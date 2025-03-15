@@ -7,7 +7,7 @@ Welcome to the **AITuber OnAir** monorepo! This repository contains various pack
 
 Currently, the primary package available is:
 
-- [**[WIP] @aituber-onair/core**](./packages/core)  
+- **[WIP] @aituber-onair/core**
   A TypeScript library for generating text and audio responses in AI Tuber streaming scenarios. It provides seamless integration with various AI and speech APIs, as well as memory and conversation context management.
 
 ## Getting Started
