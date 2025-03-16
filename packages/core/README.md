@@ -1,10 +1,10 @@
 # AITuber OnAir Core
 
-![AITuber OnAir Core - logo](./images/aituber-onair-core.png)
+![AITuber OnAir Core - logo](https://raw.githubusercontent.com/shinshin86/aituber-onair/refs/heads/main/packages/core/images/aituber-onair-core.png)
 
 **AITuber OnAir Core** is a TypeScript library developed to provide functionality for the [AITuber OnAir](https://aituberonair.com) web service, designed for AI-based virtual streaming (AITuber).  
 
-[日本語版はこちら](./README_ja.md)
+[日本語版はこちら](https://github.com/shinshin86/aituber-onair/blob/main/packages/core/README_ja.md)
 
 While it is primarily intended for use within [AITuber OnAir](https://aituberonair.com), this project is available as open-source software under the MIT License and can be used freely.
 
