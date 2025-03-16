@@ -18,6 +18,10 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Clean up
+        run: |
+          rm -f package-lock.json
+
       - name: Install dependencies
         run: npm install
 
