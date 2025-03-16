@@ -713,8 +713,8 @@ describe('AITuberOnAirCore', () => {
 
 開発とテストには以下のツールが必要です：
 
-1. Node.js（v16以上）
-2. npm（v7以上）
+1. Node.js（v20以上）
+2. npm（v10以上）
 
 ```bash
 # 依存関係のインストール

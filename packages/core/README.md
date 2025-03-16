@@ -709,8 +709,8 @@ Particularly high test coverage is sought for:
 
 You will need:
 
-1. Node.js (version 16 or higher)  
-2. npm (version 7 or higher)
+1. Node.js (version 20 or higher)  
+2. npm (version 10 or higher)
 
 ```bash
 # Install dependencies
