@@ -1,0 +1,63 @@
+---
+description: Rules that apply only within packages/core (@aituber-onair/core)
+globs: packages/core
+alwaysApply: false
+---
+# @aituber-onair/core Development Rules (English)
+
+This document outlines the rules and guidelines for development in the `@aituber-onair/core` library.
+
+## General Rules
+
+- All comments must be written in English
+- Error logs and debug messages must also be written in English
+- Use TypeScript for all code and maintain strong typing
+
+## Modularization Guidelines
+
+- Minimize external dependencies to keep the library lightweight
+- Design clear, well-documented public APIs for each module
+- Use barrel exports (index.ts) to control what's exposed to consumers
+- Keep internal implementations private when possible using module patterns
+- Separate concerns clearly: core logic, services, utilities, and types
+
+## Testing Guidelines
+
+- Write tests for all public APIs using Vitest
+- Follow the AAA pattern (Arrange, Act, Assert) in test cases
+- For mocking dependencies:
+  - Create clean, dedicated mock objects for each test suite
+  - Use `vi.fn()` directly rather than modifying shared objects
+  - Reset mocks between test cases with `vi.resetAllMocks()`
+  - For complex mocks, create dedicated interfaces/types
+- Test error cases and edge conditions
+- Prefer functional tests that check behavior over implementation details
+- Use `expect()` assertions to verify behavior rather than implementation
+
+## Code Organization
+
+- Place interfaces/types in the `/types` directory
+- Core components go in the `/core` directory
+- Services (external integrations) go in the `/services` directory
+- Utility functions go in the `/utils` directory
+- Constants and enums go in the `/constants` directory
+
+## Performance Considerations
+
+- Minimize synchronous operations that could block the main thread
+- Use async/await for potentially long-running operations
+- Consider memory usage, especially for applications that run for extended periods
+
+## Documentation
+
+- Document public APIs with JSDoc comments
+- Maintain README files that explain the purpose and usage of each module
+- Include examples that demonstrate the recommended usage patterns
+
+## Event Handling
+
+- Use the EventEmitter pattern consistently for async notifications
+- Document all events that a component can emit
+- Ensure event names are consistent across the codebase
+
+These guidelines help maintain a high-quality, consistent, and maintainable codebase for the @aituber-onair/core library.

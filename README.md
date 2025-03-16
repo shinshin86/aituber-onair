@@ -1,14 +1,18 @@
 # AITuber OnAir
-**Currently under development. Please stay tuned for updates and releases soon!**
 
 ![AITuber OnAir Toolkit - logo](./images/AITuber_OnAir_Toolkit.png)
+
+[日本語版はこちら](./README_ja.md)
 
 Welcome to the **AITuber OnAir** monorepo! This repository contains various packages and tools that power AI-driven virtual streaming and related features.
 
 Currently, the primary package available is:
 
-- **[WIP] @aituber-onair/core**
+- [**@aituber-onair/core**](./packages/core/README.md)
   A TypeScript library for generating text and audio responses in AI Tuber streaming scenarios. It provides seamless integration with various AI and speech APIs, as well as memory and conversation context management.
+  ```
+  npm install @aituber-onair/core
+  ```
 
 ## Getting Started
 
@@ -52,8 +56,10 @@ aituber-onair/
 
 - **packages/core**: The main library (`@aituber-onair/core`) providing AI conversation and voice features.
 
-Future packages (e.g., `@aituber-onair/voice-engines`) will be added here as well.
-
 ## License
 
 This project is open-sourced under the [MIT License](./LICENSE).
+
+## Special Thanks
+
+This project is based on [the work referenced below](https://x.com/shinshin86/status/1862806042603847905). Without the contributions of these pioneers, I would not have been able to create it.

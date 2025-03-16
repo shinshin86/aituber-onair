@@ -1,0 +1,8 @@
+[
+  { "speaker": "alloy", "id": "alloy" },
+  { "speaker": "echo", "id": "echo" },
+  { "speaker": "fable", "id": "fable" },
+  { "speaker": "onyx", "id": "onyx" },
+  { "speaker": "nova", "id": "nova" },
+  { "speaker": "shimmer", "id": "shimmer" }
+]
