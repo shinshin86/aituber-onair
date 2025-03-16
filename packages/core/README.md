@@ -4,6 +4,8 @@
 
 **AITuber OnAir Core** is a TypeScript library developed to provide functionality for the [AITuber OnAir](https://aituberonair.com) web service, designed for AI-based virtual streaming (AITuber).  
 
+[日本語版はこちら](./README_ja.md)
+
 While it is primarily intended for use within [AITuber OnAir](https://aituberonair.com), this project is available as open-source software under the MIT License and can be used freely.
 
 It specializes in generating response text and audio from text or image inputs, and is designed to easily integrate with other parts of an application (storage, YouTube integration, avatar control, etc.).

@@ -1,4 +1,5 @@
 # AITuber OnAir
+[![CI](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml/badge.svg)](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml)
 
 ![AITuber OnAir Toolkit - logo](./images/AITuber_OnAir_Toolkit.png)
 
