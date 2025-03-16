@@ -4,7 +4,8 @@ import { Screenplay } from '../types';
  * Extract emotion from text using regex
  * Extract emotion from text written in the format [happy], [sad], etc.
  */
-const EMOTION_REGEX = /^\s*\[([a-z]+)\]\s*/i;
+const EMOTION_REGEX = /\[([a-z]+)\]/i;
+const EMOTION_CLEANUP_REGEX = /\[[a-z]+\]\s*/gi;
 
 /**
  * Convert text to screenplay (text with emotion)
@@ -16,7 +17,8 @@ export function textToScreenplay(text: string): Screenplay {
 
   if (match) {
     const emotion = match[1].toLowerCase();
-    const cleanText = text.replace(EMOTION_REGEX, '');
+    // Remove all emotion tags from the text and trim whitespace
+    const cleanText = text.replace(EMOTION_CLEANUP_REGEX, '').trim();
     return {
       emotion,
       text: cleanText,

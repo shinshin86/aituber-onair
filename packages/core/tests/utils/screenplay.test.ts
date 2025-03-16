@@ -44,7 +44,105 @@ describe('Screenplay Utils', () => {
       // Assert
       expect(screenplay).toEqual({
         emotion: 'sad',
-        text: 'Hello world!  ',
+        text: 'Hello world!',
+      });
+    });
+
+    it('should extract emotion from text with emotion tag in the middle', () => {
+      // Arrange
+      const text = 'Hello [happy] world!';
+
+      // Act
+      const screenplay = textToScreenplay(text);
+
+      // Assert
+      expect(screenplay).toEqual({
+        emotion: 'happy',
+        text: 'Hello world!',
+      });
+    });
+
+    it('should handle multiple emotion tags and use the first one', () => {
+      // Arrange
+      const text = '[happy] Hello [sad] world!';
+
+      // Act
+      const screenplay = textToScreenplay(text);
+
+      // Assert
+      expect(screenplay).toEqual({
+        emotion: 'happy',
+        text: 'Hello world!',
+      });
+    });
+
+    it('should extract emotion from text with emotion tag at the end', () => {
+      // Arrange
+      const text = 'Hello world! [happy]';
+
+      // Act
+      const screenplay = textToScreenplay(text);
+
+      // Assert
+      expect(screenplay).toEqual({
+        emotion: 'happy',
+        text: 'Hello world!',
+      });
+    });
+
+    it('should handle uppercase emotion tags', () => {
+      // Arrange
+      const text = '[HAPPY] Hello world!';
+
+      // Act
+      const screenplay = textToScreenplay(text);
+
+      // Assert
+      expect(screenplay).toEqual({
+        emotion: 'happy',
+        text: 'Hello world!',
+      });
+    });
+
+    it('should handle multiple words with multiple emotion tags', () => {
+      // Arrange
+      const text = '[happy] Hello [sad] beautiful [angry] world!';
+
+      // Act
+      const screenplay = textToScreenplay(text);
+
+      // Assert
+      expect(screenplay).toEqual({
+        emotion: 'happy',
+        text: 'Hello beautiful world!',
+      });
+    });
+
+    it('should handle consecutive emotion tags', () => {
+      // Arrange
+      const text = '[happy][sad][angry] Hello world!';
+
+      // Act
+      const screenplay = textToScreenplay(text);
+
+      // Assert
+      expect(screenplay).toEqual({
+        emotion: 'happy',
+        text: 'Hello world!',
+      });
+    });
+
+    it('should handle text with only whitespace and emotion tag', () => {
+      // Arrange
+      const text = '   [happy]   ';
+
+      // Act
+      const screenplay = textToScreenplay(text);
+
+      // Assert
+      expect(screenplay).toEqual({
+        emotion: 'happy',
+        text: '',
       });
     });
   });
