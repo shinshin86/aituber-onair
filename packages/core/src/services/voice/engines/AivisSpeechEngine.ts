@@ -1,5 +1,5 @@
 import { AIVIS_SPEECH_API_URL } from '../../../constants';
-import { Talk } from '../messages';
+import { Talk } from '../../../types';
 import { VoiceEngine } from './VoiceEngine';
 
 /**

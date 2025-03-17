@@ -1,4 +1,4 @@
-import { Talk } from '../messages';
+import { Talk } from '../../../types';
 import { VoiceEngine } from './VoiceEngine';
 
 /**

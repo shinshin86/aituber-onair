@@ -1,4 +1,4 @@
-import { Screenplay } from '../../types';
+import { ChatScreenplay } from '../../types';
 import {
   VoiceService,
   VoiceServiceOptions,
@@ -39,7 +39,7 @@ export class VoiceEngineAdapter implements VoiceService {
    * @param options Audio playback options
    */
   async speak(
-    screenplay: Screenplay,
+    screenplay: ChatScreenplay,
     options?: AudioPlayOptions,
   ): Promise<void> {
     try {

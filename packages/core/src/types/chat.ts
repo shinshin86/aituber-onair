@@ -12,20 +12,24 @@ export interface Message {
 }
 
 /**
+ * Vision block type for image content
+ */
+export type VisionBlock =
+  | { type: 'text'; text: string }
+  | {
+      type: 'image_url';
+      image_url: {
+        url: string;
+        detail?: 'low' | 'high' | 'auto';
+      };
+    };
+
+/**
  * Message type corresponding to vision (image)
  */
 export interface MessageWithVision {
   role: 'system' | 'user' | 'assistant';
-  content:
-    | string
-    | Array<{
-        type: 'text' | 'image_url';
-        text?: string;
-        image_url?: {
-          url: string;
-          detail: 'low' | 'high';
-        };
-      }>;
+  content: string | VisionBlock[];
 }
 
 /**
@@ -37,7 +41,7 @@ export interface MessageWithVision {
 export type ChatType = 'chatForm' | 'youtube' | 'vision';
 
 /**
- * Screenplay (text with emotion)
+ * screenplay (text with emotion)
  */
 export interface Screenplay {
   text: string;

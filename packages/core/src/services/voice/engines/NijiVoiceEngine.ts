@@ -1,6 +1,5 @@
 import { NIJI_VOICE_API_URL } from '../../../constants';
-import { VoiceActor } from '../../../types';
-import { Talk } from '../messages';
+import { VoiceActor, Talk } from '../../../types';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
