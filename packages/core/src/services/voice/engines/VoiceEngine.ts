@@ -1,5 +1,4 @@
-import { Talk } from '../messages';
-import { VoiceActor } from '../../../types';
+import { VoiceActor, Talk } from '../../../types';
 
 /**
  * Common interface for voice engines

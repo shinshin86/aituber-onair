@@ -1,4 +1,4 @@
-import { Screenplay } from '../types';
+import { ChatScreenplay } from '../types';
 
 /**
  * Extract emotion from text using regex
@@ -12,7 +12,7 @@ const EMOTION_CLEANUP_REGEX = /\[[a-z]+\]\s*/gi;
  * @param text Original text (may contain emotion expressions like [happy])
  * @returns Screenplay object with emotion and text separated
  */
-export function textToScreenplay(text: string): Screenplay {
+export function textToScreenplay(text: string): ChatScreenplay {
   const match = text.match(EMOTION_REGEX);
 
   if (match) {
@@ -33,7 +33,7 @@ export function textToScreenplay(text: string): Screenplay {
  * @param texts Text array
  * @returns Array of screenplay objects
  */
-export function textsToScreenplay(texts: string[]): Screenplay[] {
+export function textsToScreenplay(texts: string[]): ChatScreenplay[] {
   return texts.map((text) => textToScreenplay(text));
 }
 
@@ -42,7 +42,7 @@ export function textsToScreenplay(texts: string[]): Screenplay[] {
  * @param screenplay Screenplay object
  * @returns Text with emotion (e.g. [happy] Hello)
  */
-export function screenplayToText(screenplay: Screenplay): string {
+export function screenplayToText(screenplay: ChatScreenplay): string {
   if (screenplay.emotion) {
     return `[${screenplay.emotion}] ${screenplay.text}`;
   }

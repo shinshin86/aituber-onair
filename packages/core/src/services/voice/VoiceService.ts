@@ -1,4 +1,4 @@
-import { Screenplay, voiceEngineType } from '../../types';
+import { ChatScreenplay, voiceEngineType } from '../../types';
 
 /**
  * Voice service settings options
@@ -38,7 +38,7 @@ export interface VoiceService {
    * @param screenplay Screenplay (text and emotion)
    * @param options Audio playback options (default settings if omitted)
    */
-  speak(screenplay: Screenplay, options?: AudioPlayOptions): Promise<void>;
+  speak(screenplay: ChatScreenplay, options?: AudioPlayOptions): Promise<void>;
 
   /**
    * Speak text as audio
