@@ -1,4 +1,4 @@
-import { Screenplay } from '../../types';
+import { Screenplay, voiceEngineType } from '../../types';
 
 /**
  * Voice service settings options
@@ -7,7 +7,7 @@ export interface VoiceServiceOptions {
   /** Speaker ID */
   speaker: string;
   /** Engine type (voicevox, voicepeak, openai, nijivoice, aivisSpeech) */
-  engineType: string;
+  engineType: voiceEngineType;
   /** API key (if needed) */
   apiKey?: string;
   /** Audio playback callback */

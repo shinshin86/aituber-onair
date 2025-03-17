@@ -1,5 +1,5 @@
 import { Talk } from '../messages';
-import { VoiceActor } from '../../../types/nijiVoice';
+import { VoiceActor } from '../../../types';
 
 /**
  * Common interface for voice engines
