@@ -359,7 +359,7 @@ AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用し�
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-4o、GPT-4o-mini、GPT-4 Turboなどのモデルをサポート
+- **OpenAI**: GPT-4o、GPT-4o-mini、O3-miniのモデルをサポート
 
 ### プロバイダーの指定方法
 
@@ -369,10 +369,37 @@ AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用し�
 const aituberCore = new AITuberOnAirCore({
   chatProvider: 'openai', // プロバイダー名を指定
   apiKey: 'your-api-key',
-  model: 'gpt-4o-mini', // 省略可能（省略時はプロバイダーのデフォルトモデルを使用）
+  model: 'gpt-4o-mini', // 省略可能（省略時はデフォルトモデル「gpt-4o-mini」が使用されます）
   // その他のオプション...
 });
 ```
+
+### モデル固有の機能制限
+
+各AIモデルは異なる機能をサポートしています。例えば：
+
+- **GPT-4o**, **GPT-4o-mini**: テキストチャットと画像処理（Vision）の両方をサポート
+- **O3-mini**: テキストチャットのみサポート（画像処理は非対応）
+
+このため、モデル選択時には注意が必要です。サポートされていない機能を使用しようとすると、明示的なエラーが発生します。
+
+**注意**: モデルを指定しない場合、デフォルトでは「gpt-4o-mini」が使用されます。このモデルはテキストチャットと画像処理の両方をサポートしています。
+
+### 異なるモデルの併用
+
+テキストチャットと画像処理で異なるモデルを使用したい場合は、`visionModel`オプションを使用できます：
+
+```typescript
+const aituberCore = new AITuberOnAirCore({
+  apiKey: 'your-api-key',
+  chatProvider: 'openai',
+  model: 'o3-mini',       // テキストチャット用 
+  visionModel: 'gpt-4o',  // 画像処理用
+  // その他のオプション...
+});
+```
+
+これにより、テキストチャットには軽量なモデルを使用し、画像処理が必要な場合のみ高機能なモデルを使用するといった最適化が可能になります。
 
 ### 利用可能なプロバイダーとモデルの取得
 

@@ -11,7 +11,7 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
   AITuberOnAirCoreOptions,
-  Screenplay,
+  ChatScreenplay,
   Message,
 } from '../src';
 
@@ -26,6 +26,7 @@ async function basicExample() {
 
   // 2. Initialize AITuberOnAirCore
   const aituberOptions: AITuberOnAirCoreOptions = {
+    chatProvider: 'openai', // Optional. If omitted, the default OpenAI will be used. (English: If omitted, the default OpenAI will be used.)
     apiKey: OPENAI_API_KEY,
     chatOptions: {
       systemPrompt: SYSTEM_PROMPT,
@@ -35,6 +36,10 @@ async function basicExample() {
       memoryNote:
         'This is a summary of past conversations. Please refer to it appropriately to continue the conversation.',
     },
+    // OpenAI Default model is gpt-4o-mini
+    // You can specify different models for text chat and vision processing
+    // model: 'o3-mini',        // Lightweight model for text chat (no vision support)
+    // visionModel: 'gpt-4o',   // More capable model for image processing
     memoryOptions: {
       enableSummarization: true,
       shortTermDuration: 60 * 1000, // 1 minute
@@ -70,7 +75,7 @@ async function basicExample() {
     AITuberOnAirCoreEvent.ASSISTANT_RESPONSE,
     (data: {
       message: Message;
-      screenplay: Screenplay;
+      screenplay: ChatScreenplay;
       rawText: string;
     }) => {
       // Handle response completion
@@ -89,7 +94,7 @@ async function basicExample() {
   aituber.on(
     AITuberOnAirCoreEvent.SPEECH_START,
     (data: {
-      screenplay: Screenplay;
+      screenplay: ChatScreenplay;
       rawText: string;
     }) => {
       console.log('Voice playback started:', data.screenplay.text);
@@ -122,7 +127,7 @@ async function basicExample() {
 
   // For this example, we're using a simulated data URL
   const mockScreenshot =
-    'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAIBAQIBAQICAgICAgICAwUDAwMDAwYEBAMFBwYHBwcGBwcICQsJCAgKCAcHCg0KCgsMDAwMBwkODw0MDgsMDAz/2wBDAQICAgMDAwYDAwYMCAcIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAz/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9/KKKKAP/2Q==';
+    'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAIBAQIBAQICAgICAgICAwUDAwMDAwYEBAMFBwYHBwcGBwcICQsJCAgKCAcHCg0KCgsMDAwMBwkODw0MDgsMDAz/2wBDAQICAgMDAwYDAwYMCAcIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAz/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9/KKKKAP/2Q==';
 
   console.log('Processing vision chat with captured image...');
   await aituber.processVisionChat(mockScreenshot);

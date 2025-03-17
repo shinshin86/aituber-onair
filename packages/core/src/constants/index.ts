@@ -11,6 +11,15 @@ export const NIJI_VOICE_API_URL = 'https://api.nijivoice.com/api/platform/v1';
 
 // gpt model
 export const MODEL_GPT_4O_MINI = 'gpt-4o-mini';
+export const MODEL_GPT_4O = 'gpt-4o';
+export const MODEL_O3_MINI = 'o3-mini';
+
+// Vision support for models
+export const VISION_SUPPORTED_MODELS = [
+  MODEL_GPT_4O_MINI,
+  MODEL_GPT_4O,
+  // MODEL_O3_MINI is not included as it doesn't support vision
+];
 
 // chat response length
 export const CHAT_RESPONSE_LENGTH = {
