@@ -355,7 +355,8 @@ aituber.updateVoiceService({
 
 ## AI Provider System
 
-AITuber OnAir Core uses an extensible provider system to accommodate various AI APIs. By default, it uses the OpenAI API, but other providers (Gemini, Claude, etc.) can be added.
+AITuber OnAir Core adopts an extensible provider system, enabling integration with various AI APIs.
+Currently, only the OpenAI API is available, but other API providers (such as Gemini API, Claude API, etc.) are planned to be added soon.
 
 ### Available Providers
 
