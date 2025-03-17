@@ -41,8 +41,7 @@ export interface MessageWithVision {
 export type ChatType = 'chatForm' | 'youtube' | 'vision';
 
 /**
- * Simple screenplay (text with emotion)
- * Kept for compatibility. Please use the Screenplay type from voice.ts for new code.
+ * screenplay (text with emotion)
  */
 export interface Screenplay {
   text: string;
