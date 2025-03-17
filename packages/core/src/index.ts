@@ -39,12 +39,9 @@ export {
   AITuberOnAirCoreEvent,
 } from './core/AITuberOnAirCore';
 
-// Utility exports
-export * from './utils';
-export { createMemoryStorage } from './utils/storage';
-
 // Constants exports
 export * from './constants';
 
-// Explicitly re-export Screenplay type (already exported via ./types, but explicitly re-exported for clarity)
-export type { Screenplay } from './types';
+// Utility exports
+export * from './utils';
+export { createMemoryStorage } from './utils/storage';
