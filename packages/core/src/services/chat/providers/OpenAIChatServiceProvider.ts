@@ -1,4 +1,4 @@
-import { MODEL_GPT_4O_MINI } from '../../../constants';
+import { MODEL_GPT_4O_MINI, MODEL_GPT_4O, MODEL_O3_MINI, VISION_SUPPORTED_MODELS } from '../../../constants';
 import { ChatService } from '../ChatService';
 import { OpenAIChatService } from '../OpenAIChatService';
 import { ChatServiceOptions, ChatServiceProvider } from './ChatServiceProvider';
@@ -13,7 +13,17 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    * @returns OpenAIChatService instance
    */
   createChatService(options: ChatServiceOptions): ChatService {
-    return new OpenAIChatService(options.apiKey, options.model);
+    // Use the visionModel if provided, otherwise use the model that supports vision
+    const visionModel = options.visionModel || 
+      (this.supportsVisionForModel(options.model || this.getDefaultModel()) 
+        ? options.model 
+        : MODEL_GPT_4O_MINI);
+    
+    return new OpenAIChatService(
+      options.apiKey, 
+      options.model, 
+      visionModel
+    );
   }
 
   /**
@@ -29,7 +39,7 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    * @returns Array of supported model names
    */
   getSupportedModels(): string[] {
-    return [MODEL_GPT_4O_MINI];
+    return [MODEL_GPT_4O_MINI, MODEL_GPT_4O, MODEL_O3_MINI];
   }
 
   /**
@@ -46,5 +56,14 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    */
   supportsVision(): boolean {
     return true;
+  }
+
+  /**
+   * Check if a specific model supports vision capabilities
+   * @param model The model name to check
+   * @returns True if the model supports vision, false otherwise
+   */
+  supportsVisionForModel(model: string): boolean {
+    return VISION_SUPPORTED_MODELS.includes(model);
   }
 }

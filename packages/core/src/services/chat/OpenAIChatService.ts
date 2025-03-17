@@ -1,6 +1,6 @@
 import { ChatService } from './ChatService';
 import { Message, MessageWithVision } from '../../types';
-import { ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, MODEL_GPT_4O_MINI } from '../../constants';
+import { ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, MODEL_GPT_4O_MINI, VISION_SUPPORTED_MODELS } from '../../constants';
 
 /**
  * OpenAI implementation of ChatService
@@ -128,6 +128,7 @@ export class OpenAIChatService implements ChatService {
    * @param messages Array of messages to send (including images)
    * @param onPartialResponse Callback to receive each part of streaming response
    * @param onCompleteResponse Callback to execute when response is complete
+   * @throws Error if the selected model doesn't support vision
    */
   async processVisionChat(
     messages: MessageWithVision[],
@@ -135,6 +136,11 @@ export class OpenAIChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
+      // Check if the vision model supports vision capabilities
+      if (!VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
+        throw new Error(`Model ${this.visionModel} does not support vision capabilities.`);
+      }
+
       const response = await fetch(ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, {
         method: 'POST',
         headers: {

@@ -8,6 +8,8 @@ export interface ChatServiceOptions {
   apiKey: string;
   /** Model name */
   model?: string;
+  /** Vision model name (for image processing) */
+  visionModel?: string;
   /** Additional provider-specific options */
   [key: string]: any;
 }
