@@ -9,16 +9,31 @@ export const VOICEPEAK_API_URL = 'http://localhost:20202';
 export const AIVIS_SPEECH_API_URL = 'http://localhost:10101';
 export const NIJI_VOICE_API_URL = 'https://api.nijivoice.com/api/platform/v1';
 
+// API Endpoints
+export const ENDPOINT_GEMINI_API = 'https://generativelanguage.googleapis.com/v1';
+
 // gpt model
 export const MODEL_GPT_4O_MINI = 'gpt-4o-mini';
 export const MODEL_GPT_4O = 'gpt-4o';
 export const MODEL_O3_MINI = 'o3-mini';
+
+// gemini model
+export const MODEL_GEMINI_2_0_FLASH = 'gemini-2.0-flash';
+export const MODEL_GEMINI_2_0_FLASH_LITE = 'gemini-2.0-flash-lite';
+export const MODEL_GEMINI_1_5_FLASH = 'gemini-1.5-flash';
 
 // Vision support for models
 export const VISION_SUPPORTED_MODELS = [
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
   // MODEL_O3_MINI is not included as it doesn't support vision
+];
+
+// Vision support for Gemini models
+export const GEMINI_VISION_SUPPORTED_MODELS = [
+  MODEL_GEMINI_2_0_FLASH,
+  MODEL_GEMINI_2_0_FLASH_LITE,
+  MODEL_GEMINI_1_5_FLASH,
 ];
 
 // chat response length

@@ -4,6 +4,7 @@ import {
   ChatServiceProvider,
 } from './providers/ChatServiceProvider';
 import { OpenAIChatServiceProvider } from './providers/OpenAIChatServiceProvider';
+import { GeminiChatServiceProvider } from './providers/GeminiChatServiceProvider';
 
 /**
  * Chat service factory
@@ -65,5 +66,7 @@ export class ChatServiceFactory {
   }
 }
 
-// Register OpenAI as the default provider
+// Register OpenAI as a provider
 ChatServiceFactory.registerProvider(new OpenAIChatServiceProvider());
+// Register Gemini as a provider
+ChatServiceFactory.registerProvider(new GeminiChatServiceProvider());
