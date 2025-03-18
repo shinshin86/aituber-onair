@@ -19,7 +19,7 @@ export const MODEL_O3_MINI = 'o3-mini';
 
 // gemini model
 export const MODEL_GEMINI_2_0_FLASH = 'gemini-2.0-flash';
-export const MODEL_GEMINI_2_0_FLASH_LITE = 'gemini-2.0-flash-lite1';
+export const MODEL_GEMINI_2_0_FLASH_LITE = 'gemini-2.0-flash-lite';
 export const MODEL_GEMINI_1_5_FLASH = 'gemini-1.5-flash';
 
 // Vision support for models
