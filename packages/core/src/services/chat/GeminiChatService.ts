@@ -91,18 +91,24 @@ export class GeminiChatService implements ChatService {
         throw new Error('Failed to get response reader');
       }
 
+      // get full response
+      let responseText = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
+        
         const chunk = decoder.decode(value);
-        try {
-          // Parse the chunk as JSON
-          const data = JSON.parse(chunk);
-          
-          // Extract text from Gemini response format
-          if (data.candidates && data.candidates.length > 0) {
-            const content = data.candidates[0].content;
+        responseText += chunk;
+      }
+
+      // parse response
+      try {
+        const responseArray = JSON.parse(responseText);
+        
+        // process each response
+        for (const item of responseArray) {
+          if (item.candidates && item.candidates.length > 0) {
+            const content = item.candidates[0].content;
             if (content && content.parts && content.parts.length > 0) {
               const text = content.parts[0].text || '';
               if (text) {
@@ -111,9 +117,10 @@ export class GeminiChatService implements ChatService {
               }
             }
           }
-        } catch (e) {
-          console.error('Error parsing stream:', e);
         }
+      } catch (err: any) {
+        console.error('Error parsing Gemini response:', err);
+        throw new Error(`Failed to parse Gemini response: ${err.message}`);
       }
 
       // Complete response callback
@@ -181,18 +188,24 @@ export class GeminiChatService implements ChatService {
         throw new Error('Failed to get response reader');
       }
 
+      // get full response 
+      let responseText = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
+        
         const chunk = decoder.decode(value);
-        try {
-          // Parse the chunk as JSON
-          const data = JSON.parse(chunk);
-          
-          // Extract text from Gemini response format
-          if (data.candidates && data.candidates.length > 0) {
-            const content = data.candidates[0].content;
+        responseText += chunk;
+      }
+
+      // parse response
+      try {
+        const responseArray = JSON.parse(responseText);
+        
+        // process each response
+        for (const item of responseArray) {
+          if (item.candidates && item.candidates.length > 0) {
+            const content = item.candidates[0].content;
             if (content && content.parts && content.parts.length > 0) {
               const text = content.parts[0].text || '';
               if (text) {
@@ -201,9 +214,10 @@ export class GeminiChatService implements ChatService {
               }
             }
           }
-        } catch (e) {
-          console.error('Error parsing stream:', e);
         }
+      } catch (err: any) {
+        console.error('Error parsing Gemini response:', err);
+        throw new Error(`Failed to parse Gemini response: ${err.message}`);
       }
 
       // Complete response callback
