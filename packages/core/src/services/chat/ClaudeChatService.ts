@@ -293,9 +293,9 @@ export class ClaudeChatService implements ChatService {
               text: block.text,
             };
           } else if (block.type === 'image_url') {
-            // データURLかどうかをチェック
+            // check if the image url is a data url
             if (block.image_url.url.startsWith('data:')) {
-              // Data URLからBase64部分を抽出
+              // extract the base64 data from the data url
               const matches = block.image_url.url.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
               if (matches && matches.length >= 3) {
                 const mediaType = matches[1];
@@ -311,7 +311,7 @@ export class ClaudeChatService implements ChatService {
               }
             }
             
-            // 通常のURLの場合
+            // if the image url is a normal url
             return {
               type: 'image',
               source: {
