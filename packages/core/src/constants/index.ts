@@ -11,6 +11,7 @@ export const NIJI_VOICE_API_URL = 'https://api.nijivoice.com/api/platform/v1';
 
 // API Endpoints
 export const ENDPOINT_GEMINI_API = 'https://generativelanguage.googleapis.com/v1';
+export const ENDPOINT_CLAUDE_API = 'https://api.anthropic.com/v1/messages';
 
 // gpt model
 export const MODEL_GPT_4O_MINI = 'gpt-4o-mini';
@@ -21,6 +22,12 @@ export const MODEL_O3_MINI = 'o3-mini';
 export const MODEL_GEMINI_2_0_FLASH = 'gemini-2.0-flash';
 export const MODEL_GEMINI_2_0_FLASH_LITE = 'gemini-2.0-flash-lite';
 export const MODEL_GEMINI_1_5_FLASH = 'gemini-1.5-flash';
+
+// claude model
+export const MODEL_CLAUDE_3_HAIKU = 'claude-3-haiku-20240307';
+export const MODEL_CLAUDE_3_5_HAIKU = 'claude-3-5-haiku-20241022';
+export const MODEL_CLAUDE_3_5_SONNET = 'claude-3-5-sonnet-20241022';
+export const MODEL_CLAUDE_3_7_SONNET = 'claude-3-7-sonnet-20250219';
 
 // Vision support for models
 export const VISION_SUPPORTED_MODELS = [
@@ -34,6 +41,14 @@ export const GEMINI_VISION_SUPPORTED_MODELS = [
   MODEL_GEMINI_2_0_FLASH,
   MODEL_GEMINI_2_0_FLASH_LITE,
   MODEL_GEMINI_1_5_FLASH,
+];
+
+// Vision support for Claude models
+export const CLAUDE_VISION_SUPPORTED_MODELS = [
+  MODEL_CLAUDE_3_HAIKU,
+  MODEL_CLAUDE_3_5_HAIKU,
+  MODEL_CLAUDE_3_5_SONNET,
+  MODEL_CLAUDE_3_7_SONNET,
 ];
 
 // chat response length

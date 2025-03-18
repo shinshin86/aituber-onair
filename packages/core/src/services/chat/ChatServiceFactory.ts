@@ -5,6 +5,7 @@ import {
 } from './providers/ChatServiceProvider';
 import { OpenAIChatServiceProvider } from './providers/OpenAIChatServiceProvider';
 import { GeminiChatServiceProvider } from './providers/GeminiChatServiceProvider';
+import { ClaudeChatServiceProvider } from './providers/ClaudeChatServiceProvider';
 
 /**
  * Chat service factory
@@ -70,3 +71,5 @@ export class ChatServiceFactory {
 ChatServiceFactory.registerProvider(new OpenAIChatServiceProvider());
 // Register Gemini as a provider
 ChatServiceFactory.registerProvider(new GeminiChatServiceProvider());
+// Register Claude as a provider
+ChatServiceFactory.registerProvider(new ClaudeChatServiceProvider());
