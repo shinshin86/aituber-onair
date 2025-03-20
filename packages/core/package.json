@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/core",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Core library for AITuber OnAir providing voice synthesis and chat processing",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -18,7 +18,6 @@
   "license": "MIT",
   "dependencies": {},
   "peerDependencies": {
-    "openai": "^3.2.1",
     "@pixiv/three-vrm": "^1.0.9"
   },
   "devDependencies": {

@@ -354,13 +354,14 @@ aituber.updateVoiceService({
 ## AIプロバイダーシステム
 
 AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用しており、様々なAI APIとの連携が可能です。
-現在はOpenAI APIのみが利用可能ですが、他のAPIプロバイダー（Gemini API、Claude APIなど）も近日中に追加予定です。
+現在はOpenAI APIとGemini APIが利用可能ですが、他のAPIプロバイダー（Claude APIなど）も近日中に追加予定です。
 
 ### 利用可能なプロバイダー
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-4o、GPT-4o-mini、O3-miniのモデルをサポート
+- **OpenAI**: GPT-4, GPT-4o-mini, O3-miniのモデルをサポート
+- **Gemini**: Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flashのモデルをサポート
 
 ### プロバイダーの指定方法
 
