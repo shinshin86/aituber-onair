@@ -19,6 +19,7 @@ export type {
 export { ChatServiceFactory } from './services/chat/ChatServiceFactory';
 export { OpenAIChatServiceProvider } from './services/chat/providers/OpenAIChatServiceProvider';
 export { GeminiChatServiceProvider } from './services/chat/providers/GeminiChatServiceProvider';
+export { ClaudeChatServiceProvider } from './services/chat/providers/ClaudeChatServiceProvider';
 
 // Voice services
 export type {
