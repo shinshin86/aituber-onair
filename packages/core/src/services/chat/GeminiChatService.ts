@@ -150,7 +150,7 @@ export class GeminiChatService implements ChatService {
       }
 
       // Convert messages to Gemini vision format
-      const geminiMessages = this.convertVisionMessagesToGeminiFormat(messages);
+      const geminiMessages = await this.convertVisionMessagesToGeminiFormat(messages);
 
       // Create the endpoint URL with API key
       const apiUrl = `${ENDPOINT_GEMINI_API}/models/${this.visionModel}:streamGenerateContent?key=${this.apiKey}`;
@@ -271,7 +271,7 @@ export class GeminiChatService implements ChatService {
    * @param messages Array of vision messages
    * @returns Gemini formatted vision messages
    */
-  private convertVisionMessagesToGeminiFormat(messages: MessageWithVision[]): any[] {
+  private async convertVisionMessagesToGeminiFormat(messages: MessageWithVision[]): Promise<any[]> {
     const geminiMessages = [];
     let currentRole = null;
     let currentParts = [];
@@ -300,14 +300,28 @@ export class GeminiChatService implements ChatService {
           if (block.type === 'text') {
             currentParts.push({ text: block.text });
           } else if (block.type === 'image_url') {
-            // Convert image_url to Gemini format
-            // Fetch the image data if URL is provided
-            currentParts.push({
-              inlineData: {
-                mimeType: 'image/jpeg',
-                data: block.image_url.url // In real implementation, this would be base64 encoded data
-              },
-            });
+            try {
+              // Fetch the image data from URL
+              const imageResponse = await fetch(block.image_url.url);
+              if (!imageResponse.ok) {
+                throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
+              }
+              
+              // Convert image to blob and then to base64
+              const imageBlob = await imageResponse.blob();
+              const base64Data = await this.blobToBase64(imageBlob);
+              
+              // Add image data in Gemini format
+              currentParts.push({
+                inlineData: {
+                  mimeType: imageBlob.type || 'image/jpeg',
+                  data: base64Data.split(',')[1] // Remove the "data:image/jpeg;base64," prefix
+                },
+              });
+            } catch (error: any) {
+              console.error('Error processing image:', error);
+              throw new Error(`Failed to process image: ${error.message}`);
+            }
           }
         }
       }
@@ -322,6 +336,20 @@ export class GeminiChatService implements ChatService {
     }
 
     return geminiMessages;
+  }
+
+  /**
+   * Convert Blob to Base64 string
+   * @param blob Image blob
+   * @returns Promise with base64 encoded string
+   */
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   }
 
   /**

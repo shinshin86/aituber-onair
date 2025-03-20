@@ -18,7 +18,6 @@
   "license": "MIT",
   "dependencies": {},
   "peerDependencies": {
-    "openai": "^3.2.1",
     "@pixiv/three-vrm": "^1.0.9"
   },
   "devDependencies": {
