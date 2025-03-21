@@ -64,16 +64,22 @@ pnpm install @aituber-onair/core
 ## 基本的な使用方法
 
 ```typescript
-import { AITuberOnAirCore, AITuberOnAirCoreEvent, AITuberOnAirCoreOptions } from '../lib/aituber-core';
+import { AITuberOnAirCore, AITuberOnAirCoreEvent, AITuberOnAirCoreOptions } from '@aituber-onair/core';
 
 // 1. オプション設定
 const options: AITuberOnAirCoreOptions = {
-  openAiKey: 'YOUR_OPENAI_API_KEY',
+  chatProvider: 'openai', // 省略可能。省略した場合はデフォルトでOpenAIが使用されます
+  apiKey: 'YOUR_API_KEY',
   chatOptions: {
     systemPrompt: 'あなたはAIチューバーです。配信者のように振る舞い、明るく親しみやすい口調で話します。',
     visionSystemPrompt: '画面に映っているものについて、配信者らしくコメントしてください。',
-    visionPrompt: '配信画面を見て、状況に合ったコメントをしてください。', // 画像入力時のプロンプト
+    visionPrompt: '配信画面を見て、状況に合ったコメントをしてください。',
+    memoryNote: 'これは過去の会話の要約です。適切に参照して会話を続けてください。',
   },
+  // OpenAIのデフォルトモデルはgpt-4o-mini
+  // テキストチャットと画像処理で異なるモデルを指定することができます
+  // model: 'o3-mini',        // テキストチャット用の軽量モデル（画像処理非対応）
+  // visionModel: 'gpt-4o',   // 画像処理も可能なモデル
   memoryOptions: {
     enableSummarization: true,
     shortTermDuration: 60 * 1000, // 1分
@@ -88,6 +94,7 @@ const options: AITuberOnAirCoreOptions = {
     engineType: 'voicevox', // 音声エンジンタイプ
     speaker: '1', // 話者ID
     apiKey: 'ENGINE_SPECIFIC_API_KEY', // 必要に応じて（NijiVoiceなど）
+    onComplete: () => console.log('音声再生が完了しました'),
   },
   debug: true, // デバッグ出力を有効化
 };

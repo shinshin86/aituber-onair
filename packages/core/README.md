@@ -78,16 +78,22 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
   AITuberOnAirCoreOptions
-} from '../lib/aituber-core';
+} from '@aituber-onair/core';
 
 // 1. Define options
 const options: AITuberOnAirCoreOptions = {
-  openAiKey: 'YOUR_OPENAI_API_KEY',
+  chatProvider: 'openai', // Optional. If omitted, the default OpenAI will be used.
+  apiKey: 'YOUR_API_KEY',
   chatOptions: {
     systemPrompt: 'You are an AI streamer. Act as a cheerful and friendly live broadcaster.',
     visionSystemPrompt: 'Please comment like a streamer on what is shown on screen.',
-    visionPrompt: 'Look at the broadcast screen and provide commentary suited to the situation.', // Prompt for image input
+    visionPrompt: 'Look at the broadcast screen and provide commentary suited to the situation.',
+    memoryNote: 'This is a summary of past conversations. Please refer to it appropriately to continue the conversation.',
   },
+  // OpenAI Default model is gpt-4o-mini
+  // You can specify different models for text chat and vision processing
+  // model: 'o3-mini',        // Lightweight model for text chat (no vision support)
+  // visionModel: 'gpt-4o',   // Model capable of image processing
   memoryOptions: {
     enableSummarization: true,
     shortTermDuration: 60 * 1000, // 1 minute
@@ -102,6 +108,7 @@ const options: AITuberOnAirCoreOptions = {
     engineType: 'voicevox', // Speech engine type
     speaker: '1',           // Speaker ID
     apiKey: 'ENGINE_SPECIFIC_API_KEY', // If required (e.g., NijiVoice)
+    onComplete: () => console.log('Voice playback completed'),
   },
   debug: true, // Enable debug output
 };
