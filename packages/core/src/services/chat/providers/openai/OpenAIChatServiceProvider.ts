@@ -1,7 +1,7 @@
-import { MODEL_GPT_4O_MINI, MODEL_GPT_4O, MODEL_O3_MINI, VISION_SUPPORTED_MODELS } from '../../../constants';
-import { ChatService } from '../ChatService';
-import { OpenAIChatService } from '../OpenAIChatService';
-import { ChatServiceOptions, ChatServiceProvider } from './ChatServiceProvider';
+import { MODEL_GPT_4O_MINI, MODEL_GPT_4O, MODEL_O3_MINI, VISION_SUPPORTED_MODELS } from '../../../../constants';
+import { ChatService } from '../../ChatService';
+import { OpenAIChatService } from './OpenAIChatService';
+import { ChatServiceOptions, ChatServiceProvider } from '../ChatServiceProvider';
 
 /**
  * OpenAI API provider implementation

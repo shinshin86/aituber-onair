@@ -1,10 +1,10 @@
-import { Message } from '../../types';
-import { Summarizer } from '../../core/MemoryManager';
+import { Message } from '../../../../types';
+import { Summarizer } from '../../../../core/MemoryManager';
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   MODEL_GPT_4O_MINI,
-} from '../../constants';
-import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../constants/prompts';
+} from '../../../../constants';
+import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../constants/prompts';
 
 /**
  * Implementation of summarization functionality using OpenAI

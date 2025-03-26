@@ -1,10 +1,10 @@
-import { ChatService } from './ChatService';
-import { Message, MessageWithVision } from '../../types';
+import { ChatService } from '../../ChatService';
+import { Message, MessageWithVision } from '../../../../types';
 import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS
-} from '../../constants';
+} from '../../../../constants';
 
 /**
  * Gemini implementation of ChatService

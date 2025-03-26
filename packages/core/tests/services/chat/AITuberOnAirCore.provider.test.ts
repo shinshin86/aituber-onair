@@ -4,8 +4,8 @@ import {
   AITuberOnAirCoreOptions,
 } from '../../../src/core/AITuberOnAirCore';
 import { ChatServiceFactory } from '../../../src/services/chat/ChatServiceFactory';
-import { OpenAIChatServiceProvider } from '../../../src/services/chat/providers/OpenAIChatServiceProvider';
-import { GeminiChatServiceProvider } from '../../../src/services/chat/providers/GeminiChatServiceProvider';
+import { OpenAIChatServiceProvider } from '../../../src/services/chat/providers/openai/OpenAIChatServiceProvider';
+import { GeminiChatServiceProvider } from '../../../src/services/chat/providers/gemini/GeminiChatServiceProvider';
 
 // Mock the ChatService
 const mockOpenAIChatService = {
