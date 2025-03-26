@@ -161,6 +161,44 @@ AITuberOnAirCore (統合層)
                 └── 各種音声エンジン (VOICEVOX, NijiVoice, etc.)
 ```
 
+### ディレクトリ構造
+
+ソースコードは以下のディレクトリ構造で整理されています：
+
+```
+src/
+  ├── constants/             # 定数と設定
+  │     ├── index.ts         # エクスポートされる定数
+  │     └── prompts.ts       # デフォルトプロンプトとテンプレート
+  ├── core/                  # コアコンポーネント
+  │     ├── AITuberOnAirCore.ts
+  │     ├── ChatProcessor.ts
+  │     └── MemoryManager.ts
+  ├── services/              # サービス実装
+  │     ├── chat/            # チャットサービス
+  │     │    ├── ChatService.ts            # 基本インターフェース
+  │     │    ├── ChatServiceFactory.ts     # プロバイダー用ファクトリー
+  │     │    └── providers/                # AIプロバイダー実装
+  │     │         ├── ChatServiceProvider.ts  # プロバイダーインターフェース
+  │     │         ├── gemini/              # Gemini固有
+  │     │         │    ├── GeminiChatService.ts
+  │     │         │    └── GeminiChatServiceProvider.ts
+  │     │         └── openai/              # OpenAI固有
+  │     │              ├── OpenAIChatService.ts
+  │     │              ├── OpenAIChatServiceProvider.ts
+  │     │              └── OpenAISummarizer.ts
+  │     ├── voice/           # 音声サービス
+  │     │    ├── VoiceService.ts
+  │     │    ├── VoiceEngineAdapter.ts
+  │     │    └── engines/    # 音声エンジン実装
+  │     └── youtube/         # YouTube API連携
+  │          └── YouTubeDataApiService.ts  # YouTube Data APIクライアント
+  ├── types/                 # TypeScript型定義
+  └── utils/                 # ユーティリティとヘルパー
+       ├── screenplay.ts     # テキストと感情処理
+       └── storage.ts        # ストレージユーティリティ
+```
+
 ## 主要コンポーネント
 
 ### AITuberOnAirCore
