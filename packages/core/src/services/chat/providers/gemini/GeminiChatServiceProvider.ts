@@ -22,7 +22,7 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
     const visionModel = options.visionModel || 
       (this.supportsVisionForModel(options.model || this.getDefaultModel()) 
         ? options.model 
-        : MODEL_GEMINI_2_0_FLASH_LITE);
+        : this.getDefaultModel());
     
     return new GeminiChatService(
       options.apiKey, 

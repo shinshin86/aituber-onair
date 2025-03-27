@@ -450,6 +450,8 @@ const aituberCore = new AITuberOnAirCore({
 
 This allows for optimizations such as using a lightweight model for text chat and a more powerful model only when image processing is needed.
 
+Note: When specifying a visionModel, ensure it supports vision capabilities. The system will validate this during initialization and throw an error if an unsupported model is provided.
+
 ### Retrieving Providers & Models
 
 You can programmatically retrieve available providers and their supported models:

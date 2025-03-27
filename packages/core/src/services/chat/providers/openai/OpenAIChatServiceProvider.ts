@@ -17,11 +17,11 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
     const visionModel = options.visionModel || 
       (this.supportsVisionForModel(options.model || this.getDefaultModel()) 
         ? options.model 
-        : MODEL_GPT_4O_MINI);
+        : this.getDefaultModel());
     
     return new OpenAIChatService(
       options.apiKey, 
-      options.model, 
+      options.model || this.getDefaultModel(), 
       visionModel
     );
   }

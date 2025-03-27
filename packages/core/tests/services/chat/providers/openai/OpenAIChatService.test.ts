@@ -174,23 +174,10 @@ describe('OpenAIChatService', () => {
   });
 
   it('should throw error if vision model does not support vision', async () => {
-    service = new OpenAIChatService(
+    expect(() => new OpenAIChatService(
       TEST_API_KEY, 
       MODEL_GPT_4O_MINI, 
       'non-vision-model'
-    );
-
-    const messages: MessageWithVision[] = [
-      {
-        role: 'user',
-        content: [{ type: 'text', text: 'Test' }],
-      },
-    ];
-
-    await expect(
-      service.processVisionChat(messages, vi.fn(), vi.fn())
-    ).rejects.toThrow(
-      /Model non-vision-model does not support vision capabilities/
-    );
+    )).toThrow(/Model non-vision-model does not support vision capabilities/);
   });
 }); 
