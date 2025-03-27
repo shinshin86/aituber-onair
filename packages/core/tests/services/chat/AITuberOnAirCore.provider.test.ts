@@ -4,22 +4,23 @@ import {
   AITuberOnAirCoreOptions,
 } from '../../../src/core/AITuberOnAirCore';
 import { ChatServiceFactory } from '../../../src/services/chat/ChatServiceFactory';
-import { OpenAIChatServiceProvider } from '../../../src/services/chat/providers/OpenAIChatServiceProvider';
-import { GeminiChatServiceProvider } from '../../../src/services/chat/providers/GeminiChatServiceProvider';
+import { OpenAIChatServiceProvider } from '../../../src/services/chat/providers/openai/OpenAIChatServiceProvider';
+import { GeminiChatServiceProvider } from '../../../src/services/chat/providers/gemini/GeminiChatServiceProvider';
+import { MODEL_GEMINI_2_0_FLASH_LITE, MODEL_GPT_4O_MINI } from '../../../src/constants';
 
 // Mock the ChatService
 const mockOpenAIChatService = {
   processChat: vi.fn().mockResolvedValue(undefined),
   processVisionChat: vi.fn().mockResolvedValue(undefined),
   provider: 'openai',
-  getModel: vi.fn().mockReturnValue('gpt-4o-mini'),
+  getModel: vi.fn().mockReturnValue(MODEL_GPT_4O_MINI),
 };
 
 const mockGeminiChatService = {
   processChat: vi.fn().mockResolvedValue(undefined),
   processVisionChat: vi.fn().mockResolvedValue(undefined),
   provider: 'gemini',
-  getModel: vi.fn().mockReturnValue('gemini-pro'),
+  getModel: vi.fn().mockReturnValue(MODEL_GEMINI_2_0_FLASH_LITE),
 };
 
 // Create default options for testing

@@ -175,6 +175,44 @@ AITuberOnAirCore (Integration Layer)
                 └── Various Speech Engines (VOICEVOX, NijiVoice, etc.)
 ```
 
+### Directory Structure
+
+The source code is organized around the following directory structure:
+
+```
+src/
+  ├── constants/             # Constants and configuration
+  │     ├── index.ts         # Exported constants
+  │     └── prompts.ts       # Default prompts and templates
+  ├── core/                  # Core components
+  │     ├── AITuberOnAirCore.ts
+  │     ├── ChatProcessor.ts
+  │     └── MemoryManager.ts
+  ├── services/              # Service implementations
+  │     ├── chat/            # Chat services
+  │     │    ├── ChatService.ts            # Base interface
+  │     │    ├── ChatServiceFactory.ts     # Factory for providers
+  │     │    └── providers/                # AI provider implementations
+  │     │         ├── ChatServiceProvider.ts  # Provider interface
+  │     │         ├── gemini/              # Gemini-specific
+  │     │         │    ├── GeminiChatService.ts
+  │     │         │    └── GeminiChatServiceProvider.ts
+  │     │         └── openai/              # OpenAI-specific
+  │     │              ├── OpenAIChatService.ts
+  │     │              ├── OpenAIChatServiceProvider.ts
+  │     │              └── OpenAISummarizer.ts
+  │     ├── voice/           # Voice services
+  │     │    ├── VoiceService.ts
+  │     │    ├── VoiceEngineAdapter.ts
+  │     │    └── engines/    # Voice engine implementations
+  │     └── youtube/         # YouTube API integration
+  │          └── YouTubeDataApiService.ts  # YouTube Data API client
+  ├── types/                 # TypeScript type definitions
+  └── utils/                 # Utilities and helpers
+       ├── screenplay.ts     # Text and emotion processing
+       └── storage.ts        # Storage utilities
+```
+
 ## Main Components
 
 ### AITuberOnAirCore
@@ -411,6 +449,8 @@ const aituberCore = new AITuberOnAirCore({
 ```
 
 This allows for optimizations such as using a lightweight model for text chat and a more powerful model only when image processing is needed.
+
+Note: When specifying a visionModel, ensure it supports vision capabilities. The system will validate this during initialization and throw an error if an unsupported model is provided.
 
 ### Retrieving Providers & Models
 

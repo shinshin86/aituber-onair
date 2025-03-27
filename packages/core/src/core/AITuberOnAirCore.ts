@@ -2,7 +2,7 @@ import { EventEmitter } from './EventEmitter';
 import { ChatProcessor, ChatProcessorOptions } from './ChatProcessor';
 import { MemoryManager, MemoryOptions } from './MemoryManager';
 import { ChatService } from '../services/chat/ChatService';
-import { OpenAISummarizer } from '../services/chat/OpenAISummarizer';
+import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer';
 import {
   VoiceService,
   VoiceServiceOptions,

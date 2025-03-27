@@ -3,10 +3,10 @@ import {
   MODEL_GEMINI_2_0_FLASH_LITE,
   MODEL_GEMINI_1_5_FLASH,
   GEMINI_VISION_SUPPORTED_MODELS
-} from '../../../constants';
-import { ChatService } from '../ChatService';
-import { GeminiChatService } from '../GeminiChatService';
-import { ChatServiceOptions, ChatServiceProvider } from './ChatServiceProvider';
+} from '../../../../constants';
+import { ChatService } from '../../ChatService';
+import { GeminiChatService } from './GeminiChatService';
+import { ChatServiceOptions, ChatServiceProvider } from '../ChatServiceProvider';
 
 /**
  * Gemini API provider implementation
@@ -22,7 +22,7 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
     const visionModel = options.visionModel || 
       (this.supportsVisionForModel(options.model || this.getDefaultModel()) 
         ? options.model 
-        : MODEL_GEMINI_2_0_FLASH_LITE);
+        : this.getDefaultModel());
     
     return new GeminiChatService(
       options.apiKey, 

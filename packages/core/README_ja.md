@@ -161,6 +161,44 @@ AITuberOnAirCore (統合層)
                 └── 各種音声エンジン (VOICEVOX, NijiVoice, etc.)
 ```
 
+### ディレクトリ構造
+
+ソースコードは以下のディレクトリ構造で整理されています：
+
+```
+src/
+  ├── constants/             # 定数と設定
+  │     ├── index.ts         # エクスポートされる定数
+  │     └── prompts.ts       # デフォルトプロンプトとテンプレート
+  ├── core/                  # コアコンポーネント
+  │     ├── AITuberOnAirCore.ts
+  │     ├── ChatProcessor.ts
+  │     └── MemoryManager.ts
+  ├── services/              # サービス実装
+  │     ├── chat/            # チャットサービス
+  │     │    ├── ChatService.ts            # 基本インターフェース
+  │     │    ├── ChatServiceFactory.ts     # プロバイダー用ファクトリー
+  │     │    └── providers/                # AIプロバイダー実装
+  │     │         ├── ChatServiceProvider.ts  # プロバイダーインターフェース
+  │     │         ├── gemini/              # Gemini固有
+  │     │         │    ├── GeminiChatService.ts
+  │     │         │    └── GeminiChatServiceProvider.ts
+  │     │         └── openai/              # OpenAI固有
+  │     │              ├── OpenAIChatService.ts
+  │     │              ├── OpenAIChatServiceProvider.ts
+  │     │              └── OpenAISummarizer.ts
+  │     ├── voice/           # 音声サービス
+  │     │    ├── VoiceService.ts
+  │     │    ├── VoiceEngineAdapter.ts
+  │     │    └── engines/    # 音声エンジン実装
+  │     └── youtube/         # YouTube API連携
+  │          └── YouTubeDataApiService.ts  # YouTube Data APIクライアント
+  ├── types/                 # TypeScript型定義
+  └── utils/                 # ユーティリティとヘルパー
+       ├── screenplay.ts     # テキストと感情処理
+       └── storage.ts        # ストレージユーティリティ
+```
+
 ## 主要コンポーネント
 
 ### AITuberOnAirCore
@@ -409,6 +447,8 @@ const aituberCore = new AITuberOnAirCore({
 ```
 
 これにより、テキストチャットには軽量なモデルを使用し、画像処理が必要な場合のみ高機能なモデルを使用するといった最適化が可能になります。
+
+注意: visionModelを指定する際は、Vision機能をサポートするモデルを選択してください。サポートされていないモデルが指定された場合、初期化時にエラーが発生します。
 
 ### 利用可能なプロバイダーとモデルの取得
 

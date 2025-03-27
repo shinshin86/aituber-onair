@@ -1,10 +1,10 @@
-import { ChatService } from './ChatService';
-import { Message, MessageWithVision } from '../../types';
+import { ChatService } from '../../ChatService';
+import { Message, MessageWithVision } from '../../../../types';
 import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS
-} from '../../constants';
+} from '../../../../constants';
 
 /**
  * Gemini implementation of ChatService
@@ -29,6 +29,11 @@ export class GeminiChatService implements ChatService {
   ) {
     this.apiKey = apiKey;
     this.model = model;
+    
+    // check if the vision model is supported
+    if (!GEMINI_VISION_SUPPORTED_MODELS.includes(visionModel)) {
+      throw new Error(`Model ${visionModel} does not support vision capabilities.`);
+    }
     this.visionModel = visionModel;
   }
 
@@ -38,6 +43,14 @@ export class GeminiChatService implements ChatService {
    */
   getModel(): string {
     return this.model;
+  }
+
+  /**
+   * Get the current vision model name
+   * @returns Vision model name
+   */
+  getVisionModel(): string {
+    return this.visionModel;
   }
 
   /**

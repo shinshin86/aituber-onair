@@ -1,6 +1,6 @@
-import { ChatService } from './ChatService';
-import { Message, MessageWithVision } from '../../types';
-import { ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, MODEL_GPT_4O_MINI, VISION_SUPPORTED_MODELS } from '../../constants';
+import { ChatService } from '../../ChatService';
+import { Message, MessageWithVision } from '../../../../types';
+import { ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, MODEL_GPT_4O_MINI, VISION_SUPPORTED_MODELS } from '../../../../constants';
 
 /**
  * OpenAI implementation of ChatService
@@ -25,6 +25,12 @@ export class OpenAIChatService implements ChatService {
   ) {
     this.apiKey = apiKey;
     this.model = model;
+
+    // check if the vision model is supported
+    if (!VISION_SUPPORTED_MODELS.includes(visionModel)) {
+      throw new Error(`Model ${visionModel} does not support vision capabilities.`);
+    }
+
     this.visionModel = visionModel;
   }
 
@@ -34,6 +40,14 @@ export class OpenAIChatService implements ChatService {
    */
   getModel(): string {
     return this.model;
+  } 
+
+  /**
+   * Get the current vision model name
+   * @returns Vision model name
+   */
+  getVisionModel(): string {
+    return this.visionModel;
   }
 
   /**
