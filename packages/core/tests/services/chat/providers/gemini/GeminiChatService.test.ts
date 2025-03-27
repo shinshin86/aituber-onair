@@ -20,7 +20,7 @@ describe('GeminiChatService', () => {
     const responseString = JSON.stringify(responseData);
     const responseStream = new ReadableStream<Uint8Array>({
       start(controller) {
-        // 全データを一度に enqueue する
+        // all data is enqueued at once
         controller.enqueue(encoder.encode(responseString));
         controller.close();
       },

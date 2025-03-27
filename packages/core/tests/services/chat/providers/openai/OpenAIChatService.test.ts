@@ -16,7 +16,7 @@ describe('OpenAIChatService', () => {
 
   // utility function for mocking fetch
   function mockFetch(responseData: any, ok = true, statusText = 'OK') {
-    // Streaming responseのモック用関数
+    // mock streaming response
     global.fetch = vi.fn().mockResolvedValue({
       ok,
       status: ok ? 200 : 400,
