@@ -1,6 +1,6 @@
 import { EventEmitter } from './EventEmitter';
 import { ChatProcessor, ChatProcessorOptions } from './ChatProcessor';
-import { MemoryManager, MemoryOptions } from './MemoryManager';
+import { MemoryManager, MemoryOptions, Summarizer } from './MemoryManager';
 import { ChatService } from '../services/chat/ChatService';
 import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer';
 import {
@@ -13,7 +13,8 @@ import { Message, MemoryStorage } from '../types';
 import { textToScreenplay, screenplayToText } from '../utils/screenplay';
 import { ChatServiceFactory } from '../services/chat/ChatServiceFactory';
 import { ChatServiceOptions } from '../services/chat/providers/ChatServiceProvider';
-import { MODEL_GPT_4O_MINI } from '../constants';
+import { MODEL_GEMINI_2_0_FLASH_LITE, MODEL_GPT_4O_MINI } from '../constants';
+import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
 
 /**
  * Setting options for AITuberOnAirCore
@@ -99,11 +100,22 @@ export class AITuberOnAirCore extends EventEmitter {
 
     // Initialize MemoryManager (optional)
     if (options.memoryOptions && options.memoryOptions.enableSummarization) {
-      const summarizer = new OpenAISummarizer(
-        options.apiKey,
-        MODEL_GPT_4O_MINI,
-        options.memoryOptions.summaryPromptTemplate,
-      );
+      let summarizer: Summarizer;
+      
+      if (providerName === 'gemini') {
+        summarizer = new GeminiSummarizer(
+          options.apiKey,
+          options.model || MODEL_GEMINI_2_0_FLASH_LITE,
+          options.memoryOptions.summaryPromptTemplate
+        );
+      } else {
+        summarizer = new OpenAISummarizer(
+          options.apiKey,
+          options.model || MODEL_GPT_4O_MINI,
+          options.memoryOptions.summaryPromptTemplate
+        );
+      }
+
       this.memoryManager = new MemoryManager(
         options.memoryOptions,
         summarizer,

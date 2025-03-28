@@ -10,6 +10,7 @@ export * from './types';
 export type { ChatService } from './services/chat/ChatService';
 export { OpenAIChatService } from './services/chat/providers/openai/OpenAIChatService';
 export { OpenAISummarizer } from './services/chat/providers/openai/OpenAISummarizer';
+export { GeminiSummarizer } from './services/chat/providers/gemini/GeminiSummarizer';
 
 // Provider exports
 export type {
