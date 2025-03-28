@@ -1,7 +1,7 @@
 /**
  * Constants for AITuber OnAir Core
  */
-export * from './voiceEngines';
+export * from './voiceEngine';
 export * from './youtube';
 export * from './openai';
 export * from './gemini';
