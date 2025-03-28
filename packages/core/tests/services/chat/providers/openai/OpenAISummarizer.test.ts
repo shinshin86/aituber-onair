@@ -6,6 +6,8 @@ import {
   MODEL_GPT_4O_MINI,
 } from '../../../../../src/constants';
 import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../../src/constants/prompts';
+import { AITuberOnAirCore } from '../../../../../src/core/AITuberOnAirCore';
+import { ChatServiceFactory } from '../../../../../src/services/chat/ChatServiceFactory';
 
 describe('OpenAISummarizer', () => {
   const TEST_API_KEY = 'test-api-key';
@@ -176,5 +178,53 @@ describe('OpenAISummarizer', () => {
 
     const summary = await summarizer.summarize(messages);
     expect(summary).toBe('');
+  });
+  
+  // Test integration with AITuberOnAirCore
+  it('should be selected automatically when using OpenAI chat provider', () => {
+    // Create a mock chat service with provider property
+    const mockChatService = {
+      provider: 'openai',
+      getModel: () => MODEL_GPT_4O_MINI,
+      processChat: vi.fn(),
+      processVisionChat: vi.fn(),
+    };
+    
+    // Mock the ChatServiceFactory.createChatService method
+    const originalCreateChatService = ChatServiceFactory.createChatService;
+    ChatServiceFactory.createChatService = vi.fn().mockReturnValue(mockChatService);
+    
+    try {
+      // Create AITuberOnAirCore with OpenAI provider (or default)
+      const core = new AITuberOnAirCore({
+        // chatProvider: 'openai', - Not specifying should default to OpenAI
+        apiKey: TEST_API_KEY,
+        chatOptions: {
+          systemPrompt: 'Test prompt',
+        },
+        memoryOptions: {
+          enableSummarization: true,
+          maxMessagesBeforeSummarization: 10,
+          shortTermDuration: 60 * 1000,
+          midTermDuration: 5 * 60 * 1000,
+          longTermDuration: 10 * 60 * 1000,
+        }
+      });
+      
+      // Check if memory is enabled (indicating Summarizer was created)
+      expect(core.isMemoryEnabled()).toBe(true);
+      
+      // Verify the mock was called with the right arguments
+      expect(ChatServiceFactory.createChatService).toHaveBeenCalledWith('openai', expect.objectContaining({
+        apiKey: TEST_API_KEY,
+      }));
+      
+      // Get the provider info (this relies on the mocked chatService)
+      const providerInfo = core.getProviderInfo();
+      expect(providerInfo.name).toBe('openai');
+    } finally {
+      // Restore the original method
+      ChatServiceFactory.createChatService = originalCreateChatService;
+    }
   });
 }); 
