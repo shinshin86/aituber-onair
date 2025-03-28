@@ -405,8 +405,8 @@ AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用し�
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-4, GPT-4o-mini, O3-miniのモデルをサポート
-- **Gemini**: Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flashのモデルをサポート
+- **OpenAI**: GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini, GPT-4.5(Preview)のモデルをサポート
+- **Gemini**: Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Pro, Gemini 2.5 Pro(試験運用版)のモデルをサポート
 
 ### プロバイダーの指定方法
 
