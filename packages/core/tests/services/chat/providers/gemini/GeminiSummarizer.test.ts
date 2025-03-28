@@ -5,7 +5,7 @@ import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
 } from '../../../../../src/constants';
-import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../../src/constants/prompts';
+import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../../src/constants';
 import { AITuberOnAirCore } from '../../../../../src/core/AITuberOnAirCore';
 import { ChatServiceFactory } from '../../../../../src/services/chat/ChatServiceFactory';
 

@@ -3,7 +3,7 @@ import { MemoryManager } from './MemoryManager';
 import { Message, MessageWithVision, ChatType } from '../types';
 import { EventEmitter } from './EventEmitter';
 import { textsToScreenplay } from '../utils/screenplay';
-import { DEFAULT_VISION_PROMPT } from '../constants/prompts';
+import { DEFAULT_VISION_PROMPT } from '../constants';
 
 /**
  * ChatProcessor options

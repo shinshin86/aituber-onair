@@ -407,8 +407,8 @@ Currently, OpenAI API and Gemini API is available, but other API providers (such
 
 Currently, the following AI provider is built-in:
 
-- **OpenAI**: Supports models like GPT-4o, GPT-4o-mini, O3-mini.
-- **Gemini**: Supports models like Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash
+- **OpenAI**: Supports models like GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini, GPT-4.5(Preview)
+- **Gemini**: Supports models like Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Pro, Gemini 2.5 Pro(Experimental)
 
 ### Specifying a Provider
 
