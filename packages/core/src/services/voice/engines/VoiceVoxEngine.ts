@@ -6,13 +6,15 @@ import { VoiceEngine } from './VoiceEngine';
  * VoiceVox voice synthesis engine
  */
 export class VoiceVoxEngine implements VoiceEngine {
+  private apiEndpoint: string = VOICE_VOX_API_URL;
+
   async fetchAudio(input: Talk, speaker: string): Promise<ArrayBuffer> {
     const talk = input as Talk;
     // get emotion from talk.style
     const emotion = talk.style || 'neutral';
 
     const ttsQueryResponse = await fetch(
-      `${VOICE_VOX_API_URL}/audio_query?speaker=${speaker}&text=${encodeURIComponent(talk.message)}`,
+      `${this.apiEndpoint}/audio_query?speaker=${speaker}&text=${encodeURIComponent(talk.message)}`,
       { method: 'POST' },
     );
 
@@ -25,7 +27,7 @@ export class VoiceVoxEngine implements VoiceEngine {
     this.adjustEmotionParameters(ttsQueryJson, emotion);
 
     const synthesisResponse = await fetch(
-      `${VOICE_VOX_API_URL}/synthesis?speaker=${speaker}`,
+      `${this.apiEndpoint}/synthesis?speaker=${speaker}`,
       {
         method: 'POST',
         headers: {
@@ -80,5 +82,13 @@ export class VoiceVoxEngine implements VoiceEngine {
 
   getTestMessage(textVoiceText?: string): string {
     return textVoiceText || 'ボイスボックスを使用します';
+  }
+
+  /**
+   * Set custom API endpoint URL
+   * @param apiUrl custom API endpoint URL
+   */
+  setApiEndpoint(apiUrl: string): void {
+    this.apiEndpoint = apiUrl;
   }
 }

@@ -6,6 +6,8 @@ import { VoiceEngine } from './VoiceEngine';
  * AivisSpeech voice synthesis engine
  */
 export class AivisSpeechEngine implements VoiceEngine {
+  private apiEndpoint: string = AIVIS_SPEECH_API_URL;
+
   async fetchAudio(input: Talk, speaker: string): Promise<ArrayBuffer> {
     const talk = input as Talk;
     // talk.styleから感情を取得
@@ -13,7 +15,7 @@ export class AivisSpeechEngine implements VoiceEngine {
     const text = talk.message.trim();
 
     const ttsQueryResponse = await fetch(
-      `${AIVIS_SPEECH_API_URL}/audio_query?speaker=${speaker}&text=${encodeURIComponent(text)}`,
+      `${this.apiEndpoint}/audio_query?speaker=${speaker}&text=${encodeURIComponent(text)}`,
       { method: 'POST' },
     );
 
@@ -27,7 +29,7 @@ export class AivisSpeechEngine implements VoiceEngine {
     this.adjustEmotionParameters(ttsQueryJson, emotion);
 
     const synthesisResponse = await fetch(
-      `${AIVIS_SPEECH_API_URL}/synthesis?speaker=${speaker}`,
+      `${this.apiEndpoint}/synthesis?speaker=${speaker}`,
       {
         method: 'POST',
         headers: {
@@ -86,5 +88,13 @@ export class AivisSpeechEngine implements VoiceEngine {
 
   getTestMessage(textVoiceText?: string): string {
     return textVoiceText || 'アイビススピーチを使用します';
+  }
+
+  /**
+   * Set custom API endpoint URL
+   * @param apiUrl custom API endpoint URL
+   */
+  setApiEndpoint(apiUrl: string): void {
+    this.apiEndpoint = apiUrl;
   }
 }

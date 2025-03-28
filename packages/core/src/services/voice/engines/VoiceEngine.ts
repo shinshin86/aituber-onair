@@ -24,4 +24,10 @@ export interface VoiceEngine {
    * @returns test message
    */
   getTestMessage(textVoiceText?: string): string;
+
+  /**
+   * Set custom API endpoint URL
+   * @param apiUrl custom API endpoint URL
+   */
+  setApiEndpoint?(apiUrl: string): void;
 }
