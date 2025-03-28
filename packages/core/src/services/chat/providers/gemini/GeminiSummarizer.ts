@@ -4,7 +4,7 @@ import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
 } from '../../../../constants';
-import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../constants/prompts';
+import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../constants';
 
 /**
  * Implementation of summarization functionality using Gemini

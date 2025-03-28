@@ -4,7 +4,7 @@ import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   MODEL_GPT_4O_MINI,
 } from '../../../../constants';
-import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../constants/prompts';
+import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../constants';
 
 /**
  * Implementation of summarization functionality using OpenAI
