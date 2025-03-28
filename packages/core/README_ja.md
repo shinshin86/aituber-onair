@@ -95,6 +95,10 @@ const options: AITuberOnAirCoreOptions = {
     speaker: '1', // 話者ID
     apiKey: 'ENGINE_SPECIFIC_API_KEY', // 必要に応じて（NijiVoiceなど）
     onComplete: () => console.log('音声再生が完了しました'),
+    // カスタムAPIエンドポイントURL（オプション）
+    voicevoxApiUrl: 'http://custom-voicevox-server:50021',
+    voicepeakApiUrl: 'http://custom-voicepeak-server:20202',
+    aivisSpeechApiUrl: 'http://custom-aivis-server:10101',
   },
   debug: true, // デバッグ出力を有効化
 };
@@ -395,6 +399,36 @@ aituber.updateVoiceService({
   apiKey: 'YOUR_NIJIVOICE_API_KEY'
 });
 ```
+
+### カスタムAPIエンドポイント
+
+ローカルでホストされる音声エンジン（VOICEVOX、VoicePeak、AivisSpeech）については、カスタムAPIエンドポイントURLを指定することができます：
+
+```typescript
+// カスタムAPIエンドポイントの設定例
+aituber.updateVoiceService({
+  engineType: 'voicevox',
+  speaker: '1',
+  // 自己ホストまたは代替VOICEVOXサーバーのカスタムエンドポイント
+  voicevoxApiUrl: 'http://custom-voicevox-server:50021'
+});
+
+// VoicePeakの例
+aituber.updateVoiceService({
+  engineType: 'voicepeak',
+  speaker: '2',
+  voicepeakApiUrl: 'http://custom-voicepeak-server:20202'
+});
+
+// AivisSpeechの例
+aituber.updateVoiceService({
+  engineType: 'aivisSpeech',
+  speaker: '3',
+  aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
+});
+```
+
+これは、音声エンジンを異なるポートやリモートサーバーで実行している場合に便利です。
 
 ## AIプロバイダーシステム
 
