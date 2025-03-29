@@ -3,7 +3,7 @@ import { GeminiChatServiceProvider } from '../../../../../src/services/chat/prov
 import { GeminiChatService } from '../../../../../src/services/chat/providers/gemini/GeminiChatService.ts';
 import {
   MODEL_GEMINI_2_0_FLASH_LITE,
-  GEMINI_VISION_SUPPORTED_MODELS
+  GEMINI_VISION_SUPPORTED_MODELS,
 } from '../../../../../src/constants';
 import { ChatServiceOptions } from '../../../../../src/services/chat/providers/ChatServiceProvider.ts';
 
@@ -59,7 +59,9 @@ describe('GeminiChatServiceProvider', () => {
 
   it('should check if a model supports vision', () => {
     // support vision model
-    expect(provider.supportsVisionForModel(GEMINI_VISION_SUPPORTED_MODELS[0])).toBe(true);
+    expect(
+      provider.supportsVisionForModel(GEMINI_VISION_SUPPORTED_MODELS[0]),
+    ).toBe(true);
     // not support vision model
     expect(provider.supportsVisionForModel('some-other-model')).toBe(false);
   });

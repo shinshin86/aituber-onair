@@ -1,5 +1,6 @@
 // API Endpoints
-export const ENDPOINT_GEMINI_API = 'https://generativelanguage.googleapis.com/v1';
+export const ENDPOINT_GEMINI_API =
+  'https://generativelanguage.googleapis.com/v1';
 
 // gemini model
 export const MODEL_GEMINI_2_0_FLASH = 'gemini-2.0-flash';

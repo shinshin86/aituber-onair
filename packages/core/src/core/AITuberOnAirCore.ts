@@ -101,18 +101,18 @@ export class AITuberOnAirCore extends EventEmitter {
     // Initialize MemoryManager (optional)
     if (options.memoryOptions && options.memoryOptions.enableSummarization) {
       let summarizer: Summarizer;
-      
+
       if (providerName === 'gemini') {
         summarizer = new GeminiSummarizer(
           options.apiKey,
           options.model || MODEL_GEMINI_2_0_FLASH_LITE,
-          options.memoryOptions.summaryPromptTemplate
+          options.memoryOptions.summaryPromptTemplate,
         );
       } else {
         summarizer = new OpenAISummarizer(
           options.apiKey,
           options.model || MODEL_GPT_4O_MINI,
-          options.memoryOptions.summaryPromptTemplate
+          options.memoryOptions.summaryPromptTemplate,
         );
       }
 

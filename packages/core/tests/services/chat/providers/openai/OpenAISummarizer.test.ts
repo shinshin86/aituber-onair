@@ -31,7 +31,7 @@ describe('OpenAISummarizer', () => {
 
   it('should initialize with default model', () => {
     const defaultSummarizer = new OpenAISummarizer(TEST_API_KEY);
-    
+
     // Hack to test private properties
     const model = (defaultSummarizer as any).model;
     expect(model).toBe(MODEL_GPT_4O_MINI);
@@ -43,13 +43,13 @@ describe('OpenAISummarizer', () => {
     const customSummarizer = new OpenAISummarizer(
       TEST_API_KEY,
       customModel,
-      customTemplate
+      customTemplate,
     );
-    
+
     // Hack to test private properties
     const model = (customSummarizer as any).model;
     const template = (customSummarizer as any).defaultPromptTemplate;
-    
+
     expect(model).toBe(customModel);
     expect(template).toBe(customTemplate);
   });
@@ -82,27 +82,29 @@ describe('OpenAISummarizer', () => {
     const callArgs = vi.mocked(global.fetch).mock.calls[0];
     const url = callArgs[0];
     const requestOptions = callArgs[1];
-    
+
     // Check if URL is correct
     expect(url).toBe(ENDPOINT_OPENAI_CHAT_COMPLETIONS_API);
 
     // Check headers
     expect(requestOptions?.headers).toEqual({
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${TEST_API_KEY}`
+      Authorization: `Bearer ${TEST_API_KEY}`,
     });
 
     // Check JSON content of the body
     const bodyObj = JSON.parse(requestOptions?.body as string);
-    
+
     // Check if model and messages are set correctly
     expect(bodyObj.model).toBe(MODEL_GPT_4O_MINI);
     expect(bodyObj.messages).toHaveLength(2);
     expect(bodyObj.messages[0].role).toBe('system');
-    expect(bodyObj.messages[0].content).toContain(DEFAULT_SUMMARY_PROMPT_TEMPLATE.replace('{maxLength}', '256'));
+    expect(bodyObj.messages[0].content).toContain(
+      DEFAULT_SUMMARY_PROMPT_TEMPLATE.replace('{maxLength}', '256'),
+    );
     expect(bodyObj.messages[1].role).toBe('user');
     expect(bodyObj.messages[1].content).toContain('user: Hello');
-    
+
     expect(bodyObj.max_tokens).toBe(256);
 
     // Check summary result
@@ -124,9 +126,7 @@ describe('OpenAISummarizer', () => {
     // Mock fetch
     mockFetch(mockApiResponse);
 
-    const messages: Message[] = [
-      { role: 'user', content: 'Test' },
-    ];
+    const messages: Message[] = [{ role: 'user', content: 'Test' }];
 
     const maxLength = 100;
     await summarizer.summarize(messages, maxLength);
@@ -135,7 +135,7 @@ describe('OpenAISummarizer', () => {
     const callArgs = vi.mocked(global.fetch).mock.calls[0];
     const requestOptions = callArgs[1];
     const bodyObj = JSON.parse(requestOptions?.body as string);
-    
+
     // Check system prompt and max_tokens
     expect(bodyObj.messages[0].content).toContain('100');
     expect(bodyObj.max_tokens).toBe(100);
@@ -148,7 +148,7 @@ describe('OpenAISummarizer', () => {
         error: { message: 'Authentication error' },
       },
       false, // ok = false
-      'Authentication error'
+      'Authentication error',
     );
 
     const messages: Message[] = [
@@ -166,20 +166,18 @@ describe('OpenAISummarizer', () => {
   it('should handle empty response correctly', async () => {
     // Empty response
     const mockApiResponse = {
-      choices: []
+      choices: [],
     };
 
     // Mock fetch
     mockFetch(mockApiResponse);
 
-    const messages: Message[] = [
-      { role: 'user', content: 'Test' },
-    ];
+    const messages: Message[] = [{ role: 'user', content: 'Test' }];
 
     const summary = await summarizer.summarize(messages);
     expect(summary).toBe('');
   });
-  
+
   // Test integration with AITuberOnAirCore
   it('should be selected automatically when using OpenAI chat provider', () => {
     // Create a mock chat service with provider property
@@ -189,11 +187,13 @@ describe('OpenAISummarizer', () => {
       processChat: vi.fn(),
       processVisionChat: vi.fn(),
     };
-    
+
     // Mock the ChatServiceFactory.createChatService method
     const originalCreateChatService = ChatServiceFactory.createChatService;
-    ChatServiceFactory.createChatService = vi.fn().mockReturnValue(mockChatService);
-    
+    ChatServiceFactory.createChatService = vi
+      .fn()
+      .mockReturnValue(mockChatService);
+
     try {
       // Create AITuberOnAirCore with OpenAI provider (or default)
       const core = new AITuberOnAirCore({
@@ -208,17 +208,20 @@ describe('OpenAISummarizer', () => {
           shortTermDuration: 60 * 1000,
           midTermDuration: 5 * 60 * 1000,
           longTermDuration: 10 * 60 * 1000,
-        }
+        },
       });
-      
+
       // Check if memory is enabled (indicating Summarizer was created)
       expect(core.isMemoryEnabled()).toBe(true);
-      
+
       // Verify the mock was called with the right arguments
-      expect(ChatServiceFactory.createChatService).toHaveBeenCalledWith('openai', expect.objectContaining({
-        apiKey: TEST_API_KEY,
-      }));
-      
+      expect(ChatServiceFactory.createChatService).toHaveBeenCalledWith(
+        'openai',
+        expect.objectContaining({
+          apiKey: TEST_API_KEY,
+        }),
+      );
+
       // Get the provider info (this relies on the mocked chatService)
       const providerInfo = core.getProviderInfo();
       expect(providerInfo.name).toBe('openai');
@@ -227,4 +230,4 @@ describe('OpenAISummarizer', () => {
       ChatServiceFactory.createChatService = originalCreateChatService;
     }
   });
-}); 
+});

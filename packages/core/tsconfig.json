@@ -13,12 +13,6 @@
     "outDir": "dist",
     "types": ["node", "vitest"]
   },
-  "include": [
-    "src",
-    "test"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.test.ts"
-  ]
+  "include": ["src", "test"],
+  "exclude": ["node_modules", "**/*.test.ts"]
 }

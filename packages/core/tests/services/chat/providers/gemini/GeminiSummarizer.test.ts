@@ -31,7 +31,7 @@ describe('GeminiSummarizer', () => {
 
   it('should initialize with default model', () => {
     const defaultSummarizer = new GeminiSummarizer(TEST_API_KEY);
-    
+
     // Hack to test private properties
     const model = (defaultSummarizer as any).model;
     expect(model).toBe(MODEL_GEMINI_2_0_FLASH_LITE);
@@ -43,13 +43,13 @@ describe('GeminiSummarizer', () => {
     const customSummarizer = new GeminiSummarizer(
       TEST_API_KEY,
       customModel,
-      customTemplate
+      customTemplate,
     );
-    
+
     // Hack to test private properties
     const model = (customSummarizer as any).model;
     const template = (customSummarizer as any).defaultPromptTemplate;
-    
+
     expect(model).toBe(customModel);
     expect(template).toBe(customTemplate);
   });
@@ -82,17 +82,21 @@ describe('GeminiSummarizer', () => {
     const callArgs = vi.mocked(global.fetch).mock.calls[0];
     const url = callArgs[0];
     const requestOptions = callArgs[1];
-    
+
     // Check if URL contains model name and API key
-    expect(url).toContain(`${ENDPOINT_GEMINI_API}/models/${MODEL_GEMINI_2_0_FLASH_LITE}:generateContent?key=${TEST_API_KEY}`);
+    expect(url).toContain(
+      `${ENDPOINT_GEMINI_API}/models/${MODEL_GEMINI_2_0_FLASH_LITE}:generateContent?key=${TEST_API_KEY}`,
+    );
 
     // Check JSON content of the body
     const bodyObj = JSON.parse(requestOptions?.body as string);
-    
+
     // Check if system prompt and messages are set correctly
-    expect(bodyObj.contents[0].parts[0].text).toContain(DEFAULT_SUMMARY_PROMPT_TEMPLATE.replace('{maxLength}', '256'));
+    expect(bodyObj.contents[0].parts[0].text).toContain(
+      DEFAULT_SUMMARY_PROMPT_TEMPLATE.replace('{maxLength}', '256'),
+    );
     expect(bodyObj.contents[0].parts[1].text).toContain('user: Hello');
-    
+
     expect(bodyObj.generationConfig).toBeDefined();
     expect(bodyObj.generationConfig.maxOutputTokens).toBe(256);
 
@@ -115,9 +119,7 @@ describe('GeminiSummarizer', () => {
     // Mock fetch
     mockFetch(mockApiResponse);
 
-    const messages: Message[] = [
-      { role: 'user', content: 'Test' },
-    ];
+    const messages: Message[] = [{ role: 'user', content: 'Test' }];
 
     const maxLength = 100;
     await summarizer.summarize(messages, maxLength);
@@ -126,7 +128,7 @@ describe('GeminiSummarizer', () => {
     const callArgs = vi.mocked(global.fetch).mock.calls[0];
     const requestOptions = callArgs[1];
     const bodyObj = JSON.parse(requestOptions?.body as string);
-    
+
     // Check system prompt and maxOutputTokens
     expect(bodyObj.contents[0].parts[0].text).toContain('100');
     expect(bodyObj.generationConfig.maxOutputTokens).toBe(100);
@@ -139,7 +141,7 @@ describe('GeminiSummarizer', () => {
         error: { message: 'Authentication error' },
       },
       false, // ok = false
-      'Authentication error'
+      'Authentication error',
     );
 
     const messages: Message[] = [
@@ -157,20 +159,18 @@ describe('GeminiSummarizer', () => {
   it('should return empty string for empty response', async () => {
     // Empty response
     const mockApiResponse = {
-      candidates: []
+      candidates: [],
     };
 
     // Mock fetch
     mockFetch(mockApiResponse);
 
-    const messages: Message[] = [
-      { role: 'user', content: 'Test' },
-    ];
+    const messages: Message[] = [{ role: 'user', content: 'Test' }];
 
     const summary = await summarizer.summarize(messages);
     expect(summary).toBe('');
   });
-  
+
   // Test integration with AITuberOnAirCore
   it('should be selected automatically when using Gemini chat provider', () => {
     // Create a mock chat service with provider property
@@ -180,11 +180,13 @@ describe('GeminiSummarizer', () => {
       processChat: vi.fn(),
       processVisionChat: vi.fn(),
     };
-    
+
     // Mock the ChatServiceFactory.createChatService method
     const originalCreateChatService = ChatServiceFactory.createChatService;
-    ChatServiceFactory.createChatService = vi.fn().mockReturnValue(mockChatService);
-    
+    ChatServiceFactory.createChatService = vi
+      .fn()
+      .mockReturnValue(mockChatService);
+
     try {
       // Create AITuberOnAirCore with Gemini provider
       const core = new AITuberOnAirCore({
@@ -201,15 +203,18 @@ describe('GeminiSummarizer', () => {
           longTermDuration: 10 * 60 * 1000,
         },
       });
-      
+
       // Check if memory is enabled (indicating Summarizer was created)
       expect(core.isMemoryEnabled()).toBe(true);
-      
+
       // Verify the mock was called with the right arguments
-      expect(ChatServiceFactory.createChatService).toHaveBeenCalledWith('gemini', expect.objectContaining({
-        apiKey: TEST_API_KEY,
-      }));
-      
+      expect(ChatServiceFactory.createChatService).toHaveBeenCalledWith(
+        'gemini',
+        expect.objectContaining({
+          apiKey: TEST_API_KEY,
+        }),
+      );
+
       // Get the provider info (this relies on the mocked chatService)
       const providerInfo = core.getProviderInfo();
       expect(providerInfo.name).toBe('gemini');
@@ -218,4 +223,4 @@ describe('GeminiSummarizer', () => {
       ChatServiceFactory.createChatService = originalCreateChatService;
     }
   });
-}); 
+});

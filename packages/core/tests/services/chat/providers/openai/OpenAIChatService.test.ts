@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { OpenAIChatService } from '../../../../../src/services/chat/providers/openai/OpenAIChatService.ts';
-import {
-  Message,
-  MessageWithVision,
-} from '../../../../../src/types';
+import { Message, MessageWithVision } from '../../../../../src/types';
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   MODEL_GPT_4O_MINI,
@@ -24,22 +21,31 @@ describe('OpenAIChatService', () => {
       json: async () => responseData,
       body: {
         getReader: () => ({
-          read: vi.fn()
+          read: vi
+            .fn()
             .mockResolvedValueOnce({
               done: false,
-              value: new TextEncoder().encode('data: ' + JSON.stringify({
-                choices: [{ delta: { content: 'Hello' } }]
-              }) + '\n')
+              value: new TextEncoder().encode(
+                'data: ' +
+                  JSON.stringify({
+                    choices: [{ delta: { content: 'Hello' } }],
+                  }) +
+                  '\n',
+              ),
             })
             .mockResolvedValueOnce({
               done: false,
-              value: new TextEncoder().encode('data: ' + JSON.stringify({
-                choices: [{ delta: { content: ' from OpenAI!' } }]
-              }) + '\n')
+              value: new TextEncoder().encode(
+                'data: ' +
+                  JSON.stringify({
+                    choices: [{ delta: { content: ' from OpenAI!' } }],
+                  }) +
+                  '\n',
+              ),
             })
-            .mockResolvedValueOnce({ done: true })
-        })
-      }
+            .mockResolvedValueOnce({ done: true }),
+        }),
+      },
     });
   }
 
@@ -63,9 +69,7 @@ describe('OpenAIChatService', () => {
     // mock response
     mockFetch({ choices: [{ message: { content: 'Hello from OpenAI!' } }] });
 
-    const messages: Message[] = [
-      { role: 'user', content: 'Hello' },
-    ];
+    const messages: Message[] = [{ role: 'user', content: 'Hello' }];
 
     const onPartialResponse = vi.fn();
     const onCompleteResponse = vi.fn();
@@ -77,7 +81,7 @@ describe('OpenAIChatService', () => {
     const callArgs = vi.mocked(global.fetch).mock.calls[0];
     const url = callArgs[0];
     const requestOptions = callArgs[1];
-    
+
     // check if the URL is correct
     expect(url).toBe(ENDPOINT_OPENAI_CHAT_COMPLETIONS_API);
 
@@ -85,15 +89,13 @@ describe('OpenAIChatService', () => {
     expect(requestOptions?.method).toBe('POST');
     expect(requestOptions?.headers).toEqual({
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${TEST_API_KEY}`
+      Authorization: `Bearer ${TEST_API_KEY}`,
     });
 
     // check the body
     const bodyObj = JSON.parse(requestOptions?.body as string);
     expect(bodyObj.model).toBe(MODEL_GPT_4O_MINI);
-    expect(bodyObj.messages).toEqual([
-      { role: 'user', content: 'Hello' }
-    ]);
+    expect(bodyObj.messages).toEqual([{ role: 'user', content: 'Hello' }]);
     expect(bodyObj.stream).toBe(true);
 
     // check the callback calls
@@ -109,15 +111,13 @@ describe('OpenAIChatService', () => {
         error: { message: 'Unauthorized' },
       },
       false, // ok = false
-      'Unauthorized'
+      'Unauthorized',
     );
 
-    const messages: Message[] = [
-      { role: 'user', content: 'Hi' },
-    ];
+    const messages: Message[] = [{ role: 'user', content: 'Hi' }];
 
     await expect(
-      service.processChat(messages, vi.fn(), vi.fn())
+      service.processChat(messages, vi.fn(), vi.fn()),
     ).rejects.toThrow('OpenAI API error: Unauthorized');
   });
 
@@ -129,15 +129,19 @@ describe('OpenAIChatService', () => {
       body: null,
     });
 
-    await expect(
-      service.processChat([], vi.fn(), vi.fn())
-    ).rejects.toThrow('Failed to get response reader');
+    await expect(service.processChat([], vi.fn(), vi.fn())).rejects.toThrow(
+      'Failed to get response reader',
+    );
   });
 
   it('should process vision chat with a vision-supported model', async () => {
     // specify a vision-supported model
     const visionModel = VISION_SUPPORTED_MODELS[0];
-    service = new OpenAIChatService(TEST_API_KEY, MODEL_GPT_4O_MINI, visionModel);
+    service = new OpenAIChatService(
+      TEST_API_KEY,
+      MODEL_GPT_4O_MINI,
+      visionModel,
+    );
 
     // mock response
     mockFetch({ choices: [{ message: { content: 'Vision response' } }] });
@@ -147,7 +151,10 @@ describe('OpenAIChatService', () => {
         role: 'user',
         content: [
           { type: 'text', text: 'Check this image' },
-          { type: 'image_url', image_url: { url: 'http://example.com/image.jpg' } },
+          {
+            type: 'image_url',
+            image_url: { url: 'http://example.com/image.jpg' },
+          },
         ],
       },
     ];
@@ -155,18 +162,22 @@ describe('OpenAIChatService', () => {
     const onPartialResponse = vi.fn();
     const onCompleteResponse = vi.fn();
 
-    await service.processVisionChat(messages, onPartialResponse, onCompleteResponse);
+    await service.processVisionChat(
+      messages,
+      onPartialResponse,
+      onCompleteResponse,
+    );
 
     // vision API endpoint call
     expect(global.fetch).toHaveBeenCalledTimes(1);
     const callArgs = vi.mocked(global.fetch).mock.calls[0];
-    
+
     // check request body
     const bodyObj = JSON.parse(callArgs[1]?.body as string);
     expect(bodyObj.model).toBe(visionModel);
     expect(bodyObj.messages).toEqual(messages);
     expect(bodyObj.stream).toBe(true);
-    
+
     // check callbacks
     expect(onPartialResponse).toHaveBeenCalledWith('Hello');
     expect(onPartialResponse).toHaveBeenCalledWith(' from OpenAI!');
@@ -174,10 +185,13 @@ describe('OpenAIChatService', () => {
   });
 
   it('should throw error if vision model does not support vision', async () => {
-    expect(() => new OpenAIChatService(
-      TEST_API_KEY, 
-      MODEL_GPT_4O_MINI, 
-      'non-vision-model'
-    )).toThrow(/Model non-vision-model does not support vision capabilities/);
+    expect(
+      () =>
+        new OpenAIChatService(
+          TEST_API_KEY,
+          MODEL_GPT_4O_MINI,
+          'non-vision-model',
+        ),
+    ).toThrow(/Model non-vision-model does not support vision capabilities/);
   });
-}); 
+});

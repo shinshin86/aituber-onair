@@ -5,7 +5,7 @@ import {
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
   MODEL_O3_MINI,
-  VISION_SUPPORTED_MODELS
+  VISION_SUPPORTED_MODELS,
 } from '../../../../../src/constants';
 import { ChatServiceOptions } from '../../../../../src/services/chat/providers/ChatServiceProvider.ts';
 
@@ -58,8 +58,10 @@ describe('OpenAIChatServiceProvider', () => {
 
   it('should check if a model supports vision', () => {
     // support vision model
-    expect(provider.supportsVisionForModel(VISION_SUPPORTED_MODELS[0])).toBe(true);
+    expect(provider.supportsVisionForModel(VISION_SUPPORTED_MODELS[0])).toBe(
+      true,
+    );
     // not support vision model
     expect(provider.supportsVisionForModel('some-other-model')).toBe(false);
   });
-}); 
+});

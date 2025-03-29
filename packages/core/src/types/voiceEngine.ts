@@ -1,1 +1,6 @@
-export type voiceEngineType = 'voicevox' | 'voicepeak' | 'openai' | 'nijivoice' | 'aivisSpeech';
+export type voiceEngineType =
+  | 'voicevox'
+  | 'voicepeak'
+  | 'openai'
+  | 'nijivoice'
+  | 'aivisSpeech';

@@ -2,11 +2,14 @@ import {
   MODEL_GEMINI_2_0_FLASH,
   MODEL_GEMINI_2_0_FLASH_LITE,
   MODEL_GEMINI_1_5_FLASH,
-  GEMINI_VISION_SUPPORTED_MODELS
+  GEMINI_VISION_SUPPORTED_MODELS,
 } from '../../../../constants';
 import { ChatService } from '../../ChatService';
 import { GeminiChatService } from './GeminiChatService';
-import { ChatServiceOptions, ChatServiceProvider } from '../ChatServiceProvider';
+import {
+  ChatServiceOptions,
+  ChatServiceProvider,
+} from '../ChatServiceProvider';
 
 /**
  * Gemini API provider implementation
@@ -19,15 +22,16 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
    */
   createChatService(options: ChatServiceOptions): ChatService {
     // Use the visionModel if provided, otherwise use the model that supports vision
-    const visionModel = options.visionModel || 
-      (this.supportsVisionForModel(options.model || this.getDefaultModel()) 
-        ? options.model 
+    const visionModel =
+      options.visionModel ||
+      (this.supportsVisionForModel(options.model || this.getDefaultModel())
+        ? options.model
         : this.getDefaultModel());
-    
+
     return new GeminiChatService(
-      options.apiKey, 
-      options.model || this.getDefaultModel(), 
-      visionModel
+      options.apiKey,
+      options.model || this.getDefaultModel(),
+      visionModel,
     );
   }
 
@@ -44,7 +48,11 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
    * @returns Array of supported model names
    */
   getSupportedModels(): string[] {
-    return [MODEL_GEMINI_2_0_FLASH, MODEL_GEMINI_2_0_FLASH_LITE, MODEL_GEMINI_1_5_FLASH];
+    return [
+      MODEL_GEMINI_2_0_FLASH,
+      MODEL_GEMINI_2_0_FLASH_LITE,
+      MODEL_GEMINI_1_5_FLASH,
+    ];
   }
 
   /**
@@ -71,4 +79,4 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
   supportsVisionForModel(model: string): boolean {
     return GEMINI_VISION_SUPPORTED_MODELS.includes(model);
   }
-} 
+}

@@ -1,6 +1,10 @@
 import { ChatService } from '../../ChatService';
 import { Message, MessageWithVision } from '../../../../types';
-import { ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, MODEL_GPT_4O_MINI, VISION_SUPPORTED_MODELS } from '../../../../constants';
+import {
+  ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+  MODEL_GPT_4O_MINI,
+  VISION_SUPPORTED_MODELS,
+} from '../../../../constants';
 
 /**
  * OpenAI implementation of ChatService
@@ -28,7 +32,9 @@ export class OpenAIChatService implements ChatService {
 
     // check if the vision model is supported
     if (!VISION_SUPPORTED_MODELS.includes(visionModel)) {
-      throw new Error(`Model ${visionModel} does not support vision capabilities.`);
+      throw new Error(
+        `Model ${visionModel} does not support vision capabilities.`,
+      );
     }
 
     this.visionModel = visionModel;
@@ -40,7 +46,7 @@ export class OpenAIChatService implements ChatService {
    */
   getModel(): string {
     return this.model;
-  } 
+  }
 
   /**
    * Get the current vision model name
@@ -152,7 +158,9 @@ export class OpenAIChatService implements ChatService {
     try {
       // Check if the vision model supports vision capabilities
       if (!VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
-        throw new Error(`Model ${this.visionModel} does not support vision capabilities.`);
+        throw new Error(
+          `Model ${this.visionModel} does not support vision capabilities.`,
+        );
       }
 
       const response = await fetch(ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, {

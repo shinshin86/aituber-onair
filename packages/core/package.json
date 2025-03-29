@@ -5,9 +5,7 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "typecheck": "tsc --project tsconfig.dev.json",
@@ -16,13 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "fmt": "biome format . --write"
   },
-  "keywords": [
-    "aituber",
-    "vtuber",
-    "ai",
-    "voice",
-    "streaming"
-  ],
+  "keywords": ["aituber", "vtuber", "ai", "voice", "streaming"],
   "author": "shinshin86 (https://github.com/shinshin86)",
   "license": "MIT",
   "peerDependencies": {
