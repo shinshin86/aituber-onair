@@ -80,6 +80,28 @@ export class VoiceEngineAdapter implements VoiceService {
 
       const engine = VoiceEngineFactory.getEngine(this.options.engineType);
 
+      // カスタムエンドポイントURLの設定
+      if (engine.setApiEndpoint) {
+        // エンジンタイプに応じてカスタムエンドポイントURLを設定
+        switch (this.options.engineType) {
+          case 'voicevox':
+            if (this.options.voicevoxApiUrl) {
+              engine.setApiEndpoint(this.options.voicevoxApiUrl);
+            }
+            break;
+          case 'voicepeak':
+            if (this.options.voicepeakApiUrl) {
+              engine.setApiEndpoint(this.options.voicepeakApiUrl);
+            }
+            break;
+          case 'aivisSpeech':
+            if (this.options.aivisSpeechApiUrl) {
+              engine.setApiEndpoint(this.options.aivisSpeechApiUrl);
+            }
+            break;
+        }
+      }
+
       // Get audio data
       const audioBuffer = await engine.fetchAudio(
         talk as any, // Use any for type compatibility

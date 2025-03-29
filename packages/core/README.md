@@ -109,6 +109,10 @@ const options: AITuberOnAirCoreOptions = {
     speaker: '1',           // Speaker ID
     apiKey: 'ENGINE_SPECIFIC_API_KEY', // If required (e.g., NijiVoice)
     onComplete: () => console.log('Voice playback completed'),
+    // Custom API endpoint URLs (optional)
+    voicevoxApiUrl: 'http://custom-voicevox-server:50021',
+    voicepeakApiUrl: 'http://custom-voicepeak-server:20202',
+    aivisSpeechApiUrl: 'http://custom-aivis-server:10101',
   },
   debug: true, // Enable debug output
 };
@@ -397,6 +401,36 @@ aituber.updateVoiceService({
   apiKey: 'YOUR_NIJIVOICE_API_KEY'
 });
 ```
+
+### Custom API Endpoints
+
+For locally hosted voice engines (VOICEVOX, VoicePeak, AivisSpeech), you can specify custom API endpoint URLs:
+
+```typescript
+// Example of setting custom API endpoints
+aituber.updateVoiceService({
+  engineType: 'voicevox',
+  speaker: '1',
+  // Custom endpoint for a self-hosted or alternative VOICEVOX server
+  voicevoxApiUrl: 'http://custom-voicevox-server:50021'
+});
+
+// Example for VoicePeak
+aituber.updateVoiceService({
+  engineType: 'voicepeak',
+  speaker: '2',
+  voicepeakApiUrl: 'http://custom-voicepeak-server:20202'
+});
+
+// Example for AivisSpeech
+aituber.updateVoiceService({
+  engineType: 'aivisSpeech',
+  speaker: '3',
+  aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
+});
+```
+
+This is useful when running voice engines on different ports or remote servers.
 
 ## AI Provider System
 

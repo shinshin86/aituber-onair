@@ -6,11 +6,13 @@ import { VoiceEngine } from './VoiceEngine';
  * VoicePeak voice synthesis engine
  */
 export class VoicePeakEngine implements VoiceEngine {
+  private apiEndpoint: string = VOICEPEAK_API_URL;
+
   async fetchAudio(input: Talk, speaker: string): Promise<ArrayBuffer> {
     const talk = input as Talk;
 
     const ttsQueryResponse = await fetch(
-      `${VOICEPEAK_API_URL}/audio_query?speaker=${speaker}&text=${encodeURIComponent(talk.message)}`,
+      `${this.apiEndpoint}/audio_query?speaker=${speaker}&text=${encodeURIComponent(talk.message)}`,
       { method: 'POST' },
     );
 
@@ -24,7 +26,7 @@ export class VoicePeakEngine implements VoiceEngine {
     ttsQueryJson['emotion'] = this.mapEmotionStyle(talk.style || 'neutral');
 
     const synthesisResponse = await fetch(
-      `${VOICEPEAK_API_URL}/synthesis?speaker=${speaker}`,
+      `${this.apiEndpoint}/synthesis?speaker=${speaker}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,5 +61,13 @@ export class VoicePeakEngine implements VoiceEngine {
 
   getTestMessage(textVoiceText?: string): string {
     return textVoiceText || 'ボイスピークを使用します';
+  }
+
+  /**
+   * Set custom API endpoint URL
+   * @param apiUrl custom API endpoint URL
+   */
+  setApiEndpoint(apiUrl: string): void {
+    this.apiEndpoint = apiUrl;
   }
 }

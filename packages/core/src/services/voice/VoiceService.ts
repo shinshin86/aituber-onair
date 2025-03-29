@@ -17,6 +17,12 @@ export interface VoiceServiceOptions {
   ) => Promise<void>;
   /** Audio playback complete callback */
   onComplete?: () => void;
+  /** Custom VOICEVOX API endpoint URL */
+  voicevoxApiUrl?: string;
+  /** Custom VOICEPEAK API endpoint URL */
+  voicepeakApiUrl?: string;
+  /** Custom AIVIS SPEECH API endpoint URL */
+  aivisSpeechApiUrl?: string;
 }
 
 /**

@@ -1,3 +1,4 @@
+import { OPENAI_TTS_API_URL } from '../../../constants';
 import { Talk } from '../../../types';
 import { VoiceEngine } from './VoiceEngine';
 
@@ -17,7 +18,7 @@ export class OpenAiEngine implements VoiceEngine {
     const talk = input as Talk;
     const text = talk.message.trim();
 
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+    const response = await fetch(OPENAI_TTS_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
