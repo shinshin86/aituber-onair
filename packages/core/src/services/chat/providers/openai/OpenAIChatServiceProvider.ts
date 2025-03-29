@@ -1,7 +1,15 @@
-import { MODEL_GPT_4O_MINI, MODEL_GPT_4O, MODEL_O3_MINI, VISION_SUPPORTED_MODELS } from '../../../../constants';
+import {
+  MODEL_GPT_4O_MINI,
+  MODEL_GPT_4O,
+  MODEL_O3_MINI,
+  VISION_SUPPORTED_MODELS,
+} from '../../../../constants';
 import { ChatService } from '../../ChatService';
 import { OpenAIChatService } from './OpenAIChatService';
-import { ChatServiceOptions, ChatServiceProvider } from '../ChatServiceProvider';
+import {
+  ChatServiceOptions,
+  ChatServiceProvider,
+} from '../ChatServiceProvider';
 
 /**
  * OpenAI API provider implementation
@@ -14,15 +22,16 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    */
   createChatService(options: ChatServiceOptions): ChatService {
     // Use the visionModel if provided, otherwise use the model that supports vision
-    const visionModel = options.visionModel || 
-      (this.supportsVisionForModel(options.model || this.getDefaultModel()) 
-        ? options.model 
+    const visionModel =
+      options.visionModel ||
+      (this.supportsVisionForModel(options.model || this.getDefaultModel())
+        ? options.model
         : this.getDefaultModel());
-    
+
     return new OpenAIChatService(
-      options.apiKey, 
-      options.model || this.getDefaultModel(), 
-      visionModel
+      options.apiKey,
+      options.model || this.getDefaultModel(),
+      visionModel,
     );
   }
 

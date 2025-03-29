@@ -31,15 +31,21 @@ Currently, the primary package available is:
 
 3. **Build all packages**  
    ```bash
-   npm run build --workspaces
+   npm run build
    ```
    - This runs the build script for each package in the `packages/` directory.
 
 4. **Test all packages**  
    ```bash
-   npm run test --workspaces
+   npm run test
    ```
    - Runs the test suite for each package.
+
+5. **Format all packages**
+   ```bash
+   npm run fmt
+   ```
+   - Runs the format for each package.
 
 ## Project Structure
 

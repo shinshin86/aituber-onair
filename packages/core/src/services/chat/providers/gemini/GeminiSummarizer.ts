@@ -70,13 +70,13 @@ export class GeminiSummarizer implements Summarizer {
               role: 'user',
               parts: [
                 {
-                  text: systemPrompt
+                  text: systemPrompt,
                 },
                 {
-                  text: conversationText
-                }
-              ]
-            }
+                  text: conversationText,
+                },
+              ],
+            },
           ],
           generationConfig: {
             temperature: 0.2,
@@ -95,16 +95,18 @@ export class GeminiSummarizer implements Summarizer {
       }
 
       const data = await response.json();
-      
+
       // Extract response text from Gemini's response format
-      if (data.candidates && 
-          data.candidates.length > 0 && 
-          data.candidates[0].content && 
-          data.candidates[0].content.parts && 
-          data.candidates[0].content.parts.length > 0) {
+      if (
+        data.candidates &&
+        data.candidates.length > 0 &&
+        data.candidates[0].content &&
+        data.candidates[0].content.parts &&
+        data.candidates[0].content.parts.length > 0
+      ) {
         return data.candidates[0].content.parts[0].text || '';
       }
-      
+
       return '';
     } catch (error) {
       console.error('Error in summarize:', error);
@@ -114,4 +116,4 @@ export class GeminiSummarizer implements Summarizer {
       }...`;
     }
   }
-} 
+}

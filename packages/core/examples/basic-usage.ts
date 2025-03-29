@@ -50,7 +50,8 @@ async function basicExample() {
       maxMessagesBeforeSummarization: 20,
       maxSummaryLength: 256,
       // You can specify a custom summarization prompt
-      summaryPromptTemplate: 'Please summarize the following conversation in under {maxLength} characters. Include important points.'
+      summaryPromptTemplate:
+        'Please summarize the following conversation in under {maxLength} characters. Include important points.',
     },
     voiceOptions: {
       speaker: '1', // VOICEVOX speaker ID
@@ -142,13 +143,14 @@ async function basicExample() {
 
   // Example with Gemini Provider and Summarizer
   console.log('\nExample using Gemini Provider:');
-  
+
   const geminiOptions: AITuberOnAirCoreOptions = {
-    chatProvider: 'gemini',  // Using Gemini as the chat provider
+    chatProvider: 'gemini', // Using Gemini as the chat provider
     apiKey: GEMINI_API_KEY,
     chatOptions: {
       systemPrompt: SYSTEM_PROMPT,
-      memoryNote: 'This is a summary of past conversations. Please refer to it appropriately.',
+      memoryNote:
+        'This is a summary of past conversations. Please refer to it appropriately.',
     },
     memoryOptions: {
       enableSummarization: true,
@@ -158,25 +160,29 @@ async function basicExample() {
       midTermDuration: 5 * 60 * 1000,
       longTermDuration: 10 * 60 * 1000,
       // Optional custom prompt
-      summaryPromptTemplate: 'Please create a brief summary of this conversation in {maxLength} characters or less.',
+      summaryPromptTemplate:
+        'Please create a brief summary of this conversation in {maxLength} characters or less.',
     },
     debug: true,
   };
-  
-  // Create AITuberOnAirCore with Gemini provider 
+
+  // Create AITuberOnAirCore with Gemini provider
   // This will automatically use GeminiSummarizer for memory management
   const geminiAITuber = new AITuberOnAirCore(geminiOptions);
-  console.log('AITuber with Gemini provider and summarizer has been configured.');
-  
+  console.log(
+    'AITuber with Gemini provider and summarizer has been configured.',
+  );
+
   // Example with OpenAI Provider and Summarizer
   console.log('\nExample using OpenAI Provider:');
-  
+
   const openaiOptions: AITuberOnAirCoreOptions = {
-    chatProvider: 'openai',  // Using OpenAI as the chat provider
+    chatProvider: 'openai', // Using OpenAI as the chat provider
     apiKey: OPENAI_API_KEY,
     chatOptions: {
       systemPrompt: SYSTEM_PROMPT,
-      memoryNote: 'This is a summary of past conversations. Please refer to it appropriately.',
+      memoryNote:
+        'This is a summary of past conversations. Please refer to it appropriately.',
     },
     memoryOptions: {
       enableSummarization: true,
@@ -188,15 +194,17 @@ async function basicExample() {
     },
     debug: true,
   };
-  
+
   // Create AITuberOnAirCore with OpenAI provider
   // This will automatically use OpenAISummarizer for memory management
   const openaiAITuber = new AITuberOnAirCore(openaiOptions);
-  console.log('AITuber with OpenAI provider and summarizer has been configured.');
-  
+  console.log(
+    'AITuber with OpenAI provider and summarizer has been configured.',
+  );
+
   // Demonstrate how to use the different AITuber instances
   console.log('\nUsage examples:');
-  
+
   /* Usage example:
   // With OpenAI Summarizer
   await openaiAITuber.processChat("Hello, how are you today?");
@@ -204,7 +212,7 @@ async function basicExample() {
   // With Gemini Summarizer
   await geminiAITuber.processChat("Hello, how are you today?");
   */
-  
+
   // 7. Additional examples (commented out for brevity)
 
   // Example: Continue chat conversation

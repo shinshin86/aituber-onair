@@ -6,7 +6,10 @@ import {
 import { ChatServiceFactory } from '../../../src/services/chat/ChatServiceFactory';
 import { OpenAIChatServiceProvider } from '../../../src/services/chat/providers/openai/OpenAIChatServiceProvider';
 import { GeminiChatServiceProvider } from '../../../src/services/chat/providers/gemini/GeminiChatServiceProvider';
-import { MODEL_GEMINI_2_0_FLASH_LITE, MODEL_GPT_4O_MINI } from '../../../src/constants';
+import {
+  MODEL_GEMINI_2_0_FLASH_LITE,
+  MODEL_GPT_4O_MINI,
+} from '../../../src/constants';
 
 // Mock the ChatService
 const mockOpenAIChatService = {
@@ -32,7 +35,7 @@ const getDefaultOptions = (): AITuberOnAirCoreOptions => ({
   voiceOptions: {
     speaker: '1',
     engineType: 'voicevox',
-  }
+  },
 });
 
 // Mock the OpenAIChatService constructor
@@ -70,22 +73,26 @@ describe('AITuberOnAirCore - ChatProvider tests', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks();
-    
+
     // Mock ChatServiceFactory methods
-    ChatServiceFactory.createChatService = vi.fn().mockImplementation((providerName, options) => {
-      if (providerName === 'openai') {
-        return mockOpenAIChatService;
-      } else if (providerName === 'gemini') {
-        return mockGeminiChatService;
-      } else {
-        throw new Error(`Unknown chat provider: ${providerName}`);
-      }
-    });
-    
-    ChatServiceFactory.getProviders = vi.fn().mockReturnValue(new Map([
-      ['openai', new OpenAIChatServiceProvider()],
-      ['gemini', new GeminiChatServiceProvider()]
-    ]));
+    ChatServiceFactory.createChatService = vi
+      .fn()
+      .mockImplementation((providerName, options) => {
+        if (providerName === 'openai') {
+          return mockOpenAIChatService;
+        } else if (providerName === 'gemini') {
+          return mockGeminiChatService;
+        } else {
+          throw new Error(`Unknown chat provider: ${providerName}`);
+        }
+      });
+
+    ChatServiceFactory.getProviders = vi.fn().mockReturnValue(
+      new Map([
+        ['openai', new OpenAIChatServiceProvider()],
+        ['gemini', new GeminiChatServiceProvider()],
+      ]),
+    );
   });
 
   afterEach(() => {
@@ -99,15 +106,15 @@ describe('AITuberOnAirCore - ChatProvider tests', () => {
     // Create AITuberOnAirCore instance without specifying chatProvider
     const options = getDefaultOptions();
     const core = new AITuberOnAirCore(options);
-    
+
     // Verify ChatServiceFactory.createChatService was called with correct parameters
     expect(ChatServiceFactory.createChatService).toHaveBeenCalledWith(
       'openai',
       expect.objectContaining({
         apiKey: 'test-key',
-      })
+      }),
     );
-    
+
     // Verify the provider info
     const providerInfo = core.getProviderInfo();
     expect(providerInfo.name).toBe('openai');
@@ -120,20 +127,20 @@ describe('AITuberOnAirCore - ChatProvider tests', () => {
       chatProvider: 'openai',
     };
     const core = new AITuberOnAirCore(options);
-    
+
     // Verify ChatServiceFactory.createChatService was called with correct parameters
     expect(ChatServiceFactory.createChatService).toHaveBeenCalledWith(
       'openai',
       expect.objectContaining({
         apiKey: 'test-key',
-      })
+      }),
     );
-    
+
     // Verify the provider info
     const providerInfo = core.getProviderInfo();
     expect(providerInfo.name).toBe('openai');
   });
-  
+
   it('should use specified provider when chatProvider is set to gemini', () => {
     // Create AITuberOnAirCore instance with explicit gemini chatProvider
     const options = {
@@ -141,15 +148,15 @@ describe('AITuberOnAirCore - ChatProvider tests', () => {
       chatProvider: 'gemini',
     };
     const core = new AITuberOnAirCore(options);
-    
+
     // Verify ChatServiceFactory.createChatService was called with correct parameters
     expect(ChatServiceFactory.createChatService).toHaveBeenCalledWith(
       'gemini',
       expect.objectContaining({
         apiKey: 'test-key',
-      })
+      }),
     );
-    
+
     // Verify the provider info
     const providerInfo = core.getProviderInfo();
     expect(providerInfo.name).toBe('gemini');
@@ -157,24 +164,26 @@ describe('AITuberOnAirCore - ChatProvider tests', () => {
 
   it('should throw error when invalid provider is specified', () => {
     // Mock createChatService to throw error for invalid provider
-    ChatServiceFactory.createChatService = vi.fn().mockImplementation((providerName) => {
-      if (providerName === 'openai') {
-        return mockOpenAIChatService;
-      } else if (providerName === 'gemini') {
-        return mockGeminiChatService;
-      } else {
-        throw new Error(`Unknown chat provider: ${providerName}`);
-      }
-    });
+    ChatServiceFactory.createChatService = vi
+      .fn()
+      .mockImplementation((providerName) => {
+        if (providerName === 'openai') {
+          return mockOpenAIChatService;
+        } else if (providerName === 'gemini') {
+          return mockGeminiChatService;
+        } else {
+          throw new Error(`Unknown chat provider: ${providerName}`);
+        }
+      });
 
     // Expect error when creating AITuberOnAirCore with invalid provider
     const options = {
       ...getDefaultOptions(),
       chatProvider: 'invalid-provider',
     };
-    
+
     expect(() => {
       new AITuberOnAirCore(options);
     }).toThrow('Unknown chat provider: invalid-provider');
   });
-}); 
+});
