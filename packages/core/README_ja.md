@@ -446,6 +446,7 @@ AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用し�
 
 - **OpenAI**: GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini, GPT-4.5(Preview)のモデルをサポート
 - **Gemini**: Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Pro, Gemini 2.5 Pro(試験運用版)のモデルをサポート
+- **Claude**: Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnetのモデルをサポート
 
 ### プロバイダーの指定方法
 
