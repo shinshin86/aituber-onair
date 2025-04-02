@@ -13,14 +13,14 @@ export * from './voiceEngine';
 export * from './nijiVoice';
 
 // Chat related type definitions (excluding Screenplay type)
-export { 
-    Message, 
-    MessageWithVision, 
-    VisionBlock, 
-    ChatType, 
-    SpeakOptions 
-  } from './chat';
-  
+export {
+  Message,
+  MessageWithVision,
+  VisionBlock,
+  ChatType,
+  SpeakOptions,
+} from './chat';
+
 // Voice related type definitions (excluding Screenplay type)
 export {
   talkStyles,
@@ -28,7 +28,7 @@ export {
   Talk,
   emotions,
   EmotionType,
-  EmotionTypeForVoicepeak
+  EmotionTypeForVoicepeak,
 } from './voice';
 
 // Individual exports to avoid name conflicts

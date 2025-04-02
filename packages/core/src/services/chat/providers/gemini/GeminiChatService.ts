@@ -1,10 +1,10 @@
-import { ChatService } from './ChatService';
-import { Message, MessageWithVision } from '../../types';
+import { ChatService } from '../../ChatService';
+import { Message, MessageWithVision } from '../../../../types';
 import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
-  GEMINI_VISION_SUPPORTED_MODELS
-} from '../../constants';
+  GEMINI_VISION_SUPPORTED_MODELS,
+} from '../../../../constants';
 
 /**
  * Gemini implementation of ChatService
@@ -29,6 +29,13 @@ export class GeminiChatService implements ChatService {
   ) {
     this.apiKey = apiKey;
     this.model = model;
+
+    // check if the vision model is supported
+    if (!GEMINI_VISION_SUPPORTED_MODELS.includes(visionModel)) {
+      throw new Error(
+        `Model ${visionModel} does not support vision capabilities.`,
+      );
+    }
     this.visionModel = visionModel;
   }
 
@@ -38,6 +45,14 @@ export class GeminiChatService implements ChatService {
    */
   getModel(): string {
     return this.model;
+  }
+
+  /**
+   * Get the current vision model name
+   * @returns Vision model name
+   */
+  getVisionModel(): string {
+    return this.visionModel;
   }
 
   /**
@@ -96,7 +111,7 @@ export class GeminiChatService implements ChatService {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         const chunk = decoder.decode(value);
         responseText += chunk;
       }
@@ -104,7 +119,7 @@ export class GeminiChatService implements ChatService {
       // parse response
       try {
         const responseArray = JSON.parse(responseText);
-        
+
         // process each response
         for (const item of responseArray) {
           if (item.candidates && item.candidates.length > 0) {
@@ -146,11 +161,14 @@ export class GeminiChatService implements ChatService {
     try {
       // Check if the vision model supports vision capabilities
       if (!GEMINI_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
-        throw new Error(`Model ${this.visionModel} does not support vision capabilities.`);
+        throw new Error(
+          `Model ${this.visionModel} does not support vision capabilities.`,
+        );
       }
 
       // Convert messages to Gemini vision format
-      const geminiMessages = await this.convertVisionMessagesToGeminiFormat(messages);
+      const geminiMessages =
+        await this.convertVisionMessagesToGeminiFormat(messages);
 
       // Create the endpoint URL with API key
       const apiUrl = `${ENDPOINT_GEMINI_API}/models/${this.visionModel}:streamGenerateContent?key=${this.apiKey}`;
@@ -188,12 +206,12 @@ export class GeminiChatService implements ChatService {
         throw new Error('Failed to get response reader');
       }
 
-      // get full response 
+      // get full response
       let responseText = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         const chunk = decoder.decode(value);
         responseText += chunk;
       }
@@ -201,7 +219,7 @@ export class GeminiChatService implements ChatService {
       // parse response
       try {
         const responseArray = JSON.parse(responseText);
-        
+
         // process each response
         for (const item of responseArray) {
           if (item.candidates && item.candidates.length > 0) {
@@ -271,7 +289,9 @@ export class GeminiChatService implements ChatService {
    * @param messages Array of vision messages
    * @returns Gemini formatted vision messages
    */
-  private async convertVisionMessagesToGeminiFormat(messages: MessageWithVision[]): Promise<any[]> {
+  private async convertVisionMessagesToGeminiFormat(
+    messages: MessageWithVision[],
+  ): Promise<any[]> {
     const geminiMessages = [];
     let currentRole = null;
     let currentParts = [];
@@ -304,18 +324,20 @@ export class GeminiChatService implements ChatService {
               // Fetch the image data from URL
               const imageResponse = await fetch(block.image_url.url);
               if (!imageResponse.ok) {
-                throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
+                throw new Error(
+                  `Failed to fetch image: ${imageResponse.statusText}`,
+                );
               }
-              
+
               // Convert image to blob and then to base64
               const imageBlob = await imageResponse.blob();
               const base64Data = await this.blobToBase64(imageBlob);
-              
+
               // Add image data in Gemini format
               currentParts.push({
                 inlineData: {
                   mimeType: imageBlob.type || 'image/jpeg',
-                  data: base64Data.split(',')[1] // Remove the "data:image/jpeg;base64," prefix
+                  data: base64Data.split(',')[1], // Remove the "data:image/jpeg;base64," prefix
                 },
               });
             } catch (error: any) {
@@ -369,4 +391,4 @@ export class GeminiChatService implements ChatService {
         return 'user';
     }
   }
-} 
+}

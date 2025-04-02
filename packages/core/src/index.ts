@@ -8,8 +8,9 @@ export * from './types';
 
 // Service exports
 export type { ChatService } from './services/chat/ChatService';
-export { OpenAIChatService } from './services/chat/OpenAIChatService';
-export { OpenAISummarizer } from './services/chat/OpenAISummarizer';
+export { OpenAIChatService } from './services/chat/providers/openai/OpenAIChatService';
+export { OpenAISummarizer } from './services/chat/providers/openai/OpenAISummarizer';
+export { GeminiSummarizer } from './services/chat/providers/gemini/GeminiSummarizer';
 
 // Provider exports
 export type {
@@ -17,9 +18,9 @@ export type {
   ChatServiceProvider,
 } from './services/chat/providers/ChatServiceProvider';
 export { ChatServiceFactory } from './services/chat/ChatServiceFactory';
-export { OpenAIChatServiceProvider } from './services/chat/providers/OpenAIChatServiceProvider';
-export { GeminiChatServiceProvider } from './services/chat/providers/GeminiChatServiceProvider';
-export { ClaudeChatServiceProvider } from './services/chat/providers/ClaudeChatServiceProvider';
+export { OpenAIChatServiceProvider } from './services/chat/providers/openai/OpenAIChatServiceProvider';
+export { GeminiChatServiceProvider } from './services/chat/providers/gemini/GeminiChatServiceProvider';
+export { ClaudeChatServiceProvider } from './services/chat/providers/claude/ClaudeChatServiceProvider';
 
 // Voice services
 export type {

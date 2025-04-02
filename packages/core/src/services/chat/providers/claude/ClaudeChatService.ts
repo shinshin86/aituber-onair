@@ -1,10 +1,10 @@
-import { ChatService } from './ChatService';
-import { Message, MessageWithVision } from '../../types';
+import { ChatService } from '../../ChatService';
+import { Message, MessageWithVision } from '../../../../types';
 import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_3_HAIKU,
-  CLAUDE_VISION_SUPPORTED_MODELS
-} from '../../constants';
+  CLAUDE_VISION_SUPPORTED_MODELS,
+} from '../../../../constants';
 
 /**
  * Claude implementation of ChatService
@@ -41,6 +41,14 @@ export class ClaudeChatService implements ChatService {
   }
 
   /**
+   * Get the current vision model name
+   * @returns Vision model name
+   */
+  getVisionModel(): string {
+    return this.visionModel;
+  }
+
+  /**
    * Process chat messages
    * @param messages Array of messages to send
    * @param onPartialResponse Callback to receive each part of streaming response
@@ -53,11 +61,12 @@ export class ClaudeChatService implements ChatService {
   ): Promise<void> {
     try {
       // Extract system message (if any) and regular messages
-      const systemMessage = messages.find(msg => msg.role === 'system');
-      const nonSystemMessages = messages.filter(msg => msg.role !== 'system');
+      const systemMessage = messages.find((msg) => msg.role === 'system');
+      const nonSystemMessages = messages.filter((msg) => msg.role !== 'system');
 
       // Convert messages to Claude format
-      const claudeMessages = this.convertMessagesToClaudeFormat(nonSystemMessages);
+      const claudeMessages =
+        this.convertMessagesToClaudeFormat(nonSystemMessages);
 
       // Request to Claude API
       const response = await fetch(ENDPOINT_CLAUDE_API, {
@@ -66,7 +75,7 @@ export class ClaudeChatService implements ChatService {
           'Content-Type': 'application/json',
           'x-api-key': this.apiKey,
           'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
+          'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
           model: this.model,
@@ -100,19 +109,19 @@ export class ClaudeChatService implements ChatService {
         const chunk = decoder.decode(value);
         // Claude API serves responses as Server-Sent Events (SSE)
         // Each event is prefixed with "event: " and "data: "
-        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+        const lines = chunk.split('\n').filter((line) => line.trim() !== '');
 
         for (const line of lines) {
           try {
             // Check if this is a data line
             if (line.startsWith('data: ')) {
               const data = line.slice(6); // Remove 'data: ' prefix
-              
+
               // Ignore [DONE] marker
               if (data === '[DONE]') continue;
-              
+
               const json = JSON.parse(data);
-              
+
               // Extract delta content if available
               if (json.type === 'content_block_delta') {
                 const deltaText = json.delta?.text || '';
@@ -163,15 +172,18 @@ export class ClaudeChatService implements ChatService {
     try {
       // Check if the vision model supports vision capabilities
       if (!CLAUDE_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
-        throw new Error(`Model ${this.visionModel} does not support vision capabilities.`);
+        throw new Error(
+          `Model ${this.visionModel} does not support vision capabilities.`,
+        );
       }
 
       // Extract system message (if any) and regular messages
-      const systemMessage = messages.find(msg => msg.role === 'system');
-      const nonSystemMessages = messages.filter(msg => msg.role !== 'system');
+      const systemMessage = messages.find((msg) => msg.role === 'system');
+      const nonSystemMessages = messages.filter((msg) => msg.role !== 'system');
 
       // Convert messages to Claude vision format
-      const claudeMessages = this.convertVisionMessagesToClaudeFormat(nonSystemMessages);
+      const claudeMessages =
+        this.convertVisionMessagesToClaudeFormat(nonSystemMessages);
 
       // Request to Claude API
       const response = await fetch(ENDPOINT_CLAUDE_API, {
@@ -180,7 +192,7 @@ export class ClaudeChatService implements ChatService {
           'Content-Type': 'application/json',
           'x-api-key': this.apiKey,
           'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
+          'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
           model: this.visionModel,
@@ -214,19 +226,19 @@ export class ClaudeChatService implements ChatService {
         const chunk = decoder.decode(value);
         // Claude API serves responses as Server-Sent Events (SSE)
         // Each event is prefixed with "event: " and "data: "
-        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+        const lines = chunk.split('\n').filter((line) => line.trim() !== '');
 
         for (const line of lines) {
           try {
             // Check if this is a data line
             if (line.startsWith('data: ')) {
               const data = line.slice(6); // Remove 'data: ' prefix
-              
+
               // Ignore [DONE] marker
               if (data === '[DONE]') continue;
-              
+
               const json = JSON.parse(data);
-              
+
               // Extract delta content if available
               if (json.type === 'content_block_delta') {
                 const deltaText = json.delta?.text || '';
@@ -257,7 +269,7 @@ export class ClaudeChatService implements ChatService {
    * @returns Claude formatted messages
    */
   private convertMessagesToClaudeFormat(messages: Message[]): any[] {
-    return messages.map(msg => {
+    return messages.map((msg) => {
       return {
         role: this.mapRoleToClaude(msg.role),
         content: msg.content,
@@ -270,8 +282,10 @@ export class ClaudeChatService implements ChatService {
    * @param messages Array of vision messages
    * @returns Claude formatted vision messages
    */
-  private convertVisionMessagesToClaudeFormat(messages: MessageWithVision[]): any[] {
-    return messages.map(msg => {
+  private convertVisionMessagesToClaudeFormat(
+    messages: MessageWithVision[],
+  ): any[] {
+    return messages.map((msg) => {
       // If message content is a string, create a text-only message
       if (typeof msg.content === 'string') {
         return {
@@ -283,46 +297,50 @@ export class ClaudeChatService implements ChatService {
             },
           ],
         };
-      } 
+      }
       // If message content is an array of blocks, convert each block
       else if (Array.isArray(msg.content)) {
-        const content = msg.content.map(block => {
-          if (block.type === 'text') {
-            return {
-              type: 'text',
-              text: block.text,
-            };
-          } else if (block.type === 'image_url') {
-            // check if the image url is a data url
-            if (block.image_url.url.startsWith('data:')) {
-              // extract the base64 data from the data url
-              const matches = block.image_url.url.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
-              if (matches && matches.length >= 3) {
-                const mediaType = matches[1];
-                const base64Data = matches[2];
-                return {
-                  type: 'image',
-                  source: {
-                    type: 'base64',
-                    media_type: mediaType,
-                    data: base64Data
-                  }
-                };
+        const content = msg.content
+          .map((block) => {
+            if (block.type === 'text') {
+              return {
+                type: 'text',
+                text: block.text,
+              };
+            } else if (block.type === 'image_url') {
+              // check if the image url is a data url
+              if (block.image_url.url.startsWith('data:')) {
+                // extract the base64 data from the data url
+                const matches = block.image_url.url.match(
+                  /^data:([A-Za-z-+/]+);base64,(.+)$/,
+                );
+                if (matches && matches.length >= 3) {
+                  const mediaType = matches[1];
+                  const base64Data = matches[2];
+                  return {
+                    type: 'image',
+                    source: {
+                      type: 'base64',
+                      media_type: mediaType,
+                      data: base64Data,
+                    },
+                  };
+                }
               }
+
+              // if the image url is a normal url
+              return {
+                type: 'image',
+                source: {
+                  type: 'url',
+                  url: block.image_url.url,
+                  media_type: this.getMimeTypeFromUrl(block.image_url.url),
+                },
+              };
             }
-            
-            // if the image url is a normal url
-            return {
-              type: 'image',
-              source: {
-                type: 'url',
-                url: block.image_url.url,
-                media_type: this.getMimeTypeFromUrl(block.image_url.url),
-              },
-            };
-          }
-          return null;
-        }).filter(item => item !== null);
+            return null;
+          })
+          .filter((item) => item !== null);
 
         return {
           role: this.mapRoleToClaude(msg.role),
@@ -377,4 +395,4 @@ export class ClaudeChatService implements ChatService {
         return 'image/jpeg';
     }
   }
-} 
+}

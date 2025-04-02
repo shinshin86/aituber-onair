@@ -6,6 +6,18 @@ import { Message, MessageWithVision } from '../../types';
  */
 export interface ChatService {
   /**
+   * Get the model name
+   * @returns Model name
+   */
+  getModel(): string;
+
+  /**
+   * Get the vision model name
+   * @returns Vision model name
+   */
+  getVisionModel(): string;
+
+  /**
    * Process chat messages
    * @param messages Array of messages to send
    * @param onPartialResponse Callback to receive each part of streaming response

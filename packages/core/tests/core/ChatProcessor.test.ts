@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ChatProcessor, ChatProcessorOptions } from '../../src/core/ChatProcessor';
+import {
+  ChatProcessor,
+  ChatProcessorOptions,
+} from '../../src/core/ChatProcessor';
 import { ChatService } from '../../src/services/chat/ChatService';
 import { MemoryManager } from '../../src/core/MemoryManager';
 

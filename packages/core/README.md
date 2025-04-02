@@ -2,11 +2,11 @@
 
 ![AITuber OnAir Core - logo](https://raw.githubusercontent.com/shinshin86/aituber-onair/refs/heads/main/packages/core/images/aituber-onair-core.png)
 
-**AITuber OnAir Core** is a TypeScript library developed to provide functionality for the [AITuber OnAir](https://aituberonair.com) web service, designed for AI-based virtual streaming (AITuber).  
+[AITuber OnAir Core](https://www.npmjs.com/package/@aituber-onair/core) is a TypeScript library developed to provide functionality for the [AITuber OnAir](https://aituberonair.com) web service, designed for AI-based virtual streaming (AITuber).  
 
 [日本語版はこちら](https://github.com/shinshin86/aituber-onair/blob/main/packages/core/README_ja.md)
 
-While it is primarily intended for use within [AITuber OnAir](https://aituberonair.com), this project is available as open-source software under the MIT License and can be used freely.
+While it is primarily intended to provide functionality for [AITuber OnAir](https://aituberonair.com), this project is published as open-source software and is available as an [npm package](https://www.npmjs.com/package/@aituber-onair/core) under the MIT License.
 
 It specializes in generating response text and audio from text or image inputs, and is designed to easily integrate with other parts of an application (storage, YouTube integration, avatar control, etc.).
 
@@ -78,16 +78,22 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
   AITuberOnAirCoreOptions
-} from '../lib/aituber-core';
+} from '@aituber-onair/core';
 
 // 1. Define options
 const options: AITuberOnAirCoreOptions = {
-  openAiKey: 'YOUR_OPENAI_API_KEY',
+  chatProvider: 'openai', // Optional. If omitted, the default OpenAI will be used.
+  apiKey: 'YOUR_API_KEY',
   chatOptions: {
     systemPrompt: 'You are an AI streamer. Act as a cheerful and friendly live broadcaster.',
     visionSystemPrompt: 'Please comment like a streamer on what is shown on screen.',
-    visionPrompt: 'Look at the broadcast screen and provide commentary suited to the situation.', // Prompt for image input
+    visionPrompt: 'Look at the broadcast screen and provide commentary suited to the situation.',
+    memoryNote: 'This is a summary of past conversations. Please refer to it appropriately to continue the conversation.',
   },
+  // OpenAI Default model is gpt-4o-mini
+  // You can specify different models for text chat and vision processing
+  // model: 'o3-mini',        // Lightweight model for text chat (no vision support)
+  // visionModel: 'gpt-4o',   // Model capable of image processing
   memoryOptions: {
     enableSummarization: true,
     shortTermDuration: 60 * 1000, // 1 minute
@@ -102,6 +108,11 @@ const options: AITuberOnAirCoreOptions = {
     engineType: 'voicevox', // Speech engine type
     speaker: '1',           // Speaker ID
     apiKey: 'ENGINE_SPECIFIC_API_KEY', // If required (e.g., NijiVoice)
+    onComplete: () => console.log('Voice playback completed'),
+    // Custom API endpoint URLs (optional)
+    voicevoxApiUrl: 'http://custom-voicevox-server:50021',
+    voicepeakApiUrl: 'http://custom-voicepeak-server:20202',
+    aivisSpeechApiUrl: 'http://custom-aivis-server:10101',
   },
   debug: true, // Enable debug output
 };
@@ -166,6 +177,44 @@ AITuberOnAirCore (Integration Layer)
     └── VoiceService (Speech processing)
           └── VoiceEngineAdapter (Speech Engine Interface)
                 └── Various Speech Engines (VOICEVOX, NijiVoice, etc.)
+```
+
+### Directory Structure
+
+The source code is organized around the following directory structure:
+
+```
+src/
+  ├── constants/             # Constants and configuration
+  │     ├── index.ts         # Exported constants
+  │     └── prompts.ts       # Default prompts and templates
+  ├── core/                  # Core components
+  │     ├── AITuberOnAirCore.ts
+  │     ├── ChatProcessor.ts
+  │     └── MemoryManager.ts
+  ├── services/              # Service implementations
+  │     ├── chat/            # Chat services
+  │     │    ├── ChatService.ts            # Base interface
+  │     │    ├── ChatServiceFactory.ts     # Factory for providers
+  │     │    └── providers/                # AI provider implementations
+  │     │         ├── ChatServiceProvider.ts  # Provider interface
+  │     │         ├── gemini/              # Gemini-specific
+  │     │         │    ├── GeminiChatService.ts
+  │     │         │    └── GeminiChatServiceProvider.ts
+  │     │         └── openai/              # OpenAI-specific
+  │     │              ├── OpenAIChatService.ts
+  │     │              ├── OpenAIChatServiceProvider.ts
+  │     │              └── OpenAISummarizer.ts
+  │     ├── voice/           # Voice services
+  │     │    ├── VoiceService.ts
+  │     │    ├── VoiceEngineAdapter.ts
+  │     │    └── engines/    # Voice engine implementations
+  │     └── youtube/         # YouTube API integration
+  │          └── YouTubeDataApiService.ts  # YouTube Data API client
+  ├── types/                 # TypeScript type definitions
+  └── utils/                 # Utilities and helpers
+       ├── screenplay.ts     # Text and emotion processing
+       └── storage.ts        # Storage utilities
 ```
 
 ## Main Components
@@ -353,6 +402,36 @@ aituber.updateVoiceService({
 });
 ```
 
+### Custom API Endpoints
+
+For locally hosted voice engines (VOICEVOX, VoicePeak, AivisSpeech), you can specify custom API endpoint URLs:
+
+```typescript
+// Example of setting custom API endpoints
+aituber.updateVoiceService({
+  engineType: 'voicevox',
+  speaker: '1',
+  // Custom endpoint for a self-hosted or alternative VOICEVOX server
+  voicevoxApiUrl: 'http://custom-voicevox-server:50021'
+});
+
+// Example for VoicePeak
+aituber.updateVoiceService({
+  engineType: 'voicepeak',
+  speaker: '2',
+  voicepeakApiUrl: 'http://custom-voicepeak-server:20202'
+});
+
+// Example for AivisSpeech
+aituber.updateVoiceService({
+  engineType: 'aivisSpeech',
+  speaker: '3',
+  aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
+});
+```
+
+This is useful when running voice engines on different ports or remote servers.
+
 ## AI Provider System
 
 AITuber OnAir Core adopts an extensible provider system, enabling integration with various AI APIs.
@@ -362,8 +441,8 @@ Currently, OpenAI API and Gemini API is available, but other API providers (such
 
 Currently, the following AI provider is built-in:
 
-- **OpenAI**: Supports models like GPT-4o, GPT-4o-mini, O3-mini.
-- **Gemini**: Supports models like Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash
+- **OpenAI**: Supports models like GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini, GPT-4.5(Preview)
+- **Gemini**: Supports models like Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Pro, Gemini 2.5 Pro(Experimental)
 
 ### Specifying a Provider
 
@@ -404,6 +483,8 @@ const aituberCore = new AITuberOnAirCore({
 ```
 
 This allows for optimizations such as using a lightweight model for text chat and a more powerful model only when image processing is needed.
+
+Note: When specifying a visionModel, ensure it supports vision capabilities. The system will validate this during initialization and throw an error if an unsupported model is provided.
 
 ### Retrieving Providers & Models
 

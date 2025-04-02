@@ -3,9 +3,9 @@ import {
   ChatServiceOptions,
   ChatServiceProvider,
 } from './providers/ChatServiceProvider';
-import { OpenAIChatServiceProvider } from './providers/OpenAIChatServiceProvider';
-import { GeminiChatServiceProvider } from './providers/GeminiChatServiceProvider';
-import { ClaudeChatServiceProvider } from './providers/ClaudeChatServiceProvider';
+import { OpenAIChatServiceProvider } from './providers/openai/OpenAIChatServiceProvider';
+import { GeminiChatServiceProvider } from './providers/gemini/GeminiChatServiceProvider';
+import { ClaudeChatServiceProvider } from './providers/claude/ClaudeChatServiceProvider';
 
 /**
  * Chat service factory

@@ -3,11 +3,14 @@ import {
   MODEL_CLAUDE_3_5_HAIKU,
   MODEL_CLAUDE_3_5_SONNET,
   MODEL_CLAUDE_3_7_SONNET,
-  CLAUDE_VISION_SUPPORTED_MODELS
-} from '../../../constants';
-import { ChatService } from '../ChatService';
-import { ClaudeChatService } from '../ClaudeChatService';
-import { ChatServiceOptions, ChatServiceProvider } from './ChatServiceProvider';
+  CLAUDE_VISION_SUPPORTED_MODELS,
+} from '../../../../constants';
+import { ChatService } from '../../ChatService';
+import { ClaudeChatService } from './ClaudeChatService';
+import {
+  ChatServiceOptions,
+  ChatServiceProvider,
+} from '../ChatServiceProvider';
 
 /**
  * Claude API provider implementation
@@ -20,15 +23,16 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
    */
   createChatService(options: ChatServiceOptions): ChatService {
     // Use the visionModel if provided, otherwise use the model that supports vision
-    const visionModel = options.visionModel || 
-      (this.supportsVisionForModel(options.model || this.getDefaultModel()) 
-        ? options.model 
-        : MODEL_CLAUDE_3_HAIKU);
-    
+    const visionModel =
+      options.visionModel ||
+      (this.supportsVisionForModel(options.model || this.getDefaultModel())
+        ? options.model
+        : this.getDefaultModel());
+
     return new ClaudeChatService(
-      options.apiKey, 
-      options.model || this.getDefaultModel(), 
-      visionModel
+      options.apiKey,
+      options.model || this.getDefaultModel(),
+      visionModel,
     );
   }
 
@@ -45,7 +49,12 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
    * @returns Array of supported model names
    */
   getSupportedModels(): string[] {
-    return [MODEL_CLAUDE_3_HAIKU, MODEL_CLAUDE_3_5_HAIKU, MODEL_CLAUDE_3_5_SONNET, MODEL_CLAUDE_3_7_SONNET];
+    return [
+      MODEL_CLAUDE_3_HAIKU,
+      MODEL_CLAUDE_3_5_HAIKU,
+      MODEL_CLAUDE_3_5_SONNET,
+      MODEL_CLAUDE_3_7_SONNET,
+    ];
   }
 
   /**
@@ -53,7 +62,7 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
    * @returns Default model name
    */
   getDefaultModel(): string {
-    return MODEL_CLAUDE_3_5_HAIKU;
+    return MODEL_CLAUDE_3_HAIKU;
   }
 
   /**
@@ -72,4 +81,4 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
   supportsVisionForModel(model: string): boolean {
     return CLAUDE_VISION_SUPPORTED_MODELS.includes(model);
   }
-} 
+}

@@ -28,13 +28,24 @@ export type Talk = {
 /**
  * Types of emotional expressions
  */
-export const emotions = ['neutral', 'happy', 'angry', 'sad', 'relaxed'] as const;
+export const emotions = [
+  'neutral',
+  'happy',
+  'angry',
+  'sad',
+  'relaxed',
+] as const;
 export type EmotionType = (typeof emotions)[number] & VRMExpressionPresetName;
 
 /**
  * Emotion types for VoicePeak
  */
-export type EmotionTypeForVoicepeak = 'happy' | 'fun' | 'angry' | 'sad' | 'neutral';
+export type EmotionTypeForVoicepeak =
+  | 'happy'
+  | 'fun'
+  | 'angry'
+  | 'sad'
+  | 'neutral';
 
 /**
  * Screenplay - Text with emotion expression
@@ -45,4 +56,4 @@ export type EmotionTypeForVoicepeak = 'happy' | 'fun' | 'angry' | 'sad' | 'neutr
 export type Screenplay = {
   expression: EmotionType;
   talk: Talk;
-}; 
+};

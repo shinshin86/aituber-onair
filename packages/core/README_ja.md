@@ -2,11 +2,11 @@
 
 ![AITuber OnAir Core - logo](./images/aituber-onair-core.png)
 
-AITuber OnAir Coreは、AITuber配信のためのWebサービスである [AITuber OnAir](https://aituberonair.com) で機能提供を行うために開発されたTypeScript製のライブラリです。
+[AITuber OnAir Core](https://www.npmjs.com/package/@aituber-onair/core)は、AITuber配信のためのWebサービスである [AITuber OnAir](https://aituberonair.com) で機能提供を行うために開発されたTypeScript製のライブラリです。
 
 [Click here for the English README](./README.md)
 
-[AITuber OnAir](https://aituberonair.com) で機能提供を行なうのが目的ですが、こちらのプロジェクトはオープンソースとして公開されており、MITライセンスで利用が可能です。
+[AITuber OnAir](https://aituberonair.com) で機能提供を行なうのが目的ですが、こちらのプロジェクトはオープンソースとして公開されており、MITライセンスの [npmパッケージ](https://www.npmjs.com/package/@aituber-onair/core) として利用が可能です。
 
 テキスト入力や画像入力から応答テキストと音声を生成する機能に特化し、アプリケーションの他の部分（ストレージ、YouTube連携、アバター制御など）と簡単に統合できるように設計されています。
 
@@ -64,16 +64,22 @@ pnpm install @aituber-onair/core
 ## 基本的な使用方法
 
 ```typescript
-import { AITuberOnAirCore, AITuberOnAirCoreEvent, AITuberOnAirCoreOptions } from '../lib/aituber-core';
+import { AITuberOnAirCore, AITuberOnAirCoreEvent, AITuberOnAirCoreOptions } from '@aituber-onair/core';
 
 // 1. オプション設定
 const options: AITuberOnAirCoreOptions = {
-  openAiKey: 'YOUR_OPENAI_API_KEY',
+  chatProvider: 'openai', // 省略可能。省略した場合はデフォルトでOpenAIが使用されます
+  apiKey: 'YOUR_API_KEY',
   chatOptions: {
     systemPrompt: 'あなたはAIチューバーです。配信者のように振る舞い、明るく親しみやすい口調で話します。',
     visionSystemPrompt: '画面に映っているものについて、配信者らしくコメントしてください。',
-    visionPrompt: '配信画面を見て、状況に合ったコメントをしてください。', // 画像入力時のプロンプト
+    visionPrompt: '配信画面を見て、状況に合ったコメントをしてください。',
+    memoryNote: 'これは過去の会話の要約です。適切に参照して会話を続けてください。',
   },
+  // OpenAIのデフォルトモデルはgpt-4o-mini
+  // テキストチャットと画像処理で異なるモデルを指定することができます
+  // model: 'o3-mini',        // テキストチャット用の軽量モデル（画像処理非対応）
+  // visionModel: 'gpt-4o',   // 画像処理も可能なモデル
   memoryOptions: {
     enableSummarization: true,
     shortTermDuration: 60 * 1000, // 1分
@@ -88,6 +94,11 @@ const options: AITuberOnAirCoreOptions = {
     engineType: 'voicevox', // 音声エンジンタイプ
     speaker: '1', // 話者ID
     apiKey: 'ENGINE_SPECIFIC_API_KEY', // 必要に応じて（NijiVoiceなど）
+    onComplete: () => console.log('音声再生が完了しました'),
+    // カスタムAPIエンドポイントURL（オプション）
+    voicevoxApiUrl: 'http://custom-voicevox-server:50021',
+    voicepeakApiUrl: 'http://custom-voicepeak-server:20202',
+    aivisSpeechApiUrl: 'http://custom-aivis-server:10101',
   },
   debug: true, // デバッグ出力を有効化
 };
@@ -152,6 +163,44 @@ AITuberOnAirCore (統合層)
     └── VoiceService (音声処理)
           └── VoiceEngineAdapter (音声エンジン接続)
                 └── 各種音声エンジン (VOICEVOX, NijiVoice, etc.)
+```
+
+### ディレクトリ構造
+
+ソースコードは以下のディレクトリ構造で整理されています：
+
+```
+src/
+  ├── constants/             # 定数と設定
+  │     ├── index.ts         # エクスポートされる定数
+  │     └── prompts.ts       # デフォルトプロンプトとテンプレート
+  ├── core/                  # コアコンポーネント
+  │     ├── AITuberOnAirCore.ts
+  │     ├── ChatProcessor.ts
+  │     └── MemoryManager.ts
+  ├── services/              # サービス実装
+  │     ├── chat/            # チャットサービス
+  │     │    ├── ChatService.ts            # 基本インターフェース
+  │     │    ├── ChatServiceFactory.ts     # プロバイダー用ファクトリー
+  │     │    └── providers/                # AIプロバイダー実装
+  │     │         ├── ChatServiceProvider.ts  # プロバイダーインターフェース
+  │     │         ├── gemini/              # Gemini固有
+  │     │         │    ├── GeminiChatService.ts
+  │     │         │    └── GeminiChatServiceProvider.ts
+  │     │         └── openai/              # OpenAI固有
+  │     │              ├── OpenAIChatService.ts
+  │     │              ├── OpenAIChatServiceProvider.ts
+  │     │              └── OpenAISummarizer.ts
+  │     ├── voice/           # 音声サービス
+  │     │    ├── VoiceService.ts
+  │     │    ├── VoiceEngineAdapter.ts
+  │     │    └── engines/    # 音声エンジン実装
+  │     └── youtube/         # YouTube API連携
+  │          └── YouTubeDataApiService.ts  # YouTube Data APIクライアント
+  ├── types/                 # TypeScript型定義
+  └── utils/                 # ユーティリティとヘルパー
+       ├── screenplay.ts     # テキストと感情処理
+       └── storage.ts        # ストレージユーティリティ
 ```
 
 ## 主要コンポーネント
@@ -351,6 +400,36 @@ aituber.updateVoiceService({
 });
 ```
 
+### カスタムAPIエンドポイント
+
+ローカルでホストされる音声エンジン（VOICEVOX、VoicePeak、AivisSpeech）については、カスタムAPIエンドポイントURLを指定することができます：
+
+```typescript
+// カスタムAPIエンドポイントの設定例
+aituber.updateVoiceService({
+  engineType: 'voicevox',
+  speaker: '1',
+  // 自己ホストまたは代替VOICEVOXサーバーのカスタムエンドポイント
+  voicevoxApiUrl: 'http://custom-voicevox-server:50021'
+});
+
+// VoicePeakの例
+aituber.updateVoiceService({
+  engineType: 'voicepeak',
+  speaker: '2',
+  voicepeakApiUrl: 'http://custom-voicepeak-server:20202'
+});
+
+// AivisSpeechの例
+aituber.updateVoiceService({
+  engineType: 'aivisSpeech',
+  speaker: '3',
+  aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
+});
+```
+
+これは、音声エンジンを異なるポートやリモートサーバーで実行している場合に便利です。
+
 ## AIプロバイダーシステム
 
 AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用しており、様々なAI APIとの連携が可能です。
@@ -360,8 +439,8 @@ AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用し�
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-4, GPT-4o-mini, O3-miniのモデルをサポート
-- **Gemini**: Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flashのモデルをサポート
+- **OpenAI**: GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini, GPT-4.5(Preview)のモデルをサポート
+- **Gemini**: Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Pro, Gemini 2.5 Pro(試験運用版)のモデルをサポート
 
 ### プロバイダーの指定方法
 
@@ -402,6 +481,8 @@ const aituberCore = new AITuberOnAirCore({
 ```
 
 これにより、テキストチャットには軽量なモデルを使用し、画像処理が必要な場合のみ高機能なモデルを使用するといった最適化が可能になります。
+
+注意: visionModelを指定する際は、Vision機能をサポートするモデルを選択してください。サポートされていないモデルが指定された場合、初期化時にエラーが発生します。
 
 ### 利用可能なプロバイダーとモデルの取得
 

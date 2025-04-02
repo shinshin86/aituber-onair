@@ -1,28 +1,28 @@
-import { Message } from '../../types';
-import { Summarizer } from '../../core/MemoryManager';
+import { Message } from '../../../../types';
+import { Summarizer } from '../../../../core/MemoryManager';
 import {
-  ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
-  MODEL_GPT_4O_MINI,
-} from '../../constants';
-import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../constants/prompts';
+  ENDPOINT_CLAUDE_API,
+  MODEL_CLAUDE_3_HAIKU,
+} from '../../../../constants';
+import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../constants';
 
 /**
- * Implementation of summarization functionality using OpenAI
+ * Implementation of summarization functionality using Claude
  */
-export class OpenAISummarizer implements Summarizer {
+export class ClaudeSummarizer implements Summarizer {
   private apiKey: string;
   private model: string;
   private defaultPromptTemplate: string;
 
   /**
    * Constructor
-   * @param apiKey OpenAI API key
+   * @param apiKey Anthropic API key
    * @param model Name of the model to use
    * @param defaultPromptTemplate Default prompt template for summarization
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_GPT_4O_MINI,
+    model: string = MODEL_CLAUDE_3_HAIKU,
     defaultPromptTemplate: string = DEFAULT_SUMMARY_PROMPT_TEMPLATE,
   ) {
     this.apiKey = apiKey;
@@ -56,22 +56,20 @@ export class OpenAISummarizer implements Summarizer {
         .join('\n');
 
       // API request
-      const response = await fetch(ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, {
+      const response = await fetch(ENDPOINT_CLAUDE_API, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
+          'x-api-key': this.apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
           model: this.model,
           messages: [
             {
-              role: 'system',
-              content: systemPrompt,
-            },
-            {
               role: 'user',
-              content: conversationText,
+              content: `${systemPrompt}\n\n${conversationText}`,
             },
           ],
           max_tokens: maxLength,
@@ -81,12 +79,12 @@ export class OpenAISummarizer implements Summarizer {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          `OpenAI API error: ${errorData.error?.message || response.statusText}`,
+          `Claude API error: ${errorData.error?.message || response.statusText}`,
         );
       }
 
       const data = await response.json();
-      return data.choices[0]?.message?.content || '';
+      return data.content?.[0]?.text || '';
     } catch (error) {
       console.error('Error in summarize:', error);
       // Error fallback - simple summary
