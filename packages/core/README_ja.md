@@ -433,7 +433,7 @@ aituber.updateVoiceService({
 ## AIプロバイダーシステム
 
 AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用しており、様々なAI APIとの連携が可能です。
-現在はOpenAI APIとGemini APIが利用可能ですが、他のAPIプロバイダー（Claude APIなど）も近日中に追加予定です。
+現在はOpenAI APIとGemini API、Claude APIが利用可能です。もし利用したいAPIがあればPRやメッセージをください。
 
 ### 利用可能なプロバイダー
 

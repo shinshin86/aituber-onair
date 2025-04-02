@@ -435,7 +435,7 @@ This is useful when running voice engines on different ports or remote servers.
 ## AI Provider System
 
 AITuber OnAir Core adopts an extensible provider system, enabling integration with various AI APIs.
-Currently, OpenAI API and Gemini API is available, but other API providers (such as Claude API, etc.) are planned to be added soon.
+Currently, OpenAI API, Gemini API, and Claude API are available. If you would like to use any other API, please submit a PR or send us a message.
 
 ### Available Providers
 
