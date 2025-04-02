@@ -184,9 +184,14 @@ src/
   │     │    ├── ChatServiceFactory.ts     # プロバイダー用ファクトリー
   │     │    └── providers/                # AIプロバイダー実装
   │     │         ├── ChatServiceProvider.ts  # プロバイダーインターフェース
+  │     │         ├── claude/              # Claude固有
+  │     │         │    ├── ClaudeChatService.ts
+  │     │         │    ├── ClaudeChatServiceProvider.ts
+  │     │         │    └── ClaudeSummarizer.ts
   │     │         ├── gemini/              # Gemini固有
   │     │         │    ├── GeminiChatService.ts
-  │     │         │    └── GeminiChatServiceProvider.ts
+  │     │         │    ├── GeminiChatServiceProvider.ts
+  │     │         │    └── GeminiSummarizer.ts
   │     │         └── openai/              # OpenAI固有
   │     │              ├── OpenAIChatService.ts
   │     │              ├── OpenAIChatServiceProvider.ts

@@ -198,9 +198,14 @@ src/
   │     │    ├── ChatServiceFactory.ts     # Factory for providers
   │     │    └── providers/                # AI provider implementations
   │     │         ├── ChatServiceProvider.ts  # Provider interface
+  │     │         ├── claude/              # Claude-specific
+  │     │         │    ├── ClaudeChatService.ts
+  │     │         │    ├── ClaudeChatServiceProvider.ts
+  │     │         │    └── ClaudeSummarizer.ts
   │     │         ├── gemini/              # Gemini-specific
   │     │         │    ├── GeminiChatService.ts
-  │     │         │    └── GeminiChatServiceProvider.ts
+  │     │         │    ├── GeminiChatServiceProvider.ts
+  │     │         │    └── GeminiSummarizer.ts
   │     │         └── openai/              # OpenAI-specific
   │     │              ├── OpenAIChatService.ts
   │     │              ├── OpenAIChatServiceProvider.ts
