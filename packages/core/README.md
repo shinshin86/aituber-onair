@@ -446,7 +446,7 @@ Currently, OpenAI API, Gemini API, and Claude API are available. If you would li
 
 Currently, the following AI provider is built-in:
 
-- **OpenAI**: Supports models like GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini, GPT-4.5(Preview)
+- **OpenAI**: Supports models like GPT-4.1(including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Pro, Gemini 2.5 Pro(Experimental)
 - **Claude**: Supports models like Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnet
 
