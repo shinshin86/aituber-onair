@@ -12,7 +12,8 @@
     "test": "npm run typecheck && vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "fmt": "biome format . --write"
+    "fmt": "biome format . --write",
+    "prepublishOnly": "npm run build"
   },
   "keywords": ["aituber", "vtuber", "ai", "voice", "streaming"],
   "author": "shinshin86 (https://github.com/shinshin86)",
