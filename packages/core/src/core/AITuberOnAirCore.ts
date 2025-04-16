@@ -15,6 +15,7 @@ import { ChatServiceFactory } from '../services/chat/ChatServiceFactory';
 import { ChatServiceOptions } from '../services/chat/providers/ChatServiceProvider';
 import { MODEL_GEMINI_2_0_FLASH_LITE, MODEL_GPT_4O_MINI } from '../constants';
 import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
+import { ClaudeSummarizer } from '../services/chat/providers/claude/ClaudeSummarizer';
 
 /**
  * Setting options for AITuberOnAirCore
@@ -105,13 +106,19 @@ export class AITuberOnAirCore extends EventEmitter {
       if (providerName === 'gemini') {
         summarizer = new GeminiSummarizer(
           options.apiKey,
-          options.model || MODEL_GEMINI_2_0_FLASH_LITE,
+          options.model,
+          options.memoryOptions.summaryPromptTemplate,
+        );
+      } else if (providerName === 'claude') {
+        summarizer = new ClaudeSummarizer(
+          options.apiKey,
+          options.model,
           options.memoryOptions.summaryPromptTemplate,
         );
       } else {
         summarizer = new OpenAISummarizer(
           options.apiKey,
-          options.model || MODEL_GPT_4O_MINI,
+          options.model,
           options.memoryOptions.summaryPromptTemplate,
         );
       }
