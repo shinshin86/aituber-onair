@@ -234,6 +234,7 @@ This is the overall integration class, responsible for initializing and coordina
 - `processVisionChat(imageDataUrl, visionPrompt?)` – Process image input (optionally pass a custom prompt)
 - `stopSpeech()` – Stop speech playback
 - `getChatHistory()` – Retrieve chat history
+- `setChatHistory(messages)` – Set chat history from external source (e.g., for replay or migration)
 - `clearChatHistory()` – Clear chat history
 - `updateVoiceService(options)` – Update speech settings
 - `isMemoryEnabled()` – Check if memory functionality is enabled

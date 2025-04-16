@@ -142,4 +142,13 @@ describe('AITuberOnAirCore Memory Integration', () => {
     // memory is enabled
     expect(newCore.isMemoryEnabled()).toBe(true);
   });
+
+  it('can set chat history from external source', () => {
+    const messages = [
+      { role: 'user' as const, content: 'A', timestamp: 1 },
+      { role: 'assistant' as const, content: 'B', timestamp: 2 },
+    ];
+    core.setChatHistory(messages);
+    expect(core.getChatHistory()).toEqual(messages);
+  });
 });

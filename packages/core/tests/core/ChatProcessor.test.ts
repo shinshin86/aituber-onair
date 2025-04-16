@@ -368,4 +368,39 @@ describe('ChatProcessor', () => {
       expect(processingEndCalls.length).toBeGreaterThan(0);
     });
   });
+
+  describe('setChatLog', () => {
+    it('should set chat log from external source and emit chatLogUpdated', () => {
+      // Arrange
+      const messages = [
+        { role: 'user', content: 'Hello', timestamp: 1 },
+        { role: 'assistant', content: 'Hi!', timestamp: 2 },
+      ];
+      const emitSpy = vi.spyOn(chatProcessor as any, 'emit');
+
+      // Act
+      (chatProcessor as any).setChatLog(messages);
+
+      // Assert
+      const log = (chatProcessor as any).getChatLog();
+      expect(log).toEqual(messages);
+      expect(emitSpy).toHaveBeenCalledWith('chatLogUpdated', messages);
+    });
+
+    it('should clear chat log if empty array is set', () => {
+      // Arrange
+      const messages = [
+        { role: 'user', content: 'Hello', timestamp: 1 },
+        { role: 'assistant', content: 'Hi!', timestamp: 2 },
+      ];
+      (chatProcessor as any).setChatLog(messages);
+      expect((chatProcessor as any).getChatLog()).toEqual(messages);
+
+      // Act
+      (chatProcessor as any).setChatLog([]);
+
+      // Assert
+      expect((chatProcessor as any).getChatLog()).toEqual([]);
+    });
+  });
 });

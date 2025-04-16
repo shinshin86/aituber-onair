@@ -236,6 +236,14 @@ export class AITuberOnAirCore extends EventEmitter {
   }
 
   /**
+   * Set chat history from external source
+   * @param messages Message array to set as chat history
+   */
+  setChatHistory(messages: Message[]): void {
+    this.chatProcessor.setChatLog(messages);
+  }
+
+  /**
    * Clear chat history
    */
   clearChatHistory(): void {

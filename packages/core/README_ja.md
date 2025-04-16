@@ -219,6 +219,7 @@ src/
 - `processVisionChat(imageDataUrl, visionPrompt?)` - 画像入力の処理（オプションでカスタムプロンプトを指定可能）
 - `stopSpeech()` - 音声再生の停止
 - `getChatHistory()` - チャット履歴の取得
+- `setChatHistory(messages)` - 外部からチャット履歴を復元・再現できる（リプレイや移行用途など）
 - `clearChatHistory()` - チャット履歴のクリア
 - `updateVoiceService(options)` - 音声設定の更新
 - `isMemoryEnabled()` - メモリ機能が有効かどうかの確認

@@ -224,9 +224,13 @@ async function basicExample() {
   // aituber.stopSpeech();
 
   // Example: Get and clear chat history
-  // const history = aituber.getChatHistory();
-  // console.log('Chat history:', history);
-  // aituber.clearChatHistory();
+  const history = aituber.getChatHistory();
+  console.log('Chat history:', history);
+  aituber.clearChatHistory();
+
+  // Example: Restore chat history from external source
+  aituber.setChatHistory(history);
+  console.log('Restored chat history:', aituber.getChatHistory());
 
   // Example: Update voice service options
   // aituber.updateVoiceService({

@@ -319,4 +319,13 @@ export class ChatProcessor extends EventEmitter {
 
     return messages;
   }
+
+  /**
+   * Set chat log from external source
+   * @param messages Message array to set as chat log
+   */
+  setChatLog(messages: Message[]): void {
+    this.chatLog = Array.isArray(messages) ? [...messages] : [];
+    this.emit('chatLogUpdated', this.chatLog);
+  }
 }
