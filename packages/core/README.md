@@ -247,6 +247,8 @@ The component that sends text input to an AI model (e.g., OpenAI GPT) and receiv
 
 ### MemoryManager
 
+**MemoryManager is designed to prevent issues such as API token limits, increased costs, and slow responses that can occur when the chat log grows too large. When a certain time or message threshold is exceeded, older chat history is summarized and stored as short-, mid-, and long-term memory. This allows recent conversation to be sent as-is, while past context is provided as a summary, maintaining context for the AI while keeping API requests efficient.**
+
 Handles conversational context. In long conversations, older messages are summarized and maintained as short-term (1 min), mid-term (4 min), and long-term (9 min) memory. This helps maintain consistency in AI responses.
 
 - **Custom Settings**: 
