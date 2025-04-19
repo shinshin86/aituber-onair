@@ -234,6 +234,7 @@ This is the overall integration class, responsible for initializing and coordina
 - `processVisionChat(imageDataUrl, visionPrompt?)` – Process image input (optionally pass a custom prompt)
 - `stopSpeech()` – Stop speech playback
 - `getChatHistory()` – Retrieve chat history
+- `setChatHistory(messages)` – Set chat history from external source (e.g., for replay or migration)
 - `clearChatHistory()` – Clear chat history
 - `updateVoiceService(options)` – Update speech settings
 - `isMemoryEnabled()` – Check if memory functionality is enabled
@@ -246,6 +247,8 @@ The component that sends text input to an AI model (e.g., OpenAI GPT) and receiv
 - `updateOptions(newOptions)` – Allows you to update settings at runtime
 
 ### MemoryManager
+
+**MemoryManager is designed to prevent issues such as API token limits, increased costs, and slow responses that can occur when the chat log grows too large. When a certain time or message threshold is exceeded, older chat history is summarized and stored as short-, mid-, and long-term memory. This allows recent conversation to be sent as-is, while past context is provided as a summary, maintaining context for the AI while keeping API requests efficient.**
 
 Handles conversational context. In long conversations, older messages are summarized and maintained as short-term (1 min), mid-term (4 min), and long-term (9 min) memory. This helps maintain consistency in AI responses.
 

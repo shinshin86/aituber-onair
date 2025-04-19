@@ -219,6 +219,7 @@ src/
 - `processVisionChat(imageDataUrl, visionPrompt?)` - 画像入力の処理（オプションでカスタムプロンプトを指定可能）
 - `stopSpeech()` - 音声再生の停止
 - `getChatHistory()` - チャット履歴の取得
+- `setChatHistory(messages)` - 外部からチャット履歴を復元・再現できる（リプレイや移行用途など）
 - `clearChatHistory()` - チャット履歴のクリア
 - `updateVoiceService(options)` - 音声設定の更新
 - `isMemoryEnabled()` - メモリ機能が有効かどうかの確認
@@ -232,6 +233,8 @@ src/
 - `updateOptions(newOptions)` - 実行時にオプションを更新可能
 
 ### MemoryManager
+
+**MemoryManagerは、会話履歴（chatLog）が長くなりすぎてAPIのトークン制限やコスト増大、レスポンス遅延などの問題が発生しないように設計されています。一定時間やメッセージ数を超えた場合、古い会話履歴を要約し、短期・中期・長期メモリとして保存します。これにより、直近の会話はそのまま、過去の文脈は要約としてAIに渡すことで、文脈維持と効率的なAPI利用を両立しています。**
 
 会話の文脈を維持するためのコンポーネントです。長時間の会話では古いメッセージを要約し、短期（1分）・中期（4分）・長期（9分）の記憶として保持します。これによりAIの応答に一貫性を持たせます。
 
