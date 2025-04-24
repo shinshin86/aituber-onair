@@ -1,4 +1,4 @@
-import { ChatScreenplay } from '../../types';
+import { ChatScreenplay, EmotionType } from '../../types';
 import {
   VoiceService,
   VoiceServiceOptions,
@@ -55,7 +55,7 @@ export class VoiceEngineAdapter implements VoiceService {
       );
 
       // Map emotion to style used by existing engine
-      const getStyleFromEmotion = (emotion: string): string => {
+      const getStyleFromEmotion = (emotion: string): EmotionType => {
         switch (emotion) {
           case 'angry':
             return 'angry';
@@ -63,12 +63,10 @@ export class VoiceEngineAdapter implements VoiceService {
             return 'happy';
           case 'sad':
             return 'sad';
-          case 'fear':
-            return 'fear';
           case 'surprised':
             return 'surprised';
           default:
-            return 'talk';
+            return 'neutral';
         }
       };
 

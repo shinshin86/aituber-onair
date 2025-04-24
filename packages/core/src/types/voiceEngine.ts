@@ -1,4 +1,4 @@
-export type voiceEngineType =
+export type VoiceEngineType =
   | 'voicevox'
   | 'voicepeak'
   | 'openai'

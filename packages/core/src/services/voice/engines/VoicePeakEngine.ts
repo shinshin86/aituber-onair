@@ -54,6 +54,10 @@ export class VoicePeakEngine implements VoiceEngine {
         return 'angry';
       case 'sad':
         return 'sad';
+      case 'surprised':
+        return 'surprised';
+      case 'fear':
+        return 'fear';
       default:
         return 'neutral';
     }

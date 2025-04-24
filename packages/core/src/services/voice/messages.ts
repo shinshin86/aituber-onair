@@ -43,6 +43,8 @@ const emotionToTalkStyle = (emotion: EmotionType): TalkStyle => {
       return 'happy';
     case 'sad':
       return 'sad';
+    case 'surprised':
+      return 'surprised';
     default:
       return 'talk';
   }

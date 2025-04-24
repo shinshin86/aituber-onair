@@ -1,4 +1,4 @@
-import { ChatScreenplay, voiceEngineType } from '../../types';
+import { ChatScreenplay, VoiceEngineType } from '../../types';
 
 /**
  * Voice service settings options
@@ -7,7 +7,7 @@ export interface VoiceServiceOptions {
   /** Speaker ID */
   speaker: string;
   /** Engine type (voicevox, voicepeak, openai, nijivoice, aivisSpeech) */
-  engineType: voiceEngineType;
+  engineType: VoiceEngineType;
   /** API key (if needed) */
   apiKey?: string;
   /** Audio playback callback */
