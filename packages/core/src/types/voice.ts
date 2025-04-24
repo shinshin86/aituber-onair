@@ -8,7 +8,6 @@ export const talkStyles = [
   'happy',
   'sad',
   'angry',
-  'fear',
   'surprised',
 ] as const;
 
