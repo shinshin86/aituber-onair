@@ -29,6 +29,7 @@ export type {
   AudioPlayOptions,
 } from './services/voice/VoiceService';
 export { VoiceEngineAdapter } from './services/voice/VoiceEngineAdapter';
+export * from './services/voice/engines';
 
 // Core module exports
 export { EventEmitter } from './core/EventEmitter';

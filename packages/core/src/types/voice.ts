@@ -8,7 +8,6 @@ export const talkStyles = [
   'happy',
   'sad',
   'angry',
-  'fear',
   'surprised',
 ] as const;
 
@@ -33,6 +32,7 @@ export const emotions = [
   'happy',
   'angry',
   'sad',
+  'surprised',
   'relaxed',
 ] as const;
 export type EmotionType = (typeof emotions)[number] & VRMExpressionPresetName;
@@ -45,7 +45,8 @@ export type EmotionTypeForVoicepeak =
   | 'fun'
   | 'angry'
   | 'sad'
-  | 'neutral';
+  | 'neutral'
+  | 'surprised';
 
 /**
  * Screenplay - Text with emotion expression

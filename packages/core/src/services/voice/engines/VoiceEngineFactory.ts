@@ -4,7 +4,7 @@ import { VoicePeakEngine } from './VoicePeakEngine';
 import { AivisSpeechEngine } from './AivisSpeechEngine';
 import { OpenAiEngine } from './OpenAiEngine';
 import { NijiVoiceEngine } from './NijiVoiceEngine';
-import { voiceEngineType } from '../../../types';
+import { VoiceEngineType } from '../../../types';
 /**
  * Voice engine factory
  * Generate appropriate voice engine instances based on voice engine type
@@ -16,7 +16,7 @@ export class VoiceEngineFactory {
    * @returns voice engine instance
    * @throws error if engine type is unknown
    */
-  static getEngine(engineType: voiceEngineType): VoiceEngine {
+  static getEngine(engineType: VoiceEngineType): VoiceEngine {
     switch (engineType) {
       case 'voicevox':
         return new VoiceVoxEngine();
