@@ -1,5 +1,11 @@
 import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision } from '../../../../types';
+import {
+  Message,
+  MessageWithVision,
+  ToolChatBlock,
+  ToolChatCompletion,
+  ToolDefinition,
+} from '../../../../types';
 import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
@@ -10,11 +16,56 @@ import {
  * Gemini implementation of ChatService
  */
 export class GeminiChatService implements ChatService {
+  /** Provider name */
+  readonly provider: string = 'gemini';
+
   private apiKey: string;
   private model: string;
   private visionModel: string;
-  /** Provider name */
-  readonly provider: string = 'gemini';
+  private tools: ToolDefinition[];
+
+  /** id(OpenAI) → name(Gemini) mapping */
+  private callIdMap = new Map<string, string>();
+
+  /* ────────────────────────────────── */
+  /*  Utilities                           */
+  /* ────────────────────────────────── */
+  private safeJsonParse(str: string) {
+    try {
+      return JSON.parse(str);
+    } catch {
+      return str; // keep as string
+    }
+  }
+
+  private normalizeToolResult(val: any) {
+    if (val === null) return { content: null };
+    if (typeof val === 'object') return val;
+    return { content: val }; // wrap primitive
+  }
+
+  /**
+   * camelCase → snake_case conversion (v1beta)
+   */
+  private adaptKeysForApi(obj: any): any {
+    const map: Record<string, string> = {
+      toolConfig: 'tool_config',
+      functionCallingConfig: 'function_calling_config',
+      functionDeclarations: 'function_declarations',
+      functionCall: 'function_call',
+      functionResponse: 'function_response',
+    };
+    if (Array.isArray(obj)) return obj.map((v) => this.adaptKeysForApi(v));
+    if (obj && typeof obj === 'object') {
+      return Object.fromEntries(
+        Object.entries(obj).map(([k, v]) => [
+          map[k] ?? k,
+          this.adaptKeysForApi(v),
+        ]),
+      );
+    }
+    return obj;
+  }
 
   /**
    * Constructor
@@ -26,6 +77,7 @@ export class GeminiChatService implements ChatService {
     apiKey: string,
     model: string = MODEL_GEMINI_2_0_FLASH_LITE,
     visionModel: string = MODEL_GEMINI_2_0_FLASH_LITE,
+    tools: ToolDefinition[] = [],
   ) {
     this.apiKey = apiKey;
     this.model = model;
@@ -37,6 +89,7 @@ export class GeminiChatService implements ChatService {
       );
     }
     this.visionModel = visionModel;
+    this.tools = tools;
   }
 
   /**
@@ -67,221 +120,228 @@ export class GeminiChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
-      // Convert messages to Gemini format
-      const geminiMessages = this.convertMessagesToGeminiFormat(messages);
-
-      // Create the endpoint URL with API key
-      const apiUrl = `${ENDPOINT_GEMINI_API}/models/${this.model}:streamGenerateContent?key=${this.apiKey}`;
-
-      // Request to Gemini API
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: geminiMessages,
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1000,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          `Gemini API error: ${errorData.error?.message || response.statusText}`,
-        );
+      if (this.tools.length === 0) {
+        /* no tools */
+        const res = await this.callGemini(messages, this.model, true);
+        const { blocks } = await this.parseStream(res, onPartialResponse);
+        const full = blocks
+          .filter((b) => b.type === 'text')
+          .map((b) => b.text)
+          .join('');
+        await onCompleteResponse(full);
+        return;
       }
 
-      // Process streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let fullText = '';
-
-      if (!reader) {
-        throw new Error('Failed to get response reader');
+      /* with tools (1 turn) */
+      const { blocks, stop_reason } = await this.chatOnce(
+        messages,
+        true,
+        onPartialResponse,
+      );
+      if (stop_reason === 'end') {
+        const full = blocks
+          .filter((b) => b.type === 'text')
+          .map((b) => b.text)
+          .join('');
+        await onCompleteResponse(full);
+        return;
       }
-
-      // get full response
-      let responseText = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        responseText += chunk;
-      }
-
-      // parse response
-      try {
-        const responseArray = JSON.parse(responseText);
-
-        // process each response
-        for (const item of responseArray) {
-          if (item.candidates && item.candidates.length > 0) {
-            const content = item.candidates[0].content;
-            if (content && content.parts && content.parts.length > 0) {
-              const text = content.parts[0].text || '';
-              if (text) {
-                fullText += text;
-                onPartialResponse(text);
-              }
-            }
-          }
-        }
-      } catch (err: any) {
-        console.error('Error parsing Gemini response:', err);
-        throw new Error(`Failed to parse Gemini response: ${err.message}`);
-      }
-
-      // Complete response callback
-      await onCompleteResponse(fullText);
-    } catch (error) {
-      console.error('Error in processChat:', error);
-      throw error;
+      throw new Error(
+        'Received functionCall. Use chatOnce() loop when tools are enabled.',
+      );
+    } catch (err) {
+      console.error('Error in processChat:', err);
+      throw err;
     }
   }
 
-  /**
-   * Process chat messages with images
-   * @param messages Array of messages to send (including images)
-   * @param onPartialResponse Callback to receive each part of streaming response
-   * @param onCompleteResponse Callback to execute when response is complete
-   * @throws Error if the selected model doesn't support vision
-   */
   async processVisionChat(
     messages: MessageWithVision[],
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
-      // Check if the vision model supports vision capabilities
       if (!GEMINI_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
         throw new Error(
           `Model ${this.visionModel} does not support vision capabilities.`,
         );
       }
 
-      // Convert messages to Gemini vision format
-      const geminiMessages =
-        await this.convertVisionMessagesToGeminiFormat(messages);
-
-      // Create the endpoint URL with API key
-      const apiUrl = `${ENDPOINT_GEMINI_API}/models/${this.visionModel}:streamGenerateContent?key=${this.apiKey}`;
-
-      // Request to Gemini API
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: geminiMessages,
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1000,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          `Gemini API error: ${errorData.error?.message || response.statusText}`,
-        );
+      if (this.tools.length === 0) {
+        const res = await this.callGemini(messages, this.visionModel, true);
+        const { blocks } = await this.parseStream(res, onPartialResponse);
+        const full = blocks
+          .filter((b) => b.type === 'text')
+          .map((b) => b.text)
+          .join('');
+        await onCompleteResponse(full);
+        return;
       }
 
-      // Process streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let fullText = '';
-
-      if (!reader) {
-        throw new Error('Failed to get response reader');
+      const { blocks, stop_reason } = await this.visionChatOnce(messages);
+      blocks
+        .filter((b) => b.type === 'text')
+        .forEach((b) => onPartialResponse(b.text!));
+      if (stop_reason === 'end') {
+        const full = blocks
+          .filter((b) => b.type === 'text')
+          .map((b) => b.text)
+          .join('');
+        await onCompleteResponse(full);
+        return;
       }
-
-      // get full response
-      let responseText = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        responseText += chunk;
-      }
-
-      // parse response
-      try {
-        const responseArray = JSON.parse(responseText);
-
-        // process each response
-        for (const item of responseArray) {
-          if (item.candidates && item.candidates.length > 0) {
-            const content = item.candidates[0].content;
-            if (content && content.parts && content.parts.length > 0) {
-              const text = content.parts[0].text || '';
-              if (text) {
-                fullText += text;
-                onPartialResponse(text);
-              }
-            }
-          }
-        }
-      } catch (err: any) {
-        console.error('Error parsing Gemini response:', err);
-        throw new Error(`Failed to parse Gemini response: ${err.message}`);
-      }
-
-      // Complete response callback
-      await onCompleteResponse(fullText);
-    } catch (error) {
-      console.error('Error in processVisionChat:', error);
-      throw error;
+      throw new Error(
+        'Received functionCall. Use visionChatOnce() loop when tools are enabled.',
+      );
+    } catch (err) {
+      console.error('Error in processVisionChat:', err);
+      throw err;
     }
   }
 
-  /**
-   * Convert AITuber OnAir messages to Gemini format
-   * @param messages Array of messages
-   * @returns Gemini formatted messages
-   */
+  /* ────────────────────────────────── */
+  /*  OpenAI → Gemini conversion         */
+  /* ────────────────────────────────── */
   private convertMessagesToGeminiFormat(messages: Message[]): any[] {
-    const geminiMessages = [];
-    let currentRole = null;
-    let currentParts = [];
+    const gemini: any[] = [];
+    let currentRole: string | null = null;
+    let currentParts: any[] = [];
 
-    for (const msg of messages) {
-      // Map AITuber OnAir roles to Gemini roles
-      const role = this.mapRoleToGemini(msg.role);
-
-      // If role changes, start a new message
-      if (role !== currentRole && currentParts.length > 0) {
-        geminiMessages.push({
-          role: currentRole,
-          parts: [...currentParts],
-        });
+    const pushCurrent = () => {
+      if (currentRole && currentParts.length) {
+        gemini.push({ role: currentRole, parts: [...currentParts] });
         currentParts = [];
       }
+    };
 
+    for (const msg of messages) {
+      const role = this.mapRoleToGemini(msg.role);
+
+      /* assistant: tool_calls -> functionCall */
+      if ((msg as any).tool_calls) {
+        pushCurrent();
+        for (const call of (msg as any).tool_calls) {
+          this.callIdMap.set(call.id, call.function.name);
+          gemini.push({
+            role: 'model',
+            parts: [
+              {
+                functionCall: {
+                  name: call.function.name,
+                  args: JSON.parse(call.function.arguments || '{}'),
+                },
+              },
+            ],
+          });
+        }
+        continue;
+      }
+
+      /* tool → functionResponse */
+      if (msg.role === 'tool') {
+        pushCurrent();
+        const funcName =
+          (msg as any).name ??
+          this.callIdMap.get((msg as any).tool_call_id) ??
+          'result';
+        gemini.push({
+          role: 'user',
+          parts: [
+            {
+              functionResponse: {
+                name: funcName,
+                response: this.normalizeToolResult(
+                  this.safeJsonParse(msg.content),
+                ),
+              },
+            },
+          ],
+        });
+        continue;
+      }
+
+      /* normal text */
+      if (role !== currentRole) pushCurrent();
       currentRole = role;
       currentParts.push({ text: msg.content });
     }
+    pushCurrent();
+    return gemini;
+  }
 
-    // Add the last message
-    if (currentRole && currentParts.length > 0) {
-      geminiMessages.push({
-        role: currentRole,
-        parts: [...currentParts],
-      });
+  /* ────────────────────────────────── */
+  /*  HTTP call                           */
+  /* ────────────────────────────────── */
+  private async callGemini(
+    messages: (Message | MessageWithVision)[],
+    model: string,
+    stream = false,
+  ): Promise<Response> {
+    const hasVision = messages.some(
+      (m) =>
+        Array.isArray((m as any).content) &&
+        (m as any).content.some(
+          (b: any) => b?.type === 'image_url' || b?.inlineData,
+        ),
+    );
+    const contents = hasVision
+      ? await this.convertVisionMessagesToGeminiFormat(
+          messages as MessageWithVision[],
+        )
+      : this.convertMessagesToGeminiFormat(messages as Message[]);
+
+    const body: any = {
+      contents,
+      generationConfig: {
+        maxOutputTokens: 1000,
+      },
+    };
+    if (this.tools.length) {
+      body.tools = [
+        {
+          functionDeclarations: this.tools.map((t) => ({
+            name: t.name,
+            description: t.description,
+            parameters: t.parameters,
+          })),
+        },
+      ];
+      body.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
     }
 
-    return geminiMessages;
+    const fetchOnce = async (
+      ver: 'v1' | 'v1beta',
+      payload: any,
+    ): Promise<Response> => {
+      const fn = stream ? 'streamGenerateContent' : 'generateContent';
+      const alt = stream ? '?alt=sse' : '';
+      const url = `${ENDPOINT_GEMINI_API}/${ver}/models/${model}:${fn}${alt}${alt ? '&' : '?'}key=${this.apiKey}`;
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    };
+
+    const isLite = /flash[-_]lite/.test(model);
+    const firstVer: 'v1' | 'v1beta' = isLite ? 'v1beta' : 'v1';
+
+    const tryApi = async (): Promise<Response> => {
+      try {
+        const payload = firstVer === 'v1' ? body : this.adaptKeysForApi(body); // snake_case conversion
+        return await fetchOnce(firstVer, payload);
+      } catch (e: any) {
+        // Only retry v1beta if camel/snake case mismatch error occurs in non-Lite models
+        if (!isLite && /Unknown name|Cannot find field|404/.test(e.message)) {
+          return await fetchOnce('v1beta', this.adaptKeysForApi(body));
+        }
+        throw e; // otherwise, throw to upper layer
+      }
+    };
+
+    const res = await tryApi();
+    if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
+    return res;
   }
 
   /**
@@ -299,6 +359,48 @@ export class GeminiChatService implements ChatService {
     for (const msg of messages) {
       // Map AITuber OnAir roles to Gemini roles
       const role = this.mapRoleToGemini(msg.role);
+
+      /* ----------- OpenAI compatible tool metadata ----------- */
+      // assistant: { tool_calls:[{id,name,function:{arguments}}] }
+      if ((msg as any).tool_calls) {
+        for (const call of (msg as any).tool_calls) {
+          // Gemini does not need id. Insert functionCall into parts
+          geminiMessages.push({
+            role: 'model',
+            parts: [
+              {
+                functionCall: {
+                  name: call.function.name,
+                  args: JSON.parse(call.function.arguments || '{}'),
+                },
+              },
+            ],
+          });
+        }
+        continue;
+      }
+
+      // tool role → user role + functionResponse
+      if (msg.role === 'tool') {
+        const funcName =
+          (msg as any).name ??
+          this.callIdMap.get((msg as any).tool_call_id) ??
+          'result';
+        geminiMessages.push({
+          role: 'user',
+          parts: [
+            {
+              functionResponse: {
+                name: funcName,
+                response: this.normalizeToolResult(
+                  this.safeJsonParse(msg.content as string),
+                ),
+              },
+            },
+          ],
+        });
+        continue;
+      }
 
       // If role changes, start a new message
       if (role !== currentRole && currentParts.length > 0) {
@@ -390,5 +492,169 @@ export class GeminiChatService implements ChatService {
       default:
         return 'user';
     }
+  }
+
+  /* ────────────────────────────────────────────────────────── */
+  /*  Convert NDJSON stream to common format             */
+  /* ────────────────────────────────────────────────────────── */
+  private async parseStream(
+    res: Response,
+    onPartial: (chunk: string) => void,
+  ): Promise<ToolChatCompletion> {
+    const reader = res.body!.getReader();
+    const dec = new TextDecoder();
+
+    const textBlocks: ToolChatBlock[] = [];
+    const toolBlocks: ToolChatBlock[] = [];
+    let buf = '';
+
+    const flush = (payload: string) => {
+      if (!payload || payload === '[DONE]') return;
+      let obj: any;
+      try {
+        obj = JSON.parse(payload);
+      } catch {
+        return;
+      }
+
+      for (const cand of obj.candidates ?? []) {
+        for (const part of cand.content?.parts ?? []) {
+          if (part.text) {
+            onPartial(part.text);
+            textBlocks.push({ type: 'text', text: part.text });
+          }
+          if (part.functionCall) {
+            toolBlocks.push({
+              type: 'tool_use',
+              id: this.genUUID(),
+              name: part.functionCall.name,
+              input: part.functionCall.args ?? {},
+            });
+          }
+          if (part.functionResponse) {
+            toolBlocks.push({
+              type: 'tool_result',
+              tool_use_id: part.functionResponse.name,
+              content: JSON.stringify(part.functionResponse.response),
+            });
+          }
+        }
+      }
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+
+      let nl;
+      while ((nl = buf.indexOf('\n')) !== -1) {
+        let line = buf.slice(0, nl);
+        buf = buf.slice(nl + 1);
+
+        if (line.endsWith('\r')) line = line.slice(0, -1); // CRLF support
+        if (!line.trim()) {
+          flush('');
+          continue;
+        } // keep-alive empty line
+
+        if (line.startsWith('data:')) line = line.slice(5).trim();
+        if (!line) continue;
+
+        flush(line);
+      }
+    }
+    if (buf) flush(buf);
+
+    const blocks = [...textBlocks, ...toolBlocks];
+    return {
+      blocks,
+      stop_reason: toolBlocks.some((b) => b.type === 'tool_use')
+        ? 'tool_use'
+        : 'end',
+    };
+  }
+
+  /* ────────────────────────────────────────────────────────── */
+  /*  Convert JSON of non-stream (= generateContent)        */
+  /* ────────────────────────────────────────────────────────── */
+  private parseOneShot(data: any): ToolChatCompletion {
+    const textBlocks: ToolChatBlock[] = [];
+    const toolBlocks: ToolChatBlock[] = [];
+
+    for (const cand of data.candidates ?? []) {
+      for (const part of cand.content?.parts ?? []) {
+        if (part.text) {
+          textBlocks.push({ type: 'text', text: part.text });
+        }
+        if (part.functionCall) {
+          toolBlocks.push({
+            type: 'tool_use',
+            id: this.genUUID(),
+            name: part.functionCall.name,
+            input: part.functionCall.args ?? {},
+          });
+        }
+        if (part.functionResponse) {
+          toolBlocks.push({
+            type: 'tool_result',
+            tool_use_id: part.functionResponse.name,
+            content: JSON.stringify(part.functionResponse.response),
+          });
+        }
+      }
+    }
+
+    const blocks = [...textBlocks, ...toolBlocks];
+    return {
+      blocks,
+      stop_reason: toolBlocks.some((b) => b.type === 'tool_use')
+        ? 'tool_use'
+        : 'end',
+    };
+  }
+
+  /* ────────────────────────────────────────────────────────── */
+  /*  chatOnce (text)                                       */
+  /* ────────────────────────────────────────────────────────── */
+
+  async chatOnce(
+    messages: Message[],
+    stream: boolean = true,
+    onPartialResponse: (t: string) => void = () => {},
+  ): Promise<ToolChatCompletion> {
+    const res = await this.callGemini(messages, this.model, stream);
+    return stream
+      ? this.parseStream(res, onPartialResponse)
+      : this.parseOneShot(await res.json());
+  }
+
+  /* ────────────────────────────────────────────────────────── */
+  /*  visionChatOnce (images)                               */
+  /* ────────────────────────────────────────────────────────── */
+  async visionChatOnce(
+    messages: MessageWithVision[],
+    stream: boolean = false,
+  ): Promise<ToolChatCompletion> {
+    const res = await this.callGemini(messages, this.visionModel, stream);
+    return stream
+      ? this.parseStream(
+          res,
+          /* vision is usually stream=false, but just in case */ () => {},
+        )
+      : this.parseOneShot(await res.json());
+  }
+
+  /* ────────────────────────────────────────────────────────── */
+  /*  UUID helper                                           */
+  /* ────────────────────────────────────────────────────────── */
+  private genUUID(): string {
+    return typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
   }
 }

@@ -14,7 +14,30 @@ import {
   AITuberOnAirCoreOptions,
   ChatScreenplay,
   Message,
+  ToolDefinition,
 } from '../src';
+
+/**
+ * Tool definition
+ */
+const randomIntTool: ToolDefinition = {
+  name: 'randomInt',
+  description: 'Return a random integer from 0 to (max - 1)',
+  parameters: {
+    type: 'object',
+    properties: {
+      max: {
+        type: 'integer',
+        description: 'Upper bound (exclusive). Defaults to 100.',
+        minimum: 1,
+      },
+    },
+  },
+};
+
+async function randomIntHandler({ max = 100 }: { max?: number }) {
+  return Math.floor(Math.random() * max).toString();
+}
 
 /**
  * Example of basic chat processing with AITuberOnAirCore
@@ -58,12 +81,20 @@ async function basicExample() {
       engineType: 'voicevox', // Voice engine type
       onComplete: () => console.log('Voice playback completed'),
     },
+    tools: [{ definition: randomIntTool, handler: randomIntHandler }],
     debug: true, // Enable debug output
   };
 
   const aituber = new AITuberOnAirCore(aituberOptions);
 
   // 3. Set up event listeners
+  aituber.on('TOOL_USE', (b: any) =>
+    console.log(`Tool use -> ${b.name}`, b.input),
+  );
+  aituber.on('TOOL_RESULT', (b: any) =>
+    console.log(`Tool result ->`, b.content),
+  );
+
   aituber.on(AITuberOnAirCoreEvent.PROCESSING_START, (data) => {
     console.log('Processing started:', data);
   });
@@ -141,6 +172,11 @@ async function basicExample() {
   // 6. Examples with different chat providers and automatic summarizer selection
   console.log('\n--- Chat Provider and Summarizer Examples ---');
 
+  // 7. Tool usage example
+  console.log('\n--- Tool Usage Example ---');
+  console.log('User: What is the random number between 0 and 100?');
+  await aituber.processChat('What is the random number between 0 and 100?');
+
   // Example with Gemini Provider and Summarizer
   console.log('\nExample using Gemini Provider:');
 
@@ -193,6 +229,7 @@ async function basicExample() {
       longTermDuration: 10 * 60 * 1000,
     },
     debug: true,
+    tools: [{ definition: randomIntTool, handler: randomIntHandler }],
   };
 
   // Create AITuberOnAirCore with OpenAI provider

@@ -1,35 +1,56 @@
 import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision } from '../../../../types';
+import {
+  CoreToolChatBlock,
+  Message,
+  MessageWithVision,
+  ToolChatBlock,
+  ToolChatCompletion,
+  ToolDefinition,
+} from '../../../../types';
 import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_3_HAIKU,
   CLAUDE_VISION_SUPPORTED_MODELS,
 } from '../../../../constants';
 
+export interface ClaudeToolResultBlock {
+  type: 'tool_result';
+  tool_use_id: string;
+  content: string;
+}
+
+type ClaudeToolChatBlock = CoreToolChatBlock;
+type ClaudeCompletion = ToolChatCompletion<ClaudeToolChatBlock>;
+
 /**
  * Claude implementation of ChatService
  */
 export class ClaudeChatService implements ChatService {
+  /** Provider name */
+  readonly provider: string = 'claude';
+
   private apiKey: string;
   private model: string;
   private visionModel: string;
-  /** Provider name */
-  readonly provider: string = 'claude';
+  private tools: ToolDefinition[];
 
   /**
    * Constructor
    * @param apiKey Anthropic API key
    * @param model Name of the model to use
    * @param visionModel Name of the vision model
+   * @param tools Array of tool definitions
    */
   constructor(
     apiKey: string,
     model: string = MODEL_CLAUDE_3_HAIKU,
     visionModel: string = MODEL_CLAUDE_3_HAIKU,
+    tools: ToolDefinition[] = [],
   ) {
     this.apiKey = apiKey;
     this.model = model || MODEL_CLAUDE_3_HAIKU;
     this.visionModel = visionModel || MODEL_CLAUDE_3_HAIKU;
+    this.tools = tools;
   }
 
   /**
@@ -59,102 +80,34 @@ export class ClaudeChatService implements ChatService {
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
-    try {
-      // Extract system message (if any) and regular messages
-      const systemMessage = messages.find((msg) => msg.role === 'system');
-      const nonSystemMessages = messages.filter((msg) => msg.role !== 'system');
-
-      // Convert messages to Claude format
-      const claudeMessages =
-        this.convertMessagesToClaudeFormat(nonSystemMessages);
-
-      // Request to Claude API
-      const response = await fetch(ENDPOINT_CLAUDE_API, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: this.model,
-          messages: claudeMessages,
-          system: systemMessage?.content || '',
-          stream: true,
-          max_tokens: 1000,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          `Claude API error: ${errorData.error?.message || response.statusText}`,
-        );
-      }
-
-      // Process streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let fullText = '';
-
-      if (!reader) {
-        throw new Error('Failed to get response reader');
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        // Claude API serves responses as Server-Sent Events (SSE)
-        // Each event is prefixed with "event: " and "data: "
-        const lines = chunk.split('\n').filter((line) => line.trim() !== '');
-
-        for (const line of lines) {
-          try {
-            // Check if this is a data line
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6); // Remove 'data: ' prefix
-
-              // Ignore [DONE] marker
-              if (data === '[DONE]') continue;
-
-              const json = JSON.parse(data);
-
-              // Extract delta content if available
-              if (json.type === 'content_block_delta') {
-                const deltaText = json.delta?.text || '';
-                if (deltaText) {
-                  fullText += deltaText;
-                  onPartialResponse(deltaText);
-                }
-              }
-              // Extract full message content if this is a message_start event
-              else if (json.type === 'message_start') {
-                // Initial message metadata, no text yet
-              }
-              // Extract content blocks from message
-              else if (json.type === 'content_block_start') {
-                // Content block metadata, no text yet
-              }
-              // Message completion
-              else if (json.type === 'message_stop') {
-                // Message is complete
-              }
-            }
-          } catch (e) {
-            console.error('Error parsing Claude stream:', e);
-          }
-        }
-      }
-
-      // Complete response callback
-      await onCompleteResponse(fullText);
-    } catch (error) {
-      console.error('Error in processChat:', error);
-      throw error;
+    // not use tools
+    if (this.tools.length === 0) {
+      const res = await this.callClaude(messages, this.model, true);
+      const full = await this.parsePureStream(res, onPartialResponse);
+      await onCompleteResponse(full);
+      return;
     }
+
+    // use tools
+    const { blocks, stop_reason } = await this.chatOnce(
+      messages,
+      true,
+      onPartialResponse,
+    );
+
+    if (stop_reason === 'end') {
+      const full = blocks
+        .filter((b) => b.type === 'text')
+        .map((b) => b.text)
+        .join('');
+      await onCompleteResponse(full);
+      return;
+    }
+
+    /* if tool_use, throw error */
+    throw new Error(
+      'processChat received tool_calls. ChatProcessor must use chatOnce() loop when tools are enabled.',
+    );
   }
 
   /**
@@ -169,98 +122,34 @@ export class ClaudeChatService implements ChatService {
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
-    try {
-      // Check if the vision model supports vision capabilities
-      if (!CLAUDE_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
-        throw new Error(
-          `Model ${this.visionModel} does not support vision capabilities.`,
-        );
-      }
-
-      // Extract system message (if any) and regular messages
-      const systemMessage = messages.find((msg) => msg.role === 'system');
-      const nonSystemMessages = messages.filter((msg) => msg.role !== 'system');
-
-      // Convert messages to Claude vision format
-      const claudeMessages =
-        this.convertVisionMessagesToClaudeFormat(nonSystemMessages);
-
-      // Request to Claude API
-      const response = await fetch(ENDPOINT_CLAUDE_API, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: this.visionModel,
-          messages: claudeMessages,
-          system: systemMessage?.content || '',
-          stream: true,
-          max_tokens: 1000,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          `Claude API error: ${errorData.error?.message || response.statusText}`,
-        );
-      }
-
-      // Process streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let fullText = '';
-
-      if (!reader) {
-        throw new Error('Failed to get response reader');
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        // Claude API serves responses as Server-Sent Events (SSE)
-        // Each event is prefixed with "event: " and "data: "
-        const lines = chunk.split('\n').filter((line) => line.trim() !== '');
-
-        for (const line of lines) {
-          try {
-            // Check if this is a data line
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6); // Remove 'data: ' prefix
-
-              // Ignore [DONE] marker
-              if (data === '[DONE]') continue;
-
-              const json = JSON.parse(data);
-
-              // Extract delta content if available
-              if (json.type === 'content_block_delta') {
-                const deltaText = json.delta?.text || '';
-                if (deltaText) {
-                  fullText += deltaText;
-                  onPartialResponse(deltaText);
-                }
-              }
-              // Other event types (handled same as in processChat)
-            }
-          } catch (e) {
-            console.error('Error parsing Claude stream:', e);
-          }
-        }
-      }
-
-      // Complete response callback
-      await onCompleteResponse(fullText);
-    } catch (error) {
-      console.error('Error in processVisionChat:', error);
-      throw error;
+    if (!CLAUDE_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
+      throw new Error(
+        `Model ${this.visionModel} does not support vision capabilities.`,
+      );
     }
+
+    /* same branch logic for vision */
+    if (this.tools.length === 0) {
+      const res = await this.callClaude(messages, this.visionModel, true);
+      const full = await this.parsePureStream(res, onPartialResponse);
+      await onCompleteResponse(full);
+      return;
+    }
+
+    const { blocks, stop_reason } = await this.visionChatOnce(messages); // non-stream (tools only)
+
+    if (stop_reason === 'end') {
+      const full = blocks
+        .filter((b) => b.type === 'text')
+        .map((b) => b.text)
+        .join('');
+      await onCompleteResponse(full);
+      return;
+    }
+
+    throw new Error(
+      'processVisionChat received tool_calls. ChatProcessor must use chatOnce() loop when tools are enabled.',
+    );
   }
 
   /**
@@ -298,34 +187,24 @@ export class ClaudeChatService implements ChatService {
           ],
         };
       }
+
       // If message content is an array of blocks, convert each block
-      else if (Array.isArray(msg.content)) {
+      if (Array.isArray(msg.content)) {
         const content = msg.content
           .map((block) => {
-            if (block.type === 'text') {
-              return {
-                type: 'text',
-                text: block.text,
-              };
-            } else if (block.type === 'image_url') {
+            if (block.type === 'image_url') {
               // check if the image url is a data url
               if (block.image_url.url.startsWith('data:')) {
-                // extract the base64 data from the data url
-                const matches = block.image_url.url.match(
-                  /^data:([A-Za-z-+/]+);base64,(.+)$/,
+                const m = block.image_url.url.match(
+                  /^data:([^;]+);base64,(.+)$/,
                 );
-                if (matches && matches.length >= 3) {
-                  const mediaType = matches[1];
-                  const base64Data = matches[2];
+                if (m) {
                   return {
                     type: 'image',
-                    source: {
-                      type: 'base64',
-                      media_type: mediaType,
-                      data: base64Data,
-                    },
+                    source: { type: 'base64', media_type: m[1], data: m[2] },
                   };
                 }
+                return null;
               }
 
               // if the image url is a normal url
@@ -338,9 +217,9 @@ export class ClaudeChatService implements ChatService {
                 },
               };
             }
-            return null;
+            return block;
           })
-          .filter((item) => item !== null);
+          .filter((b) => b);
 
         return {
           role: this.mapRoleToClaude(msg.role),
@@ -394,5 +273,238 @@ export class ClaudeChatService implements ChatService {
       default:
         return 'image/jpeg';
     }
+  }
+
+  /**
+   * Call Claude API
+   * @param messages Array of messages to send
+   * @param model Model name
+   * @param stream Whether to stream the response
+   * @returns Response
+   */
+  private async callClaude(
+    messages: (Message | MessageWithVision)[],
+    model: string,
+    stream: boolean,
+  ): Promise<Response> {
+    const system = messages.find((m) => m.role === 'system')?.content ?? '';
+    const content = messages.filter((m) => m.role !== 'system');
+
+    const hasVision = content.some(
+      (m) =>
+        Array.isArray((m as any).content) &&
+        (m as any).content.some(
+          (b: any) => b.type === 'image_url' || b.type === 'image',
+        ),
+    );
+
+    const body: any = {
+      model,
+      system,
+      messages: hasVision
+        ? this.convertVisionMessagesToClaudeFormat(
+            content as MessageWithVision[],
+          )
+        : this.convertMessagesToClaudeFormat(content as Message[]),
+      stream,
+      max_tokens: 1000,
+    };
+
+    if (this.tools.length) {
+      body.tools = this.tools.map((t) => ({
+        name: t.name,
+        description: t.description,
+        input_schema: t.parameters,
+      }));
+
+      body.tool_choice = { type: 'auto' };
+    }
+
+    const res = await fetch(ENDPOINT_CLAUDE_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': this.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    return res;
+  }
+
+  /**
+   * Parse stream response
+   * @param res Response
+   * @param onPartial Callback to receive each part of streaming response
+   * @returns ToolChatCompletion
+   */
+  private async parseStream(
+    res: Response,
+    onPartial: (t: string) => void,
+  ): Promise<ClaudeCompletion> {
+    const reader = res.body!.getReader();
+    const dec = new TextDecoder();
+
+    const textBlocks: ToolChatBlock[] = [];
+    const toolCalls = new Map<
+      number,
+      { id: string; name: string; args: string }
+    >();
+
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+
+      let nl;
+      while ((nl = buf.indexOf('\n')) !== -1) {
+        const line = buf.slice(0, nl).trim();
+        buf = buf.slice(nl + 1);
+        if (!line.startsWith('data:')) continue;
+
+        const payload = line.slice(5).trim();
+        if (payload === '[DONE]') break;
+
+        const ev = JSON.parse(payload);
+
+        /* content delta */
+        if (ev.type === 'content_block_delta' && ev.delta?.text) {
+          onPartial(ev.delta.text);
+          textBlocks.push({ type: 'text', text: ev.delta.text });
+        }
+        /* tool_call delta */
+        if (
+          ev.type === 'content_block_start' &&
+          ev.content_block?.type === 'tool_use'
+        ) {
+          toolCalls.set(ev.index, {
+            id: ev.content_block.id,
+            name: ev.content_block.name,
+            args: '',
+          });
+        } else if (
+          ev.type === 'content_block_start' && // case of non-stream
+          ev.content_block?.type === 'tool_result'
+        ) {
+          textBlocks.push({
+            type: 'tool_result',
+            tool_use_id: ev.content_block.tool_use_id,
+            content: ev.content_block.content ?? '',
+          });
+        }
+
+        /* case of input_json_delta */
+        if (
+          ev.type === 'content_block_delta' &&
+          ev.delta?.type === 'input_json_delta'
+        ) {
+          const entry = toolCalls.get(ev.index);
+          if (entry) entry.args += ev.delta.partial_json || '';
+        }
+
+        /* case of content_block_stop */
+        if (ev.type === 'content_block_stop' && toolCalls.has(ev.index)) {
+          const { id, name, args } = toolCalls.get(ev.index)!;
+          textBlocks.push({
+            type: 'tool_use',
+            id,
+            name,
+            input: JSON.parse(args || '{}'),
+          });
+          toolCalls.delete(ev.index);
+        }
+      }
+    }
+
+    return {
+      blocks: textBlocks,
+      stop_reason: textBlocks.some((b) => b.type === 'tool_use')
+        ? 'tool_use'
+        : 'end',
+    };
+  }
+
+  private async parsePureStream(
+    res: Response,
+    onPartial: (t: string) => void,
+  ): Promise<string> {
+    const { blocks } = await this.parseStream(res, onPartial);
+    return blocks
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text)
+      .join('');
+  }
+
+  private parseOneShot(data: any): ClaudeCompletion {
+    const blocks: ClaudeToolChatBlock[] = [];
+
+    (data.content ?? []).forEach((c: any) => {
+      if (c.type === 'text') {
+        blocks.push({ type: 'text', text: c.text });
+      } else if (c.type === 'tool_use') {
+        blocks.push({
+          type: 'tool_use',
+          id: c.id,
+          name: c.name,
+          input: c.input ?? {},
+        });
+      } else if (c.type === 'tool_result') {
+        blocks.push({
+          type: 'tool_result',
+          tool_use_id: c.tool_use_id,
+          content: c.content ?? '',
+        });
+      }
+    });
+
+    return {
+      blocks,
+      stop_reason: blocks.some((b) => b.type === 'tool_use')
+        ? 'tool_use'
+        : 'end',
+    };
+  }
+
+  /**
+   * Process chat messages
+   * @param messages Array of messages to send
+   * @param stream Whether to stream the response
+   * @param onPartial Callback to receive each part of streaming response
+   * @returns ToolChatCompletion
+   */
+  async chatOnce(
+    messages: Message[],
+    stream = true,
+    onPartial: (t: string) => void = () => {},
+  ): Promise<ClaudeCompletion> {
+    const res = await this.callClaude(messages, this.model, stream);
+
+    if (stream) {
+      return this.parseStream(res, onPartial);
+    }
+    return this.parseOneShot(await res.json());
+  }
+
+  /**
+   * Process vision chat messages
+   * @param messages Array of messages to send
+   * @returns ToolChatCompletion
+   */
+  async visionChatOnce(
+    messages: MessageWithVision[],
+    stream = false,
+    onPartial: (t: string) => void = () => {},
+  ): Promise<ClaudeCompletion> {
+    const res = await this.callClaude(messages, this.visionModel, stream);
+
+    if (stream) {
+      return this.parseStream(res, onPartial);
+    }
+
+    return this.parseOneShot(await res.json());
   }
 }

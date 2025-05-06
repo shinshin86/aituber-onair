@@ -6,7 +6,7 @@
  * Chat message basic type
  */
 export interface Message {
-  role: 'system' | 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
   timestamp?: number;
 }
@@ -28,7 +28,7 @@ export type VisionBlock =
  * Message type corresponding to vision (image)
  */
 export interface MessageWithVision {
-  role: 'system' | 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant' | 'tool';
   content: string | VisionBlock[];
 }
 

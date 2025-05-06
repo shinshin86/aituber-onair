@@ -1,4 +1,5 @@
 import { Message, MessageWithVision } from '../../types';
+import { ToolChatCompletion } from '../../types/toolChat';
 
 /**
  * Chat service interface
@@ -40,4 +41,26 @@ export interface ChatService {
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void>;
+
+  /**
+   * Process chat messages with tools
+   * @param messages Array of messages to send
+   * @returns Tool chat completion
+   */
+  chatOnce(
+    messages: Message[],
+    stream: boolean,
+    onPartialResponse: (text: string) => void,
+  ): Promise<ToolChatCompletion>;
+
+  /**
+   * Process chat messages with tools and images
+   * @param messages Array of messages to send (including images)
+   * @returns Tool chat completion
+   */
+  visionChatOnce(
+    messages: MessageWithVision[],
+    stream: boolean,
+    onPartialResponse: (text: string) => void,
+  ): Promise<ToolChatCompletion>;
 }
