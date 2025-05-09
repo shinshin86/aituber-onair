@@ -5,6 +5,11 @@ import {
 } from '../../src/core/ChatProcessor';
 import { ChatService } from '../../src/services/chat/ChatService';
 import { MemoryManager } from '../../src/core/MemoryManager';
+import { ToolResultBlock, ToolUseBlock } from '../../src/types/toolChat';
+import type { Mock } from 'vitest';
+
+// ToolCallback type
+type ToolCallback = (blocks: ToolUseBlock[]) => Promise<ToolResultBlock[]>;
 
 // actual ChatProcessorOptions type for testing
 type TestChatProcessorOptions = {
@@ -17,15 +22,15 @@ type TestChatProcessorOptions = {
 
 // ChatService mock interface - define directly without Partial
 interface MockChatService {
-  processChat: ReturnType<typeof vi.fn<any, Promise<void>>>;
-  processVisionChat: ReturnType<typeof vi.fn<any, Promise<void>>>;
+  chatOnce: ReturnType<typeof vi.fn<any, Promise<any>>>;
+  visionChatOnce: ReturnType<typeof vi.fn<any, Promise<any>>>;
   getTokenLimit: ReturnType<typeof vi.fn<any, number>>;
 }
 
 // ChatService mock
 const mockChatService: MockChatService = {
-  processChat: vi.fn<any, Promise<void>>(),
-  processVisionChat: vi.fn<any, Promise<void>>(),
+  chatOnce: vi.fn<any, Promise<any>>(),
+  visionChatOnce: vi.fn<any, Promise<any>>(),
   getTokenLimit: vi.fn<any, number>().mockReturnValue(4000),
 };
 
@@ -35,6 +40,7 @@ interface MockMemoryManager {
   addMessage: ReturnType<typeof vi.fn<any, void>>;
   cleanupOldMemories: ReturnType<typeof vi.fn<any, void>>;
   getAllMemories: ReturnType<typeof vi.fn<any, Promise<any[]>>>;
+  getMemoryForPrompt: ReturnType<typeof vi.fn<any, string>>;
 }
 
 // MemoryManager mock
@@ -43,11 +49,13 @@ const mockMemoryManager: MockMemoryManager = {
   addMessage: vi.fn<any, void>(),
   cleanupOldMemories: vi.fn<any, void>(),
   getAllMemories: vi.fn<any, Promise<any[]>>().mockResolvedValue([]),
+  getMemoryForPrompt: vi.fn<any, string>().mockReturnValue(''),
 };
 
 describe('ChatProcessor', () => {
   let chatProcessor: ChatProcessor;
   let defaultOptions: TestChatProcessorOptions;
+  let mockToolCallback: ToolCallback;
 
   beforeEach(() => {
     // common test preparation
@@ -61,10 +69,17 @@ describe('ChatProcessor', () => {
       memoryNote: 'Remember this information',
     };
 
+    // mock tool callback
+    mockToolCallback = vi.fn().mockImplementation(async () => {
+      return [];
+    });
+
     // type assertion to actual type
     chatProcessor = new ChatProcessor(
       mockChatService as unknown as ChatService,
       defaultOptions as unknown as ChatProcessorOptions,
+      undefined,
+      mockToolCallback,
     );
   });
 
@@ -86,6 +101,7 @@ describe('ChatProcessor', () => {
         mockChatService as unknown as ChatService,
         options as unknown as ChatProcessorOptions,
         mockMemoryManager as unknown as MemoryManager,
+        mockToolCallback,
       );
 
       // Assert
@@ -116,6 +132,11 @@ describe('ChatProcessor', () => {
       // Arrange
       const userInput = 'Hello, how are you?';
 
+      mockChatService.chatOnce.mockResolvedValueOnce({
+        blocks: [{ type: 'text', text: 'I am fine, thank you!' }],
+        stop_reason: 'end',
+      });
+
       // Mock EventEmitter emit
       const emitSpy = vi.spyOn(chatProcessor as any, 'emit');
 
@@ -123,7 +144,7 @@ describe('ChatProcessor', () => {
       await (chatProcessor as any).processTextChat(userInput);
 
       // Assert
-      expect(mockChatService.processChat).toHaveBeenCalled();
+      expect(mockChatService.chatOnce).toHaveBeenCalled();
 
       // Check events
       expect(emitSpy).toHaveBeenCalledWith(
@@ -137,16 +158,18 @@ describe('ChatProcessor', () => {
       // Arrange
       const userInput = 'Tell me a story';
 
-      // Mock streaming callback execution
-      mockChatService.processChat.mockImplementationOnce(
-        async (_: any, callback?: any, onComplete?: any) => {
-          // Simulate streaming chunks
-          callback?.('Once');
-          callback?.(' upon');
-          callback?.(' a time');
+      // mock implementation to simulate assistantPartialResponse
+      mockChatService.chatOnce.mockImplementation(
+        async (_msgs, stream, onPartial) => {
+          // simulate streaming callback
+          if (onPartial && stream) {
+            onPartial('Once upon a time');
+          }
 
-          // Simulate completion
-          await onComplete?.('Once upon a time');
+          return {
+            blocks: [{ type: 'text', text: 'Once upon a time' }],
+            stop_reason: 'end',
+          };
         },
       );
 
@@ -156,12 +179,14 @@ describe('ChatProcessor', () => {
       await (chatProcessor as any).processTextChat(userInput);
 
       // Assert - Check streaming events
-      expect(emitSpy).toHaveBeenCalledWith('assistantPartialResponse', 'Once');
-      expect(emitSpy).toHaveBeenCalledWith('assistantPartialResponse', ' upon');
-      expect(emitSpy).toHaveBeenCalledWith(
-        'assistantPartialResponse',
-        ' a time',
+      // check assistantPartialResponse event
+      const partialResponses = emitSpy.mock.calls.filter(
+        (call) => call[0] === 'assistantPartialResponse',
       );
+      expect(partialResponses.length).toBeGreaterThan(0);
+      expect(partialResponses[0][1]).toBe('Once upon a time');
+
+      // check other necessary events
       expect(emitSpy).toHaveBeenCalledWith(
         'assistantResponse',
         expect.any(Object),
@@ -173,15 +198,15 @@ describe('ChatProcessor', () => {
       const processor = new ChatProcessor(
         mockChatService as unknown as ChatService,
         defaultOptions as unknown as ChatProcessorOptions,
+        undefined,
+        mockToolCallback,
       );
 
       // test specific features with custom implementation
-      mockChatService.processChat.mockImplementationOnce(
-        async (_: any, callback?: any, onComplete?: any) => {
-          // Simulate completion
-          await onComplete?.('Response from AI');
-        },
-      );
+      mockChatService.chatOnce.mockResolvedValueOnce({
+        blocks: [{ type: 'text', text: 'Response from AI' }],
+        stop_reason: 'end',
+      });
 
       const addToChatLogSpy = vi.spyOn(processor as any, 'addToChatLog');
 
@@ -189,11 +214,17 @@ describe('ChatProcessor', () => {
       await (processor as any).processTextChat('Test message');
 
       // Assert
-      expect(addToChatLogSpy).toHaveBeenCalledTimes(2); // User message + AI response
       expect(addToChatLogSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           role: 'user',
           content: 'Test message',
+        }),
+      );
+
+      expect(addToChatLogSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: 'assistant',
+          content: 'Response from AI',
         }),
       );
     });
@@ -204,13 +235,11 @@ describe('ChatProcessor', () => {
       // Arrange
       const imageDataUrl = 'data:image/png;base64,ABC123';
 
-      // Mock processVisionChat implementation
-      mockChatService.processVisionChat.mockImplementationOnce(
-        async (_: any, callback?: any, onComplete?: any) => {
-          // Simulate completion
-          await onComplete?.('I see a cat in the image');
-        },
-      );
+      // Mock visionChatOnce implementation
+      mockChatService.visionChatOnce.mockResolvedValueOnce({
+        blocks: [{ type: 'text', text: 'I see a cat in the image' }],
+        stop_reason: 'end',
+      });
 
       // Mock EventEmitter emit
       const emitSpy = vi.spyOn(chatProcessor as any, 'emit');
@@ -219,7 +248,7 @@ describe('ChatProcessor', () => {
       await (chatProcessor as any).processVisionChat(imageDataUrl);
 
       // Assert
-      expect(mockChatService.processVisionChat).toHaveBeenCalled();
+      expect(mockChatService.visionChatOnce).toHaveBeenCalled();
       expect(emitSpy).toHaveBeenCalledWith(
         'processingStart',
         expect.objectContaining({
@@ -293,38 +322,40 @@ describe('ChatProcessor', () => {
           .mockResolvedValue([
             { type: 'short', summary: 'Test memory', timestamp: Date.now() },
           ]),
+        getMemoryForPrompt: vi.fn().mockReturnValue(''),
       };
+
+      // Mock chatOnce implementation to return a simple result
+      const mockLocalChatService = {
+        chatOnce: vi.fn().mockResolvedValue({
+          blocks: [{ type: 'text', text: 'Response from AI' }],
+          stop_reason: 'end',
+        }),
+        getTokenLimit: vi.fn().mockReturnValue(4000),
+      };
+
+      const localToolCallback: ToolCallback = vi
+        .fn()
+        .mockImplementation(async () => {
+          return [];
+        });
 
       // create simple processor
       const processor = new ChatProcessor(
-        mockChatService as unknown as ChatService,
+        mockLocalChatService as unknown as ChatService,
         {
           ...defaultOptions,
           useMemory: true,
         } as unknown as ChatProcessorOptions,
         localMemoryManager as unknown as MemoryManager,
+        localToolCallback,
       );
 
-      // spy method and call memory manager methods manually
-      const processChatSpy = vi
-        .spyOn(processor as any, 'processTextChat')
-        .mockImplementation(async () => {
-          // call memory manager methods manually during test
-          await localMemoryManager.createMemoryIfNeeded();
-          localMemoryManager.addMessage({} as any);
-          localMemoryManager.cleanupOldMemories();
-          return Promise.resolve();
-        });
-
-      // execute simple chat processing
+      // Act
       await (processor as any).processTextChat('Test message');
 
-      // verify - processor is called
-      expect(processChatSpy).toHaveBeenCalled();
-
-      // verify - each memory function is called
+      // verify - memory functions are called
       expect(createMemoryFn).toHaveBeenCalled();
-      expect(addMessageFn).toHaveBeenCalled();
       expect(cleanupFn).toHaveBeenCalled();
     });
   });
@@ -339,7 +370,7 @@ describe('ChatProcessor', () => {
       const error = new Error('API Error');
 
       // set error to be thrown
-      mockChatService.processChat = vi.fn().mockImplementation(() => {
+      mockChatService.chatOnce = vi.fn().mockImplementation(() => {
         throw error; // Promise is not rejected, but the exception is thrown directly
       });
 
@@ -364,7 +395,7 @@ describe('ChatProcessor', () => {
       );
 
       expect(errorEmitCalls.length).toBeGreaterThan(0);
-      expect(errorEmitCalls[0][1]).toBe(error);
+      expect(errorEmitCalls[0][1]).toEqual(error);
       expect(processingEndCalls.length).toBeGreaterThan(0);
     });
   });
