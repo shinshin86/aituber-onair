@@ -17,6 +17,15 @@ import {
   ToolDefinition,
 } from '../src';
 
+// Example of using MCP with AITuberOnAirCore
+// Note: When using this example, you need to install @modelcontextprotocol/sdk
+// @ts-ignore
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+// @ts-ignore
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+// @ts-ignore
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+
 /**
  * Tool definition
  */
@@ -286,6 +295,97 @@ async function basicExample() {
   //     }
   //   }
   // });
+
+  // 8. MCP (Model Context Protocol) Client Example
+  console.log('\n--- MCP Client Example ---');
+
+  // Example of using MCP with AITuberOnAirCore
+  async function mcpExample() {
+    console.log('Creating MCP client with Streamable HTTP transport...');
+
+    // Initialize the MCP client
+    const mcpClient = new Client({
+      name: 'aituber-mcp-client',
+      version: '1.0.0',
+    });
+
+    // Connect to an MCP server over Streamable HTTP
+    const streamableTransport = new StreamableHTTPClientTransport(
+      new URL('http://localhost:3000/mcp'), // Replace with your actual MCP server URL
+    );
+
+    try {
+      await mcpClient.connect(streamableTransport);
+      console.log('Connected to MCP server via Streamable HTTP');
+
+      // List available resources
+      const resources = await mcpClient.listResources();
+      console.log('Available resources:', resources);
+
+      // Call a tool through MCP
+      const result = await mcpClient.callTool({
+        name: 'randomInt',
+        arguments: { max: 100 },
+      });
+
+      console.log('MCP tool call result:', result);
+
+      // Define a tool that delegates to MCP
+      const mcpRandomIntTool: ToolDefinition = {
+        name: 'mcpRandomInt',
+        description: 'Get a random integer using MCP',
+        parameters: {
+          type: 'object',
+          properties: {
+            max: {
+              type: 'integer',
+              description: 'Upper bound (exclusive)',
+              minimum: 1,
+            },
+          },
+        },
+      };
+
+      // Tool handler that uses MCP
+      async function mcpRandomIntHandler({ max = 100 }: { max?: number }) {
+        // Delegate the tool call to the MCP server
+        const result = await mcpClient.callTool({
+          name: 'randomInt',
+          arguments: { max },
+        });
+
+        // Extract result text from MCP response
+        const content = result.content as Array<{ type: string; text: string }>;
+        return content[0]?.text || 'Error: No result from MCP server';
+      }
+
+      // Create AITuber with the MCP-backed tool
+      const mcpAITuberOptions: AITuberOnAirCoreOptions = {
+        chatProvider: 'openai',
+        apiKey: OPENAI_API_KEY,
+        chatOptions: {
+          systemPrompt:
+            'You are an AITuber using MCP tools. Use mcpRandomInt when needed.',
+        },
+        tools: [{ definition: mcpRandomIntTool, handler: mcpRandomIntHandler }],
+        debug: true,
+      };
+
+      const mcpAITuber = new AITuberOnAirCore(mcpAITuberOptions);
+
+      console.log('AITuber with MCP integration configured');
+      console.log('User: Generate a random number using MCP');
+
+      // Process a chat message that should trigger the MCP tool
+      await mcpAITuber.processChat('Generate a random number using MCP');
+    } catch (error) {
+      console.error('MCP error:', error);
+    }
+  }
+
+  // Execute MCP example
+  // Uncomment to run the example (requires installing @modelcontextprotocol/sdk):
+  // await mcpExample();
 }
 
 // Only execute in Node.js environment
