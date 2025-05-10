@@ -23,12 +23,29 @@ export interface ToolChatCompletion<B = CoreToolChatBlock> {
   stop_reason: 'tool_use' | 'end';
 }
 export type ToolChatBlock = CoreToolChatBlock;
+
 export type ToolDefinition<P = any> = {
   name: string;
   description?: string;
-  parameters: Record<string, any>;
+  parameters: {
+    type: 'object';
+    properties?: Record<
+      string,
+      {
+        type?: string;
+        description?: string;
+        enum?: any[];
+        items?: any; // for array
+        required?: string[];
+        [key: string]: any; // other JSON Schema properties
+      }
+    >;
+    required?: string[];
+    [key: string]: any;
+  };
   config?: { timeoutMs?: number };
 };
+
 export interface ToolResultBlock {
   type: 'tool_result';
   tool_use_id: string;
