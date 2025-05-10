@@ -434,4 +434,384 @@ describe('ChatProcessor', () => {
       expect((chatProcessor as any).getChatLog()).toEqual([]);
     });
   });
+
+  describe('runToolLoop', () => {
+    it('should process tool calls and return responses', async () => {
+      // Arrange
+      const mockOnce = vi
+        .fn()
+        .mockImplementation(async (_msgs, _stream, onPartial) => {
+          // First call returns tool use blocks
+          if (mockOnce.mock.calls.length === 1) {
+            onPartial?.('Thinking...');
+            return {
+              blocks: [
+                { type: 'text', text: 'I need to use a tool' },
+                {
+                  type: 'tool_use',
+                  id: 'tool-1',
+                  name: 'calculator',
+                  input: { operation: 'add', a: 2, b: 3 },
+                },
+              ],
+              stop_reason: 'tool_use',
+            };
+          }
+
+          // Second call returns final response
+          return {
+            blocks: [{ type: 'text', text: 'The answer is 5' }],
+            stop_reason: 'end',
+          };
+        });
+
+      // Tool callback returns tool result
+      const toolCallback = vi.fn().mockImplementation(async (blocks) => {
+        return [
+          {
+            type: 'tool_result',
+            tool_use_id: blocks[0].id,
+            content: '5',
+          },
+        ];
+      });
+
+      const processor = new ChatProcessor(
+        mockChatService as unknown as ChatService,
+        defaultOptions as unknown as ChatProcessorOptions,
+        undefined,
+        toolCallback,
+      );
+
+      const emitSpy = vi.spyOn(processor, 'emit' as any);
+
+      mockChatService.chatOnce = mockOnce;
+
+      // Act
+      await processor.processTextChat('Calculate 2 + 3');
+
+      // Assert
+      expect(mockOnce).toHaveBeenCalledTimes(2);
+      expect(toolCallback).toHaveBeenCalledWith([
+        expect.objectContaining({
+          type: 'tool_use',
+          id: 'tool-1',
+          name: 'calculator',
+        }),
+      ]);
+
+      // Verify both partial and final responses were emitted
+      expect(emitSpy).toHaveBeenCalledWith(
+        'assistantPartialResponse',
+        'Thinking...',
+      );
+      expect(emitSpy).toHaveBeenCalledWith(
+        'assistantResponse',
+        expect.objectContaining({
+          message: expect.objectContaining({
+            content: 'The answer is 5',
+          }),
+        }),
+      );
+    });
+
+    it('should handle Claude provider specific format', async () => {
+      // Arrange - Simulate Claude provider
+      const mockClaudeService = {
+        provider: 'claude',
+        chatOnce: vi
+          .fn()
+          .mockImplementation(async (_msgs, _stream, onPartial) => {
+            if (mockClaudeService.chatOnce.mock.calls.length === 1) {
+              onPartial?.('Thinking...');
+              return {
+                blocks: [
+                  { type: 'text', text: 'I need to use a tool' },
+                  {
+                    type: 'tool_use',
+                    id: 'tool-1',
+                    name: 'calculator',
+                    input: { operation: 'add', a: 2, b: 3 },
+                  },
+                ],
+                stop_reason: 'tool_use',
+              };
+            }
+
+            return {
+              blocks: [{ type: 'text', text: 'The answer is 5' }],
+              stop_reason: 'end',
+            };
+          }),
+        getTokenLimit: vi.fn().mockReturnValue(4000),
+      };
+
+      // Tool callback returns tool result
+      const toolCallback = vi.fn().mockImplementation(async (blocks) => {
+        return [
+          {
+            type: 'tool_result',
+            tool_use_id: blocks[0].id,
+            content: '5',
+          },
+        ];
+      });
+
+      const processor = new ChatProcessor(
+        mockClaudeService as unknown as ChatService,
+        defaultOptions as unknown as ChatProcessorOptions,
+        undefined,
+        toolCallback,
+      );
+
+      // Act
+      await processor.processTextChat('Calculate 2 + 3');
+
+      // Assert
+      expect(mockClaudeService.chatOnce).toHaveBeenCalledTimes(2);
+      // Check if the second call uses Claude format
+      const secondCallMessages = mockClaudeService.chatOnce.mock.calls[1][0];
+
+      // Verify messages contain tool results in Claude format
+      const toolResultMessage = secondCallMessages.find(
+        (msg: any) =>
+          msg.role === 'user' &&
+          Array.isArray(msg.content) &&
+          msg.content[0]?.type === 'tool_result',
+      );
+
+      expect(toolResultMessage).toBeDefined();
+      expect(toolResultMessage.content[0].tool_use_id).toBe('tool-1');
+      expect(toolResultMessage.content[0].content).toBe('5');
+    });
+
+    it('should handle non-Claude provider format', async () => {
+      // Arrange - Simulate non-Claude provider
+      const mockNonClaudeService = {
+        provider: 'openai',
+        chatOnce: vi
+          .fn()
+          .mockImplementation(async (_msgs, _stream, onPartial) => {
+            if (mockNonClaudeService.chatOnce.mock.calls.length === 1) {
+              onPartial?.('Thinking...');
+              return {
+                blocks: [
+                  { type: 'text', text: 'I need to use a tool' },
+                  {
+                    type: 'tool_use',
+                    id: 'tool-1',
+                    name: 'calculator',
+                    input: { operation: 'add', a: 2, b: 3 },
+                  },
+                ],
+                stop_reason: 'tool_use',
+              };
+            }
+
+            return {
+              blocks: [{ type: 'text', text: 'The answer is 5' }],
+              stop_reason: 'end',
+            };
+          }),
+        getTokenLimit: vi.fn().mockReturnValue(4000),
+      };
+
+      // Tool callback returns tool result
+      const toolCallback = vi.fn().mockImplementation(async (blocks) => {
+        return [
+          {
+            type: 'tool_result',
+            tool_use_id: blocks[0].id,
+            content: '5',
+          },
+        ];
+      });
+
+      const processor = new ChatProcessor(
+        mockNonClaudeService as unknown as ChatService,
+        defaultOptions as unknown as ChatProcessorOptions,
+        undefined,
+        toolCallback,
+      );
+
+      // Act
+      await processor.processTextChat('Calculate 2 + 3');
+
+      // Assert
+      expect(mockNonClaudeService.chatOnce).toHaveBeenCalledTimes(2);
+      // Check if the second call uses OpenAI format
+      const secondCallMessages = mockNonClaudeService.chatOnce.mock.calls[1][0];
+
+      // Verify messages contain tool results in OpenAI format
+      const toolResultMessage = secondCallMessages.find(
+        (msg: any) => msg.role === 'tool' && msg.tool_call_id === 'tool-1',
+      );
+
+      expect(toolResultMessage).toBeDefined();
+      expect(toolResultMessage.tool_call_id).toBe('tool-1');
+      expect(toolResultMessage.content).toBe('5');
+    });
+
+    it('should respect MAX_HOPS limit', async () => {
+      // Arrange - Simulate a service that always responds with tool use
+      const mockInfiniteToolService = {
+        chatOnce: vi.fn().mockImplementation(async () => {
+          return {
+            blocks: [
+              {
+                type: 'tool_use',
+                id: `tool-${mockInfiniteToolService.chatOnce.mock.calls.length}`,
+                name: 'calculator',
+                input: { operation: 'add', a: 1, b: 1 },
+              },
+            ],
+            stop_reason: 'tool_use',
+          };
+        }),
+        getTokenLimit: vi.fn().mockReturnValue(4000),
+      };
+
+      // Tool callback returns tool result
+      const toolCallback = vi.fn().mockImplementation(async (blocks) => {
+        return [
+          {
+            type: 'tool_result',
+            tool_use_id: blocks[0].id,
+            content: '2',
+          },
+        ];
+      });
+
+      // Create processor with MAX_HOPS set to 3
+      const options = {
+        ...defaultOptions,
+        maxHops: 3,
+      };
+
+      const processor = new ChatProcessor(
+        mockInfiniteToolService as unknown as ChatService,
+        options as unknown as ChatProcessorOptions,
+        undefined,
+        toolCallback,
+      );
+
+      const consoleSpy = vi.spyOn(console, 'warn');
+
+      // Act
+      await processor.processTextChat('Calculate something');
+
+      // Assert
+      // Verify it's called MAX_HOPS (3) times
+      expect(mockInfiniteToolService.chatOnce).toHaveBeenCalledTimes(3);
+      expect(toolCallback).toHaveBeenCalledTimes(3);
+
+      // Verify warning is logged
+      expect(consoleSpy).toHaveBeenCalledWith('Tool loop exceeded MAX_HOPS');
+    });
+
+    it('should handle missing tool callback by emitting an error', async () => {
+      // Arrange
+      const mockToolUseService = {
+        chatOnce: vi.fn().mockResolvedValue({
+          blocks: [
+            {
+              type: 'tool_use',
+              id: 'tool-1',
+              name: 'calculator',
+              input: { operation: 'add', a: 2, b: 3 },
+            },
+          ],
+          stop_reason: 'tool_use',
+        }),
+        getTokenLimit: vi.fn().mockReturnValue(4000),
+      };
+
+      // Create processor without tool callback
+      const processor = new ChatProcessor(
+        mockToolUseService as unknown as ChatService,
+        defaultOptions as unknown as ChatProcessorOptions,
+        undefined,
+        undefined, // No tool callback
+      );
+
+      // Setup spy for error event
+      const emitSpy = vi.spyOn(processor, 'emit' as any);
+
+      // Act
+      await processor.processTextChat('Calculate 2 + 3');
+
+      // Assert - Check if error is emitted instead of thrown
+      const errorEmit = emitSpy.mock.calls.find(
+        (call) =>
+          call[0] === 'error' && call[1].message === 'Tool callback missing',
+      );
+      expect(errorEmit).toBeDefined();
+    });
+  });
+
+  describe('tool processing features', () => {
+    it('should emit tool result content as partial response', async () => {
+      // Arrange
+      const mockOnce = vi
+        .fn()
+        .mockImplementation(async (_msgs, _stream, onPartial) => {
+          // First call returns tool use blocks
+          if (mockOnce.mock.calls.length === 1) {
+            return {
+              blocks: [
+                {
+                  type: 'tool_use',
+                  id: 'tool-1',
+                  name: 'calculator',
+                  input: { operation: 'add', a: 2, b: 3 },
+                },
+              ],
+              stop_reason: 'tool_use',
+            };
+          }
+
+          // Second call returns final response with tool result
+          return {
+            blocks: [
+              { type: 'tool_result', content: 'Result: 5' },
+              { type: 'text', text: 'The answer is 5' },
+            ],
+            stop_reason: 'end',
+          };
+        });
+
+      // Tool callback returns tool result
+      const toolCallback = vi.fn().mockImplementation(async (blocks) => {
+        return [
+          {
+            type: 'tool_result',
+            tool_use_id: blocks[0].id,
+            content: 'Result: 5',
+          },
+        ];
+      });
+
+      const processor = new ChatProcessor(
+        mockChatService as unknown as ChatService,
+        defaultOptions as unknown as ChatProcessorOptions,
+        undefined,
+        toolCallback,
+      );
+
+      const emitSpy = vi.spyOn(processor, 'emit' as any);
+
+      mockChatService.chatOnce = mockOnce;
+
+      // Act
+      await processor.processTextChat('Calculate 2 + 3');
+
+      // Assert
+      // Verify tool result content is emitted as partial response
+      const partialEmitCalls = emitSpy.mock.calls.filter(
+        (call) =>
+          call[0] === 'assistantPartialResponse' && call[1] === 'Result: 5',
+      );
+      expect(partialEmitCalls.length).toBeGreaterThan(0);
+    });
+  });
 });
