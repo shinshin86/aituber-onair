@@ -141,6 +141,12 @@ aituber.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
   console.log('音声再生終了');
 });
 
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlock) => 
+  console.log(`ツール使用 -> ${toolBlock.name}`, toolBlock.input));
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlock) => 
+  console.log(`ツール結果 ->`, resultBlock.content));
+
 aituber.on(AITuberOnAirCoreEvent.ERROR, (error) => {
   console.error('エラー発生:', error);
 });
@@ -694,6 +700,8 @@ AITuberOnAirCoreは以下のイベントを発行します：
 - `ASSISTANT_RESPONSE`: アシスタントの応答完了時（台本情報と感情タグ付きの元のテキストを含む）
 - `SPEECH_START`: 音声再生開始時（感情表現を含むscreenplayオブジェクトと感情タグ付きの元のテキストを含む）
 - `SPEECH_END`: 音声再生終了時
+- `TOOL_USE`: AIがツールを呼び出す時（ツール名と入力パラメータを含む）
+- `TOOL_RESULT`: ツールの実行が完了し結果が返却される時
 - `ERROR`: エラー発生時
 
 ### イベントデータの安全な取り扱い

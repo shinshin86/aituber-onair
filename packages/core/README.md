@@ -157,6 +157,12 @@ aituber.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
   console.log('Speech playback finished');
 });
 
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlock) => 
+  console.log(`Tool use -> ${toolBlock.name}`, toolBlock.input));
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlock) => 
+  console.log(`Tool result ->`, resultBlock.content));
+
 aituber.on(AITuberOnAirCoreEvent.ERROR, (error) => {
   console.error('Error occurred:', error);
 });
@@ -710,6 +716,8 @@ await aituberOnairCore.speakTextWithOptions('[happy] Hello, everyone watching!',
 - `ASSISTANT_RESPONSE`: Upon receiving a complete response (includes a screenplay object and rawText with emotion tags)  
 - `SPEECH_START`: When speech playback starts (includes a screenplay object with emotion and rawText with emotion tags)  
 - `SPEECH_END`: When speech playback ends  
+- `TOOL_USE`: When the AI calls a tool (includes the name of the tool and its input parameters)  
+- `TOOL_RESULT`: When a tool execution completes and returns a result  
 - `ERROR`: When an error occurs  
 
 ### Safely Handling Event Data
