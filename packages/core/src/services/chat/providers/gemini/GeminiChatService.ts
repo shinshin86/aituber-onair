@@ -120,8 +120,8 @@ export class GeminiChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
+      // not use tools
       if (this.tools.length === 0) {
-        /* no tools */
         const res = await this.callGemini(messages, this.model, true);
         const { blocks } = await this.parseStream(res, onPartialResponse);
         const full = blocks

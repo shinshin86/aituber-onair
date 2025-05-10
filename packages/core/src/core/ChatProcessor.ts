@@ -25,6 +25,8 @@ export interface ChatProcessorOptions {
   useMemory: boolean;
   /** Memory note (instructions for AI) */
   memoryNote?: string;
+  /** Maximum number of tool call iterations allowed (default: 6) */
+  maxHops?: number;
 }
 
 /**
@@ -40,7 +42,7 @@ export class ChatProcessor extends EventEmitter {
   private chatStartTime: number = 0;
   private processingChat: boolean = false;
   private toolCallback?: ToolCallback;
-  private readonly MAX_HOPS = 6;
+  private readonly MAX_HOPS: number;
 
   /**
    * Constructor
@@ -59,6 +61,9 @@ export class ChatProcessor extends EventEmitter {
     this.options = options;
     this.memoryManager = memoryManager;
     this.toolCallback = toolCallback;
+
+    // Initialize MAX_HOPS from options with default value of 6
+    this.MAX_HOPS = options.maxHops ?? 6;
   }
 
   /**
@@ -113,6 +118,11 @@ export class ChatProcessor extends EventEmitter {
    */
   updateOptions(newOptions: Partial<ChatProcessorOptions>): void {
     this.options = { ...this.options, ...newOptions };
+
+    // Update MAX_HOPS if maxHops is included in the new options
+    if (newOptions.maxHops !== undefined) {
+      (this as any).MAX_HOPS = newOptions.maxHops;
+    }
   }
 
   /**
