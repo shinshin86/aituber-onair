@@ -27,7 +27,7 @@ export type ToolDefinition<P = any> = {
   name: string;
   description?: string;
   parameters: Record<string, any>;
-  config?: { timeoutMs?: number; serial?: boolean };
+  config?: { timeoutMs?: number };
 };
 export interface ToolResultBlock {
   type: 'tool_result';
