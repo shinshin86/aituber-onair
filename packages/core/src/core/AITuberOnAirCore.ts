@@ -13,9 +13,14 @@ import { Message, MemoryStorage } from '../types';
 import { textToScreenplay, screenplayToText } from '../utils/screenplay';
 import { ChatServiceFactory } from '../services/chat/ChatServiceFactory';
 import { ChatServiceOptions } from '../services/chat/providers/ChatServiceProvider';
-import { MODEL_GEMINI_2_0_FLASH_LITE, MODEL_GPT_4O_MINI } from '../constants';
 import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
 import { ClaudeSummarizer } from '../services/chat/providers/claude/ClaudeSummarizer';
+import { ToolExecutor } from './ToolExecutor';
+import {
+  ToolDefinition,
+  ToolUseBlock,
+  ToolResultBlock,
+} from '../types/toolChat';
 
 /**
  * Setting options for AITuberOnAirCore
@@ -39,6 +44,11 @@ export interface AITuberOnAirCoreOptions {
   debug?: boolean;
   /** ChatService provider-specific options (optional) */
   providerOptions?: Record<string, any>;
+  /** Tools */
+  tools?: {
+    definition: ToolDefinition;
+    handler: (input: any) => Promise<any>;
+  }[];
 }
 
 /**
@@ -59,6 +69,10 @@ export enum AITuberOnAirCoreEvent {
   SPEECH_END = 'speechEnd',
   /** Error occurred */
   ERROR = 'error',
+  /** Tool use */
+  TOOL_USE = 'toolUse',
+  /** Tool result */
+  TOOL_RESULT = 'toolResult',
 }
 
 /**
@@ -74,7 +88,7 @@ export class AITuberOnAirCore extends EventEmitter {
   private voiceService?: VoiceService;
   private isProcessing: boolean = false;
   private debug: boolean;
-
+  private toolExecutor: ToolExecutor = new ToolExecutor();
   /**
    * Constructor
    * @param options Configuration options
@@ -86,11 +100,17 @@ export class AITuberOnAirCore extends EventEmitter {
     // Determine provider name (default is 'openai')
     const providerName = options.chatProvider || 'openai';
 
+    // Register tools
+    options.tools?.forEach((t) =>
+      this.toolExecutor.register(t.definition, t.handler),
+    );
+
     // Build chat service options
     const chatServiceOptions: ChatServiceOptions = {
       apiKey: options.apiKey,
       model: options.model,
       ...options.providerOptions,
+      tools: this.toolExecutor.listDefinitions(),
     };
 
     // Initialize ChatService
@@ -138,6 +158,7 @@ export class AITuberOnAirCore extends EventEmitter {
         useMemory: !!this.memoryManager,
       },
       this.memoryManager,
+      this.handleToolUse.bind(this),
     );
 
     // Forward events
@@ -388,6 +409,22 @@ export class AITuberOnAirCore extends EventEmitter {
         this.emit(AITuberOnAirCoreEvent.ERROR, error);
       });
     }
+  }
+
+  /**
+   * Handle tool use
+   * @param blocks Tool use blocks
+   * @returns Tool result blocks
+   */
+  private async handleToolUse(
+    blocks: ToolUseBlock[],
+  ): Promise<ToolResultBlock[]> {
+    this.emit(AITuberOnAirCoreEvent.TOOL_USE, blocks);
+
+    const results = await this.toolExecutor.run(blocks);
+
+    this.emit(AITuberOnAirCoreEvent.TOOL_RESULT, results);
+    return results;
   }
 
   /**

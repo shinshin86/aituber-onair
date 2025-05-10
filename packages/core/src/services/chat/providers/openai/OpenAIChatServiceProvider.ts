@@ -10,6 +10,7 @@ import {
   ChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
+import { ToolDefinition } from '../../../../types/toolChat';
 
 /**
  * OpenAI API provider implementation
@@ -28,10 +29,14 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
         ? options.model
         : this.getDefaultModel());
 
+    // tools definition
+    const tools: ToolDefinition[] | undefined = options.tools;
+
     return new OpenAIChatService(
       options.apiKey,
       options.model || this.getDefaultModel(),
       visionModel,
+      tools,
     );
   }
 

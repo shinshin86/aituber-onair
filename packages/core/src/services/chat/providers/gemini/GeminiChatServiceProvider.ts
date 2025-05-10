@@ -32,6 +32,7 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
       options.apiKey,
       options.model || this.getDefaultModel(),
       visionModel,
+      options.tools || [],
     );
   }
 

@@ -4,7 +4,13 @@ import { Message, MessageWithVision, ChatType } from '../types';
 import { EventEmitter } from './EventEmitter';
 import { textsToScreenplay } from '../utils/screenplay';
 import { DEFAULT_VISION_PROMPT } from '../constants';
+import {
+  ToolUseBlock,
+  ToolResultBlock,
+  ToolChatCompletion,
+} from '../types/toolChat';
 
+type ToolCallback = (blocks: ToolUseBlock[]) => Promise<ToolResultBlock[]>;
 /**
  * ChatProcessor options
  */
@@ -19,6 +25,8 @@ export interface ChatProcessorOptions {
   useMemory: boolean;
   /** Memory note (instructions for AI) */
   memoryNote?: string;
+  /** Maximum number of tool call iterations allowed (default: 6) */
+  maxHops?: number;
 }
 
 /**
@@ -33,6 +41,8 @@ export class ChatProcessor extends EventEmitter {
   private chatLog: Message[] = [];
   private chatStartTime: number = 0;
   private processingChat: boolean = false;
+  private toolCallback?: ToolCallback;
+  private readonly MAX_HOPS: number;
 
   /**
    * Constructor
@@ -44,11 +54,16 @@ export class ChatProcessor extends EventEmitter {
     chatService: ChatService,
     options: ChatProcessorOptions,
     memoryManager?: MemoryManager,
+    toolCallback?: ToolCallback,
   ) {
     super();
     this.chatService = chatService;
     this.options = options;
     this.memoryManager = memoryManager;
+    this.toolCallback = toolCallback;
+
+    // Initialize MAX_HOPS from options with default value of 6
+    this.MAX_HOPS = options.maxHops ?? 6;
   }
 
   /**
@@ -103,6 +118,11 @@ export class ChatProcessor extends EventEmitter {
    */
   updateOptions(newOptions: Partial<ChatProcessorOptions>): void {
     this.options = { ...this.options, ...newOptions };
+
+    // Update MAX_HOPS if maxHops is included in the new options
+    if (newOptions.maxHops !== undefined) {
+      (this as any).MAX_HOPS = newOptions.maxHops;
+    }
   }
 
   /**
@@ -146,38 +166,9 @@ export class ChatProcessor extends EventEmitter {
         );
       }
 
-      // Prepare messages to send to AI
-      const messages: Message[] = await this.prepareMessagesForAI();
-
-      // Process with ChatService
-      await this.chatService.processChat(
-        messages,
-        (sentence) => {
-          // Process streaming response
-          this.emit('assistantPartialResponse', sentence);
-        },
-        async (fullText) => {
-          // Process after response
-          const assistantMessage: Message = {
-            role: 'assistant',
-            content: fullText,
-            timestamp: Date.now(),
-          };
-
-          this.addToChatLog(assistantMessage);
-
-          // Convert to screenplay
-          const screenplay = textsToScreenplay([fullText])[0];
-          this.emit('assistantResponse', {
-            message: assistantMessage,
-            screenplay: screenplay,
-          });
-
-          // Clean up memory
-          if (this.memoryManager) {
-            this.memoryManager.cleanupOldMemories();
-          }
-        },
+      const initialMsgs = await this.prepareMessagesForAI();
+      await this.runToolLoop<Message>(initialMsgs, (msgs, stream, cb) =>
+        this.chatService.chatOnce(msgs as Message[], stream, cb),
       );
     } catch (error) {
       console.error('Error in text chat processing:', error);
@@ -244,36 +235,15 @@ export class ChatProcessor extends EventEmitter {
         ],
       };
 
-      // Process with ChatService
-      await this.chatService.processVisionChat(
+      await this.runToolLoop<Message | MessageWithVision>(
         [...baseMessages, visionMessage],
-        (sentence) => {
-          // Process streaming response
-          this.emit('assistantPartialResponse', sentence);
-        },
-        async (fullText) => {
-          // Process after response
-          const assistantMessage: Message = {
-            role: 'assistant',
-            content: fullText,
-            timestamp: Date.now(),
-          };
-
-          this.addToChatLog(assistantMessage);
-
-          // Convert to screenplay
-          const screenplay = textsToScreenplay([fullText])[0];
-          this.emit('assistantResponse', {
-            message: assistantMessage,
-            screenplay: screenplay,
-            visionSource: imageDataUrl,
-          });
-
-          // Clean up memory
-          if (this.memoryManager) {
-            this.memoryManager.cleanupOldMemories();
-          }
-        },
+        (msgs, stream, cb) =>
+          (this.chatService as any).visionChatOnce(
+            msgs as MessageWithVision[],
+            stream,
+            cb,
+          ),
+        imageDataUrl, // visionSource
       );
     } catch (error) {
       console.error('Error in vision chat processing:', error);
@@ -315,7 +285,13 @@ export class ChatProcessor extends EventEmitter {
     }
 
     // Add chat log
-    messages.push(...this.chatLog);
+    messages.push(
+      ...this.chatLog.filter(
+        (m) =>
+          !(typeof m.content === 'string' && m.content.trim() === '') &&
+          !(Array.isArray(m.content) && m.content.length === 0),
+      ),
+    );
 
     return messages;
   }
@@ -327,5 +303,141 @@ export class ChatProcessor extends EventEmitter {
   setChatLog(messages: Message[]): void {
     this.chatLog = Array.isArray(messages) ? [...messages] : [];
     this.emit('chatLogUpdated', this.chatLog);
+  }
+
+  private async runToolLoop<T extends Message | MessageWithVision>(
+    send: T[],
+    once: (
+      msgs: T[],
+      stream: boolean,
+      onPartial: (t: string) => void,
+    ) => Promise<ToolChatCompletion>,
+    visionSource?: string,
+  ): Promise<void> {
+    let toSend = send;
+    let hops = 0;
+    let first = true;
+
+    // check if the chat service is claude
+    const isClaude = (this.chatService as any).provider === 'claude';
+
+    while (hops++ < this.MAX_HOPS) {
+      const { blocks, stop_reason } = await once(toSend, first, (t) =>
+        this.emit('assistantPartialResponse', t),
+      );
+      first = false;
+
+      blocks
+        .filter((b: any) => b.type === 'tool_result')
+        .forEach((b: any) => this.emit('assistantPartialResponse', b.content));
+
+      if (stop_reason === 'end') {
+        const full = blocks
+          .map((b) =>
+            b.type === 'text'
+              ? b.text
+              : b.type === 'tool_result'
+                ? b.content
+                : '',
+          )
+          .join('');
+
+        const assistantMessage: Message = {
+          role: 'assistant',
+          content: full,
+          timestamp: Date.now(),
+        };
+        this.addToChatLog(assistantMessage);
+
+        const screenplay = textsToScreenplay([full])[0];
+        this.emit('assistantResponse', {
+          message: assistantMessage,
+          screenplay,
+          visionSource,
+        });
+
+        if (this.memoryManager) this.memoryManager.cleanupOldMemories();
+        return;
+      }
+
+      /* ---------- tool_use ---------- */
+      if (!this.toolCallback) throw new Error('Tool callback missing');
+
+      const toolUses = blocks.filter((b: any) => b.type === 'tool_use');
+      const toolResults = await this.toolCallback(toolUses as any);
+
+      const assistantToolCall = isClaude
+        ? {
+            role: 'assistant',
+            content: toolUses.map((u: any) => ({
+              type: 'tool_use',
+              id: u.id,
+              name: u.name,
+              input: u.input ?? {},
+            })),
+          }
+        : {
+            role: 'assistant',
+            content: [],
+            tool_calls: toolUses.map((u: any) => ({
+              id: u.id,
+              type: 'function',
+              function: {
+                name: u.name,
+                arguments: JSON.stringify(u.input || {}),
+              },
+            })),
+          };
+
+      const toolMsgs = toolResults.map((r) => {
+        if (isClaude) {
+          return {
+            role: 'user',
+            content: [
+              {
+                type: r.type,
+                tool_use_id: r.tool_use_id,
+                content: r.content,
+              },
+            ],
+          };
+        }
+
+        return {
+          role: 'tool',
+          tool_call_id: r.tool_use_id,
+          content: r.content,
+        };
+      });
+
+      /* build messages for the next turn */
+      const cleaned: Message[] = (toSend as Message[]).filter((m) => {
+        if (
+          isClaude &&
+          m.role === 'assistant' &&
+          Array.isArray((m as any).content) &&
+          (m as any).content.length === 0
+        ) {
+          return false;
+        }
+        return true;
+      });
+
+      if (
+        !(
+          isClaude &&
+          Array.isArray((assistantToolCall as any).content) &&
+          (assistantToolCall as any).content.length === 0
+        )
+      ) {
+        cleaned.push(assistantToolCall as unknown as Message);
+      }
+      toolMsgs.forEach((m) => cleaned.push(m as unknown as Message));
+
+      toSend = cleaned as T[];
+    }
+
+    // It is rare to reach this point. Just log it.
+    console.warn('Tool loop exceeded MAX_HOPS');
   }
 }
