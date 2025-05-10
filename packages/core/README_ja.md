@@ -239,6 +239,327 @@ const aituber = new AITuberOnAirCore({
 });
 ```
 
+### プロバイダー別のFunction calling実装の違い
+
+AITuber OnAir CoreはOpenAI、Claude、Geminiの3つの主要なAIプロバイダーをサポートしていますが、各プロバイダーはFunction calling（ツール呼び出し）の実装方法が異なります。これらの違いはAITuber OnAir Coreによって抽象化されているため、開発者は統一されたインターフェースを使用できますが、背景を理解しておくことは重要です。
+
+> 注: 本説明は2025年5月時点のAPIバージョンを対象としています。APIは頻繁に更新されるため、最新の公式ドキュメントも併せて参照してください。
+
+#### OpenAIのFunction calling実装
+
+OpenAIのFunction callingは以下の特徴があります：
+
+- **ツール定義形式**: JSONスキーマに基づいた`functions`配列（非推奨）または`tools`配列（2023-12-01以降推奨）
+- **応答形式**: ツール使用時は`tool_calls`配列を含む応答オブジェクトを返す
+- **ツール結果の送信**: ツール結果は`role: 'tool'`のメッセージとして送信
+- **複数ツールのサポート**: 複数のツールを同時に呼び出し可能（Parallel function calling）
+
+```typescript
+// OpenAIのツール定義例（最小形式）
+const tools = [
+  {
+    type: "function", 
+    function: {
+      name: "randomInt",
+      description: "Return a random integer from 0 to (max - 1)",
+      parameters: {
+        type: "object",
+        properties: {
+          max: {
+            type: "integer",
+            description: "Upper bound (exclusive). Defaults to 100."
+          }
+        },
+        required: [] // 空でも明示的に指定するとスキーマの完全性が高まります
+      }
+    }
+  }
+];
+
+// OpenAIのツール呼び出し応答例
+{
+  role: "assistant",
+  content: null,
+  tool_calls: [
+    {
+      id: "call_abc123",
+      type: "function",
+      function: {
+        name: "randomInt",
+        arguments: "{\"max\":10}" // 文字列化されたJSONとして返される点に注意
+      }
+    }
+  ]
+}
+
+// 複数ツール呼び出しの例（Parallel function calling）
+{
+  role: "assistant",
+  content: null,
+  tool_calls: [
+    {
+      id: "call_abc123",
+      type: "function",
+      function: {
+        name: "randomInt",
+        arguments: "{\"max\":10}"
+      }
+    },
+    {
+      id: "call_def456",
+      type: "function",
+      function: {
+        name: "getCurrentTime",
+        arguments: "{\"timezone\":\"JST\"}"
+      }
+    }
+  ]
+}
+
+// OpenAIのツール結果送信例
+{
+  role: "tool",
+  tool_call_id: "call_abc123",
+  content: "7"
+}
+```
+
+AITuber OnAir CoreではOpenAIのFunction callingを処理する際、ツール定義をOpenAIのフォーマットに変換し、ツール呼び出しと結果の送受信を処理します。クラス内では`transformToolToFunction`メソッドがこの変換を行います。
+
+#### Claudeのツール呼び出し実装
+
+Claudeのツール呼び出しは以下の特徴があります：
+
+- **ツール定義形式**: `tools`配列の中に各ツールの`name`、`description`、`input_schema`を指定
+- **応答形式**: ツール使用時は`type: 'tool_use'`の特殊なブロックとして返され、`stop_reason: 'tool_use'`で停止
+- **ツール結果の送信**: `type: 'tool_result'`としてユーザーロールのメッセージに含める
+- **ストリーミング時の特殊処理**: ストリーミング応答時にツール呼び出しを適切に処理するための特別なロジックが必要
+
+```typescript
+// Claudeのツール定義例
+const tools = [
+  {
+    name: "randomInt",
+    description: "Return a random integer from 0 to (max - 1)",
+    input_schema: {
+      type: "object",
+      properties: {
+        max: {
+          type: "integer",
+          description: "Upper bound (exclusive). Defaults to 100."
+        }
+      }
+    }
+  }
+];
+
+// Claudeのツール呼び出し応答例
+{
+  id: "msg_abc123",
+  model: "claude-3-haiku-20240307",
+  role: "assistant",
+  content: [
+    { type: "text", text: "I'll generate a random number for you." },
+    { 
+      type: "tool_use", 
+      id: "tu_abc123",
+      name: "randomInt",
+      input: { max: 10 }
+    }
+  ],
+  stop_reason: "tool_use"
+}
+
+// テキストなしでツールのみを使用する例も可能
+{
+  id: "msg_xyz789",
+  model: "claude-3-haiku-20240307",
+  role: "assistant",
+  content: [
+    { 
+      type: "tool_use", 
+      id: "tu_xyz789",
+      name: "randomInt",
+      input: { max: 100 }
+    }
+  ],
+  stop_reason: "tool_use"
+}
+
+// Claudeのツール結果送信例
+{
+  role: "user",
+  content: [
+    {
+      type: "tool_result",
+      tool_use_id: "tu_abc123",
+      content: "7"
+    }
+  ]
+}
+```
+
+AITuber OnAir CoreではClaudeのツール呼び出しを処理する際、Claudeの独自フォーマットを処理し、特にストリーミング応答時の複雑な処理を抽象化しています。これには`runToolLoop`メソッドの中で特殊な処理が含まれています。
+
+#### Geminiのツール呼び出し実装
+
+Geminiのツール呼び出しは以下の特徴があります：
+
+- **ツール定義形式**: `tools`配列内の`functionDeclarations`に定義を記述
+- **応答形式**: `functionCall`を含む部分を持つコンテンツオブジェクトとして返される
+- **ツール結果の送信**: `functionResponse`オブジェクトとしてコンテンツパーツに含めて送信
+- **複合的な呼び出し**: Compositional Function Callingをサポート
+
+```typescript
+// Geminiのツール定義例
+const tools = [
+  {
+    functionDeclarations: [
+      {
+        name: "randomInt",
+        description: "Return a random integer from 0 to (max - 1)",
+        parameters: {
+          type: "object",
+          properties: {
+            max: {
+              type: "integer",
+              description: "Upper bound (exclusive). Defaults to 100."
+            }
+          }
+        }
+      }
+    ]
+  }
+];
+
+// Geminiのツール呼び出し応答例（深い階層構造に注意）
+{
+  candidates: [
+    {
+      content: {
+        parts: [
+          {
+            functionCall: {
+              name: "randomInt",
+              args: {
+                max: 10
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+
+// 複合的なツール呼び出し例（Compositional Function Calling）
+{
+  candidates: [
+    {
+      content: {
+        parts: [
+          {
+            functionCall: {
+              name: "randomInt",
+              args: {
+                max: 10
+              }
+            }
+          },
+          {
+            functionCall: {
+              name: "formatResult",
+              args: {
+                prefix: "Random number:",
+                value: "<function_response:randomInt>"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+
+// Geminiのツール結果送信例
+// content partsに直接functionResponseを含めます（SDKは自動でroleを設定）
+{
+  parts: [
+    {
+      functionResponse: {
+        name: "randomInt",
+        response: {
+          value: "7"
+        }
+      }
+    }
+  ]
+}
+
+// REST API直接呼び出し時は以下のようにroleを含める場合があります
+{
+  role: "function",
+  parts: [
+    {
+      functionResponse: {
+        name: "randomInt",
+        response: {
+          value: "7"
+        }
+      }
+    }
+  ]
+}
+```
+
+AITuber OnAir CoreではGeminiのツール呼び出しを処理する際、Gemini特有の複雑なレスポンス構造とツール結果のフォーマットを適切に処理しています。特に、ツール応答を適切なJSON形式に変換するためのロジックが必要です。
+
+#### ストリーミング実装の違い
+
+各プロバイダーはストリーミング応答時のツール呼び出し処理にも違いがあります：
+
+1. **OpenAI**:
+   - ストリーミング時はデルタ更新として`delta.tool_calls`が送信される
+   - 完全なツール呼び出しデータを再構築するために累積が必要
+
+2. **Claude**:
+   - SSEストリーミングでは特殊なイベントタイプ`content_block_delta`と`content_block_stop`が使用される
+   - ツール呼び出しが完了したときに`stop_reason: "tool_use"`が送信される
+   - ツール呼び出しを検出するために特別なパーサーが必要
+
+3. **Gemini**:
+   - ストリーミング時は`functionCall`がチャンクに分かれて送信されることがある
+   - 完全なJSON構造を再構築するためのバッファリングが必要
+
+AITuber OnAir Coreはこれらのストリーミング処理の違いを抽象化し、どのプロバイダーを使用する場合でも同じインターフェースでツール呼び出しと結果の処理ができるようにしています。
+
+### プロバイダー間の主な違いと抽象化
+
+AITuber OnAir Coreは、これらの3つのプロバイダー間の違いを抽象化し、統一されたインターフェースを提供しています：
+
+1. **入力フォーマットの違い**:
+   - 各プロバイダーは独自のツール定義フォーマットを使用
+   - AITuber OnAir Coreは内部で適切な変換を行い、共通の`ToolDefinition`インターフェースを提供
+
+2. **応答処理の違い**:
+   - OpenAIは`tool_calls`オブジェクト
+   - Claudeは`tool_use`ブロック
+   - Geminiは`functionCall`オブジェクト
+   - AITuber OnAir Coreは各形式を処理し、統一された`TOOL_USE`イベントに変換
+
+3. **ツール結果の送信形式の違い**:
+   - 各プロバイダーは異なる形式でツール結果を受け取る
+   - AITuber OnAir Coreは適切なフォーマットに変換して送信
+
+4. **ストリーミング処理の違い**:
+   - 特にClaudeはストリーミング中のツール呼び出しに特別な処理が必要
+   - AITuber OnAir Coreはこれを抽象化し、すべてのプロバイダーで一貫したストリーミング体験を提供
+
+5. **ツール呼び出しの反復**:
+   - `runToolLoop`メソッドは各プロバイダーの特性に合わせて実装され、一貫したツール反復処理を提供
+
+これらの抽象化により、開発者はプロバイダーの実装の詳細を気にすることなく、AITuber OnAir Coreの統一されたインターフェースを通じてツール機能を利用できます。プロバイダーを切り替える場合でも、ツールの定義と処理コードを変更する必要はありません。
+
 ## アーキテクチャ
 
 AITuberOnAirCoreは以下のレイヤー構造で設計されています：
