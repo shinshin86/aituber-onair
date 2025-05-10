@@ -16,6 +16,7 @@
 - [インストール方法](#インストール方法)
 - [主な機能](#主な機能)
 - [基本的な使用方法](#基本的な使用方法)
+- [ツールシステム (Function calling)](#ツールシステム)
 - [アーキテクチャ](#アーキテクチャ)
 - [主要コンポーネント](#主要コンポーネント)
 - [イベントシステム](#イベントシステム)
@@ -60,6 +61,7 @@ pnpm install @aituber-onair/core
 - **イベント駆動型のアーキテクチャ**：処理の各段階でイベントを発行し、外部との連携を容易に
 - **カスタマイズ可能なプロンプト**：Vision処理や会話要約のためのプロンプトをカスタマイズ可能
 - **プラグイン可能な永続化**：メモリ機能をLocalStorage、IndexedDBなど様々な方法で永続化
+- **ツール機能によるFunction calling**：テキスト生成以外のアクション（計算、API呼び出し、データ取得など）をAIが実行できる機能を提供
 
 ## 基本的な使用方法
 
@@ -148,6 +150,93 @@ await aituber.processChat('こんにちは、今日の天気はどうですか�
 
 // 5. イベントリスナーのクリア（必要に応じて）
 aituber.offAll();
+```
+
+## ツールシステム
+
+AITuber OnAir Coreには、テキスト生成以外のアクションをAIが実行できる強力なツールシステムが含まれています。例えばデータの取得や計算の実行など、対話的なAITuber体験の作成に特に役立ちます。
+
+### ツール定義の構造
+
+ツールは`ToolDefinition`インターフェースを使用して定義され、LLMプロバイダが使用するFunction calling仕様に準拠しています：
+
+```typescript
+type ToolDefinition = {
+  name: string;                 // ツールの名前
+  description?: string;         // ツールの機能説明（オプション）
+  parameters: {
+    type: 'object';             // 常に'object'（厳格に型付けされています）
+    properties?: Record<string, {
+      type?: string;            // パラメータの型（例：'string'、'integer'）
+      description?: string;     // パラメータの説明
+      enum?: any[];             // 列挙値の場合
+      items?: any;              // 配列型の場合
+      required?: string[];      // 必須のネストされたプロパティ
+      [key: string]: any;       // その他のJSONスキーマプロパティ
+    }>;
+    required?: string[];        // 必須パラメータの名前
+    [key: string]: any;         // その他のJSONスキーマプロパティ
+  };
+  config?: { timeoutMs?: number }; // オプション設定
+};
+```
+
+注意：`parameters.type`プロパティは`'object'`に厳格に型付けされており、LLMプロバイダが使用するFunction calling標準に準拠しています。
+
+### ツールの登録と使用
+
+ツールはAITuberOnAirCoreの初期化時に登録されます：
+
+```typescript
+// ツールの定義
+const randomIntTool: ToolDefinition = {
+  name: 'randomInt',
+  description: '0から(max - 1)までのランダムな整数を返す',
+  parameters: {
+    type: 'object',  // 必ず'object'を指定する必要があります
+    properties: {
+      max: {
+        type: 'integer',
+        description: '上限値（排他的）。デフォルトは100。',
+        minimum: 1,
+      },
+    },
+  },
+};
+
+// ツールのハンドラーを作成
+async function randomIntHandler({ max = 100 }: { max?: number }) {
+  return Math.floor(Math.random() * max).toString();
+}
+
+// AITuberOnAirCoreにツールを登録
+const aituber = new AITuberOnAirCore({
+  // ...その他のオプション...
+  tools: [{ definition: randomIntTool, handler: randomIntHandler }],
+});
+
+// ツール使用のイベントリスナーを設定
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlock) => 
+  console.log(`ツール使用 -> ${toolBlock.name}`, toolBlock.input));
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlock) => 
+  console.log(`ツール結果 ->`, resultBlock.content));
+```
+
+### ツール反復の制御
+
+`maxHops`オプションを使用してツール呼び出しの反復回数を制限できます：
+
+```typescript
+const aituber = new AITuberOnAirCore({
+  // ...その他のオプション...
+  chatOptions: {
+    systemPrompt: 'システムプロンプト',
+    // ...その他のチャットオプション...
+    maxHops: 10,  // ツール呼び出しの最大反復回数（デフォルト：6）
+  },
+  tools: [/* ツールの配列 */],
+});
 ```
 
 ## アーキテクチャ

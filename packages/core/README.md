@@ -16,6 +16,7 @@ It specializes in generating response text and audio from text or image inputs, 
 - [Installation](#installation)
 - [Main Features](#main-features)
 - [Basic Usage](#basic-usage)
+- [Tool System](#tool-system)
 - [Architecture](#architecture)
 - [Main Components](#main-components)
 - [Event System](#event-system)
@@ -68,6 +69,8 @@ pnpm install @aituber-onair/core
   Allows customization of prompts for vision processing and conversation summarization.
 - **Pluggable Persistence**  
   Memory features can be persisted via LocalStorage, IndexedDB, or other customizable methods.
+- **Function Calling with Tools Support**  
+  Enables AI to use tools for performing actions beyond text generation, such as calculations, API calls, or data retrieval.
 
 ## Basic Usage
 
@@ -162,6 +165,93 @@ await aituber.processChat('Hello, how is the weather today?');
 
 // 5. Clear event listeners if needed
 aituber.offAll();
+```
+
+## Tool System
+
+AITuber OnAir Core includes a powerful tool system that allows AI to perform actions beyond text generation, such as retrieving data or making calculations. This is particularly useful for creating interactive AITuber experiences.
+
+### Tool Definition Structure
+
+Tools are defined using the `ToolDefinition` interface, which conforms to the function calling specification used by LLM providers:
+
+```typescript
+type ToolDefinition = {
+  name: string;                 // The name of the tool
+  description?: string;         // Optional description of what the tool does
+  parameters: {
+    type: 'object';             // Must be 'object' (strictly typed)
+    properties?: Record<string, {
+      type?: string;            // Parameter type (e.g. 'string', 'integer')
+      description?: string;     // Parameter description
+      enum?: any[];             // For enumerated values
+      items?: any;              // For array types
+      required?: string[];      // Required nested properties
+      [key: string]: any;       // Other JSON Schema properties
+    }>;
+    required?: string[];        // Names of required parameters
+    [key: string]: any;         // Other JSON Schema properties
+  };
+  config?: { timeoutMs?: number }; // Optional configuration
+};
+```
+
+Note that the `parameters.type` property is strictly typed as `'object'` to conform to function calling standards used by LLM providers.
+
+### Registering and Using Tools
+
+Tools are registered when initializing AITuberOnAirCore:
+
+```typescript
+// Define a tool
+const randomIntTool: ToolDefinition = {
+  name: 'randomInt',
+  description: 'Return a random integer from 0 to (max - 1)',
+  parameters: {
+    type: 'object',  // This must be 'object'
+    properties: {
+      max: {
+        type: 'integer',
+        description: 'Upper bound (exclusive). Defaults to 100.',
+        minimum: 1,
+      },
+    },
+  },
+};
+
+// Create a handler for the tool
+async function randomIntHandler({ max = 100 }: { max?: number }) {
+  return Math.floor(Math.random() * max).toString();
+}
+
+// Register the tool with AITuberOnAirCore
+const aituber = new AITuberOnAirCore({
+  // ... other options ...
+  tools: [{ definition: randomIntTool, handler: randomIntHandler }],
+});
+
+// Set up event listeners for tool use
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlock) => 
+  console.log(`Tool use -> ${toolBlock.name}`, toolBlock.input));
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlock) => 
+  console.log(`Tool result ->`, resultBlock.content));
+```
+
+### Tool Iteration Control
+
+You can limit the number of tool call iterations using the `maxHops` option:
+
+```typescript
+const aituber = new AITuberOnAirCore({
+  // ... other options ...
+  chatOptions: {
+    systemPrompt: 'Your system prompt',
+    // ... other chat options ...
+    maxHops: 10,  // Maximum number of tool call iterations (default: 6)
+  },
+  tools: [/* your tools */],
+});
 ```
 
 ## Architecture
