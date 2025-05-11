@@ -28,6 +28,7 @@ It specializes in generating response text and audio from text or image inputs, 
 - [Examples](#examples)
 - [Integration with Existing Applications](#integration-with-existing-applications)
 - [Testing & Development](#testing--development)
+- [Migration Guide for Memory Events](#migration-guide-for-memory-events)
 
 ## Overview
 
