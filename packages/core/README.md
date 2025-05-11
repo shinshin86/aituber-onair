@@ -18,6 +18,7 @@ It specializes in generating response text and audio from text or image inputs, 
 - [Basic Usage](#basic-usage)
 - [Tool System](#tool-system)
 - [Function Calling Differences](#function-calling-differences)
+- [Using MCP](#using-mcp)
 - [Architecture](#architecture)
 - [Main Components](#main-components)
 - [Event System](#event-system)
