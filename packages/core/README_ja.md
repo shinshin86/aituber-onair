@@ -571,7 +571,7 @@ AITuber OnAir Coreは、これらの3つのプロバイダー間の違いを抽�
 これらの抽象化により、開発者はプロバイダーの実装の詳細を気にすることなく、AITuber OnAir Coreの統一されたインターフェースを通じてツール機能を利用できます。プロバイダーを切り替える場合でも、ツールの定義と処理コードを変更する必要はありません。
 
 ## MCPの利用方法
-AITuber OnAir Coreではツール呼び出しを用いること [MCP](https://modelcontextprotocol.io/introduction) を組み込むことが可能です。
+AITuber OnAir Coreではツール呼び出しを用いることで [MCP](https://modelcontextprotocol.io/introduction) を組み込むことが可能です。
 
 組み込みの例を記載します。  
 以下はランダムな数値を返す `MCP` を組み込むシンプルなサンプルです。
