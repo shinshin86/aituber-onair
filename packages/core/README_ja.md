@@ -155,6 +155,34 @@ aituber.on(AITuberOnAirCoreEvent.ERROR, (error) => {
   console.error('エラー発生:', error);
 });
 
+// メモリとチャット履歴関連のイベント
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_SET, (messages) => 
+  console.log('チャット履歴が設定されました:', messages.length));
+
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_CLEARED, () => 
+  console.log('チャット履歴がクリアされました'));
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_CREATED, (memory) => 
+  console.log(`新しいメモリが作成されました: ${memory.type}`));
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_REMOVED, (memoryIds) => {
+  console.log('メモリが削除されました:', memoryIds);
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => {
+  console.log('メモリがロードされました:', memories.length);
+  // ロードされたメモリ情報をUIに表示するなど
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_SAVED, (memories) => {
+  console.log('メモリが保存されました:', memories.length);
+  // 保存完了通知を表示するなど
+});
+
+aituber.on(AITuberOnAirCoreEvent.STORAGE_CLEARED, () => {
+  console.log('ストレージがクリアされました');
+});
+
 // 4. テキスト入力の処理
 await aituber.processChat('こんにちは、今日の天気はどうですか？');
 
@@ -780,6 +808,13 @@ AITuberOnAirCoreは以下のイベントを発行します：
 - `TOOL_USE`: AIがツールを呼び出す時（ツール名と入力パラメータを含む）
 - `TOOL_RESULT`: ツールの実行が完了し結果が返却される時
 - `ERROR`: エラー発生時
+- `CHAT_HISTORY_SET`: チャット履歴が設定された時
+- `CHAT_HISTORY_CLEARED`: チャット履歴がクリアされた時
+- `MEMORY_CREATED`: 新しいメモリが作成された時
+- `MEMORY_REMOVED`: メモリが削除された時
+- `MEMORY_LOADED`: メモリがストレージから読み込まれた時
+- `MEMORY_SAVED`: メモリがストレージに保存された時
+- `STORAGE_CLEARED`: ストレージがクリアされた時
 
 ### イベントデータの安全な取り扱い
 
@@ -1127,13 +1162,55 @@ const aiTuber = new AITuberOnAirCore({
 
 メモリ機能には以下のイベントが発生します：
 
-- `memoriesLoaded`：ストレージからメモリが読み込まれたとき
-- `memoryCreated`：新しいメモリが作成されたとき
-- `memoriesRemoved`：メモリが削除されたとき
-- `memoriesSaved`：メモリがストレージに保存されたとき
-- `storageCleared`：ストレージがクリアされたとき
+- `memoriesLoaded`：ストレージからメモリが読み込まれたとき（AITuberOnAirCoreEvent.MEMORY_LOADED に対応）
+- `memoryCreated`：新しいメモリが作成されたとき（AITuberOnAirCoreEvent.MEMORY_CREATED に対応）
+- `memoriesRemoved`：メモリが削除されたとき（AITuberOnAirCoreEvent.MEMORY_REMOVED に対応）
+- `memoriesSaved`：メモリがストレージに保存されたとき（AITuberOnAirCoreEvent.MEMORY_SAVED に対応）
+- `storageCleared`：ストレージがクリアされたとき（AITuberOnAirCoreEvent.STORAGE_CLEARED に対応）
 
-これらのイベントは直接`MemoryManager`インスタンスから発行されるため、アクセスするには通常、内部コンポーネントへの参照が必要です。
+これらのイベントは直接`MemoryManager`インスタンスから発行されますが、最新のバージョンではAITuberOnAirCoreからも同様のイベントが発行されるため、通常はAITuberOnAirCoreのイベントを使用することをお勧めします。
+
+#### AITuberOnAirCoreイベントの利用
+
+AITuberOnAirCoreからもメモリ関連のイベントが発行されるようになりました：
+
+```typescript
+// メモリとチャット履歴関連のイベントリスナーの設定例
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_SET, (messages) => {
+  console.log('チャット履歴が設定されました:', messages.length);
+  // UIの更新処理など
+});
+
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_CLEARED, () => {
+  console.log('チャット履歴がクリアされました');
+  // UIのクリア処理など
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_CREATED, (memory) => {
+  console.log(`新しいメモリが作成されました: ${memory.type}`);
+  // メモリ作成通知UIの表示など
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_REMOVED, (memoryIds) => {
+  console.log('メモリが削除されました:', memoryIds);
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => {
+  console.log('メモリがロードされました:', memories.length);
+  // ロードされたメモリ情報をUIに表示するなど
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_SAVED, (memories) => {
+  console.log('メモリが保存されました:', memories.length);
+  // 保存完了通知を表示するなど
+});
+
+aituber.on(AITuberOnAirCoreEvent.STORAGE_CLEARED, () => {
+  console.log('ストレージがクリアされました');
+});
+```
+
+これらのイベントを利用することで、メモリ状態の変化をUIに反映したり、デバッグ情報を表示したりすることができます。
 
 ### メモリのクリーンアップ
 

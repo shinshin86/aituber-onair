@@ -171,6 +171,25 @@ aituber.on(AITuberOnAirCoreEvent.ERROR, (error) => {
   console.error('Error occurred:', error);
 });
 
+// Memory and chat history related events
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_SET, (messages) => 
+  console.log('Chat history set:', messages.length));
+
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_CLEARED, () => 
+  console.log('Chat history cleared'));
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_CREATED, (memory) => 
+  console.log(`New memory created: ${memory.type}`));
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_REMOVED, (memoryIds) => 
+  console.log('Memory removed:', memoryIds));
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => 
+  console.log('Memory loaded:', memories.length));
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_SAVED, (memories) => 
+  console.log('Memory saved:', memories.length));
+
 // 4. Process text input
 await aituber.processChat('Hello, how is the weather today?');
 
@@ -797,6 +816,13 @@ await aituberOnairCore.speakTextWithOptions('[happy] Hello, everyone watching!',
 - `TOOL_USE`: When the AI calls a tool (includes the name of the tool and its input parameters)  
 - `TOOL_RESULT`: When a tool execution completes and returns a result  
 - `ERROR`: When an error occurs  
+- `CHAT_HISTORY_SET`: When chat history is set
+- `CHAT_HISTORY_CLEARED`: When chat history is cleared
+- `MEMORY_CREATED`: When a new memory is created
+- `MEMORY_REMOVED`: When memory is removed
+- `MEMORY_LOADED`: When memory is loaded from storage
+- `MEMORY_SAVED`: When memory is saved to storage
+- `STORAGE_CLEARED`: When storage is cleared
 
 ### Safely Handling Event Data
 
@@ -1130,13 +1156,55 @@ const aiTuber = new AITuberOnAirCore({
 
 The memory feature triggers the following events:
 
-- `memoriesLoaded`: When memory is loaded from storage  
-- `memoryCreated`: When a new memory record is created  
-- `memoriesRemoved`: When a memory record is deleted  
-- `memoriesSaved`: When memory records are saved to storage  
-- `storageCleared`: When the storage is cleared  
+- `memoriesLoaded`: When memory is loaded from storage (corresponds to AITuberOnAirCoreEvent.MEMORY_LOADED)
+- `memoryCreated`: When a new memory record is created (corresponds to AITuberOnAirCoreEvent.MEMORY_CREATED)
+- `memoriesRemoved`: When a memory record is deleted (corresponds to AITuberOnAirCoreEvent.MEMORY_REMOVED)
+- `memoriesSaved`: When memory records are saved to storage (corresponds to AITuberOnAirCoreEvent.MEMORY_SAVED)
+- `storageCleared`: When the storage is cleared (corresponds to AITuberOnAirCoreEvent.STORAGE_CLEARED)
 
-These events are emitted by the `MemoryManager` instance internally, so you typically need a reference to the internal component to use them.
+These events are emitted by the `MemoryManager` instance internally, but in the latest version, the same events are also emitted by AITuberOnAirCore, so it's recommended to use the AITuberOnAirCore events.
+
+#### Using AITuberOnAirCore Events
+
+AITuberOnAirCore emits memory-related events that you can use directly:
+
+```typescript
+// Example of setting up memory and chat history related event listeners
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_SET, (messages) => {
+  console.log('Chat history set:', messages.length);
+  // Update UI, etc.
+});
+
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_CLEARED, () => {
+  console.log('Chat history cleared');
+  // Clear UI, etc.
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_CREATED, (memory) => {
+  console.log(`New memory created: ${memory.type}`);
+  // Display memory creation notification, etc.
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_REMOVED, (memoryIds) => {
+  console.log('Memory removed:', memoryIds);
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => {
+  console.log('Memory loaded:', memories.length);
+  // Display loaded memory information, etc.
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_SAVED, (memories) => {
+  console.log('Memory saved:', memories.length);
+  // Display save confirmation, etc.
+});
+
+aituber.on(AITuberOnAirCoreEvent.STORAGE_CLEARED, () => {
+  console.log('Storage cleared');
+});
+```
+
+You can use these events to reflect memory state changes in your UI, display debug information, or trigger other actions.
 
 ### Memory Cleanup
 
