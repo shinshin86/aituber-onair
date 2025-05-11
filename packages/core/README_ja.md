@@ -27,6 +27,7 @@
 - [応用例](#応用例)
 - [既存アプリケーションとの統合](#既存アプリケーションとの統合)
 - [テストと開発](#テストと開発)
+- [メモリイベントの移行ガイド](#メモリイベントの移行ガイド)
 
 ## 概要
 
@@ -153,6 +154,34 @@ aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlock) =>
 
 aituber.on(AITuberOnAirCoreEvent.ERROR, (error) => {
   console.error('エラー発生:', error);
+});
+
+// メモリとチャット履歴関連のイベント
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_SET, (messages) => 
+  console.log('チャット履歴が設定されました:', messages.length));
+
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_CLEARED, () => 
+  console.log('チャット履歴がクリアされました'));
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_CREATED, (memory) => 
+  console.log(`新しいメモリが作成されました: ${memory.type}`));
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_REMOVED, (memoryIds) => {
+  console.log('メモリが削除されました:', memoryIds);
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => {
+  console.log('メモリがロードされました:', memories.length);
+  // ロードされたメモリ情報をUIに表示するなど
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_SAVED, (memories) => {
+  console.log('メモリが保存されました:', memories.length);
+  // 保存完了通知を表示するなど
+});
+
+aituber.on(AITuberOnAirCoreEvent.STORAGE_CLEARED, () => {
+  console.log('ストレージがクリアされました');
 });
 
 // 4. テキスト入力の処理
@@ -780,6 +809,13 @@ AITuberOnAirCoreは以下のイベントを発行します：
 - `TOOL_USE`: AIがツールを呼び出す時（ツール名と入力パラメータを含む）
 - `TOOL_RESULT`: ツールの実行が完了し結果が返却される時
 - `ERROR`: エラー発生時
+- `CHAT_HISTORY_SET`: チャット履歴が設定された時
+- `CHAT_HISTORY_CLEARED`: チャット履歴がクリアされた時
+- `MEMORY_CREATED`: 新しいメモリが作成された時
+- `MEMORY_REMOVED`: メモリが削除された時
+- `MEMORY_LOADED`: メモリがストレージから読み込まれた時
+- `MEMORY_SAVED`: メモリがストレージに保存された時
+- `STORAGE_CLEARED`: ストレージがクリアされた時
 
 ### イベントデータの安全な取り扱い
 
@@ -1127,13 +1163,55 @@ const aiTuber = new AITuberOnAirCore({
 
 メモリ機能には以下のイベントが発生します：
 
-- `memoriesLoaded`：ストレージからメモリが読み込まれたとき
-- `memoryCreated`：新しいメモリが作成されたとき
-- `memoriesRemoved`：メモリが削除されたとき
-- `memoriesSaved`：メモリがストレージに保存されたとき
-- `storageCleared`：ストレージがクリアされたとき
+- `memoriesLoaded`：ストレージからメモリが読み込まれたとき（AITuberOnAirCoreEvent.MEMORY_LOADED に対応）
+- `memoryCreated`：新しいメモリが作成されたとき（AITuberOnAirCoreEvent.MEMORY_CREATED に対応）
+- `memoriesRemoved`：メモリが削除されたとき（AITuberOnAirCoreEvent.MEMORY_REMOVED に対応）
+- `memoriesSaved`：メモリがストレージに保存されたとき（AITuberOnAirCoreEvent.MEMORY_SAVED に対応）
+- `storageCleared`：ストレージがクリアされたとき（AITuberOnAirCoreEvent.STORAGE_CLEARED に対応）
 
-これらのイベントは直接`MemoryManager`インスタンスから発行されるため、アクセスするには通常、内部コンポーネントへの参照が必要です。
+これらのイベントは直接`MemoryManager`インスタンスから発行されますが、最新のバージョンではAITuberOnAirCoreからも同様のイベントが発行されるため、通常はAITuberOnAirCoreのイベントを使用することをお勧めします。
+
+#### AITuberOnAirCoreイベントの利用
+
+AITuberOnAirCoreからもメモリ関連のイベントが発行されるようになりました：
+
+```typescript
+// メモリとチャット履歴関連のイベントリスナーの設定例
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_SET, (messages) => {
+  console.log('チャット履歴が設定されました:', messages.length);
+  // UIの更新処理など
+});
+
+aituber.on(AITuberOnAirCoreEvent.CHAT_HISTORY_CLEARED, () => {
+  console.log('チャット履歴がクリアされました');
+  // UIのクリア処理など
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_CREATED, (memory) => {
+  console.log(`新しいメモリが作成されました: ${memory.type}`);
+  // メモリ作成通知UIの表示など
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_REMOVED, (memoryIds) => {
+  console.log('メモリが削除されました:', memoryIds);
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => {
+  console.log('メモリがロードされました:', memories.length);
+  // ロードされたメモリ情報をUIに表示するなど
+});
+
+aituber.on(AITuberOnAirCoreEvent.MEMORY_SAVED, (memories) => {
+  console.log('メモリが保存されました:', memories.length);
+  // 保存完了通知を表示するなど
+});
+
+aituber.on(AITuberOnAirCoreEvent.STORAGE_CLEARED, () => {
+  console.log('ストレージがクリアされました');
+});
+```
+
+これらのイベントを利用することで、メモリ状態の変化をUIに反映したり、デバッグ情報を表示したりすることができます。
 
 ### メモリのクリーンアップ
 
@@ -1339,3 +1417,68 @@ npm install
 # テストの実行
 npm test
 ```
+
+## メモリイベントの移行ガイド
+
+### v0.8.0での変更点
+
+バージョンv0.8.0では、内部の`MemoryManager`コンポーネントから発行されるメモリ関連のイベントをすべてメイン`AITuberOnAirCore`インスタンスに転送するよう、イベントシステムを統一しました。これにより、すべてのイベントを一箇所でリッスンできるより一貫性のあるAPIが実現しました。
+
+### 変更内容
+
+- 以前：メモリ関連のイベント（`memoriesLoaded`、`memoryCreated`など）は内部の`MemoryManager`インスタンスからのみ発行され、このコンポーネントに直接アクセスする必要がありました。
+- 現在：これらのイベントは標準化された`AITuberOnAirCoreEvent`列挙型の値としてメイン`AITuberOnAirCore`インスタンスからも発行されます。
+
+### 移行方法
+
+以前、メモリイベントをリッスンするために`MemoryManager`に直接アクセスしていた場合：
+
+```typescript
+// 古いアプローチ（非推奨）
+const memoryManager = aituber['memoryManager'];
+if (memoryManager) {
+  memoryManager.on('memoriesLoaded', (memories) => {
+    console.log('メモリがロードされました:', memories.length);
+  });
+}
+```
+
+コードを更新して、メインのAITuberOnAirCoreインスタンスを使用してください：
+
+```typescript
+// 新しいアプローチ（推奨）
+aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => {
+  console.log('メモリがロードされました:', memories.length);
+});
+```
+
+### イベントマッピング
+
+内部のMemoryManagerイベントとAITuberOnAirCoreEventの値の対応は以下の通りです：
+
+| MemoryManagerイベント | AITuberOnAirCoreEvent |
+|-----------------------|----------------------|
+| `memoriesLoaded`      | `MEMORY_LOADED`      |
+| `memoryCreated`       | `MEMORY_CREATED`     |
+| `memoriesRemoved`     | `MEMORY_REMOVED`     |
+| `memoriesSaved`       | `MEMORY_SAVED`       |
+| `storageCleared`      | `STORAGE_CLEARED`    |
+
+さらに、以下の新しいイベントが追加されました：
+
+| 新しいイベント               | 説明                        |
+|------------------------------|---------------------------|
+| `CHAT_HISTORY_SET`           | チャット履歴が設定された時   |
+| `CHAT_HISTORY_CLEARED`       | チャット履歴がクリアされた時 |
+
+### 新しいアプローチの利点
+
+- **シンプルなAPI**：すべてのイベントが単一のエントリーポイントから利用可能
+- **型安全性**：列挙型の値を使用することでTypeScriptのサポートが向上
+- **抽象化**：内部実装の詳細が適切に隠蔽されている
+- **一貫性**：すべてのイベントが同じパターンに従う
+- **ドキュメント**：イベントが列挙型の値と共に明確に文書化されている
+
+### これによりコードは壊れますか？
+
+イベントをリッスンするために`MemoryManager`インスタンスに直接アクセスしていた場合、コードは引き続き機能しますが、この方法は非推奨とみなされます。将来の互換性のために、新しいアプローチへの移行をお勧めします。

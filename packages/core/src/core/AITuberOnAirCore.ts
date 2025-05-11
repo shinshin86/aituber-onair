@@ -73,6 +73,20 @@ export enum AITuberOnAirCoreEvent {
   TOOL_USE = 'toolUse',
   /** Tool result */
   TOOL_RESULT = 'toolResult',
+  /** Chat history set */
+  CHAT_HISTORY_SET = 'chatHistorySet',
+  /** Chat history cleared */
+  CHAT_HISTORY_CLEARED = 'chatHistoryCleared',
+  /** Memory created */
+  MEMORY_CREATED = 'memoryCreated',
+  /** Memory removed */
+  MEMORY_REMOVED = 'memoryRemoved',
+  /** Memory loaded */
+  MEMORY_LOADED = 'memoryLoaded',
+  /** Memory saved */
+  MEMORY_SAVED = 'memorySaved',
+  /** Storage cleared */
+  STORAGE_CLEARED = 'storageCleared',
 }
 
 /**
@@ -262,6 +276,7 @@ export class AITuberOnAirCore extends EventEmitter {
    */
   setChatHistory(messages: Message[]): void {
     this.chatProcessor.setChatLog(messages);
+    this.emit(AITuberOnAirCoreEvent.CHAT_HISTORY_SET, messages);
   }
 
   /**
@@ -269,6 +284,7 @@ export class AITuberOnAirCore extends EventEmitter {
    */
   clearChatHistory(): void {
     this.chatProcessor.clearChatLog();
+    this.emit(AITuberOnAirCoreEvent.CHAT_HISTORY_CLEARED);
     if (this.memoryManager) {
       this.memoryManager.clearAllMemories();
     }

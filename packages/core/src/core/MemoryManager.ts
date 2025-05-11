@@ -1,4 +1,5 @@
 import { Message, MemoryRecord, MemoryType, MemoryStorage } from '../types';
+import { AITuberOnAirCoreEvent } from './AITuberOnAirCore';
 import { EventEmitter } from './EventEmitter';
 
 /**
@@ -89,11 +90,11 @@ export class MemoryManager extends EventEmitter {
       const loadedMemories = await this.storage.load();
       if (loadedMemories && loadedMemories.length > 0) {
         this.memories = loadedMemories;
-        this.emit('memoriesLoaded', loadedMemories);
+        this.emit(AITuberOnAirCoreEvent.MEMORY_LOADED, loadedMemories);
       }
     } catch (error) {
       console.error('Error loading memories from storage:', error);
-      this.emit('error', error);
+      this.emit(AITuberOnAirCoreEvent.ERROR, error);
     }
   }
 
@@ -105,10 +106,10 @@ export class MemoryManager extends EventEmitter {
 
     try {
       await this.storage.save(this.memories);
-      this.emit('memoriesSaved', this.memories);
+      this.emit(AITuberOnAirCoreEvent.MEMORY_SAVED, this.memories);
     } catch (error) {
       console.error('Error saving memories to storage:', error);
-      this.emit('error', error);
+      this.emit(AITuberOnAirCoreEvent.ERROR, error);
     }
   }
 
@@ -205,7 +206,7 @@ export class MemoryManager extends EventEmitter {
       };
 
       this.memories.push(memoryRecord);
-      this.emit('memoryCreated', memoryRecord);
+      this.emit(AITuberOnAirCoreEvent.MEMORY_CREATED, memoryRecord);
 
       // Save to storage if available
       await this.saveToStorage();
@@ -271,7 +272,7 @@ export class MemoryManager extends EventEmitter {
         (mem) => now - mem.timestamp <= retentionPeriod,
       );
 
-      this.emit('memoriesRemoved', oldMemories);
+      this.emit(AITuberOnAirCoreEvent.MEMORY_REMOVED, oldMemories);
 
       // Save to storage if available
       await this.saveToStorage();
@@ -284,16 +285,16 @@ export class MemoryManager extends EventEmitter {
   async clearAllMemories(): Promise<void> {
     const oldMemories = [...this.memories];
     this.memories = [];
-    this.emit('memoriesRemoved', oldMemories);
+    this.emit(AITuberOnAirCoreEvent.MEMORY_REMOVED, oldMemories);
 
     // Clear storage if available
     if (this.storage) {
       try {
         await this.storage.clear();
-        this.emit('storageCleared');
+        this.emit(AITuberOnAirCoreEvent.STORAGE_CLEARED);
       } catch (error) {
         console.error('Error clearing storage:', error);
-        this.emit('error', error);
+        this.emit(AITuberOnAirCoreEvent.ERROR, error);
       }
     }
   }
