@@ -75,6 +75,9 @@ pnpm install @aituber-onair/core
 
 ## Basic Usage
 
+For more practical usage examples, please see [Simple AI Chat App with AITuber OnAir Core]
+(https://github.com/shinshin86/simple-aichat-app-with-aituber-onair-core).
+
 Below is a simplified example of how to use **AITuber OnAir Core**:
 
 ```typescript
@@ -581,6 +584,80 @@ AITuber OnAir Core abstracts the differences between these three providers and p
    - The `runToolLoop` method is implemented according to each provider's characteristics, providing consistent tool iteration
 
 Through these abstractions, developers can use tool functionality through AITuber OnAir Core's unified interface without worrying about the details of provider implementations. Even when switching providers, there's no need to change tool definition and processing code.
+
+## Using MCP
+AITuber OnAir Core allows you to integrate [MCP](https://modelcontextprotocol.io/introduction) using tool calls.
+
+Here's an example of integration.  
+The following is a simple sample that integrates an `MCP` that returns a random number.
+
+```typescript
+// mcpClient.ts
+import { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+  
+let clientPromise: Promise<MCPClient> | null = null;
+  
+async function getMcpClient(): Promise<MCPClient> {
+  if (clientPromise) return clientPromise;
+
+  const client = new MCPClient({
+    name: "random-int-server",
+    version: "0.0.1",
+  });
+  const endpoint = import.meta.env.VITE_MCP_ENDPOINT as string;
+  if (!endpoint) throw new Error("VITE_MCP_ENDPOINT is not defined");
+
+  const transport = new StreamableHTTPClientTransport(new URL(endpoint));
+  clientPromise = client.connect(transport).then(() => client);
+  return clientPromise;
+}
+
+export function createMcpToolHandler<T extends { [key: string]: unknown } = any>(toolName: string) {
+    return async (args: T): Promise<string> => {
+      const client = await getMcpClient();
+      const out = await client.callTool({ name: toolName, arguments: args });
+      return (out.content as { text: string }[] | undefined)?.[0]?.text ?? "";
+    };
+  }
+```
+
+```typescript
+import { createMcpToolHandler } from './mcpClient';
+
+// tool definition
+const randomIntTool: ToolDefinition<{ max: number }> = {
+  name: 'randomInt',
+  description:
+    "Return a random integer from 0 (inclusive) up to, but not including, `max`. If `max` is omitted the default upper‑bound is 100.",
+  parameters: {
+    type: 'object',
+    properties: {
+      max: { type: 'integer', description: 'Exclusive upper bound for the random integer', minimum: 1 },
+    },
+    required: ['max'],
+  },
+};
+
+// mcp tool handler
+const randomIntHandler = createMcpToolHandler<{ max: number }>('randomInt');
+
+// create options
+const aituberOptions: AITuberOnAirCoreOptions = {
+  chatProvider,
+  apiKey: apiKey.trim(),
+  model,
+  chatOptions: {
+    systemPrompt: systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+    visionPrompt: visionPrompt.trim() || DEFAULT_VISION_PROMPT,
+  },
+  tools: [{ definition: randomIntTool, handler: randomIntHandler }],
+  debug: true,
+};
+
+// create new instance
+const newAITuber = new AITuberOnAirCore(aituberOptions);
+```
 
 ## Architecture
 

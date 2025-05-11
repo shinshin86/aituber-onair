@@ -65,6 +65,9 @@ pnpm install @aituber-onair/core
 
 ## 基本的な使用方法
 
+より実践的な利用例については [Simple AI Chat App with AITuber OnAir Core]
+(https://github.com/shinshin86/simple-aichat-app-with-aituber-onair-core) をご覧ください。  
+
 ```typescript
 import { AITuberOnAirCore, AITuberOnAirCoreEvent, AITuberOnAirCoreOptions } from '@aituber-onair/core';
 
@@ -565,6 +568,79 @@ AITuber OnAir Coreは、これらの3つのプロバイダー間の違いを抽�
    - `runToolLoop`メソッドは各プロバイダーの特性に合わせて実装され、一貫したツール反復処理を提供
 
 これらの抽象化により、開発者はプロバイダーの実装の詳細を気にすることなく、AITuber OnAir Coreの統一されたインターフェースを通じてツール機能を利用できます。プロバイダーを切り替える場合でも、ツールの定義と処理コードを変更する必要はありません。
+
+## MCPの利用方法
+AITuber OnAir Coreではツール呼び出しを用いること [MCP](https://modelcontextprotocol.io/introduction) を組み込むことが可能です。
+
+組み込みの例を記載します。  
+以下はランダムな数値を返す `MCP` を組み込むシンプルなサンプルです。
+
+```typescript
+// mcpClient.ts
+import { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+  
+let clientPromise: Promise<MCPClient> | null = null;
+  
+async function getMcpClient(): Promise<MCPClient> {
+  if (clientPromise) return clientPromise;
+
+  const client = new MCPClient({
+    name: "random-int-server",
+    version: "0.0.1",
+  });
+  const endpoint = import.meta.env.VITE_MCP_ENDPOINT as string;
+  if (!endpoint) throw new Error("VITE_MCP_ENDPOINT is not defined");
+
+  const transport = new StreamableHTTPClientTransport(new URL(endpoint));
+  clientPromise = client.connect(transport).then(() => client);
+  return clientPromise;
+}
+
+export function createMcpToolHandler<T extends { [key: string]: unknown } = any>(toolName: string) {
+    return async (args: T): Promise<string> => {
+      const client = await getMcpClient();
+      const out = await client.callTool({ name: toolName, arguments: args });
+      return (out.content as { text: string }[] | undefined)?.[0]?.text ?? "";
+    };
+  }
+```
+
+```typescript
+import { createMcpToolHandler } from './mcpClient';
+
+// tool definition
+const randomIntTool: ToolDefinition<{ max: number }> = {
+  name: 'randomInt',
+  description: '0 以上 {max} 未満の整数を返す',
+  parameters: {
+    type: 'object',
+    properties: {
+      max: { type: 'integer', description: '上限 (exclusive)', minimum: 1 },
+    },
+    required: ['max'],
+  },
+};
+
+// mcp tool handler
+const randomIntHandler = createMcpToolHandler<{ max: number }>('randomInt');
+
+// create options
+const aituberOptions: AITuberOnAirCoreOptions = {
+  chatProvider,
+  apiKey: apiKey.trim(),
+  model,
+  chatOptions: {
+    systemPrompt: systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+    visionPrompt: visionPrompt.trim() || DEFAULT_VISION_PROMPT,
+  },
+  tools: [{ definition: randomIntTool, handler: randomIntHandler }],
+  debug: true,
+};
+
+// create new instance
+const newAITuber = new AITuberOnAirCore(aituberOptions);
+```
 
 ## アーキテクチャ
 
