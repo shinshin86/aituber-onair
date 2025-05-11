@@ -1406,3 +1406,68 @@ npm install
 # Run the test suite
 npm test
 ```
+
+## Migration Guide for Memory Events
+
+### Changes in v0.8.0
+
+In version 0.8.0, we've unified the event system by forwarding all memory-related events from the internal `MemoryManager` component to the main `AITuberOnAirCore` instance. This creates a more consistent API where all events can be listened to in one place.
+
+### What Changed
+
+- Previously: Memory-related events (`memoriesLoaded`, `memoryCreated`, etc.) were only emitted by the internal `MemoryManager` instance, requiring direct access to this component.
+- Now: These events are also emitted as standardized `AITuberOnAirCoreEvent` enum values from the main `AITuberOnAirCore` instance.
+
+### How to Migrate
+
+If you were previously accessing the `MemoryManager` directly to listen for memory events:
+
+```typescript
+// Old approach (deprecated)
+const memoryManager = aituber['memoryManager'];
+if (memoryManager) {
+  memoryManager.on('memoriesLoaded', (memories) => {
+    console.log('Memories loaded:', memories.length);
+  });
+}
+```
+
+Update your code to use the main AITuberOnAirCore instance:
+
+```typescript
+// New approach (recommended)
+aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => {
+  console.log('Memories loaded:', memories.length);
+});
+```
+
+### Event Mapping
+
+Here's how the internal MemoryManager events map to AITuberOnAirCoreEvent values:
+
+| MemoryManager Event  | AITuberOnAirCoreEvent   |
+|----------------------|-------------------------|
+| `memoriesLoaded`     | `MEMORY_LOADED`         |
+| `memoryCreated`      | `MEMORY_CREATED`        |
+| `memoriesRemoved`    | `MEMORY_REMOVED`        |
+| `memoriesSaved`      | `MEMORY_SAVED`          |
+| `storageCleared`     | `STORAGE_CLEARED`       |
+
+Additionally, these new events were added:
+
+| New Event                 | Description              |
+|---------------------------|--------------------------|
+| `CHAT_HISTORY_SET`        | When chat history is set |
+| `CHAT_HISTORY_CLEARED`    | When chat history is cleared |
+
+### Benefits of the New Approach
+
+- **Simplified API**: All events are available through a single entry point
+- **Type Safety**: Using enum values provides better TypeScript support
+- **Abstraction**: Internal implementation details are properly hidden
+- **Consistency**: All events follow the same pattern
+- **Documentation**: Events are clearly documented with the enum values
+
+### Will This Break My Code?
+
+If you were directly accessing the `MemoryManager` instance to subscribe to events, your code will continue to function but is now considered deprecated. We recommend migrating to the new approach for future compatibility.

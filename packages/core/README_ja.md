@@ -1416,3 +1416,68 @@ npm install
 # テストの実行
 npm test
 ```
+
+## メモリイベントの移行ガイド
+
+### v0.8.0での変更点
+
+バージョンv0.8.0では、内部の`MemoryManager`コンポーネントから発行されるメモリ関連のイベントをすべてメイン`AITuberOnAirCore`インスタンスに転送するよう、イベントシステムを統一しました。これにより、すべてのイベントを一箇所でリッスンできるより一貫性のあるAPIが実現しました。
+
+### 変更内容
+
+- 以前：メモリ関連のイベント（`memoriesLoaded`、`memoryCreated`など）は内部の`MemoryManager`インスタンスからのみ発行され、このコンポーネントに直接アクセスする必要がありました。
+- 現在：これらのイベントは標準化された`AITuberOnAirCoreEvent`列挙型の値としてメイン`AITuberOnAirCore`インスタンスからも発行されます。
+
+### 移行方法
+
+以前、メモリイベントをリッスンするために`MemoryManager`に直接アクセスしていた場合：
+
+```typescript
+// 古いアプローチ（非推奨）
+const memoryManager = aituber['memoryManager'];
+if (memoryManager) {
+  memoryManager.on('memoriesLoaded', (memories) => {
+    console.log('メモリがロードされました:', memories.length);
+  });
+}
+```
+
+コードを更新して、メインのAITuberOnAirCoreインスタンスを使用してください：
+
+```typescript
+// 新しいアプローチ（推奨）
+aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => {
+  console.log('メモリがロードされました:', memories.length);
+});
+```
+
+### イベントマッピング
+
+内部のMemoryManagerイベントとAITuberOnAirCoreEventの値の対応は以下の通りです：
+
+| MemoryManagerイベント | AITuberOnAirCoreEvent |
+|-----------------------|----------------------|
+| `memoriesLoaded`      | `MEMORY_LOADED`      |
+| `memoryCreated`       | `MEMORY_CREATED`     |
+| `memoriesRemoved`     | `MEMORY_REMOVED`     |
+| `memoriesSaved`       | `MEMORY_SAVED`       |
+| `storageCleared`      | `STORAGE_CLEARED`    |
+
+さらに、以下の新しいイベントが追加されました：
+
+| 新しいイベント               | 説明                        |
+|------------------------------|---------------------------|
+| `CHAT_HISTORY_SET`           | チャット履歴が設定された時   |
+| `CHAT_HISTORY_CLEARED`       | チャット履歴がクリアされた時 |
+
+### 新しいアプローチの利点
+
+- **シンプルなAPI**：すべてのイベントが単一のエントリーポイントから利用可能
+- **型安全性**：列挙型の値を使用することでTypeScriptのサポートが向上
+- **抽象化**：内部実装の詳細が適切に隠蔽されている
+- **一貫性**：すべてのイベントが同じパターンに従う
+- **ドキュメント**：イベントが列挙型の値と共に明確に文書化されている
+
+### これによりコードは壊れますか？
+
+イベントをリッスンするために`MemoryManager`インスタンスに直接アクセスしていた場合、コードは引き続き機能しますが、この方法は非推奨とみなされます。将来の互換性のために、新しいアプローチへの移行をお勧めします。
