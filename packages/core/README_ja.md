@@ -16,6 +16,8 @@
 - [インストール方法](#インストール方法)
 - [主な機能](#主な機能)
 - [基本的な使用方法](#基本的な使用方法)
+- [ツールシステム (Function calling)](#ツールシステム)
+- [MCPの利用方法](#MCPの利用方法)
 - [アーキテクチャ](#アーキテクチャ)
 - [主要コンポーネント](#主要コンポーネント)
 - [イベントシステム](#イベントシステム)
@@ -60,8 +62,12 @@ pnpm install @aituber-onair/core
 - **イベント駆動型のアーキテクチャ**：処理の各段階でイベントを発行し、外部との連携を容易に
 - **カスタマイズ可能なプロンプト**：Vision処理や会話要約のためのプロンプトをカスタマイズ可能
 - **プラグイン可能な永続化**：メモリ機能をLocalStorage、IndexedDBなど様々な方法で永続化
+- **ツール機能によるFunction calling**：テキスト生成以外のアクション（計算、API呼び出し、データ取得など）をAIが実行できる機能を提供
 
 ## 基本的な使用方法
+
+より実践的な利用例については [Simple AI Chat App with AITuber OnAir Core]
+(https://github.com/shinshin86/simple-aichat-app-with-aituber-onair-core) をご覧ください。  
 
 ```typescript
 import { AITuberOnAirCore, AITuberOnAirCoreEvent, AITuberOnAirCoreOptions } from '@aituber-onair/core';
@@ -139,6 +145,12 @@ aituber.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
   console.log('音声再生終了');
 });
 
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlock) => 
+  console.log(`ツール使用 -> ${toolBlock.name}`, toolBlock.input));
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlock) => 
+  console.log(`ツール結果 ->`, resultBlock.content));
+
 aituber.on(AITuberOnAirCoreEvent.ERROR, (error) => {
   console.error('エラー発生:', error);
 });
@@ -148,6 +160,487 @@ await aituber.processChat('こんにちは、今日の天気はどうですか�
 
 // 5. イベントリスナーのクリア（必要に応じて）
 aituber.offAll();
+```
+
+## ツールシステム
+
+AITuber OnAir Coreには、テキスト生成以外のアクションをAIが実行できる強力なツールシステムが含まれています。例えばデータの取得や計算の実行など、対話的なAITuber体験の作成に特に役立ちます。
+
+### ツール定義の構造
+
+ツールは`ToolDefinition`インターフェースを使用して定義され、LLMプロバイダが使用するFunction calling仕様に準拠しています：
+
+```typescript
+type ToolDefinition = {
+  name: string;                 // ツールの名前
+  description?: string;         // ツールの機能説明（オプション）
+  parameters: {
+    type: 'object';             // 常に'object'（厳格に型付けされています）
+    properties?: Record<string, {
+      type?: string;            // パラメータの型（例：'string'、'integer'）
+      description?: string;     // パラメータの説明
+      enum?: any[];             // 列挙値の場合
+      items?: any;              // 配列型の場合
+      required?: string[];      // 必須のネストされたプロパティ
+      [key: string]: any;       // その他のJSONスキーマプロパティ
+    }>;
+    required?: string[];        // 必須パラメータの名前
+    [key: string]: any;         // その他のJSONスキーマプロパティ
+  };
+  config?: { timeoutMs?: number }; // オプション設定
+};
+```
+
+注意：`parameters.type`プロパティは`'object'`に厳格に型付けされており、LLMプロバイダが使用するFunction calling標準に準拠しています。
+
+### ツールの登録と使用
+
+ツールはAITuberOnAirCoreの初期化時に登録されます：
+
+```typescript
+// ツールの定義
+const randomIntTool: ToolDefinition = {
+  name: 'randomInt',
+  description: '0から(max - 1)までのランダムな整数を返す',
+  parameters: {
+    type: 'object',  // 必ず'object'を指定する必要があります
+    properties: {
+      max: {
+        type: 'integer',
+        description: '上限値（排他的）。デフォルトは100。',
+        minimum: 1,
+      },
+    },
+  },
+};
+
+// ツールのハンドラーを作成
+async function randomIntHandler({ max = 100 }: { max?: number }) {
+  return Math.floor(Math.random() * max).toString();
+}
+
+// AITuberOnAirCoreにツールを登録
+const aituber = new AITuberOnAirCore({
+  // ...その他のオプション...
+  tools: [{ definition: randomIntTool, handler: randomIntHandler }],
+});
+
+// ツール使用のイベントリスナーを設定
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlock) => 
+  console.log(`ツール使用 -> ${toolBlock.name}`, toolBlock.input));
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlock) => 
+  console.log(`ツール結果 ->`, resultBlock.content));
+```
+
+### ツール反復の制御
+
+`maxHops`オプションを使用してツール呼び出しの反復回数を制限できます：
+
+```typescript
+const aituber = new AITuberOnAirCore({
+  // ...その他のオプション...
+  chatOptions: {
+    systemPrompt: 'システムプロンプト',
+    // ...その他のチャットオプション...
+    maxHops: 10,  // ツール呼び出しの最大反復回数（デフォルト：6）
+  },
+  tools: [/* ツールの配列 */],
+});
+```
+
+### プロバイダー別のFunction calling実装の違い
+
+AITuber OnAir CoreはOpenAI、Claude、Geminiの3つの主要なAIプロバイダーをサポートしていますが、各プロバイダーはFunction calling（ツール呼び出し）の実装方法が異なります。これらの違いはAITuber OnAir Coreによって抽象化されているため、開発者は統一されたインターフェースを使用できますが、背景を理解しておくことは重要です。
+
+> 注: 本説明は2025年5月時点のAPIバージョンを対象としています。APIは頻繁に更新されるため、最新の公式ドキュメントも併せて参照してください。
+
+#### OpenAIのFunction calling実装
+
+OpenAIのFunction callingは以下の特徴があります：
+
+- **ツール定義形式**: JSONスキーマに基づいた`functions`配列（非推奨）または`tools`配列（2023-12-01以降推奨）
+- **応答形式**: ツール使用時は`tool_calls`配列を含む応答オブジェクトを返す
+- **ツール結果の送信**: ツール結果は`role: 'tool'`のメッセージとして送信
+- **複数ツールのサポート**: 複数のツールを同時に呼び出し可能（Parallel function calling）
+
+```typescript
+// OpenAIのツール定義例（最小形式）
+const tools = [
+  {
+    type: "function", 
+    function: {
+      name: "randomInt",
+      description: "Return a random integer from 0 to (max - 1)",
+      parameters: {
+        type: "object",
+        properties: {
+          max: {
+            type: "integer",
+            description: "Upper bound (exclusive). Defaults to 100."
+          }
+        },
+        required: [] // 空でも明示的に指定するとスキーマの完全性が高まります
+      }
+    }
+  }
+];
+
+// OpenAIのツール呼び出し応答例
+{
+  role: "assistant",
+  content: null,
+  tool_calls: [
+    {
+      id: "call_abc123",
+      type: "function",
+      function: {
+        name: "randomInt",
+        arguments: "{\"max\":10}" // 文字列化されたJSONとして返される点に注意
+      }
+    }
+  ]
+}
+
+// 複数ツール呼び出しの例（Parallel function calling）
+{
+  role: "assistant",
+  content: null,
+  tool_calls: [
+    {
+      id: "call_abc123",
+      type: "function",
+      function: {
+        name: "randomInt",
+        arguments: "{\"max\":10}"
+      }
+    },
+    {
+      id: "call_def456",
+      type: "function",
+      function: {
+        name: "getCurrentTime",
+        arguments: "{\"timezone\":\"JST\"}"
+      }
+    }
+  ]
+}
+
+// OpenAIのツール結果送信例
+{
+  role: "tool",
+  tool_call_id: "call_abc123",
+  content: "7"
+}
+```
+
+AITuber OnAir CoreではOpenAIのFunction callingを処理する際、ツール定義をOpenAIのフォーマットに変換し、ツール呼び出しと結果の送受信を処理します。クラス内では`transformToolToFunction`メソッドがこの変換を行います。
+
+#### Claudeのツール呼び出し実装
+
+Claudeのツール呼び出しは以下の特徴があります：
+
+- **ツール定義形式**: `tools`配列の中に各ツールの`name`、`description`、`input_schema`を指定
+- **応答形式**: ツール使用時は`type: 'tool_use'`の特殊なブロックとして返され、`stop_reason: 'tool_use'`で停止
+- **ツール結果の送信**: `type: 'tool_result'`としてユーザーロールのメッセージに含める
+- **ストリーミング時の特殊処理**: ストリーミング応答時にツール呼び出しを適切に処理するための特別なロジックが必要
+
+```typescript
+// Claudeのツール定義例
+const tools = [
+  {
+    name: "randomInt",
+    description: "Return a random integer from 0 to (max - 1)",
+    input_schema: {
+      type: "object",
+      properties: {
+        max: {
+          type: "integer",
+          description: "Upper bound (exclusive). Defaults to 100."
+        }
+      }
+    }
+  }
+];
+
+// Claudeのツール呼び出し応答例
+{
+  id: "msg_abc123",
+  model: "claude-3-haiku-20240307",
+  role: "assistant",
+  content: [
+    { type: "text", text: "I'll generate a random number for you." },
+    { 
+      type: "tool_use", 
+      id: "tu_abc123",
+      name: "randomInt",
+      input: { max: 10 }
+    }
+  ],
+  stop_reason: "tool_use"
+}
+
+// テキストなしでツールのみを使用する例も可能
+{
+  id: "msg_xyz789",
+  model: "claude-3-haiku-20240307",
+  role: "assistant",
+  content: [
+    { 
+      type: "tool_use", 
+      id: "tu_xyz789",
+      name: "randomInt",
+      input: { max: 100 }
+    }
+  ],
+  stop_reason: "tool_use"
+}
+
+// Claudeのツール結果送信例
+{
+  role: "user",
+  content: [
+    {
+      type: "tool_result",
+      tool_use_id: "tu_abc123",
+      content: "7"
+    }
+  ]
+}
+```
+
+AITuber OnAir CoreではClaudeのツール呼び出しを処理する際、Claudeの独自フォーマットを処理し、特にストリーミング応答時の複雑な処理を抽象化しています。これには`runToolLoop`メソッドの中で特殊な処理が含まれています。
+
+#### Geminiのツール呼び出し実装
+
+Geminiのツール呼び出しは以下の特徴があります：
+
+- **ツール定義形式**: `tools`配列内の`functionDeclarations`に定義を記述
+- **応答形式**: `functionCall`を含む部分を持つコンテンツオブジェクトとして返される
+- **ツール結果の送信**: `functionResponse`オブジェクトとしてコンテンツパーツに含めて送信
+- **複合的な呼び出し**: Compositional Function Callingをサポート
+
+```typescript
+// Geminiのツール定義例
+const tools = [
+  {
+    functionDeclarations: [
+      {
+        name: "randomInt",
+        description: "Return a random integer from 0 to (max - 1)",
+        parameters: {
+          type: "object",
+          properties: {
+            max: {
+              type: "integer",
+              description: "Upper bound (exclusive). Defaults to 100."
+            }
+          }
+        }
+      }
+    ]
+  }
+];
+
+// Geminiのツール呼び出し応答例（深い階層構造に注意）
+{
+  candidates: [
+    {
+      content: {
+        parts: [
+          {
+            functionCall: {
+              name: "randomInt",
+              args: {
+                max: 10
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+
+// 複合的なツール呼び出し例（Compositional Function Calling）
+{
+  candidates: [
+    {
+      content: {
+        parts: [
+          {
+            functionCall: {
+              name: "randomInt",
+              args: {
+                max: 10
+              }
+            }
+          },
+          {
+            functionCall: {
+              name: "formatResult",
+              args: {
+                prefix: "Random number:",
+                value: "<function_response:randomInt>"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+
+// Geminiのツール結果送信例
+// content partsに直接functionResponseを含めます（SDKは自動でroleを設定）
+{
+  parts: [
+    {
+      functionResponse: {
+        name: "randomInt",
+        response: {
+          value: "7"
+        }
+      }
+    }
+  ]
+}
+
+// REST API直接呼び出し時は以下のようにroleを含める場合があります
+{
+  role: "function",
+  parts: [
+    {
+      functionResponse: {
+        name: "randomInt",
+        response: {
+          value: "7"
+        }
+      }
+    }
+  ]
+}
+```
+
+AITuber OnAir CoreではGeminiのツール呼び出しを処理する際、Gemini特有の複雑なレスポンス構造とツール結果のフォーマットを適切に処理しています。特に、ツール応答を適切なJSON形式に変換するためのロジックが必要です。
+
+#### ストリーミング実装の違い
+
+各プロバイダーはストリーミング応答時のツール呼び出し処理にも違いがあります：
+
+1. **OpenAI**:
+   - ストリーミング時はデルタ更新として`delta.tool_calls`が送信される
+   - 完全なツール呼び出しデータを再構築するために累積が必要
+
+2. **Claude**:
+   - SSEストリーミングでは特殊なイベントタイプ`content_block_delta`と`content_block_stop`が使用される
+   - ツール呼び出しが完了したときに`stop_reason: "tool_use"`が送信される
+   - ツール呼び出しを検出するために特別なパーサーが必要
+
+3. **Gemini**:
+   - ストリーミング時は`functionCall`がチャンクに分かれて送信されることがある
+   - 完全なJSON構造を再構築するためのバッファリングが必要
+
+AITuber OnAir Coreはこれらのストリーミング処理の違いを抽象化し、どのプロバイダーを使用する場合でも同じインターフェースでツール呼び出しと結果の処理ができるようにしています。
+
+### プロバイダー間の主な違いと抽象化
+
+AITuber OnAir Coreは、これらの3つのプロバイダー間の違いを抽象化し、統一されたインターフェースを提供しています：
+
+1. **入力フォーマットの違い**:
+   - 各プロバイダーは独自のツール定義フォーマットを使用
+   - AITuber OnAir Coreは内部で適切な変換を行い、共通の`ToolDefinition`インターフェースを提供
+
+2. **応答処理の違い**:
+   - OpenAIは`tool_calls`オブジェクト
+   - Claudeは`tool_use`ブロック
+   - Geminiは`functionCall`オブジェクト
+   - AITuber OnAir Coreは各形式を処理し、統一された`TOOL_USE`イベントに変換
+
+3. **ツール結果の送信形式の違い**:
+   - 各プロバイダーは異なる形式でツール結果を受け取る
+   - AITuber OnAir Coreは適切なフォーマットに変換して送信
+
+4. **ストリーミング処理の違い**:
+   - 特にClaudeはストリーミング中のツール呼び出しに特別な処理が必要
+   - AITuber OnAir Coreはこれを抽象化し、すべてのプロバイダーで一貫したストリーミング体験を提供
+
+5. **ツール呼び出しの反復**:
+   - `runToolLoop`メソッドは各プロバイダーの特性に合わせて実装され、一貫したツール反復処理を提供
+
+これらの抽象化により、開発者はプロバイダーの実装の詳細を気にすることなく、AITuber OnAir Coreの統一されたインターフェースを通じてツール機能を利用できます。プロバイダーを切り替える場合でも、ツールの定義と処理コードを変更する必要はありません。
+
+## MCPの利用方法
+AITuber OnAir Coreではツール呼び出しを用いることで [MCP](https://modelcontextprotocol.io/introduction) を組み込むことが可能です。
+
+組み込みの例を記載します。  
+以下はランダムな数値を返す `MCP` を組み込むシンプルなサンプルです。
+
+```typescript
+// mcpClient.ts
+import { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+  
+let clientPromise: Promise<MCPClient> | null = null;
+  
+async function getMcpClient(): Promise<MCPClient> {
+  if (clientPromise) return clientPromise;
+
+  const client = new MCPClient({
+    name: "random-int-server",
+    version: "0.0.1",
+  });
+  const endpoint = import.meta.env.VITE_MCP_ENDPOINT as string;
+  if (!endpoint) throw new Error("VITE_MCP_ENDPOINT is not defined");
+
+  const transport = new StreamableHTTPClientTransport(new URL(endpoint));
+  clientPromise = client.connect(transport).then(() => client);
+  return clientPromise;
+}
+
+export function createMcpToolHandler<T extends { [key: string]: unknown } = any>(toolName: string) {
+    return async (args: T): Promise<string> => {
+      const client = await getMcpClient();
+      const out = await client.callTool({ name: toolName, arguments: args });
+      return (out.content as { text: string }[] | undefined)?.[0]?.text ?? "";
+    };
+  }
+```
+
+```typescript
+import { createMcpToolHandler } from './mcpClient';
+
+// tool definition
+const randomIntTool: ToolDefinition<{ max: number }> = {
+  name: 'randomInt',
+  description: '0 以上 {max} 未満の整数を返す',
+  parameters: {
+    type: 'object',
+    properties: {
+      max: { type: 'integer', description: '上限 (exclusive)', minimum: 1 },
+    },
+    required: ['max'],
+  },
+};
+
+// mcp tool handler
+const randomIntHandler = createMcpToolHandler<{ max: number }>('randomInt');
+
+// create options
+const aituberOptions: AITuberOnAirCoreOptions = {
+  chatProvider,
+  apiKey: apiKey.trim(),
+  model,
+  chatOptions: {
+    systemPrompt: systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+    visionPrompt: visionPrompt.trim() || DEFAULT_VISION_PROMPT,
+  },
+  tools: [{ definition: randomIntTool, handler: randomIntHandler }],
+  debug: true,
+};
+
+// create new instance
+const newAITuber = new AITuberOnAirCore(aituberOptions);
 ```
 
 ## アーキテクチャ
@@ -284,6 +777,8 @@ AITuberOnAirCoreは以下のイベントを発行します：
 - `ASSISTANT_RESPONSE`: アシスタントの応答完了時（台本情報と感情タグ付きの元のテキストを含む）
 - `SPEECH_START`: 音声再生開始時（感情表現を含むscreenplayオブジェクトと感情タグ付きの元のテキストを含む）
 - `SPEECH_END`: 音声再生終了時
+- `TOOL_USE`: AIがツールを呼び出す時（ツール名と入力パラメータを含む）
+- `TOOL_RESULT`: ツールの実行が完了し結果が返却される時
 - `ERROR`: エラー発生時
 
 ### イベントデータの安全な取り扱い

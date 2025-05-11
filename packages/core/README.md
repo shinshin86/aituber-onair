@@ -16,6 +16,9 @@ It specializes in generating response text and audio from text or image inputs, 
 - [Installation](#installation)
 - [Main Features](#main-features)
 - [Basic Usage](#basic-usage)
+- [Tool System](#tool-system)
+- [Function Calling Differences](#function-calling-differences)
+- [Using MCP](#using-mcp)
 - [Architecture](#architecture)
 - [Main Components](#main-components)
 - [Event System](#event-system)
@@ -68,8 +71,13 @@ pnpm install @aituber-onair/core
   Allows customization of prompts for vision processing and conversation summarization.
 - **Pluggable Persistence**  
   Memory features can be persisted via LocalStorage, IndexedDB, or other customizable methods.
+- **Function Calling with Tools Support**  
+  Enables AI to use tools for performing actions beyond text generation, such as calculations, API calls, or data retrieval.
 
 ## Basic Usage
+
+For more practical usage examples, please see [Simple AI Chat App with AITuber OnAir Core]
+(https://github.com/shinshin86/simple-aichat-app-with-aituber-onair-core).
 
 Below is a simplified example of how to use **AITuber OnAir Core**:
 
@@ -153,6 +161,12 @@ aituber.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
   console.log('Speech playback finished');
 });
 
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlock) => 
+  console.log(`Tool use -> ${toolBlock.name}`, toolBlock.input));
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlock) => 
+  console.log(`Tool result ->`, resultBlock.content));
+
 aituber.on(AITuberOnAirCoreEvent.ERROR, (error) => {
   console.error('Error occurred:', error);
 });
@@ -162,6 +176,488 @@ await aituber.processChat('Hello, how is the weather today?');
 
 // 5. Clear event listeners if needed
 aituber.offAll();
+```
+
+## Tool System
+
+AITuber OnAir Core includes a powerful tool system that allows AI to perform actions beyond text generation, such as retrieving data or making calculations. This is particularly useful for creating interactive AITuber experiences.
+
+### Tool Definition Structure
+
+Tools are defined using the `ToolDefinition` interface, which conforms to the function calling specification used by LLM providers:
+
+```typescript
+type ToolDefinition = {
+  name: string;                 // The name of the tool
+  description?: string;         // Optional description of what the tool does
+  parameters: {
+    type: 'object';             // Must be 'object' (strictly typed)
+    properties?: Record<string, {
+      type?: string;            // Parameter type (e.g. 'string', 'integer')
+      description?: string;     // Parameter description
+      enum?: any[];             // For enumerated values
+      items?: any;              // For array types
+      required?: string[];      // Required nested properties
+      [key: string]: any;       // Other JSON Schema properties
+    }>;
+    required?: string[];        // Names of required parameters
+    [key: string]: any;         // Other JSON Schema properties
+  };
+  config?: { timeoutMs?: number }; // Optional configuration
+};
+```
+
+Note that the `parameters.type` property is strictly typed as `'object'` to conform to function calling standards used by LLM providers.
+
+### Registering and Using Tools
+
+Tools are registered when initializing AITuberOnAirCore:
+
+```typescript
+// Define a tool
+const randomIntTool: ToolDefinition = {
+  name: 'randomInt',
+  description: 'Return a random integer from 0 to (max - 1)',
+  parameters: {
+    type: 'object',  // This must be 'object'
+    properties: {
+      max: {
+        type: 'integer',
+        description: 'Upper bound (exclusive). Defaults to 100.',
+        minimum: 1,
+      },
+    },
+  },
+};
+
+// Create a handler for the tool
+async function randomIntHandler({ max = 100 }: { max?: number }) {
+  return Math.floor(Math.random() * max).toString();
+}
+
+// Register the tool with AITuberOnAirCore
+const aituber = new AITuberOnAirCore({
+  // ... other options ...
+  tools: [{ definition: randomIntTool, handler: randomIntHandler }],
+});
+
+// Set up event listeners for tool use
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlock) => 
+  console.log(`Tool use -> ${toolBlock.name}`, toolBlock.input));
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlock) => 
+  console.log(`Tool result ->`, resultBlock.content));
+```
+
+### Tool Iteration Control
+
+You can limit the number of tool call iterations using the `maxHops` option:
+
+```typescript
+const aituber = new AITuberOnAirCore({
+  // ... other options ...
+  chatOptions: {
+    systemPrompt: 'Your system prompt',
+    // ... other chat options ...
+    maxHops: 10,  // Maximum number of tool call iterations (default: 6)
+  },
+  tools: [/* your tools */],
+});
+```
+
+### Function Calling Differences
+
+AITuber OnAir Core supports three major AI providers: OpenAI, Claude, and Gemini. Each provider has a different implementation of function calling (tool invocation). These differences are abstracted by AITuber OnAir Core, allowing developers to use a unified interface, but understanding the background is important.
+
+> Note: This explanation covers the API versions as of May 2025. APIs are frequently updated, so please refer to the official documentation for the latest information.
+
+#### OpenAI Function Calling Implementation
+
+OpenAI's function calling has the following characteristics:
+
+- **Tool Definition Format**: Uses an array of `functions` (deprecated) or `tools` (recommended from 2023-12-01) based on JSON Schema
+- **Response Format**: Returns a response object containing a `tool_calls` array when using tools
+- **Tool Result Submission**: Tool results are sent as messages with `role: 'tool'`
+- **Multiple Tool Support**: Can call multiple tools simultaneously (Parallel function calling)
+
+```typescript
+// OpenAI tool definition example (minimal form)
+const tools = [
+  {
+    type: "function", 
+    function: {
+      name: "randomInt",
+      description: "Return a random integer from 0 to (max - 1)",
+      parameters: {
+        type: "object",
+        properties: {
+          max: {
+            type: "integer",
+            description: "Upper bound (exclusive). Defaults to 100."
+          }
+        },
+        required: [] // Explicitly specifying even when empty improves schema validity
+      }
+    }
+  }
+];
+
+// OpenAI tool call response example
+{
+  role: "assistant",
+  content: null,
+  tool_calls: [
+    {
+      id: "call_abc123",
+      type: "function",
+      function: {
+        name: "randomInt",
+        arguments: "{\"max\":10}" // Note that this is returned as a stringified JSON
+      }
+    }
+  ]
+}
+
+// Multiple tool calls example (Parallel function calling)
+{
+  role: "assistant",
+  content: null,
+  tool_calls: [
+    {
+      id: "call_abc123",
+      type: "function",
+      function: {
+        name: "randomInt",
+        arguments: "{\"max\":10}"
+      }
+    },
+    {
+      id: "call_def456",
+      type: "function",
+      function: {
+        name: "getCurrentTime",
+        arguments: "{\"timezone\":\"JST\"}"
+      }
+    }
+  ]
+}
+
+// OpenAI tool result submission example
+{
+  role: "tool",
+  tool_call_id: "call_abc123",
+  content: "7"
+}
+```
+
+When handling OpenAI's function calling, AITuber OnAir Core converts tool definitions to OpenAI's format and processes tool calls and results. The `transformToolToFunction` method in the class performs this conversion.
+
+#### Claude's Tool Calling Implementation
+
+Claude's tool calling has the following characteristics:
+
+- **Tool Definition Format**: Specifies `name`, `description`, and `input_schema` for each tool in the `tools` array
+- **Response Format**: Returned as a special block with `type: 'tool_use'` and stops with `stop_reason: 'tool_use'`
+- **Tool Result Submission**: Included in user role messages as `type: 'tool_result'`
+- **Special Streaming Handling**: Requires special logic to handle tool calls in streaming responses
+
+```typescript
+// Claude tool definition example
+const tools = [
+  {
+    name: "randomInt",
+    description: "Return a random integer from 0 to (max - 1)",
+    input_schema: {
+      type: "object",
+      properties: {
+        max: {
+          type: "integer",
+          description: "Upper bound (exclusive). Defaults to 100."
+        }
+      }
+    }
+  }
+];
+
+// Claude tool call response example
+{
+  id: "msg_abc123",
+  model: "claude-3-haiku-20240307",
+  role: "assistant",
+  content: [
+    { type: "text", text: "I'll generate a random number for you." },
+    { 
+      type: "tool_use", 
+      id: "tu_abc123",
+      name: "randomInt",
+      input: { max: 10 }
+    }
+  ],
+  stop_reason: "tool_use"
+}
+
+// Example with only tool use, no text content
+{
+  id: "msg_xyz789",
+  model: "claude-3-haiku-20240307",
+  role: "assistant",
+  content: [
+    { 
+      type: "tool_use", 
+      id: "tu_xyz789",
+      name: "randomInt",
+      input: { max: 100 }
+    }
+  ],
+  stop_reason: "tool_use"
+}
+
+// Claude tool result submission example
+{
+  role: "user",
+  content: [
+    {
+      type: "tool_result",
+      tool_use_id: "tu_abc123",
+      content: "7"
+    }
+  ]
+}
+```
+
+When handling Claude's tool calls, AITuber OnAir Core processes Claude's unique format and abstracts the complex processing, especially during streaming responses. Special handling is included in the `runToolLoop` method.
+
+#### Gemini's Tool Calling Implementation
+
+Gemini's tool calling has the following characteristics:
+
+- **Tool Definition Format**: Describes definitions in `functionDeclarations` within the `tools` array
+- **Response Format**: Returned as content objects containing `functionCall` parts
+- **Tool Result Submission**: Sent as `functionResponse` objects included in content parts
+- **Compositional Calling**: Supports Compositional Function Calling
+
+```typescript
+// Gemini tool definition example
+const tools = [
+  {
+    functionDeclarations: [
+      {
+        name: "randomInt",
+        description: "Return a random integer from 0 to (max - 1)",
+        parameters: {
+          type: "object",
+          properties: {
+            max: {
+              type: "integer",
+              description: "Upper bound (exclusive). Defaults to 100."
+            }
+          }
+        }
+      }
+    ]
+  }
+];
+
+// Gemini tool call response example (note the deep structure)
+{
+  candidates: [
+    {
+      content: {
+        parts: [
+          {
+            functionCall: {
+              name: "randomInt",
+              args: {
+                max: 10
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+
+// Compositional function calling example
+{
+  candidates: [
+    {
+      content: {
+        parts: [
+          {
+            functionCall: {
+              name: "randomInt",
+              args: {
+                max: 10
+              }
+            }
+          },
+          {
+            functionCall: {
+              name: "formatResult",
+              args: {
+                prefix: "Random number:",
+                value: "<function_response:randomInt>"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+
+// Gemini tool result submission example
+// Include functionResponse directly in content parts (SDK automatically sets the role)
+{
+  parts: [
+    {
+      functionResponse: {
+        name: "randomInt",
+        response: {
+          value: "7"
+        }
+      }
+    }
+  ]
+}
+
+// When directly calling REST API, you might include role like this
+{
+  role: "function",
+  parts: [
+    {
+      functionResponse: {
+        name: "randomInt",
+        response: {
+          value: "7"
+        }
+      }
+    }
+  ]
+}
+```
+
+When handling Gemini's tool calls, AITuber OnAir Core processes Gemini's complex response structure and tool result format. Special logic is needed to convert tool responses to the appropriate JSON format.
+
+#### Streaming Implementation Differences
+
+Each provider also has differences in how tool calls are processed during streaming responses:
+
+1. **OpenAI**:
+   - During streaming, delta updates are sent as `delta.tool_calls`
+   - Requires accumulation to reconstruct complete tool call data
+
+2. **Claude**:
+   - SSE streaming uses special event types `content_block_delta` and `content_block_stop`
+   - Sends `stop_reason: "tool_use"` when a tool call is completed
+   - Requires a special parser to detect tool calls
+
+3. **Gemini**:
+   - During streaming, `functionCall` may be split across chunks
+   - Requires buffering to reconstruct complete JSON structures
+
+AITuber OnAir Core abstracts these streaming processing differences, allowing you to process tool calls and results with the same interface regardless of which provider you use.
+
+### Key Differences and Abstraction Between Providers
+
+AITuber OnAir Core abstracts the differences between these three providers and provides a unified interface:
+
+1. **Input Format Differences**:
+   - Each provider uses its own tool definition format
+   - AITuber OnAir Core performs appropriate conversions internally and provides a common `ToolDefinition` interface
+
+2. **Response Processing Differences**:
+   - OpenAI uses `tool_calls` objects
+   - Claude uses `tool_use` blocks
+   - Gemini uses `functionCall` objects
+   - AITuber OnAir Core processes each format and converts to unified `TOOL_USE` events
+
+3. **Tool Result Submission Format Differences**:
+   - Each provider accepts tool results in different formats
+   - AITuber OnAir Core converts and sends in the appropriate format
+
+4. **Streaming Processing Differences**:
+   - Claude in particular requires special handling for tool calls during streaming
+   - AITuber OnAir Core abstracts this and provides a consistent streaming experience across all providers
+
+5. **Tool Call Iteration**:
+   - The `runToolLoop` method is implemented according to each provider's characteristics, providing consistent tool iteration
+
+Through these abstractions, developers can use tool functionality through AITuber OnAir Core's unified interface without worrying about the details of provider implementations. Even when switching providers, there's no need to change tool definition and processing code.
+
+## Using MCP
+AITuber OnAir Core allows you to integrate [MCP](https://modelcontextprotocol.io/introduction) using tool calls.
+
+Here's an example of integration.  
+The following is a simple sample that integrates an `MCP` that returns a random number.
+
+```typescript
+// mcpClient.ts
+import { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+  
+let clientPromise: Promise<MCPClient> | null = null;
+  
+async function getMcpClient(): Promise<MCPClient> {
+  if (clientPromise) return clientPromise;
+
+  const client = new MCPClient({
+    name: "random-int-server",
+    version: "0.0.1",
+  });
+  const endpoint = import.meta.env.VITE_MCP_ENDPOINT as string;
+  if (!endpoint) throw new Error("VITE_MCP_ENDPOINT is not defined");
+
+  const transport = new StreamableHTTPClientTransport(new URL(endpoint));
+  clientPromise = client.connect(transport).then(() => client);
+  return clientPromise;
+}
+
+export function createMcpToolHandler<T extends { [key: string]: unknown } = any>(toolName: string) {
+    return async (args: T): Promise<string> => {
+      const client = await getMcpClient();
+      const out = await client.callTool({ name: toolName, arguments: args });
+      return (out.content as { text: string }[] | undefined)?.[0]?.text ?? "";
+    };
+  }
+```
+
+```typescript
+import { createMcpToolHandler } from './mcpClient';
+
+// tool definition
+const randomIntTool: ToolDefinition<{ max: number }> = {
+  name: 'randomInt',
+  description:
+    "Return a random integer from 0 (inclusive) up to, but not including, `max`. If `max` is omitted the default upper‑bound is 100.",
+  parameters: {
+    type: 'object',
+    properties: {
+      max: { type: 'integer', description: 'Exclusive upper bound for the random integer', minimum: 1 },
+    },
+    required: ['max'],
+  },
+};
+
+// mcp tool handler
+const randomIntHandler = createMcpToolHandler<{ max: number }>('randomInt');
+
+// create options
+const aituberOptions: AITuberOnAirCoreOptions = {
+  chatProvider,
+  apiKey: apiKey.trim(),
+  model,
+  chatOptions: {
+    systemPrompt: systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+    visionPrompt: visionPrompt.trim() || DEFAULT_VISION_PROMPT,
+  },
+  tools: [{ definition: randomIntTool, handler: randomIntHandler }],
+  debug: true,
+};
+
+// create new instance
+const newAITuber = new AITuberOnAirCore(aituberOptions);
 ```
 
 ## Architecture
@@ -298,6 +794,8 @@ await aituberOnairCore.speakTextWithOptions('[happy] Hello, everyone watching!',
 - `ASSISTANT_RESPONSE`: Upon receiving a complete response (includes a screenplay object and rawText with emotion tags)  
 - `SPEECH_START`: When speech playback starts (includes a screenplay object with emotion and rawText with emotion tags)  
 - `SPEECH_END`: When speech playback ends  
+- `TOOL_USE`: When the AI calls a tool (includes the name of the tool and its input parameters)  
+- `TOOL_RESULT`: When a tool execution completes and returns a result  
 - `ERROR`: When an error occurs  
 
 ### Safely Handling Event Data

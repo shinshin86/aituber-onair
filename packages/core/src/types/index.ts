@@ -21,6 +21,9 @@ export {
   SpeakOptions,
 } from './chat';
 
+// Tool related type definitions
+export * from './toolChat';
+
 // Voice related type definitions (excluding Screenplay type)
 export {
   talkStyles,
