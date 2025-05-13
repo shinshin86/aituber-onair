@@ -1,5 +1,6 @@
 # AITuber OnAir
 [![CI](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml/badge.svg)](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shinshin86/aituber-onair)
 
 ![AITuber OnAir Toolkit - logo](./images/AITuber_OnAir_Toolkit.png)
 
