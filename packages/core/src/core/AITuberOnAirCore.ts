@@ -355,7 +355,7 @@ export class AITuberOnAirCore extends EventEmitter {
       this.emit(AITuberOnAirCoreEvent.SPEECH_START, { screenplay, rawText });
 
       // Play the audio
-      await this.voiceService.speakText(screenplay.text, audioOptions);
+      await this.voiceService.speakText(rawText, audioOptions);
 
       // Speech end event
       this.emit(AITuberOnAirCoreEvent.SPEECH_END);
