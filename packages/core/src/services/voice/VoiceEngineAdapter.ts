@@ -124,7 +124,7 @@ export class VoiceEngineAdapter implements VoiceService {
 
   /**
    * Speak text as audio
-   * @param text Text to speak
+   * @param text Text (with emotion tags) to speak
    * @param options Audio playback options
    */
   async speakText(text: string, options?: AudioPlayOptions): Promise<void> {
