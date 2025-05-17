@@ -25,5 +25,5 @@ export const VISION_SUPPORTED_MODELS = [
   MODEL_GPT_4O,
   MODEL_GPT_4_5_PREVIEW,
   MODEL_O1,
-  // MODEL_O3_MINI and MODEL_O1_MINI is not included as it doesn't support vision
+  // MODEL_O3_MINI and MODEL_O1_MINI are not included as they don't support vision
 ];
