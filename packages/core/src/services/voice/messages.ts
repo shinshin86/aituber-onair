@@ -13,7 +13,7 @@ export const textsToScreenplay = (texts: string[]): VoiceScreenplay[] => {
 
     const match = text.match(/\[(.*?)\]/);
 
-    const tag = (match && match[1]) || prevExpression;
+    const tag = match?.[1] || prevExpression;
 
     const message = text.replace(/\[(.*?)\]/g, '');
 
