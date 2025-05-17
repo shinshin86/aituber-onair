@@ -1,6 +1,6 @@
 {
     "name": "aituber-onair",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "private": true, 
     "workspaces": [
       "packages/*"
@@ -8,7 +8,9 @@
     "scripts": {
       "build": "npm run build --workspaces",
       "test": "npm run test --workspaces",
-      "fmt": "npm run fmt --workspaces"
+      "fmt": "npm run fmt --workspaces",
+      "fmt:check": "npm run fmt:check --workspaces",
+      "lint": "npm run lint --workspaces"
     }
   }
   

@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/core",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Core library for AITuber OnAir providing voice synthesis and chat processing",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -13,6 +13,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "fmt": "biome format . --write",
+    "fmt:check": "biome format .",
+    "lint": "biome lint .",
     "prepublishOnly": "npm run build"
   },
   "keywords": ["aituber", "vtuber", "ai", "voice", "streaming"],
