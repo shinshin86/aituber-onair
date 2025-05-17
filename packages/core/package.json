@@ -13,7 +13,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "fmt": "biome format . --write",
-    "fmt:check": "biome format . --check",
+    "fmt:check": "biome format .",
     "lint": "biome lint .",
     "prepublishOnly": "npm run build"
   },
