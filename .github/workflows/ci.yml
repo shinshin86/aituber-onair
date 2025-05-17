@@ -30,3 +30,9 @@ jobs:
 
       - name: Run tests
         run: npm run test --workspaces
+
+      - name: Run lint
+        run: npm run lint --workspaces
+
+      - name: Check formatting
+        run: npm run fmt:check --workspaces

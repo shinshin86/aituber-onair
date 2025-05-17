@@ -13,6 +13,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "fmt": "biome format . --write",
+    "fmt:check": "biome format . --check",
+    "lint": "biome lint .",
     "prepublishOnly": "npm run build"
   },
   "keywords": ["aituber", "vtuber", "ai", "voice", "streaming"],
