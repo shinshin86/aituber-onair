@@ -83,4 +83,10 @@ describe('ChatServiceFactory', () => {
     const models = ChatServiceFactory.getSupportedModels('mock');
     expect(models).toEqual(['mock-model']);
   });
+
+  it('throws on unknown provider', () => {
+    expect(() =>
+      ChatServiceFactory.createChatService('not_exist', {} as any),
+    ).toThrow('Unknown chat provider');
+  });
 });
