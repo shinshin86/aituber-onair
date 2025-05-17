@@ -134,7 +134,7 @@ export class AITuberOnAirCore extends EventEmitter {
     );
 
     // Initialize MemoryManager (optional)
-    if (options.memoryOptions && options.memoryOptions.enableSummarization) {
+    if (options.memoryOptions?.enableSummarization) {
       let summarizer: Summarizer;
 
       if (providerName === 'gemini') {
