@@ -71,8 +71,42 @@ describe('ToolExecutor', () => {
 
     vi.useFakeTimers();
     const runPromise = executor.run(blocks);
+    const expectPromise = expect(runPromise).rejects.toThrow('slow timed out');
     await vi.advanceTimersByTimeAsync(1000);
+    await expectPromise;
+  });
 
-    await expect(runPromise).rejects.toThrow('slow timed out');
+  it('throws if tool is not registered', async () => {
+    const executor = new ToolExecutor();
+    const blocks = [{ type: 'tool_use', id: 'x', name: 'missing', input: {} }];
+    await expect(executor.run(blocks as any)).rejects.toThrow(
+      'Unhandled tool: missing',
+    );
+  });
+
+  it('preserves order of results with multiple blocks', async () => {
+    const exec = new ToolExecutor();
+    exec.register(
+      { name: 'id', parameters: { type: 'object' } },
+      async (v) => v,
+    );
+    const blocks = [
+      { type: 'tool_use', id: '1', name: 'id', input: 'A' },
+      { type: 'tool_use', id: '2', name: 'id', input: 'B' },
+    ];
+    const res = await exec.run(blocks as any);
+    expect(res.map((r) => r.tool_use_id)).toEqual(['1', '2']);
+  });
+
+  it('stringifies non-string result', async () => {
+    const exec = new ToolExecutor();
+    exec.register(
+      { name: 'obj', parameters: { type: 'object' } },
+      async () => ({ x: 1 }),
+    );
+    const res = await exec.run([
+      { type: 'tool_use', id: 'o1', name: 'obj', input: {} },
+    ] as any);
+    expect(res[0].content).toBe('{"x":1}');
   });
 });
