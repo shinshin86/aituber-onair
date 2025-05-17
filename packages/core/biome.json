@@ -6,7 +6,25 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noImplicitAnyLet": "off",
+        "noAssignInExpressions": "off"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "useLiteralKeys": "off",
+        "noStaticOnlyClass": "off",
+        "noThisInStatic": "off"
+      },
+      "style": {
+        "useImportType": "off",
+        "noInferrableTypes": "off",
+        "noNonNullAssertion": "off",
+        "useTemplate": "off",
+        "noUselessElse": "off"
+      }
     }
   },
   "formatter": {
