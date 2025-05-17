@@ -53,15 +53,12 @@ describe('ChatServiceFactory', () => {
   let originalProviders: Map<string, ChatServiceProvider>;
 
   beforeEach(() => {
-    // backup existing providers and register mock
     originalProviders = new Map(ChatServiceFactory.getProviders());
     ChatServiceFactory.getProviders().clear();
-    originalProviders.forEach((p) => ChatServiceFactory.registerProvider(p));
     ChatServiceFactory.registerProvider(mockProvider);
   });
 
   afterEach(() => {
-    // restore original providers
     ChatServiceFactory.getProviders().clear();
     originalProviders.forEach((p) => ChatServiceFactory.registerProvider(p));
   });
