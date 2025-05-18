@@ -1,47 +1,42 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { VoiceServiceOptions } from '../../src/services/voice/VoiceService';
 import {
   AITuberOnAirCore,
   AITuberOnAirCoreOptions,
   AITuberOnAirCoreEvent,
 } from '../../src/core/AITuberOnAirCore';
-import { VoiceServiceOptions } from '../../src/services/voice/VoiceService';
 
-// Mock OpenAIChatService to avoid real API calls
-vi.mock('../../services/chat/OpenAIChatService', () => {
-  return {
-    OpenAIChatService: vi.fn().mockImplementation(() => ({
-      processChat: vi.fn().mockResolvedValue(undefined),
-      processVisionChat: vi.fn().mockResolvedValue(undefined),
-    })),
-  };
-});
+var lastVoiceInstance: any;
+var VoiceEngineAdapter: Mock;
 
-let lastVoiceInstance: any;
-
-// Helper to create a mock VoiceEngineAdapter instance
-function createVoiceInstance(opts: VoiceServiceOptions) {
-  const instance: any = {
+vi.mock('../../src/services/voice/VoiceEngineAdapter', () => {
+  const createVoiceInstance = (opts: VoiceServiceOptions) => ({
     options: { ...opts },
     speakText: vi.fn().mockResolvedValue(undefined),
     speak: vi.fn().mockResolvedValue(undefined),
     stop: vi.fn(),
-    updateOptions: vi.fn().mockImplementation((u: Partial<VoiceServiceOptions>) => {
-      instance.options = { ...instance.options, ...u };
-    }),
-  };
-  return instance;
-}
+    updateOptions: vi
+      .fn()
+      .mockImplementation((u: Partial<VoiceServiceOptions>) => {
+        lastVoiceInstance.options = { ...lastVoiceInstance.options, ...u };
+      }),
+  });
 
-// Mock VoiceEngineAdapter
-const VoiceEngineAdapter = vi
-  .fn()
-  .mockImplementation((opts: VoiceServiceOptions) => {
+  VoiceEngineAdapter = vi.fn((opts: VoiceServiceOptions) => {
     lastVoiceInstance = createVoiceInstance(opts);
     return lastVoiceInstance;
   });
-vi.mock('../../services/voice/VoiceEngineAdapter', () => {
+
   return { VoiceEngineAdapter };
 });
+
+vi.mock('@/services/chat/ChatServiceFactory', () => ({
+  ChatServiceFactory: {
+    createChatService: vi.fn(() => ({})),
+    getAvailableProviders: vi.fn(() => []),
+    getSupportedModels: vi.fn(() => []),
+  },
+}));
 
 // Utility to create core instance
 const createCore = (withVoice = true) => {
