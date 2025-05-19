@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { ClaudeChatService } from '../../../../../src/services/chat/providers/claude/ClaudeChatService.ts';
 
 describe('ClaudeChatService parse functions', () => {
-  const API_KEY = 'dummy-key';
+  const TEST_API_KEY = 'test-api-key';
   let service: ClaudeChatService;
 
   beforeEach(() => {
-    service = new ClaudeChatService(API_KEY);
+    service = new ClaudeChatService(TEST_API_KEY);
   });
 
   it('parseOneShot should handle tool use and result', () => {
