@@ -6,7 +6,9 @@ import {
   AITuberOnAirCoreEvent,
 } from '../../src/core/AITuberOnAirCore';
 
+// biome-ignore lint/style/noVar: To avoid TDZ, var is required
 var lastVoiceInstance: any;
+// biome-ignore lint/style/noVar: To keep the mock function outside
 var VoiceEngineAdapter: Mock;
 
 vi.mock('../../src/services/voice/VoiceEngineAdapter', () => {
