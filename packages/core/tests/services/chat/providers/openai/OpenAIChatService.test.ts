@@ -224,7 +224,13 @@ describe('OpenAIChatService', () => {
   });
 });
 
-describe("OpenAIChatService parse helpers", () => {
+describe('OpenAIChatService parse helpers', () => {
+  const TEST_API_KEY = 'test-api-key';
+  let service: OpenAIChatService;
+
+  beforeEach(() => {
+    service = new OpenAIChatService(TEST_API_KEY);
+  });
 
   it('parseOneShot should extract tool calls', () => {
     const data = {

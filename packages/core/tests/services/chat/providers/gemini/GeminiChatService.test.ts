@@ -348,6 +348,13 @@ describe('GeminiChatService', () => {
 });
 
 describe('GeminiChatService parse helpers', () => {
+  const TEST_API_KEY = 'test-api-key';
+  let service: GeminiChatService;
+
+  beforeEach(() => {
+    service = new GeminiChatService(TEST_API_KEY);
+  });
+
   it('parseOneShot should handle tool use and result', () => {
     const data = {
       candidates: [
