@@ -346,3 +346,56 @@ describe('GeminiChatService', () => {
     });
   });
 });
+
+describe('GeminiChatService parse helpers', () => {
+  it('parseOneShot should handle tool use and result', () => {
+    const data = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              { text: 'hi' },
+              { functionCall: { name: 'my_tool', args: { foo: 1 } } },
+              { functionResponse: { name: 'my_tool', response: { ok: true } } },
+            ],
+          },
+        },
+      ],
+    };
+    const result = (service as any).parseOneShot(data);
+    expect(result.stop_reason).toBe('tool_use');
+    expect(result.blocks[0]).toEqual({ type: 'text', text: 'hi' });
+    expect(result.blocks[1]).toMatchObject({
+      type: 'tool_use',
+      name: 'my_tool',
+      input: { foo: 1 },
+    });
+    expect(result.blocks[2]).toEqual({
+      type: 'tool_result',
+      tool_use_id: 'my_tool',
+      content: JSON.stringify({ ok: true }),
+    });
+  });
+
+  it('parseStream should handle SSE tool use and result', async () => {
+    const sse =
+      'data: {"candidates":[{"content":{"parts":[{"text":"hi"}]}}]}\n' +
+      'data: {"candidates":[{"content":{"parts":[{"functionCall":{"name":"my_tool","args":{"foo":1}}}]}}]}\n' +
+      'data: {"candidates":[{"content":{"parts":[{"functionResponse":{"name":"my_tool","response":{"ok":true}}}]}}]}\n' +
+      'data: [DONE]\n';
+    const res = new Response(sse);
+    const result = await (service as any).parseStream(res, () => {});
+    expect(result.stop_reason).toBe('tool_use');
+    expect(result.blocks[0]).toEqual({ type: 'text', text: 'hi' });
+    expect(result.blocks[1]).toMatchObject({
+      type: 'tool_use',
+      name: 'my_tool',
+      input: { foo: 1 },
+    });
+    expect(result.blocks[2]).toEqual({
+      type: 'tool_result',
+      tool_use_id: 'my_tool',
+      content: JSON.stringify({ ok: true }),
+    });
+  });
+});

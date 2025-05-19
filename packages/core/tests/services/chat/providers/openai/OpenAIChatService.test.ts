@@ -223,3 +223,47 @@ describe('OpenAIChatService', () => {
     });
   });
 });
+
+describe("OpenAIChatService parse helpers", () => {
+
+  it('parseOneShot should extract tool calls', () => {
+    const data = {
+      choices: [
+        {
+          message: {
+            tool_calls: [
+              {
+                id: 'call1',
+                function: { name: 'my_tool', arguments: '{"foo":1}' },
+              },
+            ],
+          },
+          finish_reason: 'tool_calls',
+        },
+      ],
+    };
+    const result = (service as any).parseOneShot(data);
+    expect(result).toEqual({
+      blocks: [
+        { type: 'tool_use', id: 'call1', name: 'my_tool', input: { foo: 1 } },
+      ],
+      stop_reason: 'tool_use',
+    });
+  });
+
+  it('parseStream should extract tool calls from SSE', async () => {
+    const sse =
+      'data: {"choices":[{"delta":{"content":"Hi"}}]}\n\n' +
+      'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call1","function":{"name":"my_tool","arguments":"{\\"foo\\":1}"}}]}}]}\n\n' +
+      'data: [DONE]\n\n';
+    const res = new Response(sse);
+    const result = await (service as any).parseStream(res, () => {});
+    expect(result).toEqual({
+      blocks: [
+        { type: 'text', text: 'Hi' },
+        { type: 'tool_use', id: 'call1', name: 'my_tool', input: { foo: 1 } },
+      ],
+      stop_reason: 'tool_use',
+    });
+  });
+});
