@@ -745,6 +745,7 @@ src/
 - `clearChatHistory()` - チャット履歴のクリア
 - `updateVoiceService(options)` - 音声設定の更新
 - `isMemoryEnabled()` - メモリ機能が有効かどうかの確認
+- `generateContentFromHistory(prompt)` - チャット履歴を基に新しいテキストを生成
 - `offAll()` - すべてのイベントリスナーの削除
 
 ### ChatProcessor
@@ -1263,7 +1264,23 @@ const aiTuberCore = new AITuberOnAirCore({
     // その他のメモリ設定
     summaryPromptTemplate: '以下の会話を{maxLength}文字以内で要約し、重要なポイントを強調してください。',
   },
-});
+  });
+```
+
+### チャット履歴からコンテンツ生成
+
+```typescript
+// （未設定の場合）チャット履歴をセット
+aituber.setChatHistory([
+  { role: 'user', content: '配信どうだった？' },
+  { role: 'assistant', content: '大成功だったよ！' },
+]);
+
+// これまでの会話をもとにブログ記事を生成
+const blog = await aituber.generateContentFromHistory(
+  '会話内容を要約してブログ記事を書いてください。'
+);
+console.log(blog);
 ```
 
 ### 音声再生の同期処理

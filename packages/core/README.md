@@ -754,6 +754,7 @@ This is the overall integration class, responsible for initializing and coordina
 - `clearChatHistory()` – Clear chat history
 - `updateVoiceService(options)` – Update speech settings
 - `isMemoryEnabled()` – Check if memory functionality is enabled
+- `generateContentFromHistory(prompt)` – Generate new text from the current chat history
 - `offAll()` – Remove all event listeners
 
 ### ChatProcessor
@@ -1255,7 +1256,23 @@ const aiTuberCore = new AITuberOnAirCore({
     // Other memory settings
     summaryPromptTemplate: 'Please summarize the following conversation in under {maxLength} characters, highlighting the key points.',
   },
-});
+  });
+```
+
+### Generating Content from Chat History
+
+```typescript
+// Prepare chat history (if not already recorded)
+aituber.setChatHistory([
+  { role: 'user', content: 'How was the show?' },
+  { role: 'assistant', content: 'It went great!' },
+]);
+
+// Generate new text based on the conversation so far
+const blog = await aituber.generateContentFromHistory(
+  'Write a short blog post summarizing the conversation.'
+);
+console.log(blog);
 ```
 
 ### Synchronized Speech Playback

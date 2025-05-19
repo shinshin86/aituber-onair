@@ -453,6 +453,30 @@ export class AITuberOnAirCore extends EventEmitter {
   }
 
   /**
+   * チャット履歴を基に新しいコンテンツを生成する
+   * @param prompt 生成内容を指示するシステムプロンプト
+   * @returns 生成されたテキスト
+   */
+  async generateContentFromHistory(prompt: string): Promise<string> {
+    const messages: Message[] = [{ role: 'system', content: prompt }];
+
+    if (this.memoryManager) {
+      const memory = this.memoryManager.getMemoryForPrompt();
+      if (memory) {
+        messages.push({ role: 'system', content: memory });
+      }
+    }
+
+    messages.push(...this.chatProcessor.getChatLog());
+
+    const result = await this.chatService.chatOnce(messages, false, () => {});
+    return result.blocks
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text)
+      .join('');
+  }
+
+  /**
    * Check if memory functionality is enabled
    */
   isMemoryEnabled(): boolean {
