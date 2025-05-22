@@ -55,7 +55,9 @@ describe('ClaudeChatServiceProvider', () => {
   });
 
   it('should check if a model supports vision', () => {
-    expect(provider.supportsVisionForModel(CLAUDE_VISION_SUPPORTED_MODELS[0])).toBe(true);
+    expect(
+      provider.supportsVisionForModel(CLAUDE_VISION_SUPPORTED_MODELS[0]),
+    ).toBe(true);
     expect(provider.supportsVisionForModel('unsupported-model')).toBe(false);
   });
 });

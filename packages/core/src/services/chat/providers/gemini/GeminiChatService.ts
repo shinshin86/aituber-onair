@@ -161,12 +161,6 @@ export class GeminiChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
-      if (!GEMINI_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
-        throw new Error(
-          `Model ${this.visionModel} does not support vision capabilities.`,
-        );
-      }
-
       if (this.tools.length === 0) {
         const res = await this.callGemini(messages, this.visionModel, true);
         const { blocks } = await this.parseStream(res, onPartialResponse);

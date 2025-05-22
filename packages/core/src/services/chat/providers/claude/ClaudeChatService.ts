@@ -40,6 +40,7 @@ export class ClaudeChatService implements ChatService {
    * @param model Name of the model to use
    * @param visionModel Name of the vision model
    * @param tools Array of tool definitions
+   * @throws Error if the vision model doesn't support vision capabilities
    */
   constructor(
     apiKey: string,
@@ -51,6 +52,13 @@ export class ClaudeChatService implements ChatService {
     this.model = model || MODEL_CLAUDE_3_HAIKU;
     this.visionModel = visionModel || MODEL_CLAUDE_3_HAIKU;
     this.tools = tools;
+
+    // Validate vision model supports vision capabilities
+    if (!CLAUDE_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
+      throw new Error(
+        `Model ${this.visionModel} does not support vision capabilities.`,
+      );
+    }
   }
 
   /**
@@ -115,19 +123,12 @@ export class ClaudeChatService implements ChatService {
    * @param messages Array of messages to send (including images)
    * @param onPartialResponse Callback to receive each part of streaming response
    * @param onCompleteResponse Callback to execute when response is complete
-   * @throws Error if the selected model doesn't support vision
    */
   async processVisionChat(
     messages: MessageWithVision[],
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
-    if (!CLAUDE_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
-      throw new Error(
-        `Model ${this.visionModel} does not support vision capabilities.`,
-      );
-    }
-
     /* same branch logic for vision */
     if (this.tools.length === 0) {
       const res = await this.callClaude(messages, this.visionModel, true);

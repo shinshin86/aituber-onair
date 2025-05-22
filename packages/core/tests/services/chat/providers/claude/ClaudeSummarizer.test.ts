@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ClaudeSummarizer } from '../../../../../src/services/chat/providers/claude/ClaudeSummarizer.ts';
 import { Message } from '../../../../../src/types';
-import { ENDPOINT_CLAUDE_API, MODEL_CLAUDE_3_HAIKU } from '../../../../../src/constants';
+import {
+  ENDPOINT_CLAUDE_API,
+  MODEL_CLAUDE_3_HAIKU,
+} from '../../../../../src/constants';
 import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../../src/constants';
 import { AITuberOnAirCore } from '../../../../../src/core/AITuberOnAirCore';
 import { ChatServiceFactory } from '../../../../../src/services/chat/ChatServiceFactory';
@@ -138,7 +141,9 @@ describe('ClaudeSummarizer', () => {
     };
 
     const originalCreateChatService = ChatServiceFactory.createChatService;
-    ChatServiceFactory.createChatService = vi.fn().mockReturnValue(mockChatService);
+    ChatServiceFactory.createChatService = vi
+      .fn()
+      .mockReturnValue(mockChatService);
 
     try {
       const core = new AITuberOnAirCore({

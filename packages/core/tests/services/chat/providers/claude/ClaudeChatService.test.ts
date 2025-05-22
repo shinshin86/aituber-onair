@@ -69,7 +69,11 @@ describe('ClaudeChatService', () => {
       status: ok ? 200 : 400,
       statusText,
       json: async () => responseData,
-      body: { getReader: () => ({ read: vi.fn().mockResolvedValueOnce({ done: true }) }) },
+      body: {
+        getReader: () => ({
+          read: vi.fn().mockResolvedValueOnce({ done: true }),
+        }),
+      },
     });
   }
 
@@ -90,7 +94,9 @@ describe('ClaudeChatService', () => {
 
   it('should call Claude API with correct endpoint and body in processChat', async () => {
     mockFetch({ content: [{ text: 'Hello from Claude!' }] });
-    vi.spyOn(service as any, 'parsePureStream').mockResolvedValueOnce('Hello from Claude!');
+    vi.spyOn(service as any, 'parsePureStream').mockResolvedValueOnce(
+      'Hello from Claude!',
+    );
 
     const messages: Message[] = [{ role: 'user', content: 'Hello' }];
 
@@ -131,22 +137,33 @@ describe('ClaudeChatService', () => {
 
     const messages: Message[] = [{ role: 'user', content: 'Hi' }];
 
-    await expect(service.processChat(messages, vi.fn(), vi.fn())).rejects.toThrow();
+    await expect(
+      service.processChat(messages, vi.fn(), vi.fn()),
+    ).rejects.toThrow();
   });
 
   it('should process vision chat with a vision-supported model', async () => {
     const visionModel = CLAUDE_VISION_SUPPORTED_MODELS[0];
-    service = new ClaudeChatService(TEST_API_KEY, MODEL_CLAUDE_3_HAIKU, visionModel);
+    service = new ClaudeChatService(
+      TEST_API_KEY,
+      MODEL_CLAUDE_3_HAIKU,
+      visionModel,
+    );
 
     mockFetch({ content: [{ text: 'Vision response' }] });
-    vi.spyOn(service as any, 'parsePureStream').mockResolvedValueOnce('Vision response');
+    vi.spyOn(service as any, 'parsePureStream').mockResolvedValueOnce(
+      'Vision response',
+    );
 
     const messages: MessageWithVision[] = [
       {
         role: 'user',
         content: [
           { type: 'text', text: 'Check image' },
-          { type: 'image_url', image_url: { url: 'http://example.com/image.jpg' } },
+          {
+            type: 'image_url',
+            image_url: { url: 'http://example.com/image.jpg' },
+          },
         ],
       },
     ];
@@ -154,7 +171,11 @@ describe('ClaudeChatService', () => {
     const onPartialResponse = vi.fn();
     const onCompleteResponse = vi.fn();
 
-    await service.processVisionChat(messages, onPartialResponse, onCompleteResponse);
+    await service.processVisionChat(
+      messages,
+      onPartialResponse,
+      onCompleteResponse,
+    );
 
     expect(global.fetch).toHaveBeenCalledTimes(1);
     const callArgs = vi.mocked(global.fetch).mock.calls[0];
@@ -166,7 +187,10 @@ describe('ClaudeChatService', () => {
   });
 
   it('should throw error if vision model does not support vision', async () => {
-    expect(() => new ClaudeChatService(TEST_API_KEY, MODEL_CLAUDE_3_HAIKU, 'non-vision')).toThrow();
+    expect(
+      () =>
+        new ClaudeChatService(TEST_API_KEY, MODEL_CLAUDE_3_HAIKU, 'non-vision'),
+    ).toThrow();
   });
 
   it('should call chatOnce directly and return tool chat completion', async () => {
