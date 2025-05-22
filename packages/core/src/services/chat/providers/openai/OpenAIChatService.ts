@@ -117,13 +117,6 @@ export class OpenAIChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
-      // Check if the vision model supports vision capabilities
-      if (!VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
-        throw new Error(
-          `Model ${this.visionModel} does not support vision capabilities.`,
-        );
-      }
-
       // not use tools
       if (this.tools.length === 0) {
         const res = await this.callOpenAI(messages, this.visionModel, true);
