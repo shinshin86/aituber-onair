@@ -743,7 +743,8 @@ describe('ChatProcessor', () => {
       // Assert - Check if error is emitted instead of thrown
       const errorEmit = emitSpy.mock.calls.find(
         (call) =>
-          call[0] === 'error' && call[1].message === 'Tool callback missing',
+          call[0] === 'error' &&
+          (call[1] as Error).message === 'Tool callback missing',
       );
       expect(errorEmit).toBeDefined();
     });
