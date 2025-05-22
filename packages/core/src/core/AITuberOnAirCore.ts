@@ -453,6 +453,29 @@ export class AITuberOnAirCore extends EventEmitter {
   }
 
   /**
+   * Generate new content based on the system prompt and the provided message history (one-shot).
+   * The provided message history is used only for this generation and does not affect the internal chat history.
+   * This is ideal for generating standalone content like blog posts, reports, or summaries from existing conversations.
+   *
+   * @param prompt The system prompt to guide the content generation
+   * @param messageHistory The message history to use as context
+   * @returns The generated content as a string
+   */
+  async generateOneShotContentFromHistory(
+    prompt: string,
+    messageHistory: Message[],
+  ): Promise<string> {
+    const messages: Message[] = [{ role: 'system', content: prompt }];
+    messages.push(...messageHistory);
+
+    const result = await this.chatService.chatOnce(messages, false, () => {});
+    return result.blocks
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text)
+      .join('');
+  }
+
+  /**
    * Check if memory functionality is enabled
    */
   isMemoryEnabled(): boolean {
