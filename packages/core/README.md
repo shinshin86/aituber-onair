@@ -754,6 +754,7 @@ This is the overall integration class, responsible for initializing and coordina
 - `clearChatHistory()` – Clear chat history
 - `updateVoiceService(options)` – Update speech settings
 - `isMemoryEnabled()` – Check if memory functionality is enabled
+- `generateOneShotContentFromHistory(prompt, messageHistory)` – Generate new content from a system prompt and provided message history (one-shot, no impact on internal chat history)
 - `offAll()` – Remove all event listeners
 
 ### ChatProcessor
@@ -1255,8 +1256,49 @@ const aiTuberCore = new AITuberOnAirCore({
     // Other memory settings
     summaryPromptTemplate: 'Please summarize the following conversation in under {maxLength} characters, highlighting the key points.',
   },
-});
+  });
 ```
+
+### Generating One-Shot Content from Chat History
+
+The `generateOneShotContentFromHistory` method allows you to generate standalone content based on a provided message history without affecting the internal chat history. This is perfect for creating blog posts, reports, summaries, or other content derived from existing conversations.
+
+```typescript
+// Define the conversation history you want to use
+const conversationHistory: Message[] = [
+  { role: 'user', content: 'How was the show today?', timestamp: Date.now() },
+  { role: 'assistant', content: 'It went fantastic! We had over 1000 viewers.', timestamp: Date.now() },
+  { role: 'user', content: 'What was the most popular segment?', timestamp: Date.now() },
+  { role: 'assistant', content: 'The cooking segment got the most engagement!', timestamp: Date.now() },
+];
+
+// Generate a blog post from the conversation
+const blogPost = await aituber.generateOneShotContentFromHistory(
+  'Write a short blog post summarizing this conversation about a live streaming show.',
+  conversationHistory
+);
+console.log(blogPost);
+
+// Generate a summary report
+const summary = await aituber.generateOneShotContentFromHistory(
+  'Create a brief summary report highlighting the key points from this conversation.',
+  conversationHistory
+);
+console.log(summary);
+
+// Generate social media content
+const snsPost = await aituber.generateOneShotContentFromHistory(
+  'Create a social media content celebrating the success of today\'s show based on this conversation.',
+  conversationHistory
+);
+console.log(snsPost);
+```
+
+**Key Benefits:**
+- **Isolated Operation**: Does not modify or interfere with the current chat session
+- **Flexible Input**: Works with any message history array
+- **Multiple Use Cases**: Blog posts, reports, summaries, social media content, etc.
+- **Reusable**: Can be called multiple times with different prompts and histories
 
 ### Synchronized Speech Playback
 
