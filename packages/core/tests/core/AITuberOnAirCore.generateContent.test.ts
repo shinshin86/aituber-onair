@@ -39,7 +39,7 @@ vi.mock('../../src/services/voice/VoiceEngineAdapter', () => {
   };
 });
 
-describe('AITuberOnAirCore generateContentFromHistory', () => {
+describe('AITuberOnAirCore generateOneShotContentFromHistory', () => {
   let core: AITuberOnAirCore;
 
   beforeEach(() => {
@@ -57,7 +57,7 @@ describe('AITuberOnAirCore generateContentFromHistory', () => {
       { role: 'assistant', content: 'B', timestamp: 2 },
     ];
 
-    await core.generateContentFromHistory('Write a blog post', history);
+    await core.generateOneShotContentFromHistory('Write a blog post', history);
 
     expect(mockChatService.chatOnce).toHaveBeenCalledTimes(1);
     const args = mockChatService.chatOnce.mock.calls[0];
@@ -75,7 +75,10 @@ describe('AITuberOnAirCore generateContentFromHistory', () => {
   it('should work with empty message history', async () => {
     const emptyHistory: Message[] = [];
 
-    await core.generateContentFromHistory('Create a summary', emptyHistory);
+    await core.generateOneShotContentFromHistory(
+      'Create a summary',
+      emptyHistory,
+    );
 
     const messages = mockChatService.chatOnce.mock.calls[0][0] as Message[];
     expect(messages).toHaveLength(1);
@@ -99,7 +102,7 @@ describe('AITuberOnAirCore generateContentFromHistory', () => {
       stop_reason: 'end',
     });
 
-    const result = await core.generateContentFromHistory(
+    const result = await core.generateOneShotContentFromHistory(
       'Write something',
       history,
     );

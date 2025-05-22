@@ -453,14 +453,15 @@ export class AITuberOnAirCore extends EventEmitter {
   }
 
   /**
-   * Generate new content based on the system prompt and the provided message history.
-   * The message history is treated as a one-time use.
+   * Generate new content based on the system prompt and the provided message history (one-shot).
+   * The provided message history is used only for this generation and does not affect the internal chat history.
+   * This is ideal for generating standalone content like blog posts, reports, or summaries from existing conversations.
    *
    * @param prompt The system prompt to guide the content generation
    * @param messageHistory The message history to use as context
    * @returns The generated content as a string
    */
-  async generateContentFromHistory(
+  async generateOneShotContentFromHistory(
     prompt: string,
     messageHistory: Message[],
   ): Promise<string> {

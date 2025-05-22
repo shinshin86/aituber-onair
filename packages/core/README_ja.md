@@ -745,7 +745,7 @@ src/
 - `clearChatHistory()` - チャット履歴のクリア
 - `updateVoiceService(options)` - 音声設定の更新
 - `isMemoryEnabled()` - メモリ機能が有効かどうかの確認
-- `generateContentFromHistory(prompt)` - プロンプトとチャット履歴を渡すことで新しいテキストを生成
+- `generateOneShotContentFromHistory(prompt, messageHistory)` - システムプロンプトと提供されたメッセージ履歴から新しいコンテンツを生成（一度限り、内部チャット履歴に影響しない）
 - `offAll()` - すべてのイベントリスナーの削除
 
 ### ChatProcessor
@@ -1267,21 +1267,46 @@ const aiTuberCore = new AITuberOnAirCore({
   });
 ```
 
-### チャット履歴からコンテンツ生成
+### チャット履歴から一度限りのコンテンツ生成
+
+`generateOneShotContentFromHistory`メソッドを使用すると、提供されたメッセージ履歴に基づいて独立したコンテンツを生成できます。内部のチャット履歴には影響せず、ブログ記事、レポート、要約、その他の既存の会話から派生したコンテンツの作成に最適です。
 
 ```typescript
-// （未設定の場合）チャット履歴をセット
-aituber.setChatHistory([
-  { role: 'user', content: '配信どうだった？' },
-  { role: 'assistant', content: '大成功だったよ！' },
-]);
+// 使用したい会話履歴を定義
+const conversationHistory: Message[] = [
+  { role: 'user', content: '今日の配信はどうでしたか？', timestamp: Date.now() },
+  { role: 'assistant', content: '最高でした！1000人以上の視聴者がいました。', timestamp: Date.now() },
+  { role: 'user', content: '一番人気だったコーナーは何ですか？', timestamp: Date.now() },
+  { role: 'assistant', content: '料理コーナーが最も盛り上がりました！', timestamp: Date.now() },
+];
 
-// これまでの会話をもとにブログ記事を生成
-const blog = await aituber.generateContentFromHistory(
-  '会話内容を要約してブログ記事を書いてください。'
+// 会話からブログ記事を生成
+const blogPost = await aituber.generateOneShotContentFromHistory(
+  'このライブ配信についての会話を要約して、短いブログ記事を書いてください。',
+  conversationHistory
 );
-console.log(blog);
+console.log(blogPost);
+
+// サマリーレポートを生成
+const summary = await aituber.generateOneShotContentFromHistory(
+  'この会話から重要なポイントを抜き出して、簡潔な要約レポートを作成してください。',
+  conversationHistory
+);
+console.log(summary);
+
+// SNS用コンテンツを生成
+const snsPost = await aituber.generateOneShotContentFromHistory(
+  'この会話を基に、今日の配信の成功を祝うSNS用の投稿を作成してください。',
+  conversationHistory
+);
+console.log(snsPost);
 ```
+
+**主な利点：**
+- **独立した動作**: 現在のチャットセッションを変更したり干渉したりしません
+- **柔軟な入力**: 任意のメッセージ履歴配列で動作します
+- **多用途**: ブログ記事、レポート、要約、SNSコンテンツなどに対応
+- **再利用可能**: 異なるプロンプトと履歴で何度でも呼び出せます
 
 ### 音声再生の同期処理
 
