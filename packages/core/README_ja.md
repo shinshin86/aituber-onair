@@ -745,7 +745,7 @@ src/
 - `clearChatHistory()` - チャット履歴のクリア
 - `updateVoiceService(options)` - 音声設定の更新
 - `isMemoryEnabled()` - メモリ機能が有効かどうかの確認
-- `generateContentFromHistory(prompt)` - チャット履歴を基に新しいテキストを生成
+- `generateContentFromHistory(prompt)` - プロンプトとチャット履歴を渡すことで新しいテキストを生成
 - `offAll()` - すべてのイベントリスナーの削除
 
 ### ChatProcessor

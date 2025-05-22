@@ -754,7 +754,7 @@ This is the overall integration class, responsible for initializing and coordina
 - `clearChatHistory()` – Clear chat history
 - `updateVoiceService(options)` – Update speech settings
 - `isMemoryEnabled()` – Check if memory functionality is enabled
-- `generateContentFromHistory(prompt)` – Generate new text from the current chat history
+- `generateContentFromHistory(prompt)` – Generate new text from the system prompt and the current chat history
 - `offAll()` – Remove all event listeners
 
 ### ChatProcessor

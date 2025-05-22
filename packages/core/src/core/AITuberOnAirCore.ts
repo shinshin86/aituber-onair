@@ -453,21 +453,19 @@ export class AITuberOnAirCore extends EventEmitter {
   }
 
   /**
-   * チャット履歴を基に新しいコンテンツを生成する
-   * @param prompt 生成内容を指示するシステムプロンプト
-   * @returns 生成されたテキスト
+   * Generate new content based on the system prompt and the provided message history.
+   * The message history is treated as a one-time use.
+   *
+   * @param prompt The system prompt to guide the content generation
+   * @param messageHistory The message history to use as context
+   * @returns The generated content as a string
    */
-  async generateContentFromHistory(prompt: string): Promise<string> {
+  async generateContentFromHistory(
+    prompt: string,
+    messageHistory: Message[],
+  ): Promise<string> {
     const messages: Message[] = [{ role: 'system', content: prompt }];
-
-    if (this.memoryManager) {
-      const memory = this.memoryManager.getMemoryForPrompt();
-      if (memory) {
-        messages.push({ role: 'system', content: memory });
-      }
-    }
-
-    messages.push(...this.chatProcessor.getChatLog());
+    messages.push(...messageHistory);
 
     const result = await this.chatService.chatOnce(messages, false, () => {});
     return result.blocks
