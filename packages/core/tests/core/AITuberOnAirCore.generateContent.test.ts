@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AITuberOnAirCore, AITuberOnAirCoreOptions } from '../../src/core/AITuberOnAirCore';
+import {
+  AITuberOnAirCore,
+  AITuberOnAirCoreOptions,
+} from '../../src/core/AITuberOnAirCore';
 import { Message } from '../../src/types';
 
 // Mock OpenAIChatService
