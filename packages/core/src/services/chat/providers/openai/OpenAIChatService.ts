@@ -10,6 +10,7 @@ import {
   ToolChatBlock,
   ToolChatCompletion,
 } from '../../../../types';
+import { MCPServerConfig } from '../../../../types';
 
 /**
  * OpenAI implementation of ChatService
@@ -22,6 +23,8 @@ export class OpenAIChatService implements ChatService {
   private model: string;
   private visionModel: string;
   private tools: ToolDefinition[];
+  private endpoint: string;
+  private mcpServers: MCPServerConfig[];
 
   /**
    * Constructor
@@ -34,10 +37,14 @@ export class OpenAIChatService implements ChatService {
     model: string = MODEL_GPT_4O_MINI,
     visionModel: string = MODEL_GPT_4O_MINI,
     tools?: ToolDefinition[],
+    endpoint: string = ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+    mcpServers: MCPServerConfig[] = [],
   ) {
     this.apiKey = apiKey;
     this.model = model;
     this.tools = tools || [];
+    this.endpoint = endpoint;
+    this.mcpServers = mcpServers;
 
     // check if the vision model is supported
     if (!VISION_SUPPORTED_MODELS.includes(visionModel)) {
@@ -193,26 +200,51 @@ export class OpenAIChatService implements ChatService {
     model: string,
     stream: boolean = false,
   ): Promise<Response> {
-    const body = {
+    const body: any = {
       model,
       messages,
       stream,
-      ...(this.tools.length
-        ? {
-            tools: this.tools.map((t) => ({
-              type: 'function',
-              function: {
-                name: t.name,
-                description: t.description,
-                parameters: t.parameters,
-              },
-            })),
-            tool_choice: 'auto',
-          }
-        : {}),
     };
 
-    const res = await fetch(ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, {
+    const toolDefs: any[] = [];
+    if (this.tools.length) {
+      toolDefs.push(
+        ...this.tools.map((t) => ({
+          type: 'function',
+          function: {
+            name: t.name,
+            description: t.description,
+            parameters: t.parameters,
+          },
+        })),
+      );
+    }
+
+    if (this.mcpServers.length) {
+      this.mcpServers.forEach((s) => {
+        const mcpDef: any = {
+          type: 'mcp',
+          server_label: s.name,
+          server_url: s.url,
+        };
+        if (s.tool_configuration?.allowed_tools) {
+          mcpDef.allowed_tools = s.tool_configuration.allowed_tools;
+        }
+        if (s.authorization_token) {
+          mcpDef.headers = {
+            Authorization: `Bearer ${s.authorization_token}`,
+          };
+        }
+        toolDefs.push(mcpDef);
+      });
+    }
+
+    if (toolDefs.length) {
+      body.tools = toolDefs;
+      body.tool_choice = 'auto';
+    }
+
+    const res = await fetch(this.endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

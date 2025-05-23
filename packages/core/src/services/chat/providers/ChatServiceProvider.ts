@@ -10,6 +10,8 @@ export interface ChatServiceOptions {
   model?: string;
   /** Vision model name (for image processing) */
   visionModel?: string;
+  /** API endpoint type (chat/completions or responses) */
+  endpoint?: string;
   /** Additional provider-specific options */
   [key: string]: any;
 }

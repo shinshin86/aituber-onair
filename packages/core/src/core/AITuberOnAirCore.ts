@@ -129,8 +129,11 @@ export class AITuberOnAirCore extends EventEmitter {
       tools: this.toolExecutor.listDefinitions(),
     };
 
-    // Add MCP servers for Claude provider
-    if (providerName === 'claude' && options.mcpServers) {
+    // Add MCP servers for providers that support remote MCP
+    if (
+      (providerName === 'claude' || providerName === 'openai') &&
+      options.mcpServers
+    ) {
       (chatServiceOptions as any).mcpServers = options.mcpServers;
     }
 

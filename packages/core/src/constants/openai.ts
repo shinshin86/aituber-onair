@@ -1,5 +1,7 @@
 export const ENDPOINT_OPENAI_CHAT_COMPLETIONS_API =
   'https://api.openai.com/v1/chat/completions';
+export const ENDPOINT_OPENAI_RESPONSES_API =
+  'https://api.openai.com/v1/responses';
 
 // gpt model
 export const MODEL_GPT_4_1 = 'gpt-4.1';

@@ -1,4 +1,5 @@
 import {
+  ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
   MODEL_O3_MINI,
@@ -37,6 +38,8 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
       options.model || this.getDefaultModel(),
       visionModel,
       tools,
+      options.endpoint || ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+      (options as any).mcpServers ?? [],
     );
   }
 

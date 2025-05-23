@@ -681,6 +681,42 @@ const aituberOptions: AITuberOnAirCoreOptions = {
 const newAITuber = new AITuberOnAirCore(aituberOptions);
 ```
 
+## Using OpenAI Remote MCP
+
+OpenAI's Responses API allows connecting to remote MCP servers. Specify the
+`endpoint` as `responses` and provide MCP server configurations via the
+`mcpServers` option when initializing **AITuberOnAirCore**.
+
+```typescript
+import {
+  AITuberOnAirCore,
+  AITuberOnAirCoreOptions,
+  MCPServerConfig,
+} from '@aituber-onair/core';
+
+const mcpServers: MCPServerConfig[] = [
+  {
+    type: 'url',
+    url: 'https://mcp-server.example.com/',
+    name: 'example-mcp',
+    tool_configuration: { allowed_tools: ['example_tool'] },
+    authorization_token: 'YOUR_TOKEN',
+  },
+];
+
+const options: AITuberOnAirCoreOptions = {
+  chatProvider: 'openai',
+  apiKey: 'your-openai-api-key',
+  model: 'gpt-4.1',
+  providerOptions: {
+    endpoint: 'responses',
+  },
+  mcpServers,
+};
+
+const aituber = new AITuberOnAirCore(options);
+```
+
 ## Using Claude MCP Connector
 
 AITuber OnAir Core supports Claude's Model Context Protocol (MCP) connector feature, allowing you to connect to remote MCP servers directly from the Messages API without a separate MCP client.
