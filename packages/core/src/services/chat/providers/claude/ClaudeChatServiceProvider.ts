@@ -7,6 +7,7 @@ import {
 } from '../../../../constants';
 import { ChatService } from '../../ChatService';
 import { ClaudeChatService } from './ClaudeChatService';
+import { MCPServerConfig } from '../../../../types';
 import {
   ChatServiceOptions,
   ChatServiceProvider,
@@ -18,7 +19,7 @@ import {
 export class ClaudeChatServiceProvider implements ChatServiceProvider {
   /**
    * Create a chat service instance
-   * @param options Service options
+   * @param options Service options (can include mcpServers)
    * @returns ClaudeChatService instance
    */
   createChatService(options: ChatServiceOptions): ChatService {
@@ -34,6 +35,7 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
       options.model || this.getDefaultModel(),
       visionModel,
       options.tools ?? [],
+      (options as any).mcpServers ?? [],
     );
   }
 

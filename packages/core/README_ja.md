@@ -18,6 +18,7 @@
 - [基本的な使用方法](#基本的な使用方法)
 - [ツールシステム (Function calling)](#ツールシステム)
 - [MCPの利用方法](#MCPの利用方法)
+- [Claude MCP Connectorの使用方法](#Claude-MCP-Connectorの使用方法)
 - [アーキテクチャ](#アーキテクチャ)
 - [主要コンポーネント](#主要コンポーネント)
 - [イベントシステム](#イベントシステム)
@@ -671,6 +672,126 @@ const aituberOptions: AITuberOnAirCoreOptions = {
 // create new instance
 const newAITuber = new AITuberOnAirCore(aituberOptions);
 ```
+
+## Claude MCP Connectorの使用方法
+
+AITuber OnAir Coreは、ClaudeのModel Context Protocol (MCP) connector機能をサポートしており、別のMCPクライアントを使用せずにMessages APIからリモートMCPサーバーに直接接続できます。
+
+### 基本的な使用方法
+
+Claudeプロバイダーを使用する場合、`mcpServers`オプションでMCPサーバーを指定できます：
+
+```typescript
+import { AITuberOnAirCore, AITuberOnAirCoreOptions } from '@aituber-onair/core';
+import { MCPServerConfig } from '@aituber-onair/core';
+
+// MCPサーバー設定を定義
+const mcpServers: MCPServerConfig[] = [
+  {
+    type: 'url',
+    url: 'https://mcp-server.example.com/sse',
+    name: 'example-mcp',
+    tool_configuration: {
+      enabled: true,
+      allowed_tools: ['example_tool_1', 'example_tool_2']
+    },
+    authorization_token: 'YOUR_TOKEN' // オプション（OAuth対応サーバー用）
+  }
+];
+
+// MCPサーバーでAITuberOnAirCoreインスタンスを作成
+const options: AITuberOnAirCoreOptions = {
+  chatProvider: 'claude', // MCPはClaudeでのみサポート
+  apiKey: 'your-claude-api-key',
+  model: 'claude-3-haiku-20240307',
+  chatOptions: {
+    systemPrompt: 'あなたはMCP経由でリモートツールにアクセスできるAI配信者です。',
+  },
+  // 従来のツール（オプション、MCPと併用可能）
+  tools: [
+    {
+      definition: {
+        name: 'local_tool',
+        description: 'ローカルツール',
+        parameters: {
+          type: 'object',
+          properties: {
+            input: { type: 'string', description: '入力テキスト' }
+          }
+        }
+      },
+      handler: async (input) => {
+        return `ローカル結果: ${input.input}`;
+      }
+    }
+  ],
+  // MCPサーバー設定
+  mcpServers: mcpServers,
+  debug: true,
+};
+
+const aituber = new AITuberOnAirCore(options);
+```
+
+### 複数のMCPサーバー
+
+複数の設定を含めることで、複数のMCPサーバーに接続できます：
+
+```typescript
+const mcpServers: MCPServerConfig[] = [
+  {
+    type: 'url',
+    url: 'https://mcp-server-1.example.com/sse',
+    name: 'server-1',
+    authorization_token: 'TOKEN_1'
+  },
+  {
+    type: 'url',
+    url: 'https://mcp-server-2.example.com/sse',
+    name: 'server-2',
+    tool_configuration: {
+      enabled: true,
+      allowed_tools: ['specific_tool_1', 'specific_tool_2']
+    }
+  }
+];
+```
+
+### OAuth認証
+
+OAuth認証が必要なMCPサーバーの場合、MCP inspectorを使用してアクセストークンを取得できます：
+
+```bash
+npx @modelcontextprotocol/inspector
+```
+
+inspectorでOAuthフローを実行し、`access_token`の値をコピーして設定の`authorization_token`として使用してください。
+
+### イベントハンドリング
+
+MCPツールの使用は、従来のツールと同じイベントシステムで処理されます：
+
+```typescript
+// ツール使用の監視（従来のツールとMCPツールの両方を含む）
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlocks) => {
+  console.log('使用されたツール:', toolBlocks);
+});
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlocks) => {
+  console.log('ツール結果:', resultBlocks);
+});
+```
+
+### 制限事項
+
+- MCP connectorはClaudeプロバイダーでのみ利用可能
+- HTTP経由のMCPサーバーのみサポート（STDIOサーバーは非対応）
+- 現在MCP仕様のうちツール呼び出しのみサポート
+- Amazon BedrockとGoogle Vertexでは利用不可
+
+### 従来のツールとの共存
+
+MCPサーバーと従来のツール定義は同時に使用できます。AIはローカルツールとリモートMCPツールの両方にシームレスにアクセスできます。
 
 ## アーキテクチャ
 
