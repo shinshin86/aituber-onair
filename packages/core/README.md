@@ -692,6 +692,7 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreOptions,
   MCPServerConfig,
+  ENDPOINT_OPENAI_RESPONSES_API,
 } from '@aituber-onair/core';
 
 const mcpServers: MCPServerConfig[] = [
@@ -709,7 +710,7 @@ const options: AITuberOnAirCoreOptions = {
   apiKey: 'your-openai-api-key',
   model: 'gpt-4.1',
   providerOptions: {
-    endpoint: 'responses',
+    endpoint: ENDPOINT_OPENAI_RESPONSES_API,
   },
   mcpServers,
 };
