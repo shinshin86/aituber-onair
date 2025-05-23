@@ -49,7 +49,7 @@ export interface AITuberOnAirCoreOptions {
     definition: ToolDefinition;
     handler: (input: any) => Promise<any>;
   }[];
-  /** MCP servers configuration (Claude only) */
+  /** MCP servers configuration (OpenAI and Claude only) */
   mcpServers?: MCPServerConfig[];
 }
 
@@ -129,8 +129,11 @@ export class AITuberOnAirCore extends EventEmitter {
       tools: this.toolExecutor.listDefinitions(),
     };
 
-    // Add MCP servers for Claude provider
-    if (providerName === 'claude' && options.mcpServers) {
+    // Add MCP servers for providers that support remote MCP
+    if (
+      (providerName === 'claude' || providerName === 'openai') &&
+      options.mcpServers
+    ) {
       (chatServiceOptions as any).mcpServers = options.mcpServers;
     }
 

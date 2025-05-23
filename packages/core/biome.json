@@ -23,7 +23,8 @@
         "noInferrableTypes": "off",
         "noNonNullAssertion": "off",
         "useTemplate": "off",
-        "noUselessElse": "off"
+        "noUselessElse": "off",
+        "noUnusedTemplateLiteral": "off"
       }
     }
   },

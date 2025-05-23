@@ -19,6 +19,7 @@ It specializes in generating response text and audio from text or image inputs, 
 - [Tool System](#tool-system)
 - [Function Calling Differences](#function-calling-differences)
 - [Using MCP](#using-mcp)
+- [Using OpenAI Remote MCP](#using-openai-remote-mcp)
 - [Using Claude MCP Connector](#using-claude-mcp-connector)
 - [Architecture](#architecture)
 - [Main Components](#main-components)
@@ -680,6 +681,43 @@ const aituberOptions: AITuberOnAirCoreOptions = {
 // create new instance
 const newAITuber = new AITuberOnAirCore(aituberOptions);
 ```
+
+## Using OpenAI Remote MCP
+
+OpenAI's Responses API allows connecting to remote MCP servers. When you specify 
+MCP server configurations via the `mcpServers` option, **AITuberOnAirCore** 
+automatically switches to the Responses API endpoint for OpenAI.
+
+```typescript
+import {
+  AITuberOnAirCore,
+  AITuberOnAirCoreOptions,
+  MCPServerConfig,
+} from '@aituber-onair/core';
+
+const mcpServers: MCPServerConfig[] = [
+  {
+    type: 'url',
+    url: 'https://mcp-server.example.com/',
+    name: 'example-mcp',
+    tool_configuration: { allowed_tools: ['example_tool'] },
+    authorization_token: 'YOUR_TOKEN',
+  },
+];
+
+const options: AITuberOnAirCoreOptions = {
+  chatProvider: 'openai',
+  apiKey: 'your-openai-api-key',
+  model: 'gpt-4.1',
+  mcpServers, // Automatically switches to Responses API when MCP servers are configured
+};
+
+const aituber = new AITuberOnAirCore(options);
+```
+
+**Note**: The `endpoint` configuration is OpenAI-specific and is automatically managed 
+based on MCP server configuration. Other providers (Claude, Gemini) use their own 
+fixed endpoints.
 
 ## Using Claude MCP Connector
 
