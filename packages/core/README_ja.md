@@ -18,6 +18,7 @@
 - [基本的な使用方法](#基本的な使用方法)
 - [ツールシステム (Function calling)](#ツールシステム)
 - [MCPの利用方法](#MCPの利用方法)
+- [OpenAI Remote MCPの利用](#OpenAI-Remote-MCPの利用)
 - [Claude MCP Connectorの使用方法](#Claude-MCP-Connectorの使用方法)
 - [アーキテクチャ](#アーキテクチャ)
 - [主要コンポーネント](#主要コンポーネント)
@@ -676,14 +677,14 @@ const newAITuber = new AITuberOnAirCore(aituberOptions);
 ## OpenAI Remote MCPの利用
 
 OpenAIのResponses APIを使用すると、リモートMCPサーバーに接続できます。
-`endpoint` に `responses` を指定し、`mcpServers` オプションでサーバー情報を渡します。
+`mcpServers`オプションでMCPサーバー設定を指定すると、**AITuberOnAirCore**が
+自動的にOpenAI用のResponses APIエンドポイントに切り替わります。
 
 ```typescript
 import {
   AITuberOnAirCore,
   AITuberOnAirCoreOptions,
   MCPServerConfig,
-  ENDPOINT_OPENAI_RESPONSES_API,
 } from '@aituber-onair/core';
 
 const mcpServers: MCPServerConfig[] = [
@@ -700,14 +701,14 @@ const options: AITuberOnAirCoreOptions = {
   chatProvider: 'openai',
   apiKey: 'your-openai-api-key',
   model: 'gpt-4.1',
-  providerOptions: {
-    endpoint: ENDPOINT_OPENAI_RESPONSES_API,
-  },
-  mcpServers,
+  mcpServers, // MCPサーバー設定時に自動的にResponses APIに切り替わります
 };
 
 const aituber = new AITuberOnAirCore(options);
 ```
+
+**注意**: `endpoint`設定はOpenAI専用の機能で、MCP設定に基づいて自動的に管理されます。
+他のプロバイダー（Claude、Gemini）は独自の固定エンドポイントを使用します。
 
 ## Claude MCP Connectorの使用方法
 

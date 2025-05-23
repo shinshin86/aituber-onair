@@ -49,7 +49,7 @@ export interface AITuberOnAirCoreOptions {
     definition: ToolDefinition;
     handler: (input: any) => Promise<any>;
   }[];
-  /** MCP servers configuration (Claude only) */
+  /** MCP servers configuration (OpenAI and Claude only) */
   mcpServers?: MCPServerConfig[];
 }
 
