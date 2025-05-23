@@ -1,5 +1,6 @@
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+  ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
   MODEL_O3_MINI,
@@ -33,13 +34,22 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
     // tools definition
     const tools: ToolDefinition[] | undefined = options.tools;
 
+    // MCPサーバが設定されている場合は自動的にResponses APIを使用
+    const mcpServers = (options as any).mcpServers ?? [];
+    const shouldUseResponsesAPI = mcpServers.length > 0;
+    const endpoint =
+      options.endpoint ||
+      (shouldUseResponsesAPI
+        ? ENDPOINT_OPENAI_RESPONSES_API
+        : ENDPOINT_OPENAI_CHAT_COMPLETIONS_API);
+
     return new OpenAIChatService(
       options.apiKey,
       options.model || this.getDefaultModel(),
       visionModel,
       tools,
-      options.endpoint || ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
-      (options as any).mcpServers ?? [],
+      endpoint,
+      mcpServers,
     );
   }
 
