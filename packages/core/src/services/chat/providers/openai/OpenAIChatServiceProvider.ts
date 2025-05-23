@@ -34,7 +34,7 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
     // tools definition
     const tools: ToolDefinition[] | undefined = options.tools;
 
-    // MCPサーバが設定されている場合は自動的にResponses APIを使用
+    // if MCP servers are set, automatically use Responses API
     const mcpServers = (options as any).mcpServers ?? [];
     const shouldUseResponsesAPI = mcpServers.length > 0;
     const endpoint =
