@@ -9,7 +9,7 @@ import {
   AudioPlayOptions,
 } from '../services/voice/VoiceService';
 import { VoiceEngineAdapter } from '../services/voice/VoiceEngineAdapter';
-import { Message, MemoryStorage } from '../types';
+import { Message, MemoryStorage, MCPServerConfig } from '../types';
 import { textToScreenplay, screenplayToText } from '../utils/screenplay';
 import { ChatServiceFactory } from '../services/chat/ChatServiceFactory';
 import { ChatServiceOptions } from '../services/chat/providers/ChatServiceProvider';
@@ -49,6 +49,8 @@ export interface AITuberOnAirCoreOptions {
     definition: ToolDefinition;
     handler: (input: any) => Promise<any>;
   }[];
+  /** MCP servers configuration (Claude only) */
+  mcpServers?: MCPServerConfig[];
 }
 
 /**
@@ -126,6 +128,11 @@ export class AITuberOnAirCore extends EventEmitter {
       ...options.providerOptions,
       tools: this.toolExecutor.listDefinitions(),
     };
+
+    // Add MCP servers for Claude provider
+    if (providerName === 'claude' && options.mcpServers) {
+      (chatServiceOptions as any).mcpServers = options.mcpServers;
+    }
 
     // Initialize ChatService
     this.chatService = ChatServiceFactory.createChatService(

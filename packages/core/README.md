@@ -19,6 +19,7 @@ It specializes in generating response text and audio from text or image inputs, 
 - [Tool System](#tool-system)
 - [Function Calling Differences](#function-calling-differences)
 - [Using MCP](#using-mcp)
+- [Using Claude MCP Connector](#using-claude-mcp-connector)
 - [Architecture](#architecture)
 - [Main Components](#main-components)
 - [Event System](#event-system)
@@ -679,6 +680,126 @@ const aituberOptions: AITuberOnAirCoreOptions = {
 // create new instance
 const newAITuber = new AITuberOnAirCore(aituberOptions);
 ```
+
+## Using Claude MCP Connector
+
+AITuber OnAir Core supports Claude's Model Context Protocol (MCP) connector feature, allowing you to connect to remote MCP servers directly from the Messages API without a separate MCP client.
+
+### Basic Usage
+
+When using the Claude provider, you can specify MCP servers in the `mcpServers` option:
+
+```typescript
+import { AITuberOnAirCore, AITuberOnAirCoreOptions } from '@aituber-onair/core';
+import { MCPServerConfig } from '@aituber-onair/core';
+
+// Define MCP server configuration
+const mcpServers: MCPServerConfig[] = [
+  {
+    type: 'url',
+    url: 'https://mcp-server.example.com/sse',
+    name: 'example-mcp',
+    tool_configuration: {
+      enabled: true,
+      allowed_tools: ['example_tool_1', 'example_tool_2']
+    },
+    authorization_token: 'YOUR_TOKEN' // Optional, for OAuth-enabled servers
+  }
+];
+
+// Create AITuberOnAirCore instance with MCP servers
+const options: AITuberOnAirCoreOptions = {
+  chatProvider: 'claude', // MCP is only supported with Claude
+  apiKey: 'your-claude-api-key',
+  model: 'claude-3-haiku-20240307',
+  chatOptions: {
+    systemPrompt: 'You are an AI streamer with access to remote tools via MCP.',
+  },
+  // Traditional tools (optional, can be used alongside MCP)
+  tools: [
+    {
+      definition: {
+        name: 'local_tool',
+        description: 'A local tool',
+        parameters: {
+          type: 'object',
+          properties: {
+            input: { type: 'string', description: 'Input text' }
+          }
+        }
+      },
+      handler: async (input) => {
+        return `Local result: ${input.input}`;
+      }
+    }
+  ],
+  // MCP servers configuration
+  mcpServers: mcpServers,
+  debug: true,
+};
+
+const aituber = new AITuberOnAirCore(options);
+```
+
+### Multiple MCP Servers
+
+You can connect to multiple MCP servers by including multiple configurations:
+
+```typescript
+const mcpServers: MCPServerConfig[] = [
+  {
+    type: 'url',
+    url: 'https://mcp-server-1.example.com/sse',
+    name: 'server-1',
+    authorization_token: 'TOKEN_1'
+  },
+  {
+    type: 'url',
+    url: 'https://mcp-server-2.example.com/sse',
+    name: 'server-2',
+    tool_configuration: {
+      enabled: true,
+      allowed_tools: ['specific_tool_1', 'specific_tool_2']
+    }
+  }
+];
+```
+
+### OAuth Authentication
+
+For MCP servers that require OAuth authentication, you can obtain an access token using the MCP inspector:
+
+```bash
+npx @modelcontextprotocol/inspector
+```
+
+Follow the OAuth flow in the inspector and copy the `access_token` value to use as the `authorization_token` in your configuration.
+
+### Event Handling
+
+MCP tool usage is handled through the same event system as traditional tools:
+
+```typescript
+// Listen for tool usage (includes both traditional tools and MCP tools)
+aituber.on(AITuberOnAirCoreEvent.TOOL_USE, (toolBlocks) => {
+  console.log('Tools used:', toolBlocks);
+});
+
+aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlocks) => {
+  console.log('Tool results:', resultBlocks);
+});
+```
+
+### Limitations
+
+- MCP connector is only available with the Claude provider
+- Only HTTP-based MCP servers are supported (STDIO servers are not supported)
+- Currently only tool calls are supported from the MCP specification
+- Not available on Amazon Bedrock and Google Vertex
+
+### Coexistence with Traditional Tools
+
+MCP servers and traditional tool definitions can be used simultaneously. The AI can access both local tools and remote MCP tools seamlessly.
 
 ## Architecture
 

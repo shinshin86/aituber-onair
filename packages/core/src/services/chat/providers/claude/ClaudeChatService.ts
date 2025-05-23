@@ -6,6 +6,9 @@ import {
   ToolChatBlock,
   ToolChatCompletion,
   ToolDefinition,
+  MCPServerConfig,
+  ClaudeMCPToolUseBlock,
+  ClaudeMCPToolResultBlock,
 } from '../../../../types';
 import {
   ENDPOINT_CLAUDE_API,
@@ -19,8 +22,17 @@ export interface ClaudeToolResultBlock {
   content: string;
 }
 
-type ClaudeToolChatBlock = CoreToolChatBlock;
+type ClaudeToolChatBlock =
+  | CoreToolChatBlock
+  | ClaudeMCPToolUseBlock
+  | ClaudeMCPToolResultBlock;
 type ClaudeCompletion = ToolChatCompletion<ClaudeToolChatBlock>;
+
+// Internal extended completion type for MCP support
+type ClaudeInternalCompletion = {
+  blocks: ClaudeToolChatBlock[];
+  stop_reason: 'tool_use' | 'end';
+};
 
 /**
  * Claude implementation of ChatService
@@ -33,6 +45,7 @@ export class ClaudeChatService implements ChatService {
   private model: string;
   private visionModel: string;
   private tools: ToolDefinition[];
+  private mcpServers: MCPServerConfig[];
 
   /**
    * Constructor
@@ -40,6 +53,7 @@ export class ClaudeChatService implements ChatService {
    * @param model Name of the model to use
    * @param visionModel Name of the vision model
    * @param tools Array of tool definitions
+   * @param mcpServers Array of MCP server configurations (optional)
    * @throws Error if the vision model doesn't support vision capabilities
    */
   constructor(
@@ -47,11 +61,13 @@ export class ClaudeChatService implements ChatService {
     model: string = MODEL_CLAUDE_3_HAIKU,
     visionModel: string = MODEL_CLAUDE_3_HAIKU,
     tools: ToolDefinition[] = [],
+    mcpServers: MCPServerConfig[] = [],
   ) {
     this.apiKey = apiKey;
     this.model = model || MODEL_CLAUDE_3_HAIKU;
     this.visionModel = visionModel || MODEL_CLAUDE_3_HAIKU;
     this.tools = tools;
+    this.mcpServers = mcpServers;
 
     // Validate vision model supports vision capabilities
     if (!CLAUDE_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
@@ -78,6 +94,40 @@ export class ClaudeChatService implements ChatService {
   }
 
   /**
+   * Get configured MCP servers
+   * @returns Array of MCP server configurations
+   */
+  getMCPServers(): MCPServerConfig[] {
+    return this.mcpServers;
+  }
+
+  /**
+   * Add MCP server configuration
+   * @param serverConfig MCP server configuration
+   */
+  addMCPServer(serverConfig: MCPServerConfig): void {
+    this.mcpServers.push(serverConfig);
+  }
+
+  /**
+   * Remove MCP server by name
+   * @param serverName Name of the server to remove
+   */
+  removeMCPServer(serverName: string): void {
+    this.mcpServers = this.mcpServers.filter(
+      (server) => server.name !== serverName,
+    );
+  }
+
+  /**
+   * Check if MCP servers are configured
+   * @returns True if MCP servers are configured
+   */
+  hasMCPServers(): boolean {
+    return this.mcpServers.length > 0;
+  }
+
+  /**
    * Process chat messages
    * @param messages Array of messages to send
    * @param onPartialResponse Callback to receive each part of streaming response
@@ -88,23 +138,19 @@ export class ClaudeChatService implements ChatService {
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
-    // not use tools
-    if (this.tools.length === 0) {
+    // not use tools or MCP servers
+    if (this.tools.length === 0 && this.mcpServers.length === 0) {
       const res = await this.callClaude(messages, this.model, true);
       const full = await this.parsePureStream(res, onPartialResponse);
       await onCompleteResponse(full);
       return;
     }
 
-    // use tools
-    const { blocks, stop_reason } = await this.chatOnce(
-      messages,
-      true,
-      onPartialResponse,
-    );
+    // use tools or MCP servers
+    const result = await this.chatOnce(messages, true, onPartialResponse);
 
-    if (stop_reason === 'end') {
-      const full = blocks
+    if (result.stop_reason === 'end') {
+      const full = result.blocks
         .filter((b) => b.type === 'text')
         .map((b) => b.text)
         .join('');
@@ -130,17 +176,17 @@ export class ClaudeChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     /* same branch logic for vision */
-    if (this.tools.length === 0) {
+    if (this.tools.length === 0 && this.mcpServers.length === 0) {
       const res = await this.callClaude(messages, this.visionModel, true);
       const full = await this.parsePureStream(res, onPartialResponse);
       await onCompleteResponse(full);
       return;
     }
 
-    const { blocks, stop_reason } = await this.visionChatOnce(messages); // non-stream (tools only)
+    const result = await this.visionChatOnce(messages); // non-stream (tools only)
 
-    if (stop_reason === 'end') {
-      const full = blocks
+    if (result.stop_reason === 'end') {
+      const full = result.blocks
         .filter((b) => b.type === 'text')
         .map((b) => b.text)
         .join('');
@@ -321,14 +367,26 @@ export class ClaudeChatService implements ChatService {
       body.tool_choice = { type: 'auto' };
     }
 
+    // Add MCP servers if configured
+    if (this.mcpServers.length > 0) {
+      body.mcp_servers = this.mcpServers;
+    }
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'x-api-key': this.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    };
+
+    // Add beta header if MCP servers are configured
+    if (this.mcpServers.length > 0) {
+      headers['anthropic-beta'] = 'mcp-client-2025-04-04';
+    }
+
     const res = await fetch(ENDPOINT_CLAUDE_API, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
+      headers,
       body: JSON.stringify(body),
     });
 
@@ -340,19 +398,19 @@ export class ClaudeChatService implements ChatService {
    * Parse stream response
    * @param res Response
    * @param onPartial Callback to receive each part of streaming response
-   * @returns ToolChatCompletion
+   * @returns ClaudeInternalCompletion
    */
   private async parseStream(
     res: Response,
     onPartial: (t: string) => void,
-  ): Promise<ClaudeCompletion> {
+  ): Promise<ClaudeInternalCompletion> {
     const reader = res.body!.getReader();
     const dec = new TextDecoder();
 
-    const textBlocks: ToolChatBlock[] = [];
+    const textBlocks: ClaudeToolChatBlock[] = [];
     const toolCalls = new Map<
       number,
-      { id: string; name: string; args: string }
+      { id: string; name: string; args: string; server_name?: string }
     >();
 
     let buf = '';
@@ -377,6 +435,7 @@ export class ClaudeChatService implements ChatService {
           onPartial(ev.delta.text);
           textBlocks.push({ type: 'text', text: ev.delta.text });
         }
+
         /* tool_call delta */
         if (
           ev.type === 'content_block_start' &&
@@ -388,6 +447,17 @@ export class ClaudeChatService implements ChatService {
             args: '',
           });
         } else if (
+          ev.type === 'content_block_start' &&
+          ev.content_block?.type === 'mcp_tool_use'
+        ) {
+          // Handle MCP tool use
+          toolCalls.set(ev.index, {
+            id: ev.content_block.id,
+            name: ev.content_block.name,
+            args: '',
+            server_name: ev.content_block.server_name,
+          });
+        } else if (
           ev.type === 'content_block_start' && // case of non-stream
           ev.content_block?.type === 'tool_result'
         ) {
@@ -395,6 +465,17 @@ export class ClaudeChatService implements ChatService {
             type: 'tool_result',
             tool_use_id: ev.content_block.tool_use_id,
             content: ev.content_block.content ?? '',
+          });
+        } else if (
+          ev.type === 'content_block_start' &&
+          ev.content_block?.type === 'mcp_tool_result'
+        ) {
+          // Handle MCP tool result
+          textBlocks.push({
+            type: 'mcp_tool_result',
+            tool_use_id: ev.content_block.tool_use_id,
+            is_error: ev.content_block.is_error ?? false,
+            content: ev.content_block.content ?? [],
           });
         }
 
@@ -409,13 +490,25 @@ export class ClaudeChatService implements ChatService {
 
         /* case of content_block_stop */
         if (ev.type === 'content_block_stop' && toolCalls.has(ev.index)) {
-          const { id, name, args } = toolCalls.get(ev.index)!;
-          textBlocks.push({
-            type: 'tool_use',
-            id,
-            name,
-            input: JSON.parse(args || '{}'),
-          });
+          const { id, name, args, server_name } = toolCalls.get(ev.index)!;
+          if (server_name) {
+            // MCP tool use
+            textBlocks.push({
+              type: 'mcp_tool_use',
+              id,
+              name,
+              server_name,
+              input: JSON.parse(args || '{}'),
+            });
+          } else {
+            // Standard tool use
+            textBlocks.push({
+              type: 'tool_use',
+              id,
+              name,
+              input: JSON.parse(args || '{}'),
+            });
+          }
           toolCalls.delete(ev.index);
         }
       }
@@ -423,7 +516,9 @@ export class ClaudeChatService implements ChatService {
 
     return {
       blocks: textBlocks,
-      stop_reason: textBlocks.some((b) => b.type === 'tool_use')
+      stop_reason: textBlocks.some(
+        (b) => b.type === 'tool_use' || b.type === 'mcp_tool_use',
+      )
         ? 'tool_use'
         : 'end',
     };
@@ -440,7 +535,7 @@ export class ClaudeChatService implements ChatService {
       .join('');
   }
 
-  private parseOneShot(data: any): ClaudeCompletion {
+  private parseOneShot(data: any): ClaudeInternalCompletion {
     const blocks: ClaudeToolChatBlock[] = [];
 
     (data.content ?? []).forEach((c: any) => {
@@ -453,18 +548,35 @@ export class ClaudeChatService implements ChatService {
           name: c.name,
           input: c.input ?? {},
         });
+      } else if (c.type === 'mcp_tool_use') {
+        blocks.push({
+          type: 'mcp_tool_use',
+          id: c.id,
+          name: c.name,
+          server_name: c.server_name,
+          input: c.input ?? {},
+        });
       } else if (c.type === 'tool_result') {
         blocks.push({
           type: 'tool_result',
           tool_use_id: c.tool_use_id,
           content: c.content ?? '',
         });
+      } else if (c.type === 'mcp_tool_result') {
+        blocks.push({
+          type: 'mcp_tool_result',
+          tool_use_id: c.tool_use_id,
+          is_error: c.is_error ?? false,
+          content: c.content ?? [],
+        });
       }
     });
 
     return {
       blocks,
-      stop_reason: blocks.some((b) => b.type === 'tool_use')
+      stop_reason: blocks.some(
+        (b) => b.type === 'tool_use' || b.type === 'mcp_tool_use',
+      )
         ? 'tool_use'
         : 'end',
     };
@@ -479,15 +591,16 @@ export class ClaudeChatService implements ChatService {
    */
   async chatOnce(
     messages: Message[],
-    stream = true,
+    stream: boolean = true,
     onPartial: (t: string) => void = () => {},
-  ): Promise<ClaudeCompletion> {
+  ): Promise<ToolChatCompletion> {
     const res = await this.callClaude(messages, this.model, stream);
+    const internalResult = stream
+      ? await this.parseStream(res, onPartial)
+      : this.parseOneShot(await res.json());
 
-    if (stream) {
-      return this.parseStream(res, onPartial);
-    }
-    return this.parseOneShot(await res.json());
+    // Convert ClaudeInternalCompletion to ToolChatCompletion for compatibility
+    return this.convertToStandardCompletion(internalResult);
   }
 
   /**
@@ -497,15 +610,40 @@ export class ClaudeChatService implements ChatService {
    */
   async visionChatOnce(
     messages: MessageWithVision[],
-    stream = false,
+    stream: boolean = false,
     onPartial: (t: string) => void = () => {},
-  ): Promise<ClaudeCompletion> {
+  ): Promise<ToolChatCompletion> {
     const res = await this.callClaude(messages, this.visionModel, stream);
+    const internalResult = stream
+      ? await this.parseStream(res, onPartial)
+      : this.parseOneShot(await res.json());
 
-    if (stream) {
-      return this.parseStream(res, onPartial);
-    }
+    // Convert ClaudeInternalCompletion to ToolChatCompletion for compatibility
+    return this.convertToStandardCompletion(internalResult);
+  }
 
-    return this.parseOneShot(await res.json());
+  /**
+   * Convert internal completion to standard ToolChatCompletion
+   * @param completion Internal completion result
+   * @returns Standard ToolChatCompletion
+   */
+  private convertToStandardCompletion(
+    completion: ClaudeInternalCompletion,
+  ): ToolChatCompletion {
+    // Filter out MCP-specific blocks and convert to standard format
+    const standardBlocks = completion.blocks.filter(
+      (block): block is CoreToolChatBlock => {
+        return (
+          block.type === 'text' ||
+          block.type === 'tool_use' ||
+          block.type === 'tool_result'
+        );
+      },
+    );
+
+    return {
+      blocks: standardBlocks,
+      stop_reason: completion.stop_reason,
+    };
   }
 }

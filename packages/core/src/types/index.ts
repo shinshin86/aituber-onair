@@ -24,6 +24,9 @@ export {
 // Tool related type definitions
 export * from './toolChat';
 
+// MCP related type definitions
+export * from './mcp';
+
 // Voice related type definitions (excluding Screenplay type)
 export {
   talkStyles,
