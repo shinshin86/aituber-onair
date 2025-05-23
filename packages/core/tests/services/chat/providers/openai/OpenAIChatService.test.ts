@@ -224,6 +224,169 @@ describe('OpenAIChatService', () => {
   });
 });
 
+// Additional tests for untested functionality
+describe('OpenAIChatService advanced features', () => {
+  const TEST_API_KEY = 'test-api-key';
+
+  const baseTool = {
+    name: 'my_tool',
+    description: 'desc',
+    parameters: { type: 'object' },
+  } as const;
+
+  it('buildRequestBody creates proper payload for Chat Completions', () => {
+    const service = new OpenAIChatService(TEST_API_KEY, undefined, undefined, [
+      baseTool,
+    ]);
+
+    const messages: Message[] = [{ role: 'user', content: 'hi' }];
+    const body = (service as any).buildRequestBody(
+      messages,
+      service.getModel(),
+      true,
+    );
+
+    expect(body).toEqual({
+      model: service.getModel(),
+      stream: true,
+      messages,
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'my_tool',
+            description: 'desc',
+            parameters: { type: 'object' },
+          },
+        },
+      ],
+      tool_choice: 'auto',
+    });
+  });
+
+  it('buildRequestBody creates proper payload for Responses API with MCP', () => {
+    const mcpServers = [
+      {
+        type: 'url',
+        url: 'http://mcp.example',
+        name: 'mcp1',
+        tool_configuration: { allowed_tools: ['my_tool'] },
+        authorization_token: 'token123',
+      },
+    ];
+
+    const service = new OpenAIChatService(
+      TEST_API_KEY,
+      undefined,
+      undefined,
+      [baseTool],
+      ENDPOINT_OPENAI_RESPONSES_API,
+      mcpServers,
+    );
+
+    const messages: Message[] = [{ role: 'user', content: 'hello' }];
+    const body = (service as any).buildRequestBody(
+      messages,
+      service.getModel(),
+      false,
+    );
+
+    expect(body.model).toBe(service.getModel());
+    expect(body.stream).toBe(false);
+    expect(body.input).toEqual([{ role: 'user', content: 'hello' }]);
+    expect(body.messages).toBeUndefined();
+    expect(body.tool_choice).toBeUndefined();
+    expect(body.tools).toEqual([
+      {
+        type: 'function',
+        name: 'my_tool',
+        description: 'desc',
+        parameters: { type: 'object' },
+      },
+      {
+        type: 'mcp',
+        server_label: 'mcp1',
+        server_url: 'http://mcp.example',
+        require_approval: 'never',
+        allowed_tools: ['my_tool'],
+        headers: { Authorization: 'Bearer token123' },
+      },
+    ]);
+  });
+
+  it('validateMCPCompatibility throws with unsupported endpoint', () => {
+    const mcpServers = [
+      {
+        type: 'url',
+        url: 'http://mcp.example',
+        name: 'mcp1',
+      },
+    ];
+
+    const service = new OpenAIChatService(
+      TEST_API_KEY,
+      undefined,
+      undefined,
+      [],
+      ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+      mcpServers,
+    );
+
+    expect(() => (service as any).validateMCPCompatibility()).toThrow(
+      /MCP servers are not supported/,
+    );
+  });
+
+  it('parseResponsesOneShot converts output items', () => {
+    const service = new OpenAIChatService(TEST_API_KEY);
+    const data = {
+      output: [
+        {
+          type: 'message',
+          content: [{ type: 'output_text', text: 'Hi' }],
+        },
+        {
+          type: 'function_call',
+          id: 'call1',
+          name: 'my_tool',
+          arguments: '{"foo":1}',
+        },
+      ],
+    };
+
+    const result = (service as any).parseResponsesOneShot(data);
+    expect(result).toEqual({
+      blocks: [
+        { type: 'text', text: 'Hi' },
+        { type: 'tool_use', id: 'call1', name: 'my_tool', input: { foo: 1 } },
+      ],
+      stop_reason: 'tool_use',
+    });
+  });
+
+  it('parseResponsesStream handles SSE events', async () => {
+    const service = new OpenAIChatService(TEST_API_KEY);
+    const sse =
+      'event: response.output_item.added\n' +
+      'data: {"item":{"type":"message","content":[{"type":"output_text","text":"Hi"}]}}\n\n' +
+      'event: response.output_item.added\n' +
+      'data: {"item":{"type":"function_call","id":"call1","name":"my_tool","arguments":"{\\"foo\\":1}"}}\n\n';
+
+    const onPartial = vi.fn();
+    const res = new Response(sse);
+    const result = await (service as any).parseResponsesStream(res, onPartial);
+
+    expect(onPartial).toHaveBeenCalledWith('Hi');
+    expect(result).toEqual({
+      blocks: [
+        { type: 'text', text: 'Hi' },
+        { type: 'tool_use', id: 'call1', name: 'my_tool', input: { foo: 1 } },
+      ],
+      stop_reason: 'tool_use',
+    });
+  });
+});
+
 describe('OpenAIChatService parse helpers', () => {
   const TEST_API_KEY = 'test-api-key';
   let service: OpenAIChatService;
