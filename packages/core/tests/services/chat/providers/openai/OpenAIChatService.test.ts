@@ -230,7 +230,13 @@ describe('OpenAIChatService', () => {
       TEST_API_KEY,
       MODEL_GPT_4O_MINI,
       MODEL_GPT_4O_MINI,
-      [{ name: 'test_tool', description: 'test', parameters: { type: 'object' } }]
+      [
+        {
+          name: 'test_tool',
+          description: 'test',
+          parameters: { type: 'object' },
+        },
+      ],
     );
 
     // Mock chatOnce to return tool_use
@@ -242,9 +248,9 @@ describe('OpenAIChatService', () => {
     const messages: Message[] = [{ role: 'user', content: 'Hello' }];
 
     await expect(
-      toolEnabledService.processChat(messages, vi.fn(), vi.fn())
+      toolEnabledService.processChat(messages, vi.fn(), vi.fn()),
     ).rejects.toThrow(
-      'processChat received tool_calls. ChatProcessor must use chatOnce() loop when tools are enabled.'
+      'processChat received tool_calls. ChatProcessor must use chatOnce() loop when tools are enabled.',
     );
   });
 
@@ -254,29 +260,42 @@ describe('OpenAIChatService', () => {
       TEST_API_KEY,
       MODEL_GPT_4O_MINI,
       VISION_SUPPORTED_MODELS[0],
-      [{ name: 'test_tool', description: 'test', parameters: { type: 'object' } }]
+      [
+        {
+          name: 'test_tool',
+          description: 'test',
+          parameters: { type: 'object' },
+        },
+      ],
     );
 
     // Mock visionChatOnce to return tool_use
-    vi.spyOn(toolEnabledService as any, 'visionChatOnce').mockResolvedValueOnce({
-      blocks: [{ type: 'tool_use', id: 'call1', name: 'test_tool', input: {} }],
-      stop_reason: 'tool_use',
-    });
+    vi.spyOn(toolEnabledService as any, 'visionChatOnce').mockResolvedValueOnce(
+      {
+        blocks: [
+          { type: 'tool_use', id: 'call1', name: 'test_tool', input: {} },
+        ],
+        stop_reason: 'tool_use',
+      },
+    );
 
     const messages: MessageWithVision[] = [
       {
         role: 'user',
         content: [
           { type: 'text', text: 'Analyze this' },
-          { type: 'image_url', image_url: { url: 'http://example.com/img.jpg' } },
+          {
+            type: 'image_url',
+            image_url: { url: 'http://example.com/img.jpg' },
+          },
         ],
       },
     ];
 
     await expect(
-      toolEnabledService.processVisionChat(messages, vi.fn(), vi.fn())
+      toolEnabledService.processVisionChat(messages, vi.fn(), vi.fn()),
     ).rejects.toThrow(
-      'processVisionChat received tool_calls. ChatProcessor must use visionChatOnce() loop when tools are enabled.'
+      'processVisionChat received tool_calls. ChatProcessor must use visionChatOnce() loop when tools are enabled.',
     );
   });
 });
@@ -549,7 +568,7 @@ describe('OpenAIChatService error handling and edge cases', () => {
     const messages: Message[] = [{ role: 'user', content: 'Hello' }];
 
     await expect(
-      service.processChat(messages, vi.fn(), vi.fn())
+      service.processChat(messages, vi.fn(), vi.fn()),
     ).rejects.toThrow('Network error');
   });
 
@@ -559,10 +578,13 @@ describe('OpenAIChatService error handling and edge cases', () => {
       ok: true,
       body: {
         getReader: () => ({
-          read: vi.fn()
+          read: vi
+            .fn()
             .mockResolvedValueOnce({
               done: false,
-              value: new TextEncoder().encode('data: {"choices":[{"delta":{"content":"Empty response"}}]}\n\n'),
+              value: new TextEncoder().encode(
+                'data: {"choices":[{"delta":{"content":"Empty response"}}]}\n\n',
+              ),
             })
             .mockResolvedValueOnce({ done: true }),
         }),
@@ -598,7 +620,7 @@ describe('OpenAIChatService error handling and edge cases', () => {
     const messages: Message[] = [{ role: 'user', content: 'Hello' }];
 
     await expect(
-      service.processChat(messages, vi.fn(), vi.fn())
+      service.processChat(messages, vi.fn(), vi.fn()),
     ).rejects.toThrow();
   });
 
@@ -623,7 +645,10 @@ describe('OpenAIChatService error handling and edge cases', () => {
         role: 'user',
         content: [
           { type: 'text', text: 'Analyze this' },
-          { type: 'image_url', image_url: { url: 'http://example.com/img.jpg' } },
+          {
+            type: 'image_url',
+            image_url: { url: 'http://example.com/img.jpg' },
+          },
         ],
       },
     ];
@@ -658,14 +683,17 @@ describe('OpenAIChatService error handling and edge cases', () => {
         ok: false,
         status: errorCase.status,
         statusText: errorCase.statusText,
-        text: async () => JSON.stringify({ error: { message: errorCase.statusText } }),
+        text: async () =>
+          JSON.stringify({ error: { message: errorCase.statusText } }),
       });
 
       const messages: Message[] = [{ role: 'user', content: 'Hello' }];
 
       await expect(
-        service.processChat(messages, vi.fn(), vi.fn())
-      ).rejects.toThrow(`OpenAI error: {"error":{"message":"${errorCase.statusText}"}}`);
+        service.processChat(messages, vi.fn(), vi.fn()),
+      ).rejects.toThrow(
+        `OpenAI error: {"error":{"message":"${errorCase.statusText}"}}`,
+      );
     }
   });
 });
