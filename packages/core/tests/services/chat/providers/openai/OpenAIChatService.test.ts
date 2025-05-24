@@ -344,7 +344,7 @@ describe('OpenAIChatService advanced features', () => {
     const mcpServers = [
       {
         type: 'url' as const,
-        url: 'http://mcp.example',
+        url: 'http://example.com/mcp',
         name: 'mcp1',
         tool_configuration: { allowed_tools: ['my_tool'] },
         authorization_token: 'token123',
@@ -382,7 +382,7 @@ describe('OpenAIChatService advanced features', () => {
       {
         type: 'mcp',
         server_label: 'mcp1',
-        server_url: 'http://mcp.example',
+        server_url: 'http://example.com/mcp',
         require_approval: 'never',
         allowed_tools: ['my_tool'],
         headers: { Authorization: 'Bearer token123' },
@@ -394,7 +394,7 @@ describe('OpenAIChatService advanced features', () => {
     const mcpServers = [
       {
         type: 'url' as const,
-        url: 'http://mcp.example',
+        url: 'http://example.com/mcp',
         name: 'mcp1',
       },
     ];
