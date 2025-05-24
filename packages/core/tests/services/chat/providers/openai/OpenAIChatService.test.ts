@@ -3,6 +3,7 @@ import { OpenAIChatService } from '../../../../../src/services/chat/providers/op
 import { Message, MessageWithVision } from '../../../../../src/types';
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+  ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_4O_MINI,
   VISION_SUPPORTED_MODELS,
 } from '../../../../../src/constants';
@@ -222,6 +223,62 @@ describe('OpenAIChatService', () => {
       stop_reason: 'end',
     });
   });
+
+  it('should throw error when processChat receives tool_use with tools enabled', async () => {
+    // Create service with tools enabled
+    const toolEnabledService = new OpenAIChatService(
+      TEST_API_KEY,
+      MODEL_GPT_4O_MINI,
+      MODEL_GPT_4O_MINI,
+      [{ name: 'test_tool', description: 'test', parameters: { type: 'object' } }]
+    );
+
+    // Mock chatOnce to return tool_use
+    vi.spyOn(toolEnabledService as any, 'chatOnce').mockResolvedValueOnce({
+      blocks: [{ type: 'tool_use', id: 'call1', name: 'test_tool', input: {} }],
+      stop_reason: 'tool_use',
+    });
+
+    const messages: Message[] = [{ role: 'user', content: 'Hello' }];
+
+    await expect(
+      toolEnabledService.processChat(messages, vi.fn(), vi.fn())
+    ).rejects.toThrow(
+      'processChat received tool_calls. ChatProcessor must use chatOnce() loop when tools are enabled.'
+    );
+  });
+
+  it('should throw error when processVisionChat receives tool_use with tools enabled', async () => {
+    // Create service with tools enabled
+    const toolEnabledService = new OpenAIChatService(
+      TEST_API_KEY,
+      MODEL_GPT_4O_MINI,
+      VISION_SUPPORTED_MODELS[0],
+      [{ name: 'test_tool', description: 'test', parameters: { type: 'object' } }]
+    );
+
+    // Mock visionChatOnce to return tool_use
+    vi.spyOn(toolEnabledService as any, 'visionChatOnce').mockResolvedValueOnce({
+      blocks: [{ type: 'tool_use', id: 'call1', name: 'test_tool', input: {} }],
+      stop_reason: 'tool_use',
+    });
+
+    const messages: MessageWithVision[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Analyze this' },
+          { type: 'image_url', image_url: { url: 'http://example.com/img.jpg' } },
+        ],
+      },
+    ];
+
+    await expect(
+      toolEnabledService.processVisionChat(messages, vi.fn(), vi.fn())
+    ).rejects.toThrow(
+      'processVisionChat received tool_calls. ChatProcessor must use visionChatOnce() loop when tools are enabled.'
+    );
+  });
 });
 
 // Additional tests for untested functionality
@@ -267,7 +324,7 @@ describe('OpenAIChatService advanced features', () => {
   it('buildRequestBody creates proper payload for Responses API with MCP', () => {
     const mcpServers = [
       {
-        type: 'url',
+        type: 'url' as const,
         url: 'http://mcp.example',
         name: 'mcp1',
         tool_configuration: { allowed_tools: ['my_tool'] },
@@ -317,7 +374,7 @@ describe('OpenAIChatService advanced features', () => {
   it('validateMCPCompatibility throws with unsupported endpoint', () => {
     const mcpServers = [
       {
-        type: 'url',
+        type: 'url' as const,
         url: 'http://mcp.example',
         name: 'mcp1',
       },
@@ -434,5 +491,181 @@ describe('OpenAIChatService parse helpers', () => {
       ],
       stop_reason: 'tool_use',
     });
+  });
+});
+
+describe('OpenAIChatService error handling and edge cases', () => {
+  const TEST_API_KEY = 'test-api-key';
+  let service: OpenAIChatService;
+
+  // utility function for mocking fetch
+  function mockFetch(responseData: any, ok = true, statusText = 'OK') {
+    // mock streaming response with chunks that simulate OpenAI's format
+    global.fetch = vi.fn().mockResolvedValue({
+      ok,
+      status: ok ? 200 : 400,
+      statusText,
+      json: async () => responseData,
+      text: async () => JSON.stringify(responseData),
+      body: {
+        getReader: () => ({
+          read: vi
+            .fn()
+            .mockResolvedValueOnce({
+              done: false,
+              value: new TextEncoder().encode(
+                'data: ' +
+                  JSON.stringify({
+                    choices: [{ delta: { content: 'Hello' } }],
+                  }) +
+                  '\n\n',
+              ),
+            })
+            .mockResolvedValueOnce({
+              done: false,
+              value: new TextEncoder().encode(
+                'data: ' +
+                  JSON.stringify({
+                    choices: [{ delta: { content: ' from OpenAI!' } }],
+                  }) +
+                  '\n\n',
+              ),
+            })
+            .mockResolvedValueOnce({ done: true }),
+        }),
+      },
+    });
+  }
+
+  beforeEach(() => {
+    service = new OpenAIChatService(TEST_API_KEY);
+    vi.resetAllMocks();
+  });
+
+  it('should handle fetch network errors', async () => {
+    // Simulate network error
+    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+
+    const messages: Message[] = [{ role: 'user', content: 'Hello' }];
+
+    await expect(
+      service.processChat(messages, vi.fn(), vi.fn())
+    ).rejects.toThrow('Network error');
+  });
+
+  it('should handle empty messages array', async () => {
+    // Mock callOpenAI to return a proper response
+    const mockResponse = {
+      ok: true,
+      body: {
+        getReader: () => ({
+          read: vi.fn()
+            .mockResolvedValueOnce({
+              done: false,
+              value: new TextEncoder().encode('data: {"choices":[{"delta":{"content":"Empty response"}}]}\n\n'),
+            })
+            .mockResolvedValueOnce({ done: true }),
+        }),
+      },
+    };
+    vi.spyOn(service as any, 'callOpenAI').mockResolvedValueOnce(mockResponse);
+
+    const messages: Message[] = [];
+    const onCompleteResponse = vi.fn();
+
+    await service.processChat(messages, vi.fn(), onCompleteResponse);
+
+    expect(onCompleteResponse).toHaveBeenCalledWith('Empty response');
+  });
+
+  it('should handle streaming parse errors gracefully', async () => {
+    // Mock streaming response with invalid JSON
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      body: {
+        getReader: () => ({
+          read: vi
+            .fn()
+            .mockResolvedValueOnce({
+              done: false,
+              value: new TextEncoder().encode('data: invalid json\n\n'),
+            })
+            .mockResolvedValueOnce({ done: true }),
+        }),
+      },
+    });
+
+    const messages: Message[] = [{ role: 'user', content: 'Hello' }];
+
+    await expect(
+      service.processChat(messages, vi.fn(), vi.fn())
+    ).rejects.toThrow();
+  });
+
+  it('should handle visionChatOnce with non-streaming mode', async () => {
+    const visionModel = VISION_SUPPORTED_MODELS[0];
+    service = new OpenAIChatService(
+      TEST_API_KEY,
+      MODEL_GPT_4O_MINI,
+      visionModel,
+    );
+
+    mockFetch({ choices: [{ message: { content: 'Vision analysis' } }] });
+
+    // Override parseOneShot to simulate correct implementation behavior
+    vi.spyOn(service as any, 'parseOneShot').mockReturnValueOnce({
+      blocks: [{ type: 'text', text: 'Vision analysis' }],
+      stop_reason: 'end',
+    });
+
+    const messages: MessageWithVision[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Analyze this' },
+          { type: 'image_url', image_url: { url: 'http://example.com/img.jpg' } },
+        ],
+      },
+    ];
+
+    const result = await service.visionChatOnce(messages, false, vi.fn());
+
+    expect(result.blocks).toEqual([{ type: 'text', text: 'Vision analysis' }]);
+    expect(result.stop_reason).toBe('end');
+  });
+
+  it('should handle getVisionModel method', () => {
+    const visionModel = VISION_SUPPORTED_MODELS[0];
+    service = new OpenAIChatService(
+      TEST_API_KEY,
+      MODEL_GPT_4O_MINI,
+      visionModel,
+    );
+
+    expect(service.getVisionModel()).toBe(visionModel);
+  });
+
+  it('should handle different HTTP error status codes', async () => {
+    const errorCases = [
+      { status: 400, statusText: 'Bad Request' },
+      { status: 403, statusText: 'Forbidden' },
+      { status: 429, statusText: 'Too Many Requests' },
+      { status: 500, statusText: 'Internal Server Error' },
+    ];
+
+    for (const errorCase of errorCases) {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: errorCase.status,
+        statusText: errorCase.statusText,
+        text: async () => JSON.stringify({ error: { message: errorCase.statusText } }),
+      });
+
+      const messages: Message[] = [{ role: 'user', content: 'Hello' }];
+
+      await expect(
+        service.processChat(messages, vi.fn(), vi.fn())
+      ).rejects.toThrow(`OpenAI error: {"error":{"message":"${errorCase.statusText}"}}`);
+    }
   });
 });
