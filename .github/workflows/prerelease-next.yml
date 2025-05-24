@@ -1,0 +1,47 @@
+name: prerelease-next
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prerelease:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1) Checkout the repository with full history (tags included)
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # 2) Detect the most recent *stable* tag (skip 'next' and pre-releases like -rc)
+    - name: Determine last stable tag
+      id: tag
+      run: |
+        last_tag=$(git describe --tags --abbrev=0 \
+                   $(git rev-list --tags --no-walk --exclude='next' --exclude='*-rc*' --max-count=1))
+        echo "last_tag=$last_tag" >>"$GITHUB_OUTPUT"
+
+    # 3) Generate release notes between the last tag and HEAD
+    - name: Generate release notes
+      id: notes
+      run: |
+        git log "${{ steps.tag.outputs.last_tag }}"..HEAD \
+                --pretty=format:'* %s (%h)' --reverse > RELEASE_NOTES.md
+        echo "notes_path=RELEASE_NOTES.md" >>"$GITHUB_OUTPUT"
+
+    # 4) Create or update the 'next' prerelease
+    - name: Publish prerelease
+      uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: next                    # Fixed tag that will be overwritten
+        name: Nightly – ${{ github.sha }} # Release title
+        body_path: ${{ steps.notes.outputs.notes_path }}
+        prerelease: true                  # Mark as prerelease
+        generate_release_notes: false     # Use our custom notes
