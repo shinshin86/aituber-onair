@@ -79,8 +79,7 @@ pnpm install @aituber-onair/core
 
 ## Basic Usage
 
-For more practical usage examples, please see [Simple AI Chat App with AITuber OnAir Core]
-(https://github.com/shinshin86/simple-aichat-app-with-aituber-onair-core).
+For more practical usage examples, please see [Simple AI Chat App with AITuber OnAir Core](https://github.com/shinshin86/simple-aichat-app-with-aituber-onair-core).
 
 Below is a simplified example of how to use **AITuber OnAir Core**:
 
