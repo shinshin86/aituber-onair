@@ -128,6 +128,191 @@ describe('LocalStorageMemoryStorage', () => {
     expect(loadedRecords[0].type).toBe('short');
     expect(loadedRecords[0].summary).toBe('Valid data');
   });
+
+  it('should handle empty string storage key', async () => {
+    const emptyKeyStorage = new LocalStorageMemoryStorage('');
+    await emptyKeyStorage.save(testRecords);
+
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      '',
+      JSON.stringify(testRecords),
+    );
+  });
+
+  it('should handle very long storage key', async () => {
+    const longKey = 'a'.repeat(1000);
+    const longKeyStorage = new LocalStorageMemoryStorage(longKey);
+    await longKeyStorage.save(testRecords);
+
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      longKey,
+      JSON.stringify(testRecords),
+    );
+  });
+
+  it('should handle empty records array', async () => {
+    await storage.save([]);
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      storageKey,
+      JSON.stringify([]),
+    );
+
+    const loadedRecords = await storage.load();
+    expect(loadedRecords).toEqual([]);
+  });
+
+  it('should handle records with special characters in summary', async () => {
+    const specialRecords: MemoryRecord[] = [
+      {
+        type: 'short',
+        summary: 'Special chars: 日本語 🎉 <>&"\'',
+        timestamp: 1000,
+      },
+      { type: 'mid', summary: 'Newlines\nand\ttabs', timestamp: 2000 },
+    ];
+
+    await storage.save(specialRecords);
+    mockLocalStorage.setItem(storageKey, JSON.stringify(specialRecords));
+
+    const loadedRecords = await storage.load();
+    expect(loadedRecords).toEqual(specialRecords);
+  });
+
+  it('should handle records with zero timestamp', async () => {
+    const zeroTimestampRecords: MemoryRecord[] = [
+      { type: 'short', summary: 'Zero timestamp', timestamp: 0 },
+    ];
+
+    await storage.save(zeroTimestampRecords);
+    mockLocalStorage.setItem(storageKey, JSON.stringify(zeroTimestampRecords));
+
+    const loadedRecords = await storage.load();
+    expect(loadedRecords).toEqual(zeroTimestampRecords);
+  });
+
+  it('should handle records with negative timestamp', async () => {
+    const negativeTimestampRecords: MemoryRecord[] = [
+      { type: 'short', summary: 'Negative timestamp', timestamp: -1000 },
+    ];
+
+    await storage.save(negativeTimestampRecords);
+    mockLocalStorage.setItem(
+      storageKey,
+      JSON.stringify(negativeTimestampRecords),
+    );
+
+    const loadedRecords = await storage.load();
+    expect(loadedRecords).toEqual(negativeTimestampRecords);
+  });
+
+  it('should handle very large records array', async () => {
+    const largeRecords: MemoryRecord[] = Array.from(
+      { length: 1000 },
+      (_, i) => ({
+        type: 'short' as const,
+        summary: `Record ${i}`,
+        timestamp: i,
+      }),
+    );
+
+    await storage.save(largeRecords);
+    mockLocalStorage.setItem(storageKey, JSON.stringify(largeRecords));
+
+    const loadedRecords = await storage.load();
+    expect(loadedRecords).toEqual(largeRecords);
+  });
+
+  it('should handle localStorage setItem throwing error', async () => {
+    // Mock setItem to throw an error
+    mockLocalStorage.setItem = vi.fn().mockImplementation(() => {
+      throw new Error('Storage quota exceeded');
+    });
+
+    await expect(storage.save(testRecords)).rejects.toThrow(
+      'Storage quota exceeded',
+    );
+  });
+
+  it('should handle localStorage getItem throwing error', async () => {
+    // Mock getItem to throw an error
+    mockLocalStorage.getItem = vi.fn().mockImplementation(() => {
+      throw new Error('Storage access denied');
+    });
+
+    const loadedRecords = await storage.load();
+    expect(loadedRecords).toEqual([]);
+  });
+
+  it('should handle localStorage removeItem throwing error', async () => {
+    // Mock removeItem to throw an error
+    mockLocalStorage.removeItem = vi.fn().mockImplementation(() => {
+      throw new Error('Storage access denied');
+    });
+
+    await expect(storage.clear()).rejects.toThrow('Storage access denied');
+  });
+
+  it('should handle malformed JSON with extra properties', async () => {
+    // Reset the mock to clear previous error state
+    mockLocalStorage.getItem = vi.fn((key: string): string | null => {
+      return mockLocalStorage.store[key] || null;
+    });
+    mockLocalStorage.setItem = vi.fn((key: string, value: string): void => {
+      mockLocalStorage.store[key] = value;
+    });
+
+    const malformedData = [
+      {
+        type: 'short',
+        summary: 'Valid data',
+        timestamp: 1000,
+        extraProperty: 'should be ignored',
+        anotherExtra: 123,
+      },
+    ];
+
+    mockLocalStorage.setItem(storageKey, JSON.stringify(malformedData));
+
+    const loadedRecords = await storage.load();
+    expect(loadedRecords.length).toBe(1);
+    expect(loadedRecords[0]).toEqual({
+      type: 'short',
+      summary: 'Valid data',
+      timestamp: 1000,
+      extraProperty: 'should be ignored',
+      anotherExtra: 123,
+    });
+  });
+
+  it('should handle records with wrong data types', async () => {
+    // Reset the mock to clear previous error state
+    mockLocalStorage.setItem = vi.fn((key: string, value: string): void => {
+      mockLocalStorage.store[key] = value;
+    });
+
+    const wrongTypeData = [
+      { type: 'short', summary: 123, timestamp: 1000 }, // summary should be string
+      { type: 'short', summary: 'Valid', timestamp: '1000' }, // timestamp should be number
+      { type: 123, summary: 'Valid', timestamp: 1000 }, // type should be string
+    ];
+
+    mockLocalStorage.setItem(storageKey, JSON.stringify(wrongTypeData));
+
+    const loadedRecords = await storage.load();
+    expect(loadedRecords).toEqual([]);
+  });
+
+  it('should handle circular reference in records (should not occur in practice)', async () => {
+    const circularRecord: any = {
+      type: 'short',
+      summary: 'Test',
+      timestamp: 1000,
+    };
+    circularRecord.self = circularRecord;
+
+    // This should throw during JSON.stringify
+    await expect(storage.save([circularRecord])).rejects.toThrow();
+  });
 });
 
 describe('createMemoryStorage', () => {
@@ -155,5 +340,15 @@ describe('createMemoryStorage', () => {
     await expect(storage.clear()).rejects.toThrow(
       'IndexedDBMemoryStorage not implemented',
     );
+  });
+
+  it('should handle invalid storage type and default to localStorage', () => {
+    const storage = createMemoryStorage('testKey', 'invalidType' as any);
+    expect(storage).toBeInstanceOf(LocalStorageMemoryStorage);
+  });
+
+  it('should handle undefined storage type and default to localStorage', () => {
+    const storage = createMemoryStorage('testKey', undefined);
+    expect(storage).toBeInstanceOf(LocalStorageMemoryStorage);
   });
 });
