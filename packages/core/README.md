@@ -1082,6 +1082,7 @@ Possible use cases for `chatLogUpdated` include:
 - **NijiVoice**: AI-based speech synthesis service (requires an API key).  
 - **AivisSpeech**: Speech synthesis using AI technology.  
 - **OpenAI TTS**: Text-to-speech API from OpenAI.
+- **None**: No voice mode (no audio output).
 
 You can dynamically switch the speech engine via `updateVoiceService`:
 

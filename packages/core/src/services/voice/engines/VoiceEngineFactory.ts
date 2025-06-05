@@ -4,6 +4,7 @@ import { VoicePeakEngine } from './VoicePeakEngine';
 import { AivisSpeechEngine } from './AivisSpeechEngine';
 import { OpenAiEngine } from './OpenAiEngine';
 import { NijiVoiceEngine } from './NijiVoiceEngine';
+import { NoneEngine } from './NoneEngine';
 import { VoiceEngineType } from '../../../types';
 /**
  * Voice engine factory
@@ -28,6 +29,8 @@ export class VoiceEngineFactory {
         return new OpenAiEngine();
       case 'nijivoice':
         return new NijiVoiceEngine();
+      case 'none':
+        return new NoneEngine();
       default:
         throw new Error(`Unsupported voice engine type: ${engineType}`);
     }

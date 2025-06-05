@@ -1085,6 +1085,7 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 - **NijiVoice**: AI音声合成サービス（APIキーが必要）
 - **AivisSpeech**: AIを活用した音声合成
 - **OpenAI TTS**: OpenAIのText-to-Speech API
+- **None**: 音声なしモード（音声出力を行わない）
 
 音声エンジンの切り替えは`updateVoiceService`メソッドで動的に行えます：
 

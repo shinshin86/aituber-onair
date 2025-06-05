@@ -3,4 +3,5 @@ export type VoiceEngineType =
   | 'voicepeak'
   | 'openai'
   | 'nijivoice'
-  | 'aivisSpeech';
+  | 'aivisSpeech'
+  | 'none';
