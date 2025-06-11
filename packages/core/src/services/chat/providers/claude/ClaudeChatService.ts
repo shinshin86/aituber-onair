@@ -14,6 +14,7 @@ import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_3_HAIKU,
   CLAUDE_VISION_SUPPORTED_MODELS,
+  DEFAULT_MAX_TOKENS,
 } from '../../../../constants';
 
 export interface ClaudeToolResultBlock {
@@ -327,12 +328,14 @@ export class ClaudeChatService implements ChatService {
    * @param messages Array of messages to send
    * @param model Model name
    * @param stream Whether to stream the response
+   * @param maxTokens Maximum tokens for response (optional)
    * @returns Response
    */
   private async callClaude(
     messages: (Message | MessageWithVision)[],
     model: string,
     stream: boolean,
+    maxTokens?: number,
   ): Promise<Response> {
     const system = messages.find((m) => m.role === 'system')?.content ?? '';
     const content = messages.filter((m) => m.role !== 'system');
@@ -354,7 +357,7 @@ export class ClaudeChatService implements ChatService {
           )
         : this.convertMessagesToClaudeFormat(content as Message[]),
       stream,
-      max_tokens: 1000,
+      max_tokens: maxTokens !== undefined ? maxTokens : DEFAULT_MAX_TOKENS,
     };
 
     if (this.tools.length) {
@@ -587,14 +590,16 @@ export class ClaudeChatService implements ChatService {
    * @param messages Array of messages to send
    * @param stream Whether to stream the response
    * @param onPartial Callback to receive each part of streaming response
+   * @param maxTokens Maximum tokens for response (optional)
    * @returns ToolChatCompletion
    */
   async chatOnce(
     messages: Message[],
     stream: boolean = true,
     onPartial: (t: string) => void = () => {},
+    maxTokens?: number,
   ): Promise<ToolChatCompletion> {
-    const res = await this.callClaude(messages, this.model, stream);
+    const res = await this.callClaude(messages, this.model, stream, maxTokens);
     const internalResult = stream
       ? await this.parseStream(res, onPartial)
       : this.parseOneShot(await res.json());
@@ -606,14 +611,23 @@ export class ClaudeChatService implements ChatService {
   /**
    * Process vision chat messages
    * @param messages Array of messages to send
+   * @param stream Whether to stream the response
+   * @param onPartial Callback to receive each part of streaming response
+   * @param maxTokens Maximum tokens for response (optional)
    * @returns ToolChatCompletion
    */
   async visionChatOnce(
     messages: MessageWithVision[],
     stream: boolean = false,
     onPartial: (t: string) => void = () => {},
+    maxTokens?: number,
   ): Promise<ToolChatCompletion> {
-    const res = await this.callClaude(messages, this.visionModel, stream);
+    const res = await this.callClaude(
+      messages,
+      this.visionModel,
+      stream,
+      maxTokens,
+    );
     const internalResult = stream
       ? await this.parseStream(res, onPartial)
       : this.parseOneShot(await res.json());

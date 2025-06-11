@@ -13,5 +13,10 @@ export const MAX_TOKENS_BY_LENGTH = {
   [CHAT_RESPONSE_LENGTH.LONG]: 300,
 } as const;
 
+/**
+ * Default max tokens for AI providers when not specified
+ */
+export const DEFAULT_MAX_TOKENS = 1000;
+
 export type ChatResponseLength =
   (typeof CHAT_RESPONSE_LENGTH)[keyof typeof CHAT_RESPONSE_LENGTH];

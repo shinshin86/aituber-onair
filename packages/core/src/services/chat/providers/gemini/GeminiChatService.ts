@@ -10,6 +10,7 @@ import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS,
+  DEFAULT_MAX_TOKENS,
 } from '../../../../constants';
 
 /**
@@ -270,6 +271,7 @@ export class GeminiChatService implements ChatService {
     messages: (Message | MessageWithVision)[],
     model: string,
     stream = false,
+    maxTokens?: number,
   ): Promise<Response> {
     const hasVision = messages.some(
       (m) =>
@@ -287,7 +289,8 @@ export class GeminiChatService implements ChatService {
     const body: any = {
       contents,
       generationConfig: {
-        maxOutputTokens: 1000,
+        maxOutputTokens:
+          maxTokens !== undefined ? maxTokens : DEFAULT_MAX_TOKENS,
       },
     };
     if (this.tools.length) {
@@ -616,8 +619,9 @@ export class GeminiChatService implements ChatService {
     messages: Message[],
     stream: boolean = true,
     onPartialResponse: (t: string) => void = () => {},
+    maxTokens?: number,
   ): Promise<ToolChatCompletion> {
-    const res = await this.callGemini(messages, this.model, stream);
+    const res = await this.callGemini(messages, this.model, stream, maxTokens);
     return stream
       ? this.parseStream(res, onPartialResponse)
       : this.parseOneShot(await res.json());
@@ -629,13 +633,17 @@ export class GeminiChatService implements ChatService {
   async visionChatOnce(
     messages: MessageWithVision[],
     stream: boolean = false,
+    onPartialResponse: (t: string) => void = () => {},
+    maxTokens?: number,
   ): Promise<ToolChatCompletion> {
-    const res = await this.callGemini(messages, this.visionModel, stream);
+    const res = await this.callGemini(
+      messages,
+      this.visionModel,
+      stream,
+      maxTokens,
+    );
     return stream
-      ? this.parseStream(
-          res,
-          /* vision is usually stream=false, but just in case */ () => {},
-        )
+      ? this.parseStream(res, onPartialResponse)
       : this.parseOneShot(await res.json());
   }
 

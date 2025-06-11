@@ -5,6 +5,11 @@ import { EventEmitter } from './EventEmitter';
 import { textsToScreenplay } from '../utils/screenplay';
 import { DEFAULT_VISION_PROMPT } from '../constants';
 import {
+  ChatResponseLength,
+  MAX_TOKENS_BY_LENGTH,
+  DEFAULT_MAX_TOKENS,
+} from '../constants/chat';
+import {
   ToolUseBlock,
   ToolResultBlock,
   ToolChatCompletion,
@@ -27,6 +32,14 @@ export interface ChatProcessorOptions {
   memoryNote?: string;
   /** Maximum number of tool call iterations allowed (default: 6) */
   maxHops?: number;
+  /** Maximum tokens for chat responses (takes precedence over responseLength) */
+  maxTokens?: number;
+  /** Response length preset for chat (used if maxTokens is not specified) */
+  responseLength?: ChatResponseLength;
+  /** Maximum tokens for vision responses (takes precedence over visionResponseLength) */
+  visionMaxTokens?: number;
+  /** Response length preset for vision (used if visionMaxTokens is not specified) */
+  visionResponseLength?: ChatResponseLength;
 }
 
 /**
@@ -167,8 +180,11 @@ export class ChatProcessor extends EventEmitter {
       }
 
       const initialMsgs = await this.prepareMessagesForAI();
+
+      // Set max tokens for text chat
+      const maxTokens = this.getMaxTokensForChat();
       await this.runToolLoop<Message>(initialMsgs, (msgs, stream, cb) =>
-        this.chatService.chatOnce(msgs as Message[], stream, cb),
+        this.chatService.chatOnce(msgs as Message[], stream, cb, maxTokens),
       );
     } catch (error) {
       console.error('Error in text chat processing:', error);
@@ -235,6 +251,8 @@ export class ChatProcessor extends EventEmitter {
         ],
       };
 
+      // Set max tokens for vision chat
+      const maxTokens = this.getMaxTokensForVision();
       await this.runToolLoop<Message | MessageWithVision>(
         [...baseMessages, visionMessage],
         (msgs, stream, cb) =>
@@ -242,6 +260,7 @@ export class ChatProcessor extends EventEmitter {
             msgs as MessageWithVision[],
             stream,
             cb,
+            maxTokens,
           ),
         imageDataUrl, // visionSource
       );
@@ -303,6 +322,44 @@ export class ChatProcessor extends EventEmitter {
   setChatLog(messages: Message[]): void {
     this.chatLog = Array.isArray(messages) ? [...messages] : [];
     this.emit('chatLogUpdated', this.chatLog);
+  }
+
+  /**
+   * Get max tokens for chat responses
+   * @returns Maximum tokens for chat
+   */
+  private getMaxTokensForChat(): number | undefined {
+    // Prioritize direct maxTokens setting
+    if (this.options.maxTokens !== undefined) {
+      return this.options.maxTokens;
+    }
+
+    // Use responseLength preset if specified
+    if (this.options.responseLength) {
+      return MAX_TOKENS_BY_LENGTH[this.options.responseLength];
+    }
+
+    // Return undefined for provider default
+    return undefined;
+  }
+
+  /**
+   * Get max tokens for vision responses
+   * @returns Maximum tokens for vision
+   */
+  private getMaxTokensForVision(): number | undefined {
+    // Prioritize direct visionMaxTokens setting
+    if (this.options.visionMaxTokens !== undefined) {
+      return this.options.visionMaxTokens;
+    }
+
+    // Use visionResponseLength preset if specified
+    if (this.options.visionResponseLength) {
+      return MAX_TOKENS_BY_LENGTH[this.options.visionResponseLength];
+    }
+
+    // Fallback to regular chat settings
+    return this.getMaxTokensForChat();
   }
 
   private async runToolLoop<T extends Message | MessageWithVision>(

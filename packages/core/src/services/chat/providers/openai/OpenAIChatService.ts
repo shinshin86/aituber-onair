@@ -5,6 +5,7 @@ import {
   ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_4O_MINI,
   VISION_SUPPORTED_MODELS,
+  DEFAULT_MAX_TOKENS,
 } from '../../../../constants';
 import {
   ToolDefinition,
@@ -166,14 +167,16 @@ export class OpenAIChatService implements ChatService {
    * @param messages Array of messages to send
    * @param stream Whether to use streaming
    * @param onPartialResponse Callback for partial responses
+   * @param maxTokens Maximum tokens for response (optional)
    * @returns Tool chat completion
    */
   async chatOnce(
     messages: Message[],
     stream = true,
     onPartialResponse: (text: string) => void = () => {},
+    maxTokens?: number,
   ): Promise<ToolChatCompletion> {
-    const res = await this.callOpenAI(messages, this.model, stream);
+    const res = await this.callOpenAI(messages, this.model, stream, maxTokens);
     return this.parseResponse(res, stream, onPartialResponse);
   }
 
@@ -182,14 +185,21 @@ export class OpenAIChatService implements ChatService {
    * @param messages Array of messages to send (including images)
    * @param stream Whether to use streaming
    * @param onPartialResponse Callback for partial responses
+   * @param maxTokens Maximum tokens for response (optional)
    * @returns Tool chat completion
    */
   async visionChatOnce(
     messages: MessageWithVision[],
     stream: boolean = false,
     onPartialResponse: (text: string) => void = () => {},
+    maxTokens?: number,
   ): Promise<ToolChatCompletion> {
-    const res = await this.callOpenAI(messages, this.visionModel, stream);
+    const res = await this.callOpenAI(
+      messages,
+      this.visionModel,
+      stream,
+      maxTokens,
+    );
     return this.parseResponse(res, stream, onPartialResponse);
   }
 
@@ -218,8 +228,9 @@ export class OpenAIChatService implements ChatService {
     messages: (Message | MessageWithVision)[],
     model: string,
     stream: boolean = false,
+    maxTokens?: number,
   ): Promise<Response> {
-    const body = this.buildRequestBody(messages, model, stream);
+    const body = this.buildRequestBody(messages, model, stream, maxTokens);
 
     const res = await fetch(this.endpoint, {
       method: 'POST',
@@ -245,6 +256,7 @@ export class OpenAIChatService implements ChatService {
     messages: (Message | MessageWithVision)[],
     model: string,
     stream: boolean,
+    maxTokens?: number,
   ): any {
     const isResponsesAPI = this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
 
@@ -255,6 +267,9 @@ export class OpenAIChatService implements ChatService {
       model,
       stream,
     };
+
+    // Add max_tokens (use DEFAULT_MAX_TOKENS if not specified)
+    body.max_tokens = maxTokens !== undefined ? maxTokens : DEFAULT_MAX_TOKENS;
 
     // Handle messages format based on endpoint
     if (isResponsesAPI && this.mcpServers.length > 0) {
