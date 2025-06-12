@@ -21,6 +21,7 @@ It specializes in generating response text and audio from text or image inputs, 
 - [Using MCP](#using-mcp)
 - [Using OpenAI Remote MCP](#using-openai-remote-mcp)
 - [Using Claude MCP Connector](#using-claude-mcp-connector)
+- [Response Length Control](#response-length-control)
 - [Architecture](#architecture)
 - [Main Components](#main-components)
 - [Event System](#event-system)
@@ -99,6 +100,11 @@ const options: AITuberOnAirCoreOptions = {
     visionSystemPrompt: 'Please comment like a streamer on what is shown on screen.',
     visionPrompt: 'Look at the broadcast screen and provide commentary suited to the situation.',
     memoryNote: 'This is a summary of past conversations. Please refer to it appropriately to continue the conversation.',
+    // Response length control
+    maxTokens: 150,                    // Direct token limit for text chat
+    responseLength: 'medium',          // Or use preset: 'veryShort', 'short', 'medium', 'long'
+    visionMaxTokens: 200,              // Direct token limit for vision processing
+    visionResponseLength: 'long',      // Or use preset for vision responses
   },
   // OpenAI Default model is gpt-4o-mini
   // You can specify different models for text chat and vision processing
@@ -837,6 +843,135 @@ aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlocks) => {
 ### Coexistence with Traditional Tools
 
 MCP servers and traditional tool definitions can be used simultaneously. The AI can access both local tools and remote MCP tools seamlessly.
+
+## Response Length Control
+
+AITuber OnAir Core provides comprehensive response length control functionality, allowing you to fine-tune AI response lengths for both text chat and vision processing.
+
+### Overview
+
+Response length control helps you:
+- **Optimize costs** by limiting token usage
+- **Control response verbosity** for different scenarios
+- **Maintain consistent response patterns** across your application
+- **Separate control** for text chat and vision processing
+
+### Configuration Options
+
+You can control response length using two approaches:
+
+#### 1. Direct Token Specification
+
+Specify exact token limits directly:
+
+```typescript
+const options: AITuberOnAirCoreOptions = {
+  chatOptions: {
+    maxTokens: 150,         // Direct token limit for text chat
+    visionMaxTokens: 200,   // Direct token limit for vision processing
+  },
+  // ... other options
+};
+```
+
+#### 2. Preset Response Lengths
+
+Use predefined presets for convenience:
+
+```typescript
+const options: AITuberOnAirCoreOptions = {
+  chatOptions: {
+    responseLength: 'medium',        // Preset for text chat
+    visionResponseLength: 'long',    // Preset for vision processing
+  },
+  // ... other options
+};
+```
+
+Available presets:
+- `'veryShort'`: 40 tokens - Brief, essential responses only
+- `'short'`: 100 tokens - Concise but complete responses
+- `'medium'`: 200 tokens - Balanced length for most scenarios
+- `'long'`: 300 tokens - Detailed responses with context
+
+### Priority System
+
+When multiple length controls are specified, the following priority order applies:
+
+1. **Direct values** (`maxTokens`, `visionMaxTokens`) - Highest priority
+2. **Preset values** (`responseLength`, `visionResponseLength`) - Medium priority
+3. **Default values** (1000 tokens) - Fallback when nothing is specified
+
+### Vision-Specific Settings
+
+Vision processing often requires different response lengths than text chat. You can configure them separately:
+
+```typescript
+const options: AITuberOnAirCoreOptions = {
+  chatOptions: {
+    // Text chat settings
+    responseLength: 'short',      // Concise text responses
+    
+    // Vision processing settings
+    visionResponseLength: 'long', // Detailed image descriptions
+  },
+};
+```
+
+If vision-specific settings are not provided, they will fall back to the regular chat settings.
+
+### Dynamic Updates
+
+Response length settings can be updated at runtime:
+
+```typescript
+// Update chat processor options
+aituber.updateChatProcessorOptions({
+  maxTokens: 100,
+  visionMaxTokens: 250,
+});
+```
+
+### Usage Examples
+
+#### Different Lengths for Different Scenarios
+
+```typescript
+// Short responses for quick interactions
+const quickChat = new AITuberOnAirCore({
+  chatOptions: {
+    responseLength: 'veryShort',
+  },
+});
+
+// Detailed responses for educational content
+const educationalChat = new AITuberOnAirCore({
+  chatOptions: {
+    responseLength: 'long',
+    visionResponseLength: 'long',
+  },
+});
+```
+
+#### Mixing Direct Values and Presets
+
+```typescript
+const options: AITuberOnAirCoreOptions = {
+  chatOptions: {
+    maxTokens: 120,                  // Direct value for text chat
+    visionResponseLength: 'medium',  // Preset for vision
+  },
+};
+```
+
+### Provider Compatibility
+
+Response length control is supported across all AI providers:
+- **OpenAI**: Uses `max_tokens` parameter
+- **Claude**: Uses `max_tokens` parameter  
+- **Gemini**: Uses `maxOutputTokens` parameter
+
+The implementation handles provider-specific differences automatically.
 
 ## Architecture
 

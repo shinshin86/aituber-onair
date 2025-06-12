@@ -20,6 +20,7 @@
 - [MCPの利用方法](#MCPの利用方法)
 - [OpenAI Remote MCPの利用](#OpenAI-Remote-MCPの利用)
 - [Claude MCP Connectorの使用方法](#Claude-MCP-Connectorの使用方法)
+- [応答長制御](#応答長制御)
 - [アーキテクチャ](#アーキテクチャ)
 - [主要コンポーネント](#主要コンポーネント)
 - [イベントシステム](#イベントシステム)
@@ -83,6 +84,11 @@ const options: AITuberOnAirCoreOptions = {
     visionSystemPrompt: '画面に映っているものについて、配信者らしくコメントしてください。',
     visionPrompt: '配信画面を見て、状況に合ったコメントをしてください。',
     memoryNote: 'これは過去の会話の要約です。適切に参照して会話を続けてください。',
+    // 応答長制御
+    maxTokens: 150,                    // テキストチャットの直接トークン制限
+    responseLength: 'medium',          // またはプリセットを使用: 'veryShort', 'short', 'medium', 'long'
+    visionMaxTokens: 200,              // 画像処理の直接トークン制限
+    visionResponseLength: 'long',      // 画像処理応答のプリセット
   },
   // OpenAIのデフォルトモデルはgpt-4o-mini
   // テキストチャットと画像処理で異なるモデルを指定することができます
@@ -828,6 +834,135 @@ aituber.on(AITuberOnAirCoreEvent.TOOL_RESULT, (resultBlocks) => {
 ### 従来のツールとの共存
 
 MCPサーバーと従来のツール定義は同時に使用できます。AIはローカルツールとリモートMCPツールの両方にシームレスにアクセスできます。
+
+## 応答長制御
+
+AITuber OnAir Coreは包括的な応答長制御機能を提供し、テキストチャットと画像処理の両方でAI応答の長さを細かくコントロールできます。
+
+### 概要
+
+応答長制御により以下が可能になります：
+- **コスト最適化**: トークン使用量を制限してコストを削減
+- **応答の冗長性制御**: シナリオに応じた応答の詳細レベル調整
+- **一貫した応答パターンの維持**: アプリケーション全体で統一された応答スタイル
+- **個別制御**: テキストチャットと画像処理で異なる設定
+
+### 設定オプション
+
+応答長制御は2つの方法で設定できます：
+
+#### 1. 直接トークン数指定
+
+正確なトークン制限を直接指定：
+
+```typescript
+const options: AITuberOnAirCoreOptions = {
+  chatOptions: {
+    maxTokens: 150,         // テキストチャットの直接トークン制限
+    visionMaxTokens: 200,   // 画像処理の直接トークン制限
+  },
+  // ... その他のオプション
+};
+```
+
+#### 2. プリセット応答長
+
+便利なプリセットを使用：
+
+```typescript
+const options: AITuberOnAirCoreOptions = {
+  chatOptions: {
+    responseLength: 'medium',        // テキストチャットのプリセット
+    visionResponseLength: 'long',    // 画像処理のプリセット
+  },
+  // ... その他のオプション
+};
+```
+
+利用可能なプリセット：
+- `'veryShort'`: 40トークン - 必要最小限の簡潔な応答
+- `'short'`: 100トークン - 簡潔だが完全な応答
+- `'medium'`: 200トークン - ほとんどのシナリオに適したバランスの良い長さ
+- `'long'`: 300トークン - 文脈を含む詳細な応答
+
+### 優先順位システム
+
+複数の長さ制御が指定された場合、以下の優先順位が適用されます：
+
+1. **直接指定値** (`maxTokens`, `visionMaxTokens`) - 最高優先度
+2. **プリセット値** (`responseLength`, `visionResponseLength`) - 中優先度
+3. **デフォルト値** (1000トークン) - 何も指定されていない場合のフォールバック
+
+### 画像処理専用設定
+
+画像処理では、テキストチャットとは異なる応答長が必要な場合が多く、個別に設定できます：
+
+```typescript
+const options: AITuberOnAirCoreOptions = {
+  chatOptions: {
+    // テキストチャット設定
+    responseLength: 'short',      // 簡潔なテキスト応答
+    
+    // 画像処理設定
+    visionResponseLength: 'long', // 詳細な画像説明
+  },
+};
+```
+
+画像処理専用設定が提供されていない場合、通常のチャット設定にフォールバックします。
+
+### 動的更新
+
+応答長設定は実行時に更新できます：
+
+```typescript
+// チャットプロセッサーオプションの更新
+aituber.updateChatProcessorOptions({
+  maxTokens: 100,
+  visionMaxTokens: 250,
+});
+```
+
+### 使用例
+
+#### シナリオに応じた異なる長さ
+
+```typescript
+// 素早いやり取り用の短い応答
+const quickChat = new AITuberOnAirCore({
+  chatOptions: {
+    responseLength: 'veryShort',
+  },
+});
+
+// 教育的コンテンツ用の詳細な応答
+const educationalChat = new AITuberOnAirCore({
+  chatOptions: {
+    responseLength: 'long',
+    visionResponseLength: 'long',
+  },
+});
+```
+
+#### 直接指定値とプリセットの組み合わせ
+
+```typescript
+const options: AITuberOnAirCoreOptions = {
+  chatOptions: {
+    maxTokens: 120,                  // テキストチャットは直接指定
+    visionResponseLength: 'medium',  // 画像処理はプリセット
+  },
+};
+```
+
+### プロバイダー互換性
+
+応答長制御はすべてのAIプロバイダーでサポートされています：
+- **OpenAI**: `max_tokens`パラメータを使用
+- **Claude**: `max_tokens`パラメータを使用
+- **Gemini**: `maxOutputTokens`パラメータを使用
+
+実装はプロバイダー固有の違いを自動的に処理します。
 
 ## アーキテクチャ
 
