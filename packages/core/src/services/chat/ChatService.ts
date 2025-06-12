@@ -45,22 +45,30 @@ export interface ChatService {
   /**
    * Process chat messages with tools
    * @param messages Array of messages to send
+   * @param stream Whether to use streaming
+   * @param onPartialResponse Callback for partial responses
+   * @param maxTokens Maximum tokens for response (optional)
    * @returns Tool chat completion
    */
   chatOnce(
     messages: Message[],
     stream: boolean,
     onPartialResponse: (text: string) => void,
+    maxTokens?: number,
   ): Promise<ToolChatCompletion>;
 
   /**
    * Process chat messages with tools and images
    * @param messages Array of messages to send (including images)
+   * @param stream Whether to use streaming
+   * @param onPartialResponse Callback for partial responses
+   * @param maxTokens Maximum tokens for response (optional)
    * @returns Tool chat completion
    */
   visionChatOnce(
     messages: MessageWithVision[],
     stream: boolean,
     onPartialResponse: (text: string) => void,
+    maxTokens?: number,
   ): Promise<ToolChatCompletion>;
 }

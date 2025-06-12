@@ -37,6 +37,12 @@ export type { MemoryOptions, Summarizer } from './core/MemoryManager';
 export { MemoryManager } from './core/MemoryManager';
 export type { ChatProcessorOptions } from './core/ChatProcessor';
 export { ChatProcessor } from './core/ChatProcessor';
+export {
+  MAX_TOKENS_BY_LENGTH,
+  CHAT_RESPONSE_LENGTH,
+  DEFAULT_MAX_TOKENS,
+} from './constants/chat';
+export type { ChatResponseLength } from './constants/chat';
 export type { AITuberOnAirCoreOptions } from './core/AITuberOnAirCore';
 export {
   AITuberOnAirCore,

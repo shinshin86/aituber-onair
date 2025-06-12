@@ -326,6 +326,7 @@ describe('OpenAIChatService advanced features', () => {
       model: service.getModel(),
       stream: true,
       messages,
+      max_tokens: 1000,
       tools: [
         {
           type: 'function',
