@@ -321,15 +321,19 @@ export class GeminiChatService implements ChatService {
     };
 
     const isLite = /flash[-_]lite/.test(model);
-    const firstVer: 'v1' | 'v1beta' = isLite ? 'v1beta' : 'v1';
+    const isGemini25 = /gemini-2\.5/.test(model);
+    const firstVer: 'v1' | 'v1beta' = isLite || isGemini25 ? 'v1beta' : 'v1';
 
     const tryApi = async (): Promise<Response> => {
       try {
         const payload = firstVer === 'v1' ? body : this.adaptKeysForApi(body); // snake_case conversion
         return await fetchOnce(firstVer, payload);
       } catch (e: any) {
-        // Only retry v1beta if camel/snake case mismatch error occurs in non-Lite models
-        if (!isLite && /Unknown name|Cannot find field|404/.test(e.message)) {
+        // Only retry v1beta if camel/snake case mismatch error occurs in models that don't require v1beta
+        if (
+          !(isLite || isGemini25) &&
+          /Unknown name|Cannot find field|404/.test(e.message)
+        ) {
           return await fetchOnce('v1beta', this.adaptKeysForApi(body));
         }
         throw e; // otherwise, throw to upper layer
