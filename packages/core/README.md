@@ -1217,6 +1217,7 @@ Possible use cases for `chatLogUpdated` include:
 - **NijiVoice**: AI-based speech synthesis service (requires an API key).  
 - **AivisSpeech**: Speech synthesis using AI technology.  
 - **OpenAI TTS**: Text-to-speech API from OpenAI.
+- **MiniMax**: Multi-language TTS with 24 language support and HD quality (requires both API key and GroupId - see usage example below).
 - **None**: No voice mode (no audio output).
 
 You can dynamically switch the speech engine via `updateVoiceService`:
@@ -1256,6 +1257,23 @@ aituber.updateVoiceService({
   speaker: '3',
   aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
 });
+
+// Example for MiniMax
+aituber.updateVoiceService({
+  engineType: 'minimax',
+  speaker: 'male-qn-qingse', // or any supported voice ID
+  apiKey: 'YOUR_MINIMAX_API_KEY'
+});
+
+// IMPORTANT: MiniMax requires a GroupId in addition to the API key
+// GroupId is a unique identifier for your user group in MiniMax's system
+// Unlike other TTS engines, MiniMax uses both API key and GroupId for:
+// - User authentication and group management
+// - Usage tracking and statistics
+// - Billing and quota management
+// You can obtain your GroupId from your MiniMax account dashboard
+const minimaxEngine = aituber['voiceService']['engine'] as MinimaxEngine;
+minimaxEngine.setGroupId('YOUR_GROUP_ID');
 ```
 
 This is useful when running voice engines on different ports or remote servers.
