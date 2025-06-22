@@ -13,18 +13,18 @@ export class MinimaxEngine implements VoiceEngine {
 
   /**
    * Set GroupId for MiniMax API
-   * 
+   *
    * GroupId is a unique identifier for the user group in MiniMax's system.
    * Unlike other TTS engines that only require an API key, MiniMax requires both
    * an API key and a GroupId for authentication and usage tracking.
-   * 
+   *
    * This GroupId is used by MiniMax for:
    * - User group management
    * - Usage statistics tracking
    * - Billing and quota management
-   * 
+   *
    * You must obtain this pre-generated value from your MiniMax account dashboard.
-   * 
+   *
    * @param groupId GroupId for MiniMax API (required)
    */
   setGroupId(groupId: string): void {
@@ -57,7 +57,9 @@ export class MinimaxEngine implements VoiceEngine {
     }
 
     if (!this.groupId) {
-      throw new Error('MiniMax GroupId is required. Please set it using setGroupId()');
+      throw new Error(
+        'MiniMax GroupId is required. Please set it using setGroupId()',
+      );
     }
 
     const talk = input as Talk;
@@ -94,7 +96,11 @@ export class MinimaxEngine implements VoiceEngine {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Failed to fetch TTS from MiniMax:', response.status, errorText);
+      console.error(
+        'Failed to fetch TTS from MiniMax:',
+        response.status,
+        errorText,
+      );
       throw new Error(`Failed to fetch TTS from MiniMax: ${response.status}`);
     }
 
@@ -103,7 +109,7 @@ export class MinimaxEngine implements VoiceEngine {
     // Check response status
     if (result.base_resp?.status_code !== 0) {
       throw new Error(
-        `MiniMax API error: ${result.base_resp?.status_msg || 'Unknown error'}`
+        `MiniMax API error: ${result.base_resp?.status_msg || 'Unknown error'}`,
       );
     }
 
@@ -166,7 +172,7 @@ export class MinimaxEngine implements VoiceEngine {
   private hexToArrayBuffer(hex: string): ArrayBuffer {
     // Remove any whitespace or newlines
     const cleanHex = hex.replace(/[\s\n]/g, '');
-    
+
     // Ensure even number of characters
     if (cleanHex.length % 2 !== 0) {
       throw new Error('Invalid hex string');

@@ -25,15 +25,15 @@ describe('MinimaxEngine', () => {
 
     it('should throw error if API key is missing', async () => {
       await expect(engine.fetchAudio(mockTalk, 'voice-id')).rejects.toThrow(
-        'MiniMax API key is required'
+        'MiniMax API key is required',
       );
     });
 
     it('should throw error if GroupId is not set', async () => {
       await expect(
-        engine.fetchAudio(mockTalk, 'voice-id', 'test-api-key')
+        engine.fetchAudio(mockTalk, 'voice-id', 'test-api-key'),
       ).rejects.toThrow(
-        'MiniMax GroupId is required. Please set it using setGroupId()'
+        'MiniMax GroupId is required. Please set it using setGroupId()',
       );
     });
 
@@ -59,7 +59,7 @@ describe('MinimaxEngine', () => {
       const result = await engine.fetchAudio(
         mockTalk,
         'test-voice',
-        'test-api-key'
+        'test-api-key',
       );
 
       expect(fetch).toHaveBeenCalledWith(
@@ -88,7 +88,7 @@ describe('MinimaxEngine', () => {
             },
             language_boost: 'Japanese',
           }),
-        }
+        },
       );
 
       expect(result).toBeInstanceOf(ArrayBuffer);
@@ -104,7 +104,7 @@ describe('MinimaxEngine', () => {
       });
 
       await expect(
-        engine.fetchAudio(mockTalk, 'test-voice', 'test-api-key')
+        engine.fetchAudio(mockTalk, 'test-voice', 'test-api-key'),
       ).rejects.toThrow('Failed to fetch TTS from MiniMax: 401');
     });
 
@@ -124,7 +124,7 @@ describe('MinimaxEngine', () => {
       });
 
       await expect(
-        engine.fetchAudio(mockTalk, 'test-voice', 'test-api-key')
+        engine.fetchAudio(mockTalk, 'test-voice', 'test-api-key'),
       ).rejects.toThrow('MiniMax API error: Invalid parameters');
     });
 
@@ -145,7 +145,7 @@ describe('MinimaxEngine', () => {
       });
 
       await expect(
-        engine.fetchAudio(mockTalk, 'test-voice', 'test-api-key')
+        engine.fetchAudio(mockTalk, 'test-voice', 'test-api-key'),
       ).rejects.toThrow('Audio data not found in MiniMax response');
     });
 
@@ -153,11 +153,26 @@ describe('MinimaxEngine', () => {
       engine.setGroupId('test-group-id');
 
       const emotions = [
-        { style: 'neutral' as const, expected: { speed: 1.0, vol: 1.0, pitch: 0 } },
-        { style: 'happy' as const, expected: { speed: 1.1, vol: 1.0, pitch: 1 } },
-        { style: 'sad' as const, expected: { speed: 0.9, vol: 1.0, pitch: -1 } },
-        { style: 'angry' as const, expected: { speed: 1.0, vol: 1.1, pitch: 0 } },
-        { style: 'surprised' as const, expected: { speed: 1.2, vol: 1.0, pitch: 2 } },
+        {
+          style: 'neutral' as const,
+          expected: { speed: 1.0, vol: 1.0, pitch: 0 },
+        },
+        {
+          style: 'happy' as const,
+          expected: { speed: 1.1, vol: 1.0, pitch: 1 },
+        },
+        {
+          style: 'sad' as const,
+          expected: { speed: 0.9, vol: 1.0, pitch: -1 },
+        },
+        {
+          style: 'angry' as const,
+          expected: { speed: 1.0, vol: 1.1, pitch: 0 },
+        },
+        {
+          style: 'surprised' as const,
+          expected: { speed: 1.2, vol: 1.0, pitch: 2 },
+        },
       ];
 
       for (const { style, expected } of emotions) {
@@ -176,7 +191,7 @@ describe('MinimaxEngine', () => {
 
         const lastCall = (fetch as any).mock.calls.slice(-1)[0];
         const body = JSON.parse(lastCall[1].body);
-        
+
         expect(body.voice_setting.speed).toBe(expected.speed);
         expect(body.voice_setting.vol).toBe(expected.vol);
         expect(body.voice_setting.pitch).toBe(expected.pitch);
@@ -269,7 +284,11 @@ describe('MinimaxEngine', () => {
       });
 
       const talk: Talk = { style: 'talk', message: 'Test' };
-      const result = await engine.fetchAudio(talk, 'test-voice', 'test-api-key');
+      const result = await engine.fetchAudio(
+        talk,
+        'test-voice',
+        'test-api-key',
+      );
 
       // Convert result back to string to verify
       const decoder = new TextDecoder();
@@ -296,7 +315,11 @@ describe('MinimaxEngine', () => {
       });
 
       const talk: Talk = { style: 'talk', message: 'Test' };
-      const result = await engine.fetchAudio(talk, 'test-voice', 'test-api-key');
+      const result = await engine.fetchAudio(
+        talk,
+        'test-voice',
+        'test-api-key',
+      );
 
       // Convert result back to string to verify
       const decoder = new TextDecoder();
