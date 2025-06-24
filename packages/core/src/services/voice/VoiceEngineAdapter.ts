@@ -103,7 +103,6 @@ export class VoiceEngineAdapter implements VoiceService {
       // MiniMaxエンジンの場合、GroupIdを設定
       if (this.options.engineType === 'minimax' && (engine as any).setGroupId) {
         if (this.options.groupId) {
-          console.log('Setting MiniMax GroupId:', this.options.groupId);
           (engine as any).setGroupId(this.options.groupId);
         } else {
           console.warn(
@@ -113,7 +112,6 @@ export class VoiceEngineAdapter implements VoiceService {
 
         // エンドポイントの設定もMinimaxEngineでサポートされている場合
         if (this.options.endpoint && (engine as any).setEndpoint) {
-          console.log('Setting MiniMax endpoint:', this.options.endpoint);
           (engine as any).setEndpoint(this.options.endpoint);
         }
       }
