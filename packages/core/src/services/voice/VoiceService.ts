@@ -23,6 +23,10 @@ export interface VoiceServiceOptions {
   voicepeakApiUrl?: string;
   /** Custom AIVIS SPEECH API endpoint URL */
   aivisSpeechApiUrl?: string;
+  /** MiniMax Group ID (required for MiniMax engine) */
+  groupId?: string;
+  /** MiniMax endpoint ('global' or 'china') */
+  endpoint?: string;
 }
 
 /**
