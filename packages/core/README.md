@@ -123,7 +123,9 @@ const options: AITuberOnAirCoreOptions = {
   voiceOptions: {
     engineType: 'voicevox', // Speech engine type
     speaker: '1',           // Speaker ID
-    apiKey: 'ENGINE_SPECIFIC_API_KEY', // If required (e.g., NijiVoice)
+    apiKey: 'ENGINE_SPECIFIC_API_KEY', // If required (e.g., NijiVoice, MiniMax)
+    groupId: 'YOUR_GROUP_ID',          // If using MiniMax
+    endpoint: 'global',                // If using MiniMax: 'global' or 'china'
     onComplete: () => console.log('Voice playback completed'),
     // Custom API endpoint URLs (optional)
     voicevoxApiUrl: 'http://custom-voicevox-server:50021',
@@ -1258,11 +1260,13 @@ aituber.updateVoiceService({
   aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
 });
 
-// Example for MiniMax
+// Example for MiniMax (simplified configuration)
 aituber.updateVoiceService({
   engineType: 'minimax',
   speaker: 'male-qn-qingse', // or any supported voice ID
-  apiKey: 'YOUR_MINIMAX_API_KEY'
+  apiKey: 'YOUR_MINIMAX_API_KEY',
+  groupId: 'YOUR_GROUP_ID',  // Required for MiniMax
+  endpoint: 'global'         // Optional: 'global' (default) or 'china'
 });
 
 // IMPORTANT: MiniMax requires a GroupId in addition to the API key
@@ -1272,8 +1276,10 @@ aituber.updateVoiceService({
 // - Usage tracking and statistics
 // - Billing and quota management
 // You can obtain your GroupId from your MiniMax account dashboard
-const minimaxEngine = aituber['voiceService']['engine'] as MinimaxEngine;
-minimaxEngine.setGroupId('YOUR_GROUP_ID');
+//
+// MiniMax also supports region-specific endpoints:
+// - 'global': For international users (default)
+// - 'china': For users in mainland China
 ```
 
 This is useful when running voice engines on different ports or remote servers.

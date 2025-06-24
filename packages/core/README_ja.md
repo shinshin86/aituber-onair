@@ -1261,22 +1261,27 @@ aituber.updateVoiceService({
   aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
 });
 
-// MiniMaxの例
+// MiniMaxの例（基本設定）
 aituber.updateVoiceService({
   engineType: 'minimax',
   speaker: 'male-qn-qingse', // またはサポートされている音声ID
-  apiKey: 'YOUR_MINIMAX_API_KEY'
+  apiKey: 'YOUR_MINIMAX_API_KEY',
+  groupId: 'YOUR_GROUP_ID', // 本番環境では必須
+  endpoint: 'global' // 'global' または 'china'を選択
 });
 
-// 重要：MiniMaxはAPIキーに加えてGroupIdが必要です
-// GroupIdはMiniMaxシステム内でのユーザーグループの一意の識別子です
-// 他のTTSエンジンと異なり、MiniMaxはAPIキーとGroupIdの両方を以下の目的で使用します：
+// GroupIdについて：
+// MiniMaxはAPIキーに加えてGroupIdが必要です
+// GroupIdはMiniMaxシステム内でのユーザーグループの一意の識別子で、
+// 以下の目的で使用されます：
 // - ユーザー認証とグループ管理
-// - 使用状況の追跡と統計
+// - 使用状況の追跡と統計  
 // - 課金とクォータ管理
 // GroupIdはMiniMaxアカウントダッシュボードから取得できます
-const minimaxEngine = aituber['voiceService']['engine'] as MinimaxEngine;
-minimaxEngine.setGroupId('YOUR_GROUP_ID');
+
+// エンドポイントについて：
+// - 'global': グローバル向けAPI（デフォルト）
+// - 'china': 中国国内向けAPI
 ```
 
 これは、音声エンジンを異なるポートやリモートサーバーで実行している場合に便利です。
