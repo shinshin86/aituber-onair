@@ -484,7 +484,7 @@ export class MinimaxEngine implements VoiceEngine {
     const view = new Uint8Array(buffer);
 
     for (let i = 0; i < cleanHex.length; i += 2) {
-      view[i / 2] = parseInt(cleanHex.substr(i, 2), 16);
+      view[i / 2] = Number.parseInt(cleanHex.substr(i, 2), 16);
     }
 
     return buffer;
