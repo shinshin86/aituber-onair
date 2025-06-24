@@ -43,3 +43,9 @@ import { Screenplay as ChatScreenplay } from './chat';
 
 // Export both Screenplay types with aliases
 export { VoiceScreenplay, ChatScreenplay };
+
+// MiniMax related type definitions
+export {
+  MinimaxEndpoint,
+  MinimaxVoiceSpeaker,
+} from '../services/voice/engines/MinimaxEngine';

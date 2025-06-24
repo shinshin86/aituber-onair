@@ -77,7 +77,7 @@ The services are organized by provider type:
   - Each provider (OpenAI, Claude, Gemini) has its own implementation
 
 - **Voice Services** (`packages/core/src/services/voice/`)
-  - Multiple TTS engine support (VOICEVOX, VoicePeak, NijiVoice, etc.)
+  - Multiple TTS engine support (VOICEVOX, VoicePeak, NijiVoice, MiniMax, etc.)
   - Unified interface through VoiceEngineAdapter
   - Emotion-aware speech synthesis
 
@@ -135,3 +135,5 @@ The library abstracts differences between AI providers' function calling impleme
 4. **Voice Engine Flexibility**: Voice engines can be switched dynamically at runtime, and custom API endpoints can be specified for self-hosted engines.
 
 5. **Response Length Control**: The library provides both direct token limits and preset response lengths, with separate controls for text chat and vision processing.
+
+6. **MiniMax Audio Engine**: MiniMax requires both API key and GroupId for authentication, unlike other TTS engines. It supports dual-region endpoints (global/china) and provides emotion-aware voice synthesis with advanced language recognition.

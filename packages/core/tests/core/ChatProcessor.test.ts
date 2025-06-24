@@ -382,7 +382,7 @@ describe('ChatProcessor', () => {
         await (chatProcessor as any).processTextChat('Hello');
       } catch (e) {
         // catch error and do nothing
-        console.log('Caught error in test:', e);
+        // Caught error in test
       }
 
       // Assert

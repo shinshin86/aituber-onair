@@ -1220,6 +1220,7 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 - **NijiVoice**: AI音声合成サービス（APIキーが必要）
 - **AivisSpeech**: AIを活用した音声合成
 - **OpenAI TTS**: OpenAIのText-to-Speech API
+- **MiniMax**: 24言語対応の多言語TTS、HD品質対応（APIキーとGroupIdの両方が必要 - 使用例を参照）
 - **None**: 音声なしモード（音声出力を行わない）
 
 音声エンジンの切り替えは`updateVoiceService`メソッドで動的に行えます：
@@ -1259,6 +1260,28 @@ aituber.updateVoiceService({
   speaker: '3',
   aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
 });
+
+// MiniMaxの例（基本設定）
+aituber.updateVoiceService({
+  engineType: 'minimax',
+  speaker: 'male-qn-qingse', // またはサポートされている音声ID
+  apiKey: 'YOUR_MINIMAX_API_KEY',
+  groupId: 'YOUR_GROUP_ID', // 本番環境では必須
+  endpoint: 'global' // 'global' または 'china'を選択
+});
+
+// GroupIdについて：
+// MiniMaxはAPIキーに加えてGroupIdが必要です
+// GroupIdはMiniMaxシステム内でのユーザーグループの一意の識別子で、
+// 以下の目的で使用されます：
+// - ユーザー認証とグループ管理
+// - 使用状況の追跡と統計  
+// - 課金とクォータ管理
+// GroupIdはMiniMaxアカウントダッシュボードから取得できます
+
+// エンドポイントについて：
+// - 'global': グローバル向けAPI（デフォルト）
+// - 'china': 中国国内向けAPI
 ```
 
 これは、音声エンジンを異なるポートやリモートサーバーで実行している場合に便利です。

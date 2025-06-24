@@ -100,6 +100,22 @@ export class VoiceEngineAdapter implements VoiceService {
         }
       }
 
+      // MiniMaxエンジンの場合、GroupIdを設定
+      if (this.options.engineType === 'minimax' && (engine as any).setGroupId) {
+        if (this.options.groupId) {
+          (engine as any).setGroupId(this.options.groupId);
+        } else {
+          console.warn(
+            'MiniMax engine requires GroupId, but it is not provided in options',
+          );
+        }
+
+        // エンドポイントの設定もMinimaxEngineでサポートされている場合
+        if (this.options.endpoint && (engine as any).setEndpoint) {
+          (engine as any).setEndpoint(this.options.endpoint);
+        }
+      }
+
       // Get audio data
       const audioBuffer = await engine.fetchAudio(
         talk as any, // Use any for type compatibility
