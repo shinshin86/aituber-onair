@@ -12,6 +12,8 @@ import {
   GEMINI_VISION_SUPPORTED_MODELS,
   DEFAULT_MAX_TOKENS,
 } from '../../../../constants';
+import { StreamTextAccumulator } from '../../../../utils/streamTextAccumulator';
+import { ChatServiceHttpClient } from '../../../../utils/chatServiceHttpClient';
 
 /**
  * Gemini implementation of ChatService
@@ -313,11 +315,7 @@ export class GeminiChatService implements ChatService {
       const fn = stream ? 'streamGenerateContent' : 'generateContent';
       const alt = stream ? '?alt=sse' : '';
       const url = `${ENDPOINT_GEMINI_API}/${ver}/models/${model}:${fn}${alt}${alt ? '&' : '?'}key=${this.apiKey}`;
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      return ChatServiceHttpClient.post(url, payload);
     };
 
     const isLite = /flash[-_]lite/.test(model);
@@ -425,12 +423,7 @@ export class GeminiChatService implements ChatService {
           } else if (block.type === 'image_url') {
             try {
               // Fetch the image data from URL
-              const imageResponse = await fetch(block.image_url.url);
-              if (!imageResponse.ok) {
-                throw new Error(
-                  `Failed to fetch image: ${imageResponse.statusText}`,
-                );
-              }
+              const imageResponse = await ChatServiceHttpClient.get(block.image_url.url);
 
               // Convert image to blob and then to base64
               const imageBlob = await imageResponse.blob();
@@ -522,7 +515,7 @@ export class GeminiChatService implements ChatService {
         for (const part of cand.content?.parts ?? []) {
           if (part.text) {
             onPartial(part.text);
-            textBlocks.push({ type: 'text', text: part.text });
+            StreamTextAccumulator.addTextBlock(textBlocks, part.text);
           }
           if (part.functionCall) {
             toolBlocks.push({

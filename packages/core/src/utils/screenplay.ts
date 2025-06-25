@@ -1,11 +1,5 @@
 import { ChatScreenplay } from '../types';
-
-/**
- * Extract emotion from text using regex
- * Extract emotion from text written in the format [happy], [sad], etc.
- */
-const EMOTION_REGEX = /\[([a-z]+)\]/i;
-const EMOTION_CLEANUP_REGEX = /\[[a-z]+\]\s*/gi;
+import { EmotionParser } from './emotionParser';
 
 /**
  * Convert text to screenplay (text with emotion)
@@ -13,19 +7,16 @@ const EMOTION_CLEANUP_REGEX = /\[[a-z]+\]\s*/gi;
  * @returns Screenplay object with emotion and text separated
  */
 export function textToScreenplay(text: string): ChatScreenplay {
-  const match = text.match(EMOTION_REGEX);
-
-  if (match) {
-    const emotion = match[1].toLowerCase();
-    // Remove all emotion tags from the text and trim whitespace
-    const cleanText = text.replace(EMOTION_CLEANUP_REGEX, '').trim();
+  const { emotion, cleanText } = EmotionParser.extractEmotion(text);
+  
+  if (emotion) {
     return {
       emotion,
       text: cleanText,
     };
   }
 
-  return { text };
+  return { text: cleanText };
 }
 
 /**
@@ -44,7 +35,7 @@ export function textsToScreenplay(texts: string[]): ChatScreenplay[] {
  */
 export function screenplayToText(screenplay: ChatScreenplay): string {
   if (screenplay.emotion) {
-    return `[${screenplay.emotion}] ${screenplay.text}`;
+    return EmotionParser.addEmotionTag(screenplay.emotion, screenplay.text);
   }
   return screenplay.text;
 }
