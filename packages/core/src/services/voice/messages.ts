@@ -1,4 +1,5 @@
-import { EmotionType, VoiceScreenplay, TalkStyle, emotions } from '../../types';
+import { EmotionType, VoiceScreenplay, TalkStyle } from '../../types';
+import { EmotionParser } from '../../utils/emotionParser';
 
 export const splitSentence = (text: string): string[] => {
   const splitMessages = text.split(/(?<=[。．！？\n])/g);
@@ -11,14 +12,11 @@ export const textsToScreenplay = (texts: string[]): VoiceScreenplay[] => {
   for (let i = 0; i < texts.length; i++) {
     const text = texts[i];
 
-    const match = text.match(/\[(.*?)\]/);
-
-    const tag = match?.[1] || prevExpression;
-
-    const message = text.replace(/\[(.*?)\]/g, '');
+    const { emotion, cleanText } = EmotionParser.extractEmotion(text);
+    const tag = emotion || prevExpression;
 
     let expression = prevExpression;
-    if (emotions.includes(tag as any)) {
+    if (EmotionParser.isValidEmotion(tag)) {
       expression = tag;
       prevExpression = tag;
     }
@@ -27,7 +25,7 @@ export const textsToScreenplay = (texts: string[]): VoiceScreenplay[] => {
       expression: expression as EmotionType,
       talk: {
         style: emotionToTalkStyle(expression as EmotionType),
-        message: message,
+        message: cleanText,
       },
     });
   }

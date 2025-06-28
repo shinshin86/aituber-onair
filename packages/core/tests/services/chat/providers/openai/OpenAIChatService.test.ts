@@ -123,7 +123,7 @@ describe('OpenAIChatService', () => {
 
     await expect(
       service.processChat(messages, vi.fn(), vi.fn()),
-    ).rejects.toThrow('OpenAI error: {"error":{"message":"Unauthorized"}}');
+    ).rejects.toThrow('HTTP 401: Unauthorized');
   });
 
   it('should throw an error if response body is not readable', async () => {
@@ -692,9 +692,7 @@ describe('OpenAIChatService error handling and edge cases', () => {
 
       await expect(
         service.processChat(messages, vi.fn(), vi.fn()),
-      ).rejects.toThrow(
-        `OpenAI error: {"error":{"message":"${errorCase.statusText}"}}`,
-      );
+      ).rejects.toThrow(`HTTP ${errorCase.status}: ${errorCase.statusText}`);
     }
   });
 });

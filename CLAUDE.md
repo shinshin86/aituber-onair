@@ -137,3 +137,27 @@ The library abstracts differences between AI providers' function calling impleme
 5. **Response Length Control**: The library provides both direct token limits and preset response lengths, with separate controls for text chat and vision processing.
 
 6. **MiniMax Audio Engine**: MiniMax requires both API key and GroupId for authentication, unlike other TTS engines. It supports dual-region endpoints (global/china) and provides emotion-aware voice synthesis with advanced language recognition.
+
+## MCP Tools Integration
+
+When the lsmcp MCP server is connected (providing LSP-based code intelligence tools), leverage these capabilities for more efficient codebase exploration and refactoring:
+
+### Available MCP Tools
+- **lsmcp_move_file** - Move files and update all import statements automatically
+- **lsmcp_move_directory** - Move directories and update all imports across the codebase
+- **lsmcp_delete_symbol** - Delete symbols and all their references safely
+- **lsmcp_rename_symbol** - Rename symbols across the entire codebase
+- **lsmcp_get_type_at_symbol** - Get detailed type information for any symbol
+- **lsmcp_get_module_symbols** - List all exports from a module
+- **lsmcp_search_symbols** - Fast project-wide symbol search
+- **lsmcp_find_import_candidates** - Find and suggest imports for symbols
+
+### When to Use MCP Tools
+If these MCP tools are available in your environment, prefer them over manual operations for:
+- **Refactoring**: Use `lsmcp_rename_symbol` instead of manual find/replace for renaming functions, classes, or variables
+- **File reorganization**: Use `lsmcp_move_file` or `lsmcp_move_directory` to ensure all imports are updated correctly
+- **Code exploration**: Use `lsmcp_search_symbols` and `lsmcp_get_type_at_symbol` for faster codebase navigation
+- **Import management**: Use `lsmcp_find_import_candidates` to quickly find the correct import paths
+- **Safe deletions**: Use `lsmcp_delete_symbol` to remove code and all its references without breaking the build
+
+These tools provide TypeScript-aware refactoring that maintains code integrity and prevents common errors from manual edits.
