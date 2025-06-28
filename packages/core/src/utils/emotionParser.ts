@@ -25,7 +25,7 @@ export class EmotionParser {
    */
   static extractEmotion(text: string): EmotionExtractionResult {
     const match = text.match(EMOTION_TAG_REGEX);
-    
+
     if (match) {
       const emotion = match[1].toLowerCase();
       const cleanText = text.replace(EMOTION_TAG_CLEANUP_REGEX, '').trim();
@@ -34,10 +34,10 @@ export class EmotionParser {
         cleanText,
       };
     }
-    
+
     return { cleanText: text };
   }
-  
+
   /**
    * Check if an emotion is valid
    * @param emotion Emotion string to validate
@@ -46,7 +46,7 @@ export class EmotionParser {
   static isValidEmotion(emotion: string): emotion is EmotionType {
     return emotions.includes(emotion as any);
   }
-  
+
   /**
    * Remove all emotion tags from text
    * @param text Text containing emotion tags
@@ -55,7 +55,7 @@ export class EmotionParser {
   static cleanEmotionTags(text: string): string {
     return text.replace(EMOTION_TAG_CLEANUP_REGEX, '').trim();
   }
-  
+
   /**
    * Add emotion tag to text
    * @param emotion Emotion to add

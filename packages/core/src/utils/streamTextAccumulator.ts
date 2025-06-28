@@ -11,7 +11,7 @@ export class StreamTextAccumulator {
    */
   static append(blocks: ToolChatBlock[], text: string): void {
     if (!text) return;
-    
+
     const lastBlock = blocks[blocks.length - 1];
     if (lastBlock && lastBlock.type === 'text') {
       lastBlock.text += text;
@@ -19,7 +19,7 @@ export class StreamTextAccumulator {
       blocks.push({ type: 'text', text });
     }
   }
-  
+
   /**
    * Get the full concatenated text from all text blocks
    * @param blocks Array of chat blocks
@@ -27,11 +27,14 @@ export class StreamTextAccumulator {
    */
   static getFullText(blocks: ToolChatBlock[]): string {
     return blocks
-      .filter((block): block is { type: 'text'; text: string } => block.type === 'text')
-      .map(block => block.text)
+      .filter(
+        (block): block is { type: 'text'; text: string } =>
+          block.type === 'text',
+      )
+      .map((block) => block.text)
       .join('');
   }
-  
+
   /**
    * Add a text block without merging
    * @param blocks Array of chat blocks

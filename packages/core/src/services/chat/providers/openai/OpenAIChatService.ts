@@ -234,13 +234,9 @@ export class OpenAIChatService implements ChatService {
   ): Promise<Response> {
     const body = this.buildRequestBody(messages, model, stream, maxTokens);
 
-    const res = await ChatServiceHttpClient.post(
-      this.endpoint,
-      body,
-      {
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-    );
+    const res = await ChatServiceHttpClient.post(this.endpoint, body, {
+      Authorization: `Bearer ${this.apiKey}`,
+    });
 
     return res;
   }

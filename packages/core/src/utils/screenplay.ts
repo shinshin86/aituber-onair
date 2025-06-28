@@ -8,7 +8,7 @@ import { EmotionParser } from './emotionParser';
  */
 export function textToScreenplay(text: string): ChatScreenplay {
   const { emotion, cleanText } = EmotionParser.extractEmotion(text);
-  
+
   if (emotion) {
     return {
       emotion,

@@ -423,7 +423,9 @@ export class GeminiChatService implements ChatService {
           } else if (block.type === 'image_url') {
             try {
               // Fetch the image data from URL
-              const imageResponse = await ChatServiceHttpClient.get(block.image_url.url);
+              const imageResponse = await ChatServiceHttpClient.get(
+                block.image_url.url,
+              );
 
               // Convert image to blob and then to base64
               const imageBlob = await imageResponse.blob();

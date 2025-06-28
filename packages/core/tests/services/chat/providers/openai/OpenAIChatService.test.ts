@@ -692,9 +692,7 @@ describe('OpenAIChatService error handling and edge cases', () => {
 
       await expect(
         service.processChat(messages, vi.fn(), vi.fn()),
-      ).rejects.toThrow(
-        `HTTP ${errorCase.status}: ${errorCase.statusText}`,
-      );
+      ).rejects.toThrow(`HTTP ${errorCase.status}: ${errorCase.statusText}`);
     }
   });
 });
