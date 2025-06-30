@@ -16,6 +16,7 @@ import {
   CLAUDE_VISION_SUPPORTED_MODELS,
   DEFAULT_MAX_TOKENS,
 } from '../../../../constants';
+import { ChatServiceHttpClient } from '../../../../utils/chatServiceHttpClient';
 
 export interface ClaudeToolResultBlock {
   type: 'tool_result';
@@ -387,13 +388,11 @@ export class ClaudeChatService implements ChatService {
       headers['anthropic-beta'] = 'mcp-client-2025-04-04';
     }
 
-    const res = await fetch(ENDPOINT_CLAUDE_API, {
-      method: 'POST',
+    const res = await ChatServiceHttpClient.post(
+      ENDPOINT_CLAUDE_API,
+      body,
       headers,
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) throw new Error(await res.text());
+    );
     return res;
   }
 

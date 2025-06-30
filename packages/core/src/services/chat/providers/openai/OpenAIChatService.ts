@@ -13,6 +13,8 @@ import {
   ToolChatCompletion,
 } from '../../../../types';
 import { MCPServerConfig } from '../../../../types';
+import { StreamTextAccumulator } from '../../../../utils/streamTextAccumulator';
+import { ChatServiceHttpClient } from '../../../../utils/chatServiceHttpClient';
 
 /**
  * OpenAI implementation of ChatService
@@ -232,19 +234,9 @@ export class OpenAIChatService implements ChatService {
   ): Promise<Response> {
     const body = this.buildRequestBody(messages, model, stream, maxTokens);
 
-    const res = await fetch(this.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify(body),
+    const res = await ChatServiceHttpClient.post(this.endpoint, body, {
+      Authorization: `Bearer ${this.apiKey}`,
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`OpenAI error: ${err}`);
-    }
 
     return res;
   }
@@ -612,19 +604,6 @@ export class OpenAIChatService implements ChatService {
     textBlocks: ToolChatBlock[],
     toolCallsMap: Map<string, any>,
   ): void {
-    // Helper to append text to the last text block or create a new one
-    const appendText = (txt: string) => {
-      if (!txt) return;
-      if (
-        textBlocks.length &&
-        textBlocks[textBlocks.length - 1].type === 'text'
-      ) {
-        (textBlocks[textBlocks.length - 1] as any).text += txt;
-      } else {
-        textBlocks.push({ type: 'text', text: txt });
-      }
-    };
-
     switch (eventType) {
       // Item addition events
       case 'response.output_item.added':
@@ -632,7 +611,7 @@ export class OpenAIChatService implements ChatService {
           data.item.content.forEach((c: any) => {
             if (c.type === 'output_text' && c.text) {
               onPartial(c.text);
-              appendText(c.text);
+              StreamTextAccumulator.append(textBlocks, c.text);
             }
           });
         } else if (data.item?.type === 'function_call') {
@@ -651,7 +630,7 @@ export class OpenAIChatService implements ChatService {
           typeof data.part.text === 'string'
         ) {
           onPartial(data.part.text);
-          appendText(data.part.text);
+          StreamTextAccumulator.append(textBlocks, data.part.text);
         }
         break;
 
@@ -665,7 +644,7 @@ export class OpenAIChatService implements ChatService {
               : (data.delta?.text ?? '');
           if (deltaText) {
             onPartial(deltaText);
-            appendText(deltaText);
+            StreamTextAccumulator.append(textBlocks, deltaText);
           }
         }
         break;
@@ -674,7 +653,7 @@ export class OpenAIChatService implements ChatService {
       case 'response.output_text.done':
       case 'response.content_part.done':
         if (typeof data.text === 'string' && data.text) {
-          appendText(data.text);
+          StreamTextAccumulator.append(textBlocks, data.text);
         }
         break;
 

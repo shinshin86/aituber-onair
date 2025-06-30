@@ -28,6 +28,7 @@ describe('GeminiChatService', () => {
       status: ok ? 200 : 400,
       statusText,
       json: async () => responseData,
+      text: async () => responseString,
       body: responseStream,
     });
   }
@@ -134,7 +135,7 @@ describe('GeminiChatService', () => {
 
     await expect(
       service.processChat(messages, vi.fn(), vi.fn()),
-    ).rejects.toThrow('Gemini HTTP 400');
+    ).rejects.toThrow('HTTP 400: Unauthorized');
   });
 
   it('should throw an error if response body is not readable', async () => {
