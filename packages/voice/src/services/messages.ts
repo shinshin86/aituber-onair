@@ -1,13 +1,13 @@
-import { EmotionType, VoiceScreenplay, TalkStyle } from '../../types';
-import { EmotionParser } from '../../utils/emotionParser';
+import { EmotionType, Screenplay, TalkStyle } from '../types/voice';
+import { EmotionParser } from '../utils/emotionParser';
 
 export const splitSentence = (text: string): string[] => {
   const splitMessages = text.split(/(?<=[。．！？\n])/g);
   return splitMessages.filter((msg) => msg !== '');
 };
 
-export const textsToScreenplay = (texts: string[]): VoiceScreenplay[] => {
-  const screenplays: VoiceScreenplay[] = [];
+export const textsToScreenplay = (texts: string[]): Screenplay[] => {
+  const screenplays: Screenplay[] = [];
   let prevExpression = 'neutral';
   for (let i = 0; i < texts.length; i++) {
     const text = texts[i];

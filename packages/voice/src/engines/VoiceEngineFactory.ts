@@ -6,7 +6,7 @@ import { OpenAiEngine } from './OpenAiEngine';
 import { NijiVoiceEngine } from './NijiVoiceEngine';
 import { MinimaxEngine } from './MinimaxEngine';
 import { NoneEngine } from './NoneEngine';
-import { VoiceEngineType } from '../../../types';
+import { VoiceEngineType } from '../types/voiceEngine';
 /**
  * Voice engine factory
  * Generate appropriate voice engine instances based on voice engine type

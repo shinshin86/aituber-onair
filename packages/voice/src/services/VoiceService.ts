@@ -1,4 +1,5 @@
-import { ChatScreenplay, VoiceEngineType } from '../../types';
+import { ChatScreenplay } from '../types/chat';
+import { VoiceEngineType } from '../types/voiceEngine';
 
 /**
  * Voice service settings options

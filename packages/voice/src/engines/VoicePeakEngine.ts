@@ -1,5 +1,5 @@
-import { VOICEPEAK_API_URL } from '../../../constants';
-import { Talk } from '../../../types';
+import { VOICEPEAK_API_URL } from '../constants/voiceEngine';
+import { Talk } from '../types/voice';
 import { VoiceEngine } from './VoiceEngine';
 
 /**

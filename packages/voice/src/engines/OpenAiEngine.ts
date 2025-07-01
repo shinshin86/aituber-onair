@@ -1,5 +1,5 @@
-import { OPENAI_TTS_API_URL } from '../../../constants';
-import { Talk } from '../../../types';
+import { OPENAI_TTS_API_URL } from '../constants/voiceEngine';
+import { Talk } from '../types/voice';
 import { VoiceEngine } from './VoiceEngine';
 
 /**

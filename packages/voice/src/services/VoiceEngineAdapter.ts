@@ -1,10 +1,11 @@
-import { ChatScreenplay, EmotionType } from '../../types';
+import { ChatScreenplay } from '../types/chat';
+import { EmotionType } from '../types/voice';
 import {
   VoiceService,
   VoiceServiceOptions,
   AudioPlayOptions,
 } from './VoiceService';
-import { textToScreenplay } from '../../utils/screenplay';
+import { textToScreenplay } from '../utils/screenplay';
 
 /**
  * Adapter implementation for using existing voice engines
@@ -51,7 +52,7 @@ export class VoiceEngineAdapter implements VoiceService {
 
       // Import existing VoiceEngineFactory dynamically
       const { VoiceEngineFactory } = await import(
-        './engines/VoiceEngineFactory'
+        '../engines/VoiceEngineFactory'
       );
 
       // Map emotion to style used by existing engine

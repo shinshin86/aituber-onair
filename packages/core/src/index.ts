@@ -22,15 +22,6 @@ export { OpenAIChatServiceProvider } from './services/chat/providers/openai/Open
 export { GeminiChatServiceProvider } from './services/chat/providers/gemini/GeminiChatServiceProvider';
 export { ClaudeChatServiceProvider } from './services/chat/providers/claude/ClaudeChatServiceProvider';
 
-// Voice services
-export type {
-  VoiceService,
-  VoiceServiceOptions,
-  AudioPlayOptions,
-} from './services/voice/VoiceService';
-export { VoiceEngineAdapter } from './services/voice/VoiceEngineAdapter';
-export * from './services/voice/engines';
-
 // Core module exports
 export { EventEmitter } from './core/EventEmitter';
 export type { MemoryOptions, Summarizer } from './core/MemoryManager';

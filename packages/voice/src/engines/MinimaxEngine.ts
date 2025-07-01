@@ -3,8 +3,8 @@ import {
   MINIMAX_CHINA_API_URL,
   MINIMAX_GLOBAL_VOICE_LIST_URL,
   MINIMAX_CHINA_VOICE_LIST_URL,
-} from '../../../constants';
-import { Talk } from '../../../types';
+} from '../constants/voiceEngine';
+import { Talk } from '../types/voice';
 import { VoiceEngine } from './VoiceEngine';
 
 /**

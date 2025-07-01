@@ -1,4 +1,4 @@
-import { VoiceActor, Talk } from '../../../types';
+import { VoiceActor, Talk } from '../types/voice';
 
 /**
  * Common interface for voice engines
