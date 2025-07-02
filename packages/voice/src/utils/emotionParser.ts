@@ -1,6 +1,4 @@
-// Define emotion types and list locally to avoid dependency on voice package
-const emotions = ['happy', 'sad', 'angry', 'surprised', 'neutral'] as const;
-type EmotionType = (typeof emotions)[number];
+import { emotions, EmotionType } from '../types/voice';
 
 /**
  * Regular expressions for emotion tag parsing

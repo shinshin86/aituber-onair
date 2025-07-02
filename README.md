@@ -64,6 +64,70 @@ aituber-onair/
 
 - **packages/core**: The main library (`@aituber-onair/core`) providing AI conversation and voice features.
 
+## Release Process
+
+This project uses [Changesets](https://github.com/changesets/changesets) for version management and automated releases.
+
+### Creating a Release
+
+#### Automated Release (Recommended)
+
+1. **Create a changeset for your changes**
+   ```bash
+   npm run changeset
+   ```
+   - Select the packages that were modified
+   - Choose the appropriate version bump (patch/minor/major)
+   - Write a clear description of the changes
+
+2. **Commit the changeset file**
+   ```bash
+   git add .changeset/
+   git commit -m "Add changeset for [your feature]"
+   ```
+
+3. **Push to GitHub and create a PR**
+   - After merging to main, the GitHub Action will automatically create a "Version Packages" PR
+   - This PR will include all pending changesets
+
+4. **Merge the Version PR**
+   - Review and merge the "Version Packages" PR
+   - This will automatically:
+     - Update package versions
+     - Update CHANGELOG.md files
+     - Create git tags
+     - Publish packages to npm
+
+#### Manual Release (if needed)
+
+For a complete manual release workflow:
+
+1. **Create changeset for your changes**
+   ```bash
+   npm run changeset
+   ```
+
+2. **Update package versions**
+   ```bash
+   npm run changeset:version
+   ```
+
+3. **Release (build, test, and publish)**
+   ```bash
+   npm run release
+   ```
+
+Alternative individual operations:
+```bash
+# Check what would be published
+npm run changeset:publish -- --dry-run
+
+# Manually publish packages (after changeset:version)
+npm run changeset:publish
+```
+
+**Note**: `npm run release` executes `build → test → publish` in sequence. If any step fails, the process stops and packages won't be published.
+
 ## License
 
 This project is open-sourced under the [MIT License](./LICENSE).

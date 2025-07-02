@@ -7,8 +7,8 @@ import {
   VoiceService,
   VoiceServiceOptions,
   AudioPlayOptions,
-} from '../services/voice/VoiceService';
-import { VoiceEngineAdapter } from '../services/voice/VoiceEngineAdapter';
+  VoiceEngineAdapter,
+} from '@aituber-onair/voice';
 import { Message, MemoryStorage, MCPServerConfig } from '../types';
 import { textToScreenplay, screenplayToText } from '../utils/screenplay';
 import { ChatServiceFactory } from '../services/chat/ChatServiceFactory';
