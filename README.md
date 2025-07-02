@@ -70,6 +70,8 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 
 ### Creating a Release
 
+#### Automated Release (Recommended)
+
 1. **Create a changeset for your changes**
    ```bash
    npm run changeset
@@ -96,18 +98,35 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
      - Create git tags
      - Publish packages to npm
 
-### Manual Release (if needed)
+#### Manual Release (if needed)
 
+For a complete manual release workflow:
+
+1. **Create changeset for your changes**
+   ```bash
+   npm run changeset
+   ```
+
+2. **Update package versions**
+   ```bash
+   npm run changeset:version
+   ```
+
+3. **Release (build, test, and publish)**
+   ```bash
+   npm run release
+   ```
+
+Alternative individual operations:
 ```bash
 # Check what would be published
 npm run changeset:publish -- --dry-run
 
-# Manually version packages
-npm run changeset:version
-
-# Manually publish packages
+# Manually publish packages (after changeset:version)
 npm run changeset:publish
 ```
+
+**Note**: `npm run release` executes `build → test → publish` in sequence. If any step fails, the process stops and packages won't be published.
 
 ## License
 

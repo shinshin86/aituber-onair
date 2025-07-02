@@ -72,6 +72,8 @@ aituber-onair/
 
 ### リリースの作成方法
 
+#### 自動リリース（推奨）
+
 1. **変更内容に対してChangesetを作成**
    ```bash
    npm run changeset
@@ -98,18 +100,35 @@ aituber-onair/
      - Gitタグの作成
      - npmへのパッケージ公開
 
-### 手動リリース（必要な場合）
+#### 手動リリース（必要な場合）
 
+完全な手動リリースワークフローの手順：
+
+1. **変更内容に対してChangesetを作成**
+   ```bash
+   npm run changeset
+   ```
+
+2. **パッケージバージョンを更新**
+   ```bash
+   npm run changeset:version
+   ```
+
+3. **リリース実行（ビルド、テスト、公開）**
+   ```bash
+   npm run release
+   ```
+
+個別操作の代替方法：
 ```bash
 # 公開される内容を確認
 npm run changeset:publish -- --dry-run
 
-# 手動でパッケージのバージョンを更新
-npm run changeset:version
-
-# 手動でパッケージを公開
+# 手動でパッケージを公開（changeset:version実行後）
 npm run changeset:publish
 ```
+
+**注意**: `npm run release`は `ビルド → テスト → 公開` を順番に実行します。いずれかの手順が失敗した場合、処理が停止してパッケージは公開されません。
 
 ## ライセンス
 
