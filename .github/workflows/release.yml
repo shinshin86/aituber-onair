@@ -11,6 +11,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    if: false # Temporarily disabled until voice package is published
     permissions:
       contents: write
       packages: write
