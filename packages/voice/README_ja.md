@@ -1,6 +1,6 @@
 # AITuber OnAir Voice
 
-![AITuber OnAir Voice - logo](./images/aituber-onair-voice.png)
+![AITuber OnAir Voice - logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/voice/images/aituber-onair-voice.png)
 
 [@aituber-onair/voice](https://www.npmjs.com/package/@aituber-onair/voice)は、複数のTTS（Text-to-Speech）エンジンをサポートする独立した音声合成ライブラリです。[AITuber OnAir](https://aituberonair.com)プロジェクトのために開発されましたが、あらゆる音声合成のニーズに対して単独で使用できます。
 

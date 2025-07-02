@@ -224,6 +224,7 @@ function App() {
 
         <div className="button-group">
           <button
+            type="button"
             onClick={speak}
             disabled={isPlaying}
             style={{ opacity: isPlaying ? 0.5 : 1 }}
@@ -231,6 +232,7 @@ function App() {
             🔊 {isPlaying ? 'Speaking...' : 'Speak'}
           </button>
           <button
+            type="button"
             onClick={stopSpeaking}
             disabled={!isPlaying}
             style={{ opacity: !isPlaying ? 0.5 : 1 }}

@@ -1,6 +1,6 @@
 # AITuber OnAir Voice
 
-![AITuber OnAir Voice - logo](./images/aituber-onair-voice.png)
+![AITuber OnAir Voice - logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/voice/images/aituber-onair-voice.png)
 
 [@aituber-onair/voice](https://www.npmjs.com/package/@aituber-onair/voice) is an independent voice synthesis library that supports multiple TTS (Text-to-Speech) engines. While originally developed for the [AITuber OnAir](https://aituberonair.com) project, it can be used standalone for any voice synthesis needs.
 

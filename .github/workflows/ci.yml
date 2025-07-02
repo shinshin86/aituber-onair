@@ -18,15 +18,13 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Clean up
-        run: |
-          rm -f package-lock.json
-
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Run build
-        run: npm run build --workspaces
+      - name: Build packages in dependency order
+        run: |
+          npm -w @aituber-onair/voice run build
+          npm -w @aituber-onair/core run build
 
       - name: Run tests
         run: npm run test --workspaces

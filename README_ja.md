@@ -18,6 +18,12 @@
   npm install @aituber-onair/core
   ```
 
+- [**@aituber-onair/voice**](./packages/voice/README_ja.md)
+  複数のTTSエンジン（VOICEVOX、VoicePeak、OpenAI TTS、NijiVoice、MiniMax、AIVIS Speech等）をサポートする独立した音声合成ライブラリです。単体での使用も、coreパッケージとの統合によるフルAITuber機能の実現も可能です。
+  ```
+  npm install @aituber-onair/voice
+  ```
+
 ## はじめに
 
 1. **リポジトリをクローンする**  
@@ -55,7 +61,11 @@
 ```
 aituber-onair/
 ├── packages/
-│   └── core/
+│   ├── core/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   └── voice/
 │       ├── src/
 │       ├── test/
 │       └── package.json
@@ -64,7 +74,8 @@ aituber-onair/
 └── ...
 ```
 
-- **packages/core**: AIによる会話および音声機能を提供する主要ライブラリ（`@aituber-onair/core`）です。
+- **packages/core**: AIによる会話およびチャット処理機能を提供する主要ライブラリ（`@aituber-onair/core`）です。
+- **packages/voice**: 複数のTTSエンジンをサポートする音声合成ライブラリ（`@aituber-onair/voice`）です。
 
 ## リリース手順
 
