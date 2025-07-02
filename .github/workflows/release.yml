@@ -26,13 +26,15 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install Dependencies
-        run: npm install --workspaces --ignore-scripts --no-audit --no-fund
+        run: npm ci
+
+      - name: Build packages in dependency order
+        run: |
+          npm -w @aituber-onair/voice run build
+          npm -w @aituber-onair/core run build
 
       - name: Run Tests
-        run: npm run test
-
-      - name: Build Packages
-        run: npm run build
+        run: npm run test --workspaces
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
