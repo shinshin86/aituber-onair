@@ -20,11 +20,18 @@ export * from './types/voiceEngine';
 export * from './types/chat';
 
 // Utils
-export { textToScreenplay, textsToScreenplay, screenplayToText } from './utils/screenplay';
+export {
+  textToScreenplay,
+  textsToScreenplay,
+  screenplayToText,
+} from './utils/screenplay';
 export { EmotionParser } from './utils/emotionParser';
 
 // Voice-specific messages utility
-export { splitSentence, textsToScreenplay as textsToVoiceScreenplay } from './services/messages';
+export {
+  splitSentence,
+  textsToScreenplay as textsToVoiceScreenplay,
+} from './services/messages';
 
 // Constants
 export * from './constants/voiceEngine';

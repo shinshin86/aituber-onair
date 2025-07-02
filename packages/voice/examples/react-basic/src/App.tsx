@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react'
-import { VoiceEngineAdapter, type VoiceServiceOptions } from '@aituber-onair/voice'
-import './App.css'
+import { useState, useEffect } from 'react';
+import {
+  VoiceEngineAdapter,
+  type VoiceServiceOptions,
+} from '@aituber-onair/voice';
+import './App.css';
 
 // Engine defaults
 const ENGINE_DEFAULTS = {
@@ -8,79 +11,87 @@ const ENGINE_DEFAULTS = {
     apiUrl: 'https://api.openai.com/v1/audio/speech',
     needsApiKey: true,
     placeholder: 'sk-...',
-    speaker: 'alloy'
+    speaker: 'alloy',
   },
   voicevox: {
     apiUrl: 'http://localhost:50021',
     needsApiKey: false,
     placeholder: 'No API key needed',
-    speaker: 1
+    speaker: 1,
   },
   aivisSpeech: {
     apiUrl: 'http://localhost:10101',
     needsApiKey: false,
     placeholder: 'No API key needed',
-    speaker: '888753760'
+    speaker: '888753760',
   },
   voicepeak: {
     apiUrl: 'http://localhost:20202',
     needsApiKey: false,
     placeholder: 'No API key needed',
-    speaker: 'C001'
+    speaker: 'C001',
   },
   nijivoice: {
     apiUrl: 'https://api.nijivoice.com/api/platform/v1',
     needsApiKey: true,
     placeholder: 'Your NijiVoice API key',
-    speaker: '56bb72e9-62f4-49d9-b57f-e86da9de7730'
+    speaker: '56bb72e9-62f4-49d9-b57f-e86da9de7730',
   },
   minimax: {
     apiUrl: 'https://api.minimax.io/v1/t2a_v2',
     needsApiKey: true,
     placeholder: 'apiKey:groupId',
-    speaker: 'male-qn-qingse'
-  }
-} as const
+    speaker: 'male-qn-qingse',
+  },
+} as const;
 
-type EngineType = keyof typeof ENGINE_DEFAULTS
+type EngineType = keyof typeof ENGINE_DEFAULTS;
 
 function App() {
-  const [engine, setEngine] = useState<EngineType>('openai')
-  const [apiKey, setApiKey] = useState('')
-  const [apiUrl, setApiUrl] = useState('')
-  const [text, setText] = useState('こんにちは！AITuber OnAir Voice のReactデモへようこそ。')
-  const [status, setStatus] = useState('Ready! Select an engine and enter text.')
-  const [statusType, setStatusType] = useState<'info' | 'success' | 'error'>('info')
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [voiceService, setVoiceService] = useState<VoiceEngineAdapter | null>(null)
+  const [engine, setEngine] = useState<EngineType>('openai');
+  const [apiKey, setApiKey] = useState('');
+  const [apiUrl, setApiUrl] = useState('');
+  const [text, setText] = useState(
+    'こんにちは！AITuber OnAir Voice のReactデモへようこそ。',
+  );
+  const [status, setStatus] = useState(
+    'Ready! Select an engine and enter text.',
+  );
+  const [statusType, setStatusType] = useState<'info' | 'success' | 'error'>(
+    'info',
+  );
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [voiceService, setVoiceService] = useState<VoiceEngineAdapter | null>(
+    null,
+  );
 
   // Update defaults when engine changes
   useEffect(() => {
-    const defaults = ENGINE_DEFAULTS[engine]
-    setApiUrl(defaults.apiUrl)
-    setApiKey('')
-    setStatus(`Switched to ${engine}. Default URL: ${defaults.apiUrl}`)
-    setStatusType('success')
-  }, [engine])
+    const defaults = ENGINE_DEFAULTS[engine];
+    setApiUrl(defaults.apiUrl);
+    setApiKey('');
+    setStatus(`Switched to ${engine}. Default URL: ${defaults.apiUrl}`);
+    setStatusType('success');
+  }, [engine]);
 
   const speak = async () => {
     if (!text) {
-      setStatus('Please enter some text to speak')
-      setStatusType('error')
-      return
+      setStatus('Please enter some text to speak');
+      setStatusType('error');
+      return;
     }
 
-    const defaults = ENGINE_DEFAULTS[engine]
-    
+    const defaults = ENGINE_DEFAULTS[engine];
+
     if (defaults.needsApiKey && !apiKey) {
-      setStatus(`API key is required for ${engine}`)
-      setStatusType('error')
-      return
+      setStatus(`API key is required for ${engine}`);
+      setStatusType('error');
+      return;
     }
 
-    setIsPlaying(true)
-    setStatus('Initializing voice service...')
-    setStatusType('info')
+    setIsPlaying(true);
+    setStatus('Initializing voice service...');
+    setStatusType('info');
 
     try {
       // Create voice service options
@@ -88,69 +99,71 @@ function App() {
         engineType: engine,
         speaker: defaults.speaker,
         onComplete: () => {
-          setIsPlaying(false)
-          setStatus('Playback completed')
-          setStatusType('success')
-        }
-      }
+          setIsPlaying(false);
+          setStatus('Playback completed');
+          setStatusType('success');
+        },
+      };
 
       // Add API key if provided
       if (apiKey) {
         if (engine === 'minimax') {
           // For MiniMax, the API key format is "apiKey:groupId"
-          const [key, groupId] = apiKey.split(':')
+          const [key, groupId] = apiKey.split(':');
           if (groupId) {
-            options.apiKey = key
-            options.minimaxGroupId = groupId
+            options.apiKey = key;
+            options.minimaxGroupId = groupId;
           } else {
-            throw new Error('MiniMax requires format: apiKey:groupId')
+            throw new Error('MiniMax requires format: apiKey:groupId');
           }
         } else {
-          options.apiKey = apiKey
+          options.apiKey = apiKey;
         }
       }
 
       // Add API URL if provided
       if (apiUrl) {
-        options.apiUrl = apiUrl
+        options.apiUrl = apiUrl;
       }
 
       // Create or reuse voice service
-      const service = new VoiceEngineAdapter(options)
-      setVoiceService(service)
+      const service = new VoiceEngineAdapter(options);
+      setVoiceService(service);
 
-      setStatus('Generating speech...')
-      setStatusType('info')
+      setStatus('Generating speech...');
+      setStatusType('info');
 
       // Speak the text
-      await service.speak({ text })
-
+      await service.speak({ text });
     } catch (error) {
-      console.error('Speech error:', error)
-      setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      setStatusType('error')
-      setIsPlaying(false)
+      console.error('Speech error:', error);
+      setStatus(
+        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      setStatusType('error');
+      setIsPlaying(false);
     }
-  }
+  };
 
   const stopSpeaking = () => {
     if (voiceService) {
-      voiceService.stop()
-      setIsPlaying(false)
-      setStatus('Playback stopped')
-      setStatusType('success')
+      voiceService.stop();
+      setIsPlaying(false);
+      setStatus('Playback stopped');
+      setStatusType('success');
     }
-  }
+  };
 
-  const defaults = ENGINE_DEFAULTS[engine]
+  const defaults = ENGINE_DEFAULTS[engine];
 
   return (
     <div className="container">
       <h1>
-        🎤 AITuber OnAir Voice<br />
+        🎤 AITuber OnAir Voice
+        <br />
         React Example
       </h1>
-      
+
       <div className="card">
         <div className="form-group">
           <label htmlFor="engine">Voice Engine:</label>
@@ -180,8 +193,10 @@ function App() {
             placeholder={defaults.placeholder}
             disabled={!defaults.needsApiKey}
             style={{
-              backgroundColor: defaults.needsApiKey ? undefined : 'rgba(0,0,0,0.1)',
-              opacity: defaults.needsApiKey ? 1 : 0.5
+              backgroundColor: defaults.needsApiKey
+                ? undefined
+                : 'rgba(0,0,0,0.1)',
+              opacity: defaults.needsApiKey ? 1 : 0.5,
             }}
           />
         </div>
@@ -208,15 +223,15 @@ function App() {
         </div>
 
         <div className="button-group">
-          <button 
-            onClick={speak} 
+          <button
+            onClick={speak}
             disabled={isPlaying}
             style={{ opacity: isPlaying ? 0.5 : 1 }}
           >
             🔊 {isPlaying ? 'Speaking...' : 'Speak'}
           </button>
-          <button 
-            onClick={stopSpeaking} 
+          <button
+            onClick={stopSpeaking}
             disabled={!isPlaying}
             style={{ opacity: !isPlaying ? 0.5 : 1 }}
           >
@@ -224,24 +239,36 @@ function App() {
           </button>
         </div>
 
-        <div className={`status ${statusType}`}>
-          {status}
-        </div>
+        <div className={`status ${statusType}`}>{status}</div>
       </div>
 
       <div className="card">
         <h2>💡 Benefits of React Example</h2>
         <ul>
-          <li>✅ <strong>No CORS issues</strong> - Vite handles module resolution</li>
-          <li>✅ <strong>No .js extension problems</strong> - Bundler resolves imports automatically</li>
-          <li>✅ <strong>Hot reload</strong> - Fast development experience</li>
-          <li>✅ <strong>TypeScript support</strong> - Full type safety</li>
-          <li>✅ <strong>Modern development</strong> - Familiar React + Vite workflow</li>
-          <li>✅ <strong>Production ready</strong> - Can be built and deployed</li>
+          <li>
+            ✅ <strong>No CORS issues</strong> - Vite handles module resolution
+          </li>
+          <li>
+            ✅ <strong>No .js extension problems</strong> - Bundler resolves
+            imports automatically
+          </li>
+          <li>
+            ✅ <strong>Hot reload</strong> - Fast development experience
+          </li>
+          <li>
+            ✅ <strong>TypeScript support</strong> - Full type safety
+          </li>
+          <li>
+            ✅ <strong>Modern development</strong> - Familiar React + Vite
+            workflow
+          </li>
+          <li>
+            ✅ <strong>Production ready</strong> - Can be built and deployed
+          </li>
         </ul>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

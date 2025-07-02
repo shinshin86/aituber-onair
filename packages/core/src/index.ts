@@ -54,7 +54,6 @@ export {
   type VoiceService,
   type VoiceServiceOptions,
   type AudioPlayOptions,
-  
   // Voice engines
   VoiceEngineFactory,
   type VoiceEngine,
@@ -64,7 +63,6 @@ export {
   OpenAiEngine,
   NijiVoiceEngine,
   MinimaxEngine,
-  
   // Types
   type VoiceEngineType,
   talkStyles,
@@ -75,7 +73,6 @@ export {
   type EmotionTypeForVoicepeak,
   type Screenplay as VoiceScreenplay,
   type VoiceActor,
-  
   // Utils
   textToScreenplay,
   textsToScreenplay,
@@ -83,7 +80,6 @@ export {
   EmotionParser,
   splitSentence,
   textsToScreenplay as textsToVoiceScreenplay,
-  
   // Constants
   VOICE_VOX_API_URL,
   VOICEPEAK_API_URL,

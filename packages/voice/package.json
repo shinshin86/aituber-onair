@@ -5,9 +5,7 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "typecheck": "tsc --noEmit",
@@ -19,14 +17,7 @@
     "lint": "biome lint .",
     "prepublishOnly": "npm run build"
   },
-  "keywords": [
-    "aituber",
-    "vtuber",
-    "ai",
-    "voice",
-    "tts",
-    "speech-synthesis"
-  ],
+  "keywords": ["aituber", "vtuber", "ai", "voice", "tts", "speech-synthesis"],
   "author": "shinshin86 (https://github.com/shinshin86)",
   "license": "MIT",
   "devDependencies": {
