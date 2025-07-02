@@ -1,11 +1,13 @@
 {
   "name": "@aituber-onair/core",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Core library for AITuber OnAir providing voice synthesis and chat processing",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "typecheck": "tsc --project tsconfig.dev.json",
@@ -17,14 +19,21 @@
     "lint": "biome lint .",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["aituber", "vtuber", "ai", "voice", "streaming"],
+  "keywords": [
+    "aituber",
+    "vtuber",
+    "ai",
+    "voice",
+    "streaming"
+  ],
   "author": "shinshin86 (https://github.com/shinshin86)",
   "license": "MIT",
-  "dependencies": {
-    "@aituber-onair/voice": "0.14.0"
-  },
   "peerDependencies": {
-    "@pixiv/three-vrm": "^1.0.9"
+    "@pixiv/three-vrm": "^1.0.9",
+    "@aituber-onair/voice": "^0.1.0"
+  },
+  "optionalDependencies": {
+    "@aituber-onair/voice": "^0.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

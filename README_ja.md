@@ -66,6 +66,51 @@ aituber-onair/
 
 - **packages/core**: AIによる会話および音声機能を提供する主要ライブラリ（`@aituber-onair/core`）です。
 
+## リリース手順
+
+このプロジェクトでは [Changesets](https://github.com/changesets/changesets) を使用してバージョン管理と自動リリースを行っています。
+
+### リリースの作成方法
+
+1. **変更内容に対してChangesetを作成**
+   ```bash
+   npm run changeset
+   ```
+   - 変更したパッケージを選択
+   - 適切なバージョンアップ種別を選択 (patch/minor/major)
+   - 変更内容の説明を記載
+
+2. **Changesetファイルをコミット**
+   ```bash
+   git add .changeset/
+   git commit -m "Add changeset for [機能名]"
+   ```
+
+3. **GitHubにプッシュしてPRを作成**
+   - mainブランチにマージ後、GitHub Actionが自動的に「Version Packages」PRを作成
+   - このPRには保留中のすべてのChangesetが含まれます
+
+4. **Version PRをマージ**
+   - 「Version Packages」PRをレビューしてマージ
+   - 以下が自動的に実行されます：
+     - パッケージバージョンの更新
+     - CHANGELOG.mdファイルの更新
+     - Gitタグの作成
+     - npmへのパッケージ公開
+
+### 手動リリース（必要な場合）
+
+```bash
+# 公開される内容を確認
+npm run changeset:publish -- --dry-run
+
+# 手動でパッケージのバージョンを更新
+npm run changeset:version
+
+# 手動でパッケージを公開
+npm run changeset:publish
+```
+
 ## ライセンス
 
 このプロジェクトは [MIT License](./LICENSE) の下で公開されています。

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config/schema.json",
+  "baseBranch": "main",
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "shinshin86/aituber-onair"
+    }
+  ],
+  "access": "public",
+  "linked": [],
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}

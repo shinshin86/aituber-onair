@@ -245,3 +245,63 @@ npm install @aituber-onair/core @aituber-onair/voice
 # For core functionality without voice
 npm install @aituber-onair/core
 ```
+
+## Version Management and Release Process
+
+This project uses [Changesets](https://github.com/changesets/changesets) for automated version management and release processes.
+
+### Package Versioning Strategy
+
+- **Independent Versioning**: Each package (`@aituber-onair/core` and `@aituber-onair/voice`) maintains its own version following SemVer
+- **Dependency Relationship**: Core package uses voice as a peer + optional dependency for flexibility
+- **Release Automation**: GitHub Actions automatically handle version bumping and publishing
+
+### Development Workflow
+
+1. **Make Changes**: Implement your feature or fix
+2. **Add Changeset**: Run `npm run changeset` to document your changes
+   ```bash
+   npm run changeset
+   ```
+   - Select which packages are affected
+   - Choose the appropriate semver bump (patch/minor/major)
+   - Write a clear description of the changes
+
+3. **Commit & Push**: Include the changeset file in your commit
+4. **Create PR**: The changeset will be included in the pull request
+5. **Merge**: After merge to main, GitHub Actions will:
+   - Create a "Version Packages" PR with updated versions
+   - Auto-merge and publish when the version PR is merged
+
+### Manual Release Commands
+
+```bash
+# Check what would be published (dry run)
+npm run changeset:publish -- --dry-run
+
+# Manually version packages
+npm run changeset:version
+
+# Manually publish packages  
+npm run changeset:publish
+
+# Full release process (build, test, publish)
+npm run release
+```
+
+### SemVer Guidelines
+
+| Change Type | Version Bump | Examples |
+|-------------|--------------|----------|
+| **Major** | Breaking changes | Removing public APIs, changing function signatures |
+| **Minor** | New features | Adding new engines, new configuration options |
+| **Patch** | Bug fixes | Fixing existing functionality, documentation updates |
+
+### Package Dependency Strategy
+
+- **Core Package**: Uses voice as peer + optional dependency
+  - Users can install core alone for voice-free usage
+  - Users can add voice package when TTS functionality is needed
+- **Voice Package**: Completely independent
+  - Can be used standalone for TTS-only applications
+  - No dependencies on core package
