@@ -19,7 +19,13 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          # Remove local workspace reference and use latest npm version
+          cd packages/core
+          npm uninstall @aituber-onair/voice
+          npm install @aituber-onair/voice@latest
+          cd ../..
+          npm ci
 
       - name: Run build
         run: npm run build --workspaces
