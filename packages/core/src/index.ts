@@ -46,3 +46,52 @@ export * from './constants';
 // Utility exports
 export * from './utils';
 export { createMemoryStorage } from './utils/storage';
+
+// Voice exports (re-exported from @aituber-onair/voice for backward compatibility)
+export {
+  // Core services
+  VoiceEngineAdapter,
+  type VoiceService,
+  type VoiceServiceOptions,
+  type AudioPlayOptions,
+  
+  // Voice engines
+  VoiceEngineFactory,
+  type VoiceEngine,
+  VoiceVoxEngine,
+  VoicePeakEngine,
+  AivisSpeechEngine,
+  OpenAiEngine,
+  NijiVoiceEngine,
+  MinimaxEngine,
+  
+  // Types
+  type VoiceEngineType,
+  talkStyles,
+  type TalkStyle,
+  type Talk,
+  emotions,
+  type EmotionType,
+  type EmotionTypeForVoicepeak,
+  type Screenplay as VoiceScreenplay,
+  type VoiceActor,
+  
+  // Utils
+  textToScreenplay,
+  textsToScreenplay,
+  screenplayToText,
+  EmotionParser,
+  splitSentence,
+  textsToScreenplay as textsToVoiceScreenplay,
+  
+  // Constants
+  VOICE_VOX_API_URL,
+  VOICEPEAK_API_URL,
+  AIVIS_SPEECH_API_URL,
+  NIJI_VOICE_API_URL,
+  OPENAI_TTS_API_URL,
+  MINIMAX_GLOBAL_API_URL,
+  MINIMAX_CHINA_API_URL,
+  MINIMAX_GLOBAL_VOICE_LIST_URL,
+  MINIMAX_CHINA_VOICE_LIST_URL,
+} from '@aituber-onair/voice';
