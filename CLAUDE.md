@@ -239,10 +239,7 @@ await core.processChat('Hello!', 'chatForm');
 # For voice functionality only
 npm install @aituber-onair/voice
 
-# For full AITuber functionality
-npm install @aituber-onair/core @aituber-onair/voice
-
-# For core functionality without voice
+# For full AITuber functionality (voice included automatically)
 npm install @aituber-onair/core
 ```
 
@@ -253,7 +250,7 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
 ### Package Versioning Strategy
 
 - **Independent Versioning**: Each package (`@aituber-onair/core` and `@aituber-onair/voice`) maintains its own version following SemVer
-- **Dependency Relationship**: Core package uses voice as a peer + optional dependency for flexibility
+- **Dependency Relationship**: Core package includes voice as a direct dependency for ease of use
 - **Release Automation**: GitHub Actions automatically handle version bumping and publishing
 
 ### Development Workflow
@@ -299,9 +296,9 @@ npm run release
 
 ### Package Dependency Strategy
 
-- **Core Package**: Uses voice as peer + optional dependency
-  - Users can install core alone for voice-free usage
-  - Users can add voice package when TTS functionality is needed
+- **Core Package**: Uses voice as a direct dependency
+  - Voice functionality is automatically included when installing core
+  - Simplified installation process with single package
 - **Voice Package**: Completely independent
   - Can be used standalone for TTS-only applications
   - No dependencies on core package
