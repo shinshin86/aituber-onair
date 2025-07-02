@@ -29,7 +29,7 @@ const ENGINE_DEFAULTS = {
     apiUrl: 'http://localhost:20202',
     needsApiKey: false,
     placeholder: 'No API key needed',
-    speaker: 'C001',
+    speaker: 'f1',
   },
   nijivoice: {
     apiUrl: 'https://api.nijivoice.com/api/platform/v1',
@@ -174,9 +174,9 @@ function App() {
           >
             <option value="openai">OpenAI TTS</option>
             <option value="voicevox">VOICEVOX</option>
-            <option value="aivisSpeech">AIVIS Speech</option>
-            <option value="voicepeak">VoicePeak</option>
-            <option value="nijivoice">NijiVoice</option>
+            <option value="aivisSpeech">AivisSpeech</option>
+            <option value="voicepeak">VOICEPEAK</option>
+            <option value="nijivoice">にじボイス</option>
             <option value="minimax">MiniMax</option>
           </select>
         </div>
