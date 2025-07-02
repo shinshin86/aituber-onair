@@ -1,0 +1,66 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.container h1 {
+  margin-bottom: 2rem;
+  text-align: center;
+  line-height: 1.2;
+  background: linear-gradient(45deg, #646cff, #747bff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card h2 {
+  color: #646cff;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  text-align: left;
+}
+
+.button-group {
+  justify-content: center;
+}
+
+.status.info {
+  background-color: rgba(100, 108, 255, 0.1);
+  border: 1px solid rgba(100, 108, 255, 0.3);
+  color: #646cff;
+}
+
+.status.success {
+  background-color: rgba(0, 255, 0, 0.1);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  color: #4ade80;
+}
+
+.status.error {
+  background-color: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: #ef4444;
+}
+
+.card ul {
+  text-align: left;
+  line-height: 1.8;
+}
+
+.card li {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+}
