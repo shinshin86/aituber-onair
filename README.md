@@ -8,12 +8,18 @@
 
 Welcome to the **AITuber OnAir** monorepo! This repository contains various packages and tools that power AI-driven virtual streaming and related features.
 
-Currently, the primary package available is:
+Currently, the primary packages available are:
 
 - [**@aituber-onair/core**](./packages/core/README.md)
   A TypeScript library for generating text and audio responses in AI Tuber streaming scenarios. It provides seamless integration with various AI and speech APIs, as well as memory and conversation context management.
   ```
   npm install @aituber-onair/core
+  ```
+
+- [**@aituber-onair/voice**](./packages/voice/README.md)
+  An independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, AIVIS Speech, etc.). Can be used standalone or integrated with the core package for full AITuber functionality.
+  ```
+  npm install @aituber-onair/voice
   ```
 
 ## Getting Started
@@ -53,7 +59,11 @@ Currently, the primary package available is:
 ```
 aituber-onair/
 ├── packages/
-│   └── core/
+│   ├── core/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   └── voice/
 │       ├── src/
 │       ├── test/
 │       └── package.json
@@ -62,7 +72,8 @@ aituber-onair/
 └── ...
 ```
 
-- **packages/core**: The main library (`@aituber-onair/core`) providing AI conversation and voice features.
+- **packages/core**: The main library (`@aituber-onair/core`) providing AI conversation and chat processing features.
+- **packages/voice**: The voice synthesis library (`@aituber-onair/voice`) supporting multiple TTS engines.
 
 ## Release Process
 
