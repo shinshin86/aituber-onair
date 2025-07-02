@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build (voice → core の順で実行)
+      - name: Build packages in dependency order
         run: |
           npm -w @aituber-onair/voice run build
           npm -w @aituber-onair/core run build
