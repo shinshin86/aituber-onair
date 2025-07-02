@@ -1,7 +1,6 @@
 /**
  * Voice related type definitions
  */
-import { VRMExpressionPresetName } from '@pixiv/three-vrm';
 
 export const talkStyles = [
   'talk',
@@ -35,7 +34,7 @@ export const emotions = [
   'surprised',
   'relaxed',
 ] as const;
-export type EmotionType = (typeof emotions)[number] & VRMExpressionPresetName;
+export type EmotionType = (typeof emotions)[number];
 
 /**
  * Emotion types for VoicePeak
