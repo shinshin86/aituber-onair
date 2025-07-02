@@ -21,8 +21,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run build
-        run: npm run build --workspaces
+      - name: Build (voice → core の順で実行)
+        run: |
+          npm -w @aituber-onair/voice run build
+          npm -w @aituber-onair/core run build
 
       - name: Run tests
         run: npm run test --workspaces
