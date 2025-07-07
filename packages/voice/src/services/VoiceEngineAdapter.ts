@@ -6,14 +6,15 @@ import {
   AudioPlayOptions,
 } from './VoiceService';
 import { textToScreenplay } from '../utils/screenplay';
+import { AudioPlayer } from '../types/audioPlayer';
+import { AudioPlayerFactory } from './audio/AudioPlayerFactory';
 
 /**
  * Adapter implementation for using existing voice engines
  */
 export class VoiceEngineAdapter implements VoiceService {
   private options: VoiceServiceOptions;
-  private isPlayingAudio: boolean = false;
-  private audioElement: HTMLAudioElement | null = null;
+  private audioPlayer: AudioPlayer;
 
   /**
    * Constructor
@@ -21,17 +22,14 @@ export class VoiceEngineAdapter implements VoiceService {
    */
   constructor(options: VoiceServiceOptions) {
     this.options = options;
+    this.audioPlayer = AudioPlayerFactory.createAudioPlayer();
 
-    // Create reusable audio element
-    if (typeof window !== 'undefined') {
-      this.audioElement = document.createElement('audio');
-      this.audioElement.addEventListener('ended', () => {
-        this.isPlayingAudio = false;
-        if (this.options.onComplete) {
-          this.options.onComplete();
-        }
-      });
-    }
+    // Set up completion callback
+    this.audioPlayer.setOnComplete(() => {
+      if (this.options.onComplete) {
+        this.options.onComplete();
+      }
+    });
   }
 
   /**
@@ -44,11 +42,9 @@ export class VoiceEngineAdapter implements VoiceService {
     options?: AudioPlayOptions,
   ): Promise<void> {
     try {
-      if (this.isPlayingAudio) {
+      if (this.audioPlayer.isPlaying()) {
         this.stop();
       }
-
-      this.isPlayingAudio = true;
 
       // Import existing VoiceEngineFactory dynamically
       const { VoiceEngineFactory } = await import(
@@ -131,10 +127,9 @@ export class VoiceEngineAdapter implements VoiceService {
       }
 
       // Default playback process
-      await this.playAudioBuffer(audioBuffer, options?.audioElementId);
+      await this.audioPlayer.play(audioBuffer, options?.audioElementId);
     } catch (error) {
       console.error('Error in speak:', error);
-      this.isPlayingAudio = false;
       throw error;
     }
   }
@@ -154,18 +149,14 @@ export class VoiceEngineAdapter implements VoiceService {
    * Get whether currently playing
    */
   isPlaying(): boolean {
-    return this.isPlayingAudio;
+    return this.audioPlayer.isPlaying();
   }
 
   /**
    * Stop playback
    */
   stop(): void {
-    if (this.audioElement) {
-      this.audioElement.pause();
-      this.audioElement.currentTime = 0;
-    }
-    this.isPlayingAudio = false;
+    this.audioPlayer.stop();
   }
 
   /**
@@ -174,80 +165,14 @@ export class VoiceEngineAdapter implements VoiceService {
    */
   updateOptions(options: Partial<VoiceServiceOptions>): void {
     this.options = { ...this.options, ...options };
-  }
-
-  /**
-   * Play audio buffer
-   * @param audioBuffer Audio data ArrayBuffer
-   * @param audioElementId ID of HTML element to play audio (use internal element if omitted)
-   */
-  private async playAudioBuffer(
-    audioBuffer: ArrayBuffer,
-    audioElementId?: string,
-  ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        // If not in browser environment, do nothing
-        if (typeof window === 'undefined') {
-          this.isPlayingAudio = false;
-          resolve();
-          return;
+    
+    // Update audio player callback if onComplete changes
+    if (options.onComplete !== undefined) {
+      this.audioPlayer.setOnComplete(() => {
+        if (this.options.onComplete) {
+          this.options.onComplete();
         }
-
-        // Create Blob from audio data
-        const blob = new Blob([audioBuffer], { type: 'audio/wav' });
-        const url = URL.createObjectURL(blob);
-
-        // Get/create audio element for playback
-        let audioEl = this.audioElement;
-        if (audioElementId) {
-          const customAudioEl = document.getElementById(
-            audioElementId,
-          ) as HTMLAudioElement;
-          if (customAudioEl) {
-            audioEl = customAudioEl;
-          }
-        }
-
-        if (!audioEl) {
-          reject(new Error('Audio element not available'));
-          return;
-        }
-
-        // Set event listeners
-        const onEnded = () => {
-          this.isPlayingAudio = false;
-          URL.revokeObjectURL(url);
-          audioEl?.removeEventListener('ended', onEnded);
-          if (this.options.onComplete) {
-            this.options.onComplete();
-          }
-          resolve();
-        };
-
-        const onError = (e: Event) => {
-          this.isPlayingAudio = false;
-          URL.revokeObjectURL(url);
-          audioEl?.removeEventListener('error', onError);
-          reject(
-            new Error(`Audio playback error: ${(e as ErrorEvent).message}`),
-          );
-        };
-
-        audioEl.addEventListener('ended', onEnded);
-        audioEl.addEventListener('error', onError);
-
-        // Play audio
-        audioEl.src = url;
-        audioEl.play().catch((error) => {
-          this.isPlayingAudio = false;
-          URL.revokeObjectURL(url);
-          reject(error);
-        });
-      } catch (error) {
-        this.isPlayingAudio = false;
-        reject(error);
-      }
-    });
+      });
+    }
   }
 }

@@ -30,5 +30,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "optionalDependencies": {
+    "speaker": "^0.5.4",
+    "play-sound": "^1.1.6"
   }
 }

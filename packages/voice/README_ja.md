@@ -425,22 +425,50 @@ function VoiceDemo() {
 
 ### Node.jsでの使用
 
-```typescript
-import { VoiceService } from '@aituber-onair/voice';
-import { writeFileSync } from 'fs';
+音声パッケージは、環境の自動検出によりNode.js環境を完全にサポートするようになりました：
 
-const voiceService = new VoiceService({
+```typescript
+import { VoiceEngineAdapter } from '@aituber-onair/voice';
+
+const voiceService = new VoiceEngineAdapter({
   engineType: 'openai',
   speaker: 'nova',
-  apiKey: process.env.OPENAI_API_KEY,
-  onPlay: async (audioBuffer) => {
-    // 再生する代わりにファイルに保存
-    writeFileSync('output.mp3', Buffer.from(audioBuffer));
-  }
+  apiKey: process.env.OPENAI_API_KEY
 });
 
-await voiceService.speak({ text: 'この音声をファイルに保存します' });
+// 利用可能なNode.jsオーディオライブラリを使用して音声が再生されます
+await voiceService.speak({ text: 'Node.jsからこんにちは！' });
 ```
+
+#### Node.jsでのオーディオ再生
+
+Node.jsでオーディオを再生するには、以下のオプション依存関係のいずれかをインストールします：
+
+```bash
+# オプション1：speaker（ネイティブバインディング、高品質）
+npm install speaker
+
+# オプション2：play-sound（システムオーディオプレーヤーを使用、インストールが簡単）
+npm install play-sound
+```
+
+どちらもインストールされていない場合でも、パッケージは正常に動作しますが、音声は再生されません。`onPlay`コールバックを使用してオーディオデータを処理できます：
+
+```typescript
+const voiceService = new VoiceEngineAdapter({
+  engineType: 'voicevox',
+  speaker: '1',
+  voicevoxApiUrl: 'http://localhost:50021',
+  onPlay: async (audioBuffer) => {
+    // ファイルに保存またはオーディオデータを処理
+    writeFileSync('output.wav', Buffer.from(audioBuffer));
+  }
+});
+```
+
+パッケージは環境を自動的に検出し、適切なオーディオプレーヤーを使用します：
+- **ブラウザ**：HTMLAudioElementを使用
+- **Node.js**：利用可能な場合はspeakerまたはplay-soundを使用、それ以外はサイレント
 
 ## テスト
 
