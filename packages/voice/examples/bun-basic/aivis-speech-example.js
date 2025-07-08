@@ -1,10 +1,10 @@
 /**
  * AivisSpeech example for @aituber-onair/voice in Bun
- * 
+ *
  * Requirements:
  * - AivisSpeech server running on http://localhost:10101
  * - Optional: speaker or play-sound for audio playback
- * 
+ *
  * Run with: bun run aivis-speech-example.js
  */
 import { VoiceEngineAdapter } from '../../dist/cjs/index.js';
@@ -21,13 +21,15 @@ async function main() {
     aivisSpeechApiUrl: 'http://localhost:10101',
     onComplete: () => {
       console.log('✓ Speech processing completed');
-    }
+    },
   };
 
   // Test 1: Server connectivity check
   console.log('=== Test 1: Server connectivity check ===');
-  console.log(`Checking AivisSpeech server at: ${aivisOptions.aivisSpeechApiUrl}`);
-  
+  console.log(
+    `Checking AivisSpeech server at: ${aivisOptions.aivisSpeechApiUrl}`,
+  );
+
   let serverAvailable = false;
   try {
     const response = await fetch(aivisOptions.aivisSpeechApiUrl);
@@ -61,14 +63,16 @@ async function main() {
   console.log('=== Test 2: Generate and save audio ===');
   try {
     const outputPath = join(import.meta.dir, 'aivis-output.wav');
-    
+
     const voiceService = new VoiceEngineAdapter({
       ...aivisOptions,
       onPlay: async (audioBuffer) => {
-        console.log(`✓ Received audio buffer (${audioBuffer.byteLength} bytes)`);
+        console.log(
+          `✓ Received audio buffer (${audioBuffer.byteLength} bytes)`,
+        );
         writeFileSync(outputPath, Buffer.from(audioBuffer));
         console.log(`✓ Audio saved to: ${outputPath}`);
-      }
+      },
     });
 
     console.log('Generating speech with AivisSpeech...');
@@ -96,18 +100,18 @@ async function main() {
   const emotions = [
     { emotion: 'happy', text: '[happy] AivisSpeechで嬉しい感情を表現！' },
     { emotion: 'sad', text: '[sad] 悲しい気持ちです。' },
-    { emotion: 'angry', text: '[angry] 怒っています！' }
+    { emotion: 'angry', text: '[angry] 怒っています！' },
   ];
 
   for (const { emotion, text } of emotions) {
     try {
       const outputPath = join(import.meta.dir, `aivis-${emotion}.wav`);
-      
+
       const voiceService = new VoiceEngineAdapter({
         ...aivisOptions,
         onPlay: async (audioBuffer) => {
           writeFileSync(outputPath, Buffer.from(audioBuffer));
-        }
+        },
       });
 
       console.log(`Testing ${emotion} emotion...`);

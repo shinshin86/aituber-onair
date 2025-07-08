@@ -11,7 +11,10 @@ export class RuntimeDetection {
   }
 
   static isDeno(): boolean {
-    return typeof window !== 'undefined' && typeof (globalThis as any).Deno !== 'undefined';
+    return (
+      typeof window !== 'undefined' &&
+      typeof (globalThis as any).Deno !== 'undefined'
+    );
   }
 
   static isBun(): boolean {
@@ -19,7 +22,11 @@ export class RuntimeDetection {
   }
 
   static isNode(): boolean {
-    return typeof process !== 'undefined' && process.versions?.node !== undefined && !this.isBun();
+    return (
+      typeof process !== 'undefined' &&
+      process.versions?.node !== undefined &&
+      !this.isBun()
+    );
   }
 
   static getRuntimeName(): string {
@@ -43,7 +50,7 @@ export class AudioPlayerFactory {
     if (RuntimeDetection.isBrowser() || RuntimeDetection.isDeno()) {
       return new BrowserAudioPlayer();
     }
-    
+
     // Node.js and Bun (both can use Node.js audio libraries)
     if (RuntimeDetection.isNode() || RuntimeDetection.isBun()) {
       return new NodeAudioPlayer();
@@ -65,7 +72,7 @@ export class AudioPlayerFactory {
       isNode: RuntimeDetection.isNode(),
       hasWindow: typeof window !== 'undefined',
       hasDocument: typeof document !== 'undefined',
-      hasProcess: typeof process !== 'undefined'
+      hasProcess: typeof process !== 'undefined',
     };
   }
 }

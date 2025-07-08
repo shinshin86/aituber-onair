@@ -1,10 +1,10 @@
 /**
  * VoicePeak example for @aituber-onair/voice in Bun
- * 
+ *
  * Requirements:
  * - VoicePeak server running on http://localhost:20202
  * - Optional: speaker or play-sound for audio playback
- * 
+ *
  * Run with: bun run voicepeak-example.js
  */
 import { VoiceEngineAdapter } from '../../dist/cjs/index.js';
@@ -21,13 +21,15 @@ async function main() {
     voicepeakApiUrl: 'http://localhost:20202',
     onComplete: () => {
       console.log('✓ Speech processing completed');
-    }
+    },
   };
 
   // Test 1: Server connectivity check
   console.log('=== Test 1: Server connectivity check ===');
-  console.log(`Checking VoicePeak server at: ${voicepeakOptions.voicepeakApiUrl}`);
-  
+  console.log(
+    `Checking VoicePeak server at: ${voicepeakOptions.voicepeakApiUrl}`,
+  );
+
   let serverAvailable = false;
   try {
     const response = await fetch(voicepeakOptions.voicepeakApiUrl);
@@ -61,14 +63,16 @@ async function main() {
   console.log('=== Test 2: Generate and save audio ===');
   try {
     const outputPath = join(import.meta.dir, 'voicepeak-output.wav');
-    
+
     const voiceService = new VoiceEngineAdapter({
       ...voicepeakOptions,
       onPlay: async (audioBuffer) => {
-        console.log(`✓ Received audio buffer (${audioBuffer.byteLength} bytes)`);
+        console.log(
+          `✓ Received audio buffer (${audioBuffer.byteLength} bytes)`,
+        );
         writeFileSync(outputPath, Buffer.from(audioBuffer));
         console.log(`✓ Audio saved to: ${outputPath}`);
-      }
+      },
     });
 
     console.log('Generating speech with VoicePeak...');
@@ -96,18 +100,18 @@ async function main() {
   const emotions = [
     { emotion: 'happy', text: '[happy] VoicePeakで楽しい気持ちを表現！' },
     { emotion: 'sad', text: '[sad] 悲しい感情です。' },
-    { emotion: 'angry', text: '[angry] 怒りの感情を表現！' }
+    { emotion: 'angry', text: '[angry] 怒りの感情を表現！' },
   ];
 
   for (const { emotion, text } of emotions) {
     try {
       const outputPath = join(import.meta.dir, `voicepeak-${emotion}.wav`);
-      
+
       const voiceService = new VoiceEngineAdapter({
         ...voicepeakOptions,
         onPlay: async (audioBuffer) => {
           writeFileSync(outputPath, Buffer.from(audioBuffer));
-        }
+        },
       });
 
       console.log(`Testing ${emotion} emotion...`);
@@ -123,7 +127,7 @@ async function main() {
   console.log('\n📌 VoicePeak notes:');
   console.log('- Generates 48000Hz audio (detected automatically)');
   console.log('- Professional quality voice synthesis');
-  console.log('- Works seamlessly with Bun\'s fast runtime');
+  console.log("- Works seamlessly with Bun's fast runtime");
 }
 
 main().catch(console.error);

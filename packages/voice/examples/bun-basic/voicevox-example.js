@@ -1,13 +1,16 @@
 /**
  * VOICEVOX example for @aituber-onair/voice in Bun
- * 
+ *
  * Requirements:
  * - VOICEVOX server running on http://localhost:50021
  * - Optional: speaker or play-sound for audio playback
- * 
+ *
  * Run with: bun run voicevox-example.js
  */
-import { VoiceEngineAdapter, AudioPlayerFactory } from '../../dist/cjs/index.js';
+import {
+  VoiceEngineAdapter,
+  AudioPlayerFactory,
+} from '../../dist/cjs/index.js';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -23,7 +26,7 @@ async function main() {
   try {
     const silentService = new VoiceEngineAdapter({
       engineType: 'none',
-      speaker: 'default'
+      speaker: 'default',
     });
     await silentService.speakText('Silent test in Bun');
     console.log('✓ Silent mode test passed\n');
@@ -35,29 +38,37 @@ async function main() {
   console.log('=== Test 2: VOICEVOX with file output ===');
   try {
     const outputPath = join(import.meta.dir, 'voicevox-output.wav');
-    
+
     const voiceService = new VoiceEngineAdapter({
       speaker: '46',
       engineType: 'voicevox',
       voicevoxApiUrl: 'http://localhost:50021',
       onPlay: async (audioBuffer) => {
-        console.log(`✓ Received audio buffer (${audioBuffer.byteLength} bytes)`);
+        console.log(
+          `✓ Received audio buffer (${audioBuffer.byteLength} bytes)`,
+        );
         writeFileSync(outputPath, Buffer.from(audioBuffer));
         console.log(`✓ Audio saved to: ${outputPath}`);
       },
       onComplete: () => {
         console.log('✓ Processing completed');
-      }
+      },
     });
 
     console.log('Generating speech with VOICEVOX...');
-    console.log('(Make sure VOICEVOX server is running on http://localhost:50021)');
-    
-    await voiceService.speakText('[happy] こんにちは！Bunから音声合成のテストです。');
+    console.log(
+      '(Make sure VOICEVOX server is running on http://localhost:50021)',
+    );
+
+    await voiceService.speakText(
+      '[happy] こんにちは！Bunから音声合成のテストです。',
+    );
     console.log('✓ Test 2 passed\n');
   } catch (error) {
     console.error('❌ Test 2 failed:', error.message);
-    console.error('Make sure VOICEVOX server is running on http://localhost:50021\n');
+    console.error(
+      'Make sure VOICEVOX server is running on http://localhost:50021\n',
+    );
   }
 
   // Test 3: Speaker playback test
@@ -69,7 +80,7 @@ async function main() {
       voicevoxApiUrl: 'http://localhost:50021',
       onComplete: () => {
         console.log('✓ VOICEVOX playback completed');
-      }
+      },
     });
 
     console.log('Testing speaker playback...');
@@ -85,20 +96,20 @@ async function main() {
   const emotions = [
     { emotion: 'happy', text: '[happy] 嬉しいです！' },
     { emotion: 'sad', text: '[sad] 悲しいです。' },
-    { emotion: 'angry', text: '[angry] 怒っています！' }
+    { emotion: 'angry', text: '[angry] 怒っています！' },
   ];
 
   for (const { emotion, text } of emotions) {
     try {
       const outputPath = join(import.meta.dir, `voicevox-${emotion}.wav`);
-      
+
       const voiceService = new VoiceEngineAdapter({
         speaker: '46',
         engineType: 'voicevox',
         voicevoxApiUrl: 'http://localhost:50021',
         onPlay: async (audioBuffer) => {
           writeFileSync(outputPath, Buffer.from(audioBuffer));
-        }
+        },
       });
 
       console.log(`Testing ${emotion} emotion...`);

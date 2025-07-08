@@ -165,7 +165,7 @@ export class VoiceEngineAdapter implements VoiceService {
    */
   updateOptions(options: Partial<VoiceServiceOptions>): void {
     this.options = { ...this.options, ...options };
-    
+
     // Update audio player callback if onComplete changes
     if (options.onComplete !== undefined) {
       this.audioPlayer.setOnComplete(() => {

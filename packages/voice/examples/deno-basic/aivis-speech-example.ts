@@ -1,9 +1,9 @@
 /**
  * AivisSpeech example for @aituber-onair/voice in Deno
- * 
+ *
  * Requirements:
  * - AivisSpeech server running on http://localhost:10101
- * 
+ *
  * Run with: deno run --allow-net --allow-write aivis-speech-example.ts
  */
 import { VoiceEngineAdapter } from '../../dist/cjs/index.js';
@@ -18,13 +18,15 @@ async function main() {
     aivisSpeechApiUrl: 'http://localhost:10101',
     onComplete: () => {
       console.log('✓ Speech processing completed');
-    }
+    },
   };
 
   // Test 1: Server connectivity check
   console.log('=== Test 1: Server connectivity check ===');
-  console.log(`Checking AivisSpeech server at: ${aivisOptions.aivisSpeechApiUrl}`);
-  
+  console.log(
+    `Checking AivisSpeech server at: ${aivisOptions.aivisSpeechApiUrl}`,
+  );
+
   let serverAvailable = false;
   try {
     const response = await fetch(aivisOptions.aivisSpeechApiUrl);
@@ -58,14 +60,16 @@ async function main() {
   console.log('=== Test 2: Generate and save audio ===');
   try {
     const outputPath = './aivis-output.wav';
-    
+
     const voiceService = new VoiceEngineAdapter({
       ...aivisOptions,
       onPlay: async (audioBuffer: ArrayBuffer) => {
-        console.log(`✓ Received audio buffer (${audioBuffer.byteLength} bytes)`);
+        console.log(
+          `✓ Received audio buffer (${audioBuffer.byteLength} bytes)`,
+        );
         await Deno.writeFile(outputPath, new Uint8Array(audioBuffer));
         console.log(`✓ Audio saved to: ${outputPath}`);
-      }
+      },
     });
 
     console.log('Generating speech with AivisSpeech...');
@@ -80,18 +84,18 @@ async function main() {
   const emotions = [
     { emotion: 'happy', text: '[happy] AivisSpeechで嬉しい感情を表現！' },
     { emotion: 'sad', text: '[sad] 悲しい気持ちです。' },
-    { emotion: 'angry', text: '[angry] 怒っています！' }
+    { emotion: 'angry', text: '[angry] 怒っています！' },
   ];
 
   for (const { emotion, text } of emotions) {
     try {
       const outputPath = `./aivis-${emotion}.wav`;
-      
+
       const voiceService = new VoiceEngineAdapter({
         ...aivisOptions,
         onPlay: async (audioBuffer: ArrayBuffer) => {
           await Deno.writeFile(outputPath, new Uint8Array(audioBuffer));
-        }
+        },
       });
 
       console.log(`Testing ${emotion} emotion...`);

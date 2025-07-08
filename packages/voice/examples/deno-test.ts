@@ -17,7 +17,7 @@ const voiceOptions = {
   voicevoxApiUrl: 'http://localhost:50021',
   onComplete: () => {
     console.log('✓ Speech playback completed');
-  }
+  },
 };
 
 try {
@@ -38,7 +38,6 @@ try {
   console.log('- No native audio playback support');
   console.log('- Requires --allow-net flag for network requests');
   console.log('- Can use fetch() natively');
-  
 } catch (error) {
   console.error('❌ Error:', error);
 }

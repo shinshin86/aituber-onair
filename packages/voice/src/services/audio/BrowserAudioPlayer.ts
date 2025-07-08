@@ -30,7 +30,9 @@ export class BrowserAudioPlayer implements AudioPlayer {
 
         let audioEl = this.audioElement;
         if (audioElementId) {
-          const customAudioEl = document.getElementById(audioElementId) as HTMLAudioElement;
+          const customAudioEl = document.getElementById(
+            audioElementId,
+          ) as HTMLAudioElement;
           if (customAudioEl) {
             audioEl = customAudioEl;
           }
@@ -54,7 +56,9 @@ export class BrowserAudioPlayer implements AudioPlayer {
           audioEl?.removeEventListener('ended', onEnded);
           audioEl?.removeEventListener('error', onError);
           this.isPlayingAudio = false;
-          reject(new Error(`Audio playback error: ${(e as ErrorEvent).message}`));
+          reject(
+            new Error(`Audio playback error: ${(e as ErrorEvent).message}`),
+          );
         };
 
         audioEl.addEventListener('ended', onEnded);

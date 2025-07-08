@@ -15,7 +15,7 @@ async function testSpeakerPlayback() {
       voicevoxApiUrl: 'http://localhost:50021',
       onComplete: () => {
         console.log('✓ VOICEVOX playback completed');
-      }
+      },
     });
 
     await voicevoxService.speakText('VOICEVOXのスピーカーテストです。');
@@ -24,7 +24,7 @@ async function testSpeakerPlayback() {
     console.error('❌ VOICEVOX speaker test failed:', error.message, '\n');
   }
 
-  // Test 2: AivisSpeech speaker playback  
+  // Test 2: AivisSpeech speaker playback
   console.log('2. Testing AivisSpeech speaker playback...');
   try {
     const aivisService = new VoiceEngineAdapter({
@@ -33,7 +33,7 @@ async function testSpeakerPlayback() {
       aivisSpeechApiUrl: 'http://localhost:10101',
       onComplete: () => {
         console.log('✓ AivisSpeech playback completed');
-      }
+      },
     });
 
     await aivisService.speakText('AivisSpeechのスピーカーテストです。');
@@ -51,7 +51,7 @@ async function testSpeakerPlayback() {
       voicepeakApiUrl: 'http://localhost:20202',
       onComplete: () => {
         console.log('✓ VoicePeak playback completed');
-      }
+      },
     });
 
     await voicepeakService.speakText('VoicePeakのスピーカーテストです。');
@@ -62,7 +62,9 @@ async function testSpeakerPlayback() {
 
   console.log('=== Test Summary ===');
   console.log('If all tests show "playback completed", the fix is working!');
-  console.log('You should hear audio from VOICEVOX, AivisSpeech, and VoicePeak.');
+  console.log(
+    'You should hear audio from VOICEVOX, AivisSpeech, and VoicePeak.',
+  );
 }
 
 testSpeakerPlayback().catch(console.error);

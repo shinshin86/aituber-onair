@@ -1,7 +1,7 @@
 /**
  * AivisSpeech example for @aituber-onair/voice in Node.js
  * This example demonstrates using AivisSpeech TTS engine.
- * 
+ *
  * Requirements:
  * - AivisSpeech server running on http://localhost:10101
  * - Optional: npm install speaker OR npm install play-sound
@@ -20,13 +20,15 @@ async function main() {
     aivisSpeechApiUrl: 'http://localhost:10101', // Default AivisSpeech server URL
     onComplete: () => {
       console.log('✓ Speech processing completed');
-    }
+    },
   };
 
   // Test 1: Server connectivity check
   console.log('=== Test 1: Server connectivity check ===');
-  console.log(`Checking AivisSpeech server at: ${aivisOptions.aivisSpeechApiUrl}`);
-  
+  console.log(
+    `Checking AivisSpeech server at: ${aivisOptions.aivisSpeechApiUrl}`,
+  );
+
   let serverAvailable = false;
   try {
     // Test server connectivity first
@@ -56,28 +58,36 @@ async function main() {
 
   // Skip speech tests if server is not available, but show silent mode
   if (!serverAvailable) {
-    console.log('⚠️  AivisSpeech server not available - demonstrating silent mode\n');
-    
+    console.log(
+      '⚠️  AivisSpeech server not available - demonstrating silent mode\n',
+    );
+
     console.log('=== Silent Mode Demo ===');
     try {
       const silentService = new VoiceEngineAdapter({
         engineType: 'none',
-        speaker: 'default'
+        speaker: 'default',
       });
-      
-      await silentService.speakText('This would be AivisSpeech output if server was running');
+
+      await silentService.speakText(
+        'This would be AivisSpeech output if server was running',
+      );
       console.log('✓ Silent mode test passed');
-      console.log('ℹ️  This shows the package works, but no audio is generated\n');
+      console.log(
+        'ℹ️  This shows the package works, but no audio is generated\n',
+      );
     } catch (error) {
       console.error('❌ Silent mode test failed:', error.message);
     }
-    
+
     console.log('=== Summary ===');
     console.log('✅ Basic adapter test completed!');
     console.log('✅ Silent mode demonstration completed!');
     console.log('❌ AivisSpeech tests skipped (server unavailable)');
     console.log('\nTo test actual speech generation:');
-    console.log('1. Install and start AivisSpeech server on http://localhost:10101');
+    console.log(
+      '1. Install and start AivisSpeech server on http://localhost:10101',
+    );
     console.log('2. Run this example again');
     return;
   }
@@ -86,41 +96,50 @@ async function main() {
   console.log('=== Test 2: Generate and save audio ===');
   try {
     const outputPath = path.join(__dirname, 'aivis-output.wav');
-    
+
     const voiceService = new VoiceEngineAdapter({
       ...aivisOptions,
       onPlay: async (audioBuffer) => {
-        console.log(`✓ Received audio buffer (${audioBuffer.byteLength} bytes)`);
+        console.log(
+          `✓ Received audio buffer (${audioBuffer.byteLength} bytes)`,
+        );
         fs.writeFileSync(outputPath, Buffer.from(audioBuffer));
         console.log(`✓ Audio saved to: ${outputPath}`);
-      }
+      },
     });
 
     console.log('Generating speech with AivisSpeech...');
-    await voiceService.speakText('こんにちは、AivisSpeechの音声合成テストです。');
+    await voiceService.speakText(
+      'こんにちは、AivisSpeechの音声合成テストです。',
+    );
     console.log('✓ Test 2 passed\n');
   } catch (error) {
     console.error('❌ Test 2 failed:', error.message);
-    console.error('Make sure AivisSpeech server is running on http://localhost:10101\n');
+    console.error(
+      'Make sure AivisSpeech server is running on http://localhost:10101\n',
+    );
   }
 
   // Test 3: Test with emotions
   console.log('=== Test 3: Emotion test ===');
   const emotions = [
-    { emotion: 'happy', text: '[happy] 嬉しいです！AivisSpeechで感情表現のテストをしています。' },
+    {
+      emotion: 'happy',
+      text: '[happy] 嬉しいです！AivisSpeechで感情表現のテストをしています。',
+    },
     { emotion: 'sad', text: '[sad] 悲しい気持ちを表現しています。' },
-    { emotion: 'angry', text: '[angry] 怒っている感情を表現しています。' }
+    { emotion: 'angry', text: '[angry] 怒っている感情を表現しています。' },
   ];
 
   for (const { emotion, text } of emotions) {
     try {
       const outputPath = path.join(__dirname, `aivis-${emotion}.wav`);
-      
+
       const voiceService = new VoiceEngineAdapter({
         ...aivisOptions,
         onPlay: async (audioBuffer) => {
           fs.writeFileSync(outputPath, Buffer.from(audioBuffer));
-        }
+        },
       });
 
       console.log(`Testing ${emotion} emotion...`);

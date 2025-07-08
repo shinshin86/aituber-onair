@@ -1,7 +1,7 @@
 /**
  * Basic example of using @aituber-onair/voice in Deno environment
  * This example demonstrates basic setup and configuration.
- * 
+ *
  * Run with: deno run --allow-net --allow-read index.ts
  */
 // @ts-ignore
@@ -23,7 +23,7 @@ async function main() {
     voicevoxApiUrl: 'http://localhost:50021',
     onComplete: () => {
       console.log('✓ Speech completed');
-    }
+    },
   };
 
   try {
@@ -38,7 +38,7 @@ async function main() {
     console.log('\nTesting silent mode...');
     const silentService = new VoiceEngineAdapter({
       engineType: 'none',
-      speaker: 'default'
+      speaker: 'default',
     });
     await silentService.speakText('This is a silent test - no audio output');
     console.log('✓ Silent mode test passed');
@@ -48,7 +48,7 @@ async function main() {
     console.log('- Uses BrowserAudioPlayer for audio playback');
     console.log('- Audio playback may require browser context or be limited');
     console.log('- File operations require --allow-write permission');
-    
+
     console.log('\n📌 To test with TTS engines:');
     console.log('1. Run VOICEVOX, AivisSpeech, or VoicePeak servers');
     console.log('2. Run the specific example files');

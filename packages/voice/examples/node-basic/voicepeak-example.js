@@ -1,7 +1,7 @@
 /**
  * VoicePeak example for @aituber-onair/voice in Node.js
  * This example demonstrates using VoicePeak TTS engine.
- * 
+ *
  * Requirements:
  * - VoicePeak server running on http://localhost:20202
  * - Optional: npm install speaker OR npm install play-sound
@@ -20,13 +20,15 @@ async function main() {
     voicepeakApiUrl: 'http://localhost:20202', // Default VoicePeak server URL
     onComplete: () => {
       console.log('✓ Speech processing completed');
-    }
+    },
   };
 
   // Test 1: Server connectivity check
   console.log('=== Test 1: Server connectivity check ===');
-  console.log(`Checking VoicePeak server at: ${voicepeakOptions.voicepeakApiUrl}`);
-  
+  console.log(
+    `Checking VoicePeak server at: ${voicepeakOptions.voicepeakApiUrl}`,
+  );
+
   let serverAvailable = false;
   try {
     // Test server connectivity first
@@ -56,28 +58,36 @@ async function main() {
 
   // Skip speech tests if server is not available, but show silent mode
   if (!serverAvailable) {
-    console.log('⚠️  VoicePeak server not available - demonstrating silent mode\n');
-    
+    console.log(
+      '⚠️  VoicePeak server not available - demonstrating silent mode\n',
+    );
+
     console.log('=== Silent Mode Demo ===');
     try {
       const silentService = new VoiceEngineAdapter({
         engineType: 'none',
-        speaker: 'default'
+        speaker: 'default',
       });
-      
-      await silentService.speakText('This would be VoicePeak output if server was running');
+
+      await silentService.speakText(
+        'This would be VoicePeak output if server was running',
+      );
       console.log('✓ Silent mode test passed');
-      console.log('ℹ️  This shows the package works, but no audio is generated\n');
+      console.log(
+        'ℹ️  This shows the package works, but no audio is generated\n',
+      );
     } catch (error) {
       console.error('❌ Silent mode test failed:', error.message);
     }
-    
+
     console.log('=== Summary ===');
     console.log('✅ Basic adapter test completed!');
     console.log('✅ Silent mode demonstration completed!');
     console.log('❌ VoicePeak tests skipped (server unavailable)');
     console.log('\nTo test actual speech generation:');
-    console.log('1. Install and start VoicePeak server on http://localhost:20202');
+    console.log(
+      '1. Install and start VoicePeak server on http://localhost:20202',
+    );
     console.log('2. Run this example again');
     return;
   }
@@ -86,14 +96,16 @@ async function main() {
   console.log('=== Test 2: Generate and save audio ===');
   try {
     const outputPath = path.join(__dirname, 'voicepeak-output.wav');
-    
+
     const voiceService = new VoiceEngineAdapter({
       ...voicepeakOptions,
       onPlay: async (audioBuffer) => {
-        console.log(`✓ Received audio buffer (${audioBuffer.byteLength} bytes)`);
+        console.log(
+          `✓ Received audio buffer (${audioBuffer.byteLength} bytes)`,
+        );
         fs.writeFileSync(outputPath, Buffer.from(audioBuffer));
         console.log(`✓ Audio saved to: ${outputPath}`);
-      }
+      },
     });
 
     console.log('Generating speech with VoicePeak...');
@@ -101,7 +113,9 @@ async function main() {
     console.log('✓ Test 2 passed\n');
   } catch (error) {
     console.error('❌ Test 2 failed:', error.message);
-    console.error('Make sure VoicePeak server is running on http://localhost:20202\n');
+    console.error(
+      'Make sure VoicePeak server is running on http://localhost:20202\n',
+    );
   }
 
   // Test 3: Speaker playback test
@@ -110,7 +124,9 @@ async function main() {
     const voiceService = new VoiceEngineAdapter(voicepeakOptions);
 
     console.log('Testing speaker playback...');
-    await voiceService.speakText('[happy] VoicePeakのスピーカー再生テストです。');
+    await voiceService.speakText(
+      '[happy] VoicePeakのスピーカー再生テストです。',
+    );
     console.log('✓ Test 3 passed\n');
   } catch (error) {
     console.error('❌ Test 3 failed:', error.message, '\n');
@@ -119,20 +135,23 @@ async function main() {
   // Test 4: Test with emotions
   console.log('=== Test 4: Emotion test ===');
   const emotions = [
-    { emotion: 'happy', text: '[happy] 嬉しいです！VoicePeakで感情表現のテストをしています。' },
+    {
+      emotion: 'happy',
+      text: '[happy] 嬉しいです！VoicePeakで感情表現のテストをしています。',
+    },
     { emotion: 'sad', text: '[sad] 悲しい気持ちを表現しています。' },
-    { emotion: 'angry', text: '[angry] 怒っている感情を表現しています。' }
+    { emotion: 'angry', text: '[angry] 怒っている感情を表現しています。' },
   ];
 
   for (const { emotion, text } of emotions) {
     try {
       const outputPath = path.join(__dirname, `voicepeak-${emotion}.wav`);
-      
+
       const voiceService = new VoiceEngineAdapter({
         ...voicepeakOptions,
         onPlay: async (audioBuffer) => {
           fs.writeFileSync(outputPath, Buffer.from(audioBuffer));
-        }
+        },
       });
 
       console.log(`Testing ${emotion} emotion...`);

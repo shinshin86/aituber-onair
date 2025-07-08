@@ -36,7 +36,9 @@ export class NodeAudioPlayer implements AudioPlayer {
       }
 
       // If no audio player is available, just complete immediately
-      console.warn('No audio playback library available in Node.js environment. Audio will not be played.');
+      console.warn(
+        'No audio playback library available in Node.js environment. Audio will not be played.',
+      );
       this.handlePlaybackEnd();
       return Promise.resolve();
     } catch (error) {
@@ -45,18 +47,23 @@ export class NodeAudioPlayer implements AudioPlayer {
     }
   }
 
-  private async playWithSpeaker(audioBuffer: ArrayBuffer, Speaker: any): Promise<void> {
+  private async playWithSpeaker(
+    audioBuffer: ArrayBuffer,
+    Speaker: any,
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         // Parse WAV header to get correct audio format
         const audioFormat = getAudioFormat(audioBuffer);
-        
-        console.log(`Audio format detected: ${audioFormat.sampleRate}Hz, ${audioFormat.channels}ch, ${audioFormat.bitsPerSample}bit`);
-        
+
+        console.log(
+          `Audio format detected: ${audioFormat.sampleRate}Hz, ${audioFormat.channels}ch, ${audioFormat.bitsPerSample}bit`,
+        );
+
         const speaker = new Speaker({
           channels: audioFormat.channels,
           bitDepth: audioFormat.bitsPerSample,
-          sampleRate: audioFormat.sampleRate
+          sampleRate: audioFormat.sampleRate,
         });
 
         speaker.on('close', () => {
@@ -74,9 +81,11 @@ export class NodeAudioPlayer implements AudioPlayer {
         const wavHeaderSize = this.getWavHeaderSize(audioBuffer);
         const audioData = audioBuffer.slice(wavHeaderSize);
         const buffer = Buffer.from(audioData);
-        
-        console.log(`Playing audio: ${buffer.length} bytes (header: ${wavHeaderSize} bytes)`);
-        
+
+        console.log(
+          `Playing audio: ${buffer.length} bytes (header: ${wavHeaderSize} bytes)`,
+        );
+
         speaker.write(buffer);
         speaker.end();
       } catch (error) {
@@ -87,7 +96,10 @@ export class NodeAudioPlayer implements AudioPlayer {
     });
   }
 
-  private async playWithPlaySound(audioBuffer: ArrayBuffer, player: any): Promise<void> {
+  private async playWithPlaySound(
+    audioBuffer: ArrayBuffer,
+    player: any,
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         const fs = require('fs');
@@ -95,7 +107,10 @@ export class NodeAudioPlayer implements AudioPlayer {
         const os = require('os');
 
         // Create temporary file
-        const tempFile = path.join(os.tmpdir(), `aituber-audio-${Date.now()}.wav`);
+        const tempFile = path.join(
+          os.tmpdir(),
+          `aituber-audio-${Date.now()}.wav`,
+        );
         fs.writeFileSync(tempFile, Buffer.from(audioBuffer));
 
         const playerInstance = player();
@@ -163,25 +178,27 @@ export class NodeAudioPlayer implements AudioPlayer {
   private getWavHeaderSize(buffer: ArrayBuffer): number {
     // Check for minimum buffer size
     if (buffer.byteLength < 12) {
-      console.warn('Buffer too small for WAV header, using default header size: 44');
+      console.warn(
+        'Buffer too small for WAV header, using default header size: 44',
+      );
       return 44; // Standard WAV header size
     }
-    
+
     const view = new DataView(buffer);
-    
+
     try {
       // Check for RIFF header
       const riff = String.fromCharCode(
         view.getUint8(0),
-        view.getUint8(1), 
+        view.getUint8(1),
         view.getUint8(2),
-        view.getUint8(3)
+        view.getUint8(3),
       );
-    
+
       if (riff !== 'RIFF') {
         return 44; // Not a WAV file, use standard header size
       }
-      
+
       // Find data chunk
       let offset = 12;
       while (offset < buffer.byteLength - 8) {
@@ -189,21 +206,24 @@ export class NodeAudioPlayer implements AudioPlayer {
           view.getUint8(offset),
           view.getUint8(offset + 1),
           view.getUint8(offset + 2),
-          view.getUint8(offset + 3)
+          view.getUint8(offset + 3),
         );
-        
+
         const chunkSize = view.getUint32(offset + 4, true);
-        
+
         if (chunkId === 'data') {
           return offset + 8; // Header ends here, data starts
         }
-        
+
         offset += 8 + chunkSize;
       }
-      
+
       return 44; // Standard WAV header size fallback
     } catch (error) {
-      console.warn('Error parsing WAV header, using default header size:', error);
+      console.warn(
+        'Error parsing WAV header, using default header size:',
+        error,
+      );
       return 44; // Standard WAV header size
     }
   }

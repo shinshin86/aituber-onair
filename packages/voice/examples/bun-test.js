@@ -16,7 +16,7 @@ const voiceOptions = {
   voicevoxApiUrl: 'http://localhost:50021',
   onComplete: () => {
     console.log('✓ Speech playback completed');
-  }
+  },
 };
 
 try {
@@ -39,7 +39,6 @@ try {
   console.log('✓ Can use Node.js audio libraries (speaker, play-sound)');
   console.log('✓ Native fetch() support');
   console.log('✓ Faster execution than Node.js');
-  
 } catch (error) {
   console.error('❌ Error:', error);
 }

@@ -1,10 +1,13 @@
 /**
  * Basic example of using @aituber-onair/voice in Bun environment
  * This example demonstrates basic setup and configuration.
- * 
+ *
  * Run with: bun run index.js
  */
-import { VoiceEngineAdapter, AudioPlayerFactory } from '../../dist/cjs/index.js';
+import {
+  VoiceEngineAdapter,
+  AudioPlayerFactory,
+} from '../../dist/cjs/index.js';
 
 async function main() {
   console.log('=== AITuber OnAir Voice - Basic Bun Example ===\n');
@@ -24,7 +27,7 @@ async function main() {
     voicevoxApiUrl: 'http://localhost:50021',
     onComplete: () => {
       console.log('✓ Speech completed');
-    }
+    },
   };
 
   try {
@@ -39,7 +42,7 @@ async function main() {
     console.log('\nTesting silent mode...');
     const silentService = new VoiceEngineAdapter({
       engineType: 'none',
-      speaker: 'default'
+      speaker: 'default',
     });
     await silentService.speakText('This is a silent test - no audio output');
     console.log('✓ Silent mode test passed');
@@ -50,11 +53,13 @@ async function main() {
     console.log('- Faster execution than Node.js');
     console.log('- Native TypeScript support (can run .ts files directly)');
     console.log('- Built-in SQLite, WebSocket, and more');
-    
+
     console.log('\n📌 To test with TTS engines:');
     console.log('1. Run VOICEVOX, AivisSpeech, or VoicePeak servers');
     console.log('2. Run the specific example files');
-    console.log('3. Optional: Install speaker or play-sound for audio playback');
+    console.log(
+      '3. Optional: Install speaker or play-sound for audio playback',
+    );
 
     console.log('\n✅ Basic setup verified successfully!');
   } catch (error) {
