@@ -11,7 +11,9 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js",
       "types": "./dist/cjs/index.d.ts"
-    }
+    },
+    "./dist/cjs/*": "./dist/cjs/*",
+    "./dist/esm/*": "./dist/esm/*"
   },
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm",
