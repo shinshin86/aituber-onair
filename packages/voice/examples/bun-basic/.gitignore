@@ -1,0 +1,30 @@
+# Generated audio files
+*.wav
+*.mp3
+*.mp4
+*.ogg
+*.aac
+
+# Node modules (if any dependencies are installed)
+node_modules/
+package-lock.json
+
+# Bun specific
+.bun/
+bun.lockb
+
+# Output files
+*-output.*
+*-happy.*
+*-sad.*
+*-angry.*
+*-excited.*
+*-relaxed.*
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db

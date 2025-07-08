@@ -1,44 +1,169 @@
-# Node.js Basic Example
+# Node.js Examples
 
-This example demonstrates how to use `@aituber-onair/voice` package in a Node.js environment.
+This directory contains examples demonstrating how to use `@aituber-onair/voice` package in Node.js environments.
 
-## Running the Example
+## Files Overview
+
+- **`index.js`** - Basic setup and configuration example
+- **`voicevox-example.js`** - VOICEVOX TTS engine example
+- **`aivis-speech-example.js`** - AivisSpeech TTS engine example
+- **`voicepeak-example.js`** - VoicePeak TTS engine example
+- **`test-speaker-playback.js`** - Cross-engine speaker playback test
+- **`.gitignore`** - Ignores generated audio files
+
+## Prerequisites
+
+### 1. Build the Voice Package
+
+From the voice package root directory:
 
 ```bash
-# From the voice package root directory
-node examples/node-basic/index.js
+npm run build
 ```
 
-## Audio Playback in Node.js
+### 2. Optional Audio Dependencies
 
-The voice package supports audio playback in Node.js through optional dependencies:
-
-1. **speaker** - Direct audio output using native bindings
-2. **play-sound** - Uses system audio players (mpg123, afplay, etc.)
-
-To enable audio playback, install one of these:
+For audio playback in Node.js, install one of these optional dependencies:
 
 ```bash
-# Option 1: speaker (requires build tools)
+# Option 1: speaker (direct audio output, requires build tools)
 npm install speaker
 
-# Option 2: play-sound (easier to install)
+# Option 2: play-sound (uses system audio player, easier to install)
 npm install play-sound
 ```
 
-If neither is installed, the package will still work but won't play audio.
+**Note**: If neither is installed, examples will still work but won't play audio through speakers. Audio files can still be saved using the `onPlay` callback.
 
-## Testing with VOICEVOX
+## Running Examples
 
-To test actual speech synthesis:
+### Basic Example
 
-1. Install VOICEVOX locally
-2. Start VOICEVOX server (default port: 50021)
-3. Uncomment the speech test in index.js
-4. Run the example
+Tests basic setup and configuration without requiring external services:
+
+```bash
+node examples/node-basic/index.js
+```
+
+**Output**: Runtime detection, silent mode test, and setup instructions.
+
+### VOICEVOX Example
+
+Tests with VOICEVOX TTS engine:
+
+```bash
+# 1. First, install and start VOICEVOX server
+# Download from: https://voicevox.hiroshiba.jp/
+# Start the server (default: http://localhost:50021)
+
+# 2. Run the example
+node examples/node-basic/voicevox-example.js
+```
+
+**Features**:
+- Silent mode test (no dependencies)
+- Audio file generation and saving
+- Direct speaker playback (if audio libraries installed)
+- Emotion support (`[happy]`, `[sad]`, etc.)
+
+### AivisSpeech Example
+
+Tests with AivisSpeech TTS engine:
+
+```bash
+# 1. First, install and start AivisSpeech server
+# Default URL: http://localhost:10101
+
+# 2. Run the example
+node examples/node-basic/aivis-speech-example.js
+```
+
+**Features**:
+- Basic connectivity test
+- Audio file generation with default speaker (888753760)
+- Multiple emotion tests
+
+### VoicePeak Example
+
+Tests with VoicePeak TTS engine:
+
+```bash
+# 1. First, install and start VoicePeak server
+# Default URL: http://localhost:20202
+
+# 2. Run the example
+node examples/node-basic/voicepeak-example.js
+```
+
+**Features**:
+- Server connectivity verification
+- Audio file generation with speaker f1
+- Speaker playback testing
+- Emotion expression tests
+
+### Cross-Engine Speaker Test
+
+Tests speaker playback across all engines:
+
+```bash
+# Requires all servers to be running
+node examples/node-basic/test-speaker-playback.js
+```
+
+**Features**:
+- Tests VOICEVOX, AivisSpeech, and VoicePeak
+- Verifies dynamic audio format detection
+- Confirms speaker playback functionality
+
+## Generated Files
+
+Examples will generate audio files in this directory:
+- `test-output.wav` (VOICEVOX example)
+- `aivis-output.wav` (AivisSpeech example)
+- `aivis-happy.wav`, `aivis-sad.wav`, `aivis-angry.wav` (AivisSpeech emotion tests)
+- `voicepeak-output.wav` (VoicePeak example)
+- `voicepeak-happy.wav`, `voicepeak-sad.wav`, `voicepeak-angry.wav` (VoicePeak emotion tests)
+
+These files are automatically ignored by git.
+
+## Playing Generated Audio
+
+### macOS
+```bash
+afplay filename.wav
+```
+
+### Linux
+```bash
+aplay filename.wav      # For WAV files
+mpg123 filename.mp3     # For MP3 files
+```
+
+### Windows
+```bash
+start filename.wav
+```
+
+## Troubleshooting
+
+### "fetch failed" errors
+- Make sure the TTS server is running on the correct port
+- Check firewall settings
+- Verify the API endpoint URL
+
+### "No audio output"
+- Install speaker or play-sound dependencies
+- Check system audio settings
+- Use `onPlay` callback to save files instead
+
+### "Module not found" errors
+- Make sure to build the package first: `npm run build`
+- Run examples from the voice package root directory
 
 ## Environment Detection
 
-The package automatically detects the environment:
-- In browsers: Uses HTMLAudioElement
-- In Node.js: Uses available audio libraries or silent mode
+The package automatically detects the runtime environment:
+- **Browser**: Uses HTMLAudioElement
+- **Node.js**: Uses speaker/play-sound libraries or silent mode
+- **Deno**: Uses browser-like APIs
+- **Bun**: Uses Node.js-compatible APIs

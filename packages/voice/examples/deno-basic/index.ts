@@ -1,23 +1,25 @@
 /**
- * Basic example of using @aituber-onair/voice in Node.js environment
+ * Basic example of using @aituber-onair/voice in Deno environment
  * This example demonstrates basic setup and configuration.
+ * 
+ * Run with: deno run --allow-net --allow-read index.ts
  */
-const { VoiceEngineAdapter, AudioPlayerFactory } = require('../../dist/cjs/index.js');
+// @ts-ignore
+const { VoiceEngineAdapter } = await import('../../dist/cjs/index.js');
 
 async function main() {
-  console.log('=== AITuber OnAir Voice - Basic Node.js Example ===\n');
+  console.log('=== AITuber OnAir Voice - Basic Deno Example ===\n');
 
   // Show runtime information
-  const runtimeInfo = AudioPlayerFactory.getRuntimeInfo();
   console.log('Runtime information:');
-  console.log(`- Environment: ${runtimeInfo.runtime}`);
-  console.log(`- Node.js: ${runtimeInfo.isNode}`);
-  console.log(`- Has process: ${runtimeInfo.hasProcess}\n`);
+  console.log(`- Environment: Deno`);
+  console.log(`- Has window: ${typeof window !== 'undefined'}`);
+  console.log(`- Deno version: ${Deno.version.deno}\n`);
 
   // Create voice service with VOICEVOX
   const voiceOptions = {
     speaker: '46', // VOICEVOX speaker ID
-    engineType: 'voicevox',
+    engineType: 'voicevox' as const,
     voicevoxApiUrl: 'http://localhost:50021',
     onComplete: () => {
       console.log('✓ Speech completed');
@@ -41,15 +43,15 @@ async function main() {
     await silentService.speakText('This is a silent test - no audio output');
     console.log('✓ Silent mode test passed');
 
-    // Information about audio dependencies
-    console.log('\n📌 Audio Playback Options:');
-    console.log('1. Install "speaker" for direct audio output: npm install speaker');
-    console.log('2. Install "play-sound" for system player: npm install play-sound');
-    console.log('3. Use onPlay callback to save audio files (no dependencies needed)');
+    console.log('\n📌 Important Notes for Deno:');
+    console.log('- Deno has a browser-like environment with window object');
+    console.log('- Uses BrowserAudioPlayer for audio playback');
+    console.log('- Audio playback may require browser context or be limited');
+    console.log('- File operations require --allow-write permission');
     
-    console.log('\n📌 To test with VOICEVOX:');
-    console.log('1. Download and run VOICEVOX from https://voicevox.hiroshiba.jp/');
-    console.log('2. Run the advanced example: node test-with-speech.js');
+    console.log('\n📌 To test with TTS engines:');
+    console.log('1. Run VOICEVOX, AivisSpeech, or VoicePeak servers');
+    console.log('2. Run the specific example files');
 
     console.log('\n✅ Basic setup verified successfully!');
   } catch (error) {

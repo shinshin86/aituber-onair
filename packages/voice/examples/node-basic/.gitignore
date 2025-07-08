@@ -1,0 +1,12 @@
+# Generated audio files
+*.wav
+*.mp3
+*.ogg
+*.m4a
+
+# Node modules (if any)
+node_modules/
+
+# Environment variables
+.env
+.env.local

@@ -1,4 +1,5 @@
 import { AudioPlayer } from '../../types/audioPlayer';
+import { getAudioFormat } from '../../utils/wavHeader';
 
 /**
  * Node.js-based audio player implementation
@@ -47,10 +48,15 @@ export class NodeAudioPlayer implements AudioPlayer {
   private async playWithSpeaker(audioBuffer: ArrayBuffer, Speaker: any): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
+        // Parse WAV header to get correct audio format
+        const audioFormat = getAudioFormat(audioBuffer);
+        
+        console.log(`Audio format detected: ${audioFormat.sampleRate}Hz, ${audioFormat.channels}ch, ${audioFormat.bitsPerSample}bit`);
+        
         const speaker = new Speaker({
-          channels: 1,
-          bitDepth: 16,
-          sampleRate: 24000
+          channels: audioFormat.channels,
+          bitDepth: audioFormat.bitsPerSample,
+          sampleRate: audioFormat.sampleRate
         });
 
         speaker.on('close', () => {
@@ -59,15 +65,22 @@ export class NodeAudioPlayer implements AudioPlayer {
         });
 
         speaker.on('error', (err: Error) => {
+          console.error('Speaker error:', err);
           this.isPlayingAudio = false;
           reject(err);
         });
 
-        // Convert ArrayBuffer to Buffer
-        const buffer = Buffer.from(audioBuffer);
+        // Convert ArrayBuffer to Buffer, skip WAV header (44 bytes typically)
+        const wavHeaderSize = this.getWavHeaderSize(audioBuffer);
+        const audioData = audioBuffer.slice(wavHeaderSize);
+        const buffer = Buffer.from(audioData);
+        
+        console.log(`Playing audio: ${buffer.length} bytes (header: ${wavHeaderSize} bytes)`);
+        
         speaker.write(buffer);
         speaker.end();
       } catch (error) {
+        console.error('playWithSpeaker error:', error);
         this.isPlayingAudio = false;
         reject(error);
       }
@@ -141,6 +154,57 @@ export class NodeAudioPlayer implements AudioPlayer {
       return require(moduleName);
     } catch (e) {
       return null;
+    }
+  }
+
+  /**
+   * Calculate WAV header size to skip when sending raw audio data to speaker
+   */
+  private getWavHeaderSize(buffer: ArrayBuffer): number {
+    // Check for minimum buffer size
+    if (buffer.byteLength < 12) {
+      console.warn('Buffer too small for WAV header, using default header size: 44');
+      return 44; // Standard WAV header size
+    }
+    
+    const view = new DataView(buffer);
+    
+    try {
+      // Check for RIFF header
+      const riff = String.fromCharCode(
+        view.getUint8(0),
+        view.getUint8(1), 
+        view.getUint8(2),
+        view.getUint8(3)
+      );
+    
+      if (riff !== 'RIFF') {
+        return 44; // Not a WAV file, use standard header size
+      }
+      
+      // Find data chunk
+      let offset = 12;
+      while (offset < buffer.byteLength - 8) {
+        const chunkId = String.fromCharCode(
+          view.getUint8(offset),
+          view.getUint8(offset + 1),
+          view.getUint8(offset + 2),
+          view.getUint8(offset + 3)
+        );
+        
+        const chunkSize = view.getUint32(offset + 4, true);
+        
+        if (chunkId === 'data') {
+          return offset + 8; // Header ends here, data starts
+        }
+        
+        offset += 8 + chunkSize;
+      }
+      
+      return 44; // Standard WAV header size fallback
+    } catch (error) {
+      console.warn('Error parsing WAV header, using default header size:', error);
+      return 44; // Standard WAV header size
     }
   }
 }
