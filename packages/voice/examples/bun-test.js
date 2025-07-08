@@ -1,7 +1,7 @@
 // Test @aituber-onair/voice compatibility with Bun
 // Run with: bun run examples/bun-test.js
 
-import { VoiceEngineAdapter, AudioPlayerFactory } from '../dist/index.js';
+import { AudioPlayerFactory, VoiceEngineAdapter } from '../dist/index.js';
 
 console.log('Testing AITuber OnAir Voice in Bun environment...\n');
 

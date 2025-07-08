@@ -102,9 +102,9 @@ export class NodeAudioPlayer implements AudioPlayer {
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        const fs = require('fs');
-        const path = require('path');
-        const os = require('os');
+        const fs = require('node:fs');
+        const path = require('node:path');
+        const os = require('node:os');
 
         // Create temporary file
         const tempFile = path.join(

@@ -7,8 +7,8 @@
  * Run with: deno run --allow-net --allow-write voicevox-example.ts
  */
 import {
-  VoiceEngineAdapter,
   AudioPlayerFactory,
+  VoiceEngineAdapter,
 } from '../../dist/cjs/index.js';
 
 async function main() {

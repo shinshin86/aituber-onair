@@ -1,12 +1,12 @@
+import { AudioPlayer } from '../types/audioPlayer';
 import { ChatScreenplay } from '../types/chat';
 import { EmotionType } from '../types/voice';
+import { textToScreenplay } from '../utils/screenplay';
 import {
+  AudioPlayOptions,
   VoiceService,
   VoiceServiceOptions,
-  AudioPlayOptions,
 } from './VoiceService';
-import { textToScreenplay } from '../utils/screenplay';
-import { AudioPlayer } from '../types/audioPlayer';
 import { AudioPlayerFactory } from './audio/AudioPlayerFactory';
 
 /**

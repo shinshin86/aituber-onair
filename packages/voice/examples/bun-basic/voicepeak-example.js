@@ -1,3 +1,5 @@
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 /**
  * VoicePeak example for @aituber-onair/voice in Bun
  *
@@ -8,8 +10,6 @@
  * Run with: bun run voicepeak-example.js
  */
 import { VoiceEngineAdapter } from '../../dist/cjs/index.js';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
 
 async function main() {
   console.log('=== AITuber OnAir Voice - VoicePeak Bun Example ===\n');

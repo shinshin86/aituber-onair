@@ -5,8 +5,8 @@
  * Run with: bun run index.js
  */
 import {
-  VoiceEngineAdapter,
   AudioPlayerFactory,
+  VoiceEngineAdapter,
 } from '../../dist/cjs/index.js';
 
 async function main() {

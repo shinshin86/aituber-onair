@@ -1,3 +1,5 @@
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 /**
  * VOICEVOX example for @aituber-onair/voice in Bun
  *
@@ -8,11 +10,9 @@
  * Run with: bun run voicevox-example.js
  */
 import {
-  VoiceEngineAdapter,
   AudioPlayerFactory,
+  VoiceEngineAdapter,
 } from '../../dist/cjs/index.js';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
 
 async function main() {
   console.log('=== AITuber OnAir Voice - VOICEVOX Bun Example ===\n');

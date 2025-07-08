@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { VoiceEngineAdapter, textToScreenplay, EmotionParser } from '../src';
+import { describe, expect, it } from 'vitest';
+import { EmotionParser, VoiceEngineAdapter, textToScreenplay } from '../src';
 
 describe('Voice Package Exports', () => {
   it('should export VoiceEngineAdapter', () => {

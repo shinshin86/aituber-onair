@@ -13,8 +13,8 @@ const {
   VoiceEngineAdapter,
   AudioPlayerFactory,
 } = require('../../dist/cjs/index.js');
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 async function main() {
   console.log('=== AITuber OnAir Voice - VOICEVOX Example ===\n');
