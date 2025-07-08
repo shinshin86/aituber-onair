@@ -56,9 +56,6 @@ export class NodeAudioPlayer implements AudioPlayer {
         // Parse WAV header to get correct audio format
         const audioFormat = getAudioFormat(audioBuffer);
 
-        console.log(
-          `Audio format detected: ${audioFormat.sampleRate}Hz, ${audioFormat.channels}ch, ${audioFormat.bitsPerSample}bit`,
-        );
 
         const speaker = new Speaker({
           channels: audioFormat.channels,
@@ -82,9 +79,6 @@ export class NodeAudioPlayer implements AudioPlayer {
         const audioData = audioBuffer.slice(wavHeaderSize);
         const buffer = Buffer.from(audioData);
 
-        console.log(
-          `Playing audio: ${buffer.length} bytes (header: ${wavHeaderSize} bytes)`,
-        );
 
         speaker.write(buffer);
         speaker.end();
