@@ -115,6 +115,7 @@ aituber-onair/
 
 完全な手動リリースワークフローの手順：
 
+**方法1: Changesetsを使用**
 1. **変更内容に対してChangesetを作成**
    ```bash
    npm run changeset
@@ -129,6 +130,26 @@ aituber-onair/
    ```bash
    npm run release
    ```
+
+**方法2: 手動バージョン管理**
+Changesetのインタラクティブモードが失敗する場合：
+
+1. **CHANGELOG.mdを更新**: `packages/[package]/CHANGELOG.md`にエントリを追加
+   ```markdown
+   ## 0.x.x
+   
+   ### Patch Changes
+   
+   - 変更内容の説明をここに記載
+   ```
+
+2. **package.jsonを更新**: `packages/[package]/package.json`のバージョンを増加
+
+3. **変更をコミット**: CHANGELOG.mdとpackage.jsonの両方の更新をコミット
+
+4. **ビルドとテスト**: `npm run build && npm run test`
+
+5. **公開**: `npm run changeset:publish` または `cd packages/[package] && npm publish`
 
 個別操作の代替方法：
 ```bash

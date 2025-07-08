@@ -174,6 +174,8 @@ The library abstracts differences between AI providers' function calling impleme
 
 8. **Cross-Platform Compatibility**: The voice package supports multiple runtime environments with automatic detection and appropriate audio handling for each platform.
 
+9. **Subpath Exports**: The voice package includes subpath exports (`./dist/cjs/*`, `./dist/esm/*`) to enable direct access to build artifacts, providing workarounds for runtime-specific import issues (especially useful for Deno).
+
 ## Cross-Platform Runtime Support
 
 The `@aituber-onair/voice` package provides comprehensive support for multiple JavaScript runtimes with automatic environment detection and appropriate handling for each platform.
@@ -218,7 +220,9 @@ dist/
     ".": {
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
-    }
+    },
+    "./dist/cjs/*": "./dist/cjs/*",
+    "./dist/esm/*": "./dist/esm/*"
   }
 }
 ```
@@ -244,6 +248,7 @@ dist/
 #### Deno Environment
 - **Audio**: Limited - files generated but no direct playback
 - **Module**: Uses CommonJS build with `--unstable-detect-cjs`
+- **Import**: Supports subpath exports for direct build access
 - **Workaround**: Use system audio players (`afplay`, `aplay`, etc.)
 - **Limitation**: Native binary compatibility issues
 
@@ -272,9 +277,12 @@ Examples are provided for each runtime environment:
 
 ### Runtime Limitations
 
-**Deno Audio Limitation:**
-- **Root Cause**: Native binary compatibility issues with Node.js audio modules
-- **Workaround**: Generated audio files can be played with external players
+**Deno Limitations:**
+- **Audio**: Native binary compatibility issues with Node.js audio modules
+- **ESM Compatibility**: May have issues with standard import paths
+- **Workarounds**: 
+  - Use subpath exports: `"npm:@aituber-onair/voice/dist/cjs/index.js"`
+  - Generated audio files can be played with external players
 - **Allow Flags**: Even with `--allow-all`, native bindings are not supported
 
 **Browser Security:**
@@ -407,7 +415,11 @@ const { VoiceEngineAdapter } = require('@aituber-onair/voice');
 // Use CommonJS detection flag
 // deno run --allow-net --allow-write --unstable-detect-cjs script.ts
 
+// Standard import (may have ESM compatibility issues)
 const { VoiceEngineAdapter } = await import('../../dist/cjs/index.js');
+
+// Alternative: Direct subpath import (recommended for Deno)
+import { VoiceEngineAdapter } from "npm:@aituber-onair/voice/dist/cjs/index.js";
 
 // Audio files generated but require external playback:
 // afplay filename.wav (macOS)
@@ -426,6 +438,7 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
 
 ### Development Workflow
 
+#### Automated Workflow (Recommended)
 1. **Make Changes**: Implement your feature or fix
 2. **Add Changeset**: Run `npm run changeset` to document your changes
    ```bash
@@ -440,6 +453,23 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
 5. **Merge**: After merge to main, GitHub Actions will:
    - Create a "Version Packages" PR with updated versions
    - Auto-merge and publish when the version PR is merged
+
+#### Manual Workflow (Alternative)
+If changeset interactive mode fails or for quick patches:
+
+1. **Make Changes**: Implement your feature or fix
+2. **Update CHANGELOG.md**: Manually add entry to the package's CHANGELOG.md
+   ```markdown
+   ## 0.x.x
+   
+   ### Patch Changes
+   
+   - Your change description here
+   ```
+3. **Update package.json**: Manually increment the version number
+4. **Commit Changes**: Commit both CHANGELOG.md and package.json updates
+5. **Build and Test**: Run `npm run build` and `npm run test` to ensure everything works
+6. **Publish**: Run `npm run changeset:publish` (or `cd packages/[package] && npm publish`)
 
 ### Manual Release Commands
 
