@@ -113,6 +113,7 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 
 For a complete manual release workflow:
 
+**Option 1: Using Changesets**
 1. **Create changeset for your changes**
    ```bash
    npm run changeset
@@ -127,6 +128,26 @@ For a complete manual release workflow:
    ```bash
    npm run release
    ```
+
+**Option 2: Manual Version Management**
+If changeset interactive mode fails:
+
+1. **Update CHANGELOG.md**: Add entry to `packages/[package]/CHANGELOG.md`
+   ```markdown
+   ## 0.x.x
+   
+   ### Patch Changes
+   
+   - Your change description here
+   ```
+
+2. **Update package.json**: Increment version in `packages/[package]/package.json`
+
+3. **Commit changes**: Commit both CHANGELOG.md and package.json updates
+
+4. **Build and test**: `npm run build && npm run test`
+
+5. **Publish**: `npm run changeset:publish` or `cd packages/[package] && npm publish`
 
 Alternative individual operations:
 ```bash

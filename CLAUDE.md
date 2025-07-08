@@ -438,6 +438,7 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
 
 ### Development Workflow
 
+#### Automated Workflow (Recommended)
 1. **Make Changes**: Implement your feature or fix
 2. **Add Changeset**: Run `npm run changeset` to document your changes
    ```bash
@@ -452,6 +453,23 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
 5. **Merge**: After merge to main, GitHub Actions will:
    - Create a "Version Packages" PR with updated versions
    - Auto-merge and publish when the version PR is merged
+
+#### Manual Workflow (Alternative)
+If changeset interactive mode fails or for quick patches:
+
+1. **Make Changes**: Implement your feature or fix
+2. **Update CHANGELOG.md**: Manually add entry to the package's CHANGELOG.md
+   ```markdown
+   ## 0.x.x
+   
+   ### Patch Changes
+   
+   - Your change description here
+   ```
+3. **Update package.json**: Manually increment the version number
+4. **Commit Changes**: Commit both CHANGELOG.md and package.json updates
+5. **Build and Test**: Run `npm run build` and `npm run test` to ensure everything works
+6. **Publish**: Run `npm run changeset:publish` (or `cd packages/[package] && npm publish`)
 
 ### Manual Release Commands
 

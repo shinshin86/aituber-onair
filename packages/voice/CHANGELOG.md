@@ -1,5 +1,17 @@
 # @aituber-onair/voice
 
+## 0.2.1
+
+### Patch Changes
+
+- Add subpath exports for direct build access
+
+  Added ./dist/cjs/* and ./dist/esm/* subpath exports to package.json to enable direct access to build artifacts. This provides a workaround for Deno ESM compatibility issues by allowing imports like:
+
+  `import { VoiceEngineAdapter } from "npm:@aituber-onair/voice/dist/cjs/index.js"`
+
+  Maintains backward compatibility while enabling flexible access patterns for various runtime environments.
+
 ## 0.2.0
 
 ### Minor Changes
