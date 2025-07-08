@@ -231,9 +231,9 @@ dist/
 - **Dependencies**: No additional packages required
 
 #### Node.js Environment
-- **Audio**: Requires `speaker` or `play-sound` optional dependencies
+- **Audio**: Requires manual installation of `speaker` or `play-sound` for audio playback
 - **Module**: Uses CommonJS build
-- **Installation**: `npm install speaker` or `npm install play-sound`
+- **Installation**: `npm install speaker` or `npm install play-sound` (only if audio playback needed)
 
 #### Bun Environment
 - **Audio**: Full Node.js compatibility with `speaker`/`play-sound`
@@ -249,16 +249,16 @@ dist/
 
 ### Audio Library Support
 
-The package supports multiple audio playback libraries as optional dependencies:
+The package supports multiple audio playback libraries that must be manually installed when needed:
 
 ```typescript
 // Automatic selection based on availability
 const audioPlayer = AudioPlayerFactory.create();
 
 // Supports:
-// - speaker (real-time PCM audio streaming)
-// - play-sound (system audio player integration)
-// - HTMLAudioElement (browser environments)
+// - speaker (real-time PCM audio streaming) - install with: npm install speaker
+// - play-sound (system audio player integration) - install with: npm install play-sound  
+// - HTMLAudioElement (browser environments) - built-in, no installation needed
 ```
 
 ### Development Examples
@@ -358,11 +358,13 @@ npm install @aituber-onair/voice
 # For full AITuber functionality (voice included automatically)
 npm install @aituber-onair/core
 
-# Optional audio dependencies for Node.js-like environments
+# Additional audio dependencies (ONLY if you need audio playback in Node.js-like environments)
 npm install speaker          # For real-time audio streaming
 # OR
 npm install play-sound       # For system audio player integration
 ```
+
+**Important**: Audio libraries are NOT automatically installed. Install them only when you need audio playback in Node.js/Bun environments. Browser environments don't require additional packages.
 
 ### Runtime-Specific Usage
 
@@ -383,8 +385,10 @@ const voiceService = new VoiceEngineAdapter({
 // Automatic CommonJS require
 const { VoiceEngineAdapter } = require('@aituber-onair/voice');
 
-// For speaker audio playback:
+// For speaker audio playback (install separately):
 // npm install speaker
+// OR
+// npm install play-sound
 ```
 
 #### Bun Applications
@@ -392,8 +396,10 @@ const { VoiceEngineAdapter } = require('@aituber-onair/voice');
 // CommonJS compatible with fast execution
 const { VoiceEngineAdapter } = require('@aituber-onair/voice');
 
-// For speaker audio playback:
+// For speaker audio playback (install separately):
 // bun install speaker
+// OR
+// bun install play-sound
 ```
 
 #### Deno Applications
