@@ -56,7 +56,6 @@ export class NodeAudioPlayer implements AudioPlayer {
         // Parse WAV header to get correct audio format
         const audioFormat = getAudioFormat(audioBuffer);
 
-
         const speaker = new Speaker({
           channels: audioFormat.channels,
           bitDepth: audioFormat.bitsPerSample,
@@ -78,7 +77,6 @@ export class NodeAudioPlayer implements AudioPlayer {
         const wavHeaderSize = this.getWavHeaderSize(audioBuffer);
         const audioData = audioBuffer.slice(wavHeaderSize);
         const buffer = Buffer.from(audioData);
-
 
         speaker.write(buffer);
         speaker.end();
