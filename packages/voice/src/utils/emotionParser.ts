@@ -1,4 +1,4 @@
-import { emotions, EmotionType } from '../types/voice';
+import { EmotionType, emotions } from '../types/voice';
 
 /**
  * Regular expressions for emotion tag parsing

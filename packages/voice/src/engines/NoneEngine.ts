@@ -1,4 +1,4 @@
-import { VoiceActor, Talk } from '../types/voice';
+import { Talk, VoiceActor } from '../types/voice';
 import { VoiceEngine } from './VoiceEngine';
 
 /**

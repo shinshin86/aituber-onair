@@ -1,0 +1,8 @@
+# Generated audio files
+*.wav
+*.mp3
+*.ogg
+*.m4a
+
+# Deno cache
+.deno_cache/

@@ -21,8 +21,12 @@ npm run build
 # Build only the core package
 cd packages/core && npm run build
 
-# Build only the voice package
+# Build only the voice package (dual format: CommonJS + ESModule)
 cd packages/voice && npm run build
+
+# Build specific format for voice package
+cd packages/voice && npm run build:cjs  # CommonJS only
+cd packages/voice && npm run build:esm  # ESModule only
 
 # Type checking without building
 cd packages/core && npm run typecheck
@@ -91,10 +95,13 @@ The services are organized by provider type:
 
 - **Voice Services** (`@aituber-onair/voice` package)
   - **Independent package** that can be used standalone or with core
+  - **Dual Package Support**: CommonJS and ESModule builds for maximum compatibility
+  - **Cross-Platform Runtime Support**: Node.js, Deno, Bun, and browsers
   - Multiple TTS engine support (VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, AIVIS Speech, etc.)
   - Unified interface through VoiceEngineAdapter
   - Emotion-aware speech synthesis with automatic emotion detection
   - Browser-compatible audio playback with HTMLAudioElement support
+  - Dynamic audio format detection (24000Hz, 44100Hz, 48000Hz)
 
 ### Event-Driven Design
 
@@ -164,6 +171,115 @@ The library abstracts differences between AI providers' function calling impleme
 6. **MiniMax Audio Engine**: MiniMax requires both API key and GroupId for authentication, unlike other TTS engines. It supports dual-region endpoints (global/china) and provides emotion-aware voice synthesis with advanced language recognition.
 
 7. **Package Integration**: When using both packages together, the core package imports voice functionality from `@aituber-onair/voice`. Voice features are optional in the core package - if voice options are not provided, the system works without voice synthesis.
+
+8. **Cross-Platform Compatibility**: The voice package supports multiple runtime environments with automatic detection and appropriate audio handling for each platform.
+
+## Cross-Platform Runtime Support
+
+The `@aituber-onair/voice` package provides comprehensive support for multiple JavaScript runtimes with automatic environment detection and appropriate handling for each platform.
+
+### Supported Runtimes
+
+| Runtime | Module Format | Audio Playback | Status |
+|---------|---------------|----------------|--------|
+| **Browser** | ESModule | HTMLAudioElement | ✅ Full Support |
+| **Node.js** | CommonJS | speaker/play-sound | ✅ Full Support |
+| **Bun** | CommonJS | speaker/play-sound | ✅ Full Support |
+| **Deno** | CommonJS | File output only | ⚠️ Limited |
+
+### Runtime Detection
+
+The package automatically detects the runtime environment and selects appropriate audio handling:
+
+```typescript
+// Automatic runtime detection
+const runtimeInfo = AudioPlayerFactory.getRuntimeInfo();
+console.log(runtimeInfo.runtime); // "browser", "node", "bun", or "deno"
+```
+
+### Dual Package Architecture
+
+The voice package uses a dual package structure to support both CommonJS and ESModule environments:
+
+```
+dist/
+├── cjs/          # CommonJS build (Node.js, Deno, Bun)
+│   └── index.js  # require() compatible
+└── esm/          # ESModule build (browsers, modern bundlers)
+    └── index.js  # import/export compatible
+```
+
+**Package.json Configuration:**
+```json
+{
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  }
+}
+```
+
+### Runtime-Specific Behavior
+
+#### Browser Environment
+- **Audio**: Uses `HTMLAudioElement` for seamless playback
+- **Module**: Automatically uses ESModule build
+- **Dependencies**: No additional packages required
+
+#### Node.js Environment
+- **Audio**: Requires manual installation of `speaker` or `play-sound` for audio playback
+- **Module**: Uses CommonJS build
+- **Installation**: `npm install speaker` or `npm install play-sound` (only if audio playback needed)
+
+#### Bun Environment
+- **Audio**: Full Node.js compatibility with `speaker`/`play-sound`
+- **Module**: Uses CommonJS build
+- **Performance**: Faster execution than Node.js
+- **Installation**: `bun install speaker`
+
+#### Deno Environment
+- **Audio**: Limited - files generated but no direct playback
+- **Module**: Uses CommonJS build with `--unstable-detect-cjs`
+- **Workaround**: Use system audio players (`afplay`, `aplay`, etc.)
+- **Limitation**: Native binary compatibility issues
+
+### Audio Library Support
+
+The package supports multiple audio playback libraries that must be manually installed when needed:
+
+```typescript
+// Automatic selection based on availability
+const audioPlayer = AudioPlayerFactory.create();
+
+// Supports:
+// - speaker (real-time PCM audio streaming) - install with: npm install speaker
+// - play-sound (system audio player integration) - install with: npm install play-sound  
+// - HTMLAudioElement (browser environments) - built-in, no installation needed
+```
+
+### Development Examples
+
+Examples are provided for each runtime environment:
+
+- `examples/react-basic/` - Browser/React with Vite
+- `examples/node-basic/` - Node.js CommonJS examples  
+- `examples/deno-basic/` - Deno with TypeScript
+- `examples/bun-basic/` - Bun with fast execution
+
+### Runtime Limitations
+
+**Deno Audio Limitation:**
+- **Root Cause**: Native binary compatibility issues with Node.js audio modules
+- **Workaround**: Generated audio files can be played with external players
+- **Allow Flags**: Even with `--allow-all`, native bindings are not supported
+
+**Browser Security:**
+- **CORS**: Some TTS APIs may require proper CORS configuration
+- **File Access**: Direct file system access is limited by browser security
 
 ## MCP Tools Integration
 
@@ -241,6 +357,61 @@ npm install @aituber-onair/voice
 
 # For full AITuber functionality (voice included automatically)
 npm install @aituber-onair/core
+
+# Additional audio dependencies (ONLY if you need audio playback in Node.js-like environments)
+npm install speaker          # For real-time audio streaming
+# OR
+npm install play-sound       # For system audio player integration
+```
+
+**Important**: Audio libraries are NOT automatically installed. Install them only when you need audio playback in Node.js/Bun environments. Browser environments don't require additional packages.
+
+### Runtime-Specific Usage
+
+#### Browser/React Applications
+```typescript
+// Automatic ESModule import - no additional setup required
+import { VoiceEngineAdapter } from '@aituber-onair/voice';
+
+const voiceService = new VoiceEngineAdapter({
+  engineType: 'openai',
+  apiKey: 'your-api-key',
+  speaker: 'alloy'
+});
+```
+
+#### Node.js Applications
+```javascript
+// Automatic CommonJS require
+const { VoiceEngineAdapter } = require('@aituber-onair/voice');
+
+// For speaker audio playback (install separately):
+// npm install speaker
+// OR
+// npm install play-sound
+```
+
+#### Bun Applications
+```javascript
+// CommonJS compatible with fast execution
+const { VoiceEngineAdapter } = require('@aituber-onair/voice');
+
+// For speaker audio playback (install separately):
+// bun install speaker
+// OR
+// bun install play-sound
+```
+
+#### Deno Applications
+```typescript
+// Use CommonJS detection flag
+// deno run --allow-net --allow-write --unstable-detect-cjs script.ts
+
+const { VoiceEngineAdapter } = await import('../../dist/cjs/index.js');
+
+// Audio files generated but require external playback:
+// afplay filename.wav (macOS)
+// aplay filename.wav (Linux)
 ```
 
 ## Version Management and Release Process

@@ -34,7 +34,6 @@ export class AivisSpeechEngine implements VoiceEngine {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Transfer-Encoding': 'chunked',
         },
         body: JSON.stringify(ttsQueryJson),
       },

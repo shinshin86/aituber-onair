@@ -11,6 +11,10 @@ export type {
 } from './services/VoiceService';
 export { VoiceEngineAdapter } from './services/VoiceEngineAdapter';
 
+// Audio players
+export * from './services/audio';
+export type { AudioPlayer } from './types/audioPlayer';
+
 // Voice engines
 export * from './engines';
 
