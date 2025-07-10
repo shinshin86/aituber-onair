@@ -37,6 +37,9 @@ export class PatternDetector {
     ];
     const uniquePatterns = this.deduplicatePatterns(allPatterns);
 
+    // Clean up again to maintain the limit
+    this.cleanupOldPatterns();
+
     const severity = this.calculateSeverity(uniquePatterns);
     const confidence = this.calculateConfidence(
       uniquePatterns,
@@ -114,6 +117,7 @@ export class PatternDetector {
 
   private findRepeatedPatterns(messages: Message[]): ConversationPattern[] {
     const repeatedPatterns: ConversationPattern[] = [];
+    const foundPairs = new Set<string>();
 
     for (let i = 0; i < messages.length - 1; i++) {
       const currentMessage = messages[i];
@@ -128,11 +132,14 @@ export class PatternDetector {
           );
 
           if (similarity >= 0.8) {
-            const patternId = `repeated_${currentMessage.role}_${i}_${j}`;
-
-            if (!this.detectedPatterns.has(patternId)) {
+            // Create a unique key for this pair to avoid duplicates
+            const pairKey = `${Math.min(i, j)}_${Math.max(i, j)}`;
+            
+            if (!foundPairs.has(pairKey)) {
+              foundPairs.add(pairKey);
+              
               const pattern: ConversationPattern = {
-                id: patternId,
+                id: generateId(),
                 pattern: `Repeated ${currentMessage.role} message`,
                 frequency: 2,
                 firstSeen: currentMessage.timestamp || Date.now(),
@@ -141,7 +148,7 @@ export class PatternDetector {
               };
 
               repeatedPatterns.push(pattern);
-              this.detectedPatterns.set(patternId, pattern);
+              this.detectedPatterns.set(pattern.id, pattern);
             }
           }
         }
@@ -311,24 +318,24 @@ export class PatternDetector {
     const now = Date.now();
     const maxAge = 24 * 60 * 60 * 1000; // 24時間
 
+    // First, remove old patterns
     for (const [id, pattern] of this.detectedPatterns) {
       if (now - pattern.lastSeen > maxAge) {
         this.detectedPatterns.delete(id);
       }
     }
 
-    if (this.detectedPatterns.size > this.maxPatterns) {
+    // Then, enforce the maximum pattern limit
+    while (this.detectedPatterns.size >= this.maxPatterns) {
       const sortedPatterns = Array.from(this.detectedPatterns.values()).sort(
         (a, b) => a.lastSeen - b.lastSeen
       );
 
-      const toRemove = sortedPatterns.slice(
-        0,
-        this.detectedPatterns.size - this.maxPatterns
-      );
-
-      for (const pattern of toRemove) {
-        this.detectedPatterns.delete(pattern.id);
+      if (sortedPatterns.length > 0) {
+        // Remove the oldest pattern
+        this.detectedPatterns.delete(sortedPatterns[0].id);
+      } else {
+        break;
       }
     }
   }

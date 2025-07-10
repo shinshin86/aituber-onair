@@ -299,6 +299,12 @@ export function calculateTextSimilarity(
   text2: string,
   options: Partial<TextAnalysisOptions> = {}
 ): number {
+  const normalized1 = normalizeText(text1, options);
+  const normalized2 = normalizeText(text2, options);
+
+  // Quick check for exact match after normalization
+  if (normalized1 === normalized2) return 1.0;
+
   const tokens1 = tokenize(text1, options);
   const tokens2 = tokenize(text2, options);
 
@@ -310,29 +316,26 @@ export function calculateTextSimilarity(
 
   const jaccardSimilarity = calculateJaccardSimilarity(set1, set2);
 
-  const vocabulary = Array.from(new Set([...tokens1, ...tokens2]));
-  const documentFrequencies = new Map<string, number>();
-
-  for (const term of vocabulary) {
-    let count = 0;
-    if (set1.has(term)) count++;
-    if (set2.has(term)) count++;
-    documentFrequencies.set(term, count);
+  // For short texts or when Jaccard similarity is very high, just use Jaccard
+  if (tokens1.length < 5 || tokens2.length < 5 || jaccardSimilarity > 0.9) {
+    return jaccardSimilarity;
   }
 
-  const vector1 = createTfIdfVector(
-    tokens1,
-    vocabulary,
-    documentFrequencies,
-    2
-  );
-  const vector2 = createTfIdfVector(
-    tokens2,
-    vocabulary,
-    documentFrequencies,
-    2
-  );
+  // For longer texts, use a combination of Jaccard and token-based similarity
+  const vocabulary = Array.from(new Set([...tokens1, ...tokens2]));
+  const tokenFreq1 = new Map<string, number>();
+  const tokenFreq2 = new Map<string, number>();
 
+  for (const token of tokens1) {
+    tokenFreq1.set(token, (tokenFreq1.get(token) || 0) + 1);
+  }
+  for (const token of tokens2) {
+    tokenFreq2.set(token, (tokenFreq2.get(token) || 0) + 1);
+  }
+
+  // Calculate simple cosine similarity based on token frequencies
+  const vector1 = vocabulary.map(term => tokenFreq1.get(term) || 0);
+  const vector2 = vocabulary.map(term => tokenFreq2.get(term) || 0);
   const cosineSimilarity = calculateCosineSimilarity(vector1, vector2);
 
   return (jaccardSimilarity + cosineSimilarity) / 2;
