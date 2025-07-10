@@ -25,7 +25,7 @@ export function getPromptTemplate(
   language: string,
   index?: number
 ): string {
-  const langPrompts = prompts[language] || prompts['en'];
+  const langPrompts = prompts[language] || prompts.en;
   if (!langPrompts || !langPrompts.intervention) {
     return 'Please change the topic and talk about something new.';
   }
@@ -53,7 +53,7 @@ export function overridePrompts(
   const merged: LocalizedPrompts = { ...defaultPrompts };
 
   for (const [lang, templates] of Object.entries(customPrompts)) {
-    if (templates && templates.intervention) {
+    if (templates?.intervention) {
       merged[lang] = {
         ...merged[lang], // Preserve default prompts
         ...templates, // Override with custom prompts

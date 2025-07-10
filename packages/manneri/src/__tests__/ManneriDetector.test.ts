@@ -218,12 +218,12 @@ describe('ManneriDetector', () => {
       // 実際に介入を実行して記録
       detector.generateDiversificationPrompt(messages);
 
-      let statsBefore = detector.getStatistics();
+      const statsBefore = detector.getStatistics();
       expect(statsBefore.totalInterventions).toBeGreaterThan(0);
 
       detector.clearHistory();
 
-      let statsAfter = detector.getStatistics();
+      const statsAfter = detector.getStatistics();
       expect(statsAfter.totalInterventions).toBe(0);
     });
   });

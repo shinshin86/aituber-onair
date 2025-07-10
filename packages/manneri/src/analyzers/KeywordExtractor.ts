@@ -80,7 +80,8 @@ export class KeywordExtractor {
 
       for (const keyword of keywords) {
         if (keywordData.has(keyword)) {
-          const data = keywordData.get(keyword)!;
+          const data = keywordData.get(keyword);
+          if (!data) continue;
           data.frequency++;
           data.lastSeen = Math.max(data.lastSeen, timestamp);
           data.score = this.calculateKeywordScore(
@@ -116,7 +117,7 @@ export class KeywordExtractor {
   detectTopicShift(
     recentMessages: Message[],
     historicalMessages: Message[],
-    threshold: number = 0.5
+    threshold = 0.5
   ): { hasShift: boolean; newTopics: string[]; oldTopics: string[] } {
     const recentKeywords = new Set(
       this.extractKeywordsFromMessages(recentMessages)
@@ -163,7 +164,8 @@ export class KeywordExtractor {
         const clusterId = this.generateClusterId(relatedKeywords);
 
         if (clusters.has(clusterId)) {
-          const cluster = clusters.get(clusterId)!;
+          const cluster = clusters.get(clusterId);
+          if (!cluster) continue;
           cluster.messageCount++;
           cluster.lastMessage = Math.max(cluster.lastMessage, timestamp);
           cluster.score = this.calculateClusterScore(cluster);
@@ -198,8 +200,8 @@ export class KeywordExtractor {
 
   findRepeatedKeywords(
     messages: Message[],
-    minRepetitions: number = 3,
-    windowSize: number = 5
+    minRepetitions = 3,
+    windowSize = 5
   ): Array<{ keyword: string; positions: number[]; density: number }> {
     const keywordPositions = new Map<string, number[]>();
 
@@ -210,7 +212,7 @@ export class KeywordExtractor {
         if (!keywordPositions.has(keyword)) {
           keywordPositions.set(keyword, []);
         }
-        keywordPositions.get(keyword)!.push(i);
+        keywordPositions.get(keyword)?.push(i);
       }
     }
 

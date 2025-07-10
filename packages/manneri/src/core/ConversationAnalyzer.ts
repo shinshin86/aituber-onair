@@ -197,9 +197,9 @@ export class ConversationAnalyzer {
       messages.reduce((sum, m) => sum + m.content.length, 0) / messages.length;
 
     const roleDistribution: Record<string, number> = {};
-    messages.forEach((m) => {
+    for (const m of messages) {
       roleDistribution[m.role] = (roleDistribution[m.role] || 0) + 1;
-    });
+    }
 
     const conversationRhythm = this.calculateConversationRhythm(messages);
     const engagementScore = this.calculateEngagementScore(messages);
@@ -235,10 +235,12 @@ export class ConversationAnalyzer {
       messages.reduce((sum, m) => sum + m.content.length, 0) / messages.length;
     const uniqueWords = new Set();
 
-    messages.forEach((m) => {
+    for (const m of messages) {
       const words = m.content.split(/\s+/);
-      words.forEach((word) => uniqueWords.add(word.toLowerCase()));
-    });
+      for (const word of words) {
+        uniqueWords.add(word.toLowerCase());
+      }
+    }
 
     const vocabularyDiversity = uniqueWords.size / messages.length;
     const lengthScore = Math.min(avgLength / 100, 1.0);

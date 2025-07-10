@@ -23,10 +23,6 @@ export class PatternDetector {
   private readonly minPatternLength: number = 2;
   private readonly maxPatternLength: number = 5;
 
-  constructor() {
-    // Pattern detection logic
-  }
-
   detectPatterns(messages: Message[]): PatternDetectionResult {
     this.cleanupOldPatterns();
 
@@ -81,7 +77,8 @@ export class PatternDetector {
       const pattern = this.createPatternSignature(sequence);
 
       if (sequenceMap.has(pattern)) {
-        const existing = sequenceMap.get(pattern)!;
+        const existing = sequenceMap.get(pattern);
+        if (!existing) continue;
         existing.frequency++;
         existing.positions.push(i);
       } else {
@@ -203,7 +200,8 @@ export class PatternDetector {
 
     for (const sequence of sequences) {
       if (sequenceMap.has(sequence.pattern)) {
-        const existing = sequenceMap.get(sequence.pattern)!;
+        const existing = sequenceMap.get(sequence.pattern);
+        if (!existing) continue;
         existing.frequency++;
         existing.positions.push(...sequence.positions);
       } else {
@@ -231,7 +229,11 @@ export class PatternDetector {
     for (const pattern of patterns) {
       const key = `${pattern.pattern}_${pattern.frequency}`;
 
-      if (!unique.has(key) || unique.get(key)!.frequency < pattern.frequency) {
+      const existingPattern = unique.get(key);
+      if (
+        !unique.has(key) ||
+        (existingPattern && existingPattern.frequency < pattern.frequency)
+      ) {
         unique.set(key, pattern);
       }
     }

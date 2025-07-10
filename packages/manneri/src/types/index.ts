@@ -99,9 +99,7 @@ export interface ManneriEvent {
   cleanup_error: { error: Error };
 }
 
-export interface ManneriEventHandler<T = any> {
-  (data: T): void;
-}
+export type ManneriEventHandler<T = unknown> = (data: T) => void;
 
 export const DEFAULT_MANNERI_CONFIG: ManneriConfig = {
   similarityThreshold: 0.75,

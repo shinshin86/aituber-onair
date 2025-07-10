@@ -16,10 +16,7 @@ export class PromptGenerator {
   private language: string;
   private prompts: LocalizedPrompts;
 
-  constructor(
-    language: string = 'ja',
-    customPrompts?: Partial<LocalizedPrompts>
-  ) {
+  constructor(language = 'ja', customPrompts?: Partial<LocalizedPrompts>) {
     this.language = language;
     this.prompts = overridePrompts(DEFAULT_PROMPTS, customPrompts);
   }
@@ -40,7 +37,7 @@ export class PromptGenerator {
   }
 
   private getInterventionPrompt(language: string): string {
-    const langPrompts = this.prompts[language] || this.prompts['en'];
+    const langPrompts = this.prompts[language] || this.prompts.en;
     if (!langPrompts?.intervention || langPrompts.intervention.length === 0) {
       return 'Please change the topic and talk about something new.';
     }

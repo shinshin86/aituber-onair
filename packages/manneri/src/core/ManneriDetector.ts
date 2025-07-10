@@ -24,8 +24,8 @@ import { createEventEmitter, generateId } from '../utils/browserUtils.js';
 export class ManneriDetector {
   private readonly config: ManneriConfig;
   private readonly analyzer: ConversationAnalyzer;
-  private readonly promptGenerator: PromptGenerator;
-  private readonly patternDetector: PatternDetector;
+  private promptGenerator: PromptGenerator;
+  private patternDetector: PatternDetector;
   private readonly persistenceProvider?: PersistenceProvider;
   private readonly eventEmitter = createEventEmitter<{
     pattern_detected: AnalysisResult;
@@ -135,11 +135,9 @@ export class ManneriDetector {
     if (newConfig.language || newConfig.customPrompts) {
       const language = this.config.language || 'ja';
       const customPrompts = this.config.customPrompts;
-      (this as any).promptGenerator = new PromptGenerator(
-        language,
-        customPrompts
-      );
-      (this as any).patternDetector = new PatternDetector();
+      // Update prompt generator and pattern detector
+      this.promptGenerator = new PromptGenerator(language, customPrompts);
+      this.patternDetector = new PatternDetector();
     }
 
     this.analyzer.updateOptions(this.createAnalyzerOptions());
@@ -259,7 +257,10 @@ export class ManneriDetector {
     }
   }
 
-  private emit<K extends keyof ManneriEvent>(event: K, data: any): void {
+  private emit<K extends keyof ManneriEvent>(
+    event: K,
+    data: ManneriEvent[K]
+  ): void {
     if (this.config.debugMode) {
       console.log(`[Manneri] Event: ${event}`, data);
     }
@@ -361,14 +362,18 @@ export class ManneriDetector {
   /**
    * Get persistence provider info (if available)
    */
-  getPersistenceInfo(): any {
+  getPersistenceInfo(): { provider: string; available: boolean } | null {
     if (!this.persistenceProvider) {
       return null;
     }
 
     // Try to get info from LocalStoragePersistenceProvider
     if ('getStorageInfo' in this.persistenceProvider) {
-      return (this.persistenceProvider as any).getStorageInfo();
+      return (
+        this.persistenceProvider as {
+          getStorageInfo: () => { provider: string; available: boolean };
+        }
+      ).getStorageInfo();
     }
 
     return { provider: 'custom', available: true };

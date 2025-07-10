@@ -73,10 +73,10 @@ describe('overridePrompts', () => {
       ja: {
         intervention: [], // Empty array
       },
-      en: undefined as any, // Undefined
+      en: undefined as unknown, // Undefined
       fr: {
         // Missing intervention
-      } as any,
+      } as unknown,
     };
 
     const result = overridePrompts(DEFAULT_PROMPTS, customPrompts);
@@ -97,7 +97,7 @@ describe('overridePrompts', () => {
       ja: {
         intervention: DEFAULT_PROMPTS.ja.intervention,
         // Imagine there are other properties in the future
-      } as any,
+      } as unknown,
     };
 
     const customPrompts = {

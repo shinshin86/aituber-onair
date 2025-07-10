@@ -77,8 +77,8 @@ export function getStorageSize(storageKey?: string): number {
 }
 
 export function cleanupOldData(
-  maxAge: number = 24 * 60 * 60 * 1000,
-  storageKey?: string
+  storageKey?: string,
+  maxAge = 24 * 60 * 60 * 1000
 ): boolean {
   const data = loadFromLocalStorage(storageKey);
   if (!data) return false;
@@ -103,10 +103,10 @@ export function cleanupOldData(
   return saveToLocalStorage(cleanedData, storageKey);
 }
 
-export function debounce<T extends (...args: any[]) => void>(
+export function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   wait: number,
-  immediate: boolean = false
+  immediate = false
 ): T {
   let timeout: NodeJS.Timeout | null = null;
 
@@ -125,22 +125,24 @@ export function debounce<T extends (...args: any[]) => void>(
   }) as T;
 }
 
-export function throttle<T extends (...args: any[]) => void>(
+export function throttle<T extends (...args: unknown[]) => void>(
   func: T,
   limit: number
 ): T {
-  let inThrottle: boolean = false;
+  let inThrottle = false;
 
   return ((...args: Parameters<T>) => {
     if (!inThrottle) {
       func(...args);
       inThrottle = true;
-      setTimeout(() => (inThrottle = false), limit);
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
     }
   }) as T;
 }
 
-export function createWorkerFunction(fn: Function): Worker | null {
+export function createWorkerFunction(fn: () => void): Worker | null {
   if (!isBrowserEnvironment() || typeof Worker === 'undefined') return null;
 
   try {
@@ -166,7 +168,7 @@ export function createWorkerFunction(fn: Function): Worker | null {
 export function measurePerformance<T>(
   name: string,
   fn: () => T,
-  enableLogging: boolean = false
+  enableLogging = false
 ): T {
   const start = performance.now();
   const result = fn();
@@ -182,7 +184,7 @@ export function measurePerformance<T>(
 export function asyncMeasurePerformance<T>(
   name: string,
   fn: () => Promise<T>,
-  enableLogging: boolean = false
+  enableLogging = false
 ): Promise<T> {
   const start = performance.now();
 
@@ -197,37 +199,40 @@ export function asyncMeasurePerformance<T>(
   });
 }
 
-export function createEventEmitter<EventMap extends Record<string, any>>() {
-  const listeners = new Map<keyof EventMap, Set<Function>>();
+export function createEventEmitter<EventMap extends Record<string, unknown>>() {
+  const listeners = new Map<string, Set<(data: unknown) => void>>();
 
   return {
     on<K extends keyof EventMap>(
       event: K,
       listener: (data: EventMap[K]) => void
     ): void {
-      if (!listeners.has(event)) {
-        listeners.set(event, new Set());
+      const eventKey = String(event);
+      if (!listeners.has(eventKey)) {
+        listeners.set(eventKey, new Set());
       }
-      listeners.get(event)!.add(listener);
+      listeners.get(eventKey)?.add(listener as (data: unknown) => void);
     },
 
     off<K extends keyof EventMap>(
       event: K,
       listener: (data: EventMap[K]) => void
     ): void {
-      const eventListeners = listeners.get(event);
+      const eventKey = String(event);
+      const eventListeners = listeners.get(eventKey);
       if (eventListeners) {
-        eventListeners.delete(listener);
+        eventListeners.delete(listener as (data: unknown) => void);
         if (eventListeners.size === 0) {
-          listeners.delete(event);
+          listeners.delete(eventKey);
         }
       }
     },
 
     emit<K extends keyof EventMap>(event: K, data: EventMap[K]): void {
-      const eventListeners = listeners.get(event);
+      const eventKey = String(event);
+      const eventListeners = listeners.get(eventKey);
       if (eventListeners) {
-        eventListeners.forEach((listener) => {
+        for (const listener of eventListeners) {
           try {
             listener(data);
           } catch (error) {
@@ -236,7 +241,7 @@ export function createEventEmitter<EventMap extends Record<string, any>>() {
               error
             );
           }
-        });
+        }
       }
     },
 
@@ -250,18 +255,22 @@ export function generateId(): string {
   return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 }
 
-export function isValidConfig(config: any): config is ManneriConfig {
+export function isValidConfig(config: unknown): config is ManneriConfig {
+  if (typeof config !== 'object' || config === null) {
+    return false;
+  }
+
+  const c = config as Record<string, unknown>;
+
   return (
-    typeof config === 'object' &&
-    config !== null &&
-    typeof config.similarityThreshold === 'number' &&
-    typeof config.repetitionLimit === 'number' &&
-    typeof config.lookbackWindow === 'number' &&
-    typeof config.interventionCooldown === 'number' &&
-    typeof config.minMessageLength === 'number' &&
-    Array.isArray(config.excludeKeywords) &&
-    typeof config.enableTopicTracking === 'boolean' &&
-    typeof config.enableKeywordAnalysis === 'boolean' &&
-    typeof config.debugMode === 'boolean'
+    typeof c.similarityThreshold === 'number' &&
+    typeof c.repetitionLimit === 'number' &&
+    typeof c.lookbackWindow === 'number' &&
+    typeof c.interventionCooldown === 'number' &&
+    typeof c.minMessageLength === 'number' &&
+    Array.isArray(c.excludeKeywords) &&
+    typeof c.enableTopicTracking === 'boolean' &&
+    typeof c.enableKeywordAnalysis === 'boolean' &&
+    typeof c.debugMode === 'boolean'
   );
 }

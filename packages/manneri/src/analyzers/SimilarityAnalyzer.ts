@@ -29,8 +29,9 @@ export class SimilarityAnalyzer {
   calculateSimilarity(text1: string, text2: string): number {
     const cacheKey = this.getCacheKey(text1, text2);
 
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!;
+    const cached = this.cache.get(cacheKey);
+    if (cached !== undefined) {
+      return cached;
     }
 
     const similarity = measurePerformance(
@@ -46,7 +47,7 @@ export class SimilarityAnalyzer {
   analyzeSimilarity(
     currentMessage: Message,
     previousMessages: Message[],
-    threshold: number = 0.7
+    threshold = 0.7
   ): SimilarityResult {
     if (previousMessages.length === 0) {
       return {
@@ -95,8 +96,8 @@ export class SimilarityAnalyzer {
   findSimilarMessages(
     targetMessage: Message,
     messages: Message[],
-    threshold: number = 0.7,
-    sameRoleOnly: boolean = true
+    threshold = 0.7,
+    sameRoleOnly = true
   ): Message[] {
     const similarMessages: Message[] = [];
     const targetContent = targetMessage.content.trim();
@@ -121,8 +122,8 @@ export class SimilarityAnalyzer {
 
   analyzeSequenceSimilarity(
     messages: Message[],
-    sequenceLength: number = 3,
-    threshold: number = 0.7
+    sequenceLength = 3,
+    threshold = 0.7
   ): Array<{ sequence: Message[]; similarity: number }> {
     if (messages.length < sequenceLength * 2) {
       return [];
@@ -180,11 +181,7 @@ export class SimilarityAnalyzer {
     return validPairs > 0 ? totalSimilarity / validPairs : 0;
   }
 
-  analyzeNgramSimilarity(
-    text1: string,
-    text2: string,
-    ngramSize: number = 2
-  ): number {
+  analyzeNgramSimilarity(text1: string, text2: string, ngramSize = 2): number {
     const tokens1 = tokenize(text1, this.options);
     const tokens2 = tokenize(text2, this.options);
 
@@ -217,7 +214,9 @@ export class SimilarityAnalyzer {
 
     if (this.cache.size > 1000) {
       const keysToDelete = Array.from(this.cache.keys()).slice(0, 100);
-      keysToDelete.forEach((k) => this.cache.delete(k));
+      for (const k of keysToDelete) {
+        this.cache.delete(k);
+      }
     }
   }
 
