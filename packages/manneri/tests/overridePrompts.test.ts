@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { overridePrompts } from '../types/prompts.js';
-import { DEFAULT_PROMPTS } from '../config/defaultPrompts.js';
-import type { LocalizedPrompts } from '../types/prompts.js';
+import { overridePrompts } from '../src/types/prompts.js';
+import { DEFAULT_PROMPTS } from '../src/config/defaultPrompts.js';
+import type { LocalizedPrompts } from '../src/types/prompts.js';
 
 describe('overridePrompts', () => {
   it('should return default prompts when no custom prompts provided', () => {

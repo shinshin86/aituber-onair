@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ManneriDetector } from '../core/ManneriDetector.js';
-import type { Message } from '../types/index.js';
+import { ManneriDetector } from '../src/core/ManneriDetector.js';
+import type { Message } from '../src/types/index.js';
 
 describe('ManneriDetector', () => {
   let detector: ManneriDetector;
