@@ -59,7 +59,7 @@ describe('LocalStoragePersistenceProvider', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    
+
     // Reset localStorage mock
     localStorageMock.getItem.mockClear();
     localStorageMock.setItem.mockClear();
@@ -68,7 +68,7 @@ describe('LocalStoragePersistenceProvider', () => {
 
     // Import mocked browserUtils
     mockBrowserUtils = await import('../src/utils/browserUtils.js');
-    
+
     provider = new LocalStoragePersistenceProvider();
   });
 
@@ -86,7 +86,7 @@ describe('LocalStoragePersistenceProvider', () => {
         storageKey: 'custom_key',
         version: '2.0.0',
       });
-      
+
       expect(customProvider).toBeDefined();
     });
   });
@@ -124,7 +124,7 @@ describe('LocalStoragePersistenceProvider', () => {
       const customProvider = new LocalStoragePersistenceProvider({
         storageKey: 'custom_key',
       });
-      
+
       mockBrowserUtils.isBrowserEnvironment.mockReturnValue(true);
       mockBrowserUtils.saveToLocalStorage.mockReturnValue(true);
 
@@ -145,7 +145,9 @@ describe('LocalStoragePersistenceProvider', () => {
       const result = provider.load();
 
       expect(result).toEqual(mockStorageData);
-      expect(mockBrowserUtils.loadFromLocalStorage).toHaveBeenCalledWith('manneri_data');
+      expect(mockBrowserUtils.loadFromLocalStorage).toHaveBeenCalledWith(
+        'manneri_data'
+      );
     });
 
     it('should return null when browser environment is not available', () => {
@@ -181,7 +183,9 @@ describe('LocalStoragePersistenceProvider', () => {
       const result = provider.clear();
 
       expect(result).toBe(true);
-      expect(mockBrowserUtils.clearLocalStorage).toHaveBeenCalledWith('manneri_data');
+      expect(mockBrowserUtils.clearLocalStorage).toHaveBeenCalledWith(
+        'manneri_data'
+      );
     });
 
     it('should return false when browser environment is not available', () => {

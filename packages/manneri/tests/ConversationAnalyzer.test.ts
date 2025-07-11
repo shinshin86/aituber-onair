@@ -6,9 +6,17 @@ describe('ConversationAnalyzer', () => {
   let analyzer: ConversationAnalyzer;
   const mockMessages: Message[] = [
     { role: 'user', content: 'Hello, how are you?', timestamp: 1000 },
-    { role: 'assistant', content: 'I am doing well, thank you!', timestamp: 2000 },
+    {
+      role: 'assistant',
+      content: 'I am doing well, thank you!',
+      timestamp: 2000,
+    },
     { role: 'user', content: 'What can you help me with?', timestamp: 3000 },
-    { role: 'assistant', content: 'I can help you with various tasks.', timestamp: 4000 },
+    {
+      role: 'assistant',
+      content: 'I can help you with various tasks.',
+      timestamp: 4000,
+    },
   ];
 
   beforeEach(() => {
@@ -64,11 +72,13 @@ describe('ConversationAnalyzer', () => {
 
     it('should respect analysis window size', () => {
       const customAnalyzer = new ConversationAnalyzer({ analysisWindow: 2 });
-      const manyMessages: Message[] = Array(10).fill(null).map((_, i) => ({
-        role: i % 2 === 0 ? 'user' : 'assistant',
-        content: `Message ${i}`,
-        timestamp: i * 1000,
-      }));
+      const manyMessages: Message[] = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          role: i % 2 === 0 ? 'user' : 'assistant',
+          content: `Message ${i}`,
+          timestamp: i * 1000,
+        }));
 
       const result = customAnalyzer.analyzeConversation(manyMessages);
       // Should only analyze last 2 messages
@@ -186,10 +196,10 @@ describe('ConversationAnalyzer', () => {
     it('should clear all caches', () => {
       // Perform some analyses to populate caches
       analyzer.analyzeConversation(mockMessages);
-      
+
       // Clear caches
       analyzer.clearCache();
-      
+
       // Stats should reflect cleared caches
       const stats = analyzer.getAnalysisStats();
       expect(stats.memoryUsage).toBe(0);
@@ -239,11 +249,13 @@ describe('ConversationAnalyzer', () => {
 
     it('should trigger intervention on topic concentration', () => {
       // This test depends on the actual implementation of topic analysis
-      const topicMessages: Message[] = Array(10).fill(null).map((_, i) => ({
-        role: i % 2 === 0 ? 'user' : 'assistant',
-        content: 'Let me talk about programming and coding again',
-        timestamp: i * 1000,
-      }));
+      const topicMessages: Message[] = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          role: i % 2 === 0 ? 'user' : 'assistant',
+          content: 'Let me talk about programming and coding again',
+          timestamp: i * 1000,
+        }));
 
       const result = analyzer.analyzeConversation(topicMessages);
       // Topic analysis might detect concentrated topics

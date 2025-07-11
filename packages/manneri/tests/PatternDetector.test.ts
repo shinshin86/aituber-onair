@@ -13,19 +13,17 @@ describe('PatternDetector', () => {
   describe('detectPatterns', () => {
     it('should return empty patterns for empty messages', () => {
       const result = detector.detectPatterns([]);
-      
+
       expect(result.patterns).toEqual([]);
       expect(result.severity).toBe('low');
       expect(result.confidence).toBe(0);
     });
 
     it('should return empty patterns for too few messages', () => {
-      const messages: Message[] = [
-        { role: 'user', content: 'Hello' },
-      ];
+      const messages: Message[] = [{ role: 'user', content: 'Hello' }];
 
       const result = detector.detectPatterns(messages);
-      
+
       expect(result.patterns).toEqual([]);
       expect(result.severity).toBe('low');
     });
@@ -39,9 +37,9 @@ describe('PatternDetector', () => {
       ];
 
       const result = detector.detectPatterns(messages);
-      
+
       expect(result.patterns.length).toBeGreaterThan(0);
-      expect(result.patterns.some(p => p.frequency >= 2)).toBe(true);
+      expect(result.patterns.some((p) => p.frequency >= 2)).toBe(true);
     });
 
     it('should detect sequence patterns', () => {
@@ -55,9 +53,11 @@ describe('PatternDetector', () => {
       ];
 
       const result = detector.detectPatterns(messages);
-      
+
       expect(result.patterns.length).toBeGreaterThan(0);
-      const sequencePattern = result.patterns.find(p => p.frequency === 2 && p.messages.length === 3);
+      const sequencePattern = result.patterns.find(
+        (p) => p.frequency === 2 && p.messages.length === 3
+      );
       expect(sequencePattern).toBeDefined();
     });
 
@@ -72,8 +72,10 @@ describe('PatternDetector', () => {
       ];
 
       const result = detector.detectPatterns(messages);
-      
-      const rolePattern = result.patterns.find(p => p.pattern.includes('Role sequence'));
+
+      const rolePattern = result.patterns.find((p) =>
+        p.pattern.includes('Role sequence')
+      );
       expect(rolePattern).toBeDefined();
       expect(rolePattern?.frequency).toBeGreaterThanOrEqual(3);
     });
@@ -88,7 +90,7 @@ describe('PatternDetector', () => {
       }
 
       const result = detector.detectPatterns(highFrequencyMessages);
-      
+
       expect(result.severity).toBe('high');
       expect(result.confidence).toBeGreaterThan(0.5);
     });
@@ -102,7 +104,7 @@ describe('PatternDetector', () => {
       ];
 
       const result = detector.detectPatterns(messages);
-      
+
       expect(result.patterns.length).toBeGreaterThan(0);
       expect(result.patterns[0].firstSeen).toBeDefined();
       expect(result.patterns[0].lastSeen).toBeDefined();
@@ -119,10 +121,12 @@ describe('PatternDetector', () => {
       ];
 
       const result = detector.detectPatterns(messages);
-      
+
       // Check that patterns with same signature are not duplicated
-      const patternSignatures = new Set(result.patterns.map(p => p.pattern));
-      expect(patternSignatures.size).toBeLessThanOrEqual(result.patterns.length);
+      const patternSignatures = new Set(result.patterns.map((p) => p.pattern));
+      expect(patternSignatures.size).toBeLessThanOrEqual(
+        result.patterns.length
+      );
     });
   });
 
@@ -136,8 +140,10 @@ describe('PatternDetector', () => {
       ];
 
       const result = detector.detectPatterns(messages);
-      
-      const repeatedPattern = result.patterns.find(p => p.pattern.includes('Repeated'));
+
+      const repeatedPattern = result.patterns.find((p) =>
+        p.pattern.includes('Repeated')
+      );
       expect(repeatedPattern).toBeDefined();
     });
 
@@ -156,9 +162,11 @@ describe('PatternDetector', () => {
       }
 
       const result = detector.detectPatterns(messages);
-      
+
       // Should find patterns of length 2, 3, 4, and 5
-      const patternLengths = new Set(result.patterns.map(p => p.messages.length));
+      const patternLengths = new Set(
+        result.patterns.map((p) => p.messages.length)
+      );
       expect(patternLengths.size).toBeGreaterThan(1);
     });
   });
@@ -166,7 +174,7 @@ describe('PatternDetector', () => {
   describe('getPatternStatistics', () => {
     it('should return empty statistics for no patterns', () => {
       const stats = detector.getPatternStatistics();
-      
+
       expect(stats.totalPatterns).toBe(0);
       expect(stats.averageFrequency).toBe(0);
       expect(stats.mostFrequentPattern).toBeNull();
@@ -190,7 +198,7 @@ describe('PatternDetector', () => {
 
       detector.detectPatterns(messages);
       expect(detector.getPatternStatistics().totalPatterns).toBeGreaterThan(0);
-      
+
       detector.clearPatterns();
       expect(detector.getPatternStatistics().totalPatterns).toBe(0);
     });
@@ -198,12 +206,28 @@ describe('PatternDetector', () => {
     it('should cleanup old patterns automatically', () => {
       vi.useFakeTimers();
       const now = Date.now();
-      
+
       const oldMessages: Message[] = [
-        { role: 'user', content: 'Old pattern', timestamp: now - 25 * 60 * 60 * 1000 },
-        { role: 'assistant', content: 'Old response', timestamp: now - 25 * 60 * 60 * 1000 },
-        { role: 'user', content: 'Old pattern', timestamp: now - 25 * 60 * 60 * 1000 },
-        { role: 'assistant', content: 'Old response', timestamp: now - 25 * 60 * 60 * 1000 },
+        {
+          role: 'user',
+          content: 'Old pattern',
+          timestamp: now - 25 * 60 * 60 * 1000,
+        },
+        {
+          role: 'assistant',
+          content: 'Old response',
+          timestamp: now - 25 * 60 * 60 * 1000,
+        },
+        {
+          role: 'user',
+          content: 'Old pattern',
+          timestamp: now - 25 * 60 * 60 * 1000,
+        },
+        {
+          role: 'assistant',
+          content: 'Old response',
+          timestamp: now - 25 * 60 * 60 * 1000,
+        },
       ];
 
       const newMessages: Message[] = [
@@ -216,13 +240,13 @@ describe('PatternDetector', () => {
       // First detect old patterns
       const oldResult = detector.detectPatterns(oldMessages);
       expect(oldResult.patterns.length).toBeGreaterThan(0);
-      
+
       vi.advanceTimersByTime(25 * 60 * 60 * 1000); // 25 hours
-      
+
       // Then detect new patterns - old ones should be cleaned up
       const newResult = detector.detectPatterns(newMessages);
       expect(newResult.patterns.length).toBeGreaterThan(0);
-      
+
       vi.restoreAllMocks();
     });
 
@@ -234,16 +258,24 @@ describe('PatternDetector', () => {
           const id = batch * 15 + i;
           messages.push(
             { role: 'user', content: `Pattern ${id}`, timestamp: id * 1000 },
-            { role: 'assistant', content: `Response ${id}`, timestamp: id * 1000 + 500 },
+            {
+              role: 'assistant',
+              content: `Response ${id}`,
+              timestamp: id * 1000 + 500,
+            },
             { role: 'user', content: `Pattern ${id}`, timestamp: id * 2000 },
-            { role: 'assistant', content: `Response ${id}`, timestamp: id * 2000 + 500 }
+            {
+              role: 'assistant',
+              content: `Response ${id}`,
+              timestamp: id * 2000 + 500,
+            }
           );
         }
         detector.detectPatterns(messages);
       }
 
       const stats = detector.getPatternStatistics();
-      
+
       // Should not exceed max patterns (100)
       expect(stats.totalPatterns).toBeLessThanOrEqual(100);
     });
@@ -259,7 +291,7 @@ describe('PatternDetector', () => {
       ];
 
       const result = detector.detectPatterns(messages);
-      
+
       expect(result.patterns.length).toBeGreaterThan(0);
     });
 
@@ -272,7 +304,7 @@ describe('PatternDetector', () => {
       ];
 
       const result = detector.detectPatterns(messages);
-      
+
       expect(result.patterns.length).toBeGreaterThan(0);
     });
 
@@ -285,7 +317,7 @@ describe('PatternDetector', () => {
       ];
 
       const result = detector.detectPatterns(messages);
-      
+
       expect(result.patterns.length).toBeGreaterThan(0);
     });
   });

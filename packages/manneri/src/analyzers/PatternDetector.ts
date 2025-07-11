@@ -134,10 +134,10 @@ export class PatternDetector {
           if (similarity >= 0.8) {
             // Create a unique key for this pair to avoid duplicates
             const pairKey = `${Math.min(i, j)}_${Math.max(i, j)}`;
-            
+
             if (!foundPairs.has(pairKey)) {
               foundPairs.add(pairKey);
-              
+
               const pattern: ConversationPattern = {
                 id: generateId(),
                 pattern: `Repeated ${currentMessage.role} message`,

@@ -39,12 +39,12 @@ const localStorageMock = {
 describe.skip('browserUtils', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset localStorage mock
     localStorageMock.getItem.mockClear();
     localStorageMock.setItem.mockClear();
     localStorageMock.removeItem.mockClear();
-    
+
     // Mock browser environment
     Object.defineProperty(global, 'window', {
       value: {},
@@ -56,7 +56,7 @@ describe.skip('browserUtils', () => {
       writable: true,
       configurable: true,
     });
-    
+
     // Mock Worker
     (global as any).Worker = vi.fn().mockImplementation(() => ({}));
   });
@@ -71,12 +71,18 @@ describe.skip('browserUtils', () => {
     });
 
     it('should return false when window is not available', () => {
-      Object.defineProperty(global, 'window', { value: undefined, writable: true });
+      Object.defineProperty(global, 'window', {
+        value: undefined,
+        writable: true,
+      });
       expect(isBrowserEnvironment()).toBe(false);
     });
 
     it('should return false when localStorage is not available', () => {
-      Object.defineProperty(global, 'localStorage', { value: undefined, writable: true });
+      Object.defineProperty(global, 'localStorage', {
+        value: undefined,
+        writable: true,
+      });
       expect(isBrowserEnvironment()).toBe(false);
     });
   });
@@ -91,9 +97,9 @@ describe.skip('browserUtils', () => {
 
     it('should save data to localStorage', () => {
       localStorageMock.setItem.mockImplementation(() => {});
-      
+
       const result = saveToLocalStorage(mockData);
-      
+
       expect(result).toBe(true);
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         'manneri_data',
@@ -103,9 +109,9 @@ describe.skip('browserUtils', () => {
 
     it('should use custom storage key', () => {
       localStorageMock.setItem.mockImplementation(() => {});
-      
+
       const result = saveToLocalStorage(mockData, 'custom_key');
-      
+
       expect(result).toBe(true);
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         'custom_key',
@@ -118,23 +124,26 @@ describe.skip('browserUtils', () => {
         throw new Error('Storage full');
       });
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       const result = saveToLocalStorage(mockData);
-      
+
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to save manneri data to localStorage:',
         expect.any(Error)
       );
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should return false in non-browser environment', () => {
-      Object.defineProperty(global, 'window', { value: undefined, writable: true });
-      
+      Object.defineProperty(global, 'window', {
+        value: undefined,
+        writable: true,
+      });
+
       const result = saveToLocalStorage(mockData);
-      
+
       expect(result).toBe(false);
       expect(localStorageMock.setItem).not.toHaveBeenCalled();
     });
@@ -152,20 +161,20 @@ describe.skip('browserUtils', () => {
           version: '1.0.0',
         },
       };
-      
+
       localStorageMock.getItem.mockReturnValue(JSON.stringify(storageData));
-      
+
       const result = loadFromLocalStorage();
-      
+
       expect(result).toEqual(storageData.data);
       expect(localStorageMock.getItem).toHaveBeenCalledWith('manneri_data');
     });
 
     it('should return null when no data exists', () => {
       localStorageMock.getItem.mockReturnValue(null);
-      
+
       const result = loadFromLocalStorage();
-      
+
       expect(result).toBeNull();
     });
 
@@ -175,34 +184,34 @@ describe.skip('browserUtils', () => {
         timestamp: Date.now(),
         data: {},
       };
-      
+
       localStorageMock.getItem.mockReturnValue(JSON.stringify(storageData));
       localStorageMock.removeItem.mockImplementation(() => {});
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       const result = loadFromLocalStorage();
-      
+
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith(
         'Manneri storage version mismatch, clearing data'
       );
       expect(localStorageMock.removeItem).toHaveBeenCalled();
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should handle JSON parse errors', () => {
       localStorageMock.getItem.mockReturnValue('invalid json');
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       const result = loadFromLocalStorage();
-      
+
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to load manneri data from localStorage:',
         expect.any(Error)
       );
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -210,9 +219,9 @@ describe.skip('browserUtils', () => {
   describe('clearLocalStorage', () => {
     it('should clear localStorage', () => {
       localStorageMock.removeItem.mockImplementation(() => {});
-      
+
       const result = clearLocalStorage();
-      
+
       expect(result).toBe(true);
       expect(localStorageMock.removeItem).toHaveBeenCalledWith('manneri_data');
     });
@@ -222,12 +231,12 @@ describe.skip('browserUtils', () => {
         throw new Error('Permission denied');
       });
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       const result = clearLocalStorage();
-      
+
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalled();
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -236,25 +245,25 @@ describe.skip('browserUtils', () => {
     it('should return storage size', () => {
       const mockData = '{"test":"data"}';
       localStorageMock.getItem.mockReturnValue(mockData);
-      
+
       // Mock Blob constructor
       Object.defineProperty(global, 'Blob', {
         value: vi.fn().mockImplementation((content) => ({
           size: content[0].length,
         })),
-        writable: true
+        writable: true,
       });
-      
+
       const size = getStorageSize();
-      
+
       expect(size).toBe(mockData.length);
     });
 
     it('should return 0 when no data exists', () => {
       localStorageMock.getItem.mockReturnValue(null);
-      
+
       const size = getStorageSize();
-      
+
       expect(size).toBe(0);
     });
 
@@ -262,9 +271,9 @@ describe.skip('browserUtils', () => {
       localStorageMock.getItem.mockImplementation(() => {
         throw new Error('Access denied');
       });
-      
+
       const size = getStorageSize();
-      
+
       expect(size).toBe(0);
     });
   });
@@ -273,15 +282,15 @@ describe.skip('browserUtils', () => {
     it('should debounce function calls', (done) => {
       const mockFn = vi.fn();
       const debouncedFn = debounce(mockFn, 100);
-      
+
       // Call multiple times rapidly
       debouncedFn();
       debouncedFn();
       debouncedFn();
-      
+
       // Should not be called immediately
       expect(mockFn).not.toHaveBeenCalled();
-      
+
       // Should be called once after delay
       setTimeout(() => {
         expect(mockFn).toHaveBeenCalledTimes(1);
@@ -292,12 +301,12 @@ describe.skip('browserUtils', () => {
     it('should support immediate execution', () => {
       const mockFn = vi.fn();
       const debouncedFn = debounce(mockFn, 100, true);
-      
+
       debouncedFn();
-      
+
       // Should be called immediately
       expect(mockFn).toHaveBeenCalledTimes(1);
-      
+
       // Subsequent calls should be debounced
       debouncedFn();
       expect(mockFn).toHaveBeenCalledTimes(1);
@@ -308,15 +317,15 @@ describe.skip('browserUtils', () => {
     it('should throttle function calls', (done) => {
       const mockFn = vi.fn();
       const throttledFn = throttle(mockFn, 100);
-      
+
       // Call multiple times rapidly
       throttledFn();
       throttledFn();
       throttledFn();
-      
+
       // Should be called once immediately
       expect(mockFn).toHaveBeenCalledTimes(1);
-      
+
       // Should allow another call after limit
       setTimeout(() => {
         throttledFn();
@@ -328,22 +337,25 @@ describe.skip('browserUtils', () => {
 
   describe('createWorkerFunction', () => {
     it('should return null in non-browser environment', () => {
-      Object.defineProperty(global, 'window', { value: undefined, writable: true });
-      
+      Object.defineProperty(global, 'window', {
+        value: undefined,
+        writable: true,
+      });
+
       const worker = createWorkerFunction(() => {
         console.log('test');
       });
-      
+
       expect(worker).toBeNull();
     });
 
     it('should return null when Worker is not available', () => {
       (global as any).Worker = undefined;
-      
+
       const worker = createWorkerFunction(() => {
         console.log('test');
       });
-      
+
       expect(worker).toBeNull();
     });
 
@@ -356,19 +368,19 @@ describe.skip('browserUtils', () => {
         revokeObjectURL: vi.fn(),
       };
       (global as any).Blob = vi.fn();
-      
+
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       const worker = createWorkerFunction(() => {
         console.log('test');
       });
-      
+
       expect(worker).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to create worker:',
         expect.any(Error)
       );
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -376,10 +388,10 @@ describe.skip('browserUtils', () => {
   describe('measurePerformance', () => {
     it('should measure performance of synchronous function', () => {
       mockPerformance.now.mockReturnValueOnce(0).mockReturnValueOnce(100);
-      
+
       const testFn = vi.fn(() => 'result');
       const result = measurePerformance('test', testFn);
-      
+
       expect(result).toBe('result');
       expect(testFn).toHaveBeenCalled();
     });
@@ -387,12 +399,12 @@ describe.skip('browserUtils', () => {
     it('should log performance when enabled', () => {
       mockPerformance.now.mockReturnValueOnce(0).mockReturnValueOnce(100);
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+
       const testFn = () => 'result';
       measurePerformance('test', testFn, true);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('[Manneri] test: 100.00ms');
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -400,10 +412,10 @@ describe.skip('browserUtils', () => {
   describe('asyncMeasurePerformance', () => {
     it('should measure performance of async function', async () => {
       mockPerformance.now.mockReturnValueOnce(0).mockReturnValueOnce(100);
-      
+
       const testFn = vi.fn(async () => 'result');
       const result = await asyncMeasurePerformance('test', testFn);
-      
+
       expect(result).toBe('result');
       expect(testFn).toHaveBeenCalled();
     });
@@ -411,12 +423,12 @@ describe.skip('browserUtils', () => {
     it('should log performance when enabled', async () => {
       mockPerformance.now.mockReturnValueOnce(0).mockReturnValueOnce(100);
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+
       const testFn = async () => 'result';
       await asyncMeasurePerformance('test', testFn, true);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('[Manneri] test: 100.00ms');
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -425,10 +437,10 @@ describe.skip('browserUtils', () => {
     it('should create event emitter with basic functionality', () => {
       const emitter = createEventEmitter<{ test: string; data: number }>();
       const testListener = vi.fn();
-      
+
       emitter.on('test', testListener);
       emitter.emit('test', 'hello');
-      
+
       expect(testListener).toHaveBeenCalledWith('hello');
     });
 
@@ -436,11 +448,11 @@ describe.skip('browserUtils', () => {
       const emitter = createEventEmitter<{ test: string }>();
       const listener1 = vi.fn();
       const listener2 = vi.fn();
-      
+
       emitter.on('test', listener1);
       emitter.on('test', listener2);
       emitter.emit('test', 'hello');
-      
+
       expect(listener1).toHaveBeenCalledWith('hello');
       expect(listener2).toHaveBeenCalledWith('hello');
     });
@@ -448,40 +460,42 @@ describe.skip('browserUtils', () => {
     it('should remove listeners', () => {
       const emitter = createEventEmitter<{ test: string }>();
       const listener = vi.fn();
-      
+
       emitter.on('test', listener);
       emitter.off('test', listener);
       emitter.emit('test', 'hello');
-      
+
       expect(listener).not.toHaveBeenCalled();
     });
 
     it('should remove all listeners', () => {
       const emitter = createEventEmitter<{ test: string }>();
       const listener = vi.fn();
-      
+
       emitter.on('test', listener);
       emitter.removeAllListeners();
       emitter.emit('test', 'hello');
-      
+
       expect(listener).not.toHaveBeenCalled();
     });
 
     it('should handle listener errors gracefully', () => {
       const emitter = createEventEmitter<{ test: string }>();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
       emitter.on('test', () => {
         throw new Error('Listener error');
       });
-      
+
       emitter.emit('test', 'hello');
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         'Error in event listener for test:',
         expect.any(Error)
       );
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -490,7 +504,7 @@ describe.skip('browserUtils', () => {
     it('should generate unique IDs', () => {
       const id1 = generateId();
       const id2 = generateId();
-      
+
       expect(id1).not.toBe(id2);
       expect(typeof id1).toBe('string');
       expect(typeof id2).toBe('string');
@@ -541,7 +555,7 @@ describe.skip('browserUtils', () => {
         ...validConfig,
         similarityThreshold: 'invalid', // Should be number
       };
-      
+
       expect(isValidConfig(invalidConfig)).toBe(false);
     });
 
@@ -550,7 +564,7 @@ describe.skip('browserUtils', () => {
         similarityThreshold: 0.7,
         // Missing required properties
       };
-      
+
       expect(isValidConfig(incompleteConfig)).toBe(false);
     });
 
@@ -559,7 +573,7 @@ describe.skip('browserUtils', () => {
         ...validConfig,
         excludeKeywords: 'not-an-array',
       };
-      
+
       expect(isValidConfig(invalidConfig)).toBe(false);
     });
   });

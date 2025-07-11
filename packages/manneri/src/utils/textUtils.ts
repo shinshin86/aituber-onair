@@ -334,8 +334,8 @@ export function calculateTextSimilarity(
   }
 
   // Calculate simple cosine similarity based on token frequencies
-  const vector1 = vocabulary.map(term => tokenFreq1.get(term) || 0);
-  const vector2 = vocabulary.map(term => tokenFreq2.get(term) || 0);
+  const vector1 = vocabulary.map((term) => tokenFreq1.get(term) || 0);
+  const vector2 = vocabulary.map((term) => tokenFreq2.get(term) || 0);
   const cosineSimilarity = calculateCosineSimilarity(vector1, vector2);
 
   return (jaccardSimilarity + cosineSimilarity) / 2;

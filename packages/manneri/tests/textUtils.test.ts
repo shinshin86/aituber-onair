@@ -20,9 +20,13 @@ describe('textUtils', () => {
     });
 
     it('should handle case sensitivity', () => {
-      const caseSensitive = normalizeText('Hello World', { caseSensitive: true });
-      const caseInsensitive = normalizeText('Hello World', { caseSensitive: false });
-      
+      const caseSensitive = normalizeText('Hello World', {
+        caseSensitive: true,
+      });
+      const caseInsensitive = normalizeText('Hello World', {
+        caseSensitive: false,
+      });
+
       expect(caseSensitive).toBe('Hello World');
       expect(caseInsensitive).toBe('hello world');
     });
@@ -100,9 +104,13 @@ describe('textUtils', () => {
     });
 
     it('should handle stop words filtering', () => {
-      const withStopWords = tokenize('the quick brown fox', { includeStopWords: true });
-      const withoutStopWords = tokenize('the quick brown fox', { includeStopWords: false });
-      
+      const withStopWords = tokenize('the quick brown fox', {
+        includeStopWords: true,
+      });
+      const withoutStopWords = tokenize('the quick brown fox', {
+        includeStopWords: false,
+      });
+
       expect(withStopWords.length).toBeGreaterThan(withoutStopWords.length);
     });
 
@@ -114,8 +122,8 @@ describe('textUtils', () => {
     it('should handle special characters', () => {
       const tokens = tokenize('hello, world! @#$%');
       // After tokenization, punctuation might be attached or removed
-      const hasHello = tokens.some(token => token.includes('hello'));
-      const hasWorld = tokens.some(token => token.includes('world'));
+      const hasHello = tokens.some((token) => token.includes('hello'));
+      const hasWorld = tokens.some((token) => token.includes('world'));
       expect(hasHello).toBe(true);
       expect(hasWorld).toBe(true);
     });
@@ -125,7 +133,7 @@ describe('textUtils', () => {
     it('should generate bigrams', () => {
       const tokens = ['the', 'quick', 'brown', 'fox'];
       const bigrams = generateNgrams(tokens, 2);
-      
+
       expect(bigrams).toContain('the quick');
       expect(bigrams).toContain('quick brown');
       expect(bigrams).toContain('brown fox');
@@ -135,7 +143,7 @@ describe('textUtils', () => {
     it('should generate trigrams', () => {
       const tokens = ['the', 'quick', 'brown', 'fox'];
       const trigrams = generateNgrams(tokens, 3);
-      
+
       expect(trigrams).toContain('the quick brown');
       expect(trigrams).toContain('quick brown fox');
       expect(trigrams).toHaveLength(2);
@@ -144,14 +152,14 @@ describe('textUtils', () => {
     it('should handle n larger than token length', () => {
       const tokens = ['hello', 'world'];
       const ngrams = generateNgrams(tokens, 5);
-      
+
       expect(ngrams).toEqual([]);
     });
 
     it('should handle n = 0', () => {
       const tokens = ['hello', 'world'];
       const ngrams = generateNgrams(tokens, 0);
-      
+
       expect(ngrams).toEqual([]);
     });
 
@@ -163,7 +171,7 @@ describe('textUtils', () => {
     it('should generate unigrams', () => {
       const tokens = ['hello', 'world'];
       const unigrams = generateNgrams(tokens, 1);
-      
+
       expect(unigrams).toEqual(['hello', 'world']);
     });
   });
@@ -172,7 +180,7 @@ describe('textUtils', () => {
     it('should calculate similarity for identical sets', () => {
       const set1 = new Set(['a', 'b', 'c']);
       const set2 = new Set(['a', 'b', 'c']);
-      
+
       const similarity = calculateJaccardSimilarity(set1, set2);
       expect(similarity).toBe(1.0);
     });
@@ -180,7 +188,7 @@ describe('textUtils', () => {
     it('should calculate similarity for completely different sets', () => {
       const set1 = new Set(['a', 'b', 'c']);
       const set2 = new Set(['d', 'e', 'f']);
-      
+
       const similarity = calculateJaccardSimilarity(set1, set2);
       expect(similarity).toBe(0.0);
     });
@@ -188,7 +196,7 @@ describe('textUtils', () => {
     it('should calculate similarity for partially overlapping sets', () => {
       const set1 = new Set(['a', 'b', 'c']);
       const set2 = new Set(['b', 'c', 'd']);
-      
+
       const similarity = calculateJaccardSimilarity(set1, set2);
       expect(similarity).toBe(0.5); // 2 intersection / 4 union
     });
@@ -196,7 +204,7 @@ describe('textUtils', () => {
     it('should handle empty sets', () => {
       const set1 = new Set<string>();
       const set2 = new Set<string>();
-      
+
       const similarity = calculateJaccardSimilarity(set1, set2);
       expect(similarity).toBe(1.0);
     });
@@ -204,7 +212,7 @@ describe('textUtils', () => {
     it('should handle one empty set', () => {
       const set1 = new Set(['a', 'b']);
       const set2 = new Set<string>();
-      
+
       const similarity = calculateJaccardSimilarity(set1, set2);
       expect(similarity).toBe(0.0);
     });
@@ -214,7 +222,7 @@ describe('textUtils', () => {
     it('should calculate similarity for identical vectors', () => {
       const vector1 = [1, 2, 3];
       const vector2 = [1, 2, 3];
-      
+
       const similarity = calculateCosineSimilarity(vector1, vector2);
       expect(similarity).toBe(1.0);
     });
@@ -222,7 +230,7 @@ describe('textUtils', () => {
     it('should calculate similarity for orthogonal vectors', () => {
       const vector1 = [1, 0, 0];
       const vector2 = [0, 1, 0];
-      
+
       const similarity = calculateCosineSimilarity(vector1, vector2);
       expect(similarity).toBe(0.0);
     });
@@ -230,7 +238,7 @@ describe('textUtils', () => {
     it('should handle zero vectors', () => {
       const vector1 = [0, 0, 0];
       const vector2 = [1, 2, 3];
-      
+
       const similarity = calculateCosineSimilarity(vector1, vector2);
       expect(similarity).toBe(0.0);
     });
@@ -238,7 +246,7 @@ describe('textUtils', () => {
     it('should handle different vector lengths', () => {
       const vector1 = [1, 2];
       const vector2 = [1, 2, 3];
-      
+
       const similarity = calculateCosineSimilarity(vector1, vector2);
       expect(similarity).toBe(0.0);
     });
@@ -246,7 +254,7 @@ describe('textUtils', () => {
     it('should calculate similarity for opposite vectors', () => {
       const vector1 = [1, 2, 3];
       const vector2 = [-1, -2, -3];
-      
+
       const similarity = calculateCosineSimilarity(vector1, vector2);
       expect(similarity).toBe(-1.0);
     });
@@ -261,9 +269,14 @@ describe('textUtils', () => {
         ['world', 1],
         ['foo', 1],
       ]);
-      
-      const vector = createTfIdfVector(tokens, vocabulary, documentFrequencies, 2);
-      
+
+      const vector = createTfIdfVector(
+        tokens,
+        vocabulary,
+        documentFrequencies,
+        2
+      );
+
       expect(vector).toHaveLength(3);
       expect(vector[0]).toBeGreaterThanOrEqual(0); // hello appears twice
       expect(vector[1]).toBeGreaterThanOrEqual(0); // world appears once
@@ -277,38 +290,52 @@ describe('textUtils', () => {
         ['hello', 1],
         ['world', 1],
       ]);
-      
-      const vector = createTfIdfVector(tokens, vocabulary, documentFrequencies, 2);
-      
+
+      const vector = createTfIdfVector(
+        tokens,
+        vocabulary,
+        documentFrequencies,
+        2
+      );
+
       // When tokens are empty, TF-IDF values might be NaN due to 0/0 calculation
       expect(vector).toHaveLength(2);
       // Just verify the implementation handles empty tokens without throwing
-      expect(vector.every(v => typeof v === 'number')).toBe(true);
+      expect(vector.every((v) => typeof v === 'number')).toBe(true);
     });
 
     it('should handle empty vocabulary', () => {
       const tokens = ['hello', 'world'];
       const vocabulary: string[] = [];
       const documentFrequencies = new Map();
-      
-      const vector = createTfIdfVector(tokens, vocabulary, documentFrequencies, 2);
-      
+
+      const vector = createTfIdfVector(
+        tokens,
+        vocabulary,
+        documentFrequencies,
+        2
+      );
+
       expect(vector).toEqual([]);
     });
   });
 
   describe('extractKeywords', () => {
     it('should extract keywords from text', () => {
-      const keywords = extractKeywords('programming is fun and programming requires practice');
-      
+      const keywords = extractKeywords(
+        'programming is fun and programming requires practice'
+      );
+
       expect(keywords).toContain('programming');
       expect(keywords.length).toBeGreaterThan(0);
       expect(keywords.length).toBeLessThanOrEqual(10);
     });
 
     it('should rank keywords by frequency', () => {
-      const keywords = extractKeywords('apple apple banana apple cherry banana');
-      
+      const keywords = extractKeywords(
+        'apple apple banana apple cherry banana'
+      );
+
       expect(keywords[0]).toBe('apple'); // Most frequent
       expect(keywords[1]).toBe('banana'); // Second most frequent
     });
@@ -323,7 +350,7 @@ describe('textUtils', () => {
         minWordLength: 5,
         caseSensitive: true,
       };
-      
+
       const keywords = extractKeywords('Short long words here', options);
       expect(keywords).toContain('words');
       expect(keywords).not.toContain('long'); // too short
@@ -337,7 +364,10 @@ describe('textUtils', () => {
     });
 
     it('should calculate similarity between different texts', () => {
-      const similarity = calculateTextSimilarity('hello world', 'goodbye universe');
+      const similarity = calculateTextSimilarity(
+        'hello world',
+        'goodbye universe'
+      );
       expect(similarity).toBeGreaterThanOrEqual(0);
       expect(similarity).toBeLessThan(1);
     });
@@ -360,18 +390,28 @@ describe('textUtils', () => {
 
     it('should respect case sensitivity option', () => {
       const options: Partial<TextAnalysisOptions> = { caseSensitive: true };
-      const similarity = calculateTextSimilarity('HELLO WORLD', 'hello world', options);
+      const similarity = calculateTextSimilarity(
+        'HELLO WORLD',
+        'hello world',
+        options
+      );
       expect(similarity).toBeLessThan(1.0);
     });
 
     it('should handle similar but not identical texts', () => {
-      const similarity = calculateTextSimilarity('the quick brown fox', 'the quick red fox');
+      const similarity = calculateTextSimilarity(
+        'the quick brown fox',
+        'the quick red fox'
+      );
       expect(similarity).toBeGreaterThanOrEqual(0.5);
       expect(similarity).toBeLessThan(1.0);
     });
 
     it('should handle Japanese text', () => {
-      const similarity = calculateTextSimilarity('こんにちは世界', 'こんにちは世界');
+      const similarity = calculateTextSimilarity(
+        'こんにちは世界',
+        'こんにちは世界'
+      );
       expect(similarity).toBe(1.0);
     });
 
@@ -387,9 +427,11 @@ describe('textUtils', () => {
     });
 
     it('should handle longer texts', () => {
-      const text1 = 'This is a longer text with many words that should be processed correctly';
-      const text2 = 'This is also a longer text with some similar words that might match';
-      
+      const text1 =
+        'This is a longer text with many words that should be processed correctly';
+      const text2 =
+        'This is also a longer text with some similar words that might match';
+
       const similarity = calculateTextSimilarity(text1, text2);
       expect(similarity).toBeGreaterThan(0);
       expect(similarity).toBeLessThan(1);
@@ -414,7 +456,10 @@ describe('textUtils', () => {
     });
 
     it('should handle texts with repeated words', () => {
-      const similarity = calculateTextSimilarity('word word word', 'word word word');
+      const similarity = calculateTextSimilarity(
+        'word word word',
+        'word word word'
+      );
       expect(similarity).toBe(1.0);
     });
   });

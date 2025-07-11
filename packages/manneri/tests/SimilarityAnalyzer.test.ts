@@ -32,12 +32,18 @@ describe('SimilarityAnalyzer', () => {
 
   describe('calculateSimilarity', () => {
     it('should calculate similarity between identical texts', () => {
-      const similarity = analyzer.calculateSimilarity('Hello world', 'Hello world');
+      const similarity = analyzer.calculateSimilarity(
+        'Hello world',
+        'Hello world'
+      );
       expect(similarity).toBe(1);
     });
 
     it('should calculate similarity between different texts', () => {
-      const similarity = analyzer.calculateSimilarity('Hello world', 'Goodbye world');
+      const similarity = analyzer.calculateSimilarity(
+        'Hello world',
+        'Goodbye world'
+      );
       expect(similarity).toBeGreaterThan(0);
       expect(similarity).toBeLessThan(1);
     });
@@ -54,7 +60,10 @@ describe('SimilarityAnalyzer', () => {
     });
 
     it('should be case-insensitive by default', () => {
-      const similarity = analyzer.calculateSimilarity('HELLO WORLD', 'hello world');
+      const similarity = analyzer.calculateSimilarity(
+        'HELLO WORLD',
+        'hello world'
+      );
       expect(similarity).toBe(1);
     });
 
@@ -62,7 +71,10 @@ describe('SimilarityAnalyzer', () => {
       const caseSensitiveAnalyzer = new SimilarityAnalyzer({
         caseSensitive: true,
       });
-      const similarity = caseSensitiveAnalyzer.calculateSimilarity('HELLO WORLD', 'hello world');
+      const similarity = caseSensitiveAnalyzer.calculateSimilarity(
+        'HELLO WORLD',
+        'hello world'
+      );
       expect(similarity).toBeLessThan(1);
     });
 
@@ -72,10 +84,10 @@ describe('SimilarityAnalyzer', () => {
 
       // First calculation
       const similarity1 = analyzer.calculateSimilarity(text1, text2);
-      
+
       // Second calculation should use cache
       const similarity2 = analyzer.calculateSimilarity(text1, text2);
-      
+
       expect(similarity1).toBe(similarity2);
     });
   });
@@ -91,7 +103,7 @@ describe('SimilarityAnalyzer', () => {
     it('should return empty result for no previous messages', () => {
       const currentMessage: Message = { role: 'user', content: 'Hello' };
       const result = analyzer.analyzeSimilarity(currentMessage, []);
-      
+
       expect(result.score).toBe(0);
       expect(result.isRepeated).toBe(false);
       expect(result.matchedMessages).toEqual([]);
@@ -100,16 +112,23 @@ describe('SimilarityAnalyzer', () => {
     it('should return empty result for empty current message', () => {
       const currentMessage: Message = { role: 'user', content: '' };
       const result = analyzer.analyzeSimilarity(currentMessage, mockMessages);
-      
+
       expect(result.score).toBe(0);
       expect(result.isRepeated).toBe(false);
       expect(result.matchedMessages).toEqual([]);
     });
 
     it('should detect similar messages with same role', () => {
-      const currentMessage: Message = { role: 'user', content: 'Hello, how are you?' };
-      const result = analyzer.analyzeSimilarity(currentMessage, mockMessages, 0.8);
-      
+      const currentMessage: Message = {
+        role: 'user',
+        content: 'Hello, how are you?',
+      };
+      const result = analyzer.analyzeSimilarity(
+        currentMessage,
+        mockMessages,
+        0.8
+      );
+
       expect(result.score).toBe(1);
       expect(result.isRepeated).toBe(true);
       expect(result.matchedMessages).toHaveLength(1);
@@ -117,23 +136,37 @@ describe('SimilarityAnalyzer', () => {
     });
 
     it('should not match messages with different roles', () => {
-      const currentMessage: Message = { role: 'assistant', content: 'Hello, how are you?' };
+      const currentMessage: Message = {
+        role: 'assistant',
+        content: 'Hello, how are you?',
+      };
       const result = analyzer.analyzeSimilarity(currentMessage, mockMessages);
-      
+
       expect(result.score).toBe(0);
       expect(result.isRepeated).toBe(false);
       expect(result.matchedMessages).toEqual([]);
     });
 
     it('should respect threshold parameter', () => {
-      const currentMessage: Message = { role: 'user', content: 'Hello, how are you doing?' };
-      
+      const currentMessage: Message = {
+        role: 'user',
+        content: 'Hello, how are you doing?',
+      };
+
       // With low threshold
-      const result1 = analyzer.analyzeSimilarity(currentMessage, mockMessages, 0.5);
+      const result1 = analyzer.analyzeSimilarity(
+        currentMessage,
+        mockMessages,
+        0.5
+      );
       expect(result1.isRepeated).toBe(true);
-      
+
       // With high threshold
-      const result2 = analyzer.analyzeSimilarity(currentMessage, mockMessages, 0.95);
+      const result2 = analyzer.analyzeSimilarity(
+        currentMessage,
+        mockMessages,
+        0.95
+      );
       expect(result2.isRepeated).toBe(false);
     });
   });
@@ -148,8 +181,13 @@ describe('SimilarityAnalyzer', () => {
 
     it('should find similar messages with same role', () => {
       const targetMessage: Message = { role: 'user', content: 'Hello world' };
-      const similar = analyzer.findSimilarMessages(targetMessage, messages, 0.5, true);
-      
+      const similar = analyzer.findSimilarMessages(
+        targetMessage,
+        messages,
+        0.5,
+        true
+      );
+
       expect(similar).toHaveLength(1);
       // The actual content found should be checked (could be either similar message)
       expect(similar[0].role).toBe('user');
@@ -158,24 +196,42 @@ describe('SimilarityAnalyzer', () => {
 
     it('should find similar messages across roles when configured', () => {
       const targetMessage: Message = { role: 'user', content: 'Hello world' };
-      const similar = analyzer.findSimilarMessages(targetMessage, messages, 0.9, false);
-      
+      const similar = analyzer.findSimilarMessages(
+        targetMessage,
+        messages,
+        0.9,
+        false
+      );
+
       expect(similar.length).toBeGreaterThan(0);
-      const exactMatch = similar.find(m => m.content === 'Hello world' && m.role === 'assistant');
+      const exactMatch = similar.find(
+        (m) => m.content === 'Hello world' && m.role === 'assistant'
+      );
       expect(exactMatch).toBeDefined();
     });
 
     it('should exclude the target message itself', () => {
       const targetMessage = messages[0];
-      const similar = analyzer.findSimilarMessages(targetMessage, messages, 0.5);
-      
+      const similar = analyzer.findSimilarMessages(
+        targetMessage,
+        messages,
+        0.5
+      );
+
       expect(similar).not.toContain(targetMessage);
     });
 
     it('should return empty array when no similar messages found', () => {
-      const targetMessage: Message = { role: 'user', content: 'Completely different text' };
-      const similar = analyzer.findSimilarMessages(targetMessage, messages, 0.9);
-      
+      const targetMessage: Message = {
+        role: 'user',
+        content: 'Completely different text',
+      };
+      const similar = analyzer.findSimilarMessages(
+        targetMessage,
+        messages,
+        0.9
+      );
+
       expect(similar).toEqual([]);
     });
   });
@@ -192,7 +248,7 @@ describe('SimilarityAnalyzer', () => {
 
     it('should detect similar sequences', () => {
       const sequences = analyzer.analyzeSequenceSimilarity(messages, 3, 0.8);
-      
+
       expect(sequences).toHaveLength(1);
       expect(sequences[0].similarity).toBeGreaterThan(0.8);
       expect(sequences[0].sequence).toHaveLength(3);
@@ -200,17 +256,23 @@ describe('SimilarityAnalyzer', () => {
 
     it('should return empty array for short message lists', () => {
       const shortMessages = messages.slice(0, 3);
-      const sequences = analyzer.analyzeSequenceSimilarity(shortMessages, 3, 0.8);
-      
+      const sequences = analyzer.analyzeSequenceSimilarity(
+        shortMessages,
+        3,
+        0.8
+      );
+
       expect(sequences).toEqual([]);
     });
 
     it('should sort sequences by similarity', () => {
       const sequences = analyzer.analyzeSequenceSimilarity(messages, 2, 0.5);
-      
+
       if (sequences.length > 1) {
         for (let i = 1; i < sequences.length; i++) {
-          expect(sequences[i - 1].similarity).toBeGreaterThanOrEqual(sequences[i].similarity);
+          expect(sequences[i - 1].similarity).toBeGreaterThanOrEqual(
+            sequences[i].similarity
+          );
         }
       }
     });
@@ -218,15 +280,23 @@ describe('SimilarityAnalyzer', () => {
 
   describe('analyzeNgramSimilarity', () => {
     it('should calculate ngram similarity', () => {
-      const similarity = analyzer.analyzeNgramSimilarity('hello world test', 'hello world example', 2);
-      
+      const similarity = analyzer.analyzeNgramSimilarity(
+        'hello world test',
+        'hello world example',
+        2
+      );
+
       expect(similarity).toBeGreaterThan(0);
       expect(similarity).toBeLessThan(1);
     });
 
     it('should return 1 for identical texts', () => {
-      const similarity = analyzer.analyzeNgramSimilarity('hello world', 'hello world', 2);
-      
+      const similarity = analyzer.analyzeNgramSimilarity(
+        'hello world',
+        'hello world',
+        2
+      );
+
       expect(similarity).toBe(1);
     });
 
@@ -249,10 +319,10 @@ describe('SimilarityAnalyzer', () => {
       // Add some entries to cache
       analyzer.calculateSimilarity('text1', 'text2');
       analyzer.calculateSimilarity('text3', 'text4');
-      
+
       // Clear cache
       analyzer.clearCache();
-      
+
       // Cache should be empty
       const stats = analyzer.getCacheStats();
       expect(stats.size).toBe(0);
@@ -260,7 +330,7 @@ describe('SimilarityAnalyzer', () => {
 
     it('should return cache statistics', () => {
       const stats = analyzer.getCacheStats();
-      
+
       expect(stats).toHaveProperty('size');
       expect(stats).toHaveProperty('hitRate');
       expect(stats.size).toBeGreaterThanOrEqual(0);
@@ -269,12 +339,12 @@ describe('SimilarityAnalyzer', () => {
 
     it('should auto-expire cache entries after timeout', () => {
       analyzer.calculateSimilarity('text1', 'text2');
-      
+
       expect(analyzer.getCacheStats().size).toBe(1);
-      
+
       // Fast-forward time past cache timeout (5 minutes)
       vi.advanceTimersByTime(300001);
-      
+
       expect(analyzer.getCacheStats().size).toBe(0);
     });
 
@@ -283,7 +353,7 @@ describe('SimilarityAnalyzer', () => {
       for (let i = 0; i < 1100; i++) {
         analyzer.calculateSimilarity(`text${i}`, `other${i}`);
       }
-      
+
       // Cache size should be limited
       const stats = analyzer.getCacheStats();
       expect(stats.size).toBeLessThanOrEqual(1000);

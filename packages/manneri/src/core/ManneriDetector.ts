@@ -6,7 +6,6 @@ import type {
   ManneriEvent,
   ManneriEventHandler,
   StorageData,
-  AiProviderConfig,
   PersistenceProvider,
 } from '../types/index.js';
 import { DEFAULT_MANNERI_CONFIG } from '../types/index.js';
@@ -19,7 +18,7 @@ import {
   type PromptGenerationOptions,
 } from '../generators/PromptGenerator.js';
 import { PatternDetector } from '../analyzers/PatternDetector.js';
-import { createEventEmitter, generateId } from '../utils/browserUtils.js';
+import { createEventEmitter } from '../utils/browserUtils.js';
 
 export class ManneriDetector {
   private readonly config: ManneriConfig;
