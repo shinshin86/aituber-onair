@@ -58,7 +58,9 @@ describe.skip('browserUtils', () => {
     });
 
     // Mock Worker
-    (global as any).Worker = vi.fn().mockImplementation(() => ({}));
+    (global as unknown as { Worker: unknown }).Worker = vi
+      .fn()
+      .mockImplementation(() => ({}));
   });
 
   afterEach(() => {
@@ -350,7 +352,7 @@ describe.skip('browserUtils', () => {
     });
 
     it('should return null when Worker is not available', () => {
-      (global as any).Worker = undefined;
+      (global as unknown as { Worker: unknown }).Worker = undefined;
 
       const worker = createWorkerFunction(() => {
         console.log('test');
@@ -360,14 +362,16 @@ describe.skip('browserUtils', () => {
     });
 
     it('should handle worker creation errors', () => {
-      (global as any).Worker = vi.fn().mockImplementation(() => {
-        throw new Error('Worker creation failed');
-      });
-      (global as any).URL = {
+      (global as unknown as { Worker: unknown }).Worker = vi
+        .fn()
+        .mockImplementation(() => {
+          throw new Error('Worker creation failed');
+        });
+      (global as unknown as { URL: unknown }).URL = {
         createObjectURL: vi.fn(() => 'blob:url'),
         revokeObjectURL: vi.fn(),
       };
-      (global as any).Blob = vi.fn();
+      (global as unknown as { Blob: unknown }).Blob = vi.fn();
 
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

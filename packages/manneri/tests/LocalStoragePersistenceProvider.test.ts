@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { LocalStoragePersistenceProvider } from '../src/persistence/LocalStoragePersistenceProvider.js';
 import type { StorageData, ConversationPattern } from '../src/types/index.js';
+import type * as browserUtils from '../src/utils/browserUtils.js';
 
 // Mock browser utils
 vi.mock('../src/utils/browserUtils.js', () => ({
@@ -28,7 +29,7 @@ Object.defineProperty(global, 'localStorage', {
 
 describe('LocalStoragePersistenceProvider', () => {
   let provider: LocalStoragePersistenceProvider;
-  let mockBrowserUtils: any;
+  let mockBrowserUtils: typeof browserUtils;
 
   const mockStorageData: StorageData = {
     patterns: [
