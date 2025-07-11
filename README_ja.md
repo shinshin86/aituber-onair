@@ -24,6 +24,12 @@
   npm install @aituber-onair/voice
   ```
 
+- [**@aituber-onair/manneri**](./packages/manneri/README.ja.md)
+  会話の繰り返しパターンを検出し、話題変更の提案を行う会話分析ライブラリです。シンプルな設定でカスタマイズ可能な介入メッセージにより、魅力的な会話の維持をサポートします。
+  ```
+  npm install @aituber-onair/manneri
+  ```
+
 ## はじめに
 
 1. **リポジトリをクローンする**  

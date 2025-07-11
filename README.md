@@ -22,6 +22,12 @@ Currently, the primary packages available are:
   npm install @aituber-onair/voice
   ```
 
+- [**@aituber-onair/manneri**](./packages/manneri/README.md)
+  A conversation pattern detection library that identifies repetitive dialogue patterns and provides topic diversification prompts. Features simple configuration with customizable intervention messages for maintaining engaging conversations.
+  ```
+  npm install @aituber-onair/manneri
+  ```
+
 ## Getting Started
 
 1. **Clone the repository**  

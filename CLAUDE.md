@@ -4,12 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of two main packages:
+AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of three main packages:
 
 - **`@aituber-onair/core`** - Core library for AI-driven virtual streaming applications with chat processing, conversation management, and memory capabilities
 - **`@aituber-onair/voice`** - Independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, etc.)
+- **`@aituber-onair/manneri`** - Conversation pattern detection library that identifies repetitive dialogue and provides topic diversification prompts
 
-The voice package can be used independently for voice synthesis needs, or together with the core package for full AITuber functionality.
+Each package can be used independently or together. The voice package provides TTS functionality, manneri handles conversation variety, and core integrates everything for full AITuber functionality.
 
 ## Common Development Commands
 
@@ -24,6 +25,9 @@ cd packages/core && npm run build
 # Build only the voice package (dual format: CommonJS + ESModule)
 cd packages/voice && npm run build
 
+# Build only the manneri package
+cd packages/manneri && npm run build
+
 # Build specific format for voice package
 cd packages/voice && npm run build:cjs  # CommonJS only
 cd packages/voice && npm run build:esm  # ESModule only
@@ -31,6 +35,7 @@ cd packages/voice && npm run build:esm  # ESModule only
 # Type checking without building
 cd packages/core && npm run typecheck
 cd packages/voice && npm run typecheck
+cd packages/manneri && npm run typecheck
 ```
 
 ### Testing Commands
@@ -41,14 +46,17 @@ npm run test
 # Run tests in watch mode (for active development)
 cd packages/core && npm run test:watch
 cd packages/voice && npm run test:watch
+cd packages/manneri && npm run test:watch
 
 # Run tests with coverage report
 cd packages/core && npm run test:coverage
 cd packages/voice && npm run test:coverage
+cd packages/manneri && npm run test:coverage
 
 # Run a specific test file
 cd packages/core && npx vitest run path/to/test.test.ts
 cd packages/voice && npx vitest run path/to/test.test.ts
+cd packages/manneri && npx vitest run path/to/test.test.ts
 ```
 
 ### Code Quality Commands
@@ -148,6 +156,15 @@ The library abstracts differences between AI providers' function calling impleme
 - `/utils` - Voice utilities (screenplay conversion, emotion parsing)
 - `/constants` - Voice engine constants and speaker configurations
 
+#### Manneri Package (`@aituber-onair/manneri`)
+- `/core` - Core components (ManneriDetector, ConversationAnalyzer)
+- `/analyzers` - Analysis tools (SimilarityAnalyzer, KeywordExtractor, PatternDetector)
+- `/generators` - Prompt generation (PromptGenerator)
+- `/config` - Default prompts and configurations
+- `/types` - TypeScript type definitions for conversation analysis
+- `/utils` - Utility functions (text processing, browser compatibility)
+- `/persistence` - Data persistence providers (LocalStorage, custom)
+
 ### Key Development Rules
 - All code and comments must be in English
 - Maintain strong TypeScript typing
@@ -175,6 +192,10 @@ The library abstracts differences between AI providers' function calling impleme
 8. **Cross-Platform Compatibility**: The voice package supports multiple runtime environments with automatic detection and appropriate audio handling for each platform.
 
 9. **Subpath Exports**: The voice package includes subpath exports (`./dist/cjs/*`, `./dist/esm/*`) to enable direct access to build artifacts, providing workarounds for runtime-specific import issues (especially useful for Deno).
+
+10. **Manneri Simplicity**: The `@aituber-onair/manneri` package follows a simple design principle: detect conversation patterns and provide topic diversification prompts. It uses a single `intervention` prompt type instead of complex categorizations, making it easy to customize and maintain.
+
+11. **Conversation Pattern Detection**: Manneri detects repetitive patterns through similarity analysis, frequency detection, and topic tracking. When patterns are detected and cooldown periods have passed, it generates intervention prompts to encourage topic changes.
 
 ## Cross-Platform Runtime Support
 
@@ -333,6 +354,38 @@ const voiceService = new VoiceEngineAdapter(voiceOptions);
 await voiceService.speak({ text: 'Hello, world!' });
 ```
 
+### Using Manneri Package Independently
+
+```typescript
+import { ManneriDetector } from '@aituber-onair/manneri';
+
+const manneriDetector = new ManneriDetector({
+  language: 'en',
+  interventionCooldown: 60000,  // 1 minute cooldown
+  customPrompts: {
+    en: {
+      intervention: [
+        'Let\'s change the topic and discuss something new.',
+        'How about we explore a different subject?',
+        'Time for a fresh conversation topic!'
+      ]
+    }
+  }
+});
+
+const messages = [
+  { role: 'user', content: 'Hello' },
+  { role: 'assistant', content: 'Hello! How can I help?' },
+  { role: 'user', content: 'Hello' },
+  { role: 'assistant', content: 'Hello! What can I do for you?' }
+];
+
+if (manneriDetector.shouldIntervene(messages)) {
+  const prompt = manneriDetector.generateDiversificationPrompt(messages);
+  console.log('Topic change suggestion:', prompt.content);
+}
+```
+
 ### Using Both Packages Together
 
 ```typescript
@@ -362,6 +415,9 @@ await core.processChat('Hello!', 'chatForm');
 ```bash
 # For voice functionality only
 npm install @aituber-onair/voice
+
+# For conversation pattern detection only
+npm install @aituber-onair/manneri
 
 # For full AITuber functionality (voice included automatically)
 npm install @aituber-onair/core
@@ -432,11 +488,16 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
 
 ### Package Versioning Strategy
 
-- **Independent Versioning**: Each package (`@aituber-onair/core` and `@aituber-onair/voice`) maintains its own version following SemVer
+- **Independent Versioning**: Each package (`@aituber-onair/core`, `@aituber-onair/voice`, and `@aituber-onair/manneri`) maintains its own version following SemVer
 - **Dependency Relationship**: Core package includes voice as a direct dependency for ease of use
 - **Release Automation**: GitHub Actions automatically handle version bumping and publishing
 
 ### Development Workflow
+
+**IMPORTANT: Release Process Rules**
+- **NEVER run `npm publish` or `npm publish --dry-run` directly** - All publishing is handled automatically by GitHub Actions
+- **ALWAYS follow the automated release workflow** - Manual publishing bypasses version management and can cause conflicts
+- **Trust the CI/CD pipeline** - GitHub Actions will handle all npm publishing after PR merge
 
 #### Automated Workflow (Recommended)
 1. **Make Changes**: Implement your feature or fix
@@ -454,6 +515,24 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
    - Create a "Version Packages" PR with updated versions
    - Auto-merge and publish when the version PR is merged
 
+#### Initial Package Release
+For first-time package releases (e.g., @aituber-onair/manneri v0.1.0):
+
+1. **Prepare Package**: Ensure package.json has the correct initial version
+2. **Create CHANGELOG.md**: Add initial release notes
+   ```markdown
+   # @aituber-onair/[package-name]
+   
+   ## 0.1.0
+   
+   ### Minor Changes
+   
+   - Initial release of [package description]
+   ```
+3. **Verify Build & Tests**: Run `npm run build && npm run test` in the package directory
+4. **Create PR**: Submit PR with the new package and CHANGELOG.md
+5. **Auto-publish**: GitHub Actions will publish to npm after PR merge
+
 #### Manual Workflow (Alternative)
 If changeset interactive mode fails or for quick patches:
 
@@ -469,22 +548,24 @@ If changeset interactive mode fails or for quick patches:
 3. **Update package.json**: Manually increment the version number
 4. **Commit Changes**: Commit both CHANGELOG.md and package.json updates
 5. **Build and Test**: Run `npm run build` and `npm run test` to ensure everything works
-6. **Publish**: Run `npm run changeset:publish` (or `cd packages/[package] && npm publish`)
+6. **Create PR and Merge**: Submit PR with changes - GitHub Actions will handle publishing
 
 ### Manual Release Commands
 
-```bash
-# Check what would be published (dry run)
-npm run changeset:publish -- --dry-run
+**WARNING: These commands are for reference only. DO NOT use these for actual releases.**
 
-# Manually version packages
+```bash
+# Version management only (safe to use)
 npm run changeset:version
 
-# Manually publish packages  
-npm run changeset:publish
+# The following commands should NEVER be used directly:
+# ❌ npm run changeset:publish
+# ❌ npm run changeset:publish -- --dry-run
+# ❌ npm run release
+# ❌ npm publish
+# ❌ npm publish --dry-run
 
-# Full release process (build, test, publish)
-npm run release
+# All publishing is handled automatically by GitHub Actions after PR merge
 ```
 
 ### SemVer Guidelines
@@ -503,3 +584,7 @@ npm run release
 - **Voice Package**: Completely independent
   - Can be used standalone for TTS-only applications
   - No dependencies on core package
+- **Manneri Package**: Completely independent
+  - Can be used standalone for conversation pattern detection
+  - No dependencies on other packages
+  - Zero external dependencies for maximum portability
