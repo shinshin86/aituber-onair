@@ -488,11 +488,16 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
 
 ### Package Versioning Strategy
 
-- **Independent Versioning**: Each package (`@aituber-onair/core` and `@aituber-onair/voice`) maintains its own version following SemVer
+- **Independent Versioning**: Each package (`@aituber-onair/core`, `@aituber-onair/voice`, and `@aituber-onair/manneri`) maintains its own version following SemVer
 - **Dependency Relationship**: Core package includes voice as a direct dependency for ease of use
 - **Release Automation**: GitHub Actions automatically handle version bumping and publishing
 
 ### Development Workflow
+
+**IMPORTANT: Release Process Rules**
+- **NEVER run `npm publish` or `npm publish --dry-run` directly** - All publishing is handled automatically by GitHub Actions
+- **ALWAYS follow the automated release workflow** - Manual publishing bypasses version management and can cause conflicts
+- **Trust the CI/CD pipeline** - GitHub Actions will handle all npm publishing after PR merge
 
 #### Automated Workflow (Recommended)
 1. **Make Changes**: Implement your feature or fix
@@ -510,6 +515,24 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
    - Create a "Version Packages" PR with updated versions
    - Auto-merge and publish when the version PR is merged
 
+#### Initial Package Release
+For first-time package releases (e.g., @aituber-onair/manneri v0.1.0):
+
+1. **Prepare Package**: Ensure package.json has the correct initial version
+2. **Create CHANGELOG.md**: Add initial release notes
+   ```markdown
+   # @aituber-onair/[package-name]
+   
+   ## 0.1.0
+   
+   ### Minor Changes
+   
+   - Initial release of [package description]
+   ```
+3. **Verify Build & Tests**: Run `npm run build && npm run test` in the package directory
+4. **Create PR**: Submit PR with the new package and CHANGELOG.md
+5. **Auto-publish**: GitHub Actions will publish to npm after PR merge
+
 #### Manual Workflow (Alternative)
 If changeset interactive mode fails or for quick patches:
 
@@ -525,22 +548,24 @@ If changeset interactive mode fails or for quick patches:
 3. **Update package.json**: Manually increment the version number
 4. **Commit Changes**: Commit both CHANGELOG.md and package.json updates
 5. **Build and Test**: Run `npm run build` and `npm run test` to ensure everything works
-6. **Publish**: Run `npm run changeset:publish` (or `cd packages/[package] && npm publish`)
+6. **Create PR and Merge**: Submit PR with changes - GitHub Actions will handle publishing
 
 ### Manual Release Commands
 
-```bash
-# Check what would be published (dry run)
-npm run changeset:publish -- --dry-run
+**WARNING: These commands are for reference only. DO NOT use these for actual releases.**
 
-# Manually version packages
+```bash
+# Version management only (safe to use)
 npm run changeset:version
 
-# Manually publish packages  
-npm run changeset:publish
+# The following commands should NEVER be used directly:
+# ❌ npm run changeset:publish
+# ❌ npm run changeset:publish -- --dry-run
+# ❌ npm run release
+# ❌ npm publish
+# ❌ npm publish --dry-run
 
-# Full release process (build, test, publish)
-npm run release
+# All publishing is handled automatically by GitHub Actions after PR merge
 ```
 
 ### SemVer Guidelines
@@ -559,3 +584,7 @@ npm run release
 - **Voice Package**: Completely independent
   - Can be used standalone for TTS-only applications
   - No dependencies on core package
+- **Manneri Package**: Completely independent
+  - Can be used standalone for conversation pattern detection
+  - No dependencies on other packages
+  - Zero external dependencies for maximum portability
