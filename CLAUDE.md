@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of three main packages:
+AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of four main packages:
 
 - **`@aituber-onair/core`** - Core library for AI-driven virtual streaming applications with chat processing, conversation management, and memory capabilities
 - **`@aituber-onair/voice`** - Independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, etc.)
 - **`@aituber-onair/manneri`** - Conversation pattern detection library that identifies repetitive dialogue and provides topic diversification prompts
+- **`@aituber-onair/bushitsu-client`** - WebSocket client library for chat functionality with React hooks support, auto-reconnection, rate limiting, and mention support
 
-Each package can be used independently or together. The voice package provides TTS functionality, manneri handles conversation variety, and core integrates everything for full AITuber functionality.
+Each package can be used independently or together. The voice package provides TTS functionality, manneri handles conversation variety, bushitsu-client enables WebSocket chat communication, and core integrates everything for full AITuber functionality.
 
 ## Common Development Commands
 
@@ -28,6 +29,9 @@ cd packages/voice && npm run build
 # Build only the manneri package
 cd packages/manneri && npm run build
 
+# Build only the bushitsu-client package
+cd packages/bushitsu-client && npm run build
+
 # Build specific format for voice package
 cd packages/voice && npm run build:cjs  # CommonJS only
 cd packages/voice && npm run build:esm  # ESModule only
@@ -36,6 +40,7 @@ cd packages/voice && npm run build:esm  # ESModule only
 cd packages/core && npm run typecheck
 cd packages/voice && npm run typecheck
 cd packages/manneri && npm run typecheck
+cd packages/bushitsu-client && npm run typecheck
 ```
 
 ### Testing Commands
@@ -47,16 +52,19 @@ npm run test
 cd packages/core && npm run test:watch
 cd packages/voice && npm run test:watch
 cd packages/manneri && npm run test:watch
+cd packages/bushitsu-client && npm run test:watch
 
 # Run tests with coverage report
 cd packages/core && npm run test:coverage
 cd packages/voice && npm run test:coverage
 cd packages/manneri && npm run test:coverage
+cd packages/bushitsu-client && npm run test:coverage
 
 # Run a specific test file
 cd packages/core && npx vitest run path/to/test.test.ts
 cd packages/voice && npx vitest run path/to/test.test.ts
 cd packages/manneri && npx vitest run path/to/test.test.ts
+cd packages/bushitsu-client && npx vitest run path/to/test.test.ts
 ```
 
 ### Code Quality Commands
@@ -164,6 +172,12 @@ The library abstracts differences between AI providers' function calling impleme
 - `/types` - TypeScript type definitions for conversation analysis
 - `/utils` - Utility functions (text processing, browser compatibility)
 - `/persistence` - Data persistence providers (LocalStorage, custom)
+
+#### Bushitsu Client Package (`@aituber-onair/bushitsu-client`)
+- `/client` - Core WebSocket client (BushitsuClient)
+- `/hooks` - React hooks (useBushitsuClient, useBushitsuInitiative)
+- `/types` - TypeScript type definitions for WebSocket communication
+- `/index.ts` - Main exports for the package
 
 ### Key Development Rules
 - All code and comments must be in English
@@ -386,6 +400,48 @@ if (manneriDetector.shouldIntervene(messages)) {
 }
 ```
 
+### Using Bushitsu Client Package Independently
+
+```typescript
+import { useBushitsuClient, useBushitsuInitiative } from '@aituber-onair/bushitsu-client';
+
+function ChatComponent() {
+  const { isConnected, sendMessage, getLastMentionUser } = useBushitsuClient({
+    serverUrl: 'ws://localhost:8080',
+    room: 'lobby',
+    userName: 'User',
+    isEnabled: true,
+    onComment: (text, userName, isMention) => {
+      console.log(`${userName}: ${text}${isMention ? ' (mentioned)' : ''}`);
+    },
+  });
+
+  const { sendInitiativeMessage } = useBushitsuInitiative({
+    enabled: true,
+    serverUrl: 'ws://localhost:8080',
+    room: 'lobby',
+    userName: 'AI',
+    sendMessage,
+    onProcessMessage: async (message) => {
+      // Optional: integrate with voice synthesis
+      console.log('Processing message for voice:', message);
+    }
+  });
+
+  return (
+    <div>
+      <p>Status: {isConnected ? 'Connected' : 'Disconnected'}</p>
+      <button onClick={() => sendMessage('Hello, world!')}>
+        Send Message
+      </button>
+      <button onClick={() => sendInitiativeMessage('Welcome everyone!')}>
+        Send Initiative
+      </button>
+    </div>
+  );
+}
+```
+
 ### Using Both Packages Together
 
 ```typescript
@@ -418,6 +474,9 @@ npm install @aituber-onair/voice
 
 # For conversation pattern detection only
 npm install @aituber-onair/manneri
+
+# For WebSocket chat functionality only
+npm install @aituber-onair/bushitsu-client
 
 # For full AITuber functionality (voice included automatically)
 npm install @aituber-onair/core
@@ -588,3 +647,7 @@ npm run changeset:version
   - Can be used standalone for conversation pattern detection
   - No dependencies on other packages
   - Zero external dependencies for maximum portability
+- **Bushitsu Client Package**: Completely independent
+  - Can be used standalone for WebSocket chat functionality
+  - No dependencies on other packages
+  - Only depends on React as a peer dependency
