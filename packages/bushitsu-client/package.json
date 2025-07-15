@@ -1,0 +1,64 @@
+{
+  "name": "@aituber-onair/bushitsu-client",
+  "version": "0.1.0",
+  "description": "WebSocket client for chat functionality with React hooks support",
+  "keywords": [
+    "websocket",
+    "react",
+    "chat",
+    "client",
+    "aituber",
+    "bushitsu"
+  ],
+  "author": "shinshin86",
+  "license": "MIT",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shinshin86/aituber-onair.git",
+    "directory": "packages/bushitsu-client"
+  },
+  "bugs": {
+    "url": "https://github.com/shinshin86/aituber-onair/issues"
+  },
+  "scripts": {
+    "build": "npm run build:clean && npm run build:cjs && npm run build:esm && npm run build:types",
+    "build:clean": "rm -rf dist",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --declaration --declarationDir dist/types",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && vitest run",
+    "test:run": "vitest run",
+    "fmt": "biome format --write ./src ./tests",
+    "fmt:check": "biome format ./src ./tests",
+    "lint": "biome lint ./src ./tests",
+    "lint:fix": "biome lint --fix ./src ./tests",
+    "check": "biome check ./src ./tests",
+    "check:fix": "biome check --fix ./src ./tests"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^15.0.7",
+    "@types/react": "^18.3.12",
+    "react": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.6"
+  }
+}

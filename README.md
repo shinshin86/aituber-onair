@@ -28,6 +28,12 @@ Currently, the primary packages available are:
   npm install @aituber-onair/manneri
   ```
 
+- [**@aituber-onair/bushitsu-client**](./packages/bushitsu-client/README.md)
+  WebSocket client library for chat functionality with React hooks support. Provides WebSocket client and React hooks for real-time chat communication with auto-reconnection, rate limiting, mention support, and voice synthesis integration. Works in both browser and Node.js environments.
+  ```
+  npm install @aituber-onair/bushitsu-client
+  ```
+
 ## Getting Started
 
 1. **Clone the repository**  
@@ -69,7 +75,15 @@ aituber-onair/
 │   │   ├── src/
 │   │   ├── test/
 │   │   └── package.json
-│   └── voice/
+│   ├── voice/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   ├── manneri/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   └── bushitsu-client/
 │       ├── src/
 │       ├── test/
 │       └── package.json
@@ -80,6 +94,8 @@ aituber-onair/
 
 - **packages/core**: The main library (`@aituber-onair/core`) providing AI conversation and chat processing features.
 - **packages/voice**: The voice synthesis library (`@aituber-onair/voice`) supporting multiple TTS engines.
+- **packages/manneri**: The conversation pattern detection library (`@aituber-onair/manneri`) for identifying repetitive dialogue patterns.
+- **packages/bushitsu-client**: The WebSocket client library (`@aituber-onair/bushitsu-client`) for chat functionality with React hooks support.
 
 ## Release Process
 
