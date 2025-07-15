@@ -651,3 +651,66 @@ npm run changeset:version
   - Can be used standalone for WebSocket chat functionality
   - No dependencies on other packages
   - Only depends on React as a peer dependency
+
+## Package Publishing Requirements
+
+### Essential package.json Configuration
+
+When creating new packages for npm publishing, ensure these configurations are present:
+
+1. **files field**: Specifies which files/directories to include in the published package
+   ```json
+   "files": ["dist", "README.md"]
+   ```
+
+2. **prepublishOnly script**: Automatically builds the package before publishing
+   ```json
+   "scripts": {
+     "prepublishOnly": "npm run build"
+   }
+   ```
+
+3. **Proper entry points**: Define main, module, types, and exports
+   ```json
+   "main": "./dist/cjs/index.js",
+   "module": "./dist/esm/index.js", 
+   "types": "./dist/types/index.d.ts",
+   "exports": {
+     ".": {
+       "require": "./dist/cjs/index.js",
+       "import": "./dist/esm/index.js",
+       "types": "./dist/types/index.d.ts"
+     }
+   }
+   ```
+
+### Common Publishing Issues
+
+**Problem**: Published package only contains README.md and package.json, missing dist files
+
+**Root Cause**: The project's `.gitignore` excludes `dist/` directories, and npm respects `.gitignore` by default
+
+**Solution**: Add `"prepublishOnly": "npm run build"` script to package.json
+- This ensures dist files are built before publishing
+- No need to create `.npmignore` files (avoid committing build artifacts to git)
+- Build process runs automatically during `npm publish`
+
+**Example Fix**:
+```json
+{
+  "scripts": {
+    "build": "npm run build:clean && npm run build:cjs && npm run build:esm && npm run build:types",
+    "prepublishOnly": "npm run build"
+  }
+}
+```
+
+### Package Publishing Checklist
+
+Before publishing any new package, verify:
+- [ ] `files` field includes `"dist"` directory
+- [ ] `prepublishOnly` script runs the build process
+- [ ] `main`, `module`, `types`, and `exports` point to correct dist files
+- [ ] Build process generates all required output formats (CJS, ESM, types)
+- [ ] Package builds successfully: `npm run build`
+- [ ] Tests pass: `npm run test`
