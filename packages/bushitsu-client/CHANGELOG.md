@@ -1,5 +1,12 @@
 # @aituber-onair/bushitsu-client
 
+## 0.1.1
+
+### Patch Changes
+
+- Add `prepublishOnly` script to ensure build files are included in npm package
+- Fix npm package publishing issue where only README.md and package.json were included
+
 ## 0.1.0
 
 ### Minor Changes
