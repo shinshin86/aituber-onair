@@ -47,7 +47,8 @@
     "lint": "biome lint ./src ./tests",
     "lint:fix": "biome lint --fix ./src ./tests",
     "check": "biome check ./src ./tests",
-    "check:fix": "biome check --fix ./src ./tests"
+    "check:fix": "biome check --fix ./src ./tests",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": "^18.0.0"
