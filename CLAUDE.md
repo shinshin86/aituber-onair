@@ -4,14 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of four main packages:
+AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of five main packages:
 
 - **`@aituber-onair/core`** - Core library for AI-driven virtual streaming applications with chat processing, conversation management, and memory capabilities
 - **`@aituber-onair/voice`** - Independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, etc.)
 - **`@aituber-onair/manneri`** - Conversation pattern detection library that identifies repetitive dialogue and provides topic diversification prompts
 - **`@aituber-onair/bushitsu-client`** - WebSocket client library for chat functionality with React hooks support, auto-reconnection, rate limiting, and mention support
+- **`@aituber-onair/kizuna`** - Sophisticated bond system for managing user-AI character relationships with points, achievements, and emotion-based interactions
 
-Each package can be used independently or together. The voice package provides TTS functionality, manneri handles conversation variety, bushitsu-client enables WebSocket chat communication, and core integrates everything for full AITuber functionality.
+Each package can be used independently or together. The voice package provides TTS functionality, manneri handles conversation variety, bushitsu-client enables WebSocket chat communication, kizuna manages user relationships and engagement, and core integrates everything for full AITuber functionality.
 
 ## Common Development Commands
 
@@ -32,6 +33,9 @@ cd packages/manneri && npm run build
 # Build only the bushitsu-client package
 cd packages/bushitsu-client && npm run build
 
+# Build only the kizuna package
+cd packages/kizuna && npm run build
+
 # Build specific format for voice package
 cd packages/voice && npm run build:cjs  # CommonJS only
 cd packages/voice && npm run build:esm  # ESModule only
@@ -41,6 +45,7 @@ cd packages/core && npm run typecheck
 cd packages/voice && npm run typecheck
 cd packages/manneri && npm run typecheck
 cd packages/bushitsu-client && npm run typecheck
+cd packages/kizuna && npm run typecheck
 ```
 
 ### Testing Commands
@@ -53,18 +58,21 @@ cd packages/core && npm run test:watch
 cd packages/voice && npm run test:watch
 cd packages/manneri && npm run test:watch
 cd packages/bushitsu-client && npm run test:watch
+cd packages/kizuna && npm run test:watch
 
 # Run tests with coverage report
 cd packages/core && npm run test:coverage
 cd packages/voice && npm run test:coverage
 cd packages/manneri && npm run test:coverage
 cd packages/bushitsu-client && npm run test:coverage
+cd packages/kizuna && npm run test:coverage
 
 # Run a specific test file
 cd packages/core && npx vitest run path/to/test.test.ts
 cd packages/voice && npx vitest run path/to/test.test.ts
 cd packages/manneri && npx vitest run path/to/test.test.ts
 cd packages/bushitsu-client && npx vitest run path/to/test.test.ts
+cd packages/kizuna && npx vitest run path/to/test.test.ts
 ```
 
 ### Code Quality Commands
@@ -179,6 +187,13 @@ The library abstracts differences between AI providers' function calling impleme
 - `/types` - TypeScript type definitions for WebSocket communication
 - `/index.ts` - Main exports for the package
 
+#### Kizuna Package (`@aituber-onair/kizuna`)
+- `/storage` - Storage providers (LocalStorageProvider, ExternalStorageProvider)
+- `/utils` - Utility functions (environment detection, storage factory, user ID generation)
+- `/types` - TypeScript type definitions for bond system
+- `/index.ts` - Main exports for the package
+- **Key Classes**: KizunaManager, UserManager, PointCalculator
+
 ### Key Development Rules
 - All code and comments must be in English
 - Maintain strong TypeScript typing
@@ -210,6 +225,8 @@ The library abstracts differences between AI providers' function calling impleme
 10. **Manneri Simplicity**: The `@aituber-onair/manneri` package follows a simple design principle: detect conversation patterns and provide topic diversification prompts. It uses a single `intervention` prompt type instead of complex categorizations, making it easy to customize and maintain.
 
 11. **Conversation Pattern Detection**: Manneri detects repetitive patterns through similarity analysis, frequency detection, and topic tracking. When patterns are detected and cooldown periods have passed, it generates intervention prompts to encourage topic changes.
+
+12. **Kizuna Browser Compatibility**: The `@aituber-onair/kizuna` package uses dependency injection for file system operations, avoiding Node.js dependencies in browser builds. Users must provide ExternalStorageAdapter implementations for Node.js environments while browsers use LocalStorageProvider automatically.
 
 ## Cross-Platform Runtime Support
 
@@ -442,6 +459,81 @@ function ChatComponent() {
 }
 ```
 
+### Using Kizuna Package Independently
+
+```typescript
+import { KizunaManager, LocalStorageProvider, type ExternalStorageAdapter, ExternalStorageProvider } from '@aituber-onair/kizuna';
+
+// Browser environment
+const browserStorage = new LocalStorageProvider({
+  enableCompression: false,
+  enableEncryption: false,
+  maxStorageSize: 5 * 1024 * 1024
+});
+
+const kizuna = new KizunaManager({
+  enabled: true,
+  owner: {
+    initialPoints: 100,
+    pointMultiplier: 2,
+    dailyBonus: 10
+  },
+  platforms: {
+    youtube: {
+      basePoints: { comment: 1, superChat: 20 }
+    }
+  },
+  customRules: [
+    {
+      id: 'emotion_happy',
+      name: 'Happy emotion bonus',
+      condition: (context) => context.emotion === 'happy',
+      points: 1,
+      description: 'Bonus for happy AI responses'
+    }
+  ]
+}, browserStorage, 'users');
+
+await kizuna.initialize();
+
+// Process interaction
+const result = await kizuna.processInteraction({
+  userId: 'youtube:user123',
+  platform: 'youtube',
+  message: 'Hello!',
+  emotion: 'happy',
+  isOwner: false,
+  timestamp: Date.now()
+});
+
+console.log(`User earned ${result.pointsAdded} points!`);
+
+// Node.js environment with dependency injection
+import { promises as fs } from 'fs';
+import path from 'path';
+
+const nodeAdapter: ExternalStorageAdapter = {
+  async readFile(filePath: string) { return await fs.readFile(filePath, 'utf-8'); },
+  async writeFile(filePath: string, data: string) { await fs.writeFile(filePath, data, 'utf-8'); },
+  async deleteFile(filePath: string) { await fs.unlink(filePath); },
+  async listFiles(dirPath: string) { 
+    const files = await fs.readdir(dirPath);
+    return files.filter(file => file.endsWith('.json'));
+  },
+  async ensureDir(dirPath: string) { await fs.mkdir(dirPath, { recursive: true }); },
+  async exists(path: string) { 
+    try { await fs.access(path); return true; } catch { return false; }
+  },
+  joinPath: (...components: string[]) => path.join(...components)
+};
+
+const nodeStorage = new ExternalStorageProvider({
+  dataDir: './kizuna-data',
+  prettyJson: true,
+  autoCreateDir: true
+}, nodeAdapter);
+```
+
 ### Using Both Packages Together
 
 ```typescript
@@ -477,6 +569,9 @@ npm install @aituber-onair/manneri
 
 # For WebSocket chat functionality only
 npm install @aituber-onair/bushitsu-client
+
+# For user relationship management only
+npm install @aituber-onair/kizuna
 
 # For full AITuber functionality (voice included automatically)
 npm install @aituber-onair/core
@@ -547,7 +642,7 @@ This project uses [Changesets](https://github.com/changesets/changesets) for aut
 
 ### Package Versioning Strategy
 
-- **Independent Versioning**: Each package (`@aituber-onair/core`, `@aituber-onair/voice`, and `@aituber-onair/manneri`) maintains its own version following SemVer
+- **Independent Versioning**: Each package (`@aituber-onair/core`, `@aituber-onair/voice`, `@aituber-onair/manneri`, `@aituber-onair/bushitsu-client`, and `@aituber-onair/kizuna`) maintains its own version following SemVer
 - **Dependency Relationship**: Core package includes voice as a direct dependency for ease of use
 - **Release Automation**: GitHub Actions automatically handle version bumping and publishing
 
@@ -651,6 +746,11 @@ npm run changeset:version
   - Can be used standalone for WebSocket chat functionality
   - No dependencies on other packages
   - Only depends on React as a peer dependency
+- **Kizuna Package**: Completely independent
+  - Can be used standalone for user relationship management
+  - No dependencies on other packages
+  - Zero external dependencies for maximum portability
+  - Browser-compatible with dependency injection for Node.js
 
 ## Package Publishing Requirements
 

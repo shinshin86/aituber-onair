@@ -5,13 +5,18 @@
 
 import type { StorageProvider } from "../storage/StorageProvider";
 import { LocalStorageProvider } from "../storage/LocalStorageProvider";
-import { FileSystemStorageProvider } from "../storage/FileSystemStorageProvider";
+import { ExternalStorageProvider } from "../storage/ExternalStorageProvider";
+import type { ExternalStorageAdapter } from "../storage/ExternalStorageProvider";
 import { detectEnvironment } from "./environmentDetector";
 
 /**
  * Create default StorageProvider based on environment
+ *
+ * @param externalAdapter - Optional adapter for external storage (e.g., file system)
  */
-export function createDefaultStorageProvider(): StorageProvider {
+export function createDefaultStorageProvider(
+	externalAdapter?: ExternalStorageAdapter,
+): StorageProvider {
 	const environment = detectEnvironment();
 
 	switch (environment) {
@@ -23,14 +28,27 @@ export function createDefaultStorageProvider(): StorageProvider {
 			});
 
 		case "node":
-			return new FileSystemStorageProvider({
-				dataDir: "./data",
-				prettyJson: true,
-				autoCreateDir: true,
+			if (externalAdapter) {
+				return new ExternalStorageProvider(externalAdapter, {
+					dataDir: "./data",
+					prettyJson: true,
+					autoCreateDir: true,
+				});
+			}
+			// Fallback to LocalStorageProvider if no adapter provided
+			return new LocalStorageProvider({
+				enableCompression: false,
+				enableEncryption: false,
+				maxStorageSize: 5 * 1024 * 1024,
 			});
 
 		default:
-			throw new Error(`Unsupported environment: ${environment}`);
+			// Default to LocalStorageProvider for unknown environments
+			return new LocalStorageProvider({
+				enableCompression: false,
+				enableEncryption: false,
+				maxStorageSize: 5 * 1024 * 1024,
+			});
 	}
 }
 
@@ -44,7 +62,7 @@ export interface StorageProviderOptions {
 		encryptionKey?: string;
 		maxStorageSize?: number;
 	};
-	node?: {
+	external?: {
 		dataDir?: string;
 		prettyJson?: boolean;
 		autoCreateDir?: boolean;
@@ -54,10 +72,16 @@ export interface StorageProviderOptions {
 
 /**
  * Create StorageProvider with options
+ *
+ * @param options - Configuration options for storage providers
+ * @param externalAdapter - Optional adapter for external storage (e.g., file system)
  */
 export function createStorageProvider(
-	options: StorageProviderOptions = {},
+	options?: StorageProviderOptions,
+	externalAdapter?: ExternalStorageAdapter,
 ): StorageProvider {
+	// Set default options if not provided
+	const config = options || {};
 	const environment = detectEnvironment();
 
 	switch (environment) {
@@ -66,19 +90,34 @@ export function createStorageProvider(
 				enableCompression: false,
 				enableEncryption: false,
 				maxStorageSize: 5 * 1024 * 1024,
-				...options.browser,
+				...config.browser,
 			});
 
 		case "node":
-			return new FileSystemStorageProvider({
-				dataDir: "./data",
-				prettyJson: true,
-				autoCreateDir: true,
-				encoding: "utf8",
-				...options.node,
+			if (externalAdapter) {
+				return new ExternalStorageProvider(externalAdapter, {
+					dataDir: "./data",
+					prettyJson: true,
+					autoCreateDir: true,
+					encoding: "utf8",
+					...config.external,
+				});
+			}
+			// Fallback to LocalStorageProvider if no adapter provided
+			return new LocalStorageProvider({
+				enableCompression: false,
+				enableEncryption: false,
+				maxStorageSize: 5 * 1024 * 1024,
+				...config.browser,
 			});
 
 		default:
-			throw new Error(`Unsupported environment: ${environment}`);
+			// Default to LocalStorageProvider for unknown environments
+			return new LocalStorageProvider({
+				enableCompression: false,
+				enableEncryption: false,
+				maxStorageSize: 5 * 1024 * 1024,
+				...config.browser,
+			});
 	}
 }

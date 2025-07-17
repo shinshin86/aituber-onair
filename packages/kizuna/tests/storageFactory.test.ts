@@ -8,7 +8,10 @@ import {
 	createStorageProvider,
 } from "../src/utils/storageFactory";
 import { LocalStorageProvider } from "../src/storage/LocalStorageProvider";
-import { FileSystemStorageProvider } from "../src/storage/FileSystemStorageProvider";
+import {
+	ExternalStorageProvider,
+	type ExternalStorageAdapter,
+} from "../src/storage/ExternalStorageProvider";
 
 describe("storageFactory", () => {
 	// Store original globals
@@ -43,26 +46,40 @@ describe("storageFactory", () => {
 			expect(provider).toBeInstanceOf(LocalStorageProvider);
 		});
 
-		it("should create FileSystemStorageProvider in Node.js environment", () => {
-			// Mock Node.js environment
+		it("should create LocalStorageProvider in Node.js environment without adapter", () => {
+			// Mock Node.js environment with minimal localStorage mock
 			(global as Record<string, unknown>).window = undefined;
 			(global as Record<string, unknown>).process = {
 				versions: {
 					node: "18.0.0",
 				},
 			};
+			// Mock localStorage to be available
+			(global as Record<string, unknown>).localStorage = {
+				getItem: () => null,
+				setItem: () => {},
+				removeItem: () => {},
+				clear: () => {},
+			};
 
 			const provider = createDefaultStorageProvider();
-			expect(provider).toBeInstanceOf(FileSystemStorageProvider);
+			expect(provider).toBeInstanceOf(LocalStorageProvider);
 		});
 
-		it("should default to FileSystemStorageProvider when environment is unclear", () => {
+		it("should default to LocalStorageProvider when environment is unclear", () => {
 			// Remove both window and process
 			(global as Record<string, unknown>).window = undefined;
 			(global as Record<string, unknown>).process = undefined;
+			// Mock localStorage to be available
+			(global as Record<string, unknown>).localStorage = {
+				getItem: () => null,
+				setItem: () => {},
+				removeItem: () => {},
+				clear: () => {},
+			};
 
 			const provider = createDefaultStorageProvider();
-			expect(provider).toBeInstanceOf(FileSystemStorageProvider);
+			expect(provider).toBeInstanceOf(LocalStorageProvider);
 		});
 
 		it("should create LocalStorageProvider with default browser configuration", () => {
@@ -90,7 +107,7 @@ describe("storageFactory", () => {
 			expect(config.maxStorageSize).toBe(5 * 1024 * 1024);
 		});
 
-		it("should create FileSystemStorageProvider with default Node.js configuration", () => {
+		it("should create ExternalStorageProvider with adapter in Node.js environment", () => {
 			// Mock Node.js environment
 			(global as Record<string, unknown>).window = undefined;
 			(global as Record<string, unknown>).process = {
@@ -99,15 +116,19 @@ describe("storageFactory", () => {
 				},
 			};
 
-			const provider =
-				createDefaultStorageProvider() as FileSystemStorageProvider;
-			expect(provider).toBeInstanceOf(FileSystemStorageProvider);
+			// Create a mock adapter
+			const mockAdapter: ExternalStorageAdapter = {
+				readFile: async () => "{}",
+				writeFile: async () => {},
+				deleteFile: async () => {},
+				listFiles: async () => [],
+				ensureDir: async () => {},
+				exists: async () => true,
+				joinPath: (...components) => components.join("/"),
+			};
 
-			// Test default configuration by accessing private config
-			const config = (provider as { config: Record<string, unknown> }).config;
-			expect(config.dataDir).toBe("./data");
-			expect(config.prettyJson).toBe(true);
-			expect(config.autoCreateDir).toBe(true);
+			const provider = createDefaultStorageProvider(mockAdapter);
+			expect(provider).toBeInstanceOf(ExternalStorageProvider);
 		});
 	});
 
@@ -145,7 +166,7 @@ describe("storageFactory", () => {
 			expect(config.maxStorageSize).toBe(10 * 1024 * 1024);
 		});
 
-		it("should create FileSystemStorageProvider with custom Node.js options", () => {
+		it("should create ExternalStorageProvider with custom external options", () => {
 			// Mock Node.js environment
 			(global as Record<string, unknown>).window = undefined;
 			(global as Record<string, unknown>).process = {
@@ -154,25 +175,33 @@ describe("storageFactory", () => {
 				},
 			};
 
-			const provider = createStorageProvider({
-				node: {
-					dataDir: "./custom-data",
-					prettyJson: false,
-					autoCreateDir: false,
-					encoding: "utf-8",
+			// Create a mock adapter
+			const mockAdapter: ExternalStorageAdapter = {
+				readFile: async () => "{}",
+				writeFile: async () => {},
+				deleteFile: async () => {},
+				listFiles: async () => [],
+				ensureDir: async () => {},
+				exists: async () => true,
+				joinPath: (...components) => components.join("/"),
+			};
+
+			const provider = createStorageProvider(
+				{
+					external: {
+						dataDir: "./custom-data",
+						prettyJson: false,
+						autoCreateDir: false,
+						encoding: "utf-8",
+					},
 				},
-			}) as FileSystemStorageProvider;
+				mockAdapter,
+			);
 
-			expect(provider).toBeInstanceOf(FileSystemStorageProvider);
-
-			const config = (provider as { config: Record<string, unknown> }).config;
-			expect(config.dataDir).toBe("./custom-data");
-			expect(config.prettyJson).toBe(false);
-			expect(config.autoCreateDir).toBe(false);
-			expect(config.encoding).toBe("utf-8");
+			expect(provider).toBeInstanceOf(ExternalStorageProvider);
 		});
 
-		it("should ignore node options in browser environment", () => {
+		it("should ignore external options in browser environment", () => {
 			// Mock browser environment
 			(global as Record<string, unknown>).window = {
 				localStorage: {
@@ -191,7 +220,7 @@ describe("storageFactory", () => {
 				browser: {
 					enableCompression: true,
 				},
-				node: {
+				external: {
 					dataDir: "./should-be-ignored",
 				},
 			}) as LocalStorageProvider;
@@ -200,11 +229,11 @@ describe("storageFactory", () => {
 
 			const config = (provider as { config: Record<string, unknown> }).config;
 			expect(config.enableCompression).toBe(true);
-			// Node.js options should be ignored
+			// External options should be ignored
 			expect(config.dataDir).toBeUndefined();
 		});
 
-		it("should ignore browser options in Node.js environment", () => {
+		it("should fallback to LocalStorageProvider in Node.js environment without adapter", () => {
 			// Mock Node.js environment
 			(global as Record<string, unknown>).window = undefined;
 			(global as Record<string, unknown>).process = {
@@ -212,22 +241,30 @@ describe("storageFactory", () => {
 					node: "18.0.0",
 				},
 			};
+			// Mock localStorage to be available
+			(global as Record<string, unknown>).localStorage = {
+				getItem: () => null,
+				setItem: () => {},
+				removeItem: () => {},
+				clear: () => {},
+			};
 
 			const provider = createStorageProvider({
 				browser: {
 					enableCompression: true,
 				},
-				node: {
+				external: {
 					dataDir: "./custom-data",
 				},
-			}) as FileSystemStorageProvider;
+			}) as LocalStorageProvider;
 
-			expect(provider).toBeInstanceOf(FileSystemStorageProvider);
+			expect(provider).toBeInstanceOf(LocalStorageProvider);
 
 			const config = (provider as { config: Record<string, unknown> }).config;
-			expect(config.dataDir).toBe("./custom-data");
-			// Browser options should be ignored
-			expect(config.enableCompression).toBeUndefined();
+			// Should use browser options as fallback
+			expect(config.enableCompression).toBe(true);
+			// External options should be ignored without adapter
+			expect(config.dataDir).toBeUndefined();
 		});
 
 		it("should use default options when no options provided", () => {
@@ -238,14 +275,21 @@ describe("storageFactory", () => {
 					node: "18.0.0",
 				},
 			};
+			// Mock localStorage to be available
+			(global as Record<string, unknown>).localStorage = {
+				getItem: () => null,
+				setItem: () => {},
+				removeItem: () => {},
+				clear: () => {},
+			};
 
-			const provider = createStorageProvider({}) as FileSystemStorageProvider;
-			expect(provider).toBeInstanceOf(FileSystemStorageProvider);
+			const provider = createStorageProvider({}) as LocalStorageProvider;
+			expect(provider).toBeInstanceOf(LocalStorageProvider);
 
 			const config = (provider as { config: Record<string, unknown> }).config;
-			expect(config.dataDir).toBe("./data");
-			expect(config.prettyJson).toBe(true);
-			expect(config.autoCreateDir).toBe(true);
+			expect(config.enableCompression).toBe(false);
+			expect(config.enableEncryption).toBe(false);
+			expect(config.maxStorageSize).toBe(5 * 1024 * 1024);
 		});
 
 		it("should merge provided options with defaults", () => {
@@ -280,17 +324,23 @@ describe("storageFactory", () => {
 	});
 
 	describe("error handling", () => {
-		it("should default to FileSystemStorageProvider for unknown environments", () => {
+		it("should default to LocalStorageProvider for unknown environments", () => {
 			// Mock an unclear environment
 			(global as Record<string, unknown>).window = undefined;
-			(global as Record<string, unknown>).localStorage = undefined;
 			(global as Record<string, unknown>).process = undefined;
+			// Mock localStorage to be available
+			(global as Record<string, unknown>).localStorage = {
+				getItem: () => null,
+				setItem: () => {},
+				removeItem: () => {},
+				clear: () => {},
+			};
 
-			// This should not throw because unknown environments default to 'node'
+			// This should not throw because unknown environments default to LocalStorageProvider
 			expect(() => createDefaultStorageProvider()).not.toThrow();
 
 			const provider = createDefaultStorageProvider();
-			expect(provider).toBeInstanceOf(FileSystemStorageProvider);
+			expect(provider).toBeInstanceOf(LocalStorageProvider);
 		});
 	});
 
@@ -329,7 +379,7 @@ describe("storageFactory", () => {
 			expect(loadedData).toEqual(testData);
 		});
 
-		it("should create functional FileSystemStorageProvider", async () => {
+		it("should create functional ExternalStorageProvider", async () => {
 			// Mock Node.js environment
 			(global as Record<string, unknown>).window = undefined;
 			(global as Record<string, unknown>).process = {
@@ -338,15 +388,30 @@ describe("storageFactory", () => {
 				},
 			};
 
-			const provider = createDefaultStorageProvider();
-			expect(provider).toBeInstanceOf(FileSystemStorageProvider);
+			// Create a mock adapter with test data
+			const mockStorage: Record<string, string> = {};
+			const mockAdapter: ExternalStorageAdapter = {
+				readFile: async (filePath: string) => mockStorage[filePath] || "{}",
+				writeFile: async (filePath: string, data: string) => {
+					mockStorage[filePath] = data;
+				},
+				deleteFile: async (filePath: string) => {
+					delete mockStorage[filePath];
+				},
+				listFiles: async () => Object.keys(mockStorage),
+				ensureDir: async () => {},
+				exists: async (path: string) => path in mockStorage,
+				joinPath: (...components) => components.join("/"),
+			};
 
-			// Basic instantiation test (actual file operations would need more setup)
-			expect(provider.save).toBeDefined();
-			expect(provider.load).toBeDefined();
-			expect(provider.remove).toBeDefined();
-			expect(provider.clear).toBeDefined();
-			expect(provider.getStorageInfo).toBeDefined();
+			const provider = createDefaultStorageProvider(mockAdapter);
+			expect(provider).toBeInstanceOf(ExternalStorageProvider);
+
+			// Test basic functionality
+			const testData = { test: "value" };
+			await provider.save("test-key", testData);
+			const loadedData = await provider.load("test-key");
+			expect(loadedData).toEqual(testData);
 		});
 	});
 });

@@ -18,6 +18,8 @@ A sophisticated bond system (絆 - "Kizuna") for managing relationships between 
 - **Cooldown Management**: Prevent spam with time-based and daily limits
 - **Persistent Storage**: Save user data with configurable retention policies
 - **Debug Mode**: Detailed logging for development and troubleshooting
+- **Browser Compatible**: Works with Vite, Webpack, and other modern bundlers
+- **Dependency Injection**: Flexible file system integration for Node.js environments
 
 ## Installation
 
@@ -30,7 +32,7 @@ npm install @aituber-onair/kizuna
 ```typescript
 import { KizunaManager, LocalStorageProvider } from '@aituber-onair/kizuna';
 
-// Create storage provider
+// Create storage provider (browser environment)
 const storageProvider = new LocalStorageProvider({
   enableCompression: false,
   enableEncryption: false,
@@ -114,6 +116,41 @@ const result = await kizuna.processInteraction({
 });
 
 console.log(`User earned ${result.pointsAdded} points!`);
+```
+
+## Architecture & Browser Compatibility
+
+Kizuna v0.0.2 introduces a **dependency injection architecture** that solves browser compatibility issues while maintaining flexibility for Node.js environments.
+
+### Key Benefits
+
+- ✅ **Vite Compatible**: No more "Module 'node:fs' has been externalized for browser compatibility" errors
+- ✅ **Zero Node.js Dependencies**: Package contains no Node.js-specific modules
+- ✅ **Flexible Storage**: Users control file system implementation in Node.js
+- ✅ **Universal Package**: Works in browsers, Node.js, Deno, and Bun environments
+
+### Migration from v0.0.1
+
+If you were using `FileSystemStorageProvider` in v0.0.1, migrate to `ExternalStorageProvider`:
+
+```typescript
+// OLD (v0.0.1) - No longer available
+import { FileSystemStorageProvider } from '@aituber-onair/kizuna';
+const storage = new FileSystemStorageProvider({ dataDir: './data' });
+
+// NEW (v0.0.2+) - Dependency injection
+import { ExternalStorageProvider, type ExternalStorageAdapter } from '@aituber-onair/kizuna';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+const adapter: ExternalStorageAdapter = {
+  // Implement file system operations
+  async readFile(filePath) { return await fs.readFile(filePath, 'utf-8'); },
+  async writeFile(filePath, data) { await fs.writeFile(filePath, data, 'utf-8'); },
+  // ... other methods
+};
+
+const storage = new ExternalStorageProvider({ dataDir: './kizuna-data' }, adapter);
 ```
 
 ## Configuration
@@ -381,48 +418,88 @@ kizuna.on('threshold_reached', (eventData) => {
 });
 ```
 
-## Node.js Support
+## Browser Compatibility & Node.js Support
 
-Kizuna now supports both browser and Node.js environments. The appropriate storage provider is automatically selected based on the runtime environment.
+Kizuna is designed to be **browser-compatible** and can be used in Node.js environments through dependency injection. The package no longer includes Node.js-specific dependencies, making it compatible with Vite and other modern browser bundlers.
 
-### Automatic Environment Detection
-
-```typescript
-import { KizunaManager, createDefaultStorageProvider } from '@aituber-onair/kizuna';
-
-// Automatically uses LocalStorageProvider in browser, FileSystemStorageProvider in Node.js
-const kizuna = new KizunaManager(config, createDefaultStorageProvider(), 'my_users');
-```
-
-### Manual Storage Provider Selection
+### Browser Usage (Default)
 
 ```typescript
-import { 
-  KizunaManager, 
-  LocalStorageProvider, 
-  FileSystemStorageProvider,
-  createStorageProvider 
-} from '@aituber-onair/kizuna';
+import { KizunaManager, LocalStorageProvider } from '@aituber-onair/kizuna';
 
-// Browser environment
+// Browser environment - uses localStorage
 const browserStorage = new LocalStorageProvider({
   enableCompression: false,
   enableEncryption: false,
   maxStorageSize: 5 * 1024 * 1024
 });
 
-// Node.js environment
-const nodeStorage = new FileSystemStorageProvider({
-  dataDir: './data',
+const kizuna = new KizunaManager(config, browserStorage, 'my_users');
+```
+
+### Node.js Usage (Dependency Injection)
+
+For Node.js environments, provide your own file system adapter:
+
+```typescript
+import { 
+  KizunaManager, 
+  ExternalStorageProvider,
+  type ExternalStorageAdapter 
+} from '@aituber-onair/kizuna';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+// Create your own file system adapter
+const nodeAdapter: ExternalStorageAdapter = {
+  async readFile(filePath: string): Promise<string> {
+    return await fs.readFile(filePath, 'utf-8');
+  },
+  async writeFile(filePath: string, data: string): Promise<void> {
+    await fs.writeFile(filePath, data, 'utf-8');
+  },
+  async deleteFile(filePath: string): Promise<void> {
+    await fs.unlink(filePath);
+  },
+  async listFiles(dirPath: string): Promise<string[]> {
+    const files = await fs.readdir(dirPath);
+    return files.filter(file => file.endsWith('.json'));
+  },
+  async ensureDir(dirPath: string): Promise<void> {
+    await fs.mkdir(dirPath, { recursive: true });
+  },
+  async exists(path: string): Promise<boolean> {
+    try {
+      await fs.access(path);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  joinPath: (...components: string[]) => path.join(...components)
+};
+
+// Use ExternalStorageProvider with your adapter
+const nodeStorage = new ExternalStorageProvider({
+  dataDir: './kizuna-data',
   prettyJson: true,
   autoCreateDir: true
-});
+}, nodeAdapter);
 
-// Or use factory with custom options
-const storage = createStorageProvider({
-  browser: { enableCompression: false },
-  node: { dataDir: './custom-data' }
-});
+const kizuna = new KizunaManager(config, nodeStorage, 'my_users');
+```
+
+### Automatic Environment Detection
+
+```typescript
+import { KizunaManager, createDefaultStorageProvider } from '@aituber-onair/kizuna';
+
+// Browser: Uses LocalStorageProvider automatically
+// Node.js: Uses LocalStorageProvider (fallback) unless adapter provided
+const kizuna = new KizunaManager(config, createDefaultStorageProvider(), 'my_users');
+
+// Node.js with adapter
+const kizuna = new KizunaManager(config, createDefaultStorageProvider(nodeAdapter), 'my_users');
 ```
 
 ### Environment Detection Utilities
@@ -461,16 +538,29 @@ Storage provider using browser localStorage.
 - `encryptionKey?: string` - Encryption key (if encryption enabled)
 - `maxStorageSize: number` - Maximum storage size in bytes
 
-### FileSystemStorageProvider
+### ExternalStorageProvider
 
-Storage provider using Node.js file system.
+Storage provider using dependency injection for file system operations.
 
 #### Constructor Options
 
-- `dataDir: string` - Data directory path (default: `./data`)
-- `encoding: 'utf8' | 'utf-8'` - File encoding (default: `utf8`)
-- `prettyJson: boolean` - Pretty-print JSON files (default: `true`)
-- `autoCreateDir: boolean` - Auto-create directory if not exists (default: `true`)
+- `config: object` - Configuration object with dataDir, encoding, prettyJson, autoCreateDir
+- `adapter: ExternalStorageAdapter` - User-provided file system adapter
+
+#### ExternalStorageAdapter Interface
+
+```typescript
+interface ExternalStorageAdapter {
+  readFile(filePath: string): Promise<string>;
+  writeFile(filePath: string, data: string): Promise<void>;
+  deleteFile(filePath: string): Promise<void>;
+  listFiles(dirPath: string): Promise<string[]>;
+  ensureDir(dirPath: string): Promise<void>;
+  exists(path: string): Promise<boolean>;
+  getFileStats?(filePath: string): Promise<{ size: number }>;
+  joinPath(...components: string[]): string;
+}
+```
 
 ## Future Storage Providers (TODO)
 
@@ -525,15 +615,14 @@ npm run test:watch
 
 ### Test Structure
 
-- **`src/tests/performance.test.ts`** - LocalStorageProvider compression and encryption performance benchmarks
-- **`src/tests/FileSystemStorageProvider.test.ts`** - Node.js file system storage functionality
-- **`src/tests/environmentDetector.test.ts`** - Environment detection utilities
-- **`src/tests/storageFactory.test.ts`** - Storage provider factory and auto-selection
+- **`tests/performance.test.ts`** - LocalStorageProvider compression and encryption performance benchmarks
+- **`tests/environmentDetector.test.ts`** - Environment detection utilities
+- **`tests/storageFactory.test.ts`** - Storage provider factory and dependency injection
 
 ### Test Coverage
 
-- ✅ All storage providers (LocalStorage, FileSystem)
-- ✅ Environment detection and auto-selection
+- ✅ All storage providers (LocalStorage, ExternalStorage)
+- ✅ Environment detection and dependency injection
 - ✅ Performance benchmarks and measurements
 - ✅ Error handling and edge cases
 - ✅ Configuration options and customization
