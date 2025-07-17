@@ -1,7 +1,7 @@
 {
   "name": "@aituber-onair/kizuna",
   "version": "0.0.1",
-  "description": "A sophisticated bond system (絆 - Kizuna) for managing relationships between users and AI characters.",
+  "description": "A sophisticated bond system (絆 - Kizuna) for managing relationships between users and AI characters in AITuber OnAir.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",

@@ -2,7 +2,7 @@
 
 ![AITuber OnAir Kizuna - logo](./images/aituber-onair-kizuna.png)
 
-ユーザーとAIキャラクターの関係性を管理するための高度な絆システム（Kizuna）です。柔軟なポイントベースのエンゲージメントシステムを提供し、カスタマイズ可能なルール、実績、しきい値を設定できます。
+AITuber OnAirでユーザーとAIキャラクターの関係性を管理するための高度な絆システム（Kizuna）です。柔軟なポイントベースのエンゲージメントシステムを提供し、カスタマイズ可能なルール、実績、しきい値を設定できます。
 
 [English README is here](./README.md)
 

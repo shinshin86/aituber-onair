@@ -2,7 +2,7 @@
 
 ![AITuber OnAir Kizuna - logo](./images/aituber-onair-kizuna.png)
 
-A sophisticated bond system (絆 - "Kizuna") for managing relationships between users and AI characters. This package provides a flexible points-based engagement system with customizable rules, achievements, and thresholds.
+A sophisticated bond system (絆 - "Kizuna") for managing relationships between users and AI characters in AITuber OnAir. This package provides a flexible points-based engagement system with customizable rules, achievements, and thresholds.
 
 [日本語版 README はこちら](./README.ja.md)
 
