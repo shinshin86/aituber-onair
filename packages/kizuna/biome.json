@@ -1,0 +1,21 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		},
+		"ignore": ["dist/**/*", "**/*.d.ts"]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"indentWidth": 2
+	},
+	"files": {
+		"ignore": ["dist/**/*", "node_modules/**/*"]
+	}
+}

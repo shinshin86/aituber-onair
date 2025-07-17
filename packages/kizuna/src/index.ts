@@ -13,7 +13,11 @@ export { PointCalculator } from "./PointCalculator";
 // Storage providers
 export { StorageProvider } from "./storage/StorageProvider";
 export { LocalStorageProvider } from "./storage/LocalStorageProvider";
-export { FileSystemStorageProvider } from "./storage/FileSystemStorageProvider";
+export {
+	ExternalStorageProvider,
+	type ExternalStorageAdapter,
+	type ExternalStorageConfig,
+} from "./storage/ExternalStorageProvider";
 
 // Utilities
 export { generateUserId, parseUserId } from "./utils/userIdGenerator";
@@ -25,6 +29,7 @@ export {
 export {
 	createDefaultStorageProvider,
 	createStorageProvider,
+	type StorageProviderOptions,
 } from "./utils/storageFactory";
 
 // Type definitions

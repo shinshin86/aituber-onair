@@ -18,6 +18,8 @@ AITuber OnAirでユーザーとAIキャラクターの関係性を管理する�
 - **クールダウン管理**: 時間ベースと日次制限でスパムを防止
 - **永続ストレージ**: 設定可能な保持ポリシーでユーザーデータを保存
 - **デバッグモード**: 開発とトラブルシューティング用の詳細ログ
+- **ブラウザ互換**: Vite、Webpack、その他のモダンバンドラーで動作
+- **依存性注入**: Node.js環境向けの柔軟なファイルシステム統合
 
 ## インストール
 
@@ -30,7 +32,7 @@ npm install @aituber-onair/kizuna
 ```typescript
 import { KizunaManager, LocalStorageProvider } from '@aituber-onair/kizuna';
 
-// ストレージプロバイダーを作成
+// ストレージプロバイダーを作成（ブラウザ環境）
 const storageProvider = new LocalStorageProvider({
   enableCompression: false,
   enableEncryption: false,
@@ -114,6 +116,41 @@ const result = await kizuna.processInteraction({
 });
 
 console.log(`ユーザーが${result.pointsAdded}ポイント獲得しました！`);
+```
+
+## アーキテクチャとブラウザ互換性
+
+Kizuna v0.0.2では、ブラウザ互換性の問題を解決しつつ、Node.js環境での柔軟性を維持する**依存性注入アーキテクチャ**を導入しました。
+
+### 主な利点
+
+- ✅ **Vite対応**: 「Module 'node:fs' has been externalized for browser compatibility」エラーが解消
+- ✅ **ゼロNode.js依存性**: パッケージにNode.js固有のモジュールが含まれない
+- ✅ **柔軟なストレージ**: Node.jsでファイルシステム実装をユーザーが制御可能
+- ✅ **ユニバーサルパッケージ**: ブラウザ、Node.js、Deno、Bun環境で動作
+
+### v0.0.1からの移行
+
+v0.0.1で`FileSystemStorageProvider`を使用していた場合、`ExternalStorageProvider`に移行してください：
+
+```typescript
+// 旧（v0.0.1）- 利用不可
+import { FileSystemStorageProvider } from '@aituber-onair/kizuna';
+const storage = new FileSystemStorageProvider({ dataDir: './data' });
+
+// 新（v0.0.2+）- 依存性注入
+import { ExternalStorageProvider, type ExternalStorageAdapter } from '@aituber-onair/kizuna';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+const adapter: ExternalStorageAdapter = {
+  // ファイルシステム操作を実装
+  async readFile(filePath) { return await fs.readFile(filePath, 'utf-8'); },
+  async writeFile(filePath, data) { await fs.writeFile(filePath, data, 'utf-8'); },
+  // ... その他のメソッド
+};
+
+const storage = new ExternalStorageProvider({ dataDir: './kizuna-data' }, adapter);
 ```
 
 ## 設定
@@ -372,6 +409,30 @@ Kizunaシステムを管理するメインクラス。
 - `encryptionKey?: string` - 暗号化キー（暗号化有効時）
 - `maxStorageSize: number` - 最大ストレージサイズ（バイト）
 
+### ExternalStorageProvider
+
+依存性注入を使用してファイルシステム操作を行うストレージプロバイダー。
+
+#### コンストラクターオプション
+
+- `config: object` - dataDir、encoding、prettyJson、autoCreateDirを含む設定オブジェクト
+- `adapter: ExternalStorageAdapter` - ユーザー提供のファイルシステムアダプター
+
+#### ExternalStorageAdapterインターフェース
+
+```typescript
+interface ExternalStorageAdapter {
+  readFile(filePath: string): Promise<string>;
+  writeFile(filePath: string, data: string): Promise<void>;
+  deleteFile(filePath: string): Promise<void>;
+  listFiles(dirPath: string): Promise<string[]>;
+  ensureDir(dirPath: string): Promise<void>;
+  exists(path: string): Promise<boolean>;
+  getFileStats?(filePath: string): Promise<{ size: number }>;
+  joinPath(...components: string[]): string;
+}
+```
+
 ## AITuber OnAirとの統合
 
 このパッケージはAITuber OnAir専用に設計されていますが、他のAIキャラクターシステムにも適応可能です。感情ベースのポイント計算は、AITuber OnAirの感情検出システムとシームレスに統合されます。
@@ -380,48 +441,88 @@ Kizunaシステムを管理するメインクラス。
 
 MIT
 
-## Node.js対応
+## ブラウザ互換性とNode.js対応
 
-Kizunaは現在、ブラウザとNode.js両方の環境をサポートしています。実行時環境に基づいて適切なストレージプロバイダーが自動選択されます。
+Kizunaは**ブラウザ互換**を重視して設計されており、依存性注入を通じてNode.js環境でも使用できます。パッケージにはNode.js固有の依存関係が含まれなくなったため、ViteやWebpackなどのモダンなブラウザバンドラーと互換性があります。
 
-### 自動環境検出
-
-```typescript
-import { KizunaManager, createDefaultStorageProvider } from '@aituber-onair/kizuna';
-
-// ブラウザではLocalStorageProvider、Node.jsではFileSystemStorageProviderを自動使用
-const kizuna = new KizunaManager(config, createDefaultStorageProvider(), 'my_users');
-```
-
-### 手動ストレージプロバイダー選択
+### ブラウザでの使用（デフォルト）
 
 ```typescript
-import { 
-  KizunaManager, 
-  LocalStorageProvider, 
-  FileSystemStorageProvider,
-  createStorageProvider 
-} from '@aituber-onair/kizuna';
+import { KizunaManager, LocalStorageProvider } from '@aituber-onair/kizuna';
 
-// ブラウザ環境
+// ブラウザ環境 - localStorageを使用
 const browserStorage = new LocalStorageProvider({
   enableCompression: false,
   enableEncryption: false,
   maxStorageSize: 5 * 1024 * 1024
 });
 
-// Node.js環境
-const nodeStorage = new FileSystemStorageProvider({
-  dataDir: './data',
+const kizuna = new KizunaManager(config, browserStorage, 'my_users');
+```
+
+### Node.jsでの使用（依存性注入）
+
+Node.js環境では、独自のファイルシステムアダプターを提供してください：
+
+```typescript
+import { 
+  KizunaManager, 
+  ExternalStorageProvider,
+  type ExternalStorageAdapter 
+} from '@aituber-onair/kizuna';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+// 独自のファイルシステムアダプターを作成
+const nodeAdapter: ExternalStorageAdapter = {
+  async readFile(filePath: string): Promise<string> {
+    return await fs.readFile(filePath, 'utf-8');
+  },
+  async writeFile(filePath: string, data: string): Promise<void> {
+    await fs.writeFile(filePath, data, 'utf-8');
+  },
+  async deleteFile(filePath: string): Promise<void> {
+    await fs.unlink(filePath);
+  },
+  async listFiles(dirPath: string): Promise<string[]> {
+    const files = await fs.readdir(dirPath);
+    return files.filter(file => file.endsWith('.json'));
+  },
+  async ensureDir(dirPath: string): Promise<void> {
+    await fs.mkdir(dirPath, { recursive: true });
+  },
+  async exists(path: string): Promise<boolean> {
+    try {
+      await fs.access(path);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  joinPath: (...components: string[]) => path.join(...components)
+};
+
+// アダプターを使ってExternalStorageProviderを使用
+const nodeStorage = new ExternalStorageProvider({
+  dataDir: './kizuna-data',
   prettyJson: true,
   autoCreateDir: true
-});
+}, nodeAdapter);
 
-// またはファクトリーを使用してカスタムオプションを指定
-const storage = createStorageProvider({
-  browser: { enableCompression: false },
-  node: { dataDir: './custom-data' }
-});
+const kizuna = new KizunaManager(config, nodeStorage, 'my_users');
+```
+
+### 自動環境検出
+
+```typescript
+import { KizunaManager, createDefaultStorageProvider } from '@aituber-onair/kizuna';
+
+// ブラウザ: LocalStorageProviderを自動使用
+// Node.js: LocalStorageProvider（フォールバック）をアダプター未提供時に使用
+const kizuna = new KizunaManager(config, createDefaultStorageProvider(), 'my_users');
+
+// アダプター付きNode.js
+const kizuna = new KizunaManager(config, createDefaultStorageProvider(nodeAdapter), 'my_users');
 ```
 
 ### 環境検出ユーティリティ
@@ -479,15 +580,14 @@ npm run test:watch
 
 ### テスト構成
 
-- **`src/tests/performance.test.ts`** - LocalStorageProviderの圧縮・暗号化パフォーマンスベンチマーク
-- **`src/tests/FileSystemStorageProvider.test.ts`** - Node.jsファイルシステムストレージ機能
-- **`src/tests/environmentDetector.test.ts`** - 環境検出ユーティリティ
-- **`src/tests/storageFactory.test.ts`** - ストレージプロバイダーファクトリーと自動選択
+- **`tests/performance.test.ts`** - LocalStorageProviderの圧縮・暗号化パフォーマンスベンチマーク
+- **`tests/environmentDetector.test.ts`** - 環境検出ユーティリティ
+- **`tests/storageFactory.test.ts`** - ストレージプロバイダーファクトリーと依存性注入
 
 ### テストカバレッジ
 
-- ✅ 全ストレージプロバイダー（LocalStorage、FileSystem）
-- ✅ 環境検出と自動選択
+- ✅ 全ストレージプロバイダー（LocalStorage、ExternalStorage）
+- ✅ 環境検出と依存性注入
 - ✅ パフォーマンスベンチマークと測定
 - ✅ エラーハンドリングとエッジケース
 - ✅ 設定オプションとカスタマイズ
