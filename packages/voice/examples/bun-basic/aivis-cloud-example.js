@@ -35,7 +35,7 @@ async function main() {
   const aivisCloudOptions = {
     engineType: 'aivisCloud',
     speaker: 'a59cb814-0083-4369-8542-f51a29e72af7', // Example model UUID
-    apiKey: apiKey || 'demo-key-for-adapter-test',
+    apiKey: apiKey,
     onComplete: () => {
       console.log('✓ Speech processing completed');
     },
