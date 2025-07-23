@@ -1,5 +1,14 @@
 # @aituber-onair/core
 
+## 0.16.0
+
+### Minor Changes
+
+- Add support for Gemini 2.5 Flash Lite model
+  - Add `MODEL_GEMINI_2_5_FLASH_LITE` constant for the new `gemini-2.5-flash-lite` model
+  - Include the model in `GEMINI_VISION_SUPPORTED_MODELS` array to enable vision capabilities
+  - This provides users with a lightweight alternative to the standard Gemini models while maintaining vision support
+
 ## 0.15.0
 
 ### Minor Changes
