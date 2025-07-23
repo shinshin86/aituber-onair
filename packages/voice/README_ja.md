@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、NijiVoice、MiniMax、AivisSpeechなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、NijiVoice、MiniMax、AivisSpeech、Aivis Cloudなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -191,6 +191,35 @@ const voiceService = new VoiceService({
   aivisSpeechApiUrl: 'http://localhost:10101'
 });
 ```
+
+### Aivis Cloud
+
+SSML対応とストリーミング機能を備えた高品質なクラウドベースTTSサービス。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'aivisCloud',
+  speaker: 'unused', // モデルUUIDが指定されている場合は使用されません
+  apiKey: 'your-aivis-cloud-api-key',
+  aivisCloudModelUuid: 'a59cb814-0083-4369-8542-f51a29e72af7', // 必須
+  
+  // オプションの高度な設定
+  aivisCloudSpeakerUuid: 'speaker-uuid', // マルチスピーカーモデル用
+  aivisCloudStyleId: 0, // または aivisCloudStyleName: 'ノーマル'
+  aivisCloudUseSSML: true, // SSMLタグを有効化
+  aivisCloudSpeakingRate: 1.0, // 0.5-2.0
+  aivisCloudEmotionalIntensity: 1.0, // 0.0-2.0
+  aivisCloudOutputFormat: 'mp3', // wav, flac, mp3, aac, opus
+  aivisCloudOutputSamplingRate: 44100, // Hz
+});
+```
+
+**主な機能**：
+- **SSML対応**: 韻律、間、エイリアス、感情の豊富なマークアップ
+- **ストリーミング音声**: リアルタイム音声生成と配信
+- **複数形式**: WAV、FLAC、MP3、AAC、Opus出力
+- **感情制御**: きめ細かな感情強度設定
+- **高品質**: プロフェッショナルグレードの音声合成
 
 ### None（サイレントモード）
 音声出力なし - テストやテキストのみのシナリオに便利。

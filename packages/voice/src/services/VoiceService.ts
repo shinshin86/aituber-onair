@@ -7,7 +7,7 @@ import { VoiceEngineType } from '../types/voiceEngine';
 export interface VoiceServiceOptions {
   /** Speaker ID */
   speaker: string;
-  /** Engine type (voicevox, voicepeak, openai, nijivoice, aivisSpeech) */
+  /** Engine type (voicevox, voicepeak, openai, nijivoice, aivisSpeech, aivisCloud, minimax, none) */
   engineType: VoiceEngineType;
   /** API key (if needed) */
   apiKey?: string;
@@ -28,6 +28,52 @@ export interface VoiceServiceOptions {
   groupId?: string;
   /** MiniMax endpoint ('global' or 'china') */
   endpoint?: string;
+
+  // Aivis Cloud specific options
+  /** Aivis Cloud model UUID */
+  aivisCloudModelUuid?: string;
+  /** Aivis Cloud speaker UUID */
+  aivisCloudSpeakerUuid?: string;
+  /** Aivis Cloud style ID (0-31) */
+  aivisCloudStyleId?: number;
+  /** Aivis Cloud style name */
+  aivisCloudStyleName?: string;
+  /** Enable SSML interpretation (default: true) */
+  aivisCloudUseSSML?: boolean;
+  /** Speaking rate (0.5-2.0, default: 1.0) */
+  aivisCloudSpeakingRate?: number;
+  /** Emotional intensity (0.0-2.0, default: 1.0) */
+  aivisCloudEmotionalIntensity?: number;
+  /** Tempo dynamics (0.0-2.0, default: 1.0) */
+  aivisCloudTempoDynamics?: number;
+  /** Pitch (-1.0-1.0, default: 0.0) */
+  aivisCloudPitch?: number;
+  /** Volume (0.0-2.0, default: 1.0) */
+  aivisCloudVolume?: number;
+  /** Leading silence in seconds (default: 0.1) */
+  aivisCloudLeadingSilence?: number;
+  /** Trailing silence in seconds (default: 0.1) */
+  aivisCloudTrailingSilence?: number;
+  /** Line break silence in seconds (default: 0.4) */
+  aivisCloudLineBreakSilence?: number;
+  /** Output format (wav, flac, mp3, aac, opus) */
+  aivisCloudOutputFormat?: 'wav' | 'flac' | 'mp3' | 'aac' | 'opus';
+  /** Output bitrate in kbps (8-320) */
+  aivisCloudOutputBitrate?: number;
+  /** Output sampling rate in Hz */
+  aivisCloudOutputSamplingRate?:
+    | 8000
+    | 11025
+    | 12000
+    | 16000
+    | 22050
+    | 24000
+    | 44100
+    | 48000;
+  /** Output audio channels (mono or stereo) */
+  aivisCloudOutputChannels?: 'mono' | 'stereo';
+  /** Enable billing/usage information logs (default: false) */
+  aivisCloudEnableBillingLogs?: boolean;
 }
 
 /**
