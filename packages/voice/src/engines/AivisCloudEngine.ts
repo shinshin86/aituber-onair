@@ -329,7 +329,6 @@ export class AivisCloudEngine implements VoiceEngine {
         // Slightly increase for angry expression
         emotionalIntensity = Math.min(2.0, emotionalIntensity * 1.05);
         break;
-      case 'talk':
       default:
         // Use default emotional intensity
         break;
