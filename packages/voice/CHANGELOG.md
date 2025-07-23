@@ -1,5 +1,35 @@
 # @aituber-onair/voice
 
+## 0.3.0
+
+### Minor Changes
+
+- feat: add Aivis Cloud API support with comprehensive examples
+
+  Added complete support for Aivis Cloud API, a high-quality Japanese text-to-speech service:
+
+  **New Features:**
+  - Full Aivis Cloud API integration with all parameters support
+  - SSML (Speech Synthesis Markup Language) support for rich voice expression
+  - Emotional intensity control and speaking rate adjustment
+  - Multiple output formats: WAV, FLAC, MP3, AAC, Opus
+  - Comprehensive error handling (401, 402, 404, 422, 429, 5xx)
+  - Response header parsing for billing and usage information
+
+  **Cross-Platform Examples:**
+  - Node.js example with environment variable support and parallel format testing
+  - Deno example with TypeScript and security-focused implementation
+  - Bun example with performance benchmarking and streaming simulation
+  - React example with UI integration and engine comparison guide
+
+  **Technical Implementation:**
+  - AivisCloudEngine class with full API parameter support
+  - Comprehensive test suite with 100% feature coverage
+  - Runtime-specific optimizations for each platform
+  - Real-time streaming capability demonstration
+
+  The Aivis Cloud API provides industry-leading synthesis speed (2-second audio in 0.3s) and supports advanced features like custom voice models, speaker UUID selection, and fine-grained voice parameter control.
+
 ## 0.2.1
 
 ### Patch Changes
