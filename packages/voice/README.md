@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## Main Features
 
 - **Multiple TTS Engine Support**  
-  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, AivisSpeech, and more
+  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, AivisSpeech, Aivis Cloud, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
 - **Emotion-Aware Synthesis**  
@@ -191,6 +191,35 @@ const voiceService = new VoiceService({
   aivisSpeechApiUrl: 'http://localhost:10101'
 });
 ```
+
+### Aivis Cloud
+
+High-quality cloud-based TTS service with advanced SSML support and streaming capabilities.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'aivisCloud',
+  speaker: 'unused', // Not used when model UUID is specified
+  apiKey: 'your-aivis-cloud-api-key',
+  aivisCloudModelUuid: 'a59cb814-0083-4369-8542-f51a29e72af7', // Required
+  
+  // Optional advanced settings
+  aivisCloudSpeakerUuid: 'speaker-uuid', // For multi-speaker models
+  aivisCloudStyleId: 0, // Or use aivisCloudStyleName: 'ノーマル'
+  aivisCloudUseSSML: true, // Enable SSML tags
+  aivisCloudSpeakingRate: 1.0, // 0.5-2.0
+  aivisCloudEmotionalIntensity: 1.0, // 0.0-2.0
+  aivisCloudOutputFormat: 'mp3', // wav, flac, mp3, aac, opus
+  aivisCloudOutputSamplingRate: 44100, // Hz
+});
+```
+
+**Key Features**:
+- **SSML Support**: Rich markup for prosody, breaks, aliases, and emotions
+- **Streaming Audio**: Real-time audio generation and delivery  
+- **Multiple Formats**: WAV, FLAC, MP3, AAC, Opus output
+- **Emotion Control**: Fine-grained emotional intensity settings
+- **High Quality**: Professional-grade voice synthesis
 
 ### None (Silent Mode)
 No audio output - useful for testing or text-only scenarios.

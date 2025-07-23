@@ -13,3 +13,7 @@ export const MINIMAX_GLOBAL_VOICE_LIST_URL =
   'https://api.minimax.io/v1/query/tts_speakers';
 export const MINIMAX_CHINA_VOICE_LIST_URL =
   'https://api.minimaxi.com/v1/query/tts_speakers';
+
+// Aivis Cloud API endpoint
+export const AIVIS_CLOUD_API_URL =
+  'https://api.aivis-project.com/v1/tts/synthesize';

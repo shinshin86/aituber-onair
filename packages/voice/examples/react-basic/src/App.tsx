@@ -25,6 +25,12 @@ const ENGINE_DEFAULTS = {
     placeholder: 'No API key needed',
     speaker: '888753760',
   },
+  aivisCloud: {
+    apiUrl: 'https://api.aivis-project.com/v1/tts/synthesize',
+    needsApiKey: true,
+    placeholder: 'Your Aivis Cloud API key',
+    speaker: 'a59cb814-0083-4369-8542-f51a29e72af7',
+  },
   voicepeak: {
     apiUrl: 'http://localhost:20202',
     needsApiKey: false,
@@ -174,7 +180,8 @@ function App() {
           >
             <option value="openai">OpenAI TTS</option>
             <option value="voicevox">VOICEVOX</option>
-            <option value="aivisSpeech">AivisSpeech</option>
+            <option value="aivisSpeech">AivisSpeech (Local)</option>
+            <option value="aivisCloud">Aivis Cloud API</option>
             <option value="voicepeak">VOICEPEAK</option>
             <option value="nijivoice">にじボイス</option>
             <option value="minimax">MiniMax</option>
@@ -187,7 +194,7 @@ function App() {
           </label>
           <input
             id="apiKey"
-            type="text"
+            type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder={defaults.placeholder}
@@ -268,6 +275,56 @@ function App() {
             ✅ <strong>Production ready</strong> - Can be built and deployed
           </li>
         </ul>
+      </div>
+
+      <div className="card">
+        <h2>🌟 Engine Comparison</h2>
+        <div
+          style={{
+            display: 'grid',
+            gap: '1rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          }}
+        >
+          <div>
+            <h3>🔴 Local Engines</h3>
+            <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+              <li>
+                <strong>VOICEVOX</strong> - Free, high-quality Japanese TTS
+              </li>
+              <li>
+                <strong>AivisSpeech</strong> - Local Aivis engine
+              </li>
+              <li>
+                <strong>VOICEPEAK</strong> - Commercial local TTS
+              </li>
+            </ul>
+            <p style={{ fontSize: '0.9rem', color: '#666' }}>
+              ⚠️ Requires local server setup
+            </p>
+          </div>
+          <div>
+            <h3>☁️ Cloud APIs</h3>
+            <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+              <li>
+                <strong>OpenAI TTS</strong> - English & multilingual
+              </li>
+              <li>
+                <strong>Aivis Cloud</strong> - High-quality Japanese, SSML
+                support
+              </li>
+              <li>
+                <strong>にじボイス</strong> - Character voices
+              </li>
+              <li>
+                <strong>MiniMax</strong> - Multilingual with emotions
+              </li>
+            </ul>
+            <p style={{ fontSize: '0.9rem', color: '#666' }}>
+              ✅ No setup required, just API key
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

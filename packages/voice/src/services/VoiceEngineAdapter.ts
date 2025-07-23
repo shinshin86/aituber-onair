@@ -113,6 +113,81 @@ export class VoiceEngineAdapter implements VoiceService {
         }
       }
 
+      // Aivis Cloud エンジンの場合、各種パラメータを設定
+      if (this.options.engineType === 'aivisCloud') {
+        const aivisEngine = engine as any;
+
+        // Model UUID (required)
+        if (this.options.aivisCloudModelUuid) {
+          aivisEngine.setModelUuid(this.options.aivisCloudModelUuid);
+        }
+
+        // Speaker UUID (optional)
+        if (this.options.aivisCloudSpeakerUuid) {
+          aivisEngine.setSpeakerUuid(this.options.aivisCloudSpeakerUuid);
+        }
+
+        // Style settings (style ID or name, but not both)
+        if (this.options.aivisCloudStyleId !== undefined) {
+          aivisEngine.setStyleId(this.options.aivisCloudStyleId);
+        } else if (this.options.aivisCloudStyleName) {
+          aivisEngine.setStyleName(this.options.aivisCloudStyleName);
+        }
+
+        // SSML setting
+        if (this.options.aivisCloudUseSSML !== undefined) {
+          aivisEngine.setUseSSML(this.options.aivisCloudUseSSML);
+        }
+
+        // Voice parameters
+        if (this.options.aivisCloudSpeakingRate !== undefined) {
+          aivisEngine.setSpeakingRate(this.options.aivisCloudSpeakingRate);
+        }
+        if (this.options.aivisCloudEmotionalIntensity !== undefined) {
+          aivisEngine.setEmotionalIntensity(
+            this.options.aivisCloudEmotionalIntensity,
+          );
+        }
+        if (this.options.aivisCloudTempoDynamics !== undefined) {
+          aivisEngine.setTempoDynamics(this.options.aivisCloudTempoDynamics);
+        }
+        if (this.options.aivisCloudPitch !== undefined) {
+          aivisEngine.setPitch(this.options.aivisCloudPitch);
+        }
+        if (this.options.aivisCloudVolume !== undefined) {
+          aivisEngine.setVolume(this.options.aivisCloudVolume);
+        }
+
+        // Silence settings
+        if (
+          this.options.aivisCloudLeadingSilence !== undefined ||
+          this.options.aivisCloudTrailingSilence !== undefined ||
+          this.options.aivisCloudLineBreakSilence !== undefined
+        ) {
+          aivisEngine.setSilenceDurations(
+            this.options.aivisCloudLeadingSilence ?? 0.1,
+            this.options.aivisCloudTrailingSilence ?? 0.1,
+            this.options.aivisCloudLineBreakSilence ?? 0.4,
+          );
+        }
+
+        // Output format settings
+        if (this.options.aivisCloudOutputFormat) {
+          aivisEngine.setOutputFormat(this.options.aivisCloudOutputFormat);
+        }
+        if (this.options.aivisCloudOutputBitrate !== undefined) {
+          aivisEngine.setOutputBitrate(this.options.aivisCloudOutputBitrate);
+        }
+        if (this.options.aivisCloudOutputSamplingRate !== undefined) {
+          aivisEngine.setOutputSamplingRate(
+            this.options.aivisCloudOutputSamplingRate,
+          );
+        }
+        if (this.options.aivisCloudOutputChannels) {
+          aivisEngine.setOutputChannels(this.options.aivisCloudOutputChannels);
+        }
+      }
+
       // Get audio data
       const audioBuffer = await engine.fetchAudio(
         talk as any, // Use any for type compatibility
