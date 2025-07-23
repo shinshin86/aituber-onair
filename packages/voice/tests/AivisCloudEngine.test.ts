@@ -372,4 +372,138 @@ describe('AivisCloudEngine', () => {
       expect(body.style_name).toBeUndefined();
     });
   });
+
+  describe('billing logs control', () => {
+    it('should not log billing information by default', async () => {
+      const engine = new AivisCloudEngine();
+      engine.setModelUuid('test-model-uuid');
+
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      const mockBlob = {
+        arrayBuffer: vi.fn().mockResolvedValue(mockAudioBuffer),
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        blob: vi.fn().mockResolvedValue(mockBlob),
+        headers: {
+          get: vi.fn().mockImplementation((key: string) => {
+            const headers: Record<string, string> = {
+              'X-Aivis-Billing-Mode': 'PayAsYouGo',
+              'X-Aivis-Character-Count': '50',
+              'X-Aivis-Credits-Used': '0.5',
+              'X-Aivis-Credits-Remaining': '99.5',
+            };
+            return headers[key] || null;
+          }),
+        },
+      });
+
+      const talk: Talk = {
+        style: 'talk',
+        message: 'Test message',
+      };
+
+      await engine.fetchAudio(talk, 'unused', 'api-key');
+
+      // Should not log billing information by default
+      expect(consoleSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('Aivis Cloud billing mode'),
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should log billing information when enabled', async () => {
+      const engine = new AivisCloudEngine();
+      engine.setModelUuid('test-model-uuid');
+      engine.setEnableBillingLogs(true); // Enable billing logs
+
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      const mockBlob = {
+        arrayBuffer: vi.fn().mockResolvedValue(mockAudioBuffer),
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        blob: vi.fn().mockResolvedValue(mockBlob),
+        headers: {
+          get: vi.fn().mockImplementation((key: string) => {
+            const headers: Record<string, string> = {
+              'X-Aivis-Billing-Mode': 'PayAsYouGo',
+              'X-Aivis-Character-Count': '50',
+              'X-Aivis-Credits-Used': '0.5',
+              'X-Aivis-Credits-Remaining': '99.5',
+              'X-Aivis-Rate-Limit-Remaining': '59',
+            };
+            return headers[key] || null;
+          }),
+        },
+      });
+
+      const talk: Talk = {
+        style: 'talk',
+        message: 'Test message',
+      };
+
+      await engine.fetchAudio(talk, 'unused', 'api-key');
+
+      // Should log billing information when enabled
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Aivis Cloud billing mode: PayAsYouGo',
+      );
+      expect(consoleSpy).toHaveBeenCalledWith('Characters synthesized: 50');
+      expect(consoleSpy).toHaveBeenCalledWith('Credits used: 0.5');
+      expect(consoleSpy).toHaveBeenCalledWith('Credits remaining: 99.5');
+      expect(consoleSpy).toHaveBeenCalledWith('Rate limit remaining: 59/min');
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should allow disabling billing logs after enabling', async () => {
+      const engine = new AivisCloudEngine();
+      engine.setModelUuid('test-model-uuid');
+      engine.setEnableBillingLogs(true);
+      engine.setEnableBillingLogs(false); // Disable again
+
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      const mockBlob = {
+        arrayBuffer: vi.fn().mockResolvedValue(mockAudioBuffer),
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        blob: vi.fn().mockResolvedValue(mockBlob),
+        headers: {
+          get: vi.fn().mockImplementation((key: string) => {
+            const headers: Record<string, string> = {
+              'X-Aivis-Billing-Mode': 'PayAsYouGo',
+              'X-Aivis-Character-Count': '50',
+            };
+            return headers[key] || null;
+          }),
+        },
+      });
+
+      const talk: Talk = {
+        style: 'talk',
+        message: 'Test message',
+      };
+
+      await engine.fetchAudio(talk, 'unused', 'api-key');
+
+      // Should not log billing information when disabled
+      expect(consoleSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('Aivis Cloud billing mode'),
+      );
+
+      consoleSpy.mockRestore();
+    });
+  });
 });

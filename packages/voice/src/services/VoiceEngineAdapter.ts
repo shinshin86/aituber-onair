@@ -186,6 +186,13 @@ export class VoiceEngineAdapter implements VoiceService {
         if (this.options.aivisCloudOutputChannels) {
           aivisEngine.setOutputChannels(this.options.aivisCloudOutputChannels);
         }
+
+        // Billing logs setting
+        if (this.options.aivisCloudEnableBillingLogs !== undefined) {
+          aivisEngine.setEnableBillingLogs(
+            this.options.aivisCloudEnableBillingLogs,
+          );
+        }
       }
 
       // Get audio data

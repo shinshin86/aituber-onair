@@ -23,6 +23,7 @@ export class AivisCloudEngine implements VoiceEngine {
   private outputBitrate?: number;
   private outputSamplingRate: number = 44100;
   private outputChannels: 'mono' | 'stereo' = 'mono';
+  private enableBillingLogs: boolean = false;
 
   /**
    * Set model UUID
@@ -156,6 +157,14 @@ export class AivisCloudEngine implements VoiceEngine {
     this.outputChannels = channels;
   }
 
+  /**
+   * Enable or disable billing/usage information logs
+   * @param enable Whether to enable billing logs (default: false)
+   */
+  setEnableBillingLogs(enable: boolean): void {
+    this.enableBillingLogs = enable;
+  }
+
   async fetchAudio(
     input: Talk,
     speaker: string,
@@ -266,24 +275,28 @@ export class AivisCloudEngine implements VoiceEngine {
       throw new Error(errorMessage);
     }
 
-    // Log billing/usage information from response headers
-    const billingMode = response.headers.get('X-Aivis-Billing-Mode');
-    const characterCount = response.headers.get('X-Aivis-Character-Count');
-    const creditsUsed = response.headers.get('X-Aivis-Credits-Used');
-    const creditsRemaining = response.headers.get('X-Aivis-Credits-Remaining');
-    const rateLimitRemaining = response.headers.get(
-      'X-Aivis-Rate-Limit-Remaining',
-    );
+    // Log billing/usage information from response headers (if enabled)
+    if (this.enableBillingLogs) {
+      const billingMode = response.headers.get('X-Aivis-Billing-Mode');
+      const characterCount = response.headers.get('X-Aivis-Character-Count');
+      const creditsUsed = response.headers.get('X-Aivis-Credits-Used');
+      const creditsRemaining = response.headers.get(
+        'X-Aivis-Credits-Remaining',
+      );
+      const rateLimitRemaining = response.headers.get(
+        'X-Aivis-Rate-Limit-Remaining',
+      );
 
-    if (billingMode) {
-      console.log(`Aivis Cloud billing mode: ${billingMode}`);
-      if (characterCount)
-        console.log(`Characters synthesized: ${characterCount}`);
-      if (creditsUsed) console.log(`Credits used: ${creditsUsed}`);
-      if (creditsRemaining)
-        console.log(`Credits remaining: ${creditsRemaining}`);
-      if (rateLimitRemaining)
-        console.log(`Rate limit remaining: ${rateLimitRemaining}/min`);
+      if (billingMode) {
+        console.log(`Aivis Cloud billing mode: ${billingMode}`);
+        if (characterCount)
+          console.log(`Characters synthesized: ${characterCount}`);
+        if (creditsUsed) console.log(`Credits used: ${creditsUsed}`);
+        if (creditsRemaining)
+          console.log(`Credits remaining: ${creditsRemaining}`);
+        if (rateLimitRemaining)
+          console.log(`Rate limit remaining: ${rateLimitRemaining}/min`);
+      }
     }
 
     const blob = await response.blob();

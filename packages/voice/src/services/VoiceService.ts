@@ -72,6 +72,8 @@ export interface VoiceServiceOptions {
     | 48000;
   /** Output audio channels (mono or stereo) */
   aivisCloudOutputChannels?: 'mono' | 'stereo';
+  /** Enable billing/usage information logs (default: false) */
+  aivisCloudEnableBillingLogs?: boolean;
 }
 
 /**
