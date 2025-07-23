@@ -66,7 +66,7 @@ pnpm install @aituber-onair/core
 - **Conversation Context Management & Memory**  
   Maintains long-running conversation context via short-, mid-, and long-term memory systems.
 - **Text-to-Speech Conversion**  
-  Compatible with multiple speech engines (VOICEVOX, VoicePeak, NijiVoice, AivisSpeech, OpenAI TTS).
+  Compatible with multiple speech engines (VOICEVOX, VoicePeak, NijiVoice, AivisSpeech, Aivis Cloud, OpenAI TTS).
 - **Emotion Extraction & Processing**  
   Extracts emotion from AI responses and utilizes it for speech synthesis or avatar expressions.
 - **Event-Driven Architecture**  
@@ -1218,6 +1218,7 @@ Possible use cases for `chatLogUpdated` include:
 - **VoicePeak**: Speech synthesis engine with rich emotional expression.  
 - **NijiVoice**: AI-based speech synthesis service (requires an API key).  
 - **AivisSpeech**: Speech synthesis using AI technology.  
+- **Aivis Cloud**: High-quality Japanese text-to-speech service with SSML support, emotional intensity control, and multiple output formats (WAV, FLAC, MP3, AAC, Opus).
 - **OpenAI TTS**: Text-to-speech API from OpenAI.
 - **MiniMax**: Multi-language TTS with 24 language support and HD quality (requires both API key and GroupId - see usage example below).
 - **None**: No voice mode (no audio output).
@@ -1258,6 +1259,17 @@ aituber.updateVoiceService({
   engineType: 'aivisSpeech',
   speaker: '3',
   aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
+});
+
+// Example for Aivis Cloud (high-quality Japanese TTS with SSML support)
+aituber.updateVoiceService({
+  engineType: 'aivisCloud',
+  speaker: 'YOUR_SPEAKER_UUID', // Speaker UUID from Aivis Cloud
+  apiKey: 'YOUR_AIVIS_CLOUD_API_KEY',
+  // Optional parameters for advanced control
+  emotionalIntensity: 1.0,     // 0.0-2.0 range for emotional expression
+  speakingRate: 1.0,           // 0.5-2.0 range for speaking speed
+  outputFormat: 'wav'          // wav, flac, mp3, aac, opus
 });
 
 // Example for MiniMax (simplified configuration)

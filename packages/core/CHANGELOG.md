@@ -1,5 +1,11 @@
 # @aituber-onair/core
 
+## 0.16.1
+
+### Patch Changes
+
+- Update @aituber-onair/voice dependency to v0.3.0 to support newly added voice engines
+
 ## 0.16.0
 
 ### Minor Changes
