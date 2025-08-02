@@ -1,26 +1,24 @@
 import {
-  MODEL_CLAUDE_3_HAIKU,
-  MODEL_CLAUDE_3_5_HAIKU,
-  MODEL_CLAUDE_3_5_SONNET,
-  MODEL_CLAUDE_3_7_SONNET,
-  CLAUDE_VISION_SUPPORTED_MODELS,
-} from '../../../../constants';
+  MODEL_GEMINI_2_0_FLASH,
+  MODEL_GEMINI_2_0_FLASH_LITE,
+  MODEL_GEMINI_1_5_FLASH,
+  GEMINI_VISION_SUPPORTED_MODELS,
+} from '../../../constants';
 import { ChatService } from '../../ChatService';
-import { ClaudeChatService } from './ClaudeChatService';
-import { MCPServerConfig } from '../../../../types';
+import { GeminiChatService } from './GeminiChatService';
 import {
   ChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 
 /**
- * Claude API provider implementation
+ * Gemini API provider implementation
  */
-export class ClaudeChatServiceProvider implements ChatServiceProvider {
+export class GeminiChatServiceProvider implements ChatServiceProvider {
   /**
    * Create a chat service instance
-   * @param options Service options (can include mcpServers)
-   * @returns ClaudeChatService instance
+   * @param options Service options
+   * @returns GeminiChatService instance
    */
   createChatService(options: ChatServiceOptions): ChatService {
     // Use the visionModel if provided, otherwise use the model that supports vision
@@ -30,21 +28,20 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
         ? options.model
         : this.getDefaultModel());
 
-    return new ClaudeChatService(
+    return new GeminiChatService(
       options.apiKey,
       options.model || this.getDefaultModel(),
       visionModel,
-      options.tools ?? [],
-      (options as any).mcpServers ?? [],
+      options.tools || [],
     );
   }
 
   /**
    * Get the provider name
-   * @returns Provider name ('claude')
+   * @returns Provider name ('gemini')
    */
   getProviderName(): string {
-    return 'claude';
+    return 'gemini';
   }
 
   /**
@@ -53,10 +50,9 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
    */
   getSupportedModels(): string[] {
     return [
-      MODEL_CLAUDE_3_HAIKU,
-      MODEL_CLAUDE_3_5_HAIKU,
-      MODEL_CLAUDE_3_5_SONNET,
-      MODEL_CLAUDE_3_7_SONNET,
+      MODEL_GEMINI_2_0_FLASH,
+      MODEL_GEMINI_2_0_FLASH_LITE,
+      MODEL_GEMINI_1_5_FLASH,
     ];
   }
 
@@ -65,7 +61,7 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
    * @returns Default model name
    */
   getDefaultModel(): string {
-    return MODEL_CLAUDE_3_HAIKU;
+    return MODEL_GEMINI_2_0_FLASH_LITE;
   }
 
   /**
@@ -82,6 +78,6 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
    * @returns True if the model supports vision, false otherwise
    */
   supportsVisionForModel(model: string): boolean {
-    return CLAUDE_VISION_SUPPORTED_MODELS.includes(model);
+    return GEMINI_VISION_SUPPORTED_MODELS.includes(model);
   }
 }

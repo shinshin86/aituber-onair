@@ -1,19 +1,19 @@
-import { ChatService } from '../services/chat/ChatService';
-import { MemoryManager } from './MemoryManager';
-import { Message, MessageWithVision, ChatType } from '../types';
-import { EventEmitter } from './EventEmitter';
-import { textsToScreenplay } from '../utils/screenplay';
-import { DEFAULT_VISION_PROMPT } from '../constants';
 import {
+  ChatService,
+  Message,
+  MessageWithVision,
+  ChatType,
   ChatResponseLength,
   MAX_TOKENS_BY_LENGTH,
   DEFAULT_MAX_TOKENS,
-} from '../constants/chat';
-import {
   ToolUseBlock,
   ToolResultBlock,
   ToolChatCompletion,
-} from '../types/toolChat';
+  DEFAULT_VISION_PROMPT,
+  textsToScreenplay,
+} from '@aituber-onair/chat';
+import { MemoryManager } from './MemoryManager';
+import { EventEmitter } from './EventEmitter';
 
 type ToolCallback = (blocks: ToolUseBlock[]) => Promise<ToolResultBlock[]>;
 /**

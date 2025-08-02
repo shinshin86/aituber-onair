@@ -5,15 +5,15 @@ import {
   ToolChatBlock,
   ToolChatCompletion,
   ToolDefinition,
-} from '../../../../types';
+} from '../../../types';
 import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS,
   DEFAULT_MAX_TOKENS,
-} from '../../../../constants';
-import { StreamTextAccumulator } from '../../../../utils/streamTextAccumulator';
-import { ChatServiceHttpClient } from '../../../../utils/chatServiceHttpClient';
+} from '../../../constants';
+import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 
 /**
  * Gemini implementation of ChatService

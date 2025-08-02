@@ -1,20 +1,20 @@
 import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision } from '../../../../types';
+import { Message, MessageWithVision } from '../../../types';
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_4O_MINI,
   VISION_SUPPORTED_MODELS,
   DEFAULT_MAX_TOKENS,
-} from '../../../../constants';
+} from '../../../constants';
 import {
   ToolDefinition,
   ToolChatBlock,
   ToolChatCompletion,
-} from '../../../../types';
-import { MCPServerConfig } from '../../../../types';
-import { StreamTextAccumulator } from '../../../../utils/streamTextAccumulator';
-import { ChatServiceHttpClient } from '../../../../utils/chatServiceHttpClient';
+} from '../../../types';
+import { MCPServerConfig } from '../../../types';
+import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 
 /**
  * OpenAI implementation of ChatService

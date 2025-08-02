@@ -1,5 +1,5 @@
-import { Message, MessageWithVision } from '../../types';
-import { ToolChatCompletion } from '../../types/toolChat';
+import { Message, MessageWithVision } from '../types';
+import { ToolChatCompletion } from '../types/toolChat';
 
 /**
  * Chat service interface

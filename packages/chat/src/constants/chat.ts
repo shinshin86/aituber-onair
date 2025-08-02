@@ -1,4 +1,3 @@
-// chat response length
 export const CHAT_RESPONSE_LENGTH = {
   VERY_SHORT: 'veryShort',
   SHORT: 'short',

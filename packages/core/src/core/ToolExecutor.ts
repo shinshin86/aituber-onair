@@ -2,14 +2,14 @@ import {
   ToolDefinition,
   ToolUseBlock,
   ToolResultBlock,
-} from '../types/toolChat';
+} from '@aituber-onair/chat';
 
 type Handler<P = any, R = any> = (input: P) => Promise<R>;
 
 export class ToolExecutor {
   private registry = new Map<string, { def: ToolDefinition; fn: Handler }>();
 
-  register<P, R>(definition: ToolDefinition<P>, fn: Handler<P, R>) {
+  register<P, R>(definition: ToolDefinition, fn: Handler<P, R>) {
     if (this.registry.has(definition.name)) {
       throw new Error(`Tool '${definition.name}' already registered`);
     }

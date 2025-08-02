@@ -3,20 +3,19 @@ import {
   CoreToolChatBlock,
   Message,
   MessageWithVision,
-  ToolChatBlock,
   ToolChatCompletion,
   ToolDefinition,
   MCPServerConfig,
   ClaudeMCPToolUseBlock,
   ClaudeMCPToolResultBlock,
-} from '../../../../types';
+} from '../../../types';
 import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_3_HAIKU,
   CLAUDE_VISION_SUPPORTED_MODELS,
   DEFAULT_MAX_TOKENS,
-} from '../../../../constants';
-import { ChatServiceHttpClient } from '../../../../utils/chatServiceHttpClient';
+} from '../../../constants';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 
 export interface ClaudeToolResultBlock {
   type: 'tool_result';
@@ -28,7 +27,7 @@ type ClaudeToolChatBlock =
   | CoreToolChatBlock
   | ClaudeMCPToolUseBlock
   | ClaudeMCPToolResultBlock;
-type ClaudeCompletion = ToolChatCompletion<ClaudeToolChatBlock>;
+// type ClaudeCompletion = ToolChatCompletion<ClaudeToolChatBlock>;
 
 // Internal extended completion type for MCP support
 type ClaudeInternalCompletion = {

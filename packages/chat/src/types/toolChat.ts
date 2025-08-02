@@ -24,7 +24,7 @@ export interface ToolChatCompletion<B = CoreToolChatBlock> {
 }
 export type ToolChatBlock = CoreToolChatBlock;
 
-export type ToolDefinition<P = any> = {
+export type ToolDefinition = {
   name: string;
   description?: string;
   parameters: {

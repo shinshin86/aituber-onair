@@ -1,24 +1,27 @@
 import {
-  MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_2_0_FLASH_LITE,
-  MODEL_GEMINI_1_5_FLASH,
-  GEMINI_VISION_SUPPORTED_MODELS,
-} from '../../../../constants';
+  ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+  ENDPOINT_OPENAI_RESPONSES_API,
+  MODEL_GPT_4O_MINI,
+  MODEL_GPT_4O,
+  MODEL_O3_MINI,
+  VISION_SUPPORTED_MODELS,
+} from '../../../constants';
 import { ChatService } from '../../ChatService';
-import { GeminiChatService } from './GeminiChatService';
+import { OpenAIChatService } from './OpenAIChatService';
 import {
   ChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
+import { ToolDefinition } from '../../../types/toolChat';
 
 /**
- * Gemini API provider implementation
+ * OpenAI API provider implementation
  */
-export class GeminiChatServiceProvider implements ChatServiceProvider {
+export class OpenAIChatServiceProvider implements ChatServiceProvider {
   /**
    * Create a chat service instance
    * @param options Service options
-   * @returns GeminiChatService instance
+   * @returns OpenAIChatService instance
    */
   createChatService(options: ChatServiceOptions): ChatService {
     // Use the visionModel if provided, otherwise use the model that supports vision
@@ -28,20 +31,34 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
         ? options.model
         : this.getDefaultModel());
 
-    return new GeminiChatService(
+    // tools definition
+    const tools: ToolDefinition[] | undefined = options.tools;
+
+    // if MCP servers are set, automatically use Responses API
+    const mcpServers = (options as any).mcpServers ?? [];
+    const shouldUseResponsesAPI = mcpServers.length > 0;
+    const endpoint =
+      options.endpoint ||
+      (shouldUseResponsesAPI
+        ? ENDPOINT_OPENAI_RESPONSES_API
+        : ENDPOINT_OPENAI_CHAT_COMPLETIONS_API);
+
+    return new OpenAIChatService(
       options.apiKey,
       options.model || this.getDefaultModel(),
       visionModel,
-      options.tools || [],
+      tools,
+      endpoint,
+      mcpServers,
     );
   }
 
   /**
    * Get the provider name
-   * @returns Provider name ('gemini')
+   * @returns Provider name ('openai')
    */
   getProviderName(): string {
-    return 'gemini';
+    return 'openai';
   }
 
   /**
@@ -49,11 +66,7 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
    * @returns Array of supported model names
    */
   getSupportedModels(): string[] {
-    return [
-      MODEL_GEMINI_2_0_FLASH,
-      MODEL_GEMINI_2_0_FLASH_LITE,
-      MODEL_GEMINI_1_5_FLASH,
-    ];
+    return [MODEL_GPT_4O_MINI, MODEL_GPT_4O, MODEL_O3_MINI];
   }
 
   /**
@@ -61,7 +74,7 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
    * @returns Default model name
    */
   getDefaultModel(): string {
-    return MODEL_GEMINI_2_0_FLASH_LITE;
+    return MODEL_GPT_4O_MINI;
   }
 
   /**
@@ -78,6 +91,6 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
    * @returns True if the model supports vision, false otherwise
    */
   supportsVisionForModel(model: string): boolean {
-    return GEMINI_VISION_SUPPORTED_MODELS.includes(model);
+    return VISION_SUPPORTED_MODELS.includes(model);
   }
 }
