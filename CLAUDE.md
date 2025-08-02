@@ -4,15 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of five main packages:
+AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of six main packages:
 
-- **`@aituber-onair/core`** - Core library for AI-driven virtual streaming applications with chat processing, conversation management, and memory capabilities
+- **`@aituber-onair/core`** - Core library for AI-driven virtual streaming applications with memory management and event-driven architecture
+- **`@aituber-onair/chat`** - Chat and LLM API integration library supporting multiple AI providers (OpenAI, Claude, Gemini) with unified interface
 - **`@aituber-onair/voice`** - Independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, etc.)
 - **`@aituber-onair/manneri`** - Conversation pattern detection library that identifies repetitive dialogue and provides topic diversification prompts
 - **`@aituber-onair/bushitsu-client`** - WebSocket client library for chat functionality with React hooks support, auto-reconnection, rate limiting, and mention support
 - **`@aituber-onair/kizuna`** - Sophisticated bond system for managing user-AI character relationships with points, achievements, and emotion-based interactions
 
-Each package can be used independently or together. The voice package provides TTS functionality, manneri handles conversation variety, bushitsu-client enables WebSocket chat communication, kizuna manages user relationships and engagement, and core integrates everything for full AITuber functionality.
+Each package can be used independently or together. The chat package handles LLM interactions, voice package provides TTS functionality, manneri handles conversation variety, bushitsu-client enables WebSocket chat communication, kizuna manages user relationships and engagement, and core integrates everything for full AITuber functionality.
 
 ## Common Development Commands
 
@@ -23,6 +24,9 @@ npm run build
 
 # Build only the core package
 cd packages/core && npm run build
+
+# Build only the chat package
+cd packages/chat && npm run build
 
 # Build only the voice package (dual format: CommonJS + ESModule)
 cd packages/voice && npm run build
@@ -42,6 +46,7 @@ cd packages/voice && npm run build:esm  # ESModule only
 
 # Type checking without building
 cd packages/core && npm run typecheck
+cd packages/chat && npm run typecheck
 cd packages/voice && npm run typecheck
 cd packages/manneri && npm run typecheck
 cd packages/bushitsu-client && npm run typecheck
@@ -55,6 +60,7 @@ npm run test
 
 # Run tests in watch mode (for active development)
 cd packages/core && npm run test:watch
+cd packages/chat && npm run test:watch
 cd packages/voice && npm run test:watch
 cd packages/manneri && npm run test:watch
 cd packages/bushitsu-client && npm run test:watch
@@ -62,6 +68,7 @@ cd packages/kizuna && npm run test:watch
 
 # Run tests with coverage report
 cd packages/core && npm run test:coverage
+cd packages/chat && npm run test:coverage
 cd packages/voice && npm run test:coverage
 cd packages/manneri && npm run test:coverage
 cd packages/bushitsu-client && npm run test:coverage
@@ -69,6 +76,7 @@ cd packages/kizuna && npm run test:coverage
 
 # Run a specific test file
 cd packages/core && npx vitest run path/to/test.test.ts
+cd packages/chat && npx vitest run path/to/test.test.ts
 cd packages/voice && npx vitest run path/to/test.test.ts
 cd packages/manneri && npx vitest run path/to/test.test.ts
 cd packages/bushitsu-client && npx vitest run path/to/test.test.ts
@@ -112,10 +120,12 @@ npm run lint
 
 The services are organized by provider type:
 
-- **Chat Services** (`packages/core/src/services/chat/`)
+- **Chat Services** (`@aituber-onair/chat` package)
+  - **Independent package** for LLM API integration
   - Provider abstraction through `ChatServiceProvider` interface
   - Factory pattern for creating provider-specific services
   - Each provider (OpenAI, Claude, Gemini) has its own implementation
+  - Unified interface for streaming responses, tool calling, and vision processing
 
 - **Voice Services** (`@aituber-onair/voice` package)
   - **Independent package** that can be used standalone or with core
@@ -159,11 +169,17 @@ The library abstracts differences between AI providers' function calling impleme
 
 #### Core Package (`@aituber-onair/core`)
 - `/core` - Core components (AITuberOnAirCore, ChatProcessor, MemoryManager)
-- `/services/chat` - Chat provider integrations (OpenAI, Claude, Gemini)
 - `/services/youtube` - YouTube integration services
-- `/types` - TypeScript type definitions (chat, memory, tools)
-- `/utils` - Utility functions (screenshots, storage, emotion parsing)
+- `/types` - TypeScript type definitions (memory, events)
+- `/utils` - Utility functions (screenshots, storage)
 - `/constants` - Constants and default prompts
+
+#### Chat Package (`@aituber-onair/chat`)
+- `/services` - ChatService interface and ChatServiceFactory
+- `/services/providers` - Provider implementations (OpenAI, Claude, Gemini)
+- `/types` - TypeScript type definitions (chat, tools, mcp)
+- `/utils` - Utility functions (emotion parsing, screenplay conversion)
+- `/constants` - Provider-specific constants and response lengths
 
 #### Voice Package (`@aituber-onair/voice`)
 - `/services` - VoiceService and VoiceEngineAdapter
@@ -367,6 +383,32 @@ These tools provide TypeScript-aware refactoring that maintains code integrity a
 
 ## Package Usage Examples
 
+### Using Chat Package Independently
+
+```typescript
+import { ChatServiceFactory, ChatServiceOptions } from '@aituber-onair/chat';
+
+// Create a chat service for OpenAI
+const chatOptions: ChatServiceOptions = {
+  apiKey: 'your-openai-key',
+  model: 'gpt-4' // optional
+};
+
+const chatService = ChatServiceFactory.createChatService('openai', chatOptions);
+
+// Process a chat message
+const messages = [
+  { role: 'system', content: 'You are a helpful assistant.' },
+  { role: 'user', content: 'Hello!' }
+];
+
+await chatService.processChat(
+  messages,
+  (partial) => console.log('Streaming:', partial),
+  async (complete) => console.log('Complete:', complete)
+);
+```
+
 ### Using Voice Package Independently
 
 ```typescript
@@ -561,6 +603,9 @@ await core.processChat('Hello!', 'chatForm');
 ### Installing Packages
 
 ```bash
+# For chat and LLM API integration only
+npm install @aituber-onair/chat
+
 # For voice functionality only
 npm install @aituber-onair/voice
 
@@ -573,7 +618,7 @@ npm install @aituber-onair/bushitsu-client
 # For user relationship management only
 npm install @aituber-onair/kizuna
 
-# For full AITuber functionality (voice included automatically)
+# For full AITuber functionality (chat and voice included automatically)
 npm install @aituber-onair/core
 
 # Additional audio dependencies (ONLY if you need audio playback in Node.js-like environments)
@@ -732,12 +777,16 @@ npm run changeset:version
 
 ### Package Dependency Strategy
 
-- **Core Package**: Uses voice as a direct dependency
-  - Voice functionality is automatically included when installing core
-  - Simplified installation process with single package
+- **Core Package**: Uses both chat and voice as direct dependencies
+  - Chat and voice functionality are automatically included when installing core
+  - Simplified installation process with single package for full AITuber functionality
+- **Chat Package**: Completely independent
+  - Can be used standalone for LLM API integration
+  - No dependencies on other packages
+  - Provides unified interface for multiple AI providers
 - **Voice Package**: Completely independent
   - Can be used standalone for TTS-only applications
-  - No dependencies on core package
+  - No dependencies on other packages
 - **Manneri Package**: Completely independent
   - Can be used standalone for conversation pattern detection
   - No dependencies on other packages
