@@ -16,9 +16,10 @@
     "./dist/esm/*": "./dist/esm/*"
   },
   "scripts": {
-    "build": "npm run build:cjs && npm run build:esm",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc --project tsconfig.cjs.json",
     "build:esm": "tsc --project tsconfig.esm.json",
+    "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck && vitest run",
     "test:watch": "vitest",

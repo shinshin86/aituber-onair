@@ -1,4 +1,4 @@
-import { ChatScreenplay } from '../types';
+import { Screenplay } from '../types';
 import { EmotionParser } from './emotionParser';
 
 /**
@@ -6,7 +6,7 @@ import { EmotionParser } from './emotionParser';
  * @param text Original text (may contain emotion expressions like [happy])
  * @returns Screenplay object with emotion and text separated
  */
-export function textToScreenplay(text: string): ChatScreenplay {
+export function textToScreenplay(text: string): Screenplay {
   const { emotion, cleanText } = EmotionParser.extractEmotion(text);
 
   if (emotion) {
@@ -24,7 +24,7 @@ export function textToScreenplay(text: string): ChatScreenplay {
  * @param texts Text array
  * @returns Array of screenplay objects
  */
-export function textsToScreenplay(texts: string[]): ChatScreenplay[] {
+export function textsToScreenplay(texts: string[]): Screenplay[] {
   return texts.map((text) => textToScreenplay(text));
 }
 
@@ -33,7 +33,7 @@ export function textsToScreenplay(texts: string[]): ChatScreenplay[] {
  * @param screenplay Screenplay object
  * @returns Text with emotion (e.g. [happy] Hello)
  */
-export function screenplayToText(screenplay: ChatScreenplay): string {
+export function screenplayToText(screenplay: Screenplay): string {
   if (screenplay.emotion) {
     return EmotionParser.addEmotionTag(screenplay.emotion, screenplay.text);
   }

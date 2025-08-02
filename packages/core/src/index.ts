@@ -28,8 +28,6 @@ export {
   type MessageWithVision,
   type VisionBlock,
   type ChatType,
-  type SpeakOptions,
-  type ChatScreenplay,
   type ToolDefinition,
   type ToolUseBlock,
   type ToolResultBlock,
@@ -41,7 +39,7 @@ export {
   DEFAULT_MAX_TOKENS,
   DEFAULT_VISION_PROMPT,
   // Utils
-  textToScreenplay as textToChatScreenplay,
+  textToScreenplay as chatTextToScreenplay,
   screenplayToText as chatScreenplayToText,
   EmotionParser as ChatEmotionParser,
 } from '@aituber-onair/chat';
@@ -93,6 +91,8 @@ export {
   type EmotionType,
   type EmotionTypeForVoicepeak,
   type Screenplay as VoiceScreenplay,
+  type ChatScreenplay,
+  type SpeakOptions,
   type VoiceActor,
   // Utils
   textToScreenplay,

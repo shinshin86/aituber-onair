@@ -9,8 +9,7 @@ export {
   MessageWithVision,
   VisionBlock,
   ChatType,
-  SpeakOptions,
-  Screenplay as ChatScreenplay,
+  Screenplay,
 } from './chat';
 
 // Tool related type definitions
