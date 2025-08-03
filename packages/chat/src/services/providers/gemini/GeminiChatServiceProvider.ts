@@ -1,7 +1,12 @@
 import {
+  MODEL_GEMINI_2_5_PRO,
+  MODEL_GEMINI_2_5_FLASH,
+  MODEL_GEMINI_2_5_FLASH_LITE,
+  MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_2_0_FLASH,
   MODEL_GEMINI_2_0_FLASH_LITE,
   MODEL_GEMINI_1_5_FLASH,
+  MODEL_GEMINI_1_5_PRO,
   GEMINI_VISION_SUPPORTED_MODELS,
 } from '../../../constants';
 import { ChatService } from '../../ChatService';
@@ -33,6 +38,7 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
       options.model || this.getDefaultModel(),
       visionModel,
       options.tools || [],
+      options.responseLength,
     );
   }
 
@@ -50,9 +56,14 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_GEMINI_2_5_PRO,
+      MODEL_GEMINI_2_5_FLASH,
+      MODEL_GEMINI_2_5_FLASH_LITE,
+      MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
       MODEL_GEMINI_2_0_FLASH,
       MODEL_GEMINI_2_0_FLASH_LITE,
       MODEL_GEMINI_1_5_FLASH,
+      MODEL_GEMINI_1_5_PRO,
     ];
   }
 

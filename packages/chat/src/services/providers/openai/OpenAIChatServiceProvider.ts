@@ -1,9 +1,15 @@
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
+  MODEL_GPT_4_1,
+  MODEL_GPT_4_1_MINI,
+  MODEL_GPT_4_1_NANO,
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
   MODEL_O3_MINI,
+  MODEL_O1_MINI,
+  MODEL_O1,
+  MODEL_GPT_4_5_PREVIEW,
   VISION_SUPPORTED_MODELS,
 } from '../../../constants';
 import { ChatService } from '../../ChatService';
@@ -50,6 +56,7 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
       tools,
       endpoint,
       mcpServers,
+      options.responseLength,
     );
   }
 
@@ -66,7 +73,17 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    * @returns Array of supported model names
    */
   getSupportedModels(): string[] {
-    return [MODEL_GPT_4O_MINI, MODEL_GPT_4O, MODEL_O3_MINI];
+    return [
+      MODEL_GPT_4_1,
+      MODEL_GPT_4_1_MINI,
+      MODEL_GPT_4_1_NANO,
+      MODEL_GPT_4O_MINI,
+      MODEL_GPT_4O,
+      MODEL_O3_MINI,
+      MODEL_O1_MINI,
+      MODEL_O1,
+      MODEL_GPT_4_5_PREVIEW,
+    ];
   }
 
   /**

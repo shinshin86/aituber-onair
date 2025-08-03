@@ -5,8 +5,11 @@ import {
   ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_4O_MINI,
   VISION_SUPPORTED_MODELS,
-  DEFAULT_MAX_TOKENS,
 } from '../../../constants';
+import {
+  ChatResponseLength,
+  getMaxTokensForResponseLength,
+} from '../../../constants/chat';
 import {
   ToolDefinition,
   ToolChatBlock,
@@ -29,6 +32,7 @@ export class OpenAIChatService implements ChatService {
   private tools: ToolDefinition[];
   private endpoint: string;
   private mcpServers: MCPServerConfig[];
+  private responseLength?: ChatResponseLength;
 
   /**
    * Constructor
@@ -43,12 +47,14 @@ export class OpenAIChatService implements ChatService {
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
     mcpServers: MCPServerConfig[] = [],
+    responseLength?: ChatResponseLength,
   ) {
     this.apiKey = apiKey;
     this.model = model;
     this.tools = tools || [];
     this.endpoint = endpoint;
     this.mcpServers = mcpServers;
+    this.responseLength = responseLength;
 
     // check if the vision model is supported
     if (!VISION_SUPPORTED_MODELS.includes(visionModel)) {
@@ -260,8 +266,11 @@ export class OpenAIChatService implements ChatService {
       stream,
     };
 
-    // Add max_tokens (use DEFAULT_MAX_TOKENS if not specified)
-    body.max_tokens = maxTokens !== undefined ? maxTokens : DEFAULT_MAX_TOKENS;
+    // Add max_tokens (use responseLength preference or DEFAULT_MAX_TOKENS if not specified)
+    body.max_tokens =
+      maxTokens !== undefined
+        ? maxTokens
+        : getMaxTokensForResponseLength(this.responseLength);
 
     // Handle messages format based on endpoint
     if (isResponsesAPI && this.mcpServers.length > 0) {

@@ -3,6 +3,8 @@ import {
   MODEL_CLAUDE_3_5_HAIKU,
   MODEL_CLAUDE_3_5_SONNET,
   MODEL_CLAUDE_3_7_SONNET,
+  MODEL_CLAUDE_4_SONNET,
+  MODEL_CLAUDE_4_OPUS,
   CLAUDE_VISION_SUPPORTED_MODELS,
 } from '../../../constants';
 import { ChatService } from '../../ChatService';
@@ -36,6 +38,7 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
       visionModel,
       options.tools ?? [],
       (options as any).mcpServers ?? [],
+      options.responseLength,
     );
   }
 
@@ -57,6 +60,8 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
       MODEL_CLAUDE_3_5_HAIKU,
       MODEL_CLAUDE_3_5_SONNET,
       MODEL_CLAUDE_3_7_SONNET,
+      MODEL_CLAUDE_4_SONNET,
+      MODEL_CLAUDE_4_OPUS,
     ];
   }
 

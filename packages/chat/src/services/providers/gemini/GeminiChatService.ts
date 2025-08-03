@@ -10,8 +10,11 @@ import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS,
-  DEFAULT_MAX_TOKENS,
 } from '../../../constants';
+import {
+  ChatResponseLength,
+  getMaxTokensForResponseLength,
+} from '../../../constants/chat';
 import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 
@@ -26,6 +29,7 @@ export class GeminiChatService implements ChatService {
   private model: string;
   private visionModel: string;
   private tools: ToolDefinition[];
+  private responseLength?: ChatResponseLength;
 
   /** id(OpenAI) → name(Gemini) mapping */
   private callIdMap = new Map<string, string>();
@@ -81,9 +85,11 @@ export class GeminiChatService implements ChatService {
     model: string = MODEL_GEMINI_2_0_FLASH_LITE,
     visionModel: string = MODEL_GEMINI_2_0_FLASH_LITE,
     tools: ToolDefinition[] = [],
+    responseLength?: ChatResponseLength,
   ) {
     this.apiKey = apiKey;
     this.model = model;
+    this.responseLength = responseLength;
 
     // check if the vision model is supported
     if (!GEMINI_VISION_SUPPORTED_MODELS.includes(visionModel)) {
@@ -292,7 +298,9 @@ export class GeminiChatService implements ChatService {
       contents,
       generationConfig: {
         maxOutputTokens:
-          maxTokens !== undefined ? maxTokens : DEFAULT_MAX_TOKENS,
+          maxTokens !== undefined
+            ? maxTokens
+            : getMaxTokensForResponseLength(this.responseLength),
       },
     };
     if (this.tools.length) {

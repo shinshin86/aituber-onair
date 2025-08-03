@@ -1,4 +1,5 @@
 import { ChatService } from '../ChatService';
+import { ChatResponseLength } from '../../constants/chat';
 
 /**
  * Options for chat service providers
@@ -12,6 +13,8 @@ export interface ChatServiceOptions {
   visionModel?: string;
   /** API endpoint type (chat/completions or responses (OpenAI only)) */
   endpoint?: string;
+  /** Response length setting */
+  responseLength?: ChatResponseLength;
   /** Additional provider-specific options */
   [key: string]: any;
 }

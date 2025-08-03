@@ -7,6 +7,8 @@ import {
   MODEL_CLAUDE_3_5_HAIKU,
   MODEL_CLAUDE_3_5_SONNET,
   MODEL_CLAUDE_3_7_SONNET,
+  MODEL_CLAUDE_4_SONNET,
+  MODEL_CLAUDE_4_OPUS,
 } from '../../src/constants';
 
 // Mock ClaudeChatService
@@ -35,6 +37,8 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_3_5_HAIKU,
         MODEL_CLAUDE_3_5_SONNET,
         MODEL_CLAUDE_3_7_SONNET,
+        MODEL_CLAUDE_4_SONNET,
+        MODEL_CLAUDE_4_OPUS,
       ]);
     });
   });

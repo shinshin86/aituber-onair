@@ -3,9 +3,14 @@ import { GeminiChatServiceProvider } from '../../src/services/providers/gemini/G
 import type { ChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import type { ToolDefinition } from '../../src/types/toolChat';
 import {
+  MODEL_GEMINI_2_5_PRO,
+  MODEL_GEMINI_2_5_FLASH,
+  MODEL_GEMINI_2_5_FLASH_LITE,
+  MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_2_0_FLASH,
   MODEL_GEMINI_2_0_FLASH_LITE,
   MODEL_GEMINI_1_5_FLASH,
+  MODEL_GEMINI_1_5_PRO,
 } from '../../src/constants';
 
 // Mock GeminiChatService
@@ -30,9 +35,14 @@ describe('GeminiChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GEMINI_2_5_PRO,
+        MODEL_GEMINI_2_5_FLASH,
+        MODEL_GEMINI_2_5_FLASH_LITE,
+        MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
         MODEL_GEMINI_2_0_FLASH,
         MODEL_GEMINI_2_0_FLASH_LITE,
         MODEL_GEMINI_1_5_FLASH,
+        MODEL_GEMINI_1_5_PRO,
       ]);
     });
   });

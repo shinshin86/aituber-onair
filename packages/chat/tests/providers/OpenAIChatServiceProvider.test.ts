@@ -3,9 +3,15 @@ import { OpenAIChatServiceProvider } from '../../src/services/providers/openai/O
 import type { ChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import type { ToolDefinition } from '../../src/types/toolChat';
 import {
+  MODEL_GPT_4_1,
+  MODEL_GPT_4_1_MINI,
+  MODEL_GPT_4_1_NANO,
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
   MODEL_O3_MINI,
+  MODEL_O1_MINI,
+  MODEL_O1,
+  MODEL_GPT_4_5_PREVIEW,
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
 } from '../../src/constants';
@@ -31,7 +37,17 @@ describe('OpenAIChatServiceProvider', () => {
   describe('getSupportedModels', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
-      expect(models).toEqual([MODEL_GPT_4O_MINI, MODEL_GPT_4O, MODEL_O3_MINI]);
+      expect(models).toEqual([
+        MODEL_GPT_4_1,
+        MODEL_GPT_4_1_MINI,
+        MODEL_GPT_4_1_NANO,
+        MODEL_GPT_4O_MINI,
+        MODEL_GPT_4O,
+        MODEL_O3_MINI,
+        MODEL_O1_MINI,
+        MODEL_O1,
+        MODEL_GPT_4_5_PREVIEW,
+      ]);
     });
   });
 

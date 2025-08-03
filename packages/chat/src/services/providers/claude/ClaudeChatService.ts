@@ -13,8 +13,11 @@ import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_3_HAIKU,
   CLAUDE_VISION_SUPPORTED_MODELS,
-  DEFAULT_MAX_TOKENS,
 } from '../../../constants';
+import {
+  ChatResponseLength,
+  getMaxTokensForResponseLength,
+} from '../../../constants/chat';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 
 export interface ClaudeToolResultBlock {
@@ -47,6 +50,7 @@ export class ClaudeChatService implements ChatService {
   private visionModel: string;
   private tools: ToolDefinition[];
   private mcpServers: MCPServerConfig[];
+  private responseLength?: ChatResponseLength;
 
   /**
    * Constructor
@@ -63,12 +67,14 @@ export class ClaudeChatService implements ChatService {
     visionModel: string = MODEL_CLAUDE_3_HAIKU,
     tools: ToolDefinition[] = [],
     mcpServers: MCPServerConfig[] = [],
+    responseLength?: ChatResponseLength,
   ) {
     this.apiKey = apiKey;
     this.model = model || MODEL_CLAUDE_3_HAIKU;
     this.visionModel = visionModel || MODEL_CLAUDE_3_HAIKU;
     this.tools = tools;
     this.mcpServers = mcpServers;
+    this.responseLength = responseLength;
 
     // Validate vision model supports vision capabilities
     if (!CLAUDE_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
@@ -357,7 +363,10 @@ export class ClaudeChatService implements ChatService {
           )
         : this.convertMessagesToClaudeFormat(content as Message[]),
       stream,
-      max_tokens: maxTokens !== undefined ? maxTokens : DEFAULT_MAX_TOKENS,
+      max_tokens:
+        maxTokens !== undefined
+          ? maxTokens
+          : getMaxTokensForResponseLength(this.responseLength),
     };
 
     if (this.tools.length) {
