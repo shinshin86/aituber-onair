@@ -16,19 +16,24 @@ const mockChatService = vi.hoisted(() => ({
   getVisionModel: vi.fn(),
 }));
 
-// Mock ChatServiceFactory
-vi.mock('../../src/services/chat/ChatServiceFactory', () => {
+// Mock ChatServiceFactory from chat package
+vi.mock('@aituber-onair/chat', () => {
   return {
     ChatServiceFactory: {
       createChatService: vi.fn().mockReturnValue(mockChatService),
       getAvailableProviders: vi.fn().mockReturnValue(['openai']),
       getSupportedModels: vi.fn().mockReturnValue(['gpt-4o-mini']),
     },
+    // Mock other potential exports from chat package
+    ChatService: vi.fn(),
+    Message: {},
+    ChatServiceOptions: {},
+    textsToScreenplay: vi.fn(),
   };
 });
 
-// Skip voice
-vi.mock('../../src/services/voice/VoiceEngineAdapter', () => {
+// Skip voice from voice package
+vi.mock('@aituber-onair/voice', () => {
   return {
     VoiceEngineAdapter: vi.fn().mockImplementation(() => ({
       speakText: vi.fn(),
@@ -36,6 +41,10 @@ vi.mock('../../src/services/voice/VoiceEngineAdapter', () => {
       stop: vi.fn(),
       updateOptions: vi.fn(),
     })),
+    // Mock other potential exports from voice package
+    VoiceService: vi.fn(),
+    VoiceServiceOptions: {},
+    AudioPlayOptions: {},
   };
 });
 

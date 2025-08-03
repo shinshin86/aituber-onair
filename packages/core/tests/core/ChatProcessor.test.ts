@@ -3,7 +3,7 @@ import {
   ChatProcessor,
   ChatProcessorOptions,
 } from '../../src/core/ChatProcessor';
-import { ChatService } from '../../src/services/chat/ChatService';
+import { ChatService } from '@aituber-onair/chat';
 import { MemoryManager } from '../../src/core/MemoryManager';
 import { ToolResultBlock, ToolUseBlock } from '../../src/types/toolChat';
 import type { Mock } from 'vitest';

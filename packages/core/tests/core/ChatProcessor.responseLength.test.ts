@@ -3,13 +3,13 @@ import {
   ChatProcessor,
   ChatProcessorOptions,
 } from '../../src/core/ChatProcessor';
-import { ChatService } from '../../src/services/chat/ChatService';
+import { ChatService } from '@aituber-onair/chat';
 import { MemoryManager } from '../../src/core/MemoryManager';
 import { ToolResultBlock, ToolUseBlock } from '../../src/types/toolChat';
 import {
   MAX_TOKENS_BY_LENGTH,
   CHAT_RESPONSE_LENGTH,
-} from '../../src/constants/chat';
+} from '@aituber-onair/chat';
 
 // ToolCallback type
 type ToolCallback = (blocks: ToolUseBlock[]) => Promise<ToolResultBlock[]>;

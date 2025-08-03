@@ -3,7 +3,7 @@ import {
   CHAT_RESPONSE_LENGTH,
   MAX_TOKENS_BY_LENGTH,
   DEFAULT_MAX_TOKENS,
-} from '../../src/constants/chat';
+} from '@aituber-onair/chat';
 
 describe('Chat Constants - Response Length Control', () => {
   describe('CHAT_RESPONSE_LENGTH', () => {
