@@ -90,6 +90,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
+        undefined,
       );
     });
 
@@ -108,6 +109,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
+        undefined,
       );
     });
 
@@ -127,6 +129,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
+        undefined,
       );
     });
 
@@ -145,6 +148,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
+        undefined,
       );
     });
 
@@ -176,6 +180,7 @@ describe('OpenAIChatServiceProvider', () => {
         tools,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
+        undefined,
       );
     });
 
@@ -194,6 +199,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'https://custom.api.endpoint',
         [],
+        undefined,
       );
     });
 
@@ -218,6 +224,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         ENDPOINT_OPENAI_RESPONSES_API,
         options.mcpServers,
+        undefined,
       );
     });
 
@@ -244,6 +251,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         customEndpoint,
         options.mcpServers,
+        undefined,
       );
     });
 
@@ -285,6 +293,26 @@ describe('OpenAIChatServiceProvider', () => {
         tools,
         'https://custom.endpoint',
         options.mcpServers,
+        undefined,
+      );
+    });
+
+    it('should pass responseLength when provided', () => {
+      const options: ChatServiceOptions = {
+        apiKey: 'test-api-key',
+        responseLength: 'medium',
+      } as any;
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_4O_MINI,
+        undefined,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        'medium',
       );
     });
   });

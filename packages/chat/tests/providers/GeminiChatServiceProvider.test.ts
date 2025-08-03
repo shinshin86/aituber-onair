@@ -91,6 +91,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_0_FLASH_LITE,
         undefined,
         [],
+        undefined,
       );
     });
 
@@ -107,6 +108,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_0_FLASH,
         MODEL_GEMINI_2_0_FLASH,
         [],
+        undefined,
       );
     });
 
@@ -124,6 +126,7 @@ describe('GeminiChatServiceProvider', () => {
         'gemini-pro',
         MODEL_GEMINI_2_0_FLASH,
         [],
+        undefined,
       );
     });
 
@@ -140,6 +143,7 @@ describe('GeminiChatServiceProvider', () => {
         'gemini-pro',
         MODEL_GEMINI_2_0_FLASH_LITE,
         [],
+        undefined,
       );
     });
 
@@ -174,6 +178,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_0_FLASH_LITE,
         undefined,
         tools,
+        undefined,
       );
     });
 
@@ -190,6 +195,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_0_FLASH_LITE,
         undefined,
         [],
+        undefined,
       );
     });
 
@@ -224,6 +230,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_1_5_FLASH,
         MODEL_GEMINI_2_0_FLASH,
         tools,
+        undefined,
       );
     });
 
@@ -240,6 +247,24 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_0_FLASH,
         MODEL_GEMINI_2_0_FLASH,
         [],
+        undefined,
+      );
+    });
+
+    it('should pass responseLength when provided', () => {
+      const options: ChatServiceOptions = {
+        apiKey: 'test-api-key',
+        responseLength: 'long',
+      } as any;
+
+      provider.createChatService(options);
+
+      expect(GeminiChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GEMINI_2_0_FLASH_LITE,
+        undefined,
+        [],
+        'long',
       );
     });
   });

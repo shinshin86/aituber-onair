@@ -89,6 +89,7 @@ describe('ClaudeChatServiceProvider', () => {
         undefined,
         [],
         [],
+        undefined,
       );
     });
 
@@ -106,6 +107,7 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_3_5_SONNET,
         [],
         [],
+        undefined,
       );
     });
 
@@ -124,6 +126,7 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_3_5_SONNET,
         [],
         [],
+        undefined,
       );
     });
 
@@ -141,6 +144,7 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_3_HAIKU,
         [],
         [],
+        undefined,
       );
     });
 
@@ -172,6 +176,7 @@ describe('ClaudeChatServiceProvider', () => {
         undefined,
         tools,
         [],
+        undefined,
       );
     });
 
@@ -197,6 +202,7 @@ describe('ClaudeChatServiceProvider', () => {
         undefined,
         [],
         mcpServers,
+        undefined,
       );
     });
 
@@ -239,6 +245,7 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_3_5_HAIKU,
         tools,
         mcpServers,
+        undefined,
       );
     });
 
@@ -256,6 +263,7 @@ describe('ClaudeChatServiceProvider', () => {
         undefined,
         [],
         [],
+        undefined,
       );
     });
 
@@ -273,6 +281,25 @@ describe('ClaudeChatServiceProvider', () => {
         undefined,
         [],
         [],
+        undefined,
+      );
+    });
+
+    it('should pass responseLength when provided', () => {
+      const options: ChatServiceOptions = {
+        apiKey: 'test-api-key',
+        responseLength: 'short',
+      } as any;
+
+      provider.createChatService(options);
+
+      expect(ClaudeChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_CLAUDE_3_HAIKU,
+        undefined,
+        [],
+        [],
+        'short',
       );
     });
   });

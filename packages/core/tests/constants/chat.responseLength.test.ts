@@ -14,6 +14,7 @@ describe('Chat Constants - Response Length Control', () => {
       expect(CHAT_RESPONSE_LENGTH.SHORT).toBe('short');
       expect(CHAT_RESPONSE_LENGTH.MEDIUM).toBe('medium');
       expect(CHAT_RESPONSE_LENGTH.LONG).toBe('long');
+      expect(CHAT_RESPONSE_LENGTH.VERY_LONG).toBe('veryLong');
     });
 
     it('should have consistent string values', () => {
@@ -34,6 +35,7 @@ describe('Chat Constants - Response Length Control', () => {
       expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.SHORT]).toBe(100);
       expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.MEDIUM]).toBe(200);
       expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.LONG]).toBe(300);
+      expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.VERY_LONG]).toBe(1000);
     });
 
     it('should have ascending token values', () => {
@@ -43,6 +45,7 @@ describe('Chat Constants - Response Length Control', () => {
         MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.SHORT],
         MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.MEDIUM],
         MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.LONG],
+        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.VERY_LONG],
       ];
 
       // Assert - Values should be in ascending order
@@ -75,6 +78,13 @@ describe('Chat Constants - Response Length Control', () => {
       expect(
         MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.LONG],
       ).toBeLessThanOrEqual(500);
+
+      expect(
+        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.VERY_LONG],
+      ).toBeGreaterThanOrEqual(500);
+      expect(
+        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.VERY_LONG],
+      ).toBeLessThanOrEqual(2000);
     });
   });
 
@@ -87,10 +97,10 @@ describe('Chat Constants - Response Length Control', () => {
       expect(Number.isInteger(DEFAULT_MAX_TOKENS)).toBe(true);
     });
 
-    it('should be higher than highest predefined limit', () => {
-      // Assert - DEFAULT_MAX_TOKENS should be higher than the highest predefined limit
-      expect(DEFAULT_MAX_TOKENS).toBeGreaterThan(
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.LONG],
+    it('should be higher than or equal to highest predefined limit', () => {
+      // Assert - DEFAULT_MAX_TOKENS should be higher than or equal to the highest predefined limit
+      expect(DEFAULT_MAX_TOKENS).toBeGreaterThanOrEqual(
+        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.VERY_LONG],
       );
     });
 
@@ -130,7 +140,7 @@ describe('Chat Constants - Response Length Control', () => {
   describe('type safety', () => {
     it('should use ChatResponseLength type for keys', () => {
       // Assert - This is more of a compile-time check, but we can verify structure
-      const expectedKeys = ['veryShort', 'short', 'medium', 'long'];
+      const expectedKeys = ['veryShort', 'short', 'medium', 'long', 'veryLong'];
       const actualKeys = Object.values(CHAT_RESPONSE_LENGTH).sort();
 
       expect(actualKeys).toEqual(expectedKeys.sort());
