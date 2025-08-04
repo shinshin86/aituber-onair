@@ -266,14 +266,20 @@ export class OpenAIChatService implements ChatService {
       stream,
     };
 
-    // Add max_tokens (use responseLength preference or DEFAULT_MAX_TOKENS if not specified)
-    body.max_tokens =
+    // Add max_tokens/max_completion_tokens based on endpoint
+    const tokenLimit =
       maxTokens !== undefined
         ? maxTokens
         : getMaxTokensForResponseLength(this.responseLength);
 
+    if (isResponsesAPI) {
+      body.max_output_tokens = tokenLimit;
+    } else {
+      body.max_tokens = tokenLimit;
+    }
+
     // Handle messages format based on endpoint
-    if (isResponsesAPI && this.mcpServers.length > 0) {
+    if (isResponsesAPI) {
       body.input = this.cleanMessagesForResponsesAPI(messages);
     } else {
       body.messages = messages;
