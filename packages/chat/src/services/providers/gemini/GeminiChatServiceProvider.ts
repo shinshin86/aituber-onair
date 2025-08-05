@@ -38,6 +38,7 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
       options.model || this.getDefaultModel(),
       visionModel,
       options.tools || [],
+      (options as any).mcpServers || [],
       options.responseLength,
     );
   }

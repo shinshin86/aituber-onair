@@ -5,6 +5,7 @@ import {
   ToolChatBlock,
   ToolChatCompletion,
   ToolDefinition,
+  MCPServerConfig,
 } from '../../../types';
 import {
   ENDPOINT_GEMINI_API,
@@ -17,6 +18,7 @@ import {
 } from '../../../constants/chat';
 import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+import { MCPSchemaFetcher } from '../../../utils/mcpSchemaFetcher';
 
 /**
  * Gemini implementation of ChatService
@@ -29,6 +31,9 @@ export class GeminiChatService implements ChatService {
   private model: string;
   private visionModel: string;
   private tools: ToolDefinition[];
+  private mcpServers: MCPServerConfig[];
+  private mcpToolSchemas: ToolDefinition[] = [];
+  private mcpSchemasInitialized: boolean = false;
   private responseLength?: ChatResponseLength;
 
   /** id(OpenAI) → name(Gemini) mapping */
@@ -79,12 +84,15 @@ export class GeminiChatService implements ChatService {
    * @param apiKey Google API key
    * @param model Name of the model to use
    * @param visionModel Name of the vision model
+   * @param tools Array of tool definitions
+   * @param mcpServers Array of MCP server configurations
    */
   constructor(
     apiKey: string,
     model: string = MODEL_GEMINI_2_0_FLASH_LITE,
     visionModel: string = MODEL_GEMINI_2_0_FLASH_LITE,
     tools: ToolDefinition[] = [],
+    mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,
   ) {
     this.apiKey = apiKey;
@@ -99,6 +107,7 @@ export class GeminiChatService implements ChatService {
     }
     this.visionModel = visionModel;
     this.tools = tools;
+    this.mcpServers = mcpServers;
   }
 
   /**
@@ -118,6 +127,88 @@ export class GeminiChatService implements ChatService {
   }
 
   /**
+   * Get configured MCP servers
+   * @returns Array of MCP server configurations
+   */
+  getMCPServers(): MCPServerConfig[] {
+    return this.mcpServers;
+  }
+
+  /**
+   * Add MCP server configuration
+   * @param serverConfig MCP server configuration
+   */
+  addMCPServer(serverConfig: MCPServerConfig): void {
+    this.mcpServers.push(serverConfig);
+    // Reset initialization flag to re-fetch schemas
+    this.mcpSchemasInitialized = false;
+  }
+
+  /**
+   * Remove MCP server by name
+   * @param serverName Name of the server to remove
+   */
+  removeMCPServer(serverName: string): void {
+    this.mcpServers = this.mcpServers.filter(
+      (server) => server.name !== serverName,
+    );
+    // Reset initialization flag to re-fetch schemas
+    this.mcpSchemasInitialized = false;
+  }
+
+  /**
+   * Check if MCP servers are configured
+   * @returns True if MCP servers are configured
+   */
+  hasMCPServers(): boolean {
+    return this.mcpServers.length > 0;
+  }
+
+  /**
+   * Initialize MCP tool schemas by fetching from servers
+   * @private
+   */
+  private async initializeMCPSchemas(): Promise<void> {
+    if (this.mcpSchemasInitialized || this.mcpServers.length === 0) {
+      return;
+    }
+
+    try {
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('MCP schema fetch timeout')), 5000),
+      );
+
+      const schemasPromise = MCPSchemaFetcher.fetchAllToolSchemas(
+        this.mcpServers,
+      );
+      this.mcpToolSchemas = await Promise.race([
+        schemasPromise,
+        timeoutPromise,
+      ]);
+      this.mcpSchemasInitialized = true;
+    } catch (error) {
+      console.warn('Failed to initialize MCP schemas, using fallback:', error);
+      // Use fallback schemas - always provide basic functionality
+      this.mcpToolSchemas = this.mcpServers.map((server) => ({
+        name: `mcp_${server.name}_search`,
+        description: `Search using ${server.name} MCP server (fallback)`,
+        parameters: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'Search query',
+            },
+          },
+          required: ['query'],
+        },
+      }));
+      this.mcpSchemasInitialized = true;
+    }
+  }
+
+  /**
    * Process chat messages
    * @param messages Array of messages to send
    * @param onPartialResponse Callback to receive each part of streaming response
@@ -129,8 +220,8 @@ export class GeminiChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
-      // not use tools
-      if (this.tools.length === 0) {
+      // not use tools or MCP servers
+      if (this.tools.length === 0 && this.mcpServers.length === 0) {
         const res = await this.callGemini(messages, this.model, true);
         const { blocks } = await this.parseStream(res, onPartialResponse);
         const full = blocks
@@ -170,7 +261,7 @@ export class GeminiChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
-      if (this.tools.length === 0) {
+      if (this.tools.length === 0 && this.mcpServers.length === 0) {
         const res = await this.callGemini(messages, this.visionModel, true);
         const { blocks } = await this.parseStream(res, onPartialResponse);
         const full = blocks
@@ -303,14 +394,45 @@ export class GeminiChatService implements ChatService {
             : getMaxTokensForResponseLength(this.responseLength),
       },
     };
-    if (this.tools.length) {
-      body.tools = [
-        {
-          functionDeclarations: this.tools.map((t) => ({
+    // Add tools configuration (regular tools + MCP tools as functionDeclarations)
+    const allToolDeclarations = [];
+
+    // Add regular function tools
+    if (this.tools.length > 0) {
+      allToolDeclarations.push(
+        ...this.tools.map((t) => ({
+          name: t.name,
+          description: t.description,
+          parameters: t.parameters,
+        })),
+      );
+    }
+
+    // Add MCP tools as functionDeclarations
+    if (this.mcpServers.length > 0) {
+      try {
+        // Initialize MCP schemas if not already done
+        await this.initializeMCPSchemas();
+
+        // Add MCP tool schemas as regular function declarations
+        // Gemini will call these as normal functions, and ToolExecutor will handle the MCP routing
+        allToolDeclarations.push(
+          ...this.mcpToolSchemas.map((t) => ({
             name: t.name,
             description: t.description,
             parameters: t.parameters,
           })),
+        );
+      } catch (error) {
+        console.warn('MCP initialization failed, skipping MCP tools:', error);
+        // Continue without MCP tools if initialization fails
+      }
+    }
+
+    if (allToolDeclarations.length > 0) {
+      body.tools = [
+        {
+          functionDeclarations: allToolDeclarations,
         },
       ];
       body.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
@@ -346,9 +468,17 @@ export class GeminiChatService implements ChatService {
       }
     };
 
-    const res = await tryApi();
-    if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
-    return res;
+    try {
+      const res = await tryApi();
+      return res;
+    } catch (error: any) {
+      // Enhanced error logging for debugging
+      if (error.body) {
+        console.error('Gemini API Error Details:', error.body);
+        console.error('Request Body:', JSON.stringify(body, null, 2));
+      }
+      throw error;
+    }
   }
 
   /**

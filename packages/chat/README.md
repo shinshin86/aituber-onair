@@ -13,7 +13,7 @@ Chat and LLM API integration library for AITuber OnAir. This package provides a 
 - 🖼️ **Vision Support**: Process images with vision-enabled models
 - 📝 **Emotion Detection**: Extract emotions from AI responses
 - 🎯 **Response Length Control**: Configure response lengths with presets or custom token limits
-- 🔌 **Model Context Protocol (MCP)**: Support for MCP servers (OpenAI and Claude)
+- 🔌 **Model Context Protocol (MCP)**: Support for MCP servers (all providers)
 
 ## Installation
 
@@ -146,6 +146,32 @@ const service = ChatServiceFactory.createChatService('openai', {
 });
 ```
 
+### Model Context Protocol (MCP)
+
+```typescript
+// MCP servers work with all providers (OpenAI, Claude, Gemini)
+const mcpServers = [{
+  type: 'url',
+  url: 'http://localhost:3000',
+  name: 'local-server',
+  authorization_token: 'optional-token'
+}];
+
+// With OpenAI or Claude - direct MCP integration
+const openaiService = ChatServiceFactory.createChatService('openai', {
+  apiKey: 'your-key',
+  mcpServers // Direct integration via Responses API
+});
+
+// With Gemini - MCP via function calling
+const geminiService = ChatServiceFactory.createChatService('gemini', {
+  apiKey: 'your-key',
+  mcpServers // Integrated as function declarations
+});
+
+// MCP tools are automatically available and handled by ToolExecutor
+```
+
 ### Emotion Detection
 
 ```typescript
@@ -228,7 +254,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 - Models: Gemini Pro, Gemini Pro Vision
 - Vision: Gemini Pro Vision
 - Tools: Function calling support
-- MCP: Not supported
+- MCP: Supported (via function calling integration)
 
 ## License
 

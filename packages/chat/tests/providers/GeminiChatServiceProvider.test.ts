@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GeminiChatServiceProvider } from '../../src/services/providers/gemini/GeminiChatServiceProvider';
 import type { ChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import type { ToolDefinition } from '../../src/types/toolChat';
+import type { MCPServerConfig } from '../../src/types/mcp';
 import {
   MODEL_GEMINI_2_5_PRO,
   MODEL_GEMINI_2_5_FLASH,
@@ -91,6 +92,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_0_FLASH_LITE,
         undefined,
         [],
+        [],
         undefined,
       );
     });
@@ -107,6 +109,7 @@ describe('GeminiChatServiceProvider', () => {
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH,
         MODEL_GEMINI_2_0_FLASH,
+        [],
         [],
         undefined,
       );
@@ -126,6 +129,7 @@ describe('GeminiChatServiceProvider', () => {
         'gemini-pro',
         MODEL_GEMINI_2_0_FLASH,
         [],
+        [],
         undefined,
       );
     });
@@ -142,6 +146,7 @@ describe('GeminiChatServiceProvider', () => {
         'test-api-key',
         'gemini-pro',
         MODEL_GEMINI_2_0_FLASH_LITE,
+        [],
         [],
         undefined,
       );
@@ -178,6 +183,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_0_FLASH_LITE,
         undefined,
         tools,
+        [],
         undefined,
       );
     });
@@ -194,6 +200,7 @@ describe('GeminiChatServiceProvider', () => {
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
         undefined,
+        [],
         [],
         undefined,
       );
@@ -230,6 +237,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_1_5_FLASH,
         MODEL_GEMINI_2_0_FLASH,
         tools,
+        [],
         undefined,
       );
     });
@@ -246,6 +254,7 @@ describe('GeminiChatServiceProvider', () => {
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH,
         MODEL_GEMINI_2_0_FLASH,
+        [],
         [],
         undefined,
       );
@@ -264,7 +273,87 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_0_FLASH_LITE,
         undefined,
         [],
+        [],
         'long',
+      );
+    });
+
+    it('should pass MCP servers when provided', () => {
+      const mcpServers: MCPServerConfig[] = [
+        {
+          type: 'url',
+          url: 'http://localhost:3000',
+          name: 'test-server',
+          tool_configuration: {
+            enabled: true,
+            allowed_tools: ['weather', 'translate'],
+          },
+          authorization_token: 'test-token',
+        },
+      ];
+
+      const options = {
+        apiKey: 'test-api-key',
+        mcpServers,
+      } as any;
+
+      provider.createChatService(options);
+
+      expect(GeminiChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GEMINI_2_0_FLASH_LITE,
+        undefined,
+        [],
+        mcpServers,
+        undefined,
+      );
+    });
+
+    it('should handle MCP servers with tools together', () => {
+      const tools: ToolDefinition[] = [
+        {
+          name: 'calculator',
+          description: 'Perform calculations',
+          parameters: {
+            type: 'object',
+            properties: {
+              expression: { type: 'string' },
+            },
+            required: ['expression'],
+          },
+        },
+      ];
+
+      const mcpServers: MCPServerConfig[] = [
+        {
+          type: 'url',
+          url: 'http://localhost:3000',
+          name: 'search-server',
+        },
+        {
+          type: 'url',
+          url: 'http://localhost:3001',
+          name: 'db-server',
+        },
+      ];
+
+      const options = {
+        apiKey: 'test-api-key',
+        model: MODEL_GEMINI_2_0_FLASH,
+        tools,
+        mcpServers,
+        responseLength: 'medium',
+      } as any;
+
+      provider.createChatService(options);
+
+      expect(GeminiChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GEMINI_2_0_FLASH,
+        MODEL_GEMINI_2_0_FLASH,
+        tools,
+        mcpServers,
+        'medium',
       );
     });
   });
