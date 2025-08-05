@@ -148,6 +148,22 @@ const service = ChatServiceFactory.createChatService('openai', {
 
 ### Model Context Protocol (MCP)
 
+The chat package supports MCP (Model Context Protocol) servers across all providers, with different implementation approaches:
+
+#### Provider-Specific MCP Implementation
+
+**OpenAI & Claude**: Direct MCP Integration
+- Uses provider's native MCP support (Responses API for OpenAI)
+- Server-to-server communication (no CORS issues)
+- Direct connection to MCP servers
+
+**Gemini**: Function Calling Integration
+- MCP tools are registered as Gemini function declarations
+- ToolExecutor handles MCP server communication
+- Requires CORS configuration in browser environments
+
+#### Basic Usage
+
 ```typescript
 // MCP servers work with all providers (OpenAI, Claude, Gemini)
 const mcpServers = [{
@@ -157,13 +173,13 @@ const mcpServers = [{
   authorization_token: 'optional-token'
 }];
 
-// With OpenAI or Claude - direct MCP integration
+// OpenAI/Claude - direct MCP integration
 const openaiService = ChatServiceFactory.createChatService('openai', {
   apiKey: 'your-key',
   mcpServers // Direct integration via Responses API
 });
 
-// With Gemini - MCP via function calling
+// Gemini - MCP via function calling
 const geminiService = ChatServiceFactory.createChatService('gemini', {
   apiKey: 'your-key',
   mcpServers // Integrated as function declarations
@@ -171,6 +187,55 @@ const geminiService = ChatServiceFactory.createChatService('gemini', {
 
 // MCP tools are automatically available and handled by ToolExecutor
 ```
+
+#### Gemini-Specific CORS Configuration
+
+When using Gemini with MCP in browser environments, you need to configure a proxy to avoid CORS issues:
+
+**Vite Development Setup** (`vite.config.ts`):
+```typescript
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api/mcp': {
+        target: 'https://mcp.deepwiki.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/mcp/, ''),
+      }
+    }
+  }
+})
+```
+
+**Dynamic MCP URL Configuration**:
+```typescript
+// Provider-specific MCP server configuration
+const getMcpServers = (provider: string): MCPServerConfig[] => {
+  const baseUrl = provider === 'gemini' 
+    ? '/api/mcp/sse'  // Proxy URL for Gemini (browser)
+    : 'https://mcp.deepwiki.com/sse';  // Direct URL for OpenAI/Claude
+
+  return [{
+    type: 'url',
+    url: baseUrl,
+    name: 'deepwiki',
+  }];
+};
+
+// Use in chat service creation
+const mcpServers = getMcpServers(chatProvider);
+const chatService = ChatServiceFactory.createChatService(chatProvider, {
+  apiKey: 'your-api-key',
+  mcpServers
+});
+```
+
+#### Error Handling & Timeouts
+
+The Gemini MCP implementation includes robust error handling:
+- 5-second timeout for MCP schema fetching
+- Automatic fallback to basic search tools if MCP servers are unavailable
+- Graceful degradation when MCP initialization fails
 
 ### Emotion Detection
 

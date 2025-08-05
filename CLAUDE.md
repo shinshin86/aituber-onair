@@ -244,6 +244,19 @@ The library abstracts differences between AI providers' function calling impleme
 
 12. **Kizuna Browser Compatibility**: The `@aituber-onair/kizuna` package uses dependency injection for file system operations, avoiding Node.js dependencies in browser builds. Users must provide ExternalStorageAdapter implementations for Node.js environments while browsers use LocalStorageProvider automatically.
 
+13. **Model Context Protocol (MCP) Support**: All chat providers (OpenAI, Claude, Gemini) support MCP integration with different implementation approaches:
+   - **OpenAI/Claude**: Direct MCP integration via provider's native MCP support (Responses API)
+   - **Gemini**: Function calling integration where MCP tools are registered as function declarations
+   - **Tool Naming Convention**: MCP tools follow the format `mcp_{serverName}_{toolName}`
+   - **Error Handling**: Robust timeout and fallback mechanisms ensure graceful degradation when MCP servers are unavailable
+
+14. **Gemini MCP Implementation Details**: 
+   - **Schema Fetching**: Uses `MCPSchemaFetcher` to dynamically fetch tool schemas from MCP servers with 5-second timeout
+   - **Function Declarations**: MCP tools are converted to Gemini function declarations and handled by `ToolExecutor`
+   - **CORS Handling**: Browser environments require proxy configuration for Gemini MCP (unlike OpenAI/Claude direct integration)
+   - **Fallback Strategy**: Automatically creates generic search tools if MCP schema fetching fails
+   - **Graceful Degradation**: Regular tools continue working even if MCP initialization fails
+
 ## Cross-Platform Runtime Support
 
 The `@aituber-onair/voice` package provides comprehensive support for multiple JavaScript runtimes with automatic environment detection and appropriate handling for each platform.
@@ -380,6 +393,191 @@ If these MCP tools are available in your environment, prefer them over manual op
 - **Safe deletions**: Use `lsmcp_delete_symbol` to remove code and all its references without breaking the build
 
 These tools provide TypeScript-aware refactoring that maintains code integrity and prevents common errors from manual edits.
+
+## Model Context Protocol (MCP) Implementation
+
+The chat package provides comprehensive MCP (Model Context Protocol) support across all providers with different implementation strategies based on each provider's capabilities.
+
+### Provider-Specific MCP Architectures
+
+#### OpenAI & Claude: Direct MCP Integration
+- **Server-to-Server Communication**: Direct connection to MCP servers without CORS issues
+- **Native MCP Support**: Uses provider's built-in MCP capabilities (Responses API for OpenAI)
+- **Seamless Integration**: MCP tools are automatically available in chat sessions
+
+#### Gemini: Function Calling Integration
+- **Manual Integration Approach**: MCP tools are registered as Gemini function declarations
+- **Client-Side HTTP Requests**: Browser environments make HTTP requests to MCP servers
+- **ToolExecutor Routing**: `ToolExecutor` handles MCP server communication and result processing
+- **CORS Requirements**: Browser environments need proxy configuration to avoid CORS issues
+
+### Technical Implementation Files
+
+#### Core Implementation Files
+- **`GeminiChatService.ts`** (`packages/chat/src/services/providers/gemini/GeminiChatService.ts:413-430`)
+  - MCP schema initialization with timeout handling
+  - Function declaration registration for MCP tools
+  - Error handling and fallback mechanisms
+
+- **`MCPSchemaFetcher.ts`** (`packages/chat/src/utils/mcpSchemaFetcher.ts`)
+  - Dynamic tool schema fetching from MCP servers
+  - Converts MCP schemas to AITuber `ToolDefinition` format
+  - Implements fallback generic search tools
+
+- **`ToolExecutor.ts`** (`packages/core/src/core/ToolExecutor.ts:67-117`)
+  - MCP tool name parsing (`mcp_{serverName}_{toolName}`)
+  - HTTP request handling to MCP servers
+  - Error handling and result formatting
+
+### Gemini MCP Configuration
+
+#### Basic Usage
+```typescript
+import { ChatServiceFactory } from '@aituber-onair/chat';
+
+const mcpServers = [{
+  type: 'url',
+  url: 'http://localhost:3000',
+  name: 'deepwiki',
+  authorization_token: 'optional-token'
+}];
+
+const geminiService = ChatServiceFactory.createChatService('gemini', {
+  apiKey: 'your-gemini-key',
+  mcpServers // Automatically converted to function declarations
+});
+```
+
+#### CORS Configuration for Browser Environments
+
+**Vite Development Setup** (`vite.config.ts`):
+```typescript
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api/mcp': {
+        target: 'https://mcp.deepwiki.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/mcp/, ''),
+      }
+    }
+  }
+})
+```
+
+**Dynamic MCP URL Configuration**:
+```typescript
+// Provider-specific MCP server configuration
+const getMcpServers = (provider: string): MCPServerConfig[] => {
+  const baseUrl = provider === 'gemini' 
+    ? '/api/mcp/sse'  // Proxy URL for Gemini (browser)
+    : 'https://mcp.deepwiki.com/sse';  // Direct URL for OpenAI/Claude
+
+  return [{
+    type: 'url',
+    url: baseUrl,
+    name: 'deepwiki',
+  }];
+};
+
+const mcpServers = getMcpServers(chatProvider);
+const chatService = ChatServiceFactory.createChatService(chatProvider, {
+  apiKey: 'your-api-key',
+  mcpServers
+});
+```
+
+### Error Handling & Resilience
+
+#### Timeout Protection
+```typescript
+// 5-second timeout for MCP schema fetching (GeminiChatService.ts:178-188)
+const timeoutPromise = new Promise<never>((_, reject) =>
+  setTimeout(() => reject(new Error('MCP schema fetch timeout')), 5000)
+);
+
+this.mcpToolSchemas = await Promise.race([
+  MCPSchemaFetcher.fetchAllToolSchemas(this.mcpServers),
+  timeoutPromise,
+]);
+```
+
+#### Fallback Strategy
+```typescript
+// Automatic fallback to generic search tools (GeminiChatService.ts:193-206)
+catch (error) {
+  console.warn('Failed to initialize MCP schemas, using fallback:', error);
+  this.mcpToolSchemas = this.mcpServers.map((server) => ({
+    name: `mcp_${server.name}_search`,
+    description: `Search using ${server.name} MCP server (fallback)`,
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search query' }
+      },
+      required: ['query']
+    }
+  }));
+}
+```
+
+#### Graceful Degradation
+```typescript
+// Regular tools continue working if MCP fails (GeminiChatService.ts:426-429)
+try {
+  await this.initializeMCPSchemas();
+  allToolDeclarations.push(...this.mcpToolSchemas.map(...));
+} catch (error) {
+  console.warn('MCP initialization failed, skipping MCP tools:', error);
+  // Continue without MCP tools - regular function declarations still work
+}
+```
+
+### Tool Naming Convention
+
+MCP tools follow a specific naming pattern for proper routing:
+
+**Format**: `mcp_{serverName}_{toolName}`
+
+**Examples**:
+- `mcp_deepwiki_search` - Search tool from deepwiki server
+- `mcp_calculator_evaluate` - Evaluate tool from calculator server
+
+**Parsing Logic** (`ToolExecutor.ts:39-60`):
+```typescript
+private extractMCPServerName(toolName: string): string {
+  const parts = toolName.split('_');
+  if (parts.length >= 3 && parts[0] === 'mcp') {
+    return parts[1]; // Return server name
+  }
+  throw new Error(`Invalid MCP tool name format: ${toolName}`);
+}
+
+private extractMCPToolName(toolName: string): string {
+  const parts = toolName.split('_');
+  if (parts.length >= 3 && parts[0] === 'mcp') {
+    return parts.slice(2).join('_'); // Return everything after server name
+  }
+  throw new Error(`Invalid MCP tool name format: ${toolName}`);
+}
+```
+
+### Development Best Practices
+
+#### Server Environment vs Browser Environment
+- **Server/Node.js**: Use direct MCP server URLs (no proxy needed)
+- **Browser**: Configure proxy for Gemini, direct URLs for OpenAI/Claude
+- **Testing**: Use localhost MCP servers for development
+
+#### Error Monitoring
+- Monitor console warnings for MCP initialization failures
+- Check network requests for CORS issues in browser dev tools
+- Verify MCP server availability and response formats
+
+#### Performance Considerations
+- MCP schema fetching adds startup time (5-second timeout)
+- Consider caching schemas for production environments
+- Monitor tool execution times for MCP vs regular tools
 
 ## Package Usage Examples
 
