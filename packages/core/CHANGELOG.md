@@ -1,5 +1,16 @@
 # @aituber-onair/core
 
+## 0.17.0
+
+### Minor Changes
+
+- Add @aituber-onair/chat package as dependency for unified LLM API integration
+  - Enables support for multiple chat providers (OpenAI, Claude, Gemini) through a single interface
+  - Chat functionality is now provided through the dedicated @aituber-onair/chat package
+  - Maintains backward compatibility with existing APIs
+  - Provides comprehensive MCP (Model Context Protocol) support across all providers
+  - Includes emotion detection, screenplay conversion, and configurable response lengths
+
 ## 0.16.1
 
 ### Patch Changes
