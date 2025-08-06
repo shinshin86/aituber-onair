@@ -13,7 +13,7 @@ AITuber OnAirのチャット・LLM API統合ライブラリです。このパッ
 - 🖼️ **ビジョン対応**: ビジョン対応モデルでの画像処理
 - 📝 **感情検出**: AI応答からの感情抽出
 - 🎯 **応答長制御**: プリセットまたはカスタムトークン制限での応答長設定
-- 🔌 **Model Context Protocol (MCP)**: MCP サーバーサポート（全プロバイダー対応）
+- 🔌 **Model Context Protocol (MCP)**: MCP サーバーサポート
 
 ## インストール
 
@@ -303,88 +303,11 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 
 ## 利用可能なプロバイダー
 
-### OpenAI
-- モデル: GPT-4、GPT-4 Turbo、GPT-3.5 Turbo、o1シリーズ
-- ビジョン: GPT-4 Vision
-- ツール: 関数呼び出しサポート
-- MCP: サポート済み
+現在、以下のAIプロバイダーが組み込まれています：
 
-### Claude (Anthropic)
-- モデル: Claude 3 (Opus、Sonnet、Haiku)、Claude 2
-- ビジョン: Claude 3モデル
-- ツール: ツール使用サポート
-- MCP: サポート済み
-
-### Gemini (Google)
-- モデル: Gemini Pro、Gemini Pro Vision
-- ビジョン: Gemini Pro Vision
-- ツール: 関数呼び出しサポート
-- MCP: サポート済み（関数呼び出し統合経由）
-
-## 技術的な実装詳細
-
-### Gemini MCP実装
-
-#### 主要実装ファイル
-- **`GeminiChatService.ts`** - MCP スキーマ初期化、関数宣言登録、エラーハンドリング
-- **`MCPSchemaFetcher.ts`** - MCPサーバーからの動的ツールスキーマ取得
-- **`ToolExecutor.ts`** - MCPツール名解析とHTTPリクエスト処理
-
-#### ツール命名規則
-MCPツールは適切なルーティングのために特定の命名パターンに従います：
-
-**形式**: `mcp_{サーバー名}_{ツール名}`
-
-**例**:
-- `mcp_deepwiki_search` - deepwikiサーバーからの検索ツール
-- `mcp_calculator_evaluate` - calculatorサーバーからの評価ツール
-
-#### エラーハンドリング機能
-
-**タイムアウト保護**:
-```typescript
-// MCPスキーマ取得に5秒のタイムアウト
-const timeoutPromise = new Promise<never>((_, reject) =>
-  setTimeout(() => reject(new Error('MCP schema fetch timeout')), 5000)
-);
-```
-
-**フォールバック戦略**:
-```typescript
-// 一般的な検索ツールへの自動フォールバック
-this.mcpToolSchemas = this.mcpServers.map((server) => ({
-  name: `mcp_${server.name}_search`,
-  description: `${server.name} MCPサーバーを使用した検索（フォールバック）`,
-  parameters: {
-    type: 'object',
-    properties: {
-      query: { type: 'string', description: '検索クエリ' }
-    }
-  }
-}));
-```
-
-**優雅な劣化**:
-- MCP初期化が失敗しても通常のツールは動作を継続
-- MCPツールが利用できない場合の警告表示
-- ネットワークエラーに対する堅牢なエラーハンドリング
-
-### 開発のベストプラクティス
-
-#### サーバー環境 vs ブラウザ環境
-- **サーバー/Node.js**: 直接MCPサーバーURLを使用（プロキシ不要）
-- **ブラウザ**: Gemini用にプロキシを設定、OpenAI/Claudeは直接URL
-- **テスト**: 開発にはlocalhost MCPサーバーを使用
-
-#### エラー監視
-- MCP初期化失敗のコンソール警告を監視
-- ブラウザ開発ツールでCORSの問題のネットワークリクエストをチェック
-- MCPサーバーの可用性と応答形式を確認
-
-#### パフォーマンス考慮事項
-- MCPスキーマ取得により起動時間が追加（5秒タイムアウト）
-- 本番環境でのスキーマキャッシュを検討
-- MCP vs 通常ツールのツール実行時間を監視
+- **OpenAI**: GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
+- **Gemini**: Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Proのモデルをサポート
+- **Claude**: Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnetのモデルをサポート
 
 ## ライセンス
 

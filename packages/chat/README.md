@@ -13,7 +13,7 @@ Chat and LLM API integration library for AITuber OnAir. This package provides a 
 - 🖼️ **Vision Support**: Process images with vision-enabled models
 - 📝 **Emotion Detection**: Extract emotions from AI responses
 - 🎯 **Response Length Control**: Configure response lengths with presets or custom token limits
-- 🔌 **Model Context Protocol (MCP)**: Support for MCP servers (all providers)
+- 🔌 **Model Context Protocol (MCP)**: Support for MCP servers
 
 ## Installation
 
@@ -303,23 +303,11 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 
 ## Available Providers
 
-### OpenAI
-- Models: GPT-4, GPT-4 Turbo, GPT-3.5 Turbo, o1 series
-- Vision: GPT-4 Vision
-- Tools: Function calling support
-- MCP: Supported
+Currently, the following AI provider is built-in:
 
-### Claude (Anthropic)
-- Models: Claude 3 (Opus, Sonnet, Haiku), Claude 2
-- Vision: Claude 3 models
-- Tools: Tool use support
-- MCP: Supported
-
-### Gemini (Google)
-- Models: Gemini Pro, Gemini Pro Vision
-- Vision: Gemini Pro Vision
-- Tools: Function calling support
-- MCP: Supported (via function calling integration)
+- **OpenAI**: Supports models like GPT-4.1(including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
+- **Gemini**: Supports models like Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Pro
+- **Claude**: Supports models like Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnet
 
 ## License
 
