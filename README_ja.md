@@ -30,6 +30,12 @@
   npm install @aituber-onair/manneri
   ```
 
+- [**@aituber-onair/chat**](./packages/chat/README.md)
+  AITuber OnAir用のチャットおよびLLM API統合ライブラリです。OpenAI、Claude（Anthropic）、Google Geminiなど複数のAIプロバイダーをサポートし、統一されたインターフェースでストリーミング応答、ツール呼び出し、Vision処理を提供します。
+  ```
+  npm install @aituber-onair/chat
+  ```
+
 ## はじめに
 
 1. **リポジトリをクローンする**  
@@ -71,7 +77,15 @@ aituber-onair/
 │   │   ├── src/
 │   │   ├── test/
 │   │   └── package.json
-│   └── voice/
+│   ├── voice/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   ├── chat/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   └── manneri/
 │       ├── src/
 │       ├── test/
 │       └── package.json
@@ -80,8 +94,10 @@ aituber-onair/
 └── ...
 ```
 
-- **packages/core**: AIによる会話およびチャット処理機能を提供する主要ライブラリ（`@aituber-onair/core`）です。
+- **packages/core**: AITuberのコア機能を提供する主要ライブラリ（`@aituber-onair/core`）です。
 - **packages/voice**: 複数のTTSエンジンをサポートする音声合成ライブラリ（`@aituber-onair/voice`）です。
+- **packages/chat**: LLM API統合とチャット処理機能を提供するライブラリ（`@aituber-onair/chat`）です。
+- **packages/manneri**: 会話パターン検出ライブラリ（`@aituber-onair/manneri`）です。
 
 ## リリース手順
 

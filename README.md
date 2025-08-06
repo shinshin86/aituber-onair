@@ -34,6 +34,12 @@ Currently, the primary packages available are:
   npm install @aituber-onair/bushitsu-client
   ```
 
+- [**@aituber-onair/chat**](./packages/chat/README.md)
+  Chat and LLM API integration library for AITuber OnAir. Provides a unified interface for interacting with various AI chat providers including OpenAI, Claude (Anthropic), and Google Gemini. Features streaming responses, tool/function calling, vision support, and emotion detection.
+  ```
+  npm install @aituber-onair/chat
+  ```
+
 ## Getting Started
 
 1. **Clone the repository**  
@@ -79,6 +85,10 @@ aituber-onair/
 │   │   ├── src/
 │   │   ├── test/
 │   │   └── package.json
+│   ├── chat/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
 │   ├── manneri/
 │   │   ├── src/
 │   │   ├── test/
@@ -92,8 +102,9 @@ aituber-onair/
 └── ...
 ```
 
-- **packages/core**: The main library (`@aituber-onair/core`) providing AI conversation and chat processing features.
+- **packages/core**: The main library (`@aituber-onair/core`) providing AITuber core functionality.
 - **packages/voice**: The voice synthesis library (`@aituber-onair/voice`) supporting multiple TTS engines.
+- **packages/chat**: The chat and LLM API integration library (`@aituber-onair/chat`) for AI provider interactions.
 - **packages/manneri**: The conversation pattern detection library (`@aituber-onair/manneri`) for identifying repetitive dialogue patterns.
 - **packages/bushitsu-client**: The WebSocket client library (`@aituber-onair/bushitsu-client`) for chat functionality with React hooks support.
 

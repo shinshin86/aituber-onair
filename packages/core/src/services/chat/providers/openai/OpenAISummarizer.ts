@@ -1,10 +1,10 @@
-import { Message } from '../../../../types';
+import { Message } from '@aituber-onair/chat';
 import { Summarizer } from '../../../../core/MemoryManager';
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   MODEL_GPT_4O_MINI,
-} from '../../../../constants';
-import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../constants';
+  DEFAULT_SUMMARY_PROMPT_TEMPLATE,
+} from '@aituber-onair/chat';
 
 /**
  * Implementation of summarization functionality using OpenAI

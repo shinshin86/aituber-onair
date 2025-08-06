@@ -3,7 +3,7 @@ import {
   textToScreenplay,
   screenplayToText,
   textsToScreenplay,
-} from '../../src/utils/screenplay';
+} from '@aituber-onair/chat';
 
 describe('Screenplay Utils', () => {
   describe('textToScreenplay', () => {

@@ -1,10 +1,10 @@
-import { Message } from '../../../../types';
+import { Message } from '@aituber-onair/chat';
 import { Summarizer } from '../../../../core/MemoryManager';
 import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_2_0_FLASH_LITE,
-} from '../../../../constants';
-import { DEFAULT_SUMMARY_PROMPT_TEMPLATE } from '../../../../constants';
+  DEFAULT_SUMMARY_PROMPT_TEMPLATE,
+} from '@aituber-onair/chat';
 
 /**
  * Implementation of summarization functionality using Gemini
