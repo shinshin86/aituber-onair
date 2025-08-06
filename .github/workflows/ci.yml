@@ -23,6 +23,7 @@ jobs:
 
       - name: Build packages in dependency order
         run: |
+          npm -w @aituber-onair/chat run build
           npm -w @aituber-onair/voice run build
           npm -w @aituber-onair/core run build
 
