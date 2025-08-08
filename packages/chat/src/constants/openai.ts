@@ -4,6 +4,11 @@ export const ENDPOINT_OPENAI_RESPONSES_API =
   'https://api.openai.com/v1/responses';
 
 // gpt model
+export const MODEL_GPT_5_NANO = 'gpt-5-nano';
+export const MODEL_GPT_5_MINI = 'gpt-5-mini';
+export const MODEL_GPT_5 = 'gpt-5';
+export const MODEL_GPT_5_CHAT_LATEST = 'gpt-5-chat-latest';
+
 export const MODEL_GPT_4_1 = 'gpt-4.1';
 export const MODEL_GPT_4_1_MINI = 'gpt-4.1-mini';
 export const MODEL_GPT_4_1_NANO = 'gpt-4.1-nano';
@@ -20,6 +25,10 @@ export const MODEL_GPT_4_5_PREVIEW = 'gpt-4.5-preview';
 
 // Vision support for models
 export const VISION_SUPPORTED_MODELS = [
+  MODEL_GPT_5_NANO,
+  MODEL_GPT_5_MINI,
+  MODEL_GPT_5,
+  MODEL_GPT_5_CHAT_LATEST,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
   MODEL_GPT_4_1_NANO,
@@ -29,3 +38,20 @@ export const VISION_SUPPORTED_MODELS = [
   MODEL_O1,
   // MODEL_O3_MINI and MODEL_O1_MINI are not included as they don't support vision
 ];
+
+// GPT-5 models list
+export const GPT_5_MODELS = [
+  MODEL_GPT_5_NANO,
+  MODEL_GPT_5_MINI,
+  MODEL_GPT_5,
+  MODEL_GPT_5_CHAT_LATEST,
+];
+
+/**
+ * Check if a model is a GPT-5 model
+ * @param model Model name to check
+ * @returns True if the model is a GPT-5 variant
+ */
+export function isGPT5Model(model: string): boolean {
+  return GPT_5_MODELS.includes(model);
+}
