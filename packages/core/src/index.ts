@@ -35,9 +35,11 @@ export {
   type MCPServerConfig,
   // Constants
   type ChatResponseLength,
+  CHAT_RESPONSE_LENGTH,
   MAX_TOKENS_BY_LENGTH,
   DEFAULT_MAX_TOKENS,
   DEFAULT_VISION_PROMPT,
+  getMaxTokensForResponseLength,
   // OpenAI model constants
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
@@ -52,9 +54,14 @@ export {
   MODEL_O3_MINI,
   MODEL_O1,
   MODEL_O1_MINI,
+  GPT_5_MODELS,
+  isGPT5Model,
   VISION_SUPPORTED_MODELS,
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
+  // GPT-5 presets
+  GPT5_PRESETS,
+  type GPT5PresetKey,
   // Gemini model constants
   MODEL_GEMINI_2_5_PRO,
   MODEL_GEMINI_2_5_FLASH,
