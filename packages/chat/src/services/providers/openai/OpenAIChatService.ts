@@ -67,10 +67,6 @@ export class OpenAIChatService implements ChatService {
     this.reasoning_effort = reasoning_effort;
     this.enableReasoningSummary = enableReasoningSummary;
 
-    // Log the selected endpoint for GPT-5 models
-    if (isGPT5Model(model)) {
-    }
-
     // check if the vision model is supported
     if (!VISION_SUPPORTED_MODELS.includes(visionModel)) {
       throw new Error(
