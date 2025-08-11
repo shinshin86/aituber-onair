@@ -136,7 +136,7 @@ const tools: ToolDefinition[] = [{
 // Using preset response lengths
 const service = ChatServiceFactory.createChatService('openai', {
   apiKey: 'your-key',
-  responseLength: 'medium' // 'veryShort', 'short', 'medium', 'long', 'veryLong'
+  responseLength: 'medium' // 'veryShort', 'short', 'medium', 'long', 'veryLong', 'deep'
 });
 
 // Using custom token limits
@@ -298,7 +298,7 @@ interface MessageWithVision {
   content: string | VisionBlock[];
 }
 
-type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong';
+type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong' | 'deep';
 ```
 
 ## Available Providers

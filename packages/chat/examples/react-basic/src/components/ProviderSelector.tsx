@@ -306,22 +306,7 @@ export default function ProviderSelector({
             <option value="medium">Medium (~200 tokens)</option>
             <option value="long">Long (~300 tokens)</option>
             <option value="veryLong">Very Long (~1000 tokens)</option>
-            {isGPT5 && (
-              <>
-                <option value="reasoningShort">
-                  Reasoning Short (~800 tokens)
-                </option>
-                <option value="reasoningMedium">
-                  Reasoning Medium (~1500 tokens)
-                </option>
-                <option value="reasoningLong">
-                  Reasoning Long (~3000 tokens)
-                </option>
-                <option value="reasoningDeep">
-                  Reasoning Deep (~5000 tokens)
-                </option>
-              </>
-            )}
+            <option value="deep">Deep (~5000 tokens)</option>
           </select>
         </div>
 

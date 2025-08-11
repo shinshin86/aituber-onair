@@ -15,11 +15,8 @@ describe('Chat Constants - Response Length Control', () => {
       expect(CHAT_RESPONSE_LENGTH.MEDIUM).toBe('medium');
       expect(CHAT_RESPONSE_LENGTH.LONG).toBe('long');
       expect(CHAT_RESPONSE_LENGTH.VERY_LONG).toBe('veryLong');
-      // Reasoning-aware response lengths
-      expect(CHAT_RESPONSE_LENGTH.REASONING_SHORT).toBe('reasoningShort');
-      expect(CHAT_RESPONSE_LENGTH.REASONING_MEDIUM).toBe('reasoningMedium');
-      expect(CHAT_RESPONSE_LENGTH.REASONING_LONG).toBe('reasoningLong');
-      expect(CHAT_RESPONSE_LENGTH.REASONING_DEEP).toBe('reasoningDeep');
+      // Extended response length
+      expect(CHAT_RESPONSE_LENGTH.DEEP).toBe('deep');
     });
 
     it('should have consistent string values', () => {
@@ -41,19 +38,8 @@ describe('Chat Constants - Response Length Control', () => {
       expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.MEDIUM]).toBe(200);
       expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.LONG]).toBe(300);
       expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.VERY_LONG]).toBe(1000);
-      // Reasoning-aware response lengths
-      expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_SHORT]).toBe(
-        800,
-      );
-      expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_MEDIUM]).toBe(
-        1500,
-      );
-      expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_LONG]).toBe(
-        3000,
-      );
-      expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_DEEP]).toBe(
-        5000,
-      );
+      // Extended response length
+      expect(MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.DEEP]).toBe(5000);
     });
 
     it('should have ascending token values', () => {
@@ -63,11 +49,8 @@ describe('Chat Constants - Response Length Control', () => {
         MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.SHORT],
         MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.MEDIUM],
         MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.LONG],
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_SHORT],
         MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.VERY_LONG],
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_MEDIUM],
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_LONG],
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_DEEP],
+        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.DEEP],
       ];
 
       // Assert - Values should be in ascending order
@@ -108,19 +91,12 @@ describe('Chat Constants - Response Length Control', () => {
         MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.VERY_LONG],
       ).toBeLessThanOrEqual(2000);
 
-      // Reasoning-aware response lengths should have higher limits
+      // Extended response length should have higher limit
       expect(
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_SHORT],
-      ).toBeGreaterThanOrEqual(500);
-      expect(
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_SHORT],
-      ).toBeLessThanOrEqual(1000);
-
-      expect(
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_DEEP],
+        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.DEEP],
       ).toBeGreaterThanOrEqual(3000);
       expect(
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_DEEP],
+        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.DEEP],
       ).toBeLessThanOrEqual(10000);
     });
   });
@@ -137,7 +113,7 @@ describe('Chat Constants - Response Length Control', () => {
     it('should be higher than or equal to highest predefined limit', () => {
       // Assert - DEFAULT_MAX_TOKENS should be higher than or equal to the highest predefined limit
       expect(DEFAULT_MAX_TOKENS).toBeGreaterThanOrEqual(
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.REASONING_DEEP],
+        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.DEEP],
       );
     });
 
@@ -183,10 +159,7 @@ describe('Chat Constants - Response Length Control', () => {
         'medium',
         'long',
         'veryLong',
-        'reasoningShort',
-        'reasoningMedium',
-        'reasoningLong',
-        'reasoningDeep',
+        'deep',
       ];
       const actualKeys = Object.values(CHAT_RESPONSE_LENGTH).sort();
 
