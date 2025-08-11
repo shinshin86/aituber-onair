@@ -1,5 +1,17 @@
 # @aituber-onair/chat
 
+## 0.2.0
+
+### Minor Changes
+
+- **GPT-5 Model Support**: Added support for GPT-5 models in OpenAI provider
+  - Support for GPT-5 Nano, Mini, and Chat Latest variants
+  - New GPT-5 specific configuration options (endpoint preference, reasoning effort, verbosity)
+  - Added GPT-5 preset configurations (casual, balanced, expert)
+- **Response Length Enhancement**: Added new "deep" response length option (5000 tokens) for extended conversations
+- **Default Token Limit**: Increased DEFAULT_MAX_TOKENS from 1000 to 5000 tokens
+- **Code Quality**: Removed debug logging statements and cleaned up unused code
+
 ## 0.1.0
 
 ### Minor Changes

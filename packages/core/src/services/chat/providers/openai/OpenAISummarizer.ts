@@ -74,7 +74,7 @@ export class OpenAISummarizer implements Summarizer {
               content: conversationText,
             },
           ],
-          max_tokens: maxLength,
+          max_completion_tokens: maxLength,
         }),
       });
 

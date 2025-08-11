@@ -129,7 +129,7 @@ const tools = [{
 ### 6. Response Length Control
 ```typescript
 // Using presets
-{ responseLength: 'short' } // veryShort, short, medium, long, veryLong
+{ responseLength: 'short' } // veryShort, short, medium, long, veryLong, deep
 
 // Using token limits
 { maxTokens: 500 }

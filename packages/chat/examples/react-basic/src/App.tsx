@@ -5,6 +5,7 @@ import {
   type Message,
   type MessageWithVision,
   type ChatResponseLength,
+  type GPT5PresetKey,
 } from '@aituber-onair/chat';
 import './App.css';
 import ChatInterface from './components/ChatInterface';
@@ -33,6 +34,17 @@ function App() {
   const [selectedModel, setSelectedModel] = useState(() =>
     getDefaultModelForProvider('openai'),
   );
+  const [gpt5Preset, setGpt5Preset] = useState<GPT5PresetKey | undefined>();
+  const [reasoning_effort, setReasoningEffort] = useState<
+    'minimal' | 'low' | 'medium' | 'high'
+  >('medium');
+  const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
+    'medium',
+  );
+  const [gpt5EndpointPreference, setGpt5EndpointPreference] = useState<
+    'chat' | 'responses' | 'auto'
+  >('chat');
+  const [enableReasoningSummary, setEnableReasoningSummary] = useState(false);
   const [chatService, setChatService] = useState<ChatService | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -46,11 +58,25 @@ function App() {
   useEffect(() => {
     if (apiKey) {
       try {
-        const service = ChatServiceFactory.createChatService(provider, {
+        const options: any = {
           apiKey,
           responseLength,
           model: selectedModel,
-        });
+        };
+
+        // Add GPT-5 specific options for OpenAI provider
+        if (provider === 'openai') {
+          if (gpt5Preset) {
+            options.gpt5Preset = gpt5Preset;
+          } else {
+            options.reasoning_effort = reasoning_effort;
+            options.verbosity = verbosity;
+          }
+          options.gpt5EndpointPreference = gpt5EndpointPreference;
+          options.enableReasoningSummary = enableReasoningSummary;
+        }
+
+        const service = ChatServiceFactory.createChatService(provider, options);
         setChatService(service);
         setError(null);
       } catch (err) {
@@ -60,7 +86,17 @@ function App() {
     } else {
       setChatService(null);
     }
-  }, [provider, apiKey, responseLength, selectedModel]);
+  }, [
+    provider,
+    apiKey,
+    responseLength,
+    selectedModel,
+    gpt5Preset,
+    reasoning_effort,
+    verbosity,
+    gpt5EndpointPreference,
+    enableReasoningSummary,
+  ]);
 
   const sendMessage = useCallback(
     async (content: string, imageData?: string) => {
@@ -171,6 +207,10 @@ function App() {
               // プロバイダー変更時にそのプロバイダーのデフォルトモデルを自動選択
               const defaultModel = getDefaultModelForProvider(newProvider);
               setSelectedModel(defaultModel);
+              // Reset GPT-5 settings when changing provider
+              setGpt5Preset(undefined);
+              setReasoningEffort('medium');
+              setVerbosity('medium');
             }}
             apiKey={apiKey}
             onApiKeyChange={setApiKey}
@@ -184,6 +224,16 @@ function App() {
               }
               setSelectedModel(modelId);
             }}
+            gpt5Preset={gpt5Preset}
+            onGpt5PresetChange={setGpt5Preset}
+            reasoning_effort={reasoning_effort}
+            onReasoningEffortChange={setReasoningEffort}
+            verbosity={verbosity}
+            onVerbosityChange={setVerbosity}
+            gpt5EndpointPreference={gpt5EndpointPreference}
+            onGpt5EndpointPreferenceChange={setGpt5EndpointPreference}
+            enableReasoningSummary={enableReasoningSummary}
+            onEnableReasoningSummaryChange={setEnableReasoningSummary}
             disabled={isLoading}
           />
         </div>

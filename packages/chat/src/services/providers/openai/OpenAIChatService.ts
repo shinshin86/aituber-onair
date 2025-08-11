@@ -5,6 +5,7 @@ import {
   ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_4O_MINI,
   VISION_SUPPORTED_MODELS,
+  isGPT5Model,
 } from '../../../constants';
 import {
   ChatResponseLength,
@@ -33,6 +34,9 @@ export class OpenAIChatService implements ChatService {
   private endpoint: string;
   private mcpServers: MCPServerConfig[];
   private responseLength?: ChatResponseLength;
+  private verbosity?: 'low' | 'medium' | 'high';
+  private reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
+  private enableReasoningSummary?: boolean;
 
   /**
    * Constructor
@@ -48,13 +52,20 @@ export class OpenAIChatService implements ChatService {
     endpoint: string = ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
     mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,
+    verbosity?: 'low' | 'medium' | 'high',
+    reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high',
+    enableReasoningSummary: boolean = false,
   ) {
     this.apiKey = apiKey;
     this.model = model;
     this.tools = tools || [];
+    // Keep the endpoint as specified - no auto-switching
     this.endpoint = endpoint;
     this.mcpServers = mcpServers;
     this.responseLength = responseLength;
+    this.verbosity = verbosity;
+    this.reasoning_effort = reasoning_effort;
+    this.enableReasoningSummary = enableReasoningSummary;
 
     // check if the vision model is supported
     if (!VISION_SUPPORTED_MODELS.includes(visionModel)) {
@@ -96,8 +107,29 @@ export class OpenAIChatService implements ChatService {
     // not use tools
     if (this.tools.length === 0) {
       const res = await this.callOpenAI(messages, this.model, true);
-      const full = await this.handleStream(res, onPartialResponse);
-      await onCompleteResponse(full);
+      const isResponsesAPI = this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
+
+      try {
+        if (isResponsesAPI) {
+          // Use Responses API parser for GPT-5 and other models using Responses API
+          const result = await this.parseResponsesStream(
+            res,
+            onPartialResponse,
+          );
+          const full = result.blocks
+            .filter((b) => b.type === 'text')
+            .map((b) => b.text)
+            .join('');
+          await onCompleteResponse(full);
+        } else {
+          // Use standard Chat Completions API parser
+          const full = await this.handleStream(res, onPartialResponse);
+          await onCompleteResponse(full);
+        }
+      } catch (error) {
+        console.error('[processChat] Error in streaming/completion:', error);
+        throw error;
+      }
       return;
     }
 
@@ -137,8 +169,32 @@ export class OpenAIChatService implements ChatService {
       // not use tools
       if (this.tools.length === 0) {
         const res = await this.callOpenAI(messages, this.visionModel, true);
-        const full = await this.handleStream(res, onPartialResponse);
-        await onCompleteResponse(full);
+        const isResponsesAPI = this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
+
+        try {
+          if (isResponsesAPI) {
+            // Use Responses API parser for GPT-5 and other models using Responses API
+            const result = await this.parseResponsesStream(
+              res,
+              onPartialResponse,
+            );
+            const full = result.blocks
+              .filter((b) => b.type === 'text')
+              .map((b) => b.text)
+              .join('');
+            await onCompleteResponse(full);
+          } else {
+            // Use standard Chat Completions API parser
+            const full = await this.handleStream(res, onPartialResponse);
+            await onCompleteResponse(full);
+          }
+        } catch (streamError) {
+          console.error(
+            '[processVisionChat] Error in streaming/completion:',
+            streamError,
+          );
+          throw streamError;
+        }
         return;
       }
 
@@ -275,7 +331,7 @@ export class OpenAIChatService implements ChatService {
     if (isResponsesAPI) {
       body.max_output_tokens = tokenLimit;
     } else {
-      body.max_tokens = tokenLimit;
+      body.max_completion_tokens = tokenLimit;
     }
 
     // Handle messages format based on endpoint
@@ -283,6 +339,39 @@ export class OpenAIChatService implements ChatService {
       body.input = this.cleanMessagesForResponsesAPI(messages);
     } else {
       body.messages = messages;
+    }
+
+    // Add GPT-5 specific parameters
+    if (isGPT5Model(model)) {
+      // For Responses API, use nested structure
+      if (isResponsesAPI) {
+        if (this.reasoning_effort) {
+          body.reasoning = {
+            ...body.reasoning,
+            effort: this.reasoning_effort,
+          };
+          // Only add summary if explicitly enabled (requires org verification)
+          if (this.enableReasoningSummary) {
+            body.reasoning.summary = 'auto';
+          }
+        }
+        if (this.verbosity) {
+          body.text = {
+            ...body.text,
+            format: { type: 'text' },
+            verbosity: this.verbosity,
+          };
+        }
+      } else {
+        // For Chat Completions API, add GPT-5 parameters directly (flat structure)
+        // Example: { "reasoning_effort": "minimal", "verbosity": "low" }
+        if (this.reasoning_effort) {
+          body.reasoning_effort = this.reasoning_effort;
+        }
+        if (this.verbosity) {
+          body.verbosity = this.verbosity;
+        }
+      }
     }
 
     // Add tools if available
@@ -575,13 +664,18 @@ export class OpenAIChatService implements ChatService {
           // Process event separated by empty line
           try {
             const json = JSON.parse(eventData);
-            this.handleResponsesSSEEvent(
+            const completionResult = this.handleResponsesSSEEvent(
               eventType,
               json,
               onPartial,
               textBlocks,
               toolCallsMap,
             );
+
+            // Check if response is completed
+            if (completionResult === 'completed') {
+              // Response completed
+            }
           } catch (e) {
             console.warn('Failed to parse SSE data:', eventData);
           }
@@ -611,6 +705,7 @@ export class OpenAIChatService implements ChatService {
 
   /**
    * Handle specific SSE events from Responses API
+   * @returns 'completed' if the response is completed, undefined otherwise
    */
   private handleResponsesSSEEvent(
     eventType: string,
@@ -618,7 +713,7 @@ export class OpenAIChatService implements ChatService {
     onPartial: (t: string) => void,
     textBlocks: ToolChatBlock[],
     toolCallsMap: Map<string, any>,
-  ): void {
+  ): 'completed' | undefined {
     switch (eventType) {
       // Item addition events
       case 'response.output_item.added':
@@ -664,22 +759,28 @@ export class OpenAIChatService implements ChatService {
         }
         break;
 
-      // Text completion events
+      // Text completion events - do not add text here as it's already accumulated via delta events
       case 'response.output_text.done':
       case 'response.content_part.done':
-        if (typeof data.text === 'string' && data.text) {
-          StreamTextAccumulator.append(textBlocks, data.text);
-        }
+        // These events contain the complete text but we've already accumulated it through deltas
+        // Adding it here would cause duplicate display
         break;
 
       // Response completion events
       case 'response.completed':
+        return 'completed';
+
+      // GPT-5 reasoning token events (not visible but counted for billing)
+      case 'response.reasoning.started':
+      case 'response.reasoning.delta':
+      case 'response.reasoning.done':
         break;
 
       default:
-        // Ignore other events
         break;
     }
+
+    return undefined;
   }
 
   /**

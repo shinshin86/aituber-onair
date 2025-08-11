@@ -1,6 +1,10 @@
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
+  MODEL_GPT_5_NANO,
+  MODEL_GPT_5_MINI,
+  MODEL_GPT_5,
+  MODEL_GPT_5_CHAT_LATEST,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
   MODEL_GPT_4_1_NANO,
@@ -11,7 +15,9 @@ import {
   MODEL_O1,
   MODEL_GPT_4_5_PREVIEW,
   VISION_SUPPORTED_MODELS,
+  isGPT5Model,
 } from '../../../constants';
+import { GPT5_PRESETS } from '../../../constants/chat';
 import { ChatService } from '../../ChatService';
 import { OpenAIChatService } from './OpenAIChatService';
 import {
@@ -30,33 +36,58 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    * @returns OpenAIChatService instance
    */
   createChatService(options: ChatServiceOptions): ChatService {
+    // Apply GPT-5 optimizations if needed
+    const optimizedOptions = this.optimizeGPT5Options(options);
     // Use the visionModel if provided, otherwise use the model that supports vision
     const visionModel =
-      options.visionModel ||
-      (this.supportsVisionForModel(options.model || this.getDefaultModel())
-        ? options.model
+      optimizedOptions.visionModel ||
+      (this.supportsVisionForModel(
+        optimizedOptions.model || this.getDefaultModel(),
+      )
+        ? optimizedOptions.model
         : this.getDefaultModel());
 
     // tools definition
-    const tools: ToolDefinition[] | undefined = options.tools;
+    const tools: ToolDefinition[] | undefined = optimizedOptions.tools;
 
-    // if MCP servers are set, automatically use Responses API
-    const mcpServers = (options as any).mcpServers ?? [];
-    const shouldUseResponsesAPI = mcpServers.length > 0;
+    // Determine endpoint based on MCP servers, GPT-5 model, and user preference
+    const mcpServers = (optimizedOptions as any).mcpServers ?? [];
+    const modelName = optimizedOptions.model || this.getDefaultModel();
+
+    // For GPT-5 models, respect user endpoint preference
+    let shouldUseResponsesAPI = false;
+    if (isGPT5Model(modelName)) {
+      const preference = optimizedOptions.gpt5EndpointPreference || 'chat'; // Default to chat API for GPT-5
+      if (preference === 'responses') {
+        shouldUseResponsesAPI = true;
+      } else if (preference === 'auto') {
+        // Only use Responses API if explicitly needed (e.g., for advanced reasoning)
+        shouldUseResponsesAPI =
+          !!optimizedOptions.reasoning_effort || !!optimizedOptions.verbosity;
+      }
+      // 'chat' preference means use Chat Completions API
+    } else if (mcpServers.length > 0) {
+      // Non-GPT-5 models with MCP always use Responses API
+      shouldUseResponsesAPI = true;
+    }
+
     const endpoint =
-      options.endpoint ||
+      optimizedOptions.endpoint ||
       (shouldUseResponsesAPI
         ? ENDPOINT_OPENAI_RESPONSES_API
         : ENDPOINT_OPENAI_CHAT_COMPLETIONS_API);
 
     return new OpenAIChatService(
-      options.apiKey,
-      options.model || this.getDefaultModel(),
+      optimizedOptions.apiKey,
+      modelName,
       visionModel,
       tools,
       endpoint,
       mcpServers,
-      options.responseLength,
+      optimizedOptions.responseLength,
+      optimizedOptions.verbosity,
+      optimizedOptions.reasoning_effort,
+      optimizedOptions.enableReasoningSummary,
     );
   }
 
@@ -74,6 +105,10 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_GPT_5_NANO,
+      MODEL_GPT_5_MINI,
+      MODEL_GPT_5,
+      MODEL_GPT_5_CHAT_LATEST,
       MODEL_GPT_4_1,
       MODEL_GPT_4_1_MINI,
       MODEL_GPT_4_1_NANO,
@@ -91,7 +126,7 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    * @returns Default model name
    */
   getDefaultModel(): string {
-    return MODEL_GPT_4O_MINI;
+    return MODEL_GPT_5_NANO;
   }
 
   /**
@@ -109,5 +144,38 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    */
   supportsVisionForModel(model: string): boolean {
     return VISION_SUPPORTED_MODELS.includes(model);
+  }
+
+  /**
+   * Apply GPT-5 specific optimizations to options
+   * @param options Original chat service options
+   * @returns Optimized options for GPT-5 usage
+   */
+  private optimizeGPT5Options(options: ChatServiceOptions): ChatServiceOptions {
+    const modelName = options.model || this.getDefaultModel();
+
+    // Skip optimization for non-GPT-5 models
+    if (!isGPT5Model(modelName)) {
+      return options;
+    }
+
+    const optimized = { ...options };
+
+    // Apply preset if specified (only affects reasoning_effort and verbosity)
+    if (options.gpt5Preset) {
+      const preset = GPT5_PRESETS[options.gpt5Preset];
+      optimized.reasoning_effort = preset.reasoning_effort;
+      optimized.verbosity = preset.verbosity;
+    } else {
+      // Set default reasoning_effort if not specified
+      if (!options.reasoning_effort) {
+        optimized.reasoning_effort = 'medium';
+      }
+    }
+
+    // Keep the user's selected response length regardless of API endpoint
+    // Users can manually select reasoning response lengths if desired
+
+    return optimized;
   }
 }

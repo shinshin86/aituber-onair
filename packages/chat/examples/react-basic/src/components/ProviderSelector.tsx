@@ -1,7 +1,13 @@
 import { Provider } from '../App';
 import {
   type ChatResponseLength,
+  type GPT5PresetKey,
+  isGPT5Model,
   // OpenAI models
+  MODEL_GPT_5_NANO,
+  MODEL_GPT_5_MINI,
+  MODEL_GPT_5,
+  MODEL_GPT_5_CHAT_LATEST,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
   MODEL_GPT_4_1_NANO,
@@ -38,6 +44,20 @@ interface ProviderSelectorProps {
   onResponseLengthChange: (length: ChatResponseLength) => void;
   selectedModel: string;
   onModelChange: (model: string) => void;
+  gpt5Preset?: GPT5PresetKey;
+  onGpt5PresetChange?: (preset: GPT5PresetKey | undefined) => void;
+  reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
+  onReasoningEffortChange?: (
+    effort: 'minimal' | 'low' | 'medium' | 'high',
+  ) => void;
+  verbosity?: 'low' | 'medium' | 'high';
+  onVerbosityChange?: (verbosity: 'low' | 'medium' | 'high') => void;
+  gpt5EndpointPreference?: 'chat' | 'responses' | 'auto';
+  onGpt5EndpointPreferenceChange?: (
+    preference: 'chat' | 'responses' | 'auto',
+  ) => void;
+  enableReasoningSummary?: boolean;
+  onEnableReasoningSummaryChange?: (enabled: boolean) => void;
   disabled: boolean;
 }
 
@@ -61,6 +81,25 @@ const providerInfo = {
 
 export const allModels = [
   // OpenAI models
+  {
+    id: MODEL_GPT_5_NANO,
+    name: 'GPT-5 Nano',
+    provider: 'openai',
+    default: true,
+  },
+  {
+    id: MODEL_GPT_5_MINI,
+    name: 'GPT-5 Mini',
+    provider: 'openai',
+    default: false,
+  },
+  { id: MODEL_GPT_5, name: 'GPT-5', provider: 'openai', default: false },
+  {
+    id: MODEL_GPT_5_CHAT_LATEST,
+    name: 'GPT-5 Chat Latest',
+    provider: 'openai',
+    default: false,
+  },
   { id: MODEL_GPT_4_1, name: 'GPT-4.1', provider: 'openai', default: false },
   {
     id: MODEL_GPT_4_1_MINI,
@@ -72,7 +111,7 @@ export const allModels = [
     id: MODEL_GPT_4_1_NANO,
     name: 'GPT-4.1 Nano',
     provider: 'openai',
-    default: true,
+    default: false,
   },
   {
     id: MODEL_GPT_4O_MINI,
@@ -202,9 +241,20 @@ export default function ProviderSelector({
   onResponseLengthChange,
   selectedModel,
   onModelChange,
+  gpt5Preset,
+  onGpt5PresetChange,
+  reasoning_effort,
+  onReasoningEffortChange,
+  verbosity,
+  onVerbosityChange,
+  gpt5EndpointPreference,
+  onGpt5EndpointPreferenceChange,
+  enableReasoningSummary,
+  onEnableReasoningSummaryChange,
   disabled,
 }: ProviderSelectorProps) {
   const info = providerInfo[provider];
+  const isGPT5 = provider === 'openai' && isGPT5Model(selectedModel);
 
   return (
     <div className="provider-selector">
@@ -256,6 +306,7 @@ export default function ProviderSelector({
             <option value="medium">Medium (~200 tokens)</option>
             <option value="long">Long (~300 tokens)</option>
             <option value="veryLong">Very Long (~1000 tokens)</option>
+            <option value="deep">Deep (~5000 tokens)</option>
           </select>
         </div>
 
@@ -277,6 +328,115 @@ export default function ProviderSelector({
               ))}
           </select>
         </div>
+
+        {/* GPT-5 specific settings */}
+        {isGPT5 && (
+          <>
+            <div className="config-group">
+              <label htmlFor="gpt5-endpoint">GPT-5 API Endpoint</label>
+              <select
+                id="gpt5-endpoint"
+                value={gpt5EndpointPreference || 'chat'}
+                onChange={(e) =>
+                  onGpt5EndpointPreferenceChange?.(
+                    e.target.value as 'chat' | 'responses' | 'auto',
+                  )
+                }
+                disabled={disabled}
+                className="gpt5-endpoint-select"
+              >
+                <option value="chat">Chat Completions (Standard API)</option>
+                <option value="responses">
+                  Responses API (Advanced with reasoning visibility)
+                </option>
+                <option value="auto">Auto (Based on Settings)</option>
+              </select>
+            </div>
+
+            {gpt5EndpointPreference === 'responses' && (
+              <div className="config-group">
+                <label htmlFor="reasoning-summary">
+                  <input
+                    id="reasoning-summary"
+                    type="checkbox"
+                    checked={enableReasoningSummary || false}
+                    onChange={(e) =>
+                      onEnableReasoningSummaryChange?.(e.target.checked)
+                    }
+                    disabled={disabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Enable Reasoning Summary (Requires Org Verification)
+                </label>
+              </div>
+            )}
+
+            <div className="config-group">
+              <label htmlFor="gpt5-preset">GPT-5 Preset (Optional)</label>
+              <select
+                id="gpt5-preset"
+                value={gpt5Preset || ''}
+                onChange={(e) =>
+                  onGpt5PresetChange?.(
+                    e.target.value
+                      ? (e.target.value as GPT5PresetKey)
+                      : undefined,
+                  )
+                }
+                disabled={disabled}
+                className="gpt5-preset-select"
+              >
+                <option value="">Custom Settings</option>
+                <option value="casual">Casual (fast, minimal reasoning)</option>
+                <option value="balanced">Balanced (medium reasoning)</option>
+                <option value="expert">Expert (deep reasoning)</option>
+              </select>
+            </div>
+
+            {!gpt5Preset && (
+              <>
+                <div className="config-group">
+                  <label htmlFor="reasoning-effort">Reasoning Effort</label>
+                  <select
+                    id="reasoning-effort"
+                    value={reasoning_effort || 'medium'}
+                    onChange={(e) =>
+                      onReasoningEffortChange?.(
+                        e.target.value as 'minimal' | 'low' | 'medium' | 'high',
+                      )
+                    }
+                    disabled={disabled}
+                    className="reasoning-effort-select"
+                  >
+                    <option value="minimal">Minimal (GPT-4 like)</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div className="config-group">
+                  <label htmlFor="verbosity">Verbosity</label>
+                  <select
+                    id="verbosity"
+                    value={verbosity || 'medium'}
+                    onChange={(e) =>
+                      onVerbosityChange?.(
+                        e.target.value as 'low' | 'medium' | 'high',
+                      )
+                    }
+                    disabled={disabled}
+                    className="verbosity-select"
+                  >
+                    <option value="low">Low (concise)</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High (detailed)</option>
+                  </select>
+                </div>
+              </>
+            )}
+          </>
+        )}
       </div>
 
       <style>{`
@@ -390,6 +550,35 @@ export default function ProviderSelector({
         }
 
         .model-select:disabled {
+          background: #f5f5f5;
+          cursor: not-allowed;
+        }
+
+        .gpt5-preset-select,
+        .gpt5-endpoint-select,
+        .reasoning-effort-select,
+        .verbosity-select {
+          padding: 0.5rem 1rem;
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          background: white;
+          cursor: pointer;
+          min-width: 180px;
+        }
+
+        .gpt5-preset-select:focus,
+        .gpt5-endpoint-select:focus,
+        .reasoning-effort-select:focus,
+        .verbosity-select:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+
+        .gpt5-preset-select:disabled,
+        .gpt5-endpoint-select:disabled,
+        .reasoning-effort-select:disabled,
+        .verbosity-select:disabled {
           background: #f5f5f5;
           cursor: not-allowed;
         }
