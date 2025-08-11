@@ -69,13 +69,6 @@ export class OpenAIChatService implements ChatService {
 
     // Log the selected endpoint for GPT-5 models
     if (isGPT5Model(model)) {
-      const apiType =
-        endpoint === ENDPOINT_OPENAI_RESPONSES_API
-          ? 'Responses API'
-          : 'Chat Completions API';
-      console.log(
-        `[OpenAIChatService] Using ${apiType} for GPT-5 model: ${model}`,
-      );
     }
 
     // check if the vision model is supported
@@ -123,7 +116,6 @@ export class OpenAIChatService implements ChatService {
       try {
         if (isResponsesAPI) {
           // Use Responses API parser for GPT-5 and other models using Responses API
-          console.debug('[Responses API] Starting parseResponsesStream');
           const result = await this.parseResponsesStream(
             res,
             onPartialResponse,
@@ -132,14 +124,7 @@ export class OpenAIChatService implements ChatService {
             .filter((b) => b.type === 'text')
             .map((b) => b.text)
             .join('');
-          console.debug(
-            '[Responses API] Calling onCompleteResponse with text length:',
-            full.length,
-          );
           await onCompleteResponse(full);
-          console.debug(
-            '[Responses API] onCompleteResponse completed successfully',
-          );
         } else {
           // Use standard Chat Completions API parser
           const full = await this.handleStream(res, onPartialResponse);
@@ -193,9 +178,6 @@ export class OpenAIChatService implements ChatService {
         try {
           if (isResponsesAPI) {
             // Use Responses API parser for GPT-5 and other models using Responses API
-            console.debug(
-              '[Responses API] Starting parseResponsesStream (vision)',
-            );
             const result = await this.parseResponsesStream(
               res,
               onPartialResponse,
@@ -204,14 +186,7 @@ export class OpenAIChatService implements ChatService {
               .filter((b) => b.type === 'text')
               .map((b) => b.text)
               .join('');
-            console.debug(
-              '[Responses API] Calling onCompleteResponse with text length (vision):',
-              full.length,
-            );
             await onCompleteResponse(full);
-            console.debug(
-              '[Responses API] onCompleteResponse completed successfully (vision)',
-            );
           } else {
             // Use standard Chat Completions API parser
             const full = await this.handleStream(res, onPartialResponse);
@@ -669,7 +644,6 @@ export class OpenAIChatService implements ChatService {
     const toolCallsMap = new Map<string, any>();
 
     let buf = '';
-    let isCompleted = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -704,10 +678,7 @@ export class OpenAIChatService implements ChatService {
 
             // Check if response is completed
             if (completionResult === 'completed') {
-              isCompleted = true;
-              console.debug(
-                '[Responses API] Stream completed via response.completed event',
-              );
+              // Response completed
             }
           } catch (e) {
             console.warn('Failed to parse SSE data:', eventData);
@@ -717,8 +688,6 @@ export class OpenAIChatService implements ChatService {
         }
       }
     }
-
-    console.debug('[Responses API] Stream ended, isCompleted:', isCompleted);
 
     // Convert tool calls to blocks
     const toolBlocks: ToolChatBlock[] = Array.from(toolCallsMap.values()).map(
@@ -749,11 +718,6 @@ export class OpenAIChatService implements ChatService {
     textBlocks: ToolChatBlock[],
     toolCallsMap: Map<string, any>,
   ): 'completed' | undefined {
-    // Debug logging for GPT-5 responses
-    if (isGPT5Model(this.model)) {
-      console.debug(`[GPT-5 SSE Event] Type: ${eventType}`, data);
-    }
-
     switch (eventType) {
       // Item addition events
       case 'response.output_item.added':
@@ -808,23 +772,15 @@ export class OpenAIChatService implements ChatService {
 
       // Response completion events
       case 'response.completed':
-        console.debug('[Responses API] Response completed event received');
         return 'completed';
 
       // GPT-5 reasoning token events (not visible but counted for billing)
       case 'response.reasoning.started':
       case 'response.reasoning.delta':
       case 'response.reasoning.done':
-        if (isGPT5Model(this.model)) {
-          console.debug(`[GPT-5] Reasoning event: ${eventType}`, data);
-        }
         break;
 
       default:
-        // Log unknown events for GPT-5 debugging
-        if (isGPT5Model(this.model) && eventType.startsWith('response.')) {
-          console.debug(`[GPT-5] Unknown event type: ${eventType}`, data);
-        }
         break;
     }
 

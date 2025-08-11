@@ -170,17 +170,10 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
       const preset = GPT5_PRESETS[options.gpt5Preset];
       optimized.reasoning_effort = preset.reasoning_effort;
       optimized.verbosity = preset.verbosity;
-
-      console.log(
-        `[GPT-5 Optimization] Applied preset '${options.gpt5Preset}': reasoning_effort=${preset.reasoning_effort}, verbosity=${preset.verbosity}`,
-      );
     } else {
       // Set default reasoning_effort if not specified
       if (!options.reasoning_effort) {
         optimized.reasoning_effort = 'medium';
-        console.log(
-          `[GPT-5 Optimization] Applied default reasoning_effort: medium`,
-        );
       }
     }
 
@@ -197,14 +190,8 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
       isStandardResponseLength(options.responseLength)
     ) {
       optimized.responseLength = mapToReasoningLength(options.responseLength);
-      console.log(
-        `[GPT-5 Optimization] Auto-mapped responseLength for Responses API: ${options.responseLength} → ${optimized.responseLength}`,
-      );
     } else if (options.responseLength) {
       // Keep standard response length for Chat Completions API
-      console.log(
-        `[GPT-5 Optimization] Using standard responseLength for Chat Completions API: ${options.responseLength}`,
-      );
     }
 
     return optimized;
