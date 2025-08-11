@@ -17,11 +17,7 @@ import {
   VISION_SUPPORTED_MODELS,
   isGPT5Model,
 } from '../../../constants';
-import {
-  GPT5_PRESETS,
-  isStandardResponseLength,
-  mapToReasoningLength,
-} from '../../../constants/chat';
+import { GPT5_PRESETS } from '../../../constants/chat';
 import { ChatService } from '../../ChatService';
 import { OpenAIChatService } from './OpenAIChatService';
 import {
@@ -177,22 +173,8 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
       }
     }
 
-    // Auto-optimize response length only when using Responses API
-    // Determine if we'll use Responses API based on endpoint preference
-    const willUseResponsesAPI =
-      options.gpt5EndpointPreference === 'responses' ||
-      (options.gpt5EndpointPreference === 'auto' &&
-        (!!optimized.reasoning_effort || !!optimized.verbosity));
-
-    if (
-      willUseResponsesAPI &&
-      options.responseLength &&
-      isStandardResponseLength(options.responseLength)
-    ) {
-      optimized.responseLength = mapToReasoningLength(options.responseLength);
-    } else if (options.responseLength) {
-      // Keep standard response length for Chat Completions API
-    }
+    // Keep the user's selected response length regardless of API endpoint
+    // Users can manually select reasoning response lengths if desired
 
     return optimized;
   }
