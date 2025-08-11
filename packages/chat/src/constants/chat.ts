@@ -27,7 +27,7 @@ export const MAX_TOKENS_BY_LENGTH = {
 /**
  * Default max tokens for AI providers when not specified
  */
-export const DEFAULT_MAX_TOKENS = 1000;
+export const DEFAULT_MAX_TOKENS = 5000;
 
 /**
  * GPT-5 reasoning and verbosity presets (response length is set separately)
