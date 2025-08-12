@@ -162,8 +162,8 @@ const App: React.FC = () => {
     'minimal' | 'low' | 'medium' | 'high'
   >('medium');
   const [gpt5EndpointPreference, setGpt5EndpointPreference] = useState<
-    'chat' | 'responses' | 'auto'
-  >('auto');
+    'chat' | 'responses'
+  >('chat');
 
   // chat messages state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -216,12 +216,69 @@ const App: React.FC = () => {
   /**
    * convert messages to API format
    */
-  const convertMessagesToApiFormat = (msgs: Message[]) =>
-    msgs.map((msg) =>
-      msg.kind === 'text'
-        ? { role: msg.role, content: msg.content }
-        : { role: msg.role, content: '', image_url: msg.dataUrl },
-    );
+  const convertMessagesToApiFormat = (msgs: Message[]) => {
+    const apiMessages: any[] = [];
+    let currentImageUrl: string | null = null;
+    let currentText = '';
+
+    for (const msg of msgs) {
+      if (msg.role === 'user') {
+        if (msg.kind === 'image') {
+          // Store image URL for combining with next text message
+          currentImageUrl = msg.dataUrl;
+        } else if (msg.kind === 'text') {
+          if (currentImageUrl) {
+            // Combine image and text into a single message with VisionBlock format
+            apiMessages.push({
+              role: 'user',
+              content: [
+                { type: 'text', text: msg.content },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: currentImageUrl,
+                    detail: 'low',
+                  },
+                },
+              ],
+            });
+            currentImageUrl = null;
+          } else {
+            // Text only message
+            apiMessages.push({
+              role: 'user',
+              content: msg.content,
+            });
+          }
+        }
+      } else {
+        // Assistant messages are always text
+        apiMessages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      }
+    }
+
+    // If there's a dangling image without text, add it with default prompt
+    if (currentImageUrl) {
+      apiMessages.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: 'この画像について説明してください。' },
+          {
+            type: 'image_url',
+            image_url: {
+              url: currentImageUrl,
+              detail: 'low',
+            },
+          },
+        ],
+      });
+    }
+
+    return apiMessages;
+  };
 
   /**
    * initialize AITuberOnAirCore
@@ -750,13 +807,12 @@ const App: React.FC = () => {
                       value={gpt5EndpointPreference}
                       onChange={(e) =>
                         setGpt5EndpointPreference(
-                          e.target.value as 'chat' | 'responses' | 'auto',
+                          e.target.value as 'chat' | 'responses',
                         )
                       }
                     >
                       <option value="chat">Chat Completions API</option>
                       <option value="responses">Responses API</option>
-                      <option value="auto">Auto</option>
                     </select>
                   </div>
                   <hr />
