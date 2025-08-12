@@ -229,7 +229,7 @@ describe('OpenAIChatServiceProvider', () => {
       );
     });
 
-    it('should use Chat Completions API by default even when MCP servers are configured for GPT-5', () => {
+    it('should use Responses API when MCP servers are configured regardless of model', () => {
       const options: ChatServiceOptions = {
         apiKey: 'test-api-key',
         mcpServers: [
@@ -248,7 +248,7 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_GPT_5_NANO,
         undefined,
         undefined,
-        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API, // For GPT-5, default is chat even with MCP
+        ENDPOINT_OPENAI_RESPONSES_API, // MCP requires Responses API regardless of model
         options.mcpServers,
         undefined,
         undefined,
