@@ -412,16 +412,35 @@ export class OpenAIChatService implements ChatService {
     messages: (Message | MessageWithVision)[],
   ): any[] {
     return messages.map((msg) => {
+      // Convert 'tool' role to 'user' for Responses API compatibility
+      const role = msg.role === 'tool' ? 'user' : msg.role;
+
       const cleanMsg: any = {
-        role: msg.role,
+        role: role,
       };
 
       // Handle content (text or vision)
       if (typeof msg.content === 'string') {
         cleanMsg.content = msg.content;
       } else if (Array.isArray(msg.content)) {
-        // Vision message case
-        cleanMsg.content = msg.content;
+        // Vision message case - convert VisionBlock types for Responses API
+        cleanMsg.content = msg.content.map((block: any) => {
+          if (block.type === 'text') {
+            // Convert 'text' to 'input_text' for Responses API
+            return {
+              type: 'input_text',
+              text: block.text,
+            };
+          } else if (block.type === 'image_url') {
+            // For Responses API, image_url should be a direct string, not an object
+            return {
+              type: 'input_image',
+              image_url: block.image_url.url, // Extract the URL string directly
+            };
+          }
+          // Return as-is for any other types
+          return block;
+        });
       } else {
         cleanMsg.content = msg.content;
       }
@@ -478,10 +497,9 @@ export class OpenAIChatService implements ChatService {
   private buildMCPToolsDefinition(): any[] {
     return this.mcpServers.map((server) => {
       const mcpDef: any = {
-        type: 'mcp',
-        server_label: server.name,
-        server_url: server.url,
-        require_approval: 'never',
+        type: 'mcp', // Using 'mcp' as indicated by the error message
+        server_label: server.name, // Use server_label as required by API
+        server_url: server.url, // Use server_url instead of url
       };
 
       if (server.tool_configuration?.allowed_tools) {
