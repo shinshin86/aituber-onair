@@ -41,6 +41,6 @@
     }
   },
   "files": {
-    "ignore": ["**/dist/**"]
+    "ignore": ["**/dist/**", "./examples/**"]
   }
 }

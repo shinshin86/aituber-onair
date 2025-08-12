@@ -70,8 +70,6 @@ pnpm install @aituber-onair/core
 
 ## 基本的な使用方法
 
-より実践的な利用例については [Simple AI Chat App with AITuber OnAir Core](https://github.com/shinshin86/simple-aichat-app-with-aituber-onair-core) をご覧ください。
-
 ```typescript
 import { AITuberOnAirCore, AITuberOnAirCoreEvent, AITuberOnAirCoreOptions } from '@aituber-onair/core';
 

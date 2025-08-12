@@ -1,5 +1,15 @@
 # @aituber-onair/core
 
+## 0.17.1
+
+### Patch Changes
+
+- Update @aituber-onair/chat dependency to v0.2.1
+  - **GPT-5 Model Support**: Added support for GPT-5 models in OpenAI provider
+  - **MCP Compatibility Improvements**: Enhanced Model Context Protocol support with better endpoint selection behavior
+  - **Responses API Integration**: Improved compatibility with OpenAI's Responses API for vision and MCP features
+  - **Test Coverage**: Updated test expectations to reflect the improved MCP endpoint selection behavior
+
 ## 0.17.0
 
 ### Minor Changes

@@ -54,21 +54,16 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
     const mcpServers = (optimizedOptions as any).mcpServers ?? [];
     const modelName = optimizedOptions.model || this.getDefaultModel();
 
-    // For GPT-5 models, respect user endpoint preference
+    // Determine endpoint preference
     let shouldUseResponsesAPI = false;
-    if (isGPT5Model(modelName)) {
-      const preference = optimizedOptions.gpt5EndpointPreference || 'chat'; // Default to chat API for GPT-5
-      if (preference === 'responses') {
-        shouldUseResponsesAPI = true;
-      } else if (preference === 'auto') {
-        // Only use Responses API if explicitly needed (e.g., for advanced reasoning)
-        shouldUseResponsesAPI =
-          !!optimizedOptions.reasoning_effort || !!optimizedOptions.verbosity;
-      }
-      // 'chat' preference means use Chat Completions API
-    } else if (mcpServers.length > 0) {
-      // Non-GPT-5 models with MCP always use Responses API
+
+    // MCP requires Responses API regardless of model
+    if (mcpServers.length > 0) {
       shouldUseResponsesAPI = true;
+    } else if (isGPT5Model(modelName)) {
+      // For GPT-5 models without MCP, respect user endpoint preference
+      const preference = optimizedOptions.gpt5EndpointPreference || 'chat'; // Default to chat API for GPT-5
+      shouldUseResponsesAPI = preference === 'responses';
     }
 
     const endpoint =

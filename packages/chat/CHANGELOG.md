@@ -1,5 +1,12 @@
 # @aituber-onair/chat
 
+## 0.2.1
+
+### Patch Changes
+
+- **MCP Endpoint Selection**: Fixed MCP endpoint selection behavior for improved compatibility with Model Context Protocol servers
+- **Test Updates**: Updated test expectations to reflect the corrected MCP endpoint selection behavior
+
 ## 0.2.0
 
 ### Minor Changes
