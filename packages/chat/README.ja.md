@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat ロゴ](./images/aituber-onair-chat.png)
 
-AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、Claude、Gemini等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
+AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、Claude、Gemini、OpenRouter等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
 
 ## 機能
 
-- 🤖 **複数のAIプロバイダー対応**: OpenAI、Claude (Anthropic)、Google Gemini
+- 🤖 **複数のAIプロバイダー対応**: OpenAI、Claude (Anthropic)、Google Gemini、OpenRouter
 - 🔄 **統一されたインターフェース**: 異なるプロバイダー間での一貫したAPI
 - 🛠️ **ツール・関数呼び出し**: AI関数呼び出しの自動反復処理をサポート
 - 💬 **ストリーミングレスポンス**: リアルタイムストリーミングチャット応答
@@ -84,6 +84,24 @@ const geminiService = ChatServiceFactory.createChatService('gemini', {
   model: 'gemini-pro'
 });
 ```
+
+#### OpenRouter
+
+```typescript
+const openRouterService = ChatServiceFactory.createChatService('openrouter', {
+  apiKey: process.env.OPENROUTER_API_KEY,
+  model: 'openai/gpt-oss-20b:free', // 無料階層モデル
+  // オプション: 分析用アプリ情報を追加
+  appName: 'あなたのアプリ名',
+  appUrl: 'https://your-app-url.com'
+});
+```
+
+**OpenRouterの重要な注意事項:**
+- `gpt-oss-20b:free`モデルでは、技術的制限によりトークン制限が自動的に無効化されます
+- 応答の長さを制御するには、プロンプト内で指示してください（例：「40文字以内で返答してください」）
+- 無料階層にはレート制限があります（20リクエスト/分）
+- 現在は`openai/gpt-oss-20b:free`モデルのみサポートしています
 
 ### ビジョンチャット
 
@@ -308,6 +326,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 - **OpenAI**: GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **Gemini**: Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Proのモデルをサポート
 - **Claude**: Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnetのモデルをサポート
+- **OpenRouter**: `openai/gpt-oss-20b:free`（トークン制限の特別処理がある無料階層モデル）をサポート
 
 ## ライセンス
 

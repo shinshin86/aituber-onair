@@ -28,6 +28,10 @@ export { GeminiChatServiceProvider } from './services/providers/gemini/GeminiCha
 export { ClaudeChatService } from './services/providers/claude/ClaudeChatService';
 export { ClaudeChatServiceProvider } from './services/providers/claude/ClaudeChatServiceProvider';
 
+// OpenRouter provider exports
+export { OpenRouterChatService } from './services/providers/openrouter/OpenRouterChatService';
+export { OpenRouterChatServiceProvider } from './services/providers/openrouter/OpenRouterChatServiceProvider';
+
 // Constants exports
 export * from './constants';
 

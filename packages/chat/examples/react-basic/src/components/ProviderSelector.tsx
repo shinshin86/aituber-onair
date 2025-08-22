@@ -33,6 +33,8 @@ import {
   MODEL_GEMINI_2_0_FLASH_LITE,
   MODEL_GEMINI_1_5_FLASH,
   MODEL_GEMINI_1_5_PRO,
+  // OpenRouter models
+  MODEL_GPT_OSS_20B_FREE,
 } from '@aituber-onair/chat';
 
 interface ProviderSelectorProps {
@@ -76,6 +78,11 @@ const providerInfo = {
     name: 'Gemini',
     placeholder: 'AI...',
     color: '#4285f4',
+  },
+  openrouter: {
+    name: 'OpenRouter',
+    placeholder: 'sk-or-...',
+    color: '#8b5cf6',
   },
 };
 
@@ -216,6 +223,14 @@ export const allModels = [
     name: 'Gemini 1.5 Pro',
     provider: 'gemini',
     default: false,
+  },
+
+  // OpenRouter models
+  {
+    id: MODEL_GPT_OSS_20B_FREE,
+    name: 'GPT OSS 20B (Free)',
+    provider: 'openrouter',
+    default: true,
   },
 ];
 

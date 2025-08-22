@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](./images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, and Gemini.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, Gemini, and OpenRouter.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, Claude (Anthropic), and Google Gemini
+- 🤖 **Multiple AI Provider Support**: OpenAI, Claude (Anthropic), Google Gemini, and OpenRouter
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -84,6 +84,24 @@ const geminiService = ChatServiceFactory.createChatService('gemini', {
   model: 'gemini-pro'
 });
 ```
+
+#### OpenRouter
+
+```typescript
+const openRouterService = ChatServiceFactory.createChatService('openrouter', {
+  apiKey: process.env.OPENROUTER_API_KEY,
+  model: 'openai/gpt-oss-20b:free', // Free tier model
+  // Optional: Add app information for analytics
+  appName: 'Your App Name',
+  appUrl: 'https://your-app-url.com'
+});
+```
+
+**Important Notes for OpenRouter:**
+- Token limits are automatically disabled for the `gpt-oss-20b:free` model due to technical limitations
+- To control response length, include instructions in your prompt (e.g., "Please respond in 40 characters or less")
+- Free tier has rate limits (20 requests/minute)
+- Only `openai/gpt-oss-20b:free` model is currently supported
 
 ### Vision Chat
 
@@ -303,11 +321,12 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 
 ## Available Providers
 
-Currently, the following AI provider is built-in:
+Currently, the following AI providers are built-in:
 
 - **OpenAI**: Supports models like GPT-4.1(including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Pro
 - **Claude**: Supports models like Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnet
+- **OpenRouter**: Supports `openai/gpt-oss-20b:free` (free tier model with special handling for token limits)
 
 ## License
 
