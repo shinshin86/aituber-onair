@@ -1,5 +1,23 @@
 # @aituber-onair/chat
 
+## 0.3.0
+
+### Minor Changes
+
+- **OpenRouter Provider Support**: Added comprehensive support for OpenRouter as a new chat service provider
+  - New `OpenRouterChatService` and `OpenRouterChatServiceProvider` implementations with unified interface
+  - Support for `openai/gpt-oss-20b:free` model with free tier access
+  - Automatic rate limiting for free tier (20 requests per minute)
+  - Application analytics support with optional `appName` and `appUrl` parameters
+  - Token limits automatically disabled for free model due to technical limitations
+  - Complete streaming response support with partial message callbacks
+  - Tool/function calling capabilities
+- **Documentation and Examples**: Added comprehensive documentation and usage examples
+  - Node.js example with OpenRouter integration
+  - React example with provider selection support
+  - Updated README with OpenRouter configuration and usage guidelines
+- **Test Coverage**: Added complete test suite for OpenRouter provider functionality
+
 ## 0.2.1
 
 ### Patch Changes

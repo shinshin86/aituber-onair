@@ -15,7 +15,7 @@ import ProviderSelector, {
 } from './components/ProviderSelector';
 import MessageList from './components/MessageList';
 
-export type Provider = 'openai' | 'claude' | 'gemini';
+export type Provider = 'openai' | 'claude' | 'gemini' | 'openrouter';
 
 interface ChatMessage extends Omit<Message, 'timestamp'> {
   id: string;

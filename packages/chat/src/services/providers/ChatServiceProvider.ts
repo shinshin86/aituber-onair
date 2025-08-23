@@ -17,7 +17,7 @@ export interface ChatServiceOptions {
   responseLength?: ChatResponseLength;
   /** Verbosity level for GPT-5 models (OpenAI only) */
   verbosity?: 'low' | 'medium' | 'high';
-  /** Reasoning effort level for GPT-5 models (OpenAI only) */
+  /** Reasoning effort level for GPT-5 models (OpenAI) and gpt-oss models (OpenRouter) */
   reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
   /** GPT-5 usage preset (OpenAI only) - overrides individual reasoning/verbosity settings */
   gpt5Preset?: GPT5PresetKey;
@@ -25,6 +25,10 @@ export interface ChatServiceOptions {
   gpt5EndpointPreference?: 'chat' | 'responses' | 'auto';
   /** Enable reasoning summary for GPT-5 models (OpenAI only) - requires organization verification */
   enableReasoningSummary?: boolean;
+  /** Include reasoning in response (OpenRouter only) - default false to avoid empty responses */
+  includeReasoning?: boolean;
+  /** Maximum tokens allocated for reasoning (OpenRouter only) */
+  reasoningMaxTokens?: number;
   /** Additional provider-specific options */
   [key: string]: any;
 }
