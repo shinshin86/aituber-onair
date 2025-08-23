@@ -8,7 +8,6 @@ import {
   isGPT5Model,
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
-  VoiceServiceOptions,
 } from '@aituber-onair/core';
 
 // Constants imports
@@ -53,6 +52,9 @@ const App: React.FC = () => {
 
   // initialized flag (true if configured)
   const [isConfigured, setIsConfigured] = useState(false);
+
+  // Settings modal tab state
+  const [activeTab, setActiveTab] = useState<'llm' | 'voice'>('llm');
 
   // configuration form states
   const [apiKey, setApiKey] = useState<string>('');
@@ -145,7 +147,6 @@ const App: React.FC = () => {
   const convertMessagesToApiFormat = (msgs: Message[]) => {
     const apiMessages: any[] = [];
     let currentImageUrl: string | null = null;
-    let currentText = '';
 
     for (const msg of msgs) {
       if (msg.role === 'user') {
@@ -179,10 +180,12 @@ const App: React.FC = () => {
         }
       } else {
         // Assistant messages are always text
-        apiMessages.push({
-          role: msg.role,
-          content: msg.content,
-        });
+        if (msg.kind === 'text') {
+          apiMessages.push({
+            role: msg.role,
+            content: msg.content,
+          });
+        }
       }
     }
 
@@ -498,7 +501,7 @@ const App: React.FC = () => {
                 marginRight: '8px',
               }}
             >
-              API設定
+              設定
             </button>
             <button
               onClick={clearChatHistory}
@@ -603,50 +606,105 @@ const App: React.FC = () => {
           <div
             className="modal-content"
             style={{
+              height: '80vh',
               maxHeight: '90vh',
-              overflowY: 'auto',
+              minHeight: '500px',
               display: 'flex',
               flexDirection: 'column',
             }}
           >
+            <h2 style={{ marginBottom: '16px' }}>設定</h2>
+            
+            {/* Tab Headers */}
             <div
-              style={{ flexGrow: 1, overflowY: 'auto', paddingRight: '8px' }}
+              style={{
+                display: 'flex',
+                borderBottom: '2px solid #ddd',
+                marginBottom: '20px',
+              }}
             >
-              <h2>設定</h2>
-              <label htmlFor="apiKey">API Key:</label>
-              <input
-                type="password"
-                id="apiKey"
-                placeholder="..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-
-              <label htmlFor="systemPrompt">System Prompt:</label>
-              <textarea
-                id="systemPrompt"
-                placeholder="あなたはフレンドリーなAITuberです..."
-                value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
-              />
-
-              <label htmlFor="chatProvider">Chat Provider:</label>
-              <select
-                id="chatProvider"
-                value={chatProvider}
-                onChange={(e) => setChatProvider(e.target.value)}
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: activeTab === 'llm' ? '#2e997d' : 'transparent',
+                  color: activeTab === 'llm' ? '#fff' : '#333',
+                  border: 'none',
+                  borderBottom: activeTab === 'llm' ? '3px solid #2e997d' : 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: activeTab === 'llm' ? 'bold' : 'normal',
+                  transition: 'all 0.3s ease',
+                }}
+                onClick={() => setActiveTab('llm')}
               >
-                <option value="openai">OpenAI</option>
-                <option value="gemini">Gemini</option>
-                <option value="claude">Claude</option>
-              </select>
-
-              <label htmlFor="model">Model:</label>
-              <select
-                id="model"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
+                LLM設定
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: activeTab === 'voice' ? '#2e997d' : 'transparent',
+                  color: activeTab === 'voice' ? '#fff' : '#333',
+                  border: 'none',
+                  borderBottom: activeTab === 'voice' ? '3px solid #2e997d' : 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: activeTab === 'voice' ? 'bold' : 'normal',
+                  transition: 'all 0.3s ease',
+                }}
+                onClick={() => setActiveTab('voice')}
               >
+                音声設定
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div
+              style={{ 
+                flex: '1 1 auto',
+                overflowY: 'auto', 
+                paddingRight: '8px',
+                minHeight: '0'
+              }}
+            >
+              {activeTab === 'llm' ? (
+                <div>
+                  {/* LLM Settings */}
+                  <label htmlFor="apiKey">API Key:</label>
+                  <input
+                    type="password"
+                    id="apiKey"
+                    placeholder="..."
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+
+                  <label htmlFor="systemPrompt">System Prompt:</label>
+                  <textarea
+                    id="systemPrompt"
+                    placeholder="あなたはフレンドリーなAITuberです..."
+                    value={systemPrompt}
+                    onChange={(e) => setSystemPrompt(e.target.value)}
+                  />
+
+                  <label htmlFor="chatProvider">Chat Provider:</label>
+                  <select
+                    id="chatProvider"
+                    value={chatProvider}
+                    onChange={(e) => setChatProvider(e.target.value)}
+                  >
+                    <option value="openai">OpenAI</option>
+                    <option value="gemini">Gemini</option>
+                    <option value="claude">Claude</option>
+                  </select>
+
+                  <label htmlFor="model">Model:</label>
+                  <select
+                    id="model"
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                  >
                 {chatProvider === 'openai' &&
                   openaiModels.map((m) => (
                     <option key={m} value={m}>
@@ -787,60 +845,61 @@ const App: React.FC = () => {
                 </div>
               )}
 
-              <div style={{ marginTop: '8px' }}>
-                <label htmlFor="enableDeepWikiMcp">
-                  DeepWiki MCPを有効にする:
-                </label>
-                <input
-                  type="checkbox"
-                  id="enableDeepWikiMcp"
-                  checked={enableDeepWikiMcp}
-                  onChange={(e) => setEnableDeepWikiMcp(e.target.checked)}
-                  style={{ marginLeft: '8px' }}
-                />
-              </div>
-
-              {/* Voice Settings Section */}
-              <div style={{ marginTop: '24px' }}>
-                <hr />
-                <h3 style={{ marginTop: '16px' }}>音声設定 (Aivis Cloud API)</h3>
-
-                <div style={{ marginTop: '16px' }}>
-                  <label htmlFor="enableVoice">
-                    音声合成を有効にする:
-                  </label>
-                  <input
-                    type="checkbox"
-                    id="enableVoice"
-                    checked={enableVoice}
-                    onChange={(e) => setEnableVoice(e.target.checked)}
-                    style={{ marginLeft: '8px' }}
-                  />
-                </div>
-
-                {enableVoice && (
-                  <>
-                    <label htmlFor="aivisCloudApiKey">
-                      Aivis Cloud API Key:
+                  <div style={{ marginTop: '8px' }}>
+                    <label htmlFor="enableDeepWikiMcp">
+                      DeepWiki MCPを有効にする:
                     </label>
                     <input
-                      type="password"
-                      id="aivisCloudApiKey"
-                      placeholder="API Keyを入力してください..."
-                      value={aivisCloudApiKey}
-                      onChange={(e) => setAivisCloudApiKey(e.target.value)}
+                      type="checkbox"
+                      id="enableDeepWikiMcp"
+                      checked={enableDeepWikiMcp}
+                      onChange={(e) => setEnableDeepWikiMcp(e.target.checked)}
+                      style={{ marginLeft: '8px' }}
                     />
-                    <div style={{ fontSize: '0.9em', color: '#666', marginTop: '4px', marginBottom: '12px' }}>
-                      API Keyは <a href="https://hub.aivis-project.com/cloud-api/api-keys" target="_blank" rel="noopener noreferrer">
-                        https://hub.aivis-project.com/cloud-api/api-keys
-                      </a> から取得できます
-                    </div>
-                    <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
-                      ※ 音声パラメータは最適な値に固定されています
-                    </div>
-                  </>
-                )}
-              </div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {/* Voice Settings */}
+                  <h3 style={{ marginTop: '0', marginBottom: '16px' }}>音声設定 (Aivis Cloud API)</h3>
+
+                  <div style={{ marginTop: '16px' }}>
+                    <label htmlFor="enableVoice">
+                      音声合成を有効にする:
+                    </label>
+                    <input
+                      type="checkbox"
+                      id="enableVoice"
+                      checked={enableVoice}
+                      onChange={(e) => setEnableVoice(e.target.checked)}
+                      style={{ marginLeft: '8px' }}
+                    />
+                  </div>
+
+                  {enableVoice && (
+                    <>
+                      <label htmlFor="aivisCloudApiKey" style={{ marginTop: '16px', display: 'block' }}>
+                        Aivis Cloud API Key:
+                      </label>
+                      <input
+                        type="password"
+                        id="aivisCloudApiKey"
+                        placeholder="API Keyを入力してください..."
+                        value={aivisCloudApiKey}
+                        onChange={(e) => setAivisCloudApiKey(e.target.value)}
+                      />
+                      <div style={{ fontSize: '0.9em', color: '#666', marginTop: '4px', marginBottom: '12px' }}>
+                        API Keyは <a href="https://hub.aivis-project.com/cloud-api/api-keys" target="_blank" rel="noopener noreferrer">
+                          https://hub.aivis-project.com/cloud-api/api-keys
+                        </a> から取得できます
+                      </div>
+                      <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
+                        ※ 音声パラメータは最適な値に固定されています
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             <div
