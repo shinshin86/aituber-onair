@@ -20,13 +20,10 @@ import {
 import { geminiModels } from './constants/gemini';
 import { claudeModels } from './constants/claude';
 import {
-  FIXED_AIVIS_MODEL_UUID,
-  FIXED_AIVIS_SPEAKING_RATE,
-  FIXED_AIVIS_EMOTIONAL_INTENSITY,
-  FIXED_AIVIS_PITCH,
-  FIXED_AIVIS_VOLUME,
-  FIXED_AIVIS_OUTPUT_FORMAT,
-} from './constants/aivisCloudApi';
+  type VoiceEngineType,
+  VOICE_ENGINE_CONFIGS,
+  DEFAULT_VOICE_ENGINE,
+} from './constants/voiceEngines';
 import { randomIntTool, randomIntHandler } from './constants/tools';
 import { mcpServers } from './constants/mcp';
 
@@ -97,8 +94,8 @@ const App: React.FC = () => {
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
 
   // Voice settings state
-  const [enableVoice, setEnableVoice] = useState(false);
-  const [aivisCloudApiKey, setAivisCloudApiKey] = useState('');
+  const [selectedVoiceEngine, setSelectedVoiceEngine] = useState<VoiceEngineType>(DEFAULT_VOICE_ENGINE);
+  const [voiceApiKeys, setVoiceApiKeys] = useState<Record<string, string>>({});
 
   // Voice playback state
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -238,25 +235,76 @@ const App: React.FC = () => {
     }
 
     // prepare voice options if enabled
-    const voiceOptions = enableVoice && aivisCloudApiKey
-      ? {
-          engineType: 'aivisCloud' as const,
-          speaker: FIXED_AIVIS_MODEL_UUID,
-          apiKey: aivisCloudApiKey.trim(),
-          // Aivis Cloud specific options with fixed values
-          aivisCloudModelUuid: FIXED_AIVIS_MODEL_UUID,
-          aivisCloudSpeakingRate: FIXED_AIVIS_SPEAKING_RATE,
-          aivisCloudEmotionalIntensity: FIXED_AIVIS_EMOTIONAL_INTENSITY,
-          aivisCloudPitch: FIXED_AIVIS_PITCH,
-          aivisCloudVolume: FIXED_AIVIS_VOLUME,
-          aivisCloudOutputFormat: FIXED_AIVIS_OUTPUT_FORMAT,
-          aivisCloudUseSSML: true, // Enable SSML support
-          onComplete: () => {
-            console.log('Voice playback completed');
-            setIsSpeaking(false);
-          },
+    const createVoiceOptions = () => {
+      if (selectedVoiceEngine === 'none') {
+        return undefined;
+      }
+
+      const config = VOICE_ENGINE_CONFIGS[selectedVoiceEngine];
+      const options: any = {
+        engineType: selectedVoiceEngine,
+        speaker: config.speaker,
+        onComplete: () => {
+          console.log('Voice playback completed');
+          setIsSpeaking(false);
+        },
+      };
+
+      // Add API key if needed
+      if (config.needsApiKey) {
+        const apiKey = voiceApiKeys[selectedVoiceEngine];
+        if (apiKey) {
+          if (selectedVoiceEngine === 'minimax') {
+            const [key, groupId] = apiKey.split(':');
+            if (groupId) {
+              options.apiKey = key;
+              options.groupId = groupId;
+            }
+          } else {
+            options.apiKey = apiKey.trim();
+          }
         }
-      : undefined;
+      }
+
+      // Add API URL if specified
+      if (config.apiUrl) {
+        switch (selectedVoiceEngine) {
+          case 'voicevox':
+            options.voicevoxApiUrl = config.apiUrl;
+            break;
+          case 'voicepeak':
+            options.voicepeakApiUrl = config.apiUrl;
+            break;
+          case 'aivisSpeech':
+            options.aivisSpeechApiUrl = config.apiUrl;
+            break;
+        }
+      }
+
+      // Add engine-specific options
+      switch (selectedVoiceEngine) {
+        case 'aivisCloud':
+          Object.assign(options, {
+            aivisCloudModelUuid: config.speaker,
+            aivisCloudSpeakingRate: config.defaultParams?.speakingRate,
+            aivisCloudEmotionalIntensity: config.defaultParams?.emotionalIntensity,
+            aivisCloudPitch: config.defaultParams?.pitch,
+            aivisCloudVolume: config.defaultParams?.volume,
+            aivisCloudOutputFormat: config.defaultParams?.outputFormat,
+            aivisCloudUseSSML: true,
+          });
+          break;
+        case 'minimax':
+          if (config.defaultParams?.endpoint) {
+            options.endpoint = config.defaultParams.endpoint;
+          }
+          break;
+      }
+
+      return options;
+    };
+
+    const voiceOptions = createVoiceOptions();
 
     // create options
     const aituberOptions: AITuberOnAirCoreOptions = {
@@ -525,9 +573,9 @@ const App: React.FC = () => {
           <div>
             選択中のモデル：{chatProvider} / {model}
           </div>
-          {enableVoice && (
+          {selectedVoiceEngine !== 'none' && (
             <div style={{ color: '#2e997d' }}>
-              音声合成: 有効 (Aivis Cloud)
+              音声合成: 有効 ({VOICE_ENGINE_CONFIGS[selectedVoiceEngine].name})
             </div>
           )}
           {isSpeaking && (
@@ -861,42 +909,53 @@ const App: React.FC = () => {
               ) : (
                 <div>
                   {/* Voice Settings */}
-                  <h3 style={{ marginTop: '0', marginBottom: '16px' }}>音声設定 (Aivis Cloud API)</h3>
+                  <h3 style={{ marginTop: '0', marginBottom: '16px' }}>音声設定</h3>
 
-                  <div style={{ marginTop: '16px' }}>
-                    <label htmlFor="enableVoice">
-                      音声合成を有効にする:
-                    </label>
-                    <input
-                      type="checkbox"
-                      id="enableVoice"
-                      checked={enableVoice}
-                      onChange={(e) => setEnableVoice(e.target.checked)}
-                      style={{ marginLeft: '8px' }}
-                    />
-                  </div>
+                  <label htmlFor="voiceEngine" style={{ marginTop: '16px', display: 'block' }}>
+                    音声エンジン:
+                  </label>
+                  <select
+                    id="voiceEngine"
+                    value={selectedVoiceEngine}
+                    onChange={(e) => setSelectedVoiceEngine(e.target.value as VoiceEngineType)}
+                    style={{ width: '100%', marginBottom: '12px' }}
+                  >
+                    {Object.entries(VOICE_ENGINE_CONFIGS).map(([key, config]) => (
+                      <option key={key} value={key}>
+                        {config.name}
+                      </option>
+                    ))}
+                  </select>
 
-                  {enableVoice && (
+                  {selectedVoiceEngine !== 'none' && VOICE_ENGINE_CONFIGS[selectedVoiceEngine].needsApiKey && (
                     <>
-                      <label htmlFor="aivisCloudApiKey" style={{ marginTop: '16px', display: 'block' }}>
-                        Aivis Cloud API Key:
+                      <label htmlFor="voiceApiKey" style={{ marginTop: '16px', display: 'block' }}>
+                        {VOICE_ENGINE_CONFIGS[selectedVoiceEngine].name} API Key:
                       </label>
                       <input
                         type="password"
-                        id="aivisCloudApiKey"
-                        placeholder="API Keyを入力してください..."
-                        value={aivisCloudApiKey}
-                        onChange={(e) => setAivisCloudApiKey(e.target.value)}
+                        id="voiceApiKey"
+                        placeholder={VOICE_ENGINE_CONFIGS[selectedVoiceEngine].placeholder}
+                        value={voiceApiKeys[selectedVoiceEngine] || ''}
+                        onChange={(e) => setVoiceApiKeys(prev => ({
+                          ...prev,
+                          [selectedVoiceEngine]: e.target.value
+                        }))}
+                        style={{ width: '100%', marginBottom: '8px' }}
                       />
-                      <div style={{ fontSize: '0.9em', color: '#666', marginTop: '4px', marginBottom: '12px' }}>
-                        API Keyは <a href="https://hub.aivis-project.com/cloud-api/api-keys" target="_blank" rel="noopener noreferrer">
-                          https://hub.aivis-project.com/cloud-api/api-keys
-                        </a> から取得できます
-                      </div>
-                      <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
-                        ※ 音声パラメータは最適な値に固定されています
-                      </div>
                     </>
+                  )}
+
+                  {selectedVoiceEngine !== 'none' && VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl && (
+                    <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
+                      <strong>API URL:</strong> {VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl}
+                    </div>
+                  )}
+
+                  {selectedVoiceEngine !== 'none' && (
+                    <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
+                      ※ 音声パラメータは最適な値に固定されています
+                    </div>
                   )}
                 </div>
               )}
