@@ -27,6 +27,10 @@ import {
 import { randomIntTool, randomIntHandler } from './constants/tools';
 import { mcpServers } from './constants/mcp';
 
+// Default icons
+import defaultUserIcon from './assets/icons/default-user.svg';
+import defaultAvatarIcon from './assets/icons/default-avatar.svg';
+
 // when use MCP, uncomment the following line
 // import { createMcpToolHandler } from './mcpClient';
 
@@ -51,7 +55,7 @@ const App: React.FC = () => {
   const [isConfigured, setIsConfigured] = useState(false);
 
   // Settings modal tab state
-  const [activeTab, setActiveTab] = useState<'llm' | 'voice'>('llm');
+  const [activeTab, setActiveTab] = useState<'llm' | 'voice' | 'avatar'>('llm');
 
   // configuration form states
   const [apiKey, setApiKey] = useState<string>('');
@@ -99,6 +103,9 @@ const App: React.FC = () => {
 
   // Voice playback state
   const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Avatar settings state
+  const [avatarImageUrl, setAvatarImageUrl] = useState<string>(defaultAvatarIcon);
 
   // AITuberOnAirCore instance reference
   const aituberRef = useRef<AITuberOnAirCore | null>(null);
@@ -515,6 +522,24 @@ const App: React.FC = () => {
   };
 
   /**
+   * avatar image upload onChange: convert selected image to DataURL and store it in state
+   */
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      if (typeof ev.target?.result === 'string') {
+        setAvatarImageUrl(ev.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /**
    * apply settings
    */
   const handleApplySettings = () => {
@@ -593,24 +618,39 @@ const App: React.FC = () => {
           <div id="messages">
             {messages.map((msg) => (
               <div key={msg.id} className={`message ${msg.role}`}>
-                {msg.kind === 'text' && <div>{msg.content}</div>}
-                {msg.kind === 'image' && (
-                  <img
-                    src={msg.dataUrl}
-                    alt="Attached"
-                    style={{
-                      maxWidth: '200px',
-                      display: 'block',
-                      marginTop: '8px',
-                    }}
-                  />
-                )}
+                <img
+                  src={msg.role === 'user' ? defaultUserIcon : avatarImageUrl}
+                  alt={`${msg.role} avatar`}
+                  className="message-avatar"
+                />
+                <div className="message-content">
+                  {msg.kind === 'text' && <div>{msg.content}</div>}
+                  {msg.kind === 'image' && (
+                    <img
+                      src={msg.dataUrl}
+                      alt="Attached"
+                      style={{
+                        maxWidth: '200px',
+                        display: 'block',
+                        marginTop: '8px',
+                        borderRadius: '8px',
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             ))}
             {/* assistant's partial response */}
             {partialTextBuffer && (
               <div className="message assistant assistant-partial">
-                {partialTextBuffer}
+                <img
+                  src={avatarImageUrl}
+                  alt="assistant avatar"
+                  className="message-avatar"
+                />
+                <div className="message-content">
+                  {partialTextBuffer}
+                </div>
               </div>
             )}
           </div>
@@ -704,6 +744,23 @@ const App: React.FC = () => {
                 onClick={() => setActiveTab('voice')}
               >
                 音声設定
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: activeTab === 'avatar' ? '#2e997d' : 'transparent',
+                  color: activeTab === 'avatar' ? '#fff' : '#333',
+                  border: 'none',
+                  borderBottom: activeTab === 'avatar' ? '3px solid #2e997d' : 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: activeTab === 'avatar' ? 'bold' : 'normal',
+                  transition: 'all 0.3s ease',
+                }}
+                onClick={() => setActiveTab('avatar')}
+              >
+                アバター設定
               </button>
             </div>
 
@@ -906,7 +963,7 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
-              ) : (
+              ) : activeTab === 'voice' ? (
                 <div>
                   {/* Voice Settings */}
                   <h3 style={{ marginTop: '0', marginBottom: '16px' }}>音声設定</h3>
@@ -957,6 +1014,55 @@ const App: React.FC = () => {
                       ※ 音声パラメータは最適な値に固定されています
                     </div>
                   )}
+                </div>
+              ) : (
+                <div>
+                  {/* Avatar Settings */}
+                  <h3 style={{ marginTop: '0', marginBottom: '16px' }}>アバター設定</h3>
+                  
+                  <div style={{ marginBottom: '24px' }}>
+                    <img
+                      src={avatarImageUrl}
+                      alt="Avatar preview"
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '3px solid #e0e0e0',
+                        display: 'block',
+                        marginBottom: '12px'
+                      }}
+                    />
+                    <div style={{ fontSize: '0.9em', color: '#666' }}>
+                      現在のアバター画像
+                    </div>
+                  </div>
+
+                  <label htmlFor="avatarUpload" style={{ marginTop: '16px', display: 'block' }}>
+                    アバター画像をアップロード:
+                  </label>
+                  <input
+                    type="file"
+                    id="avatarUpload"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    style={{ marginBottom: '8px', width: '100%' }}
+                  />
+                  <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '16px' }}>
+                    ※ 画像は自動的に円形にクロップされます
+                  </div>
+                  
+                  <div style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px', marginTop: '16px' }}>
+                    <div style={{ fontSize: '0.9em', color: '#495057' }}>
+                      <strong>ヒント：</strong>
+                      <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
+                        <li>正方形に近い画像がベストです</li>
+                        <li>推奨サイズ：200px × 200px 以上</li>
+                        <li>対応形式：JPG、PNG、WebP</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
