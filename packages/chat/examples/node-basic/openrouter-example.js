@@ -12,7 +12,7 @@ async function main() {
     model: 'openai/gpt-oss-20b:free', // Free model
     // Optional: Add app information for OpenRouter analytics
     appName: 'AITuber OnAir Example',
-    appUrl: 'https://github.com/aituber-onair',
+    appUrl: 'https://github.com/shinshin86/aituber-onair',
   });
 
   console.log('OpenRouter Chat Service Example');
