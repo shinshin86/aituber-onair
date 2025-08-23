@@ -35,6 +35,7 @@ import {
   isGPT5Model,
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
+  VoiceServiceOptions,
 } from '@aituber-onair/core';
 
 // when use MCP, uncomment the following line
@@ -53,6 +54,14 @@ const DO_NOT_SET_API_KEY_MESSAGE = 'API Keyを入力してください。';
 const CORE_SETTINGS_APPLIED_MESSAGE = 'AITuberOnAirCoreの設定を反映しました！';
 const DO_NOT_SETTINGS_MESSAGE = 'まずは「設定」を行ってください。';
 const CORE_NOT_INITIALIZED_MESSAGE = 'AITuberOnAirCoreが初期化されていません。';
+
+// Aivis Cloud API fixed parameters
+const FIXED_AIVIS_MODEL_UUID = 'a59cb814-0083-4369-8542-f51a29e72af7';
+const FIXED_AIVIS_SPEAKING_RATE = 1.0;
+const FIXED_AIVIS_EMOTIONAL_INTENSITY = 1.0;
+const FIXED_AIVIS_PITCH = 0.0;
+const FIXED_AIVIS_VOLUME = 1.0;
+const FIXED_AIVIS_OUTPUT_FORMAT = 'mp3' as const;
 
 // each chat provider's models
 const openaiModels = [
@@ -174,6 +183,13 @@ const App: React.FC = () => {
 
   // image attachment state
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+
+  // Voice settings state
+  const [enableVoice, setEnableVoice] = useState(false);
+  const [aivisCloudApiKey, setAivisCloudApiKey] = useState('');
+
+  // Voice playback state
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // AITuberOnAirCore instance reference
   const aituberRef = useRef<AITuberOnAirCore | null>(null);
@@ -308,6 +324,27 @@ const App: React.FC = () => {
       providerOptions.gpt5EndpointPreference = gpt5EndpointPreference;
     }
 
+    // prepare voice options if enabled
+    const voiceOptions = enableVoice && aivisCloudApiKey
+      ? {
+          engineType: 'aivisCloud' as const,
+          speaker: FIXED_AIVIS_MODEL_UUID,
+          apiKey: aivisCloudApiKey.trim(),
+          // Aivis Cloud specific options with fixed values
+          aivisCloudModelUuid: FIXED_AIVIS_MODEL_UUID,
+          aivisCloudSpeakingRate: FIXED_AIVIS_SPEAKING_RATE,
+          aivisCloudEmotionalIntensity: FIXED_AIVIS_EMOTIONAL_INTENSITY,
+          aivisCloudPitch: FIXED_AIVIS_PITCH,
+          aivisCloudVolume: FIXED_AIVIS_VOLUME,
+          aivisCloudOutputFormat: FIXED_AIVIS_OUTPUT_FORMAT,
+          aivisCloudUseSSML: true, // Enable SSML support
+          onComplete: () => {
+            console.log('Voice playback completed');
+            setIsSpeaking(false);
+          },
+        }
+      : undefined;
+
     // create options
     const aituberOptions: AITuberOnAirCoreOptions = {
       chatProvider,
@@ -320,6 +357,7 @@ const App: React.FC = () => {
       providerOptions,
       tools: [{ definition: randomIntTool, handler: randomIntHandler }],
       mcpServers: enableDeepWikiMcp ? mcpServers : [],
+      voiceOptions,
       debug: true,
     };
 
@@ -396,6 +434,16 @@ const App: React.FC = () => {
 
     instance.on(AITuberOnAirCoreEvent.TOOL_RESULT, (data: any) => {
       console.log('Tool result:', data);
+    });
+
+    instance.on(AITuberOnAirCoreEvent.SPEECH_START, (data: any) => {
+      console.log('Speech started:', data);
+      setIsSpeaking(true);
+    });
+
+    instance.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
+      console.log('Speech ended');
+      setIsSpeaking(false);
     });
   };
 
@@ -564,6 +612,16 @@ const App: React.FC = () => {
           <div>
             選択中のモデル：{chatProvider} / {model}
           </div>
+          {enableVoice && (
+            <div style={{ color: '#2e997d' }}>
+              音声合成: 有効 (Aivis Cloud)
+            </div>
+          )}
+          {isSpeaking && (
+            <div style={{ color: '#1e90ff', fontWeight: 'bold' }}>
+              🔊 音声再生中...
+            </div>
+          )}
           {!apiKey && (
             <div style={{ color: '#e01e5a' }}>
               API Keyが設定されていません。
@@ -830,6 +888,48 @@ const App: React.FC = () => {
                   onChange={(e) => setEnableDeepWikiMcp(e.target.checked)}
                   style={{ marginLeft: '8px' }}
                 />
+              </div>
+
+              {/* Voice Settings Section */}
+              <div style={{ marginTop: '24px' }}>
+                <hr />
+                <h3 style={{ marginTop: '16px' }}>音声設定 (Aivis Cloud API)</h3>
+
+                <div style={{ marginTop: '16px' }}>
+                  <label htmlFor="enableVoice">
+                    音声合成を有効にする:
+                  </label>
+                  <input
+                    type="checkbox"
+                    id="enableVoice"
+                    checked={enableVoice}
+                    onChange={(e) => setEnableVoice(e.target.checked)}
+                    style={{ marginLeft: '8px' }}
+                  />
+                </div>
+
+                {enableVoice && (
+                  <>
+                    <label htmlFor="aivisCloudApiKey">
+                      Aivis Cloud API Key:
+                    </label>
+                    <input
+                      type="password"
+                      id="aivisCloudApiKey"
+                      placeholder="API Keyを入力してください..."
+                      value={aivisCloudApiKey}
+                      onChange={(e) => setAivisCloudApiKey(e.target.value)}
+                    />
+                    <div style={{ fontSize: '0.9em', color: '#666', marginTop: '4px', marginBottom: '12px' }}>
+                      API Keyは <a href="https://hub.aivis-project.com/cloud-api/api-keys" target="_blank" rel="noopener noreferrer">
+                        https://hub.aivis-project.com/cloud-api/api-keys
+                      </a> から取得できます
+                    </div>
+                    <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
+                      ※ 音声パラメータは最適な値に固定されています
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
