@@ -3,33 +3,6 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
   AITuberOnAirCoreOptions,
-  MODEL_GPT_5_NANO,
-  MODEL_GPT_5_MINI,
-  MODEL_GPT_5,
-  MODEL_GPT_5_CHAT_LATEST,
-  MODEL_GPT_4_1,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1_NANO,
-  MODEL_GPT_4O,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_4_5_PREVIEW,
-  MODEL_O3_MINI,
-  MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_2_5_FLASH,
-  MODEL_GEMINI_2_5_FLASH_LITE,
-  MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-  MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_2_0_FLASH_LITE,
-  MODEL_GEMINI_1_5_FLASH,
-  MODEL_GEMINI_1_5_PRO,
-  MODEL_CLAUDE_3_HAIKU,
-  MODEL_CLAUDE_3_5_HAIKU,
-  MODEL_CLAUDE_3_5_SONNET,
-  MODEL_CLAUDE_3_7_SONNET,
-  MODEL_CLAUDE_4_SONNET,
-  MODEL_CLAUDE_4_OPUS,
-  ToolDefinition,
-  MCPServerConfig,
   GPT5_PRESETS,
   GPT5PresetKey,
   isGPT5Model,
@@ -37,6 +10,26 @@ import {
   ChatResponseLength,
   VoiceServiceOptions,
 } from '@aituber-onair/core';
+
+// Constants imports
+import {
+  openaiModels,
+  DEFAULT_CHAT_PROVIDER,
+  DEFAULT_MODEL,
+  DEFAULT_SYSTEM_PROMPT,
+} from './constants/openai';
+import { geminiModels } from './constants/gemini';
+import { claudeModels } from './constants/claude';
+import {
+  FIXED_AIVIS_MODEL_UUID,
+  FIXED_AIVIS_SPEAKING_RATE,
+  FIXED_AIVIS_EMOTIONAL_INTENSITY,
+  FIXED_AIVIS_PITCH,
+  FIXED_AIVIS_VOLUME,
+  FIXED_AIVIS_OUTPUT_FORMAT,
+} from './constants/aivisCloudApi';
+import { randomIntTool, randomIntHandler } from './constants/tools';
+import { mcpServers } from './constants/mcp';
 
 // when use MCP, uncomment the following line
 // import { createMcpToolHandler } from './mcpClient';
@@ -46,94 +39,11 @@ type TextMessage = BaseMessage & { kind: 'text'; content: string };
 type ImageMessage = BaseMessage & { kind: 'image'; dataUrl: string };
 type Message = TextMessage | ImageMessage;
 
-const DEFAULT_SYSTEM_PROMPT = 'あなたはフレンドリーなAITuberです。';
-const DEFAULT_CHAT_PROVIDER = 'openai';
-const DEFAULT_MODEL = MODEL_GPT_4_1_NANO;
-
+// UI Messages
 const DO_NOT_SET_API_KEY_MESSAGE = 'API Keyを入力してください。';
 const CORE_SETTINGS_APPLIED_MESSAGE = 'AITuberOnAirCoreの設定を反映しました！';
 const DO_NOT_SETTINGS_MESSAGE = 'まずは「設定」を行ってください。';
 const CORE_NOT_INITIALIZED_MESSAGE = 'AITuberOnAirCoreが初期化されていません。';
-
-// Aivis Cloud API fixed parameters
-const FIXED_AIVIS_MODEL_UUID = 'a59cb814-0083-4369-8542-f51a29e72af7';
-const FIXED_AIVIS_SPEAKING_RATE = 1.0;
-const FIXED_AIVIS_EMOTIONAL_INTENSITY = 1.0;
-const FIXED_AIVIS_PITCH = 0.0;
-const FIXED_AIVIS_VOLUME = 1.0;
-const FIXED_AIVIS_OUTPUT_FORMAT = 'mp3' as const;
-
-// each chat provider's models
-const openaiModels = [
-  MODEL_GPT_5_NANO,
-  MODEL_GPT_5_MINI,
-  MODEL_GPT_5,
-  MODEL_GPT_5_CHAT_LATEST,
-  MODEL_GPT_4_1_NANO,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1,
-  MODEL_O3_MINI,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_4O,
-  MODEL_GPT_4_5_PREVIEW,
-];
-const geminiModels = [
-  MODEL_GEMINI_2_5_FLASH_LITE,
-  MODEL_GEMINI_2_5_FLASH,
-  MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-  MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_2_0_FLASH_LITE,
-  MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_1_5_FLASH,
-  MODEL_GEMINI_1_5_PRO,
-];
-
-const claudeModels = [
-  MODEL_CLAUDE_3_HAIKU,
-  MODEL_CLAUDE_3_5_HAIKU,
-  MODEL_CLAUDE_3_5_SONNET,
-  MODEL_CLAUDE_3_7_SONNET,
-  MODEL_CLAUDE_4_SONNET,
-  MODEL_CLAUDE_4_OPUS,
-];
-
-// tool definition
-const randomIntTool: ToolDefinition = {
-  name: 'randomInt',
-  description:
-    'Return a random integer from 0 (inclusive) up to, but not including, `max`. If `max` is omitted the default upper‑bound is 100.',
-  parameters: {
-    type: 'object',
-    properties: {
-      max: {
-        type: 'integer',
-        description: 'Exclusive upper bound for the random integer',
-        minimum: 1,
-      },
-    },
-    required: ['max'],
-  },
-};
-
-// tool handler
-const randomIntHandler = async ({ max }: { max: number }) => {
-  return Math.floor(Math.random() * max).toString();
-};
-
-// mcp tool handler
-/*
-const randomIntHandler = createMcpToolHandler<{ max: number }>('randomInt');
-*/
-
-// DeepWiki MCP server
-const deepwikiMcpServer: MCPServerConfig = {
-  type: 'url',
-  url: 'https://mcp.deepwiki.com/sse',
-  name: 'deepwiki',
-};
-
-// MCP server config
-const mcpServers: MCPServerConfig[] = [deepwikiMcpServer];
 
 const App: React.FC = () => {
   const idCounter = useRef(0);
