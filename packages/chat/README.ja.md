@@ -90,7 +90,7 @@ const geminiService = ChatServiceFactory.createChatService('gemini', {
 ```typescript
 const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   apiKey: process.env.OPENROUTER_API_KEY,
-  model: 'openai/gpt-oss-20b:free', // 無料階層モデル
+  model: 'openai/gpt-oss-20b:free', // 無料利用枠モデル
   // オプション: 分析用アプリ情報を追加
   appName: 'あなたのアプリ名',
   appUrl: 'https://your-app-url.com'
@@ -326,7 +326,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 - **OpenAI**: GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **Gemini**: Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Proのモデルをサポート
 - **Claude**: Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnetのモデルをサポート
-- **OpenRouter**: `openai/gpt-oss-20b:free`（トークン制限の特別処理がある無料階層モデル）をサポート
+- **OpenRouter**: `openai/gpt-oss-20b:free`（トークン制限の特別処理がある無料利用枠モデル）をサポート
 
 ## ライセンス
 
