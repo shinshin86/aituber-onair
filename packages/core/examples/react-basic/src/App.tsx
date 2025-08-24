@@ -35,6 +35,8 @@ import { AIVIS_CLOUD_MODELS } from './constants/speakers/aivisCloud';
 // Default icons
 import defaultUserIcon from './assets/icons/default-user.svg';
 import defaultAvatarIcon from './assets/icons/default-avatar.svg';
+import { AIVIS_SPEECH_API_ENDPOINT } from './constants/speakers/aivisSpeech';
+import { VOICEVOX_API_ENDPOINT } from './constants/speakers/voicevox';
 
 // when use MCP, uncomment the following line
 // import { createMcpToolHandler } from './mcpClient';
@@ -133,7 +135,7 @@ const App: React.FC = () => {
     try {
       switch (engine) {
         case 'voicevox': {
-          const response = await fetch('http://localhost:50021/speakers');
+          const response = await fetch(`${VOICEVOX_API_ENDPOINT}/speakers`);
           if (response.ok) {
             const speakers = await response.json();
             setAvailableSpeakers(prev => ({ ...prev, voicevox: speakers }));
@@ -147,7 +149,7 @@ const App: React.FC = () => {
           break;
         }
         case 'aivisSpeech': {
-          const response = await fetch('http://localhost:10101/speakers');
+          const response = await fetch(`${AIVIS_SPEECH_API_ENDPOINT}/speakers`);
           if (response.ok) {
             const speakers = await response.json();
             setAvailableSpeakers(prev => ({ ...prev, aivisSpeech: speakers }));

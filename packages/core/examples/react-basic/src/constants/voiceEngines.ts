@@ -1,3 +1,7 @@
+import { AIVIS_SPEECH_API_ENDPOINT } from "./speakers/aivisSpeech";
+import { VOICEPEAK_API_ENDPOINT } from "./speakers/voicepeak";
+import { VOICEVOX_API_ENDPOINT } from "./speakers/voicevox";
+
 export type VoiceEngineType = 
   | 'openai' 
   | 'voicevox' 
@@ -29,13 +33,13 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> = 
   },
   voicevox: {
     name: 'VOICEVOX',
-    apiUrl: 'http://localhost:50021',
+    apiUrl: VOICEVOX_API_ENDPOINT,
     needsApiKey: false,
     placeholder: 'API key not needed',
   },
   aivisSpeech: {
     name: 'Aivis Speech',
-    apiUrl: 'http://localhost:10101',
+    apiUrl: AIVIS_SPEECH_API_ENDPOINT,
     needsApiKey: false,
     placeholder: 'API key not needed',
   },
@@ -54,7 +58,7 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> = 
   },
   voicepeak: {
     name: 'VoicePeak',
-    apiUrl: 'http://localhost:20202',
+    apiUrl: VOICEPEAK_API_ENDPOINT,
     needsApiKey: false,
     placeholder: 'API key not needed',
   },

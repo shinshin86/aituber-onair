@@ -1,0 +1,1 @@
+export const AIVIS_SPEECH_API_ENDPOINT = 'http://localhost:10101';

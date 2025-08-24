@@ -12,3 +12,5 @@ export const VOICEPEAK_SPEAKERS: VoicepeakSpeaker[] = [
   { id: 'm3', name: '日本人男性 3' },
   { id: 'c', name: '女の子' },
 ];
+
+export const VOICEPEAK_API_ENDPOINT = 'http://localhost:20202';
