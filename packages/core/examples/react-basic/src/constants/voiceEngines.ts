@@ -13,7 +13,6 @@ export interface VoiceEngineConfig {
   apiUrl?: string;
   needsApiKey: boolean;
   placeholder: string;
-  speaker: string | number;
   // Engine-specific parameters
   defaultParams?: Record<string, any>;
 }
@@ -24,9 +23,7 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> = 
     apiUrl: 'https://api.openai.com/v1/audio/speech',
     needsApiKey: true,
     placeholder: 'sk-...',
-    speaker: 'alloy',
     defaultParams: {
-      voice: 'alloy',
       model: 'tts-1',
     }
   },
@@ -35,21 +32,18 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> = 
     apiUrl: 'http://localhost:50021',
     needsApiKey: false,
     placeholder: 'API key not needed',
-    speaker: 1,
   },
   aivisSpeech: {
     name: 'Aivis Speech',
     apiUrl: 'http://localhost:10101',
     needsApiKey: false,
     placeholder: 'API key not needed',
-    speaker: '888753760',
   },
   aivisCloud: {
     name: 'Aivis Cloud API',
     apiUrl: 'https://api.aivis-project.com/v1/tts/synthesize',
     needsApiKey: true,
     placeholder: 'Aivis Cloud API key',
-    speaker: 'a59cb814-0083-4369-8542-f51a29e72af7',
     defaultParams: {
       speakingRate: 1.0,
       emotionalIntensity: 1.0,
@@ -63,20 +57,17 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> = 
     apiUrl: 'http://localhost:20202',
     needsApiKey: false,
     placeholder: 'API key not needed',
-    speaker: 'f1',
   },
   nijivoice: {
     name: 'にじボイス',
     needsApiKey: true,
     placeholder: 'NijiVoice API key',
-    speaker: '56bb72e9-62f4-49d9-b57f-e86da9de7730',
   },
   minimax: {
     name: 'MiniMax',
     apiUrl: 'https://api.minimax.io/v1/t2a_v2',
     needsApiKey: true,
-    placeholder: 'apiKey:groupId',
-    speaker: 'male-qn-qingse',
+    placeholder: 'sk-...',
     defaultParams: {
       endpoint: 'global',
     }
@@ -85,7 +76,6 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> = 
     name: '音声なし',
     needsApiKey: false,
     placeholder: '',
-    speaker: '',
   }
 };
 

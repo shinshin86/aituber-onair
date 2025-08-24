@@ -27,6 +27,11 @@ import {
 import { randomIntTool, randomIntHandler } from './constants/tools';
 import { mcpServers } from './constants/mcp';
 
+// Speaker constants
+import { OPENAI_TTS_SPEAKERS } from './constants/speakers/openaiTts';
+import { VOICEPEAK_SPEAKERS } from './constants/speakers/voicepeak';
+import { AIVIS_CLOUD_MODELS } from './constants/speakers/aivisCloud';
+
 // Default icons
 import defaultUserIcon from './assets/icons/default-user.svg';
 import defaultAvatarIcon from './assets/icons/default-avatar.svg';
@@ -100,6 +105,17 @@ const App: React.FC = () => {
   // Voice settings state
   const [selectedVoiceEngine, setSelectedVoiceEngine] = useState<VoiceEngineType>(DEFAULT_VOICE_ENGINE);
   const [voiceApiKeys, setVoiceApiKeys] = useState<Record<string, string>>({});
+  const [minimaxGroupId, setMinimaxGroupId] = useState<string>('');
+  const [selectedSpeakers, setSelectedSpeakers] = useState<Record<string, string | number>>({
+    openai: 'alloy',
+    voicevox: '',
+    aivisSpeech: '',
+    aivisCloud: 'a59cb814-0083-4369-8542-f51a29e72af7',
+    voicepeak: 'f1',
+    nijivoice: '',
+    minimax: '',
+  });
+  const [availableSpeakers, setAvailableSpeakers] = useState<Record<string, any[]>>({});
 
   // Voice playback state
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -109,6 +125,98 @@ const App: React.FC = () => {
 
   // AITuberOnAirCore instance reference
   const aituberRef = useRef<AITuberOnAirCore | null>(null);
+
+  /**
+   * Fetch speakers for dynamic voice engines
+   */
+  const fetchSpeakers = async (engine: VoiceEngineType) => {
+    try {
+      switch (engine) {
+        case 'voicevox': {
+          const response = await fetch('http://localhost:50021/speakers');
+          if (response.ok) {
+            const speakers = await response.json();
+            setAvailableSpeakers(prev => ({ ...prev, voicevox: speakers }));
+            // Auto-select first speaker if none selected
+            if (!selectedSpeakers.voicevox && speakers.length > 0) {
+              const firstSpeaker = speakers[0];
+              const speakerId = firstSpeaker.styles?.[0]?.id || firstSpeaker.speaker_uuid;
+              setSelectedSpeakers(prev => ({ ...prev, voicevox: speakerId }));
+            }
+          }
+          break;
+        }
+        case 'aivisSpeech': {
+          const response = await fetch('http://localhost:10101/speakers');
+          if (response.ok) {
+            const speakers = await response.json();
+            setAvailableSpeakers(prev => ({ ...prev, aivisSpeech: speakers }));
+            // Auto-select first speaker if none selected
+            if (!selectedSpeakers.aivisSpeech && speakers.length > 0) {
+              const firstStyle = speakers[0]?.styles?.[0];
+              if (firstStyle) {
+                setSelectedSpeakers(prev => ({ ...prev, aivisSpeech: firstStyle.id }));
+              }
+            }
+          }
+          break;
+        }
+        case 'nijivoice': {
+          const apiKey = voiceApiKeys.nijivoice;
+          if (apiKey) {
+            const response = await fetch('https://api.nijivoice.com/api/platform/v1/voice-actors', {
+              headers: {
+                'x-api-key': apiKey,
+              },
+            });
+            if (response.ok) {
+              const data = await response.json();
+              setAvailableSpeakers(prev => ({ ...prev, nijivoice: data.voiceActors || [] }));
+            }
+          }
+          break;
+        }
+        case 'minimax': {
+          const apiKey = voiceApiKeys.minimax?.trim();
+          
+          if (apiKey) {
+            const response = await fetch('https://api.minimax.io/v1/get_voice', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: 'voice_type=all',
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              const allVoices = [
+                ...(data.system_voice || []),
+                ...(data.voice_cloning || []),
+                ...(data.voice_generation || []),
+              ];
+              setAvailableSpeakers(prev => ({ ...prev, minimax: allVoices }));
+            }
+          }
+          break;
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to fetch speakers for ${engine}:`, error);
+    }
+  };
+
+  /**
+   * when voice engine changes, fetch speakers if needed
+   */
+  useEffect(() => {
+    if (selectedVoiceEngine !== 'none') {
+      if (['voicevox', 'aivisSpeech', 'nijivoice', 'minimax'].includes(selectedVoiceEngine)) {
+        fetchSpeakers(selectedVoiceEngine);
+      }
+    }
+  }, [selectedVoiceEngine, voiceApiKeys, minimaxGroupId]);
 
   /**
    * when chat provider changes, reset the model to the first one
@@ -248,9 +356,10 @@ const App: React.FC = () => {
       }
 
       const config = VOICE_ENGINE_CONFIGS[selectedVoiceEngine];
+      const selectedSpeaker = selectedSpeakers[selectedVoiceEngine];
       const options: any = {
         engineType: selectedVoiceEngine,
-        speaker: config.speaker,
+        speaker: selectedSpeaker,
         onComplete: () => {
           console.log('Voice playback completed');
           setIsSpeaking(false);
@@ -262,10 +371,9 @@ const App: React.FC = () => {
         const apiKey = voiceApiKeys[selectedVoiceEngine];
         if (apiKey) {
           if (selectedVoiceEngine === 'minimax') {
-            const [key, groupId] = apiKey.split(':');
-            if (groupId) {
-              options.apiKey = key;
-              options.groupId = groupId;
+            options.apiKey = apiKey.trim();
+            if (minimaxGroupId) {
+              options.groupId = minimaxGroupId.trim();
             }
           } else {
             options.apiKey = apiKey.trim();
@@ -292,7 +400,7 @@ const App: React.FC = () => {
       switch (selectedVoiceEngine) {
         case 'aivisCloud':
           Object.assign(options, {
-            aivisCloudModelUuid: config.speaker,
+            aivisCloudModelUuid: selectedSpeaker,
             aivisCloudSpeakingRate: config.defaultParams?.speakingRate,
             aivisCloudEmotionalIntensity: config.defaultParams?.emotionalIntensity,
             aivisCloudPitch: config.defaultParams?.pitch,
@@ -987,12 +1095,12 @@ const App: React.FC = () => {
                   {selectedVoiceEngine !== 'none' && VOICE_ENGINE_CONFIGS[selectedVoiceEngine].needsApiKey && (
                     <>
                       <label htmlFor="voiceApiKey" style={{ marginTop: '16px', display: 'block' }}>
-                        {VOICE_ENGINE_CONFIGS[selectedVoiceEngine].name} API Key:
+                        {selectedVoiceEngine === 'minimax' ? 'MiniMax API Key:' : `${VOICE_ENGINE_CONFIGS[selectedVoiceEngine].name} API Key:`}
                       </label>
                       <input
                         type="password"
                         id="voiceApiKey"
-                        placeholder={VOICE_ENGINE_CONFIGS[selectedVoiceEngine].placeholder}
+                        placeholder={selectedVoiceEngine === 'minimax' ? 'xxx...' : VOICE_ENGINE_CONFIGS[selectedVoiceEngine].placeholder}
                         value={voiceApiKeys[selectedVoiceEngine] || ''}
                         onChange={(e) => setVoiceApiKeys(prev => ({
                           ...prev,
@@ -1000,6 +1108,22 @@ const App: React.FC = () => {
                         }))}
                         style={{ width: '100%', marginBottom: '8px' }}
                       />
+                      
+                      {selectedVoiceEngine === 'minimax' && (
+                        <>
+                          <label htmlFor="minimaxGroupId" style={{ marginTop: '8px', display: 'block' }}>
+                            MiniMax Group ID:
+                          </label>
+                          <input
+                            type="password"
+                            id="minimaxGroupId"
+                            placeholder="1234567890"
+                            value={minimaxGroupId}
+                            onChange={(e) => setMinimaxGroupId(e.target.value)}
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </>
+                      )}
                     </>
                   )}
 
@@ -1007,6 +1131,98 @@ const App: React.FC = () => {
                     <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
                       <strong>API URL:</strong> {VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl}
                     </div>
+                  )}
+
+                  {/* Speaker Selection */}
+                  {selectedVoiceEngine !== 'none' && (
+                    <>
+                      <label htmlFor="voiceSpeaker" style={{ marginTop: '16px', display: 'block' }}>
+                        音声:
+                      </label>
+                      <select
+                        id="voiceSpeaker"
+                        value={String(selectedSpeakers[selectedVoiceEngine] || '')}
+                        onChange={(e) => {
+                          const value = selectedVoiceEngine === 'voicevox' || selectedVoiceEngine === 'aivisSpeech' 
+                            ? Number(e.target.value) 
+                            : e.target.value;
+                          setSelectedSpeakers(prev => ({
+                            ...prev,
+                            [selectedVoiceEngine]: value
+                          }));
+                        }}
+                        style={{ width: '100%', marginBottom: '12px' }}
+                      >
+                        {/* OpenAI TTS */}
+                        {selectedVoiceEngine === 'openai' && OPENAI_TTS_SPEAKERS.map(speaker => (
+                          <option key={speaker.id} value={speaker.id}>
+                            {speaker.name} {speaker.description && `- ${speaker.description}`}
+                          </option>
+                        ))}
+                        
+                        {/* VOICEVOX */}
+                        {selectedVoiceEngine === 'voicevox' && availableSpeakers.voicevox ? (
+                          availableSpeakers.voicevox.flatMap((speaker: any) => 
+                            speaker.styles?.map((style: any) => (
+                              <option key={`${speaker.speaker_uuid}-${style.id}`} value={style.id}>
+                                {speaker.name} - {style.name}
+                              </option>
+                            )) || []
+                          )
+                        ) : selectedVoiceEngine === 'voicevox' && (
+                          <option value="">ローカルサーバーから取得中...</option>
+                        )}
+                        
+                        {/* Aivis Speech */}
+                        {selectedVoiceEngine === 'aivisSpeech' && availableSpeakers.aivisSpeech ? (
+                          availableSpeakers.aivisSpeech.flatMap((speaker: any) => 
+                            speaker.styles?.map((style: any) => (
+                              <option key={`${speaker.speaker_uuid}-${style.id}`} value={style.id}>
+                                {speaker.name} - {style.name}
+                              </option>
+                            )) || []
+                          )
+                        ) : selectedVoiceEngine === 'aivisSpeech' && (
+                          <option value="">ローカルサーバーから取得中...</option>
+                        )}
+                        
+                        {/* Aivis Cloud */}
+                        {selectedVoiceEngine === 'aivisCloud' && AIVIS_CLOUD_MODELS.map(model => (
+                          <option key={model.aivm_model_uuid} value={model.aivm_model_uuid}>
+                            {model.name}
+                          </option>
+                        ))}
+                        
+                        {/* VoicePeak */}
+                        {selectedVoiceEngine === 'voicepeak' && VOICEPEAK_SPEAKERS.map(speaker => (
+                          <option key={speaker.id} value={speaker.id}>
+                            {speaker.name}
+                          </option>
+                        ))}
+                        
+                        {/* NijiVoice */}
+                        {selectedVoiceEngine === 'nijivoice' && availableSpeakers.nijivoice ? (
+                          availableSpeakers.nijivoice.map((actor: any) => (
+                            <option key={actor.id} value={actor.id}>
+                              {actor.name}
+                            </option>
+                          ))
+                        ) : selectedVoiceEngine === 'nijivoice' && (
+                          <option value="">API Keyを入力後、自動取得されます</option>
+                        )}
+                        
+                        {/* MiniMax */}
+                        {selectedVoiceEngine === 'minimax' && availableSpeakers.minimax ? (
+                          availableSpeakers.minimax.map((voice: any) => (
+                            <option key={voice.voice_id} value={voice.voice_id}>
+                              {voice.voice_name}
+                            </option>
+                          ))
+                        ) : selectedVoiceEngine === 'minimax' && (
+                          <option value="">API Keyを入力後、自動取得されます</option>
+                        )}
+                      </select>
+                    </>
                   )}
 
                   {selectedVoiceEngine !== 'none' && (
