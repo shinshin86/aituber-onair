@@ -66,7 +66,7 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> = 
     speaker: 'f1',
   },
   nijivoice: {
-    name: 'にじボイス (NijiVoice)',
+    name: 'にじボイス',
     needsApiKey: true,
     placeholder: 'NijiVoice API key',
     speaker: '56bb72e9-62f4-49d9-b57f-e86da9de7730',
