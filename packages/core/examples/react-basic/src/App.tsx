@@ -3,39 +3,40 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
   AITuberOnAirCoreOptions,
-  MODEL_GPT_5_NANO,
-  MODEL_GPT_5_MINI,
-  MODEL_GPT_5,
-  MODEL_GPT_5_CHAT_LATEST,
-  MODEL_GPT_4_1,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1_NANO,
-  MODEL_GPT_4O,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_4_5_PREVIEW,
-  MODEL_O3_MINI,
-  MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_2_5_FLASH,
-  MODEL_GEMINI_2_5_FLASH_LITE,
-  MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-  MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_2_0_FLASH_LITE,
-  MODEL_GEMINI_1_5_FLASH,
-  MODEL_GEMINI_1_5_PRO,
-  MODEL_CLAUDE_3_HAIKU,
-  MODEL_CLAUDE_3_5_HAIKU,
-  MODEL_CLAUDE_3_5_SONNET,
-  MODEL_CLAUDE_3_7_SONNET,
-  MODEL_CLAUDE_4_SONNET,
-  MODEL_CLAUDE_4_OPUS,
-  ToolDefinition,
-  MCPServerConfig,
   GPT5_PRESETS,
   GPT5PresetKey,
   isGPT5Model,
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
 } from '@aituber-onair/core';
+
+// Constants imports
+import {
+  openaiModels,
+  DEFAULT_CHAT_PROVIDER,
+  DEFAULT_MODEL,
+  DEFAULT_SYSTEM_PROMPT,
+} from './constants/openai';
+import { geminiModels } from './constants/gemini';
+import { claudeModels } from './constants/claude';
+import {
+  type VoiceEngineType,
+  VOICE_ENGINE_CONFIGS,
+  DEFAULT_VOICE_ENGINE,
+} from './constants/voiceEngines';
+import { randomIntTool, randomIntHandler } from './constants/tools';
+import { mcpServers } from './constants/mcp';
+
+// Speaker constants
+import { OPENAI_TTS_SPEAKERS } from './constants/speakers/openaiTts';
+import { VOICEPEAK_SPEAKERS } from './constants/speakers/voicepeak';
+import { AIVIS_CLOUD_MODELS } from './constants/speakers/aivisCloud';
+
+// Default icons
+import defaultUserIcon from './assets/icons/default-user.svg';
+import defaultAvatarIcon from './assets/icons/default-avatar.svg';
+import { AIVIS_SPEECH_API_ENDPOINT } from './constants/speakers/aivisSpeech';
+import { VOICEVOX_API_ENDPOINT } from './constants/speakers/voicevox';
 
 // when use MCP, uncomment the following line
 // import { createMcpToolHandler } from './mcpClient';
@@ -45,86 +46,11 @@ type TextMessage = BaseMessage & { kind: 'text'; content: string };
 type ImageMessage = BaseMessage & { kind: 'image'; dataUrl: string };
 type Message = TextMessage | ImageMessage;
 
-const DEFAULT_SYSTEM_PROMPT = 'あなたはフレンドリーなAITuberです。';
-const DEFAULT_CHAT_PROVIDER = 'openai';
-const DEFAULT_MODEL = MODEL_GPT_4_1_NANO;
-
+// UI Messages
 const DO_NOT_SET_API_KEY_MESSAGE = 'API Keyを入力してください。';
 const CORE_SETTINGS_APPLIED_MESSAGE = 'AITuberOnAirCoreの設定を反映しました！';
 const DO_NOT_SETTINGS_MESSAGE = 'まずは「設定」を行ってください。';
 const CORE_NOT_INITIALIZED_MESSAGE = 'AITuberOnAirCoreが初期化されていません。';
-
-// each chat provider's models
-const openaiModels = [
-  MODEL_GPT_5_NANO,
-  MODEL_GPT_5_MINI,
-  MODEL_GPT_5,
-  MODEL_GPT_5_CHAT_LATEST,
-  MODEL_GPT_4_1_NANO,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1,
-  MODEL_O3_MINI,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_4O,
-  MODEL_GPT_4_5_PREVIEW,
-];
-const geminiModels = [
-  MODEL_GEMINI_2_5_FLASH_LITE,
-  MODEL_GEMINI_2_5_FLASH,
-  MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-  MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_2_0_FLASH_LITE,
-  MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_1_5_FLASH,
-  MODEL_GEMINI_1_5_PRO,
-];
-
-const claudeModels = [
-  MODEL_CLAUDE_3_HAIKU,
-  MODEL_CLAUDE_3_5_HAIKU,
-  MODEL_CLAUDE_3_5_SONNET,
-  MODEL_CLAUDE_3_7_SONNET,
-  MODEL_CLAUDE_4_SONNET,
-  MODEL_CLAUDE_4_OPUS,
-];
-
-// tool definition
-const randomIntTool: ToolDefinition = {
-  name: 'randomInt',
-  description:
-    'Return a random integer from 0 (inclusive) up to, but not including, `max`. If `max` is omitted the default upper‑bound is 100.',
-  parameters: {
-    type: 'object',
-    properties: {
-      max: {
-        type: 'integer',
-        description: 'Exclusive upper bound for the random integer',
-        minimum: 1,
-      },
-    },
-    required: ['max'],
-  },
-};
-
-// tool handler
-const randomIntHandler = async ({ max }: { max: number }) => {
-  return Math.floor(Math.random() * max).toString();
-};
-
-// mcp tool handler
-/*
-const randomIntHandler = createMcpToolHandler<{ max: number }>('randomInt');
-*/
-
-// DeepWiki MCP server
-const deepwikiMcpServer: MCPServerConfig = {
-  type: 'url',
-  url: 'https://mcp.deepwiki.com/sse',
-  name: 'deepwiki',
-};
-
-// MCP server config
-const mcpServers: MCPServerConfig[] = [deepwikiMcpServer];
 
 const App: React.FC = () => {
   const idCounter = useRef(0);
@@ -134,6 +60,9 @@ const App: React.FC = () => {
 
   // initialized flag (true if configured)
   const [isConfigured, setIsConfigured] = useState(false);
+
+  // Settings modal tab state
+  const [activeTab, setActiveTab] = useState<'llm' | 'voice' | 'avatar'>('llm');
 
   // configuration form states
   const [apiKey, setApiKey] = useState<string>('');
@@ -175,8 +104,121 @@ const App: React.FC = () => {
   // image attachment state
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
 
+  // Voice settings state
+  const [selectedVoiceEngine, setSelectedVoiceEngine] = useState<VoiceEngineType>(DEFAULT_VOICE_ENGINE);
+  const [voiceApiKeys, setVoiceApiKeys] = useState<Record<string, string>>({});
+  const [minimaxGroupId, setMinimaxGroupId] = useState<string>('');
+  const [selectedSpeakers, setSelectedSpeakers] = useState<Record<string, string | number>>({
+    openai: 'alloy',
+    voicevox: '',
+    aivisSpeech: '',
+    aivisCloud: 'a59cb814-0083-4369-8542-f51a29e72af7',
+    voicepeak: 'f1',
+    nijivoice: '',
+    minimax: '',
+  });
+  const [availableSpeakers, setAvailableSpeakers] = useState<Record<string, any[]>>({});
+
+  // Voice playback state
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Avatar settings state
+  const [avatarImageUrl, setAvatarImageUrl] = useState<string>(defaultAvatarIcon);
+
   // AITuberOnAirCore instance reference
   const aituberRef = useRef<AITuberOnAirCore | null>(null);
+
+  /**
+   * Fetch speakers for dynamic voice engines
+   */
+  const fetchSpeakers = async (engine: VoiceEngineType) => {
+    try {
+      switch (engine) {
+        case 'voicevox': {
+          const response = await fetch(`${VOICEVOX_API_ENDPOINT}/speakers`);
+          if (response.ok) {
+            const speakers = await response.json();
+            setAvailableSpeakers(prev => ({ ...prev, voicevox: speakers }));
+            // Auto-select first speaker if none selected
+            if (!selectedSpeakers.voicevox && speakers.length > 0) {
+              const firstSpeaker = speakers[0];
+              const speakerId = firstSpeaker.styles?.[0]?.id || firstSpeaker.speaker_uuid;
+              setSelectedSpeakers(prev => ({ ...prev, voicevox: speakerId }));
+            }
+          }
+          break;
+        }
+        case 'aivisSpeech': {
+          const response = await fetch(`${AIVIS_SPEECH_API_ENDPOINT}/speakers`);
+          if (response.ok) {
+            const speakers = await response.json();
+            setAvailableSpeakers(prev => ({ ...prev, aivisSpeech: speakers }));
+            // Auto-select first speaker if none selected
+            if (!selectedSpeakers.aivisSpeech && speakers.length > 0) {
+              const firstStyle = speakers[0]?.styles?.[0];
+              if (firstStyle) {
+                setSelectedSpeakers(prev => ({ ...prev, aivisSpeech: firstStyle.id }));
+              }
+            }
+          }
+          break;
+        }
+        case 'nijivoice': {
+          const apiKey = voiceApiKeys.nijivoice;
+          if (apiKey) {
+            const response = await fetch('https://api.nijivoice.com/api/platform/v1/voice-actors', {
+              headers: {
+                'x-api-key': apiKey,
+              },
+            });
+            if (response.ok) {
+              const data = await response.json();
+              setAvailableSpeakers(prev => ({ ...prev, nijivoice: data.voiceActors || [] }));
+            }
+          }
+          break;
+        }
+        case 'minimax': {
+          const apiKey = voiceApiKeys.minimax?.trim();
+          
+          if (apiKey) {
+            const response = await fetch('https://api.minimax.io/v1/get_voice', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: 'voice_type=all',
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              const allVoices = [
+                ...(data.system_voice || []),
+                ...(data.voice_cloning || []),
+                ...(data.voice_generation || []),
+              ];
+              setAvailableSpeakers(prev => ({ ...prev, minimax: allVoices }));
+            }
+          }
+          break;
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to fetch speakers for ${engine}:`, error);
+    }
+  };
+
+  /**
+   * when voice engine changes, fetch speakers if needed
+   */
+  useEffect(() => {
+    if (selectedVoiceEngine !== 'none') {
+      if (['voicevox', 'aivisSpeech', 'nijivoice', 'minimax'].includes(selectedVoiceEngine)) {
+        fetchSpeakers(selectedVoiceEngine);
+      }
+    }
+  }, [selectedVoiceEngine, voiceApiKeys, minimaxGroupId]);
 
   /**
    * when chat provider changes, reset the model to the first one
@@ -219,7 +261,6 @@ const App: React.FC = () => {
   const convertMessagesToApiFormat = (msgs: Message[]) => {
     const apiMessages: any[] = [];
     let currentImageUrl: string | null = null;
-    let currentText = '';
 
     for (const msg of msgs) {
       if (msg.role === 'user') {
@@ -253,10 +294,12 @@ const App: React.FC = () => {
         }
       } else {
         // Assistant messages are always text
-        apiMessages.push({
-          role: msg.role,
-          content: msg.content,
-        });
+        if (msg.kind === 'text') {
+          apiMessages.push({
+            role: msg.role,
+            content: msg.content,
+          });
+        }
       }
     }
 
@@ -308,6 +351,78 @@ const App: React.FC = () => {
       providerOptions.gpt5EndpointPreference = gpt5EndpointPreference;
     }
 
+    // prepare voice options if enabled
+    const createVoiceOptions = () => {
+      if (selectedVoiceEngine === 'none') {
+        return undefined;
+      }
+
+      const config = VOICE_ENGINE_CONFIGS[selectedVoiceEngine];
+      const selectedSpeaker = selectedSpeakers[selectedVoiceEngine];
+      const options: any = {
+        engineType: selectedVoiceEngine,
+        speaker: selectedSpeaker,
+        onComplete: () => {
+          console.log('Voice playback completed');
+          setIsSpeaking(false);
+        },
+      };
+
+      // Add API key if needed
+      if (config.needsApiKey) {
+        const apiKey = voiceApiKeys[selectedVoiceEngine];
+        if (apiKey) {
+          if (selectedVoiceEngine === 'minimax') {
+            options.apiKey = apiKey.trim();
+            if (minimaxGroupId) {
+              options.groupId = minimaxGroupId.trim();
+            }
+          } else {
+            options.apiKey = apiKey.trim();
+          }
+        }
+      }
+
+      // Add API URL if specified
+      if (config.apiUrl) {
+        switch (selectedVoiceEngine) {
+          case 'voicevox':
+            options.voicevoxApiUrl = config.apiUrl;
+            break;
+          case 'voicepeak':
+            options.voicepeakApiUrl = config.apiUrl;
+            break;
+          case 'aivisSpeech':
+            options.aivisSpeechApiUrl = config.apiUrl;
+            break;
+        }
+      }
+
+      // Add engine-specific options
+      switch (selectedVoiceEngine) {
+        case 'aivisCloud':
+          Object.assign(options, {
+            aivisCloudModelUuid: selectedSpeaker,
+            aivisCloudSpeakingRate: config.defaultParams?.speakingRate,
+            aivisCloudEmotionalIntensity: config.defaultParams?.emotionalIntensity,
+            aivisCloudPitch: config.defaultParams?.pitch,
+            aivisCloudVolume: config.defaultParams?.volume,
+            aivisCloudOutputFormat: config.defaultParams?.outputFormat,
+            aivisCloudUseSSML: true,
+          });
+          break;
+        case 'minimax':
+          if (config.defaultParams?.endpoint) {
+            options.endpoint = config.defaultParams.endpoint;
+          }
+          break;
+      }
+
+      return options;
+    };
+
+    const voiceOptions = createVoiceOptions();
+
     // create options
     const aituberOptions: AITuberOnAirCoreOptions = {
       chatProvider,
@@ -320,6 +435,7 @@ const App: React.FC = () => {
       providerOptions,
       tools: [{ definition: randomIntTool, handler: randomIntHandler }],
       mcpServers: enableDeepWikiMcp ? mcpServers : [],
+      voiceOptions,
       debug: true,
     };
 
@@ -396,6 +512,16 @@ const App: React.FC = () => {
 
     instance.on(AITuberOnAirCoreEvent.TOOL_RESULT, (data: any) => {
       console.log('Tool result:', data);
+    });
+
+    instance.on(AITuberOnAirCoreEvent.SPEECH_START, (data: any) => {
+      console.log('Speech started:', data);
+      setIsSpeaking(true);
+    });
+
+    instance.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
+      console.log('Speech ended');
+      setIsSpeaking(false);
     });
   };
 
@@ -506,6 +632,24 @@ const App: React.FC = () => {
   };
 
   /**
+   * avatar image upload onChange: convert selected image to DataURL and store it in state
+   */
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      if (typeof ev.target?.result === 'string') {
+        setAvatarImageUrl(ev.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /**
    * apply settings
    */
   const handleApplySettings = () => {
@@ -540,7 +684,7 @@ const App: React.FC = () => {
                 marginRight: '8px',
               }}
             >
-              API設定
+              設定
             </button>
             <button
               onClick={clearChatHistory}
@@ -564,6 +708,16 @@ const App: React.FC = () => {
           <div>
             選択中のモデル：{chatProvider} / {model}
           </div>
+          {selectedVoiceEngine !== 'none' && (
+            <div style={{ color: '#2e997d' }}>
+              音声合成: 有効 ({VOICE_ENGINE_CONFIGS[selectedVoiceEngine].name})
+            </div>
+          )}
+          {isSpeaking && (
+            <div style={{ color: '#1e90ff', fontWeight: 'bold' }}>
+              🔊 音声再生中...
+            </div>
+          )}
           {!apiKey && (
             <div style={{ color: '#e01e5a' }}>
               API Keyが設定されていません。
@@ -574,24 +728,39 @@ const App: React.FC = () => {
           <div id="messages">
             {messages.map((msg) => (
               <div key={msg.id} className={`message ${msg.role}`}>
-                {msg.kind === 'text' && <div>{msg.content}</div>}
-                {msg.kind === 'image' && (
-                  <img
-                    src={msg.dataUrl}
-                    alt="Attached"
-                    style={{
-                      maxWidth: '200px',
-                      display: 'block',
-                      marginTop: '8px',
-                    }}
-                  />
-                )}
+                <img
+                  src={msg.role === 'user' ? defaultUserIcon : avatarImageUrl}
+                  alt={`${msg.role} avatar`}
+                  className="message-avatar"
+                />
+                <div className="message-content">
+                  {msg.kind === 'text' && <div>{msg.content}</div>}
+                  {msg.kind === 'image' && (
+                    <img
+                      src={msg.dataUrl}
+                      alt="Attached"
+                      style={{
+                        maxWidth: '200px',
+                        display: 'block',
+                        marginTop: '8px',
+                        borderRadius: '8px',
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             ))}
             {/* assistant's partial response */}
             {partialTextBuffer && (
               <div className="message assistant assistant-partial">
-                {partialTextBuffer}
+                <img
+                  src={avatarImageUrl}
+                  alt="assistant avatar"
+                  className="message-avatar"
+                />
+                <div className="message-content">
+                  {partialTextBuffer}
+                </div>
               </div>
             )}
           </div>
@@ -635,50 +804,122 @@ const App: React.FC = () => {
           <div
             className="modal-content"
             style={{
+              height: '80vh',
               maxHeight: '90vh',
-              overflowY: 'auto',
+              minHeight: '500px',
               display: 'flex',
               flexDirection: 'column',
             }}
           >
+            <h2 style={{ marginBottom: '16px' }}>設定</h2>
+            
+            {/* Tab Headers */}
             <div
-              style={{ flexGrow: 1, overflowY: 'auto', paddingRight: '8px' }}
+              style={{
+                display: 'flex',
+                borderBottom: '2px solid #ddd',
+                marginBottom: '20px',
+              }}
             >
-              <h2>設定</h2>
-              <label htmlFor="apiKey">API Key:</label>
-              <input
-                type="password"
-                id="apiKey"
-                placeholder="..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-
-              <label htmlFor="systemPrompt">System Prompt:</label>
-              <textarea
-                id="systemPrompt"
-                placeholder="あなたはフレンドリーなAITuberです..."
-                value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
-              />
-
-              <label htmlFor="chatProvider">Chat Provider:</label>
-              <select
-                id="chatProvider"
-                value={chatProvider}
-                onChange={(e) => setChatProvider(e.target.value)}
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: activeTab === 'llm' ? '#2e997d' : 'transparent',
+                  color: activeTab === 'llm' ? '#fff' : '#333',
+                  border: 'none',
+                  borderBottom: activeTab === 'llm' ? '3px solid #2e997d' : 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: activeTab === 'llm' ? 'bold' : 'normal',
+                  transition: 'all 0.3s ease',
+                }}
+                onClick={() => setActiveTab('llm')}
               >
-                <option value="openai">OpenAI</option>
-                <option value="gemini">Gemini</option>
-                <option value="claude">Claude</option>
-              </select>
-
-              <label htmlFor="model">Model:</label>
-              <select
-                id="model"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
+                LLM設定
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: activeTab === 'voice' ? '#2e997d' : 'transparent',
+                  color: activeTab === 'voice' ? '#fff' : '#333',
+                  border: 'none',
+                  borderBottom: activeTab === 'voice' ? '3px solid #2e997d' : 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: activeTab === 'voice' ? 'bold' : 'normal',
+                  transition: 'all 0.3s ease',
+                }}
+                onClick={() => setActiveTab('voice')}
               >
+                音声設定
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: activeTab === 'avatar' ? '#2e997d' : 'transparent',
+                  color: activeTab === 'avatar' ? '#fff' : '#333',
+                  border: 'none',
+                  borderBottom: activeTab === 'avatar' ? '3px solid #2e997d' : 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: activeTab === 'avatar' ? 'bold' : 'normal',
+                  transition: 'all 0.3s ease',
+                }}
+                onClick={() => setActiveTab('avatar')}
+              >
+                アバター設定
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div
+              style={{ 
+                flex: '1 1 auto',
+                overflowY: 'auto', 
+                paddingRight: '8px',
+                minHeight: '0'
+              }}
+            >
+              {activeTab === 'llm' ? (
+                <div>
+                  {/* LLM Settings */}
+                  <label htmlFor="apiKey">API Key:</label>
+                  <input
+                    type="password"
+                    id="apiKey"
+                    placeholder="..."
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+
+                  <label htmlFor="systemPrompt">System Prompt:</label>
+                  <textarea
+                    id="systemPrompt"
+                    placeholder="あなたはフレンドリーなAITuberです..."
+                    value={systemPrompt}
+                    onChange={(e) => setSystemPrompt(e.target.value)}
+                  />
+
+                  <label htmlFor="chatProvider">Chat Provider:</label>
+                  <select
+                    id="chatProvider"
+                    value={chatProvider}
+                    onChange={(e) => setChatProvider(e.target.value)}
+                  >
+                    <option value="openai">OpenAI</option>
+                    <option value="gemini">Gemini</option>
+                    <option value="claude">Claude</option>
+                  </select>
+
+                  <label htmlFor="model">Model:</label>
+                  <select
+                    id="model"
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                  >
                 {chatProvider === 'openai' &&
                   openaiModels.map((m) => (
                     <option key={m} value={m}>
@@ -819,18 +1060,229 @@ const App: React.FC = () => {
                 </div>
               )}
 
-              <div style={{ marginTop: '8px' }}>
-                <label htmlFor="enableDeepWikiMcp">
-                  DeepWiki MCPを有効にする:
-                </label>
-                <input
-                  type="checkbox"
-                  id="enableDeepWikiMcp"
-                  checked={enableDeepWikiMcp}
-                  onChange={(e) => setEnableDeepWikiMcp(e.target.checked)}
-                  style={{ marginLeft: '8px' }}
-                />
-              </div>
+                  <div style={{ marginTop: '8px' }}>
+                    <label htmlFor="enableDeepWikiMcp">
+                      DeepWiki MCPを有効にする:
+                    </label>
+                    <input
+                      type="checkbox"
+                      id="enableDeepWikiMcp"
+                      checked={enableDeepWikiMcp}
+                      onChange={(e) => setEnableDeepWikiMcp(e.target.checked)}
+                      style={{ marginLeft: '8px' }}
+                    />
+                  </div>
+                </div>
+              ) : activeTab === 'voice' ? (
+                <div>
+                  {/* Voice Settings */}
+                  <h3 style={{ marginTop: '0', marginBottom: '16px' }}>音声設定</h3>
+
+                  <label htmlFor="voiceEngine" style={{ marginTop: '16px', display: 'block' }}>
+                    音声エンジン:
+                  </label>
+                  <select
+                    id="voiceEngine"
+                    value={selectedVoiceEngine}
+                    onChange={(e) => setSelectedVoiceEngine(e.target.value as VoiceEngineType)}
+                    style={{ width: '100%', marginBottom: '12px' }}
+                  >
+                    {Object.entries(VOICE_ENGINE_CONFIGS).map(([key, config]) => (
+                      <option key={key} value={key}>
+                        {config.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedVoiceEngine !== 'none' && VOICE_ENGINE_CONFIGS[selectedVoiceEngine].needsApiKey && (
+                    <>
+                      <label htmlFor="voiceApiKey" style={{ marginTop: '16px', display: 'block' }}>
+                        {selectedVoiceEngine === 'minimax' ? 'MiniMax API Key:' : `${VOICE_ENGINE_CONFIGS[selectedVoiceEngine].name} API Key:`}
+                      </label>
+                      <input
+                        type="password"
+                        id="voiceApiKey"
+                        placeholder={selectedVoiceEngine === 'minimax' ? 'xxx...' : VOICE_ENGINE_CONFIGS[selectedVoiceEngine].placeholder}
+                        value={voiceApiKeys[selectedVoiceEngine] || ''}
+                        onChange={(e) => setVoiceApiKeys(prev => ({
+                          ...prev,
+                          [selectedVoiceEngine]: e.target.value
+                        }))}
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                      
+                      {selectedVoiceEngine === 'minimax' && (
+                        <>
+                          <label htmlFor="minimaxGroupId" style={{ marginTop: '8px', display: 'block' }}>
+                            MiniMax Group ID:
+                          </label>
+                          <input
+                            type="password"
+                            id="minimaxGroupId"
+                            placeholder="1234567890"
+                            value={minimaxGroupId}
+                            onChange={(e) => setMinimaxGroupId(e.target.value)}
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {selectedVoiceEngine !== 'none' && VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl && (
+                    <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
+                      <strong>API URL:</strong> {VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl}
+                    </div>
+                  )}
+
+                  {/* Speaker Selection */}
+                  {selectedVoiceEngine !== 'none' && (
+                    <>
+                      <label htmlFor="voiceSpeaker" style={{ marginTop: '16px', display: 'block' }}>
+                        音声:
+                      </label>
+                      <select
+                        id="voiceSpeaker"
+                        value={String(selectedSpeakers[selectedVoiceEngine] || '')}
+                        onChange={(e) => {
+                          const value = selectedVoiceEngine === 'voicevox' || selectedVoiceEngine === 'aivisSpeech' 
+                            ? Number(e.target.value) 
+                            : e.target.value;
+                          setSelectedSpeakers(prev => ({
+                            ...prev,
+                            [selectedVoiceEngine]: value
+                          }));
+                        }}
+                        style={{ width: '100%', marginBottom: '12px' }}
+                      >
+                        {/* OpenAI TTS */}
+                        {selectedVoiceEngine === 'openai' && OPENAI_TTS_SPEAKERS.map(speaker => (
+                          <option key={speaker.id} value={speaker.id}>
+                            {speaker.name} {speaker.description && `- ${speaker.description}`}
+                          </option>
+                        ))}
+                        
+                        {/* VOICEVOX */}
+                        {selectedVoiceEngine === 'voicevox' && availableSpeakers.voicevox ? (
+                          availableSpeakers.voicevox.flatMap((speaker: any) => 
+                            speaker.styles?.map((style: any) => (
+                              <option key={`${speaker.speaker_uuid}-${style.id}`} value={style.id}>
+                                {speaker.name} - {style.name}
+                              </option>
+                            )) || []
+                          )
+                        ) : selectedVoiceEngine === 'voicevox' && (
+                          <option value="">ローカルサーバーから取得中...</option>
+                        )}
+                        
+                        {/* Aivis Speech */}
+                        {selectedVoiceEngine === 'aivisSpeech' && availableSpeakers.aivisSpeech ? (
+                          availableSpeakers.aivisSpeech.flatMap((speaker: any) => 
+                            speaker.styles?.map((style: any) => (
+                              <option key={`${speaker.speaker_uuid}-${style.id}`} value={style.id}>
+                                {speaker.name} - {style.name}
+                              </option>
+                            )) || []
+                          )
+                        ) : selectedVoiceEngine === 'aivisSpeech' && (
+                          <option value="">ローカルサーバーから取得中...</option>
+                        )}
+                        
+                        {/* Aivis Cloud */}
+                        {selectedVoiceEngine === 'aivisCloud' && AIVIS_CLOUD_MODELS.map(model => (
+                          <option key={model.aivm_model_uuid} value={model.aivm_model_uuid}>
+                            {model.name}
+                          </option>
+                        ))}
+                        
+                        {/* VoicePeak */}
+                        {selectedVoiceEngine === 'voicepeak' && VOICEPEAK_SPEAKERS.map(speaker => (
+                          <option key={speaker.id} value={speaker.id}>
+                            {speaker.name}
+                          </option>
+                        ))}
+                        
+                        {/* NijiVoice */}
+                        {selectedVoiceEngine === 'nijivoice' && availableSpeakers.nijivoice ? (
+                          availableSpeakers.nijivoice.map((actor: any) => (
+                            <option key={actor.id} value={actor.id}>
+                              {actor.name}
+                            </option>
+                          ))
+                        ) : selectedVoiceEngine === 'nijivoice' && (
+                          <option value="">API Keyを入力後、自動取得されます</option>
+                        )}
+                        
+                        {/* MiniMax */}
+                        {selectedVoiceEngine === 'minimax' && availableSpeakers.minimax ? (
+                          availableSpeakers.minimax.map((voice: any) => (
+                            <option key={voice.voice_id} value={voice.voice_id}>
+                              {voice.voice_name}
+                            </option>
+                          ))
+                        ) : selectedVoiceEngine === 'minimax' && (
+                          <option value="">API Keyを入力後、自動取得されます</option>
+                        )}
+                      </select>
+                    </>
+                  )}
+
+                  {selectedVoiceEngine !== 'none' && (
+                    <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
+                      ※ 音声パラメータは最適な値に固定されています
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  {/* Avatar Settings */}
+                  <h3 style={{ marginTop: '0', marginBottom: '16px' }}>アバター設定</h3>
+                  
+                  <div style={{ marginBottom: '24px' }}>
+                    <img
+                      src={avatarImageUrl}
+                      alt="Avatar preview"
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '3px solid #e0e0e0',
+                        display: 'block',
+                        marginBottom: '12px'
+                      }}
+                    />
+                    <div style={{ fontSize: '0.9em', color: '#666' }}>
+                      現在のアバター画像
+                    </div>
+                  </div>
+
+                  <label htmlFor="avatarUpload" style={{ marginTop: '16px', display: 'block' }}>
+                    アバター画像をアップロード:
+                  </label>
+                  <input
+                    type="file"
+                    id="avatarUpload"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    style={{ marginBottom: '8px', width: '100%' }}
+                  />
+                  <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '16px' }}>
+                    ※ 画像は自動的に円形にクロップされます
+                  </div>
+                  
+                  <div style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px', marginTop: '16px' }}>
+                    <div style={{ fontSize: '0.9em', color: '#495057' }}>
+                      <strong>ヒント：</strong>
+                      <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
+                        <li>正方形に近い画像がベストです</li>
+                        <li>推奨サイズ：200px × 200px 以上</li>
+                        <li>対応形式：JPG、PNG、WebP</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div

@@ -91,23 +91,46 @@ button:hover {
 }
 
 .message {
-  margin-bottom: 12px;
-  display: inline-block;
-  padding: 8px 12px;
-  border-radius: 8px;
-  max-width: 70%;
-  word-wrap: break-word;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 85%;
   clear: both;
 }
 
 .message.user {
   float: right;
-  background-color: #f0f0f0;
-  color: #333;
+  flex-direction: row-reverse;
 }
 
 .message.assistant {
   float: left;
+  flex-direction: row;
+}
+
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #e0e0e0;
+}
+
+.message-content {
+  padding: 8px 12px;
+  border-radius: 8px;
+  word-wrap: break-word;
+  flex: 1;
+}
+
+.message.user .message-content {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.message.assistant .message-content {
   background-color: #e8e8e8;
   color: #333;
 }
@@ -167,4 +190,31 @@ button:hover {
 
 .modal-content button:hover {
   opacity: 0.9;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .message {
+    max-width: 95%;
+    gap: 8px;
+  }
+  
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .message-content {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  
+  .container {
+    padding: 8px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    padding: 16px;
+  }
 }
