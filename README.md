@@ -2,11 +2,17 @@
 [![CI](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml/badge.svg)](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shinshin86/aituber-onair)
 
-![AITuber OnAir Toolkit - logo](./images/AITuber_OnAir_Toolkit.png)
+![AITuber OnAir Toolkit - logo](./images/aituber-onair-toolkit.png)
 
 [日本語版はこちら](./README_ja.md)
 
-Welcome to the **AITuber OnAir** monorepo! This repository contains various packages and tools that power AI-driven virtual streaming and related features.
+Welcome to the **AITuber OnAir** monorepo!  
+This repository open-sources the AITuber streaming processes used in [AITuber OnAir](https://aituberonair.com), a web application for AITuber/AIVTuber streaming.
+
+It contains various packages and tools for AI-powered chat, TTS, virtual streaming, and related features. You can also run a [simple chat app](https://github.com/shinshin86/aituber-onair/tree/main/packages/core/examples/react-basic) using these systems on your local PC or self-host it.
+
+![AITuber OnAir Demo](./images/aituber-onair-demo.png)
+(This is the AITuber OnAir interface)
 
 Currently, the primary packages available are:
 
@@ -32,6 +38,12 @@ Currently, the primary packages available are:
   WebSocket client library for chat functionality with React hooks support. Provides WebSocket client and React hooks for real-time chat communication with auto-reconnection, rate limiting, mention support, and voice synthesis integration. Works in both browser and Node.js environments.
   ```
   npm install @aituber-onair/bushitsu-client
+  ```
+
+- [**@aituber-onair/kizuna**](./packages/kizuna/README.md)
+  Sophisticated bond system (絆 - "Kizuna") for managing user-AI character relationships. Features points-based engagement system with customizable rules, achievements, emotion-based bonuses, level progression, and persistent storage. Supports YouTube, Twitch, and WebSocket platforms.
+  ```
+  npm install @aituber-onair/kizuna
   ```
 
 - [**@aituber-onair/chat**](./packages/chat/README.md)
@@ -93,9 +105,13 @@ aituber-onair/
 │   │   ├── src/
 │   │   ├── test/
 │   │   └── package.json
-│   └── bushitsu-client/
+│   ├── bushitsu-client/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   └── kizuna/
 │       ├── src/
-│       ├── test/
+│       ├── tests/
 │       └── package.json
 ├── package.json
 ├── README.md
@@ -107,6 +123,7 @@ aituber-onair/
 - **packages/chat**: The chat and LLM API integration library (`@aituber-onair/chat`) for AI provider interactions.
 - **packages/manneri**: The conversation pattern detection library (`@aituber-onair/manneri`) for identifying repetitive dialogue patterns.
 - **packages/bushitsu-client**: The WebSocket client library (`@aituber-onair/bushitsu-client`) for chat functionality with React hooks support.
+- **packages/kizuna**: The user-AI relationship management library (`@aituber-onair/kizuna`) for engagement tracking.
 
 ## Release Process
 

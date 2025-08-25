@@ -2,12 +2,17 @@
 [![CI](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml/badge.svg)](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shinshin86/aituber-onair)
 
-![AITuber OnAir Toolkit - logo](./images/AITuber_OnAir_Toolkit.png)
+![AITuber OnAir Toolkit - logo](./images/aituber-onair-toolkit.png)
 
 [Click here for the English README](./README.md)
 
 **AITuber OnAir** モノレポへようこそ！  
-このリポジトリには、AIを活用したバーチャルストリーミングやその他関連機能を実現するための各種パッケージやツールが含まれています。
+このリポジトリは、AITuber・AIVTuber配信向けWebアプリである[AITuber OnAir](https://aituberonair.com)で利用されているAITuber配信に関する処理をオープンソースにしたものです。
+
+AIを活用したチャットやTTS、バーチャルストリーミングやその他関連機能を実現するための各種パッケージやツールが含まれているほか、これらの仕組みを用いた[シンプルなチャットアプリ](https://github.com/shinshin86/aituber-onair/tree/main/packages/core/examples/react-basic)を手元のPCで動かしたり、セルフホスティングすることも出来ます。
+
+![AITuber OnAir Demo](./images/aituber-onair-demo.png)
+（これはAITuber OnAirの画面です）
 
 現在、提供中の主要なパッケージは以下の通りです：
 
@@ -30,10 +35,22 @@
   npm install @aituber-onair/manneri
   ```
 
+- [**@aituber-onair/bushitsu-client**](./packages/bushitsu-client/README_ja.md)
+  React hooksサポートを含むチャット機能向けWebSocketクライアントライブラリです。自動再接続、レート制限、メンション対応、音声合成統合を持つリアルタイムチャット通信用のWebSocketクライアントとReact hooksを提供します。ブラウザとNode.js環境の両方で動作します。
+  ```
+  npm install @aituber-onair/bushitsu-client
+  ```
+
 - [**@aituber-onair/chat**](./packages/chat/README.md)
   AITuber OnAir用のチャットおよびLLM API統合ライブラリです。OpenAI、Claude（Anthropic）、Google Geminiなど複数のAIプロバイダーをサポートし、統一されたインターフェースでストリーミング応答、ツール呼び出し、Vision処理を提供します。
   ```
   npm install @aituber-onair/chat
+  ```
+
+- [**@aituber-onair/kizuna**](./packages/kizuna/README.ja.md)
+  ユーザーとAIキャラクターの関係性を管理する高度な絆（「Kizuna」）システムです。カスタマイズ可能なルール、実績、感情ベースボーナス、レベル進行、永続ストレージを備えたポイントベースのエンゲージメントシステムを特徴としています。YouTube、Twitch、WebSocketプラットフォームをサポートします。
+  ```
+  npm install @aituber-onair/kizuna
   ```
 
 ## はじめに
@@ -85,9 +102,17 @@ aituber-onair/
 │   │   ├── src/
 │   │   ├── test/
 │   │   └── package.json
-│   └── manneri/
+│   ├── manneri/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   ├── bushitsu-client/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   └── kizuna/
 │       ├── src/
-│       ├── test/
+│       ├── tests/
 │       └── package.json
 ├── package.json
 ├── README.md
@@ -98,6 +123,8 @@ aituber-onair/
 - **packages/voice**: 複数のTTSエンジンをサポートする音声合成ライブラリ（`@aituber-onair/voice`）です。
 - **packages/chat**: LLM API統合とチャット処理機能を提供するライブラリ（`@aituber-onair/chat`）です。
 - **packages/manneri**: 会話パターン検出ライブラリ（`@aituber-onair/manneri`）です。
+- **packages/bushitsu-client**: チャット機能用WebSocketクライアントライブラリ（`@aituber-onair/bushitsu-client`）です。
+- **packages/kizuna**: ユーザーとAIの関係性管理ライブラリ（`@aituber-onair/kizuna`）です。
 
 ## リリース手順
 
