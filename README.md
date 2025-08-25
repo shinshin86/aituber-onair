@@ -2,11 +2,17 @@
 [![CI](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml/badge.svg)](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shinshin86/aituber-onair)
 
-![AITuber OnAir Toolkit - logo](./images/AITuber_OnAir_Toolkit.png)
+![AITuber OnAir Toolkit - logo](./images/aituber-onair-toolkit.png)
 
 [日本語版はこちら](./README_ja.md)
 
-Welcome to the **AITuber OnAir** monorepo! This repository contains various packages and tools that power AI-driven virtual streaming and related features.
+Welcome to the **AITuber OnAir** monorepo!  
+This repository open-sources the AITuber streaming processes used in [AITuber OnAir](https://aituberonair.com), a web application for AITuber/AIVTuber streaming.
+
+It contains various packages and tools for AI-powered chat, TTS, virtual streaming, and related features. You can also run a [simple chat app](https://github.com/shinshin86/aituber-onair/tree/main/packages/core/examples/react-basic) using these systems on your local PC or self-host it.
+
+![AITuber OnAir Demo](./images/aituber-onair-demo.png)
+(This is the AITuber OnAir interface)
 
 Currently, the primary packages available are:
 

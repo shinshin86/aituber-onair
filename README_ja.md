@@ -2,12 +2,17 @@
 [![CI](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml/badge.svg)](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shinshin86/aituber-onair)
 
-![AITuber OnAir Toolkit - logo](./images/AITuber_OnAir_Toolkit.png)
+![AITuber OnAir Toolkit - logo](./images/aituber-onair-toolkit.png)
 
 [Click here for the English README](./README.md)
 
 **AITuber OnAir** モノレポへようこそ！  
-このリポジトリには、AIを活用したバーチャルストリーミングやその他関連機能を実現するための各種パッケージやツールが含まれています。
+このリポジトリは、AITuber・AIVTuber配信向けWebアプリである[AITuber OnAir](https://aituberonair.com)で利用されているAITuber配信に関する処理をオープンソースにしたものです。
+
+AIを活用したチャットやTTS、バーチャルストリーミングやその他関連機能を実現するための各種パッケージやツールが含まれているほか、これらの仕組みを用いた[シンプルなチャットアプリ](https://github.com/shinshin86/aituber-onair/tree/main/packages/core/examples/react-basic)を手元のPCで動かしたり、セルフホスティングすることも出来ます。
+
+![AITuber OnAir Demo](./images/aituber-onair-demo.png)
+（これはAITuber OnAirの画面です）
 
 現在、提供中の主要なパッケージは以下の通りです：
 
