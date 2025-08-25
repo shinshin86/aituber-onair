@@ -34,6 +34,12 @@ Currently, the primary packages available are:
   npm install @aituber-onair/bushitsu-client
   ```
 
+- [**@aituber-onair/kizuna**](./packages/kizuna/README.md)
+  Sophisticated bond system (絆 - "Kizuna") for managing user-AI character relationships. Features points-based engagement system with customizable rules, achievements, emotion-based bonuses, level progression, and persistent storage. Supports YouTube, Twitch, and WebSocket platforms.
+  ```
+  npm install @aituber-onair/kizuna
+  ```
+
 - [**@aituber-onair/chat**](./packages/chat/README.md)
   Chat and LLM API integration library for AITuber OnAir. Provides a unified interface for interacting with various AI chat providers including OpenAI, Claude (Anthropic), and Google Gemini. Features streaming responses, tool/function calling, vision support, and emotion detection.
   ```
@@ -93,9 +99,13 @@ aituber-onair/
 │   │   ├── src/
 │   │   ├── test/
 │   │   └── package.json
-│   └── bushitsu-client/
+│   ├── bushitsu-client/
+│   │   ├── src/
+│   │   ├── test/
+│   │   └── package.json
+│   └── kizuna/
 │       ├── src/
-│       ├── test/
+│       ├── tests/
 │       └── package.json
 ├── package.json
 ├── README.md
@@ -107,6 +117,7 @@ aituber-onair/
 - **packages/chat**: The chat and LLM API integration library (`@aituber-onair/chat`) for AI provider interactions.
 - **packages/manneri**: The conversation pattern detection library (`@aituber-onair/manneri`) for identifying repetitive dialogue patterns.
 - **packages/bushitsu-client**: The WebSocket client library (`@aituber-onair/bushitsu-client`) for chat functionality with React hooks support.
+- **packages/kizuna**: The user-AI relationship management library (`@aituber-onair/kizuna`) for engagement tracking.
 
 ## Release Process
 
