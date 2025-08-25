@@ -82,7 +82,7 @@ const App: React.FC = () => {
     CHAT_RESPONSE_LENGTH.MEDIUM,
   );
   const [gpt5Preset, setGpt5Preset] = useState<GPT5PresetKey | 'custom'>(
-    'balanced',
+    'casual',
   );
   const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
     'medium',

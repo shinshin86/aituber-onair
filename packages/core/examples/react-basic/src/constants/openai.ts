@@ -14,13 +14,13 @@ import {
 
 // OpenAI models list
 export const openaiModels = [
+  MODEL_GPT_4_1_NANO,
+  MODEL_GPT_4_1_MINI,
+  MODEL_GPT_4_1,
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
   MODEL_GPT_5_CHAT_LATEST,
-  MODEL_GPT_4_1_NANO,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1,
   MODEL_O3_MINI,
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
