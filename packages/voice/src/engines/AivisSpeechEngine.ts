@@ -10,7 +10,7 @@ export class AivisSpeechEngine implements VoiceEngine {
 
   async fetchAudio(input: Talk, speaker: string): Promise<ArrayBuffer> {
     const talk = input as Talk;
-    // talk.styleから感情を取得
+    // Get emotion from talk.style
     const emotion = talk.style || 'neutral';
     const text = talk.message.trim();
 

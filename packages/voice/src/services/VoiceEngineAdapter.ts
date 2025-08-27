@@ -75,9 +75,9 @@ export class VoiceEngineAdapter implements VoiceService {
 
       const engine = VoiceEngineFactory.getEngine(this.options.engineType);
 
-      // カスタムエンドポイントURLの設定
+      // Set custom endpoint URL
       if (engine.setApiEndpoint) {
-        // エンジンタイプに応じてカスタムエンドポイントURLを設定
+        // Set custom endpoint URL based on engine type
         switch (this.options.engineType) {
           case 'voicevox':
             if (this.options.voicevoxApiUrl) {
@@ -97,7 +97,7 @@ export class VoiceEngineAdapter implements VoiceService {
         }
       }
 
-      // MiniMaxエンジンの場合、GroupIdを設定
+      // For MiniMax engine, set GroupId
       if (this.options.engineType === 'minimax' && (engine as any).setGroupId) {
         if (this.options.groupId) {
           (engine as any).setGroupId(this.options.groupId);
@@ -107,18 +107,18 @@ export class VoiceEngineAdapter implements VoiceService {
           );
         }
 
-        // エンドポイントの設定もMinimaxEngineでサポートされている場合
+        // If endpoint setting is also supported by MinimaxEngine
         if (this.options.endpoint && (engine as any).setEndpoint) {
           (engine as any).setEndpoint(this.options.endpoint);
         }
 
-        // モデルの設定もMinimaxEngineでサポートされている場合
+        // If model setting is also supported by MinimaxEngine
         if (this.options.minimaxModel && (engine as any).setModel) {
           (engine as any).setModel(this.options.minimaxModel);
         }
       }
 
-      // Aivis Cloud エンジンの場合、各種パラメータを設定
+      // For Aivis Cloud engine, set various parameters
       if (this.options.engineType === 'aivisCloud') {
         const aivisEngine = engine as any;
 
