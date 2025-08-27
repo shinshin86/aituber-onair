@@ -111,6 +111,11 @@ export class VoiceEngineAdapter implements VoiceService {
         if (this.options.endpoint && (engine as any).setEndpoint) {
           (engine as any).setEndpoint(this.options.endpoint);
         }
+
+        // モデルの設定もMinimaxEngineでサポートされている場合
+        if (this.options.minimaxModel && (engine as any).setModel) {
+          (engine as any).setModel(this.options.minimaxModel);
+        }
       }
 
       // Aivis Cloud エンジンの場合、各種パラメータを設定

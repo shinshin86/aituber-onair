@@ -13,6 +13,17 @@ import { VoiceEngine } from './VoiceEngine';
 export type MinimaxEndpoint = 'global' | 'china';
 
 /**
+ * Available MiniMax TTS models
+ */
+export type MinimaxModel =
+  | 'speech-2.5-hd-preview'
+  | 'speech-2.5-turbo-preview'
+  | 'speech-02-hd'
+  | 'speech-02-turbo'
+  | 'speech-01-hd'
+  | 'speech-01-turbo';
+
+/**
  * MiniMax voice speaker information
  */
 export interface MinimaxVoiceSpeaker {
@@ -28,7 +39,7 @@ export interface MinimaxVoiceSpeaker {
  */
 export class MinimaxEngine implements VoiceEngine {
   private groupId?: string;
-  private model: string = 'speech-02-hd';
+  private model: MinimaxModel = 'speech-2.5-hd-preview';
   private defaultVoiceId: string = 'male-qn-qingse';
   private language: string = 'Japanese';
   private endpoint: MinimaxEndpoint = 'global';
@@ -63,9 +74,16 @@ export class MinimaxEngine implements VoiceEngine {
 
   /**
    * Set model for MiniMax TTS
-   * @param model Model name (speech-02-hd, speech-02-turbo, speech-01-hd, speech-01-turbo)
+   * Available models:
+   * - speech-2.5-hd-preview: Latest high-quality model (preview)
+   * - speech-2.5-turbo-preview: Latest fast model (preview)
+   * - speech-02-hd: High-quality model
+   * - speech-02-turbo: Fast model
+   * - speech-01-hd: Previous generation high-quality model
+   * - speech-01-turbo: Previous generation fast model
+   * @param model Model name
    */
-  setModel(model: string): void {
+  setModel(model: MinimaxModel): void {
     this.model = model;
   }
 
