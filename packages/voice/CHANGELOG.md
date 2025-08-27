@@ -1,5 +1,37 @@
 # @aituber-onair/voice
 
+## 0.4.0
+
+### Minor Changes
+
+- feat: add MiniMax TTS new models and enhanced UI configuration
+
+  **New MiniMax TTS Models:**
+  - speech-2.5-hd-preview: Latest high-definition preview model (new default)
+  - speech-2.5-turbo-preview: Enhanced turbo model for faster processing
+  - speech-02-turbo: Updated turbo model with improved quality
+  - Maintained compatibility with existing speech-01, speech-02-hd, speech-02 models
+
+  **Enhanced React UI:**
+  - Separated API Key and Group ID configuration fields for better security
+  - Added comprehensive Voice ID selection with 18 voice options including new voices:
+    * Wise_Woman, Deep_Voice_Man, Cute_Boy, Energetic_Woman_1, Energetic_Woman_2
+    * Gentle_Woman, Mature_Woman_1, Mature_Woman_2, Soft_Woman, Sweet_Woman
+    * Youthful_Woman_1, Youthful_Woman_2, and more
+  - Improved configuration interface for better user experience
+
+  **Comprehensive Test Coverage:**
+  - Added MinimaxEngine.test.ts with 7 configuration tests
+  - Added VoiceEngineAdapter.test.ts with 15 integration tests
+  - CI/CD-friendly testing without API key dependencies
+  - Complete coverage for model selection, emotion conversion, and error handling
+  - 45 total tests ensuring robust functionality across all engines
+
+  **Code Quality Improvements:**
+  - Translated all Japanese comments to English for international development
+  - Enhanced TypeScript type safety with MinimaxModel union type
+  - Improved error handling and validation throughout the codebase
+
 ## 0.3.0
 
 ### Minor Changes
