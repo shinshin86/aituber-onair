@@ -1,6 +1,7 @@
 import {
   VoiceEngineAdapter,
   type VoiceServiceOptions,
+  type MinimaxModel,
 } from '@aituber-onair/voice';
 import { useEffect, useState } from 'react';
 import './App.css';
@@ -46,17 +47,60 @@ const ENGINE_DEFAULTS = {
   minimax: {
     apiUrl: 'https://api.minimax.io/v1/t2a_v2',
     needsApiKey: true,
-    placeholder: 'apiKey:groupId',
+    placeholder: 'Your MiniMax API key',
+    groupIdPlaceholder: 'Your Group ID',
     speaker: 'male-qn-qingse',
+    defaultModel: 'speech-2.5-hd-preview' as MinimaxModel,
   },
 } as const;
+
+// MiniMax model options with descriptions
+const MINIMAX_MODELS: Record<MinimaxModel, string> = {
+  'speech-2.5-hd-preview':
+    'The brand new HD model. Ultimate Similarity, Ultra-High Quality',
+  'speech-2.5-turbo-preview':
+    'The brand new Turbo model. Ultimate Value, 40 Languages',
+  'speech-02-hd':
+    'Superior rhythm and stability, with outstanding performance in replication similarity and sound quality.',
+  'speech-02-turbo':
+    'Superior rhythm and stability, with enhanced multilingual capabilities and excellent performance.',
+  'speech-01-hd': 'Rich Voices, Expressive Emotions, Authentic Languages',
+  'speech-01-turbo': 'Excellent performance and low latency',
+};
+
+// MiniMax Voice IDs with descriptions
+const MINIMAX_VOICES: Record<string, string> = {
+  'male-qn-qingse': 'Male - Qingse (Default)',
+  Wise_Woman: 'Wise Woman',
+  Friendly_Person: 'Friendly Person',
+  Inspirational_girl: 'Inspirational Girl',
+  Deep_Voice_Man: 'Deep Voice Man',
+  Calm_Woman: 'Calm Woman',
+  Casual_Guy: 'Casual Guy',
+  Lively_Girl: 'Lively Girl',
+  Patient_Man: 'Patient Man',
+  Young_Knight: 'Young Knight',
+  Determined_Man: 'Determined Man',
+  Lovely_Girl: 'Lovely Girl',
+  Decent_Boy: 'Decent Boy',
+  Imposing_Manner: 'Imposing Manner',
+  Elegant_Man: 'Elegant Man',
+  Abbess: 'Abbess',
+  Sweet_Girl_2: 'Sweet Girl 2',
+  Exuberant_Girl: 'Exuberant Girl',
+};
 
 type EngineType = keyof typeof ENGINE_DEFAULTS;
 
 function App() {
   const [engine, setEngine] = useState<EngineType>('openai');
   const [apiKey, setApiKey] = useState('');
+  const [minimaxGroupId, setMinimaxGroupId] = useState('');
+  const [minimaxVoiceId, setMinimaxVoiceId] = useState('male-qn-qingse');
   const [apiUrl, setApiUrl] = useState('');
+  const [minimaxModel, setMinimaxModel] = useState<MinimaxModel>(
+    'speech-2.5-hd-preview',
+  );
   const [text, setText] = useState(
     'こんにちは！AITuber OnAir Voice のReactデモへようこそ。',
   );
@@ -76,6 +120,7 @@ function App() {
     const defaults = ENGINE_DEFAULTS[engine];
     setApiUrl(defaults.apiUrl);
     setApiKey('');
+    setMinimaxGroupId('');
     setStatus(`Switched to ${engine}. Default URL: ${defaults.apiUrl}`);
     setStatusType('success');
   }, [engine]);
@@ -89,7 +134,14 @@ function App() {
 
     const defaults = ENGINE_DEFAULTS[engine];
 
-    if (defaults.needsApiKey && !apiKey) {
+    // Validate required fields
+    if (engine === 'minimax') {
+      if (!apiKey || !minimaxGroupId) {
+        setStatus('Both API key and Group ID are required for MiniMax');
+        setStatusType('error');
+        return;
+      }
+    } else if (defaults.needsApiKey && !apiKey) {
       setStatus(`API key is required for ${engine}`);
       setStatusType('error');
       return;
@@ -103,7 +155,8 @@ function App() {
       // Create voice service options
       const options: VoiceServiceOptions = {
         engineType: engine,
-        speaker: defaults.speaker,
+        speaker:
+          engine === 'minimax' ? minimaxVoiceId : String(defaults.speaker),
         onComplete: () => {
           setIsPlaying(false);
           setStatus('Playback completed');
@@ -113,23 +166,31 @@ function App() {
 
       // Add API key if provided
       if (apiKey) {
-        if (engine === 'minimax') {
-          // For MiniMax, the API key format is "apiKey:groupId"
-          const [key, groupId] = apiKey.split(':');
-          if (groupId) {
-            options.apiKey = key;
-            options.minimaxGroupId = groupId;
-          } else {
-            throw new Error('MiniMax requires format: apiKey:groupId');
-          }
-        } else {
-          options.apiKey = apiKey;
-        }
+        options.apiKey = apiKey;
+      }
+
+      // Add MiniMax-specific options
+      if (engine === 'minimax') {
+        options.groupId = minimaxGroupId;
+        options.minimaxModel = minimaxModel;
       }
 
       // Add API URL if provided
       if (apiUrl) {
-        options.apiUrl = apiUrl;
+        // Set engine-specific API URL
+        switch (engine) {
+          case 'voicevox':
+            options.voicevoxApiUrl = apiUrl;
+            break;
+          case 'voicepeak':
+            options.voicepeakApiUrl = apiUrl;
+            break;
+          case 'aivisSpeech':
+            options.aivisSpeechApiUrl = apiUrl;
+            break;
+          // For cloud services, the API URL is typically fixed
+          // but we can still allow override if needed
+        }
       }
 
       // Create or reuse voice service
@@ -188,25 +249,91 @@ function App() {
           </select>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="apiKey">
-            API Key {defaults.needsApiKey ? '(required)' : '(optional)'}:
-          </label>
-          <input
-            id="apiKey"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder={defaults.placeholder}
-            disabled={!defaults.needsApiKey}
-            style={{
-              backgroundColor: defaults.needsApiKey
-                ? undefined
-                : 'rgba(0,0,0,0.1)',
-              opacity: defaults.needsApiKey ? 1 : 0.5,
-            }}
-          />
-        </div>
+        {engine === 'minimax' && (
+          <>
+            <div className="form-group">
+              <label htmlFor="minimaxModel">MiniMax Model:</label>
+              <select
+                id="minimaxModel"
+                value={minimaxModel}
+                onChange={(e) =>
+                  setMinimaxModel(e.target.value as MinimaxModel)
+                }
+              >
+                {Object.entries(MINIMAX_MODELS).map(([model, description]) => (
+                  <option key={model} value={model}>
+                    {model} - {description}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="minimaxVoiceId">Voice ID:</label>
+              <select
+                id="minimaxVoiceId"
+                value={minimaxVoiceId}
+                onChange={(e) => setMinimaxVoiceId(e.target.value)}
+              >
+                {Object.entries(MINIMAX_VOICES).map(
+                  ([voiceId, description]) => (
+                    <option key={voiceId} value={voiceId}>
+                      {description}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="minimaxApiKey">MiniMax API Key (required):</label>
+              <input
+                id="minimaxApiKey"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={defaults.placeholder}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="minimaxGroupId">
+                MiniMax Group ID (required):
+              </label>
+              <input
+                id="minimaxGroupId"
+                type="password"
+                value={minimaxGroupId}
+                onChange={(e) => setMinimaxGroupId(e.target.value)}
+                placeholder={
+                  (defaults as any).groupIdPlaceholder || 'Your Group ID'
+                }
+              />
+            </div>
+          </>
+        )}
+
+        {engine !== 'minimax' && (
+          <div className="form-group">
+            <label htmlFor="apiKey">
+              API Key {defaults.needsApiKey ? '(required)' : '(optional)'}:
+            </label>
+            <input
+              id="apiKey"
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder={defaults.placeholder}
+              disabled={!defaults.needsApiKey}
+              style={{
+                backgroundColor: defaults.needsApiKey
+                  ? undefined
+                  : 'rgba(0,0,0,0.1)',
+                opacity: defaults.needsApiKey ? 1 : 0.5,
+              }}
+            />
+          </div>
+        )}
 
         <div className="form-group">
           <label htmlFor="apiUrl">API URL (customizable):</label>

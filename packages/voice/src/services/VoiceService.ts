@@ -28,6 +28,8 @@ export interface VoiceServiceOptions {
   groupId?: string;
   /** MiniMax endpoint ('global' or 'china') */
   endpoint?: string;
+  /** MiniMax model to use */
+  minimaxModel?: string;
 
   // Aivis Cloud specific options
   /** Aivis Cloud model UUID */
