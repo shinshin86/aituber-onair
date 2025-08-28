@@ -4,7 +4,6 @@ import { MinimaxEngine, type MinimaxModel } from '../src/engines/MinimaxEngine';
 // No API mocking needed - we only test configuration methods
 
 describe('MinimaxEngine', () => {
-
   describe('Configuration Methods', () => {
     it('should set and use different models', () => {
       const engine = new MinimaxEngine();
@@ -33,19 +32,19 @@ describe('MinimaxEngine', () => {
 
     it('should set endpoint to global', () => {
       const engine = new MinimaxEngine();
-      
+
       expect(() => engine.setEndpoint('global')).not.toThrow();
     });
 
     it('should set endpoint to china', () => {
       const engine = new MinimaxEngine();
-      
+
       expect(() => engine.setEndpoint('china')).not.toThrow();
     });
 
     it('should set language', () => {
       const engine = new MinimaxEngine();
-      
+
       expect(() => engine.setLanguage('English')).not.toThrow();
       expect(() => engine.setLanguage('Japanese')).not.toThrow();
     });

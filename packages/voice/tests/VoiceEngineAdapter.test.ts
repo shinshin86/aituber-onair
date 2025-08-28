@@ -20,7 +20,7 @@ describe('VoiceEngineAdapter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Create a mock engine with all necessary methods
     mockEngine = {
       fetchAudio: vi.fn(),
@@ -74,10 +74,10 @@ describe('VoiceEngineAdapter', () => {
 
       // Verify GroupId was set
       expect(mockEngine.setGroupId).toHaveBeenCalledWith('test-group-id');
-      
+
       // Verify endpoint was set
       expect(mockEngine.setEndpoint).toHaveBeenCalledWith('global');
-      
+
       // Verify model was set
       expect(mockEngine.setModel).toHaveBeenCalledWith('speech-2.5-hd-preview');
 
@@ -88,7 +88,7 @@ describe('VoiceEngineAdapter', () => {
           message: 'Hello from MiniMax!',
         },
         'male-qn-qingse', // speaker
-        'test-api-key'    // apiKey
+        'test-api-key', // apiKey
       );
     });
 
@@ -148,7 +148,7 @@ describe('VoiceEngineAdapter', () => {
 
     it('should warn when GroupId is not provided', async () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       const options: VoiceServiceOptions = {
         engineType: 'minimax',
         speaker: 'test-speaker',
@@ -164,7 +164,7 @@ describe('VoiceEngineAdapter', () => {
       await adapter.speak({ text: 'Test without GroupId' });
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'MiniMax engine requires GroupId, but it is not provided in options'
+        'MiniMax engine requires GroupId, but it is not provided in options',
       );
 
       consoleSpy.mockRestore();
@@ -231,7 +231,7 @@ describe('VoiceEngineAdapter', () => {
             style: mapping.expectedStyle,
           }),
           expect.any(String),
-          expect.any(String)
+          expect.any(String),
         );
       }
     });
@@ -240,9 +240,21 @@ describe('VoiceEngineAdapter', () => {
   describe('Custom Endpoint Configuration', () => {
     it('should configure custom endpoints for supported engines', async () => {
       const testCases = [
-        { engineType: 'voicevox' as const, option: 'voicevoxApiUrl', url: 'http://localhost:50021' },
-        { engineType: 'voicepeak' as const, option: 'voicepeakApiUrl' as const, url: 'http://localhost:20202' },
-        { engineType: 'aivisSpeech' as const, option: 'aivisSpeechApiUrl' as const, url: 'http://localhost:10101' },
+        {
+          engineType: 'voicevox' as const,
+          option: 'voicevoxApiUrl',
+          url: 'http://localhost:50021',
+        },
+        {
+          engineType: 'voicepeak' as const,
+          option: 'voicepeakApiUrl' as const,
+          url: 'http://localhost:20202',
+        },
+        {
+          engineType: 'aivisSpeech' as const,
+          option: 'aivisSpeechApiUrl' as const,
+          url: 'http://localhost:10101',
+        },
       ];
 
       const mockAudioBuffer = new ArrayBuffer(1024);
@@ -286,7 +298,7 @@ describe('VoiceEngineAdapter', () => {
           message: 'Hello world!',
         },
         'test-speaker',
-        'test-api-key'
+        'test-api-key',
       );
     });
 
@@ -311,7 +323,7 @@ describe('VoiceEngineAdapter', () => {
           message: 'Plain text without emotion',
         },
         'test-speaker',
-        'test-api-key'
+        'test-api-key',
       );
     });
   });
@@ -329,11 +341,15 @@ describe('VoiceEngineAdapter', () => {
 
       const adapter = new VoiceEngineAdapter(options);
 
-      await expect(adapter.speak({ text: 'Test error' })).rejects.toThrow('API Error');
+      await expect(adapter.speak({ text: 'Test error' })).rejects.toThrow(
+        'API Error',
+      );
     });
 
     it('should handle missing API key gracefully', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const options: VoiceServiceOptions = {
         engineType: 'minimax',
@@ -346,7 +362,9 @@ describe('VoiceEngineAdapter', () => {
 
       const adapter = new VoiceEngineAdapter(options);
 
-      await expect(adapter.speak({ text: 'Test without API key' })).rejects.toThrow();
+      await expect(
+        adapter.speak({ text: 'Test without API key' }),
+      ).rejects.toThrow();
       expect(consoleSpy).toHaveBeenCalled();
 
       consoleSpy.mockRestore();
@@ -361,7 +379,7 @@ describe('VoiceEngineAdapter', () => {
       };
 
       const adapter = new VoiceEngineAdapter(options);
-      
+
       // Should return false initially (mocked behavior)
       expect(typeof adapter.isPlaying()).toBe('boolean');
     });
@@ -373,7 +391,7 @@ describe('VoiceEngineAdapter', () => {
       };
 
       const adapter = new VoiceEngineAdapter(options);
-      
+
       expect(() => adapter.stop()).not.toThrow();
     });
   });
@@ -387,11 +405,13 @@ describe('VoiceEngineAdapter', () => {
       };
 
       const adapter = new VoiceEngineAdapter(options);
-      
-      expect(() => adapter.updateOptions({
-        speaker: 'updated-speaker',
-        apiKey: 'updated-key',
-      })).not.toThrow();
+
+      expect(() =>
+        adapter.updateOptions({
+          speaker: 'updated-speaker',
+          apiKey: 'updated-key',
+        }),
+      ).not.toThrow();
     });
 
     it('should update onComplete callback', () => {
@@ -402,10 +422,12 @@ describe('VoiceEngineAdapter', () => {
 
       const adapter = new VoiceEngineAdapter(options);
       const mockCallback = vi.fn();
-      
-      expect(() => adapter.updateOptions({
-        onComplete: mockCallback,
-      })).not.toThrow();
+
+      expect(() =>
+        adapter.updateOptions({
+          onComplete: mockCallback,
+        }),
+      ).not.toThrow();
     });
   });
 });
