@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.17.2
+
+### Patch Changes
+
+- Update @aituber-onair/voice dependency to v0.4.0
+  - **New MiniMax TTS Models**: Added support for three new high-quality MiniMax TTS models:
+    - speech-2.5-hd-preview (new default model)
+    - speech-2.5-turbo-preview
+    - speech-02-turbo
+  - **Enhanced Type Safety**: Improved TypeScript type definitions across voice engines
+  - **Better Test Coverage**: Added comprehensive test suite with 45 total tests
+  - **Code Quality**: Translated all Japanese comments to English for better international collaboration
+  - **UI Improvements**: Enhanced React example with separated API Key/Group ID fields and model selection dropdown
+
 ## 0.17.1
 
 ### Patch Changes
