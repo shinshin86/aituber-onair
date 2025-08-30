@@ -9,6 +9,14 @@ import {
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
 } from '@aituber-onair/core';
+// Import MinimaxModel type directly from the core package which re-exports voice types
+type MinimaxModel =
+  | 'speech-2.5-hd-preview'
+  | 'speech-2.5-turbo-preview'
+  | 'speech-02-hd'
+  | 'speech-02-turbo'
+  | 'speech-01-hd'
+  | 'speech-01-turbo';
 
 // Constants imports
 import {
@@ -40,6 +48,42 @@ import { VOICEVOX_API_ENDPOINT } from './constants/speakers/voicevox';
 
 // when use MCP, uncomment the following line
 // import { createMcpToolHandler } from './mcpClient';
+
+// MiniMax model options with descriptions
+const MINIMAX_MODELS: Record<MinimaxModel, string> = {
+  'speech-2.5-hd-preview':
+    'The brand new HD model. Ultimate Similarity, Ultra-High Quality',
+  'speech-2.5-turbo-preview':
+    'The brand new Turbo model. Ultimate Value, 40 Languages',
+  'speech-02-hd':
+    'Superior rhythm and stability, with outstanding performance in replication similarity and sound quality.',
+  'speech-02-turbo':
+    'Superior rhythm and stability, with enhanced multilingual capabilities and excellent performance.',
+  'speech-01-hd': 'Rich Voices, Expressive Emotions, Authentic Languages',
+  'speech-01-turbo': 'Excellent performance and low latency',
+};
+
+// MiniMax Voice IDs with descriptions
+const MINIMAX_VOICES: Record<string, string> = {
+  'male-qn-qingse': 'Male - Qingse (Default)',
+  Wise_Woman: 'Wise Woman',
+  Friendly_Person: 'Friendly Person',
+  Inspirational_girl: 'Inspirational Girl',
+  Deep_Voice_Man: 'Deep Voice Man',
+  Calm_Woman: 'Calm Woman',
+  Casual_Guy: 'Casual Guy',
+  Lively_Girl: 'Lively Girl',
+  Patient_Man: 'Patient Man',
+  Young_Knight: 'Young Knight',
+  Determined_Man: 'Determined Man',
+  Lovely_Girl: 'Lovely Girl',
+  Decent_Boy: 'Decent Boy',
+  Imposing_Manner: 'Imposing Manner',
+  Elegant_Man: 'Elegant Man',
+  Abbess: 'Abbess',
+  Sweet_Girl_2: 'Sweet Girl 2',
+  Exuberant_Girl: 'Exuberant Girl',
+};
 
 type BaseMessage = { id: string; role: 'user' | 'assistant' };
 type TextMessage = BaseMessage & { kind: 'text'; content: string };
@@ -108,6 +152,7 @@ const App: React.FC = () => {
   const [selectedVoiceEngine, setSelectedVoiceEngine] = useState<VoiceEngineType>(DEFAULT_VOICE_ENGINE);
   const [voiceApiKeys, setVoiceApiKeys] = useState<Record<string, string>>({});
   const [minimaxGroupId, setMinimaxGroupId] = useState<string>('');
+  const [minimaxModel, setMinimaxModel] = useState<MinimaxModel>('speech-2.5-hd-preview');
   const [selectedSpeakers, setSelectedSpeakers] = useState<Record<string, string | number>>({
     openai: 'alloy',
     voicevox: '',
@@ -115,7 +160,7 @@ const App: React.FC = () => {
     aivisCloud: 'a59cb814-0083-4369-8542-f51a29e72af7',
     voicepeak: 'f1',
     nijivoice: '',
-    minimax: '',
+    minimax: 'male-qn-qingse',
   });
   const [availableSpeakers, setAvailableSpeakers] = useState<Record<string, any[]>>({});
 
@@ -178,31 +223,6 @@ const App: React.FC = () => {
           }
           break;
         }
-        case 'minimax': {
-          const apiKey = voiceApiKeys.minimax?.trim();
-          
-          if (apiKey) {
-            const response = await fetch('https://api.minimax.io/v1/get_voice', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: 'voice_type=all',
-            });
-            
-            if (response.ok) {
-              const data = await response.json();
-              const allVoices = [
-                ...(data.system_voice || []),
-                ...(data.voice_cloning || []),
-                ...(data.voice_generation || []),
-              ];
-              setAvailableSpeakers(prev => ({ ...prev, minimax: allVoices }));
-            }
-          }
-          break;
-        }
       }
     } catch (error) {
       console.error(`Failed to fetch speakers for ${engine}:`, error);
@@ -214,11 +234,11 @@ const App: React.FC = () => {
    */
   useEffect(() => {
     if (selectedVoiceEngine !== 'none') {
-      if (['voicevox', 'aivisSpeech', 'nijivoice', 'minimax'].includes(selectedVoiceEngine)) {
+      if (['voicevox', 'aivisSpeech', 'nijivoice'].includes(selectedVoiceEngine)) {
         fetchSpeakers(selectedVoiceEngine);
       }
     }
-  }, [selectedVoiceEngine, voiceApiKeys, minimaxGroupId]);
+  }, [selectedVoiceEngine, voiceApiKeys]);
 
   /**
    * when chat provider changes, reset the model to the first one
@@ -415,6 +435,7 @@ const App: React.FC = () => {
           if (config.defaultParams?.endpoint) {
             options.endpoint = config.defaultParams.endpoint;
           }
+          options.minimaxModel = minimaxModel;
           break;
       }
 
@@ -1124,6 +1145,25 @@ const App: React.FC = () => {
                             onChange={(e) => setMinimaxGroupId(e.target.value)}
                             style={{ width: '100%', marginBottom: '8px' }}
                           />
+                          
+                          <label htmlFor="minimaxModel" style={{ marginTop: '8px', display: 'block' }}>
+                            MiniMax Model:
+                          </label>
+                          <select
+                            id="minimaxModel"
+                            value={minimaxModel}
+                            onChange={(e) => setMinimaxModel(e.target.value as MinimaxModel)}
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            {Object.entries(MINIMAX_MODELS).map(([model]) => (
+                              <option key={model} value={model}>
+                                {model}
+                              </option>
+                            ))}
+                          </select>
+                          <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '8px' }}>
+                            {MINIMAX_MODELS[minimaxModel]}
+                          </div>
                         </>
                       )}
                     </>
@@ -1214,15 +1254,13 @@ const App: React.FC = () => {
                         )}
                         
                         {/* MiniMax */}
-                        {selectedVoiceEngine === 'minimax' && availableSpeakers.minimax ? (
-                          availableSpeakers.minimax.map((voice: any) => (
-                            <option key={voice.voice_id} value={voice.voice_id}>
-                              {voice.voice_name}
+                        {selectedVoiceEngine === 'minimax' && 
+                          Object.entries(MINIMAX_VOICES).map(([voiceId, description]) => (
+                            <option key={voiceId} value={voiceId}>
+                              {description}
                             </option>
                           ))
-                        ) : selectedVoiceEngine === 'minimax' && (
-                          <option value="">API Keyを入力後、自動取得されます</option>
-                        )}
+                        }
                       </select>
                     </>
                   )}
