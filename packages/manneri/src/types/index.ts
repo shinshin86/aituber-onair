@@ -43,7 +43,6 @@ export interface ConversationPattern {
 export interface TopicInfo {
   keywords: string[];
   score: number;
-  category: string;
   confidence: number;
 }
 

@@ -1,5 +1,20 @@
 # @aituber-onair/manneri
 
+## 0.2.0
+
+### Major Changes
+
+- **BREAKING**: Removed unused `category` field from `TopicInfo` interface
+  - The `category` field was not being used in intervention logic
+  - Intervention decisions are based solely on `confidence` scores
+  - This simplifies the API and reduces unnecessary code complexity
+  - Migration: Remove any references to `topic.category` from your code
+
+### Improvements
+
+- Cleaner and more maintainable codebase
+- Reduced bundle size by removing unused categorization logic
+
 ## 0.1.0
 
 ### Minor Changes
