@@ -193,7 +193,6 @@ export class KeywordExtractor {
     return clusters.map((cluster) => ({
       keywords: cluster.keywords,
       score: cluster.score,
-      category: this.categorizeKeywords(cluster.keywords),
       confidence: Math.min(cluster.score / 10, 1.0),
     }));
   }
@@ -304,44 +303,6 @@ export class KeywordExtractor {
       messageCount *
       (1 + Math.min(1, timeSpan / (60 * 60 * 1000)))
     );
-  }
-
-  private categorizeKeywords(keywords: string[]): string {
-    const categories = {
-      技術: [
-        '技術',
-        'プログラミング',
-        'コード',
-        'システム',
-        'API',
-        'データベース',
-        'サーバー',
-      ],
-      エンターテイメント: [
-        'ゲーム',
-        '音楽',
-        '映画',
-        'アニメ',
-        'TV',
-        'スポーツ',
-      ],
-      日常: ['食事', '天気', '仕事', '家族', '友達', '学校'],
-      その他: [],
-    };
-
-    for (const [category, categoryKeywords] of Object.entries(categories)) {
-      if (category === 'その他') continue;
-
-      const matchCount = keywords.filter((k) =>
-        categoryKeywords.some((ck) => k.includes(ck) || ck.includes(k))
-      ).length;
-
-      if (matchCount > 0) {
-        return category;
-      }
-    }
-
-    return 'その他';
   }
 
   private calculateKeywordDensity(

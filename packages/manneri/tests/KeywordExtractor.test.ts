@@ -264,7 +264,7 @@ describe('KeywordExtractor', () => {
   });
 
   describe('getTopicInfo', () => {
-    it('should get topic information with categories', () => {
+    it('should get topic information', () => {
       const topicInfo = extractor.getTopicInfo(mockMessages);
 
       expect(topicInfo).toBeInstanceOf(Array);
@@ -273,31 +273,13 @@ describe('KeywordExtractor', () => {
       for (const topic of topicInfo) {
         expect(topic).toHaveProperty('keywords');
         expect(topic).toHaveProperty('score');
-        expect(topic).toHaveProperty('category');
         expect(topic).toHaveProperty('confidence');
 
         expect(topic.keywords).toBeInstanceOf(Array);
         expect(topic.score).toBeGreaterThan(0);
         expect(topic.confidence).toBeGreaterThanOrEqual(0);
         expect(topic.confidence).toBeLessThanOrEqual(1);
-        expect(['技術', 'エンターテイメント', '日常', 'その他']).toContain(
-          topic.category
-        );
       }
-    });
-
-    it('should categorize programming topics correctly', () => {
-      const programmingMessages: Message[] = [
-        { role: 'user', content: 'プログラミング技術について話しましょう' },
-        { role: 'assistant', content: 'コードの最適化が重要です' },
-      ];
-
-      const topicInfo = extractor.getTopicInfo(programmingMessages);
-
-      expect(topicInfo.length).toBeGreaterThan(0);
-      // Should categorize as technical topic
-      const technicalTopics = topicInfo.filter((t) => t.category === '技術');
-      expect(technicalTopics.length).toBeGreaterThan(0);
     });
   });
 
