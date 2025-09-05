@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/chat",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Chat and LLM API integration library for AITuber OnAir",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -8,17 +8,19 @@
   "files": ["dist"],
   "exports": {
     ".": {
+      "types": "./dist/cjs/index.d.ts",
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/cjs/index.d.ts"
+      "require": "./dist/cjs/index.js"
     },
     "./dist/cjs/*": "./dist/cjs/*",
-    "./dist/esm/*": "./dist/esm/*"
+    "./dist/esm/*": "./dist/esm/*",
+    "./umd": "./dist/umd/aituber-onair-chat.js"
   },
   "scripts": {
-    "build": "npm run clean && npm run build:cjs && npm run build:esm",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:umd",
     "build:cjs": "tsc --project tsconfig.cjs.json",
     "build:esm": "tsc --project tsconfig.esm.json",
+    "build:umd": "npx tsup src/index.ts --format iife --global-name AITuberOnAirChat --out-dir dist/umd && mv dist/umd/index.global.js dist/umd/aituber-onair-chat.js && npx tsup src/index.ts --format iife --global-name AITuberOnAirChat --minify --out-dir dist/umd && mv dist/umd/index.global.js dist/umd/aituber-onair-chat.min.js",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck && vitest run",
@@ -45,10 +47,14 @@
     "@biomejs/biome": "1.9.4",
     "@types/node": "^18.15.0",
     "@vitest/coverage-v8": "^1.3.1",
+    "tsup": "^8.0.1",
     "typescript": "^5.0.0",
     "vitest": "^1.3.1"
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "unpkg": "dist/umd/aituber-onair-chat.min.js",
+  "jsdelivr": "dist/umd/aituber-onair-chat.min.js",
+  "sideEffects": false
 }

@@ -1,5 +1,34 @@
 # @aituber-onair/chat
 
+## 0.4.0
+
+### Minor Changes
+
+- **UMD Build Support**: Added comprehensive UMD/IIFE bundle generation for browser and Google Apps Script environments
+  - Normal version: `dist/umd/aituber-onair-chat.js` (~105KB) for development with readable code
+  - Minified version: `dist/umd/aituber-onair-chat.min.js` (~39KB) for production with optimized size
+  - Global name: `AITuberOnAirChat` available in browser environments
+  - Automatic inclusion in standard build process (`npm run build`)
+- **Google Apps Script Integration**: Complete GAS support with specialized adapters and utilities
+  - `installGASFetch()` function to replace fetch with UrlFetchApp for GAS compatibility
+  - `runOnceText()` helper for non-streaming environments like GAS
+  - Comprehensive GAS example with step-by-step setup documentation
+  - V8 runtime configuration guidance and manifest file setup
+- **CDN Distribution Optimization**: Enhanced CDN delivery via unpkg and jsDelivr
+  - Configured unpkg/jsDelivr to serve minified version for optimal performance
+  - Direct browser loading support via `<script>` tags
+  - Alternative CDN-based setup option for GAS projects
+- **Enhanced Documentation**: Comprehensive setup guides and examples
+  - Detailed browser UMD usage examples with HTML templates
+  - Complete GAS integration tutorial with UI screenshots and step-by-step instructions
+  - Multiple setup options (local build vs CDN) for different use cases
+  - Improved README with clear environment-specific guidance
+- **Testing Infrastructure**: Added comprehensive test coverage for new features
+  - UMD bundle structure and API verification tests
+  - GAS adapter integration tests with UrlFetchApp mocking
+  - Non-streaming helper function tests
+  - Cross-platform compatibility validation
+
 ## 0.3.0
 
 ### Minor Changes

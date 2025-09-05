@@ -27,6 +27,23 @@ export class HttpError extends Error {
  */
 export class ChatServiceHttpClient {
   /**
+   * Injectable fetch implementation (browser/node: native fetch, GAS: UrlFetchApp wrapper)
+   */
+  private static fetchImpl: (
+    url: string,
+    init?: RequestInit,
+  ) => Promise<Response> = (u, i) => fetch(u, i);
+
+  /**
+   * Set custom fetch implementation
+   */
+  static setFetch(
+    fn: (url: string, init?: RequestInit) => Promise<Response>,
+  ): void {
+    this.fetchImpl = fn;
+  }
+
+  /**
    * Make a POST request with common error handling
    * @param url Request URL
    * @param body Request body
@@ -53,17 +70,21 @@ export class ChatServiceHttpClient {
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        const hasAbort = typeof AbortController !== 'undefined';
+        const controller = hasAbort ? new AbortController() : undefined;
+        const timeoutId = hasAbort
+          ? setTimeout(() => controller!.abort(), timeout)
+          : undefined;
 
-        const response = await fetch(url, {
+        const response = await ChatServiceHttpClient.fetchImpl(url, {
           method: 'POST',
           headers: finalHeaders,
           body: typeof body === 'string' ? body : JSON.stringify(body),
-          signal: controller.signal,
+          // Attach signal only when controller exists
+          ...(controller ? { signal: controller.signal } : {}),
         });
 
-        clearTimeout(timeoutId);
+        if (timeoutId) clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errorBody = await response.text();
@@ -128,16 +149,19 @@ export class ChatServiceHttpClient {
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        const hasAbort = typeof AbortController !== 'undefined';
+        const controller = hasAbort ? new AbortController() : undefined;
+        const timeoutId = hasAbort
+          ? setTimeout(() => controller!.abort(), timeout)
+          : undefined;
 
-        const response = await fetch(url, {
+        const response = await ChatServiceHttpClient.fetchImpl(url, {
           method: 'GET',
           headers,
-          signal: controller.signal,
+          ...(controller ? { signal: controller.signal } : {}),
         });
 
-        clearTimeout(timeoutId);
+        if (timeoutId) clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errorBody = await response.text();
