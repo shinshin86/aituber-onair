@@ -34,7 +34,7 @@ Build UMD locally (in the monorepo):
 # Install deps at repo root
 npm ci
 
-# Build CJS/ESM then UMD for chat only
+# Build for chat only
 npm -w @aituber-onair/chat run build
 ```
 
@@ -63,7 +63,7 @@ npm -w @aituber-onair/chat run build
 GAS does not support streaming or the Fetch API natively. Use the provided adapter and the non‑streaming helper.
 
 Steps:
-- Build UMD and copy `dist/umd/aituber-onair-chat.min.js` into your GAS project as a script file (e.g., `lib.js`). With clasp, place it under the project folder and push.
+- Build UMD and copy `dist/umd/aituber-onair-chat.min.js` into your GAS project as a script file (e.g., `lib.gs`). With clasp, place it under the project folder and push.
 - Create another file (e.g., `main.js`) and use the following snippet:
 
 ```javascript

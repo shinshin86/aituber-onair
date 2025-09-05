@@ -34,7 +34,7 @@ npm install @aituber-onair/chat
 # 依存をインストール
 npm ci
 
-# chatのCJS/ESM→UMDをビルド
+# chatパッケージをビルド
 npm -w @aituber-onair/chat run build
 ```
 
@@ -63,7 +63,7 @@ npm -w @aituber-onair/chat run build
 GASはストリーミング不可・Fetch API非対応です。提供アダプターと非ストリーミングヘルパーを使用してください。
 
 手順:
-- UMDをビルドし、`dist/umd/aituber-onair-chat.min.js` をGASプロジェクトにスクリプトとして追加（例: `lib.js`）。claspを使う場合はプロジェクト配下に配置してプッシュ。
+- UMDをビルドし、`dist/umd/aituber-onair-chat.min.js` をGASプロジェクトにスクリプトとして追加（例: `lib.gs`）。claspを使う場合はプロジェクト配下に配置してプッシュ。
 - 別ファイル（例: `main.js`）で以下を利用:
 
 ```javascript

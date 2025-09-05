@@ -1,6 +1,6 @@
 /**
  * Google Apps Script example for @aituber-onair/chat using UMD bundle.
- * Requires: aituber-onair-chat.min.js loaded as a script file (e.g., lib.js).
+ * Requires: aituber-onair-chat.min.js loaded as a script file (e.g., lib.gs).
  */
 
 async function testChat() {

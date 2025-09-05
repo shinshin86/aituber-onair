@@ -31,9 +31,9 @@ This creates `packages/chat/dist/umd/aituber-onair-chat.js` (~105KB).
 2) **Copy the UMD file into your GAS project**:
    - Open Apps Script editor (script.google.com)
    - Create a new script file: Click "+" button → "Script"
-   - Rename the file to `lib.js`
+   - Rename the file to `lib.gs`
    - Open `packages/chat/dist/umd/aituber-onair-chat.js` in your local editor
-   - Copy all content and paste it into the GAS `lib.js` file
+   - Copy all content and paste it into the GAS `lib.gs` file
    - Save the file
    
    *Alternative: Use clasp CLI to push files automatically (`clasp push`)*
