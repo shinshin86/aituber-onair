@@ -86,7 +86,7 @@ async function testChat() {
 注意:
 - 実行ランタイムはV8。ストリーミング不可のため `chatOnce(..., false)`/`runOnceText` を使用。
 - スクリプトプロパティに `OPENAI_API_KEY` を設定。
-- 実例は `packages/chat/examples/gas-basic` を参照（`appsscript.json` 付属）。
+- 実例は `packages/chat/examples/gas-basic` を参照。`appsscript.json` は任意（近年のGASは既定でV8ランタイム）。タイムゾーン等をカスタムしたい場合のみ追加してください。
 
 ## 使用方法
 

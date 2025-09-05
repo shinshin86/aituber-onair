@@ -66,14 +66,18 @@ function setupLibrary() {
    - Rename it to `main.js`  
    - Copy the content from `packages/chat/examples/gas-basic/main.js` and paste it
    - Save the file
-   
-   **Add appsscript.json (V8 Runtime Configuration):**
-   - In the GAS editor, click the gear icon (⚙️) "Project Settings" 
-   - Check "Show 'appsscript.json' manifest file in editor"
-   - Now you'll see `appsscript.json` appear in the file list
-   - Click on `appsscript.json` to edit it
-   - Replace the content with the content from `packages/chat/examples/gas-basic/appsscript.json`
-   - Save the file
+
+   **Manifest (Optional):**
+   - Most new GAS projects already run on the V8 runtime; no manifest is required.
+   - If you want to customize settings (e.g., time zone, exception logging), enable the manifest in Project Settings and add an `appsscript.json` manually. A minimal example:
+
+```json
+{
+  "timeZone": "Asia/Tokyo",
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8"
+}
+```
 
 4) Run the function:
 - Open the Apps Script editor and run `testChat`.
@@ -82,4 +86,3 @@ function setupLibrary() {
 ## Notes
 - Streaming is not supported on GAS. Use `runOnceText` or `chatOnce(..., false)`.
 - The adapter `installGASFetch()` injects a minimal fetch backed by `UrlFetchApp`.
-

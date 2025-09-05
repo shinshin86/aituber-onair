@@ -86,7 +86,7 @@ async function testChat() {
 Notes:
 - GAS runtime: V8. No streaming; prefer `chatOnce(..., false)` or `runOnceText`.
 - Set your API key in Script Properties: `OPENAI_API_KEY`.
-- See `packages/chat/examples/gas-basic` for a working example with `appsscript.json`.
+- See `packages/chat/examples/gas-basic` for a working example. The Apps Script manifest (`appsscript.json`) is optional; modern projects default to V8. Add one only if you need custom settings (e.g., time zone).
 
 ## Usage
 
