@@ -26,7 +26,7 @@ npm install @aituber-onair/chat
 This package ships ESM/CJS by default. For environments without bundlers (browsers via script tag, Google Apps Script), a UMD/IIFE bundle is available.
 
 - Global name: `AITuberOnAirChat`
-- Files: `dist/umd/aituber-onair-chat.umd.js`, `dist/umd/aituber-onair-chat.min.js`
+- Files: `dist/umd/aituber-onair-chat.js`, `dist/umd/aituber-onair-chat.min.js`
 
 Build UMD locally (in the monorepo):
 

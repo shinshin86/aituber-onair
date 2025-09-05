@@ -26,7 +26,7 @@ npm install @aituber-onair/chat
 本パッケージは既定で ESM/CJS を提供します。バンドラ無し環境（`<script>`読み込みのブラウザ、Google Apps Script）向けに UMD/IIFE バンドルも利用できます。
 
 - グローバル名: `AITuberOnAirChat`
-- 出力: `dist/umd/aituber-onair-chat.umd.js`, `dist/umd/aituber-onair-chat.min.js`
+- 出力: `dist/umd/aituber-onair-chat.js`, `dist/umd/aituber-onair-chat.min.js`
 
 モノレポ直下でUMDをビルド:
 

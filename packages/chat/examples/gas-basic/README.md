@@ -45,7 +45,7 @@ If you prefer not to build from source, you can fetch the UMD bundle from CDN:
 ```javascript
 // In your GAS project, create a setup function
 function setupLibrary() {
-  const response = UrlFetchApp.fetch('https://unpkg.com/@aituber-onair/chat/dist/umd/aituber-onair-chat.js');
+  const response = UrlFetchApp.fetch('https://unpkg.com/@aituber-onair/chat/dist/umd/aituber-onair-chat.min.js');
   const libraryCode = response.getContentText();
   
   // Save to Script Properties or evaluate directly

@@ -20,7 +20,7 @@
     "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:umd",
     "build:cjs": "tsc --project tsconfig.cjs.json",
     "build:esm": "tsc --project tsconfig.esm.json",
-    "build:umd": "npx tsup src/index.ts --format iife --global-name AITuberOnAirChat --out-dir dist/umd && mv dist/umd/index.global.js dist/umd/aituber-onair-chat.js",
+    "build:umd": "npx tsup src/index.ts --format iife --global-name AITuberOnAirChat --out-dir dist/umd && mv dist/umd/index.global.js dist/umd/aituber-onair-chat.js && npx tsup src/index.ts --format iife --global-name AITuberOnAirChat --minify --out-dir dist/umd && mv dist/umd/index.global.js dist/umd/aituber-onair-chat.min.js",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck && vitest run",
@@ -54,7 +54,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "unpkg": "dist/umd/aituber-onair-chat.js",
-  "jsdelivr": "dist/umd/aituber-onair-chat.js",
+  "unpkg": "dist/umd/aituber-onair-chat.min.js",
+  "jsdelivr": "dist/umd/aituber-onair-chat.min.js",
   "sideEffects": false
 }
