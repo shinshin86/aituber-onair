@@ -37,3 +37,6 @@ export * from './constants';
 
 // Utility exports
 export * from './utils';
+
+// Adapters
+export { installGASFetch } from './adapters/gasFetch';

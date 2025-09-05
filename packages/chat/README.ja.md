@@ -21,6 +21,73 @@ AITuber OnAirのチャット・LLM API統合ライブラリです。このパッ
 npm install @aituber-onair/chat
 ```
 
+## UMDビルド（ブラウザ/GAS）
+
+本パッケージは既定で ESM/CJS を提供します。バンドラ無し環境（`<script>`読み込みのブラウザ、Google Apps Script）向けに UMD/IIFE バンドルも利用できます。
+
+- グローバル名: `AITuberOnAirChat`
+- 出力: `dist/umd/aituber-onair-chat.umd.js`, `dist/umd/aituber-onair-chat.min.js`
+
+モノレポ直下でUMDをビルド:
+
+```bash
+# 依存をインストール
+npm ci
+
+# chatのCJS/ESM→UMDをビルド
+npm -w @aituber-onair/chat run build
+```
+
+### ブラウザ（UMD）
+
+```html
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/dist/umd/aituber-onair-chat.min.js"></script>
+  </head>
+  <body>
+    <script>
+      const chat = AITuberOnAirChat.ChatServiceFactory.createChatService('openai', {
+        apiKey: 'your-api-key'
+      });
+      // ブラウザではストリーミング利用可
+    </script>
+  </body>
+  </html>
+```
+
+### Google Apps Script（GAS）
+
+GASはストリーミング不可・Fetch API非対応です。提供アダプターと非ストリーミングヘルパーを使用してください。
+
+手順:
+- UMDをビルドし、`dist/umd/aituber-onair-chat.min.js` をGASプロジェクトにスクリプトとして追加（例: `lib.js`）。claspを使う場合はプロジェクト配下に配置してプッシュ。
+- 別ファイル（例: `main.js`）で以下を利用:
+
+```javascript
+async function testChat() {
+  // UrlFetchAppを使うfetchを注入
+  AITuberOnAirChat.installGASFetch();
+
+  const chat = AITuberOnAirChat.ChatServiceFactory.createChatService('openai', {
+    apiKey: PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY')
+  });
+
+  const text = await AITuberOnAirChat.runOnceText(chat, [
+    { role: 'user', content: 'Hello!' }
+  ]);
+
+  Logger.log(text);
+}
+```
+
+注意:
+- 実行ランタイムはV8。ストリーミング不可のため `chatOnce(..., false)`/`runOnceText` を使用。
+- スクリプトプロパティに `OPENAI_API_KEY` を設定。
+- 実例は `packages/chat/examples/gas-basic` を参照（`appsscript.json` 付属）。
+
 ## 使用方法
 
 ### 基本的なチャット

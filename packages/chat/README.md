@@ -21,6 +21,73 @@ Chat and LLM API integration library for AITuber OnAir. This package provides a 
 npm install @aituber-onair/chat
 ```
 
+## UMD Build (Browser/GAS)
+
+This package ships ESM/CJS by default. For environments without bundlers (browsers via script tag, Google Apps Script), a UMD/IIFE bundle is available.
+
+- Global name: `AITuberOnAirChat`
+- Files: `dist/umd/aituber-onair-chat.umd.js`, `dist/umd/aituber-onair-chat.min.js`
+
+Build UMD locally (in the monorepo):
+
+```bash
+# Install deps at repo root
+npm ci
+
+# Build CJS/ESM then UMD for chat only
+npm -w @aituber-onair/chat run build
+```
+
+### Browser via UMD
+
+```html
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/dist/umd/aituber-onair-chat.min.js"></script>
+  </head>
+  <body>
+    <script>
+      const chat = AITuberOnAirChat.ChatServiceFactory.createChatService('openai', {
+        apiKey: 'your-api-key'
+      });
+      // Streaming is available in browsers
+    </script>
+  </body>
+  </html>
+```
+
+### Google Apps Script (GAS)
+
+GAS does not support streaming or the Fetch API natively. Use the provided adapter and the non‑streaming helper.
+
+Steps:
+- Build UMD and copy `dist/umd/aituber-onair-chat.min.js` into your GAS project as a script file (e.g., `lib.js`). With clasp, place it under the project folder and push.
+- Create another file (e.g., `main.js`) and use the following snippet:
+
+```javascript
+async function testChat() {
+  // Install fetch backed by UrlFetchApp
+  AITuberOnAirChat.installGASFetch();
+
+  const chat = AITuberOnAirChat.ChatServiceFactory.createChatService('openai', {
+    apiKey: PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY')
+  });
+
+  const text = await AITuberOnAirChat.runOnceText(chat, [
+    { role: 'user', content: 'Hello!' }
+  ]);
+
+  Logger.log(text);
+}
+```
+
+Notes:
+- GAS runtime: V8. No streaming; prefer `chatOnce(..., false)` or `runOnceText`.
+- Set your API key in Script Properties: `OPENAI_API_KEY`.
+- See `packages/chat/examples/gas-basic` for a working example with `appsscript.json`.
+
 ## Usage
 
 ### Basic Chat
