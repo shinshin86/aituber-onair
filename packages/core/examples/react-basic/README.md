@@ -28,6 +28,12 @@ This example application serves as a practical implementation guide for integrat
   - Adjustable response length (40-5000 tokens)
   - Chat history management
 
+- **🎨 AI Avatar Generation**
+  - Dynamic avatar generation using Gemini-2.5-Flash-Image API
+  - Context-aware avatar updates based on conversation content
+  - Base image modification to preserve character consistency
+  - Automatic expression adjustment based on conversation mood
+
 - **⚙️ GPT-5 Specific Features**
   - Quick presets (Casual, Balanced, Expert)
   - Custom configuration options
@@ -188,6 +194,40 @@ The application supports 7 different Text-to-Speech engines:
 4. Choose speaker/voice from available options
 5. Click "設定を反映" to apply
 
+## 🎨 AI Avatar Generation
+
+### Gemini-2.5-Flash-Image Integration
+
+The application features dynamic avatar generation that creates personalized avatar images based on conversation context using Google's Gemini-2.5-Flash-Image API.
+
+#### Key Features
+
+- **Context-Aware Generation**: Avatars are generated based on the assistant's responses and conversation mood
+- **Base Image Modification**: Uses existing avatar as a base to maintain character consistency
+- **Automatic Updates**: Avatar automatically updates after each assistant response
+- **Expression Matching**: Facial expressions adjust to match conversation emotions
+- **Real-time Status**: Visual indicators show when avatar generation is in progress
+
+#### Setup
+
+1. Navigate to the AI画像生成機能 (AI Image Generation) section in settings
+2. Check "アシスタントの返答に基づいてアバター画像を自動生成する"
+3. Enter your Gemini API Key in the password field
+4. The system will automatically generate and update avatars based on conversations
+
+#### Requirements
+
+- Valid Gemini API Key with access to Gemini-2.5-Flash-Image-Preview model
+- Internet connection for API requests
+- Modern browser with blob URL support
+
+#### How It Works
+
+1. When the assistant responds, the system creates a context-aware prompt
+2. Current avatar image is sent as a base image to Gemini API
+3. Gemini generates a modified version reflecting the conversation mood
+4. New avatar is automatically applied and displayed in the interface
+
 ## 📁 Project Structure
 
 ```
@@ -211,6 +251,8 @@ react-basic/
 │   │       ├── voicepeak.ts
 │   │       └── minimax.ts
 │   ├── mcpClient.ts           # MCP client implementation
+│   ├── utils/                 # Utility functions
+│   │   └── geminiImageGeneration.ts  # Gemini image generation utilities
 │   └── assets/                # Static assets
 │       └── icons/             # UI icons
 ├── index.html                 # HTML template
@@ -285,6 +327,12 @@ To extend the application:
 - Check if the selected TTS engine server is running (for local engines)
 - Verify API key for cloud-based engines
 - Ensure speaker is selected
+
+**Avatar generation not working**
+- Verify Gemini API Key has access to Gemini-2.5-Flash-Image-Preview model
+- Check browser console for API errors
+- Ensure stable internet connection
+- Confirm Gemini API usage quotas
 
 **Streaming not working**
 - Verify your LLM provider supports streaming
