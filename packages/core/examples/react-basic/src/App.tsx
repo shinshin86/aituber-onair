@@ -46,6 +46,13 @@ import defaultAvatarIcon from './assets/icons/default-avatar.svg';
 import { AIVIS_SPEECH_API_ENDPOINT } from './constants/speakers/aivisSpeech';
 import { VOICEVOX_API_ENDPOINT } from './constants/speakers/voicevox';
 
+// Avatar image generation utilities
+import { 
+  generateAvatarImage, 
+  createAvatarPrompt, 
+  revokeObjectUrl 
+} from './utils/geminiImageGeneration';
+
 // when use MCP, uncomment the following line
 // import { createMcpToolHandler } from './mcpClient';
 
@@ -169,6 +176,10 @@ const App: React.FC = () => {
 
   // Avatar settings state
   const [avatarImageUrl, setAvatarImageUrl] = useState<string>(defaultAvatarIcon);
+  const [enableAvatarGeneration, setEnableAvatarGeneration] = useState<boolean>(false);
+  const [geminiImageApiKey, setGeminiImageApiKey] = useState<string>('');
+  const [generatedAvatarImage, setGeneratedAvatarImage] = useState<string | null>(null);
+  const [isGeneratingAvatar, setIsGeneratingAvatar] = useState<boolean>(false);
 
   // AITuberOnAirCore instance reference
   const aituberRef = useRef<AITuberOnAirCore | null>(null);
@@ -509,7 +520,7 @@ const App: React.FC = () => {
       },
     );
 
-    instance.on(AITuberOnAirCoreEvent.ASSISTANT_RESPONSE, (data: any) => {
+    instance.on(AITuberOnAirCoreEvent.ASSISTANT_RESPONSE, async (data: any) => {
       const { message } = data;
       console.log('Assistant response completed:', message.content);
       removeAssistantPartial();
@@ -520,6 +531,32 @@ const App: React.FC = () => {
         kind: 'text',
         content: message.content,
       });
+
+      // Generate avatar image if enabled
+      if (enableAvatarGeneration && geminiImageApiKey.trim()) {
+        try {
+          setIsGeneratingAvatar(true);
+          const prompt = createAvatarPrompt(message.content);
+          const imageUrl = await generateAvatarImage({
+            apiKey: geminiImageApiKey,
+            prompt,
+            baseImageUrl: avatarImageUrl, // Pass the current avatar image as the base
+          });
+          
+          // Clean up previous generated image
+          if (generatedAvatarImage) {
+            revokeObjectUrl(generatedAvatarImage);
+          }
+          
+          setGeneratedAvatarImage(imageUrl);
+          setAvatarImageUrl(imageUrl); // Automatically update the avatar image
+          console.log('Avatar image generated and updated successfully');
+        } catch (error) {
+          console.error('Failed to generate avatar image:', error);
+        } finally {
+          setIsGeneratingAvatar(false);
+        }
+      }
     });
 
     instance.on(AITuberOnAirCoreEvent.ERROR, (error: any) => {
@@ -734,9 +771,19 @@ const App: React.FC = () => {
               音声合成: 有効 ({VOICE_ENGINE_CONFIGS[selectedVoiceEngine].name})
             </div>
           )}
+          {enableAvatarGeneration && geminiImageApiKey && (
+            <div style={{ color: '#28a745' }}>
+              AI画像生成: 有効 (Gemini-2.5-Flash-Image)
+            </div>
+          )}
           {isSpeaking && (
             <div style={{ color: '#1e90ff', fontWeight: 'bold' }}>
               🔊 音声再生中...
+            </div>
+          )}
+          {isGeneratingAvatar && (
+            <div style={{ color: '#28a745', fontWeight: 'bold' }}>
+              🎨 アバター画像を生成中...
             </div>
           )}
           {!apiKey && (
@@ -1318,6 +1365,84 @@ const App: React.FC = () => {
                         <li>対応形式：JPG、PNG、WebP</li>
                       </ul>
                     </div>
+                  </div>
+
+                  {/* Avatar Image Generation Settings */}
+                  <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#fff3cd', borderRadius: '8px', border: '1px solid #ffeaa7' }}>
+                    <h4 style={{ marginTop: '0', marginBottom: '12px', color: '#856404' }}>AI画像生成機能</h4>
+                    
+                    <div style={{ marginBottom: '16px' }}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={enableAvatarGeneration}
+                          onChange={(e) => setEnableAvatarGeneration(e.target.checked)}
+                          style={{ marginRight: '8px' }}
+                        />
+                        アシスタントの返答に基づいてアバター画像を自動生成する
+                      </label>
+                    </div>
+
+                    {enableAvatarGeneration && (
+                      <div>
+                        <label htmlFor="geminiImageApiKey" style={{ display: 'block', marginBottom: '8px' }}>
+                          Gemini API Key（画像生成用）:
+                        </label>
+                        <input
+                          type="password"
+                          id="geminiImageApiKey"
+                          placeholder="Gemini API Key for image generation..."
+                          value={geminiImageApiKey}
+                          onChange={(e) => setGeminiImageApiKey(e.target.value)}
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <div style={{ fontSize: '0.85em', color: '#6c757d', marginBottom: '12px' }}>
+                          ※ この機能にはGemini-2.5-Flash-Image-Preview APIが使用されます
+                        </div>
+                        
+                        {generatedAvatarImage && (
+                          <div>
+                            <div style={{ fontSize: '0.9em', marginBottom: '8px', fontWeight: 'bold' }}>最後に生成された画像:</div>
+                            <img
+                              src={generatedAvatarImage}
+                              alt="Generated avatar"
+                              style={{
+                                width: '80px',
+                                height: '80px',
+                                borderRadius: '50%',
+                                objectFit: 'cover',
+                                border: '3px solid #28a745',
+                                display: 'block',
+                                marginBottom: '8px'
+                              }}
+                            />
+                            <button
+                              onClick={() => {
+                                setAvatarImageUrl(generatedAvatarImage);
+                                alert('生成された画像をアバターに設定しました！');
+                              }}
+                              style={{
+                                backgroundColor: '#28a745',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '0.85em'
+                              }}
+                            >
+                              この画像をアバターに設定
+                            </button>
+                          </div>
+                        )}
+                        
+                        {isGeneratingAvatar && (
+                          <div style={{ color: '#28a745', fontWeight: 'bold', marginTop: '8px' }}>
+                            🎨 アバター画像を生成中...
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
