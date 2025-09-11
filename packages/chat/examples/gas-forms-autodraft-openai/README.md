@@ -160,18 +160,3 @@ If you need to explicitly control OAuth scopes for distribution, add `"oauthScop
 * **Quota exceeded**
 
   * Reduce frequency, batch submissions, or add a fallback model and stricter summarization prompts.
-
----
-
-## Suggested Folder Structure
-
-```
-packages/
-  chat/
-    examples/
-      gas-forms-autodraft-openai/
-        README.md            # ← this file
-        Code.gs              # ← example code using gpt-4.1-nano
-        lib_aituber.js       # ← UMD bundle (built or loaded via CDN)
-        appsscript.json      # ← optional manifest
-```
