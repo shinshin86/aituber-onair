@@ -7,13 +7,16 @@ function getApiKey_() {
   return PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY');
 }
 
-function createChat_({ model = DEFAULT_MODEL, responseLength = RESPONSE_LENGTH } = {}) {
+function createChat_({
+  model = DEFAULT_MODEL,
+  responseLength = RESPONSE_LENGTH,
+} = {}) {
   // Inject fetch polyfill for AITuberOnAirChat
   AITuberOnAirChat.installGASFetch();
   return AITuberOnAirChat.ChatServiceFactory.createChatService('openai', {
     apiKey: getApiKey_(),
     model,
-    responseLength
+    responseLength,
   });
 }
 
@@ -27,7 +30,7 @@ function buildPrompt_(formTitle, qaText) {
     '3) 過度な約束や断定は禁止。未確定事項は「確認します」と表現。',
     '',
     '--- 回答内容（Q&A） ---',
-    qaText
+    qaText,
   ].join('\n');
 }
 
@@ -36,19 +39,29 @@ async function autoReply_onFormSubmit(e) {
   const form = FormApp.getActiveForm();
   const resp = e.response; // FormResponse
   const email = resp.getRespondentEmail(); // Only available when "collect email" is enabled in form settings
-  if (!email) { console.warn('No respondent email. Is "collect email" enabled?'); return; }
+  if (!email) {
+    console.warn('No respondent email. Is "collect email" enabled?');
+    return;
+  }
 
   // Convert responses to Q&A text format
-  const qa = resp.getItemResponses()
-    .map(ir => `Q: ${ir.getItem().getTitle()}\nA: ${String(ir.getResponse())}`)
+  const qa = resp
+    .getItemResponses()
+    .map(
+      (ir) => `Q: ${ir.getItem().getTitle()}\nA: ${String(ir.getResponse())}`,
+    )
     .join('\n\n')
     .slice(0, 8000); // Safety limit for text length
 
   // Query LLM (GAS is non-streaming, use runOnceText for single response)
   const chat = createChat_({});
   const text = await AITuberOnAirChat.runOnceText(chat, [
-    { role: 'system', content: 'あなたは礼儀正しい日本語の秘書です。冗長表現を避け、具体的で読みやすい文面を作成します。' },
-    { role: 'user', content: buildPrompt_(form.getTitle(), qa) }
+    {
+      role: 'system',
+      content:
+        'あなたは礼儀正しい日本語の秘書です。冗長表現を避け、具体的で読みやすい文面を作成します。',
+    },
+    { role: 'user', content: buildPrompt_(form.getTitle(), qa) },
   ]);
 
   // Create Gmail draft (plain text; use options with htmlBody if needed)
@@ -62,9 +75,12 @@ function setupTrigger_autoReply() {
   const form = FormApp.getActiveForm();
   // Prevent duplicates: delete existing triggers with same handler name
   ScriptApp.getProjectTriggers()
-    .filter(t => t.getHandlerFunction() === 'autoReply_onFormSubmit')
-    .forEach(t => ScriptApp.deleteTrigger(t));
+    .filter((t) => t.getHandlerFunction() === 'autoReply_onFormSubmit')
+    .forEach((t) => ScriptApp.deleteTrigger(t));
   // Create installable trigger for form submission
-  ScriptApp.newTrigger('autoReply_onFormSubmit').forForm(form).onFormSubmit().create();
+  ScriptApp.newTrigger('autoReply_onFormSubmit')
+    .forForm(form)
+    .onFormSubmit()
+    .create();
   console.log('Installable onFormSubmit trigger created.');
 }
