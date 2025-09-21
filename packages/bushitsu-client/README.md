@@ -2,7 +2,17 @@
 
 ![@aituber-onair/bushitsu-client logo](./images/aituber-onair-bushitsu-client.png)
 
-A WebSocket client library for [AITuber OnAir Bushitsu](https://github.com/shinshin86/aituber-onair-bushitsu) — a real-time WebSocket chat server written in Go with room support, @mentions, and join/leave notifications for AITuber streaming environments. This package provides a lightweight WebSocket client and ergonomic React hooks to embed live chat into your application, with support for both browser and Node.js environments.
+A transport-agnostic chat client for [AITuber OnAir Bushitsu](https://github.com/shinshin86/aituber-onair-bushitsu). It provides:
+
+- A reconnecting WebSocket client with rate limiting and mention handling
+- React hooks for browser apps
+- A Node.js helper that works with `ws`
+- A send-only helper tailored for Google Apps Script
+- Low-level transport adapters so you can plug in any runtime
+
+The package is distributed as an npm workspace and can be imported from environment-specific entry points.
+
+---
 
 ## Installation
 
@@ -10,480 +20,183 @@ A WebSocket client library for [AITuber OnAir Bushitsu](https://github.com/shins
 npm install @aituber-onair/bushitsu-client
 ```
 
-## Usage
+If you plan to use the Node.js helper, also install a WebSocket implementation such as [`ws`](https://www.npmjs.com/package/ws).
 
-### Basic WebSocket Chat
+```bash
+npm install ws
+```
 
-```typescript
-import { useBushitsuClient } from '@aituber-onair/bushitsu-client';
+---
+
+## Quick Start (React)
+
+```tsx
+import { useBushitsuClient } from '@aituber-onair/bushitsu-client/react';
 
 function ChatComponent() {
   const { isConnected, sendMessage } = useBushitsuClient({
-    serverUrl: 'ws://localhost:8080',
+    serverUrl: 'http://localhost:8080',
     room: 'lobby',
-    userName: 'User',
+    userName: 'Viewer',
     isEnabled: true,
-    onComment: (text, userName, isMention) => {
-      console.log(`${userName}: ${text}${isMention ? ' (mentioned)' : ''}`);
+    onComment: (text, from, isMention) => {
+      console.log(`${from}: ${text}${isMention ? ' (mention)' : ''}`);
     },
   });
-
-  const handleSend = () => {
-    sendMessage('Hello, world!');
-  };
 
   return (
     <div>
       <p>Status: {isConnected ? 'Connected' : 'Disconnected'}</p>
-      <button onClick={handleSend}>Send Message</button>
-    </div>
-  );
-}
-```
-
-### Initiative Messages (with Voice Synthesis)
-
-```typescript
-import { useBushitsuInitiative } from '@aituber-onair/bushitsu-client';
-
-function InitiativeComponent({ sendMessage, onProcessMessage }) {
-  const { sendInitiativeMessage } = useBushitsuInitiative({
-    enabled: true,
-    serverUrl: 'ws://localhost:8080',
-    room: 'lobby',
-    userName: 'AI',
-    sendMessage,
-    onProcessMessage, // Optional: process voice synthesis
-  });
-
-  const handleAnnouncement = async () => {
-    await sendInitiativeMessage('Welcome to the chat room!');
-  };
-
-  return <button onClick={handleAnnouncement}>Send Announcement</button>;
-}
-```
-
-### Priority-Based AI Streaming
-
-```typescript
-import { useBushitsuInitiative } from '@aituber-onair/bushitsu-client';
-
-function AIStreamingComponent({ sendMessage, priorityQueue }) {
-  // High priority for user responses
-  const { sendInitiativeMessage: respondToUser } = useBushitsuInitiative({
-    enabled: true,
-    serverUrl: 'ws://localhost:8080',
-    room: 'stream',
-    userName: 'AITuber',
-    sendMessage,
-    priority: 2, // Higher priority than announcements
-    runWithPriority: (priority, task) => {
-      priorityQueue.add(task, priority);
-    },
-    onProcessMessage: async (message) => {
-      await voiceService.speak(message, { emotion: 'friendly' });
-    },
-  });
-
-  // Normal priority for general announcements
-  const { sendInitiativeMessage: announce } = useBushitsuInitiative({
-    enabled: true,
-    serverUrl: 'ws://localhost:8080',
-    room: 'stream',
-    userName: 'AITuber',
-    sendMessage,
-    priority: 1, // Default priority
-    runWithPriority: (priority, task) => {
-      priorityQueue.add(task, priority);
-    },
-  });
-
-  const handleUserQuestion = async (question: string) => {
-    // This gets higher priority and executes before announcements
-    await respondToUser(`Great question! ${question}`);
-  };
-
-  const handlePeriodicAnnouncement = async () => {
-    // This gets normal priority
-    await announce('Thanks for watching everyone!');
-  };
-
-  return (
-    <div>
-      <button onClick={() => handleUserQuestion('What is AI?')}>
-        Respond to User
-      </button>
-      <button onClick={handlePeriodicAnnouncement}>
-        Send Announcement
+      <button onClick={() => sendMessage('Hello from React!')}>
+        Send
       </button>
     </div>
   );
 }
 ```
+
+> **Note**: React-specific exports live in `@aituber-onair/bushitsu-client/react` to keep the core runtime-agnostic.
+
+---
 
 ## Node.js Usage
 
-This package can also be used in Node.js environments for server-side chat automation, bots, or API integrations.
+Use the `createNodeBushitsuClient` helper together with a WebSocket implementation such as `ws`.
 
-### Basic Node.js Example
+```ts
+import { createNodeBushitsuClient } from '@aituber-onair/bushitsu-client/node';
+import WebSocket from 'ws';
 
-```typescript
-import { BushitsuClient } from '@aituber-onair/bushitsu-client';
-
-const client = new BushitsuClient({
-  serverUrl: 'ws://localhost:8080',
+const client = createNodeBushitsuClient({
+  serverUrl: 'http://localhost:8080',
   room: 'lobby',
-  userName: 'ChatBot',
-  onComment: (text, userName, isMention) => {
-    console.log(`${userName}: ${text}${isMention ? ' (mentioned)' : ''}`);
-    
-    // Auto-respond to mentions
-    if (isMention) {
-      client.sendMessage(`Hello ${userName}! How can I help you?`);
-    }
+  userName: 'NodeBot',
+  webSocketImpl: WebSocket as unknown as typeof WebSocket,
+  onReceiveMessage: (text, from, isMention) => {
+    console.log(`${from}: ${text}${isMention ? ' (mention)' : ''}`);
   },
-  onError: (error) => {
-    console.error('WebSocket error:', error);
+  onConnectionChange: (connected) => {
+    console.log(`[status] connected=${connected}`);
   },
-  onClose: () => {
-    console.log('Connection closed');
-  }
 });
 
-// Connect and send initial message
-client.connect();
-client.sendMessage('Hello from Node.js bot!');
+await client.connect();
+client.sendMessage('Hello from Node.js');
+```
 
-// Clean up on exit
-process.on('SIGINT', () => {
-  client.disconnect();
-  process.exit(0);
+See `examples/node-basic` for a full runnable script with graceful shutdown and heartbeats.
+
+---
+
+## Google Apps Script (Send Only)
+
+`createGasBushitsuMessageSender` provides a thin helper for Apps Script environments where only outgoing messages are required.
+
+```ts
+import { createGasBushitsuMessageSender } from '@aituber-onair/bushitsu-client/gas';
+
+const sender = createGasBushitsuMessageSender({
+  endpoint: 'https://example.com/api/chat/send',
+  room: 'lobby',
+  userName: 'GasBot',
+  fetchFn: (url, params) => UrlFetchApp.fetch(url, params),
 });
+
+sender.sendMessage('Hello from GAS!');
 ```
 
-### Chat Bot Example
+- Uses `UrlFetchApp.fetch` by default if you do not pass `fetchFn`
+- The default payload is `{ room, userName, text, mentionTo }`
+- Pass a `payloadBuilder` when your bridge expects a custom JSON schema
 
-```typescript
+See `examples/gas-send-only` for a complete Apps Script snippet.
+
+---
+
+## Custom Transports
+
+The core client is transport-agnostic. Supply your own implementation via the `transport` dependency injection point.
+
+```ts
 import { BushitsuClient } from '@aituber-onair/bushitsu-client';
+import { createWebSocketTransport } from '@aituber-onair/bushitsu-client';
+import SomePlatformWebSocket from 'some-platform-ws';
 
-class ChatBot {
-  private client: BushitsuClient;
+const transport = createWebSocketTransport((url) => new SomePlatformWebSocket(url));
 
-  constructor(serverUrl: string, room: string, botName: string) {
-    this.client = new BushitsuClient({
-      serverUrl,
-      room,
-      userName: botName,
-      onComment: this.handleMessage.bind(this),
-      onError: (error) => console.error('Bot error:', error)
-    });
-  }
-
-  private handleMessage(text: string, userName: string, isMention: boolean) {
-    // Simple command system
-    if (text.startsWith('!help')) {
-      this.client.sendMessage('Available commands: !help, !time, !ping');
-    } else if (text.startsWith('!time')) {
-      this.client.sendMessage(`Current time: ${new Date().toLocaleString()}`);
-    } else if (text.startsWith('!ping')) {
-      this.client.sendMessage('Pong!');
-    }
-  }
-
-  start() {
-    this.client.connect();
-    console.log('Chat bot started');
-  }
-
-  stop() {
-    this.client.disconnect();
-    console.log('Chat bot stopped');
-  }
-}
-
-// Usage
-const bot = new ChatBot('ws://localhost:8080', 'lobby', 'HelpBot');
-bot.start();
+const client = new BushitsuClient(
+  {
+    serverUrl: 'http://localhost:8080',
+    room: 'lobby',
+    userName: 'CustomClient',
+    onReceiveMessage: (text, from) => console.log(from, text),
+  },
+  { transport },
+);
 ```
 
-## Next.js Integration
+The client handles:
 
-### API Routes
+- Reconnection with exponential backoff (configurable constants available)
+- Message deduplication and rate limiting
+- Mention filtering and session tracking
 
-```typescript
-// pages/api/chat/send.ts
-import { NextApiRequest, NextApiResponse } from 'next';
-import { BushitsuClient } from '@aituber-onair/bushitsu-client';
+---
 
-let client: BushitsuClient | null = null;
+## API Overview
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    const { message, room, userName } = req.body;
+### Core
 
-    if (!client) {
-      client = new BushitsuClient({
-        serverUrl: process.env.WEBSOCKET_SERVER_URL || 'ws://localhost:8080',
-        room,
-        userName: 'API',
-        onComment: (text, user, mention) => {
-          console.log(`API received: ${user}: ${text}`);
-        }
-      });
-      await client.connect();
-    }
+- `BushitsuClient(options, dependencies?)`
+  - `options.serverUrl`: Base HTTP/HTTPS URL to your Bushitsu server
+  - `options.room`, `options.userName`
+  - `options.onReceiveMessage(text, from, isMention)` (required)
+  - `options.onConnectionChange?(connected)` (optional)
+  - `dependencies.transport?`: Custom transport implementing `BushitsuTransport`
+- `BushitsuTransport` interface and helpers in `core/transport`
+- Constants (rate limits, reconnection) exported from `client/constants`
 
-    try {
-      client.sendMessage(message);
-      res.status(200).json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to send message' });
-    }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
-  }
-}
-```
+### React (`/react` entry point)
 
-### Server-Side Chat Integration
+- `useBushitsuClient`
+- `useBushitsuInitiative` (priority-aware messaging helper)
+- Shared types re-exported for convenience
 
-```typescript
-// lib/chatService.ts
-import { BushitsuClient } from '@aituber-onair/bushitsu-client';
+### Node (`/node` entry point)
 
-export class ServerChatService {
-  private static instance: ServerChatService;
-  private client: BushitsuClient;
+- `createNodeBushitsuClient(options)`
+  - Accepts `webSocketImpl` or `createWebSocket` factory
+  - Returns a configured `BushitsuClient`
 
-  private constructor() {
-    this.client = new BushitsuClient({
-      serverUrl: process.env.WEBSOCKET_SERVER_URL || 'ws://localhost:8080',
-      room: 'main',
-      userName: 'Server',
-      onComment: this.handleServerMessage.bind(this)
-    });
-  }
+### Google Apps Script (`/gas` entry point)
 
-  static getInstance(): ServerChatService {
-    if (!ServerChatService.instance) {
-      ServerChatService.instance = new ServerChatService();
-    }
-    return ServerChatService.instance;
-  }
+- `createGasBushitsuMessageSender(options)`
+  - Supports `fetchFn`, `payloadBuilder`, `contentType`, and `muteHttpExceptions`
 
-  private handleServerMessage(text: string, userName: string, isMention: boolean) {
-    // Log server-side messages
-    console.log(`Server chat: ${userName}: ${text}`);
-    
-    // Integrate with your application logic
-    // e.g., save to database, trigger notifications, etc.
-  }
+### Transport Utilities
 
-  async sendNotification(message: string) {
-    this.client.sendMessage(`[System] ${message}`);
-  }
+- `createBrowserWebSocketTransport()`
+- `createWebSocketTransport(factory)`
+- `WebSocketFactory`, `WebSocketLike` types for custom integrations
 
-  async connect() {
-    await this.client.connect();
-  }
+---
 
-  disconnect() {
-    this.client.disconnect();
-  }
-}
+## Examples
 
-// Usage in your Next.js app
-export async function getServerSideProps() {
-  const chatService = ServerChatService.getInstance();
-  await chatService.connect();
-  
-  return {
-    props: {}
-  };
-}
-```
+- `examples/node-basic/` – minimal Node.js bot using `ws`
+- `examples/gas-send-only/` – send-only Apps Script functions
+- `examples/react-basic/` – Vite + React UI hooked up to `useBushitsuClient`
+- Additional React demos live in the `packages/chat` workspace
 
-## Environment Requirements
-
-### Browser Environment
-- Modern browsers with WebSocket support
-- No additional dependencies required
-
-### Node.js Environment
-- Node.js 16+ recommended
-- WebSocket implementation is built-in (using native WebSocket API)
-- For older Node.js versions, you may need to install a WebSocket polyfill:
+Run the repository setup:
 
 ```bash
-npm install ws
-# or
-npm install websocket
+npm ci
+npm -w @aituber-onair/bushitsu-client run build
+npm -w @aituber-onair/bushitsu-client run test
 ```
 
-### TypeScript Support
-- Full TypeScript support included
-- Type definitions are automatically available
-- Compatible with both CommonJS and ES modules
-
-## API Reference
-
-### useBushitsuClient
-
-Main hook for WebSocket chat functionality.
-
-#### Options
-
-- `serverUrl`: WebSocket server URL
-- `room`: Room name to join
-- `userName`: User display name
-- `isEnabled`: Enable/disable connection
-- `onComment`: Callback for received messages
-
-#### Returns
-
-- `isConnected`: Connection status
-- `sendMessage(text, mentionTo?)`: Send message function
-- `getLastMentionUser()`: Get last user who mentioned you
-- `resetRateLimit()`: Reset rate limiting
-- `forceReconnect()`: Force reconnection
-
-### useBushitsuInitiative
-
-Hook for sending initiative messages with optional voice synthesis.
-
-#### Options
-
-- `enabled`: Enable/disable feature
-- `serverUrl`: WebSocket server URL
-- `room`: Room name
-- `userName`: User display name
-- `sendMessage`: Message sending function
-- `onProcessMessage?`: Voice processing callback
-- `runWithPriority?`: Priority execution function
-- `priority?`: Execution priority
-
-#### Returns
-
-- `sendInitiativeMessage(message, mentionTo?, skipVoice?)`: Send with voice
-- `sendDirectMessage(message, mentionTo?)`: Send without voice
-- `canSendMessage()`: Check if can send
-- `isEnabled`: Feature status
-
-## Priority System
-
-The priority system is designed for AI live streaming environments where multiple tasks (chat responses, announcements, voice synthesis) need to be executed in order of importance. This is especially useful for AITuber applications where the AI needs to balance different types of interactions.
-
-### How Priority Works
-
-The priority system is **optional** and integrates with external priority queue systems. If no priority system is provided, messages are processed immediately.
-
-```typescript
-// Basic usage (no priority - immediate execution)
-const { sendInitiativeMessage } = useBushitsuInitiative({
-  enabled: true,
-  serverUrl: 'ws://localhost:8080',
-  room: 'lobby',
-  userName: 'AI',
-  sendMessage,
-});
-
-// Advanced usage with priority system
-const { sendInitiativeMessage } = useBushitsuInitiative({
-  enabled: true,
-  serverUrl: 'ws://localhost:8080',
-  room: 'lobby',
-  userName: 'AI',
-  sendMessage,
-  priority: 2, // Higher priority than default (1)
-  runWithPriority: (priority, task) => {
-    // Your priority queue implementation
-    priorityQueue.add(task, priority);
-  },
-});
-```
-
-### Priority Levels
-
-Common priority levels used in AI streaming applications:
-
-- **Priority 1 (Default)**: Announcements and general messages
-- **Priority 2**: Chat responses to user messages
-- **Priority 3**: Urgent notifications or system messages
-- **Priority 0**: Background tasks (lower priority)
-
-### Real-World Example
-
-```typescript
-// AI streaming scenario with priority management
-class AIStreamingBot {
-  private priorityQueue = new PriorityQueue();
-
-  setupChat() {
-    // High priority for user mention responses
-    const { sendInitiativeMessage: sendResponse } = useBushitsuInitiative({
-      enabled: true,
-      serverUrl: 'ws://localhost:8080',
-      room: 'stream',
-      userName: 'AITuber',
-      sendMessage: this.sendMessage,
-      priority: 2, // Higher priority than announcements
-      runWithPriority: (priority, task) => {
-        this.priorityQueue.add(task, priority);
-      },
-    });
-
-    // Normal priority for general announcements
-    const { sendInitiativeMessage: sendAnnouncement } = useBushitsuInitiative({
-      enabled: true,
-      serverUrl: 'ws://localhost:8080',
-      room: 'stream',
-      userName: 'AITuber',
-      sendMessage: this.sendMessage,
-      priority: 1, // Default priority
-      runWithPriority: (priority, task) => {
-        this.priorityQueue.add(task, priority);
-      },
-    });
-
-    // Usage
-    sendResponse('Thanks for the question!'); // Executes with priority 2
-    sendAnnouncement('Welcome to the stream!'); // Executes with priority 1
-  }
-}
-```
-
-### Integration with Voice Synthesis
-
-The priority system works seamlessly with voice synthesis, ensuring that both chat messages and voice generation respect the priority order:
-
-```typescript
-const { sendInitiativeMessage } = useBushitsuInitiative({
-  enabled: true,
-  serverUrl: 'ws://localhost:8080',
-  room: 'lobby',
-  userName: 'AI',
-  sendMessage,
-  priority: 2,
-  runWithPriority: (priority, task) => {
-    // Both chat and voice synthesis respect priority
-    voiceQueue.add(task, priority);
-  },
-  onProcessMessage: async (message) => {
-    // This also gets prioritized
-    await voiceService.speak(message);
-  },
-});
-```
-
-## Features
-
-- **Auto-reconnection**: Automatically reconnects on connection loss
-- **Rate limiting**: Prevents message flooding
-- **Message deduplication**: Filters duplicate messages
-- **Mention support**: Handle @mentions in messages
-- **Session management**: Tracks user sessions
-- **Priority execution**: Optional integration with priority queue systems for AI streaming
+---
 
 ## License
 

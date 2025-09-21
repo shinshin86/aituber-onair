@@ -1,5 +1,18 @@
 # @aituber-onair/bushitsu-client
 
+## 0.2.0
+
+### Minor Changes
+
+- Add transport abstraction and environment-specific bindings (Node.js helper, Google Apps Script sender, React barrel) for cross-runtime support
+- Expose transport utilities and custom injection options in the public API
+- Document new usage patterns and ship runnable examples for Node.js, Google Apps Script, and React
+
+### Patch Changes
+
+- Improve WebSocket adapter robustness (binary message handling, cleanup) and align package exports with new structure
+- Add targeted tests for Node.js and Apps Script bindings
+
 ## 0.1.1
 
 ### Patch Changes
