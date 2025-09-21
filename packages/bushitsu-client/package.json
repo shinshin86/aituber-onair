@@ -20,6 +20,21 @@
       "require": "./dist/cjs/index.js",
       "import": "./dist/esm/index.js",
       "types": "./dist/types/index.d.ts"
+    },
+    "./node": {
+      "require": "./dist/cjs/node/index.js",
+      "import": "./dist/esm/node/index.js",
+      "types": "./dist/types/node/index.d.ts"
+    },
+    "./gas": {
+      "require": "./dist/cjs/gas/index.js",
+      "import": "./dist/esm/gas/index.js",
+      "types": "./dist/types/gas/index.d.ts"
+    },
+    "./react": {
+      "require": "./dist/cjs/react/index.js",
+      "import": "./dist/esm/react/index.js",
+      "types": "./dist/types/react/index.d.ts"
     }
   },
   "files": [

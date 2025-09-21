@@ -9,18 +9,34 @@ import {
   WEBSOCKET_MAX_RECONNECT_ATTEMPTS,
   WEBSOCKET_MAX_RECONNECT_DELAY,
 } from './constants';
+import {
+  BushitsuTransportReadyState,
+  type BushitsuTransport,
+  type BushitsuTransportCloseEvent,
+  type BushitsuTransportMessageEvent,
+} from '../core/transport';
+import { createBrowserWebSocketTransport } from '../transports/webSocketTransport';
+
+interface BushitsuClientDependencies {
+  transport?: BushitsuTransport;
+}
 
 export class BushitsuClient {
-  private ws: WebSocket | null = null;
-  private options: BushitsuClientOptions;
+  private readonly options: BushitsuClientOptions;
+  private readonly transport: BushitsuTransport;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = WEBSOCKET_MAX_RECONNECT_ATTEMPTS;
-  private reconnectTimer: number | null = null;
+  private readonly maxReconnectAttempts = WEBSOCKET_MAX_RECONNECT_ATTEMPTS;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isConnected = false;
   private sessionId: string | null = null; // Own session ID
 
-  constructor(options: BushitsuClientOptions) {
+  constructor(
+    options: BushitsuClientOptions,
+    dependencies: BushitsuClientDependencies = {},
+  ) {
     this.options = options;
+    this.transport =
+      dependencies.transport ?? createBrowserWebSocketTransport();
   }
 
   /**
@@ -29,13 +45,9 @@ export class BushitsuClient {
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        // Clean up existing connection first
-        if (this.ws) {
-          this.ws.close();
-          this.ws = null;
-        }
+        // Clean up any existing connection before creating a new one
+        this.transport.disconnect();
 
-        // Format URL properly
         const baseUrl = this.options.serverUrl.replace(/^http/, 'ws');
         const wsUrl = `${baseUrl}/ws?room=${encodeURIComponent(
           this.options.room,
@@ -44,41 +56,52 @@ export class BushitsuClient {
         // Set connection timeout
         const connectionTimeout = setTimeout(() => {
           console.error('[BushitsuClient] Connection timeout');
-          if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
-            this.ws.close();
-          }
+          this.transport.disconnect();
           this.isConnected = false;
           this.options.onConnectionChange?.(false);
           reject(new Error('Connection timeout'));
         }, WEBSOCKET_CONNECTION_TIMEOUT);
 
-        this.ws = new WebSocket(wsUrl);
-
-        this.ws.onopen = () => {
-          clearTimeout(connectionTimeout);
-          this.isConnected = true;
-          this.reconnectAttempts = 0;
-          this.options.onConnectionChange?.(true);
-          resolve();
-        };
-
-        this.ws.onmessage = this.handleMessage.bind(this);
-        this.ws.onclose = this.handleClose.bind(this);
-        this.ws.onerror = (error) => {
-          console.error('[BushitsuClient] WebSocket error:', error);
-          clearTimeout(connectionTimeout);
-          this.isConnected = false;
-          this.options.onConnectionChange?.(false);
-          reject(error);
-        };
+        this.transport
+          .connect(wsUrl, {
+            onOpen: () => {
+              clearTimeout(connectionTimeout);
+              this.isConnected = true;
+              this.reconnectAttempts = 0;
+              this.options.onConnectionChange?.(true);
+              resolve();
+            },
+            onMessage: (event) => {
+              this.handleMessage(event);
+            },
+            onClose: (event) => {
+              clearTimeout(connectionTimeout);
+              this.handleClose(event);
+            },
+            onError: (error) => {
+              console.error('[BushitsuClient] WebSocket error:', error);
+              this.isConnected = false;
+              this.options.onConnectionChange?.(false);
+            },
+          })
+          .catch((error) => {
+            clearTimeout(connectionTimeout);
+            console.error(
+              '[BushitsuClient] Failed to create WebSocket connection:',
+              error,
+            );
+            this.isConnected = false;
+            this.options.onConnectionChange?.(false);
+            reject(error);
+          });
       } catch (error) {
         console.error(
-          '[BushitsuClient] Failed to create WebSocket connection:',
+          '[BushitsuClient] Failed to start WebSocket connection:',
           error,
         );
         this.isConnected = false;
         this.options.onConnectionChange?.(false);
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }
@@ -86,7 +109,7 @@ export class BushitsuClient {
   /**
    * Handle incoming messages
    */
-  private handleMessage(event: MessageEvent) {
+  private handleMessage(event: BushitsuTransportMessageEvent) {
     try {
       const message: BushitsuMessage = JSON.parse(event.data);
 
@@ -143,14 +166,14 @@ export class BushitsuClient {
    * Send message (broadcast or mention)
    */
   sendMessage(text: string, mentionTo?: string): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+    if (this.transport.getReadyState() !== BushitsuTransportReadyState.OPEN) {
       console.error('WebSocket is not connected');
-      console.error('WebSocket state:', this.ws?.readyState);
+      console.error('WebSocket state:', this.transport.getReadyState());
       console.error('Connection states:', {
-        CONNECTING: WebSocket.CONNECTING,
-        OPEN: WebSocket.OPEN,
-        CLOSING: WebSocket.CLOSING,
-        CLOSED: WebSocket.CLOSED,
+        CONNECTING: BushitsuTransportReadyState.CONNECTING,
+        OPEN: BushitsuTransportReadyState.OPEN,
+        CLOSING: BushitsuTransportReadyState.CLOSING,
+        CLOSED: BushitsuTransportReadyState.CLOSED,
       });
       return;
     }
@@ -161,7 +184,7 @@ export class BushitsuClient {
         text: mentionTo ? `@${mentionTo} ${text}` : text,
       };
 
-      this.ws.send(JSON.stringify(message));
+      this.transport.send(JSON.stringify(message));
     } catch (error) {
       console.error(
         '[BushitsuClient] Failed to send WebSocket message:',
@@ -174,7 +197,10 @@ export class BushitsuClient {
    * Get connection status
    */
   getConnectionStatus(): boolean {
-    return this.isConnected && this.ws?.readyState === WebSocket.OPEN;
+    return (
+      this.isConnected &&
+      this.transport.getReadyState() === BushitsuTransportReadyState.OPEN
+    );
   }
 
   /**
@@ -187,10 +213,7 @@ export class BushitsuClient {
       this.reconnectTimer = null;
     }
 
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
+    this.transport.disconnect();
 
     this.isConnected = false;
     this.reconnectAttempts = 0;
@@ -201,15 +224,21 @@ export class BushitsuClient {
   /**
    * Handle connection close (including reconnection)
    */
-  private handleClose(event: CloseEvent) {
-    this.ws = null;
+  private handleClose(event: BushitsuTransportCloseEvent) {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
     this.isConnected = false;
     this.sessionId = null; // Reset session ID
     this.options.onConnectionChange?.(false);
 
+    const closeCode = event.code ?? 0;
+
     // Only attempt reconnection if not a normal closure
     if (
-      event.code !== 1000 && // Normal closure
+      closeCode !== 1000 &&
       this.reconnectAttempts < this.maxReconnectAttempts
     ) {
       this.reconnectAttempts++;
@@ -218,7 +247,7 @@ export class BushitsuClient {
         3000 * this.reconnectAttempts,
         WEBSOCKET_MAX_RECONNECT_DELAY,
       );
-      this.reconnectTimer = window.setTimeout(() => {
+      this.reconnectTimer = setTimeout(() => {
         this.connect().catch((error) => {
           console.error('Reconnection failed:', error);
         });
