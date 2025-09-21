@@ -5,7 +5,7 @@ This example shows how to wire `useBushitsuClient` inside a Vite + React project
 ## Prerequisites
 
 - Node.js 20+
-- A running Bushitsu server (HTTP base URL, e.g. `http://localhost:8787`)
+- A running Bushitsu server (HTTP base URL, e.g. `http://localhost:8080`)
 
 ## Quick Setup
 
@@ -28,7 +28,7 @@ This example shows how to wire `useBushitsuClient` inside a Vite + React project
 4. Create `.env.local` and set the connection details:
 
    ```bash
-   VITE_BUSHITSU_SERVER_URL=http://localhost:8787
+   VITE_BUSHITSU_SERVER_URL=http://localhost:8080
    VITE_BUSHITSU_ROOM=lobby
    VITE_BUSHITSU_USER=ReactUser
    ```

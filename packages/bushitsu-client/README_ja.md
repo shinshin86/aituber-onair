@@ -35,7 +35,7 @@ import { useBushitsuClient } from '@aituber-onair/bushitsu-client/react';
 
 function ChatComponent() {
   const { isConnected, sendMessage } = useBushitsuClient({
-    serverUrl: 'http://localhost:8787',
+    serverUrl: 'http://localhost:8080',
     room: 'lobby',
     userName: 'Viewer',
     isEnabled: true,
@@ -68,7 +68,7 @@ import { createNodeBushitsuClient } from '@aituber-onair/bushitsu-client/node';
 import WebSocket from 'ws';
 
 const client = createNodeBushitsuClient({
-  serverUrl: 'http://localhost:8787',
+  serverUrl: 'http://localhost:8080',
   room: 'lobby',
   userName: 'NodeBot',
   webSocketImpl: WebSocket as unknown as typeof WebSocket,
@@ -126,7 +126,7 @@ const transport = createWebSocketTransport((url) => new SomePlatformWebSocket(ur
 
 const client = new BushitsuClient(
   {
-    serverUrl: 'http://localhost:8787',
+    serverUrl: 'http://localhost:8080',
     room: 'lobby',
     userName: 'CustomClient',
     onReceiveMessage: (text, from) => console.log(from, text),

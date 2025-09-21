@@ -22,7 +22,7 @@ node --loader ts-node/esm examples/node-basic/index.ts
 
 Set the following environment variables before running the script:
 
-- `BUSHITSU_SERVER_URL` – Base HTTP(S) URL of the Bushitsu server (e.g. `http://localhost:8787`)
+- `BUSHITSU_SERVER_URL` – Base HTTP(S) URL of the Bushitsu server (e.g. `http://localhost:8080`)
 - `BUSHITSU_ROOM` – Target room name
 - `BUSHITSU_USER_NAME` – Display name to join with
 
