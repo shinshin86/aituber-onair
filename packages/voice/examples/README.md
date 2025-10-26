@@ -116,9 +116,9 @@ voiceService.updateOptions({
 });
 
 // Note:
-// MiniMaxの sampleRate は 8000 / 16000 / 22050 / 24000 / 32000 / 44100、
-// bitrate は 32000 / 64000 / 128000 / 256000 のみ受け付けられます。
-// それ以外を指定すると API から 2013 invalid params エラーが返ります。
+// MiniMax accepts sampleRate values of 8000 / 16000 / 22050 / 24000 / 32000 / 44100 only.
+// Accepted bitrates are 32000 / 64000 / 128000 / 256000.
+// Any other value results in the API returning error code 2013 (invalid params).
 ```
 
 ### 4. Dynamic Engine Switching
