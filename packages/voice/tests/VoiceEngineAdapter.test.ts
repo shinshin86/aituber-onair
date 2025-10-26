@@ -25,6 +25,19 @@ describe('VoiceEngineAdapter', () => {
     mockEngine = {
       fetchAudio: vi.fn(),
       setApiEndpoint: vi.fn(),
+      setQueryParameters: vi.fn(),
+      setSpeedScale: vi.fn(),
+      setPitchScale: vi.fn(),
+      setIntonationScale: vi.fn(),
+      setVolumeScale: vi.fn(),
+      setPrePhonemeLength: vi.fn(),
+      setPostPhonemeLength: vi.fn(),
+      setPauseLength: vi.fn(),
+      setPauseLengthScale: vi.fn(),
+      setOutputStereo: vi.fn(),
+      setEnableKatakanaEnglish: vi.fn(),
+      setEnableInterrogativeUpspeak: vi.fn(),
+      setCoreVersion: vi.fn(),
       setGroupId: vi.fn(),
       setEndpoint: vi.fn(),
       setModel: vi.fn(),
@@ -56,6 +69,63 @@ describe('VoiceEngineAdapter', () => {
 
     // Set up the mock to return our mock engine
     mockGetEngine.mockReturnValue(mockEngine);
+  });
+
+  describe('VOICEVOX Integration', () => {
+    it('should configure VOICEVOX engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'voicevox',
+        speaker: '1',
+        voicevoxApiUrl: 'http://localhost:50021',
+        voicevoxQueryParameters: {
+          speedScale: 1.05,
+          volumeScale: 0.95,
+        },
+        voicevoxSpeedScale: 1.2,
+        voicevoxPitchScale: -0.1,
+        voicevoxIntonationScale: 1.3,
+        voicevoxVolumeScale: 0.9,
+        voicevoxPrePhonemeLength: 0.2,
+        voicevoxPostPhonemeLength: 0.15,
+        voicevoxPauseLength: null,
+        voicevoxPauseLengthScale: 1.1,
+        voicevoxOutputSamplingRate: 48000,
+        voicevoxOutputStereo: true,
+        voicevoxEnableKatakanaEnglish: false,
+        voicevoxEnableInterrogativeUpspeak: false,
+        voicevoxCoreVersion: '0.15.0',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'VOICEVOX test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'http://localhost:50021',
+      );
+      expect(mockEngine.setQueryParameters).toHaveBeenCalledWith({
+        speedScale: 1.05,
+        volumeScale: 0.95,
+      });
+      expect(mockEngine.setSpeedScale).toHaveBeenCalledWith(1.2);
+      expect(mockEngine.setPitchScale).toHaveBeenCalledWith(-0.1);
+      expect(mockEngine.setIntonationScale).toHaveBeenCalledWith(1.3);
+      expect(mockEngine.setVolumeScale).toHaveBeenCalledWith(0.9);
+      expect(mockEngine.setPrePhonemeLength).toHaveBeenCalledWith(0.2);
+      expect(mockEngine.setPostPhonemeLength).toHaveBeenCalledWith(0.15);
+      expect(mockEngine.setPauseLength).toHaveBeenCalledWith(null);
+      expect(mockEngine.setPauseLengthScale).toHaveBeenCalledWith(1.1);
+      expect(mockEngine.setOutputSamplingRate).toHaveBeenCalledWith(48000);
+      expect(mockEngine.setOutputStereo).toHaveBeenCalledWith(true);
+      expect(mockEngine.setEnableKatakanaEnglish).toHaveBeenCalledWith(false);
+      expect(mockEngine.setEnableInterrogativeUpspeak).toHaveBeenCalledWith(
+        false,
+      );
+      expect(mockEngine.setCoreVersion).toHaveBeenCalledWith('0.15.0');
+    });
   });
 
   describe('MiniMax Integration', () => {
@@ -244,6 +314,20 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setBitrate).not.toHaveBeenCalled();
       expect(mockEngine.setAudioFormat).not.toHaveBeenCalled();
       expect(mockEngine.setAudioChannel).not.toHaveBeenCalled();
+      expect(mockEngine.setQueryParameters).not.toHaveBeenCalled();
+      expect(mockEngine.setSpeedScale).not.toHaveBeenCalled();
+      expect(mockEngine.setPitchScale).not.toHaveBeenCalled();
+      expect(mockEngine.setIntonationScale).not.toHaveBeenCalled();
+      expect(mockEngine.setVolumeScale).not.toHaveBeenCalled();
+      expect(mockEngine.setPrePhonemeLength).not.toHaveBeenCalled();
+      expect(mockEngine.setPostPhonemeLength).not.toHaveBeenCalled();
+      expect(mockEngine.setPauseLength).not.toHaveBeenCalled();
+      expect(mockEngine.setPauseLengthScale).not.toHaveBeenCalled();
+      expect(mockEngine.setOutputSamplingRate).not.toHaveBeenCalled();
+      expect(mockEngine.setOutputStereo).not.toHaveBeenCalled();
+      expect(mockEngine.setEnableKatakanaEnglish).not.toHaveBeenCalled();
+      expect(mockEngine.setEnableInterrogativeUpspeak).not.toHaveBeenCalled();
+      expect(mockEngine.setCoreVersion).not.toHaveBeenCalled();
     });
   });
 

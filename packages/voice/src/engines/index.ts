@@ -1,6 +1,9 @@
 export type { VoiceEngine } from './VoiceEngine';
 export { VoiceEngineFactory } from './VoiceEngineFactory';
-export { VoiceVoxEngine } from './VoiceVoxEngine';
+export {
+  VoiceVoxEngine,
+  type VoiceVoxQueryParameterOverrides,
+} from './VoiceVoxEngine';
 export { VoicePeakEngine } from './VoicePeakEngine';
 export { AivisSpeechEngine } from './AivisSpeechEngine';
 export { AivisCloudEngine } from './AivisCloudEngine';

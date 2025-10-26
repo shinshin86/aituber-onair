@@ -131,6 +131,7 @@ export {
   type MinimaxVoiceSettingsOptions,
   type MinimaxAudioSettingsOptions,
   type MinimaxAudioFormat,
+  type VoiceVoxQueryParameterOverrides,
   type VoiceEngineType,
   talkStyles,
   type TalkStyle,

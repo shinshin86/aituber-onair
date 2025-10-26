@@ -97,6 +97,125 @@ export class VoiceEngineAdapter implements VoiceService {
         }
       }
 
+      // For VOICEVOX engine, configure additional parameters
+      if (this.options.engineType === 'voicevox') {
+        const voicevoxEngine = engine as any;
+
+        if (
+          this.options.voicevoxQueryParameters &&
+          typeof voicevoxEngine.setQueryParameters === 'function'
+        ) {
+          voicevoxEngine.setQueryParameters(
+            this.options.voicevoxQueryParameters,
+          );
+        }
+
+        if (
+          this.options.voicevoxSpeedScale !== undefined &&
+          typeof voicevoxEngine.setSpeedScale === 'function'
+        ) {
+          voicevoxEngine.setSpeedScale(this.options.voicevoxSpeedScale);
+        }
+
+        if (
+          this.options.voicevoxPitchScale !== undefined &&
+          typeof voicevoxEngine.setPitchScale === 'function'
+        ) {
+          voicevoxEngine.setPitchScale(this.options.voicevoxPitchScale);
+        }
+
+        if (
+          this.options.voicevoxIntonationScale !== undefined &&
+          typeof voicevoxEngine.setIntonationScale === 'function'
+        ) {
+          voicevoxEngine.setIntonationScale(
+            this.options.voicevoxIntonationScale,
+          );
+        }
+
+        if (
+          this.options.voicevoxVolumeScale !== undefined &&
+          typeof voicevoxEngine.setVolumeScale === 'function'
+        ) {
+          voicevoxEngine.setVolumeScale(this.options.voicevoxVolumeScale);
+        }
+
+        if (
+          this.options.voicevoxPrePhonemeLength !== undefined &&
+          typeof voicevoxEngine.setPrePhonemeLength === 'function'
+        ) {
+          voicevoxEngine.setPrePhonemeLength(
+            this.options.voicevoxPrePhonemeLength,
+          );
+        }
+
+        if (
+          this.options.voicevoxPostPhonemeLength !== undefined &&
+          typeof voicevoxEngine.setPostPhonemeLength === 'function'
+        ) {
+          voicevoxEngine.setPostPhonemeLength(
+            this.options.voicevoxPostPhonemeLength,
+          );
+        }
+
+        if (
+          this.options.voicevoxPauseLength !== undefined &&
+          typeof voicevoxEngine.setPauseLength === 'function'
+        ) {
+          voicevoxEngine.setPauseLength(this.options.voicevoxPauseLength);
+        }
+
+        if (
+          this.options.voicevoxPauseLengthScale !== undefined &&
+          typeof voicevoxEngine.setPauseLengthScale === 'function'
+        ) {
+          voicevoxEngine.setPauseLengthScale(
+            this.options.voicevoxPauseLengthScale,
+          );
+        }
+
+        if (
+          this.options.voicevoxOutputSamplingRate !== undefined &&
+          typeof voicevoxEngine.setOutputSamplingRate === 'function'
+        ) {
+          voicevoxEngine.setOutputSamplingRate(
+            this.options.voicevoxOutputSamplingRate,
+          );
+        }
+
+        if (
+          this.options.voicevoxOutputStereo !== undefined &&
+          typeof voicevoxEngine.setOutputStereo === 'function'
+        ) {
+          voicevoxEngine.setOutputStereo(this.options.voicevoxOutputStereo);
+        }
+
+        if (
+          this.options.voicevoxEnableKatakanaEnglish !== undefined &&
+          typeof voicevoxEngine.setEnableKatakanaEnglish === 'function'
+        ) {
+          voicevoxEngine.setEnableKatakanaEnglish(
+            this.options.voicevoxEnableKatakanaEnglish,
+          );
+        }
+
+        if (
+          this.options.voicevoxEnableInterrogativeUpspeak !== undefined &&
+          typeof voicevoxEngine.setEnableInterrogativeUpspeak === 'function'
+        ) {
+          voicevoxEngine.setEnableInterrogativeUpspeak(
+            this.options.voicevoxEnableInterrogativeUpspeak,
+          );
+        }
+
+        if (
+          this.options.voicevoxCoreVersion !== undefined &&
+          typeof voicevoxEngine.setCoreVersion === 'function'
+        ) {
+          voicevoxEngine.setCoreVersion(this.options.voicevoxCoreVersion);
+        }
+      }
+
       // For MiniMax engine, configure additional parameters
       if (this.options.engineType === 'minimax') {
         const minimaxEngine = engine as any;

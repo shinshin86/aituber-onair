@@ -3,6 +3,7 @@ import {
   type VoiceServiceOptions,
   type MinimaxModel,
   type MinimaxAudioFormat,
+  type VoiceVoxQueryParameterOverrides,
 } from '@aituber-onair/voice';
 import { useEffect, useState } from 'react';
 import './App.css';
@@ -113,6 +114,27 @@ function App() {
   const [minimaxAudioChannel, setMinimaxAudioChannel] = useState<'1' | '2'>(
     '1',
   );
+  const [voicevoxSpeedScale, setVoicevoxSpeedScale] = useState('');
+  const [voicevoxPitchScale, setVoicevoxPitchScale] = useState('');
+  const [voicevoxIntonationScale, setVoicevoxIntonationScale] = useState('');
+  const [voicevoxVolumeScale, setVoicevoxVolumeScale] = useState('');
+  const [voicevoxPrePhonemeLength, setVoicevoxPrePhonemeLength] = useState('');
+  const [voicevoxPostPhonemeLength, setVoicevoxPostPhonemeLength] =
+    useState('');
+  const [voicevoxPauseLength, setVoicevoxPauseLength] = useState('');
+  const [voicevoxPauseLengthScale, setVoicevoxPauseLengthScale] = useState('');
+  const [voicevoxOutputSamplingRate, setVoicevoxOutputSamplingRate] =
+    useState('default');
+  const [voicevoxOutputStereo, setVoicevoxOutputStereo] = useState<
+    'default' | 'mono' | 'stereo'
+  >('default');
+  const [voicevoxEnableKatakanaEnglish, setVoicevoxEnableKatakanaEnglish] =
+    useState<'default' | 'true' | 'false'>('default');
+  const [
+    voicevoxEnableInterrogativeUpspeak,
+    setVoicevoxEnableInterrogativeUpspeak,
+  ] = useState<'default' | 'true' | 'false'>('default');
+  const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState('');
   const [text, setText] = useState(
     'こんにちは！AITuber OnAir Voice のReactデモへようこそ。',
   );
@@ -147,6 +169,19 @@ function App() {
     setMinimaxBitrate('128000');
     setMinimaxAudioFormat('mp3');
     setMinimaxAudioChannel('1');
+    setVoicevoxSpeedScale('');
+    setVoicevoxPitchScale('');
+    setVoicevoxIntonationScale('');
+    setVoicevoxVolumeScale('');
+    setVoicevoxPrePhonemeLength('');
+    setVoicevoxPostPhonemeLength('');
+    setVoicevoxPauseLength('');
+    setVoicevoxPauseLengthScale('');
+    setVoicevoxOutputSamplingRate('default');
+    setVoicevoxOutputStereo('default');
+    setVoicevoxEnableKatakanaEnglish('default');
+    setVoicevoxEnableInterrogativeUpspeak('default');
+    setVoicevoxCoreVersion('');
     setStatus(`Switched to ${engine}. Default URL: ${defaults.apiUrl}`);
     setStatusType('success');
   }, [engine]);
@@ -265,6 +300,99 @@ function App() {
         if (Object.keys(audioSettings).length > 0) {
           options.minimaxAudioSettings = audioSettings;
         }
+      } else if (engine === 'voicevox') {
+        const queryOverrides: VoiceVoxQueryParameterOverrides = {};
+
+        const parsedSpeedScale = Number.parseFloat(voicevoxSpeedScale);
+        if (!Number.isNaN(parsedSpeedScale)) {
+          options.voicevoxSpeedScale = parsedSpeedScale;
+          queryOverrides.speedScale = parsedSpeedScale;
+        }
+
+        const parsedPitchScale = Number.parseFloat(voicevoxPitchScale);
+        if (!Number.isNaN(parsedPitchScale)) {
+          options.voicevoxPitchScale = parsedPitchScale;
+          queryOverrides.pitchScale = parsedPitchScale;
+        }
+
+        const parsedIntonationScale = Number.parseFloat(
+          voicevoxIntonationScale,
+        );
+        if (!Number.isNaN(parsedIntonationScale)) {
+          options.voicevoxIntonationScale = parsedIntonationScale;
+          queryOverrides.intonationScale = parsedIntonationScale;
+        }
+
+        const parsedVolumeScale = Number.parseFloat(voicevoxVolumeScale);
+        if (!Number.isNaN(parsedVolumeScale)) {
+          options.voicevoxVolumeScale = parsedVolumeScale;
+          queryOverrides.volumeScale = parsedVolumeScale;
+        }
+
+        const parsedPrePhonemeLength = Number.parseFloat(
+          voicevoxPrePhonemeLength,
+        );
+        if (!Number.isNaN(parsedPrePhonemeLength)) {
+          options.voicevoxPrePhonemeLength = parsedPrePhonemeLength;
+          queryOverrides.prePhonemeLength = parsedPrePhonemeLength;
+        }
+
+        const parsedPostPhonemeLength = Number.parseFloat(
+          voicevoxPostPhonemeLength,
+        );
+        if (!Number.isNaN(parsedPostPhonemeLength)) {
+          options.voicevoxPostPhonemeLength = parsedPostPhonemeLength;
+          queryOverrides.postPhonemeLength = parsedPostPhonemeLength;
+        }
+
+        const parsedPauseLength = Number.parseFloat(voicevoxPauseLength);
+        if (!Number.isNaN(parsedPauseLength)) {
+          options.voicevoxPauseLength = parsedPauseLength;
+          queryOverrides.pauseLength = parsedPauseLength;
+        }
+
+        const parsedPauseLengthScale = Number.parseFloat(
+          voicevoxPauseLengthScale,
+        );
+        if (!Number.isNaN(parsedPauseLengthScale)) {
+          options.voicevoxPauseLengthScale = parsedPauseLengthScale;
+          queryOverrides.pauseLengthScale = parsedPauseLengthScale;
+        }
+
+        if (voicevoxOutputSamplingRate !== 'default') {
+          const parsedOutputSamplingRate = Number.parseInt(
+            voicevoxOutputSamplingRate,
+            10,
+          );
+          if (!Number.isNaN(parsedOutputSamplingRate)) {
+            options.voicevoxOutputSamplingRate = parsedOutputSamplingRate;
+            queryOverrides.outputSamplingRate = parsedOutputSamplingRate;
+          }
+        }
+
+        if (voicevoxOutputStereo !== 'default') {
+          const stereo = voicevoxOutputStereo === 'stereo';
+          options.voicevoxOutputStereo = stereo;
+          queryOverrides.outputStereo = stereo;
+        }
+
+        if (voicevoxEnableKatakanaEnglish !== 'default') {
+          options.voicevoxEnableKatakanaEnglish =
+            voicevoxEnableKatakanaEnglish === 'true';
+        }
+
+        if (voicevoxEnableInterrogativeUpspeak !== 'default') {
+          options.voicevoxEnableInterrogativeUpspeak =
+            voicevoxEnableInterrogativeUpspeak === 'true';
+        }
+
+        if (voicevoxCoreVersion.trim()) {
+          options.voicevoxCoreVersion = voicevoxCoreVersion.trim();
+        }
+
+        if (Object.keys(queryOverrides).length > 0) {
+          options.voicevoxQueryParameters = queryOverrides;
+        }
       }
 
       // Add API URL if provided
@@ -340,6 +468,262 @@ function App() {
             <option value="minimax">MiniMax</option>
           </select>
         </div>
+
+        {engine === 'voicevox' && (
+          <>
+            <div className="form-group">
+              <label htmlFor="voicevoxApiKey">API Key (optional):</label>
+              <input
+                id="voicevoxApiKey"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="例: Bearer トークンやX-API-KEYなど（不要なら空欄）"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="voicevoxApiUrl">API URL (customizable):</label>
+              <input
+                id="voicevoxApiUrl"
+                type="text"
+                value={apiUrl}
+                onChange={(e) => setApiUrl(e.target.value)}
+                placeholder="例: http://localhost:50021"
+              />
+            </div>
+
+            <div className="parameter-card voicevox-card">
+              <div className="parameter-card__header">
+                <h4>VOICEVOX パラメータ</h4>
+                <p className="parameter-card__description">
+                  テキストから生成される音声の質感を細かく調整できます。未入力のフィールドは
+                  API の既定値のまま使用されます。
+                </p>
+              </div>
+
+              <div className="parameter-section">
+                <div className="parameter-section__title">話速・ピッチ</div>
+                <div className="parameter-grid">
+                  <div className="form-group">
+                    <label htmlFor="voicevoxSpeedScale">Speed Scale</label>
+                    <input
+                      id="voicevoxSpeedScale"
+                      type="number"
+                      step="0.05"
+                      value={voicevoxSpeedScale}
+                      onChange={(e) => setVoicevoxSpeedScale(e.target.value)}
+                      placeholder="例: 1.10（標準は 1.0）"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="voicevoxPitchScale">Pitch Scale</label>
+                    <input
+                      id="voicevoxPitchScale"
+                      type="number"
+                      step="0.05"
+                      value={voicevoxPitchScale}
+                      onChange={(e) => setVoicevoxPitchScale(e.target.value)}
+                      placeholder="例: 0.15（標準は 0.0）"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="voicevoxIntonationScale">
+                      Intonation Scale
+                    </label>
+                    <input
+                      id="voicevoxIntonationScale"
+                      type="number"
+                      step="0.05"
+                      value={voicevoxIntonationScale}
+                      onChange={(e) =>
+                        setVoicevoxIntonationScale(e.target.value)
+                      }
+                      placeholder="例: 1.20（標準は 1.0）"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="voicevoxVolumeScale">Volume Scale</label>
+                    <input
+                      id="voicevoxVolumeScale"
+                      type="number"
+                      step="0.05"
+                      value={voicevoxVolumeScale}
+                      onChange={(e) => setVoicevoxVolumeScale(e.target.value)}
+                      placeholder="例: 0.95（標準は 1.0）"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="parameter-section">
+                <div className="parameter-section__title">無音コントロール</div>
+                <div className="parameter-grid">
+                  <div className="form-group">
+                    <label htmlFor="voicevoxPrePhonemeLength">
+                      Pre-phoneme Length (sec)
+                    </label>
+                    <input
+                      id="voicevoxPrePhonemeLength"
+                      type="number"
+                      step="0.01"
+                      value={voicevoxPrePhonemeLength}
+                      onChange={(e) =>
+                        setVoicevoxPrePhonemeLength(e.target.value)
+                      }
+                      placeholder="例: 0.12"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="voicevoxPostPhonemeLength">
+                      Post-phoneme Length (sec)
+                    </label>
+                    <input
+                      id="voicevoxPostPhonemeLength"
+                      type="number"
+                      step="0.01"
+                      value={voicevoxPostPhonemeLength}
+                      onChange={(e) =>
+                        setVoicevoxPostPhonemeLength(e.target.value)
+                      }
+                      placeholder="例: 0.08"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="voicevoxPauseLength">
+                      Pause Length (sec)
+                    </label>
+                    <input
+                      id="voicevoxPauseLength"
+                      type="number"
+                      step="0.05"
+                      value={voicevoxPauseLength}
+                      onChange={(e) => setVoicevoxPauseLength(e.target.value)}
+                      placeholder="例: 0.5（空欄で自動）"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="voicevoxPauseLengthScale">
+                      Pause Length Scale
+                    </label>
+                    <input
+                      id="voicevoxPauseLengthScale"
+                      type="number"
+                      step="0.05"
+                      value={voicevoxPauseLengthScale}
+                      onChange={(e) =>
+                        setVoicevoxPauseLengthScale(e.target.value)
+                      }
+                      placeholder="例: 1.1（標準は 1.0）"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="parameter-section">
+                <div className="parameter-section__title">出力フォーマット</div>
+                <div className="parameter-grid parameter-grid--two">
+                  <div className="form-group">
+                    <label htmlFor="voicevoxOutputSamplingRate">
+                      Output Sampling Rate
+                    </label>
+                    <select
+                      id="voicevoxOutputSamplingRate"
+                      value={voicevoxOutputSamplingRate}
+                      onChange={(e) =>
+                        setVoicevoxOutputSamplingRate(e.target.value)
+                      }
+                    >
+                      <option value="default">API既定値を使用</option>
+                      <option value="8000">8,000 Hz</option>
+                      <option value="11025">11,025 Hz</option>
+                      <option value="16000">16,000 Hz</option>
+                      <option value="22050">22,050 Hz</option>
+                      <option value="24000">24,000 Hz</option>
+                      <option value="44100">44,100 Hz</option>
+                      <option value="48000">48,000 Hz</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="voicevoxOutputStereo">Output Stereo</label>
+                    <select
+                      id="voicevoxOutputStereo"
+                      value={voicevoxOutputStereo}
+                      onChange={(e) =>
+                        setVoicevoxOutputStereo(
+                          e.target.value as 'default' | 'mono' | 'stereo',
+                        )
+                      }
+                    >
+                      <option value="default">API既定値を使用</option>
+                      <option value="mono">モノラル（false）</option>
+                      <option value="stereo">ステレオ（true）</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="parameter-section">
+                <div className="parameter-section__title">クエリオプション</div>
+                <div className="parameter-grid parameter-grid--two">
+                  <div className="form-group">
+                    <label htmlFor="voicevoxEnableKatakanaEnglish">
+                      Katakana English
+                    </label>
+                    <select
+                      id="voicevoxEnableKatakanaEnglish"
+                      value={voicevoxEnableKatakanaEnglish}
+                      onChange={(e) =>
+                        setVoicevoxEnableKatakanaEnglish(
+                          e.target.value as 'default' | 'true' | 'false',
+                        )
+                      }
+                    >
+                      <option value="default">API既定値（true）</option>
+                      <option value="true">有効</option>
+                      <option value="false">無効</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="voicevoxEnableInterrogativeUpspeak">
+                      Interrogative Upspeak
+                    </label>
+                    <select
+                      id="voicevoxEnableInterrogativeUpspeak"
+                      value={voicevoxEnableInterrogativeUpspeak}
+                      onChange={(e) =>
+                        setVoicevoxEnableInterrogativeUpspeak(
+                          e.target.value as 'default' | 'true' | 'false',
+                        )
+                      }
+                    >
+                      <option value="default">API既定値（true）</option>
+                      <option value="true">有効</option>
+                      <option value="false">無効</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="voicevoxCoreVersion">Core Version</label>
+                <input
+                  id="voicevoxCoreVersion"
+                  type="text"
+                  value={voicevoxCoreVersion}
+                  onChange={(e) => setVoicevoxCoreVersion(e.target.value)}
+                  placeholder="例: 0.15.0（任意指定）"
+                />
+              </div>
+
+              <p className="parameter-card__note">
+                サンプリングレートは 8,000 / 11,025 / 16,000 / 22,050 / 24,000 /
+                44,100 / 48,000 Hz
+                をサポート。未入力の場合はエンジンの既定値が適用されます。
+              </p>
+            </div>
+          </>
+        )}
 
         {engine === 'minimax' && (
           <>
@@ -530,7 +914,7 @@ function App() {
           </>
         )}
 
-        {engine !== 'minimax' && (
+        {engine !== 'minimax' && engine !== 'voicevox' && (
           <div className="form-group">
             <label htmlFor="apiKey">
               API Key {defaults.needsApiKey ? '(required)' : '(optional)'}:
@@ -552,16 +936,18 @@ function App() {
           </div>
         )}
 
-        <div className="form-group">
-          <label htmlFor="apiUrl">API URL (customizable):</label>
-          <input
-            id="apiUrl"
-            type="text"
-            value={apiUrl}
-            onChange={(e) => setApiUrl(e.target.value)}
-            placeholder="Default will be set based on selected engine"
-          />
-        </div>
+        {engine !== 'voicevox' && (
+          <div className="form-group">
+            <label htmlFor="apiUrl">API URL (customizable):</label>
+            <input
+              id="apiUrl"
+              type="text"
+              value={apiUrl}
+              onChange={(e) => setApiUrl(e.target.value)}
+              placeholder="Default will be set based on selected engine"
+            />
+          </div>
+        )}
 
         <div className="form-group">
           <label htmlFor="text">Text to speak:</label>
@@ -596,6 +982,10 @@ function App() {
         {engine === 'minimax' ? (
           <p className="helper-text">
             ※ MiniMax では速度・音量・ピッチ・音質パラメータを自由に調整できます
+          </p>
+        ) : engine === 'voicevox' ? (
+          <p className="helper-text">
+            ※ VOICEVOX では話速や抑揚・無音長などをカード内で細かく指定できます
           </p>
         ) : (
           <p className="helper-text">

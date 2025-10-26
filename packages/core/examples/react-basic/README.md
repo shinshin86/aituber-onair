@@ -180,7 +180,13 @@ The application supports 7 different Text-to-Speech engines:
 - Anime/game character voices
 - Dynamic voice actor fetching
 
-#### 7. **MiniMax**
+#### 7. **VOICEVOX**
+- Local Japanese TTS engine
+- No API key required
+- Adjustable speed/pitch/intonation/volume and silence lengths
+- Supports sampling rate, mono/stereo, and query flags (katakana English / interrogative upspeak)
+
+#### 8. **MiniMax**
 - Chinese TTS service
 - Requires API key and Group ID
 - Multiple voice options
