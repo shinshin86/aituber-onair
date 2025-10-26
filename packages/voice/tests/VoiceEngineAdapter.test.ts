@@ -34,7 +34,6 @@ describe('VoiceEngineAdapter', () => {
       setPostPhonemeLength: vi.fn(),
       setPauseLength: vi.fn(),
       setPauseLengthScale: vi.fn(),
-      setOutputSamplingRate: vi.fn(),
       setOutputStereo: vi.fn(),
       setEnableKatakanaEnglish: vi.fn(),
       setEnableInterrogativeUpspeak: vi.fn(),
