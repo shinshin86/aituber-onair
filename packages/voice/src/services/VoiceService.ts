@@ -2,6 +2,37 @@ import { ChatScreenplay } from '../types/chat';
 import { VoiceEngineType } from '../types/voiceEngine';
 
 /**
+ * MiniMax audio format types
+ */
+export type MinimaxAudioFormat = 'mp3' | 'wav' | 'aac' | 'pcm' | 'flac' | 'ogg';
+
+/**
+ * MiniMax voice setting overrides
+ */
+export interface MinimaxVoiceSettingsOptions {
+  /** Speaking speed multiplier (default: 1.0) */
+  speed?: number;
+  /** Output volume multiplier (default: 1.0) */
+  vol?: number;
+  /** Pitch adjustment in semitones (default: 0) */
+  pitch?: number;
+}
+
+/**
+ * MiniMax audio setting overrides
+ */
+export interface MinimaxAudioSettingsOptions {
+  /** Sampling rate in Hz (default: 32000) */
+  sampleRate?: number;
+  /** Bitrate in bps (default: 128000) */
+  bitrate?: number;
+  /** Output format (default: mp3) */
+  format?: MinimaxAudioFormat;
+  /** Number of audio channels (default: 1) */
+  channel?: 1 | 2;
+}
+
+/**
  * Voice service settings options
  */
 export interface VoiceServiceOptions {
@@ -30,6 +61,26 @@ export interface VoiceServiceOptions {
   endpoint?: string;
   /** MiniMax model to use */
   minimaxModel?: string;
+  /** MiniMax voice settings override */
+  minimaxVoiceSettings?: MinimaxVoiceSettingsOptions;
+  /** MiniMax audio settings override */
+  minimaxAudioSettings?: MinimaxAudioSettingsOptions;
+  /** MiniMax speed override (voice_setting.speed) */
+  minimaxSpeed?: number;
+  /** MiniMax volume override (voice_setting.vol) */
+  minimaxVolume?: number;
+  /** MiniMax pitch override (voice_setting.pitch) */
+  minimaxPitch?: number;
+  /** MiniMax audio sample rate override (audio_setting.sample_rate) */
+  minimaxSampleRate?: number;
+  /** MiniMax audio bitrate override (audio_setting.bitrate) */
+  minimaxBitrate?: number;
+  /** MiniMax audio format override (audio_setting.format) */
+  minimaxAudioFormat?: MinimaxAudioFormat;
+  /** MiniMax audio channel override (audio_setting.channel) */
+  minimaxAudioChannel?: 1 | 2;
+  /** MiniMax language boost override */
+  minimaxLanguageBoost?: string;
 
   // Aivis Cloud specific options
   /** Aivis Cloud model UUID */

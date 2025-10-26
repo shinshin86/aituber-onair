@@ -25,6 +25,7 @@ npm run dev
 ### Features
 
 - **Multiple TTS Engines**: OpenAI TTS, VOICEVOX, AIVIS Speech, VoicePeak, NijiVoice, MiniMax
+- **MiniMax Parameter Controls**: Adjust speed, volume, pitch, sample rate, bitrate, and format directly from the settings UI
 - **Automatic URL Configuration**: Default URLs set based on library constants
 - **Smart API Key Handling**: Required/optional validation per engine
 - **Real-time Status Updates**: Visual feedback during synthesis
@@ -87,13 +88,37 @@ const openaiService = new VoiceEngineAdapter({
     speaker: 'alloy'
 });
 
-// MiniMax (special format: apiKey:groupId)
+// MiniMax (API key + Group ID + customizable parameters)
 const minimaxService = new VoiceEngineAdapter({
     engineType: 'minimax',
     apiKey: 'your-api-key',
-    minimaxGroupId: 'your-group-id',
-    speaker: 'male-qn-qingse'
+    groupId: 'your-group-id',
+    speaker: 'male-qn-qingse',
+    minimaxModel: 'speech-2.5-hd-preview',
+    minimaxVoiceSettings: {
+        speed: 1.1,
+        vol: 1.0,
+        pitch: 0,
+    },
+    minimaxAudioSettings: {
+        sampleRate: 32000,
+        bitrate: 128000,
+        format: 'mp3',
+        channel: 2,
+    },
+    minimaxLanguageBoost: 'Japanese',
 });
+
+// Individual overrides (e.g., dynamic adjustments)
+voiceService.updateOptions({
+    minimaxSpeed: 1.3,
+    minimaxAudioFormat: 'wav',
+});
+
+// Note:
+// MiniMaxの sampleRate は 8000 / 16000 / 22050 / 24000 / 32000 / 44100、
+// bitrate は 32000 / 64000 / 128000 / 256000 のみ受け付けられます。
+// それ以外を指定すると API から 2013 invalid params エラーが返ります。
 ```
 
 ### 4. Dynamic Engine Switching

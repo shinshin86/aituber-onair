@@ -2,6 +2,7 @@ import {
   VoiceEngineAdapter,
   type VoiceServiceOptions,
   type MinimaxModel,
+  type MinimaxAudioFormat,
 } from '@aituber-onair/voice';
 import { useEffect, useState } from 'react';
 import './App.css';
@@ -101,6 +102,17 @@ function App() {
   const [minimaxModel, setMinimaxModel] = useState<MinimaxModel>(
     'speech-2.5-hd-preview',
   );
+  const [minimaxLanguageBoost, setMinimaxLanguageBoost] = useState('Japanese');
+  const [minimaxSpeed, setMinimaxSpeed] = useState('');
+  const [minimaxVolume, setMinimaxVolume] = useState('');
+  const [minimaxPitch, setMinimaxPitch] = useState('');
+  const [minimaxSampleRate, setMinimaxSampleRate] = useState('32000');
+  const [minimaxBitrate, setMinimaxBitrate] = useState('128000');
+  const [minimaxAudioFormat, setMinimaxAudioFormat] =
+    useState<MinimaxAudioFormat>('mp3');
+  const [minimaxAudioChannel, setMinimaxAudioChannel] = useState<'1' | '2'>(
+    '1',
+  );
   const [text, setText] = useState(
     'こんにちは！AITuber OnAir Voice のReactデモへようこそ。',
   );
@@ -121,6 +133,20 @@ function App() {
     setApiUrl(defaults.apiUrl);
     setApiKey('');
     setMinimaxGroupId('');
+    setMinimaxVoiceId(
+      engine === 'minimax' ? defaults.speaker : 'male-qn-qingse',
+    );
+    setMinimaxModel(
+      engine === 'minimax' ? defaults.defaultModel : 'speech-2.5-hd-preview',
+    );
+    setMinimaxLanguageBoost('Japanese');
+    setMinimaxSpeed('');
+    setMinimaxVolume('');
+    setMinimaxPitch('');
+    setMinimaxSampleRate('32000');
+    setMinimaxBitrate('128000');
+    setMinimaxAudioFormat('mp3');
+    setMinimaxAudioChannel('1');
     setStatus(`Switched to ${engine}. Default URL: ${defaults.apiUrl}`);
     setStatusType('success');
   }, [engine]);
@@ -173,6 +199,72 @@ function App() {
       if (engine === 'minimax') {
         options.groupId = minimaxGroupId;
         options.minimaxModel = minimaxModel;
+
+        if (minimaxLanguageBoost.trim()) {
+          options.minimaxLanguageBoost = minimaxLanguageBoost.trim();
+        }
+
+        const voiceSettings: {
+          speed?: number;
+          vol?: number;
+          pitch?: number;
+        } = {};
+
+        const parsedSpeed = Number.parseFloat(minimaxSpeed);
+        if (!Number.isNaN(parsedSpeed)) {
+          options.minimaxSpeed = parsedSpeed;
+          voiceSettings.speed = parsedSpeed;
+        }
+        const parsedVolume = Number.parseFloat(minimaxVolume);
+        if (!Number.isNaN(parsedVolume)) {
+          options.minimaxVolume = parsedVolume;
+          voiceSettings.vol = parsedVolume;
+        }
+        const parsedPitch = Number.parseFloat(minimaxPitch);
+        if (!Number.isNaN(parsedPitch)) {
+          options.minimaxPitch = parsedPitch;
+          voiceSettings.pitch = parsedPitch;
+        }
+        if (Object.keys(voiceSettings).length > 0) {
+          options.minimaxVoiceSettings = voiceSettings;
+        }
+
+        const audioSettings: {
+          sampleRate?: number;
+          bitrate?: number;
+          format?: MinimaxAudioFormat;
+          channel?: 1 | 2;
+        } = {};
+
+        const parsedSampleRate = Number.parseInt(minimaxSampleRate, 10);
+        if (!Number.isNaN(parsedSampleRate)) {
+          options.minimaxSampleRate = parsedSampleRate;
+          audioSettings.sampleRate = parsedSampleRate;
+        }
+
+        const parsedBitrate = Number.parseInt(minimaxBitrate, 10);
+        if (!Number.isNaN(parsedBitrate)) {
+          options.minimaxBitrate = parsedBitrate;
+          audioSettings.bitrate = parsedBitrate;
+        }
+
+        if (minimaxAudioFormat) {
+          options.minimaxAudioFormat = minimaxAudioFormat;
+          audioSettings.format = minimaxAudioFormat;
+        }
+
+        const parsedChannel = Number.parseInt(minimaxAudioChannel, 10);
+        if (
+          !Number.isNaN(parsedChannel) &&
+          (parsedChannel === 1 || parsedChannel === 2)
+        ) {
+          options.minimaxAudioChannel = parsedChannel as 1 | 2;
+          audioSettings.channel = parsedChannel as 1 | 2;
+        }
+
+        if (Object.keys(audioSettings).length > 0) {
+          options.minimaxAudioSettings = audioSettings;
+        }
       }
 
       // Add API URL if provided
@@ -310,6 +402,131 @@ function App() {
                 }
               />
             </div>
+
+            <div className="advanced-card">
+              <h3>MiniMax Voice Parameters</h3>
+
+              <div className="form-group">
+                <label htmlFor="minimaxLanguageBoost">Language Boost:</label>
+                <input
+                  id="minimaxLanguageBoost"
+                  type="text"
+                  value={minimaxLanguageBoost}
+                  onChange={(e) => setMinimaxLanguageBoost(e.target.value)}
+                  placeholder="e.g. Japanese"
+                />
+              </div>
+
+              <div className="grid">
+                <div className="form-group">
+                  <label htmlFor="minimaxSpeed">Speed (1.0 = default):</label>
+                  <input
+                    id="minimaxSpeed"
+                    type="number"
+                    step="0.05"
+                    min="0.1"
+                    max="3.0"
+                    value={minimaxSpeed}
+                    onChange={(e) => setMinimaxSpeed(e.target.value)}
+                    placeholder="Auto"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="minimaxVolume">Volume (1.0 = default):</label>
+                  <input
+                    id="minimaxVolume"
+                    type="number"
+                    step="0.05"
+                    min="0.1"
+                    max="3.0"
+                    value={minimaxVolume}
+                    onChange={(e) => setMinimaxVolume(e.target.value)}
+                    placeholder="Auto"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="minimaxPitch">Pitch (semitones):</label>
+                  <input
+                    id="minimaxPitch"
+                    type="number"
+                    step="1"
+                    min="-12"
+                    max="12"
+                    value={minimaxPitch}
+                    onChange={(e) => setMinimaxPitch(e.target.value)}
+                    placeholder="Auto"
+                  />
+                </div>
+              </div>
+
+              <div className="grid">
+                <div className="form-group">
+                  <label htmlFor="minimaxSampleRate">Sample Rate:</label>
+                  <select
+                    id="minimaxSampleRate"
+                    value={minimaxSampleRate}
+                    onChange={(e) => setMinimaxSampleRate(e.target.value)}
+                  >
+                    <option value="8000">8,000 Hz</option>
+                    <option value="16000">16,000 Hz</option>
+                    <option value="22050">22,050 Hz</option>
+                    <option value="24000">24,000 Hz</option>
+                    <option value="32000">32,000 Hz</option>
+                    <option value="44100">44,100 Hz</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="minimaxBitrate">Bitrate (bps):</label>
+                  <select
+                    id="minimaxBitrate"
+                    value={minimaxBitrate}
+                    onChange={(e) => setMinimaxBitrate(e.target.value)}
+                  >
+                    <option value="32000">32,000</option>
+                    <option value="64000">64,000</option>
+                    <option value="128000">128,000</option>
+                    <option value="256000">256,000</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="minimaxAudioFormat">Audio Format:</label>
+                  <select
+                    id="minimaxAudioFormat"
+                    value={minimaxAudioFormat}
+                    onChange={(e) =>
+                      setMinimaxAudioFormat(
+                        e.target.value as MinimaxAudioFormat,
+                      )
+                    }
+                  >
+                    <option value="mp3">MP3</option>
+                    <option value="wav">WAV</option>
+                    <option value="aac">AAC</option>
+                    <option value="pcm">PCM</option>
+                    <option value="flac">FLAC</option>
+                    <option value="ogg">OGG</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="minimaxAudioChannel">Channel:</label>
+                  <select
+                    id="minimaxAudioChannel"
+                    value={minimaxAudioChannel}
+                    onChange={(e) =>
+                      setMinimaxAudioChannel(e.target.value === '2' ? '2' : '1')
+                    }
+                  >
+                    <option value="1">Mono (1ch)</option>
+                    <option value="2">Stereo (2ch)</option>
+                  </select>
+                </div>
+              </div>
+
+              <p className="helper-text">
+                Leave fields blank to use MiniMax defaults or emotion-based
+                automatic values.
+              </p>
+            </div>
           </>
         )}
 
@@ -376,6 +593,15 @@ function App() {
         </div>
 
         <div className={`status ${statusType}`}>{status}</div>
+        {engine === 'minimax' ? (
+          <p className="helper-text">
+            ※ MiniMax では速度・音量・ピッチ・音質パラメータを自由に調整できます
+          </p>
+        ) : (
+          <p className="helper-text">
+            ※ その他のエンジンでは推奨パラメータが自動的に適用されます
+          </p>
+        )}
       </div>
 
       <div className="card">

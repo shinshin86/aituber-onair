@@ -8,6 +8,9 @@ export type {
   VoiceService,
   VoiceServiceOptions,
   AudioPlayOptions,
+  MinimaxVoiceSettingsOptions,
+  MinimaxAudioSettingsOptions,
+  MinimaxAudioFormat,
 } from './services/VoiceService';
 export { VoiceEngineAdapter } from './services/VoiceEngineAdapter';
 

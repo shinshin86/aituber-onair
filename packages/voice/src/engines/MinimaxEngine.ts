@@ -35,6 +35,30 @@ export interface MinimaxVoiceSpeaker {
 }
 
 /**
+ * MiniMax voice setting override options
+ */
+export interface MinimaxVoiceSettingsOptions {
+  speed?: number;
+  vol?: number;
+  pitch?: number;
+}
+
+/**
+ * MiniMax audio format options
+ */
+export type MinimaxAudioFormat = 'mp3' | 'wav' | 'aac' | 'pcm' | 'flac' | 'ogg';
+
+/**
+ * MiniMax audio setting override options
+ */
+export interface MinimaxAudioSettingsOptions {
+  sampleRate?: number;
+  bitrate?: number;
+  format?: MinimaxAudioFormat;
+  channel?: 1 | 2;
+}
+
+/**
  * MiniMax TTS voice synthesis engine
  */
 export class MinimaxEngine implements VoiceEngine {
@@ -43,6 +67,8 @@ export class MinimaxEngine implements VoiceEngine {
   private defaultVoiceId: string = 'male-qn-qingse';
   private language: string = 'Japanese';
   private endpoint: MinimaxEndpoint = 'global';
+  private voiceOverrides: MinimaxVoiceSettingsOptions = {};
+  private audioOverrides: MinimaxAudioSettingsOptions = {};
 
   /**
    * Set GroupId for MiniMax API
@@ -93,6 +119,86 @@ export class MinimaxEngine implements VoiceEngine {
    */
   setLanguage(language: string): void {
     this.language = language;
+  }
+
+  /**
+   * Set voice setting overrides (speed, volume, pitch)
+   * @param settings Voice setting overrides
+   */
+  setVoiceSettings(settings: MinimaxVoiceSettingsOptions): void {
+    this.updateVoiceOverrides(settings);
+  }
+
+  /**
+   * Set speech speed multiplier
+   * @param speed Speed multiplier
+   */
+  setSpeed(speed?: number): void {
+    this.updateVoiceOverrides({ speed });
+  }
+
+  /**
+   * Set output volume multiplier
+   * @param vol Volume multiplier
+   */
+  setVolume(vol?: number): void {
+    this.updateVoiceOverrides({ vol });
+  }
+
+  /**
+   * Set pitch adjustment in semitones
+   * @param pitch Pitch adjustment
+   */
+  setPitch(pitch?: number): void {
+    this.updateVoiceOverrides({ pitch });
+  }
+
+  /**
+   * Set audio encoding overrides (sample rate, bitrate, format, channel)
+   * @param settings Audio setting overrides
+   */
+  setAudioSettings(settings: MinimaxAudioSettingsOptions): void {
+    this.updateAudioOverrides(settings);
+  }
+
+  /**
+   * Set audio sampling rate (Hz)
+   * @param sampleRate Sampling rate
+   */
+  setSampleRate(sampleRate?: number): void {
+    this.updateAudioOverrides({ sampleRate });
+  }
+
+  /**
+   * Set audio bitrate (bps)
+   * @param bitrate Bitrate
+   */
+  setBitrate(bitrate?: number): void {
+    this.updateAudioOverrides({ bitrate });
+  }
+
+  /**
+   * Set audio output format
+   * @param format Audio format
+   */
+  setAudioFormat(format?: MinimaxAudioFormat): void {
+    this.updateAudioOverrides({ format });
+  }
+
+  /**
+   * Set audio channel count
+   * @param channel Number of channels
+   */
+  setAudioChannel(channel?: 1 | 2): void {
+    this.updateAudioOverrides({ channel });
+  }
+
+  /**
+   * Alias for setLanguage to emphasize MiniMax terminology
+   * @param language Language boost string
+   */
+  setLanguageBoost(language: string): void {
+    this.setLanguage(language);
   }
 
   /**
@@ -170,6 +276,49 @@ export class MinimaxEngine implements VoiceEngine {
   }
 
   /**
+   * Build MiniMax voice settings by merging emotion defaults with overrides
+   * @param voiceId Target voice ID
+   * @param defaults Default emotion-based values
+   */
+  private buildVoiceSetting(
+    voiceId: string,
+    defaults: { speed: number; vol: number; pitch: number },
+  ): { voice_id: string; speed: number; vol: number; pitch: number } {
+    return {
+      voice_id: voiceId,
+      speed:
+        this.voiceOverrides.speed !== undefined
+          ? this.voiceOverrides.speed
+          : defaults.speed,
+      vol:
+        this.voiceOverrides.vol !== undefined
+          ? this.voiceOverrides.vol
+          : defaults.vol,
+      pitch:
+        this.voiceOverrides.pitch !== undefined
+          ? this.voiceOverrides.pitch
+          : defaults.pitch,
+    };
+  }
+
+  /**
+   * Build MiniMax audio settings from overrides
+   */
+  private buildAudioSetting(): {
+    sample_rate: number;
+    bitrate: number;
+    format: string;
+    channel: number;
+  } {
+    return {
+      sample_rate: this.audioOverrides.sampleRate ?? 32000,
+      bitrate: this.audioOverrides.bitrate ?? 128000,
+      format: this.audioOverrides.format ?? 'mp3',
+      channel: this.audioOverrides.channel ?? 1,
+    };
+  }
+
+  /**
    * Test voice synthesis with minimal requirements
    * Requires API key and voice ID, but not GroupId
    * @param text Text to synthesize (shorter text recommended for testing)
@@ -200,18 +349,12 @@ export class MinimaxEngine implements VoiceEngine {
       model: this.model,
       text: testText,
       stream: false,
-      voice_setting: {
-        voice_id: voiceId,
+      voice_setting: this.buildVoiceSetting(voiceId, {
         speed: 1.0,
         vol: 1.0,
         pitch: 0,
-      },
-      audio_setting: {
-        sample_rate: 32000,
-        bitrate: 128000,
-        format: 'mp3',
-        channel: 1,
-      },
+      }),
+      audio_setting: this.buildAudioSetting(),
       language_boost: this.language,
     };
 
@@ -324,24 +467,17 @@ export class MinimaxEngine implements VoiceEngine {
     }
 
     // Get emotion from talk.style and adjust voice settings
-    const voiceSettings = this.getVoiceSettings(talk.style || 'talk');
+    const emotionVoiceSettings = this.getVoiceSettings(talk.style || 'talk');
 
     const requestBody = {
       model: this.model,
       text: text,
       stream: false,
-      voice_setting: {
-        voice_id: speaker || this.defaultVoiceId,
-        speed: voiceSettings.speed,
-        vol: voiceSettings.vol,
-        pitch: voiceSettings.pitch,
-      },
-      audio_setting: {
-        sample_rate: 32000,
-        bitrate: 128000,
-        format: 'mp3',
-        channel: 1,
-      },
+      voice_setting: this.buildVoiceSetting(
+        speaker || this.defaultVoiceId,
+        emotionVoiceSettings,
+      ),
+      audio_setting: this.buildAudioSetting(),
       language_boost: this.language,
     };
 
@@ -475,6 +611,58 @@ export class MinimaxEngine implements VoiceEngine {
     }
 
     return { speed, vol, pitch };
+  }
+
+  /**
+   * Merge incoming voice overrides into the current override map
+   * Passing undefined removes the override and falls back to defaults
+   * @param settings Voice setting overrides
+   */
+  private updateVoiceOverrides(settings: MinimaxVoiceSettingsOptions): void {
+    for (const [key, value] of Object.entries(settings) as [
+      keyof MinimaxVoiceSettingsOptions,
+      number | undefined,
+    ][]) {
+      if (value === undefined || value === null) {
+        delete this.voiceOverrides[key];
+      } else {
+        this.voiceOverrides[key] = value;
+      }
+    }
+  }
+
+  /**
+   * Merge incoming audio overrides into the current override map
+   * Passing undefined removes the override and falls back to defaults
+   * @param settings Audio setting overrides
+   */
+  private updateAudioOverrides(settings: MinimaxAudioSettingsOptions): void {
+    for (const [key, value] of Object.entries(settings) as [
+      keyof MinimaxAudioSettingsOptions,
+      (
+        | MinimaxAudioSettingsOptions[keyof MinimaxAudioSettingsOptions]
+        | undefined
+      ),
+    ][]) {
+      if (value === undefined || value === null) {
+        delete this.audioOverrides[key];
+      } else {
+        switch (key) {
+          case 'sampleRate':
+            this.audioOverrides.sampleRate = value as number;
+            break;
+          case 'bitrate':
+            this.audioOverrides.bitrate = value as number;
+            break;
+          case 'format':
+            this.audioOverrides.format = value as MinimaxAudioFormat;
+            break;
+          case 'channel':
+            this.audioOverrides.channel = value as 1 | 2;
+            break;
+        }
+      }
+    }
   }
 
   /**

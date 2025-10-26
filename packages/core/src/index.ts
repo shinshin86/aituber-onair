@@ -127,6 +127,10 @@ export {
   NijiVoiceEngine,
   MinimaxEngine,
   // Types
+  type MinimaxModel,
+  type MinimaxVoiceSettingsOptions,
+  type MinimaxAudioSettingsOptions,
+  type MinimaxAudioFormat,
   type VoiceEngineType,
   talkStyles,
   type TalkStyle,

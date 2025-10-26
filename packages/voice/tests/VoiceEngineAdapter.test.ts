@@ -28,6 +28,9 @@ describe('VoiceEngineAdapter', () => {
       setGroupId: vi.fn(),
       setEndpoint: vi.fn(),
       setModel: vi.fn(),
+      setLanguage: vi.fn(),
+      setVoiceSettings: vi.fn(),
+      setSpeed: vi.fn(),
       setModelUuid: vi.fn(),
       setSpeakerUuid: vi.fn(),
       setStyleId: vi.fn(),
@@ -38,6 +41,11 @@ describe('VoiceEngineAdapter', () => {
       setTempoDynamics: vi.fn(),
       setPitch: vi.fn(),
       setVolume: vi.fn(),
+      setAudioSettings: vi.fn(),
+      setSampleRate: vi.fn(),
+      setBitrate: vi.fn(),
+      setAudioFormat: vi.fn(),
+      setAudioChannel: vi.fn(),
       setSilenceDurations: vi.fn(),
       setOutputFormat: vi.fn(),
       setOutputBitrate: vi.fn(),
@@ -59,6 +67,21 @@ describe('VoiceEngineAdapter', () => {
         groupId: 'test-group-id',
         endpoint: 'global',
         minimaxModel: 'speech-2.5-hd-preview' as MinimaxModel,
+        minimaxLanguageBoost: 'English',
+        minimaxVoiceSettings: { speed: 0.95, vol: 0.9, pitch: -2 },
+        minimaxSpeed: 1.1,
+        minimaxVolume: 1.05,
+        minimaxPitch: 3,
+        minimaxAudioSettings: {
+          sampleRate: 44100,
+          bitrate: 96000,
+          format: 'wav',
+          channel: 2,
+        },
+        minimaxSampleRate: 48000,
+        minimaxBitrate: 192000,
+        minimaxAudioFormat: 'mp3',
+        minimaxAudioChannel: 1,
         onPlay: vi.fn(), // Skip actual audio playback
       };
 
@@ -80,6 +103,25 @@ describe('VoiceEngineAdapter', () => {
 
       // Verify model was set
       expect(mockEngine.setModel).toHaveBeenCalledWith('speech-2.5-hd-preview');
+      expect(mockEngine.setLanguage).toHaveBeenCalledWith('English');
+      expect(mockEngine.setVoiceSettings).toHaveBeenCalledWith({
+        speed: 0.95,
+        vol: 0.9,
+        pitch: -2,
+      });
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.1);
+      expect(mockEngine.setVolume).toHaveBeenCalledWith(1.05);
+      expect(mockEngine.setPitch).toHaveBeenCalledWith(3);
+      expect(mockEngine.setAudioSettings).toHaveBeenCalledWith({
+        sampleRate: 44100,
+        bitrate: 96000,
+        format: 'wav',
+        channel: 2,
+      });
+      expect(mockEngine.setSampleRate).toHaveBeenCalledWith(48000);
+      expect(mockEngine.setBitrate).toHaveBeenCalledWith(192000);
+      expect(mockEngine.setAudioFormat).toHaveBeenCalledWith('mp3');
+      expect(mockEngine.setAudioChannel).toHaveBeenCalledWith(1);
 
       // Verify fetchAudio was called with correct parameters
       expect(mockEngine.fetchAudio).toHaveBeenCalledWith(
@@ -192,6 +234,16 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setGroupId).not.toHaveBeenCalled();
       expect(mockEngine.setEndpoint).not.toHaveBeenCalled();
       expect(mockEngine.setModel).not.toHaveBeenCalled();
+      expect(mockEngine.setLanguage).not.toHaveBeenCalled();
+      expect(mockEngine.setVoiceSettings).not.toHaveBeenCalled();
+      expect(mockEngine.setSpeed).not.toHaveBeenCalled();
+      expect(mockEngine.setVolume).not.toHaveBeenCalled();
+      expect(mockEngine.setPitch).not.toHaveBeenCalled();
+      expect(mockEngine.setAudioSettings).not.toHaveBeenCalled();
+      expect(mockEngine.setSampleRate).not.toHaveBeenCalled();
+      expect(mockEngine.setBitrate).not.toHaveBeenCalled();
+      expect(mockEngine.setAudioFormat).not.toHaveBeenCalled();
+      expect(mockEngine.setAudioChannel).not.toHaveBeenCalled();
     });
   });
 

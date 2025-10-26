@@ -97,24 +97,102 @@ export class VoiceEngineAdapter implements VoiceService {
         }
       }
 
-      // For MiniMax engine, set GroupId
-      if (this.options.engineType === 'minimax' && (engine as any).setGroupId) {
-        if (this.options.groupId) {
-          (engine as any).setGroupId(this.options.groupId);
-        } else {
-          console.warn(
-            'MiniMax engine requires GroupId, but it is not provided in options',
-          );
+      // For MiniMax engine, configure additional parameters
+      if (this.options.engineType === 'minimax') {
+        const minimaxEngine = engine as any;
+
+        if (typeof minimaxEngine.setGroupId === 'function') {
+          if (this.options.groupId) {
+            minimaxEngine.setGroupId(this.options.groupId);
+          } else {
+            console.warn(
+              'MiniMax engine requires GroupId, but it is not provided in options',
+            );
+          }
         }
 
-        // If endpoint setting is also supported by MinimaxEngine
-        if (this.options.endpoint && (engine as any).setEndpoint) {
-          (engine as any).setEndpoint(this.options.endpoint);
+        if (
+          this.options.endpoint &&
+          typeof minimaxEngine.setEndpoint === 'function'
+        ) {
+          minimaxEngine.setEndpoint(this.options.endpoint);
         }
 
-        // If model setting is also supported by MinimaxEngine
-        if (this.options.minimaxModel && (engine as any).setModel) {
-          (engine as any).setModel(this.options.minimaxModel);
+        if (
+          this.options.minimaxModel &&
+          typeof minimaxEngine.setModel === 'function'
+        ) {
+          minimaxEngine.setModel(this.options.minimaxModel);
+        }
+
+        if (
+          this.options.minimaxLanguageBoost !== undefined &&
+          typeof minimaxEngine.setLanguage === 'function'
+        ) {
+          minimaxEngine.setLanguage(this.options.minimaxLanguageBoost);
+        }
+
+        if (
+          this.options.minimaxVoiceSettings &&
+          typeof minimaxEngine.setVoiceSettings === 'function'
+        ) {
+          minimaxEngine.setVoiceSettings(this.options.minimaxVoiceSettings);
+        }
+
+        if (
+          this.options.minimaxSpeed !== undefined &&
+          typeof minimaxEngine.setSpeed === 'function'
+        ) {
+          minimaxEngine.setSpeed(this.options.minimaxSpeed);
+        }
+
+        if (
+          this.options.minimaxVolume !== undefined &&
+          typeof minimaxEngine.setVolume === 'function'
+        ) {
+          minimaxEngine.setVolume(this.options.minimaxVolume);
+        }
+
+        if (
+          this.options.minimaxPitch !== undefined &&
+          typeof minimaxEngine.setPitch === 'function'
+        ) {
+          minimaxEngine.setPitch(this.options.minimaxPitch);
+        }
+
+        if (
+          this.options.minimaxAudioSettings &&
+          typeof minimaxEngine.setAudioSettings === 'function'
+        ) {
+          minimaxEngine.setAudioSettings(this.options.minimaxAudioSettings);
+        }
+
+        if (
+          this.options.minimaxSampleRate !== undefined &&
+          typeof minimaxEngine.setSampleRate === 'function'
+        ) {
+          minimaxEngine.setSampleRate(this.options.minimaxSampleRate);
+        }
+
+        if (
+          this.options.minimaxBitrate !== undefined &&
+          typeof minimaxEngine.setBitrate === 'function'
+        ) {
+          minimaxEngine.setBitrate(this.options.minimaxBitrate);
+        }
+
+        if (
+          this.options.minimaxAudioFormat !== undefined &&
+          typeof minimaxEngine.setAudioFormat === 'function'
+        ) {
+          minimaxEngine.setAudioFormat(this.options.minimaxAudioFormat);
+        }
+
+        if (
+          this.options.minimaxAudioChannel !== undefined &&
+          typeof minimaxEngine.setAudioChannel === 'function'
+        ) {
+          minimaxEngine.setAudioChannel(this.options.minimaxAudioChannel);
         }
       }
 
