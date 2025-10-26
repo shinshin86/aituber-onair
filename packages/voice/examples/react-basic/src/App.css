@@ -22,6 +22,52 @@
 
 .form-group {
   text-align: left;
+  margin-bottom: 0.75rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #212529;
+  background-color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.15);
+}
+
+.form-group input:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+
+.form-group input[type="number"]::-webkit-outer-spin-button,
+.form-group input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-group input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 .button-group {
@@ -44,6 +90,33 @@
   background-color: rgba(255, 0, 0, 0.1);
   border: 1px solid rgba(255, 0, 0, 0.3);
   color: #ef4444;
+}
+
+.advanced-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #dbe4ff;
+  border-radius: 8px;
+  background-color: #f8f9ff;
+  text-align: left;
+}
+
+.advanced-card h3 {
+  margin-top: 0;
+  color: #3b5bdb;
+}
+
+.grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.helper-text {
+  font-size: 0.85rem;
+  color: #6c757d;
+  text-align: left;
+  margin-top: 0.5rem;
 }
 
 .card ul {

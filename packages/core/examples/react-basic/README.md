@@ -185,6 +185,8 @@ The application supports 7 different Text-to-Speech engines:
 - Requires API key and Group ID
 - Multiple voice options
 - Global endpoint support
+- Supports speed/volume/pitch tuning and audio settings  
+  (sample rate: 8k/16k/22.05k/24k/32k/44.1k Hz, bitrate: 32/64/128/256 kbps)
 
 ### Voice Engine Setup
 

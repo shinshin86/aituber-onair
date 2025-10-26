@@ -8,15 +8,9 @@ import {
   isGPT5Model,
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
+  type MinimaxModel,
+  type MinimaxAudioFormat,
 } from '@aituber-onair/core';
-// Import MinimaxModel type directly from the core package which re-exports voice types
-type MinimaxModel =
-  | 'speech-2.5-hd-preview'
-  | 'speech-2.5-turbo-preview'
-  | 'speech-02-hd'
-  | 'speech-02-turbo'
-  | 'speech-01-hd'
-  | 'speech-01-turbo';
 
 // Constants imports
 import {
@@ -159,7 +153,20 @@ const App: React.FC = () => {
   const [selectedVoiceEngine, setSelectedVoiceEngine] = useState<VoiceEngineType>(DEFAULT_VOICE_ENGINE);
   const [voiceApiKeys, setVoiceApiKeys] = useState<Record<string, string>>({});
   const [minimaxGroupId, setMinimaxGroupId] = useState<string>('');
-  const [minimaxModel, setMinimaxModel] = useState<MinimaxModel>('speech-2.5-hd-preview');
+  const [minimaxModel, setMinimaxModel] =
+    useState<MinimaxModel>('speech-2.5-hd-preview');
+  const [minimaxLanguageBoost, setMinimaxLanguageBoost] =
+    useState<string>('Japanese');
+  const [minimaxSpeed, setMinimaxSpeed] = useState<string>('');
+  const [minimaxVolume, setMinimaxVolume] = useState<string>('');
+  const [minimaxPitch, setMinimaxPitch] = useState<string>('');
+  const [minimaxSampleRate, setMinimaxSampleRate] =
+    useState<string>('32000');
+  const [minimaxBitrate, setMinimaxBitrate] = useState<string>('128000');
+  const [minimaxAudioFormat, setMinimaxAudioFormat] =
+    useState<MinimaxAudioFormat>('mp3');
+  const [minimaxAudioChannel, setMinimaxAudioChannel] =
+    useState<'1' | '2'>('1');
   const [selectedSpeakers, setSelectedSpeakers] = useState<Record<string, string | number>>({
     openai: 'alloy',
     voicevox: '',
@@ -447,6 +454,73 @@ const App: React.FC = () => {
             options.endpoint = config.defaultParams.endpoint;
           }
           options.minimaxModel = minimaxModel;
+
+          if (minimaxLanguageBoost.trim()) {
+            options.minimaxLanguageBoost = minimaxLanguageBoost.trim();
+          }
+
+          const voiceSettings: {
+            speed?: number;
+            vol?: number;
+            pitch?: number;
+          } = {};
+
+          const parsedSpeed = Number.parseFloat(minimaxSpeed);
+          if (!Number.isNaN(parsedSpeed)) {
+            options.minimaxSpeed = parsedSpeed;
+            voiceSettings.speed = parsedSpeed;
+          }
+
+          const parsedVolume = Number.parseFloat(minimaxVolume);
+          if (!Number.isNaN(parsedVolume)) {
+            options.minimaxVolume = parsedVolume;
+            voiceSettings.vol = parsedVolume;
+          }
+
+          const parsedPitch = Number.parseFloat(minimaxPitch);
+          if (!Number.isNaN(parsedPitch)) {
+            options.minimaxPitch = parsedPitch;
+            voiceSettings.pitch = parsedPitch;
+          }
+
+          if (Object.keys(voiceSettings).length > 0) {
+            options.minimaxVoiceSettings = voiceSettings;
+          }
+
+          const audioSettings: {
+            sampleRate?: number;
+            bitrate?: number;
+            format?: MinimaxAudioFormat;
+            channel?: 1 | 2;
+          } = {};
+
+          const parsedSampleRate = Number.parseInt(minimaxSampleRate, 10);
+          if (!Number.isNaN(parsedSampleRate)) {
+            options.minimaxSampleRate = parsedSampleRate;
+            audioSettings.sampleRate = parsedSampleRate;
+          }
+
+          const parsedBitrate = Number.parseInt(minimaxBitrate, 10);
+          if (!Number.isNaN(parsedBitrate)) {
+            options.minimaxBitrate = parsedBitrate;
+            audioSettings.bitrate = parsedBitrate;
+          }
+
+          if (minimaxAudioFormat) {
+            options.minimaxAudioFormat = minimaxAudioFormat;
+            audioSettings.format = minimaxAudioFormat;
+          }
+
+          const parsedChannel = Number.parseInt(minimaxAudioChannel, 10);
+          if (!Number.isNaN(parsedChannel) && (parsedChannel === 1 || parsedChannel === 2)) {
+            options.minimaxAudioChannel = parsedChannel as 1 | 2;
+            audioSettings.channel = parsedChannel as 1 | 2;
+          }
+
+          if (Object.keys(audioSettings).length > 0) {
+            options.minimaxAudioSettings = audioSettings;
+          }
+
           break;
       }
 
@@ -1211,6 +1285,201 @@ const App: React.FC = () => {
                           <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '8px' }}>
                             {MINIMAX_MODELS[minimaxModel]}
                           </div>
+
+                          <div
+                            style={{
+                              marginTop: '12px',
+                              padding: '12px',
+                              backgroundColor: '#f8f9ff',
+                              borderRadius: '8px',
+                              border: '1px solid #dbe4ff',
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontWeight: 'bold',
+                                marginBottom: '8px',
+                                color: '#3b5bdb',
+                              }}
+                            >
+                              MiniMax 音声パラメータ
+                            </div>
+
+                            <label
+                              htmlFor="minimaxLanguageBoost"
+                              style={{
+                                marginTop: '4px',
+                                display: 'block',
+                              }}
+                            >
+                              Language Boost:
+                            </label>
+                            <input
+                              type="text"
+                              id="minimaxLanguageBoost"
+                              placeholder="例: Japanese（未入力で既定のまま）"
+                              value={minimaxLanguageBoost}
+                              onChange={(e) => setMinimaxLanguageBoost(e.target.value)}
+                              style={{ width: '100%', marginBottom: '8px' }}
+                            />
+
+                            <label
+                              htmlFor="minimaxSpeed"
+                              style={{ marginTop: '4px', display: 'block' }}
+                            >
+                              スピード (1.0 = 標準):
+                            </label>
+                            <input
+                              type="number"
+                              id="minimaxSpeed"
+                              step="0.05"
+                              min="0.1"
+                              max="3.0"
+                              placeholder="未指定でスタイルに応じた自動値"
+                              value={minimaxSpeed}
+                              onChange={(e) => setMinimaxSpeed(e.target.value)}
+                              style={{ width: '100%', marginBottom: '8px' }}
+                            />
+
+                            <label
+                              htmlFor="minimaxVolume"
+                              style={{ marginTop: '4px', display: 'block' }}
+                            >
+                              ボリューム (1.0 = 標準):
+                            </label>
+                            <input
+                              type="number"
+                              id="minimaxVolume"
+                              step="0.05"
+                              min="0.1"
+                              max="3.0"
+                              placeholder="未指定で1.0"
+                              value={minimaxVolume}
+                              onChange={(e) => setMinimaxVolume(e.target.value)}
+                              style={{ width: '100%', marginBottom: '8px' }}
+                            />
+
+                            <label
+                              htmlFor="minimaxPitch"
+                              style={{ marginTop: '4px', display: 'block' }}
+                            >
+                              ピッチ (半音単位):
+                            </label>
+                            <input
+                              type="number"
+                              id="minimaxPitch"
+                              step="1"
+                              min="-12"
+                              max="12"
+                              placeholder="未指定で0"
+                              value={minimaxPitch}
+                              onChange={(e) => setMinimaxPitch(e.target.value)}
+                              style={{ width: '100%', marginBottom: '8px' }}
+                            />
+
+                            <div
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '8px',
+                              }}
+                            >
+                              <div>
+                                <label
+                                  htmlFor="minimaxSampleRate"
+                                  style={{ marginTop: '4px', display: 'block' }}
+                                >
+                                  サンプルレート:
+                                </label>
+                                <select
+                                  id="minimaxSampleRate"
+                                  value={minimaxSampleRate}
+                                  onChange={(e) => setMinimaxSampleRate(e.target.value)}
+                                  style={{ width: '100%', marginBottom: '8px' }}
+                                >
+                                  <option value="8000">8,000 Hz</option>
+                                  <option value="16000">16,000 Hz</option>
+                                  <option value="22050">22,050 Hz</option>
+                                  <option value="24000">24,000 Hz</option>
+                                  <option value="32000">32,000 Hz</option>
+                                  <option value="44100">44,100 Hz</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor="minimaxBitrate"
+                                  style={{ marginTop: '4px', display: 'block' }}
+                                >
+                                  ビットレート (bps):
+                                </label>
+                                <select
+                                  id="minimaxBitrate"
+                                  value={minimaxBitrate}
+                                  onChange={(e) => setMinimaxBitrate(e.target.value)}
+                                  style={{ width: '100%', marginBottom: '8px' }}
+                                >
+                                  <option value="32000">32,000</option>
+                                  <option value="64000">64,000</option>
+                                  <option value="128000">128,000</option>
+                                  <option value="256000">256,000</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor="minimaxAudioFormat"
+                                  style={{ marginTop: '4px', display: 'block' }}
+                                >
+                                  オーディオ形式:
+                                </label>
+                                <select
+                                  id="minimaxAudioFormat"
+                                  value={minimaxAudioFormat}
+                                  onChange={(e) =>
+                                    setMinimaxAudioFormat(e.target.value as MinimaxAudioFormat)
+                                  }
+                                  style={{ width: '100%', marginBottom: '8px' }}
+                                >
+                                  <option value="mp3">MP3</option>
+                                  <option value="wav">WAV</option>
+                                  <option value="aac">AAC</option>
+                                  <option value="pcm">PCM</option>
+                                  <option value="flac">FLAC</option>
+                                  <option value="ogg">OGG</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor="minimaxAudioChannel"
+                                  style={{ marginTop: '4px', display: 'block' }}
+                                >
+                                  チャンネル:
+                                </label>
+                                <select
+                                  id="minimaxAudioChannel"
+                                  value={minimaxAudioChannel}
+                                  onChange={(e) =>
+                                    setMinimaxAudioChannel(
+                                      e.target.value === '2' ? '2' : '1',
+                                    )
+                                  }
+                                  style={{ width: '100%', marginBottom: '8px' }}
+                                >
+                                  <option value="1">モノラル (1ch)</option>
+                                  <option value="2">ステレオ (2ch)</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div
+                              style={{
+                                fontSize: '0.8em',
+                                color: '#5c677d',
+                              }}
+                            >
+                              値を空欄にすると MiniMax の既定値（または感情に応じた自動調整）
+                              が利用されます。
+                            </div>
+                          </div>
                         </>
                       )}
                     </>
@@ -1313,8 +1582,16 @@ const App: React.FC = () => {
                   )}
 
                   {selectedVoiceEngine !== 'none' && (
-                    <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
-                      ※ 音声パラメータは最適な値に固定されています
+                    <div
+                      style={{
+                        fontSize: '0.9em',
+                        color: '#666',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      {selectedVoiceEngine === 'minimax'
+                        ? 'MiniMaxでは速度・音質のパラメータを調整できます'
+                        : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

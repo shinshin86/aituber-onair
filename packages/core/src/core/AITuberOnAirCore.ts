@@ -344,18 +344,23 @@ export class AITuberOnAirCore extends EventEmitter {
 
     // Store the original voice options
     let originalVoiceOptions: Partial<VoiceServiceOptions> | undefined;
+    let temporaryVoiceOptionKeys: string[] | undefined;
 
     try {
       // Apply temporary voice options if provided
       if (options?.temporaryVoiceOptions) {
-        // We'll save what we're currently using and restore it later
-        originalVoiceOptions = {
-          speaker: (this.voiceService as any).options?.speaker,
-          engineType: (this.voiceService as any).options?.engineType,
-          apiKey: (this.voiceService as any).options?.apiKey,
-        };
+        const serviceWithOptions = this.voiceService as any;
+        const currentOptions =
+          (serviceWithOptions.options as Partial<VoiceServiceOptions>) || {};
 
-        // Apply temporary options
+        // Save a shallow copy of current options for restoration
+        originalVoiceOptions = { ...currentOptions };
+
+        // Track which keys are newly introduced so we can remove them later
+        temporaryVoiceOptionKeys = Object.keys(
+          options.temporaryVoiceOptions,
+        ).filter((key) => !(key in currentOptions));
+
         this.voiceService.updateOptions(options.temporaryVoiceOptions);
       }
 
@@ -383,8 +388,18 @@ export class AITuberOnAirCore extends EventEmitter {
       this.emit(AITuberOnAirCoreEvent.ERROR, error);
     } finally {
       // Restore original options if they were changed
-      if (originalVoiceOptions && this.voiceService) {
-        this.voiceService.updateOptions(originalVoiceOptions);
+      if (this.voiceService) {
+        const resetOptions: Partial<VoiceServiceOptions> = {
+          ...(originalVoiceOptions ?? {}),
+        };
+
+        if (temporaryVoiceOptionKeys) {
+          for (const key of temporaryVoiceOptionKeys) {
+            (resetOptions as Record<string, unknown>)[key] = undefined;
+          }
+        }
+
+        this.voiceService.updateOptions(resetOptions);
       }
     }
   }
