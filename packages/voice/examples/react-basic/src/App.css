@@ -70,6 +70,81 @@
   -moz-appearance: textfield;
 }
 
+.form-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.parameter-card {
+  margin-top: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  border: 1px solid #dbe4ff;
+  background: linear-gradient(180deg, #f8f9ff 0%, #eef2ff 100%);
+  text-align: left;
+  box-shadow: 0 6px 16px rgba(72, 99, 255, 0.12);
+}
+
+.parameter-card h4 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  color: #364fc7;
+}
+
+.parameter-card__description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.parameter-section {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(82, 109, 255, 0.12);
+}
+
+.parameter-section:first-of-type {
+  border-top: none;
+  padding-top: 0.5rem;
+}
+
+.parameter-section__title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #3b5bdb;
+  margin-bottom: 0.5rem;
+}
+
+.parameter-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.parameter-grid--two {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.parameter-card__note {
+  margin-top: 0.9rem;
+  font-size: 0.8rem;
+  color: #5c677d;
+}
+
+.voicevox-card select,
+.voicevox-card input {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.voicevox-card select:focus,
+.voicevox-card input:focus {
+  background: #fff;
+}
+
 .button-group {
   justify-content: center;
 }

@@ -10,6 +10,7 @@ import {
   ChatResponseLength,
   type MinimaxModel,
   type MinimaxAudioFormat,
+  type VoiceVoxQueryParameterOverrides,
 } from '@aituber-onair/core';
 
 // Constants imports
@@ -167,6 +168,32 @@ const App: React.FC = () => {
     useState<MinimaxAudioFormat>('mp3');
   const [minimaxAudioChannel, setMinimaxAudioChannel] =
     useState<'1' | '2'>('1');
+  const [voicevoxSpeedScale, setVoicevoxSpeedScale] = useState<string>('');
+  const [voicevoxPitchScale, setVoicevoxPitchScale] = useState<string>('');
+  const [voicevoxIntonationScale, setVoicevoxIntonationScale] =
+    useState<string>('');
+  const [voicevoxVolumeScale, setVoicevoxVolumeScale] = useState<string>('');
+  const [voicevoxPrePhonemeLength, setVoicevoxPrePhonemeLength] =
+    useState<string>('');
+  const [voicevoxPostPhonemeLength, setVoicevoxPostPhonemeLength] =
+    useState<string>('');
+  const [voicevoxPauseLength, setVoicevoxPauseLength] = useState<string>('');
+  const [voicevoxPauseLengthScale, setVoicevoxPauseLengthScale] =
+    useState<string>('');
+  const [voicevoxOutputSamplingRate, setVoicevoxOutputSamplingRate] =
+    useState<string>('default');
+  const [voicevoxOutputStereo, setVoicevoxOutputStereo] = useState<
+    'default' | 'mono' | 'stereo'
+  >('default');
+  const [
+    voicevoxEnableKatakanaEnglish,
+    setVoicevoxEnableKatakanaEnglish,
+  ] = useState<'default' | 'true' | 'false'>('default');
+  const [
+    voicevoxEnableInterrogativeUpspeak,
+    setVoicevoxEnableInterrogativeUpspeak,
+  ] = useState<'default' | 'true' | 'false'>('default');
+  const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState<string>('');
   const [selectedSpeakers, setSelectedSpeakers] = useState<Record<string, string | number>>({
     openai: 'alloy',
     voicevox: '',
@@ -255,6 +282,22 @@ const App: React.FC = () => {
       if (['voicevox', 'aivisSpeech', 'nijivoice'].includes(selectedVoiceEngine)) {
         fetchSpeakers(selectedVoiceEngine);
       }
+    }
+
+    if (selectedVoiceEngine === 'voicevox') {
+      setVoicevoxSpeedScale('');
+      setVoicevoxPitchScale('');
+      setVoicevoxIntonationScale('');
+      setVoicevoxVolumeScale('');
+      setVoicevoxPrePhonemeLength('');
+      setVoicevoxPostPhonemeLength('');
+      setVoicevoxPauseLength('');
+      setVoicevoxPauseLengthScale('');
+      setVoicevoxOutputSamplingRate('default');
+      setVoicevoxOutputStereo('default');
+      setVoicevoxEnableKatakanaEnglish('default');
+      setVoicevoxEnableInterrogativeUpspeak('default');
+      setVoicevoxCoreVersion('');
     }
   }, [selectedVoiceEngine, voiceApiKeys]);
 
@@ -449,6 +492,91 @@ const App: React.FC = () => {
             aivisCloudUseSSML: true,
           });
           break;
+        case 'voicevox': {
+          const voicevoxOverrides: VoiceVoxQueryParameterOverrides = {};
+
+          const parsedSpeedScale = Number.parseFloat(voicevoxSpeedScale);
+          if (!Number.isNaN(parsedSpeedScale)) {
+            options.voicevoxSpeedScale = parsedSpeedScale;
+            voicevoxOverrides.speedScale = parsedSpeedScale;
+          }
+
+          const parsedPitchScale = Number.parseFloat(voicevoxPitchScale);
+          if (!Number.isNaN(parsedPitchScale)) {
+            options.voicevoxPitchScale = parsedPitchScale;
+            voicevoxOverrides.pitchScale = parsedPitchScale;
+          }
+
+          const parsedIntonationScale = Number.parseFloat(voicevoxIntonationScale);
+          if (!Number.isNaN(parsedIntonationScale)) {
+            options.voicevoxIntonationScale = parsedIntonationScale;
+            voicevoxOverrides.intonationScale = parsedIntonationScale;
+          }
+
+          const parsedVolumeScale = Number.parseFloat(voicevoxVolumeScale);
+          if (!Number.isNaN(parsedVolumeScale)) {
+            options.voicevoxVolumeScale = parsedVolumeScale;
+            voicevoxOverrides.volumeScale = parsedVolumeScale;
+          }
+
+          const parsedPrePhonemeLength = Number.parseFloat(voicevoxPrePhonemeLength);
+          if (!Number.isNaN(parsedPrePhonemeLength)) {
+            options.voicevoxPrePhonemeLength = parsedPrePhonemeLength;
+            voicevoxOverrides.prePhonemeLength = parsedPrePhonemeLength;
+          }
+
+          const parsedPostPhonemeLength = Number.parseFloat(voicevoxPostPhonemeLength);
+          if (!Number.isNaN(parsedPostPhonemeLength)) {
+            options.voicevoxPostPhonemeLength = parsedPostPhonemeLength;
+            voicevoxOverrides.postPhonemeLength = parsedPostPhonemeLength;
+          }
+
+          const parsedPauseLength = Number.parseFloat(voicevoxPauseLength);
+          if (!Number.isNaN(parsedPauseLength)) {
+            options.voicevoxPauseLength = parsedPauseLength;
+            voicevoxOverrides.pauseLength = parsedPauseLength;
+          }
+
+          const parsedPauseLengthScale = Number.parseFloat(voicevoxPauseLengthScale);
+          if (!Number.isNaN(parsedPauseLengthScale)) {
+            options.voicevoxPauseLengthScale = parsedPauseLengthScale;
+            voicevoxOverrides.pauseLengthScale = parsedPauseLengthScale;
+          }
+
+          if (voicevoxOutputSamplingRate !== 'default') {
+            const parsedSamplingRate = Number.parseInt(voicevoxOutputSamplingRate, 10);
+            if (!Number.isNaN(parsedSamplingRate)) {
+              options.voicevoxOutputSamplingRate = parsedSamplingRate;
+              voicevoxOverrides.outputSamplingRate = parsedSamplingRate;
+            }
+          }
+
+          if (voicevoxOutputStereo !== 'default') {
+            const stereo = voicevoxOutputStereo === 'stereo';
+            options.voicevoxOutputStereo = stereo;
+            voicevoxOverrides.outputStereo = stereo;
+          }
+
+          if (voicevoxEnableKatakanaEnglish !== 'default') {
+            options.voicevoxEnableKatakanaEnglish =
+              voicevoxEnableKatakanaEnglish === 'true';
+          }
+
+          if (voicevoxEnableInterrogativeUpspeak !== 'default') {
+            options.voicevoxEnableInterrogativeUpspeak =
+              voicevoxEnableInterrogativeUpspeak === 'true';
+          }
+
+          if (voicevoxCoreVersion.trim()) {
+            options.voicevoxCoreVersion = voicevoxCoreVersion.trim();
+          }
+
+          if (Object.keys(voicevoxOverrides).length > 0) {
+            options.voicevoxQueryParameters = voicevoxOverrides;
+          }
+
+          break;
+        }
         case 'minimax':
           if (config.defaultParams?.endpoint) {
             options.endpoint = config.defaultParams.endpoint;
@@ -1483,6 +1611,292 @@ const App: React.FC = () => {
                         </>
                       )}
                     </>
+                  )}
+
+                  {selectedVoiceEngine === 'voicevox' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        backgroundColor: '#f4f5ff',
+                        borderRadius: '8px',
+                        border: '1px solid #dbe4ff',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 'bold',
+                          marginBottom: '8px',
+                          color: '#364fc7',
+                        }}
+                      >
+                        VOICEVOX パラメータ
+                      </div>
+
+                      <label htmlFor="voicevoxSpeedScale" style={{ display: 'block', marginBottom: '6px' }}>
+                        スピード倍率:
+                      </label>
+                      <input
+                        id="voicevoxSpeedScale"
+                        type="number"
+                        step="0.05"
+                        value={voicevoxSpeedScale}
+                        onChange={(e) => setVoicevoxSpeedScale(e.target.value)}
+                        placeholder="未指定でAPI既定値"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+
+                      <label htmlFor="voicevoxPitchScale" style={{ display: 'block', marginBottom: '6px' }}>
+                        ピッチ倍率:
+                      </label>
+                      <input
+                        id="voicevoxPitchScale"
+                        type="number"
+                        step="0.05"
+                        value={voicevoxPitchScale}
+                        onChange={(e) => setVoicevoxPitchScale(e.target.value)}
+                        placeholder="未指定でAPI既定値"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+
+                      <label
+                        htmlFor="voicevoxIntonationScale"
+                        style={{ display: 'block', marginBottom: '6px' }}
+                      >
+                        抑揚倍率:
+                      </label>
+                      <input
+                        id="voicevoxIntonationScale"
+                        type="number"
+                        step="0.05"
+                        value={voicevoxIntonationScale}
+                        onChange={(e) => setVoicevoxIntonationScale(e.target.value)}
+                        placeholder="未指定でAPI既定値"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+
+                      <label htmlFor="voicevoxVolumeScale" style={{ display: 'block', marginBottom: '6px' }}>
+                        音量倍率:
+                      </label>
+                      <input
+                        id="voicevoxVolumeScale"
+                        type="number"
+                        step="0.05"
+                        value={voicevoxVolumeScale}
+                        onChange={(e) => setVoicevoxVolumeScale(e.target.value)}
+                        placeholder="未指定でAPI既定値"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <label
+                            htmlFor="voicevoxPrePhonemeLength"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            前無音 (秒):
+                          </label>
+                          <input
+                            id="voicevoxPrePhonemeLength"
+                            type="number"
+                            step="0.01"
+                            value={voicevoxPrePhonemeLength}
+                            onChange={(e) => setVoicevoxPrePhonemeLength(e.target.value)}
+                            placeholder="例: 0.1"
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="voicevoxPostPhonemeLength"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            後無音 (秒):
+                          </label>
+                          <input
+                            id="voicevoxPostPhonemeLength"
+                            type="number"
+                            step="0.01"
+                            value={voicevoxPostPhonemeLength}
+                            onChange={(e) => setVoicevoxPostPhonemeLength(e.target.value)}
+                            placeholder="例: 0.1"
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <label
+                            htmlFor="voicevoxPauseLength"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            ポーズ長 (秒):
+                          </label>
+                          <input
+                            id="voicevoxPauseLength"
+                            type="number"
+                            step="0.05"
+                            value={voicevoxPauseLength}
+                            onChange={(e) => setVoicevoxPauseLength(e.target.value)}
+                            placeholder="未指定で自動"
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="voicevoxPauseLengthScale"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            ポーズ倍率:
+                          </label>
+                          <input
+                            id="voicevoxPauseLengthScale"
+                            type="number"
+                            step="0.05"
+                            value={voicevoxPauseLengthScale}
+                            onChange={(e) => setVoicevoxPauseLengthScale(e.target.value)}
+                            placeholder="未指定で1.0"
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <label
+                            htmlFor="voicevoxOutputSamplingRate"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            サンプリングレート:
+                          </label>
+                          <select
+                            id="voicevoxOutputSamplingRate"
+                            value={voicevoxOutputSamplingRate}
+                            onChange={(e) => setVoicevoxOutputSamplingRate(e.target.value)}
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            <option value="default">既定値を使用</option>
+                            <option value="8000">8,000 Hz</option>
+                            <option value="11025">11,025 Hz</option>
+                            <option value="16000">16,000 Hz</option>
+                            <option value="22050">22,050 Hz</option>
+                            <option value="24000">24,000 Hz</option>
+                            <option value="44100">44,100 Hz</option>
+                            <option value="48000">48,000 Hz</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="voicevoxOutputStereo"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            出力チャンネル:
+                          </label>
+                          <select
+                            id="voicevoxOutputStereo"
+                            value={voicevoxOutputStereo}
+                            onChange={(e) =>
+                              setVoicevoxOutputStereo(
+                                e.target.value as 'default' | 'mono' | 'stereo',
+                              )
+                            }
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            <option value="default">既定値を使用</option>
+                            <option value="mono">モノラル (false)</option>
+                            <option value="stereo">ステレオ (true)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <label
+                            htmlFor="voicevoxEnableKatakanaEnglish"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            カタカナ英語化:
+                          </label>
+                          <select
+                            id="voicevoxEnableKatakanaEnglish"
+                            value={voicevoxEnableKatakanaEnglish}
+                            onChange={(e) =>
+                              setVoicevoxEnableKatakanaEnglish(
+                                e.target.value as 'default' | 'true' | 'false',
+                              )
+                            }
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            <option value="default">既定値 (true)</option>
+                            <option value="true">有効</option>
+                            <option value="false">無効</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="voicevoxEnableInterrogativeUpspeak"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            疑問文語尾調整:
+                          </label>
+                          <select
+                            id="voicevoxEnableInterrogativeUpspeak"
+                            value={voicevoxEnableInterrogativeUpspeak}
+                            onChange={(e) =>
+                              setVoicevoxEnableInterrogativeUpspeak(
+                                e.target.value as 'default' | 'true' | 'false',
+                              )
+                            }
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            <option value="default">既定値 (true)</option>
+                            <option value="true">有効</option>
+                            <option value="false">無効</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <label htmlFor="voicevoxCoreVersion" style={{ display: 'block', marginBottom: '6px' }}>
+                        Core Version:
+                      </label>
+                      <input
+                        id="voicevoxCoreVersion"
+                        type="text"
+                        value={voicevoxCoreVersion}
+                        onChange={(e) => setVoicevoxCoreVersion(e.target.value)}
+                        placeholder="例: 0.15.0（任意）"
+                        style={{ width: '100%', marginBottom: '4px' }}
+                      />
+
+                      <div style={{ fontSize: '0.8em', color: '#5c677d' }}>
+                        空欄の項目はVOICEVOX API側の既定値が利用されます。
+                      </div>
+                    </div>
                   )}
 
                   {selectedVoiceEngine !== 'none' && VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl && (

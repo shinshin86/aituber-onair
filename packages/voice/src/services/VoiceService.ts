@@ -1,3 +1,5 @@
+import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine';
+export type { VoiceVoxQueryParameterOverrides };
 import { ChatScreenplay } from '../types/chat';
 import { VoiceEngineType } from '../types/voiceEngine';
 
@@ -81,6 +83,34 @@ export interface VoiceServiceOptions {
   minimaxAudioChannel?: 1 | 2;
   /** MiniMax language boost override */
   minimaxLanguageBoost?: string;
+  /** VOICEVOX audio query parameter overrides */
+  voicevoxQueryParameters?: VoiceVoxQueryParameterOverrides;
+  /** VOICEVOX speedScale override */
+  voicevoxSpeedScale?: number;
+  /** VOICEVOX pitchScale override */
+  voicevoxPitchScale?: number;
+  /** VOICEVOX intonationScale override */
+  voicevoxIntonationScale?: number;
+  /** VOICEVOX volumeScale override */
+  voicevoxVolumeScale?: number;
+  /** VOICEVOX prePhonemeLength override */
+  voicevoxPrePhonemeLength?: number;
+  /** VOICEVOX postPhonemeLength override */
+  voicevoxPostPhonemeLength?: number;
+  /** VOICEVOX pauseLength override */
+  voicevoxPauseLength?: number | null;
+  /** VOICEVOX pauseLengthScale override */
+  voicevoxPauseLengthScale?: number;
+  /** VOICEVOX outputSamplingRate override */
+  voicevoxOutputSamplingRate?: number;
+  /** VOICEVOX outputStereo override */
+  voicevoxOutputStereo?: boolean;
+  /** VOICEVOX enable_katakana_english flag */
+  voicevoxEnableKatakanaEnglish?: boolean;
+  /** VOICEVOX enable_interrogative_upspeak flag */
+  voicevoxEnableInterrogativeUpspeak?: boolean;
+  /** VOICEVOX core_version specification */
+  voicevoxCoreVersion?: string;
 
   // Aivis Cloud specific options
   /** Aivis Cloud model UUID */

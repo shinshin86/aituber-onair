@@ -25,6 +25,7 @@ npm run dev
 ### Features
 
 - **Multiple TTS Engines**: OpenAI TTS, VOICEVOX, AIVIS Speech, VoicePeak, NijiVoice, MiniMax
+- **VOICEVOX Query Controls**: Adjust talk speed, pitch, intonation, silence lengths, sampling rate, stereo, and query flags directly from the UI
 - **MiniMax Parameter Controls**: Adjust speed, volume, pitch, sample rate, bitrate, and format directly from the settings UI
 - **Automatic URL Configuration**: Default URLs set based on library constants
 - **Smart API Key Handling**: Required/optional validation per engine
@@ -77,8 +78,21 @@ await voiceService.speak({ text: 'Hello, world!' });
 // Local engines (no API key needed)
 const voicevoxService = new VoiceEngineAdapter({
     engineType: 'voicevox',
-    apiUrl: 'http://localhost:50021',
-    speaker: 1
+    speaker: 1,
+    voicevoxQueryParameters: {
+        speedScale: 1.1,
+        pitchScale: 0.2,
+        intonationScale: 1.25,
+        volumeScale: 0.95,
+    },
+    voicevoxPrePhonemeLength: 0.12,
+    voicevoxPostPhonemeLength: 0.08,
+    voicevoxPauseLengthScale: 1.1,
+    voicevoxOutputSamplingRate: 48000,
+    voicevoxOutputStereo: true,
+    voicevoxEnableKatakanaEnglish: false,
+    voicevoxEnableInterrogativeUpspeak: true,
+    voicevoxCoreVersion: '0.15.0',
 });
 
 // Cloud engines (API key required)
@@ -119,6 +133,8 @@ voiceService.updateOptions({
 // MiniMax accepts sampleRate values of 8000 / 16000 / 22050 / 24000 / 32000 / 44100 only.
 // Accepted bitrates are 32000 / 64000 / 128000 / 256000.
 // Any other value results in the API returning error code 2013 (invalid params).
+// VOICEVOX outputSamplingRate commonly supports 8000 / 11025 / 16000 / 22050 / 24000 / 44100 / 48000 (Hz).
+// Leave VOICEVOX fields blank to use API defaults. enable_katakana_english / enable_interrogative_upspeak default to true.
 ```
 
 ### 4. Dynamic Engine Switching

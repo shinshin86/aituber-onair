@@ -11,6 +11,7 @@ export type {
   MinimaxVoiceSettingsOptions,
   MinimaxAudioSettingsOptions,
   MinimaxAudioFormat,
+  VoiceVoxQueryParameterOverrides,
 } from './services/VoiceService';
 export { VoiceEngineAdapter } from './services/VoiceEngineAdapter';
 
