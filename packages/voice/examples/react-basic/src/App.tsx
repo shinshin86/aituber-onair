@@ -155,6 +155,7 @@ function App() {
     setVoicevoxEnableInterrogativeUpspeak,
   ] = useState<'default' | 'true' | 'false'>('default');
   const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState('');
+  const [openaiSpeed, setOpenaiSpeed] = useState('');
   const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState('');
   const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] = useState('');
   const [aivisCloudStyleId, setAivisCloudStyleId] = useState('');
@@ -247,6 +248,7 @@ function App() {
     setVoicevoxEnableKatakanaEnglish('default');
     setVoicevoxEnableInterrogativeUpspeak('default');
     setVoicevoxCoreVersion('');
+    setOpenaiSpeed('');
     setAivisCloudModelUuid('');
     setAivisCloudSpeakerUuid('');
     setAivisCloudStyleId('');
@@ -502,6 +504,11 @@ function App() {
           options.aivisCloudEnableBillingLogs =
             aivisCloudEnableBillingLogs === 'true';
         }
+      } else if (engine === 'openai') {
+        const parsedSpeed = Number.parseFloat(openaiSpeed);
+        if (!Number.isNaN(parsedSpeed)) {
+          options.openAiSpeed = parsedSpeed;
+        }
       } else if (engine === 'aivisSpeech') {
         const queryOverrides: AivisSpeechQueryParameterOverrides = {};
 
@@ -751,6 +758,39 @@ function App() {
             <option value="minimax">MiniMax</option>
           </select>
         </div>
+
+        {engine === 'openai' && (
+          <div className="parameter-card openai-card">
+            <div className="parameter-card__header">
+              <h4>OpenAI TTS パラメータ</h4>
+              <p className="parameter-card__description">
+                現在のOpenAI TTSでは音声速度のみ数値指定が可能です。
+                未入力の場合は既定値 1.0 が使用されます。
+              </p>
+            </div>
+
+            <div className="parameter-section">
+              <div className="parameter-section__title">話速</div>
+              <div className="form-group">
+                <label htmlFor="openaiSpeed">Speed (0.25 - 4.0)</label>
+                <input
+                  id="openaiSpeed"
+                  type="number"
+                  step="0.05"
+                  min="0.25"
+                  max="4"
+                  value={openaiSpeed}
+                  onChange={(e) => setOpenaiSpeed(e.target.value)}
+                  placeholder="例: 1.25（標準は 1.0）"
+                />
+              </div>
+            </div>
+
+            <p className="parameter-card__note">
+              モデルや声色は `speaker` の指定で切り替えられます。
+            </p>
+          </div>
+        )}
 
         {engine === 'voicevox' && (
           <div className="parameter-card voicevox-card">

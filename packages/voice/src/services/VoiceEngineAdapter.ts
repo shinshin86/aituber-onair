@@ -319,6 +319,25 @@ export class VoiceEngineAdapter implements VoiceService {
         }
       }
 
+      // For OpenAI TTS engine, configure optional overrides
+      if (this.options.engineType === 'openai') {
+        const openaiEngine = engine as any;
+
+        if (
+          this.options.openAiModel &&
+          typeof openaiEngine.setModel === 'function'
+        ) {
+          openaiEngine.setModel(this.options.openAiModel);
+        }
+
+        if (
+          this.options.openAiSpeed !== undefined &&
+          typeof openaiEngine.setSpeed === 'function'
+        ) {
+          openaiEngine.setSpeed(this.options.openAiSpeed);
+        }
+      }
+
       // For MiniMax engine, configure additional parameters
       if (this.options.engineType === 'minimax') {
         const minimaxEngine = engine as any;

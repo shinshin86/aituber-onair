@@ -46,6 +46,10 @@ export interface VoiceServiceOptions {
   engineType: VoiceEngineType;
   /** API key (if needed) */
   apiKey?: string;
+  /** OpenAI TTS model (tts-1, tts-1-hd, gpt-4o-mini-tts) */
+  openAiModel?: string;
+  /** OpenAI TTS speaking speed (0.25-4.0, default: 1.0) */
+  openAiSpeed?: number;
   /** Audio playback callback */
   onPlay?: (
     audioBuffer: ArrayBuffer,
