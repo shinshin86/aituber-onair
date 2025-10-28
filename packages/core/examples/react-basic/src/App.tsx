@@ -2023,16 +2023,16 @@ const App: React.FC = () => {
                   style={{
                     marginTop: '12px',
                     padding: '12px',
-                    backgroundColor: '#fff4e6',
+                    backgroundColor: '#f4f5ff',
                     borderRadius: '8px',
-                    border: '1px solid #ffd8a8',
+                    border: '1px solid #dbe4ff',
                   }}
                 >
                   <div
                     style={{
                       fontWeight: 'bold',
                       marginBottom: '8px',
-                      color: '#d9480f',
+                      color: '#364fc7',
                     }}
                   >
                     AivisSpeech パラメータ
@@ -2228,7 +2228,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  <div style={{ fontSize: '0.8em', color: '#d9480f' }}>
+                  <div style={{ fontSize: '0.8em', color: '#5c677d' }}>
                     tempoDynamicsScale はテンポの緩急、Intonation Scale は感情表現の強さを制御します。空欄の場合は既定値が利用されます。
                   </div>
                 </div>
