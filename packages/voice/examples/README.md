@@ -25,6 +25,7 @@ npm run dev
 ### Features
 
 - **Multiple TTS Engines**: OpenAI TTS, VOICEVOX, AIVIS Speech, VoicePeak, NijiVoice, MiniMax
+- **AivisSpeech Controls**: Tune speed, pitch, intonation strength, tempo dynamics, and silence lengths with AivisSpeech独自拡張
 - **VOICEVOX Query Controls**: Adjust talk speed, pitch, intonation, silence lengths, sampling rate, stereo, and query flags directly from the UI
 - **MiniMax Parameter Controls**: Adjust speed, volume, pitch, sample rate, bitrate, and format directly from the settings UI
 - **Automatic URL Configuration**: Default URLs set based on library constants
@@ -101,7 +102,6 @@ const openaiService = new VoiceEngineAdapter({
     apiKey: 'sk-...',
     speaker: 'alloy'
 });
-
 // MiniMax (API key + Group ID + customizable parameters)
 const minimaxService = new VoiceEngineAdapter({
     engineType: 'minimax',
@@ -135,6 +135,21 @@ voiceService.updateOptions({
 // Any other value results in the API returning error code 2013 (invalid params).
 // VOICEVOX outputSamplingRate commonly supports 8000 / 11025 / 16000 / 22050 / 24000 / 44100 / 48000 (Hz).
 // Leave VOICEVOX fields blank to use API defaults. enable_katakana_english / enable_interrogative_upspeak default to true.
+
+// AivisSpeech (VOICEVOX API compatible with extended parameters)
+const aivisSpeechService = new VoiceEngineAdapter({
+    engineType: 'aivisSpeech',
+    speaker: 1,
+    aivisSpeechQueryParameters: {
+        speedScale: 1.05,
+        tempoDynamicsScale: 1.1,
+        volumeScale: 0.95,
+    },
+    aivisSpeechIntonationScale: 1.2,
+    aivisSpeechPauseLength: 0.35,
+    aivisSpeechOutputSamplingRate: 44100,
+    aivisSpeechOutputStereo: true,
+});
 ```
 
 ### 4. Dynamic Engine Switching

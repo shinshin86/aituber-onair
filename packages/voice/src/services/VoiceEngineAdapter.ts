@@ -216,6 +216,109 @@ export class VoiceEngineAdapter implements VoiceService {
         }
       }
 
+      // For AivisSpeech engine, configure additional parameters
+      if (this.options.engineType === 'aivisSpeech') {
+        const aivisEngine = engine as any;
+
+        if (
+          this.options.aivisSpeechQueryParameters &&
+          typeof aivisEngine.setQueryParameters === 'function'
+        ) {
+          aivisEngine.setQueryParameters(
+            this.options.aivisSpeechQueryParameters,
+          );
+        }
+
+        if (
+          this.options.aivisSpeechSpeedScale !== undefined &&
+          typeof aivisEngine.setSpeedScale === 'function'
+        ) {
+          aivisEngine.setSpeedScale(this.options.aivisSpeechSpeedScale);
+        }
+
+        if (
+          this.options.aivisSpeechPitchScale !== undefined &&
+          typeof aivisEngine.setPitchScale === 'function'
+        ) {
+          aivisEngine.setPitchScale(this.options.aivisSpeechPitchScale);
+        }
+
+        if (
+          this.options.aivisSpeechIntonationScale !== undefined &&
+          typeof aivisEngine.setIntonationScale === 'function'
+        ) {
+          aivisEngine.setIntonationScale(
+            this.options.aivisSpeechIntonationScale,
+          );
+        }
+
+        if (
+          this.options.aivisSpeechTempoDynamicsScale !== undefined &&
+          typeof aivisEngine.setTempoDynamicsScale === 'function'
+        ) {
+          aivisEngine.setTempoDynamicsScale(
+            this.options.aivisSpeechTempoDynamicsScale,
+          );
+        }
+
+        if (
+          this.options.aivisSpeechVolumeScale !== undefined &&
+          typeof aivisEngine.setVolumeScale === 'function'
+        ) {
+          aivisEngine.setVolumeScale(this.options.aivisSpeechVolumeScale);
+        }
+
+        if (
+          this.options.aivisSpeechPrePhonemeLength !== undefined &&
+          typeof aivisEngine.setPrePhonemeLength === 'function'
+        ) {
+          aivisEngine.setPrePhonemeLength(
+            this.options.aivisSpeechPrePhonemeLength,
+          );
+        }
+
+        if (
+          this.options.aivisSpeechPostPhonemeLength !== undefined &&
+          typeof aivisEngine.setPostPhonemeLength === 'function'
+        ) {
+          aivisEngine.setPostPhonemeLength(
+            this.options.aivisSpeechPostPhonemeLength,
+          );
+        }
+
+        if (
+          this.options.aivisSpeechPauseLength !== undefined &&
+          typeof aivisEngine.setPauseLength === 'function'
+        ) {
+          aivisEngine.setPauseLength(this.options.aivisSpeechPauseLength);
+        }
+
+        if (
+          this.options.aivisSpeechPauseLengthScale !== undefined &&
+          typeof aivisEngine.setPauseLengthScale === 'function'
+        ) {
+          aivisEngine.setPauseLengthScale(
+            this.options.aivisSpeechPauseLengthScale,
+          );
+        }
+
+        if (
+          this.options.aivisSpeechOutputSamplingRate !== undefined &&
+          typeof aivisEngine.setOutputSamplingRate === 'function'
+        ) {
+          aivisEngine.setOutputSamplingRate(
+            this.options.aivisSpeechOutputSamplingRate,
+          );
+        }
+
+        if (
+          this.options.aivisSpeechOutputStereo !== undefined &&
+          typeof aivisEngine.setOutputStereo === 'function'
+        ) {
+          aivisEngine.setOutputStereo(this.options.aivisSpeechOutputStereo);
+        }
+      }
+
       // For MiniMax engine, configure additional parameters
       if (this.options.engineType === 'minimax') {
         const minimaxEngine = engine as any;

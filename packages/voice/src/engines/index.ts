@@ -5,7 +5,10 @@ export {
   type VoiceVoxQueryParameterOverrides,
 } from './VoiceVoxEngine';
 export { VoicePeakEngine } from './VoicePeakEngine';
-export { AivisSpeechEngine } from './AivisSpeechEngine';
+export {
+  AivisSpeechEngine,
+  type AivisSpeechQueryParameterOverrides,
+} from './AivisSpeechEngine';
 export { AivisCloudEngine } from './AivisCloudEngine';
 export { OpenAiEngine } from './OpenAiEngine';
 export { NijiVoiceEngine } from './NijiVoiceEngine';

@@ -186,7 +186,12 @@ The application supports 7 different Text-to-Speech engines:
 - Adjustable speed/pitch/intonation/volume and silence lengths
 - Supports sampling rate, mono/stereo, and query flags (katakana English / interrogative upspeak)
 
-#### 8. **MiniMax**
+#### 8. **AivisSpeech**
+- Local TTS engine extending the VOICEVOX-compatible API
+- Adds dedicated controls for intonation intensity and tempo dynamics
+- Supports silence duration tuning, selectable sampling rates, and mono/stereo output
+
+#### 9. **MiniMax**
 - Chinese TTS service
 - Requires API key and Group ID
 - Multiple voice options

@@ -1,5 +1,7 @@
+import type { AivisSpeechQueryParameterOverrides } from '../engines/AivisSpeechEngine';
 import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine';
 export type { VoiceVoxQueryParameterOverrides };
+export type { AivisSpeechQueryParameterOverrides };
 import { ChatScreenplay } from '../types/chat';
 import { VoiceEngineType } from '../types/voiceEngine';
 
@@ -111,6 +113,30 @@ export interface VoiceServiceOptions {
   voicevoxEnableInterrogativeUpspeak?: boolean;
   /** VOICEVOX core_version specification */
   voicevoxCoreVersion?: string;
+  /** AivisSpeech audio query parameter overrides */
+  aivisSpeechQueryParameters?: AivisSpeechQueryParameterOverrides;
+  /** AivisSpeech speedScale override */
+  aivisSpeechSpeedScale?: number;
+  /** AivisSpeech pitchScale override */
+  aivisSpeechPitchScale?: number;
+  /** AivisSpeech intonationScale override */
+  aivisSpeechIntonationScale?: number;
+  /** AivisSpeech tempoDynamicsScale override */
+  aivisSpeechTempoDynamicsScale?: number;
+  /** AivisSpeech volumeScale override */
+  aivisSpeechVolumeScale?: number;
+  /** AivisSpeech prePhonemeLength override */
+  aivisSpeechPrePhonemeLength?: number;
+  /** AivisSpeech postPhonemeLength override */
+  aivisSpeechPostPhonemeLength?: number;
+  /** AivisSpeech pauseLength override */
+  aivisSpeechPauseLength?: number | null;
+  /** AivisSpeech pauseLengthScale override */
+  aivisSpeechPauseLengthScale?: number;
+  /** AivisSpeech outputSamplingRate override */
+  aivisSpeechOutputSamplingRate?: number;
+  /** AivisSpeech outputStereo override */
+  aivisSpeechOutputStereo?: boolean;
 
   // Aivis Cloud specific options
   /** Aivis Cloud model UUID */

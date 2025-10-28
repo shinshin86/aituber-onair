@@ -145,6 +145,29 @@
   background: #fff;
 }
 
+.aivisspeech-card {
+  border-color: #dbe4ff;
+  background: linear-gradient(180deg, #f8f9ff 0%, #eef2ff 100%);
+}
+
+.aivisspeech-card h4 {
+  color: #364fc7;
+}
+
+.aivisspeech-card .parameter-section__title {
+  color: #3b5bdb;
+}
+
+.aivisspeech-card select,
+.aivisspeech-card input {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.aivisspeech-card select:focus,
+.aivisspeech-card input:focus {
+  background: #fff;
+}
+
 .button-group {
   justify-content: center;
 }

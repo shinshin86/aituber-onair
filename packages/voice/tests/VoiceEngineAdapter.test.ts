@@ -29,6 +29,7 @@ describe('VoiceEngineAdapter', () => {
       setSpeedScale: vi.fn(),
       setPitchScale: vi.fn(),
       setIntonationScale: vi.fn(),
+      setTempoDynamicsScale: vi.fn(),
       setVolumeScale: vi.fn(),
       setPrePhonemeLength: vi.fn(),
       setPostPhonemeLength: vi.fn(),
@@ -125,6 +126,57 @@ describe('VoiceEngineAdapter', () => {
         false,
       );
       expect(mockEngine.setCoreVersion).toHaveBeenCalledWith('0.15.0');
+    });
+  });
+
+  describe('AivisSpeech Integration', () => {
+    it('should configure AivisSpeech engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'aivisSpeech',
+        speaker: '100',
+        aivisSpeechApiUrl: 'http://localhost:10101',
+        aivisSpeechQueryParameters: {
+          speedScale: 0.95,
+          tempoDynamicsScale: 1.05,
+        },
+        aivisSpeechSpeedScale: 1.1,
+        aivisSpeechPitchScale: -0.05,
+        aivisSpeechIntonationScale: 1.4,
+        aivisSpeechTempoDynamicsScale: 1.2,
+        aivisSpeechVolumeScale: 0.9,
+        aivisSpeechPrePhonemeLength: 0.18,
+        aivisSpeechPostPhonemeLength: 0.12,
+        aivisSpeechPauseLength: null,
+        aivisSpeechPauseLengthScale: 1.15,
+        aivisSpeechOutputSamplingRate: 44100,
+        aivisSpeechOutputStereo: true,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'AivisSpeech test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'http://localhost:10101',
+      );
+      expect(mockEngine.setQueryParameters).toHaveBeenCalledWith({
+        speedScale: 0.95,
+        tempoDynamicsScale: 1.05,
+      });
+      expect(mockEngine.setSpeedScale).toHaveBeenCalledWith(1.1);
+      expect(mockEngine.setPitchScale).toHaveBeenCalledWith(-0.05);
+      expect(mockEngine.setIntonationScale).toHaveBeenCalledWith(1.4);
+      expect(mockEngine.setTempoDynamicsScale).toHaveBeenCalledWith(1.2);
+      expect(mockEngine.setVolumeScale).toHaveBeenCalledWith(0.9);
+      expect(mockEngine.setPrePhonemeLength).toHaveBeenCalledWith(0.18);
+      expect(mockEngine.setPostPhonemeLength).toHaveBeenCalledWith(0.12);
+      expect(mockEngine.setPauseLength).toHaveBeenCalledWith(null);
+      expect(mockEngine.setPauseLengthScale).toHaveBeenCalledWith(1.15);
+      expect(mockEngine.setOutputSamplingRate).toHaveBeenCalledWith(44100);
+      expect(mockEngine.setOutputStereo).toHaveBeenCalledWith(true);
     });
   });
 
@@ -318,6 +370,7 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setSpeedScale).not.toHaveBeenCalled();
       expect(mockEngine.setPitchScale).not.toHaveBeenCalled();
       expect(mockEngine.setIntonationScale).not.toHaveBeenCalled();
+      expect(mockEngine.setTempoDynamicsScale).not.toHaveBeenCalled();
       expect(mockEngine.setVolumeScale).not.toHaveBeenCalled();
       expect(mockEngine.setPrePhonemeLength).not.toHaveBeenCalled();
       expect(mockEngine.setPostPhonemeLength).not.toHaveBeenCalled();
