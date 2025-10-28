@@ -787,9 +787,7 @@ function App() {
             </div>
 
             <p className="parameter-card__note">
-              モデルや声色は `speaker`
-              の指定で切り替えられます。速度以外の調整は `gpt-4o-mini-tts` の
-              instructions を活用してください。
+              モデルや声色は `speaker` の指定で切り替えられます。
             </p>
           </div>
         )}
