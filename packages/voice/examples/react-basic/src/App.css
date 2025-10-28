@@ -136,12 +136,16 @@
 }
 
 .voicevox-card select,
-.voicevox-card input {
+.voicevox-card input,
+.aiviscloud-card select,
+.aiviscloud-card input {
   background: rgba(255, 255, 255, 0.85);
 }
 
 .voicevox-card select:focus,
-.voicevox-card input:focus {
+.voicevox-card input:focus,
+.aiviscloud-card select:focus,
+.aiviscloud-card input:focus {
   background: #fff;
 }
 

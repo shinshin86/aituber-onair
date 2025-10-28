@@ -147,8 +147,12 @@ export interface VoiceServiceOptions {
   aivisCloudStyleId?: number;
   /** Aivis Cloud style name */
   aivisCloudStyleName?: string;
+  /** Aivis Cloud user dictionary UUID */
+  aivisCloudUserDictionaryUuid?: string;
   /** Enable SSML interpretation (default: true) */
   aivisCloudUseSSML?: boolean;
+  /** Synthesis language (BCP 47, default: ja) */
+  aivisCloudLanguage?: string;
   /** Speaking rate (0.5-2.0, default: 1.0) */
   aivisCloudSpeakingRate?: number;
   /** Emotional intensity (0.0-2.0, default: 1.0) */

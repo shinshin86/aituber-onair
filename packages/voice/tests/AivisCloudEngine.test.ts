@@ -61,6 +61,7 @@ describe('AivisCloudEngine', () => {
           model_uuid: 'test-model-uuid',
           text: 'Hello, this is a test message.',
           use_ssml: true,
+          language: 'ja',
           speaking_rate: 1.0,
           emotional_intensity: 1.1, // Adjusted for happy emotion
           tempo_dynamics: 1.0,
@@ -185,6 +186,8 @@ describe('AivisCloudEngine', () => {
       engine.setModelUuid('model-uuid');
       engine.setSpeakerUuid('speaker-uuid');
       engine.setStyleId(5);
+      engine.setUserDictionaryUuid('user-dict-uuid');
+      engine.setLanguage('ja');
       engine.setUseSSML(false);
       engine.setSpeakingRate(1.5);
       engine.setEmotionalIntensity(0.8);
@@ -232,6 +235,7 @@ describe('AivisCloudEngine', () => {
       expect(body.style_id).toBe(5);
       expect(body.text).toBe('Test message');
       expect(body.use_ssml).toBe(false);
+      expect(body.language).toBe('ja');
       expect(body.speaking_rate).toBe(1.5);
       expect(body.emotional_intensity).toBe(0.8);
       expect(body.tempo_dynamics).toBe(1.2);
@@ -244,6 +248,7 @@ describe('AivisCloudEngine', () => {
       expect(body.output_bitrate).toBe(128);
       expect(body.output_sampling_rate).toBe(48000);
       expect(body.output_audio_channels).toBe('stereo');
+      expect(body.user_dictionary_uuid).toBe('user-dict-uuid');
     });
 
     it('should use style name instead of style ID when set', async () => {

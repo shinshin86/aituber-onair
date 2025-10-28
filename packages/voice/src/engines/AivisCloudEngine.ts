@@ -10,6 +10,8 @@ export class AivisCloudEngine implements VoiceEngine {
   private speakerUuid?: string;
   private styleId?: number;
   private styleName?: string;
+  private userDictionaryUuid?: string;
+  private language: string = 'ja';
   private useSSML: boolean = true;
   private speakingRate: number = 1.0;
   private emotionalIntensity: number = 1.0;
@@ -30,7 +32,8 @@ export class AivisCloudEngine implements VoiceEngine {
    * @param modelUuid Aivis Cloud model UUID
    */
   setModelUuid(modelUuid: string): void {
-    this.modelUuid = modelUuid;
+    const trimmed = modelUuid?.trim();
+    this.modelUuid = trimmed ? trimmed : undefined;
   }
 
   /**
@@ -38,7 +41,8 @@ export class AivisCloudEngine implements VoiceEngine {
    * @param speakerUuid Aivis Cloud speaker UUID
    */
   setSpeakerUuid(speakerUuid: string): void {
-    this.speakerUuid = speakerUuid;
+    const trimmed = speakerUuid?.trim();
+    this.speakerUuid = trimmed ? trimmed : undefined;
   }
 
   /**
@@ -46,7 +50,8 @@ export class AivisCloudEngine implements VoiceEngine {
    * @param styleId Style ID (0-31)
    */
   setStyleId(styleId: number): void {
-    this.styleId = styleId;
+    const sanitized = Math.max(0, Math.min(31, Math.round(styleId)));
+    this.styleId = Number.isFinite(sanitized) ? sanitized : undefined;
     this.styleName = undefined; // Clear style name when setting style ID
   }
 
@@ -55,8 +60,28 @@ export class AivisCloudEngine implements VoiceEngine {
    * @param styleName Style name
    */
   setStyleName(styleName: string): void {
-    this.styleName = styleName;
+    const trimmed = styleName?.trim();
+    this.styleName = trimmed && trimmed.length > 0 ? trimmed : undefined;
     this.styleId = undefined; // Clear style ID when setting style name
+  }
+
+  /**
+   * Set user dictionary UUID
+   * @param userDictionaryUuid User dictionary UUID
+   */
+  setUserDictionaryUuid(userDictionaryUuid?: string): void {
+    const trimmed = userDictionaryUuid?.trim();
+    this.userDictionaryUuid =
+      trimmed && trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  /**
+   * Set synthesis language (BCP 47)
+   * @param language Language tag (currently only 'ja' supported)
+   */
+  setLanguage(language?: string): void {
+    const trimmed = language?.trim();
+    this.language = trimmed && trimmed.length > 0 ? trimmed : 'ja';
   }
 
   /**
@@ -118,9 +143,10 @@ export class AivisCloudEngine implements VoiceEngine {
     trailing: number,
     lineBreak: number,
   ): void {
-    this.leadingSilence = Math.max(0, leading);
-    this.trailingSilence = Math.max(0, trailing);
-    this.lineBreakSilence = Math.max(0, lineBreak);
+    const clamp = (value: number) => Math.min(60, Math.max(0, value));
+    this.leadingSilence = clamp(leading);
+    this.trailingSilence = clamp(trailing);
+    this.lineBreakSilence = clamp(lineBreak);
   }
 
   /**
@@ -136,7 +162,8 @@ export class AivisCloudEngine implements VoiceEngine {
    * @param bitrate Output bitrate in kbps (8-320)
    */
   setOutputBitrate(bitrate: number): void {
-    this.outputBitrate = Math.max(8, Math.min(320, bitrate));
+    const rounded = Math.round(bitrate);
+    this.outputBitrate = Math.max(8, Math.min(320, rounded));
   }
 
   /**
@@ -174,7 +201,8 @@ export class AivisCloudEngine implements VoiceEngine {
       throw new Error('Aivis Cloud API key is required');
     }
 
-    if (!this.modelUuid && !speaker) {
+    const fallbackModelUuid = speaker?.trim();
+    if (!this.modelUuid && !fallbackModelUuid) {
       throw new Error(
         'Aivis Cloud model UUID is required. Set it using setModelUuid() or pass as speaker parameter',
       );
@@ -184,7 +212,7 @@ export class AivisCloudEngine implements VoiceEngine {
     const text = talk.message.trim();
 
     // Use speaker parameter as model UUID if modelUuid is not set
-    const actualModelUuid = this.modelUuid || speaker;
+    const actualModelUuid = this.modelUuid || fallbackModelUuid;
 
     // Get emotion from talk.style and adjust emotional intensity if needed
     const emotionSettings = this.getEmotionSettings(talk.style || 'talk');
@@ -193,6 +221,7 @@ export class AivisCloudEngine implements VoiceEngine {
       model_uuid: actualModelUuid,
       text: text,
       use_ssml: this.useSSML,
+      language: this.language,
       speaking_rate: this.speakingRate,
       emotional_intensity: emotionSettings.emotionalIntensity,
       tempo_dynamics: this.tempoDynamics,
@@ -215,6 +244,10 @@ export class AivisCloudEngine implements VoiceEngine {
       requestBody.style_id = this.styleId;
     } else if (this.styleName) {
       requestBody.style_name = this.styleName;
+    }
+
+    if (this.userDictionaryUuid) {
+      requestBody.user_dictionary_uuid = this.userDictionaryUuid;
     }
 
     if (

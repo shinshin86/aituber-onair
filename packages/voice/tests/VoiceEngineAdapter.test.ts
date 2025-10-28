@@ -49,6 +49,7 @@ describe('VoiceEngineAdapter', () => {
       setSpeakerUuid: vi.fn(),
       setStyleId: vi.fn(),
       setStyleName: vi.fn(),
+      setUserDictionaryUuid: vi.fn(),
       setUseSSML: vi.fn(),
       setSpeakingRate: vi.fn(),
       setEmotionalIntensity: vi.fn(),
@@ -177,6 +178,67 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setPauseLengthScale).toHaveBeenCalledWith(1.15);
       expect(mockEngine.setOutputSamplingRate).toHaveBeenCalledWith(44100);
       expect(mockEngine.setOutputStereo).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('AivisCloud Integration', () => {
+    it('should configure Aivis Cloud engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'aivisCloud',
+        speaker: 'model-default',
+        apiKey: 'cloud-key',
+        aivisCloudModelUuid: 'override-model',
+        aivisCloudSpeakerUuid: 'speaker-uuid',
+        aivisCloudStyleName: 'Happy',
+        aivisCloudUseSSML: false,
+        aivisCloudLanguage: 'ja',
+        aivisCloudSpeakingRate: 1.25,
+        aivisCloudEmotionalIntensity: 1.4,
+        aivisCloudTempoDynamics: 1.1,
+        aivisCloudPitch: 0.15,
+        aivisCloudVolume: 1.3,
+        aivisCloudLeadingSilence: 0.05,
+        aivisCloudTrailingSilence: 0.2,
+        aivisCloudLineBreakSilence: 0.6,
+        aivisCloudOutputFormat: 'opus',
+        aivisCloudOutputBitrate: 192,
+        aivisCloudOutputSamplingRate: 48000,
+        aivisCloudOutputChannels: 'stereo',
+        aivisCloudUserDictionaryUuid: 'dict-uuid',
+        aivisCloudEnableBillingLogs: true,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'Aivis Cloud test' });
+
+      expect(mockEngine.setModelUuid).toHaveBeenCalledWith('override-model');
+      expect(mockEngine.setSpeakerUuid).toHaveBeenCalledWith('speaker-uuid');
+      expect(mockEngine.setStyleName).toHaveBeenCalledWith('Happy');
+      expect(mockEngine.setUseSSML).toHaveBeenCalledWith(false);
+      expect(mockEngine.setLanguage).toHaveBeenCalledWith('ja');
+      expect(mockEngine.setSpeakingRate).toHaveBeenCalledWith(1.25);
+      expect(mockEngine.setEmotionalIntensity).toHaveBeenCalledWith(1.4);
+      expect(mockEngine.setTempoDynamics).toHaveBeenCalledWith(1.1);
+      expect(mockEngine.setPitch).toHaveBeenCalledWith(0.15);
+      expect(mockEngine.setVolume).toHaveBeenCalledWith(1.3);
+      expect(mockEngine.setSilenceDurations).toHaveBeenCalledWith(
+        0.05,
+        0.2,
+        0.6,
+      );
+      expect(mockEngine.setOutputFormat).toHaveBeenCalledWith('opus');
+      expect(mockEngine.setOutputBitrate).toHaveBeenCalledWith(192);
+      expect(mockEngine.setOutputSamplingRate).toHaveBeenCalledWith(48000);
+      expect(mockEngine.setOutputChannels).toHaveBeenCalledWith('stereo');
+      expect(mockEngine.setUserDictionaryUuid).toHaveBeenCalledWith(
+        'dict-uuid',
+      );
+      expect(mockEngine.setEnableBillingLogs).toHaveBeenCalledWith(true);
+      expect(mockEngine.fetchAudio).toHaveBeenCalled();
     });
   });
 
