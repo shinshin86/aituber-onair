@@ -93,6 +93,26 @@ type TextMessage = BaseMessage & { kind: 'text'; content: string };
 type ImageMessage = BaseMessage & { kind: 'image'; dataUrl: string };
 type Message = TextMessage | ImageMessage;
 
+type AivisCloudBooleanOption = 'default' | 'true' | 'false';
+type AivisCloudOutputFormatOption =
+  | 'default'
+  | 'wav'
+  | 'flac'
+  | 'mp3'
+  | 'aac'
+  | 'opus';
+type AivisCloudOutputSamplingRateOption =
+  | 'default'
+  | '8000'
+  | '11025'
+  | '12000'
+  | '16000'
+  | '22050'
+  | '24000'
+  | '44100'
+  | '48000';
+type AivisCloudOutputChannelOption = 'default' | 'mono' | 'stereo';
+
 // UI Messages
 const DO_NOT_SET_API_KEY_MESSAGE = 'API Keyを入力してください。';
 const CORE_SETTINGS_APPLIED_MESSAGE = 'AITuberOnAirCoreの設定を反映しました！';
@@ -195,6 +215,46 @@ const App: React.FC = () => {
     setVoicevoxEnableInterrogativeUpspeak,
   ] = useState<'default' | 'true' | 'false'>('default');
   const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState<string>('');
+  const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState<string>('');
+  const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] =
+    useState<string>('');
+  const [aivisCloudStyleId, setAivisCloudStyleId] = useState<string>('');
+  const [aivisCloudStyleName, setAivisCloudStyleName] = useState<string>('');
+  const [aivisCloudUseSsml, setAivisCloudUseSsml] =
+    useState<AivisCloudBooleanOption>('default');
+  const [aivisCloudLanguage, setAivisCloudLanguage] = useState<string>('ja');
+  const [aivisCloudSpeakingRate, setAivisCloudSpeakingRate] =
+    useState<string>('');
+  const [aivisCloudEmotionalIntensity, setAivisCloudEmotionalIntensity] =
+    useState<string>('');
+  const [aivisCloudTempoDynamics, setAivisCloudTempoDynamics] =
+    useState<string>('');
+  const [aivisCloudPitch, setAivisCloudPitch] = useState<string>('');
+  const [aivisCloudVolume, setAivisCloudVolume] = useState<string>('');
+  const [aivisCloudLeadingSilence, setAivisCloudLeadingSilence] =
+    useState<string>('');
+  const [aivisCloudTrailingSilence, setAivisCloudTrailingSilence] =
+    useState<string>('');
+  const [aivisCloudLineBreakSilence, setAivisCloudLineBreakSilence] =
+    useState<string>('');
+  const [aivisCloudOutputFormat, setAivisCloudOutputFormat] =
+    useState<AivisCloudOutputFormatOption>('default');
+  const [aivisCloudOutputBitrate, setAivisCloudOutputBitrate] =
+    useState<string>('');
+  const [
+    aivisCloudOutputSamplingRate,
+    setAivisCloudOutputSamplingRate,
+  ] = useState<AivisCloudOutputSamplingRateOption>('default');
+  const [aivisCloudOutputChannels, setAivisCloudOutputChannels] =
+    useState<AivisCloudOutputChannelOption>('default');
+  const [
+    aivisCloudUserDictionaryUuid,
+    setAivisCloudUserDictionaryUuid,
+  ] = useState<string>('');
+  const [
+    aivisCloudEnableBillingLogs,
+    setAivisCloudEnableBillingLogs,
+  ] = useState<AivisCloudBooleanOption>('default');
   const [aivisSpeedScale, setAivisSpeedScale] = useState<string>('');
   const [aivisPitchScale, setAivisPitchScale] = useState<string>('');
   const [aivisIntonationScale, setAivisIntonationScale] = useState<string>('');
@@ -315,14 +375,37 @@ const App: React.FC = () => {
       setVoicevoxOutputSamplingRate('default');
       setVoicevoxOutputStereo('default');
       setVoicevoxEnableKatakanaEnglish('default');
-      setVoicevoxEnableInterrogativeUpspeak('default');
-      setVoicevoxCoreVersion('');
-    }
+    setVoicevoxEnableInterrogativeUpspeak('default');
+    setVoicevoxCoreVersion('');
+  }
 
-  if (selectedVoiceEngine === 'aivisSpeech') {
-    setAivisSpeedScale('');
-    setAivisPitchScale('');
-    setAivisIntonationScale('');
+  if (selectedVoiceEngine === 'aivisCloud') {
+    setAivisCloudModelUuid('');
+    setAivisCloudSpeakerUuid('');
+    setAivisCloudStyleId('');
+    setAivisCloudStyleName('');
+    setAivisCloudUseSsml('default');
+    setAivisCloudLanguage('ja');
+    setAivisCloudSpeakingRate('');
+    setAivisCloudEmotionalIntensity('');
+    setAivisCloudTempoDynamics('');
+    setAivisCloudPitch('');
+    setAivisCloudVolume('');
+    setAivisCloudLeadingSilence('');
+    setAivisCloudTrailingSilence('');
+    setAivisCloudLineBreakSilence('');
+    setAivisCloudOutputFormat('default');
+    setAivisCloudOutputBitrate('');
+    setAivisCloudOutputSamplingRate('default');
+    setAivisCloudOutputChannels('default');
+    setAivisCloudUserDictionaryUuid('');
+    setAivisCloudEnableBillingLogs('default');
+  }
+
+if (selectedVoiceEngine === 'aivisSpeech') {
+  setAivisSpeedScale('');
+  setAivisPitchScale('');
+  setAivisIntonationScale('');
     setAivisTempoDynamicsScale('');
       setAivisVolumeScale('');
       setAivisPrePhonemeLength('');
@@ -514,17 +597,120 @@ const App: React.FC = () => {
 
       // Add engine-specific options
       switch (selectedVoiceEngine) {
-        case 'aivisCloud':
-          Object.assign(options, {
-            aivisCloudModelUuid: selectedSpeaker,
-            aivisCloudSpeakingRate: config.defaultParams?.speakingRate,
-            aivisCloudEmotionalIntensity: config.defaultParams?.emotionalIntensity,
-            aivisCloudPitch: config.defaultParams?.pitch,
-            aivisCloudVolume: config.defaultParams?.volume,
-            aivisCloudOutputFormat: config.defaultParams?.outputFormat,
-            aivisCloudUseSSML: true,
-          });
+        case 'aivisCloud': {
+          const trimmedModelUuid = aivisCloudModelUuid.trim();
+          if (trimmedModelUuid) {
+            options.aivisCloudModelUuid = trimmedModelUuid;
+          } else if (selectedSpeaker) {
+            options.aivisCloudModelUuid = String(selectedSpeaker);
+          }
+
+          if (aivisCloudSpeakerUuid.trim()) {
+            options.aivisCloudSpeakerUuid = aivisCloudSpeakerUuid.trim();
+          }
+
+          const parsedStyleId = Number.parseInt(aivisCloudStyleId, 10);
+          if (!Number.isNaN(parsedStyleId)) {
+            options.aivisCloudStyleId = parsedStyleId;
+          } else if (aivisCloudStyleName.trim()) {
+            options.aivisCloudStyleName = aivisCloudStyleName.trim();
+          }
+
+          if (aivisCloudUseSsml !== 'default') {
+            options.aivisCloudUseSSML = aivisCloudUseSsml === 'true';
+          }
+
+          if (aivisCloudLanguage.trim()) {
+            options.aivisCloudLanguage = aivisCloudLanguage.trim();
+          }
+
+          const parsedSpeakingRate = Number.parseFloat(aivisCloudSpeakingRate);
+          if (!Number.isNaN(parsedSpeakingRate)) {
+            options.aivisCloudSpeakingRate = parsedSpeakingRate;
+          }
+
+          const parsedEmotionalIntensity = Number.parseFloat(
+            aivisCloudEmotionalIntensity,
+          );
+          if (!Number.isNaN(parsedEmotionalIntensity)) {
+            options.aivisCloudEmotionalIntensity = parsedEmotionalIntensity;
+          }
+
+          const parsedTempoDynamics = Number.parseFloat(aivisCloudTempoDynamics);
+          if (!Number.isNaN(parsedTempoDynamics)) {
+            options.aivisCloudTempoDynamics = parsedTempoDynamics;
+          }
+
+          const parsedPitch = Number.parseFloat(aivisCloudPitch);
+          if (!Number.isNaN(parsedPitch)) {
+            options.aivisCloudPitch = parsedPitch;
+          }
+
+          const parsedVolume = Number.parseFloat(aivisCloudVolume);
+          if (!Number.isNaN(parsedVolume)) {
+            options.aivisCloudVolume = parsedVolume;
+          }
+
+          const parsedLeadingSilence = Number.parseFloat(
+            aivisCloudLeadingSilence,
+          );
+          if (!Number.isNaN(parsedLeadingSilence)) {
+            options.aivisCloudLeadingSilence = parsedLeadingSilence;
+          }
+
+          const parsedTrailingSilence = Number.parseFloat(
+            aivisCloudTrailingSilence,
+          );
+          if (!Number.isNaN(parsedTrailingSilence)) {
+            options.aivisCloudTrailingSilence = parsedTrailingSilence;
+          }
+
+          const parsedLineBreakSilence = Number.parseFloat(
+            aivisCloudLineBreakSilence,
+          );
+          if (!Number.isNaN(parsedLineBreakSilence)) {
+            options.aivisCloudLineBreakSilence = parsedLineBreakSilence;
+          }
+
+          if (aivisCloudOutputFormat !== 'default') {
+            options.aivisCloudOutputFormat = aivisCloudOutputFormat as Exclude<
+              AivisCloudOutputFormatOption,
+              'default'
+            >;
+          }
+
+          if (aivisCloudOutputBitrate.trim()) {
+            const parsedBitrate = Number.parseInt(
+              aivisCloudOutputBitrate,
+              10,
+            );
+            if (!Number.isNaN(parsedBitrate)) {
+              options.aivisCloudOutputBitrate = parsedBitrate;
+            }
+          }
+
+          if (aivisCloudOutputSamplingRate !== 'default') {
+            options.aivisCloudOutputSamplingRate = Number(
+              aivisCloudOutputSamplingRate,
+            ) as 8000 | 11025 | 12000 | 16000 | 22050 | 24000 | 44100 | 48000;
+          }
+
+          if (aivisCloudOutputChannels !== 'default') {
+            options.aivisCloudOutputChannels =
+              aivisCloudOutputChannels as 'mono' | 'stereo';
+          }
+
+          if (aivisCloudUserDictionaryUuid.trim()) {
+            options.aivisCloudUserDictionaryUuid =
+              aivisCloudUserDictionaryUuid.trim();
+          }
+
+          if (aivisCloudEnableBillingLogs !== 'default') {
+            options.aivisCloudEnableBillingLogs =
+              aivisCloudEnableBillingLogs === 'true';
+          }
           break;
+        }
         case 'voicevox': {
           const voicevoxOverrides: VoiceVoxQueryParameterOverrides = {};
 
@@ -2018,6 +2204,426 @@ const App: React.FC = () => {
                 </div>
               )}
 
+              {selectedVoiceEngine === 'aivisCloud' && (
+                <div
+                  style={{
+                    marginTop: '12px',
+                    padding: '12px',
+                    backgroundColor: '#f4f5ff',
+                    borderRadius: '8px',
+                    border: '1px solid #dbe4ff',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 'bold',
+                      marginBottom: '8px',
+                      color: '#364fc7',
+                    }}
+                  >
+                    Aivis Cloud パラメータ
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="aivisCloudModelUuid" style={{ display: 'block', marginBottom: '6px' }}>
+                        Model UUID (override):
+                      </label>
+                      <input
+                        id="aivisCloudModelUuid"
+                        type="text"
+                        value={aivisCloudModelUuid}
+                        onChange={(e) => setAivisCloudModelUuid(e.target.value)}
+                        placeholder="空欄なら選択中のモデルを使用"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudSpeakerUuid" style={{ display: 'block', marginBottom: '6px' }}>
+                        Speaker UUID:
+                      </label>
+                      <input
+                        id="aivisCloudSpeakerUuid"
+                        type="text"
+                        value={aivisCloudSpeakerUuid}
+                        onChange={(e) => setAivisCloudSpeakerUuid(e.target.value)}
+                        placeholder="複数話者モデルで指定 (任意)"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="aivisCloudStyleId" style={{ display: 'block', marginBottom: '6px' }}>
+                        Style ID (0-31):
+                      </label>
+                      <input
+                        id="aivisCloudStyleId"
+                        type="number"
+                        min="0"
+                        max="31"
+                        step="1"
+                        value={aivisCloudStyleId}
+                        onChange={(e) => setAivisCloudStyleId(e.target.value)}
+                        placeholder="スタイルIDを使用する場合"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudStyleName" style={{ display: 'block', marginBottom: '6px' }}>
+                        Style Name:
+                      </label>
+                      <input
+                        id="aivisCloudStyleName"
+                        type="text"
+                        value={aivisCloudStyleName}
+                        onChange={(e) => setAivisCloudStyleName(e.target.value)}
+                        placeholder="スタイル名を直接指定 (IDと併用不可)"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudUseSsml" style={{ display: 'block', marginBottom: '6px' }}>
+                        Use SSML:
+                      </label>
+                      <select
+                        id="aivisCloudUseSsml"
+                        value={aivisCloudUseSsml}
+                        onChange={(e) =>
+                          setAivisCloudUseSsml(
+                            e.target.value as AivisCloudBooleanOption,
+                          )
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        <option value="default">API既定値（true）</option>
+                        <option value="true">有効</option>
+                        <option value="false">無効</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudLanguage" style={{ display: 'block', marginBottom: '6px' }}>
+                        Language:
+                      </label>
+                      <input
+                        id="aivisCloudLanguage"
+                        type="text"
+                        value={aivisCloudLanguage}
+                        onChange={(e) => setAivisCloudLanguage(e.target.value)}
+                        placeholder="例: ja （現状日本語のみ）"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="aivisCloudSpeakingRate" style={{ display: 'block', marginBottom: '6px' }}>
+                        Speaking Rate:
+                      </label>
+                      <input
+                        id="aivisCloudSpeakingRate"
+                        type="number"
+                        min="0.5"
+                        max="2"
+                        step="0.05"
+                        value={aivisCloudSpeakingRate}
+                        onChange={(e) => setAivisCloudSpeakingRate(e.target.value)}
+                        placeholder="例: 1.05"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudEmotionalIntensity" style={{ display: 'block', marginBottom: '6px' }}>
+                        Emotional Intensity:
+                      </label>
+                      <input
+                        id="aivisCloudEmotionalIntensity"
+                        type="number"
+                        min="0"
+                        max="2"
+                        step="0.05"
+                        value={aivisCloudEmotionalIntensity}
+                        onChange={(e) =>
+                          setAivisCloudEmotionalIntensity(e.target.value)
+                        }
+                        placeholder="例: 1.2"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudTempoDynamics" style={{ display: 'block', marginBottom: '6px' }}>
+                        Tempo Dynamics:
+                      </label>
+                      <input
+                        id="aivisCloudTempoDynamics"
+                        type="number"
+                        min="0"
+                        max="2"
+                        step="0.05"
+                        value={aivisCloudTempoDynamics}
+                        onChange={(e) => setAivisCloudTempoDynamics(e.target.value)}
+                        placeholder="話速の緩急"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudPitch" style={{ display: 'block', marginBottom: '6px' }}>
+                        Pitch:
+                      </label>
+                      <input
+                        id="aivisCloudPitch"
+                        type="number"
+                        min="-1"
+                        max="1"
+                        step="0.05"
+                        value={aivisCloudPitch}
+                        onChange={(e) => setAivisCloudPitch(e.target.value)}
+                        placeholder="例: 0.1"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudVolume" style={{ display: 'block', marginBottom: '6px' }}>
+                        Volume:
+                      </label>
+                      <input
+                        id="aivisCloudVolume"
+                        type="number"
+                        min="0"
+                        max="2"
+                        step="0.05"
+                        value={aivisCloudVolume}
+                        onChange={(e) => setAivisCloudVolume(e.target.value)}
+                        placeholder="例: 1.0"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="aivisCloudLeadingSilence" style={{ display: 'block', marginBottom: '6px' }}>
+                        Leading Silence (sec):
+                      </label>
+                      <input
+                        id="aivisCloudLeadingSilence"
+                        type="number"
+                        min="0"
+                        max="60"
+                        step="0.05"
+                        value={aivisCloudLeadingSilence}
+                        onChange={(e) => setAivisCloudLeadingSilence(e.target.value)}
+                        placeholder="0.0〜60.0"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudTrailingSilence" style={{ display: 'block', marginBottom: '6px' }}>
+                        Trailing Silence (sec):
+                      </label>
+                      <input
+                        id="aivisCloudTrailingSilence"
+                        type="number"
+                        min="0"
+                        max="60"
+                        step="0.05"
+                        value={aivisCloudTrailingSilence}
+                        onChange={(e) => setAivisCloudTrailingSilence(e.target.value)}
+                        placeholder="0.0〜60.0"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudLineBreakSilence" style={{ display: 'block', marginBottom: '6px' }}>
+                        Line Break Silence (sec):
+                      </label>
+                      <input
+                        id="aivisCloudLineBreakSilence"
+                        type="number"
+                        min="0"
+                        max="60"
+                        step="0.05"
+                        value={aivisCloudLineBreakSilence}
+                        onChange={(e) => setAivisCloudLineBreakSilence(e.target.value)}
+                        placeholder="改行毎の無音"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="aivisCloudOutputFormat" style={{ display: 'block', marginBottom: '6px' }}>
+                        Output Format:
+                      </label>
+                      <select
+                        id="aivisCloudOutputFormat"
+                        value={aivisCloudOutputFormat}
+                        onChange={(e) =>
+                          setAivisCloudOutputFormat(
+                            e.target.value as AivisCloudOutputFormatOption,
+                          )
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        <option value="default">API既定値（mp3）</option>
+                        <option value="wav">wav</option>
+                        <option value="flac">flac</option>
+                        <option value="mp3">mp3</option>
+                        <option value="aac">aac</option>
+                        <option value="opus">opus</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudOutputBitrate" style={{ display: 'block', marginBottom: '6px' }}>
+                        Output Bitrate (kbps):
+                      </label>
+                      <input
+                        id="aivisCloudOutputBitrate"
+                        type="number"
+                        min="8"
+                        max="320"
+                        step="8"
+                        value={aivisCloudOutputBitrate}
+                        onChange={(e) => setAivisCloudOutputBitrate(e.target.value)}
+                        placeholder="例: 192（mp3/aac/opusのみ）"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudOutputSamplingRate" style={{ display: 'block', marginBottom: '6px' }}>
+                        Output Sampling Rate:
+                      </label>
+                      <select
+                        id="aivisCloudOutputSamplingRate"
+                        value={aivisCloudOutputSamplingRate}
+                        onChange={(e) =>
+                          setAivisCloudOutputSamplingRate(
+                            e.target.value as AivisCloudOutputSamplingRateOption,
+                          )
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        <option value="default">API既定値</option>
+                        <option value="8000">8,000 Hz</option>
+                        <option value="11025">11,025 Hz</option>
+                        <option value="12000">12,000 Hz</option>
+                        <option value="16000">16,000 Hz</option>
+                        <option value="22050">22,050 Hz</option>
+                        <option value="24000">24,000 Hz</option>
+                        <option value="44100">44,100 Hz</option>
+                        <option value="48000">48,000 Hz</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudOutputChannels" style={{ display: 'block', marginBottom: '6px' }}>
+                        Output Channels:
+                      </label>
+                      <select
+                        id="aivisCloudOutputChannels"
+                        value={aivisCloudOutputChannels}
+                        onChange={(e) =>
+                          setAivisCloudOutputChannels(
+                            e.target.value as AivisCloudOutputChannelOption,
+                          )
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        <option value="default">API既定値（mono）</option>
+                        <option value="mono">モノラル</option>
+                        <option value="stereo">ステレオ</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="aivisCloudUserDictionaryUuid" style={{ display: 'block', marginBottom: '6px' }}>
+                        User Dictionary UUID:
+                      </label>
+                      <input
+                        id="aivisCloudUserDictionaryUuid"
+                        type="text"
+                        value={aivisCloudUserDictionaryUuid}
+                        onChange={(e) =>
+                          setAivisCloudUserDictionaryUuid(e.target.value)
+                        }
+                        placeholder="適用するユーザー辞書がある場合"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisCloudEnableBillingLogs" style={{ display: 'block', marginBottom: '6px' }}>
+                        Billing Logs:
+                      </label>
+                      <select
+                        id="aivisCloudEnableBillingLogs"
+                        value={aivisCloudEnableBillingLogs}
+                        onChange={(e) =>
+                          setAivisCloudEnableBillingLogs(
+                            e.target.value as AivisCloudBooleanOption,
+                          )
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        <option value="default">API既定値（false）</option>
+                        <option value="true">ログを出力する</option>
+                        <option value="false">ログを出力しない</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: '0.8em', color: '#5c677d' }}>
+                    スタイル ID とスタイル名はどちらか片方のみ指定してください。
+                    SSML を有効にすると改行や &lt;break&gt; タグに応じて音声が分割されます。
+                  </div>
+                </div>
+              )}
+
               {selectedVoiceEngine === 'aivisSpeech' && (
                 <div
                   style={{
@@ -2340,7 +2946,13 @@ const App: React.FC = () => {
                     >
                       {selectedVoiceEngine === 'minimax'
                         ? 'MiniMaxでは速度・音質のパラメータを調整できます'
-                        : '※ 音声パラメータは最適な値に固定されています'}
+                        : selectedVoiceEngine === 'voicevox'
+                          ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
+                          : selectedVoiceEngine === 'aivisCloud'
+                            ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                            : selectedVoiceEngine === 'aivisSpeech'
+                              ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
+                              : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

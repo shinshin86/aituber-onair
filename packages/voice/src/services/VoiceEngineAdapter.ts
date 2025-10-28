@@ -439,6 +439,16 @@ export class VoiceEngineAdapter implements VoiceService {
           aivisEngine.setStyleName(this.options.aivisCloudStyleName);
         }
 
+        if (this.options.aivisCloudUserDictionaryUuid) {
+          aivisEngine.setUserDictionaryUuid(
+            this.options.aivisCloudUserDictionaryUuid,
+          );
+        }
+
+        if (this.options.aivisCloudLanguage) {
+          aivisEngine.setLanguage(this.options.aivisCloudLanguage);
+        }
+
         // SSML setting
         if (this.options.aivisCloudUseSSML !== undefined) {
           aivisEngine.setUseSSML(this.options.aivisCloudUseSSML);
