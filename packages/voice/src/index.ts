@@ -12,6 +12,7 @@ export type {
   MinimaxAudioSettingsOptions,
   MinimaxAudioFormat,
   VoiceVoxQueryParameterOverrides,
+  AivisSpeechQueryParameterOverrides,
 } from './services/VoiceService';
 export { VoiceEngineAdapter } from './services/VoiceEngineAdapter';
 

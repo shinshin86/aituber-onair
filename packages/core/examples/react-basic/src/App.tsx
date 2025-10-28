@@ -11,6 +11,7 @@ import {
   type MinimaxModel,
   type MinimaxAudioFormat,
   type VoiceVoxQueryParameterOverrides,
+  type AivisSpeechQueryParameterOverrides,
 } from '@aituber-onair/core';
 
 // Constants imports
@@ -194,6 +195,24 @@ const App: React.FC = () => {
     setVoicevoxEnableInterrogativeUpspeak,
   ] = useState<'default' | 'true' | 'false'>('default');
   const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState<string>('');
+  const [aivisSpeedScale, setAivisSpeedScale] = useState<string>('');
+  const [aivisPitchScale, setAivisPitchScale] = useState<string>('');
+  const [aivisIntonationScale, setAivisIntonationScale] = useState<string>('');
+  const [aivisTempoDynamicsScale, setAivisTempoDynamicsScale] =
+    useState<string>('');
+  const [aivisVolumeScale, setAivisVolumeScale] = useState<string>('');
+  const [aivisPrePhonemeLength, setAivisPrePhonemeLength] =
+    useState<string>('');
+  const [aivisPostPhonemeLength, setAivisPostPhonemeLength] =
+    useState<string>('');
+  const [aivisPauseLength, setAivisPauseLength] = useState<string>('');
+  const [aivisPauseLengthScale, setAivisPauseLengthScale] =
+    useState<string>('');
+  const [aivisOutputSamplingRate, setAivisOutputSamplingRate] =
+    useState<string>('default');
+  const [aivisOutputStereo, setAivisOutputStereo] = useState<
+    'default' | 'mono' | 'stereo'
+  >('default');
   const [selectedSpeakers, setSelectedSpeakers] = useState<Record<string, string | number>>({
     openai: 'alloy',
     voicevox: '',
@@ -299,6 +318,20 @@ const App: React.FC = () => {
       setVoicevoxEnableInterrogativeUpspeak('default');
       setVoicevoxCoreVersion('');
     }
+
+  if (selectedVoiceEngine === 'aivisSpeech') {
+    setAivisSpeedScale('');
+    setAivisPitchScale('');
+    setAivisIntonationScale('');
+    setAivisTempoDynamicsScale('');
+      setAivisVolumeScale('');
+      setAivisPrePhonemeLength('');
+    setAivisPostPhonemeLength('');
+    setAivisPauseLength('');
+    setAivisPauseLengthScale('');
+    setAivisOutputSamplingRate('default');
+    setAivisOutputStereo('default');
+  }
   }, [selectedVoiceEngine, voiceApiKeys]);
 
   /**
@@ -573,6 +606,92 @@ const App: React.FC = () => {
 
           if (Object.keys(voicevoxOverrides).length > 0) {
             options.voicevoxQueryParameters = voicevoxOverrides;
+          }
+
+          break;
+        }
+        case 'aivisSpeech': {
+          const aivisOverrides: AivisSpeechQueryParameterOverrides = {};
+
+          const parsedSpeedScale = Number.parseFloat(aivisSpeedScale);
+          if (!Number.isNaN(parsedSpeedScale)) {
+            options.aivisSpeechSpeedScale = parsedSpeedScale;
+            aivisOverrides.speedScale = parsedSpeedScale;
+          }
+
+          const parsedPitchScale = Number.parseFloat(aivisPitchScale);
+          if (!Number.isNaN(parsedPitchScale)) {
+            options.aivisSpeechPitchScale = parsedPitchScale;
+            aivisOverrides.pitchScale = parsedPitchScale;
+          }
+
+          const parsedIntonationScale = Number.parseFloat(aivisIntonationScale);
+          if (!Number.isNaN(parsedIntonationScale)) {
+            options.aivisSpeechIntonationScale = parsedIntonationScale;
+            aivisOverrides.intonationScale = parsedIntonationScale;
+          }
+
+          const parsedTempoDynamicsScale = Number.parseFloat(
+            aivisTempoDynamicsScale,
+          );
+          if (!Number.isNaN(parsedTempoDynamicsScale)) {
+            options.aivisSpeechTempoDynamicsScale = parsedTempoDynamicsScale;
+            aivisOverrides.tempoDynamicsScale = parsedTempoDynamicsScale;
+          }
+
+          const parsedVolumeScale = Number.parseFloat(aivisVolumeScale);
+          if (!Number.isNaN(parsedVolumeScale)) {
+            options.aivisSpeechVolumeScale = parsedVolumeScale;
+            aivisOverrides.volumeScale = parsedVolumeScale;
+          }
+
+          const parsedPrePhonemeLength = Number.parseFloat(aivisPrePhonemeLength);
+          if (!Number.isNaN(parsedPrePhonemeLength)) {
+            options.aivisSpeechPrePhonemeLength = parsedPrePhonemeLength;
+            aivisOverrides.prePhonemeLength = parsedPrePhonemeLength;
+          }
+
+          const parsedPostPhonemeLength = Number.parseFloat(
+            aivisPostPhonemeLength,
+          );
+          if (!Number.isNaN(parsedPostPhonemeLength)) {
+            options.aivisSpeechPostPhonemeLength = parsedPostPhonemeLength;
+            aivisOverrides.postPhonemeLength = parsedPostPhonemeLength;
+          }
+
+          const parsedPauseLength = Number.parseFloat(aivisPauseLength);
+          if (!Number.isNaN(parsedPauseLength)) {
+            options.aivisSpeechPauseLength = parsedPauseLength;
+            aivisOverrides.pauseLength = parsedPauseLength;
+          }
+
+          const parsedPauseLengthScale = Number.parseFloat(
+            aivisPauseLengthScale,
+          );
+          if (!Number.isNaN(parsedPauseLengthScale)) {
+            options.aivisSpeechPauseLengthScale = parsedPauseLengthScale;
+            aivisOverrides.pauseLengthScale = parsedPauseLengthScale;
+          }
+
+          if (aivisOutputSamplingRate !== 'default') {
+            const parsedSamplingRate = Number.parseInt(
+              aivisOutputSamplingRate,
+              10,
+            );
+            if (!Number.isNaN(parsedSamplingRate)) {
+              options.aivisSpeechOutputSamplingRate = parsedSamplingRate;
+              aivisOverrides.outputSamplingRate = parsedSamplingRate;
+            }
+          }
+
+          if (aivisOutputStereo !== 'default') {
+            const stereo = aivisOutputStereo === 'stereo';
+            options.aivisSpeechOutputStereo = stereo;
+            aivisOverrides.outputStereo = stereo;
+          }
+
+          if (Object.keys(aivisOverrides).length > 0) {
+            options.aivisSpeechQueryParameters = aivisOverrides;
           }
 
           break;
@@ -1893,17 +2012,233 @@ const App: React.FC = () => {
                         style={{ width: '100%', marginBottom: '4px' }}
                       />
 
-                      <div style={{ fontSize: '0.8em', color: '#5c677d' }}>
-                        空欄の項目はVOICEVOX API側の既定値が利用されます。
-                      </div>
-                    </div>
-                  )}
+                  <div style={{ fontSize: '0.8em', color: '#5c677d' }}>
+                    空欄の項目はVOICEVOX API側の既定値が利用されます。
+                  </div>
+                </div>
+              )}
 
-                  {selectedVoiceEngine !== 'none' && VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl && (
-                    <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
-                      <strong>API URL:</strong> {VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl}
+              {selectedVoiceEngine === 'aivisSpeech' && (
+                <div
+                  style={{
+                    marginTop: '12px',
+                    padding: '12px',
+                    backgroundColor: '#fff4e6',
+                    borderRadius: '8px',
+                    border: '1px solid #ffd8a8',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 'bold',
+                      marginBottom: '8px',
+                      color: '#d9480f',
+                    }}
+                  >
+                    AivisSpeech パラメータ
+                  </div>
+
+                  <label htmlFor="aivisSpeedScale" style={{ display: 'block', marginBottom: '6px' }}>
+                    Speed Scale:
+                  </label>
+                  <input
+                    id="aivisSpeedScale"
+                    type="number"
+                    step="0.05"
+                    value={aivisSpeedScale}
+                    onChange={(e) => setAivisSpeedScale(e.target.value)}
+                    placeholder="未指定でAPI既定値"
+                    style={{ width: '100%', marginBottom: '8px' }}
+                  />
+
+                  <label htmlFor="aivisPitchScale" style={{ display: 'block', marginBottom: '6px' }}>
+                    ピッチ倍率:
+                  </label>
+                  <input
+                    id="aivisPitchScale"
+                    type="number"
+                    step="0.05"
+                    value={aivisPitchScale}
+                    onChange={(e) => setAivisPitchScale(e.target.value)}
+                    placeholder="未指定でAPI既定値"
+                    style={{ width: '100%', marginBottom: '8px' }}
+                  />
+
+                  <label htmlFor="aivisIntonationScale" style={{ display: 'block', marginBottom: '6px' }}>
+                    Intonation Scale (0.0 ~ 2.0):
+                  </label>
+                  <input
+                    id="aivisIntonationScale"
+                    type="number"
+                    step="0.05"
+                    value={aivisIntonationScale}
+                    onChange={(e) => setAivisIntonationScale(e.target.value)}
+                    placeholder="感情の強さ"
+                    style={{ width: '100%', marginBottom: '8px' }}
+                  />
+
+                  <label
+                    htmlFor="aivisTempoDynamicsScale"
+                    style={{ display: 'block', marginBottom: '6px' }}
+                  >
+                    Tempo Dynamics Scale:
+                  </label>
+                  <input
+                    id="aivisTempoDynamicsScale"
+                    type="number"
+                    step="0.05"
+                    value={aivisTempoDynamicsScale}
+                    onChange={(e) => setAivisTempoDynamicsScale(e.target.value)}
+                    placeholder="話速の緩急"
+                    style={{ width: '100%', marginBottom: '8px' }}
+                  />
+
+                  <label htmlFor="aivisVolumeScale" style={{ display: 'block', marginBottom: '6px' }}>
+                    音量倍率:
+                  </label>
+                  <input
+                    id="aivisVolumeScale"
+                    type="number"
+                    step="0.05"
+                    value={aivisVolumeScale}
+                    onChange={(e) => setAivisVolumeScale(e.target.value)}
+                    placeholder="未指定でAPI既定値"
+                    style={{ width: '100%', marginBottom: '8px' }}
+                  />
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="aivisPrePhonemeLength" style={{ display: 'block', marginBottom: '6px' }}>
+                        前無音 (秒):
+                      </label>
+                      <input
+                        id="aivisPrePhonemeLength"
+                        type="number"
+                        step="0.01"
+                        value={aivisPrePhonemeLength}
+                        onChange={(e) => setAivisPrePhonemeLength(e.target.value)}
+                        placeholder="例: 0.15"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
                     </div>
-                  )}
+                    <div>
+                      <label htmlFor="aivisPostPhonemeLength" style={{ display: 'block', marginBottom: '6px' }}>
+                        後無音 (秒):
+                      </label>
+                      <input
+                        id="aivisPostPhonemeLength"
+                        type="number"
+                        step="0.01"
+                        value={aivisPostPhonemeLength}
+                        onChange={(e) => setAivisPostPhonemeLength(e.target.value)}
+                        placeholder="例: 0.1"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="aivisPauseLength" style={{ display: 'block', marginBottom: '6px' }}>
+                        ポーズ長 (秒):
+                      </label>
+                      <input
+                        id="aivisPauseLength"
+                        type="number"
+                        step="0.05"
+                        value={aivisPauseLength}
+                        onChange={(e) => setAivisPauseLength(e.target.value)}
+                        placeholder="例: 0.4"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="aivisPauseLengthScale" style={{ display: 'block', marginBottom: '6px' }}>
+                        ポーズ倍率:
+                      </label>
+                      <input
+                        id="aivisPauseLengthScale"
+                        type="number"
+                        step="0.05"
+                        value={aivisPauseLengthScale}
+                        onChange={(e) => setAivisPauseLengthScale(e.target.value)}
+                        placeholder="例: 1.1"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="aivisOutputSamplingRate" style={{ display: 'block', marginBottom: '6px' }}>
+                        サンプリングレート:
+                      </label>
+                      <select
+                        id="aivisOutputSamplingRate"
+                        value={aivisOutputSamplingRate}
+                        onChange={(e) => setAivisOutputSamplingRate(e.target.value)}
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        <option value="default">既定値を使用</option>
+                        <option value="8000">8,000 Hz</option>
+                        <option value="11025">11,025 Hz</option>
+                        <option value="16000">16,000 Hz</option>
+                        <option value="22050">22,050 Hz</option>
+                        <option value="24000">24,000 Hz</option>
+                        <option value="44100">44,100 Hz</option>
+                        <option value="48000">48,000 Hz</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="aivisOutputStereo" style={{ display: 'block', marginBottom: '6px' }}>
+                        出力チャンネル:
+                      </label>
+                      <select
+                        id="aivisOutputStereo"
+                        value={aivisOutputStereo}
+                        onChange={(e) =>
+                          setAivisOutputStereo(
+                            e.target.value as 'default' | 'mono' | 'stereo',
+                          )
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        <option value="default">既定値を使用</option>
+                        <option value="mono">モノラル (false)</option>
+                        <option value="stereo">ステレオ (true)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: '0.8em', color: '#d9480f' }}>
+                    tempoDynamicsScale はテンポの緩急、Intonation Scale は感情表現の強さを制御します。空欄の場合は既定値が利用されます。
+                  </div>
+                </div>
+              )}
+
+            {selectedVoiceEngine !== 'none' && VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl && (
+              <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
+                <strong>API URL:</strong> {VOICE_ENGINE_CONFIGS[selectedVoiceEngine].apiUrl}
+              </div>
+            )}
 
                   {/* Speaker Selection */}
                   {selectedVoiceEngine !== 'none' && (

@@ -132,6 +132,7 @@ export {
   type MinimaxAudioSettingsOptions,
   type MinimaxAudioFormat,
   type VoiceVoxQueryParameterOverrides,
+  type AivisSpeechQueryParameterOverrides,
   type VoiceEngineType,
   talkStyles,
   type TalkStyle,
