@@ -215,6 +215,7 @@ const App: React.FC = () => {
     setVoicevoxEnableInterrogativeUpspeak,
   ] = useState<'default' | 'true' | 'false'>('default');
   const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState<string>('');
+  const [openaiSpeed, setOpenaiSpeed] = useState<string>('');
   const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState<string>('');
   const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] =
     useState<string>('');
@@ -377,6 +378,10 @@ const App: React.FC = () => {
       setVoicevoxEnableKatakanaEnglish('default');
     setVoicevoxEnableInterrogativeUpspeak('default');
     setVoicevoxCoreVersion('');
+  }
+
+  if (selectedVoiceEngine === 'openai') {
+    setOpenaiSpeed('');
   }
 
   if (selectedVoiceEngine === 'aivisCloud') {
@@ -597,6 +602,13 @@ if (selectedVoiceEngine === 'aivisSpeech') {
 
       // Add engine-specific options
       switch (selectedVoiceEngine) {
+        case 'openai': {
+          const parsedSpeed = Number.parseFloat(openaiSpeed);
+          if (!Number.isNaN(parsedSpeed)) {
+            options.openAiSpeed = parsedSpeed;
+          }
+          break;
+        }
         case 'aivisCloud': {
           const trimmedModelUuid = aivisCloudModelUuid.trim();
           if (trimmedModelUuid) {
@@ -1918,6 +1930,48 @@ if (selectedVoiceEngine === 'aivisSpeech') {
                     </>
                   )}
 
+                  {selectedVoiceEngine === 'openai' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        backgroundColor: '#e6f6ff',
+                        borderRadius: '8px',
+                        border: '1px solid #b5e3f5',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 'bold',
+                          marginBottom: '8px',
+                          color: '#0b7285',
+                        }}
+                      >
+                        OpenAI TTS パラメータ
+                      </div>
+
+                      <label htmlFor="openaiSpeed" style={{ display: 'block', marginBottom: '6px' }}>
+                        Speed (0.25 - 4.0):
+                      </label>
+                      <input
+                        id="openaiSpeed"
+                        type="number"
+                        min="0.25"
+                        max="4"
+                        step="0.05"
+                        value={openaiSpeed}
+                        onChange={(e) => setOpenaiSpeed(e.target.value)}
+                        placeholder="例: 1.25（未入力で既定値1.0）"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+
+                      <div style={{ fontSize: '0.8em', color: '#0b7285' }}>
+                        速度以外は `gpt-4o-mini-tts` の instructions で自然言語指定するか、
+                        生成後に加工してください。
+                      </div>
+                    </div>
+                  )}
+
                   {selectedVoiceEngine === 'voicevox' && (
                     <div
                       style={{
@@ -2948,11 +3002,13 @@ if (selectedVoiceEngine === 'aivisSpeech') {
                         ? 'MiniMaxでは速度・音質のパラメータを調整できます'
                         : selectedVoiceEngine === 'voicevox'
                           ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
-                          : selectedVoiceEngine === 'aivisCloud'
-                            ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
-                            : selectedVoiceEngine === 'aivisSpeech'
-                              ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
-                              : '※ 音声パラメータは最適な値に固定されています'}
+                          : selectedVoiceEngine === 'openai'
+                            ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
+                            : selectedVoiceEngine === 'aivisCloud'
+                              ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                              : selectedVoiceEngine === 'aivisSpeech'
+                                ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
+                                : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

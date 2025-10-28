@@ -181,6 +181,29 @@ describe('VoiceEngineAdapter', () => {
     });
   });
 
+  describe('OpenAI Integration', () => {
+    it('should configure OpenAI engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'openai',
+        speaker: 'alloy',
+        apiKey: 'sk-test',
+        openAiModel: 'gpt-4o-mini-tts',
+        openAiSpeed: 1.75,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'OpenAI test' });
+
+      expect(mockEngine.setModel).toHaveBeenCalledWith('gpt-4o-mini-tts');
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.75);
+      expect(mockEngine.fetchAudio).toHaveBeenCalled();
+    });
+  });
+
   describe('AivisCloud Integration', () => {
     it('should configure Aivis Cloud engine with provided overrides', async () => {
       const options: VoiceServiceOptions = {

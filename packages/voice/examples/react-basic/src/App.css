@@ -138,15 +138,32 @@
 .voicevox-card select,
 .voicevox-card input,
 .aiviscloud-card select,
-.aiviscloud-card input {
+.aiviscloud-card input,
+.openai-card select,
+.openai-card input {
   background: rgba(255, 255, 255, 0.85);
 }
 
 .voicevox-card select:focus,
 .voicevox-card input:focus,
 .aiviscloud-card select:focus,
-.aiviscloud-card input:focus {
+.aiviscloud-card input:focus,
+.openai-card select:focus,
+.openai-card input:focus {
   background: #fff;
+}
+
+.openai-card {
+  border-color: #c3f0ff;
+  background: linear-gradient(180deg, #f0fbff 0%, #e0f4ff 100%);
+}
+
+.openai-card h4 {
+  color: #0b7285;
+}
+
+.openai-card .parameter-section__title {
+  color: #1098ad;
 }
 
 .aivisspeech-card {
