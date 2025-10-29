@@ -42,6 +42,7 @@ describe('VoiceEngineAdapter', () => {
       setGroupId: vi.fn(),
       setEndpoint: vi.fn(),
       setModel: vi.fn(),
+      setEmotion: vi.fn(),
       setLanguage: vi.fn(),
       setVoiceSettings: vi.fn(),
       setSpeed: vi.fn(),
@@ -127,6 +128,33 @@ describe('VoiceEngineAdapter', () => {
         false,
       );
       expect(mockEngine.setCoreVersion).toHaveBeenCalledWith('0.15.0');
+    });
+  });
+
+  describe('VoicePeak Integration', () => {
+    it('should configure VoicePeak engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'voicepeak',
+        speaker: 'f1',
+        voicepeakApiUrl: 'http://localhost:20202',
+        voicepeakEmotion: 'angry',
+        voicepeakSpeed: 180,
+        voicepeakPitch: 120,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'VoicePeak test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'http://localhost:20202',
+      );
+      expect(mockEngine.setEmotion).toHaveBeenCalledWith('angry');
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(180);
+      expect(mockEngine.setPitch).toHaveBeenCalledWith(120);
     });
   });
 

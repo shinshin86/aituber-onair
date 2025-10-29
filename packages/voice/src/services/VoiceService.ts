@@ -3,6 +3,7 @@ import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine'
 export type { VoiceVoxQueryParameterOverrides };
 export type { AivisSpeechQueryParameterOverrides };
 import { ChatScreenplay } from '../types/chat';
+import type { EmotionTypeForVoicepeak } from '../types/voice';
 import { VoiceEngineType } from '../types/voiceEngine';
 
 /**
@@ -61,6 +62,12 @@ export interface VoiceServiceOptions {
   voicevoxApiUrl?: string;
   /** Custom VOICEPEAK API endpoint URL */
   voicepeakApiUrl?: string;
+  /** VoicePeak emotion override */
+  voicepeakEmotion?: EmotionTypeForVoicepeak;
+  /** VoicePeak speaking speed (50-200, integer) */
+  voicepeakSpeed?: number;
+  /** VoicePeak pitch (-300 to 300, integer) */
+  voicepeakPitch?: number;
   /** Custom AIVIS SPEECH API endpoint URL */
   aivisSpeechApiUrl?: string;
   /** MiniMax Group ID (required for MiniMax engine) */

@@ -112,6 +112,13 @@ type AivisCloudOutputSamplingRateOption =
   | '44100'
   | '48000';
 type AivisCloudOutputChannelOption = 'default' | 'mono' | 'stereo';
+type VoicePeakEmotionOption =
+  | 'neutral'
+  | 'happy'
+  | 'fun'
+  | 'angry'
+  | 'sad'
+  | 'surprised';
 
 // UI Messages
 const DO_NOT_SET_API_KEY_MESSAGE = 'API Keyを入力してください。';
@@ -215,6 +222,10 @@ const App: React.FC = () => {
     setVoicevoxEnableInterrogativeUpspeak,
   ] = useState<'default' | 'true' | 'false'>('default');
   const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState<string>('');
+  const [voicepeakEmotion, setVoicepeakEmotion] =
+    useState<VoicePeakEmotionOption>('neutral');
+  const [voicepeakSpeed, setVoicepeakSpeed] = useState<string>('');
+  const [voicepeakPitch, setVoicepeakPitch] = useState<string>('');
   const [openaiSpeed, setOpenaiSpeed] = useState<string>('');
   const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState<string>('');
   const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] =
@@ -379,6 +390,10 @@ const App: React.FC = () => {
     setVoicevoxEnableInterrogativeUpspeak('default');
     setVoicevoxCoreVersion('');
   }
+
+  setVoicepeakEmotion('neutral');
+  setVoicepeakSpeed('');
+  setVoicepeakPitch('');
 
   if (selectedVoiceEngine === 'openai') {
     setOpenaiSpeed('');
@@ -720,6 +735,20 @@ if (selectedVoiceEngine === 'aivisSpeech') {
           if (aivisCloudEnableBillingLogs !== 'default') {
             options.aivisCloudEnableBillingLogs =
               aivisCloudEnableBillingLogs === 'true';
+          }
+          break;
+        }
+        case 'voicepeak': {
+          options.voicepeakEmotion = voicepeakEmotion;
+
+          const parsedSpeed = Number.parseInt(voicepeakSpeed, 10);
+          if (!Number.isNaN(parsedSpeed)) {
+            options.voicepeakSpeed = parsedSpeed;
+          }
+
+          const parsedPitch = Number.parseInt(voicepeakPitch, 10);
+          if (!Number.isNaN(parsedPitch)) {
+            options.voicepeakPitch = parsedPitch;
           }
           break;
         }
@@ -2254,6 +2283,84 @@ if (selectedVoiceEngine === 'aivisSpeech') {
 
                   <div style={{ fontSize: '0.8em', color: '#5c677d' }}>
                     空欄の項目はVOICEVOX API側の既定値が利用されます。
+                  </div>
+                </div>
+              )}
+
+              {selectedVoiceEngine === 'voicepeak' && (
+                <div
+                  style={{
+                    marginTop: '12px',
+                    padding: '12px',
+                    backgroundColor: '#f4f5ff',
+                    borderRadius: '8px',
+                    border: '1px solid #dbe4ff',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 'bold',
+                      marginBottom: '8px',
+                      color: '#364fc7',
+                    }}
+                  >
+                    VOICEPEAK パラメータ
+                  </div>
+
+                  <label htmlFor="voicepeakEmotion" style={{ display: 'block', marginBottom: '6px' }}>
+                    Emotion Override:
+                  </label>
+                  <select
+                    id="voicepeakEmotion"
+                    value={voicepeakEmotion}
+                    onChange={(e) =>
+                      setVoicepeakEmotion(
+                        e.target.value as VoicePeakEmotionOption,
+                      )
+                    }
+                    style={{ width: '100%', marginBottom: '8px' }}
+                  >
+                    <option value="neutral">neutral</option>
+                    <option value="happy">happy</option>
+                    <option value="fun">fun</option>
+                    <option value="angry">angry</option>
+                    <option value="sad">sad</option>
+                    <option value="surprised">surprised</option>
+                  </select>
+
+                  <label htmlFor="voicepeakSpeed" style={{ display: 'block', marginBottom: '6px' }}>
+                    Speed (50-200):
+                  </label>
+                  <input
+                    id="voicepeakSpeed"
+                    type="number"
+                    min={50}
+                    max={200}
+                    step={1}
+                    value={voicepeakSpeed}
+                    onChange={(e) => setVoicepeakSpeed(e.target.value)}
+                    placeholder="整数のみ（未入力で既定値）"
+                    style={{ width: '100%', marginBottom: '8px' }}
+                  />
+
+                  <label htmlFor="voicepeakPitch" style={{ display: 'block', marginBottom: '6px' }}>
+                    Pitch (-300〜300):
+                  </label>
+                  <input
+                    id="voicepeakPitch"
+                    type="number"
+                    min={-300}
+                    max={300}
+                    step={1}
+                    value={voicepeakPitch}
+                    onChange={(e) => setVoicepeakPitch(e.target.value)}
+                    placeholder="整数のみ（未入力で既定値）"
+                    style={{ width: '100%', marginBottom: '8px' }}
+                  />
+
+                  <div style={{ fontSize: '0.8em', color: '#364fc7' }}>
+                    Emotion で選んだ感情がそのまま vpeakserver へ送信されます
+                    （初期値は neutral）。Speed と Pitch を空欄にすると vpeakserver のデフォルト値が利用されます。
                   </div>
                 </div>
               )}

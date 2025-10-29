@@ -140,7 +140,10 @@ Professional speech synthesis with rich emotional expression.
 const voiceService = new VoiceService({
   engineType: 'voicepeak',
   speaker: 'f1',
-  voicepeakApiUrl: 'http://localhost:20202'
+  voicepeakApiUrl: 'http://localhost:20202',
+  voicepeakEmotion: 'happy',
+  voicepeakSpeed: 140,
+  voicepeakPitch: 20
 });
 ```
 
@@ -393,6 +396,15 @@ interface VoiceServiceOptions {
   endpoint?: 'global' | 'china'; // For MiniMax
   voicevoxApiUrl?: string;
   voicepeakApiUrl?: string;
+  voicepeakEmotion?:
+    | 'happy'
+    | 'fun'
+    | 'angry'
+    | 'sad'
+    | 'neutral'
+    | 'surprised';
+  voicepeakSpeed?: number; // 50-200 (integer)
+  voicepeakPitch?: number; // -300 to 300 (integer)
   aivisSpeechApiUrl?: string;
   onPlay?: (audioBuffer: ArrayBuffer) => Promise<void>;
   onComplete?: () => void;
