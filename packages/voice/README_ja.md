@@ -140,7 +140,10 @@ const voiceService = new VoiceService({
 const voiceService = new VoiceService({
   engineType: 'voicepeak',
   speaker: 'f1',
-  voicepeakApiUrl: 'http://localhost:20202'
+  voicepeakApiUrl: 'http://localhost:20202',
+  voicepeakEmotion: 'happy',
+  voicepeakSpeed: 140,
+  voicepeakPitch: 20
 });
 ```
 
@@ -393,6 +396,15 @@ interface VoiceServiceOptions {
   endpoint?: 'global' | 'china'; // MiniMax用
   voicevoxApiUrl?: string;
   voicepeakApiUrl?: string;
+  voicepeakEmotion?:
+    | 'happy'
+    | 'fun'
+    | 'angry'
+    | 'sad'
+    | 'neutral'
+    | 'surprised';
+  voicepeakSpeed?: number; // 50-200（整数）
+  voicepeakPitch?: number; // -300〜300（整数）
   aivisSpeechApiUrl?: string;
   onPlay?: (audioBuffer: ArrayBuffer) => Promise<void>;
   onComplete?: () => void;

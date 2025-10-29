@@ -113,6 +113,13 @@ type AivisCloudOutputSamplingRateOption =
   | '44100'
   | '48000';
 type AivisCloudOutputChannelOption = 'default' | 'mono' | 'stereo';
+type VoicePeakEmotionOption =
+  | 'neutral'
+  | 'happy'
+  | 'fun'
+  | 'angry'
+  | 'sad'
+  | 'surprised';
 
 function App() {
   const [engine, setEngine] = useState<EngineType>('openai');
@@ -155,6 +162,10 @@ function App() {
     setVoicevoxEnableInterrogativeUpspeak,
   ] = useState<'default' | 'true' | 'false'>('default');
   const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState('');
+  const [voicepeakEmotion, setVoicepeakEmotion] =
+    useState<VoicePeakEmotionOption>('neutral');
+  const [voicepeakSpeed, setVoicepeakSpeed] = useState('');
+  const [voicepeakPitch, setVoicepeakPitch] = useState('');
   const [openaiSpeed, setOpenaiSpeed] = useState('');
   const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState('');
   const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] = useState('');
@@ -248,6 +259,9 @@ function App() {
     setVoicevoxEnableKatakanaEnglish('default');
     setVoicevoxEnableInterrogativeUpspeak('default');
     setVoicevoxCoreVersion('');
+    setVoicepeakEmotion('neutral');
+    setVoicepeakSpeed('');
+    setVoicepeakPitch('');
     setOpenaiSpeed('');
     setAivisCloudModelUuid('');
     setAivisCloudSpeakerUuid('');
@@ -508,6 +522,18 @@ function App() {
         const parsedSpeed = Number.parseFloat(openaiSpeed);
         if (!Number.isNaN(parsedSpeed)) {
           options.openAiSpeed = parsedSpeed;
+        }
+      } else if (engine === 'voicepeak') {
+        options.voicepeakEmotion = voicepeakEmotion;
+
+        const parsedSpeed = Number.parseInt(voicepeakSpeed, 10);
+        if (!Number.isNaN(parsedSpeed)) {
+          options.voicepeakSpeed = parsedSpeed;
+        }
+
+        const parsedPitch = Number.parseInt(voicepeakPitch, 10);
+        if (!Number.isNaN(parsedPitch)) {
+          options.voicepeakPitch = parsedPitch;
         }
       } else if (engine === 'aivisSpeech') {
         const queryOverrides: AivisSpeechQueryParameterOverrides = {};
@@ -1048,6 +1074,99 @@ function App() {
               サンプリングレートは 8,000 / 11,025 / 16,000 / 22,050 / 24,000 /
               44,100 / 48,000 Hz
               をサポート。未入力の場合はエンジンの既定値が適用されます。
+            </p>
+          </div>
+        )}
+
+        {engine === 'voicepeak' && (
+          <div className="parameter-card voicepeak-card">
+            <div className="parameter-card__header">
+              <h4>VOICEPEAK パラメータ</h4>
+              <p className="parameter-card__description">
+                vpeakserver を利用してローカルの VOICEPEAK
+                と連携します。未指定の項目は サーバー側の推奨値が適用されます。
+              </p>
+            </div>
+
+            <div className="parameter-grid parameter-grid--two parameter-card__grid">
+              <div className="form-group">
+                <label htmlFor="voicepeakApiKey">API Key</label>
+                <input
+                  id="voicepeakApiKey"
+                  type="password"
+                  value=""
+                  disabled
+                  placeholder="VOICEPEAKはAPIキー不要"
+                  title="VOICEPEAKローカルエンジンではAPIキーは不要です"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="voicepeakApiUrl">API URL</label>
+                <input
+                  id="voicepeakApiUrl"
+                  type="text"
+                  value={apiUrl}
+                  onChange={(e) => setApiUrl(e.target.value)}
+                  placeholder="例: http://localhost:20202"
+                />
+              </div>
+            </div>
+
+            <div className="parameter-section">
+              <div className="parameter-section__title">感情・ピッチ</div>
+              <div className="parameter-grid">
+                <div className="form-group">
+                  <label htmlFor="voicepeakEmotion">Emotion Override</label>
+                  <select
+                    id="voicepeakEmotion"
+                    value={voicepeakEmotion}
+                    onChange={(e) =>
+                      setVoicepeakEmotion(
+                        e.target.value as VoicePeakEmotionOption,
+                      )
+                    }
+                  >
+                    <option value="neutral">neutral</option>
+                    <option value="happy">happy</option>
+                    <option value="fun">fun</option>
+                    <option value="angry">angry</option>
+                    <option value="sad">sad</option>
+                    <option value="surprised">surprised</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="voicepeakSpeed">Speed (50-200)</label>
+                  <input
+                    id="voicepeakSpeed"
+                    type="number"
+                    min="50"
+                    max="200"
+                    step="1"
+                    value={voicepeakSpeed}
+                    onChange={(e) => setVoicepeakSpeed(e.target.value)}
+                    placeholder="整数のみ（未入力で既定値）"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="voicepeakPitch">Pitch (-300〜300)</label>
+                  <input
+                    id="voicepeakPitch"
+                    type="number"
+                    min="-300"
+                    max="300"
+                    step="1"
+                    value={voicepeakPitch}
+                    onChange={(e) => setVoicepeakPitch(e.target.value)}
+                    placeholder="整数のみ（未入力で既定値）"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <p className="parameter-card__note">
+              Emotion で選んだ値がそのまま vpeakserver に送信されます （初期値は
+              neutral）。Speed と Pitch を空欄にすると vpeakserver
+              の初期値が利用されます。
             </p>
           </div>
         )}

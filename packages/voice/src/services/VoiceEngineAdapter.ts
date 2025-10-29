@@ -216,6 +216,32 @@ export class VoiceEngineAdapter implements VoiceService {
         }
       }
 
+      // For VoicePeak engine, configure optional parameters
+      if (this.options.engineType === 'voicepeak') {
+        const voicepeakEngine = engine as any;
+
+        if (
+          this.options.voicepeakEmotion !== undefined &&
+          typeof voicepeakEngine.setEmotion === 'function'
+        ) {
+          voicepeakEngine.setEmotion(this.options.voicepeakEmotion);
+        }
+
+        if (
+          this.options.voicepeakSpeed !== undefined &&
+          typeof voicepeakEngine.setSpeed === 'function'
+        ) {
+          voicepeakEngine.setSpeed(this.options.voicepeakSpeed);
+        }
+
+        if (
+          this.options.voicepeakPitch !== undefined &&
+          typeof voicepeakEngine.setPitch === 'function'
+        ) {
+          voicepeakEngine.setPitch(this.options.voicepeakPitch);
+        }
+      }
+
       // For AivisSpeech engine, configure additional parameters
       if (this.options.engineType === 'aivisSpeech') {
         const aivisEngine = engine as any;
