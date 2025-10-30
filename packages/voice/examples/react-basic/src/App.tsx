@@ -2050,7 +2050,8 @@ function App() {
 
         {engine !== 'minimax' &&
           engine !== 'voicevox' &&
-          engine !== 'aivisSpeech' && (
+          engine !== 'aivisSpeech' &&
+          engine !== 'voicepeak' && (
             <div className="form-group">
               <label htmlFor="apiKey">
                 API Key {defaults.needsApiKey ? '(required)' : '(optional)'}:
@@ -2072,18 +2073,20 @@ function App() {
             </div>
           )}
 
-        {engine !== 'voicevox' && engine !== 'aivisSpeech' && (
-          <div className="form-group">
-            <label htmlFor="apiUrl">API URL (customizable):</label>
-            <input
-              id="apiUrl"
-              type="text"
-              value={apiUrl}
-              onChange={(e) => setApiUrl(e.target.value)}
-              placeholder="Default will be set based on selected engine"
-            />
-          </div>
-        )}
+        {engine !== 'voicevox' &&
+          engine !== 'aivisSpeech' &&
+          engine !== 'voicepeak' && (
+            <div className="form-group">
+              <label htmlFor="apiUrl">API URL (customizable):</label>
+              <input
+                id="apiUrl"
+                type="text"
+                value={apiUrl}
+                onChange={(e) => setApiUrl(e.target.value)}
+                placeholder="Default will be set based on selected engine"
+              />
+            </div>
+          )}
 
         <div className="form-group">
           <label htmlFor="text">Text to speak:</label>
