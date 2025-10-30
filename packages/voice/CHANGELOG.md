@@ -1,5 +1,21 @@
 # @aituber-onair/voice
 
+## 0.5.0
+
+### Minor Changes
+
+- feat: expand engine parameter coverage (all engines except NijiVoice) so developers can tune key overrides directly from the React example while leveraging existing `VoiceServiceOptions`
+
+  **Engine highlights:**
+  - **OpenAI TTS** — surfaced `openAiSpeed` override; UI defaults remain at 1.0 with real-time adjustment.
+  - **VOICEVOX** — exposed full query overrides including speed/pitch/intonation/volume scales, phoneme lengths, pause controls, sampling rate, stereo, katakana-English handling, interrogative upspeak, and core version.
+  - **AivisSpeech** — matched VOICEVOX-style controls for speed, pitch, intonation, volume, silence lengths, sampling rate, and channel selection.
+  - **Aivis Cloud** — added most frequently requested sliders for speaking rate, emotional intensity, tempo, pitch, volume, leading/trailing/line-break silence plus output format options.
+  - **VoicePeak** — enabled emotion selection alongside slider-based speed and pitch overrides to mirror the engine's API ranges.
+  - **MiniMax** — reorganized voice/audio settings with sliders for speed, volume, pitch, and dropdowns for sample rate, bitrate, format, and channel while keeping language boost configurable.
+
+- feat: refresh the React example UI to introduce reusable slider components, reset buttons, and collapsible cards that keep each engine's extended parameter set tidy and discoverable.
+
 ## 0.4.0
 
 ### Minor Changes
