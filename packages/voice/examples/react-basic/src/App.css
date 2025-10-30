@@ -70,6 +70,108 @@
   -moz-appearance: textfield;
 }
 
+.form-group--with-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  grid-column: 1 / -1;
+}
+
+.form-group__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+
+.form-group__label-row label {
+  margin-bottom: 0;
+}
+
+.slider-reset {
+  border: none;
+  background: none;
+  color: #3b5bdb;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.slider-reset:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.slider-reset:not(:disabled):hover {
+  text-decoration: underline;
+}
+
+.range-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.range-control input[type="range"] {
+  flex: 1;
+  accent-color: #646cff;
+}
+
+.range-control__value {
+  min-width: 140px;
+  text-align: right;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.form-group--with-slider input[type="number"] {
+  margin-top: 0.2rem;
+}
+
+.collapsible-card__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.collapsible-card__trigger:focus-visible {
+  outline: 2px solid rgba(100, 108, 255, 0.6);
+  border-radius: 6px;
+}
+
+.collapsible-card__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.collapsible-card__icon {
+  font-size: 0.85rem;
+  color: #5c677d;
+}
+
+.collapsible-card__panel {
+  margin-top: 0.75rem;
+}
+
+.collapsible-card__description {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.collapsible-card__trigger:focus {
+  outline: none;
+}
+
 .form-row {
   display: flex;
   gap: 0.75rem;
@@ -79,23 +181,27 @@
   flex: 1;
 }
 
-.parameter-card {
+.parameter-card,
+.advanced-card {
   margin-top: 1rem;
-  padding: 1rem 1.2rem;
-  border-radius: 10px;
+  padding: 1rem;
+  border-radius: 8px;
   border: 1px solid #dbe4ff;
-  background: linear-gradient(180deg, #f8f9ff 0%, #eef2ff 100%);
+  background-color: #f8f9ff;
   text-align: left;
-  box-shadow: 0 6px 16px rgba(72, 99, 255, 0.12);
 }
 
-.parameter-card h4 {
+.parameter-card h4,
+.parameter-card .collapsible-card__title,
+.advanced-card .collapsible-card__title {
   margin: 0 0 0.35rem;
   font-size: 1.05rem;
   color: #364fc7;
 }
 
-.parameter-card__description {
+.parameter-card__description,
+.parameter-card .collapsible-card__description,
+.advanced-card .collapsible-card__description {
   margin: 0;
   font-size: 0.9rem;
   color: #495057;
@@ -153,25 +259,13 @@
   background: #fff;
 }
 
-.openai-card {
-  border-color: #c3f0ff;
-  background: linear-gradient(180deg, #f0fbff 0%, #e0f4ff 100%);
-}
-
-.openai-card h4 {
-  color: #0b7285;
-}
-
-.openai-card .parameter-section__title {
-  color: #1098ad;
-}
-
 .aivisspeech-card {
   border-color: #dbe4ff;
   background: linear-gradient(180deg, #f8f9ff 0%, #eef2ff 100%);
 }
 
-.aivisspeech-card h4 {
+.aivisspeech-card h4,
+.aivisspeech-card .collapsible-card__title {
   color: #364fc7;
 }
 
@@ -209,20 +303,6 @@
   background-color: rgba(255, 0, 0, 0.1);
   border: 1px solid rgba(255, 0, 0, 0.3);
   color: #ef4444;
-}
-
-.advanced-card {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid #dbe4ff;
-  border-radius: 8px;
-  background-color: #f8f9ff;
-  text-align: left;
-}
-
-.advanced-card h3 {
-  margin-top: 0;
-  color: #3b5bdb;
 }
 
 .grid {

@@ -6,7 +6,7 @@ import {
   type VoiceVoxQueryParameterOverrides,
   type AivisSpeechQueryParameterOverrides,
 } from '@aituber-onair/voice';
-import { useEffect, useState } from 'react';
+import { type ChangeEvent, type ReactNode, useEffect, useState } from 'react';
 import './App.css';
 
 // Engine defaults
@@ -92,6 +92,311 @@ const MINIMAX_VOICES: Record<string, string> = {
   Sweet_Girl_2: 'Sweet Girl 2',
   Exuberant_Girl: 'Exuberant Girl',
 };
+
+interface SliderConfig {
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+  suffix?: string;
+}
+
+const SLIDER_CONFIG: Record<string, SliderConfig> = {
+  openaiSpeed: {
+    min: 0.25,
+    max: 1.75,
+    step: 0.05,
+    defaultValue: 1,
+    suffix: 'x',
+  },
+  voicepeakSpeed: { min: 50, max: 150, step: 1, defaultValue: 100 },
+  voicepeakPitch: { min: -300, max: 300, step: 1, defaultValue: 0 },
+  voicevoxSpeedScale: {
+    min: 0.5,
+    max: 1.5,
+    step: 0.05,
+    defaultValue: 1,
+    suffix: 'x',
+  },
+  voicevoxPitchScale: { min: -0.3, max: 0.3, step: 0.01, defaultValue: 0 },
+  voicevoxIntonationScale: { min: 0.5, max: 1.5, step: 0.05, defaultValue: 1 },
+  voicevoxVolumeScale: { min: 0.5, max: 1.5, step: 0.05, defaultValue: 1 },
+  voicevoxPrePhonemeLength: {
+    min: 0,
+    max: 0.2,
+    step: 0.005,
+    defaultValue: 0.1,
+    suffix: 's',
+  },
+  voicevoxPostPhonemeLength: {
+    min: 0,
+    max: 0.2,
+    step: 0.005,
+    defaultValue: 0.1,
+    suffix: 's',
+  },
+  voicevoxPauseLength: {
+    min: 0,
+    max: 0.6,
+    step: 0.05,
+    defaultValue: 0.3,
+    suffix: 's',
+  },
+  voicevoxPauseLengthScale: { min: 0.5, max: 1.5, step: 0.05, defaultValue: 1 },
+  minimaxSpeed: {
+    min: 0.1,
+    max: 1.9,
+    step: 0.05,
+    defaultValue: 1,
+    suffix: 'x',
+  },
+  minimaxVolume: {
+    min: 0.1,
+    max: 1.9,
+    step: 0.05,
+    defaultValue: 1,
+    suffix: 'x',
+  },
+  minimaxPitch: { min: -12, max: 12, step: 1, defaultValue: 0 },
+  aivisSpeedScale: {
+    min: 0.5,
+    max: 1.5,
+    step: 0.05,
+    defaultValue: 1,
+    suffix: 'x',
+  },
+  aivisPitchScale: { min: -0.3, max: 0.3, step: 0.01, defaultValue: 0 },
+  aivisIntonationScale: { min: 0.5, max: 1.5, step: 0.05, defaultValue: 1 },
+  aivisTempoDynamicsScale: { min: 0.5, max: 1.5, step: 0.05, defaultValue: 1 },
+  aivisVolumeScale: { min: 0.5, max: 1.5, step: 0.05, defaultValue: 1 },
+  aivisPrePhonemeLength: {
+    min: 0,
+    max: 0.2,
+    step: 0.005,
+    defaultValue: 0.1,
+    suffix: 's',
+  },
+  aivisPostPhonemeLength: {
+    min: 0,
+    max: 0.2,
+    step: 0.005,
+    defaultValue: 0.1,
+    suffix: 's',
+  },
+  aivisPauseLength: {
+    min: 0,
+    max: 0.6,
+    step: 0.05,
+    defaultValue: 0.3,
+    suffix: 's',
+  },
+  aivisPauseLengthScale: { min: 0.5, max: 1.5, step: 0.05, defaultValue: 1 },
+  aivisCloudSpeakingRate: {
+    min: 0.5,
+    max: 1.5,
+    step: 0.05,
+    defaultValue: 1,
+    suffix: 'x',
+  },
+  aivisCloudEmotionalIntensity: { min: 0, max: 2, step: 0.05, defaultValue: 1 },
+  aivisCloudTempoDynamics: { min: 0, max: 2, step: 0.05, defaultValue: 1 },
+  aivisCloudPitch: { min: -1, max: 1, step: 0.05, defaultValue: 0 },
+  aivisCloudVolume: { min: 0, max: 2, step: 0.05, defaultValue: 1 },
+  aivisCloudLeadingSilence: {
+    min: 0,
+    max: 0.6,
+    step: 0.05,
+    defaultValue: 0.3,
+    suffix: 's',
+  },
+  aivisCloudTrailingSilence: {
+    min: 0,
+    max: 0.6,
+    step: 0.05,
+    defaultValue: 0.3,
+    suffix: 's',
+  },
+  aivisCloudLineBreakSilence: {
+    min: 0,
+    max: 0.6,
+    step: 0.05,
+    defaultValue: 0.3,
+    suffix: 's',
+  },
+};
+
+const clampValue = (value: number, min: number, max: number): number => {
+  return Math.min(Math.max(value, min), max);
+};
+
+const getDecimalPlaces = (step: number): number => {
+  const stepString = step.toString();
+  if (!stepString.includes('.')) {
+    return 0;
+  }
+  return stepString.split('.')[1]?.length ?? 0;
+};
+
+const formatValueForStep = (value: number, step: number): string => {
+  const decimals = getDecimalPlaces(step);
+  return decimals > 0 ? value.toFixed(decimals) : value.toString();
+};
+
+interface NumberSliderFieldProps {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (nextValue: string) => void;
+  config: SliderConfig;
+  placeholder?: string;
+  suffix?: string;
+}
+
+const DEFAULT_VALUE_LABEL = '既定値';
+
+function NumberSliderField({
+  id,
+  label,
+  value,
+  onChange,
+  config,
+  placeholder,
+  suffix,
+}: NumberSliderFieldProps) {
+  const effectiveSuffix = suffix ?? config.suffix ?? '';
+  const trimmedValue = value.trim();
+  const numericValue = Number(trimmedValue);
+  const hasCustomValue = trimmedValue !== '' && !Number.isNaN(numericValue);
+  const sliderValue = clampValue(
+    hasCustomValue ? numericValue : config.defaultValue,
+    config.min,
+    config.max,
+  );
+
+  const handleSliderChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const numericValue = Number.parseFloat(event.target.value);
+    if (Number.isNaN(numericValue)) {
+      onChange('');
+      return;
+    }
+    onChange(formatValueForStep(numericValue, config.step));
+  };
+
+  const handleNumberChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange(event.target.value);
+  };
+
+  const handleReset = () => {
+    onChange('');
+  };
+
+  const displayValue = !hasCustomValue
+    ? `${DEFAULT_VALUE_LABEL} (${formatValueForStep(
+        config.defaultValue,
+        config.step,
+      )}${effectiveSuffix})`
+    : `${trimmedValue}${effectiveSuffix}`;
+
+  return (
+    <div className="form-group form-group--with-slider">
+      <div className="form-group__label-row">
+        <label htmlFor={id}>{label}</label>
+        <button
+          type="button"
+          className="slider-reset"
+          onClick={handleReset}
+          disabled={!hasCustomValue}
+        >
+          既定値に戻す
+        </button>
+      </div>
+      <div className="range-control">
+        <input
+          id={`${id}Slider`}
+          type="range"
+          min={config.min}
+          max={config.max}
+          step={config.step}
+          value={sliderValue}
+          onChange={handleSliderChange}
+          aria-label={`${label} スライダー`}
+          list={`${id}Ticks`}
+        />
+        <output className="range-control__value" htmlFor={`${id}Slider`}>
+          {displayValue}
+        </output>
+      </div>
+      <input
+        id={id}
+        type="number"
+        step={config.step}
+        value={value}
+        onChange={handleNumberChange}
+        placeholder={placeholder}
+      />
+      <datalist id={`${id}Ticks`}>
+        <option value={config.min} />
+        <option value={config.defaultValue} />
+        <option value={config.max} />
+      </datalist>
+    </div>
+  );
+}
+
+interface CollapsibleCardProps {
+  title: string;
+  description?: string;
+  children: ReactNode;
+  className?: string;
+  defaultOpen?: boolean;
+}
+
+function CollapsibleCard({
+  title,
+  description,
+  children,
+  className,
+  defaultOpen = false,
+}: CollapsibleCardProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  const handleToggle = () => {
+    setIsOpen((prev) => !prev);
+  };
+
+  const rootClassName = ['collapsible-card', className]
+    .filter(Boolean)
+    .join(' ');
+  const panelClassName = ['collapsible-card__panel', className]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={rootClassName}>
+      <button
+        type="button"
+        className="collapsible-card__trigger"
+        onClick={handleToggle}
+        aria-expanded={isOpen}
+      >
+        <span className="collapsible-card__title">{title}</span>
+        <span className="collapsible-card__icon" aria-hidden="true">
+          {isOpen ? '▲' : '▼'}
+        </span>
+      </button>
+      <div
+        className={panelClassName}
+        style={{ display: isOpen ? 'block' : 'none' }}
+        aria-hidden={!isOpen}
+      >
+        {description ? (
+          <p className="collapsible-card__description">{description}</p>
+        ) : null}
+        <div className="collapsible-card__content">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 type EngineType = keyof typeof ENGINE_DEFAULTS;
 type AivisCloudBooleanOption = 'default' | 'true' | 'false';
@@ -786,48 +1091,35 @@ function App() {
         </div>
 
         {engine === 'openai' && (
-          <div className="parameter-card openai-card">
-            <div className="parameter-card__header">
-              <h4>OpenAI TTS パラメータ</h4>
-              <p className="parameter-card__description">
-                現在のOpenAI TTSでは音声速度のみ数値指定が可能です。
-                未入力の場合は既定値 1.0 が使用されます。
-              </p>
-            </div>
-
+          <CollapsibleCard
+            className="parameter-card openai-card"
+            title="OpenAI TTS パラメータ"
+            description="現在のOpenAI TTSでは音声速度のみ数値指定が可能です。未入力の場合は既定値 1.0 が使用されます。"
+          >
             <div className="parameter-section">
               <div className="parameter-section__title">話速</div>
-              <div className="form-group">
-                <label htmlFor="openaiSpeed">Speed (0.25 - 4.0)</label>
-                <input
-                  id="openaiSpeed"
-                  type="number"
-                  step="0.05"
-                  min="0.25"
-                  max="4"
-                  value={openaiSpeed}
-                  onChange={(e) => setOpenaiSpeed(e.target.value)}
-                  placeholder="例: 1.25（標準は 1.0）"
-                />
-              </div>
+              <NumberSliderField
+                id="openaiSpeed"
+                label="Speed (0.25 - 4.0)"
+                value={openaiSpeed}
+                onChange={(next) => setOpenaiSpeed(next)}
+                config={SLIDER_CONFIG.openaiSpeed}
+                placeholder="例: 1.25（標準は 1.0）"
+              />
             </div>
 
             <p className="parameter-card__note">
               モデルや声色は `speaker` の指定で切り替えられます。
             </p>
-          </div>
+          </CollapsibleCard>
         )}
 
         {engine === 'voicevox' && (
-          <div className="parameter-card voicevox-card">
-            <div className="parameter-card__header">
-              <h4>VOICEVOX パラメータ</h4>
-              <p className="parameter-card__description">
-                テキストから生成される音声の質感を細かく調整できます。未入力のフィールドは
-                API の既定値のまま使用されます。
-              </p>
-            </div>
-
+          <CollapsibleCard
+            className="parameter-card voicevox-card"
+            title="VOICEVOX パラメータ"
+            description="テキストから生成される音声の質感を細かく調整できます。未入力のフィールドは API の既定値のまま使用されます。"
+          >
             <div className="parameter-grid parameter-grid--two parameter-card__grid">
               <div className="form-group">
                 <label htmlFor="voicevoxApiKey">API Key (optional)</label>
@@ -856,116 +1148,76 @@ function App() {
             <div className="parameter-section">
               <div className="parameter-section__title">話速・ピッチ</div>
               <div className="parameter-grid">
-                <div className="form-group">
-                  <label htmlFor="voicevoxSpeedScale">Speed Scale</label>
-                  <input
-                    id="voicevoxSpeedScale"
-                    type="number"
-                    step="0.05"
-                    value={voicevoxSpeedScale}
-                    onChange={(e) => setVoicevoxSpeedScale(e.target.value)}
-                    placeholder="例: 1.10（標準は 1.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="voicevoxPitchScale">Pitch Scale</label>
-                  <input
-                    id="voicevoxPitchScale"
-                    type="number"
-                    step="0.05"
-                    value={voicevoxPitchScale}
-                    onChange={(e) => setVoicevoxPitchScale(e.target.value)}
-                    placeholder="例: 0.15（標準は 0.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="voicevoxIntonationScale">
-                    Intonation Scale
-                  </label>
-                  <input
-                    id="voicevoxIntonationScale"
-                    type="number"
-                    step="0.05"
-                    value={voicevoxIntonationScale}
-                    onChange={(e) => setVoicevoxIntonationScale(e.target.value)}
-                    placeholder="例: 1.20（標準は 1.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="voicevoxVolumeScale">Volume Scale</label>
-                  <input
-                    id="voicevoxVolumeScale"
-                    type="number"
-                    step="0.05"
-                    value={voicevoxVolumeScale}
-                    onChange={(e) => setVoicevoxVolumeScale(e.target.value)}
-                    placeholder="例: 0.95（標準は 1.0）"
-                  />
-                </div>
+                <NumberSliderField
+                  id="voicevoxSpeedScale"
+                  label="Speed Scale"
+                  value={voicevoxSpeedScale}
+                  onChange={(next) => setVoicevoxSpeedScale(next)}
+                  config={SLIDER_CONFIG.voicevoxSpeedScale}
+                  placeholder="例: 1.10（標準は 1.0）"
+                />
+                <NumberSliderField
+                  id="voicevoxPitchScale"
+                  label="Pitch Scale"
+                  value={voicevoxPitchScale}
+                  onChange={(next) => setVoicevoxPitchScale(next)}
+                  config={SLIDER_CONFIG.voicevoxPitchScale}
+                  placeholder="例: 0.15（標準は 0.0）"
+                />
+                <NumberSliderField
+                  id="voicevoxIntonationScale"
+                  label="Intonation Scale"
+                  value={voicevoxIntonationScale}
+                  onChange={(next) => setVoicevoxIntonationScale(next)}
+                  config={SLIDER_CONFIG.voicevoxIntonationScale}
+                  placeholder="例: 1.20（標準は 1.0）"
+                />
+                <NumberSliderField
+                  id="voicevoxVolumeScale"
+                  label="Volume Scale"
+                  value={voicevoxVolumeScale}
+                  onChange={(next) => setVoicevoxVolumeScale(next)}
+                  config={SLIDER_CONFIG.voicevoxVolumeScale}
+                  placeholder="例: 0.95（標準は 1.0）"
+                />
               </div>
             </div>
 
             <div className="parameter-section">
               <div className="parameter-section__title">無音コントロール</div>
               <div className="parameter-grid">
-                <div className="form-group">
-                  <label htmlFor="voicevoxPrePhonemeLength">
-                    Pre-phoneme Length (sec)
-                  </label>
-                  <input
-                    id="voicevoxPrePhonemeLength"
-                    type="number"
-                    step="0.01"
-                    value={voicevoxPrePhonemeLength}
-                    onChange={(e) =>
-                      setVoicevoxPrePhonemeLength(e.target.value)
-                    }
-                    placeholder="例: 0.12"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="voicevoxPostPhonemeLength">
-                    Post-phoneme Length (sec)
-                  </label>
-                  <input
-                    id="voicevoxPostPhonemeLength"
-                    type="number"
-                    step="0.01"
-                    value={voicevoxPostPhonemeLength}
-                    onChange={(e) =>
-                      setVoicevoxPostPhonemeLength(e.target.value)
-                    }
-                    placeholder="例: 0.08"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="voicevoxPauseLength">
-                    Pause Length (sec)
-                  </label>
-                  <input
-                    id="voicevoxPauseLength"
-                    type="number"
-                    step="0.05"
-                    value={voicevoxPauseLength}
-                    onChange={(e) => setVoicevoxPauseLength(e.target.value)}
-                    placeholder="例: 0.5（空欄で自動）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="voicevoxPauseLengthScale">
-                    Pause Length Scale
-                  </label>
-                  <input
-                    id="voicevoxPauseLengthScale"
-                    type="number"
-                    step="0.05"
-                    value={voicevoxPauseLengthScale}
-                    onChange={(e) =>
-                      setVoicevoxPauseLengthScale(e.target.value)
-                    }
-                    placeholder="例: 1.1（標準は 1.0）"
-                  />
-                </div>
+                <NumberSliderField
+                  id="voicevoxPrePhonemeLength"
+                  label="Pre-phoneme Length (sec)"
+                  value={voicevoxPrePhonemeLength}
+                  onChange={(next) => setVoicevoxPrePhonemeLength(next)}
+                  config={SLIDER_CONFIG.voicevoxPrePhonemeLength}
+                  placeholder="例: 0.12"
+                />
+                <NumberSliderField
+                  id="voicevoxPostPhonemeLength"
+                  label="Post-phoneme Length (sec)"
+                  value={voicevoxPostPhonemeLength}
+                  onChange={(next) => setVoicevoxPostPhonemeLength(next)}
+                  config={SLIDER_CONFIG.voicevoxPostPhonemeLength}
+                  placeholder="例: 0.08"
+                />
+                <NumberSliderField
+                  id="voicevoxPauseLength"
+                  label="Pause Length (sec)"
+                  value={voicevoxPauseLength}
+                  onChange={(next) => setVoicevoxPauseLength(next)}
+                  config={SLIDER_CONFIG.voicevoxPauseLength}
+                  placeholder="例: 0.5（空欄で自動）"
+                />
+                <NumberSliderField
+                  id="voicevoxPauseLengthScale"
+                  label="Pause Length Scale"
+                  value={voicevoxPauseLengthScale}
+                  onChange={(next) => setVoicevoxPauseLengthScale(next)}
+                  config={SLIDER_CONFIG.voicevoxPauseLengthScale}
+                  placeholder="例: 1.1（標準は 1.0）"
+                />
               </div>
             </div>
 
@@ -1075,19 +1327,15 @@ function App() {
               44,100 / 48,000 Hz
               をサポート。未入力の場合はエンジンの既定値が適用されます。
             </p>
-          </div>
+          </CollapsibleCard>
         )}
 
         {engine === 'voicepeak' && (
-          <div className="parameter-card voicepeak-card">
-            <div className="parameter-card__header">
-              <h4>VOICEPEAK パラメータ</h4>
-              <p className="parameter-card__description">
-                vpeakserver を利用してローカルの VOICEPEAK
-                と連携します。未指定の項目は サーバー側の推奨値が適用されます。
-              </p>
-            </div>
-
+          <CollapsibleCard
+            className="parameter-card voicepeak-card"
+            title="VOICEPEAK パラメータ"
+            description="vpeakserver を利用してローカルの VOICEPEAK と連携します。未指定の項目は サーバー側の推奨値が適用されます。"
+          >
             <div className="parameter-grid parameter-grid--two parameter-card__grid">
               <div className="form-group">
                 <label htmlFor="voicepeakApiKey">API Key</label>
@@ -1134,32 +1382,22 @@ function App() {
                     <option value="surprised">surprised</option>
                   </select>
                 </div>
-                <div className="form-group">
-                  <label htmlFor="voicepeakSpeed">Speed (50-200)</label>
-                  <input
-                    id="voicepeakSpeed"
-                    type="number"
-                    min="50"
-                    max="200"
-                    step="1"
-                    value={voicepeakSpeed}
-                    onChange={(e) => setVoicepeakSpeed(e.target.value)}
-                    placeholder="整数のみ（未入力で既定値）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="voicepeakPitch">Pitch (-300〜300)</label>
-                  <input
-                    id="voicepeakPitch"
-                    type="number"
-                    min="-300"
-                    max="300"
-                    step="1"
-                    value={voicepeakPitch}
-                    onChange={(e) => setVoicepeakPitch(e.target.value)}
-                    placeholder="整数のみ（未入力で既定値）"
-                  />
-                </div>
+                <NumberSliderField
+                  id="voicepeakSpeed"
+                  label="Speed (50-200)"
+                  value={voicepeakSpeed}
+                  onChange={(next) => setVoicepeakSpeed(next)}
+                  config={SLIDER_CONFIG.voicepeakSpeed}
+                  placeholder="整数のみ（未入力で既定値）"
+                />
+                <NumberSliderField
+                  id="voicepeakPitch"
+                  label="Pitch (-300〜300)"
+                  value={voicepeakPitch}
+                  onChange={(next) => setVoicepeakPitch(next)}
+                  config={SLIDER_CONFIG.voicepeakPitch}
+                  placeholder="整数のみ（未入力で既定値）"
+                />
               </div>
             </div>
 
@@ -1168,19 +1406,15 @@ function App() {
               neutral）。Speed と Pitch を空欄にすると vpeakserver
               の初期値が利用されます。
             </p>
-          </div>
+          </CollapsibleCard>
         )}
 
         {engine === 'aivisCloud' && (
-          <div className="parameter-card aiviscloud-card">
-            <div className="parameter-card__header">
-              <h4>Aivis Cloud パラメータ</h4>
-              <p className="parameter-card__description">
-                クラウド版 Aivis のモデル・話者・出力条件を細かく指定できます。
-                空欄や「API既定値」はサービス側のデフォルト設定が利用されます。
-              </p>
-            </div>
-
+          <CollapsibleCard
+            className="parameter-card aiviscloud-card"
+            title="Aivis Cloud パラメータ"
+            description="クラウド版 Aivis のモデル・話者・出力条件を細かく指定できます。空欄や「API既定値」はサービス側のデフォルト設定が利用されます。"
+          >
             <div className="parameter-grid parameter-grid--two parameter-card__grid">
               <div className="form-group">
                 <label htmlFor="aivisCloudApiKey">API Key (required)</label>
@@ -1274,134 +1508,76 @@ function App() {
             <div className="parameter-section">
               <div className="parameter-section__title">話速・感情</div>
               <div className="parameter-grid parameter-grid--two">
-                <div className="form-group">
-                  <label htmlFor="aivisCloudSpeakingRate">Speaking Rate</label>
-                  <input
-                    id="aivisCloudSpeakingRate"
-                    type="number"
-                    step="0.05"
-                    min="0.5"
-                    max="2"
-                    value={aivisCloudSpeakingRate}
-                    onChange={(e) => setAivisCloudSpeakingRate(e.target.value)}
-                    placeholder="例: 1.05 （0.5〜2.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisCloudEmotionalIntensity">
-                    Emotional Intensity
-                  </label>
-                  <input
-                    id="aivisCloudEmotionalIntensity"
-                    type="number"
-                    step="0.05"
-                    min="0"
-                    max="2"
-                    value={aivisCloudEmotionalIntensity}
-                    onChange={(e) =>
-                      setAivisCloudEmotionalIntensity(e.target.value)
-                    }
-                    placeholder="例: 1.2 （0.0〜2.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisCloudTempoDynamics">
-                    Tempo Dynamics
-                  </label>
-                  <input
-                    id="aivisCloudTempoDynamics"
-                    type="number"
-                    step="0.05"
-                    min="0"
-                    max="2"
-                    value={aivisCloudTempoDynamics}
-                    onChange={(e) => setAivisCloudTempoDynamics(e.target.value)}
-                    placeholder="話速の緩急（0.0〜2.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisCloudPitch">Pitch</label>
-                  <input
-                    id="aivisCloudPitch"
-                    type="number"
-                    step="0.05"
-                    min="-1"
-                    max="1"
-                    value={aivisCloudPitch}
-                    onChange={(e) => setAivisCloudPitch(e.target.value)}
-                    placeholder="例: 0.1 （-1.0〜1.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisCloudVolume">Volume</label>
-                  <input
-                    id="aivisCloudVolume"
-                    type="number"
-                    step="0.05"
-                    min="0"
-                    max="2"
-                    value={aivisCloudVolume}
-                    onChange={(e) => setAivisCloudVolume(e.target.value)}
-                    placeholder="例: 1.0 （0.0〜2.0）"
-                  />
-                </div>
+                <NumberSliderField
+                  id="aivisCloudSpeakingRate"
+                  label="Speaking Rate"
+                  value={aivisCloudSpeakingRate}
+                  onChange={(next) => setAivisCloudSpeakingRate(next)}
+                  config={SLIDER_CONFIG.aivisCloudSpeakingRate}
+                  placeholder="例: 1.05 （0.5〜1.5）"
+                />
+                <NumberSliderField
+                  id="aivisCloudEmotionalIntensity"
+                  label="Emotional Intensity"
+                  value={aivisCloudEmotionalIntensity}
+                  onChange={(next) => setAivisCloudEmotionalIntensity(next)}
+                  config={SLIDER_CONFIG.aivisCloudEmotionalIntensity}
+                  placeholder="例: 1.2 （0.0〜2.0）"
+                />
+                <NumberSliderField
+                  id="aivisCloudTempoDynamics"
+                  label="Tempo Dynamics"
+                  value={aivisCloudTempoDynamics}
+                  onChange={(next) => setAivisCloudTempoDynamics(next)}
+                  config={SLIDER_CONFIG.aivisCloudTempoDynamics}
+                  placeholder="話速の緩急（0.0〜2.0）"
+                />
+                <NumberSliderField
+                  id="aivisCloudPitch"
+                  label="Pitch"
+                  value={aivisCloudPitch}
+                  onChange={(next) => setAivisCloudPitch(next)}
+                  config={SLIDER_CONFIG.aivisCloudPitch}
+                  placeholder="例: 0.10 （-1.0〜1.0）"
+                />
+                <NumberSliderField
+                  id="aivisCloudVolume"
+                  label="Volume"
+                  value={aivisCloudVolume}
+                  onChange={(next) => setAivisCloudVolume(next)}
+                  config={SLIDER_CONFIG.aivisCloudVolume}
+                  placeholder="例: 1.0 （0.0〜2.0）"
+                />
               </div>
             </div>
 
             <div className="parameter-section">
               <div className="parameter-section__title">無音コントロール</div>
               <div className="parameter-grid parameter-grid--two">
-                <div className="form-group">
-                  <label htmlFor="aivisCloudLeadingSilence">
-                    Leading Silence (sec)
-                  </label>
-                  <input
-                    id="aivisCloudLeadingSilence"
-                    type="number"
-                    step="0.05"
-                    min="0"
-                    max="60"
-                    value={aivisCloudLeadingSilence}
-                    onChange={(e) =>
-                      setAivisCloudLeadingSilence(e.target.value)
-                    }
-                    placeholder="先頭無音 0.0〜60.0"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisCloudTrailingSilence">
-                    Trailing Silence (sec)
-                  </label>
-                  <input
-                    id="aivisCloudTrailingSilence"
-                    type="number"
-                    step="0.05"
-                    min="0"
-                    max="60"
-                    value={aivisCloudTrailingSilence}
-                    onChange={(e) =>
-                      setAivisCloudTrailingSilence(e.target.value)
-                    }
-                    placeholder="末尾無音 0.0〜60.0"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisCloudLineBreakSilence">
-                    Line Break Silence (sec)
-                  </label>
-                  <input
-                    id="aivisCloudLineBreakSilence"
-                    type="number"
-                    step="0.05"
-                    min="0"
-                    max="60"
-                    value={aivisCloudLineBreakSilence}
-                    onChange={(e) =>
-                      setAivisCloudLineBreakSilence(e.target.value)
-                    }
-                    placeholder="改行ごとの無音（0.0〜60.0）"
-                  />
-                </div>
+                <NumberSliderField
+                  id="aivisCloudLeadingSilence"
+                  label="Leading Silence (sec)"
+                  value={aivisCloudLeadingSilence}
+                  onChange={(next) => setAivisCloudLeadingSilence(next)}
+                  config={SLIDER_CONFIG.aivisCloudLeadingSilence}
+                  placeholder="先頭無音 0.0〜0.6"
+                />
+                <NumberSliderField
+                  id="aivisCloudTrailingSilence"
+                  label="Trailing Silence (sec)"
+                  value={aivisCloudTrailingSilence}
+                  onChange={(next) => setAivisCloudTrailingSilence(next)}
+                  config={SLIDER_CONFIG.aivisCloudTrailingSilence}
+                  placeholder="末尾無音 0.0〜0.6"
+                />
+                <NumberSliderField
+                  id="aivisCloudLineBreakSilence"
+                  label="Line Break Silence (sec)"
+                  value={aivisCloudLineBreakSilence}
+                  onChange={(next) => setAivisCloudLineBreakSilence(next)}
+                  config={SLIDER_CONFIG.aivisCloudLineBreakSilence}
+                  placeholder="改行ごとの無音（0.0〜0.6）"
+                />
               </div>
             </div>
 
@@ -1530,19 +1706,15 @@ function App() {
               を有効にすると改行や &lt;break&gt;
               タグに基づいて音声が分割されます。
             </p>
-          </div>
+          </CollapsibleCard>
         )}
 
         {engine === 'aivisSpeech' && (
-          <div className="parameter-card aivisspeech-card">
-            <div className="parameter-card__header">
-              <h4>AivisSpeech パラメータ</h4>
-              <p className="parameter-card__description">
-                テキストから生成される音声の質感を細かく調整できます。未入力のフィールドは
-                API の既定値のまま使用されます。
-              </p>
-            </div>
-
+          <CollapsibleCard
+            className="parameter-card aivisspeech-card"
+            title="AivisSpeech パラメータ"
+            description="テキストから生成される音声の質感を細かく調整できます。未入力のフィールドは API の既定値のまま使用されます。"
+          >
             <div className="parameter-grid parameter-grid--two parameter-card__grid">
               <div className="form-group">
                 <label htmlFor="aivisApiKey">API Key (optional)</label>
@@ -1571,119 +1743,84 @@ function App() {
             <div className="parameter-section">
               <div className="parameter-section__title">話速・ピッチ</div>
               <div className="parameter-grid">
-                <div className="form-group">
-                  <label htmlFor="aivisSpeedScale">Speed Scale</label>
-                  <input
-                    id="aivisSpeedScale"
-                    type="number"
-                    step="0.05"
-                    value={aivisSpeedScale}
-                    onChange={(e) => setAivisSpeedScale(e.target.value)}
-                    placeholder="例: 1.10（標準は 1.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisPitchScale">Pitch Scale</label>
-                  <input
-                    id="aivisPitchScale"
-                    type="number"
-                    step="0.05"
-                    value={aivisPitchScale}
-                    onChange={(e) => setAivisPitchScale(e.target.value)}
-                    placeholder="例: 0.15（標準は 0.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisIntonationScale">Intonation Scale</label>
-                  <input
-                    id="aivisIntonationScale"
-                    type="number"
-                    step="0.05"
-                    value={aivisIntonationScale}
-                    onChange={(e) => setAivisIntonationScale(e.target.value)}
-                    placeholder="例: 1.20（標準は 1.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisTempoDynamicsScale">
-                    Tempo Dynamics Scale
-                  </label>
-                  <input
-                    id="aivisTempoDynamicsScale"
-                    type="number"
-                    step="0.05"
-                    value={aivisTempoDynamicsScale}
-                    onChange={(e) => setAivisTempoDynamicsScale(e.target.value)}
-                    placeholder="例: 1.10（標準は 1.0）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisVolumeScale">Volume Scale</label>
-                  <input
-                    id="aivisVolumeScale"
-                    type="number"
-                    step="0.05"
-                    value={aivisVolumeScale}
-                    onChange={(e) => setAivisVolumeScale(e.target.value)}
-                    placeholder="例: 0.95（標準は 1.0）"
-                  />
-                </div>
+                <NumberSliderField
+                  id="aivisSpeedScale"
+                  label="Speed Scale"
+                  value={aivisSpeedScale}
+                  onChange={(next) => setAivisSpeedScale(next)}
+                  config={SLIDER_CONFIG.aivisSpeedScale}
+                  placeholder="例: 1.10（標準は 1.0）"
+                />
+                <NumberSliderField
+                  id="aivisPitchScale"
+                  label="Pitch Scale"
+                  value={aivisPitchScale}
+                  onChange={(next) => setAivisPitchScale(next)}
+                  config={SLIDER_CONFIG.aivisPitchScale}
+                  placeholder="例: 0.15（標準は 0.0）"
+                />
+                <NumberSliderField
+                  id="aivisIntonationScale"
+                  label="Intonation Scale"
+                  value={aivisIntonationScale}
+                  onChange={(next) => setAivisIntonationScale(next)}
+                  config={SLIDER_CONFIG.aivisIntonationScale}
+                  placeholder="例: 1.20（標準は 1.0）"
+                />
+                <NumberSliderField
+                  id="aivisTempoDynamicsScale"
+                  label="Tempo Dynamics Scale"
+                  value={aivisTempoDynamicsScale}
+                  onChange={(next) => setAivisTempoDynamicsScale(next)}
+                  config={SLIDER_CONFIG.aivisTempoDynamicsScale}
+                  placeholder="例: 1.10（標準は 1.0）"
+                />
+                <NumberSliderField
+                  id="aivisVolumeScale"
+                  label="Volume Scale"
+                  value={aivisVolumeScale}
+                  onChange={(next) => setAivisVolumeScale(next)}
+                  config={SLIDER_CONFIG.aivisVolumeScale}
+                  placeholder="例: 0.95（標準は 1.0）"
+                />
               </div>
             </div>
 
             <div className="parameter-section">
               <div className="parameter-section__title">無音コントロール</div>
               <div className="parameter-grid">
-                <div className="form-group">
-                  <label htmlFor="aivisPrePhonemeLength">
-                    Pre-phoneme Length (sec)
-                  </label>
-                  <input
-                    id="aivisPrePhonemeLength"
-                    type="number"
-                    step="0.01"
-                    value={aivisPrePhonemeLength}
-                    onChange={(e) => setAivisPrePhonemeLength(e.target.value)}
-                    placeholder="例: 0.12"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisPostPhonemeLength">
-                    Post-phoneme Length (sec)
-                  </label>
-                  <input
-                    id="aivisPostPhonemeLength"
-                    type="number"
-                    step="0.01"
-                    value={aivisPostPhonemeLength}
-                    onChange={(e) => setAivisPostPhonemeLength(e.target.value)}
-                    placeholder="例: 0.08"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisPauseLength">Pause Length (sec)</label>
-                  <input
-                    id="aivisPauseLength"
-                    type="number"
-                    step="0.05"
-                    value={aivisPauseLength}
-                    onChange={(e) => setAivisPauseLength(e.target.value)}
-                    placeholder="例: 0.5（空欄で自動）"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="aivisPauseLengthScale">
-                    Pause Length Scale
-                  </label>
-                  <input
-                    id="aivisPauseLengthScale"
-                    type="number"
-                    step="0.05"
-                    value={aivisPauseLengthScale}
-                    onChange={(e) => setAivisPauseLengthScale(e.target.value)}
-                    placeholder="例: 1.1（標準は 1.0）"
-                  />
-                </div>
+                <NumberSliderField
+                  id="aivisPrePhonemeLength"
+                  label="Pre-phoneme Length (sec)"
+                  value={aivisPrePhonemeLength}
+                  onChange={(next) => setAivisPrePhonemeLength(next)}
+                  config={SLIDER_CONFIG.aivisPrePhonemeLength}
+                  placeholder="例: 0.12"
+                />
+                <NumberSliderField
+                  id="aivisPostPhonemeLength"
+                  label="Post-phoneme Length (sec)"
+                  value={aivisPostPhonemeLength}
+                  onChange={(next) => setAivisPostPhonemeLength(next)}
+                  config={SLIDER_CONFIG.aivisPostPhonemeLength}
+                  placeholder="例: 0.08"
+                />
+                <NumberSliderField
+                  id="aivisPauseLength"
+                  label="Pause Length (sec)"
+                  value={aivisPauseLength}
+                  onChange={(next) => setAivisPauseLength(next)}
+                  config={SLIDER_CONFIG.aivisPauseLength}
+                  placeholder="例: 0.5（空欄で自動）"
+                />
+                <NumberSliderField
+                  id="aivisPauseLengthScale"
+                  label="Pause Length Scale"
+                  value={aivisPauseLengthScale}
+                  onChange={(next) => setAivisPauseLengthScale(next)}
+                  config={SLIDER_CONFIG.aivisPauseLengthScale}
+                  placeholder="例: 1.1（標準は 1.0）"
+                />
               </div>
             </div>
 
@@ -1733,7 +1870,7 @@ function App() {
               44,100 / 48,000 Hz
               をサポート。未入力の場合はエンジンの既定値が適用されます。
             </p>
-          </div>
+          </CollapsibleCard>
         )}
 
         {engine === 'minimax' && (
@@ -1798,9 +1935,10 @@ function App() {
               />
             </div>
 
-            <div className="advanced-card">
-              <h3>MiniMax Voice Parameters</h3>
-
+            <CollapsibleCard
+              className="advanced-card"
+              title="MiniMax Voice Parameters"
+            >
               <div className="form-group">
                 <label htmlFor="minimaxLanguageBoost">Language Boost:</label>
                 <input
@@ -1813,45 +1951,30 @@ function App() {
               </div>
 
               <div className="grid">
-                <div className="form-group">
-                  <label htmlFor="minimaxSpeed">Speed (1.0 = default):</label>
-                  <input
-                    id="minimaxSpeed"
-                    type="number"
-                    step="0.05"
-                    min="0.1"
-                    max="3.0"
-                    value={minimaxSpeed}
-                    onChange={(e) => setMinimaxSpeed(e.target.value)}
-                    placeholder="Auto"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="minimaxVolume">Volume (1.0 = default):</label>
-                  <input
-                    id="minimaxVolume"
-                    type="number"
-                    step="0.05"
-                    min="0.1"
-                    max="3.0"
-                    value={minimaxVolume}
-                    onChange={(e) => setMinimaxVolume(e.target.value)}
-                    placeholder="Auto"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="minimaxPitch">Pitch (semitones):</label>
-                  <input
-                    id="minimaxPitch"
-                    type="number"
-                    step="1"
-                    min="-12"
-                    max="12"
-                    value={minimaxPitch}
-                    onChange={(e) => setMinimaxPitch(e.target.value)}
-                    placeholder="Auto"
-                  />
-                </div>
+                <NumberSliderField
+                  id="minimaxSpeed"
+                  label="Speed (1.0 = default)"
+                  value={minimaxSpeed}
+                  onChange={(next) => setMinimaxSpeed(next)}
+                  config={SLIDER_CONFIG.minimaxSpeed}
+                  placeholder="Auto"
+                />
+                <NumberSliderField
+                  id="minimaxVolume"
+                  label="Volume (1.0 = default)"
+                  value={minimaxVolume}
+                  onChange={(next) => setMinimaxVolume(next)}
+                  config={SLIDER_CONFIG.minimaxVolume}
+                  placeholder="Auto"
+                />
+                <NumberSliderField
+                  id="minimaxPitch"
+                  label="Pitch (semitones)"
+                  value={minimaxPitch}
+                  onChange={(next) => setMinimaxPitch(next)}
+                  config={SLIDER_CONFIG.minimaxPitch}
+                  placeholder="Auto"
+                />
               </div>
 
               <div className="grid">
@@ -1921,7 +2044,7 @@ function App() {
                 Leave fields blank to use MiniMax defaults or emotion-based
                 automatic values.
               </p>
-            </div>
+            </CollapsibleCard>
           </>
         )}
 
