@@ -1,5 +1,11 @@
 # @aituber-onair/voice
 
+## 0.5.1
+
+### Patch Changes
+
+- docs: add per-engine parameter reference and highlight new 0.5.0 overrides in English/Japanese README
+
 ## 0.5.0
 
 ### Minor Changes
