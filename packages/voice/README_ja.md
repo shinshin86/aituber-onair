@@ -324,6 +324,75 @@ const voiceService = new VoiceService({
 });
 ```
 
+### エンジンごとのパラメーターについて
+
+NijiVoice を除くすべてのエンジンで、`VoiceServiceOptions` から実行時に細かいパラメーターを上書きできます。Reactデモの新しいスライダーUIはこれらのフィールドをそのまま利用しているため、コードでもUIでも同じ値を扱えます。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'voicevox',
+  speaker: '1',
+  openAiSpeed: 1.1,
+  voicevoxSpeedScale: 1.05,
+  voicevoxPitchScale: 0.02,
+  voicevoxQueryParameters: {
+    pauseLength: 0.25,
+    outputSamplingRate: 44100,
+  },
+  minimaxVoiceSettings: { speed: 1.05, vol: 1.1, pitch: 2 },
+  minimaxAudioSettings: { sampleRate: 44100, format: 'mp3' },
+  aivisSpeechSpeedScale: 1.05,
+  aivisCloudSpeakingRate: 1.1,
+  aivisCloudVolume: 1.05,
+});
+```
+
+ヒント: `packages/voice/examples/react-basic` の React デモでは、折りたたみカードとスライダーで同じ項目を調整してからコードに反映できます。
+
+> `VoiceServiceOptions` 本体の型定義は [API リファレンス](#voiceserviceoptions) 内にまとめています。以下はその主要項目をエンジン別に整理した早見表です。
+
+#### エンジン別パラメーター一覧
+
+- **OpenAI TTS**
+  - `openAiModel`
+  - `openAiSpeed`
+
+- **VOICEVOX**
+  - エンドポイント: `voicevoxApiUrl`
+  - スカラー: `voicevoxSpeedScale`, `voicevoxPitchScale`, `voicevoxIntonationScale`, `voicevoxVolumeScale`
+  - タイミング: `voicevoxPrePhonemeLength`, `voicevoxPostPhonemeLength`, `voicevoxPauseLength`, `voicevoxPauseLengthScale`
+  - 出力: `voicevoxOutputSamplingRate`, `voicevoxOutputStereo`
+  - フラグ: `voicevoxEnableKatakanaEnglish`, `voicevoxEnableInterrogativeUpspeak`
+  - バージョン: `voicevoxCoreVersion`
+  - 低レベル上書き: `voicevoxQueryParameters`
+
+- **AivisSpeech**
+  - エンドポイント: `aivisSpeechApiUrl`
+  - スカラー: `aivisSpeechSpeedScale`, `aivisSpeechPitchScale`, `aivisSpeechIntonationScale`, `aivisSpeechTempoDynamicsScale`, `aivisSpeechVolumeScale`
+  - タイミング: `aivisSpeechPrePhonemeLength`, `aivisSpeechPostPhonemeLength`, `aivisSpeechPauseLength`, `aivisSpeechPauseLengthScale`
+  - 出力: `aivisSpeechOutputSamplingRate`, `aivisSpeechOutputStereo`
+  - 低レベル上書き: `aivisSpeechQueryParameters`
+
+- **Aivis Cloud**
+  - 識別子: `aivisCloudModelUuid`, `aivisCloudSpeakerUuid`, `aivisCloudStyleId`, `aivisCloudStyleName`, `aivisCloudUserDictionaryUuid`
+  - 設定: `aivisCloudUseSSML`, `aivisCloudLanguage`, `aivisCloudSpeakingRate`, `aivisCloudEmotionalIntensity`, `aivisCloudTempoDynamics`, `aivisCloudPitch`, `aivisCloudVolume`
+  - 無音: `aivisCloudLeadingSilence`, `aivisCloudTrailingSilence`, `aivisCloudLineBreakSilence`
+  - 出力: `aivisCloudOutputFormat`, `aivisCloudOutputBitrate`, `aivisCloudOutputSamplingRate`, `aivisCloudOutputChannels`
+  - ログ: `aivisCloudEnableBillingLogs`
+
+- **VoicePeak**
+  - エンドポイント: `voicepeakApiUrl`
+  - 感情: `voicepeakEmotion`
+  - スカラー: `voicepeakSpeed`, `voicepeakPitch`
+
+- **MiniMax**
+  - 識別子: `groupId`, `endpoint`, `minimaxModel`, `minimaxLanguageBoost`
+  - 音声: `minimaxVoiceSettings` または `minimaxSpeed`, `minimaxVolume`, `minimaxPitch`
+  - オーディオ: `minimaxAudioSettings` または `minimaxSampleRate`, `minimaxBitrate`, `minimaxAudioFormat`, `minimaxAudioChannel`
+
+- **NijiVoice**
+  - `apiKey` とスピーカー選択が必要。現時点では追加の実行時パラメーターはありません。
+
 ### エラーハンドリング
 
 ```typescript
