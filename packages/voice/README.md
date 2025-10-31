@@ -324,6 +324,71 @@ const voiceService = new VoiceService({
 });
 ```
 
+### Engine Parameter Overrides
+
+`VoiceServiceOptions` (see [API Reference](#voiceserviceoptions)) now covers a consistent set of overrides for each engine (except NijiVoice). Below is a field-by-field summary to help you discover the right property without scanning the entire interface.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'voicevox',
+  speaker: '1',
+  openAiSpeed: 1.15,
+  voicevoxSpeedScale: 1.1,
+  voicevoxPitchScale: 0.05,
+  voicevoxIntonationScale: 1.2,
+  voicevoxQueryParameters: { pauseLength: 0.3, outputSamplingRate: 44100 },
+  minimaxVoiceSettings: { speed: 1.05, vol: 1.1, pitch: 2 },
+  minimaxAudioSettings: { sampleRate: 44100, format: 'mp3' },
+  aivisSpeechSpeedScale: 1.05,
+  aivisCloudSpeakingRate: 1.1,
+  aivisCloudVolume: 1.05,
+});
+```
+
+> Tip: the React example in `packages/voice/examples/react-basic` exposes the same controls with collapsible cards + sliders, making it easy to try values before applying them in code.
+
+#### Engine parameter reference
+
+- **OpenAI TTS**
+  - `openAiModel`
+  - `openAiSpeed`
+
+- **VOICEVOX**
+  - Endpoint: `voicevoxApiUrl`
+  - Scalars: `voicevoxSpeedScale`, `voicevoxPitchScale`, `voicevoxIntonationScale`, `voicevoxVolumeScale`
+  - Timing: `voicevoxPrePhonemeLength`, `voicevoxPostPhonemeLength`, `voicevoxPauseLength`, `voicevoxPauseLengthScale`
+  - Output: `voicevoxOutputSamplingRate`, `voicevoxOutputStereo`
+  - Flags: `voicevoxEnableKatakanaEnglish`, `voicevoxEnableInterrogativeUpspeak`
+  - Version: `voicevoxCoreVersion`
+  - Low-level overrides: `voicevoxQueryParameters`
+
+- **AivisSpeech**
+  - Endpoint: `aivisSpeechApiUrl`
+  - Scalars: `aivisSpeechSpeedScale`, `aivisSpeechPitchScale`, `aivisSpeechIntonationScale`, `aivisSpeechTempoDynamicsScale`, `aivisSpeechVolumeScale`
+  - Timing: `aivisSpeechPrePhonemeLength`, `aivisSpeechPostPhonemeLength`, `aivisSpeechPauseLength`, `aivisSpeechPauseLengthScale`
+  - Output: `aivisSpeechOutputSamplingRate`, `aivisSpeechOutputStereo`
+  - Low-level overrides: `aivisSpeechQueryParameters`
+
+- **Aivis Cloud**
+  - Identity: `aivisCloudModelUuid`, `aivisCloudSpeakerUuid`, `aivisCloudStyleId`, `aivisCloudStyleName`, `aivisCloudUserDictionaryUuid`
+  - Behaviour: `aivisCloudUseSSML`, `aivisCloudLanguage`, `aivisCloudSpeakingRate`, `aivisCloudEmotionalIntensity`, `aivisCloudTempoDynamics`, `aivisCloudPitch`, `aivisCloudVolume`
+  - Silence: `aivisCloudLeadingSilence`, `aivisCloudTrailingSilence`, `aivisCloudLineBreakSilence`
+  - Output: `aivisCloudOutputFormat`, `aivisCloudOutputBitrate`, `aivisCloudOutputSamplingRate`, `aivisCloudOutputChannels`
+  - Logging: `aivisCloudEnableBillingLogs`
+
+- **VoicePeak**
+  - Endpoint: `voicepeakApiUrl`
+  - Emotion: `voicepeakEmotion`
+  - Scalars: `voicepeakSpeed`, `voicepeakPitch`
+
+- **MiniMax**
+  - Identity: `groupId`, `endpoint`, `minimaxModel`, `minimaxLanguageBoost`
+  - Voice overrides: `minimaxVoiceSettings` or individual `minimaxSpeed`, `minimaxVolume`, `minimaxPitch`
+  - Audio overrides: `minimaxAudioSettings` or individual `minimaxSampleRate`, `minimaxBitrate`, `minimaxAudioFormat`, `minimaxAudioChannel`
+
+- **NijiVoice**
+  - Requires `apiKey` and speaker selection; no additional runtime parameters are currently exposed.
+
 ### Error Handling
 
 ```typescript
