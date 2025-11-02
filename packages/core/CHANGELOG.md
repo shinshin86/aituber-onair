@@ -1,5 +1,11 @@
 # @aituber-onair/core
 
+## 0.17.3
+
+### Patch Changes
+
+- chore: bump @aituber-onair/voice dependency to v0.5.1 so core ships the latest engine parameter overrides and synced README docs
+
 ## 0.17.2
 
 ### Patch Changes
