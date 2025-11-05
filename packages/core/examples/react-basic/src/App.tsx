@@ -1016,6 +1016,10 @@ if (selectedVoiceEngine === 'aivisSpeech') {
       tools: [{ definition: randomIntTool, handler: randomIntHandler }],
       mcpServers: enableDeepWikiMcp ? mcpServers : [],
       voiceOptions,
+      speechChunking: {
+        enabled: true,
+        minWords: 40,
+      },
       debug: true,
     };
 

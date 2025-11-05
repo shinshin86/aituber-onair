@@ -97,7 +97,10 @@ export { GeminiSummarizer } from './services/chat/providers/gemini/GeminiSummari
 export { ClaudeSummarizer } from './services/chat/providers/claude/ClaudeSummarizer';
 export type { ChatProcessorOptions } from './core/ChatProcessor';
 export { ChatProcessor } from './core/ChatProcessor';
-export type { AITuberOnAirCoreOptions } from './core/AITuberOnAirCore';
+export type {
+  AITuberOnAirCoreOptions,
+  SpeechChunkingOptions,
+} from './core/AITuberOnAirCore';
 export {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
