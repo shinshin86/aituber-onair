@@ -27,14 +27,42 @@ import {
 import { MemoryStorage } from '../types';
 import { ToolExecutor } from './ToolExecutor';
 
+type SpeechChunkLocalePreset = Exclude<SpeechChunkLocale, 'all'>;
+
+const SPEECH_CHUNK_SEPARATOR_PRESETS_BASE: Record<
+  SpeechChunkLocalePreset,
+  string[]
+> = {
+  ja: ['。', '！', '？', '、', '，', '…'],
+  en: ['.', '!', '?'],
+  ko: ['.', '!', '?', '。', '！', '？'],
+  zh: ['。', '！', '？', '，', '、'],
+};
+
+const SPEECH_CHUNK_SEPARATOR_PRESETS: Record<SpeechChunkLocale, string[]> = {
+  ...SPEECH_CHUNK_SEPARATOR_PRESETS_BASE,
+  all: Array.from(
+    new Set(Object.values(SPEECH_CHUNK_SEPARATOR_PRESETS_BASE).flat()),
+  ),
+};
+
+const FALLBACK_SEPARATORS = ['.', '!', '?', '。', '！', '？'];
+const ALWAYS_SPLIT_CHARACTERS = ['\n', '\r'];
+
 /**
  * Setting options for AITuberOnAirCore
  */
+export type SpeechChunkLocale = 'ja' | 'en' | 'ko' | 'zh' | 'all';
+
 export interface SpeechChunkingOptions {
-  /** Enable or disable speech chunking. Defaults to true. */
+  /** Enable or disable speech chunking. Defaults to false (disabled). */
   enabled?: boolean;
   /** Minimum words (approx.) per speech chunk. Set to 0 or omit to disable merging. */
   minWords?: number;
+  /** Locale preset used to decide punctuation delimiters. */
+  locale?: SpeechChunkLocale;
+  /** Custom separator characters (overrides locale preset). */
+  separators?: string[];
 }
 
 export interface AITuberOnAirCoreOptions {
@@ -121,6 +149,8 @@ export class AITuberOnAirCore extends EventEmitter {
   private toolExecutor: ToolExecutor = new ToolExecutor();
   private speechChunkEnabled: boolean;
   private speechChunkMinWords: number;
+  private speechChunkLocale: SpeechChunkLocale;
+  private speechChunkSeparators?: string[];
   /**
    * Constructor
    * @param options Configuration options
@@ -128,11 +158,11 @@ export class AITuberOnAirCore extends EventEmitter {
   constructor(options: AITuberOnAirCoreOptions) {
     super();
     this.debug = options.debug || false;
-    this.speechChunkEnabled = options.speechChunking?.enabled ?? false;
-    this.speechChunkMinWords = Math.max(
-      0,
-      options.speechChunking?.minWords ?? 0,
-    );
+    const speechChunkingOptions = options.speechChunking ?? {};
+    this.speechChunkEnabled = speechChunkingOptions.enabled ?? false;
+    this.speechChunkMinWords = Math.max(0, speechChunkingOptions.minWords ?? 0);
+    this.speechChunkLocale = speechChunkingOptions.locale ?? 'ja';
+    this.speechChunkSeparators = speechChunkingOptions.separators;
 
     // Determine provider name (default is 'openai')
     const providerName = options.chatProvider || 'openai';
@@ -347,6 +377,12 @@ export class AITuberOnAirCore extends EventEmitter {
     if (options.minWords !== undefined) {
       this.speechChunkMinWords = Math.max(0, options.minWords);
     }
+    if (options.locale) {
+      this.speechChunkLocale = options.locale;
+    }
+    if ('separators' in options) {
+      this.speechChunkSeparators = options.separators;
+    }
   }
 
   /**
@@ -532,14 +568,11 @@ export class AITuberOnAirCore extends EventEmitter {
       return [normalized];
     }
 
-    const matches = normalized.match(/[^。！？!?,、\r\n]+[。！？!?,、]?/gu);
-    if (!matches) {
-      return [normalized];
-    }
-
-    const baseChunks = matches
-      .map((chunk) => chunk.trim())
-      .filter((chunk) => chunk.length > 0);
+    const activeSeparators = this.getActiveSpeechSeparators();
+    const baseChunks = this.segmentTextBySeparators(
+      normalized,
+      activeSeparators,
+    );
 
     if (baseChunks.length === 0) {
       return [normalized];
@@ -586,6 +619,53 @@ export class AITuberOnAirCore extends EventEmitter {
     pushBuffer();
 
     return merged.length > 0 ? merged : [normalized];
+  }
+
+  private getActiveSpeechSeparators(): string[] {
+    const baseSeparators =
+      this.speechChunkSeparators && this.speechChunkSeparators.length > 0
+        ? this.speechChunkSeparators
+        : SPEECH_CHUNK_SEPARATOR_PRESETS[this.speechChunkLocale] ||
+          FALLBACK_SEPARATORS;
+
+    const unique = new Set<string>();
+    [...baseSeparators, ...ALWAYS_SPLIT_CHARACTERS].forEach((char) => {
+      if (char && char.length > 0) {
+        unique.add(char);
+      }
+    });
+    return Array.from(unique);
+  }
+
+  private segmentTextBySeparators(
+    text: string,
+    separators: string[],
+  ): string[] {
+    if (separators.length === 0) {
+      return [text];
+    }
+
+    const separatorSet = new Set(separators);
+    const chunks: string[] = [];
+    let buffer = '';
+
+    for (const char of text) {
+      buffer += char;
+      if (separatorSet.has(char)) {
+        const trimmed = buffer.trim();
+        if (trimmed.length > 0) {
+          chunks.push(trimmed);
+        }
+        buffer = '';
+      }
+    }
+
+    const tail = buffer.trim();
+    if (tail.length > 0) {
+      chunks.push(tail);
+    }
+
+    return chunks.length > 0 ? chunks : [text];
   }
 
   private countApproxWords(text: string): number {

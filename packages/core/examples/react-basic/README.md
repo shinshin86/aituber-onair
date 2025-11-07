@@ -199,6 +199,27 @@ The application supports 7 different Text-to-Speech engines:
 - Supports speed/volume/pitch tuning and audio settings  
   (sample rate: 8k/16k/22.05k/24k/32k/44.1k Hz, bitrate: 32/64/128/256 kbps)
 
+### Speech Chunking Settings
+
+This example enables `speechChunking` so that long responses start speaking
+sooner. Default configuration in `App.tsx`:
+
+```ts
+speechChunking: {
+  enabled: true,
+  minWords: 40,
+  locale: 'all',
+}
+```
+
+- `locale: 'all'` merges Japanese/English/Korean/Chinese punctuation presets,
+  making the splitter robust even when multiple languages appear in one reply.
+- You can override this runtime by calling
+  `aituber.updateSpeechChunking({ enabled: true, minWords: 30, locale: 'en', separators: ['.', '!', '?'] })`
+  or set `enabled: false` to revert to the legacy single-audio flow.
+- Leaving `speechChunking` undefined keeps backwards-compatible behaviour
+  (single TTS request per assistant response).
+
 ### Voice Engine Setup
 
 1. Navigate to the Voice tab in settings

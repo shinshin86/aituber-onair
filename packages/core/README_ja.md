@@ -1247,6 +1247,10 @@ const aituber = new AITuberOnAirCore({
     // 新しいチャンクを開始する目安となる最小語数。
     // 日本語など空白が少ないテキストでは文字数ベースで判定されます。
     minWords: 40,
+    // 句読点プリセット（ja | en | ko | zh | all）
+    locale: 'ja',
+    // 独自セパレーターを使いたい場合
+    // separators: ['.', '!', '?'],
   },
 });
 ```
@@ -1257,7 +1261,12 @@ const aituber = new AITuberOnAirCore({
 
 ```ts
 aituber.updateSpeechChunking({ enabled: false });
-aituber.updateSpeechChunking({ enabled: true, minWords: 25 });
+aituber.updateSpeechChunking({
+  enabled: true,
+  minWords: 25,
+  locale: 'en',
+  separators: ['.', '!', '?'],
+});
 ```
 
 ### カスタムAPIエンドポイント

@@ -1248,6 +1248,10 @@ const aituber = new AITuberOnAirCore({
     // Minimum "word" count before a new chunk is started. Japanese text falls
     // back to character counts when spaces are not present.
     minWords: 40,
+    // Pick a preset for punctuation detection (ja | en | ko | zh | all)
+    locale: 'ja',
+    // Or override with your own separator characters
+    // separators: ['.', '!', '?'],
   },
 });
 ```
@@ -1263,7 +1267,12 @@ const aituber = new AITuberOnAirCore({
 
 ```ts
 aituber.updateSpeechChunking({ enabled: false });
-aituber.updateSpeechChunking({ enabled: true, minWords: 25 });
+aituber.updateSpeechChunking({
+  enabled: true,
+  minWords: 25,
+  locale: 'en',
+  separators: ['.', '!', '?'],
+});
 ```
 
 ### Custom API Endpoints
