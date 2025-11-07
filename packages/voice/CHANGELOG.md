@@ -1,5 +1,14 @@
 # @aituber-onair/voice
 
+## 0.6.0
+
+### Minor Changes
+
+- feat: introduce asynchronous speech queueing to support chunked playback
+  - `VoiceEngineAdapter` now prefetches audio buffers per chunk and enqueues playback so long responses can start speaking immediately while later parts render in the background.
+  - Added graceful cancellation when `stop()` is invoked and improved error handling for both fetch and playback stages.
+  - This update keeps the public `VoiceService` API unchanged, so standalone consumers benefit from smoother playback without code changes.
+
 ## 0.5.1
 
 ### Patch Changes
