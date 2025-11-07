@@ -1,5 +1,21 @@
 # @aituber-onair/core
 
+## 0.18.0
+
+### Minor Changes
+
+- feat: add configurable `speechChunking` (`enabled`, `minWords`, `locale`, and
+  custom `separators`) so long responses can be split by punctuation in multiple
+  languages and spoken chunk-by-chunk with reduced perceived latency. Updated
+  the English/Japanese README and the React example to document the new option
+  and enable `locale: 'all'` by default.
+
+### Patch Changes
+
+- chore: bump @aituber-onair/voice to v0.6.0 to pick up the new asynchronous
+  speech queue so chunked playback can start immediately while later audio is
+  generated in the background.
+
 ## 0.17.3
 
 ### Patch Changes
