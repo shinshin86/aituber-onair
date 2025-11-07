@@ -28,7 +28,10 @@ export interface GeminiImageResponse {
 /**
  * Convert Base64 string to Blob URL for display
  */
-export function base64ToObjectUrl(base64: string, mimeType: string = 'image/png'): string {
+export function base64ToObjectUrl(
+  base64: string,
+  mimeType: string = 'image/png',
+): string {
   const binaryString = atob(base64);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
@@ -41,10 +44,12 @@ export function base64ToObjectUrl(base64: string, mimeType: string = 'image/png'
 /**
  * Convert image URL to base64
  */
-async function imageUrlToBase64(url: string): Promise<{ data: string; mimeType: string }> {
+async function imageUrlToBase64(
+  url: string,
+): Promise<{ data: string; mimeType: string }> {
   const response = await fetch(url);
   const blob = await response.blob();
-  
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -59,7 +64,9 @@ async function imageUrlToBase64(url: string): Promise<{ data: string; mimeType: 
 /**
  * Generate an avatar image using Gemini-2.5-Flash-Image API
  */
-export async function generateAvatarImage(options: GeminiImageGenerationOptions): Promise<string> {
+export async function generateAvatarImage(
+  options: GeminiImageGenerationOptions,
+): Promise<string> {
   const { apiKey, prompt, baseImageUrl } = options;
 
   if (!apiKey.trim()) {
@@ -68,7 +75,7 @@ export async function generateAvatarImage(options: GeminiImageGenerationOptions)
 
   // Create request parts array
   const requestParts: any[] = [];
-  
+
   // Add base image if provided
   if (baseImageUrl && !baseImageUrl.includes('default-avatar.svg')) {
     try {
@@ -76,24 +83,28 @@ export async function generateAvatarImage(options: GeminiImageGenerationOptions)
       requestParts.push({
         inlineData: {
           mimeType: baseImageData.mimeType,
-          data: baseImageData.data
-        }
+          data: baseImageData.data,
+        },
       });
     } catch (error) {
-      console.warn('Failed to convert base image, generating new avatar:', error);
+      console.warn(
+        'Failed to convert base image, generating new avatar:',
+        error,
+      );
     }
   }
 
   // Create a descriptive prompt for avatar modification or generation
-  const imagePrompt = baseImageUrl && !baseImageUrl.includes('default-avatar.svg') 
-    ? `Please modify the provided avatar image based on this conversation context: "${prompt}". Keep the overall character design but adjust:
+  const imagePrompt =
+    baseImageUrl && !baseImageUrl.includes('default-avatar.svg')
+      ? `Please modify the provided avatar image based on this conversation context: "${prompt}". Keep the overall character design but adjust:
 - Facial expression to match the mood/emotion of the conversation
 - Small visual elements that reflect the conversation theme
 - Maintain the anime/manga art style
 - Keep it suitable as a profile picture
 - Preserve the character's main features and identity
 Style: Keep the existing art style but enhance emotional expression based on context`
-    : `Create a beautiful anime-style avatar image based on this conversation context: "${prompt}". The avatar should be:
+      : `Create a beautiful anime-style avatar image based on this conversation context: "${prompt}". The avatar should be:
 - High quality, professional anime/manga art style
 - Suitable as a profile picture or avatar
 - Clean, expressive, and engaging
@@ -104,7 +115,7 @@ Style: modern anime illustration, detailed character art, vibrant colors, profes
 
   // Add text prompt
   requestParts.push({
-    text: imagePrompt
+    text: imagePrompt,
   });
 
   try {
@@ -157,27 +168,44 @@ Style: modern anime illustration, detailed character art, vibrant colors, profes
 export function createAvatarPrompt(assistantResponse: string): string {
   // Extract key themes and emotions from the assistant's response
   const response = assistantResponse.toLowerCase();
-  
+
   let styleHints = '';
-  
+
   // Add style hints based on response content
-  if (response.includes('happy') || response.includes('joy') || response.includes('excited')) {
+  if (
+    response.includes('happy') ||
+    response.includes('joy') ||
+    response.includes('excited')
+  ) {
     styleHints += 'cheerful, bright expression, ';
   }
-  if (response.includes('calm') || response.includes('peaceful') || response.includes('relax')) {
+  if (
+    response.includes('calm') ||
+    response.includes('peaceful') ||
+    response.includes('relax')
+  ) {
     styleHints += 'serene, gentle expression, ';
   }
-  if (response.includes('smart') || response.includes('clever') || response.includes('think')) {
+  if (
+    response.includes('smart') ||
+    response.includes('clever') ||
+    response.includes('think')
+  ) {
     styleHints += 'intelligent, thoughtful expression, ';
   }
-  if (response.includes('cute') || response.includes('kawaii') || response.includes('adorable')) {
+  if (
+    response.includes('cute') ||
+    response.includes('kawaii') ||
+    response.includes('adorable')
+  ) {
     styleHints += 'cute, charming features, ';
   }
 
   // Limit the response length for the prompt to avoid token limits
-  const shortResponse = assistantResponse.length > 200 
-    ? assistantResponse.substring(0, 200) + '...' 
-    : assistantResponse;
+  const shortResponse =
+    assistantResponse.length > 200
+      ? assistantResponse.substring(0, 200) + '...'
+      : assistantResponse;
 
   return `${styleHints}inspired by: "${shortResponse}"`;
 }
