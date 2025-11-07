@@ -228,21 +228,21 @@ button:hover {
     max-width: 95%;
     gap: 8px;
   }
-  
+
   .message-avatar {
     width: 32px;
     height: 32px;
   }
-  
+
   .message-content {
     padding: 6px 10px;
     font-size: 0.9rem;
   }
-  
+
   .container {
     padding: 8px;
   }
-  
+
   .modal-content {
     width: 95%;
     padding: 16px;

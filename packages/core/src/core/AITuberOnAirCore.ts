@@ -27,9 +27,44 @@ import {
 import { MemoryStorage } from '../types';
 import { ToolExecutor } from './ToolExecutor';
 
+type SpeechChunkLocalePreset = Exclude<SpeechChunkLocale, 'all'>;
+
+const SPEECH_CHUNK_SEPARATOR_PRESETS_BASE: Record<
+  SpeechChunkLocalePreset,
+  string[]
+> = {
+  ja: ['。', '！', '？', '、', '，', '…'],
+  en: ['.', '!', '?'],
+  ko: ['.', '!', '?', '。', '！', '？'],
+  zh: ['。', '！', '？', '，', '、'],
+};
+
+const SPEECH_CHUNK_SEPARATOR_PRESETS: Record<SpeechChunkLocale, string[]> = {
+  ...SPEECH_CHUNK_SEPARATOR_PRESETS_BASE,
+  all: Array.from(
+    new Set(Object.values(SPEECH_CHUNK_SEPARATOR_PRESETS_BASE).flat()),
+  ),
+};
+
+const FALLBACK_SEPARATORS = ['.', '!', '?', '。', '！', '？'];
+const ALWAYS_SPLIT_CHARACTERS = ['\n', '\r'];
+
 /**
  * Setting options for AITuberOnAirCore
  */
+export type SpeechChunkLocale = 'ja' | 'en' | 'ko' | 'zh' | 'all';
+
+export interface SpeechChunkingOptions {
+  /** Enable or disable speech chunking. Defaults to false (disabled). */
+  enabled?: boolean;
+  /** Minimum words (approx.) per speech chunk. Set to 0 or omit to disable merging. */
+  minWords?: number;
+  /** Locale preset used to decide punctuation delimiters. */
+  locale?: SpeechChunkLocale;
+  /** Custom separator characters (overrides locale preset). */
+  separators?: string[];
+}
+
 export interface AITuberOnAirCoreOptions {
   /** AI provider name */
   chatProvider?: string;
@@ -45,6 +80,8 @@ export interface AITuberOnAirCoreOptions {
   memoryStorage?: MemoryStorage;
   /** Voice service options */
   voiceOptions?: VoiceServiceOptions;
+  /** Speech chunking behaviour */
+  speechChunking?: SpeechChunkingOptions;
   /** Debug mode */
   debug?: boolean;
   /** ChatService provider-specific options (optional) */
@@ -110,6 +147,10 @@ export class AITuberOnAirCore extends EventEmitter {
   private isProcessing: boolean = false;
   private debug: boolean;
   private toolExecutor: ToolExecutor = new ToolExecutor();
+  private speechChunkEnabled: boolean;
+  private speechChunkMinWords: number;
+  private speechChunkLocale: SpeechChunkLocale;
+  private speechChunkSeparators?: string[];
   /**
    * Constructor
    * @param options Configuration options
@@ -117,6 +158,11 @@ export class AITuberOnAirCore extends EventEmitter {
   constructor(options: AITuberOnAirCoreOptions) {
     super();
     this.debug = options.debug || false;
+    const speechChunkingOptions = options.speechChunking ?? {};
+    this.speechChunkEnabled = speechChunkingOptions.enabled ?? false;
+    this.speechChunkMinWords = Math.max(0, speechChunkingOptions.minWords ?? 0);
+    this.speechChunkLocale = speechChunkingOptions.locale ?? 'ja';
+    this.speechChunkSeparators = speechChunkingOptions.separators;
 
     // Determine provider name (default is 'openai')
     const providerName = options.chatProvider || 'openai';
@@ -322,6 +368,24 @@ export class AITuberOnAirCore extends EventEmitter {
   }
 
   /**
+   * Update speech chunking behaviour
+   */
+  updateSpeechChunking(options: SpeechChunkingOptions): void {
+    if (options.enabled !== undefined) {
+      this.speechChunkEnabled = options.enabled;
+    }
+    if (options.minWords !== undefined) {
+      this.speechChunkMinWords = Math.max(0, options.minWords);
+    }
+    if (options.locale) {
+      this.speechChunkLocale = options.locale;
+    }
+    if ('separators' in options) {
+      this.speechChunkSeparators = options.separators;
+    }
+  }
+
+  /**
    * Speak text with custom voice options
    * @param text Text to speak
    * @param options Speech options
@@ -438,9 +502,22 @@ export class AITuberOnAirCore extends EventEmitter {
         try {
           this.emit(AITuberOnAirCoreEvent.SPEECH_START, screenplay);
 
-          await this.voiceService.speak(screenplay, {
-            enableAnimation: true,
-          });
+          const chunks = this.splitTextForSpeech(screenplay.text);
+          const emotion = screenplay.emotion;
+
+          const playbackPromises = chunks
+            .filter((chunk) => chunk)
+            .map((chunk) => {
+              const chunkScreenplay = emotion
+                ? { emotion, text: chunk }
+                : { text: chunk };
+
+              return this.voiceService!.speak(chunkScreenplay, {
+                enableAnimation: true,
+              });
+            });
+
+          await Promise.all(playbackPromises);
 
           this.emit(AITuberOnAirCoreEvent.SPEECH_END);
         } catch (error) {
@@ -475,6 +552,134 @@ export class AITuberOnAirCore extends EventEmitter {
 
     this.emit(AITuberOnAirCoreEvent.TOOL_RESULT, results);
     return results;
+  }
+
+  /**
+   * Split screenplay text into smaller chunks for sequential speech synthesis.
+   * Falls back to the original text when no delimiters are present.
+   */
+  private splitTextForSpeech(text?: string): string[] {
+    const normalized = text?.trim();
+    if (!normalized) {
+      return [];
+    }
+
+    if (!this.speechChunkEnabled) {
+      return [normalized];
+    }
+
+    const activeSeparators = this.getActiveSpeechSeparators();
+    const baseChunks = this.segmentTextBySeparators(
+      normalized,
+      activeSeparators,
+    );
+
+    if (baseChunks.length === 0) {
+      return [normalized];
+    }
+
+    const minWords = this.speechChunkMinWords;
+    if (minWords <= 1) {
+      return baseChunks;
+    }
+
+    const merged: string[] = [];
+    let buffer = '';
+
+    const pushBuffer = () => {
+      const trimmed = buffer.trim();
+      if (trimmed.length > 0) {
+        merged.push(trimmed);
+      }
+      buffer = '';
+    };
+
+    baseChunks.forEach((chunk, index) => {
+      if (!buffer) {
+        if (this.countApproxWords(chunk) >= minWords) {
+          merged.push(chunk);
+        } else {
+          buffer = chunk;
+        }
+        return;
+      }
+
+      const candidate = `${buffer}${chunk}`;
+      if (
+        this.countApproxWords(candidate) >= minWords ||
+        index === baseChunks.length - 1
+      ) {
+        buffer = candidate;
+        pushBuffer();
+      } else {
+        buffer = candidate;
+      }
+    });
+
+    pushBuffer();
+
+    return merged.length > 0 ? merged : [normalized];
+  }
+
+  private getActiveSpeechSeparators(): string[] {
+    const baseSeparators =
+      this.speechChunkSeparators && this.speechChunkSeparators.length > 0
+        ? this.speechChunkSeparators
+        : SPEECH_CHUNK_SEPARATOR_PRESETS[this.speechChunkLocale] ||
+          FALLBACK_SEPARATORS;
+
+    const unique = new Set<string>();
+    [...baseSeparators, ...ALWAYS_SPLIT_CHARACTERS].forEach((char) => {
+      if (char && char.length > 0) {
+        unique.add(char);
+      }
+    });
+    return Array.from(unique);
+  }
+
+  private segmentTextBySeparators(
+    text: string,
+    separators: string[],
+  ): string[] {
+    if (separators.length === 0) {
+      return [text];
+    }
+
+    const separatorSet = new Set(separators);
+    const chunks: string[] = [];
+    let buffer = '';
+
+    for (const char of text) {
+      buffer += char;
+      if (separatorSet.has(char)) {
+        const trimmed = buffer.trim();
+        if (trimmed.length > 0) {
+          chunks.push(trimmed);
+        }
+        buffer = '';
+      }
+    }
+
+    const tail = buffer.trim();
+    if (tail.length > 0) {
+      chunks.push(tail);
+    }
+
+    return chunks.length > 0 ? chunks : [text];
+  }
+
+  private countApproxWords(text: string): number {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      return 0;
+    }
+
+    const spaceSeparated = trimmed.split(/\s+/u).filter(Boolean);
+    if (spaceSeparated.length > 1) {
+      return spaceSeparated.length;
+    }
+
+    return trimmed.length;
   }
 
   /**

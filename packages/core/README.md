@@ -1232,6 +1232,49 @@ aituber.updateVoiceService({
 });
 ```
 
+### Speech Chunking (Optional)
+
+Speech synthesis can optionally split assistant responses into smaller chunks so
+that playback starts sooner for long messages. Chunking is **disabled by
+default** to preserve the previous behaviour (one TTS request per response).
+
+You can enable and configure it when creating `AITuberOnAirCore`:
+
+```ts
+const aituber = new AITuberOnAirCore({
+  // ... existing options ...
+  speechChunking: {
+    enabled: true,
+    // Minimum "word" count before a new chunk is started. Japanese text falls
+    // back to character counts when spaces are not present.
+    minWords: 40,
+    // Pick a preset for punctuation detection (ja | en | ko | zh | all)
+    locale: 'ja',
+    // Or override with your own separator characters
+    // separators: ['.', '!', '?'],
+  },
+});
+```
+
+- When enabled, the core splits text at punctuation (`。！？!?` and commas) and
+  merges adjacent segments until the `minWords` threshold is reached. This keeps
+  the number of TTS requests manageable while still reducing perceived
+  latency.
+- Setting `minWords` to `0` (or omitting it) keeps the raw punctuation-based
+  segments and simply streams them in order.
+- You can toggle the behaviour at runtime, for example when the viewer switches
+  between local and cloud TTS engines:
+
+```ts
+aituber.updateSpeechChunking({ enabled: false });
+aituber.updateSpeechChunking({
+  enabled: true,
+  minWords: 25,
+  locale: 'en',
+  separators: ['.', '!', '?'],
+});
+```
+
 ### Custom API Endpoints
 
 For locally hosted voice engines (VOICEVOX, VoicePeak, AivisSpeech), you can specify custom API endpoint URLs:

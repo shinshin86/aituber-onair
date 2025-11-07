@@ -1233,6 +1233,42 @@ aituber.updateVoiceService({
 });
 ```
 
+### 音声チャンク分割（オプション）
+
+長い応答を複数のチャンクに分割して順次音声化することで、視聴者が音声を聞き始めるまでの待ち時間を短縮できます。既定では過去互換性を保つため **無効** になっており、1 応答につき 1 回だけ音声合成を行います。
+
+`AITuberOnAirCore` 初期化時に `speechChunking` オプションを指定すると有効化できます。
+
+```ts
+const aituber = new AITuberOnAirCore({
+  // ... 他の設定 ...
+  speechChunking: {
+    enabled: true,
+    // 新しいチャンクを開始する目安となる最小語数。
+    // 日本語など空白が少ないテキストでは文字数ベースで判定されます。
+    minWords: 40,
+    // 句読点プリセット（ja | en | ko | zh | all）
+    locale: 'ja',
+    // 独自セパレーターを使いたい場合
+    // separators: ['.', '!', '?'],
+  },
+});
+```
+
+- 有効化すると、`。！？!?` や読点でテキストを一旦区切り、`minWords` に達するまで隣接チャンクを結合します。これにより、リクエスト回数を抑えつつ早期再生を実現できます。
+- `minWords` を `0` もしくは未指定にすると、句読点単位でそのままチャンク化されます。
+- 運用中にチャンク分割を切り替えたい場合は `updateSpeechChunking` を利用してください。
+
+```ts
+aituber.updateSpeechChunking({ enabled: false });
+aituber.updateSpeechChunking({
+  enabled: true,
+  minWords: 25,
+  locale: 'en',
+  separators: ['.', '!', '?'],
+});
+```
+
 ### カスタムAPIエンドポイント
 
 ローカルでホストされる音声エンジン（VOICEVOX、VoicePeak、AivisSpeech）については、カスタムAPIエンドポイントURLを指定することができます：
