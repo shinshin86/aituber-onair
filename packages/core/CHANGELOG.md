@@ -1,5 +1,12 @@
 # @aituber-onair/core
 
+## 0.18.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aituber-onair/voice@0.7.0
+
 ## 0.18.0
 
 ### Minor Changes
@@ -78,7 +85,7 @@
 
 - Introduce Changesets-based version management and voice package separation
 
-  - Add @changesets/cli for automated version management  
+  - Add @changesets/cli for automated version management
   - Configure independent versioning for core and voice packages
   - Split voice functionality into separate @aituber-onair/voice package
   - Update core package to use peer + optional dependencies for voice
