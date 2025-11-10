@@ -53,12 +53,16 @@ const ENGINE_DEFAULTS = {
     placeholder: 'Your MiniMax API key',
     groupIdPlaceholder: 'Your Group ID',
     speaker: 'male-qn-qingse',
-    defaultModel: 'speech-2.5-hd-preview' as MinimaxModel,
+    defaultModel: 'speech-2.6-hd' as MinimaxModel,
   },
 } as const;
 
 // MiniMax model options with descriptions
 const MINIMAX_MODELS: Record<MinimaxModel, string> = {
+  'speech-2.6-hd':
+    'Latest flagship HD model with ultra-high fidelity and natural prosody.',
+  'speech-2.6-turbo':
+    'Latest Turbo model optimized for low latency and real-time responses.',
   'speech-2.5-hd-preview':
     'The brand new HD model. Ultimate Similarity, Ultra-High Quality',
   'speech-2.5-turbo-preview':
@@ -433,7 +437,7 @@ function App() {
   const [minimaxVoiceId, setMinimaxVoiceId] = useState('male-qn-qingse');
   const [apiUrl, setApiUrl] = useState('');
   const [minimaxModel, setMinimaxModel] = useState<MinimaxModel>(
-    'speech-2.5-hd-preview',
+    ENGINE_DEFAULTS.minimax.defaultModel,
   );
   const [minimaxLanguageBoost, setMinimaxLanguageBoost] = useState('Japanese');
   const [minimaxSpeed, setMinimaxSpeed] = useState('');
@@ -532,16 +536,16 @@ function App() {
   // Update defaults when engine changes
   useEffect(() => {
     const defaults = ENGINE_DEFAULTS[engine];
+    const minimaxDefaults = ENGINE_DEFAULTS.minimax;
     setApiUrl(defaults.apiUrl);
     setApiKey('');
     setMinimaxGroupId('');
     if (engine === 'minimax') {
-      const minimaxDefaults = ENGINE_DEFAULTS.minimax;
       setMinimaxVoiceId(minimaxDefaults.speaker);
       setMinimaxModel(minimaxDefaults.defaultModel);
     } else {
       setMinimaxVoiceId('male-qn-qingse');
-      setMinimaxModel('speech-2.5-hd-preview');
+      setMinimaxModel(minimaxDefaults.defaultModel);
     }
     setMinimaxLanguageBoost('Japanese');
     setMinimaxSpeed('');

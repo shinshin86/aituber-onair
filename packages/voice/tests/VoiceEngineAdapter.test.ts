@@ -301,7 +301,7 @@ describe('VoiceEngineAdapter', () => {
         apiKey: 'test-api-key',
         groupId: 'test-group-id',
         endpoint: 'global',
-        minimaxModel: 'speech-2.5-hd-preview' as MinimaxModel,
+        minimaxModel: 'speech-2.6-hd' as MinimaxModel,
         minimaxLanguageBoost: 'English',
         minimaxVoiceSettings: { speed: 0.95, vol: 0.9, pitch: -2 },
         minimaxSpeed: 1.1,
@@ -337,7 +337,7 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setEndpoint).toHaveBeenCalledWith('global');
 
       // Verify model was set
-      expect(mockEngine.setModel).toHaveBeenCalledWith('speech-2.5-hd-preview');
+      expect(mockEngine.setModel).toHaveBeenCalledWith('speech-2.6-hd');
       expect(mockEngine.setLanguage).toHaveBeenCalledWith('English');
       expect(mockEngine.setVoiceSettings).toHaveBeenCalledWith({
         speed: 0.95,
@@ -395,6 +395,8 @@ describe('VoiceEngineAdapter', () => {
 
     it('should handle all available MiniMax models', async () => {
       const models: MinimaxModel[] = [
+        'speech-2.6-hd',
+        'speech-2.6-turbo',
         'speech-2.5-hd-preview',
         'speech-2.5-turbo-preview',
         'speech-02-hd',
@@ -455,7 +457,7 @@ describe('VoiceEngineAdapter', () => {
         // These should be ignored for non-MiniMax engines
         groupId: 'test-group-id',
         endpoint: 'global',
-        minimaxModel: 'speech-2.5-hd-preview' as MinimaxModel,
+        minimaxModel: 'speech-2.6-hd' as MinimaxModel,
         onPlay: vi.fn(),
       };
 

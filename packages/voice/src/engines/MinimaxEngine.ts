@@ -16,6 +16,8 @@ export type MinimaxEndpoint = 'global' | 'china';
  * Available MiniMax TTS models
  */
 export type MinimaxModel =
+  | 'speech-2.6-hd'
+  | 'speech-2.6-turbo'
   | 'speech-2.5-hd-preview'
   | 'speech-2.5-turbo-preview'
   | 'speech-02-hd'
@@ -63,7 +65,7 @@ export interface MinimaxAudioSettingsOptions {
  */
 export class MinimaxEngine implements VoiceEngine {
   private groupId?: string;
-  private model: MinimaxModel = 'speech-2.5-hd-preview';
+  private model: MinimaxModel = 'speech-2.6-hd';
   private defaultVoiceId: string = 'male-qn-qingse';
   private language: string = 'Japanese';
   private endpoint: MinimaxEndpoint = 'global';
@@ -101,6 +103,8 @@ export class MinimaxEngine implements VoiceEngine {
   /**
    * Set model for MiniMax TTS
    * Available models:
+   * - speech-2.6-hd: Latest flagship HD model with highest fidelity
+   * - speech-2.6-turbo: Low-latency Turbo model from 2.6 generation
    * - speech-2.5-hd-preview: Latest high-quality model (preview)
    * - speech-2.5-turbo-preview: Latest fast model (preview)
    * - speech-02-hd: High-quality model

@@ -108,7 +108,7 @@ const minimaxService = new VoiceEngineAdapter({
     apiKey: 'your-api-key',
     groupId: 'your-group-id',
     speaker: 'male-qn-qingse',
-    minimaxModel: 'speech-2.5-hd-preview',
+    minimaxModel: 'speech-2.6-hd',
     minimaxVoiceSettings: {
         speed: 1.1,
         vol: 1.0,
