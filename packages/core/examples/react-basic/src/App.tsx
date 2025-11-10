@@ -54,6 +54,10 @@ import {
 
 // MiniMax model options with descriptions
 const MINIMAX_MODELS: Record<MinimaxModel, string> = {
+  'speech-2.6-hd':
+    'Latest flagship HD model with ultra-high fidelity and natural prosody.',
+  'speech-2.6-turbo':
+    'Latest Turbo model optimized for low latency and real-time responses.',
   'speech-2.5-hd-preview':
     'The brand new HD model. Ultimate Similarity, Ultra-High Quality',
   'speech-2.5-turbo-preview':
@@ -184,7 +188,7 @@ const App: React.FC = () => {
   const [voiceApiKeys, setVoiceApiKeys] = useState<Record<string, string>>({});
   const [minimaxGroupId, setMinimaxGroupId] = useState<string>('');
   const [minimaxModel, setMinimaxModel] = useState<MinimaxModel>(
-    'speech-2.5-hd-preview',
+    'speech-2.6-hd',
   );
   const [minimaxLanguageBoost, setMinimaxLanguageBoost] =
     useState<string>('Japanese');

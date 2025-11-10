@@ -8,6 +8,8 @@ describe('MinimaxEngine', () => {
     it('should set and use different models', () => {
       const engine = new MinimaxEngine();
       const models: MinimaxModel[] = [
+        'speech-2.6-hd',
+        'speech-2.6-turbo',
         'speech-2.5-hd-preview',
         'speech-2.5-turbo-preview',
         'speech-02-hd',
