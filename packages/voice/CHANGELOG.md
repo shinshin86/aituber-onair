@@ -1,5 +1,11 @@
 # @aituber-onair/voice
 
+## 0.7.0
+
+### Minor Changes
+
+- Add support for MiniMax speech-2.6 HD/Turbo models and update docs plus defaults accordingly.
+
 ## 0.6.0
 
 ### Minor Changes
@@ -22,6 +28,7 @@
 - feat: expand engine parameter coverage (all engines except NijiVoice) so developers can tune key overrides directly from the React example while leveraging existing `VoiceServiceOptions`
 
   **Engine highlights:**
+
   - **OpenAI TTS** — surfaced `openAiSpeed` override; UI defaults remain at 1.0 with real-time adjustment.
   - **VOICEVOX** — exposed full query overrides including speed/pitch/intonation/volume scales, phoneme lengths, pause controls, sampling rate, stereo, katakana-English handling, interrogative upspeak, and core version.
   - **AivisSpeech** — matched VOICEVOX-style controls for speed, pitch, intonation, volume, silence lengths, sampling rate, and channel selection.
@@ -38,20 +45,23 @@
 - feat: add MiniMax TTS new models and enhanced UI configuration
 
   **New MiniMax TTS Models:**
+
   - speech-2.5-hd-preview: Latest high-definition preview model (new default)
   - speech-2.5-turbo-preview: Enhanced turbo model for faster processing
   - speech-02-turbo: Updated turbo model with improved quality
   - Maintained compatibility with existing speech-01, speech-02-hd, speech-02 models
 
   **Enhanced React UI:**
+
   - Separated API Key and Group ID configuration fields for better security
   - Added comprehensive Voice ID selection with 18 voice options including new voices:
-    * Wise_Woman, Deep_Voice_Man, Cute_Boy, Energetic_Woman_1, Energetic_Woman_2
-    * Gentle_Woman, Mature_Woman_1, Mature_Woman_2, Soft_Woman, Sweet_Woman
-    * Youthful_Woman_1, Youthful_Woman_2, and more
+    - Wise_Woman, Deep_Voice_Man, Cute_Boy, Energetic_Woman_1, Energetic_Woman_2
+    - Gentle_Woman, Mature_Woman_1, Mature_Woman_2, Soft_Woman, Sweet_Woman
+    - Youthful_Woman_1, Youthful_Woman_2, and more
   - Improved configuration interface for better user experience
 
   **Comprehensive Test Coverage:**
+
   - Added MinimaxEngine.test.ts with 7 configuration tests
   - Added VoiceEngineAdapter.test.ts with 15 integration tests
   - CI/CD-friendly testing without API key dependencies
@@ -59,6 +69,7 @@
   - 45 total tests ensuring robust functionality across all engines
 
   **Code Quality Improvements:**
+
   - Translated all Japanese comments to English for international development
   - Enhanced TypeScript type safety with MinimaxModel union type
   - Improved error handling and validation throughout the codebase
@@ -72,6 +83,7 @@
   Added complete support for Aivis Cloud API, a high-quality Japanese text-to-speech service:
 
   **New Features:**
+
   - Full Aivis Cloud API integration with all parameters support
   - SSML (Speech Synthesis Markup Language) support for rich voice expression
   - Emotional intensity control and speaking rate adjustment
@@ -80,12 +92,14 @@
   - Response header parsing for billing and usage information
 
   **Cross-Platform Examples:**
+
   - Node.js example with environment variable support and parallel format testing
   - Deno example with TypeScript and security-focused implementation
   - Bun example with performance benchmarking and streaming simulation
   - React example with UI integration and engine comparison guide
 
   **Technical Implementation:**
+
   - AivisCloudEngine class with full API parameter support
   - Comprehensive test suite with 100% feature coverage
   - Runtime-specific optimizations for each platform
@@ -99,7 +113,7 @@
 
 - Add subpath exports for direct build access
 
-  Added ./dist/cjs/* and ./dist/esm/* subpath exports to package.json to enable direct access to build artifacts. This provides a workaround for Deno ESM compatibility issues by allowing imports like:
+  Added ./dist/cjs/_ and ./dist/esm/_ subpath exports to package.json to enable direct access to build artifacts. This provides a workaround for Deno ESM compatibility issues by allowing imports like:
 
   `import { VoiceEngineAdapter } from "npm:@aituber-onair/voice/dist/cjs/index.js"`
 
@@ -114,30 +128,35 @@
   This update brings significant improvements to the voice package, making it compatible with multiple JavaScript runtimes and module systems:
 
   **Cross-Platform Runtime Support:**
+
   - Full Node.js support with dynamic audio format detection
   - Bun runtime compatibility with fast execution
   - Deno runtime support (file output with external playback)
   - Browser environment with HTMLAudioElement support
 
   **Dual Package Architecture:**
+
   - CommonJS build for Node.js-like environments
   - ESModule build for modern browsers and bundlers
   - Automatic format selection based on import method
   - Maintains full backward compatibility
 
   **Audio Engine Improvements:**
+
   - Dynamic WAV header parsing for sample rate detection
   - Support for 24000Hz, 44100Hz, and 48000Hz audio formats
   - Fixed audio playback issues across different TTS engines
   - Unified audio player interface with runtime-specific implementations
 
   **Developer Experience:**
+
   - Comprehensive examples for each runtime environment
   - Optional audio dependency installation (no breaking installs)
   - Updated Node.js import protocols for lint compliance
   - Improved documentation with runtime-specific guidance
 
   **Technical Details:**
+
   - Removed optionalDependencies to prevent CI failures
   - Audio libraries (speaker, play-sound) now require manual installation
   - Fixed Transfer-Encoding header issues with Node.js fetch
