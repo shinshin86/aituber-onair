@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## 0.5.0
+
+### Minor Changes
+
+- **Claude 4.5 Model Support**: Added the new Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`) and Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) identifiers to the shared constants, provider factory, and test suite so applications can immediately target the latest Anthropic releases, including full vision support validation.
+- **Documentation Updates**: Refreshed the Chat package README (English/Japanese) and the React example README to highlight Claude 4.5 defaults and clarify the supported model matrix.
+- **React Example Improvements**: Updated the `react-basic` example's provider selector UI so end-users can pick the newly added Claude 4.5 models directly from the dropdown.
+
 ## 0.4.0
 
 ### Minor Changes
