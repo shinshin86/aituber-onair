@@ -24,6 +24,8 @@ import {
   MODEL_CLAUDE_3_7_SONNET,
   MODEL_CLAUDE_4_SONNET,
   MODEL_CLAUDE_4_OPUS,
+  MODEL_CLAUDE_4_5_SONNET,
+  MODEL_CLAUDE_4_5_HAIKU,
   // Gemini models
   MODEL_GEMINI_2_5_PRO,
   MODEL_GEMINI_2_5_FLASH,
@@ -171,6 +173,18 @@ export const allModels = [
   {
     id: MODEL_CLAUDE_4_OPUS,
     name: 'Claude 4 Opus',
+    provider: 'claude',
+    default: false,
+  },
+  {
+    id: MODEL_CLAUDE_4_5_SONNET,
+    name: 'Claude 4.5 Sonnet',
+    provider: 'claude',
+    default: false,
+  },
+  {
+    id: MODEL_CLAUDE_4_5_HAIKU,
+    name: 'Claude 4.5 Haiku',
     provider: 'claude',
     default: false,
   },

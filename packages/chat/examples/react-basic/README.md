@@ -99,9 +99,9 @@ Use the dropdown to select response length:
 - Best for: General purpose, code generation
 
 **Claude**
-- Models: Claude 3 (Opus, Sonnet, Haiku)
-- Vision: All Claude 3 models
-- Best for: Long context, analysis
+- Models: Claude 4.5 (Sonnet, Haiku), Claude 4 (Sonnet, Opus), Claude 3 (Sonnet, Haiku)
+- Vision: All Claude 4/4.5/3 models listed above
+- Best for: Long context, tool use + advanced reasoning
 
 **Gemini**
 - Models: Gemini Pro
