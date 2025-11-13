@@ -1,5 +1,13 @@
 # @aituber-onair/core
 
+## 0.18.2
+
+### Patch Changes
+
+- Add Claude Sonnet 4.5 / Haiku 4.5 constants to the public exports so React/Vite integrations can target the newest Anthropic releases out of the box, and update the core React example (settings dropdown + README) to include the new models by default.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.5.0
+
 ## 0.18.1
 
 ### Patch Changes
