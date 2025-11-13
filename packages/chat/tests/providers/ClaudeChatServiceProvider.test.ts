@@ -9,6 +9,8 @@ import {
   MODEL_CLAUDE_3_7_SONNET,
   MODEL_CLAUDE_4_SONNET,
   MODEL_CLAUDE_4_OPUS,
+  MODEL_CLAUDE_4_5_SONNET,
+  MODEL_CLAUDE_4_5_HAIKU,
 } from '../../src/constants';
 
 // Mock ClaudeChatService
@@ -39,6 +41,8 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_3_7_SONNET,
         MODEL_CLAUDE_4_SONNET,
         MODEL_CLAUDE_4_OPUS,
+        MODEL_CLAUDE_4_5_SONNET,
+        MODEL_CLAUDE_4_5_HAIKU,
       ]);
     });
   });
@@ -65,6 +69,14 @@ describe('ClaudeChatServiceProvider', () => {
         true,
       );
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_3_7_SONNET)).toBe(
+        true,
+      );
+      expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_SONNET)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_OPUS)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_5_SONNET)).toBe(
+        true,
+      );
+      expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_5_HAIKU)).toBe(
         true,
       );
     });
