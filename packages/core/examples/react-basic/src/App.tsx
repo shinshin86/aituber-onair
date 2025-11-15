@@ -6,6 +6,7 @@ import {
   GPT5_PRESETS,
   GPT5PresetKey,
   isGPT5Model,
+  MODEL_GPT_5_1,
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
   type MinimaxModel,
@@ -69,6 +70,8 @@ const MINIMAX_MODELS: Record<MinimaxModel, string> = {
   'speech-01-hd': 'Rich Voices, Expressive Emotions, Authentic Languages',
   'speech-01-turbo': 'Excellent performance and low latency',
 };
+
+type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high';
 
 // MiniMax Voice IDs with descriptions
 const MINIMAX_VOICES: Record<string, string> = {
@@ -165,12 +168,31 @@ const App: React.FC = () => {
   const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
     'medium',
   );
-  const [reasoning_effort, setReasoningEffort] = useState<
-    'minimal' | 'low' | 'medium' | 'high'
-  >('medium');
+  const [reasoning_effort, setReasoningEffort] = useState<ReasoningEffortLevel>(
+    'medium',
+  );
   const [gpt5EndpointPreference, setGpt5EndpointPreference] = useState<
     'chat' | 'responses'
   >('chat');
+
+  const normalizeReasoningEffortForModel = (
+    targetModel: string | undefined,
+    effort?: ReasoningEffortLevel,
+  ): ReasoningEffortLevel => {
+  if (targetModel === MODEL_GPT_5_1) {
+    if (!effort) {
+      return 'none';
+    }
+    if (effort === 'minimal') {
+      return 'none';
+    }
+    return effort;
+  }
+    if (!effort || effort === 'none') {
+      return 'medium';
+    }
+    return effort;
+  };
 
   // chat messages state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -478,6 +500,22 @@ const App: React.FC = () => {
     }
   }, [chatProvider]);
 
+  useEffect(() => {
+    if (chatProvider !== 'openai') {
+      return;
+    }
+    if (!model || !isGPT5Model(model)) {
+      if (reasoning_effort === 'none') {
+        setReasoningEffort('medium');
+      }
+      return;
+    }
+    const normalized = normalizeReasoningEffortForModel(model, reasoning_effort);
+    if (normalized !== reasoning_effort) {
+      setReasoningEffort(normalized);
+    }
+  }, [chatProvider, model, reasoning_effort]);
+
   /**
    * when GPT-5 preset changes, update verbosity and reasoning_effort
    */
@@ -485,9 +523,11 @@ const App: React.FC = () => {
     if (gpt5Preset !== 'custom' && gpt5Preset in GPT5_PRESETS) {
       const preset = GPT5_PRESETS[gpt5Preset];
       setVerbosity(preset.verbosity);
-      setReasoningEffort(preset.reasoning_effort);
+      setReasoningEffort(
+        normalizeReasoningEffortForModel(model, preset.reasoning_effort),
+      );
     }
-  }, [gpt5Preset]);
+  }, [gpt5Preset, model]);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -584,7 +624,7 @@ const App: React.FC = () => {
       } else {
         // Use custom settings
         providerOptions.verbosity = verbosity;
-        providerOptions.reasoning_effort = reasoning_effort;
+        providerOptions.reasoning_effort = normalizedReasoningEffort;
       }
       providerOptions.gpt5EndpointPreference = gpt5EndpointPreference;
     }
@@ -1309,6 +1349,11 @@ const App: React.FC = () => {
     setShowSettings(false);
   };
 
+  const isOpenAIGPT5ModelSelected =
+    chatProvider === 'openai' && model && isGPT5Model(model);
+  const isOpenAIGPT51Selected =
+    chatProvider === 'openai' && model === MODEL_GPT_5_1;
+
   return (
     <>
       <header>
@@ -1631,7 +1676,7 @@ const App: React.FC = () => {
                   </select>
 
                   {/* GPT-5 specific settings */}
-                  {chatProvider === 'openai' && model && isGPT5Model(model) && (
+                  {isOpenAIGPT5ModelSelected && (
                     <div style={{ marginTop: '16px' }}>
                       <hr />
                       <div style={{ marginTop: '16px', marginBottom: '16px' }}>
@@ -1686,15 +1731,15 @@ const App: React.FC = () => {
                               value={reasoning_effort}
                               onChange={(e) =>
                                 setReasoningEffort(
-                                  e.target.value as
-                                    | 'minimal'
-                                    | 'low'
-                                    | 'medium'
-                                    | 'high',
+                                  e.target.value as ReasoningEffortLevel,
                                 )
                               }
                             >
-                              <option value="minimal">Minimal</option>
+                              {isOpenAIGPT51Selected ? (
+                                <option value="none">None</option>
+                              ) : (
+                                <option value="minimal">Minimal</option>
+                              )}
                               <option value="low">Low</option>
                               <option value="medium">Medium</option>
                               <option value="high">High</option>

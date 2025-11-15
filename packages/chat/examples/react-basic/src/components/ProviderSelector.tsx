@@ -284,6 +284,19 @@ export default function ProviderSelector({
 }: ProviderSelectorProps) {
   const info = providerInfo[provider];
   const isGPT5 = provider === 'openai' && isGPT5Model(selectedModel);
+  const isGPT51 = provider === 'openai' && selectedModel === MODEL_GPT_5_1;
+  const effectiveReasoningEffort = (() => {
+    if (isGPT51) {
+      if (!reasoning_effort || reasoning_effort === 'minimal') {
+        return 'none';
+      }
+      return reasoning_effort;
+    }
+    if (reasoning_effort === 'none' || !reasoning_effort) {
+      return 'medium';
+    }
+    return reasoning_effort;
+  })();
 
   return (
     <div className="provider-selector">
@@ -428,7 +441,7 @@ export default function ProviderSelector({
                   <label htmlFor="reasoning-effort">Reasoning Effort</label>
                   <select
                     id="reasoning-effort"
-                    value={reasoning_effort || 'none'}
+                    value={effectiveReasoningEffort}
                     onChange={(e) =>
                       onReasoningEffortChange?.(
                         e.target.value as
@@ -442,8 +455,11 @@ export default function ProviderSelector({
                     disabled={disabled}
                     className="reasoning-effort-select"
                   >
-                    <option value="none">None (fastest)</option>
-                    <option value="minimal">Minimal (GPT-4 like)</option>
+                    {isGPT51 ? (
+                      <option value="none">None (fastest)</option>
+                    ) : (
+                      <option value="minimal">Minimal (GPT-4 like)</option>
+                    )}
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>

@@ -136,7 +136,7 @@ const openaiService = ChatServiceFactory.createChatService('openai', {
 });
 ```
 
-`reasoning_effort` accepts `'minimal' | 'low' | 'medium' | 'high'` for GPT-5 models, while GPT-5.1 adds a `'none'` option that skips structured reasoning for low-latency work. Use `'none'` (GPT-5.1's default) when you want the quickest response without chain-of-thought, and raise the effort level for deeper reasoning tasks.
+`reasoning_effort` options differ per model: GPT-5 (5.0) accepts `'minimal' | 'low' | 'medium' | 'high'`, while GPT-5.1 replaces `'minimal'` with `'none'` so the valid values are `'none' | 'low' | 'medium' | 'high'`. Use `'none'` (GPT-5.1's default) when you want the quickest response without structured reasoning, and raise the effort level for deeper analysis.
 
 **Meet the GPT-5 family**
 

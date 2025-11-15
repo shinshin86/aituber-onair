@@ -16,6 +16,8 @@ import {
   MODEL_GPT_4_5_PREVIEW,
   VISION_SUPPORTED_MODELS,
   isGPT5Model,
+  allowsReasoningNone,
+  allowsReasoningMinimal,
 } from '../../../constants';
 import { GPT5_PRESETS } from '../../../constants/chat';
 import { ChatService } from '../../ChatService';
@@ -169,6 +171,11 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
       }
     }
 
+    optimized.reasoning_effort = this.normalizeReasoningEffort(
+      modelName,
+      optimized.reasoning_effort,
+    );
+
     // Keep the user's selected response length regardless of API endpoint
     // Users can manually select reasoning response lengths if desired
 
@@ -186,5 +193,24 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
       return 'none';
     }
     return 'medium';
+  }
+
+  private normalizeReasoningEffort(
+    modelName: string,
+    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high',
+  ): 'none' | 'minimal' | 'low' | 'medium' | 'high' | undefined {
+    if (!effort) {
+      return undefined;
+    }
+
+    if (effort === 'none' && !allowsReasoningNone(modelName)) {
+      return this.getDefaultReasoningEffortForModel(modelName);
+    }
+
+    if (effort === 'minimal' && !allowsReasoningMinimal(modelName)) {
+      return 'none';
+    }
+
+    return effort;
   }
 }

@@ -2,6 +2,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   ChatServiceFactory,
   ChatService,
+  MODEL_GPT_5_1,
+  isGPT5Model,
   type Message,
   type MessageWithVision,
   type ChatResponseLength,
@@ -23,6 +25,36 @@ interface ChatMessage extends Omit<Message, 'timestamp'> {
   isStreaming?: boolean;
 }
 
+type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high';
+
+const normalizeReasoningEffortForModel = (
+  modelId?: string,
+  effort?: ReasoningEffortLevel,
+): ReasoningEffortLevel => {
+  if (!modelId || !isGPT5Model(modelId)) {
+    if (!effort || effort === 'none') {
+      return 'medium';
+    }
+    return effort;
+  }
+
+  if (modelId === MODEL_GPT_5_1) {
+    if (!effort) {
+      return 'none';
+    }
+    if (effort === 'minimal') {
+      return 'none';
+    }
+    return effort;
+  }
+
+  if (!effort || effort === 'none') {
+    return 'medium';
+  }
+
+  return effort;
+};
+
 function App() {
   const [provider, setProvider] = useState<Provider>('openai');
   const [apiKey, setApiKey] = useState('');
@@ -35,9 +67,8 @@ function App() {
     getDefaultModelForProvider('openai'),
   );
   const [gpt5Preset, setGpt5Preset] = useState<GPT5PresetKey | undefined>();
-  const [reasoning_effort, setReasoningEffort] = useState<
-    'none' | 'minimal' | 'low' | 'medium' | 'high'
-  >('none');
+  const [reasoning_effort, setReasoningEffort] =
+    useState<ReasoningEffortLevel>('none');
   const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
     'medium',
   );
@@ -47,6 +78,11 @@ function App() {
   const [enableReasoningSummary, setEnableReasoningSummary] = useState(false);
   const [chatService, setChatService] = useState<ChatService | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const normalizedReasoningEffort = normalizeReasoningEffortForModel(
+    selectedModel,
+    reasoning_effort,
+  );
 
   // Auto-scroll to bottom when messages change
   // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally want to scroll when messages change
@@ -69,7 +105,7 @@ function App() {
           if (gpt5Preset) {
             options.gpt5Preset = gpt5Preset;
           } else {
-            options.reasoning_effort = reasoning_effort;
+            options.reasoning_effort = normalizedReasoningEffort;
             options.verbosity = verbosity;
           }
           options.gpt5EndpointPreference = gpt5EndpointPreference;
@@ -209,7 +245,13 @@ function App() {
               setSelectedModel(defaultModel);
               // Reset GPT-5 settings when changing provider
               setGpt5Preset(undefined);
-              setReasoningEffort('medium');
+              if (newProvider === 'openai') {
+                setReasoningEffort(
+                  defaultModel === MODEL_GPT_5_1 ? 'none' : 'medium',
+                );
+              } else {
+                setReasoningEffort('medium');
+              }
               setVerbosity('medium');
             }}
             apiKey={apiKey}
@@ -223,10 +265,15 @@ function App() {
                 setProvider(newProvider);
               }
               setSelectedModel(modelId);
+              if (newProvider === 'openai' && !gpt5Preset) {
+                setReasoningEffort(
+                  modelId === MODEL_GPT_5_1 ? 'none' : 'medium',
+                );
+              }
             }}
             gpt5Preset={gpt5Preset}
             onGpt5PresetChange={setGpt5Preset}
-            reasoning_effort={reasoning_effort}
+            reasoning_effort={normalizedReasoningEffort}
             onReasoningEffortChange={setReasoningEffort}
             verbosity={verbosity}
             onVerbosityChange={setVerbosity}

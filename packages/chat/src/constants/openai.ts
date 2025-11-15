@@ -55,3 +55,19 @@ export const GPT_5_MODELS = [
 export function isGPT5Model(model: string): boolean {
   return GPT_5_MODELS.includes(model);
 }
+
+/**
+ * Check if the provided model allows the reasoning_effort 'none' shortcut
+ * Currently GPT-5.1 only
+ */
+export function allowsReasoningNone(model: string): boolean {
+  return model === MODEL_GPT_5_1;
+}
+
+/**
+ * Check if the provided model allows the 'minimal' reasoning effort level
+ * GPT-5.1 removes 'minimal' in favor of 'none'
+ */
+export function allowsReasoningMinimal(model: string): boolean {
+  return model !== MODEL_GPT_5_1;
+}

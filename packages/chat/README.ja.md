@@ -136,7 +136,7 @@ const openaiService = ChatServiceFactory.createChatService('openai', {
 });
 ```
 
-`reasoning_effort` は GPT-5 系列では `'minimal' | 'low' | 'medium' | 'high'` を指定でき、GPT-5.1 では追加で `'none'` を選択できます（GPT-5.1の新デフォルト値）。`'none'` を使うと推論フェーズを省略し、高速応答を優先できます。
+`reasoning_effort` の選択肢はモデルによって異なります。GPT-5（5.0）では `'minimal' | 'low' | 'medium' | 'high'` が有効で、GPT-5.1 では `'minimal'` の代わりに `'none'` を利用できます（GPT-5.1 の新しいデフォルト）。`'none'` を使うと推論フェーズを完全にスキップし、高速応答を優先できます。一方で GPT-5.1 では `'minimal'` はサポートされない点に注意してください。
 
 **GPT-5ファミリーの概要**
 
@@ -413,4 +413,3 @@ MIT
 ## 貢献
 
 貢献を歓迎します！プルリクエストをお気軽にご提出ください。
-`reasoning_effort` は GPT-5 系列では `'minimal' | 'low' | 'medium' | 'high'` を指定でき、GPT-5.1 では追加で `'none'` を利用できます。`'none'`（GPT-5.1のデフォルト）を指定すると推論フェーズを省略し、応答速度を最優先にできます。

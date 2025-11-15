@@ -150,6 +150,52 @@ describe('OpenAIChatServiceProvider', () => {
       );
     });
 
+    it('should fallback reasoning effort to default when none is not supported', () => {
+      const options: ChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5,
+        reasoning_effort: 'none',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5,
+        MODEL_GPT_5,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'medium',
+        undefined,
+      );
+    });
+
+    it('should map minimal reasoning to none for GPT-5.1 models', () => {
+      const options: ChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_1,
+        reasoning_effort: 'minimal',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_1,
+        MODEL_GPT_5_1,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'none',
+        undefined,
+      );
+    });
+
     it('should use custom vision model when provided', () => {
       const options: ChatServiceOptions = {
         apiKey: 'test-api-key',
