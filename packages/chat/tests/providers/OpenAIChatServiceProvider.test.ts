@@ -6,7 +6,6 @@ import {
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
-  MODEL_GPT_5_CHAT_LATEST,
   MODEL_GPT_5_1,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
@@ -46,7 +45,6 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_GPT_5_NANO,
         MODEL_GPT_5_MINI,
         MODEL_GPT_5,
-        MODEL_GPT_5_CHAT_LATEST,
         MODEL_GPT_5_1,
         MODEL_GPT_4_1,
         MODEL_GPT_4_1_MINI,
@@ -404,12 +402,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should create services for all GPT-5 models correctly', () => {
-      const gpt5Models = [
-        MODEL_GPT_5_NANO,
-        MODEL_GPT_5_MINI,
-        MODEL_GPT_5,
-        MODEL_GPT_5_CHAT_LATEST,
-      ];
+      const gpt5Models = [MODEL_GPT_5_NANO, MODEL_GPT_5_MINI, MODEL_GPT_5];
 
       gpt5Models.forEach((model) => {
         // Clear previous calls

@@ -7,7 +7,6 @@ export const ENDPOINT_OPENAI_RESPONSES_API =
 export const MODEL_GPT_5_NANO = 'gpt-5-nano';
 export const MODEL_GPT_5_MINI = 'gpt-5-mini';
 export const MODEL_GPT_5 = 'gpt-5';
-export const MODEL_GPT_5_CHAT_LATEST = 'gpt-5-chat-latest';
 export const MODEL_GPT_5_1 = 'gpt-5.1';
 
 export const MODEL_GPT_4_1 = 'gpt-4.1';
@@ -29,7 +28,6 @@ export const VISION_SUPPORTED_MODELS = [
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
-  MODEL_GPT_5_CHAT_LATEST,
   MODEL_GPT_5_1,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
@@ -46,7 +44,6 @@ export const GPT_5_MODELS = [
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
-  MODEL_GPT_5_CHAT_LATEST,
   MODEL_GPT_5_1,
 ];
 

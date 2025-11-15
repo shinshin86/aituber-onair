@@ -401,7 +401,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 
 Currently, the following AI providers are built-in:
 
-- **OpenAI**: Supports models like GPT-5.1, GPT-5 (Nano/Mini/Standard/Chat Latest), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
+- **OpenAI**: Supports models like GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Pro
 - **Claude**: Supports models like Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
 - **OpenRouter**: Supports `openai/gpt-oss-20b:free` (free tier model with special handling for token limits)
