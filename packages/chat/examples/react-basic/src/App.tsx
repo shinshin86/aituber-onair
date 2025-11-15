@@ -128,7 +128,7 @@ function App() {
     responseLength,
     selectedModel,
     gpt5Preset,
-    reasoning_effort,
+    normalizedReasoningEffort,
     verbosity,
     gpt5EndpointPreference,
     enableReasoningSummary,
