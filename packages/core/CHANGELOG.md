@@ -1,12 +1,18 @@
 # @aituber-onair/core
 
+## 0.18.3
+
+### Patch Changes
+
+- Normalize GPT-5.1 reasoning defaults across the public exports and the React basic example so selecting GPT-5.1 automatically uses `reasoning_effort='none'`, while legacy GPT-5 variants retain the `'minimal' | 'low' | 'medium' | 'high'` options. The example UI now exposes GPT-5.1 as the default OpenAI model to match the latest chat package behavior.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.6.0
+
 ## 0.18.2
 
 ### Patch Changes
 
 - Add Claude Sonnet 4.5 / Haiku 4.5 constants to the public exports so React/Vite integrations can target the newest Anthropic releases out of the box, and update the core React example (settings dropdown + README) to include the new models by default.
-- Updated dependencies []:
-  - @aituber-onair/chat@0.5.0
 
 ## 0.18.1
 
