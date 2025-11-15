@@ -35,7 +35,7 @@ export class OpenAIChatService implements ChatService {
   private mcpServers: MCPServerConfig[];
   private responseLength?: ChatResponseLength;
   private verbosity?: 'low' | 'medium' | 'high';
-  private reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
+  private reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
   private enableReasoningSummary?: boolean;
 
   /**
@@ -53,7 +53,7 @@ export class OpenAIChatService implements ChatService {
     mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,
     verbosity?: 'low' | 'medium' | 'high',
-    reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high',
+    reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high',
     enableReasoningSummary: boolean = false,
   ) {
     this.apiKey = apiKey;

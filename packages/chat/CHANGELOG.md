@@ -1,5 +1,15 @@
 # @aituber-onair/chat
 
+## 0.6.0
+
+### Minor Changes
+
+- **OpenAI GPT-5.1 Support**: Added the newly announced `gpt-5.1` model identifier across the OpenAI chat service, provider factory, UI examples, and documentation so apps can immediately target the latest tier. GPT-5 family metadata (vision support, presets, tests) now understands both 5.0 and 5.1 variants. Removed legacy GPT-5 chat_latest aliases to align with current OpenAI API offerings.
+- **Efficient Reasoning Enhancements**: The `reasoning_effort` option accepts the new `'none'` value (matching GPT-5.1's default). Both the SDK and React example expose the toggle, and OpenRouter mappings gracefully skip sending an unsupported effort when `'none'` is selected.
+- **Reasoning Guardrails**: Automatically remap unsupported combinations (e.g., `'minimal'` on GPT-5.1 or `'none'` on GPT-5) to valid values so API calls no longer fail when presets or UI selections drift from the model-specific contract. React/core examples hide invalid choices accordingly.
+- **Docs & Examples**: Updated README files and the React example UI to highlight GPT-5.1 models and explain when to use `'none'` vs. higher reasoning levels.
+- **Cleanup**: Removed `gpt-5-chat-latest` related constants, tests, and documentation references so the package now exposes only the stable IDs (`gpt-5.1`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano`) that OpenAI currently documents. React/core examples and supported-model lists were updated accordingly.
+
 ## 0.5.0
 
 ### Minor Changes

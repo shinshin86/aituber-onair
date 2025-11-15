@@ -99,7 +99,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **OpenAI:**
 - GPT-4.1 series (Nano, Mini, Standard)
-- GPT-5 series (Nano, Mini, Standard, Chat Latest)
+- GPT-5 series (Nano, Mini, Standard)
 - o3-mini
 - GPT-4o, GPT-4o Mini
 - GPT-4.5 Preview

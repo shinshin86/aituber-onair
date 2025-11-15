@@ -94,9 +94,10 @@ Use the dropdown to select response length:
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-4, GPT-3.5
+- Models: GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
 - Vision: GPT-4 Vision
-- Best for: General purpose, code generation
+- Best for: General purpose, code generation, advanced reasoning
+- Reasoning Effort: GPT-5 (5.0) supports Minimal/Low/Medium/High, while GPT-5.1 swaps Minimal for None (fastest) plus Low/Medium/High
 
 **Claude**
 - Models: Claude 4.5 (Sonnet, Haiku), Claude 4 (Sonnet, Opus), Claude 3 (Sonnet, Haiku)

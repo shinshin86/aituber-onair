@@ -7,7 +7,7 @@ import {
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
-  MODEL_GPT_5_CHAT_LATEST,
+  MODEL_GPT_5_1,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
   MODEL_GPT_4_1_NANO,
@@ -50,9 +50,9 @@ interface ProviderSelectorProps {
   onModelChange: (model: string) => void;
   gpt5Preset?: GPT5PresetKey;
   onGpt5PresetChange?: (preset: GPT5PresetKey | undefined) => void;
-  reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
+  reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
   onReasoningEffortChange?: (
-    effort: 'minimal' | 'low' | 'medium' | 'high',
+    effort: 'none' | 'minimal' | 'low' | 'medium' | 'high',
   ) => void;
   verbosity?: 'low' | 'medium' | 'high';
   onVerbosityChange?: (verbosity: 'low' | 'medium' | 'high') => void;
@@ -94,7 +94,7 @@ export const allModels = [
     id: MODEL_GPT_5_NANO,
     name: 'GPT-5 Nano',
     provider: 'openai',
-    default: true,
+    default: false,
   },
   {
     id: MODEL_GPT_5_MINI,
@@ -104,10 +104,10 @@ export const allModels = [
   },
   { id: MODEL_GPT_5, name: 'GPT-5', provider: 'openai', default: false },
   {
-    id: MODEL_GPT_5_CHAT_LATEST,
-    name: 'GPT-5 Chat Latest',
+    id: MODEL_GPT_5_1,
+    name: 'GPT-5.1',
     provider: 'openai',
-    default: false,
+    default: true,
   },
   { id: MODEL_GPT_4_1, name: 'GPT-4.1', provider: 'openai', default: false },
   {
@@ -284,6 +284,19 @@ export default function ProviderSelector({
 }: ProviderSelectorProps) {
   const info = providerInfo[provider];
   const isGPT5 = provider === 'openai' && isGPT5Model(selectedModel);
+  const isGPT51 = provider === 'openai' && selectedModel === MODEL_GPT_5_1;
+  const effectiveReasoningEffort = (() => {
+    if (isGPT51) {
+      if (!reasoning_effort || reasoning_effort === 'minimal') {
+        return 'none';
+      }
+      return reasoning_effort;
+    }
+    if (reasoning_effort === 'none' || !reasoning_effort) {
+      return 'medium';
+    }
+    return reasoning_effort;
+  })();
 
   return (
     <div className="provider-selector">
@@ -428,16 +441,25 @@ export default function ProviderSelector({
                   <label htmlFor="reasoning-effort">Reasoning Effort</label>
                   <select
                     id="reasoning-effort"
-                    value={reasoning_effort || 'medium'}
+                    value={effectiveReasoningEffort}
                     onChange={(e) =>
                       onReasoningEffortChange?.(
-                        e.target.value as 'minimal' | 'low' | 'medium' | 'high',
+                        e.target.value as
+                          | 'none'
+                          | 'minimal'
+                          | 'low'
+                          | 'medium'
+                          | 'high',
                       )
                     }
                     disabled={disabled}
                     className="reasoning-effort-select"
                   >
-                    <option value="minimal">Minimal (GPT-4 like)</option>
+                    {isGPT51 ? (
+                      <option value="none">None (fastest)</option>
+                    ) : (
+                      <option value="minimal">Minimal (GPT-4 like)</option>
+                    )}
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
