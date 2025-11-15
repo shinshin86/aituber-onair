@@ -7,6 +7,7 @@ import {
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
   MODEL_GPT_5_CHAT_LATEST,
+  MODEL_GPT_5_1,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
   MODEL_GPT_4_1_NANO,
@@ -46,6 +47,7 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_GPT_5_MINI,
         MODEL_GPT_5,
         MODEL_GPT_5_CHAT_LATEST,
+        MODEL_GPT_5_1,
         MODEL_GPT_4_1,
         MODEL_GPT_4_1_MINI,
         MODEL_GPT_4_1_NANO,
@@ -75,6 +77,7 @@ describe('OpenAIChatServiceProvider', () => {
     it('should return true for vision-supported models', () => {
       expect(provider.supportsVisionForModel(MODEL_GPT_5_NANO)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_MINI)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_5_1)).toBe(true);
     });
 
     it('should return false for non-vision models', () => {
@@ -123,6 +126,28 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         undefined,
+        undefined,
+      );
+    });
+
+    it('should default reasoning effort to none for GPT-5.1 models', () => {
+      const options: ChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_1,
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_1,
+        MODEL_GPT_5_1,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'none',
         undefined,
       );
     });

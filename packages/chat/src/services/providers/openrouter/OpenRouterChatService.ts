@@ -35,7 +35,7 @@ export class OpenRouterChatService implements ChatService {
   private responseLength?: ChatResponseLength;
   private appName?: string;
   private appUrl?: string;
-  private reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
+  private reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
   private includeReasoning?: boolean;
   private reasoningMaxTokens?: number;
   private lastRequestTime: number = 0;
@@ -64,7 +64,7 @@ export class OpenRouterChatService implements ChatService {
     responseLength?: ChatResponseLength,
     appName?: string,
     appUrl?: string,
-    reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high',
+    reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high',
     includeReasoning?: boolean,
     reasoningMaxTokens?: number,
   ) {
@@ -348,21 +348,21 @@ export class OpenRouterChatService implements ChatService {
 
     // Add OpenRouter reasoning control
     if (
-      this.reasoning_effort ||
+      this.reasoning_effort !== undefined ||
       this.includeReasoning !== undefined ||
       this.reasoningMaxTokens
     ) {
       body.reasoning = {};
 
-      if (this.reasoning_effort) {
+      if (this.reasoning_effort && this.reasoning_effort !== 'none') {
         // OpenRouter uses 'low' as the minimum effort level, map 'minimal' to 'low'
         const effort =
           this.reasoning_effort === 'minimal' ? 'low' : this.reasoning_effort;
         body.reasoning.effort = effort;
       }
 
-      // Default to exclude reasoning if includeReasoning is not explicitly set to true
-      if (this.includeReasoning !== true) {
+      // Default to exclude reasoning to avoid empty responses unless explicitly requested
+      if (this.reasoning_effort === 'none' || this.includeReasoning !== true) {
         body.reasoning.exclude = true;
       }
 

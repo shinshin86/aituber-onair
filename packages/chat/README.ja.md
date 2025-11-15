@@ -129,10 +129,21 @@ await chatService.processChat(
 ```typescript
 const openaiService = ChatServiceFactory.createChatService('openai', {
   apiKey: process.env.OPENAI_API_KEY,
-  model: 'gpt-4-turbo-preview',
-  endpoint: 'chat/completions' // o1シリーズモデルの場合は 'responses'
+  model: 'gpt-5.1',
+  endpoint: 'responses', // GPT-5.1やMCP利用時に推奨
+  reasoning_effort: 'none', // 最速モード（効率化推論を無効化）
+  verbosity: 'medium'
 });
 ```
+
+`reasoning_effort` は GPT-5 系列では `'minimal' | 'low' | 'medium' | 'high'` を指定でき、GPT-5.1 では追加で `'none'` を選択できます（GPT-5.1の新デフォルト値）。`'none'` を使うと推論フェーズを省略し、高速応答を優先できます。
+
+**GPT-5ファミリーの概要**
+
+- `gpt-5.1` – 複雑な推論、広範な世界知識、コードやマルチステップのエージェントタスク向け。
+- `gpt-5` – 旧フラッグシップ（後方互換目的で提供されるが、現在は 5.1 が推奨）。
+- `gpt-5-mini` – コスト最適化された推論/チャットモデル。速度と能力のバランスが良い。
+- `gpt-5-nano` – 指示追従や分類などの高スループット処理に向いた軽量モデル。
 
 #### Claude (Anthropic)
 
@@ -390,7 +401,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
+- **OpenAI**: GPT-5.1、GPT-5（Nano/Mini/Standard/Chat Latest）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **Gemini**: Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemini 1.5 Flash, Gemini 1.5 Proのモデルをサポート
 - **Claude**: Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haikuのモデルをサポート
 - **OpenRouter**: `openai/gpt-oss-20b:free`（トークン制限の特別処理がある無料利用枠モデル）をサポート
@@ -402,3 +413,4 @@ MIT
 ## 貢献
 
 貢献を歓迎します！プルリクエストをお気軽にご提出ください。
+`reasoning_effort` は GPT-5 系列では `'minimal' | 'low' | 'medium' | 'high'` を指定でき、GPT-5.1 では追加で `'none'` を利用できます。`'none'`（GPT-5.1のデフォルト）を指定すると推論フェーズを省略し、応答速度を最優先にできます。

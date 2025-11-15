@@ -36,8 +36,8 @@ function App() {
   );
   const [gpt5Preset, setGpt5Preset] = useState<GPT5PresetKey | undefined>();
   const [reasoning_effort, setReasoningEffort] = useState<
-    'minimal' | 'low' | 'medium' | 'high'
-  >('medium');
+    'none' | 'minimal' | 'low' | 'medium' | 'high'
+  >('none');
   const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
     'medium',
   );

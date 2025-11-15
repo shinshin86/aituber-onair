@@ -5,6 +5,7 @@ import {
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
   MODEL_GPT_5_CHAT_LATEST,
+  MODEL_GPT_5_1,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
   MODEL_GPT_4_1_NANO,
@@ -104,6 +105,7 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
       MODEL_GPT_5_MINI,
       MODEL_GPT_5,
       MODEL_GPT_5_CHAT_LATEST,
+      MODEL_GPT_5_1,
       MODEL_GPT_4_1,
       MODEL_GPT_4_1_MINI,
       MODEL_GPT_4_1_NANO,
@@ -164,7 +166,8 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
     } else {
       // Set default reasoning_effort if not specified
       if (!options.reasoning_effort) {
-        optimized.reasoning_effort = 'medium';
+        optimized.reasoning_effort =
+          this.getDefaultReasoningEffortForModel(modelName);
       }
     }
 
@@ -172,5 +175,18 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
     // Users can manually select reasoning response lengths if desired
 
     return optimized;
+  }
+
+  /**
+   * Determine the default reasoning effort for GPT-5 family models
+   * GPT-5.1 defaults to 'none' (fastest), earlier GPT-5 defaults to 'medium'
+   */
+  private getDefaultReasoningEffortForModel(
+    modelName: string,
+  ): 'none' | 'medium' {
+    if (modelName === MODEL_GPT_5_1) {
+      return 'none';
+    }
+    return 'medium';
   }
 }
