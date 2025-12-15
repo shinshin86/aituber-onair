@@ -1,6 +1,6 @@
 # @aituber-onair/chat
 
-![@aituber-onair/chat logo](./images/aituber-onair-chat.png)
+![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
 Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, Gemini, and OpenRouter.
 
