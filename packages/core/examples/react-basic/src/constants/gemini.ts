@@ -5,8 +5,6 @@ import {
   MODEL_GEMINI_2_5_PRO,
   MODEL_GEMINI_2_0_FLASH_LITE,
   MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_1_5_FLASH,
-  MODEL_GEMINI_1_5_PRO,
 } from '@aituber-onair/core';
 
 // Gemini models list
@@ -17,6 +15,4 @@ export const geminiModels = [
   MODEL_GEMINI_2_5_PRO,
   MODEL_GEMINI_2_0_FLASH_LITE,
   MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_1_5_FLASH,
-  MODEL_GEMINI_1_5_PRO,
 ];
