@@ -1,5 +1,11 @@
 # @aituber-onair/chat
 
+## 0.7.0
+
+### Minor Changes
+
+- Removed deprecated Gemini 1.5 Flash/Pro model constants and vision whitelist entries, aligning SDK exports, documentation, and React example UI with the currently supported Gemini 2.x lineup.
+
 ## 0.6.0
 
 ### Minor Changes

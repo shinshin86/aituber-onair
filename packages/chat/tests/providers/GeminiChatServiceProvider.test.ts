@@ -10,8 +10,6 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_2_0_FLASH,
   MODEL_GEMINI_2_0_FLASH_LITE,
-  MODEL_GEMINI_1_5_FLASH,
-  MODEL_GEMINI_1_5_PRO,
 } from '../../src/constants';
 
 // Mock GeminiChatService
@@ -42,8 +40,6 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
         MODEL_GEMINI_2_0_FLASH,
         MODEL_GEMINI_2_0_FLASH_LITE,
-        MODEL_GEMINI_1_5_FLASH,
-        MODEL_GEMINI_1_5_PRO,
       ]);
     });
   });
@@ -66,9 +62,6 @@ describe('GeminiChatServiceProvider', () => {
         true,
       );
       expect(provider.supportsVisionForModel(MODEL_GEMINI_2_0_FLASH_LITE)).toBe(
-        true,
-      );
-      expect(provider.supportsVisionForModel(MODEL_GEMINI_1_5_FLASH)).toBe(
         true,
       );
     });
@@ -225,7 +218,7 @@ describe('GeminiChatServiceProvider', () => {
 
       const options: ChatServiceOptions = {
         apiKey: 'test-api-key',
-        model: MODEL_GEMINI_1_5_FLASH,
+        model: MODEL_GEMINI_2_0_FLASH,
         visionModel: MODEL_GEMINI_2_0_FLASH,
         tools,
       };
@@ -234,7 +227,7 @@ describe('GeminiChatServiceProvider', () => {
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_1_5_FLASH,
+        MODEL_GEMINI_2_0_FLASH,
         MODEL_GEMINI_2_0_FLASH,
         tools,
         [],

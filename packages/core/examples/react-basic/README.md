@@ -108,7 +108,6 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)
 - Gemini 2.0 series (Flash Lite, Flash)
-- Gemini 1.5 series (Flash, Pro)
 
 **Claude:**
 - Claude 4.5 series (Sonnet, Haiku)

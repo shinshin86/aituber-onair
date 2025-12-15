@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/chat",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Chat and LLM API integration library for AITuber OnAir",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",

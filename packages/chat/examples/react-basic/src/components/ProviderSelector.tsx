@@ -33,8 +33,6 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_2_0_FLASH,
   MODEL_GEMINI_2_0_FLASH_LITE,
-  MODEL_GEMINI_1_5_FLASH,
-  MODEL_GEMINI_1_5_PRO,
   // OpenRouter models
   MODEL_GPT_OSS_20B_FREE,
 } from '@aituber-onair/chat';
@@ -223,18 +221,6 @@ export const allModels = [
   {
     id: MODEL_GEMINI_2_0_FLASH_LITE,
     name: 'Gemini 2.0 Flash Lite',
-    provider: 'gemini',
-    default: false,
-  },
-  {
-    id: MODEL_GEMINI_1_5_FLASH,
-    name: 'Gemini 1.5 Flash',
-    provider: 'gemini',
-    default: false,
-  },
-  {
-    id: MODEL_GEMINI_1_5_PRO,
-    name: 'Gemini 1.5 Pro',
     provider: 'gemini',
     default: false,
   },
