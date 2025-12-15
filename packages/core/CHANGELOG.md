@@ -1,5 +1,16 @@
 # @aituber-onair/core
 
+## 0.19.0
+
+### Minor Changes
+
+- Removed deprecated Gemini 1.5 Flash/Pro model constants and documentation references to align with the current Gemini 2.x lineup.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aituber-onair/chat@0.7.0
+
 ## 0.18.3
 
 ### Patch Changes
