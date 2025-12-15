@@ -31,7 +31,12 @@
 ## Commit & Pull Requests
 - Conventional Commits: `feat(core): ...`, `fix(manneri): ...`, `test(voice): ...`.
 - PRs: clear description, linked issues, screenshots for example/UI changes.
-- Must pass CI, lint/format, tests; add a Changeset for user‑facing changes. Do not publish locally—CI handles releases; never commit `dist` or secrets.
+- Must pass CI, lint/format, tests. Keep per-package CHANGELOG and version bumps in sync; do not add files under `.changeset/`. Do not publish locally—CI handles releases; never commit `dist` or secrets.
+
+## Release Notes / Process
+- Applies to all packages: do not use the Changeset CLI or create `.changeset/*` files.
+- For releases, update each package’s `CHANGELOG.md` and `package.json` manually (align dependent version ranges as needed).
+- Refer to `README.md` for the current release flow; when in doubt, re-read it before acting.
 
 ## Security & Configuration
 - Never hardcode API keys (OpenAI/Gemini/etc). Use environment variables; `.env*` stays untracked.
