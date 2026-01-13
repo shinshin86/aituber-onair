@@ -127,88 +127,23 @@ aituber-onair/
 
 ## Release Process
 
-This project uses [Changesets](https://github.com/changesets/changesets) for version management and automated releases.
+Releases are managed via **manual version updates and CHANGELOG maintenance**.
 
-### Creating a Release
+1. **Bump versions**: Update `version` in each affected `packages/[package]/package.json`
+2. **Update CHANGELOGs**: Add release notes in `packages/[package]/CHANGELOG.md`
+3. **Open a PR**: Include version and CHANGELOG updates in the PR
+4. **CI publishes**: After merging to main, GitHub Actions publishes to npm
 
-#### Automated Release (Recommended)
+Version bump guidelines:
+- **Patch**: Bug fixes, dependency updates, backward-compatible changes
+- **Minor**: New features, backward-compatible changes
+- **Major**: Breaking changes to public API
 
-1. **Create a changeset for your changes**
-   ```bash
-   npm run changeset
-   ```
-   - Select the packages that were modified
-   - Choose the appropriate version bump (patch/minor/major)
-   - Write a clear description of the changes
+CHANGELOG format:
+- Maintain a `CHANGELOG.md` per package
+- Organize entries under `Major Changes / Minor Changes / Patch Changes`
 
-2. **Commit the changeset file**
-   ```bash
-   git add .changeset/
-   git commit -m "Add changeset for [your feature]"
-   ```
-
-3. **Push to GitHub and create a PR**
-   - After merging to main, the GitHub Action will automatically create a "Version Packages" PR
-   - This PR will include all pending changesets
-
-4. **Merge the Version PR**
-   - Review and merge the "Version Packages" PR
-   - This will automatically:
-     - Update package versions
-     - Update CHANGELOG.md files
-     - Create git tags
-     - Publish packages to npm
-
-#### Manual Release (if needed)
-
-For a complete manual release workflow:
-
-**Option 1: Using Changesets**
-1. **Create changeset for your changes**
-   ```bash
-   npm run changeset
-   ```
-
-2. **Update package versions**
-   ```bash
-   npm run changeset:version
-   ```
-
-3. **Release (build, test, and publish)**
-   ```bash
-   npm run release
-   ```
-
-**Option 2: Manual Version Management**
-If changeset interactive mode fails:
-
-1. **Update CHANGELOG.md**: Add entry to `packages/[package]/CHANGELOG.md`
-   ```markdown
-   ## 0.x.x
-   
-   ### Patch Changes
-   
-   - Your change description here
-   ```
-
-2. **Update package.json**: Increment version in `packages/[package]/package.json`
-
-3. **Commit changes**: Commit both CHANGELOG.md and package.json updates
-
-4. **Build and test**: `npm run build && npm run test`
-
-5. **Publish**: `npm run changeset:publish` or `cd packages/[package] && npm publish`
-
-Alternative individual operations:
-```bash
-# Check what would be published
-npm run changeset:publish -- --dry-run
-
-# Manually publish packages (after changeset:version)
-npm run changeset:publish
-```
-
-**Note**: `npm run release` executes `build → test → publish` in sequence. If any step fails, the process stops and packages won't be published.
+Note: Do not run `npm publish` directly.
 
 ## License
 
