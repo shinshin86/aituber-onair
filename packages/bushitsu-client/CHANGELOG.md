@@ -1,5 +1,12 @@
 # @aituber-onair/bushitsu-client
 
+## 0.2.1
+
+### Patch Changes
+
+- Expand React peer dependency range to include React 19
+- Update React testing dependencies for React 19
+
 ## 0.2.0
 
 ### Minor Changes

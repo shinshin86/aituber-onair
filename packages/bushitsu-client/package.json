@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/bushitsu-client",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "WebSocket client for chat functionality with React hooks support",
   "keywords": [
     "websocket",
