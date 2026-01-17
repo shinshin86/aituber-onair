@@ -100,7 +100,7 @@ Use the dropdown to select response length:
 - Reasoning Effort: GPT-5 (5.0) supports Minimal/Low/Medium/High, while GPT-5.1 swaps Minimal for None (fastest) plus Low/Medium/High
 
 **Claude**
-- Models: Claude 4.5 (Sonnet, Haiku), Claude 4 (Sonnet, Opus), Claude 3 (Sonnet, Haiku)
+- Models: Claude 4.5 (Opus, Sonnet, Haiku), Claude 4 (Sonnet, Opus), Claude 3 (Sonnet, Haiku)
 - Vision: All Claude 4/4.5/3 models listed above
 - Best for: Long context, tool use + advanced reasoning
 

@@ -7,6 +7,7 @@ import {
   MODEL_CLAUDE_4_OPUS,
   MODEL_CLAUDE_4_5_SONNET,
   MODEL_CLAUDE_4_5_HAIKU,
+  MODEL_CLAUDE_4_5_OPUS,
   CLAUDE_VISION_SUPPORTED_MODELS,
 } from '../../../constants';
 import { ChatService } from '../../ChatService';
@@ -66,6 +67,7 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
       MODEL_CLAUDE_4_OPUS,
       MODEL_CLAUDE_4_5_SONNET,
       MODEL_CLAUDE_4_5_HAIKU,
+      MODEL_CLAUDE_4_5_OPUS,
     ];
   }
 
