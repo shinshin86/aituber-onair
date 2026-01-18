@@ -13,7 +13,7 @@ This example application serves as a practical implementation guide for integrat
 - **🤖 Multi-Provider LLM Support**
   - OpenAI (GPT-3.5, GPT-4, GPT-5 series)
   - Google Gemini (Pro, Flash, Thinking models)
-  - Anthropic Claude (4.5 Sonnet/Haiku, 4.x, 3.x families)
+  - Anthropic Claude (4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
   - Seamless provider switching
 
 - **🎙️ Comprehensive Voice Synthesis**
@@ -110,7 +110,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Gemini 2.0 series (Flash Lite, Flash)
 
 **Claude:**
-- Claude 4.5 series (Sonnet, Haiku)
+- Claude 4.5 series (Opus, Sonnet, Haiku)
 - Claude 3 Haiku
 - Claude 3.5 series (Haiku, Sonnet)
 - Claude 3.7 Sonnet
