@@ -1,5 +1,13 @@
 # @aituber-onair/core
 
+## 0.19.1
+
+### Patch Changes
+
+- Re-exported `MODEL_CLAUDE_4_5_OPUS` so the core React example can reference the new Claude 4.5 Opus model.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.8.0
+
 ## 0.19.0
 
 ### Minor Changes

@@ -1,4 +1,5 @@
 import {
+  MODEL_CLAUDE_4_5_OPUS,
   MODEL_CLAUDE_4_5_SONNET,
   MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_3_HAIKU,
@@ -11,6 +12,7 @@ import {
 
 // Claude models list
 export const claudeModels = [
+  MODEL_CLAUDE_4_5_OPUS,
   MODEL_CLAUDE_4_5_SONNET,
   MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_4_OPUS,
