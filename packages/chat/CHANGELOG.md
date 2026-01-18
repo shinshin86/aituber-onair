@@ -1,5 +1,12 @@
 # @aituber-onair/chat
 
+## 0.8.0
+
+### Minor Changes
+
+- Added Claude 4.5 Opus (`claude-opus-4-5-20251101`) to the Claude model constants, supported model list, and vision whitelist.
+- Updated the Chat README (EN/JA) and the React basic example to list/select the new Claude 4.5 Opus model.
+
 ## 0.7.0
 
 ### Minor Changes

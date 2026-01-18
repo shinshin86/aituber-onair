@@ -9,6 +9,7 @@ export const MODEL_CLAUDE_4_SONNET = 'claude-4-sonnet-20250514';
 export const MODEL_CLAUDE_4_OPUS = 'claude-4-opus-20250514';
 export const MODEL_CLAUDE_4_5_SONNET = 'claude-sonnet-4-5-20250929';
 export const MODEL_CLAUDE_4_5_HAIKU = 'claude-haiku-4-5-20251001';
+export const MODEL_CLAUDE_4_5_OPUS = 'claude-opus-4-5-20251101';
 
 export const CLAUDE_VISION_SUPPORTED_MODELS = [
   MODEL_CLAUDE_3_HAIKU,
@@ -19,4 +20,5 @@ export const CLAUDE_VISION_SUPPORTED_MODELS = [
   MODEL_CLAUDE_4_OPUS,
   MODEL_CLAUDE_4_5_SONNET,
   MODEL_CLAUDE_4_5_HAIKU,
+  MODEL_CLAUDE_4_5_OPUS,
 ];
