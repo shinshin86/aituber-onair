@@ -93,6 +93,21 @@ describe('ChatServiceFactory', () => {
         apiKey: 'test-claude-key',
       });
       expect(claudeService).toBeDefined();
+
+      // Test OpenRouter
+      const openRouterService = ChatServiceFactory.createChatService(
+        'openrouter',
+        {
+          apiKey: 'test-openrouter-key',
+        },
+      );
+      expect(openRouterService).toBeDefined();
+
+      // Test Z.ai
+      const zaiService = ChatServiceFactory.createChatService('zai', {
+        apiKey: 'test-zai-key',
+      });
+      expect(zaiService).toBeDefined();
     });
   });
 
@@ -104,6 +119,8 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('openai')).toBe(true);
       expect(providers.has('gemini')).toBe(true);
       expect(providers.has('claude')).toBe(true);
+      expect(providers.has('openrouter')).toBe(true);
+      expect(providers.has('zai')).toBe(true);
     });
 
     it('should return mutable map that allows modifications', () => {
@@ -126,6 +143,8 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('openai');
       expect(availableProviders).toContain('gemini');
       expect(availableProviders).toContain('claude');
+      expect(availableProviders).toContain('openrouter');
+      expect(availableProviders).toContain('zai');
     });
 
     it('should include newly registered providers', () => {
@@ -142,6 +161,8 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('openai');
       expect(availableProviders).toContain('gemini');
       expect(availableProviders).toContain('claude');
+      expect(availableProviders).toContain('openrouter');
+      expect(availableProviders).toContain('zai');
     });
   });
 
@@ -175,12 +196,14 @@ describe('ChatServiceFactory', () => {
   });
 
   describe('default providers', () => {
-    it('should have OpenAI, Gemini, and Claude providers registered by default', () => {
+    it('should have default providers registered by default', () => {
       const providers = ChatServiceFactory.getProviders();
 
       expect(providers.has('openai')).toBe(true);
       expect(providers.has('gemini')).toBe(true);
       expect(providers.has('claude')).toBe(true);
+      expect(providers.has('openrouter')).toBe(true);
+      expect(providers.has('zai')).toBe(true);
       expect(providers.size).toBeGreaterThanOrEqual(3);
     });
   });

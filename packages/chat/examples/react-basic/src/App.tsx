@@ -17,7 +17,7 @@ import ProviderSelector, {
 } from './components/ProviderSelector';
 import MessageList from './components/MessageList';
 
-export type Provider = 'openai' | 'claude' | 'gemini' | 'openrouter';
+export type Provider = 'openai' | 'claude' | 'gemini' | 'openrouter' | 'zai';
 
 interface ChatMessage extends Omit<Message, 'timestamp'> {
   id: string;
@@ -231,7 +231,9 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>AITuber OnAir Chat Example</h1>
-        <p>Interactive chat with OpenAI, Claude, and Gemini</p>
+        <p>
+          Interactive chat with OpenAI, Claude, Gemini, OpenRouter, and Z.ai
+        </p>
       </header>
 
       <main className="app-main">

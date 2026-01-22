@@ -36,6 +36,11 @@ import {
   MODEL_GEMINI_2_0_FLASH_LITE,
   // OpenRouter models
   MODEL_GPT_OSS_20B_FREE,
+  // Z.ai models
+  MODEL_GLM_4_7,
+  MODEL_GLM_4_7_FLASHX,
+  MODEL_GLM_4_7_FLASH,
+  MODEL_GLM_4_6V_FLASH,
 } from '@aituber-onair/chat';
 
 interface ProviderSelectorProps {
@@ -84,6 +89,11 @@ const providerInfo = {
     name: 'OpenRouter',
     placeholder: 'sk-or-...',
     color: '#8b5cf6',
+  },
+  zai: {
+    name: 'Z.ai',
+    placeholder: 'sk-...',
+    color: '#0ea5e9',
   },
 };
 
@@ -238,6 +248,32 @@ export const allModels = [
     name: 'GPT OSS 20B (Free)',
     provider: 'openrouter',
     default: true,
+  },
+
+  // Z.ai models
+  {
+    id: MODEL_GLM_4_7,
+    name: 'GLM-4.7',
+    provider: 'zai',
+    default: true,
+  },
+  {
+    id: MODEL_GLM_4_7_FLASHX,
+    name: 'GLM-4.7 FlashX',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_4_7_FLASH,
+    name: 'GLM-4.7 Flash',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_4_6V_FLASH,
+    name: 'GLM-4.6V Flash (Vision)',
+    provider: 'zai',
+    default: false,
   },
 ];
 

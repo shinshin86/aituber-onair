@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat ロゴ](./images/aituber-onair-chat.png)
 
-AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、Claude、Gemini、OpenRouter等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
+AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、Claude、Gemini、OpenRouter、Z.ai等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
 
 ## 機能
 
-- 🤖 **複数のAIプロバイダー対応**: OpenAI、Claude (Anthropic)、Google Gemini、OpenRouter
+- 🤖 **複数のAIプロバイダー対応**: OpenAI、Claude (Anthropic)、Google Gemini、OpenRouter、Z.ai
 - 🔄 **統一されたインターフェース**: 異なるプロバイダー間での一貫したAPI
 - 🛠️ **ツール・関数呼び出し**: AI関数呼び出しの自動反復処理をサポート
 - 💬 **ストリーミングレスポンス**: リアルタイムストリーミングチャット応答
@@ -180,6 +180,21 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - 応答の長さを制御するには、プロンプト内で指示してください（例：「40文字以内で返答してください」）
 - 無料階層にはレート制限があります（20リクエスト/分）
 - 現在は`openai/gpt-oss-20b:free`モデルのみサポートしています
+
+#### Z.ai（GLM）
+
+```typescript
+const zaiService = ChatServiceFactory.createChatService('zai', {
+  apiKey: process.env.ZAI_API_KEY,
+  model: 'glm-4.7',
+  visionModel: 'glm-4.6V-Flash', // 任意: ビジョン対応モデル
+  responseFormat: { type: 'json_object' } // 任意: JSONモード
+});
+```
+
+注意:
+- Z.aiはOpenAI互換のChat Completionsを利用します。
+- `thinking` はデフォルトで無効化しています。
 
 ### ビジョンチャット
 
@@ -405,6 +420,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 - **Gemini**: Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Liteのモデルをサポート
 - **Claude**: Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haikuのモデルをサポート
 - **OpenRouter**: `openai/gpt-oss-20b:free`（トークン制限の特別処理がある無料利用枠モデル）をサポート
+- **Z.ai**: GLM-4.7（Flash/FlashX含む）とGLM-4.6V-Flash（ビジョン）をサポート
 
 ## ライセンス
 

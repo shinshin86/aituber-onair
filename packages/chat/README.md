@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, Gemini, and OpenRouter.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, Gemini, OpenRouter, and Z.ai.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, Claude (Anthropic), Google Gemini, and OpenRouter
+- 🤖 **Multiple AI Provider Support**: OpenAI, Claude (Anthropic), Google Gemini, OpenRouter, and Z.ai
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -180,6 +180,21 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - To control response length, include instructions in your prompt (e.g., "Please respond in 40 characters or less")
 - Free tier has rate limits (20 requests/minute)
 - Only `openai/gpt-oss-20b:free` model is currently supported
+
+#### Z.ai (GLM)
+
+```typescript
+const zaiService = ChatServiceFactory.createChatService('zai', {
+  apiKey: process.env.ZAI_API_KEY,
+  model: 'glm-4.7',
+  visionModel: 'glm-4.6V-Flash', // Optional: vision-capable model
+  responseFormat: { type: 'json_object' } // Optional JSON mode
+});
+```
+
+Notes:
+- Z.ai uses OpenAI-compatible Chat Completions.
+- `thinking` is disabled by default to match fast response behavior.
 
 ### Vision Chat
 
@@ -405,6 +420,7 @@ Currently, the following AI providers are built-in:
 - **Gemini**: Supports models like Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Claude**: Supports models like Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
 - **OpenRouter**: Supports `openai/gpt-oss-20b:free` (free tier model with special handling for token limits)
+- **Z.ai**: Supports GLM-4.7 (including Flash/FlashX) and GLM-4.6V-Flash (vision)
 
 ## License
 
