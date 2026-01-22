@@ -23,6 +23,9 @@ export {
   // Claude provider
   ClaudeChatService,
   ClaudeChatServiceProvider,
+  // Z.ai provider
+  ZAIChatService,
+  ZAIChatServiceProvider,
   // Type definitions
   type Message,
   type MessageWithVision,
@@ -83,6 +86,16 @@ export {
   MODEL_CLAUDE_4_5_HAIKU,
   CLAUDE_VISION_SUPPORTED_MODELS,
   ENDPOINT_CLAUDE_API,
+  // Z.ai model constants
+  MODEL_GLM_4_7,
+  MODEL_GLM_4_7_FLASHX,
+  MODEL_GLM_4_7_FLASH,
+  MODEL_GLM_4_6,
+  MODEL_GLM_4_6V,
+  MODEL_GLM_4_6V_FLASHX,
+  MODEL_GLM_4_6V_FLASH,
+  ZAI_VISION_SUPPORTED_MODELS,
+  ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   // Utils
   textToScreenplay as chatTextToScreenplay,
   screenplayToText as chatScreenplayToText,

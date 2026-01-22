@@ -294,7 +294,7 @@ const aituber = new AITuberOnAirCore({
 
 ### Function Calling Differences
 
-AITuber OnAir Core supports three major AI providers: OpenAI, Claude, and Gemini. Each provider has a different implementation of function calling (tool invocation). These differences are abstracted by AITuber OnAir Core, allowing developers to use a unified interface, but understanding the background is important.
+AITuber OnAir Core supports major AI providers including OpenAI, Claude, Gemini, and Z.ai. Each provider has a different implementation of function calling (tool invocation). These differences are abstracted by AITuber OnAir Core, allowing developers to use a unified interface, but understanding the background is important.
 
 > Note: This explanation covers the API versions as of May 2025. APIs are frequently updated, so please refer to the official documentation for the latest information.
 
@@ -1340,7 +1340,7 @@ This is useful when running voice engines on different ports or remote servers.
 ## AI Provider System
 
 AITuber OnAir Core adopts an extensible provider system, enabling integration with various AI APIs.
-Currently, OpenAI API, Gemini API, and Claude API are available. If you would like to use any other API, please submit a PR or send us a message.
+Currently, OpenAI API, Gemini API, Claude API, and Z.ai API are available. If you would like to use any other API, please submit a PR or send us a message.
 
 ### Available Providers
 
@@ -1349,6 +1349,7 @@ Currently, the following AI provider is built-in:
 - **OpenAI**: Supports models like GPT-4.1(including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Claude**: Supports models like Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnet
+- **Z.ai**: Supports models like GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V Flash/FlashX
 
 ### Specifying a Provider
 

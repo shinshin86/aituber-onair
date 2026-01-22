@@ -1,5 +1,18 @@
 # @aituber-onair/core
 
+## 0.20.0
+
+### Minor Changes
+
+- Re-exported Z.ai (GLM) provider and model constants from the core entry point.
+- Updated the React basic example to include Z.ai models and disable image uploads for non-vision models.
+- Updated README (EN/JA) to list Z.ai as a supported provider.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aituber-onair/chat@0.9.0
+
 ## 0.19.1
 
 ### Patch Changes
