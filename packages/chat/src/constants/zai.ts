@@ -5,10 +5,17 @@ export const ENDPOINT_ZAI_CHAT_COMPLETIONS_API =
 export const MODEL_GLM_4_7 = 'glm-4.7';
 export const MODEL_GLM_4_7_FLASHX = 'glm-4.7-FlashX';
 export const MODEL_GLM_4_7_FLASH = 'glm-4.7-Flash';
+export const MODEL_GLM_4_6 = 'glm-4.6';
+export const MODEL_GLM_4_6V = 'glm-4.6V';
+export const MODEL_GLM_4_6V_FLASHX = 'glm-4.6V-FlashX';
 export const MODEL_GLM_4_6V_FLASH = 'glm-4.6V-Flash';
 
 // Vision support for models
-export const ZAI_VISION_SUPPORTED_MODELS = [MODEL_GLM_4_6V_FLASH];
+export const ZAI_VISION_SUPPORTED_MODELS = [
+  MODEL_GLM_4_6V,
+  MODEL_GLM_4_6V_FLASHX,
+  MODEL_GLM_4_6V_FLASH,
+];
 
 /**
  * Check if a model supports vision capabilities
