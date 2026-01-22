@@ -29,6 +29,16 @@ export interface ChatServiceOptions {
   includeReasoning?: boolean;
   /** Maximum tokens allocated for reasoning (OpenRouter only) */
   reasoningMaxTokens?: number;
+  /** Response format (OpenAI-compatible JSON mode) */
+  responseFormat?: {
+    type: 'text' | 'json_object' | 'json_schema';
+    json_schema?: any;
+  };
+  /** Thinking mode options (Z.ai only) */
+  thinking?: {
+    type: 'enabled' | 'disabled';
+    clear_thinking?: boolean;
+  };
   /** Additional provider-specific options */
   [key: string]: any;
 }

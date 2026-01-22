@@ -36,6 +36,19 @@ import {
   MODEL_GEMINI_2_0_FLASH_LITE,
   // OpenRouter models
   MODEL_GPT_OSS_20B_FREE,
+  // Z.ai models
+  MODEL_GLM_4_7,
+  MODEL_GLM_4_7_FLASHX,
+  MODEL_GLM_4_7_FLASH,
+  MODEL_GLM_4_6,
+  MODEL_GLM_4_6V,
+  MODEL_GLM_4_6V_FLASHX,
+  MODEL_GLM_4_6V_FLASH,
+  ZAI_VISION_SUPPORTED_MODELS,
+  VISION_SUPPORTED_MODELS,
+  GEMINI_VISION_SUPPORTED_MODELS,
+  CLAUDE_VISION_SUPPORTED_MODELS,
+  OPENROUTER_VISION_SUPPORTED_MODELS,
 } from '@aituber-onair/chat';
 
 interface ProviderSelectorProps {
@@ -85,6 +98,11 @@ const providerInfo = {
     placeholder: 'sk-or-...',
     color: '#8b5cf6',
   },
+  zai: {
+    name: 'Z.ai',
+    placeholder: 'xxx...',
+    color: '#0ea5e9',
+  },
 };
 
 export const allModels = [
@@ -101,14 +119,24 @@ export const allModels = [
     provider: 'openai',
     default: false,
   },
-  { id: MODEL_GPT_5, name: 'GPT-5', provider: 'openai', default: false },
+  {
+    id: MODEL_GPT_5,
+    name: 'GPT-5',
+    provider: 'openai',
+    default: false,
+  },
   {
     id: MODEL_GPT_5_1,
     name: 'GPT-5.1',
     provider: 'openai',
     default: true,
   },
-  { id: MODEL_GPT_4_1, name: 'GPT-4.1', provider: 'openai', default: false },
+  {
+    id: MODEL_GPT_4_1,
+    name: 'GPT-4.1',
+    provider: 'openai',
+    default: false,
+  },
   {
     id: MODEL_GPT_4_1_MINI,
     name: 'GPT-4.1 Mini',
@@ -127,10 +155,30 @@ export const allModels = [
     provider: 'openai',
     default: false,
   },
-  { id: MODEL_GPT_4O, name: 'GPT-4o', provider: 'openai', default: false },
-  { id: MODEL_O3_MINI, name: 'O3 Mini', provider: 'openai', default: false },
-  { id: MODEL_O1_MINI, name: 'O1 Mini', provider: 'openai', default: false },
-  { id: MODEL_O1, name: 'O1', provider: 'openai', default: false },
+  {
+    id: MODEL_GPT_4O,
+    name: 'GPT-4o',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_O3_MINI,
+    name: 'O3 Mini',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_O1_MINI,
+    name: 'O1 Mini',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_O1,
+    name: 'O1',
+    provider: 'openai',
+    default: false,
+  },
   {
     id: MODEL_GPT_4_5_PREVIEW,
     name: 'GPT-4.5 Preview',
@@ -239,6 +287,50 @@ export const allModels = [
     provider: 'openrouter',
     default: true,
   },
+
+  // Z.ai models
+  {
+    id: MODEL_GLM_4_7,
+    name: 'GLM-4.7',
+    provider: 'zai',
+    default: true,
+  },
+  {
+    id: MODEL_GLM_4_7_FLASHX,
+    name: 'GLM-4.7 FlashX',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_4_7_FLASH,
+    name: 'GLM-4.7 Flash',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_4_6,
+    name: 'GLM-4.6',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_4_6V,
+    name: 'GLM-4.6V',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_4_6V_FLASHX,
+    name: 'GLM-4.6V FlashX',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_4_6V_FLASH,
+    name: 'GLM-4.6V Flash',
+    provider: 'zai',
+    default: false,
+  },
 ];
 
 export const getProviderForModel = (modelId: string): Provider => {
@@ -252,6 +344,26 @@ export const getDefaultModelForProvider = (provider: Provider): string => {
   );
   const fallbackModel = allModels.find((m) => m.provider === provider);
   return defaultModel?.id || fallbackModel?.id || MODEL_GPT_4O_MINI;
+};
+
+export const isVisionSupported = (
+  provider: Provider,
+  modelId: string,
+): boolean => {
+  switch (provider) {
+    case 'openai':
+      return VISION_SUPPORTED_MODELS.includes(modelId);
+    case 'gemini':
+      return GEMINI_VISION_SUPPORTED_MODELS.includes(modelId);
+    case 'claude':
+      return CLAUDE_VISION_SUPPORTED_MODELS.includes(modelId);
+    case 'openrouter':
+      return OPENROUTER_VISION_SUPPORTED_MODELS.includes(modelId);
+    case 'zai':
+      return ZAI_VISION_SUPPORTED_MODELS.includes(modelId);
+    default:
+      return false;
+  }
 };
 
 export default function ProviderSelector({

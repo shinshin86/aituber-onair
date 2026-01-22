@@ -14,10 +14,11 @@ import ChatInterface from './components/ChatInterface';
 import ProviderSelector, {
   getProviderForModel,
   getDefaultModelForProvider,
+  isVisionSupported,
 } from './components/ProviderSelector';
 import MessageList from './components/MessageList';
 
-export type Provider = 'openai' | 'claude' | 'gemini' | 'openrouter';
+export type Provider = 'openai' | 'claude' | 'gemini' | 'openrouter' | 'zai';
 
 interface ChatMessage extends Omit<Message, 'timestamp'> {
   id: string;
@@ -83,6 +84,7 @@ function App() {
     selectedModel,
     reasoning_effort,
   );
+  const supportsVision = isVisionSupported(provider, selectedModel);
 
   // Auto-scroll to bottom when messages change
   // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally want to scroll when messages change
@@ -231,7 +233,9 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>AITuber OnAir Chat Example</h1>
-        <p>Interactive chat with OpenAI, Claude, and Gemini</p>
+        <p>
+          Interactive chat with OpenAI, Claude, Gemini, OpenRouter, and Z.ai
+        </p>
       </header>
 
       <main className="app-main">
@@ -295,7 +299,7 @@ function App() {
             disabled={!chatService || isLoading}
             isLoading={isLoading}
             onClearChat={clearChat}
-            provider={provider}
+            supportsVision={supportsVision}
           />
         </div>
       </main>

@@ -1,12 +1,11 @@
-import { useState, useRef, FormEvent, ChangeEvent } from 'react';
-import { Provider } from '../App';
+import { useState, useRef, useEffect, FormEvent, ChangeEvent } from 'react';
 
 interface ChatInterfaceProps {
   onSendMessage: (message: string, imageData?: string) => void;
   disabled: boolean;
   isLoading: boolean;
   onClearChat: () => void;
-  provider: Provider;
+  supportsVision: boolean;
 }
 
 export default function ChatInterface({
@@ -14,11 +13,22 @@ export default function ChatInterface({
   disabled,
   isLoading,
   onClearChat,
-  provider,
+  supportsVision,
 }: ChatInterfaceProps) {
   const [message, setMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const imageDisabled = disabled || !supportsVision;
+
+  useEffect(() => {
+    if (!supportsVision && selectedImage) {
+      setSelectedImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [supportsVision, selectedImage]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -48,8 +58,6 @@ export default function ChatInterface({
     }
   };
 
-  const supportsVision = provider !== 'gemini' || provider === 'gemini'; // All providers support vision now
-
   return (
     <div className="chat-interface">
       {selectedImage && (
@@ -76,25 +84,27 @@ export default function ChatInterface({
             className="chat-input"
           />
 
-          {supportsVision && (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                style={{ display: 'none' }}
-                id="image-upload"
-              />
-              <label
-                htmlFor="image-upload"
-                className={`image-button ${disabled ? 'disabled' : ''}`}
-                title="Add image"
-              >
-                📷
-              </label>
-            </>
-          )}
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              style={{ display: 'none' }}
+              id="image-upload"
+              disabled={imageDisabled}
+            />
+            <label
+              htmlFor="image-upload"
+              className={`image-button ${imageDisabled ? 'disabled' : ''}`}
+              title={
+                supportsVision ? 'Add image' : 'Image not supported by model'
+              }
+              aria-disabled={imageDisabled}
+            >
+              📷
+            </label>
+          </>
 
           <button
             type="submit"

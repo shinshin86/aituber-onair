@@ -32,6 +32,10 @@ export { ClaudeChatServiceProvider } from './services/providers/claude/ClaudeCha
 export { OpenRouterChatService } from './services/providers/openrouter/OpenRouterChatService';
 export { OpenRouterChatServiceProvider } from './services/providers/openrouter/OpenRouterChatServiceProvider';
 
+// Z.ai provider exports
+export { ZAIChatService } from './services/providers/zai/ZAIChatService';
+export { ZAIChatServiceProvider } from './services/providers/zai/ZAIChatServiceProvider';
+
 // Constants exports
 export * from './constants';
 
