@@ -327,7 +327,7 @@ export const allModels = [
   },
   {
     id: MODEL_GLM_4_6V_FLASH,
-    name: 'GLM-4.6V Flash (Vision)',
+    name: 'GLM-4.6V Flash',
     provider: 'zai',
     default: false,
   },
