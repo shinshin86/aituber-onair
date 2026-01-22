@@ -1,0 +1,19 @@
+import {
+  MODEL_GLM_4_7,
+  MODEL_GLM_4_7_FLASHX,
+  MODEL_GLM_4_7_FLASH,
+  MODEL_GLM_4_6,
+  MODEL_GLM_4_6V,
+  MODEL_GLM_4_6V_FLASHX,
+  MODEL_GLM_4_6V_FLASH,
+} from '@aituber-onair/core';
+
+export const zaiModels = [
+  MODEL_GLM_4_7,
+  MODEL_GLM_4_7_FLASHX,
+  MODEL_GLM_4_7_FLASH,
+  MODEL_GLM_4_6,
+  MODEL_GLM_4_6V,
+  MODEL_GLM_4_6V_FLASHX,
+  MODEL_GLM_4_6V_FLASH,
+];

@@ -7,6 +7,10 @@ import {
   GPT5PresetKey,
   isGPT5Model,
   MODEL_GPT_5_1,
+  VISION_SUPPORTED_MODELS,
+  GEMINI_VISION_SUPPORTED_MODELS,
+  CLAUDE_VISION_SUPPORTED_MODELS,
+  ZAI_VISION_SUPPORTED_MODELS,
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
   type MinimaxModel,
@@ -24,6 +28,7 @@ import {
 } from './constants/openai';
 import { geminiModels } from './constants/gemini';
 import { claudeModels } from './constants/claude';
+import { zaiModels } from './constants/zai';
 import {
   type VoiceEngineType,
   VOICE_ENGINE_CONFIGS,
@@ -203,6 +208,23 @@ const App: React.FC = () => {
 
   // image attachment state
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const supportsVision = (() => {
+    if (!model) {
+      return false;
+    }
+    switch (chatProvider) {
+      case 'openai':
+        return VISION_SUPPORTED_MODELS.includes(model);
+      case 'gemini':
+        return GEMINI_VISION_SUPPORTED_MODELS.includes(model);
+      case 'claude':
+        return CLAUDE_VISION_SUPPORTED_MODELS.includes(model);
+      case 'zai':
+        return ZAI_VISION_SUPPORTED_MODELS.includes(model);
+      default:
+        return false;
+    }
+  })();
 
   // Voice settings state
   const [selectedVoiceEngine, setSelectedVoiceEngine] =
@@ -494,11 +516,26 @@ const App: React.FC = () => {
       case 'claude':
         setModel(claudeModels[0]);
         break;
+      case 'zai':
+        setModel(zaiModels[0]);
+        break;
       default:
         setModel(openaiModels[0]);
         break;
     }
   }, [chatProvider]);
+
+  useEffect(() => {
+    if (chatProvider === 'zai' && enableDeepWikiMcp) {
+      setEnableDeepWikiMcp(false);
+    }
+  }, [chatProvider, enableDeepWikiMcp]);
+
+  useEffect(() => {
+    if (!supportsVision && imageDataUrl) {
+      setImageDataUrl(null);
+    }
+  }, [supportsVision, imageDataUrl]);
 
   useEffect(() => {
     if (chatProvider !== 'openai') {
@@ -1233,8 +1270,17 @@ const App: React.FC = () => {
 
     if (!userMessage && !attachedImageUrl) return;
 
+    const canUseVision = Boolean(attachedImageUrl && supportsVision);
+    if (attachedImageUrl && !supportsVision) {
+      alert('選択中のモデルは画像入力に対応していません。');
+      setImageDataUrl(null);
+      if (!userMessage) {
+        return;
+      }
+    }
+
     const drafts: Message[] = [];
-    if (attachedImageUrl)
+    if (canUseVision)
       drafts.push({
         id: nextId(),
         role: 'user',
@@ -1263,7 +1309,7 @@ const App: React.FC = () => {
 
     // if image is attached, call vision API
     // if only text, call normal chat API
-    if (attachedImageUrl) {
+    if (canUseVision) {
       // send image to AITuberOnAirCore (Vision API)
       console.log('Calling processVisionChat with image...');
       await aituberRef.current.processVisionChat(attachedImageUrl, userMessage);
@@ -1483,7 +1529,7 @@ const App: React.FC = () => {
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              disabled={!isConfigured}
+              disabled={!isConfigured || !supportsVision}
               style={{ width: '180px' }}
             />
 
@@ -1619,6 +1665,7 @@ const App: React.FC = () => {
                     <option value="openai">OpenAI</option>
                     <option value="gemini">Gemini</option>
                     <option value="claude">Claude</option>
+                    <option value="zai">Z.ai</option>
                   </select>
 
                   <label htmlFor="model">Model:</label>
@@ -1641,6 +1688,12 @@ const App: React.FC = () => {
                       ))}
                     {chatProvider === 'claude' &&
                       claudeModels.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    {chatProvider === 'zai' &&
+                      zaiModels.map((m) => (
                         <option key={m} value={m}>
                           {m}
                         </option>
@@ -1776,8 +1829,14 @@ const App: React.FC = () => {
                       id="enableDeepWikiMcp"
                       checked={enableDeepWikiMcp}
                       onChange={(e) => setEnableDeepWikiMcp(e.target.checked)}
+                      disabled={chatProvider === 'zai'}
                       style={{ marginLeft: '8px' }}
                     />
+                    {chatProvider === 'zai' && (
+                      <div style={{ color: '#e01e5a', marginTop: '4px' }}>
+                        Z.aiはMCP非対応のため使用できません。
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : activeTab === 'voice' ? (
