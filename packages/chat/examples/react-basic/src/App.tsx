@@ -14,6 +14,7 @@ import ChatInterface from './components/ChatInterface';
 import ProviderSelector, {
   getProviderForModel,
   getDefaultModelForProvider,
+  isVisionSupported,
 } from './components/ProviderSelector';
 import MessageList from './components/MessageList';
 
@@ -83,6 +84,7 @@ function App() {
     selectedModel,
     reasoning_effort,
   );
+  const supportsVision = isVisionSupported(provider, selectedModel);
 
   // Auto-scroll to bottom when messages change
   // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally want to scroll when messages change
@@ -297,7 +299,7 @@ function App() {
             disabled={!chatService || isLoading}
             isLoading={isLoading}
             onClearChat={clearChat}
-            provider={provider}
+            supportsVision={supportsVision}
           />
         </div>
       </main>
