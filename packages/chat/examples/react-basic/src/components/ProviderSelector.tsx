@@ -100,7 +100,7 @@ const providerInfo = {
   },
   zai: {
     name: 'Z.ai',
-    placeholder: 'sk-...',
+    placeholder: 'xxx...',
     color: '#0ea5e9',
   },
 };
