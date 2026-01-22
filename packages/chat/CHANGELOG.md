@@ -1,5 +1,14 @@
 # @aituber-onair/chat
 
+## 0.9.0
+
+### Minor Changes
+
+- Added Z.ai (GLM) provider support with OpenAI-compatible chat completions, including streaming and tool/function calling.
+- Added GLM model constants (GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX) and vision model detection for Z.ai.
+- Added `responseFormat` and `thinking` options to ChatServiceOptions for provider-specific JSON output and reasoning controls.
+- Updated README (EN/JA) and React basic example to include Z.ai models and to disable image upload for non-vision models.
+
 ## 0.8.0
 
 ### Minor Changes
