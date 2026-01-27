@@ -20,9 +20,10 @@ import MessageList from './components/MessageList';
 
 export type Provider = 'openai' | 'claude' | 'gemini' | 'openrouter' | 'zai';
 
-interface ChatMessage extends Omit<Message, 'timestamp'> {
+interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
   id: string;
   timestamp: Date;
+  content: Message['content'] | MessageWithVision['content'];
   isStreaming?: boolean;
 }
 
@@ -77,6 +78,23 @@ function App() {
     'chat' | 'responses' | 'auto'
   >('chat');
   const [enableReasoningSummary, setEnableReasoningSummary] = useState(false);
+  const [openrouterReasoningEffort, setOpenrouterReasoningEffort] = useState<
+    'none' | 'minimal' | 'low' | 'medium' | 'high'
+  >('none');
+  const [openrouterIncludeReasoning, setOpenrouterIncludeReasoning] =
+    useState(false);
+  const [openrouterReasoningMaxTokens, setOpenrouterReasoningMaxTokens] =
+    useState('');
+  const [openrouterAppName, setOpenrouterAppName] = useState('');
+  const [openrouterAppUrl, setOpenrouterAppUrl] = useState('');
+  const [zaiThinkingType, setZaiThinkingType] = useState<
+    'enabled' | 'disabled'
+  >('disabled');
+  const [zaiClearThinking, setZaiClearThinking] = useState(false);
+  const [zaiResponseFormatType, setZaiResponseFormatType] = useState<
+    'text' | 'json_object' | 'json_schema'
+  >('text');
+  const [zaiResponseSchema, setZaiResponseSchema] = useState('');
   const [chatService, setChatService] = useState<ChatService | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -114,6 +132,53 @@ function App() {
           options.enableReasoningSummary = enableReasoningSummary;
         }
 
+        if (provider === 'openrouter') {
+          options.reasoning_effort = openrouterReasoningEffort;
+          options.includeReasoning = openrouterIncludeReasoning;
+          const maxTokens =
+            openrouterReasoningMaxTokens.trim() === ''
+              ? undefined
+              : Number(openrouterReasoningMaxTokens);
+          if (!Number.isNaN(maxTokens)) {
+            options.reasoningMaxTokens = maxTokens;
+          }
+          if (openrouterAppName.trim()) {
+            options.appName = openrouterAppName.trim();
+          }
+          if (openrouterAppUrl.trim()) {
+            options.appUrl = openrouterAppUrl.trim();
+          }
+        }
+
+        if (provider === 'zai') {
+          options.thinking = {
+            type: zaiThinkingType,
+            clear_thinking: zaiClearThinking,
+          };
+
+          if (zaiResponseFormatType !== 'text') {
+            if (zaiResponseFormatType === 'json_schema') {
+              if (!zaiResponseSchema.trim()) {
+                throw new Error(
+                  'Z.ai response schema is required for json_schema format.',
+                );
+              }
+              try {
+                options.responseFormat = {
+                  type: 'json_schema',
+                  json_schema: JSON.parse(zaiResponseSchema),
+                };
+              } catch (parseError) {
+                throw new Error(
+                  'Invalid JSON schema for Z.ai response format.',
+                );
+              }
+            } else {
+              options.responseFormat = { type: 'json_object' };
+            }
+          }
+        }
+
         const service = ChatServiceFactory.createChatService(provider, options);
         setChatService(service);
         setError(null);
@@ -134,16 +199,39 @@ function App() {
     verbosity,
     gpt5EndpointPreference,
     enableReasoningSummary,
+    openrouterReasoningEffort,
+    openrouterIncludeReasoning,
+    openrouterReasoningMaxTokens,
+    openrouterAppName,
+    openrouterAppUrl,
+    zaiThinkingType,
+    zaiClearThinking,
+    zaiResponseFormatType,
+    zaiResponseSchema,
   ]);
 
   const sendMessage = useCallback(
     async (content: string, imageData?: string) => {
       if (!chatService || !content.trim()) return;
 
+      const userContent: Message['content'] | MessageWithVision['content'] =
+        imageData
+          ? [
+              { type: 'text', text: content },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: imageData,
+                  detail: 'auto',
+                },
+              },
+            ]
+          : content;
+
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
         role: 'user',
-        content: content,
+        content: userContent,
         timestamp: new Date(),
       };
 
@@ -232,10 +320,12 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>AITuber OnAir Chat Example</h1>
-        <p>
-          Interactive chat with OpenAI, Claude, Gemini, OpenRouter, and Z.ai
-        </p>
+        <div className="brand">
+          <div className="brand-title">AITuber OnAir Chat</div>
+          <div className="brand-subtitle">
+            Sample UI for provider + model selection
+          </div>
+        </div>
       </header>
 
       <main className="app-main">
@@ -285,6 +375,26 @@ function App() {
             onGpt5EndpointPreferenceChange={setGpt5EndpointPreference}
             enableReasoningSummary={enableReasoningSummary}
             onEnableReasoningSummaryChange={setEnableReasoningSummary}
+            openrouterReasoningEffort={openrouterReasoningEffort}
+            onOpenrouterReasoningEffortChange={setOpenrouterReasoningEffort}
+            openrouterIncludeReasoning={openrouterIncludeReasoning}
+            onOpenrouterIncludeReasoningChange={setOpenrouterIncludeReasoning}
+            openrouterReasoningMaxTokens={openrouterReasoningMaxTokens}
+            onOpenrouterReasoningMaxTokensChange={
+              setOpenrouterReasoningMaxTokens
+            }
+            openrouterAppName={openrouterAppName}
+            onOpenrouterAppNameChange={setOpenrouterAppName}
+            openrouterAppUrl={openrouterAppUrl}
+            onOpenrouterAppUrlChange={setOpenrouterAppUrl}
+            zaiThinkingType={zaiThinkingType}
+            onZaiThinkingTypeChange={setZaiThinkingType}
+            zaiClearThinking={zaiClearThinking}
+            onZaiClearThinkingChange={setZaiClearThinking}
+            zaiResponseFormatType={zaiResponseFormatType}
+            onZaiResponseFormatTypeChange={setZaiResponseFormatType}
+            zaiResponseSchema={zaiResponseSchema}
+            onZaiResponseSchemaChange={setZaiResponseSchema}
             disabled={isLoading}
           />
         </div>
@@ -308,7 +418,7 @@ function App() {
         <p>
           Powered by @aituber-onair/chat |
           <a
-            href="https://github.com/aituber/aituber-onair"
+            href="https://github.com/shinshin86/aituber-onair/tree/main/packages/chat"
             target="_blank"
             rel="noopener noreferrer"
           >

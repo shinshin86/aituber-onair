@@ -1,9 +1,10 @@
 import { RefObject } from 'react';
-import type { Message } from '@aituber-onair/chat';
+import type { Message, MessageWithVision } from '@aituber-onair/chat';
 
-interface ChatMessage extends Omit<Message, 'timestamp'> {
+interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
   id: string;
   timestamp: Date;
+  content: Message['content'] | MessageWithVision['content'];
   isStreaming?: boolean;
 }
 
@@ -62,9 +63,8 @@ export default function MessageList({
     <div className="message-list">
       {messages.length === 0 && (
         <div className="empty-state">
-          <div className="empty-icon">💬</div>
-          <h3>No messages yet</h3>
-          <p>Start a conversation by typing a message below</p>
+          <div className="empty-icon">No messages yet</div>
+          <p>Start a conversation by typing a message below.</p>
         </div>
       )}
 
@@ -72,7 +72,7 @@ export default function MessageList({
         <div key={message.id} className={`message ${message.role}`}>
           <div className="message-header">
             <span className="message-role">
-              {message.role === 'user' ? '👤 You' : '🤖 Assistant'}
+              {message.role === 'user' ? 'You' : 'Assistant'}
             </span>
             <span className="message-time">
               {formatTime(message.timestamp)}
@@ -93,7 +93,7 @@ export default function MessageList({
         .message-list {
           flex: 1;
           overflow-y: auto;
-          padding: 1rem;
+          padding: 1.25rem;
           display: flex;
           flex-direction: column;
           gap: 1rem;
@@ -105,19 +105,20 @@ export default function MessageList({
           align-items: center;
           justify-content: center;
           height: 100%;
-          color: #999;
+          color: var(--muted);
           text-align: center;
         }
 
         .empty-icon {
-          font-size: 4rem;
-          margin-bottom: 1rem;
-          opacity: 0.3;
+          font-size: 1.1rem;
+          margin-bottom: 0.35rem;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
 
         .empty-state h3 {
           margin: 0 0 0.5rem 0;
-          color: #666;
+          color: var(--text);
         }
 
         .empty-state p {
@@ -160,31 +161,33 @@ export default function MessageList({
 
         .message-role {
           font-weight: 600;
-          color: #666;
+          color: var(--text);
         }
 
         .message-time {
-          color: #999;
+          color: var(--muted);
           font-size: 0.8rem;
         }
 
         .message-body {
           max-width: 70%;
-          padding: 0.75rem 1rem;
-          border-radius: 16px;
+          padding: 0.8rem 1rem;
+          border-radius: 18px;
           position: relative;
+          border: 1px solid transparent;
         }
 
         .user .message-body {
-          background: #667eea;
+          background: #0f0f0f;
           color: white;
-          border-bottom-right-radius: 4px;
+          border-bottom-right-radius: 6px;
         }
 
         .assistant .message-body {
-          background: #f0f0f0;
-          color: #333;
-          border-bottom-left-radius: 4px;
+          background: #f6f6f6;
+          color: var(--text);
+          border-bottom-left-radius: 6px;
+          border-color: #ececec;
         }
 
         .message-text {
@@ -204,6 +207,7 @@ export default function MessageList({
           max-height: 300px;
           border-radius: 8px;
           margin-top: 0.5rem;
+          border: 1px solid var(--border);
         }
 
         .streaming-indicator {
@@ -228,12 +232,12 @@ export default function MessageList({
         }
 
         .message-list::-webkit-scrollbar-thumb {
-          background: #888;
+          background: #bdbdbd;
           border-radius: 4px;
         }
 
         .message-list::-webkit-scrollbar-thumb:hover {
-          background: #555;
+          background: #9a9a9a;
         }
 
         @media (max-width: 768px) {
