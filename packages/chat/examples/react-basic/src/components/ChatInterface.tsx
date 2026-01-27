@@ -64,7 +64,7 @@ export default function ChatInterface({
         <div className="selected-image-preview">
           <img src={selectedImage} alt="Selected" />
           <button type="button" onClick={removeImage} className="remove-image">
-            ×
+            Remove
           </button>
         </div>
       )}
@@ -102,7 +102,7 @@ export default function ChatInterface({
               }
               aria-disabled={imageDisabled}
             >
-              📷
+              Image
             </label>
           </>
 
@@ -111,7 +111,7 @@ export default function ChatInterface({
             disabled={disabled || !message.trim()}
             className="send-button"
           >
-            {isLoading ? '⏳' : '📤'} Send
+            {isLoading ? 'Sending...' : 'Send'}
           </button>
 
           <button
@@ -120,16 +120,16 @@ export default function ChatInterface({
             className="clear-button"
             title="Clear chat"
           >
-            🗑️
+            Clear
           </button>
         </div>
       </form>
 
       <style>{`
         .chat-interface {
-          border-top: 1px solid #e0e0e0;
-          background: white;
-          padding: 1rem;
+          border-top: 1px solid var(--border);
+          background: var(--panel);
+          padding: 1rem 1.25rem 1.25rem;
         }
         
         .selected-image-preview {
@@ -141,25 +141,21 @@ export default function ChatInterface({
         .selected-image-preview img {
           max-width: 200px;
           max-height: 150px;
-          border-radius: 8px;
-          border: 2px solid #667eea;
+          border-radius: 12px;
+          border: 1px solid var(--border);
         }
         
         .remove-image {
           position: absolute;
-          top: -8px;
-          right: -8px;
-          background: #ff4444;
+          top: -10px;
+          right: -10px;
+          background: #0f0f0f;
           color: white;
           border: none;
-          border-radius: 50%;
-          width: 24px;
-          height: 24px;
-          font-size: 18px;
+          border-radius: 999px;
+          padding: 0.2rem 0.55rem;
+          font-size: 0.7rem;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
         }
         
         .chat-form {
@@ -171,45 +167,46 @@ export default function ChatInterface({
           display: flex;
           flex: 1;
           gap: 0.5rem;
+          flex-wrap: wrap;
         }
         
         .chat-input {
-          flex: 1;
+          flex: 1 1 220px;
           padding: 0.75rem;
-          border: 2px solid #e0e0e0;
-          border-radius: 24px;
+          border: 1px solid var(--input-border);
+          border-radius: 999px;
           font-size: 1rem;
           outline: none;
-          transition: border-color 0.3s;
+          background: var(--input-bg);
+          transition: border-color 0.2s ease, background 0.2s ease;
         }
         
         .chat-input:focus {
-          border-color: #667eea;
+          border-color: var(--input-focus);
+          background: white;
         }
         
         .chat-input:disabled {
-          background: #f5f5f5;
+          background: #f1f1f1;
           cursor: not-allowed;
         }
         
         .image-button {
-          padding: 0.75rem;
-          background: #f0f0f0;
-          border: none;
-          border-radius: 50%;
+          padding: 0.75rem 1rem;
+          background: var(--input-bg);
+          border: 1px solid var(--input-border);
+          border-radius: 999px;
           cursor: pointer;
-          font-size: 1.2rem;
-          transition: all 0.3s;
-          display: flex;
+          font-size: 0.9rem;
+          transition: all 0.2s ease;
+          display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
         }
         
         .image-button:hover:not(.disabled) {
-          background: #667eea;
-          transform: scale(1.05);
+          background: #f1f1f1;
+          transform: translateY(-1px);
         }
         
         .image-button.disabled {
@@ -219,47 +216,43 @@ export default function ChatInterface({
         
         .send-button {
           padding: 0.75rem 1.5rem;
-          background: #667eea;
+          background: #0f0f0f;
           color: white;
-          border: none;
-          border-radius: 24px;
+          border: 1px solid #0f0f0f;
+          border-radius: 999px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.3s;
+          transition: all 0.2s ease;
           display: flex;
           align-items: center;
           gap: 0.5rem;
         }
         
         .send-button:hover:not(:disabled) {
-          background: #5a67d8;
+          background: #1c1c1c;
           transform: translateY(-1px);
         }
         
         .send-button:disabled {
-          background: #ccc;
+          background: #cfcfcf;
+          border-color: #cfcfcf;
           cursor: not-allowed;
         }
         
         .clear-button {
-          padding: 0.75rem;
-          background: #ff6b6b;
-          color: white;
-          border: none;
-          border-radius: 50%;
+          padding: 0.75rem 1rem;
+          background: transparent;
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-radius: 999px;
           cursor: pointer;
-          font-size: 1.2rem;
-          transition: all 0.3s;
-          width: 44px;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          font-size: 0.9rem;
+          transition: all 0.2s ease;
         }
         
         .clear-button:hover {
-          background: #ff5252;
-          transform: scale(1.05);
+          background: #f1f1f1;
+          transform: translateY(-1px);
         }
       `}</style>
     </div>
