@@ -42,7 +42,7 @@ AIを活用したチャットやTTS、バーチャルストリーミングやそ
   ```
 
 - [**@aituber-onair/chat**](./packages/chat/README.md)
-  AITuber OnAir用のチャットおよびLLM API統合ライブラリです。OpenAI、Claude（Anthropic）、Google Geminiなど複数のAIプロバイダーをサポートし、統一されたインターフェースでストリーミング応答、ツール呼び出し、Vision処理を提供します。
+  AITuber OnAir用のチャットおよびLLM API統合ライブラリです。OpenAI、Claude（Anthropic）、Google Gemini、Z.ai、Kimi、OpenRouterなど複数のAIプロバイダーをサポートし、統一されたインターフェースでストリーミング応答、ツール呼び出し、Vision処理を提供します。
   ```
   npm install @aituber-onair/chat
   ```

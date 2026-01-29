@@ -47,7 +47,7 @@ Currently, the primary packages available are:
   ```
 
 - [**@aituber-onair/chat**](./packages/chat/README.md)
-  Chat and LLM API integration library for AITuber OnAir. Provides a unified interface for interacting with various AI chat providers including OpenAI, Claude (Anthropic), and Google Gemini. Features streaming responses, tool/function calling, vision support, and emotion detection.
+  Chat and LLM API integration library for AITuber OnAir. Provides a unified interface for interacting with various AI chat providers including OpenAI, Claude (Anthropic), Google Gemini, Z.ai, Kimi, and OpenRouter. Features streaming responses, tool/function calling, vision support, and emotion detection.
   ```
   npm install @aituber-onair/chat
   ```
