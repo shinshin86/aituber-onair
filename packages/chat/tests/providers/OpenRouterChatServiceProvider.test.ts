@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
-import { MODEL_GPT_OSS_20B_FREE } from '../../src/constants/openrouter';
+import {
+  MODEL_GPT_OSS_20B_FREE,
+  MODEL_MOONSHOTAI_KIMI_K2_5,
+} from '../../src/constants/openrouter';
 
 describe('OpenRouterChatServiceProvider', () => {
   let provider: OpenRouterChatServiceProvider;
@@ -23,11 +26,13 @@ describe('OpenRouterChatServiceProvider', () => {
   });
 
   describe('getSupportedModels', () => {
-    it('should return array containing only gpt-oss-20b:free', () => {
+    it('should return array containing supported models', () => {
       const models = provider.getSupportedModels();
       expect(Array.isArray(models)).toBe(true);
-      expect(models.length).toBe(1);
-      expect(models).toEqual([MODEL_GPT_OSS_20B_FREE]);
+      expect(models).toEqual([
+        MODEL_GPT_OSS_20B_FREE,
+        MODEL_MOONSHOTAI_KIMI_K2_5,
+      ]);
     });
   });
 
@@ -66,6 +71,7 @@ describe('OpenRouterChatServiceProvider', () => {
     it('should return false for models without :free suffix', () => {
       expect(provider.isModelFree('openai/gpt-4o')).toBe(false);
       expect(provider.isModelFree('anthropic/claude-3-opus')).toBe(false);
+      expect(provider.isModelFree(MODEL_MOONSHOTAI_KIMI_K2_5)).toBe(false);
     });
   });
 

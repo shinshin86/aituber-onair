@@ -36,6 +36,7 @@ import {
   MODEL_GEMINI_2_0_FLASH_LITE,
   // OpenRouter models
   MODEL_GPT_OSS_20B_FREE,
+  MODEL_MOONSHOTAI_KIMI_K2_5,
   // Z.ai models
   MODEL_GLM_4_7,
   MODEL_GLM_4_7_FLASHX,
@@ -314,6 +315,12 @@ export const allModels = [
     name: 'GPT OSS 20B (Free)',
     provider: 'openrouter',
     default: true,
+  },
+  {
+    id: MODEL_MOONSHOTAI_KIMI_K2_5,
+    name: 'Kimi K2.5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
   },
 
   // Z.ai models

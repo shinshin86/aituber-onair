@@ -3,6 +3,7 @@ export const ENDPOINT_OPENROUTER_API =
 
 // OpenRouter models
 export const MODEL_GPT_OSS_20B_FREE = 'openai/gpt-oss-20b:free';
+export const MODEL_MOONSHOTAI_KIMI_K2_5 = 'moonshotai/kimi-k2.5';
 
 // Free tier models
 export const OPENROUTER_FREE_MODELS = [MODEL_GPT_OSS_20B_FREE];

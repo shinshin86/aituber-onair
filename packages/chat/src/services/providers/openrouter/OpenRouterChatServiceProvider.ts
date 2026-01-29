@@ -1,5 +1,6 @@
 import {
   MODEL_GPT_OSS_20B_FREE,
+  MODEL_MOONSHOTAI_KIMI_K2_5,
   OPENROUTER_FREE_MODELS,
   isOpenRouterVisionModel,
 } from '../../../constants/openrouter';
@@ -69,13 +70,15 @@ export class OpenRouterChatServiceProvider implements ChatServiceProvider {
 
   /**
    * Get the list of supported models
-   * Currently only supports gpt-oss-20b:free
+   * Supports gpt-oss-20b:free and moonshotai/kimi-k2.5
    * @returns Array of supported model names
    */
   getSupportedModels(): string[] {
     return [
       // Free models
       MODEL_GPT_OSS_20B_FREE,
+      // Other models
+      MODEL_MOONSHOTAI_KIMI_K2_5,
     ];
   }
 
