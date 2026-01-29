@@ -179,7 +179,15 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - `gpt-oss-20b:free`モデルでは、技術的制限によりトークン制限が自動的に無効化されます
 - 応答の長さを制御するには、プロンプト内で指示してください（例：「40文字以内で返答してください」）
 - 無料階層にはレート制限があります（20リクエスト/分）
-- サポート対象モデル: `openai/gpt-oss-20b:free`、`moonshotai/kimi-k2.5`
+- サポート対象モデル（キュレーション済み）:
+  - `openai/gpt-oss-20b:free`
+  - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
+  - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
+  - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
+  - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
+  - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
+  - `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
+  - `moonshotai/kimi-k2.5`
 
 #### Z.ai（GLM）
 
@@ -449,7 +457,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 - **OpenAI**: GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **Gemini**: Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Liteのモデルをサポート
 - **Claude**: Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haikuのモデルをサポート
-- **OpenRouter**: `openai/gpt-oss-20b:free`（トークン制限の特別処理がある無料利用枠モデル）と`moonshotai/kimi-k2.5`をサポート
+- **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-4.7（Flash/FlashX含む）とGLM-4.6V-Flash（ビジョン）をサポート
 - **Kimi**: Kimi K2.5（`kimi-k2.5`、ビジョン対応）をサポート
 

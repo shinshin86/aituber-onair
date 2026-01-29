@@ -179,7 +179,15 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - Token limits are automatically disabled for the `gpt-oss-20b:free` model due to technical limitations
 - To control response length, include instructions in your prompt (e.g., "Please respond in 40 characters or less")
 - Free tier has rate limits (20 requests/minute)
-- Supported models include `openai/gpt-oss-20b:free` and `moonshotai/kimi-k2.5`
+- Supported models (curated list):
+  - `openai/gpt-oss-20b:free`
+  - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
+  - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
+  - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
+  - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
+  - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
+  - `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
+  - `moonshotai/kimi-k2.5`
 
 #### Z.ai (GLM)
 
@@ -449,7 +457,7 @@ Currently, the following AI providers are built-in:
 - **OpenAI**: Supports models like GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Claude**: Supports models like Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
-- **OpenRouter**: Supports `openai/gpt-oss-20b:free` (free tier model with special handling for token limits) and `moonshotai/kimi-k2.5`
+- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-4.7 (including Flash/FlashX) and GLM-4.6V-Flash (vision)
 - **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
 
