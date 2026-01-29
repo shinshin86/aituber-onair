@@ -45,6 +45,9 @@ import {
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,
   ZAI_VISION_SUPPORTED_MODELS,
+  // Kimi models
+  MODEL_KIMI_K2_5,
+  KIMI_VISION_SUPPORTED_MODELS,
   VISION_SUPPORTED_MODELS,
   GEMINI_VISION_SUPPORTED_MODELS,
   CLAUDE_VISION_SUPPORTED_MODELS,
@@ -96,6 +99,10 @@ interface ProviderSelectorProps {
   ) => void;
   zaiResponseSchema?: string;
   onZaiResponseSchemaChange?: (value: string) => void;
+  kimiThinkingType?: 'enabled' | 'disabled';
+  onKimiThinkingTypeChange?: (value: 'enabled' | 'disabled') => void;
+  kimiBaseUrl?: string;
+  onKimiBaseUrlChange?: (value: string) => void;
   disabled: boolean;
 }
 
@@ -119,6 +126,10 @@ const providerInfo = {
   zai: {
     name: 'Z.ai',
     placeholder: 'xxx...',
+  },
+  kimi: {
+    name: 'Kimi',
+    placeholder: 'sk-...',
   },
 };
 
@@ -348,6 +359,14 @@ export const allModels = [
     provider: 'zai',
     default: false,
   },
+
+  // Kimi models
+  {
+    id: MODEL_KIMI_K2_5,
+    name: 'Kimi K2.5',
+    provider: 'kimi',
+    default: true,
+  },
 ];
 
 export const getProviderForModel = (modelId: string): Provider => {
@@ -378,6 +397,8 @@ export const isVisionSupported = (
       return OPENROUTER_VISION_SUPPORTED_MODELS.includes(modelId);
     case 'zai':
       return ZAI_VISION_SUPPORTED_MODELS.includes(modelId);
+    case 'kimi':
+      return KIMI_VISION_SUPPORTED_MODELS.includes(modelId);
     default:
       return false;
   }
@@ -420,6 +441,10 @@ export default function ProviderSelector({
   onZaiResponseFormatTypeChange,
   zaiResponseSchema,
   onZaiResponseSchemaChange,
+  kimiThinkingType,
+  onKimiThinkingTypeChange,
+  kimiBaseUrl,
+  onKimiBaseUrlChange,
   disabled,
 }: ProviderSelectorProps) {
   const info = providerInfo[provider];
@@ -814,6 +839,45 @@ export default function ProviderSelector({
                   />
                 </div>
               )}
+            </>
+          )}
+
+          {provider === 'kimi' && (
+            <>
+              <div className="config-group">
+                <label htmlFor="kimi-thinking-type">Thinking</label>
+                <select
+                  id="kimi-thinking-type"
+                  value={kimiThinkingType || 'enabled'}
+                  onChange={(e) =>
+                    onKimiThinkingTypeChange?.(
+                      e.target.value as 'enabled' | 'disabled',
+                    )
+                  }
+                  disabled={disabled}
+                  className="select-input"
+                >
+                  <option value="enabled">Enabled</option>
+                  <option value="disabled">Disabled</option>
+                </select>
+              </div>
+
+              <div className="config-group config-full">
+                <label htmlFor="kimi-base-url">Base URL</label>
+                <input
+                  id="kimi-base-url"
+                  type="url"
+                  value={kimiBaseUrl || ''}
+                  onChange={(e) => onKimiBaseUrlChange?.(e.target.value)}
+                  disabled={disabled}
+                  className="text-input"
+                  placeholder="https://api.moonshot.ai/v1"
+                />
+                <span className="helper-text">
+                  Default: https://api.moonshot.ai/v1 (self-hosted:
+                  http://localhost:8000/v1)
+                </span>
+              </div>
             </>
           )}
         </div>

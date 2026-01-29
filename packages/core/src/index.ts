@@ -26,6 +26,9 @@ export {
   // Z.ai provider
   ZAIChatService,
   ZAIChatServiceProvider,
+  // Kimi provider
+  KimiChatService,
+  KimiChatServiceProvider,
   // Type definitions
   type Message,
   type MessageWithVision,
@@ -96,6 +99,10 @@ export {
   MODEL_GLM_4_6V_FLASH,
   ZAI_VISION_SUPPORTED_MODELS,
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+  // Kimi model constants
+  MODEL_KIMI_K2_5,
+  KIMI_VISION_SUPPORTED_MODELS,
+  ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   // Utils
   textToScreenplay as chatTextToScreenplay,
   screenplayToText as chatScreenplayToText,

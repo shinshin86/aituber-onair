@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, Gemini, OpenRouter, and Z.ai.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, Gemini, OpenRouter, Z.ai, and Kimi.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, Claude (Anthropic), Google Gemini, OpenRouter, and Z.ai
+- 🤖 **Multiple AI Provider Support**: OpenAI, Claude (Anthropic), Google Gemini, OpenRouter, Z.ai, and Kimi
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -195,6 +195,36 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 Notes:
 - Z.ai uses OpenAI-compatible Chat Completions.
 - `thinking` is disabled by default to match fast response behavior.
+
+#### Kimi (Moonshot)
+
+```typescript
+const kimiService = ChatServiceFactory.createChatService('kimi', {
+  apiKey: process.env.MOONSHOT_API_KEY,
+  model: 'kimi-k2.5',
+  // Optional: override endpoint or baseUrl
+  // endpoint: 'https://api.moonshot.ai/v1/chat/completions',
+  // baseUrl: 'https://api.moonshot.ai/v1',
+  thinking: { type: 'enabled' }
+});
+```
+
+Notes:
+- Kimi uses OpenAI-compatible Chat Completions.
+- When tools are enabled, `thinking` is forced to `{ type: 'disabled' }`.
+
+Self-hosted example:
+
+```typescript
+const kimiService = ChatServiceFactory.createChatService('kimi', {
+  apiKey: process.env.MOONSHOT_API_KEY,
+  baseUrl: 'http://localhost:8000/v1',
+  thinking: { type: 'disabled' }
+});
+```
+
+Notes for self-hosted:
+- Self-hosted endpoints use `chat_template_kwargs` for thinking controls.
 
 ### Vision Chat
 
@@ -421,6 +451,7 @@ Currently, the following AI providers are built-in:
 - **Claude**: Supports models like Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
 - **OpenRouter**: Supports `openai/gpt-oss-20b:free` (free tier model with special handling for token limits)
 - **Z.ai**: Supports GLM-4.7 (including Flash/FlashX) and GLM-4.6V-Flash (vision)
+- **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
 
 ## License
 

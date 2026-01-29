@@ -13,6 +13,8 @@ export interface ChatServiceOptions {
   visionModel?: string;
   /** API endpoint type (chat/completions or responses (OpenAI only)) */
   endpoint?: string;
+  /** Base URL for OpenAI-compatible APIs (Kimi only) */
+  baseUrl?: string;
   /** Response length setting */
   responseLength?: ChatResponseLength;
   /** Verbosity level for GPT-5 models (OpenAI only) */
@@ -34,7 +36,7 @@ export interface ChatServiceOptions {
     type: 'text' | 'json_object' | 'json_schema';
     json_schema?: any;
   };
-  /** Thinking mode options (Z.ai only) */
+  /** Thinking mode options (Z.ai/Kimi only) */
   thinking?: {
     type: 'enabled' | 'disabled';
     clear_thinking?: boolean;
