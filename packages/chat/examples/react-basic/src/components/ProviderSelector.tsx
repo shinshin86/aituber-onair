@@ -148,7 +148,7 @@ const providerInfo = {
   },
   kimi: {
     name: 'Kimi',
-    placeholder: 'sk-...',
+    placeholder: 'xxx...',
   },
 };
 
