@@ -182,7 +182,7 @@ The project uses GitHub Actions for automated testing, validation, and publishin
    - Triggered on merges to main branch
    - Detects version changes in package.json files
    - Automatically publishes updated packages to npm registry
-   - Creates GitHub releases with changelogs
+   - Creates GitHub releases for packages published in that run (via `changesets/action@v1` with `createGithubReleases: true`)
 
 ### Release Management
 
@@ -206,6 +206,11 @@ This project manages releases through manual version updates and CHANGELOG maint
    - **Major**: Breaking changes to public API
 
 **IMPORTANT**: Never use `npm publish` directly - all publishing is automated via CI/CD
+
+### Failure Recovery Notes
+- If release CI fails mid-run, some packages may be published and tagged while others are not.
+- Re-running the release workflow only publishes remaining packages; it does **not** create GitHub Releases for packages already published in a previous run.
+- If a GitHub Release is missing, create it manually using the existing tag and the package CHANGELOG section.
 
 ### Publishing Requirements
 Essential `package.json` fields:

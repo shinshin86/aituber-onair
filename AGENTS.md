@@ -37,6 +37,12 @@
 - Applies to all packages: do not use the Changeset CLI or create `.changeset/*` files.
 - For releases, update each package’s `CHANGELOG.md` and `package.json` manually (align dependent version ranges as needed).
 - Refer to `README.md` for the current release flow; when in doubt, re-read it before acting.
+### Release Flow & Failure Recovery
+- `release.yml` runs `changesets/action@v1` with `createGithubReleases: true`.
+- On merge to `main`, it publishes updated packages to npm, creates tags like `@aituber-onair/<pkg>@x.y.z`, and creates GitHub Releases **only for packages published in that run**.
+- `prerelease-next.yml` only updates the `next` prerelease; it does not create stable releases.
+- If the release CI fails after some packages were published, re-running will skip already-published packages and only publish the remaining ones; missing GitHub Releases must be created manually.
+- Manual recovery (when a Release is missing): ensure the tag exists, then create the Release with changelog notes (e.g., `gh release create "@aituber-onair/chat@0.10.0" -t "@aituber-onair/chat v0.10.0" -F /tmp/chat-0.10.0.md`).
 
 ## Security & Configuration
 - Never hardcode API keys (OpenAI/Gemini/etc). Use environment variables; `.env*` stays untracked.

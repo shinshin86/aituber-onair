@@ -145,6 +145,12 @@ CHANGELOG format:
 
 Note: Do not run `npm publish` directly.
 
+### Release Tags & Failure Recovery
+
+- `release.yml` uses Changesets to publish updated packages to npm, create tags like `@aituber-onair/<pkg>@x.y.z`, and create GitHub Releases **only for packages published in that run**.
+- `prerelease-next.yml` only updates the `next` prerelease tag.
+- If release CI fails after some packages were published, re-running will publish the remaining packages but **will not backfill GitHub Releases** for packages already published. In that case, create the missing Release manually from the package CHANGELOG (tag must exist).
+
 ## License
 
 This project is open-sourced under the [MIT License](./LICENSE).
