@@ -41,18 +41,14 @@ describe('processChatWithOptionalTools', () => {
 
     expect(runWithoutTools).not.toHaveBeenCalled();
     expect(runWithTools).toHaveBeenCalledTimes(1);
-    expect(onToolBlocks).toHaveBeenCalledWith([
-      { type: 'text', text: 'ok' },
-    ]);
+    expect(onToolBlocks).toHaveBeenCalledWith([{ type: 'text', text: 'ok' }]);
     expect(onCompleteResponse).toHaveBeenCalledWith('ok');
   });
 
   it('should throw when tool calls are present', async () => {
     const runWithoutTools = vi.fn();
     const runWithTools = vi.fn().mockResolvedValue({
-      blocks: [
-        { type: 'tool_use', id: 'call_1', name: 't', input: {} },
-      ],
+      blocks: [{ type: 'tool_use', id: 'call_1', name: 't', input: {} }],
       stop_reason: 'tool_use',
     } as ToolChatCompletion);
     const onCompleteResponse = vi.fn().mockResolvedValue(undefined);

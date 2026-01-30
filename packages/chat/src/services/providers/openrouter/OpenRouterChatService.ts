@@ -1,9 +1,6 @@
 import { ChatService } from '../../ChatService';
 import { Message, MessageWithVision } from '../../../types';
-import {
-  ToolDefinition,
-  ToolChatCompletion,
-} from '../../../types';
+import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_OPENROUTER_API,
   MODEL_GPT_OSS_20B_FREE,

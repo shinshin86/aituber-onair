@@ -198,8 +198,9 @@ export class AITuberOnAirCore extends EventEmitter {
 
     switch (providerName) {
       case 'openai': {
-        const providerOptions =
-          options.providerOptions as ProviderOptionsByName<'openai'> | undefined;
+        const providerOptions = options.providerOptions as
+          | ProviderOptionsByName<'openai'>
+          | undefined;
         chatServiceOptions = {
           ...baseOptions,
           ...(providerOptions ?? {}),
@@ -207,10 +208,9 @@ export class AITuberOnAirCore extends EventEmitter {
         break;
       }
       case 'openrouter': {
-        const providerOptions =
-          options.providerOptions as
-            | ProviderOptionsByName<'openrouter'>
-            | undefined;
+        const providerOptions = options.providerOptions as
+          | ProviderOptionsByName<'openrouter'>
+          | undefined;
         chatServiceOptions = {
           ...baseOptions,
           ...(providerOptions ?? {}),
@@ -218,10 +218,9 @@ export class AITuberOnAirCore extends EventEmitter {
         break;
       }
       case 'gemini': {
-        const providerOptions =
-          options.providerOptions as
-            | ProviderOptionsByName<'gemini'>
-            | undefined;
+        const providerOptions = options.providerOptions as
+          | ProviderOptionsByName<'gemini'>
+          | undefined;
         chatServiceOptions = {
           ...baseOptions,
           ...(providerOptions ?? {}),
@@ -229,10 +228,9 @@ export class AITuberOnAirCore extends EventEmitter {
         break;
       }
       case 'claude': {
-        const providerOptions =
-          options.providerOptions as
-            | ProviderOptionsByName<'claude'>
-            | undefined;
+        const providerOptions = options.providerOptions as
+          | ProviderOptionsByName<'claude'>
+          | undefined;
         chatServiceOptions = {
           ...baseOptions,
           ...(providerOptions ?? {}),
@@ -240,8 +238,9 @@ export class AITuberOnAirCore extends EventEmitter {
         break;
       }
       case 'zai': {
-        const providerOptions =
-          options.providerOptions as ProviderOptionsByName<'zai'> | undefined;
+        const providerOptions = options.providerOptions as
+          | ProviderOptionsByName<'zai'>
+          | undefined;
         chatServiceOptions = {
           ...baseOptions,
           ...(providerOptions ?? {}),
@@ -249,8 +248,9 @@ export class AITuberOnAirCore extends EventEmitter {
         break;
       }
       case 'kimi': {
-        const providerOptions =
-          options.providerOptions as ProviderOptionsByName<'kimi'> | undefined;
+        const providerOptions = options.providerOptions as
+          | ProviderOptionsByName<'kimi'>
+          | undefined;
         chatServiceOptions = {
           ...baseOptions,
           ...(providerOptions ?? {}),
@@ -258,7 +258,8 @@ export class AITuberOnAirCore extends EventEmitter {
         break;
       }
       default:
-        chatServiceOptions = baseOptions as ChatServiceOptionsByProvider['openai'];
+        chatServiceOptions =
+          baseOptions as ChatServiceOptionsByProvider['openai'];
         break;
     }
 
@@ -271,8 +272,9 @@ export class AITuberOnAirCore extends EventEmitter {
     ) {
       (
         chatServiceOptions as ChatServiceOptionsByProvider[
-          'claude' | 'openai' | 'gemini'
-        ]
+          | 'claude'
+          | 'openai'
+          | 'gemini']
       ).mcpServers = options.mcpServers;
       // Also set MCP servers in ToolExecutor for handling MCP tool calls
       this.toolExecutor.setMCPServers(options.mcpServers);

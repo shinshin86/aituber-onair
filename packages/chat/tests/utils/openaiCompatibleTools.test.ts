@@ -31,7 +31,10 @@ describe('openaiCompatibleTools', () => {
       {
         name: 'get_weather',
         description: 'Get weather',
-        parameters: { type: 'object', properties: { city: { type: 'string' } } },
+        parameters: {
+          type: 'object',
+          properties: { city: { type: 'string' } },
+        },
       },
     ];
 
@@ -42,7 +45,10 @@ describe('openaiCompatibleTools', () => {
         type: 'function',
         name: 'get_weather',
         description: 'Get weather',
-        parameters: { type: 'object', properties: { city: { type: 'string' } } },
+        parameters: {
+          type: 'object',
+          properties: { city: { type: 'string' } },
+        },
       },
     ]);
   });

@@ -33,9 +33,7 @@ export const resolveVisionModel = (
     options.validate === 'resolved' &&
     !options.supportsVisionForModel(resolved)
   ) {
-    throw new Error(
-      `Model ${resolved} does not support vision capabilities.`,
-    );
+    throw new Error(`Model ${resolved} does not support vision capabilities.`);
   }
 
   return resolved;
