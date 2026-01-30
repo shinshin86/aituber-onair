@@ -115,6 +115,19 @@ describe('ChatServiceFactory', () => {
       });
       expect(kimiService).toBeDefined();
     });
+
+    it('should accept provider-specific options', () => {
+      const openRouterService = ChatServiceFactory.createChatService(
+        'openrouter',
+        {
+          apiKey: 'test-openrouter-key',
+          appName: 'Test App',
+          appUrl: 'https://test.app',
+        },
+      );
+
+      expect(openRouterService).toBeDefined();
+    });
   });
 
   describe('getProviders', () => {

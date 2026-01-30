@@ -10,7 +10,7 @@ import {
 import { ChatService } from '../../ChatService';
 import { GeminiChatService } from './GeminiChatService';
 import {
-  ChatServiceOptions,
+  GeminiChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 import { resolveVisionModel } from '../../../utils';
@@ -18,13 +18,15 @@ import { resolveVisionModel } from '../../../utils';
 /**
  * Gemini API provider implementation
  */
-export class GeminiChatServiceProvider implements ChatServiceProvider {
+export class GeminiChatServiceProvider
+  implements ChatServiceProvider<GeminiChatServiceOptions>
+{
   /**
    * Create a chat service instance
    * @param options Service options
    * @returns GeminiChatService instance
    */
-  createChatService(options: ChatServiceOptions): ChatService {
+  createChatService(options: GeminiChatServiceOptions): ChatService {
     // Use the visionModel if provided, otherwise use the model that supports vision
     const visionModel = resolveVisionModel({
       model: options.model,
@@ -40,7 +42,7 @@ export class GeminiChatServiceProvider implements ChatServiceProvider {
       options.model || this.getDefaultModel(),
       visionModel,
       options.tools || [],
-      (options as any).mcpServers || [],
+      options.mcpServers || [],
       options.responseLength,
     );
   }

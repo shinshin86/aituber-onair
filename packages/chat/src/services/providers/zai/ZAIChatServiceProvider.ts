@@ -12,7 +12,7 @@ import {
 import { ChatService } from '../../ChatService';
 import { ZAIChatService } from './ZAIChatService';
 import {
-  ChatServiceOptions,
+  ZAIChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
@@ -21,11 +21,13 @@ import { resolveVisionModel } from '../../../utils';
 /**
  * Z.ai API provider implementation
  */
-export class ZAIChatServiceProvider implements ChatServiceProvider {
+export class ZAIChatServiceProvider
+  implements ChatServiceProvider<ZAIChatServiceOptions>
+{
   /**
    * Create a chat service instance
    */
-  createChatService(options: ChatServiceOptions): ChatService {
+  createChatService(options: ZAIChatServiceOptions): ChatService {
     const model = options.model || this.getDefaultModel();
     const visionModel = resolveVisionModel({
       model,

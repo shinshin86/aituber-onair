@@ -13,6 +13,14 @@ export { ChatServiceFactory } from './services/ChatServiceFactory';
 // Provider exports
 export type {
   ChatServiceOptions,
+  ChatServiceOptionsByProvider,
+  ChatProviderName,
+  OpenAIChatServiceOptions,
+  OpenRouterChatServiceOptions,
+  GeminiChatServiceOptions,
+  ClaudeChatServiceOptions,
+  ZAIChatServiceOptions,
+  KimiChatServiceOptions,
   ChatServiceProvider,
 } from './services/providers/ChatServiceProvider';
 

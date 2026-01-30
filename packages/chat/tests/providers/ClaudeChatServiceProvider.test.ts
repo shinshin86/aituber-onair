@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ClaudeChatServiceProvider } from '../../src/services/providers/claude/ClaudeChatServiceProvider';
-import type { ChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
+import type { ClaudeChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import type { ToolDefinition } from '../../src/types/toolChat';
 import {
   MODEL_CLAUDE_3_HAIKU,
@@ -92,7 +92,7 @@ describe('ClaudeChatServiceProvider', () => {
 
   describe('createChatService', () => {
     it('should create ClaudeChatService with default values', () => {
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
       };
 
@@ -109,7 +109,7 @@ describe('ClaudeChatServiceProvider', () => {
     });
 
     it('should create ClaudeChatService with custom model', () => {
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_CLAUDE_3_5_SONNET,
       };
@@ -127,7 +127,7 @@ describe('ClaudeChatServiceProvider', () => {
     });
 
     it('should use custom vision model when provided', () => {
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         model: 'claude-2',
         visionModel: MODEL_CLAUDE_3_5_SONNET,
@@ -146,7 +146,7 @@ describe('ClaudeChatServiceProvider', () => {
     });
 
     it('should use default model for vision when model does not support vision', () => {
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         model: 'claude-2',
       };
@@ -178,7 +178,7 @@ describe('ClaudeChatServiceProvider', () => {
         },
       ];
 
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         tools,
       };
@@ -204,7 +204,7 @@ describe('ClaudeChatServiceProvider', () => {
         },
       ];
 
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         mcpServers,
       } as any;
@@ -244,7 +244,7 @@ describe('ClaudeChatServiceProvider', () => {
         },
       ];
 
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_CLAUDE_3_7_SONNET,
         visionModel: MODEL_CLAUDE_3_5_HAIKU,
@@ -265,7 +265,7 @@ describe('ClaudeChatServiceProvider', () => {
     });
 
     it('should handle undefined tools gracefully', () => {
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         tools: undefined,
       };
@@ -283,7 +283,7 @@ describe('ClaudeChatServiceProvider', () => {
     });
 
     it('should handle undefined mcpServers gracefully', () => {
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         mcpServers: undefined,
       } as any;
@@ -301,7 +301,7 @@ describe('ClaudeChatServiceProvider', () => {
     });
 
     it('should pass responseLength when provided', () => {
-      const options: ChatServiceOptions = {
+      const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         responseLength: 'short',
       } as any;

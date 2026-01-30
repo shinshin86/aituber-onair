@@ -14,7 +14,7 @@ import { ChatService } from '../../ChatService';
 import { ClaudeChatService } from './ClaudeChatService';
 // import { MCPServerConfig } from '../../../types';
 import {
-  ChatServiceOptions,
+  ClaudeChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 import { resolveVisionModel } from '../../../utils';
@@ -22,13 +22,15 @@ import { resolveVisionModel } from '../../../utils';
 /**
  * Claude API provider implementation
  */
-export class ClaudeChatServiceProvider implements ChatServiceProvider {
+export class ClaudeChatServiceProvider
+  implements ChatServiceProvider<ClaudeChatServiceOptions>
+{
   /**
    * Create a chat service instance
    * @param options Service options (can include mcpServers)
    * @returns ClaudeChatService instance
    */
-  createChatService(options: ChatServiceOptions): ChatService {
+  createChatService(options: ClaudeChatServiceOptions): ChatService {
     // Use the visionModel if provided, otherwise use the model that supports vision
     const visionModel = resolveVisionModel({
       model: options.model,
@@ -44,7 +46,7 @@ export class ClaudeChatServiceProvider implements ChatServiceProvider {
       options.model || this.getDefaultModel(),
       visionModel,
       options.tools ?? [],
-      (options as any).mcpServers ?? [],
+      options.mcpServers ?? [],
       options.responseLength,
     );
   }

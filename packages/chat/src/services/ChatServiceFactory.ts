@@ -1,6 +1,8 @@
 import { ChatService } from './ChatService';
 import {
   ChatServiceOptions,
+  ChatServiceOptionsByProvider,
+  ChatProviderName,
   ChatServiceProvider,
 } from './providers/ChatServiceProvider';
 import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
@@ -27,6 +29,10 @@ export class ChatServiceFactory {
    * @param options Service options
    * @returns Created ChatService instance
    */
+  static createChatService<TProvider extends ChatProviderName>(
+    providerName: TProvider,
+    options: ChatServiceOptionsByProvider[TProvider],
+  ): ChatService;
   static createChatService(
     providerName: string,
     options: ChatServiceOptions,
