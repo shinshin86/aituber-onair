@@ -146,6 +146,12 @@ CHANGELOGの書式:
 
 注意: 直接の `npm publish` は行いません。
 
+### リリースタグと失敗時の対応
+
+- `release.yml` は Changesets により npm 公開とタグ作成（`@aituber-onair/<pkg>@x.y.z`）を行い、**その実行で公開されたパッケージのみ** GitHub Release を作成します。
+- `prerelease-next.yml` は `next` のプレリリースのみ更新します。
+- リリースCIが途中で失敗した場合、再実行では**未公開パッケージのみ**が公開され、**既に公開済みのパッケージの GitHub Release は補完されません**。その場合は、タグを確認したうえで CHANGELOG から手動で Release を作成します。
+
 ## ライセンス
 
 このプロジェクトは [MIT License](./LICENSE) の下で公開されています。
