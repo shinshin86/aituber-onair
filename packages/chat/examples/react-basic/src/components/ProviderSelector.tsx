@@ -36,6 +36,25 @@ import {
   MODEL_GEMINI_2_0_FLASH_LITE,
   // OpenRouter models
   MODEL_GPT_OSS_20B_FREE,
+  MODEL_MOONSHOTAI_KIMI_K2_5,
+  MODEL_OPENAI_GPT_5_1_CHAT,
+  MODEL_OPENAI_GPT_5_1_CODEX,
+  MODEL_OPENAI_GPT_5_MINI,
+  MODEL_OPENAI_GPT_5_NANO,
+  MODEL_OPENAI_GPT_4O,
+  MODEL_OPENAI_GPT_4_1_MINI,
+  MODEL_OPENAI_GPT_4_1_NANO,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_4,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_4,
+  MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
+  MODEL_ANTHROPIC_CLAUDE_3_5_SONNET,
+  MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
+  MODEL_GOOGLE_GEMINI_2_5_PRO,
+  MODEL_GOOGLE_GEMINI_2_5_FLASH,
+  MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+  MODEL_ZAI_GLM_4_7_FLASH,
+  MODEL_ZAI_GLM_4_5_AIR,
+  MODEL_ZAI_GLM_4_5_AIR_FREE,
   // Z.ai models
   MODEL_GLM_4_7,
   MODEL_GLM_4_7_FLASHX,
@@ -45,6 +64,9 @@ import {
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,
   ZAI_VISION_SUPPORTED_MODELS,
+  // Kimi models
+  MODEL_KIMI_K2_5,
+  KIMI_VISION_SUPPORTED_MODELS,
   VISION_SUPPORTED_MODELS,
   GEMINI_VISION_SUPPORTED_MODELS,
   CLAUDE_VISION_SUPPORTED_MODELS,
@@ -96,6 +118,10 @@ interface ProviderSelectorProps {
   ) => void;
   zaiResponseSchema?: string;
   onZaiResponseSchemaChange?: (value: string) => void;
+  kimiThinkingType?: 'enabled' | 'disabled';
+  onKimiThinkingTypeChange?: (value: 'enabled' | 'disabled') => void;
+  kimiBaseUrl?: string;
+  onKimiBaseUrlChange?: (value: string) => void;
   disabled: boolean;
 }
 
@@ -118,6 +144,10 @@ const providerInfo = {
   },
   zai: {
     name: 'Z.ai',
+    placeholder: 'xxx...',
+  },
+  kimi: {
+    name: 'Kimi',
     placeholder: 'xxx...',
   },
 };
@@ -304,6 +334,120 @@ export const allModels = [
     provider: 'openrouter',
     default: true,
   },
+  {
+    id: MODEL_OPENAI_GPT_5_1_CHAT,
+    name: 'GPT-5.1 Chat (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_5_1_CODEX,
+    name: 'GPT-5.1 Codex (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_5_MINI,
+    name: 'GPT-5 Mini (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_5_NANO,
+    name: 'GPT-5 Nano (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_4O,
+    name: 'GPT-4o (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_4_1_MINI,
+    name: 'GPT-4.1 Mini (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_4_1_NANO,
+    name: 'GPT-4.1 Nano (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_OPUS_4,
+    name: 'Claude 4 Opus (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_SONNET_4,
+    name: 'Claude 4 Sonnet (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
+    name: 'Claude 3.7 Sonnet (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_3_5_SONNET,
+    name: 'Claude 3.5 Sonnet (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
+    name: 'Claude 4.5 Haiku (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_2_5_PRO,
+    name: 'Gemini 2.5 Pro (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_2_5_FLASH,
+    name: 'Gemini 2.5 Flash (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+    name: 'Gemini 2.5 Flash Lite Preview (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ZAI_GLM_4_7_FLASH,
+    name: 'GLM-4.7 Flash (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ZAI_GLM_4_5_AIR,
+    name: 'GLM-4.5 Air (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ZAI_GLM_4_5_AIR_FREE,
+    name: 'GLM-4.5 Air (Free, OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_MOONSHOTAI_KIMI_K2_5,
+    name: 'Kimi K2.5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
 
   // Z.ai models
   {
@@ -348,6 +492,14 @@ export const allModels = [
     provider: 'zai',
     default: false,
   },
+
+  // Kimi models
+  {
+    id: MODEL_KIMI_K2_5,
+    name: 'Kimi K2.5',
+    provider: 'kimi',
+    default: true,
+  },
 ];
 
 export const getProviderForModel = (modelId: string): Provider => {
@@ -378,6 +530,8 @@ export const isVisionSupported = (
       return OPENROUTER_VISION_SUPPORTED_MODELS.includes(modelId);
     case 'zai':
       return ZAI_VISION_SUPPORTED_MODELS.includes(modelId);
+    case 'kimi':
+      return KIMI_VISION_SUPPORTED_MODELS.includes(modelId);
     default:
       return false;
   }
@@ -420,6 +574,10 @@ export default function ProviderSelector({
   onZaiResponseFormatTypeChange,
   zaiResponseSchema,
   onZaiResponseSchemaChange,
+  kimiThinkingType,
+  onKimiThinkingTypeChange,
+  kimiBaseUrl,
+  onKimiBaseUrlChange,
   disabled,
 }: ProviderSelectorProps) {
   const info = providerInfo[provider];
@@ -814,6 +972,45 @@ export default function ProviderSelector({
                   />
                 </div>
               )}
+            </>
+          )}
+
+          {provider === 'kimi' && (
+            <>
+              <div className="config-group">
+                <label htmlFor="kimi-thinking-type">Thinking</label>
+                <select
+                  id="kimi-thinking-type"
+                  value={kimiThinkingType || 'enabled'}
+                  onChange={(e) =>
+                    onKimiThinkingTypeChange?.(
+                      e.target.value as 'enabled' | 'disabled',
+                    )
+                  }
+                  disabled={disabled}
+                  className="select-input"
+                >
+                  <option value="enabled">Enabled</option>
+                  <option value="disabled">Disabled</option>
+                </select>
+              </div>
+
+              <div className="config-group config-full">
+                <label htmlFor="kimi-base-url">Base URL</label>
+                <input
+                  id="kimi-base-url"
+                  type="url"
+                  value={kimiBaseUrl || ''}
+                  onChange={(e) => onKimiBaseUrlChange?.(e.target.value)}
+                  disabled={disabled}
+                  className="text-input"
+                  placeholder="https://api.moonshot.ai/v1"
+                />
+                <span className="helper-text">
+                  Default: https://api.moonshot.ai/v1 (self-hosted:
+                  http://localhost:8000/v1)
+                </span>
+              </div>
             </>
           )}
         </div>

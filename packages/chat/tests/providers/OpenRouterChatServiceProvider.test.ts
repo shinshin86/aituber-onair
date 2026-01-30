@@ -1,7 +1,28 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
-import { MODEL_GPT_OSS_20B_FREE } from '../../src/constants/openrouter';
+import {
+  MODEL_GPT_OSS_20B_FREE,
+  MODEL_MOONSHOTAI_KIMI_K2_5,
+  MODEL_OPENAI_GPT_5_1_CHAT,
+  MODEL_OPENAI_GPT_5_1_CODEX,
+  MODEL_OPENAI_GPT_5_MINI,
+  MODEL_OPENAI_GPT_5_NANO,
+  MODEL_OPENAI_GPT_4O,
+  MODEL_OPENAI_GPT_4_1_MINI,
+  MODEL_OPENAI_GPT_4_1_NANO,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_4,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_4,
+  MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
+  MODEL_ANTHROPIC_CLAUDE_3_5_SONNET,
+  MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
+  MODEL_GOOGLE_GEMINI_2_5_PRO,
+  MODEL_GOOGLE_GEMINI_2_5_FLASH,
+  MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+  MODEL_ZAI_GLM_4_7_FLASH,
+  MODEL_ZAI_GLM_4_5_AIR,
+  MODEL_ZAI_GLM_4_5_AIR_FREE,
+} from '../../src/constants/openrouter';
 
 describe('OpenRouterChatServiceProvider', () => {
   let provider: OpenRouterChatServiceProvider;
@@ -23,22 +44,48 @@ describe('OpenRouterChatServiceProvider', () => {
   });
 
   describe('getSupportedModels', () => {
-    it('should return array containing only gpt-oss-20b:free', () => {
+    it('should return array containing supported models', () => {
       const models = provider.getSupportedModels();
       expect(Array.isArray(models)).toBe(true);
-      expect(models.length).toBe(1);
-      expect(models).toEqual([MODEL_GPT_OSS_20B_FREE]);
+      expect(models).toEqual([
+        MODEL_GPT_OSS_20B_FREE,
+        MODEL_ZAI_GLM_4_5_AIR_FREE,
+        MODEL_OPENAI_GPT_5_1_CHAT,
+        MODEL_OPENAI_GPT_5_1_CODEX,
+        MODEL_OPENAI_GPT_5_MINI,
+        MODEL_OPENAI_GPT_5_NANO,
+        MODEL_OPENAI_GPT_4O,
+        MODEL_OPENAI_GPT_4_1_MINI,
+        MODEL_OPENAI_GPT_4_1_NANO,
+        MODEL_ANTHROPIC_CLAUDE_OPUS_4,
+        MODEL_ANTHROPIC_CLAUDE_SONNET_4,
+        MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
+        MODEL_ANTHROPIC_CLAUDE_3_5_SONNET,
+        MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
+        MODEL_GOOGLE_GEMINI_2_5_PRO,
+        MODEL_GOOGLE_GEMINI_2_5_FLASH,
+        MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+        MODEL_ZAI_GLM_4_7_FLASH,
+        MODEL_ZAI_GLM_4_5_AIR,
+        MODEL_MOONSHOTAI_KIMI_K2_5,
+      ]);
     });
   });
 
   describe('supportsVision', () => {
-    it('should not support vision capabilities', () => {
-      expect(provider.supportsVision()).toBe(false);
+    it('should report vision support when vision models are available', () => {
+      expect(provider.supportsVision()).toBe(true);
     });
   });
 
   describe('supportsVisionForModel', () => {
-    it('should return false for all models since gpt-oss-20b does not support vision', () => {
+    it('should return true for vision-supported models', () => {
+      expect(provider.supportsVisionForModel(MODEL_MOONSHOTAI_KIMI_K2_5)).toBe(
+        true,
+      );
+    });
+
+    it('should return false for non-vision models', () => {
       expect(provider.supportsVisionForModel(MODEL_GPT_OSS_20B_FREE)).toBe(
         false,
       );
@@ -47,10 +94,13 @@ describe('OpenRouterChatServiceProvider', () => {
   });
 
   describe('getFreeModels', () => {
-    it('should return list containing only gpt-oss-20b:free', () => {
+    it('should return list containing free tier models', () => {
       const freeModels = provider.getFreeModels();
       expect(Array.isArray(freeModels)).toBe(true);
-      expect(freeModels).toEqual([MODEL_GPT_OSS_20B_FREE]);
+      expect(freeModels).toEqual([
+        MODEL_GPT_OSS_20B_FREE,
+        MODEL_ZAI_GLM_4_5_AIR_FREE,
+      ]);
     });
   });
 
@@ -66,6 +116,7 @@ describe('OpenRouterChatServiceProvider', () => {
     it('should return false for models without :free suffix', () => {
       expect(provider.isModelFree('openai/gpt-4o')).toBe(false);
       expect(provider.isModelFree('anthropic/claude-3-opus')).toBe(false);
+      expect(provider.isModelFree(MODEL_MOONSHOTAI_KIMI_K2_5)).toBe(false);
     });
   });
 

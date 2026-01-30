@@ -108,6 +108,12 @@ describe('ChatServiceFactory', () => {
         apiKey: 'test-zai-key',
       });
       expect(zaiService).toBeDefined();
+
+      // Test Kimi
+      const kimiService = ChatServiceFactory.createChatService('kimi', {
+        apiKey: 'test-kimi-key',
+      });
+      expect(kimiService).toBeDefined();
     });
   });
 
@@ -121,6 +127,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('claude')).toBe(true);
       expect(providers.has('openrouter')).toBe(true);
       expect(providers.has('zai')).toBe(true);
+      expect(providers.has('kimi')).toBe(true);
     });
 
     it('should return mutable map that allows modifications', () => {
@@ -145,6 +152,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('claude');
       expect(availableProviders).toContain('openrouter');
       expect(availableProviders).toContain('zai');
+      expect(availableProviders).toContain('kimi');
     });
 
     it('should include newly registered providers', () => {
@@ -163,6 +171,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('claude');
       expect(availableProviders).toContain('openrouter');
       expect(availableProviders).toContain('zai');
+      expect(availableProviders).toContain('kimi');
     });
   });
 
@@ -204,6 +213,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('claude')).toBe(true);
       expect(providers.has('openrouter')).toBe(true);
       expect(providers.has('zai')).toBe(true);
+      expect(providers.has('kimi')).toBe(true);
       expect(providers.size).toBeGreaterThanOrEqual(3);
     });
   });

@@ -1340,7 +1340,7 @@ This is useful when running voice engines on different ports or remote servers.
 ## AI Provider System
 
 AITuber OnAir Core adopts an extensible provider system, enabling integration with various AI APIs.
-Currently, OpenAI API, Gemini API, Claude API, and Z.ai API are available. If you would like to use any other API, please submit a PR or send us a message.
+Currently, OpenAI API, Gemini API, Claude API, Z.ai API, Kimi API, and OpenRouter API are available. If you would like to use any other API, please submit a PR or send us a message.
 
 ### Available Providers
 
@@ -1350,6 +1350,8 @@ Currently, the following AI provider is built-in:
 - **Gemini**: Supports models like Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Claude**: Supports models like Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnet
 - **Z.ai**: Supports models like GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V Flash/FlashX
+- **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
+- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi)
 
 ### Specifying a Provider
 

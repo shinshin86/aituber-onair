@@ -1,5 +1,17 @@
 # @aituber-onair/core
 
+## 0.21.0
+
+### Minor Changes
+
+- Re-exported Kimi (Moonshot) provider and model constants from the core entry point.
+- Re-exported curated OpenRouter model constants and vision-supported model lists.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aituber-onair/chat@0.10.0
+
 ## 0.20.0
 
 ### Minor Changes

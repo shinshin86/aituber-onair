@@ -1335,7 +1335,7 @@ aituber.updateVoiceService({
 ## AIプロバイダーシステム
 
 AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用しており、様々なAI APIとの連携が可能です。
-現在はOpenAI APIとGemini API、Claude API、Z.ai APIが利用可能です。もし利用したいAPIがあればPRやメッセージをください。
+現在はOpenAI APIとGemini API、Claude API、Z.ai API、Kimi API、OpenRouter APIが利用可能です。もし利用したいAPIがあればPRやメッセージをください。
 
 ### 利用可能なプロバイダー
 
@@ -1345,6 +1345,8 @@ AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用し�
 - **Gemini**: Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Liteのモデルをサポート
 - **Claude**: Claude 3 Haiku, Claude 3.5 Haiku, Claude 3.5 Sonnet v2, Claude 3.7 Sonnetのモデルをサポート
 - **Z.ai**: GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V Flash/FlashXのモデルをサポート
+- **Kimi**: Kimi K2.5（`kimi-k2.5`、ビジョン対応）をサポート
+- **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート
 
 ### プロバイダーの指定方法
 

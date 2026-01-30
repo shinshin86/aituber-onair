@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, Gemini, OpenRouter, and Z.ai.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, Gemini, OpenRouter, Z.ai, and Kimi.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, Claude (Anthropic), Google Gemini, OpenRouter, and Z.ai
+- 🤖 **Multiple AI Provider Support**: OpenAI, Claude (Anthropic), Google Gemini, OpenRouter, Z.ai, and Kimi
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -179,7 +179,15 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - Token limits are automatically disabled for the `gpt-oss-20b:free` model due to technical limitations
 - To control response length, include instructions in your prompt (e.g., "Please respond in 40 characters or less")
 - Free tier has rate limits (20 requests/minute)
-- Only `openai/gpt-oss-20b:free` model is currently supported
+- Supported models (curated list):
+  - `openai/gpt-oss-20b:free`
+  - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
+  - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
+  - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
+  - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
+  - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
+  - `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
+  - `moonshotai/kimi-k2.5`
 
 #### Z.ai (GLM)
 
@@ -195,6 +203,36 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 Notes:
 - Z.ai uses OpenAI-compatible Chat Completions.
 - `thinking` is disabled by default to match fast response behavior.
+
+#### Kimi (Moonshot)
+
+```typescript
+const kimiService = ChatServiceFactory.createChatService('kimi', {
+  apiKey: process.env.MOONSHOT_API_KEY,
+  model: 'kimi-k2.5',
+  // Optional: override endpoint or baseUrl
+  // endpoint: 'https://api.moonshot.ai/v1/chat/completions',
+  // baseUrl: 'https://api.moonshot.ai/v1',
+  thinking: { type: 'enabled' }
+});
+```
+
+Notes:
+- Kimi uses OpenAI-compatible Chat Completions.
+- When tools are enabled, `thinking` is forced to `{ type: 'disabled' }`.
+
+Self-hosted example:
+
+```typescript
+const kimiService = ChatServiceFactory.createChatService('kimi', {
+  apiKey: process.env.MOONSHOT_API_KEY,
+  baseUrl: 'http://localhost:8000/v1',
+  thinking: { type: 'disabled' }
+});
+```
+
+Notes for self-hosted:
+- Self-hosted endpoints use `chat_template_kwargs` for thinking controls.
 
 ### Vision Chat
 
@@ -419,8 +457,9 @@ Currently, the following AI providers are built-in:
 - **OpenAI**: Supports models like GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Claude**: Supports models like Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
-- **OpenRouter**: Supports `openai/gpt-oss-20b:free` (free tier model with special handling for token limits)
+- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-4.7 (including Flash/FlashX) and GLM-4.6V-Flash (vision)
+- **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
 
 ## License
 

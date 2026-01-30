@@ -134,7 +134,14 @@ describe('UMD Bundle', () => {
 
   describe('API Compatibility', () => {
     it('should create chat service instances without throwing', () => {
-      const providers = ['openai', 'claude', 'gemini', 'openrouter', 'zai'];
+      const providers = [
+        'openai',
+        'claude',
+        'gemini',
+        'openrouter',
+        'zai',
+        'kimi',
+      ];
 
       for (const provider of providers) {
         expect(() => {

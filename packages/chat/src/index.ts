@@ -36,6 +36,10 @@ export { OpenRouterChatServiceProvider } from './services/providers/openrouter/O
 export { ZAIChatService } from './services/providers/zai/ZAIChatService';
 export { ZAIChatServiceProvider } from './services/providers/zai/ZAIChatServiceProvider';
 
+// Kimi provider exports
+export { KimiChatService } from './services/providers/kimi/KimiChatService';
+export { KimiChatServiceProvider } from './services/providers/kimi/KimiChatServiceProvider';
+
 // Constants exports
 export * from './constants';
 

@@ -18,7 +18,13 @@ import ProviderSelector, {
 } from './components/ProviderSelector';
 import MessageList from './components/MessageList';
 
-export type Provider = 'openai' | 'claude' | 'gemini' | 'openrouter' | 'zai';
+export type Provider =
+  | 'openai'
+  | 'claude'
+  | 'gemini'
+  | 'openrouter'
+  | 'zai'
+  | 'kimi';
 
 interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
   id: string;
@@ -28,6 +34,8 @@ interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
 }
 
 type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high';
+
+const KIMI_OFFICIAL_BASE_URL = 'https://api.moonshot.ai/v1';
 
 const normalizeReasoningEffortForModel = (
   modelId?: string,
@@ -95,6 +103,10 @@ function App() {
     'text' | 'json_object' | 'json_schema'
   >('text');
   const [zaiResponseSchema, setZaiResponseSchema] = useState('');
+  const [kimiThinkingType, setKimiThinkingType] = useState<
+    'enabled' | 'disabled'
+  >('enabled');
+  const [kimiBaseUrl, setKimiBaseUrl] = useState(KIMI_OFFICIAL_BASE_URL);
   const [chatService, setChatService] = useState<ChatService | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -179,6 +191,13 @@ function App() {
           }
         }
 
+        if (provider === 'kimi') {
+          options.thinking = { type: kimiThinkingType };
+          if (kimiBaseUrl.trim()) {
+            options.baseUrl = kimiBaseUrl.trim();
+          }
+        }
+
         const service = ChatServiceFactory.createChatService(provider, options);
         setChatService(service);
         setError(null);
@@ -208,6 +227,8 @@ function App() {
     zaiClearThinking,
     zaiResponseFormatType,
     zaiResponseSchema,
+    kimiThinkingType,
+    kimiBaseUrl,
   ]);
 
   const sendMessage = useCallback(
@@ -395,6 +416,10 @@ function App() {
             onZaiResponseFormatTypeChange={setZaiResponseFormatType}
             zaiResponseSchema={zaiResponseSchema}
             onZaiResponseSchemaChange={setZaiResponseSchema}
+            kimiThinkingType={kimiThinkingType}
+            onKimiThinkingTypeChange={setKimiThinkingType}
+            kimiBaseUrl={kimiBaseUrl}
+            onKimiBaseUrlChange={setKimiBaseUrl}
             disabled={isLoading}
           />
         </div>

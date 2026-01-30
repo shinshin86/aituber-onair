@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## 0.10.0
+
+### Minor Changes
+
+- Added Kimi K2.5 provider support with OpenAI-compatible chat completions, including vision support and configurable base URL for self-hosted endpoints.
+- Added curated OpenRouter model support (OpenAI/Claude/Gemini/Z.ai/Kimi) and documented the supported list.
+- Added OpenRouter vision model mapping and updated the React example to expose the new OpenRouter model options.
+
 ## 0.9.0
 
 ### Minor Changes

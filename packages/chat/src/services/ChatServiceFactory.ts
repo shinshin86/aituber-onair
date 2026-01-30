@@ -8,6 +8,7 @@ import { GeminiChatServiceProvider } from './providers/gemini/GeminiChatServiceP
 import { ClaudeChatServiceProvider } from './providers/claude/ClaudeChatServiceProvider';
 import { OpenRouterChatServiceProvider } from './providers/openrouter/OpenRouterChatServiceProvider';
 import { ZAIChatServiceProvider } from './providers/zai/ZAIChatServiceProvider';
+import { KimiChatServiceProvider } from './providers/kimi/KimiChatServiceProvider';
 
 /**
  * Chat service factory
@@ -79,3 +80,5 @@ ChatServiceFactory.registerProvider(new ClaudeChatServiceProvider());
 ChatServiceFactory.registerProvider(new OpenRouterChatServiceProvider());
 // Register Z.ai as a provider
 ChatServiceFactory.registerProvider(new ZAIChatServiceProvider());
+// Register Kimi as a provider
+ChatServiceFactory.registerProvider(new KimiChatServiceProvider());
