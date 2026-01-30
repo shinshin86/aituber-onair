@@ -101,7 +101,7 @@ describe('ClaudeChatServiceProvider', () => {
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_CLAUDE_3_HAIKU,
-        undefined,
+        MODEL_CLAUDE_3_HAIKU,
         [],
         [],
         undefined,
@@ -188,7 +188,7 @@ describe('ClaudeChatServiceProvider', () => {
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_CLAUDE_3_HAIKU,
-        undefined,
+        MODEL_CLAUDE_3_HAIKU,
         tools,
         [],
         undefined,
@@ -214,7 +214,7 @@ describe('ClaudeChatServiceProvider', () => {
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_CLAUDE_3_HAIKU,
-        undefined,
+        MODEL_CLAUDE_3_HAIKU,
         [],
         mcpServers,
         undefined,
@@ -275,7 +275,7 @@ describe('ClaudeChatServiceProvider', () => {
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_CLAUDE_3_HAIKU,
-        undefined,
+        MODEL_CLAUDE_3_HAIKU,
         [],
         [],
         undefined,
@@ -293,7 +293,7 @@ describe('ClaudeChatServiceProvider', () => {
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_CLAUDE_3_HAIKU,
-        undefined,
+        MODEL_CLAUDE_3_HAIKU,
         [],
         [],
         undefined,
@@ -311,7 +311,7 @@ describe('ClaudeChatServiceProvider', () => {
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_CLAUDE_3_HAIKU,
-        undefined,
+        MODEL_CLAUDE_3_HAIKU,
         [],
         [],
         'short',

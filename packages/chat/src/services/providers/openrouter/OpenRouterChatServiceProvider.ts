@@ -29,6 +29,7 @@ import {
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
+import { resolveVisionModel } from '../../../utils';
 
 /**
  * OpenRouter API provider implementation
@@ -43,18 +44,15 @@ export class OpenRouterChatServiceProvider implements ChatServiceProvider {
   createChatService(options: ChatServiceOptions): ChatService {
     // For OpenRouter, use the main model as vision model placeholder
     // Only validate if visionModel is explicitly provided
-    const visionModel =
-      options.visionModel || options.model || this.getDefaultModel();
-
-    // If visionModel is explicitly provided and different from main model, validate it
-    if (
-      options.visionModel &&
-      !this.supportsVisionForModel(options.visionModel)
-    ) {
-      throw new Error(
-        `Model ${options.visionModel} does not support vision capabilities.`,
-      );
-    }
+    const visionModel = resolveVisionModel({
+      model: options.model,
+      visionModel: options.visionModel,
+      defaultModel: this.getDefaultModel(),
+      defaultVisionModel: options.model || this.getDefaultModel(),
+      supportsVisionForModel: (visionModel) =>
+        this.supportsVisionForModel(visionModel),
+      validate: 'explicit',
+    });
 
     // Tools definition
     const tools: ToolDefinition[] | undefined = options.tools;

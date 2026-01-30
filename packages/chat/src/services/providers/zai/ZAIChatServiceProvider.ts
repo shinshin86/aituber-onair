@@ -16,6 +16,7 @@ import {
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
+import { resolveVisionModel } from '../../../utils';
 
 /**
  * Z.ai API provider implementation
@@ -26,20 +27,15 @@ export class ZAIChatServiceProvider implements ChatServiceProvider {
    */
   createChatService(options: ChatServiceOptions): ChatService {
     const model = options.model || this.getDefaultModel();
-    const visionModel =
-      options.visionModel ||
-      (this.supportsVisionForModel(model)
-        ? model
-        : this.getDefaultVisionModel());
-
-    if (
-      options.visionModel &&
-      !this.supportsVisionForModel(options.visionModel)
-    ) {
-      throw new Error(
-        `Model ${options.visionModel} does not support vision capabilities.`,
-      );
-    }
+    const visionModel = resolveVisionModel({
+      model,
+      visionModel: options.visionModel,
+      defaultModel: this.getDefaultModel(),
+      defaultVisionModel: this.getDefaultVisionModel(),
+      supportsVisionForModel: (visionModel) =>
+        this.supportsVisionForModel(visionModel),
+      validate: 'explicit',
+    });
 
     const tools: ToolDefinition[] | undefined = options.tools;
     const thinking = options.thinking ?? { type: 'disabled' as const };

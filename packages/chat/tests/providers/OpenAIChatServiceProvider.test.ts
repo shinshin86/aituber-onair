@@ -95,7 +95,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
@@ -265,7 +265,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         tools,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
@@ -287,7 +287,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         'https://custom.api.endpoint',
         [],
@@ -315,7 +315,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         ENDPOINT_OPENAI_RESPONSES_API, // MCP requires Responses API regardless of model
         options.mcpServers,
@@ -345,7 +345,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         customEndpoint,
         options.mcpServers,
@@ -412,7 +412,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],

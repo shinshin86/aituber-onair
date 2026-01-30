@@ -27,6 +27,7 @@ import {
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
+import { resolveVisionModel } from '../../../utils';
 
 /**
  * OpenAI API provider implementation
@@ -41,13 +42,14 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
     // Apply GPT-5 optimizations if needed
     const optimizedOptions = this.optimizeGPT5Options(options);
     // Use the visionModel if provided, otherwise use the model that supports vision
-    const visionModel =
-      optimizedOptions.visionModel ||
-      (this.supportsVisionForModel(
-        optimizedOptions.model || this.getDefaultModel(),
-      )
-        ? optimizedOptions.model
-        : this.getDefaultModel());
+    const visionModel = resolveVisionModel({
+      model: optimizedOptions.model,
+      visionModel: optimizedOptions.visionModel,
+      defaultModel: this.getDefaultModel(),
+      defaultVisionModel: this.getDefaultModel(),
+      supportsVisionForModel: (model) => this.supportsVisionForModel(model),
+      validate: 'resolved',
+    });
 
     // tools definition
     const tools: ToolDefinition[] | undefined = optimizedOptions.tools;

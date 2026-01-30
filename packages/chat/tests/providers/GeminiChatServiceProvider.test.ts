@@ -83,7 +83,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         [],
         [],
         undefined,
@@ -174,7 +174,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         tools,
         [],
         undefined,
@@ -192,7 +192,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         [],
         [],
         undefined,
@@ -264,7 +264,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         [],
         [],
         'long',
@@ -295,7 +295,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         [],
         mcpServers,
         undefined,
