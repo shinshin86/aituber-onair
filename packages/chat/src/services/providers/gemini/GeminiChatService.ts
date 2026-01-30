@@ -19,6 +19,7 @@ import {
 import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 import { MCPSchemaFetcher } from '../../../utils/mcpSchemaFetcher';
+import { processChatWithOptionalTools } from '../../../utils';
 
 /**
  * Gemini implementation of ChatService
@@ -220,35 +221,18 @@ export class GeminiChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
-      // not use tools or MCP servers
-      if (this.tools.length === 0 && this.mcpServers.length === 0) {
-        const res = await this.callGemini(messages, this.model, true);
-        const { blocks } = await this.parseStream(res, onPartialResponse);
-        const full = blocks
-          .filter((b) => b.type === 'text')
-          .map((b) => b.text)
-          .join('');
-        await onCompleteResponse(full);
-        return;
-      }
-
-      /* with tools (1 turn) */
-      const { blocks, stop_reason } = await this.chatOnce(
-        messages,
-        true,
-        onPartialResponse,
-      );
-      if (stop_reason === 'end') {
-        const full = blocks
-          .filter((b) => b.type === 'text')
-          .map((b) => b.text)
-          .join('');
-        await onCompleteResponse(full);
-        return;
-      }
-      throw new Error(
-        'Received functionCall. Use chatOnce() loop when tools are enabled.',
-      );
+      await processChatWithOptionalTools({
+        hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
+        runWithoutTools: async () => {
+          const res = await this.callGemini(messages, this.model, true);
+          const { blocks } = await this.parseStream(res, onPartialResponse);
+          return StreamTextAccumulator.getFullText(blocks);
+        },
+        runWithTools: () => this.chatOnce(messages, true, onPartialResponse),
+        onCompleteResponse,
+        toolErrorMessage:
+          'Received functionCall. Use chatOnce() loop when tools are enabled.',
+      });
     } catch (err) {
       console.error('Error in processChat:', err);
       throw err;
@@ -261,32 +245,25 @@ export class GeminiChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
-      if (this.tools.length === 0 && this.mcpServers.length === 0) {
-        const res = await this.callGemini(messages, this.visionModel, true);
-        const { blocks } = await this.parseStream(res, onPartialResponse);
-        const full = blocks
-          .filter((b) => b.type === 'text')
-          .map((b) => b.text)
-          .join('');
-        await onCompleteResponse(full);
-        return;
-      }
-
-      const { blocks, stop_reason } = await this.visionChatOnce(messages);
-      blocks
-        .filter((b) => b.type === 'text')
-        .forEach((b) => onPartialResponse(b.text!));
-      if (stop_reason === 'end') {
-        const full = blocks
-          .filter((b) => b.type === 'text')
-          .map((b) => b.text)
-          .join('');
-        await onCompleteResponse(full);
-        return;
-      }
-      throw new Error(
-        'Received functionCall. Use visionChatOnce() loop when tools are enabled.',
-      );
+      await processChatWithOptionalTools({
+        hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
+        runWithoutTools: async () => {
+          const res = await this.callGemini(messages, this.visionModel, true);
+          const { blocks } = await this.parseStream(res, onPartialResponse);
+          return StreamTextAccumulator.getFullText(blocks);
+        },
+        runWithTools: () => this.visionChatOnce(messages),
+        onToolBlocks: (blocks) => {
+          blocks
+            .filter(
+              (b): b is { type: 'text'; text: string } => b.type === 'text',
+            )
+            .forEach((b) => onPartialResponse(b.text));
+        },
+        onCompleteResponse,
+        toolErrorMessage:
+          'Received functionCall. Use visionChatOnce() loop when tools are enabled.',
+      });
     } catch (err) {
       console.error('Error in processVisionChat:', err);
       throw err;

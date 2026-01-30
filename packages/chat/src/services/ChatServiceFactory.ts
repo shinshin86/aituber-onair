@@ -3,12 +3,7 @@ import {
   ChatServiceOptions,
   ChatServiceProvider,
 } from './providers/ChatServiceProvider';
-import { OpenAIChatServiceProvider } from './providers/openai/OpenAIChatServiceProvider';
-import { GeminiChatServiceProvider } from './providers/gemini/GeminiChatServiceProvider';
-import { ClaudeChatServiceProvider } from './providers/claude/ClaudeChatServiceProvider';
-import { OpenRouterChatServiceProvider } from './providers/openrouter/OpenRouterChatServiceProvider';
-import { ZAIChatServiceProvider } from './providers/zai/ZAIChatServiceProvider';
-import { KimiChatServiceProvider } from './providers/kimi/KimiChatServiceProvider';
+import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 
 /**
  * Chat service factory
@@ -70,15 +65,6 @@ export class ChatServiceFactory {
   }
 }
 
-// Register OpenAI as a provider
-ChatServiceFactory.registerProvider(new OpenAIChatServiceProvider());
-// Register Gemini as a provider
-ChatServiceFactory.registerProvider(new GeminiChatServiceProvider());
-// Register Claude as a provider
-ChatServiceFactory.registerProvider(new ClaudeChatServiceProvider());
-// Register OpenRouter as a provider
-ChatServiceFactory.registerProvider(new OpenRouterChatServiceProvider());
-// Register Z.ai as a provider
-ChatServiceFactory.registerProvider(new ZAIChatServiceProvider());
-// Register Kimi as a provider
-ChatServiceFactory.registerProvider(new KimiChatServiceProvider());
+DEFAULT_CHAT_SERVICE_PROVIDERS.forEach((provider) =>
+  ChatServiceFactory.registerProvider(provider),
+);

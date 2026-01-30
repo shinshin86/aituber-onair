@@ -1,10 +1,11 @@
 import { ChatService } from '../ChatService';
 import { ChatResponseLength, GPT5PresetKey } from '../../constants/chat';
+import { ToolDefinition } from '../../types';
 
 /**
  * Options for chat service providers
  */
-export interface ChatServiceOptions {
+export interface BaseChatServiceOptions {
   /** API Key */
   apiKey: string;
   /** Model name */
@@ -41,21 +42,27 @@ export interface ChatServiceOptions {
     type: 'enabled' | 'disabled';
     clear_thinking?: boolean;
   };
-  /** Additional provider-specific options */
-  [key: string]: any;
+  /** Tool definitions (OpenAI-compatible tools) */
+  tools?: ToolDefinition[];
 }
+
+export type ChatServiceOptions<
+  TExtra extends Record<string, unknown> = Record<string, unknown>,
+> = BaseChatServiceOptions & TExtra;
 
 /**
  * Chat service provider interface
  * Abstraction for various AI API providers (OpenAI, Gemini, Claude, etc.)
  */
-export interface ChatServiceProvider {
+export interface ChatServiceProvider<
+  TOptions extends ChatServiceOptions = ChatServiceOptions,
+> {
   /**
    * Create a chat service instance
    * @param options Service options
    * @returns ChatService implementation
    */
-  createChatService(options: ChatServiceOptions): ChatService;
+  createChatService(options: TOptions): ChatService;
 
   /**
    * Get the provider name

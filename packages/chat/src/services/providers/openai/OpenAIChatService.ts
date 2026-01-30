@@ -19,6 +19,13 @@ import {
 import { MCPServerConfig } from '../../../types';
 import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+import {
+  buildOpenAICompatibleTools,
+  parseOpenAICompatibleOneShot,
+  parseOpenAICompatibleTextStream,
+  parseOpenAICompatibleToolStream,
+  processChatWithOptionalTools,
+} from '../../../utils';
 
 /**
  * OpenAI implementation of ChatService
@@ -104,53 +111,32 @@ export class OpenAIChatService implements ChatService {
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
-    // not use tools
-    if (this.tools.length === 0) {
-      const res = await this.callOpenAI(messages, this.model, true);
-      const isResponsesAPI = this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
+    await processChatWithOptionalTools({
+      hasTools: this.tools.length > 0,
+      runWithoutTools: async () => {
+        const res = await this.callOpenAI(messages, this.model, true);
+        const isResponsesAPI = this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
 
-      try {
-        if (isResponsesAPI) {
-          // Use Responses API parser for GPT-5 and other models using Responses API
-          const result = await this.parseResponsesStream(
-            res,
-            onPartialResponse,
-          );
-          const full = result.blocks
-            .filter((b) => b.type === 'text')
-            .map((b) => b.text)
-            .join('');
-          await onCompleteResponse(full);
-        } else {
-          // Use standard Chat Completions API parser
-          const full = await this.handleStream(res, onPartialResponse);
-          await onCompleteResponse(full);
+        try {
+          if (isResponsesAPI) {
+            const result = await this.parseResponsesStream(
+              res,
+              onPartialResponse,
+            );
+            return StreamTextAccumulator.getFullText(result.blocks);
+          }
+          return this.handleStream(res, onPartialResponse);
+        } catch (error) {
+          console.error('[processChat] Error in streaming/completion:', error);
+          throw error;
         }
-      } catch (error) {
-        console.error('[processChat] Error in streaming/completion:', error);
-        throw error;
-      }
-      return;
-    }
-
-    // use tools
-    const { blocks, stop_reason } = await this.chatOnce(messages);
-
-    if (stop_reason === 'end') {
-      // no tool calls
-      const full = blocks
-        .filter((b) => b.type === 'text')
-        .map((b) => b.text)
-        .join('');
-      await onCompleteResponse(full);
-      return;
-    }
-
-    // case of stop_reason === 'tool_use', so error
-    throw new Error(
-      'processChat received tool_calls. ' +
+      },
+      runWithTools: () => this.chatOnce(messages, true, onPartialResponse),
+      onCompleteResponse,
+      toolErrorMessage:
+        'processChat received tool_calls. ' +
         'ChatProcessor must use chatOnce() loop when tools are enabled.',
-    );
+    });
   }
 
   /**
@@ -166,60 +152,37 @@ export class OpenAIChatService implements ChatService {
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
     try {
-      // not use tools
-      if (this.tools.length === 0) {
-        const res = await this.callOpenAI(messages, this.visionModel, true);
-        const isResponsesAPI = this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
+      await processChatWithOptionalTools({
+        hasTools: this.tools.length > 0,
+        runWithoutTools: async () => {
+          const res = await this.callOpenAI(messages, this.visionModel, true);
+          const isResponsesAPI =
+            this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
 
-        try {
-          if (isResponsesAPI) {
-            // Use Responses API parser for GPT-5 and other models using Responses API
-            const result = await this.parseResponsesStream(
-              res,
-              onPartialResponse,
+          try {
+            if (isResponsesAPI) {
+              const result = await this.parseResponsesStream(
+                res,
+                onPartialResponse,
+              );
+              return StreamTextAccumulator.getFullText(result.blocks);
+            }
+            return this.handleStream(res, onPartialResponse);
+          } catch (streamError) {
+            console.error(
+              '[processVisionChat] Error in streaming/completion:',
+              streamError,
             );
-            const full = result.blocks
-              .filter((b) => b.type === 'text')
-              .map((b) => b.text)
-              .join('');
-            await onCompleteResponse(full);
-          } else {
-            // Use standard Chat Completions API parser
-            const full = await this.handleStream(res, onPartialResponse);
-            await onCompleteResponse(full);
+            throw streamError;
           }
-        } catch (streamError) {
-          console.error(
-            '[processVisionChat] Error in streaming/completion:',
-            streamError,
-          );
-          throw streamError;
-        }
-        return;
-      }
-
-      // use tools
-      const { blocks, stop_reason } = await this.visionChatOnce(
-        messages,
-        true,
-        onPartialResponse,
-      );
-
-      if (stop_reason === 'end') {
-        // no tool calls
-        const full = blocks
-          .filter((b) => b.type === 'text')
-          .map((b) => b.text)
-          .join('');
-        await onCompleteResponse(full);
-        return;
-      }
-
-      // case of stop_reason === 'tool_use', so error
-      throw new Error(
-        'processVisionChat received tool_calls. ' +
+        },
+        runWithTools: () =>
+          this.visionChatOnce(messages, true, onPartialResponse),
+        onCompleteResponse,
+        toolErrorMessage:
+          'processVisionChat received tool_calls. ' +
           'ChatProcessor must use visionChatOnce() loop when tools are enabled.',
-      );
+      });
     } catch (error) {
       console.error('Error in processVisionChat:', error);
       throw error;
@@ -458,29 +421,12 @@ export class OpenAIChatService implements ChatService {
 
     // Add function tools
     if (this.tools.length > 0) {
-      if (isResponsesAPI) {
-        // Responses API format (flattened function properties)
-        toolDefs.push(
-          ...this.tools.map((t) => ({
-            type: 'function',
-            name: t.name,
-            description: t.description,
-            parameters: t.parameters,
-          })),
-        );
-      } else {
-        // Chat Completions API format (nested function properties)
-        toolDefs.push(
-          ...this.tools.map((t) => ({
-            type: 'function',
-            function: {
-              name: t.name,
-              description: t.description,
-              parameters: t.parameters,
-            },
-          })),
-        );
-      }
+      toolDefs.push(
+        ...buildOpenAICompatibleTools(
+          this.tools,
+          isResponsesAPI ? 'responses' : 'chat-completions',
+        ),
+      );
     }
 
     // Add MCP tools (only for Responses API)
@@ -517,131 +463,20 @@ export class OpenAIChatService implements ChatService {
   }
 
   private async handleStream(res: Response, onPartial: (t: string) => void) {
-    const reader = res.body!.getReader();
-    const dec = new TextDecoder();
-    let buffer = '';
-    let full = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += dec.decode(value, { stream: true });
-
-      let idx;
-      while ((idx = buffer.indexOf('\n\n')) !== -1) {
-        const raw = buffer.slice(0, idx).trim();
-        buffer = buffer.slice(idx + 2);
-        if (!raw.startsWith('data:')) continue;
-        const jsonStr = raw.slice(5).trim();
-        if (jsonStr === '[DONE]') {
-          buffer = '';
-          break;
-        }
-
-        const json = JSON.parse(jsonStr);
-        const content = json.choices[0]?.delta?.content || '';
-        if (content) {
-          onPartial(content);
-          full += content;
-        }
-      }
-    }
-    return full;
+    return parseOpenAICompatibleTextStream(res, onPartial);
   }
 
   private async parseStream(
     res: Response,
     onPartial: (t: string) => void,
   ): Promise<ToolChatCompletion> {
-    const reader = res.body!.getReader();
-    const dec = new TextDecoder();
-
-    const textBlocks: ToolChatBlock[] = [];
-    const toolCallsMap = new Map<number, any>();
-
-    let buf = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-
-      // wait for "\n\n"
-      let sep;
-      while ((sep = buf.indexOf('\n\n')) !== -1) {
-        const raw = buf.slice(0, sep).trim(); // 1 line
-        buf = buf.slice(sep + 2);
-
-        if (!raw.startsWith('data:')) continue;
-        const payload = raw.slice(5).trim(); // after "data:"
-        if (payload === '[DONE]') {
-          buf = '';
-          break;
-        }
-
-        const json = JSON.parse(payload);
-        const delta = json.choices[0].delta;
-
-        if (delta.content) {
-          onPartial(delta.content);
-          textBlocks.push({ type: 'text', text: delta.content });
-        }
-
-        /* -------------- tool_calls -------------- */
-        if (delta.tool_calls) {
-          delta.tool_calls.forEach((c: any) => {
-            // arguments are incremented for each chunk → concatenate
-            const entry = toolCallsMap.get(c.index) ?? {
-              id: c.id,
-              name: c.function.name,
-              args: '',
-            };
-            entry.args += c.function.arguments || '';
-            toolCallsMap.set(c.index, entry);
-          });
-        }
-      }
-    }
-
-    // convert tool_callsMap to ToolUseBlock[]
-    const toolBlocks: ToolChatBlock[] = Array.from(toolCallsMap.entries())
-      .sort((a, b) => a[0] - b[0])
-      .map(([_, e]) => ({
-        type: 'tool_use',
-        id: e.id,
-        name: e.name,
-        input: JSON.parse(e.args || '{}'),
-      }));
-
-    const blocks = [...textBlocks, ...toolBlocks];
-
-    return {
-      blocks,
-      stop_reason: toolBlocks.length ? 'tool_use' : 'end',
-    };
+    return parseOpenAICompatibleToolStream(res, onPartial, {
+      appendTextBlock: StreamTextAccumulator.addTextBlock,
+    });
   }
 
   private parseOneShot(data: any): ToolChatCompletion {
-    const choice = data.choices[0];
-    const blocks: ToolChatBlock[] = [];
-
-    if (choice.finish_reason === 'tool_calls') {
-      choice.message.tool_calls.forEach((c: any) =>
-        blocks.push({
-          type: 'tool_use',
-          id: c.id,
-          name: c.function.name,
-          input: JSON.parse(c.function.arguments || '{}'),
-        }),
-      );
-    } else {
-      blocks.push({ type: 'text', text: choice.message.content });
-    }
-
-    return {
-      blocks,
-      stop_reason: choice.finish_reason === 'tool_calls' ? 'tool_use' : 'end',
-    };
+    return parseOpenAICompatibleOneShot(data);
   }
 
   /**
