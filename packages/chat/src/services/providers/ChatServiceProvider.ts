@@ -128,8 +128,9 @@ export type ZAIChatServiceOptions = DisallowKeys<
   | 'baseUrl'
 >;
 
-export type ChatServiceOptions<TExtra extends Record<string, unknown> = {}> =
-  BaseChatServiceOptions & TExtra;
+export type ChatServiceOptions<
+  TExtra extends Record<string, unknown> = Record<string, unknown>,
+> = BaseChatServiceOptions & TExtra;
 
 export type ChatServiceOptionsByProvider = {
   openai: OpenAIChatServiceOptions;
