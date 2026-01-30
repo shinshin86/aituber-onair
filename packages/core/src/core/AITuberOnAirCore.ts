@@ -4,7 +4,14 @@ import { MemoryManager, MemoryOptions, Summarizer } from './MemoryManager';
 import {
   ChatService,
   ChatServiceFactory,
-  ChatServiceOptions,
+  ChatProviderName,
+  ChatServiceOptionsByProvider,
+  OpenAIChatServiceOptions,
+  OpenRouterChatServiceOptions,
+  GeminiChatServiceOptions,
+  ClaudeChatServiceOptions,
+  ZAIChatServiceOptions,
+  KimiChatServiceOptions,
 } from '@aituber-onair/chat';
 import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer';
 import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
@@ -67,7 +74,7 @@ export interface SpeechChunkingOptions {
 
 export interface AITuberOnAirCoreOptions {
   /** AI provider name */
-  chatProvider?: string;
+  chatProvider?: ChatProviderName;
   /** AI API key */
   apiKey: string;
   /** AI model name (default is provider's default model) */
@@ -85,7 +92,10 @@ export interface AITuberOnAirCoreOptions {
   /** Debug mode */
   debug?: boolean;
   /** ChatService provider-specific options (optional) */
-  providerOptions?: Record<string, any>;
+  providerOptions?: Omit<
+    ChatServiceOptionsByProvider[ChatProviderName],
+    'apiKey' | 'model' | 'tools'
+  >;
   /** Tools */
   tools?: {
     definition: ToolDefinition;
@@ -94,6 +104,11 @@ export interface AITuberOnAirCoreOptions {
   /** MCP servers configuration (OpenAI, Claude, and Gemini) */
   mcpServers?: MCPServerConfig[];
 }
+
+type ProviderOptionsByName<TProvider extends ChatProviderName> = Omit<
+  ChatServiceOptionsByProvider[TProvider],
+  'apiKey' | 'model' | 'tools'
+>;
 
 /**
  * Event types for AITuberOnAirCore
@@ -165,7 +180,7 @@ export class AITuberOnAirCore extends EventEmitter {
     this.speechChunkSeparators = speechChunkingOptions.separators;
 
     // Determine provider name (default is 'openai')
-    const providerName = options.chatProvider || 'openai';
+    const providerName: ChatProviderName = options.chatProvider || 'openai';
 
     // Register tools
     options.tools?.forEach((t) =>
@@ -173,12 +188,79 @@ export class AITuberOnAirCore extends EventEmitter {
     );
 
     // Build chat service options
-    const chatServiceOptions: ChatServiceOptions = {
+    const baseOptions = {
       apiKey: options.apiKey,
       model: options.model,
-      ...options.providerOptions,
       tools: this.toolExecutor.listDefinitions(),
     };
+
+    let chatServiceOptions: ChatServiceOptionsByProvider[ChatProviderName];
+
+    switch (providerName) {
+      case 'openai': {
+        const providerOptions =
+          options.providerOptions as ProviderOptionsByName<'openai'> | undefined;
+        chatServiceOptions = {
+          ...baseOptions,
+          ...(providerOptions ?? {}),
+        } as OpenAIChatServiceOptions;
+        break;
+      }
+      case 'openrouter': {
+        const providerOptions =
+          options.providerOptions as
+            | ProviderOptionsByName<'openrouter'>
+            | undefined;
+        chatServiceOptions = {
+          ...baseOptions,
+          ...(providerOptions ?? {}),
+        } as OpenRouterChatServiceOptions;
+        break;
+      }
+      case 'gemini': {
+        const providerOptions =
+          options.providerOptions as
+            | ProviderOptionsByName<'gemini'>
+            | undefined;
+        chatServiceOptions = {
+          ...baseOptions,
+          ...(providerOptions ?? {}),
+        } as GeminiChatServiceOptions;
+        break;
+      }
+      case 'claude': {
+        const providerOptions =
+          options.providerOptions as
+            | ProviderOptionsByName<'claude'>
+            | undefined;
+        chatServiceOptions = {
+          ...baseOptions,
+          ...(providerOptions ?? {}),
+        } as ClaudeChatServiceOptions;
+        break;
+      }
+      case 'zai': {
+        const providerOptions =
+          options.providerOptions as ProviderOptionsByName<'zai'> | undefined;
+        chatServiceOptions = {
+          ...baseOptions,
+          ...(providerOptions ?? {}),
+        } as ZAIChatServiceOptions;
+        break;
+      }
+      case 'kimi': {
+        const providerOptions =
+          options.providerOptions as ProviderOptionsByName<'kimi'> | undefined;
+        chatServiceOptions = {
+          ...baseOptions,
+          ...(providerOptions ?? {}),
+        } as KimiChatServiceOptions;
+        break;
+      }
+      default:
+        chatServiceOptions = baseOptions as ChatServiceOptionsByProvider['openai'];
+        break;
+    }
 
     // Add MCP servers for providers that support remote MCP
     if (
@@ -187,7 +269,11 @@ export class AITuberOnAirCore extends EventEmitter {
         providerName === 'gemini') &&
       options.mcpServers
     ) {
-      (chatServiceOptions as any).mcpServers = options.mcpServers;
+      (
+        chatServiceOptions as ChatServiceOptionsByProvider[
+          'claude' | 'openai' | 'gemini'
+        ]
+      ).mcpServers = options.mcpServers;
       // Also set MCP servers in ToolExecutor for handling MCP tool calls
       this.toolExecutor.setMCPServers(options.mcpServers);
     }
