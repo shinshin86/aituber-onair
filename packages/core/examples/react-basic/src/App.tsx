@@ -11,6 +11,8 @@ import {
   GEMINI_VISION_SUPPORTED_MODELS,
   CLAUDE_VISION_SUPPORTED_MODELS,
   ZAI_VISION_SUPPORTED_MODELS,
+  KIMI_VISION_SUPPORTED_MODELS,
+  OPENROUTER_VISION_SUPPORTED_MODELS,
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
   type MinimaxModel,
@@ -29,6 +31,8 @@ import {
 import { geminiModels } from './constants/gemini';
 import { claudeModels } from './constants/claude';
 import { zaiModels } from './constants/zai';
+import { kimiModels } from './constants/kimi';
+import { openrouterModels } from './constants/openrouter';
 import {
   type VoiceEngineType,
   VOICE_ENGINE_CONFIGS,
@@ -159,6 +163,8 @@ const App: React.FC = () => {
     DEFAULT_CHAT_PROVIDER,
   );
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
+  const [kimiBaseUrl, setKimiBaseUrl] = useState<string>('');
+  const [openRouterBaseUrl, setOpenRouterBaseUrl] = useState<string>('');
 
   // DeepWiki MCP enable flag
   const [enableDeepWikiMcp, setEnableDeepWikiMcp] = useState<boolean>(false);
@@ -221,10 +227,19 @@ const App: React.FC = () => {
         return CLAUDE_VISION_SUPPORTED_MODELS.includes(model);
       case 'zai':
         return ZAI_VISION_SUPPORTED_MODELS.includes(model);
+      case 'kimi':
+        return KIMI_VISION_SUPPORTED_MODELS.includes(model);
+      case 'openrouter':
+        return OPENROUTER_VISION_SUPPORTED_MODELS.includes(model);
       default:
         return false;
     }
   })();
+
+  const isMcpSupportedProvider =
+    chatProvider === 'openai' ||
+    chatProvider === 'gemini' ||
+    chatProvider === 'claude';
 
   // Voice settings state
   const [selectedVoiceEngine, setSelectedVoiceEngine] =
@@ -519,6 +534,12 @@ const App: React.FC = () => {
       case 'zai':
         setModel(zaiModels[0]);
         break;
+      case 'kimi':
+        setModel(kimiModels[0]);
+        break;
+      case 'openrouter':
+        setModel(openrouterModels[0]);
+        break;
       default:
         setModel(openaiModels[0]);
         break;
@@ -526,10 +547,10 @@ const App: React.FC = () => {
   }, [chatProvider]);
 
   useEffect(() => {
-    if (chatProvider === 'zai' && enableDeepWikiMcp) {
+    if (!isMcpSupportedProvider && enableDeepWikiMcp) {
       setEnableDeepWikiMcp(false);
     }
-  }, [chatProvider, enableDeepWikiMcp]);
+  }, [chatProvider, enableDeepWikiMcp, isMcpSupportedProvider]);
 
   useEffect(() => {
     if (!supportsVision && imageDataUrl) {
@@ -664,6 +685,18 @@ const App: React.FC = () => {
         providerOptions.reasoning_effort = normalizedReasoningEffort;
       }
       providerOptions.gpt5EndpointPreference = gpt5EndpointPreference;
+    }
+    if (chatProvider === 'kimi') {
+      const trimmedBaseUrl = kimiBaseUrl.trim();
+      if (trimmedBaseUrl) {
+        providerOptions.baseUrl = trimmedBaseUrl;
+      }
+    }
+    if (chatProvider === 'openrouter') {
+      const trimmedBaseUrl = openRouterBaseUrl.trim();
+      if (trimmedBaseUrl) {
+        providerOptions.baseUrl = trimmedBaseUrl;
+      }
     }
 
     // prepare voice options if enabled
@@ -1666,6 +1699,8 @@ const App: React.FC = () => {
                     <option value="gemini">Gemini</option>
                     <option value="claude">Claude</option>
                     <option value="zai">Z.ai</option>
+                    <option value="kimi">Kimi</option>
+                    <option value="openrouter">OpenRouter</option>
                   </select>
 
                   <label htmlFor="model">Model:</label>
@@ -1698,7 +1733,47 @@ const App: React.FC = () => {
                           {m}
                         </option>
                       ))}
+                    {chatProvider === 'kimi' &&
+                      kimiModels.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    {chatProvider === 'openrouter' &&
+                      openrouterModels.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
                   </select>
+
+                  {chatProvider === 'kimi' && (
+                    <>
+                      <label htmlFor="kimiBaseUrl">Base URL (optional):</label>
+                      <input
+                        id="kimiBaseUrl"
+                        type="text"
+                        placeholder="https://api.moonshot.ai/v1"
+                        value={kimiBaseUrl}
+                        onChange={(e) => setKimiBaseUrl(e.target.value)}
+                      />
+                    </>
+                  )}
+
+                  {chatProvider === 'openrouter' && (
+                    <>
+                      <label htmlFor="openRouterBaseUrl">
+                        Base URL (optional):
+                      </label>
+                      <input
+                        id="openRouterBaseUrl"
+                        type="text"
+                        placeholder="https://openrouter.ai/api/v1"
+                        value={openRouterBaseUrl}
+                        onChange={(e) => setOpenRouterBaseUrl(e.target.value)}
+                      />
+                    </>
+                  )}
 
                   <label htmlFor="responseLength">Response Length:</label>
                   <select
@@ -1829,12 +1904,12 @@ const App: React.FC = () => {
                       id="enableDeepWikiMcp"
                       checked={enableDeepWikiMcp}
                       onChange={(e) => setEnableDeepWikiMcp(e.target.checked)}
-                      disabled={chatProvider === 'zai'}
+                      disabled={!isMcpSupportedProvider}
                       style={{ marginLeft: '8px' }}
                     />
-                    {chatProvider === 'zai' && (
+                    {!isMcpSupportedProvider && (
                       <div style={{ color: '#e01e5a', marginTop: '4px' }}>
-                        Z.aiはMCP非対応のため使用できません。
+                        現在のプロバイダーはMCP非対応のため使用できません。
                       </div>
                     )}
                   </div>
