@@ -1,5 +1,12 @@
 # @aituber-onair/voice
 
+## 0.8.0
+
+### Minor Changes
+
+- Remove the NijiVoice engine and related public types/exports (including the
+  `nijivoice` engine type and `voiceActor` parameter).
+
 ## 0.7.0
 
 ### Minor Changes

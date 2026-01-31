@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## Main Features
 
 - **Multiple TTS Engine Support**  
-  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, AivisSpeech, Aivis Cloud, and more
+  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, AivisSpeech, Aivis Cloud, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
 - **Emotion-Aware Synthesis**  
@@ -155,17 +155,6 @@ const voiceService = new VoiceService({
   engineType: 'openai',
   speaker: 'alloy',
   apiKey: 'your-openai-api-key'
-});
-```
-
-### NijiVoice
-AI-based Japanese voice synthesis service.
-
-```typescript
-const voiceService = new VoiceService({
-  engineType: 'nijivoice',
-  speaker: 'speaker-id',
-  apiKey: 'your-nijivoice-api-key'
 });
 ```
 
@@ -288,9 +277,9 @@ const voiceService = new VoiceService({
 
 // Option 3: Specify HTML audio element
 const voiceService = new VoiceService({
-  engineType: 'nijivoice',
-  speaker: 'speaker-id',
-  apiKey: 'your-api-key',
+  engineType: 'voicevox',
+  speaker: '1',
+  voicevoxApiUrl: 'http://localhost:50021',
   audioElementId: 'my-audio-player' // ID of <audio> element
 });
 ```
@@ -326,7 +315,7 @@ const voiceService = new VoiceService({
 
 ### Engine Parameter Overrides
 
-`VoiceServiceOptions` (see [API Reference](#voiceserviceoptions)) now covers a consistent set of overrides for each engine (except NijiVoice). Below is a field-by-field summary to help you discover the right property without scanning the entire interface.
+`VoiceServiceOptions` (see [API Reference](#voiceserviceoptions)) now covers a consistent set of overrides for each engine. Below is a field-by-field summary to help you discover the right property without scanning the entire interface.
 
 ```typescript
 const voiceService = new VoiceService({
@@ -386,9 +375,6 @@ const voiceService = new VoiceService({
   - Voice overrides: `minimaxVoiceSettings` or individual `minimaxSpeed`, `minimaxVolume`, `minimaxPitch`
   - Audio overrides: `minimaxAudioSettings` or individual `minimaxSampleRate`, `minimaxBitrate`, `minimaxAudioFormat`, `minimaxAudioChannel`
 
-- **NijiVoice**
-  - Requires `apiKey` and speaker selection; no additional runtime parameters are currently exposed.
-
 ### Error Handling
 
 ```typescript
@@ -422,11 +408,6 @@ try {
 - HD quality audio output
 - Dual-region endpoints (global/china)
 - Advanced emotion synthesis
-
-### NijiVoice Features
-- Japanese-specialized voices
-- Character-based voice models
-- Emotion-rich synthesis
 
 ## Integration with AITuber OnAir Core
 

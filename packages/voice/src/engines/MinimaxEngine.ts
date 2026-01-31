@@ -426,14 +426,12 @@ export class MinimaxEngine implements VoiceEngine {
    * @param input Talk object
    * @param speaker Voice ID
    * @param apiKey MiniMax API key
-   * @param voiceActor Not used for MiniMax (for interface compatibility)
    * @returns Promise<ArrayBuffer>
    */
   async fetchAudio(
     input: Talk,
     speaker: string,
     apiKey?: string,
-    voiceActor?: any,
   ): Promise<ArrayBuffer> {
     return this.fetchAudioWithOptions(input, speaker, apiKey, true);
   }

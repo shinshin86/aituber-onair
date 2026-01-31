@@ -23,7 +23,7 @@ Currently, the primary packages available are:
   ```
 
 - [**@aituber-onair/voice**](./packages/voice/README.md)
-  An independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, AIVIS Speech, etc.). Can be used standalone or integrated with the core package for full AITuber functionality.
+  An independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, AIVIS Speech, etc.). Can be used standalone or integrated with the core package for full AITuber functionality.
   ```
   npm install @aituber-onair/voice
   ```

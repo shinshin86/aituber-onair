@@ -8,7 +8,7 @@ AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for
 
 - **`@aituber-onair/core`** - Core library for AI-driven virtual streaming applications with memory management and event-driven architecture
 - **`@aituber-onair/chat`** - Chat and LLM API integration library supporting multiple AI providers (OpenAI, Claude, Gemini) with unified interface
-- **`@aituber-onair/voice`** - Independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, NijiVoice, MiniMax, etc.)
+- **`@aituber-onair/voice`** - Independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, etc.)
 - **`@aituber-onair/manneri`** - Conversation pattern detection library that identifies repetitive dialogue and provides topic diversification prompts
 - **`@aituber-onair/bushitsu-client`** - WebSocket client library for chat functionality with React hooks support, auto-reconnection, rate limiting, and mention support
 - **`@aituber-onair/kizuna`** - Sophisticated bond system for managing user-AI character relationships with points, achievements, and emotion-based interactions

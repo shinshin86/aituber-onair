@@ -41,12 +41,6 @@ const ENGINE_DEFAULTS = {
     placeholder: 'No API key needed',
     speaker: 'f1',
   },
-  nijivoice: {
-    apiUrl: 'https://api.nijivoice.com/api/platform/v1',
-    needsApiKey: true,
-    placeholder: 'Your NijiVoice API key',
-    speaker: '56bb72e9-62f4-49d9-b57f-e86da9de7730',
-  },
   minimax: {
     apiUrl: 'https://api.minimax.io/v1/t2a_v2',
     needsApiKey: true,
@@ -1089,7 +1083,6 @@ function App() {
             <option value="aivisSpeech">AivisSpeech (Local)</option>
             <option value="aivisCloud">Aivis Cloud API</option>
             <option value="voicepeak">VOICEPEAK</option>
-            <option value="nijivoice">にじボイス</option>
             <option value="minimax">MiniMax</option>
           </select>
         </div>

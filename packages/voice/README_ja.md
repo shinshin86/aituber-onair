@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、NijiVoice、MiniMax、AivisSpeech、Aivis Cloudなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -155,17 +155,6 @@ const voiceService = new VoiceService({
   engineType: 'openai',
   speaker: 'alloy',
   apiKey: 'your-openai-api-key'
-});
-```
-
-### NijiVoice
-AIベースの日本語音声合成サービス。
-
-```typescript
-const voiceService = new VoiceService({
-  engineType: 'nijivoice',
-  speaker: 'speaker-id',
-  apiKey: 'your-nijivoice-api-key'
 });
 ```
 
@@ -288,9 +277,9 @@ const voiceService = new VoiceService({
 
 // オプション3：HTMLオーディオ要素を指定
 const voiceService = new VoiceService({
-  engineType: 'nijivoice',
-  speaker: 'speaker-id',
-  apiKey: 'your-api-key',
+  engineType: 'voicevox',
+  speaker: '1',
+  voicevoxApiUrl: 'http://localhost:50021',
   audioElementId: 'my-audio-player' // <audio>要素のID
 });
 ```
@@ -326,7 +315,7 @@ const voiceService = new VoiceService({
 
 ### エンジンごとのパラメーターについて
 
-NijiVoice を除くすべてのエンジンで、`VoiceServiceOptions` から実行時に細かいパラメーターを上書きできます。Reactデモの新しいスライダーUIはこれらのフィールドをそのまま利用しているため、コードでもUIでも同じ値を扱えます。
+`VoiceServiceOptions` から実行時に細かいパラメーターを上書きできます。Reactデモの新しいスライダーUIはこれらのフィールドをそのまま利用しているため、コードでもUIでも同じ値を扱えます。
 
 ```typescript
 const voiceService = new VoiceService({
@@ -390,9 +379,6 @@ const voiceService = new VoiceService({
   - 音声: `minimaxVoiceSettings` または `minimaxSpeed`, `minimaxVolume`, `minimaxPitch`
   - オーディオ: `minimaxAudioSettings` または `minimaxSampleRate`, `minimaxBitrate`, `minimaxAudioFormat`, `minimaxAudioChannel`
 
-- **NijiVoice**
-  - `apiKey` とスピーカー選択が必要。現時点では追加の実行時パラメーターはありません。
-
 ### エラーハンドリング
 
 ```typescript
@@ -426,11 +412,6 @@ try {
 - HD品質のオーディオ出力
 - デュアルリージョンエンドポイント（global/china）
 - 高度な感情合成
-
-### NijiVoiceの機能
-- 日本語特化型の音声
-- キャラクターベースの音声モデル
-- 感情豊かな合成
 
 ## AITuber OnAir Coreとの統合
 

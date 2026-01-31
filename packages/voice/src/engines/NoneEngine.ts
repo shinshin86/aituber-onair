@@ -1,4 +1,4 @@
-import { Talk, VoiceActor } from '../types/voice';
+import { Talk } from '../types/voice';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -11,14 +11,12 @@ export class NoneEngine implements VoiceEngine {
    * @param input script
    * @param speaker speaker ID
    * @param apiKey API key (not used)
-   * @param voiceActor voice actor information (not used)
    * @returns empty ArrayBuffer
    */
   async fetchAudio(
     input: Talk,
     speaker: string,
     apiKey?: string,
-    voiceActor?: VoiceActor,
   ): Promise<ArrayBuffer> {
     // Return empty ArrayBuffer since no voice is needed
     return new ArrayBuffer(0);

@@ -11,7 +11,6 @@ export {
 } from './AivisSpeechEngine';
 export { AivisCloudEngine } from './AivisCloudEngine';
 export { OpenAiEngine } from './OpenAiEngine';
-export { NijiVoiceEngine } from './NijiVoiceEngine';
 export {
   MinimaxEngine,
   type MinimaxModel,

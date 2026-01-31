@@ -1,4 +1,4 @@
-import { Talk, VoiceActor } from '../types/voice';
+import { Talk } from '../types/voice';
 
 /**
  * Common interface for voice engines
@@ -9,14 +9,12 @@ export interface VoiceEngine {
    * @param input script
    * @param speaker speaker ID
    * @param apiKey API key (if needed)
-   * @param voiceActor voice actor information (for NijiVoice)
    * @returns ArrayBuffer of voice data
    */
   fetchAudio(
     input: Talk,
     speaker: string,
     apiKey?: string,
-    voiceActor?: VoiceActor,
   ): Promise<ArrayBuffer>;
 
   /**

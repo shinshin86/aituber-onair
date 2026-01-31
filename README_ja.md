@@ -24,7 +24,7 @@ AIを活用したチャットやTTS、バーチャルストリーミングやそ
   ```
 
 - [**@aituber-onair/voice**](./packages/voice/README_ja.md)
-  複数のTTSエンジン（VOICEVOX、VoicePeak、OpenAI TTS、NijiVoice、MiniMax、AIVIS Speech等）をサポートする独立した音声合成ライブラリです。単体での使用も、coreパッケージとの統合によるフルAITuber機能の実現も可能です。
+  複数のTTSエンジン（VOICEVOX、VoicePeak、OpenAI TTS、MiniMax、AIVIS Speech等）をサポートする独立した音声合成ライブラリです。単体での使用も、coreパッケージとの統合によるフルAITuber機能の実現も可能です。
   ```
   npm install @aituber-onair/voice
   ```
