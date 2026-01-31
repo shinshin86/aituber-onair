@@ -10,33 +10,39 @@ import {
 import { ChatService } from '../../ChatService';
 import { GeminiChatService } from './GeminiChatService';
 import {
-  ChatServiceOptions,
+  GeminiChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
+import { resolveVisionModel } from '../../../utils';
 
 /**
  * Gemini API provider implementation
  */
-export class GeminiChatServiceProvider implements ChatServiceProvider {
+export class GeminiChatServiceProvider
+  implements ChatServiceProvider<GeminiChatServiceOptions>
+{
   /**
    * Create a chat service instance
    * @param options Service options
    * @returns GeminiChatService instance
    */
-  createChatService(options: ChatServiceOptions): ChatService {
+  createChatService(options: GeminiChatServiceOptions): ChatService {
     // Use the visionModel if provided, otherwise use the model that supports vision
-    const visionModel =
-      options.visionModel ||
-      (this.supportsVisionForModel(options.model || this.getDefaultModel())
-        ? options.model
-        : this.getDefaultModel());
+    const visionModel = resolveVisionModel({
+      model: options.model,
+      visionModel: options.visionModel,
+      defaultModel: this.getDefaultModel(),
+      defaultVisionModel: this.getDefaultModel(),
+      supportsVisionForModel: (model) => this.supportsVisionForModel(model),
+      validate: 'resolved',
+    });
 
     return new GeminiChatService(
       options.apiKey,
       options.model || this.getDefaultModel(),
       visionModel,
       options.tools || [],
-      (options as any).mcpServers || [],
+      options.mcpServers || [],
       options.responseLength,
     );
   }

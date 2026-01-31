@@ -6,35 +6,33 @@ import {
 import { ChatService } from '../../ChatService';
 import { KimiChatService } from './KimiChatService';
 import {
-  ChatServiceOptions,
+  KimiChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
+import { resolveVisionModel } from '../../../utils';
 
 /**
  * Kimi API provider implementation
  */
-export class KimiChatServiceProvider implements ChatServiceProvider {
+export class KimiChatServiceProvider
+  implements ChatServiceProvider<KimiChatServiceOptions>
+{
   /**
    * Create a chat service instance
    */
-  createChatService(options: ChatServiceOptions): ChatService {
+  createChatService(options: KimiChatServiceOptions): ChatService {
     const endpoint = this.resolveEndpoint(options);
     const model = options.model || this.getDefaultModel();
-    const visionModel =
-      options.visionModel ||
-      (this.supportsVisionForModel(model)
-        ? model
-        : this.getDefaultVisionModel());
-
-    if (
-      options.visionModel &&
-      !this.supportsVisionForModel(options.visionModel)
-    ) {
-      throw new Error(
-        `Model ${options.visionModel} does not support vision capabilities.`,
-      );
-    }
+    const visionModel = resolveVisionModel({
+      model,
+      visionModel: options.visionModel,
+      defaultModel: this.getDefaultModel(),
+      defaultVisionModel: this.getDefaultVisionModel(),
+      supportsVisionForModel: (visionModel) =>
+        this.supportsVisionForModel(visionModel),
+      validate: 'explicit',
+    });
 
     const tools: ToolDefinition[] | undefined = options.tools;
     const defaultThinking = options.thinking ?? { type: 'enabled' as const };
@@ -97,7 +95,7 @@ export class KimiChatServiceProvider implements ChatServiceProvider {
     return isKimiVisionModel(model);
   }
 
-  private resolveEndpoint(options: ChatServiceOptions): string {
+  private resolveEndpoint(options: KimiChatServiceOptions): string {
     if (options.endpoint) {
       return this.normalizeEndpoint(options.endpoint);
     }

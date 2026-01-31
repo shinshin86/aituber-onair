@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GeminiChatServiceProvider } from '../../src/services/providers/gemini/GeminiChatServiceProvider';
-import type { ChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
+import type { GeminiChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import type { ToolDefinition } from '../../src/types/toolChat';
 import type { MCPServerConfig } from '../../src/types/mcp';
 import {
@@ -74,7 +74,7 @@ describe('GeminiChatServiceProvider', () => {
 
   describe('createChatService', () => {
     it('should create GeminiChatService with default values', () => {
-      const options: ChatServiceOptions = {
+      const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
       };
 
@@ -83,7 +83,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         [],
         [],
         undefined,
@@ -91,7 +91,7 @@ describe('GeminiChatServiceProvider', () => {
     });
 
     it('should create GeminiChatService with custom model', () => {
-      const options: ChatServiceOptions = {
+      const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GEMINI_2_0_FLASH,
       };
@@ -109,7 +109,7 @@ describe('GeminiChatServiceProvider', () => {
     });
 
     it('should use custom vision model when provided', () => {
-      const options: ChatServiceOptions = {
+      const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
         model: 'gemini-pro',
         visionModel: MODEL_GEMINI_2_0_FLASH,
@@ -128,7 +128,7 @@ describe('GeminiChatServiceProvider', () => {
     });
 
     it('should use default model for vision when model does not support vision', () => {
-      const options: ChatServiceOptions = {
+      const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
         model: 'gemini-pro',
       };
@@ -164,7 +164,7 @@ describe('GeminiChatServiceProvider', () => {
         },
       ];
 
-      const options: ChatServiceOptions = {
+      const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
         tools,
       };
@@ -174,7 +174,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         tools,
         [],
         undefined,
@@ -182,7 +182,7 @@ describe('GeminiChatServiceProvider', () => {
     });
 
     it('should handle undefined tools gracefully', () => {
-      const options: ChatServiceOptions = {
+      const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
         tools: undefined,
       };
@@ -192,7 +192,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         [],
         [],
         undefined,
@@ -216,7 +216,7 @@ describe('GeminiChatServiceProvider', () => {
         },
       ];
 
-      const options: ChatServiceOptions = {
+      const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GEMINI_2_0_FLASH,
         visionModel: MODEL_GEMINI_2_0_FLASH,
@@ -236,7 +236,7 @@ describe('GeminiChatServiceProvider', () => {
     });
 
     it('should handle model as vision model when it supports vision', () => {
-      const options: ChatServiceOptions = {
+      const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GEMINI_2_0_FLASH,
       };
@@ -254,7 +254,7 @@ describe('GeminiChatServiceProvider', () => {
     });
 
     it('should pass responseLength when provided', () => {
-      const options: ChatServiceOptions = {
+      const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
         responseLength: 'long',
       } as any;
@@ -264,7 +264,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         [],
         [],
         'long',
@@ -295,7 +295,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GEMINI_2_0_FLASH_LITE,
-        undefined,
+        MODEL_GEMINI_2_0_FLASH_LITE,
         [],
         mcpServers,
         undefined,

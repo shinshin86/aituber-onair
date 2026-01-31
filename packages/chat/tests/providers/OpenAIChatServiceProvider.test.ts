@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, MockedClass } from 'vitest';
 import { OpenAIChatServiceProvider } from '../../src/services/providers/openai/OpenAIChatServiceProvider';
-import type { ChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
+import type { OpenAIChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import type { ToolDefinition } from '../../src/types/toolChat';
 import {
   MODEL_GPT_5_NANO,
@@ -86,7 +86,7 @@ describe('OpenAIChatServiceProvider', () => {
 
   describe('createChatService', () => {
     it('should create OpenAIChatService with default values', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
       };
 
@@ -95,7 +95,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
@@ -107,7 +107,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should create OpenAIChatService with custom model', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GPT_4O,
       };
@@ -129,7 +129,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should default reasoning effort to none for GPT-5.1 models', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GPT_5_1,
       };
@@ -151,7 +151,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should fallback reasoning effort to default when none is not supported', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GPT_5,
         reasoning_effort: 'none',
@@ -174,7 +174,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should map minimal reasoning to none for GPT-5.1 models', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GPT_5_1,
         reasoning_effort: 'minimal',
@@ -197,7 +197,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should use custom vision model when provided', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: 'gpt-3.5-turbo',
         visionModel: MODEL_GPT_5_NANO,
@@ -220,7 +220,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should use default model for vision when model does not support vision', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: 'gpt-3.5-turbo',
       };
@@ -255,7 +255,7 @@ describe('OpenAIChatServiceProvider', () => {
         },
       ];
 
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         tools,
       };
@@ -265,7 +265,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         tools,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
@@ -277,7 +277,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should use custom endpoint when provided', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         endpoint: 'https://custom.api.endpoint',
       };
@@ -287,7 +287,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         'https://custom.api.endpoint',
         [],
@@ -299,7 +299,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should use Responses API when MCP servers are configured regardless of model', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         mcpServers: [
           {
@@ -315,7 +315,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         ENDPOINT_OPENAI_RESPONSES_API, // MCP requires Responses API regardless of model
         options.mcpServers,
@@ -328,7 +328,7 @@ describe('OpenAIChatServiceProvider', () => {
 
     it('should prioritize custom endpoint over MCP-based endpoint selection', () => {
       const customEndpoint = 'https://custom.endpoint';
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         endpoint: customEndpoint,
         mcpServers: [
@@ -345,7 +345,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         customEndpoint,
         options.mcpServers,
@@ -370,7 +370,7 @@ describe('OpenAIChatServiceProvider', () => {
         },
       ];
 
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GPT_4O,
         visionModel: MODEL_GPT_4O_MINI,
@@ -402,7 +402,7 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should pass responseLength when provided', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         responseLength: 'medium',
       } as any;
@@ -412,7 +412,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         MODEL_GPT_5_NANO,
-        undefined,
+        MODEL_GPT_5_NANO,
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
@@ -423,7 +423,7 @@ describe('OpenAIChatServiceProvider', () => {
       );
     });
     it('should pass GPT-5 specific parameters correctly', () => {
-      const options: ChatServiceOptions = {
+      const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GPT_5,
         verbosity: 'high',
@@ -454,7 +454,7 @@ describe('OpenAIChatServiceProvider', () => {
         // Clear previous calls
         vi.clearAllMocks();
 
-        const options: ChatServiceOptions = {
+        const options: OpenAIChatServiceOptions = {
           apiKey: 'test-api-key',
           model,
         };

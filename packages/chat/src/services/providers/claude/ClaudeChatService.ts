@@ -19,6 +19,7 @@ import {
   getMaxTokensForResponseLength,
 } from '../../../constants/chat';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+import { processChatWithOptionalTools } from '../../../utils';
 
 export interface ClaudeToolResultBlock {
   type: 'tool_result';
@@ -145,30 +146,17 @@ export class ClaudeChatService implements ChatService {
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
-    // not use tools or MCP servers
-    if (this.tools.length === 0 && this.mcpServers.length === 0) {
-      const res = await this.callClaude(messages, this.model, true);
-      const full = await this.parsePureStream(res, onPartialResponse);
-      await onCompleteResponse(full);
-      return;
-    }
-
-    // use tools or MCP servers
-    const result = await this.chatOnce(messages, true, onPartialResponse);
-
-    if (result.stop_reason === 'end') {
-      const full = result.blocks
-        .filter((b) => b.type === 'text')
-        .map((b) => b.text)
-        .join('');
-      await onCompleteResponse(full);
-      return;
-    }
-
-    /* if tool_use, throw error */
-    throw new Error(
-      'processChat received tool_calls. ChatProcessor must use chatOnce() loop when tools are enabled.',
-    );
+    await processChatWithOptionalTools({
+      hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
+      runWithoutTools: async () => {
+        const res = await this.callClaude(messages, this.model, true);
+        return this.parsePureStream(res, onPartialResponse);
+      },
+      runWithTools: () => this.chatOnce(messages, true, onPartialResponse),
+      onCompleteResponse,
+      toolErrorMessage:
+        'processChat received tool_calls. ChatProcessor must use chatOnce() loop when tools are enabled.',
+    });
   }
 
   /**
@@ -182,28 +170,17 @@ export class ClaudeChatService implements ChatService {
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
-    /* same branch logic for vision */
-    if (this.tools.length === 0 && this.mcpServers.length === 0) {
-      const res = await this.callClaude(messages, this.visionModel, true);
-      const full = await this.parsePureStream(res, onPartialResponse);
-      await onCompleteResponse(full);
-      return;
-    }
-
-    const result = await this.visionChatOnce(messages); // non-stream (tools only)
-
-    if (result.stop_reason === 'end') {
-      const full = result.blocks
-        .filter((b) => b.type === 'text')
-        .map((b) => b.text)
-        .join('');
-      await onCompleteResponse(full);
-      return;
-    }
-
-    throw new Error(
-      'processVisionChat received tool_calls. ChatProcessor must use chatOnce() loop when tools are enabled.',
-    );
+    await processChatWithOptionalTools({
+      hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
+      runWithoutTools: async () => {
+        const res = await this.callClaude(messages, this.visionModel, true);
+        return this.parsePureStream(res, onPartialResponse);
+      },
+      runWithTools: () => this.visionChatOnce(messages),
+      onCompleteResponse,
+      toolErrorMessage:
+        'processVisionChat received tool_calls. ChatProcessor must use chatOnce() loop when tools are enabled.',
+    });
   }
 
   /**

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ZAIChatServiceProvider } from '../../src/services/providers/zai/ZAIChatServiceProvider';
-import type { ChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
+import type { ZAIChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   MODEL_GLM_4_7,
@@ -68,7 +68,7 @@ describe('ZAIChatServiceProvider', () => {
 
   describe('createChatService', () => {
     it('should create ZAIChatService with default values', () => {
-      const options: ChatServiceOptions = {
+      const options: ZAIChatServiceOptions = {
         apiKey: 'test-api-key',
       };
 
@@ -87,7 +87,7 @@ describe('ZAIChatServiceProvider', () => {
     });
 
     it('should use vision model when main model supports vision', () => {
-      const options: ChatServiceOptions = {
+      const options: ZAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GLM_4_6V_FLASH,
       };
@@ -107,7 +107,7 @@ describe('ZAIChatServiceProvider', () => {
     });
 
     it('should allow overriding vision model when supported', () => {
-      const options: ChatServiceOptions = {
+      const options: ZAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GLM_4_7,
         visionModel: MODEL_GLM_4_6V_FLASH,

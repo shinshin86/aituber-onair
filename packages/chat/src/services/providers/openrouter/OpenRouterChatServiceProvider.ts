@@ -25,43 +25,43 @@ import {
 import { ChatService } from '../../ChatService';
 import { OpenRouterChatService } from './OpenRouterChatService';
 import {
-  ChatServiceOptions,
+  OpenRouterChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
+import { resolveVisionModel } from '../../../utils';
 
 /**
  * OpenRouter API provider implementation
  * Provides access to multiple AI models through OpenRouter's unified API
  */
-export class OpenRouterChatServiceProvider implements ChatServiceProvider {
+export class OpenRouterChatServiceProvider
+  implements ChatServiceProvider<OpenRouterChatServiceOptions>
+{
   /**
    * Create a chat service instance
    * @param options Service options
    * @returns OpenRouterChatService instance
    */
-  createChatService(options: ChatServiceOptions): ChatService {
+  createChatService(options: OpenRouterChatServiceOptions): ChatService {
     // For OpenRouter, use the main model as vision model placeholder
     // Only validate if visionModel is explicitly provided
-    const visionModel =
-      options.visionModel || options.model || this.getDefaultModel();
-
-    // If visionModel is explicitly provided and different from main model, validate it
-    if (
-      options.visionModel &&
-      !this.supportsVisionForModel(options.visionModel)
-    ) {
-      throw new Error(
-        `Model ${options.visionModel} does not support vision capabilities.`,
-      );
-    }
+    const visionModel = resolveVisionModel({
+      model: options.model,
+      visionModel: options.visionModel,
+      defaultModel: this.getDefaultModel(),
+      defaultVisionModel: options.model || this.getDefaultModel(),
+      supportsVisionForModel: (visionModel) =>
+        this.supportsVisionForModel(visionModel),
+      validate: 'explicit',
+    });
 
     // Tools definition
     const tools: ToolDefinition[] | undefined = options.tools;
 
     // Extract OpenRouter-specific options
-    const appName = (options as any).appName;
-    const appUrl = (options as any).appUrl;
+    const appName = options.appName;
+    const appUrl = options.appUrl;
 
     return new OpenRouterChatService(
       options.apiKey,
@@ -74,7 +74,7 @@ export class OpenRouterChatServiceProvider implements ChatServiceProvider {
       appUrl,
       options.reasoning_effort,
       options.includeReasoning,
-      (options as any).reasoningMaxTokens,
+      options.reasoningMaxTokens,
     );
   }
 

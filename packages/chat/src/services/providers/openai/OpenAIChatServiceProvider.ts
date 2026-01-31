@@ -23,37 +23,41 @@ import { GPT5_PRESETS } from '../../../constants/chat';
 import { ChatService } from '../../ChatService';
 import { OpenAIChatService } from './OpenAIChatService';
 import {
-  ChatServiceOptions,
+  OpenAIChatServiceOptions,
   ChatServiceProvider,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
+import { resolveVisionModel } from '../../../utils';
 
 /**
  * OpenAI API provider implementation
  */
-export class OpenAIChatServiceProvider implements ChatServiceProvider {
+export class OpenAIChatServiceProvider
+  implements ChatServiceProvider<OpenAIChatServiceOptions>
+{
   /**
    * Create a chat service instance
    * @param options Service options
    * @returns OpenAIChatService instance
    */
-  createChatService(options: ChatServiceOptions): ChatService {
+  createChatService(options: OpenAIChatServiceOptions): ChatService {
     // Apply GPT-5 optimizations if needed
     const optimizedOptions = this.optimizeGPT5Options(options);
     // Use the visionModel if provided, otherwise use the model that supports vision
-    const visionModel =
-      optimizedOptions.visionModel ||
-      (this.supportsVisionForModel(
-        optimizedOptions.model || this.getDefaultModel(),
-      )
-        ? optimizedOptions.model
-        : this.getDefaultModel());
+    const visionModel = resolveVisionModel({
+      model: optimizedOptions.model,
+      visionModel: optimizedOptions.visionModel,
+      defaultModel: this.getDefaultModel(),
+      defaultVisionModel: this.getDefaultModel(),
+      supportsVisionForModel: (model) => this.supportsVisionForModel(model),
+      validate: 'resolved',
+    });
 
     // tools definition
     const tools: ToolDefinition[] | undefined = optimizedOptions.tools;
 
     // Determine endpoint based on MCP servers, GPT-5 model, and user preference
-    const mcpServers = (optimizedOptions as any).mcpServers ?? [];
+    const mcpServers = optimizedOptions.mcpServers ?? [];
     const modelName = optimizedOptions.model || this.getDefaultModel();
 
     // Determine endpoint preference
@@ -148,7 +152,9 @@ export class OpenAIChatServiceProvider implements ChatServiceProvider {
    * @param options Original chat service options
    * @returns Optimized options for GPT-5 usage
    */
-  private optimizeGPT5Options(options: ChatServiceOptions): ChatServiceOptions {
+  private optimizeGPT5Options(
+    options: OpenAIChatServiceOptions,
+  ): OpenAIChatServiceOptions {
     const modelName = options.model || this.getDefaultModel();
 
     // Skip optimization for non-GPT-5 models

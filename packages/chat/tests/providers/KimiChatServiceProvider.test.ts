@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { KimiChatServiceProvider } from '../../src/services/providers/kimi/KimiChatServiceProvider';
-import type { ChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
+import type { KimiChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   MODEL_KIMI_K2_5,
@@ -54,7 +54,7 @@ describe('KimiChatServiceProvider', () => {
 
   describe('createChatService', () => {
     it('should create KimiChatService with default values', () => {
-      const options: ChatServiceOptions = {
+      const options: KimiChatServiceOptions = {
         apiKey: 'test-api-key',
       };
 
@@ -73,7 +73,7 @@ describe('KimiChatServiceProvider', () => {
     });
 
     it('should disable thinking when tools are provided', () => {
-      const options: ChatServiceOptions = {
+      const options: KimiChatServiceOptions = {
         apiKey: 'test-api-key',
         tools: [
           {
@@ -98,7 +98,7 @@ describe('KimiChatServiceProvider', () => {
     });
 
     it('should resolve baseUrl to chat completions endpoint', () => {
-      const options: ChatServiceOptions = {
+      const options: KimiChatServiceOptions = {
         apiKey: 'test-api-key',
         baseUrl: 'http://localhost:8000/v1',
       };
