@@ -350,7 +350,6 @@ const App: React.FC = () => {
     aivisSpeech: '',
     aivisCloud: 'a59cb814-0083-4369-8542-f51a29e72af7',
     voicepeak: 'f1',
-    nijivoice: '',
     minimax: 'male-qn-qingse',
   });
   const [availableSpeakers, setAvailableSpeakers] = useState<
@@ -416,27 +415,6 @@ const App: React.FC = () => {
           }
           break;
         }
-        case 'nijivoice': {
-          const apiKey = voiceApiKeys.nijivoice;
-          if (apiKey) {
-            const response = await fetch(
-              'https://api.nijivoice.com/api/platform/v1/voice-actors',
-              {
-                headers: {
-                  'x-api-key': apiKey,
-                },
-              },
-            );
-            if (response.ok) {
-              const data = await response.json();
-              setAvailableSpeakers((prev) => ({
-                ...prev,
-                nijivoice: data.voiceActors || [],
-              }));
-            }
-          }
-          break;
-        }
       }
     } catch (error) {
       console.error(`Failed to fetch speakers for ${engine}:`, error);
@@ -448,9 +426,7 @@ const App: React.FC = () => {
    */
   useEffect(() => {
     if (selectedVoiceEngine !== 'none') {
-      if (
-        ['voicevox', 'aivisSpeech', 'nijivoice'].includes(selectedVoiceEngine)
-      ) {
+      if (['voicevox', 'aivisSpeech'].includes(selectedVoiceEngine)) {
         fetchSpeakers(selectedVoiceEngine);
       }
     }
@@ -3582,20 +3558,6 @@ const App: React.FC = () => {
                               {speaker.name}
                             </option>
                           ))}
-
-                        {/* NijiVoice */}
-                        {selectedVoiceEngine === 'nijivoice' &&
-                        availableSpeakers.nijivoice
-                          ? availableSpeakers.nijivoice.map((actor: any) => (
-                              <option key={actor.id} value={actor.id}>
-                                {actor.name}
-                              </option>
-                            ))
-                          : selectedVoiceEngine === 'nijivoice' && (
-                              <option value="">
-                                API Keyを入力後、自動取得されます
-                              </option>
-                            )}
 
                         {/* MiniMax */}
                         {selectedVoiceEngine === 'minimax' &&
