@@ -172,7 +172,6 @@ export {
   VoicePeakEngine,
   AivisSpeechEngine,
   OpenAiEngine,
-  NijiVoiceEngine,
   MinimaxEngine,
   // Types
   type MinimaxModel,
@@ -191,7 +190,6 @@ export {
   type Screenplay as VoiceScreenplay,
   type ChatScreenplay,
   type SpeakOptions,
-  type VoiceActor,
   // Utils
   textToScreenplay,
   textsToScreenplay,
@@ -203,7 +201,6 @@ export {
   VOICE_VOX_API_URL,
   VOICEPEAK_API_URL,
   AIVIS_SPEECH_API_URL,
-  NIJI_VOICE_API_URL,
   OPENAI_TTS_API_URL,
   MINIMAX_GLOBAL_API_URL,
   MINIMAX_CHINA_API_URL,
