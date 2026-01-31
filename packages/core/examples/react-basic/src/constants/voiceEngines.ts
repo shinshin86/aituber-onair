@@ -8,7 +8,6 @@ export type VoiceEngineType =
   | 'aivisSpeech'
   | 'aivisCloud'
   | 'voicepeak'
-  | 'nijivoice'
   | 'minimax'
   | 'none';
 
@@ -62,11 +61,6 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       apiUrl: VOICEPEAK_API_ENDPOINT,
       needsApiKey: false,
       placeholder: 'API key not needed',
-    },
-    nijivoice: {
-      name: 'にじボイス',
-      needsApiKey: true,
-      placeholder: 'NijiVoice API key',
     },
     minimax: {
       name: 'MiniMax',

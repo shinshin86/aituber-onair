@@ -174,24 +174,18 @@ The application supports 7 different Text-to-Speech engines:
 - 6 built-in speakers
 - Natural Japanese voices
 
-#### 6. **にじボイス (NijiVoice)**
-- Commercial Japanese TTS
-- Requires API key
-- Anime/game character voices
-- Dynamic voice actor fetching
-
-#### 7. **VOICEVOX**
+#### 6. **VOICEVOX**
 - Local Japanese TTS engine
 - No API key required
 - Adjustable speed/pitch/intonation/volume and silence lengths
 - Supports sampling rate, mono/stereo, and query flags (katakana English / interrogative upspeak)
 
-#### 8. **AivisSpeech**
+#### 7. **AivisSpeech**
 - Local TTS engine extending the VOICEVOX-compatible API
 - Adds dedicated controls for intonation intensity and tempo dynamics
 - Supports silence duration tuning, selectable sampling rates, and mono/stereo output
 
-#### 9. **MiniMax**
+#### 8. **MiniMax**
 - Chinese TTS service
 - Requires API key and Group ID
 - Multiple voice options

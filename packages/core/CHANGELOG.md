@@ -1,5 +1,17 @@
 # @aituber-onair/core
 
+## 0.22.0
+
+### Minor Changes
+
+- Remove NijiVoice exports from the core entry point and drop related docs and
+  React basic example references.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aituber-onair/voice@0.8.0
+
 ## 0.21.0
 
 ### Minor Changes

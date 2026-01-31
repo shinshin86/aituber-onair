@@ -66,7 +66,7 @@ pnpm install @aituber-onair/core
 - **Conversation Context Management & Memory**  
   Maintains long-running conversation context via short-, mid-, and long-term memory systems.
 - **Text-to-Speech Conversion**  
-  Compatible with multiple speech engines (VOICEVOX, VoicePeak, NijiVoice, AivisSpeech, Aivis Cloud, OpenAI TTS).
+  Compatible with multiple speech engines (VOICEVOX, VoicePeak, AivisSpeech, Aivis Cloud, OpenAI TTS).
 - **Emotion Extraction & Processing**  
   Extracts emotion from AI responses and utilizes it for speech synthesis or avatar expressions.
 - **Event-Driven Architecture**  
@@ -121,7 +121,7 @@ const options: AITuberOnAirCoreOptions = {
   voiceOptions: {
     engineType: 'voicevox', // Speech engine type
     speaker: '1',           // Speaker ID
-    apiKey: 'ENGINE_SPECIFIC_API_KEY', // If required (e.g., NijiVoice, MiniMax)
+    apiKey: 'ENGINE_SPECIFIC_API_KEY', // If required (e.g., OpenAI, MiniMax)
     groupId: 'YOUR_GROUP_ID',          // If using MiniMax
     endpoint: 'global',                // If using MiniMax: 'global' or 'china'
     onComplete: () => console.log('Voice playback completed'),
@@ -985,7 +985,7 @@ AITuberOnAirCore (Integration Layer)
     │     └── Summarizer (Summarization)
     └── VoiceService (Speech processing)
           └── VoiceEngineAdapter (Speech Engine Interface)
-                └── Various Speech Engines (VOICEVOX, NijiVoice, etc.)
+                └── Various Speech Engines (VOICEVOX, OpenAI, etc.)
 ```
 
 ### Directory Structure
@@ -1214,7 +1214,6 @@ Possible use cases for `chatLogUpdated` include:
 
 - **VOICEVOX**: High-quality Japanese speech synthesis engine.  
 - **VoicePeak**: Speech synthesis engine with rich emotional expression.  
-- **NijiVoice**: AI-based speech synthesis service (requires an API key).  
 - **AivisSpeech**: Speech synthesis using AI technology.  
 - **Aivis Cloud**: High-quality Japanese text-to-speech service with SSML support, emotional intensity control, and multiple output formats (WAV, FLAC, MP3, AAC, Opus).
 - **OpenAI TTS**: Text-to-speech API from OpenAI.
@@ -1226,9 +1225,9 @@ You can dynamically switch the speech engine via `updateVoiceService`:
 ```typescript
 // Example of switching speech engines
 aituber.updateVoiceService({
-  engineType: 'nijivoice',
-  speaker: 'some-speaker-id',
-  apiKey: 'YOUR_NIJIVOICE_API_KEY'
+  engineType: 'openai',
+  speaker: 'alloy',
+  apiKey: 'YOUR_OPENAI_API_KEY'
 });
 ```
 

@@ -61,7 +61,7 @@ pnpm install @aituber-onair/core
 - **テキスト入力からのAI応答生成**：ユーザーのテキスト入力に対して、OpenAI GPTモデルを使用して自然な応答を生成
 - **画像（Vision）入力からのAI応答生成**：配信画面のキャプチャなどの画像に対して、AIが認識した内容に基づく応答を生成
 - **会話の文脈維持と記憶機能**：短期・中期・長期の記憶システムによる長時間の会話の文脈維持
-- **テキストから音声への変換**：複数の音声エンジン（VOICEVOX、VoicePeak、NijiVoice、AivisSpeech、Aivis Cloud、OpenAI TTS）に対応
+- **テキストから音声への変換**：複数の音声エンジン（VOICEVOX、VoicePeak、AivisSpeech、Aivis Cloud、OpenAI TTS）に対応
 - **感情表現の抽出と処理**：AIの応答から感情表現を抽出し、音声合成やアバター表現に活用
 - **イベント駆動型のアーキテクチャ**：処理の各段階でイベントを発行し、外部との連携を容易に
 - **カスタマイズ可能なプロンプト**：Vision処理や会話要約のためのプロンプトをカスタマイズ可能
@@ -105,7 +105,7 @@ const options: AITuberOnAirCoreOptions = {
   voiceOptions: {
     engineType: 'voicevox', // 音声エンジンタイプ
     speaker: '1', // 話者ID
-    apiKey: 'ENGINE_SPECIFIC_API_KEY', // 必要に応じて（NijiVoiceなど）
+    apiKey: 'ENGINE_SPECIFIC_API_KEY', // 必要に応じて（OpenAIなど）
     onComplete: () => console.log('音声再生が完了しました'),
     // カスタムAPIエンドポイントURL（オプション）
     voicevoxApiUrl: 'http://custom-voicevox-server:50021',
@@ -974,7 +974,7 @@ AITuberOnAirCore (統合層)
     │     └── Summarizer (要約)
     └── VoiceService (音声処理)
           └── VoiceEngineAdapter (音声エンジン接続)
-                └── 各種音声エンジン (VOICEVOX, NijiVoice, etc.)
+                └── 各種音声エンジン (VOICEVOX, OpenAI, etc.)
 ```
 
 ### ディレクトリ構造
@@ -1215,7 +1215,6 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 
 - **VOICEVOX**: 日本語の高品質な音声合成エンジン
 - **VoicePeak**: 感情表現が豊かな音声合成エンジン
-- **NijiVoice**: AI音声合成サービス（APIキーが必要）
 - **AivisSpeech**: AIを活用した音声合成
 - **Aivis Cloud**: SSMLサポート、感情強度制御、複数出力形式（WAV、FLAC、MP3、AAC、Opus）対応の高品質日本語音声合成サービス
 - **OpenAI TTS**: OpenAIのText-to-Speech API
@@ -1227,9 +1226,9 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 ```typescript
 // 音声エンジンを切り替える例
 aituber.updateVoiceService({
-  engineType: 'nijivoice',
-  speaker: 'some-speaker-id',
-  apiKey: 'YOUR_NIJIVOICE_API_KEY'
+  engineType: 'openai',
+  speaker: 'alloy',
+  apiKey: 'YOUR_OPENAI_API_KEY'
 });
 ```
 
