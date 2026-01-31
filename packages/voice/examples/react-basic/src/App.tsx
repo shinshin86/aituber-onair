@@ -2203,9 +2203,6 @@ function App() {
                 support
               </li>
               <li>
-                <strong>にじボイス</strong> - Character voices
-              </li>
-              <li>
                 <strong>MiniMax</strong> - Multilingual with emotions
               </li>
             </ul>
