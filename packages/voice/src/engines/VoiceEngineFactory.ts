@@ -2,7 +2,6 @@ import { VoiceEngineType } from '../types/voiceEngine';
 import { AivisCloudEngine } from './AivisCloudEngine';
 import { AivisSpeechEngine } from './AivisSpeechEngine';
 import { MinimaxEngine } from './MinimaxEngine';
-import { NijiVoiceEngine } from './NijiVoiceEngine';
 import { NoneEngine } from './NoneEngine';
 import { OpenAiEngine } from './OpenAiEngine';
 import { VoiceEngine } from './VoiceEngine';
@@ -31,8 +30,6 @@ export class VoiceEngineFactory {
         return new AivisCloudEngine();
       case 'openai':
         return new OpenAiEngine();
-      case 'nijivoice':
-        return new NijiVoiceEngine();
       case 'minimax':
         return new MinimaxEngine();
       case 'none':

@@ -24,7 +24,7 @@ npm run dev
 
 ### Features
 
-- **Multiple TTS Engines**: OpenAI TTS, VOICEVOX, AIVIS Speech, VoicePeak, NijiVoice, MiniMax
+- **Multiple TTS Engines**: OpenAI TTS, VOICEVOX, AIVIS Speech, VoicePeak, MiniMax
 - **AivisSpeech Controls**: Tune speed, pitch, intonation strength, tempo dynamics, and silence lengths with AivisSpeech独自拡張
 - **VOICEVOX Query Controls**: Adjust talk speed, pitch, intonation, silence lengths, sampling rate, stereo, and query flags directly from the UI
 - **MiniMax Parameter Controls**: Adjust speed, volume, pitch, sample rate, bitrate, and format directly from the settings UI
@@ -51,7 +51,6 @@ npm run dev
 
 3. **API Keys:**
    - **OpenAI**: Get from [platform.openai.com](https://platform.openai.com/)
-   - **NijiVoice**: Get from NijiVoice service
    - **MiniMax**: Register at MiniMax platform (requires API key + Group ID)
 
 ## Key Concepts

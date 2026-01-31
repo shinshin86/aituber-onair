@@ -49,7 +49,6 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 - **VOICEVOX** - Free Japanese voices (requires local server)
 - **AIVIS Speech** - Emotion-aware synthesis
 - **VoicePeak** - Professional voice synthesis
-- **NijiVoice** - Anime/VTuber character voices
 - **MiniMax** - Advanced Chinese/Japanese TTS
 
 ### Dynamic Configuration

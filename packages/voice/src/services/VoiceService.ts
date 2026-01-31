@@ -43,7 +43,7 @@ export interface MinimaxAudioSettingsOptions {
 export interface VoiceServiceOptions {
   /** Speaker ID */
   speaker: string;
-  /** Engine type (voicevox, voicepeak, openai, nijivoice, aivisSpeech, aivisCloud, minimax, none) */
+  /** Engine type (voicevox, voicepeak, openai, aivisSpeech, aivisCloud, minimax, none) */
   engineType: VoiceEngineType;
   /** API key (if needed) */
   apiKey?: string;
