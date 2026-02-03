@@ -345,27 +345,13 @@ export class AITuberOnAirCore extends EventEmitter {
    * @returns Success or failure of processing
    */
   async processChat(text: string): Promise<boolean> {
-    if (this.isProcessing) {
-      this.log('Already processing another chat');
-      return false;
-    }
-
-    try {
-      this.isProcessing = true;
-      this.emit(AITuberOnAirCoreEvent.PROCESSING_START, { text });
-
-      // Process text chat
-      await this.chatProcessor.processTextChat(text);
-
-      return true;
-    } catch (error) {
-      this.log('Error in processChat:', error);
-      this.emit(AITuberOnAirCoreEvent.ERROR, error);
-      return false;
-    } finally {
-      this.isProcessing = false;
-      this.emit(AITuberOnAirCoreEvent.PROCESSING_END);
-    }
+    return this.withProcessing(
+      { text },
+      async () => {
+        await this.chatProcessor.processTextChat(text);
+      },
+      'Error in processChat:',
+    );
   }
 
   /**
@@ -378,6 +364,26 @@ export class AITuberOnAirCore extends EventEmitter {
     imageDataUrl: string,
     visionPrompt?: string,
   ): Promise<boolean> {
+    return this.withProcessing(
+      { type: 'vision' },
+      async () => {
+        // Update vision prompt if provided
+        if (visionPrompt) {
+          this.chatProcessor.updateOptions({ visionPrompt });
+        }
+
+        // Process image in ChatProcessor
+        await this.chatProcessor.processVisionChat(imageDataUrl);
+      },
+      'Error in processVisionChat:',
+    );
+  }
+
+  private async withProcessing(
+    startPayload: Record<string, unknown>,
+    action: () => Promise<void>,
+    errorMessage: string,
+  ): Promise<boolean> {
     if (this.isProcessing) {
       this.log('Already processing another chat');
       return false;
@@ -385,19 +391,11 @@ export class AITuberOnAirCore extends EventEmitter {
 
     try {
       this.isProcessing = true;
-      this.emit(AITuberOnAirCoreEvent.PROCESSING_START, { type: 'vision' });
-
-      // Update vision prompt if provided
-      if (visionPrompt) {
-        this.chatProcessor.updateOptions({ visionPrompt });
-      }
-
-      // Process image in ChatProcessor
-      await this.chatProcessor.processVisionChat(imageDataUrl);
-
+      this.emit(AITuberOnAirCoreEvent.PROCESSING_START, startPayload);
+      await action();
       return true;
     } catch (error) {
-      this.log('Error in processVisionChat:', error);
+      this.log(errorMessage, error);
       this.emit(AITuberOnAirCoreEvent.ERROR, error);
       return false;
     } finally {
