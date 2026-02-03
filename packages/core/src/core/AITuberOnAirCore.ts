@@ -194,74 +194,11 @@ export class AITuberOnAirCore extends EventEmitter {
       tools: this.toolExecutor.listDefinitions(),
     };
 
-    let chatServiceOptions: ChatServiceOptionsByProvider[ChatProviderName];
-
-    switch (providerName) {
-      case 'openai': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'openai'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as OpenAIChatServiceOptions;
-        break;
-      }
-      case 'openrouter': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'openrouter'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as OpenRouterChatServiceOptions;
-        break;
-      }
-      case 'gemini': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'gemini'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as GeminiChatServiceOptions;
-        break;
-      }
-      case 'claude': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'claude'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as ClaudeChatServiceOptions;
-        break;
-      }
-      case 'zai': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'zai'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as ZAIChatServiceOptions;
-        break;
-      }
-      case 'kimi': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'kimi'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as KimiChatServiceOptions;
-        break;
-      }
-      default:
-        chatServiceOptions =
-          baseOptions as ChatServiceOptionsByProvider['openai'];
-        break;
-    }
+    const chatServiceOptions = this.buildChatServiceOptions(
+      providerName,
+      baseOptions,
+      options.providerOptions,
+    );
 
     // Add MCP servers for providers that support remote MCP
     if (
@@ -337,6 +274,69 @@ export class AITuberOnAirCore extends EventEmitter {
     }
 
     this.log('AITuberOnAirCore initialized');
+  }
+
+  private buildChatServiceOptions(
+    providerName: ChatProviderName,
+    baseOptions: {
+      apiKey: string;
+      model?: string;
+      tools: ToolDefinition[];
+    },
+    providerOptions?: AITuberOnAirCoreOptions['providerOptions'],
+  ): ChatServiceOptionsByProvider[ChatProviderName] {
+    switch (providerName) {
+      case 'openai': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as
+            | ProviderOptionsByName<'openai'>
+            | undefined),
+        } as OpenAIChatServiceOptions;
+      }
+      case 'openrouter': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as
+            | ProviderOptionsByName<'openrouter'>
+            | undefined),
+        } as OpenRouterChatServiceOptions;
+      }
+      case 'gemini': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as
+            | ProviderOptionsByName<'gemini'>
+            | undefined),
+        } as GeminiChatServiceOptions;
+      }
+      case 'claude': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as
+            | ProviderOptionsByName<'claude'>
+            | undefined),
+        } as ClaudeChatServiceOptions;
+      }
+      case 'zai': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as
+            | ProviderOptionsByName<'zai'>
+            | undefined),
+        } as ZAIChatServiceOptions;
+      }
+      case 'kimi': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as
+            | ProviderOptionsByName<'kimi'>
+            | undefined),
+        } as KimiChatServiceOptions;
+      }
+      default:
+        return baseOptions as ChatServiceOptionsByProvider['openai'];
+    }
   }
 
   /**
