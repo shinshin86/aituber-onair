@@ -9,6 +9,7 @@ import {
   ToolUseBlock,
   ToolResultBlock,
   ToolChatCompletion,
+  ToolChatBlock,
   DEFAULT_VISION_PROMPT,
   textsToScreenplay,
 } from '@aituber-onair/chat';
@@ -362,6 +363,106 @@ export class ChatProcessor extends EventEmitter {
     return this.getMaxTokensForChat();
   }
 
+  private isClaudeProvider(): boolean {
+    return (this.chatService as any).provider === 'claude';
+  }
+
+  private getToolUseBlocks(blocks: ToolChatBlock[]): ToolUseBlock[] {
+    return blocks.filter((b): b is ToolUseBlock => b.type === 'tool_use');
+  }
+
+  private getToolResultBlocks(blocks: ToolChatBlock[]): ToolResultBlock[] {
+    return blocks.filter((b): b is ToolResultBlock => b.type === 'tool_result');
+  }
+
+  private isEmptyClaudeAssistantMessage(
+    isClaude: boolean,
+    message: Message,
+  ): boolean {
+    if (!isClaude || message.role !== 'assistant') {
+      return false;
+    }
+    const content = (message as { content?: unknown }).content;
+    return Array.isArray(content) && content.length === 0;
+  }
+
+  private buildAssistantToolCall(
+    isClaude: boolean,
+    toolUses: ToolUseBlock[],
+  ): Message {
+    if (isClaude) {
+      return {
+        role: 'assistant',
+        content: toolUses.map((u) => ({
+          type: 'tool_use',
+          id: u.id,
+          name: u.name,
+          input: u.input ?? {},
+        })),
+      } as unknown as Message;
+    }
+
+    return {
+      role: 'assistant',
+      content: [],
+      tool_calls: toolUses.map((u) => ({
+        id: u.id,
+        type: 'function',
+        function: {
+          name: u.name,
+          arguments: JSON.stringify(u.input || {}),
+        },
+      })),
+    } as unknown as Message;
+  }
+
+  private buildToolMessages(
+    isClaude: boolean,
+    toolResults: ToolResultBlock[],
+  ): Message[] {
+    if (isClaude) {
+      return toolResults.map(
+        (r) =>
+          ({
+            role: 'user',
+            content: [
+              {
+                type: r.type,
+                tool_use_id: r.tool_use_id,
+                content: r.content,
+              },
+            ],
+          }) as unknown as Message,
+      );
+    }
+
+    return toolResults.map(
+      (r) =>
+        ({
+          role: 'tool',
+          tool_call_id: r.tool_use_id,
+          content: r.content,
+        }) as unknown as Message,
+    );
+  }
+
+  private buildNextMessages(
+    isClaude: boolean,
+    currentMessages: Message[],
+    assistantToolCall: Message,
+    toolMessages: Message[],
+  ): Message[] {
+    const cleaned = currentMessages.filter(
+      (m) => !this.isEmptyClaudeAssistantMessage(isClaude, m),
+    );
+
+    if (!this.isEmptyClaudeAssistantMessage(isClaude, assistantToolCall)) {
+      cleaned.push(assistantToolCall);
+    }
+    toolMessages.forEach((m) => cleaned.push(m));
+    return cleaned;
+  }
+
   private async runToolLoop<T extends Message | MessageWithVision>(
     send: T[],
     once: (
@@ -376,7 +477,7 @@ export class ChatProcessor extends EventEmitter {
     let first = true;
 
     // check if the chat service is claude
-    const isClaude = (this.chatService as any).provider === 'claude';
+    const isClaude = this.isClaudeProvider();
 
     while (hops++ < this.maxHops) {
       const { blocks, stop_reason } = await once(toSend, first, (t) =>
@@ -384,9 +485,9 @@ export class ChatProcessor extends EventEmitter {
       );
       first = false;
 
-      blocks
-        .filter((b: any) => b.type === 'tool_result')
-        .forEach((b: any) => this.emit('assistantPartialResponse', b.content));
+      this.getToolResultBlocks(blocks).forEach((b) =>
+        this.emit('assistantPartialResponse', b.content),
+      );
 
       if (stop_reason === 'end') {
         const full = blocks
@@ -420,76 +521,22 @@ export class ChatProcessor extends EventEmitter {
       /* ---------- tool_use ---------- */
       if (!this.toolCallback) throw new Error('Tool callback missing');
 
-      const toolUses = blocks.filter((b: any) => b.type === 'tool_use');
-      const toolResults = await this.toolCallback(toolUses as any);
+      const toolUses = this.getToolUseBlocks(blocks);
+      const toolResults = await this.toolCallback(toolUses);
 
-      const assistantToolCall = isClaude
-        ? {
-            role: 'assistant',
-            content: toolUses.map((u: any) => ({
-              type: 'tool_use',
-              id: u.id,
-              name: u.name,
-              input: u.input ?? {},
-            })),
-          }
-        : {
-            role: 'assistant',
-            content: [],
-            tool_calls: toolUses.map((u: any) => ({
-              id: u.id,
-              type: 'function',
-              function: {
-                name: u.name,
-                arguments: JSON.stringify(u.input || {}),
-              },
-            })),
-          };
-
-      const toolMsgs = toolResults.map((r) => {
-        if (isClaude) {
-          return {
-            role: 'user',
-            content: [
-              {
-                type: r.type,
-                tool_use_id: r.tool_use_id,
-                content: r.content,
-              },
-            ],
-          };
-        }
-
-        return {
-          role: 'tool',
-          tool_call_id: r.tool_use_id,
-          content: r.content,
-        };
-      });
+      const assistantToolCall = this.buildAssistantToolCall(
+        isClaude,
+        toolUses,
+      );
+      const toolMsgs = this.buildToolMessages(isClaude, toolResults);
 
       /* build messages for the next turn */
-      const cleaned: Message[] = (toSend as Message[]).filter((m) => {
-        if (
-          isClaude &&
-          m.role === 'assistant' &&
-          Array.isArray((m as any).content) &&
-          (m as any).content.length === 0
-        ) {
-          return false;
-        }
-        return true;
-      });
-
-      if (
-        !(
-          isClaude &&
-          Array.isArray((assistantToolCall as any).content) &&
-          (assistantToolCall as any).content.length === 0
-        )
-      ) {
-        cleaned.push(assistantToolCall as unknown as Message);
-      }
-      toolMsgs.forEach((m) => cleaned.push(m as unknown as Message));
+      const cleaned = this.buildNextMessages(
+        isClaude,
+        toSend as Message[],
+        assistantToolCall,
+        toolMsgs,
+      );
 
       toSend = cleaned as T[];
     }

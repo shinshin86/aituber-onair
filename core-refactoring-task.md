@@ -7,7 +7,7 @@
 | ID | 優先度 | 対象 | 提案 | テスト観点 |
 | --- | --- | --- | --- | --- |
 | core-01 (完了済み) | 中 | `packages/core/src/core/ChatProcessor.ts` | `MAX_HOPS` を readonly + `(this as any)` で更新している箇所を整理。`maxHops` を可変プロパティにするか getter 化して options から参照するように変更。 | 既存の `maxHops` の挙動が維持されるか（更新後に反映されるか）。 |
-| core-02 | 中 | `packages/core/src/core/ChatProcessor.ts` | `runToolLoop` の Claude/非Claude 分岐とメッセージ組み立てを小さな private 関数に分割し、`any` キャストを削減。 | tool 連鎖の挙動（tool_use → tool_result → 継続）が既存と同じか。 |
+| core-02 (完了済み) | 中 | `packages/core/src/core/ChatProcessor.ts` | `runToolLoop` の Claude/非Claude 分岐とメッセージ組み立てを小さな private 関数に分割し、`any` キャストを削減。 | tool 連鎖の挙動（tool_use → tool_result → 継続）が既存と同じか。 |
 | core-03 | 低 | `packages/core/src/core/AITuberOnAirCore.ts` | Provider の switch を `buildChatServiceOptions(providerName, baseOptions, providerOptions)` のような関数へ抽出して可読性を改善。 | 既存の provider 選択と options のマージ順序が変わらないか。 |
 | core-04 | 中 | `packages/core/src/core/AITuberOnAirCore.ts` | `processChat` / `processVisionChat` の重複した排他制御・イベント発火・try/finally を共通化（小さな helper へ）。 | PROCESSING_START/END が同じタイミングで発火するか。 |
 | core-05 | 低 | `packages/core/src/core/AITuberOnAirCore.ts` | speech chunking（区切り判定・マージ）を `utils/speechChunking.ts` の純粋関数へ移動し、ユニットテストしやすくする。 | 既存の分割結果（特に minWords と separators）が変わらないか。 |
