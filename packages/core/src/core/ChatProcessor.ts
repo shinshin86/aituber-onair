@@ -55,7 +55,7 @@ export class ChatProcessor extends EventEmitter {
   private chatStartTime: number = 0;
   private processingChat: boolean = false;
   private toolCallback?: ToolCallback;
-  private readonly MAX_HOPS: number;
+  private maxHops: number;
 
   /**
    * Constructor
@@ -75,8 +75,8 @@ export class ChatProcessor extends EventEmitter {
     this.memoryManager = memoryManager;
     this.toolCallback = toolCallback;
 
-    // Initialize MAX_HOPS from options with default value of 6
-    this.MAX_HOPS = options.maxHops ?? 6;
+    // Initialize maxHops from options with default value of 6
+    this.maxHops = options.maxHops ?? 6;
   }
 
   /**
@@ -132,9 +132,9 @@ export class ChatProcessor extends EventEmitter {
   updateOptions(newOptions: Partial<ChatProcessorOptions>): void {
     this.options = { ...this.options, ...newOptions };
 
-    // Update MAX_HOPS if maxHops is included in the new options
+    // Update maxHops if maxHops is included in the new options
     if (newOptions.maxHops !== undefined) {
-      (this as any).MAX_HOPS = newOptions.maxHops;
+      this.maxHops = newOptions.maxHops;
     }
   }
 
@@ -378,7 +378,7 @@ export class ChatProcessor extends EventEmitter {
     // check if the chat service is claude
     const isClaude = (this.chatService as any).provider === 'claude';
 
-    while (hops++ < this.MAX_HOPS) {
+    while (hops++ < this.maxHops) {
       const { blocks, stop_reason } = await once(toSend, first, (t) =>
         this.emit('assistantPartialResponse', t),
       );
