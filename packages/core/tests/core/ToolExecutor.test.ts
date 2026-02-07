@@ -10,6 +10,7 @@ interface AddInput {
 describe('ToolExecutor', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -108,5 +109,90 @@ describe('ToolExecutor', () => {
       { type: 'tool_use', id: 'o1', name: 'obj', input: {} },
     ] as any);
     expect(res[0].content).toBe('{"x":1}');
+  });
+
+  it('executes MCP tool via configured server', async () => {
+    const exec = new ToolExecutor();
+    exec.setMCPServers([
+      {
+        name: 'deepwiki',
+        url: 'https://mcp.example.com',
+      },
+    ] as any);
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ result: 'ok' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await exec.run([
+      {
+        type: 'tool_use',
+        id: 'm1',
+        name: 'mcp_deepwiki_search',
+        input: { q: 'typescript' },
+      },
+    ] as any);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://mcp.example.com/tools/search',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{"q":"typescript"}',
+      },
+    );
+    expect(res).toEqual([
+      {
+        type: 'tool_result',
+        tool_use_id: 'm1',
+        content: '{"result":"ok"}',
+      },
+    ]);
+  });
+
+  it('returns MCP tool error result when server responds non-ok', async () => {
+    const exec = new ToolExecutor();
+    exec.setMCPServers([
+      {
+        name: 'deepwiki',
+        url: 'https://mcp.example.com',
+      },
+    ] as any);
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await exec.run([
+      {
+        type: 'tool_use',
+        id: 'm2',
+        name: 'mcp_deepwiki_search',
+        input: { q: 'typescript' },
+      },
+    ] as any);
+
+    expect(res).toEqual([
+      {
+        type: 'tool_result',
+        tool_use_id: 'm2',
+        content:
+          'MCP tool execution failed: MCP server responded with 500: Internal Server Error',
+      },
+    ]);
+  });
+
+  it('throws for invalid MCP tool name format', async () => {
+    const exec = new ToolExecutor();
+    await expect(
+      exec.run([
+        { type: 'tool_use', id: 'm3', name: 'mcp_invalid', input: {} },
+      ] as any),
+    ).rejects.toThrow('Invalid MCP tool name format: mcp_invalid');
   });
 });

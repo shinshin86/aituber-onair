@@ -23,38 +23,23 @@ export class ToolExecutor {
   }
 
   /**
-   * Check if a tool name is an MCP tool
-   * @param toolName Tool name to check
-   * @returns True if this is an MCP tool
-   */
-  private isMCPTool(toolName: string): boolean {
-    return toolName.startsWith('mcp_') && toolName.includes('_');
-  }
-
-  /**
-   * Extract MCP server name from tool name
+   * Parse MCP tool name
    * @param toolName Tool name (e.g., "mcp_deepwiki_search")
-   * @returns Server name (e.g., "deepwiki")
+   * @returns Parsed MCP tool parts or null for non-MCP tools
    */
-  private extractMCPServerName(toolName: string): string {
+  private parseMCPToolName(
+    toolName: string,
+  ): { serverName: string; toolName: string } | null {
     // Format: mcp_{serverName}_{toolName}
-    const parts = toolName.split('_');
-    if (parts.length >= 3 && parts[0] === 'mcp') {
-      return parts[1]; // Return server name
+    if (!toolName.startsWith('mcp_')) {
+      return null;
     }
-    throw new Error(`Invalid MCP tool name format: ${toolName}`);
-  }
-
-  /**
-   * Extract actual tool name from MCP tool name
-   * @param toolName Tool name (e.g., "mcp_deepwiki_search")
-   * @returns Actual tool name (e.g., "search")
-   */
-  private extractMCPToolName(toolName: string): string {
-    // Format: mcp_{serverName}_{toolName}
     const parts = toolName.split('_');
     if (parts.length >= 3 && parts[0] === 'mcp') {
-      return parts.slice(2).join('_'); // Return everything after server name
+      return {
+        serverName: parts[1],
+        toolName: parts.slice(2).join('_'),
+      };
     }
     throw new Error(`Invalid MCP tool name format: ${toolName}`);
   }
@@ -64,10 +49,11 @@ export class ToolExecutor {
    * @param block Tool use block
    * @returns Tool result block
    */
-  private async executeMCPTool(block: ToolUseBlock): Promise<ToolResultBlock> {
-    const serverName = this.extractMCPServerName(block.name);
-    const toolName = this.extractMCPToolName(block.name);
-
+  private async executeMCPTool(
+    block: ToolUseBlock,
+    mcpTool: { serverName: string; toolName: string },
+  ): Promise<ToolResultBlock> {
+    const { serverName, toolName } = mcpTool;
     const mcpServer = this.mcpServers.find(
       (server) => server.name === serverName,
     );
@@ -121,8 +107,9 @@ export class ToolExecutor {
       .filter((b): b is ToolUseBlock => b.type === 'tool_use')
       .map(async (b) => {
         // Check if this is an MCP tool
-        if (this.isMCPTool(b.name)) {
-          return this.executeMCPTool(b);
+        const mcpTool = this.parseMCPToolName(b.name);
+        if (mcpTool) {
+          return this.executeMCPTool(b, mcpTool);
         }
 
         // Handle regular tools

@@ -5,6 +5,10 @@ import {
   MODEL_GEMINI_2_0_FLASH_LITE,
   DEFAULT_SUMMARY_PROMPT_TEMPLATE,
 } from '@aituber-onair/chat';
+import {
+  createSummaryContext,
+  summarizeWithFallback,
+} from '../summarizerUtils';
 
 /**
  * Implementation of summarization functionality using Gemini
@@ -42,19 +46,14 @@ export class GeminiSummarizer implements Summarizer {
     maxLength: number = 256,
     customPrompt?: string,
   ): Promise<string> {
-    try {
-      // Create system prompt
-      const promptTemplate = customPrompt || this.defaultPromptTemplate;
-      const systemPrompt = promptTemplate.replace(
-        '{maxLength}',
-        maxLength.toString(),
-      );
+    const { systemPrompt, conversationText } = createSummaryContext(
+      messages,
+      maxLength,
+      this.defaultPromptTemplate,
+      customPrompt,
+    );
 
-      // Join message content
-      const conversationText = messages
-        .map((msg) => `${msg.role}: ${msg.content}`)
-        .join('\n');
-
+    return summarizeWithFallback(messages, async () => {
       // Create the endpoint URL with API key
       const apiUrl = `${ENDPOINT_GEMINI_API}/models/${this.model}:generateContent?key=${this.apiKey}`;
 
@@ -108,12 +107,6 @@ export class GeminiSummarizer implements Summarizer {
       }
 
       return '';
-    } catch (error) {
-      console.error('Error in summarize:', error);
-      // Error fallback - simple summary
-      return `${messages.length} messages. Latest topic: ${
-        messages[messages.length - 1]?.content.substring(0, 50) || 'none'
-      }...`;
-    }
+    });
   }
 }

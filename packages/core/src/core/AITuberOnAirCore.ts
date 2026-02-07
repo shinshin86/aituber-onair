@@ -194,74 +194,11 @@ export class AITuberOnAirCore extends EventEmitter {
       tools: this.toolExecutor.listDefinitions(),
     };
 
-    let chatServiceOptions: ChatServiceOptionsByProvider[ChatProviderName];
-
-    switch (providerName) {
-      case 'openai': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'openai'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as OpenAIChatServiceOptions;
-        break;
-      }
-      case 'openrouter': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'openrouter'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as OpenRouterChatServiceOptions;
-        break;
-      }
-      case 'gemini': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'gemini'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as GeminiChatServiceOptions;
-        break;
-      }
-      case 'claude': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'claude'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as ClaudeChatServiceOptions;
-        break;
-      }
-      case 'zai': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'zai'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as ZAIChatServiceOptions;
-        break;
-      }
-      case 'kimi': {
-        const providerOptions = options.providerOptions as
-          | ProviderOptionsByName<'kimi'>
-          | undefined;
-        chatServiceOptions = {
-          ...baseOptions,
-          ...(providerOptions ?? {}),
-        } as KimiChatServiceOptions;
-        break;
-      }
-      default:
-        chatServiceOptions =
-          baseOptions as ChatServiceOptionsByProvider['openai'];
-        break;
-    }
+    const chatServiceOptions = this.buildChatServiceOptions(
+      providerName,
+      baseOptions,
+      options.providerOptions,
+    );
 
     // Add MCP servers for providers that support remote MCP
     if (
@@ -339,33 +276,72 @@ export class AITuberOnAirCore extends EventEmitter {
     this.log('AITuberOnAirCore initialized');
   }
 
+  private buildChatServiceOptions(
+    providerName: ChatProviderName,
+    baseOptions: {
+      apiKey: string;
+      model?: string;
+      tools: ToolDefinition[];
+    },
+    providerOptions?: AITuberOnAirCoreOptions['providerOptions'],
+  ): ChatServiceOptionsByProvider[ChatProviderName] {
+    switch (providerName) {
+      case 'openai': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as ProviderOptionsByName<'openai'> | undefined),
+        } as OpenAIChatServiceOptions;
+      }
+      case 'openrouter': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as
+            | ProviderOptionsByName<'openrouter'>
+            | undefined),
+        } as OpenRouterChatServiceOptions;
+      }
+      case 'gemini': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as ProviderOptionsByName<'gemini'> | undefined),
+        } as GeminiChatServiceOptions;
+      }
+      case 'claude': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as ProviderOptionsByName<'claude'> | undefined),
+        } as ClaudeChatServiceOptions;
+      }
+      case 'zai': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as ProviderOptionsByName<'zai'> | undefined),
+        } as ZAIChatServiceOptions;
+      }
+      case 'kimi': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as ProviderOptionsByName<'kimi'> | undefined),
+        } as KimiChatServiceOptions;
+      }
+      default:
+        return baseOptions as ChatServiceOptionsByProvider['openai'];
+    }
+  }
+
   /**
    * Process text chat
    * @param text User input text
    * @returns Success or failure of processing
    */
   async processChat(text: string): Promise<boolean> {
-    if (this.isProcessing) {
-      this.log('Already processing another chat');
-      return false;
-    }
-
-    try {
-      this.isProcessing = true;
-      this.emit(AITuberOnAirCoreEvent.PROCESSING_START, { text });
-
-      // Process text chat
-      await this.chatProcessor.processTextChat(text);
-
-      return true;
-    } catch (error) {
-      this.log('Error in processChat:', error);
-      this.emit(AITuberOnAirCoreEvent.ERROR, error);
-      return false;
-    } finally {
-      this.isProcessing = false;
-      this.emit(AITuberOnAirCoreEvent.PROCESSING_END);
-    }
+    return this.withProcessing(
+      { text },
+      async () => {
+        await this.chatProcessor.processTextChat(text);
+      },
+      'Error in processChat:',
+    );
   }
 
   /**
@@ -378,6 +354,26 @@ export class AITuberOnAirCore extends EventEmitter {
     imageDataUrl: string,
     visionPrompt?: string,
   ): Promise<boolean> {
+    return this.withProcessing(
+      { type: 'vision' },
+      async () => {
+        // Update vision prompt if provided
+        if (visionPrompt) {
+          this.chatProcessor.updateOptions({ visionPrompt });
+        }
+
+        // Process image in ChatProcessor
+        await this.chatProcessor.processVisionChat(imageDataUrl);
+      },
+      'Error in processVisionChat:',
+    );
+  }
+
+  private async withProcessing(
+    startPayload: Record<string, unknown>,
+    action: () => Promise<void>,
+    errorMessage: string,
+  ): Promise<boolean> {
     if (this.isProcessing) {
       this.log('Already processing another chat');
       return false;
@@ -385,19 +381,11 @@ export class AITuberOnAirCore extends EventEmitter {
 
     try {
       this.isProcessing = true;
-      this.emit(AITuberOnAirCoreEvent.PROCESSING_START, { type: 'vision' });
-
-      // Update vision prompt if provided
-      if (visionPrompt) {
-        this.chatProcessor.updateOptions({ visionPrompt });
-      }
-
-      // Process image in ChatProcessor
-      await this.chatProcessor.processVisionChat(imageDataUrl);
-
+      this.emit(AITuberOnAirCoreEvent.PROCESSING_START, startPayload);
+      await action();
       return true;
     } catch (error) {
-      this.log('Error in processVisionChat:', error);
+      this.log(errorMessage, error);
       this.emit(AITuberOnAirCoreEvent.ERROR, error);
       return false;
     } finally {
