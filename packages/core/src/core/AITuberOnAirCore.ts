@@ -289,9 +289,7 @@ export class AITuberOnAirCore extends EventEmitter {
       case 'openai': {
         return {
           ...baseOptions,
-          ...(providerOptions as
-            | ProviderOptionsByName<'openai'>
-            | undefined),
+          ...(providerOptions as ProviderOptionsByName<'openai'> | undefined),
         } as OpenAIChatServiceOptions;
       }
       case 'openrouter': {
@@ -305,33 +303,25 @@ export class AITuberOnAirCore extends EventEmitter {
       case 'gemini': {
         return {
           ...baseOptions,
-          ...(providerOptions as
-            | ProviderOptionsByName<'gemini'>
-            | undefined),
+          ...(providerOptions as ProviderOptionsByName<'gemini'> | undefined),
         } as GeminiChatServiceOptions;
       }
       case 'claude': {
         return {
           ...baseOptions,
-          ...(providerOptions as
-            | ProviderOptionsByName<'claude'>
-            | undefined),
+          ...(providerOptions as ProviderOptionsByName<'claude'> | undefined),
         } as ClaudeChatServiceOptions;
       }
       case 'zai': {
         return {
           ...baseOptions,
-          ...(providerOptions as
-            | ProviderOptionsByName<'zai'>
-            | undefined),
+          ...(providerOptions as ProviderOptionsByName<'zai'> | undefined),
         } as ZAIChatServiceOptions;
       }
       case 'kimi': {
         return {
           ...baseOptions,
-          ...(providerOptions as
-            | ProviderOptionsByName<'kimi'>
-            | undefined),
+          ...(providerOptions as ProviderOptionsByName<'kimi'> | undefined),
         } as KimiChatServiceOptions;
       }
       default:

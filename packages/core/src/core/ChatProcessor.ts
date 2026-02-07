@@ -524,10 +524,7 @@ export class ChatProcessor extends EventEmitter {
       const toolUses = this.getToolUseBlocks(blocks);
       const toolResults = await this.toolCallback(toolUses);
 
-      const assistantToolCall = this.buildAssistantToolCall(
-        isClaude,
-        toolUses,
-      );
+      const assistantToolCall = this.buildAssistantToolCall(isClaude, toolUses);
       const toolMsgs = this.buildToolMessages(isClaude, toolResults);
 
       /* build messages for the next turn */

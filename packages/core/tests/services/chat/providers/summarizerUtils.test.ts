@@ -61,9 +61,7 @@ describe('summarizerUtils', () => {
 
       const result = await summarizeWithFallback(messages, summarize);
 
-      expect(result).toBe(
-        `1 messages. Latest topic: ${'a'.repeat(50)}...`,
-      );
+      expect(result).toBe(`1 messages. Latest topic: ${'a'.repeat(50)}...`);
       expect(summarize).toHaveBeenCalledTimes(1);
       expect(errorSpy).toHaveBeenCalledTimes(1);
     });

@@ -77,9 +77,9 @@ describe('AITuberOnAirCore processing flow', () => {
     const core = new AITuberOnAirCore(createOptions());
     const chatProcessor = (core as any).chatProcessor;
 
-    vi
-      .spyOn(chatProcessor, 'processTextChat')
-      .mockRejectedValue(new Error('boom'));
+    vi.spyOn(chatProcessor, 'processTextChat').mockRejectedValue(
+      new Error('boom'),
+    );
 
     const events: string[] = [];
 
