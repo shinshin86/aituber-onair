@@ -448,6 +448,10 @@ export class OpenAIChatService implements ChatService {
         server_url: server.url, // Use server_url instead of url
       };
 
+      if (server.require_approval) {
+        mcpDef.require_approval = server.require_approval;
+      }
+
       if (server.tool_configuration?.allowed_tools) {
         mcpDef.allowed_tools = server.tool_configuration.allowed_tools;
       }

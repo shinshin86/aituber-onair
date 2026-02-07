@@ -10,6 +10,7 @@ export interface MCPServerConfig {
   type: 'url';
   url: string;
   name: string;
+  require_approval?: 'always' | 'never';
   tool_configuration?: {
     enabled?: boolean;
     allowed_tools?: string[];
