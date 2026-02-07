@@ -1,5 +1,12 @@
 # @aituber-onair/chat
 
+## 0.11.1
+
+### Patch Changes
+
+- Added `require_approval` to `MCPServerConfig` for OpenAI remote MCP settings.
+- Propagated `require_approval` to OpenAI Responses API MCP tool definitions.
+
 ## 0.11.0
 
 ### Minor Changes
