@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## 0.11.0
+
+### Minor Changes
+
+- Added Claude Opus 4.6 (`claude-opus-4-6`) to Claude constants and provider supported models.
+- Added Claude Opus 4.6 to `CLAUDE_VISION_SUPPORTED_MODELS` so vision model resolution recognizes it.
+- Updated Chat README (EN/JA), Claude provider tests, and the React basic example to include Claude Opus 4.6.
+
 ## 0.10.0
 
 ### Minor Changes
