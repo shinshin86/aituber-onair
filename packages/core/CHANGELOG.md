@@ -1,5 +1,15 @@
 # @aituber-onair/core
 
+## 0.22.1
+
+### Patch Changes
+
+- Re-exported `MODEL_CLAUDE_4_6_OPUS` from the core entry point so
+  integrations can target Claude Opus 4.6 via `@aituber-onair/core`.
+- Updated the React basic example Claude model list to include Claude Opus 4.6.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.11.1
+
 ## 0.22.0
 
 ### Minor Changes
