@@ -204,7 +204,6 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 - Z.aiはOpenAI互換のChat Completionsを利用します。
 - テキスト対応モデル: `glm-5`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
 - ビジョン対応モデル: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
-- 本パッケージでは現時点で `glm-5` をテキスト専用として扱います。
 - `thinking` はデフォルトで無効化しています。
 
 #### Kimi（Moonshot）

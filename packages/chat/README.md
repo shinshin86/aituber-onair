@@ -204,7 +204,6 @@ Notes:
 - Z.ai uses OpenAI-compatible Chat Completions.
 - Supported text models: `glm-5`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
 - Supported vision models: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
-- `glm-5` is currently handled as text-only in this package.
 - `thinking` is disabled by default to match fast response behavior.
 
 #### Kimi (Moonshot)
