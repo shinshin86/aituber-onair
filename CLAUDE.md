@@ -205,6 +205,15 @@ This project manages releases through manual version updates and CHANGELOG maint
    - **Minor**: New features, backward-compatible changes
    - **Major**: Breaking changes to public API
 
+4. **Cross-Package Dependency Alignment (Single-Package Release)**
+   - If package `A` is released as a new **minor** version and package `B` depends on `A`, update `B`'s dependency range to include the new `A` version (for example, `^0.11.1` -> `^0.12.0`).
+   - This dependency-range update in `B` is a release-consistency change and does **not** require publishing `B` by itself.
+   - Only packages whose own `version` field is bumped are published by `release.yml`.
+   - Always regenerate `package-lock.json` after version/range updates and validate with:
+     - `npm install --package-lock-only`
+     - `npm ci`
+   - Before opening PR, ensure the target package tests still pass (for example: `npm -w @aituber-onair/chat run test`).
+
 **IMPORTANT**: Never use `npm publish` directly - all publishing is automated via CI/CD
 
 ### Failure Recovery Notes
