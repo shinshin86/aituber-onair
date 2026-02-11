@@ -4,7 +4,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
 
 ## Features
 
-- 🔄 **Provider Switching** - Switch between OpenAI, Claude, and Gemini in real-time
+- 🔄 **Provider Switching** - Switch between OpenAI, Claude, Gemini, OpenRouter, Z.ai, and Kimi in real-time
 - 💬 **Real-time Streaming** - See AI responses as they're generated
 - 📝 **Chat History** - Full conversation history with role indicators
 - 🖼️ **Vision Support** - Upload and analyze images (drag & drop supported)
@@ -39,6 +39,9 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
   - OpenAI: https://platform.openai.com/api-keys
   - Claude: https://console.anthropic.com/
   - Gemini: https://makersuite.google.com/app/apikey
+  - OpenRouter: https://openrouter.ai/
+  - Z.ai: https://platform.z.ai/
+  - Kimi (Moonshot): https://platform.moonshot.cn/
 
 ### Scripts
 
@@ -70,7 +73,7 @@ react-basic/
 
 ### Basic Chat
 
-1. Select a provider (OpenAI, Claude, or Gemini)
+1. Select a provider (OpenAI, Claude, Gemini, OpenRouter, Z.ai, or Kimi)
 2. Enter your API key
 3. Type a message and press Enter or click Send
 4. Watch the AI response stream in real-time
@@ -108,6 +111,21 @@ Use the dropdown to select response length:
 - Models: Gemini Pro
 - Vision: Gemini Pro Vision
 - Best for: Fast responses, cost-effective
+
+**OpenRouter**
+- Models: Curated multi-provider model list (OpenAI/Claude/Gemini/Z.ai/Kimi)
+- Vision: Depends on selected routed model
+- Best for: Flexible model routing and unified API usage
+
+**Z.ai**
+- Models: GLM-5, GLM-4.7/4.6, GLM-4.6V family
+- Vision: GLM-4.6V family (`glm-5` is currently text-only)
+- Best for: OpenAI-compatible GLM integration
+
+**Kimi**
+- Models: Kimi K2.5
+- Vision: Supported
+- Best for: Moonshot models with OpenAI-compatible API
 
 ## Troubleshooting
 

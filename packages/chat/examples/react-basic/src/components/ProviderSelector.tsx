@@ -57,6 +57,7 @@ import {
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_ZAI_GLM_4_5_AIR_FREE,
   // Z.ai models
+  MODEL_GLM_5,
   MODEL_GLM_4_7,
   MODEL_GLM_4_7_FLASHX,
   MODEL_GLM_4_7_FLASH,
@@ -457,6 +458,12 @@ export const allModels = [
   },
 
   // Z.ai models
+  {
+    id: MODEL_GLM_5,
+    name: 'GLM-5',
+    provider: 'zai',
+    default: false,
+  },
   {
     id: MODEL_GLM_4_7,
     name: 'GLM-4.7',

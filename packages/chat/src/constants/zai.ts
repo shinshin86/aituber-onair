@@ -2,6 +2,7 @@ export const ENDPOINT_ZAI_CHAT_COMPLETIONS_API =
   'https://api.z.ai/api/paas/v4/chat/completions';
 
 // Z.ai GLM models
+export const MODEL_GLM_5 = 'glm-5';
 export const MODEL_GLM_4_7 = 'glm-4.7';
 export const MODEL_GLM_4_7_FLASHX = 'glm-4.7-FlashX';
 export const MODEL_GLM_4_7_FLASH = 'glm-4.7-Flash';

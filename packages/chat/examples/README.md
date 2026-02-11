@@ -17,6 +17,9 @@ This directory contains examples demonstrating how to use the @aituber-onair/cha
    - **OpenAI**: Get from [platform.openai.com](https://platform.openai.com/)
    - **Claude**: Get from [console.anthropic.com](https://console.anthropic.com/)
    - **Gemini**: Get from [makersuite.google.com](https://makersuite.google.com/app/apikey)
+   - **OpenRouter**: Get from [openrouter.ai](https://openrouter.ai/)
+   - **Z.ai**: Get from [platform.z.ai](https://platform.z.ai/)
+   - **Kimi (Moonshot)**: Get from [platform.moonshot.cn](https://platform.moonshot.cn/)
 
 ## 📁 Example Structure
 
@@ -41,7 +44,7 @@ node index.js
 ### [React Example](./react-basic/)
 Interactive web application with TypeScript and Vite:
 
-- ✅ **Provider Switching** - Switch between OpenAI, Claude, and Gemini
+- ✅ **Provider Switching** - Switch between OpenAI, Claude, Gemini, OpenRouter, Z.ai, and Kimi
 - ✅ **Real-time Streaming** - See responses as they're generated
 - ✅ **Chat History** - Full conversation management
 - ✅ **Vision Support** - Upload and analyze images
@@ -95,6 +98,12 @@ const geminiService = ChatServiceFactory.createChatService('gemini', { apiKey })
 const openaiService = ChatServiceFactory.createChatService('openai', options);
 const claudeService = ChatServiceFactory.createChatService('claude', options);
 const geminiService = ChatServiceFactory.createChatService('gemini', options);
+const openRouterService = ChatServiceFactory.createChatService(
+  'openrouter',
+  options,
+);
+const zaiService = ChatServiceFactory.createChatService('zai', options);
+const kimiService = ChatServiceFactory.createChatService('kimi', options);
 ```
 
 ### 3. Streaming Responses
@@ -136,6 +145,8 @@ const tools = [{
 ```
 
 ## 📊 Provider Comparison
+
+The table below focuses on the primary providers used in the core Node.js examples.
 
 | Feature | OpenAI | Claude | Gemini |
 |---------|--------|--------|--------|
