@@ -3,6 +3,7 @@ import { ZAIChatServiceProvider } from '../../src/services/providers/zai/ZAIChat
 import type { ZAIChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+  MODEL_GLM_5,
   MODEL_GLM_4_7,
   MODEL_GLM_4_7_FLASHX,
   MODEL_GLM_4_7_FLASH,
@@ -33,6 +34,7 @@ describe('ZAIChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GLM_5,
         MODEL_GLM_4_7,
         MODEL_GLM_4_7_FLASHX,
         MODEL_GLM_4_7_FLASH,
@@ -63,6 +65,10 @@ describe('ZAIChatServiceProvider', () => {
 
     it('should return false for non-vision models', () => {
       expect(provider.supportsVisionForModel(MODEL_GLM_4_7)).toBe(false);
+    });
+
+    it('should return false for glm-5', () => {
+      expect(provider.supportsVisionForModel(MODEL_GLM_5)).toBe(false);
     });
   });
 
