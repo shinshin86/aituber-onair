@@ -1,5 +1,14 @@
 # @aituber-onair/chat
 
+## 0.12.0
+
+### Minor Changes
+
+- Added Z.ai GLM-5 (`glm-5`) to chat constants and provider supported models.
+- Treated GLM-5 as text-only while keeping GLM-4.6V family as the vision model set.
+- Updated Z.ai provider tests and the React basic example model selector to include GLM-5.
+- Updated README files (EN/JA) and example documentation to reflect GLM-5 support and current provider/model coverage.
+
 ## 0.11.1
 
 ### Patch Changes
