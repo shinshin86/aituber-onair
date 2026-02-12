@@ -81,6 +81,7 @@ const MINIMAX_MODELS: Record<MinimaxModel, string> = {
 };
 
 type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high';
+type ChatProvider = NonNullable<AITuberOnAirCoreOptions['chatProvider']>;
 
 // MiniMax Voice IDs with descriptions
 const MINIMAX_VOICES: Record<string, string> = {
@@ -159,8 +160,8 @@ const App: React.FC = () => {
   const [systemPrompt, setSystemPrompt] = useState<string>(
     DEFAULT_SYSTEM_PROMPT,
   );
-  const [chatProvider, setChatProvider] = useState<string>(
-    DEFAULT_CHAT_PROVIDER,
+  const [chatProvider, setChatProvider] = useState<ChatProvider>(
+    DEFAULT_CHAT_PROVIDER as ChatProvider,
   );
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
   const [kimiBaseUrl, setKimiBaseUrl] = useState<string>('');
@@ -648,6 +649,11 @@ const App: React.FC = () => {
     if (aituberRef.current) {
       aituberRef.current.removeAllListeners();
     }
+
+    const normalizedReasoningEffort = normalizeReasoningEffortForModel(
+      model,
+      reasoning_effort,
+    );
 
     // prepare provider options for GPT-5 models
     const providerOptions: Record<string, any> = {};
@@ -1289,7 +1295,7 @@ const App: React.FC = () => {
     }
 
     const drafts: Message[] = [];
-    if (canUseVision)
+    if (canUseVision && attachedImageUrl)
       drafts.push({
         id: nextId(),
         role: 'user',
@@ -1318,7 +1324,7 @@ const App: React.FC = () => {
 
     // if image is attached, call vision API
     // if only text, call normal chat API
-    if (canUseVision) {
+    if (canUseVision && attachedImageUrl) {
       // send image to AITuberOnAirCore (Vision API)
       console.log('Calling processVisionChat with image...');
       await aituberRef.current.processVisionChat(attachedImageUrl, userMessage);
@@ -1669,7 +1675,9 @@ const App: React.FC = () => {
                   <select
                     id="chatProvider"
                     value={chatProvider}
-                    onChange={(e) => setChatProvider(e.target.value)}
+                    onChange={(e) =>
+                      setChatProvider(e.target.value as ChatProvider)
+                    }
                   >
                     <option value="openai">OpenAI</option>
                     <option value="gemini">Gemini</option>
