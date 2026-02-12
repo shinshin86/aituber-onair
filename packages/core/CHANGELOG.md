@@ -1,5 +1,15 @@
 # @aituber-onair/core
 
+## 0.22.2
+
+### Patch Changes
+
+- Re-exported `MODEL_GLM_5` from the core entry point so integrations can target GLM-5 via `@aituber-onair/core`.
+- Updated the React basic example Z.ai model list to include GLM-5.
+- Updated core and example README files to reflect current Z.ai/OpenRouter/Kimi model coverage.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.12.0
+
 ## 0.22.1
 
 ### Patch Changes

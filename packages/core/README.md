@@ -1349,7 +1349,7 @@ Currently, the following AI provider is built-in:
 - **OpenAI**: Supports models like GPT-4.1(including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Claude**: Supports models like Claude 4.6 Opus, Claude 4.5 Opus/Sonnet/Haiku, Claude 4 Sonnet/Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
-- **Z.ai**: Supports models like GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V Flash/FlashX
+- **Z.ai**: Supports models like GLM-5 (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
 - **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi)
 

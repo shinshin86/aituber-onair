@@ -90,7 +90,7 @@ npm run fmt      # Format code with Biome
 
 Click the "設定" (Settings) button to configure your AI provider:
 
-1. **Select Provider**: Choose from OpenAI, Gemini, or Claude
+1. **Select Provider**: Choose from OpenAI, Gemini, Claude, Z.ai, Kimi, or OpenRouter
 2. **Enter API Key**: Provide your provider's API key
 3. **Choose Model**: Select the specific model to use
 4. **System Prompt**: Customize the AI's behavior and personality
@@ -116,6 +116,17 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Claude 3.5 series (Haiku, Sonnet)
 - Claude 3.7 Sonnet
 - Claude 4 series (Sonnet, Opus)
+
+**Z.ai:**
+- GLM-5 (text-only)
+- GLM-4.7 series
+- GLM-4.6 and GLM-4.6V series
+
+**Kimi:**
+- Kimi K2.5
+
+**OpenRouter:**
+- Curated multi-provider models (OpenAI, Claude, Gemini, Z.ai, Kimi)
 
 ### GPT-5 Configuration
 

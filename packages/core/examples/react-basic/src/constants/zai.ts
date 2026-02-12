@@ -1,4 +1,5 @@
 import {
+  MODEL_GLM_5,
   MODEL_GLM_4_7,
   MODEL_GLM_4_7_FLASHX,
   MODEL_GLM_4_7_FLASH,
@@ -10,6 +11,7 @@ import {
 
 export const zaiModels = [
   MODEL_GLM_4_7,
+  MODEL_GLM_5,
   MODEL_GLM_4_7_FLASHX,
   MODEL_GLM_4_7_FLASH,
   MODEL_GLM_4_6,
