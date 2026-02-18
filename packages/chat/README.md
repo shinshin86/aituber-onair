@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, Claude, Gemini, OpenRouter, Z.ai, and Kimi.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, and Kimi.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, Claude (Anthropic), Google Gemini, OpenRouter, Z.ai, and Kimi
+- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, OpenRouter, Z.ai, and Kimi
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -130,11 +130,57 @@ await chatService.processChat(
 const openaiService = ChatServiceFactory.createChatService('openai', {
   apiKey: process.env.OPENAI_API_KEY,
   model: 'gpt-5.1',
-  endpoint: 'responses', // Recommended for GPT-5.1 or when MCP/tools are enabled
   reasoning_effort: 'none', // Skip structured reasoning for fastest replies
   verbosity: 'medium'
 });
 ```
+
+For Chat Completions, use:
+
+```typescript
+endpoint: 'https://api.openai.com/v1/chat/completions';
+```
+
+##### OpenAI-Compatible Local LLM Quick Start
+
+```typescript
+const localCompatibleService = ChatServiceFactory.createChatService(
+  'openai-compatible',
+  {
+    apiKey: process.env.OPENAI_COMPAT_API_KEY || 'dummy-key',
+    model: process.env.OPENAI_COMPAT_MODEL || 'your-local-model',
+    endpoint:
+      process.env.OPENAI_COMPAT_ENDPOINT ||
+      'http://127.0.0.1:18080/v1/chat/completions',
+  },
+);
+```
+
+Notes:
+- The `endpoint` must be a full URL (not shorthand like `'responses'`).
+- The target server must satisfy the OpenAI-compatible API contract.
+- This package does not depend on any specific local LLM product.
+
+#### OpenAI-Compatible (Local/Self-Hosted)
+
+Use `openai-compatible` when you want to clearly separate official OpenAI
+usage from compatible endpoint usage.
+
+```typescript
+const compatibleService = ChatServiceFactory.createChatService(
+  'openai-compatible',
+  {
+    apiKey: process.env.OPENAI_COMPAT_API_KEY || 'dummy-key',
+    endpoint: 'http://127.0.0.1:18080/v1/chat/completions',
+    model: 'your-local-model',
+  },
+);
+```
+
+Notes:
+- `openai-compatible` requires both `endpoint` and `model`.
+- `openai-compatible` does not support `mcpServers`.
+- Existing `openai` provider behavior is unchanged.
 
 `reasoning_effort` options differ per model: GPT-5 (5.0) accepts `'minimal' | 'low' | 'medium' | 'high'`, while GPT-5.1 replaces `'minimal'` with `'none'` so the valid values are `'none' | 'low' | 'medium' | 'high'`. Use `'none'` (GPT-5.1's default) when you want the quickest response without structured reasoning, and raise the effort level for deeper analysis.
 
@@ -144,6 +190,41 @@ const openaiService = ChatServiceFactory.createChatService('openai', {
 - `gpt-5` – Previous flagship, still available for backward compatibility but superseded by GPT-5.1.
 - `gpt-5-mini` – Cost-optimized reasoning/chat model that balances speed, cost, and capability.
 - `gpt-5-nano` – High-throughput option best suited for simple instruction-following or classification runs.
+
+### OpenAI-Compatible Support Scope
+
+Required:
+- Non-stream responses (`stream: false`)
+- Stream responses (`stream: true`, SSE)
+- Conversation history continuity (`messages`)
+- Error handling (especially 4xx and timeout surfaces)
+
+Best effort:
+- tools/function calling
+- vision input support
+- strict JSON mode compatibility across implementations
+
+### OpenAI-Compatible Troubleshooting
+
+- CORS: In browser environments, ensure the compatible server returns
+  `Access-Control-Allow-Origin` and `Access-Control-Allow-Headers`.
+- Authorization: This package sends `Authorization: Bearer <apiKey>`.
+  Confirm the expected token format on the server side.
+- Model name: Compatible servers often expose different model IDs.
+  Confirm the exact model name accepted by your endpoint.
+- Stream compatibility: `stream: true` assumes OpenAI-compatible SSE chunks
+  (`data: { ... }` + `data: [DONE]`). If the format differs, streaming parse
+  may fail.
+
+### Compatibility Probe (Automated)
+
+Use `examples/compat-probe` to validate compatibility automatically:
+
+```bash
+npm -w @aituber-onair/chat run compat:probe
+```
+
+For CI/local deterministic runs, pair it with `examples/mock-openai-server`.
 
 #### Claude (Anthropic)
 

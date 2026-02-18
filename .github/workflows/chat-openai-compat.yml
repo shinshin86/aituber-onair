@@ -1,0 +1,103 @@
+name: Chat OpenAI Compatibility
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      endpoint:
+        description: 'OpenAI-compatible endpoint (full URL)'
+        required: true
+        type: string
+      model:
+        description: 'Model name for compatibility checks'
+        required: false
+        default: 'gpt-4o-mini'
+        type: string
+      error_model:
+        description: 'Model name expected to return 4xx for T5'
+        required: false
+        default: '__force_400__'
+        type: string
+      stream:
+        description: 'Enable streaming check (T2)'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  compat-probe-mock:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build chat package
+        run: npm -w @aituber-onair/chat run build
+
+      - name: Run compatibility probe with mock server
+        run: |
+          MOCK_PORT=18080
+          node packages/chat/examples/mock-openai-server/server.js --port=${MOCK_PORT} > /tmp/mock-openai-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID}' EXIT
+
+          for i in $(seq 1 30); do
+            if curl -fsS "http://127.0.0.1:${MOCK_PORT}/health" > /dev/null; then
+              break
+            fi
+
+            if [ "$i" -eq 30 ]; then
+              echo "Mock server did not become ready"
+              cat /tmp/mock-openai-server.log
+              exit 1
+            fi
+
+            sleep 1
+          done
+
+          COMPAT_ENDPOINT="http://127.0.0.1:${MOCK_PORT}/v1/chat/completions" \
+          COMPAT_API_KEY="test-key" \
+          COMPAT_MODEL="mock-chat-model" \
+          COMPAT_ERROR_MODEL="mock-400" \
+          COMPAT_STREAM="true" \
+          node packages/chat/examples/compat-probe/index.js
+
+  compat-probe-remote:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build chat package
+        run: npm -w @aituber-onair/chat run build
+
+      - name: Run compatibility probe with provided endpoint
+        env:
+          COMPAT_ENDPOINT: ${{ inputs.endpoint }}
+          COMPAT_API_KEY: ${{ secrets.OPENAI_COMPAT_API_KEY }}
+          COMPAT_MODEL: ${{ inputs.model }}
+          COMPAT_ERROR_MODEL: ${{ inputs.error_model }}
+          COMPAT_STREAM: ${{ inputs.stream }}
+        run: node packages/chat/examples/compat-probe/index.js

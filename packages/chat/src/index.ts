@@ -16,6 +16,7 @@ export type {
   ChatServiceOptionsByProvider,
   ChatProviderName,
   OpenAIChatServiceOptions,
+  OpenAICompatibleChatServiceOptions,
   OpenRouterChatServiceOptions,
   GeminiChatServiceOptions,
   ClaudeChatServiceOptions,
@@ -27,6 +28,7 @@ export type {
 // OpenAI provider exports
 export { OpenAIChatService } from './services/providers/openai/OpenAIChatService';
 export { OpenAIChatServiceProvider } from './services/providers/openai/OpenAIChatServiceProvider';
+export { OpenAICompatibleChatServiceProvider } from './services/providers/openaiCompatible/OpenAICompatibleChatServiceProvider';
 
 // Gemini provider exports
 export { GeminiChatService } from './services/providers/gemini/GeminiChatService';

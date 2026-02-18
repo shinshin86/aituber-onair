@@ -12,7 +12,7 @@ export interface BaseChatServiceOptions {
   model?: string;
   /** Vision model name (for image processing) */
   visionModel?: string;
-  /** API endpoint type (chat/completions or responses (OpenAI only)) */
+  /** API endpoint URL (OpenAI-compatible full URL) */
   endpoint?: string;
   /** Base URL for OpenAI-compatible APIs (Kimi only) */
   baseUrl?: string;
@@ -55,6 +55,15 @@ export type OpenAIChatServiceOptions = DisallowKeys<
   'baseUrl' | 'thinking' | 'includeReasoning' | 'reasoningMaxTokens'
 > & {
   mcpServers?: MCPServerConfig[];
+};
+
+export type OpenAICompatibleChatServiceOptions = Omit<
+  OpenAIChatServiceOptions,
+  'model' | 'endpoint' | 'mcpServers'
+> & {
+  model: string;
+  endpoint: string;
+  mcpServers?: never;
 };
 
 export type OpenRouterChatServiceOptions = DisallowKeys<
@@ -134,6 +143,7 @@ export type ChatServiceOptions<
 
 export type ChatServiceOptionsByProvider = {
   openai: OpenAIChatServiceOptions;
+  'openai-compatible': OpenAICompatibleChatServiceOptions;
   openrouter: OpenRouterChatServiceOptions;
   gemini: GeminiChatServiceOptions;
   claude: ClaudeChatServiceOptions;

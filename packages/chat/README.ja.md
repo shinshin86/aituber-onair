@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat ロゴ](./images/aituber-onair-chat.png)
 
-AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、Claude、Gemini、OpenRouter、Z.ai、Kimi等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
+AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、OpenRouter、Z.ai、Kimi等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
 
 ## 機能
 
-- 🤖 **複数のAIプロバイダー対応**: OpenAI、Claude (Anthropic)、Google Gemini、OpenRouter、Z.ai、Kimi
+- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、OpenRouter、Z.ai、Kimi
 - 🔄 **統一されたインターフェース**: 異なるプロバイダー間での一貫したAPI
 - 🛠️ **ツール・関数呼び出し**: AI関数呼び出しの自動反復処理をサポート
 - 💬 **ストリーミングレスポンス**: リアルタイムストリーミングチャット応答
@@ -130,11 +130,57 @@ await chatService.processChat(
 const openaiService = ChatServiceFactory.createChatService('openai', {
   apiKey: process.env.OPENAI_API_KEY,
   model: 'gpt-5.1',
-  endpoint: 'responses', // GPT-5.1やMCP利用時に推奨
   reasoning_effort: 'none', // 最速モード（効率化推論を無効化）
   verbosity: 'medium'
 });
 ```
+
+Chat Completionsを使う場合:
+
+```typescript
+endpoint: 'https://api.openai.com/v1/chat/completions';
+```
+
+##### OpenAI互換API（ローカルLLM向け）最短手順
+
+```typescript
+const localCompatibleService = ChatServiceFactory.createChatService(
+  'openai-compatible',
+  {
+    apiKey: process.env.OPENAI_COMPAT_API_KEY || 'dummy-key',
+    model: process.env.OPENAI_COMPAT_MODEL || 'your-local-model',
+    endpoint:
+      process.env.OPENAI_COMPAT_ENDPOINT ||
+      'http://127.0.0.1:18080/v1/chat/completions',
+  },
+);
+```
+
+注意:
+- `endpoint` は省略記法ではなく、完全URLで指定してください。
+- 接続先サーバーは OpenAI互換API 契約を満たす必要があります。
+- 本パッケージは特定のローカルLLM製品に依存しません。
+
+#### OpenAI互換（ローカル/セルフホスト）
+
+公式OpenAI利用と互換エンドポイント利用を明確に分離したい場合は、
+`openai-compatible` を使用してください。
+
+```typescript
+const compatibleService = ChatServiceFactory.createChatService(
+  'openai-compatible',
+  {
+    apiKey: process.env.OPENAI_COMPAT_API_KEY || 'dummy-key',
+    endpoint: 'http://127.0.0.1:18080/v1/chat/completions',
+    model: 'your-local-model',
+  },
+);
+```
+
+注意:
+- `openai-compatible` は `endpoint` と `model` の指定が必須です。
+- `openai-compatible` では `mcpServers` は利用できません。
+- 既存の `openai` プロバイダーの挙動は変更されません。
 
 `reasoning_effort` の選択肢はモデルによって異なります。GPT-5（5.0）では `'minimal' | 'low' | 'medium' | 'high'` が有効で、GPT-5.1 では `'minimal'` の代わりに `'none'` を利用できます（GPT-5.1 の新しいデフォルト）。`'none'` を使うと推論フェーズを完全にスキップし、高速応答を優先できます。一方で GPT-5.1 では `'minimal'` はサポートされない点に注意してください。
 
@@ -144,6 +190,44 @@ const openaiService = ChatServiceFactory.createChatService('openai', {
 - `gpt-5` – 旧フラッグシップ（後方互換目的で提供されるが、現在は 5.1 が推奨）。
 - `gpt-5-mini` – コスト最適化された推論/チャットモデル。速度と能力のバランスが良い。
 - `gpt-5-nano` – 指示追従や分類などの高スループット処理に向いた軽量モデル。
+
+### OpenAI互換対応範囲
+
+必須:
+- 非ストリーム応答（`stream: false`）
+- ストリーム応答（`stream: true` / SSE）
+- 会話履歴の継続参照（`messages`）
+- エラー処理（特に4xxとタイムアウト）
+
+ベストエフォート:
+- tools/function calling
+- vision入力
+- JSONモードの厳密互換
+
+### OpenAI互換APIトラブルシューティング
+
+- CORS: ブラウザ環境では互換サーバーが
+  `Access-Control-Allow-Origin` と
+  `Access-Control-Allow-Headers` を返す必要があります。
+- Authorization: 本パッケージは
+  `Authorization: Bearer <apiKey>` を送信します。
+  サーバー側が期待するトークン形式を確認してください。
+- model名: 互換サーバーごとに利用可能なモデルIDが異なります。
+  エンドポイントが受け付ける正確なモデル名を指定してください。
+- ストリーム互換: `stream: true` では OpenAI互換のSSE形式
+  （`data: {...}` + `data: [DONE]`）を想定しています。
+  形式が異なる場合、ストリーム解析に失敗する可能性があります。
+
+### 互換プローブ（自動検証）
+
+`examples/compat-probe` で互換性を自動検証できます:
+
+```bash
+npm -w @aituber-onair/chat run compat:probe
+```
+
+CI/ローカルで再現性を高める場合は
+`examples/mock-openai-server` を併用してください。
 
 #### Claude (Anthropic)
 

@@ -89,6 +89,7 @@ export class OpenAIChatServiceProvider
       optimizedOptions.verbosity,
       optimizedOptions.reasoning_effort,
       optimizedOptions.enableReasoningSummary,
+      this.getProviderName(),
     );
   }
 
