@@ -13,10 +13,14 @@ export {
   ChatServiceFactory,
   // Provider exports
   type ChatServiceOptions,
+  type ChatServiceOptionsByProvider,
+  type ChatProviderName,
+  type OpenAICompatibleChatServiceOptions,
   type ChatServiceProvider,
   // OpenAI provider
   OpenAIChatService,
   OpenAIChatServiceProvider,
+  OpenAICompatibleChatServiceProvider,
   // Gemini provider
   GeminiChatService,
   GeminiChatServiceProvider,
@@ -78,6 +82,7 @@ export {
   GEMINI_VISION_SUPPORTED_MODELS,
   ENDPOINT_GEMINI_API,
   // Claude model constants
+  MODEL_CLAUDE_4_6_SONNET,
   MODEL_CLAUDE_3_HAIKU,
   MODEL_CLAUDE_3_5_HAIKU,
   MODEL_CLAUDE_3_5_SONNET,

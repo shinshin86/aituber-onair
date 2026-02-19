@@ -7,6 +7,7 @@ import {
   ChatProviderName,
   ChatServiceOptionsByProvider,
   OpenAIChatServiceOptions,
+  OpenAICompatibleChatServiceOptions,
   OpenRouterChatServiceOptions,
   GeminiChatServiceOptions,
   ClaudeChatServiceOptions,
@@ -291,6 +292,14 @@ export class AITuberOnAirCore extends EventEmitter {
           ...baseOptions,
           ...(providerOptions as ProviderOptionsByName<'openai'> | undefined),
         } as OpenAIChatServiceOptions;
+      }
+      case 'openai-compatible': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as
+            | ProviderOptionsByName<'openai-compatible'>
+            | undefined),
+        } as OpenAICompatibleChatServiceOptions;
       }
       case 'openrouter': {
         return {

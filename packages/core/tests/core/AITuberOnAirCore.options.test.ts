@@ -95,4 +95,28 @@ describe('AITuberOnAirCore buildChatServiceOptions', () => {
       }),
     );
   });
+
+  it('passes endpoint options for openai-compatible provider', () => {
+    const options = createOptions({
+      chatProvider: 'openai-compatible',
+      apiKey: '',
+      model: 'local-model',
+      providerOptions: {
+        endpoint: 'http://localhost:11434/v1/chat/completions',
+      },
+    });
+
+    new AITuberOnAirCore(options);
+
+    const mockCreate = vi.mocked(ChatServiceFactory.createChatService);
+    expect(mockCreate).toHaveBeenCalledWith(
+      'openai-compatible',
+      expect.objectContaining({
+        apiKey: '',
+        model: 'local-model',
+        endpoint: 'http://localhost:11434/v1/chat/completions',
+        tools: [],
+      }),
+    );
+  });
 });

@@ -18,6 +18,7 @@ interface SettingsPanelProps extends SettingsHook {
 
 const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
   { value: 'openai', label: 'OpenAI' },
+  { value: 'openai-compatible', label: 'OpenAI-Compatible' },
   { value: 'openrouter', label: 'OpenRouter' },
   { value: 'gemini', label: 'Gemini' },
   { value: 'claude', label: 'Claude' },
@@ -91,6 +92,7 @@ export function SettingsPanel({
   updateLLMProvider,
   updateLLMModel,
   updateLLMApiKey,
+  updateLLMEndpoint,
   updateTTSEngine,
   updateTTSSpeaker,
   updateVoicevoxApiUrl,
@@ -311,26 +313,60 @@ export function SettingsPanel({
 
             <div className="settings-field">
               <label htmlFor="llm-model">Model</label>
-              <select
-                id="llm-model"
-                value={settings.llm.model}
-                onChange={(e) => updateLLMModel(e.target.value)}
-                disabled={disabled}
-              >
-                {availableModels.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
+              {settings.llm.provider === 'openai-compatible' ? (
+                <input
+                  id="llm-model"
+                  type="text"
+                  value={settings.llm.model}
+                  onChange={(e) => updateLLMModel(e.target.value)}
+                  placeholder="local-model"
+                  disabled={disabled}
+                />
+              ) : (
+                <select
+                  id="llm-model"
+                  value={settings.llm.model}
+                  onChange={(e) => updateLLMModel(e.target.value)}
+                  disabled={disabled}
+                >
+                  {availableModels.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
+            {settings.llm.provider === 'openai-compatible' && (
+              <div className="settings-field">
+                <label htmlFor="llm-endpoint">Endpoint URL</label>
+                <input
+                  id="llm-endpoint"
+                  type="text"
+                  value={settings.llm.endpoint || ''}
+                  onChange={(e) => updateLLMEndpoint(e.target.value)}
+                  placeholder="http://localhost:11434/v1/chat/completions"
+                  disabled={disabled}
+                />
+              </div>
+            )}
+
             <div className="settings-field">
-              <label htmlFor="llm-apikey">API Key ({settings.llm.provider})</label>
+              <label htmlFor="llm-apikey">
+                API Key ({settings.llm.provider})
+                {settings.llm.provider === 'openai-compatible'
+                  ? ' - optional'
+                  : ''}
+              </label>
               <input
                 id="llm-apikey"
                 type="password"
                 value={getApiKeyForProvider(settings.llm.provider)}
                 onChange={(e) => updateLLMApiKey(settings.llm.provider, e.target.value)}
-                placeholder="XXX-..."
+                placeholder={
+                  settings.llm.provider === 'openai-compatible'
+                    ? 'optional'
+                    : 'XXX-...'
+                }
                 disabled={disabled}
               />
             </div>
