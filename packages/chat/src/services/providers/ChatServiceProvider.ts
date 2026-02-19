@@ -158,9 +158,7 @@ export type ChatProviderName = keyof ChatServiceOptionsByProvider;
  * Chat service provider interface
  * Abstraction for various AI API providers (OpenAI, Gemini, Claude, etc.)
  */
-export interface ChatServiceProvider<
-  TOptions = BaseChatServiceOptions,
-> {
+export interface ChatServiceProvider<TOptions = BaseChatServiceOptions> {
   /**
    * Create a chat service instance
    * @param options Service options
