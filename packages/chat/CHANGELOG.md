@@ -1,5 +1,14 @@
 # @aituber-onair/chat
 
+## 0.14.0
+
+### Minor Changes
+
+- Added a dedicated `openai-compatible` provider for local/self-hosted OpenAI-compatible Chat Completions endpoints with explicit endpoint/model validation.
+- Added OpenAI-compatible compatibility tooling: probe script, mock server, local LLM CLI example, and CI workflow for reproducible compatibility checks.
+- Updated request behavior for `openai-compatible` to allow optional `apiKey` (Authorization header is omitted when no key is provided).
+- Expanded the React basic example and README docs to configure OpenAI-compatible endpoint/model directly and document local LLM usage.
+
 ## 0.13.0
 
 ### Minor Changes

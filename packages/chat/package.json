@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/chat",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Chat and LLM API integration library for AITuber OnAir",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -26,6 +26,8 @@
     "test": "npm run typecheck && vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "openai-compatible:probe": "node examples/compat-probe/index.js",
+    "openai-compatible:mock-server": "node examples/mock-openai-server/server.js",
     "fmt": "biome format . --write",
     "fmt:check": "biome format .",
     "lint": "biome lint .",

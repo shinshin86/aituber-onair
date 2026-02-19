@@ -97,6 +97,8 @@ interface ProviderSelectorProps {
   onGpt5EndpointPreferenceChange?: (
     preference: 'chat' | 'responses' | 'auto',
   ) => void;
+  openaiCompatibleEndpoint?: string;
+  onOpenaiCompatibleEndpointChange?: (endpoint: string) => void;
   enableReasoningSummary?: boolean;
   onEnableReasoningSummaryChange?: (enabled: boolean) => void;
   openrouterReasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
@@ -132,6 +134,10 @@ const providerInfo = {
   openai: {
     name: 'OpenAI',
     placeholder: 'sk-...',
+  },
+  'openai-compatible': {
+    name: 'OpenAI-Compatible',
+    placeholder: 'xxx...',
   },
   claude: {
     name: 'Claude',
@@ -523,12 +529,19 @@ export const allModels = [
   },
 ];
 
-export const getProviderForModel = (modelId: string): Provider => {
+export const getProviderForModel = (
+  modelId: string,
+  fallback: Provider = 'openai',
+): Provider => {
   const model = allModels.find((m) => m.id === modelId);
-  return (model?.provider as Provider) || 'openai';
+  return (model?.provider as Provider) || fallback;
 };
 
 export const getDefaultModelForProvider = (provider: Provider): string => {
+  if (provider === 'openai-compatible') {
+    return '';
+  }
+
   const defaultModel = allModels.find(
     (m) => m.provider === provider && m.default,
   );
@@ -543,6 +556,8 @@ export const isVisionSupported = (
   switch (provider) {
     case 'openai':
       return VISION_SUPPORTED_MODELS.includes(modelId);
+    case 'openai-compatible':
+      return false;
     case 'gemini':
       return GEMINI_VISION_SUPPORTED_MODELS.includes(modelId);
     case 'claude':
@@ -575,6 +590,8 @@ export default function ProviderSelector({
   onVerbosityChange,
   gpt5EndpointPreference,
   onGpt5EndpointPreferenceChange,
+  openaiCompatibleEndpoint,
+  onOpenaiCompatibleEndpointChange,
   enableReasoningSummary,
   onEnableReasoningSummaryChange,
   openrouterReasoningEffort,
@@ -683,6 +700,11 @@ export default function ProviderSelector({
               disabled={disabled}
               className="text-input"
             />
+            {provider === 'openai-compatible' && (
+              <span className="helper-text">
+                Optional. If empty, Authorization header is omitted.
+              </span>
+            )}
           </div>
 
           <div className="config-group">
@@ -704,6 +726,46 @@ export default function ProviderSelector({
               <option value="deep">Deep (~5000 tokens)</option>
             </select>
           </div>
+
+          {provider === 'openai-compatible' && (
+            <>
+              <div className="config-group config-full">
+                <label htmlFor="openai-compatible-endpoint">Endpoint URL</label>
+                <input
+                  id="openai-compatible-endpoint"
+                  type="url"
+                  value={openaiCompatibleEndpoint || ''}
+                  onChange={(e) =>
+                    onOpenaiCompatibleEndpointChange?.(e.target.value)
+                  }
+                  disabled={disabled}
+                  className="text-input"
+                  placeholder="http://127.0.0.1:18080/v1/chat/completions"
+                />
+                <span className="helper-text">
+                  Full URL for your OpenAI-compatible `/v1/chat/completions`
+                  endpoint.
+                </span>
+              </div>
+
+              <div className="config-group config-full">
+                <label htmlFor="openai-compatible-model">Model ID</label>
+                <input
+                  id="openai-compatible-model"
+                  type="text"
+                  value={selectedModel}
+                  onChange={(e) => onModelChange(e.target.value)}
+                  disabled={disabled}
+                  className="text-input"
+                  placeholder="your-local-model"
+                />
+                <span className="helper-text">
+                  Set the exact model ID exposed by your local/self-hosted
+                  server.
+                </span>
+              </div>
+            </>
+          )}
 
           {isGPT5 && (
             <>

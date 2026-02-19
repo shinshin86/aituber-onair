@@ -32,7 +32,7 @@ import {
  */
 export class OpenAIChatService implements ChatService {
   /** Provider name */
-  readonly provider: string = 'openai';
+  readonly provider: string;
 
   private apiKey: string;
   private model: string;
@@ -62,7 +62,10 @@ export class OpenAIChatService implements ChatService {
     verbosity?: 'low' | 'medium' | 'high',
     reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high',
     enableReasoningSummary: boolean = false,
+    provider: string = 'openai',
+    validateVisionModel: boolean = true,
   ) {
+    this.provider = provider;
     this.apiKey = apiKey;
     this.model = model;
     this.tools = tools || [];
@@ -74,8 +77,9 @@ export class OpenAIChatService implements ChatService {
     this.reasoning_effort = reasoning_effort;
     this.enableReasoningSummary = enableReasoningSummary;
 
-    // check if the vision model is supported
-    if (!VISION_SUPPORTED_MODELS.includes(visionModel)) {
+    // Official OpenAI validates vision model names strictly.
+    // Compatible providers can skip this to support arbitrary local IDs.
+    if (validateVisionModel && !VISION_SUPPORTED_MODELS.includes(visionModel)) {
       throw new Error(
         `Model ${visionModel} does not support vision capabilities.`,
       );
@@ -258,10 +262,15 @@ export class OpenAIChatService implements ChatService {
     maxTokens?: number,
   ): Promise<Response> {
     const body = this.buildRequestBody(messages, model, stream, maxTokens);
+    const headers: Record<string, string> = {};
 
-    const res = await ChatServiceHttpClient.post(this.endpoint, body, {
-      Authorization: `Bearer ${this.apiKey}`,
-    });
+    const shouldSendAuthorization =
+      this.provider !== 'openai-compatible' || this.apiKey.trim() !== '';
+    if (shouldSendAuthorization) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
+
+    const res = await ChatServiceHttpClient.post(this.endpoint, body, headers);
 
     return res;
   }
@@ -285,16 +294,31 @@ export class OpenAIChatService implements ChatService {
       stream,
     };
 
-    // Add max_tokens/max_completion_tokens based on endpoint
+    // Add max token field based on endpoint/provider compatibility.
+    // For openai-compatible providers, omit token limit by default to avoid
+    // server-specific context-window errors on local/self-hosted models.
     const tokenLimit =
       maxTokens !== undefined
         ? maxTokens
-        : getMaxTokensForResponseLength(this.responseLength);
+        : this.provider === 'openai-compatible'
+          ? this.responseLength !== undefined
+            ? getMaxTokensForResponseLength(this.responseLength)
+            : undefined
+          : getMaxTokensForResponseLength(this.responseLength);
 
     if (isResponsesAPI) {
-      body.max_output_tokens = tokenLimit;
+      if (tokenLimit !== undefined) {
+        body.max_output_tokens = tokenLimit;
+      }
     } else {
-      body.max_completion_tokens = tokenLimit;
+      if (tokenLimit !== undefined) {
+        // Many OpenAI-compatible local servers (vLLM/Ollama/LM Studio) expect max_tokens.
+        if (this.provider === 'openai-compatible') {
+          body.max_tokens = tokenLimit;
+        } else {
+          body.max_completion_tokens = tokenLimit;
+        }
+      }
     }
 
     // Handle messages format based on endpoint

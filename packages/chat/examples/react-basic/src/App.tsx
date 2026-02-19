@@ -20,6 +20,7 @@ import MessageList from './components/MessageList';
 
 export type Provider =
   | 'openai'
+  | 'openai-compatible'
   | 'claude'
   | 'gemini'
   | 'openrouter'
@@ -36,6 +37,8 @@ interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
 type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high';
 
 const KIMI_OFFICIAL_BASE_URL = 'https://api.moonshot.ai/v1';
+const DEFAULT_OPENAI_COMPAT_ENDPOINT =
+  'http://127.0.0.1:18080/v1/chat/completions';
 
 const normalizeReasoningEffortForModel = (
   modelId?: string,
@@ -85,6 +88,9 @@ function App() {
   const [gpt5EndpointPreference, setGpt5EndpointPreference] = useState<
     'chat' | 'responses' | 'auto'
   >('chat');
+  const [openaiCompatibleEndpoint, setOpenaiCompatibleEndpoint] = useState(
+    DEFAULT_OPENAI_COMPAT_ENDPOINT,
+  );
   const [enableReasoningSummary, setEnableReasoningSummary] = useState(false);
   const [openrouterReasoningEffort, setOpenrouterReasoningEffort] = useState<
     'none' | 'minimal' | 'low' | 'medium' | 'high'
@@ -115,6 +121,8 @@ function App() {
     reasoning_effort,
   );
   const supportsVision = isVisionSupported(provider, selectedModel);
+  const effectiveApiKey =
+    provider === 'openai-compatible' ? apiKey.trim() : apiKey;
 
   // Auto-scroll to bottom when messages change
   // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally want to scroll when messages change
@@ -124,10 +132,16 @@ function App() {
 
   // Initialize chat service when provider, API key, or model changes
   useEffect(() => {
-    if (apiKey) {
+    const shouldInitialize =
+      provider === 'openai-compatible'
+        ? Boolean(selectedModel.trim()) &&
+          Boolean(openaiCompatibleEndpoint.trim())
+        : Boolean(apiKey);
+
+    if (shouldInitialize) {
       try {
         const options: any = {
-          apiKey,
+          apiKey: effectiveApiKey,
           responseLength,
           model: selectedModel,
         };
@@ -142,6 +156,14 @@ function App() {
           }
           options.gpt5EndpointPreference = gpt5EndpointPreference;
           options.enableReasoningSummary = enableReasoningSummary;
+        }
+
+        if (provider === 'openai-compatible') {
+          const endpoint = openaiCompatibleEndpoint.trim();
+          if (!endpoint) {
+            throw new Error('OpenAI-compatible endpoint is required.');
+          }
+          options.endpoint = endpoint;
         }
 
         if (provider === 'openrouter') {
@@ -207,16 +229,19 @@ function App() {
       }
     } else {
       setChatService(null);
+      setError(null);
     }
   }, [
     provider,
     apiKey,
+    effectiveApiKey,
     responseLength,
     selectedModel,
     gpt5Preset,
     normalizedReasoningEffort,
     verbosity,
     gpt5EndpointPreference,
+    openaiCompatibleEndpoint,
     enableReasoningSummary,
     openrouterReasoningEffort,
     openrouterIncludeReasoning,
@@ -356,7 +381,10 @@ function App() {
             onProviderChange={(newProvider) => {
               setProvider(newProvider);
               // プロバイダー変更時にそのプロバイダーのデフォルトモデルを自動選択
-              const defaultModel = getDefaultModelForProvider(newProvider);
+              const defaultModel =
+                newProvider === 'openai-compatible'
+                  ? ''
+                  : getDefaultModelForProvider(newProvider);
               setSelectedModel(defaultModel);
               // Reset GPT-5 settings when changing provider
               setGpt5Preset(undefined);
@@ -375,7 +403,7 @@ function App() {
             onResponseLengthChange={setResponseLength}
             selectedModel={selectedModel}
             onModelChange={(modelId) => {
-              const newProvider = getProviderForModel(modelId);
+              const newProvider = getProviderForModel(modelId, provider);
               if (newProvider !== provider) {
                 setProvider(newProvider);
               }
@@ -394,6 +422,8 @@ function App() {
             onVerbosityChange={setVerbosity}
             gpt5EndpointPreference={gpt5EndpointPreference}
             onGpt5EndpointPreferenceChange={setGpt5EndpointPreference}
+            openaiCompatibleEndpoint={openaiCompatibleEndpoint}
+            onOpenaiCompatibleEndpointChange={setOpenaiCompatibleEndpoint}
             enableReasoningSummary={enableReasoningSummary}
             onEnableReasoningSummaryChange={setEnableReasoningSummary}
             openrouterReasoningEffort={openrouterReasoningEffort}

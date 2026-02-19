@@ -13,13 +13,13 @@ import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
  */
 export class ChatServiceFactory {
   /** Map of registered providers */
-  private static providers: Map<string, ChatServiceProvider> = new Map();
+  private static providers: Map<string, ChatServiceProvider<any>> = new Map();
 
   /**
    * Register a new provider
    * @param provider Provider instance
    */
-  static registerProvider(provider: ChatServiceProvider): void {
+  static registerProvider(provider: ChatServiceProvider<any>): void {
     this.providers.set(provider.getProviderName(), provider);
   }
 
@@ -48,7 +48,7 @@ export class ChatServiceFactory {
    * Get registered providers
    * @returns Provider map
    */
-  static getProviders(): Map<string, ChatServiceProvider> {
+  static getProviders(): Map<string, ChatServiceProvider<any>> {
     return this.providers;
   }
 

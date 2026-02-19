@@ -82,6 +82,24 @@ describe('ChatServiceFactory', () => {
       });
       expect(openaiService).toBeDefined();
 
+      // Test OpenAI-compatible
+      const openaiCompatibleService = ChatServiceFactory.createChatService(
+        'openai-compatible',
+        {
+          apiKey: 'test-openai-compatible-key',
+          endpoint: 'http://127.0.0.1:18080/v1/chat/completions',
+          model: 'local-model',
+        },
+      );
+      expect(openaiCompatibleService).toBeDefined();
+
+      const openaiCompatibleServiceWithoutKey =
+        ChatServiceFactory.createChatService('openai-compatible', {
+          endpoint: 'http://127.0.0.1:18080/v1/chat/completions',
+          model: 'local-model',
+        });
+      expect(openaiCompatibleServiceWithoutKey).toBeDefined();
+
       // Test Gemini
       const geminiService = ChatServiceFactory.createChatService('gemini', {
         apiKey: 'test-gemini-key',
@@ -136,6 +154,7 @@ describe('ChatServiceFactory', () => {
 
       expect(providers).toBeInstanceOf(Map);
       expect(providers.has('openai')).toBe(true);
+      expect(providers.has('openai-compatible')).toBe(true);
       expect(providers.has('gemini')).toBe(true);
       expect(providers.has('claude')).toBe(true);
       expect(providers.has('openrouter')).toBe(true);
@@ -161,6 +180,7 @@ describe('ChatServiceFactory', () => {
 
       expect(Array.isArray(availableProviders)).toBe(true);
       expect(availableProviders).toContain('openai');
+      expect(availableProviders).toContain('openai-compatible');
       expect(availableProviders).toContain('gemini');
       expect(availableProviders).toContain('claude');
       expect(availableProviders).toContain('openrouter');
@@ -180,6 +200,7 @@ describe('ChatServiceFactory', () => {
       const availableProviders = ChatServiceFactory.getAvailableProviders();
 
       expect(availableProviders).toContain('openai');
+      expect(availableProviders).toContain('openai-compatible');
       expect(availableProviders).toContain('gemini');
       expect(availableProviders).toContain('claude');
       expect(availableProviders).toContain('openrouter');
@@ -222,6 +243,7 @@ describe('ChatServiceFactory', () => {
       const providers = ChatServiceFactory.getProviders();
 
       expect(providers.has('openai')).toBe(true);
+      expect(providers.has('openai-compatible')).toBe(true);
       expect(providers.has('gemini')).toBe(true);
       expect(providers.has('claude')).toBe(true);
       expect(providers.has('openrouter')).toBe(true);

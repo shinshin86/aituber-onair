@@ -103,6 +103,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'medium', // default reasoning_effort for GPT-5
         undefined, // enableReasoningSummary
+        'openai',
       );
     });
 
@@ -125,6 +126,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         undefined,
+        'openai',
       );
     });
 
@@ -147,6 +149,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'none',
         undefined,
+        'openai',
       );
     });
 
@@ -170,6 +173,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'medium',
         undefined,
+        'openai',
       );
     });
 
@@ -193,6 +197,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'none',
         undefined,
+        'openai',
       );
     });
 
@@ -216,6 +221,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         undefined,
+        'openai',
       );
     });
 
@@ -238,6 +244,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         undefined,
+        'openai',
       );
     });
 
@@ -273,6 +280,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'medium', // default reasoning_effort for GPT-5
         undefined,
+        'openai',
       );
     });
 
@@ -295,6 +303,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'medium', // default reasoning_effort for GPT-5
         undefined,
+        'openai',
       );
     });
 
@@ -323,6 +332,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'medium',
         undefined,
+        'openai',
       );
     });
 
@@ -353,6 +363,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'medium',
         undefined,
+        'openai',
       );
     });
 
@@ -398,6 +409,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         undefined,
+        'openai',
       );
     });
 
@@ -420,6 +432,7 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         'medium',
         undefined,
+        'openai',
       );
     });
     it('should pass GPT-5 specific parameters correctly', () => {
@@ -444,6 +457,7 @@ describe('OpenAIChatServiceProvider', () => {
         'high', // verbosity
         'medium', // reasoning_effort
         undefined, // enableReasoningSummary
+        'openai',
       );
     });
 
@@ -473,6 +487,7 @@ describe('OpenAIChatServiceProvider', () => {
           undefined,
           'medium', // default reasoning_effort for GPT-5
           undefined,
+          'openai',
         );
       });
     });

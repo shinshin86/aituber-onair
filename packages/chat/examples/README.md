@@ -41,6 +41,34 @@ npm install  # Install any required dependencies
 node index.js
 ```
 
+### [OpenAI Compatible Probe](./compat-probe/)
+Validation probe for OpenAI-compatible Chat Completions endpoints:
+
+- **T1** Non-stream short response
+- **T2** Streaming completion (SSE)
+- **T3** Conversation history reference
+- **T4** Long input response
+- **T5** Intentional 4xx error handling
+- **T6** Timeout handling (simulated)
+
+Use this probe to verify compatibility against local LLM servers without
+adding provider-specific code.
+
+### [Local LLM CLI](./local-llm-cli/)
+Minimal interactive CLI for local/self-hosted LLMs (Ollama/LM Studio/vLLM):
+
+- Uses `openai-compatible` provider under the hood
+- Supports streaming output
+- Keeps simple conversation history
+- Works with env vars or CLI flags
+
+### [Mock OpenAI-Compatible Server](./mock-openai-server/)
+Minimal local server for CI and local validation:
+
+- Implements `POST /v1/chat/completions`
+- Supports both non-stream and SSE stream responses
+- Provides `GET /health` for readiness checks
+
 ### [React Example](./react-basic/)
 Interactive web application with TypeScript and Vite:
 
