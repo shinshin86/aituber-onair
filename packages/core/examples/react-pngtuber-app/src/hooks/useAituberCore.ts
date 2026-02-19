@@ -71,6 +71,13 @@ export function useAituberCore({
 
   const llmApiKey = getApiKeyForProvider(settings.llm.provider);
   const ttsApiKey = getTtsApiKey(settings, getApiKeyForProvider);
+  const isOpenAICompatibleProvider =
+    settings.llm.provider === 'openai-compatible';
+  const openAICompatibleEndpoint = settings.llm.endpoint?.trim() || '';
+  const resolvedModel =
+    settings.llm.provider === 'openai-compatible'
+      ? settings.llm.model.trim() || 'local-model'
+      : settings.llm.model;
   const createMessageId = useCallback(() => {
     messageIdSequenceRef.current += 1;
     return `${Date.now()}-${messageIdSequenceRef.current}`;
@@ -78,17 +85,27 @@ export function useAituberCore({
 
   // Effect 1: Recreate core when LLM settings change
   useEffect(() => {
-    if (!llmApiKey) {
+    if (!isOpenAICompatibleProvider && !llmApiKey) {
       coreRef.current?.offAll();
       coreRef.current = null;
       console.error(`API key is not set for provider: ${settings.llm.provider}`);
       return;
     }
 
+    if (isOpenAICompatibleProvider && !openAICompatibleEndpoint) {
+      coreRef.current?.offAll();
+      coreRef.current = null;
+      console.error('Endpoint URL is required for openai-compatible provider');
+      return;
+    }
+
     const core = new AITuberOnAirCore({
-      apiKey: llmApiKey,
+      apiKey: llmApiKey.trim(),
       chatProvider: settings.llm.provider,
-      model: settings.llm.model,
+      model: resolvedModel,
+      providerOptions: isOpenAICompatibleProvider
+        ? { endpoint: openAICompatibleEndpoint }
+        : undefined,
       chatOptions: {
         systemPrompt:
           'あなたはフレンドリーなAITuberです。親しみやすい口調で応答してください。',
@@ -158,7 +175,14 @@ export function useAituberCore({
       coreRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.llm.provider, settings.llm.model, llmApiKey, ttsApiKey, createMessageId]);
+  }, [
+    settings.llm.provider,
+    settings.llm.model,
+    settings.llm.endpoint,
+    llmApiKey,
+    ttsApiKey,
+    createMessageId,
+  ]);
 
   // Effect 2: Update voice service when TTS settings change (no core recreation)
   useEffect(() => {

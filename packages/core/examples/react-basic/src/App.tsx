@@ -142,6 +142,11 @@ const DO_NOT_SET_API_KEY_MESSAGE = 'API Keyを入力してください。';
 const CORE_SETTINGS_APPLIED_MESSAGE = 'AITuberOnAirCoreの設定を反映しました！';
 const DO_NOT_SETTINGS_MESSAGE = 'まずは「設定」を行ってください。';
 const CORE_NOT_INITIALIZED_MESSAGE = 'AITuberOnAirCoreが初期化されていません。';
+const OPENAI_COMPATIBLE_DEFAULT_MODEL = 'local-model';
+const OPENAI_COMPATIBLE_DEFAULT_ENDPOINT =
+  'http://localhost:11434/v1/chat/completions';
+const OPENAI_COMPATIBLE_ENDPOINT_REQUIRED_MESSAGE =
+  'OpenAI-CompatibleのEndpoint URLを入力してください。';
 
 const App: React.FC = () => {
   const idCounter = useRef(0);
@@ -166,6 +171,8 @@ const App: React.FC = () => {
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
   const [kimiBaseUrl, setKimiBaseUrl] = useState<string>('');
   const [openRouterBaseUrl, setOpenRouterBaseUrl] = useState<string>('');
+  const [openAICompatibleEndpoint, setOpenAICompatibleEndpoint] =
+    useState<string>(OPENAI_COMPATIBLE_DEFAULT_ENDPOINT);
 
   // DeepWiki MCP enable flag
   const [enableDeepWikiMcp, setEnableDeepWikiMcp] = useState<boolean>(false);
@@ -232,6 +239,8 @@ const App: React.FC = () => {
         return KIMI_VISION_SUPPORTED_MODELS.includes(model);
       case 'openrouter':
         return OPENROUTER_VISION_SUPPORTED_MODELS.includes(model);
+      case 'openai-compatible':
+        return false;
       default:
         return false;
     }
@@ -241,6 +250,7 @@ const App: React.FC = () => {
     chatProvider === 'openai' ||
     chatProvider === 'gemini' ||
     chatProvider === 'claude';
+  const requiresApiKey = chatProvider !== 'openai-compatible';
 
   // Voice settings state
   const [selectedVoiceEngine, setSelectedVoiceEngine] =
@@ -517,6 +527,9 @@ const App: React.FC = () => {
       case 'openrouter':
         setModel(openrouterModels[0]);
         break;
+      case 'openai-compatible':
+        setModel(OPENAI_COMPATIBLE_DEFAULT_MODEL);
+        break;
       default:
         setModel(openaiModels[0]);
         break;
@@ -640,8 +653,16 @@ const App: React.FC = () => {
    * initialize AITuberOnAirCore
    */
   const initializeAITuber = () => {
-    if (!apiKey.trim()) {
+    const trimmedApiKey = apiKey.trim();
+    const trimmedModel = model.trim();
+
+    if (requiresApiKey && !trimmedApiKey) {
       alert(DO_NOT_SET_API_KEY_MESSAGE);
+      return;
+    }
+
+    if (chatProvider === 'openai-compatible' && !trimmedModel) {
+      alert('OpenAI-CompatibleのModelを入力してください。');
       return;
     }
 
@@ -679,6 +700,14 @@ const App: React.FC = () => {
       if (trimmedBaseUrl) {
         providerOptions.baseUrl = trimmedBaseUrl;
       }
+    }
+    if (chatProvider === 'openai-compatible') {
+      const trimmedEndpoint = openAICompatibleEndpoint.trim();
+      if (!trimmedEndpoint) {
+        alert(OPENAI_COMPATIBLE_ENDPOINT_REQUIRED_MESSAGE);
+        return;
+      }
+      providerOptions.endpoint = trimmedEndpoint;
     }
 
     // prepare voice options if enabled
@@ -1133,16 +1162,19 @@ const App: React.FC = () => {
     const voiceOptions = createVoiceOptions();
 
     // create options
+    const shouldEnableTools = chatProvider !== 'openai-compatible';
     const aituberOptions: AITuberOnAirCoreOptions = {
       chatProvider,
-      apiKey: apiKey.trim(),
-      model,
+      apiKey: trimmedApiKey,
+      model: trimmedModel,
       chatOptions: {
         systemPrompt: systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
         responseLength,
       },
       providerOptions,
-      tools: [{ definition: randomIntTool, handler: randomIntHandler }],
+      tools: shouldEnableTools
+        ? [{ definition: randomIntTool, handler: randomIntHandler }]
+        : undefined,
       mcpServers: enableDeepWikiMcp ? mcpServers : [],
       voiceOptions,
       speechChunking: {
@@ -1482,7 +1514,7 @@ const App: React.FC = () => {
               🎨 アバター画像を生成中...
             </div>
           )}
-          {!apiKey && (
+          {requiresApiKey && !apiKey && (
             <div style={{ color: '#e01e5a' }}>
               API Keyが設定されていません。
             </div>
@@ -1654,11 +1686,13 @@ const App: React.FC = () => {
               {activeTab === 'llm' ? (
                 <div>
                   {/* LLM Settings */}
-                  <label htmlFor="apiKey">API Key:</label>
+                  <label htmlFor="apiKey">
+                    {requiresApiKey ? 'API Key:' : 'API Key (optional):'}
+                  </label>
                   <input
                     type="password"
                     id="apiKey"
-                    placeholder="..."
+                    placeholder={requiresApiKey ? '...' : '未入力で送信可能'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                   />
@@ -1685,51 +1719,81 @@ const App: React.FC = () => {
                     <option value="zai">Z.ai</option>
                     <option value="kimi">Kimi</option>
                     <option value="openrouter">OpenRouter</option>
+                    <option value="openai-compatible">
+                      OpenAI-Compatible
+                    </option>
                   </select>
 
                   <label htmlFor="model">Model:</label>
-                  <select
-                    id="model"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                  >
-                    {chatProvider === 'openai' &&
-                      openaiModels.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    {chatProvider === 'gemini' &&
-                      geminiModels.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    {chatProvider === 'claude' &&
-                      claudeModels.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    {chatProvider === 'zai' &&
-                      zaiModels.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    {chatProvider === 'kimi' &&
-                      kimiModels.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    {chatProvider === 'openrouter' &&
-                      openrouterModels.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                  </select>
+                  {chatProvider === 'openai-compatible' ? (
+                    <input
+                      id="model"
+                      type="text"
+                      placeholder={OPENAI_COMPATIBLE_DEFAULT_MODEL}
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                    />
+                  ) : (
+                    <select
+                      id="model"
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                    >
+                      {chatProvider === 'openai' &&
+                        openaiModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'gemini' &&
+                        geminiModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'claude' &&
+                        claudeModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'zai' &&
+                        zaiModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'kimi' &&
+                        kimiModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'openrouter' &&
+                        openrouterModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                    </select>
+                  )}
+
+                  {chatProvider === 'openai-compatible' && (
+                    <>
+                      <label htmlFor="openAICompatibleEndpoint">
+                        Endpoint URL:
+                      </label>
+                      <input
+                        id="openAICompatibleEndpoint"
+                        type="text"
+                        placeholder={OPENAI_COMPATIBLE_DEFAULT_ENDPOINT}
+                        value={openAICompatibleEndpoint}
+                        onChange={(e) =>
+                          setOpenAICompatibleEndpoint(e.target.value)
+                        }
+                      />
+                    </>
+                  )}
 
                   {chatProvider === 'kimi' && (
                     <>

@@ -12,8 +12,9 @@ This example application serves as a practical implementation guide for integrat
 
 - **🤖 Multi-Provider LLM Support**
   - OpenAI (GPT-3.5, GPT-4, GPT-5 series)
+  - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
   - Google Gemini (Pro, Flash, Thinking models)
-  - Anthropic Claude (4.6 Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
+  - Anthropic Claude (4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
   - Seamless provider switching
 
 - **🎙️ Comprehensive Voice Synthesis**
@@ -52,6 +53,7 @@ This example application serves as a practical implementation guide for integrat
 - Node.js 18+ 
 - npm or yarn
 - API keys for your chosen LLM provider(s)
+  (`openai-compatible` can work without an API key)
 - (Optional) API keys for voice engines
 
 ### Installation
@@ -90,8 +92,8 @@ npm run fmt      # Format code with Biome
 
 Click the "設定" (Settings) button to configure your AI provider:
 
-1. **Select Provider**: Choose from OpenAI, Gemini, Claude, Z.ai, Kimi, or OpenRouter
-2. **Enter API Key**: Provide your provider's API key
+1. **Select Provider**: Choose from OpenAI, OpenAI-Compatible, Gemini, Claude, Z.ai, Kimi, or OpenRouter
+2. **Enter API Key**: Provide your provider's API key (`openai-compatible` is optional)
 3. **Choose Model**: Select the specific model to use
 4. **System Prompt**: Customize the AI's behavior and personality
 
@@ -104,12 +106,19 @@ Click the "設定" (Settings) button to configure your AI provider:
 - GPT-4o, GPT-4o Mini
 - GPT-4.5 Preview
 
+**OpenAI-Compatible:**
+- Any server model ID (default example: `local-model`)
+- Endpoint URL is required (full `/v1/chat/completions` URL)
+- API key is optional (header is omitted when empty)
+- This example disables tool calling automatically for better local-LLM compatibility
+
 **Gemini:**
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)
 - Gemini 2.0 series (Flash Lite, Flash)
 
 **Claude:**
+- Claude 4.6 Sonnet
 - Claude 4.6 Opus
 - Claude 4.5 series (Opus, Sonnet, Haiku)
 - Claude 3 Haiku

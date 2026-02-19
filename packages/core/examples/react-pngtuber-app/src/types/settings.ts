@@ -1,4 +1,10 @@
-export type ChatProviderOption = 'openai' | 'openrouter' | 'gemini' | 'claude' | 'zai';
+export type ChatProviderOption =
+  | 'openai'
+  | 'openrouter'
+  | 'gemini'
+  | 'claude'
+  | 'zai'
+  | 'openai-compatible';
 export type TTSEngineOption =
   | 'openai'
   | 'voicevox'
@@ -14,11 +20,13 @@ export interface ProviderApiKeys {
   gemini?: string;
   claude?: string;
   zai?: string;
+  'openai-compatible'?: string;
 }
 
 export interface LLMSettings {
   provider: ChatProviderOption;
   model: string;
+  endpoint?: string;
   apiKeys: ProviderApiKeys;
 }
 

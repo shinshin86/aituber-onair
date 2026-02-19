@@ -7,7 +7,7 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 
 ## What this app can do
 
-- Chat with LLM providers: `openai`, `openrouter`, `gemini`, `claude`, `zai`
+- Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `claude`, `zai`
 - Use TTS engines: `openai`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `none`
 - Fetch and select speaker lists dynamically:
   - `voicevox` / `aivisSpeech`: from `/speakers`
@@ -24,12 +24,18 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 ## Setup
 
 ```bash
-npm install
+cd packages/core/examples/react-pngtuber-app
+npm install --include=dev
 npm run dev
 ```
 
 After launch, open **Settings** and set API keys / provider options there.  
 All settings are saved in `localStorage` (`pngtuber-settings`).
+
+For `openai-compatible`, set:
+- `Endpoint URL` (required, full `/v1/chat/completions` URL)
+- `Model` (required, e.g. `local-model`)
+- `API Key` (optional; omitted when empty)
 
 ## Settings persistence
 
@@ -68,6 +74,20 @@ You can tune constants in `src/hooks/useAudioLipsync.ts`:
 - Firefox and Safari are not supported
 - Mic button is disabled on unsupported browsers
 - Requires HTTPS or localhost
+
+## Troubleshooting
+
+If you see:
+
+`Cannot find package '@vitejs/plugin-react'`
+
+run:
+
+```bash
+cd packages/core/examples/react-pngtuber-app
+rm -rf node_modules
+npm install --include=dev
+```
 
 ## Tech stack
 

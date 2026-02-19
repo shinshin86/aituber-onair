@@ -8,15 +8,20 @@ import type {
 
 const STORAGE_KEY = 'pngtuber-settings';
 const DEFAULT_AIVIS_CLOUD_MODEL_UUID = '22e8ed77-94fe-4ef2-871f-a86f94e9a579';
+const DEFAULT_OPENAI_COMPATIBLE_MODEL = 'local-model';
+const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
+  'http://localhost:11434/v1/chat/completions';
 
 function getDefaultSettings(): AppSettings {
   return {
     llm: {
       provider: 'openai',
       model: 'gpt-4.1-nano',
+      endpoint: DEFAULT_OPENAI_COMPATIBLE_ENDPOINT,
       apiKeys: {
         openai: '',
         zai: '',
+        'openai-compatible': '',
       },
     },
     tts: {
@@ -55,10 +60,16 @@ function saveSettings(settings: AppSettings) {
 
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
-  const availableModels = useMemo(
-    () => AITuberOnAirCore.getSupportedModels(settings.llm.provider),
-    [settings.llm.provider],
-  );
+  const availableModels = useMemo(() => {
+    const models = AITuberOnAirCore.getSupportedModels(settings.llm.provider);
+    if (settings.llm.provider !== 'openai-compatible') {
+      return models;
+    }
+    if (settings.llm.model) {
+      return [settings.llm.model];
+    }
+    return [DEFAULT_OPENAI_COMPATIBLE_MODEL];
+  }, [settings.llm.provider, settings.llm.model]);
 
   // Persist settings on change
   useEffect(() => {
@@ -67,12 +78,20 @@ export function useSettings() {
 
   const updateLLMProvider = useCallback((provider: ChatProviderOption) => {
     const models = AITuberOnAirCore.getSupportedModels(provider);
+    const nextModel =
+      provider === 'openai-compatible'
+        ? DEFAULT_OPENAI_COMPATIBLE_MODEL
+        : models[0] || '';
     setSettings((prev) => ({
       ...prev,
       llm: {
         ...prev.llm,
         provider,
-        model: models[0] || '',
+        model: nextModel,
+        endpoint:
+          provider === 'openai-compatible'
+            ? prev.llm.endpoint || DEFAULT_OPENAI_COMPATIBLE_ENDPOINT
+            : prev.llm.endpoint,
       },
     }));
   }, []);
@@ -91,6 +110,13 @@ export function useSettings() {
         ...prev.llm,
         apiKeys: { ...prev.llm.apiKeys, [provider]: key },
       },
+    }));
+  }, []);
+
+  const updateLLMEndpoint = useCallback((endpoint: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      llm: { ...prev.llm, endpoint },
     }));
   }, []);
 
@@ -205,6 +231,7 @@ export function useSettings() {
     updateLLMProvider,
     updateLLMModel,
     updateLLMApiKey,
+    updateLLMEndpoint,
     updateTTSEngine,
     updateTTSSpeaker,
     updateVoicevoxApiUrl,
