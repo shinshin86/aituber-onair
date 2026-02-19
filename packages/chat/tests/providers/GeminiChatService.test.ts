@@ -10,10 +10,12 @@ import type { Message } from '../../src/types';
 const messages: Message[] = [{ role: 'user', content: 'hello' }];
 
 const createOkResponse = () =>
-  new Response(JSON.stringify({ candidates: [] }), {
+  ({
+    ok: true,
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+    json: async () => ({ candidates: [] }),
+    text: async () => JSON.stringify({ candidates: [] }),
+  }) as Response;
 
 describe('GeminiChatService API version selection', () => {
   beforeEach(() => {
