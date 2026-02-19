@@ -125,6 +125,16 @@ aituber-onair/
 - **packages/bushitsu-client**: The WebSocket client library (`@aituber-onair/bushitsu-client`) for chat functionality with React hooks support.
 - **packages/kizuna**: The user-AI relationship management library (`@aituber-onair/kizuna`) for engagement tracking.
 
+## Agent Skills
+
+This repository includes shared Agent Skills so Codex and Claude Code can use
+the same workflow definitions.
+
+- Guide: `docs/agent-skills.md`
+- Current skill: `add-chat-model`
+- Canonical source: `skills/add-chat-model/SKILL.md`
+- Claude Code path: `.claude/skills/add-chat-model/SKILL.md`
+
 ## Release Process
 
 Releases are managed via **manual version updates and CHANGELOG maintenance**.

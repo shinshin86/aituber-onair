@@ -4,6 +4,9 @@ import type { GeminiChatServiceOptions } from '../../src/services/providers/Chat
 import type { ToolDefinition } from '../../src/types/toolChat';
 import type { MCPServerConfig } from '../../src/types/mcp';
 import {
+  MODEL_GEMINI_3_1_PRO_PREVIEW,
+  MODEL_GEMINI_3_PRO_PREVIEW,
+  MODEL_GEMINI_3_FLASH_PREVIEW,
   MODEL_GEMINI_2_5_PRO,
   MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_2_5_FLASH_LITE,
@@ -34,6 +37,9 @@ describe('GeminiChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GEMINI_3_1_PRO_PREVIEW,
+        MODEL_GEMINI_3_PRO_PREVIEW,
+        MODEL_GEMINI_3_FLASH_PREVIEW,
         MODEL_GEMINI_2_5_PRO,
         MODEL_GEMINI_2_5_FLASH,
         MODEL_GEMINI_2_5_FLASH_LITE,
@@ -58,6 +64,15 @@ describe('GeminiChatServiceProvider', () => {
 
   describe('supportsVisionForModel', () => {
     it('should return true for vision-supported models', () => {
+      expect(
+        provider.supportsVisionForModel(MODEL_GEMINI_3_1_PRO_PREVIEW),
+      ).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GEMINI_3_PRO_PREVIEW)).toBe(
+        true,
+      );
+      expect(
+        provider.supportsVisionForModel(MODEL_GEMINI_3_FLASH_PREVIEW),
+      ).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GEMINI_2_0_FLASH)).toBe(
         true,
       );

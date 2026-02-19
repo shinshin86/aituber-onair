@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## 0.15.0
+
+### Minor Changes
+
+- Added Gemini 3.1 Pro Preview (`gemini-3.1-pro-preview`), Gemini 3 Pro Preview (`gemini-3-pro-preview`), and Gemini 3 Flash Preview (`gemini-3-flash-preview`) to Gemini constants and provider supported models.
+- Added Gemini 3.1/3 Pro/3 Flash Preview to `GEMINI_VISION_SUPPORTED_MODELS` so vision model resolution recognizes all Gemini 3 variants.
+- Updated Gemini provider tests, React basic model selector, and README docs (EN/JA) to include Gemini 3.1 and Gemini 3 preview models.
+
 ## 0.14.0
 
 ### Minor Changes

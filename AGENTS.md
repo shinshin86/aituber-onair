@@ -47,3 +47,12 @@
 ## Security & Configuration
 - Never hardcode API keys (OpenAI/Gemini/etc). Use environment variables; `.env*` stays untracked.
 - Preserve backwards‑compatible exports; treat `dist` as build output only.
+
+## Agent Skills Usage
+- Use the shared skill guide in `docs/agent-skills.md`.
+- Current skill: `add-chat-model`.
+- Canonical skill source: `skills/add-chat-model/SKILL.md`.
+- Claude Code mirror path: `.claude/skills/add-chat-model/SKILL.md`.
+- When requests match "add a new model", "support model <model_id>", "add <provider> model", or "update supported models", follow `skills/add-chat-model/SKILL.md`.
+- If required inputs are missing, collect: `provider`, `model_id`, `model_const_name`, `display_name`, `supports_vision`, and optional `bump_version` (default `true`).
+- Keep both skill copies synchronized when updating the procedure.

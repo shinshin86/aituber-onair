@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add Chat Model"
+  short_description: "Add model support and prepare chat release updates"
+  default_prompt: "Use $add-chat-model to add a provider model across constants, provider, tests, examples, docs, and release-prep version files."

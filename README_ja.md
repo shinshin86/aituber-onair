@@ -126,6 +126,16 @@ aituber-onair/
 - **packages/bushitsu-client**: チャット機能用WebSocketクライアントライブラリ（`@aituber-onair/bushitsu-client`）です。
 - **packages/kizuna**: ユーザーとAIの関係性管理ライブラリ（`@aituber-onair/kizuna`）です。
 
+## Agent Skills
+
+このリポジトリでは、Codex と Claude Code の両方で同じ手順を使えるよう、
+共通の Agent Skills を管理しています。
+
+- ガイド: `docs/agent-skills.ja.md`
+- 現在のスキル: `add-chat-model`
+- 正本: `skills/add-chat-model/SKILL.md`
+- Claude Code 用配置: `.claude/skills/add-chat-model/SKILL.md`
+
 ## リリース手順
 
 リリースは**手動のバージョン更新とCHANGELOGの更新**で管理します。
