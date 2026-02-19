@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/core",
-  "version": "0.22.2",
+  "version": "0.23.0",
   "description": "Core library for AITuber OnAir providing voice synthesis and chat processing",
   "main": "dist/index.js",
   "module": "dist/index.js",
