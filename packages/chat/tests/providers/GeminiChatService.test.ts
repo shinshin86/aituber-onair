@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GeminiChatService } from '../../src/services/providers/gemini/GeminiChatService';
-import { ChatServiceHttpClient, HttpError } from '../../src/utils/chatServiceHttpClient';
+import {
+  ChatServiceHttpClient,
+  HttpError,
+} from '../../src/utils/chatServiceHttpClient';
 import {
   MODEL_GEMINI_2_0_FLASH,
   MODEL_GEMINI_3_FLASH_PREVIEW,
@@ -32,7 +35,11 @@ describe('GeminiChatService API version selection', () => {
       MODEL_GEMINI_3_FLASH_PREVIEW,
     );
 
-    await (service as any).callGemini(messages, MODEL_GEMINI_3_FLASH_PREVIEW, true);
+    await (service as any).callGemini(
+      messages,
+      MODEL_GEMINI_3_FLASH_PREVIEW,
+      true,
+    );
 
     expect(postSpy).toHaveBeenCalledTimes(1);
     expect(postSpy.mock.calls[0][0]).toContain(
