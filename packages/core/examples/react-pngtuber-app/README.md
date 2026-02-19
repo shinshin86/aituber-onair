@@ -25,7 +25,7 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 
 ```bash
 cd packages/core/examples/react-pngtuber-app
-npm install --include=dev
+npm install
 npm run dev
 ```
 
@@ -85,9 +85,11 @@ run:
 
 ```bash
 cd packages/core/examples/react-pngtuber-app
-rm -rf node_modules
-npm install --include=dev
+npm install
 ```
+
+If it still fails, check whether your npm config/environment omits
+`devDependencies` (e.g. `NODE_ENV=production` or `omit=dev`).
 
 ## Tech stack
 
