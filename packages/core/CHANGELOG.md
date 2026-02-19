@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.23.0
+
+### Minor Changes
+
+- Added `openai-compatible` provider options handling in `AITuberOnAirCore` so endpoint/model settings are forwarded correctly.
+- Re-exported `OpenAICompatibleChatServiceProvider`, related option types, and `MODEL_CLAUDE_4_6_SONNET` from the core entry point.
+- Updated core React examples (`react-basic`, `react-pngtuber-app`) to support `openai-compatible` setup (endpoint + optional API key), and improved local LLM compatibility.
+- Added Claude Sonnet 4.6 to the React basic example model list and documentation.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aituber-onair/chat@0.14.0
+
 ## 0.22.2
 
 ### Patch Changes
