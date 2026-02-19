@@ -59,8 +59,9 @@ export type OpenAIChatServiceOptions = DisallowKeys<
 
 export type OpenAICompatibleChatServiceOptions = Omit<
   OpenAIChatServiceOptions,
-  'model' | 'endpoint' | 'mcpServers'
+  'apiKey' | 'model' | 'endpoint' | 'mcpServers'
 > & {
+  apiKey?: string;
   model: string;
   endpoint: string;
   mcpServers?: never;
@@ -158,7 +159,7 @@ export type ChatProviderName = keyof ChatServiceOptionsByProvider;
  * Abstraction for various AI API providers (OpenAI, Gemini, Claude, etc.)
  */
 export interface ChatServiceProvider<
-  TOptions extends BaseChatServiceOptions = BaseChatServiceOptions,
+  TOptions = BaseChatServiceOptions,
 > {
   /**
    * Create a chat service instance

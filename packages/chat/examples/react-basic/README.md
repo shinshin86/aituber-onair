@@ -4,7 +4,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
 
 ## Features
 
-- 🔄 **Provider Switching** - Switch between OpenAI, Claude, Gemini, OpenRouter, Z.ai, and Kimi in real-time
+- 🔄 **Provider Switching** - Switch between OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, and Kimi in real-time
 - 💬 **Real-time Streaming** - See AI responses as they're generated
 - 📝 **Chat History** - Full conversation history with role indicators
 - 🖼️ **Vision Support** - Upload and analyze images (drag & drop supported)
@@ -37,6 +37,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
 - npm or yarn
 - API keys for at least one provider:
   - OpenAI: https://platform.openai.com/api-keys
+  - OpenAI-compatible (Local LLM): use your own endpoint and token (or dummy key)
   - Claude: https://console.anthropic.com/
   - Gemini: https://makersuite.google.com/app/apikey
   - OpenRouter: https://openrouter.ai/
@@ -73,10 +74,18 @@ react-basic/
 
 ### Basic Chat
 
-1. Select a provider (OpenAI, Claude, Gemini, OpenRouter, Z.ai, or Kimi)
+1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, or Kimi)
 2. Enter your API key
 3. Type a message and press Enter or click Send
 4. Watch the AI response stream in real-time
+
+### Local LLM (OpenAI-Compatible)
+
+1. Select `OpenAI-Compatible`
+2. Set `Endpoint URL` (example: `http://127.0.0.1:18080/v1/chat/completions`)
+3. Set `Model ID` to the exact model name exposed by your server
+4. API key is optional (if empty, Authorization header is omitted)
+5. Send a message and verify streaming/non-stream behavior
 
 ### Image Analysis (Vision)
 
@@ -101,6 +110,12 @@ Use the dropdown to select response length:
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
 - Reasoning Effort: GPT-5 (5.0) supports Minimal/Low/Medium/High, while GPT-5.1 swaps Minimal for None (fastest) plus Low/Medium/High
+
+**OpenAI-Compatible (Local/Self-Hosted)**
+- Endpoint: user-configurable full URL (`/v1/chat/completions`)
+- Model: user-configurable model ID
+- Vision: depends on your server/model implementation
+- Best for: local LLMs (Ollama/LM Studio/vLLM-compatible endpoints)
 
 **Claude**
 - Models: Claude Sonnet 4.6, Claude Opus 4.6, Claude 4.5 (Opus, Sonnet, Haiku), Claude 4 (Sonnet, Opus), Claude 3 (Sonnet, Haiku)

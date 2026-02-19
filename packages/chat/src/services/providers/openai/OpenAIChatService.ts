@@ -262,10 +262,15 @@ export class OpenAIChatService implements ChatService {
     maxTokens?: number,
   ): Promise<Response> {
     const body = this.buildRequestBody(messages, model, stream, maxTokens);
+    const headers: Record<string, string> = {};
 
-    const res = await ChatServiceHttpClient.post(this.endpoint, body, {
-      Authorization: `Bearer ${this.apiKey}`,
-    });
+    const shouldSendAuthorization =
+      this.provider !== 'openai-compatible' || this.apiKey.trim() !== '';
+    if (shouldSendAuthorization) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
+
+    const res = await ChatServiceHttpClient.post(this.endpoint, body, headers);
 
     return res;
   }

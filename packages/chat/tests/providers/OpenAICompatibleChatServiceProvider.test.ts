@@ -47,7 +47,6 @@ describe('OpenAICompatibleChatServiceProvider', () => {
 
   it('should create chat service with endpoint and model', () => {
     const service = provider.createChatService({
-      apiKey: 'test-key',
       endpoint: 'http://127.0.0.1:18080/v1/chat/completions',
       model: 'local-model',
     });
@@ -56,6 +55,57 @@ describe('OpenAICompatibleChatServiceProvider', () => {
     expect(service.getModel()).toBe('local-model');
     expect(service.getVisionModel()).toBe('local-model');
     expect((service as any).provider).toBe('openai-compatible');
+  });
+
+  it('should omit authorization header when apiKey is empty', async () => {
+    const nativeFetch = (url: string, init?: RequestInit) => fetch(url, init);
+    let headers: Record<string, unknown> = {};
+
+    ChatServiceHttpClient.setFetch(async (_url, init = {}) => {
+      headers = (init.headers as Record<string, unknown>) || {};
+      throw new Error('request-captured');
+    });
+
+    try {
+      const service = provider.createChatService({
+        endpoint: 'http://127.0.0.1:18080/v1/chat/completions',
+        model: 'local-model',
+      });
+
+      await expect(
+        service.chatOnce([{ role: 'user', content: 'hello' }], false, () => {}),
+      ).rejects.toThrow('request-captured');
+
+      expect(headers.Authorization).toBeUndefined();
+    } finally {
+      ChatServiceHttpClient.setFetch(nativeFetch);
+    }
+  });
+
+  it('should send authorization header when apiKey is provided', async () => {
+    const nativeFetch = (url: string, init?: RequestInit) => fetch(url, init);
+    let headers: Record<string, unknown> = {};
+
+    ChatServiceHttpClient.setFetch(async (_url, init = {}) => {
+      headers = (init.headers as Record<string, unknown>) || {};
+      throw new Error('request-captured');
+    });
+
+    try {
+      const service = provider.createChatService({
+        apiKey: 'test-key',
+        endpoint: 'http://127.0.0.1:18080/v1/chat/completions',
+        model: 'local-model',
+      });
+
+      await expect(
+        service.chatOnce([{ role: 'user', content: 'hello' }], false, () => {}),
+      ).rejects.toThrow('request-captured');
+
+      expect(headers.Authorization).toBe('Bearer test-key');
+    } finally {
+      ChatServiceHttpClient.setFetch(nativeFetch);
+    }
   });
 
   it('should reject mcpServers', () => {

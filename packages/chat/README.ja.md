@@ -179,6 +179,7 @@ const compatibleService = ChatServiceFactory.createChatService(
 
 注意:
 - `openai-compatible` は `endpoint` と `model` の指定が必須です。
+- `openai-compatible` では `apiKey` は任意です。
 - `openai-compatible` では `mcpServers` は利用できません。
 - 既存の `openai` プロバイダーの挙動は変更されません。
 
@@ -209,8 +210,9 @@ const compatibleService = ChatServiceFactory.createChatService(
 - CORS: ブラウザ環境では互換サーバーが
   `Access-Control-Allow-Origin` と
   `Access-Control-Allow-Headers` を返す必要があります。
-- Authorization: 本パッケージは
+- Authorization: `apiKey` を指定した場合は
   `Authorization: Bearer <apiKey>` を送信します。
+  `apiKey` 未指定時は Authorization ヘッダーを送信しません。
   サーバー側が期待するトークン形式を確認してください。
 - model名: 互換サーバーごとに利用可能なモデルIDが異なります。
   エンドポイントが受け付ける正確なモデル名を指定してください。

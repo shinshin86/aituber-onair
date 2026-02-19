@@ -179,6 +179,7 @@ const compatibleService = ChatServiceFactory.createChatService(
 
 Notes:
 - `openai-compatible` requires both `endpoint` and `model`.
+- `apiKey` is optional for `openai-compatible`.
 - `openai-compatible` does not support `mcpServers`.
 - Existing `openai` provider behavior is unchanged.
 
@@ -208,7 +209,8 @@ Best effort:
 
 - CORS: In browser environments, ensure the compatible server returns
   `Access-Control-Allow-Origin` and `Access-Control-Allow-Headers`.
-- Authorization: This package sends `Authorization: Bearer <apiKey>`.
+- Authorization: This package sends `Authorization: Bearer <apiKey>` when
+  `apiKey` is provided. If omitted, no Authorization header is sent.
   Confirm the expected token format on the server side.
 - Model name: Compatible servers often expose different model IDs.
   Confirm the exact model name accepted by your endpoint.

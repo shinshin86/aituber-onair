@@ -93,6 +93,13 @@ describe('ChatServiceFactory', () => {
       );
       expect(openaiCompatibleService).toBeDefined();
 
+      const openaiCompatibleServiceWithoutKey =
+        ChatServiceFactory.createChatService('openai-compatible', {
+          endpoint: 'http://127.0.0.1:18080/v1/chat/completions',
+          model: 'local-model',
+        });
+      expect(openaiCompatibleServiceWithoutKey).toBeDefined();
+
       // Test Gemini
       const geminiService = ChatServiceFactory.createChatService('gemini', {
         apiKey: 'test-gemini-key',

@@ -1,6 +1,8 @@
 import { ChatService } from '../../ChatService';
-import { OpenAICompatibleChatServiceOptions } from '../ChatServiceProvider';
-import { OpenAIChatServiceProvider } from '../openai/OpenAIChatServiceProvider';
+import {
+  ChatServiceProvider,
+  OpenAICompatibleChatServiceOptions,
+} from '../ChatServiceProvider';
 import { OpenAIChatService } from '../openai/OpenAIChatService';
 
 /**
@@ -10,11 +12,13 @@ import { OpenAIChatService } from '../openai/OpenAIChatService';
  * To avoid accidental usage of OpenAI default endpoints, endpoint/model are
  * validated explicitly.
  */
-export class OpenAICompatibleChatServiceProvider extends OpenAIChatServiceProvider {
+export class OpenAICompatibleChatServiceProvider
+  implements ChatServiceProvider<OpenAICompatibleChatServiceOptions>
+{
   createChatService(options: OpenAICompatibleChatServiceOptions): ChatService {
     this.validateRequiredOptions(options);
     return new OpenAIChatService(
-      options.apiKey,
+      options.apiKey?.trim() ?? '',
       options.model,
       options.visionModel ?? options.model,
       options.tools,
@@ -42,6 +46,10 @@ export class OpenAICompatibleChatServiceProvider extends OpenAIChatServiceProvid
 
   supportsVision(): boolean {
     return false;
+  }
+
+  getDefaultModel(): string {
+    return 'local-model';
   }
 
   private validateRequiredOptions(
