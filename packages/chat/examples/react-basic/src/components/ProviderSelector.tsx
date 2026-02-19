@@ -30,6 +30,9 @@ import {
   MODEL_CLAUDE_4_6_SONNET,
   MODEL_CLAUDE_4_6_OPUS,
   // Gemini models
+  MODEL_GEMINI_3_1_PRO_PREVIEW,
+  MODEL_GEMINI_3_PRO_PREVIEW,
+  MODEL_GEMINI_3_FLASH_PREVIEW,
   MODEL_GEMINI_2_5_PRO,
   MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_2_5_FLASH_LITE,
@@ -311,6 +314,24 @@ export const allModels = [
   },
 
   // Gemini models
+  {
+    id: MODEL_GEMINI_3_1_PRO_PREVIEW,
+    name: 'Gemini 3.1 Pro Preview',
+    provider: 'gemini',
+    default: false,
+  },
+  {
+    id: MODEL_GEMINI_3_PRO_PREVIEW,
+    name: 'Gemini 3 Pro Preview',
+    provider: 'gemini',
+    default: false,
+  },
+  {
+    id: MODEL_GEMINI_3_FLASH_PREVIEW,
+    name: 'Gemini 3 Flash Preview',
+    provider: 'gemini',
+    default: false,
+  },
   {
     id: MODEL_GEMINI_2_5_PRO,
     name: 'Gemini 2.5 Pro',

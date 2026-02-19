@@ -427,18 +427,20 @@ export class GeminiChatService implements ChatService {
 
     const isLite = /flash[-_]lite/.test(model);
     const isGemini25 = /gemini-2\.5/.test(model);
-    const firstVer: 'v1' | 'v1beta' = isLite || isGemini25 ? 'v1beta' : 'v1';
+    const isGemini3Preview = /^gemini-3(?:\.[0-9]+)?-.*preview/.test(model);
+    const requiresV1beta = isLite || isGemini25 || isGemini3Preview;
+    const firstVer: 'v1' | 'v1beta' = requiresV1beta ? 'v1beta' : 'v1';
 
     const tryApi = async (): Promise<Response> => {
       try {
         const payload = firstVer === 'v1' ? body : this.adaptKeysForApi(body); // snake_case conversion
         return await fetchOnce(firstVer, payload);
       } catch (e: any) {
-        // Only retry v1beta if camel/snake case mismatch error occurs in models that don't require v1beta
-        if (
-          !(isLite || isGemini25) &&
-          /Unknown name|Cannot find field|404/.test(e.message)
-        ) {
+        // Retry with v1beta when a v1 request looks unsupported for this model.
+        const looksLikeVersionMismatch =
+          /Unknown name|Cannot find field|404/.test(e?.message || '') ||
+          e?.status === 404;
+        if (!requiresV1beta && looksLikeVersionMismatch) {
           return await fetchOnce('v1beta', this.adaptKeysForApi(body));
         }
         throw e; // otherwise, throw to upper layer
