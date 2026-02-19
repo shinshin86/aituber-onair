@@ -223,7 +223,7 @@ Best effort:
 Use `examples/compat-probe` to validate compatibility automatically:
 
 ```bash
-npm -w @aituber-onair/chat run compat:probe
+npm -w @aituber-onair/chat run openai-compatible:probe
 ```
 
 For CI/local deterministic runs, pair it with `examples/mock-openai-server`.

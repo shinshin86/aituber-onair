@@ -225,7 +225,7 @@ const compatibleService = ChatServiceFactory.createChatService(
 `examples/compat-probe` で互換性を自動検証できます:
 
 ```bash
-npm -w @aituber-onair/chat run compat:probe
+npm -w @aituber-onair/chat run openai-compatible:probe
 ```
 
 CI/ローカルで再現性を高める場合は
