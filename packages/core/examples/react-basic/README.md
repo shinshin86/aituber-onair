@@ -113,6 +113,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - This example disables tool calling automatically for better local-LLM compatibility
 
 **Gemini:**
+- Gemini 3 preview series (3.1 Pro Preview, 3 Pro Preview, 3 Flash Preview)
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)
 - Gemini 2.0 series (Flash Lite, Flash)

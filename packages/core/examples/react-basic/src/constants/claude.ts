@@ -1,4 +1,5 @@
 import {
+  MODEL_CLAUDE_4_6_SONNET,
   MODEL_CLAUDE_4_6_OPUS,
   MODEL_CLAUDE_4_5_OPUS,
   MODEL_CLAUDE_4_5_SONNET,
@@ -10,8 +11,6 @@ import {
   MODEL_CLAUDE_4_SONNET,
   MODEL_CLAUDE_4_OPUS,
 } from '@aituber-onair/core';
-
-const MODEL_CLAUDE_4_6_SONNET = 'claude-sonnet-4-6';
 
 // Claude models list
 export const claudeModels = [
