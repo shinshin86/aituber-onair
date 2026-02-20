@@ -132,9 +132,15 @@ aituber-onair/
 共通の Agent Skills を管理しています。
 
 - ガイド: `docs/agent-skills.ja.md`
-- 現在のスキル: `add-chat-model`
-- 正本: `skills/add-chat-model/SKILL.md`
-- Claude Code 用配置: `.claude/skills/add-chat-model/SKILL.md`
+- スキル:
+  - `add-chat-model`
+  - `sync-core-after-chat-upgrade`
+- 正本:
+  - `skills/add-chat-model/SKILL.md`
+  - `skills/sync-core-after-chat-upgrade/SKILL.md`
+- Claude Code 用配置:
+  - `.claude/skills/add-chat-model/SKILL.md`
+  - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
 
 ## リリース手順
 

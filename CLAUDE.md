@@ -43,26 +43,40 @@ This repository uses open-format Agent Skills and keeps Codex and Claude Code
 skill definitions aligned.
 
 - Skill guide: `docs/agent-skills.md`
-- Current skill: `add-chat-model`
-- Canonical source: `skills/add-chat-model/SKILL.md`
-- Claude Code runtime path: `.claude/skills/add-chat-model/SKILL.md`
+- Skills:
+  - `add-chat-model`
+  - `sync-core-after-chat-upgrade`
+- Canonical sources:
+  - `skills/add-chat-model/SKILL.md`
+  - `skills/sync-core-after-chat-upgrade/SKILL.md`
+- Claude Code runtime paths:
+  - `.claude/skills/add-chat-model/SKILL.md`
+  - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
 
 Usage:
 
 - Invoke explicitly with `$add-chat-model`, or use prompts like
   "add a new model", "support model <model_id>", or
   "update supported models".
+- Invoke `$sync-core-after-chat-upgrade` after chat upgrades when the same
+  changes must be propagated into core and core examples.
 - If input is missing, collect:
   `provider`, `model_id`, `model_const_name`, `display_name`,
   `supports_vision`, and optional `bump_version` (default `true`).
 - Follow the skill procedure end-to-end, including tests/docs/versioning
   updates and final verification commands.
+- After `add-chat-model` completes, ask whether to run
+  `$sync-core-after-chat-upgrade` unless end-to-end chat+core propagation was
+  already requested.
 
 Maintenance:
 
 - Edit `skills/add-chat-model/SKILL.md` first.
 - Sync the same content to `.claude/skills/add-chat-model/SKILL.md`.
 - Keep `skills/add-chat-model/agents/openai.yaml` aligned for Codex UI.
+- For core-propagation workflow updates, edit
+  `skills/sync-core-after-chat-upgrade/SKILL.md` and sync to
+  `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`.
 
 ## System Architecture
 

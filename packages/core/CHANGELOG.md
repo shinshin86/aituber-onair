@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.23.1
+
+### Patch Changes
+
+- Re-exported Gemini 3 preview model constants
+  (`MODEL_GEMINI_3_1_PRO_PREVIEW`, `MODEL_GEMINI_3_PRO_PREVIEW`,
+  `MODEL_GEMINI_3_FLASH_PREVIEW`) from the core entry point.
+- Updated the core React basic example model list to include Gemini 3 preview
+  models and use the exported Claude Sonnet 4.6 constant.
+- Updated core README (EN/JA) and React basic example README to reflect the
+  latest Gemini model support.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.15.0
+
 ## 0.23.0
 
 ### Minor Changes

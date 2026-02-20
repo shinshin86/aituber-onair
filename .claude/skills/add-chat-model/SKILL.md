@@ -107,6 +107,14 @@ Collect missing inputs before editing:
    - Use a release-prep message such as:
      `chore(release): prepare @aituber-onair/chat v<next_version>`.
    - Keep release-prep changes (version/changelog/lockfiles) in the same commit.
+13. Offer core propagation handoff:
+   - After chat-side work is complete, ask:
+     "Run `$sync-core-after-chat-upgrade` now to propagate this chat upgrade
+     into `@aituber-onair/core` and core examples?"
+   - If the user agrees, execute that skill next with the same target
+     `chat_version`.
+   - Skip the question only when the user already requested end-to-end chat+core
+     propagation in the same task.
 
 ## Verification Commands
 
@@ -135,3 +143,5 @@ rg "v1beta|streamGenerateContent|generateContent" packages/chat/src/services/pro
 - Version and changelog are updated when `bump_version` is `true`.
 - `@aituber-onair/core` dependency range is aligned to the new chat version.
 - Lockfiles are consistent and `npm ci` succeeds.
+- The user is asked whether to run `$sync-core-after-chat-upgrade` after chat
+  updates finish (unless already requested explicitly).
