@@ -28,9 +28,16 @@ Codex と Claude Code の運用をそろえています。
   - 正本: `skills/add-chat-model/SKILL.md`
   - Claude Code: `.claude/skills/add-chat-model/SKILL.md`
   - Codex メタデータ: `skills/add-chat-model/agents/openai.yaml`
+- `sync-core-after-chat-upgrade`
+  - 正本: `skills/sync-core-after-chat-upgrade/SKILL.md`
+  - Claude Code: `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
+  - Codex メタデータ:
+    `skills/sync-core-after-chat-upgrade/agents/openai.yaml`
 
 `@aituber-onair/chat` に新しい model id を追加する際
 （constants/provider/tests/examples/docs/versioning）に使用します。
+chat 更新後に `@aituber-onair/core` と core examples へ反映する場合は
+`sync-core-after-chat-upgrade` を使います。
 
 ## 使い方
 
@@ -45,9 +52,17 @@ Claude Code での依頼例:
 
 - "Use $add-chat-model to add claude-sonnet-4-6 for claude."
 - "Use $add-chat-model and wire the model through tests/docs/versioning."
+- "Use $sync-core-after-chat-upgrade for chat 0.15.0."
 
 入力が足りない場合は、`provider`, `model_id`, `model_const_name`,
 `display_name`, `supports_vision`, `bump_version`（省略時 `true`）を確認します。
+
+連携ルール:
+
+- `$add-chat-model` 完了後は、
+  `$sync-core-after-chat-upgrade` を続けて実行するか確認します。
+- ユーザーが最初から chat + core の一括反映を明示している場合は、
+  確認を省略して続行します。
 
 ## 更新フロー
 
@@ -63,4 +78,5 @@ Claude Code での依頼例:
 
 ```bash
 diff -u skills/add-chat-model/SKILL.md .claude/skills/add-chat-model/SKILL.md
+diff -u skills/sync-core-after-chat-upgrade/SKILL.md .claude/skills/sync-core-after-chat-upgrade/SKILL.md
 ```

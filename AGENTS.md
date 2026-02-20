@@ -50,9 +50,17 @@
 
 ## Agent Skills Usage
 - Use the shared skill guide in `docs/agent-skills.md`.
-- Current skill: `add-chat-model`.
-- Canonical skill source: `skills/add-chat-model/SKILL.md`.
-- Claude Code mirror path: `.claude/skills/add-chat-model/SKILL.md`.
+- Skills:
+  - `add-chat-model`
+  - `sync-core-after-chat-upgrade`
+- Canonical skill sources:
+  - `skills/add-chat-model/SKILL.md`
+  - `skills/sync-core-after-chat-upgrade/SKILL.md`
+- Claude Code mirror paths:
+  - `.claude/skills/add-chat-model/SKILL.md`
+  - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
 - When requests match "add a new model", "support model <model_id>", "add <provider> model", or "update supported models", follow `skills/add-chat-model/SKILL.md`.
+- When requests ask to apply chat upgrades to core/examples, follow `skills/sync-core-after-chat-upgrade/SKILL.md`.
 - If required inputs are missing, collect: `provider`, `model_id`, `model_const_name`, `display_name`, `supports_vision`, and optional `bump_version` (default `true`).
-- Keep both skill copies synchronized when updating the procedure.
+- After finishing `add-chat-model`, ask whether to run `sync-core-after-chat-upgrade` unless the user already asked for end-to-end chat+core propagation.
+- Keep skill copies synchronized when updating procedures.

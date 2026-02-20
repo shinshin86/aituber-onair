@@ -131,9 +131,15 @@ This repository includes shared Agent Skills so Codex and Claude Code can use
 the same workflow definitions.
 
 - Guide: `docs/agent-skills.md`
-- Current skill: `add-chat-model`
-- Canonical source: `skills/add-chat-model/SKILL.md`
-- Claude Code path: `.claude/skills/add-chat-model/SKILL.md`
+- Skills:
+  - `add-chat-model`
+  - `sync-core-after-chat-upgrade`
+- Canonical sources:
+  - `skills/add-chat-model/SKILL.md`
+  - `skills/sync-core-after-chat-upgrade/SKILL.md`
+- Claude Code paths:
+  - `.claude/skills/add-chat-model/SKILL.md`
+  - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
 
 ## Release Process
 

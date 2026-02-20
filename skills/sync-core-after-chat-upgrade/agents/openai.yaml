@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sync Core After Chat Upgrade"
+  short_description: "Propagate chat updates into core and examples"
+  default_prompt: "Use $sync-core-after-chat-upgrade to apply chat package upgrades to core exports, examples, docs, and release files."
