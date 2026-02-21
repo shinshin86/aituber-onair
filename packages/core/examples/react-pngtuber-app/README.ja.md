@@ -29,7 +29,7 @@ npm run dev
 ```
 
 起動後に **Settings** を開き、APIキーや各種設定を入力してください。  
-設定値は `localStorage`（`pngtuber-settings`）に保存されます。
+設定値は `localStorage`（`react-pngtuber-app-settings`）に保存されます。
 
 ## 設定の保存仕様
 
