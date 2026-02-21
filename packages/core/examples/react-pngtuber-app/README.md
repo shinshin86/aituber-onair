@@ -30,7 +30,7 @@ npm run dev
 ```
 
 After launch, open **Settings** and set API keys / provider options there.  
-All settings are saved in `localStorage` (`pngtuber-settings`).
+All settings are saved in `localStorage` (`react-pngtuber-app-settings`).
 
 For `openai-compatible`, set:
 - `Endpoint URL` (required, full `/v1/chat/completions` URL)

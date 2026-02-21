@@ -6,7 +6,7 @@ import type {
   TTSEngineOption,
 } from '../types/settings';
 
-const STORAGE_KEY = 'pngtuber-settings';
+const STORAGE_KEY = 'react-pngtuber-app-settings';
 const DEFAULT_AIVIS_CLOUD_MODEL_UUID = '22e8ed77-94fe-4ef2-871f-a86f94e9a579';
 const DEFAULT_OPENAI_COMPATIBLE_MODEL = 'local-model';
 const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
