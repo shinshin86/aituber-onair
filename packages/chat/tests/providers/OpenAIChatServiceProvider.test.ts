@@ -15,7 +15,6 @@ import {
   MODEL_O3_MINI,
   MODEL_O1_MINI,
   MODEL_O1,
-  MODEL_GPT_4_5_PREVIEW,
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
 } from '../../src/constants';
@@ -54,7 +53,6 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_O3_MINI,
         MODEL_O1_MINI,
         MODEL_O1,
-        MODEL_GPT_4_5_PREVIEW,
       ]);
     });
   });

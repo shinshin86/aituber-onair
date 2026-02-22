@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## 0.16.0
+
+### Minor Changes
+
+- Removed the deprecated OpenAI model constant `MODEL_GPT_4_5_PREVIEW` (`gpt-4.5-preview`) from public exports.
+- Removed `gpt-4.5-preview` from OpenAI provider supported-model and vision-supported lists.
+- Updated OpenAI provider tests and the React basic model selector to remove GPT-4.5 Preview references.
+
 ## 0.15.0
 
 ### Minor Changes

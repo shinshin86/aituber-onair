@@ -17,6 +17,7 @@
 - Test all: `npm run test --workspaces` (watch: `npm -w @aituber-onair/core run test:watch`)
 - Lint/Format: `npm run lint --workspaces` • `npm run fmt --workspaces` (check: `fmt:check`)
 - Type check (per pkg): `npm -w <name> run typecheck`
+- After any code fix/change, always run `fmt`, `build`, then `test` for the affected scope before completing the task.
 
 ## Coding Style & Naming
 - TypeScript + Biome (2‑space indent, single quotes, 80‑char width). Code/comments in English.

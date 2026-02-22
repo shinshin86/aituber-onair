@@ -13,7 +13,6 @@ import {
   MODEL_O3_MINI,
   MODEL_O1_MINI,
   MODEL_O1,
-  MODEL_GPT_4_5_PREVIEW,
   VISION_SUPPORTED_MODELS,
   isGPT5Model,
   allowsReasoningNone,
@@ -119,7 +118,6 @@ export class OpenAIChatServiceProvider
       MODEL_O3_MINI,
       MODEL_O1_MINI,
       MODEL_O1,
-      MODEL_GPT_4_5_PREVIEW,
     ];
   }
 

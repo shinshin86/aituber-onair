@@ -16,7 +16,6 @@ import {
   MODEL_O3_MINI,
   MODEL_O1_MINI,
   MODEL_O1,
-  MODEL_GPT_4_5_PREVIEW,
   // Claude models
   MODEL_CLAUDE_3_HAIKU,
   MODEL_CLAUDE_3_5_HAIKU,
@@ -235,12 +234,6 @@ export const allModels = [
   {
     id: MODEL_O1,
     name: 'O1',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_4_5_PREVIEW,
-    name: 'GPT-4.5 Preview',
     provider: 'openai',
     default: false,
   },
