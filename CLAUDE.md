@@ -37,6 +37,11 @@ cd packages/[package] && npm run test       # Run tests
 cd packages/[package] && npm run test:watch # Watch mode
 ```
 
+### Mandatory Validation After Changes
+
+After any code fix/change, always run `fmt`, then `build`, then `test` for the
+affected scope before finishing the task.
+
 ## Agent Skills
 
 This repository uses open-format Agent Skills and keeps Codex and Claude Code

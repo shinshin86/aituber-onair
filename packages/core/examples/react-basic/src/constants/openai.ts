@@ -9,7 +9,6 @@ import {
   MODEL_O3_MINI,
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
-  MODEL_GPT_4_5_PREVIEW,
 } from '@aituber-onair/core';
 
 // OpenAI models list
@@ -24,7 +23,6 @@ export const openaiModels = [
   MODEL_O3_MINI,
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
-  MODEL_GPT_4_5_PREVIEW,
 ];
 
 // OpenAI default settings

@@ -104,7 +104,6 @@ Click the "設定" (Settings) button to configure your AI provider:
 - GPT-5 series (Nano, Mini, Standard)
 - o3-mini
 - GPT-4o, GPT-4o Mini
-- GPT-4.5 Preview
 
 **OpenAI-Compatible:**
 - Any server model ID (default example: `local-model`)
