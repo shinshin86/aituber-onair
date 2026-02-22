@@ -1,5 +1,16 @@
 # @aituber-onair/core
 
+## 0.23.2
+
+### Patch Changes
+
+- Removed `MODEL_GPT_4_5_PREVIEW` re-export from the core entry point to align
+  with `@aituber-onair/chat@0.16.0`.
+- Updated the core React basic example OpenAI model list/docs to remove GPT-4.5
+  Preview.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.16.0
+
 ## 0.23.1
 
 ### Patch Changes
