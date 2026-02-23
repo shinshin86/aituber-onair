@@ -262,6 +262,7 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - Token limits are automatically disabled for the `gpt-oss-20b:free` model due to technical limitations
 - To control response length, include instructions in your prompt (e.g., "Please respond in 40 characters or less")
 - Free tier has rate limits (20 requests/minute)
+- Free tier detection is based on the model ID suffix `:free` (dynamic `:free` IDs are also rate-limited)
 - Supported models (curated list):
   - `openai/gpt-oss-20b:free`
   - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
@@ -271,6 +272,32 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
   - `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
   - `moonshotai/kimi-k2.5`
+
+**Dynamic OpenRouter free model refresh**
+
+You can fetch currently available `:free` models and probe them before use:
+
+```typescript
+import { refreshOpenRouterFreeModels } from '@aituber-onair/chat';
+
+const result = await refreshOpenRouterFreeModels({
+  apiKey: process.env.OPENROUTER_API_KEY || '',
+  concurrency: 2, // default: 2
+  timeoutMs: 12000, // default: 12000
+  maxCandidates: 20, // default: 20
+  maxWorking: 10, // default: 10
+});
+
+console.log(result.working); // e.g. ['openai/gpt-oss-20b:free']
+console.log(result.failed); // [{ id, reason }, ...]
+console.log(result.fetchedAt); // Date.now() timestamp
+```
+
+Notes:
+- Models are fetched from `https://openrouter.ai/api/v1/models`
+- Candidates are filtered by model ID suffix `:free`
+- Probe uses OpenRouter chat completions with a minimal one-shot request (`stream: false`)
+- Works in both browser and Node runtimes (uses `fetch`)
 
 #### Z.ai (GLM)
 
