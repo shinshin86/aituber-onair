@@ -10,3 +10,4 @@ export * from './openaiCompatibleSse';
 export * from './openaiCompatibleTools';
 export * from './processChatFlow';
 export * from './visionModelResolver';
+export * from './refreshOpenRouterFreeModels';

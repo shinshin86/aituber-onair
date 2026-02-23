@@ -265,6 +265,7 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - `gpt-oss-20b:free`モデルでは、技術的制限によりトークン制限が自動的に無効化されます
 - 応答の長さを制御するには、プロンプト内で指示してください（例：「40文字以内で返答してください」）
 - 無料階層にはレート制限があります（20リクエスト/分）
+- 無料モデル判定はモデルID末尾の `:free` で行います（動的取得した `:free` も同様にレート制限対象）
 - サポート対象モデル（キュレーション済み）:
   - `openai/gpt-oss-20b:free`
   - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
@@ -274,6 +275,34 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
   - `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
   - `moonshotai/kimi-k2.5`
+
+**OpenRouter freeモデルの動的リフレッシュ**
+
+利用可能な `:free` モデルを取得し、利用前に疎通確認できます。
+
+```typescript
+import { refreshOpenRouterFreeModels } from '@aituber-onair/chat';
+
+const result = await refreshOpenRouterFreeModels({
+  apiKey: process.env.OPENROUTER_API_KEY || '',
+  concurrency: 2, // デフォルト: 2
+  timeoutMs: 12000, // デフォルト: 12000
+  maxCandidates: 1, // デフォルト: 1
+  maxWorking: 10, // デフォルト: 10
+});
+
+console.log(result.working); // 例: ['openai/gpt-oss-20b:free']
+console.log(result.failed); // [{ id, reason }, ...]
+console.log(result.fetchedAt); // Date.now() のタイムスタンプ
+```
+
+注意:
+- モデル一覧は `https://openrouter.ai/api/v1/models` から取得します
+- 候補はモデルID末尾が `:free` のものに絞り込みます
+- `maxCandidates` は「疎通確認する候補の最大件数」です
+  （例: `10` は「最大10候補を試す」意味で、動作モデルが10件見つかるまで継続はしません）
+- 疎通確認は OpenRouter chat completions の最小 one-shot リクエスト（`stream: false`）を使います
+- `fetch` を利用しているため、ブラウザとNodeの両方で動作します
 
 #### Z.ai（GLM）
 

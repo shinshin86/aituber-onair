@@ -131,6 +131,10 @@ Use the dropdown to select response length:
 - Models: Curated multi-provider model list (OpenAI/Claude/Gemini/Z.ai/Kimi)
 - Vision: Depends on selected routed model
 - Best for: Flexible model routing and unified API usage
+- Dynamic Free Models: Click `Fetch free models` to probe currently available `:free` models and append working IDs to the model list
+- Max candidates: Adjustable in UI (default `1`) to control probe request volume
+- `Max candidates = 10` means probing up to 10 `:free` candidates (it does not continue until 10 working models are found)
+- Persistence: Fetched dynamic free model IDs are saved under localStorage root key `AITuberOnAirChat_example_react-basic`
 
 **Z.ai**
 - Models: GLM-5, GLM-4.7/4.6, GLM-4.6V family
@@ -141,6 +145,15 @@ Use the dropdown to select response length:
 - Models: Kimi K2.5
 - Vision: Supported
 - Best for: Moonshot models with OpenAI-compatible API
+
+### OpenRouter Dynamic Free Models (Manual Check)
+
+1. Select `OpenRouter` as provider
+2. Enter a valid OpenRouter API key
+3. Click `Fetch free models` in the model settings panel
+4. Confirm fetched `:free` models are added to the `Models` list
+5. Select one dynamic model and send a chat message
+6. Reload the page and confirm the dynamic list is restored from localStorage
 
 ## Troubleshooting
 

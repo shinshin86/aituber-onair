@@ -20,6 +20,7 @@ import {
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_ZAI_GLM_4_5_AIR_FREE,
   OPENROUTER_FREE_MODELS,
+  isOpenRouterFreeModel,
   isOpenRouterVisionModel,
 } from '../../../constants/openrouter';
 import { ChatService } from '../../ChatService';
@@ -163,6 +164,6 @@ export class OpenRouterChatServiceProvider
    * @returns True if the model is free
    */
   isModelFree(model: string): boolean {
-    return OPENROUTER_FREE_MODELS.includes(model) || model.endsWith(':free');
+    return isOpenRouterFreeModel(model);
   }
 }

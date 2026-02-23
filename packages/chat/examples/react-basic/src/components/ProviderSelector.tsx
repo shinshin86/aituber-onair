@@ -1,8 +1,11 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Provider } from '../App';
 import {
   type ChatResponseLength,
   type GPT5PresetKey,
   isGPT5Model,
+  isOpenRouterFreeModel,
+  refreshOpenRouterFreeModels,
   // OpenAI models
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
@@ -132,6 +135,179 @@ interface ProviderSelectorProps {
   disabled: boolean;
 }
 
+type ProviderModel = {
+  id: string;
+  name: string;
+  provider: Provider;
+  default: boolean;
+  dynamic?: boolean;
+};
+
+type DynamicOpenRouterFreeModel = ProviderModel & {
+  provider: 'openrouter';
+  default: false;
+  dynamic: true;
+};
+
+const EXAMPLE_STORAGE_ROOT_KEY = 'AITuberOnAirChat_example_react-basic';
+const LEGACY_DYNAMIC_OPENROUTER_FREE_MODELS_STORAGE_KEY =
+  'aituber-onair.openrouter.dynamicFreeModels';
+
+type DynamicOpenRouterFreeModelsStorage = {
+  fetchedAt: number | null;
+  models: string[];
+  maxCandidates: number | null;
+};
+
+const parseDynamicOpenRouterFreeModelsStorage = (
+  parsed: unknown,
+): DynamicOpenRouterFreeModelsStorage => {
+  if (Array.isArray(parsed)) {
+    return {
+      fetchedAt: null,
+      models: dedupeFreeModelIds(
+        parsed.filter((value): value is string => typeof value === 'string'),
+      ),
+      maxCandidates: null,
+    };
+  }
+
+  if (!parsed || typeof parsed !== 'object') {
+    return { fetchedAt: null, models: [], maxCandidates: null };
+  }
+
+  const parsedObject = parsed as {
+    fetchedAt?: unknown;
+    models?: unknown;
+    maxCandidates?: unknown;
+  };
+
+  const fetchedAt =
+    typeof parsedObject.fetchedAt === 'number' ? parsedObject.fetchedAt : null;
+  const models = Array.isArray(parsedObject.models)
+    ? dedupeFreeModelIds(
+        parsedObject.models.filter(
+          (value): value is string => typeof value === 'string',
+        ),
+      )
+    : [];
+  const maxCandidates =
+    typeof parsedObject.maxCandidates === 'number' &&
+    Number.isFinite(parsedObject.maxCandidates) &&
+    parsedObject.maxCandidates >= 1
+      ? Math.floor(parsedObject.maxCandidates)
+      : null;
+
+  return { fetchedAt, models, maxCandidates };
+};
+
+const dedupeFreeModelIds = (modelIds: string[]): string[] => {
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+
+  for (const modelId of modelIds) {
+    const trimmed = modelId.trim();
+    if (!isOpenRouterFreeModel(trimmed) || seen.has(trimmed)) {
+      continue;
+    }
+    seen.add(trimmed);
+    deduped.push(trimmed);
+  }
+
+  return deduped;
+};
+
+const toDynamicOpenRouterModel = (id: string): DynamicOpenRouterFreeModel => ({
+  id,
+  name: `${id} (Free, dynamic)`,
+  provider: 'openrouter',
+  default: false,
+  dynamic: true,
+});
+
+const loadDynamicOpenRouterFreeModels = (): {
+  fetchedAt: number | null;
+  models: string[];
+  maxCandidates: number | null;
+} => {
+  if (typeof localStorage === 'undefined') {
+    return { fetchedAt: null, models: [], maxCandidates: null };
+  }
+
+  const rootStored = localStorage.getItem(EXAMPLE_STORAGE_ROOT_KEY);
+  if (rootStored) {
+    try {
+      const rootParsed = JSON.parse(rootStored) as unknown;
+      if (rootParsed && typeof rootParsed === 'object') {
+        const rootObject = rootParsed as {
+          openrouter?: { dynamicFreeModels?: unknown };
+        };
+        if (rootObject.openrouter?.dynamicFreeModels !== undefined) {
+          return parseDynamicOpenRouterFreeModelsStorage(
+            rootObject.openrouter.dynamicFreeModels,
+          );
+        }
+      }
+    } catch {
+      // Ignore parse error and fallback to legacy key.
+    }
+  }
+
+  const legacyStored = localStorage.getItem(
+    LEGACY_DYNAMIC_OPENROUTER_FREE_MODELS_STORAGE_KEY,
+  );
+  if (!legacyStored) {
+    return { fetchedAt: null, models: [], maxCandidates: null };
+  }
+
+  try {
+    return parseDynamicOpenRouterFreeModelsStorage(JSON.parse(legacyStored));
+  } catch {
+    return { fetchedAt: null, models: [], maxCandidates: null };
+  }
+};
+
+const saveDynamicOpenRouterFreeModels = (
+  fetchedAt: number | null,
+  modelIds: string[],
+  maxCandidates: number | null,
+): void => {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+
+  let rootObject: {
+    openrouter?: { dynamicFreeModels?: DynamicOpenRouterFreeModelsStorage };
+  } = {};
+
+  const rootStored = localStorage.getItem(EXAMPLE_STORAGE_ROOT_KEY);
+  if (rootStored) {
+    try {
+      const parsed = JSON.parse(rootStored) as unknown;
+      if (parsed && typeof parsed === 'object') {
+        rootObject = parsed as {
+          openrouter?: {
+            dynamicFreeModels?: DynamicOpenRouterFreeModelsStorage;
+          };
+        };
+      }
+    } catch {
+      // Keep default empty object.
+    }
+  }
+
+  rootObject.openrouter = {
+    ...(rootObject.openrouter || {}),
+    dynamicFreeModels: {
+      fetchedAt,
+      models: modelIds,
+      maxCandidates,
+    },
+  };
+
+  localStorage.setItem(EXAMPLE_STORAGE_ROOT_KEY, JSON.stringify(rootObject));
+};
+
 const providerInfo = {
   openai: {
     name: 'OpenAI',
@@ -163,7 +339,7 @@ const providerInfo = {
   },
 };
 
-export const allModels = [
+export const allModels: ProviderModel[] = [
   // OpenAI models
   {
     id: MODEL_GPT_5_NANO,
@@ -632,12 +808,121 @@ export default function ProviderSelector({
   onKimiBaseUrlChange,
   disabled,
 }: ProviderSelectorProps) {
+  const [dynamicOpenRouterFreeModels, setDynamicOpenRouterFreeModels] =
+    useState<DynamicOpenRouterFreeModel[]>([]);
+  const [isFetchingOpenRouterFreeModels, setIsFetchingOpenRouterFreeModels] =
+    useState(false);
+  const [openRouterFreeModelsError, setOpenRouterFreeModelsError] = useState<
+    string | null
+  >(null);
+  const [openRouterFreeModelsFetchedAt, setOpenRouterFreeModelsFetchedAt] =
+    useState<number | null>(null);
+  const [openRouterFreeMaxCandidates, setOpenRouterFreeMaxCandidates] =
+    useState('1');
+
   const info = providerInfo[provider];
   const isGPT5 = provider === 'openai' && isGPT5Model(selectedModel);
   const isGPT51 = provider === 'openai' && selectedModel === MODEL_GPT_5_1;
-  const modelsForProvider = allModels.filter(
-    (model) => model.provider === provider,
+  const baseModelsForProvider = useMemo(
+    () => allModels.filter((model) => model.provider === provider),
+    [provider],
   );
+  const modelsForProvider = useMemo(() => {
+    if (provider !== 'openrouter') {
+      return baseModelsForProvider;
+    }
+
+    const existingIds = new Set(baseModelsForProvider.map((model) => model.id));
+    const dynamicModels = dynamicOpenRouterFreeModels.filter(
+      (model) => !existingIds.has(model.id),
+    );
+    return [...baseModelsForProvider, ...dynamicModels];
+  }, [provider, baseModelsForProvider, dynamicOpenRouterFreeModels]);
+  const isOpenRouterFreeModelsFetchDisabled =
+    disabled || isFetchingOpenRouterFreeModels || apiKey.trim() === '';
+
+  useEffect(() => {
+    const stored = loadDynamicOpenRouterFreeModels();
+    if (stored.models.length > 0) {
+      setDynamicOpenRouterFreeModels(
+        stored.models.map((id) => toDynamicOpenRouterModel(id)),
+      );
+    }
+    if (stored.fetchedAt) {
+      setOpenRouterFreeModelsFetchedAt(stored.fetchedAt);
+    }
+    if (stored.maxCandidates) {
+      setOpenRouterFreeMaxCandidates(String(stored.maxCandidates));
+    }
+  }, []);
+
+  const handleFetchOpenRouterFreeModels = useCallback(async () => {
+    const openRouterApiKey = apiKey.trim();
+    if (!openRouterApiKey) {
+      setOpenRouterFreeModelsError('OpenRouter API key is required.');
+      return;
+    }
+
+    const maxCandidatesInput = openRouterFreeMaxCandidates.trim();
+    const parsedMaxCandidates = Number(maxCandidatesInput);
+    if (
+      maxCandidatesInput &&
+      (!Number.isFinite(parsedMaxCandidates) || parsedMaxCandidates < 1)
+    ) {
+      setOpenRouterFreeModelsError('Max candidates must be 1 or higher.');
+      return;
+    }
+    const maxCandidates = maxCandidatesInput
+      ? Math.floor(parsedMaxCandidates)
+      : undefined;
+
+    setIsFetchingOpenRouterFreeModels(true);
+    setOpenRouterFreeModelsError(null);
+
+    try {
+      const result = await refreshOpenRouterFreeModels({
+        apiKey: openRouterApiKey,
+        appName: openrouterAppName?.trim() || undefined,
+        appUrl: openrouterAppUrl?.trim() || undefined,
+        maxCandidates,
+      });
+
+      const mergedModelIds = dedupeFreeModelIds([
+        ...dynamicOpenRouterFreeModels.map((model) => model.id),
+        ...result.working,
+      ]);
+
+      setDynamicOpenRouterFreeModels(
+        mergedModelIds.map((id) => toDynamicOpenRouterModel(id)),
+      );
+      setOpenRouterFreeModelsFetchedAt(result.fetchedAt);
+      saveDynamicOpenRouterFreeModels(
+        result.fetchedAt,
+        mergedModelIds,
+        maxCandidates ?? null,
+      );
+
+      if (result.working.length === 0) {
+        setOpenRouterFreeModelsError(
+          `No working free models found. Failed probes: ` +
+            `${result.failed.length}.`,
+        );
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to fetch free models.';
+      setOpenRouterFreeModelsError(message);
+    } finally {
+      setIsFetchingOpenRouterFreeModels(false);
+    }
+  }, [
+    apiKey,
+    dynamicOpenRouterFreeModels,
+    openRouterFreeMaxCandidates,
+    openrouterAppName,
+    openrouterAppUrl,
+  ]);
+
   const effectiveReasoningEffort = (() => {
     if (isGPT51) {
       if (!reasoning_effort || reasoning_effort === 'minimal') {
@@ -689,7 +974,7 @@ export default function ProviderSelector({
               >
                 <div className="model-name">{model.name}</div>
                 <div className="model-meta">
-                  {model.default ? 'Default' : ' '}
+                  {model.default ? 'Default' : model.dynamic ? 'Dynamic' : ' '}
                 </div>
               </button>
             ))}
@@ -900,6 +1185,64 @@ export default function ProviderSelector({
 
           {provider === 'openrouter' && (
             <>
+              <div className="config-group config-full">
+                <label htmlFor="openrouter-fetch-free-models">
+                  Dynamic Free Models
+                </label>
+                <div className="action-row">
+                  <label
+                    htmlFor="openrouter-free-max-candidates"
+                    className="inline-label"
+                  >
+                    Max candidates
+                  </label>
+                  <input
+                    id="openrouter-free-max-candidates"
+                    type="number"
+                    min={1}
+                    inputMode="numeric"
+                    value={openRouterFreeMaxCandidates}
+                    onChange={(e) =>
+                      setOpenRouterFreeMaxCandidates(e.target.value)
+                    }
+                    disabled={disabled || isFetchingOpenRouterFreeModels}
+                    className="small-input"
+                  />
+                  <span className="helper-text">
+                    Default: 1 (set higher if needed)
+                  </span>
+                </div>
+                <div className="action-row">
+                  <button
+                    id="openrouter-fetch-free-models"
+                    type="button"
+                    onClick={handleFetchOpenRouterFreeModels}
+                    disabled={isOpenRouterFreeModelsFetchDisabled}
+                    className="action-button"
+                  >
+                    {isFetchingOpenRouterFreeModels
+                      ? 'Fetching...'
+                      : 'Fetch free models'}
+                  </button>
+                  {openRouterFreeModelsFetchedAt && (
+                    <span className="helper-text">
+                      Last fetched:{' '}
+                      {new Date(openRouterFreeModelsFetchedAt).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+                {openRouterFreeModelsError && (
+                  <div className="inline-error">
+                    {openRouterFreeModelsError}
+                  </div>
+                )}
+                {apiKey.trim() === '' && (
+                  <span className="helper-text">
+                    Set OpenRouter API key to fetch dynamic free models.
+                  </span>
+                )}
+              </div>
+
               <div className="config-group">
                 <label htmlFor="openrouter-reasoning-effort">
                   Reasoning Effort
@@ -1279,6 +1622,63 @@ export default function ProviderSelector({
           text-align: left;
         }
 
+        .action-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 0.5rem 0.75rem;
+        }
+
+        .inline-label {
+          font-size: 0.78rem;
+          color: var(--muted);
+          font-weight: 600;
+        }
+
+        .small-input {
+          width: 84px;
+          padding: 0.45rem 0.55rem;
+          border: 1px solid var(--input-border);
+          border-radius: 10px;
+          font-size: 0.85rem;
+          background: var(--input-bg);
+          color: var(--text);
+        }
+
+        .small-input:focus {
+          border-color: var(--input-focus);
+          background: #fff;
+        }
+
+        .small-input:disabled {
+          background: #f1f1f1;
+          color: #9a9a9a;
+          cursor: not-allowed;
+        }
+
+        .action-button {
+          border-radius: 10px;
+          border: 1px solid var(--input-border);
+          background: var(--input-bg);
+          color: var(--text);
+          padding: 0.55rem 0.8rem;
+          font-size: 0.85rem;
+          font-weight: 600;
+          line-height: 1;
+        }
+
+        .action-button:hover:not(:disabled) {
+          background: #fff;
+          border-color: var(--input-focus);
+          transform: translateY(-1px);
+        }
+
+        .action-button:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+          transform: none;
+        }
+
         .config-group label {
           font-size: 0.8rem;
           color: var(--muted);
@@ -1338,6 +1738,15 @@ export default function ProviderSelector({
         .helper-text {
           font-size: 0.75rem;
           color: var(--muted);
+        }
+
+        .inline-error {
+          border: 1px solid #f1c4c4;
+          border-radius: 10px;
+          background: #fff1f1;
+          color: #8d1c1c;
+          font-size: 0.78rem;
+          padding: 0.5rem 0.65rem;
         }
 
         @media (max-width: 900px) {

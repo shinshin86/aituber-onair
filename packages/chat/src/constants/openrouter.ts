@@ -61,7 +61,7 @@ export const OPENROUTER_CREDITS_THRESHOLD = 10;
  * @returns True if the model is free tier
  */
 export function isOpenRouterFreeModel(model: string): boolean {
-  return OPENROUTER_FREE_MODELS.some((freeModel) => model.includes(freeModel));
+  return model.trim().endsWith(':free');
 }
 
 /**
