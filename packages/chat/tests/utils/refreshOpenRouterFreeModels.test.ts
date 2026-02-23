@@ -51,6 +51,7 @@ describe('refreshOpenRouterFreeModels', () => {
     const result = await refreshOpenRouterFreeModels({
       apiKey: 'sk-or-test',
       concurrency: 1,
+      maxCandidates: 2,
     });
 
     expect(result.working).toEqual(['openai/gpt-oss-20b:free']);
@@ -58,6 +59,29 @@ describe('refreshOpenRouterFreeModels', () => {
     expect(result.failed[0].id).toBe('z-ai/glm-4.5-air:free');
     expect(result.failed[0].reason).toContain('HTTP 429');
     expect(typeof result.fetchedAt).toBe('number');
+  });
+
+  it('uses maxCandidates=1 by default', async () => {
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          data: [{ id: 'model/a:free' }, { id: 'model/b:free' }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          choices: [{ message: { role: 'assistant', content: 'OK' } }],
+        }),
+      );
+
+    const result = await refreshOpenRouterFreeModels({
+      apiKey: 'sk-or-test',
+      concurrency: 1,
+    });
+
+    expect(result.working).toEqual(['model/a:free']);
+    expect(result.failed).toEqual([]);
+    expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(2);
   });
 
   it('marks probe as failed when JSON parsing fails', async () => {
@@ -199,6 +223,7 @@ describe('refreshOpenRouterFreeModels', () => {
     const result = await refreshOpenRouterFreeModels({
       apiKey: 'sk-or-test',
       concurrency: 1,
+      maxCandidates: 3,
       maxWorking: 2,
     });
 

@@ -284,7 +284,7 @@ const result = await refreshOpenRouterFreeModels({
   apiKey: process.env.OPENROUTER_API_KEY || '',
   concurrency: 2, // default: 2
   timeoutMs: 12000, // default: 12000
-  maxCandidates: 20, // default: 20
+  maxCandidates: 1, // default: 1
   maxWorking: 10, // default: 10
 });
 
@@ -296,6 +296,7 @@ console.log(result.fetchedAt); // Date.now() timestamp
 Notes:
 - Models are fetched from `https://openrouter.ai/api/v1/models`
 - Candidates are filtered by model ID suffix `:free`
+- `maxCandidates` means "maximum number of candidates to probe" (e.g., `10` probes up to 10 candidates, not until 10 working models are found)
 - Probe uses OpenRouter chat completions with a minimal one-shot request (`stream: false`)
 - Works in both browser and Node runtimes (uses `fetch`)
 

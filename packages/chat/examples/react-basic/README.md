@@ -132,7 +132,9 @@ Use the dropdown to select response length:
 - Vision: Depends on selected routed model
 - Best for: Flexible model routing and unified API usage
 - Dynamic Free Models: Click `Fetch free models` to probe currently available `:free` models and append working IDs to the model list
-- Persistence: Fetched dynamic free model IDs are saved to localStorage (`aituber-onair.openrouter.dynamicFreeModels`)
+- Max candidates: Adjustable in UI (default `1`) to control probe request volume
+- `Max candidates = 10` means probing up to 10 `:free` candidates (it does not continue until 10 working models are found)
+- Persistence: Fetched dynamic free model IDs are saved under localStorage root key `AITuberOnAirChat_example_react-basic`
 
 **Z.ai**
 - Models: GLM-5, GLM-4.7/4.6, GLM-4.6V family

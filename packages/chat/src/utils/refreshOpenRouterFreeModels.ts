@@ -6,7 +6,7 @@ import {
 const OPENROUTER_MODELS_ENDPOINT = 'https://openrouter.ai/api/v1/models';
 const DEFAULT_CONCURRENCY = 2;
 const DEFAULT_TIMEOUT_MS = 12000;
-const DEFAULT_MAX_CANDIDATES = 20;
+const DEFAULT_MAX_CANDIDATES = 1;
 const DEFAULT_MAX_WORKING = 10;
 
 export interface RefreshOpenRouterFreeModelsOptions {
