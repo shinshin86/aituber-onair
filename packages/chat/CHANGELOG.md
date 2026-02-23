@@ -1,5 +1,15 @@
 # @aituber-onair/chat
 
+## 0.17.0
+
+### Minor Changes
+
+- Added `refreshOpenRouterFreeModels` utility to fetch and probe currently available OpenRouter `:free` models, with configurable timeout/concurrency/candidate limits and structured `working/failed/fetchedAt` results.
+- Unified OpenRouter free-tier detection to model ID suffix matching (`:free`) so dynamically discovered free models consistently use free-tier rate limiting.
+- Updated `react-basic` example to support dynamic OpenRouter free model fetching from UI, including runtime merge into model list, deduplication, and localStorage restore.
+- Tuned refresh defaults for safer usage (`maxCandidates` default is now `1`) and added user-configurable max-candidates input in the example UI.
+- Updated Chat README and example README docs to clarify probing behavior (`maxCandidates` means maximum candidates to probe, not a target number of working models).
+
 ## 0.16.0
 
 ### Minor Changes
