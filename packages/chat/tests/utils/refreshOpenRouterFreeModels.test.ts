@@ -107,4 +107,102 @@ describe('refreshOpenRouterFreeModels', () => {
     expect(result.failed).toHaveLength(1);
     expect(result.failed[0].reason).toContain('Timeout after 5ms');
   });
+
+  it('throws when models API returns non-OK response', async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      mockTextResponse(503, 'Service Unavailable', 'upstream unavailable'),
+    );
+
+    await expect(
+      refreshOpenRouterFreeModels({
+        apiKey: 'sk-or-test',
+      }),
+    ).rejects.toThrow('HTTP 503');
+  });
+
+  it('throws when models API JSON parsing fails', async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: vi.fn().mockRejectedValue(new Error('Unexpected token')),
+      text: vi.fn().mockResolvedValue('invalid-json'),
+    } as unknown as Response);
+
+    await expect(
+      refreshOpenRouterFreeModels({
+        apiKey: 'sk-or-test',
+      }),
+    ).rejects.toThrow('JSON parse failed');
+  });
+
+  it('respects maxCandidates when probing free models', async () => {
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          data: [
+            { id: 'model/a:free' },
+            { id: 'model/b:free' },
+            { id: 'model/c:free' },
+            { id: 'model/d:free' },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          choices: [{ message: { role: 'assistant', content: 'OK' } }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          choices: [{ message: { role: 'assistant', content: 'OK' } }],
+        }),
+      );
+
+    const result = await refreshOpenRouterFreeModels({
+      apiKey: 'sk-or-test',
+      concurrency: 1,
+      maxCandidates: 2,
+    });
+
+    expect(result.working).toEqual(['model/a:free', 'model/b:free']);
+    expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(3);
+  });
+
+  it('respects maxWorking for successful probes', async () => {
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          data: [
+            { id: 'model/a:free' },
+            { id: 'model/b:free' },
+            { id: 'model/c:free' },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          choices: [{ message: { role: 'assistant', content: 'OK' } }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          choices: [{ message: { role: 'assistant', content: 'OK' } }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          choices: [{ message: { role: 'assistant', content: 'OK' } }],
+        }),
+      );
+
+    const result = await refreshOpenRouterFreeModels({
+      apiKey: 'sk-or-test',
+      concurrency: 1,
+      maxWorking: 2,
+    });
+
+    expect(result.working).toEqual(['model/a:free', 'model/b:free']);
+    expect(result.failed).toEqual([]);
+  });
 });
