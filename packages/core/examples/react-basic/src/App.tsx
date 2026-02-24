@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
+import React, {
+  ChangeEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
@@ -15,6 +21,7 @@ import {
   OPENROUTER_VISION_SUPPORTED_MODELS,
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
+  refreshOpenRouterFreeModels,
   type MinimaxModel,
   type MinimaxAudioFormat,
   type VoiceVoxQueryParameterOverrides,
@@ -147,6 +154,93 @@ const OPENAI_COMPATIBLE_DEFAULT_ENDPOINT =
   'http://localhost:11434/v1/chat/completions';
 const OPENAI_COMPATIBLE_ENDPOINT_REQUIRED_MESSAGE =
   'OpenAI-CompatibleのEndpoint URLを入力してください。';
+const REACT_BASIC_STORAGE_KEY = 'AITuberOnAirCore_example_react-basic';
+const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
+const DEFAULT_OPENROUTER_MAX_WORKING = 10;
+
+interface OpenRouterDynamicFreeModelsState {
+  models: string[];
+  fetchedAt: number;
+  maxCandidates: number;
+}
+
+interface ReactBasicStorageShape {
+  openRouterDynamicFreeModels?: Partial<OpenRouterDynamicFreeModelsState>;
+}
+
+function normalizeOpenRouterModelIds(modelIds: string[]): string[] {
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+
+  for (const modelId of modelIds) {
+    const trimmed = modelId.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+    seen.add(trimmed);
+    normalized.push(trimmed);
+  }
+
+  return normalized;
+}
+
+function normalizeMaxCandidates(value: number | undefined): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return DEFAULT_OPENROUTER_MAX_CANDIDATES;
+  }
+  return Math.max(1, Math.floor(value));
+}
+
+function normalizeOpenRouterDynamicState(
+  input?: Partial<OpenRouterDynamicFreeModelsState>,
+): OpenRouterDynamicFreeModelsState {
+  return {
+    models: normalizeOpenRouterModelIds(input?.models || []),
+    fetchedAt:
+      typeof input?.fetchedAt === 'number' && Number.isFinite(input.fetchedAt)
+        ? input.fetchedAt
+        : 0,
+    maxCandidates: normalizeMaxCandidates(input?.maxCandidates),
+  };
+}
+
+function loadOpenRouterDynamicState(): OpenRouterDynamicFreeModelsState {
+  try {
+    const raw = localStorage.getItem(REACT_BASIC_STORAGE_KEY);
+    if (!raw) {
+      return normalizeOpenRouterDynamicState();
+    }
+    const parsed = JSON.parse(raw) as ReactBasicStorageShape;
+    return normalizeOpenRouterDynamicState(parsed.openRouterDynamicFreeModels);
+  } catch {
+    return normalizeOpenRouterDynamicState();
+  }
+}
+
+function saveOpenRouterDynamicState(
+  value: OpenRouterDynamicFreeModelsState,
+): void {
+  try {
+    const raw = localStorage.getItem(REACT_BASIC_STORAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as ReactBasicStorageShape) : {};
+    const next: ReactBasicStorageShape = {
+      ...parsed,
+      openRouterDynamicFreeModels: {
+        models: normalizeOpenRouterModelIds(value.models),
+        fetchedAt: value.fetchedAt,
+        maxCandidates: normalizeMaxCandidates(value.maxCandidates),
+      },
+    };
+    localStorage.setItem(REACT_BASIC_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function buildOpenRouterEndpoint(baseUrl: string, path: string): string {
+  const trimmed = baseUrl.trim().replace(/\/+$/, '');
+  return `${trimmed}${path}`;
+}
 
 const App: React.FC = () => {
   const idCounter = useRef(0);
@@ -171,6 +265,12 @@ const App: React.FC = () => {
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
   const [kimiBaseUrl, setKimiBaseUrl] = useState<string>('');
   const [openRouterBaseUrl, setOpenRouterBaseUrl] = useState<string>('');
+  const [openRouterDynamicState, setOpenRouterDynamicState] =
+    useState<OpenRouterDynamicFreeModelsState>(loadOpenRouterDynamicState);
+  const [isFetchingOpenRouterFreeModels, setIsFetchingOpenRouterFreeModels] =
+    useState<boolean>(false);
+  const [openRouterRefreshError, setOpenRouterRefreshError] =
+    useState<string>('');
   const [openAICompatibleEndpoint, setOpenAICompatibleEndpoint] =
     useState<string>(OPENAI_COMPATIBLE_DEFAULT_ENDPOINT);
 
@@ -187,9 +287,8 @@ const App: React.FC = () => {
   const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
     'medium',
   );
-  const [reasoning_effort, setReasoningEffort] = useState<ReasoningEffortLevel>(
-    'medium',
-  );
+  const [reasoning_effort, setReasoningEffort] =
+    useState<ReasoningEffortLevel>('medium');
   const [gpt5EndpointPreference, setGpt5EndpointPreference] = useState<
     'chat' | 'responses'
   >('chat');
@@ -198,15 +297,15 @@ const App: React.FC = () => {
     targetModel: string | undefined,
     effort?: ReasoningEffortLevel,
   ): ReasoningEffortLevel => {
-  if (targetModel === MODEL_GPT_5_1) {
-    if (!effort) {
-      return 'none';
+    if (targetModel === MODEL_GPT_5_1) {
+      if (!effort) {
+        return 'none';
+      }
+      if (effort === 'minimal') {
+        return 'none';
+      }
+      return effort;
     }
-    if (effort === 'minimal') {
-      return 'none';
-    }
-    return effort;
-  }
     if (!effort || effort === 'none') {
       return 'medium';
     }
@@ -251,15 +350,26 @@ const App: React.FC = () => {
     chatProvider === 'gemini' ||
     chatProvider === 'claude';
   const requiresApiKey = chatProvider !== 'openai-compatible';
+  const openRouterAvailableModels = useMemo(() => {
+    const seen = new Set(openrouterModels);
+    const dynamic = openRouterDynamicState.models.filter((modelId) => {
+      const trimmed = modelId.trim();
+      if (!trimmed || seen.has(trimmed)) {
+        return false;
+      }
+      seen.add(trimmed);
+      return true;
+    });
+    return [...openrouterModels, ...dynamic];
+  }, [openRouterDynamicState.models]);
 
   // Voice settings state
   const [selectedVoiceEngine, setSelectedVoiceEngine] =
     useState<VoiceEngineType>(DEFAULT_VOICE_ENGINE);
   const [voiceApiKeys, setVoiceApiKeys] = useState<Record<string, string>>({});
   const [minimaxGroupId, setMinimaxGroupId] = useState<string>('');
-  const [minimaxModel, setMinimaxModel] = useState<MinimaxModel>(
-    'speech-2.6-hd',
-  );
+  const [minimaxModel, setMinimaxModel] =
+    useState<MinimaxModel>('speech-2.6-hd');
   const [minimaxLanguageBoost, setMinimaxLanguageBoost] =
     useState<string>('Japanese');
   const [minimaxSpeed, setMinimaxSpeed] = useState<string>('');
@@ -558,7 +668,10 @@ const App: React.FC = () => {
       }
       return;
     }
-    const normalized = normalizeReasoningEffortForModel(model, reasoning_effort);
+    const normalized = normalizeReasoningEffortForModel(
+      model,
+      reasoning_effort,
+    );
     if (normalized !== reasoning_effort) {
       setReasoningEffort(normalized);
     }
@@ -576,6 +689,22 @@ const App: React.FC = () => {
       );
     }
   }, [gpt5Preset, model]);
+
+  useEffect(() => {
+    saveOpenRouterDynamicState(openRouterDynamicState);
+  }, [openRouterDynamicState]);
+
+  useEffect(() => {
+    if (chatProvider !== 'openrouter') {
+      return;
+    }
+    if (openRouterAvailableModels.length === 0) {
+      return;
+    }
+    if (!openRouterAvailableModels.includes(model)) {
+      setModel(openRouterAvailableModels[0]);
+    }
+  }, [chatProvider, model, openRouterAvailableModels]);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -1297,6 +1426,56 @@ const App: React.FC = () => {
     });
   };
 
+  const handleOpenRouterMaxCandidatesChange = (value: string) => {
+    const parsed = Number.parseInt(value, 10);
+    setOpenRouterDynamicState((prev) => ({
+      ...prev,
+      maxCandidates: normalizeMaxCandidates(
+        Number.isFinite(parsed) ? parsed : undefined,
+      ),
+    }));
+  };
+
+  const handleRefreshOpenRouterFreeModels = async () => {
+    const trimmedApiKey = apiKey.trim();
+    if (!trimmedApiKey) {
+      setOpenRouterRefreshError('OpenRouter API key is required.');
+      return;
+    }
+
+    setIsFetchingOpenRouterFreeModels(true);
+    setOpenRouterRefreshError('');
+
+    try {
+      const trimmedBaseUrl = openRouterBaseUrl.trim();
+      const endpoint = trimmedBaseUrl
+        ? buildOpenRouterEndpoint(trimmedBaseUrl, '/chat/completions')
+        : undefined;
+      const modelsEndpoint = trimmedBaseUrl
+        ? buildOpenRouterEndpoint(trimmedBaseUrl, '/models')
+        : undefined;
+
+      const result = await refreshOpenRouterFreeModels({
+        apiKey: trimmedApiKey,
+        endpoint,
+        modelsEndpoint,
+        maxCandidates: openRouterDynamicState.maxCandidates,
+        maxWorking: DEFAULT_OPENROUTER_MAX_WORKING,
+      });
+
+      setOpenRouterDynamicState((prev) => ({
+        ...prev,
+        models: normalizeOpenRouterModelIds(result.working),
+        fetchedAt: result.fetchedAt,
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setOpenRouterRefreshError(message);
+    } finally {
+      setIsFetchingOpenRouterFreeModels(false);
+    }
+  };
+
   /**
    * send message
    */
@@ -1719,9 +1898,7 @@ const App: React.FC = () => {
                     <option value="zai">Z.ai</option>
                     <option value="kimi">Kimi</option>
                     <option value="openrouter">OpenRouter</option>
-                    <option value="openai-compatible">
-                      OpenAI-Compatible
-                    </option>
+                    <option value="openai-compatible">OpenAI-Compatible</option>
                   </select>
 
                   <label htmlFor="model">Model:</label>
@@ -1770,7 +1947,7 @@ const App: React.FC = () => {
                           </option>
                         ))}
                       {chatProvider === 'openrouter' &&
-                        openrouterModels.map((m) => (
+                        openRouterAvailableModels.map((m) => (
                           <option key={m} value={m}>
                             {m}
                           </option>
@@ -1820,6 +1997,79 @@ const App: React.FC = () => {
                         value={openRouterBaseUrl}
                         onChange={(e) => setOpenRouterBaseUrl(e.target.value)}
                       />
+                      <label htmlFor="openRouterMaxCandidates">
+                        Max candidates:
+                      </label>
+                      <input
+                        id="openRouterMaxCandidates"
+                        type="number"
+                        min={1}
+                        value={openRouterDynamicState.maxCandidates}
+                        onChange={(e) =>
+                          handleOpenRouterMaxCandidatesChange(e.target.value)
+                        }
+                        disabled={isFetchingOpenRouterFreeModels}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void handleRefreshOpenRouterFreeModels();
+                        }}
+                        disabled={
+                          isFetchingOpenRouterFreeModels || !apiKey.trim()
+                        }
+                        style={{ marginTop: '8px' }}
+                      >
+                        {isFetchingOpenRouterFreeModels
+                          ? 'Fetching...'
+                          : 'Fetch free models'}
+                      </button>
+                      {!apiKey.trim() && (
+                        <p
+                          style={{
+                            marginTop: '6px',
+                            color: '#666',
+                            fontSize: '12px',
+                          }}
+                        >
+                          Set OpenRouter API key to fetch free models.
+                        </p>
+                      )}
+                      {openRouterRefreshError && (
+                        <p
+                          style={{
+                            marginTop: '6px',
+                            color: '#d9534f',
+                            fontSize: '12px',
+                          }}
+                        >
+                          {openRouterRefreshError}
+                        </p>
+                      )}
+                      <p
+                        style={{
+                          marginTop: '6px',
+                          color: '#666',
+                          fontSize: '12px',
+                        }}
+                      >
+                        Dynamic free models:{' '}
+                        {openRouterDynamicState.models.length}
+                      </p>
+                      {openRouterDynamicState.fetchedAt > 0 && (
+                        <p
+                          style={{
+                            marginTop: '6px',
+                            color: '#666',
+                            fontSize: '12px',
+                          }}
+                        >
+                          Last fetched:{' '}
+                          {new Date(
+                            openRouterDynamicState.fetchedAt,
+                          ).toLocaleString()}
+                        </p>
+                      )}
                     </>
                   )}
 

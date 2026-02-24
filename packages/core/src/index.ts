@@ -136,6 +136,10 @@ export {
   OPENROUTER_FREE_MODELS,
   OPENROUTER_VISION_SUPPORTED_MODELS,
   ENDPOINT_OPENROUTER_API,
+  type RefreshOpenRouterFreeModelsOptions,
+  type RefreshOpenRouterFreeModelsFailure,
+  type RefreshOpenRouterFreeModelsResult,
+  refreshOpenRouterFreeModels,
   // Utils
   textToScreenplay as chatTextToScreenplay,
   screenplayToText as chatScreenplayToText,

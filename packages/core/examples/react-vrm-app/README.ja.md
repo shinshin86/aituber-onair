@@ -11,6 +11,10 @@
 - LLM プロバイダ切り替え:
   `openai`, `openai-compatible`, `openrouter`, `gemini`, `claude`,
   `zai`, `kimi`
+- `openrouter` では Settings から現在使える `:free` モデルを取得可能:
+  - `Fetch free models` で候補を疎通確認し、通ったモデルを一覧に追加
+  - `Max candidates` は「疎通確認する `:free` 候補の最大件数」
+    （「N件見つかるまで試行」ではありません）
 - TTS エンジン切り替え:
   `openai`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`,
   `minimax`, `none`
@@ -47,6 +51,8 @@ npm run dev
 ## 設定の保存仕様
 
 - LLM/TTS/API キー設定は `localStorage` に保存されます
+- OpenRouter の動的 free モデルキャッシュ
+  （`models` / `fetchedAt` / `maxCandidates`）も同じキーに保存されます
 - Visual の背景画像はメモリ保持のみで、リロード時に初期化されます
 
 ## アバターアセット（`public/avatar`）

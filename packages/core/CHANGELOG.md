@@ -1,5 +1,21 @@
 # @aituber-onair/core
 
+## 0.23.3
+
+### Patch Changes
+
+- Re-exported OpenRouter free-model refresh utility and related types from the
+  core entry point:
+  - `refreshOpenRouterFreeModels`
+  - `RefreshOpenRouterFreeModelsOptions`
+  - `RefreshOpenRouterFreeModelsFailure`
+  - `RefreshOpenRouterFreeModelsResult`
+- Updated core README docs (EN/JA) to mention OpenRouter free-tier discovery
+  via `@aituber-onair/core`.
+- Added core export test coverage for chat re-exports.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.17.0
+
 ## 0.23.2
 
 ### Patch Changes

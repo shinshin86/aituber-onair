@@ -11,6 +11,10 @@ from actual audio output volume.
 - Chat with LLM providers:
   `openai`, `openai-compatible`, `openrouter`, `gemini`, `claude`, `zai`,
   `kimi`
+- For `openrouter`, fetch currently working `:free` models from Settings:
+  - `Fetch free models` probes candidates and appends working models to the model list
+  - `Max candidates` is the maximum number of `:free` candidates to probe
+    (not a target number of working models)
 - Use TTS engines:
   `openai`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`,
   `minimax`, `none`
@@ -47,6 +51,8 @@ For `openai-compatible`, set:
 ## Settings persistence
 
 - LLM/TTS/API key settings are persisted in `localStorage`
+- OpenRouter dynamic free model cache
+  (`models`, `fetchedAt`, `maxCandidates`) is also persisted in the same key
 - Visual background image is memory-only and reset on page reload
 
 ## Avatar assets (`public/avatar`)
