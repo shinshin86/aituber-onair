@@ -1353,6 +1353,10 @@ Currently, the following AI provider is built-in:
 - **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi)
 
+For OpenRouter free-tier discovery, you can also use
+`refreshOpenRouterFreeModels` via `@aituber-onair/core`
+(re-exported from `@aituber-onair/chat`).
+
 ### Specifying a Provider
 
 You can specify the provider when instantiating `AITuberOnAirCore`:

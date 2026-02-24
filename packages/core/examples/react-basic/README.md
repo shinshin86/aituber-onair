@@ -136,6 +136,12 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **OpenRouter:**
 - Curated multi-provider models (OpenAI, Claude, Gemini, Z.ai, Kimi)
+- `Fetch free models` button to probe currently available `:free` models
+- Dynamic free models are added to the model select list
+- `Max candidates` means "maximum number of `:free` candidates to probe"
+  (not "keep probing until N working models are found")
+- Dynamic free model cache is stored in `localStorage`
+  (`AITuberOnAirCore_example_react-basic`)
 
 ### GPT-5 Configuration
 

@@ -8,6 +8,10 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 ## What this app can do
 
 - Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `claude`, `zai`
+- For `openrouter`, fetch currently working `:free` models from Settings:
+  - `Fetch free models` probes candidates and appends working models to the model list
+  - `Max candidates` is the maximum number of `:free` candidates to probe
+    (not a target number of working models)
 - Use TTS engines: `openai`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `none`
 - Fetch and select speaker lists dynamically:
   - `voicevox` / `aivisSpeech`: from `/speakers`
@@ -40,6 +44,8 @@ For `openai-compatible`, set:
 ## Settings persistence
 
 - LLM/TTS/API key settings are persisted in `localStorage`
+- OpenRouter dynamic free model cache
+  (`models`, `fetchedAt`, `maxCandidates`) is also persisted in the same key
 - Visual uploaded images are memory-only and reset on page reload
 
 ## Avatar base images (`public/avatar`)

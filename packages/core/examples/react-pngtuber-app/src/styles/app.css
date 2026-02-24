@@ -164,7 +164,8 @@ body {
 
 .settings-field select,
 .settings-field input[type="password"],
-.settings-field input[type="text"] {
+.settings-field input[type="text"],
+.settings-field input[type="number"] {
   width: 100%;
   padding: 6px 10px;
   background: #1a1a2e;
@@ -178,7 +179,8 @@ body {
 
 .settings-field select:focus,
 .settings-field input[type="password"]:focus,
-.settings-field input[type="text"]:focus {
+.settings-field input[type="text"]:focus,
+.settings-field input[type="number"]:focus {
   border-color: #e94560;
 }
 
@@ -261,6 +263,38 @@ body {
 .settings-field input:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.settings-action-button {
+  width: 100%;
+  border: 1px solid #0f3460;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.settings-action-button:hover:not(:disabled) {
+  border-color: #e94560;
+}
+
+.settings-action-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.settings-field-hint {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: #8899aa;
+}
+
+.settings-field-error {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: #ff8e8e;
 }
 
 .app-main {

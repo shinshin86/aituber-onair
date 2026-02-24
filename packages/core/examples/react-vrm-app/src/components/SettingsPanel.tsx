@@ -84,6 +84,10 @@ export function SettingsPanel({
   updateLLMModel,
   updateLLMApiKey,
   updateLLMEndpoint,
+  refreshOpenRouterDynamicFreeModels,
+  isRefreshingOpenRouterFreeModels,
+  openRouterRefreshError,
+  updateOpenRouterMaxCandidates,
   updateTTSEngine,
   updateTTSSpeaker,
   updateVoicevoxApiUrl,
@@ -101,6 +105,13 @@ export function SettingsPanel({
   onBackgroundImageChange,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
+  const openRouterApiKey = getApiKeyForProvider('openrouter').trim();
+  const openRouterDynamicFreeModels =
+    settings.llm.openRouterDynamicFreeModels?.models || [];
+  const openRouterFetchedAt =
+    settings.llm.openRouterDynamicFreeModels?.fetchedAt || 0;
+  const openRouterMaxCandidates =
+    settings.llm.openRouterDynamicFreeModels?.maxCandidates || 1;
 
   const [voicevoxSpeakers, setVoicevoxSpeakers] = useState<VoiceSpeaker[]>([]);
   const [aivisSpeakers, setAivisSpeakers] = useState<VoiceSpeaker[]>([]);
@@ -332,6 +343,82 @@ export function SettingsPanel({
               </div>
             )}
 
+            {settings.llm.provider === 'openrouter' && (
+              <div className="settings-field">
+                <label htmlFor="llm-apikey">
+                  API Key ({settings.llm.provider})
+                </label>
+                <input
+                  id="llm-apikey"
+                  type="password"
+                  value={getApiKeyForProvider(settings.llm.provider)}
+                  onChange={(e) =>
+                    updateLLMApiKey(settings.llm.provider, e.target.value)}
+                  placeholder="XXX-..."
+                  disabled={disabled}
+                />
+              </div>
+            )}
+
+            {settings.llm.provider === 'openrouter' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="openrouter-max-candidates">
+                    Max candidates
+                  </label>
+                  <input
+                    id="openrouter-max-candidates"
+                    type="number"
+                    min={1}
+                    value={openRouterMaxCandidates}
+                    onChange={(e) => {
+                      const parsed = Number.parseInt(e.target.value, 10);
+                      updateOpenRouterMaxCandidates(
+                        Number.isFinite(parsed) ? parsed : 1,
+                      );
+                    }}
+                    disabled={disabled || isRefreshingOpenRouterFreeModels}
+                  />
+                </div>
+                <div className="settings-field">
+                  <button
+                    type="button"
+                    className="settings-action-button"
+                    onClick={() => {
+                      void refreshOpenRouterDynamicFreeModels();
+                    }}
+                    disabled={
+                      disabled
+                      || isRefreshingOpenRouterFreeModels
+                      || !openRouterApiKey
+                    }
+                  >
+                    {isRefreshingOpenRouterFreeModels
+                      ? 'Fetching...'
+                      : 'Fetch free models'}
+                  </button>
+                  {!openRouterApiKey && (
+                    <p className="settings-field-hint">
+                      Set OpenRouter API key to fetch free models.
+                    </p>
+                  )}
+                  {openRouterRefreshError && (
+                    <p className="settings-field-error">
+                      {openRouterRefreshError}
+                    </p>
+                  )}
+                  <p className="settings-field-hint">
+                    Dynamic free models: {openRouterDynamicFreeModels.length}
+                  </p>
+                  {openRouterFetchedAt > 0 && (
+                    <p className="settings-field-hint">
+                      Last fetched: {new Date(openRouterFetchedAt).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
             {settings.llm.provider === 'openai-compatible' && (
               <div className="settings-field">
                 <label htmlFor="llm-endpoint">Endpoint URL</label>
@@ -346,26 +433,29 @@ export function SettingsPanel({
               </div>
             )}
 
-            <div className="settings-field">
-              <label htmlFor="llm-apikey">
-                API Key ({settings.llm.provider})
-                {settings.llm.provider === 'openai-compatible'
-                  ? ' (任意)'
-                  : ''}
-              </label>
-              <input
-                id="llm-apikey"
-                type="password"
-                value={getApiKeyForProvider(settings.llm.provider)}
-                onChange={(e) => updateLLMApiKey(settings.llm.provider, e.target.value)}
-                placeholder={
-                  settings.llm.provider === 'openai-compatible'
-                    ? '必要な場合のみ入力'
-                    : 'XXX-...'
-                }
-                disabled={disabled}
-              />
-            </div>
+            {settings.llm.provider !== 'openrouter' && (
+              <div className="settings-field">
+                <label htmlFor="llm-apikey">
+                  API Key ({settings.llm.provider})
+                  {settings.llm.provider === 'openai-compatible'
+                    ? ' (任意)'
+                    : ''}
+                </label>
+                <input
+                  id="llm-apikey"
+                  type="password"
+                  value={getApiKeyForProvider(settings.llm.provider)}
+                  onChange={(e) =>
+                    updateLLMApiKey(settings.llm.provider, e.target.value)}
+                  placeholder={
+                    settings.llm.provider === 'openai-compatible'
+                      ? '必要な場合のみ入力'
+                      : 'XXX-...'
+                  }
+                  disabled={disabled}
+                />
+              </div>
+            )}
           </>
         )}
       </div>

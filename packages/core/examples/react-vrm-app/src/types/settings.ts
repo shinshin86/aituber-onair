@@ -30,6 +30,11 @@ export interface LLMSettings {
   model: string;
   endpoint?: string;
   apiKeys: ProviderApiKeys;
+  openRouterDynamicFreeModels?: {
+    models: string[];
+    fetchedAt: number;
+    maxCandidates: number;
+  };
 }
 
 export interface TTSSettings {
