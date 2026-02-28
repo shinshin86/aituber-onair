@@ -733,5 +733,51 @@ describe('VoiceEngineAdapter', () => {
         }),
       ).not.toThrow();
     });
+
+    it('should reject cross-engine options in updateOptions', () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'openai',
+        speaker: 'alloy',
+        apiKey: 'test-api-key',
+      };
+
+      const adapter = new VoiceEngineAdapter(options);
+
+      expect(() =>
+        adapter.updateOptions({
+          minimaxModel: 'speech-2.6-hd',
+        } as any),
+      ).toThrow('Use switchEngine()');
+    });
+
+    it('should switch engine using switchEngine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'openai',
+        speaker: 'alloy',
+        apiKey: 'openai-api-key',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.switchEngine({
+        engineType: 'minimax',
+        speaker: 'minimax-speaker',
+        apiKey: 'minimax-api-key',
+        groupId: 'minimax-group-id',
+        onPlay: vi.fn(),
+      });
+
+      await adapter.speak({ text: 'Engine switched' });
+
+      expect(mockEngine.setGroupId).toHaveBeenCalledWith('minimax-group-id');
+      expect(mockEngine.fetchAudio).toHaveBeenCalledWith(
+        expect.any(Object),
+        'minimax-speaker',
+        'minimax-api-key',
+      );
+    });
   });
 });

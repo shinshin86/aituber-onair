@@ -5,13 +5,20 @@ import { textToScreenplay } from '../utils/screenplay';
 import {
   AudioPlayOptions,
   AivisCloudVoiceServiceOptions,
+  AivisCloudVoiceServiceOptionsUpdate,
   AivisSpeechVoiceServiceOptions,
+  AivisSpeechVoiceServiceOptionsUpdate,
+  MinimaxVoiceServiceOptionsUpdate,
   MinimaxVoiceServiceOptions,
+  NoneVoiceServiceOptionsUpdate,
+  OpenAiVoiceServiceOptionsUpdate,
   OpenAiVoiceServiceOptions,
+  VoicePeakVoiceServiceOptionsUpdate,
   VoicePeakVoiceServiceOptions,
   VoiceService,
   VoiceServiceOptions,
   VoiceServiceOptionsUpdate,
+  VoiceVoxVoiceServiceOptionsUpdate,
   VoiceVoxVoiceServiceOptions,
 } from './VoiceService';
 import { AudioPlayerFactory } from './audio/AudioPlayerFactory';
@@ -144,6 +151,96 @@ interface AivisCloudConfigurableEngine extends VoiceEngine {
   setEnableBillingLogs?(value: boolean): void;
 }
 
+const COMMON_UPDATE_KEYS = [
+  'speaker',
+  'apiKey',
+  'onPlay',
+  'onComplete',
+] as const;
+
+const ENGINE_SPECIFIC_UPDATE_KEYS = {
+  voicevox: [
+    'voicevoxApiUrl',
+    'voicevoxQueryParameters',
+    'voicevoxSpeedScale',
+    'voicevoxPitchScale',
+    'voicevoxIntonationScale',
+    'voicevoxVolumeScale',
+    'voicevoxPrePhonemeLength',
+    'voicevoxPostPhonemeLength',
+    'voicevoxPauseLength',
+    'voicevoxPauseLengthScale',
+    'voicevoxOutputSamplingRate',
+    'voicevoxOutputStereo',
+    'voicevoxEnableKatakanaEnglish',
+    'voicevoxEnableInterrogativeUpspeak',
+    'voicevoxCoreVersion',
+  ],
+  voicepeak: [
+    'voicepeakApiUrl',
+    'voicepeakEmotion',
+    'voicepeakSpeed',
+    'voicepeakPitch',
+  ],
+  openai: ['openAiModel', 'openAiSpeed'],
+  aivisSpeech: [
+    'aivisSpeechApiUrl',
+    'aivisSpeechQueryParameters',
+    'aivisSpeechSpeedScale',
+    'aivisSpeechPitchScale',
+    'aivisSpeechIntonationScale',
+    'aivisSpeechTempoDynamicsScale',
+    'aivisSpeechVolumeScale',
+    'aivisSpeechPrePhonemeLength',
+    'aivisSpeechPostPhonemeLength',
+    'aivisSpeechPauseLength',
+    'aivisSpeechPauseLengthScale',
+    'aivisSpeechOutputSamplingRate',
+    'aivisSpeechOutputStereo',
+  ],
+  minimax: [
+    'groupId',
+    'endpoint',
+    'minimaxModel',
+    'minimaxVoiceSettings',
+    'minimaxAudioSettings',
+    'minimaxSpeed',
+    'minimaxVolume',
+    'minimaxPitch',
+    'minimaxSampleRate',
+    'minimaxBitrate',
+    'minimaxAudioFormat',
+    'minimaxAudioChannel',
+    'minimaxLanguageBoost',
+  ],
+  aivisCloud: [
+    'aivisCloudModelUuid',
+    'aivisCloudSpeakerUuid',
+    'aivisCloudStyleId',
+    'aivisCloudStyleName',
+    'aivisCloudUserDictionaryUuid',
+    'aivisCloudUseSSML',
+    'aivisCloudLanguage',
+    'aivisCloudSpeakingRate',
+    'aivisCloudEmotionalIntensity',
+    'aivisCloudTempoDynamics',
+    'aivisCloudPitch',
+    'aivisCloudVolume',
+    'aivisCloudLeadingSilence',
+    'aivisCloudTrailingSilence',
+    'aivisCloudLineBreakSilence',
+    'aivisCloudOutputFormat',
+    'aivisCloudOutputBitrate',
+    'aivisCloudOutputSamplingRate',
+    'aivisCloudOutputChannels',
+    'aivisCloudEnableBillingLogs',
+  ],
+  none: [],
+} as const satisfies Record<
+  VoiceServiceOptions['engineType'],
+  readonly string[]
+>;
+
 /**
  * Adapter implementation for using existing voice engines
  */
@@ -162,8 +259,10 @@ export class VoiceEngineAdapter implements VoiceService {
   constructor(options: VoiceServiceOptions) {
     this.options = options;
     this.audioPlayer = AudioPlayerFactory.createAudioPlayer();
+    this.bindOnCompleteCallback();
+  }
 
-    // Set up completion callback
+  private bindOnCompleteCallback(): void {
     this.audioPlayer.setOnComplete(() => {
       if (this.options.onComplete) {
         this.options.onComplete();
@@ -786,15 +885,94 @@ export class VoiceEngineAdapter implements VoiceService {
    * @param options New settings options
    */
   updateOptions(options: VoiceServiceOptionsUpdate): void {
-    this.options = { ...this.options, ...options } as VoiceServiceOptions;
+    this.validateUpdateOptions(options);
+    this.mergeOptionsForCurrentEngine(options);
 
     // Update audio player callback if onComplete changes
     if (options.onComplete !== undefined) {
-      this.audioPlayer.setOnComplete(() => {
-        if (this.options.onComplete) {
-          this.options.onComplete();
-        }
-      });
+      this.bindOnCompleteCallback();
+    }
+  }
+
+  /**
+   * Switch voice engine with complete options for the target engine
+   * @param options New engine options
+   */
+  switchEngine(options: VoiceServiceOptions): void {
+    this.options = options;
+    this.bindOnCompleteCallback();
+  }
+
+  private validateUpdateOptions(options: VoiceServiceOptionsUpdate): void {
+    if (Object.prototype.hasOwnProperty.call(options, 'engineType')) {
+      throw new Error(
+        'engineType cannot be updated via updateOptions(). Use switchEngine() instead.',
+      );
+    }
+
+    const allowedKeys = new Set<string>([
+      ...COMMON_UPDATE_KEYS,
+      ...ENGINE_SPECIFIC_UPDATE_KEYS[this.options.engineType],
+    ]);
+    const invalidKeys = Object.keys(options).filter(
+      (key) => !allowedKeys.has(key),
+    );
+
+    if (invalidKeys.length > 0) {
+      throw new Error(
+        `Invalid update options for engine "${this.options.engineType}": ${invalidKeys.join(
+          ', ',
+        )}. Use switchEngine() for cross-engine changes.`,
+      );
+    }
+  }
+
+  private mergeOptionsForCurrentEngine(
+    options: VoiceServiceOptionsUpdate,
+  ): void {
+    switch (this.options.engineType) {
+      case 'voicevox':
+        this.options = {
+          ...this.options,
+          ...(options as VoiceVoxVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'voicepeak':
+        this.options = {
+          ...this.options,
+          ...(options as VoicePeakVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'openai':
+        this.options = {
+          ...this.options,
+          ...(options as OpenAiVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'aivisSpeech':
+        this.options = {
+          ...this.options,
+          ...(options as AivisSpeechVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'minimax':
+        this.options = {
+          ...this.options,
+          ...(options as MinimaxVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'aivisCloud':
+        this.options = {
+          ...this.options,
+          ...(options as AivisCloudVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'none':
+        this.options = {
+          ...this.options,
+          ...(options as NoneVoiceServiceOptionsUpdate),
+        };
+        break;
     }
   }
 }

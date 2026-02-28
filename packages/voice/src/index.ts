@@ -7,6 +7,7 @@
 export type {
   VoiceService,
   VoiceServiceOptions,
+  VoiceServiceOptionsUpdate,
   AudioPlayOptions,
   MinimaxVoiceSettingsOptions,
   MinimaxAudioSettingsOptions,

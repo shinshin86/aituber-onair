@@ -248,14 +248,36 @@ export type VoiceServiceOptions =
 /**
  * Voice service update options
  */
+export type VoiceVoxVoiceServiceOptionsUpdate = Partial<
+  Omit<VoiceVoxVoiceServiceOptions, 'engineType'>
+>;
+export type VoicePeakVoiceServiceOptionsUpdate = Partial<
+  Omit<VoicePeakVoiceServiceOptions, 'engineType'>
+>;
+export type OpenAiVoiceServiceOptionsUpdate = Partial<
+  Omit<OpenAiVoiceServiceOptions, 'engineType'>
+>;
+export type AivisSpeechVoiceServiceOptionsUpdate = Partial<
+  Omit<AivisSpeechVoiceServiceOptions, 'engineType'>
+>;
+export type AivisCloudVoiceServiceOptionsUpdate = Partial<
+  Omit<AivisCloudVoiceServiceOptions, 'engineType'>
+>;
+export type MinimaxVoiceServiceOptionsUpdate = Partial<
+  Omit<MinimaxVoiceServiceOptions, 'engineType'>
+>;
+export type NoneVoiceServiceOptionsUpdate = Partial<
+  Omit<NoneVoiceServiceOptions, 'engineType'>
+>;
+
 export type VoiceServiceOptionsUpdate =
-  | Partial<VoiceVoxVoiceServiceOptions>
-  | Partial<VoicePeakVoiceServiceOptions>
-  | Partial<OpenAiVoiceServiceOptions>
-  | Partial<AivisSpeechVoiceServiceOptions>
-  | Partial<AivisCloudVoiceServiceOptions>
-  | Partial<MinimaxVoiceServiceOptions>
-  | Partial<NoneVoiceServiceOptions>;
+  | VoiceVoxVoiceServiceOptionsUpdate
+  | VoicePeakVoiceServiceOptionsUpdate
+  | OpenAiVoiceServiceOptionsUpdate
+  | AivisSpeechVoiceServiceOptionsUpdate
+  | AivisCloudVoiceServiceOptionsUpdate
+  | MinimaxVoiceServiceOptionsUpdate
+  | NoneVoiceServiceOptionsUpdate;
 
 /**
  * Audio playback options
@@ -300,4 +322,10 @@ export interface VoiceService {
    * @param options New settings options
    */
   updateOptions(options: VoiceServiceOptionsUpdate): void;
+
+  /**
+   * Switch voice engine with complete options for the target engine
+   * @param options New engine options
+   */
+  switchEngine(options: VoiceServiceOptions): void;
 }
