@@ -1,6 +1,6 @@
 import { AudioPlayer } from '../types/audioPlayer';
 import { ChatScreenplay } from '../types/chat';
-import { EmotionType } from '../types/voice';
+import { Talk, TalkStyle } from '../types/voice';
 import { textToScreenplay } from '../utils/screenplay';
 import {
   AudioPlayOptions,
@@ -149,7 +149,7 @@ export class VoiceEngineAdapter implements VoiceService {
     }
   }
 
-  private mapEmotionToStyle(emotion?: string): EmotionType {
+  private mapEmotionToStyle(emotion?: string): TalkStyle {
     switch ((emotion || 'neutral').toLowerCase()) {
       case 'angry':
         return 'angry';
@@ -172,7 +172,7 @@ export class VoiceEngineAdapter implements VoiceService {
       '../engines/VoiceEngineFactory'
     );
 
-    const talk = {
+    const talk: Talk = {
       style: this.mapEmotionToStyle(screenplay.emotion),
       message: screenplay.text,
     };
@@ -183,7 +183,7 @@ export class VoiceEngineAdapter implements VoiceService {
 
     // Get audio data
     return await engine.fetchAudio(
-      talk as any,
+      talk,
       this.options.speaker,
       this.options.apiKey,
     );
