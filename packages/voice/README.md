@@ -294,8 +294,22 @@ const voiceAdapter = new VoiceEngineAdapter({
   speaker: '1'
 });
 
+// Update options within the same engine
+voiceAdapter.updateOptions({
+  speaker: '3',
+  voicevoxSpeedScale: 1.1,
+});
+
 // Switch to a different engine at runtime
-await voiceAdapter.updateOptions({
+voiceAdapter.switchEngine({
+  engineType: 'openai',
+  speaker: 'nova',
+  apiKey: 'your-openai-api-key'
+});
+
+// Backward compatibility:
+// updateOptions with engineType is still accepted.
+voiceAdapter.updateOptions({
   engineType: 'openai',
   speaker: 'nova',
   apiKey: 'your-openai-api-key'
@@ -434,38 +448,34 @@ await core.processChat('Hello!');
 ### VoiceServiceOptions
 
 ```typescript
-interface VoiceServiceOptions {
-  engineType: VoiceEngineType;
-  speaker: string;
-  apiKey?: string;
-  groupId?: string; // For MiniMax
-  endpoint?: 'global' | 'china'; // For MiniMax
-  voicevoxApiUrl?: string;
-  voicepeakApiUrl?: string;
-  voicepeakEmotion?:
-    | 'happy'
-    | 'fun'
-    | 'angry'
-    | 'sad'
-    | 'neutral'
-    | 'surprised';
-  voicepeakSpeed?: number; // 50-200 (integer)
-  voicepeakPitch?: number; // -300 to 300 (integer)
-  aivisSpeechApiUrl?: string;
-  onPlay?: (audioBuffer: ArrayBuffer) => Promise<void>;
-  onComplete?: () => void;
-  audioElementId?: string;
-}
+type VoiceServiceOptions =
+  | VoiceVoxVoiceServiceOptions
+  | VoicePeakVoiceServiceOptions
+  | OpenAiVoiceServiceOptions
+  | AivisSpeechVoiceServiceOptions
+  | AivisCloudVoiceServiceOptions
+  | MinimaxVoiceServiceOptions
+  | NoneVoiceServiceOptions;
 ```
 
-### VoiceEngine Methods
+`VoiceServiceOptions` is a discriminated union keyed by `engineType`.
+Use `updateOptions(...)` for same-engine updates and `switchEngine(...)`
+for cross-engine changes.
+For backward compatibility, cross-engine fields in `updateOptions(...)`
+are still accepted.
+
+### VoiceService Methods
 
 ```typescript
-interface VoiceEngine {
-  speak(params: SpeakParams): Promise<ArrayBuffer | null>;
-  isAvailable(): Promise<boolean>;
-  getSpeakers?(): Promise<SpeakerInfo[]>;
-  getEngineInfo(): VoiceEngineInfo;
+interface VoiceService {
+  speak(screenplay: ChatScreenplay, options?: AudioPlayOptions): Promise<void>;
+  speakText(text: string, options?: AudioPlayOptions): Promise<void>;
+  isPlaying(): boolean;
+  stop(): void;
+  updateOptions(
+    options: VoiceServiceOptionsUpdate | Partial<VoiceServiceOptions>
+  ): void;
+  switchEngine?(options: VoiceServiceOptions): void;
 }
 ```
 

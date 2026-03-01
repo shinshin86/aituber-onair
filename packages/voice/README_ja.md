@@ -294,8 +294,22 @@ const voiceAdapter = new VoiceEngineAdapter({
   speaker: '1'
 });
 
+// 同じエンジン内でパラメーター更新
+voiceAdapter.updateOptions({
+  speaker: '3',
+  voicevoxSpeedScale: 1.1,
+});
+
 // 実行時に別のエンジンに切り替え
-await voiceAdapter.updateOptions({
+voiceAdapter.switchEngine({
+  engineType: 'openai',
+  speaker: 'nova',
+  apiKey: 'your-openai-api-key'
+});
+
+// 後方互換:
+// engineType を含む updateOptions も引き続き利用可能です
+voiceAdapter.updateOptions({
   engineType: 'openai',
   speaker: 'nova',
   apiKey: 'your-openai-api-key'
@@ -438,38 +452,34 @@ await core.processChat('こんにちは！');
 ### VoiceServiceOptions
 
 ```typescript
-interface VoiceServiceOptions {
-  engineType: VoiceEngineType;
-  speaker: string;
-  apiKey?: string;
-  groupId?: string; // MiniMax用
-  endpoint?: 'global' | 'china'; // MiniMax用
-  voicevoxApiUrl?: string;
-  voicepeakApiUrl?: string;
-  voicepeakEmotion?:
-    | 'happy'
-    | 'fun'
-    | 'angry'
-    | 'sad'
-    | 'neutral'
-    | 'surprised';
-  voicepeakSpeed?: number; // 50-200（整数）
-  voicepeakPitch?: number; // -300〜300（整数）
-  aivisSpeechApiUrl?: string;
-  onPlay?: (audioBuffer: ArrayBuffer) => Promise<void>;
-  onComplete?: () => void;
-  audioElementId?: string;
-}
+type VoiceServiceOptions =
+  | VoiceVoxVoiceServiceOptions
+  | VoicePeakVoiceServiceOptions
+  | OpenAiVoiceServiceOptions
+  | AivisSpeechVoiceServiceOptions
+  | AivisCloudVoiceServiceOptions
+  | MinimaxVoiceServiceOptions
+  | NoneVoiceServiceOptions;
 ```
 
-### VoiceEngineメソッド
+`VoiceServiceOptions` は `engineType` を判別キーにした union 型です。  
+同一エンジン内の更新は `updateOptions(...)`、エンジン切替は
+`switchEngine(...)` を使用してください。
+後方互換のため、`updateOptions(...)` へエンジン切替用フィールドを
+渡す使い方も引き続き受け付けます。
+
+### VoiceServiceメソッド
 
 ```typescript
-interface VoiceEngine {
-  speak(params: SpeakParams): Promise<ArrayBuffer | null>;
-  isAvailable(): Promise<boolean>;
-  getSpeakers?(): Promise<SpeakerInfo[]>;
-  getEngineInfo(): VoiceEngineInfo;
+interface VoiceService {
+  speak(screenplay: ChatScreenplay, options?: AudioPlayOptions): Promise<void>;
+  speakText(text: string, options?: AudioPlayOptions): Promise<void>;
+  isPlaying(): boolean;
+  stop(): void;
+  updateOptions(
+    options: VoiceServiceOptionsUpdate | Partial<VoiceServiceOptions>
+  ): void;
+  switchEngine?(options: VoiceServiceOptions): void;
 }
 ```
 
