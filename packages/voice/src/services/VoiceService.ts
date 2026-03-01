@@ -321,11 +321,13 @@ export interface VoiceService {
    * Update service settings
    * @param options New settings options
    */
-  updateOptions(options: VoiceServiceOptionsUpdate): void;
+  updateOptions(
+    options: VoiceServiceOptionsUpdate | Partial<VoiceServiceOptions>,
+  ): void;
 
   /**
    * Switch voice engine with complete options for the target engine
    * @param options New engine options
    */
-  switchEngine(options: VoiceServiceOptions): void;
+  switchEngine?(options: VoiceServiceOptions): void;
 }

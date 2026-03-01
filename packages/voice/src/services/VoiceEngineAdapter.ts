@@ -884,9 +884,28 @@ export class VoiceEngineAdapter implements VoiceService {
    * Update service settings
    * @param options New settings options
    */
-  updateOptions(options: VoiceServiceOptionsUpdate): void {
-    this.validateUpdateOptions(options);
-    this.mergeOptionsForCurrentEngine(options);
+  updateOptions(
+    options: VoiceServiceOptionsUpdate | Partial<VoiceServiceOptions>,
+  ): void {
+    // Backward compatible path: allow engine switching via updateOptions().
+    if (Object.prototype.hasOwnProperty.call(options, 'engineType')) {
+      this.switchEngine({
+        ...this.options,
+        ...(options as Partial<VoiceServiceOptions>),
+      } as VoiceServiceOptions);
+      return;
+    }
+
+    try {
+      this.validateUpdateOptions(options as VoiceServiceOptionsUpdate);
+      this.mergeOptionsForCurrentEngine(options as VoiceServiceOptionsUpdate);
+    } catch {
+      // Backward compatible path: accept cross-engine fields without throwing.
+      this.options = {
+        ...this.options,
+        ...(options as Partial<VoiceServiceOptions>),
+      } as VoiceServiceOptions;
+    }
 
     // Update audio player callback if onComplete changes
     if (options.onComplete !== undefined) {

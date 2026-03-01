@@ -447,7 +447,11 @@ export class AITuberOnAirCore extends EventEmitter {
    */
   updateVoiceService(options: VoiceServiceOptions): void {
     if (this.voiceService) {
-      this.voiceService.switchEngine(options);
+      if (this.voiceService.switchEngine) {
+        this.voiceService.switchEngine(options);
+      } else {
+        this.voiceService.updateOptions(options);
+      }
     } else {
       this.voiceService = new VoiceEngineAdapter(options);
     }
