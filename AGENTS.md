@@ -19,6 +19,13 @@
 - Type check (per pkg): `npm -w <name> run typecheck`
 - After any code fix/change, always run `fmt`, `build`, then `test` for the affected scope before completing the task.
 
+## Definition of Done (DoD)
+- Before push/PR, always run the following repository-wide commands in this order and ensure all pass:
+  - `npm run fmt`
+  - `npm run lint`
+  - `npm run test`
+  - `npm run build`
+
 ## Coding Style & Naming
 - TypeScript + Biome (2‑space indent, single quotes, 80‑char width). Code/comments in English.
 - Use barrel exports (`index.ts`) to define public API; minimize external deps.
