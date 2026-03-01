@@ -4,6 +4,7 @@ import {
   AITuberOnAirCoreOptions,
 } from '../../src/core/AITuberOnAirCore';
 import { ChatServiceFactory } from '@aituber-onair/chat';
+import { VoiceEngineAdapter } from '@aituber-onair/voice';
 
 const createChatService = vi.hoisted(() => vi.fn().mockReturnValue({}));
 
@@ -28,6 +29,7 @@ vi.mock('@aituber-onair/voice', () => {
       speak: vi.fn(),
       stop: vi.fn(),
       updateOptions: vi.fn(),
+      switchEngine: vi.fn(),
     })),
     VoiceService: vi.fn(),
     VoiceServiceOptions: {},
@@ -118,5 +120,35 @@ describe('AITuberOnAirCore buildChatServiceOptions', () => {
         tools: [],
       }),
     );
+  });
+
+  it('switches voice engine via switchEngine when voice service exists', () => {
+    const core = new AITuberOnAirCore(
+      createOptions({
+        voiceOptions: {
+          engineType: 'voicevox',
+          speaker: '1',
+        },
+      }),
+    );
+
+    const nextOptions = {
+      engineType: 'openai' as const,
+      speaker: 'alloy',
+      apiKey: 'test-openai-key',
+    };
+
+    core.updateVoiceService(nextOptions);
+
+    const voiceAdapterMock = vi.mocked(VoiceEngineAdapter);
+    expect(voiceAdapterMock).toHaveBeenCalledTimes(1);
+
+    const instance = voiceAdapterMock.mock.results[0]?.value as {
+      switchEngine: ReturnType<typeof vi.fn>;
+      updateOptions: ReturnType<typeof vi.fn>;
+    };
+
+    expect(instance.switchEngine).toHaveBeenCalledWith(nextOptions);
+    expect(instance.updateOptions).not.toHaveBeenCalled();
   });
 });
