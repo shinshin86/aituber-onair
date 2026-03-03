@@ -4,6 +4,7 @@
 
 export const talkStyles = [
   'talk',
+  'neutral',
   'happy',
   'sad',
   'angry',

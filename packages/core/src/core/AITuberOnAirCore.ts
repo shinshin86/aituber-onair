@@ -20,6 +20,7 @@ import { ClaudeSummarizer } from '../services/chat/providers/claude/ClaudeSummar
 import {
   VoiceService,
   VoiceServiceOptions,
+  VoiceServiceOptionsUpdate,
   AudioPlayOptions,
   VoiceEngineAdapter,
 } from '@aituber-onair/voice';
@@ -446,7 +447,11 @@ export class AITuberOnAirCore extends EventEmitter {
    */
   updateVoiceService(options: VoiceServiceOptions): void {
     if (this.voiceService) {
-      this.voiceService.updateOptions(options);
+      if (this.voiceService.switchEngine) {
+        this.voiceService.switchEngine(options);
+      } else {
+        this.voiceService.updateOptions(options);
+      }
     } else {
       this.voiceService = new VoiceEngineAdapter(options);
     }
@@ -480,7 +485,7 @@ export class AITuberOnAirCore extends EventEmitter {
     text: string,
     options?: {
       enableAnimation?: boolean;
-      temporaryVoiceOptions?: Partial<VoiceServiceOptions>;
+      temporaryVoiceOptions?: VoiceServiceOptionsUpdate;
       audioElementId?: string;
     },
   ): Promise<void> {
@@ -492,7 +497,7 @@ export class AITuberOnAirCore extends EventEmitter {
     this.log(`Speaking text with options: ${JSON.stringify(options)}`);
 
     // Store the original voice options
-    let originalVoiceOptions: Partial<VoiceServiceOptions> | undefined;
+    let originalVoiceOptions: VoiceServiceOptionsUpdate | undefined;
     let temporaryVoiceOptionKeys: string[] | undefined;
 
     try {
@@ -500,14 +505,22 @@ export class AITuberOnAirCore extends EventEmitter {
       if (options?.temporaryVoiceOptions) {
         const serviceWithOptions = this.voiceService as any;
         const currentOptions =
-          (serviceWithOptions.options as Partial<VoiceServiceOptions>) || {};
+          (serviceWithOptions.options as Record<string, unknown>) || {};
 
-        // Save a shallow copy of current options for restoration
-        originalVoiceOptions = { ...currentOptions };
+        const temporaryVoiceOptionsRecord =
+          options.temporaryVoiceOptions as Record<string, unknown>;
+
+        // Save only the keys being overridden for restoration
+        originalVoiceOptions = Object.fromEntries(
+          Object.keys(temporaryVoiceOptionsRecord).map((key) => [
+            key,
+            currentOptions[key],
+          ]),
+        ) as VoiceServiceOptionsUpdate;
 
         // Track which keys are newly introduced so we can remove them later
         temporaryVoiceOptionKeys = Object.keys(
-          options.temporaryVoiceOptions,
+          temporaryVoiceOptionsRecord,
         ).filter((key) => !(key in currentOptions));
 
         this.voiceService.updateOptions(options.temporaryVoiceOptions);
@@ -538,7 +551,7 @@ export class AITuberOnAirCore extends EventEmitter {
     } finally {
       // Restore original options if they were changed
       if (this.voiceService) {
-        const resetOptions: Partial<VoiceServiceOptions> = {
+        const resetOptions: VoiceServiceOptionsUpdate = {
           ...(originalVoiceOptions ?? {}),
         };
 

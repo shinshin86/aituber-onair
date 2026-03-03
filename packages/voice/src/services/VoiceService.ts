@@ -4,7 +4,6 @@ export type { VoiceVoxQueryParameterOverrides };
 export type { AivisSpeechQueryParameterOverrides };
 import { ChatScreenplay } from '../types/chat';
 import type { EmotionTypeForVoicepeak } from '../types/voice';
-import { VoiceEngineType } from '../types/voiceEngine';
 
 /**
  * MiniMax audio format types
@@ -38,19 +37,13 @@ export interface MinimaxAudioSettingsOptions {
 }
 
 /**
- * Voice service settings options
+ * Voice service common settings options
  */
-export interface VoiceServiceOptions {
+interface VoiceServiceCommonOptions {
   /** Speaker ID */
   speaker: string;
-  /** Engine type (voicevox, voicepeak, openai, aivisSpeech, aivisCloud, minimax, none) */
-  engineType: VoiceEngineType;
   /** API key (if needed) */
   apiKey?: string;
-  /** OpenAI TTS model (tts-1, tts-1-hd, gpt-4o-mini-tts) */
-  openAiModel?: string;
-  /** OpenAI TTS speaking speed (0.25-4.0, default: 1.0) */
-  openAiSpeed?: number;
   /** Audio playback callback */
   onPlay?: (
     audioBuffer: ArrayBuffer,
@@ -58,44 +51,13 @@ export interface VoiceServiceOptions {
   ) => Promise<void>;
   /** Audio playback complete callback */
   onComplete?: () => void;
+}
+
+export interface VoiceVoxVoiceServiceOptions extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'voicevox';
   /** Custom VOICEVOX API endpoint URL */
   voicevoxApiUrl?: string;
-  /** Custom VOICEPEAK API endpoint URL */
-  voicepeakApiUrl?: string;
-  /** VoicePeak emotion override */
-  voicepeakEmotion?: EmotionTypeForVoicepeak;
-  /** VoicePeak speaking speed (50-200, integer) */
-  voicepeakSpeed?: number;
-  /** VoicePeak pitch (-300 to 300, integer) */
-  voicepeakPitch?: number;
-  /** Custom AIVIS SPEECH API endpoint URL */
-  aivisSpeechApiUrl?: string;
-  /** MiniMax Group ID (required for MiniMax engine) */
-  groupId?: string;
-  /** MiniMax endpoint ('global' or 'china') */
-  endpoint?: string;
-  /** MiniMax model to use */
-  minimaxModel?: string;
-  /** MiniMax voice settings override */
-  minimaxVoiceSettings?: MinimaxVoiceSettingsOptions;
-  /** MiniMax audio settings override */
-  minimaxAudioSettings?: MinimaxAudioSettingsOptions;
-  /** MiniMax speed override (voice_setting.speed) */
-  minimaxSpeed?: number;
-  /** MiniMax volume override (voice_setting.vol) */
-  minimaxVolume?: number;
-  /** MiniMax pitch override (voice_setting.pitch) */
-  minimaxPitch?: number;
-  /** MiniMax audio sample rate override (audio_setting.sample_rate) */
-  minimaxSampleRate?: number;
-  /** MiniMax audio bitrate override (audio_setting.bitrate) */
-  minimaxBitrate?: number;
-  /** MiniMax audio format override (audio_setting.format) */
-  minimaxAudioFormat?: MinimaxAudioFormat;
-  /** MiniMax audio channel override (audio_setting.channel) */
-  minimaxAudioChannel?: 1 | 2;
-  /** MiniMax language boost override */
-  minimaxLanguageBoost?: string;
   /** VOICEVOX audio query parameter overrides */
   voicevoxQueryParameters?: VoiceVoxQueryParameterOverrides;
   /** VOICEVOX speedScale override */
@@ -124,6 +86,37 @@ export interface VoiceServiceOptions {
   voicevoxEnableInterrogativeUpspeak?: boolean;
   /** VOICEVOX core_version specification */
   voicevoxCoreVersion?: string;
+}
+
+export interface VoicePeakVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'voicepeak';
+  /** Custom VOICEPEAK API endpoint URL */
+  voicepeakApiUrl?: string;
+  /** VoicePeak emotion override */
+  voicepeakEmotion?: EmotionTypeForVoicepeak;
+  /** VoicePeak speaking speed (50-200, integer) */
+  voicepeakSpeed?: number;
+  /** VoicePeak pitch (-300 to 300, integer) */
+  voicepeakPitch?: number;
+}
+
+export interface OpenAiVoiceServiceOptions extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'openai';
+  /** OpenAI TTS model (tts-1, tts-1-hd, gpt-4o-mini-tts) */
+  openAiModel?: string;
+  /** OpenAI TTS speaking speed (0.25-4.0, default: 1.0) */
+  openAiSpeed?: number;
+}
+
+export interface AivisSpeechVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'aivisSpeech';
+  /** Custom AIVIS SPEECH API endpoint URL */
+  aivisSpeechApiUrl?: string;
   /** AivisSpeech audio query parameter overrides */
   aivisSpeechQueryParameters?: AivisSpeechQueryParameterOverrides;
   /** AivisSpeech speedScale override */
@@ -148,8 +141,43 @@ export interface VoiceServiceOptions {
   aivisSpeechOutputSamplingRate?: number;
   /** AivisSpeech outputStereo override */
   aivisSpeechOutputStereo?: boolean;
+}
 
-  // Aivis Cloud specific options
+export interface MinimaxVoiceServiceOptions extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'minimax';
+  /** MiniMax Group ID (required for MiniMax engine) */
+  groupId?: string;
+  /** MiniMax endpoint ('global' or 'china') */
+  endpoint?: 'global' | 'china';
+  /** MiniMax model to use */
+  minimaxModel?: string;
+  /** MiniMax voice settings override */
+  minimaxVoiceSettings?: MinimaxVoiceSettingsOptions;
+  /** MiniMax audio settings override */
+  minimaxAudioSettings?: MinimaxAudioSettingsOptions;
+  /** MiniMax speed override (voice_setting.speed) */
+  minimaxSpeed?: number;
+  /** MiniMax volume override (voice_setting.vol) */
+  minimaxVolume?: number;
+  /** MiniMax pitch override (voice_setting.pitch) */
+  minimaxPitch?: number;
+  /** MiniMax audio sample rate override (audio_setting.sample_rate) */
+  minimaxSampleRate?: number;
+  /** MiniMax audio bitrate override (audio_setting.bitrate) */
+  minimaxBitrate?: number;
+  /** MiniMax audio format override (audio_setting.format) */
+  minimaxAudioFormat?: MinimaxAudioFormat;
+  /** MiniMax audio channel override (audio_setting.channel) */
+  minimaxAudioChannel?: 1 | 2;
+  /** MiniMax language boost override */
+  minimaxLanguageBoost?: string;
+}
+
+export interface AivisCloudVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'aivisCloud';
   /** Aivis Cloud model UUID */
   aivisCloudModelUuid?: string;
   /** Aivis Cloud speaker UUID */
@@ -200,6 +228,57 @@ export interface VoiceServiceOptions {
   aivisCloudEnableBillingLogs?: boolean;
 }
 
+export interface NoneVoiceServiceOptions extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'none';
+}
+
+/**
+ * Voice service settings options
+ */
+export type VoiceServiceOptions =
+  | VoiceVoxVoiceServiceOptions
+  | VoicePeakVoiceServiceOptions
+  | OpenAiVoiceServiceOptions
+  | AivisSpeechVoiceServiceOptions
+  | AivisCloudVoiceServiceOptions
+  | MinimaxVoiceServiceOptions
+  | NoneVoiceServiceOptions;
+
+/**
+ * Voice service update options
+ */
+export type VoiceVoxVoiceServiceOptionsUpdate = Partial<
+  Omit<VoiceVoxVoiceServiceOptions, 'engineType'>
+>;
+export type VoicePeakVoiceServiceOptionsUpdate = Partial<
+  Omit<VoicePeakVoiceServiceOptions, 'engineType'>
+>;
+export type OpenAiVoiceServiceOptionsUpdate = Partial<
+  Omit<OpenAiVoiceServiceOptions, 'engineType'>
+>;
+export type AivisSpeechVoiceServiceOptionsUpdate = Partial<
+  Omit<AivisSpeechVoiceServiceOptions, 'engineType'>
+>;
+export type AivisCloudVoiceServiceOptionsUpdate = Partial<
+  Omit<AivisCloudVoiceServiceOptions, 'engineType'>
+>;
+export type MinimaxVoiceServiceOptionsUpdate = Partial<
+  Omit<MinimaxVoiceServiceOptions, 'engineType'>
+>;
+export type NoneVoiceServiceOptionsUpdate = Partial<
+  Omit<NoneVoiceServiceOptions, 'engineType'>
+>;
+
+export type VoiceServiceOptionsUpdate =
+  | VoiceVoxVoiceServiceOptionsUpdate
+  | VoicePeakVoiceServiceOptionsUpdate
+  | OpenAiVoiceServiceOptionsUpdate
+  | AivisSpeechVoiceServiceOptionsUpdate
+  | AivisCloudVoiceServiceOptionsUpdate
+  | MinimaxVoiceServiceOptionsUpdate
+  | NoneVoiceServiceOptionsUpdate;
+
 /**
  * Audio playback options
  */
@@ -242,5 +321,13 @@ export interface VoiceService {
    * Update service settings
    * @param options New settings options
    */
-  updateOptions(options: Partial<VoiceServiceOptions>): void;
+  updateOptions(
+    options: VoiceServiceOptionsUpdate | Partial<VoiceServiceOptions>,
+  ): void;
+
+  /**
+   * Switch voice engine with complete options for the target engine
+   * @param options New engine options
+   */
+  switchEngine?(options: VoiceServiceOptions): void;
 }

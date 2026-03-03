@@ -1,11 +1,25 @@
 import { AudioPlayer } from '../types/audioPlayer';
 import { ChatScreenplay } from '../types/chat';
-import { EmotionType } from '../types/voice';
+import { Talk, TalkStyle } from '../types/voice';
 import { textToScreenplay } from '../utils/screenplay';
 import {
   AudioPlayOptions,
+  AivisCloudVoiceServiceOptions,
+  AivisCloudVoiceServiceOptionsUpdate,
+  AivisSpeechVoiceServiceOptions,
+  AivisSpeechVoiceServiceOptionsUpdate,
+  MinimaxVoiceServiceOptionsUpdate,
+  MinimaxVoiceServiceOptions,
+  NoneVoiceServiceOptionsUpdate,
+  OpenAiVoiceServiceOptionsUpdate,
+  OpenAiVoiceServiceOptions,
+  VoicePeakVoiceServiceOptionsUpdate,
+  VoicePeakVoiceServiceOptions,
   VoiceService,
   VoiceServiceOptions,
+  VoiceServiceOptionsUpdate,
+  VoiceVoxVoiceServiceOptionsUpdate,
+  VoiceVoxVoiceServiceOptions,
 } from './VoiceService';
 import { AudioPlayerFactory } from './audio/AudioPlayerFactory';
 import { VoiceEngine } from '../engines/VoiceEngine';
@@ -20,6 +34,212 @@ interface SpeechRequest {
   completionPromise: Promise<void>;
   cancelled: boolean;
 }
+
+interface ApiEndpointConfigurableEngine extends VoiceEngine {
+  setApiEndpoint(apiUrl: string): void;
+}
+
+interface VoiceVoxConfigurableEngine extends VoiceEngine {
+  setQueryParameters?(
+    overrides: NonNullable<
+      VoiceVoxVoiceServiceOptions['voicevoxQueryParameters']
+    >,
+  ): void;
+  setSpeedScale?(value?: number): void;
+  setPitchScale?(value?: number): void;
+  setIntonationScale?(value?: number): void;
+  setVolumeScale?(value?: number): void;
+  setPrePhonemeLength?(value?: number): void;
+  setPostPhonemeLength?(value?: number): void;
+  setPauseLength?(value?: number | null): void;
+  setPauseLengthScale?(value?: number): void;
+  setOutputSamplingRate?(value?: number): void;
+  setOutputStereo?(value?: boolean): void;
+  setEnableKatakanaEnglish?(value?: boolean): void;
+  setEnableInterrogativeUpspeak?(value?: boolean): void;
+  setCoreVersion?(value?: string): void;
+}
+
+interface VoicePeakConfigurableEngine extends VoiceEngine {
+  setEmotion?(value?: VoicePeakVoiceServiceOptions['voicepeakEmotion']): void;
+  setSpeed?(value?: number): void;
+  setPitch?(value?: number): void;
+}
+
+interface AivisSpeechConfigurableEngine extends VoiceEngine {
+  setQueryParameters?(
+    overrides: NonNullable<
+      AivisSpeechVoiceServiceOptions['aivisSpeechQueryParameters']
+    >,
+  ): void;
+  setSpeedScale?(value?: number): void;
+  setPitchScale?(value?: number): void;
+  setIntonationScale?(value?: number): void;
+  setTempoDynamicsScale?(value?: number): void;
+  setVolumeScale?(value?: number): void;
+  setPrePhonemeLength?(value?: number): void;
+  setPostPhonemeLength?(value?: number): void;
+  setPauseLength?(value?: number | null): void;
+  setPauseLengthScale?(value?: number): void;
+  setOutputSamplingRate?(value?: number): void;
+  setOutputStereo?(value?: boolean): void;
+}
+
+interface OpenAiConfigurableEngine extends VoiceEngine {
+  setModel?(value: string): void;
+  setSpeed?(value?: number): void;
+}
+
+interface MinimaxConfigurableEngine extends VoiceEngine {
+  setGroupId?(value: string): void;
+  setEndpoint?(
+    value: NonNullable<MinimaxVoiceServiceOptions['endpoint']>,
+  ): void;
+  setModel?(value: string): void;
+  setLanguage?(value: string): void;
+  setVoiceSettings?(
+    value: NonNullable<MinimaxVoiceServiceOptions['minimaxVoiceSettings']>,
+  ): void;
+  setSpeed?(value?: number): void;
+  setVolume?(value?: number): void;
+  setPitch?(value?: number): void;
+  setAudioSettings?(
+    value: NonNullable<MinimaxVoiceServiceOptions['minimaxAudioSettings']>,
+  ): void;
+  setSampleRate?(value?: number): void;
+  setBitrate?(value?: number): void;
+  setAudioFormat?(
+    value?: MinimaxVoiceServiceOptions['minimaxAudioFormat'],
+  ): void;
+  setAudioChannel?(
+    value?: MinimaxVoiceServiceOptions['minimaxAudioChannel'],
+  ): void;
+}
+
+interface AivisCloudConfigurableEngine extends VoiceEngine {
+  setModelUuid?(value: string): void;
+  setSpeakerUuid?(value: string): void;
+  setStyleId?(value: number): void;
+  setStyleName?(value: string): void;
+  setUserDictionaryUuid?(value: string): void;
+  setLanguage?(value: string): void;
+  setUseSSML?(value: boolean): void;
+  setSpeakingRate?(value: number): void;
+  setEmotionalIntensity?(value: number): void;
+  setTempoDynamics?(value: number): void;
+  setPitch?(value: number): void;
+  setVolume?(value: number): void;
+  setSilenceDurations?(
+    leading: number,
+    trailing: number,
+    lineBreak: number,
+  ): void;
+  setOutputFormat?(
+    value: NonNullable<AivisCloudVoiceServiceOptions['aivisCloudOutputFormat']>,
+  ): void;
+  setOutputBitrate?(value: number): void;
+  setOutputSamplingRate?(
+    value: NonNullable<
+      AivisCloudVoiceServiceOptions['aivisCloudOutputSamplingRate']
+    >,
+  ): void;
+  setOutputChannels?(
+    value: NonNullable<
+      AivisCloudVoiceServiceOptions['aivisCloudOutputChannels']
+    >,
+  ): void;
+  setEnableBillingLogs?(value: boolean): void;
+}
+
+const COMMON_UPDATE_KEYS = [
+  'speaker',
+  'apiKey',
+  'onPlay',
+  'onComplete',
+] as const;
+
+const ENGINE_SPECIFIC_UPDATE_KEYS = {
+  voicevox: [
+    'voicevoxApiUrl',
+    'voicevoxQueryParameters',
+    'voicevoxSpeedScale',
+    'voicevoxPitchScale',
+    'voicevoxIntonationScale',
+    'voicevoxVolumeScale',
+    'voicevoxPrePhonemeLength',
+    'voicevoxPostPhonemeLength',
+    'voicevoxPauseLength',
+    'voicevoxPauseLengthScale',
+    'voicevoxOutputSamplingRate',
+    'voicevoxOutputStereo',
+    'voicevoxEnableKatakanaEnglish',
+    'voicevoxEnableInterrogativeUpspeak',
+    'voicevoxCoreVersion',
+  ],
+  voicepeak: [
+    'voicepeakApiUrl',
+    'voicepeakEmotion',
+    'voicepeakSpeed',
+    'voicepeakPitch',
+  ],
+  openai: ['openAiModel', 'openAiSpeed'],
+  aivisSpeech: [
+    'aivisSpeechApiUrl',
+    'aivisSpeechQueryParameters',
+    'aivisSpeechSpeedScale',
+    'aivisSpeechPitchScale',
+    'aivisSpeechIntonationScale',
+    'aivisSpeechTempoDynamicsScale',
+    'aivisSpeechVolumeScale',
+    'aivisSpeechPrePhonemeLength',
+    'aivisSpeechPostPhonemeLength',
+    'aivisSpeechPauseLength',
+    'aivisSpeechPauseLengthScale',
+    'aivisSpeechOutputSamplingRate',
+    'aivisSpeechOutputStereo',
+  ],
+  minimax: [
+    'groupId',
+    'endpoint',
+    'minimaxModel',
+    'minimaxVoiceSettings',
+    'minimaxAudioSettings',
+    'minimaxSpeed',
+    'minimaxVolume',
+    'minimaxPitch',
+    'minimaxSampleRate',
+    'minimaxBitrate',
+    'minimaxAudioFormat',
+    'minimaxAudioChannel',
+    'minimaxLanguageBoost',
+  ],
+  aivisCloud: [
+    'aivisCloudModelUuid',
+    'aivisCloudSpeakerUuid',
+    'aivisCloudStyleId',
+    'aivisCloudStyleName',
+    'aivisCloudUserDictionaryUuid',
+    'aivisCloudUseSSML',
+    'aivisCloudLanguage',
+    'aivisCloudSpeakingRate',
+    'aivisCloudEmotionalIntensity',
+    'aivisCloudTempoDynamics',
+    'aivisCloudPitch',
+    'aivisCloudVolume',
+    'aivisCloudLeadingSilence',
+    'aivisCloudTrailingSilence',
+    'aivisCloudLineBreakSilence',
+    'aivisCloudOutputFormat',
+    'aivisCloudOutputBitrate',
+    'aivisCloudOutputSamplingRate',
+    'aivisCloudOutputChannels',
+    'aivisCloudEnableBillingLogs',
+  ],
+  none: [],
+} as const satisfies Record<
+  VoiceServiceOptions['engineType'],
+  readonly string[]
+>;
 
 /**
  * Adapter implementation for using existing voice engines
@@ -39,8 +259,10 @@ export class VoiceEngineAdapter implements VoiceService {
   constructor(options: VoiceServiceOptions) {
     this.options = options;
     this.audioPlayer = AudioPlayerFactory.createAudioPlayer();
+    this.bindOnCompleteCallback();
+  }
 
-    // Set up completion callback
+  private bindOnCompleteCallback(): void {
     this.audioPlayer.setOnComplete(() => {
       if (this.options.onComplete) {
         this.options.onComplete();
@@ -149,7 +371,7 @@ export class VoiceEngineAdapter implements VoiceService {
     }
   }
 
-  private mapEmotionToStyle(emotion?: string): EmotionType {
+  private mapEmotionToStyle(emotion?: string): TalkStyle {
     switch ((emotion || 'neutral').toLowerCase()) {
       case 'angry':
         return 'angry';
@@ -172,7 +394,7 @@ export class VoiceEngineAdapter implements VoiceService {
       '../engines/VoiceEngineFactory'
     );
 
-    const talk = {
+    const talk: Talk = {
       style: this.mapEmotionToStyle(screenplay.emotion),
       message: screenplay.text,
     };
@@ -183,7 +405,7 @@ export class VoiceEngineAdapter implements VoiceService {
 
     // Get audio data
     return await engine.fetchAudio(
-      talk as any,
+      talk,
       this.options.speaker,
       this.options.apiKey,
     );
@@ -201,461 +423,421 @@ export class VoiceEngineAdapter implements VoiceService {
     await this.audioPlayer.play(audioBuffer, options?.audioElementId);
   }
 
+  private hasApiEndpointSetter(
+    engine: VoiceEngine,
+  ): engine is ApiEndpointConfigurableEngine {
+    return typeof engine.setApiEndpoint === 'function';
+  }
+
   private applyEngineOverrides(engine: VoiceEngine): void {
-    if (engine.setApiEndpoint) {
-      switch (this.options.engineType) {
-        case 'voicevox':
-          if (this.options.voicevoxApiUrl) {
-            engine.setApiEndpoint(this.options.voicevoxApiUrl);
-          }
-          break;
-        case 'voicepeak':
-          if (this.options.voicepeakApiUrl) {
-            engine.setApiEndpoint(this.options.voicepeakApiUrl);
-          }
-          break;
-        case 'aivisSpeech':
-          if (this.options.aivisSpeechApiUrl) {
-            engine.setApiEndpoint(this.options.aivisSpeechApiUrl);
-          }
-          break;
-      }
+    this.applyApiEndpointOverride(engine);
+
+    switch (this.options.engineType) {
+      case 'voicevox':
+        this.applyVoiceVoxOverrides(engine, this.options);
+        break;
+      case 'voicepeak':
+        this.applyVoicePeakOverrides(engine, this.options);
+        break;
+      case 'aivisSpeech':
+        this.applyAivisSpeechOverrides(engine, this.options);
+        break;
+      case 'openai':
+        this.applyOpenAiOverrides(engine, this.options);
+        break;
+      case 'minimax':
+        this.applyMinimaxOverrides(engine, this.options);
+        break;
+      case 'aivisCloud':
+        this.applyAivisCloudOverrides(engine, this.options);
+        break;
+      case 'none':
+        break;
+    }
+  }
+
+  private applyApiEndpointOverride(engine: VoiceEngine): void {
+    if (!this.hasApiEndpointSetter(engine)) {
+      return;
     }
 
-    if (this.options.engineType === 'voicevox') {
-      const voicevoxEngine = engine as any;
-
-      if (
-        this.options.voicevoxQueryParameters &&
-        typeof voicevoxEngine.setQueryParameters === 'function'
-      ) {
-        voicevoxEngine.setQueryParameters(this.options.voicevoxQueryParameters);
-      }
-
-      if (
-        this.options.voicevoxSpeedScale !== undefined &&
-        typeof voicevoxEngine.setSpeedScale === 'function'
-      ) {
-        voicevoxEngine.setSpeedScale(this.options.voicevoxSpeedScale);
-      }
-
-      if (
-        this.options.voicevoxPitchScale !== undefined &&
-        typeof voicevoxEngine.setPitchScale === 'function'
-      ) {
-        voicevoxEngine.setPitchScale(this.options.voicevoxPitchScale);
-      }
-
-      if (
-        this.options.voicevoxIntonationScale !== undefined &&
-        typeof voicevoxEngine.setIntonationScale === 'function'
-      ) {
-        voicevoxEngine.setIntonationScale(this.options.voicevoxIntonationScale);
-      }
-
-      if (
-        this.options.voicevoxVolumeScale !== undefined &&
-        typeof voicevoxEngine.setVolumeScale === 'function'
-      ) {
-        voicevoxEngine.setVolumeScale(this.options.voicevoxVolumeScale);
-      }
-
-      if (
-        this.options.voicevoxPrePhonemeLength !== undefined &&
-        typeof voicevoxEngine.setPrePhonemeLength === 'function'
-      ) {
-        voicevoxEngine.setPrePhonemeLength(
-          this.options.voicevoxPrePhonemeLength,
-        );
-      }
-
-      if (
-        this.options.voicevoxPostPhonemeLength !== undefined &&
-        typeof voicevoxEngine.setPostPhonemeLength === 'function'
-      ) {
-        voicevoxEngine.setPostPhonemeLength(
-          this.options.voicevoxPostPhonemeLength,
-        );
-      }
-
-      if (
-        this.options.voicevoxPauseLength !== undefined &&
-        typeof voicevoxEngine.setPauseLength === 'function'
-      ) {
-        voicevoxEngine.setPauseLength(this.options.voicevoxPauseLength);
-      }
-
-      if (
-        this.options.voicevoxPauseLengthScale !== undefined &&
-        typeof voicevoxEngine.setPauseLengthScale === 'function'
-      ) {
-        voicevoxEngine.setPauseLengthScale(
-          this.options.voicevoxPauseLengthScale,
-        );
-      }
-
-      if (
-        this.options.voicevoxOutputSamplingRate !== undefined &&
-        typeof voicevoxEngine.setOutputSamplingRate === 'function'
-      ) {
-        voicevoxEngine.setOutputSamplingRate(
-          this.options.voicevoxOutputSamplingRate,
-        );
-      }
-
-      if (
-        this.options.voicevoxOutputStereo !== undefined &&
-        typeof voicevoxEngine.setOutputStereo === 'function'
-      ) {
-        voicevoxEngine.setOutputStereo(this.options.voicevoxOutputStereo);
-      }
-
-      if (
-        this.options.voicevoxEnableKatakanaEnglish !== undefined &&
-        typeof voicevoxEngine.setEnableKatakanaEnglish === 'function'
-      ) {
-        voicevoxEngine.setEnableKatakanaEnglish(
-          this.options.voicevoxEnableKatakanaEnglish,
-        );
-      }
-
-      if (
-        this.options.voicevoxEnableInterrogativeUpspeak !== undefined &&
-        typeof voicevoxEngine.setEnableInterrogativeUpspeak === 'function'
-      ) {
-        voicevoxEngine.setEnableInterrogativeUpspeak(
-          this.options.voicevoxEnableInterrogativeUpspeak,
-        );
-      }
-
-      if (
-        this.options.voicevoxCoreVersion !== undefined &&
-        typeof voicevoxEngine.setCoreVersion === 'function'
-      ) {
-        voicevoxEngine.setCoreVersion(this.options.voicevoxCoreVersion);
-      }
-    }
-
-    if (this.options.engineType === 'voicepeak') {
-      const voicepeakEngine = engine as any;
-
-      if (
-        this.options.voicepeakEmotion !== undefined &&
-        typeof voicepeakEngine.setEmotion === 'function'
-      ) {
-        voicepeakEngine.setEmotion(this.options.voicepeakEmotion);
-      }
-
-      if (
-        this.options.voicepeakSpeed !== undefined &&
-        typeof voicepeakEngine.setSpeed === 'function'
-      ) {
-        voicepeakEngine.setSpeed(this.options.voicepeakSpeed);
-      }
-
-      if (
-        this.options.voicepeakPitch !== undefined &&
-        typeof voicepeakEngine.setPitch === 'function'
-      ) {
-        voicepeakEngine.setPitch(this.options.voicepeakPitch);
-      }
-    }
-
-    if (this.options.engineType === 'aivisSpeech') {
-      const aivisEngine = engine as any;
-
-      if (
-        this.options.aivisSpeechQueryParameters &&
-        typeof aivisEngine.setQueryParameters === 'function'
-      ) {
-        aivisEngine.setQueryParameters(this.options.aivisSpeechQueryParameters);
-      }
-
-      if (
-        this.options.aivisSpeechSpeedScale !== undefined &&
-        typeof aivisEngine.setSpeedScale === 'function'
-      ) {
-        aivisEngine.setSpeedScale(this.options.aivisSpeechSpeedScale);
-      }
-
-      if (
-        this.options.aivisSpeechPitchScale !== undefined &&
-        typeof aivisEngine.setPitchScale === 'function'
-      ) {
-        aivisEngine.setPitchScale(this.options.aivisSpeechPitchScale);
-      }
-
-      if (
-        this.options.aivisSpeechIntonationScale !== undefined &&
-        typeof aivisEngine.setIntonationScale === 'function'
-      ) {
-        aivisEngine.setIntonationScale(this.options.aivisSpeechIntonationScale);
-      }
-
-      if (
-        this.options.aivisSpeechTempoDynamicsScale !== undefined &&
-        typeof aivisEngine.setTempoDynamicsScale === 'function'
-      ) {
-        aivisEngine.setTempoDynamicsScale(
-          this.options.aivisSpeechTempoDynamicsScale,
-        );
-      }
-
-      if (
-        this.options.aivisSpeechVolumeScale !== undefined &&
-        typeof aivisEngine.setVolumeScale === 'function'
-      ) {
-        aivisEngine.setVolumeScale(this.options.aivisSpeechVolumeScale);
-      }
-
-      if (
-        this.options.aivisSpeechPrePhonemeLength !== undefined &&
-        typeof aivisEngine.setPrePhonemeLength === 'function'
-      ) {
-        aivisEngine.setPrePhonemeLength(
-          this.options.aivisSpeechPrePhonemeLength,
-        );
-      }
-
-      if (
-        this.options.aivisSpeechPostPhonemeLength !== undefined &&
-        typeof aivisEngine.setPostPhonemeLength === 'function'
-      ) {
-        aivisEngine.setPostPhonemeLength(
-          this.options.aivisSpeechPostPhonemeLength,
-        );
-      }
-
-      if (
-        this.options.aivisSpeechPauseLength !== undefined &&
-        typeof aivisEngine.setPauseLength === 'function'
-      ) {
-        aivisEngine.setPauseLength(this.options.aivisSpeechPauseLength);
-      }
-
-      if (
-        this.options.aivisSpeechPauseLengthScale !== undefined &&
-        typeof aivisEngine.setPauseLengthScale === 'function'
-      ) {
-        aivisEngine.setPauseLengthScale(
-          this.options.aivisSpeechPauseLengthScale,
-        );
-      }
-
-      if (
-        this.options.aivisSpeechOutputSamplingRate !== undefined &&
-        typeof aivisEngine.setOutputSamplingRate === 'function'
-      ) {
-        aivisEngine.setOutputSamplingRate(
-          this.options.aivisSpeechOutputSamplingRate,
-        );
-      }
-
-      if (
-        this.options.aivisSpeechOutputStereo !== undefined &&
-        typeof aivisEngine.setOutputStereo === 'function'
-      ) {
-        aivisEngine.setOutputStereo(this.options.aivisSpeechOutputStereo);
-      }
-    }
-
-    if (this.options.engineType === 'openai') {
-      const openaiEngine = engine as any;
-
-      if (
-        this.options.openAiModel &&
-        typeof openaiEngine.setModel === 'function'
-      ) {
-        openaiEngine.setModel(this.options.openAiModel);
-      }
-
-      if (
-        this.options.openAiSpeed !== undefined &&
-        typeof openaiEngine.setSpeed === 'function'
-      ) {
-        openaiEngine.setSpeed(this.options.openAiSpeed);
-      }
-    }
-
-    if (this.options.engineType === 'minimax') {
-      const minimaxEngine = engine as any;
-
-      if (typeof minimaxEngine.setGroupId === 'function') {
-        if (this.options.groupId) {
-          minimaxEngine.setGroupId(this.options.groupId);
-        } else {
-          console.warn(
-            'MiniMax engine requires GroupId, but it is not provided in options',
-          );
+    switch (this.options.engineType) {
+      case 'voicevox':
+        if (this.options.voicevoxApiUrl) {
+          engine.setApiEndpoint(this.options.voicevoxApiUrl);
         }
-      }
+        break;
+      case 'voicepeak':
+        if (this.options.voicepeakApiUrl) {
+          engine.setApiEndpoint(this.options.voicepeakApiUrl);
+        }
+        break;
+      case 'aivisSpeech':
+        if (this.options.aivisSpeechApiUrl) {
+          engine.setApiEndpoint(this.options.aivisSpeechApiUrl);
+        }
+        break;
+      default:
+        break;
+    }
+  }
 
-      if (
-        this.options.endpoint &&
-        typeof minimaxEngine.setEndpoint === 'function'
-      ) {
-        minimaxEngine.setEndpoint(this.options.endpoint);
-      }
+  private applyVoiceVoxOverrides(
+    engine: VoiceEngine,
+    options: VoiceVoxVoiceServiceOptions,
+  ): void {
+    const voicevoxEngine = engine as VoiceVoxConfigurableEngine;
 
-      if (
-        this.options.minimaxModel &&
-        typeof minimaxEngine.setModel === 'function'
-      ) {
-        minimaxEngine.setModel(this.options.minimaxModel);
-      }
+    if (options.voicevoxQueryParameters && voicevoxEngine.setQueryParameters) {
+      voicevoxEngine.setQueryParameters(options.voicevoxQueryParameters);
+    }
+    if (
+      options.voicevoxSpeedScale !== undefined &&
+      voicevoxEngine.setSpeedScale
+    ) {
+      voicevoxEngine.setSpeedScale(options.voicevoxSpeedScale);
+    }
+    if (
+      options.voicevoxPitchScale !== undefined &&
+      voicevoxEngine.setPitchScale
+    ) {
+      voicevoxEngine.setPitchScale(options.voicevoxPitchScale);
+    }
+    if (
+      options.voicevoxIntonationScale !== undefined &&
+      voicevoxEngine.setIntonationScale
+    ) {
+      voicevoxEngine.setIntonationScale(options.voicevoxIntonationScale);
+    }
+    if (
+      options.voicevoxVolumeScale !== undefined &&
+      voicevoxEngine.setVolumeScale
+    ) {
+      voicevoxEngine.setVolumeScale(options.voicevoxVolumeScale);
+    }
+    if (
+      options.voicevoxPrePhonemeLength !== undefined &&
+      voicevoxEngine.setPrePhonemeLength
+    ) {
+      voicevoxEngine.setPrePhonemeLength(options.voicevoxPrePhonemeLength);
+    }
+    if (
+      options.voicevoxPostPhonemeLength !== undefined &&
+      voicevoxEngine.setPostPhonemeLength
+    ) {
+      voicevoxEngine.setPostPhonemeLength(options.voicevoxPostPhonemeLength);
+    }
+    if (
+      options.voicevoxPauseLength !== undefined &&
+      voicevoxEngine.setPauseLength
+    ) {
+      voicevoxEngine.setPauseLength(options.voicevoxPauseLength);
+    }
+    if (
+      options.voicevoxPauseLengthScale !== undefined &&
+      voicevoxEngine.setPauseLengthScale
+    ) {
+      voicevoxEngine.setPauseLengthScale(options.voicevoxPauseLengthScale);
+    }
+    if (
+      options.voicevoxOutputSamplingRate !== undefined &&
+      voicevoxEngine.setOutputSamplingRate
+    ) {
+      voicevoxEngine.setOutputSamplingRate(options.voicevoxOutputSamplingRate);
+    }
+    if (
+      options.voicevoxOutputStereo !== undefined &&
+      voicevoxEngine.setOutputStereo
+    ) {
+      voicevoxEngine.setOutputStereo(options.voicevoxOutputStereo);
+    }
+    if (
+      options.voicevoxEnableKatakanaEnglish !== undefined &&
+      voicevoxEngine.setEnableKatakanaEnglish
+    ) {
+      voicevoxEngine.setEnableKatakanaEnglish(
+        options.voicevoxEnableKatakanaEnglish,
+      );
+    }
+    if (
+      options.voicevoxEnableInterrogativeUpspeak !== undefined &&
+      voicevoxEngine.setEnableInterrogativeUpspeak
+    ) {
+      voicevoxEngine.setEnableInterrogativeUpspeak(
+        options.voicevoxEnableInterrogativeUpspeak,
+      );
+    }
+    if (
+      options.voicevoxCoreVersion !== undefined &&
+      voicevoxEngine.setCoreVersion
+    ) {
+      voicevoxEngine.setCoreVersion(options.voicevoxCoreVersion);
+    }
+  }
 
-      if (
-        this.options.minimaxLanguageBoost !== undefined &&
-        typeof minimaxEngine.setLanguage === 'function'
-      ) {
-        minimaxEngine.setLanguage(this.options.minimaxLanguageBoost);
-      }
+  private applyVoicePeakOverrides(
+    engine: VoiceEngine,
+    options: VoicePeakVoiceServiceOptions,
+  ): void {
+    const voicepeakEngine = engine as VoicePeakConfigurableEngine;
 
-      if (
-        this.options.minimaxVoiceSettings &&
-        typeof minimaxEngine.setVoiceSettings === 'function'
-      ) {
-        minimaxEngine.setVoiceSettings(this.options.minimaxVoiceSettings);
-      }
+    if (options.voicepeakEmotion !== undefined && voicepeakEngine.setEmotion) {
+      voicepeakEngine.setEmotion(options.voicepeakEmotion);
+    }
+    if (options.voicepeakSpeed !== undefined && voicepeakEngine.setSpeed) {
+      voicepeakEngine.setSpeed(options.voicepeakSpeed);
+    }
+    if (options.voicepeakPitch !== undefined && voicepeakEngine.setPitch) {
+      voicepeakEngine.setPitch(options.voicepeakPitch);
+    }
+  }
 
-      if (
-        this.options.minimaxSpeed !== undefined &&
-        typeof minimaxEngine.setSpeed === 'function'
-      ) {
-        minimaxEngine.setSpeed(this.options.minimaxSpeed);
-      }
+  private applyAivisSpeechOverrides(
+    engine: VoiceEngine,
+    options: AivisSpeechVoiceServiceOptions,
+  ): void {
+    const aivisEngine = engine as AivisSpeechConfigurableEngine;
 
-      if (
-        this.options.minimaxVolume !== undefined &&
-        typeof minimaxEngine.setVolume === 'function'
-      ) {
-        minimaxEngine.setVolume(this.options.minimaxVolume);
-      }
+    if (options.aivisSpeechQueryParameters && aivisEngine.setQueryParameters) {
+      aivisEngine.setQueryParameters(options.aivisSpeechQueryParameters);
+    }
+    if (
+      options.aivisSpeechSpeedScale !== undefined &&
+      aivisEngine.setSpeedScale
+    ) {
+      aivisEngine.setSpeedScale(options.aivisSpeechSpeedScale);
+    }
+    if (
+      options.aivisSpeechPitchScale !== undefined &&
+      aivisEngine.setPitchScale
+    ) {
+      aivisEngine.setPitchScale(options.aivisSpeechPitchScale);
+    }
+    if (
+      options.aivisSpeechIntonationScale !== undefined &&
+      aivisEngine.setIntonationScale
+    ) {
+      aivisEngine.setIntonationScale(options.aivisSpeechIntonationScale);
+    }
+    if (
+      options.aivisSpeechTempoDynamicsScale !== undefined &&
+      aivisEngine.setTempoDynamicsScale
+    ) {
+      aivisEngine.setTempoDynamicsScale(options.aivisSpeechTempoDynamicsScale);
+    }
+    if (
+      options.aivisSpeechVolumeScale !== undefined &&
+      aivisEngine.setVolumeScale
+    ) {
+      aivisEngine.setVolumeScale(options.aivisSpeechVolumeScale);
+    }
+    if (
+      options.aivisSpeechPrePhonemeLength !== undefined &&
+      aivisEngine.setPrePhonemeLength
+    ) {
+      aivisEngine.setPrePhonemeLength(options.aivisSpeechPrePhonemeLength);
+    }
+    if (
+      options.aivisSpeechPostPhonemeLength !== undefined &&
+      aivisEngine.setPostPhonemeLength
+    ) {
+      aivisEngine.setPostPhonemeLength(options.aivisSpeechPostPhonemeLength);
+    }
+    if (
+      options.aivisSpeechPauseLength !== undefined &&
+      aivisEngine.setPauseLength
+    ) {
+      aivisEngine.setPauseLength(options.aivisSpeechPauseLength);
+    }
+    if (
+      options.aivisSpeechPauseLengthScale !== undefined &&
+      aivisEngine.setPauseLengthScale
+    ) {
+      aivisEngine.setPauseLengthScale(options.aivisSpeechPauseLengthScale);
+    }
+    if (
+      options.aivisSpeechOutputSamplingRate !== undefined &&
+      aivisEngine.setOutputSamplingRate
+    ) {
+      aivisEngine.setOutputSamplingRate(options.aivisSpeechOutputSamplingRate);
+    }
+    if (
+      options.aivisSpeechOutputStereo !== undefined &&
+      aivisEngine.setOutputStereo
+    ) {
+      aivisEngine.setOutputStereo(options.aivisSpeechOutputStereo);
+    }
+  }
 
-      if (
-        this.options.minimaxPitch !== undefined &&
-        typeof minimaxEngine.setPitch === 'function'
-      ) {
-        minimaxEngine.setPitch(this.options.minimaxPitch);
-      }
+  private applyOpenAiOverrides(
+    engine: VoiceEngine,
+    options: OpenAiVoiceServiceOptions,
+  ): void {
+    const openaiEngine = engine as OpenAiConfigurableEngine;
 
-      if (
-        this.options.minimaxAudioSettings &&
-        typeof minimaxEngine.setAudioSettings === 'function'
-      ) {
-        minimaxEngine.setAudioSettings(this.options.minimaxAudioSettings);
-      }
+    if (options.openAiModel && openaiEngine.setModel) {
+      openaiEngine.setModel(options.openAiModel);
+    }
+    if (options.openAiSpeed !== undefined && openaiEngine.setSpeed) {
+      openaiEngine.setSpeed(options.openAiSpeed);
+    }
+  }
 
-      if (
-        this.options.minimaxSampleRate !== undefined &&
-        typeof minimaxEngine.setSampleRate === 'function'
-      ) {
-        minimaxEngine.setSampleRate(this.options.minimaxSampleRate);
-      }
+  private applyMinimaxOverrides(
+    engine: VoiceEngine,
+    options: MinimaxVoiceServiceOptions,
+  ): void {
+    const minimaxEngine = engine as MinimaxConfigurableEngine;
 
-      if (
-        this.options.minimaxBitrate !== undefined &&
-        typeof minimaxEngine.setBitrate === 'function'
-      ) {
-        minimaxEngine.setBitrate(this.options.minimaxBitrate);
-      }
-
-      if (
-        this.options.minimaxAudioFormat !== undefined &&
-        typeof minimaxEngine.setAudioFormat === 'function'
-      ) {
-        minimaxEngine.setAudioFormat(this.options.minimaxAudioFormat);
-      }
-
-      if (
-        this.options.minimaxAudioChannel !== undefined &&
-        typeof minimaxEngine.setAudioChannel === 'function'
-      ) {
-        minimaxEngine.setAudioChannel(this.options.minimaxAudioChannel);
+    if (minimaxEngine.setGroupId) {
+      if (options.groupId) {
+        minimaxEngine.setGroupId(options.groupId);
+      } else {
+        console.warn(
+          'MiniMax engine requires GroupId, but it is not provided in options',
+        );
       }
     }
+    if (options.endpoint && minimaxEngine.setEndpoint) {
+      minimaxEngine.setEndpoint(options.endpoint);
+    }
+    if (options.minimaxModel && minimaxEngine.setModel) {
+      minimaxEngine.setModel(options.minimaxModel);
+    }
+    if (
+      options.minimaxLanguageBoost !== undefined &&
+      minimaxEngine.setLanguage
+    ) {
+      minimaxEngine.setLanguage(options.minimaxLanguageBoost);
+    }
+    if (options.minimaxVoiceSettings && minimaxEngine.setVoiceSettings) {
+      minimaxEngine.setVoiceSettings(options.minimaxVoiceSettings);
+    }
+    if (options.minimaxSpeed !== undefined && minimaxEngine.setSpeed) {
+      minimaxEngine.setSpeed(options.minimaxSpeed);
+    }
+    if (options.minimaxVolume !== undefined && minimaxEngine.setVolume) {
+      minimaxEngine.setVolume(options.minimaxVolume);
+    }
+    if (options.minimaxPitch !== undefined && minimaxEngine.setPitch) {
+      minimaxEngine.setPitch(options.minimaxPitch);
+    }
+    if (options.minimaxAudioSettings && minimaxEngine.setAudioSettings) {
+      minimaxEngine.setAudioSettings(options.minimaxAudioSettings);
+    }
+    if (
+      options.minimaxSampleRate !== undefined &&
+      minimaxEngine.setSampleRate
+    ) {
+      minimaxEngine.setSampleRate(options.minimaxSampleRate);
+    }
+    if (options.minimaxBitrate !== undefined && minimaxEngine.setBitrate) {
+      minimaxEngine.setBitrate(options.minimaxBitrate);
+    }
+    if (
+      options.minimaxAudioFormat !== undefined &&
+      minimaxEngine.setAudioFormat
+    ) {
+      minimaxEngine.setAudioFormat(options.minimaxAudioFormat);
+    }
+    if (
+      options.minimaxAudioChannel !== undefined &&
+      minimaxEngine.setAudioChannel
+    ) {
+      minimaxEngine.setAudioChannel(options.minimaxAudioChannel);
+    }
+  }
 
-    if (this.options.engineType === 'aivisCloud') {
-      const aivisEngine = engine as any;
+  private applyAivisCloudOverrides(
+    engine: VoiceEngine,
+    options: AivisCloudVoiceServiceOptions,
+  ): void {
+    const aivisEngine = engine as AivisCloudConfigurableEngine;
 
-      if (this.options.aivisCloudModelUuid) {
-        aivisEngine.setModelUuid(this.options.aivisCloudModelUuid);
-      }
+    if (options.aivisCloudModelUuid && aivisEngine.setModelUuid) {
+      aivisEngine.setModelUuid(options.aivisCloudModelUuid);
+    }
+    if (options.aivisCloudSpeakerUuid && aivisEngine.setSpeakerUuid) {
+      aivisEngine.setSpeakerUuid(options.aivisCloudSpeakerUuid);
+    }
+    if (options.aivisCloudStyleId !== undefined && aivisEngine.setStyleId) {
+      aivisEngine.setStyleId(options.aivisCloudStyleId);
+    } else if (options.aivisCloudStyleName && aivisEngine.setStyleName) {
+      aivisEngine.setStyleName(options.aivisCloudStyleName);
+    }
+    if (
+      options.aivisCloudUserDictionaryUuid &&
+      aivisEngine.setUserDictionaryUuid
+    ) {
+      aivisEngine.setUserDictionaryUuid(options.aivisCloudUserDictionaryUuid);
+    }
+    if (options.aivisCloudLanguage && aivisEngine.setLanguage) {
+      aivisEngine.setLanguage(options.aivisCloudLanguage);
+    }
+    if (options.aivisCloudUseSSML !== undefined && aivisEngine.setUseSSML) {
+      aivisEngine.setUseSSML(options.aivisCloudUseSSML);
+    }
+    if (
+      options.aivisCloudSpeakingRate !== undefined &&
+      aivisEngine.setSpeakingRate
+    ) {
+      aivisEngine.setSpeakingRate(options.aivisCloudSpeakingRate);
+    }
+    if (
+      options.aivisCloudEmotionalIntensity !== undefined &&
+      aivisEngine.setEmotionalIntensity
+    ) {
+      aivisEngine.setEmotionalIntensity(options.aivisCloudEmotionalIntensity);
+    }
+    if (
+      options.aivisCloudTempoDynamics !== undefined &&
+      aivisEngine.setTempoDynamics
+    ) {
+      aivisEngine.setTempoDynamics(options.aivisCloudTempoDynamics);
+    }
+    if (options.aivisCloudPitch !== undefined && aivisEngine.setPitch) {
+      aivisEngine.setPitch(options.aivisCloudPitch);
+    }
+    if (options.aivisCloudVolume !== undefined && aivisEngine.setVolume) {
+      aivisEngine.setVolume(options.aivisCloudVolume);
+    }
 
-      if (this.options.aivisCloudSpeakerUuid) {
-        aivisEngine.setSpeakerUuid(this.options.aivisCloudSpeakerUuid);
-      }
+    if (
+      (options.aivisCloudLeadingSilence !== undefined ||
+        options.aivisCloudTrailingSilence !== undefined ||
+        options.aivisCloudLineBreakSilence !== undefined) &&
+      aivisEngine.setSilenceDurations
+    ) {
+      aivisEngine.setSilenceDurations(
+        options.aivisCloudLeadingSilence ?? 0.1,
+        options.aivisCloudTrailingSilence ?? 0.1,
+        options.aivisCloudLineBreakSilence ?? 0.4,
+      );
+    }
 
-      if (this.options.aivisCloudStyleId !== undefined) {
-        aivisEngine.setStyleId(this.options.aivisCloudStyleId);
-      } else if (this.options.aivisCloudStyleName) {
-        aivisEngine.setStyleName(this.options.aivisCloudStyleName);
-      }
-
-      if (this.options.aivisCloudUserDictionaryUuid) {
-        aivisEngine.setUserDictionaryUuid(
-          this.options.aivisCloudUserDictionaryUuid,
-        );
-      }
-
-      if (this.options.aivisCloudLanguage) {
-        aivisEngine.setLanguage(this.options.aivisCloudLanguage);
-      }
-
-      if (this.options.aivisCloudUseSSML !== undefined) {
-        aivisEngine.setUseSSML(this.options.aivisCloudUseSSML);
-      }
-
-      if (this.options.aivisCloudSpeakingRate !== undefined) {
-        aivisEngine.setSpeakingRate(this.options.aivisCloudSpeakingRate);
-      }
-      if (this.options.aivisCloudEmotionalIntensity !== undefined) {
-        aivisEngine.setEmotionalIntensity(
-          this.options.aivisCloudEmotionalIntensity,
-        );
-      }
-      if (this.options.aivisCloudTempoDynamics !== undefined) {
-        aivisEngine.setTempoDynamics(this.options.aivisCloudTempoDynamics);
-      }
-      if (this.options.aivisCloudPitch !== undefined) {
-        aivisEngine.setPitch(this.options.aivisCloudPitch);
-      }
-      if (this.options.aivisCloudVolume !== undefined) {
-        aivisEngine.setVolume(this.options.aivisCloudVolume);
-      }
-
-      if (
-        this.options.aivisCloudLeadingSilence !== undefined ||
-        this.options.aivisCloudTrailingSilence !== undefined ||
-        this.options.aivisCloudLineBreakSilence !== undefined
-      ) {
-        aivisEngine.setSilenceDurations(
-          this.options.aivisCloudLeadingSilence ?? 0.1,
-          this.options.aivisCloudTrailingSilence ?? 0.1,
-          this.options.aivisCloudLineBreakSilence ?? 0.4,
-        );
-      }
-
-      if (this.options.aivisCloudOutputFormat) {
-        aivisEngine.setOutputFormat(this.options.aivisCloudOutputFormat);
-      }
-      if (this.options.aivisCloudOutputBitrate !== undefined) {
-        aivisEngine.setOutputBitrate(this.options.aivisCloudOutputBitrate);
-      }
-      if (this.options.aivisCloudOutputSamplingRate !== undefined) {
-        aivisEngine.setOutputSamplingRate(
-          this.options.aivisCloudOutputSamplingRate,
-        );
-      }
-      if (this.options.aivisCloudOutputChannels) {
-        aivisEngine.setOutputChannels(this.options.aivisCloudOutputChannels);
-      }
-
-      if (this.options.aivisCloudEnableBillingLogs !== undefined) {
-        aivisEngine.setEnableBillingLogs(
-          this.options.aivisCloudEnableBillingLogs,
-        );
-      }
+    if (options.aivisCloudOutputFormat && aivisEngine.setOutputFormat) {
+      aivisEngine.setOutputFormat(options.aivisCloudOutputFormat);
+    }
+    if (
+      options.aivisCloudOutputBitrate !== undefined &&
+      aivisEngine.setOutputBitrate
+    ) {
+      aivisEngine.setOutputBitrate(options.aivisCloudOutputBitrate);
+    }
+    if (
+      options.aivisCloudOutputSamplingRate !== undefined &&
+      aivisEngine.setOutputSamplingRate
+    ) {
+      aivisEngine.setOutputSamplingRate(options.aivisCloudOutputSamplingRate);
+    }
+    if (options.aivisCloudOutputChannels && aivisEngine.setOutputChannels) {
+      aivisEngine.setOutputChannels(options.aivisCloudOutputChannels);
+    }
+    if (
+      options.aivisCloudEnableBillingLogs !== undefined &&
+      aivisEngine.setEnableBillingLogs
+    ) {
+      aivisEngine.setEnableBillingLogs(options.aivisCloudEnableBillingLogs);
     }
   }
 
@@ -702,16 +884,114 @@ export class VoiceEngineAdapter implements VoiceService {
    * Update service settings
    * @param options New settings options
    */
-  updateOptions(options: Partial<VoiceServiceOptions>): void {
-    this.options = { ...this.options, ...options };
+  updateOptions(
+    options: VoiceServiceOptionsUpdate | Partial<VoiceServiceOptions>,
+  ): void {
+    // Backward compatible path: allow engine switching via updateOptions().
+    if (Object.prototype.hasOwnProperty.call(options, 'engineType')) {
+      this.switchEngine({
+        ...this.options,
+        ...(options as Partial<VoiceServiceOptions>),
+      } as VoiceServiceOptions);
+      return;
+    }
+
+    try {
+      this.validateUpdateOptions(options as VoiceServiceOptionsUpdate);
+      this.mergeOptionsForCurrentEngine(options as VoiceServiceOptionsUpdate);
+    } catch {
+      // Backward compatible path: accept cross-engine fields without throwing.
+      this.options = {
+        ...this.options,
+        ...(options as Partial<VoiceServiceOptions>),
+      } as VoiceServiceOptions;
+    }
 
     // Update audio player callback if onComplete changes
     if (options.onComplete !== undefined) {
-      this.audioPlayer.setOnComplete(() => {
-        if (this.options.onComplete) {
-          this.options.onComplete();
-        }
-      });
+      this.bindOnCompleteCallback();
+    }
+  }
+
+  /**
+   * Switch voice engine with complete options for the target engine
+   * @param options New engine options
+   */
+  switchEngine(options: VoiceServiceOptions): void {
+    this.options = options;
+    this.bindOnCompleteCallback();
+  }
+
+  private validateUpdateOptions(options: VoiceServiceOptionsUpdate): void {
+    if (Object.prototype.hasOwnProperty.call(options, 'engineType')) {
+      throw new Error(
+        'engineType cannot be updated via updateOptions(). Use switchEngine() instead.',
+      );
+    }
+
+    const allowedKeys = new Set<string>([
+      ...COMMON_UPDATE_KEYS,
+      ...ENGINE_SPECIFIC_UPDATE_KEYS[this.options.engineType],
+    ]);
+    const invalidKeys = Object.keys(options).filter(
+      (key) => !allowedKeys.has(key),
+    );
+
+    if (invalidKeys.length > 0) {
+      throw new Error(
+        `Invalid update options for engine "${this.options.engineType}": ${invalidKeys.join(
+          ', ',
+        )}. Use switchEngine() for cross-engine changes.`,
+      );
+    }
+  }
+
+  private mergeOptionsForCurrentEngine(
+    options: VoiceServiceOptionsUpdate,
+  ): void {
+    switch (this.options.engineType) {
+      case 'voicevox':
+        this.options = {
+          ...this.options,
+          ...(options as VoiceVoxVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'voicepeak':
+        this.options = {
+          ...this.options,
+          ...(options as VoicePeakVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'openai':
+        this.options = {
+          ...this.options,
+          ...(options as OpenAiVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'aivisSpeech':
+        this.options = {
+          ...this.options,
+          ...(options as AivisSpeechVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'minimax':
+        this.options = {
+          ...this.options,
+          ...(options as MinimaxVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'aivisCloud':
+        this.options = {
+          ...this.options,
+          ...(options as AivisCloudVoiceServiceOptionsUpdate),
+        };
+        break;
+      case 'none':
+        this.options = {
+          ...this.options,
+          ...(options as NoneVoiceServiceOptionsUpdate),
+        };
+        break;
     }
   }
 }

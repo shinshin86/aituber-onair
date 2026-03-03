@@ -42,6 +42,17 @@ cd packages/[package] && npm run test:watch # Watch mode
 After any code fix/change, always run `fmt`, then `build`, then `test` for the
 affected scope before finishing the task.
 
+### Definition of Done (DoD)
+
+Before push/PR, always run the following repository-wide commands in this order and ensure all pass:
+
+```bash
+npm run fmt
+npm run lint
+npm run test
+npm run build
+```
+
 ## Agent Skills
 
 This repository uses open-format Agent Skills and keeps Codex and Claude Code
