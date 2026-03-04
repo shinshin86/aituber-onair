@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   refreshOpenRouterFreeModels,
   type RefreshOpenRouterFreeModelsResult,
 } from '../src/index';
@@ -7,6 +8,12 @@ import {
 describe('Core index chat re-exports', () => {
   it('re-exports refreshOpenRouterFreeModels', () => {
     expect(typeof refreshOpenRouterFreeModels).toBe('function');
+  });
+
+  it('re-exports Gemini 3.1 Flash-Lite Preview model constant', () => {
+    expect(MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW).toBe(
+      'gemini-3.1-flash-lite-preview',
+    );
   });
 
   it('exposes refresh result type shape compatibility', () => {

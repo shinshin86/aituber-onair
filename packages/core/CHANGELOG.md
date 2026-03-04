@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.23.4
+
+### Patch Changes
+
+- Re-exported `MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW` from the core entry point
+  so integrations can target Gemini 3.1 Flash-Lite Preview via
+  `@aituber-onair/core`.
+- Updated the core React basic example Gemini model list to include Gemini 3.1
+  Flash-Lite Preview.
+- Updated core README docs (EN/JA) and React basic example README to reflect
+  Gemini 3.1 Flash-Lite Preview support.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.18.0
+
 ## 0.23.3
 
 ### Patch Changes
