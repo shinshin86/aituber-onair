@@ -123,7 +123,7 @@ Use the dropdown to select response length:
 - Best for: Long context, tool use + advanced reasoning
 
 **Gemini**
-- Models: Gemini 3.1 Pro Preview, Gemini 3 Pro/Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemini 2.0 Flash/Flash Lite
+- Models: Gemini 3.1 Pro/Flash-Lite Preview, Gemini 3 Pro/Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemini 2.0 Flash/Flash Lite
 - Vision: Supported for all listed Gemini models
 - Best for: Fast responses, cost-effective
 

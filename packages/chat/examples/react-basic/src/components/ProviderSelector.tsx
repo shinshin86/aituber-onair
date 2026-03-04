@@ -33,6 +33,7 @@ import {
   MODEL_CLAUDE_4_6_OPUS,
   // Gemini models
   MODEL_GEMINI_3_1_PRO_PREVIEW,
+  MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
   MODEL_GEMINI_2_5_PRO,
@@ -486,6 +487,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GEMINI_3_1_PRO_PREVIEW,
     name: 'Gemini 3.1 Pro Preview',
+    provider: 'gemini',
+    default: false,
+  },
+  {
+    id: MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
+    name: 'Gemini 3.1 Flash-Lite Preview',
     provider: 'gemini',
     default: false,
   },
