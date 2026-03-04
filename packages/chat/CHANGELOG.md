@@ -1,5 +1,14 @@
 # @aituber-onair/chat
 
+## 0.18.0
+
+### Minor Changes
+
+- Added Gemini 3.1 Flash-Lite Preview (`gemini-3.1-flash-lite-preview`) to Gemini constants and provider supported models.
+- Added Gemini 3.1 Flash-Lite Preview to `GEMINI_VISION_SUPPORTED_MODELS` so vision model resolution recognizes it.
+- Added Gemini API transport test coverage to verify Gemini 3.1 Flash-Lite Preview routes via `v1beta`.
+- Updated Gemini provider tests, React basic model selector, and README docs (EN/JA) to include Gemini 3.1 Flash-Lite Preview.
+
 ## 0.17.0
 
 ### Minor Changes

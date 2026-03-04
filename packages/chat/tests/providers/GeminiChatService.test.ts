@@ -6,6 +6,7 @@ import {
 } from '../../src/utils/chatServiceHttpClient';
 import {
   MODEL_GEMINI_2_0_FLASH,
+  MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
 } from '../../src/constants';
 import type { Message } from '../../src/types';
@@ -44,6 +45,28 @@ describe('GeminiChatService API version selection', () => {
     expect(postSpy).toHaveBeenCalledTimes(1);
     expect(postSpy.mock.calls[0][0]).toContain(
       '/v1beta/models/gemini-3-flash-preview:streamGenerateContent?alt=sse&key=test-key',
+    );
+  });
+
+  it('uses v1beta for Gemini 3.1 Flash-Lite Preview', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
+      MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
+    );
+
+    await (service as any).callGemini(
+      messages,
+      MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
+      true,
+    );
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy.mock.calls[0][0]).toContain(
+      '/v1beta/models/gemini-3.1-flash-lite-preview:streamGenerateContent?alt=sse&key=test-key',
     );
   });
 
