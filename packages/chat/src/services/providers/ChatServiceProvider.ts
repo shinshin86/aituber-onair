@@ -21,7 +21,7 @@ export interface BaseChatServiceOptions {
   /** Verbosity level for GPT-5 models (OpenAI only) */
   verbosity?: 'low' | 'medium' | 'high';
   /** Reasoning effort level for GPT-5 models (OpenAI) and gpt-oss models (OpenRouter) */
-  reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
+  reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
   /** GPT-5 usage preset (OpenAI only) - overrides individual reasoning/verbosity settings */
   gpt5Preset?: GPT5PresetKey;
   /** GPT-5 endpoint preference (OpenAI only) - 'chat' for Chat Completions API, 'responses' for Responses API, 'auto' for automatic selection */
@@ -77,6 +77,7 @@ export type OpenRouterChatServiceOptions = DisallowKeys<
   | 'thinking'
   | 'responseFormat'
 > & {
+  reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
   appName?: string;
   appUrl?: string;
 };

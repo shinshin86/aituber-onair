@@ -2,7 +2,11 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   ChatServiceFactory,
   ChatService,
-  MODEL_GPT_5_1,
+  allowsReasoningLow,
+  allowsReasoningMinimal,
+  allowsReasoningNone,
+  allowsReasoningXHigh,
+  getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
   type Message,
   type MessageWithVision,
@@ -34,7 +38,13 @@ interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
   isStreaming?: boolean;
 }
 
-type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high';
+type ReasoningEffortLevel =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh';
 
 const KIMI_OFFICIAL_BASE_URL = 'https://api.moonshot.ai/v1';
 const DEFAULT_OPENAI_COMPAT_ENDPOINT =
@@ -51,18 +61,25 @@ const normalizeReasoningEffortForModel = (
     return effort;
   }
 
-  if (modelId === MODEL_GPT_5_1) {
-    if (!effort) {
-      return 'none';
-    }
-    if (effort === 'minimal') {
-      return 'none';
-    }
-    return effort;
+  const defaultEffort = getDefaultReasoningEffortForGPT5Model(modelId);
+  if (!effort) {
+    return defaultEffort;
   }
 
-  if (!effort || effort === 'none') {
-    return 'medium';
+  if (effort === 'none' && !allowsReasoningNone(modelId)) {
+    return defaultEffort;
+  }
+
+  if (effort === 'minimal' && !allowsReasoningMinimal(modelId)) {
+    return defaultEffort;
+  }
+
+  if (effort === 'low' && !allowsReasoningLow(modelId)) {
+    return defaultEffort;
+  }
+
+  if (effort === 'xhigh' && !allowsReasoningXHigh(modelId)) {
+    return defaultEffort;
   }
 
   return effort;
@@ -390,7 +407,9 @@ function App() {
               setGpt5Preset(undefined);
               if (newProvider === 'openai') {
                 setReasoningEffort(
-                  defaultModel === MODEL_GPT_5_1 ? 'none' : 'medium',
+                  isGPT5Model(defaultModel)
+                    ? getDefaultReasoningEffortForGPT5Model(defaultModel)
+                    : 'medium',
                 );
               } else {
                 setReasoningEffort('medium');
@@ -410,7 +429,9 @@ function App() {
               setSelectedModel(modelId);
               if (newProvider === 'openai' && !gpt5Preset) {
                 setReasoningEffort(
-                  modelId === MODEL_GPT_5_1 ? 'none' : 'medium',
+                  isGPT5Model(modelId)
+                    ? getDefaultReasoningEffortForGPT5Model(modelId)
+                    : 'medium',
                 );
               }
             }}

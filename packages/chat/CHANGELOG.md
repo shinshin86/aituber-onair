@@ -1,5 +1,18 @@
 # @aituber-onair/chat
 
+## 0.19.0
+
+### Minor Changes
+
+- Added OpenAI GPT-5.4 (`gpt-5.4`) to shared constants and provider supported-model lists.
+- Added OpenAI GPT-5.4 Pro (`gpt-5.4-pro`) to shared constants and provider supported-model lists.
+- Included GPT-5.4 in vision-supported and GPT-5-family detection lists so provider behavior and option normalization stay consistent.
+- Updated GPT-5 model capability handling:
+  - force `gpt-5.4-pro` to use Responses API
+  - add `xhigh` reasoning support for GPT-5.4/5.4 Pro
+  - normalize unsupported reasoning levels by model family defaults
+- Updated OpenAI provider tests, React basic model selector, and README docs (EN/JA) to include GPT-5.4/GPT-5.4 Pro.
+
 ## 0.18.0
 
 ### Minor Changes

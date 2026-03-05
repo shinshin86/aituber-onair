@@ -5,6 +5,8 @@ import {
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
   MODEL_GPT_5_1,
+  MODEL_GPT_5_4,
+  MODEL_GPT_5_4_PRO,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
   MODEL_GPT_4_1_NANO,
@@ -15,8 +17,13 @@ import {
   MODEL_O1,
   VISION_SUPPORTED_MODELS,
   isGPT5Model,
+  isResponsesOnlyGPT5Model,
+  allowsReasoningXHigh,
   allowsReasoningNone,
   allowsReasoningMinimal,
+  allowsReasoningLow,
+  getDefaultReasoningEffortForGPT5Model,
+  OpenAIReasoningEffort,
 } from '../../../constants';
 import { GPT5_PRESETS } from '../../../constants/chat';
 import { ChatService } from '../../ChatService';
@@ -55,7 +62,7 @@ export class OpenAIChatServiceProvider
     // tools definition
     const tools: ToolDefinition[] | undefined = optimizedOptions.tools;
 
-    // Determine endpoint based on MCP servers, GPT-5 model, and user preference
+    // Determine endpoint based on MCP servers, model constraints, and user preference
     const mcpServers = optimizedOptions.mcpServers ?? [];
     const modelName = optimizedOptions.model || this.getDefaultModel();
 
@@ -64,6 +71,9 @@ export class OpenAIChatServiceProvider
 
     // MCP requires Responses API regardless of model
     if (mcpServers.length > 0) {
+      shouldUseResponsesAPI = true;
+    } else if (isResponsesOnlyGPT5Model(modelName)) {
+      // GPT-5.4 Pro is Responses API only
       shouldUseResponsesAPI = true;
     } else if (isGPT5Model(modelName)) {
       // For GPT-5 models without MCP, respect user endpoint preference
@@ -110,6 +120,8 @@ export class OpenAIChatServiceProvider
       MODEL_GPT_5_MINI,
       MODEL_GPT_5,
       MODEL_GPT_5_1,
+      MODEL_GPT_5_4,
+      MODEL_GPT_5_4_PRO,
       MODEL_GPT_4_1,
       MODEL_GPT_4_1_MINI,
       MODEL_GPT_4_1_NANO,
@@ -172,7 +184,7 @@ export class OpenAIChatServiceProvider
       // Set default reasoning_effort if not specified
       if (!options.reasoning_effort) {
         optimized.reasoning_effort =
-          this.getDefaultReasoningEffortForModel(modelName);
+          getDefaultReasoningEffortForGPT5Model(modelName);
       }
     }
 
@@ -188,32 +200,30 @@ export class OpenAIChatServiceProvider
   }
 
   /**
-   * Determine the default reasoning effort for GPT-5 family models
-   * GPT-5.1 defaults to 'none' (fastest), earlier GPT-5 defaults to 'medium'
+   * Normalize reasoning effort to a model-supported value
    */
-  private getDefaultReasoningEffortForModel(
-    modelName: string,
-  ): 'none' | 'medium' {
-    if (modelName === MODEL_GPT_5_1) {
-      return 'none';
-    }
-    return 'medium';
-  }
-
   private normalizeReasoningEffort(
     modelName: string,
-    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high',
-  ): 'none' | 'minimal' | 'low' | 'medium' | 'high' | undefined {
+    effort?: OpenAIReasoningEffort,
+  ): OpenAIReasoningEffort | undefined {
     if (!effort) {
       return undefined;
     }
 
     if (effort === 'none' && !allowsReasoningNone(modelName)) {
-      return this.getDefaultReasoningEffortForModel(modelName);
+      return getDefaultReasoningEffortForGPT5Model(modelName);
     }
 
     if (effort === 'minimal' && !allowsReasoningMinimal(modelName)) {
-      return 'none';
+      return getDefaultReasoningEffortForGPT5Model(modelName);
+    }
+
+    if (effort === 'low' && !allowsReasoningLow(modelName)) {
+      return getDefaultReasoningEffortForGPT5Model(modelName);
+    }
+
+    if (effort === 'xhigh' && !allowsReasoningXHigh(modelName)) {
+      return getDefaultReasoningEffortForGPT5Model(modelName);
     }
 
     return effort;

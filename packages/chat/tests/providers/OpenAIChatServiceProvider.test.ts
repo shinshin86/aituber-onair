@@ -7,6 +7,8 @@ import {
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
   MODEL_GPT_5_1,
+  MODEL_GPT_5_4,
+  MODEL_GPT_5_4_PRO,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
   MODEL_GPT_4_1_NANO,
@@ -45,6 +47,8 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_GPT_5_MINI,
         MODEL_GPT_5,
         MODEL_GPT_5_1,
+        MODEL_GPT_5_4,
+        MODEL_GPT_5_4_PRO,
         MODEL_GPT_4_1,
         MODEL_GPT_4_1_MINI,
         MODEL_GPT_4_1_NANO,
@@ -74,6 +78,8 @@ describe('OpenAIChatServiceProvider', () => {
       expect(provider.supportsVisionForModel(MODEL_GPT_5_NANO)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_MINI)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_1)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_5_4)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_5_4_PRO)).toBe(true);
     });
 
     it('should return false for non-vision models', () => {
@@ -151,6 +157,52 @@ describe('OpenAIChatServiceProvider', () => {
       );
     });
 
+    it('should default reasoning effort to none for GPT-5.4 models', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4,
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4,
+        MODEL_GPT_5_4,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'none',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should force Responses API for GPT-5.4 Pro', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_PRO,
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_PRO,
+        MODEL_GPT_5_4_PRO,
+        undefined,
+        ENDPOINT_OPENAI_RESPONSES_API,
+        [],
+        undefined,
+        undefined,
+        'medium',
+        undefined,
+        'openai',
+      );
+    });
+
     it('should fallback reasoning effort to default when none is not supported', () => {
       const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
@@ -194,6 +246,78 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         'none',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should fallback low reasoning to medium for GPT-5.4 Pro', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_PRO,
+        reasoning_effort: 'low',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_PRO,
+        MODEL_GPT_5_4_PRO,
+        undefined,
+        ENDPOINT_OPENAI_RESPONSES_API,
+        [],
+        undefined,
+        undefined,
+        'medium',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should allow xhigh reasoning for GPT-5.4 Pro', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_PRO,
+        reasoning_effort: 'xhigh',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_PRO,
+        MODEL_GPT_5_4_PRO,
+        undefined,
+        ENDPOINT_OPENAI_RESPONSES_API,
+        [],
+        undefined,
+        undefined,
+        'xhigh',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should force Responses API for GPT-5.4 Pro even when chat is preferred', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_PRO,
+        gpt5EndpointPreference: 'chat',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_PRO,
+        MODEL_GPT_5_4_PRO,
+        undefined,
+        ENDPOINT_OPENAI_RESPONSES_API,
+        [],
+        undefined,
+        undefined,
+        'medium',
         undefined,
         'openai',
       );
