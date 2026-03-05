@@ -4,6 +4,7 @@ import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_4O_MINI,
+  OpenAIReasoningEffort,
   VISION_SUPPORTED_MODELS,
   isGPT5Model,
 } from '../../../constants';
@@ -42,7 +43,7 @@ export class OpenAIChatService implements ChatService {
   private mcpServers: MCPServerConfig[];
   private responseLength?: ChatResponseLength;
   private verbosity?: 'low' | 'medium' | 'high';
-  private reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
+  private reasoning_effort?: OpenAIReasoningEffort;
   private enableReasoningSummary?: boolean;
 
   /**
@@ -60,7 +61,7 @@ export class OpenAIChatService implements ChatService {
     mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,
     verbosity?: 'low' | 'medium' | 'high',
-    reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high',
+    reasoning_effort?: OpenAIReasoningEffort,
     enableReasoningSummary: boolean = false,
     provider: string = 'openai',
     validateVisionModel: boolean = true,

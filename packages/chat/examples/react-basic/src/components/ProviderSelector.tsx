@@ -3,7 +3,13 @@ import { Provider } from '../App';
 import {
   type ChatResponseLength,
   type GPT5PresetKey,
+  allowsReasoningLow,
+  allowsReasoningMinimal,
+  allowsReasoningNone,
+  allowsReasoningXHigh,
+  getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
+  isResponsesOnlyGPT5Model,
   isOpenRouterFreeModel,
   refreshOpenRouterFreeModels,
   // OpenAI models
@@ -11,6 +17,8 @@ import {
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
   MODEL_GPT_5_1,
+  MODEL_GPT_5_4,
+  MODEL_GPT_5_4_PRO,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
   MODEL_GPT_4_1_NANO,
@@ -93,9 +101,9 @@ interface ProviderSelectorProps {
   onModelChange: (model: string) => void;
   gpt5Preset?: GPT5PresetKey;
   onGpt5PresetChange?: (preset: GPT5PresetKey | undefined) => void;
-  reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
+  reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
   onReasoningEffortChange?: (
-    effort: 'none' | 'minimal' | 'low' | 'medium' | 'high',
+    effort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh',
   ) => void;
   verbosity?: 'low' | 'medium' | 'high';
   onVerbosityChange?: (verbosity: 'low' | 'medium' | 'high') => void;
@@ -365,6 +373,18 @@ export const allModels: ProviderModel[] = [
     name: 'GPT-5.1',
     provider: 'openai',
     default: true,
+  },
+  {
+    id: MODEL_GPT_5_4,
+    name: 'GPT-5.4',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_5_4_PRO,
+    name: 'GPT-5.4 Pro',
+    provider: 'openai',
+    default: false,
   },
   {
     id: MODEL_GPT_4_1,
@@ -829,7 +849,15 @@ export default function ProviderSelector({
 
   const info = providerInfo[provider];
   const isGPT5 = provider === 'openai' && isGPT5Model(selectedModel);
-  const isGPT51 = provider === 'openai' && selectedModel === MODEL_GPT_5_1;
+  const isResponsesOnlyModel =
+    provider === 'openai' && isResponsesOnlyGPT5Model(selectedModel);
+  const allowsNone =
+    provider === 'openai' && allowsReasoningNone(selectedModel);
+  const allowsMinimal =
+    provider === 'openai' && allowsReasoningMinimal(selectedModel);
+  const allowsLow = provider === 'openai' && allowsReasoningLow(selectedModel);
+  const allowsXHigh =
+    provider === 'openai' && allowsReasoningXHigh(selectedModel);
   const baseModelsForProvider = useMemo(
     () => allModels.filter((model) => model.provider === provider),
     [provider],
@@ -931,14 +959,28 @@ export default function ProviderSelector({
   ]);
 
   const effectiveReasoningEffort = (() => {
-    if (isGPT51) {
-      if (!reasoning_effort || reasoning_effort === 'minimal') {
-        return 'none';
+    if (!isGPT5) {
+      if (!reasoning_effort || reasoning_effort === 'none') {
+        return 'medium';
       }
       return reasoning_effort;
     }
-    if (reasoning_effort === 'none' || !reasoning_effort) {
-      return 'medium';
+
+    const fallback = getDefaultReasoningEffortForGPT5Model(selectedModel);
+    if (!reasoning_effort) {
+      return fallback;
+    }
+    if (reasoning_effort === 'none' && !allowsNone) {
+      return fallback;
+    }
+    if (reasoning_effort === 'minimal' && !allowsMinimal) {
+      return fallback;
+    }
+    if (reasoning_effort === 'low' && !allowsLow) {
+      return fallback;
+    }
+    if (reasoning_effort === 'xhigh' && !allowsXHigh) {
+      return fallback;
     }
     return reasoning_effort;
   })();
@@ -1079,13 +1121,17 @@ export default function ProviderSelector({
                 <label htmlFor="gpt5-endpoint">GPT-5 API Endpoint</label>
                 <select
                   id="gpt5-endpoint"
-                  value={gpt5EndpointPreference || 'chat'}
+                  value={
+                    isResponsesOnlyModel
+                      ? 'responses'
+                      : gpt5EndpointPreference || 'chat'
+                  }
                   onChange={(e) =>
                     onGpt5EndpointPreferenceChange?.(
                       e.target.value as 'chat' | 'responses' | 'auto',
                     )
                   }
-                  disabled={disabled}
+                  disabled={disabled || isResponsesOnlyModel}
                   className="select-input"
                 >
                   <option value="chat">Chat Completions (Standard API)</option>
@@ -1094,6 +1140,11 @@ export default function ProviderSelector({
                   </option>
                   <option value="auto">Auto (Based on Settings)</option>
                 </select>
+                {isResponsesOnlyModel && (
+                  <span className="helper-text">
+                    GPT-5.4 Pro is Responses API only.
+                  </span>
+                )}
               </div>
 
               <div className="config-group">
@@ -1106,7 +1157,10 @@ export default function ProviderSelector({
                       onEnableReasoningSummaryChange?.(e.target.checked)
                     }
                     disabled={
-                      disabled || gpt5EndpointPreference !== 'responses'
+                      disabled ||
+                      (isResponsesOnlyModel
+                        ? false
+                        : gpt5EndpointPreference !== 'responses')
                     }
                   />
                   Enable Reasoning Summary
@@ -1152,20 +1206,22 @@ export default function ProviderSelector({
                         | 'minimal'
                         | 'low'
                         | 'medium'
-                        | 'high',
+                        | 'high'
+                        | 'xhigh',
                     )
                   }
                   disabled={disabled || Boolean(gpt5Preset)}
                   className="select-input"
                 >
-                  {isGPT51 ? (
+                  {allowsNone ? (
                     <option value="none">None (fastest)</option>
-                  ) : (
+                  ) : allowsMinimal ? (
                     <option value="minimal">Minimal (GPT-4 like)</option>
-                  )}
-                  <option value="low">Low</option>
+                  ) : null}
+                  {allowsLow && <option value="low">Low</option>}
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
+                  {allowsXHigh && <option value="xhigh">XHigh</option>}
                 </select>
               </div>
 

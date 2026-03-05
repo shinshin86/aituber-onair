@@ -106,10 +106,10 @@ Use the dropdown to select response length:
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
+- Models: GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
-- Reasoning Effort: GPT-5 (5.0) supports Minimal/Low/Medium/High, while GPT-5.1 swaps Minimal for None (fastest) plus Low/Medium/High
+- Reasoning Effort: GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.1 supports None/Low/Medium/High, and GPT-5.0 models support Minimal/Low/Medium/High
 
 **OpenAI-Compatible (Local/Self-Hosted)**
 - Endpoint: user-configurable full URL (`/v1/chat/completions`)

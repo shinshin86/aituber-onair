@@ -129,8 +129,9 @@ await chatService.processChat(
 ```typescript
 const openaiService = ChatServiceFactory.createChatService('openai', {
   apiKey: process.env.OPENAI_API_KEY,
-  model: 'gpt-5.1',
-  reasoning_effort: 'none', // Skip structured reasoning for fastest replies
+  model: 'gpt-5.4-pro',
+  gpt5EndpointPreference: 'responses', // Required for GPT-5.4 Pro
+  reasoning_effort: 'medium',
   verbosity: 'medium'
 });
 ```
@@ -183,10 +184,16 @@ Notes:
 - `openai-compatible` does not support `mcpServers`.
 - Existing `openai` provider behavior is unchanged.
 
-`reasoning_effort` options differ per model: GPT-5 (5.0) accepts `'minimal' | 'low' | 'medium' | 'high'`, while GPT-5.1 replaces `'minimal'` with `'none'` so the valid values are `'none' | 'low' | 'medium' | 'high'`. Use `'none'` (GPT-5.1's default) when you want the quickest response without structured reasoning, and raise the effort level for deeper analysis.
+`reasoning_effort` options differ per model:
+- `gpt-5.4-pro`: `'medium' | 'high' | 'xhigh'` (Responses API only)
+- `gpt-5.4`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
+- `gpt-5.1`: `'none' | 'low' | 'medium' | 'high'`
+- `gpt-5` / `gpt-5-mini` / `gpt-5-nano`: `'minimal' | 'low' | 'medium' | 'high'`
 
 **Meet the GPT-5 family**
 
+- `gpt-5.4-pro` – Highest-tier GPT-5.4 model. Use with Responses API only.
+- `gpt-5.4` – Latest GPT-5 generation model optimized for stronger coding, instruction following, and long-context agentic work.
 - `gpt-5.1` – Complex reasoning, broad world knowledge, and code-heavy or multi-step agentic workflows.
 - `gpt-5` – Previous flagship, still available for backward compatibility but superseded by GPT-5.1.
 - `gpt-5-mini` – Cost-optimized reasoning/chat model that balances speed, cost, and capability.
@@ -567,7 +574,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 
 Currently, the following AI providers are built-in:
 
-- **OpenAI**: Supports models like GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
+- **OpenAI**: Supports models like GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Claude**: Supports models like Claude Sonnet 4.6, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
