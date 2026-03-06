@@ -11,7 +11,7 @@ This example application serves as a practical implementation guide for integrat
 ### Key Features
 
 - **🤖 Multi-Provider LLM Support**
-  - OpenAI (GPT-3.5, GPT-4, GPT-5 series)
+  - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.4/5.4 Pro)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
   - Google Gemini (Pro, Flash, Thinking models)
   - Anthropic Claude (4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
@@ -101,7 +101,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **OpenAI:**
 - GPT-4.1 series (Nano, Mini, Standard)
-- GPT-5 series (Nano, Mini, Standard)
+- GPT-5 series (Nano, Mini, Standard, 5.1, 5.4, 5.4 Pro)
 - o3-mini
 - GPT-4o, GPT-4o Mini
 
@@ -163,8 +163,8 @@ When using GPT-5 models, additional configuration options become available:
 
 #### Custom Settings
 - **Verbosity**: Low, Medium, High
-- **Reasoning Effort**: Minimal, Low, Medium, High
-- **Endpoint**: Chat Completions API or Responses API
+- **Reasoning Effort**: `none`/`minimal`/`low`/`medium`/`high`/`xhigh` (options change by model capability)
+- **Endpoint**: Chat Completions API or Responses API (`gpt-5.4-pro` is fixed to Responses API)
 
 ## 🎤 Voice Engine Configuration
 
