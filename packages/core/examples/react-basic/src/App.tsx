@@ -11,8 +11,13 @@ import {
   AITuberOnAirCoreOptions,
   GPT5_PRESETS,
   GPT5PresetKey,
+  allowsReasoningLow,
+  allowsReasoningMinimal,
+  allowsReasoningNone,
+  allowsReasoningXHigh,
+  getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
-  MODEL_GPT_5_1,
+  isResponsesOnlyGPT5Model,
   VISION_SUPPORTED_MODELS,
   GEMINI_VISION_SUPPORTED_MODELS,
   CLAUDE_VISION_SUPPORTED_MODELS,
@@ -87,7 +92,13 @@ const MINIMAX_MODELS: Record<MinimaxModel, string> = {
   'speech-01-turbo': 'Excellent performance and low latency',
 };
 
-type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high';
+type ReasoningEffortLevel =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh';
 type ChatProvider = NonNullable<AITuberOnAirCoreOptions['chatProvider']>;
 
 // MiniMax Voice IDs with descriptions
@@ -297,17 +308,28 @@ const App: React.FC = () => {
     targetModel: string | undefined,
     effort?: ReasoningEffortLevel,
   ): ReasoningEffortLevel => {
-    if (targetModel === MODEL_GPT_5_1) {
-      if (!effort) {
-        return 'none';
-      }
-      if (effort === 'minimal') {
-        return 'none';
+    if (!targetModel || !isGPT5Model(targetModel)) {
+      if (!effort || effort === 'none') {
+        return 'medium';
       }
       return effort;
     }
-    if (!effort || effort === 'none') {
-      return 'medium';
+
+    const fallback = getDefaultReasoningEffortForGPT5Model(targetModel);
+    if (!effort) {
+      return fallback;
+    }
+    if (effort === 'none' && !allowsReasoningNone(targetModel)) {
+      return fallback;
+    }
+    if (effort === 'minimal' && !allowsReasoningMinimal(targetModel)) {
+      return fallback;
+    }
+    if (effort === 'low' && !allowsReasoningLow(targetModel)) {
+      return fallback;
+    }
+    if (effort === 'xhigh' && !allowsReasoningXHigh(targetModel)) {
+      return fallback;
     }
     return effort;
   };
@@ -662,12 +684,6 @@ const App: React.FC = () => {
     if (chatProvider !== 'openai') {
       return;
     }
-    if (!model || !isGPT5Model(model)) {
-      if (reasoning_effort === 'none') {
-        setReasoningEffort('medium');
-      }
-      return;
-    }
     const normalized = normalizeReasoningEffortForModel(
       model,
       reasoning_effort,
@@ -676,6 +692,18 @@ const App: React.FC = () => {
       setReasoningEffort(normalized);
     }
   }, [chatProvider, model, reasoning_effort]);
+
+  useEffect(() => {
+    if (chatProvider !== 'openai' || !model) {
+      return;
+    }
+    if (
+      isResponsesOnlyGPT5Model(model) &&
+      gpt5EndpointPreference !== 'responses'
+    ) {
+      setGpt5EndpointPreference('responses');
+    }
+  }, [chatProvider, model, gpt5EndpointPreference]);
 
   /**
    * when GPT-5 preset changes, update verbosity and reasoning_effort
@@ -816,7 +844,9 @@ const App: React.FC = () => {
         providerOptions.verbosity = verbosity;
         providerOptions.reasoning_effort = normalizedReasoningEffort;
       }
-      providerOptions.gpt5EndpointPreference = gpt5EndpointPreference;
+      providerOptions.gpt5EndpointPreference = isResponsesOnlyGPT5Model(model)
+        ? 'responses'
+        : gpt5EndpointPreference;
     }
     if (chatProvider === 'kimi') {
       const trimmedBaseUrl = kimiBaseUrl.trim();
@@ -1621,10 +1651,24 @@ const App: React.FC = () => {
     setShowSettings(false);
   };
 
-  const isOpenAIGPT5ModelSelected =
-    chatProvider === 'openai' && model && isGPT5Model(model);
-  const isOpenAIGPT51Selected =
-    chatProvider === 'openai' && model === MODEL_GPT_5_1;
+  const isOpenAIGPT5ModelSelected = Boolean(
+    chatProvider === 'openai' && model && isGPT5Model(model),
+  );
+  const isResponsesOnlyOpenAIGPT5ModelSelected = Boolean(
+    chatProvider === 'openai' && model && isResponsesOnlyGPT5Model(model),
+  );
+  const allowsNoneReasoningEffort = Boolean(
+    chatProvider === 'openai' && model && allowsReasoningNone(model),
+  );
+  const allowsMinimalReasoningEffort = Boolean(
+    chatProvider === 'openai' && model && allowsReasoningMinimal(model),
+  );
+  const allowsLowReasoningEffort = Boolean(
+    chatProvider === 'openai' && model && allowsReasoningLow(model),
+  );
+  const allowsXHighReasoningEffort = Boolean(
+    chatProvider === 'openai' && model && allowsReasoningXHigh(model),
+  );
 
   return (
     <>
@@ -2161,14 +2205,19 @@ const App: React.FC = () => {
                                 )
                               }
                             >
-                              {isOpenAIGPT51Selected ? (
+                              {allowsNoneReasoningEffort ? (
                                 <option value="none">None</option>
-                              ) : (
+                              ) : allowsMinimalReasoningEffort ? (
                                 <option value="minimal">Minimal</option>
+                              ) : null}
+                              {allowsLowReasoningEffort && (
+                                <option value="low">Low</option>
                               )}
-                              <option value="low">Low</option>
                               <option value="medium">Medium</option>
                               <option value="high">High</option>
+                              {allowsXHighReasoningEffort && (
+                                <option value="xhigh">XHigh</option>
+                              )}
                             </select>
                           </>
                         )}
@@ -2178,16 +2227,32 @@ const App: React.FC = () => {
                         </label>
                         <select
                           id="gpt5EndpointPreference"
-                          value={gpt5EndpointPreference}
+                          value={
+                            isResponsesOnlyOpenAIGPT5ModelSelected
+                              ? 'responses'
+                              : gpt5EndpointPreference
+                          }
                           onChange={(e) =>
                             setGpt5EndpointPreference(
                               e.target.value as 'chat' | 'responses',
                             )
                           }
+                          disabled={isResponsesOnlyOpenAIGPT5ModelSelected}
                         >
                           <option value="chat">Chat Completions API</option>
                           <option value="responses">Responses API</option>
                         </select>
+                        {isResponsesOnlyOpenAIGPT5ModelSelected && (
+                          <div
+                            style={{
+                              marginTop: '6px',
+                              color: '#666',
+                              fontSize: '12px',
+                            }}
+                          >
+                            GPT-5.4 ProはResponses API専用です。
+                          </div>
+                        )}
                       </div>
                       <hr />
                     </div>

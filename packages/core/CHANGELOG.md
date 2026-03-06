@@ -1,5 +1,30 @@
 # @aituber-onair/core
 
+## 0.23.5
+
+### Patch Changes
+
+- Re-exported OpenAI GPT-5.4 additions and capability helpers from the core
+  entry point:
+  - `MODEL_GPT_5_4`
+  - `MODEL_GPT_5_4_PRO`
+  - `OpenAIReasoningEffort`
+  - `isResponsesOnlyGPT5Model`
+  - `allowsReasoningNone`, `allowsReasoningMinimal`, `allowsReasoningLow`,
+    `allowsReasoningXHigh`
+  - `getDefaultReasoningEffortForGPT5Model`
+- Updated the core React basic example OpenAI model list and GPT-5 settings UI:
+  - added GPT-5.4 and GPT-5.4 Pro
+  - fixed GPT-5.4 Pro endpoint preference to Responses API
+  - switched reasoning effort options to model-capability-based controls,
+    including `xhigh`
+- Updated core README docs (EN/JA) and React basic example README to reflect
+  GPT-5.4 and GPT-5.4 Pro support.
+- Added core export test coverage for GPT-5.4 model constants and capability
+  helpers.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.19.0
+
 ## 0.23.4
 
 ### Patch Changes
