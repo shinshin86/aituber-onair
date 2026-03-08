@@ -1,0 +1,32 @@
+{
+  "name": "@aituber-onair/core-example-coding-agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --project tsconfig.dev.json",
+    "test": "npm run typecheck && vitest run",
+    "test:e2e": "npm run build && vitest run --config vitest.e2e.config.ts",
+    "test:watch": "vitest",
+    "fmt": "biome format . --write",
+    "fmt:check": "biome format .",
+    "lint": "biome lint .",
+    "agent": "npm run build && node dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@aituber-onair/core": "file:../..",
+    "ajv": "^8.17.1",
+    "diff": "^7.0.0",
+    "dotenv": "^16.6.1",
+    "minimatch": "^10.1.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^20.17.57",
+    "esbuild": "^0.21.5",
+    "typescript": "^5.8.3",
+    "vitest": "^1.6.1"
+  }
+}
