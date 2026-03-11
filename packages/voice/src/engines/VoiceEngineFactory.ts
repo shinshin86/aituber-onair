@@ -7,6 +7,17 @@ import { OpenAiEngine } from './OpenAiEngine';
 import { VoiceEngine } from './VoiceEngine';
 import { VoicePeakEngine } from './VoicePeakEngine';
 import { VoiceVoxEngine } from './VoiceVoxEngine';
+
+const ENGINE_CONSTRUCTORS = {
+  voicevox: VoiceVoxEngine,
+  voicepeak: VoicePeakEngine,
+  aivisSpeech: AivisSpeechEngine,
+  aivisCloud: AivisCloudEngine,
+  openai: OpenAiEngine,
+  minimax: MinimaxEngine,
+  none: NoneEngine,
+} as const satisfies Record<VoiceEngineType, new () => VoiceEngine>;
+
 /**
  * Voice engine factory
  * Generate appropriate voice engine instances based on voice engine type
@@ -19,23 +30,10 @@ export class VoiceEngineFactory {
    * @throws error if engine type is unknown
    */
   static getEngine(engineType: VoiceEngineType): VoiceEngine {
-    switch (engineType) {
-      case 'voicevox':
-        return new VoiceVoxEngine();
-      case 'voicepeak':
-        return new VoicePeakEngine();
-      case 'aivisSpeech':
-        return new AivisSpeechEngine();
-      case 'aivisCloud':
-        return new AivisCloudEngine();
-      case 'openai':
-        return new OpenAiEngine();
-      case 'minimax':
-        return new MinimaxEngine();
-      case 'none':
-        return new NoneEngine();
-      default:
-        throw new Error(`Unsupported voice engine type: ${engineType}`);
+    const EngineConstructor = ENGINE_CONSTRUCTORS[engineType];
+    if (!EngineConstructor) {
+      throw new Error(`Unsupported voice engine type: ${engineType}`);
     }
+    return new EngineConstructor();
   }
 }

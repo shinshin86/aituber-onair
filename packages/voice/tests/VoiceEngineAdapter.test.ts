@@ -734,6 +734,54 @@ describe('VoiceEngineAdapter', () => {
       ).not.toThrow();
     });
 
+    it('should apply updated options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'voicevox',
+        speaker: '1',
+        voicevoxApiUrl: 'http://localhost:50021',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.updateOptions({
+        voicevoxApiUrl: 'http://localhost:50022',
+        voicevoxSpeedScale: 1.15,
+      });
+
+      await adapter.speak({ text: 'Updated voicevox options' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'http://localhost:50022',
+      );
+      expect(mockEngine.setSpeedScale).toHaveBeenCalledWith(1.15);
+    });
+
+    it('should apply updated OpenAI options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'openai',
+        speaker: 'alloy',
+        apiKey: 'test-api-key',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.updateOptions({
+        openAiModel: 'gpt-4o-mini-tts',
+        openAiSpeed: 1.5,
+      });
+
+      await adapter.speak({ text: 'Updated openai options' });
+
+      expect(mockEngine.setModel).toHaveBeenCalledWith('gpt-4o-mini-tts');
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.5);
+    });
+
     it('should allow cross-engine options in updateOptions for backward compatibility', () => {
       const options: VoiceServiceOptions = {
         engineType: 'openai',
