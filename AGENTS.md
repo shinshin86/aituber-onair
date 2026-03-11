@@ -60,15 +60,20 @@
 - Use the shared skill guide in `docs/agent-skills.md`.
 - Skills:
   - `add-chat-model`
+  - `add-tts-provider`
   - `sync-core-after-chat-upgrade`
 - Canonical skill sources:
   - `skills/add-chat-model/SKILL.md`
+  - `skills/add-tts-provider/SKILL.md`
   - `skills/sync-core-after-chat-upgrade/SKILL.md`
 - Claude Code mirror paths:
   - `.claude/skills/add-chat-model/SKILL.md`
+  - `.claude/skills/add-tts-provider/SKILL.md`
   - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
 - When requests match "add a new model", "support model <model_id>", "add <provider> model", or "update supported models", follow `skills/add-chat-model/SKILL.md`.
+- When requests match "add a TTS provider", "support <provider> TTS", "add voice provider", or "update supported voice providers", follow `skills/add-tts-provider/SKILL.md`.
 - When requests ask to apply chat upgrades to core/examples, follow `skills/sync-core-after-chat-upgrade/SKILL.md`.
 - If required inputs are missing, collect: `provider`, `model_id`, `model_const_name`, `display_name`, `supports_vision`, and optional `bump_version` (default `true`).
+- For `add-tts-provider`, collect missing inputs: `engine_type`, `engine_class_name`, `display_name`, `provider_kind`, `default_speaker`, `requires_api_key`, `supports_emotion`, and `option_fields`, plus optional `default_api_url`, `examples_scope`, and `bump_version` (default `true`).
 - After finishing `add-chat-model`, ask whether to run `sync-core-after-chat-upgrade` unless the user already asked for end-to-end chat+core propagation.
 - Keep skill copies synchronized when updating procedures.

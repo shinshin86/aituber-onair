@@ -28,6 +28,10 @@ minimal (`name`, `description`) and keep the body procedural.
   - Canonical: `skills/add-chat-model/SKILL.md`
   - Claude Code: `.claude/skills/add-chat-model/SKILL.md`
   - Codex metadata: `skills/add-chat-model/agents/openai.yaml`
+- `add-tts-provider`
+  - Canonical: `skills/add-tts-provider/SKILL.md`
+  - Claude Code: `.claude/skills/add-tts-provider/SKILL.md`
+  - Codex metadata: `skills/add-tts-provider/agents/openai.yaml`
 - `sync-core-after-chat-upgrade`
   - Canonical: `skills/sync-core-after-chat-upgrade/SKILL.md`
   - Claude Code: `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
@@ -35,6 +39,9 @@ minimal (`name`, `description`) and keep the body procedural.
 
 Use this skill when adding a new model id to `@aituber-onair/chat`, including
 constants, provider support, tests, examples, docs, and versioning updates.
+Use `add-tts-provider` when adding a new voice/TTS provider to
+`@aituber-onair/voice`, including engine implementation, public option types,
+internal handler wiring, tests, docs, examples, and release prep.
 Use `sync-core-after-chat-upgrade` after chat upgrades to propagate changes
 into `@aituber-onair/core` and core examples.
 
@@ -46,6 +53,9 @@ Codex prompt examples:
 - "support model claude-sonnet-4-6"
 - "add claude model"
 - "update supported models"
+- "add a TTS provider"
+- "support Acme TTS in voice"
+- "add <provider> TTS"
 
 Claude Code prompt examples:
 
@@ -78,5 +88,6 @@ Recommended sync check:
 
 ```bash
 diff -u skills/add-chat-model/SKILL.md .claude/skills/add-chat-model/SKILL.md
+diff -u skills/add-tts-provider/SKILL.md .claude/skills/add-tts-provider/SKILL.md
 diff -u skills/sync-core-after-chat-upgrade/SKILL.md .claude/skills/sync-core-after-chat-upgrade/SKILL.md
 ```

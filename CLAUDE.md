@@ -61,12 +61,15 @@ skill definitions aligned.
 - Skill guide: `docs/agent-skills.md`
 - Skills:
   - `add-chat-model`
+  - `add-tts-provider`
   - `sync-core-after-chat-upgrade`
 - Canonical sources:
   - `skills/add-chat-model/SKILL.md`
+  - `skills/add-tts-provider/SKILL.md`
   - `skills/sync-core-after-chat-upgrade/SKILL.md`
 - Claude Code runtime paths:
   - `.claude/skills/add-chat-model/SKILL.md`
+  - `.claude/skills/add-tts-provider/SKILL.md`
   - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
 
 Usage:
@@ -74,11 +77,19 @@ Usage:
 - Invoke explicitly with `$add-chat-model`, or use prompts like
   "add a new model", "support model <model_id>", or
   "update supported models".
+- Invoke explicitly with `$add-tts-provider`, or use prompts like
+  "add a TTS provider", "support <provider> TTS", or
+  "update supported voice providers".
 - Invoke `$sync-core-after-chat-upgrade` after chat upgrades when the same
   changes must be propagated into core and core examples.
 - If input is missing, collect:
   `provider`, `model_id`, `model_const_name`, `display_name`,
   `supports_vision`, and optional `bump_version` (default `true`).
+- For `$add-tts-provider`, collect:
+  `engine_type`, `engine_class_name`, `display_name`, `provider_kind`,
+  `default_speaker`, `requires_api_key`, `supports_emotion`,
+  `option_fields`, and optional `default_api_url`, `examples_scope`,
+  `bump_version` (default `true`).
 - Follow the skill procedure end-to-end, including tests/docs/versioning
   updates and final verification commands.
 - After `add-chat-model` completes, ask whether to run
@@ -90,6 +101,10 @@ Maintenance:
 - Edit `skills/add-chat-model/SKILL.md` first.
 - Sync the same content to `.claude/skills/add-chat-model/SKILL.md`.
 - Keep `skills/add-chat-model/agents/openai.yaml` aligned for Codex UI.
+- For TTS provider workflow updates, edit
+  `skills/add-tts-provider/SKILL.md`, sync to
+  `.claude/skills/add-tts-provider/SKILL.md`, and keep
+  `skills/add-tts-provider/agents/openai.yaml` aligned.
 - For core-propagation workflow updates, edit
   `skills/sync-core-after-chat-upgrade/SKILL.md` and sync to
   `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`.
