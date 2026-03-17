@@ -316,7 +316,7 @@ console.log(result.fetchedAt); // Date.now() のタイムスタンプ
 ```typescript
 const zaiService = ChatServiceFactory.createChatService('zai', {
   apiKey: process.env.ZAI_API_KEY,
-  model: 'glm-5',
+  model: 'glm-5-turbo',
   visionModel: 'glm-4.6V-Flash', // 任意: ビジョン対応モデル
   responseFormat: { type: 'json_object' } // 任意: JSONモード
 });
@@ -324,7 +324,7 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 
 注意:
 - Z.aiはOpenAI互換のChat Completionsを利用します。
-- テキスト対応モデル: `glm-5`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
+- テキスト対応モデル: `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
 - ビジョン対応モデル: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
 - `thinking` はデフォルトで無効化しています。
 
@@ -582,7 +582,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 - **Gemini**: Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Liteのモデルをサポート
 - **Claude**: Claude Sonnet 4.6, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haikuのモデルをサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
-- **Z.ai**: GLM-5（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
+- **Z.ai**: GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
 - **Kimi**: Kimi K2.5（`kimi-k2.5`、ビジョン対応）をサポート
 
 ## ライセンス

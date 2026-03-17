@@ -137,8 +137,8 @@ Use the dropdown to select response length:
 - Persistence: Fetched dynamic free model IDs are saved under localStorage root key `AITuberOnAirChat_example_react-basic`
 
 **Z.ai**
-- Models: GLM-5, GLM-4.7/4.6, GLM-4.6V family
-- Vision: GLM-4.6V family (`glm-5` is currently text-only)
+- Models: GLM-5, GLM-5-Turbo, GLM-4.7/4.6, GLM-4.6V family
+- Vision: GLM-4.6V family (`glm-5` and `glm-5-turbo` are currently text-only)
 - Best for: OpenAI-compatible GLM integration
 
 **Kimi**

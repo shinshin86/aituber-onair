@@ -1,5 +1,14 @@
 # @aituber-onair/chat
 
+## 0.20.0
+
+### Minor Changes
+
+- Added Z.ai GLM-5-Turbo (`glm-5-turbo`) to chat constants and provider supported models.
+- Kept GLM-5-Turbo as text-only while preserving the existing GLM-4.6V family as the vision model set.
+- Added Z.ai service/provider test coverage and updated the React basic example model selector for GLM-5-Turbo.
+- Updated README files (EN/JA) and example documentation to reflect GLM-5-Turbo support.
+
 ## 0.19.0
 
 ### Minor Changes
