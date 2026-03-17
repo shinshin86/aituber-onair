@@ -64,6 +64,12 @@ export interface OpenAiConfigurableEngine extends VoiceEngine {
   setSpeed?(value?: number): void;
 }
 
+export interface OpenAiCompatibleConfigurableEngine extends VoiceEngine {
+  setApiEndpoint?(value: string): void;
+  setModel?(value: string): void;
+  setSpeed?(value?: number): void;
+}
+
 export interface MinimaxConfigurableEngine extends VoiceEngine {
   setGroupId?(value: string): void;
   setEndpoint?(

@@ -4,6 +4,7 @@ import { AivisSpeechEngine } from './AivisSpeechEngine';
 import { MinimaxEngine } from './MinimaxEngine';
 import { NoneEngine } from './NoneEngine';
 import { OpenAiEngine } from './OpenAiEngine';
+import { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 import { VoiceEngine } from './VoiceEngine';
 import { VoicePeakEngine } from './VoicePeakEngine';
 import { VoiceVoxEngine } from './VoiceVoxEngine';
@@ -14,6 +15,7 @@ const ENGINE_CONSTRUCTORS = {
   aivisSpeech: AivisSpeechEngine,
   aivisCloud: AivisCloudEngine,
   openai: OpenAiEngine,
+  openaiCompatible: OpenAiCompatibleEngine,
   minimax: MinimaxEngine,
   none: NoneEngine,
 } as const satisfies Record<VoiceEngineType, new () => VoiceEngine>;

@@ -232,6 +232,32 @@ describe('VoiceEngineAdapter', () => {
     });
   });
 
+  describe('OpenAI Compatible Integration', () => {
+    it('should configure an OpenAI-compatible engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'openaiCompatible',
+        speaker: 'af_bella',
+        openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
+        openAiCompatibleModel: 'kokoro',
+        openAiCompatibleSpeed: 1.3,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'OpenAI compatible test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'http://localhost:8880/v1/audio/speech',
+      );
+      expect(mockEngine.setModel).toHaveBeenCalledWith('kokoro');
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.3);
+      expect(mockEngine.fetchAudio).toHaveBeenCalled();
+    });
+  });
+
   describe('AivisCloud Integration', () => {
     it('should configure Aivis Cloud engine with provided overrides', async () => {
       const options: VoiceServiceOptions = {
@@ -559,6 +585,11 @@ describe('VoiceEngineAdapter', () => {
           option: 'aivisSpeechApiUrl' as const,
           url: 'http://localhost:10101',
         },
+        {
+          engineType: 'openaiCompatible' as const,
+          option: 'openAiCompatibleApiUrl' as const,
+          url: 'http://localhost:8880/v1/audio/speech',
+        },
       ];
 
       const mockAudioBuffer = new ArrayBuffer(1024);
@@ -780,6 +811,32 @@ describe('VoiceEngineAdapter', () => {
 
       expect(mockEngine.setModel).toHaveBeenCalledWith('gpt-4o-mini-tts');
       expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.5);
+    });
+
+    it('should apply updated OpenAI-compatible options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'openaiCompatible',
+        speaker: 'af_bella',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.updateOptions({
+        openAiCompatibleApiUrl: 'http://localhost:8881/v1/audio/speech',
+        openAiCompatibleModel: 'kokoro-v1',
+        openAiCompatibleSpeed: 1.4,
+      });
+
+      await adapter.speak({ text: 'Updated openai compatible options' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'http://localhost:8881/v1/audio/speech',
+      );
+      expect(mockEngine.setModel).toHaveBeenCalledWith('kokoro-v1');
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.4);
     });
 
     it('should allow cross-engine options in updateOptions for backward compatibility', () => {

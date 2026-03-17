@@ -158,6 +158,18 @@ const voiceService = new VoiceService({
 });
 ```
 
+### OpenAI互換 TTS
+Kokoro FastAPI などの OpenAI 互換エンドポイントを利用するための TTS プロバイダーです。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'openaiCompatible',
+  speaker: 'af_bella',
+  openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
+  openAiCompatibleModel: 'kokoro'
+});
+```
+
 ### MiniMax
 HD品質で24言語をサポートする多言語TTS。
 
@@ -336,6 +348,8 @@ const voiceService = new VoiceService({
   engineType: 'voicevox',
   speaker: '1',
   openAiSpeed: 1.1,
+  openAiCompatibleModel: 'kokoro',
+  openAiCompatibleSpeed: 1.1,
   voicevoxSpeedScale: 1.05,
   voicevoxPitchScale: 0.02,
   voicevoxQueryParameters: {
@@ -359,6 +373,11 @@ const voiceService = new VoiceService({
 - **OpenAI TTS**
   - `openAiModel`
   - `openAiSpeed`
+
+- **OpenAI互換 TTS**
+  - エンドポイント: `openAiCompatibleApiUrl`
+  - `openAiCompatibleModel`
+  - `openAiCompatibleSpeed`
 
 - **VOICEVOX**
   - エンドポイント: `voicevoxApiUrl`

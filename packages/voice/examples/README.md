@@ -24,7 +24,7 @@ npm run dev
 
 ### Features
 
-- **Multiple TTS Engines**: OpenAI TTS, VOICEVOX, AIVIS Speech, VoicePeak, MiniMax
+- **Multiple TTS Engines**: OpenAI TTS, OpenAI-Compatible TTS, VOICEVOX, AIVIS Speech, VoicePeak, MiniMax
 - **AivisSpeech Controls**: Tune speed, pitch, intonation strength, tempo dynamics, and silence lengths with AivisSpeech独自拡張
 - **VOICEVOX Query Controls**: Adjust talk speed, pitch, intonation, silence lengths, sampling rate, stereo, and query flags directly from the UI
 - **MiniMax Parameter Controls**: Adjust speed, volume, pitch, sample rate, bitrate, and format directly from the settings UI
@@ -100,6 +100,14 @@ const openaiService = new VoiceEngineAdapter({
     engineType: 'openai',
     apiKey: 'sk-...',
     speaker: 'alloy'
+});
+
+// OpenAI-compatible endpoints such as Kokoro FastAPI
+const openaiCompatibleService = new VoiceEngineAdapter({
+    engineType: 'openaiCompatible',
+    speaker: 'af_bella',
+    openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
+    openAiCompatibleModel: 'kokoro',
 });
 // MiniMax (API key + Group ID + customizable parameters)
 const minimaxService = new VoiceEngineAdapter({

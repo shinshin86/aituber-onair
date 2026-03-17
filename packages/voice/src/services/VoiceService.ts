@@ -111,6 +111,18 @@ export interface OpenAiVoiceServiceOptions extends VoiceServiceCommonOptions {
   openAiSpeed?: number;
 }
 
+export interface OpenAiCompatibleVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'openaiCompatible';
+  /** OpenAI-compatible speech endpoint URL */
+  openAiCompatibleApiUrl?: string;
+  /** OpenAI-compatible model name (for example: kokoro) */
+  openAiCompatibleModel?: string;
+  /** OpenAI-compatible speaking speed (0.25-4.0, default: 1.0) */
+  openAiCompatibleSpeed?: number;
+}
+
 export interface AivisSpeechVoiceServiceOptions
   extends VoiceServiceCommonOptions {
   /** Engine type */
@@ -240,6 +252,7 @@ export type VoiceServiceOptions =
   | VoiceVoxVoiceServiceOptions
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
+  | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions
@@ -256,6 +269,9 @@ export type VoicePeakVoiceServiceOptionsUpdate = Partial<
 >;
 export type OpenAiVoiceServiceOptionsUpdate = Partial<
   Omit<OpenAiVoiceServiceOptions, 'engineType'>
+>;
+export type OpenAiCompatibleVoiceServiceOptionsUpdate = Partial<
+  Omit<OpenAiCompatibleVoiceServiceOptions, 'engineType'>
 >;
 export type AivisSpeechVoiceServiceOptionsUpdate = Partial<
   Omit<AivisSpeechVoiceServiceOptions, 'engineType'>
@@ -274,6 +290,7 @@ export type VoiceServiceOptionsUpdate =
   | VoiceVoxVoiceServiceOptionsUpdate
   | VoicePeakVoiceServiceOptionsUpdate
   | OpenAiVoiceServiceOptionsUpdate
+  | OpenAiCompatibleVoiceServiceOptionsUpdate
   | AivisSpeechVoiceServiceOptionsUpdate
   | AivisCloudVoiceServiceOptionsUpdate
   | MinimaxVoiceServiceOptionsUpdate

@@ -46,6 +46,7 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 ### Supported Voice Engines
 
 - **OpenAI TTS** - High-quality voices with API key
+- **OpenAI-Compatible TTS** - Self-hosted OpenAI-style endpoints such as Kokoro FastAPI
 - **VOICEVOX** - Free Japanese voices (requires local server)
 - **AIVIS Speech** - Emotion-aware synthesis
 - **VoicePeak** - Professional voice synthesis
@@ -127,6 +128,12 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 #### OpenAI TTS
 ```bash
 # Standard OpenAI API key: "sk-..."
+```
+
+#### OpenAI-Compatible TTS
+```bash
+# Kokoro FastAPI default endpoint: http://localhost:8880/v1/audio/speech
+# API key is optional. Default model in the example is "kokoro".
 ```
 
 ## 🚨 Troubleshooting

@@ -158,6 +158,18 @@ const voiceService = new VoiceService({
 });
 ```
 
+### OpenAI-Compatible TTS
+OpenAI-compatible speech endpoints for self-hosted servers such as Kokoro FastAPI.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'openaiCompatible',
+  speaker: 'af_bella',
+  openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
+  openAiCompatibleModel: 'kokoro'
+});
+```
+
 ### MiniMax
 Multi-language TTS supporting 24 languages with HD quality.
 
@@ -336,6 +348,8 @@ const voiceService = new VoiceService({
   engineType: 'voicevox',
   speaker: '1',
   openAiSpeed: 1.15,
+  openAiCompatibleModel: 'kokoro',
+  openAiCompatibleSpeed: 1.1,
   voicevoxSpeedScale: 1.1,
   voicevoxPitchScale: 0.05,
   voicevoxIntonationScale: 1.2,
@@ -355,6 +369,11 @@ const voiceService = new VoiceService({
 - **OpenAI TTS**
   - `openAiModel`
   - `openAiSpeed`
+
+- **OpenAI-Compatible TTS**
+  - Endpoint: `openAiCompatibleApiUrl`
+  - `openAiCompatibleModel`
+  - `openAiCompatibleSpeed`
 
 - **VOICEVOX**
   - Endpoint: `voicevoxApiUrl`

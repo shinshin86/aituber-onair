@@ -11,6 +11,7 @@ export {
 } from './AivisSpeechEngine';
 export { AivisCloudEngine } from './AivisCloudEngine';
 export { OpenAiEngine } from './OpenAiEngine';
+export { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 export {
   MinimaxEngine,
   type MinimaxModel,

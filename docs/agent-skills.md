@@ -41,7 +41,9 @@ Use this skill when adding a new model id to `@aituber-onair/chat`, including
 constants, provider support, tests, examples, docs, and versioning updates.
 Use `add-tts-provider` when adding a new voice/TTS provider to
 `@aituber-onair/voice`, including engine implementation, public option types,
-internal handler wiring, tests, docs, examples, and release prep.
+internal handler wiring, tests, docs, examples, and release prep. This also
+fits OpenAI-compatible TTS endpoints such as Kokoro FastAPI when they should be
+added as a dedicated provider.
 Use `sync-core-after-chat-upgrade` after chat upgrades to propagate changes
 into `@aituber-onair/core` and core examples.
 

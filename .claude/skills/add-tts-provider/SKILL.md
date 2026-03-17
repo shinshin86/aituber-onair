@@ -43,6 +43,9 @@ Collect missing inputs before editing:
    - Follow the existing `VoiceServiceOptions` top-level naming style.
    - Keep `VoiceEngineAdapter` public usage unchanged.
    - Keep existing public engine exports and methods backward compatible.
+   - If adding support for an OpenAI-compatible endpoint would change the
+     behavior of the existing `openai` provider, add a new provider instead of
+     mutating `openai`.
 3. Add engine implementation:
    - Create `packages/voice/src/engines/<engine_class_name>.ts`.
    - Implement `VoiceEngine`.
@@ -62,6 +65,9 @@ Collect missing inputs before editing:
    - Extend `VoiceServiceOptions` and `VoiceServiceOptionsUpdate`.
    - Follow existing field naming conventions such as
      `<engine_type>ApiUrl`, `<engine_type>Speed`, or provider-specific names.
+   - For OpenAI-compatible providers, prefer explicit top-level fields such as
+     `<engine_type>ApiUrl`, `<engine_type>Model`, and `<engine_type>Speed`
+     instead of reusing `openAi*` fields.
 6. Add internal handler wiring:
    - Create
      `packages/voice/src/services/internal/engineHandlers/<engine_type>.ts`.
@@ -90,6 +96,10 @@ Collect missing inputs before editing:
     - For `react-only`, update
       `packages/voice/examples/react-basic/src/App.tsx`
       and the related example README if needed.
+    - In the React example, update `ENGINE_DEFAULTS`, engine selector options,
+      provider-specific controls, API key behavior, and custom API URL wiring.
+    - If a provider accepts but does not require an API key, keep UI behavior
+      explicit rather than inferring from `needsApiKey` alone.
     - For `all-examples`, also add or update Node/Bun/Deno examples and example
       READMEs.
     - Keep example usage aligned with the current public API style.
@@ -104,8 +114,12 @@ Collect missing inputs before editing:
     - Update affected lockfiles when workspace metadata changes.
 12. Verify:
     - Run package-level `fmt`, `lint`, `test`, and `build`.
+    - If the React example changed, run its `build` too.
     - Grep for `<engine_type>` to confirm expected placements.
     - Confirm no public API usage pattern changed in README or examples.
+    - If the provider has a local default endpoint, optionally try a simple
+      `curl` smoke test against that endpoint when the local service is
+      expected to be running.
 
 ## References
 

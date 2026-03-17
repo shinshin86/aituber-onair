@@ -40,6 +40,8 @@ Use this file when applying `$add-tts-provider`.
 - `packages/voice/README.md`
 - `packages/voice/README_ja.md`
 - `packages/voice/examples/react-basic/src/App.tsx`
+- `packages/voice/examples/react-basic/README.md`
+- `packages/voice/examples/README.md`
 - Example READMEs and Node/Bun/Deno examples only when requested by scope.
 
 ## Naming Rules
@@ -61,6 +63,12 @@ Use this file when applying `$add-tts-provider`.
   - Usually uses `apiKey`
   - May have no public API URL override
   - Example patterns: `openai`, `aivisCloud`, `minimax`
+- `openai-compatible` provider:
+  - Prefer a dedicated provider when endpoint URL, API key optionality, or
+    default model differs from the official `openai` provider
+  - Usually has `ApiUrl`, `Model`, and `Speed`
+  - Often accepts an optional `apiKey`
+  - Example pattern: `openaiCompatible` for Kokoro FastAPI style endpoints
 
 ## Internal Refactor Assumption
 
