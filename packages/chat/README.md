@@ -312,7 +312,7 @@ Notes:
 ```typescript
 const zaiService = ChatServiceFactory.createChatService('zai', {
   apiKey: process.env.ZAI_API_KEY,
-  model: 'glm-5',
+  model: 'glm-5-turbo',
   visionModel: 'glm-4.6V-Flash', // Optional: vision-capable model
   responseFormat: { type: 'json_object' } // Optional JSON mode
 });
@@ -320,7 +320,7 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 
 Notes:
 - Z.ai uses OpenAI-compatible Chat Completions.
-- Supported text models: `glm-5`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
+- Supported text models: `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
 - Supported vision models: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
 - `thinking` is disabled by default to match fast response behavior.
 
@@ -578,7 +578,7 @@ Currently, the following AI providers are built-in:
 - **Gemini**: Supports models like Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Claude**: Supports models like Claude Sonnet 4.6, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
-- **Z.ai**: Supports GLM-5 (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)
+- **Z.ai**: Supports GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)
 - **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
 
 ## License
