@@ -9,6 +9,8 @@ export const MODEL_GPT_5_MINI = 'gpt-5-mini';
 export const MODEL_GPT_5 = 'gpt-5';
 export const MODEL_GPT_5_1 = 'gpt-5.1';
 export const MODEL_GPT_5_4 = 'gpt-5.4';
+export const MODEL_GPT_5_4_MINI = 'gpt-5.4-mini';
+export const MODEL_GPT_5_4_NANO = 'gpt-5.4-nano';
 export const MODEL_GPT_5_4_PRO = 'gpt-5.4-pro';
 
 export const MODEL_GPT_4_1 = 'gpt-4.1';
@@ -29,6 +31,8 @@ export const VISION_SUPPORTED_MODELS = [
   MODEL_GPT_5,
   MODEL_GPT_5_1,
   MODEL_GPT_5_4,
+  MODEL_GPT_5_4_MINI,
+  MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
@@ -46,6 +50,8 @@ export const GPT_5_MODELS = [
   MODEL_GPT_5,
   MODEL_GPT_5_1,
   MODEL_GPT_5_4,
+  MODEL_GPT_5_4_MINI,
+  MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
 ];
 
@@ -77,7 +83,12 @@ export function isResponsesOnlyGPT5Model(model: string): boolean {
  * Check if the provided model allows the reasoning_effort 'xhigh' level
  */
 export function allowsReasoningXHigh(model: string): boolean {
-  return model === MODEL_GPT_5_4 || model === MODEL_GPT_5_4_PRO;
+  return (
+    model === MODEL_GPT_5_4 ||
+    model === MODEL_GPT_5_4_MINI ||
+    model === MODEL_GPT_5_4_NANO ||
+    model === MODEL_GPT_5_4_PRO
+  );
 }
 
 /**

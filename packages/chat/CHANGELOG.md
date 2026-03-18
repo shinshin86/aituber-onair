@@ -1,5 +1,14 @@
 # @aituber-onair/chat
 
+## 0.21.0
+
+### Minor Changes
+
+- Added OpenAI GPT-5.4 Mini (`gpt-5.4-mini`) and GPT-5.4 Nano (`gpt-5.4-nano`) to shared constants and provider supported-model lists.
+- Added GPT-5.4 Mini/Nano to `VISION_SUPPORTED_MODELS` so vision model resolution recognizes them.
+- Extended GPT-5 capability handling so GPT-5.4 Mini/Nano are treated as GPT-5 models and allow `xhigh` reasoning effort.
+- Updated OpenAI provider tests, React basic example model selector, and README docs (EN/JA) to include GPT-5.4 Mini/Nano.
+
 ## 0.20.0
 
 ### Minor Changes
