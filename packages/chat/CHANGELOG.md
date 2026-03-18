@@ -1,5 +1,17 @@
 # @aituber-onair/chat
 
+## 0.21.1
+
+### Patch Changes
+
+- Fixed OpenAI GPT-5.4 Mini (`gpt-5.4-mini`) and GPT-5.4 Nano
+  (`gpt-5.4-nano`) capability normalization so `reasoning_effort: 'none'`
+  remains available instead of being forced back to the model default.
+- Updated README docs (EN/JA) to reflect that GPT-5.4 Mini/Nano support
+  `'none' | 'low' | 'medium' | 'high' | 'xhigh'`.
+- Added provider test coverage for GPT-5.4 Mini/Nano with
+  `reasoning_effort: 'none'`.
+
 ## 0.21.0
 
 ### Minor Changes
