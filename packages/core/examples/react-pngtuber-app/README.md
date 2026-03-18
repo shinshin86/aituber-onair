@@ -8,6 +8,8 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 ## What this app can do
 
 - Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `claude`, `zai`
+- Provider model lists are sourced from `@aituber-onair/core`, so newly synced
+  chat models are available automatically in Settings
 - For `openrouter`, fetch currently working `:free` models from Settings:
   - `Fetch free models` probes candidates and appends working models to the model list
   - `Max candidates` is the maximum number of `:free` candidates to probe

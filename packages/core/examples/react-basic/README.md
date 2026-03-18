@@ -11,7 +11,7 @@ This example application serves as a practical implementation guide for integrat
 ### Key Features
 
 - **🤖 Multi-Provider LLM Support**
-  - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.4/5.4 Pro)
+  - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.4/5.4 Mini/5.4 Nano/5.4 Pro)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
   - Google Gemini (Pro, Flash, Thinking models)
   - Anthropic Claude (4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
@@ -101,7 +101,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **OpenAI:**
 - GPT-4.1 series (Nano, Mini, Standard)
-- GPT-5 series (Nano, Mini, Standard, 5.1, 5.4, 5.4 Pro)
+- GPT-5 series (Nano, Mini, Standard, 5.1, 5.4, 5.4 Mini, 5.4 Nano, 5.4 Pro)
 - o3-mini
 - GPT-4o, GPT-4o Mini
 
@@ -127,7 +127,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Claude 4 series (Sonnet, Opus)
 
 **Z.ai:**
-- GLM-5 (text-only)
+- GLM-5 and GLM-5-Turbo (text-only)
 - GLM-4.7 series
 - GLM-4.6 and GLM-4.6V series
 
