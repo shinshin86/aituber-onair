@@ -1,5 +1,21 @@
 # @aituber-onair/core
 
+## 0.23.6
+
+### Patch Changes
+
+- Re-exported additional chat model constants from the core entry point:
+  - `MODEL_GPT_5_4_MINI`
+  - `MODEL_GPT_5_4_NANO`
+  - `MODEL_GLM_5_TURBO`
+- Updated the core React basic example model lists to include GPT-5.4 Mini,
+  GPT-5.4 Nano, and GLM-5-Turbo.
+- Updated core README docs (EN/JA) and the React basic example README to
+  reflect GPT-5.4 Mini/Nano and GLM-5-Turbo support.
+- Added core export test coverage for the new OpenAI and Z.ai model constants.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.21.0
+
 ## 0.23.5
 
 ### Patch Changes
