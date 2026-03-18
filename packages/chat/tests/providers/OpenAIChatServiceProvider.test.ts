@@ -233,6 +233,30 @@ describe('OpenAIChatServiceProvider', () => {
       );
     });
 
+    it('should allow none reasoning for GPT-5.4 Mini', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_MINI,
+        reasoning_effort: 'none',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_MINI,
+        MODEL_GPT_5_4_MINI,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'none',
+        undefined,
+        'openai',
+      );
+    });
+
     it('should allow xhigh reasoning for GPT-5.4 Nano', () => {
       const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
@@ -252,6 +276,30 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         'xhigh',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should allow none reasoning for GPT-5.4 Nano', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_NANO,
+        reasoning_effort: 'none',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_NANO,
+        MODEL_GPT_5_4_NANO,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'none',
         undefined,
         'openai',
       );

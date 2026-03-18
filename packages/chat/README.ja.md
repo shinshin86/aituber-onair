@@ -187,7 +187,7 @@ const compatibleService = ChatServiceFactory.createChatService(
 `reasoning_effort` の選択肢はモデルによって異なります。
 - `gpt-5.4-pro`: `'medium' | 'high' | 'xhigh'`（Responses API 専用）
 - `gpt-5.4`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
-- `gpt-5.4-mini` / `gpt-5.4-nano`: `'low' | 'medium' | 'high' | 'xhigh'`
+- `gpt-5.4-mini` / `gpt-5.4-nano`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.1`: `'none' | 'low' | 'medium' | 'high'`
 - `gpt-5` / `gpt-5-mini` / `gpt-5-nano`: `'minimal' | 'low' | 'medium' | 'high'`
 
