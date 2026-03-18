@@ -18,6 +18,8 @@ import {
   MODEL_GPT_5,
   MODEL_GPT_5_1,
   MODEL_GPT_5_4,
+  MODEL_GPT_5_4_MINI,
+  MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
@@ -378,6 +380,18 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GPT_5_4,
     name: 'GPT-5.4',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_5_4_MINI,
+    name: 'GPT-5.4 Mini',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_5_4_NANO,
+    name: 'GPT-5.4 Nano',
     provider: 'openai',
     default: false,
   },

@@ -187,6 +187,7 @@ const compatibleService = ChatServiceFactory.createChatService(
 `reasoning_effort` の選択肢はモデルによって異なります。
 - `gpt-5.4-pro`: `'medium' | 'high' | 'xhigh'`（Responses API 専用）
 - `gpt-5.4`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
+- `gpt-5.4-mini` / `gpt-5.4-nano`: `'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.1`: `'none' | 'low' | 'medium' | 'high'`
 - `gpt-5` / `gpt-5-mini` / `gpt-5-nano`: `'minimal' | 'low' | 'medium' | 'high'`
 
@@ -194,6 +195,8 @@ const compatibleService = ChatServiceFactory.createChatService(
 
 - `gpt-5.4-pro` – GPT-5.4 の上位モデル。Responses API でのみ利用可能。
 - `gpt-5.4` – コーディング、指示追従、長い文脈を伴うエージェント用途を強化した最新世代モデル。
+- `gpt-5.4-mini` – コーディング、ツール利用、マルチモーダル用途向けの高速な GPT-5.4 系小型モデル。
+- `gpt-5.4-nano` – 単純な高頻度タスクや軽量サブエージェント向けの最廉価な GPT-5.4 系モデル。
 - `gpt-5.1` – 複雑な推論、広範な世界知識、コードやマルチステップのエージェントタスク向け。
 - `gpt-5` – 旧フラッグシップ（後方互換目的で提供されるが、現在は 5.1 が推奨）。
 - `gpt-5-mini` – コスト最適化された推論/チャットモデル。速度と能力のバランスが良い。
@@ -578,7 +581,7 @@ type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong'
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-5.4 Pro、GPT-5.4、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
+- **OpenAI**: GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **Gemini**: Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Liteのモデルをサポート
 - **Claude**: Claude Sonnet 4.6, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haikuのモデルをサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください

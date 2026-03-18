@@ -8,6 +8,8 @@ import {
   MODEL_GPT_5,
   MODEL_GPT_5_1,
   MODEL_GPT_5_4,
+  MODEL_GPT_5_4_MINI,
+  MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
@@ -48,6 +50,8 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_GPT_5,
         MODEL_GPT_5_1,
         MODEL_GPT_5_4,
+        MODEL_GPT_5_4_MINI,
+        MODEL_GPT_5_4_NANO,
         MODEL_GPT_5_4_PRO,
         MODEL_GPT_4_1,
         MODEL_GPT_4_1_MINI,
@@ -79,6 +83,8 @@ describe('OpenAIChatServiceProvider', () => {
       expect(provider.supportsVisionForModel(MODEL_GPT_5_MINI)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_1)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_4)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_5_4_MINI)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_5_4_NANO)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_4_PRO)).toBe(true);
     });
 
@@ -198,6 +204,54 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         'medium',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should allow xhigh reasoning for GPT-5.4 Mini', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_MINI,
+        reasoning_effort: 'xhigh',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_MINI,
+        MODEL_GPT_5_4_MINI,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'xhigh',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should allow xhigh reasoning for GPT-5.4 Nano', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_NANO,
+        reasoning_effort: 'xhigh',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_NANO,
+        MODEL_GPT_5_4_NANO,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'xhigh',
         undefined,
         'openai',
       );
@@ -584,7 +638,13 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should create services for all GPT-5 models correctly', () => {
-      const gpt5Models = [MODEL_GPT_5_NANO, MODEL_GPT_5_MINI, MODEL_GPT_5];
+      const gpt5Models = [
+        MODEL_GPT_5_NANO,
+        MODEL_GPT_5_MINI,
+        MODEL_GPT_5,
+        MODEL_GPT_5_4_MINI,
+        MODEL_GPT_5_4_NANO,
+      ];
 
       gpt5Models.forEach((model) => {
         // Clear previous calls
