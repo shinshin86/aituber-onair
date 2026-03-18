@@ -93,10 +93,15 @@ export function allowsReasoningXHigh(model: string): boolean {
 
 /**
  * Check if the provided model allows the reasoning_effort 'none' shortcut
- * Supported by GPT-5.1 and GPT-5.4
+ * Supported by GPT-5.1 and GPT-5.4 family models, except Pro
  */
 export function allowsReasoningNone(model: string): boolean {
-  return model === MODEL_GPT_5_1 || model === MODEL_GPT_5_4;
+  return (
+    model === MODEL_GPT_5_1 ||
+    model === MODEL_GPT_5_4 ||
+    model === MODEL_GPT_5_4_MINI ||
+    model === MODEL_GPT_5_4_NANO
+  );
 }
 
 /**
