@@ -23,7 +23,7 @@ const ENGINE_DEFAULTS = {
     needsApiKey: false,
     acceptsApiKey: true,
     placeholder: 'Optional API key',
-    speaker: 'af_bella',
+    speaker: '',
     defaultModel: 'kokoro',
   },
   voicevox: {
@@ -629,13 +629,16 @@ function App() {
     const defaults = ENGINE_DEFAULTS[engine];
 
     // Validate required fields
+    const apiKeyIsRequired =
+      engine !== 'openaiCompatible' && defaults.needsApiKey;
+
     if (engine === 'minimax') {
       if (!apiKey || !minimaxGroupId) {
         setStatus('Both API key and Group ID are required for MiniMax');
         setStatusType('error');
         return;
       }
-    } else if (defaults.needsApiKey && !apiKey) {
+    } else if (apiKeyIsRequired && !apiKey) {
       setStatus(`API key is required for ${engine}`);
       setStatusType('error');
       return;
@@ -1097,6 +1100,8 @@ function App() {
   };
 
   const defaults = ENGINE_DEFAULTS[engine];
+  const apiKeyIsRequired =
+    engine !== 'openaiCompatible' && defaults.needsApiKey;
 
   return (
     <div className="container">
@@ -1179,7 +1184,7 @@ function App() {
             </div>
 
             <p className="parameter-card__note">
-              デフォルトの voice は `af_bella`、API URL は
+              `voice` は既定では送信されません。API URL の既定値は
               `http://localhost:8880/v1/audio/speech` です。
             </p>
           </CollapsibleCard>
@@ -2125,7 +2130,7 @@ function App() {
           engine !== 'voicepeak' && (
             <div className="form-group">
               <label htmlFor="apiKey">
-                API Key {defaults.needsApiKey ? '(required)' : '(optional)'}:
+                API Key {apiKeyIsRequired ? '(required)' : '(optional)'}:
               </label>
               <input
                 id="apiKey"

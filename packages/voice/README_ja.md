@@ -164,11 +164,13 @@ Kokoro FastAPI などの OpenAI 互換エンドポイントを利用するため
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'openaiCompatible',
-  speaker: 'af_bella',
   openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
   openAiCompatibleModel: 'kokoro'
 });
 ```
+
+`speaker` は省略可能です。未指定の場合、リクエストボディに `voice`
+フィールドは含まれません。
 
 ### MiniMax
 HD品質で24言語をサポートする多言語TTS。
@@ -376,6 +378,7 @@ const voiceService = new VoiceService({
 
 - **OpenAI互換 TTS**
   - エンドポイント: `openAiCompatibleApiUrl`
+  - 任意の voice: `speaker`
   - `openAiCompatibleModel`
   - `openAiCompatibleSpeed`
 

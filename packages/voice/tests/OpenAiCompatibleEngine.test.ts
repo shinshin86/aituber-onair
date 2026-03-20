@@ -45,6 +45,33 @@ describe('OpenAiCompatibleEngine', () => {
     }
   });
 
+  it('should omit voice when speaker is not provided', async () => {
+    const engine = new OpenAiCompatibleEngine();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => ({
+        arrayBuffer: async () => new ArrayBuffer(8),
+      }),
+    });
+    globalThis.fetch = fetchMock as any;
+
+    try {
+      await engine.fetchAudio(
+        { message: 'Hello without voice', style: 'neutral' } as any,
+        '',
+      );
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init.body)).toEqual({
+        model: 'kokoro',
+        input: 'Hello without voice',
+        speed: 1,
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('should include Authorization when apiKey is provided', async () => {
     const engine = new OpenAiCompatibleEngine();
     const fetchMock = vi.fn().mockResolvedValue({

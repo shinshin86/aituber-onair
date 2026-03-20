@@ -199,7 +199,7 @@ export class VoiceEngineAdapter implements VoiceService {
     // Get audio data
     return await engine.fetchAudio(
       talk,
-      this.options.speaker,
+      this.options.speaker ?? '',
       this.options.apiKey,
     );
   }

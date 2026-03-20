@@ -39,10 +39,6 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
     speaker: string,
     apiKey?: string,
   ): Promise<ArrayBuffer> {
-    if (!speaker) {
-      throw new Error('OpenAI-compatible TTS voice name is required');
-    }
-
     const text = input.message.trim();
     if (!text) {
       throw new Error('Input text is empty');
@@ -56,15 +52,21 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
       headers.Authorization = `Bearer ${apiKey}`;
     }
 
+    const trimmedSpeaker = speaker.trim();
+    const requestBody: Record<string, string | number> = {
+      model: this.model,
+      input: text,
+      speed: this.speed,
+    };
+
+    if (trimmedSpeaker) {
+      requestBody.voice = trimmedSpeaker;
+    }
+
     const response = await fetch(this.apiUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        model: this.model,
-        voice: speaker,
-        input: text,
-        speed: this.speed,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {

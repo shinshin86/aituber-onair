@@ -39,9 +39,7 @@ export interface MinimaxAudioSettingsOptions {
 /**
  * Voice service common settings options
  */
-interface VoiceServiceCommonOptions {
-  /** Speaker ID */
-  speaker: string;
+interface VoiceServiceBaseOptions {
   /** API key (if needed) */
   apiKey?: string;
   /** Audio playback callback */
@@ -51,6 +49,11 @@ interface VoiceServiceCommonOptions {
   ) => Promise<void>;
   /** Audio playback complete callback */
   onComplete?: () => void;
+}
+
+interface VoiceServiceCommonOptions extends VoiceServiceBaseOptions {
+  /** Speaker ID */
+  speaker: string;
 }
 
 export interface VoiceVoxVoiceServiceOptions extends VoiceServiceCommonOptions {
@@ -112,9 +115,11 @@ export interface OpenAiVoiceServiceOptions extends VoiceServiceCommonOptions {
 }
 
 export interface OpenAiCompatibleVoiceServiceOptions
-  extends VoiceServiceCommonOptions {
+  extends VoiceServiceBaseOptions {
   /** Engine type */
   engineType: 'openaiCompatible';
+  /** Optional voice name for compatible endpoints that support it */
+  speaker?: string;
   /** OpenAI-compatible speech endpoint URL */
   openAiCompatibleApiUrl?: string;
   /** OpenAI-compatible model name (for example: kokoro) */

@@ -36,6 +36,7 @@ cd examples/react-basic
 npm install
 
 # Start development server
+# This also rebuilds @aituber-onair/voice automatically
 npm run dev
 ```
 
@@ -140,9 +141,9 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 
 ### Common Issues
 
-1. **Import errors** - Make sure the voice package is built: `npm run build` from voice package root
+1. **Import errors** - `npm run dev` and `npm run build` rebuild `@aituber-onair/voice` automatically. If you still see stale behavior, restart the dev server once.
 2. **API errors** - Check your API keys and ensure services are running
-3. **CORS errors** - Should not occur in this example (that's the point!)
+3. **CORS errors** - For browser use, the target server must return proper CORS headers. If it does not, use your own backend relay/proxy in production.
 
 ### Audio Playback
 

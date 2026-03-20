@@ -256,6 +256,29 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.3);
       expect(mockEngine.fetchAudio).toHaveBeenCalled();
     });
+
+    it('should allow OpenAI-compatible engine without speaker', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'openaiCompatible',
+        openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
+        openAiCompatibleModel: 'kokoro',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'OpenAI compatible test without speaker' });
+
+      expect(mockEngine.fetchAudio).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'OpenAI compatible test without speaker',
+        }),
+        '',
+        undefined,
+      );
+    });
   });
 
   describe('AivisCloud Integration', () => {

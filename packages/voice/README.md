@@ -164,11 +164,13 @@ OpenAI-compatible speech endpoints for self-hosted servers such as Kokoro FastAP
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'openaiCompatible',
-  speaker: 'af_bella',
   openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
   openAiCompatibleModel: 'kokoro'
 });
 ```
+
+`speaker` is optional for compatible endpoints. When omitted, the request body
+does not include a `voice` field.
 
 ### MiniMax
 Multi-language TTS supporting 24 languages with HD quality.
@@ -372,6 +374,7 @@ const voiceService = new VoiceService({
 
 - **OpenAI-Compatible TTS**
   - Endpoint: `openAiCompatibleApiUrl`
+  - Optional voice: `speaker`
   - `openAiCompatibleModel`
   - `openAiCompatibleSpeed`
 
