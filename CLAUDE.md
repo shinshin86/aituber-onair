@@ -63,14 +63,17 @@ skill definitions aligned.
   - `add-chat-model`
   - `add-tts-provider`
   - `sync-core-after-chat-upgrade`
+  - `wrap-tts-as-openai-compatible`
 - Canonical sources:
   - `skills/add-chat-model/SKILL.md`
   - `skills/add-tts-provider/SKILL.md`
   - `skills/sync-core-after-chat-upgrade/SKILL.md`
+  - `skills/wrap-tts-as-openai-compatible/SKILL.md`
 - Claude Code runtime paths:
   - `.claude/skills/add-chat-model/SKILL.md`
   - `.claude/skills/add-tts-provider/SKILL.md`
   - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
+  - `.claude/skills/wrap-tts-as-openai-compatible/SKILL.md`
 
 Usage:
 
@@ -82,6 +85,16 @@ Usage:
   "update supported voice providers".
 - Invoke `$sync-core-after-chat-upgrade` after chat upgrades when the same
   changes must be propagated into core and core examples.
+- Invoke explicitly with `$wrap-tts-as-openai-compatible`, or use prompts like
+  "wrap a TTS engine as OpenAI-compatible", "build an OpenAI-compatible speech
+  server", or "set up a Colab TTS compatibility server".
+- For `$wrap-tts-as-openai-compatible`, classify the upstream TTS as direct
+  Python API, CLI/file-output, or internal runtime plus save helper before
+  choosing the adapter shape, and validate from `@aituber-onair/voice` when
+  relevant.
+- Prefer this skill for practical local TTS engines with clean one-shot WAV
+  generation. Do not force research-first or streaming-first systems into this
+  workflow.
 - If input is missing, collect:
   `provider`, `model_id`, `model_const_name`, `display_name`,
   `supports_vision`, and optional `bump_version` (default `true`).
@@ -108,6 +121,9 @@ Maintenance:
 - For core-propagation workflow updates, edit
   `skills/sync-core-after-chat-upgrade/SKILL.md` and sync to
   `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`.
+- For TTS compatibility-wrapper workflow updates, edit
+  `skills/wrap-tts-as-openai-compatible/SKILL.md` and sync to
+  `.claude/skills/wrap-tts-as-openai-compatible/SKILL.md`.
 
 ## System Architecture
 

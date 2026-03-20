@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wrap TTS As OpenAI-Compatible"
+  short_description: "Expose a practical local TTS via /v1/audio/speech with Colab and E2E guidance"
+  default_prompt: "Use $wrap-tts-as-openai-compatible to wrap a practical local or self-hosted TTS engine behind an OpenAI-compatible /v1/audio/speech server. Classify the upstream integration pattern first, keep the wrapper minimal, skip research-first or streaming-first engines that do not fit cleanly, and validate from @aituber-onair/voice."
