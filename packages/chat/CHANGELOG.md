@@ -1,5 +1,35 @@
 # @aituber-onair/chat
 
+## 0.21.1
+
+### Patch Changes
+
+- Fixed OpenAI GPT-5.4 Mini (`gpt-5.4-mini`) and GPT-5.4 Nano
+  (`gpt-5.4-nano`) capability normalization so `reasoning_effort: 'none'`
+  remains available instead of being forced back to the model default.
+- Updated README docs (EN/JA) to reflect that GPT-5.4 Mini/Nano support
+  `'none' | 'low' | 'medium' | 'high' | 'xhigh'`.
+- Added provider test coverage for GPT-5.4 Mini/Nano with
+  `reasoning_effort: 'none'`.
+
+## 0.21.0
+
+### Minor Changes
+
+- Added OpenAI GPT-5.4 Mini (`gpt-5.4-mini`) and GPT-5.4 Nano (`gpt-5.4-nano`) to shared constants and provider supported-model lists.
+- Added GPT-5.4 Mini/Nano to `VISION_SUPPORTED_MODELS` so vision model resolution recognizes them.
+- Extended GPT-5 capability handling so GPT-5.4 Mini/Nano are treated as GPT-5 models and allow `xhigh` reasoning effort.
+- Updated OpenAI provider tests, React basic example model selector, and README docs (EN/JA) to include GPT-5.4 Mini/Nano.
+
+## 0.20.0
+
+### Minor Changes
+
+- Added Z.ai GLM-5-Turbo (`glm-5-turbo`) to chat constants and provider supported models.
+- Kept GLM-5-Turbo as text-only while preserving the existing GLM-4.6V family as the vision model set.
+- Added Z.ai service/provider test coverage and updated the React basic example model selector for GLM-5-Turbo.
+- Updated README files (EN/JA) and example documentation to reflect GLM-5-Turbo support.
+
 ## 0.19.0
 
 ### Minor Changes

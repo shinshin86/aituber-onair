@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   MODEL_GPT_5_4,
+  MODEL_GPT_5_4_MINI,
+  MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
+  MODEL_GLM_5_TURBO,
   allowsReasoningXHigh,
   isResponsesOnlyGPT5Model,
   refreshOpenRouterFreeModels,
@@ -22,9 +25,17 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports GPT-5.4 model constants and capability helpers', () => {
     expect(MODEL_GPT_5_4).toBe('gpt-5.4');
+    expect(MODEL_GPT_5_4_MINI).toBe('gpt-5.4-mini');
+    expect(MODEL_GPT_5_4_NANO).toBe('gpt-5.4-nano');
     expect(MODEL_GPT_5_4_PRO).toBe('gpt-5.4-pro');
     expect(isResponsesOnlyGPT5Model(MODEL_GPT_5_4_PRO)).toBe(true);
     expect(allowsReasoningXHigh(MODEL_GPT_5_4)).toBe(true);
+    expect(allowsReasoningXHigh(MODEL_GPT_5_4_MINI)).toBe(true);
+    expect(allowsReasoningXHigh(MODEL_GPT_5_4_NANO)).toBe(true);
+  });
+
+  it('re-exports GLM-5-Turbo model constant', () => {
+    expect(MODEL_GLM_5_TURBO).toBe('glm-5-turbo');
   });
 
   it('exposes refresh result type shape compatibility', () => {
