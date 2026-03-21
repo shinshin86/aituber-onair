@@ -1120,12 +1120,12 @@ function App() {
             onChange={(e) => setEngine(e.target.value as EngineType)}
           >
             <option value="openai">OpenAI TTS</option>
-            <option value="openaiCompatible">OpenAI-Compatible TTS</option>
             <option value="voicevox">VOICEVOX</option>
             <option value="aivisSpeech">AivisSpeech (Local)</option>
             <option value="aivisCloud">Aivis Cloud API</option>
             <option value="voicepeak">VOICEPEAK</option>
             <option value="minimax">MiniMax</option>
+            <option value="openaiCompatible">OpenAI-Compatible TTS</option>
           </select>
         </div>
 
