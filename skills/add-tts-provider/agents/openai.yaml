@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add TTS Provider"
+  short_description: "Add a voice provider in @aituber-onair/voice"
+  default_prompt: "Use $add-tts-provider to add a new TTS provider to @aituber-onair/voice, including engine implementation, handler wiring, tests, docs, React example updates, and optional versioning."

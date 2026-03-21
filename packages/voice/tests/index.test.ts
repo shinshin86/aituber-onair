@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import * as voicePackage from '../src';
 import { EmotionParser, VoiceEngineAdapter, textToScreenplay } from '../src';
 
 describe('Voice Package Exports', () => {
@@ -15,6 +16,21 @@ describe('Voice Package Exports', () => {
   it('should export EmotionParser utility', () => {
     expect(EmotionParser).toBeDefined();
     expect(typeof EmotionParser).toBe('function');
+  });
+
+  it('should preserve the main engine exports', () => {
+    expect(voicePackage.VoiceEngineFactory).toBeDefined();
+    expect(voicePackage.VoiceVoxEngine).toBeDefined();
+    expect(voicePackage.VoicePeakEngine).toBeDefined();
+    expect(voicePackage.AivisSpeechEngine).toBeDefined();
+    expect(voicePackage.AivisCloudEngine).toBeDefined();
+    expect(voicePackage.OpenAiEngine).toBeDefined();
+    expect(voicePackage.OpenAiCompatibleEngine).toBeDefined();
+    expect(voicePackage.MinimaxEngine).toBeDefined();
+  });
+
+  it('should keep NoneEngine out of the public engine exports', () => {
+    expect('NoneEngine' in voicePackage).toBe(false);
   });
 });
 

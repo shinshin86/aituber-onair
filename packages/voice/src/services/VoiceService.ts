@@ -39,9 +39,7 @@ export interface MinimaxAudioSettingsOptions {
 /**
  * Voice service common settings options
  */
-interface VoiceServiceCommonOptions {
-  /** Speaker ID */
-  speaker: string;
+interface VoiceServiceBaseOptions {
   /** API key (if needed) */
   apiKey?: string;
   /** Audio playback callback */
@@ -51,6 +49,11 @@ interface VoiceServiceCommonOptions {
   ) => Promise<void>;
   /** Audio playback complete callback */
   onComplete?: () => void;
+}
+
+interface VoiceServiceCommonOptions extends VoiceServiceBaseOptions {
+  /** Speaker ID */
+  speaker: string;
 }
 
 export interface VoiceVoxVoiceServiceOptions extends VoiceServiceCommonOptions {
@@ -109,6 +112,20 @@ export interface OpenAiVoiceServiceOptions extends VoiceServiceCommonOptions {
   openAiModel?: string;
   /** OpenAI TTS speaking speed (0.25-4.0, default: 1.0) */
   openAiSpeed?: number;
+}
+
+export interface OpenAiCompatibleVoiceServiceOptions
+  extends VoiceServiceBaseOptions {
+  /** Engine type */
+  engineType: 'openaiCompatible';
+  /** Optional voice name for compatible endpoints that support it */
+  speaker?: string;
+  /** OpenAI-compatible speech endpoint URL */
+  openAiCompatibleApiUrl?: string;
+  /** OpenAI-compatible model name expected by the endpoint */
+  openAiCompatibleModel?: string;
+  /** OpenAI-compatible speaking speed (0.25-4.0, default: 1.0) */
+  openAiCompatibleSpeed?: number;
 }
 
 export interface AivisSpeechVoiceServiceOptions
@@ -240,6 +257,7 @@ export type VoiceServiceOptions =
   | VoiceVoxVoiceServiceOptions
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
+  | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions
@@ -256,6 +274,9 @@ export type VoicePeakVoiceServiceOptionsUpdate = Partial<
 >;
 export type OpenAiVoiceServiceOptionsUpdate = Partial<
   Omit<OpenAiVoiceServiceOptions, 'engineType'>
+>;
+export type OpenAiCompatibleVoiceServiceOptionsUpdate = Partial<
+  Omit<OpenAiCompatibleVoiceServiceOptions, 'engineType'>
 >;
 export type AivisSpeechVoiceServiceOptionsUpdate = Partial<
   Omit<AivisSpeechVoiceServiceOptions, 'engineType'>
@@ -274,6 +295,7 @@ export type VoiceServiceOptionsUpdate =
   | VoiceVoxVoiceServiceOptionsUpdate
   | VoicePeakVoiceServiceOptionsUpdate
   | OpenAiVoiceServiceOptionsUpdate
+  | OpenAiCompatibleVoiceServiceOptionsUpdate
   | AivisSpeechVoiceServiceOptionsUpdate
   | AivisCloudVoiceServiceOptionsUpdate
   | MinimaxVoiceServiceOptionsUpdate

@@ -14,36 +14,49 @@ const ENGINE_DEFAULTS = {
   openai: {
     apiUrl: 'https://api.openai.com/v1/audio/speech',
     needsApiKey: true,
+    acceptsApiKey: true,
     placeholder: 'sk-...',
     speaker: 'alloy',
+  },
+  openaiCompatible: {
+    apiUrl: 'http://localhost:8880/v1/audio/speech',
+    needsApiKey: false,
+    acceptsApiKey: true,
+    placeholder: 'Optional API key',
+    speaker: '',
   },
   voicevox: {
     apiUrl: 'http://localhost:50021',
     needsApiKey: false,
+    acceptsApiKey: false,
     placeholder: 'No API key needed',
     speaker: 1,
   },
   aivisSpeech: {
     apiUrl: 'http://localhost:10101',
     needsApiKey: false,
+    acceptsApiKey: false,
     placeholder: 'No API key needed',
     speaker: '888753760',
   },
   aivisCloud: {
     apiUrl: 'https://api.aivis-project.com/v1/tts/synthesize',
     needsApiKey: true,
+    acceptsApiKey: true,
     placeholder: 'Your Aivis Cloud API key',
     speaker: 'a59cb814-0083-4369-8542-f51a29e72af7',
   },
   voicepeak: {
     apiUrl: 'http://localhost:20202',
     needsApiKey: false,
+    acceptsApiKey: false,
     placeholder: 'No API key needed',
     speaker: 'f1',
   },
   minimax: {
     apiUrl: 'https://api.minimax.io/v1/t2a_v2',
     needsApiKey: true,
+    acceptsApiKey: true,
     placeholder: 'Your MiniMax API key',
     groupIdPlaceholder: 'Your Group ID',
     speaker: 'male-qn-qingse',
@@ -470,6 +483,7 @@ function App() {
   const [voicepeakSpeed, setVoicepeakSpeed] = useState('');
   const [voicepeakPitch, setVoicepeakPitch] = useState('');
   const [openaiSpeed, setOpenaiSpeed] = useState('');
+  const [openaiCompatibleModel, setOpenaiCompatibleModel] = useState('');
   const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState('');
   const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] = useState('');
   const [aivisCloudStyleId, setAivisCloudStyleId] = useState('');
@@ -566,6 +580,7 @@ function App() {
     setVoicepeakSpeed('');
     setVoicepeakPitch('');
     setOpenaiSpeed('');
+    setOpenaiCompatibleModel('');
     setAivisCloudModelUuid('');
     setAivisCloudSpeakerUuid('');
     setAivisCloudStyleId('');
@@ -611,14 +626,23 @@ function App() {
     const defaults = ENGINE_DEFAULTS[engine];
 
     // Validate required fields
+    const apiKeyIsRequired =
+      engine !== 'openaiCompatible' && defaults.needsApiKey;
+
     if (engine === 'minimax') {
       if (!apiKey || !minimaxGroupId) {
         setStatus('Both API key and Group ID are required for MiniMax');
         setStatusType('error');
         return;
       }
-    } else if (defaults.needsApiKey && !apiKey) {
+    } else if (apiKeyIsRequired && !apiKey) {
       setStatus(`API key is required for ${engine}`);
+      setStatusType('error');
+      return;
+    }
+
+    if (engine === 'openaiCompatible' && !openaiCompatibleModel.trim()) {
+      setStatus('Model is required for openaiCompatible');
       setStatusType('error');
       return;
     }
@@ -629,7 +653,13 @@ function App() {
 
     try {
       // Create voice service options
-      const options: VoiceServiceOptions = {
+      const options: {
+        engineType: EngineType;
+        speaker: string;
+        apiKey?: string;
+        onComplete: () => void;
+        [key: string]: unknown;
+      } = {
         engineType: engine,
         speaker:
           engine === 'minimax' ? minimaxVoiceId : String(defaults.speaker),
@@ -825,6 +855,15 @@ function App() {
         const parsedSpeed = Number.parseFloat(openaiSpeed);
         if (!Number.isNaN(parsedSpeed)) {
           options.openAiSpeed = parsedSpeed;
+        }
+      } else if (engine === 'openaiCompatible') {
+        if (openaiCompatibleModel.trim()) {
+          options.openAiCompatibleModel = openaiCompatibleModel.trim();
+        }
+
+        const parsedSpeed = Number.parseFloat(openaiSpeed);
+        if (!Number.isNaN(parsedSpeed)) {
+          options.openAiCompatibleSpeed = parsedSpeed;
         }
       } else if (engine === 'voicepeak') {
         options.voicepeakEmotion = voicepeakEmotion;
@@ -1024,6 +1063,9 @@ function App() {
           case 'voicepeak':
             options.voicepeakApiUrl = apiUrl;
             break;
+          case 'openaiCompatible':
+            options.openAiCompatibleApiUrl = apiUrl;
+            break;
           case 'aivisSpeech':
             options.aivisSpeechApiUrl = apiUrl;
             break;
@@ -1033,7 +1075,7 @@ function App() {
       }
 
       // Create or reuse voice service
-      const service = new VoiceEngineAdapter(options);
+      const service = new VoiceEngineAdapter(options as VoiceServiceOptions);
       setVoiceService(service);
 
       setStatus('Generating speech...');
@@ -1061,6 +1103,8 @@ function App() {
   };
 
   const defaults = ENGINE_DEFAULTS[engine];
+  const apiKeyIsRequired =
+    engine !== 'openaiCompatible' && defaults.needsApiKey;
 
   return (
     <div className="container">
@@ -1084,6 +1128,7 @@ function App() {
             <option value="aivisCloud">Aivis Cloud API</option>
             <option value="voicepeak">VOICEPEAK</option>
             <option value="minimax">MiniMax</option>
+            <option value="openaiCompatible">OpenAI-Compatible TTS</option>
           </select>
         </div>
 
@@ -1107,6 +1152,43 @@ function App() {
 
             <p className="parameter-card__note">
               モデルや声色は `speaker` の指定で切り替えられます。
+            </p>
+          </CollapsibleCard>
+        )}
+
+        {engine === 'openaiCompatible' && (
+          <CollapsibleCard
+            className="parameter-card openai-card"
+            title="OpenAI互換 TTS パラメータ"
+            description="`/v1/audio/speech` 互換のセルフホスト / ローカルTTSエンドポイント向けです。"
+          >
+            <div className="parameter-section">
+              <div className="parameter-section__title">モデル・話速</div>
+              <div className="parameter-grid parameter-grid--two">
+                <div className="form-group">
+                  <label htmlFor="openaiCompatibleModel">Model</label>
+                  <input
+                    id="openaiCompatibleModel"
+                    type="text"
+                    value={openaiCompatibleModel}
+                    onChange={(e) => setOpenaiCompatibleModel(e.target.value)}
+                    placeholder="例: your-model-id"
+                  />
+                </div>
+                <NumberSliderField
+                  id="openaiCompatibleSpeed"
+                  label="Speed (0.25 - 4.0)"
+                  value={openaiSpeed}
+                  onChange={(next) => setOpenaiSpeed(next)}
+                  config={SLIDER_CONFIG.openaiSpeed}
+                  placeholder="例: 1.10（標準は 1.0）"
+                />
+              </div>
+            </div>
+
+            <p className="parameter-card__note">
+              `voice` は既定では送信されません。API URL の既定値は
+              `http://localhost:8880/v1/audio/speech` です。
             </p>
           </CollapsibleCard>
         )}
@@ -2051,7 +2133,7 @@ function App() {
           engine !== 'voicepeak' && (
             <div className="form-group">
               <label htmlFor="apiKey">
-                API Key {defaults.needsApiKey ? '(required)' : '(optional)'}:
+                API Key {apiKeyIsRequired ? '(required)' : '(optional)'}:
               </label>
               <input
                 id="apiKey"
@@ -2059,12 +2141,12 @@ function App() {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder={defaults.placeholder}
-                disabled={!defaults.needsApiKey}
+                disabled={!defaults.acceptsApiKey}
                 style={{
-                  backgroundColor: defaults.needsApiKey
+                  backgroundColor: defaults.acceptsApiKey
                     ? undefined
                     : 'rgba(0,0,0,0.1)',
-                  opacity: defaults.needsApiKey ? 1 : 0.5,
+                  opacity: defaults.acceptsApiKey ? 1 : 0.5,
                 }}
               />
             </div>

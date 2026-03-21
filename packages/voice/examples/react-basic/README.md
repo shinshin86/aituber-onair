@@ -36,6 +36,7 @@ cd examples/react-basic
 npm install
 
 # Start development server
+# This also rebuilds @aituber-onair/voice automatically
 npm run dev
 ```
 
@@ -46,6 +47,7 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 ### Supported Voice Engines
 
 - **OpenAI TTS** - High-quality voices with API key
+- **OpenAI-Compatible TTS** - Self-hosted OpenAI-style endpoints such as Kokoro FastAPI
 - **VOICEVOX** - Free Japanese voices (requires local server)
 - **AIVIS Speech** - Emotion-aware synthesis
 - **VoicePeak** - Professional voice synthesis
@@ -129,13 +131,19 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 # Standard OpenAI API key: "sk-..."
 ```
 
+#### OpenAI-Compatible TTS
+```bash
+# Kokoro FastAPI default endpoint: http://localhost:8880/v1/audio/speech
+# API key is optional. Set the model explicitly to one accepted by your endpoint.
+```
+
 ## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **Import errors** - Make sure the voice package is built: `npm run build` from voice package root
+1. **Import errors** - `npm run dev` and `npm run build` rebuild `@aituber-onair/voice` automatically. If you still see stale behavior, restart the dev server once.
 2. **API errors** - Check your API keys and ensure services are running
-3. **CORS errors** - Should not occur in this example (that's the point!)
+3. **CORS errors** - For browser use, the target server must return proper CORS headers. If it does not, use your own backend relay/proxy in production.
 
 ### Audio Playback
 

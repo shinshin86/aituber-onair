@@ -1,5 +1,22 @@
 # @aituber-onair/voice
 
+## 0.9.0
+
+### Minor Changes
+
+- Add OpenAI-compatible TTS support for self-hosted `/v1/audio/speech`
+  endpoints.
+  - Introduce `engineType: 'openaiCompatible'` with
+    `openAiCompatibleApiUrl`, `openAiCompatibleModel`, and
+    `openAiCompatibleSpeed`.
+  - Allow `speaker` to be omitted for compatible endpoints that do not require
+    a `voice` field.
+  - Update the React example, tests, and documentation for browser-based
+    validation of compatible TTS servers.
+- Refactor internal engine option handling to move provider-specific override
+  logic out of `VoiceEngineAdapter` into internal handler modules while keeping
+  the public API unchanged.
+
 ## 0.8.0
 
 ### Minor Changes
