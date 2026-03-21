@@ -107,7 +107,7 @@ const openaiCompatibleService = new VoiceEngineAdapter({
     engineType: 'openaiCompatible',
     speaker: 'af_bella',
     openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
-    openAiCompatibleModel: 'kokoro',
+    openAiCompatibleModel: 'your-model-id',
 });
 // MiniMax (API key + Group ID + customizable parameters)
 const minimaxService = new VoiceEngineAdapter({

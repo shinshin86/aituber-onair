@@ -24,7 +24,6 @@ const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'Optional API key',
     speaker: '',
-    defaultModel: 'kokoro',
   },
   voicevox: {
     apiUrl: 'http://localhost:50021',
@@ -484,9 +483,7 @@ function App() {
   const [voicepeakSpeed, setVoicepeakSpeed] = useState('');
   const [voicepeakPitch, setVoicepeakPitch] = useState('');
   const [openaiSpeed, setOpenaiSpeed] = useState('');
-  const [openaiCompatibleModel, setOpenaiCompatibleModel] = useState<string>(
-    ENGINE_DEFAULTS.openaiCompatible.defaultModel,
-  );
+  const [openaiCompatibleModel, setOpenaiCompatibleModel] = useState('');
   const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState('');
   const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] = useState('');
   const [aivisCloudStyleId, setAivisCloudStyleId] = useState('');
@@ -583,7 +580,7 @@ function App() {
     setVoicepeakSpeed('');
     setVoicepeakPitch('');
     setOpenaiSpeed('');
-    setOpenaiCompatibleModel(ENGINE_DEFAULTS.openaiCompatible.defaultModel);
+    setOpenaiCompatibleModel('');
     setAivisCloudModelUuid('');
     setAivisCloudSpeakerUuid('');
     setAivisCloudStyleId('');
@@ -640,6 +637,12 @@ function App() {
       }
     } else if (apiKeyIsRequired && !apiKey) {
       setStatus(`API key is required for ${engine}`);
+      setStatusType('error');
+      return;
+    }
+
+    if (engine === 'openaiCompatible' && !openaiCompatibleModel.trim()) {
+      setStatus('Model is required for openaiCompatible');
       setStatusType('error');
       return;
     }
@@ -1157,7 +1160,7 @@ function App() {
           <CollapsibleCard
             className="parameter-card openai-card"
             title="OpenAI互換 TTS パラメータ"
-            description="Kokoro FastAPI など `/v1/audio/speech` 互換のエンドポイント向けです。既定値は Kokoro FastAPI を想定しています。"
+            description="`/v1/audio/speech` 互換のセルフホスト / ローカルTTSエンドポイント向けです。"
           >
             <div className="parameter-section">
               <div className="parameter-section__title">モデル・話速</div>
@@ -1169,7 +1172,7 @@ function App() {
                     type="text"
                     value={openaiCompatibleModel}
                     onChange={(e) => setOpenaiCompatibleModel(e.target.value)}
-                    placeholder="例: kokoro"
+                    placeholder="例: your-model-id"
                   />
                 </div>
                 <NumberSliderField

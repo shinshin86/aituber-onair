@@ -134,7 +134,7 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 #### OpenAI-Compatible TTS
 ```bash
 # Kokoro FastAPI default endpoint: http://localhost:8880/v1/audio/speech
-# API key is optional. Default model in the example is "kokoro".
+# API key is optional. Set the model explicitly to one accepted by your endpoint.
 ```
 
 ## 🚨 Troubleshooting

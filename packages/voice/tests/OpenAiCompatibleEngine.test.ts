@@ -20,11 +20,11 @@ describe('OpenAiCompatibleEngine', () => {
 
     try {
       engine.setApiEndpoint('http://localhost:8880/v1/audio/speech');
-      engine.setModel('kokoro');
+      engine.setModel('example-model');
       engine.setSpeed(1.25);
 
       await engine.fetchAudio(
-        { message: 'Hello from Kokoro', style: 'happy' } as any,
+        { message: 'Hello from compatible endpoint', style: 'happy' } as any,
         'af_bella',
       );
 
@@ -35,14 +35,22 @@ describe('OpenAiCompatibleEngine', () => {
         'Content-Type': 'application/json',
       });
       expect(JSON.parse(init.body)).toEqual({
-        model: 'kokoro',
+        model: 'example-model',
         voice: 'af_bella',
-        input: 'Hello from Kokoro',
+        input: 'Hello from compatible endpoint',
         speed: 1.25,
       });
     } finally {
       globalThis.fetch = originalFetch;
     }
+  });
+
+  it('should require a model before fetching audio', async () => {
+    const engine = new OpenAiCompatibleEngine();
+
+    await expect(
+      engine.fetchAudio({ message: 'Hello', style: 'neutral' } as any, ''),
+    ).rejects.toThrow('OpenAI-compatible TTS model is required');
   });
 
   it('should omit voice when speaker is not provided', async () => {
@@ -56,6 +64,8 @@ describe('OpenAiCompatibleEngine', () => {
     globalThis.fetch = fetchMock as any;
 
     try {
+      engine.setModel('example-model');
+
       await engine.fetchAudio(
         { message: 'Hello without voice', style: 'neutral' } as any,
         '',
@@ -63,7 +73,7 @@ describe('OpenAiCompatibleEngine', () => {
 
       const [, init] = fetchMock.mock.calls[0];
       expect(JSON.parse(init.body)).toEqual({
-        model: 'kokoro',
+        model: 'example-model',
         input: 'Hello without voice',
         speed: 1,
       });
@@ -83,6 +93,8 @@ describe('OpenAiCompatibleEngine', () => {
     globalThis.fetch = fetchMock as any;
 
     try {
+      engine.setModel('example-model');
+
       await engine.fetchAudio(
         { message: 'Secured request', style: 'neutral' } as any,
         'af_bella',

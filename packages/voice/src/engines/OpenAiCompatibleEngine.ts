@@ -8,7 +8,7 @@ import { VoiceEngine } from './VoiceEngine';
 export class OpenAiCompatibleEngine implements VoiceEngine {
   private apiUrl: string = OPENAI_COMPATIBLE_TTS_API_URL;
   private speed: number = 1.0;
-  private model: string = 'kokoro';
+  private model: string = '';
 
   /**
    * Set custom OpenAI-compatible speech endpoint
@@ -30,8 +30,7 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
    * Set model name used by the compatible endpoint
    */
   setModel(model: string): void {
-    const trimmed = model.trim();
-    this.model = trimmed.length > 0 ? trimmed : 'kokoro';
+    this.model = model.trim();
   }
 
   async fetchAudio(
@@ -42,6 +41,10 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
     const text = input.message.trim();
     if (!text) {
       throw new Error('Input text is empty');
+    }
+
+    if (!this.model) {
+      throw new Error('OpenAI-compatible TTS model is required');
     }
 
     const headers: Record<string, string> = {

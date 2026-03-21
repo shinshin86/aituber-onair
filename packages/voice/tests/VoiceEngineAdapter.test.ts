@@ -238,7 +238,7 @@ describe('VoiceEngineAdapter', () => {
         engineType: 'openaiCompatible',
         speaker: 'af_bella',
         openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
-        openAiCompatibleModel: 'kokoro',
+        openAiCompatibleModel: 'example-model',
         openAiCompatibleSpeed: 1.3,
         onPlay: vi.fn(),
       };
@@ -252,7 +252,7 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
         'http://localhost:8880/v1/audio/speech',
       );
-      expect(mockEngine.setModel).toHaveBeenCalledWith('kokoro');
+      expect(mockEngine.setModel).toHaveBeenCalledWith('example-model');
       expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.3);
       expect(mockEngine.fetchAudio).toHaveBeenCalled();
     });
@@ -261,7 +261,7 @@ describe('VoiceEngineAdapter', () => {
       const options: VoiceServiceOptions = {
         engineType: 'openaiCompatible',
         openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
-        openAiCompatibleModel: 'kokoro',
+        openAiCompatibleModel: 'example-model',
         onPlay: vi.fn(),
       };
 
@@ -849,7 +849,7 @@ describe('VoiceEngineAdapter', () => {
       const adapter = new VoiceEngineAdapter(options);
       adapter.updateOptions({
         openAiCompatibleApiUrl: 'http://localhost:8881/v1/audio/speech',
-        openAiCompatibleModel: 'kokoro-v1',
+        openAiCompatibleModel: 'example-model-v1',
         openAiCompatibleSpeed: 1.4,
       });
 
@@ -858,7 +858,7 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
         'http://localhost:8881/v1/audio/speech',
       );
-      expect(mockEngine.setModel).toHaveBeenCalledWith('kokoro-v1');
+      expect(mockEngine.setModel).toHaveBeenCalledWith('example-model-v1');
       expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.4);
     });
 

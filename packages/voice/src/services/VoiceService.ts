@@ -122,7 +122,7 @@ export interface OpenAiCompatibleVoiceServiceOptions
   speaker?: string;
   /** OpenAI-compatible speech endpoint URL */
   openAiCompatibleApiUrl?: string;
-  /** OpenAI-compatible model name (for example: kokoro) */
+  /** OpenAI-compatible model name expected by the endpoint */
   openAiCompatibleModel?: string;
   /** OpenAI-compatible speaking speed (0.25-4.0, default: 1.0) */
   openAiCompatibleSpeed?: number;
