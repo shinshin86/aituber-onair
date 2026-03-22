@@ -1218,6 +1218,7 @@ Possible use cases for `chatLogUpdated` include:
 - **AivisSpeech**: Speech synthesis using AI technology.  
 - **Aivis Cloud**: High-quality Japanese text-to-speech service with SSML support, emotional intensity control, and multiple output formats (WAV, FLAC, MP3, AAC, Opus).
 - **OpenAI TTS**: Text-to-speech API from OpenAI.
+- **OpenAI-Compatible TTS**: Self-hosted or third-party `/v1/audio/speech` compatible endpoints.
 - **MiniMax**: Multi-language TTS with 24 language support and HD quality (requires both API key and GroupId - see usage example below).
 - **None**: No voice mode (no audio output).
 
@@ -1277,7 +1278,7 @@ aituber.updateSpeechChunking({
 
 ### Custom API Endpoints
 
-For locally hosted voice engines (VOICEVOX, VoicePeak, AivisSpeech), you can specify custom API endpoint URLs:
+For locally hosted voice engines (VOICEVOX, VoicePeak, AivisSpeech, OpenAI-Compatible TTS), you can specify custom API endpoint URLs:
 
 ```typescript
 // Example of setting custom API endpoints
@@ -1300,6 +1301,14 @@ aituber.updateVoiceService({
   engineType: 'aivisSpeech',
   speaker: '3',
   aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
+});
+
+// Example for OpenAI-compatible TTS
+aituber.updateVoiceService({
+  engineType: 'openaiCompatible',
+  openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
+  openAiCompatibleModel: 'your-model-id',
+  openAiCompatibleSpeed: 1.1
 });
 
 // Example for Aivis Cloud (high-quality Japanese TTS with SSML support)

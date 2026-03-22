@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.23.7
+
+### Patch Changes
+
+- Re-exported additional voice package items from the core entry point:
+  - `AivisCloudEngine`
+  - `OpenAiCompatibleEngine`
+  - `AIVIS_CLOUD_API_URL`
+  - `OPENAI_COMPATIBLE_TTS_API_URL`
+- Updated core README docs (EN/JA) to mention OpenAI-compatible TTS support.
+- Added core export test coverage for the new voice re-exports.
+- Updated dependencies []:
+  - @aituber-onair/voice@0.9.0
+
 ## 0.23.6
 
 ### Patch Changes
