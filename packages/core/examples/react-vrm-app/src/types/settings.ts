@@ -8,6 +8,7 @@ export type ChatProviderOption =
   | 'kimi';
 export type TTSEngineOption =
   | 'openai'
+  | 'openaiCompatible'
   | 'voicevox'
   | 'voicepeak'
   | 'aivisSpeech'
@@ -40,6 +41,10 @@ export interface LLMSettings {
 export interface TTSSettings {
   engine: TTSEngineOption;
   speaker: string;
+  openAiCompatibleApiKey?: string;
+  openAiCompatibleApiUrl?: string;
+  openAiCompatibleModel?: string;
+  openAiCompatibleSpeed?: string;
   voicevoxApiUrl?: string;
   voicepeakApiUrl?: string;
   aivisSpeechApiUrl?: string;

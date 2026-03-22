@@ -4,6 +4,7 @@ import { VOICEVOX_API_ENDPOINT } from './speakers/voicevox';
 
 export type VoiceEngineType =
   | 'openai'
+  | 'openaiCompatible'
   | 'voicevox'
   | 'aivisSpeech'
   | 'aivisCloud'
@@ -29,6 +30,15 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       placeholder: 'sk-...',
       defaultParams: {
         model: 'tts-1',
+      },
+    },
+    openaiCompatible: {
+      name: 'OpenAI-Compatible TTS',
+      apiUrl: 'http://localhost:8880/v1/audio/speech',
+      needsApiKey: false,
+      placeholder: 'Optional API key',
+      defaultParams: {
+        model: 'local-model',
       },
     },
     voicevox: {

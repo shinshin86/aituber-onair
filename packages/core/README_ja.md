@@ -1219,6 +1219,7 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 - **AivisSpeech**: AIを活用した音声合成
 - **Aivis Cloud**: SSMLサポート、感情強度制御、複数出力形式（WAV、FLAC、MP3、AAC、Opus）対応の高品質日本語音声合成サービス
 - **OpenAI TTS**: OpenAIのText-to-Speech API
+- **OpenAI-Compatible TTS**: 自己ホストやサードパーティーの `/v1/audio/speech` 互換エンドポイント
 - **MiniMax**: 24言語対応の多言語TTS、HD品質対応（APIキーとGroupIdの両方が必要 - 使用例を参照）
 - **None**: 音声なしモード（音声出力を行わない）
 
@@ -1271,7 +1272,7 @@ aituber.updateSpeechChunking({
 
 ### カスタムAPIエンドポイント
 
-ローカルでホストされる音声エンジン（VOICEVOX、VoicePeak、AivisSpeech）については、カスタムAPIエンドポイントURLを指定することができます：
+ローカルでホストされる音声エンジン（VOICEVOX、VoicePeak、AivisSpeech、OpenAI-Compatible TTS）については、カスタムAPIエンドポイントURLを指定することができます：
 
 ```typescript
 // カスタムAPIエンドポイントの設定例
@@ -1294,6 +1295,14 @@ aituber.updateVoiceService({
   engineType: 'aivisSpeech',
   speaker: '3',
   aivisSpeechApiUrl: 'http://custom-aivis-server:10101'
+});
+
+// OpenAI互換TTSの例
+aituber.updateVoiceService({
+  engineType: 'openaiCompatible',
+  openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
+  openAiCompatibleModel: 'your-model-id',
+  openAiCompatibleSpeed: 1.1
 });
 
 // Aivis Cloudの例（SSMLサポート付き高品質日本語TTS）

@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  AITuberOnAirCore,
-  AITuberOnAirCoreEvent,
-} from '@aituber-onair/core';
+import { AITuberOnAirCore, AITuberOnAirCoreEvent } from '@aituber-onair/core';
 import type { VoiceServiceOptions } from '@aituber-onair/core';
 import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
@@ -20,6 +17,9 @@ function getTtsApiKey(
   if (settings.tts.engine === 'openai') {
     return getApiKeyForProvider('openai');
   }
+  if (settings.tts.engine === 'openaiCompatible') {
+    return settings.tts.openAiCompatibleApiKey || '';
+  }
   if (settings.tts.engine === 'aivisCloud') {
     return settings.tts.aivisCloudApiKey || '';
   }
@@ -34,12 +34,27 @@ function buildVoiceOptions(
   apiKey: string,
   onPlay: (audioBuffer: ArrayBuffer) => Promise<void>,
 ): VoiceServiceOptions {
-  const parsedAivisCloudStyleId = Number.parseInt(tts.aivisCloudStyleId || '', 10);
+  const parsedAivisCloudStyleId = Number.parseInt(
+    tts.aivisCloudStyleId || '',
+    10,
+  );
+  const parsedOpenAiCompatibleSpeed = Number.parseFloat(
+    tts.openAiCompatibleSpeed || '',
+  );
+  const trimmedSpeaker = tts.speaker.trim();
 
   return {
     engineType: tts.engine,
-    speaker: tts.speaker,
+    speaker:
+      tts.engine === 'openaiCompatible' && !trimmedSpeaker
+        ? undefined
+        : tts.speaker,
     apiKey,
+    openAiCompatibleApiUrl: tts.openAiCompatibleApiUrl,
+    openAiCompatibleModel: tts.openAiCompatibleModel,
+    openAiCompatibleSpeed: Number.isNaN(parsedOpenAiCompatibleSpeed)
+      ? undefined
+      : parsedOpenAiCompatibleSpeed,
     voicevoxApiUrl: tts.voicevoxApiUrl,
     voicepeakApiUrl: tts.voicepeakApiUrl,
     aivisSpeechApiUrl: tts.aivisSpeechApiUrl,
@@ -51,7 +66,7 @@ function buildVoiceOptions(
       ? undefined
       : parsedAivisCloudStyleId,
     onPlay,
-  };
+  } as VoiceServiceOptions;
 }
 
 export function useAituberCore({
@@ -88,7 +103,9 @@ export function useAituberCore({
     if (!isOpenAICompatibleProvider && !llmApiKey) {
       coreRef.current?.offAll();
       coreRef.current = null;
-      console.error(`API key is not set for provider: ${settings.llm.provider}`);
+      console.error(
+        `API key is not set for provider: ${settings.llm.provider}`,
+      );
       return;
     }
 
@@ -135,9 +152,9 @@ export function useAituberCore({
       const text =
         typeof data === 'string'
           ? data
-          : (data as { message?: string; rawText?: string })?.message ??
+          : ((data as { message?: string; rawText?: string })?.message ??
             (data as { rawText?: string })?.rawText ??
-            String(data);
+            String(data));
       setPartialResponse(text);
     });
 
@@ -158,7 +175,12 @@ export function useAituberCore({
       }
       setMessages((prev) => [
         ...prev,
-        { id: createMessageId(), role: 'assistant', content, timestamp: Date.now() },
+        {
+          id: createMessageId(),
+          role: 'assistant',
+          content,
+          timestamp: Date.now(),
+        },
       ]);
       setPartialResponse('');
     });
@@ -199,6 +221,9 @@ export function useAituberCore({
   }, [
     settings.tts.engine,
     settings.tts.speaker,
+    settings.tts.openAiCompatibleApiUrl,
+    settings.tts.openAiCompatibleModel,
+    settings.tts.openAiCompatibleSpeed,
     settings.tts.voicevoxApiUrl,
     settings.tts.voicepeakApiUrl,
     settings.tts.aivisSpeechApiUrl,
@@ -209,22 +234,30 @@ export function useAituberCore({
     ttsApiKey,
   ]);
 
-  const processChat = useCallback(async (text: string) => {
-    if (!coreRef.current || !text.trim()) return;
+  const processChat = useCallback(
+    async (text: string) => {
+      if (!coreRef.current || !text.trim()) return;
 
-    // Append the user message to the chat log
-    setMessages((prev) => [
-      ...prev,
-      { id: createMessageId(), role: 'user', content: text.trim(), timestamp: Date.now() },
-    ]);
+      // Append the user message to the chat log
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: createMessageId(),
+          role: 'user',
+          content: text.trim(),
+          timestamp: Date.now(),
+        },
+      ]);
 
-    try {
-      await coreRef.current.processChat(text.trim());
-    } catch (err) {
-      console.error('processChat error:', err);
-      setIsProcessing(false);
-    }
-  }, [createMessageId]);
+      try {
+        await coreRef.current.processChat(text.trim());
+      } catch (err) {
+        console.error('processChat error:', err);
+        setIsProcessing(false);
+      }
+    },
+    [createMessageId],
+  );
 
   return {
     messages,

@@ -15,6 +15,8 @@ const DEFAULT_AIVIS_CLOUD_MODEL_UUID = '22e8ed77-94fe-4ef2-871f-a86f94e9a579';
 const DEFAULT_OPENAI_COMPATIBLE_MODEL = 'local-model';
 const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
   'http://localhost:11434/v1/chat/completions';
+const DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT =
+  'http://localhost:8880/v1/audio/speech';
 const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
 const DEFAULT_OPENROUTER_MAX_WORKING = 10;
 const EMPTY_MODEL_IDS: string[] = [];
@@ -70,9 +72,7 @@ function mergeModelIds(base: string[], extras: string[]): string[] {
 }
 
 function normalizeOpenRouterDynamicFreeModels(
-  value:
-    | AppSettings['llm']['openRouterDynamicFreeModels']
-    | undefined,
+  value: AppSettings['llm']['openRouterDynamicFreeModels'] | undefined,
 ): NonNullable<AppSettings['llm']['openRouterDynamicFreeModels']> {
   return {
     models: normalizeModelIds(value?.models || []),
@@ -111,6 +111,10 @@ function getDefaultSettings(): AppSettings {
     tts: {
       engine: 'openai' as TTSEngineOption,
       speaker: 'alloy',
+      openAiCompatibleApiKey: '',
+      openAiCompatibleApiUrl: DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT,
+      openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_MODEL,
+      openAiCompatibleSpeed: '',
       aivisCloudApiKey: '',
       aivisCloudModelUuid: DEFAULT_AIVIS_CLOUD_MODEL_UUID,
       aivisCloudSpeakerUuid: '',
@@ -157,8 +161,7 @@ export function useSettings() {
     setIsRefreshingOpenRouterFreeModels,
   ] = useState(false);
   const openRouterDynamicModels = useMemo(
-    () =>
-      settings.llm.openRouterDynamicFreeModels?.models || EMPTY_MODEL_IDS,
+    () => settings.llm.openRouterDynamicFreeModels?.models || EMPTY_MODEL_IDS,
     [settings.llm.openRouterDynamicFreeModels?.models],
   );
 
@@ -307,6 +310,7 @@ export function useSettings() {
   const updateTTSEngine = useCallback((engine: TTSEngineOption) => {
     const defaultSpeaker: Record<string, string> = {
       openai: 'alloy',
+      openaiCompatible: '',
       voicepeak: 'f1',
       voicevox: '',
       aivisSpeech: '',
@@ -320,6 +324,19 @@ export function useSettings() {
         ...prev.tts,
         engine,
         speaker: defaultSpeaker[engine] ?? '',
+        openAiCompatibleApiUrl:
+          engine === 'openaiCompatible'
+            ? prev.tts.openAiCompatibleApiUrl ||
+              DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT
+            : prev.tts.openAiCompatibleApiUrl,
+        openAiCompatibleModel:
+          engine === 'openaiCompatible'
+            ? prev.tts.openAiCompatibleModel || DEFAULT_OPENAI_COMPATIBLE_MODEL
+            : prev.tts.openAiCompatibleModel,
+        openAiCompatibleSpeed:
+          engine === 'openaiCompatible'
+            ? prev.tts.openAiCompatibleSpeed || ''
+            : prev.tts.openAiCompatibleSpeed,
         aivisCloudModelUuid:
           engine === 'aivisCloud'
             ? prev.tts.aivisCloudModelUuid || DEFAULT_AIVIS_CLOUD_MODEL_UUID
@@ -340,6 +357,34 @@ export function useSettings() {
     setSettings((prev) => ({
       ...prev,
       tts: { ...prev.tts, speaker },
+    }));
+  }, []);
+
+  const updateOpenAiCompatibleApiKey = useCallback((key: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, openAiCompatibleApiKey: key },
+    }));
+  }, []);
+
+  const updateOpenAiCompatibleApiUrl = useCallback((url: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, openAiCompatibleApiUrl: url },
+    }));
+  }, []);
+
+  const updateOpenAiCompatibleModel = useCallback((model: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, openAiCompatibleModel: model },
+    }));
+  }, []);
+
+  const updateOpenAiCompatibleSpeed = useCallback((speed: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, openAiCompatibleSpeed: speed },
     }));
   }, []);
 
@@ -426,6 +471,10 @@ export function useSettings() {
     updateOpenRouterMaxCandidates,
     updateTTSEngine,
     updateTTSSpeaker,
+    updateOpenAiCompatibleApiKey,
+    updateOpenAiCompatibleApiUrl,
+    updateOpenAiCompatibleModel,
+    updateOpenAiCompatibleSpeed,
     updateVoicevoxApiUrl,
     updateVoicepeakApiUrl,
     updateAivisSpeechApiUrl,

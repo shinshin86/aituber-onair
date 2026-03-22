@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type {
-  ChatProviderOption,
-  TTSEngineOption,
-} from '../types/settings';
+import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
 
 type SettingsHook = ReturnType<typeof useSettings>;
@@ -25,6 +22,7 @@ const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
 
 const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'openai', label: 'OpenAI TTS' },
+  { value: 'openaiCompatible', label: 'OpenAI-Compatible TTS' },
   { value: 'voicevox', label: 'VOICEVOX' },
   { value: 'voicepeak', label: 'VOICEPEAK' },
   { value: 'aivisSpeech', label: 'AivisSpeech' },
@@ -33,9 +31,7 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'none', label: 'None' },
 ];
 
-const OPENAI_SPEAKERS = [
-  'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer',
-];
+const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 
 const VOICEPEAK_SPEAKERS = [
   { id: 'f1', name: '日本人女性 1' },
@@ -90,6 +86,10 @@ export function SettingsPanel({
   updateOpenRouterMaxCandidates,
   updateTTSEngine,
   updateTTSSpeaker,
+  updateOpenAiCompatibleApiKey,
+  updateOpenAiCompatibleApiUrl,
+  updateOpenAiCompatibleModel,
+  updateOpenAiCompatibleSpeed,
   updateVoicevoxApiUrl,
   updateVoicepeakApiUrl,
   updateAivisSpeechApiUrl,
@@ -119,7 +119,9 @@ export function SettingsPanel({
   const [fetchError, setFetchError] = useState('');
   const [isFetchingMinimaxVoices, setIsFetchingMinimaxVoices] = useState(false);
   const speakerRef = useRef(settings.tts.speaker);
-  const [expandedSections, setExpandedSections] = useState<Record<SectionKey, boolean>>({
+  const [expandedSections, setExpandedSections] = useState<
+    Record<SectionKey, boolean>
+  >({
     llm: true,
     tts: true,
     visual: true,
@@ -130,10 +132,11 @@ export function SettingsPanel({
   }, [settings.tts.speaker]);
 
   const selectedAivisCloudPresetId = useMemo(() => {
-    const matched = AIVIS_CLOUD_PRESETS.find((preset) =>
-      preset.modelUuid === (settings.tts.aivisCloudModelUuid || '')
-      && preset.speakerUuid === (settings.tts.aivisCloudSpeakerUuid || '')
-      && preset.styleId === (settings.tts.aivisCloudStyleId || ''),
+    const matched = AIVIS_CLOUD_PRESETS.find(
+      (preset) =>
+        preset.modelUuid === (settings.tts.aivisCloudModelUuid || '') &&
+        preset.speakerUuid === (settings.tts.aivisCloudSpeakerUuid || '') &&
+        preset.styleId === (settings.tts.aivisCloudStyleId || ''),
     );
     return matched?.id || AIVIS_CLOUD_PRESETS[0].id;
   }, [
@@ -144,7 +147,10 @@ export function SettingsPanel({
 
   // Fetch speaker list for VOICEVOX / AivisSpeech
   useEffect(() => {
-    if (settings.tts.engine !== 'voicevox' && settings.tts.engine !== 'aivisSpeech') {
+    if (
+      settings.tts.engine !== 'voicevox' &&
+      settings.tts.engine !== 'aivisSpeech'
+    ) {
       return;
     }
 
@@ -217,14 +223,17 @@ export function SettingsPanel({
     const fetchMinimaxVoices = async () => {
       setIsFetchingMinimaxVoices(true);
       try {
-        const response = await fetch('https://api.minimax.io/v1/query/tts_speakers', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
+        const response = await fetch(
+          'https://api.minimax.io/v1/query/tts_speakers',
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            signal: controller.signal,
           },
-          signal: controller.signal,
-        });
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -244,7 +253,10 @@ export function SettingsPanel({
         setMinimaxVoices(voices);
         setFetchError('');
 
-        if (voices.length > 0 && !voices.some((voice) => voice.voice_id === speakerRef.current)) {
+        if (
+          voices.length > 0 &&
+          !voices.some((voice) => voice.voice_id === speakerRef.current)
+        ) {
           updateTTSSpeaker(voices[0].voice_id);
         }
       } catch (error) {
@@ -294,7 +306,9 @@ export function SettingsPanel({
           aria-expanded={expandedSections.llm}
         >
           <h3>LLM</h3>
-          <span className={`settings-section-chevron${expandedSections.llm ? ' is-open' : ''}`}>
+          <span
+            className={`settings-section-chevron${expandedSections.llm ? ' is-open' : ''}`}
+          >
             ⌄
           </span>
         </button>
@@ -306,11 +320,15 @@ export function SettingsPanel({
               <select
                 id="llm-provider"
                 value={settings.llm.provider}
-                onChange={(e) => updateLLMProvider(e.target.value as ChatProviderOption)}
+                onChange={(e) =>
+                  updateLLMProvider(e.target.value as ChatProviderOption)
+                }
                 disabled={disabled}
               >
                 {PROVIDERS.map((p) => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -337,7 +355,9 @@ export function SettingsPanel({
                   disabled={disabled}
                 >
                   {availableModels.map((m) => (
-                    <option key={m} value={m}>{m}</option>
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -353,7 +373,8 @@ export function SettingsPanel({
                   type="password"
                   value={getApiKeyForProvider(settings.llm.provider)}
                   onChange={(e) =>
-                    updateLLMApiKey(settings.llm.provider, e.target.value)}
+                    updateLLMApiKey(settings.llm.provider, e.target.value)
+                  }
                   placeholder="XXX-..."
                   disabled={disabled}
                 />
@@ -388,9 +409,9 @@ export function SettingsPanel({
                       void refreshOpenRouterDynamicFreeModels();
                     }}
                     disabled={
-                      disabled
-                      || isRefreshingOpenRouterFreeModels
-                      || !openRouterApiKey
+                      disabled ||
+                      isRefreshingOpenRouterFreeModels ||
+                      !openRouterApiKey
                     }
                   >
                     {isRefreshingOpenRouterFreeModels
@@ -412,7 +433,8 @@ export function SettingsPanel({
                   </p>
                   {openRouterFetchedAt > 0 && (
                     <p className="settings-field-hint">
-                      Last fetched: {new Date(openRouterFetchedAt).toLocaleString()}
+                      Last fetched:{' '}
+                      {new Date(openRouterFetchedAt).toLocaleString()}
                     </p>
                   )}
                 </div>
@@ -446,7 +468,8 @@ export function SettingsPanel({
                   type="password"
                   value={getApiKeyForProvider(settings.llm.provider)}
                   onChange={(e) =>
-                    updateLLMApiKey(settings.llm.provider, e.target.value)}
+                    updateLLMApiKey(settings.llm.provider, e.target.value)
+                  }
                   placeholder={
                     settings.llm.provider === 'openai-compatible'
                       ? '必要な場合のみ入力'
@@ -469,7 +492,9 @@ export function SettingsPanel({
           aria-expanded={expandedSections.tts}
         >
           <h3>TTS</h3>
-          <span className={`settings-section-chevron${expandedSections.tts ? ' is-open' : ''}`}>
+          <span
+            className={`settings-section-chevron${expandedSections.tts ? ' is-open' : ''}`}
+          >
             ⌄
           </span>
         </button>
@@ -481,11 +506,15 @@ export function SettingsPanel({
               <select
                 id="tts-engine"
                 value={settings.tts.engine}
-                onChange={(e) => updateTTSEngine(e.target.value as TTSEngineOption)}
+                onChange={(e) =>
+                  updateTTSEngine(e.target.value as TTSEngineOption)
+                }
                 disabled={disabled}
               >
                 {TTS_ENGINES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -500,10 +529,91 @@ export function SettingsPanel({
                   disabled={disabled}
                 >
                   {OPENAI_SPEAKERS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
                   ))}
                 </select>
               </div>
+            )}
+
+            {settings.tts.engine === 'openaiCompatible' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-openai-compatible-apikey">
+                    API Key (optional)
+                  </label>
+                  <input
+                    id="tts-openai-compatible-apikey"
+                    type="password"
+                    value={settings.tts.openAiCompatibleApiKey || ''}
+                    onChange={(e) =>
+                      updateOpenAiCompatibleApiKey(e.target.value)
+                    }
+                    placeholder="未入力なら Authorization ヘッダーなし"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-openai-compatible-url">
+                    Endpoint URL
+                  </label>
+                  <input
+                    id="tts-openai-compatible-url"
+                    type="text"
+                    value={settings.tts.openAiCompatibleApiUrl || ''}
+                    onChange={(e) =>
+                      updateOpenAiCompatibleApiUrl(e.target.value)
+                    }
+                    placeholder="http://localhost:8880/v1/audio/speech"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-openai-compatible-model">Model</label>
+                  <input
+                    id="tts-openai-compatible-model"
+                    type="text"
+                    value={settings.tts.openAiCompatibleModel || ''}
+                    onChange={(e) =>
+                      updateOpenAiCompatibleModel(e.target.value)
+                    }
+                    placeholder="local-model"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-openai-compatible-speaker">
+                    Voice (optional)
+                  </label>
+                  <input
+                    id="tts-openai-compatible-speaker"
+                    type="text"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    placeholder="未入力なら voice フィールドを送信しません"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-openai-compatible-speed">
+                    Speed (0.25 - 4.0)
+                  </label>
+                  <input
+                    id="tts-openai-compatible-speed"
+                    type="number"
+                    min="0.25"
+                    max="4"
+                    step="0.05"
+                    value={settings.tts.openAiCompatibleSpeed || ''}
+                    onChange={(e) =>
+                      updateOpenAiCompatibleSpeed(e.target.value)
+                    }
+                    placeholder="1.0"
+                    disabled={disabled}
+                  />
+                </div>
+              </>
             )}
 
             {settings.tts.engine === 'voicevox' && (
@@ -516,16 +626,20 @@ export function SettingsPanel({
                     onChange={(e) => updateTTSSpeaker(e.target.value)}
                     disabled={disabled}
                   >
-                    {voicevoxSpeakers.length > 0
-                      ? voicevoxSpeakers.flatMap((sp) =>
-                          (sp.styles || []).map((style) => (
-                            <option key={`${sp.speaker_uuid}-${style.id}`} value={String(style.id)}>
-                              {sp.name} - {style.name}
-                            </option>
-                          )),
-                        )
-                      : <option value="">サーバーから取得中...</option>
-                    }
+                    {voicevoxSpeakers.length > 0 ? (
+                      voicevoxSpeakers.flatMap((sp) =>
+                        (sp.styles || []).map((style) => (
+                          <option
+                            key={`${sp.speaker_uuid}-${style.id}`}
+                            value={String(style.id)}
+                          >
+                            {sp.name} - {style.name}
+                          </option>
+                        )),
+                      )
+                    ) : (
+                      <option value="">サーバーから取得中...</option>
+                    )}
                   </select>
                 </div>
                 <div className="settings-field">
@@ -553,7 +667,9 @@ export function SettingsPanel({
                     disabled={disabled}
                   >
                     {VOICEPEAK_SPEAKERS.map((sp) => (
-                      <option key={sp.id} value={sp.id}>{sp.name}</option>
+                      <option key={sp.id} value={sp.id}>
+                        {sp.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -581,16 +697,20 @@ export function SettingsPanel({
                     onChange={(e) => updateTTSSpeaker(e.target.value)}
                     disabled={disabled}
                   >
-                    {aivisSpeakers.length > 0
-                      ? aivisSpeakers.flatMap((sp) =>
-                          (sp.styles || []).map((style) => (
-                            <option key={`${sp.speaker_uuid}-${style.id}`} value={String(style.id)}>
-                              {sp.name} - {style.name}
-                            </option>
-                          )),
-                        )
-                      : <option value="">サーバーから取得中...</option>
-                    }
+                    {aivisSpeakers.length > 0 ? (
+                      aivisSpeakers.flatMap((sp) =>
+                        (sp.styles || []).map((style) => (
+                          <option
+                            key={`${sp.speaker_uuid}-${style.id}`}
+                            value={String(style.id)}
+                          >
+                            {sp.name} - {style.name}
+                          </option>
+                        )),
+                      )
+                    ) : (
+                      <option value="">サーバーから取得中...</option>
+                    )}
                   </select>
                 </div>
                 <div className="settings-field">
@@ -632,22 +752,32 @@ export function SettingsPanel({
                   />
                 </div>
                 <div className="settings-field">
-                  <label htmlFor="tts-minimax-speaker">Speaker (Endpoint: global 固定)</label>
+                  <label htmlFor="tts-minimax-speaker">
+                    Speaker (Endpoint: global 固定)
+                  </label>
                   <select
                     id="tts-minimax-speaker"
                     value={settings.tts.speaker}
                     onChange={(e) => updateTTSSpeaker(e.target.value)}
-                    disabled={disabled || !settings.tts.minimaxApiKey || minimaxVoices.length === 0}
+                    disabled={
+                      disabled ||
+                      !settings.tts.minimaxApiKey ||
+                      minimaxVoices.length === 0
+                    }
                   >
                     {!settings.tts.minimaxApiKey && (
-                      <option value="">APIキーを入力すると一覧を取得します</option>
+                      <option value="">
+                        APIキーを入力すると一覧を取得します
+                      </option>
                     )}
                     {settings.tts.minimaxApiKey && isFetchingMinimaxVoices && (
                       <option value="">スピーカー一覧を取得中...</option>
                     )}
-                    {settings.tts.minimaxApiKey && !isFetchingMinimaxVoices && minimaxVoices.length === 0 && (
-                      <option value="">一覧を取得できませんでした</option>
-                    )}
+                    {settings.tts.minimaxApiKey &&
+                      !isFetchingMinimaxVoices &&
+                      minimaxVoices.length === 0 && (
+                        <option value="">一覧を取得できませんでした</option>
+                      )}
                     {minimaxVoices.map((voice) => (
                       <option key={voice.voice_id} value={voice.voice_id}>
                         {voice.voice_name}
@@ -676,7 +806,9 @@ export function SettingsPanel({
                   <select
                     id="tts-aiviscloud-preset"
                     value={selectedAivisCloudPresetId}
-                    onChange={(e) => handleAivisCloudPresetChange(e.target.value)}
+                    onChange={(e) =>
+                      handleAivisCloudPresetChange(e.target.value)
+                    }
                     disabled={disabled}
                   >
                     {AIVIS_CLOUD_PRESETS.map((preset) => (
@@ -689,15 +821,20 @@ export function SettingsPanel({
               </>
             )}
 
-            {fetchError && (
-              settings.tts.engine === 'voicevox'
-              || settings.tts.engine === 'aivisSpeech'
-              || settings.tts.engine === 'minimax'
-            ) && (
-              <div style={{ color: '#e94560', fontSize: '0.75rem', marginTop: 4 }}>
-                {fetchError}
-              </div>
-            )}
+            {fetchError &&
+              (settings.tts.engine === 'voicevox' ||
+                settings.tts.engine === 'aivisSpeech' ||
+                settings.tts.engine === 'minimax') && (
+                <div
+                  style={{
+                    color: '#e94560',
+                    fontSize: '0.75rem',
+                    marginTop: 4,
+                  }}
+                >
+                  {fetchError}
+                </div>
+              )}
           </>
         )}
       </div>
@@ -710,7 +847,9 @@ export function SettingsPanel({
           aria-expanded={expandedSections.visual}
         >
           <h3>Visual</h3>
-          <span className={`settings-section-chevron${expandedSections.visual ? ' is-open' : ''}`}>
+          <span
+            className={`settings-section-chevron${expandedSections.visual ? ' is-open' : ''}`}
+          >
             ⌄
           </span>
         </button>
