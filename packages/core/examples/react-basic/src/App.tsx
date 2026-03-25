@@ -170,6 +170,22 @@ const OPENAI_COMPATIBLE_ENDPOINT_REQUIRED_MESSAGE =
 const REACT_BASIC_STORAGE_KEY = 'AITuberOnAirCore_example_react-basic';
 const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
 const DEFAULT_OPENROUTER_MAX_WORKING = 10;
+const RESPONSE_LENGTH_LABELS: Record<ChatResponseLength, string> = {
+  [CHAT_RESPONSE_LENGTH.VERY_SHORT]: 'Very Short',
+  [CHAT_RESPONSE_LENGTH.SHORT]: 'Short',
+  [CHAT_RESPONSE_LENGTH.MEDIUM]: 'Medium',
+  [CHAT_RESPONSE_LENGTH.LONG]: 'Long',
+  [CHAT_RESPONSE_LENGTH.VERY_LONG]: 'Very Long',
+  [CHAT_RESPONSE_LENGTH.DEEP]: 'Deep',
+};
+const RESPONSE_LENGTH_BASE_TOKENS: Record<ChatResponseLength, number> = {
+  [CHAT_RESPONSE_LENGTH.VERY_SHORT]: 40,
+  [CHAT_RESPONSE_LENGTH.SHORT]: 100,
+  [CHAT_RESPONSE_LENGTH.MEDIUM]: 200,
+  [CHAT_RESPONSE_LENGTH.LONG]: 300,
+  [CHAT_RESPONSE_LENGTH.VERY_LONG]: 1000,
+  [CHAT_RESPONSE_LENGTH.DEEP]: 5000,
+};
 
 interface OpenRouterDynamicFreeModelsState {
   models: string[];
@@ -1718,6 +1734,16 @@ const App: React.FC = () => {
   const allowsXHighReasoningEffort = Boolean(
     chatProvider === 'openai' && model && allowsReasoningXHigh(model),
   );
+  const getResponseLengthOptionLabel = (length: ChatResponseLength): string => {
+    const label = RESPONSE_LENGTH_LABELS[length];
+    const baseTokens = RESPONSE_LENGTH_BASE_TOKENS[length];
+
+    if (!isOpenAIGPT5ModelSelected) {
+      return `${label} (${baseTokens} tokens)`;
+    }
+
+    return `${label} (GPT-5 auto, starts at ${baseTokens})`;
+  };
 
   return (
     <>
@@ -2175,24 +2201,40 @@ const App: React.FC = () => {
                     }
                   >
                     <option value={CHAT_RESPONSE_LENGTH.VERY_SHORT}>
-                      Very Short (40 tokens)
+                      {getResponseLengthOptionLabel(
+                        CHAT_RESPONSE_LENGTH.VERY_SHORT,
+                      )}
                     </option>
                     <option value={CHAT_RESPONSE_LENGTH.SHORT}>
-                      Short (100 tokens)
+                      {getResponseLengthOptionLabel(CHAT_RESPONSE_LENGTH.SHORT)}
                     </option>
                     <option value={CHAT_RESPONSE_LENGTH.MEDIUM}>
-                      Medium (200 tokens)
+                      {getResponseLengthOptionLabel(CHAT_RESPONSE_LENGTH.MEDIUM)}
                     </option>
                     <option value={CHAT_RESPONSE_LENGTH.LONG}>
-                      Long (300 tokens)
+                      {getResponseLengthOptionLabel(CHAT_RESPONSE_LENGTH.LONG)}
                     </option>
                     <option value={CHAT_RESPONSE_LENGTH.VERY_LONG}>
-                      Very Long (1000 tokens)
+                      {getResponseLengthOptionLabel(
+                        CHAT_RESPONSE_LENGTH.VERY_LONG,
+                      )}
                     </option>
                     <option value={CHAT_RESPONSE_LENGTH.DEEP}>
-                      Deep (5000 tokens)
+                      {getResponseLengthOptionLabel(CHAT_RESPONSE_LENGTH.DEEP)}
                     </option>
                   </select>
+                  {isOpenAIGPT5ModelSelected && (
+                    <div
+                      style={{
+                        marginTop: '6px',
+                        color: '#666',
+                        fontSize: '12px',
+                      }}
+                    >
+                      GPT-5系では途中終了を減らすため、実際の出力上限は
+                      model と reasoning effort に応じて自動補正されます。
+                    </div>
+                  )}
 
                   {/* GPT-5 specific settings */}
                   {isOpenAIGPT5ModelSelected && (
