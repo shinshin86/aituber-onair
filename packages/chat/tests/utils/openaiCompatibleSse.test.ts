@@ -150,4 +150,31 @@ describe('openaiCompatibleSse', () => {
       { type: 'tool_use', id: 'call_2', name: 'search', input: { q: 'hello' } },
     ]);
   });
+
+  it('should preserve truncation metadata for one-shot responses', () => {
+    const result = parseOpenAICompatibleOneShot({
+      choices: [
+        {
+          finish_reason: 'length',
+          message: {
+            content: 'Hello',
+          },
+        },
+      ],
+      usage: {
+        completion_tokens_details: {
+          reasoning_tokens: 128,
+        },
+      },
+    }) as ToolChatCompletion;
+
+    expect(result.stop_reason).toBe('end');
+    expect(result.truncated).toBe(true);
+    expect(result.finish_reason).toBe('length');
+    expect(result.usage).toEqual({
+      completion_tokens_details: {
+        reasoning_tokens: 128,
+      },
+    });
+  });
 });

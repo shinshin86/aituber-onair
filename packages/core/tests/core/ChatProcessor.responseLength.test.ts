@@ -6,10 +6,7 @@ import {
 import { ChatService } from '@aituber-onair/chat';
 import { MemoryManager } from '../../src/core/MemoryManager';
 import { ToolResultBlock, ToolUseBlock } from '../../src/types/toolChat';
-import {
-  MAX_TOKENS_BY_LENGTH,
-  CHAT_RESPONSE_LENGTH,
-} from '@aituber-onair/chat';
+import { CHAT_RESPONSE_LENGTH } from '@aituber-onair/chat';
 
 // ToolCallback type
 type ToolCallback = (blocks: ToolUseBlock[]) => Promise<ToolResultBlock[]>;
@@ -108,7 +105,7 @@ describe('ChatProcessor - Response Length Control', () => {
   });
 
   describe('responseLength preset specification', () => {
-    it('should convert responseLength SHORT to correct token count', async () => {
+    it('should defer responseLength SHORT handling to the provider', async () => {
       // Arrange
       const options: ChatProcessorOptions = {
         systemPrompt: 'Test prompt',
@@ -131,11 +128,11 @@ describe('ChatProcessor - Response Length Control', () => {
         expect.any(Array),
         true,
         expect.any(Function),
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.SHORT], // Should be 100
+        undefined,
       );
     });
 
-    it('should convert responseLength VERY_SHORT to correct token count', async () => {
+    it('should defer responseLength VERY_SHORT handling to the provider', async () => {
       // Arrange
       const options: ChatProcessorOptions = {
         systemPrompt: 'Test prompt',
@@ -158,11 +155,11 @@ describe('ChatProcessor - Response Length Control', () => {
         expect.any(Array),
         true,
         expect.any(Function),
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.VERY_SHORT], // Should be 40
+        undefined,
       );
     });
 
-    it('should convert visionResponseLength MEDIUM to correct token count', async () => {
+    it('should still convert visionResponseLength MEDIUM in core', async () => {
       // Arrange
       const options: ChatProcessorOptions = {
         systemPrompt: 'Test prompt',
@@ -187,7 +184,7 @@ describe('ChatProcessor - Response Length Control', () => {
         expect.any(Array),
         true, // first call is always streaming
         expect.any(Function),
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.MEDIUM], // Should be 200
+        200,
       );
     });
   });
@@ -251,7 +248,7 @@ describe('ChatProcessor - Response Length Control', () => {
       );
     });
 
-    it('should fallback from visionResponseLength to regular responseLength', async () => {
+    it('should not convert regular responseLength for vision fallback in core', async () => {
       // Arrange
       const options: ChatProcessorOptions = {
         systemPrompt: 'Test prompt',
@@ -276,7 +273,7 @@ describe('ChatProcessor - Response Length Control', () => {
         expect.any(Array),
         true, // first call is always streaming
         expect.any(Function),
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.LONG], // Should fallback to regular responseLength
+        undefined,
       );
     });
   });
@@ -370,7 +367,7 @@ describe('ChatProcessor - Response Length Control', () => {
       );
     });
 
-    it('should update responseLength through updateOptions', async () => {
+    it('should keep updated responseLength provider-managed', async () => {
       // Arrange
       const initialOptions: ChatProcessorOptions = {
         systemPrompt: 'Test prompt',
@@ -396,7 +393,7 @@ describe('ChatProcessor - Response Length Control', () => {
         expect.any(Array),
         true,
         expect.any(Function),
-        MAX_TOKENS_BY_LENGTH[CHAT_RESPONSE_LENGTH.LONG], // Updated responseLength should be used
+        undefined,
       );
     });
   });

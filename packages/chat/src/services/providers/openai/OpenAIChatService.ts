@@ -6,9 +6,11 @@ import {
   MODEL_GPT_4O_MINI,
   OpenAIReasoningEffort,
   VISION_SUPPORTED_MODELS,
+  getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
 } from '../../../constants';
 import {
+  CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
   getMaxTokensForResponseLength,
 } from '../../../constants/chat';
@@ -27,6 +29,24 @@ import {
   parseOpenAICompatibleToolStream,
   processChatWithOptionalTools,
 } from '../../../utils';
+
+const GPT5_RESPONSE_LENGTH_MIN_TOKENS: Record<ChatResponseLength, number> = {
+  [CHAT_RESPONSE_LENGTH.VERY_SHORT]: 800,
+  [CHAT_RESPONSE_LENGTH.SHORT]: 1200,
+  [CHAT_RESPONSE_LENGTH.MEDIUM]: 2000,
+  [CHAT_RESPONSE_LENGTH.LONG]: 3000,
+  [CHAT_RESPONSE_LENGTH.VERY_LONG]: 8000,
+  [CHAT_RESPONSE_LENGTH.DEEP]: 25000,
+};
+
+const GPT5_REASONING_MIN_TOKENS: Record<OpenAIReasoningEffort, number> = {
+  none: 1200,
+  minimal: 1600,
+  low: 2500,
+  medium: 4000,
+  high: 8000,
+  xhigh: 12000,
+};
 
 /**
  * OpenAI implementation of ChatService
@@ -298,14 +318,7 @@ export class OpenAIChatService implements ChatService {
     // Add max token field based on endpoint/provider compatibility.
     // For openai-compatible providers, omit token limit by default to avoid
     // server-specific context-window errors on local/self-hosted models.
-    const tokenLimit =
-      maxTokens !== undefined
-        ? maxTokens
-        : this.provider === 'openai-compatible'
-          ? this.responseLength !== undefined
-            ? getMaxTokensForResponseLength(this.responseLength)
-            : undefined
-          : getMaxTokensForResponseLength(this.responseLength);
+    const tokenLimit = this.resolveTokenLimit(model, maxTokens);
 
     if (isResponsesAPI) {
       if (tokenLimit !== undefined) {
@@ -374,6 +387,39 @@ export class OpenAIChatService implements ChatService {
     }
 
     return body;
+  }
+
+  private resolveTokenLimit(
+    model: string,
+    maxTokens?: number,
+  ): number | undefined {
+    if (maxTokens !== undefined) {
+      return maxTokens;
+    }
+
+    const baseTokenLimit =
+      this.provider === 'openai-compatible'
+        ? this.responseLength !== undefined
+          ? getMaxTokensForResponseLength(this.responseLength)
+          : undefined
+        : getMaxTokensForResponseLength(this.responseLength);
+
+    if (
+      this.provider !== 'openai' ||
+      !isGPT5Model(model) ||
+      this.responseLength === undefined
+    ) {
+      return baseTokenLimit;
+    }
+
+    const effectiveReasoningEffort =
+      this.reasoning_effort ?? getDefaultReasoningEffortForGPT5Model(model);
+
+    return Math.max(
+      baseTokenLimit ?? 0,
+      GPT5_RESPONSE_LENGTH_MIN_TOKENS[this.responseLength],
+      GPT5_REASONING_MIN_TOKENS[effectiveReasoningEffort],
+    );
   }
 
   /**
@@ -520,6 +566,9 @@ export class OpenAIChatService implements ChatService {
 
     const textBlocks: ToolChatBlock[] = [];
     const toolCallsMap = new Map<string, any>();
+    let responseStatus: string | undefined;
+    let incompleteDetails: Record<string, any> | null | undefined;
+    let usage: Record<string, any> | undefined;
 
     let buf = '';
 
@@ -552,6 +601,17 @@ export class OpenAIChatService implements ChatService {
               onPartial,
               textBlocks,
               toolCallsMap,
+              (metadata) => {
+                if (metadata.responseStatus !== undefined) {
+                  responseStatus = metadata.responseStatus;
+                }
+                if (metadata.incompleteDetails !== undefined) {
+                  incompleteDetails = metadata.incompleteDetails;
+                }
+                if (metadata.usage !== undefined) {
+                  usage = metadata.usage;
+                }
+              },
             );
 
             // Check if response is completed
@@ -582,6 +642,10 @@ export class OpenAIChatService implements ChatService {
     return {
       blocks,
       stop_reason: toolBlocks.length ? 'tool_use' : 'end',
+      truncated: responseStatus === 'incomplete',
+      response_status: responseStatus,
+      incomplete_details: incompleteDetails,
+      usage,
     };
   }
 
@@ -595,6 +659,11 @@ export class OpenAIChatService implements ChatService {
     onPartial: (t: string) => void,
     textBlocks: ToolChatBlock[],
     toolCallsMap: Map<string, any>,
+    onMetadata: (metadata: {
+      responseStatus?: string;
+      incompleteDetails?: Record<string, any> | null;
+      usage?: Record<string, any>;
+    }) => void,
   ): 'completed' | undefined {
     switch (eventType) {
       // Item addition events
@@ -650,6 +719,11 @@ export class OpenAIChatService implements ChatService {
 
       // Response completion events
       case 'response.completed':
+        onMetadata(this.extractResponsesMetadata(data, 'completed'));
+        return 'completed';
+
+      case 'response.incomplete':
+        onMetadata(this.extractResponsesMetadata(data, 'incomplete'));
         return 'completed';
 
       // GPT-5 reasoning token events (not visible but counted for billing)
@@ -663,6 +737,23 @@ export class OpenAIChatService implements ChatService {
     }
 
     return undefined;
+  }
+
+  private extractResponsesMetadata(
+    data: any,
+    fallbackStatus: 'completed' | 'incomplete',
+  ): {
+    responseStatus: string;
+    incompleteDetails: Record<string, any> | null;
+    usage?: Record<string, any>;
+  } {
+    const response = data?.response ?? data;
+
+    return {
+      responseStatus: response?.status ?? fallbackStatus,
+      incompleteDetails: response?.incomplete_details ?? null,
+      usage: response?.usage,
+    };
   }
 
   /**
@@ -699,6 +790,10 @@ export class OpenAIChatService implements ChatService {
       stop_reason: blocks.some((b) => b.type === 'tool_use')
         ? 'tool_use'
         : 'end',
+      truncated: data?.status === 'incomplete',
+      response_status: data?.status,
+      incomplete_details: data?.incomplete_details ?? null,
+      usage: data?.usage,
     };
   }
 }

@@ -86,6 +86,8 @@ export async function parseOpenAICompatibleToolStream(
 ): Promise<ToolChatCompletion> {
   const textBlocks: ToolChatBlock[] = [];
   const toolCallsMap = new Map<number, any>();
+  let finishReason: string | undefined;
+  let usage: Record<string, any> | undefined;
   const appendTextBlock =
     options.appendTextBlock ?? StreamTextAccumulator.append;
 
@@ -93,7 +95,15 @@ export async function parseOpenAICompatibleToolStream(
     const json = parseJsonPayload(payload, options.onJsonError);
     if (!json) return;
 
-    const delta = json.choices?.[0]?.delta;
+    const choice = json.choices?.[0];
+    if (typeof choice?.finish_reason === 'string') {
+      finishReason = choice.finish_reason;
+    }
+    if (json.usage) {
+      usage = json.usage;
+    }
+
+    const delta = choice?.delta;
 
     if (delta?.content) {
       onPartial(delta.content);
@@ -127,6 +137,9 @@ export async function parseOpenAICompatibleToolStream(
   return {
     blocks,
     stop_reason: toolBlocks.length ? 'tool_use' : 'end',
+    truncated: finishReason === 'length',
+    finish_reason: finishReason,
+    usage,
   };
 }
 
@@ -154,5 +167,8 @@ export function parseOpenAICompatibleOneShot(data: any): ToolChatCompletion {
       blocks.some((b) => b.type === 'tool_use')
         ? 'tool_use'
         : 'end',
+    truncated: choice?.finish_reason === 'length',
+    finish_reason: choice?.finish_reason,
+    usage: data?.usage,
   };
 }
