@@ -21,6 +21,11 @@ export type CoreToolChatBlock = TextBlock | ToolUseBlock | ToolResultBlock;
 export interface ToolChatCompletion<B = CoreToolChatBlock> {
   blocks: B[];
   stop_reason: 'tool_use' | 'end';
+  truncated?: boolean;
+  finish_reason?: string;
+  response_status?: string;
+  incomplete_details?: { reason?: string; [key: string]: any } | null;
+  usage?: Record<string, any>;
 }
 export type ToolChatBlock = CoreToolChatBlock;
 

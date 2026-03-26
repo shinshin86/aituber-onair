@@ -228,6 +228,44 @@ describe('ChatProcessor', () => {
         }),
       );
     });
+
+    it('should emit truncation metadata when provider reports truncation', async () => {
+      mockChatService.chatOnce.mockResolvedValueOnce({
+        blocks: [{ type: 'text', text: 'Partial response' }],
+        stop_reason: 'end',
+        truncated: true,
+        finish_reason: 'length',
+        usage: {
+          completion_tokens_details: {
+            reasoning_tokens: 256,
+          },
+        },
+      });
+
+      const emitSpy = vi.spyOn(chatProcessor as any, 'emit');
+
+      await (chatProcessor as any).processTextChat('Hello');
+
+      expect(emitSpy).toHaveBeenCalledWith(
+        'assistantResponseTruncated',
+        expect.objectContaining({
+          truncated: true,
+          finishReason: 'length',
+          usage: {
+            completion_tokens_details: {
+              reasoning_tokens: 256,
+            },
+          },
+        }),
+      );
+      expect(emitSpy).toHaveBeenCalledWith(
+        'assistantResponse',
+        expect.objectContaining({
+          truncated: true,
+          finishReason: 'length',
+        }),
+      );
+    });
   });
 
   describe('processVisionChat', () => {

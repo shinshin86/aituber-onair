@@ -148,12 +148,12 @@ Click the "設定" (Settings) button to configure your AI provider:
 When using GPT-5 models, additional configuration options become available:
 
 #### Response Length
-- Very Short: ~40 tokens
-- Short: ~100 tokens
-- Medium: ~200 tokens (default)
-- Long: ~500 tokens
-- Very Long: ~1000 tokens
-- Deep: ~5000 tokens
+- Base presets: Very Short (40), Short (100), Medium (200, default),
+  Long (300), Very Long (1000), Deep (5000)
+- For OpenAI GPT-5 family models, these are treated as preset levels rather
+  than strict output limits
+- The actual output token limit may be raised automatically based on the model
+  and reasoning effort to reduce premature truncation
 
 #### Presets
 - **Casual**: Fast, conversational responses

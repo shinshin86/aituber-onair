@@ -124,6 +124,8 @@ export enum AITuberOnAirCoreEvent {
   ASSISTANT_PARTIAL = 'assistantPartial',
   /** Assistant response completed */
   ASSISTANT_RESPONSE = 'assistantResponse',
+  /** Assistant response was truncated by the model/token budget */
+  ASSISTANT_RESPONSE_TRUNCATED = 'assistantResponseTruncated',
   /** Speech started */
   SPEECH_START = 'speechStart',
   /** Speech ended */
@@ -583,7 +585,7 @@ export class AITuberOnAirCore extends EventEmitter {
     });
 
     this.chatProcessor.on('assistantResponse', async (data) => {
-      const { message, screenplay } = data;
+      const { message, screenplay, ...metadata } = data;
 
       // Generate the raw text with emotion tags using utility function
       const rawText = screenplayToText(screenplay);
@@ -593,6 +595,7 @@ export class AITuberOnAirCore extends EventEmitter {
         message,
         screenplay,
         rawText,
+        ...metadata,
       });
 
       // Speech synthesis and playback (if VoiceService exists)
@@ -623,6 +626,17 @@ export class AITuberOnAirCore extends EventEmitter {
           this.emit(AITuberOnAirCoreEvent.ERROR, error);
         }
       }
+    });
+
+    this.chatProcessor.on('assistantResponseTruncated', (data) => {
+      const { message, screenplay, ...metadata } = data;
+      const rawText = screenplayToText(screenplay);
+      this.emit(AITuberOnAirCoreEvent.ASSISTANT_RESPONSE_TRUNCATED, {
+        message,
+        screenplay,
+        rawText,
+        ...metadata,
+      });
     });
 
     this.chatProcessor.on('error', (error) => {

@@ -5,7 +5,6 @@ import {
   ChatType,
   ChatResponseLength,
   MAX_TOKENS_BY_LENGTH,
-  DEFAULT_MAX_TOKENS,
   ToolUseBlock,
   ToolResultBlock,
   ToolChatCompletion,
@@ -182,8 +181,9 @@ export class ChatProcessor extends EventEmitter {
 
       const initialMsgs = await this.prepareMessagesForAI();
 
-      // Set max tokens for text chat
-      const maxTokens = this.getMaxTokensForChat();
+      // Only pass explicit maxTokens.
+      // Provider-specific responseLength handling should stay in the provider.
+      const maxTokens = this.getExplicitMaxTokensForChat();
       await this.runToolLoop<Message>(initialMsgs, (msgs, stream, cb) =>
         this.chatService.chatOnce(msgs as Message[], stream, cb, maxTokens),
       );
@@ -252,8 +252,9 @@ export class ChatProcessor extends EventEmitter {
         ],
       };
 
-      // Set max tokens for vision chat
-      const maxTokens = this.getMaxTokensForVision();
+      // Only pass explicit maxTokens.
+      // Provider-specific responseLength handling should stay in the provider.
+      const maxTokens = this.getExplicitMaxTokensForVision();
       await this.runToolLoop<Message | MessageWithVision>(
         [...baseMessages, visionMessage],
         (msgs, stream, cb) =>
@@ -329,38 +330,24 @@ export class ChatProcessor extends EventEmitter {
    * Get max tokens for chat responses
    * @returns Maximum tokens for chat
    */
-  private getMaxTokensForChat(): number | undefined {
-    // Prioritize direct maxTokens setting
-    if (this.options.maxTokens !== undefined) {
-      return this.options.maxTokens;
-    }
-
-    // Use responseLength preset if specified
-    if (this.options.responseLength) {
-      return MAX_TOKENS_BY_LENGTH[this.options.responseLength];
-    }
-
-    // Return undefined for provider default
-    return undefined;
+  private getExplicitMaxTokensForChat(): number | undefined {
+    return this.options.maxTokens;
   }
 
   /**
    * Get max tokens for vision responses
    * @returns Maximum tokens for vision
    */
-  private getMaxTokensForVision(): number | undefined {
-    // Prioritize direct visionMaxTokens setting
+  private getExplicitMaxTokensForVision(): number | undefined {
     if (this.options.visionMaxTokens !== undefined) {
       return this.options.visionMaxTokens;
     }
 
-    // Use visionResponseLength preset if specified
-    if (this.options.visionResponseLength) {
+    if (this.options.visionResponseLength !== undefined) {
       return MAX_TOKENS_BY_LENGTH[this.options.visionResponseLength];
     }
 
-    // Fallback to regular chat settings
-    return this.getMaxTokensForChat();
+    return this.getExplicitMaxTokensForChat();
   }
 
   private isClaudeProvider(): boolean {
@@ -480,7 +467,15 @@ export class ChatProcessor extends EventEmitter {
     const isClaude = this.isClaudeProvider();
 
     while (hops++ < this.maxHops) {
-      const { blocks, stop_reason } = await once(toSend, first, (t) =>
+      const {
+        blocks,
+        stop_reason,
+        truncated,
+        finish_reason,
+        response_status,
+        incomplete_details,
+        usage,
+      } = await once(toSend, first, (t) =>
         this.emit('assistantPartialResponse', t),
       );
       first = false;
@@ -508,11 +503,22 @@ export class ChatProcessor extends EventEmitter {
         this.addToChatLog(assistantMessage);
 
         const screenplay = textsToScreenplay([full])[0];
-        this.emit('assistantResponse', {
+        const responsePayload = {
           message: assistantMessage,
           screenplay,
           visionSource,
-        });
+          truncated: Boolean(truncated),
+          finishReason: finish_reason,
+          responseStatus: response_status,
+          incompleteDetails: incomplete_details ?? null,
+          usage,
+        };
+
+        if (responsePayload.truncated) {
+          this.emit('assistantResponseTruncated', responsePayload);
+        }
+
+        this.emit('assistantResponse', responsePayload);
 
         if (this.memoryManager) this.memoryManager.cleanupOldMemories();
         return;

@@ -408,11 +408,28 @@ const tools: ToolDefinition[] = [{
 
 ### 応答長制御
 
+プリセットの基準トークン値は次の通りです。
+- `veryShort`: 40
+- `short`: 100
+- `medium`: 200
+- `long`: 300
+- `veryLong`: 1000
+- `deep`: 5000
+
+ただし OpenAI の GPT-5 family
+（`gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5.1`, `gpt-5.4`,
+`gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`）では、これらは基準値として
+扱われます。途中終了を減らすため、実際に送信される
+`max_completion_tokens` / `max_output_tokens` は、model と
+`reasoning_effort` に応じて自動的に引き上げられることがあります。
+
+厳密な token 上限を指定したい場合は `maxTokens` を使ってください。
+
 ```typescript
 // プリセット応答長を使用
 const service = ChatServiceFactory.createChatService('openai', {
   apiKey: 'your-key',
-  responseLength: 'medium' // 'veryShort', 'short', 'medium', 'long', 'veryLong'
+  responseLength: 'medium' // 'veryShort', 'short', 'medium', 'long', 'veryLong', 'deep'
 });
 
 // カスタムトークン制限を使用
