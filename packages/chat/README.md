@@ -404,6 +404,22 @@ const tools: ToolDefinition[] = [{
 
 ### Response Length Control
 
+Base preset token targets are:
+- `veryShort`: 40
+- `short`: 100
+- `medium`: 200
+- `long`: 300
+- `veryLong`: 1000
+- `deep`: 5000
+
+For the OpenAI GPT-5 family (`gpt-5`, `gpt-5-mini`, `gpt-5-nano`,
+`gpt-5.1`, `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`),
+these values are treated as base presets. The library may raise the actual
+`max_completion_tokens` or `max_output_tokens` to reduce premature truncation,
+depending on the selected model and `reasoning_effort`.
+
+If you need an exact token limit, use `maxTokens`.
+
 ```typescript
 // Using preset response lengths
 const service = ChatServiceFactory.createChatService('openai', {
