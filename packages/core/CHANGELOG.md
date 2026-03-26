@@ -1,5 +1,22 @@
 # @aituber-onair/core
 
+## 0.23.8
+
+### Patch Changes
+
+- Updated `ChatProcessor` to pass text `responseLength` through to the chat
+  provider so model-aware providers can adjust output token limits without a
+  core-side fixed token mapping.
+- Added truncation metadata propagation for assistant responses, including
+  `truncated`, `finishReason`, `responseStatus`, `incompleteDetails`, and
+  `usage`, and added the `assistantResponseTruncated` event to distinguish
+  token-budget truncation from normal completion.
+- Updated the React basic example and README to clarify that GPT-5 response
+  length presets are base values and may be internally expanded by the OpenAI
+  provider.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.21.2
+
 ## 0.23.7
 
 ### Patch Changes
