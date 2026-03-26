@@ -1,5 +1,22 @@
 # @aituber-onair/chat
 
+## 0.21.2
+
+### Patch Changes
+
+- Reduced premature truncation risk for the OpenAI GPT-5 family by treating
+  `responseLength` presets as base targets and raising the actual
+  `max_completion_tokens` / `max_output_tokens` when needed based on the model
+  and `reasoning_effort`.
+- Preserved truncation metadata from OpenAI responses, including
+  `finish_reason: 'length'`, Responses API `incomplete` status,
+  `incomplete_details`, and `usage`, so callers can distinguish shortened
+  outputs from normal completions.
+- Added OpenAI transport/parser test coverage for GPT-5 token budgeting and
+  truncation metadata propagation.
+- Updated README docs (EN/JA) to clarify that GPT-5 family models may use a
+  higher effective output-token limit than the base preset values.
+
 ## 0.21.1
 
 ### Patch Changes
