@@ -37,6 +37,7 @@ export {
   type Message,
   type MessageWithVision,
   type VisionBlock,
+  type VisionSupportLevel,
   type ChatType,
   type ToolDefinition,
   type ToolUseBlock,

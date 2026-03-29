@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.23.9
+
+### Patch Changes
+
+- Re-exported `VisionSupportLevel` from the core entry point.
+- Updated the React basic example to allow image uploads for
+  `openai-compatible` models/endpoints whose vision capability is unknown and
+  surface the runtime-failure caveat in the UI.
+- Updated core README docs to clarify that `openai-compatible` vision support
+  is treated as `unknown` and may fail at runtime on unsupported endpoints or
+  models.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.22.0
+
 ## 0.23.8
 
 ### Patch Changes

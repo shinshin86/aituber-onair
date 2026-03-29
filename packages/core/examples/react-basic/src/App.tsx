@@ -9,8 +9,12 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
   AITuberOnAirCoreOptions,
+  ChatServiceFactory,
   GPT5_PRESETS,
   GPT5PresetKey,
+  CHAT_RESPONSE_LENGTH,
+  ChatResponseLength,
+  type VisionSupportLevel,
   allowsReasoningLow,
   allowsReasoningMinimal,
   allowsReasoningNone,
@@ -18,14 +22,6 @@ import {
   getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
   isResponsesOnlyGPT5Model,
-  VISION_SUPPORTED_MODELS,
-  GEMINI_VISION_SUPPORTED_MODELS,
-  CLAUDE_VISION_SUPPORTED_MODELS,
-  ZAI_VISION_SUPPORTED_MODELS,
-  KIMI_VISION_SUPPORTED_MODELS,
-  OPENROUTER_VISION_SUPPORTED_MODELS,
-  CHAT_RESPONSE_LENGTH,
-  ChatResponseLength,
   refreshOpenRouterFreeModels,
   type MinimaxModel,
   type MinimaxAudioFormat,
@@ -361,29 +357,10 @@ const App: React.FC = () => {
 
   // image attachment state
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
-  const supportsVision = (() => {
-    if (!model) {
-      return false;
-    }
-    switch (chatProvider) {
-      case 'openai':
-        return VISION_SUPPORTED_MODELS.includes(model);
-      case 'gemini':
-        return GEMINI_VISION_SUPPORTED_MODELS.includes(model);
-      case 'claude':
-        return CLAUDE_VISION_SUPPORTED_MODELS.includes(model);
-      case 'zai':
-        return ZAI_VISION_SUPPORTED_MODELS.includes(model);
-      case 'kimi':
-        return KIMI_VISION_SUPPORTED_MODELS.includes(model);
-      case 'openrouter':
-        return OPENROUTER_VISION_SUPPORTED_MODELS.includes(model);
-      case 'openai-compatible':
-        return false;
-      default:
-        return false;
-    }
-  })();
+  const visionSupportLevel: VisionSupportLevel = model
+    ? ChatServiceFactory.getVisionSupportLevelForModel(chatProvider, model)
+    : 'unsupported';
+  const supportsVision = visionSupportLevel !== 'unsupported';
 
   const isMcpSupportedProvider =
     chatProvider === 'openai' ||
@@ -1592,7 +1569,7 @@ const App: React.FC = () => {
     if (!userMessage && !attachedImageUrl) return;
 
     const canUseVision = Boolean(attachedImageUrl && supportsVision);
-    if (attachedImageUrl && !supportsVision) {
+    if (attachedImageUrl && visionSupportLevel === 'unsupported') {
       alert('選択中のモデルは画像入力に対応していません。');
       setImageDataUrl(null);
       if (!userMessage) {
@@ -1792,6 +1769,11 @@ const App: React.FC = () => {
           <div>
             選択中のモデル：{chatProvider} / {model}
           </div>
+          {visionSupportLevel === 'unknown' && (
+            <div style={{ color: '#6b7280' }}>
+              この endpoint / model の画像対応は事前判定できません。画像送信は試せますが、実行時に失敗する場合があります。
+            </div>
+          )}
           {selectedVoiceEngine !== 'none' && (
             <div style={{ color: '#2e997d' }}>
               音声合成: 有効 ({VOICE_ENGINE_CONFIGS[selectedVoiceEngine].name})
@@ -1874,7 +1856,7 @@ const App: React.FC = () => {
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              disabled={!isConfigured || !supportsVision}
+              disabled={!isConfigured || visionSupportLevel === 'unsupported'}
               style={{ width: '180px' }}
             />
 

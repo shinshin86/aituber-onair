@@ -1349,7 +1349,7 @@ This is useful when running voice engines on different ports or remote servers.
 ## AI Provider System
 
 AITuber OnAir Core adopts an extensible provider system, enabling integration with various AI APIs.
-Currently, OpenAI API, Gemini API, Claude API, Z.ai API, Kimi API, and OpenRouter API are available. If you would like to use any other API, please submit a PR or send us a message.
+Currently, OpenAI API, OpenAI-compatible APIs, Gemini API, Claude API, Z.ai API, Kimi API, and OpenRouter API are available. If you would like to use any other API, please submit a PR or send us a message.
 
 ### Available Providers
 
@@ -1361,6 +1361,7 @@ Currently, the following AI provider is built-in:
 - **Z.ai**: Supports models like GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
 - **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi)
+- **OpenAI-Compatible**: Supports arbitrary OpenAI-compatible Chat Completions endpoints; vision capability is treated as unknown until the target endpoint/model responds
 
 For OpenRouter free-tier discovery, you can also use
 `refreshOpenRouterFreeModels` via `@aituber-onair/core`
@@ -1389,6 +1390,11 @@ Different AI models support different features. For example:
 
 When selecting a model, be aware of these limitations. Attempting to use unsupported features will result in an explicit error.
 
+For `openai-compatible`, vision support is treated as `unknown` because the
+library cannot pre-validate arbitrary local/self-hosted endpoints. Image
+requests are allowed, but unsupported endpoint/model combinations will fail at
+runtime with the upstream API error.
+
 **Note**: If you don't specify a model, the default model used is 'gpt-4o-mini'. This model supports both text chat and image processing.
 
 ### Using Different Models Together
@@ -1407,7 +1413,24 @@ const aituberCore = new AITuberOnAirCore({
 
 This allows for optimizations such as using a lightweight model for text chat and a more powerful model only when image processing is needed.
 
-Note: When specifying a visionModel, ensure it supports vision capabilities. The system will validate this during initialization and throw an error if an unsupported model is provided.
+Note: When specifying a `visionModel`, ensure it supports vision capabilities.
+Built-in providers are validated during initialization. For
+`openai-compatible`, support is treated as unknown, so the request is allowed
+and the endpoint may reject it at runtime if vision is unsupported.
+
+If you need to surface this in your own UI, `@aituber-onair/core` re-exports
+the chat capability helpers:
+
+```typescript
+import { ChatServiceFactory, type VisionSupportLevel } from '@aituber-onair/core';
+
+const visionSupport: VisionSupportLevel =
+  ChatServiceFactory.getVisionSupportLevelForModel(
+    'openai-compatible',
+    'local-model',
+  );
+// 'supported' | 'unsupported' | 'unknown'
+```
 
 ### Retrieving Providers & Models
 

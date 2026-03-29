@@ -10,6 +10,7 @@ import {
   isResponsesOnlyGPT5Model,
   refreshOpenRouterFreeModels,
   type RefreshOpenRouterFreeModelsResult,
+  type VisionSupportLevel,
 } from '../src/index';
 
 describe('Core index chat re-exports', () => {
@@ -47,5 +48,11 @@ describe('Core index chat re-exports', () => {
 
     expect(sample.working.length).toBe(1);
     expect(sample.failed.length).toBe(1);
+  });
+
+  it('re-exports VisionSupportLevel type compatibility', () => {
+    const sample: VisionSupportLevel = 'unknown';
+
+    expect(sample).toBe('unknown');
   });
 });
