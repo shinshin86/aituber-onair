@@ -2,6 +2,7 @@ import { ChatService } from '../../ChatService';
 import {
   ChatServiceProvider,
   OpenAICompatibleChatServiceOptions,
+  VisionSupportLevel,
 } from '../ChatServiceProvider';
 import { OpenAIChatService } from '../openai/OpenAIChatService';
 
@@ -45,7 +46,19 @@ export class OpenAICompatibleChatServiceProvider
   }
 
   supportsVision(): boolean {
-    return false;
+    return this.getVisionSupportLevel() !== 'unsupported';
+  }
+
+  getVisionSupportLevel(): VisionSupportLevel {
+    return 'unknown';
+  }
+
+  supportsVisionForModel(_model: string): boolean {
+    return true;
+  }
+
+  getVisionSupportLevelForModel(_model: string): VisionSupportLevel {
+    return 'unknown';
   }
 
   getDefaultModel(): string {

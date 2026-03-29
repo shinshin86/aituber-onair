@@ -4,6 +4,7 @@ import {
   ChatServiceOptionsByProvider,
   ChatProviderName,
   ChatServiceProvider,
+  VisionSupportLevel,
 } from './providers/ChatServiceProvider';
 import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 
@@ -68,6 +69,39 @@ export class ChatServiceFactory {
   static getSupportedModels(providerName: string): string[] {
     const provider = this.providers.get(providerName);
     return provider ? provider.getSupportedModels() : [];
+  }
+
+  /**
+   * Get provider-level vision support status.
+   */
+  static getVisionSupportLevel(providerName: string): VisionSupportLevel {
+    const provider = this.providers.get(providerName);
+    return provider ? provider.getVisionSupportLevel() : 'unsupported';
+  }
+
+  /**
+   * Get model-level vision support status.
+   */
+  static getVisionSupportLevelForModel(
+    providerName: string,
+    model: string,
+  ): VisionSupportLevel {
+    const provider = this.providers.get(providerName);
+    if (!provider) {
+      return 'unsupported';
+    }
+
+    if (provider.getVisionSupportLevelForModel) {
+      return provider.getVisionSupportLevelForModel(model);
+    }
+
+    if (provider.supportsVisionForModel) {
+      return provider.supportsVisionForModel(model)
+        ? 'supported'
+        : 'unsupported';
+    }
+
+    return provider.getVisionSupportLevel();
   }
 }
 

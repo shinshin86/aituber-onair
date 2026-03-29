@@ -8,6 +8,7 @@ import { KimiChatService } from './KimiChatService';
 import {
   KimiChatServiceOptions,
   ChatServiceProvider,
+  VisionSupportLevel,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
 import { resolveVisionModel } from '../../../utils';
@@ -85,7 +86,11 @@ export class KimiChatServiceProvider
    * Check if this provider supports vision
    */
   supportsVision(): boolean {
-    return true;
+    return this.getVisionSupportLevel() !== 'unsupported';
+  }
+
+  getVisionSupportLevel(): VisionSupportLevel {
+    return 'supported';
   }
 
   /**
@@ -93,6 +98,10 @@ export class KimiChatServiceProvider
    */
   supportsVisionForModel(model: string): boolean {
     return isKimiVisionModel(model);
+  }
+
+  getVisionSupportLevelForModel(model: string): VisionSupportLevel {
+    return this.supportsVisionForModel(model) ? 'supported' : 'unsupported';
   }
 
   private resolveEndpoint(options: KimiChatServiceOptions): string {

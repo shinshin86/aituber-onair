@@ -18,7 +18,7 @@ import ChatInterface from './components/ChatInterface';
 import ProviderSelector, {
   getProviderForModel,
   getDefaultModelForProvider,
-  isVisionSupported,
+  getVisionSupportLevel,
 } from './components/ProviderSelector';
 import MessageList from './components/MessageList';
 
@@ -137,7 +137,7 @@ function App() {
     selectedModel,
     reasoning_effort,
   );
-  const supportsVision = isVisionSupported(provider, selectedModel);
+  const visionSupportLevel = getVisionSupportLevel(provider, selectedModel);
   const effectiveApiKey =
     provider === 'openai-compatible' ? apiKey.trim() : apiKey;
 
@@ -485,7 +485,7 @@ function App() {
             disabled={!chatService || isLoading}
             isLoading={isLoading}
             onClearChat={clearChat}
-            supportsVision={supportsVision}
+            visionSupportLevel={visionSupportLevel}
           />
         </div>
       </main>

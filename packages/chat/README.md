@@ -182,6 +182,9 @@ Notes:
 - `openai-compatible` requires both `endpoint` and `model`.
 - `apiKey` is optional for `openai-compatible`.
 - `openai-compatible` does not support `mcpServers`.
+- Vision support for `openai-compatible` is treated as `unknown`.
+  Image requests are allowed, but unsupported endpoints or models will fail
+  at runtime.
 - Existing `openai` provider behavior is unchanged.
 
 `reasoning_effort` options differ per model:
@@ -212,7 +215,7 @@ Required:
 
 Best effort:
 - tools/function calling
-- vision input support
+- vision input support (runtime-validated for `openai-compatible`)
 - strict JSON mode compatibility across implementations
 
 ### OpenAI-Compatible Troubleshooting
@@ -224,6 +227,9 @@ Best effort:
   Confirm the expected token format on the server side.
 - Model name: Compatible servers often expose different model IDs.
   Confirm the exact model name accepted by your endpoint.
+- Vision: `openai-compatible` does not pre-validate vision capability.
+  If an image request fails, confirm that both the endpoint and selected model
+  actually support image input.
 - Stream compatibility: `stream: true` assumes OpenAI-compatible SSE chunks
   (`data: { ... }` + `data: [DONE]`). If the format differs, streaming parse
   may fail.
@@ -359,6 +365,12 @@ Notes for self-hosted:
 
 ### Vision Chat
 
+For built-in providers with curated model lists, the library pre-validates
+vision support. For `openai-compatible`, vision support is reported as
+`'unknown'` unless your application adds its own endpoint-specific knowledge.
+In that case, image requests are still allowed and any incompatibility is
+surfaced as a runtime error from the target endpoint.
+
 ```typescript
 const visionMessage = {
   role: 'user',
@@ -379,6 +391,17 @@ await chatService.processVisionChat(
   (partial) => console.log(partial),
   async (complete) => console.log(complete)
 );
+```
+
+You can inspect the pre-validation status from `ChatServiceFactory`:
+
+```typescript
+const level = ChatServiceFactory.getVisionSupportLevelForModel(
+  'openai-compatible',
+  'your-local-model',
+);
+
+console.log(level); // 'unknown'
 ```
 
 ### Tool/Function Calling
@@ -587,13 +610,35 @@ interface MessageWithVision {
 }
 
 type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong' | 'deep';
+type VisionSupportLevel = 'supported' | 'unsupported' | 'unknown';
 ```
+
+### Vision Support Discovery
+
+```typescript
+const providerLevel = ChatServiceFactory.getVisionSupportLevel(
+  'openai-compatible',
+);
+const modelLevel = ChatServiceFactory.getVisionSupportLevelForModel(
+  'openai-compatible',
+  'your-local-model',
+);
+
+console.log(providerLevel); // 'unknown'
+console.log(modelLevel); // 'unknown'
+```
+
+Semantics:
+- `supported`: Known to support vision before sending the request
+- `unsupported`: Known to reject vision before sending the request
+- `unknown`: Cannot be pre-validated, but vision requests may still succeed
 
 ## Available Providers
 
 Currently, the following AI providers are built-in:
 
 - **OpenAI**: Supports models like GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
+- **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports models like Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Claude**: Supports models like Claude Sonnet 4.6, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.

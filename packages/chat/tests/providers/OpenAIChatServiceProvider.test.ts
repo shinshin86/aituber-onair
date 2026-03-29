@@ -74,6 +74,7 @@ describe('OpenAIChatServiceProvider', () => {
   describe('supportsVision', () => {
     it('should return true', () => {
       expect(provider.supportsVision()).toBe(true);
+      expect(provider.getVisionSupportLevel()).toBe('supported');
     });
   });
 
@@ -91,6 +92,9 @@ describe('OpenAIChatServiceProvider', () => {
     it('should return false for non-vision models', () => {
       expect(provider.supportsVisionForModel('gpt-3.5-turbo')).toBe(false);
       expect(provider.supportsVisionForModel('text-davinci-003')).toBe(false);
+      expect(provider.getVisionSupportLevelForModel('gpt-3.5-turbo')).toBe(
+        'unsupported',
+      );
     });
   });
 

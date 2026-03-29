@@ -4,6 +4,7 @@ import type { ChatService } from '../src/services/ChatService';
 import type {
   ChatServiceProvider,
   ChatServiceOptions,
+  VisionSupportLevel,
 } from '../src/services/providers/ChatServiceProvider';
 
 // Mock provider for testing
@@ -20,6 +21,22 @@ class MockChatServiceProvider implements ChatServiceProvider {
 
   createChatService(options: ChatServiceOptions): ChatService {
     return {} as ChatService; // Return a mock object
+  }
+
+  getVisionSupportLevel(): VisionSupportLevel {
+    return 'unknown';
+  }
+
+  getVisionSupportLevelForModel(): VisionSupportLevel {
+    return 'unknown';
+  }
+
+  supportsVision(): boolean {
+    return true;
+  }
+
+  supportsVisionForModel(): boolean {
+    return true;
   }
 }
 
@@ -235,6 +252,39 @@ describe('ChatServiceFactory', () => {
       const claudeModels = ChatServiceFactory.getSupportedModels('claude');
       expect(Array.isArray(claudeModels)).toBe(true);
       expect(claudeModels.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('getVisionSupportLevel', () => {
+    it('should return provider-level vision support', () => {
+      const mockProvider = new MockChatServiceProvider();
+      ChatServiceFactory.registerProvider(mockProvider);
+
+      expect(ChatServiceFactory.getVisionSupportLevel('mock')).toBe('unknown');
+      expect(ChatServiceFactory.getVisionSupportLevel('unknown')).toBe(
+        'unsupported',
+      );
+    });
+
+    it('should return model-level vision support', () => {
+      const mockProvider = new MockChatServiceProvider();
+      ChatServiceFactory.registerProvider(mockProvider);
+
+      expect(
+        ChatServiceFactory.getVisionSupportLevelForModel(
+          'mock',
+          'mock-model-1',
+        ),
+      ).toBe('unknown');
+      expect(
+        ChatServiceFactory.getVisionSupportLevelForModel('unknown', 'model'),
+      ).toBe('unsupported');
+      expect(
+        ChatServiceFactory.getVisionSupportLevelForModel(
+          'openai-compatible',
+          'local-model',
+        ),
+      ).toBe('unknown');
     });
   });
 

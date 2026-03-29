@@ -182,6 +182,9 @@ const compatibleService = ChatServiceFactory.createChatService(
 - `openai-compatible` は `endpoint` と `model` の指定が必須です。
 - `openai-compatible` では `apiKey` は任意です。
 - `openai-compatible` では `mcpServers` は利用できません。
+- `openai-compatible` の vision 対応可否は `unknown` として扱われます。
+  画像リクエスト自体は許可されますが、未対応の endpoint / model の
+  場合は実行時エラーになります。
 - 既存の `openai` プロバイダーの挙動は変更されません。
 
 `reasoning_effort` の選択肢はモデルによって異なります。
@@ -212,7 +215,7 @@ const compatibleService = ChatServiceFactory.createChatService(
 
 ベストエフォート:
 - tools/function calling
-- vision入力
+- vision入力（`openai-compatible` では実行時検証）
 - JSONモードの厳密互換
 
 ### OpenAI互換APIトラブルシューティング
@@ -226,6 +229,9 @@ const compatibleService = ChatServiceFactory.createChatService(
   サーバー側が期待するトークン形式を確認してください。
 - model名: 互換サーバーごとに利用可能なモデルIDが異なります。
   エンドポイントが受け付ける正確なモデル名を指定してください。
+- Vision: `openai-compatible` では画像対応を事前検証しません。
+  画像付きリクエストが失敗する場合は、endpoint と model の双方が
+  vision入力に対応しているか確認してください。
 - ストリーム互換: `stream: true` では OpenAI互換のSSE形式
   （`data: {...}` + `data: [DONE]`）を想定しています。
   形式が異なる場合、ストリーム解析に失敗する可能性があります。
@@ -363,6 +369,11 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 
 ### ビジョンチャット
 
+組み込み provider のうち、対応モデル一覧を持つものは vision 対応を
+事前判定します。一方 `openai-compatible` は endpoint / model ごとの差が
+大きいため、原則 `unknown` として扱います。この場合でも画像リクエストは
+許可され、非互換は接続先 endpoint の実行時エラーとして表面化します。
+
 ```typescript
 const visionMessage = {
   role: 'user',
@@ -383,6 +394,17 @@ await chatService.processVisionChat(
   (partial) => console.log(partial),
   async (complete) => console.log(complete)
 );
+```
+
+`ChatServiceFactory` から事前判定の状態を参照できます。
+
+```typescript
+const level = ChatServiceFactory.getVisionSupportLevelForModel(
+  'openai-compatible',
+  'your-local-model',
+);
+
+console.log(level); // 'unknown'
 ```
 
 ### ツール・関数呼び出し
@@ -592,13 +614,35 @@ interface MessageWithVision {
 }
 
 type ChatResponseLength = 'veryShort' | 'short' | 'medium' | 'long' | 'veryLong';
+type VisionSupportLevel = 'supported' | 'unsupported' | 'unknown';
 ```
+
+### Vision対応判定
+
+```typescript
+const providerLevel = ChatServiceFactory.getVisionSupportLevel(
+  'openai-compatible',
+);
+const modelLevel = ChatServiceFactory.getVisionSupportLevelForModel(
+  'openai-compatible',
+  'your-local-model',
+);
+
+console.log(providerLevel); // 'unknown'
+console.log(modelLevel); // 'unknown'
+```
+
+意味:
+- `supported`: リクエスト送信前に vision 対応と分かっている
+- `unsupported`: リクエスト送信前に非対応と分かっている
+- `unknown`: 事前判定できないが、実際には成功する可能性がある
 
 ## 利用可能なプロバイダー
 
 現在、以下のAIプロバイダーが組み込まれています：
 
 - **OpenAI**: GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
+- **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Liteのモデルをサポート
 - **Claude**: Claude Sonnet 4.6, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haikuのモデルをサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください

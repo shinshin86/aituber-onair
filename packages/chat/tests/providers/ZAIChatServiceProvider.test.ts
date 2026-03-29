@@ -57,6 +57,7 @@ describe('ZAIChatServiceProvider', () => {
   describe('supportsVision', () => {
     it('should return true', () => {
       expect(provider.supportsVision()).toBe(true);
+      expect(provider.getVisionSupportLevel()).toBe('supported');
     });
   });
 
@@ -75,6 +76,9 @@ describe('ZAIChatServiceProvider', () => {
 
     it('should return false for glm-5-turbo', () => {
       expect(provider.supportsVisionForModel(MODEL_GLM_5_TURBO)).toBe(false);
+      expect(provider.getVisionSupportLevelForModel(MODEL_GLM_5_TURBO)).toBe(
+        'unsupported',
+      );
     });
   });
 
