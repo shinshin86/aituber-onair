@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Provider } from '../App';
 import {
+  ChatServiceFactory,
   type ChatResponseLength,
   type GPT5PresetKey,
+  type VisionSupportLevel,
   allowsReasoningLow,
   allowsReasoningMinimal,
   allowsReasoningNone,
@@ -83,14 +85,8 @@ import {
   MODEL_GLM_4_6V,
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,
-  ZAI_VISION_SUPPORTED_MODELS,
   // Kimi models
   MODEL_KIMI_K2_5,
-  KIMI_VISION_SUPPORTED_MODELS,
-  VISION_SUPPORTED_MODELS,
-  GEMINI_VISION_SUPPORTED_MODELS,
-  CLAUDE_VISION_SUPPORTED_MODELS,
-  OPENROUTER_VISION_SUPPORTED_MODELS,
 } from '@aituber-onair/chat';
 
 interface ProviderSelectorProps {
@@ -787,29 +783,11 @@ export const getDefaultModelForProvider = (provider: Provider): string => {
   return defaultModel?.id || fallbackModel?.id || MODEL_GPT_4O_MINI;
 };
 
-export const isVisionSupported = (
+export const getVisionSupportLevel = (
   provider: Provider,
   modelId: string,
-): boolean => {
-  switch (provider) {
-    case 'openai':
-      return VISION_SUPPORTED_MODELS.includes(modelId);
-    case 'openai-compatible':
-      return false;
-    case 'gemini':
-      return GEMINI_VISION_SUPPORTED_MODELS.includes(modelId);
-    case 'claude':
-      return CLAUDE_VISION_SUPPORTED_MODELS.includes(modelId);
-    case 'openrouter':
-      return OPENROUTER_VISION_SUPPORTED_MODELS.includes(modelId);
-    case 'zai':
-      return ZAI_VISION_SUPPORTED_MODELS.includes(modelId);
-    case 'kimi':
-      return KIMI_VISION_SUPPORTED_MODELS.includes(modelId);
-    default:
-      return false;
-  }
-};
+): VisionSupportLevel =>
+  ChatServiceFactory.getVisionSupportLevelForModel(provider, modelId);
 
 export default function ProviderSelector({
   provider,

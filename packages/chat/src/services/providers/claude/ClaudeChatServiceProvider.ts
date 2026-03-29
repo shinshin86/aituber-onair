@@ -18,6 +18,7 @@ import { ClaudeChatService } from './ClaudeChatService';
 import {
   ClaudeChatServiceOptions,
   ChatServiceProvider,
+  VisionSupportLevel,
 } from '../ChatServiceProvider';
 import { resolveVisionModel } from '../../../utils';
 
@@ -94,7 +95,11 @@ export class ClaudeChatServiceProvider
    * @returns Vision support status (true)
    */
   supportsVision(): boolean {
-    return true;
+    return this.getVisionSupportLevel() !== 'unsupported';
+  }
+
+  getVisionSupportLevel(): VisionSupportLevel {
+    return 'supported';
   }
 
   /**
@@ -104,5 +109,9 @@ export class ClaudeChatServiceProvider
    */
   supportsVisionForModel(model: string): boolean {
     return CLAUDE_VISION_SUPPORTED_MODELS.includes(model);
+  }
+
+  getVisionSupportLevelForModel(model: string): VisionSupportLevel {
+    return this.supportsVisionForModel(model) ? 'supported' : 'unsupported';
   }
 }

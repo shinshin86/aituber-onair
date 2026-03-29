@@ -28,6 +28,7 @@ import { OpenRouterChatService } from './OpenRouterChatService';
 import {
   OpenRouterChatServiceOptions,
   ChatServiceProvider,
+  VisionSupportLevel,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
 import { resolveVisionModel } from '../../../utils';
@@ -136,9 +137,15 @@ export class OpenRouterChatServiceProvider
    * @returns Vision support status (false - gpt-oss-20b does not support vision)
    */
   supportsVision(): boolean {
+    return this.getVisionSupportLevel() !== 'unsupported';
+  }
+
+  getVisionSupportLevel(): VisionSupportLevel {
     return this.getSupportedModels().some((model) =>
       this.supportsVisionForModel(model),
-    );
+    )
+      ? 'supported'
+      : 'unsupported';
   }
 
   /**
@@ -148,6 +155,10 @@ export class OpenRouterChatServiceProvider
    */
   supportsVisionForModel(model: string): boolean {
     return isOpenRouterVisionModel(model);
+  }
+
+  getVisionSupportLevelForModel(model: string): VisionSupportLevel {
+    return this.supportsVisionForModel(model) ? 'supported' : 'unsupported';
   }
 
   /**

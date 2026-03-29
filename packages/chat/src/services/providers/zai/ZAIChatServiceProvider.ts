@@ -16,6 +16,7 @@ import { ZAIChatService } from './ZAIChatService';
 import {
   ZAIChatServiceOptions,
   ChatServiceProvider,
+  VisionSupportLevel,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
 import { resolveVisionModel } from '../../../utils';
@@ -98,7 +99,11 @@ export class ZAIChatServiceProvider
    * Check if this provider supports vision
    */
   supportsVision(): boolean {
-    return true;
+    return this.getVisionSupportLevel() !== 'unsupported';
+  }
+
+  getVisionSupportLevel(): VisionSupportLevel {
+    return 'supported';
   }
 
   /**
@@ -106,5 +111,9 @@ export class ZAIChatServiceProvider
    */
   supportsVisionForModel(model: string): boolean {
     return isZaiVisionModel(model);
+  }
+
+  getVisionSupportLevelForModel(model: string): VisionSupportLevel {
+    return this.supportsVisionForModel(model) ? 'supported' : 'unsupported';
   }
 }

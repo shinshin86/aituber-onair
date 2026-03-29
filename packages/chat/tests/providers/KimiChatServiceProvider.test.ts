@@ -39,6 +39,7 @@ describe('KimiChatServiceProvider', () => {
   describe('supportsVision', () => {
     it('should return true', () => {
       expect(provider.supportsVision()).toBe(true);
+      expect(provider.getVisionSupportLevel()).toBe('supported');
     });
   });
 
@@ -49,6 +50,9 @@ describe('KimiChatServiceProvider', () => {
 
     it('should return false for non-vision models', () => {
       expect(provider.supportsVisionForModel('unknown-model')).toBe(false);
+      expect(provider.getVisionSupportLevelForModel('unknown-model')).toBe(
+        'unsupported',
+      );
     });
   });
 

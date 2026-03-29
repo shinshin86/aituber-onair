@@ -16,6 +16,7 @@ import { GeminiChatService } from './GeminiChatService';
 import {
   GeminiChatServiceOptions,
   ChatServiceProvider,
+  VisionSupportLevel,
 } from '../ChatServiceProvider';
 import { resolveVisionModel } from '../../../utils';
 
@@ -91,7 +92,11 @@ export class GeminiChatServiceProvider
    * @returns Vision support status (true)
    */
   supportsVision(): boolean {
-    return true;
+    return this.getVisionSupportLevel() !== 'unsupported';
+  }
+
+  getVisionSupportLevel(): VisionSupportLevel {
+    return 'supported';
   }
 
   /**
@@ -101,5 +106,9 @@ export class GeminiChatServiceProvider
    */
   supportsVisionForModel(model: string): boolean {
     return GEMINI_VISION_SUPPORTED_MODELS.includes(model);
+  }
+
+  getVisionSupportLevelForModel(model: string): VisionSupportLevel {
+    return this.supportsVisionForModel(model) ? 'supported' : 'unsupported';
   }
 }

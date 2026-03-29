@@ -155,6 +155,8 @@ export type ChatServiceOptionsByProvider = {
 
 export type ChatProviderName = keyof ChatServiceOptionsByProvider;
 
+export type VisionSupportLevel = 'supported' | 'unsupported' | 'unknown';
+
 /**
  * Chat service provider interface
  * Abstraction for various AI API providers (OpenAI, Gemini, Claude, etc.)
@@ -186,8 +188,27 @@ export interface ChatServiceProvider<TOptions = BaseChatServiceOptions> {
   getDefaultModel(): string;
 
   /**
+   * Get the provider-level vision support status.
+   * - supported: known to support vision
+   * - unsupported: known to not support vision
+   * - unknown: depends on endpoint/model and cannot be pre-validated
+   */
+  getVisionSupportLevel(): VisionSupportLevel;
+
+  /**
+   * Get the model-level vision support status when pre-validation is possible.
+   */
+  getVisionSupportLevelForModel?(model: string): VisionSupportLevel;
+
+  /**
    * Check if the provider supports vision (image processing)
-   * @returns Support status
+   * @returns True when vision can be attempted
    */
   supportsVision(): boolean;
+
+  /**
+   * Check if a specific model supports vision capabilities.
+   * Returns true when vision can be attempted for the model.
+   */
+  supportsVisionForModel?(model: string): boolean;
 }

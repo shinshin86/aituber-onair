@@ -75,6 +75,7 @@ describe('OpenRouterChatServiceProvider', () => {
   describe('supportsVision', () => {
     it('should report vision support when vision models are available', () => {
       expect(provider.supportsVision()).toBe(true);
+      expect(provider.getVisionSupportLevel()).toBe('supported');
     });
   });
 
@@ -90,6 +91,9 @@ describe('OpenRouterChatServiceProvider', () => {
         false,
       );
       expect(provider.supportsVisionForModel('any-model')).toBe(false);
+      expect(
+        provider.getVisionSupportLevelForModel(MODEL_GPT_OSS_20B_FREE),
+      ).toBe('unsupported');
     });
   });
 

@@ -23,6 +23,7 @@ export type {
   ZAIChatServiceOptions,
   KimiChatServiceOptions,
   ChatServiceProvider,
+  VisionSupportLevel,
 } from './services/providers/ChatServiceProvider';
 
 // OpenAI provider exports

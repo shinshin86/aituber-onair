@@ -61,6 +61,7 @@ describe('GeminiChatServiceProvider', () => {
   describe('supportsVision', () => {
     it('should return true', () => {
       expect(provider.supportsVision()).toBe(true);
+      expect(provider.getVisionSupportLevel()).toBe('supported');
     });
   });
 
@@ -89,6 +90,9 @@ describe('GeminiChatServiceProvider', () => {
     it('should return false for non-vision models', () => {
       expect(provider.supportsVisionForModel('gemini-pro')).toBe(false);
       expect(provider.supportsVisionForModel('gemini-1.0')).toBe(false);
+      expect(provider.getVisionSupportLevelForModel('gemini-pro')).toBe(
+        'unsupported',
+      );
     });
   });
 

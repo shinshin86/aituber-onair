@@ -14,7 +14,15 @@ describe('OpenAICompatibleChatServiceProvider', () => {
   });
 
   it('should report vision as unsupported', () => {
-    expect(provider.supportsVision()).toBe(false);
+    expect(provider.supportsVision()).toBe(true);
+  });
+
+  it('should report unknown vision support level', () => {
+    expect(provider.getVisionSupportLevel()).toBe('unknown');
+    expect(provider.getVisionSupportLevelForModel('local-model')).toBe(
+      'unknown',
+    );
+    expect(provider.supportsVisionForModel('local-model')).toBe(true);
   });
 
   it('should require endpoint', () => {

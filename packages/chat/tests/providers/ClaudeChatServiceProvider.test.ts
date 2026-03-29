@@ -62,6 +62,7 @@ describe('ClaudeChatServiceProvider', () => {
   describe('supportsVision', () => {
     it('should return true', () => {
       expect(provider.supportsVision()).toBe(true);
+      expect(provider.getVisionSupportLevel()).toBe('supported');
     });
   });
 
@@ -95,6 +96,9 @@ describe('ClaudeChatServiceProvider', () => {
     it('should return false for non-vision models', () => {
       expect(provider.supportsVisionForModel('claude-2')).toBe(false);
       expect(provider.supportsVisionForModel('claude-instant')).toBe(false);
+      expect(provider.getVisionSupportLevelForModel('claude-2')).toBe(
+        'unsupported',
+      );
     });
   });
 

@@ -33,6 +33,7 @@ import { OpenAIChatService } from './OpenAIChatService';
 import {
   OpenAIChatServiceOptions,
   ChatServiceProvider,
+  VisionSupportLevel,
 } from '../ChatServiceProvider';
 import { ToolDefinition } from '../../../types/toolChat';
 import { resolveVisionModel } from '../../../utils';
@@ -150,7 +151,11 @@ export class OpenAIChatServiceProvider
    * @returns Vision support status (true)
    */
   supportsVision(): boolean {
-    return true;
+    return this.getVisionSupportLevel() !== 'unsupported';
+  }
+
+  getVisionSupportLevel(): VisionSupportLevel {
+    return 'supported';
   }
 
   /**
@@ -160,6 +165,10 @@ export class OpenAIChatServiceProvider
    */
   supportsVisionForModel(model: string): boolean {
     return VISION_SUPPORTED_MODELS.includes(model);
+  }
+
+  getVisionSupportLevelForModel(model: string): VisionSupportLevel {
+    return this.supportsVisionForModel(model) ? 'supported' : 'unsupported';
   }
 
   /**

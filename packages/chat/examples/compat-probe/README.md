@@ -18,7 +18,7 @@ Required checks:
 
 Best effort (out of required scope):
 - tools/function calling
-- vision
+- vision (runtime compatibility only; not pre-validated)
 - strict JSON mode compatibility
 
 ## Usage

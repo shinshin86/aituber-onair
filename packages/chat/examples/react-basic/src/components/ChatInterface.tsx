@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, FormEvent, ChangeEvent } from 'react';
+import type { VisionSupportLevel } from '@aituber-onair/chat';
 
 interface ChatInterfaceProps {
   onSendMessage: (message: string, imageData?: string) => void;
   disabled: boolean;
   isLoading: boolean;
   onClearChat: () => void;
-  supportsVision: boolean;
+  visionSupportLevel: VisionSupportLevel;
 }
 
 export default function ChatInterface({
@@ -13,22 +14,28 @@ export default function ChatInterface({
   disabled,
   isLoading,
   onClearChat,
-  supportsVision,
+  visionSupportLevel,
 }: ChatInterfaceProps) {
   const [message, setMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const imageDisabled = disabled || !supportsVision;
+  const imageDisabled = disabled || visionSupportLevel === 'unsupported';
+  const visionHint =
+    visionSupportLevel === 'supported'
+      ? 'Add image'
+      : visionSupportLevel === 'unknown'
+        ? 'Vision support cannot be pre-validated for this model or endpoint'
+        : 'Image not supported by model';
 
   useEffect(() => {
-    if (!supportsVision && selectedImage) {
+    if (visionSupportLevel === 'unsupported' && selectedImage) {
       setSelectedImage(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
-  }, [supportsVision, selectedImage]);
+  }, [visionSupportLevel, selectedImage]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -97,9 +104,7 @@ export default function ChatInterface({
             <label
               htmlFor="image-upload"
               className={`image-button ${imageDisabled ? 'disabled' : ''}`}
-              title={
-                supportsVision ? 'Add image' : 'Image not supported by model'
-              }
+              title={visionHint}
               aria-disabled={imageDisabled}
             >
               Image
@@ -124,6 +129,13 @@ export default function ChatInterface({
           </button>
         </div>
       </form>
+
+      {visionSupportLevel === 'unknown' && !disabled && (
+        <p className="vision-hint">
+          Vision support is unknown for this endpoint or model. Image requests
+          may fail at runtime.
+        </p>
+      )}
 
       <style>{`
         .chat-interface {
@@ -161,6 +173,12 @@ export default function ChatInterface({
         .chat-form {
           display: flex;
           gap: 0.5rem;
+        }
+
+        .vision-hint {
+          margin: 0.75rem 0 0;
+          color: #6b7280;
+          font-size: 0.85rem;
         }
         
         .input-group {

@@ -1,5 +1,24 @@
 # @aituber-onair/chat
 
+## 0.22.0
+
+### Minor Changes
+
+- Changed vision capability handling from a boolean check to a three-state
+  model: `supported`, `unsupported`, or `unknown`.
+- Updated `openai-compatible` so vision capability is treated as `unknown`
+  instead of being hard-disabled, allowing image requests against compatible
+  local/self-hosted models while still surfacing runtime errors for
+  unsupported endpoints or model IDs.
+- Added `ChatServiceFactory.getVisionSupportLevel()` and
+  `ChatServiceFactory.getVisionSupportLevelForModel()` for pre-validation
+  aware UI or application logic.
+- Updated the `react-basic` example so the image button stays available for
+  `openai-compatible` after the service is initialized, while still warning
+  that vision support may fail at runtime.
+- Updated README docs (EN/JA) and the compatibility probe README to document
+  the new `unknown` vision behavior.
+
 ## 0.21.2
 
 ### Patch Changes
