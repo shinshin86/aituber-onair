@@ -110,6 +110,8 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Endpoint URL is required (full `/v1/chat/completions` URL)
 - API key is optional (header is omitted when empty)
 - This example disables tool calling automatically for better local-LLM compatibility
+- Vision support is treated as `unknown`: image upload is allowed after
+  configuration, but unsupported endpoint/model combinations fail at runtime
 
 **Gemini:**
 - Gemini 3 preview series (3.1 Pro Preview, 3.1 Flash-Lite Preview, 3 Pro Preview, 3 Flash Preview)
@@ -350,6 +352,10 @@ Upload images for vision-enabled models:
 1. Click the image attachment button
 2. Select an image file
 3. The AI will analyze and respond to image content
+
+For `openai-compatible`, the example also allows image upload when configured.
+Because the endpoint/model is arbitrary, vision support cannot be pre-validated
+and may fail at runtime.
 
 ## 🎨 Customization
 
