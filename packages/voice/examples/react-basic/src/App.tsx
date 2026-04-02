@@ -21,8 +21,38 @@ import {
   type EngineType,
   type LocalOutputSamplingRateOption,
   type OutputStereoOption,
+  type SpeakerOption,
   type VoicePeakEmotionOption,
 } from './constants';
+
+interface VoicevoxSpeakerStyleResponse {
+  id: number;
+  name: string;
+}
+
+interface VoicevoxSpeakerResponse {
+  name: string;
+  styles: VoicevoxSpeakerStyleResponse[];
+}
+
+interface MinimaxSpeakerResponse {
+  voice_id: string;
+  voice_name: string;
+  gender?: string;
+  language?: string;
+}
+
+interface MinimaxSpeakerListResponse {
+  base_resp?: {
+    status_code?: number;
+    status_msg?: string;
+  };
+  data?: {
+    speakers?: MinimaxSpeakerResponse[];
+  };
+}
+
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
 
 function App() {
   const [engine, setEngine] = useState<EngineType>('openai');
@@ -124,6 +154,11 @@ function App() {
     'info',
   );
   const [isPlaying, setIsPlaying] = useState(false);
+  const [speakerOptions, setSpeakerOptions] = useState<SpeakerOption[]>([]);
+  const [isFetchingSpeakers, setIsFetchingSpeakers] = useState(false);
+  const [speakerFetchError, setSpeakerFetchError] = useState<string | null>(
+    null,
+  );
   const [voiceService, setVoiceService] = useState<VoiceEngineAdapter | null>(
     null,
   );
@@ -193,9 +228,112 @@ function App() {
     setAivisPauseLengthScale('');
     setAivisOutputSamplingRate('default');
     setAivisOutputStereo('default');
+    setSpeakerOptions([]);
+    setIsFetchingSpeakers(false);
+    setSpeakerFetchError(null);
     setStatus(`Switched to ${engine}. Default URL: ${defaults.apiUrl}`);
     setStatusType('success');
   }, [engine]);
+
+  const fetchSpeakers = async () => {
+    if (
+      engine !== 'voicevox' &&
+      engine !== 'aivisSpeech' &&
+      engine !== 'minimax'
+    ) {
+      return;
+    }
+
+    setIsFetchingSpeakers(true);
+    setSpeakerFetchError(null);
+
+    try {
+      let nextSpeakerOptions: SpeakerOption[] = [];
+
+      if (engine === 'voicevox' || engine === 'aivisSpeech') {
+        const normalizedApiUrl = trimTrailingSlash(apiUrl.trim());
+
+        if (!normalizedApiUrl) {
+          throw new Error('API URL is required');
+        }
+
+        const response = await fetch(`${normalizedApiUrl}/speakers`);
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch speakers: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const speakers = (await response.json()) as VoicevoxSpeakerResponse[];
+        nextSpeakerOptions = speakers.flatMap((voice) =>
+          voice.styles.map((style) => ({
+            id: String(style.id),
+            label: `${voice.name} - ${style.name}`,
+          })),
+        );
+      } else {
+        const trimmedApiKey = apiKey.trim();
+
+        if (!trimmedApiKey) {
+          throw new Error('MiniMax API key is required');
+        }
+
+        const response = await fetch(
+          'https://api.minimax.io/v1/query/tts_speakers',
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${trimmedApiKey}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            errorText
+              ? `Failed to fetch speakers: ${response.status} - ${errorText}`
+              : `Failed to fetch speakers: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const result = (await response.json()) as MinimaxSpeakerListResponse;
+
+        if (
+          result.base_resp?.status_code !== undefined &&
+          result.base_resp.status_code !== 0
+        ) {
+          const statusMessage = result.base_resp.status_msg ?? 'Unknown error';
+          throw new Error(
+            `MiniMax API error: ${result.base_resp.status_code} - ${statusMessage}`,
+          );
+        }
+
+        nextSpeakerOptions = (result.data?.speakers ?? []).map((voice) => ({
+          id: voice.voice_id,
+          label: voice.gender
+            ? `${voice.voice_name} (${voice.gender})`
+            : voice.voice_name,
+        }));
+      }
+
+      if (nextSpeakerOptions.length === 0) {
+        throw new Error('No speakers found');
+      }
+
+      setSpeakerOptions(nextSpeakerOptions);
+      setSpeaker(nextSpeakerOptions[0].id);
+    } catch (error) {
+      console.error('Failed to fetch speaker list:', error);
+      setSpeakerFetchError(
+        error instanceof Error ? error.message : 'Failed to fetch speakers',
+      );
+    } finally {
+      setIsFetchingSpeakers(false);
+    }
+  };
 
   const speak = async () => {
     if (!text) {
@@ -222,6 +360,17 @@ function App() {
 
     if (engine === 'openaiCompatible' && !openaiCompatibleModel.trim()) {
       setStatus('Model is required for openaiCompatible');
+      setStatusType('error');
+      return;
+    }
+
+    if (
+      (engine === 'voicevox' ||
+        engine === 'aivisSpeech' ||
+        engine === 'minimax') &&
+      !speaker.trim()
+    ) {
+      setStatus('話者一覧を取得してSpeakerを選択してください');
       setStatusType('error');
       return;
     }
@@ -697,6 +846,10 @@ function App() {
               onEngineChange={setEngine}
               speaker={speaker}
               onSpeakerChange={setSpeaker}
+              speakerOptions={speakerOptions}
+              isFetchingSpeakers={isFetchingSpeakers}
+              speakerFetchError={speakerFetchError}
+              onFetchSpeakers={fetchSpeakers}
               apiKey={apiKey}
               onApiKeyChange={setApiKey}
               apiUrl={apiUrl}
@@ -947,7 +1100,6 @@ function App() {
               engine={engine}
             />
           </div>
-
         </div>
       </main>
 

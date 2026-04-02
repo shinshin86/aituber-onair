@@ -394,6 +394,38 @@
   margin-top: 0.5rem;
 }
 
+.speaker-fetch-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+
+.secondary-action-button {
+  border: 1px solid var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  padding: 0.55rem 0.95rem;
+}
+
+.secondary-action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.secondary-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.speaker-fetch-message {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.speaker-fetch-message--error {
+  color: var(--error-text);
+}
+
 .card ul {
   text-align: left;
   line-height: 1.8;
@@ -434,6 +466,15 @@
   }
 
   .button-group button {
+    width: 100%;
+  }
+
+  .speaker-fetch-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .secondary-action-button {
     width: 100%;
   }
 

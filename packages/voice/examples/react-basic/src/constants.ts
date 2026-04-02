@@ -20,14 +20,14 @@ export const ENGINE_DEFAULTS = {
     needsApiKey: false,
     acceptsApiKey: false,
     placeholder: 'No API key needed',
-    speaker: 1,
+    speaker: '',
   },
   aivisSpeech: {
     apiUrl: 'http://localhost:10101',
     needsApiKey: false,
     acceptsApiKey: false,
     placeholder: 'No API key needed',
-    speaker: '888753760',
+    speaker: '',
   },
   aivisCloud: {
     apiUrl: 'https://api.aivis-project.com/v1/tts/synthesize',
@@ -49,7 +49,7 @@ export const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'Your MiniMax API key',
     groupIdPlaceholder: 'Your Group ID',
-    speaker: 'male-qn-qingse',
+    speaker: '',
     defaultModel: 'speech-2.6-hd' as MinimaxModel,
   },
 } as const;
@@ -73,27 +73,6 @@ export const MINIMAX_MODELS: Record<MinimaxModel, string> = {
   'speech-01-turbo': 'Excellent performance and low latency',
 };
 
-export const MINIMAX_VOICES: Record<string, string> = {
-  'male-qn-qingse': 'Male - Qingse (Default)',
-  Wise_Woman: 'Wise Woman',
-  Friendly_Person: 'Friendly Person',
-  Inspirational_girl: 'Inspirational Girl',
-  Deep_Voice_Man: 'Deep Voice Man',
-  Calm_Woman: 'Calm Woman',
-  Casual_Guy: 'Casual Guy',
-  Lively_Girl: 'Lively Girl',
-  Patient_Man: 'Patient Man',
-  Young_Knight: 'Young Knight',
-  Determined_Man: 'Determined Man',
-  Lovely_Girl: 'Lovely Girl',
-  Decent_Boy: 'Decent Boy',
-  Imposing_Manner: 'Imposing Manner',
-  Elegant_Man: 'Elegant Man',
-  Abbess: 'Abbess',
-  Sweet_Girl_2: 'Sweet Girl 2',
-  Exuberant_Girl: 'Exuberant Girl',
-};
-
 export const OPENAI_VOICES: Record<string, string> = {
   alloy: 'Alloy',
   ash: 'Ash',
@@ -105,6 +84,11 @@ export const OPENAI_VOICES: Record<string, string> = {
   sage: 'Sage',
   shimmer: 'Shimmer',
 };
+
+export interface SpeakerOption {
+  id: string;
+  label: string;
+}
 
 export interface SliderConfig {
   min: number;

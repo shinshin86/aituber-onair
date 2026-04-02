@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import {
   ENGINE_DEFAULTS,
-  MINIMAX_VOICES,
   OPENAI_VOICES,
   type EngineType,
+  type SpeakerOption,
 } from '../constants';
 
 interface EngineSelectorProps {
@@ -11,6 +11,10 @@ interface EngineSelectorProps {
   onEngineChange: (nextValue: EngineType) => void;
   speaker: string;
   onSpeakerChange: (nextValue: string) => void;
+  speakerOptions: SpeakerOption[];
+  isFetchingSpeakers: boolean;
+  speakerFetchError: string | null;
+  onFetchSpeakers: () => void;
   apiKey: string;
   onApiKeyChange: (nextValue: string) => void;
   apiUrl: string;
@@ -26,6 +30,10 @@ export function EngineSelector({
   onEngineChange,
   speaker,
   onSpeakerChange,
+  speakerOptions,
+  isFetchingSpeakers,
+  speakerFetchError,
+  onFetchSpeakers,
   apiKey,
   onApiKeyChange,
   apiUrl,
@@ -36,6 +44,7 @@ export function EngineSelector({
   children,
 }: EngineSelectorProps) {
   const defaults = ENGINE_DEFAULTS[engine];
+  const hasSpeakerOptions = speakerOptions.length > 0;
   const showApiKey =
     engine === 'openai' ||
     engine === 'openaiCompatible' ||
@@ -73,45 +82,87 @@ export function EngineSelector({
           <label htmlFor="speaker">Speaker:</label>
           <select
             id="speaker"
-            value={speaker}
+            value={hasSpeakerOptions ? speaker : ''}
             onChange={(e) => onSpeakerChange(e.target.value)}
+            disabled={!hasSpeakerOptions}
           >
-            {Object.entries(MINIMAX_VOICES).map(([voiceId, label]) => (
-              <option key={voiceId} value={voiceId}>
-                {label}
+            {hasSpeakerOptions ? (
+              speakerOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))
+            ) : (
+              <option value="">
+                -- 話者一覧を取得してください --
               </option>
-            ))}
+            )}
           </select>
+          <div className="speaker-fetch-row">
+            <button
+              type="button"
+              className="secondary-action-button"
+              onClick={onFetchSpeakers}
+              disabled={isFetchingSpeakers || !apiKey.trim()}
+              title={!apiKey.trim() ? 'API Keyを入力してください' : undefined}
+            >
+              {isFetchingSpeakers
+                ? '取得中...'
+                : hasSpeakerOptions
+                  ? '再取得'
+                  : '話者一覧を取得'}
+            </button>
+          </div>
+          {speakerFetchError && (
+            <div className="speaker-fetch-message speaker-fetch-message--error">
+              {speakerFetchError}
+            </div>
+          )}
         </div>
       );
     }
 
-    if (engine === 'voicevox') {
+    if (engine === 'voicevox' || engine === 'aivisSpeech') {
       return (
         <div className="form-group">
           <label htmlFor="speaker">Speaker:</label>
-          <input
+          <select
             id="speaker"
-            type="text"
-            value={speaker}
+            value={hasSpeakerOptions ? speaker : ''}
             onChange={(e) => onSpeakerChange(e.target.value)}
-            placeholder="例: 1 (ずんだもん: 3, 四国めたん: 2)"
-          />
-        </div>
-      );
-    }
-
-    if (engine === 'aivisSpeech') {
-      return (
-        <div className="form-group">
-          <label htmlFor="speaker">Speaker:</label>
-          <input
-            id="speaker"
-            type="text"
-            value={speaker}
-            onChange={(e) => onSpeakerChange(e.target.value)}
-            placeholder="例: 888753760"
-          />
+            disabled={!hasSpeakerOptions}
+          >
+            {hasSpeakerOptions ? (
+              speakerOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))
+            ) : (
+              <option value="">
+                -- 話者一覧を取得してください --
+              </option>
+            )}
+          </select>
+          <div className="speaker-fetch-row">
+            <button
+              type="button"
+              className="secondary-action-button"
+              onClick={onFetchSpeakers}
+              disabled={isFetchingSpeakers}
+            >
+              {isFetchingSpeakers
+                ? '取得中...'
+                : hasSpeakerOptions
+                  ? '再取得'
+                  : '話者一覧を取得'}
+            </button>
+          </div>
+          {speakerFetchError && (
+            <div className="speaker-fetch-message speaker-fetch-message--error">
+              {speakerFetchError}
+            </div>
+          )}
         </div>
       );
     }
