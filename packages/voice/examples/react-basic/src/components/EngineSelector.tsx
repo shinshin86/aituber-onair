@@ -93,9 +93,7 @@ export function EngineSelector({
                 </option>
               ))
             ) : (
-              <option value="">
-                -- 話者一覧を取得してください --
-              </option>
+              <option value="">-- 話者一覧を取得してください --</option>
             )}
           </select>
           <div className="speaker-fetch-row">
@@ -139,9 +137,7 @@ export function EngineSelector({
                 </option>
               ))
             ) : (
-              <option value="">
-                -- 話者一覧を取得してください --
-              </option>
+              <option value="">-- 話者一覧を取得してください --</option>
             )}
           </select>
           <div className="speaker-fetch-row">
