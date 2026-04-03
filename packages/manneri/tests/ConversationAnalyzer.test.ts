@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ConversationAnalyzer } from '../src/core/ConversationAnalyzer.js';
 import type { Message } from '../src/types/index.js';
+import type { PromptTemplates } from '../src/types/prompts.js';
 
 describe('ConversationAnalyzer', () => {
   let analyzer: ConversationAnalyzer;
@@ -15,6 +16,20 @@ describe('ConversationAnalyzer', () => {
     {
       role: 'assistant',
       content: 'I can help you with various tasks.',
+      timestamp: 4000,
+    },
+  ];
+  const guaranteedSimilarMessages: Message[] = [
+    { role: 'user', content: 'Tell me about cats', timestamp: 1000 },
+    {
+      role: 'assistant',
+      content: 'Cats are wonderful pets',
+      timestamp: 2000,
+    },
+    { role: 'user', content: 'Tell me about cats', timestamp: 3000 },
+    {
+      role: 'assistant',
+      content: 'Cats are wonderful pets',
       timestamp: 4000,
     },
   ];
@@ -47,6 +62,11 @@ describe('ConversationAnalyzer', () => {
       expect(options.similarityThreshold).toBe(0.9);
       expect(options.analysisWindow).toBe(5);
       expect(options.enablePatternDetection).toBe(false);
+    });
+
+    it('should default language to ja', () => {
+      const options = analyzer.getOptions();
+      expect(options.language).toBe('ja');
     });
   });
 
@@ -230,21 +250,17 @@ describe('ConversationAnalyzer', () => {
 
   describe('intervention logic', () => {
     it('should trigger intervention on high similarity', () => {
-      const similarMessages: Message[] = [
-        { role: 'user', content: 'Tell me about cats' },
-        { role: 'assistant', content: 'Cats are wonderful pets' },
-        { role: 'user', content: 'Tell me about cats' },
-        { role: 'assistant', content: 'Cats are wonderful pets' },
-      ];
-
       const customAnalyzer = new ConversationAnalyzer({
         similarityThreshold: 0.5,
       });
 
-      const result = customAnalyzer.analyzeConversation(similarMessages);
-      if (result.similarity.score >= 0.5) {
-        expect(result.interventionReason).toContain('類似度が高い');
-      }
+      const result = customAnalyzer.analyzeConversation(
+        guaranteedSimilarMessages
+      );
+
+      expect(result.shouldIntervene).toBe(true);
+      expect(result.similarity.score).toBeGreaterThanOrEqual(0.5);
+      expect(result.interventionReason).toContain('類似度が高い');
     });
 
     it('should trigger intervention on topic concentration', () => {
@@ -260,6 +276,66 @@ describe('ConversationAnalyzer', () => {
       const result = analyzer.analyzeConversation(topicMessages);
       // Topic analysis might detect concentrated topics
       expect(result).toBeDefined();
+    });
+
+    it('should localize intervention reasons in English', () => {
+      const customAnalyzer = new ConversationAnalyzer({
+        language: 'en',
+        similarityThreshold: 0.5,
+      });
+
+      const result = customAnalyzer.analyzeConversation(
+        guaranteedSimilarMessages
+      );
+
+      expect(result.shouldIntervene).toBe(true);
+      expect(result.similarity.score).toBeGreaterThanOrEqual(0.5);
+      expect(result.interventionReason).toContain('High similarity');
+    });
+
+    it('should use custom localized reason templates', () => {
+      const customAnalyzer = new ConversationAnalyzer({
+        similarityThreshold: 0.5,
+        customPrompts: {
+          ja: {
+            interventionReasons: {
+              similarityHigh: 'SIM {score}',
+              patternRepetition: 'PAT {count}',
+              topicBias: 'TOPIC {count}',
+              thresholdExceeded: 'FALLBACK',
+            },
+          },
+        },
+      });
+      const result = customAnalyzer.analyzeConversation(
+        guaranteedSimilarMessages
+      );
+
+      expect(result.shouldIntervene).toBe(true);
+      expect(result.similarity.score).toBeGreaterThanOrEqual(0.5);
+      expect(result.interventionReason).toContain('SIM');
+    });
+
+    it('should fall back to English defaults for incomplete reason templates', () => {
+      const customAnalyzer = new ConversationAnalyzer({
+        language: 'fr',
+        similarityThreshold: 0.5,
+        customPrompts: {
+          fr: {
+            interventionReasons: {
+              similarityHigh: undefined,
+            } as unknown as NonNullable<PromptTemplates['interventionReasons']>,
+          },
+        },
+      });
+
+      const result = customAnalyzer.analyzeConversation(
+        guaranteedSimilarMessages
+      );
+
+      expect(result.shouldIntervene).toBe(true);
+      expect(result.interventionReason).toContain('High similarity');
+      expect(result.interventionReason).not.toContain('undefined');
     });
   });
 });

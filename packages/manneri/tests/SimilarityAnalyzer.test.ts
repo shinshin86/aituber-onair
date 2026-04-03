@@ -90,6 +90,31 @@ describe('SimilarityAnalyzer', () => {
 
       expect(similarity1).toBe(similarity2);
     });
+
+    it('should track cache hits and misses', () => {
+      analyzer.calculateSimilarity('Hello world', 'Hello universe');
+      analyzer.calculateSimilarity('Hello world', 'Hello universe');
+
+      const stats = analyzer.getCacheStats();
+      expect(stats.hits).toBe(1);
+      expect(stats.misses).toBe(1);
+      expect(stats.hitRate).toBe(0.5);
+    });
+
+    it('should avoid cache key collisions when text contains old delimiter', () => {
+      const pair1Text1 = 'alpha';
+      const pair1Text2 = 'beta||beta';
+      const pair2Text1 = 'alpha||beta';
+      const pair2Text2 = 'beta';
+
+      analyzer.calculateSimilarity(pair1Text1, pair1Text2);
+      analyzer.calculateSimilarity(pair2Text1, pair2Text2);
+      const stats = analyzer.getCacheStats();
+
+      expect(stats.size).toBe(2);
+      expect(stats.hits).toBe(0);
+      expect(stats.misses).toBe(2);
+    });
   });
 
   describe('analyzeSimilarity', () => {
@@ -333,8 +358,23 @@ describe('SimilarityAnalyzer', () => {
 
       expect(stats).toHaveProperty('size');
       expect(stats).toHaveProperty('hitRate');
+      expect(stats).toHaveProperty('hits');
+      expect(stats).toHaveProperty('misses');
       expect(stats.size).toBeGreaterThanOrEqual(0);
       expect(stats.hitRate).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should reset cache statistics when cache is cleared', () => {
+      analyzer.calculateSimilarity('text1', 'text2');
+      analyzer.calculateSimilarity('text1', 'text2');
+
+      analyzer.clearCache();
+
+      const stats = analyzer.getCacheStats();
+      expect(stats.size).toBe(0);
+      expect(stats.hits).toBe(0);
+      expect(stats.misses).toBe(0);
+      expect(stats.hitRate).toBe(0);
     });
 
     it('should auto-expire cache entries after timeout', () => {

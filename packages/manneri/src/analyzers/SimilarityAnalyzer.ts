@@ -4,6 +4,12 @@ import type {
   TextAnalysisOptions,
 } from '../types/index.js';
 import {
+  CACHE_EVICTION_BATCH,
+  CACHE_TTL_MS,
+  DEFAULT_SIMILARITY_THRESHOLD,
+  MAX_CACHE_SIZE,
+} from '../config/constants.js';
+import {
   calculateTextSimilarity,
   tokenize,
   generateNgrams,
@@ -13,7 +19,9 @@ import { measurePerformance } from '../utils/browserUtils.js';
 export class SimilarityAnalyzer {
   private readonly options: TextAnalysisOptions;
   private readonly cache: Map<string, number> = new Map();
-  private readonly cacheTimeout: number = 300000; // 5 minutes
+  private readonly cacheTimeout: number = CACHE_TTL_MS;
+  private cacheHits = 0;
+  private cacheMisses = 0;
 
   constructor(options: Partial<TextAnalysisOptions> = {}) {
     this.options = {
@@ -31,8 +39,11 @@ export class SimilarityAnalyzer {
 
     const cached = this.cache.get(cacheKey);
     if (cached !== undefined) {
+      this.cacheHits++;
       return cached;
     }
+
+    this.cacheMisses++;
 
     const similarity = measurePerformance(
       'calculateSimilarity',
@@ -47,7 +58,7 @@ export class SimilarityAnalyzer {
   analyzeSimilarity(
     currentMessage: Message,
     previousMessages: Message[],
-    threshold = 0.7
+    threshold: number = DEFAULT_SIMILARITY_THRESHOLD
   ): SimilarityResult {
     if (previousMessages.length === 0) {
       return {
@@ -96,7 +107,7 @@ export class SimilarityAnalyzer {
   findSimilarMessages(
     targetMessage: Message,
     messages: Message[],
-    threshold = 0.7,
+    threshold: number = DEFAULT_SIMILARITY_THRESHOLD,
     sameRoleOnly = true
   ): Message[] {
     const similarMessages: Message[] = [];
@@ -123,7 +134,7 @@ export class SimilarityAnalyzer {
   analyzeSequenceSimilarity(
     messages: Message[],
     sequenceLength = 3,
-    threshold = 0.7
+    threshold: number = DEFAULT_SIMILARITY_THRESHOLD
   ): Array<{ sequence: Message[]; similarity: number }> {
     if (messages.length < sequenceLength * 2) {
       return [];
@@ -202,7 +213,7 @@ export class SimilarityAnalyzer {
 
   private getCacheKey(text1: string, text2: string): string {
     const sortedTexts = [text1, text2].sort();
-    return `${sortedTexts[0]}||${sortedTexts[1]}`;
+    return JSON.stringify(sortedTexts);
   }
 
   private setCacheValue(key: string, value: number): void {
@@ -212,8 +223,11 @@ export class SimilarityAnalyzer {
       this.cache.delete(key);
     }, this.cacheTimeout);
 
-    if (this.cache.size > 1000) {
-      const keysToDelete = Array.from(this.cache.keys()).slice(0, 100);
+    if (this.cache.size > MAX_CACHE_SIZE) {
+      const keysToDelete = Array.from(this.cache.keys()).slice(
+        0,
+        CACHE_EVICTION_BATCH
+      );
       for (const k of keysToDelete) {
         this.cache.delete(k);
       }
@@ -222,12 +236,23 @@ export class SimilarityAnalyzer {
 
   clearCache(): void {
     this.cache.clear();
+    this.cacheHits = 0;
+    this.cacheMisses = 0;
   }
 
-  getCacheStats(): { size: number; hitRate: number } {
+  getCacheStats(): {
+    size: number;
+    hitRate: number;
+    hits: number;
+    misses: number;
+  } {
+    const total = this.cacheHits + this.cacheMisses;
+
     return {
       size: this.cache.size,
-      hitRate: 0,
+      hitRate: total > 0 ? this.cacheHits / total : 0,
+      hits: this.cacheHits,
+      misses: this.cacheMisses,
     };
   }
 }

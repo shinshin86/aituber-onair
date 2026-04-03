@@ -9,7 +9,36 @@ import type {
 import { SimilarityAnalyzer } from '../analyzers/SimilarityAnalyzer.js';
 import { KeywordExtractor } from '../analyzers/KeywordExtractor.js';
 import { PatternDetector } from '../analyzers/PatternDetector.js';
+import {
+  DEFAULT_ANALYSIS_WINDOW,
+  DEFAULT_ANALYZER_SIMILARITY_THRESHOLD,
+  DEFAULT_KEYWORD_THRESHOLD,
+  DEFAULT_PATTERN_THRESHOLD,
+  LOOP_DETECTION_THRESHOLD,
+  PATTERN_FREQUENCY_TRIGGER,
+  TOPIC_CONFIDENCE_TRIGGER,
+} from '../config/constants.js';
+import { DEFAULT_PROMPTS } from '../config/defaultPrompts.js';
+import {
+  overridePrompts,
+  type LocalizedPrompts,
+  type LocalizedPromptOverrides,
+  type PromptTemplates,
+} from '../types/prompts.js';
 import { measurePerformance } from '../utils/browserUtils.js';
+
+const DEFAULT_INTERVENTION_REASONS: NonNullable<
+  PromptTemplates['interventionReasons']
+> = {
+  similarityHigh: 'High similarity ({score}%)',
+  patternRepetition: 'Pattern repetition (max {count} times)',
+  topicBias: 'Narrow topic focus ({count} topics)',
+  thresholdExceeded: 'Threshold exceeded',
+};
+
+type InterventionReasonKey = keyof NonNullable<
+  PromptTemplates['interventionReasons']
+>;
 
 export interface ConversationAnalyzerOptions {
   similarityThreshold: number;
@@ -21,6 +50,8 @@ export interface ConversationAnalyzerOptions {
   enableKeywordAnalysis: boolean;
   enableTopicTracking: boolean;
   textAnalysisOptions: Partial<TextAnalysisOptions>;
+  language?: string;
+  customPrompts?: LocalizedPromptOverrides;
 }
 
 export class ConversationAnalyzer {
@@ -28,20 +59,24 @@ export class ConversationAnalyzer {
   private readonly keywordExtractor: KeywordExtractor;
   private readonly patternDetector: PatternDetector;
   private readonly options: ConversationAnalyzerOptions;
+  private prompts: LocalizedPrompts;
 
   constructor(options: Partial<ConversationAnalyzerOptions> = {}) {
     this.options = {
-      similarityThreshold: 0.75,
-      patternThreshold: 0.8,
-      keywordThreshold: 0.7,
-      analysisWindow: 10,
+      similarityThreshold: DEFAULT_ANALYZER_SIMILARITY_THRESHOLD,
+      patternThreshold: DEFAULT_PATTERN_THRESHOLD,
+      keywordThreshold: DEFAULT_KEYWORD_THRESHOLD,
+      analysisWindow: DEFAULT_ANALYSIS_WINDOW,
       enableSimilarityAnalysis: true,
       enablePatternDetection: true,
       enableKeywordAnalysis: true,
       enableTopicTracking: true,
       textAnalysisOptions: {},
+      language: 'ja',
+      customPrompts: undefined,
       ...options,
     };
+    this.prompts = overridePrompts(DEFAULT_PROMPTS, this.options.customPrompts);
 
     this.similarityAnalyzer = new SimilarityAnalyzer(
       this.options.textAnalysisOptions
@@ -136,10 +171,13 @@ export class ConversationAnalyzer {
       similarity.isRepeated &&
       similarity.score >= this.options.similarityThreshold;
 
-    const patternTrigger = patterns.some((p) => p.frequency >= 3);
+    const patternTrigger = patterns.some(
+      (p) => p.frequency >= PATTERN_FREQUENCY_TRIGGER
+    );
 
     const topicTrigger =
-      topics.length > 0 && topics.some((t) => t.confidence > 0.8);
+      topics.length > 0 &&
+      topics.some((t) => t.confidence > TOPIC_CONFIDENCE_TRIGGER);
 
     return similarityTrigger || patternTrigger || topicTrigger;
   }
@@ -149,25 +187,69 @@ export class ConversationAnalyzer {
     topics: TopicInfo[],
     patterns: ConversationPattern[]
   ): string {
+    const templates = this.getInterventionReasonTemplates();
     const reasons: string[] = [];
 
     if (similarity.isRepeated) {
-      reasons.push(`類似度が高い (${Math.round(similarity.score * 100)}%)`);
+      reasons.push(
+        templates.similarityHigh.replace(
+          '{score}',
+          String(Math.round(similarity.score * 100))
+        )
+      );
     }
 
     if (patterns.length > 0) {
       const maxFrequency = Math.max(...patterns.map((p) => p.frequency));
-      reasons.push(`パターンの繰り返し (最大${maxFrequency}回)`);
+      reasons.push(
+        templates.patternRepetition.replace('{count}', String(maxFrequency))
+      );
     }
 
     if (topics.length > 0) {
-      const highConfidenceTopics = topics.filter((t) => t.confidence > 0.8);
+      const highConfidenceTopics = topics.filter(
+        (t) => t.confidence > TOPIC_CONFIDENCE_TRIGGER
+      );
       if (highConfidenceTopics.length > 0) {
-        reasons.push(`話題の偏り (${highConfidenceTopics.length}件)`);
+        reasons.push(
+          templates.topicBias.replace(
+            '{count}',
+            String(highConfidenceTopics.length)
+          )
+        );
       }
     }
 
-    return reasons.length > 0 ? reasons.join(', ') : '閾値を超過';
+    return reasons.length > 0
+      ? reasons.join(', ')
+      : templates.thresholdExceeded;
+  }
+
+  private getInterventionReasonTemplates(): NonNullable<
+    PromptTemplates['interventionReasons']
+  > {
+    return {
+      similarityHigh: this.resolveInterventionReasonTemplate('similarityHigh'),
+      patternRepetition:
+        this.resolveInterventionReasonTemplate('patternRepetition'),
+      topicBias: this.resolveInterventionReasonTemplate('topicBias'),
+      thresholdExceeded:
+        this.resolveInterventionReasonTemplate('thresholdExceeded'),
+    } satisfies NonNullable<PromptTemplates['interventionReasons']>;
+  }
+
+  private resolveInterventionReasonTemplate(
+    key: InterventionReasonKey
+  ): string {
+    const language = this.options.language || 'ja';
+    const languageReasons = this.prompts[language]?.interventionReasons;
+    const englishDefaults = DEFAULT_PROMPTS.en.interventionReasons;
+
+    return (
+      languageReasons?.[key] ||
+      englishDefaults?.[key] ||
+      DEFAULT_INTERVENTION_REASONS[key]
+    );
   }
 
   private createEmptySimilarityResult(): SimilarityResult {
@@ -280,7 +362,7 @@ export class ConversationAnalyzer {
           sequence2
         );
 
-        if (similarity > 0.8) {
+        if (similarity > LOOP_DETECTION_THRESHOLD) {
           result.hasLoop = true;
           result.loopLength = loopLength;
           result.loopStart = start;
@@ -340,6 +422,7 @@ export class ConversationAnalyzer {
 
   updateOptions(options: Partial<ConversationAnalyzerOptions>): void {
     Object.assign(this.options, options);
+    this.prompts = overridePrompts(DEFAULT_PROMPTS, this.options.customPrompts);
   }
 
   getOptions(): ConversationAnalyzerOptions {

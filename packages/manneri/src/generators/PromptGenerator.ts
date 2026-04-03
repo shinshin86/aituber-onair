@@ -2,7 +2,9 @@ import type {
   Message,
   DiversificationPrompt,
   LocalizedPrompts,
+  LocalizedPromptOverrides,
 } from '../types/index.js';
+import { MAX_PROMPT_HISTORY } from '../config/constants.js';
 import { DEFAULT_PROMPTS } from '../config/defaultPrompts.js';
 import { overridePrompts } from '../types/prompts.js';
 
@@ -12,11 +14,11 @@ export interface PromptGenerationOptions {
 
 export class PromptGenerator {
   private readonly usedPrompts: Set<string> = new Set();
-  private readonly maxPromptHistory: number = 50;
+  private readonly maxPromptHistory: number = MAX_PROMPT_HISTORY;
   private language: string;
   private prompts: LocalizedPrompts;
 
-  constructor(language = 'ja', customPrompts?: Partial<LocalizedPrompts>) {
+  constructor(language = 'ja', customPrompts?: LocalizedPromptOverrides) {
     this.language = language;
     this.prompts = overridePrompts(DEFAULT_PROMPTS, customPrompts);
   }

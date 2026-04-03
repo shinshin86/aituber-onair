@@ -4,10 +4,11 @@ export interface Message {
   timestamp?: number;
 }
 
-import type { LocalizedPrompts } from './prompts.js';
+import type { LocalizedPrompts, LocalizedPromptOverrides } from './prompts.js';
 
 export interface ManneriConfig {
   similarityThreshold: number;
+  /** @deprecated This field is not used in detection logic and will be removed in a future major version. */
   repetitionLimit: number;
   lookbackWindow: number;
   interventionCooldown: number;
@@ -16,13 +17,9 @@ export interface ManneriConfig {
   enableTopicTracking: boolean;
   enableKeywordAnalysis: boolean;
   debugMode: boolean;
-  // AI generation settings
-  enableAiPromptGeneration: boolean;
-  aiPromptGenerationProvider: 'openai' | 'gemini' | 'default';
-  aiPromptGenerationModel?: string;
   // Language and prompt settings
   language?: string;
-  customPrompts?: Partial<LocalizedPrompts>;
+  customPrompts?: LocalizedPromptOverrides;
 }
 
 export interface SimilarityResult {
@@ -60,12 +57,6 @@ export interface DiversificationPrompt {
   type: 'topic_change' | 'pattern_break' | 'keyword_shift';
   priority: 'low' | 'medium' | 'high';
   context: string;
-}
-
-export interface AiProviderConfig {
-  provider: 'openai' | 'gemini';
-  model: string;
-  apiKey: string;
 }
 
 export interface TextAnalysisOptions {
@@ -119,9 +110,6 @@ export const DEFAULT_MANNERI_CONFIG: ManneriConfig = {
   enableTopicTracking: true,
   enableKeywordAnalysis: true,
   debugMode: false,
-  enableAiPromptGeneration: false,
-  aiPromptGenerationProvider: 'default',
-  aiPromptGenerationModel: undefined,
   language: 'ja',
   customPrompts: undefined,
 };
@@ -130,6 +118,7 @@ export const DEFAULT_MANNERI_CONFIG: ManneriConfig = {
 export type {
   PromptTemplates,
   LocalizedPrompts,
+  LocalizedPromptOverrides,
 } from './prompts.js';
 
 // Export persistence types

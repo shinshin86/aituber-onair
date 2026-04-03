@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { overridePrompts } from '../src/types/prompts.js';
 import { DEFAULT_PROMPTS } from '../src/config/defaultPrompts.js';
-import type { LocalizedPrompts } from '../src/types/prompts.js';
+import { ConversationAnalyzer } from '../src/core/ConversationAnalyzer.js';
+import type {
+  LocalizedPrompts,
+  LocalizedPromptOverrides,
+} from '../src/types/prompts.js';
+import type { Message } from '../src/types/index.js';
 
 describe('overridePrompts', () => {
   it('should return default prompts when no custom prompts provided', () => {
@@ -15,7 +20,7 @@ describe('overridePrompts', () => {
   });
 
   it('should override specific language prompts with custom prompts', () => {
-    const customPrompts = {
+    const customPrompts: LocalizedPromptOverrides = {
       ja: {
         intervention: ['カスタムプロンプト1', 'カスタムプロンプト2'],
       },
@@ -25,13 +30,16 @@ describe('overridePrompts', () => {
 
     // Japanese prompts should be overridden
     expect(result.ja.intervention).toEqual(customPrompts.ja.intervention);
+    expect(result.ja.interventionReasons).toEqual(
+      DEFAULT_PROMPTS.ja.interventionReasons
+    );
 
     // English prompts should remain default
     expect(result.en.intervention).toEqual(DEFAULT_PROMPTS.en.intervention);
   });
 
   it('should add new language prompts while preserving defaults', () => {
-    const customPrompts = {
+    const customPrompts: LocalizedPromptOverrides = {
       zh: {
         intervention: ['换个话题吧', '我们聊点别的'],
       },
@@ -48,7 +56,7 @@ describe('overridePrompts', () => {
   });
 
   it('should handle multiple language overrides', () => {
-    const customPrompts = {
+    const customPrompts: LocalizedPromptOverrides = {
       ja: {
         intervention: ['カスタム日本語'],
       },
@@ -68,15 +76,13 @@ describe('overridePrompts', () => {
     expect(result.es.intervention).toEqual(['Español personalizado']);
   });
 
-  it('should ignore empty or invalid custom prompts', () => {
-    const customPrompts = {
+  it('should preserve defaults and allow fallback for incomplete overrides', () => {
+    const customPrompts: LocalizedPromptOverrides = {
       ja: {
         intervention: [], // Empty array
       },
       en: undefined as unknown, // Undefined
-      fr: {
-        // Missing intervention
-      } as unknown,
+      fr: {},
     };
 
     const result = overridePrompts(DEFAULT_PROMPTS, customPrompts);
@@ -87,8 +93,29 @@ describe('overridePrompts', () => {
     // Default English should be preserved (undefined template)
     expect(result.en.intervention).toEqual(DEFAULT_PROMPTS.en.intervention);
 
-    // French should not be added (missing intervention)
-    expect(result.fr).toBeUndefined();
+    const analyzer = new ConversationAnalyzer({
+      language: 'fr',
+      similarityThreshold: 0.5,
+      customPrompts,
+    });
+    const repeatedMessages: Message[] = [
+      { role: 'user', content: 'Tell me about cats', timestamp: 1000 },
+      {
+        role: 'assistant',
+        content: 'Cats are wonderful pets',
+        timestamp: 2000,
+      },
+      { role: 'user', content: 'Tell me about cats', timestamp: 3000 },
+      {
+        role: 'assistant',
+        content: 'Cats are wonderful pets',
+        timestamp: 4000,
+      },
+    ];
+
+    const analysis = analyzer.analyzeConversation(repeatedMessages);
+    expect(analysis.shouldIntervene).toBe(true);
+    expect(analysis.interventionReason).toContain('High similarity');
   });
 
   it('should preserve default structure when partially overriding', () => {
@@ -100,7 +127,7 @@ describe('overridePrompts', () => {
       } as unknown,
     };
 
-    const customPrompts = {
+    const customPrompts: LocalizedPromptOverrides = {
       ja: {
         intervention: ['新しいプロンプト'],
       },
@@ -118,7 +145,7 @@ describe('overridePrompts', () => {
 
   it('should handle the exact user reported case', () => {
     // This is the exact custom prompts structure from the user's bug report
-    const userCustomPrompts = {
+    const userCustomPrompts: LocalizedPromptOverrides = {
       ja: {
         intervention: [
           '話題を変えて、新しい内容について話しましょう。',
@@ -150,5 +177,25 @@ describe('overridePrompts', () => {
     // Verify no default prompts leak through
     expect(result.ja.intervention).not.toEqual(DEFAULT_PROMPTS.ja.intervention);
     expect(result.en.intervention).not.toEqual(DEFAULT_PROMPTS.en.intervention);
+  });
+
+  it('should override only intervention reasons', () => {
+    const customPrompts: LocalizedPromptOverrides = {
+      ja: {
+        interventionReasons: {
+          similarityHigh: 'SIM {score}',
+          patternRepetition: 'PAT {count}',
+          topicBias: 'TOPIC {count}',
+          thresholdExceeded: 'DONE',
+        },
+      },
+    };
+
+    const result = overridePrompts(DEFAULT_PROMPTS, customPrompts);
+
+    expect(result.ja.intervention).toEqual(DEFAULT_PROMPTS.ja.intervention);
+    expect(result.ja.interventionReasons).toEqual(
+      customPrompts.ja.interventionReasons
+    );
   });
 });

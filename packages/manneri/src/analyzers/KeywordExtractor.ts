@@ -3,6 +3,18 @@ import type {
   TopicInfo,
   TextAnalysisOptions,
 } from '../types/index.js';
+import {
+  KEYWORD_DENSITY_THRESHOLD,
+  MAX_CONTEXT_LENGTH,
+  MAX_CONTEXTS_PER_KEYWORD,
+  MAX_KEYWORDS,
+  MAX_RELATED_KEYWORDS,
+  MAX_TOPIC_CLUSTERS,
+  PERSISTENCE_WINDOW_MS,
+  RECENCY_WINDOW_MS,
+  SEMANTIC_SIMILARITY_THRESHOLD,
+  TOP_KEYWORDS_LIMIT,
+} from '../config/constants.js';
 import { tokenize, extractKeywords } from '../utils/textUtils.js';
 import { measurePerformance } from '../utils/browserUtils.js';
 
@@ -29,8 +41,8 @@ export class KeywordExtractor {
   private readonly keywordFrequencies: Map<string, KeywordFrequency> =
     new Map();
   private readonly topicClusters: Map<string, TopicCluster> = new Map();
-  private readonly maxKeywords: number = 50;
-  private readonly maxContextLength: number = 100;
+  private readonly maxKeywords: number = MAX_KEYWORDS;
+  private readonly maxContextLength: number = MAX_CONTEXT_LENGTH;
 
   constructor(options: Partial<TextAnalysisOptions> = {}) {
     this.options = {
@@ -67,7 +79,7 @@ export class KeywordExtractor {
 
     return Array.from(keywordCounts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
+      .slice(0, TOP_KEYWORDS_LIMIT)
       .map(([keyword]) => keyword);
   }
 
@@ -90,7 +102,7 @@ export class KeywordExtractor {
             data.lastSeen
           );
 
-          if (data.contexts.length < 5) {
+          if (data.contexts.length < MAX_CONTEXTS_PER_KEYWORD) {
             const context = message.content.substring(0, this.maxContextLength);
             if (!data.contexts.includes(context)) {
               data.contexts.push(context);
@@ -184,7 +196,7 @@ export class KeywordExtractor {
 
     return Array.from(clusters.values())
       .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
+      .slice(0, MAX_TOPIC_CLUSTERS);
   }
 
   getTopicInfo(messages: Message[]): TopicInfo[] {
@@ -225,7 +237,7 @@ export class KeywordExtractor {
       if (positions.length >= minRepetitions) {
         const density = this.calculateKeywordDensity(positions, windowSize);
 
-        if (density > 0.5) {
+        if (density > KEYWORD_DENSITY_THRESHOLD) {
           repeatedKeywords.push({
             keyword,
             positions,
@@ -243,8 +255,8 @@ export class KeywordExtractor {
     firstSeen: number,
     lastSeen: number
   ): number {
-    const recencyFactor = 1 - (Date.now() - lastSeen) / (24 * 60 * 60 * 1000);
-    const persistenceFactor = (lastSeen - firstSeen) / (60 * 60 * 1000);
+    const recencyFactor = 1 - (Date.now() - lastSeen) / RECENCY_WINDOW_MS;
+    const persistenceFactor = (lastSeen - firstSeen) / PERSISTENCE_WINDOW_MS;
 
     return (
       frequency *
@@ -265,13 +277,13 @@ export class KeywordExtractor {
           keyword,
           freq.keyword
         );
-        if (similarity > 0.3) {
+        if (similarity > SEMANTIC_SIMILARITY_THRESHOLD) {
           related.push(freq.keyword);
         }
       }
     }
 
-    return related.slice(0, 5);
+    return related.slice(0, MAX_RELATED_KEYWORDS);
   }
 
   private calculateSemanticSimilarity(word1: string, word2: string): number {
@@ -301,7 +313,7 @@ export class KeywordExtractor {
     return (
       keywordCount *
       messageCount *
-      (1 + Math.min(1, timeSpan / (60 * 60 * 1000)))
+      (1 + Math.min(1, timeSpan / PERSISTENCE_WINDOW_MS))
     );
   }
 

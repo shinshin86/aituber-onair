@@ -130,6 +130,44 @@ describe('ManneriDetector', () => {
       expect(config.similarityThreshold).toBeDefined();
       expect(config.repetitionLimit).toBeDefined();
     });
+
+    it('should pass language and custom prompts to analyzer', () => {
+      const englishDetector = new ManneriDetector({
+        language: 'en',
+        similarityThreshold: 0.5,
+        customPrompts: {
+          en: {
+            interventionReasons: {
+              similarityHigh: 'High similarity override ({score}%)',
+              patternRepetition: 'Pattern override ({count})',
+              topicBias: 'Topic override ({count})',
+              thresholdExceeded: 'Threshold override',
+            },
+          },
+        },
+      });
+      const similarMessages: Message[] = [
+        { role: 'user', content: 'Tell me about cats', timestamp: 1000 },
+        {
+          role: 'assistant',
+          content: 'Cats are wonderful pets',
+          timestamp: 2000,
+        },
+        { role: 'user', content: 'Tell me about cats', timestamp: 3000 },
+        {
+          role: 'assistant',
+          content: 'Cats are wonderful pets',
+          timestamp: 4000,
+        },
+      ];
+
+      const result = englishDetector.analyzeConversation(similarMessages);
+
+      expect(result.shouldIntervene).toBe(true);
+      expect(result.similarity.score).toBeGreaterThanOrEqual(0.5);
+      expect(result.interventionReason).toContain('High similarity override');
+      expect(result.interventionReason).not.toContain('類似度が高い');
+    });
   });
 
   describe('statistics', () => {

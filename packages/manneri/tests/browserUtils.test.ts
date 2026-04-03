@@ -8,7 +8,6 @@ import {
   cleanupOldData,
   debounce,
   throttle,
-  createWorkerFunction,
   measurePerformance,
   asyncMeasurePerformance,
   createEventEmitter,
@@ -337,58 +336,6 @@ describe.skip('browserUtils', () => {
     });
   });
 
-  describe('createWorkerFunction', () => {
-    it('should return null in non-browser environment', () => {
-      Object.defineProperty(global, 'window', {
-        value: undefined,
-        writable: true,
-      });
-
-      const worker = createWorkerFunction(() => {
-        console.log('test');
-      });
-
-      expect(worker).toBeNull();
-    });
-
-    it('should return null when Worker is not available', () => {
-      (global as unknown as { Worker: unknown }).Worker = undefined;
-
-      const worker = createWorkerFunction(() => {
-        console.log('test');
-      });
-
-      expect(worker).toBeNull();
-    });
-
-    it('should handle worker creation errors', () => {
-      (global as unknown as { Worker: unknown }).Worker = vi
-        .fn()
-        .mockImplementation(() => {
-          throw new Error('Worker creation failed');
-        });
-      (global as unknown as { URL: unknown }).URL = {
-        createObjectURL: vi.fn(() => 'blob:url'),
-        revokeObjectURL: vi.fn(),
-      };
-      (global as unknown as { Blob: unknown }).Blob = vi.fn();
-
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      const worker = createWorkerFunction(() => {
-        console.log('test');
-      });
-
-      expect(worker).toBeNull();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to create worker:',
-        expect.any(Error)
-      );
-
-      consoleSpy.mockRestore();
-    });
-  });
-
   describe('measurePerformance', () => {
     it('should measure performance of synchronous function', () => {
       mockPerformance.now.mockReturnValueOnce(0).mockReturnValueOnce(100);
@@ -534,8 +481,6 @@ describe.skip('browserUtils', () => {
       enableTopicTracking: true,
       enableKeywordAnalysis: true,
       debugMode: false,
-      enableAiPromptGeneration: false,
-      aiPromptGenerationProvider: 'default',
       language: 'ja',
     };
 
