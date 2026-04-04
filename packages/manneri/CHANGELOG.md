@@ -1,5 +1,13 @@
 # @aituber-onair/manneri
 
+## 0.3.1
+
+### Patch Changes
+
+- **Export missing prompt types from public API**
+  - Added `PromptTemplates`, `LocalizedPrompts`, `LocalizedPromptOverrides` to main entry point exports
+  - These types were available in `types/index.ts` but not re-exported from `index.ts`, requiring consumers to use fragile deep imports
+
 ## 0.3.0
 
 ### Minor Changes

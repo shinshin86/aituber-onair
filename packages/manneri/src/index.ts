@@ -17,6 +17,9 @@ export type {
   StorageData,
   ManneriEvent,
   ManneriEventHandler,
+  PromptTemplates,
+  LocalizedPrompts,
+  LocalizedPromptOverrides,
 } from './types/index.js';
 
 export {
