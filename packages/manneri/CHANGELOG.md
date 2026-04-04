@@ -1,5 +1,43 @@
 # @aituber-onair/manneri
 
+## 0.3.0
+
+### Minor Changes
+
+- **Extract magic numbers into centralized constants**
+  - Created `config/constants.ts` with all hardcoded values grouped by module
+  - All analyzers, detectors, and utilities now import from constants
+  - Constants are exported for optional consumer use
+
+- **Localize intervention reason strings**
+  - Added `interventionReasons` to `PromptTemplates` type (optional, backward-compatible)
+  - `ConversationAnalyzer` now respects language configuration for reason strings
+  - Built-in Japanese and English reason templates with per-key fallback chain
+
+- **Implement cache statistics in SimilarityAnalyzer**
+  - `getCacheStats()` now returns actual `hitRate`, `hits`, and `misses`
+  - Fixed cache key generation to use `JSON.stringify()` to prevent collisions
+
+### Breaking Changes
+
+- **Removed unused AI prompt generation config fields** from `ManneriConfig`:
+  - `enableAiPromptGeneration`
+  - `aiPromptGenerationProvider`
+  - `aiPromptGenerationModel`
+  - Migration: Remove these fields from your config objects if present
+- **Removed `AiProviderConfig` type export**
+- **Removed `generateAiDiversificationPrompt()` method** from `ManneriDetector`
+  - Migration: Use `generateDiversificationPrompt()` instead (synchronous)
+
+### Removals
+
+- Removed unused `createWorkerFunction()` from browser utilities
+- Removed unused `createTfIdfVector()` from text utilities
+
+### Deprecations
+
+- `repetitionLimit` config field is deprecated and will be removed in a future major version (it was never used in detection logic)
+
 ## 0.2.0
 
 ### Major Changes

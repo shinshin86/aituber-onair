@@ -103,8 +103,6 @@ export {
   isValidConfig,
 } from './utils/browserUtils.js';
 
-export const VERSION = '0.1.0';
-
 export function createManneriDetector(
   config?: Partial<import('./types/index.js').ManneriConfig>
 ) {
