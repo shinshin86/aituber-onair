@@ -1,4 +1,9 @@
 import type { TextAnalysisOptions } from '../types/index.js';
+import {
+  DEFAULT_TOP_KEYWORDS,
+  HIGH_JACCARD_THRESHOLD,
+  SHORT_TEXT_TOKEN_LIMIT,
+} from '../config/constants.js';
 
 export function normalizeText(
   text: string,
@@ -256,26 +261,6 @@ export function calculateCosineSimilarity(
   return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
 }
 
-export function createTfIdfVector(
-  tokens: string[],
-  vocabulary: string[],
-  documentFrequencies: Map<string, number>,
-  totalDocuments: number
-): number[] {
-  const tokenCounts = new Map<string, number>();
-
-  for (const token of tokens) {
-    tokenCounts.set(token, (tokenCounts.get(token) || 0) + 1);
-  }
-
-  return vocabulary.map((term) => {
-    const tf = (tokenCounts.get(term) || 0) / tokens.length;
-    const df = documentFrequencies.get(term) || 1;
-    const idf = Math.log(totalDocuments / df);
-    return tf * idf;
-  });
-}
-
 export function extractKeywords(
   text: string,
   options: Partial<TextAnalysisOptions> = {}
@@ -291,7 +276,10 @@ export function extractKeywords(
     .sort((a, b) => b[1] - a[1])
     .map(([token]) => token);
 
-  return sortedTokens.slice(0, Math.min(10, sortedTokens.length));
+  return sortedTokens.slice(
+    0,
+    Math.min(DEFAULT_TOP_KEYWORDS, sortedTokens.length)
+  );
 }
 
 export function calculateTextSimilarity(
@@ -317,7 +305,11 @@ export function calculateTextSimilarity(
   const jaccardSimilarity = calculateJaccardSimilarity(set1, set2);
 
   // For short texts or when Jaccard similarity is very high, just use Jaccard
-  if (tokens1.length < 5 || tokens2.length < 5 || jaccardSimilarity > 0.9) {
+  if (
+    tokens1.length < SHORT_TEXT_TOKEN_LIMIT ||
+    tokens2.length < SHORT_TEXT_TOKEN_LIMIT ||
+    jaccardSimilarity > HIGH_JACCARD_THRESHOLD
+  ) {
     return jaccardSimilarity;
   }
 

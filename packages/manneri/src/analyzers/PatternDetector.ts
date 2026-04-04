@@ -1,4 +1,18 @@
 import type { Message, ConversationPattern } from '../types/index.js';
+import {
+  MAX_PATTERN_AGE_MS,
+  MAX_PATTERN_LENGTH,
+  MAX_PATTERNS,
+  MIN_PATTERN_LENGTH,
+  MIN_REPEATED_ROLE_FREQUENCY,
+  MIN_SEQUENCE_FREQUENCY,
+  REPEATED_SIMILARITY_THRESHOLD,
+  SEVERITY_HIGH_FREQUENCY,
+  SEVERITY_HIGH_PATTERN_COUNT,
+  SEVERITY_MEDIUM_FREQUENCY,
+  SEVERITY_MEDIUM_PATTERN_COUNT,
+  SIGNATURE_WORD_COUNT,
+} from '../config/constants.js';
 import { generateId } from '../utils/browserUtils.js';
 import { calculateTextSimilarity } from '../utils/textUtils.js';
 
@@ -19,9 +33,9 @@ export class PatternDetector {
   private readonly detectedPatterns: Map<string, ConversationPattern> =
     new Map();
   private readonly sequenceCache: Map<string, MessageSequence> = new Map();
-  private readonly maxPatterns: number = 100;
-  private readonly minPatternLength: number = 2;
-  private readonly maxPatternLength: number = 5;
+  private readonly maxPatterns: number = MAX_PATTERNS;
+  private readonly minPatternLength: number = MIN_PATTERN_LENGTH;
+  private readonly maxPatternLength: number = MAX_PATTERN_LENGTH;
 
   detectPatterns(messages: Message[]): PatternDetectionResult {
     this.cleanupOldPatterns();
@@ -95,7 +109,7 @@ export class PatternDetector {
     }
 
     for (const [patternSignature, sequence] of sequenceMap) {
-      if (sequence.frequency >= 2) {
+      if (sequence.frequency >= MIN_SEQUENCE_FREQUENCY) {
         const pattern: ConversationPattern = {
           id: generateId(),
           pattern: patternSignature,
@@ -131,7 +145,7 @@ export class PatternDetector {
             compareMessage.content
           );
 
-          if (similarity >= 0.8) {
+          if (similarity >= REPEATED_SIMILARITY_THRESHOLD) {
             // Create a unique key for this pair to avoid duplicates
             const pairKey = `${Math.min(i, j)}_${Math.max(i, j)}`;
 
@@ -216,13 +230,17 @@ export class PatternDetector {
       }
     }
 
-    return Array.from(sequenceMap.values()).filter((seq) => seq.frequency >= 3);
+    return Array.from(sequenceMap.values()).filter(
+      (seq) => seq.frequency >= MIN_REPEATED_ROLE_FREQUENCY
+    );
   }
 
   private createPatternSignature(messages: Message[]): string {
     return messages
       .map((m) => {
-        const contentWords = m.content.split(/\s+/).slice(0, 3);
+        const contentWords = m.content
+          .split(/\s+/)
+          .slice(0, SIGNATURE_WORD_COUNT);
         return `${m.role}:${contentWords.join(' ')}`;
       })
       .join('|');
@@ -258,8 +276,18 @@ export class PatternDetector {
     const maxFrequency = Math.max(...patterns.map((p) => p.frequency));
     const totalPatterns = patterns.length;
 
-    if (maxFrequency >= 5 || totalPatterns >= 10) return 'high';
-    if (maxFrequency >= 3 || totalPatterns >= 5) return 'medium';
+    if (
+      maxFrequency >= SEVERITY_HIGH_FREQUENCY ||
+      totalPatterns >= SEVERITY_HIGH_PATTERN_COUNT
+    ) {
+      return 'high';
+    }
+    if (
+      maxFrequency >= SEVERITY_MEDIUM_FREQUENCY ||
+      totalPatterns >= SEVERITY_MEDIUM_PATTERN_COUNT
+    ) {
+      return 'medium';
+    }
     return 'low';
   }
 
@@ -316,7 +344,7 @@ export class PatternDetector {
 
   private cleanupOldPatterns(): void {
     const now = Date.now();
-    const maxAge = 24 * 60 * 60 * 1000; // 24時間
+    const maxAge = MAX_PATTERN_AGE_MS;
 
     // First, remove old patterns
     for (const [id, pattern] of this.detectedPatterns) {

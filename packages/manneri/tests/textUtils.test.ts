@@ -6,7 +6,6 @@ import {
   generateNgrams,
   calculateJaccardSimilarity,
   calculateCosineSimilarity,
-  createTfIdfVector,
   extractKeywords,
   calculateTextSimilarity,
 } from '../src/utils/textUtils.js';
@@ -257,66 +256,6 @@ describe('textUtils', () => {
 
       const similarity = calculateCosineSimilarity(vector1, vector2);
       expect(similarity).toBe(-1.0);
-    });
-  });
-
-  describe('createTfIdfVector', () => {
-    it('should create TF-IDF vector', () => {
-      const tokens = ['hello', 'world', 'hello'];
-      const vocabulary = ['hello', 'world', 'foo'];
-      const documentFrequencies = new Map([
-        ['hello', 1],
-        ['world', 1],
-        ['foo', 1],
-      ]);
-
-      const vector = createTfIdfVector(
-        tokens,
-        vocabulary,
-        documentFrequencies,
-        2
-      );
-
-      expect(vector).toHaveLength(3);
-      expect(vector[0]).toBeGreaterThanOrEqual(0); // hello appears twice
-      expect(vector[1]).toBeGreaterThanOrEqual(0); // world appears once
-      expect(vector[2]).toBe(0); // foo doesn't appear
-    });
-
-    it('should handle empty tokens', () => {
-      const tokens: string[] = [];
-      const vocabulary = ['hello', 'world'];
-      const documentFrequencies = new Map([
-        ['hello', 1],
-        ['world', 1],
-      ]);
-
-      const vector = createTfIdfVector(
-        tokens,
-        vocabulary,
-        documentFrequencies,
-        2
-      );
-
-      // When tokens are empty, TF-IDF values might be NaN due to 0/0 calculation
-      expect(vector).toHaveLength(2);
-      // Just verify the implementation handles empty tokens without throwing
-      expect(vector.every((v) => typeof v === 'number')).toBe(true);
-    });
-
-    it('should handle empty vocabulary', () => {
-      const tokens = ['hello', 'world'];
-      const vocabulary: string[] = [];
-      const documentFrequencies = new Map();
-
-      const vector = createTfIdfVector(
-        tokens,
-        vocabulary,
-        documentFrequencies,
-        2
-      );
-
-      expect(vector).toEqual([]);
     });
   });
 

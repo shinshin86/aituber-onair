@@ -56,7 +56,7 @@ if (detector.shouldIntervene(messages)) {
 ```typescript
 const detector = new ManneriDetector({
   similarityThreshold: 0.75,     // 類似度閾値 (0-1)
-  repetitionLimit: 3,            // 繰り返し検出回数
+  repetitionLimit: 3,            // (非推奨) 繰り返し検出回数
   lookbackWindow: 10,            // 分析対象のメッセージ数
   interventionCooldown: 300000,  // 介入間隔（ミリ秒）
   minMessageLength: 10,          // 分析対象の最小文字数

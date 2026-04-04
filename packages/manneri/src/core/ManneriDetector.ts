@@ -18,6 +18,12 @@ import {
   type PromptGenerationOptions,
 } from '../generators/PromptGenerator.js';
 import { PatternDetector } from '../analyzers/PatternDetector.js';
+import {
+  DEFAULT_CLEANUP_MAX_AGE_MS,
+  DEFAULT_KEYWORD_THRESHOLD,
+  DEFAULT_PATTERN_THRESHOLD,
+  MAX_INTERVENTION_HISTORY,
+} from '../config/constants.js';
 import { createEventEmitter } from '../utils/browserUtils.js';
 
 export class ManneriDetector {
@@ -113,12 +119,6 @@ export class ManneriDetector {
     this.emit('intervention_triggered', prompt);
 
     return prompt;
-  }
-
-  async generateAiDiversificationPrompt(
-    messages: Message[]
-  ): Promise<DiversificationPrompt> {
-    return this.generateDiversificationPrompt(messages);
   }
 
   analyzeConversation(messages: Message[]): AnalysisResult {
@@ -231,13 +231,15 @@ export class ManneriDetector {
   private createAnalyzerOptions(): ConversationAnalyzerOptions {
     return {
       similarityThreshold: this.config.similarityThreshold,
-      patternThreshold: 0.8,
-      keywordThreshold: 0.7,
+      patternThreshold: DEFAULT_PATTERN_THRESHOLD,
+      keywordThreshold: DEFAULT_KEYWORD_THRESHOLD,
       analysisWindow: this.config.lookbackWindow,
       enableSimilarityAnalysis: true,
       enablePatternDetection: true,
       enableKeywordAnalysis: this.config.enableKeywordAnalysis,
       enableTopicTracking: this.config.enableTopicTracking,
+      language: this.config.language,
+      customPrompts: this.config.customPrompts,
       textAnalysisOptions: {
         minWordLength: 2,
         includeStopWords: false,
@@ -250,7 +252,7 @@ export class ManneriDetector {
     const now = Date.now();
     this.interventionHistory.push(now);
 
-    const maxHistory = 100;
+    const maxHistory = MAX_INTERVENTION_HISTORY;
     if (this.interventionHistory.length > maxHistory) {
       this.interventionHistory = this.interventionHistory.slice(-maxHistory);
     }
@@ -319,7 +321,7 @@ export class ManneriDetector {
   /**
    * Manually cleanup old data
    */
-  async cleanup(maxAge: number = 7 * 24 * 60 * 60 * 1000): Promise<number> {
+  async cleanup(maxAge: number = DEFAULT_CLEANUP_MAX_AGE_MS): Promise<number> {
     const cutoff = Date.now() - maxAge;
 
     const originalLength = this.interventionHistory.length;

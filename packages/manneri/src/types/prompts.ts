@@ -4,15 +4,25 @@
 
 export interface PromptTemplates {
   intervention: string[];
+  interventionReasons?: {
+    similarityHigh: string;
+    patternRepetition: string;
+    topicBias: string;
+    thresholdExceeded: string;
+  };
 }
 
 export interface LocalizedPrompts {
   [language: string]: PromptTemplates;
 }
 
+export interface LocalizedPromptOverrides {
+  [language: string]: Partial<PromptTemplates>;
+}
+
 export interface PromptConfig {
   language?: string;
-  customPrompts?: Partial<LocalizedPrompts>;
+  customPrompts?: LocalizedPromptOverrides;
 }
 
 export type SupportedLanguage = 'ja' | 'en' | string;
@@ -46,18 +56,18 @@ export function getPromptTemplate(
  */
 export function overridePrompts(
   defaultPrompts: LocalizedPrompts,
-  customPrompts?: Partial<LocalizedPrompts>
+  customPrompts?: LocalizedPromptOverrides
 ): LocalizedPrompts {
   if (!customPrompts) return defaultPrompts;
 
   const merged: LocalizedPrompts = { ...defaultPrompts };
 
   for (const [lang, templates] of Object.entries(customPrompts)) {
-    if (templates?.intervention) {
+    if (templates) {
       merged[lang] = {
         ...merged[lang], // Preserve default prompts
         ...templates, // Override with custom prompts
-      };
+      } as PromptTemplates;
     }
   }
 

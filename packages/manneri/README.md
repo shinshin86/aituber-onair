@@ -58,7 +58,7 @@ if (detector.shouldIntervene(messages)) {
 ```typescript
 const detector = new ManneriDetector({
   similarityThreshold: 0.75,     // Similarity threshold (0-1)
-  repetitionLimit: 3,            // Number of repetitions to detect
+  repetitionLimit: 3,            // (deprecated) Number of repetitions to detect
   lookbackWindow: 10,            // Number of messages to analyze
   interventionCooldown: 300000,  // Intervention interval (milliseconds)
   minMessageLength: 10,          // Minimum character count for analysis

@@ -1,7 +1,5 @@
 import type { StorageData, ManneriConfig } from '../types/index.js';
-
-const STORAGE_KEY = 'manneri_data';
-const STORAGE_VERSION = '1.0.0';
+import { DEFAULT_STORAGE_KEY, STORAGE_VERSION } from '../config/constants.js';
 
 export function isBrowserEnvironment(): boolean {
   return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
@@ -21,7 +19,7 @@ export function saveToLocalStorage(
     };
 
     localStorage.setItem(
-      storageKey || STORAGE_KEY,
+      storageKey || DEFAULT_STORAGE_KEY,
       JSON.stringify(storageData)
     );
     return true;
@@ -35,7 +33,7 @@ export function loadFromLocalStorage(storageKey?: string): StorageData | null {
   if (!isBrowserEnvironment()) return null;
 
   try {
-    const item = localStorage.getItem(storageKey || STORAGE_KEY);
+    const item = localStorage.getItem(storageKey || DEFAULT_STORAGE_KEY);
     if (!item) return null;
 
     const storageData = JSON.parse(item);
@@ -57,7 +55,7 @@ export function clearLocalStorage(storageKey?: string): boolean {
   if (!isBrowserEnvironment()) return false;
 
   try {
-    localStorage.removeItem(storageKey || STORAGE_KEY);
+    localStorage.removeItem(storageKey || DEFAULT_STORAGE_KEY);
     return true;
   } catch (error) {
     console.warn('Failed to clear manneri data from localStorage:', error);
@@ -69,7 +67,7 @@ export function getStorageSize(storageKey?: string): number {
   if (!isBrowserEnvironment()) return 0;
 
   try {
-    const item = localStorage.getItem(storageKey || STORAGE_KEY);
+    const item = localStorage.getItem(storageKey || DEFAULT_STORAGE_KEY);
     return item ? new Blob([item]).size : 0;
   } catch (error) {
     return 0;
@@ -140,29 +138,6 @@ export function throttle<T extends (...args: unknown[]) => void>(
       }, limit);
     }
   }) as T;
-}
-
-export function createWorkerFunction(fn: () => void): Worker | null {
-  if (!isBrowserEnvironment() || typeof Worker === 'undefined') return null;
-
-  try {
-    const functionString = fn.toString();
-    const blob = new Blob([`(${functionString})()`], {
-      type: 'application/javascript',
-    });
-    const url = URL.createObjectURL(blob);
-
-    const worker = new Worker(url);
-
-    worker.addEventListener('error', () => {
-      URL.revokeObjectURL(url);
-    });
-
-    return worker;
-  } catch (error) {
-    console.warn('Failed to create worker:', error);
-    return null;
-  }
 }
 
 export function measurePerformance<T>(

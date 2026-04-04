@@ -1,5 +1,6 @@
 import type { PersistenceProvider } from '../types/persistence.js';
-import type { StorageData, ConversationPattern } from '../types/index.js';
+import type { StorageData } from '../types/index.js';
+import { DEFAULT_STORAGE_KEY, STORAGE_VERSION } from '../config/constants.js';
 import {
   saveToLocalStorage,
   loadFromLocalStorage,
@@ -24,8 +25,8 @@ export class LocalStoragePersistenceProvider implements PersistenceProvider {
       version?: string;
     } = {}
   ) {
-    this.storageKey = options.storageKey || 'manneri_data';
-    this.version = options.version || '1.0.0';
+    this.storageKey = options.storageKey || DEFAULT_STORAGE_KEY;
+    this.version = options.version || STORAGE_VERSION;
   }
 
   /**
