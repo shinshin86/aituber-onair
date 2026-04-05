@@ -11,6 +11,12 @@ export {
 } from './AivisSpeechEngine';
 export { AivisCloudEngine } from './AivisCloudEngine';
 export { OpenAiEngine } from './OpenAiEngine';
+export {
+  XaiEngine,
+  type XaiCodec,
+  type XaiSampleRate,
+  type XaiBitRate,
+} from './XaiEngine';
 export { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 export {
   MinimaxEngine,

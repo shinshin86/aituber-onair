@@ -1,4 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import type {
+  XaiBitRate,
+  XaiCodec,
+  XaiSampleRate,
+} from '../src/engines/XaiEngine';
 import { VoiceEngineAdapter } from '../src/services/VoiceEngineAdapter';
 import { VoiceServiceOptions } from '../src/services/VoiceService';
 import { MinimaxModel } from '../src/engines/MinimaxEngine';
@@ -42,10 +47,12 @@ describe('VoiceEngineAdapter', () => {
       setGroupId: vi.fn(),
       setEndpoint: vi.fn(),
       setModel: vi.fn(),
+      setCodec: vi.fn(),
       setEmotion: vi.fn(),
       setLanguage: vi.fn(),
       setVoiceSettings: vi.fn(),
       setSpeed: vi.fn(),
+      setBitRate: vi.fn(),
       setModelUuid: vi.fn(),
       setSpeakerUuid: vi.fn(),
       setStyleId: vi.fn(),
@@ -228,6 +235,33 @@ describe('VoiceEngineAdapter', () => {
 
       expect(mockEngine.setModel).toHaveBeenCalledWith('gpt-4o-mini-tts');
       expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.75);
+      expect(mockEngine.fetchAudio).toHaveBeenCalled();
+    });
+  });
+
+  describe('xAI Integration', () => {
+    it('should configure xAI engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'xai',
+        speaker: 'eve',
+        apiKey: 'xai-api-key',
+        xaiLanguage: 'ja',
+        xaiCodec: 'wav' as XaiCodec,
+        xaiSampleRate: 44100 as XaiSampleRate,
+        xaiBitRate: 192000 as XaiBitRate,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'xAI test' });
+
+      expect(mockEngine.setLanguage).toHaveBeenCalledWith('ja');
+      expect(mockEngine.setCodec).toHaveBeenCalledWith('wav');
+      expect(mockEngine.setSampleRate).toHaveBeenCalledWith(44100);
+      expect(mockEngine.setBitRate).toHaveBeenCalledWith(192000);
       expect(mockEngine.fetchAudio).toHaveBeenCalled();
     });
   });
@@ -834,6 +868,33 @@ describe('VoiceEngineAdapter', () => {
 
       expect(mockEngine.setModel).toHaveBeenCalledWith('gpt-4o-mini-tts');
       expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.5);
+    });
+
+    it('should apply updated xAI options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'xai',
+        speaker: 'eve',
+        apiKey: 'xai-api-key',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.updateOptions({
+        xaiLanguage: 'ja',
+        xaiCodec: 'pcm',
+        xaiSampleRate: 24000,
+        xaiBitRate: 96000,
+      });
+
+      await adapter.speak({ text: 'Updated xai options' });
+
+      expect(mockEngine.setLanguage).toHaveBeenCalledWith('ja');
+      expect(mockEngine.setCodec).toHaveBeenCalledWith('pcm');
+      expect(mockEngine.setSampleRate).toHaveBeenCalledWith(24000);
+      expect(mockEngine.setBitRate).toHaveBeenCalledWith(96000);
     });
 
     it('should apply updated OpenAI-compatible options for the current engine', async () => {

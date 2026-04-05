@@ -8,6 +8,7 @@ import { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 import { VoiceEngine } from './VoiceEngine';
 import { VoicePeakEngine } from './VoicePeakEngine';
 import { VoiceVoxEngine } from './VoiceVoxEngine';
+import { XaiEngine } from './XaiEngine';
 
 const ENGINE_CONSTRUCTORS = {
   voicevox: VoiceVoxEngine,
@@ -15,6 +16,7 @@ const ENGINE_CONSTRUCTORS = {
   aivisSpeech: AivisSpeechEngine,
   aivisCloud: AivisCloudEngine,
   openai: OpenAiEngine,
+  xai: XaiEngine,
   openaiCompatible: OpenAiCompatibleEngine,
   minimax: MinimaxEngine,
   none: NoneEngine,

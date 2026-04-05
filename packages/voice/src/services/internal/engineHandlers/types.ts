@@ -7,6 +7,7 @@ import type {
   VoicePeakVoiceServiceOptions,
   VoiceServiceOptions,
   VoiceVoxVoiceServiceOptions,
+  XaiVoiceServiceOptions,
 } from '../../VoiceService';
 
 export interface ApiEndpointConfigurableEngine extends VoiceEngine {
@@ -62,6 +63,15 @@ export interface AivisSpeechConfigurableEngine extends VoiceEngine {
 export interface OpenAiConfigurableEngine extends VoiceEngine {
   setModel?(value: string): void;
   setSpeed?(value?: number): void;
+}
+
+export interface XaiConfigurableEngine extends VoiceEngine {
+  setLanguage?(value: string): void;
+  setCodec?(value: NonNullable<XaiVoiceServiceOptions['xaiCodec']>): void;
+  setSampleRate?(
+    value: NonNullable<XaiVoiceServiceOptions['xaiSampleRate']>,
+  ): void;
+  setBitRate?(value: NonNullable<XaiVoiceServiceOptions['xaiBitRate']>): void;
 }
 
 export interface OpenAiCompatibleConfigurableEngine extends VoiceEngine {
