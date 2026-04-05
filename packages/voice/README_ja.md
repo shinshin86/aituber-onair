@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -155,6 +155,21 @@ const voiceService = new VoiceService({
   engineType: 'openai',
   speaker: 'alloy',
   apiKey: 'your-openai-api-key'
+});
+```
+
+### xAI TTS
+音声 ID、言語、出力形式を指定できる xAI のクラウド TTS API。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'xai',
+  speaker: 'eve',
+  apiKey: 'your-xai-api-key',
+  xaiLanguage: 'ja',
+  xaiCodec: 'mp3',
+  xaiSampleRate: 24000,
+  xaiBitRate: 128000,
 });
 ```
 
@@ -384,6 +399,12 @@ const voiceService = new VoiceService({
   - `openAiCompatibleModel`
   - `openAiCompatibleSpeed`
 
+- **xAI TTS**
+  - `xaiLanguage`
+  - `xaiCodec`
+  - `xaiSampleRate`
+  - `xaiBitRate`
+
 - **VOICEVOX**
   - エンドポイント: `voicevoxApiUrl`
   - スカラー: `voicevoxSpeedScale`, `voicevoxPitchScale`, `voicevoxIntonationScale`, `voicevoxVolumeScale`
@@ -444,6 +465,11 @@ try {
 - 高品質な多言語サポート
 - 複数の音声パーソナリティ
 - 会話型AIに最適化
+
+### xAI TTSの機能
+- Bearer トークン認証のクラウド TTS エンドポイント
+- 指定した `speaker` をそのまま `voice_id` として送信
+- codec、sample rate、MP3 bitrate の調整に対応
 
 ### MiniMaxの機能
 - 自動検出付き24言語サポート

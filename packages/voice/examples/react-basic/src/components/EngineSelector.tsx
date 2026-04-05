@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   ENGINE_DEFAULTS,
   OPENAI_VOICES,
+  XAI_VOICES,
   type EngineType,
   type SpeakerOption,
 } from '../constants';
@@ -47,6 +48,7 @@ export function EngineSelector({
   const hasSpeakerOptions = speakerOptions.length > 0;
   const showApiKey =
     engine === 'openai' ||
+    engine === 'xai' ||
     engine === 'openaiCompatible' ||
     engine === 'aivisCloud' ||
     engine === 'minimax';
@@ -67,6 +69,25 @@ export function EngineSelector({
             onChange={(e) => onSpeakerChange(e.target.value)}
           >
             {Object.entries(OPENAI_VOICES).map(([voiceId, label]) => (
+              <option key={voiceId} value={voiceId}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    if (engine === 'xai') {
+      return (
+        <div className="form-group">
+          <label htmlFor="speaker">Speaker:</label>
+          <select
+            id="speaker"
+            value={speaker}
+            onChange={(e) => onSpeakerChange(e.target.value)}
+          >
+            {Object.entries(XAI_VOICES).map(([voiceId, label]) => (
               <option key={voiceId} value={voiceId}>
                 {label}
               </option>
@@ -217,6 +238,7 @@ export function EngineSelector({
           onChange={(e) => onEngineChange(e.target.value as EngineType)}
         >
           <option value="openai">OpenAI TTS</option>
+          <option value="xai">xAI TTS</option>
           <option value="voicevox">VOICEVOX</option>
           <option value="aivisSpeech">AivisSpeech (Local)</option>
           <option value="aivisCloud">Aivis Cloud API</option>

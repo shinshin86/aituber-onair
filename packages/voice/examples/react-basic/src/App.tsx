@@ -5,6 +5,9 @@ import {
   type MinimaxModel,
   type VoiceServiceOptions,
   type VoiceVoxQueryParameterOverrides,
+  type XaiBitRate,
+  type XaiCodec,
+  type XaiSampleRate,
 } from '@aituber-onair/voice';
 import { useEffect, useState } from 'react';
 import './App.css';
@@ -101,6 +104,18 @@ function App() {
   const [voicepeakSpeed, setVoicepeakSpeed] = useState('');
   const [voicepeakPitch, setVoicepeakPitch] = useState('');
   const [openaiSpeed, setOpenaiSpeed] = useState('');
+  const [xaiLanguage, setXaiLanguage] = useState(
+    ENGINE_DEFAULTS.xai.defaultLanguage,
+  );
+  const [xaiCodec, setXaiCodec] = useState<XaiCodec>(
+    ENGINE_DEFAULTS.xai.defaultCodec,
+  );
+  const [xaiSampleRate, setXaiSampleRate] = useState<`${XaiSampleRate}`>(
+    String(ENGINE_DEFAULTS.xai.defaultSampleRate) as `${XaiSampleRate}`,
+  );
+  const [xaiBitRate, setXaiBitRate] = useState<`${XaiBitRate}`>(
+    String(ENGINE_DEFAULTS.xai.defaultBitRate) as `${XaiBitRate}`,
+  );
   const [openaiCompatibleModel, setOpenaiCompatibleModel] = useState('');
   const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState('');
   const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] = useState('');
@@ -196,6 +211,14 @@ function App() {
     setVoicepeakSpeed('');
     setVoicepeakPitch('');
     setOpenaiSpeed('');
+    setXaiLanguage(ENGINE_DEFAULTS.xai.defaultLanguage);
+    setXaiCodec(ENGINE_DEFAULTS.xai.defaultCodec);
+    setXaiSampleRate(
+      String(ENGINE_DEFAULTS.xai.defaultSampleRate) as `${XaiSampleRate}`,
+    );
+    setXaiBitRate(
+      String(ENGINE_DEFAULTS.xai.defaultBitRate) as `${XaiBitRate}`,
+    );
     setOpenaiCompatibleModel('');
     setAivisCloudModelUuid('');
     setAivisCloudSpeakerUuid('');
@@ -583,6 +606,17 @@ function App() {
         if (!Number.isNaN(parsedSpeed)) {
           options.openAiSpeed = parsedSpeed;
         }
+      } else if (engine === 'xai') {
+        if (xaiLanguage.trim()) {
+          options.xaiLanguage = xaiLanguage.trim();
+        }
+
+        options.xaiCodec = xaiCodec;
+        options.xaiSampleRate = Number(xaiSampleRate) as XaiSampleRate;
+
+        if (xaiCodec === 'mp3') {
+          options.xaiBitRate = Number(xaiBitRate) as XaiBitRate;
+        }
       } else if (engine === 'openaiCompatible') {
         if (openaiCompatibleModel.trim()) {
           options.openAiCompatibleModel = openaiCompatibleModel.trim();
@@ -862,6 +896,18 @@ function App() {
                 engine={engine}
                 openai={{
                   speed: { value: openaiSpeed, onChange: setOpenaiSpeed },
+                }}
+                xai={{
+                  language: { value: xaiLanguage, onChange: setXaiLanguage },
+                  codec: { value: xaiCodec, onChange: setXaiCodec },
+                  sampleRate: {
+                    value: xaiSampleRate,
+                    onChange: setXaiSampleRate,
+                  },
+                  bitRate: {
+                    value: xaiBitRate,
+                    onChange: setXaiBitRate,
+                  },
                 }}
                 openaiCompatible={{
                   model: {

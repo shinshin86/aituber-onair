@@ -59,7 +59,8 @@ pnpm install @aituber-onair/voice
 ## Main Features
 
 - **Multiple TTS Engine Support**  
-  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, AivisSpeech, Aivis Cloud, and more
+  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, MiniMax,
+  AivisSpeech, Aivis Cloud, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
 - **Emotion-Aware Synthesis**  
@@ -155,6 +156,22 @@ const voiceService = new VoiceService({
   engineType: 'openai',
   speaker: 'alloy',
   apiKey: 'your-openai-api-key'
+});
+```
+
+### xAI TTS
+xAI's cloud TTS API with selectable voice IDs, language control, and output
+format tuning.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'xai',
+  speaker: 'eve',
+  apiKey: 'your-xai-api-key',
+  xaiLanguage: 'ja',
+  xaiCodec: 'mp3',
+  xaiSampleRate: 24000,
+  xaiBitRate: 128000,
 });
 ```
 
@@ -380,6 +397,12 @@ const voiceService = new VoiceService({
   - `openAiCompatibleModel`
   - `openAiCompatibleSpeed`
 
+- **xAI TTS**
+  - `xaiLanguage`
+  - `xaiCodec`
+  - `xaiSampleRate`
+  - `xaiBitRate`
+
 - **VOICEVOX**
   - Endpoint: `voicevoxApiUrl`
   - Scalars: `voicevoxSpeedScale`, `voicevoxPitchScale`, `voicevoxIntonationScale`, `voicevoxVolumeScale`
@@ -440,6 +463,11 @@ try {
 - High-quality multilingual support
 - Multiple voice personalities
 - Optimized for conversational AI
+
+### xAI TTS Features
+- Cloud TTS endpoint with Bearer token authentication
+- Passes `speaker` through to `voice_id` as provided
+- Configurable codec, sample rate, and MP3 bitrate
 
 ### MiniMax Features
 - 24 language support with automatic detection

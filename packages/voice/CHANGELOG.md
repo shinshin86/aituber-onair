@@ -1,5 +1,15 @@
 # @aituber-onair/voice
 
+## 0.10.0
+
+### Minor Changes
+
+- Add xAI cloud TTS support via `engineType: 'xai'`.
+  - Introduce `XaiEngine` with `xaiLanguage`, `xaiCodec`,
+    `xaiSampleRate`, and `xaiBitRate` option support.
+  - Register xAI in the voice engine factory, public exports, internal option
+    handlers, React example, README, and tests.
+
 ## 0.9.0
 
 ### Minor Changes

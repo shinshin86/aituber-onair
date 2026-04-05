@@ -1,4 +1,5 @@
 import type { AivisSpeechQueryParameterOverrides } from '../engines/AivisSpeechEngine';
+import type { XaiBitRate, XaiCodec, XaiSampleRate } from '../engines/XaiEngine';
 import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine';
 export type { VoiceVoxQueryParameterOverrides };
 export type { AivisSpeechQueryParameterOverrides };
@@ -112,6 +113,19 @@ export interface OpenAiVoiceServiceOptions extends VoiceServiceCommonOptions {
   openAiModel?: string;
   /** OpenAI TTS speaking speed (0.25-4.0, default: 1.0) */
   openAiSpeed?: number;
+}
+
+export interface XaiVoiceServiceOptions extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'xai';
+  /** xAI TTS language (BCP-47 or auto, default: auto) */
+  xaiLanguage?: string;
+  /** xAI output codec (default: mp3) */
+  xaiCodec?: XaiCodec;
+  /** xAI output sample rate (default: 24000) */
+  xaiSampleRate?: XaiSampleRate;
+  /** xAI MP3 bit rate (default: 128000) */
+  xaiBitRate?: XaiBitRate;
 }
 
 export interface OpenAiCompatibleVoiceServiceOptions
@@ -257,6 +271,7 @@ export type VoiceServiceOptions =
   | VoiceVoxVoiceServiceOptions
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
+  | XaiVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
   | AivisCloudVoiceServiceOptions
@@ -274,6 +289,9 @@ export type VoicePeakVoiceServiceOptionsUpdate = Partial<
 >;
 export type OpenAiVoiceServiceOptionsUpdate = Partial<
   Omit<OpenAiVoiceServiceOptions, 'engineType'>
+>;
+export type XaiVoiceServiceOptionsUpdate = Partial<
+  Omit<XaiVoiceServiceOptions, 'engineType'>
 >;
 export type OpenAiCompatibleVoiceServiceOptionsUpdate = Partial<
   Omit<OpenAiCompatibleVoiceServiceOptions, 'engineType'>
@@ -295,6 +313,7 @@ export type VoiceServiceOptionsUpdate =
   | VoiceVoxVoiceServiceOptionsUpdate
   | VoicePeakVoiceServiceOptionsUpdate
   | OpenAiVoiceServiceOptionsUpdate
+  | XaiVoiceServiceOptionsUpdate
   | OpenAiCompatibleVoiceServiceOptionsUpdate
   | AivisSpeechVoiceServiceOptionsUpdate
   | AivisCloudVoiceServiceOptionsUpdate

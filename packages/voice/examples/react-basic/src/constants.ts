@@ -1,4 +1,9 @@
-import type { MinimaxModel } from '@aituber-onair/voice';
+import type {
+  MinimaxModel,
+  XaiBitRate,
+  XaiCodec,
+  XaiSampleRate,
+} from '@aituber-onair/voice';
 
 export const ENGINE_DEFAULTS = {
   openai: {
@@ -7,6 +12,17 @@ export const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'sk-...',
     speaker: 'alloy',
+  },
+  xai: {
+    apiUrl: 'https://api.x.ai/v1/tts',
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'xai-...',
+    speaker: 'eve',
+    defaultLanguage: 'auto',
+    defaultCodec: 'mp3' as XaiCodec,
+    defaultSampleRate: 24000 as XaiSampleRate,
+    defaultBitRate: 128000 as XaiBitRate,
   },
   openaiCompatible: {
     apiUrl: 'http://localhost:8880/v1/audio/speech',
@@ -83,6 +99,14 @@ export const OPENAI_VOICES: Record<string, string> = {
   nova: 'Nova',
   sage: 'Sage',
   shimmer: 'Shimmer',
+};
+
+export const XAI_VOICES: Record<string, string> = {
+  ara: 'Ara',
+  eve: 'Eve',
+  leo: 'Leo',
+  rex: 'Rex',
+  sal: 'Sal',
 };
 
 export interface SpeakerOption {

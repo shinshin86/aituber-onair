@@ -12,11 +12,13 @@ import { openAiCompatibleEngineHandler } from './openaiCompatible';
 import type { EngineHandler } from './types';
 import { voicePeakEngineHandler } from './voicepeak';
 import { voiceVoxEngineHandler } from './voicevox';
+import { xaiEngineHandler } from './xai';
 
 const engineHandlers = {
   voicevox: voiceVoxEngineHandler,
   voicepeak: voicePeakEngineHandler,
   openai: openAiEngineHandler,
+  xai: xaiEngineHandler,
   openaiCompatible: openAiCompatibleEngineHandler,
   aivisSpeech: aivisSpeechEngineHandler,
   aivisCloud: aivisCloudEngineHandler,

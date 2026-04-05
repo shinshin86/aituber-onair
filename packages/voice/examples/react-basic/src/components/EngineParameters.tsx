@@ -1,4 +1,10 @@
-import type { MinimaxAudioFormat, MinimaxModel } from '@aituber-onair/voice';
+import type {
+  MinimaxAudioFormat,
+  MinimaxModel,
+  XaiBitRate,
+  XaiCodec,
+  XaiSampleRate,
+} from '@aituber-onair/voice';
 import {
   MINIMAX_MODELS,
   SLIDER_CONFIG,
@@ -29,6 +35,12 @@ interface EngineParametersProps {
   engine: EngineType;
   openai: {
     speed: StringField;
+  };
+  xai: {
+    language: StringField;
+    codec: SelectField<XaiCodec>;
+    sampleRate: SelectField<`${XaiSampleRate}`>;
+    bitRate: SelectField<`${XaiBitRate}`>;
   };
   openaiCompatible: {
     model: StringField;
@@ -105,6 +117,7 @@ interface EngineParametersProps {
 export function EngineParameters({
   engine,
   openai,
+  xai,
   openaiCompatible,
   voicevox,
   voicepeak,
@@ -134,6 +147,92 @@ export function EngineParameters({
 
           <p className="parameter-card__note">
             モデルや声色は `speaker` の指定で切り替えられます。
+          </p>
+        </CollapsibleCard>
+      )}
+
+      {engine === 'xai' && (
+        <CollapsibleCard
+          className="parameter-card openai-card"
+          title="xAI TTS パラメータ"
+          description="xAI の `/v1/tts` エンドポイント向け設定です。voice は上部の Speaker で選択し、ここでは言語と出力形式を調整できます。"
+        >
+          <div className="parameter-section">
+            <div className="parameter-section__title">言語</div>
+            <div className="parameter-grid parameter-grid--two">
+              <div className="form-group">
+                <label htmlFor="xaiLanguage">Language</label>
+                <input
+                  id="xaiLanguage"
+                  type="text"
+                  value={xai.language.value}
+                  onChange={(e) => xai.language.onChange(e.target.value)}
+                  placeholder="例: auto, ja, en"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="parameter-section">
+            <div className="parameter-section__title">出力フォーマット</div>
+            <div className="parameter-grid parameter-grid--two">
+              <div className="form-group">
+                <label htmlFor="xaiCodec">Codec</label>
+                <select
+                  id="xaiCodec"
+                  value={xai.codec.value}
+                  onChange={(e) =>
+                    xai.codec.onChange(e.target.value as XaiCodec)
+                  }
+                >
+                  <option value="mp3">MP3</option>
+                  <option value="wav">WAV</option>
+                  <option value="pcm">PCM</option>
+                  <option value="mulaw">Mu-law</option>
+                  <option value="alaw">A-law</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="xaiSampleRate">Sample Rate</label>
+                <select
+                  id="xaiSampleRate"
+                  value={xai.sampleRate.value}
+                  onChange={(e) =>
+                    xai.sampleRate.onChange(
+                      e.target.value as `${XaiSampleRate}`,
+                    )
+                  }
+                >
+                  <option value="8000">8,000 Hz</option>
+                  <option value="16000">16,000 Hz</option>
+                  <option value="22050">22,050 Hz</option>
+                  <option value="24000">24,000 Hz</option>
+                  <option value="44100">44,100 Hz</option>
+                  <option value="48000">48,000 Hz</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="xaiBitRate">MP3 Bit Rate</label>
+                <select
+                  id="xaiBitRate"
+                  value={xai.bitRate.value}
+                  onChange={(e) =>
+                    xai.bitRate.onChange(e.target.value as `${XaiBitRate}`)
+                  }
+                  disabled={xai.codec.value !== 'mp3'}
+                >
+                  <option value="32000">32 kbps</option>
+                  <option value="64000">64 kbps</option>
+                  <option value="96000">96 kbps</option>
+                  <option value="128000">128 kbps</option>
+                  <option value="192000">192 kbps</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <p className="parameter-card__note">
+            `bit_rate` は MP3 出力時のみ送信されます。
           </p>
         </CollapsibleCard>
       )}
