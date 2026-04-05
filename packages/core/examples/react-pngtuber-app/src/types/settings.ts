@@ -5,6 +5,7 @@ export type ChatProviderOption =
   | 'claude'
   | 'xai'
   | 'zai'
+  | 'kimi'
   | 'openai-compatible';
 export type TTSEngineOption =
   | 'openai'
@@ -24,6 +25,7 @@ export interface ProviderApiKeys {
   claude?: string;
   xai?: string;
   zai?: string;
+  kimi?: string;
   'openai-compatible'?: string;
 }
 
