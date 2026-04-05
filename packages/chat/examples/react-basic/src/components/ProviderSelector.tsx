@@ -85,6 +85,11 @@ import {
   MODEL_GLM_4_6V,
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,
+  // xAI models
+  MODEL_GROK_4_20_REASONING,
+  MODEL_GROK_4_20_NON_REASONING,
+  MODEL_GROK_4_1_FAST_REASONING,
+  MODEL_GROK_4_1_FAST_NON_REASONING,
   // Kimi models
   MODEL_KIMI_K2_5,
 } from '@aituber-onair/chat';
@@ -340,6 +345,10 @@ const providerInfo = {
   zai: {
     name: 'Z.ai',
     placeholder: 'xxx...',
+  },
+  xai: {
+    name: 'xAI',
+    placeholder: 'xai-...',
   },
   kimi: {
     name: 'Kimi',
@@ -752,6 +761,32 @@ export const allModels: ProviderModel[] = [
     name: 'GLM-4.6V Flash',
     provider: 'zai',
     default: false,
+  },
+
+  // xAI models
+  {
+    id: MODEL_GROK_4_20_REASONING,
+    name: 'Grok 4.20 Reasoning',
+    provider: 'xai',
+    default: false,
+  },
+  {
+    id: MODEL_GROK_4_20_NON_REASONING,
+    name: 'Grok 4.20',
+    provider: 'xai',
+    default: false,
+  },
+  {
+    id: MODEL_GROK_4_1_FAST_REASONING,
+    name: 'Grok 4-1 Fast Reasoning',
+    provider: 'xai',
+    default: false,
+  },
+  {
+    id: MODEL_GROK_4_1_FAST_NON_REASONING,
+    name: 'Grok 4-1 Fast',
+    provider: 'xai',
+    default: true,
   },
 
   // Kimi models

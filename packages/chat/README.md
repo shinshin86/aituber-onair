@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, and Kimi.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, xAI, and Kimi.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, OpenRouter, Z.ai, and Kimi
+- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, OpenRouter, Z.ai, xAI, and Kimi
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -333,6 +333,21 @@ Notes:
 - Supported vision models: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
 - `thinking` is disabled by default to match fast response behavior.
 
+#### xAI (Grok)
+
+```typescript
+const xaiService = ChatServiceFactory.createChatService('xai', {
+  apiKey: process.env.XAI_API_KEY,
+  model: 'grok-4-1-fast-non-reasoning',
+  visionModel: 'grok-4-1-fast-non-reasoning', // Optional: all xAI models support vision
+});
+```
+
+Notes:
+- xAI uses OpenAI-compatible Chat Completions.
+- Supported models: `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
+- All supported xAI models support vision and tool/function calling.
+
 #### Kimi (Moonshot)
 
 ```typescript
@@ -643,6 +658,7 @@ Currently, the following AI providers are built-in:
 - **Claude**: Supports models like Claude Sonnet 4.6, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)
+- **xAI**: Supports Grok 4.20 Reasoning/Non-Reasoning and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support
 - **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
 
 ## License

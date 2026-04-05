@@ -6,6 +6,7 @@ export * from './gemini';
 export * from './claude';
 export * from './openrouter';
 export * from './zai';
+export * from './xai';
 export * from './kimi';
 export * from './chat';
 export * from './prompts';
