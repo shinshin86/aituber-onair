@@ -21,6 +21,7 @@ const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
   { value: 'claude', label: 'Claude' },
   { value: 'xai', label: 'xAI' },
   { value: 'zai', label: 'Z.ai' },
+  { value: 'kimi', label: 'Kimi' },
 ];
 
 const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [

@@ -89,6 +89,7 @@ function getDefaultSettings(): AppSettings {
         openai: '',
         xai: '',
         zai: '',
+        kimi: '',
         'openai-compatible': '',
       },
       openRouterDynamicFreeModels: {
