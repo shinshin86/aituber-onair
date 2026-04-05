@@ -3,6 +3,7 @@ export type ChatProviderOption =
   | 'openrouter'
   | 'gemini'
   | 'claude'
+  | 'xai'
   | 'zai'
   | 'openai-compatible';
 export type TTSEngineOption =
@@ -13,6 +14,7 @@ export type TTSEngineOption =
   | 'aivisSpeech'
   | 'aivisCloud'
   | 'minimax'
+  | 'xai'
   | 'none';
 
 export interface ProviderApiKeys {
@@ -20,6 +22,7 @@ export interface ProviderApiKeys {
   openrouter?: string;
   gemini?: string;
   claude?: string;
+  xai?: string;
   zai?: string;
   'openai-compatible'?: string;
 }
@@ -52,6 +55,10 @@ export interface TTSSettings {
   aivisCloudStyleId?: string;
   minimaxApiKey?: string;
   minimaxGroupId?: string;
+  xaiLanguage?: string;
+  xaiCodec?: string;
+  xaiSampleRate?: number;
+  xaiBitRate?: number;
 }
 
 export interface AppSettings {

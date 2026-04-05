@@ -101,6 +101,7 @@ function getDefaultSettings(): AppSettings {
         claude: '',
         zai: '',
         kimi: '',
+        xai: '',
       },
       openRouterDynamicFreeModels: {
         models: [],
@@ -121,6 +122,10 @@ function getDefaultSettings(): AppSettings {
       aivisCloudStyleId: '',
       minimaxApiKey: '',
       minimaxGroupId: '',
+      xaiLanguage: 'auto',
+      xaiCodec: 'mp3',
+      xaiSampleRate: 24000,
+      xaiBitRate: 128000,
     },
   };
 }
@@ -316,6 +321,7 @@ export function useSettings() {
       aivisSpeech: '',
       aivisCloud: DEFAULT_AIVIS_CLOUD_MODEL_UUID,
       minimax: 'male-qn-qingse',
+      xai: 'eve',
       none: '',
     };
     setSettings((prev) => ({
@@ -349,6 +355,18 @@ export function useSettings() {
           engine === 'aivisCloud'
             ? prev.tts.aivisCloudStyleId || ''
             : prev.tts.aivisCloudStyleId,
+        xaiLanguage:
+          engine === 'xai'
+            ? prev.tts.xaiLanguage || 'auto'
+            : prev.tts.xaiLanguage,
+        xaiCodec:
+          engine === 'xai' ? prev.tts.xaiCodec || 'mp3' : prev.tts.xaiCodec,
+        xaiSampleRate:
+          engine === 'xai'
+            ? prev.tts.xaiSampleRate || 24000
+            : prev.tts.xaiSampleRate,
+        xaiBitRate:
+          engine === 'xai' ? prev.tts.xaiBitRate || 128000 : prev.tts.xaiBitRate,
       },
     }));
   }, []);
@@ -451,6 +469,34 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateXaiLanguage = useCallback((language: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, xaiLanguage: language },
+    }));
+  }, []);
+
+  const updateXaiCodec = useCallback((codec: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, xaiCodec: codec },
+    }));
+  }, []);
+
+  const updateXaiSampleRate = useCallback((sampleRate: number) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, xaiSampleRate: sampleRate },
+    }));
+  }, []);
+
+  const updateXaiBitRate = useCallback((bitRate: number) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, xaiBitRate: bitRate },
+    }));
+  }, []);
+
   const getApiKeyForProvider = useCallback(
     (provider: ChatProviderOption): string => {
       return settings.llm.apiKeys[provider] || '';
@@ -484,6 +530,10 @@ export function useSettings() {
     updateAivisCloudStyleId,
     updateMinimaxApiKey,
     updateMinimaxGroupId,
+    updateXaiLanguage,
+    updateXaiCodec,
+    updateXaiSampleRate,
+    updateXaiBitRate,
     getApiKeyForProvider,
   };
 }

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AITuberOnAirCore, AITuberOnAirCoreEvent } from '@aituber-onair/core';
-import type { VoiceServiceOptions } from '@aituber-onair/core';
+import type {
+  VoiceServiceOptions,
+  XaiBitRate,
+  XaiCodec,
+  XaiSampleRate,
+} from '@aituber-onair/core';
 import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
 
@@ -26,6 +31,9 @@ function getTtsApiKey(
   if (settings.tts.engine === 'minimax') {
     return settings.tts.minimaxApiKey || '';
   }
+  if (settings.tts.engine === 'xai') {
+    return getApiKeyForProvider('xai');
+  }
   return getApiKeyForProvider(settings.llm.provider);
 }
 
@@ -41,6 +49,11 @@ function buildVoiceOptions(
   const parsedOpenAiCompatibleSpeed = Number.parseFloat(
     tts.openAiCompatibleSpeed || '',
   );
+  const parsedXaiSampleRate = Number.parseInt(
+    String(tts.xaiSampleRate || ''),
+    10,
+  );
+  const parsedXaiBitRate = Number.parseInt(String(tts.xaiBitRate || ''), 10);
   const trimmedSpeaker = tts.speaker.trim();
 
   return {
@@ -65,6 +78,15 @@ function buildVoiceOptions(
     aivisCloudStyleId: Number.isNaN(parsedAivisCloudStyleId)
       ? undefined
       : parsedAivisCloudStyleId,
+    xaiLanguage: tts.xaiLanguage?.trim() || undefined,
+    xaiCodec: tts.xaiCodec as XaiCodec | undefined,
+    xaiSampleRate: Number.isNaN(parsedXaiSampleRate)
+      ? undefined
+      : (parsedXaiSampleRate as XaiSampleRate),
+    xaiBitRate:
+      tts.xaiCodec === 'mp3' && !Number.isNaN(parsedXaiBitRate)
+        ? (parsedXaiBitRate as XaiBitRate)
+        : undefined,
     onPlay,
   } as VoiceServiceOptions;
 }
@@ -231,6 +253,10 @@ export function useAituberCore({
     settings.tts.aivisCloudSpeakerUuid,
     settings.tts.aivisCloudStyleId,
     settings.tts.minimaxGroupId,
+    settings.tts.xaiLanguage,
+    settings.tts.xaiCodec,
+    settings.tts.xaiSampleRate,
+    settings.tts.xaiBitRate,
     ttsApiKey,
   ]);
 

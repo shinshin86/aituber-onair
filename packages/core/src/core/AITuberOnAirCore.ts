@@ -13,6 +13,7 @@ import {
   ClaudeChatServiceOptions,
   ZAIChatServiceOptions,
   KimiChatServiceOptions,
+  XAIChatServiceOptions,
 } from '@aituber-onair/chat';
 import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer';
 import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
@@ -335,6 +336,12 @@ export class AITuberOnAirCore extends EventEmitter {
           ...baseOptions,
           ...(providerOptions as ProviderOptionsByName<'kimi'> | undefined),
         } as KimiChatServiceOptions;
+      }
+      case 'xai': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as ProviderOptionsByName<'xai'> | undefined),
+        } as XAIChatServiceOptions;
       }
       default:
         return baseOptions as ChatServiceOptionsByProvider['openai'];

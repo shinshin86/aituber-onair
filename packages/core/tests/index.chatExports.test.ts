@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ENDPOINT_XAI_CHAT_COMPLETIONS_API,
   MODEL_GPT_5_4,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GLM_5_TURBO,
+  MODEL_GROK_4_20_REASONING,
+  XAIChatService,
   allowsReasoningXHigh,
   isResponsesOnlyGPT5Model,
+  isXaiVisionModel,
   refreshOpenRouterFreeModels,
   type RefreshOpenRouterFreeModelsResult,
   type VisionSupportLevel,
@@ -37,6 +41,15 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports GLM-5-Turbo model constant', () => {
     expect(MODEL_GLM_5_TURBO).toBe('glm-5-turbo');
+  });
+
+  it('re-exports xAI chat provider items', () => {
+    expect(typeof XAIChatService).toBe('function');
+    expect(MODEL_GROK_4_20_REASONING).toBe('grok-4.20-0309-reasoning');
+    expect(ENDPOINT_XAI_CHAT_COMPLETIONS_API).toBe(
+      'https://api.x.ai/v1/chat/completions',
+    );
+    expect(isXaiVisionModel(MODEL_GROK_4_20_REASONING)).toBe(true);
   });
 
   it('exposes refresh result type shape compatibility', () => {

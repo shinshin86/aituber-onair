@@ -40,6 +40,7 @@ import { geminiModels } from './constants/gemini';
 import { claudeModels } from './constants/claude';
 import { zaiModels } from './constants/zai';
 import { kimiModels } from './constants/kimi';
+import { xaiModels } from './constants/xai';
 import { openrouterModels } from './constants/openrouter';
 import {
   type VoiceEngineType,
@@ -118,6 +119,8 @@ const MINIMAX_VOICES: Record<string, string> = {
   Sweet_Girl_2: 'Sweet Girl 2',
   Exuberant_Girl: 'Exuberant Girl',
 };
+
+const XAI_TTS_SPEAKERS = ['ara', 'eve', 'leo', 'rex', 'sal'] as const;
 
 type BaseMessage = { id: string; role: 'user' | 'assistant' };
 type TextMessage = BaseMessage & { kind: 'text'; content: string };
@@ -399,6 +402,10 @@ const App: React.FC = () => {
   const [minimaxAudioChannel, setMinimaxAudioChannel] = useState<'1' | '2'>(
     '1',
   );
+  const [xaiLanguage, setXaiLanguage] = useState<string>('auto');
+  const [xaiCodec, setXaiCodec] = useState<string>('mp3');
+  const [xaiSampleRate, setXaiSampleRate] = useState<string>('24000');
+  const [xaiBitRate, setXaiBitRate] = useState<string>('128000');
   const [voicevoxSpeedScale, setVoicevoxSpeedScale] = useState<string>('');
   const [voicevoxPitchScale, setVoicevoxPitchScale] = useState<string>('');
   const [voicevoxIntonationScale, setVoicevoxIntonationScale] =
@@ -498,6 +505,7 @@ const App: React.FC = () => {
     aivisCloud: 'a59cb814-0083-4369-8542-f51a29e72af7',
     voicepeak: 'f1',
     minimax: 'male-qn-qingse',
+    xai: 'eve',
   });
   const [availableSpeakers, setAvailableSpeakers] = useState<
     Record<string, any[]>
@@ -644,7 +652,14 @@ const App: React.FC = () => {
       setAivisOutputSamplingRate('default');
       setAivisOutputStereo('default');
     }
-  }, [selectedVoiceEngine, voiceApiKeys]);
+
+    if (selectedVoiceEngine === 'xai') {
+      setXaiLanguage('auto');
+      setXaiCodec('mp3');
+      setXaiSampleRate('24000');
+      setXaiBitRate('128000');
+    }
+  }, [selectedVoiceEngine]);
 
   /**
    * when chat provider changes, reset the model to the first one
@@ -665,6 +680,9 @@ const App: React.FC = () => {
         break;
       case 'kimi':
         setModel(kimiModels[0]);
+        break;
+      case 'xai':
+        setModel(xaiModels[0]);
         break;
       case 'openrouter':
         setModel(openrouterModels[0]);
@@ -1355,6 +1373,29 @@ const App: React.FC = () => {
           }
 
           break;
+        case 'xai': {
+          if (xaiLanguage.trim()) {
+            options.xaiLanguage = xaiLanguage.trim();
+          }
+
+          if (xaiCodec) {
+            options.xaiCodec = xaiCodec;
+          }
+
+          const parsedSampleRate = Number.parseInt(xaiSampleRate, 10);
+          if (!Number.isNaN(parsedSampleRate)) {
+            options.xaiSampleRate = parsedSampleRate;
+          }
+
+          if (xaiCodec === 'mp3') {
+            const parsedBitRate = Number.parseInt(xaiBitRate, 10);
+            if (!Number.isNaN(parsedBitRate)) {
+              options.xaiBitRate = parsedBitRate;
+            }
+          }
+
+          break;
+        }
       }
 
       return options;
@@ -1998,6 +2039,7 @@ const App: React.FC = () => {
                     <option value="claude">Claude</option>
                     <option value="zai">Z.ai</option>
                     <option value="kimi">Kimi</option>
+                    <option value="xai">xAI</option>
                     <option value="openrouter">OpenRouter</option>
                     <option value="openai-compatible">OpenAI-Compatible</option>
                   </select>
@@ -2043,6 +2085,12 @@ const App: React.FC = () => {
                         ))}
                       {chatProvider === 'kimi' &&
                         kimiModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'xai' &&
+                        xaiModels.map((m) => (
                           <option key={m} value={m}>
                             {m}
                           </option>
@@ -2693,6 +2741,138 @@ const App: React.FC = () => {
                               </div>
                             </div>
                           </>
+                        )}
+
+                        {selectedVoiceEngine === 'xai' && (
+                          <div
+                            style={{
+                              marginTop: '12px',
+                              padding: '12px',
+                              backgroundColor: '#f8f9ff',
+                              borderRadius: '8px',
+                              border: '1px solid #dbe4ff',
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontWeight: 'bold',
+                                marginBottom: '8px',
+                                color: '#3b5bdb',
+                              }}
+                            >
+                              xAI TTS parameters
+                            </div>
+
+                            <label
+                              htmlFor="xaiLanguage"
+                              style={{ marginTop: '4px', display: 'block' }}
+                            >
+                              Language:
+                            </label>
+                            <input
+                              type="text"
+                              id="xaiLanguage"
+                              placeholder="auto"
+                              value={xaiLanguage}
+                              onChange={(e) => setXaiLanguage(e.target.value)}
+                              style={{ width: '100%', marginBottom: '8px' }}
+                            />
+
+                            <div
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '8px',
+                              }}
+                            >
+                              <div>
+                                <label
+                                  htmlFor="xaiCodec"
+                                  style={{
+                                    marginTop: '4px',
+                                    display: 'block',
+                                  }}
+                                >
+                                  Codec:
+                                </label>
+                                <select
+                                  id="xaiCodec"
+                                  value={xaiCodec}
+                                  onChange={(e) => setXaiCodec(e.target.value)}
+                                  style={{
+                                    width: '100%',
+                                    marginBottom: '8px',
+                                  }}
+                                >
+                                  <option value="mp3">MP3</option>
+                                  <option value="wav">WAV</option>
+                                  <option value="pcm">PCM</option>
+                                  <option value="mulaw">Mu-Law</option>
+                                  <option value="alaw">A-Law</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor="xaiSampleRate"
+                                  style={{
+                                    marginTop: '4px',
+                                    display: 'block',
+                                  }}
+                                >
+                                  Sample Rate:
+                                </label>
+                                <select
+                                  id="xaiSampleRate"
+                                  value={xaiSampleRate}
+                                  onChange={(e) =>
+                                    setXaiSampleRate(e.target.value)
+                                  }
+                                  style={{
+                                    width: '100%',
+                                    marginBottom: '8px',
+                                  }}
+                                >
+                                  <option value="8000">8,000 Hz</option>
+                                  <option value="16000">16,000 Hz</option>
+                                  <option value="22050">22,050 Hz</option>
+                                  <option value="24000">24,000 Hz</option>
+                                  <option value="44100">44,100 Hz</option>
+                                  <option value="48000">48,000 Hz</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {xaiCodec === 'mp3' && (
+                              <>
+                                <label
+                                  htmlFor="xaiBitRate"
+                                  style={{
+                                    marginTop: '4px',
+                                    display: 'block',
+                                  }}
+                                >
+                                  Bit Rate (bps):
+                                </label>
+                                <select
+                                  id="xaiBitRate"
+                                  value={xaiBitRate}
+                                  onChange={(e) =>
+                                    setXaiBitRate(e.target.value)
+                                  }
+                                  style={{
+                                    width: '100%',
+                                    marginBottom: '8px',
+                                  }}
+                                >
+                                  <option value="32000">32,000</option>
+                                  <option value="64000">64,000</option>
+                                  <option value="96000">96,000</option>
+                                  <option value="128000">128,000</option>
+                                  <option value="192000">192,000</option>
+                                </select>
+                              </>
+                            )}
+                          </div>
                         )}
                       </>
                     )}
@@ -4150,6 +4330,13 @@ const App: React.FC = () => {
                                 </option>
                               ),
                             )}
+
+                          {selectedVoiceEngine === 'xai' &&
+                            XAI_TTS_SPEAKERS.map((speaker) => (
+                              <option key={speaker} value={speaker}>
+                                {speaker}
+                              </option>
+                            ))}
                         </select>
                       </>
                     )}
@@ -4164,6 +4351,8 @@ const App: React.FC = () => {
                     >
                       {selectedVoiceEngine === 'minimax'
                         ? 'MiniMaxでは速度・音質のパラメータを調整できます'
+                        : selectedVoiceEngine === 'xai'
+                          ? 'xAI TTSでは language / codec / sample rate / bit rate を設定できます'
                         : selectedVoiceEngine === 'voicevox'
                           ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
                           : selectedVoiceEngine === 'openai'

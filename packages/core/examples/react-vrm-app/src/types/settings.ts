@@ -5,7 +5,8 @@ export type ChatProviderOption =
   | 'gemini'
   | 'claude'
   | 'zai'
-  | 'kimi';
+  | 'kimi'
+  | 'xai';
 export type TTSEngineOption =
   | 'openai'
   | 'openaiCompatible'
@@ -14,6 +15,7 @@ export type TTSEngineOption =
   | 'aivisSpeech'
   | 'aivisCloud'
   | 'minimax'
+  | 'xai'
   | 'none';
 
 export interface ProviderApiKeys {
@@ -24,6 +26,7 @@ export interface ProviderApiKeys {
   claude?: string;
   zai?: string;
   kimi?: string;
+  xai?: string;
 }
 
 export interface LLMSettings {
@@ -54,6 +57,10 @@ export interface TTSSettings {
   aivisCloudStyleId?: string;
   minimaxApiKey?: string;
   minimaxGroupId?: string;
+  xaiLanguage?: string;
+  xaiCodec?: string;
+  xaiSampleRate?: number;
+  xaiBitRate?: number;
 }
 
 export interface AppSettings {
