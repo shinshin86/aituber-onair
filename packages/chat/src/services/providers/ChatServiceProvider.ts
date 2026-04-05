@@ -139,6 +139,20 @@ export type ZAIChatServiceOptions = DisallowKeys<
   | 'baseUrl'
 >;
 
+export type XAIChatServiceOptions = DisallowKeys<
+  BaseChatServiceOptions,
+  | 'verbosity'
+  | 'reasoning_effort'
+  | 'gpt5Preset'
+  | 'gpt5EndpointPreference'
+  | 'enableReasoningSummary'
+  | 'includeReasoning'
+  | 'reasoningMaxTokens'
+  | 'baseUrl'
+  | 'thinking'
+  | 'responseFormat'
+>;
+
 export type ChatServiceOptions<
   TExtra extends Record<string, unknown> = Record<string, unknown>,
 > = BaseChatServiceOptions & TExtra;
@@ -150,6 +164,7 @@ export type ChatServiceOptionsByProvider = {
   gemini: GeminiChatServiceOptions;
   claude: ClaudeChatServiceOptions;
   zai: ZAIChatServiceOptions;
+  xai: XAIChatServiceOptions;
   kimi: KimiChatServiceOptions;
 };
 

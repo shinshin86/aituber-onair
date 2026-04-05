@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## 0.23.0
+
+### Minor Changes
+
+- Added xAI provider support with OpenAI-compatible chat completions, including Grok 4.20 and Grok 4-1 Fast model constants.
+- Added xAI provider/service test coverage and updated the React basic example model selector with the new Grok models.
+- Updated README files (EN/JA) and package exports to document and expose xAI support.
+
 ## 0.22.0
 
 ### Minor Changes

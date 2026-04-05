@@ -40,6 +40,7 @@
 - Conventional Commits: `feat(core): ...`, `fix(manneri): ...`, `test(voice): ...`.
 - PRs: clear description, linked issues, screenshots for example/UI changes.
 - Must pass CI, lint/format, tests. Keep per-package CHANGELOG and version bumps in sync; do not add files under `.changeset/`. Do not publish locally—CI handles releases; never commit `dist` or secrets.
+- **Version bump commits must include `package-lock.json` and dependent `package.json` range updates.** All packages use `0.x` versioning, so `^0.x.y` does NOT span minor bumps (e.g. `^0.22.0` excludes `0.23.0`). Omitting these causes `npm ci` to fail in CI. Always run `npm install --package-lock-only` then `npm ci` before committing.
 
 ## Release Notes / Process
 - Applies to all packages: do not use the Changeset CLI or create `.changeset/*` files.

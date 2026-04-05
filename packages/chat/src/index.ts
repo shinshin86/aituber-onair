@@ -21,6 +21,7 @@ export type {
   GeminiChatServiceOptions,
   ClaudeChatServiceOptions,
   ZAIChatServiceOptions,
+  XAIChatServiceOptions,
   KimiChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
@@ -46,6 +47,10 @@ export { OpenRouterChatServiceProvider } from './services/providers/openrouter/O
 // Z.ai provider exports
 export { ZAIChatService } from './services/providers/zai/ZAIChatService';
 export { ZAIChatServiceProvider } from './services/providers/zai/ZAIChatServiceProvider';
+
+// xAI provider exports
+export { XAIChatService } from './services/providers/xai/XAIChatService';
+export { XAIChatServiceProvider } from './services/providers/xai/XAIChatServiceProvider';
 
 // Kimi provider exports
 export { KimiChatService } from './services/providers/kimi/KimiChatService';

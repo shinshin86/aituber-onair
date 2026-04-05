@@ -29,6 +29,7 @@ export type Provider =
   | 'gemini'
   | 'openrouter'
   | 'zai'
+  | 'xai'
   | 'kimi';
 
 interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {

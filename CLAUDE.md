@@ -302,6 +302,22 @@ This project manages releases through manual version updates and CHANGELOG maint
      - `npm ci`
    - Before opening PR, ensure the target package tests still pass (for example: `npm -w @aituber-onair/chat run test`).
 
+   **CRITICAL — `npm ci` will fail without these steps:**
+   In this monorepo, all packages use `0.x` versioning. Under semver, `^0.x.y`
+   ranges do **not** span minor bumps (e.g. `^0.22.0` matches `>=0.22.0 <0.23.0`,
+   so `0.23.0` is **excluded**). If you bump package `A` to a new minor version
+   but forget to update the dependent range in package `B`, `npm ci` in CI will
+   fail because the lockfile becomes inconsistent with the workspace.
+
+   **Required steps for every version bump commit:**
+   1. Bump the target package version in its `package.json`.
+   2. Update **all** workspace consumers' dependency ranges (e.g. core's
+      `@aituber-onair/chat` range).
+   3. Run `npm install --package-lock-only` to regenerate `package-lock.json`.
+   4. Run `npm ci` locally to verify.
+   5. Include `package-lock.json` **and** consumer `package.json` range updates
+      in the **same commit** (or at least the same PR) as the version bump.
+
 **IMPORTANT**: Never use `npm publish` directly - all publishing is automated via CI/CD
 
 ### Failure Recovery Notes

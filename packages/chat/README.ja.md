@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat ロゴ](./images/aituber-onair-chat.png)
 
-AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、OpenRouter、Z.ai、Kimi等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
+AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、OpenRouter、Z.ai、xAI、Kimi等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
 
 ## 機能
 
-- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、OpenRouter、Z.ai、Kimi
+- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、OpenRouter、Z.ai、xAI、Kimi
 - 🔄 **統一されたインターフェース**: 異なるプロバイダー間での一貫したAPI
 - 🛠️ **ツール・関数呼び出し**: AI関数呼び出しの自動反復処理をサポート
 - 💬 **ストリーミングレスポンス**: リアルタイムストリーミングチャット応答
@@ -337,6 +337,21 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 - ビジョン対応モデル: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
 - `thinking` はデフォルトで無効化しています。
 
+#### xAI（Grok）
+
+```typescript
+const xaiService = ChatServiceFactory.createChatService('xai', {
+  apiKey: process.env.XAI_API_KEY,
+  model: 'grok-4-1-fast-non-reasoning',
+  visionModel: 'grok-4-1-fast-non-reasoning', // 任意: xAI の全モデルがビジョン対応
+});
+```
+
+注意:
+- xAIはOpenAI互換のChat Completionsを利用します。
+- 対応モデル: `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
+- すべての対応 xAI モデルでビジョンとツール・関数呼び出しを利用できます。
+
 #### Kimi（Moonshot）
 
 ```typescript
@@ -647,6 +662,7 @@ console.log(modelLevel); // 'unknown'
 - **Claude**: Claude Sonnet 4.6, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Claude 4 Sonnet, Claude 4 Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haikuのモデルをサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
+- **xAI**: Grok 4.20 の Reasoning/Non-Reasoning と Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
 - **Kimi**: Kimi K2.5（`kimi-k2.5`、ビジョン対応）をサポート
 
 ## ライセンス
