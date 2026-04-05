@@ -16,6 +16,7 @@ const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
   { value: 'openrouter', label: 'OpenRouter' },
   { value: 'gemini', label: 'Gemini' },
   { value: 'claude', label: 'Claude' },
+  { value: 'xai', label: 'xAI' },
   { value: 'zai', label: 'Z.ai' },
   { value: 'kimi', label: 'Kimi' },
 ];
@@ -28,10 +29,15 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'aivisSpeech', label: 'AivisSpeech' },
   { value: 'aivisCloud', label: 'Aivis Cloud' },
   { value: 'minimax', label: 'MiniMax' },
+  { value: 'xai', label: 'xAI TTS' },
   { value: 'none', label: 'None' },
 ];
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+const XAI_SPEAKERS = ['ara', 'eve', 'leo', 'rex', 'sal'];
+const XAI_CODECS = ['mp3', 'wav', 'pcm', 'mulaw', 'alaw'] as const;
+const XAI_SAMPLE_RATES = [8000, 16000, 22050, 24000, 44100, 48000] as const;
+const XAI_BIT_RATES = [32000, 64000, 96000, 128000, 192000] as const;
 
 const VOICEPEAK_SPEAKERS = [
   { id: 'f1', name: '日本人女性 1' },
@@ -99,6 +105,10 @@ export function SettingsPanel({
   updateAivisCloudStyleId,
   updateMinimaxApiKey,
   updateMinimaxGroupId,
+  updateXaiLanguage,
+  updateXaiCodec,
+  updateXaiSampleRate,
+  updateXaiBitRate,
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
@@ -535,6 +545,101 @@ export function SettingsPanel({
                   ))}
                 </select>
               </div>
+            )}
+
+            {settings.tts.engine === 'xai' && (
+              <>
+                {settings.llm.provider !== 'xai' && (
+                  <div className="settings-field">
+                    <label htmlFor="tts-xai-apikey">API Key (xAI)</label>
+                    <input
+                      id="tts-xai-apikey"
+                      type="password"
+                      value={getApiKeyForProvider('xai')}
+                      onChange={(e) => updateLLMApiKey('xai', e.target.value)}
+                      placeholder="xai-..."
+                      disabled={disabled}
+                    />
+                  </div>
+                )}
+                <div className="settings-field">
+                  <label htmlFor="tts-xai-speaker">Speaker</label>
+                  <select
+                    id="tts-xai-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={disabled}
+                  >
+                    {XAI_SPEAKERS.map((speaker) => (
+                      <option key={speaker} value={speaker}>
+                        {speaker}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-xai-language">Language</label>
+                  <input
+                    id="tts-xai-language"
+                    type="text"
+                    value={settings.tts.xaiLanguage || ''}
+                    onChange={(e) => updateXaiLanguage(e.target.value)}
+                    placeholder="auto"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-xai-codec">Codec</label>
+                  <select
+                    id="tts-xai-codec"
+                    value={settings.tts.xaiCodec || 'mp3'}
+                    onChange={(e) => updateXaiCodec(e.target.value)}
+                    disabled={disabled}
+                  >
+                    {XAI_CODECS.map((codec) => (
+                      <option key={codec} value={codec}>
+                        {codec}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-xai-sample-rate">Sample Rate</label>
+                  <select
+                    id="tts-xai-sample-rate"
+                    value={String(settings.tts.xaiSampleRate || 24000)}
+                    onChange={(e) =>
+                      updateXaiSampleRate(Number.parseInt(e.target.value, 10))
+                    }
+                    disabled={disabled}
+                  >
+                    {XAI_SAMPLE_RATES.map((sampleRate) => (
+                      <option key={sampleRate} value={sampleRate}>
+                        {sampleRate}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {(settings.tts.xaiCodec || 'mp3') === 'mp3' && (
+                  <div className="settings-field">
+                    <label htmlFor="tts-xai-bit-rate">Bit Rate</label>
+                    <select
+                      id="tts-xai-bit-rate"
+                      value={String(settings.tts.xaiBitRate || 128000)}
+                      onChange={(e) =>
+                        updateXaiBitRate(Number.parseInt(e.target.value, 10))
+                      }
+                      disabled={disabled}
+                    >
+                      {XAI_BIT_RATES.map((bitRate) => (
+                        <option key={bitRate} value={bitRate}>
+                          {bitRate}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </>
             )}
 
             {settings.tts.engine === 'openaiCompatible' && (

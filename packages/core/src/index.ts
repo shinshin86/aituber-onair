@@ -17,6 +17,7 @@ export {
   type ChatProviderName,
   type OpenAICompatibleChatServiceOptions,
   type ChatServiceProvider,
+  type XAIChatServiceOptions,
   // OpenAI provider
   OpenAIChatService,
   OpenAIChatServiceProvider,
@@ -33,6 +34,9 @@ export {
   // Kimi provider
   KimiChatService,
   KimiChatServiceProvider,
+  // xAI provider
+  XAIChatService,
+  XAIChatServiceProvider,
   // Type definitions
   type Message,
   type MessageWithVision,
@@ -126,6 +130,14 @@ export {
   MODEL_KIMI_K2_5,
   KIMI_VISION_SUPPORTED_MODELS,
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  // xAI model constants
+  MODEL_GROK_4_20_REASONING,
+  MODEL_GROK_4_20_NON_REASONING,
+  MODEL_GROK_4_1_FAST_REASONING,
+  MODEL_GROK_4_1_FAST_NON_REASONING,
+  XAI_VISION_SUPPORTED_MODELS,
+  ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+  isXaiVisionModel,
   // OpenRouter model constants
   MODEL_GPT_OSS_20B_FREE,
   MODEL_MOONSHOTAI_KIMI_K2_5,
@@ -202,11 +214,15 @@ export {
   OpenAiEngine,
   OpenAiCompatibleEngine,
   MinimaxEngine,
+  XaiEngine,
   // Types
   type MinimaxModel,
   type MinimaxVoiceSettingsOptions,
   type MinimaxAudioSettingsOptions,
   type MinimaxAudioFormat,
+  type XaiCodec,
+  type XaiSampleRate,
+  type XaiBitRate,
   type VoiceVoxQueryParameterOverrides,
   type AivisSpeechQueryParameterOverrides,
   type VoiceEngineType,
@@ -237,4 +253,5 @@ export {
   MINIMAX_CHINA_API_URL,
   MINIMAX_GLOBAL_VOICE_LIST_URL,
   MINIMAX_CHINA_VOICE_LIST_URL,
+  XAI_TTS_API_URL,
 } from '@aituber-onair/voice';

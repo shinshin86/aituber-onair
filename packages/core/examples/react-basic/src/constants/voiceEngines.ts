@@ -10,6 +10,7 @@ export type VoiceEngineType =
   | 'aivisCloud'
   | 'voicepeak'
   | 'minimax'
+  | 'xai'
   | 'none';
 
 export interface VoiceEngineConfig {
@@ -80,6 +81,12 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       defaultParams: {
         endpoint: 'global',
       },
+    },
+    xai: {
+      name: 'xAI TTS',
+      apiUrl: 'https://api.x.ai/v1/tts',
+      needsApiKey: true,
+      placeholder: 'xai-...',
     },
     none: {
       name: '音声なし',

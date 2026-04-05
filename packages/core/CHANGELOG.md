@@ -1,5 +1,26 @@
 # @aituber-onair/core
 
+## 0.24.0
+
+### Minor Changes
+
+- Added xAI provider support to `AITuberOnAirCore`, including xAI chat
+  provider option handling and xAI chat exports from the core entry point.
+- Re-exported xAI voice engine items from the core entry point:
+  - `XaiEngine`
+  - `XaiCodec`
+  - `XaiSampleRate`
+  - `XaiBitRate`
+  - `XAI_TTS_API_URL`
+- Updated the React VRM example settings UI to support xAI chat and xAI TTS
+  configuration, including shared xAI API key handling and xAI audio options.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aituber-onair/chat@0.23.0
+  - @aituber-onair/voice@0.10.0
+
 ## 0.23.9
 
 ### Patch Changes
