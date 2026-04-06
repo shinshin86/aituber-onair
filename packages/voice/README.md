@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## Main Features
 
 - **Multiple TTS Engine Support**  
-  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, MiniMax,
+  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Gemini TTS, MiniMax,
   AivisSpeech, Aivis Cloud, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
@@ -245,6 +245,27 @@ const voiceService = new VoiceService({
 - **Multiple Formats**: WAV, FLAC, MP3, AAC, Opus output
 - **Emotion Control**: Fine-grained emotional intensity settings
 - **High Quality**: Professional-grade voice synthesis
+
+### Gemini TTS
+Gemini API text-to-speech with Gemini preview TTS models and simple API key
+authentication.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'geminiTts',
+  speaker: 'Zephyr',
+  apiKey: 'your-google-api-key',
+  geminiTtsModel: 'gemini-2.5-flash-preview-tts',
+  geminiTtsLanguageCode: 'ja-JP',
+  geminiTtsPrompt: 'Speak in a cheerful tone', // Optional style instruction
+  geminiTtsApiUrl:
+    'https://generativelanguage.googleapis.com/v1beta', // Optional Gemini API base URL
+});
+```
+
+**Note**: Use a standard Google API key. `apiKey` is sent as
+`x-goog-api-key` to the Gemini API. Available voices include Zephyr, Aoede,
+Kore, Puck, Charon, and more.
 
 ### None (Silent Mode)
 No audio output - useful for testing or text-only scenarios.
@@ -475,6 +496,14 @@ try {
 - Dual-region endpoints (global/china)
 - Advanced emotion synthesis
 
+### Gemini TTS Features
+- Gemini API-based high-quality voice synthesis
+- 30+ voice options (star/moon themed names)
+- Prompt-based style/tone control
+- Simple API key authentication with `x-goog-api-key`
+- Configurable Gemini API base URL
+- 24+ language support including Japanese
+
 ## Integration with AITuber OnAir Core
 
 While this package can be used independently, it integrates seamlessly with [@aituber-onair/core](https://www.npmjs.com/package/@aituber-onair/core):
@@ -504,6 +533,7 @@ type VoiceServiceOptions =
   | VoiceVoxVoiceServiceOptions
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
+  | GeminiTtsVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions

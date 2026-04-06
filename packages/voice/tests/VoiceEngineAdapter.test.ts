@@ -47,6 +47,8 @@ describe('VoiceEngineAdapter', () => {
       setGroupId: vi.fn(),
       setEndpoint: vi.fn(),
       setModel: vi.fn(),
+      setLanguageCode: vi.fn(),
+      setPrompt: vi.fn(),
       setCodec: vi.fn(),
       setEmotion: vi.fn(),
       setLanguage: vi.fn(),
@@ -582,6 +584,73 @@ describe('VoiceEngineAdapter', () => {
     });
   });
 
+  describe('Gemini TTS Integration', () => {
+    it('should configure Gemini TTS engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'geminiTts',
+        speaker: 'Zephyr',
+        apiKey: 'test-api-key',
+        geminiTtsModel: 'gemini-2.5-pro-preview-tts',
+        geminiTtsLanguageCode: 'en-US',
+        geminiTtsPrompt: 'Speak cheerfully',
+        geminiTtsApiUrl: 'https://generativelanguage.googleapis.com/v1beta',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'Gemini TTS test' });
+
+      expect(mockEngine.setModel).toHaveBeenCalledWith(
+        'gemini-2.5-pro-preview-tts',
+      );
+      expect(mockEngine.setLanguageCode).toHaveBeenCalledWith('en-US');
+      expect(mockEngine.setPrompt).toHaveBeenCalledWith('Speak cheerfully');
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://generativelanguage.googleapis.com/v1beta',
+      );
+      expect(mockEngine.fetchAudio).toHaveBeenCalled();
+    });
+
+    it('should apply updated Gemini TTS options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'geminiTts',
+        speaker: 'Zephyr',
+        apiKey: 'test-access-token',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'Initial' });
+
+      vi.clearAllMocks();
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      adapter.updateOptions({
+        geminiTtsModel: 'gemini-2.5-pro-preview-tts',
+        geminiTtsLanguageCode: 'en-US',
+        geminiTtsPrompt: 'Speak cheerfully',
+        geminiTtsApiUrl: 'https://generativelanguage.googleapis.com/v1beta',
+      });
+
+      await adapter.speak({ text: 'After update' });
+
+      expect(mockEngine.setModel).toHaveBeenCalledWith(
+        'gemini-2.5-pro-preview-tts',
+      );
+      expect(mockEngine.setLanguageCode).toHaveBeenCalledWith('en-US');
+      expect(mockEngine.setPrompt).toHaveBeenCalledWith('Speak cheerfully');
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://generativelanguage.googleapis.com/v1beta',
+      );
+    });
+  });
+
   describe('Emotion Conversion', () => {
     it('should convert emotions to styles correctly', async () => {
       const emotionMappings = [
@@ -646,6 +715,11 @@ describe('VoiceEngineAdapter', () => {
           engineType: 'openaiCompatible' as const,
           option: 'openAiCompatibleApiUrl' as const,
           url: 'http://localhost:8880/v1/audio/speech',
+        },
+        {
+          engineType: 'geminiTts' as const,
+          option: 'geminiTtsApiUrl' as const,
+          url: 'https://generativelanguage.googleapis.com/v1beta',
         },
       ];
 

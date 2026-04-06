@@ -2,6 +2,7 @@ import type { VoiceEngine } from '../../../engines/VoiceEngine';
 import type {
   AivisCloudVoiceServiceOptions,
   AivisSpeechVoiceServiceOptions,
+  GeminiTtsVoiceServiceOptions,
   MinimaxVoiceServiceOptions,
   OpenAiVoiceServiceOptions,
   VoicePeakVoiceServiceOptions,
@@ -72,6 +73,14 @@ export interface XaiConfigurableEngine extends VoiceEngine {
     value: NonNullable<XaiVoiceServiceOptions['xaiSampleRate']>,
   ): void;
   setBitRate?(value: NonNullable<XaiVoiceServiceOptions['xaiBitRate']>): void;
+}
+
+export interface GeminiTtsConfigurableEngine extends VoiceEngine {
+  setModel?(
+    value: NonNullable<GeminiTtsVoiceServiceOptions['geminiTtsModel']>,
+  ): void;
+  setLanguageCode?(value: string): void;
+  setPrompt?(value?: GeminiTtsVoiceServiceOptions['geminiTtsPrompt']): void;
 }
 
 export interface OpenAiCompatibleConfigurableEngine extends VoiceEngine {

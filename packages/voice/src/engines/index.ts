@@ -11,6 +11,7 @@ export {
 } from './AivisSpeechEngine';
 export { AivisCloudEngine } from './AivisCloudEngine';
 export { OpenAiEngine } from './OpenAiEngine';
+export { GeminiTtsEngine, type GeminiTtsModel } from './GeminiTtsEngine';
 export {
   XaiEngine,
   type XaiCodec,

@@ -19,3 +19,7 @@ export const MINIMAX_CHINA_VOICE_LIST_URL =
 // Aivis Cloud API endpoint
 export const AIVIS_CLOUD_API_URL =
   'https://api.aivis-project.com/v1/tts/synthesize';
+
+// Gemini TTS API endpoint
+export const GEMINI_TTS_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta';
