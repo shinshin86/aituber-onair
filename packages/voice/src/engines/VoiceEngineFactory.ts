@@ -1,6 +1,7 @@
 import { VoiceEngineType } from '../types/voiceEngine';
 import { AivisCloudEngine } from './AivisCloudEngine';
 import { AivisSpeechEngine } from './AivisSpeechEngine';
+import { GeminiTtsEngine } from './GeminiTtsEngine';
 import { MinimaxEngine } from './MinimaxEngine';
 import { NoneEngine } from './NoneEngine';
 import { OpenAiEngine } from './OpenAiEngine';
@@ -17,6 +18,7 @@ const ENGINE_CONSTRUCTORS = {
   aivisCloud: AivisCloudEngine,
   openai: OpenAiEngine,
   xai: XaiEngine,
+  geminiTts: GeminiTtsEngine,
   openaiCompatible: OpenAiCompatibleEngine,
   minimax: MinimaxEngine,
   none: NoneEngine,

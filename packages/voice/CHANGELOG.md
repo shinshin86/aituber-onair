@@ -1,5 +1,19 @@
 # @aituber-onair/voice
 
+## 0.11.0
+
+### Minor Changes
+
+- Add Gemini TTS support via `engineType: 'geminiTts'`.
+  - Introduce `GeminiTtsEngine` using the Gemini API
+    (`generativelanguage.googleapis.com`) with preview TTS models
+    (`gemini-2.5-flash-preview-tts`, `gemini-2.5-pro-preview-tts`, etc.).
+  - Support `geminiTtsModel`, `geminiTtsLanguageCode`,
+    `geminiTtsPrompt`, and `geminiTtsApiUrl` options.
+  - Simplify authentication to Google API key only via `x-goog-api-key`.
+  - Register Gemini TTS in the voice engine factory, public exports, internal
+    option handlers, React example, README, and tests.
+
 ## 0.10.0
 
 ### Minor Changes

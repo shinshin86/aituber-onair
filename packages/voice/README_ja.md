@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -243,6 +243,27 @@ const voiceService = new VoiceService({
 - **複数形式**: WAV、FLAC、MP3、AAC、Opus出力
 - **感情制御**: きめ細かな感情強度設定
 - **高品質**: プロフェッショナルグレードの音声合成
+
+### Gemini TTS
+Gemini preview TTS モデルを Gemini API 経由で利用する音声合成です。
+認証は API キーのみです。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'geminiTts',
+  speaker: 'Zephyr',
+  apiKey: 'your-google-api-key',
+  geminiTtsModel: 'gemini-2.5-flash-preview-tts',
+  geminiTtsLanguageCode: 'ja-JP',
+  geminiTtsPrompt: '明るく元気な声で話してください', // オプション：スタイル指示
+  geminiTtsApiUrl:
+    'https://generativelanguage.googleapis.com/v1beta', // オプション：Gemini API のベース URL
+});
+```
+
+**注意**：通常の Google API キーを利用します。`apiKey` は Gemini
+API に `x-goog-api-key` として送信されます。利用可能なボイスには
+Zephyr、Aoede、Kore、Puck、Charon などがあります。
 
 ### None（サイレントモード）
 音声出力なし - テストやテキストのみのシナリオに便利。
@@ -477,6 +498,14 @@ try {
 - デュアルリージョンエンドポイント（global/china）
 - 高度な感情合成
 
+### Gemini TTS の機能
+- Gemini API ベースの高品質音声合成
+- 30以上のボイスオプション（星・月をテーマにした名前）
+- プロンプトベースのスタイル・トーン制御
+- `x-goog-api-key` によるシンプルな API キー認証
+- Gemini API ベース URL の切り替えに対応
+- 日本語を含む24以上の言語サポート
+
 ## AITuber OnAir Coreとの統合
 
 このパッケージは独立して使用できますが、[@aituber-onair/core](https://www.npmjs.com/package/@aituber-onair/core)とシームレスに統合されます：
@@ -506,6 +535,7 @@ type VoiceServiceOptions =
   | VoiceVoxVoiceServiceOptions
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
+  | GeminiTtsVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions

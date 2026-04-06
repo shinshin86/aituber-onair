@@ -1,4 +1,5 @@
 import type { AivisSpeechQueryParameterOverrides } from '../engines/AivisSpeechEngine';
+import type { GeminiTtsModel } from '../engines';
 import type { XaiBitRate, XaiCodec, XaiSampleRate } from '../engines/XaiEngine';
 import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine';
 export type { VoiceVoxQueryParameterOverrides };
@@ -126,6 +127,20 @@ export interface XaiVoiceServiceOptions extends VoiceServiceCommonOptions {
   xaiSampleRate?: XaiSampleRate;
   /** xAI MP3 bit rate (default: 128000) */
   xaiBitRate?: XaiBitRate;
+}
+
+export interface GeminiTtsVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'geminiTts';
+  /** Custom Gemini API endpoint URL */
+  geminiTtsApiUrl?: string;
+  /** Gemini TTS model name */
+  geminiTtsModel?: GeminiTtsModel;
+  /** Gemini TTS language code (default: ja-JP) */
+  geminiTtsLanguageCode?: string;
+  /** Gemini TTS optional prompt */
+  geminiTtsPrompt?: string;
 }
 
 export interface OpenAiCompatibleVoiceServiceOptions
@@ -272,6 +287,7 @@ export type VoiceServiceOptions =
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
   | XaiVoiceServiceOptions
+  | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
   | AivisCloudVoiceServiceOptions
@@ -292,6 +308,9 @@ export type OpenAiVoiceServiceOptionsUpdate = Partial<
 >;
 export type XaiVoiceServiceOptionsUpdate = Partial<
   Omit<XaiVoiceServiceOptions, 'engineType'>
+>;
+export type GeminiTtsVoiceServiceOptionsUpdate = Partial<
+  Omit<GeminiTtsVoiceServiceOptions, 'engineType'>
 >;
 export type OpenAiCompatibleVoiceServiceOptionsUpdate = Partial<
   Omit<OpenAiCompatibleVoiceServiceOptions, 'engineType'>
@@ -314,6 +333,7 @@ export type VoiceServiceOptionsUpdate =
   | VoicePeakVoiceServiceOptionsUpdate
   | OpenAiVoiceServiceOptionsUpdate
   | XaiVoiceServiceOptionsUpdate
+  | GeminiTtsVoiceServiceOptionsUpdate
   | OpenAiCompatibleVoiceServiceOptionsUpdate
   | AivisSpeechVoiceServiceOptionsUpdate
   | AivisCloudVoiceServiceOptionsUpdate

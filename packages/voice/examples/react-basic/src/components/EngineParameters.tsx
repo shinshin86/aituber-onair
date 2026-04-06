@@ -42,6 +42,12 @@ interface EngineParametersProps {
     sampleRate: SelectField<`${XaiSampleRate}`>;
     bitRate: SelectField<`${XaiBitRate}`>;
   };
+  geminiTts: {
+    model: SelectField<string>;
+    languageCode: StringField;
+    prompt: StringField;
+    models: Record<string, string>;
+  };
   openaiCompatible: {
     model: StringField;
     speed: StringField;
@@ -118,6 +124,7 @@ export function EngineParameters({
   engine,
   openai,
   xai,
+  geminiTts,
   openaiCompatible,
   voicevox,
   voicepeak,
@@ -235,6 +242,45 @@ export function EngineParameters({
             `bit_rate` は MP3 出力時のみ送信されます。
           </p>
         </CollapsibleCard>
+      )}
+
+      {engine === 'geminiTts' && (
+        <>
+          <div className="form-group">
+            <label htmlFor="geminiTtsModel">Model:</label>
+            <select
+              id="geminiTtsModel"
+              value={geminiTts.model.value}
+              onChange={(e) => geminiTts.model.onChange(e.target.value)}
+            >
+              {Object.entries(geminiTts.models).map(([modelId, desc]) => (
+                <option key={modelId} value={modelId}>
+                  {modelId} — {desc}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="geminiTtsLanguageCode">Language Code:</label>
+            <input
+              id="geminiTtsLanguageCode"
+              type="text"
+              value={geminiTts.languageCode.value}
+              onChange={(e) => geminiTts.languageCode.onChange(e.target.value)}
+              placeholder="ja-JP"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="geminiTtsPrompt">Style Prompt (optional):</label>
+            <input
+              id="geminiTtsPrompt"
+              type="text"
+              value={geminiTts.prompt.value}
+              onChange={(e) => geminiTts.prompt.onChange(e.target.value)}
+              placeholder="Speak in a cheerful tone"
+            />
+          </div>
+        </>
       )}
 
       {engine === 'openaiCompatible' && (

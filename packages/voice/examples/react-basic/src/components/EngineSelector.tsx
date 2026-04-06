@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import {
   ENGINE_DEFAULTS,
+  GEMINI_TTS_VOICES,
   OPENAI_VOICES,
   XAI_VOICES,
   type EngineType,
@@ -49,10 +50,12 @@ export function EngineSelector({
   const showApiKey =
     engine === 'openai' ||
     engine === 'xai' ||
+    engine === 'geminiTts' ||
     engine === 'openaiCompatible' ||
     engine === 'aivisCloud' ||
     engine === 'minimax';
   const showApiUrl =
+    engine === 'geminiTts' ||
     engine === 'openaiCompatible' ||
     engine === 'voicevox' ||
     engine === 'aivisSpeech' ||
@@ -88,6 +91,25 @@ export function EngineSelector({
             onChange={(e) => onSpeakerChange(e.target.value)}
           >
             {Object.entries(XAI_VOICES).map(([voiceId, label]) => (
+              <option key={voiceId} value={voiceId}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    if (engine === 'geminiTts') {
+      return (
+        <div className="form-group">
+          <label htmlFor="speaker">Speaker:</label>
+          <select
+            id="speaker"
+            value={speaker}
+            onChange={(e) => onSpeakerChange(e.target.value)}
+          >
+            {Object.entries(GEMINI_TTS_VOICES).map(([voiceId, label]) => (
               <option key={voiceId} value={voiceId}>
                 {label}
               </option>
@@ -239,6 +261,7 @@ export function EngineSelector({
         >
           <option value="openai">OpenAI TTS</option>
           <option value="xai">xAI TTS</option>
+          <option value="geminiTts">Gemini TTS</option>
           <option value="voicevox">VOICEVOX</option>
           <option value="aivisSpeech">AivisSpeech (Local)</option>
           <option value="aivisCloud">Aivis Cloud API</option>
@@ -255,7 +278,9 @@ export function EngineSelector({
           <label htmlFor="apiKey">
             {engine === 'minimax'
               ? 'MiniMax API Key (required):'
-              : `API Key ${apiKeyIsRequired ? '(required)' : '(optional)'}:`}
+              : engine === 'geminiTts'
+                ? 'API Key (required):'
+                : `API Key ${apiKeyIsRequired ? '(required)' : '(optional)'}:`}
           </label>
           <input
             id="apiKey"

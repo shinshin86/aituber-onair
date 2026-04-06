@@ -1,6 +1,7 @@
 import {
   VoiceEngineAdapter,
   type AivisSpeechQueryParameterOverrides,
+  type GeminiTtsModel,
   type MinimaxAudioFormat,
   type MinimaxModel,
   type VoiceServiceOptions,
@@ -16,6 +17,7 @@ import { EngineSelector } from './components/EngineSelector';
 import { SpeakControls } from './components/SpeakControls';
 import {
   ENGINE_DEFAULTS,
+  GEMINI_TTS_MODELS,
   type AivisCloudBooleanOption,
   type AivisCloudOutputChannelOption,
   type AivisCloudOutputFormatOption,
@@ -104,7 +106,7 @@ function App() {
   const [voicepeakSpeed, setVoicepeakSpeed] = useState('');
   const [voicepeakPitch, setVoicepeakPitch] = useState('');
   const [openaiSpeed, setOpenaiSpeed] = useState('');
-  const [xaiLanguage, setXaiLanguage] = useState(
+  const [xaiLanguage, setXaiLanguage] = useState<string>(
     ENGINE_DEFAULTS.xai.defaultLanguage,
   );
   const [xaiCodec, setXaiCodec] = useState<XaiCodec>(
@@ -116,6 +118,13 @@ function App() {
   const [xaiBitRate, setXaiBitRate] = useState<`${XaiBitRate}`>(
     String(ENGINE_DEFAULTS.xai.defaultBitRate) as `${XaiBitRate}`,
   );
+  const [geminiTtsModel, setGeminiTtsModel] = useState<string>(
+    ENGINE_DEFAULTS.geminiTts.defaultModel,
+  );
+  const [geminiTtsLanguageCode, setGeminiTtsLanguageCode] = useState<string>(
+    ENGINE_DEFAULTS.geminiTts.defaultLanguageCode,
+  );
+  const [geminiTtsPrompt, setGeminiTtsPrompt] = useState<string>('');
   const [openaiCompatibleModel, setOpenaiCompatibleModel] = useState('');
   const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState('');
   const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] = useState('');
@@ -219,6 +228,9 @@ function App() {
     setXaiBitRate(
       String(ENGINE_DEFAULTS.xai.defaultBitRate) as `${XaiBitRate}`,
     );
+    setGeminiTtsModel(ENGINE_DEFAULTS.geminiTts.defaultModel);
+    setGeminiTtsLanguageCode(ENGINE_DEFAULTS.geminiTts.defaultLanguageCode);
+    setGeminiTtsPrompt('');
     setOpenaiCompatibleModel('');
     setAivisCloudModelUuid('');
     setAivisCloudSpeakerUuid('');
@@ -617,6 +629,13 @@ function App() {
         if (xaiCodec === 'mp3') {
           options.xaiBitRate = Number(xaiBitRate) as XaiBitRate;
         }
+      } else if (engine === 'geminiTts') {
+        options.geminiTtsModel = geminiTtsModel as GeminiTtsModel;
+        options.geminiTtsLanguageCode = geminiTtsLanguageCode;
+
+        if (geminiTtsPrompt.trim()) {
+          options.geminiTtsPrompt = geminiTtsPrompt.trim();
+        }
       } else if (engine === 'openaiCompatible') {
         if (openaiCompatibleModel.trim()) {
           options.openAiCompatibleModel = openaiCompatibleModel.trim();
@@ -822,6 +841,11 @@ function App() {
           case 'voicepeak':
             options.voicepeakApiUrl = apiUrl;
             break;
+          case 'geminiTts':
+            if (apiUrl !== ENGINE_DEFAULTS.geminiTts.apiUrl) {
+              options.geminiTtsApiUrl = apiUrl;
+            }
+            break;
           case 'openaiCompatible':
             options.openAiCompatibleApiUrl = apiUrl;
             break;
@@ -908,6 +932,21 @@ function App() {
                     value: xaiBitRate,
                     onChange: setXaiBitRate,
                   },
+                }}
+                geminiTts={{
+                  model: {
+                    value: geminiTtsModel,
+                    onChange: setGeminiTtsModel,
+                  },
+                  languageCode: {
+                    value: geminiTtsLanguageCode,
+                    onChange: setGeminiTtsLanguageCode,
+                  },
+                  prompt: {
+                    value: geminiTtsPrompt,
+                    onChange: setGeminiTtsPrompt,
+                  },
+                  models: GEMINI_TTS_MODELS,
                 }}
                 openaiCompatible={{
                   model: {

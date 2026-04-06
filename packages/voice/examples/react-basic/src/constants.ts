@@ -1,4 +1,5 @@
 import type {
+  GeminiTtsModel,
   MinimaxModel,
   XaiBitRate,
   XaiCodec,
@@ -23,6 +24,15 @@ export const ENGINE_DEFAULTS = {
     defaultCodec: 'mp3' as XaiCodec,
     defaultSampleRate: 24000 as XaiSampleRate,
     defaultBitRate: 128000 as XaiBitRate,
+  },
+  geminiTts: {
+    apiUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'Your Google API key',
+    speaker: 'Zephyr',
+    defaultModel: 'gemini-2.5-flash-preview-tts' as GeminiTtsModel,
+    defaultLanguageCode: 'ja-JP',
   },
   openaiCompatible: {
     apiUrl: 'http://localhost:8880/v1/audio/speech',
@@ -89,6 +99,11 @@ export const MINIMAX_MODELS: Record<MinimaxModel, string> = {
   'speech-01-turbo': 'Excellent performance and low latency',
 };
 
+export const GEMINI_TTS_MODELS: Record<string, string> = {
+  'gemini-2.5-flash-preview-tts': 'Flash Preview TTS — Optimized for latency',
+  'gemini-2.5-pro-preview-tts': 'Pro Preview TTS — Highest quality control',
+};
+
 export const OPENAI_VOICES: Record<string, string> = {
   alloy: 'Alloy',
   ash: 'Ash',
@@ -107,6 +122,17 @@ export const XAI_VOICES: Record<string, string> = {
   leo: 'Leo',
   rex: 'Rex',
   sal: 'Sal',
+};
+
+export const GEMINI_TTS_VOICES: Record<string, string> = {
+  Zephyr: 'Zephyr (Female)',
+  Aoede: 'Aoede (Female)',
+  Kore: 'Kore (Female)',
+  Leda: 'Leda (Female)',
+  Puck: 'Puck (Male)',
+  Charon: 'Charon (Male)',
+  Fenrir: 'Fenrir (Male)',
+  Orus: 'Orus (Male)',
 };
 
 export interface SpeakerOption {
