@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## 0.24.0
+
+### Minor Changes
+
+- Added Gemini Nano (`gemini-nano`) support as a Chrome built-in AI chat provider for browser environments.
+- Exported Gemini Nano constants, service, and provider types through the public package entry points.
+- Added Gemini Nano test coverage and updated the React basic example with setup guidance and model preparation UI.
+
 ## 0.23.0
 
 ### Minor Changes
