@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, xAI, and Kimi.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, and Kimi.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, OpenRouter, Z.ai, xAI, and Kimi
+- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, and Kimi
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -378,6 +378,24 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 Notes for self-hosted:
 - Self-hosted endpoints use `chat_template_kwargs` for thinking controls.
 
+#### Gemini Nano (Chrome Built-in AI)
+
+```typescript
+const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
+  responseLength: 'medium'
+});
+```
+
+Notes:
+- No API key required — uses Chrome's built-in LanguageModel API (Prompt API).
+- Requires **Chrome 138+** with the following flags enabled:
+  - `chrome://flags/#optimization-guide-on-device-model` → Enabled
+  - `chrome://flags/#prompt-api-for-gemini-nano` → Enabled
+- The model runs entirely on-device; no network requests are made for inference.
+- Non-streaming only — responses are returned as a single complete text.
+- Vision is not supported.
+- The initial model download requires a user action and may take a few minutes.
+
 ### Vision Chat
 
 For built-in providers with curated model lists, the library pre-validates
@@ -660,6 +678,7 @@ Currently, the following AI providers are built-in:
 - **Z.ai**: Supports GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)
 - **xAI**: Supports Grok 4.20 Reasoning/Non-Reasoning and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support
 - **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
+- **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Chrome 138+ with Prompt API flags enabled. Non-streaming, no vision support.
 
 ## License
 
