@@ -20,6 +20,7 @@ import ProviderSelector, {
   getDefaultModelForProvider,
   getVisionSupportLevel,
 } from './components/ProviderSelector';
+import { useGeminiNanoStatus } from './hooks/useGeminiNanoStatus';
 import MessageList from './components/MessageList';
 
 export type Provider =
@@ -134,6 +135,7 @@ function App() {
   const [kimiBaseUrl, setKimiBaseUrl] = useState(KIMI_OFFICIAL_BASE_URL);
   const [chatService, setChatService] = useState<ChatService | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const geminiNano = useGeminiNanoStatus(provider === 'gemini-nano');
 
   const normalizedReasoningEffort = normalizeReasoningEffortForModel(
     selectedModel,
@@ -475,6 +477,11 @@ function App() {
             onKimiThinkingTypeChange={setKimiThinkingType}
             kimiBaseUrl={kimiBaseUrl}
             onKimiBaseUrlChange={setKimiBaseUrl}
+            geminiNanoStatus={geminiNano.status}
+            geminiNanoStatusText={geminiNano.statusText}
+            geminiNanoDownloadProgress={geminiNano.downloadProgress}
+            geminiNanoIsPreparing={geminiNano.isPreparing}
+            onGeminiNanoPrepare={geminiNano.prepareModel}
             disabled={isLoading}
           />
         </div>

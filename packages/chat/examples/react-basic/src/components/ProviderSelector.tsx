@@ -147,6 +147,11 @@ interface ProviderSelectorProps {
   onKimiThinkingTypeChange?: (value: 'enabled' | 'disabled') => void;
   kimiBaseUrl?: string;
   onKimiBaseUrlChange?: (value: string) => void;
+  geminiNanoStatus?: string;
+  geminiNanoStatusText?: string;
+  geminiNanoDownloadProgress?: number | null;
+  geminiNanoIsPreparing?: boolean;
+  onGeminiNanoPrepare?: () => void;
   disabled: boolean;
 }
 
@@ -881,6 +886,11 @@ export default function ProviderSelector({
   onKimiThinkingTypeChange,
   kimiBaseUrl,
   onKimiBaseUrlChange,
+  geminiNanoStatus,
+  geminiNanoStatusText,
+  geminiNanoDownloadProgress,
+  geminiNanoIsPreparing,
+  onGeminiNanoPrepare,
   disabled,
 }: ProviderSelectorProps) {
   const [dynamicOpenRouterFreeModels, setDynamicOpenRouterFreeModels] =
@@ -1088,8 +1098,7 @@ export default function ProviderSelector({
           {provider === 'gemini-nano' ? (
             <div className="config-group">
               <span className="helper-text">
-                No API key required — uses Chrome&apos;s built-in AI (Chrome
-                138+ with Prompt API enabled).
+                No API key required — uses Chrome&apos;s built-in AI.
               </span>
             </div>
           ) : (
@@ -1131,6 +1140,119 @@ export default function ProviderSelector({
               <option value="deep">Deep (~5000 tokens)</option>
             </select>
           </div>
+
+          {provider === 'gemini-nano' && (
+            <>
+              <div className="config-group config-full">
+                <div
+                  className="gemini-nano-status"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {geminiNanoStatus === 'checking' && (
+                    <span className="gemini-nano-status__text">
+                      Checking Built-in AI availability...
+                    </span>
+                  )}
+                  {geminiNanoStatus === 'available' && (
+                    <span className="gemini-nano-status__text gemini-nano-status__text--ready">
+                      <span
+                        className="gemini-nano-ready-indicator"
+                        aria-hidden="true"
+                      />
+                      Gemini Nano is ready
+                    </span>
+                  )}
+                  {geminiNanoStatus === 'downloadable' && (
+                    <div className="gemini-nano-prepare">
+                      <span className="gemini-nano-status__text">
+                        {geminiNanoStatusText}
+                      </span>
+                      <button
+                        type="button"
+                        className="gemini-nano-prepare__button"
+                        onClick={onGeminiNanoPrepare}
+                        disabled={geminiNanoIsPreparing}
+                      >
+                        Prepare Model
+                      </button>
+                    </div>
+                  )}
+                  {geminiNanoStatus === 'downloading' && (
+                    <div className="gemini-nano-prepare">
+                      <span className="gemini-nano-status__text">
+                        {geminiNanoStatusText}
+                      </span>
+                      {geminiNanoIsPreparing && (
+                        <button
+                          type="button"
+                          className="gemini-nano-prepare__button"
+                          disabled
+                        >
+                          Preparing...
+                        </button>
+                      )}
+                      {geminiNanoDownloadProgress != null && (
+                        <div
+                          className="gemini-nano-progress"
+                          role="progressbar"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={geminiNanoDownloadProgress}
+                          aria-label="Model download progress"
+                        >
+                          <div
+                            className="gemini-nano-progress__bar"
+                            style={{
+                              width: `${geminiNanoDownloadProgress}%`,
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {(geminiNanoStatus === 'unavailable' ||
+                    geminiNanoStatus === 'error') && (
+                    <span className="gemini-nano-status__text gemini-nano-status__text--error">
+                      {geminiNanoStatusText}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="config-group config-full">
+                <details className="gemini-nano-setup">
+                  <summary className="gemini-nano-setup__summary">
+                    Setup Guide
+                  </summary>
+                  <div className="gemini-nano-setup__body">
+                    <p>
+                      <strong>Chrome 138+</strong> is required. Enable the
+                      following flags to use Built-in AI:
+                    </p>
+                    <ol className="gemini-nano-steps">
+                      <li>
+                        Open <code>chrome://flags</code> in the address bar
+                      </li>
+                      <li>
+                        Set <code>#optimization-guide-on-device-model</code> to
+                        &quot;Enabled&quot;
+                      </li>
+                      <li>
+                        Set <code>#prompt-api-for-gemini-nano</code> to
+                        &quot;Enabled&quot;
+                      </li>
+                      <li>Restart Chrome</li>
+                    </ol>
+                    <p className="gemini-nano-note">
+                      After enabling the flags, press &quot;Prepare Model&quot;
+                      above to start the model download. The initial download
+                      may take a few minutes.
+                    </p>
+                  </div>
+                </details>
+              </div>
+            </>
+          )}
 
           {provider === 'openai-compatible' && (
             <>
