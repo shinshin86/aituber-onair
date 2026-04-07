@@ -123,6 +123,13 @@ describe('ChatServiceFactory', () => {
       });
       expect(geminiService).toBeDefined();
 
+      // Test Gemini Nano
+      const geminiNanoService = ChatServiceFactory.createChatService(
+        'gemini-nano',
+        {},
+      );
+      expect(geminiNanoService).toBeDefined();
+
       // Test Claude
       const claudeService = ChatServiceFactory.createChatService('claude', {
         apiKey: 'test-claude-key',
@@ -173,6 +180,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('openai')).toBe(true);
       expect(providers.has('openai-compatible')).toBe(true);
       expect(providers.has('gemini')).toBe(true);
+      expect(providers.has('gemini-nano')).toBe(true);
       expect(providers.has('claude')).toBe(true);
       expect(providers.has('openrouter')).toBe(true);
       expect(providers.has('zai')).toBe(true);
@@ -199,6 +207,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('openai');
       expect(availableProviders).toContain('openai-compatible');
       expect(availableProviders).toContain('gemini');
+      expect(availableProviders).toContain('gemini-nano');
       expect(availableProviders).toContain('claude');
       expect(availableProviders).toContain('openrouter');
       expect(availableProviders).toContain('zai');
@@ -219,6 +228,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('openai');
       expect(availableProviders).toContain('openai-compatible');
       expect(availableProviders).toContain('gemini');
+      expect(availableProviders).toContain('gemini-nano');
       expect(availableProviders).toContain('claude');
       expect(availableProviders).toContain('openrouter');
       expect(availableProviders).toContain('zai');
@@ -252,6 +262,10 @@ describe('ChatServiceFactory', () => {
       const claudeModels = ChatServiceFactory.getSupportedModels('claude');
       expect(Array.isArray(claudeModels)).toBe(true);
       expect(claudeModels.length).toBeGreaterThan(0);
+
+      const geminiNanoModels =
+        ChatServiceFactory.getSupportedModels('gemini-nano');
+      expect(geminiNanoModels).toEqual(['gemini-nano']);
     });
   });
 
@@ -295,6 +309,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('openai')).toBe(true);
       expect(providers.has('openai-compatible')).toBe(true);
       expect(providers.has('gemini')).toBe(true);
+      expect(providers.has('gemini-nano')).toBe(true);
       expect(providers.has('claude')).toBe(true);
       expect(providers.has('openrouter')).toBe(true);
       expect(providers.has('zai')).toBe(true);

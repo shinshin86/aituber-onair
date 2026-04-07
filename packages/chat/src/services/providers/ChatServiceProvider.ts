@@ -153,6 +153,19 @@ export type XAIChatServiceOptions = DisallowKeys<
   | 'responseFormat'
 >;
 
+export type GeminiNanoChatServiceOptions = {
+  /** API Key is not needed for Gemini Nano (browser built-in AI) */
+  apiKey?: never;
+  /** Model name (fixed to 'gemini-nano') */
+  model?: string;
+  /** Response length setting */
+  responseLength?: ChatResponseLength;
+  /** Expected input languages for the Prompt API (default: ['ja']) */
+  expectedInputLanguages?: string[];
+  /** Expected output languages for the Prompt API (default: ['ja']) */
+  expectedOutputLanguages?: string[];
+};
+
 export type ChatServiceOptions<
   TExtra extends Record<string, unknown> = Record<string, unknown>,
 > = BaseChatServiceOptions & TExtra;
@@ -166,6 +179,7 @@ export type ChatServiceOptionsByProvider = {
   zai: ZAIChatServiceOptions;
   xai: XAIChatServiceOptions;
   kimi: KimiChatServiceOptions;
+  'gemini-nano': GeminiNanoChatServiceOptions;
 };
 
 export type ChatProviderName = keyof ChatServiceOptionsByProvider;

@@ -27,6 +27,7 @@ export type Provider =
   | 'openai-compatible'
   | 'claude'
   | 'gemini'
+  | 'gemini-nano'
   | 'openrouter'
   | 'zai'
   | 'xai'
@@ -151,10 +152,12 @@ function App() {
   // Initialize chat service when provider, API key, or model changes
   useEffect(() => {
     const shouldInitialize =
-      provider === 'openai-compatible'
-        ? Boolean(selectedModel.trim()) &&
-          Boolean(openaiCompatibleEndpoint.trim())
-        : Boolean(apiKey);
+      provider === 'gemini-nano'
+        ? true
+        : provider === 'openai-compatible'
+          ? Boolean(selectedModel.trim()) &&
+            Boolean(openaiCompatibleEndpoint.trim())
+          : Boolean(apiKey);
 
     if (shouldInitialize) {
       try {

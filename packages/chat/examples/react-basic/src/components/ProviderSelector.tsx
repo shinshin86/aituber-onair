@@ -92,6 +92,8 @@ import {
   MODEL_GROK_4_1_FAST_NON_REASONING,
   // Kimi models
   MODEL_KIMI_K2_5,
+  // Gemini Nano models
+  MODEL_GEMINI_NANO,
 } from '@aituber-onair/chat';
 
 interface ProviderSelectorProps {
@@ -353,6 +355,10 @@ const providerInfo = {
   kimi: {
     name: 'Kimi',
     placeholder: 'xxx...',
+  },
+  'gemini-nano': {
+    name: 'Gemini Nano (Browser AI)',
+    placeholder: '',
   },
 };
 
@@ -796,6 +802,14 @@ export const allModels: ProviderModel[] = [
     provider: 'kimi',
     default: true,
   },
+
+  // Gemini Nano models (browser built-in AI)
+  {
+    id: MODEL_GEMINI_NANO,
+    name: 'Gemini Nano (Browser)',
+    provider: 'gemini-nano',
+    default: true,
+  },
 ];
 
 export const getProviderForModel = (
@@ -1071,23 +1085,32 @@ export default function ProviderSelector({
           <span className="summary-action" aria-hidden="true" />
         </summary>
         <div className="settings-grid">
-          <div className="config-group">
-            <label htmlFor="api-key">API Key</label>
-            <input
-              id="api-key"
-              type="password"
-              value={apiKey}
-              onChange={(e) => onApiKeyChange(e.target.value)}
-              placeholder={info.placeholder}
-              disabled={disabled}
-              className="text-input"
-            />
-            {provider === 'openai-compatible' && (
+          {provider === 'gemini-nano' ? (
+            <div className="config-group">
               <span className="helper-text">
-                Optional. If empty, Authorization header is omitted.
+                No API key required — uses Chrome&apos;s built-in AI (Chrome
+                138+ with Prompt API enabled).
               </span>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="config-group">
+              <label htmlFor="api-key">API Key</label>
+              <input
+                id="api-key"
+                type="password"
+                value={apiKey}
+                onChange={(e) => onApiKeyChange(e.target.value)}
+                placeholder={info.placeholder}
+                disabled={disabled}
+                className="text-input"
+              />
+              {provider === 'openai-compatible' && (
+                <span className="helper-text">
+                  Optional. If empty, Authorization header is omitted.
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="config-group">
             <label htmlFor="response-length">Response Length</label>
