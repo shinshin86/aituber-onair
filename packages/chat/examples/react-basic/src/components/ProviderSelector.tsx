@@ -1144,11 +1144,7 @@ export default function ProviderSelector({
           {provider === 'gemini-nano' && (
             <>
               <div className="config-group config-full">
-                <div
-                  className="gemini-nano-status"
-                  role="status"
-                  aria-live="polite"
-                >
+                <div className="gemini-nano-status" aria-live="polite">
                   {geminiNanoStatus === 'checking' && (
                     <span className="gemini-nano-status__text">
                       Checking Built-in AI availability...
@@ -1196,6 +1192,7 @@ export default function ProviderSelector({
                         <div
                           className="gemini-nano-progress"
                           role="progressbar"
+                          tabIndex={0}
                           aria-valuemin={0}
                           aria-valuemax={100}
                           aria-valuenow={geminiNanoDownloadProgress}
