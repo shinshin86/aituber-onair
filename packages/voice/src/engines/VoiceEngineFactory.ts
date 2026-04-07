@@ -6,6 +6,7 @@ import { MinimaxEngine } from './MinimaxEngine';
 import { NoneEngine } from './NoneEngine';
 import { OpenAiEngine } from './OpenAiEngine';
 import { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
+import { PiperPlusEngine } from './PiperPlusEngine';
 import { VoiceEngine } from './VoiceEngine';
 import { VoicePeakEngine } from './VoicePeakEngine';
 import { VoiceVoxEngine } from './VoiceVoxEngine';
@@ -21,6 +22,7 @@ const ENGINE_CONSTRUCTORS = {
   geminiTts: GeminiTtsEngine,
   openaiCompatible: OpenAiCompatibleEngine,
   minimax: MinimaxEngine,
+  piperPlus: PiperPlusEngine,
   none: NoneEngine,
 } as const satisfies Record<VoiceEngineType, new () => VoiceEngine>;
 

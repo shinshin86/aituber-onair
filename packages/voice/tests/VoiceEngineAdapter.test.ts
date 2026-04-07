@@ -71,6 +71,7 @@ describe('VoiceEngineAdapter', () => {
       setBitrate: vi.fn(),
       setAudioFormat: vi.fn(),
       setAudioChannel: vi.fn(),
+      setNoiseScale: vi.fn(),
       setSilenceDurations: vi.fn(),
       setOutputFormat: vi.fn(),
       setOutputBitrate: vi.fn(),
@@ -584,6 +585,35 @@ describe('VoiceEngineAdapter', () => {
     });
   });
 
+  describe('PiperPlus Integration', () => {
+    it('should configure PiperPlus engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'piperPlus',
+        speaker: 'tsukuyomi',
+        piperPlusSpeed: 1.2,
+        piperPlusNoiseScale: 0.7,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'PiperPlus test' });
+
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.2);
+      expect(mockEngine.setNoiseScale).toHaveBeenCalledWith(0.7);
+      expect(mockEngine.fetchAudio).toHaveBeenCalledWith(
+        {
+          style: 'neutral',
+          message: 'PiperPlus test',
+        },
+        'tsukuyomi',
+        undefined,
+      );
+    });
+  });
+
   describe('Gemini TTS Integration', () => {
     it('should configure Gemini TTS engine with provided overrides', async () => {
       const options: VoiceServiceOptions = {
@@ -995,6 +1025,28 @@ describe('VoiceEngineAdapter', () => {
       );
       expect(mockEngine.setModel).toHaveBeenCalledWith('example-model-v1');
       expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.4);
+    });
+
+    it('should apply updated PiperPlus options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'piperPlus',
+        speaker: 'tsukuyomi',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.updateOptions({
+        piperPlusSpeed: 1.1,
+        piperPlusNoiseScale: 0.6,
+      });
+
+      await adapter.speak({ text: 'Updated piperPlus options' });
+
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.1);
+      expect(mockEngine.setNoiseScale).toHaveBeenCalledWith(0.6);
     });
 
     it('should allow cross-engine options in updateOptions for backward compatibility', () => {

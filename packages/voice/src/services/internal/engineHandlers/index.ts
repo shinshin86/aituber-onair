@@ -10,6 +10,7 @@ import { minimaxEngineHandler } from './minimax';
 import { noneEngineHandler } from './none';
 import { openAiEngineHandler } from './openai';
 import { openAiCompatibleEngineHandler } from './openaiCompatible';
+import { piperPlusEngineHandler } from './piperPlus';
 import type { EngineHandler } from './types';
 import { voicePeakEngineHandler } from './voicepeak';
 import { voiceVoxEngineHandler } from './voicevox';
@@ -25,6 +26,7 @@ const engineHandlers = {
   aivisSpeech: aivisSpeechEngineHandler,
   aivisCloud: aivisCloudEngineHandler,
   minimax: minimaxEngineHandler,
+  piperPlus: piperPlusEngineHandler,
   none: noneEngineHandler,
 } as const;
 

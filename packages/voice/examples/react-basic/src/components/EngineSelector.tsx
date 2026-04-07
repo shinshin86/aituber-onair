@@ -24,6 +24,8 @@ interface EngineSelectorProps {
   minimaxGroupId: string;
   onMinimaxGroupIdChange: (nextValue: string) => void;
   apiKeyIsRequired: boolean;
+  piperPlusAvailable: boolean;
+  piperPlusLoading: boolean;
   children?: ReactNode;
 }
 
@@ -43,6 +45,8 @@ export function EngineSelector({
   minimaxGroupId,
   onMinimaxGroupIdChange,
   apiKeyIsRequired,
+  piperPlusAvailable,
+  piperPlusLoading,
   children,
 }: EngineSelectorProps) {
   const defaults = ENGINE_DEFAULTS[engine];
@@ -62,6 +66,10 @@ export function EngineSelector({
     engine === 'voicepeak';
 
   const renderSpeakerField = () => {
+    if (engine === 'piperPlus') {
+      return null;
+    }
+
     if (engine === 'openai') {
       return (
         <div className="form-group">
@@ -250,6 +258,96 @@ export function EngineSelector({
     );
   };
 
+  const renderPiperPlusGuidance = () => {
+    if (engine !== 'piperPlus') {
+      return null;
+    }
+
+    return (
+      <div className="piper-plus-panel">
+        {piperPlusLoading ? (
+          <div className="piper-plus-notice">
+            Checking `public/piper/` for Piper Plus assets...
+          </div>
+        ) : piperPlusAvailable ? (
+          <div className="piper-plus-notice piper-plus-notice--ready">
+            <span className="piper-plus-ready-indicator" aria-hidden="true" />
+            Assets detected — ready to use
+          </div>
+        ) : (
+          <div className="piper-plus-notice piper-plus-notice--setup">
+            <div className="piper-plus-notice__title">Piper Plus Setup</div>
+            <p>
+              Piper Plus requires TTS assets in `public/piper/`. See README for
+              setup instructions.
+            </p>
+            <div className="piper-plus-notice__subtitle">
+              Required asset structure:
+            </div>
+            <pre className="piper-plus-asset-tree">
+              {`public/piper/
+├── piper-global-loader.js
+├── dist/ (ort.min.js, ort-wasm-simd.wasm, openjtalk.js, openjtalk.wasm)
+├── src/ (piper-plus JS modules)
+├── assets/dict/ (OpenJTalk dictionary)
+├── assets/voice/ (HTS voice file)
+└── models/ (ONNX model + config JSON)`}
+            </pre>
+          </div>
+        )}
+
+        <div className="piper-plus-license">
+          <div className="piper-plus-license__title">
+            Third-party licenses and attribution
+          </div>
+          <ul>
+            <li>
+              piper-plus (MIT License) {'— '}
+              <a
+                href="https://github.com/ayutaz/piper-plus"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://github.com/ayutaz/piper-plus
+              </a>
+            </li>
+            <li>
+              ONNX Runtime Web (MIT License) {'— '}
+              <a
+                href="https://onnxruntime.ai/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://onnxruntime.ai/
+              </a>
+            </li>
+            <li>
+              Open JTalk (BSD 3-Clause) {'— '}
+              <a
+                href="https://open-jtalk.sourceforge.net/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://open-jtalk.sourceforge.net/
+              </a>
+            </li>
+            <li>
+              Tsukuyomi-chan Corpus {'— '}
+              <a
+                href="https://tyc.rei-yumesaki.net/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                https://tyc.rei-yumesaki.net/
+              </a>{' '}
+              (© Rei Yumesaki)
+            </li>
+          </ul>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="form-group">
@@ -268,6 +366,7 @@ export function EngineSelector({
           <option value="voicepeak">VOICEPEAK</option>
           <option value="minimax">MiniMax</option>
           <option value="openaiCompatible">OpenAI-Compatible TTS</option>
+          <option value="piperPlus">Piper Plus (Browser WASM)</option>
         </select>
       </div>
 
@@ -317,6 +416,8 @@ export function EngineSelector({
           />
         </div>
       )}
+
+      {renderPiperPlusGuidance()}
 
       {children}
     </>

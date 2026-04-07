@@ -137,6 +137,64 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 # API key is optional. Set the model explicitly to one accepted by your endpoint.
 ```
 
+## Piper Plus Setup
+
+`piperPlus` is a browser-side WASM TTS engine using ONNX Runtime Web and OpenJTalk. Its runtime assets are **not bundled** with this example due to their size and third-party license requirements. You need to place them under `public/piper/` before use.
+
+### Quick setup (recommended)
+
+A setup script is provided that downloads all required assets from the [chrome-on-aituber](https://github.com/shinshin86/chrome-on-aituber) GitHub Release:
+
+```bash
+./scripts/setup-piper-assets.sh
+```
+
+This downloads and extracts the full asset set (~85 MB) into `public/piper/`. After running the script, start the dev server and select the "Piper Plus" engine.
+
+### Manual setup
+
+If you prefer to collect assets yourself, you need files from these 3 sources:
+
+1. **[piper-plus](https://github.com/ayutaz/piper-plus)** (`dev` branch) — `piper-global-loader.js`, `src/` JS modules, OpenJTalk WASM/dictionary, and HTS voice files
+2. **[onnxruntime-web](https://www.npmjs.com/package/onnxruntime-web)** (npm) — `ort.min.js`, `ort-wasm-simd.wasm`, `ort-wasm.wasm`
+3. **[piper-plus-tsukuyomi-chan](https://huggingface.co/ayousanz/piper-plus-tsukuyomi-chan)** (Hugging Face) — ONNX model and config JSON
+
+Place them under `public/piper/` following this layout:
+
+```text
+public/piper/
+├── piper-global-loader.js
+├── dist/
+│   ├── ort.min.js
+│   ├── ort-wasm-simd.wasm
+│   ├── openjtalk.js
+│   └── openjtalk.wasm
+├── src/          (piper-plus JS modules)
+├── assets/
+│   ├── dict/     (OpenJTalk dictionary files)
+│   └── voice/    (HTS voice file, e.g. mei_normal.htsvoice)
+└── models/
+    ├── tsukuyomi-wavlm-300epoch.onnx
+    └── tsukuyomi-config.json
+```
+
+For detailed step-by-step instructions, refer to the [chrome-on-aituber README](https://github.com/shinshin86/chrome-on-aituber).
+
+### Third-party licenses
+
+The Piper Plus engine uses the following third-party components. By downloading and using these assets you agree to their respective license terms.
+
+| Component | License | Source |
+|-----------|---------|--------|
+| piper-plus | MIT License (c) 2022 Michael Hansen, (c) 2025 ayutaz | [GitHub](https://github.com/ayutaz/piper-plus) |
+| Piper TTS | MIT License (c) 2022 Michael Hansen | [GitHub](https://github.com/rhasspy/piper) |
+| ONNX Runtime Web | MIT License (c) Microsoft Corporation | [npm](https://www.npmjs.com/package/onnxruntime-web) |
+| Open JTalk | BSD 3-Clause License | [SourceForge](https://open-jtalk.sourceforge.net/) |
+| Tsukuyomi-chan Corpus | Tsukuyomi-chan Corpus terms (c) Rei Yumesaki | [Official site](https://tyc.rei-yumesaki.net/) |
+| piper-plus-tsukuyomi-chan model | Compliant with Tsukuyomi-chan Corpus | [Hugging Face](https://huggingface.co/ayousanz/piper-plus-tsukuyomi-chan) |
+
+**Important:** The Tsukuyomi-chan voice model is not governed solely by common OSS licenses. If you redistribute or create derivative works, review the [terms of use](https://tyc.rei-yumesaki.net/about/terms/) and [credit guide](https://tyc.rei-yumesaki.net/about/terms/credit/) on the official Tsukuyomi-chan website.
+
 ## 🚨 Troubleshooting
 
 ### Common Issues

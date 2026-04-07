@@ -26,3 +26,4 @@ export {
   type MinimaxAudioSettingsOptions,
   type MinimaxAudioFormat,
 } from './MinimaxEngine';
+export { PiperPlusEngine, type PiperPlusAssets } from './PiperPlusEngine';

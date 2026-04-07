@@ -12,10 +12,12 @@ export type {
   MinimaxVoiceSettingsOptions,
   MinimaxAudioSettingsOptions,
   MinimaxAudioFormat,
+  PiperPlusVoiceServiceOptions,
   VoiceVoxQueryParameterOverrides,
   AivisSpeechQueryParameterOverrides,
 } from './services/VoiceService';
 export { VoiceEngineAdapter } from './services/VoiceEngineAdapter';
+export type { PiperPlusAssets } from './engines/PiperPlusEngine';
 
 // Audio players
 export * from './services/audio';
