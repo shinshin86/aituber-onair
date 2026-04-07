@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat ロゴ](./images/aituber-onair-chat.png)
 
-AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、OpenRouter、Z.ai、xAI、Kimi等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
+AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
 
 ## 機能
 
-- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、OpenRouter、Z.ai、xAI、Kimi
+- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi
 - 🔄 **統一されたインターフェース**: 異なるプロバイダー間での一貫したAPI
 - 🛠️ **ツール・関数呼び出し**: AI関数呼び出しの自動反復処理をサポート
 - 💬 **ストリーミングレスポンス**: リアルタイムストリーミングチャット応答
@@ -382,6 +382,24 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 注意:
 - 自前ホスティングではthinking制御に`chat_template_kwargs`を使用します。
 
+#### Gemini Nano（Chromeブラウザ内蔵AI）
+
+```typescript
+const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
+  responseLength: 'medium'
+});
+```
+
+注意:
+- APIキー不要 — ChromeのLanguageModel API（Prompt API）を使用します。
+- **Chrome 138以降**で、以下のフラグを有効にする必要があります:
+  - `chrome://flags/#optimization-guide-on-device-model` → Enabled
+  - `chrome://flags/#prompt-api-for-gemini-nano` → Enabled
+- モデルはすべてデバイス上で実行され、推論時にネットワーク通信は発生しません。
+- 非ストリーミングのみ — レスポンスは完全なテキストとして一括返却されます。
+- ビジョン（画像入力）は非対応です。
+- 初回のモデルダウンロードにはユーザー操作が必要で、数分かかる場合があります。
+
 ### ビジョンチャット
 
 組み込み provider のうち、対応モデル一覧を持つものは vision 対応を
@@ -664,6 +682,7 @@ console.log(modelLevel); // 'unknown'
 - **Z.ai**: GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
 - **xAI**: Grok 4.20 の Reasoning/Non-Reasoning と Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
 - **Kimi**: Kimi K2.5（`kimi-k2.5`、ビジョン対応）をサポート
+- **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Chrome 138以降でPrompt APIフラグの有効化が必要。非ストリーミング、ビジョン非対応
 
 ## ライセンス
 

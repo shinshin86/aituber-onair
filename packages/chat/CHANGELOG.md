@@ -1,5 +1,11 @@
 # @aituber-onair/chat
 
+## 0.24.1
+
+### Patch Changes
+
+- Added Gemini Nano provider documentation to both English and Japanese READMEs (usage example, Chrome 138+ requirements, flag setup, limitations).
+
 ## 0.24.0
 
 ### Minor Changes
