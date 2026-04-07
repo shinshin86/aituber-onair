@@ -220,6 +220,24 @@ export interface MinimaxVoiceServiceOptions extends VoiceServiceCommonOptions {
   minimaxLanguageBoost?: string;
 }
 
+export interface PiperPlusVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'piperPlus';
+  /** PiperPlus asset base path */
+  piperPlusBasePath?: string;
+  /** PiperPlus model config filename */
+  piperPlusModelConfigFile?: string;
+  /** PiperPlus model filename */
+  piperPlusModelFile?: string;
+  /** PiperPlus HTS voice filename */
+  piperPlusVoiceFile?: string;
+  /** PiperPlus speaking speed */
+  piperPlusSpeed?: number;
+  /** PiperPlus noise scale */
+  piperPlusNoiseScale?: number;
+}
+
 export interface AivisCloudVoiceServiceOptions
   extends VoiceServiceCommonOptions {
   /** Engine type */
@@ -292,6 +310,7 @@ export type VoiceServiceOptions =
   | AivisSpeechVoiceServiceOptions
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions
+  | PiperPlusVoiceServiceOptions
   | NoneVoiceServiceOptions;
 
 /**
@@ -324,6 +343,9 @@ export type AivisCloudVoiceServiceOptionsUpdate = Partial<
 export type MinimaxVoiceServiceOptionsUpdate = Partial<
   Omit<MinimaxVoiceServiceOptions, 'engineType'>
 >;
+export type PiperPlusVoiceServiceOptionsUpdate = Partial<
+  Omit<PiperPlusVoiceServiceOptions, 'engineType'>
+>;
 export type NoneVoiceServiceOptionsUpdate = Partial<
   Omit<NoneVoiceServiceOptions, 'engineType'>
 >;
@@ -338,6 +360,7 @@ export type VoiceServiceOptionsUpdate =
   | AivisSpeechVoiceServiceOptionsUpdate
   | AivisCloudVoiceServiceOptionsUpdate
   | MinimaxVoiceServiceOptionsUpdate
+  | PiperPlusVoiceServiceOptionsUpdate
   | NoneVoiceServiceOptionsUpdate;
 
 /**

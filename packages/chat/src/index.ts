@@ -19,6 +19,7 @@ export type {
   OpenAICompatibleChatServiceOptions,
   OpenRouterChatServiceOptions,
   GeminiChatServiceOptions,
+  GeminiNanoChatServiceOptions,
   ClaudeChatServiceOptions,
   ZAIChatServiceOptions,
   XAIChatServiceOptions,
@@ -35,6 +36,10 @@ export { OpenAICompatibleChatServiceProvider } from './services/providers/openai
 // Gemini provider exports
 export { GeminiChatService } from './services/providers/gemini/GeminiChatService';
 export { GeminiChatServiceProvider } from './services/providers/gemini/GeminiChatServiceProvider';
+
+// Gemini Nano provider exports
+export { GeminiNanoChatService } from './services/providers/geminiNano/GeminiNanoChatService';
+export { GeminiNanoChatServiceProvider } from './services/providers/geminiNano/GeminiNanoChatServiceProvider';
 
 // Claude provider exports
 export { ClaudeChatService } from './services/providers/claude/ClaudeChatService';

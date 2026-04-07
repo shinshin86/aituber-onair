@@ -118,6 +118,10 @@ interface EngineParametersProps {
     audioFormat: SelectField<MinimaxAudioFormat>;
     audioChannel: SelectField<'1' | '2'>;
   };
+  piperPlus: {
+    speed: StringField;
+    noiseScale: StringField;
+  };
 }
 
 export function EngineParameters({
@@ -131,6 +135,7 @@ export function EngineParameters({
   aivisCloud,
   aivisSpeech,
   minimax,
+  piperPlus,
 }: EngineParametersProps) {
   return (
     <>
@@ -1141,6 +1146,36 @@ export function EngineParameters({
             </p>
           </CollapsibleCard>
         </>
+      )}
+
+      {engine === 'piperPlus' && (
+        <CollapsibleCard
+          className="parameter-card"
+          title="Piper Plus パラメータ"
+          description="ブラウザ内蔵 WASM 音声合成エンジンです。ONNX Runtime + OpenJTalk を使用します。"
+        >
+          <div className="parameter-section">
+            <div className="parameter-section__title">音声調整</div>
+            <div className="parameter-grid parameter-grid--two">
+              <NumberSliderField
+                id="piperPlusSpeed"
+                label="Speed (0.5 - 2.0)"
+                value={piperPlus.speed.value}
+                onChange={piperPlus.speed.onChange}
+                config={SLIDER_CONFIG.piperPlusSpeed}
+                placeholder="例: 1.0（標準）"
+              />
+              <NumberSliderField
+                id="piperPlusNoiseScale"
+                label="Noise Scale (0.0 - 2.0)"
+                value={piperPlus.noiseScale.value}
+                onChange={piperPlus.noiseScale.onChange}
+                config={SLIDER_CONFIG.piperPlusNoiseScale}
+                placeholder="例: 1.0（標準）"
+              />
+            </div>
+          </div>
+        </CollapsibleCard>
       )}
     </>
   );

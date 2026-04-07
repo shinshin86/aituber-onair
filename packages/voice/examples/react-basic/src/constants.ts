@@ -78,6 +78,13 @@ export const ENGINE_DEFAULTS = {
     speaker: '',
     defaultModel: 'speech-2.6-hd' as MinimaxModel,
   },
+  piperPlus: {
+    apiUrl: '',
+    needsApiKey: false,
+    acceptsApiKey: false,
+    placeholder: '',
+    speaker: 'default',
+  },
 } as const;
 
 export type EngineType = keyof typeof ENGINE_DEFAULTS;
@@ -269,6 +276,19 @@ export const SLIDER_CONFIG: Record<string, SliderConfig> = {
     step: 0.05,
     defaultValue: 0.3,
     suffix: 's',
+  },
+  piperPlusSpeed: {
+    min: 0.5,
+    max: 2.0,
+    step: 0.05,
+    defaultValue: 1,
+    suffix: 'x',
+  },
+  piperPlusNoiseScale: {
+    min: 0,
+    max: 2.0,
+    step: 0.05,
+    defaultValue: 1,
   },
 };
 

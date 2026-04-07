@@ -426,6 +426,93 @@
   color: var(--error-text);
 }
 
+.piper-plus-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.piper-plus-notice,
+.piper-plus-license {
+  border-radius: 12px;
+  padding: 0.95rem 1rem;
+  text-align: left;
+}
+
+.piper-plus-notice {
+  border: 1px solid var(--border);
+  background: var(--status-bg);
+  color: var(--muted);
+}
+
+.piper-plus-notice--setup {
+  border-color: #fde68a;
+  background: #fefce8;
+  color: #854d0e;
+}
+
+.piper-plus-notice--ready {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-weight: 600;
+}
+
+.piper-plus-ready-indicator {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.piper-plus-notice__title,
+.piper-plus-license__title {
+  margin-bottom: 0.45rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.piper-plus-notice__subtitle {
+  margin-top: 0.75rem;
+  font-weight: 600;
+}
+
+.piper-plus-notice p {
+  margin: 0;
+}
+
+.piper-plus-asset-tree {
+  margin: 0.75rem 0 0;
+  padding: 0.8rem 0.9rem;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(133, 77, 14, 0.16);
+  background: rgba(255, 255, 255, 0.55);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.piper-plus-license {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: var(--muted);
+}
+
+.piper-plus-license ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.piper-plus-license li {
+  margin-bottom: 0.35rem;
+}
+
 .card ul {
   text-align: left;
   line-height: 1.8;

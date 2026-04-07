@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as voicePackage from '../src';
+import type { PiperPlusAssets, PiperPlusVoiceServiceOptions } from '../src';
 import { EmotionParser, VoiceEngineAdapter, textToScreenplay } from '../src';
 
 describe('Voice Package Exports', () => {
@@ -29,10 +30,29 @@ describe('Voice Package Exports', () => {
     expect(voicePackage.GeminiTtsEngine).toBeDefined();
     expect(voicePackage.OpenAiCompatibleEngine).toBeDefined();
     expect(voicePackage.MinimaxEngine).toBeDefined();
+    expect(voicePackage.PiperPlusEngine).toBeDefined();
   });
 
   it('should keep NoneEngine out of the public engine exports', () => {
     expect('NoneEngine' in voicePackage).toBe(false);
+  });
+
+  it('should expose PiperPlus public types through the package root', () => {
+    const assets: PiperPlusAssets = {
+      basePath: '/piper/',
+      modelConfigFile: 'model.json',
+      modelFile: 'model.onnx',
+      voiceFile: 'voice.htsvoice',
+    };
+    const options: PiperPlusVoiceServiceOptions = {
+      engineType: 'piperPlus',
+      speaker: 'tsukuyomi',
+      piperPlusSpeed: 1.1,
+      piperPlusNoiseScale: 0.7,
+    };
+
+    expect(assets.modelFile).toBe('model.onnx');
+    expect(options.engineType).toBe('piperPlus');
   });
 });
 

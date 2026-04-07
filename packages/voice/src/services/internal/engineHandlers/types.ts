@@ -1,10 +1,12 @@
 import type { VoiceEngine } from '../../../engines/VoiceEngine';
+import type { PiperPlusAssets } from '../../../engines/PiperPlusEngine';
 import type {
   AivisCloudVoiceServiceOptions,
   AivisSpeechVoiceServiceOptions,
   GeminiTtsVoiceServiceOptions,
   MinimaxVoiceServiceOptions,
   OpenAiVoiceServiceOptions,
+  PiperPlusVoiceServiceOptions,
   VoicePeakVoiceServiceOptions,
   VoiceServiceOptions,
   VoiceVoxVoiceServiceOptions,
@@ -113,6 +115,12 @@ export interface MinimaxConfigurableEngine extends VoiceEngine {
   setAudioChannel?(
     value?: MinimaxVoiceServiceOptions['minimaxAudioChannel'],
   ): void;
+}
+
+export interface PiperPlusConfigurableEngine extends VoiceEngine {
+  setAssets?(assets: PiperPlusAssets): void;
+  setSpeed?(value?: number): void;
+  setNoiseScale?(value?: number): void;
 }
 
 export interface AivisCloudConfigurableEngine extends VoiceEngine {

@@ -8,4 +8,5 @@ export type VoiceEngineType =
   | 'aivisSpeech'
   | 'aivisCloud'
   | 'minimax'
+  | 'piperPlus'
   | 'none';

@@ -29,6 +29,7 @@ import {
   type SpeakerOption,
   type VoicePeakEmotionOption,
 } from './constants';
+import { usePiperPlusStatus } from './hooks/usePiperPlusStatus';
 
 interface VoicevoxSpeakerStyleResponse {
   id: number;
@@ -168,6 +169,8 @@ function App() {
     useState<LocalOutputSamplingRateOption>('default');
   const [aivisOutputStereo, setAivisOutputStereo] =
     useState<OutputStereoOption>('default');
+  const [piperPlusSpeed, setPiperPlusSpeed] = useState('');
+  const [piperPlusNoiseScale, setPiperPlusNoiseScale] = useState('');
   const [text, setText] = useState(
     'こんにちは！AITuber OnAir Voice のReactデモへようこそ。',
   );
@@ -186,6 +189,8 @@ function App() {
   const [voiceService, setVoiceService] = useState<VoiceEngineAdapter | null>(
     null,
   );
+  const { available: piperPlusAvailable, loading: piperPlusLoading } =
+    usePiperPlusStatus();
 
   useEffect(() => {
     const defaults = ENGINE_DEFAULTS[engine];
@@ -266,7 +271,11 @@ function App() {
     setSpeakerOptions([]);
     setIsFetchingSpeakers(false);
     setSpeakerFetchError(null);
-    setStatus(`Switched to ${engine}. Default URL: ${defaults.apiUrl}`);
+    setStatus(
+      engine === 'piperPlus'
+        ? 'Switched to piperPlus. Place assets in public/piper/ and review the setup guide below.'
+        : `Switched to ${engine}. Default URL: ${defaults.apiUrl}`,
+    );
     setStatusType('success');
   }, [engine]);
 
@@ -831,6 +840,23 @@ function App() {
         if (Object.keys(queryOverrides).length > 0) {
           options.voicevoxQueryParameters = queryOverrides;
         }
+      } else if (engine === 'piperPlus') {
+        if (piperPlusAvailable) {
+          options.piperPlusBasePath = `${import.meta.env.BASE_URL}piper/`;
+          options.piperPlusModelConfigFile = 'tsukuyomi-config.json';
+          options.piperPlusModelFile = 'tsukuyomi-wavlm-300epoch.onnx';
+          options.piperPlusVoiceFile = 'mei_normal.htsvoice';
+        }
+
+        const parsedSpeed = Number.parseFloat(piperPlusSpeed);
+        if (!Number.isNaN(parsedSpeed)) {
+          options.piperPlusSpeed = parsedSpeed;
+        }
+
+        const parsedNoiseScale = Number.parseFloat(piperPlusNoiseScale);
+        if (!Number.isNaN(parsedNoiseScale)) {
+          options.piperPlusNoiseScale = parsedNoiseScale;
+        }
       }
 
       if (apiUrl) {
@@ -915,6 +941,8 @@ function App() {
               minimaxGroupId={minimaxGroupId}
               onMinimaxGroupIdChange={setMinimaxGroupId}
               apiKeyIsRequired={apiKeyIsRequired}
+              piperPlusAvailable={piperPlusAvailable}
+              piperPlusLoading={piperPlusLoading}
             >
               <EngineParameters
                 engine={engine}
@@ -1169,6 +1197,16 @@ function App() {
                   audioChannel: {
                     value: minimaxAudioChannel,
                     onChange: setMinimaxAudioChannel,
+                  },
+                }}
+                piperPlus={{
+                  speed: {
+                    value: piperPlusSpeed,
+                    onChange: setPiperPlusSpeed,
+                  },
+                  noiseScale: {
+                    value: piperPlusNoiseScale,
+                    onChange: setPiperPlusNoiseScale,
                   },
                 }}
               />

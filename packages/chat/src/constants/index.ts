@@ -10,3 +10,4 @@ export * from './xai';
 export * from './kimi';
 export * from './chat';
 export * from './prompts';
+export * from './geminiNano';
