@@ -426,9 +426,10 @@ export class GeminiChatService implements ChatService {
     };
 
     const isLite = /flash[-_]lite/.test(model);
+    const isGemma4 = /^gemma-4-/.test(model);
     const isGemini25 = /gemini-2\.5/.test(model);
     const isGemini3Preview = /^gemini-3(?:\.[0-9]+)?-.*preview/.test(model);
-    const requiresV1beta = isLite || isGemini25 || isGemini3Preview;
+    const requiresV1beta = isLite || isGemma4 || isGemini25 || isGemini3Preview;
     const firstVer: 'v1' | 'v1beta' = requiresV1beta ? 'v1beta' : 'v1';
 
     const tryApi = async (): Promise<Response> => {

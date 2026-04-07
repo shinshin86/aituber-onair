@@ -5,6 +5,8 @@ import {
   HttpError,
 } from '../../src/utils/chatServiceHttpClient';
 import {
+  MODEL_GEMMA_4_31B_IT,
+  MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMINI_2_0_FLASH,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
@@ -45,6 +47,42 @@ describe('GeminiChatService API version selection', () => {
     expect(postSpy).toHaveBeenCalledTimes(1);
     expect(postSpy.mock.calls[0][0]).toContain(
       '/v1beta/models/gemini-3-flash-preview:streamGenerateContent?alt=sse&key=test-key',
+    );
+  });
+
+  it('uses v1beta for Gemma 4 31B IT', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMMA_4_31B_IT,
+      MODEL_GEMMA_4_31B_IT,
+    );
+
+    await (service as any).callGemini(messages, MODEL_GEMMA_4_31B_IT, true);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy.mock.calls[0][0]).toContain(
+      '/v1beta/models/gemma-4-31b-it:streamGenerateContent?alt=sse&key=test-key',
+    );
+  });
+
+  it('uses v1beta for Gemma 4 26B A4B IT', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMMA_4_26B_A4B_IT,
+      MODEL_GEMMA_4_26B_A4B_IT,
+    );
+
+    await (service as any).callGemini(messages, MODEL_GEMMA_4_26B_A4B_IT, true);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy.mock.calls[0][0]).toContain(
+      '/v1beta/models/gemma-4-26b-a4b-it:streamGenerateContent?alt=sse&key=test-key',
     );
   });
 

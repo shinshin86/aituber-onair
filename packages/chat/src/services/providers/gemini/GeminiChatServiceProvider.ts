@@ -1,4 +1,6 @@
 import {
+  MODEL_GEMMA_4_31B_IT,
+  MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
@@ -66,6 +68,8 @@ export class GeminiChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_GEMMA_4_31B_IT,
+      MODEL_GEMMA_4_26B_A4B_IT,
       MODEL_GEMINI_3_1_PRO_PREVIEW,
       MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
       MODEL_GEMINI_3_PRO_PREVIEW,
