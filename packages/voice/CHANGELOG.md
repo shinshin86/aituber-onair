@@ -1,5 +1,18 @@
 # @aituber-onair/voice
 
+## 0.12.0
+
+### Minor Changes
+
+- Added piper-plus browser WASM TTS engine via `engineType: 'piperPlus'`.
+  - Introduce `PiperPlusEngine` using ONNX Runtime Web and OpenJTalk WASM for
+    fully on-device Japanese speech synthesis in the browser.
+  - Support `piperPlusModelPath`, `piperPlusSpeed`, `piperPlusNoiseScale`,
+    `piperPlusNoiseW`, and `piperPlusLengthScale` options.
+  - Register piper-plus in the voice engine factory, public exports, internal
+    engine handlers, React example with asset detection UI and setup guide, and
+    tests.
+
 ## 0.11.0
 
 ### Minor Changes
