@@ -57,6 +57,23 @@ export class GeminiChatService implements ChatService {
     return { content: val }; // wrap primitive
   }
 
+  private isGemma4Model(model: string): boolean {
+    return /^gemma-4-/.test(model);
+  }
+
+  private shouldExposeTextPart(part: any, model: string): boolean {
+    if (!part.text) return false;
+
+    // Gemma 4 can emit thought parts as regular text blocks.
+    // Hide those blocks from user-visible output while leaving other Gemini
+    // model families unchanged for now.
+    if (this.isGemma4Model(model) && part.thought === true) {
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * camelCase → snake_case conversion (v1beta)
    */
@@ -225,7 +242,11 @@ export class GeminiChatService implements ChatService {
         hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
         runWithoutTools: async () => {
           const res = await this.callGemini(messages, this.model, true);
-          const { blocks } = await this.parseStream(res, onPartialResponse);
+          const { blocks } = await this.parseStream(
+            res,
+            onPartialResponse,
+            this.model,
+          );
           return StreamTextAccumulator.getFullText(blocks);
         },
         runWithTools: () => this.chatOnce(messages, true, onPartialResponse),
@@ -249,7 +270,11 @@ export class GeminiChatService implements ChatService {
         hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
         runWithoutTools: async () => {
           const res = await this.callGemini(messages, this.visionModel, true);
-          const { blocks } = await this.parseStream(res, onPartialResponse);
+          const { blocks } = await this.parseStream(
+            res,
+            onPartialResponse,
+            this.visionModel,
+          );
           return StreamTextAccumulator.getFullText(blocks);
         },
         runWithTools: () => this.visionChatOnce(messages),
@@ -371,6 +396,13 @@ export class GeminiChatService implements ChatService {
             : getMaxTokensForResponseLength(this.responseLength),
       },
     };
+
+    if (this.isGemma4Model(model)) {
+      body.generationConfig.thinkingConfig = {
+        includeThoughts: false,
+        thinkingLevel: 'minimal',
+      };
+    }
     // Add tools configuration (regular tools + MCP tools as functionDeclarations)
     const allToolDeclarations = [];
 
@@ -426,9 +458,10 @@ export class GeminiChatService implements ChatService {
     };
 
     const isLite = /flash[-_]lite/.test(model);
+    const isGemma4 = this.isGemma4Model(model);
     const isGemini25 = /gemini-2\.5/.test(model);
     const isGemini3Preview = /^gemini-3(?:\.[0-9]+)?-.*preview/.test(model);
-    const requiresV1beta = isLite || isGemini25 || isGemini3Preview;
+    const requiresV1beta = isLite || isGemma4 || isGemini25 || isGemini3Preview;
     const firstVer: 'v1' | 'v1beta' = requiresV1beta ? 'v1beta' : 'v1';
 
     const tryApi = async (): Promise<Response> => {
@@ -613,6 +646,7 @@ export class GeminiChatService implements ChatService {
   private async parseStream(
     res: Response,
     onPartial: (chunk: string) => void,
+    model: string,
   ): Promise<ToolChatCompletion> {
     const reader = res.body!.getReader();
     const dec = new TextDecoder();
@@ -632,7 +666,7 @@ export class GeminiChatService implements ChatService {
 
       for (const cand of obj.candidates ?? []) {
         for (const part of cand.content?.parts ?? []) {
-          if (part.text) {
+          if (this.shouldExposeTextPart(part, model)) {
             onPartial(part.text);
             StreamTextAccumulator.addTextBlock(textBlocks, part.text);
           }
@@ -691,13 +725,13 @@ export class GeminiChatService implements ChatService {
   /* ────────────────────────────────────────────────────────── */
   /*  Convert JSON of non-stream (= generateContent)        */
   /* ────────────────────────────────────────────────────────── */
-  private parseOneShot(data: any): ToolChatCompletion {
+  private parseOneShot(data: any, model: string): ToolChatCompletion {
     const textBlocks: ToolChatBlock[] = [];
     const toolBlocks: ToolChatBlock[] = [];
 
     for (const cand of data.candidates ?? []) {
       for (const part of cand.content?.parts ?? []) {
-        if (part.text) {
+        if (this.shouldExposeTextPart(part, model)) {
           textBlocks.push({ type: 'text', text: part.text });
         }
         if (part.functionCall) {
@@ -739,8 +773,8 @@ export class GeminiChatService implements ChatService {
   ): Promise<ToolChatCompletion> {
     const res = await this.callGemini(messages, this.model, stream, maxTokens);
     return stream
-      ? this.parseStream(res, onPartialResponse)
-      : this.parseOneShot(await res.json());
+      ? this.parseStream(res, onPartialResponse, this.model)
+      : this.parseOneShot(await res.json(), this.model);
   }
 
   /* ────────────────────────────────────────────────────────── */
@@ -759,8 +793,8 @@ export class GeminiChatService implements ChatService {
       maxTokens,
     );
     return stream
-      ? this.parseStream(res, onPartialResponse)
-      : this.parseOneShot(await res.json());
+      ? this.parseStream(res, onPartialResponse, this.visionModel)
+      : this.parseOneShot(await res.json(), this.visionModel);
   }
 
   /* ────────────────────────────────────────────────────────── */
