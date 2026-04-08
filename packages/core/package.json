@@ -22,7 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "@aituber-onair/chat": "^0.25.0",
-    "@aituber-onair/voice": "^0.11.0"
+    "@aituber-onair/voice": "^0.12.0"
   },
   "peerDependencies": {
     "@pixiv/three-vrm": "^1.0.9"
