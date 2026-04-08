@@ -1,5 +1,15 @@
 # @aituber-onair/chat
 
+## 0.25.0
+
+### Minor Changes
+
+- Added Gemma 4 support through the Gemini provider, including `gemma-4-31b-it` and `gemma-4-26b-a4b-it`.
+- Added Gemma 4 models to the Gemini vision-supported model list and the React basic example model selector.
+- Updated Chat README files (EN/JA) and the React basic example docs to include Gemma 4 support while keeping Gemini models prioritized in examples and selectors.
+- Updated Gemini transport routing and tests so Gemma 4 models use the Gemini API `v1beta` endpoint.
+- Reduced user-visible Gemma 4 thinking leakage by filtering `thought: true` parts from displayed text and by sending Gemma-specific thinking config (`includeThoughts: false`, `thinkingLevel: 'minimal'`).
+
 ## 0.24.1
 
 ### Patch Changes
