@@ -1,5 +1,41 @@
 # @aituber-onair/core
 
+## 0.25.0
+
+### Minor Changes
+
+- Added Gemini Nano support to `AITuberOnAirCore`, including provider-option
+  forwarding and core entry-point re-exports for:
+  - `GeminiNanoChatService`
+  - `GeminiNanoChatServiceProvider`
+  - `GeminiNanoChatServiceOptions`
+  - `MODEL_GEMINI_NANO`
+  - `GEMINI_NANO_MAX_CONTEXT_MESSAGES`
+- Re-exported additional Gemini model constants from the core entry point:
+  - `MODEL_GEMMA_4_31B_IT`
+  - `MODEL_GEMMA_4_26B_A4B_IT`
+- Updated the core React basic example to support:
+  - Gemini Nano provider selection with Built-in AI setup guidance
+  - Gemma 4 model selection in the Gemini model list
+- Re-exported additional voice package items from the core entry point:
+  - `GeminiTtsEngine`
+  - `GeminiTtsModel`
+  - `PiperPlusEngine`
+  - `PiperPlusAssets`
+  - `GEMINI_TTS_API_URL`
+- Updated the React VRM and PNGTuber examples to support Gemini TTS and Piper
+  Plus configuration.
+- Updated core README docs and example READMEs to reflect Gemini Nano, Gemma 4,
+  Gemini TTS, and Piper Plus support.
+- Added core export and options test coverage for the new chat and voice
+  re-exports.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aituber-onair/chat@0.25.0
+  - @aituber-onair/voice@0.12.0
+
 ## 0.24.0
 
 ### Minor Changes

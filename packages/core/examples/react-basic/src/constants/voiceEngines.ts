@@ -4,6 +4,7 @@ import { VOICEVOX_API_ENDPOINT } from './speakers/voicevox';
 
 export type VoiceEngineType =
   | 'openai'
+  | 'geminiTts'
   | 'openaiCompatible'
   | 'voicevox'
   | 'aivisSpeech'
@@ -11,6 +12,7 @@ export type VoiceEngineType =
   | 'voicepeak'
   | 'minimax'
   | 'xai'
+  | 'piperPlus'
   | 'none';
 
 export interface VoiceEngineConfig {
@@ -31,6 +33,16 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       placeholder: 'sk-...',
       defaultParams: {
         model: 'tts-1',
+      },
+    },
+    geminiTts: {
+      name: 'Gemini TTS',
+      apiUrl: 'https://generativelanguage.googleapis.com/v1beta',
+      needsApiKey: true,
+      placeholder: 'Google API key',
+      defaultParams: {
+        model: 'gemini-2.5-flash-preview-tts',
+        languageCode: 'ja-JP',
       },
     },
     openaiCompatible: {
@@ -87,6 +99,11 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       apiUrl: 'https://api.x.ai/v1/tts',
       needsApiKey: true,
       placeholder: 'xai-...',
+    },
+    piperPlus: {
+      name: 'Piper Plus',
+      needsApiKey: false,
+      placeholder: '',
     },
     none: {
       name: '音声なし',

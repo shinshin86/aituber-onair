@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
 
@@ -15,6 +16,7 @@ const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
   { value: 'openai-compatible', label: 'OpenAI-Compatible' },
   { value: 'openrouter', label: 'OpenRouter' },
   { value: 'gemini', label: 'Gemini' },
+  { value: 'gemini-nano', label: 'Gemini Nano' },
   { value: 'claude', label: 'Claude' },
   { value: 'xai', label: 'xAI' },
   { value: 'zai', label: 'Z.ai' },
@@ -23,6 +25,7 @@ const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
 
 const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'openai', label: 'OpenAI TTS' },
+  { value: 'geminiTts', label: 'Gemini TTS' },
   { value: 'openaiCompatible', label: 'OpenAI-Compatible TTS' },
   { value: 'voicevox', label: 'VOICEVOX' },
   { value: 'voicepeak', label: 'VOICEPEAK' },
@@ -30,10 +33,25 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'aivisCloud', label: 'Aivis Cloud' },
   { value: 'minimax', label: 'MiniMax' },
   { value: 'xai', label: 'xAI TTS' },
+  { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'none', label: 'None' },
 ];
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+const GEMINI_TTS_MODELS = [
+  'gemini-2.5-flash-preview-tts',
+  'gemini-2.5-pro-preview-tts',
+] as const;
+const GEMINI_TTS_SPEAKERS = [
+  'Zephyr',
+  'Aoede',
+  'Kore',
+  'Leda',
+  'Puck',
+  'Charon',
+  'Fenrir',
+  'Orus',
+] as const;
 const XAI_SPEAKERS = ['ara', 'eve', 'leo', 'rex', 'sal'];
 const XAI_CODECS = ['mp3', 'wav', 'pcm', 'mulaw', 'alaw'] as const;
 const XAI_SAMPLE_RATES = [8000, 16000, 22050, 24000, 44100, 48000] as const;
@@ -96,6 +114,9 @@ export function SettingsPanel({
   updateOpenAiCompatibleApiUrl,
   updateOpenAiCompatibleModel,
   updateOpenAiCompatibleSpeed,
+  updateGeminiTtsModel,
+  updateGeminiTtsLanguageCode,
+  updateGeminiTtsPrompt,
   updateVoicevoxApiUrl,
   updateVoicepeakApiUrl,
   updateAivisSpeechApiUrl,
@@ -109,6 +130,12 @@ export function SettingsPanel({
   updateXaiCodec,
   updateXaiSampleRate,
   updateXaiBitRate,
+  updatePiperPlusBasePath,
+  updatePiperPlusModelConfigFile,
+  updatePiperPlusModelFile,
+  updatePiperPlusVoiceFile,
+  updatePiperPlusSpeed,
+  updatePiperPlusNoiseScale,
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
@@ -122,6 +149,9 @@ export function SettingsPanel({
     settings.llm.openRouterDynamicFreeModels?.fetchedAt || 0;
   const openRouterMaxCandidates =
     settings.llm.openRouterDynamicFreeModels?.maxCandidates || 1;
+  const geminiNano = useGeminiNanoStatus(
+    settings.llm.provider === 'gemini-nano',
+  );
 
   const [voicevoxSpeakers, setVoicevoxSpeakers] = useState<VoiceSpeaker[]>([]);
   const [aivisSpeakers, setAivisSpeakers] = useState<VoiceSpeaker[]>([]);
@@ -465,7 +495,47 @@ export function SettingsPanel({
               </div>
             )}
 
-            {settings.llm.provider !== 'openrouter' && (
+            {settings.llm.provider === 'gemini-nano' && (
+              <>
+                <div className="settings-field">
+                  <small>
+                    Gemini Nano はブラウザ内蔵 AI を使うため API Key は不要です。
+                  </small>
+                </div>
+                <div className="settings-field">
+                  <small>{geminiNano.statusText}</small>
+                  {geminiNano.downloadProgress != null && (
+                    <small>{geminiNano.downloadProgress}%</small>
+                  )}
+                  {geminiNano.status === 'downloadable' && (
+                    <button
+                      type="button"
+                      className="settings-action-button"
+                      onClick={() => geminiNano.prepareModel()}
+                      disabled={disabled || geminiNano.isPreparing}
+                    >
+                      {geminiNano.isPreparing
+                        ? 'Preparing...'
+                        : 'Prepare Model'}
+                    </button>
+                  )}
+                  <small>
+                    Chrome 138+ が必要です。`chrome://flags` を開き、
+                    `#optimization-guide-on-device-model` と
+                    `#prompt-api-for-gemini-nano` を `Enabled` に設定してから
+                    Chrome を再起動してください。
+                  </small>
+                  <small>
+                    フラグ有効化後に上の `Prepare Model` を押すとモデルの
+                    ダウンロードが始まります。初回ダウンロードには数分かかる
+                    場合があります。
+                  </small>
+                </div>
+              </>
+            )}
+
+            {settings.llm.provider !== 'openrouter' &&
+              settings.llm.provider !== 'gemini-nano' && (
               <div className="settings-field">
                 <label htmlFor="llm-apikey">
                   API Key ({settings.llm.provider})
@@ -488,7 +558,7 @@ export function SettingsPanel({
                   disabled={disabled}
                 />
               </div>
-            )}
+              )}
           </>
         )}
       </div>
@@ -545,6 +615,83 @@ export function SettingsPanel({
                   ))}
                 </select>
               </div>
+            )}
+
+            {settings.tts.engine === 'geminiTts' && (
+              <>
+                {settings.llm.provider !== 'gemini' && (
+                  <div className="settings-field">
+                    <label htmlFor="tts-gemini-apikey">API Key (Gemini)</label>
+                    <input
+                      id="tts-gemini-apikey"
+                      type="password"
+                      value={getApiKeyForProvider('gemini')}
+                      onChange={(e) =>
+                        updateLLMApiKey('gemini', e.target.value)
+                      }
+                      placeholder="Google API key"
+                      disabled={disabled}
+                    />
+                  </div>
+                )}
+                <div className="settings-field">
+                  <label htmlFor="tts-gemini-speaker">Voice</label>
+                  <select
+                    id="tts-gemini-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={disabled}
+                  >
+                    {GEMINI_TTS_SPEAKERS.map((speaker) => (
+                      <option key={speaker} value={speaker}>
+                        {speaker}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gemini-model">Model</label>
+                  <select
+                    id="tts-gemini-model"
+                    value={
+                      settings.tts.geminiTtsModel ||
+                      GEMINI_TTS_MODELS[0]
+                    }
+                    onChange={(e) => updateGeminiTtsModel(e.target.value)}
+                    disabled={disabled}
+                  >
+                    {GEMINI_TTS_MODELS.map((model) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gemini-language">Language Code</label>
+                  <input
+                    id="tts-gemini-language"
+                    type="text"
+                    value={settings.tts.geminiTtsLanguageCode || ''}
+                    onChange={(e) =>
+                      updateGeminiTtsLanguageCode(e.target.value)
+                    }
+                    placeholder="ja-JP"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gemini-prompt">Style Prompt</label>
+                  <input
+                    id="tts-gemini-prompt"
+                    type="text"
+                    value={settings.tts.geminiTtsPrompt || ''}
+                    onChange={(e) => updateGeminiTtsPrompt(e.target.value)}
+                    placeholder="明るく元気な声で話してください"
+                    disabled={disabled}
+                  />
+                </div>
+              </>
             )}
 
             {settings.tts.engine === 'xai' && (
@@ -639,6 +786,97 @@ export function SettingsPanel({
                     </select>
                   </div>
                 )}
+              </>
+            )}
+
+            {settings.tts.engine === 'piperPlus' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-piper-base-path">Assets Base Path</label>
+                  <input
+                    id="tts-piper-base-path"
+                    type="text"
+                    value={settings.tts.piperPlusBasePath || ''}
+                    onChange={(e) =>
+                      updatePiperPlusBasePath(e.target.value)
+                    }
+                    placeholder="/piper/"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-piper-config">Model Config File</label>
+                  <input
+                    id="tts-piper-config"
+                    type="text"
+                    value={settings.tts.piperPlusModelConfigFile || ''}
+                    onChange={(e) =>
+                      updatePiperPlusModelConfigFile(e.target.value)
+                    }
+                    placeholder="tsukuyomi-config.json"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-piper-model">Model File</label>
+                  <input
+                    id="tts-piper-model"
+                    type="text"
+                    value={settings.tts.piperPlusModelFile || ''}
+                    onChange={(e) =>
+                      updatePiperPlusModelFile(e.target.value)
+                    }
+                    placeholder="tsukuyomi-wavlm-300epoch.onnx"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-piper-voice">HTS Voice File</label>
+                  <input
+                    id="tts-piper-voice"
+                    type="text"
+                    value={settings.tts.piperPlusVoiceFile || ''}
+                    onChange={(e) =>
+                      updatePiperPlusVoiceFile(e.target.value)
+                    }
+                    placeholder="mei_normal.htsvoice"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-piper-speed">Speed</label>
+                  <input
+                    id="tts-piper-speed"
+                    type="number"
+                    step="0.05"
+                    value={settings.tts.piperPlusSpeed || ''}
+                    onChange={(e) => updatePiperPlusSpeed(e.target.value)}
+                    placeholder="1.0"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-piper-noise-scale">Noise Scale</label>
+                  <input
+                    id="tts-piper-noise-scale"
+                    type="number"
+                    step="0.05"
+                    value={settings.tts.piperPlusNoiseScale || ''}
+                    onChange={(e) =>
+                      updatePiperPlusNoiseScale(e.target.value)
+                    }
+                    placeholder="0.667"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <small>
+                    Runtime assets はサイズとサードパーティライセンスの都合で
+                    同梱していません。README の Piper Plus Setup を参照し、
+                    `public/piper/` 配下に `dist/`, `src/`, `assets/`,
+                    `models/` を配置してください。
+                  </small>
+                </div>
               </>
             )}
 

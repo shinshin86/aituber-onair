@@ -2,6 +2,7 @@ export type ChatProviderOption =
   | 'openai'
   | 'openrouter'
   | 'gemini'
+  | 'gemini-nano'
   | 'claude'
   | 'xai'
   | 'zai'
@@ -9,6 +10,7 @@ export type ChatProviderOption =
   | 'openai-compatible';
 export type TTSEngineOption =
   | 'openai'
+  | 'geminiTts'
   | 'openaiCompatible'
   | 'voicevox'
   | 'voicepeak'
@@ -16,6 +18,7 @@ export type TTSEngineOption =
   | 'aivisCloud'
   | 'minimax'
   | 'xai'
+  | 'piperPlus'
   | 'none';
 
 export interface ProviderApiKeys {
@@ -48,6 +51,9 @@ export interface TTSSettings {
   openAiCompatibleApiUrl?: string;
   openAiCompatibleModel?: string;
   openAiCompatibleSpeed?: string;
+  geminiTtsModel?: string;
+  geminiTtsLanguageCode?: string;
+  geminiTtsPrompt?: string;
   voicevoxApiUrl?: string;
   voicepeakApiUrl?: string;
   aivisSpeechApiUrl?: string;
@@ -61,6 +67,12 @@ export interface TTSSettings {
   xaiCodec?: string;
   xaiSampleRate?: number;
   xaiBitRate?: number;
+  piperPlusBasePath?: string;
+  piperPlusModelConfigFile?: string;
+  piperPlusModelFile?: string;
+  piperPlusVoiceFile?: string;
+  piperPlusSpeed?: string;
+  piperPlusNoiseScale?: string;
 }
 
 export interface AppSettings {

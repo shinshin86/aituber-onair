@@ -9,8 +9,8 @@
 ## このアプリでできること
 
 - LLM プロバイダ切り替え:
-  `openai`, `openai-compatible`, `openrouter`, `gemini`, `claude`,
-  `zai`, `kimi`
+  `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`,
+  `claude`, `zai`, `kimi`, `xai`
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
   chat 由来の新規モデルも Settings に自動反映されます
 - `openrouter` では Settings から現在使える `:free` モデルを取得可能:
@@ -18,14 +18,15 @@
   - `Max candidates` は「疎通確認する `:free` 候補の最大件数」
     （「N件見つかるまで試行」ではありません）
 - TTS エンジン切り替え:
-  `openai`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`,
-  `minimax`, `none`
+  `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`,
+  `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `piperPlus`, `none`
 - スピーカー一覧の動的取得と選択:
   - `voicevox` / `aivisSpeech`: `/speakers` から取得
   - `minimax`: API キー入力後に `query/tts_speakers` から取得
 - Aivis Cloud は CORS 回避のため固定プリセット選択:
   - `コハク`（`22e8ed77-94fe-4ef2-871f-a86f94e9a579`）
   - `まお`（`a59cb814-0083-4369-8542-f51a29e72af7`）
+- `piperPlus` は `public/piper/` 配下に browser assets を配置して利用します
 - VRM アバター（`miko.vrm`）の表示と、任意の VRMA 待機モーション再生
 - VRM 表情（`Aa`）へのリアルタイム口パク反映
 - アバターステージのカメラ操作:
@@ -49,6 +50,81 @@ npm run dev
 - `Endpoint URL`（必須。`/v1/chat/completions` まで含む URL）
 - `Model`（必須。任意文字列）
 - `API Key`（任意。空なら送信しません）
+
+`gemini-nano` 利用時は以下を設定してください。
+- Chrome 138+ で Built-in AI のフラグを有効化してください
+- `#optimization-guide-on-device-model`
+- `#prompt-api-for-gemini-nano`
+- API Key は不要です
+
+## Piper Plus のセットアップ
+
+`piperPlus` は ONNX Runtime Web と OpenJTalk を使うブラウザ側の WASM
+TTS です。runtime assets はサイズとサードパーティライセンスの都合で
+この example には同梱していないため、`Piper Plus` を選ぶ前に
+`public/piper/` を用意してください。
+
+### 最短セットアップ（推奨）
+
+`chrome-on-aituber` の release から配布済み assets を取得し、この
+example に展開します。
+
+```bash
+cd packages/core/examples/react-vrm-app
+curl -L -o piper-assets.tar.gz \
+  https://github.com/shinshin86/chrome-on-aituber/releases/download/piper-assets-v1/piper-assets.tar.gz
+mkdir -p public
+tar -xzf piper-assets.tar.gz -C public/
+rm piper-assets.tar.gz
+npm run dev
+```
+
+これで約 85 MB の assets 一式が `public/piper/` に展開されます。
+展開後、Settings で `Piper Plus` を選択してください。
+
+### 既存 assets の再利用
+
+すでに voice example 用に assets を用意済みなら、そのままコピーできます。
+
+```bash
+cd packages/core/examples/react-vrm-app
+mkdir -p public
+cp -R ../../../voice/examples/react-basic/public/piper public/
+```
+
+### 手動セットアップ
+
+自分で assets を集める場合は、次の 3 ソースから必要ファイルを用意します。
+
+1. [piper-plus](https://github.com/ayutaz/piper-plus)（`dev` branch）:
+   `piper-global-loader.js`、`src/`、OpenJTalk WASM / 辞書、HTS voice
+2. [onnxruntime-web](https://www.npmjs.com/package/onnxruntime-web):
+   `ort.min.js`、`ort-wasm-simd.wasm`、`ort-wasm.wasm`
+3. [piper-plus-tsukuyomi-chan](https://huggingface.co/ayousanz/piper-plus-tsukuyomi-chan):
+   ONNX model、config JSON
+
+これらを次の構成で `public/piper/` に配置してください。
+
+```text
+public/piper/
+├── piper-global-loader.js
+├── dist/
+│   ├── ort.min.js
+│   ├── ort-wasm-simd.wasm
+│   ├── openjtalk.js
+│   └── openjtalk.wasm
+├── src/
+├── assets/
+│   ├── dict/
+│   └── voice/
+└── models/
+    ├── tsukuyomi-wavlm-300epoch.onnx
+    └── tsukuyomi-config.json
+```
+
+元のセットアップ script、より詳細な assets の出所、ライセンス注意点は
+[`packages/voice/examples/react-basic/README.md`](../../../voice/examples/react-basic/README.md)
+を参照してください。
 
 ## 設定の保存仕様
 

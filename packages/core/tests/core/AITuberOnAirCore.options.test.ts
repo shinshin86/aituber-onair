@@ -98,6 +98,29 @@ describe('AITuberOnAirCore buildChatServiceOptions', () => {
     );
   });
 
+  it('passes provider-specific options for gemini-nano', () => {
+    const options = createOptions({
+      chatProvider: 'gemini-nano',
+      providerOptions: {
+        responseLength: 'short',
+        expectedInputLanguages: ['ja'],
+        expectedOutputLanguages: ['ja'],
+      },
+    });
+
+    new AITuberOnAirCore(options);
+
+    const mockCreate = vi.mocked(ChatServiceFactory.createChatService);
+    expect(mockCreate).toHaveBeenCalledWith(
+      'gemini-nano',
+      expect.objectContaining({
+        responseLength: 'short',
+        expectedInputLanguages: ['ja'],
+        expectedOutputLanguages: ['ja'],
+      }),
+    );
+  });
+
   it('passes endpoint options for openai-compatible provider', () => {
     const options = createOptions({
       chatProvider: 'openai-compatible',

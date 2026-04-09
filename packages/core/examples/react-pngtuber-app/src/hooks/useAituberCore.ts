@@ -22,6 +22,9 @@ function getTtsApiKey(
   if (settings.tts.engine === 'openai') {
     return getApiKeyForProvider('openai');
   }
+  if (settings.tts.engine === 'geminiTts') {
+    return getApiKeyForProvider('gemini');
+  }
   if (settings.tts.engine === 'openaiCompatible') {
     return settings.tts.openAiCompatibleApiKey || '';
   }
@@ -54,6 +57,10 @@ function buildVoiceOptions(
     10,
   );
   const parsedXaiBitRate = Number.parseInt(String(tts.xaiBitRate || ''), 10);
+  const parsedPiperPlusSpeed = Number.parseFloat(tts.piperPlusSpeed || '');
+  const parsedPiperPlusNoiseScale = Number.parseFloat(
+    tts.piperPlusNoiseScale || '',
+  );
   const trimmedSpeaker = tts.speaker.trim();
 
   return {
@@ -68,6 +75,9 @@ function buildVoiceOptions(
     openAiCompatibleSpeed: Number.isNaN(parsedOpenAiCompatibleSpeed)
       ? undefined
       : parsedOpenAiCompatibleSpeed,
+    geminiTtsModel: tts.geminiTtsModel,
+    geminiTtsLanguageCode: tts.geminiTtsLanguageCode?.trim() || undefined,
+    geminiTtsPrompt: tts.geminiTtsPrompt?.trim() || undefined,
     voicevoxApiUrl: tts.voicevoxApiUrl,
     voicepeakApiUrl: tts.voicepeakApiUrl,
     aivisSpeechApiUrl: tts.aivisSpeechApiUrl,
@@ -87,6 +97,16 @@ function buildVoiceOptions(
       tts.xaiCodec === 'mp3' && !Number.isNaN(parsedXaiBitRate)
         ? (parsedXaiBitRate as XaiBitRate)
         : undefined,
+    piperPlusBasePath: tts.piperPlusBasePath?.trim() || undefined,
+    piperPlusModelConfigFile: tts.piperPlusModelConfigFile?.trim() || undefined,
+    piperPlusModelFile: tts.piperPlusModelFile?.trim() || undefined,
+    piperPlusVoiceFile: tts.piperPlusVoiceFile?.trim() || undefined,
+    piperPlusSpeed: Number.isNaN(parsedPiperPlusSpeed)
+      ? undefined
+      : parsedPiperPlusSpeed,
+    piperPlusNoiseScale: Number.isNaN(parsedPiperPlusNoiseScale)
+      ? undefined
+      : parsedPiperPlusNoiseScale,
     onPlay,
   } as VoiceServiceOptions;
 }
@@ -110,6 +130,8 @@ export function useAituberCore({
   const ttsApiKey = getTtsApiKey(settings, getApiKeyForProvider);
   const isOpenAICompatibleProvider =
     settings.llm.provider === 'openai-compatible';
+  const isApiKeyOptionalProvider =
+    isOpenAICompatibleProvider || settings.llm.provider === 'gemini-nano';
   const openAICompatibleEndpoint = settings.llm.endpoint?.trim() || '';
   const resolvedModel =
     settings.llm.provider === 'openai-compatible'
@@ -122,7 +144,7 @@ export function useAituberCore({
 
   // Effect 1: Recreate core when LLM settings change
   useEffect(() => {
-    if (!isOpenAICompatibleProvider && !llmApiKey) {
+    if (!isApiKeyOptionalProvider && !llmApiKey) {
       coreRef.current?.offAll();
       coreRef.current = null;
       console.error(
@@ -157,7 +179,7 @@ export function useAituberCore({
         },
       ),
       debug: false,
-    });
+    } as ConstructorParameters<typeof AITuberOnAirCore>[0]);
 
     // Subscribe to core events
     core.on(AITuberOnAirCoreEvent.PROCESSING_START, () => {
@@ -224,6 +246,7 @@ export function useAituberCore({
     settings.llm.model,
     settings.llm.endpoint,
     llmApiKey,
+    isApiKeyOptionalProvider,
     createMessageId,
   ]);
 

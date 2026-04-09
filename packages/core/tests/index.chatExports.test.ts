@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+  GEMINI_NANO_MAX_CONTEXT_MESSAGES,
+  MODEL_GEMINI_NANO,
+  MODEL_GEMMA_4_26B_A4B_IT,
+  MODEL_GEMMA_4_31B_IT,
   MODEL_GPT_5_4,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
@@ -8,6 +12,7 @@ import {
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GLM_5_TURBO,
   MODEL_GROK_4_20_REASONING,
+  GeminiNanoChatService,
   XAIChatService,
   allowsReasoningXHigh,
   isResponsesOnlyGPT5Model,
@@ -26,6 +31,14 @@ describe('Core index chat re-exports', () => {
     expect(MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW).toBe(
       'gemini-3.1-flash-lite-preview',
     );
+  });
+
+  it('re-exports Gemini Nano and Gemma 4 constants', () => {
+    expect(typeof GeminiNanoChatService).toBe('function');
+    expect(MODEL_GEMINI_NANO).toBe('gemini-nano');
+    expect(GEMINI_NANO_MAX_CONTEXT_MESSAGES).toBe(20);
+    expect(MODEL_GEMMA_4_31B_IT).toBe('gemma-4-31b-it');
+    expect(MODEL_GEMMA_4_26B_A4B_IT).toBe('gemma-4-26b-a4b-it');
   });
 
   it('re-exports GPT-5.4 model constants and capability helpers', () => {

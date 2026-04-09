@@ -9,8 +9,8 @@ from actual audio output volume.
 ## What this app can do
 
 - Chat with LLM providers:
-  `openai`, `openai-compatible`, `openrouter`, `gemini`, `claude`, `zai`,
-  `kimi`
+  `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`,
+  `claude`, `zai`, `kimi`, `xai`
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
   chat models are available automatically in Settings
 - For `openrouter`, fetch currently working `:free` models from Settings:
@@ -18,14 +18,15 @@ from actual audio output volume.
   - `Max candidates` is the maximum number of `:free` candidates to probe
     (not a target number of working models)
 - Use TTS engines:
-  `openai`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`,
-  `minimax`, `none`
+  `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`,
+  `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `piperPlus`, `none`
 - Fetch and select speaker lists dynamically:
   - `voicevox` / `aivisSpeech`: from `/speakers`
   - `minimax`: from `query/tts_speakers` after API key input
 - Use fixed Aivis Cloud voice presets (CORS-safe UI):
   - `コハク` (`22e8ed77-94fe-4ef2-871f-a86f94e9a579`)
   - `まお` (`a59cb814-0083-4369-8542-f51a29e72af7`)
+- `piperPlus` expects browser assets under `public/piper/`
 - Render a VRM avatar (`miko.vrm`) with optional idle VRMA animation
 - Real-time lip-sync for VRM expression (`Aa`)
 - Control camera on the avatar stage:
@@ -49,6 +50,80 @@ For `openai-compatible`, set:
 - `Endpoint URL` (required, full `/v1/chat/completions` URL)
 - `Model` (required, free text)
 - `API Key` (optional; omitted when empty)
+
+For `gemini-nano`, set:
+- Chrome 138+ with Built-in AI flags enabled
+- `#optimization-guide-on-device-model`
+- `#prompt-api-for-gemini-nano`
+- No API key is required
+
+## Piper Plus Setup
+
+`piperPlus` is a browser-side WASM TTS engine using ONNX Runtime Web and
+OpenJTalk. Its runtime assets are not bundled with this example because of
+their size and third-party license requirements. You need to prepare
+`public/piper/` before selecting `Piper Plus` in Settings.
+
+### Quick setup (recommended)
+
+Download the prebuilt asset bundle from the `chrome-on-aituber` release and
+extract it into this example:
+
+```bash
+cd packages/core/examples/react-vrm-app
+curl -L -o piper-assets.tar.gz \
+  https://github.com/shinshin86/chrome-on-aituber/releases/download/piper-assets-v1/piper-assets.tar.gz
+mkdir -p public
+tar -xzf piper-assets.tar.gz -C public/
+rm piper-assets.tar.gz
+npm run dev
+```
+
+This downloads and extracts the full asset set (about 85 MB) into
+`public/piper/`. After extraction, select `Piper Plus` in Settings.
+
+### Reuse an existing asset directory
+
+If you already prepared assets for the voice example, you can copy them:
+
+```bash
+cd packages/core/examples/react-vrm-app
+mkdir -p public
+cp -R ../../../voice/examples/react-basic/public/piper public/
+```
+
+### Manual setup
+
+If you prefer to collect assets yourself, you need files from these 3 sources:
+
+1. [piper-plus](https://github.com/ayutaz/piper-plus) (`dev` branch):
+   `piper-global-loader.js`, `src/`, OpenJTalk WASM/dictionary, HTS voice
+2. [onnxruntime-web](https://www.npmjs.com/package/onnxruntime-web):
+   `ort.min.js`, `ort-wasm-simd.wasm`, `ort-wasm.wasm`
+3. [piper-plus-tsukuyomi-chan](https://huggingface.co/ayousanz/piper-plus-tsukuyomi-chan):
+   ONNX model and config JSON
+
+Place them under `public/piper/` following this layout:
+
+```text
+public/piper/
+├── piper-global-loader.js
+├── dist/
+│   ├── ort.min.js
+│   ├── ort-wasm-simd.wasm
+│   ├── openjtalk.js
+│   └── openjtalk.wasm
+├── src/
+├── assets/
+│   ├── dict/
+│   └── voice/
+└── models/
+    ├── tsukuyomi-wavlm-300epoch.onnx
+    └── tsukuyomi-config.json
+```
+
+For the original setup script, detailed asset sources, and license notes, see
+[`packages/voice/examples/react-basic/README.md`](../../../voice/examples/react-basic/README.md).
 
 ## Settings persistence
 

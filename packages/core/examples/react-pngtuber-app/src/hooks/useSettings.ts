@@ -10,13 +10,21 @@ import type {
   TTSEngineOption,
 } from '../types/settings';
 
+type ApiKeyProvider = Exclude<ChatProviderOption, 'gemini-nano'>;
+
 const STORAGE_KEY = 'react-pngtuber-app-settings';
 const DEFAULT_AIVIS_CLOUD_MODEL_UUID = '22e8ed77-94fe-4ef2-871f-a86f94e9a579';
+const DEFAULT_GEMINI_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+const DEFAULT_GEMINI_TTS_LANGUAGE_CODE = 'ja-JP';
 const DEFAULT_OPENAI_COMPATIBLE_MODEL = 'local-model';
 const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
   'http://localhost:11434/v1/chat/completions';
 const DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT =
   'http://localhost:8880/v1/audio/speech';
+const DEFAULT_PIPER_PLUS_BASE_PATH = `${import.meta.env.BASE_URL}piper/`;
+const DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE = 'tsukuyomi-config.json';
+const DEFAULT_PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
+const DEFAULT_PIPER_PLUS_VOICE_FILE = 'mei_normal.htsvoice';
 const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
 const DEFAULT_OPENROUTER_MAX_WORKING = 10;
 const EMPTY_MODEL_IDS: string[] = [];
@@ -105,6 +113,9 @@ function getDefaultSettings(): AppSettings {
       openAiCompatibleApiUrl: DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT,
       openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_MODEL,
       openAiCompatibleSpeed: '',
+      geminiTtsModel: DEFAULT_GEMINI_TTS_MODEL,
+      geminiTtsLanguageCode: DEFAULT_GEMINI_TTS_LANGUAGE_CODE,
+      geminiTtsPrompt: '',
       aivisCloudApiKey: '',
       aivisCloudModelUuid: DEFAULT_AIVIS_CLOUD_MODEL_UUID,
       aivisCloudSpeakerUuid: '',
@@ -115,6 +126,12 @@ function getDefaultSettings(): AppSettings {
       xaiCodec: 'mp3',
       xaiSampleRate: 24000,
       xaiBitRate: 128000,
+      piperPlusBasePath: DEFAULT_PIPER_PLUS_BASE_PATH,
+      piperPlusModelConfigFile: DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE,
+      piperPlusModelFile: DEFAULT_PIPER_PLUS_MODEL_FILE,
+      piperPlusVoiceFile: DEFAULT_PIPER_PLUS_VOICE_FILE,
+      piperPlusSpeed: '',
+      piperPlusNoiseScale: '',
     },
   };
 }
@@ -214,11 +231,17 @@ export function useSettings() {
 
   const updateLLMApiKey = useCallback(
     (provider: ChatProviderOption, key: string) => {
+      if (provider === 'gemini-nano') {
+        return;
+      }
       setSettings((prev) => ({
         ...prev,
         llm: {
           ...prev.llm,
-          apiKeys: { ...prev.llm.apiKeys, [provider]: key },
+          apiKeys: {
+            ...prev.llm.apiKeys,
+            [provider as ApiKeyProvider]: key,
+          },
         },
       }));
     },
@@ -304,6 +327,7 @@ export function useSettings() {
   const updateTTSEngine = useCallback((engine: TTSEngineOption) => {
     const defaultSpeaker: Record<string, string> = {
       openai: 'alloy',
+      geminiTts: 'Zephyr',
       openaiCompatible: '',
       voicepeak: 'f1',
       voicevox: '',
@@ -311,6 +335,7 @@ export function useSettings() {
       aivisCloud: DEFAULT_AIVIS_CLOUD_MODEL_UUID,
       minimax: 'male-qn-qingse',
       xai: 'eve',
+      piperPlus: 'default',
       none: '',
     };
     setSettings((prev) => ({
@@ -332,6 +357,19 @@ export function useSettings() {
           engine === 'openaiCompatible'
             ? prev.tts.openAiCompatibleSpeed || ''
             : prev.tts.openAiCompatibleSpeed,
+        geminiTtsModel:
+          engine === 'geminiTts'
+            ? prev.tts.geminiTtsModel || DEFAULT_GEMINI_TTS_MODEL
+            : prev.tts.geminiTtsModel,
+        geminiTtsLanguageCode:
+          engine === 'geminiTts'
+            ? prev.tts.geminiTtsLanguageCode ||
+              DEFAULT_GEMINI_TTS_LANGUAGE_CODE
+            : prev.tts.geminiTtsLanguageCode,
+        geminiTtsPrompt:
+          engine === 'geminiTts'
+            ? prev.tts.geminiTtsPrompt || ''
+            : prev.tts.geminiTtsPrompt,
         aivisCloudModelUuid:
           engine === 'aivisCloud'
             ? prev.tts.aivisCloudModelUuid || DEFAULT_AIVIS_CLOUD_MODEL_UUID
@@ -358,6 +396,31 @@ export function useSettings() {
           engine === 'xai'
             ? prev.tts.xaiBitRate || 128000
             : prev.tts.xaiBitRate,
+        piperPlusBasePath:
+          engine === 'piperPlus'
+            ? prev.tts.piperPlusBasePath || DEFAULT_PIPER_PLUS_BASE_PATH
+            : prev.tts.piperPlusBasePath,
+        piperPlusModelConfigFile:
+          engine === 'piperPlus'
+            ? prev.tts.piperPlusModelConfigFile ||
+              DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE
+            : prev.tts.piperPlusModelConfigFile,
+        piperPlusModelFile:
+          engine === 'piperPlus'
+            ? prev.tts.piperPlusModelFile || DEFAULT_PIPER_PLUS_MODEL_FILE
+            : prev.tts.piperPlusModelFile,
+        piperPlusVoiceFile:
+          engine === 'piperPlus'
+            ? prev.tts.piperPlusVoiceFile || DEFAULT_PIPER_PLUS_VOICE_FILE
+            : prev.tts.piperPlusVoiceFile,
+        piperPlusSpeed:
+          engine === 'piperPlus'
+            ? prev.tts.piperPlusSpeed || ''
+            : prev.tts.piperPlusSpeed,
+        piperPlusNoiseScale:
+          engine === 'piperPlus'
+            ? prev.tts.piperPlusNoiseScale || ''
+            : prev.tts.piperPlusNoiseScale,
       },
     }));
   }, []);
@@ -394,6 +457,27 @@ export function useSettings() {
     setSettings((prev) => ({
       ...prev,
       tts: { ...prev.tts, openAiCompatibleSpeed: speed },
+    }));
+  }, []);
+
+  const updateGeminiTtsModel = useCallback((model: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, geminiTtsModel: model },
+    }));
+  }, []);
+
+  const updateGeminiTtsLanguageCode = useCallback((languageCode: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, geminiTtsLanguageCode: languageCode },
+    }));
+  }, []);
+
+  const updateGeminiTtsPrompt = useCallback((prompt: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, geminiTtsPrompt: prompt },
     }));
   }, []);
 
@@ -488,9 +572,54 @@ export function useSettings() {
     }));
   }, []);
 
+  const updatePiperPlusBasePath = useCallback((basePath: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, piperPlusBasePath: basePath },
+    }));
+  }, []);
+
+  const updatePiperPlusModelConfigFile = useCallback((modelConfigFile: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, piperPlusModelConfigFile: modelConfigFile },
+    }));
+  }, []);
+
+  const updatePiperPlusModelFile = useCallback((modelFile: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, piperPlusModelFile: modelFile },
+    }));
+  }, []);
+
+  const updatePiperPlusVoiceFile = useCallback((voiceFile: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, piperPlusVoiceFile: voiceFile },
+    }));
+  }, []);
+
+  const updatePiperPlusSpeed = useCallback((speed: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, piperPlusSpeed: speed },
+    }));
+  }, []);
+
+  const updatePiperPlusNoiseScale = useCallback((noiseScale: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      tts: { ...prev.tts, piperPlusNoiseScale: noiseScale },
+    }));
+  }, []);
+
   const getApiKeyForProvider = useCallback(
     (provider: ChatProviderOption): string => {
-      return settings.llm.apiKeys[provider] || '';
+      if (provider === 'gemini-nano') {
+        return '';
+      }
+      return settings.llm.apiKeys[provider as ApiKeyProvider] || '';
     },
     [settings.llm.apiKeys],
   );
@@ -512,6 +641,9 @@ export function useSettings() {
     updateOpenAiCompatibleApiUrl,
     updateOpenAiCompatibleModel,
     updateOpenAiCompatibleSpeed,
+    updateGeminiTtsModel,
+    updateGeminiTtsLanguageCode,
+    updateGeminiTtsPrompt,
     updateVoicevoxApiUrl,
     updateVoicepeakApiUrl,
     updateAivisSpeechApiUrl,
@@ -525,6 +657,12 @@ export function useSettings() {
     updateXaiCodec,
     updateXaiSampleRate,
     updateXaiBitRate,
+    updatePiperPlusBasePath,
+    updatePiperPlusModelConfigFile,
+    updatePiperPlusModelFile,
+    updatePiperPlusVoiceFile,
+    updatePiperPlusSpeed,
+    updatePiperPlusNoiseScale,
     getApiKeyForProvider,
   };
 }
