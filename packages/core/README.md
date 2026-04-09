@@ -1218,8 +1218,11 @@ Possible use cases for `chatLogUpdated` include:
 - **AivisSpeech**: Speech synthesis using AI technology.  
 - **Aivis Cloud**: High-quality Japanese text-to-speech service with SSML support, emotional intensity control, and multiple output formats (WAV, FLAC, MP3, AAC, Opus).
 - **OpenAI TTS**: Text-to-speech API from OpenAI.
+- **Gemini TTS**: Gemini API-based text-to-speech with selectable preview TTS models and style prompt support.
+- **xAI TTS**: xAI text-to-speech with selectable codec, sample rate, and bit rate options.
 - **OpenAI-Compatible TTS**: Self-hosted or third-party `/v1/audio/speech` compatible endpoints.
 - **MiniMax**: Multi-language TTS with 24 language support and HD quality (requires both API key and GroupId - see usage example below).
+- **Piper Plus**: Browser WASM TTS using ONNX Runtime Web and OpenJTalk assets for on-device synthesis.
 - **None**: No voice mode (no audio output).
 
 You can dynamically switch the speech engine via `updateVoiceService`:
@@ -1349,15 +1352,20 @@ This is useful when running voice engines on different ports or remote servers.
 ## AI Provider System
 
 AITuber OnAir Core adopts an extensible provider system, enabling integration with various AI APIs.
-Currently, OpenAI API, OpenAI-compatible APIs, Gemini API, Claude API, Z.ai API, Kimi API, and OpenRouter API are available. If you would like to use any other API, please submit a PR or send us a message.
+Currently, OpenAI API, OpenAI-compatible APIs, Gemini API, Gemini Nano
+(Chrome Built-in AI), Claude API, xAI API, Z.ai API, Kimi API, and OpenRouter
+API are available. If you would like to use any other API, please submit a PR
+or send us a message.
 
 ### Available Providers
 
 Currently, the following AI provider is built-in:
 
 - **OpenAI**: Supports models like GPT-5 family (Nano/Mini/Standard/5.1/5.4/5.4 Mini/5.4 Nano/5.4 Pro), GPT-4.1 (including Mini/Nano), GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini
-- **Gemini**: Supports models like Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
+- **Gemini**: Supports models like Gemma 4 31B IT, Gemma 4 26B A4B IT, Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
+- **Gemini Nano**: Supports the built-in Chrome `gemini-nano` model without an API key (Chrome 138+ with Prompt API flags enabled)
 - **Claude**: Supports models like Claude 4.6 Opus, Claude 4.5 Opus/Sonnet/Haiku, Claude 4 Sonnet/Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
+- **xAI**: Supports Grok 4.20 and Grok 4.1 Fast model families
 - **Z.ai**: Supports models like GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
 - **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi)

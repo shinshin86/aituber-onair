@@ -10,6 +10,7 @@ import {
   OpenAICompatibleChatServiceOptions,
   OpenRouterChatServiceOptions,
   GeminiChatServiceOptions,
+  GeminiNanoChatServiceOptions,
   ClaudeChatServiceOptions,
   ZAIChatServiceOptions,
   KimiChatServiceOptions,
@@ -318,6 +319,16 @@ export class AITuberOnAirCore extends EventEmitter {
           ...baseOptions,
           ...(providerOptions as ProviderOptionsByName<'gemini'> | undefined),
         } as GeminiChatServiceOptions;
+      }
+      case 'gemini-nano': {
+        const geminiNanoOptions = providerOptions as
+          | ProviderOptionsByName<'gemini-nano'>
+          | undefined;
+
+        return {
+          ...(baseOptions.model ? { model: baseOptions.model } : {}),
+          ...geminiNanoOptions,
+        } as GeminiNanoChatServiceOptions;
       }
       case 'claude': {
         return {

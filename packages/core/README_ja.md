@@ -1219,8 +1219,11 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 - **AivisSpeech**: AIを活用した音声合成
 - **Aivis Cloud**: SSMLサポート、感情強度制御、複数出力形式（WAV、FLAC、MP3、AAC、Opus）対応の高品質日本語音声合成サービス
 - **OpenAI TTS**: OpenAIのText-to-Speech API
+- **Gemini TTS**: Gemini API ベースの音声合成。preview TTS モデル切り替えとスタイルプロンプトに対応
+- **xAI TTS**: codec、sample rate、bit rate を切り替え可能な xAI の音声合成
 - **OpenAI-Compatible TTS**: 自己ホストやサードパーティーの `/v1/audio/speech` 互換エンドポイント
 - **MiniMax**: 24言語対応の多言語TTS、HD品質対応（APIキーとGroupIdの両方が必要 - 使用例を参照）
+- **Piper Plus**: ONNX Runtime Web と OpenJTalk assets を使うブラウザ内完結の WASM TTS
 - **None**: 音声なしモード（音声出力を行わない）
 
 音声エンジンの切り替えは`updateVoiceService`メソッドで動的に行えます：
@@ -1344,15 +1347,19 @@ aituber.updateVoiceService({
 ## AIプロバイダーシステム
 
 AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用しており、様々なAI APIとの連携が可能です。
-現在はOpenAI API、OpenAI互換API、Gemini API、Claude API、Z.ai API、Kimi API、OpenRouter APIが利用可能です。もし利用したいAPIがあればPRやメッセージをください。
+現在はOpenAI API、OpenAI互換API、Gemini API、Gemini Nano
+（Chrome Built-in AI）、Claude API、xAI API、Z.ai API、Kimi API、
+OpenRouter APIが利用可能です。もし利用したいAPIがあればPRやメッセージをください。
 
 ### 利用可能なプロバイダー
 
 現在、以下のAIプロバイダーが組み込まれています：
 
 - **OpenAI**: GPT-5系（Nano/Mini/Standard/5.1/5.4/5.4 Mini/5.4 Nano/5.4 Pro）、GPT-4.1（Mini/Nano含む）、GPT-4o、GPT-4o-mini、O3-mini、o1、o1-miniのモデルをサポート
-- **Gemini**: Gemini 3.1 Pro Preview、Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite Preview、Gemini 2.0 Flash、Gemini 2.0 Flash-Liteのモデルをサポート
+- **Gemini**: Gemma 4 31B IT、Gemma 4 26B A4B IT、Gemini 3.1 Pro Preview、Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite Preview、Gemini 2.0 Flash、Gemini 2.0 Flash-Liteのモデルをサポート
+- **Gemini Nano**: Chrome内蔵の `gemini-nano` モデルを API キー不要でサポート（Chrome 138+ かつ Prompt API のフラグ有効化が必要）
 - **Claude**: Claude 4.6 Opus、Claude 4.5 Opus/Sonnet/Haiku、Claude 4 Sonnet/Opus、Claude 3.7 Sonnet、Claude 3.5 Haiku/Sonnet、Claude 3 Haikuのモデルをサポート
+- **xAI**: Grok 4.20 系および Grok 4.1 Fast 系モデルをサポート
 - **Z.ai**: GLM-5/GLM-5-Turbo（テキスト専用）、GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashXのモデルをサポート
 - **Kimi**: Kimi K2.5（`kimi-k2.5`、ビジョン対応）をサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート

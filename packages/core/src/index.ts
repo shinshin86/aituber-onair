@@ -16,6 +16,7 @@ export {
   type ChatServiceOptionsByProvider,
   type ChatProviderName,
   type OpenAICompatibleChatServiceOptions,
+  type GeminiNanoChatServiceOptions,
   type ChatServiceProvider,
   type XAIChatServiceOptions,
   // OpenAI provider
@@ -25,6 +26,9 @@ export {
   // Gemini provider
   GeminiChatService,
   GeminiChatServiceProvider,
+  // Gemini Nano provider
+  GeminiNanoChatService,
+  GeminiNanoChatServiceProvider,
   // Claude provider
   ClaudeChatService,
   ClaudeChatServiceProvider,
@@ -88,6 +92,10 @@ export {
   GPT5_PRESETS,
   type GPT5PresetKey,
   // Gemini model constants
+  MODEL_GEMINI_NANO,
+  GEMINI_NANO_MAX_CONTEXT_MESSAGES,
+  MODEL_GEMMA_4_31B_IT,
+  MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
@@ -213,13 +221,17 @@ export {
   AivisCloudEngine,
   OpenAiEngine,
   OpenAiCompatibleEngine,
+  GeminiTtsEngine,
   MinimaxEngine,
   XaiEngine,
+  PiperPlusEngine,
   // Types
+  type GeminiTtsModel,
   type MinimaxModel,
   type MinimaxVoiceSettingsOptions,
   type MinimaxAudioSettingsOptions,
   type MinimaxAudioFormat,
+  type PiperPlusAssets,
   type XaiCodec,
   type XaiSampleRate,
   type XaiBitRate,
@@ -249,6 +261,7 @@ export {
   AIVIS_CLOUD_API_URL,
   OPENAI_TTS_API_URL,
   OPENAI_COMPATIBLE_TTS_API_URL,
+  GEMINI_TTS_API_URL,
   MINIMAX_GLOBAL_API_URL,
   MINIMAX_CHINA_API_URL,
   MINIMAX_GLOBAL_VOICE_LIST_URL,

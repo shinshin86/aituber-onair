@@ -12,13 +12,14 @@ This example application serves as a practical implementation guide for integrat
 
 - **🤖 Multi-Provider LLM Support**
   - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.4/5.4 Mini/5.4 Nano/5.4 Pro)
+  - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
-  - Google Gemini (Pro, Flash, Thinking models)
+  - Google Gemini (Gemma 4, Pro, Flash, Thinking models)
   - Anthropic Claude (4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
   - Seamless provider switching
 
 - **🎙️ Comprehensive Voice Synthesis**
-  - 7 different TTS engines with unique capabilities
+  - 10 different TTS engines with unique capabilities
   - Real-time voice streaming
   - Speaker selection for each engine
   - Emotion-aware synthesis support
@@ -92,8 +93,8 @@ npm run fmt      # Format code with Biome
 
 Click the "設定" (Settings) button to configure your AI provider:
 
-1. **Select Provider**: Choose from OpenAI, OpenAI-Compatible, Gemini, Claude, Z.ai, Kimi, or OpenRouter
-2. **Enter API Key**: Provide your provider's API key (`openai-compatible` is optional)
+1. **Select Provider**: Choose from OpenAI, Gemini, Gemini Nano, Claude, Z.ai, Kimi, xAI, OpenRouter, or OpenAI-Compatible
+2. **Enter API Key**: Provide your provider's API key (`openai-compatible` and `gemini-nano` can work without one)
 3. **Choose Model**: Select the specific model to use
 4. **System Prompt**: Customize the AI's behavior and personality
 
@@ -114,10 +115,16 @@ Click the "設定" (Settings) button to configure your AI provider:
   configuration, but unsupported endpoint/model combinations fail at runtime
 
 **Gemini:**
+- Gemma 4 series (31B IT, 26B A4B IT)
 - Gemini 3 preview series (3.1 Pro Preview, 3.1 Flash-Lite Preview, 3 Pro Preview, 3 Flash Preview)
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)
 - Gemini 2.0 series (Flash Lite, Flash)
+
+**Gemini Nano:**
+- Built-in Chrome `gemini-nano` model
+- No API key required
+- Requires Chrome 138+ with `#optimization-guide-on-device-model` and `#prompt-api-for-gemini-nano` enabled
 
 **Claude:**
 - Claude 4.6 Sonnet
@@ -172,47 +179,46 @@ When using GPT-5 models, additional configuration options become available:
 
 ### Supported TTS Engines
 
-The application supports 7 different Text-to-Speech engines:
+The application supports 10 different Text-to-Speech engines:
 
 #### 1. **OpenAI TTS**
 - Requires OpenAI API key
 - Voices: alloy, echo, fable, onyx, nova, shimmer
 - High-quality neural voices
 
-#### 2. **VOICEVOX**
+#### 2. **Gemini TTS**
+- Requires Google API key
+- Voices: Zephyr, Aoede, Kore, Leda, Puck, Charon, Fenrir, Orus
+- Supports model selection, language code, and style prompt
+
+#### 3. **OpenAI-Compatible TTS**
+- Optional API key
+- Custom `/v1/audio/speech` endpoints
+- Configurable endpoint, model, voice, and speed
+
+#### 4. **VOICEVOX**
 - Free, open-source Japanese TTS
 - No API key required
 - Requires local VOICEVOX server running
 - Dynamic speaker fetching
 
-#### 3. **Aivis Speech**
+#### 5. **Aivis Speech**
 - Local TTS engine
 - No API key required
 - Requires Aivis Speech server
 - Multiple character voices
 
-#### 4. **Aivis Cloud API**
+#### 6. **Aivis Cloud API**
 - Cloud-based TTS service
 - Requires API key
 - Advanced voice parameters
 - Emotion control support
 
-#### 5. **VoicePeak**
+#### 7. **VoicePeak**
 - Local TTS engine
 - No API key required
 - 6 built-in speakers
 - Natural Japanese voices
-
-#### 6. **VOICEVOX**
-- Local Japanese TTS engine
-- No API key required
-- Adjustable speed/pitch/intonation/volume and silence lengths
-- Supports sampling rate, mono/stereo, and query flags (katakana English / interrogative upspeak)
-
-#### 7. **AivisSpeech**
-- Local TTS engine extending the VOICEVOX-compatible API
-- Adds dedicated controls for intonation intensity and tempo dynamics
-- Supports silence duration tuning, selectable sampling rates, and mono/stereo output
 
 #### 8. **MiniMax**
 - Chinese TTS service
@@ -221,6 +227,17 @@ The application supports 7 different Text-to-Speech engines:
 - Global endpoint support
 - Supports speed/volume/pitch tuning and audio settings  
   (sample rate: 8k/16k/22.05k/24k/32k/44.1k Hz, bitrate: 32/64/128/256 kbps)
+
+#### 9. **xAI TTS**
+- Requires xAI API key
+- Voices: ara, eve, leo, rex, sal
+- Supports language, codec, sample rate, and bitrate
+
+#### 10. **Piper Plus**
+- Browser-side WASM TTS
+- No API key required
+- Requires `public/piper/` assets
+- Supports speed and noise scale
 
 ### Speech Chunking Settings
 
@@ -250,6 +267,72 @@ speechChunking: {
 3. Enter API key if required
 4. Choose speaker/voice from available options
 5. Click "設定を反映" to apply
+
+### Piper Plus Setup
+
+`piperPlus` is a browser-side WASM TTS engine using ONNX Runtime Web and
+OpenJTalk. Its runtime assets are not bundled with this example because of
+their size and third-party license requirements. You need to place them under
+`public/piper/` before use.
+
+### Quick setup (recommended)
+
+```bash
+cd packages/core/examples/react-basic
+curl -L -o piper-assets.tar.gz \
+  https://github.com/shinshin86/chrome-on-aituber/releases/download/piper-assets-v1/piper-assets.tar.gz
+mkdir -p public
+tar -xzf piper-assets.tar.gz -C public/
+rm piper-assets.tar.gz
+npm run dev
+```
+
+This downloads and extracts the full asset set (about 85 MB) into
+`public/piper/`. After extraction, start the dev server and select
+`Piper Plus`.
+
+### Reuse an existing asset directory
+
+You can also reuse the prepared assets from the voice example:
+
+```bash
+cd packages/core/examples/react-basic
+mkdir -p public
+cp -R ../../../voice/examples/react-basic/public/piper public/
+```
+
+### Manual setup
+
+If you prefer to collect assets yourself, you need files from these 3 sources:
+
+1. [piper-plus](https://github.com/ayutaz/piper-plus) (`dev` branch):
+   `piper-global-loader.js`, `src/`, OpenJTalk WASM/dictionary, HTS voice
+2. [onnxruntime-web](https://www.npmjs.com/package/onnxruntime-web):
+   `ort.min.js`, `ort-wasm-simd.wasm`, `ort-wasm.wasm`
+3. [piper-plus-tsukuyomi-chan](https://huggingface.co/ayousanz/piper-plus-tsukuyomi-chan):
+   ONNX model and config JSON
+
+Place them under `public/piper/` following this layout:
+
+```text
+public/piper/
+├── piper-global-loader.js
+├── dist/
+│   ├── ort.min.js
+│   ├── ort-wasm-simd.wasm
+│   ├── openjtalk.js
+│   └── openjtalk.wasm
+├── src/
+├── assets/
+│   ├── dict/
+│   └── voice/
+└── models/
+    ├── tsukuyomi-wavlm-300epoch.onnx
+    └── tsukuyomi-config.json
+```
+
+For the original setup script, detailed asset sources, and license notes, see
+[`packages/voice/examples/react-basic/README.md`](../../../voice/examples/react-basic/README.md).
 
 ## 🎨 AI Avatar Generation
 
