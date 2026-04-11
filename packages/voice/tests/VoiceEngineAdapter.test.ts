@@ -612,6 +612,75 @@ describe('VoiceEngineAdapter', () => {
         undefined,
       );
     });
+
+    it('should reuse the same PiperPlus engine across multiple speaks', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'piperPlus',
+        speaker: 'tsukuyomi',
+        onPlay: vi.fn(),
+      };
+
+      const piperEngine = {
+        ...mockEngine,
+        fetchAudio: vi.fn().mockResolvedValue(new ArrayBuffer(1024)),
+      };
+
+      mockGetEngine.mockImplementation((engineType: string) => {
+        if (engineType === 'piperPlus') {
+          return piperEngine;
+        }
+
+        return mockEngine;
+      });
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: '1回目' });
+      await adapter.speak({ text: '2回目' });
+
+      expect(mockGetEngine).toHaveBeenCalledTimes(1);
+      expect(piperEngine.fetchAudio).toHaveBeenCalledTimes(2);
+    });
+
+    it('should drop the cached PiperPlus engine after switching away', async () => {
+      const piperEngine = {
+        ...mockEngine,
+        fetchAudio: vi.fn().mockResolvedValue(new ArrayBuffer(1024)),
+      };
+      const minimaxEngine = {
+        ...mockEngine,
+        fetchAudio: vi.fn().mockResolvedValue(new ArrayBuffer(1024)),
+      };
+
+      mockGetEngine.mockImplementation((engineType: string) => {
+        if (engineType === 'piperPlus') {
+          return piperEngine;
+        }
+
+        return minimaxEngine;
+      });
+
+      const adapter = new VoiceEngineAdapter({
+        engineType: 'piperPlus',
+        speaker: 'tsukuyomi',
+        onPlay: vi.fn(),
+      });
+
+      await adapter.speak({ text: 'PiperPlus' });
+
+      adapter.switchEngine({
+        engineType: 'minimax',
+        speaker: 'minimax-speaker',
+        groupId: 'group-id',
+        onPlay: vi.fn(),
+      });
+
+      await adapter.speak({ text: 'MiniMax' });
+
+      expect(mockGetEngine).toHaveBeenNthCalledWith(1, 'piperPlus');
+      expect(mockGetEngine).toHaveBeenNthCalledWith(2, 'minimax');
+      expect(piperEngine.fetchAudio).toHaveBeenCalledTimes(1);
+      expect(minimaxEngine.fetchAudio).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('Gemini TTS Integration', () => {
@@ -1124,6 +1193,36 @@ describe('VoiceEngineAdapter', () => {
         'minimax-speaker',
         'minimax-api-key',
       );
+    });
+
+    it('should keep creating new engines for non-Piper providers', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'openai',
+        speaker: 'alloy',
+        apiKey: 'openai-api-key',
+        onPlay: vi.fn(),
+      };
+
+      const openAiEngine1 = {
+        ...mockEngine,
+        fetchAudio: vi.fn().mockResolvedValue(new ArrayBuffer(1024)),
+      };
+      const openAiEngine2 = {
+        ...mockEngine,
+        fetchAudio: vi.fn().mockResolvedValue(new ArrayBuffer(1024)),
+      };
+
+      mockGetEngine
+        .mockReturnValueOnce(openAiEngine1)
+        .mockReturnValueOnce(openAiEngine2);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: '1回目' });
+      await adapter.speak({ text: '2回目' });
+
+      expect(mockGetEngine).toHaveBeenCalledTimes(2);
+      expect(openAiEngine1.fetchAudio).toHaveBeenCalledTimes(1);
+      expect(openAiEngine2.fetchAudio).toHaveBeenCalledTimes(1);
     });
   });
 });
