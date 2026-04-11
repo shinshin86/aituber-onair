@@ -1,5 +1,12 @@
 # @aituber-onair/core
 
+## 0.25.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aituber-onair/voice@0.12.1
+
 ## 0.25.0
 
 ### Minor Changes
