@@ -1,5 +1,17 @@
 # @aituber-onair/voice
 
+## 0.12.1
+
+### Patch Changes
+
+- Prevent redundant Piper Plus reinitialization when identical assets are
+  applied again to the same engine instance.
+- Reuse the same Piper Plus engine inside `VoiceEngineAdapter` across repeated
+  speaks while keeping other providers on the existing per-request engine
+  creation path.
+- Add regression tests covering repeated Piper Plus playback, engine switching,
+  and unchanged behavior for non-Piper providers.
+
 ## 0.12.0
 
 ### Minor Changes
