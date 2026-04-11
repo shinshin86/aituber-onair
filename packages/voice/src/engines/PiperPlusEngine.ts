@@ -78,10 +78,22 @@ export class PiperPlusEngine implements VoiceEngine {
   }
 
   setAssets(assets: PiperPlusAssets): void {
-    this.assets = {
+    const nextAssets = {
       ...assets,
       basePath: normalizeBasePath(assets.basePath),
     };
+
+    if (
+      this.assets &&
+      this.assets.basePath === nextAssets.basePath &&
+      this.assets.modelConfigFile === nextAssets.modelConfigFile &&
+      this.assets.modelFile === nextAssets.modelFile &&
+      this.assets.voiceFile === nextAssets.voiceFile
+    ) {
+      return;
+    }
+
+    this.assets = nextAssets;
     this.initialized = false;
     this.initPromise = null;
   }

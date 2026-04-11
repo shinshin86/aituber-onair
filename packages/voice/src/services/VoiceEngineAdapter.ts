@@ -44,6 +44,7 @@ export class VoiceEngineAdapter implements VoiceService {
   private isProcessingQueue = false;
   private activeRequest?: SpeechRequest;
   private requestIdCounter = 0;
+  private cachedPiperPlusEngine?: VoiceEngine;
 
   /**
    * Constructor
@@ -182,17 +183,12 @@ export class VoiceEngineAdapter implements VoiceService {
   private async fetchAudioForScreenplay(
     screenplay: ChatScreenplay,
   ): Promise<ArrayBuffer> {
-    // Import existing VoiceEngineFactory dynamically
-    const { VoiceEngineFactory } = await import(
-      '../engines/VoiceEngineFactory'
-    );
-
     const talk: Talk = {
       style: this.mapEmotionToStyle(screenplay.emotion),
       message: screenplay.text,
     };
 
-    const engine = VoiceEngineFactory.getEngine(this.options.engineType);
+    const engine = await this.getEngine();
 
     applyOptionsToEngine(engine, this.options);
 
@@ -202,6 +198,24 @@ export class VoiceEngineAdapter implements VoiceService {
       this.options.speaker ?? '',
       this.options.apiKey,
     );
+  }
+
+  private async getEngine(): Promise<VoiceEngine> {
+    const { VoiceEngineFactory } = await import(
+      '../engines/VoiceEngineFactory'
+    );
+
+    if (this.options.engineType === 'piperPlus') {
+      if (!this.cachedPiperPlusEngine) {
+        this.cachedPiperPlusEngine = VoiceEngineFactory.getEngine(
+          this.options.engineType,
+        );
+      }
+
+      return this.cachedPiperPlusEngine;
+    }
+
+    return VoiceEngineFactory.getEngine(this.options.engineType);
   }
 
   private async playAudioBuffer(
@@ -293,6 +307,13 @@ export class VoiceEngineAdapter implements VoiceService {
    * @param options New engine options
    */
   switchEngine(options: VoiceServiceOptions): void {
+    if (
+      this.options.engineType === 'piperPlus' &&
+      options.engineType !== 'piperPlus'
+    ) {
+      this.cachedPiperPlusEngine = undefined;
+    }
+
     this.options = options;
     this.bindOnCompleteCallback();
   }

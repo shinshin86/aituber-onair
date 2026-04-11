@@ -222,6 +222,34 @@ describe('PiperPlusEngine', () => {
     expect((engine as any).noiseScale).toBe(0.55);
   });
 
+  it('should keep initialization when the same assets are applied again', async () => {
+    const runtime = createRuntimeMocks();
+    const engine = new PiperPlusEngine();
+    engine.setAssets(assets);
+
+    const initializeSpy = vi.spyOn(engine, 'initialize');
+
+    await engine.fetchAudio(
+      { style: 'neutral', message: 'こんにちは' },
+      'tsukuyomi',
+    );
+
+    engine.setAssets({
+      ...assets,
+      basePath: '/piper',
+    });
+
+    await engine.fetchAudio(
+      { style: 'neutral', message: 'もう一度' },
+      'tsukuyomi',
+    );
+
+    expect(initializeSpy).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+    runtime.restore();
+  });
+
   it('should lazily initialize on first fetchAudio and return WAV data', async () => {
     const runtime = createRuntimeMocks();
     const engine = new PiperPlusEngine();
