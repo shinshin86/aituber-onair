@@ -1,5 +1,18 @@
 # @aituber-onair/chat
 
+## 0.25.1
+
+### Patch Changes
+
+- Fixed Gemini Nano `responseLength` handling by injecting an English
+  token-budget instruction into the system prompt, since the Chrome
+  on-device LanguageModel API does not expose a max output length parameter
+  and the option was previously ignored. The instruction is language-neutral
+  so it works across any `expectedOutputLanguages`.
+- Also replaced the hardcoded Japanese conversation-history header in the
+  Gemini Nano system prompt with an English equivalent, for the same
+  multilingual reason.
+
 ## 0.25.0
 
 ### Minor Changes
