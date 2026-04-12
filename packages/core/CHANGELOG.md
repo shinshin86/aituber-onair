@@ -1,5 +1,14 @@
 # @aituber-onair/core
 
+## 0.25.2
+
+### Patch Changes
+
+- Picked up the Gemini Nano `responseLength` handling and multilingual
+  conversation-history prompt fixes from `@aituber-onair/chat@0.25.1`.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.25.1
+
 ## 0.25.1
 
 ### Patch Changes
