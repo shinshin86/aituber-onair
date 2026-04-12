@@ -5,7 +5,10 @@ import {
   MODEL_GEMINI_NANO,
   GEMINI_NANO_MAX_CONTEXT_MESSAGES,
 } from '../../../constants/geminiNano';
-import { ChatResponseLength } from '../../../constants/chat';
+import {
+  type ChatResponseLength,
+  MAX_TOKENS_BY_LENGTH,
+} from '../../../constants/chat';
 import type { GeminiNanoChatServiceOptions } from '../ChatServiceProvider';
 
 /**
@@ -49,7 +52,6 @@ export class GeminiNanoChatService implements ChatService {
     this.expectedInputLanguages = options.expectedInputLanguages ?? ['ja'];
     this.expectedOutputLanguages = options.expectedOutputLanguages ?? ['ja'];
     this._responseLength = options.responseLength;
-    void this._responseLength;
   }
 
   getModel(): string {
@@ -172,7 +174,7 @@ export class GeminiNanoChatService implements ChatService {
     systemPrompt: string,
     contextHistory: Message[],
   ): Promise<LanguageModelSession> {
-    let prompt = systemPrompt;
+    let prompt = this.buildSystemPrompt(systemPrompt);
 
     // Embed conversation history into system prompt (exclude last user msg)
     const historyMessages = contextHistory.slice(0, -1);
@@ -181,7 +183,7 @@ export class GeminiNanoChatService implements ChatService {
         .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
         .join('\n');
       prompt +=
-        '\n\n以下はこれまでの会話履歴です。この文脈を踏まえて回答してください:\n' +
+        '\n\nThe following is the prior conversation history. Use it as context for your response:\n' +
         history;
     }
 
@@ -194,5 +196,37 @@ export class GeminiNanoChatService implements ChatService {
         { type: 'text', languages: this.expectedOutputLanguages },
       ],
     });
+  }
+
+  private buildSystemPrompt(systemPrompt?: string): string {
+    const promptParts: string[] = [];
+
+    if (systemPrompt) {
+      promptParts.push(systemPrompt);
+    }
+
+    const lengthInstruction = this.getResponseLengthInstruction();
+    if (lengthInstruction) {
+      promptParts.push(lengthInstruction);
+    }
+
+    return promptParts.join('\n\n');
+  }
+
+  private getResponseLengthInstruction(): string | undefined {
+    if (!this._responseLength) {
+      return undefined;
+    }
+
+    const maxTokens = MAX_TOKENS_BY_LENGTH[this._responseLength];
+    if (!maxTokens) {
+      return undefined;
+    }
+
+    // Chrome LanguageModel API does not expose a max output length parameter,
+    // so we inject a soft output-length instruction into the prompt instead.
+    // We express the instruction in English so it is language-neutral across
+    // any value of expectedOutputLanguages.
+    return `Please keep your response concise, within approximately ${maxTokens} tokens.`;
   }
 }
