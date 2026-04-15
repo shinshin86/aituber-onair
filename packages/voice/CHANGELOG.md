@@ -1,5 +1,17 @@
 # @aituber-onair/voice
 
+## 0.13.0
+
+### Minor Changes
+
+- Add support for `gemini-3.1-flash-tts-preview` in Gemini TTS.
+  - Promote Gemini 3.1 Flash TTS Preview to an explicit supported model and
+    make it the default model for `GeminiTtsEngine`.
+  - Expand the React example with the latest Gemini prebuilt voice list and
+    update Gemini TTS documentation in English and Japanese.
+  - Keep the existing `geminiTtsPrompt` option so style and audio-tag
+    instructions continue to work without public API changes.
+
 ## 0.12.1
 
 ### Patch Changes

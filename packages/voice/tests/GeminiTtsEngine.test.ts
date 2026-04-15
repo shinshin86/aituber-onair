@@ -37,14 +37,14 @@ describe('GeminiTtsEngine', () => {
     const engine = new GeminiTtsEngine();
 
     engine.setApiEndpoint('https://example.googleapis.com/v1beta/');
-    engine.setModel('gemini-2.5-pro-preview-tts');
+    engine.setModel('gemini-3.1-flash-tts-preview');
     engine.setLanguageCode('en-US');
     engine.setPrompt('Speak cheerfully');
 
     expect((engine as any).baseUrl).toBe(
       'https://example.googleapis.com/v1beta',
     );
-    expect((engine as any).model).toBe('gemini-2.5-pro-preview-tts');
+    expect((engine as any).model).toBe('gemini-3.1-flash-tts-preview');
     expect((engine as any).languageCode).toBe('en-US');
     expect((engine as any).prompt).toBe('Speak cheerfully');
   });
@@ -60,7 +60,7 @@ describe('GeminiTtsEngine', () => {
     expect((engine as any).baseUrl).toBe(
       'https://generativelanguage.googleapis.com/v1beta',
     );
-    expect((engine as any).model).toBe('gemini-2.5-flash-preview-tts');
+    expect((engine as any).model).toBe('gemini-3.1-flash-tts-preview');
     expect((engine as any).languageCode).toBe('ja-JP');
     expect((engine as any).prompt).toBeUndefined();
   });
@@ -81,7 +81,7 @@ describe('GeminiTtsEngine', () => {
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-tts-preview:generateContent',
     );
     expect(init.headers).toEqual({
       'Content-Type': 'application/json',
@@ -223,7 +223,7 @@ describe('GeminiTtsEngine', () => {
 
     const [url] = fetchMock.mock.calls[0];
     expect(url).toBe(
-      'https://example.googleapis.com/custom/models/gemini-2.5-flash-preview-tts:generateContent',
+      'https://example.googleapis.com/custom/models/gemini-3.1-flash-tts-preview:generateContent',
     );
   });
 

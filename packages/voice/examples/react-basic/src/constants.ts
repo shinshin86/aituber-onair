@@ -31,7 +31,7 @@ export const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'Your Google API key',
     speaker: 'Zephyr',
-    defaultModel: 'gemini-2.5-flash-preview-tts' as GeminiTtsModel,
+    defaultModel: 'gemini-3.1-flash-tts-preview' as GeminiTtsModel,
     defaultLanguageCode: 'ja-JP',
   },
   openaiCompatible: {
@@ -107,6 +107,8 @@ export const MINIMAX_MODELS: Record<MinimaxModel, string> = {
 };
 
 export const GEMINI_TTS_MODELS: Record<string, string> = {
+  'gemini-3.1-flash-tts-preview':
+    '3.1 Flash TTS Preview — Expressive speech with audio-tag control',
   'gemini-2.5-flash-preview-tts': 'Flash Preview TTS — Optimized for latency',
   'gemini-2.5-pro-preview-tts': 'Pro Preview TTS — Highest quality control',
 };
@@ -132,14 +134,36 @@ export const XAI_VOICES: Record<string, string> = {
 };
 
 export const GEMINI_TTS_VOICES: Record<string, string> = {
-  Zephyr: 'Zephyr (Female)',
-  Aoede: 'Aoede (Female)',
-  Kore: 'Kore (Female)',
-  Leda: 'Leda (Female)',
-  Puck: 'Puck (Male)',
-  Charon: 'Charon (Male)',
-  Fenrir: 'Fenrir (Male)',
-  Orus: 'Orus (Male)',
+  Zephyr: 'Zephyr — Bright',
+  Puck: 'Puck — Upbeat',
+  Charon: 'Charon — Informative',
+  Kore: 'Kore — Firm',
+  Fenrir: 'Fenrir — Excitable',
+  Leda: 'Leda — Youthful',
+  Orus: 'Orus — Firm',
+  Aoede: 'Aoede — Breezy',
+  Callirrhoe: 'Callirrhoe — Easy-going',
+  Autonoe: 'Autonoe — Bright',
+  Enceladus: 'Enceladus — Breathy',
+  Iapetus: 'Iapetus — Clear',
+  Umbriel: 'Umbriel — Easy-going',
+  Algieba: 'Algieba — Smooth',
+  Despina: 'Despina — Smooth',
+  Erinome: 'Erinome — Clear',
+  Algenib: 'Algenib — Gravelly',
+  Rasalgethi: 'Rasalgethi — Informative',
+  Laomedeia: 'Laomedeia — Upbeat',
+  Achernar: 'Achernar — Soft',
+  Alnilam: 'Alnilam — Firm',
+  Schedar: 'Schedar — Even',
+  Gacrux: 'Gacrux — Mature',
+  Pulcherrima: 'Pulcherrima — Forward',
+  Achird: 'Achird — Friendly',
+  Zubenelgenubi: 'Zubenelgenubi — Casual',
+  Vindemiatrix: 'Vindemiatrix — Gentle',
+  Sadachbia: 'Sadachbia — Lively',
+  Sadaltager: 'Sadaltager — Knowledgeable',
+  Sulafat: 'Sulafat — Warm',
 };
 
 export interface SpeakerOption {

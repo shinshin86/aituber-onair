@@ -247,17 +247,17 @@ const voiceService = new VoiceService({
 - **High Quality**: Professional-grade voice synthesis
 
 ### Gemini TTS
-Gemini API text-to-speech with Gemini preview TTS models and simple API key
-authentication.
+Gemini API text-to-speech with Gemini preview TTS models, including
+`gemini-3.1-flash-tts-preview`, and simple API key authentication.
 
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'geminiTts',
   speaker: 'Zephyr',
   apiKey: 'your-google-api-key',
-  geminiTtsModel: 'gemini-2.5-flash-preview-tts',
+  geminiTtsModel: 'gemini-3.1-flash-tts-preview',
   geminiTtsLanguageCode: 'ja-JP',
-  geminiTtsPrompt: 'Speak in a cheerful tone', // Optional style instruction
+  geminiTtsPrompt: 'Speak in a cheerful tone', // Optional style or audio-tag instruction
   geminiTtsApiUrl:
     'https://generativelanguage.googleapis.com/v1beta', // Optional Gemini API base URL
 });
@@ -265,7 +265,7 @@ const voiceService = new VoiceService({
 
 **Note**: Use a standard Google API key. `apiKey` is sent as
 `x-goog-api-key` to the Gemini API. Available voices include Zephyr, Aoede,
-Kore, Puck, Charon, and more.
+Kore, Puck, Charon, and 25+ more prebuilt voices.
 
 ### None (Silent Mode)
 No audio output - useful for testing or text-only scenarios.

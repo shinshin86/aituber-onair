@@ -689,7 +689,7 @@ describe('VoiceEngineAdapter', () => {
         engineType: 'geminiTts',
         speaker: 'Zephyr',
         apiKey: 'test-api-key',
-        geminiTtsModel: 'gemini-2.5-pro-preview-tts',
+        geminiTtsModel: 'gemini-3.1-flash-tts-preview',
         geminiTtsLanguageCode: 'en-US',
         geminiTtsPrompt: 'Speak cheerfully',
         geminiTtsApiUrl: 'https://generativelanguage.googleapis.com/v1beta',
@@ -703,7 +703,7 @@ describe('VoiceEngineAdapter', () => {
       await adapter.speak({ text: 'Gemini TTS test' });
 
       expect(mockEngine.setModel).toHaveBeenCalledWith(
-        'gemini-2.5-pro-preview-tts',
+        'gemini-3.1-flash-tts-preview',
       );
       expect(mockEngine.setLanguageCode).toHaveBeenCalledWith('en-US');
       expect(mockEngine.setPrompt).toHaveBeenCalledWith('Speak cheerfully');
