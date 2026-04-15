@@ -245,17 +245,17 @@ const voiceService = new VoiceService({
 - **高品質**: プロフェッショナルグレードの音声合成
 
 ### Gemini TTS
-Gemini preview TTS モデルを Gemini API 経由で利用する音声合成です。
-認証は API キーのみです。
+`gemini-3.1-flash-tts-preview` を含む Gemini preview TTS モデルを
+Gemini API 経由で利用する音声合成です。認証は API キーのみです。
 
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'geminiTts',
   speaker: 'Zephyr',
   apiKey: 'your-google-api-key',
-  geminiTtsModel: 'gemini-2.5-flash-preview-tts',
+  geminiTtsModel: 'gemini-3.1-flash-tts-preview',
   geminiTtsLanguageCode: 'ja-JP',
-  geminiTtsPrompt: '明るく元気な声で話してください', // オプション：スタイル指示
+  geminiTtsPrompt: '明るく元気な声で話してください', // オプション：スタイル指示や audio-tag 指示
   geminiTtsApiUrl:
     'https://generativelanguage.googleapis.com/v1beta', // オプション：Gemini API のベース URL
 });
@@ -263,7 +263,7 @@ const voiceService = new VoiceService({
 
 **注意**：通常の Google API キーを利用します。`apiKey` は Gemini
 API に `x-goog-api-key` として送信されます。利用可能なボイスには
-Zephyr、Aoede、Kore、Puck、Charon などがあります。
+Zephyr、Aoede、Kore、Puck、Charon など 30 種類のプリセットボイスがあります。
 
 ### None（サイレントモード）
 音声出力なし - テストやテキストのみのシナリオに便利。

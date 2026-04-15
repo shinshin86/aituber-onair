@@ -3,11 +3,12 @@ import type { Talk } from '../types/voice';
 import type { VoiceEngine } from './VoiceEngine';
 
 export type GeminiTtsModel =
+  | 'gemini-3.1-flash-tts-preview'
   | 'gemini-2.5-flash-preview-tts'
   | 'gemini-2.5-pro-preview-tts'
   | (string & {});
 
-const DEFAULT_GEMINI_TTS_MODEL: GeminiTtsModel = 'gemini-2.5-flash-preview-tts';
+const DEFAULT_GEMINI_TTS_MODEL: GeminiTtsModel = 'gemini-3.1-flash-tts-preview';
 const DEFAULT_LANGUAGE_CODE = 'ja-JP';
 
 interface GeminiGenerateContentResponse {
