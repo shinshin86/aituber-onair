@@ -15,6 +15,7 @@
   - `Max candidates` は「疎通確認する `:free` 候補の最大件数」
     （「N件見つかるまで試行」ではありません）
 - TTS エンジン切り替え: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `piperPlus`, `none`
+- `geminiTts` は `gemini-3.1-flash-tts-preview` を既定利用し、30 種類のプリセットボイスとスタイル / audio-tag プロンプト入力に対応
 - スピーカー一覧の動的取得と選択:
   - `voicevox` / `aivisSpeech`: `/speakers` から取得
   - `minimax`: APIキー入力後に `query/tts_speakers` から取得

@@ -1219,7 +1219,7 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 - **AivisSpeech**: AIを活用した音声合成
 - **Aivis Cloud**: SSMLサポート、感情強度制御、複数出力形式（WAV、FLAC、MP3、AAC、Opus）対応の高品質日本語音声合成サービス
 - **OpenAI TTS**: OpenAIのText-to-Speech API
-- **Gemini TTS**: Gemini API ベースの音声合成。preview TTS モデル切り替えとスタイルプロンプトに対応
+- **Gemini TTS**: Gemini API ベースの音声合成。`gemini-3.1-flash-tts-preview` を含む preview TTS モデル切り替えと、スタイル / audio-tag プロンプトに対応
 - **xAI TTS**: codec、sample rate、bit rate を切り替え可能な xAI の音声合成
 - **OpenAI-Compatible TTS**: 自己ホストやサードパーティーの `/v1/audio/speech` 互換エンドポイント
 - **MiniMax**: 24言語対応の多言語TTS、HD品質対応（APIキーとGroupIdの両方が必要 - 使用例を参照）

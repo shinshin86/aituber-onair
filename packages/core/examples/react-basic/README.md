@@ -188,8 +188,9 @@ The application supports 10 different Text-to-Speech engines:
 
 #### 2. **Gemini TTS**
 - Requires Google API key
-- Voices: Zephyr, Aoede, Kore, Leda, Puck, Charon, Fenrir, Orus
-- Supports model selection, language code, and style prompt
+- Default model: `gemini-3.1-flash-tts-preview`
+- Voices: 30 prebuilt options including Zephyr, Aoede, Kore, Leda, Puck, Charon, Fenrir, and Orus
+- Supports model selection, language code, and style/audio-tag prompt
 
 #### 3. **OpenAI-Compatible TTS**
 - Optional API key

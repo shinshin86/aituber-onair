@@ -125,18 +125,41 @@ const MINIMAX_VOICES: Record<string, string> = {
 
 const XAI_TTS_SPEAKERS = ['ara', 'eve', 'leo', 'rex', 'sal'] as const;
 const GEMINI_TTS_MODELS = [
+  'gemini-3.1-flash-tts-preview',
   'gemini-2.5-flash-preview-tts',
   'gemini-2.5-pro-preview-tts',
 ] as const;
 const GEMINI_TTS_SPEAKERS = [
   'Zephyr',
-  'Aoede',
-  'Kore',
-  'Leda',
   'Puck',
   'Charon',
+  'Kore',
   'Fenrir',
+  'Leda',
   'Orus',
+  'Aoede',
+  'Callirrhoe',
+  'Autonoe',
+  'Enceladus',
+  'Iapetus',
+  'Umbriel',
+  'Algieba',
+  'Despina',
+  'Erinome',
+  'Algenib',
+  'Rasalgethi',
+  'Laomedeia',
+  'Achernar',
+  'Alnilam',
+  'Schedar',
+  'Gacrux',
+  'Pulcherrima',
+  'Achird',
+  'Zubenelgenubi',
+  'Vindemiatrix',
+  'Sadachbia',
+  'Sadaltager',
+  'Sulafat',
 ] as const;
 const PIPER_PLUS_BASE_PATH = `${import.meta.env.BASE_URL}piper/`;
 const PIPER_PLUS_MODEL_CONFIG_FILE = 'tsukuyomi-config.json';
@@ -665,8 +688,7 @@ const App: React.FC = () => {
       );
       setGeminiTtsLanguageCode(
         String(
-          VOICE_ENGINE_CONFIGS.geminiTts.defaultParams?.languageCode ||
-            'ja-JP',
+          VOICE_ENGINE_CONFIGS.geminiTts.defaultParams?.languageCode || 'ja-JP',
         ),
       );
       setGeminiTtsPrompt('');
@@ -1911,7 +1933,8 @@ const App: React.FC = () => {
           </div>
           {visionSupportLevel === 'unknown' && (
             <div style={{ color: '#6b7280' }}>
-              この endpoint / model の画像対応は事前判定できません。画像送信は試せますが、実行時に失敗する場合があります。
+              この endpoint / model
+              の画像対応は事前判定できません。画像送信は試せますが、実行時に失敗する場合があります。
             </div>
           )}
           {selectedVoiceEngine !== 'none' && (
@@ -2108,7 +2131,8 @@ const App: React.FC = () => {
                   {/* LLM Settings */}
                   {chatProvider === 'gemini-nano' ? (
                     <div style={{ marginBottom: '12px', color: '#495057' }}>
-                      Gemini Nano はブラウザ内蔵 AI を使うため API Key は不要です。
+                      Gemini Nano はブラウザ内蔵 AI を使うため API Key
+                      は不要です。
                     </div>
                   ) : (
                     <>
@@ -2118,7 +2142,9 @@ const App: React.FC = () => {
                       <input
                         type="password"
                         id="apiKey"
-                        placeholder={requiresApiKey ? '...' : '未入力で送信可能'}
+                        placeholder={
+                          requiresApiKey ? '...' : '未入力で送信可能'
+                        }
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
                       />
@@ -2231,7 +2257,8 @@ const App: React.FC = () => {
                         Chrome Built-in AI
                       </div>
                       <div style={{ fontSize: '0.95rem', marginBottom: '8px' }}>
-                        API Key は不要です。Chrome 138+ で Built-in AI を有効化して利用します。
+                        API Key は不要です。Chrome 138+ で Built-in AI
+                        を有効化して利用します。
                       </div>
                       <div style={{ fontSize: '0.95rem', marginBottom: '8px' }}>
                         {geminiNano.statusText ||
@@ -2255,8 +2282,8 @@ const App: React.FC = () => {
                       <div style={{ marginTop: '8px', fontSize: '0.9rem' }}>
                         Chrome 138+ が必要です。`chrome://flags` を開き、
                         `#optimization-guide-on-device-model` と
-                        `#prompt-api-for-gemini-nano` を `Enabled` に設定してから
-                        Chrome を再起動してください。
+                        `#prompt-api-for-gemini-nano` を `Enabled`
+                        に設定してから Chrome を再起動してください。
                       </div>
                       <div style={{ marginTop: '8px', fontSize: '0.9rem' }}>
                         フラグ有効化後に `Prepare Model` を押すとモデルの
@@ -2401,7 +2428,9 @@ const App: React.FC = () => {
                       {getResponseLengthOptionLabel(CHAT_RESPONSE_LENGTH.SHORT)}
                     </option>
                     <option value={CHAT_RESPONSE_LENGTH.MEDIUM}>
-                      {getResponseLengthOptionLabel(CHAT_RESPONSE_LENGTH.MEDIUM)}
+                      {getResponseLengthOptionLabel(
+                        CHAT_RESPONSE_LENGTH.MEDIUM,
+                      )}
                     </option>
                     <option value={CHAT_RESPONSE_LENGTH.LONG}>
                       {getResponseLengthOptionLabel(CHAT_RESPONSE_LENGTH.LONG)}
@@ -2423,8 +2452,8 @@ const App: React.FC = () => {
                         fontSize: '12px',
                       }}
                     >
-                      GPT-5系では途中終了を減らすため、実際の出力上限は
-                      model と reasoning effort に応じて自動補正されます。
+                      GPT-5系では途中終了を減らすため、実際の出力上限は model と
+                      reasoning effort に応じて自動補正されます。
                     </div>
                   )}
 
@@ -3144,7 +3173,7 @@ const App: React.FC = () => {
                         htmlFor="geminiTtsPrompt"
                         style={{ display: 'block', marginBottom: '6px' }}
                       >
-                        Style Prompt (optional):
+                        Style / Audio-tag Prompt (optional):
                       </label>
                       <input
                         id="geminiTtsPrompt"
@@ -3157,7 +3186,7 @@ const App: React.FC = () => {
 
                       <div style={{ fontSize: '0.8em', color: '#1864ab' }}>
                         Google の Gemini TTS API を利用します。音声は下の
-                        Speaker から選択できます。
+                        Speaker から選択でき、style / audio-tag 指示も渡せます。
                       </div>
                     </div>
                   )}
@@ -3334,9 +3363,7 @@ const App: React.FC = () => {
                         max="2"
                         step="0.05"
                         value={piperPlusNoiseScale}
-                        onChange={(e) =>
-                          setPiperPlusNoiseScale(e.target.value)
-                        }
+                        onChange={(e) => setPiperPlusNoiseScale(e.target.value)}
                         placeholder="例: 0.667"
                         style={{ width: '100%', marginBottom: '8px' }}
                       />
@@ -3352,7 +3379,8 @@ const App: React.FC = () => {
                             : `Piper Plus assets が未検出です。public/piper/ を配置してください。${piperPlus.error ? ` (${piperPlus.error})` : ''}`}
                       </div>
                       <div style={{ fontSize: '0.8em', color: '#5f3dc4' }}>
-                        Runtime assets はサイズとサードパーティライセンスの都合で
+                        Runtime assets
+                        はサイズとサードパーティライセンスの都合で
                         同梱していません。README の Piper Plus Setup を参照し、
                         `public/piper/` 配下に `dist/`, `src/`, `assets/`,
                         `models/` を配置してください。
@@ -4680,22 +4708,22 @@ const App: React.FC = () => {
                       {selectedVoiceEngine === 'minimax'
                         ? 'MiniMaxでは速度・音質のパラメータを調整できます'
                         : selectedVoiceEngine === 'geminiTts'
-                          ? 'Gemini TTSでは model / language code / style prompt を設定できます'
-                        : selectedVoiceEngine === 'xai'
-                          ? 'xAI TTSでは language / codec / sample rate / bit rate を設定できます'
-                        : selectedVoiceEngine === 'voicevox'
-                          ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
-                          : selectedVoiceEngine === 'openai'
-                            ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
-                            : selectedVoiceEngine === 'openaiCompatible'
-                              ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
-                              : selectedVoiceEngine === 'piperPlus'
-                                ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
-                              : selectedVoiceEngine === 'aivisCloud'
-                                ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
-                                : selectedVoiceEngine === 'aivisSpeech'
-                                  ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
-                                  : '※ 音声パラメータは最適な値に固定されています'}
+                          ? 'Gemini TTSでは model / language code / style prompt / audio-tag prompt を設定できます'
+                          : selectedVoiceEngine === 'xai'
+                            ? 'xAI TTSでは language / codec / sample rate / bit rate を設定できます'
+                            : selectedVoiceEngine === 'voicevox'
+                              ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
+                              : selectedVoiceEngine === 'openai'
+                                ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
+                                : selectedVoiceEngine === 'openaiCompatible'
+                                  ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
+                                  : selectedVoiceEngine === 'piperPlus'
+                                    ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
+                                    : selectedVoiceEngine === 'aivisCloud'
+                                      ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                      : selectedVoiceEngine === 'aivisSpeech'
+                                        ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
+                                        : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

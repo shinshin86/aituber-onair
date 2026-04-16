@@ -1218,7 +1218,7 @@ Possible use cases for `chatLogUpdated` include:
 - **AivisSpeech**: Speech synthesis using AI technology.  
 - **Aivis Cloud**: High-quality Japanese text-to-speech service with SSML support, emotional intensity control, and multiple output formats (WAV, FLAC, MP3, AAC, Opus).
 - **OpenAI TTS**: Text-to-speech API from OpenAI.
-- **Gemini TTS**: Gemini API-based text-to-speech with selectable preview TTS models and style prompt support.
+- **Gemini TTS**: Gemini API-based text-to-speech with selectable preview TTS models including `gemini-3.1-flash-tts-preview`, plus style/audio-tag prompt support.
 - **xAI TTS**: xAI text-to-speech with selectable codec, sample rate, and bit rate options.
 - **OpenAI-Compatible TTS**: Self-hosted or third-party `/v1/audio/speech` compatible endpoints.
 - **MiniMax**: Multi-language TTS with 24 language support and HD quality (requires both API key and GroupId - see usage example below).

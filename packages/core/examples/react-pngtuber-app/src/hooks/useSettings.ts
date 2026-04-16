@@ -14,7 +14,7 @@ type ApiKeyProvider = Exclude<ChatProviderOption, 'gemini-nano'>;
 
 const STORAGE_KEY = 'react-pngtuber-app-settings';
 const DEFAULT_AIVIS_CLOUD_MODEL_UUID = '22e8ed77-94fe-4ef2-871f-a86f94e9a579';
-const DEFAULT_GEMINI_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+const DEFAULT_GEMINI_TTS_MODEL = 'gemini-3.1-flash-tts-preview';
 const DEFAULT_GEMINI_TTS_LANGUAGE_CODE = 'ja-JP';
 const DEFAULT_OPENAI_COMPATIBLE_MODEL = 'local-model';
 const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
@@ -363,8 +363,7 @@ export function useSettings() {
             : prev.tts.geminiTtsModel,
         geminiTtsLanguageCode:
           engine === 'geminiTts'
-            ? prev.tts.geminiTtsLanguageCode ||
-              DEFAULT_GEMINI_TTS_LANGUAGE_CODE
+            ? prev.tts.geminiTtsLanguageCode || DEFAULT_GEMINI_TTS_LANGUAGE_CODE
             : prev.tts.geminiTtsLanguageCode,
         geminiTtsPrompt:
           engine === 'geminiTts'
@@ -579,12 +578,15 @@ export function useSettings() {
     }));
   }, []);
 
-  const updatePiperPlusModelConfigFile = useCallback((modelConfigFile: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      tts: { ...prev.tts, piperPlusModelConfigFile: modelConfigFile },
-    }));
-  }, []);
+  const updatePiperPlusModelConfigFile = useCallback(
+    (modelConfigFile: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        tts: { ...prev.tts, piperPlusModelConfigFile: modelConfigFile },
+      }));
+    },
+    [],
+  );
 
   const updatePiperPlusModelFile = useCallback((modelFile: string) => {
     setSettings((prev) => ({

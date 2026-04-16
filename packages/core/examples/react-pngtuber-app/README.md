@@ -15,6 +15,7 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   - `Max candidates` is the maximum number of `:free` candidates to probe
     (not a target number of working models)
 - Use TTS engines: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `piperPlus`, `none`
+- `geminiTts` defaults to `gemini-3.1-flash-tts-preview` and exposes 30 prebuilt voices plus style/audio-tag prompt input
 - Fetch and select speaker lists dynamically:
   - `voicevox` / `aivisSpeech`: from `/speakers`
   - `minimax`: from `query/tts_speakers` after API key input
