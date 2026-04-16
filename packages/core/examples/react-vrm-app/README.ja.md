@@ -20,6 +20,8 @@
 - TTS エンジン切り替え:
   `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`,
   `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `piperPlus`, `none`
+- `geminiTts` は `gemini-3.1-flash-tts-preview` を既定利用し、30 種類の
+  プリセットボイスとスタイル / audio-tag プロンプト入力に対応
 - スピーカー一覧の動的取得と選択:
   - `voicevox` / `aivisSpeech`: `/speakers` から取得
   - `minimax`: API キー入力後に `query/tts_speakers` から取得

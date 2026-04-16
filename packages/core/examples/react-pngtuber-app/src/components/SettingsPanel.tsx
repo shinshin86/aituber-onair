@@ -42,18 +42,41 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 const GEMINI_TTS_MODELS = [
+  'gemini-3.1-flash-tts-preview',
   'gemini-2.5-flash-preview-tts',
   'gemini-2.5-pro-preview-tts',
 ] as const;
 const GEMINI_TTS_SPEAKERS = [
   'Zephyr',
-  'Aoede',
-  'Kore',
-  'Leda',
   'Puck',
   'Charon',
+  'Kore',
   'Fenrir',
+  'Leda',
   'Orus',
+  'Aoede',
+  'Callirrhoe',
+  'Autonoe',
+  'Enceladus',
+  'Iapetus',
+  'Umbriel',
+  'Algieba',
+  'Despina',
+  'Erinome',
+  'Algenib',
+  'Rasalgethi',
+  'Laomedeia',
+  'Achernar',
+  'Alnilam',
+  'Schedar',
+  'Gacrux',
+  'Pulcherrima',
+  'Achird',
+  'Zubenelgenubi',
+  'Vindemiatrix',
+  'Sadachbia',
+  'Sadaltager',
+  'Sulafat',
 ] as const;
 const XAI_SPEAKERS = ['ara', 'eve', 'leo', 'rex', 'sal'];
 const XAI_CODECS = ['mp3', 'wav', 'pcm', 'mulaw', 'alaw'] as const;
@@ -509,7 +532,8 @@ export function SettingsPanel({
               <>
                 <div className="settings-field">
                   <small>
-                    Gemini Nano はブラウザ内蔵 AI を使うため API Key は不要です。
+                    Gemini Nano はブラウザ内蔵 AI を使うため API Key
+                    は不要です。
                   </small>
                 </div>
                 <div className="settings-field">
@@ -546,28 +570,28 @@ export function SettingsPanel({
 
             {settings.llm.provider !== 'openrouter' &&
               settings.llm.provider !== 'gemini-nano' && (
-              <div className="settings-field">
-                <label htmlFor="llm-apikey">
-                  API Key ({settings.llm.provider})
-                  {settings.llm.provider === 'openai-compatible'
-                    ? ' - optional'
-                    : ''}
-                </label>
-                <input
-                  id="llm-apikey"
-                  type="password"
-                  value={getApiKeyForProvider(settings.llm.provider)}
-                  onChange={(e) =>
-                    updateLLMApiKey(settings.llm.provider, e.target.value)
-                  }
-                  placeholder={
-                    settings.llm.provider === 'openai-compatible'
-                      ? 'optional'
-                      : 'XXX-...'
-                  }
-                  disabled={disabled}
-                />
-              </div>
+                <div className="settings-field">
+                  <label htmlFor="llm-apikey">
+                    API Key ({settings.llm.provider})
+                    {settings.llm.provider === 'openai-compatible'
+                      ? ' - optional'
+                      : ''}
+                  </label>
+                  <input
+                    id="llm-apikey"
+                    type="password"
+                    value={getApiKeyForProvider(settings.llm.provider)}
+                    onChange={(e) =>
+                      updateLLMApiKey(settings.llm.provider, e.target.value)
+                    }
+                    placeholder={
+                      settings.llm.provider === 'openai-compatible'
+                        ? 'optional'
+                        : 'XXX-...'
+                    }
+                    disabled={disabled}
+                  />
+                </div>
               )}
           </>
         )}
@@ -663,10 +687,7 @@ export function SettingsPanel({
                   <label htmlFor="tts-gemini-model">Model</label>
                   <select
                     id="tts-gemini-model"
-                    value={
-                      settings.tts.geminiTtsModel ||
-                      GEMINI_TTS_MODELS[0]
-                    }
+                    value={settings.tts.geminiTtsModel || GEMINI_TTS_MODELS[0]}
                     onChange={(e) => updateGeminiTtsModel(e.target.value)}
                     disabled={disabled}
                   >
@@ -691,7 +712,9 @@ export function SettingsPanel({
                   />
                 </div>
                 <div className="settings-field">
-                  <label htmlFor="tts-gemini-prompt">Style Prompt</label>
+                  <label htmlFor="tts-gemini-prompt">
+                    Style / Audio-tag Prompt
+                  </label>
                   <input
                     id="tts-gemini-prompt"
                     type="text"
@@ -807,9 +830,7 @@ export function SettingsPanel({
                     id="tts-piper-base-path"
                     type="text"
                     value={settings.tts.piperPlusBasePath || ''}
-                    onChange={(e) =>
-                      updatePiperPlusBasePath(e.target.value)
-                    }
+                    onChange={(e) => updatePiperPlusBasePath(e.target.value)}
                     placeholder="/piper/"
                     disabled={disabled}
                   />
@@ -833,9 +854,7 @@ export function SettingsPanel({
                     id="tts-piper-model"
                     type="text"
                     value={settings.tts.piperPlusModelFile || ''}
-                    onChange={(e) =>
-                      updatePiperPlusModelFile(e.target.value)
-                    }
+                    onChange={(e) => updatePiperPlusModelFile(e.target.value)}
                     placeholder="tsukuyomi-wavlm-300epoch.onnx"
                     disabled={disabled}
                   />
@@ -846,9 +865,7 @@ export function SettingsPanel({
                     id="tts-piper-voice"
                     type="text"
                     value={settings.tts.piperPlusVoiceFile || ''}
-                    onChange={(e) =>
-                      updatePiperPlusVoiceFile(e.target.value)
-                    }
+                    onChange={(e) => updatePiperPlusVoiceFile(e.target.value)}
                     placeholder="mei_normal.htsvoice"
                     disabled={disabled}
                   />
@@ -872,9 +889,7 @@ export function SettingsPanel({
                     type="number"
                     step="0.05"
                     value={settings.tts.piperPlusNoiseScale || ''}
-                    onChange={(e) =>
-                      updatePiperPlusNoiseScale(e.target.value)
-                    }
+                    onChange={(e) => updatePiperPlusNoiseScale(e.target.value)}
                     placeholder="0.667"
                     disabled={disabled}
                   />
@@ -883,8 +898,8 @@ export function SettingsPanel({
                   <small>
                     Runtime assets はサイズとサードパーティライセンスの都合で
                     同梱していません。README の Piper Plus Setup を参照し、
-                    `public/piper/` 配下に `dist/`, `src/`, `assets/`,
-                    `models/` を配置してください。
+                    `public/piper/` 配下に `dist/`, `src/`, `assets/`, `models/`
+                    を配置してください。
                   </small>
                 </div>
               </>

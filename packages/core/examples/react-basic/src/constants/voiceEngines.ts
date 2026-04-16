@@ -41,7 +41,7 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       needsApiKey: true,
       placeholder: 'Google API key',
       defaultParams: {
-        model: 'gemini-2.5-flash-preview-tts',
+        model: 'gemini-3.1-flash-tts-preview',
         languageCode: 'ja-JP',
       },
     },

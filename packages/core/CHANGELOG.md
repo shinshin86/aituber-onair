@@ -1,5 +1,17 @@
 # @aituber-onair/core
 
+## 0.25.3
+
+### Patch Changes
+
+- Synced Gemini TTS 3.1 defaults from `@aituber-onair/voice@0.13.0` into core
+  docs and React examples.
+- Updated the React basic / VRM / PNGTuber examples to default Gemini TTS to
+  `gemini-3.1-flash-tts-preview`, surface the expanded prebuilt voice list, and
+  clarify style/audio-tag prompt usage.
+- Updated dependencies []:
+  - @aituber-onair/voice@0.13.0
+
 ## 0.25.2
 
 ### Patch Changes
