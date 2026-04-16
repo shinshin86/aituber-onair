@@ -11,7 +11,7 @@ import {
 } from '../../../types';
 import {
   ENDPOINT_CLAUDE_API,
-  MODEL_CLAUDE_3_HAIKU,
+  MODEL_CLAUDE_4_5_HAIKU,
   CLAUDE_VISION_SUPPORTED_MODELS,
 } from '../../../constants';
 import {
@@ -64,15 +64,15 @@ export class ClaudeChatService implements ChatService {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_CLAUDE_3_HAIKU,
-    visionModel: string = MODEL_CLAUDE_3_HAIKU,
+    model: string = MODEL_CLAUDE_4_5_HAIKU,
+    visionModel: string = MODEL_CLAUDE_4_5_HAIKU,
     tools: ToolDefinition[] = [],
     mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,
   ) {
     this.apiKey = apiKey;
-    this.model = model || MODEL_CLAUDE_3_HAIKU;
-    this.visionModel = visionModel || MODEL_CLAUDE_3_HAIKU;
+    this.model = model || MODEL_CLAUDE_4_5_HAIKU;
+    this.visionModel = visionModel || MODEL_CLAUDE_4_5_HAIKU;
     this.tools = tools;
     this.mcpServers = mcpServers;
     this.responseLength = responseLength;

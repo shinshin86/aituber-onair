@@ -1,8 +1,5 @@
 import {
   MODEL_CLAUDE_3_HAIKU,
-  MODEL_CLAUDE_3_5_HAIKU,
-  MODEL_CLAUDE_3_5_SONNET,
-  MODEL_CLAUDE_3_7_SONNET,
   MODEL_CLAUDE_4_SONNET,
   MODEL_CLAUDE_4_OPUS,
   MODEL_CLAUDE_4_5_SONNET,
@@ -10,6 +7,7 @@ import {
   MODEL_CLAUDE_4_5_OPUS,
   MODEL_CLAUDE_4_6_SONNET,
   MODEL_CLAUDE_4_6_OPUS,
+  MODEL_CLAUDE_4_7_OPUS,
   CLAUDE_VISION_SUPPORTED_MODELS,
 } from '../../../constants';
 import { ChatService } from '../../ChatService';
@@ -68,10 +66,6 @@ export class ClaudeChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
-      MODEL_CLAUDE_3_HAIKU,
-      MODEL_CLAUDE_3_5_HAIKU,
-      MODEL_CLAUDE_3_5_SONNET,
-      MODEL_CLAUDE_3_7_SONNET,
       MODEL_CLAUDE_4_SONNET,
       MODEL_CLAUDE_4_OPUS,
       MODEL_CLAUDE_4_5_SONNET,
@@ -79,6 +73,8 @@ export class ClaudeChatServiceProvider
       MODEL_CLAUDE_4_5_OPUS,
       MODEL_CLAUDE_4_6_SONNET,
       MODEL_CLAUDE_4_6_OPUS,
+      MODEL_CLAUDE_4_7_OPUS,
+      MODEL_CLAUDE_3_HAIKU,
     ];
   }
 
@@ -87,7 +83,7 @@ export class ClaudeChatServiceProvider
    * @returns Default model name
    */
   getDefaultModel(): string {
-    return MODEL_CLAUDE_3_HAIKU;
+    return MODEL_CLAUDE_4_5_HAIKU;
   }
 
   /**
