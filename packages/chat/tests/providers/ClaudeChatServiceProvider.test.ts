@@ -4,9 +4,6 @@ import type { ClaudeChatServiceOptions } from '../../src/services/providers/Chat
 import type { ToolDefinition } from '../../src/types/toolChat';
 import {
   MODEL_CLAUDE_3_HAIKU,
-  MODEL_CLAUDE_3_5_HAIKU,
-  MODEL_CLAUDE_3_5_SONNET,
-  MODEL_CLAUDE_3_7_SONNET,
   MODEL_CLAUDE_4_SONNET,
   MODEL_CLAUDE_4_OPUS,
   MODEL_CLAUDE_4_5_SONNET,
@@ -14,6 +11,7 @@ import {
   MODEL_CLAUDE_4_5_OPUS,
   MODEL_CLAUDE_4_6_SONNET,
   MODEL_CLAUDE_4_6_OPUS,
+  MODEL_CLAUDE_4_7_OPUS,
 } from '../../src/constants';
 
 // Mock ClaudeChatService
@@ -38,10 +36,6 @@ describe('ClaudeChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
-        MODEL_CLAUDE_3_HAIKU,
-        MODEL_CLAUDE_3_5_HAIKU,
-        MODEL_CLAUDE_3_5_SONNET,
-        MODEL_CLAUDE_3_7_SONNET,
         MODEL_CLAUDE_4_SONNET,
         MODEL_CLAUDE_4_OPUS,
         MODEL_CLAUDE_4_5_SONNET,
@@ -49,13 +43,15 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_4_5_OPUS,
         MODEL_CLAUDE_4_6_SONNET,
         MODEL_CLAUDE_4_6_OPUS,
+        MODEL_CLAUDE_4_7_OPUS,
+        MODEL_CLAUDE_3_HAIKU,
       ]);
     });
   });
 
   describe('getDefaultModel', () => {
-    it('should return Claude 3 Haiku as default model', () => {
-      expect(provider.getDefaultModel()).toBe(MODEL_CLAUDE_3_HAIKU);
+    it('should return Claude Haiku 4.5 as default model', () => {
+      expect(provider.getDefaultModel()).toBe(MODEL_CLAUDE_4_5_HAIKU);
     });
   });
 
@@ -69,15 +65,6 @@ describe('ClaudeChatServiceProvider', () => {
   describe('supportsVisionForModel', () => {
     it('should return true for vision-supported models', () => {
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_3_HAIKU)).toBe(true);
-      expect(provider.supportsVisionForModel(MODEL_CLAUDE_3_5_HAIKU)).toBe(
-        true,
-      );
-      expect(provider.supportsVisionForModel(MODEL_CLAUDE_3_5_SONNET)).toBe(
-        true,
-      );
-      expect(provider.supportsVisionForModel(MODEL_CLAUDE_3_7_SONNET)).toBe(
-        true,
-      );
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_SONNET)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_OPUS)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_5_SONNET)).toBe(
@@ -91,6 +78,7 @@ describe('ClaudeChatServiceProvider', () => {
         true,
       );
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_6_OPUS)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_7_OPUS)).toBe(true);
     });
 
     it('should return false for non-vision models', () => {
@@ -112,8 +100,8 @@ describe('ClaudeChatServiceProvider', () => {
 
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_CLAUDE_3_HAIKU,
-        MODEL_CLAUDE_3_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
         [],
         [],
         undefined,
@@ -123,15 +111,15 @@ describe('ClaudeChatServiceProvider', () => {
     it('should create ClaudeChatService with custom model', () => {
       const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
-        model: MODEL_CLAUDE_3_5_SONNET,
+        model: MODEL_CLAUDE_4_6_SONNET,
       };
 
       provider.createChatService(options);
 
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_CLAUDE_3_5_SONNET,
-        MODEL_CLAUDE_3_5_SONNET,
+        MODEL_CLAUDE_4_6_SONNET,
+        MODEL_CLAUDE_4_6_SONNET,
         [],
         [],
         undefined,
@@ -142,7 +130,7 @@ describe('ClaudeChatServiceProvider', () => {
       const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
         model: 'claude-2',
-        visionModel: MODEL_CLAUDE_3_5_SONNET,
+        visionModel: MODEL_CLAUDE_4_6_SONNET,
       };
 
       provider.createChatService(options);
@@ -150,7 +138,7 @@ describe('ClaudeChatServiceProvider', () => {
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
         'claude-2',
-        MODEL_CLAUDE_3_5_SONNET,
+        MODEL_CLAUDE_4_6_SONNET,
         [],
         [],
         undefined,
@@ -168,7 +156,7 @@ describe('ClaudeChatServiceProvider', () => {
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
         'claude-2',
-        MODEL_CLAUDE_3_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
         [],
         [],
         undefined,
@@ -199,8 +187,8 @@ describe('ClaudeChatServiceProvider', () => {
 
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_CLAUDE_3_HAIKU,
-        MODEL_CLAUDE_3_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
         tools,
         [],
         undefined,
@@ -225,8 +213,8 @@ describe('ClaudeChatServiceProvider', () => {
 
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_CLAUDE_3_HAIKU,
-        MODEL_CLAUDE_3_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
         [],
         mcpServers,
         undefined,
@@ -258,8 +246,8 @@ describe('ClaudeChatServiceProvider', () => {
 
       const options: ClaudeChatServiceOptions = {
         apiKey: 'test-api-key',
-        model: MODEL_CLAUDE_3_7_SONNET,
-        visionModel: MODEL_CLAUDE_3_5_HAIKU,
+        model: MODEL_CLAUDE_4_7_OPUS,
+        visionModel: MODEL_CLAUDE_4_5_HAIKU,
         tools,
         mcpServers,
       } as any;
@@ -268,8 +256,8 @@ describe('ClaudeChatServiceProvider', () => {
 
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_CLAUDE_3_7_SONNET,
-        MODEL_CLAUDE_3_5_HAIKU,
+        MODEL_CLAUDE_4_7_OPUS,
+        MODEL_CLAUDE_4_5_HAIKU,
         tools,
         mcpServers,
         undefined,
@@ -286,8 +274,8 @@ describe('ClaudeChatServiceProvider', () => {
 
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_CLAUDE_3_HAIKU,
-        MODEL_CLAUDE_3_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
         [],
         [],
         undefined,
@@ -304,8 +292,8 @@ describe('ClaudeChatServiceProvider', () => {
 
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_CLAUDE_3_HAIKU,
-        MODEL_CLAUDE_3_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
         [],
         [],
         undefined,
@@ -322,8 +310,8 @@ describe('ClaudeChatServiceProvider', () => {
 
       expect(ClaudeChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_CLAUDE_3_HAIKU,
-        MODEL_CLAUDE_3_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
+        MODEL_CLAUDE_4_5_HAIKU,
         [],
         [],
         'short',

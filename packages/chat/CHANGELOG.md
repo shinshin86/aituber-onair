@@ -1,5 +1,19 @@
 # @aituber-onair/chat
 
+## 0.26.0
+
+### Minor Changes
+
+- Added Claude Opus 4.7 (`claude-opus-4-7`) to the Claude constants,
+  provider supported models, tests, and the React basic example selector.
+- Updated Claude 4 Sonnet/Opus to the current Anthropic API model IDs
+  (`claude-sonnet-4-20250514` and `claude-opus-4-20250514`).
+- Removed retired Claude 3.5 Haiku/Sonnet and Claude 3.7 Sonnet from the
+  provider's advertised supported-model list and the React basic example.
+- Changed the Claude provider default model from Claude 3 Haiku to
+  Claude Haiku 4.5 and refreshed the English/Japanese docs to reflect the
+  currently valid Anthropic model lineup as of April 17, 2026.
+
 ## 0.25.1
 
 ### Patch Changes
