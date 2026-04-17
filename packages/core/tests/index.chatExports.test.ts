@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
   GEMINI_NANO_MAX_CONTEXT_MESSAGES,
+  MODEL_CLAUDE_4_5_HAIKU,
+  MODEL_CLAUDE_4_7_OPUS,
+  MODEL_CLAUDE_4_OPUS,
+  MODEL_CLAUDE_4_SONNET,
   MODEL_GEMINI_NANO,
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMMA_4_31B_IT,
@@ -50,6 +54,13 @@ describe('Core index chat re-exports', () => {
     expect(allowsReasoningXHigh(MODEL_GPT_5_4)).toBe(true);
     expect(allowsReasoningXHigh(MODEL_GPT_5_4_MINI)).toBe(true);
     expect(allowsReasoningXHigh(MODEL_GPT_5_4_NANO)).toBe(true);
+  });
+
+  it('re-exports current Claude model constants', () => {
+    expect(MODEL_CLAUDE_4_7_OPUS).toBe('claude-opus-4-7');
+    expect(MODEL_CLAUDE_4_5_HAIKU).toBe('claude-haiku-4-5-20251001');
+    expect(MODEL_CLAUDE_4_OPUS).toBe('claude-opus-4-20250514');
+    expect(MODEL_CLAUDE_4_SONNET).toBe('claude-sonnet-4-20250514');
   });
 
   it('re-exports GLM-5-Turbo model constant', () => {

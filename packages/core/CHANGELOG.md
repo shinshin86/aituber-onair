@@ -1,5 +1,24 @@
 # @aituber-onair/core
 
+## 0.25.4
+
+### Patch Changes
+
+- Synced Claude updates from `@aituber-onair/chat@0.26.0` into the core
+  entry point and examples:
+  - re-exported `MODEL_CLAUDE_4_7_OPUS`
+  - updated the React basic example Claude model list to add Claude Opus 4.7,
+    keep Claude Haiku 4.5 as the default, and remove retired Claude 3.5 /
+    Claude 3.7 options from the selectable list
+- Updated `ClaudeSummarizer` to default to Claude Haiku 4.5, matching the
+  current Claude provider default from `@aituber-onair/chat`.
+- Refreshed core README docs (EN/JA) and the React basic example README to
+  reflect the current Anthropic Claude lineup and recommended Claude examples.
+- Added core export test coverage for the latest Claude model constants and
+  refreshed Anthropic API model IDs.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.26.0
+
 ## 0.25.3
 
 ### Patch Changes

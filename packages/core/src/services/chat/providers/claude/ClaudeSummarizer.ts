@@ -2,7 +2,7 @@ import { Message } from '@aituber-onair/chat';
 import { Summarizer } from '../../../../core/MemoryManager';
 import {
   ENDPOINT_CLAUDE_API,
-  MODEL_CLAUDE_3_HAIKU,
+  MODEL_CLAUDE_4_5_HAIKU,
   DEFAULT_SUMMARY_PROMPT_TEMPLATE,
 } from '@aituber-onair/chat';
 import {
@@ -26,7 +26,7 @@ export class ClaudeSummarizer implements Summarizer {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_CLAUDE_3_HAIKU,
+    model: string = MODEL_CLAUDE_4_5_HAIKU,
     defaultPromptTemplate: string = DEFAULT_SUMMARY_PROMPT_TEMPLATE,
   ) {
     this.apiKey = apiKey;
