@@ -409,7 +409,7 @@ const tools = [
 // Claude tool call response example
 {
   id: "msg_abc123",
-  model: "claude-3-haiku-20240307",
+  model: "claude-haiku-4-5-20251001",
   role: "assistant",
   content: [
     { type: "text", text: "I'll generate a random number for you." },
@@ -426,7 +426,7 @@ const tools = [
 // Example with only tool use, no text content
 {
   id: "msg_xyz789",
-  model: "claude-3-haiku-20240307",
+  model: "claude-haiku-4-5-20251001",
   role: "assistant",
   content: [
     { 
@@ -755,7 +755,7 @@ const mcpServers: MCPServerConfig[] = [
 const options: AITuberOnAirCoreOptions = {
   chatProvider: 'claude', // MCP is only supported with Claude
   apiKey: 'your-claude-api-key',
-  model: 'claude-3-haiku-20240307',
+  model: 'claude-haiku-4-5-20251001',
   chatOptions: {
     systemPrompt: 'You are an AI streamer with access to remote tools via MCP.',
   },
@@ -1364,7 +1364,7 @@ Currently, the following AI provider is built-in:
 - **OpenAI**: Supports models like GPT-5 family (Nano/Mini/Standard/5.1/5.4/5.4 Mini/5.4 Nano/5.4 Pro), GPT-4.1 (including Mini/Nano), GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemma 4 31B IT, Gemma 4 26B A4B IT, Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Gemini Nano**: Supports the built-in Chrome `gemini-nano` model without an API key (Chrome 138+ with Prompt API flags enabled)
-- **Claude**: Supports models like Claude 4.6 Opus, Claude 4.5 Opus/Sonnet/Haiku, Claude 4 Sonnet/Opus, Claude 3.7 Sonnet, Claude 3.5 Haiku/Sonnet, Claude 3 Haiku
+- **Claude**: Supports current Claude API model IDs including Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
 - **xAI**: Supports Grok 4.20 and Grok 4.1 Fast model families
 - **Z.ai**: Supports models like GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
 - **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support

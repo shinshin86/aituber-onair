@@ -127,13 +127,12 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Requires Chrome 138+ with `#optimization-guide-on-device-model` and `#prompt-api-for-gemini-nano` enabled
 
 **Claude:**
-- Claude 4.6 Sonnet
+- Claude Opus 4.7
 - Claude 4.6 Opus
+- Claude 4.6 Sonnet
 - Claude 4.5 series (Opus, Sonnet, Haiku)
-- Claude 3 Haiku
-- Claude 3.5 series (Haiku, Sonnet)
-- Claude 3.7 Sonnet
-- Claude 4 series (Sonnet, Opus)
+- Claude 4 series (Sonnet, Opus, deprecated but still available)
+- Claude 3 Haiku (deprecated but still available)
 
 **Z.ai:**
 - GLM-5 and GLM-5-Turbo (text-only)
