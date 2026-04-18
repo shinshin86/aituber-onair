@@ -1,4 +1,5 @@
 # AITuber OnAir
+
 [![CI](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml/badge.svg)](https://github.com/shinshin86/aituber-onair/actions/workflows/ci.yml)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shinshin86/aituber-onair)
 
@@ -6,171 +7,163 @@
 
 [日本語版はこちら](./README_ja.md)
 
-Welcome to the **AITuber OnAir** monorepo!  
-This repository open-sources the AITuber streaming processes used in [AITuber OnAir](https://aituberonair.com), a web application for AITuber/AIVTuber streaming.
+> **Open source toolkit for building AI VTubers**
+>
+> For developers and creators who want to build AI VTubers like [Neuro-sama](https://www.twitch.tv/vedal987), or open-source AI characters in the spirit of [Project AIRI](https://github.com/moeru-ai/airi).
+> Start from the hosted web app, self-host a working example, or assemble your own stack from modular TypeScript packages for chat, voice, streaming, and viewer relationships.
 
-It contains various packages and tools for AI-powered chat, TTS, virtual streaming, and related features. You can also run a [simple chat app](https://github.com/shinshin86/aituber-onair/tree/main/packages/core/examples/react-basic) using these systems on your local PC or self-host it.
+<p align="center">
+  <a href="https://aituberonair.com">Try the hosted web app</a> ・
+  <a href="./packages/core/examples/react-basic">Run the React example</a> ・
+  <a href="#packages">Browse packages</a>
+</p>
 
 ![AITuber OnAir Demo](./images/aituber-onair-demo.png)
-(This is the AITuber OnAir interface)
 
-Currently, the primary packages available are:
+## What you can build
 
-- [**@aituber-onair/core**](./packages/core/README.md)
-  A TypeScript library for generating text and audio responses in AI Tuber streaming scenarios. It provides seamless integration with various AI and speech APIs, as well as memory and conversation context management.
-  ```
-  npm install @aituber-onair/core
-  ```
+- AI VTubers that chat and speak with live viewers
+- Streaming assistants that react to YouTube / Twitch comments
+- AI character apps with text, voice, vision, and long-term memory
+- Viewer relationship systems with points, levels, and achievements
+- Browser- and Node.js-based integrations, composed from independent packages
 
-- [**@aituber-onair/voice**](./packages/voice/README.md)
-  An independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, AIVIS Speech, etc.). Can be used standalone or integrated with the core package for full AITuber functionality.
-  ```
-  npm install @aituber-onair/voice
-  ```
+## Choose your path
 
-- [**@aituber-onair/manneri**](./packages/manneri/README.md)
-  A conversation pattern detection library that identifies repetitive dialogue patterns and provides topic diversification prompts. Features simple configuration with customizable intervention messages for maintaining engaging conversations.
-  ```
-  npm install @aituber-onair/manneri
-  ```
+### 1. Try the hosted web app
 
-- [**@aituber-onair/bushitsu-client**](./packages/bushitsu-client/README.md)
-  WebSocket client library for chat functionality with React hooks support. Provides WebSocket client and React hooks for real-time chat communication with auto-reconnection, rate limiting, mention support, and voice synthesis integration. Works in both browser and Node.js environments.
-  ```
-  npm install @aituber-onair/bushitsu-client
-  ```
+[AITuber OnAir](https://aituberonair.com) is a full, standalone AITuber streaming web app built on top of `@aituber-onair/core`. It's both the quickest way to experience the toolkit end-to-end and a working reference for what you can ship with it. No setup required.
 
-- [**@aituber-onair/kizuna**](./packages/kizuna/README.md)
-  Sophisticated bond system (絆 - "Kizuna") for managing user-AI character relationships. Features points-based engagement system with customizable rules, achievements, emotion-based bonuses, level progression, and persistent storage. Supports YouTube, Twitch, and WebSocket platforms.
-  ```
-  npm install @aituber-onair/kizuna
-  ```
+### 2. Run the example locally
 
-- [**@aituber-onair/chat**](./packages/chat/README.md)
-  Chat and LLM API integration library for AITuber OnAir. Provides a unified interface for interacting with various AI chat providers including OpenAI, Claude (Anthropic), Google Gemini, Z.ai, Kimi, and OpenRouter. Features streaming responses, tool/function calling, vision support, and emotion detection.
-  ```
-  npm install @aituber-onair/chat
-  ```
+A React app that wires chat + voice together, ready to tweak.
 
-## Getting Started
-
-1. **Clone the repository**  
-   ```bash
-   git clone https://github.com/shinshin86/aituber-onair.git
-   cd aituber-onair
-   ```
-
-2. **Install dependencies**  
-   This monorepo uses **npm workspaces**. Simply run:
-   ```bash
-   npm install
-   ```
-
-3. **Build all packages**  
-   ```bash
-   npm run build
-   ```
-   - This runs the build script for each package in the `packages/` directory.
-
-4. **Test all packages**  
-   ```bash
-   npm run test
-   ```
-   - Runs the test suite for each package.
-
-5. **Format all packages**
-   ```bash
-   npm run fmt
-   ```
-   - Runs the format for each package.
-
-## Project Structure
-
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-basic
+npm install
+npm run dev
 ```
+
+Open `http://localhost:5173`.
+
+### 3. Build your own with the packages
+
+Install only what you need and drop it into your own app:
+
+```bash
+npm install @aituber-onair/chat
+```
+
+```ts
+import { ChatServiceFactory } from '@aituber-onair/chat';
+
+const chat = ChatServiceFactory.createChatService('openai', {
+  apiKey: process.env.OPENAI_API_KEY!,
+});
+
+await chat.processChat(
+  [{ role: 'user', content: 'Hello!' }],
+  (partial) => process.stdout.write(partial),
+  async (full) => console.log('\nDone:', full),
+);
+```
+
+See each package README for provider setup and fuller usage.
+
+## Packages
+
+### [@aituber-onair/core](./packages/core/README.md)
+Core runtime tying chat, voice, memory, and conversation context together for full AITuber experiences.
+```bash
+npm install @aituber-onair/core
+```
+
+### [@aituber-onair/chat](./packages/chat/README.md)
+Unified LLM layer across OpenAI, Claude, Gemini, Z.ai, Kimi, and OpenRouter — streaming, tool/function calling, vision, and MCP support included.
+```bash
+npm install @aituber-onair/chat
+```
+
+### [@aituber-onair/voice](./packages/voice/README.md)
+Standalone TTS library with VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, AIVIS Speech, and more, plus emotion-aware synthesis.
+```bash
+npm install @aituber-onair/voice
+```
+
+### [@aituber-onair/manneri](./packages/manneri/README.md)
+Detects repetitive conversation patterns and injects topic-diversification prompts to keep dialogue fresh.
+```bash
+npm install @aituber-onair/manneri
+```
+
+### [@aituber-onair/bushitsu-client](./packages/bushitsu-client/README.md)
+WebSocket chat client with React hooks, auto-reconnect, rate limiting, mentions, and voice integration. Browser and Node.js.
+```bash
+npm install @aituber-onair/bushitsu-client
+```
+
+### [@aituber-onair/kizuna](./packages/kizuna/README.md)
+Relationship / bond system (絆) for AI characters and viewers: points, achievements, emotion-based bonuses, level progression, persistent storage.
+```bash
+npm install @aituber-onair/kizuna
+```
+
+## Why AITuber OnAir
+
+- Proven in production — powers [AITuber OnAir](https://aituberonair.com), a live AITuber streaming web app, so you're building on the same code path a real product ships on
+- Pick any entry point: hosted web app, self-hosted example, or modular npm packages
+- First-class coverage of the providers AITuber builders actually use — OpenAI / Claude / Gemini for chat, VOICEVOX / OpenAI TTS / AIVIS Speech and more for voice
+- Chat, voice, streaming (YouTube / Twitch / WebSocket), and viewer relationships in a single, consistent stack
+- MIT-licensed TypeScript — you keep control of hosting, data, and integrations
+
+## Project structure
+
+```txt
 aituber-onair/
-├── packages/
-│   ├── core/
-│   │   ├── src/
-│   │   ├── test/
-│   │   └── package.json
-│   ├── voice/
-│   │   ├── src/
-│   │   ├── test/
-│   │   └── package.json
-│   ├── chat/
-│   │   ├── src/
-│   │   ├── test/
-│   │   └── package.json
-│   ├── manneri/
-│   │   ├── src/
-│   │   ├── test/
-│   │   └── package.json
-│   ├── bushitsu-client/
-│   │   ├── src/
-│   │   ├── test/
-│   │   └── package.json
-│   └── kizuna/
-│       ├── src/
-│       ├── tests/
-│       └── package.json
-├── package.json
-├── README.md
-└── ...
+└── packages/
+    ├── core/             # AITuberOnAirCore, memory, orchestration
+    ├── chat/             # LLM providers, streaming, tools, MCP
+    ├── voice/            # TTS engines, emotion, playback
+    ├── manneri/          # Conversation pattern detection
+    ├── bushitsu-client/  # WebSocket chat client + React hooks
+    └── kizuna/           # Viewer relationship / bond system
 ```
-
-- **packages/core**: The main library (`@aituber-onair/core`) providing AITuber core functionality.
-- **packages/voice**: The voice synthesis library (`@aituber-onair/voice`) supporting multiple TTS engines.
-- **packages/chat**: The chat and LLM API integration library (`@aituber-onair/chat`) for AI provider interactions.
-- **packages/manneri**: The conversation pattern detection library (`@aituber-onair/manneri`) for identifying repetitive dialogue patterns.
-- **packages/bushitsu-client**: The WebSocket client library (`@aituber-onair/bushitsu-client`) for chat functionality with React hooks support.
-- **packages/kizuna**: The user-AI relationship management library (`@aituber-onair/kizuna`) for engagement tracking.
-
-## Agent Skills
-
-This repository includes shared Agent Skills so Codex and Claude Code can use
-the same workflow definitions.
-
-- Guide: `docs/agent-skills.md`
-- Skills:
-  - `add-chat-model`
-  - `sync-core-after-chat-upgrade`
-- Canonical sources:
-  - `skills/add-chat-model/SKILL.md`
-  - `skills/sync-core-after-chat-upgrade/SKILL.md`
-- Claude Code paths:
-  - `.claude/skills/add-chat-model/SKILL.md`
-  - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
-
-## Release Process
-
-Releases are managed via **manual version updates and CHANGELOG maintenance**.
-
-1. **Bump versions**: Update `version` in each affected `packages/[package]/package.json`
-2. **Update CHANGELOGs**: Add release notes in `packages/[package]/CHANGELOG.md`
-3. **Open a PR**: Include version and CHANGELOG updates in the PR
-4. **CI publishes**: After merging to main, GitHub Actions publishes to npm
-
-Version bump guidelines:
-- **Patch**: Bug fixes, dependency updates, backward-compatible changes
-- **Minor**: New features, backward-compatible changes
-- **Major**: Breaking changes to public API
-
-CHANGELOG format:
-- Maintain a `CHANGELOG.md` per package
-- Organize entries under `Major Changes / Minor Changes / Patch Changes`
-
-Note: Do not run `npm publish` directly.
-
-### Release Tags & Failure Recovery
-
-- `release.yml` uses Changesets to publish updated packages to npm, create tags like `@aituber-onair/<pkg>@x.y.z`, and create GitHub Releases **only for packages published in that run**.
-- `prerelease-next.yml` only updates the `next` prerelease tag.
-- If release CI fails after some packages were published, re-running will publish the remaining packages but **will not backfill GitHub Releases** for packages already published. In that case, create the missing Release manually from the package CHANGELOG (tag must exist).
 
 ## License
 
-This project is open-sourced under the [MIT License](./LICENSE).
+MIT — see [LICENSE](./LICENSE).
 
 ## Special Thanks
 
-This project is based on [the work referenced below](https://x.com/shinshin86/status/1862806042603847905). Without the contributions of these pioneers, I would not have been able to create it.
+This project is based on [the work referenced here](https://x.com/shinshin86/status/1862806042603847905). Without the contributions of these pioneers, it would not exist.
+
+---
+
+## For contributors
+
+Working on the monorepo itself:
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair
+npm install
+npm run build
+npm run test
+npm run fmt
+```
+
+### Agent Skills
+
+Shared Agent Skills so Codex and Claude Code use the same workflow definitions.
+See [`docs/agent-skills.md`](./docs/agent-skills.md) for the full guide. Canonical sources live in `skills/`, with Claude Code runtime copies under `.claude/skills/`.
+
+### Releases
+
+Releases are driven by manual version bumps + per-package `CHANGELOG.md`, published automatically by GitHub Actions on merge to `main`. Do **not** run `npm publish` directly.
+
+- **Patch**: bug fixes, dependency updates
+- **Minor**: new features, backward-compatible changes
+- **Major**: breaking changes to public API
+
+`release.yml` uses Changesets to publish packages, create tags (`@aituber-onair/<pkg>@x.y.z`), and create GitHub Releases for packages published in that run. If CI fails mid-run, re-running publishes the remainder but does **not** backfill Releases for already-published packages — create those manually from the package CHANGELOG (tag will already exist). `prerelease-next.yml` only updates the `next` prerelease tag.
