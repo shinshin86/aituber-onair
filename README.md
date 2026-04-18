@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://aituberonair.com">Try the hosted web app</a> ・
-  <a href="./packages/core/examples/react-basic">Run the React example</a> ・
+  <a href="#2-run-an-example-app-locally">See example apps</a> ・
   <a href="#packages">Browse packages</a>
 </p>
 
@@ -34,18 +34,37 @@
 
 [AITuber OnAir](https://aituberonair.com) is a full, standalone AITuber streaming web app built on top of `@aituber-onair/core`. It's both the quickest way to experience the toolkit end-to-end and a working reference for what you can ship with it. No setup required.
 
-### 2. Run the example locally
+### 2. Run an example app locally
 
-A React app that wires chat + voice together, ready to tweak.
+Two full, ready-to-run React apps built on `@aituber-onair/core`. Pick whichever avatar style fits your project — both share the same broad LLM / TTS provider coverage and in-app **Settings** UI.
+
+#### PNGTuber Chat — 2D PNG avatar
+
+![PNGTuber example app](./packages/core/examples/react-pngtuber-app/images/react-pngtuber-app.png)
+
+Swap in 4 PNG states (mouth/eyes open/close) and get real-time lip-sync driven from actual audio output. See [`packages/core/examples/react-pngtuber-app`](./packages/core/examples/react-pngtuber-app).
 
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
-cd aituber-onair/packages/core/examples/react-basic
+cd aituber-onair/packages/core/examples/react-pngtuber-app
 npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`.
+#### VRM Chat — 3D VRM avatar
+
+![VRM example app](./packages/core/examples/react-vrm-app/images/react-vrm-app.png)
+
+Render a 3D VRM avatar (`miko.vrm`) with optional idle VRMA animation, real-time lip-sync on the `Aa` expression, and camera controls (drag to rotate / wheel to zoom). See [`packages/core/examples/react-vrm-app`](./packages/core/examples/react-vrm-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-vrm-app
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173` in either case, then set API keys and provider options in **Settings**.
 
 ### 3. Build your own with the packages
 
@@ -74,36 +93,54 @@ See each package README for provider setup and fuller usage.
 ## Packages
 
 ### [@aituber-onair/core](./packages/core/README.md)
+
+<img src="./packages/core/images/aituber-onair-core.png" alt="AITuber OnAir Core logo" width="240" />
+
 Core runtime tying chat, voice, memory, and conversation context together for full AITuber experiences.
 ```bash
 npm install @aituber-onair/core
 ```
 
 ### [@aituber-onair/chat](./packages/chat/README.md)
+
+<img src="./packages/chat/images/aituber-onair-chat.png" alt="AITuber OnAir Chat logo" width="240" />
+
 Unified LLM layer across OpenAI, Claude, Gemini, Z.ai, Kimi, and OpenRouter — streaming, tool/function calling, vision, and MCP support included.
 ```bash
 npm install @aituber-onair/chat
 ```
 
 ### [@aituber-onair/voice](./packages/voice/README.md)
+
+<img src="./packages/voice/images/aituber-onair-voice.png" alt="AITuber OnAir Voice logo" width="240" />
+
 Standalone TTS library with VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, AIVIS Speech, and more, plus emotion-aware synthesis.
 ```bash
 npm install @aituber-onair/voice
 ```
 
 ### [@aituber-onair/manneri](./packages/manneri/README.md)
+
+<img src="./packages/manneri/images/aituber-onair-manneri.png" alt="AITuber OnAir Manneri logo" width="240" />
+
 Detects repetitive conversation patterns and injects topic-diversification prompts to keep dialogue fresh.
 ```bash
 npm install @aituber-onair/manneri
 ```
 
 ### [@aituber-onair/bushitsu-client](./packages/bushitsu-client/README.md)
+
+<img src="./packages/bushitsu-client/images/aituber-onair-bushitsu-client.png" alt="AITuber OnAir Bushitsu Client logo" width="240" />
+
 WebSocket chat client with React hooks, auto-reconnect, rate limiting, mentions, and voice integration. Browser and Node.js.
 ```bash
 npm install @aituber-onair/bushitsu-client
 ```
 
 ### [@aituber-onair/kizuna](./packages/kizuna/README.md)
+
+<img src="./packages/kizuna/images/aituber-onair-kizuna.png" alt="AITuber OnAir Kizuna logo" width="240" />
+
 Relationship / bond system (絆) for AI characters and viewers: points, achievements, emotion-based bonuses, level progression, persistent storage.
 ```bash
 npm install @aituber-onair/kizuna

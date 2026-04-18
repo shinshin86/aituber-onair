@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://aituberonair.com">Web アプリを試す</a> ・
-  <a href="./packages/core/examples/react-basic">React サンプルを動かす</a> ・
+  <a href="#2-サンプルアプリをローカルで動かす">サンプルを試す</a> ・
   <a href="#パッケージ">パッケージ一覧を見る</a>
 </p>
 
@@ -34,18 +34,37 @@
 
 [AITuber OnAir](https://aituberonair.com) は `@aituber-onair/core` を使って作られた、独立した AITuber 配信 Web アプリです。ツールキット全体の雰囲気をいちばん早く掴めると同時に、このライブラリで実際にどこまで作れるかを示す実践的なリファレンスにもなっています。セットアップ不要。
 
-### 2. サンプルをローカルで動かす
+### 2. サンプルアプリをローカルで動かす
 
-チャット + 音声を組み合わせた React アプリ。そのまま改造できます。
+`@aituber-onair/core` をベースにしたフル機能の React サンプルを2種類用意しています。プロジェクトに合う方を選んでください。LLM / TTS プロバイダー対応範囲と **Settings** UI はどちらも共通です。
+
+#### PNGTuber Chat — 2D PNG アバター
+
+![PNGTuber サンプルアプリ](./packages/core/examples/react-pngtuber-app/images/react-pngtuber-app.png)
+
+4状態の PNG（口・目の開閉）を差し替えるだけで、実際の音声出力ボリュームから駆動されるリアルタイムリップシンクが動きます。詳細は [`packages/core/examples/react-pngtuber-app`](./packages/core/examples/react-pngtuber-app) を参照。
 
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
-cd aituber-onair/packages/core/examples/react-basic
+cd aituber-onair/packages/core/examples/react-pngtuber-app
 npm install
 npm run dev
 ```
 
-ブラウザで `http://localhost:5173` を開いてください。
+#### VRM Chat — 3D VRM アバター
+
+![VRM サンプルアプリ](./packages/core/examples/react-vrm-app/images/react-vrm-app.png)
+
+3D VRM アバター（`miko.vrm`）、任意のアイドル VRMA アニメーション、`Aa` 表情へのリアルタイムリップシンク、カメラ操作（ドラッグで回転 / ホイールでズーム）に対応。詳細は [`packages/core/examples/react-vrm-app`](./packages/core/examples/react-vrm-app) を参照。
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-vrm-app
+npm install
+npm run dev
+```
+
+どちらもブラウザで `http://localhost:5173` を開き、**Settings** から API キーとプロバイダー設定を入力してください。
 
 ### 3. パッケージを使って自分のアプリに組み込む
 
@@ -74,36 +93,54 @@ await chat.processChat(
 ## パッケージ
 
 ### [@aituber-onair/core](./packages/core/README_ja.md)
+
+<img src="./packages/core/images/aituber-onair-core.png" alt="AITuber OnAir Core ロゴ" width="240" />
+
 チャット・音声・メモリ・会話コンテキストをまとめて、フル機能の AITuber 体験を組み立てるためのコアランタイム。
 ```bash
 npm install @aituber-onair/core
 ```
 
 ### [@aituber-onair/chat](./packages/chat/README.ja.md)
+
+<img src="./packages/chat/images/aituber-onair-chat.png" alt="AITuber OnAir Chat ロゴ" width="240" />
+
 OpenAI、Claude、Gemini、Z.ai、Kimi、OpenRouter を共通インターフェースで扱える LLM レイヤー。ストリーミング、ツール / 関数呼び出し、Vision、MCP に対応。
 ```bash
 npm install @aituber-onair/chat
 ```
 
 ### [@aituber-onair/voice](./packages/voice/README_ja.md)
+
+<img src="./packages/voice/images/aituber-onair-voice.png" alt="AITuber OnAir Voice ロゴ" width="240" />
+
 VOICEVOX、VoicePeak、OpenAI TTS、MiniMax、AIVIS Speech などをサポートする独立した TTS ライブラリ。感情に応じた合成にも対応。
 ```bash
 npm install @aituber-onair/voice
 ```
 
 ### [@aituber-onair/manneri](./packages/manneri/README.ja.md)
+
+<img src="./packages/manneri/images/aituber-onair-manneri.png" alt="AITuber OnAir Manneri ロゴ" width="240" />
+
 会話の繰り返しパターンを検出し、話題を切り替えるためのプロンプトを差し込むことで、対話を飽きさせないようにします。
 ```bash
 npm install @aituber-onair/manneri
 ```
 
 ### [@aituber-onair/bushitsu-client](./packages/bushitsu-client/README_ja.md)
+
+<img src="./packages/bushitsu-client/images/aituber-onair-bushitsu-client.png" alt="AITuber OnAir Bushitsu Client ロゴ" width="240" />
+
 React hooks 対応の WebSocket チャットクライアント。自動再接続・レート制限・メンション・音声合成統合つき。ブラウザと Node.js の両方で動作します。
 ```bash
 npm install @aituber-onair/bushitsu-client
 ```
 
 ### [@aituber-onair/kizuna](./packages/kizuna/README.ja.md)
+
+<img src="./packages/kizuna/images/aituber-onair-kizuna.png" alt="AITuber OnAir Kizuna ロゴ" width="240" />
+
 AI キャラクターと視聴者のための絆システム。ポイント、実績、感情ボーナス、レベル進行、永続ストレージに対応。
 ```bash
 npm install @aituber-onair/kizuna
