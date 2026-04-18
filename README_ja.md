@@ -55,7 +55,7 @@ npm run dev
 
 ![VRM サンプルアプリ](./packages/core/examples/react-vrm-app/images/react-vrm-app.png)
 
-3D VRM アバター（`miko.vrm`）、任意のアイドル VRMA アニメーション、`Aa` 表情へのリアルタイムリップシンク、カメラ操作（ドラッグで回転 / ホイールでズーム）に対応。詳細は [`packages/core/examples/react-vrm-app`](./packages/core/examples/react-vrm-app) を参照。
+3D VRM アバター（`miko.vrm`）、任意のアイドル VRMA アニメーション、発話に合わせた口元のリアルタイムリップシンク、カメラ操作（ドラッグで回転 / ホイールでズーム）に対応。詳細は [`packages/core/examples/react-vrm-app`](./packages/core/examples/react-vrm-app) を参照。
 
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git

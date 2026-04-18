@@ -55,7 +55,7 @@ npm run dev
 
 ![VRM example app](./packages/core/examples/react-vrm-app/images/react-vrm-app.png)
 
-Render a 3D VRM avatar (`miko.vrm`) with optional idle VRMA animation, real-time lip-sync on the `Aa` expression, and camera controls (drag to rotate / wheel to zoom). See [`packages/core/examples/react-vrm-app`](./packages/core/examples/react-vrm-app).
+Render a 3D VRM avatar (`miko.vrm`) with optional idle VRMA animation, real-time mouth lip-sync driven from audio output, and camera controls (drag to rotate / wheel to zoom). See [`packages/core/examples/react-vrm-app`](./packages/core/examples/react-vrm-app).
 
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
