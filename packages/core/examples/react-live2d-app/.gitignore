@@ -1,0 +1,4 @@
+models/*
+!models/.gitkeep
+public/scripts/*
+!public/scripts/.gitkeep
