@@ -36,7 +36,9 @@
 
 ### 2. Run an example app locally
 
-Two full, ready-to-run React apps built on `@aituber-onair/core`. Pick whichever avatar style fits your project — both share the same broad LLM / TTS provider coverage and in-app **Settings** UI.
+Three full, ready-to-run React apps built on `@aituber-onair/core`. Pick the
+avatar style that fits your project. All three share the same broad LLM / TTS
+provider coverage and in-app **Settings** UI.
 
 #### PNGTuber Chat — 2D PNG avatar
 
@@ -64,7 +66,21 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in either case, then set API keys and provider options in **Settings**.
+#### Live2D Chat — local Live2D folder loader
+
+Load a local Live2D model folder that contains `.model3.json`, render it in
+the browser, and drive mouth movement from actual audio output volume. This
+example intentionally does not bundle any Live2D assets. See
+[`packages/core/examples/react-live2d-app`](./packages/core/examples/react-live2d-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173` in any case, then set API keys and provider options in **Settings**.
 
 ### 3. Build your own with the packages
 

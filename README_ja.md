@@ -36,7 +36,7 @@
 
 ### 2. サンプルアプリをローカルで動かす
 
-`@aituber-onair/core` をベースにしたフル機能の React サンプルを2種類用意しています。プロジェクトに合う方を選んでください。LLM / TTS プロバイダー対応範囲と **Settings** UI はどちらも共通です。
+`@aituber-onair/core` をベースにしたフル機能の React サンプルを3種類用意しています。プロジェクトに合うアバター方式を選んでください。LLM / TTS プロバイダー対応範囲と **Settings** UI はどれも共通です。
 
 #### PNGTuber Chat — 2D PNG アバター
 
@@ -64,7 +64,18 @@ npm install
 npm run dev
 ```
 
-どちらもブラウザで `http://localhost:5173` を開き、**Settings** から API キーとプロバイダー設定を入力してください。
+#### Live2D Chat — ローカル Live2D フォルダ読み込み
+
+`.model3.json` を含むローカルの Live2D モデルフォルダをブラウザで読み込み、実際の音声出力ボリュームに合わせて口元を動かします。このサンプルは Live2D アセット自体は同梱しません。詳細は [`packages/core/examples/react-live2d-app`](./packages/core/examples/react-live2d-app) を参照。
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+いずれの場合もブラウザで `http://localhost:5173` を開き、**Settings** から API キーとプロバイダー設定を入力してください。
 
 ### 3. パッケージを使って自分のアプリに組み込む
 
