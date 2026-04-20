@@ -18,6 +18,7 @@ import { SpeakControls } from './components/SpeakControls';
 import {
   ENGINE_DEFAULTS,
   GEMINI_TTS_MODELS,
+  XAI_VOICE_OPTIONS,
   type AivisCloudBooleanOption,
   type AivisCloudOutputChannelOption,
   type AivisCloudOutputFormatOption,
@@ -56,6 +57,15 @@ interface MinimaxSpeakerListResponse {
   data?: {
     speakers?: MinimaxSpeakerResponse[];
   };
+}
+
+interface XaiVoiceResponse {
+  voice_id: string;
+  name: string;
+}
+
+interface XaiVoiceListResponse {
+  voices?: XaiVoiceResponse[];
 }
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
@@ -283,7 +293,8 @@ function App() {
     if (
       engine !== 'voicevox' &&
       engine !== 'aivisSpeech' &&
-      engine !== 'minimax'
+      engine !== 'minimax' &&
+      engine !== 'xai'
     ) {
       return;
     }
@@ -316,6 +327,37 @@ function App() {
             label: `${voice.name} - ${style.name}`,
           })),
         );
+      } else if (engine === 'xai') {
+        const trimmedApiKey = apiKey.trim();
+
+        if (!trimmedApiKey) {
+          throw new Error('xAI API key is required');
+        }
+
+        const response = await fetch(
+          `${trimTrailingSlash(ENGINE_DEFAULTS.xai.apiUrl)}/voices`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${trimmedApiKey}`,
+            },
+          },
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            errorText
+              ? `Failed to fetch speakers: ${response.status} - ${errorText}`
+              : `Failed to fetch speakers: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const result = (await response.json()) as XaiVoiceListResponse;
+        nextSpeakerOptions = (result.voices ?? []).map((voice) => ({
+          id: voice.voice_id,
+          label: voice.name,
+        }));
       } else {
         const trimmedApiKey = apiKey.trim();
 
@@ -368,9 +410,21 @@ function App() {
       }
 
       setSpeakerOptions(nextSpeakerOptions);
-      setSpeaker(nextSpeakerOptions[0].id);
+      setSpeaker((currentSpeaker) =>
+        nextSpeakerOptions.some((option) => option.id === currentSpeaker)
+          ? currentSpeaker
+          : nextSpeakerOptions[0].id,
+      );
     } catch (error) {
       console.error('Failed to fetch speaker list:', error);
+      if (engine === 'xai') {
+        setSpeakerOptions([]);
+        setSpeaker((currentSpeaker) =>
+          XAI_VOICE_OPTIONS.some((option) => option.id === currentSpeaker)
+            ? currentSpeaker
+            : String(ENGINE_DEFAULTS.xai.speaker),
+        );
+      }
       setSpeakerFetchError(
         error instanceof Error ? error.message : 'Failed to fetch speakers',
       );

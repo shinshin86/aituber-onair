@@ -133,6 +133,13 @@ export const XAI_VOICES: Record<string, string> = {
   sal: 'Sal',
 };
 
+export const XAI_VOICE_OPTIONS = Object.entries(XAI_VOICES).map(
+  ([id, label]) => ({
+    id,
+    label,
+  }),
+);
+
 export const GEMINI_TTS_VOICES: Record<string, string> = {
   Zephyr: 'Zephyr — Bright',
   Puck: 'Puck — Upbeat',

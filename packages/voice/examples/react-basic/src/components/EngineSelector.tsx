@@ -3,7 +3,7 @@ import {
   ENGINE_DEFAULTS,
   GEMINI_TTS_VOICES,
   OPENAI_VOICES,
-  XAI_VOICES,
+  XAI_VOICE_OPTIONS,
   type EngineType,
   type SpeakerOption,
 } from '../constants';
@@ -90,6 +90,11 @@ export function EngineSelector({
     }
 
     if (engine === 'xai') {
+      const hasFetchedSpeakerOptions = speakerOptions.length > 0;
+      const xaiSpeakerOptions = hasFetchedSpeakerOptions
+        ? speakerOptions
+        : XAI_VOICE_OPTIONS;
+
       return (
         <div className="form-group">
           <label htmlFor="speaker">Speaker:</label>
@@ -98,12 +103,32 @@ export function EngineSelector({
             value={speaker}
             onChange={(e) => onSpeakerChange(e.target.value)}
           >
-            {Object.entries(XAI_VOICES).map(([voiceId, label]) => (
-              <option key={voiceId} value={voiceId}>
-                {label}
+            {xaiSpeakerOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
               </option>
             ))}
           </select>
+          <div className="speaker-fetch-row">
+            <button
+              type="button"
+              className="secondary-action-button"
+              onClick={onFetchSpeakers}
+              disabled={isFetchingSpeakers || !apiKey.trim()}
+              title={!apiKey.trim() ? 'API Keyを入力してください' : undefined}
+            >
+              {isFetchingSpeakers
+                ? '取得中...'
+                : hasFetchedSpeakerOptions
+                  ? '再取得'
+                  : '話者一覧を取得'}
+            </button>
+          </div>
+          {speakerFetchError && (
+            <div className="speaker-fetch-message speaker-fetch-message--error">
+              {speakerFetchError}
+            </div>
+          )}
         </div>
       );
     }
