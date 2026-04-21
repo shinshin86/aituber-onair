@@ -8,6 +8,8 @@ import {
   GeminiTtsEngine,
   OpenAiCompatibleEngine,
   PiperPlusEngine,
+  type VoicepeakEmotionInput,
+  type VoicepeakEmotionWeights,
   XaiEngine,
 } from '../src/index';
 
@@ -31,5 +33,12 @@ describe('Core index voice re-exports', () => {
       'http://localhost:8880/v1/audio/speech',
     );
     expect(XAI_TTS_API_URL).toBe('https://api.x.ai/v1/tts');
+  });
+
+  it('re-exports VoicePeak weighted emotion types', () => {
+    const weighted: VoicepeakEmotionWeights = { happy: 40, fun: 60 };
+    const input: VoicepeakEmotionInput = weighted;
+
+    expect(input).toEqual({ happy: 40, fun: 60 });
   });
 });

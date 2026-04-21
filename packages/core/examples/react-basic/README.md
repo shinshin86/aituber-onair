@@ -140,6 +140,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - GLM-4.6 and GLM-4.6V series
 
 **Kimi:**
+- Kimi K2.6
 - Kimi K2.5
 
 **OpenRouter:**
@@ -219,6 +220,7 @@ The application supports 10 different Text-to-Speech engines:
 - No API key required
 - 6 built-in speakers
 - Natural Japanese voices
+- Supports single-tag and weighted emotion overrides (`vpeakserver >= v0.2.0`)
 
 #### 8. **MiniMax**
 - Chinese TTS service
