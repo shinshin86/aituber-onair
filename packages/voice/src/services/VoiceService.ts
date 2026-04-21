@@ -5,7 +5,7 @@ import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine'
 export type { VoiceVoxQueryParameterOverrides };
 export type { AivisSpeechQueryParameterOverrides };
 import { ChatScreenplay } from '../types/chat';
-import type { EmotionTypeForVoicepeak } from '../types/voice';
+import type { VoicepeakEmotionInput } from '../types/voice';
 
 /**
  * MiniMax audio format types
@@ -99,8 +99,11 @@ export interface VoicePeakVoiceServiceOptions
   engineType: 'voicepeak';
   /** Custom VOICEPEAK API endpoint URL */
   voicepeakApiUrl?: string;
-  /** VoicePeak emotion override */
-  voicepeakEmotion?: EmotionTypeForVoicepeak;
+  /**
+   * VoicePeak emotion override.
+   * Accepts a single legacy tag or a weighted map (vpeakserver v0.2.0+).
+   */
+  voicepeakEmotion?: VoicepeakEmotionInput;
   /** VoicePeak speaking speed (50-200, integer) */
   voicepeakSpeed?: number;
   /** VoicePeak pitch (-300 to 300, integer) */

@@ -49,6 +49,22 @@ export type EmotionTypeForVoicepeak =
   | 'surprised';
 
 /**
+ * Weighted VoicePeak emotion overrides.
+ * Each key accepts an integer from 0 to 100.
+ */
+export type VoicepeakEmotionWeights = Partial<
+  Record<EmotionTypeForVoicepeak, number>
+>;
+
+/**
+ * VoicePeak emotion override input.
+ * Accepts either a single legacy tag or weighted emotion overrides.
+ */
+export type VoicepeakEmotionInput =
+  | EmotionTypeForVoicepeak
+  | VoicepeakEmotionWeights;
+
+/**
  * Screenplay - Text with emotion expression
  * This has a different structure from the Screenplay type in chat.ts.
  * Be careful of name conflicts when importing both types.
