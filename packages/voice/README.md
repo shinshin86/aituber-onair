@@ -148,6 +148,23 @@ const voiceService = new VoiceService({
 });
 ```
 
+Single-tag `voicepeakEmotion` remains backward compatible with existing
+VoicePeak setups. Weighted emotion maps require `vpeakserver >= v0.2.0`.
+
+```typescript
+const weightedVoiceService = new VoiceService({
+  engineType: 'voicepeak',
+  speaker: 'f1',
+  voicepeakApiUrl: 'http://localhost:20202',
+  voicepeakEmotion: { happy: 40, fun: 60 },
+});
+```
+
+- `neutral` is ignored when sending weighted emotions.
+- Weight `0` is ignored.
+- `{}` means "do not send emotion" and does not fall back to `Talk.style`.
+- `undefined` means no override, so `Talk.style` still maps to a single tag.
+
 ### OpenAI TTS
 OpenAI's text-to-speech API with multiple voice options.
 
@@ -449,7 +466,7 @@ const voiceService = new VoiceService({
 
 - **VoicePeak**
   - Endpoint: `voicepeakApiUrl`
-  - Emotion: `voicepeakEmotion`
+  - Emotion: `voicepeakEmotion` (single tag or weighted map)
   - Scalars: `voicepeakSpeed`, `voicepeakPitch`
 
 - **MiniMax**

@@ -162,12 +162,34 @@ async function main() {
     }
   }
 
+  // Test 5: Weighted emotions (requires vpeakserver v0.2.0+)
+  console.log('\n=== Test 5: Weighted emotion test ===');
+  try {
+    const outputPath = path.join(__dirname, 'voicepeak-weighted.wav');
+
+    const voiceService = new VoiceEngineAdapter({
+      ...voicepeakOptions,
+      voicepeakEmotion: { happy: 40, fun: 60 },
+      onPlay: async (audioBuffer) => {
+        fs.writeFileSync(outputPath, Buffer.from(audioBuffer));
+      },
+    });
+
+    await voiceService.speakText(
+      '重み付き emotion を使った VoicePeak のテストです。',
+    );
+    console.log('✓ Saved to: voicepeak-weighted.wav');
+  } catch (error) {
+    console.error('❌ Weighted emotion test failed:', error.message);
+  }
+
   console.log('\n=== Summary ===');
   console.log('✅ VoicePeak example completed!');
   console.log('\nℹ️  To use VoicePeak:');
   console.log('1. Install and run VoicePeak server');
   console.log('2. Default URL: http://localhost:20202');
   console.log('3. Default speaker ID: f1');
+  console.log('4. Weighted emotions require vpeakserver v0.2.0 or later');
   console.log('\nℹ️  Generated files can be played with:');
   console.log('- macOS: afplay filename.wav');
   console.log('- Linux: aplay filename.wav');
