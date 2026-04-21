@@ -147,6 +147,23 @@ const voiceService = new VoiceService({
 });
 ```
 
+単一タグの `voicepeakEmotion` は従来どおり後方互換です。重み付き
+emotion map を使う場合は `vpeakserver >= v0.2.0` が必要です。
+
+```typescript
+const weightedVoiceService = new VoiceService({
+  engineType: 'voicepeak',
+  speaker: 'f1',
+  voicepeakApiUrl: 'http://localhost:20202',
+  voicepeakEmotion: { happy: 40, fun: 60 },
+});
+```
+
+- `neutral` は重み付き送信時に無視されます。
+- 重み `0` は無視されます。
+- `{}` は「emotion を送らない」を意味し、`Talk.style` へはフォールバックしません。
+- `undefined` は override なしなので、従来どおり `Talk.style` が単一タグにマップされます。
+
 ### OpenAI TTS
 複数の音声オプションを持つOpenAIのテキスト読み上げAPI。
 
@@ -451,7 +468,7 @@ const voiceService = new VoiceService({
 
 - **VoicePeak**
   - エンドポイント: `voicepeakApiUrl`
-  - 感情: `voicepeakEmotion`
+  - 感情: `voicepeakEmotion`（単一タグまたは重み付き map）
   - スカラー: `voicepeakSpeed`, `voicepeakPitch`
 
 - **MiniMax**

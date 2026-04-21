@@ -140,6 +140,14 @@ export const XAI_VOICE_OPTIONS = Object.entries(XAI_VOICES).map(
   }),
 );
 
+export const VOICEPEAK_WEIGHT_KEYS = [
+  'happy',
+  'fun',
+  'angry',
+  'sad',
+  'surprised',
+] as const;
+
 export const GEMINI_TTS_VOICES: Record<string, string> = {
   Zephyr: 'Zephyr — Bright',
   Puck: 'Puck — Upbeat',
@@ -194,6 +202,7 @@ export const SLIDER_CONFIG: Record<string, SliderConfig> = {
     defaultValue: 1,
     suffix: 'x',
   },
+  voicepeakEmotionWeight: { min: 0, max: 100, step: 1, defaultValue: 0 },
   voicepeakSpeed: { min: 50, max: 150, step: 1, defaultValue: 100 },
   voicepeakPitch: { min: -300, max: 300, step: 1, defaultValue: 0 },
   voicevoxSpeedScale: {
@@ -353,6 +362,7 @@ export type AivisCloudOutputSamplingRateOption =
   | '44100'
   | '48000';
 export type AivisCloudOutputChannelOption = 'default' | 'mono' | 'stereo';
+export type VoicepeakEmotionMode = 'single' | 'weighted';
 export type VoicePeakEmotionOption =
   | 'neutral'
   | 'happy'

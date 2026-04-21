@@ -4,6 +4,7 @@ interface SpeakControlsProps {
   text: string;
   onTextChange: (nextValue: string) => void;
   isPlaying: boolean;
+  isSpeakDisabled?: boolean;
   onSpeak: () => void;
   onStop: () => void;
   status: string;
@@ -15,12 +16,15 @@ export function SpeakControls({
   text,
   onTextChange,
   isPlaying,
+  isSpeakDisabled = false,
   onSpeak,
   onStop,
   status,
   statusType,
   engine,
 }: SpeakControlsProps) {
+  const speakDisabled = isPlaying || isSpeakDisabled;
+
   return (
     <>
       <div className="form-group">
@@ -37,8 +41,8 @@ export function SpeakControls({
         <button
           type="button"
           onClick={onSpeak}
-          disabled={isPlaying}
-          style={{ opacity: isPlaying ? 0.5 : 1 }}
+          disabled={speakDisabled}
+          style={{ opacity: speakDisabled ? 0.5 : 1 }}
         >
           🔊 {isPlaying ? 'Speaking...' : 'Speak'}
         </button>
@@ -70,6 +74,11 @@ export function SpeakControls({
         <p className="helper-text">
           ※ AivisSpeech
           では感情の強さ（Intonation）やテンポ緩急など独自パラメータを設定できます
+        </p>
+      ) : engine === 'voicepeak' ? (
+        <p className="helper-text">
+          ※ VOICEPEAK では単一タグに加えて weighted map も指定できます。weighted
+          は vpeakserver v0.2.0+ が必要です
         </p>
       ) : (
         <p className="helper-text">
