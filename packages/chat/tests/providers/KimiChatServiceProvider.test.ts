@@ -3,6 +3,7 @@ import { KimiChatServiceProvider } from '../../src/services/providers/kimi/KimiC
 import type { KimiChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
 } from '../../src/constants';
 
@@ -26,13 +27,13 @@ describe('KimiChatServiceProvider', () => {
   describe('getSupportedModels', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
-      expect(models).toEqual([MODEL_KIMI_K2_5]);
+      expect(models).toEqual([MODEL_KIMI_K2_6, MODEL_KIMI_K2_5]);
     });
   });
 
   describe('getDefaultModel', () => {
-    it('should return kimi-k2.5 as default model', () => {
-      expect(provider.getDefaultModel()).toBe(MODEL_KIMI_K2_5);
+    it('should return kimi-k2.6 as default model', () => {
+      expect(provider.getDefaultModel()).toBe(MODEL_KIMI_K2_6);
     });
   });
 
@@ -45,6 +46,7 @@ describe('KimiChatServiceProvider', () => {
 
   describe('supportsVisionForModel', () => {
     it('should return true for vision-supported models', () => {
+      expect(provider.supportsVisionForModel(MODEL_KIMI_K2_6)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_KIMI_K2_5)).toBe(true);
     });
 
@@ -66,8 +68,8 @@ describe('KimiChatServiceProvider', () => {
 
       expect(KimiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_KIMI_K2_5,
-        MODEL_KIMI_K2_5,
+        MODEL_KIMI_K2_6,
+        MODEL_KIMI_K2_6,
         undefined,
         ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
         undefined,
@@ -91,8 +93,8 @@ describe('KimiChatServiceProvider', () => {
 
       expect(KimiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_KIMI_K2_5,
-        MODEL_KIMI_K2_5,
+        MODEL_KIMI_K2_6,
+        MODEL_KIMI_K2_6,
         options.tools,
         ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
         undefined,
@@ -111,8 +113,8 @@ describe('KimiChatServiceProvider', () => {
 
       expect(KimiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_KIMI_K2_5,
-        MODEL_KIMI_K2_5,
+        MODEL_KIMI_K2_6,
+        MODEL_KIMI_K2_6,
         undefined,
         'http://localhost:8000/v1/chat/completions',
         undefined,

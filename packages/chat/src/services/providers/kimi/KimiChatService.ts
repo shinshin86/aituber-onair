@@ -3,7 +3,7 @@ import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
-  MODEL_KIMI_K2_5,
+  MODEL_KIMI_K2_6,
   isKimiVisionModel,
 } from '../../../constants/kimi';
 import {
@@ -49,8 +49,8 @@ export class KimiChatService implements ChatService {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_KIMI_K2_5,
-    visionModel: string = MODEL_KIMI_K2_5,
+    model: string = MODEL_KIMI_K2_6,
+    visionModel: string = MODEL_KIMI_K2_6,
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
     responseLength?: ChatResponseLength,

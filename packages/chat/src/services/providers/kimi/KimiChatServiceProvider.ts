@@ -1,5 +1,6 @@
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
   isKimiVisionModel,
 } from '../../../constants/kimi';
@@ -65,21 +66,21 @@ export class KimiChatServiceProvider
    * Get the list of supported models
    */
   getSupportedModels(): string[] {
-    return [MODEL_KIMI_K2_5];
+    return [MODEL_KIMI_K2_6, MODEL_KIMI_K2_5];
   }
 
   /**
    * Get the default model
    */
   getDefaultModel(): string {
-    return MODEL_KIMI_K2_5;
+    return MODEL_KIMI_K2_6;
   }
 
   /**
    * Get the default vision model
    */
   private getDefaultVisionModel(): string {
-    return MODEL_KIMI_K2_5;
+    return MODEL_KIMI_K2_6;
   }
 
   /**

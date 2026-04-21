@@ -91,6 +91,7 @@ import {
   MODEL_GROK_4_1_FAST_REASONING,
   MODEL_GROK_4_1_FAST_NON_REASONING,
   // Kimi models
+  MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
   // Gemini Nano models
   MODEL_GEMINI_NANO,
@@ -802,10 +803,16 @@ export const allModels: ProviderModel[] = [
 
   // Kimi models
   {
+    id: MODEL_KIMI_K2_6,
+    name: 'Kimi K2.6',
+    provider: 'kimi',
+    default: true,
+  },
+  {
     id: MODEL_KIMI_K2_5,
     name: 'Kimi K2.5',
     provider: 'kimi',
-    default: true,
+    default: false,
   },
 
   // Gemini Nano models (browser built-in AI)
