@@ -1,5 +1,19 @@
 # @aituber-onair/voice
 
+## 0.14.0
+
+### Minor Changes
+
+- Add weighted VoicePeak emotion overrides while keeping the existing
+  single-tag API backward compatible.
+  - Introduce `VoicepeakEmotionInput` and
+    `VoicepeakEmotionWeights` public types.
+  - Accept either a single legacy tag or weighted emotion map through
+    `voicepeakEmotion`.
+  - Require `vpeakserver >= v0.2.0` for weighted emotion serialization.
+  - Ignore `neutral`, ignore zero weights, and allow `{}` to suppress
+    emotion output without falling back to `Talk.style`.
+
 ## 0.13.0
 
 ### Minor Changes
