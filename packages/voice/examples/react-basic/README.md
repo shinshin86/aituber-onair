@@ -50,7 +50,7 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 - **OpenAI-Compatible TTS** - Self-hosted OpenAI-style endpoints such as Kokoro FastAPI
 - **VOICEVOX** - Free Japanese voices (requires local server)
 - **AIVIS Speech** - Emotion-aware synthesis
-- **VoicePeak** - Professional voice synthesis
+- **VoicePeak** - Professional voice synthesis with single-tag and weighted emotion UI (`vpeakserver v0.2.0+` required for weighted mode)
 - **MiniMax** - Advanced Chinese/Japanese TTS
 
 ### Dynamic Configuration

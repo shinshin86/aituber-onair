@@ -280,12 +280,52 @@
   color: var(--muted);
 }
 
+.voicepeak-mode-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.voicepeak-mode-toggle__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.voicepeak-mode-toggle__option input {
+  width: auto;
+  margin: 0;
+}
+
+.voicepeak-weight-sum {
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.voicepeak-weight-sum--warning {
+  color: var(--error-text);
+}
+
+.voicepeak-weight-error {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--error-text);
+}
+
 .voicevox-card select,
 .voicevox-card input,
 .aiviscloud-card select,
 .aiviscloud-card input,
 .openai-card select,
-.openai-card input {
+.openai-card input,
+.voicepeak-card select,
+.voicepeak-card input:not([type="radio"]):not([type="range"]) {
   background: var(--panel-overlay);
 }
 
@@ -294,7 +334,9 @@
 .aiviscloud-card select:focus,
 .aiviscloud-card input:focus,
 .openai-card select:focus,
-.openai-card input:focus {
+.openai-card input:focus,
+.voicepeak-card select:focus,
+.voicepeak-card input:not([type="radio"]):not([type="range"]):focus {
   background: var(--panel);
 }
 

@@ -5,6 +5,8 @@ import {
   type MinimaxAudioFormat,
   type MinimaxModel,
   type VoiceServiceOptions,
+  type VoicepeakEmotionInput,
+  type VoicepeakEmotionWeights,
   type VoiceVoxQueryParameterOverrides,
   type XaiBitRate,
   type XaiCodec,
@@ -29,6 +31,8 @@ import {
   type OutputStereoOption,
   type SpeakerOption,
   type VoicePeakEmotionOption,
+  type VoicepeakEmotionMode,
+  VOICEPEAK_WEIGHT_KEYS,
 } from './constants';
 import { usePiperPlusStatus } from './hooks/usePiperPlusStatus';
 
@@ -69,6 +73,17 @@ interface XaiVoiceListResponse {
 }
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
+
+const createInitialVoicepeakEmotionWeights = (): Record<
+  (typeof VOICEPEAK_WEIGHT_KEYS)[number],
+  string
+> => ({
+  happy: '',
+  fun: '',
+  angry: '',
+  sad: '',
+  surprised: '',
+});
 
 function App() {
   const [engine, setEngine] = useState<EngineType>('openai');
@@ -114,6 +129,11 @@ function App() {
   const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState('');
   const [voicepeakEmotion, setVoicepeakEmotion] =
     useState<VoicePeakEmotionOption>('neutral');
+  const [voicepeakEmotionMode, setVoicepeakEmotionMode] =
+    useState<VoicepeakEmotionMode>('single');
+  const [voicepeakEmotionWeights, setVoicepeakEmotionWeights] = useState<
+    Record<(typeof VOICEPEAK_WEIGHT_KEYS)[number], string>
+  >(createInitialVoicepeakEmotionWeights);
   const [voicepeakSpeed, setVoicepeakSpeed] = useState('');
   const [voicepeakPitch, setVoicepeakPitch] = useState('');
   const [openaiSpeed, setOpenaiSpeed] = useState('');
@@ -201,6 +221,26 @@ function App() {
   );
   const { available: piperPlusAvailable, loading: piperPlusLoading } =
     usePiperPlusStatus();
+  const voicepeakWeightSum = VOICEPEAK_WEIGHT_KEYS.reduce((sum, key) => {
+    const parsedValue = Number.parseInt(voicepeakEmotionWeights[key], 10);
+    return Number.isInteger(parsedValue) && parsedValue > 0
+      ? sum + parsedValue
+      : sum;
+  }, 0);
+  const isVoicepeakWeightedInvalid =
+    engine === 'voicepeak' &&
+    voicepeakEmotionMode === 'weighted' &&
+    voicepeakWeightSum > 100;
+
+  const setVoicepeakEmotionWeight = (
+    key: (typeof VOICEPEAK_WEIGHT_KEYS)[number],
+    value: string,
+  ) => {
+    setVoicepeakEmotionWeights((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  };
 
   useEffect(() => {
     const defaults = ENGINE_DEFAULTS[engine];
@@ -232,6 +272,8 @@ function App() {
     setVoicevoxEnableInterrogativeUpspeak('default');
     setVoicevoxCoreVersion('');
     setVoicepeakEmotion('neutral');
+    setVoicepeakEmotionMode('single');
+    setVoicepeakEmotionWeights(createInitialVoicepeakEmotionWeights());
     setVoicepeakSpeed('');
     setVoicepeakPitch('');
     setOpenaiSpeed('');
@@ -436,6 +478,14 @@ function App() {
   const speak = async () => {
     if (!text) {
       setStatus('Please enter some text to speak');
+      setStatusType('error');
+      return;
+    }
+
+    if (isVoicepeakWeightedInvalid) {
+      setStatus(
+        '合計が 100 を超えています。weight は合計 100 以下に抑えてください。',
+      );
       setStatusType('error');
       return;
     }
@@ -709,7 +759,23 @@ function App() {
           options.openAiCompatibleSpeed = parsedSpeed;
         }
       } else if (engine === 'voicepeak') {
-        options.voicepeakEmotion = voicepeakEmotion;
+        if (voicepeakEmotionMode === 'weighted') {
+          const weights: VoicepeakEmotionWeights = {};
+
+          for (const key of VOICEPEAK_WEIGHT_KEYS) {
+            const parsedWeight = Number.parseInt(
+              voicepeakEmotionWeights[key],
+              10,
+            );
+            if (Number.isInteger(parsedWeight) && parsedWeight > 0) {
+              weights[key] = parsedWeight;
+            }
+          }
+
+          options.voicepeakEmotion = weights as VoicepeakEmotionInput;
+        } else {
+          options.voicepeakEmotion = voicepeakEmotion;
+        }
 
         const parsedSpeed = Number.parseInt(voicepeakSpeed, 10);
         if (!Number.isNaN(parsedSpeed)) {
@@ -1092,10 +1158,15 @@ function App() {
                   },
                 }}
                 voicepeak={{
+                  mode: voicepeakEmotionMode,
+                  setMode: setVoicepeakEmotionMode,
                   emotion: {
                     value: voicepeakEmotion,
                     onChange: setVoicepeakEmotion,
                   },
+                  weights: voicepeakEmotionWeights,
+                  setWeight: setVoicepeakEmotionWeight,
+                  weightSum: voicepeakWeightSum,
                   speed: { value: voicepeakSpeed, onChange: setVoicepeakSpeed },
                   pitch: { value: voicepeakPitch, onChange: setVoicepeakPitch },
                 }}
@@ -1270,6 +1341,7 @@ function App() {
               text={text}
               onTextChange={setText}
               isPlaying={isPlaying}
+              isSpeakDisabled={isVoicepeakWeightedInvalid}
               onSpeak={speak}
               onStop={stopSpeaking}
               status={status}

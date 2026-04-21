@@ -17,6 +17,8 @@ import {
   type LocalOutputSamplingRateOption,
   type OutputStereoOption,
   type VoicePeakEmotionOption,
+  type VoicepeakEmotionMode,
+  VOICEPEAK_WEIGHT_KEYS,
 } from '../constants';
 import { CollapsibleCard } from './CollapsibleCard';
 import { NumberSliderField } from './NumberSliderField';
@@ -68,7 +70,15 @@ interface EngineParametersProps {
     coreVersion: StringField;
   };
   voicepeak: {
+    mode: VoicepeakEmotionMode;
+    setMode: (nextMode: VoicepeakEmotionMode) => void;
     emotion: SelectField<VoicePeakEmotionOption>;
+    weights: Record<(typeof VOICEPEAK_WEIGHT_KEYS)[number], string>;
+    setWeight: (
+      key: (typeof VOICEPEAK_WEIGHT_KEYS)[number],
+      nextValue: string,
+    ) => void;
+    weightSum: number;
     speed: StringField;
     pitch: StringField;
   };
@@ -529,27 +539,95 @@ export function EngineParameters({
           description="vpeakserver を利用してローカルの VOICEPEAK と連携します。未指定の項目は サーバー側の推奨値が適用されます。"
         >
           <div className="parameter-section">
-            <div className="parameter-section__title">感情・ピッチ</div>
-            <div className="parameter-grid">
-              <div className="form-group">
-                <label htmlFor="voicepeakEmotion">Emotion Override</label>
-                <select
-                  id="voicepeakEmotion"
-                  value={voicepeak.emotion.value}
-                  onChange={(e) =>
-                    voicepeak.emotion.onChange(
-                      e.target.value as VoicePeakEmotionOption,
-                    )
-                  }
-                >
-                  <option value="neutral">neutral</option>
-                  <option value="happy">happy</option>
-                  <option value="fun">fun</option>
-                  <option value="angry">angry</option>
-                  <option value="sad">sad</option>
-                  <option value="surprised">surprised</option>
-                </select>
+            <div className="parameter-section__title">Emotion Override</div>
+            <div
+              className="voicepeak-mode-toggle"
+              role="radiogroup"
+              aria-label="VoicePeak emotion mode"
+            >
+              <label className="voicepeak-mode-toggle__option">
+                <input
+                  type="radio"
+                  name="voicepeakEmotionMode"
+                  value="single"
+                  checked={voicepeak.mode === 'single'}
+                  onChange={() => voicepeak.setMode('single')}
+                />
+                <span>Single tag</span>
+              </label>
+              <label className="voicepeak-mode-toggle__option">
+                <input
+                  type="radio"
+                  name="voicepeakEmotionMode"
+                  value="weighted"
+                  checked={voicepeak.mode === 'weighted'}
+                  onChange={() => voicepeak.setMode('weighted')}
+                />
+                <span>Weighted map (vpeakserver v0.2.0+)</span>
+              </label>
+            </div>
+
+            {voicepeak.mode === 'single' ? (
+              <div className="parameter-grid">
+                <div className="form-group">
+                  <label htmlFor="voicepeakEmotion">Emotion Override</label>
+                  <select
+                    id="voicepeakEmotion"
+                    value={voicepeak.emotion.value}
+                    onChange={(e) =>
+                      voicepeak.emotion.onChange(
+                        e.target.value as VoicePeakEmotionOption,
+                      )
+                    }
+                  >
+                    <option value="neutral">neutral</option>
+                    <option value="happy">happy</option>
+                    <option value="fun">fun</option>
+                    <option value="angry">angry</option>
+                    <option value="sad">sad</option>
+                    <option value="surprised">surprised</option>
+                  </select>
+                </div>
               </div>
+            ) : (
+              <>
+                <div className="parameter-grid">
+                  {VOICEPEAK_WEIGHT_KEYS.map((key) => (
+                    <NumberSliderField
+                      key={key}
+                      id={`voicepeakWeight${key}`}
+                      label={`${key} (0-100)`}
+                      value={voicepeak.weights[key]}
+                      onChange={(nextValue) =>
+                        voicepeak.setWeight(key, nextValue)
+                      }
+                      config={SLIDER_CONFIG.voicepeakEmotionWeight}
+                      placeholder="空欄で未指定"
+                    />
+                  ))}
+                </div>
+                <div
+                  className={`voicepeak-weight-sum${voicepeak.weightSum > 100 ? ' voicepeak-weight-sum--warning' : ''}`}
+                >
+                  Sum: {voicepeak.weightSum} / 100
+                </div>
+                {voicepeak.weightSum > 100 && (
+                  <p className="voicepeak-weight-error">
+                    合計が 100 を超えています。weight は合計 100
+                    以下に抑えてください。
+                  </p>
+                )}
+                <p className="parameter-card__note">
+                  空欄は重み未指定、すべて空欄なら emotion を送信しません。
+                  neutral は仕様上除外されます。vpeakserver v0.2.0+ が必要です。
+                </p>
+              </>
+            )}
+          </div>
+
+          <div className="parameter-section">
+            <div className="parameter-section__title">速度・ピッチ</div>
+            <div className="parameter-grid">
               <NumberSliderField
                 id="voicepeakSpeed"
                 label="Speed (50-200)"
@@ -570,9 +648,8 @@ export function EngineParameters({
           </div>
 
           <p className="parameter-card__note">
-            Emotion で選んだ値がそのまま vpeakserver に送信されます （初期値は
-            neutral）。Speed と Pitch を空欄にすると vpeakserver
-            の初期値が利用されます。
+            Single tag では選択した値をそのまま送信します。Speed と Pitch
+            を空欄にすると vpeakserver の初期値が利用されます。
           </p>
         </CollapsibleCard>
       )}
