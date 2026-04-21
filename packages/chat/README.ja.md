@@ -357,7 +357,7 @@ const xaiService = ChatServiceFactory.createChatService('xai', {
 ```typescript
 const kimiService = ChatServiceFactory.createChatService('kimi', {
   apiKey: process.env.MOONSHOT_API_KEY,
-  model: 'kimi-k2.5',
+  model: 'kimi-k2.6',
   // Optional: エンドポイント/ベースURLの上書き
   // endpoint: 'https://api.moonshot.ai/v1/chat/completions',
   // baseUrl: 'https://api.moonshot.ai/v1',
@@ -367,6 +367,7 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 
 注意:
 - KimiはOpenAI互換のChat Completionsを利用します。
+- 対応モデル: `kimi-k2.6`, `kimi-k2.5`
 - ツール使用時は`thinking`を`{ type: 'disabled' }`に強制します。
 
 自前ホスティング例:
@@ -681,7 +682,7 @@ console.log(modelLevel); // 'unknown'
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
 - **xAI**: Grok 4.20 の Reasoning/Non-Reasoning と Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
-- **Kimi**: Kimi K2.5（`kimi-k2.5`、ビジョン対応）をサポート
+- **Kimi**: Kimi K2.6（`kimi-k2.6`）と Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
 - **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Chrome 138以降でPrompt APIフラグの有効化が必要。非ストリーミング、ビジョン非対応
 
 ## ライセンス

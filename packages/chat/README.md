@@ -353,7 +353,7 @@ Notes:
 ```typescript
 const kimiService = ChatServiceFactory.createChatService('kimi', {
   apiKey: process.env.MOONSHOT_API_KEY,
-  model: 'kimi-k2.5',
+  model: 'kimi-k2.6',
   // Optional: override endpoint or baseUrl
   // endpoint: 'https://api.moonshot.ai/v1/chat/completions',
   // baseUrl: 'https://api.moonshot.ai/v1',
@@ -363,6 +363,7 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 
 Notes:
 - Kimi uses OpenAI-compatible Chat Completions.
+- Supported models: `kimi-k2.6`, `kimi-k2.5`
 - When tools are enabled, `thinking` is forced to `{ type: 'disabled' }`.
 
 Self-hosted example:
@@ -677,7 +678,7 @@ Currently, the following AI providers are built-in:
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)
 - **xAI**: Supports Grok 4.20 Reasoning/Non-Reasoning and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support
-- **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
+- **Kimi**: Supports Kimi K2.6 (`kimi-k2.6`) and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Chrome 138+ with Prompt API flags enabled. Non-streaming, no vision support.
 
 ## License

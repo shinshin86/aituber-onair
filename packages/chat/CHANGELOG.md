@@ -1,5 +1,16 @@
 # @aituber-onair/chat
 
+## 0.27.0
+
+### Minor Changes
+
+- Added Kimi K2.6 (`kimi-k2.6`) to the Kimi constants, provider supported
+  models, and React basic example selector while keeping Kimi K2.5 available.
+- Changed the Kimi provider default text/vision model from Kimi K2.5 to
+  Kimi K2.6.
+- Updated the English/Japanese README files and the React basic example docs
+  to document Kimi K2.6 support.
+
 ## 0.26.0
 
 ### Minor Changes

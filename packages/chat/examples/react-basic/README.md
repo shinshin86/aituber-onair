@@ -142,7 +142,7 @@ Use the dropdown to select response length:
 - Best for: OpenAI-compatible GLM integration
 
 **Kimi**
-- Models: Kimi K2.5
+- Models: Kimi K2.6, Kimi K2.5
 - Vision: Supported
 - Best for: Moonshot models with OpenAI-compatible API
 
