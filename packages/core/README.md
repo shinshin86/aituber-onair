@@ -1214,7 +1214,7 @@ Possible use cases for `chatLogUpdated` include:
 **AITuberOnAirCore** supports the following speech engines:
 
 - **VOICEVOX**: High-quality Japanese speech synthesis engine.  
-- **VoicePeak**: Speech synthesis engine with rich emotional expression.  
+- **VoicePeak**: Speech synthesis engine with rich emotional expression, supporting single-tag or weighted emotion overrides.  
 - **AivisSpeech**: Speech synthesis using AI technology.  
 - **Aivis Cloud**: High-quality Japanese text-to-speech service with SSML support, emotional intensity control, and multiple output formats (WAV, FLAC, MP3, AAC, Opus).
 - **OpenAI TTS**: Text-to-speech API from OpenAI.
@@ -1296,7 +1296,10 @@ aituber.updateVoiceService({
 aituber.updateVoiceService({
   engineType: 'voicepeak',
   speaker: '2',
-  voicepeakApiUrl: 'http://custom-voicepeak-server:20202'
+  voicepeakApiUrl: 'http://custom-voicepeak-server:20202',
+  voicepeakEmotion: { happy: 40, fun: 60 },
+  voicepeakSpeed: 140,
+  voicepeakPitch: 20,
 });
 
 // Example for AivisSpeech
@@ -1367,7 +1370,7 @@ Currently, the following AI provider is built-in:
 - **Claude**: Supports current Claude API model IDs including Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
 - **xAI**: Supports Grok 4.20 and Grok 4.1 Fast model families
 - **Z.ai**: Supports models like GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
-- **Kimi**: Supports Kimi K2.5 (`kimi-k2.5`) with vision support
+- **Kimi**: Supports Kimi K2.6 (`kimi-k2.6`) and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi)
 - **OpenAI-Compatible**: Supports arbitrary OpenAI-compatible Chat Completions endpoints; vision capability is treated as unknown until the target endpoint/model responds
 

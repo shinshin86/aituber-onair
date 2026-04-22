@@ -16,6 +16,9 @@ import {
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GLM_5_TURBO,
   MODEL_GROK_4_20_REASONING,
+  MODEL_KIMI_K2_6,
+  MODEL_KIMI_K2_5,
+  KIMI_VISION_SUPPORTED_MODELS,
   GeminiNanoChatService,
   XAIChatService,
   allowsReasoningXHigh,
@@ -65,6 +68,15 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports GLM-5-Turbo model constant', () => {
     expect(MODEL_GLM_5_TURBO).toBe('glm-5-turbo');
+  });
+
+  it('re-exports current Kimi model constants', () => {
+    expect(MODEL_KIMI_K2_6).toBe('kimi-k2.6');
+    expect(MODEL_KIMI_K2_5).toBe('kimi-k2.5');
+    expect(KIMI_VISION_SUPPORTED_MODELS).toEqual([
+      MODEL_KIMI_K2_6,
+      MODEL_KIMI_K2_5,
+    ]);
   });
 
   it('re-exports xAI chat provider items', () => {

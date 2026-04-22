@@ -1,5 +1,28 @@
 # @aituber-onair/core
 
+## 0.25.5
+
+### Patch Changes
+
+- Synced Kimi updates from `@aituber-onair/chat@0.27.0` into the core entry
+  point and React basic example:
+  - re-exported `MODEL_KIMI_K2_6`
+  - updated the React basic example Kimi model list to add Kimi K2.6 while
+    keeping Kimi K2.5 available
+- Synced VoicePeak weighted emotion support from `@aituber-onair/voice@0.14.0`
+  into the core entry point, docs, and React basic example:
+  - re-exported `VoicepeakEmotionInput` and
+    `VoicepeakEmotionWeights`
+  - updated the React basic example VoicePeak controls to switch between
+    legacy single-tag emotion overrides and weighted emotion maps
+- Refreshed core README docs (EN/JA) and the React basic example README to
+  reflect Kimi K2.6 and VoicePeak weighted emotion support.
+- Added core export test coverage for the latest Kimi model constant and
+  VoicePeak weighted emotion types.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.27.0
+  - @aituber-onair/voice@0.14.0
+
 ## 0.25.4
 
 ### Patch Changes

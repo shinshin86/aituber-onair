@@ -26,6 +26,8 @@ import {
   refreshOpenRouterFreeModels,
   type MinimaxModel,
   type MinimaxAudioFormat,
+  type EmotionTypeForVoicepeak,
+  type VoicepeakEmotionWeights,
   type VoiceVoxQueryParameterOverrides,
   type AivisSpeechQueryParameterOverrides,
 } from '@aituber-onair/core';
@@ -190,13 +192,30 @@ type AivisCloudOutputSamplingRateOption =
   | '44100'
   | '48000';
 type AivisCloudOutputChannelOption = 'default' | 'mono' | 'stereo';
-type VoicePeakEmotionOption =
-  | 'neutral'
-  | 'happy'
-  | 'fun'
-  | 'angry'
-  | 'sad'
-  | 'surprised';
+type VoicePeakEmotionMode = 'single' | 'weighted';
+const VOICEPEAK_WEIGHTED_EMOTION_KEYS = [
+  'happy',
+  'fun',
+  'angry',
+  'sad',
+  'surprised',
+] as const;
+type VoicePeakWeightedEmotionKey =
+  (typeof VOICEPEAK_WEIGHTED_EMOTION_KEYS)[number];
+type VoicePeakWeightedEmotionInputs = Record<
+  VoicePeakWeightedEmotionKey,
+  string
+>;
+
+function createInitialVoicePeakEmotionWeights(): VoicePeakWeightedEmotionInputs {
+  return {
+    happy: '',
+    fun: '',
+    angry: '',
+    sad: '',
+    surprised: '',
+  };
+}
 
 // UI Messages
 const DO_NOT_SET_API_KEY_MESSAGE = 'API Keyを入力してください。';
@@ -477,8 +496,14 @@ const App: React.FC = () => {
     setVoicevoxEnableInterrogativeUpspeak,
   ] = useState<'default' | 'true' | 'false'>('default');
   const [voicevoxCoreVersion, setVoicevoxCoreVersion] = useState<string>('');
+  const [voicepeakEmotionMode, setVoicepeakEmotionMode] =
+    useState<VoicePeakEmotionMode>('single');
   const [voicepeakEmotion, setVoicepeakEmotion] =
-    useState<VoicePeakEmotionOption>('neutral');
+    useState<EmotionTypeForVoicepeak>('neutral');
+  const [voicepeakEmotionWeights, setVoicepeakEmotionWeights] =
+    useState<VoicePeakWeightedEmotionInputs>(
+      createInitialVoicePeakEmotionWeights,
+    );
   const [voicepeakSpeed, setVoicepeakSpeed] = useState<string>('');
   const [voicepeakPitch, setVoicepeakPitch] = useState<string>('');
   const [openaiSpeed, setOpenaiSpeed] = useState<string>('');
@@ -665,7 +690,9 @@ const App: React.FC = () => {
       setVoicevoxCoreVersion('');
     }
 
+    setVoicepeakEmotionMode('single');
     setVoicepeakEmotion('neutral');
+    setVoicepeakEmotionWeights(createInitialVoicePeakEmotionWeights());
     setVoicepeakSpeed('');
     setVoicepeakPitch('');
 
@@ -1202,7 +1229,27 @@ const App: React.FC = () => {
           break;
         }
         case 'voicepeak': {
-          options.voicepeakEmotion = voicepeakEmotion;
+          if (voicepeakEmotionMode === 'weighted') {
+            const weightedEmotion: VoicepeakEmotionWeights = {};
+
+            for (const key of VOICEPEAK_WEIGHTED_EMOTION_KEYS) {
+              const parsedWeight = Number.parseInt(
+                voicepeakEmotionWeights[key],
+                10,
+              );
+              if (
+                !Number.isNaN(parsedWeight) &&
+                parsedWeight >= 0 &&
+                parsedWeight <= 100
+              ) {
+                weightedEmotion[key] = parsedWeight;
+              }
+            }
+
+            options.voicepeakEmotion = weightedEmotion;
+          } else {
+            options.voicepeakEmotion = voicepeakEmotion;
+          }
 
           const parsedSpeed = Number.parseInt(voicepeakSpeed, 10);
           if (!Number.isNaN(parsedSpeed)) {
@@ -3719,28 +3766,92 @@ const App: React.FC = () => {
                       </div>
 
                       <label
-                        htmlFor="voicepeakEmotion"
+                        htmlFor="voicepeakEmotionMode"
                         style={{ display: 'block', marginBottom: '6px' }}
                       >
-                        Emotion Override:
+                        Emotion Input:
                       </label>
                       <select
-                        id="voicepeakEmotion"
-                        value={voicepeakEmotion}
+                        id="voicepeakEmotionMode"
+                        value={voicepeakEmotionMode}
                         onChange={(e) =>
-                          setVoicepeakEmotion(
-                            e.target.value as VoicePeakEmotionOption,
+                          setVoicepeakEmotionMode(
+                            e.target.value as VoicePeakEmotionMode,
                           )
                         }
                         style={{ width: '100%', marginBottom: '8px' }}
                       >
-                        <option value="neutral">neutral</option>
-                        <option value="happy">happy</option>
-                        <option value="fun">fun</option>
-                        <option value="angry">angry</option>
-                        <option value="sad">sad</option>
-                        <option value="surprised">surprised</option>
+                        <option value="single">single tag</option>
+                        <option value="weighted">weighted map</option>
                       </select>
+
+                      {voicepeakEmotionMode === 'single' ? (
+                        <>
+                          <label
+                            htmlFor="voicepeakEmotion"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Emotion Override:
+                          </label>
+                          <select
+                            id="voicepeakEmotion"
+                            value={voicepeakEmotion}
+                            onChange={(e) =>
+                              setVoicepeakEmotion(
+                                e.target.value as EmotionTypeForVoicepeak,
+                              )
+                            }
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            <option value="neutral">neutral</option>
+                            <option value="happy">happy</option>
+                            <option value="fun">fun</option>
+                            <option value="angry">angry</option>
+                            <option value="sad">sad</option>
+                            <option value="surprised">surprised</option>
+                          </select>
+                        </>
+                      ) : (
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '8px',
+                            marginBottom: '12px',
+                          }}
+                        >
+                          {VOICEPEAK_WEIGHTED_EMOTION_KEYS.map((emotionKey) => (
+                            <div key={emotionKey}>
+                              <label
+                                htmlFor={`voicepeakWeight-${emotionKey}`}
+                                style={{
+                                  display: 'block',
+                                  marginBottom: '6px',
+                                  textTransform: 'capitalize',
+                                }}
+                              >
+                                {emotionKey} (0-100):
+                              </label>
+                              <input
+                                id={`voicepeakWeight-${emotionKey}`}
+                                type="number"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={voicepeakEmotionWeights[emotionKey]}
+                                onChange={(e) =>
+                                  setVoicepeakEmotionWeights((prev) => ({
+                                    ...prev,
+                                    [emotionKey]: e.target.value,
+                                  }))
+                                }
+                                placeholder="未入力で送信しない"
+                                style={{ width: '100%' }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       <label
                         htmlFor="voicepeakSpeed"
@@ -3779,9 +3890,11 @@ const App: React.FC = () => {
                       />
 
                       <div style={{ fontSize: '0.8em', color: '#364fc7' }}>
-                        Emotion で選んだ感情がそのまま vpeakserver
-                        へ送信されます （初期値は neutral）。Speed と Pitch
-                        を空欄にすると vpeakserver
+                        {voicepeakEmotionMode === 'single'
+                          ? 'single tag は従来どおり 1 つの感情をそのまま vpeakserver へ送信します。'
+                          : 'weighted map は vpeakserver v0.2.0 以降で利用できます。neutral は送信対象外で、未入力キーは送信されません。'}
+                        {' '}
+                        Speed と Pitch を空欄にすると vpeakserver
                         のデフォルト値が利用されます。
                       </div>
                     </div>

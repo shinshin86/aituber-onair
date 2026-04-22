@@ -136,6 +136,7 @@ export {
   ZAI_VISION_SUPPORTED_MODELS,
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   // Kimi model constants
+  MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
   KIMI_VISION_SUPPORTED_MODELS,
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
@@ -245,6 +246,8 @@ export {
   emotions,
   type EmotionType,
   type EmotionTypeForVoicepeak,
+  type VoicepeakEmotionInput,
+  type VoicepeakEmotionWeights,
   type Screenplay as VoiceScreenplay,
   type ChatScreenplay,
   type SpeakOptions,
