@@ -7,6 +7,7 @@ import {
 import type {
   AppSettings,
   ChatProviderOption,
+  StreamingPlatformOption,
   TTSEngineOption,
 } from '../types/settings';
 
@@ -144,6 +145,18 @@ function getDefaultSettings(): AppSettings {
       piperPlusSpeed: '',
       piperPlusNoiseScale: '',
     },
+    stream: {
+      platform: 'none',
+      youtubeApiKey: '',
+      youtubeLiveId: '',
+      youtubeEnabled: false,
+      youtubeCommentIntervalMs: 20_000,
+      twitchClientId: '',
+      twitchAccessToken: '',
+      twitchChannel: '',
+      twitchEnabled: false,
+      twitchCommentIntervalMs: 20_000,
+    },
   };
 }
 
@@ -163,6 +176,7 @@ function loadSettings(): AppSettings {
           ),
         },
         tts: { ...defaults.tts, ...saved.tts },
+        stream: { ...defaults.stream, ...saved.stream },
       };
     }
   } catch {
@@ -627,6 +641,85 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateStreamPlatform = useCallback(
+    (platform: StreamingPlatformOption) => {
+      setSettings((prev) => ({
+        ...prev,
+        stream: { ...prev.stream, platform },
+      }));
+    },
+    [],
+  );
+
+  const updateYoutubeApiKey = useCallback((youtubeApiKey: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, youtubeApiKey },
+    }));
+  }, []);
+
+  const updateYoutubeLiveId = useCallback((youtubeLiveId: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, youtubeLiveId },
+    }));
+  }, []);
+
+  const updateYoutubeEnabled = useCallback((youtubeEnabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, youtubeEnabled },
+    }));
+  }, []);
+
+  const updateYoutubeCommentIntervalMs = useCallback(
+    (youtubeCommentIntervalMs: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        stream: { ...prev.stream, youtubeCommentIntervalMs },
+      }));
+    },
+    [],
+  );
+
+  const updateTwitchClientId = useCallback((twitchClientId: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, twitchClientId },
+    }));
+  }, []);
+
+  const updateTwitchAccessToken = useCallback((twitchAccessToken: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, twitchAccessToken },
+    }));
+  }, []);
+
+  const updateTwitchChannel = useCallback((twitchChannel: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, twitchChannel },
+    }));
+  }, []);
+
+  const updateTwitchEnabled = useCallback((twitchEnabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, twitchEnabled },
+    }));
+  }, []);
+
+  const updateTwitchCommentIntervalMs = useCallback(
+    (twitchCommentIntervalMs: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        stream: { ...prev.stream, twitchCommentIntervalMs },
+      }));
+    },
+    [],
+  );
+
   const getApiKeyForProvider = useCallback(
     (provider: ChatProviderOption): string => {
       if (provider === 'gemini-nano') {
@@ -676,6 +769,16 @@ export function useSettings() {
     updatePiperPlusVoiceFile,
     updatePiperPlusSpeed,
     updatePiperPlusNoiseScale,
+    updateStreamPlatform,
+    updateYoutubeApiKey,
+    updateYoutubeLiveId,
+    updateYoutubeEnabled,
+    updateYoutubeCommentIntervalMs,
+    updateTwitchClientId,
+    updateTwitchAccessToken,
+    updateTwitchChannel,
+    updateTwitchEnabled,
+    updateTwitchCommentIntervalMs,
     getApiKeyForProvider,
   };
 }

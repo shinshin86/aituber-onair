@@ -28,6 +28,10 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   - Background image (1 file)
   - Avatar images (4 states: mouth/eyes open/close)
 - Visual image settings are memory-only (reset on page reload)
+- Fetch live chat comments from YouTube Live or Twitch and feed them into the
+  LLM pipeline
+  - YouTube uses the YouTube Data API v3 (requires a Google Cloud API key)
+  - Twitch uses EventSub WebSocket with a browser-based implicit OAuth flow
 
 ## Setup
 
@@ -50,6 +54,53 @@ For `gemini-nano`, set:
 - `#optimization-guide-on-device-model`
 - `#prompt-api-for-gemini-nano`
 - No API key is required
+
+## Stream comments (YouTube Live / Twitch)
+
+This app can forward live chat comments from YouTube Live or Twitch into the LLM.
+Configure it from **Settings → Stream**.
+
+Only one platform can be active at a time.
+
+### YouTube Live
+
+1. Create an API key in Google Cloud Console with **YouTube Data API v3** enabled.
+2. Open Settings → Stream, choose `YouTube`, paste the API key, and enter the live
+   video ID (the `v=` parameter of the YouTube Live URL).
+3. Adjust the polling interval if needed (default: 20s), then enable the toggle.
+
+### Twitch
+
+This app uses the Twitch browser-based implicit OAuth flow (`response_type=token`,
+scope `user:read:chat`). The access token lives only in `localStorage` inside
+your browser. No server is involved.
+
+1. Register an application in the
+   [Twitch Developer Console](https://dev.twitch.tv/console/apps) and copy the
+   Client ID.
+2. Add **`http://localhost:5173/`** as an OAuth Redirect URL for that app
+   (use the exact URL shown in Settings → Stream → Twitch; for Vite this is
+   typically `http://localhost:5173/`).
+3. In Settings → Stream, choose `Twitch`, paste the Client ID, then click
+   **Connect to Twitch** and approve the OAuth prompt.
+4. Enter the channel login name (the name in the Twitch URL, lowercase), set
+   the dequeue interval, and enable the toggle.
+
+**Deploying to a non-localhost origin:** if you host this sample app anywhere
+other than `http://localhost:5173/`, register the deployed origin
+(for example `https://your-domain.example/`) as an additional OAuth Redirect
+URL in the Twitch Developer Console, then re-run the OAuth flow from that
+origin. The Redirect URL displayed in the Settings panel is derived from
+`window.location` and updates automatically.
+
+### Security note on stored credentials
+
+This is a sample app. The YouTube API key, Twitch Client ID, and Twitch access
+token are stored **unencrypted in `localStorage`** (same place as the other
+provider API keys used by this sample). Any script running on the app's origin
+can read them. Do not use production-scope credentials here, do not deploy this
+sample on a shared or public origin, and rotate keys if the browser storage is
+shared with other users.
 
 ## Piper Plus Setup
 
@@ -173,7 +224,7 @@ npm install
 ```
 
 If it still fails, check whether your npm config/environment omits
-`devDependencies` (e.g. `NODE_ENV=production` or `omit=dev`).
+`devDependencies` (for example `NODE_ENV=production` or `omit=dev`).
 
 ## Tech stack
 
