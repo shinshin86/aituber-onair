@@ -123,7 +123,7 @@ interface MinimaxVoice {
   voice_name: string;
 }
 
-type SectionKey = 'llm' | 'tts' | 'visual';
+type SectionKey = 'llm' | 'tts' | 'visual' | 'stream';
 
 const AVATAR_IMAGE_FIELDS: { key: AvatarImageKey; label: string }[] = [
   { key: 'mouth_close_eyes_open', label: '口閉じ / 目開き' },
@@ -212,6 +212,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    stream: true,
   });
 
   const selectedAivisCloudPresetId = useMemo(() => {
@@ -1328,6 +1329,8 @@ export function SettingsPanel({
       <StreamSettings
         stream={settings.stream}
         disabled={disabled}
+        isExpanded={expandedSections.stream}
+        onToggleExpand={() => toggleSection('stream')}
         streamErrorMessage={streamErrorMessage}
         updateStreamPlatform={updateStreamPlatform}
         updateYoutubeApiKey={updateYoutubeApiKey}

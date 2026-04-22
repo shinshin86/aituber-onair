@@ -8,6 +8,8 @@ const STREAM_INTERVAL_OPTIONS = [5000, 10000, 20000, 30000, 60000] as const;
 interface StreamSettingsProps {
   stream: StreamSettings;
   disabled: boolean;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
   streamErrorMessage?: string;
   updateStreamPlatform: (platform: StreamingPlatformOption) => void;
   updateYoutubeApiKey: (value: string) => void;
@@ -32,6 +34,8 @@ function getTwitchRedirectUri(): string {
 export function StreamSettings({
   stream,
   disabled,
+  isExpanded,
+  onToggleExpand,
   streamErrorMessage,
   updateStreamPlatform,
   updateYoutubeApiKey,
@@ -75,195 +79,213 @@ export function StreamSettings({
 
   return (
     <div className="settings-section">
-      <h3>Stream</h3>
-
-      <div className="settings-field">
-        <label htmlFor="stream-platform">Platform</label>
-        <select
-          id="stream-platform"
-          value={stream.platform}
-          onChange={(event) =>
-            updateStreamPlatform(
-              event.target.value as StreamingPlatformOption,
-            )
-          }
-          disabled={disabled}
+      <button
+        type="button"
+        className="settings-section-toggle"
+        onClick={onToggleExpand}
+        aria-expanded={isExpanded}
+      >
+        <h3>Stream</h3>
+        <span
+          className={`settings-section-chevron${isExpanded ? ' is-open' : ''}`}
         >
-          <option value="none">None</option>
-          <option value="youtube">YouTube</option>
-          <option value="twitch">Twitch</option>
-        </select>
-      </div>
+          ⌄
+        </span>
+      </button>
 
-      {isYoutubeSelected && (
+      {isExpanded && (
         <>
           <div className="settings-field">
-            <label htmlFor="stream-youtube-apikey">YouTube API Key</label>
-            <input
-              id="stream-youtube-apikey"
-              type="password"
-              value={stream.youtubeApiKey}
-              onChange={(event) => updateYoutubeApiKey(event.target.value)}
-              placeholder="YouTube Data API v3 key"
-              disabled={disabled}
-            />
-          </div>
-
-          <div className="settings-field">
-            <label htmlFor="stream-youtube-liveid">YouTube Live Video ID</label>
-            <input
-              id="stream-youtube-liveid"
-              type="text"
-              value={stream.youtubeLiveId}
-              onChange={(event) => updateYoutubeLiveId(event.target.value)}
-              placeholder="YouTube live video ID"
-              disabled={disabled}
-            />
-            <p className="settings-field-hint">
-              Use the <code>v=</code> value from the YouTube Live URL.
-            </p>
-          </div>
-
-          <div className="settings-field">
-            <label htmlFor="stream-youtube-interval">Polling Interval</label>
+            <label htmlFor="stream-platform">Platform</label>
             <select
-              id="stream-youtube-interval"
-              value={stream.youtubeCommentIntervalMs}
+              id="stream-platform"
+              value={stream.platform}
               onChange={(event) =>
-                updateYoutubeCommentIntervalMs(Number(event.target.value))
+                updateStreamPlatform(
+                  event.target.value as StreamingPlatformOption,
+                )
               }
               disabled={disabled}
             >
-              {STREAM_INTERVAL_OPTIONS.map((intervalMs) => (
-                <option key={intervalMs} value={intervalMs}>
-                  {intervalMs.toLocaleString()} ms
-                </option>
-              ))}
+              <option value="none">None</option>
+              <option value="youtube">YouTube</option>
+              <option value="twitch">Twitch</option>
             </select>
           </div>
 
-          <div className="settings-field">
-            <label htmlFor="stream-youtube-enabled">
-              <input
-                id="stream-youtube-enabled"
-                type="checkbox"
-                checked={stream.youtubeEnabled}
-                onChange={(event) =>
-                  updateYoutubeEnabled(event.target.checked)
-                }
-                disabled={disabled}
-                style={{ marginRight: 8 }}
-              />
-              Enable
-            </label>
-          </div>
-        </>
-      )}
+          {isYoutubeSelected && (
+            <>
+              <div className="settings-field">
+                <label htmlFor="stream-youtube-apikey">YouTube API Key</label>
+                <input
+                  id="stream-youtube-apikey"
+                  type="password"
+                  value={stream.youtubeApiKey}
+                  onChange={(event) => updateYoutubeApiKey(event.target.value)}
+                  placeholder="YouTube Data API v3 key"
+                  disabled={disabled}
+                />
+              </div>
 
-      {isTwitchSelected && (
-        <>
-          <div className="settings-field">
-            <label htmlFor="stream-twitch-clientid">Twitch Client ID</label>
-            <input
-              id="stream-twitch-clientid"
-              type="text"
-              value={stream.twitchClientId}
-              onChange={(event) => updateTwitchClientId(event.target.value)}
-              placeholder="Twitch Client ID"
-              disabled={disabled}
-            />
-          </div>
+              <div className="settings-field">
+                <label htmlFor="stream-youtube-liveid">
+                  YouTube Live Video ID
+                </label>
+                <input
+                  id="stream-youtube-liveid"
+                  type="text"
+                  value={stream.youtubeLiveId}
+                  onChange={(event) => updateYoutubeLiveId(event.target.value)}
+                  placeholder="YouTube live video ID"
+                  disabled={disabled}
+                />
+                <p className="settings-field-hint">
+                  Use the <code>v=</code> value from the YouTube Live URL.
+                </p>
+              </div>
 
-          <div className="settings-field">
-            <label>Twitch Connection</label>
-            {stream.twitchAccessToken ? (
-              <div className="settings-file-actions">
-                <span className="settings-file-status">Connected</span>
-                <button
-                  type="button"
-                  className="settings-clear-button"
-                  onClick={() => {
-                    updateTwitchAccessToken('');
-                    updateTwitchEnabled(false);
-                  }}
+              <div className="settings-field">
+                <label htmlFor="stream-youtube-interval">Polling Interval</label>
+                <select
+                  id="stream-youtube-interval"
+                  value={stream.youtubeCommentIntervalMs}
+                  onChange={(event) =>
+                    updateYoutubeCommentIntervalMs(Number(event.target.value))
+                  }
                   disabled={disabled}
                 >
-                  Disconnect
-                </button>
+                  {STREAM_INTERVAL_OPTIONS.map((intervalMs) => (
+                    <option key={intervalMs} value={intervalMs}>
+                      {intervalMs.toLocaleString()} ms
+                    </option>
+                  ))}
+                </select>
               </div>
-            ) : (
-              <button
-                type="button"
-                className="settings-file-trigger"
-                onClick={handleConnectTwitch}
-                disabled={disabled || !stream.twitchClientId.trim()}
-              >
-                Connect to Twitch
-              </button>
-            )}
-            <p className="settings-field-hint">
-              Register this URL in Twitch Developer Console as an OAuth
-              Redirect URL.
-            </p>
-            <p className="settings-field-hint">{twitchRedirectUri}</p>
-          </div>
 
-          <div className="settings-field">
-            <label htmlFor="stream-twitch-channel">
-              Twitch Channel (login name)
-            </label>
-            <input
-              id="stream-twitch-channel"
-              type="text"
-              value={stream.twitchChannel}
-              onChange={(event) => updateTwitchChannel(event.target.value)}
-              placeholder="example_channel"
-              disabled={disabled}
-            />
-          </div>
+              <div className="settings-field">
+                <label htmlFor="stream-youtube-enabled">
+                  <input
+                    id="stream-youtube-enabled"
+                    type="checkbox"
+                    checked={stream.youtubeEnabled}
+                    onChange={(event) =>
+                      updateYoutubeEnabled(event.target.checked)
+                    }
+                    disabled={disabled}
+                    style={{ marginRight: 8 }}
+                  />
+                  Enable
+                </label>
+              </div>
+            </>
+          )}
 
-          <div className="settings-field">
-            <label htmlFor="stream-twitch-interval">Dequeue Interval</label>
-            <select
-              id="stream-twitch-interval"
-              value={stream.twitchCommentIntervalMs}
-              onChange={(event) =>
-                updateTwitchCommentIntervalMs(Number(event.target.value))
-              }
-              disabled={disabled}
-            >
-              {STREAM_INTERVAL_OPTIONS.map((intervalMs) => (
-                <option key={intervalMs} value={intervalMs}>
-                  {intervalMs.toLocaleString()} ms
-                </option>
-              ))}
-            </select>
-            <p className="settings-field-hint">
-              One queued Twitch message is forwarded per interval.
-            </p>
-          </div>
+          {isTwitchSelected && (
+            <>
+              <div className="settings-field">
+                <label htmlFor="stream-twitch-clientid">Twitch Client ID</label>
+                <input
+                  id="stream-twitch-clientid"
+                  type="text"
+                  value={stream.twitchClientId}
+                  onChange={(event) => updateTwitchClientId(event.target.value)}
+                  placeholder="Twitch Client ID"
+                  disabled={disabled}
+                />
+              </div>
 
-          <div className="settings-field">
-            <label htmlFor="stream-twitch-enabled">
-              <input
-                id="stream-twitch-enabled"
-                type="checkbox"
-                checked={stream.twitchEnabled}
-                onChange={(event) =>
-                  updateTwitchEnabled(event.target.checked)
-                }
-                disabled={disabled || !isTwitchReady}
-                style={{ marginRight: 8 }}
-              />
-              Enable
-            </label>
-          </div>
+              <div className="settings-field">
+                <label>Twitch Connection</label>
+                {stream.twitchAccessToken ? (
+                  <div className="settings-file-actions">
+                    <span className="settings-file-status">Connected</span>
+                    <button
+                      type="button"
+                      className="settings-clear-button"
+                      onClick={() => {
+                        updateTwitchAccessToken('');
+                        updateTwitchEnabled(false);
+                      }}
+                      disabled={disabled}
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="settings-file-trigger"
+                    onClick={handleConnectTwitch}
+                    disabled={disabled || !stream.twitchClientId.trim()}
+                  >
+                    Connect to Twitch
+                  </button>
+                )}
+                <p className="settings-field-hint">
+                  Register this URL in Twitch Developer Console as an OAuth
+                  Redirect URL.
+                </p>
+                <p className="settings-field-hint">{twitchRedirectUri}</p>
+              </div>
+
+              <div className="settings-field">
+                <label htmlFor="stream-twitch-channel">
+                  Twitch Channel (login name)
+                </label>
+                <input
+                  id="stream-twitch-channel"
+                  type="text"
+                  value={stream.twitchChannel}
+                  onChange={(event) => updateTwitchChannel(event.target.value)}
+                  placeholder="example_channel"
+                  disabled={disabled}
+                />
+              </div>
+
+              <div className="settings-field">
+                <label htmlFor="stream-twitch-interval">Dequeue Interval</label>
+                <select
+                  id="stream-twitch-interval"
+                  value={stream.twitchCommentIntervalMs}
+                  onChange={(event) =>
+                    updateTwitchCommentIntervalMs(Number(event.target.value))
+                  }
+                  disabled={disabled}
+                >
+                  {STREAM_INTERVAL_OPTIONS.map((intervalMs) => (
+                    <option key={intervalMs} value={intervalMs}>
+                      {intervalMs.toLocaleString()} ms
+                    </option>
+                  ))}
+                </select>
+                <p className="settings-field-hint">
+                  One queued Twitch message is forwarded per interval.
+                </p>
+              </div>
+
+              <div className="settings-field">
+                <label htmlFor="stream-twitch-enabled">
+                  <input
+                    id="stream-twitch-enabled"
+                    type="checkbox"
+                    checked={stream.twitchEnabled}
+                    onChange={(event) =>
+                      updateTwitchEnabled(event.target.checked)
+                    }
+                    disabled={disabled || !isTwitchReady}
+                    style={{ marginRight: 8 }}
+                  />
+                  Enable
+                </label>
+              </div>
+            </>
+          )}
+
+          {streamErrorMessage ? (
+            <p className="settings-field-error">{streamErrorMessage}</p>
+          ) : null}
         </>
       )}
-
-      {streamErrorMessage ? (
-        <p className="settings-field-error">{streamErrorMessage}</p>
-      ) : null}
     </div>
   );
 }

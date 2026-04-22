@@ -120,7 +120,7 @@ interface MinimaxVoice {
   voice_name: string;
 }
 
-type SectionKey = 'llm' | 'tts' | 'visual';
+type SectionKey = 'llm' | 'tts' | 'visual' | 'stream';
 
 export function SettingsPanel({
   settings,
@@ -201,6 +201,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    stream: true,
   });
 
   useEffect(() => {
@@ -1271,6 +1272,8 @@ export function SettingsPanel({
       <StreamSettings
         stream={settings.stream}
         disabled={disabled}
+        isExpanded={expandedSections.stream}
+        onToggleExpand={() => toggleSection('stream')}
         streamErrorMessage={streamErrorMessage}
         updateStreamPlatform={updateStreamPlatform}
         updateYoutubeApiKey={updateYoutubeApiKey}
