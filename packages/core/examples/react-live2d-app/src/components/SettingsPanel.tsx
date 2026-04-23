@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
@@ -8,6 +9,7 @@ type SettingsHook = ReturnType<typeof useSettings>;
 interface SettingsPanelProps extends SettingsHook {
   isProcessing: boolean;
   backgroundImageUrl: string | null;
+  streamErrorMessage?: string;
   onBackgroundImageChange: (file: File | null) => void;
 }
 
@@ -118,7 +120,7 @@ interface MinimaxVoice {
   voice_name: string;
 }
 
-type SectionKey = 'llm' | 'tts' | 'visual';
+type SectionKey = 'llm' | 'tts' | 'visual' | 'stream';
 
 export function SettingsPanel({
   settings,
@@ -159,9 +161,20 @@ export function SettingsPanel({
   updatePiperPlusVoiceFile,
   updatePiperPlusSpeed,
   updatePiperPlusNoiseScale,
+  updateStreamPlatform,
+  updateYoutubeApiKey,
+  updateYoutubeLiveId,
+  updateYoutubeEnabled,
+  updateYoutubeCommentIntervalMs,
+  updateTwitchClientId,
+  updateTwitchAccessToken,
+  updateTwitchChannel,
+  updateTwitchEnabled,
+  updateTwitchCommentIntervalMs,
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
+  streamErrorMessage,
   onBackgroundImageChange,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
@@ -188,6 +201,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    stream: true,
   });
 
   useEffect(() => {
@@ -1254,6 +1268,24 @@ export function SettingsPanel({
           </>
         )}
       </div>
+
+      <StreamSettings
+        stream={settings.stream}
+        disabled={disabled}
+        isExpanded={expandedSections.stream}
+        onToggleExpand={() => toggleSection('stream')}
+        streamErrorMessage={streamErrorMessage}
+        updateStreamPlatform={updateStreamPlatform}
+        updateYoutubeApiKey={updateYoutubeApiKey}
+        updateYoutubeLiveId={updateYoutubeLiveId}
+        updateYoutubeEnabled={updateYoutubeEnabled}
+        updateYoutubeCommentIntervalMs={updateYoutubeCommentIntervalMs}
+        updateTwitchClientId={updateTwitchClientId}
+        updateTwitchAccessToken={updateTwitchAccessToken}
+        updateTwitchChannel={updateTwitchChannel}
+        updateTwitchEnabled={updateTwitchEnabled}
+        updateTwitchCommentIntervalMs={updateTwitchCommentIntervalMs}
+      />
     </div>
   );
 }

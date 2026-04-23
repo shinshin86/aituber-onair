@@ -28,10 +28,14 @@
   - 背景画像（1枚）
   - アバター画像（4状態: 口開閉/目開閉）
 - 画像設定はメモリ保持のみ（リロードで初期化）
+- YouTube Live / Twitch のライブチャットを取得して LLM パイプラインに流す
+  - YouTube は YouTube Data API v3 を利用（Google Cloud の API キーが必要）
+  - Twitch は EventSub WebSocket とブラウザ上での implicit OAuth フローを利用
 
 ## セットアップ
 
 ```bash
+cd packages/core/examples/react-pngtuber-app
 npm install
 npm run dev
 ```
@@ -49,6 +53,45 @@ npm run dev
 - `#optimization-guide-on-device-model`
 - `#prompt-api-for-gemini-nano`
 - API Key は不要です
+
+## ライブコメント取得（YouTube Live / Twitch）
+
+このサンプルでは YouTube Live / Twitch のライブチャットを LLM に流し込むことができます。
+**Settings → Stream** から設定します。
+
+同時に有効化できるのはどちらか一方だけです。
+
+### YouTube Live
+
+1. Google Cloud Console で **YouTube Data API v3** を有効化した API キーを作成します。
+2. Settings → Stream で `YouTube` を選択し、API キーとライブ動画 ID（YouTube Live URL の `v=` パラメータ）を入力します。
+3. 必要に応じてポーリング間隔（既定 20 秒）を調整し、トグルを有効化します。
+
+### Twitch
+
+このサンプルは Twitch のブラウザ implicit OAuth フロー（`response_type=token`、
+スコープ `user:read:chat`）を使用します。アクセストークンはサーバを介さず、
+ブラウザの `localStorage` にのみ保存されます。
+
+1. [Twitch Developer Console](https://dev.twitch.tv/console/apps) でアプリケーションを登録し、Client ID をコピーします。
+2. そのアプリケーションの OAuth Redirect URL に **`http://localhost:5173/`** を登録します（Settings → Stream → Twitch に表示されている URL を正確にコピーしてください。Vite 既定では `http://localhost:5173/`）。
+3. Settings → Stream で `Twitch` を選択し、Client ID を貼り付けて **Connect to Twitch** を押し、OAuth 認可画面で承認します。
+4. チャンネルの login 名（Twitch URL に含まれる小文字の名前）を入力し、dequeue 間隔を設定してトグルを有効化します。
+
+**localhost 以外の環境にデプロイする場合:** `http://localhost:5173/` 以外のホスト
+（例: `https://your-domain.example/`）で動かしたい場合は、その URL を Twitch
+Developer Console に追加の OAuth Redirect URL として登録し、そのホスト上で
+再度 OAuth フローを実行してください。Settings パネルに表示される Redirect URL は
+`window.location` から自動計算され、開いているホストに追従します。
+
+### 認証情報の保存に関する注意
+
+このサンプルは開発者向けサンプルです。YouTube API キー、Twitch Client ID、
+Twitch アクセストークンは **`localStorage` に平文で保存** されます（このサンプルが
+既に扱っている他プロバイダの API キーと同じ扱いです）。このオリジン上で動く
+スクリプトはこれらの値を読み取れます。本番権限のクレデンシャルを入れないこと、
+共有オリジンや公開オリジンにこのサンプルをそのままデプロイしないこと、
+共有環境で使ったブラウザではキーをローテーションすることを推奨します。
 
 ## Piper Plus のセットアップ
 

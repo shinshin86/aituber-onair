@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { AvatarImageKey, AvatarImageUrls } from './AvatarPanel';
@@ -10,6 +11,7 @@ interface SettingsPanelProps extends SettingsHook {
   isProcessing: boolean;
   backgroundImageUrl: string | null;
   avatarImageUrls: AvatarImageUrls;
+  streamErrorMessage?: string;
   onBackgroundImageChange: (file: File | null) => void;
   onAvatarImageChange: (key: AvatarImageKey, file: File | null) => void;
 }
@@ -121,7 +123,7 @@ interface MinimaxVoice {
   voice_name: string;
 }
 
-type SectionKey = 'llm' | 'tts' | 'visual';
+type SectionKey = 'llm' | 'tts' | 'visual' | 'stream';
 
 const AVATAR_IMAGE_FIELDS: { key: AvatarImageKey; label: string }[] = [
   { key: 'mouth_close_eyes_open', label: '口閉じ / 目開き' },
@@ -169,10 +171,21 @@ export function SettingsPanel({
   updatePiperPlusVoiceFile,
   updatePiperPlusSpeed,
   updatePiperPlusNoiseScale,
+  updateStreamPlatform,
+  updateYoutubeApiKey,
+  updateYoutubeLiveId,
+  updateYoutubeEnabled,
+  updateYoutubeCommentIntervalMs,
+  updateTwitchClientId,
+  updateTwitchAccessToken,
+  updateTwitchChannel,
+  updateTwitchEnabled,
+  updateTwitchCommentIntervalMs,
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
   avatarImageUrls,
+  streamErrorMessage,
   onBackgroundImageChange,
   onAvatarImageChange,
 }: SettingsPanelProps) {
@@ -199,6 +212,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    stream: true,
   });
 
   const selectedAivisCloudPresetId = useMemo(() => {
@@ -1311,6 +1325,24 @@ export function SettingsPanel({
           </>
         )}
       </div>
+
+      <StreamSettings
+        stream={settings.stream}
+        disabled={disabled}
+        isExpanded={expandedSections.stream}
+        onToggleExpand={() => toggleSection('stream')}
+        streamErrorMessage={streamErrorMessage}
+        updateStreamPlatform={updateStreamPlatform}
+        updateYoutubeApiKey={updateYoutubeApiKey}
+        updateYoutubeLiveId={updateYoutubeLiveId}
+        updateYoutubeEnabled={updateYoutubeEnabled}
+        updateYoutubeCommentIntervalMs={updateYoutubeCommentIntervalMs}
+        updateTwitchClientId={updateTwitchClientId}
+        updateTwitchAccessToken={updateTwitchAccessToken}
+        updateTwitchChannel={updateTwitchChannel}
+        updateTwitchEnabled={updateTwitchEnabled}
+        updateTwitchCommentIntervalMs={updateTwitchCommentIntervalMs}
+      />
     </div>
   );
 }

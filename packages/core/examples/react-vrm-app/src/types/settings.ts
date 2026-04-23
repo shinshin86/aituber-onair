@@ -20,6 +20,7 @@ export type TTSEngineOption =
   | 'xai'
   | 'piperPlus'
   | 'none';
+export type StreamingPlatformOption = 'none' | 'youtube' | 'twitch';
 
 export interface ProviderApiKeys {
   openai?: string;
@@ -75,7 +76,21 @@ export interface TTSSettings {
   piperPlusNoiseScale?: string;
 }
 
+export interface StreamSettings {
+  platform: StreamingPlatformOption;
+  youtubeApiKey: string;
+  youtubeLiveId: string;
+  youtubeEnabled: boolean;
+  youtubeCommentIntervalMs: number;
+  twitchClientId: string;
+  twitchAccessToken: string;
+  twitchChannel: string;
+  twitchEnabled: boolean;
+  twitchCommentIntervalMs: number;
+}
+
 export interface AppSettings {
   llm: LLMSettings;
   tts: TTSSettings;
+  stream: StreamSettings;
 }
