@@ -186,7 +186,7 @@ export function StreamSettings({
                 <label htmlFor="stream-twitch-clientid">Twitch Client ID</label>
                 <input
                   id="stream-twitch-clientid"
-                  type="text"
+                  type="password"
                   value={stream.twitchClientId}
                   onChange={(event) => updateTwitchClientId(event.target.value)}
                   placeholder="Twitch Client ID"

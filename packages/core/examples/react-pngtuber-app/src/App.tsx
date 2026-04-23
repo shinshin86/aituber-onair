@@ -108,7 +108,6 @@ export default function App() {
 
     if (token && state && state === savedState) {
       settingsHook.updateTwitchAccessToken(token);
-      settingsHook.updateTwitchEnabled(true);
       setStreamErrorMessage('');
       sessionStorage.removeItem('twitchOauthState');
     }
