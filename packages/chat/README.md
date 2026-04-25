@@ -189,6 +189,7 @@ Notes:
 
 `reasoning_effort` options differ per model:
 - `gpt-5.4-pro`: `'medium' | 'high' | 'xhigh'` (Responses API only)
+- `gpt-5.5`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'` (defaults to `'none'` in this package for fast chat responses)
 - `gpt-5.4`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.4-mini` / `gpt-5.4-nano`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.1`: `'none' | 'low' | 'medium' | 'high'`
@@ -196,14 +197,19 @@ Notes:
 
 **Meet the GPT-5 family**
 
+- `gpt-5.5` – OpenAI's newest frontier model for complex professional work, with text and image input support and both Chat Completions and Responses API support.
 - `gpt-5.4-pro` – Highest-tier GPT-5.4 model. Use with Responses API only.
-- `gpt-5.4` – Latest GPT-5 generation model optimized for stronger coding, instruction following, and long-context agentic work.
+- `gpt-5.4` – Previous GPT-5 generation model optimized for stronger coding, instruction following, and long-context agentic work.
 - `gpt-5.4-mini` – Faster GPT-5.4-class small model for coding, tool use, and multimodal workloads.
 - `gpt-5.4-nano` – Lowest-cost GPT-5.4-class model for simpler high-volume tasks and lightweight subagents.
 - `gpt-5.1` – Complex reasoning, broad world knowledge, and code-heavy or multi-step agentic workflows.
 - `gpt-5` – Previous flagship, still available for backward compatibility but superseded by GPT-5.1.
 - `gpt-5-mini` – Cost-optimized reasoning/chat model that balances speed, cost, and capability.
 - `gpt-5-nano` – High-throughput option best suited for simple instruction-following or classification runs.
+
+`gpt-5.5-pro` is not included in the supported model list because OpenAI
+documents it as non-streaming, while this package's standard chat flow expects
+streaming support.
 
 ### OpenAI-Compatible Support Scope
 
@@ -470,7 +476,8 @@ Base preset token targets are:
 - `deep`: 5000
 
 For the OpenAI GPT-5 family (`gpt-5`, `gpt-5-mini`, `gpt-5-nano`,
-`gpt-5.1`, `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`),
+`gpt-5.1`, `gpt-5.4`, `gpt-5.5`, `gpt-5.4-mini`, `gpt-5.4-nano`,
+`gpt-5.4-pro`),
 these values are treated as base presets. The library may raise the actual
 `max_completion_tokens` or `max_output_tokens` to reduce premature truncation,
 depending on the selected model and `reasoning_effort`.
@@ -671,7 +678,7 @@ Semantics:
 
 Currently, the following AI providers are built-in:
 
-- **OpenAI**: Supports models like GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
+- **OpenAI**: Supports models like GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports models like Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - **Claude**: Supports current Claude API model IDs including Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku

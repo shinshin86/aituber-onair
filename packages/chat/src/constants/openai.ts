@@ -9,9 +9,12 @@ export const MODEL_GPT_5_MINI = 'gpt-5-mini';
 export const MODEL_GPT_5 = 'gpt-5';
 export const MODEL_GPT_5_1 = 'gpt-5.1';
 export const MODEL_GPT_5_4 = 'gpt-5.4';
+export const MODEL_GPT_5_5 = 'gpt-5.5';
 export const MODEL_GPT_5_4_MINI = 'gpt-5.4-mini';
 export const MODEL_GPT_5_4_NANO = 'gpt-5.4-nano';
 export const MODEL_GPT_5_4_PRO = 'gpt-5.4-pro';
+// GPT-5.5 Pro is intentionally not listed because OpenAI documents it as
+// non-streaming, while this package's chat flow expects streaming support.
 
 export const MODEL_GPT_4_1 = 'gpt-4.1';
 export const MODEL_GPT_4_1_MINI = 'gpt-4.1-mini';
@@ -31,6 +34,7 @@ export const VISION_SUPPORTED_MODELS = [
   MODEL_GPT_5,
   MODEL_GPT_5_1,
   MODEL_GPT_5_4,
+  MODEL_GPT_5_5,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
@@ -50,6 +54,7 @@ export const GPT_5_MODELS = [
   MODEL_GPT_5,
   MODEL_GPT_5_1,
   MODEL_GPT_5_4,
+  MODEL_GPT_5_5,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
@@ -84,6 +89,7 @@ export function isResponsesOnlyGPT5Model(model: string): boolean {
  */
 export function allowsReasoningXHigh(model: string): boolean {
   return (
+    model === MODEL_GPT_5_5 ||
     model === MODEL_GPT_5_4 ||
     model === MODEL_GPT_5_4_MINI ||
     model === MODEL_GPT_5_4_NANO ||
@@ -93,12 +99,13 @@ export function allowsReasoningXHigh(model: string): boolean {
 
 /**
  * Check if the provided model allows the reasoning_effort 'none' shortcut
- * Supported by GPT-5.1 and GPT-5.4 family models, except Pro
+ * Supported by GPT-5.1, GPT-5.4, and GPT-5.5 family models, except Pro
  */
 export function allowsReasoningNone(model: string): boolean {
   return (
     model === MODEL_GPT_5_1 ||
     model === MODEL_GPT_5_4 ||
+    model === MODEL_GPT_5_5 ||
     model === MODEL_GPT_5_4_MINI ||
     model === MODEL_GPT_5_4_NANO
   );
@@ -106,7 +113,7 @@ export function allowsReasoningNone(model: string): boolean {
 
 /**
  * Check if the provided model allows the 'minimal' reasoning effort level
- * GPT-5.1 and GPT-5.4 variants remove 'minimal'
+ * GPT-5.1, GPT-5.4, and GPT-5.5 variants remove 'minimal'
  */
 export function allowsReasoningMinimal(model: string): boolean {
   return (
@@ -126,13 +133,17 @@ export function allowsReasoningLow(model: string): boolean {
 
 /**
  * Get default reasoning effort by GPT-5 model family
- * - GPT-5.1 / GPT-5.4: none
+ * - GPT-5.1 / GPT-5.4 / GPT-5.5: none
  * - GPT-5.4 Pro and earlier GPT-5 variants: medium
  */
 export function getDefaultReasoningEffortForGPT5Model(
   model: string,
 ): 'none' | 'medium' {
-  if (model === MODEL_GPT_5_1 || model === MODEL_GPT_5_4) {
+  if (
+    model === MODEL_GPT_5_1 ||
+    model === MODEL_GPT_5_4 ||
+    model === MODEL_GPT_5_5
+  ) {
     return 'none';
   }
   return 'medium';
