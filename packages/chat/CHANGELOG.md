@@ -1,5 +1,21 @@
 # @aituber-onair/chat
 
+## 0.28.0
+
+### Minor Changes
+
+- Added OpenAI GPT-5.5 (`gpt-5.5`) to the shared constants, provider
+  supported-model list, and the React basic example selector.
+- Treated GPT-5.5 as a vision-capable GPT-5 family model so existing GPT-5
+  option normalization applies consistently.
+- Matched GPT-5.5 reasoning handling to the package's low-latency chat policy:
+  default to `reasoning_effort: 'none'`, allow `xhigh`, and remap unsupported
+  `minimal` requests back to `none`.
+- Updated the English/Japanese README files and the React basic example docs to
+  document GPT-5.5 API support.
+- Documented that GPT-5.5 Pro is intentionally not added because OpenAI marks
+  it as non-streaming while the package's standard chat flow expects streaming.
+
 ## 0.27.0
 
 ### Minor Changes

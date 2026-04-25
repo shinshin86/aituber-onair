@@ -189,6 +189,7 @@ const compatibleService = ChatServiceFactory.createChatService(
 
 `reasoning_effort` の選択肢はモデルによって異なります。
 - `gpt-5.4-pro`: `'medium' | 'high' | 'xhigh'`（Responses API 専用）
+- `gpt-5.5`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`（このパッケージでは高速なチャット応答を優先してデフォルトは `'none'`）
 - `gpt-5.4`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.4-mini` / `gpt-5.4-nano`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.1`: `'none' | 'low' | 'medium' | 'high'`
@@ -196,14 +197,19 @@ const compatibleService = ChatServiceFactory.createChatService(
 
 **GPT-5ファミリーの概要**
 
+- `gpt-5.5` – 複雑なプロフェッショナル用途向けの OpenAI 最新フロンティアモデル。テキスト/画像入力に対応し、Chat Completions API と Responses API の両方で利用できます。
 - `gpt-5.4-pro` – GPT-5.4 の上位モデル。Responses API でのみ利用可能。
-- `gpt-5.4` – コーディング、指示追従、長い文脈を伴うエージェント用途を強化した最新世代モデル。
+- `gpt-5.4` – コーディング、指示追従、長い文脈を伴うエージェント用途を強化した一世代前の GPT-5 系モデル。
 - `gpt-5.4-mini` – コーディング、ツール利用、マルチモーダル用途向けの高速な GPT-5.4 系小型モデル。
 - `gpt-5.4-nano` – 単純な高頻度タスクや軽量サブエージェント向けの最廉価な GPT-5.4 系モデル。
 - `gpt-5.1` – 複雑な推論、広範な世界知識、コードやマルチステップのエージェントタスク向け。
 - `gpt-5` – 旧フラッグシップ（後方互換目的で提供されるが、現在は 5.1 が推奨）。
 - `gpt-5-mini` – コスト最適化された推論/チャットモデル。速度と能力のバランスが良い。
 - `gpt-5-nano` – 指示追従や分類などの高スループット処理に向いた軽量モデル。
+
+`gpt-5.5-pro` は OpenAI のドキュメント上でストリーミング非対応のため、
+ストリーミング前提の通常チャットフローを持つこのパッケージの supported
+models には含めていません。
 
 ### OpenAI互換対応範囲
 
@@ -474,7 +480,7 @@ const tools: ToolDefinition[] = [{
 
 ただし OpenAI の GPT-5 family
 （`gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5.1`, `gpt-5.4`,
-`gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`）では、これらは基準値として
+`gpt-5.5`, `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`）では、これらは基準値として
 扱われます。途中終了を減らすため、実際に送信される
 `max_completion_tokens` / `max_output_tokens` は、model と
 `reasoning_effort` に応じて自動的に引き上げられることがあります。
@@ -675,7 +681,7 @@ console.log(modelLevel); // 'unknown'
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
+- **OpenAI**: GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite、Gemma 4 31B IT、Gemma 4 26B A4B ITのモデルをサポート
 - **Claude**: Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
