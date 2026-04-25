@@ -1364,7 +1364,7 @@ or send us a message.
 
 Currently, the following AI provider is built-in:
 
-- **OpenAI**: Supports models like GPT-5 family (Nano/Mini/Standard/5.1/5.4/5.4 Mini/5.4 Nano/5.4 Pro), GPT-4.1 (including Mini/Nano), GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini
+- **OpenAI**: Supports models like GPT-5 family (Nano/Mini/Standard/5.1/5.4/5.5/5.4 Mini/5.4 Nano/5.4 Pro), GPT-4.1 (including Mini/Nano), GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini
 - **Gemini**: Supports models like Gemma 4 31B IT, Gemma 4 26B A4B IT, Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Gemini Nano**: Supports the built-in Chrome `gemini-nano` model without an API key (Chrome 138+ with Prompt API flags enabled)
 - **Claude**: Supports current Claude API model IDs including Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
@@ -1398,6 +1398,7 @@ Different AI models support different features. For example:
 - **GPT-4o**, **GPT-4o-mini**: Support both text chat and image processing (Vision)
 - **O3-mini**: Supports text chat only (does not support image processing)
 - **GPT-5.4 Pro**: Uses Responses API only (Chat Completions API is not available)
+- **GPT-5.5 Pro**: Not included in supported models because OpenAI documents it as non-streaming, while the standard chat flow expects streaming support
 
 When selecting a model, be aware of these limitations. Attempting to use unsupported features will result in an explicit error.
 

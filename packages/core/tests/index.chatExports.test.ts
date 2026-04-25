@@ -10,6 +10,7 @@ import {
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMMA_4_31B_IT,
   MODEL_GPT_5_4,
+  MODEL_GPT_5_5,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
@@ -48,13 +49,15 @@ describe('Core index chat re-exports', () => {
     expect(MODEL_GEMMA_4_26B_A4B_IT).toBe('gemma-4-26b-a4b-it');
   });
 
-  it('re-exports GPT-5.4 model constants and capability helpers', () => {
+  it('re-exports GPT-5.4/5.5 model constants and capability helpers', () => {
     expect(MODEL_GPT_5_4).toBe('gpt-5.4');
+    expect(MODEL_GPT_5_5).toBe('gpt-5.5');
     expect(MODEL_GPT_5_4_MINI).toBe('gpt-5.4-mini');
     expect(MODEL_GPT_5_4_NANO).toBe('gpt-5.4-nano');
     expect(MODEL_GPT_5_4_PRO).toBe('gpt-5.4-pro');
     expect(isResponsesOnlyGPT5Model(MODEL_GPT_5_4_PRO)).toBe(true);
     expect(allowsReasoningXHigh(MODEL_GPT_5_4)).toBe(true);
+    expect(allowsReasoningXHigh(MODEL_GPT_5_5)).toBe(true);
     expect(allowsReasoningXHigh(MODEL_GPT_5_4_MINI)).toBe(true);
     expect(allowsReasoningXHigh(MODEL_GPT_5_4_NANO)).toBe(true);
   });

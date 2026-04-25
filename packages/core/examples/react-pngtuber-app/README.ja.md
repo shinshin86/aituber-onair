@@ -9,7 +9,9 @@
 
 - LLM プロバイダ切り替え: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
-  chat 由来の新規モデルも Settings に自動反映されます
+  GPT-5.5 など chat 由来の新規モデルも Settings に自動反映されます
+- `gpt-5.5-pro` は OpenAI のドキュメント上でストリーミング非対応のため、
+  ストリーミング前提の通常チャットフローを使うこの例では含めていません
 - `openrouter` では Settings から現在使える `:free` モデルを取得可能:
   - `Fetch free models` で候補を疎通確認し、通ったモデルを一覧に追加
   - `Max candidates` は「疎通確認する `:free` 候補の最大件数」

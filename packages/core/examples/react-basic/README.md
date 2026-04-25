@@ -11,7 +11,7 @@ This example application serves as a practical implementation guide for integrat
 ### Key Features
 
 - **🤖 Multi-Provider LLM Support**
-  - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.4/5.4 Mini/5.4 Nano/5.4 Pro)
+  - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.5 and GPT-5.4/5.4 Mini/5.4 Nano/5.4 Pro)
   - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
   - Google Gemini (Gemma 4, Pro, Flash, Thinking models)
@@ -102,7 +102,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **OpenAI:**
 - GPT-4.1 series (Nano, Mini, Standard)
-- GPT-5 series (Nano, Mini, Standard, 5.1, 5.4, 5.4 Mini, 5.4 Nano, 5.4 Pro)
+- GPT-5 series (Nano, Mini, Standard, 5.1, 5.4, 5.5, 5.4 Mini, 5.4 Nano, 5.4 Pro)
 - o3-mini
 - GPT-4o, GPT-4o Mini
 
@@ -174,6 +174,9 @@ When using GPT-5 models, additional configuration options become available:
 - **Verbosity**: Low, Medium, High
 - **Reasoning Effort**: `none`/`minimal`/`low`/`medium`/`high`/`xhigh` (options change by model capability)
 - **Endpoint**: Chat Completions API or Responses API (`gpt-5.4-pro` is fixed to Responses API)
+
+`gpt-5.5-pro` is not listed because OpenAI documents it as non-streaming,
+while this example uses the standard streaming chat flow.
 
 ## 🎤 Voice Engine Configuration
 
