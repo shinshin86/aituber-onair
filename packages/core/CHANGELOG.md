@@ -1,5 +1,23 @@
 # @aituber-onair/core
 
+## 0.25.6
+
+### Patch Changes
+
+- Synced OpenAI GPT-5.5 support from `@aituber-onair/chat@0.28.0` into the
+  core entry point and examples:
+  - re-exported `MODEL_GPT_5_5`
+  - updated the React basic example OpenAI model list to add GPT-5.5
+  - kept VRM, PNGTuber, and Live2D examples on dynamic model discovery through
+    `AITuberOnAirCore.getSupportedModels()`, so GPT-5.5 appears through the
+    core provider model list
+- Refreshed core README docs and example READMEs to reflect GPT-5.5 support and
+  note that GPT-5.5 Pro is intentionally omitted because it is non-streaming.
+- Added core export test coverage for the GPT-5.5 model constant and capability
+  helper behavior.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.28.0
+
 ## 0.25.5
 
 ### Patch Changes

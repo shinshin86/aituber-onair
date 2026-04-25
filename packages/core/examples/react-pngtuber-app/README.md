@@ -9,7 +9,9 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 
 - Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
-  chat models are available automatically in Settings
+  chat models such as GPT-5.5 are available automatically in Settings
+- `gpt-5.5-pro` is intentionally omitted because OpenAI documents it as
+  non-streaming, while this example uses the standard streaming chat flow
 - For `openrouter`, fetch currently working `:free` models from Settings:
   - `Fetch free models` probes candidates and appends working models to the model list
   - `Max candidates` is the maximum number of `:free` candidates to probe
