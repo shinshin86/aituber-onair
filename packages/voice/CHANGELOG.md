@@ -1,5 +1,26 @@
 # @aituber-onair/voice
 
+## 0.15.0
+
+### Minor Changes
+
+- Add Unreal Speech v8 support via `engineType: 'unrealSpeech'`.
+  - Introduce `UnrealSpeechEngine` using the v8 `/stream` endpoint.
+  - Support `unrealSpeechApiUrl`, `unrealSpeechBitrate`,
+    `unrealSpeechSpeed`, `unrealSpeechPitch`, `unrealSpeechCodec`,
+    and `unrealSpeechTemperature`.
+  - Register Unreal Speech in the voice engine factory, public exports,
+    internal option handlers, React example, README, and tests.
+- Add ElevenLabs Text to Speech support via `engineType: 'elevenLabs'`.
+  - Introduce `ElevenLabsEngine` using the ElevenLabs Text to Speech API
+    without adding the ElevenLabs SDK.
+  - Support `elevenLabsApiUrl`, `elevenLabsModel`,
+    `elevenLabsOutputFormat`, `elevenLabsLanguageCode`,
+    `elevenLabsVoiceSettings`, individual voice-setting overrides,
+    generation context, text normalization, and logging controls.
+  - Add React example voice-list fetching from ElevenLabs Voices API so users
+    can select voices by readable names while using `voice_id` internally.
+
 ## 0.14.0
 
 ### Minor Changes
