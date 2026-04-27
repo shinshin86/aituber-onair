@@ -1,6 +1,7 @@
 import type {
   GeminiTtsModel,
   MinimaxModel,
+  UnrealSpeechCodec,
   XaiBitRate,
   XaiCodec,
   XaiSampleRate,
@@ -24,6 +25,15 @@ export const ENGINE_DEFAULTS = {
     defaultCodec: 'mp3' as XaiCodec,
     defaultSampleRate: 24000 as XaiSampleRate,
     defaultBitRate: 128000 as XaiBitRate,
+  },
+  unrealSpeech: {
+    apiUrl: 'https://api.v8.unrealspeech.com/stream',
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'Your Unreal Speech API key',
+    speaker: 'af_bella',
+    defaultBitrate: '192k',
+    defaultCodec: 'libmp3lame' as UnrealSpeechCodec,
   },
   geminiTts: {
     apiUrl: 'https://generativelanguage.googleapis.com/v1beta',
@@ -140,6 +150,12 @@ export const XAI_VOICE_OPTIONS = Object.entries(XAI_VOICES).map(
   }),
 );
 
+export const UNREAL_SPEECH_CODECS: Record<UnrealSpeechCodec, string> = {
+  libmp3lame: 'MP3 (libmp3lame)',
+  pcm_mulaw: 'PCM mu-law',
+  pcm_s16le: 'PCM signed 16-bit',
+};
+
 export const VOICEPEAK_WEIGHT_KEYS = [
   'happy',
   'fun',
@@ -252,6 +268,24 @@ export const SLIDER_CONFIG: Record<string, SliderConfig> = {
     suffix: 'x',
   },
   minimaxPitch: { min: -12, max: 12, step: 1, defaultValue: 0 },
+  unrealSpeechSpeed: {
+    min: -1,
+    max: 1,
+    step: 0.05,
+    defaultValue: 0,
+  },
+  unrealSpeechPitch: {
+    min: 0.5,
+    max: 1.5,
+    step: 0.05,
+    defaultValue: 1,
+  },
+  unrealSpeechTemperature: {
+    min: 0.1,
+    max: 0.8,
+    step: 0.05,
+    defaultValue: 0.25,
+  },
   aivisSpeedScale: {
     min: 0.5,
     max: 1.5,

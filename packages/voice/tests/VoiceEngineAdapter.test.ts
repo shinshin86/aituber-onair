@@ -71,6 +71,7 @@ describe('VoiceEngineAdapter', () => {
       setBitrate: vi.fn(),
       setAudioFormat: vi.fn(),
       setAudioChannel: vi.fn(),
+      setTemperature: vi.fn(),
       setNoiseScale: vi.fn(),
       setSilenceDurations: vi.fn(),
       setOutputFormat: vi.fn(),
@@ -265,6 +266,39 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setCodec).toHaveBeenCalledWith('wav');
       expect(mockEngine.setSampleRate).toHaveBeenCalledWith(44100);
       expect(mockEngine.setBitRate).toHaveBeenCalledWith(192000);
+      expect(mockEngine.fetchAudio).toHaveBeenCalled();
+    });
+  });
+
+  describe('Unreal Speech Integration', () => {
+    it('should configure Unreal Speech engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'unrealSpeech',
+        speaker: 'af_bella',
+        apiKey: 'unreal-api-key',
+        unrealSpeechApiUrl: 'https://example.com/stream',
+        unrealSpeechBitrate: '320k',
+        unrealSpeechSpeed: 0.3,
+        unrealSpeechPitch: 1.1,
+        unrealSpeechCodec: 'pcm_mulaw',
+        unrealSpeechTemperature: 0.35,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'Unreal Speech test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/stream',
+      );
+      expect(mockEngine.setBitrate).toHaveBeenCalledWith('320k');
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(0.3);
+      expect(mockEngine.setPitch).toHaveBeenCalledWith(1.1);
+      expect(mockEngine.setCodec).toHaveBeenCalledWith('pcm_mulaw');
+      expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.35);
       expect(mockEngine.fetchAudio).toHaveBeenCalled();
     });
   });
@@ -1068,6 +1102,39 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setCodec).toHaveBeenCalledWith('pcm');
       expect(mockEngine.setSampleRate).toHaveBeenCalledWith(24000);
       expect(mockEngine.setBitRate).toHaveBeenCalledWith(96000);
+    });
+
+    it('should apply updated Unreal Speech options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'unrealSpeech',
+        speaker: 'af_bella',
+        apiKey: 'unreal-api-key',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.updateOptions({
+        unrealSpeechApiUrl: 'https://example.com/stream',
+        unrealSpeechBitrate: '320k',
+        unrealSpeechSpeed: 0.25,
+        unrealSpeechPitch: 1.2,
+        unrealSpeechCodec: 'pcm_s16le',
+        unrealSpeechTemperature: 0.4,
+      });
+
+      await adapter.speak({ text: 'Updated Unreal Speech options' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/stream',
+      );
+      expect(mockEngine.setBitrate).toHaveBeenCalledWith('320k');
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(0.25);
+      expect(mockEngine.setPitch).toHaveBeenCalledWith(1.2);
+      expect(mockEngine.setCodec).toHaveBeenCalledWith('pcm_s16le');
+      expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.4);
     });
 
     it('should apply updated OpenAI-compatible options for the current engine', async () => {

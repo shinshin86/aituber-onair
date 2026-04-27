@@ -12,6 +12,7 @@ import { openAiEngineHandler } from './openai';
 import { openAiCompatibleEngineHandler } from './openaiCompatible';
 import { piperPlusEngineHandler } from './piperPlus';
 import type { EngineHandler } from './types';
+import { unrealSpeechEngineHandler } from './unrealSpeech';
 import { voicePeakEngineHandler } from './voicepeak';
 import { voiceVoxEngineHandler } from './voicevox';
 import { xaiEngineHandler } from './xai';
@@ -21,6 +22,7 @@ const engineHandlers = {
   voicepeak: voicePeakEngineHandler,
   openai: openAiEngineHandler,
   xai: xaiEngineHandler,
+  unrealSpeech: unrealSpeechEngineHandler,
   geminiTts: geminiTtsEngineHandler,
   openaiCompatible: openAiCompatibleEngineHandler,
   aivisSpeech: aivisSpeechEngineHandler,

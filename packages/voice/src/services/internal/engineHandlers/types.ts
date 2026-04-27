@@ -7,6 +7,7 @@ import type {
   MinimaxVoiceServiceOptions,
   OpenAiVoiceServiceOptions,
   PiperPlusVoiceServiceOptions,
+  UnrealSpeechVoiceServiceOptions,
   VoicePeakVoiceServiceOptions,
   VoiceServiceOptions,
   VoiceVoxVoiceServiceOptions,
@@ -75,6 +76,17 @@ export interface XaiConfigurableEngine extends VoiceEngine {
     value: NonNullable<XaiVoiceServiceOptions['xaiSampleRate']>,
   ): void;
   setBitRate?(value: NonNullable<XaiVoiceServiceOptions['xaiBitRate']>): void;
+}
+
+export interface UnrealSpeechConfigurableEngine extends VoiceEngine {
+  setApiEndpoint?(value: string): void;
+  setBitrate?(value?: string): void;
+  setSpeed?(value?: number): void;
+  setPitch?(value?: number): void;
+  setCodec?(
+    value?: NonNullable<UnrealSpeechVoiceServiceOptions['unrealSpeechCodec']>,
+  ): void;
+  setTemperature?(value?: number): void;
 }
 
 export interface GeminiTtsConfigurableEngine extends VoiceEngine {

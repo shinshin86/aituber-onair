@@ -59,8 +59,8 @@ pnpm install @aituber-onair/voice
 ## Main Features
 
 - **Multiple TTS Engine Support**  
-  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Gemini TTS, MiniMax,
-  AivisSpeech, Aivis Cloud, and more
+  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Unreal Speech,
+  Gemini TTS, MiniMax, AivisSpeech, Aivis Cloud, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
 - **Emotion-Aware Synthesis**  
@@ -191,6 +191,27 @@ const voiceService = new VoiceService({
   xaiBitRate: 128000,
 });
 ```
+
+### Unreal Speech
+Unreal Speech v8 cloud TTS via the `/stream` endpoint. It returns audio bytes
+directly, so it works with `VoiceEngineAdapter` playback without an extra
+download step.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'unrealSpeech',
+  speaker: 'af_bella',
+  apiKey: 'your-unreal-speech-api-key',
+  unrealSpeechBitrate: '192k',
+  unrealSpeechSpeed: 0,
+  unrealSpeechPitch: 1,
+  unrealSpeechCodec: 'libmp3lame',
+  unrealSpeechTemperature: 0.25,
+});
+```
+
+Use `unrealSpeechApiUrl` to override the default
+`https://api.v8.unrealspeech.com/stream` endpoint.
 
 ### OpenAI-Compatible TTS
 OpenAI-compatible speech endpoints for self-hosted servers such as Kokoro FastAPI.
@@ -409,6 +430,9 @@ const voiceService = new VoiceService({
   openAiSpeed: 1.15,
   openAiCompatibleModel: 'your-model-id',
   openAiCompatibleSpeed: 1.1,
+  unrealSpeechBitrate: '192k',
+  unrealSpeechSpeed: 0,
+  unrealSpeechPitch: 1,
   voicevoxSpeedScale: 1.1,
   voicevoxPitchScale: 0.05,
   voicevoxIntonationScale: 1.2,
@@ -440,6 +464,11 @@ const voiceService = new VoiceService({
   - `xaiCodec`
   - `xaiSampleRate`
   - `xaiBitRate`
+
+- **Unreal Speech**
+  - Endpoint: `unrealSpeechApiUrl`
+  - Output: `unrealSpeechBitrate`, `unrealSpeechCodec`
+  - Voice controls: `unrealSpeechSpeed`, `unrealSpeechPitch`, `unrealSpeechTemperature`
 
 - **VOICEVOX**
   - Endpoint: `voicevoxApiUrl`
@@ -507,6 +536,12 @@ try {
 - Passes `speaker` through to `voice_id` as provided
 - Configurable codec, sample rate, and MP3 bitrate
 
+### Unreal Speech Features
+- Cloud TTS endpoint with Bearer token authentication
+- Passes `speaker` through to `VoiceId` as provided
+- Configurable bitrate, codec, speed, pitch, and temperature
+- Uses the v8 `/stream` API, which returns audio bytes directly
+
 ### MiniMax Features
 - 24 language support with automatic detection
 - HD quality audio output
@@ -550,10 +585,14 @@ type VoiceServiceOptions =
   | VoiceVoxVoiceServiceOptions
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
+  | XaiVoiceServiceOptions
+  | UnrealSpeechVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
+  | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions
+  | PiperPlusVoiceServiceOptions
   | NoneVoiceServiceOptions;
 ```
 

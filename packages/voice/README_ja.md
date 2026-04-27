@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -189,6 +189,27 @@ const voiceService = new VoiceService({
   xaiBitRate: 128000,
 });
 ```
+
+### Unreal Speech
+Unreal Speech v8 の `/stream` エンドポイントを利用するクラウド TTS
+です。音声バイト列を直接返すため、追加ダウンロードなしで
+`VoiceEngineAdapter` の再生処理に渡せます。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'unrealSpeech',
+  speaker: 'af_bella',
+  apiKey: 'your-unreal-speech-api-key',
+  unrealSpeechBitrate: '192k',
+  unrealSpeechSpeed: 0,
+  unrealSpeechPitch: 1,
+  unrealSpeechCodec: 'libmp3lame',
+  unrealSpeechTemperature: 0.25,
+});
+```
+
+既定の `https://api.v8.unrealspeech.com/stream` 以外を使う場合は
+`unrealSpeechApiUrl` で上書きできます。
 
 ### OpenAI互換 TTS
 Kokoro FastAPI などの OpenAI 互換エンドポイントを利用するための TTS プロバイダーです。
@@ -407,6 +428,9 @@ const voiceService = new VoiceService({
   openAiSpeed: 1.1,
   openAiCompatibleModel: 'your-model-id',
   openAiCompatibleSpeed: 1.1,
+  unrealSpeechBitrate: '192k',
+  unrealSpeechSpeed: 0,
+  unrealSpeechPitch: 1,
   voicevoxSpeedScale: 1.05,
   voicevoxPitchScale: 0.02,
   voicevoxQueryParameters: {
@@ -442,6 +466,11 @@ const voiceService = new VoiceService({
   - `xaiCodec`
   - `xaiSampleRate`
   - `xaiBitRate`
+
+- **Unreal Speech**
+  - エンドポイント: `unrealSpeechApiUrl`
+  - 出力: `unrealSpeechBitrate`, `unrealSpeechCodec`
+  - 音声調整: `unrealSpeechSpeed`, `unrealSpeechPitch`, `unrealSpeechTemperature`
 
 - **VOICEVOX**
   - エンドポイント: `voicevoxApiUrl`
@@ -509,6 +538,12 @@ try {
 - 指定した `speaker` をそのまま `voice_id` として送信
 - codec、sample rate、MP3 bitrate の調整に対応
 
+### Unreal Speech の機能
+- Bearer トークン認証のクラウド TTS エンドポイント
+- 指定した `speaker` をそのまま `VoiceId` として送信
+- bitrate、codec、speed、pitch、temperature の調整に対応
+- 音声バイト列を直接返す v8 `/stream` API を使用
+
 ### MiniMaxの機能
 - 自動検出付き24言語サポート
 - HD品質のオーディオ出力
@@ -552,10 +587,14 @@ type VoiceServiceOptions =
   | VoiceVoxVoiceServiceOptions
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
+  | XaiVoiceServiceOptions
+  | UnrealSpeechVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
+  | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions
+  | PiperPlusVoiceServiceOptions
   | NoneVoiceServiceOptions;
 ```
 

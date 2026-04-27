@@ -54,12 +54,14 @@ export function EngineSelector({
   const showApiKey =
     engine === 'openai' ||
     engine === 'xai' ||
+    engine === 'unrealSpeech' ||
     engine === 'geminiTts' ||
     engine === 'openaiCompatible' ||
     engine === 'aivisCloud' ||
     engine === 'minimax';
   const showApiUrl =
     engine === 'geminiTts' ||
+    engine === 'unrealSpeech' ||
     engine === 'openaiCompatible' ||
     engine === 'voicevox' ||
     engine === 'aivisSpeech' ||
@@ -390,6 +392,7 @@ export function EngineSelector({
           <option value="aivisCloud">Aivis Cloud API</option>
           <option value="voicepeak">VOICEPEAK</option>
           <option value="minimax">MiniMax</option>
+          <option value="unrealSpeech">Unreal Speech</option>
           <option value="openaiCompatible">OpenAI-Compatible TTS</option>
           <option value="piperPlus">Piper Plus (Browser WASM)</option>
         </select>

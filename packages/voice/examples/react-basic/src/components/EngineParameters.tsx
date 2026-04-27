@@ -1,6 +1,7 @@
 import type {
   MinimaxAudioFormat,
   MinimaxModel,
+  UnrealSpeechCodec,
   XaiBitRate,
   XaiCodec,
   XaiSampleRate,
@@ -8,6 +9,7 @@ import type {
 import {
   MINIMAX_MODELS,
   SLIDER_CONFIG,
+  UNREAL_SPEECH_CODECS,
   type AivisCloudBooleanOption,
   type AivisCloudOutputChannelOption,
   type AivisCloudOutputFormatOption,
@@ -43,6 +45,13 @@ interface EngineParametersProps {
     codec: SelectField<XaiCodec>;
     sampleRate: SelectField<`${XaiSampleRate}`>;
     bitRate: SelectField<`${XaiBitRate}`>;
+  };
+  unrealSpeech: {
+    bitrate: StringField;
+    speed: StringField;
+    pitch: StringField;
+    codec: SelectField<UnrealSpeechCodec>;
+    temperature: StringField;
   };
   geminiTts: {
     model: SelectField<string>;
@@ -138,6 +147,7 @@ export function EngineParameters({
   engine,
   openai,
   xai,
+  unrealSpeech,
   geminiTts,
   openaiCompatible,
   voicevox,
@@ -256,6 +266,82 @@ export function EngineParameters({
           <p className="parameter-card__note">
             `bit_rate` は MP3 出力時のみ送信されます。
           </p>
+        </CollapsibleCard>
+      )}
+
+      {engine === 'unrealSpeech' && (
+        <CollapsibleCard
+          className="parameter-card openai-card"
+          title="Unreal Speech パラメータ"
+          description="Unreal Speech v8 `/stream` API 向けの音声合成設定です。VoiceId は上部の Speaker に入力します。"
+        >
+          <div className="parameter-section">
+            <div className="parameter-section__title">出力</div>
+            <div className="parameter-grid parameter-grid--two">
+              <div className="form-group">
+                <label htmlFor="unrealSpeechBitrate">Bitrate</label>
+                <input
+                  id="unrealSpeechBitrate"
+                  type="text"
+                  value={unrealSpeech.bitrate.value}
+                  onChange={(e) =>
+                    unrealSpeech.bitrate.onChange(e.target.value)
+                  }
+                  placeholder="例: 192k"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="unrealSpeechCodec">Codec</label>
+                <select
+                  id="unrealSpeechCodec"
+                  value={unrealSpeech.codec.value}
+                  onChange={(e) =>
+                    unrealSpeech.codec.onChange(
+                      e.target.value as UnrealSpeechCodec,
+                    )
+                  }
+                >
+                  {Object.entries(UNREAL_SPEECH_CODECS).map(
+                    ([codec, label]) => (
+                      <option key={codec} value={codec}>
+                        {label}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="parameter-section">
+            <div className="parameter-section__title">音声調整</div>
+            <div className="parameter-grid">
+              <NumberSliderField
+                id="unrealSpeechSpeed"
+                label="Speed (-1.0 - 1.0)"
+                value={unrealSpeech.speed.value}
+                onChange={unrealSpeech.speed.onChange}
+                config={SLIDER_CONFIG.unrealSpeechSpeed}
+                placeholder="例: 0（標準）"
+              />
+              <NumberSliderField
+                id="unrealSpeechPitch"
+                label="Pitch (0.5 - 1.5)"
+                value={unrealSpeech.pitch.value}
+                onChange={unrealSpeech.pitch.onChange}
+                config={SLIDER_CONFIG.unrealSpeechPitch}
+                placeholder="例: 1.0（標準）"
+              />
+              <NumberSliderField
+                id="unrealSpeechTemperature"
+                label="Temperature (0.1 - 0.8)"
+                value={unrealSpeech.temperature.value}
+                onChange={unrealSpeech.temperature.onChange}
+                config={SLIDER_CONFIG.unrealSpeechTemperature}
+                placeholder="空欄で API 既定値"
+              />
+            </div>
+          </div>
         </CollapsibleCard>
       )}
 

@@ -7,6 +7,7 @@ import { NoneEngine } from './NoneEngine';
 import { OpenAiEngine } from './OpenAiEngine';
 import { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 import { PiperPlusEngine } from './PiperPlusEngine';
+import { UnrealSpeechEngine } from './UnrealSpeechEngine';
 import { VoiceEngine } from './VoiceEngine';
 import { VoicePeakEngine } from './VoicePeakEngine';
 import { VoiceVoxEngine } from './VoiceVoxEngine';
@@ -19,6 +20,7 @@ const ENGINE_CONSTRUCTORS = {
   aivisCloud: AivisCloudEngine,
   openai: OpenAiEngine,
   xai: XaiEngine,
+  unrealSpeech: UnrealSpeechEngine,
   geminiTts: GeminiTtsEngine,
   openaiCompatible: OpenAiCompatibleEngine,
   minimax: MinimaxEngine,
