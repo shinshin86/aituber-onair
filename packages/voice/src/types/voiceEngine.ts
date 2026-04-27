@@ -4,6 +4,7 @@ export type VoiceEngineType =
   | 'openai'
   | 'xai'
   | 'unrealSpeech'
+  | 'elevenLabs'
   | 'geminiTts'
   | 'openaiCompatible'
   | 'aivisSpeech'

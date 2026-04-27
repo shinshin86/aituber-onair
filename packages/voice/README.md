@@ -60,7 +60,7 @@ pnpm install @aituber-onair/voice
 
 - **Multiple TTS Engine Support**  
   Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Unreal Speech,
-  Gemini TTS, MiniMax, AivisSpeech, Aivis Cloud, and more
+  ElevenLabs, Gemini TTS, MiniMax, AivisSpeech, Aivis Cloud, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
 - **Emotion-Aware Synthesis**  
@@ -212,6 +212,27 @@ const voiceService = new VoiceService({
 
 Use `unrealSpeechApiUrl` to override the default
 `https://api.v8.unrealspeech.com/stream` endpoint.
+
+### ElevenLabs
+ElevenLabs Text to Speech API support using direct `fetch` calls. No SDK is
+required.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'elevenLabs',
+  speaker: 'JBFqnCBsd6RMkjVDRZzb',
+  apiKey: 'your-elevenlabs-api-key',
+  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsOutputFormat: 'mp3_44100_128',
+  elevenLabsStability: 0.5,
+  elevenLabsSimilarityBoost: 0.75,
+  elevenLabsUseSpeakerBoost: true,
+});
+```
+
+Use `elevenLabsApiUrl` to override the default
+`https://api.elevenlabs.io/v1/text-to-speech` endpoint. The `speaker` value is
+sent as the ElevenLabs `voice_id`.
 
 ### OpenAI-Compatible TTS
 OpenAI-compatible speech endpoints for self-hosted servers such as Kokoro FastAPI.
@@ -433,6 +454,9 @@ const voiceService = new VoiceService({
   unrealSpeechBitrate: '192k',
   unrealSpeechSpeed: 0,
   unrealSpeechPitch: 1,
+  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsStability: 0.5,
+  elevenLabsSimilarityBoost: 0.75,
   voicevoxSpeedScale: 1.1,
   voicevoxPitchScale: 0.05,
   voicevoxIntonationScale: 1.2,
@@ -469,6 +493,12 @@ const voiceService = new VoiceService({
   - Endpoint: `unrealSpeechApiUrl`
   - Output: `unrealSpeechBitrate`, `unrealSpeechCodec`
   - Voice controls: `unrealSpeechSpeed`, `unrealSpeechPitch`, `unrealSpeechTemperature`
+
+- **ElevenLabs**
+  - Endpoint: `elevenLabsApiUrl`
+  - Identity/output: `speaker`, `elevenLabsModel`, `elevenLabsOutputFormat`, `elevenLabsLanguageCode`
+  - Voice settings: `elevenLabsVoiceSettings`, `elevenLabsStability`, `elevenLabsSimilarityBoost`, `elevenLabsStyle`, `elevenLabsUseSpeakerBoost`, `elevenLabsSpeed`
+  - Context/normalization: `elevenLabsSeed`, `elevenLabsPreviousText`, `elevenLabsNextText`, `elevenLabsApplyTextNormalization`, `elevenLabsApplyLanguageTextNormalization`, `elevenLabsEnableLogging`
 
 - **VOICEVOX**
   - Endpoint: `voicevoxApiUrl`
@@ -542,6 +572,12 @@ try {
 - Configurable bitrate, codec, speed, pitch, and temperature
 - Uses the v8 `/stream` API, which returns audio bytes directly
 
+### ElevenLabs Features
+- Cloud TTS endpoint with `xi-api-key` authentication
+- Passes `speaker` through to `voice_id` as provided
+- Configurable model, output format, language code, and voice settings
+- Supports optional text context, seed, text normalization, and logging flags
+
 ### MiniMax Features
 - 24 language support with automatic detection
 - HD quality audio output
@@ -587,6 +623,7 @@ type VoiceServiceOptions =
   | OpenAiVoiceServiceOptions
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
+  | ElevenLabsVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions

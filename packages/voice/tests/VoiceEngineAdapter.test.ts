@@ -53,6 +53,16 @@ describe('VoiceEngineAdapter', () => {
       setEmotion: vi.fn(),
       setLanguage: vi.fn(),
       setVoiceSettings: vi.fn(),
+      setStability: vi.fn(),
+      setSimilarityBoost: vi.fn(),
+      setStyle: vi.fn(),
+      setUseSpeakerBoost: vi.fn(),
+      setSeed: vi.fn(),
+      setPreviousText: vi.fn(),
+      setNextText: vi.fn(),
+      setApplyTextNormalization: vi.fn(),
+      setApplyLanguageTextNormalization: vi.fn(),
+      setEnableLogging: vi.fn(),
       setSpeed: vi.fn(),
       setBitRate: vi.fn(),
       setModelUuid: vi.fn(),
@@ -299,6 +309,67 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setPitch).toHaveBeenCalledWith(1.1);
       expect(mockEngine.setCodec).toHaveBeenCalledWith('pcm_mulaw');
       expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.35);
+      expect(mockEngine.fetchAudio).toHaveBeenCalled();
+    });
+  });
+
+  describe('ElevenLabs Integration', () => {
+    it('should configure ElevenLabs engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'elevenLabs',
+        speaker: 'JBFqnCBsd6RMkjVDRZzb',
+        apiKey: 'eleven-api-key',
+        elevenLabsApiUrl: 'https://example.com/v1/text-to-speech',
+        elevenLabsModel: 'eleven_flash_v2_5',
+        elevenLabsOutputFormat: 'mp3_22050_32',
+        elevenLabsLanguageCode: 'ja',
+        elevenLabsVoiceSettings: {
+          stability: 0.5,
+          similarityBoost: 0.75,
+        },
+        elevenLabsStability: 0.4,
+        elevenLabsSimilarityBoost: 0.8,
+        elevenLabsStyle: 0.1,
+        elevenLabsUseSpeakerBoost: true,
+        elevenLabsSpeed: 1.05,
+        elevenLabsSeed: 123,
+        elevenLabsPreviousText: 'previous',
+        elevenLabsNextText: 'next',
+        elevenLabsApplyTextNormalization: 'auto',
+        elevenLabsApplyLanguageTextNormalization: false,
+        elevenLabsEnableLogging: false,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'ElevenLabs test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/v1/text-to-speech',
+      );
+      expect(mockEngine.setModel).toHaveBeenCalledWith('eleven_flash_v2_5');
+      expect(mockEngine.setOutputFormat).toHaveBeenCalledWith('mp3_22050_32');
+      expect(mockEngine.setLanguageCode).toHaveBeenCalledWith('ja');
+      expect(mockEngine.setVoiceSettings).toHaveBeenCalledWith({
+        stability: 0.5,
+        similarityBoost: 0.75,
+      });
+      expect(mockEngine.setStability).toHaveBeenCalledWith(0.4);
+      expect(mockEngine.setSimilarityBoost).toHaveBeenCalledWith(0.8);
+      expect(mockEngine.setStyle).toHaveBeenCalledWith(0.1);
+      expect(mockEngine.setUseSpeakerBoost).toHaveBeenCalledWith(true);
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.05);
+      expect(mockEngine.setSeed).toHaveBeenCalledWith(123);
+      expect(mockEngine.setPreviousText).toHaveBeenCalledWith('previous');
+      expect(mockEngine.setNextText).toHaveBeenCalledWith('next');
+      expect(mockEngine.setApplyTextNormalization).toHaveBeenCalledWith('auto');
+      expect(mockEngine.setApplyLanguageTextNormalization).toHaveBeenCalledWith(
+        false,
+      );
+      expect(mockEngine.setEnableLogging).toHaveBeenCalledWith(false);
       expect(mockEngine.fetchAudio).toHaveBeenCalled();
     });
   });
@@ -1135,6 +1206,59 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setPitch).toHaveBeenCalledWith(1.2);
       expect(mockEngine.setCodec).toHaveBeenCalledWith('pcm_s16le');
       expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.4);
+    });
+
+    it('should apply updated ElevenLabs options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'elevenLabs',
+        speaker: 'JBFqnCBsd6RMkjVDRZzb',
+        apiKey: 'eleven-api-key',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.updateOptions({
+        elevenLabsApiUrl: 'https://example.com/v1/text-to-speech',
+        elevenLabsModel: 'eleven_flash_v2_5',
+        elevenLabsOutputFormat: 'mp3_22050_32',
+        elevenLabsLanguageCode: 'ja',
+        elevenLabsStability: 0.4,
+        elevenLabsSimilarityBoost: 0.8,
+        elevenLabsStyle: 0.1,
+        elevenLabsUseSpeakerBoost: true,
+        elevenLabsSpeed: 1.05,
+        elevenLabsSeed: 123,
+        elevenLabsPreviousText: 'previous',
+        elevenLabsNextText: 'next',
+        elevenLabsApplyTextNormalization: 'on',
+        elevenLabsApplyLanguageTextNormalization: true,
+        elevenLabsEnableLogging: false,
+      });
+
+      await adapter.speak({ text: 'Updated ElevenLabs options' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/v1/text-to-speech',
+      );
+      expect(mockEngine.setModel).toHaveBeenCalledWith('eleven_flash_v2_5');
+      expect(mockEngine.setOutputFormat).toHaveBeenCalledWith('mp3_22050_32');
+      expect(mockEngine.setLanguageCode).toHaveBeenCalledWith('ja');
+      expect(mockEngine.setStability).toHaveBeenCalledWith(0.4);
+      expect(mockEngine.setSimilarityBoost).toHaveBeenCalledWith(0.8);
+      expect(mockEngine.setStyle).toHaveBeenCalledWith(0.1);
+      expect(mockEngine.setUseSpeakerBoost).toHaveBeenCalledWith(true);
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.05);
+      expect(mockEngine.setSeed).toHaveBeenCalledWith(123);
+      expect(mockEngine.setPreviousText).toHaveBeenCalledWith('previous');
+      expect(mockEngine.setNextText).toHaveBeenCalledWith('next');
+      expect(mockEngine.setApplyTextNormalization).toHaveBeenCalledWith('on');
+      expect(mockEngine.setApplyLanguageTextNormalization).toHaveBeenCalledWith(
+        true,
+      );
+      expect(mockEngine.setEnableLogging).toHaveBeenCalledWith(false);
     });
 
     it('should apply updated OpenAI-compatible options for the current engine', async () => {

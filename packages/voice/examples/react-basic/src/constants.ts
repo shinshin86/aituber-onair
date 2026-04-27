@@ -1,4 +1,5 @@
 import type {
+  ElevenLabsApplyTextNormalization,
   GeminiTtsModel,
   MinimaxModel,
   UnrealSpeechCodec,
@@ -34,6 +35,16 @@ export const ENGINE_DEFAULTS = {
     speaker: 'af_bella',
     defaultBitrate: '192k',
     defaultCodec: 'libmp3lame' as UnrealSpeechCodec,
+  },
+  elevenLabs: {
+    apiUrl: 'https://api.elevenlabs.io/v1/text-to-speech',
+    voicesApiUrl: 'https://api.elevenlabs.io/v2/voices',
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'Your ElevenLabs API key',
+    speaker: '',
+    defaultModel: 'eleven_multilingual_v2',
+    defaultOutputFormat: 'mp3_44100_128',
   },
   geminiTts: {
     apiUrl: 'https://generativelanguage.googleapis.com/v1beta',
@@ -154,6 +165,23 @@ export const UNREAL_SPEECH_CODECS: Record<UnrealSpeechCodec, string> = {
   libmp3lame: 'MP3 (libmp3lame)',
   pcm_mulaw: 'PCM mu-law',
   pcm_s16le: 'PCM signed 16-bit',
+};
+
+export const ELEVENLABS_MODELS: Record<string, string> = {
+  eleven_multilingual_v2: 'Multilingual v2 — high quality',
+  eleven_flash_v2_5: 'Flash v2.5 — low latency',
+  eleven_turbo_v2_5: 'Turbo v2.5 — balanced latency and quality',
+};
+
+export const ELEVENLABS_OUTPUT_FORMATS: Record<string, string> = {
+  mp3_44100_128: 'MP3 44.1kHz 128kbps',
+  mp3_22050_32: 'MP3 22.05kHz 32kbps',
+  mp3_44100_192: 'MP3 44.1kHz 192kbps',
+  pcm_16000: 'PCM 16kHz',
+  pcm_22050: 'PCM 22.05kHz',
+  pcm_24000: 'PCM 24kHz',
+  pcm_44100: 'PCM 44.1kHz',
+  ulaw_8000: 'u-law 8kHz',
 };
 
 export const VOICEPEAK_WEIGHT_KEYS = [
@@ -286,6 +314,21 @@ export const SLIDER_CONFIG: Record<string, SliderConfig> = {
     step: 0.05,
     defaultValue: 0.25,
   },
+  elevenLabsStability: { min: 0, max: 1, step: 0.05, defaultValue: 0.5 },
+  elevenLabsSimilarityBoost: {
+    min: 0,
+    max: 1,
+    step: 0.05,
+    defaultValue: 0.75,
+  },
+  elevenLabsStyle: { min: 0, max: 1, step: 0.05, defaultValue: 0 },
+  elevenLabsSpeed: {
+    min: 0.7,
+    max: 1.2,
+    step: 0.05,
+    defaultValue: 1,
+    suffix: 'x',
+  },
   aivisSpeedScale: {
     min: 0.5,
     max: 1.5,
@@ -367,6 +410,9 @@ export const SLIDER_CONFIG: Record<string, SliderConfig> = {
 };
 
 export type DefaultBooleanOption = 'default' | 'true' | 'false';
+export type ElevenLabsApplyTextNormalizationOption =
+  | 'default'
+  | ElevenLabsApplyTextNormalization;
 export type OutputStereoOption = 'default' | 'mono' | 'stereo';
 export type LocalOutputSamplingRateOption =
   | 'default'

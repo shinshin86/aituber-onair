@@ -5,6 +5,7 @@ import type {
 } from '../../VoiceService';
 import { aivisCloudEngineHandler } from './aivisCloud';
 import { aivisSpeechEngineHandler } from './aivisSpeech';
+import { elevenLabsEngineHandler } from './elevenLabs';
 import { geminiTtsEngineHandler } from './geminiTts';
 import { minimaxEngineHandler } from './minimax';
 import { noneEngineHandler } from './none';
@@ -23,6 +24,7 @@ const engineHandlers = {
   openai: openAiEngineHandler,
   xai: xaiEngineHandler,
   unrealSpeech: unrealSpeechEngineHandler,
+  elevenLabs: elevenLabsEngineHandler,
   geminiTts: geminiTtsEngineHandler,
   openaiCompatible: openAiCompatibleEngineHandler,
   aivisSpeech: aivisSpeechEngineHandler,
