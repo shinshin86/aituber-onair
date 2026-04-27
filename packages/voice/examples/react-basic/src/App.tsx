@@ -4,6 +4,7 @@ import {
   type GeminiTtsModel,
   type MinimaxAudioFormat,
   type MinimaxModel,
+  type UnrealSpeechCodec,
   type VoiceServiceOptions,
   type VoicepeakEmotionInput,
   type VoicepeakEmotionWeights,
@@ -149,6 +150,15 @@ function App() {
   const [xaiBitRate, setXaiBitRate] = useState<`${XaiBitRate}`>(
     String(ENGINE_DEFAULTS.xai.defaultBitRate) as `${XaiBitRate}`,
   );
+  const [unrealSpeechBitrate, setUnrealSpeechBitrate] = useState<string>(
+    ENGINE_DEFAULTS.unrealSpeech.defaultBitrate,
+  );
+  const [unrealSpeechSpeed, setUnrealSpeechSpeed] = useState('');
+  const [unrealSpeechPitch, setUnrealSpeechPitch] = useState('');
+  const [unrealSpeechCodec, setUnrealSpeechCodec] = useState<UnrealSpeechCodec>(
+    ENGINE_DEFAULTS.unrealSpeech.defaultCodec,
+  );
+  const [unrealSpeechTemperature, setUnrealSpeechTemperature] = useState('');
   const [geminiTtsModel, setGeminiTtsModel] = useState<string>(
     ENGINE_DEFAULTS.geminiTts.defaultModel,
   );
@@ -285,6 +295,11 @@ function App() {
     setXaiBitRate(
       String(ENGINE_DEFAULTS.xai.defaultBitRate) as `${XaiBitRate}`,
     );
+    setUnrealSpeechBitrate(ENGINE_DEFAULTS.unrealSpeech.defaultBitrate);
+    setUnrealSpeechSpeed('');
+    setUnrealSpeechPitch('');
+    setUnrealSpeechCodec(ENGINE_DEFAULTS.unrealSpeech.defaultCodec);
+    setUnrealSpeechTemperature('');
     setGeminiTtsModel(ENGINE_DEFAULTS.geminiTts.defaultModel);
     setGeminiTtsLanguageCode(ENGINE_DEFAULTS.geminiTts.defaultLanguageCode);
     setGeminiTtsPrompt('');
@@ -742,6 +757,27 @@ function App() {
         if (xaiCodec === 'mp3') {
           options.xaiBitRate = Number(xaiBitRate) as XaiBitRate;
         }
+      } else if (engine === 'unrealSpeech') {
+        if (unrealSpeechBitrate.trim()) {
+          options.unrealSpeechBitrate = unrealSpeechBitrate.trim();
+        }
+
+        const parsedSpeed = Number.parseFloat(unrealSpeechSpeed);
+        if (!Number.isNaN(parsedSpeed)) {
+          options.unrealSpeechSpeed = parsedSpeed;
+        }
+
+        const parsedPitch = Number.parseFloat(unrealSpeechPitch);
+        if (!Number.isNaN(parsedPitch)) {
+          options.unrealSpeechPitch = parsedPitch;
+        }
+
+        options.unrealSpeechCodec = unrealSpeechCodec;
+
+        const parsedTemperature = Number.parseFloat(unrealSpeechTemperature);
+        if (!Number.isNaN(parsedTemperature)) {
+          options.unrealSpeechTemperature = parsedTemperature;
+        }
       } else if (engine === 'geminiTts') {
         options.geminiTtsModel = geminiTtsModel as GeminiTtsModel;
         options.geminiTtsLanguageCode = geminiTtsLanguageCode;
@@ -992,6 +1028,11 @@ function App() {
               options.geminiTtsApiUrl = apiUrl;
             }
             break;
+          case 'unrealSpeech':
+            if (apiUrl !== ENGINE_DEFAULTS.unrealSpeech.apiUrl) {
+              options.unrealSpeechApiUrl = apiUrl;
+            }
+            break;
           case 'openaiCompatible':
             options.openAiCompatibleApiUrl = apiUrl;
             break;
@@ -1079,6 +1120,28 @@ function App() {
                   bitRate: {
                     value: xaiBitRate,
                     onChange: setXaiBitRate,
+                  },
+                }}
+                unrealSpeech={{
+                  bitrate: {
+                    value: unrealSpeechBitrate,
+                    onChange: setUnrealSpeechBitrate,
+                  },
+                  speed: {
+                    value: unrealSpeechSpeed,
+                    onChange: setUnrealSpeechSpeed,
+                  },
+                  pitch: {
+                    value: unrealSpeechPitch,
+                    onChange: setUnrealSpeechPitch,
+                  },
+                  codec: {
+                    value: unrealSpeechCodec,
+                    onChange: setUnrealSpeechCodec,
+                  },
+                  temperature: {
+                    value: unrealSpeechTemperature,
+                    onChange: setUnrealSpeechTemperature,
                   },
                 }}
                 geminiTts={{

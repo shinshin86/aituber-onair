@@ -3,6 +3,7 @@ export type VoiceEngineType =
   | 'voicepeak'
   | 'openai'
   | 'xai'
+  | 'unrealSpeech'
   | 'geminiTts'
   | 'openaiCompatible'
   | 'aivisSpeech'

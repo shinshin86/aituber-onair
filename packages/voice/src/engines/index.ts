@@ -18,6 +18,10 @@ export {
   type XaiSampleRate,
   type XaiBitRate,
 } from './XaiEngine';
+export {
+  UnrealSpeechEngine,
+  type UnrealSpeechCodec,
+} from './UnrealSpeechEngine';
 export { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 export {
   MinimaxEngine,

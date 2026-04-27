@@ -1,5 +1,6 @@
 import type { AivisSpeechQueryParameterOverrides } from '../engines/AivisSpeechEngine';
 import type { GeminiTtsModel } from '../engines';
+import type { UnrealSpeechCodec } from '../engines/UnrealSpeechEngine';
 import type { XaiBitRate, XaiCodec, XaiSampleRate } from '../engines/XaiEngine';
 import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine';
 export type { VoiceVoxQueryParameterOverrides };
@@ -130,6 +131,24 @@ export interface XaiVoiceServiceOptions extends VoiceServiceCommonOptions {
   xaiSampleRate?: XaiSampleRate;
   /** xAI MP3 bit rate (default: 128000) */
   xaiBitRate?: XaiBitRate;
+}
+
+export interface UnrealSpeechVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'unrealSpeech';
+  /** Custom Unreal Speech /stream endpoint URL */
+  unrealSpeechApiUrl?: string;
+  /** Unreal Speech output bitrate (default: 192k) */
+  unrealSpeechBitrate?: string;
+  /** Unreal Speech speaking speed (-1.0-1.0, default: 0) */
+  unrealSpeechSpeed?: number;
+  /** Unreal Speech pitch (0.5-1.5, default: 1.0) */
+  unrealSpeechPitch?: number;
+  /** Unreal Speech output codec */
+  unrealSpeechCodec?: UnrealSpeechCodec;
+  /** Unreal Speech generation temperature (0.1-0.8) */
+  unrealSpeechTemperature?: number;
 }
 
 export interface GeminiTtsVoiceServiceOptions
@@ -308,6 +327,7 @@ export type VoiceServiceOptions =
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
   | XaiVoiceServiceOptions
+  | UnrealSpeechVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
@@ -330,6 +350,9 @@ export type OpenAiVoiceServiceOptionsUpdate = Partial<
 >;
 export type XaiVoiceServiceOptionsUpdate = Partial<
   Omit<XaiVoiceServiceOptions, 'engineType'>
+>;
+export type UnrealSpeechVoiceServiceOptionsUpdate = Partial<
+  Omit<UnrealSpeechVoiceServiceOptions, 'engineType'>
 >;
 export type GeminiTtsVoiceServiceOptionsUpdate = Partial<
   Omit<GeminiTtsVoiceServiceOptions, 'engineType'>
@@ -358,6 +381,7 @@ export type VoiceServiceOptionsUpdate =
   | VoicePeakVoiceServiceOptionsUpdate
   | OpenAiVoiceServiceOptionsUpdate
   | XaiVoiceServiceOptionsUpdate
+  | UnrealSpeechVoiceServiceOptionsUpdate
   | GeminiTtsVoiceServiceOptionsUpdate
   | OpenAiCompatibleVoiceServiceOptionsUpdate
   | AivisSpeechVoiceServiceOptionsUpdate

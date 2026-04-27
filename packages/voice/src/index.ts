@@ -13,6 +13,7 @@ export type {
   MinimaxAudioSettingsOptions,
   MinimaxAudioFormat,
   PiperPlusVoiceServiceOptions,
+  UnrealSpeechVoiceServiceOptions,
   VoiceVoxQueryParameterOverrides,
   AivisSpeechQueryParameterOverrides,
 } from './services/VoiceService';
