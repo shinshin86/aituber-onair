@@ -22,6 +22,11 @@ export {
   UnrealSpeechEngine,
   type UnrealSpeechCodec,
 } from './UnrealSpeechEngine';
+export {
+  ElevenLabsEngine,
+  type ElevenLabsApplyTextNormalization,
+  type ElevenLabsVoiceSettingsOptions,
+} from './ElevenLabsEngine';
 export { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 export {
   MinimaxEngine,

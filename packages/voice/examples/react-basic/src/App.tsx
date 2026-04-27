@@ -1,6 +1,7 @@
 import {
   VoiceEngineAdapter,
   type AivisSpeechQueryParameterOverrides,
+  type ElevenLabsApplyTextNormalization,
   type GeminiTtsModel,
   type MinimaxAudioFormat,
   type MinimaxModel,
@@ -19,6 +20,8 @@ import { EngineParameters } from './components/EngineParameters';
 import { EngineSelector } from './components/EngineSelector';
 import { SpeakControls } from './components/SpeakControls';
 import {
+  ELEVENLABS_MODELS,
+  ELEVENLABS_OUTPUT_FORMATS,
   ENGINE_DEFAULTS,
   GEMINI_TTS_MODELS,
   XAI_VOICE_OPTIONS,
@@ -27,6 +30,7 @@ import {
   type AivisCloudOutputFormatOption,
   type AivisCloudOutputSamplingRateOption,
   type DefaultBooleanOption,
+  type ElevenLabsApplyTextNormalizationOption,
   type EngineType,
   type LocalOutputSamplingRateOption,
   type OutputStereoOption,
@@ -71,6 +75,17 @@ interface XaiVoiceResponse {
 
 interface XaiVoiceListResponse {
   voices?: XaiVoiceResponse[];
+}
+
+interface ElevenLabsVoiceResponse {
+  voice_id: string;
+  name: string;
+  category?: string;
+  description?: string;
+}
+
+interface ElevenLabsVoiceListResponse {
+  voices?: ElevenLabsVoiceResponse[];
 }
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
@@ -159,6 +174,33 @@ function App() {
     ENGINE_DEFAULTS.unrealSpeech.defaultCodec,
   );
   const [unrealSpeechTemperature, setUnrealSpeechTemperature] = useState('');
+  const [elevenLabsModel, setElevenLabsModel] = useState<string>(
+    ENGINE_DEFAULTS.elevenLabs.defaultModel,
+  );
+  const [elevenLabsOutputFormat, setElevenLabsOutputFormat] = useState<string>(
+    ENGINE_DEFAULTS.elevenLabs.defaultOutputFormat,
+  );
+  const [elevenLabsLanguageCode, setElevenLabsLanguageCode] = useState('');
+  const [elevenLabsStability, setElevenLabsStability] = useState('');
+  const [elevenLabsSimilarityBoost, setElevenLabsSimilarityBoost] =
+    useState('');
+  const [elevenLabsStyle, setElevenLabsStyle] = useState('');
+  const [elevenLabsUseSpeakerBoost, setElevenLabsUseSpeakerBoost] =
+    useState<DefaultBooleanOption>('default');
+  const [elevenLabsSpeed, setElevenLabsSpeed] = useState('');
+  const [elevenLabsSeed, setElevenLabsSeed] = useState('');
+  const [elevenLabsPreviousText, setElevenLabsPreviousText] = useState('');
+  const [elevenLabsNextText, setElevenLabsNextText] = useState('');
+  const [
+    elevenLabsApplyTextNormalization,
+    setElevenLabsApplyTextNormalization,
+  ] = useState<ElevenLabsApplyTextNormalizationOption>('default');
+  const [
+    elevenLabsApplyLanguageTextNormalization,
+    setElevenLabsApplyLanguageTextNormalization,
+  ] = useState<DefaultBooleanOption>('default');
+  const [elevenLabsEnableLogging, setElevenLabsEnableLogging] =
+    useState<DefaultBooleanOption>('default');
   const [geminiTtsModel, setGeminiTtsModel] = useState<string>(
     ENGINE_DEFAULTS.geminiTts.defaultModel,
   );
@@ -300,6 +342,20 @@ function App() {
     setUnrealSpeechPitch('');
     setUnrealSpeechCodec(ENGINE_DEFAULTS.unrealSpeech.defaultCodec);
     setUnrealSpeechTemperature('');
+    setElevenLabsModel(ENGINE_DEFAULTS.elevenLabs.defaultModel);
+    setElevenLabsOutputFormat(ENGINE_DEFAULTS.elevenLabs.defaultOutputFormat);
+    setElevenLabsLanguageCode('');
+    setElevenLabsStability('');
+    setElevenLabsSimilarityBoost('');
+    setElevenLabsStyle('');
+    setElevenLabsUseSpeakerBoost('default');
+    setElevenLabsSpeed('');
+    setElevenLabsSeed('');
+    setElevenLabsPreviousText('');
+    setElevenLabsNextText('');
+    setElevenLabsApplyTextNormalization('default');
+    setElevenLabsApplyLanguageTextNormalization('default');
+    setElevenLabsEnableLogging('default');
     setGeminiTtsModel(ENGINE_DEFAULTS.geminiTts.defaultModel);
     setGeminiTtsLanguageCode(ENGINE_DEFAULTS.geminiTts.defaultLanguageCode);
     setGeminiTtsPrompt('');
@@ -351,7 +407,8 @@ function App() {
       engine !== 'voicevox' &&
       engine !== 'aivisSpeech' &&
       engine !== 'minimax' &&
-      engine !== 'xai'
+      engine !== 'xai' &&
+      engine !== 'elevenLabs'
     ) {
       return;
     }
@@ -414,6 +471,36 @@ function App() {
         nextSpeakerOptions = (result.voices ?? []).map((voice) => ({
           id: voice.voice_id,
           label: voice.name,
+        }));
+      } else if (engine === 'elevenLabs') {
+        const trimmedApiKey = apiKey.trim();
+
+        if (!trimmedApiKey) {
+          throw new Error('ElevenLabs API key is required');
+        }
+
+        const response = await fetch(ENGINE_DEFAULTS.elevenLabs.voicesApiUrl, {
+          method: 'GET',
+          headers: {
+            'xi-api-key': trimmedApiKey,
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            errorText
+              ? `Failed to fetch speakers: ${response.status} - ${errorText}`
+              : `Failed to fetch speakers: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const result = (await response.json()) as ElevenLabsVoiceListResponse;
+        nextSpeakerOptions = (result.voices ?? []).map((voice) => ({
+          id: voice.voice_id,
+          label: voice.category
+            ? `${voice.name} (${voice.category})`
+            : voice.name,
         }));
       } else {
         const trimmedApiKey = apiKey.trim();
@@ -530,7 +617,8 @@ function App() {
     if (
       (engine === 'voicevox' ||
         engine === 'aivisSpeech' ||
-        engine === 'minimax') &&
+        engine === 'minimax' ||
+        engine === 'elevenLabs') &&
       !speaker.trim()
     ) {
       setStatus('話者一覧を取得してSpeakerを選択してください');
@@ -777,6 +865,84 @@ function App() {
         const parsedTemperature = Number.parseFloat(unrealSpeechTemperature);
         if (!Number.isNaN(parsedTemperature)) {
           options.unrealSpeechTemperature = parsedTemperature;
+        }
+      } else if (engine === 'elevenLabs') {
+        options.elevenLabsModel = elevenLabsModel;
+        options.elevenLabsOutputFormat = elevenLabsOutputFormat;
+
+        if (elevenLabsLanguageCode.trim()) {
+          options.elevenLabsLanguageCode = elevenLabsLanguageCode.trim();
+        }
+
+        const voiceSettings: {
+          stability?: number;
+          similarityBoost?: number;
+          style?: number;
+          useSpeakerBoost?: boolean;
+          speed?: number;
+        } = {};
+
+        const parsedStability = Number.parseFloat(elevenLabsStability);
+        if (!Number.isNaN(parsedStability)) {
+          options.elevenLabsStability = parsedStability;
+          voiceSettings.stability = parsedStability;
+        }
+
+        const parsedSimilarityBoost = Number.parseFloat(
+          elevenLabsSimilarityBoost,
+        );
+        if (!Number.isNaN(parsedSimilarityBoost)) {
+          options.elevenLabsSimilarityBoost = parsedSimilarityBoost;
+          voiceSettings.similarityBoost = parsedSimilarityBoost;
+        }
+
+        const parsedStyle = Number.parseFloat(elevenLabsStyle);
+        if (!Number.isNaN(parsedStyle)) {
+          options.elevenLabsStyle = parsedStyle;
+          voiceSettings.style = parsedStyle;
+        }
+
+        if (elevenLabsUseSpeakerBoost !== 'default') {
+          const useSpeakerBoost = elevenLabsUseSpeakerBoost === 'true';
+          options.elevenLabsUseSpeakerBoost = useSpeakerBoost;
+          voiceSettings.useSpeakerBoost = useSpeakerBoost;
+        }
+
+        const parsedSpeed = Number.parseFloat(elevenLabsSpeed);
+        if (!Number.isNaN(parsedSpeed)) {
+          options.elevenLabsSpeed = parsedSpeed;
+          voiceSettings.speed = parsedSpeed;
+        }
+
+        if (Object.keys(voiceSettings).length > 0) {
+          options.elevenLabsVoiceSettings = voiceSettings;
+        }
+
+        const parsedSeed = Number.parseInt(elevenLabsSeed, 10);
+        if (!Number.isNaN(parsedSeed)) {
+          options.elevenLabsSeed = parsedSeed;
+        }
+
+        if (elevenLabsPreviousText.trim()) {
+          options.elevenLabsPreviousText = elevenLabsPreviousText.trim();
+        }
+
+        if (elevenLabsNextText.trim()) {
+          options.elevenLabsNextText = elevenLabsNextText.trim();
+        }
+
+        if (elevenLabsApplyTextNormalization !== 'default') {
+          options.elevenLabsApplyTextNormalization =
+            elevenLabsApplyTextNormalization as ElevenLabsApplyTextNormalization;
+        }
+
+        if (elevenLabsApplyLanguageTextNormalization !== 'default') {
+          options.elevenLabsApplyLanguageTextNormalization =
+            elevenLabsApplyLanguageTextNormalization === 'true';
+        }
+
+        if (elevenLabsEnableLogging !== 'default') {
+          options.elevenLabsEnableLogging = elevenLabsEnableLogging === 'true';
         }
       } else if (engine === 'geminiTts') {
         options.geminiTtsModel = geminiTtsModel as GeminiTtsModel;
@@ -1033,6 +1199,11 @@ function App() {
               options.unrealSpeechApiUrl = apiUrl;
             }
             break;
+          case 'elevenLabs':
+            if (apiUrl !== ENGINE_DEFAULTS.elevenLabs.apiUrl) {
+              options.elevenLabsApiUrl = apiUrl;
+            }
+            break;
           case 'openaiCompatible':
             options.openAiCompatibleApiUrl = apiUrl;
             break;
@@ -1142,6 +1313,66 @@ function App() {
                   temperature: {
                     value: unrealSpeechTemperature,
                     onChange: setUnrealSpeechTemperature,
+                  },
+                }}
+                elevenLabs={{
+                  model: {
+                    value: elevenLabsModel,
+                    onChange: setElevenLabsModel,
+                  },
+                  models: ELEVENLABS_MODELS,
+                  outputFormat: {
+                    value: elevenLabsOutputFormat,
+                    onChange: setElevenLabsOutputFormat,
+                  },
+                  outputFormats: ELEVENLABS_OUTPUT_FORMATS,
+                  languageCode: {
+                    value: elevenLabsLanguageCode,
+                    onChange: setElevenLabsLanguageCode,
+                  },
+                  stability: {
+                    value: elevenLabsStability,
+                    onChange: setElevenLabsStability,
+                  },
+                  similarityBoost: {
+                    value: elevenLabsSimilarityBoost,
+                    onChange: setElevenLabsSimilarityBoost,
+                  },
+                  style: {
+                    value: elevenLabsStyle,
+                    onChange: setElevenLabsStyle,
+                  },
+                  useSpeakerBoost: {
+                    value: elevenLabsUseSpeakerBoost,
+                    onChange: setElevenLabsUseSpeakerBoost,
+                  },
+                  speed: {
+                    value: elevenLabsSpeed,
+                    onChange: setElevenLabsSpeed,
+                  },
+                  seed: {
+                    value: elevenLabsSeed,
+                    onChange: setElevenLabsSeed,
+                  },
+                  previousText: {
+                    value: elevenLabsPreviousText,
+                    onChange: setElevenLabsPreviousText,
+                  },
+                  nextText: {
+                    value: elevenLabsNextText,
+                    onChange: setElevenLabsNextText,
+                  },
+                  applyTextNormalization: {
+                    value: elevenLabsApplyTextNormalization,
+                    onChange: setElevenLabsApplyTextNormalization,
+                  },
+                  applyLanguageTextNormalization: {
+                    value: elevenLabsApplyLanguageTextNormalization,
+                    onChange: setElevenLabsApplyLanguageTextNormalization,
+                  },
+                  enableLogging: {
+                    value: elevenLabsEnableLogging,
+                    onChange: setElevenLabsEnableLogging,
                   },
                 }}
                 geminiTts={{

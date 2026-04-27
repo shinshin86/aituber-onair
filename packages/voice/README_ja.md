@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -210,6 +210,27 @@ const voiceService = new VoiceService({
 
 既定の `https://api.v8.unrealspeech.com/stream` 以外を使う場合は
 `unrealSpeechApiUrl` で上書きできます。
+
+### ElevenLabs
+ElevenLabs Text to Speech API を SDK なしの直接 `fetch` で利用する
+クラウド TTS です。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'elevenLabs',
+  speaker: 'JBFqnCBsd6RMkjVDRZzb',
+  apiKey: 'your-elevenlabs-api-key',
+  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsOutputFormat: 'mp3_44100_128',
+  elevenLabsStability: 0.5,
+  elevenLabsSimilarityBoost: 0.75,
+  elevenLabsUseSpeakerBoost: true,
+});
+```
+
+既定の `https://api.elevenlabs.io/v1/text-to-speech` 以外を使う場合は
+`elevenLabsApiUrl` で上書きできます。`speaker` は ElevenLabs の
+`voice_id` として送信されます。
 
 ### OpenAI互換 TTS
 Kokoro FastAPI などの OpenAI 互換エンドポイントを利用するための TTS プロバイダーです。
@@ -431,6 +452,9 @@ const voiceService = new VoiceService({
   unrealSpeechBitrate: '192k',
   unrealSpeechSpeed: 0,
   unrealSpeechPitch: 1,
+  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsStability: 0.5,
+  elevenLabsSimilarityBoost: 0.75,
   voicevoxSpeedScale: 1.05,
   voicevoxPitchScale: 0.02,
   voicevoxQueryParameters: {
@@ -471,6 +495,12 @@ const voiceService = new VoiceService({
   - エンドポイント: `unrealSpeechApiUrl`
   - 出力: `unrealSpeechBitrate`, `unrealSpeechCodec`
   - 音声調整: `unrealSpeechSpeed`, `unrealSpeechPitch`, `unrealSpeechTemperature`
+
+- **ElevenLabs**
+  - エンドポイント: `elevenLabsApiUrl`
+  - 識別子・出力: `speaker`, `elevenLabsModel`, `elevenLabsOutputFormat`, `elevenLabsLanguageCode`
+  - 音声設定: `elevenLabsVoiceSettings`, `elevenLabsStability`, `elevenLabsSimilarityBoost`, `elevenLabsStyle`, `elevenLabsUseSpeakerBoost`, `elevenLabsSpeed`
+  - 文脈・正規化: `elevenLabsSeed`, `elevenLabsPreviousText`, `elevenLabsNextText`, `elevenLabsApplyTextNormalization`, `elevenLabsApplyLanguageTextNormalization`, `elevenLabsEnableLogging`
 
 - **VOICEVOX**
   - エンドポイント: `voicevoxApiUrl`
@@ -544,6 +574,12 @@ try {
 - bitrate、codec、speed、pitch、temperature の調整に対応
 - 音声バイト列を直接返す v8 `/stream` API を使用
 
+### ElevenLabs の機能
+- `xi-api-key` 認証のクラウド TTS エンドポイント
+- 指定した `speaker` をそのまま `voice_id` として送信
+- model、output format、language code、voice settings の調整に対応
+- 任意の text context、seed、text normalization、logging flag に対応
+
 ### MiniMaxの機能
 - 自動検出付き24言語サポート
 - HD品質のオーディオ出力
@@ -589,6 +625,7 @@ type VoiceServiceOptions =
   | OpenAiVoiceServiceOptions
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
+  | ElevenLabsVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions

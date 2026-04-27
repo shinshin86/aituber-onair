@@ -3,6 +3,7 @@ import type { PiperPlusAssets } from '../../../engines/PiperPlusEngine';
 import type {
   AivisCloudVoiceServiceOptions,
   AivisSpeechVoiceServiceOptions,
+  ElevenLabsVoiceServiceOptions,
   GeminiTtsVoiceServiceOptions,
   MinimaxVoiceServiceOptions,
   OpenAiVoiceServiceOptions,
@@ -87,6 +88,31 @@ export interface UnrealSpeechConfigurableEngine extends VoiceEngine {
     value?: NonNullable<UnrealSpeechVoiceServiceOptions['unrealSpeechCodec']>,
   ): void;
   setTemperature?(value?: number): void;
+}
+
+export interface ElevenLabsConfigurableEngine extends VoiceEngine {
+  setApiEndpoint?(value: string): void;
+  setModel?(value: string): void;
+  setOutputFormat?(value?: string): void;
+  setLanguageCode?(value?: string): void;
+  setVoiceSettings?(
+    value: NonNullable<
+      ElevenLabsVoiceServiceOptions['elevenLabsVoiceSettings']
+    >,
+  ): void;
+  setStability?(value?: number): void;
+  setSimilarityBoost?(value?: number): void;
+  setStyle?(value?: number): void;
+  setUseSpeakerBoost?(value?: boolean): void;
+  setSpeed?(value?: number): void;
+  setSeed?(value?: number): void;
+  setPreviousText?(value?: string): void;
+  setNextText?(value?: string): void;
+  setApplyTextNormalization?(
+    value?: ElevenLabsVoiceServiceOptions['elevenLabsApplyTextNormalization'],
+  ): void;
+  setApplyLanguageTextNormalization?(value?: boolean): void;
+  setEnableLogging?(value?: boolean): void;
 }
 
 export interface GeminiTtsConfigurableEngine extends VoiceEngine {

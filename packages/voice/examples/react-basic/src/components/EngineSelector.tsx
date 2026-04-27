@@ -55,6 +55,7 @@ export function EngineSelector({
     engine === 'openai' ||
     engine === 'xai' ||
     engine === 'unrealSpeech' ||
+    engine === 'elevenLabs' ||
     engine === 'geminiTts' ||
     engine === 'openaiCompatible' ||
     engine === 'aivisCloud' ||
@@ -62,6 +63,7 @@ export function EngineSelector({
   const showApiUrl =
     engine === 'geminiTts' ||
     engine === 'unrealSpeech' ||
+    engine === 'elevenLabs' ||
     engine === 'openaiCompatible' ||
     engine === 'voicevox' ||
     engine === 'aivisSpeech' ||
@@ -155,6 +157,50 @@ export function EngineSelector({
     }
 
     if (engine === 'minimax') {
+      return (
+        <div className="form-group">
+          <label htmlFor="speaker">Speaker:</label>
+          <select
+            id="speaker"
+            value={hasSpeakerOptions ? speaker : ''}
+            onChange={(e) => onSpeakerChange(e.target.value)}
+            disabled={!hasSpeakerOptions}
+          >
+            {hasSpeakerOptions ? (
+              speakerOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))
+            ) : (
+              <option value="">-- 話者一覧を取得してください --</option>
+            )}
+          </select>
+          <div className="speaker-fetch-row">
+            <button
+              type="button"
+              className="secondary-action-button"
+              onClick={onFetchSpeakers}
+              disabled={isFetchingSpeakers || !apiKey.trim()}
+              title={!apiKey.trim() ? 'API Keyを入力してください' : undefined}
+            >
+              {isFetchingSpeakers
+                ? '取得中...'
+                : hasSpeakerOptions
+                  ? '再取得'
+                  : '話者一覧を取得'}
+            </button>
+          </div>
+          {speakerFetchError && (
+            <div className="speaker-fetch-message speaker-fetch-message--error">
+              {speakerFetchError}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (engine === 'elevenLabs') {
       return (
         <div className="form-group">
           <label htmlFor="speaker">Speaker:</label>
@@ -393,6 +439,7 @@ export function EngineSelector({
           <option value="voicepeak">VOICEPEAK</option>
           <option value="minimax">MiniMax</option>
           <option value="unrealSpeech">Unreal Speech</option>
+          <option value="elevenLabs">ElevenLabs</option>
           <option value="openaiCompatible">OpenAI-Compatible TTS</option>
           <option value="piperPlus">Piper Plus (Browser WASM)</option>
         </select>

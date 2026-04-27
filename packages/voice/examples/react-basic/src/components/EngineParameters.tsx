@@ -7,6 +7,8 @@ import type {
   XaiSampleRate,
 } from '@aituber-onair/voice';
 import {
+  ELEVENLABS_MODELS,
+  ELEVENLABS_OUTPUT_FORMATS,
   MINIMAX_MODELS,
   SLIDER_CONFIG,
   UNREAL_SPEECH_CODECS,
@@ -15,6 +17,7 @@ import {
   type AivisCloudOutputFormatOption,
   type AivisCloudOutputSamplingRateOption,
   type DefaultBooleanOption,
+  type ElevenLabsApplyTextNormalizationOption,
   type EngineType,
   type LocalOutputSamplingRateOption,
   type OutputStereoOption,
@@ -52,6 +55,24 @@ interface EngineParametersProps {
     pitch: StringField;
     codec: SelectField<UnrealSpeechCodec>;
     temperature: StringField;
+  };
+  elevenLabs: {
+    model: SelectField<string>;
+    models: typeof ELEVENLABS_MODELS;
+    outputFormat: SelectField<string>;
+    outputFormats: typeof ELEVENLABS_OUTPUT_FORMATS;
+    languageCode: StringField;
+    stability: StringField;
+    similarityBoost: StringField;
+    style: StringField;
+    useSpeakerBoost: SelectField<DefaultBooleanOption>;
+    speed: StringField;
+    seed: StringField;
+    previousText: StringField;
+    nextText: StringField;
+    applyTextNormalization: SelectField<ElevenLabsApplyTextNormalizationOption>;
+    applyLanguageTextNormalization: SelectField<DefaultBooleanOption>;
+    enableLogging: SelectField<DefaultBooleanOption>;
   };
   geminiTts: {
     model: SelectField<string>;
@@ -148,6 +169,7 @@ export function EngineParameters({
   openai,
   xai,
   unrealSpeech,
+  elevenLabs,
   geminiTts,
   openaiCompatible,
   voicevox,
@@ -340,6 +362,215 @@ export function EngineParameters({
                 config={SLIDER_CONFIG.unrealSpeechTemperature}
                 placeholder="空欄で API 既定値"
               />
+            </div>
+          </div>
+        </CollapsibleCard>
+      )}
+
+      {engine === 'elevenLabs' && (
+        <CollapsibleCard
+          className="parameter-card openai-card"
+          title="ElevenLabs パラメータ"
+          description="ElevenLabs Text to Speech API 向けの設定です。voice_id は上部の Speaker に入力します。"
+        >
+          <div className="parameter-section">
+            <div className="parameter-section__title">モデル・出力</div>
+            <div className="parameter-grid parameter-grid--two">
+              <div className="form-group">
+                <label htmlFor="elevenLabsModel">Model</label>
+                <select
+                  id="elevenLabsModel"
+                  value={elevenLabs.model.value}
+                  onChange={(e) => elevenLabs.model.onChange(e.target.value)}
+                >
+                  {Object.entries(elevenLabs.models).map(
+                    ([modelId, description]) => (
+                      <option key={modelId} value={modelId}>
+                        {modelId} - {description}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="elevenLabsOutputFormat">Output Format</label>
+                <select
+                  id="elevenLabsOutputFormat"
+                  value={elevenLabs.outputFormat.value}
+                  onChange={(e) =>
+                    elevenLabs.outputFormat.onChange(e.target.value)
+                  }
+                >
+                  {Object.entries(elevenLabs.outputFormats).map(
+                    ([format, description]) => (
+                      <option key={format} value={format}>
+                        {format} - {description}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="elevenLabsLanguageCode">Language Code</label>
+                <input
+                  id="elevenLabsLanguageCode"
+                  type="text"
+                  value={elevenLabs.languageCode.value}
+                  onChange={(e) =>
+                    elevenLabs.languageCode.onChange(e.target.value)
+                  }
+                  placeholder="例: ja, en（空欄で自動）"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="elevenLabsSeed">Seed</label>
+                <input
+                  id="elevenLabsSeed"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={elevenLabs.seed.value}
+                  onChange={(e) => elevenLabs.seed.onChange(e.target.value)}
+                  placeholder="任意の整数"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="parameter-section">
+            <div className="parameter-section__title">Voice Settings</div>
+            <div className="parameter-grid">
+              <NumberSliderField
+                id="elevenLabsStability"
+                label="Stability"
+                value={elevenLabs.stability.value}
+                onChange={elevenLabs.stability.onChange}
+                config={SLIDER_CONFIG.elevenLabsStability}
+                placeholder="空欄で voice 既定値"
+              />
+              <NumberSliderField
+                id="elevenLabsSimilarityBoost"
+                label="Similarity Boost"
+                value={elevenLabs.similarityBoost.value}
+                onChange={elevenLabs.similarityBoost.onChange}
+                config={SLIDER_CONFIG.elevenLabsSimilarityBoost}
+                placeholder="空欄で voice 既定値"
+              />
+              <NumberSliderField
+                id="elevenLabsStyle"
+                label="Style"
+                value={elevenLabs.style.value}
+                onChange={elevenLabs.style.onChange}
+                config={SLIDER_CONFIG.elevenLabsStyle}
+                placeholder="空欄で voice 既定値"
+              />
+              <NumberSliderField
+                id="elevenLabsSpeed"
+                label="Speed"
+                value={elevenLabs.speed.value}
+                onChange={elevenLabs.speed.onChange}
+                config={SLIDER_CONFIG.elevenLabsSpeed}
+                placeholder="空欄で voice 既定値"
+              />
+              <div className="form-group">
+                <label htmlFor="elevenLabsUseSpeakerBoost">
+                  Use Speaker Boost
+                </label>
+                <select
+                  id="elevenLabsUseSpeakerBoost"
+                  value={elevenLabs.useSpeakerBoost.value}
+                  onChange={(e) =>
+                    elevenLabs.useSpeakerBoost.onChange(
+                      e.target.value as DefaultBooleanOption,
+                    )
+                  }
+                >
+                  <option value="default">Voice 既定値</option>
+                  <option value="true">有効</option>
+                  <option value="false">無効</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="parameter-section">
+            <div className="parameter-section__title">コンテキスト・正規化</div>
+            <div className="parameter-grid parameter-grid--two">
+              <div className="form-group">
+                <label htmlFor="elevenLabsPreviousText">Previous Text</label>
+                <input
+                  id="elevenLabsPreviousText"
+                  type="text"
+                  value={elevenLabs.previousText.value}
+                  onChange={(e) =>
+                    elevenLabs.previousText.onChange(e.target.value)
+                  }
+                  placeholder="前後の文脈が必要な場合"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="elevenLabsNextText">Next Text</label>
+                <input
+                  id="elevenLabsNextText"
+                  type="text"
+                  value={elevenLabs.nextText.value}
+                  onChange={(e) => elevenLabs.nextText.onChange(e.target.value)}
+                  placeholder="前後の文脈が必要な場合"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="elevenLabsApplyTextNormalization">
+                  Text Normalization
+                </label>
+                <select
+                  id="elevenLabsApplyTextNormalization"
+                  value={elevenLabs.applyTextNormalization.value}
+                  onChange={(e) =>
+                    elevenLabs.applyTextNormalization.onChange(
+                      e.target.value as ElevenLabsApplyTextNormalizationOption,
+                    )
+                  }
+                >
+                  <option value="default">API既定値</option>
+                  <option value="auto">auto</option>
+                  <option value="on">on</option>
+                  <option value="off">off</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="elevenLabsApplyLanguageTextNormalization">
+                  Language Text Normalization
+                </label>
+                <select
+                  id="elevenLabsApplyLanguageTextNormalization"
+                  value={elevenLabs.applyLanguageTextNormalization.value}
+                  onChange={(e) =>
+                    elevenLabs.applyLanguageTextNormalization.onChange(
+                      e.target.value as DefaultBooleanOption,
+                    )
+                  }
+                >
+                  <option value="default">API既定値</option>
+                  <option value="true">有効</option>
+                  <option value="false">無効</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="elevenLabsEnableLogging">Enable Logging</label>
+                <select
+                  id="elevenLabsEnableLogging"
+                  value={elevenLabs.enableLogging.value}
+                  onChange={(e) =>
+                    elevenLabs.enableLogging.onChange(
+                      e.target.value as DefaultBooleanOption,
+                    )
+                  }
+                >
+                  <option value="default">API既定値（true）</option>
+                  <option value="true">有効</option>
+                  <option value="false">無効</option>
+                </select>
+              </div>
             </div>
           </div>
         </CollapsibleCard>

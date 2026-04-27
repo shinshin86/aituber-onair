@@ -5,6 +5,8 @@ export const OPENAI_TTS_API_URL = 'https://api.openai.com/v1/audio/speech';
 export const XAI_TTS_API_URL = 'https://api.x.ai/v1/tts';
 export const UNREAL_SPEECH_TTS_API_URL =
   'https://api.v8.unrealspeech.com/stream';
+export const ELEVENLABS_TTS_API_URL =
+  'https://api.elevenlabs.io/v1/text-to-speech';
 export const OPENAI_COMPATIBLE_TTS_API_URL =
   'http://localhost:8880/v1/audio/speech';
 

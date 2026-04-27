@@ -1,4 +1,8 @@
 import type { AivisSpeechQueryParameterOverrides } from '../engines/AivisSpeechEngine';
+import type {
+  ElevenLabsApplyTextNormalization,
+  ElevenLabsVoiceSettingsOptions,
+} from '../engines/ElevenLabsEngine';
 import type { GeminiTtsModel } from '../engines';
 import type { UnrealSpeechCodec } from '../engines/UnrealSpeechEngine';
 import type { XaiBitRate, XaiCodec, XaiSampleRate } from '../engines/XaiEngine';
@@ -149,6 +153,44 @@ export interface UnrealSpeechVoiceServiceOptions
   unrealSpeechCodec?: UnrealSpeechCodec;
   /** Unreal Speech generation temperature (0.1-0.8) */
   unrealSpeechTemperature?: number;
+}
+
+export interface ElevenLabsVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'elevenLabs';
+  /** Custom ElevenLabs text-to-speech API base endpoint URL */
+  elevenLabsApiUrl?: string;
+  /** ElevenLabs model ID */
+  elevenLabsModel?: string;
+  /** ElevenLabs output format query parameter */
+  elevenLabsOutputFormat?: string;
+  /** ElevenLabs optional language code */
+  elevenLabsLanguageCode?: string;
+  /** ElevenLabs voice settings override */
+  elevenLabsVoiceSettings?: ElevenLabsVoiceSettingsOptions;
+  /** ElevenLabs stability override (0.0-1.0) */
+  elevenLabsStability?: number;
+  /** ElevenLabs similarity boost override (0.0-1.0) */
+  elevenLabsSimilarityBoost?: number;
+  /** ElevenLabs style exaggeration override (0.0-1.0) */
+  elevenLabsStyle?: number;
+  /** ElevenLabs speaker boost flag */
+  elevenLabsUseSpeakerBoost?: boolean;
+  /** ElevenLabs voice speed override (0.7-1.2) */
+  elevenLabsSpeed?: number;
+  /** ElevenLabs deterministic generation seed */
+  elevenLabsSeed?: number;
+  /** Previous text context */
+  elevenLabsPreviousText?: string;
+  /** Next text context */
+  elevenLabsNextText?: string;
+  /** Text normalization mode */
+  elevenLabsApplyTextNormalization?: ElevenLabsApplyTextNormalization;
+  /** Language text normalization flag */
+  elevenLabsApplyLanguageTextNormalization?: boolean;
+  /** Enable ElevenLabs request logging */
+  elevenLabsEnableLogging?: boolean;
 }
 
 export interface GeminiTtsVoiceServiceOptions
@@ -328,6 +370,7 @@ export type VoiceServiceOptions =
   | OpenAiVoiceServiceOptions
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
+  | ElevenLabsVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
@@ -353,6 +396,9 @@ export type XaiVoiceServiceOptionsUpdate = Partial<
 >;
 export type UnrealSpeechVoiceServiceOptionsUpdate = Partial<
   Omit<UnrealSpeechVoiceServiceOptions, 'engineType'>
+>;
+export type ElevenLabsVoiceServiceOptionsUpdate = Partial<
+  Omit<ElevenLabsVoiceServiceOptions, 'engineType'>
 >;
 export type GeminiTtsVoiceServiceOptionsUpdate = Partial<
   Omit<GeminiTtsVoiceServiceOptions, 'engineType'>
@@ -382,6 +428,7 @@ export type VoiceServiceOptionsUpdate =
   | OpenAiVoiceServiceOptionsUpdate
   | XaiVoiceServiceOptionsUpdate
   | UnrealSpeechVoiceServiceOptionsUpdate
+  | ElevenLabsVoiceServiceOptionsUpdate
   | GeminiTtsVoiceServiceOptionsUpdate
   | OpenAiCompatibleVoiceServiceOptionsUpdate
   | AivisSpeechVoiceServiceOptionsUpdate

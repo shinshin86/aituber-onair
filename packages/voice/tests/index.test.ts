@@ -28,6 +28,7 @@ describe('Voice Package Exports', () => {
     expect(voicePackage.OpenAiEngine).toBeDefined();
     expect(voicePackage.XaiEngine).toBeDefined();
     expect(voicePackage.UnrealSpeechEngine).toBeDefined();
+    expect(voicePackage.ElevenLabsEngine).toBeDefined();
     expect(voicePackage.GeminiTtsEngine).toBeDefined();
     expect(voicePackage.OpenAiCompatibleEngine).toBeDefined();
     expect(voicePackage.MinimaxEngine).toBeDefined();
