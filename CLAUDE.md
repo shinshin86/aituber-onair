@@ -85,6 +85,16 @@ Usage:
   "update supported voice providers".
 - Invoke `$sync-core-after-chat-upgrade` after chat upgrades when the same
   changes must be propagated into core and core examples.
+- When propagating `@aituber-onair/voice` upgrades into `@aituber-onair/core`,
+  update all core React examples that expose TTS settings, not only
+  `react-basic`: `packages/core/examples/react-basic`,
+  `packages/core/examples/react-pngtuber-app`,
+  `packages/core/examples/react-vrm-app`, and
+  `packages/core/examples/react-live2d-app`. For every new TTS provider, check
+  the engine selector, persisted settings type/defaults, settings UI,
+  `VoiceServiceOptions` wiring, README mention, lockfile metadata, and example
+  build. If the provider has a voice-list API, surface it as a selectable list
+  so users do not have to type opaque voice IDs.
 - Invoke explicitly with `$wrap-tts-as-openai-compatible`, or use prompts like
   "wrap a TTS engine as OpenAI-compatible", "build an OpenAI-compatible speech
   server", or "set up a Colab TTS compatibility server".

@@ -77,6 +77,17 @@
 - When requests match "add a new model", "support model <model_id>", "add <provider> model", or "update supported models", follow `skills/add-chat-model/SKILL.md`.
 - When requests match "add a TTS provider", "support <provider> TTS", "add voice provider", or "update supported voice providers", follow `skills/add-tts-provider/SKILL.md`.
 - When requests ask to apply chat upgrades to core/examples, follow `skills/sync-core-after-chat-upgrade/SKILL.md`.
+- When propagating `@aituber-onair/voice` upgrades into `@aituber-onair/core`,
+  do not stop at core exports or the React basic example. Check and update all
+  core React examples that expose TTS settings:
+  `packages/core/examples/react-basic`,
+  `packages/core/examples/react-pngtuber-app`,
+  `packages/core/examples/react-vrm-app`, and
+  `packages/core/examples/react-live2d-app`. For each provider, verify the
+  engine selector, persisted settings type/defaults, settings UI,
+  `VoiceServiceOptions` wiring, README mention, lockfile metadata, and example
+  build. Cloud voice providers that expose voice-list APIs should provide a
+  selectable voice list instead of requiring users to type opaque voice IDs.
 - When requests match "wrap a TTS engine as OpenAI-compatible", "build an OpenAI-compatible speech server", "expose <provider> as `/v1/audio/speech`", or "set up a Colab TTS compatibility server", follow `skills/wrap-tts-as-openai-compatible/SKILL.md`.
 - For `wrap-tts-as-openai-compatible`, first classify the upstream TTS as direct Python API, CLI/file-output, or internal runtime plus save helper, then validate the wrapper from `@aituber-onair/voice` when applicable.
 - Prefer this skill for practical local TTS engines that cleanly support one-shot WAV generation. Do not force research-first or streaming-first systems into this workflow.
