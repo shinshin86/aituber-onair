@@ -1,0 +1,35 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "files": {
+    "ignore": [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/package-lock.json",
+      "package.json"
+    ]
+  },
+  "overrides": [
+    {
+      "include": ["packages/kizuna/**"],
+      "formatter": {
+        "indentStyle": "tab",
+        "indentWidth": 2
+      }
+    }
+  ]
+}
