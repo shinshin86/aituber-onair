@@ -1,19 +1,19 @@
 {
-	"compilerOptions": {
-		"target": "ES2020",
-		"module": "ESNext",
-		"moduleResolution": "node",
-		"lib": ["ES2020", "DOM"],
-		"strict": true,
-		"forceConsistentCasingInFileNames": true,
-		"skipLibCheck": true,
-		"esModuleInterop": true,
-		"declaration": true,
-		"sourceMap": true,
-		"outDir": "dist",
-		"useUnknownInCatchVariables": false,
-		"types": ["node", "vitest"]
-	},
-	"include": ["src"],
-	"exclude": ["node_modules", "**/*.test.ts"]
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM"],
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "useUnknownInCatchVariables": false,
+    "types": ["node", "vitest"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "**/*.test.ts"]
 }

@@ -22,14 +22,5 @@
       "**/package-lock.json",
       "package.json"
     ]
-  },
-  "overrides": [
-    {
-      "include": ["packages/kizuna/**"],
-      "formatter": {
-        "indentStyle": "tab",
-        "indentWidth": 2
-      }
-    }
-  ]
+  }
 }
