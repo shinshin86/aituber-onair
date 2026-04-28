@@ -6,64 +6,64 @@
  */
 
 // Main classes
-export { KizunaManager } from "./KizunaManager";
-export { UserManager } from "./UserManager";
-export { PointCalculator } from "./PointCalculator";
+export { KizunaManager } from './KizunaManager';
+export { UserManager } from './UserManager';
+export { PointCalculator } from './PointCalculator';
 
 // Storage providers
-export { StorageProvider } from "./storage/StorageProvider";
-export { LocalStorageProvider } from "./storage/LocalStorageProvider";
+export { StorageProvider } from './storage/StorageProvider';
+export { LocalStorageProvider } from './storage/LocalStorageProvider';
 export {
-	ExternalStorageProvider,
-	type ExternalStorageAdapter,
-	type ExternalStorageConfig,
-} from "./storage/ExternalStorageProvider";
+  ExternalStorageProvider,
+  type ExternalStorageAdapter,
+  type ExternalStorageConfig,
+} from './storage/ExternalStorageProvider';
 
 // Utilities
-export { generateUserId, parseUserId } from "./utils/userIdGenerator";
+export { generateUserId, parseUserId } from './utils/userIdGenerator';
 export {
-	detectEnvironment,
-	isBrowser,
-	isNode,
-} from "./utils/environmentDetector";
+  detectEnvironment,
+  isBrowser,
+  isNode,
+} from './utils/environmentDetector';
 export {
-	createDefaultStorageProvider,
-	createStorageProvider,
-	type StorageProviderOptions,
-} from "./utils/storageFactory";
+  createDefaultStorageProvider,
+  createStorageProvider,
+  type StorageProviderOptions,
+} from './utils/storageFactory';
 
 // Type definitions
 export type {
-	// Basic types
-	UserType,
-	ChatType,
-	LogLevel,
-	// User-related
-	KizunaUser,
-	UserStats,
-	Achievement,
-	InteractionRecord,
-	// Point system
-	PointContext,
-	PointRule,
-	PointResult,
-	// Thresholds and actions
-	ActionType,
-	ThresholdAction,
-	Threshold,
-	// Configuration
-	KizunaConfig,
-	OwnerConfig,
-	PlatformPointConfig,
-	StorageConfig,
-	DevConfig,
-	// Events
-	KizunaEventType,
-	KizunaEventData,
-	// Interfaces
-	KizunaManagerInterface,
-	StorageProvider as IStorageProvider,
-} from "./types";
+  // Basic types
+  UserType,
+  ChatType,
+  LogLevel,
+  // User-related
+  KizunaUser,
+  UserStats,
+  Achievement,
+  InteractionRecord,
+  // Point system
+  PointContext,
+  PointRule,
+  PointResult,
+  // Thresholds and actions
+  ActionType,
+  ThresholdAction,
+  Threshold,
+  // Configuration
+  KizunaConfig,
+  OwnerConfig,
+  PlatformPointConfig,
+  StorageConfig,
+  DevConfig,
+  // Events
+  KizunaEventType,
+  KizunaEventData,
+  // Interfaces
+  KizunaManagerInterface,
+  StorageProvider as IStorageProvider,
+} from './types';
 
 // Version information
-export const version = "0.0.1";
+export const version = '0.0.1';

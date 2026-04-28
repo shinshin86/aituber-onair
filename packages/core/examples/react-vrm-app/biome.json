@@ -7,8 +7,7 @@
     "enabled": true,
     "rules": {
       "recommended": true
-    },
-    "ignore": ["dist/**/*", "**/*.d.ts"]
+    }
   },
   "formatter": {
     "enabled": true,
@@ -23,6 +22,6 @@
     }
   },
   "files": {
-    "ignore": ["dist/**/*", "node_modules/**/*"]
+    "ignore": ["**/dist/**", "tsconfig*.json"]
   }
 }

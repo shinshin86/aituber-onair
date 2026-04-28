@@ -12,6 +12,8 @@ export type VoiceEngineType =
   | 'voicepeak'
   | 'minimax'
   | 'xai'
+  | 'unrealSpeech'
+  | 'elevenLabs'
   | 'piperPlus'
   | 'none';
 
@@ -99,6 +101,26 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       apiUrl: 'https://api.x.ai/v1/tts',
       needsApiKey: true,
       placeholder: 'xai-...',
+    },
+    unrealSpeech: {
+      name: 'Unreal Speech',
+      apiUrl: 'https://api.v8.unrealspeech.com/stream',
+      needsApiKey: true,
+      placeholder: 'Unreal Speech API key',
+      defaultParams: {
+        bitrate: '192k',
+        codec: 'libmp3lame',
+      },
+    },
+    elevenLabs: {
+      name: 'ElevenLabs',
+      apiUrl: 'https://api.elevenlabs.io/v1/text-to-speech',
+      needsApiKey: true,
+      placeholder: 'ElevenLabs API key',
+      defaultParams: {
+        model: 'eleven_multilingual_v2',
+        outputFormat: 'mp3_44100_128',
+      },
     },
     piperPlus: {
       name: 'Piper Plus',

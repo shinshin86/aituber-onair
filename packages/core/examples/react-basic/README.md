@@ -182,7 +182,7 @@ while this example uses the standard streaming chat flow.
 
 ### Supported TTS Engines
 
-The application supports 10 different Text-to-Speech engines:
+The application supports 12 different Text-to-Speech engines:
 
 #### 1. **OpenAI TTS**
 - Requires OpenAI API key
@@ -238,7 +238,17 @@ The application supports 10 different Text-to-Speech engines:
 - Voices: ara, eve, leo, rex, sal
 - Supports language, codec, sample rate, and bitrate
 
-#### 10. **Piper Plus**
+#### 10. **Unreal Speech**
+- Requires Unreal Speech API key
+- Uses the v8 `/stream` endpoint
+- Supports bitrate, codec, speed, pitch, and temperature options
+
+#### 11. **ElevenLabs**
+- Requires ElevenLabs API key
+- Fetches voices from the ElevenLabs Voices API and lets users select by name
+- Supports model, output format, language code, voice settings, seed, and text normalization options
+
+#### 12. **Piper Plus**
 - Browser-side WASM TTS
 - No API key required
 - Requires `public/piper/` assets

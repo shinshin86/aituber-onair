@@ -18,6 +18,8 @@ export type TTSEngineOption =
   | 'aivisCloud'
   | 'minimax'
   | 'xai'
+  | 'unrealSpeech'
+  | 'elevenLabs'
   | 'piperPlus'
   | 'none';
 export type StreamingPlatformOption = 'none' | 'youtube' | 'twitch';
@@ -68,6 +70,25 @@ export interface TTSSettings {
   xaiCodec?: string;
   xaiSampleRate?: number;
   xaiBitRate?: number;
+  unrealSpeechApiKey?: string;
+  unrealSpeechApiUrl?: string;
+  unrealSpeechBitrate?: string;
+  unrealSpeechSpeed?: string;
+  unrealSpeechPitch?: string;
+  unrealSpeechCodec?: string;
+  unrealSpeechTemperature?: string;
+  elevenLabsApiKey?: string;
+  elevenLabsApiUrl?: string;
+  elevenLabsModel?: string;
+  elevenLabsOutputFormat?: string;
+  elevenLabsLanguageCode?: string;
+  elevenLabsStability?: string;
+  elevenLabsSimilarityBoost?: string;
+  elevenLabsStyle?: string;
+  elevenLabsUseSpeakerBoost?: 'default' | 'true' | 'false';
+  elevenLabsSpeed?: string;
+  elevenLabsSeed?: string;
+  elevenLabsApplyTextNormalization?: 'default' | 'auto' | 'on' | 'off';
   piperPlusBasePath?: string;
   piperPlusModelConfigFile?: string;
   piperPlusModelFile?: string;

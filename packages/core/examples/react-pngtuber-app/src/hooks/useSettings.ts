@@ -22,6 +22,12 @@ const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
   'http://localhost:11434/v1/chat/completions';
 const DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT =
   'http://localhost:8880/v1/audio/speech';
+const DEFAULT_UNREAL_SPEECH_TTS_ENDPOINT =
+  'https://api.v8.unrealspeech.com/stream';
+const DEFAULT_ELEVENLABS_TTS_ENDPOINT =
+  'https://api.elevenlabs.io/v1/text-to-speech';
+const DEFAULT_ELEVENLABS_MODEL = 'eleven_multilingual_v2';
+const DEFAULT_ELEVENLABS_OUTPUT_FORMAT = 'mp3_44100_128';
 const DEFAULT_PIPER_PLUS_BASE_PATH = `${import.meta.env.BASE_URL}piper/`;
 const DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE = 'tsukuyomi-config.json';
 const DEFAULT_PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
@@ -127,6 +133,25 @@ function getDefaultSettings(): AppSettings {
       xaiCodec: 'mp3',
       xaiSampleRate: 24000,
       xaiBitRate: 128000,
+      unrealSpeechApiKey: '',
+      unrealSpeechApiUrl: DEFAULT_UNREAL_SPEECH_TTS_ENDPOINT,
+      unrealSpeechBitrate: '192k',
+      unrealSpeechSpeed: '',
+      unrealSpeechPitch: '',
+      unrealSpeechCodec: 'libmp3lame',
+      unrealSpeechTemperature: '',
+      elevenLabsApiKey: '',
+      elevenLabsApiUrl: DEFAULT_ELEVENLABS_TTS_ENDPOINT,
+      elevenLabsModel: DEFAULT_ELEVENLABS_MODEL,
+      elevenLabsOutputFormat: DEFAULT_ELEVENLABS_OUTPUT_FORMAT,
+      elevenLabsLanguageCode: '',
+      elevenLabsStability: '',
+      elevenLabsSimilarityBoost: '',
+      elevenLabsStyle: '',
+      elevenLabsUseSpeakerBoost: 'default',
+      elevenLabsSpeed: '',
+      elevenLabsSeed: '',
+      elevenLabsApplyTextNormalization: 'default',
       piperPlusBasePath: DEFAULT_PIPER_PLUS_BASE_PATH,
       piperPlusModelConfigFile: DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE,
       piperPlusModelFile: DEFAULT_PIPER_PLUS_MODEL_FILE,
@@ -349,6 +374,8 @@ export function useSettings() {
       aivisCloud: DEFAULT_AIVIS_CLOUD_MODEL_UUID,
       minimax: 'male-qn-qingse',
       xai: 'eve',
+      unrealSpeech: 'af_bella',
+      elevenLabs: '',
       piperPlus: 'default',
       none: '',
     };
@@ -409,6 +436,39 @@ export function useSettings() {
           engine === 'xai'
             ? prev.tts.xaiBitRate || 128000
             : prev.tts.xaiBitRate,
+        unrealSpeechApiUrl:
+          engine === 'unrealSpeech'
+            ? prev.tts.unrealSpeechApiUrl || DEFAULT_UNREAL_SPEECH_TTS_ENDPOINT
+            : prev.tts.unrealSpeechApiUrl,
+        unrealSpeechBitrate:
+          engine === 'unrealSpeech'
+            ? prev.tts.unrealSpeechBitrate || '192k'
+            : prev.tts.unrealSpeechBitrate,
+        unrealSpeechCodec:
+          engine === 'unrealSpeech'
+            ? prev.tts.unrealSpeechCodec || 'libmp3lame'
+            : prev.tts.unrealSpeechCodec,
+        elevenLabsApiUrl:
+          engine === 'elevenLabs'
+            ? prev.tts.elevenLabsApiUrl || DEFAULT_ELEVENLABS_TTS_ENDPOINT
+            : prev.tts.elevenLabsApiUrl,
+        elevenLabsModel:
+          engine === 'elevenLabs'
+            ? prev.tts.elevenLabsModel || DEFAULT_ELEVENLABS_MODEL
+            : prev.tts.elevenLabsModel,
+        elevenLabsOutputFormat:
+          engine === 'elevenLabs'
+            ? prev.tts.elevenLabsOutputFormat ||
+              DEFAULT_ELEVENLABS_OUTPUT_FORMAT
+            : prev.tts.elevenLabsOutputFormat,
+        elevenLabsUseSpeakerBoost:
+          engine === 'elevenLabs'
+            ? prev.tts.elevenLabsUseSpeakerBoost || 'default'
+            : prev.tts.elevenLabsUseSpeakerBoost,
+        elevenLabsApplyTextNormalization:
+          engine === 'elevenLabs'
+            ? prev.tts.elevenLabsApplyTextNormalization || 'default'
+            : prev.tts.elevenLabsApplyTextNormalization,
         piperPlusBasePath:
           engine === 'piperPlus'
             ? prev.tts.piperPlusBasePath || DEFAULT_PIPER_PLUS_BASE_PATH
@@ -585,6 +645,19 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateTtsField = useCallback(
+    <TKey extends keyof AppSettings['tts']>(
+      key: TKey,
+      value: AppSettings['tts'][TKey],
+    ) => {
+      setSettings((prev) => ({
+        ...prev,
+        tts: { ...prev.tts, [key]: value },
+      }));
+    },
+    [],
+  );
+
   const updatePiperPlusBasePath = useCallback((basePath: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -752,6 +825,7 @@ export function useSettings() {
     updateXaiCodec,
     updateXaiSampleRate,
     updateXaiBitRate,
+    updateTtsField,
     updatePiperPlusBasePath,
     updatePiperPlusModelConfigFile,
     updatePiperPlusModelFile,

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AITuberOnAirCore, AITuberOnAirCoreEvent } from '@aituber-onair/core';
 import type {
   VoiceServiceOptions,
+  ElevenLabsApplyTextNormalization,
+  UnrealSpeechCodec,
   XaiBitRate,
   XaiCodec,
   XaiSampleRate,
@@ -37,6 +39,12 @@ function getTtsApiKey(
   if (settings.tts.engine === 'xai') {
     return getApiKeyForProvider('xai');
   }
+  if (settings.tts.engine === 'unrealSpeech') {
+    return settings.tts.unrealSpeechApiKey || '';
+  }
+  if (settings.tts.engine === 'elevenLabs') {
+    return settings.tts.elevenLabsApiKey || '';
+  }
   return getApiKeyForProvider(settings.llm.provider);
 }
 
@@ -57,6 +65,24 @@ function buildVoiceOptions(
     10,
   );
   const parsedXaiBitRate = Number.parseInt(String(tts.xaiBitRate || ''), 10);
+  const parsedUnrealSpeechSpeed = Number.parseFloat(
+    tts.unrealSpeechSpeed || '',
+  );
+  const parsedUnrealSpeechPitch = Number.parseFloat(
+    tts.unrealSpeechPitch || '',
+  );
+  const parsedUnrealSpeechTemperature = Number.parseFloat(
+    tts.unrealSpeechTemperature || '',
+  );
+  const parsedElevenLabsStability = Number.parseFloat(
+    tts.elevenLabsStability || '',
+  );
+  const parsedElevenLabsSimilarityBoost = Number.parseFloat(
+    tts.elevenLabsSimilarityBoost || '',
+  );
+  const parsedElevenLabsStyle = Number.parseFloat(tts.elevenLabsStyle || '');
+  const parsedElevenLabsSpeed = Number.parseFloat(tts.elevenLabsSpeed || '');
+  const parsedElevenLabsSeed = Number.parseInt(tts.elevenLabsSeed || '', 10);
   const parsedPiperPlusSpeed = Number.parseFloat(tts.piperPlusSpeed || '');
   const parsedPiperPlusNoiseScale = Number.parseFloat(
     tts.piperPlusNoiseScale || '',
@@ -96,6 +122,48 @@ function buildVoiceOptions(
     xaiBitRate:
       tts.xaiCodec === 'mp3' && !Number.isNaN(parsedXaiBitRate)
         ? (parsedXaiBitRate as XaiBitRate)
+        : undefined,
+    unrealSpeechApiUrl: tts.unrealSpeechApiUrl?.trim() || undefined,
+    unrealSpeechBitrate: tts.unrealSpeechBitrate?.trim() || undefined,
+    unrealSpeechSpeed: Number.isNaN(parsedUnrealSpeechSpeed)
+      ? undefined
+      : parsedUnrealSpeechSpeed,
+    unrealSpeechPitch: Number.isNaN(parsedUnrealSpeechPitch)
+      ? undefined
+      : parsedUnrealSpeechPitch,
+    unrealSpeechCodec:
+      (tts.unrealSpeechCodec as UnrealSpeechCodec | undefined) || undefined,
+    unrealSpeechTemperature: Number.isNaN(parsedUnrealSpeechTemperature)
+      ? undefined
+      : parsedUnrealSpeechTemperature,
+    elevenLabsApiUrl: tts.elevenLabsApiUrl?.trim() || undefined,
+    elevenLabsModel: tts.elevenLabsModel?.trim() || undefined,
+    elevenLabsOutputFormat: tts.elevenLabsOutputFormat?.trim() || undefined,
+    elevenLabsLanguageCode: tts.elevenLabsLanguageCode?.trim() || undefined,
+    elevenLabsStability: Number.isNaN(parsedElevenLabsStability)
+      ? undefined
+      : parsedElevenLabsStability,
+    elevenLabsSimilarityBoost: Number.isNaN(parsedElevenLabsSimilarityBoost)
+      ? undefined
+      : parsedElevenLabsSimilarityBoost,
+    elevenLabsStyle: Number.isNaN(parsedElevenLabsStyle)
+      ? undefined
+      : parsedElevenLabsStyle,
+    elevenLabsUseSpeakerBoost:
+      tts.elevenLabsUseSpeakerBoost &&
+      tts.elevenLabsUseSpeakerBoost !== 'default'
+        ? tts.elevenLabsUseSpeakerBoost === 'true'
+        : undefined,
+    elevenLabsSpeed: Number.isNaN(parsedElevenLabsSpeed)
+      ? undefined
+      : parsedElevenLabsSpeed,
+    elevenLabsSeed: Number.isNaN(parsedElevenLabsSeed)
+      ? undefined
+      : parsedElevenLabsSeed,
+    elevenLabsApplyTextNormalization:
+      tts.elevenLabsApplyTextNormalization &&
+      tts.elevenLabsApplyTextNormalization !== 'default'
+        ? (tts.elevenLabsApplyTextNormalization as ElevenLabsApplyTextNormalization)
         : undefined,
     piperPlusBasePath: tts.piperPlusBasePath?.trim() || undefined,
     piperPlusModelConfigFile: tts.piperPlusModelConfigFile?.trim() || undefined,

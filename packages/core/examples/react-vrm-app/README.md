@@ -21,12 +21,14 @@ from actual audio output volume.
     (not a target number of working models)
 - Use TTS engines:
   `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`,
-  `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `piperPlus`, `none`
+  `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`,
+  `elevenLabs`, `piperPlus`, `none`
 - `geminiTts` defaults to `gemini-3.1-flash-tts-preview` and exposes 30
   prebuilt voices plus style/audio-tag prompt input
 - Fetch and select speaker lists dynamically:
   - `voicevox` / `aivisSpeech`: from `/speakers`
   - `minimax`: from `query/tts_speakers` after API key input
+  - `elevenLabs`: from `/v2/voices` after API key input
 - Use fixed Aivis Cloud voice presets (CORS-safe UI):
   - `コハク` (`22e8ed77-94fe-4ef2-871f-a86f94e9a579`)
   - `まお` (`a59cb814-0083-4369-8542-f51a29e72af7`)

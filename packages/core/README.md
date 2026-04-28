@@ -1220,6 +1220,8 @@ Possible use cases for `chatLogUpdated` include:
 - **OpenAI TTS**: Text-to-speech API from OpenAI.
 - **Gemini TTS**: Gemini API-based text-to-speech with selectable preview TTS models including `gemini-3.1-flash-tts-preview`, plus style/audio-tag prompt support.
 - **xAI TTS**: xAI text-to-speech with selectable codec, sample rate, and bit rate options.
+- **Unreal Speech**: Unreal Speech v8 `/stream` endpoint with bitrate, speed, pitch, codec, and temperature options.
+- **ElevenLabs**: ElevenLabs Text to Speech API with model, output format, language code, voice settings, and text normalization options.
 - **OpenAI-Compatible TTS**: Self-hosted or third-party `/v1/audio/speech` compatible endpoints.
 - **MiniMax**: Multi-language TTS with 24 language support and HD quality (requires both API key and GroupId - see usage example below).
 - **Piper Plus**: Browser WASM TTS using ONNX Runtime Web and OpenJTalk assets for on-device synthesis.
@@ -1281,7 +1283,7 @@ aituber.updateSpeechChunking({
 
 ### Custom API Endpoints
 
-For locally hosted voice engines (VOICEVOX, VoicePeak, AivisSpeech, OpenAI-Compatible TTS), you can specify custom API endpoint URLs:
+For locally hosted or overridable voice engines (VOICEVOX, VoicePeak, AivisSpeech, OpenAI-Compatible TTS, Unreal Speech, ElevenLabs), you can specify custom API endpoint URLs:
 
 ```typescript
 // Example of setting custom API endpoints
@@ -1335,6 +1337,26 @@ aituber.updateVoiceService({
   apiKey: 'YOUR_MINIMAX_API_KEY',
   groupId: 'YOUR_GROUP_ID',  // Required for MiniMax
   endpoint: 'global'         // Optional: 'global' (default) or 'china'
+});
+
+// Example for Unreal Speech
+aituber.updateVoiceService({
+  engineType: 'unrealSpeech',
+  speaker: 'af_bella',
+  apiKey: 'YOUR_UNREAL_SPEECH_API_KEY',
+  unrealSpeechBitrate: '192k',
+  unrealSpeechCodec: 'libmp3lame',
+  unrealSpeechSpeed: 0.3,
+});
+
+// Example for ElevenLabs
+aituber.updateVoiceService({
+  engineType: 'elevenLabs',
+  speaker: 'YOUR_ELEVENLABS_VOICE_ID',
+  apiKey: 'YOUR_ELEVENLABS_API_KEY',
+  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsOutputFormat: 'mp3_44100_128',
+  elevenLabsLanguageCode: 'ja',
 });
 
 // IMPORTANT: MiniMax requires a GroupId in addition to the API key

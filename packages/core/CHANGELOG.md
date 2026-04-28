@@ -1,5 +1,25 @@
 # @aituber-onair/core
 
+## 0.25.7
+
+### Patch Changes
+
+- Synced Unreal Speech and ElevenLabs TTS support from
+  `@aituber-onair/voice@0.15.0` into the core entry point and React examples:
+  - re-exported `UnrealSpeechEngine`, `ElevenLabsEngine`, related option
+    types, and endpoint constants
+  - added React basic example selection and parameter controls for
+    `engineType: 'unrealSpeech'` and `engineType: 'elevenLabs'`
+  - added VRM, PNGTuber, and Live2D example selection and settings wiring for
+    Unreal Speech and ElevenLabs
+  - added ElevenLabs voice-list fetching to the React examples so users can
+    select a voice by name instead of typing an opaque voice ID
+- Refreshed core README docs and the React basic example README to mention the
+  new voice providers.
+- Added core export test coverage for the new voice re-exports.
+- Updated dependencies []:
+  - @aituber-onair/voice@0.15.0
+
 ## 0.25.6
 
 ### Patch Changes

@@ -35,6 +35,8 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'aivisCloud', label: 'Aivis Cloud' },
   { value: 'minimax', label: 'MiniMax' },
   { value: 'xai', label: 'xAI TTS' },
+  { value: 'unrealSpeech', label: 'Unreal Speech' },
+  { value: 'elevenLabs', label: 'ElevenLabs' },
   { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'none', label: 'None' },
 ];
@@ -81,6 +83,24 @@ const XAI_SPEAKERS = ['ara', 'eve', 'leo', 'rex', 'sal'];
 const XAI_CODECS = ['mp3', 'wav', 'pcm', 'mulaw', 'alaw'] as const;
 const XAI_SAMPLE_RATES = [8000, 16000, 22050, 24000, 44100, 48000] as const;
 const XAI_BIT_RATES = [32000, 64000, 96000, 128000, 192000] as const;
+const UNREAL_SPEECH_SPEAKERS = [
+  'af_bella',
+  'af_sarah',
+  'am_adam',
+  'am_michael',
+] as const;
+const UNREAL_SPEECH_CODECS = ['libmp3lame', 'pcm_mulaw', 'pcm_s16le'] as const;
+const ELEVENLABS_MODELS = [
+  'eleven_multilingual_v2',
+  'eleven_flash_v2_5',
+  'eleven_turbo_v2_5',
+] as const;
+const ELEVENLABS_OUTPUT_FORMATS = [
+  'mp3_44100_128',
+  'mp3_22050_32',
+  'pcm_16000',
+  'ulaw_8000',
+] as const;
 
 const VOICEPEAK_SPEAKERS = [
   { id: 'f1', name: '日本人女性 1' },
@@ -120,6 +140,12 @@ interface MinimaxVoice {
   voice_name: string;
 }
 
+interface ElevenLabsVoice {
+  voice_id: string;
+  name: string;
+  category?: string;
+}
+
 type SectionKey = 'llm' | 'tts' | 'visual' | 'stream';
 
 export function SettingsPanel({
@@ -155,6 +181,7 @@ export function SettingsPanel({
   updateXaiCodec,
   updateXaiSampleRate,
   updateXaiBitRate,
+  updateTtsField,
   updatePiperPlusBasePath,
   updatePiperPlusModelConfigFile,
   updatePiperPlusModelFile,
@@ -192,8 +219,13 @@ export function SettingsPanel({
   const [voicevoxSpeakers, setVoicevoxSpeakers] = useState<VoiceSpeaker[]>([]);
   const [aivisSpeakers, setAivisSpeakers] = useState<VoiceSpeaker[]>([]);
   const [minimaxVoices, setMinimaxVoices] = useState<MinimaxVoice[]>([]);
+  const [elevenLabsVoices, setElevenLabsVoices] = useState<ElevenLabsVoice[]>(
+    [],
+  );
   const [fetchError, setFetchError] = useState('');
   const [isFetchingMinimaxVoices, setIsFetchingMinimaxVoices] = useState(false);
+  const [isFetchingElevenLabsVoices, setIsFetchingElevenLabsVoices] =
+    useState(false);
   const speakerRef = useRef(settings.tts.speaker);
   const [expandedSections, setExpandedSections] = useState<
     Record<SectionKey, boolean>
@@ -354,6 +386,74 @@ export function SettingsPanel({
       controller.abort();
     };
   }, [settings.tts.engine, settings.tts.minimaxApiKey, updateTTSSpeaker]);
+
+  // Fetch ElevenLabs voice list after API key is entered
+  useEffect(() => {
+    if (settings.tts.engine !== 'elevenLabs') {
+      return;
+    }
+
+    const apiKey = settings.tts.elevenLabsApiKey?.trim();
+    if (!apiKey) {
+      queueMicrotask(() => {
+        setElevenLabsVoices([]);
+      });
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchElevenLabsVoices = async () => {
+      setIsFetchingElevenLabsVoices(true);
+      try {
+        const response = await fetch(
+          'https://api.elevenlabs.io/v2/voices?page_size=100',
+          {
+            method: 'GET',
+            headers: {
+              'xi-api-key': apiKey,
+            },
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = (await response.json()) as {
+          voices?: ElevenLabsVoice[];
+        };
+        if (controller.signal.aborted) return;
+
+        const voices = payload.voices || [];
+        setElevenLabsVoices(voices);
+        setFetchError('');
+
+        if (
+          voices.length > 0 &&
+          !voices.some((voice) => voice.voice_id === speakerRef.current)
+        ) {
+          updateTTSSpeaker(voices[0].voice_id);
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        const message = error instanceof Error ? error.message : String(error);
+        setElevenLabsVoices([]);
+        setFetchError(`ElevenLabs接続エラー: ${message}`);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsFetchingElevenLabsVoices(false);
+        }
+      }
+    };
+
+    void fetchElevenLabsVoices();
+
+    return () => {
+      controller.abort();
+    };
+  }, [settings.tts.engine, settings.tts.elevenLabsApiKey, updateTTSSpeaker]);
 
   const handleAivisCloudPresetChange = (presetId: string) => {
     const preset = AIVIS_CLOUD_PRESETS.find((item) => item.id === presetId);
@@ -823,6 +923,362 @@ export function SettingsPanel({
                     </select>
                   </div>
                 )}
+              </>
+            )}
+
+            {settings.tts.engine === 'unrealSpeech' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-unreal-apikey">API Key</label>
+                  <input
+                    id="tts-unreal-apikey"
+                    type="password"
+                    value={settings.tts.unrealSpeechApiKey || ''}
+                    onChange={(e) =>
+                      updateTtsField('unrealSpeechApiKey', e.target.value)
+                    }
+                    placeholder="Unreal Speech API key"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-unreal-speaker">Speaker</label>
+                  <select
+                    id="tts-unreal-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={disabled}
+                  >
+                    {UNREAL_SPEECH_SPEAKERS.map((speaker) => (
+                      <option key={speaker} value={speaker}>
+                        {speaker}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-unreal-url">API URL</label>
+                  <input
+                    id="tts-unreal-url"
+                    type="text"
+                    value={settings.tts.unrealSpeechApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('unrealSpeechApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-unreal-codec">Codec</label>
+                  <select
+                    id="tts-unreal-codec"
+                    value={settings.tts.unrealSpeechCodec || 'libmp3lame'}
+                    onChange={(e) =>
+                      updateTtsField('unrealSpeechCodec', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {UNREAL_SPEECH_CODECS.map((codec) => (
+                      <option key={codec} value={codec}>
+                        {codec}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-unreal-bitrate">Bitrate</label>
+                  <input
+                    id="tts-unreal-bitrate"
+                    type="text"
+                    value={settings.tts.unrealSpeechBitrate || ''}
+                    onChange={(e) =>
+                      updateTtsField('unrealSpeechBitrate', e.target.value)
+                    }
+                    placeholder="192k"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-unreal-speed">Speed</label>
+                  <input
+                    id="tts-unreal-speed"
+                    type="number"
+                    step="0.05"
+                    value={settings.tts.unrealSpeechSpeed || ''}
+                    onChange={(e) =>
+                      updateTtsField('unrealSpeechSpeed', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-unreal-pitch">Pitch</label>
+                  <input
+                    id="tts-unreal-pitch"
+                    type="number"
+                    step="0.05"
+                    value={settings.tts.unrealSpeechPitch || ''}
+                    onChange={(e) =>
+                      updateTtsField('unrealSpeechPitch', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-unreal-temperature">Temperature</label>
+                  <input
+                    id="tts-unreal-temperature"
+                    type="number"
+                    step="0.05"
+                    value={settings.tts.unrealSpeechTemperature || ''}
+                    onChange={(e) =>
+                      updateTtsField('unrealSpeechTemperature', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+              </>
+            )}
+
+            {settings.tts.engine === 'elevenLabs' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-apikey">API Key</label>
+                  <input
+                    id="tts-eleven-apikey"
+                    type="password"
+                    value={settings.tts.elevenLabsApiKey || ''}
+                    onChange={(e) =>
+                      updateTtsField('elevenLabsApiKey', e.target.value)
+                    }
+                    placeholder="ElevenLabs API key"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-speaker">Voice</label>
+                  <select
+                    id="tts-eleven-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={
+                      disabled ||
+                      !settings.tts.elevenLabsApiKey ||
+                      isFetchingElevenLabsVoices ||
+                      elevenLabsVoices.length === 0
+                    }
+                  >
+                    {!settings.tts.elevenLabsApiKey && (
+                      <option value="">API Keyを入力してください</option>
+                    )}
+                    {settings.tts.elevenLabsApiKey &&
+                      isFetchingElevenLabsVoices && (
+                        <option value="">取得中...</option>
+                      )}
+                    {settings.tts.elevenLabsApiKey &&
+                      !isFetchingElevenLabsVoices &&
+                      elevenLabsVoices.length === 0 && (
+                        <option value="">音声一覧を取得できませんでした</option>
+                      )}
+                    {elevenLabsVoices.map((voice) => (
+                      <option key={voice.voice_id} value={voice.voice_id}>
+                        {voice.category
+                          ? `${voice.name} (${voice.category})`
+                          : voice.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-url">API URL</label>
+                  <input
+                    id="tts-eleven-url"
+                    type="text"
+                    value={settings.tts.elevenLabsApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('elevenLabsApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-model">Model</label>
+                  <select
+                    id="tts-eleven-model"
+                    value={settings.tts.elevenLabsModel || ELEVENLABS_MODELS[0]}
+                    onChange={(e) =>
+                      updateTtsField('elevenLabsModel', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {ELEVENLABS_MODELS.map((model) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-format">Output Format</label>
+                  <select
+                    id="tts-eleven-format"
+                    value={
+                      settings.tts.elevenLabsOutputFormat ||
+                      ELEVENLABS_OUTPUT_FORMATS[0]
+                    }
+                    onChange={(e) =>
+                      updateTtsField('elevenLabsOutputFormat', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {ELEVENLABS_OUTPUT_FORMATS.map((format) => (
+                      <option key={format} value={format}>
+                        {format}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-language">Language Code</label>
+                  <input
+                    id="tts-eleven-language"
+                    type="text"
+                    value={settings.tts.elevenLabsLanguageCode || ''}
+                    onChange={(e) =>
+                      updateTtsField('elevenLabsLanguageCode', e.target.value)
+                    }
+                    placeholder="ja"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-stability">Stability</label>
+                  <input
+                    id="tts-eleven-stability"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={settings.tts.elevenLabsStability || ''}
+                    onChange={(e) =>
+                      updateTtsField('elevenLabsStability', e.target.value)
+                    }
+                    placeholder="0.5"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-similarity">
+                    Similarity Boost
+                  </label>
+                  <input
+                    id="tts-eleven-similarity"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={settings.tts.elevenLabsSimilarityBoost || ''}
+                    onChange={(e) =>
+                      updateTtsField(
+                        'elevenLabsSimilarityBoost',
+                        e.target.value,
+                      )
+                    }
+                    placeholder="0.75"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-style">Style</label>
+                  <input
+                    id="tts-eleven-style"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={settings.tts.elevenLabsStyle || ''}
+                    onChange={(e) =>
+                      updateTtsField('elevenLabsStyle', e.target.value)
+                    }
+                    placeholder="0"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-speed">Speed</label>
+                  <input
+                    id="tts-eleven-speed"
+                    type="number"
+                    min="0.7"
+                    max="1.2"
+                    step="0.01"
+                    value={settings.tts.elevenLabsSpeed || ''}
+                    onChange={(e) =>
+                      updateTtsField('elevenLabsSpeed', e.target.value)
+                    }
+                    placeholder="1.0"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-seed">Seed</label>
+                  <input
+                    id="tts-eleven-seed"
+                    type="number"
+                    value={settings.tts.elevenLabsSeed || ''}
+                    onChange={(e) =>
+                      updateTtsField('elevenLabsSeed', e.target.value)
+                    }
+                    placeholder="optional"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-speaker-boost">
+                    Speaker Boost
+                  </label>
+                  <select
+                    id="tts-eleven-speaker-boost"
+                    value={settings.tts.elevenLabsUseSpeakerBoost || 'default'}
+                    onChange={(e) =>
+                      updateTtsField(
+                        'elevenLabsUseSpeakerBoost',
+                        e.target.value as 'default' | 'true' | 'false',
+                      )
+                    }
+                    disabled={disabled}
+                  >
+                    <option value="default">Default</option>
+                    <option value="true">On</option>
+                    <option value="false">Off</option>
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-eleven-normalization">
+                    Text Normalization
+                  </label>
+                  <select
+                    id="tts-eleven-normalization"
+                    value={
+                      settings.tts.elevenLabsApplyTextNormalization || 'default'
+                    }
+                    onChange={(e) =>
+                      updateTtsField(
+                        'elevenLabsApplyTextNormalization',
+                        e.target.value as 'default' | 'auto' | 'on' | 'off',
+                      )
+                    }
+                    disabled={disabled}
+                  >
+                    <option value="default">Default</option>
+                    <option value="auto">auto</option>
+                    <option value="on">on</option>
+                    <option value="off">off</option>
+                  </select>
+                </div>
               </>
             )}
 
