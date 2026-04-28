@@ -16,6 +16,7 @@ import {
   ChatResponseLength,
   MODEL_GEMINI_NANO,
   type VisionSupportLevel,
+  type ElevenLabsApplyTextNormalization,
   allowsReasoningLow,
   allowsReasoningMinimal,
   allowsReasoningNone,
@@ -26,6 +27,7 @@ import {
   refreshOpenRouterFreeModels,
   type MinimaxModel,
   type MinimaxAudioFormat,
+  type UnrealSpeechCodec,
   type EmotionTypeForVoicepeak,
   type VoicepeakEmotionWeights,
   type VoiceVoxQueryParameterOverrides,
@@ -126,6 +128,34 @@ const MINIMAX_VOICES: Record<string, string> = {
 };
 
 const XAI_TTS_SPEAKERS = ['ara', 'eve', 'leo', 'rex', 'sal'] as const;
+const UNREAL_SPEECH_SPEAKERS = [
+  'af_bella',
+  'af_sarah',
+  'am_adam',
+  'am_michael',
+] as const;
+const ELEVENLABS_MODELS = [
+  'eleven_multilingual_v2',
+  'eleven_flash_v2_5',
+  'eleven_turbo_v2_5',
+] as const;
+const ELEVENLABS_OUTPUT_FORMATS = [
+  'mp3_44100_128',
+  'mp3_22050_32',
+  'pcm_16000',
+  'ulaw_8000',
+] as const;
+
+interface ElevenLabsVoice {
+  voice_id: string;
+  name: string;
+  category?: string;
+}
+
+interface ElevenLabsVoiceListResponse {
+  voices?: ElevenLabsVoice[];
+}
+
 const GEMINI_TTS_MODELS = [
   'gemini-3.1-flash-tts-preview',
   'gemini-2.5-flash-preview-tts',
@@ -472,6 +502,41 @@ const App: React.FC = () => {
   const [xaiCodec, setXaiCodec] = useState<string>('mp3');
   const [xaiSampleRate, setXaiSampleRate] = useState<string>('24000');
   const [xaiBitRate, setXaiBitRate] = useState<string>('128000');
+  const [unrealSpeechBitrate, setUnrealSpeechBitrate] =
+    useState<string>('192k');
+  const [unrealSpeechSpeed, setUnrealSpeechSpeed] = useState<string>('');
+  const [unrealSpeechPitch, setUnrealSpeechPitch] = useState<string>('');
+  const [unrealSpeechCodec, setUnrealSpeechCodec] =
+    useState<UnrealSpeechCodec>('libmp3lame');
+  const [unrealSpeechTemperature, setUnrealSpeechTemperature] =
+    useState<string>('');
+  const [elevenLabsModel, setElevenLabsModel] = useState<string>(
+    String(
+      VOICE_ENGINE_CONFIGS.elevenLabs.defaultParams?.model ||
+        ELEVENLABS_MODELS[0],
+    ),
+  );
+  const [elevenLabsOutputFormat, setElevenLabsOutputFormat] = useState<string>(
+    String(
+      VOICE_ENGINE_CONFIGS.elevenLabs.defaultParams?.outputFormat ||
+        ELEVENLABS_OUTPUT_FORMATS[0],
+    ),
+  );
+  const [elevenLabsLanguageCode, setElevenLabsLanguageCode] =
+    useState<string>('');
+  const [elevenLabsStability, setElevenLabsStability] = useState<string>('');
+  const [elevenLabsSimilarityBoost, setElevenLabsSimilarityBoost] =
+    useState<string>('');
+  const [elevenLabsStyle, setElevenLabsStyle] = useState<string>('');
+  const [elevenLabsUseSpeakerBoost, setElevenLabsUseSpeakerBoost] = useState<
+    'default' | 'true' | 'false'
+  >('default');
+  const [elevenLabsSpeed, setElevenLabsSpeed] = useState<string>('');
+  const [elevenLabsSeed, setElevenLabsSeed] = useState<string>('');
+  const [
+    elevenLabsApplyTextNormalization,
+    setElevenLabsApplyTextNormalization,
+  ] = useState<'default' | ElevenLabsApplyTextNormalization>('default');
   const [voicevoxSpeedScale, setVoicevoxSpeedScale] = useState<string>('');
   const [voicevoxPitchScale, setVoicevoxPitchScale] = useState<string>('');
   const [voicevoxIntonationScale, setVoicevoxIntonationScale] =
@@ -593,11 +658,20 @@ const App: React.FC = () => {
     voicepeak: 'f1',
     minimax: 'male-qn-qingse',
     xai: 'eve',
+    unrealSpeech: 'af_bella',
+    elevenLabs: '',
     piperPlus: 'default',
   });
   const [availableSpeakers, setAvailableSpeakers] = useState<
     Record<string, any[]>
   >({});
+  const [elevenLabsVoices, setElevenLabsVoices] = useState<ElevenLabsVoice[]>(
+    [],
+  );
+  const [isFetchingElevenLabsVoices, setIsFetchingElevenLabsVoices] =
+    useState(false);
+  const [elevenLabsVoiceFetchError, setElevenLabsVoiceFetchError] =
+    useState('');
 
   // Voice playback state
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -765,11 +839,126 @@ const App: React.FC = () => {
       setXaiBitRate('128000');
     }
 
+    if (selectedVoiceEngine === 'unrealSpeech') {
+      setUnrealSpeechBitrate(
+        String(
+          VOICE_ENGINE_CONFIGS.unrealSpeech.defaultParams?.bitrate || '192k',
+        ),
+      );
+      setUnrealSpeechSpeed('');
+      setUnrealSpeechPitch('');
+      setUnrealSpeechCodec(
+        (VOICE_ENGINE_CONFIGS.unrealSpeech.defaultParams
+          ?.codec as UnrealSpeechCodec) || 'libmp3lame',
+      );
+      setUnrealSpeechTemperature('');
+    }
+
+    if (selectedVoiceEngine === 'elevenLabs') {
+      setElevenLabsModel(
+        String(
+          VOICE_ENGINE_CONFIGS.elevenLabs.defaultParams?.model ||
+            ELEVENLABS_MODELS[0],
+        ),
+      );
+      setElevenLabsOutputFormat(
+        String(
+          VOICE_ENGINE_CONFIGS.elevenLabs.defaultParams?.outputFormat ||
+            ELEVENLABS_OUTPUT_FORMATS[0],
+        ),
+      );
+      setElevenLabsLanguageCode('');
+      setElevenLabsStability('');
+      setElevenLabsSimilarityBoost('');
+      setElevenLabsStyle('');
+      setElevenLabsUseSpeakerBoost('default');
+      setElevenLabsSpeed('');
+      setElevenLabsSeed('');
+      setElevenLabsApplyTextNormalization('default');
+    }
+
     if (selectedVoiceEngine === 'piperPlus') {
       setPiperPlusSpeed('');
       setPiperPlusNoiseScale('');
     }
   }, [selectedVoiceEngine]);
+
+  useEffect(() => {
+    if (selectedVoiceEngine !== 'elevenLabs') {
+      return;
+    }
+
+    const apiKey = voiceApiKeys.elevenLabs?.trim();
+    if (!apiKey) {
+      queueMicrotask(() => {
+        setElevenLabsVoices([]);
+        setElevenLabsVoiceFetchError('');
+      });
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchElevenLabsVoices = async () => {
+      setIsFetchingElevenLabsVoices(true);
+      try {
+        const response = await fetch(
+          'https://api.elevenlabs.io/v2/voices?page_size=100',
+          {
+            method: 'GET',
+            headers: {
+              'xi-api-key': apiKey,
+            },
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = (await response.json()) as ElevenLabsVoiceListResponse;
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        const voices = payload.voices || [];
+        setElevenLabsVoices(voices);
+        setElevenLabsVoiceFetchError('');
+
+        if (
+          voices.length > 0 &&
+          !voices.some((voice) => voice.voice_id === selectedSpeakers.elevenLabs)
+        ) {
+          setSelectedSpeakers((prev) => ({
+            ...prev,
+            elevenLabs: voices[0].voice_id,
+          }));
+        }
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        setElevenLabsVoices([]);
+        setElevenLabsVoiceFetchError(`ElevenLabs接続エラー: ${message}`);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsFetchingElevenLabsVoices(false);
+        }
+      }
+    };
+
+    void fetchElevenLabsVoices();
+
+    return () => {
+      controller.abort();
+    };
+  }, [
+    selectedVoiceEngine,
+    voiceApiKeys.elevenLabs,
+    selectedSpeakers.elevenLabs,
+  ]);
 
   /**
    * when chat provider changes, reset the model to the first one
@@ -1059,6 +1248,12 @@ const App: React.FC = () => {
             break;
           case 'aivisSpeech':
             options.aivisSpeechApiUrl = config.apiUrl;
+            break;
+          case 'unrealSpeech':
+            options.unrealSpeechApiUrl = config.apiUrl;
+            break;
+          case 'elevenLabs':
+            options.elevenLabsApiUrl = config.apiUrl;
             break;
         }
       }
@@ -1541,6 +1736,80 @@ const App: React.FC = () => {
             if (!Number.isNaN(parsedBitRate)) {
               options.xaiBitRate = parsedBitRate;
             }
+          }
+
+          break;
+        }
+        case 'unrealSpeech': {
+          if (unrealSpeechBitrate.trim()) {
+            options.unrealSpeechBitrate = unrealSpeechBitrate.trim();
+          }
+
+          const parsedSpeed = Number.parseFloat(unrealSpeechSpeed);
+          if (!Number.isNaN(parsedSpeed)) {
+            options.unrealSpeechSpeed = parsedSpeed;
+          }
+
+          const parsedPitch = Number.parseFloat(unrealSpeechPitch);
+          if (!Number.isNaN(parsedPitch)) {
+            options.unrealSpeechPitch = parsedPitch;
+          }
+
+          options.unrealSpeechCodec = unrealSpeechCodec;
+
+          const parsedTemperature = Number.parseFloat(unrealSpeechTemperature);
+          if (!Number.isNaN(parsedTemperature)) {
+            options.unrealSpeechTemperature = parsedTemperature;
+          }
+
+          break;
+        }
+        case 'elevenLabs': {
+          if (elevenLabsModel.trim()) {
+            options.elevenLabsModel = elevenLabsModel.trim();
+          }
+          if (elevenLabsOutputFormat.trim()) {
+            options.elevenLabsOutputFormat = elevenLabsOutputFormat.trim();
+          }
+          if (elevenLabsLanguageCode.trim()) {
+            options.elevenLabsLanguageCode = elevenLabsLanguageCode.trim();
+          }
+
+          const parsedStability = Number.parseFloat(elevenLabsStability);
+          if (!Number.isNaN(parsedStability)) {
+            options.elevenLabsStability = parsedStability;
+          }
+
+          const parsedSimilarityBoost = Number.parseFloat(
+            elevenLabsSimilarityBoost,
+          );
+          if (!Number.isNaN(parsedSimilarityBoost)) {
+            options.elevenLabsSimilarityBoost = parsedSimilarityBoost;
+          }
+
+          const parsedStyle = Number.parseFloat(elevenLabsStyle);
+          if (!Number.isNaN(parsedStyle)) {
+            options.elevenLabsStyle = parsedStyle;
+          }
+
+          if (elevenLabsUseSpeakerBoost !== 'default') {
+            options.elevenLabsUseSpeakerBoost =
+              elevenLabsUseSpeakerBoost === 'true';
+          }
+
+          const parsedSpeed = Number.parseFloat(elevenLabsSpeed);
+          if (!Number.isNaN(parsedSpeed)) {
+            options.elevenLabsSpeed = parsedSpeed;
+          }
+
+          const parsedSeed = Number.parseInt(elevenLabsSeed, 10);
+          if (!Number.isNaN(parsedSeed)) {
+            options.elevenLabsSeed = parsedSeed;
+          }
+
+          if (elevenLabsApplyTextNormalization !== 'default') {
+            options.elevenLabsApplyTextNormalization =
+              elevenLabsApplyTextNormalization;
           }
 
           break;
@@ -3115,6 +3384,390 @@ const App: React.FC = () => {
                       </>
                     )}
 
+                  {selectedVoiceEngine === 'unrealSpeech' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        backgroundColor: '#fff4e6',
+                        borderRadius: '8px',
+                        border: '1px solid #ffd8a8',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 'bold',
+                          marginBottom: '8px',
+                          color: '#d9480f',
+                        }}
+                      >
+                        Unreal Speech パラメータ
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <label
+                            htmlFor="unrealSpeechBitrate"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Bitrate:
+                          </label>
+                          <input
+                            id="unrealSpeechBitrate"
+                            type="text"
+                            value={unrealSpeechBitrate}
+                            onChange={(e) =>
+                              setUnrealSpeechBitrate(e.target.value)
+                            }
+                            placeholder="192k"
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="unrealSpeechCodec"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Codec:
+                          </label>
+                          <select
+                            id="unrealSpeechCodec"
+                            value={unrealSpeechCodec}
+                            onChange={(e) =>
+                              setUnrealSpeechCodec(
+                                e.target.value as UnrealSpeechCodec,
+                              )
+                            }
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            <option value="libmp3lame">MP3</option>
+                            <option value="pcm_mulaw">PCM μ-law</option>
+                            <option value="pcm_s16le">PCM 16-bit</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <label
+                            htmlFor="unrealSpeechSpeed"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Speed:
+                          </label>
+                          <input
+                            id="unrealSpeechSpeed"
+                            type="number"
+                            step="0.05"
+                            value={unrealSpeechSpeed}
+                            onChange={(e) =>
+                              setUnrealSpeechSpeed(e.target.value)
+                            }
+                            placeholder="既定値"
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="unrealSpeechPitch"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Pitch:
+                          </label>
+                          <input
+                            id="unrealSpeechPitch"
+                            type="number"
+                            step="0.05"
+                            value={unrealSpeechPitch}
+                            onChange={(e) =>
+                              setUnrealSpeechPitch(e.target.value)
+                            }
+                            placeholder="既定値"
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="unrealSpeechTemperature"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Temperature:
+                          </label>
+                          <input
+                            id="unrealSpeechTemperature"
+                            type="number"
+                            step="0.05"
+                            value={unrealSpeechTemperature}
+                            onChange={(e) =>
+                              setUnrealSpeechTemperature(e.target.value)
+                            }
+                            placeholder="既定値"
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedVoiceEngine === 'elevenLabs' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        backgroundColor: '#f3f0ff',
+                        borderRadius: '8px',
+                        border: '1px solid #d0bfff',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 'bold',
+                          marginBottom: '8px',
+                          color: '#5f3dc4',
+                        }}
+                      >
+                        ElevenLabs パラメータ
+                      </div>
+
+                      <label
+                        htmlFor="elevenLabsSpeaker"
+                        style={{ display: 'block', marginBottom: '6px' }}
+                      >
+                        Voice:
+                      </label>
+                      <select
+                        id="elevenLabsSpeaker"
+                        value={String(selectedSpeakers.elevenLabs || '')}
+                        onChange={(e) =>
+                          setSelectedSpeakers((prev) => ({
+                            ...prev,
+                            elevenLabs: e.target.value,
+                          }))
+                        }
+                        disabled={
+                          !voiceApiKeys.elevenLabs ||
+                          isFetchingElevenLabsVoices ||
+                          elevenLabsVoices.length === 0
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        {!voiceApiKeys.elevenLabs && (
+                          <option value="">API Keyを入力してください</option>
+                        )}
+                        {voiceApiKeys.elevenLabs &&
+                          isFetchingElevenLabsVoices && (
+                            <option value="">取得中...</option>
+                          )}
+                        {voiceApiKeys.elevenLabs &&
+                          !isFetchingElevenLabsVoices &&
+                          elevenLabsVoices.length === 0 && (
+                            <option value="">
+                              音声一覧を取得できませんでした
+                            </option>
+                          )}
+                        {elevenLabsVoices.map((voice) => (
+                          <option key={voice.voice_id} value={voice.voice_id}>
+                            {voice.category
+                              ? `${voice.name} (${voice.category})`
+                              : voice.name}
+                          </option>
+                        ))}
+                      </select>
+                      {elevenLabsVoiceFetchError && (
+                        <div
+                          style={{
+                            fontSize: '0.8em',
+                            color: '#c92a2a',
+                            marginBottom: '8px',
+                          }}
+                        >
+                          {elevenLabsVoiceFetchError}
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <label
+                            htmlFor="elevenLabsModel"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Model:
+                          </label>
+                          <select
+                            id="elevenLabsModel"
+                            value={elevenLabsModel}
+                            onChange={(e) => setElevenLabsModel(e.target.value)}
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            {ELEVENLABS_MODELS.map((ttsModel) => (
+                              <option key={ttsModel} value={ttsModel}>
+                                {ttsModel}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="elevenLabsOutputFormat"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Output Format:
+                          </label>
+                          <select
+                            id="elevenLabsOutputFormat"
+                            value={elevenLabsOutputFormat}
+                            onChange={(e) =>
+                              setElevenLabsOutputFormat(e.target.value)
+                            }
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            {ELEVENLABS_OUTPUT_FORMATS.map((format) => (
+                              <option key={format} value={format}>
+                                {format}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <label
+                        htmlFor="elevenLabsLanguageCode"
+                        style={{ display: 'block', marginBottom: '6px' }}
+                      >
+                        Language Code:
+                      </label>
+                      <input
+                        id="elevenLabsLanguageCode"
+                        type="text"
+                        value={elevenLabsLanguageCode}
+                        onChange={(e) =>
+                          setElevenLabsLanguageCode(e.target.value)
+                        }
+                        placeholder="ja"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={elevenLabsStability}
+                          onChange={(e) =>
+                            setElevenLabsStability(e.target.value)
+                          }
+                          placeholder="Stability"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={elevenLabsSimilarityBoost}
+                          onChange={(e) =>
+                            setElevenLabsSimilarityBoost(e.target.value)
+                          }
+                          placeholder="Similarity"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={elevenLabsStyle}
+                          onChange={(e) => setElevenLabsStyle(e.target.value)}
+                          placeholder="Style"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <input
+                          type="number"
+                          min="0.7"
+                          max="1.2"
+                          step="0.01"
+                          value={elevenLabsSpeed}
+                          onChange={(e) => setElevenLabsSpeed(e.target.value)}
+                          placeholder="Speed"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <input
+                          type="number"
+                          value={elevenLabsSeed}
+                          onChange={(e) => setElevenLabsSeed(e.target.value)}
+                          placeholder="Seed"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <select
+                          value={elevenLabsUseSpeakerBoost}
+                          onChange={(e) =>
+                            setElevenLabsUseSpeakerBoost(
+                              e.target.value as 'default' | 'true' | 'false',
+                            )
+                          }
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        >
+                          <option value="default">Speaker boost default</option>
+                          <option value="true">Speaker boost on</option>
+                          <option value="false">Speaker boost off</option>
+                        </select>
+                      </div>
+
+                      <select
+                        value={elevenLabsApplyTextNormalization}
+                        onChange={(e) =>
+                          setElevenLabsApplyTextNormalization(
+                            e.target.value as
+                              | 'default'
+                              | ElevenLabsApplyTextNormalization,
+                          )
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        <option value="default">
+                          Text normalization default
+                        </option>
+                        <option value="auto">auto</option>
+                        <option value="on">on</option>
+                        <option value="off">off</option>
+                      </select>
+                    </div>
+                  )}
+
                   {selectedVoiceEngine === 'openai' && (
                     <div
                       style={{
@@ -3892,8 +4545,7 @@ const App: React.FC = () => {
                       <div style={{ fontSize: '0.8em', color: '#364fc7' }}>
                         {voicepeakEmotionMode === 'single'
                           ? 'single tag は従来どおり 1 つの感情をそのまま vpeakserver へ送信します。'
-                          : 'weighted map は vpeakserver v0.2.0 以降で利用できます。neutral は送信対象外で、未入力キーは送信されません。'}
-                        {' '}
+                          : 'weighted map は vpeakserver v0.2.0 以降で利用できます。neutral は送信対象外で、未入力キーは送信されません。'}{' '}
                         Speed と Pitch を空欄にすると vpeakserver
                         のデフォルト値が利用されます。
                       </div>
@@ -4684,7 +5336,8 @@ const App: React.FC = () => {
 
                   {/* Speaker Selection */}
                   {selectedVoiceEngine !== 'none' &&
-                    selectedVoiceEngine !== 'openaiCompatible' && (
+                    selectedVoiceEngine !== 'openaiCompatible' &&
+                    selectedVoiceEngine !== 'elevenLabs' && (
                       <>
                         <label
                           htmlFor="voiceSpeaker"
@@ -4803,6 +5456,13 @@ const App: React.FC = () => {
                               </option>
                             ))}
 
+                          {selectedVoiceEngine === 'unrealSpeech' &&
+                            UNREAL_SPEECH_SPEAKERS.map((speaker) => (
+                              <option key={speaker} value={speaker}>
+                                {speaker}
+                              </option>
+                            ))}
+
                           {selectedVoiceEngine === 'piperPlus' && (
                             <option value="default">default</option>
                           )}
@@ -4824,19 +5484,24 @@ const App: React.FC = () => {
                           ? 'Gemini TTSでは model / language code / style prompt / audio-tag prompt を設定できます'
                           : selectedVoiceEngine === 'xai'
                             ? 'xAI TTSでは language / codec / sample rate / bit rate を設定できます'
-                            : selectedVoiceEngine === 'voicevox'
-                              ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
-                              : selectedVoiceEngine === 'openai'
-                                ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
-                                : selectedVoiceEngine === 'openaiCompatible'
-                                  ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
-                                  : selectedVoiceEngine === 'piperPlus'
-                                    ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
-                                    : selectedVoiceEngine === 'aivisCloud'
-                                      ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
-                                      : selectedVoiceEngine === 'aivisSpeech'
-                                        ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
-                                        : '※ 音声パラメータは最適な値に固定されています'}
+                            : selectedVoiceEngine === 'unrealSpeech'
+                              ? 'Unreal Speechでは v8 /stream endpoint の bitrate / codec / speed / pitch / temperature を設定できます'
+                              : selectedVoiceEngine === 'elevenLabs'
+                                ? 'ElevenLabsでは voice ID / model / output format / voice settings を設定できます'
+                                : selectedVoiceEngine === 'voicevox'
+                                  ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
+                                  : selectedVoiceEngine === 'openai'
+                                    ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
+                                    : selectedVoiceEngine === 'openaiCompatible'
+                                      ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
+                                      : selectedVoiceEngine === 'piperPlus'
+                                        ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
+                                        : selectedVoiceEngine === 'aivisCloud'
+                                          ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                          : selectedVoiceEngine ===
+                                              'aivisSpeech'
+                                            ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
+                                            : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

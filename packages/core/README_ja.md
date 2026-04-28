@@ -1221,6 +1221,8 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 - **OpenAI TTS**: OpenAIのText-to-Speech API
 - **Gemini TTS**: Gemini API ベースの音声合成。`gemini-3.1-flash-tts-preview` を含む preview TTS モデル切り替えと、スタイル / audio-tag プロンプトに対応
 - **xAI TTS**: codec、sample rate、bit rate を切り替え可能な xAI の音声合成
+- **Unreal Speech**: Unreal Speech v8 `/stream` エンドポイントを使う音声合成。bitrate、speed、pitch、codec、temperature を指定可能
+- **ElevenLabs**: ElevenLabs Text to Speech API。model、output format、language code、voice settings、text normalization を指定可能
 - **OpenAI-Compatible TTS**: 自己ホストやサードパーティーの `/v1/audio/speech` 互換エンドポイント
 - **MiniMax**: 24言語対応の多言語TTS、HD品質対応（APIキーとGroupIdの両方が必要 - 使用例を参照）
 - **Piper Plus**: ONNX Runtime Web と OpenJTalk assets を使うブラウザ内完結の WASM TTS
@@ -1275,7 +1277,7 @@ aituber.updateSpeechChunking({
 
 ### カスタムAPIエンドポイント
 
-ローカルでホストされる音声エンジン（VOICEVOX、VoicePeak、AivisSpeech、OpenAI-Compatible TTS）については、カスタムAPIエンドポイントURLを指定することができます：
+ローカルまたは上書き可能な音声エンジン（VOICEVOX、VoicePeak、AivisSpeech、OpenAI-Compatible TTS、Unreal Speech、ElevenLabs）については、カスタムAPIエンドポイントURLを指定することができます：
 
 ```typescript
 // カスタムAPIエンドポイントの設定例
@@ -1329,6 +1331,26 @@ aituber.updateVoiceService({
   apiKey: 'YOUR_MINIMAX_API_KEY',
   groupId: 'YOUR_GROUP_ID', // 本番環境では必須
   endpoint: 'global' // 'global' または 'china'を選択
+});
+
+// Unreal Speechの例
+aituber.updateVoiceService({
+  engineType: 'unrealSpeech',
+  speaker: 'af_bella',
+  apiKey: 'YOUR_UNREAL_SPEECH_API_KEY',
+  unrealSpeechBitrate: '192k',
+  unrealSpeechCodec: 'libmp3lame',
+  unrealSpeechSpeed: 0.3,
+});
+
+// ElevenLabsの例
+aituber.updateVoiceService({
+  engineType: 'elevenLabs',
+  speaker: 'YOUR_ELEVENLABS_VOICE_ID',
+  apiKey: 'YOUR_ELEVENLABS_API_KEY',
+  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsOutputFormat: 'mp3_44100_128',
+  elevenLabsLanguageCode: 'ja',
 });
 
 // GroupIdについて：
