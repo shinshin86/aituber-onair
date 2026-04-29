@@ -58,6 +58,12 @@ import {
   // OpenRouter models
   MODEL_GPT_OSS_20B_FREE,
   MODEL_MOONSHOTAI_KIMI_K2_5,
+  MODEL_MOONSHOTAI_KIMI_LATEST,
+  MODEL_OPENROUTER_AUTO,
+  MODEL_OPENAI_GPT_LATEST,
+  MODEL_OPENAI_GPT_MINI_LATEST,
+  MODEL_OPENAI_GPT_5_5_PRO,
+  MODEL_OPENAI_GPT_5_5,
   MODEL_OPENAI_GPT_5_1_CHAT,
   MODEL_OPENAI_GPT_5_1_CODEX,
   MODEL_OPENAI_GPT_5_MINI,
@@ -65,11 +71,15 @@ import {
   MODEL_OPENAI_GPT_4O,
   MODEL_OPENAI_GPT_4_1_MINI,
   MODEL_OPENAI_GPT_4_1_NANO,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
+  MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
   MODEL_ANTHROPIC_CLAUDE_OPUS_4,
   MODEL_ANTHROPIC_CLAUDE_SONNET_4,
   MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
   MODEL_ANTHROPIC_CLAUDE_3_5_SONNET,
   MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
+  MODEL_GOOGLE_GEMINI_PRO_LATEST,
+  MODEL_GOOGLE_GEMINI_FLASH_LATEST,
   MODEL_GOOGLE_GEMINI_2_5_PRO,
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
   MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
@@ -606,10 +616,40 @@ export const allModels: ProviderModel[] = [
 
   // OpenRouter models
   {
+    id: MODEL_OPENROUTER_AUTO,
+    name: 'Auto Router (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_GPT_OSS_20B_FREE,
     name: 'GPT OSS 20B (Free)',
     provider: 'openrouter',
     default: true,
+  },
+  {
+    id: MODEL_OPENAI_GPT_LATEST,
+    name: 'GPT Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_MINI_LATEST,
+    name: 'GPT Mini Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_5_5_PRO,
+    name: 'GPT-5.5 Pro (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_5_5,
+    name: 'GPT-5.5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
   },
   {
     id: MODEL_OPENAI_GPT_5_1_CHAT,
@@ -654,6 +694,18 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
+    name: 'Claude Sonnet Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
+    name: 'Claude Haiku Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_ANTHROPIC_CLAUDE_OPUS_4,
     name: 'Claude 4 Opus (OpenRouter)',
     provider: 'openrouter',
@@ -680,6 +732,18 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
     name: 'Claude 4.5 Haiku (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_PRO_LATEST,
+    name: 'Gemini Pro Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_FLASH_LATEST,
+    name: 'Gemini Flash Latest (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -716,6 +780,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_ZAI_GLM_4_5_AIR_FREE,
     name: 'GLM-4.5 Air (Free, OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_MOONSHOTAI_KIMI_LATEST,
+    name: 'Kimi Latest (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },

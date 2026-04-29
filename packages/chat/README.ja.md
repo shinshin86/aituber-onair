@@ -289,14 +289,18 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - 無料階層にはレート制限があります（20リクエスト/分）
 - 無料モデル判定はモデルID末尾の `:free` で行います（動的取得した `:free` も同様にレート制限対象）
 - サポート対象モデル（キュレーション済み）:
+  - `openrouter/auto`
   - `openai/gpt-oss-20b:free`
+  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`, `openai/gpt-5.5-pro`, `openai/gpt-5.5`
   - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
   - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
+  - `~anthropic/claude-sonnet-latest`, `~anthropic/claude-haiku-latest`
   - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
   - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
+  - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
   - `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
-  - `moonshotai/kimi-k2.5`
+  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k2.5`
 
 **OpenRouter freeモデルの動的リフレッシュ**
 

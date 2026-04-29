@@ -128,7 +128,7 @@ Use the dropdown to select response length:
 - Best for: Fast responses, cost-effective
 
 **OpenRouter**
-- Models: Curated multi-provider model list (OpenAI/Claude/Gemini/Z.ai/Kimi)
+- Models: Curated multi-provider model list (OpenRouter Auto, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
 - Vision: Depends on selected routed model
 - Best for: Flexible model routing and unified API usage
 - Dynamic Free Models: Click `Fetch free models` to probe currently available `:free` models and append working IDs to the model list
