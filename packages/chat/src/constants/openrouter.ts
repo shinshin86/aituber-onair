@@ -2,8 +2,14 @@ export const ENDPOINT_OPENROUTER_API =
   'https://openrouter.ai/api/v1/chat/completions';
 
 // OpenRouter models
+export const MODEL_OPENROUTER_AUTO = 'openrouter/auto';
 export const MODEL_GPT_OSS_20B_FREE = 'openai/gpt-oss-20b:free';
 export const MODEL_MOONSHOTAI_KIMI_K2_5 = 'moonshotai/kimi-k2.5';
+export const MODEL_MOONSHOTAI_KIMI_LATEST = '~moonshotai/kimi-latest';
+export const MODEL_OPENAI_GPT_LATEST = '~openai/gpt-latest';
+export const MODEL_OPENAI_GPT_MINI_LATEST = '~openai/gpt-mini-latest';
+export const MODEL_OPENAI_GPT_5_5_PRO = 'openai/gpt-5.5-pro';
+export const MODEL_OPENAI_GPT_5_5 = 'openai/gpt-5.5';
 export const MODEL_OPENAI_GPT_5_1_CHAT = 'openai/gpt-5.1-chat';
 export const MODEL_OPENAI_GPT_5_1_CODEX = 'openai/gpt-5.1-codex';
 export const MODEL_OPENAI_GPT_5_MINI = 'openai/gpt-5-mini';
@@ -11,11 +17,17 @@ export const MODEL_OPENAI_GPT_5_NANO = 'openai/gpt-5-nano';
 export const MODEL_OPENAI_GPT_4O = 'openai/gpt-4o';
 export const MODEL_OPENAI_GPT_4_1_MINI = 'openai/gpt-4.1-mini';
 export const MODEL_OPENAI_GPT_4_1_NANO = 'openai/gpt-4.1-nano';
+export const MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST =
+  '~anthropic/claude-sonnet-latest';
+export const MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST =
+  '~anthropic/claude-haiku-latest';
 export const MODEL_ANTHROPIC_CLAUDE_OPUS_4 = 'anthropic/claude-opus-4';
 export const MODEL_ANTHROPIC_CLAUDE_SONNET_4 = 'anthropic/claude-sonnet-4';
 export const MODEL_ANTHROPIC_CLAUDE_3_7_SONNET = 'anthropic/claude-3.7-sonnet';
 export const MODEL_ANTHROPIC_CLAUDE_3_5_SONNET = 'anthropic/claude-3.5-sonnet';
 export const MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU = 'anthropic/claude-haiku-4.5';
+export const MODEL_GOOGLE_GEMINI_PRO_LATEST = '~google/gemini-pro-latest';
+export const MODEL_GOOGLE_GEMINI_FLASH_LATEST = '~google/gemini-flash-latest';
 export const MODEL_GOOGLE_GEMINI_2_5_PRO = 'google/gemini-2.5-pro';
 export const MODEL_GOOGLE_GEMINI_2_5_FLASH = 'google/gemini-2.5-flash';
 export const MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025 =
@@ -32,6 +44,11 @@ export const OPENROUTER_FREE_MODELS = [
 
 // Vision supported models on OpenRouter
 export const OPENROUTER_VISION_SUPPORTED_MODELS = [
+  MODEL_MOONSHOTAI_KIMI_LATEST,
+  MODEL_OPENAI_GPT_LATEST,
+  MODEL_OPENAI_GPT_MINI_LATEST,
+  MODEL_OPENAI_GPT_5_5_PRO,
+  MODEL_OPENAI_GPT_5_5,
   MODEL_OPENAI_GPT_5_1_CHAT,
   MODEL_OPENAI_GPT_5_1_CODEX,
   MODEL_OPENAI_GPT_5_MINI,
@@ -39,10 +56,14 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_OPENAI_GPT_4O,
   MODEL_OPENAI_GPT_4_1_MINI,
   MODEL_OPENAI_GPT_4_1_NANO,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
+  MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
   MODEL_ANTHROPIC_CLAUDE_OPUS_4,
   MODEL_ANTHROPIC_CLAUDE_SONNET_4,
   MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
   MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
+  MODEL_GOOGLE_GEMINI_PRO_LATEST,
+  MODEL_GOOGLE_GEMINI_FLASH_LATEST,
   MODEL_GOOGLE_GEMINI_2_5_PRO,
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
   MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,

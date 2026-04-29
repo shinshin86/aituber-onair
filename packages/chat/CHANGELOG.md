@@ -1,5 +1,17 @@
 # @aituber-onair/chat
 
+## 0.29.0
+
+### Minor Changes
+
+- Added OpenRouter Auto Router (`openrouter/auto`) and latest-family aliases for
+  OpenAI, Claude, Gemini, and Kimi to the OpenRouter curated model list.
+- Added OpenRouter GPT-5.5 (`openai/gpt-5.5`) and GPT-5.5 Pro
+  (`openai/gpt-5.5-pro`) model constants, provider support, tests, and the
+  React basic selector.
+- Updated OpenRouter vision capability metadata and English/Japanese docs for
+  the newly added routed models.
+
 ## 0.28.0
 
 ### Minor Changes
