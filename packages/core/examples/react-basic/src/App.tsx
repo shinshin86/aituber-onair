@@ -928,7 +928,9 @@ const App: React.FC = () => {
 
         if (
           voices.length > 0 &&
-          !voices.some((voice) => voice.voice_id === selectedSpeakers.elevenLabs)
+          !voices.some(
+            (voice) => voice.voice_id === selectedSpeakers.elevenLabs,
+          )
         ) {
           setSelectedSpeakers((prev) => ({
             ...prev,

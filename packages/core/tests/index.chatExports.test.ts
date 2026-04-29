@@ -19,6 +19,16 @@ import {
   MODEL_GROK_4_20_REASONING,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
+  MODEL_OPENROUTER_AUTO,
+  MODEL_MOONSHOTAI_KIMI_LATEST,
+  MODEL_OPENAI_GPT_LATEST,
+  MODEL_OPENAI_GPT_MINI_LATEST,
+  MODEL_OPENAI_GPT_5_5_PRO,
+  MODEL_OPENAI_GPT_5_5,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
+  MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
+  MODEL_GOOGLE_GEMINI_PRO_LATEST,
+  MODEL_GOOGLE_GEMINI_FLASH_LATEST,
   KIMI_VISION_SUPPORTED_MODELS,
   GeminiNanoChatService,
   XAIChatService,
@@ -89,6 +99,25 @@ describe('Core index chat re-exports', () => {
       'https://api.x.ai/v1/chat/completions',
     );
     expect(isXaiVisionModel(MODEL_GROK_4_20_REASONING)).toBe(true);
+  });
+
+  it('re-exports OpenRouter latest routed model constants', () => {
+    expect(MODEL_OPENROUTER_AUTO).toBe('openrouter/auto');
+    expect(MODEL_OPENAI_GPT_LATEST).toBe('~openai/gpt-latest');
+    expect(MODEL_OPENAI_GPT_MINI_LATEST).toBe('~openai/gpt-mini-latest');
+    expect(MODEL_OPENAI_GPT_5_5_PRO).toBe('openai/gpt-5.5-pro');
+    expect(MODEL_OPENAI_GPT_5_5).toBe('openai/gpt-5.5');
+    expect(MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST).toBe(
+      '~anthropic/claude-sonnet-latest',
+    );
+    expect(MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST).toBe(
+      '~anthropic/claude-haiku-latest',
+    );
+    expect(MODEL_GOOGLE_GEMINI_PRO_LATEST).toBe('~google/gemini-pro-latest');
+    expect(MODEL_GOOGLE_GEMINI_FLASH_LATEST).toBe(
+      '~google/gemini-flash-latest',
+    );
+    expect(MODEL_MOONSHOTAI_KIMI_LATEST).toBe('~moonshotai/kimi-latest');
   });
 
   it('exposes refresh result type shape compatibility', () => {

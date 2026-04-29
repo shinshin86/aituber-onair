@@ -1,5 +1,21 @@
 # @aituber-onair/core
 
+## 0.25.8
+
+### Patch Changes
+
+- Synced OpenRouter updates from `@aituber-onair/chat@0.29.0` into the core
+  entry point and React basic example:
+  - re-exported OpenRouter Auto Router, latest-family aliases, GPT-5.5, and
+    GPT-5.5 Pro model constants
+  - updated the React basic example OpenRouter model list so the new routed
+    models are selectable
+- Refreshed core README docs and the React basic example README to mention the
+  expanded OpenRouter routed model coverage.
+- Added core export test coverage for the new OpenRouter model constants.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.29.0
+
 ## 0.25.7
 
 ### Patch Changes
