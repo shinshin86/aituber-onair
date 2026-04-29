@@ -1393,7 +1393,7 @@ Currently, the following AI provider is built-in:
 - **xAI**: Supports Grok 4.20 and Grok 4.1 Fast model families
 - **Z.ai**: Supports models like GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
 - **Kimi**: Supports Kimi K2.6 (`kimi-k2.6`) and Kimi K2.5 (`kimi-k2.5`) with vision support
-- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi)
+- **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router, latest-family aliases, OpenAI GPT-5.5, Claude, Gemini, Z.ai, and Kimi
 - **OpenAI-Compatible**: Supports arbitrary OpenAI-compatible Chat Completions endpoints; vision capability is treated as unknown until the target endpoint/model responds
 
 For OpenRouter free-tier discovery, you can also use

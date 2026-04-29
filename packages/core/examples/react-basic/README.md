@@ -144,7 +144,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Kimi K2.5
 
 **OpenRouter:**
-- Curated multi-provider models (OpenAI, Claude, Gemini, Z.ai, Kimi)
+- Curated multi-provider models (OpenRouter Auto, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
 - `Fetch free models` button to probe currently available `:free` models
 - Dynamic free models are added to the model select list
 - `Max candidates` means "maximum number of `:free` candidates to probe"
