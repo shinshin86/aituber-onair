@@ -1,0 +1,13 @@
+{
+  "name": "chat-discord-bot-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@aituber-onair/chat": "file:../..",
+    "discord.js": "^14.16.3"
+  }
+}

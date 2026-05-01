@@ -62,6 +62,23 @@ Minimal interactive CLI for local/self-hosted LLMs (Ollama/LM Studio/vLLM):
 - Keeps simple conversation history
 - Works with env vars or CLI flags
 
+### [Discord AI Character Bot](./discord-bot/)
+Minimal Discord example that lets an AI character live in your server:
+
+- Responds to direct messages and bot mentions by default
+- Uses a Japanese AI character prompt by default
+- Supports character name/profile customization through environment variables
+- Keeps short per-channel conversation history
+
+### [Slack AI Character Bot](./slack-bot/)
+Minimal Slack Socket Mode example that lets an AI character live in your
+workspace:
+
+- Responds to app mentions and direct messages by default
+- Uses a Japanese AI character prompt by default
+- Supports character name/profile customization through environment variables
+- Replies in Slack threads
+
 ### [Mock OpenAI-Compatible Server](./mock-openai-server/)
 Minimal local server for CI and local validation:
 
