@@ -1,0 +1,13 @@
+{
+  "name": "chat-slack-bot-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@aituber-onair/chat": "file:../..",
+    "@slack/bolt": "^3.21.2"
+  }
+}
