@@ -1,0 +1,38 @@
+{
+  "name": "create-aituber-onair",
+  "version": "0.0.1",
+  "description": "Create an AITuber OnAir app from an official starter template",
+  "type": "module",
+  "bin": {
+    "create-aituber-onair": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": ["dist", "templates", "README.ja.md"],
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "fmt": "biome format . --write",
+    "fmt:check": "biome format .",
+    "lint": "biome lint .",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "aituber",
+    "vtuber",
+    "ai",
+    "create",
+    "cli",
+    "template"
+  ],
+  "author": "shinshin86 (https://github.com/shinshin86)",
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^18.15.0",
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

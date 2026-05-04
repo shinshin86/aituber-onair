@@ -10,11 +10,11 @@
 > **AI VTuber を作るためのオープンソースツールキット**
 >
 > [Neuro-sama](https://www.twitch.tv/vedal987) のような AI VTuber、あるいは [Project AIRI](https://github.com/moeru-ai/airi) のような OSS の AI キャラクターを自分で作りたい開発者・クリエイター向けのツールキットです。
-> ホスティング済みの Web アプリを試す、サンプルを手元で動かす、あるいはチャット・音声・配信・視聴者関係のためのモジュール化された TypeScript パッケージを自分のアプリに組み込む、どの入口からでも始められます。
+> ホスティング済みの Web アプリを試す、スターターアプリを作成する、サンプルを手元で動かす、あるいはチャット・音声・配信・視聴者関係のためのモジュール化された TypeScript パッケージを自分のアプリに組み込む、どの入口からでも始められます。
 
 <p align="center">
   <a href="https://aituberonair.com">Web アプリを試す</a> ・
-  <a href="#2-サンプルアプリをローカルで動かす">サンプルを試す</a> ・
+  <a href="#2-スターターアプリを作成する">スターターを作る</a> ・
   <a href="#パッケージ">パッケージ一覧を見る</a>
 </p>
 
@@ -34,7 +34,25 @@
 
 [AITuber OnAir](https://aituberonair.com) は `@aituber-onair/core` を使って作られた、独立した AITuber 配信 Web アプリです。ツールキット全体の雰囲気をいちばん早く掴めると同時に、このライブラリで実際にどこまで作れるかを示す実践的なリファレンスにもなっています。セットアップ不要。
 
-### 2. サンプルアプリをローカルで動かす
+### 2. スターターアプリを作成する
+
+`create-aituber-onair` を使うと、公式の PNGTuber / VRM スターター
+テンプレートから自分の AITuber OnAir アプリを作成できます。
+
+```bash
+npm create aituber-onair@latest
+```
+
+CLI がプロジェクト名、テンプレート、依存関係をインストールするかどうかを
+対話形式で確認します。プロジェクト名を先に指定することもできます。
+
+```bash
+npm create aituber-onair@latest my-aituber
+cd my-aituber
+npm run dev
+```
+
+### 3. サンプルアプリをローカルで動かす
 
 `@aituber-onair/core` をベースにしたフル機能の React サンプルを3種類用意しています。プロジェクトに合うアバター方式を選んでください。LLM / TTS プロバイダー対応範囲と **Settings** UI はどれも共通です。
 
@@ -77,7 +95,7 @@ npm run dev
 
 いずれの場合もブラウザで `http://localhost:5173` を開き、**Settings** から API キーとプロバイダー設定を入力してください。
 
-### 3. パッケージを使って自分のアプリに組み込む
+### 4. パッケージを使って自分のアプリに組み込む
 
 必要なものだけをインストールして、自分のアプリに差し込めます。
 
@@ -102,6 +120,14 @@ await chat.processChat(
 プロバイダーの設定や詳しい使い方は、各パッケージの README を参照してください。
 
 ## パッケージ
+
+### [create-aituber-onair](./packages/create-aituber-onair/README.ja.md)
+
+公式スターターテンプレートから AITuber OnAir アプリを作成する CLI。
+現時点では、スターターアセット同梱の PNGTuber / VRM テンプレートに対応しています。
+```bash
+npm create aituber-onair@latest
+```
 
 ### [@aituber-onair/core](./packages/core/README_ja.md)
 
@@ -160,7 +186,7 @@ npm install @aituber-onair/kizuna
 ## なぜ AITuber OnAir か
 
 - 実運用で揉まれている — ライブ運用中の AITuber 配信 Web アプリ [AITuber OnAir](https://aituberonair.com) の裏側で動いているので、実際のプロダクトが依存しているのと同じコードの上に構築できます
-- 好きな入口から始められる: ホスト済み Web アプリ / セルフホストのサンプル / モジュール化された npm パッケージ
+- 好きな入口から始められる: ホスト済み Web アプリ / スターター CLI / セルフホストのサンプル / モジュール化された npm パッケージ
 - AITuber を作る人が実際に使うプロバイダーを第一級でサポート: チャットは OpenAI / Claude / Gemini、音声は VOICEVOX / OpenAI TTS / AIVIS Speech ほか
 - チャット・音声・配信（YouTube / Twitch / WebSocket）・視聴者関係を、ひとつの一貫したスタックでまとめて扱える
 - MIT ライセンスの TypeScript なので、ホスティング・データ・連携先を自分でコントロールできる
@@ -170,6 +196,7 @@ npm install @aituber-onair/kizuna
 ```txt
 aituber-onair/
 └── packages/
+    ├── create-aituber-onair/ # スターターテンプレート同梱の npm create CLI
     ├── core/             # AITuberOnAirCore、メモリ、オーケストレーション
     ├── chat/             # LLM プロバイダー、ストリーミング、ツール、MCP
     ├── voice/            # TTS エンジン、感情、再生

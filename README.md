@@ -10,11 +10,11 @@
 > **Open source toolkit for building AI VTubers**
 >
 > For developers and creators who want to build AI VTubers like [Neuro-sama](https://www.twitch.tv/vedal987), or open-source AI characters in the spirit of [Project AIRI](https://github.com/moeru-ai/airi).
-> Start from the hosted web app, self-host a working example, or assemble your own stack from modular TypeScript packages for chat, voice, streaming, and viewer relationships.
+> Start from the hosted web app, scaffold a starter app, self-host a working example, or assemble your own stack from modular TypeScript packages for chat, voice, streaming, and viewer relationships.
 
 <p align="center">
   <a href="https://aituberonair.com">Try the hosted web app</a> ・
-  <a href="#2-run-an-example-app-locally">See example apps</a> ・
+  <a href="#2-create-a-starter-app">Create a starter app</a> ・
   <a href="#packages">Browse packages</a>
 </p>
 
@@ -34,7 +34,25 @@
 
 [AITuber OnAir](https://aituberonair.com) is a full, standalone AITuber streaming web app built on top of `@aituber-onair/core`. It's both the quickest way to experience the toolkit end-to-end and a working reference for what you can ship with it. No setup required.
 
-### 2. Run an example app locally
+### 2. Create a starter app
+
+Use `create-aituber-onair` to scaffold your own app from an official PNGTuber
+or VRM starter template.
+
+```bash
+npm create aituber-onair@latest
+```
+
+The CLI asks for a project name, template, and whether to install
+dependencies. You can also pass the project name up front:
+
+```bash
+npm create aituber-onair@latest my-aituber
+cd my-aituber
+npm run dev
+```
+
+### 3. Run an example app locally
 
 Three full, ready-to-run React apps built on `@aituber-onair/core`. Pick the
 avatar style that fits your project. All three share the same broad LLM / TTS
@@ -82,7 +100,7 @@ npm run dev
 
 Open `http://localhost:5173` in any case, then set API keys and provider options in **Settings**.
 
-### 3. Build your own with the packages
+### 4. Build your own with the packages
 
 Install only what you need and drop it into your own app:
 
@@ -107,6 +125,14 @@ await chat.processChat(
 See each package README for provider setup and fuller usage.
 
 ## Packages
+
+### [create-aituber-onair](./packages/create-aituber-onair/README.md)
+
+CLI for creating an AITuber OnAir app from an official starter template.
+Currently includes PNGTuber and VRM templates with bundled starter assets.
+```bash
+npm create aituber-onair@latest
+```
 
 ### [@aituber-onair/core](./packages/core/README.md)
 
@@ -165,7 +191,7 @@ npm install @aituber-onair/kizuna
 ## Why AITuber OnAir
 
 - Proven in production — powers [AITuber OnAir](https://aituberonair.com), a live AITuber streaming web app, so you're building on the same code path a real product ships on
-- Pick any entry point: hosted web app, self-hosted example, or modular npm packages
+- Pick any entry point: hosted web app, starter CLI, self-hosted example, or modular npm packages
 - First-class coverage of the providers AITuber builders actually use — OpenAI / Claude / Gemini for chat, VOICEVOX / OpenAI TTS / AIVIS Speech and more for voice
 - Chat, voice, streaming (YouTube / Twitch / WebSocket), and viewer relationships in a single, consistent stack
 - MIT-licensed TypeScript — you keep control of hosting, data, and integrations
@@ -175,6 +201,7 @@ npm install @aituber-onair/kizuna
 ```txt
 aituber-onair/
 └── packages/
+    ├── create-aituber-onair/ # npm create CLI with starter templates
     ├── core/             # AITuberOnAirCore, memory, orchestration
     ├── chat/             # LLM providers, streaming, tools, MCP
     ├── voice/            # TTS engines, emotion, playback
