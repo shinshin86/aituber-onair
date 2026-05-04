@@ -128,6 +128,8 @@ See each package README for provider setup and fuller usage.
 
 ### [create-aituber-onair](./packages/create-aituber-onair/README.md)
 
+<img src="./packages/create-aituber-onair/images/create-aituber-onair.png" alt="create-aituber-onair logo" width="240" />
+
 CLI for creating an AITuber OnAir app from an official starter template.
 Currently includes PNGTuber and VRM templates with bundled starter assets.
 ```bash

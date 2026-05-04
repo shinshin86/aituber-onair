@@ -123,6 +123,8 @@ await chat.processChat(
 
 ### [create-aituber-onair](./packages/create-aituber-onair/README.ja.md)
 
+<img src="./packages/create-aituber-onair/images/create-aituber-onair.png" alt="create-aituber-onair ロゴ" width="240" />
+
 公式スターターテンプレートから AITuber OnAir アプリを作成する CLI。
 現時点では、スターターアセット同梱の PNGTuber / VRM テンプレートに対応しています。
 ```bash
