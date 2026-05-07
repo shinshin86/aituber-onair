@@ -6,6 +6,9 @@ import { ToolChatCompletion } from '../types/toolChat';
  * Abstracts interaction with AI models
  */
 export interface ChatService {
+  /** Provider name for provider-specific orchestration decisions */
+  readonly provider: string;
+
   /**
    * Get the model name
    * @returns Model name

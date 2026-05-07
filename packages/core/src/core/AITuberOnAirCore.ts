@@ -523,9 +523,8 @@ export class AITuberOnAirCore extends EventEmitter {
     try {
       // Apply temporary voice options if provided
       if (options?.temporaryVoiceOptions) {
-        const serviceWithOptions = this.voiceService as any;
         const currentOptions =
-          (serviceWithOptions.options as Record<string, unknown>) || {};
+          this.voiceService.getOptions() as unknown as Record<string, unknown>;
 
         const temporaryVoiceOptionsRecord =
           options.temporaryVoiceOptions as Record<string, unknown>;
@@ -863,14 +862,9 @@ export class AITuberOnAirCore extends EventEmitter {
    * @returns Provider information object
    */
   getProviderInfo(): { name: string; model?: string } {
-    // Safe method to get internal information without depending on specific provider implementation
-    // If only available in specific provider implementations, cast to any type
-    const provider = (this.chatService as any).provider;
-    const model = (this.chatService as any).model;
-
     return {
-      name: provider ? provider : 'unknown',
-      model: model ? model : undefined,
+      name: this.chatService.provider || 'unknown',
+      model: this.chatService.getModel(),
     };
   }
 

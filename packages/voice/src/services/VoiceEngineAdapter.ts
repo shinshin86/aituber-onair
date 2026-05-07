@@ -249,6 +249,13 @@ export class VoiceEngineAdapter implements VoiceService {
   }
 
   /**
+   * Get current service settings
+   */
+  getOptions(): VoiceServiceOptions {
+    return this.options;
+  }
+
+  /**
    * Stop playback
    */
   stop(): void {
