@@ -471,6 +471,11 @@ export interface VoiceService {
   isPlaying(): boolean;
 
   /**
+   * Get current service settings
+   */
+  getOptions(): VoiceServiceOptions;
+
+  /**
    * Stop playback
    */
   stop(): void;

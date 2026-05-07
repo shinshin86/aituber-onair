@@ -258,7 +258,7 @@ export class ChatProcessor extends EventEmitter {
       await this.runToolLoop<Message | MessageWithVision>(
         [...baseMessages, visionMessage],
         (msgs, stream, cb) =>
-          (this.chatService as any).visionChatOnce(
+          this.chatService.visionChatOnce(
             msgs as MessageWithVision[],
             stream,
             cb,
@@ -351,7 +351,7 @@ export class ChatProcessor extends EventEmitter {
   }
 
   private isClaudeProvider(): boolean {
-    return (this.chatService as any).provider === 'claude';
+    return this.chatService.provider === 'claude';
   }
 
   private getToolUseBlocks(blocks: ToolChatBlock[]): ToolUseBlock[] {

@@ -7,6 +7,7 @@ import {
   MODEL_GPT_5_4_MINI,
 } from '../../src/constants';
 import { OpenAIChatService } from '../../src/services/providers/openai/OpenAIChatService';
+import { parseOpenAIResponsesOneShot } from '../../src/services/providers/openai/responsesParser';
 import type { Message } from '../../src/types';
 
 const messages: Message[] = [{ role: 'user', content: 'hello' }];
@@ -80,15 +81,7 @@ describe('OpenAIChatService GPT-5 token budgeting', () => {
   });
 
   it('surfaces incomplete metadata from responses one-shot payloads', () => {
-    const service = new OpenAIChatService(
-      'test-key',
-      MODEL_GPT_5_4_MINI,
-      MODEL_GPT_5_4_MINI,
-      undefined,
-      ENDPOINT_OPENAI_RESPONSES_API,
-    );
-
-    const result = (service as any).parseResponsesOneShot({
+    const result = parseOpenAIResponsesOneShot({
       status: 'incomplete',
       incomplete_details: { reason: 'max_output_tokens' },
       usage: {
