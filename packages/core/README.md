@@ -1390,7 +1390,7 @@ Currently, the following AI provider is built-in:
 - **Gemini**: Supports models like Gemma 4 31B IT, Gemma 4 26B A4B IT, Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
 - **Gemini Nano**: Supports the built-in Chrome `gemini-nano` model without an API key (Chrome 138+ with Prompt API flags enabled)
 - **Claude**: Supports current Claude API model IDs including Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
-- **xAI**: Supports Grok 4.20 and Grok 4.1 Fast model families
+- **xAI**: Supports Grok 4.3, Grok 4.20, and Grok 4.1 Fast model families
 - **Z.ai**: Supports models like GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
 - **Kimi**: Supports Kimi K2.6 (`kimi-k2.6`) and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router, latest-family aliases, OpenAI GPT-5.5, Claude, Gemini, Z.ai, and Kimi

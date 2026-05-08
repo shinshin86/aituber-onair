@@ -1,4 +1,5 @@
 import {
+  MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_20_NON_REASONING,
   MODEL_GROK_4_1_FAST_REASONING,
@@ -6,6 +7,7 @@ import {
 } from '@aituber-onair/core';
 
 export const xaiModels = [
+  MODEL_GROK_4_3,
   MODEL_GROK_4_1_FAST_NON_REASONING,
   MODEL_GROK_4_1_FAST_REASONING,
   MODEL_GROK_4_20_NON_REASONING,

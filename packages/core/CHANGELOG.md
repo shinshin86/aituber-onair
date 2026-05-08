@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.25.9
+
+### Patch Changes
+
+- Synced xAI Grok 4.3 support from `@aituber-onair/chat@0.30.0` into the
+  core entry point and React basic example:
+  - re-exported `MODEL_GROK_4_3`
+  - updated the React basic example xAI model list so Grok 4.3 is selectable
+- Refreshed core README docs and the React basic example README to mention
+  Grok 4.3 support.
+- Added core export test coverage for the new Grok 4.3 model constant.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.30.0
+
 ## 0.25.8
 
 ### Patch Changes

@@ -16,6 +16,7 @@ import {
   MODEL_GPT_5_4_PRO,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GLM_5_TURBO,
+  MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
@@ -94,11 +95,12 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports xAI chat provider items', () => {
     expect(typeof XAIChatService).toBe('function');
+    expect(MODEL_GROK_4_3).toBe('grok-4.3');
     expect(MODEL_GROK_4_20_REASONING).toBe('grok-4.20-0309-reasoning');
     expect(ENDPOINT_XAI_CHAT_COMPLETIONS_API).toBe(
       'https://api.x.ai/v1/chat/completions',
     );
-    expect(isXaiVisionModel(MODEL_GROK_4_20_REASONING)).toBe(true);
+    expect(isXaiVisionModel(MODEL_GROK_4_3)).toBe(true);
   });
 
   it('re-exports OpenRouter latest routed model constants', () => {
