@@ -57,6 +57,16 @@ async function main(): Promise<void> {
 
   console.log('');
   console.log('After launch, open Settings and configure your LLM / TTS keys.');
+
+  if (result.template === 'live2d') {
+    console.log('');
+    console.log('Live2D setup:');
+    console.log(
+      '  1. Place your Live2D model folder under models/<model-name>/',
+    );
+    console.log('  2. Place live2dcubismcore.min.js under public/scripts/');
+    console.log('See README.md for Live2D license and setup notes.');
+  }
 }
 
 async function promptForMissingOptions(

@@ -1,0 +1,31 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Live2D assets are user-provided and may have separate licenses.
+models/*
+!models/.gitkeep
+public/scripts/*
+!public/scripts/.gitkeep
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+.claude/settings.local.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

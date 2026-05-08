@@ -13,9 +13,9 @@ import {
 const fixtureTemplateRoot = path.resolve('templates');
 
 test('parseArgs reads project name and template', () => {
-  assert.deepEqual(parseArgs(['my-app', '--template', 'vrm', '--install']), {
+  assert.deepEqual(parseArgs(['my-app', '--template', 'live2d', '--install']), {
     targetDir: 'my-app',
-    template: 'vrm',
+    template: 'live2d',
     install: true,
   });
 });
@@ -28,7 +28,7 @@ test('parseArgs reads no-install flag', () => {
 });
 
 test('parseArgs rejects unknown templates', () => {
-  assert.throws(() => parseArgs(['my-app', '--template', 'live2d']), CliError);
+  assert.throws(() => parseArgs(['my-app', '--template', 'unknown']), CliError);
 });
 
 test('toPackageName converts directory names to npm-safe names', () => {
@@ -75,6 +75,33 @@ test('createProject adds direct VRM runtime dependencies', async () => {
   );
   assert.equal(packageJson.dependencies['@pixiv/three-vrm'], '^1.0.9');
   assert.equal(packageJson.dependencies.three, '^0.151.3');
+});
+
+test('createProject copies live2d template without licensed assets', async () => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'create-aituber-onair-'));
+  const result = await createProject({
+    cwd,
+    targetDir: 'live2d-app',
+    template: 'live2d',
+    install: false,
+    templateRoot: fixtureTemplateRoot,
+  });
+
+  const packageJson = JSON.parse(
+    await readFile(path.join(result.projectDir, 'package.json'), 'utf8'),
+  );
+  const modelFiles = await readdir(path.join(result.projectDir, 'models'));
+  const scriptFiles = await readdir(
+    path.join(result.projectDir, 'public', 'scripts'),
+  );
+
+  assert.equal(
+    packageJson.dependencies['pixi-live2d-display-lipsyncpatch'],
+    'github:shinshin86/pixi-live2d-display-lipsyncpatch#release/v0.5.0-ls-7-noMaskFix',
+  );
+  assert.equal(packageJson.dependencies['pixi.js'], '^7.4.3');
+  assert.deepEqual(modelFiles, ['.gitkeep']);
+  assert.deepEqual(scriptFiles, ['.gitkeep']);
 });
 
 test('createProject runs npm install when requested', async () => {
