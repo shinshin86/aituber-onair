@@ -1,5 +1,14 @@
 # create-aituber-onair
 
+## 0.1.0
+
+### Minor Changes
+
+- Added a `live2d` starter template aligned with the React Live2D core
+  example.
+- Added Live2D setup guidance for user-provided model files and Cubism Core
+  runtime files.
+
 ## 0.0.1
 
 ### Minor Changes
