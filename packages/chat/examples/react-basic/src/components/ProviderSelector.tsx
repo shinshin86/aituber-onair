@@ -97,6 +97,7 @@ import {
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,
   // xAI models
+  MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_20_NON_REASONING,
   MODEL_GROK_4_1_FAST_REASONING,
@@ -853,6 +854,12 @@ export const allModels: ProviderModel[] = [
   },
 
   // xAI models
+  {
+    id: MODEL_GROK_4_3,
+    name: 'Grok 4.3',
+    provider: 'xai',
+    default: false,
+  },
   {
     id: MODEL_GROK_4_20_REASONING,
     name: 'Grok 4.20 Reasoning',

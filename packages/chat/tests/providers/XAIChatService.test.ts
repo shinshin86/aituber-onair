@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+  MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_1_FAST_NON_REASONING,
 } from '../../src/constants';
@@ -85,6 +86,25 @@ describe('XAIChatService', () => {
       ENDPOINT_XAI_CHAT_COMPLETIONS_API,
       expect.objectContaining({
         model: MODEL_GROK_4_1_FAST_NON_REASONING,
+        stream: false,
+        messages,
+      }),
+      { Authorization: 'Bearer test-key' },
+    );
+  });
+
+  it('sends Grok 4.3 requests through the xAI chat completions endpoint', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new XAIChatService('test-key', MODEL_GROK_4_3);
+
+    await service.chatOnce(messages, false);
+
+    expect(postSpy).toHaveBeenCalledWith(
+      ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+      expect.objectContaining({
+        model: MODEL_GROK_4_3,
         stream: false,
         messages,
       }),

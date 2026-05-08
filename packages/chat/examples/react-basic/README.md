@@ -141,6 +141,11 @@ Use the dropdown to select response length:
 - Vision: GLM-4.6V family (`glm-5` and `glm-5-turbo` are currently text-only)
 - Best for: OpenAI-compatible GLM integration
 
+**xAI**
+- Models: Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, Grok 4-1 Fast Reasoning/Non-Reasoning
+- Vision: Supported
+- Best for: Grok models with OpenAI-compatible API
+
 **Kimi**
 - Models: Kimi K2.6, Kimi K2.5
 - Vision: Supported

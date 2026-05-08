@@ -352,14 +352,14 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 ```typescript
 const xaiService = ChatServiceFactory.createChatService('xai', {
   apiKey: process.env.XAI_API_KEY,
-  model: 'grok-4-1-fast-non-reasoning',
-  visionModel: 'grok-4-1-fast-non-reasoning', // 任意: xAI の全モデルがビジョン対応
+  model: 'grok-4.3',
+  visionModel: 'grok-4.3', // 任意: xAI の全モデルがビジョン対応
 });
 ```
 
 注意:
 - xAIはOpenAI互換のChat Completionsを利用します。
-- 対応モデル: `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
+- 対応モデル: `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
 - すべての対応 xAI モデルでビジョンとツール・関数呼び出しを利用できます。
 
 #### Kimi（Moonshot）
@@ -691,7 +691,7 @@ console.log(modelLevel); // 'unknown'
 - **Claude**: Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
-- **xAI**: Grok 4.20 の Reasoning/Non-Reasoning と Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
+- **xAI**: Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
 - **Kimi**: Kimi K2.6（`kimi-k2.6`）と Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
 - **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Chrome 138以降でPrompt APIフラグの有効化が必要。非ストリーミング、ビジョン非対応
 

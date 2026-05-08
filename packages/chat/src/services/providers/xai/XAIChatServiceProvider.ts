@@ -1,5 +1,6 @@
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+  MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_20_NON_REASONING,
   MODEL_GROK_4_1_FAST_REASONING,
@@ -61,6 +62,7 @@ export class XAIChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_GROK_4_3,
       MODEL_GROK_4_20_REASONING,
       MODEL_GROK_4_20_NON_REASONING,
       MODEL_GROK_4_1_FAST_REASONING,
