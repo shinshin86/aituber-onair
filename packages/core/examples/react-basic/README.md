@@ -143,6 +143,11 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Kimi K2.6
 - Kimi K2.5
 
+**xAI:**
+- Grok 4.3
+- Grok 4.20 series
+- Grok 4.1 Fast series
+
 **OpenRouter:**
 - Curated multi-provider models (OpenRouter Auto, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
 - `Fetch free models` button to probe currently available `:free` models
