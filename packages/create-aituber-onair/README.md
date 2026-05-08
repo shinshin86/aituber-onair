@@ -23,6 +23,7 @@ npm run dev
 
 - `pngtuber`: 2D PNG avatar app with bundled avatar image assets
 - `vrm`: 3D VRM avatar app with bundled `miko.vrm` and idle animation assets
+- `live2d`: Live2D avatar app without bundled Live2D model assets
 
 ## Usage
 
@@ -43,6 +44,7 @@ Advanced template selection:
 ```bash
 npm create aituber-onair@latest my-aituber -- --template pngtuber
 npm create aituber-onair@latest my-vrm-aituber -- --template vrm
+npm create aituber-onair@latest my-live2d-aituber -- --template live2d
 ```
 
 Install dependencies during project creation:
@@ -61,3 +63,7 @@ After launch, open Settings in the app and configure your LLM / TTS provider
 API keys. The generated app stores sample credentials in browser
 `localStorage`, so do not use production-scope keys on a shared or public
 origin.
+
+For the `live2d` template, Live2D model files and
+`public/scripts/live2dcubismcore.min.js` are not bundled. Place them yourself
+after project creation, following the generated app README.

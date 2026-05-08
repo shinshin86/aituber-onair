@@ -23,6 +23,7 @@ npm run dev
 
 - `pngtuber`: PNG アバター画像アセット同梱の 2D PNGTuber アプリ
 - `vrm`: `miko.vrm` と待機アニメーション同梱の 3D VRM アプリ
+- `live2d`: Live2D モデルアセットを同梱しない Live2D アプリ
 
 ## 使い方
 
@@ -43,6 +44,7 @@ npm create aituber-onair@latest my-aituber
 ```bash
 npm create aituber-onair@latest my-aituber -- --template pngtuber
 npm create aituber-onair@latest my-vrm-aituber -- --template vrm
+npm create aituber-onair@latest my-live2d-aituber -- --template live2d
 ```
 
 作成時に依存関係もインストールする場合:
@@ -61,3 +63,7 @@ npm create aituber-onair@latest my-aituber -- --no-install
 設定してください。生成されたアプリはサンプル用の認証情報をブラウザの
 `localStorage` に保存します。共有環境や公開 origin では、本番権限のキーを
 使わないでください。
+
+`live2d` テンプレートには、Live2D モデルファイルと
+`public/scripts/live2dcubismcore.min.js` は同梱していません。プロジェクト
+作成後、生成されたアプリの README に従って利用者自身で配置してください。

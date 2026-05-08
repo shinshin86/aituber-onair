@@ -190,7 +190,7 @@ Usage:
   create-aituber-onair [project-directory] [options]
 
 Options:
-  -t, --template <name>  Template to use: pngtuber, vrm
+  -t, --template <name>  Template to use: pngtuber, vrm, live2d
       --install          Run npm install after creating the project
       --no-install       Do not run npm install
   -y, --yes              Use defaults for omitted values
@@ -258,6 +258,15 @@ async function updatePackageJson(
       ...packageJson.dependencies,
       '@pixiv/three-vrm': '^1.0.9',
       three: '^0.151.3',
+    };
+  }
+
+  if (template === 'live2d') {
+    packageJson.dependencies = {
+      ...packageJson.dependencies,
+      'pixi-live2d-display-lipsyncpatch':
+        'github:shinshin86/pixi-live2d-display-lipsyncpatch#release/v0.5.0-ls-7-noMaskFix',
+      'pixi.js': '^7.4.3',
     };
   }
 
