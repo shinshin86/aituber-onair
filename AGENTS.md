@@ -36,6 +36,24 @@
 - Prefer AAA pattern and focused unit tests; include environment differences (browser vs Node).
 - Coverage: `npm -w <name> run test:coverage`.
 
+## Starter / CLI Smoke Testing
+- When smoke testing generated starter projects, create the project outside the
+  repository or in a package-local ignored `tmp/` directory. Prefer an
+  OS-managed temporary directory for dependency-isolation checks.
+- Use a dedicated npm cache for each starter smoke test via `npm_config_cache`.
+  Avoid reusing the repository npm cache or a cache nested inside an existing npm
+  workspace when validating fresh installs.
+- Keep generated starter paths and cache paths generic in notes and commits; do
+  not record machine-specific absolute paths, user names, or other local
+  environment details.
+- For `create-aituber-onair` template validation, test the packaged CLI flow
+  from a local tarball, then run the generated app's normal user-facing steps:
+  `npm install`, `npm run build`, and `npm run dev` when applicable.
+- If a fresh starter install fails with native or optional dependency version
+  mismatches, first retry in an isolated temporary directory with a fresh npm
+  cache before changing template dependencies. Monorepo/workspace context and
+  stale caches can affect GitHub dependencies and optional binary packages.
+
 ## Commit & Pull Requests
 - Conventional Commits: `feat(core): ...`, `fix(manneri): ...`, `test(voice): ...`.
 - PRs: clear description, linked issues, screenshots for example/UI changes.
