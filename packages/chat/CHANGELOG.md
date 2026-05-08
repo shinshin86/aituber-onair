@@ -1,5 +1,14 @@
 # @aituber-onair/chat
 
+## 0.30.0
+
+### Minor Changes
+
+- Added xAI Grok 4.3 (`grok-4.3`) to the xAI constants, provider supported
+  models, vision-supported model list, tests, and the React basic selector.
+- Updated English/Japanese docs and the React basic example docs to document
+  Grok 4.3 support.
+
 ## 0.29.0
 
 ### Minor Changes

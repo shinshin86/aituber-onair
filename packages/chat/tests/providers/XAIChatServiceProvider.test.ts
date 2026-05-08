@@ -3,6 +3,7 @@ import { XAIChatServiceProvider } from '../../src/services/providers/xai/XAIChat
 import type { XAIChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+  MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_20_NON_REASONING,
   MODEL_GROK_4_1_FAST_REASONING,
@@ -30,6 +31,7 @@ describe('XAIChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GROK_4_3,
         MODEL_GROK_4_20_REASONING,
         MODEL_GROK_4_20_NON_REASONING,
         MODEL_GROK_4_1_FAST_REASONING,
@@ -55,6 +57,7 @@ describe('XAIChatServiceProvider', () => {
 
   describe('supportsVisionForModel', () => {
     it('should return true for all supported models', () => {
+      expect(provider.supportsVisionForModel(MODEL_GROK_4_3)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GROK_4_20_REASONING)).toBe(
         true,
       );
@@ -98,15 +101,15 @@ describe('XAIChatServiceProvider', () => {
     it('should use the main model as vision model when it supports vision', () => {
       const options: XAIChatServiceOptions = {
         apiKey: 'test-api-key',
-        model: MODEL_GROK_4_20_REASONING,
+        model: MODEL_GROK_4_3,
       };
 
       provider.createChatService(options);
 
       expect(XAIChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GROK_4_20_REASONING,
-        MODEL_GROK_4_20_REASONING,
+        MODEL_GROK_4_3,
+        MODEL_GROK_4_3,
         undefined,
         ENDPOINT_XAI_CHAT_COMPLETIONS_API,
         undefined,
