@@ -24,7 +24,7 @@ This directory contains examples demonstrating how to use the @aituber-onair/cha
 ## 📁 Example Structure
 
 ### [Node.js Examples](./node-basic/)
-Simple Node.js examples demonstrating core functionality:
+Simple JavaScript runtime examples demonstrating core functionality:
 
 - **Basic Usage** (`index.js`) - Getting started with all providers
 - **OpenAI Example** (`openai-example.js`) - GPT-4, o1 models, response formats
@@ -61,6 +61,14 @@ Minimal interactive CLI for local/self-hosted LLMs (Ollama/LM Studio/vLLM):
 - Supports streaming output
 - Keeps simple conversation history
 - Works with env vars or CLI flags
+
+### [Agent SDK Providers](./agent-providers/)
+JavaScript runtime examples for Agent SDK providers:
+
+- Uses `@aituber-onair/chat/agent`
+- Supports `codex-sdk` and `copilot-sdk`
+- Requires the corresponding SDK package and local SDK authentication
+- Text chat only; browser/GAS/UMD environments are not supported
 
 ### [Discord AI Character Bot](./discord-bot/)
 Minimal Discord example that lets an AI character live in your server:
@@ -191,7 +199,7 @@ const tools = [{
 
 ## 📊 Provider Comparison
 
-The table below focuses on the primary providers used in the core Node.js examples.
+The table below focuses on the primary providers used in the core JavaScript runtime examples.
 
 | Feature | OpenAI | Claude | Gemini |
 |---------|--------|--------|--------|

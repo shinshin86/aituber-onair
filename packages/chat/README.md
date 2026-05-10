@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, and Kimi.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, and Agent SDK providers.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, and Kimi
+- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, and Agent SDK providers
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -14,6 +14,7 @@ Chat and LLM API integration library for AITuber OnAir. This package provides a 
 - 📝 **Emotion Detection**: Extract emotions from AI responses
 - 🎯 **Response Length Control**: Configure response lengths with presets or custom token limits
 - 🔌 **Model Context Protocol (MCP)**: Support for MCP servers
+- 🧩 **Agent SDK Providers**: Optional `@aituber-onair/chat/agent` entry for agent SDK providers without adding agent SDK packages to the default install
 
 ## Installation
 
@@ -88,6 +89,74 @@ Notes:
 - Set your API key in Script Properties: `OPENAI_API_KEY`.
 - See `packages/chat/examples/gas-basic` for a working example. The Apps Script manifest (`appsscript.json`) is optional; modern projects default to V8. Add one only if you need custom settings (e.g., time zone).
 
+## Agent SDK Providers
+
+For agent SDKs such as Codex SDK and Copilot SDK, use the separate
+`@aituber-onair/chat/agent` entry point:
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+```
+
+This entry is not part of the browser/GAS UMD build. It loads agent SDK packages
+dynamically, so install only the agent SDK package used by your JavaScript runtime application:
+
+```bash
+npm install @aituber-onair/chat @openai/codex-sdk
+# or
+npm install @aituber-onair/chat @github/copilot-sdk
+```
+
+Minimal Codex SDK example:
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const chatService = createAgentChatService('codex-sdk', {
+  workingDirectory: process.cwd(),
+  skipGitRepoCheck: true,
+});
+
+const response = await chatService.chatOnce(
+  [{ role: 'user', content: 'Describe this project in one sentence.' }],
+  false,
+);
+
+console.log(response);
+```
+
+For Copilot SDK:
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const chatService = createAgentChatService('copilot-sdk', {
+  model: 'gpt-4.1',
+});
+
+const response = await chatService.chatOnce(
+  [{ role: 'user', content: 'Say hello in one sentence.' }],
+  false,
+);
+
+console.log(response);
+```
+
+Copilot SDK requires a permission request handler when creating a session. This
+package defaults to denying SDK-managed tool execution for safety. If your
+application wants to allow it, pass `onPermissionRequest` explicitly.
+
+```typescript
+const chatService = createAgentChatService('copilot-sdk', {
+  model: 'gpt-4.1',
+  onPermissionRequest: () => ({ kind: 'approve-once' }),
+});
+```
+
+Authenticate the corresponding SDK locally before using these providers. If the
+SDK package is missing or authentication is not ready, the provider throws an
+error at runtime with the original SDK error details.
+
 ## Usage
 
 ### Basic Chat
@@ -161,6 +230,77 @@ Notes:
 - The `endpoint` must be a full URL (not shorthand like `'responses'`).
 - The target server must satisfy the OpenAI-compatible API contract.
 - This package does not depend on any specific local LLM product.
+
+#### Agent SDK Providers
+
+`@aituber-onair/chat/agent` exposes experimental providers for agent SDKs such
+as Codex SDK and Copilot SDK. These providers are not included in the
+browser/GAS UMD entry point and do not use API keys.
+
+Install only the agent SDK package you actually use in your JavaScript runtime application:
+
+```bash
+npm install @aituber-onair/chat @openai/codex-sdk
+# or
+npm install @aituber-onair/chat @github/copilot-sdk
+```
+
+`@openai/codex-sdk` and `@github/copilot-sdk` are not dependencies of
+`@aituber-onair/chat`. They are loaded dynamically, so users who only use the
+normal API providers do not install these agent SDK packages.
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const codexService = createAgentChatService('codex-sdk', {
+  workingDirectory: process.cwd(),
+  skipGitRepoCheck: true,
+});
+
+const result = await codexService.chatOnce(
+  [{ role: 'user', content: 'Summarize this project structure.' }],
+  false,
+  (text) => process.stdout.write(text),
+);
+```
+
+For Copilot SDK, use `copilot-sdk`.
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const copilotService = createAgentChatService('copilot-sdk', {
+  model: 'gpt-4.1',
+});
+
+const result = await copilotService.chatOnce(
+  [{ role: 'user', content: 'Say hello in one sentence.' }],
+  false,
+  (text) => process.stdout.write(text),
+);
+```
+
+Copilot SDK requires a permission request handler when creating a session. This
+package defaults to denying SDK-managed tool execution for safety. If you want
+to allow it, pass `onPermissionRequest` from your application. For example, to
+allow all requests:
+
+```typescript
+const copilotService = createAgentChatService('copilot-sdk', {
+  model: 'gpt-4.1',
+  onPermissionRequest: () => ({ kind: 'approve-once' }),
+});
+```
+
+Available providers:
+- `codex-sdk`: requires `@openai/codex-sdk` and Codex authentication.
+- `copilot-sdk`: requires `@github/copilot-sdk` and GitHub Copilot authentication.
+
+Current limitations:
+- Text chat only.
+- Vision chat, tools, and MCP servers are intentionally unsupported for now.
+- If an agent SDK package is missing or local authentication is not ready, the
+  provider throws an error at runtime with the original SDK error details.
 
 #### OpenAI-Compatible (Local/Self-Hosted)
 
