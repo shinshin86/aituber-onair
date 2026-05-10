@@ -1,5 +1,21 @@
 # @aituber-onair/chat
 
+## 0.31.0
+
+### Minor Changes
+
+- Added the optional `@aituber-onair/chat/agent` sub-entry for Agent SDK
+  providers without adding agent SDK packages to the default install.
+- Added experimental text-chat providers for Codex SDK (`codex-sdk`) and
+  Copilot SDK (`copilot-sdk`) with local SDK authentication, dynamic SDK
+  loading, and no API-key requirement.
+- Marked vision chat, tools, and MCP servers as unsupported for Agent SDK
+  providers for now, and documented Copilot SDK permission handling with a
+  safe default that denies SDK-managed tool execution unless callers provide
+  `onPermissionRequest`.
+- Added Agent SDK provider examples and English/Japanese README documentation
+  showing AI-avatar style base prompts and conversation history.
+
 ## 0.30.0
 
 ### Minor Changes
