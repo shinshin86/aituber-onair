@@ -68,6 +68,12 @@ node packages/chat/examples/agent-providers/index.js codex \
   "Say hello in one sentence."
 ```
 
+The example sends a normal chat message array to the selected SDK provider:
+
+- A base `system` prompt for an AI avatar.
+- A short `user` / `assistant` conversation history.
+- The latest user message from the CLI argument.
+
 Optional model overrides:
 
 ```bash

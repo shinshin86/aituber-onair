@@ -20,7 +20,7 @@ const providerInput = process.argv[2];
 const provider = providerAliases[providerInput];
 const prompt =
   process.argv.slice(3).join(' ').trim() ||
-  'Say hello from the selected SDK provider in one concise sentence.';
+  'What kind of drink would you recommend for a late-night coding session?';
 
 if (!provider) {
   console.log('Usage:');
@@ -51,27 +51,41 @@ function buildOptions(providerName) {
   };
 }
 
+function buildAvatarMessages(userPrompt) {
+  return [
+    {
+      role: 'system',
+      content:
+        'You are a friendly AI avatar for a live chat. ' +
+        'Reply in a warm, concise style and keep the conversation moving.',
+    },
+    {
+      role: 'user',
+      content: 'I have been working on a TypeScript library tonight.',
+    },
+    {
+      role: 'assistant',
+      content:
+        'That sounds productive. I can help keep the mood light while you work.',
+    },
+    {
+      role: 'user',
+      content: userPrompt,
+    },
+  ];
+}
+
 async function main() {
   const service = createAgentChatService(provider, buildOptions(provider));
+  const messages = buildAvatarMessages(prompt);
 
   console.log('=== AITuber OnAir Chat - Agent Provider ===\n');
   console.log(`provider: ${provider}`);
   console.log(`model: ${service.getModel()}`);
   console.log(`prompt: ${prompt}\n`);
 
-  const result = await service.chatOnce(
-    [
-      {
-        role: 'system',
-        content: 'You are a concise assistant.',
-      },
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
-    true,
-    (partial) => process.stdout.write(partial),
+  const result = await service.chatOnce(messages, true, (partial) =>
+    process.stdout.write(partial),
   );
 
   const text = result.blocks

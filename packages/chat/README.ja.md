@@ -117,10 +117,21 @@ const chatService = createAgentChatService('codex-sdk', {
   skipGitRepoCheck: true,
 });
 
-const response = await chatService.chatOnce(
-  [{ role: 'user', content: 'このプロジェクトを一文で説明してください。' }],
-  false,
-);
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。親しみやすく短めに返答してください。',
+  },
+  { role: 'user', content: '今日はTypeScriptのライブラリを作っています。' },
+  {
+    role: 'assistant',
+    content: 'いいですね。作業の合間に、会話で少し気分転換しましょう。',
+  },
+  { role: 'user', content: '夜の作業に合う飲み物をおすすめして。' },
+];
+
+const response = await chatService.chatOnce(messages, false);
 
 console.log(response);
 ```
@@ -134,10 +145,21 @@ const chatService = createAgentChatService('copilot-sdk', {
   model: 'gpt-4.1',
 });
 
-const response = await chatService.chatOnce(
-  [{ role: 'user', content: '一文で挨拶してください。' }],
-  false,
-);
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。親しみやすく短めに返答してください。',
+  },
+  { role: 'user', content: '今日はTypeScriptのライブラリを作っています。' },
+  {
+    role: 'assistant',
+    content: 'いいですね。作業の合間に、会話で少し気分転換しましょう。',
+  },
+  { role: 'user', content: '夜の作業に合う飲み物をおすすめして。' },
+];
+
+const response = await chatService.chatOnce(messages, false);
 
 console.log(response);
 ```
@@ -259,10 +281,22 @@ const codexService = createAgentChatService('codex-sdk', {
   skipGitRepoCheck: true,
 });
 
-const result = await codexService.chatOnce(
-  [{ role: 'user', content: 'このプロジェクトの構成を要約してください。' }],
-  false,
-  (text) => process.stdout.write(text),
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。視聴者との自然な会話を続けてください。',
+  },
+  { role: 'user', content: '最近、個人開発の進め方で悩んでいます。' },
+  {
+    role: 'assistant',
+    content: '無理なく続けられる形を一緒に考えましょう。',
+  },
+  { role: 'user', content: '今日は何から手をつけるのが良さそう？' },
+];
+
+const result = await codexService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
 );
 ```
 
@@ -275,10 +309,22 @@ const copilotService = createAgentChatService('copilot-sdk', {
   model: 'gpt-4.1',
 });
 
-const result = await copilotService.chatOnce(
-  [{ role: 'user', content: '一文で挨拶してください。' }],
-  false,
-  (text) => process.stdout.write(text),
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。視聴者との自然な会話を続けてください。',
+  },
+  { role: 'user', content: '最近、個人開発の進め方で悩んでいます。' },
+  {
+    role: 'assistant',
+    content: '無理なく続けられる形を一緒に考えましょう。',
+  },
+  { role: 'user', content: '今日は何から手をつけるのが良さそう？' },
+];
+
+const result = await copilotService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
 );
 ```
 

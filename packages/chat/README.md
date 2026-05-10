@@ -117,10 +117,24 @@ const chatService = createAgentChatService('codex-sdk', {
   skipGitRepoCheck: true,
 });
 
-const response = await chatService.chatOnce(
-  [{ role: 'user', content: 'Describe this project in one sentence.' }],
-  false,
-);
+const messages = [
+  {
+    role: 'system',
+    content:
+      'You are a friendly AI avatar for a live chat. Reply warmly and concisely.',
+  },
+  { role: 'user', content: 'I am working on a TypeScript library tonight.' },
+  {
+    role: 'assistant',
+    content: 'Nice. I can keep the conversation light while you work.',
+  },
+  {
+    role: 'user',
+    content: 'What drink would you recommend for a late-night coding session?',
+  },
+];
+
+const response = await chatService.chatOnce(messages, false);
 
 console.log(response);
 ```
@@ -134,10 +148,24 @@ const chatService = createAgentChatService('copilot-sdk', {
   model: 'gpt-4.1',
 });
 
-const response = await chatService.chatOnce(
-  [{ role: 'user', content: 'Say hello in one sentence.' }],
-  false,
-);
+const messages = [
+  {
+    role: 'system',
+    content:
+      'You are a friendly AI avatar for a live chat. Reply warmly and concisely.',
+  },
+  { role: 'user', content: 'I am working on a TypeScript library tonight.' },
+  {
+    role: 'assistant',
+    content: 'Nice. I can keep the conversation light while you work.',
+  },
+  {
+    role: 'user',
+    content: 'What drink would you recommend for a late-night coding session?',
+  },
+];
+
+const response = await chatService.chatOnce(messages, false);
 
 console.log(response);
 ```
@@ -257,10 +285,25 @@ const codexService = createAgentChatService('codex-sdk', {
   skipGitRepoCheck: true,
 });
 
-const result = await codexService.chatOnce(
-  [{ role: 'user', content: 'Summarize this project structure.' }],
-  false,
-  (text) => process.stdout.write(text),
+const messages = [
+  {
+    role: 'system',
+    content:
+      'You are a friendly AI avatar for a live chat. Keep a natural conversation going.',
+  },
+  {
+    role: 'user',
+    content: 'I am thinking about how to keep a side project moving.',
+  },
+  {
+    role: 'assistant',
+    content: 'Let us make it feel manageable and easy to restart.',
+  },
+  { role: 'user', content: 'What should I work on first today?' },
+];
+
+const result = await codexService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
 );
 ```
 
@@ -273,10 +316,25 @@ const copilotService = createAgentChatService('copilot-sdk', {
   model: 'gpt-4.1',
 });
 
-const result = await copilotService.chatOnce(
-  [{ role: 'user', content: 'Say hello in one sentence.' }],
-  false,
-  (text) => process.stdout.write(text),
+const messages = [
+  {
+    role: 'system',
+    content:
+      'You are a friendly AI avatar for a live chat. Keep a natural conversation going.',
+  },
+  {
+    role: 'user',
+    content: 'I am thinking about how to keep a side project moving.',
+  },
+  {
+    role: 'assistant',
+    content: 'Let us make it feel manageable and easy to restart.',
+  },
+  { role: 'user', content: 'What should I work on first today?' },
+];
+
+const result = await copilotService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
 );
 ```
 
