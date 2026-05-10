@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat ロゴ](./images/aituber-onair-chat.png)
 
-AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
+AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、Agent SDKプロバイダー等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
 
 ## 機能
 
-- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi
+- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、Agent SDKプロバイダー
 - 🔄 **統一されたインターフェース**: 異なるプロバイダー間での一貫したAPI
 - 🛠️ **ツール・関数呼び出し**: AI関数呼び出しの自動反復処理をサポート
 - 💬 **ストリーミングレスポンス**: リアルタイムストリーミングチャット応答
@@ -14,6 +14,7 @@ AITuber OnAirのチャット・LLM API統合ライブラリです。このパッ
 - 📝 **感情検出**: AI応答からの感情抽出
 - 🎯 **応答長制御**: プリセットまたはカスタムトークン制限での応答長設定
 - 🔌 **Model Context Protocol (MCP)**: MCP サーバーサポート
+- 🧩 **Agent SDKプロバイダー**: エージェントSDKパッケージを標準インストールに含めず、任意で `@aituber-onair/chat/agent` から利用可能
 
 ## インストール
 
@@ -88,6 +89,97 @@ async function testChat() {
 - スクリプトプロパティに `OPENAI_API_KEY` を設定。
 - 実例は `packages/chat/examples/gas-basic` を参照。`appsscript.json` は任意（近年のGASは既定でV8ランタイム）。タイムゾーン等をカスタムしたい場合のみ追加してください。
 
+## Agent SDKプロバイダー
+
+Codex SDK や Copilot SDK のようなエージェントSDKを使う場合は、
+専用の `@aituber-onair/chat/agent` エントリを使用します。
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+```
+
+このエントリはブラウザ/GAS向けUMDビルドには含まれません。エージェントSDKパッケージは
+動的に読み込むため、利用する SDK だけを JavaScript ランタイムアプリ側に追加してください。
+
+```bash
+npm install @aituber-onair/chat @openai/codex-sdk
+# または
+npm install @aituber-onair/chat @github/copilot-sdk
+```
+
+Codex SDK を使う最短例:
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const chatService = createAgentChatService('codex-sdk', {
+  workingDirectory: process.cwd(),
+  skipGitRepoCheck: true,
+});
+
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。親しみやすく短めに返答してください。',
+  },
+  { role: 'user', content: '今日はTypeScriptのライブラリを作っています。' },
+  {
+    role: 'assistant',
+    content: 'いいですね。作業の合間に、会話で少し気分転換しましょう。',
+  },
+  { role: 'user', content: '夜の作業に合う飲み物をおすすめして。' },
+];
+
+const response = await chatService.chatOnce(messages, false);
+
+console.log(response);
+```
+
+Copilot SDK を使う場合:
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const chatService = createAgentChatService('copilot-sdk', {
+  model: 'gpt-4.1',
+});
+
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。親しみやすく短めに返答してください。',
+  },
+  { role: 'user', content: '今日はTypeScriptのライブラリを作っています。' },
+  {
+    role: 'assistant',
+    content: 'いいですね。作業の合間に、会話で少し気分転換しましょう。',
+  },
+  { role: 'user', content: '夜の作業に合う飲み物をおすすめして。' },
+];
+
+const response = await chatService.chatOnce(messages, false);
+
+console.log(response);
+```
+
+Copilot SDK はセッション作成時に権限リクエスト用ハンドラが必須です。
+このパッケージでは安全側に倒すため、未指定時は SDK が管理するツール実行を
+拒否します。ツール実行を許可したい場合は、利用側で `onPermissionRequest` を
+明示してください。
+
+```typescript
+const chatService = createAgentChatService('copilot-sdk', {
+  model: 'gpt-4.1',
+  onPermissionRequest: () => ({ kind: 'approve-once' }),
+});
+```
+
+利用前に、各 SDK のローカル認証を済ませておく必要があります。SDK パッケージが
+未インストール、または認証が未完了の場合は、実行時に元の SDK エラー詳細を含む
+エラーを投げます。
+
 ## 使用方法
 
 ### 基本的なチャット
@@ -161,6 +253,102 @@ const localCompatibleService = ChatServiceFactory.createChatService(
 - `endpoint` は省略記法ではなく、完全URLで指定してください。
 - 接続先サーバーは OpenAI互換API 契約を満たす必要があります。
 - 本パッケージは特定のローカルLLM製品に依存しません。
+
+#### Agent SDKプロバイダー
+
+`@aituber-onair/chat/agent` は、Codex SDK や Copilot SDK のような
+エージェントSDK向けの実験的なプロバイダーを公開します。ブラウザ/GAS向けUMDエントリには
+含まれず、APIキーも使用しません。
+
+利用するエージェントSDKパッケージだけを、利用側の JavaScript ランタイムアプリに追加してください。
+
+```bash
+npm install @aituber-onair/chat @openai/codex-sdk
+# または
+npm install @aituber-onair/chat @github/copilot-sdk
+```
+
+`@openai/codex-sdk` と `@github/copilot-sdk` は `@aituber-onair/chat` の
+依存関係には含めていません。SDK は動的に読み込むため、通常の API
+プロバイダーだけを使うユーザーはこれらのエージェントSDKパッケージをインストールする
+必要がありません。
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const codexService = createAgentChatService('codex-sdk', {
+  workingDirectory: process.cwd(),
+  skipGitRepoCheck: true,
+});
+
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。視聴者との自然な会話を続けてください。',
+  },
+  { role: 'user', content: '最近、個人開発の進め方で悩んでいます。' },
+  {
+    role: 'assistant',
+    content: '無理なく続けられる形を一緒に考えましょう。',
+  },
+  { role: 'user', content: '今日は何から手をつけるのが良さそう？' },
+];
+
+const result = await codexService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
+);
+```
+
+Copilot SDK を使う場合は `copilot-sdk` を指定します。
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const copilotService = createAgentChatService('copilot-sdk', {
+  model: 'gpt-4.1',
+});
+
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。視聴者との自然な会話を続けてください。',
+  },
+  { role: 'user', content: '最近、個人開発の進め方で悩んでいます。' },
+  {
+    role: 'assistant',
+    content: '無理なく続けられる形を一緒に考えましょう。',
+  },
+  { role: 'user', content: '今日は何から手をつけるのが良さそう？' },
+];
+
+const result = await copilotService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
+);
+```
+
+Copilot SDK はセッション作成時に権限リクエスト用ハンドラが必須です。
+このパッケージでは安全側に倒すため、未指定時は SDK が管理するツール実行を
+拒否します。ツール実行を許可する場合は、利用側で `onPermissionRequest` を
+渡してください。たとえば、すべて許可する場合は次のように指定できます。
+
+```typescript
+const copilotService = createAgentChatService('copilot-sdk', {
+  model: 'gpt-4.1',
+  onPermissionRequest: () => ({ kind: 'approve-once' }),
+});
+```
+
+利用可能なプロバイダー:
+- `codex-sdk`: `@openai/codex-sdk` と Codex 認証が必要です。
+- `copilot-sdk`: `@github/copilot-sdk` と GitHub Copilot 認証が必要です。
+
+現時点の制限:
+- テキストチャットのみ対応します。
+- Vision chat、tools、MCP servers は意図的に未対応です。
+- エージェントSDKパッケージが未インストール、またはローカル認証が未完了の場合は、
+  実行時に元のSDKエラー詳細を含むエラーを投げます。
 
 #### OpenAI互換（ローカル/セルフホスト）
 
