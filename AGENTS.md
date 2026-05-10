@@ -74,6 +74,11 @@
 ## Security & Configuration
 - Never hardcode API keys (OpenAI/Gemini/etc). Use environment variables; `.env*` stays untracked.
 - Preserve backwards‑compatible exports; treat `dist` as build output only.
+- For `@aituber-onair/chat` Agent SDK providers exposed through
+  `@aituber-onair/chat/agent`, keep provider SDK packages such as
+  `@openai/codex-sdk` and `@github/copilot-sdk` out of repository/package
+  dependencies. Load them dynamically and require consuming runtime apps to
+  install only the SDK they use.
 
 ## Agent Skills Usage
 - Use the shared skill guide in `docs/agent-skills.md`.
