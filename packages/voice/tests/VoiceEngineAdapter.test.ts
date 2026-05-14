@@ -63,6 +63,9 @@ describe('VoiceEngineAdapter', () => {
       setApplyTextNormalization: vi.fn(),
       setApplyLanguageTextNormalization: vi.fn(),
       setEnableLogging: vi.fn(),
+      setAudioEncoding: vi.fn(),
+      setSampleRateHertz: vi.fn(),
+      setDeliveryMode: vi.fn(),
       setSpeed: vi.fn(),
       setBitRate: vi.fn(),
       setModelUuid: vi.fn(),
@@ -371,6 +374,52 @@ describe('VoiceEngineAdapter', () => {
       );
       expect(mockEngine.setEnableLogging).toHaveBeenCalledWith(false);
       expect(mockEngine.fetchAudio).toHaveBeenCalled();
+    });
+  });
+
+  describe('Inworld Integration', () => {
+    it('should configure Inworld engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'inworld',
+        speaker: 'Ashley',
+        apiKey: 'inworld-basic-key',
+        inworldApiUrl: 'https://example.com/tts/v1/voice',
+        inworldModel: 'inworld-tts-2',
+        inworldAudioEncoding: 'MP3',
+        inworldSampleRateHertz: 48000,
+        inworldBitRate: 128000,
+        inworldSpeakingRate: 1.05,
+        inworldLanguage: 'ja-JP',
+        inworldDeliveryMode: 'BALANCED',
+        inworldTemperature: 0.8,
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'Inworld test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/tts/v1/voice',
+      );
+      expect(mockEngine.setModel).toHaveBeenCalledWith('inworld-tts-2');
+      expect(mockEngine.setAudioEncoding).toHaveBeenCalledWith('MP3');
+      expect(mockEngine.setSampleRateHertz).toHaveBeenCalledWith(48000);
+      expect(mockEngine.setBitRate).toHaveBeenCalledWith(128000);
+      expect(mockEngine.setSpeakingRate).toHaveBeenCalledWith(1.05);
+      expect(mockEngine.setLanguage).toHaveBeenCalledWith('ja-JP');
+      expect(mockEngine.setDeliveryMode).toHaveBeenCalledWith('BALANCED');
+      expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.8);
+      expect(mockEngine.fetchAudio).toHaveBeenCalledWith(
+        {
+          style: 'neutral',
+          message: 'Inworld test',
+        },
+        'Ashley',
+        'inworld-basic-key',
+      );
     });
   });
 
@@ -925,6 +974,11 @@ describe('VoiceEngineAdapter', () => {
           option: 'geminiTtsApiUrl' as const,
           url: 'https://generativelanguage.googleapis.com/v1beta',
         },
+        {
+          engineType: 'inworld' as const,
+          option: 'inworldApiUrl' as const,
+          url: 'https://api.inworld.ai/tts/v1/voice',
+        },
       ];
 
       const mockAudioBuffer = new ArrayBuffer(1024);
@@ -1259,6 +1313,45 @@ describe('VoiceEngineAdapter', () => {
         true,
       );
       expect(mockEngine.setEnableLogging).toHaveBeenCalledWith(false);
+    });
+
+    it('should apply updated Inworld options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'inworld',
+        speaker: 'Ashley',
+        apiKey: 'inworld-basic-key',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.updateOptions({
+        inworldApiUrl: 'https://example.com/tts/v1/voice',
+        inworldModel: 'inworld-tts-1.5-mini',
+        inworldAudioEncoding: 'LINEAR16',
+        inworldSampleRateHertz: 24000,
+        inworldBitRate: 96000,
+        inworldSpeakingRate: 1.1,
+        inworldLanguage: 'ja-JP',
+        inworldDeliveryMode: 'CREATIVE',
+        inworldTemperature: 0.7,
+      });
+
+      await adapter.speak({ text: 'Updated Inworld options' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/tts/v1/voice',
+      );
+      expect(mockEngine.setModel).toHaveBeenCalledWith('inworld-tts-1.5-mini');
+      expect(mockEngine.setAudioEncoding).toHaveBeenCalledWith('LINEAR16');
+      expect(mockEngine.setSampleRateHertz).toHaveBeenCalledWith(24000);
+      expect(mockEngine.setBitRate).toHaveBeenCalledWith(96000);
+      expect(mockEngine.setSpeakingRate).toHaveBeenCalledWith(1.1);
+      expect(mockEngine.setLanguage).toHaveBeenCalledWith('ja-JP');
+      expect(mockEngine.setDeliveryMode).toHaveBeenCalledWith('CREATIVE');
+      expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.7);
     });
 
     it('should apply updated OpenAI-compatible options for the current engine', async () => {

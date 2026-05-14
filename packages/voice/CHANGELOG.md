@@ -1,5 +1,18 @@
 # @aituber-onair/voice
 
+## 0.16.0
+
+### Minor Changes
+
+- Add Inworld TTS support via `engineType: 'inworld'`.
+  - Introduce `InworldEngine` using the non-streaming Inworld TTS REST
+    endpoint without adding the Inworld SDK.
+  - Support `inworldApiUrl`, `inworldModel`, `inworldAudioEncoding`,
+    `inworldSampleRateHertz`, `inworldBitRate`, `inworldSpeakingRate`,
+    `inworldLanguage`, `inworldDeliveryMode`, and `inworldTemperature`.
+  - Register Inworld in the voice engine factory, public exports, internal
+    option handlers, README, and tests.
+
 ## 0.15.0
 
 ### Minor Changes

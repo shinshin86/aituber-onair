@@ -5,6 +5,7 @@ import type {
   AivisSpeechVoiceServiceOptions,
   ElevenLabsVoiceServiceOptions,
   GeminiTtsVoiceServiceOptions,
+  InworldVoiceServiceOptions,
   MinimaxVoiceServiceOptions,
   OpenAiVoiceServiceOptions,
   PiperPlusVoiceServiceOptions,
@@ -113,6 +114,22 @@ export interface ElevenLabsConfigurableEngine extends VoiceEngine {
   ): void;
   setApplyLanguageTextNormalization?(value?: boolean): void;
   setEnableLogging?(value?: boolean): void;
+}
+
+export interface InworldConfigurableEngine extends VoiceEngine {
+  setApiEndpoint?(value: string): void;
+  setModel?(value?: string): void;
+  setAudioEncoding?(
+    value?: InworldVoiceServiceOptions['inworldAudioEncoding'],
+  ): void;
+  setSampleRateHertz?(value?: number): void;
+  setBitRate?(value?: number): void;
+  setSpeakingRate?(value?: number): void;
+  setLanguage?(value?: string): void;
+  setDeliveryMode?(
+    value?: InworldVoiceServiceOptions['inworldDeliveryMode'],
+  ): void;
+  setTemperature?(value?: number): void;
 }
 
 export interface GeminiTtsConfigurableEngine extends VoiceEngine {

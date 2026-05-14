@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Inworld、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -231,6 +231,32 @@ const voiceService = new VoiceService({
 既定の `https://api.elevenlabs.io/v1/text-to-speech` 以外を使う場合は
 `elevenLabsApiUrl` で上書きできます。`speaker` は ElevenLabs の
 `voice_id` として送信されます。
+
+### Inworld
+Inworld TTS の非ストリーミング音声合成を、SDK なしの直接 `fetch` で
+利用するクラウド TTS です。このエンジンは REST エンドポイントのみを
+使用し、WebSocket や HTTP ストリーミングは実装していません。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'inworld',
+  speaker: 'Ashley',
+  apiKey: process.env.INWORLD_API_KEY,
+  inworldModel: 'inworld-tts-2',
+  inworldAudioEncoding: 'MP3',
+  inworldSampleRateHertz: 48000,
+});
+```
+
+既定の `https://api.inworld.ai/tts/v1/voice` 以外を使う場合は
+`inworldApiUrl` で上書きできます。`apiKey` には Inworld の Basic
+Base64 認証値を指定します。Basic 認証情報をブラウザ側コードへ露出しないで
+ください。ブラウザアプリではバックエンドプロキシまたは Inworld の JWT 認証を
+使用してください。
+
+Inworld の On-Demand は無料で開始でき、開発用途に適しています。コストを
+抑える場合は TTS 1.5 Mini、品質を優先する場合は TTS-2 または 1.5 Max の
+利用が推奨されます。
 
 ### OpenAI互換 TTS
 Kokoro FastAPI などの OpenAI 互換エンドポイントを利用するための TTS プロバイダーです。
@@ -455,6 +481,9 @@ const voiceService = new VoiceService({
   elevenLabsModel: 'eleven_multilingual_v2',
   elevenLabsStability: 0.5,
   elevenLabsSimilarityBoost: 0.75,
+  inworldModel: 'inworld-tts-2',
+  inworldAudioEncoding: 'MP3',
+  inworldSampleRateHertz: 48000,
   voicevoxSpeedScale: 1.05,
   voicevoxPitchScale: 0.02,
   voicevoxQueryParameters: {
@@ -501,6 +530,11 @@ const voiceService = new VoiceService({
   - 識別子・出力: `speaker`, `elevenLabsModel`, `elevenLabsOutputFormat`, `elevenLabsLanguageCode`
   - 音声設定: `elevenLabsVoiceSettings`, `elevenLabsStability`, `elevenLabsSimilarityBoost`, `elevenLabsStyle`, `elevenLabsUseSpeakerBoost`, `elevenLabsSpeed`
   - 文脈・正規化: `elevenLabsSeed`, `elevenLabsPreviousText`, `elevenLabsNextText`, `elevenLabsApplyTextNormalization`, `elevenLabsApplyLanguageTextNormalization`, `elevenLabsEnableLogging`
+
+- **Inworld**
+  - エンドポイント: `inworldApiUrl`
+  - 識別子・出力: `speaker`, `inworldModel`, `inworldAudioEncoding`, `inworldSampleRateHertz`, `inworldBitRate`
+  - 音声調整: `inworldSpeakingRate`, `inworldLanguage`, `inworldDeliveryMode`, `inworldTemperature`
 
 - **VOICEVOX**
   - エンドポイント: `voicevoxApiUrl`
@@ -580,6 +614,12 @@ try {
 - model、output format、language code、voice settings の調整に対応
 - 任意の text context、seed、text normalization、logging flag に対応
 
+### Inworld の機能
+- Basic 認証のクラウド TTS エンドポイント
+- 指定した `speaker` をそのまま `voiceId` として送信
+- model、audio encoding、sample rate、bit rate、speaking rate、language、delivery mode、temperature の調整に対応
+- 非ストリーミング REST API を使用し、返却された `audioContent` をデコード
+
 ### MiniMaxの機能
 - 自動検出付き24言語サポート
 - HD品質のオーディオ出力
@@ -626,6 +666,7 @@ type VoiceServiceOptions =
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
+  | InworldVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions

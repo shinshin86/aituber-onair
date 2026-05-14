@@ -1,6 +1,8 @@
 import type {
   ElevenLabsApplyTextNormalization,
   GeminiTtsModel,
+  InworldAudioEncoding,
+  InworldDeliveryMode,
   MinimaxModel,
   UnrealSpeechCodec,
   XaiBitRate,
@@ -45,6 +47,18 @@ export const ENGINE_DEFAULTS = {
     speaker: '',
     defaultModel: 'eleven_multilingual_v2',
     defaultOutputFormat: 'mp3_44100_128',
+  },
+  inworld: {
+    apiUrl: 'https://api.inworld.ai/tts/v1/voice',
+    voicesApiUrl: 'https://api.inworld.ai/voices/v1/voices',
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'Your Inworld Basic Base64 credentials',
+    speaker: 'Ashley',
+    defaultModel: 'inworld-tts-2',
+    defaultAudioEncoding: 'MP3' as InworldAudioEncoding,
+    defaultSampleRateHertz: 48000,
+    defaultLanguage: 'ja-JP',
   },
   geminiTts: {
     apiUrl: 'https://generativelanguage.googleapis.com/v1beta',
@@ -183,6 +197,42 @@ export const ELEVENLABS_OUTPUT_FORMATS: Record<string, string> = {
   pcm_44100: 'PCM 44.1kHz',
   ulaw_8000: 'u-law 8kHz',
 };
+
+export const INWORLD_MODELS: Record<string, string> = {
+  'inworld-tts-2': 'TTS-2 — highest quality for expressive speech',
+  'inworld-tts-1.5-mini': 'TTS 1.5 Mini — cost-efficient',
+  'inworld-tts-1.5-max': 'TTS 1.5 Max — high quality',
+};
+
+export const INWORLD_AUDIO_ENCODINGS: Record<InworldAudioEncoding, string> = {
+  MP3: 'MP3',
+  OGG_OPUS: 'OGG Opus',
+  FLAC: 'FLAC',
+  LINEAR16: 'Linear 16-bit PCM',
+  WAV: 'WAV',
+  PCM: 'PCM',
+  ALAW: 'A-law',
+  MULAW: 'Mu-law',
+};
+
+export const INWORLD_DELIVERY_MODES: Record<InworldDeliveryMode, string> = {
+  STABLE: 'Stable',
+  BALANCED: 'Balanced',
+  CREATIVE: 'Creative',
+};
+
+export const INWORLD_VOICE_LANGUAGE_OPTIONS = {
+  all: 'All languages (Japanese first)',
+  'ja-JP': 'Japanese (ja-JP)',
+  en: 'English (en)',
+  'es-ES': 'Spanish (es-ES)',
+  'fr-FR': 'French (fr-FR)',
+  'de-DE': 'German (de-DE)',
+  'ko-KR': 'Korean (ko-KR)',
+  'zh-CN': 'Chinese (zh-CN)',
+  'pt-BR': 'Portuguese (pt-BR)',
+  'it-IT': 'Italian (it-IT)',
+} as const;
 
 export const VOICEPEAK_WEIGHT_KEYS = [
   'happy',
@@ -329,6 +379,19 @@ export const SLIDER_CONFIG: Record<string, SliderConfig> = {
     defaultValue: 1,
     suffix: 'x',
   },
+  inworldSpeakingRate: {
+    min: 0.5,
+    max: 1.5,
+    step: 0.05,
+    defaultValue: 1,
+    suffix: 'x',
+  },
+  inworldTemperature: {
+    min: 0.1,
+    max: 2,
+    step: 0.05,
+    defaultValue: 1,
+  },
   aivisSpeedScale: {
     min: 0.5,
     max: 1.5,
@@ -410,6 +473,9 @@ export const SLIDER_CONFIG: Record<string, SliderConfig> = {
 };
 
 export type DefaultBooleanOption = 'default' | 'true' | 'false';
+export type InworldDeliveryModeOption = 'default' | InworldDeliveryMode;
+export type InworldVoiceLanguageOption =
+  keyof typeof INWORLD_VOICE_LANGUAGE_OPTIONS;
 export type ElevenLabsApplyTextNormalizationOption =
   | 'default'
   | ElevenLabsApplyTextNormalization;

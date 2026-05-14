@@ -4,6 +4,10 @@ import type {
   ElevenLabsVoiceSettingsOptions,
 } from '../engines/ElevenLabsEngine';
 import type { GeminiTtsModel } from '../engines';
+import type {
+  InworldAudioEncoding,
+  InworldDeliveryMode,
+} from '../engines/InworldEngine';
 import type { UnrealSpeechCodec } from '../engines/UnrealSpeechEngine';
 import type { XaiBitRate, XaiCodec, XaiSampleRate } from '../engines/XaiEngine';
 import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine';
@@ -193,6 +197,29 @@ export interface ElevenLabsVoiceServiceOptions
   elevenLabsEnableLogging?: boolean;
 }
 
+export interface InworldVoiceServiceOptions extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'inworld';
+  /** Custom Inworld TTS endpoint URL */
+  inworldApiUrl?: string;
+  /** Inworld TTS model ID */
+  inworldModel?: string;
+  /** Inworld output audio encoding (default: MP3) */
+  inworldAudioEncoding?: InworldAudioEncoding;
+  /** Inworld output sample rate in hertz (default: 48000) */
+  inworldSampleRateHertz?: number;
+  /** Inworld output bitrate in bps */
+  inworldBitRate?: number;
+  /** Inworld speaking rate */
+  inworldSpeakingRate?: number;
+  /** Optional BCP-47 language tag */
+  inworldLanguage?: string;
+  /** Inworld TTS-2 delivery mode */
+  inworldDeliveryMode?: InworldDeliveryMode;
+  /** Inworld generation temperature for non TTS-2 models */
+  inworldTemperature?: number;
+}
+
 export interface GeminiTtsVoiceServiceOptions
   extends VoiceServiceCommonOptions {
   /** Engine type */
@@ -371,6 +398,7 @@ export type VoiceServiceOptions =
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
+  | InworldVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
@@ -399,6 +427,9 @@ export type UnrealSpeechVoiceServiceOptionsUpdate = Partial<
 >;
 export type ElevenLabsVoiceServiceOptionsUpdate = Partial<
   Omit<ElevenLabsVoiceServiceOptions, 'engineType'>
+>;
+export type InworldVoiceServiceOptionsUpdate = Partial<
+  Omit<InworldVoiceServiceOptions, 'engineType'>
 >;
 export type GeminiTtsVoiceServiceOptionsUpdate = Partial<
   Omit<GeminiTtsVoiceServiceOptions, 'engineType'>
@@ -429,6 +460,7 @@ export type VoiceServiceOptionsUpdate =
   | XaiVoiceServiceOptionsUpdate
   | UnrealSpeechVoiceServiceOptionsUpdate
   | ElevenLabsVoiceServiceOptionsUpdate
+  | InworldVoiceServiceOptionsUpdate
   | GeminiTtsVoiceServiceOptionsUpdate
   | OpenAiCompatibleVoiceServiceOptionsUpdate
   | AivisSpeechVoiceServiceOptionsUpdate

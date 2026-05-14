@@ -2,9 +2,11 @@ import type { ReactNode } from 'react';
 import {
   ENGINE_DEFAULTS,
   GEMINI_TTS_VOICES,
+  INWORLD_VOICE_LANGUAGE_OPTIONS,
   OPENAI_VOICES,
   XAI_VOICE_OPTIONS,
   type EngineType,
+  type InworldVoiceLanguageOption,
   type SpeakerOption,
 } from '../constants';
 
@@ -23,6 +25,8 @@ interface EngineSelectorProps {
   onApiUrlChange: (nextValue: string) => void;
   minimaxGroupId: string;
   onMinimaxGroupIdChange: (nextValue: string) => void;
+  inworldVoiceLanguage: InworldVoiceLanguageOption;
+  onInworldVoiceLanguageChange: (nextValue: InworldVoiceLanguageOption) => void;
   apiKeyIsRequired: boolean;
   piperPlusAvailable: boolean;
   piperPlusLoading: boolean;
@@ -44,6 +48,8 @@ export function EngineSelector({
   onApiUrlChange,
   minimaxGroupId,
   onMinimaxGroupIdChange,
+  inworldVoiceLanguage,
+  onInworldVoiceLanguageChange,
   apiKeyIsRequired,
   piperPlusAvailable,
   piperPlusLoading,
@@ -56,6 +62,7 @@ export function EngineSelector({
     engine === 'xai' ||
     engine === 'unrealSpeech' ||
     engine === 'elevenLabs' ||
+    engine === 'inworld' ||
     engine === 'geminiTts' ||
     engine === 'openaiCompatible' ||
     engine === 'aivisCloud' ||
@@ -200,7 +207,9 @@ export function EngineSelector({
       );
     }
 
-    if (engine === 'elevenLabs') {
+    if (engine === 'elevenLabs' || engine === 'inworld') {
+      const providerLabel = engine === 'inworld' ? 'Inworld' : 'ElevenLabs';
+
       return (
         <div className="form-group">
           <label htmlFor="speaker">Speaker:</label>
@@ -220,6 +229,28 @@ export function EngineSelector({
               <option value="">-- 話者一覧を取得してください --</option>
             )}
           </select>
+          {engine === 'inworld' && (
+            <div className="speaker-fetch-row">
+              <label htmlFor="inworldVoiceLanguage">Language:</label>
+              <select
+                id="inworldVoiceLanguage"
+                value={inworldVoiceLanguage}
+                onChange={(e) =>
+                  onInworldVoiceLanguageChange(
+                    e.target.value as InworldVoiceLanguageOption,
+                  )
+                }
+              >
+                {Object.entries(INWORLD_VOICE_LANGUAGE_OPTIONS).map(
+                  ([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+          )}
           <div className="speaker-fetch-row">
             <button
               type="button"
@@ -227,6 +258,7 @@ export function EngineSelector({
               onClick={onFetchSpeakers}
               disabled={isFetchingSpeakers || !apiKey.trim()}
               title={!apiKey.trim() ? 'API Keyを入力してください' : undefined}
+              aria-label={`${providerLabel} の話者一覧を取得`}
             >
               {isFetchingSpeakers
                 ? '取得中...'
@@ -440,6 +472,7 @@ export function EngineSelector({
           <option value="minimax">MiniMax</option>
           <option value="unrealSpeech">Unreal Speech</option>
           <option value="elevenLabs">ElevenLabs</option>
+          <option value="inworld">Inworld</option>
           <option value="openaiCompatible">OpenAI-Compatible TTS</option>
           <option value="piperPlus">Piper Plus (Browser WASM)</option>
         </select>

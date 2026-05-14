@@ -3,6 +3,7 @@ import { AivisCloudEngine } from './AivisCloudEngine';
 import { AivisSpeechEngine } from './AivisSpeechEngine';
 import { ElevenLabsEngine } from './ElevenLabsEngine';
 import { GeminiTtsEngine } from './GeminiTtsEngine';
+import { InworldEngine } from './InworldEngine';
 import { MinimaxEngine } from './MinimaxEngine';
 import { NoneEngine } from './NoneEngine';
 import { OpenAiEngine } from './OpenAiEngine';
@@ -23,6 +24,7 @@ const ENGINE_CONSTRUCTORS = {
   xai: XaiEngine,
   unrealSpeech: UnrealSpeechEngine,
   elevenLabs: ElevenLabsEngine,
+  inworld: InworldEngine,
   geminiTts: GeminiTtsEngine,
   openaiCompatible: OpenAiCompatibleEngine,
   minimax: MinimaxEngine,
