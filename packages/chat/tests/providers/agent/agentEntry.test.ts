@@ -7,8 +7,11 @@ import {
 
 describe('Agent chat entry', () => {
   it('registers agent providers through the agent entry', () => {
-    expect(ChatServiceFactory.getAvailableProviders()).toContain('copilot-sdk');
     expect(ChatServiceFactory.getAvailableProviders()).toContain('codex-sdk');
+    expect(ChatServiceFactory.getAvailableProviders()).toContain(
+      'claude-agent-sdk',
+    );
+    expect(ChatServiceFactory.getAvailableProviders()).toContain('copilot-sdk');
   });
 
   it('creates agent services with typed helper', async () => {

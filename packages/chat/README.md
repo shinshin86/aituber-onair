@@ -91,8 +91,8 @@ Notes:
 
 ## Agent SDK Providers
 
-For agent SDKs such as Codex SDK and Copilot SDK, use the separate
-`@aituber-onair/chat/agent` entry point:
+For agent SDKs such as Codex SDK, Claude Agent SDK, and Copilot SDK, use the
+separate `@aituber-onair/chat/agent` entry point:
 
 ```typescript
 import { createAgentChatService } from '@aituber-onair/chat/agent';
@@ -103,6 +103,8 @@ dynamically, so install only the agent SDK package used by your JavaScript runti
 
 ```bash
 npm install @aituber-onair/chat @openai/codex-sdk
+# or
+npm install @aituber-onair/chat @anthropic-ai/claude-agent-sdk
 # or
 npm install @aituber-onair/chat @github/copilot-sdk
 ```
@@ -138,6 +140,43 @@ const response = await chatService.chatOnce(messages, false);
 
 console.log(response);
 ```
+
+For Claude Agent SDK:
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const chatService = createAgentChatService('claude-agent-sdk', {
+  workingDirectory: process.cwd(),
+  maxTurns: 1,
+});
+
+const messages = [
+  {
+    role: 'system',
+    content:
+      'You are a friendly AI avatar for a live chat. Reply warmly and concisely.',
+  },
+  { role: 'user', content: 'I am working on a TypeScript library tonight.' },
+  {
+    role: 'assistant',
+    content: 'Nice. I can keep the conversation light while you work.',
+  },
+  {
+    role: 'user',
+    content: 'What drink would you recommend for a late-night coding session?',
+  },
+];
+
+const response = await chatService.chatOnce(messages, false);
+
+console.log(response);
+```
+
+Claude Agent SDK is run as a text-chat provider with built-in tools disabled by
+default. Eligible Claude subscription plans can use Agent SDK monthly credits
+starting June 15, 2026; API-key based Developer Platform usage remains
+pay-as-you-go.
 
 For Copilot SDK:
 
@@ -262,20 +301,23 @@ Notes:
 #### Agent SDK Providers
 
 `@aituber-onair/chat/agent` exposes experimental providers for agent SDKs such
-as Codex SDK and Copilot SDK. These providers are not included in the
-browser/GAS UMD entry point and do not use API keys.
+as Codex SDK, Claude Agent SDK, and Copilot SDK. These providers are not
+included in the browser/GAS UMD entry point and do not use API keys.
 
 Install only the agent SDK package you actually use in your JavaScript runtime application:
 
 ```bash
 npm install @aituber-onair/chat @openai/codex-sdk
 # or
+npm install @aituber-onair/chat @anthropic-ai/claude-agent-sdk
+# or
 npm install @aituber-onair/chat @github/copilot-sdk
 ```
 
-`@openai/codex-sdk` and `@github/copilot-sdk` are not dependencies of
-`@aituber-onair/chat`. They are loaded dynamically, so users who only use the
-normal API providers do not install these agent SDK packages.
+`@openai/codex-sdk`, `@anthropic-ai/claude-agent-sdk`, and
+`@github/copilot-sdk` are not dependencies of `@aituber-onair/chat`. They are
+loaded dynamically, so users who only use the normal API providers do not
+install these agent SDK packages.
 
 ```typescript
 import { createAgentChatService } from '@aituber-onair/chat/agent';
@@ -306,6 +348,43 @@ const result = await codexService.chatOnce(messages, false, (text) =>
   process.stdout.write(text),
 );
 ```
+
+For Claude Agent SDK, use `claude-agent-sdk`.
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const claudeService = createAgentChatService('claude-agent-sdk', {
+  workingDirectory: process.cwd(),
+  maxTurns: 1,
+});
+
+const messages = [
+  {
+    role: 'system',
+    content:
+      'You are a friendly AI avatar for a live chat. Keep a natural conversation going.',
+  },
+  {
+    role: 'user',
+    content: 'I am thinking about how to keep a side project moving.',
+  },
+  {
+    role: 'assistant',
+    content: 'Let us make it feel manageable and easy to restart.',
+  },
+  { role: 'user', content: 'What should I work on first today?' },
+];
+
+const result = await claudeService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
+);
+```
+
+Claude Agent SDK is configured with `tools: []`, `permissionMode: 'dontAsk'`,
+and `settingSources: []` by default so this provider behaves as text chat and
+does not load Claude Code project/user settings unless the implementation is
+expanded later.
 
 For Copilot SDK, use `copilot-sdk`.
 
@@ -352,6 +431,7 @@ const copilotService = createAgentChatService('copilot-sdk', {
 
 Available providers:
 - `codex-sdk`: requires `@openai/codex-sdk` and Codex authentication.
+- `claude-agent-sdk`: requires `@anthropic-ai/claude-agent-sdk` and Claude Agent SDK authentication.
 - `copilot-sdk`: requires `@github/copilot-sdk` and GitHub Copilot authentication.
 
 Current limitations:

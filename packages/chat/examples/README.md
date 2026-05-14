@@ -66,7 +66,7 @@ Minimal interactive CLI for local/self-hosted LLMs (Ollama/LM Studio/vLLM):
 JavaScript runtime examples for Agent SDK providers:
 
 - Uses `@aituber-onair/chat/agent`
-- Supports `codex-sdk` and `copilot-sdk`
+- Supports `codex-sdk`, `claude-agent-sdk`, and `copilot-sdk`
 - Requires the corresponding SDK package and local SDK authentication
 - Text chat only; browser/GAS/UMD environments are not supported
 

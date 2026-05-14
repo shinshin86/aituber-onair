@@ -91,7 +91,7 @@ async function testChat() {
 
 ## Agent SDKプロバイダー
 
-Codex SDK や Copilot SDK のようなエージェントSDKを使う場合は、
+Codex SDK、Claude Agent SDK、Copilot SDK のようなエージェントSDKを使う場合は、
 専用の `@aituber-onair/chat/agent` エントリを使用します。
 
 ```typescript
@@ -103,6 +103,8 @@ import { createAgentChatService } from '@aituber-onair/chat/agent';
 
 ```bash
 npm install @aituber-onair/chat @openai/codex-sdk
+# または
+npm install @aituber-onair/chat @anthropic-ai/claude-agent-sdk
 # または
 npm install @aituber-onair/chat @github/copilot-sdk
 ```
@@ -135,6 +137,40 @@ const response = await chatService.chatOnce(messages, false);
 
 console.log(response);
 ```
+
+Claude Agent SDK を使う場合:
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const chatService = createAgentChatService('claude-agent-sdk', {
+  workingDirectory: process.cwd(),
+  maxTurns: 1,
+});
+
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。親しみやすく短めに返答してください。',
+  },
+  { role: 'user', content: '今日はTypeScriptのライブラリを作っています。' },
+  {
+    role: 'assistant',
+    content: 'いいですね。作業の合間に、会話で少し気分転換しましょう。',
+  },
+  { role: 'user', content: '夜の作業に合う飲み物をおすすめして。' },
+];
+
+const response = await chatService.chatOnce(messages, false);
+
+console.log(response);
+```
+
+Claude Agent SDK はテキストチャット用プロバイダーとして扱い、既定では組み込みツールを
+無効にします。2026年6月15日以降、対象の有料 Claude プランでは Agent SDK 用の
+月間クレジットを利用できます。APIキーを使う Developer Platform の利用は従来通り
+従量課金です。
 
 Copilot SDK を使う場合:
 
@@ -256,7 +292,7 @@ const localCompatibleService = ChatServiceFactory.createChatService(
 
 #### Agent SDKプロバイダー
 
-`@aituber-onair/chat/agent` は、Codex SDK や Copilot SDK のような
+`@aituber-onair/chat/agent` は、Codex SDK、Claude Agent SDK、Copilot SDK のような
 エージェントSDK向けの実験的なプロバイダーを公開します。ブラウザ/GAS向けUMDエントリには
 含まれず、APIキーも使用しません。
 
@@ -265,11 +301,13 @@ const localCompatibleService = ChatServiceFactory.createChatService(
 ```bash
 npm install @aituber-onair/chat @openai/codex-sdk
 # または
+npm install @aituber-onair/chat @anthropic-ai/claude-agent-sdk
+# または
 npm install @aituber-onair/chat @github/copilot-sdk
 ```
 
-`@openai/codex-sdk` と `@github/copilot-sdk` は `@aituber-onair/chat` の
-依存関係には含めていません。SDK は動的に読み込むため、通常の API
+`@openai/codex-sdk`、`@anthropic-ai/claude-agent-sdk`、`@github/copilot-sdk` は
+`@aituber-onair/chat` の依存関係には含めていません。SDK は動的に読み込むため、通常の API
 プロバイダーだけを使うユーザーはこれらのエージェントSDKパッケージをインストールする
 必要がありません。
 
@@ -299,6 +337,39 @@ const result = await codexService.chatOnce(messages, false, (text) =>
   process.stdout.write(text),
 );
 ```
+
+Claude Agent SDK を使う場合は `claude-agent-sdk` を指定します。
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const claudeService = createAgentChatService('claude-agent-sdk', {
+  workingDirectory: process.cwd(),
+  maxTurns: 1,
+});
+
+const messages = [
+  {
+    role: 'system',
+    content:
+      'あなたはライブ配信中のAIアバターです。視聴者との自然な会話を続けてください。',
+  },
+  { role: 'user', content: '最近、個人開発の進め方で悩んでいます。' },
+  {
+    role: 'assistant',
+    content: '無理なく続けられる形を一緒に考えましょう。',
+  },
+  { role: 'user', content: '今日は何から手をつけるのが良さそう？' },
+];
+
+const result = await claudeService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
+);
+```
+
+Claude Agent SDK は既定で `tools: []`、`permissionMode: 'dontAsk'`、
+`settingSources: []` を指定し、組み込みツールや Claude Code のプロジェクト/ユーザー設定を
+読み込まないテキストチャットとして実行します。
 
 Copilot SDK を使う場合は `copilot-sdk` を指定します。
 
@@ -342,6 +413,7 @@ const copilotService = createAgentChatService('copilot-sdk', {
 
 利用可能なプロバイダー:
 - `codex-sdk`: `@openai/codex-sdk` と Codex 認証が必要です。
+- `claude-agent-sdk`: `@anthropic-ai/claude-agent-sdk` と Claude Agent SDK 認証が必要です。
 - `copilot-sdk`: `@github/copilot-sdk` と GitHub Copilot 認証が必要です。
 
 現時点の制限:
