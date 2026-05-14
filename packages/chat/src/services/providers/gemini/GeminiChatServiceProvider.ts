@@ -1,17 +1,7 @@
 import {
-  MODEL_GEMMA_4_31B_IT,
-  MODEL_GEMMA_4_26B_A4B_IT,
-  MODEL_GEMINI_3_1_PRO_PREVIEW,
-  MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
-  MODEL_GEMINI_3_PRO_PREVIEW,
-  MODEL_GEMINI_3_FLASH_PREVIEW,
-  MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_2_5_FLASH,
-  MODEL_GEMINI_2_5_FLASH_LITE,
-  MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-  MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_2_0_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS,
+  GEMINI_RECOMMENDED_MODELS,
+  MODEL_GEMINI_3_1_FLASH_LITE,
 } from '../../../constants';
 import { ChatService } from '../../ChatService';
 import { GeminiChatService } from './GeminiChatService';
@@ -67,20 +57,7 @@ export class GeminiChatServiceProvider
    * @returns Array of supported model names
    */
   getSupportedModels(): string[] {
-    return [
-      MODEL_GEMMA_4_31B_IT,
-      MODEL_GEMMA_4_26B_A4B_IT,
-      MODEL_GEMINI_3_1_PRO_PREVIEW,
-      MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
-      MODEL_GEMINI_3_PRO_PREVIEW,
-      MODEL_GEMINI_3_FLASH_PREVIEW,
-      MODEL_GEMINI_2_5_PRO,
-      MODEL_GEMINI_2_5_FLASH,
-      MODEL_GEMINI_2_5_FLASH_LITE,
-      MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-      MODEL_GEMINI_2_0_FLASH,
-      MODEL_GEMINI_2_0_FLASH_LITE,
-    ];
+    return [...GEMINI_RECOMMENDED_MODELS];
   }
 
   /**
@@ -88,7 +65,7 @@ export class GeminiChatServiceProvider
    * @returns Default model name
    */
   getDefaultModel(): string {
-    return MODEL_GEMINI_2_0_FLASH_LITE;
+    return MODEL_GEMINI_3_1_FLASH_LITE;
   }
 
   /**

@@ -9,7 +9,7 @@ import {
 } from '../../../types';
 import {
   ENDPOINT_GEMINI_API,
-  MODEL_GEMINI_2_0_FLASH_LITE,
+  MODEL_GEMINI_3_1_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS,
 } from '../../../constants';
 import {
@@ -107,8 +107,8 @@ export class GeminiChatService implements ChatService {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_GEMINI_2_0_FLASH_LITE,
-    visionModel: string = MODEL_GEMINI_2_0_FLASH_LITE,
+    model: string = MODEL_GEMINI_3_1_FLASH_LITE,
+    visionModel: string = MODEL_GEMINI_3_1_FLASH_LITE,
     tools: ToolDefinition[] = [],
     mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,

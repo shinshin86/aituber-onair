@@ -7,6 +7,7 @@ import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
+  MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
@@ -40,25 +41,30 @@ describe('GeminiChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
-        MODEL_GEMMA_4_31B_IT,
-        MODEL_GEMMA_4_26B_A4B_IT,
+        MODEL_GEMINI_3_1_FLASH_LITE,
         MODEL_GEMINI_3_1_PRO_PREVIEW,
-        MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
-        MODEL_GEMINI_3_PRO_PREVIEW,
         MODEL_GEMINI_3_FLASH_PREVIEW,
         MODEL_GEMINI_2_5_PRO,
         MODEL_GEMINI_2_5_FLASH,
         MODEL_GEMINI_2_5_FLASH_LITE,
-        MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-        MODEL_GEMINI_2_0_FLASH,
-        MODEL_GEMINI_2_0_FLASH_LITE,
+        MODEL_GEMMA_4_31B_IT,
+        MODEL_GEMMA_4_26B_A4B_IT,
       ]);
+    });
+
+    it('should not advertise deprecated models in the recommended list', () => {
+      const models = provider.getSupportedModels();
+      expect(models).not.toContain(MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW);
+      expect(models).not.toContain(MODEL_GEMINI_3_PRO_PREVIEW);
+      expect(models).not.toContain(MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17);
+      expect(models).not.toContain(MODEL_GEMINI_2_0_FLASH);
+      expect(models).not.toContain(MODEL_GEMINI_2_0_FLASH_LITE);
     });
   });
 
   describe('getDefaultModel', () => {
-    it('should return Gemini 2.0 Flash Lite as default model', () => {
-      expect(provider.getDefaultModel()).toBe(MODEL_GEMINI_2_0_FLASH_LITE);
+    it('should return Gemini 3.1 Flash-Lite as default model', () => {
+      expect(provider.getDefaultModel()).toBe(MODEL_GEMINI_3_1_FLASH_LITE);
     });
   });
 
@@ -78,6 +84,9 @@ describe('GeminiChatServiceProvider', () => {
       expect(
         provider.supportsVisionForModel(MODEL_GEMINI_3_1_PRO_PREVIEW),
       ).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GEMINI_3_1_FLASH_LITE)).toBe(
+        true,
+      );
       expect(
         provider.supportsVisionForModel(MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW),
       ).toBe(true);
@@ -114,8 +123,8 @@ describe('GeminiChatServiceProvider', () => {
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_2_0_FLASH_LITE,
-        MODEL_GEMINI_2_0_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
         [],
         [],
         undefined,
@@ -170,7 +179,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         'gemini-pro',
-        MODEL_GEMINI_2_0_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
         [],
         [],
         undefined,
@@ -205,8 +214,8 @@ describe('GeminiChatServiceProvider', () => {
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_2_0_FLASH_LITE,
-        MODEL_GEMINI_2_0_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
         tools,
         [],
         undefined,
@@ -223,8 +232,8 @@ describe('GeminiChatServiceProvider', () => {
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_2_0_FLASH_LITE,
-        MODEL_GEMINI_2_0_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
         [],
         [],
         undefined,
@@ -295,8 +304,8 @@ describe('GeminiChatServiceProvider', () => {
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_2_0_FLASH_LITE,
-        MODEL_GEMINI_2_0_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
         [],
         [],
         'long',
@@ -326,8 +335,8 @@ describe('GeminiChatServiceProvider', () => {
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_2_0_FLASH_LITE,
-        MODEL_GEMINI_2_0_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
+        MODEL_GEMINI_3_1_FLASH_LITE,
         [],
         mcpServers,
         undefined,

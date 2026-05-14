@@ -90,7 +90,7 @@ async function main() {
     try {
       const geminiService = ChatServiceFactory.createChatService('gemini', {
         apiKey: process.env.GOOGLE_API_KEY,
-        // Using default model (gemini-2.0-flash-lite) for cost efficiency
+        // Using default model (gemini-3.1-flash-lite) for cost efficiency
         responseLength: 'short',
       });
 

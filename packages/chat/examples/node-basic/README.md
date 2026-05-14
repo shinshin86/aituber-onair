@@ -5,7 +5,7 @@ This directory contains Node.js examples demonstrating how to use the @aituber-o
 **Note**: All examples use default models for optimal cost and performance:
 - **OpenAI**: `gpt-4o-mini`
 - **Claude**: `claude-3-haiku-20240307`  
-- **Gemini**: `gemini-2.0-flash-lite`
+- **Gemini**: `gemini-3.1-flash-lite`
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ node claude-example.js
 ```
 
 #### Gemini (`gemini-example.js`)
-- Default model (gemini-2.0-flash-lite) usage
+- Default model (gemini-3.1-flash-lite) usage
 - Safety settings
 - Generation configuration
 ```bash
