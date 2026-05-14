@@ -167,10 +167,10 @@ const response = await chatService.chatOnce(messages, false);
 console.log(response);
 ```
 
-Claude Agent SDK はテキストチャット用プロバイダーとして扱い、既定では組み込みツールを
-無効にします。2026年6月15日以降、対象の有料 Claude プランでは Agent SDK 用の
-月間クレジットを利用できます。APIキーを使う Developer Platform の利用は従来通り
-従量課金です。
+このプロバイダーでは、Claude Agent SDK を通常のチャット応答生成にだけ使います。
+既定では Claude Code のファイル操作やコマンド実行などのツール機能は使いません。
+2026年6月15日以降、対象の有料 Claude プランでは Agent SDK 用の月間クレジットを
+利用できます。APIキーを使う Developer Platform の利用は従来通り従量課金です。
 
 Copilot SDK を使う場合:
 
@@ -368,8 +368,8 @@ const result = await claudeService.chatOnce(messages, false, (text) =>
 ```
 
 Claude Agent SDK は既定で `tools: []`、`permissionMode: 'dontAsk'`、
-`settingSources: []` を指定し、組み込みツールや Claude Code のプロジェクト/ユーザー設定を
-読み込まないテキストチャットとして実行します。
+`settingSources: []` を指定し、Claude Code のファイル操作・コマンド実行や
+プロジェクト/ユーザー設定を使わずにチャット応答を生成します。
 
 Copilot SDK を使う場合は `copilot-sdk` を指定します。
 
