@@ -60,7 +60,7 @@ pnpm install @aituber-onair/voice
 
 - **Multiple TTS Engine Support**  
   Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Unreal Speech,
-  ElevenLabs, Gemini TTS, MiniMax, AivisSpeech, Aivis Cloud, and more
+  ElevenLabs, Inworld, Gemini TTS, MiniMax, AivisSpeech, Aivis Cloud, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
 - **Emotion-Aware Synthesis**  
@@ -233,6 +233,32 @@ const voiceService = new VoiceService({
 Use `elevenLabsApiUrl` to override the default
 `https://api.elevenlabs.io/v1/text-to-speech` endpoint. The `speaker` value is
 sent as the ElevenLabs `voice_id`.
+
+### Inworld
+Inworld TTS non-streaming speech synthesis using direct `fetch` calls. This
+engine uses the REST endpoint only; WebSocket and HTTP streaming are not
+implemented.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'inworld',
+  speaker: 'Ashley',
+  apiKey: process.env.INWORLD_API_KEY,
+  inworldModel: 'inworld-tts-2',
+  inworldAudioEncoding: 'MP3',
+  inworldSampleRateHertz: 48000,
+});
+```
+
+Use `inworldApiUrl` to override the default
+`https://api.inworld.ai/tts/v1/voice` endpoint. The `apiKey` value should be
+the Inworld Basic Base64 authorization value. Do not expose Basic credentials
+in browser-side code; use a backend proxy or Inworld JWT authentication for
+browser apps.
+
+Inworld On-Demand starts free and is suitable for development. For cost
+savings, use TTS 1.5 Mini when minimizing cost; use TTS-2 or 1.5 Max when
+prioritizing quality.
 
 ### OpenAI-Compatible TTS
 OpenAI-compatible speech endpoints for self-hosted servers such as Kokoro FastAPI.
@@ -457,6 +483,9 @@ const voiceService = new VoiceService({
   elevenLabsModel: 'eleven_multilingual_v2',
   elevenLabsStability: 0.5,
   elevenLabsSimilarityBoost: 0.75,
+  inworldModel: 'inworld-tts-2',
+  inworldAudioEncoding: 'MP3',
+  inworldSampleRateHertz: 48000,
   voicevoxSpeedScale: 1.1,
   voicevoxPitchScale: 0.05,
   voicevoxIntonationScale: 1.2,
@@ -499,6 +528,11 @@ const voiceService = new VoiceService({
   - Identity/output: `speaker`, `elevenLabsModel`, `elevenLabsOutputFormat`, `elevenLabsLanguageCode`
   - Voice settings: `elevenLabsVoiceSettings`, `elevenLabsStability`, `elevenLabsSimilarityBoost`, `elevenLabsStyle`, `elevenLabsUseSpeakerBoost`, `elevenLabsSpeed`
   - Context/normalization: `elevenLabsSeed`, `elevenLabsPreviousText`, `elevenLabsNextText`, `elevenLabsApplyTextNormalization`, `elevenLabsApplyLanguageTextNormalization`, `elevenLabsEnableLogging`
+
+- **Inworld**
+  - Endpoint: `inworldApiUrl`
+  - Identity/output: `speaker`, `inworldModel`, `inworldAudioEncoding`, `inworldSampleRateHertz`, `inworldBitRate`
+  - Voice controls: `inworldSpeakingRate`, `inworldLanguage`, `inworldDeliveryMode`, `inworldTemperature`
 
 - **VOICEVOX**
   - Endpoint: `voicevoxApiUrl`
@@ -578,6 +612,12 @@ try {
 - Configurable model, output format, language code, and voice settings
 - Supports optional text context, seed, text normalization, and logging flags
 
+### Inworld Features
+- Cloud TTS endpoint with Basic authentication
+- Passes `speaker` through to `voiceId` as provided
+- Configurable model, audio encoding, sample rate, bit rate, speaking rate, language, delivery mode, and temperature
+- Uses the non-streaming REST API and decodes the returned `audioContent`
+
 ### MiniMax Features
 - 24 language support with automatic detection
 - HD quality audio output
@@ -624,6 +664,7 @@ type VoiceServiceOptions =
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
+  | InworldVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions

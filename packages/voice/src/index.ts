@@ -15,6 +15,7 @@ export type {
   PiperPlusVoiceServiceOptions,
   UnrealSpeechVoiceServiceOptions,
   ElevenLabsVoiceServiceOptions,
+  InworldVoiceServiceOptions,
   VoiceVoxQueryParameterOverrides,
   AivisSpeechQueryParameterOverrides,
 } from './services/VoiceService';

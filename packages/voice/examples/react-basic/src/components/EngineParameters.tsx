@@ -1,4 +1,5 @@
 import type {
+  InworldAudioEncoding,
   MinimaxAudioFormat,
   MinimaxModel,
   UnrealSpeechCodec,
@@ -9,6 +10,9 @@ import type {
 import {
   ELEVENLABS_MODELS,
   ELEVENLABS_OUTPUT_FORMATS,
+  INWORLD_AUDIO_ENCODINGS,
+  INWORLD_DELIVERY_MODES,
+  INWORLD_MODELS,
   MINIMAX_MODELS,
   SLIDER_CONFIG,
   UNREAL_SPEECH_CODECS,
@@ -19,6 +23,7 @@ import {
   type DefaultBooleanOption,
   type ElevenLabsApplyTextNormalizationOption,
   type EngineType,
+  type InworldDeliveryModeOption,
   type LocalOutputSamplingRateOption,
   type OutputStereoOption,
   type VoicePeakEmotionOption,
@@ -73,6 +78,19 @@ interface EngineParametersProps {
     applyTextNormalization: SelectField<ElevenLabsApplyTextNormalizationOption>;
     applyLanguageTextNormalization: SelectField<DefaultBooleanOption>;
     enableLogging: SelectField<DefaultBooleanOption>;
+  };
+  inworld: {
+    model: SelectField<string>;
+    models: typeof INWORLD_MODELS;
+    audioEncoding: SelectField<InworldAudioEncoding>;
+    audioEncodings: typeof INWORLD_AUDIO_ENCODINGS;
+    sampleRateHertz: StringField;
+    bitRate: StringField;
+    speakingRate: StringField;
+    language: StringField;
+    deliveryMode: SelectField<InworldDeliveryModeOption>;
+    deliveryModes: typeof INWORLD_DELIVERY_MODES;
+    temperature: StringField;
   };
   geminiTts: {
     model: SelectField<string>;
@@ -170,6 +188,7 @@ export function EngineParameters({
   xai,
   unrealSpeech,
   elevenLabs,
+  inworld,
   geminiTts,
   openaiCompatible,
   voicevox,
@@ -569,6 +588,137 @@ export function EngineParameters({
                   <option value="default">API既定値（true）</option>
                   <option value="true">有効</option>
                   <option value="false">無効</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </CollapsibleCard>
+      )}
+
+      {engine === 'inworld' && (
+        <CollapsibleCard
+          className="parameter-card openai-card"
+          title="Inworld パラメータ"
+          description="Inworld TTS の非ストリーミング REST API 向け設定です。voiceId は上部の Speaker に入力します。"
+        >
+          <div className="parameter-section">
+            <div className="parameter-section__title">モデル・出力</div>
+            <div className="parameter-grid parameter-grid--two">
+              <div className="form-group">
+                <label htmlFor="inworldModel">Model</label>
+                <select
+                  id="inworldModel"
+                  value={inworld.model.value}
+                  onChange={(e) => inworld.model.onChange(e.target.value)}
+                >
+                  {Object.entries(inworld.models).map(
+                    ([modelId, description]) => (
+                      <option key={modelId} value={modelId}>
+                        {modelId} - {description}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="inworldAudioEncoding">Audio Encoding</label>
+                <select
+                  id="inworldAudioEncoding"
+                  value={inworld.audioEncoding.value}
+                  onChange={(e) =>
+                    inworld.audioEncoding.onChange(
+                      e.target.value as InworldAudioEncoding,
+                    )
+                  }
+                >
+                  {Object.entries(inworld.audioEncodings).map(
+                    ([encoding, description]) => (
+                      <option key={encoding} value={encoding}>
+                        {description}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="inworldSampleRateHertz">
+                  Sample Rate Hertz
+                </label>
+                <input
+                  id="inworldSampleRateHertz"
+                  type="number"
+                  min="8000"
+                  step="1"
+                  value={inworld.sampleRateHertz.value}
+                  onChange={(e) =>
+                    inworld.sampleRateHertz.onChange(e.target.value)
+                  }
+                  placeholder="48000"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="inworldBitRate">Bit Rate</label>
+                <input
+                  id="inworldBitRate"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={inworld.bitRate.value}
+                  onChange={(e) => inworld.bitRate.onChange(e.target.value)}
+                  placeholder="空欄で未送信"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="parameter-section">
+            <div className="parameter-section__title">音声調整</div>
+            <div className="parameter-grid">
+              <NumberSliderField
+                id="inworldSpeakingRate"
+                label="Speaking Rate"
+                value={inworld.speakingRate.value}
+                onChange={inworld.speakingRate.onChange}
+                config={SLIDER_CONFIG.inworldSpeakingRate}
+                placeholder="空欄で API 既定値"
+              />
+              <NumberSliderField
+                id="inworldTemperature"
+                label="Temperature"
+                value={inworld.temperature.value}
+                onChange={inworld.temperature.onChange}
+                config={SLIDER_CONFIG.inworldTemperature}
+                placeholder="TTS-2 では deliveryMode を使用"
+              />
+              <div className="form-group">
+                <label htmlFor="inworldLanguage">Language</label>
+                <input
+                  id="inworldLanguage"
+                  type="text"
+                  value={inworld.language.value}
+                  onChange={(e) => inworld.language.onChange(e.target.value)}
+                  placeholder="例: ja-JP（空欄で自動）"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="inworldDeliveryMode">Delivery Mode</label>
+                <select
+                  id="inworldDeliveryMode"
+                  value={inworld.deliveryMode.value}
+                  onChange={(e) =>
+                    inworld.deliveryMode.onChange(
+                      e.target.value as InworldDeliveryModeOption,
+                    )
+                  }
+                >
+                  <option value="default">API既定値</option>
+                  {Object.entries(inworld.deliveryModes).map(
+                    ([mode, description]) => (
+                      <option key={mode} value={mode}>
+                        {description}
+                      </option>
+                    ),
+                  )}
                 </select>
               </div>
             </div>

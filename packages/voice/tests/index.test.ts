@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import * as voicePackage from '../src';
-import type { PiperPlusAssets, PiperPlusVoiceServiceOptions } from '../src';
+import type {
+  InworldVoiceServiceOptions,
+  PiperPlusAssets,
+  PiperPlusVoiceServiceOptions,
+} from '../src';
 import { EmotionParser, VoiceEngineAdapter, textToScreenplay } from '../src';
 
 describe('Voice Package Exports', () => {
@@ -29,6 +33,7 @@ describe('Voice Package Exports', () => {
     expect(voicePackage.XaiEngine).toBeDefined();
     expect(voicePackage.UnrealSpeechEngine).toBeDefined();
     expect(voicePackage.ElevenLabsEngine).toBeDefined();
+    expect(voicePackage.InworldEngine).toBeDefined();
     expect(voicePackage.GeminiTtsEngine).toBeDefined();
     expect(voicePackage.OpenAiCompatibleEngine).toBeDefined();
     expect(voicePackage.MinimaxEngine).toBeDefined();
@@ -55,6 +60,19 @@ describe('Voice Package Exports', () => {
 
     expect(assets.modelFile).toBe('model.onnx');
     expect(options.engineType).toBe('piperPlus');
+  });
+
+  it('should expose Inworld public types through the package root', () => {
+    const options: InworldVoiceServiceOptions = {
+      engineType: 'inworld',
+      speaker: 'Ashley',
+      apiKey: 'inworld-basic-key',
+      inworldModel: 'inworld-tts-2',
+      inworldAudioEncoding: 'MP3',
+      inworldSampleRateHertz: 48000,
+    };
+
+    expect(options.engineType).toBe('inworld');
   });
 });
 

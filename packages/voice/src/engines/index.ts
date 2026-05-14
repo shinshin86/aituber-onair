@@ -27,6 +27,11 @@ export {
   type ElevenLabsApplyTextNormalization,
   type ElevenLabsVoiceSettingsOptions,
 } from './ElevenLabsEngine';
+export {
+  InworldEngine,
+  type InworldAudioEncoding,
+  type InworldDeliveryMode,
+} from './InworldEngine';
 export { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 export {
   MinimaxEngine,

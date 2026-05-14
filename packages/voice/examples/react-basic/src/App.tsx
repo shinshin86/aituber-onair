@@ -3,6 +3,8 @@ import {
   type AivisSpeechQueryParameterOverrides,
   type ElevenLabsApplyTextNormalization,
   type GeminiTtsModel,
+  type InworldAudioEncoding,
+  type InworldDeliveryMode,
   type MinimaxAudioFormat,
   type MinimaxModel,
   type UnrealSpeechCodec,
@@ -24,6 +26,9 @@ import {
   ELEVENLABS_OUTPUT_FORMATS,
   ENGINE_DEFAULTS,
   GEMINI_TTS_MODELS,
+  INWORLD_AUDIO_ENCODINGS,
+  INWORLD_DELIVERY_MODES,
+  INWORLD_MODELS,
   XAI_VOICE_OPTIONS,
   type AivisCloudBooleanOption,
   type AivisCloudOutputChannelOption,
@@ -32,6 +37,8 @@ import {
   type DefaultBooleanOption,
   type ElevenLabsApplyTextNormalizationOption,
   type EngineType,
+  type InworldDeliveryModeOption,
+  type InworldVoiceLanguageOption,
   type LocalOutputSamplingRateOption,
   type OutputStereoOption,
   type SpeakerOption,
@@ -88,7 +95,45 @@ interface ElevenLabsVoiceListResponse {
   voices?: ElevenLabsVoiceResponse[];
 }
 
+interface InworldVoiceResponse {
+  voiceId: string;
+  displayName?: string;
+  langCode?: string;
+  promptLanguages?: string[];
+  source?: string;
+  gender?: string;
+}
+
+interface InworldVoiceListResponse {
+  voices?: InworldVoiceResponse[];
+  nextPageToken?: string;
+}
+
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
+const isNonEmptyString = (value?: string): value is string => Boolean(value);
+
+const formatInworldLanguage = (voice: InworldVoiceResponse): string => {
+  const languages = [voice.langCode, ...(voice.promptLanguages ?? [])].filter(
+    isNonEmptyString,
+  );
+  const uniqueLanguages = Array.from(
+    new Set(
+      languages.map((language) =>
+        language.includes('_') ? language.replace('_', '-') : language,
+      ),
+    ),
+  );
+
+  return uniqueLanguages.join(', ') || 'unknown';
+};
+
+const isJapaneseInworldVoice = (voice: InworldVoiceResponse): boolean => {
+  const languages = [voice.langCode, ...(voice.promptLanguages ?? [])]
+    .filter(isNonEmptyString)
+    .map((language) => language.toLowerCase().replace('_', '-'));
+
+  return languages.some((language) => language.startsWith('ja'));
+};
 
 const createInitialVoicepeakEmotionWeights = (): Record<
   (typeof VOICEPEAK_WEIGHT_KEYS)[number],
@@ -201,6 +246,28 @@ function App() {
   ] = useState<DefaultBooleanOption>('default');
   const [elevenLabsEnableLogging, setElevenLabsEnableLogging] =
     useState<DefaultBooleanOption>('default');
+  const [inworldModel, setInworldModel] = useState<string>(
+    ENGINE_DEFAULTS.inworld.defaultModel,
+  );
+  const [inworldAudioEncoding, setInworldAudioEncoding] =
+    useState<InworldAudioEncoding>(
+      ENGINE_DEFAULTS.inworld.defaultAudioEncoding,
+    );
+  const [inworldSampleRateHertz, setInworldSampleRateHertz] = useState(
+    String(ENGINE_DEFAULTS.inworld.defaultSampleRateHertz),
+  );
+  const [inworldBitRate, setInworldBitRate] = useState('');
+  const [inworldSpeakingRate, setInworldSpeakingRate] = useState('');
+  const [inworldLanguage, setInworldLanguage] = useState<string>(
+    ENGINE_DEFAULTS.inworld.defaultLanguage,
+  );
+  const [inworldVoiceLanguage, setInworldVoiceLanguage] =
+    useState<InworldVoiceLanguageOption>(
+      ENGINE_DEFAULTS.inworld.defaultLanguage,
+    );
+  const [inworldDeliveryMode, setInworldDeliveryMode] =
+    useState<InworldDeliveryModeOption>('default');
+  const [inworldTemperature, setInworldTemperature] = useState('');
   const [geminiTtsModel, setGeminiTtsModel] = useState<string>(
     ENGINE_DEFAULTS.geminiTts.defaultModel,
   );
@@ -294,6 +361,16 @@ function App() {
     }));
   };
 
+  const changeInworldVoiceLanguage = (
+    nextLanguage: InworldVoiceLanguageOption,
+  ) => {
+    setInworldVoiceLanguage(nextLanguage);
+
+    if (nextLanguage !== 'all') {
+      setInworldLanguage(nextLanguage);
+    }
+  };
+
   useEffect(() => {
     const defaults = ENGINE_DEFAULTS[engine];
     const minimaxDefaults = ENGINE_DEFAULTS.minimax;
@@ -356,6 +433,17 @@ function App() {
     setElevenLabsApplyTextNormalization('default');
     setElevenLabsApplyLanguageTextNormalization('default');
     setElevenLabsEnableLogging('default');
+    setInworldModel(ENGINE_DEFAULTS.inworld.defaultModel);
+    setInworldAudioEncoding(ENGINE_DEFAULTS.inworld.defaultAudioEncoding);
+    setInworldSampleRateHertz(
+      String(ENGINE_DEFAULTS.inworld.defaultSampleRateHertz),
+    );
+    setInworldBitRate('');
+    setInworldSpeakingRate('');
+    setInworldLanguage(ENGINE_DEFAULTS.inworld.defaultLanguage);
+    setInworldVoiceLanguage(ENGINE_DEFAULTS.inworld.defaultLanguage);
+    setInworldDeliveryMode('default');
+    setInworldTemperature('');
     setGeminiTtsModel(ENGINE_DEFAULTS.geminiTts.defaultModel);
     setGeminiTtsLanguageCode(ENGINE_DEFAULTS.geminiTts.defaultLanguageCode);
     setGeminiTtsPrompt('');
@@ -408,7 +496,8 @@ function App() {
       engine !== 'aivisSpeech' &&
       engine !== 'minimax' &&
       engine !== 'xai' &&
-      engine !== 'elevenLabs'
+      engine !== 'elevenLabs' &&
+      engine !== 'inworld'
     ) {
       return;
     }
@@ -502,6 +591,79 @@ function App() {
             ? `${voice.name} (${voice.category})`
             : voice.name,
         }));
+      } else if (engine === 'inworld') {
+        const trimmedApiKey = apiKey.trim();
+
+        if (!trimmedApiKey) {
+          throw new Error('Inworld API key is required');
+        }
+
+        let pageToken = '';
+        const voices: InworldVoiceResponse[] = [];
+
+        do {
+          const url = new URL(ENGINE_DEFAULTS.inworld.voicesApiUrl);
+          url.searchParams.set('orderBy', 'display_name asc');
+          url.searchParams.set('pageSize', '2000');
+
+          if (inworldVoiceLanguage !== 'all') {
+            url.searchParams.set(
+              'filter',
+              `lang_code = "${inworldVoiceLanguage}"`,
+            );
+          }
+
+          if (pageToken) {
+            url.searchParams.set('pageToken', pageToken);
+          }
+
+          const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+              Authorization: `Basic ${trimmedApiKey}`,
+            },
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(
+              errorText
+                ? `Failed to fetch speakers: ${response.status} - ${errorText}`
+                : `Failed to fetch speakers: ${response.status} ${response.statusText}`,
+            );
+          }
+
+          const result = (await response.json()) as InworldVoiceListResponse;
+          voices.push(...(result.voices ?? []));
+          pageToken = result.nextPageToken ?? '';
+        } while (pageToken);
+
+        nextSpeakerOptions = voices
+          .sort((a, b) => {
+            const languagePriority =
+              Number(isJapaneseInworldVoice(b)) -
+              Number(isJapaneseInworldVoice(a));
+
+            if (languagePriority !== 0) {
+              return languagePriority;
+            }
+
+            return (a.displayName ?? a.voiceId).localeCompare(
+              b.displayName ?? b.voiceId,
+            );
+          })
+          .map((voice) => {
+            const metadata = [formatInworldLanguage(voice), voice.gender]
+              .filter(Boolean)
+              .join(' / ');
+
+            return {
+              id: voice.voiceId,
+              label: metadata
+                ? `${voice.displayName ?? voice.voiceId} (${metadata})`
+                : (voice.displayName ?? voice.voiceId),
+            };
+          });
       } else {
         const trimmedApiKey = apiKey.trim();
 
@@ -618,7 +780,8 @@ function App() {
       (engine === 'voicevox' ||
         engine === 'aivisSpeech' ||
         engine === 'minimax' ||
-        engine === 'elevenLabs') &&
+        engine === 'elevenLabs' ||
+        engine === 'inworld') &&
       !speaker.trim()
     ) {
       setStatus('話者一覧を取得してSpeakerを選択してください');
@@ -944,6 +1107,41 @@ function App() {
         if (elevenLabsEnableLogging !== 'default') {
           options.elevenLabsEnableLogging = elevenLabsEnableLogging === 'true';
         }
+      } else if (engine === 'inworld') {
+        options.inworldModel = inworldModel;
+        options.inworldAudioEncoding = inworldAudioEncoding;
+
+        const parsedSampleRateHertz = Number.parseInt(
+          inworldSampleRateHertz,
+          10,
+        );
+        if (!Number.isNaN(parsedSampleRateHertz)) {
+          options.inworldSampleRateHertz = parsedSampleRateHertz;
+        }
+
+        const parsedBitRate = Number.parseInt(inworldBitRate, 10);
+        if (!Number.isNaN(parsedBitRate)) {
+          options.inworldBitRate = parsedBitRate;
+        }
+
+        const parsedSpeakingRate = Number.parseFloat(inworldSpeakingRate);
+        if (!Number.isNaN(parsedSpeakingRate)) {
+          options.inworldSpeakingRate = parsedSpeakingRate;
+        }
+
+        if (inworldLanguage.trim()) {
+          options.inworldLanguage = inworldLanguage.trim();
+        }
+
+        if (inworldDeliveryMode !== 'default') {
+          options.inworldDeliveryMode =
+            inworldDeliveryMode as InworldDeliveryMode;
+        }
+
+        const parsedTemperature = Number.parseFloat(inworldTemperature);
+        if (!Number.isNaN(parsedTemperature)) {
+          options.inworldTemperature = parsedTemperature;
+        }
       } else if (engine === 'geminiTts') {
         options.geminiTtsModel = geminiTtsModel as GeminiTtsModel;
         options.geminiTtsLanguageCode = geminiTtsLanguageCode;
@@ -1204,6 +1402,11 @@ function App() {
               options.elevenLabsApiUrl = apiUrl;
             }
             break;
+          case 'inworld':
+            if (apiUrl !== ENGINE_DEFAULTS.inworld.apiUrl) {
+              options.inworldApiUrl = apiUrl;
+            }
+            break;
           case 'openaiCompatible':
             options.openAiCompatibleApiUrl = apiUrl;
             break;
@@ -1272,6 +1475,8 @@ function App() {
               onApiUrlChange={setApiUrl}
               minimaxGroupId={minimaxGroupId}
               onMinimaxGroupIdChange={setMinimaxGroupId}
+              inworldVoiceLanguage={inworldVoiceLanguage}
+              onInworldVoiceLanguageChange={changeInworldVoiceLanguage}
               apiKeyIsRequired={apiKeyIsRequired}
               piperPlusAvailable={piperPlusAvailable}
               piperPlusLoading={piperPlusLoading}
@@ -1373,6 +1578,43 @@ function App() {
                   enableLogging: {
                     value: elevenLabsEnableLogging,
                     onChange: setElevenLabsEnableLogging,
+                  },
+                }}
+                inworld={{
+                  model: {
+                    value: inworldModel,
+                    onChange: setInworldModel,
+                  },
+                  models: INWORLD_MODELS,
+                  audioEncoding: {
+                    value: inworldAudioEncoding,
+                    onChange: setInworldAudioEncoding,
+                  },
+                  audioEncodings: INWORLD_AUDIO_ENCODINGS,
+                  sampleRateHertz: {
+                    value: inworldSampleRateHertz,
+                    onChange: setInworldSampleRateHertz,
+                  },
+                  bitRate: {
+                    value: inworldBitRate,
+                    onChange: setInworldBitRate,
+                  },
+                  speakingRate: {
+                    value: inworldSpeakingRate,
+                    onChange: setInworldSpeakingRate,
+                  },
+                  language: {
+                    value: inworldLanguage,
+                    onChange: setInworldLanguage,
+                  },
+                  deliveryMode: {
+                    value: inworldDeliveryMode,
+                    onChange: setInworldDeliveryMode,
+                  },
+                  deliveryModes: INWORLD_DELIVERY_MODES,
+                  temperature: {
+                    value: inworldTemperature,
+                    onChange: setInworldTemperature,
                   },
                 }}
                 geminiTts={{

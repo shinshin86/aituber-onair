@@ -48,6 +48,7 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 
 - **OpenAI TTS** - High-quality voices with API key
 - **OpenAI-Compatible TTS** - Self-hosted OpenAI-style endpoints such as Kokoro FastAPI
+- **Inworld TTS** - Non-streaming Inworld REST API with Basic authentication
 - **VOICEVOX** - Free Japanese voices (requires local server)
 - **AIVIS Speech** - Emotion-aware synthesis
 - **VoicePeak** - Professional voice synthesis with single-tag and weighted emotion UI (`vpeakserver v0.2.0+` required for weighted mode)
@@ -135,6 +136,13 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 ```bash
 # Kokoro FastAPI default endpoint: http://localhost:8880/v1/audio/speech
 # API key is optional. Set the model explicitly to one accepted by your endpoint.
+```
+
+#### Inworld TTS
+```bash
+# Default endpoint: https://api.inworld.ai/tts/v1/voice
+# Use the Basic Base64 authorization value from Inworld as the API key.
+# Do not expose Basic credentials in production browser apps; use a backend proxy or JWT.
 ```
 
 ## Piper Plus Setup
