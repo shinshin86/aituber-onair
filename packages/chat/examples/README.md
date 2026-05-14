@@ -142,7 +142,7 @@ const claudeService = ChatServiceFactory.createChatService('claude', { apiKey })
 // Uses: claude-3-haiku-20240307 (balanced speed/cost)
 
 const geminiService = ChatServiceFactory.createChatService('gemini', { apiKey });
-// Uses: gemini-2.0-flash-lite (latest, efficient)
+// Uses: gemini-3.1-flash-lite (stable, efficient)
 ```
 
 ### 2. Multi-Provider Support
@@ -203,7 +203,7 @@ The table below focuses on the primary providers used in the core JavaScript run
 
 | Feature | OpenAI | Claude | Gemini |
 |---------|--------|--------|--------|
-| Default Model | `gpt-4o-mini` | `claude-3-haiku-20240307` | `gemini-2.0-flash-lite` |
+| Default Model | `gpt-4o-mini` | `claude-3-haiku-20240307` | `gemini-3.1-flash-lite` |
 | Text Chat | ✅ GPT-4, GPT-3.5 | ✅ Claude 3 Family | ✅ Gemini Pro |
 | Vision | ✅ GPT-4 Vision | ✅ Claude 3 Vision | ✅ Gemini Pro Vision |
 | Streaming | ✅ Full Support | ✅ Full Support | ✅ Full Support |

@@ -542,9 +542,16 @@ const claudeService = ChatServiceFactory.createChatService('claude', {
 ```typescript
 const geminiService = ChatServiceFactory.createChatService('gemini', {
   apiKey: process.env.GOOGLE_API_KEY,
-  model: 'gemini-3.1-flash-lite-preview'
+  model: 'gemini-3.1-flash-lite'
 });
 ```
+
+`gemini-3.1-flash-lite` is the recommended stable Flash-Lite model. Deprecated
+preview and shutdown-scheduled models such as `gemini-3.1-flash-lite-preview`,
+`gemini-3-pro-preview`, `gemini-2.0-flash`, and
+`gemini-2.0-flash-lite` remain usable by explicit model string for backward
+compatibility, but are no longer advertised in the standard supported-model
+list for production use.
 
 #### OpenRouter
 
@@ -962,7 +969,7 @@ Currently, the following AI providers are built-in:
 
 - **OpenAI**: Supports models like GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
-- **Gemini**: Supports models like Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
+- **Gemini**: Supports recommended models like Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 2.0 Flash, and Gemini 2.0 Flash-Lite remain exported for explicit use, but should be migrated before shutdown.
 - **Claude**: Supports current Claude API model IDs including Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)

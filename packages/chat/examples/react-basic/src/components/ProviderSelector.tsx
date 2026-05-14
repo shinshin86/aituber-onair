@@ -46,6 +46,7 @@ import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
+  MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
@@ -543,6 +544,12 @@ export const allModels: ProviderModel[] = [
 
   // Gemini models
   {
+    id: MODEL_GEMINI_3_1_FLASH_LITE,
+    name: 'Gemini 3.1 Flash-Lite',
+    provider: 'gemini',
+    default: true,
+  },
+  {
     id: MODEL_GEMINI_3_1_PRO_PREVIEW,
     name: 'Gemini 3.1 Pro Preview',
     provider: 'gemini',
@@ -550,13 +557,13 @@ export const allModels: ProviderModel[] = [
   },
   {
     id: MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
-    name: 'Gemini 3.1 Flash-Lite Preview',
+    name: 'Gemini 3.1 Flash-Lite Preview (Deprecated)',
     provider: 'gemini',
     default: false,
   },
   {
     id: MODEL_GEMINI_3_PRO_PREVIEW,
-    name: 'Gemini 3 Pro Preview',
+    name: 'Gemini 3 Pro Preview (Deprecated)',
     provider: 'gemini',
     default: false,
   },
@@ -582,23 +589,23 @@ export const allModels: ProviderModel[] = [
     id: MODEL_GEMINI_2_5_FLASH_LITE,
     name: 'Gemini 2.5 Flash Lite',
     provider: 'gemini',
-    default: true,
+    default: false,
   },
   {
     id: MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-    name: 'Gemini 2.5 Flash Lite Preview',
+    name: 'Gemini 2.5 Flash Lite Preview (Deprecated)',
     provider: 'gemini',
     default: false,
   },
   {
     id: MODEL_GEMINI_2_0_FLASH,
-    name: 'Gemini 2.0 Flash',
+    name: 'Gemini 2.0 Flash (Deprecated)',
     provider: 'gemini',
     default: false,
   },
   {
     id: MODEL_GEMINI_2_0_FLASH_LITE,
-    name: 'Gemini 2.0 Flash Lite',
+    name: 'Gemini 2.0 Flash Lite (Deprecated)',
     provider: 'gemini',
     default: false,
   },

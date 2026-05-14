@@ -1,5 +1,22 @@
 # @aituber-onair/chat
 
+## 0.33.0
+
+### Minor Changes
+
+- Added the stable Gemini 3.1 Flash-Lite model constant
+  (`MODEL_GEMINI_3_1_FLASH_LITE`, `gemini-3.1-flash-lite`) and made it the
+  Gemini provider default.
+- Updated Gemini recommended supported models so stable/current models are
+  listed first and lifecycle-deprecated models are no longer advertised by
+  `getSupportedModels()`.
+- Kept deprecated Gemini model constants exported for backward compatibility,
+  including Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 2.0
+  Flash, and Gemini 2.0 Flash-Lite.
+- Updated the React basic selector and README docs to label deprecated Gemini
+  lifecycle models and recommend migrating production usage to stable/current
+  models before shutdown.
+
 ## 0.32.0
 
 ### Minor Changes
