@@ -12,6 +12,8 @@ const { createAgentChatService } = require('../../dist/cjs/agent.js');
 const providerAliases = {
   codex: 'codex-sdk',
   'codex-sdk': 'codex-sdk',
+  claude: 'claude-agent-sdk',
+  'claude-agent-sdk': 'claude-agent-sdk',
   copilot: 'copilot-sdk',
   'copilot-sdk': 'copilot-sdk',
 };
@@ -25,11 +27,23 @@ const prompt =
 if (!provider) {
   console.log('Usage:');
   console.log('  node agent-provider-example.js codex "Say hello"');
+  console.log('  node agent-provider-example.js claude "Say hello"');
   console.log('  node agent-provider-example.js copilot "Say hello"');
   process.exit(1);
 }
 
 function buildOptions(providerName) {
+  if (providerName === 'claude-agent-sdk') {
+    return {
+      model: process.env.CLAUDE_AGENT_SDK_MODEL,
+      responseLength: 'short',
+      workingDirectory: process.cwd(),
+      maxTurns: 1,
+      pathToClaudeCodeExecutable:
+        process.env.CLAUDE_AGENT_SDK_CLI_PATH || undefined,
+    };
+  }
+
   if (providerName === 'copilot-sdk') {
     const options = {
       model: process.env.COPILOT_SDK_MODEL || 'gpt-4.1',

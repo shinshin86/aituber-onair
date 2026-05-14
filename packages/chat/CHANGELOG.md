@@ -1,5 +1,18 @@
 # @aituber-onair/chat
 
+## 0.32.0
+
+### Minor Changes
+
+- Added an experimental Claude Agent SDK provider (`claude-agent-sdk`) for the
+  optional `@aituber-onair/chat/agent` entry.
+- Kept `@anthropic-ai/claude-agent-sdk` optional and dynamically loaded so the
+  default chat package install remains unchanged for normal API providers.
+- Runs Claude Agent SDK as text chat by default with built-in tools disabled and
+  without loading Claude Code project/user settings.
+- Updated Agent SDK provider examples and English/Japanese README
+  documentation to cover Codex, Claude, and Copilot in that order.
+
 ## 0.31.0
 
 ### Minor Changes

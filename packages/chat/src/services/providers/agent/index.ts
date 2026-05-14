@@ -1,7 +1,12 @@
 import { ChatService } from '../../ChatService';
 import { ChatServiceFactory } from '../../ChatServiceFactory';
+import { ClaudeAgentSDKChatServiceProvider } from './ClaudeAgentSDKChatServiceProvider';
 import { CodexSDKChatServiceProvider } from './CodexSDKChatServiceProvider';
 import { CopilotSDKChatServiceProvider } from './CopilotSDKChatServiceProvider';
+import {
+  ClaudeAgentSDKChatServiceOptions,
+  ClaudeAgentSDKLoader,
+} from './ClaudeAgentSDKChatService';
 import {
   CodexSDKChatServiceOptions,
   CodexSDKLoader,
@@ -11,6 +16,13 @@ import {
   CopilotSDKLoader,
 } from './CopilotSDKChatService';
 
+export {
+  ClaudeAgentSDKChatService,
+  DEFAULT_CLAUDE_AGENT_SDK_MODEL,
+  type ClaudeAgentSDKChatServiceOptions,
+  type ClaudeAgentSDKLoader,
+} from './ClaudeAgentSDKChatService';
+export { ClaudeAgentSDKChatServiceProvider } from './ClaudeAgentSDKChatServiceProvider';
 export {
   CodexSDKChatService,
   DEFAULT_CODEX_SDK_MODEL,
@@ -26,26 +38,34 @@ export {
 } from './CopilotSDKChatService';
 export { CopilotSDKChatServiceProvider } from './CopilotSDKChatServiceProvider';
 
-export type AgentChatProviderName = 'copilot-sdk' | 'codex-sdk';
+export type AgentChatProviderName =
+  | 'codex-sdk'
+  | 'claude-agent-sdk'
+  | 'copilot-sdk';
 
 export type AgentChatServiceOptionsByProvider = {
-  'copilot-sdk': CopilotSDKChatServiceOptions;
   'codex-sdk': CodexSDKChatServiceOptions;
+  'claude-agent-sdk': ClaudeAgentSDKChatServiceOptions;
+  'copilot-sdk': CopilotSDKChatServiceOptions;
 };
 
 export type RegisterAgentChatProvidersOptions = {
-  copilotSDKLoader?: CopilotSDKLoader;
   codexSDKLoader?: CodexSDKLoader;
+  claudeAgentSDKLoader?: ClaudeAgentSDKLoader;
+  copilotSDKLoader?: CopilotSDKLoader;
 };
 
 export function registerAgentChatProviders(
   options: RegisterAgentChatProvidersOptions = {},
 ): void {
   ChatServiceFactory.registerProvider(
-    new CopilotSDKChatServiceProvider(options.copilotSDKLoader),
+    new CodexSDKChatServiceProvider(options.codexSDKLoader),
   );
   ChatServiceFactory.registerProvider(
-    new CodexSDKChatServiceProvider(options.codexSDKLoader),
+    new ClaudeAgentSDKChatServiceProvider(options.claudeAgentSDKLoader),
+  );
+  ChatServiceFactory.registerProvider(
+    new CopilotSDKChatServiceProvider(options.copilotSDKLoader),
   );
 }
 
