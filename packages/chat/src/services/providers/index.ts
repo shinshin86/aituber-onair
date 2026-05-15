@@ -3,6 +3,7 @@ import { DeepSeekChatServiceProvider } from './deepseek/DeepSeekChatServiceProvi
 import { GeminiChatServiceProvider } from './gemini/GeminiChatServiceProvider';
 import { GeminiNanoChatServiceProvider } from './geminiNano/GeminiNanoChatServiceProvider';
 import { KimiChatServiceProvider } from './kimi/KimiChatServiceProvider';
+import { MistralChatServiceProvider } from './mistral/MistralChatServiceProvider';
 import { OpenAICompatibleChatServiceProvider } from './openaiCompatible/OpenAICompatibleChatServiceProvider';
 import { OpenAIChatServiceProvider } from './openai/OpenAIChatServiceProvider';
 import { OpenRouterChatServiceProvider } from './openrouter/OpenRouterChatServiceProvider';
@@ -20,4 +21,5 @@ export const DEFAULT_CHAT_SERVICE_PROVIDERS = [
   new XAIChatServiceProvider(),
   new KimiChatServiceProvider(),
   new DeepSeekChatServiceProvider(),
+  new MistralChatServiceProvider(),
 ];

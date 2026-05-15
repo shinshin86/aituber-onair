@@ -144,7 +144,7 @@ npm install @aituber-onair/core
 
 <img src="./packages/chat/images/aituber-onair-chat.png" alt="AITuber OnAir Chat ロゴ" width="240" />
 
-OpenAI、Claude、Gemini、Z.ai、Kimi、OpenRouter を共通インターフェースで扱える LLM レイヤー。ストリーミング、ツール / 関数呼び出し、Vision、MCP に対応。
+OpenAI、Claude、Gemini、Z.ai、Kimi、DeepSeek、Mistral、OpenRouter を共通インターフェースで扱える LLM レイヤー。ストリーミング、ツール / 関数呼び出し、Vision、MCP に対応。
 ```bash
 npm install @aituber-onair/chat
 ```

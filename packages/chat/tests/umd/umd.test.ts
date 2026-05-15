@@ -142,6 +142,7 @@ describe('UMD Bundle', () => {
         'zai',
         'kimi',
         'deepseek',
+        'mistral',
       ];
 
       for (const provider of providers) {

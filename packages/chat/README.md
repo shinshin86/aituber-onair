@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, and Agent SDK providers.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, and Agent SDK providers.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, and Agent SDK providers
+- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, and Agent SDK providers
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -690,6 +690,40 @@ Notes:
 - You can still use DeepSeek through `openai-compatible` by providing the full endpoint and model manually, but the first-class `deepseek` provider supplies the endpoint and default model for you.
 - DeepSeek documents thinking/reasoning controls, but this package does not add DeepSeek-specific request parameters by default. Standard chat and streaming are prioritized here.
 
+#### Mistral
+
+```typescript
+const mistralService = ChatServiceFactory.createChatService('mistral', {
+  apiKey: process.env.MISTRAL_API_KEY,
+  model: 'mistral-small-latest',
+});
+
+await mistralService.processChat(
+  [{ role: 'user', content: 'Give me one concise streaming reply.' }],
+  (partial) => process.stdout.write(partial),
+  async (complete) => console.log('\nDone:', complete),
+);
+```
+
+Notes:
+- Mistral uses Chat Completions at `https://api.mistral.ai/v1/chat/completions`.
+- Default model: `mistral-small-latest`, chosen for the sample-friendly balance of low cost, strong general chat quality, vision support, and adjustable reasoning support.
+- Supported models: `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`.
+- `reasoning_effort` is supported as `'none' | 'high'` and is only sent for `mistral-small-latest` and `mistral-medium-3-5`, matching Mistral's adjustable reasoning docs. It is omitted for other models.
+
+Reasoning example:
+
+```typescript
+const mistralReasoningService = ChatServiceFactory.createChatService(
+  'mistral',
+  {
+    apiKey: process.env.MISTRAL_API_KEY,
+    model: 'mistral-medium-3-5',
+    reasoning_effort: 'high',
+  },
+);
+```
+
 #### Gemini Nano (Chrome Built-in AI)
 
 ```typescript
@@ -992,6 +1026,7 @@ Currently, the following AI providers are built-in:
 - **xAI**: Supports Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support
 - **Kimi**: Supports Kimi K2.6 (`kimi-k2.6`) and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`) and DeepSeek V4 Pro (`deepseek-v4-pro`) via OpenAI-compatible Chat Completions. Legacy aliases `deepseek-chat` and `deepseek-reasoner` are deprecated by DeepSeek.
+- **Mistral**: Supports current Mistral generalist models including `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, and `mistral-medium-2508`, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
 - **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Chrome 138+ with Prompt API flags enabled. Non-streaming, no vision support.
 
 ## License

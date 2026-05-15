@@ -44,6 +44,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
   - Z.ai: https://platform.z.ai/
   - Kimi (Moonshot): https://platform.moonshot.cn/
   - DeepSeek: https://platform.deepseek.com/
+  - Mistral: https://console.mistral.ai/
 
 ### Scripts
 
@@ -75,7 +76,7 @@ react-basic/
 
 ### Basic Chat
 
-1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, or DeepSeek)
+1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, or Mistral)
 2. Enter your API key
 3. Type a message and press Enter or click Send
 4. Watch the AI response stream in real-time
@@ -156,6 +157,11 @@ Use the dropdown to select response length:
 - Models: DeepSeek V4 Flash, DeepSeek V4 Pro
 - Vision: Not pre-validated as supported
 - Best for: DeepSeek's OpenAI-compatible API without manually configuring an endpoint
+
+**Mistral**
+- Models: Mistral Small Latest, Mistral Medium 3.5, Mistral Large Latest, Mistral Large 3, Mistral Small 4, Mistral Medium 3.1
+- Vision: Supported
+- Best for: Mistral Chat Completions with streaming and optional adjustable reasoning
 
 ### OpenRouter Dynamic Free Models (Manual Check)
 

@@ -1,6 +1,6 @@
 # @aituber-onair/chat
 
-## Unreleased
+## 0.34.0
 
 ### Minor Changes
 
@@ -13,6 +13,14 @@
 - Documented DeepSeek usage, recommended models, streaming support, and the
   legacy model deprecation notice without adding DeepSeek-specific
   thinking/reasoning request parameters by default.
+- Added a first-class Mistral provider (`provider: 'mistral'`) using Mistral
+  Chat Completions with `mistral-small-latest` as the default model.
+- Added Mistral constants and supported current generalist model IDs:
+  `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`,
+  `mistral-large-2512`, `mistral-small-2603`, and `mistral-medium-2508`.
+- Added Mistral streaming/non-streaming tests, vision request normalization,
+  and adjustable `reasoning_effort` support for `mistral-small-latest` and
+  `mistral-medium-3-5` only.
 
 ## 0.33.0
 
