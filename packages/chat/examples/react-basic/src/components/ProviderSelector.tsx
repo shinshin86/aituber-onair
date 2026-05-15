@@ -109,6 +109,13 @@ import {
   // DeepSeek models
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_PRO,
+  // Mistral models
+  MODEL_MISTRAL_SMALL_LATEST,
+  MODEL_MISTRAL_MEDIUM_3_5,
+  MODEL_MISTRAL_LARGE_LATEST,
+  MODEL_MISTRAL_LARGE_2512,
+  MODEL_MISTRAL_SMALL_2603,
+  MODEL_MISTRAL_MEDIUM_2508,
   // Gemini Nano models
   MODEL_GEMINI_NANO,
 } from '@aituber-onair/chat';
@@ -381,6 +388,10 @@ const providerInfo = {
   deepseek: {
     name: 'DeepSeek',
     placeholder: 'sk-...',
+  },
+  mistral: {
+    name: 'Mistral',
+    placeholder: 'xxx...',
   },
   'gemini-nano': {
     name: 'Gemini Nano (Browser AI)',
@@ -924,6 +935,44 @@ export const allModels: ProviderModel[] = [
     id: MODEL_DEEPSEEK_V4_PRO,
     name: 'DeepSeek V4 Pro',
     provider: 'deepseek',
+    default: false,
+  },
+
+  // Mistral models
+  {
+    id: MODEL_MISTRAL_SMALL_LATEST,
+    name: 'Mistral Small Latest',
+    provider: 'mistral',
+    default: true,
+  },
+  {
+    id: MODEL_MISTRAL_MEDIUM_3_5,
+    name: 'Mistral Medium 3.5',
+    provider: 'mistral',
+    default: false,
+  },
+  {
+    id: MODEL_MISTRAL_LARGE_LATEST,
+    name: 'Mistral Large Latest',
+    provider: 'mistral',
+    default: false,
+  },
+  {
+    id: MODEL_MISTRAL_LARGE_2512,
+    name: 'Mistral Large 3',
+    provider: 'mistral',
+    default: false,
+  },
+  {
+    id: MODEL_MISTRAL_SMALL_2603,
+    name: 'Mistral Small 4',
+    provider: 'mistral',
+    default: false,
+  },
+  {
+    id: MODEL_MISTRAL_MEDIUM_2508,
+    name: 'Mistral Medium 3.1',
+    provider: 'mistral',
     default: false,
   },
 

@@ -21,6 +21,33 @@ const parseJsonPayload = (
   }
 };
 
+const extractTextContent = (content: unknown): string => {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (!Array.isArray(content)) {
+    return '';
+  }
+
+  return content
+    .map((chunk) => {
+      if (typeof chunk === 'string') {
+        return chunk;
+      }
+      if (
+        chunk &&
+        typeof chunk === 'object' &&
+        (chunk as { type?: unknown }).type === 'text' &&
+        typeof (chunk as { text?: unknown }).text === 'string'
+      ) {
+        return (chunk as { text: string }).text;
+      }
+      return '';
+    })
+    .join('');
+};
+
 const forEachSsePayload = async (
   res: Response,
   onPayload: (payload: string) => void,
@@ -69,7 +96,7 @@ export async function parseOpenAICompatibleTextStream(
     const json = parseJsonPayload(payload, options.onJsonError);
     if (!json) return;
 
-    const content = json.choices?.[0]?.delta?.content || '';
+    const content = extractTextContent(json.choices?.[0]?.delta?.content);
     if (content) {
       onPartial(content);
       full += content;
@@ -105,9 +132,10 @@ export async function parseOpenAICompatibleToolStream(
 
     const delta = choice?.delta;
 
-    if (delta?.content) {
-      onPartial(delta.content);
-      appendTextBlock(textBlocks, delta.content);
+    const content = extractTextContent(delta?.content);
+    if (content) {
+      onPartial(content);
+      appendTextBlock(textBlocks, content);
     }
 
     if (delta?.tool_calls) {
@@ -156,8 +184,11 @@ export function parseOpenAICompatibleOneShot(data: any): ToolChatCompletion {
         input: JSON.parse(c.function?.arguments || '{}'),
       }),
     );
-  } else if (choice?.message?.content) {
-    blocks.push({ type: 'text', text: choice.message.content });
+  } else {
+    const content = extractTextContent(choice?.message?.content);
+    if (content) {
+      blocks.push({ type: 'text', text: content });
+    }
   }
 
   return {

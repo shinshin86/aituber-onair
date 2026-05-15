@@ -162,6 +162,12 @@ describe('ChatServiceFactory', () => {
         apiKey: 'test-deepseek-key',
       });
       expect(deepSeekService).toBeDefined();
+
+      // Test Mistral
+      const mistralService = ChatServiceFactory.createChatService('mistral', {
+        apiKey: 'test-mistral-key',
+      });
+      expect(mistralService).toBeDefined();
     });
 
     it('should accept provider-specific options', () => {
@@ -192,6 +198,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('zai')).toBe(true);
       expect(providers.has('kimi')).toBe(true);
       expect(providers.has('deepseek')).toBe(true);
+      expect(providers.has('mistral')).toBe(true);
     });
 
     it('should return mutable map that allows modifications', () => {
@@ -220,6 +227,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('zai');
       expect(availableProviders).toContain('kimi');
       expect(availableProviders).toContain('deepseek');
+      expect(availableProviders).toContain('mistral');
     });
 
     it('should include newly registered providers', () => {
@@ -242,6 +250,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('zai');
       expect(availableProviders).toContain('kimi');
       expect(availableProviders).toContain('deepseek');
+      expect(availableProviders).toContain('mistral');
     });
   });
 
@@ -278,6 +287,16 @@ describe('ChatServiceFactory', () => {
 
       const deepSeekModels = ChatServiceFactory.getSupportedModels('deepseek');
       expect(deepSeekModels).toEqual(['deepseek-v4-flash', 'deepseek-v4-pro']);
+
+      const mistralModels = ChatServiceFactory.getSupportedModels('mistral');
+      expect(mistralModels).toEqual([
+        'mistral-small-latest',
+        'mistral-medium-3-5',
+        'mistral-large-latest',
+        'mistral-large-2512',
+        'mistral-small-2603',
+        'mistral-medium-2508',
+      ]);
     });
   });
 
@@ -327,6 +346,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('zai')).toBe(true);
       expect(providers.has('kimi')).toBe(true);
       expect(providers.has('deepseek')).toBe(true);
+      expect(providers.has('mistral')).toBe(true);
       expect(providers.size).toBeGreaterThanOrEqual(3);
     });
   });

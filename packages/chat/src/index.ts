@@ -25,6 +25,7 @@ export type {
   XAIChatServiceOptions,
   KimiChatServiceOptions,
   DeepSeekChatServiceOptions,
+  MistralChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
 } from './services/providers/ChatServiceProvider';
@@ -65,6 +66,10 @@ export { KimiChatServiceProvider } from './services/providers/kimi/KimiChatServi
 // DeepSeek provider exports
 export { DeepSeekChatService } from './services/providers/deepseek/DeepSeekChatService';
 export { DeepSeekChatServiceProvider } from './services/providers/deepseek/DeepSeekChatServiceProvider';
+
+// Mistral provider exports
+export { MistralChatService } from './services/providers/mistral/MistralChatService';
+export { MistralChatServiceProvider } from './services/providers/mistral/MistralChatServiceProvider';
 
 // Constants exports
 export * from './constants';

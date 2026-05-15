@@ -7,6 +7,8 @@ import {
   OpenAIReasoningEffort,
   VISION_SUPPORTED_MODELS,
   getDefaultReasoningEffortForGPT5Model,
+  isMistralReasoningEffort,
+  isMistralReasoningEffortModel,
   isGPT5Model,
 } from '../../../constants';
 import {
@@ -51,6 +53,7 @@ const GPT5_REASONING_MIN_TOKENS: Record<OpenAIReasoningEffort, number> = {
 const OPENAI_COMPATIBLE_CHAT_COMPLETIONS_PROVIDERS = new Set([
   'openai-compatible',
   'deepseek',
+  'mistral',
 ]);
 
 /**
@@ -344,7 +347,10 @@ export class OpenAIChatService implements ChatService {
     if (isResponsesAPI) {
       body.input = this.cleanMessagesForResponsesAPI(messages);
     } else {
-      body.messages = messages;
+      body.messages =
+        this.provider === 'mistral'
+          ? this.cleanMessagesForMistralChatCompletions(messages)
+          : messages;
     }
 
     // Add GPT-5 specific parameters
@@ -378,6 +384,15 @@ export class OpenAIChatService implements ChatService {
           body.verbosity = this.verbosity;
         }
       }
+    }
+
+    if (
+      this.provider === 'mistral' &&
+      isMistralReasoningEffortModel(model) &&
+      this.reasoning_effort &&
+      isMistralReasoningEffort(this.reasoning_effort)
+    ) {
+      body.reasoning_effort = this.reasoning_effort;
     }
 
     // Add tools if available
@@ -484,6 +499,33 @@ export class OpenAIChatService implements ChatService {
       }
 
       return cleanMsg;
+    });
+  }
+
+  private cleanMessagesForMistralChatCompletions(
+    messages: (Message | MessageWithVision)[],
+  ): any[] {
+    return messages.map((msg) => {
+      if (!Array.isArray(msg.content)) {
+        return msg;
+      }
+
+      return {
+        ...msg,
+        content: msg.content.map((block: any) => {
+          if (
+            block.type === 'image_url' &&
+            typeof block.image_url === 'object' &&
+            typeof block.image_url?.url === 'string'
+          ) {
+            return {
+              type: 'image_url',
+              image_url: block.image_url.url,
+            };
+          }
+          return block;
+        }),
+      };
     });
   }
 

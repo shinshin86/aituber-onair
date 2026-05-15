@@ -149,7 +149,7 @@ npm install @aituber-onair/core
 
 <img src="./packages/chat/images/aituber-onair-chat.png" alt="AITuber OnAir Chat logo" width="240" />
 
-Unified LLM layer across OpenAI, Claude, Gemini, Z.ai, Kimi, and OpenRouter — streaming, tool/function calling, vision, and MCP support included.
+Unified LLM layer across OpenAI, Claude, Gemini, Z.ai, Kimi, DeepSeek, Mistral, and OpenRouter — streaming, tool/function calling, vision, and MCP support included.
 ```bash
 npm install @aituber-onair/chat
 ```
