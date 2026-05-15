@@ -32,7 +32,8 @@ export type Provider =
   | 'openrouter'
   | 'zai'
   | 'xai'
-  | 'kimi';
+  | 'kimi'
+  | 'deepseek';
 
 interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
   id: string;

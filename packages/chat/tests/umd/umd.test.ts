@@ -141,6 +141,7 @@ describe('UMD Bundle', () => {
         'openrouter',
         'zai',
         'kimi',
+        'deepseek',
       ];
 
       for (const provider of providers) {

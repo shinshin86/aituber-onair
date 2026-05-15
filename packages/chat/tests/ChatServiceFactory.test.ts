@@ -156,6 +156,12 @@ describe('ChatServiceFactory', () => {
         apiKey: 'test-kimi-key',
       });
       expect(kimiService).toBeDefined();
+
+      // Test DeepSeek
+      const deepSeekService = ChatServiceFactory.createChatService('deepseek', {
+        apiKey: 'test-deepseek-key',
+      });
+      expect(deepSeekService).toBeDefined();
     });
 
     it('should accept provider-specific options', () => {
@@ -185,6 +191,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('openrouter')).toBe(true);
       expect(providers.has('zai')).toBe(true);
       expect(providers.has('kimi')).toBe(true);
+      expect(providers.has('deepseek')).toBe(true);
     });
 
     it('should return mutable map that allows modifications', () => {
@@ -212,6 +219,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('openrouter');
       expect(availableProviders).toContain('zai');
       expect(availableProviders).toContain('kimi');
+      expect(availableProviders).toContain('deepseek');
     });
 
     it('should include newly registered providers', () => {
@@ -233,6 +241,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('openrouter');
       expect(availableProviders).toContain('zai');
       expect(availableProviders).toContain('kimi');
+      expect(availableProviders).toContain('deepseek');
     });
   });
 
@@ -266,6 +275,9 @@ describe('ChatServiceFactory', () => {
       const geminiNanoModels =
         ChatServiceFactory.getSupportedModels('gemini-nano');
       expect(geminiNanoModels).toEqual(['gemini-nano']);
+
+      const deepSeekModels = ChatServiceFactory.getSupportedModels('deepseek');
+      expect(deepSeekModels).toEqual(['deepseek-v4-flash', 'deepseek-v4-pro']);
     });
   });
 
@@ -314,6 +326,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('openrouter')).toBe(true);
       expect(providers.has('zai')).toBe(true);
       expect(providers.has('kimi')).toBe(true);
+      expect(providers.has('deepseek')).toBe(true);
       expect(providers.size).toBeGreaterThanOrEqual(3);
     });
   });

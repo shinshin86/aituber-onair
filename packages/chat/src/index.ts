@@ -24,6 +24,7 @@ export type {
   ZAIChatServiceOptions,
   XAIChatServiceOptions,
   KimiChatServiceOptions,
+  DeepSeekChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
 } from './services/providers/ChatServiceProvider';
@@ -60,6 +61,10 @@ export { XAIChatServiceProvider } from './services/providers/xai/XAIChatServiceP
 // Kimi provider exports
 export { KimiChatService } from './services/providers/kimi/KimiChatService';
 export { KimiChatServiceProvider } from './services/providers/kimi/KimiChatServiceProvider';
+
+// DeepSeek provider exports
+export { DeepSeekChatService } from './services/providers/deepseek/DeepSeekChatService';
+export { DeepSeekChatServiceProvider } from './services/providers/deepseek/DeepSeekChatServiceProvider';
 
 // Constants exports
 export * from './constants';
