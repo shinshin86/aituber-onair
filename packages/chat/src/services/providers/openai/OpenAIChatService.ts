@@ -48,6 +48,11 @@ const GPT5_REASONING_MIN_TOKENS: Record<OpenAIReasoningEffort, number> = {
   xhigh: 12000,
 };
 
+const OPENAI_COMPATIBLE_CHAT_COMPLETIONS_PROVIDERS = new Set([
+  'openai-compatible',
+  'deepseek',
+]);
+
 /**
  * OpenAI implementation of ChatService
  */
@@ -326,8 +331,8 @@ export class OpenAIChatService implements ChatService {
       }
     } else {
       if (tokenLimit !== undefined) {
-        // Many OpenAI-compatible local servers (vLLM/Ollama/LM Studio) expect max_tokens.
-        if (this.provider === 'openai-compatible') {
+        // OpenAI-compatible Chat Completions providers expect max_tokens.
+        if (this.usesCompatibleChatCompletions()) {
           body.max_tokens = tokenLimit;
         } else {
           body.max_completion_tokens = tokenLimit;
@@ -397,12 +402,11 @@ export class OpenAIChatService implements ChatService {
       return maxTokens;
     }
 
-    const baseTokenLimit =
-      this.provider === 'openai-compatible'
-        ? this.responseLength !== undefined
-          ? getMaxTokensForResponseLength(this.responseLength)
-          : undefined
-        : getMaxTokensForResponseLength(this.responseLength);
+    const baseTokenLimit = this.usesCompatibleChatCompletions()
+      ? this.responseLength !== undefined
+        ? getMaxTokensForResponseLength(this.responseLength)
+        : undefined
+      : getMaxTokensForResponseLength(this.responseLength);
 
     if (
       this.provider !== 'openai' ||
@@ -552,5 +556,9 @@ export class OpenAIChatService implements ChatService {
 
   private parseOneShot(data: any): ToolChatCompletion {
     return parseOpenAICompatibleOneShot(data);
+  }
+
+  private usesCompatibleChatCompletions(): boolean {
+    return OPENAI_COMPATIBLE_CHAT_COMPLETIONS_PROVIDERS.has(this.provider);
   }
 }

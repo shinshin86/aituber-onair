@@ -106,6 +106,9 @@ import {
   // Kimi models
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
+  // DeepSeek models
+  MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_PRO,
   // Gemini Nano models
   MODEL_GEMINI_NANO,
 } from '@aituber-onair/chat';
@@ -374,6 +377,10 @@ const providerInfo = {
   kimi: {
     name: 'Kimi',
     placeholder: 'xxx...',
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    placeholder: 'sk-...',
   },
   'gemini-nano': {
     name: 'Gemini Nano (Browser AI)',
@@ -903,6 +910,20 @@ export const allModels: ProviderModel[] = [
     id: MODEL_KIMI_K2_5,
     name: 'Kimi K2.5',
     provider: 'kimi',
+    default: false,
+  },
+
+  // DeepSeek models
+  {
+    id: MODEL_DEEPSEEK_V4_FLASH,
+    name: 'DeepSeek V4 Flash',
+    provider: 'deepseek',
+    default: true,
+  },
+  {
+    id: MODEL_DEEPSEEK_V4_PRO,
+    name: 'DeepSeek V4 Pro',
+    provider: 'deepseek',
     default: false,
   },
 

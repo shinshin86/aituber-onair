@@ -1,5 +1,19 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+### Minor Changes
+
+- Added a first-class DeepSeek provider (`provider: 'deepseek'`) using
+  OpenAI-compatible Chat Completions with `deepseek-v4-flash` as the default
+  model and `deepseek-v4-pro` as a supported current model.
+- Exported DeepSeek constants for the API base URL, Chat Completions endpoint,
+  current V4 model IDs, and deprecated legacy aliases (`deepseek-chat`,
+  `deepseek-reasoner`).
+- Documented DeepSeek usage, recommended models, streaming support, and the
+  legacy model deprecation notice without adding DeepSeek-specific
+  thinking/reasoning request parameters by default.
+
 ## 0.33.0
 
 ### Minor Changes

@@ -19,6 +19,7 @@ export {
   type GeminiNanoChatServiceOptions,
   type ChatServiceProvider,
   type XAIChatServiceOptions,
+  type DeepSeekChatServiceOptions,
   // OpenAI provider
   OpenAIChatService,
   OpenAIChatServiceProvider,
@@ -41,6 +42,9 @@ export {
   // xAI provider
   XAIChatService,
   XAIChatServiceProvider,
+  // DeepSeek provider
+  DeepSeekChatService,
+  DeepSeekChatServiceProvider,
   // Type definitions
   type Message,
   type MessageWithVision,
@@ -141,6 +145,15 @@ export {
   MODEL_KIMI_K2_5,
   KIMI_VISION_SUPPORTED_MODELS,
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  // DeepSeek model constants
+  MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_PRO,
+  MODEL_DEEPSEEK_CHAT,
+  MODEL_DEEPSEEK_REASONER,
+  DEEPSEEK_SUPPORTED_MODELS,
+  DEEPSEEK_DEPRECATED_MODELS,
+  DEEPSEEK_API_BASE_URL,
+  ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
   // xAI model constants
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,

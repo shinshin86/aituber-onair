@@ -43,6 +43,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
   - OpenRouter: https://openrouter.ai/
   - Z.ai: https://platform.z.ai/
   - Kimi (Moonshot): https://platform.moonshot.cn/
+  - DeepSeek: https://platform.deepseek.com/
 
 ### Scripts
 
@@ -74,7 +75,7 @@ react-basic/
 
 ### Basic Chat
 
-1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, or Kimi)
+1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, or DeepSeek)
 2. Enter your API key
 3. Type a message and press Enter or click Send
 4. Watch the AI response stream in real-time
@@ -150,6 +151,11 @@ Use the dropdown to select response length:
 - Models: Kimi K2.6, Kimi K2.5
 - Vision: Supported
 - Best for: Moonshot models with OpenAI-compatible API
+
+**DeepSeek**
+- Models: DeepSeek V4 Flash, DeepSeek V4 Pro
+- Vision: Not pre-validated as supported
+- Best for: DeepSeek's OpenAI-compatible API without manually configuring an endpoint
 
 ### OpenRouter Dynamic Free Models (Manual Check)
 

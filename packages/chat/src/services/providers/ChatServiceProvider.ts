@@ -14,7 +14,7 @@ export interface BaseChatServiceOptions {
   visionModel?: string;
   /** API endpoint URL (OpenAI-compatible full URL) */
   endpoint?: string;
-  /** Base URL for OpenAI-compatible APIs (Kimi only) */
+  /** Base URL for OpenAI-compatible APIs (Kimi/DeepSeek only) */
   baseUrl?: string;
   /** Response length setting */
   responseLength?: ChatResponseLength;
@@ -127,6 +127,19 @@ export type KimiChatServiceOptions = DisallowKeys<
   | 'reasoningMaxTokens'
 >;
 
+export type DeepSeekChatServiceOptions = DisallowKeys<
+  BaseChatServiceOptions,
+  | 'verbosity'
+  | 'reasoning_effort'
+  | 'gpt5Preset'
+  | 'gpt5EndpointPreference'
+  | 'enableReasoningSummary'
+  | 'includeReasoning'
+  | 'reasoningMaxTokens'
+  | 'thinking'
+  | 'responseFormat'
+>;
+
 export type ZAIChatServiceOptions = DisallowKeys<
   BaseChatServiceOptions,
   | 'verbosity'
@@ -179,6 +192,7 @@ export type ChatServiceOptionsByProvider = {
   zai: ZAIChatServiceOptions;
   xai: XAIChatServiceOptions;
   kimi: KimiChatServiceOptions;
+  deepseek: DeepSeekChatServiceOptions;
   'gemini-nano': GeminiNanoChatServiceOptions;
 };
 

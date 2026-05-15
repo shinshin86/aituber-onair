@@ -1,4 +1,5 @@
 import { ClaudeChatServiceProvider } from './claude/ClaudeChatServiceProvider';
+import { DeepSeekChatServiceProvider } from './deepseek/DeepSeekChatServiceProvider';
 import { GeminiChatServiceProvider } from './gemini/GeminiChatServiceProvider';
 import { GeminiNanoChatServiceProvider } from './geminiNano/GeminiNanoChatServiceProvider';
 import { KimiChatServiceProvider } from './kimi/KimiChatServiceProvider';
@@ -18,4 +19,5 @@ export const DEFAULT_CHAT_SERVICE_PROVIDERS = [
   new ZAIChatServiceProvider(),
   new XAIChatServiceProvider(),
   new KimiChatServiceProvider(),
+  new DeepSeekChatServiceProvider(),
 ];
