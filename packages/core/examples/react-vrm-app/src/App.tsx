@@ -15,14 +15,16 @@ export default function App() {
   const settingsHook = useSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [streamErrorMessage, setStreamErrorMessage] = useState('');
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
+    null,
+  );
   const backgroundObjectUrlRef = useRef<string | null>(null);
 
   const handleAudioPlay = useCallback(
     async (arrayBuffer: ArrayBuffer) => {
       await play(arrayBuffer);
     },
-    [play]
+    [play],
   );
 
   const { messages, isProcessing, partialResponse, processChat } =
@@ -38,23 +40,27 @@ export default function App() {
       stop();
       processChat(text);
     },
-    [stop, processChat]
+    [stop, processChat],
   );
 
   const handleYoutubeComment = useCallback(
     (comment: YouTubeChatMessage) => {
       stop();
-      processChat(`「${comment.userName}」さんのコメント: ${comment.userComment}`);
+      processChat(
+        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
+      );
     },
-    [processChat, stop]
+    [processChat, stop],
   );
 
   const handleTwitchComment = useCallback(
     (comment: TwitchChatMessage) => {
       stop();
-      processChat(`「${comment.userName}」さんのコメント: ${comment.userComment}`);
+      processChat(
+        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
+      );
     },
-    [processChat, stop]
+    [processChat, stop],
   );
 
   const handleBackgroundImageChange = useCallback((file: File | null) => {
@@ -91,7 +97,7 @@ export default function App() {
     history.replaceState(
       null,
       '',
-      window.location.pathname + window.location.search
+      window.location.pathname + window.location.search,
     );
   }, []);
 
@@ -161,11 +167,19 @@ export default function App() {
       />
 
       {settingsOpen && (
-        <div className="settings-dialog-overlay" onClick={() => setSettingsOpen(false)}>
-          <div className="settings-dialog" onClick={e => e.stopPropagation()}>
+        <div
+          className="settings-dialog-overlay"
+          onClick={() => setSettingsOpen(false)}
+        >
+          <div className="settings-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="settings-dialog-header">
               <h2>Settings</h2>
-              <button className="settings-dialog-close" onClick={() => setSettingsOpen(false)}>&times;</button>
+              <button
+                className="settings-dialog-close"
+                onClick={() => setSettingsOpen(false)}
+              >
+                &times;
+              </button>
             </div>
             <SettingsPanel
               {...settingsHook}

@@ -31,10 +31,13 @@ function useBlink() {
       blinkTimeout = setTimeout(() => {
         setEyesClosed(true);
         // Keep eyes closed for 100-200ms
-        openTimeout = setTimeout(() => {
-          setEyesClosed(false);
-          scheduleBlink();
-        }, 100 + Math.random() * 100);
+        openTimeout = setTimeout(
+          () => {
+            setEyesClosed(false);
+            scheduleBlink();
+          },
+          100 + Math.random() * 100,
+        );
       }, interval);
     };
 
@@ -49,19 +52,21 @@ function useBlink() {
 }
 
 /** Select image key from mouth/eye state */
-function selectImageKey(mouthOpen: boolean, eyesClosed: boolean): AvatarImageKey {
+function selectImageKey(
+  mouthOpen: boolean,
+  eyesClosed: boolean,
+): AvatarImageKey {
   if (mouthOpen) {
-    return eyesClosed
-      ? 'mouth_open_eyes_close'
-      : 'mouth_open_eyes_open';
+    return eyesClosed ? 'mouth_open_eyes_close' : 'mouth_open_eyes_open';
   }
-  return eyesClosed
-    ? 'mouth_close_eyes_close'
-    : 'mouth_close_eyes_open';
+  return eyesClosed ? 'mouth_close_eyes_close' : 'mouth_close_eyes_open';
 }
 
 /** Fallback SVG when image is unavailable */
-function FallbackAvatar({ mouthOpen, eyesClosed }: { mouthOpen: boolean; eyesClosed: boolean }) {
+function FallbackAvatar({
+  mouthOpen,
+  eyesClosed,
+}: { mouthOpen: boolean; eyesClosed: boolean }) {
   const mouthHeight = mouthOpen ? 14 : 2;
   const mouthY = 130 - mouthHeight / 2;
   return (
@@ -72,16 +77,39 @@ function FallbackAvatar({ mouthOpen, eyesClosed }: { mouthOpen: boolean; eyesClo
       style={{ display: 'block', margin: '0 auto' }}
     >
       {/* Face */}
-      <circle cx="100" cy="100" r="80" fill="#FFE0B2" stroke="#E0A060" strokeWidth="2" />
+      <circle
+        cx="100"
+        cy="100"
+        r="80"
+        fill="#FFE0B2"
+        stroke="#E0A060"
+        strokeWidth="2"
+      />
       {/* Left eye */}
       {eyesClosed ? (
-        <line x1="58" y1="85" x2="82" y2="85" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+        <line
+          x1="58"
+          y1="85"
+          x2="82"
+          y2="85"
+          stroke="#333"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       ) : (
         <circle cx="70" cy="85" r="8" fill="#333" />
       )}
       {/* Right eye */}
       {eyesClosed ? (
-        <line x1="118" y1="85" x2="142" y2="85" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+        <line
+          x1="118"
+          y1="85"
+          x2="142"
+          y2="85"
+          stroke="#333"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       ) : (
         <circle cx="130" cy="85" r="8" fill="#333" />
       )}
@@ -132,7 +160,9 @@ export function AvatarPanel({
             }}
           />
         )}
-        {!showImage && <FallbackAvatar mouthOpen={mouthOpen} eyesClosed={eyesClosed} />}
+        {!showImage && (
+          <FallbackAvatar mouthOpen={mouthOpen} eyesClosed={eyesClosed} />
+        )}
       </div>
 
       {/* Debug display */}
@@ -180,7 +210,9 @@ export function AvatarBackground({
             }}
           />
         )}
-        {!showImage && <FallbackAvatar mouthOpen={mouthOpen} eyesClosed={eyesClosed} />}
+        {!showImage && (
+          <FallbackAvatar mouthOpen={mouthOpen} eyesClosed={eyesClosed} />
+        )}
       </div>
     </div>
   );

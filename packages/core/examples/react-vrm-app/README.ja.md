@@ -10,7 +10,7 @@
 
 - LLM プロバイダ切り替え:
   `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`,
-  `claude`, `zai`, `kimi`, `xai`
+  `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
   GPT-5.5 など chat 由来の新規モデルも Settings に自動反映されます
 - `gpt-5.5-pro` は OpenAI のドキュメント上でストリーミング非対応のため、
@@ -21,12 +21,15 @@
     （「N件見つかるまで試行」ではありません）
 - TTS エンジン切り替え:
   `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`,
-  `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `piperPlus`, `none`
+  `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`,
+  `elevenLabs`, `inworld`, `piperPlus`, `none`
 - `geminiTts` は `gemini-3.1-flash-tts-preview` を既定利用し、30 種類の
   プリセットボイスとスタイル / audio-tag プロンプト入力に対応
 - スピーカー一覧の動的取得と選択:
   - `voicevox` / `aivisSpeech`: `/speakers` から取得
   - `minimax`: API キー入力後に `query/tts_speakers` から取得
+  - `elevenLabs`: API キー入力後に `/v2/voices` から取得
+  - `inworld`: API キー入力後に `/voices/v1/voices` から取得
 - Aivis Cloud は CORS 回避のため固定プリセット選択:
   - `コハク`（`22e8ed77-94fe-4ef2-871f-a86f94e9a579`）
   - `まお`（`a59cb814-0083-4369-8542-f51a29e72af7`）

@@ -26,6 +26,8 @@ const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
   { value: 'xai', label: 'xAI' },
   { value: 'zai', label: 'Z.ai' },
   { value: 'kimi', label: 'Kimi' },
+  { value: 'deepseek', label: 'DeepSeek' },
+  { value: 'mistral', label: 'Mistral' },
 ];
 
 const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
@@ -40,6 +42,7 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'xai', label: 'xAI TTS' },
   { value: 'unrealSpeech', label: 'Unreal Speech' },
   { value: 'elevenLabs', label: 'ElevenLabs' },
+  { value: 'inworld', label: 'Inworld' },
   { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'none', label: 'None' },
 ];
@@ -104,6 +107,22 @@ const ELEVENLABS_OUTPUT_FORMATS = [
   'pcm_16000',
   'ulaw_8000',
 ] as const;
+const INWORLD_MODELS = [
+  'inworld-tts-2',
+  'inworld-tts-1.5-mini',
+  'inworld-tts-1.5-max',
+] as const;
+const INWORLD_AUDIO_ENCODINGS = [
+  'MP3',
+  'OGG_OPUS',
+  'FLAC',
+  'LINEAR16',
+  'WAV',
+  'PCM',
+  'ALAW',
+  'MULAW',
+] as const;
+const INWORLD_DELIVERY_MODES = ['STABLE', 'BALANCED', 'CREATIVE'] as const;
 
 const VOICEPEAK_SPEAKERS = [
   { id: 'f1', name: '日本人女性 1' },
@@ -147,6 +166,13 @@ interface ElevenLabsVoice {
   voice_id: string;
   name: string;
   category?: string;
+}
+
+interface InworldVoice {
+  voiceId: string;
+  displayName?: string;
+  langCode?: string;
+  gender?: string;
 }
 
 type SectionKey = 'llm' | 'tts' | 'visual' | 'stream';
@@ -234,10 +260,12 @@ export function SettingsPanel({
   const [elevenLabsVoices, setElevenLabsVoices] = useState<ElevenLabsVoice[]>(
     [],
   );
+  const [inworldVoices, setInworldVoices] = useState<InworldVoice[]>([]);
   const [fetchError, setFetchError] = useState('');
   const [isFetchingMinimaxVoices, setIsFetchingMinimaxVoices] = useState(false);
   const [isFetchingElevenLabsVoices, setIsFetchingElevenLabsVoices] =
     useState(false);
+  const [isFetchingInworldVoices, setIsFetchingInworldVoices] = useState(false);
   const [expandedSections, setExpandedSections] = useState<
     Record<SectionKey, boolean>
   >({
@@ -469,6 +497,84 @@ export function SettingsPanel({
   }, [
     settings.tts.engine,
     settings.tts.elevenLabsApiKey,
+    settings.tts.speaker,
+    updateTTSSpeaker,
+  ]);
+
+  useEffect(() => {
+    if (settings.tts.engine !== 'inworld') {
+      return;
+    }
+
+    const apiKey = settings.tts.inworldApiKey?.trim();
+    if (!apiKey) {
+      queueMicrotask(() => {
+        setInworldVoices([]);
+      });
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchInworldVoices = async () => {
+      setIsFetchingInworldVoices(true);
+      try {
+        const url = new URL('https://api.inworld.ai/voices/v1/voices');
+        url.searchParams.set('orderBy', 'display_name asc');
+        url.searchParams.set('pageSize', '2000');
+        if (settings.tts.inworldLanguage?.trim()) {
+          url.searchParams.set(
+            'filter',
+            `lang_code = "${settings.tts.inworldLanguage.trim()}"`,
+          );
+        }
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: { Authorization: `Basic ${apiKey}` },
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = (await response.json()) as {
+          voices?: InworldVoice[];
+        };
+        if (controller.signal.aborted) return;
+
+        const voices = payload.voices || [];
+        setInworldVoices(voices);
+        setFetchError('');
+
+        if (
+          voices.length > 0 &&
+          !voices.some((voice) => voice.voiceId === settings.tts.speaker)
+        ) {
+          updateTTSSpeaker(voices[0].voiceId);
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        const message = error instanceof Error ? error.message : String(error);
+        setInworldVoices([]);
+        setFetchError(`Inworld接続エラー: ${message}`);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsFetchingInworldVoices(false);
+        }
+      }
+    };
+
+    void fetchInworldVoices();
+
+    return () => {
+      controller.abort();
+    };
+  }, [
+    settings.tts.engine,
+    settings.tts.inworldApiKey,
+    settings.tts.inworldLanguage,
     settings.tts.speaker,
     updateTTSSpeaker,
   ]);
@@ -1293,6 +1399,199 @@ export function SettingsPanel({
                     <option value="on">on</option>
                     <option value="off">off</option>
                   </select>
+                </div>
+              </>
+            )}
+
+            {settings.tts.engine === 'inworld' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-apikey">API Key</label>
+                  <input
+                    id="tts-inworld-apikey"
+                    type="password"
+                    value={settings.tts.inworldApiKey || ''}
+                    onChange={(e) =>
+                      updateTtsField('inworldApiKey', e.target.value)
+                    }
+                    placeholder="Inworld Basic Base64 credentials"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-speaker">Voice</label>
+                  <select
+                    id="tts-inworld-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={
+                      disabled ||
+                      !settings.tts.inworldApiKey ||
+                      isFetchingInworldVoices ||
+                      inworldVoices.length === 0
+                    }
+                  >
+                    {!settings.tts.inworldApiKey && (
+                      <option value="">API Keyを入力してください</option>
+                    )}
+                    {settings.tts.inworldApiKey && isFetchingInworldVoices && (
+                      <option value="">取得中...</option>
+                    )}
+                    {settings.tts.inworldApiKey &&
+                      !isFetchingInworldVoices &&
+                      inworldVoices.length === 0 && (
+                        <option value="">音声一覧を取得できませんでした</option>
+                      )}
+                    {inworldVoices.map((voice) => (
+                      <option key={voice.voiceId} value={voice.voiceId}>
+                        {voice.displayName || voice.voiceId}
+                        {voice.langCode ? ` (${voice.langCode})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-url">API URL</label>
+                  <input
+                    id="tts-inworld-url"
+                    type="text"
+                    value={settings.tts.inworldApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('inworldApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-model">Model</label>
+                  <select
+                    id="tts-inworld-model"
+                    value={settings.tts.inworldModel || INWORLD_MODELS[0]}
+                    onChange={(e) =>
+                      updateTtsField('inworldModel', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {INWORLD_MODELS.map((model) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-encoding">Audio Encoding</label>
+                  <select
+                    id="tts-inworld-encoding"
+                    value={
+                      settings.tts.inworldAudioEncoding ||
+                      INWORLD_AUDIO_ENCODINGS[0]
+                    }
+                    onChange={(e) =>
+                      updateTtsField('inworldAudioEncoding', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {INWORLD_AUDIO_ENCODINGS.map((encoding) => (
+                      <option key={encoding} value={encoding}>
+                        {encoding}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-language">Language</label>
+                  <input
+                    id="tts-inworld-language"
+                    type="text"
+                    value={settings.tts.inworldLanguage || ''}
+                    onChange={(e) =>
+                      updateTtsField('inworldLanguage', e.target.value)
+                    }
+                    placeholder="ja-JP"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-sample-rate">Sample Rate</label>
+                  <input
+                    id="tts-inworld-sample-rate"
+                    type="number"
+                    value={settings.tts.inworldSampleRateHertz || ''}
+                    onChange={(e) =>
+                      updateTtsField('inworldSampleRateHertz', e.target.value)
+                    }
+                    placeholder="48000"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-bitrate">Bit Rate</label>
+                  <input
+                    id="tts-inworld-bitrate"
+                    type="number"
+                    value={settings.tts.inworldBitRate || ''}
+                    onChange={(e) =>
+                      updateTtsField('inworldBitRate', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-speaking-rate">
+                    Speaking Rate
+                  </label>
+                  <input
+                    id="tts-inworld-speaking-rate"
+                    type="number"
+                    step="0.05"
+                    value={settings.tts.inworldSpeakingRate || ''}
+                    onChange={(e) =>
+                      updateTtsField('inworldSpeakingRate', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-delivery">Delivery Mode</label>
+                  <select
+                    id="tts-inworld-delivery"
+                    value={settings.tts.inworldDeliveryMode || 'default'}
+                    onChange={(e) =>
+                      updateTtsField(
+                        'inworldDeliveryMode',
+                        e.target.value as
+                          | 'default'
+                          | 'STABLE'
+                          | 'BALANCED'
+                          | 'CREATIVE',
+                      )
+                    }
+                    disabled={disabled}
+                  >
+                    <option value="default">Default</option>
+                    {INWORLD_DELIVERY_MODES.map((mode) => (
+                      <option key={mode} value={mode}>
+                        {mode}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-inworld-temperature">Temperature</label>
+                  <input
+                    id="tts-inworld-temperature"
+                    type="number"
+                    step="0.05"
+                    value={settings.tts.inworldTemperature || ''}
+                    onChange={(e) =>
+                      updateTtsField('inworldTemperature', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
                 </div>
               </>
             )}

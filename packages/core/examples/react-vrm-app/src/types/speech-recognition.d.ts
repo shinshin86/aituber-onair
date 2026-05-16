@@ -45,11 +45,17 @@ interface SpeechRecognition extends EventTarget {
 
   addEventListener<K extends keyof SpeechRecognitionEventMap>(
     type: K,
-    listener: (this: SpeechRecognition, ev: SpeechRecognitionEventMap[K]) => void,
+    listener: (
+      this: SpeechRecognition,
+      ev: SpeechRecognitionEventMap[K],
+    ) => void,
   ): void;
   removeEventListener<K extends keyof SpeechRecognitionEventMap>(
     type: K,
-    listener: (this: SpeechRecognition, ev: SpeechRecognitionEventMap[K]) => void,
+    listener: (
+      this: SpeechRecognition,
+      ev: SpeechRecognitionEventMap[K],
+    ) => void,
   ): void;
 }
 

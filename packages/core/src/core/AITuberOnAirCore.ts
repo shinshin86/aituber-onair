@@ -16,6 +16,7 @@ import {
   KimiChatServiceOptions,
   XAIChatServiceOptions,
   DeepSeekChatServiceOptions,
+  MistralChatServiceOptions,
 } from '@aituber-onair/chat';
 import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer';
 import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
@@ -354,6 +355,12 @@ export class AITuberOnAirCore extends EventEmitter {
           ...baseOptions,
           ...(providerOptions as ProviderOptionsByName<'deepseek'> | undefined),
         } as DeepSeekChatServiceOptions;
+      }
+      case 'mistral': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as ProviderOptionsByName<'mistral'> | undefined),
+        } as MistralChatServiceOptions;
       }
       case 'xai': {
         return {

@@ -14,6 +14,7 @@ export type VoiceEngineType =
   | 'xai'
   | 'unrealSpeech'
   | 'elevenLabs'
+  | 'inworld'
   | 'piperPlus'
   | 'none';
 
@@ -120,6 +121,18 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       defaultParams: {
         model: 'eleven_multilingual_v2',
         outputFormat: 'mp3_44100_128',
+      },
+    },
+    inworld: {
+      name: 'Inworld',
+      apiUrl: 'https://api.inworld.ai/tts/v1/voice',
+      needsApiKey: true,
+      placeholder: 'Inworld Basic Base64 credentials',
+      defaultParams: {
+        model: 'inworld-tts-2',
+        audioEncoding: 'MP3',
+        sampleRateHertz: 48000,
+        language: 'ja-JP',
       },
     },
     piperPlus: {

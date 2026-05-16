@@ -7,6 +7,7 @@
 ## このサンプルでできること
 
 - LLM / TTS の設定 UI を内蔵
+- LLM プロバイダは既存の OpenAI / Gemini / Claude / Z.ai / Kimi / xAI / OpenRouter / Gemini Nano / OpenAI-compatible に加えて `deepseek` と `mistral` に対応
 - `models/` フォルダ配下の Live2D モデルを読み込み
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
   GPT-5.5 など chat 由来の新規モデルも Settings に自動反映されます
@@ -15,6 +16,7 @@
 - モデルファイルはメモリ内だけで扱い、アプリ固有の永続保存をしない
 - アバターステージ上でドラッグ移動、ホイールズーム
 - `@aituber-onair/core` が生成した音声を使った口パク
+- TTS エンジンは `unrealSpeech`, `elevenLabs`, `inworld` を含む cloud provider とローカル/ブラウザ内エンジンに対応し、Inworld は API キー入力後に `/voices/v1/voices` から音声一覧を取得します
 - YouTube Live / Twitch のライブチャットを取得して LLM パイプラインに流す
   - YouTube は YouTube Data API v3 を利用（Google Cloud の API キーが必要）
   - Twitch は EventSub WebSocket とブラウザ上での implicit OAuth フローを利用

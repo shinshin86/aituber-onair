@@ -115,7 +115,7 @@ export function useAudioLipsync() {
         // Mouth animation level (0-4)
         const level = Math.min(
           Math.round(normalized * (MOUTH_LEVELS - 1)),
-          MOUTH_LEVELS - 1
+          MOUTH_LEVELS - 1,
         );
 
         setMouthLevel(level);
@@ -148,7 +148,7 @@ export function useAudioLipsync() {
         source.start(0);
       });
     },
-    [clearPlayback, getAudioContext]
+    [clearPlayback, getAudioContext],
   );
 
   useEffect(() => {

@@ -7,7 +7,7 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 
 ## What this app can do
 
-- Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`
+- Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
   chat models such as GPT-5.5 are available automatically in Settings
 - `gpt-5.5-pro` is intentionally omitted because OpenAI documents it as
@@ -16,12 +16,13 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   - `Fetch free models` probes candidates and appends working models to the model list
   - `Max candidates` is the maximum number of `:free` candidates to probe
     (not a target number of working models)
-- Use TTS engines: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`, `elevenLabs`, `piperPlus`, `none`
+- Use TTS engines: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`, `elevenLabs`, `inworld`, `piperPlus`, `none`
 - `geminiTts` defaults to `gemini-3.1-flash-tts-preview` and exposes 30 prebuilt voices plus style/audio-tag prompt input
 - Fetch and select speaker lists dynamically:
   - `voicevox` / `aivisSpeech`: from `/speakers`
   - `minimax`: from `query/tts_speakers` after API key input
   - `elevenLabs`: from `/v2/voices` after API key input
+  - `inworld`: from `/voices/v1/voices` after API key input
 - Use fixed Aivis Cloud voice presets (CORS-safe UI):
   - `コハク` (`22e8ed77-94fe-4ef2-871f-a86f94e9a579`)
   - `まお` (`a59cb814-0083-4369-8542-f51a29e72af7`)

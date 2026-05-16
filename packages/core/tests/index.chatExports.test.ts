@@ -7,6 +7,7 @@ import {
   MODEL_CLAUDE_4_OPUS,
   MODEL_CLAUDE_4_SONNET,
   MODEL_GEMINI_NANO,
+  MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMMA_4_31B_IT,
   MODEL_GPT_5_4,
@@ -31,6 +32,16 @@ import {
   MODEL_GOOGLE_GEMINI_PRO_LATEST,
   MODEL_GOOGLE_GEMINI_FLASH_LATEST,
   KIMI_VISION_SUPPORTED_MODELS,
+  MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_PRO,
+  DEEPSEEK_SUPPORTED_MODELS,
+  DeepSeekChatService,
+  MODEL_MISTRAL_SMALL_LATEST,
+  MODEL_MISTRAL_MEDIUM_3_5,
+  MISTRAL_SUPPORTED_MODELS,
+  MISTRAL_VISION_SUPPORTED_MODELS,
+  MistralChatService,
+  isMistralReasoningEffortModel,
   GeminiNanoChatService,
   XAIChatService,
   allowsReasoningXHigh,
@@ -46,7 +57,8 @@ describe('Core index chat re-exports', () => {
     expect(typeof refreshOpenRouterFreeModels).toBe('function');
   });
 
-  it('re-exports Gemini 3.1 Flash-Lite Preview model constant', () => {
+  it('re-exports Gemini 3.1 Flash-Lite model constants', () => {
+    expect(MODEL_GEMINI_3_1_FLASH_LITE).toBe('gemini-3.1-flash-lite');
     expect(MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW).toBe(
       'gemini-3.1-flash-lite-preview',
     );
@@ -101,6 +113,27 @@ describe('Core index chat re-exports', () => {
       'https://api.x.ai/v1/chat/completions',
     );
     expect(isXaiVisionModel(MODEL_GROK_4_3)).toBe(true);
+  });
+
+  it('re-exports DeepSeek chat provider items', () => {
+    expect(typeof DeepSeekChatService).toBe('function');
+    expect(MODEL_DEEPSEEK_V4_FLASH).toBe('deepseek-v4-flash');
+    expect(MODEL_DEEPSEEK_V4_PRO).toBe('deepseek-v4-pro');
+    expect(DEEPSEEK_SUPPORTED_MODELS).toEqual([
+      MODEL_DEEPSEEK_V4_FLASH,
+      MODEL_DEEPSEEK_V4_PRO,
+    ]);
+  });
+
+  it('re-exports Mistral chat provider items', () => {
+    expect(typeof MistralChatService).toBe('function');
+    expect(MODEL_MISTRAL_SMALL_LATEST).toBe('mistral-small-latest');
+    expect(MODEL_MISTRAL_MEDIUM_3_5).toBe('mistral-medium-3-5');
+    expect(MISTRAL_SUPPORTED_MODELS).toContain(MODEL_MISTRAL_SMALL_LATEST);
+    expect(MISTRAL_VISION_SUPPORTED_MODELS).toContain(
+      MODEL_MISTRAL_SMALL_LATEST,
+    );
+    expect(isMistralReasoningEffortModel(MODEL_MISTRAL_MEDIUM_3_5)).toBe(true);
   });
 
   it('re-exports OpenRouter latest routed model constants', () => {

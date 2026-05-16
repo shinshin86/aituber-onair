@@ -28,6 +28,11 @@ const DEFAULT_ELEVENLABS_TTS_ENDPOINT =
   'https://api.elevenlabs.io/v1/text-to-speech';
 const DEFAULT_ELEVENLABS_MODEL = 'eleven_multilingual_v2';
 const DEFAULT_ELEVENLABS_OUTPUT_FORMAT = 'mp3_44100_128';
+const DEFAULT_INWORLD_TTS_ENDPOINT = 'https://api.inworld.ai/tts/v1/voice';
+const DEFAULT_INWORLD_MODEL = 'inworld-tts-2';
+const DEFAULT_INWORLD_AUDIO_ENCODING = 'MP3';
+const DEFAULT_INWORLD_SAMPLE_RATE_HERTZ = '48000';
+const DEFAULT_INWORLD_LANGUAGE = 'ja-JP';
 const DEFAULT_PIPER_PLUS_BASE_PATH = `${import.meta.env.BASE_URL}piper/`;
 const DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE = 'tsukuyomi-config.json';
 const DEFAULT_PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
@@ -117,6 +122,8 @@ function getDefaultSettings(): AppSettings {
         zai: '',
         kimi: '',
         xai: '',
+        deepseek: '',
+        mistral: '',
       },
       openRouterDynamicFreeModels: {
         models: [],
@@ -163,6 +170,16 @@ function getDefaultSettings(): AppSettings {
       elevenLabsSpeed: '',
       elevenLabsSeed: '',
       elevenLabsApplyTextNormalization: 'default',
+      inworldApiKey: '',
+      inworldApiUrl: DEFAULT_INWORLD_TTS_ENDPOINT,
+      inworldModel: DEFAULT_INWORLD_MODEL,
+      inworldAudioEncoding: DEFAULT_INWORLD_AUDIO_ENCODING,
+      inworldSampleRateHertz: DEFAULT_INWORLD_SAMPLE_RATE_HERTZ,
+      inworldBitRate: '',
+      inworldSpeakingRate: '',
+      inworldLanguage: DEFAULT_INWORLD_LANGUAGE,
+      inworldDeliveryMode: 'default',
+      inworldTemperature: '',
       piperPlusBasePath: DEFAULT_PIPER_PLUS_BASE_PATH,
       piperPlusModelConfigFile: DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE,
       piperPlusModelFile: DEFAULT_PIPER_PLUS_MODEL_FILE,
@@ -384,6 +401,7 @@ export function useSettings() {
       xai: 'eve',
       unrealSpeech: 'af_bella',
       elevenLabs: '',
+      inworld: '',
       piperPlus: 'default',
       none: '',
     };
@@ -477,6 +495,31 @@ export function useSettings() {
           engine === 'elevenLabs'
             ? prev.tts.elevenLabsApplyTextNormalization || 'default'
             : prev.tts.elevenLabsApplyTextNormalization,
+        inworldApiUrl:
+          engine === 'inworld'
+            ? prev.tts.inworldApiUrl || DEFAULT_INWORLD_TTS_ENDPOINT
+            : prev.tts.inworldApiUrl,
+        inworldModel:
+          engine === 'inworld'
+            ? prev.tts.inworldModel || DEFAULT_INWORLD_MODEL
+            : prev.tts.inworldModel,
+        inworldAudioEncoding:
+          engine === 'inworld'
+            ? prev.tts.inworldAudioEncoding || DEFAULT_INWORLD_AUDIO_ENCODING
+            : prev.tts.inworldAudioEncoding,
+        inworldSampleRateHertz:
+          engine === 'inworld'
+            ? prev.tts.inworldSampleRateHertz ||
+              DEFAULT_INWORLD_SAMPLE_RATE_HERTZ
+            : prev.tts.inworldSampleRateHertz,
+        inworldLanguage:
+          engine === 'inworld'
+            ? prev.tts.inworldLanguage || DEFAULT_INWORLD_LANGUAGE
+            : prev.tts.inworldLanguage,
+        inworldDeliveryMode:
+          engine === 'inworld'
+            ? prev.tts.inworldDeliveryMode || 'default'
+            : prev.tts.inworldDeliveryMode,
         piperPlusBasePath:
           engine === 'piperPlus'
             ? prev.tts.piperPlusBasePath || DEFAULT_PIPER_PLUS_BASE_PATH

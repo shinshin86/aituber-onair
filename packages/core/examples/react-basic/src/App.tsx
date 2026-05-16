@@ -28,6 +28,8 @@ import {
   type MinimaxModel,
   type MinimaxAudioFormat,
   type UnrealSpeechCodec,
+  type InworldAudioEncoding,
+  type InworldDeliveryMode,
   type EmotionTypeForVoicepeak,
   type VoicepeakEmotionWeights,
   type VoiceVoxQueryParameterOverrides,
@@ -46,6 +48,8 @@ import { claudeModels } from './constants/claude';
 import { zaiModels } from './constants/zai';
 import { kimiModels } from './constants/kimi';
 import { xaiModels } from './constants/xai';
+import { deepseekModels } from './constants/deepseek';
+import { mistralModels } from './constants/mistral';
 import { openrouterModels } from './constants/openrouter';
 import {
   type VoiceEngineType,
@@ -145,6 +149,22 @@ const ELEVENLABS_OUTPUT_FORMATS = [
   'pcm_16000',
   'ulaw_8000',
 ] as const;
+const INWORLD_MODELS = [
+  'inworld-tts-2',
+  'inworld-tts-1.5-mini',
+  'inworld-tts-1.5-max',
+] as const;
+const INWORLD_AUDIO_ENCODINGS = [
+  'MP3',
+  'OGG_OPUS',
+  'FLAC',
+  'LINEAR16',
+  'WAV',
+  'PCM',
+  'ALAW',
+  'MULAW',
+] as const;
+const INWORLD_DELIVERY_MODES = ['STABLE', 'BALANCED', 'CREATIVE'] as const;
 
 interface ElevenLabsVoice {
   voice_id: string;
@@ -154,6 +174,19 @@ interface ElevenLabsVoice {
 
 interface ElevenLabsVoiceListResponse {
   voices?: ElevenLabsVoice[];
+}
+
+interface InworldVoice {
+  voiceId: string;
+  displayName?: string;
+  langCode?: string;
+  promptLanguages?: string[];
+  gender?: string;
+}
+
+interface InworldVoiceListResponse {
+  voices?: InworldVoice[];
+  nextPageToken?: string;
 }
 
 const GEMINI_TTS_MODELS = [
@@ -537,6 +570,30 @@ const App: React.FC = () => {
     elevenLabsApplyTextNormalization,
     setElevenLabsApplyTextNormalization,
   ] = useState<'default' | ElevenLabsApplyTextNormalization>('default');
+  const [inworldModel, setInworldModel] = useState<string>(
+    String(
+      VOICE_ENGINE_CONFIGS.inworld.defaultParams?.model || INWORLD_MODELS[0],
+    ),
+  );
+  const [inworldAudioEncoding, setInworldAudioEncoding] =
+    useState<InworldAudioEncoding>(
+      (VOICE_ENGINE_CONFIGS.inworld.defaultParams
+        ?.audioEncoding as InworldAudioEncoding) || 'MP3',
+    );
+  const [inworldSampleRateHertz, setInworldSampleRateHertz] = useState<string>(
+    String(
+      VOICE_ENGINE_CONFIGS.inworld.defaultParams?.sampleRateHertz || 48000,
+    ),
+  );
+  const [inworldBitRate, setInworldBitRate] = useState<string>('');
+  const [inworldSpeakingRate, setInworldSpeakingRate] = useState<string>('');
+  const [inworldLanguage, setInworldLanguage] = useState<string>(
+    String(VOICE_ENGINE_CONFIGS.inworld.defaultParams?.language || 'ja-JP'),
+  );
+  const [inworldDeliveryMode, setInworldDeliveryMode] = useState<
+    'default' | InworldDeliveryMode
+  >('default');
+  const [inworldTemperature, setInworldTemperature] = useState<string>('');
   const [voicevoxSpeedScale, setVoicevoxSpeedScale] = useState<string>('');
   const [voicevoxPitchScale, setVoicevoxPitchScale] = useState<string>('');
   const [voicevoxIntonationScale, setVoicevoxIntonationScale] =
@@ -660,6 +717,7 @@ const App: React.FC = () => {
     xai: 'eve',
     unrealSpeech: 'af_bella',
     elevenLabs: '',
+    inworld: '',
     piperPlus: 'default',
   });
   const [availableSpeakers, setAvailableSpeakers] = useState<
@@ -672,6 +730,9 @@ const App: React.FC = () => {
     useState(false);
   const [elevenLabsVoiceFetchError, setElevenLabsVoiceFetchError] =
     useState('');
+  const [inworldVoices, setInworldVoices] = useState<InworldVoice[]>([]);
+  const [isFetchingInworldVoices, setIsFetchingInworldVoices] = useState(false);
+  const [inworldVoiceFetchError, setInworldVoiceFetchError] = useState('');
 
   // Voice playback state
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -877,6 +938,31 @@ const App: React.FC = () => {
       setElevenLabsApplyTextNormalization('default');
     }
 
+    if (selectedVoiceEngine === 'inworld') {
+      setInworldModel(
+        String(
+          VOICE_ENGINE_CONFIGS.inworld.defaultParams?.model ||
+            INWORLD_MODELS[0],
+        ),
+      );
+      setInworldAudioEncoding(
+        (VOICE_ENGINE_CONFIGS.inworld.defaultParams
+          ?.audioEncoding as InworldAudioEncoding) || 'MP3',
+      );
+      setInworldSampleRateHertz(
+        String(
+          VOICE_ENGINE_CONFIGS.inworld.defaultParams?.sampleRateHertz || 48000,
+        ),
+      );
+      setInworldBitRate('');
+      setInworldSpeakingRate('');
+      setInworldLanguage(
+        String(VOICE_ENGINE_CONFIGS.inworld.defaultParams?.language || 'ja-JP'),
+      );
+      setInworldDeliveryMode('default');
+      setInworldTemperature('');
+    }
+
     if (selectedVoiceEngine === 'piperPlus') {
       setPiperPlusSpeed('');
       setPiperPlusNoiseScale('');
@@ -962,6 +1048,96 @@ const App: React.FC = () => {
     selectedSpeakers.elevenLabs,
   ]);
 
+  useEffect(() => {
+    if (selectedVoiceEngine !== 'inworld') {
+      return;
+    }
+
+    const apiKey = voiceApiKeys.inworld?.trim();
+    if (!apiKey) {
+      queueMicrotask(() => {
+        setInworldVoices([]);
+        setInworldVoiceFetchError('');
+      });
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchInworldVoices = async () => {
+      setIsFetchingInworldVoices(true);
+      try {
+        const voices: InworldVoice[] = [];
+        let pageToken = '';
+
+        do {
+          const url = new URL('https://api.inworld.ai/voices/v1/voices');
+          url.searchParams.set('orderBy', 'display_name asc');
+          url.searchParams.set('pageSize', '2000');
+          if (inworldLanguage.trim()) {
+            url.searchParams.set('filter', `lang_code = "${inworldLanguage}"`);
+          }
+          if (pageToken) {
+            url.searchParams.set('pageToken', pageToken);
+          }
+
+          const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+              Authorization: `Basic ${apiKey}`,
+            },
+            signal: controller.signal,
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const payload = (await response.json()) as InworldVoiceListResponse;
+          voices.push(...(payload.voices || []));
+          pageToken = payload.nextPageToken || '';
+        } while (pageToken);
+
+        if (controller.signal.aborted) {
+          return;
+        }
+        setInworldVoices(voices);
+        setInworldVoiceFetchError('');
+        if (
+          voices.length > 0 &&
+          !voices.some((voice) => voice.voiceId === selectedSpeakers.inworld)
+        ) {
+          setSelectedSpeakers((prev) => ({
+            ...prev,
+            inworld: voices[0].voiceId,
+          }));
+        }
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        setInworldVoices([]);
+        setInworldVoiceFetchError(`Inworld接続エラー: ${message}`);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsFetchingInworldVoices(false);
+        }
+      }
+    };
+
+    void fetchInworldVoices();
+
+    return () => {
+      controller.abort();
+    };
+  }, [
+    selectedVoiceEngine,
+    voiceApiKeys.inworld,
+    inworldLanguage,
+    selectedSpeakers.inworld,
+  ]);
+
   /**
    * when chat provider changes, reset the model to the first one
    */
@@ -987,6 +1163,12 @@ const App: React.FC = () => {
         break;
       case 'xai':
         setModel(xaiModels[0]);
+        break;
+      case 'deepseek':
+        setModel(deepseekModels[0]);
+        break;
+      case 'mistral':
+        setModel(mistralModels[0]);
         break;
       case 'openrouter':
         setModel(openrouterModels[0]);
@@ -1256,6 +1438,9 @@ const App: React.FC = () => {
             break;
           case 'elevenLabs':
             options.elevenLabsApiUrl = config.apiUrl;
+            break;
+          case 'inworld':
+            options.inworldApiUrl = config.apiUrl;
             break;
         }
       }
@@ -1812,6 +1997,42 @@ const App: React.FC = () => {
           if (elevenLabsApplyTextNormalization !== 'default') {
             options.elevenLabsApplyTextNormalization =
               elevenLabsApplyTextNormalization;
+          }
+
+          break;
+        }
+        case 'inworld': {
+          if (inworldModel.trim()) {
+            options.inworldModel = inworldModel.trim();
+          }
+          options.inworldAudioEncoding = inworldAudioEncoding;
+
+          const parsedSampleRate = Number.parseInt(inworldSampleRateHertz, 10);
+          if (!Number.isNaN(parsedSampleRate)) {
+            options.inworldSampleRateHertz = parsedSampleRate;
+          }
+
+          const parsedBitRate = Number.parseInt(inworldBitRate, 10);
+          if (!Number.isNaN(parsedBitRate)) {
+            options.inworldBitRate = parsedBitRate;
+          }
+
+          const parsedSpeakingRate = Number.parseFloat(inworldSpeakingRate);
+          if (!Number.isNaN(parsedSpeakingRate)) {
+            options.inworldSpeakingRate = parsedSpeakingRate;
+          }
+
+          if (inworldLanguage.trim()) {
+            options.inworldLanguage = inworldLanguage.trim();
+          }
+
+          if (inworldDeliveryMode !== 'default') {
+            options.inworldDeliveryMode = inworldDeliveryMode;
+          }
+
+          const parsedTemperature = Number.parseFloat(inworldTemperature);
+          if (!Number.isNaN(parsedTemperature)) {
+            options.inworldTemperature = parsedTemperature;
           }
 
           break;
@@ -2492,6 +2713,8 @@ const App: React.FC = () => {
                     <option value="zai">Z.ai</option>
                     <option value="kimi">Kimi</option>
                     <option value="xai">xAI</option>
+                    <option value="deepseek">DeepSeek</option>
+                    <option value="mistral">Mistral</option>
                     <option value="openrouter">OpenRouter</option>
                     <option value="openai-compatible">OpenAI-Compatible</option>
                   </select>
@@ -2549,6 +2772,18 @@ const App: React.FC = () => {
                         ))}
                       {chatProvider === 'xai' &&
                         xaiModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'deepseek' &&
+                        deepseekModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'mistral' &&
+                        mistralModels.map((m) => (
                           <option key={m} value={m}>
                             {m}
                           </option>
@@ -3767,6 +4002,212 @@ const App: React.FC = () => {
                         <option value="on">on</option>
                         <option value="off">off</option>
                       </select>
+                    </div>
+                  )}
+
+                  {selectedVoiceEngine === 'inworld' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        backgroundColor: '#e7f5ff',
+                        borderRadius: '8px',
+                        border: '1px solid #a5d8ff',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 'bold',
+                          marginBottom: '8px',
+                          color: '#1864ab',
+                        }}
+                      >
+                        Inworld パラメータ
+                      </div>
+
+                      <label
+                        htmlFor="inworldSpeaker"
+                        style={{ display: 'block', marginBottom: '6px' }}
+                      >
+                        Voice:
+                      </label>
+                      <select
+                        id="inworldSpeaker"
+                        value={String(selectedSpeakers.inworld || '')}
+                        onChange={(e) =>
+                          setSelectedSpeakers((prev) => ({
+                            ...prev,
+                            inworld: e.target.value,
+                          }))
+                        }
+                        disabled={
+                          !voiceApiKeys.inworld ||
+                          isFetchingInworldVoices ||
+                          inworldVoices.length === 0
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        {!voiceApiKeys.inworld && (
+                          <option value="">API Keyを入力してください</option>
+                        )}
+                        {voiceApiKeys.inworld && isFetchingInworldVoices && (
+                          <option value="">取得中...</option>
+                        )}
+                        {voiceApiKeys.inworld &&
+                          !isFetchingInworldVoices &&
+                          inworldVoices.length === 0 && (
+                            <option value="">
+                              音声一覧を取得できませんでした
+                            </option>
+                          )}
+                        {inworldVoices.map((voice) => (
+                          <option key={voice.voiceId} value={voice.voiceId}>
+                            {voice.displayName || voice.voiceId}
+                            {voice.langCode ? ` (${voice.langCode})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {inworldVoiceFetchError && (
+                        <div
+                          style={{
+                            fontSize: '0.8em',
+                            color: '#c92a2a',
+                            marginBottom: '8px',
+                          }}
+                        >
+                          {inworldVoiceFetchError}
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <label
+                            htmlFor="inworldModel"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Model:
+                          </label>
+                          <select
+                            id="inworldModel"
+                            value={inworldModel}
+                            onChange={(e) => setInworldModel(e.target.value)}
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            {INWORLD_MODELS.map((ttsModel) => (
+                              <option key={ttsModel} value={ttsModel}>
+                                {ttsModel}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="inworldAudioEncoding"
+                            style={{ display: 'block', marginBottom: '6px' }}
+                          >
+                            Audio Encoding:
+                          </label>
+                          <select
+                            id="inworldAudioEncoding"
+                            value={inworldAudioEncoding}
+                            onChange={(e) =>
+                              setInworldAudioEncoding(
+                                e.target.value as InworldAudioEncoding,
+                              )
+                            }
+                            style={{ width: '100%', marginBottom: '8px' }}
+                          >
+                            {INWORLD_AUDIO_ENCODINGS.map((encoding) => (
+                              <option key={encoding} value={encoding}>
+                                {encoding}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <input
+                          type="number"
+                          value={inworldSampleRateHertz}
+                          onChange={(e) =>
+                            setInworldSampleRateHertz(e.target.value)
+                          }
+                          placeholder="Sample rate"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <input
+                          type="number"
+                          value={inworldBitRate}
+                          onChange={(e) => setInworldBitRate(e.target.value)}
+                          placeholder="Bit rate"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <input
+                          type="number"
+                          step="0.05"
+                          value={inworldSpeakingRate}
+                          onChange={(e) =>
+                            setInworldSpeakingRate(e.target.value)
+                          }
+                          placeholder="Speaking rate"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <input
+                          type="text"
+                          value={inworldLanguage}
+                          onChange={(e) => setInworldLanguage(e.target.value)}
+                          placeholder="ja-JP"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <select
+                          value={inworldDeliveryMode}
+                          onChange={(e) =>
+                            setInworldDeliveryMode(
+                              e.target.value as 'default' | InworldDeliveryMode,
+                            )
+                          }
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        >
+                          <option value="default">Delivery mode default</option>
+                          {INWORLD_DELIVERY_MODES.map((mode) => (
+                            <option key={mode} value={mode}>
+                              {mode}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          step="0.05"
+                          value={inworldTemperature}
+                          onChange={(e) =>
+                            setInworldTemperature(e.target.value)
+                          }
+                          placeholder="Temperature"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -5339,7 +5780,8 @@ const App: React.FC = () => {
                   {/* Speaker Selection */}
                   {selectedVoiceEngine !== 'none' &&
                     selectedVoiceEngine !== 'openaiCompatible' &&
-                    selectedVoiceEngine !== 'elevenLabs' && (
+                    selectedVoiceEngine !== 'elevenLabs' &&
+                    selectedVoiceEngine !== 'inworld' && (
                       <>
                         <label
                           htmlFor="voiceSpeaker"
@@ -5490,20 +5932,23 @@ const App: React.FC = () => {
                               ? 'Unreal Speechでは v8 /stream endpoint の bitrate / codec / speed / pitch / temperature を設定できます'
                               : selectedVoiceEngine === 'elevenLabs'
                                 ? 'ElevenLabsでは voice ID / model / output format / voice settings を設定できます'
-                                : selectedVoiceEngine === 'voicevox'
-                                  ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
-                                  : selectedVoiceEngine === 'openai'
-                                    ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
-                                    : selectedVoiceEngine === 'openaiCompatible'
-                                      ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
-                                      : selectedVoiceEngine === 'piperPlus'
-                                        ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
-                                        : selectedVoiceEngine === 'aivisCloud'
-                                          ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
-                                          : selectedVoiceEngine ===
-                                              'aivisSpeech'
-                                            ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
-                                            : '※ 音声パラメータは最適な値に固定されています'}
+                                : selectedVoiceEngine === 'inworld'
+                                  ? 'Inworldでは voice / model / audio config / delivery mode を設定できます'
+                                  : selectedVoiceEngine === 'voicevox'
+                                    ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
+                                    : selectedVoiceEngine === 'openai'
+                                      ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
+                                      : selectedVoiceEngine ===
+                                          'openaiCompatible'
+                                        ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
+                                        : selectedVoiceEngine === 'piperPlus'
+                                          ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
+                                          : selectedVoiceEngine === 'aivisCloud'
+                                            ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                            : selectedVoiceEngine ===
+                                                'aivisSpeech'
+                                              ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
+                                              : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

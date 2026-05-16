@@ -3,6 +3,8 @@ import { AITuberOnAirCore, AITuberOnAirCoreEvent } from '@aituber-onair/core';
 import type {
   VoiceServiceOptions,
   ElevenLabsApplyTextNormalization,
+  InworldAudioEncoding,
+  InworldDeliveryMode,
   UnrealSpeechCodec,
   XaiBitRate,
   XaiCodec,
@@ -45,6 +47,9 @@ function getTtsApiKey(
   if (settings.tts.engine === 'elevenLabs') {
     return settings.tts.elevenLabsApiKey || '';
   }
+  if (settings.tts.engine === 'inworld') {
+    return settings.tts.inworldApiKey || '';
+  }
   return getApiKeyForProvider(settings.llm.provider);
 }
 
@@ -83,6 +88,17 @@ function buildVoiceOptions(
   const parsedElevenLabsStyle = Number.parseFloat(tts.elevenLabsStyle || '');
   const parsedElevenLabsSpeed = Number.parseFloat(tts.elevenLabsSpeed || '');
   const parsedElevenLabsSeed = Number.parseInt(tts.elevenLabsSeed || '', 10);
+  const parsedInworldSampleRateHertz = Number.parseInt(
+    tts.inworldSampleRateHertz || '',
+    10,
+  );
+  const parsedInworldBitRate = Number.parseInt(tts.inworldBitRate || '', 10);
+  const parsedInworldSpeakingRate = Number.parseFloat(
+    tts.inworldSpeakingRate || '',
+  );
+  const parsedInworldTemperature = Number.parseFloat(
+    tts.inworldTemperature || '',
+  );
   const parsedPiperPlusSpeed = Number.parseFloat(tts.piperPlusSpeed || '');
   const parsedPiperPlusNoiseScale = Number.parseFloat(
     tts.piperPlusNoiseScale || '',
@@ -165,6 +181,28 @@ function buildVoiceOptions(
       tts.elevenLabsApplyTextNormalization !== 'default'
         ? (tts.elevenLabsApplyTextNormalization as ElevenLabsApplyTextNormalization)
         : undefined,
+    inworldApiUrl: tts.inworldApiUrl?.trim() || undefined,
+    inworldModel: tts.inworldModel?.trim() || undefined,
+    inworldAudioEncoding:
+      (tts.inworldAudioEncoding as InworldAudioEncoding | undefined) ||
+      undefined,
+    inworldSampleRateHertz: Number.isNaN(parsedInworldSampleRateHertz)
+      ? undefined
+      : parsedInworldSampleRateHertz,
+    inworldBitRate: Number.isNaN(parsedInworldBitRate)
+      ? undefined
+      : parsedInworldBitRate,
+    inworldSpeakingRate: Number.isNaN(parsedInworldSpeakingRate)
+      ? undefined
+      : parsedInworldSpeakingRate,
+    inworldLanguage: tts.inworldLanguage?.trim() || undefined,
+    inworldDeliveryMode:
+      tts.inworldDeliveryMode && tts.inworldDeliveryMode !== 'default'
+        ? (tts.inworldDeliveryMode as InworldDeliveryMode)
+        : undefined,
+    inworldTemperature: Number.isNaN(parsedInworldTemperature)
+      ? undefined
+      : parsedInworldTemperature,
     piperPlusBasePath: tts.piperPlusBasePath?.trim() || undefined,
     piperPlusModelConfigFile: tts.piperPlusModelConfigFile?.trim() || undefined,
     piperPlusModelFile: tts.piperPlusModelFile?.trim() || undefined,

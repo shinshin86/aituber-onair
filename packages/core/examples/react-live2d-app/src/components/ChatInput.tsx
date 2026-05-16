@@ -12,7 +12,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const appendRecognizedText = useCallback((recognizedText: string) => {
     setText((prev) => prev + recognizedText);
   }, []);
-  const speech = useSpeechRecognition({ onFinalTranscript: appendRecognizedText });
+  const speech = useSpeechRecognition({
+    onFinalTranscript: appendRecognizedText,
+  });
 
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
@@ -45,8 +47,12 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onCompositionStart={() => { composingRef.current = true; }}
-          onCompositionEnd={() => { composingRef.current = false; }}
+          onCompositionStart={() => {
+            composingRef.current = true;
+          }}
+          onCompositionEnd={() => {
+            composingRef.current = false;
+          }}
           onKeyDown={handleKeyDown}
           placeholder={
             speech.listening

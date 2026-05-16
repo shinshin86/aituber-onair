@@ -43,12 +43,7 @@ export function useTwitchComments({
   });
 
   useEffect(() => {
-    if (
-      !isEnabled ||
-      !twitchChannel ||
-      !twitchClientId ||
-      !twitchAccessToken
-    ) {
+    if (!isEnabled || !twitchChannel || !twitchClientId || !twitchAccessToken) {
       return;
     }
 

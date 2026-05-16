@@ -16,7 +16,9 @@ export default function App() {
   const settingsHook = useSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [streamErrorMessage, setStreamErrorMessage] = useState('');
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
+    null,
+  );
   const [avatarImageUrls, setAvatarImageUrls] = useState<AvatarImageUrls>({});
   const backgroundObjectUrlRef = useRef<string | null>(null);
   const avatarObjectUrlRef = useRef<AvatarImageUrls>({});
@@ -25,7 +27,7 @@ export default function App() {
     async (arrayBuffer: ArrayBuffer) => {
       await play(arrayBuffer);
     },
-    [play]
+    [play],
   );
 
   const { messages, isProcessing, partialResponse, processChat } =
@@ -41,23 +43,27 @@ export default function App() {
       stop();
       processChat(text);
     },
-    [stop, processChat]
+    [stop, processChat],
   );
 
   const handleYoutubeComment = useCallback(
     (comment: YouTubeChatMessage) => {
       stop();
-      processChat(`「${comment.userName}」さんのコメント: ${comment.userComment}`);
+      processChat(
+        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
+      );
     },
-    [processChat, stop]
+    [processChat, stop],
   );
 
   const handleTwitchComment = useCallback(
     (comment: TwitchChatMessage) => {
       stop();
-      processChat(`「${comment.userName}」さんのコメント: ${comment.userComment}`);
+      processChat(
+        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
+      );
     },
-    [processChat, stop]
+    [processChat, stop],
   );
 
   const handleBackgroundImageChange = useCallback((file: File | null) => {
@@ -76,26 +82,29 @@ export default function App() {
     setBackgroundImageUrl(nextUrl);
   }, []);
 
-  const handleAvatarImageChange = useCallback((key: AvatarImageKey, file: File | null) => {
-    const previousUrl = avatarObjectUrlRef.current[key];
-    if (previousUrl) {
-      URL.revokeObjectURL(previousUrl);
-      delete avatarObjectUrlRef.current[key];
-    }
-
-    setAvatarImageUrls((prev) => {
-      if (!file) {
-        if (!(key in prev)) return prev;
-        const next = { ...prev };
-        delete next[key];
-        return next;
+  const handleAvatarImageChange = useCallback(
+    (key: AvatarImageKey, file: File | null) => {
+      const previousUrl = avatarObjectUrlRef.current[key];
+      if (previousUrl) {
+        URL.revokeObjectURL(previousUrl);
+        delete avatarObjectUrlRef.current[key];
       }
 
-      const nextUrl = URL.createObjectURL(file);
-      avatarObjectUrlRef.current[key] = nextUrl;
-      return { ...prev, [key]: nextUrl };
-    });
-  }, []);
+      setAvatarImageUrls((prev) => {
+        if (!file) {
+          if (!(key in prev)) return prev;
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        }
+
+        const nextUrl = URL.createObjectURL(file);
+        avatarObjectUrlRef.current[key] = nextUrl;
+        return { ...prev, [key]: nextUrl };
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -115,7 +124,7 @@ export default function App() {
     history.replaceState(
       null,
       '',
-      window.location.pathname + window.location.search
+      window.location.pathname + window.location.search,
     );
   }, []);
 
@@ -201,11 +210,19 @@ export default function App() {
       </main>
 
       {settingsOpen && (
-        <div className="settings-dialog-overlay" onClick={() => setSettingsOpen(false)}>
-          <div className="settings-dialog" onClick={e => e.stopPropagation()}>
+        <div
+          className="settings-dialog-overlay"
+          onClick={() => setSettingsOpen(false)}
+        >
+          <div className="settings-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="settings-dialog-header">
               <h2>Settings</h2>
-              <button className="settings-dialog-close" onClick={() => setSettingsOpen(false)}>&times;</button>
+              <button
+                className="settings-dialog-close"
+                onClick={() => setSettingsOpen(false)}
+              >
+                &times;
+              </button>
             </div>
             <SettingsPanel
               {...settingsHook}

@@ -14,12 +14,13 @@ This example application serves as a practical implementation guide for integrat
   - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.5 and GPT-5.4/5.4 Mini/5.4 Nano/5.4 Pro)
   - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
-  - Google Gemini (Gemma 4, Pro, Flash, Thinking models)
+  - Google Gemini (Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
   - Anthropic Claude (4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
+  - DeepSeek and Mistral first-class providers
   - Seamless provider switching
 
 - **🎙️ Comprehensive Voice Synthesis**
-  - 10 different TTS engines with unique capabilities
+  - 13 different TTS engines with unique capabilities
   - Real-time voice streaming
   - Speaker selection for each engine
   - Emotion-aware synthesis support
@@ -93,7 +94,7 @@ npm run fmt      # Format code with Biome
 
 Click the "設定" (Settings) button to configure your AI provider:
 
-1. **Select Provider**: Choose from OpenAI, Gemini, Gemini Nano, Claude, Z.ai, Kimi, xAI, OpenRouter, or OpenAI-Compatible
+1. **Select Provider**: Choose from OpenAI, Gemini, Gemini Nano, Claude, Z.ai, Kimi, xAI, DeepSeek, Mistral, OpenRouter, or OpenAI-Compatible
 2. **Enter API Key**: Provide your provider's API key (`openai-compatible` and `gemini-nano` can work without one)
 3. **Choose Model**: Select the specific model to use
 4. **System Prompt**: Customize the AI's behavior and personality
@@ -116,7 +117,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **Gemini:**
 - Gemma 4 series (31B IT, 26B A4B IT)
-- Gemini 3 preview series (3.1 Pro Preview, 3.1 Flash-Lite Preview, 3 Pro Preview, 3 Flash Preview)
+- Gemini 3 series (3.1 Flash-Lite, 3.1 Pro Preview, 3 Flash Preview, plus deprecated preview aliases)
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)
 - Gemini 2.0 series (Flash Lite, Flash)
@@ -147,6 +148,15 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Grok 4.3
 - Grok 4.20 series
 - Grok 4.1 Fast series
+
+**DeepSeek:**
+- DeepSeek V4 Flash
+- DeepSeek V4 Pro
+
+**Mistral:**
+- Mistral Small Latest
+- Mistral Medium 3.5
+- Mistral Large Latest / 3, Small 4, Medium 3.1
 
 **OpenRouter:**
 - Curated multi-provider models (OpenRouter Auto, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
@@ -187,7 +197,7 @@ while this example uses the standard streaming chat flow.
 
 ### Supported TTS Engines
 
-The application supports 12 different Text-to-Speech engines:
+The application supports 13 different Text-to-Speech engines:
 
 #### 1. **OpenAI TTS**
 - Requires OpenAI API key
@@ -253,7 +263,12 @@ The application supports 12 different Text-to-Speech engines:
 - Fetches voices from the ElevenLabs Voices API and lets users select by name
 - Supports model, output format, language code, voice settings, seed, and text normalization options
 
-#### 12. **Piper Plus**
+#### 12. **Inworld**
+- Requires Inworld Basic Base64 credentials
+- Fetches voices from the Inworld Voices API and lets users select by name
+- Supports model, audio encoding, sample rate, bitrate, language, delivery mode, and temperature options
+
+#### 13. **Piper Plus**
 - Browser-side WASM TTS
 - No API key required
 - Requires `public/piper/` assets

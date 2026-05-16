@@ -3,17 +3,22 @@ import {
   AIVIS_CLOUD_API_URL,
   ELEVENLABS_TTS_API_URL,
   GEMINI_TTS_API_URL,
+  INWORLD_TTS_API_URL,
   OPENAI_COMPATIBLE_TTS_API_URL,
   UNREAL_SPEECH_TTS_API_URL,
   XAI_TTS_API_URL,
   AivisCloudEngine,
   ElevenLabsEngine,
   GeminiTtsEngine,
+  InworldEngine,
   OpenAiCompatibleEngine,
   PiperPlusEngine,
   UnrealSpeechEngine,
   type ElevenLabsApplyTextNormalization,
   type ElevenLabsVoiceSettingsOptions,
+  type InworldAudioEncoding,
+  type InworldDeliveryMode,
+  type InworldVoiceServiceOptions,
   type UnrealSpeechCodec,
   type VoicepeakEmotionInput,
   type VoicepeakEmotionWeights,
@@ -25,6 +30,7 @@ describe('Core index voice re-exports', () => {
     expect(typeof AivisCloudEngine).toBe('function');
     expect(typeof ElevenLabsEngine).toBe('function');
     expect(typeof GeminiTtsEngine).toBe('function');
+    expect(typeof InworldEngine).toBe('function');
     expect(typeof OpenAiCompatibleEngine).toBe('function');
     expect(typeof PiperPlusEngine).toBe('function');
     expect(typeof UnrealSpeechEngine).toBe('function');
@@ -47,6 +53,7 @@ describe('Core index voice re-exports', () => {
     expect(ELEVENLABS_TTS_API_URL).toBe(
       'https://api.elevenlabs.io/v1/text-to-speech',
     );
+    expect(INWORLD_TTS_API_URL).toBe('https://api.inworld.ai/tts/v1/voice');
     expect(XAI_TTS_API_URL).toBe('https://api.x.ai/v1/tts');
   });
 
@@ -71,5 +78,21 @@ describe('Core index voice re-exports', () => {
     const input: VoicepeakEmotionInput = weighted;
 
     expect(input).toEqual({ happy: 40, fun: 60 });
+  });
+
+  it('re-exports Inworld option types', () => {
+    const encoding: InworldAudioEncoding = 'MP3';
+    const deliveryMode: InworldDeliveryMode = 'BALANCED';
+    const options: InworldVoiceServiceOptions = {
+      engineType: 'inworld',
+      speaker: 'Ashley',
+      apiKey: 'inworld-basic-key',
+      inworldModel: 'inworld-tts-2',
+      inworldAudioEncoding: encoding,
+      inworldDeliveryMode: deliveryMode,
+    };
+
+    expect(options.inworldAudioEncoding).toBe('MP3');
+    expect(options.inworldDeliveryMode).toBe('BALANCED');
   });
 });

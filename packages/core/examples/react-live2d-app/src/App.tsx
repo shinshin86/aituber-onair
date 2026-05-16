@@ -73,7 +73,9 @@ export default function App() {
   const handleYoutubeComment = useCallback(
     (comment: YouTubeChatMessage) => {
       stop();
-      processChat(`「${comment.userName}」さんのコメント: ${comment.userComment}`);
+      processChat(
+        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
+      );
     },
     [processChat, stop],
   );
@@ -81,7 +83,9 @@ export default function App() {
   const handleTwitchComment = useCallback(
     (comment: TwitchChatMessage) => {
       stop();
-      processChat(`「${comment.userName}」さんのコメント: ${comment.userComment}`);
+      processChat(
+        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
+      );
     },
     [processChat, stop],
   );
@@ -114,8 +118,9 @@ export default function App() {
 
     try {
       setModelPickerError('');
-      const nextSource =
-        await createBundledLive2DModelSource(selectedBundledModelId);
+      const nextSource = await createBundledLive2DModelSource(
+        selectedBundledModelId,
+      );
       replaceModelSource(nextSource);
     } catch (error) {
       const message =
@@ -257,7 +262,9 @@ export default function App() {
                       disabled={bundledModels.length === 0}
                     >
                       {bundledModels.length === 0 ? (
-                        <option value="">`models/` にモデルが見つかりません</option>
+                        <option value="">
+                          `models/` にモデルが見つかりません
+                        </option>
                       ) : (
                         bundledModels.map((model) => (
                           <option key={model.id} value={model.id}>
@@ -278,7 +285,8 @@ export default function App() {
                     </button>
                   </div>
                   <p className="settings-field-hint">
-                    `packages/core/examples/react-live2d-app/models/` 配下にあるモデルを表示します。新しいファイルを追加した場合は
+                    `packages/core/examples/react-live2d-app/models/`
+                    配下にあるモデルを表示します。新しいファイルを追加した場合は
                     dev サーバーを再起動してください。
                   </p>
                   <div className="settings-file-actions">
