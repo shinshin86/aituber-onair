@@ -42,10 +42,7 @@ export function ChatPanel({
       >
         ⚙
       </button>
-      <AvatarBackground
-        mouthLevel={mouthLevel}
-        isSpeaking={isSpeaking}
-      />
+      <AvatarBackground mouthLevel={mouthLevel} isSpeaking={isSpeaking} />
       <ChatLog messages={messages} partialResponse={partialResponse} />
       <ChatInput onSend={onSend} disabled={isProcessing} />
     </div>

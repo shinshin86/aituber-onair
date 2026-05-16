@@ -44,7 +44,10 @@ const DEFAULT_MAX_DISTANCE_RATIO = 1.32;
 const DEFAULT_MODEL_X_OFFSET = 0.0;
 const DEFAULT_MODEL_Y_ROTATION = -0.12;
 
-export function AvatarBackground({ mouthLevel, isSpeaking }: AvatarBackgroundProps) {
+export function AvatarBackground({
+  mouthLevel,
+  isSpeaking,
+}: AvatarBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const vrmRef = useRef<VRM | null>(null);
@@ -115,8 +118,8 @@ export function AvatarBackground({ mouthLevel, isSpeaking }: AvatarBackgroundPro
     controls.enableRotate = true;
     controls.rotateSpeed = 0.75;
     controls.zoomSpeed = 0.9;
-    controls.minPolarAngle = (Math.PI * 0.2);
-    controls.maxPolarAngle = (Math.PI * 0.55);
+    controls.minPolarAngle = Math.PI * 0.2;
+    controls.maxPolarAngle = Math.PI * 0.55;
     controls.target.set(0, 1.1, 0);
     controls.update();
 
@@ -188,23 +191,34 @@ export function AvatarBackground({ mouthLevel, isSpeaking }: AvatarBackgroundPro
         const modelHeight = Math.max(size.y, 1.0);
         const modelWidth = Math.max(size.x, 0.6);
         const verticalFov = (camera.fov * Math.PI) / 180;
-        const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
+        const horizontalFov =
+          2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
         const visibleHeight = modelHeight * DEFAULT_VISIBLE_HEIGHT_RATIO;
         const visibleWidth = modelWidth * DEFAULT_VISIBLE_WIDTH_RATIO;
-        const distanceByHeight = visibleHeight / (2 * Math.tan(verticalFov / 2));
-        const distanceByWidth = visibleWidth / (2 * Math.tan(horizontalFov / 2));
+        const distanceByHeight =
+          visibleHeight / (2 * Math.tan(verticalFov / 2));
+        const distanceByWidth =
+          visibleWidth / (2 * Math.tan(horizontalFov / 2));
         const distance = Math.max(distanceByHeight, distanceByWidth);
         const lookAtY = Math.max(
           0.9,
-          modelHeight * (DEFAULT_LOOK_AT_HEIGHT_RATIO + DEFAULT_LOOK_AT_RAISE_RATIO),
+          modelHeight *
+            (DEFAULT_LOOK_AT_HEIGHT_RATIO + DEFAULT_LOOK_AT_RAISE_RATIO),
         );
         const lookAtX = DEFAULT_MODEL_X_OFFSET;
-        const cameraY = lookAtY + modelHeight * DEFAULT_CAMERA_HEIGHT_OFFSET_RATIO;
+        const cameraY =
+          lookAtY + modelHeight * DEFAULT_CAMERA_HEIGHT_OFFSET_RATIO;
 
         camera.position.set(lookAtX, cameraY, distance);
         controls.target.set(lookAtX, lookAtY, 0);
-        controls.minDistance = Math.max(0.7, distance * DEFAULT_MIN_DISTANCE_RATIO);
-        controls.maxDistance = Math.max(2.5, distance * DEFAULT_MAX_DISTANCE_RATIO);
+        controls.minDistance = Math.max(
+          0.7,
+          distance * DEFAULT_MIN_DISTANCE_RATIO,
+        );
+        controls.maxDistance = Math.max(
+          2.5,
+          distance * DEFAULT_MAX_DISTANCE_RATIO,
+        );
         camera.near = 0.01;
         camera.far = Math.max(50, distance * 20);
         camera.updateProjectionMatrix();
@@ -219,7 +233,9 @@ export function AvatarBackground({ mouthLevel, isSpeaking }: AvatarBackgroundPro
         setIsLoading(false);
 
         const animationLoader = new GLTFLoader();
-        animationLoader.register((parser) => new VRMAnimationLoaderPlugin(parser));
+        animationLoader.register(
+          (parser) => new VRMAnimationLoaderPlugin(parser),
+        );
         animationLoader.load(
           VRMA_FILE_URL,
           (animationGltf) => {
@@ -236,9 +252,12 @@ export function AvatarBackground({ mouthLevel, isSpeaking }: AvatarBackgroundPro
               idleAnimation,
               vrm as unknown as Parameters<typeof createVRMAnimationClip>[1],
             );
-            const hipsNodeName = vrm.humanoid.getNormalizedBoneNode('hips')?.name;
+            const hipsNodeName =
+              vrm.humanoid.getNormalizedBoneNode('hips')?.name;
             const stabilizedTracks = hipsNodeName
-              ? idleClip.tracks.filter((track) => track.name !== `${hipsNodeName}.position`)
+              ? idleClip.tracks.filter(
+                  (track) => track.name !== `${hipsNodeName}.position`,
+                )
               : idleClip.tracks;
             const stabilizedClip = new AnimationClip(
               idleClip.name,
@@ -275,8 +294,9 @@ export function AvatarBackground({ mouthLevel, isSpeaking }: AvatarBackgroundPro
       if (vrm) {
         mixer?.update(delta);
 
-        const nextWeight = mouthWeightRef.current
-          + (targetMouthWeightRef.current - mouthWeightRef.current) * 0.35;
+        const nextWeight =
+          mouthWeightRef.current +
+          (targetMouthWeightRef.current - mouthWeightRef.current) * 0.35;
         mouthWeightRef.current = nextWeight;
 
         vrm.expressionManager?.setValue(VRMExpressionPresetName.Aa, nextWeight);

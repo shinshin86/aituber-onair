@@ -506,26 +506,30 @@ export class OpenAIChatService implements ChatService {
     messages: (Message | MessageWithVision)[],
   ): any[] {
     return messages.map((msg) => {
+      const cleanMsg: any = {
+        role: msg.role,
+      };
+
       if (!Array.isArray(msg.content)) {
-        return msg;
+        cleanMsg.content = msg.content;
+        return cleanMsg;
       }
 
-      return {
-        ...msg,
-        content: msg.content.map((block: any) => {
-          if (
-            block.type === 'image_url' &&
-            typeof block.image_url === 'object' &&
-            typeof block.image_url?.url === 'string'
-          ) {
-            return {
-              type: 'image_url',
-              image_url: block.image_url.url,
-            };
-          }
-          return block;
-        }),
-      };
+      cleanMsg.content = msg.content.map((block: any) => {
+        if (
+          block.type === 'image_url' &&
+          typeof block.image_url === 'object' &&
+          typeof block.image_url?.url === 'string'
+        ) {
+          return {
+            type: 'image_url',
+            image_url: block.image_url.url,
+          };
+        }
+        return block;
+      });
+
+      return cleanMsg;
     });
   }
 

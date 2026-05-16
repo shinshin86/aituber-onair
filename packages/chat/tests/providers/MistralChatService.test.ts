@@ -159,6 +159,21 @@ describe('MistralChatService', () => {
     });
   });
 
+  it('removes core-only timestamp fields before sending messages', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOneShotResponse('ok'));
+    const service = new MistralChatService('test-key');
+    const messagesWithTimestamp: Message[] = [
+      { role: 'user', content: 'hello', timestamp: 1234567890 },
+    ];
+
+    await service.chatOnce(messagesWithTimestamp, false);
+
+    const body = postSpy.mock.calls[0][1] as any;
+    expect(body.messages).toEqual([{ role: 'user', content: 'hello' }]);
+  });
+
   it('returns parsed non-streaming output from chatOnce', async () => {
     vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
       createOneShotResponse([

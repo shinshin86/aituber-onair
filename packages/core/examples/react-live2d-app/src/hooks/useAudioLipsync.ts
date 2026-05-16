@@ -66,7 +66,7 @@ export function useAudioLipsync() {
         finalizePlayback();
       }
     },
-    [finalizePlayback]
+    [finalizePlayback],
   );
 
   const stopCurrent = useCallback(() => {
@@ -143,12 +143,12 @@ export function useAudioLipsync() {
           reject(
             error instanceof Error
               ? error
-              : new Error('音声を再生できませんでした。')
+              : new Error('音声を再生できませんでした。'),
           );
         });
       });
     },
-    [clearPlayback, getAudioContext]
+    [clearPlayback, getAudioContext],
   );
 
   useEffect(() => {

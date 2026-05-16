@@ -7,7 +7,9 @@ export type ChatProviderOption =
   | 'claude'
   | 'zai'
   | 'kimi'
-  | 'xai';
+  | 'xai'
+  | 'deepseek'
+  | 'mistral';
 export type TTSEngineOption =
   | 'openai'
   | 'geminiTts'
@@ -20,6 +22,7 @@ export type TTSEngineOption =
   | 'xai'
   | 'unrealSpeech'
   | 'elevenLabs'
+  | 'inworld'
   | 'piperPlus'
   | 'none';
 export type StreamingPlatformOption = 'none' | 'youtube' | 'twitch';
@@ -33,6 +36,8 @@ export interface ProviderApiKeys {
   zai?: string;
   kimi?: string;
   xai?: string;
+  deepseek?: string;
+  mistral?: string;
 }
 
 export interface LLMSettings {
@@ -89,6 +94,16 @@ export interface TTSSettings {
   elevenLabsSpeed?: string;
   elevenLabsSeed?: string;
   elevenLabsApplyTextNormalization?: 'default' | 'auto' | 'on' | 'off';
+  inworldApiKey?: string;
+  inworldApiUrl?: string;
+  inworldModel?: string;
+  inworldAudioEncoding?: string;
+  inworldSampleRateHertz?: string;
+  inworldBitRate?: string;
+  inworldSpeakingRate?: string;
+  inworldLanguage?: string;
+  inworldDeliveryMode?: 'default' | 'STABLE' | 'BALANCED' | 'CREATIVE';
+  inworldTemperature?: string;
   piperPlusBasePath?: string;
   piperPlusModelConfigFile?: string;
   piperPlusModelFile?: string;

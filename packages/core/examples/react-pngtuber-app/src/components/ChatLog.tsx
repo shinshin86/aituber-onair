@@ -20,9 +20,7 @@ export function ChatLog({ messages, partialResponse }: ChatLogProps) {
       )}
       {messages.map((msg) => (
         <div key={msg.id} className={`chat-message chat-message-${msg.role}`}>
-          <div className="chat-role">
-            {msg.role === 'user' ? 'You' : 'AI'}
-          </div>
+          <div className="chat-role">{msg.role === 'user' ? 'You' : 'AI'}</div>
           <div className="chat-content">{msg.content}</div>
         </div>
       ))}

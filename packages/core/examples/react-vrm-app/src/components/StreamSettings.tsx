@@ -145,7 +145,9 @@ export function StreamSettings({
               </div>
 
               <div className="settings-field">
-                <label htmlFor="stream-youtube-interval">Polling Interval</label>
+                <label htmlFor="stream-youtube-interval">
+                  Polling Interval
+                </label>
                 <select
                   id="stream-youtube-interval"
                   value={stream.youtubeCommentIntervalMs}

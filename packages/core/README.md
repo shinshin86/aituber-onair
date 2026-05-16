@@ -66,7 +66,7 @@ pnpm install @aituber-onair/core
 - **Conversation Context Management & Memory**  
   Maintains long-running conversation context via short-, mid-, and long-term memory systems.
 - **Text-to-Speech Conversion**  
-  Compatible with multiple speech engines (VOICEVOX, VoicePeak, AivisSpeech, Aivis Cloud, OpenAI TTS).
+  Compatible with multiple speech engines (VOICEVOX, VoicePeak, AivisSpeech, Aivis Cloud, OpenAI TTS, Gemini TTS, xAI, Unreal Speech, ElevenLabs, Inworld, Piper Plus).
 - **Emotion Extraction & Processing**  
   Extracts emotion from AI responses and utilizes it for speech synthesis or avatar expressions.
 - **Event-Driven Architecture**  
@@ -1222,6 +1222,7 @@ Possible use cases for `chatLogUpdated` include:
 - **xAI TTS**: xAI text-to-speech with selectable codec, sample rate, and bit rate options.
 - **Unreal Speech**: Unreal Speech v8 `/stream` endpoint with bitrate, speed, pitch, codec, and temperature options.
 - **ElevenLabs**: ElevenLabs Text to Speech API with model, output format, language code, voice settings, and text normalization options.
+- **Inworld**: Inworld TTS REST API with selectable model, audio encoding, sample rate, bitrate, language, delivery mode, and temperature options.
 - **OpenAI-Compatible TTS**: Self-hosted or third-party `/v1/audio/speech` compatible endpoints.
 - **MiniMax**: Multi-language TTS with 24 language support and HD quality (requires both API key and GroupId - see usage example below).
 - **Piper Plus**: Browser WASM TTS using ONNX Runtime Web and OpenJTalk assets for on-device synthesis.
@@ -1283,7 +1284,7 @@ aituber.updateSpeechChunking({
 
 ### Custom API Endpoints
 
-For locally hosted or overridable voice engines (VOICEVOX, VoicePeak, AivisSpeech, OpenAI-Compatible TTS, Unreal Speech, ElevenLabs), you can specify custom API endpoint URLs:
+For locally hosted or overridable voice engines (VOICEVOX, VoicePeak, AivisSpeech, OpenAI-Compatible TTS, Unreal Speech, ElevenLabs, Inworld), you can specify custom API endpoint URLs:
 
 ```typescript
 // Example of setting custom API endpoints
@@ -1387,10 +1388,12 @@ or send us a message.
 Currently, the following AI provider is built-in:
 
 - **OpenAI**: Supports models like GPT-5 family (Nano/Mini/Standard/5.1/5.4/5.5/5.4 Mini/5.4 Nano/5.4 Pro), GPT-4.1 (including Mini/Nano), GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini
-- **Gemini**: Supports models like Gemma 4 31B IT, Gemma 4 26B A4B IT, Gemini 3.1 Pro Preview, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite Preview, Gemini 2.0 Flash, Gemini 2.0 Flash-Lite
+- **Gemini**: Supports models like Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT; deprecated lifecycle models remain exported for explicit compatibility.
 - **Gemini Nano**: Supports the built-in Chrome `gemini-nano` model without an API key (Chrome 138+ with Prompt API flags enabled)
 - **Claude**: Supports current Claude API model IDs including Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
 - **xAI**: Supports Grok 4.3, Grok 4.20, and Grok 4.1 Fast model families
+- **DeepSeek**: Supports DeepSeek V4 Flash and DeepSeek V4 Pro through the first-class `deepseek` provider.
+- **Mistral**: Supports current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including vision-capable model metadata and adjustable reasoning for supported models.
 - **Z.ai**: Supports models like GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
 - **Kimi**: Supports Kimi K2.6 (`kimi-k2.6`) and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router, latest-family aliases, OpenAI GPT-5.5, Claude, Gemini, Z.ai, and Kimi
