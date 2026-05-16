@@ -1,10 +1,10 @@
 # @aituber-onair/core
 
-## Unreleased
+## 0.25.10
 
 ### Patch Changes
 
-- Synced chat updates from `@aituber-onair/chat@0.34.0` into the core entry
+- Synced chat updates through `@aituber-onair/chat@0.34.1` into the core entry
   point and React examples:
   - re-exported the stable Gemini 3.1 Flash-Lite constant
   - re-exported DeepSeek provider classes, options, model constants, and
@@ -12,6 +12,7 @@
   - re-exported Mistral provider classes, options, model constants, endpoint
     constants, and reasoning/vision helpers
   - added DeepSeek and Mistral to the core React example settings
+  - required the Mistral message sanitization patch for core usage
 - Synced Inworld TTS support from `@aituber-onair/voice@0.16.0` into the core
   entry point and React examples:
   - re-exported `InworldEngine`, related option types, and the endpoint
@@ -22,7 +23,7 @@
   Gemini 3.1 Flash-Lite, and Inworld support.
 - Added core export test coverage for the new chat and voice re-exports.
 - Updated dependencies []:
-  - @aituber-onair/chat@0.34.0
+  - @aituber-onair/chat@0.34.1
   - @aituber-onair/voice@0.16.0
 
 ## 0.25.9
