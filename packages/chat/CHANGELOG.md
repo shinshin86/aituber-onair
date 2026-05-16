@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## 0.34.1
+
+### Patch Changes
+
+- Removed internal message metadata such as `timestamp` from Mistral Chat
+  Completions requests so messages produced by `@aituber-onair/core` are
+  accepted by Mistral's strict request schema.
+
 ## 0.34.0
 
 ### Minor Changes
