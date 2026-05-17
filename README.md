@@ -7,15 +7,19 @@
 
 [日本語版はこちら](./README_ja.md)
 
-> **Open source toolkit for building AI VTubers**
+> **Build stream-ready AI VTubers with TypeScript**
 >
-> For developers and creators who want to build AI VTubers like [Neuro-sama](https://www.twitch.tv/vedal987), or open-source AI characters in the spirit of [Project AIRI](https://github.com/moeru-ai/airi).
-> Start from the hosted web app, scaffold a starter app, self-host a working example, or assemble your own stack from modular TypeScript packages for chat, voice, streaming, and viewer relationships.
+> AITuber OnAir is an open source toolkit for building AI VTubers
+> that can chat, speak, react to viewers, use memory, and run with
+> PNG, VRM, or Live2D avatars. Start from the hosted web app, scaffold
+> a starter app, self-host a working example, or assemble your own stack
+> from modular TypeScript packages.
 
 <p align="center">
   <a href="https://aituberonair.com">Try the hosted web app</a> ・
-  <a href="#2-create-a-starter-app">Create a starter app</a> ・
-  <a href="#packages">Browse packages</a>
+  <a href="./docs/quickstart.md">Quickstart</a> ・
+  <a href="./docs/examples.md">Examples</a> ・
+  <a href="#packages">Packages</a>
 </p>
 
 ![AITuber OnAir Demo](./images/aituber-onair-demo.png)
@@ -28,6 +32,20 @@
 - Viewer relationship systems with points, levels, and achievements
 - Browser- and Node.js-based integrations, composed from independent packages
 
+## Start in 10 minutes
+
+If you want the shortest path to a local AI VTuber:
+
+```bash
+npm create aituber-onair@latest my-aituber
+cd my-aituber
+npm run dev
+```
+
+Then open the app, choose a template, and configure your LLM / TTS provider
+from **Settings**. See the [Quickstart](./docs/quickstart.md) for the full
+walkthrough.
+
 ## Choose your path
 
 ### 1. Try the hosted web app
@@ -36,8 +54,8 @@
 
 ### 2. Create a starter app
 
-Use `create-aituber-onair` to scaffold your own app from an official PNGTuber
-or VRM starter template.
+Use `create-aituber-onair` to scaffold your own app from an official PNGTuber,
+VRM, or Live2D starter template.
 
 ```bash
 npm create aituber-onair@latest
@@ -51,6 +69,9 @@ npm create aituber-onair@latest my-aituber
 cd my-aituber
 npm run dev
 ```
+
+For step-by-step setup and template selection, see
+[Quickstart](./docs/quickstart.md).
 
 ### 3. Run an example app locally
 
@@ -100,6 +121,9 @@ npm run dev
 
 Open `http://localhost:5173` in any case, then set API keys and provider options in **Settings**.
 
+See [Examples](./docs/examples.md) for the full example map and recommended
+starting points.
+
 ### 4. Build your own with the packages
 
 Install only what you need and drop it into your own app:
@@ -123,6 +147,13 @@ await chat.processChat(
 ```
 
 See each package README for provider setup and fuller usage.
+
+## Documentation
+
+- [Quickstart](./docs/quickstart.md): create a starter app, pick a template,
+  configure providers, and run locally.
+- [Examples](./docs/examples.md): choose from full AI VTuber apps, package
+  examples, bot examples, and local runtime examples.
 
 ## Packages
 
