@@ -7,15 +7,19 @@
 
 [Click here for the English README](./README.md)
 
-> **AI VTuber を作るためのオープンソースツールキット**
+> **TypeScript で配信向け AI VTuber を作るためのツールキット**
 >
-> [Neuro-sama](https://www.twitch.tv/vedal987) のような AI VTuber、あるいは [Project AIRI](https://github.com/moeru-ai/airi) のような OSS の AI キャラクターを自分で作りたい開発者・クリエイター向けのツールキットです。
-> ホスティング済みの Web アプリを試す、スターターアプリを作成する、サンプルを手元で動かす、あるいはチャット・音声・配信・視聴者関係のためのモジュール化された TypeScript パッケージを自分のアプリに組み込む、どの入口からでも始められます。
+> AITuber OnAir は、会話し、音声で話し、視聴者に反応し、
+> メモリを使い、PNG / VRM / Live2D アバターで動く AI VTuber を
+> 作るためのオープンソースツールキットです。ホスティング済みの
+> Web アプリ、スターターアプリ、セルフホスト可能なサンプル、
+> モジュール化された TypeScript パッケージのどこからでも始められます。
 
 <p align="center">
   <a href="https://aituberonair.com">Web アプリを試す</a> ・
-  <a href="#2-スターターアプリを作成する">スターターを作る</a> ・
-  <a href="#パッケージ">パッケージ一覧を見る</a>
+  <a href="./docs/quickstart.ja.md">クイックスタート</a> ・
+  <a href="./docs/examples.ja.md">サンプル一覧</a> ・
+  <a href="#パッケージ">パッケージ</a>
 </p>
 
 ![AITuber OnAir Demo](./images/aituber-onair-demo.png)
@@ -28,6 +32,19 @@
 - ポイント・レベル・実績を持つ視聴者との関係性システム
 - 独立した npm パッケージを組み合わせたブラウザ / Node.js 向けの統合
 
+## 10分で始める
+
+ローカルで AI VTuber を動かす最短ルートは次の通りです。
+
+```bash
+npm create aituber-onair@latest my-aituber
+cd my-aituber
+npm run dev
+```
+
+起動後、アプリの **Settings** から LLM / TTS プロバイダーを設定します。
+詳しい手順は [クイックスタート](./docs/quickstart.ja.md) を参照してください。
+
 ## 使い始め方
 
 ### 1. ホスティング済みの Web アプリを試す
@@ -36,7 +53,7 @@
 
 ### 2. スターターアプリを作成する
 
-`create-aituber-onair` を使うと、公式の PNGTuber / VRM スターター
+`create-aituber-onair` を使うと、公式の PNGTuber / VRM / Live2D スターター
 テンプレートから自分の AITuber OnAir アプリを作成できます。
 
 ```bash
@@ -51,6 +68,9 @@ npm create aituber-onair@latest my-aituber
 cd my-aituber
 npm run dev
 ```
+
+手順ごとのセットアップとテンプレート選択については
+[クイックスタート](./docs/quickstart.ja.md) を参照してください。
 
 ### 3. サンプルアプリをローカルで動かす
 
@@ -95,6 +115,9 @@ npm run dev
 
 いずれの場合もブラウザで `http://localhost:5173` を開き、**Settings** から API キーとプロバイダー設定を入力してください。
 
+サンプル全体の一覧とおすすめの始め方は
+[サンプル一覧](./docs/examples.ja.md) を参照してください。
+
 ### 4. パッケージを使って自分のアプリに組み込む
 
 必要なものだけをインストールして、自分のアプリに差し込めます。
@@ -118,6 +141,13 @@ await chat.processChat(
 ```
 
 プロバイダーの設定や詳しい使い方は、各パッケージの README を参照してください。
+
+## ドキュメント
+
+- [クイックスタート](./docs/quickstart.ja.md): スターターアプリの作成、
+  テンプレート選択、プロバイダー設定、ローカル起動まで。
+- [サンプル一覧](./docs/examples.ja.md): フル機能の AI VTuber アプリ、
+  パッケージ別サンプル、Bot サンプル、ローカル実行例の選び方。
 
 ## パッケージ
 
