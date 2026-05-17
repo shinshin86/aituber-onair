@@ -2,7 +2,7 @@
 
 [English version](./quickstart.md)
 
-![PC に向かう AITuber OnAir 公式キャラクター](./images/aituber-onair-quickstart-miko.png)
+![PC に向かう AITuber OnAir 公式キャラクターのミコ](./images/aituber-onair-quickstart-miko.png)
 
 このガイドでは、約10分でローカルの AI VTuber アプリを起動します。
 パッケージごとの詳しいドキュメントを読む前に、まず動く状態を作りたい場合に

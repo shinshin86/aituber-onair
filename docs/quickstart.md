@@ -2,7 +2,7 @@
 
 [日本語版はこちら](./quickstart.ja.md)
 
-![AITuber OnAir character working at a computer](./images/aituber-onair-quickstart-miko.png)
+![Miko, the official AITuber OnAir character, working at a computer](./images/aituber-onair-quickstart-miko.png)
 
 This guide gets you from zero to a local AI VTuber app in about 10 minutes.
 Use it when you want the fastest working setup before reading package-level
