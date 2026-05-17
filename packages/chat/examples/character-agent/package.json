@@ -1,0 +1,11 @@
+{
+  "name": "@aituber-onair/chat-example-character-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AITuber secretary character agent example for @aituber-onair/chat",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "vitest run tests"
+  }
+}
