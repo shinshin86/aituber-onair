@@ -31,6 +31,8 @@
     "test": "npm run typecheck && vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:example:character-agent": "vitest run examples/character-agent/tests",
+    "example:character-agent": "npm --prefix examples/character-agent run build && npm --prefix examples/character-agent run start",
     "openai-compatible:probe": "node examples/compat-probe/index.js",
     "openai-compatible:mock-server": "node examples/mock-openai-server/server.js",
     "fmt": "biome format . --write",

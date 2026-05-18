@@ -70,6 +70,14 @@ JavaScript runtime examples for Agent SDK providers:
 - Requires the corresponding SDK package and local SDK authentication
 - Text chat only; browser/GAS/UMD environments are not supported
 
+### [AITuber Secretary Agent Example](./character-agent/)
+TypeScript CLI example for an AI character secretary:
+
+- Uses tool calling to save memos, todos, schedule suggestions, drafts, and memories
+- Stores demo data in local JSON files
+- Demonstrates safe assistant behavior without sending email, posting to social media, or registering calendar events
+- Includes Vitest coverage for storage, tools, registry, memory search, safety policy, and the agent loop
+
 ### [Discord AI Character Bot](./discord-bot/)
 Minimal Discord example that lets an AI character live in your server:
 
