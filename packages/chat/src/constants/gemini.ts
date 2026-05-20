@@ -4,6 +4,7 @@ export const ENDPOINT_GEMINI_API = 'https://generativelanguage.googleapis.com';
 // Gemini / Gemma models
 export const MODEL_GEMMA_4_31B_IT = 'gemma-4-31b-it';
 export const MODEL_GEMMA_4_26B_A4B_IT = 'gemma-4-26b-a4b-it';
+export const MODEL_GEMINI_3_5_FLASH = 'gemini-3.5-flash';
 export const MODEL_GEMINI_3_1_PRO_PREVIEW = 'gemini-3.1-pro-preview';
 export const MODEL_GEMINI_3_1_FLASH_LITE = 'gemini-3.1-flash-lite';
 /** @deprecated Use MODEL_GEMINI_3_1_FLASH_LITE instead. */
@@ -27,6 +28,7 @@ export const MODEL_GEMINI_2_0_FLASH = 'gemini-2.0-flash';
 export const MODEL_GEMINI_2_0_FLASH_LITE = 'gemini-2.0-flash-lite';
 
 export const GEMINI_RECOMMENDED_MODELS = [
+  MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,

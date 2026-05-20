@@ -45,6 +45,7 @@ import {
   // Gemini models
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
+  MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
@@ -561,6 +562,12 @@ export const allModels: ProviderModel[] = [
   },
 
   // Gemini models
+  {
+    id: MODEL_GEMINI_3_5_FLASH,
+    name: 'Gemini 3.5 Flash',
+    provider: 'gemini',
+    default: false,
+  },
   {
     id: MODEL_GEMINI_3_1_FLASH_LITE,
     name: 'Gemini 3.1 Flash-Lite',
