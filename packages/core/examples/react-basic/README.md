@@ -14,7 +14,7 @@ This example application serves as a practical implementation guide for integrat
   - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.5 and GPT-5.4/5.4 Mini/5.4 Nano/5.4 Pro)
   - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
-  - Google Gemini (Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
+  - Google Gemini (Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
   - Anthropic Claude (4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
   - DeepSeek and Mistral first-class providers
   - Seamless provider switching
@@ -117,6 +117,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **Gemini:**
 - Gemma 4 series (31B IT, 26B A4B IT)
+- Gemini 3.5 Flash with automatic minimal thinking for chat-style responses
 - Gemini 3 series (3.1 Flash-Lite, 3.1 Pro Preview, 3 Flash Preview, plus deprecated preview aliases)
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)

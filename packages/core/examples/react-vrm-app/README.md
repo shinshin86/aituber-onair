@@ -12,7 +12,9 @@ from actual audio output volume.
   `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`,
   `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
-  chat models such as GPT-5.5 are available automatically in Settings
+  chat models such as Gemini 3.5 Flash and GPT-5.5 are available automatically
+  in Settings
+- Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses
 - `gpt-5.5-pro` is intentionally omitted because OpenAI documents it as
   non-streaming, while this example uses the standard streaming chat flow
 - For `openrouter`, fetch currently working `:free` models from Settings:

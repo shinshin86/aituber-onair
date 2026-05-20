@@ -12,7 +12,9 @@
   `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`,
   `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
-  GPT-5.5 など chat 由来の新規モデルも Settings に自動反映されます
+  Gemini 3.5 Flash や GPT-5.5 など chat 由来の新規モデルも Settings に
+  自動反映されます
+- Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します
 - `gpt-5.5-pro` は OpenAI のドキュメント上でストリーミング非対応のため、
   ストリーミング前提の通常チャットフローを使うこの例では含めていません
 - `openrouter` では Settings から現在使える `:free` モデルを取得可能:
