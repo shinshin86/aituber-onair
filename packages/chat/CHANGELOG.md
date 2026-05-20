@@ -1,5 +1,17 @@
 # @aituber-onair/chat
 
+## 0.35.0
+
+### Minor Changes
+
+- Added Gemini 3.5 Flash support through the Gemini provider, including the
+  `MODEL_GEMINI_3_5_FLASH` constant, recommended model list entry, vision
+  support metadata, React basic selector option, and README documentation.
+- Updated Gemini 3.x API routing so stable Gemini 3.5 Flash uses the
+  `v1beta` GenerateContent endpoint path.
+- Set Gemini 3.5 Flash requests to use `MINIMAL` thinking and omit thought parts
+  by default for low-latency chat-style responses.
+
 ## 0.34.1
 
 ### Patch Changes

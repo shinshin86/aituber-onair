@@ -6,6 +6,7 @@ import type { MCPServerConfig } from '../../src/types/mcp';
 import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
+  MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
@@ -41,6 +42,7 @@ describe('GeminiChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GEMINI_3_5_FLASH,
         MODEL_GEMINI_3_1_FLASH_LITE,
         MODEL_GEMINI_3_1_PRO_PREVIEW,
         MODEL_GEMINI_3_FLASH_PREVIEW,
@@ -84,6 +86,9 @@ describe('GeminiChatServiceProvider', () => {
       expect(
         provider.supportsVisionForModel(MODEL_GEMINI_3_1_PRO_PREVIEW),
       ).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GEMINI_3_5_FLASH)).toBe(
+        true,
+      );
       expect(provider.supportsVisionForModel(MODEL_GEMINI_3_1_FLASH_LITE)).toBe(
         true,
       );

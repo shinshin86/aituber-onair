@@ -9,6 +9,7 @@ import {
 } from '../../../types';
 import {
   ENDPOINT_GEMINI_API,
+  MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_1_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS,
 } from '../../../constants';
@@ -59,6 +60,10 @@ export class GeminiChatService implements ChatService {
 
   private isGemma4Model(model: string): boolean {
     return /^gemma-4-/.test(model);
+  }
+
+  private shouldMinimizeThinking(model: string): boolean {
+    return model === MODEL_GEMINI_3_5_FLASH || this.isGemma4Model(model);
   }
 
   private shouldExposeTextPart(part: any, model: string): boolean {
@@ -397,10 +402,10 @@ export class GeminiChatService implements ChatService {
       },
     };
 
-    if (this.isGemma4Model(model)) {
+    if (this.shouldMinimizeThinking(model)) {
       body.generationConfig.thinkingConfig = {
         includeThoughts: false,
-        thinkingLevel: 'minimal',
+        thinkingLevel: 'MINIMAL',
       };
     }
     // Add tools configuration (regular tools + MCP tools as functionDeclarations)
@@ -460,8 +465,8 @@ export class GeminiChatService implements ChatService {
     const isLite = /flash[-_]lite/.test(model);
     const isGemma4 = this.isGemma4Model(model);
     const isGemini25 = /gemini-2\.5/.test(model);
-    const isGemini3Preview = /^gemini-3(?:\.[0-9]+)?-.*preview/.test(model);
-    const requiresV1beta = isLite || isGemma4 || isGemini25 || isGemini3Preview;
+    const isGemini3 = /^gemini-3(?:\.[0-9]+)?-/.test(model);
+    const requiresV1beta = isLite || isGemma4 || isGemini25 || isGemini3;
     const firstVer: 'v1' | 'v1beta' = requiresV1beta ? 'v1beta' : 'v1';
 
     const tryApi = async (): Promise<Response> => {
