@@ -859,40 +859,49 @@ export function SettingsPanel({
             </div>
 
             {settings.tts.engine === 'openai' && (
-              <div className="settings-field">
-                <label htmlFor="tts-speaker">Speaker</label>
-                <select
-                  id="tts-speaker"
-                  value={settings.tts.speaker}
-                  onChange={(e) => updateTTSSpeaker(e.target.value)}
-                  disabled={disabled}
-                >
-                  {OPENAI_SPEAKERS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-openai-apikey">API Key (OpenAI)</label>
+                  <input
+                    id="tts-openai-apikey"
+                    type="password"
+                    value={getApiKeyForProvider('openai')}
+                    onChange={(e) => updateLLMApiKey('openai', e.target.value)}
+                    placeholder="OpenAI API key"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-speaker">Speaker</label>
+                  <select
+                    id="tts-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={disabled}
+                  >
+                    {OPENAI_SPEAKERS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
             )}
 
             {settings.tts.engine === 'geminiTts' && (
               <>
-                {settings.llm.provider !== 'gemini' && (
-                  <div className="settings-field">
-                    <label htmlFor="tts-gemini-apikey">API Key (Gemini)</label>
-                    <input
-                      id="tts-gemini-apikey"
-                      type="password"
-                      value={getApiKeyForProvider('gemini')}
-                      onChange={(e) =>
-                        updateLLMApiKey('gemini', e.target.value)
-                      }
-                      placeholder="Google API key"
-                      disabled={disabled}
-                    />
-                  </div>
-                )}
+                <div className="settings-field">
+                  <label htmlFor="tts-gemini-apikey">API Key (Gemini)</label>
+                  <input
+                    id="tts-gemini-apikey"
+                    type="password"
+                    value={getApiKeyForProvider('gemini')}
+                    onChange={(e) => updateLLMApiKey('gemini', e.target.value)}
+                    placeholder="Google API key"
+                    disabled={disabled}
+                  />
+                </div>
                 <div className="settings-field">
                   <label htmlFor="tts-gemini-speaker">Voice</label>
                   <select

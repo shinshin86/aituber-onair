@@ -7,6 +7,7 @@ import {
   MODEL_CLAUDE_4_OPUS,
   MODEL_CLAUDE_4_SONNET,
   MODEL_GEMINI_NANO,
+  MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMMA_4_31B_IT,
@@ -57,7 +58,8 @@ describe('Core index chat re-exports', () => {
     expect(typeof refreshOpenRouterFreeModels).toBe('function');
   });
 
-  it('re-exports Gemini 3.1 Flash-Lite model constants', () => {
+  it('re-exports Gemini 3.5 and 3.1 Flash-Lite model constants', () => {
+    expect(MODEL_GEMINI_3_5_FLASH).toBe('gemini-3.5-flash');
     expect(MODEL_GEMINI_3_1_FLASH_LITE).toBe('gemini-3.1-flash-lite');
     expect(MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW).toBe(
       'gemini-3.1-flash-lite-preview',

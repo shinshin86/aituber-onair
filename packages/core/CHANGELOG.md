@@ -1,5 +1,20 @@
 # @aituber-onair/core
 
+## 0.25.11
+
+### Patch Changes
+
+- Synced Gemini 3.5 Flash support from `@aituber-onair/chat@0.35.0` into the
+  core entry point and React examples:
+  - re-exported `MODEL_GEMINI_3_5_FLASH`
+  - added Gemini 3.5 Flash to the core React basic example Gemini model list
+  - noted that PNGTuber, VRM, and Live2D examples source model lists from core,
+    so Gemini 3.5 Flash appears automatically after the core sync
+  - documented that Gemini 3.5 Flash uses minimal thinking automatically for
+    chat-style responses
+- Updated dependencies []:
+  - @aituber-onair/chat@0.35.0
+
 ## 0.25.10
 
 ### Patch Changes
