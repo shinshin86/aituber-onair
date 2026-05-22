@@ -21,7 +21,6 @@ import { MCPServerConfig } from '../../../types';
 import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 import {
-  buildOpenAICompatibleTools,
   parseOpenAICompatibleOneShot,
   parseOpenAICompatibleTextStream,
   parseOpenAICompatibleToolStream,
@@ -31,6 +30,7 @@ import {
   parseOpenAIResponsesOneShot,
   parseOpenAIResponsesStream,
 } from './responsesParser';
+import { buildOpenAIToolsDefinition } from './openaiToolBuilder';
 
 const GPT5_RESPONSE_LENGTH_MIN_TOKENS: Record<ChatResponseLength, number> = {
   [CHAT_RESPONSE_LENGTH.VERY_SHORT]: 800,
@@ -395,8 +395,11 @@ export class OpenAIChatService implements ChatService {
       body.reasoning_effort = this.reasoning_effort;
     }
 
-    // Add tools if available
-    const tools = this.buildToolsDefinition();
+    const tools = buildOpenAIToolsDefinition({
+      tools: this.tools,
+      mcpServers: this.mcpServers,
+      isResponsesAPI,
+    });
     if (tools.length > 0) {
       body.tools = tools;
 
@@ -530,60 +533,6 @@ export class OpenAIChatService implements ChatService {
       });
 
       return cleanMsg;
-    });
-  }
-
-  /**
-   * Build tools definition based on the endpoint type
-   */
-  private buildToolsDefinition(): any[] {
-    const isResponsesAPI = this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
-    const toolDefs: any[] = [];
-
-    // Add function tools
-    if (this.tools.length > 0) {
-      toolDefs.push(
-        ...buildOpenAICompatibleTools(
-          this.tools,
-          isResponsesAPI ? 'responses' : 'chat-completions',
-        ),
-      );
-    }
-
-    // Add MCP tools (only for Responses API)
-    if (this.mcpServers.length > 0 && isResponsesAPI) {
-      toolDefs.push(...this.buildMCPToolsDefinition());
-    }
-
-    return toolDefs;
-  }
-
-  /**
-   * Build MCP tools definition for Responses API
-   */
-  private buildMCPToolsDefinition(): any[] {
-    return this.mcpServers.map((server) => {
-      const mcpDef: any = {
-        type: 'mcp', // Using 'mcp' as indicated by the error message
-        server_label: server.name, // Use server_label as required by API
-        server_url: server.url, // Use server_url instead of url
-      };
-
-      if (server.require_approval) {
-        mcpDef.require_approval = server.require_approval;
-      }
-
-      if (server.tool_configuration?.allowed_tools) {
-        mcpDef.allowed_tools = server.tool_configuration.allowed_tools;
-      }
-
-      if (server.authorization_token) {
-        mcpDef.headers = {
-          Authorization: `Bearer ${server.authorization_token}`,
-        };
-      }
-
-      return mcpDef;
     });
   }
 
