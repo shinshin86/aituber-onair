@@ -25,6 +25,10 @@ import {
   convertMessagesToGeminiFormat,
   convertVisionMessagesToGeminiFormat,
 } from './geminiMessageConverter';
+import {
+  buildGeminiToolConfig,
+  createFallbackMCPToolSchemas,
+} from './geminiToolAdapter';
 
 /**
  * Gemini implementation of ChatService
@@ -199,21 +203,7 @@ export class GeminiChatService implements ChatService {
       this.mcpSchemasInitialized = true;
     } catch (error) {
       console.warn('Failed to initialize MCP schemas, using fallback:', error);
-      // Use fallback schemas - always provide basic functionality
-      this.mcpToolSchemas = this.mcpServers.map((server) => ({
-        name: `mcp_${server.name}_search`,
-        description: `Search using ${server.name} MCP server (fallback)`,
-        parameters: {
-          type: 'object',
-          properties: {
-            query: {
-              type: 'string',
-              description: 'Search query',
-            },
-          },
-          required: ['query'],
-        },
-      }));
+      this.mcpToolSchemas = createFallbackMCPToolSchemas(this.mcpServers);
       this.mcpSchemasInitialized = true;
     }
   }
@@ -330,48 +320,19 @@ export class GeminiChatService implements ChatService {
         thinkingLevel: 'MINIMAL',
       };
     }
-    // Add tools configuration (regular tools + MCP tools as functionDeclarations)
-    const allToolDeclarations = [];
-
-    // Add regular function tools
-    if (this.tools.length > 0) {
-      allToolDeclarations.push(
-        ...this.tools.map((t) => ({
-          name: t.name,
-          description: t.description,
-          parameters: t.parameters,
-        })),
-      );
-    }
-
-    // Add MCP tools as functionDeclarations
+    let activeMCPToolSchemas: ToolDefinition[] = [];
     if (this.mcpServers.length > 0) {
       try {
-        // Initialize MCP schemas if not already done
         await this.initializeMCPSchemas();
-
-        // Add MCP tool schemas as regular function declarations
-        // Gemini will call these as normal functions, and ToolExecutor will handle the MCP routing
-        allToolDeclarations.push(
-          ...this.mcpToolSchemas.map((t) => ({
-            name: t.name,
-            description: t.description,
-            parameters: t.parameters,
-          })),
-        );
+        activeMCPToolSchemas = this.mcpToolSchemas;
       } catch (error) {
         console.warn('MCP initialization failed, skipping MCP tools:', error);
-        // Continue without MCP tools if initialization fails
       }
     }
 
-    if (allToolDeclarations.length > 0) {
-      body.tools = [
-        {
-          functionDeclarations: allToolDeclarations,
-        },
-      ];
-      body.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
+    const toolConfig = buildGeminiToolConfig(this.tools, activeMCPToolSchemas);
+    if (toolConfig) {
+      Object.assign(body, toolConfig);
     }
 
     const fetchOnce = async (
