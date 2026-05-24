@@ -183,6 +183,14 @@ For the original setup script, detailed asset sources, and license notes, see
   (`models`, `fetchedAt`, `maxCandidates`) is also persisted in the same key
 - Visual uploaded images are memory-only and reset on page reload
 
+### Comment Intelligence
+
+This example uses `@aituber-onair/comment-intelligence` to analyze live chat comments before sending them to `@aituber-onair/core`.
+
+Instead of forwarding every YouTube or Twitch comment directly to the LLM, the app batches incoming comments, filters unsafe ones, ranks them, summarizes ignored comments, and sends compact live-chat context to the AITuber.
+
+The chat UI shows only the selected viewer comment, while the LLM receives additional context such as greetings, first-time viewers, repeated comments, and safety instructions.
+
 ## Avatar base images (`public/avatar`)
 
 Place these files in `public/avatar/`:

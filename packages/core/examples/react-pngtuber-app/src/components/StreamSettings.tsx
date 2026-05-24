@@ -1,12 +1,23 @@
 import type {
+  CommentIntelligenceSettings,
   StreamSettings,
   StreamingPlatformOption,
 } from '../types/settings';
 
 const STREAM_INTERVAL_OPTIONS = [5000, 10000, 20000, 30000, 60000] as const;
+const COMMENT_ANALYSIS_INTERVAL_OPTIONS = [1000, 2000, 5000, 10000] as const;
+const COMMENT_BATCH_SIZE_OPTIONS = [10, 25, 50, 100, 200] as const;
+const COMMENT_LLM_MIN_COMMENTS_OPTIONS = [4, 8, 12, 20] as const;
+const VIEWER_BLOCK_DURATION_OPTIONS = [
+  { label: '1 min', value: 60 * 1000 },
+  { label: '5 min', value: 5 * 60 * 1000 },
+  { label: '10 min', value: 10 * 60 * 1000 },
+  { label: '30 min', value: 30 * 60 * 1000 },
+] as const;
 
 interface StreamSettingsProps {
   stream: StreamSettings;
+  commentIntelligence: CommentIntelligenceSettings;
   disabled: boolean;
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -21,6 +32,15 @@ interface StreamSettingsProps {
   updateTwitchChannel: (value: string) => void;
   updateTwitchEnabled: (value: boolean) => void;
   updateTwitchCommentIntervalMs: (value: number) => void;
+  updateCommentIntelligenceEnabled: (value: boolean) => void;
+  updateCommentIntelligenceMode: (
+    value: CommentIntelligenceSettings['mode'],
+  ) => void;
+  updateCommentIntelligenceAnalysisIntervalMs: (value: number) => void;
+  updateCommentIntelligenceMaxCommentsPerBatch: (value: number) => void;
+  updateCommentIntelligenceMinCommentsForLLMAnalysis: (value: number) => void;
+  updateCommentIntelligenceBlockHighRiskViewers: (value: boolean) => void;
+  updateCommentIntelligenceViewerBlockDurationMs: (value: number) => void;
 }
 
 function getTwitchRedirectUri(): string {
@@ -33,6 +53,7 @@ function getTwitchRedirectUri(): string {
 
 export function StreamSettings({
   stream,
+  commentIntelligence,
   disabled,
   isExpanded,
   onToggleExpand,
@@ -47,6 +68,13 @@ export function StreamSettings({
   updateTwitchChannel,
   updateTwitchEnabled,
   updateTwitchCommentIntervalMs,
+  updateCommentIntelligenceEnabled,
+  updateCommentIntelligenceMode,
+  updateCommentIntelligenceAnalysisIntervalMs,
+  updateCommentIntelligenceMaxCommentsPerBatch,
+  updateCommentIntelligenceMinCommentsForLLMAnalysis,
+  updateCommentIntelligenceBlockHighRiskViewers,
+  updateCommentIntelligenceViewerBlockDurationMs,
 }: StreamSettingsProps) {
   const twitchRedirectUri = getTwitchRedirectUri();
   const isYoutubeSelected = stream.platform === 'youtube';
@@ -55,6 +83,7 @@ export function StreamSettings({
     !!stream.twitchAccessToken &&
     !!stream.twitchChannel.trim() &&
     !!stream.twitchClientId.trim();
+  const commentControlsDisabled = disabled || !commentIntelligence.enabled;
 
   const handleConnectTwitch = () => {
     try {
@@ -261,7 +290,7 @@ export function StreamSettings({
                   ))}
                 </select>
                 <p className="settings-field-hint">
-                  One queued Twitch message is forwarded per interval.
+                  Queued Twitch messages are forwarded as a batch per interval.
                 </p>
               </div>
 
@@ -286,6 +315,164 @@ export function StreamSettings({
           {streamErrorMessage ? (
             <p className="settings-field-error">{streamErrorMessage}</p>
           ) : null}
+
+          <div className="settings-field">
+            <label htmlFor="comment-intelligence-enabled">
+              <input
+                id="comment-intelligence-enabled"
+                type="checkbox"
+                checked={commentIntelligence.enabled}
+                onChange={(event) =>
+                  updateCommentIntelligenceEnabled(event.target.checked)
+                }
+                disabled={disabled}
+                style={{ marginRight: 8 }}
+              />
+              Comment Intelligence
+            </label>
+            <p className="settings-field-hint">
+              Live comments are queued while the AI is processing or speaking,
+              then ranked and filtered before one selected comment is sent.
+            </p>
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="comment-intelligence-mode">Analysis Mode</label>
+            <select
+              id="comment-intelligence-mode"
+              value={commentIntelligence.mode}
+              onChange={(event) =>
+                updateCommentIntelligenceMode(
+                  event.target.value as CommentIntelligenceSettings['mode'],
+                )
+              }
+              disabled={commentControlsDisabled}
+            >
+              <option value="rules">Rules (no API key)</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="llm-assisted">LLM Assisted</option>
+            </select>
+            <p className="settings-field-hint">
+              Rules mode is the default. Hybrid and LLM-assisted modes fall back
+              to rules unless an analysis provider is wired by the app.
+            </p>
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="comment-intelligence-interval">
+              Analysis Interval
+            </label>
+            <select
+              id="comment-intelligence-interval"
+              value={commentIntelligence.analysisIntervalMs}
+              onChange={(event) =>
+                updateCommentIntelligenceAnalysisIntervalMs(
+                  Number(event.target.value),
+                )
+              }
+              disabled={commentControlsDisabled}
+            >
+              {COMMENT_ANALYSIS_INTERVAL_OPTIONS.map((intervalMs) => (
+                <option key={intervalMs} value={intervalMs}>
+                  {intervalMs.toLocaleString()} ms
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="comment-intelligence-batch-size">
+              Max Comments per Analysis
+            </label>
+            <select
+              id="comment-intelligence-batch-size"
+              value={commentIntelligence.maxCommentsPerBatch}
+              onChange={(event) =>
+                updateCommentIntelligenceMaxCommentsPerBatch(
+                  Number(event.target.value),
+                )
+              }
+              disabled={commentControlsDisabled}
+            >
+              {COMMENT_BATCH_SIZE_OPTIONS.map((batchSize) => (
+                <option key={batchSize} value={batchSize}>
+                  {batchSize}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {commentIntelligence.mode !== 'rules' && (
+            <div className="settings-field">
+              <label htmlFor="comment-intelligence-llm-min-comments">
+                Min Comments for LLM Analysis
+              </label>
+              <select
+                id="comment-intelligence-llm-min-comments"
+                value={commentIntelligence.minCommentsForLLMAnalysis}
+                onChange={(event) =>
+                  updateCommentIntelligenceMinCommentsForLLMAnalysis(
+                    Number(event.target.value),
+                  )
+                }
+                disabled={commentControlsDisabled}
+              >
+                {COMMENT_LLM_MIN_COMMENTS_OPTIONS.map((minComments) => (
+                  <option key={minComments} value={minComments}>
+                    {minComments}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="settings-field">
+            <label htmlFor="comment-intelligence-block-viewers">
+              <input
+                id="comment-intelligence-block-viewers"
+                type="checkbox"
+                checked={commentIntelligence.blockHighRiskViewers}
+                onChange={(event) =>
+                  updateCommentIntelligenceBlockHighRiskViewers(
+                    event.target.checked,
+                  )
+                }
+                disabled={commentControlsDisabled}
+                style={{ marginRight: 8 }}
+              />
+              Temporarily skip unsafe viewers
+            </label>
+            <p className="settings-field-hint">
+              Viewers who send high-risk comments are skipped for later analyses
+              during the block window, so unsafe comments are not sent directly
+              to core.
+            </p>
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="comment-intelligence-block-duration">
+              Unsafe Viewer Skip Duration
+            </label>
+            <select
+              id="comment-intelligence-block-duration"
+              value={commentIntelligence.viewerBlockDurationMs}
+              onChange={(event) =>
+                updateCommentIntelligenceViewerBlockDurationMs(
+                  Number(event.target.value),
+                )
+              }
+              disabled={
+                commentControlsDisabled ||
+                !commentIntelligence.blockHighRiskViewers
+              }
+            >
+              {VIEWER_BLOCK_DURATION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </>
       )}
     </div>

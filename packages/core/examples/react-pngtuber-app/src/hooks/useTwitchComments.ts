@@ -11,7 +11,7 @@ interface UseTwitchCommentsParams {
   twitchAccessToken: string;
   isEnabled: boolean;
   intervalMs: number;
-  onComment: (comment: TwitchChatMessage) => void;
+  onComments: (comments: TwitchChatMessage[]) => void;
   onTokenExpired?: () => void;
   onError?: (message: string) => void;
 }
@@ -20,7 +20,7 @@ interface UseTwitchCommentsParams {
  * Connects to Twitch chat over EventSub WebSocket.
  *
  * Starts only when isEnabled and all required credentials are present.
- * Uses a WebSocket push stream with buffered dequeue delivery.
+ * Uses a WebSocket push stream with buffered batch delivery.
  */
 export function useTwitchComments({
   twitchChannel,
@@ -28,12 +28,12 @@ export function useTwitchComments({
   twitchAccessToken,
   isEnabled,
   intervalMs,
-  onComment,
+  onComments,
   onTokenExpired,
   onError,
 }: UseTwitchCommentsParams): void {
-  const onCommentEvent = useEffectEvent((message: TwitchChatMessage) => {
-    onComment(message);
+  const onCommentsEvent = useEffectEvent((messages: TwitchChatMessage[]) => {
+    onComments(messages);
   });
   const onTokenExpiredEvent = useEffectEvent(() => {
     onTokenExpired?.();
@@ -53,9 +53,9 @@ export function useTwitchComments({
     connectTwitchChat({
       channelLogin: twitchChannel,
       pollInterval: intervalMs,
-      onComment: (message) => {
+      onComments: (messages) => {
         if (!cancelled) {
-          onCommentEvent(message);
+          onCommentsEvent(messages);
         }
       },
       onTokenExpired: () => {

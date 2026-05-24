@@ -1,17 +1,19 @@
 /**
- * Subscribes to Twitch chat over EventSub WebSocket and delivers one queued
- * message per polling interval.
+ * Subscribes to Twitch chat over EventSub WebSocket and delivers queued
+ * messages in batches.
  */
 
 export interface TwitchChatMessage {
+  id: string;
   userName: string;
   userComment: string;
+  publishedAt: string;
 }
 
 interface ConnectTwitchChatOptions {
   channelLogin: string;
   pollInterval: number;
-  onComment: (message: TwitchChatMessage) => void;
+  onComments: (messages: TwitchChatMessage[]) => void;
   onTokenExpired?: () => void;
   token: string;
   clientId: string;
@@ -37,7 +39,7 @@ export async function connectTwitchChat(
   const {
     channelLogin,
     pollInterval,
-    onComment,
+    onComments,
     onTokenExpired,
     token,
     clientId,
@@ -82,8 +84,8 @@ export async function connectTwitchChat(
 
   pollTimer = window.setInterval(() => {
     if (buffer.length > 0) {
-      const message = buffer.shift()!;
-      onComment(message);
+      const messages = buffer.splice(0, buffer.length);
+      onComments(messages);
     }
   }, pollInterval);
 
@@ -238,8 +240,10 @@ export async function connectTwitchChat(
 
         processedMessageIds.add(messageId);
         buffer.push({
+          id: messageId,
           userName: message.payload.event.chatter_user_name,
           userComment: message.payload.event.message.text,
+          publishedAt: new Date().toISOString(),
         });
       }
     } catch (error) {
