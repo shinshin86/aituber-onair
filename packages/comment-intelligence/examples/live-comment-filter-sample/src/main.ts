@@ -224,21 +224,25 @@ function renderApp() {
 
   app.innerHTML = `
     <section class="hero">
-      <div class="hero-copy">
-        <div class="hero-topline">
-          <a class="repo-link" href="https://github.com/shinshin86/aituber-onair/tree/main/packages/comment-intelligence" target="_blank" rel="noreferrer">
-            github.com/shinshin86/aituber-onair
-          </a>
-          <label class="language-switch" for="ui-language">
-            <span>${copy.uiLabel}</span>
-            <select id="ui-language">
-              <option value="en"${uiLanguage === 'en' ? ' selected' : ''}>English</option>
-              <option value="ja"${uiLanguage === 'ja' ? ' selected' : ''}>日本語</option>
-            </select>
-          </label>
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <div class="hero-topline">
+            <a class="repo-link" href="https://github.com/shinshin86/aituber-onair/tree/main/packages/comment-intelligence" target="_blank" rel="noreferrer">
+              <span class="repo-icon" aria-hidden="true">&#x2197;</span>
+              github.com/shinshin86/aituber-onair
+            </a>
+            <label class="language-switch" for="ui-language">
+              <span>${copy.uiLabel}</span>
+              <select id="ui-language">
+                <option value="en"${uiLanguage === 'en' ? ' selected' : ''}>English</option>
+                <option value="ja"${uiLanguage === 'ja' ? ' selected' : ''}>日本語</option>
+              </select>
+            </label>
+          </div>
+          <p class="hero-eyebrow">@aituber-onair/comment-intelligence</p>
+          <h1>${copy.title}</h1>
+          <p class="lead">${copy.lead}</p>
         </div>
-        <h1>${copy.title}</h1>
-        <p class="lead">${copy.lead}</p>
       </div>
     </section>
 
