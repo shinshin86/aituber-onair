@@ -52,13 +52,13 @@ await core.processChat(promptForCore);
 
 ライブ配信中に視聴者ごとの安全状態を覚えたい場合は、同じ `intelligence` インスタンスを使い続けてください。関数型の `analyzeComments()` は単発分析には便利ですが、過去の視聴者状態は覚えません。
 
-## 最小ブラウザサンプル
+## ライブコメントフィルターサンプル
 
 コメントの安全判定、ランキング、未選択コメント要約、視聴者ごとの安全状態、
 core へ渡す入力を確認できる小さなブラウザサンプルを含めています。
 
 ```sh
-npm -w @aituber-onair/comment-intelligence run example:minimal
+npm -w @aituber-onair/comment-intelligence run example:live-comment-filter-sample
 ```
 
 Vite が表示するローカルURLを開き、`視聴者名: コメント` 形式でコメントを貼り付けてください。

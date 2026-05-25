@@ -52,14 +52,14 @@ await core.processChat(promptForCore);
 
 Keep the same `intelligence` instance for a live stream if you want viewer safety memory to work across batches. The stateless `analyzeComments()` helper is useful for one-shot analysis, but it does not remember previous viewers.
 
-## Minimal Browser Example
+## Live Comment Filter Example
 
 This package includes a small browser example that shows comment safety checks,
 ranking, ignored-comment summaries, viewer safety memory, and prepared input for
 core.
 
 ```sh
-npm -w @aituber-onair/comment-intelligence run example:minimal
+npm -w @aituber-onair/comment-intelligence run example:live-comment-filter-sample
 ```
 
 Open the local URL shown by Vite and paste comments as `viewer: comment`.

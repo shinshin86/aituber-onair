@@ -10,8 +10,8 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "example:minimal": "vite --host 127.0.0.1 examples/minimal",
-    "example:minimal:build": "vite build examples/minimal --outDir ../../dist/examples/minimal --emptyOutDir=false",
+    "example:live-comment-filter-sample": "vite --host 127.0.0.1 examples/live-comment-filter-sample",
+    "example:live-comment-filter-sample:build": "vite build examples/live-comment-filter-sample --outDir ../../dist/examples/live-comment-filter-sample --emptyOutDir=false",
     "typecheck": "tsc --noEmit --project tsconfig.dev.json",
     "test": "npm run typecheck && vitest run",
     "test:watch": "vitest",
