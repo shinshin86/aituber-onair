@@ -54,9 +54,10 @@ Keep the same `intelligence` instance for a live stream if you want viewer safet
 
 ## Live Comment Filter Example
 
-This package includes a small browser example that shows comment safety checks,
-ranking, ignored-comment summaries, viewer safety memory, and prepared input for
-core.
+This package includes a small browser example for trying rules-based live
+comment filtering. It shows which comment is picked, which unsafe comments are
+blocked, and what context is summarized. It does not connect to
+`@aituber-onair/core` or call an LLM.
 
 ```sh
 npm -w @aituber-onair/comment-intelligence run example:live-comment-filter-sample

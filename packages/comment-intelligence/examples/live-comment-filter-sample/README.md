@@ -15,8 +15,8 @@ npm --prefix ../.. run example:live-comment-filter-sample
 ```
 
 Open the shown local URL, paste comments as `viewer: comment`, and run analysis.
-The page shows selected comments, ignored summaries, safety reports, ranking
-scores, viewer safety memory, and the prepared input that an app would pass to
-`@aituber-onair/core`.
+The page shows rules-based comment filtering: selected comments, blocked unsafe
+comments, ignored summaries, safety reports, ranking scores, and viewer safety
+memory. This sample does not connect to `@aituber-onair/core` or call an LLM.
 
 The UI can be switched between English and Japanese.

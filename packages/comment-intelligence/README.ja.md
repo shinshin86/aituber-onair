@@ -54,8 +54,9 @@ await core.processChat(promptForCore);
 
 ## ライブコメントフィルターサンプル
 
-コメントの安全判定、ランキング、未選択コメント要約、視聴者ごとの安全状態、
-core へ渡す入力を確認できる小さなブラウザサンプルを含めています。
+ルールベースのライブコメントフィルターを試せる小さなブラウザサンプルを含めています。
+AIが拾うコメント、ブロックする危険コメント、要約される文脈を確認できます。
+このサンプル単体では `@aituber-onair/core` への送信や LLM 呼び出しは行いません。
 
 ```sh
 npm -w @aituber-onair/comment-intelligence run example:live-comment-filter-sample
