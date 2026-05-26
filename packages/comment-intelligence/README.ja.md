@@ -61,6 +61,13 @@ core へ渡す入力を確認できる小さなブラウザサンプルを含め
 npm -w @aituber-onair/comment-intelligence run example:live-comment-filter-sample
 ```
 
+サンプルフォルダ内から起動する場合は、親パッケージの script を呼び出します。
+
+```sh
+cd packages/comment-intelligence/examples/live-comment-filter-sample
+npm --prefix ../.. run example:live-comment-filter-sample
+```
+
 Vite が表示するローカルURLを開き、`視聴者名: コメント` 形式でコメントを貼り付けてください。
 サンプルUIは英語・日本語を切り替えられます。
 

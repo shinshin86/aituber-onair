@@ -62,6 +62,13 @@ core.
 npm -w @aituber-onair/comment-intelligence run example:live-comment-filter-sample
 ```
 
+You can also start it from the example directory:
+
+```sh
+cd packages/comment-intelligence/examples/live-comment-filter-sample
+npm --prefix ../.. run example:live-comment-filter-sample
+```
+
 Open the local URL shown by Vite and paste comments as `viewer: comment`.
 The example UI can be switched between English and Japanese.
 
