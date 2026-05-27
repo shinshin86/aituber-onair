@@ -3,6 +3,7 @@ import {
   formatCommentIntelligencePrompt,
   type CommentIntelligenceConfig,
   type CommentIntelligenceResult,
+  type CommentAnalysisLLMProvider,
   type LiveComment,
   type RankingStrategy,
 } from '../../../src/index';
@@ -11,6 +12,7 @@ import './styles.css';
 type Intelligence = ReturnType<typeof createCommentIntelligence>;
 type UiLanguage = 'en' | 'ja';
 type PresetKey = 'live' | 'blockedViewer' | 'noisy';
+type AnalysisEngine = 'rules' | 'mock-llm';
 
 const PRESETS: Record<UiLanguage, Record<PresetKey, string>> = {
   en: {
@@ -100,6 +102,11 @@ const COPY = {
     reset: 'Reset viewer memory',
     advanced: 'Advanced parameters',
     advancedLiveHint: 'Parameter changes update the result automatically.',
+    engine: 'Analysis engine',
+    rulesEngine: 'Rules only',
+    mockLlmEngine: 'Mock LLM provider',
+    engineHint:
+      'The mock LLM mode uses a local sample provider so this browser demo can show llm-assisted behavior without an API key.',
     strategy: 'Ranking strategy',
     maxSelected: 'Max selected',
     minScore: 'Min score',
@@ -199,6 +206,11 @@ const COPY = {
     reset: '視聴者の記憶をリセット',
     advanced: '詳細パラメーター',
     advancedLiveHint: 'パラメーター変更も結果へ自動で反映されます。',
+    engine: '解析エンジン',
+    rulesEngine: 'ルールのみ',
+    mockLlmEngine: 'モックLLM provider',
+    engineHint:
+      'モックLLMモードはローカルのサンプルproviderを使います。APIキーなしで llm-assisted の動きを確認できます。',
     strategy: 'ランキング戦略',
     maxSelected: '最大選択数',
     minScore: '最小スコア',
@@ -276,6 +288,7 @@ if (!app) {
 let uiLanguage: UiLanguage = 'en';
 let activePreset: PresetKey | undefined = 'live';
 let currentCommentsText = PRESETS[uiLanguage][activePreset];
+let analysisEngine: AnalysisEngine = 'rules';
 let intelligence: Intelligence | null = null;
 let configSignature = '';
 let analyzeDebounceTimer: number | undefined;
@@ -322,6 +335,15 @@ function renderApp() {
           ${renderUsecaseButton('live')}
           ${renderUsecaseButton('blockedViewer')}
           ${renderUsecaseButton('noisy')}
+        </div>
+
+        <div class="engine-row">
+          <label for="analysis-engine">${copy.engine}</label>
+          <select id="analysis-engine">
+            <option value="rules"${analysisEngine === 'rules' ? ' selected' : ''}>${copy.rulesEngine}</option>
+            <option value="mock-llm"${analysisEngine === 'mock-llm' ? ' selected' : ''}>${copy.mockLlmEngine}</option>
+          </select>
+          <p class="hint">${copy.engineHint}</p>
         </div>
 
         <div class="action-row">
@@ -509,6 +531,15 @@ function bindEvents() {
     scheduleAnalyze({ resetMemory: true });
   });
 
+  getElement<HTMLSelectElement>('analysis-engine').addEventListener(
+    'change',
+    (event) => {
+      analysisEngine = (event.currentTarget as HTMLSelectElement)
+        .value as AnalysisEngine;
+      scheduleAnalyze();
+    }
+  );
+
   for (const id of [
     'strategy',
     'language',
@@ -570,12 +601,18 @@ function getElement<T extends HTMLElement>(id: string): T {
 }
 
 function buildConfig(): CommentIntelligenceConfig {
+  const language = getSelectValue('language') as 'ja' | 'en' | 'auto';
   return {
     analysis: {
-      mode: 'rules',
+      mode: analysisEngine === 'mock-llm' ? 'llm-assisted' : 'rules',
+      llmProvider:
+        analysisEngine === 'mock-llm'
+          ? createSampleLLMProvider(language)
+          : undefined,
       llmPolicy: {
         fallbackToRules: true,
         minComments: 8,
+        maxComments: 12,
       },
     },
     safety: {
@@ -596,7 +633,7 @@ function buildConfig(): CommentIntelligenceConfig {
       maxExamplesPerCluster: 2,
     },
     context: {
-      language: getSelectValue('language') as 'ja' | 'en' | 'auto',
+      language,
       style: 'aituber-live',
     },
     viewerSafety: {
@@ -605,6 +642,47 @@ function buildConfig(): CommentIntelligenceConfig {
       blockDurationMs: 10 * 60 * 1000,
     },
   };
+}
+
+function createSampleLLMProvider(
+  language: 'ja' | 'en' | 'auto'
+): CommentAnalysisLLMProvider {
+  return {
+    async analyze(input) {
+      const selected = pickSampleLLMComment(input.comments);
+      const isEnglish = language === 'en';
+
+      return {
+        selectedCommentIds: selected ? [selected.id] : undefined,
+        ignoredSummary: isEnglish
+          ? 'The sample LLM provider reviewed the safe-looking comments and preferred a question that can move the stream forward.'
+          : 'サンプルLLM providerは、安全そうなコメントの中から配信を進めやすい質問を優先しました。',
+        contextForLLM: [
+          isEnglish
+            ? 'Mock LLM provider was used for this sample.'
+            : 'このサンプルではモックLLM providerを使用しています。',
+          isEnglish
+            ? 'The LLM provider can add extra context before the response prompt is assembled.'
+            : 'LLM providerは、返答用プロンプトを組み立てる前に補足コンテキストを追加できます。',
+        ],
+        instructionForLLM: isEnglish
+          ? 'Answer the LLM-selected comment briefly, while respecting the rule-based safety result.'
+          : 'ルールベースの安全判定を尊重しつつ、LLMが選んだコメントへ短く返答してください。',
+      };
+    },
+  };
+}
+
+function pickSampleLLMComment(
+  comments: LiveComment[]
+): LiveComment | undefined {
+  return (
+    comments.find((comment) =>
+      /[?？]|how|what|why|when|where|どう|なに|何|いつ|どこ|なぜ/i.test(
+        comment.text
+      )
+    ) ?? comments[0]
+  );
 }
 
 async function analyze(options: { focusResults?: boolean } = {}) {

@@ -329,6 +329,31 @@ h3 {
   margin: 4px 0 18px;
 }
 
+.engine-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.35fr) minmax(220px, 0.65fr);
+  gap: 8px 12px;
+  align-items: center;
+  max-width: 640px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-soft);
+}
+
+.engine-row label {
+  margin: 0;
+}
+
+.engine-row select {
+  background-color: var(--c-surface);
+}
+
+.engine-row .hint {
+  grid-column: 1 / -1;
+}
+
 .usecase-card {
   min-height: 86px;
   display: grid;
@@ -907,6 +932,10 @@ pre {
 
   .incoming-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .engine-row {
+    grid-template-columns: 1fr;
   }
 }
 
