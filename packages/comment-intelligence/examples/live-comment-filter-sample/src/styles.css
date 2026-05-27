@@ -631,6 +631,10 @@ details[open] > summary::before {
   margin-bottom: 18px;
 }
 
+.prompt-note {
+  margin-top: 6px;
+}
+
 .prompt-panel pre {
   margin-top: 12px;
   padding: 14px 16px;

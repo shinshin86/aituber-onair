@@ -127,6 +127,8 @@ const COPY = {
     prompt: 'LLM prompt preview',
     promptHint:
       'Exact string returned by formatCommentIntelligencePrompt(). Drop it into your LLM call to see the full payload.',
+    promptLanguageNote:
+      'Note: formatCommentIntelligencePrompt() currently emits Japanese prompt text.',
     noSelected: 'No safe comment selected.',
     noUnsafe: 'No unsafe comments were blocked in this batch.',
     noReason: 'No reason',
@@ -200,6 +202,8 @@ const COPY = {
     prompt: 'LLMプロンプトのプレビュー',
     promptHint:
       'formatCommentIntelligencePrompt() が返す文字列そのままです。LLM呼び出しにそのまま渡せます。',
+    promptLanguageNote:
+      '注: formatCommentIntelligencePrompt() のプロンプト本文は現在日本語固定です。',
     noSelected: '安全に拾うコメントはありません。',
     noUnsafe: 'このバッチでは危険コメントはブロックされませんでした。',
     noReason: '理由なし',
@@ -370,6 +374,7 @@ function renderApp() {
           <article class="panel prompt-panel">
             <h2>${copy.prompt}</h2>
             <p class="hint">${copy.promptHint}</p>
+            <p class="hint prompt-note">${copy.promptLanguageNote}</p>
             <pre id="prompt-preview"></pre>
           </article>
 
@@ -720,13 +725,19 @@ function formatSafetyReason(reason?: string): string {
   const labels: Record<string, string> = {
     'prompt injection pattern': 'プロンプトインジェクションの疑いがあります',
     'url pattern': 'URLが含まれています',
+    'URL detected': 'URLが含まれています',
     'repetition pattern': '同じ文字や表現の繰り返しが含まれています',
+    'abnormal repetition': '同じ文字や表現の繰り返しが含まれています',
     'spam pattern': 'スパムの可能性があります',
     'too long': 'コメントが長すぎます',
+    'comment is too long': 'コメントが長すぎます',
     'viewer is blocked due to previous unsafe comments':
       '過去の危険コメントにより、この視聴者は一時スキップ中です',
   };
-  return labels[reason] ?? reason;
+  return reason
+    .split(', ')
+    .map((part) => labels[part] ?? part)
+    .join('、');
 }
 
 function setActivePreset(activeButton: HTMLButtonElement) {
