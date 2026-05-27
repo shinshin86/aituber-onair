@@ -540,6 +540,38 @@ details[open] > summary::before {
   margin-bottom: 22px;
 }
 
+.incoming-panel {
+  margin-bottom: 14px;
+}
+
+.incoming-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.incoming-heading h3 {
+  margin-bottom: 0;
+}
+
+.incoming-count {
+  min-width: 40px;
+  margin: 2px 0 0;
+  color: var(--c-brand-strong);
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: right;
+}
+
+.incoming-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .value-panel {
   min-height: 180px;
   position: relative;
@@ -655,6 +687,7 @@ details[open] > summary::before {
 /* ---------- Comment & safety cards ---------- */
 
 .comment-card,
+.incoming-comment,
 .safety-report,
 .cluster {
   border: 1px solid var(--c-border);
@@ -668,6 +701,56 @@ details[open] > summary::before {
 .safety-report + .safety-report,
 .cluster + .cluster {
   margin-top: 10px;
+}
+
+.incoming-comment {
+  min-height: 104px;
+  border-left: 4px solid var(--c-border-strong);
+  background: var(--c-surface-soft);
+}
+
+.incoming-comment p {
+  margin: 0;
+  color: var(--c-ink);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.incoming-comment.is-selected {
+  border-color: var(--c-brand-soft);
+  border-left-color: var(--c-brand);
+  background: var(--c-brand-tint);
+}
+
+.incoming-comment.is-blocked {
+  border-color: var(--c-danger-border);
+  border-left-color: var(--c-danger);
+  background: var(--c-danger-soft);
+}
+
+.incoming-comment.is-context {
+  border-left-color: var(--c-subtle);
+}
+
+.incoming-comment .comment-meta span {
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  padding: 1px 8px;
+  color: var(--c-ink-soft);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.incoming-comment.is-selected .comment-meta span {
+  border-color: var(--c-brand-soft);
+  color: var(--c-brand-strong);
+}
+
+.incoming-comment.is-blocked .comment-meta span {
+  border-color: var(--c-danger-border);
+  color: var(--c-danger);
 }
 
 .comment-card p,
@@ -809,6 +892,10 @@ pre {
   .grid {
     grid-template-columns: 1fr;
   }
+
+  .incoming-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
@@ -840,6 +927,19 @@ pre {
 
   .composer {
     padding: 18px;
+  }
+
+  .incoming-heading {
+    display: block;
+  }
+
+  .incoming-count {
+    margin-top: 8px;
+    text-align: left;
+  }
+
+  .incoming-list {
+    grid-template-columns: 1fr;
   }
 
   .toggles button {

@@ -115,6 +115,20 @@ const COPY = {
     blockedTitle: 'Not sent to the AI',
     contextKicker: 'Context',
     ignoredTitle: 'Kept as context',
+    incomingKicker: 'Incoming',
+    incomingTitle: 'All received comments',
+    incomingLead: (
+      totalCount: number,
+      selectedCount: number,
+      blockedCount: number,
+      contextCount: number
+    ) =>
+      `${totalCount} comments came in. ${selectedCount} selected, ${blockedCount} blocked, and ${contextCount} kept as context.`,
+    incomingCount: (totalCount: number) =>
+      `${totalCount} comment${totalCount === 1 ? '' : 's'}`,
+    statusSelected: 'Picked',
+    statusBlocked: 'Blocked',
+    statusContext: 'Context',
     contextLead:
       'These three pieces are returned alongside the picked comment and are what the library hands to your LLM.',
     summaryHeading: 'Ignored summary',
@@ -190,6 +204,19 @@ const COPY = {
     blockedTitle: 'AIへ渡さないコメント',
     contextKicker: '文脈',
     ignoredTitle: '残す文脈',
+    incomingKicker: '受信',
+    incomingTitle: '実際に来たコメント',
+    incomingLead: (
+      totalCount: number,
+      selectedCount: number,
+      blockedCount: number,
+      contextCount: number
+    ) =>
+      `${totalCount}件のコメントを受け取り、${selectedCount}件を拾い、${blockedCount}件を止め、${contextCount}件を文脈として残します。`,
+    incomingCount: (totalCount: number) => `${totalCount}件`,
+    statusSelected: '拾う',
+    statusBlocked: '止める',
+    statusContext: '文脈',
     contextLead:
       'この3点が、選ばれたコメントと一緒にライブラリ利用者へ返ってきます。そのままLLMへ渡せる形です。',
     summaryHeading: '未選択コメントの要約',
@@ -285,6 +312,18 @@ function renderApp() {
           <p class="kicker">${copy.step2}</p>
           <h2>${copy.decisionTitle}</h2>
         </div>
+
+        <article class="panel incoming-panel">
+          <div class="incoming-heading">
+            <div>
+              <p class="kicker">${copy.incomingKicker}</p>
+              <h3>${copy.incomingTitle}</h3>
+            </div>
+            <p class="incoming-count" id="incoming-count"></p>
+          </div>
+          <p class="value-lead" id="incoming-lead"></p>
+          <div class="incoming-list" id="incoming-comments"></div>
+        </article>
 
         <div class="value-grid">
           <article class="panel value-panel">
@@ -520,7 +559,7 @@ async function analyze(options: { focusResults?: boolean } = {}) {
     },
   });
 
-  renderResult(result, options);
+  renderResult(result, comments, options);
 }
 
 function parseComments(value: string): LiveComment[] {
@@ -551,9 +590,39 @@ function parseComments(value: string): LiveComment[] {
 
 function renderResult(
   result: CommentIntelligenceResult,
+  comments: LiveComment[],
   options: { focusResults?: boolean } = {}
 ) {
   const copy = COPY[uiLanguage];
+  const unsafeReports = result.safetyReports.filter(
+    (report) => report.shouldIgnore || report.riskLevel === 'high'
+  );
+  const unsafeCommentIds = new Set(
+    unsafeReports.map((report) => report.commentId)
+  );
+  const selectedCommentIds = new Set(
+    result.selectedComments.map((comment) => comment.id)
+  );
+  const contextCount = comments.filter(
+    (comment) =>
+      !selectedCommentIds.has(comment.id) && !unsafeCommentIds.has(comment.id)
+  ).length;
+
+  getElement<HTMLParagraphElement>('incoming-count').textContent =
+    copy.incomingCount(comments.length);
+  getElement<HTMLParagraphElement>('incoming-lead').textContent =
+    copy.incomingLead(
+      comments.length,
+      result.selectedComments.length,
+      unsafeCommentIds.size,
+      contextCount
+    );
+  getElement<HTMLDivElement>('incoming-comments').innerHTML = comments
+    .map((comment) =>
+      renderIncomingComment(comment, selectedCommentIds, unsafeCommentIds)
+    )
+    .join('');
+
   getElement<HTMLDivElement>('selected').innerHTML = result.selectedComments
     .length
     ? result.selectedComments.map(renderOutcomeComment).join('')
@@ -580,9 +649,6 @@ function renderResult(
     </div>
   `;
 
-  const unsafeReports = result.safetyReports.filter(
-    (report) => report.shouldIgnore || report.riskLevel === 'high'
-  );
   const blockedViewerCount = result.debug?.blockedViewerIds?.length || 0;
   const commentsById = new Map(
     result.rankedComments.map((comment) => [comment.id, comment])
@@ -611,6 +677,35 @@ function renderResult(
       block: 'start',
     });
   }
+}
+
+function renderIncomingComment(
+  comment: LiveComment,
+  selectedCommentIds: Set<string>,
+  unsafeCommentIds: Set<string>
+): string {
+  const copy = COPY[uiLanguage];
+  const status = selectedCommentIds.has(comment.id)
+    ? 'selected'
+    : unsafeCommentIds.has(comment.id)
+      ? 'blocked'
+      : 'context';
+  const statusLabel =
+    status === 'selected'
+      ? copy.statusSelected
+      : status === 'blocked'
+        ? copy.statusBlocked
+        : copy.statusContext;
+
+  return `
+    <div class="incoming-comment is-${status}">
+      <div class="comment-meta">
+        <strong>${escapeHtml(comment.author.displayName || comment.author.name)}</strong>
+        <span>${escapeHtml(statusLabel)}</span>
+      </div>
+      <p>${escapeHtml(comment.text)}</p>
+    </div>
+  `;
 }
 
 function renderCommentCard(
