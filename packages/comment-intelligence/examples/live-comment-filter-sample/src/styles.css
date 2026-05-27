@@ -776,6 +776,11 @@ details[open] > summary::before {
   border-left-color: var(--c-subtle);
 }
 
+.incoming-comment.is-pending {
+  border-left-color: var(--c-warning);
+  background: #fffaf0;
+}
+
 .incoming-comment .comment-meta span {
   border-radius: var(--radius-pill);
   background: var(--c-surface);

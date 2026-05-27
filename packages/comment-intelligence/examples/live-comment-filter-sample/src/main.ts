@@ -174,11 +174,13 @@ const COPY = {
     comments: 'Comments',
     commentHint: 'One comment per line. Use',
     commentExample: 'viewer: comment',
-    commentLiveHint: 'Results update automatically as you edit.',
-    analyze: 'Show result',
+    commentLiveHint:
+      'Edits are applied the next time you click Filter comments.',
+    analyze: 'Filter comments',
     reset: 'Reset viewer memory',
     advanced: 'Advanced parameters',
-    advancedLiveHint: 'Parameter changes update the result automatically.',
+    advancedLiveHint:
+      'Parameter changes are applied the next time you click Filter comments.',
     engine: 'Analysis engine',
     rulesEngine: 'Rules only',
     openaiEngine: 'OpenAI LLM assist',
@@ -221,9 +223,14 @@ const COPY = {
       `${totalCount} comments came in. ${selectedCount} selected, ${blockedCount} blocked, and ${contextCount} kept as context.`,
     incomingCount: (totalCount: number) =>
       `${totalCount} comment${totalCount === 1 ? '' : 's'}`,
+    pendingLead:
+      'Comments are ready. Click Filter comments to run the library.',
+    pendingCount: (totalCount: number) =>
+      `${totalCount} pending comment${totalCount === 1 ? '' : 's'}`,
     statusSelected: 'Picked',
     statusBlocked: 'Blocked',
     statusContext: 'Context',
+    statusPending: 'Pending',
     contextLead:
       'These three pieces are returned alongside the picked comment and are what the library hands to your LLM.',
     summaryHeading: 'Ignored summary',
@@ -246,6 +253,9 @@ const COPY = {
       'The preview follows the analysis language selected above.',
     noSelected: 'No safe comment selected.',
     noUnsafe: 'No unsafe comments were blocked in this batch.',
+    noResult: 'Filter comments to see the result.',
+    noDeveloperOutput:
+      'Run the filter to see the prompt preview, ranking scores, and debug metadata.',
     noReason: 'No reason',
     analysisComplete: (
       selectedName: string | undefined,
@@ -285,11 +295,13 @@ const COPY = {
     comments: 'コメント',
     commentHint: '1行に1コメント。形式は',
     commentExample: '視聴者名: コメント',
-    commentLiveHint: '編集すると結果へ自動で反映されます。',
-    analyze: '結果を見る',
+    commentLiveHint:
+      '編集内容は「コメントをフィルタリング」を押したときに反映されます。',
+    analyze: 'コメントをフィルタリング',
     reset: '視聴者の記憶をリセット',
     advanced: '詳細パラメーター',
-    advancedLiveHint: 'パラメーター変更も結果へ自動で反映されます。',
+    advancedLiveHint:
+      'パラメーター変更は「コメントをフィルタリング」を押したときに反映されます。',
     engine: '解析エンジン',
     rulesEngine: 'ルールのみ',
     openaiEngine: 'OpenAI LLMアシスト',
@@ -331,9 +343,13 @@ const COPY = {
     ) =>
       `${totalCount}件のコメントを受け取り、${selectedCount}件を拾い、${blockedCount}件を止め、${contextCount}件を文脈として残します。`,
     incomingCount: (totalCount: number) => `${totalCount}件`,
+    pendingLead:
+      'コメントは準備できています。「コメントをフィルタリング」を押すとライブラリの処理が走ります。',
+    pendingCount: (totalCount: number) => `未処理 ${totalCount}件`,
     statusSelected: '拾う',
     statusBlocked: '止める',
     statusContext: '文脈',
+    statusPending: '未処理',
     contextLead:
       'この3点が、選ばれたコメントと一緒にライブラリ利用者へ返ってきます。そのままLLMへ渡せる形です。',
     summaryHeading: '未選択コメントの要約',
@@ -356,6 +372,9 @@ const COPY = {
       'プレビューは上で選択した分析言語に合わせて表示されます。',
     noSelected: '安全に拾うコメントはありません。',
     noUnsafe: 'このバッチでは危険コメントはブロックされませんでした。',
+    noResult: 'フィルタ処理を実行すると結果が表示されます。',
+    noDeveloperOutput:
+      'フィルタ処理を実行すると、プロンプトプレビュー、ランキングスコア、デバッグメタデータが表示されます。',
     noReason: '理由なし',
     analysisComplete: (
       selectedName: string | undefined,
@@ -385,7 +404,6 @@ let openaiApiKey = '';
 let openaiApiKeyRevision = 0;
 let intelligence: Intelligence | null = null;
 let configSignature = '';
-let analyzeDebounceTimer: number | undefined;
 
 renderApp();
 
@@ -588,7 +606,7 @@ function renderApp() {
 
   bindEvents();
   resetIntelligence();
-  void analyze();
+  renderPendingResult();
 }
 
 function renderUsecaseButton(preset: PresetKey): string {
@@ -630,7 +648,7 @@ function bindEvents() {
       getElement<HTMLTextAreaElement>('comments').value = currentCommentsText;
       setActivePreset(button);
       resetIntelligence();
-      void analyze();
+      renderPendingResult();
     });
   }
 
@@ -638,7 +656,8 @@ function bindEvents() {
     currentCommentsText = getElement<HTMLTextAreaElement>('comments').value;
     activePreset = undefined;
     setActivePreset();
-    scheduleAnalyze({ resetMemory: true });
+    resetIntelligence();
+    renderPendingResult();
   });
 
   getElement<HTMLSelectElement>('analysis-engine').addEventListener(
@@ -655,7 +674,8 @@ function bindEvents() {
     (event) => {
       selectedOpenAIModel = (event.currentTarget as HTMLSelectElement)
         .value as OpenAIModel;
-      scheduleAnalyze({ resetMemory: true });
+      resetIntelligence();
+      renderPendingResult();
     }
   );
 
@@ -664,7 +684,8 @@ function bindEvents() {
     (event) => {
       openaiApiKey = (event.currentTarget as HTMLInputElement).value;
       openaiApiKeyRevision += 1;
-      scheduleAnalyze({ resetMemory: true });
+      resetIntelligence();
+      renderPendingResult();
     }
   );
 
@@ -675,13 +696,15 @@ function bindEvents() {
     'block-viewers',
   ]) {
     getElement<HTMLElement>(id).addEventListener('change', () => {
-      scheduleAnalyze();
+      resetIntelligence();
+      renderPendingResult();
     });
   }
 
   for (const id of ['max-selected', 'min-score', 'topic']) {
     getElement<HTMLElement>(id).addEventListener('input', () => {
-      scheduleAnalyze();
+      resetIntelligence();
+      renderPendingResult();
     });
   }
 
@@ -697,22 +720,10 @@ function bindEvents() {
     'click',
     () => {
       intelligence?.resetViewerSafetyState();
-      void analyze();
+      resetIntelligence();
+      renderPendingResult();
     }
   );
-}
-
-function scheduleAnalyze(options: { resetMemory?: boolean } = {}) {
-  if (analyzeDebounceTimer) {
-    window.clearTimeout(analyzeDebounceTimer);
-  }
-
-  analyzeDebounceTimer = window.setTimeout(() => {
-    if (options.resetMemory) {
-      resetIntelligence();
-    }
-    void analyze();
-  }, 250);
 }
 
 function resetIntelligence() {
@@ -1012,6 +1023,45 @@ function parseComments(value: string): LiveComment[] {
     });
 }
 
+function renderPendingResult() {
+  const copy = COPY[uiLanguage];
+  const comments = parseComments(
+    getElement<HTMLTextAreaElement>('comments').value
+  );
+
+  getElement<HTMLParagraphElement>('incoming-count').textContent =
+    copy.pendingCount(comments.length);
+  getElement<HTMLParagraphElement>('incoming-lead').textContent =
+    copy.pendingLead;
+  getElement<HTMLDivElement>('incoming-comments').innerHTML = comments
+    .map(renderPendingComment)
+    .join('');
+
+  getElement<HTMLDivElement>('selected').innerHTML =
+    `<p class="empty">${copy.noResult}</p>`;
+  getElement<HTMLDivElement>('safety').innerHTML =
+    `<p class="empty">${copy.noResult}</p>`;
+  getElement<HTMLDivElement>('summary').innerHTML = `
+    <div class="context-block">
+      <h4>${copy.summaryHeading}</h4>
+      <p>${copy.noResult}</p>
+    </div>
+    <div class="context-block">
+      <h4>${copy.hintsHeading}</h4>
+      <p class="empty">${copy.noResult}</p>
+    </div>
+    <div class="context-block">
+      <h4>${copy.instructionHeading}</h4>
+      <p>${copy.noResult}</p>
+    </div>
+  `;
+  getElement<HTMLDivElement>('ranking').innerHTML =
+    `<p class="empty">${copy.noDeveloperOutput}</p>`;
+  getElement<HTMLPreElement>('debug').textContent = copy.noDeveloperOutput;
+  getElement<HTMLPreElement>('prompt-preview').textContent =
+    copy.noDeveloperOutput;
+}
+
 function renderResult(
   result: CommentIntelligenceResult,
   comments: LiveComment[],
@@ -1104,6 +1154,19 @@ function renderResult(
       block: 'start',
     });
   }
+}
+
+function renderPendingComment(comment: LiveComment): string {
+  const copy = COPY[uiLanguage];
+  return `
+    <div class="incoming-comment is-pending">
+      <div class="comment-meta">
+        <strong>${escapeHtml(comment.author.displayName || comment.author.name)}</strong>
+        <span>${escapeHtml(copy.statusPending)}</span>
+      </div>
+      <p>${escapeHtml(comment.text)}</p>
+    </div>
+  `;
 }
 
 function renderIncomingComment(
