@@ -142,7 +142,7 @@ const COPY = {
     promptHint:
       'Exact string returned by formatCommentIntelligencePrompt(). Drop it into your LLM call to see the full payload.',
     promptLanguageNote:
-      'Note: formatCommentIntelligencePrompt() currently emits Japanese prompt text.',
+      'The preview follows the analysis language selected above.',
     noSelected: 'No safe comment selected.',
     noUnsafe: 'No unsafe comments were blocked in this batch.',
     noReason: 'No reason',
@@ -230,7 +230,7 @@ const COPY = {
     promptHint:
       'formatCommentIntelligencePrompt() が返す文字列そのままです。LLM呼び出しにそのまま渡せます。',
     promptLanguageNote:
-      '注: formatCommentIntelligencePrompt() のプロンプト本文は現在日本語固定です。',
+      'プレビューは上で選択した分析言語に合わせて表示されます。',
     noSelected: '安全に拾うコメントはありません。',
     noUnsafe: 'このバッチでは危険コメントはブロックされませんでした。',
     noReason: '理由なし',
@@ -669,7 +669,10 @@ function renderResult(
     2
   );
   getElement<HTMLPreElement>('prompt-preview').textContent =
-    formatCommentIntelligencePrompt(result);
+    formatCommentIntelligencePrompt(
+      result,
+      getSelectValue('language') as 'ja' | 'en' | 'auto'
+    );
 
   if (options.focusResults) {
     getElement<HTMLDivElement>('analysis-results').scrollIntoView({

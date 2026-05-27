@@ -89,6 +89,30 @@ describe('createCommentIntelligence', () => {
     expect(result.debug?.usedLLM).toBe(false);
   });
 
+  it('returns English context and instructions when language is en', async () => {
+    const intelligence = createCommentIntelligence({
+      context: { language: 'en' },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', 'First time here!'),
+        comment('b', 'Hello there'),
+        comment('c', 'Hi everyone'),
+        comment('d', 'When is the next stream?'),
+      ],
+      streamState: { language: 'en' },
+    });
+
+    expect(result.contextForLLM).toContain('A first-time viewer is here.');
+    expect(result.contextForLLM).toContain(
+      'There are multiple greeting comments.'
+    );
+    expect(result.instructionForLLM).toBe(
+      "Welcome first-time viewers and briefly explain today's stream so they can follow along."
+    );
+  });
+
   it('falls back to rules when LLM provider fails and fallbackToRules is true', async () => {
     const llmProvider: CommentAnalysisLLMProvider = {
       analyze: vi.fn().mockRejectedValue(new Error('network failed')),

@@ -209,8 +209,8 @@ function buildRulesResult(
       blockedViewerIds: getBlockedViewerIds(viewerSafetyStates),
     },
   };
-  result.contextForLLM = buildLLMContext(result);
-  result.instructionForLLM = buildDefaultInstruction(result);
+  result.contextForLLM = buildLLMContext(result, language);
+  result.instructionForLLM = buildDefaultInstruction(result, language);
 
   return result;
 }
@@ -429,20 +429,28 @@ function isViewerBlocked(state?: ViewerSafetyState): boolean {
   );
 }
 
-function buildDefaultInstruction(result: CommentIntelligenceResult): string {
+function buildDefaultInstruction(
+  result: CommentIntelligenceResult,
+  language?: 'ja' | 'en' | 'auto'
+): string {
   const selected = result.selectedComments[0];
   if (!selected) {
-    return buildInstruction(result);
+    return buildInstruction(result, language);
   }
 
+  const resolvedLanguage = language === 'en' ? 'en' : 'ja';
   const hasFirstTimeViewer = result.ignoredSummary.clusters.some(
     (cluster) => cluster.label === 'first_time_viewer'
   );
   if (hasFirstTimeViewer) {
-    return '初見の視聴者にも分かるように、歓迎しつつ今日の配信内容を短く説明してください。';
+    return resolvedLanguage === 'ja'
+      ? '初見の視聴者にも分かるように、歓迎しつつ今日の配信内容を短く説明してください。'
+      : "Welcome first-time viewers and briefly explain today's stream so they can follow along.";
   }
 
-  return '選ばれたコメントに短く自然に返答し、配信のテンポを保ってください。';
+  return resolvedLanguage === 'ja'
+    ? '選ばれたコメントに短く自然に返答し、配信のテンポを保ってください。'
+    : 'Reply briefly and naturally to the selected comment, and keep the stream moving.';
 }
 
 async function withOptionalTimeout<T>(

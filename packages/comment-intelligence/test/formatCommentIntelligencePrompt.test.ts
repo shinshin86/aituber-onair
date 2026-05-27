@@ -96,4 +96,43 @@ describe('formatCommentIntelligencePrompt', () => {
 
     expect(prompt).toContain('今すぐ拾うべき安全なコメントがありません');
   });
+
+  it('formats an English prompt when language is en', () => {
+    const prompt = formatCommentIntelligencePrompt(
+      {
+        ...baseResult,
+        selectedComments: [
+          {
+            ...baseResult.selectedComments[0],
+            text: 'When is the next stream?',
+            author: {
+              id: 'viewer-a',
+              name: 'Viewer A',
+              displayName: 'Viewer A',
+            },
+          },
+        ],
+        ignoredSummary: {
+          ...baseResult.ignoredSummary,
+          summary:
+            'There are 2 first-time viewer comments and 2 greeting comments.',
+        },
+        contextForLLM: [
+          'A first-time viewer is here.',
+          'There are multiple greeting comments.',
+        ],
+        instructionForLLM:
+          "Welcome first-time viewers and briefly explain today's stream so they can follow along.",
+      },
+      'en'
+    );
+
+    expect(prompt).toContain('You are an AITuber in a live stream.');
+    expect(prompt).toContain('Selected comment:');
+    expect(prompt).toContain('Viewer A: When is the next stream?');
+    expect(prompt).toContain('- A first-time viewer is here.');
+    expect(prompt).toContain(
+      "Welcome first-time viewers and briefly explain today's stream so they can follow along."
+    );
+  });
 });
