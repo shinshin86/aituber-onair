@@ -579,6 +579,54 @@ details[open] > summary::before {
   color: var(--c-ink-soft);
 }
 
+.value-lead {
+  margin: -4px 0 14px;
+  color: var(--c-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.context-panel #summary {
+  display: grid;
+  gap: 14px;
+}
+
+.context-block {
+  display: grid;
+  gap: 4px;
+}
+
+.context-block + .context-block {
+  padding-top: 12px;
+  border-top: 1px dashed var(--c-border);
+}
+
+.context-block h4 {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--c-brand-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.context-block p {
+  margin: 0;
+  color: var(--c-ink-soft);
+  font-size: 0.92rem;
+}
+
+.hint-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--c-ink-soft);
+  font-size: 0.92rem;
+}
+
+.hint-list li + li {
+  margin-top: 4px;
+}
+
 .prompt-panel {
   margin-bottom: 18px;
 }
