@@ -56,6 +56,13 @@ const OPENAI_ANALYSIS_RESPONSE_FORMAT = {
   schema: {
     type: 'object',
     additionalProperties: false,
+    required: [
+      'selectedCommentIds',
+      'ignoredSummary',
+      'contextForLLM',
+      'instructionForLLM',
+      'safetyFlags',
+    ],
     properties: {
       selectedCommentIds: {
         type: 'array',
@@ -72,6 +79,7 @@ const OPENAI_ANALYSIS_RESPONSE_FORMAT = {
         items: {
           type: 'object',
           additionalProperties: false,
+          required: ['commentId', 'category', 'reason'],
           properties: {
             commentId: { type: 'string' },
             category: { type: 'string' },
