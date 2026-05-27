@@ -494,6 +494,10 @@ select {
   padding: 4px 0;
 }
 
+.advanced-hint {
+  margin-top: 8px;
+}
+
 summary {
   cursor: pointer;
   color: var(--c-brand-strong);

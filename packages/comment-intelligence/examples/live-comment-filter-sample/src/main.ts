@@ -99,6 +99,7 @@ const COPY = {
     analyze: 'Show result',
     reset: 'Reset viewer memory',
     advanced: 'Advanced parameters',
+    advancedLiveHint: 'Parameter changes update the result automatically.',
     strategy: 'Ranking strategy',
     maxSelected: 'Max selected',
     minScore: 'Min score',
@@ -189,6 +190,7 @@ const COPY = {
     analyze: '結果を見る',
     reset: '視聴者の記憶をリセット',
     advanced: '詳細パラメーター',
+    advancedLiveHint: 'パラメーター変更も結果へ自動で反映されます。',
     strategy: 'ランキング戦略',
     maxSelected: '最大選択数',
     minScore: '最小スコア',
@@ -360,6 +362,7 @@ function renderApp() {
 
           <details class="advanced">
             <summary>${copy.advanced}</summary>
+            <p class="hint advanced-hint">${copy.advancedLiveHint}</p>
             <div class="grid">
               <div class="field">
                 <label for="strategy">${copy.strategy}</label>
@@ -479,6 +482,23 @@ function bindEvents() {
     setActivePreset();
     scheduleAnalyze({ resetMemory: true });
   });
+
+  for (const id of [
+    'strategy',
+    'language',
+    'safety-enabled',
+    'block-viewers',
+  ]) {
+    getElement<HTMLElement>(id).addEventListener('change', () => {
+      scheduleAnalyze();
+    });
+  }
+
+  for (const id of ['max-selected', 'min-score', 'topic']) {
+    getElement<HTMLElement>(id).addEventListener('input', () => {
+      scheduleAnalyze();
+    });
+  }
 
   getElement<HTMLFormElement>('controls').addEventListener(
     'submit',
