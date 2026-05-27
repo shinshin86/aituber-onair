@@ -274,7 +274,8 @@ if (!app) {
 }
 
 let uiLanguage: UiLanguage = 'en';
-let activePreset: PresetKey = 'live';
+let activePreset: PresetKey | undefined = 'live';
+let currentCommentsText = PRESETS[uiLanguage][activePreset];
 let intelligence: Intelligence | null = null;
 let configSignature = '';
 let analyzeDebounceTimer: number | undefined;
@@ -371,7 +372,7 @@ function renderApp() {
           <summary>${copy.editDetails}</summary>
           <div class="field">
             <label for="comments">${copy.comments}</label>
-            <textarea id="comments" spellcheck="false">${PRESETS[uiLanguage][activePreset]}</textarea>
+            <textarea id="comments" spellcheck="false">${escapeHtml(currentCommentsText)}</textarea>
             <p class="hint">${copy.commentHint} <code>${copy.commentExample}</code>.</p>
             <p class="hint">${copy.commentLiveHint}</p>
           </div>
@@ -481,6 +482,9 @@ function bindEvents() {
     (event) => {
       uiLanguage = (event.currentTarget as HTMLSelectElement)
         .value as UiLanguage;
+      if (activePreset) {
+        currentCommentsText = PRESETS[uiLanguage][activePreset];
+      }
       renderApp();
     }
   );
@@ -490,8 +494,8 @@ function bindEvents() {
   )) {
     button.addEventListener('click', () => {
       activePreset = button.dataset.preset as PresetKey;
-      getElement<HTMLTextAreaElement>('comments').value =
-        PRESETS[uiLanguage][activePreset];
+      currentCommentsText = PRESETS[uiLanguage][activePreset];
+      getElement<HTMLTextAreaElement>('comments').value = currentCommentsText;
       setActivePreset(button);
       resetIntelligence();
       void analyze();
@@ -499,6 +503,8 @@ function bindEvents() {
   }
 
   getElement<HTMLTextAreaElement>('comments').addEventListener('input', () => {
+    currentCommentsText = getElement<HTMLTextAreaElement>('comments').value;
+    activePreset = undefined;
     setActivePreset();
     scheduleAnalyze({ resetMemory: true });
   });
@@ -593,8 +599,8 @@ function buildConfig(): CommentIntelligenceConfig {
       style: 'aituber-live',
     },
     viewerSafety: {
-      enabled: true,
-      blockOnHighRisk: getCheckboxValue('block-viewers'),
+      enabled: getCheckboxValue('block-viewers'),
+      blockOnHighRisk: true,
       blockDurationMs: 10 * 60 * 1000,
     },
   };
