@@ -103,6 +103,8 @@ const COPY = {
     strategy: 'Ranking strategy',
     maxSelected: 'Max selected',
     minScore: 'Min score',
+    minScoreHint:
+      'Only safe comments with this score or higher can be picked. Raising it makes the filter stricter.',
     topic: 'Stream topic',
     topicValue: "today's stream",
     language: 'Analysis language',
@@ -200,6 +202,8 @@ const COPY = {
     strategy: 'ランキング戦略',
     maxSelected: '最大選択数',
     minScore: '最小スコア',
+    minScoreHint:
+      'この点数以上の安全なコメントだけを拾います。上げるほど拾う条件が厳しくなります。',
     topic: '配信トピック',
     topicValue: '今日の配信内容',
     language: '分析言語',
@@ -396,6 +400,7 @@ function renderApp() {
               <div class="field">
                 <label for="min-score">${copy.minScore}</label>
                 <input id="min-score" type="number" min="0" max="1" step="0.05" value="0.3" />
+                <p class="hint">${copy.minScoreHint}</p>
               </div>
 
               <div class="field">
