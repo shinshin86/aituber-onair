@@ -95,6 +95,7 @@ const COPY = {
     comments: 'Comments',
     commentHint: 'One comment per line. Use',
     commentExample: 'viewer: comment',
+    commentLiveHint: 'Results update automatically as you edit.',
     analyze: 'Show result',
     reset: 'Reset viewer memory',
     advanced: 'Advanced parameters',
@@ -184,6 +185,7 @@ const COPY = {
     comments: 'コメント',
     commentHint: '1行に1コメント。形式は',
     commentExample: '視聴者名: コメント',
+    commentLiveHint: '編集すると結果へ自動で反映されます。',
     analyze: '結果を見る',
     reset: '視聴者の記憶をリセット',
     advanced: '詳細パラメーター',
@@ -257,6 +259,7 @@ let uiLanguage: UiLanguage = 'en';
 let activePreset: PresetKey = 'live';
 let intelligence: Intelligence | null = null;
 let configSignature = '';
+let analyzeDebounceTimer: number | undefined;
 
 renderApp();
 
@@ -352,6 +355,7 @@ function renderApp() {
             <label for="comments">${copy.comments}</label>
             <textarea id="comments" spellcheck="false">${PRESETS[uiLanguage][activePreset]}</textarea>
             <p class="hint">${copy.commentHint} <code>${copy.commentExample}</code>.</p>
+            <p class="hint">${copy.commentLiveHint}</p>
           </div>
 
           <details class="advanced">
@@ -471,6 +475,11 @@ function bindEvents() {
     });
   }
 
+  getElement<HTMLTextAreaElement>('comments').addEventListener('input', () => {
+    setActivePreset();
+    scheduleAnalyze({ resetMemory: true });
+  });
+
   getElement<HTMLFormElement>('controls').addEventListener(
     'submit',
     (event) => {
@@ -486,6 +495,19 @@ function bindEvents() {
       void analyze();
     }
   );
+}
+
+function scheduleAnalyze(options: { resetMemory?: boolean } = {}) {
+  if (analyzeDebounceTimer) {
+    window.clearTimeout(analyzeDebounceTimer);
+  }
+
+  analyzeDebounceTimer = window.setTimeout(() => {
+    if (options.resetMemory) {
+      resetIntelligence();
+    }
+    void analyze();
+  }, 250);
 }
 
 function resetIntelligence() {
@@ -838,7 +860,7 @@ function formatSafetyReason(reason?: string): string {
     .join('、');
 }
 
-function setActivePreset(activeButton: HTMLButtonElement) {
+function setActivePreset(activeButton?: HTMLButtonElement) {
   for (const button of document.querySelectorAll<HTMLButtonElement>(
     '[data-preset]'
   )) {
