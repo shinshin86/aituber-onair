@@ -517,6 +517,7 @@ select {
 /* ---------- Disclosure ---------- */
 
 .editor,
+.editor-details,
 .advanced,
 .analysis-details {
   border-top: 1px solid var(--c-border);
@@ -524,15 +525,10 @@ select {
   padding-top: 14px;
 }
 
-.setup-details summary,
+.editor-details > summary,
 .advanced > summary,
 .analysis-details > summary {
   padding: 4px 0;
-}
-
-.setup-details {
-  margin-top: 0;
-  margin-bottom: 18px;
 }
 
 .advanced-hint {

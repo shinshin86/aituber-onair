@@ -450,6 +450,20 @@ function renderApp() {
           ${renderUsecaseButton('noisy')}
         </div>
 
+        <details class="editor-details" open>
+          <summary>${copy.editDetails}</summary>
+          <div class="field">
+            <label for="comments">${copy.comments}</label>
+            <textarea id="comments" spellcheck="false">${escapeHtml(currentCommentsText)}</textarea>
+            <p class="hint">${copy.commentHint} <code>${copy.commentExample}</code>.</p>
+            <p class="hint">${copy.commentLiveHint}</p>
+          </div>
+
+          <div class="action-row editor-action-row">
+            <button type="button" class="primary" id="filter-from-editor">${copy.analyze}</button>
+          </div>
+        </details>
+
         <div class="engine-row">
           <label for="analysis-engine">${copy.engine}</label>
           <select id="analysis-engine">
@@ -467,81 +481,67 @@ function renderApp() {
           <p class="hint">${copy.openaiKeyHint}</p>
         </div>
 
+        <details class="advanced">
+          <summary>${copy.advanced}</summary>
+          <p class="hint advanced-hint">${copy.advancedLiveHint}</p>
+          <div class="grid">
+            <div class="field">
+              <label for="strategy">${copy.strategy}</label>
+              <select id="strategy">
+                <option value="balanced">${uiLanguage === 'ja' ? 'バランス重視' : 'Balanced'}</option>
+                <option value="new-viewer-friendly">${uiLanguage === 'ja' ? '初見・新規視聴者重視' : 'New viewer friendly'}</option>
+                <option value="loyal-viewer-friendly">${uiLanguage === 'ja' ? '常連視聴者重視' : 'Loyal viewer friendly'}</option>
+                <option value="topic-focused">${uiLanguage === 'ja' ? '配信トピック重視' : 'Topic focused'}</option>
+                <option value="chaos-resistant">${uiLanguage === 'ja' ? '荒れ対策重視' : 'Chaos resistant'}</option>
+                <option value="q-and-a">${uiLanguage === 'ja' ? '質問重視' : 'Q and A'}</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="max-selected">${copy.maxSelected}</label>
+              <input id="max-selected" type="number" min="1" max="5" value="1" />
+            </div>
+
+            <div class="field">
+              <label for="min-score">${copy.minScore}</label>
+              <input id="min-score" type="number" min="0" max="1" step="0.05" value="0.3" />
+              <p class="hint">${copy.minScoreHint}</p>
+            </div>
+
+            <div class="field">
+              <label for="topic">${copy.topic}</label>
+              <input id="topic" type="text" value="${copy.topicValue}" />
+            </div>
+
+            <div class="field">
+              <label for="language">${copy.language}</label>
+              <select id="language">
+                <option value="ja"${uiLanguage === 'ja' ? ' selected' : ''}>Japanese</option>
+                <option value="en"${uiLanguage === 'en' ? ' selected' : ''}>English</option>
+                <option value="auto">Auto</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="toggles">
+            <label>
+              <input id="safety-enabled" type="checkbox" checked />
+              ${copy.safety}
+            </label>
+            <label>
+              <input id="block-viewers" type="checkbox" checked />
+              ${copy.blockViewers}
+            </label>
+            <button type="button" id="reset-memory">${copy.reset}</button>
+          </div>
+        </details>
+
         <div class="action-row">
           <button type="submit" class="primary">${copy.analyze}</button>
         </div>
       </form>
 
       <section class="results" aria-live="polite">
-        <details class="analysis-details setup-details" open>
-          <summary>${copy.editDetails}</summary>
-          <div class="field">
-            <label for="comments">${copy.comments}</label>
-            <textarea id="comments" spellcheck="false">${escapeHtml(currentCommentsText)}</textarea>
-            <p class="hint">${copy.commentHint} <code>${copy.commentExample}</code>.</p>
-            <p class="hint">${copy.commentLiveHint}</p>
-          </div>
-
-          <div class="action-row editor-action-row">
-            <button type="button" class="primary" id="filter-from-editor">${copy.analyze}</button>
-          </div>
-
-          <details class="advanced">
-            <summary>${copy.advanced}</summary>
-            <p class="hint advanced-hint">${copy.advancedLiveHint}</p>
-            <div class="grid">
-              <div class="field">
-                <label for="strategy">${copy.strategy}</label>
-                <select id="strategy">
-                  <option value="balanced">${uiLanguage === 'ja' ? 'バランス重視' : 'Balanced'}</option>
-                  <option value="new-viewer-friendly">${uiLanguage === 'ja' ? '初見・新規視聴者重視' : 'New viewer friendly'}</option>
-                  <option value="loyal-viewer-friendly">${uiLanguage === 'ja' ? '常連視聴者重視' : 'Loyal viewer friendly'}</option>
-                  <option value="topic-focused">${uiLanguage === 'ja' ? '配信トピック重視' : 'Topic focused'}</option>
-                  <option value="chaos-resistant">${uiLanguage === 'ja' ? '荒れ対策重視' : 'Chaos resistant'}</option>
-                  <option value="q-and-a">${uiLanguage === 'ja' ? '質問重視' : 'Q and A'}</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="max-selected">${copy.maxSelected}</label>
-                <input id="max-selected" type="number" min="1" max="5" value="1" />
-              </div>
-
-              <div class="field">
-                <label for="min-score">${copy.minScore}</label>
-                <input id="min-score" type="number" min="0" max="1" step="0.05" value="0.3" />
-                <p class="hint">${copy.minScoreHint}</p>
-              </div>
-
-              <div class="field">
-                <label for="topic">${copy.topic}</label>
-                <input id="topic" type="text" value="${copy.topicValue}" />
-              </div>
-
-              <div class="field">
-                <label for="language">${copy.language}</label>
-                <select id="language">
-                  <option value="ja"${uiLanguage === 'ja' ? ' selected' : ''}>Japanese</option>
-                  <option value="en"${uiLanguage === 'en' ? ' selected' : ''}>English</option>
-                  <option value="auto">Auto</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="toggles">
-              <label>
-                <input id="safety-enabled" type="checkbox" checked />
-                ${copy.safety}
-              </label>
-              <label>
-                <input id="block-viewers" type="checkbox" checked />
-                ${copy.blockViewers}
-              </label>
-              <button type="button" id="reset-memory">${copy.reset}</button>
-            </div>
-          </details>
-        </details>
-
         <div class="section-heading compact" id="analysis-results">
           <p class="kicker">${copy.step2}</p>
           <h2>${copy.decisionTitle}</h2>
