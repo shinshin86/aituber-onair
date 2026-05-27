@@ -667,6 +667,14 @@ details[open] > summary::before {
   margin-bottom: 18px;
 }
 
+.details-lead {
+  margin: 8px 0 14px;
+}
+
+.details-panel-hint {
+  margin: -2px 0 12px;
+}
+
 .prompt-note {
   margin-top: 6px;
 }

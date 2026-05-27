@@ -137,12 +137,18 @@ const COPY = {
     hintsHeading: 'Hints for the AI',
     instructionHeading: 'Instruction',
     noHints: 'No extra hints in this batch.',
-    details: 'Developer details',
-    ranking: 'Ranking',
-    debug: 'Debug',
-    prompt: 'LLM prompt preview',
+    details: 'Developer output',
+    detailsLead:
+      'Read-only outputs returned by the library for app integration.',
+    ranking: 'Ranking scores',
+    rankingHint:
+      'Ranked comments with score and reasons. The top safe comment becomes selectedComments.',
+    debug: 'Debug metadata',
+    debugHint:
+      'Raw debug fields such as analysis mode, selected IDs, and blocked viewer IDs.',
+    prompt: 'LLM payload preview',
     promptHint:
-      'Exact string returned by formatCommentIntelligencePrompt(). Drop it into your LLM call to see the full payload.',
+      'Prompt string assembled from selectedComments, ignoredSummary, contextForLLM, and instructionForLLM.',
     promptLanguageNote:
       'The preview follows the analysis language selected above.',
     noSelected: 'No safe comment selected.',
@@ -227,12 +233,18 @@ const COPY = {
     hintsHeading: 'AIへの補足ヒント',
     instructionHeading: '指示',
     noHints: '今回のバッチでは補足ヒントはありません。',
-    details: '開発者向け詳細',
-    ranking: 'ランキング',
-    debug: 'Debug',
-    prompt: 'LLMプロンプトのプレビュー',
+    details: '開発者向け出力',
+    detailsLead:
+      'アプリ組み込み時に使う、ライブラリの返り値を確認する読み取り専用ビューです。',
+    ranking: 'ランキングスコア',
+    rankingHint:
+      '各コメントのスコアと理由です。安全な上位コメントが selectedComments になります。',
+    debug: 'デバッグメタデータ',
+    debugHint:
+      '解析モード、選択されたID、ブロック中の視聴者IDなどの生データです。',
+    prompt: 'LLMペイロードのプレビュー',
     promptHint:
-      'formatCommentIntelligencePrompt() が返す文字列そのままです。LLM呼び出しにそのまま渡せます。',
+      'selectedComments、ignoredSummary、contextForLLM、instructionForLLM から組み立てたプロンプト文字列です。',
     promptLanguageNote:
       'プレビューは上で選択した分析言語に合わせて表示されます。',
     noSelected: '安全に拾うコメントはありません。',
@@ -417,6 +429,7 @@ function renderApp() {
 
         <details class="analysis-details">
           <summary>${copy.details}</summary>
+          <p class="hint details-lead">${copy.detailsLead}</p>
           <article class="panel prompt-panel">
             <h2>${copy.prompt}</h2>
             <p class="hint">${copy.promptHint}</p>
@@ -427,11 +440,13 @@ function renderApp() {
           <div class="result-grid">
             <article class="panel">
               <h2>${copy.ranking}</h2>
+              <p class="hint details-panel-hint">${copy.rankingHint}</p>
               <div id="ranking"></div>
             </article>
 
             <article class="panel">
               <h2>${copy.debug}</h2>
+              <p class="hint details-panel-hint">${copy.debugHint}</p>
               <pre id="debug"></pre>
             </article>
           </div>
