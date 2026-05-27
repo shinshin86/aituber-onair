@@ -175,12 +175,12 @@ const COPY = {
     commentHint: 'One comment per line. Use',
     commentExample: 'viewer: comment',
     commentLiveHint:
-      'Edits are applied the next time you click Filter comments.',
-    analyze: 'Filter comments',
+      'Edits are applied the next time you click Run comment filter.',
+    analyze: 'Run comment filter',
     reset: 'Reset viewer memory',
     advanced: 'Advanced parameters',
     advancedLiveHint:
-      'Parameter changes are applied the next time you click Filter comments.',
+      'Parameter changes are applied the next time you click Run comment filter.',
     engine: 'Analysis engine',
     rulesEngine: 'Rules only',
     openaiEngine: 'OpenAI LLM assist',
@@ -224,7 +224,7 @@ const COPY = {
     incomingCount: (totalCount: number) =>
       `${totalCount} comment${totalCount === 1 ? '' : 's'}`,
     pendingLead:
-      'Comments are ready. Click Filter comments to run the library.',
+      'Comments are ready. Click Run comment filter to run the library.',
     pendingCount: (totalCount: number) =>
       `${totalCount} pending comment${totalCount === 1 ? '' : 's'}`,
     statusSelected: 'Picked',
@@ -248,12 +248,12 @@ const COPY = {
       'Raw debug fields such as analysis mode, selected IDs, and blocked viewer IDs.',
     prompt: 'LLM payload preview',
     promptHint:
-      'Prompt string assembled from selectedComments, ignoredSummary, contextForLLM, and instructionForLLM.',
+      'This is the final prompt you can send to your reply LLM. It combines the picked comment, ignored-comment summary, extra hints, and response instruction.',
     promptLanguageNote:
       'The preview follows the analysis language selected above.',
     noSelected: 'No safe comment selected.',
     noUnsafe: 'No unsafe comments were blocked in this batch.',
-    noResult: 'Filter comments to see the result.',
+    noResult: 'Run comment filter to see the result.',
     noDeveloperOutput:
       'Run the filter to see the prompt preview, ranking scores, and debug metadata.',
     noReason: 'No reason',
@@ -296,12 +296,12 @@ const COPY = {
     commentHint: '1行に1コメント。形式は',
     commentExample: '視聴者名: コメント',
     commentLiveHint:
-      '編集内容は「コメントをフィルタリング」を押したときに反映されます。',
-    analyze: 'コメントをフィルタリング',
+      '編集内容は「コメントをフィルタリングする」を押したときに反映されます。',
+    analyze: 'コメントをフィルタリングする',
     reset: '視聴者の記憶をリセット',
     advanced: '詳細パラメーター',
     advancedLiveHint:
-      'パラメーター変更は「コメントをフィルタリング」を押したときに反映されます。',
+      'パラメーター変更は「コメントをフィルタリングする」を押したときに反映されます。',
     engine: '解析エンジン',
     rulesEngine: 'ルールのみ',
     openaiEngine: 'OpenAI LLMアシスト',
@@ -344,7 +344,7 @@ const COPY = {
       `${totalCount}件のコメントを受け取り、${selectedCount}件を拾い、${blockedCount}件を止め、${contextCount}件を文脈として残します。`,
     incomingCount: (totalCount: number) => `${totalCount}件`,
     pendingLead:
-      'コメントは準備できています。「コメントをフィルタリング」を押すとライブラリの処理が走ります。',
+      'コメントは準備できています。「コメントをフィルタリングする」を押すとライブラリの処理が走ります。',
     pendingCount: (totalCount: number) => `未処理 ${totalCount}件`,
     statusSelected: '拾う',
     statusBlocked: '止める',
@@ -367,7 +367,7 @@ const COPY = {
       '解析モード、選択されたID、ブロック中の視聴者IDなどの生データです。',
     prompt: 'LLMペイロードのプレビュー',
     promptHint:
-      'selectedComments、ignoredSummary、contextForLLM、instructionForLLM から組み立てたプロンプト文字列です。',
+      '返信用LLMへそのまま渡せる最終プロンプトです。拾うコメント、未選択コメントの要約、補足ヒント、返答指示をまとめています。',
     promptLanguageNote:
       'プレビューは上で選択した分析言語に合わせて表示されます。',
     noSelected: '安全に拾うコメントはありません。',
@@ -473,51 +473,17 @@ function renderApp() {
       </form>
 
       <section class="results" aria-live="polite">
-        <div class="section-heading compact" id="analysis-results">
-          <p class="kicker">${copy.step2}</p>
-          <h2>${copy.decisionTitle}</h2>
-        </div>
-
-        <article class="panel incoming-panel">
-          <div class="incoming-heading">
-            <div>
-              <p class="kicker">${copy.incomingKicker}</p>
-              <h3>${copy.incomingTitle}</h3>
-            </div>
-            <p class="incoming-count" id="incoming-count"></p>
-          </div>
-          <p class="value-lead" id="incoming-lead"></p>
-          <div class="incoming-list" id="incoming-comments"></div>
-        </article>
-
-        <div class="value-grid">
-          <article class="panel value-panel">
-            <p class="kicker">${copy.answerTarget}</p>
-            <h3>${copy.selectedTitle}</h3>
-            <div id="selected"></div>
-          </article>
-
-          <article class="panel value-panel">
-            <p class="kicker">${copy.safetyKicker}</p>
-            <h3>${copy.blockedTitle}</h3>
-            <div id="safety"></div>
-          </article>
-
-          <article class="panel value-panel context-panel">
-            <p class="kicker">${copy.contextKicker}</p>
-            <h3>${copy.ignoredTitle}</h3>
-            <p class="value-lead">${copy.contextLead}</p>
-            <div id="summary"></div>
-          </article>
-        </div>
-
-        <details class="analysis-details setup-details">
+        <details class="analysis-details setup-details" open>
           <summary>${copy.editDetails}</summary>
           <div class="field">
             <label for="comments">${copy.comments}</label>
             <textarea id="comments" spellcheck="false">${escapeHtml(currentCommentsText)}</textarea>
             <p class="hint">${copy.commentHint} <code>${copy.commentExample}</code>.</p>
             <p class="hint">${copy.commentLiveHint}</p>
+          </div>
+
+          <div class="action-row editor-action-row">
+            <button type="button" class="primary" id="filter-from-editor">${copy.analyze}</button>
           </div>
 
           <details class="advanced">
@@ -575,6 +541,44 @@ function renderApp() {
             </div>
           </details>
         </details>
+
+        <div class="section-heading compact" id="analysis-results">
+          <p class="kicker">${copy.step2}</p>
+          <h2>${copy.decisionTitle}</h2>
+        </div>
+
+        <article class="panel incoming-panel">
+          <div class="incoming-heading">
+            <div>
+              <p class="kicker">${copy.incomingKicker}</p>
+              <h3>${copy.incomingTitle}</h3>
+            </div>
+            <p class="incoming-count" id="incoming-count"></p>
+          </div>
+          <p class="value-lead" id="incoming-lead"></p>
+          <div class="incoming-list" id="incoming-comments"></div>
+        </article>
+
+        <div class="value-grid">
+          <article class="panel value-panel">
+            <p class="kicker">${copy.answerTarget}</p>
+            <h3>${copy.selectedTitle}</h3>
+            <div id="selected"></div>
+          </article>
+
+          <article class="panel value-panel">
+            <p class="kicker">${copy.safetyKicker}</p>
+            <h3>${copy.blockedTitle}</h3>
+            <div id="safety"></div>
+          </article>
+
+          <article class="panel value-panel context-panel">
+            <p class="kicker">${copy.contextKicker}</p>
+            <h3>${copy.ignoredTitle}</h3>
+            <p class="value-lead">${copy.contextLead}</p>
+            <div id="summary"></div>
+          </article>
+        </div>
 
         <details class="analysis-details">
           <summary>${copy.details}</summary>
@@ -712,6 +716,13 @@ function bindEvents() {
     'submit',
     (event) => {
       event.preventDefault();
+      void analyze({ focusResults: true });
+    }
+  );
+
+  getElement<HTMLButtonElement>('filter-from-editor').addEventListener(
+    'click',
+    () => {
       void analyze({ focusResults: true });
     }
   );

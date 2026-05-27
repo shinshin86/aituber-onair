@@ -480,6 +480,10 @@ select {
   margin-bottom: 0;
 }
 
+.editor-action-row {
+  margin: 10px 0 16px;
+}
+
 .toggles {
   display: flex;
   flex-wrap: wrap;
@@ -524,6 +528,11 @@ select {
 .advanced > summary,
 .analysis-details > summary {
   padding: 4px 0;
+}
+
+.setup-details {
+  margin-top: 0;
+  margin-bottom: 18px;
 }
 
 .advanced-hint {
