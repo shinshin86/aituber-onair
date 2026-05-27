@@ -77,10 +77,22 @@ export const ruleBasedSafetyProvider = {
       uniqueCategories.includes('sexual') ||
       uniqueCategories.includes('violence');
     const riskLevel = hasHighRisk ? 'high' : hasMediumRisk ? 'medium' : 'none';
+    const shouldIgnorePromptInjection =
+      uniqueCategories.includes('prompt_injection') &&
+      config?.blockPromptInjection !== false;
+    const shouldIgnoreHighRisk =
+      riskLevel === 'high' && config?.ignoreHighRisk !== false;
+    const shouldIgnoreSpam =
+      uniqueCategories.includes('spam') && shouldIgnoreHighRisk;
+    const shouldIgnoreMediumRisk =
+      riskLevel === 'medium' && config?.ignoreMediumRisk === true;
+    const shouldIgnoreUrl =
+      uniqueCategories.includes('url') && config?.blockUrls === true;
     const shouldIgnore =
-      riskLevel === 'high' ||
-      (riskLevel === 'medium' &&
-        (config?.blockUrls === true || config?.ignoreHighRisk === true));
+      shouldIgnorePromptInjection ||
+      shouldIgnoreSpam ||
+      shouldIgnoreMediumRisk ||
+      shouldIgnoreUrl;
 
     return {
       commentId: comment.id,

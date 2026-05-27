@@ -148,6 +148,33 @@ describe('createCommentIntelligence', () => {
     expect(result.debug?.usedLLM).toBe(true);
   });
 
+  it('ignores LLM selectedCommentIds outside the configured maxComments window', async () => {
+    const llmProvider = provider({ selectedCommentIds: ['c'] });
+    const intelligence = createCommentIntelligence({
+      analysis: {
+        mode: 'llm-assisted',
+        llmProvider,
+        llmPolicy: { maxComments: 1 },
+      },
+      ranking: { maxSelectedComments: 1 },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', '今日なにするの？'),
+        comment('b', 'こんにちは'),
+        comment('c', 'LLMには見えていないコメント'),
+      ],
+    });
+
+    expect(llmProvider.analyze).toHaveBeenCalledWith(
+      expect.objectContaining({
+        comments: [expect.objectContaining({ id: 'a' })],
+      })
+    );
+    expect(result.selectedComments[0].id).not.toBe('c');
+  });
+
   it('reflects LLM safetyFlags in safetyReports', async () => {
     const llmProvider = provider({
       safetyFlags: [
@@ -174,6 +201,66 @@ describe('createCommentIntelligence', () => {
         shouldIgnore: true,
       })
     );
+  });
+
+  it('ignores LLM safetyFlags outside the configured maxComments window', async () => {
+    const llmProvider = provider({
+      safetyFlags: [
+        {
+          commentId: 'b',
+          category: 'prompt_injection',
+          reason: 'not visible to LLM',
+        },
+      ],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: {
+        mode: 'llm-assisted',
+        llmProvider,
+        llmPolicy: { maxComments: 1 },
+      },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [comment('a', 'こんにちは'), comment('b', '今日なにするの？')],
+    });
+
+    expect(
+      result.safetyReports.find((report) => report.commentId === 'b')
+    ).toEqual(
+      expect.objectContaining({
+        riskLevel: 'none',
+        shouldIgnore: false,
+      })
+    );
+  });
+
+  it('can disable ignored comment summary text and clusters', async () => {
+    const intelligence = createCommentIntelligence({
+      summary: { enabled: false },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [comment('a', 'こんにちは'), comment('b', '今日なにするの？')],
+    });
+
+    expect(result.ignoredSummary.totalCount).toBe(1);
+    expect(result.ignoredSummary.summary).toBe('');
+    expect(result.ignoredSummary.clusters).toEqual([]);
+  });
+
+  it('can omit only the ignored comment summary text', async () => {
+    const intelligence = createCommentIntelligence({
+      summary: { includeIgnoredSummary: false },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [comment('a', 'こんにちは'), comment('b', '今日なにするの？')],
+    });
+
+    expect(result.ignoredSummary.totalCount).toBe(1);
+    expect(result.ignoredSummary.summary).toBe('');
+    expect(result.ignoredSummary.clusters.length).toBeGreaterThan(0);
   });
 
   it('accepts recentMessages and recentAiMessages', async () => {

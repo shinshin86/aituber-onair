@@ -581,6 +581,7 @@ function buildConfig(): CommentIntelligenceConfig {
     safety: {
       enabled: getCheckboxValue('safety-enabled'),
       ignoreHighRisk: true,
+      ignoreMediumRisk: true,
       blockPromptInjection: true,
       blockUrls: true,
     },

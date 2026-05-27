@@ -17,6 +17,7 @@ export type CommentIntelligenceConfig = {
   safety?: {
     enabled?: boolean;
     ignoreHighRisk?: boolean;
+    ignoreMediumRisk?: boolean;
     blockPromptInjection?: boolean;
     blockUrls?: boolean;
   };

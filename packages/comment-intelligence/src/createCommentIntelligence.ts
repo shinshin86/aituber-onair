@@ -25,6 +25,7 @@ const defaultConfig: CommentIntelligenceConfig = {
   safety: {
     enabled: true,
     ignoreHighRisk: true,
+    ignoreMediumRisk: true,
     blockPromptInjection: true,
     blockUrls: false,
   },
@@ -136,19 +137,25 @@ async function analyzeWithConfig(
   }
 
   try {
+    const llmComments = input.comments.slice(
+      0,
+      config.analysis?.llmPolicy?.maxComments ?? input.comments.length
+    );
     const llmResult = await withOptionalTimeout(
       llmProvider.analyze({
-        comments: input.comments.slice(
-          0,
-          config.analysis?.llmPolicy?.maxComments ?? input.comments.length
-        ),
+        comments: llmComments,
         streamState: input.streamState,
         recentMessages: input.recentMessages ?? input.recentAiMessages,
         recentAiMessages: input.recentAiMessages ?? input.recentMessages,
       }),
       config.analysis?.llmPolicy?.timeoutMs
     );
-    return applyLLMResult(rulesResult, llmResult, mode);
+    return applyLLMResult(
+      rulesResult,
+      llmResult,
+      mode,
+      new Set(llmComments.map((comment) => comment.id))
+    );
   } catch (error) {
     if (config.analysis?.llmPolicy?.fallbackToRules === false) {
       throw error;
@@ -188,11 +195,21 @@ function buildRulesResult(
     (comment) => !selectedIds.has(comment.id)
   );
   const language = input.streamState?.language ?? config.context?.language;
-  const ignoredSummary = summarizeIgnoredComments({
-    comments: ignoredComments,
-    language,
-    maxExamplesPerCluster: config.summary?.maxExamplesPerCluster,
-  });
+  const ignoredSummary =
+    config.summary?.enabled === false
+      ? {
+          totalCount: ignoredComments.length,
+          summary: '',
+          clusters: [],
+        }
+      : summarizeIgnoredComments({
+          comments: ignoredComments,
+          language,
+          maxExamplesPerCluster: config.summary?.maxExamplesPerCluster,
+        });
+  if (config.summary?.includeIgnoredSummary === false) {
+    ignoredSummary.summary = '';
+  }
   const result: CommentIntelligenceResult = {
     selectedComments,
     rankedComments,
@@ -222,17 +239,20 @@ function applyLLMResult(
     ? Debug extends { mode: infer Mode }
       ? Mode
       : never
-    : never
+    : never,
+  llmCommentIds: Set<string>
 ): CommentIntelligenceResult {
   const safetyReports = mergeLLMSafetyFlags(
     rulesResult.safetyReports,
-    llmResult
+    llmResult,
+    llmCommentIds
   );
   const rankedById = new Map(
     rulesResult.rankedComments.map((comment) => [comment.id, comment])
   );
   const selectedFromLLM =
     llmResult.selectedCommentIds
+      ?.filter((id) => llmCommentIds.has(id))
       ?.map((id) => rankedById.get(id))
       .filter((comment): comment is RankedComment => Boolean(comment))
       .filter((comment) => {
@@ -282,13 +302,18 @@ function applyLLMResult(
 
 function mergeLLMSafetyFlags(
   safetyReports: SafetyReport[],
-  llmResult: LLMCommentAnalysisResult
+  llmResult: LLMCommentAnalysisResult,
+  llmCommentIds: Set<string>
 ): SafetyReport[] {
   const byId = new Map(
     safetyReports.map((report) => [report.commentId, report])
   );
 
   for (const flag of llmResult.safetyFlags ?? []) {
+    if (!llmCommentIds.has(flag.commentId)) {
+      continue;
+    }
+
     const category = normalizeSafetyCategory(flag.category);
     const existing = byId.get(flag.commentId);
     byId.set(flag.commentId, {
