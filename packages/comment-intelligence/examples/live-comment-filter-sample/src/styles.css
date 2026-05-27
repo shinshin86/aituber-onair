@@ -441,6 +441,13 @@ select {
   padding: 6px 12px;
 }
 
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
+  background-color: #edf2f2;
+  color: var(--c-subtle);
+}
+
 select {
   appearance: none;
   -webkit-appearance: none;
