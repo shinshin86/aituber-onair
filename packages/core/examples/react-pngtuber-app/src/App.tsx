@@ -35,6 +35,7 @@ export default function App() {
       settings: settingsHook.settings,
       getApiKeyForProvider: settingsHook.getApiKeyForProvider,
     });
+  const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
 
   const handleSend = useCallback(
     (text: string) => {
@@ -52,6 +53,8 @@ export default function App() {
       isSpeaking,
       processChat,
       streamPlatform: settingsHook.settings.stream.platform,
+      llmSettings: settingsHook.settings.llm,
+      getApiKeyForProvider: settingsHook.getApiKeyForProvider,
       enabled: settingsHook.settings.commentIntelligence.enabled,
       mode: settingsHook.settings.commentIntelligence.mode,
       analysisIntervalMs:
@@ -116,8 +119,8 @@ export default function App() {
     const savedState = sessionStorage.getItem('twitchOauthState');
 
     if (token && state && state === savedState) {
-      settingsHook.updateTwitchAccessToken(token);
-      setStreamErrorMessage('');
+      updateTwitchAccessToken(token);
+      queueMicrotask(() => setStreamErrorMessage(''));
       sessionStorage.removeItem('twitchOauthState');
     }
 
@@ -126,7 +129,7 @@ export default function App() {
       '',
       window.location.pathname + window.location.search,
     );
-  }, []);
+  }, [updateTwitchAccessToken]);
 
   useYoutubeComments({
     youtubeLiveId: settingsHook.settings.stream.youtubeLiveId,

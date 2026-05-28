@@ -191,6 +191,8 @@ Instead of forwarding every YouTube or Twitch comment directly to the LLM, the a
 
 The chat UI shows only the selected viewer comment, while the LLM receives additional context such as greetings, first-time viewers, repeated comments, and safety instructions.
 
+Rules mode runs without an additional LLM call. Hybrid and LLM-assisted modes reuse the LLM provider, model, API key, and endpoint configured in the LLM settings tab for comment analysis, and fall back to rules if that provider is unavailable.
+
 ## Avatar base images (`public/avatar`)
 
 Place these files in `public/avatar/`:

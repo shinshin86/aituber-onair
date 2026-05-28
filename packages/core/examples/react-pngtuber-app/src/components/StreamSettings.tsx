@@ -353,8 +353,9 @@ export function StreamSettings({
               <option value="llm-assisted">LLM Assisted</option>
             </select>
             <p className="settings-field-hint">
-              Rules mode is the default. Hybrid and LLM-assisted modes fall back
-              to rules unless an analysis provider is wired by the app.
+              Rules mode is the default. Hybrid and LLM-assisted modes reuse
+              the LLM provider and model from the LLM tab, then fall back to
+              rules when that provider is unavailable.
             </p>
           </div>
 

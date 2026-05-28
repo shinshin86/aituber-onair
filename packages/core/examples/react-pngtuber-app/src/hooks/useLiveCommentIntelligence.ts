@@ -1,10 +1,18 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
+  ChatServiceFactory,
+  type ChatService,
+  type ChatServiceOptionsByProvider,
+  type Message,
+} from '@aituber-onair/core';
+import {
   createCommentIntelligence,
+  createChatServiceCommentAnalysisProvider,
   formatCommentIntelligencePrompt,
   normalizeTwitchComment,
   normalizeYouTubeComment,
   type CommentAnalysisMode,
+  type CommentAnalysisLLMProvider,
   type CommentIntelligenceResult,
   type CommentPlatform,
   type LiveComment,
@@ -12,6 +20,7 @@ import {
 import type { TwitchChatMessage } from '../services/twitch/twitchService';
 import type { YouTubeChatMessage } from '../services/youtube/youtubeService';
 import type { ChatMessage } from '../types/chat';
+import type { AppSettings, ChatProviderOption } from '../types/settings';
 import { useInterval } from './useInterval';
 
 type StreamPlatform = 'youtube' | 'twitch' | 'none';
@@ -29,6 +38,8 @@ type UseLiveCommentIntelligenceParams = {
   isSpeaking: boolean;
   processChat: ProcessChat;
   streamPlatform: StreamPlatform;
+  llmSettings: AppSettings['llm'];
+  getApiKeyForProvider: (provider: ChatProviderOption) => string;
   enabled?: boolean;
   mode?: CommentAnalysisMode;
   analysisIntervalMs?: number;
@@ -44,6 +55,8 @@ export function useLiveCommentIntelligence({
   isSpeaking,
   processChat,
   streamPlatform,
+  llmSettings,
+  getApiKeyForProvider,
   enabled = true,
   mode = 'rules',
   analysisIntervalMs = 1000,
@@ -57,11 +70,23 @@ export function useLiveCommentIntelligence({
   const [lastAnalysis, setLastAnalysis] =
     useState<CommentIntelligenceResult | null>(null);
 
+  const llmProvider = useMemo(
+    () =>
+      mode === 'rules'
+        ? undefined
+        : createAnalysisProviderFromLLMSettings(
+            llmSettings,
+            getApiKeyForProvider,
+          ),
+    [getApiKeyForProvider, llmSettings, mode],
+  );
+
   const intelligence = useMemo(
     () =>
       createCommentIntelligence({
         analysis: {
           mode,
+          llmProvider,
           llmPolicy: {
             minComments: minCommentsForLLMAnalysis,
             fallbackToRules: true,
@@ -93,6 +118,7 @@ export function useLiveCommentIntelligence({
       }),
     [
       blockHighRiskViewers,
+      llmProvider,
       minCommentsForLLMAnalysis,
       mode,
       viewerBlockDurationMs,
@@ -186,5 +212,80 @@ export function useLiveCommentIntelligence({
     enqueueTwitchComments,
     flush,
     lastAnalysis,
+  };
+}
+
+function createAnalysisProviderFromLLMSettings(
+  llmSettings: AppSettings['llm'],
+  getApiKeyForProvider: (provider: ChatProviderOption) => string,
+): CommentAnalysisLLMProvider | undefined {
+  try {
+    if (llmSettings.provider === 'gemini-nano') {
+      const chatService = ChatServiceFactory.createChatService('gemini-nano', {
+        ...(llmSettings.model ? { model: llmSettings.model } : {}),
+      });
+      return createChatServiceCommentAnalysisProvider(
+        toCommentAnalysisChatService(chatService),
+      );
+    }
+
+    const apiKey = getApiKeyForProvider(llmSettings.provider).trim();
+
+    if (llmSettings.provider === 'openai-compatible') {
+      const endpoint = llmSettings.endpoint?.trim();
+      const model = llmSettings.model.trim() || 'local-model';
+      if (!endpoint) {
+        return undefined;
+      }
+
+      const chatService = ChatServiceFactory.createChatService(
+        'openai-compatible',
+        { apiKey, model, endpoint },
+      );
+      return createChatServiceCommentAnalysisProvider(
+        toCommentAnalysisChatService(chatService),
+      );
+    }
+
+    if (!apiKey) {
+      return undefined;
+    }
+
+    const provider = llmSettings.provider;
+    const chatService = ChatServiceFactory.createChatService(
+      provider,
+      {
+        apiKey,
+        model: llmSettings.model,
+      } as ChatServiceOptionsByProvider[typeof provider],
+    );
+    return createChatServiceCommentAnalysisProvider(
+      toCommentAnalysisChatService(chatService),
+    );
+  } catch (error) {
+    console.warn('Failed to create comment analysis provider:', error);
+    return undefined;
+  }
+}
+
+function toCommentAnalysisChatService(
+  chatService: ChatService,
+): Parameters<typeof createChatServiceCommentAnalysisProvider>[0] {
+  return {
+    chatOnce(messages, stream, onPartialResponse, maxTokens) {
+      return chatService.chatOnce(
+        messages as Message[],
+        stream,
+        onPartialResponse,
+        maxTokens,
+      );
+    },
+    processChat(messages, onPartialResponse, onCompleteResponse) {
+      return chatService.processChat(
+        messages as Message[],
+        onPartialResponse,
+        onCompleteResponse,
+      );
+    },
   };
 }
