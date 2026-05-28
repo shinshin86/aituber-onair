@@ -354,6 +354,20 @@ export function StreamSettings({
             <p className="settings-field-hint">
               ルールは追加のLLM呼び出しなしで動作します。ハイブリッドとLLMアシストはLLMタブのプロバイダーとモデルを使い、利用できない場合はルールに戻ります。
             </p>
+            <div className="settings-mode-help">
+              <p>
+                <strong>ルール:</strong>
+                追加コストなしで固定ルールにより、安全判定、優先度付け、要約を行います。
+              </p>
+              <p>
+                <strong>ハイブリッド:</strong>
+                通常はルールで処理し、コメント数が設定値以上のときだけLLM解析を使います。
+              </p>
+              <p>
+                <strong>LLMアシスト:</strong>
+                毎回LLMでコメント群を分析します。文脈理解は強くなりますが、APIコストと遅延が増えます。
+              </p>
+            </div>
           </div>
 
           <div className="settings-field">

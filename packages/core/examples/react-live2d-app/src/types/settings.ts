@@ -125,8 +125,20 @@ export interface StreamSettings {
   twitchCommentIntervalMs: number;
 }
 
+export interface CommentIntelligenceSettings {
+  enabled: boolean;
+  mode: 'rules' | 'hybrid' | 'llm-assisted';
+  useSameLLMSettings: boolean;
+  maxCommentsPerBatch: number;
+  analysisIntervalMs: number;
+  minCommentsForLLMAnalysis: number;
+  blockHighRiskViewers: boolean;
+  viewerBlockDurationMs: number;
+}
+
 export interface AppSettings {
   llm: LLMSettings;
   tts: TTSSettings;
   stream: StreamSettings;
+  commentIntelligence: CommentIntelligenceSettings;
 }

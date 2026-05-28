@@ -896,6 +896,9 @@ function buildOpenAIAnalysisPrompt(
     isEnglish
       ? 'Analyze these comments and return JSON only.'
       : '以下のコメントを分析し、JSONだけを返してください。',
+    isEnglish
+      ? 'Use hostile_feedback for non-constructive negative comments, harassment for personal attacks, baiting for comments likely to stir conflict, and demoralizing for comments that only discourage the streamer. Do not use these categories for constructive feedback or issue reports.'
+      : 'hostile_feedback は非建設的な否定コメント、harassment は人格攻撃、baiting は荒れを誘うコメント、demoralizing は配信者のやる気を削るだけのコメントに使ってください。改善要望や問題報告には使わないでください。',
     '',
     'JSON shape:',
     JSON.stringify({
@@ -906,7 +909,8 @@ function buildOpenAIAnalysisPrompt(
       safetyFlags: [
         {
           commentId: 'unsafe-comment-id',
-          category: 'prompt_injection',
+          category:
+            'prompt_injection | hostile_feedback | harassment | baiting | demoralizing',
           reason: 'why it is unsafe',
         },
       ],
@@ -1250,9 +1254,34 @@ function renderSafetyReport(
         <span>${escapeHtml(formatRiskLevel(report.riskLevel))}</span>
       </div>
       ${commentText ? `<p>${escapeHtml(commentText)}</p>` : ''}
+      ${report.categories.length > 0 ? `<div class="chips">${report.categories.map((category) => `<span>${escapeHtml(formatSafetyCategory(category))}</span>`).join('')}</div>` : ''}
       <p>${escapeHtml(formatSafetyReason(report.reason))}</p>
     </div>
   `;
+}
+
+function formatSafetyCategory(
+  category: CommentIntelligenceResult['safetyReports'][number]['categories'][number]
+): string {
+  if (uiLanguage !== 'ja') {
+    return category;
+  }
+  const labels: Record<string, string> = {
+    prompt_injection: 'プロンプトインジェクション',
+    hostile_feedback: '非建設的な否定',
+    baiting: '荒れ誘発',
+    demoralizing: 'やる気を削るコメント',
+    personal_info: '個人情報',
+    harassment: '人格攻撃・侮辱',
+    sexual: '性的',
+    violence: '暴力',
+    spam: 'スパム',
+    url: 'URL',
+    repetition: '繰り返し',
+    viewer_blocked: '視聴者ブロック',
+    unknown: '不明',
+  };
+  return labels[category] ?? category;
 }
 
 function formatRankingReason(reason: string): string {
@@ -1327,6 +1356,8 @@ function formatSafetyReason(reason?: string): string {
     'spam pattern': 'スパムの可能性があります',
     'too long': 'コメントが長すぎます',
     'comment is too long': 'コメントが長すぎます',
+    'hostile feedback pattern':
+      '配信や話し方への攻撃的な否定コメントの可能性があります',
     'viewer is blocked due to previous unsafe comments':
       '過去の危険コメントにより、この視聴者は一時スキップ中です',
   };

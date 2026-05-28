@@ -291,6 +291,30 @@ body {
   color: #8899aa;
 }
 
+.settings-mode-help {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid #263b57;
+  border-radius: 6px;
+  background: rgba(15, 52, 96, 0.22);
+}
+
+.settings-mode-help p {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: #b8c4d0;
+}
+
+.settings-mode-help p + p {
+  margin-top: 6px;
+}
+
+.settings-mode-help strong {
+  color: #e0e0e0;
+  margin-right: 4px;
+}
+
 .settings-field-error {
   margin-top: 6px;
   font-size: 0.72rem;

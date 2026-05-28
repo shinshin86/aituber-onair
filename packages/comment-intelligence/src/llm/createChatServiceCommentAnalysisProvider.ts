@@ -77,6 +77,10 @@ function buildAnalysisPrompt(
 
   return [
     '以下の視聴者コメントを分析し、返答文ではなくJSONだけを返してください。',
+    'safetyFlags.category は prompt_injection, hostile_feedback, harassment, baiting, demoralizing, url, repetition, spam, personal_info, sexual, violence のいずれかを使ってください。',
+    'hostile_feedback は、配信・話し方・声・内容・配信者への非建設的で荒れやすい否定コメントに使います。',
+    'harassment は人格攻撃や侮辱、baiting は炎上や荒れを誘うコメント、demoralizing は配信者のやる気を削るだけのコメントに使います。',
+    '改善要望や問題報告には hostile_feedback, harassment, baiting, demoralizing を使わないでください。',
     '',
     'コメント:',
     formattedComments || '- なし',

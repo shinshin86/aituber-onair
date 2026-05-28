@@ -43,7 +43,7 @@
 - Settings 画面から見た目を設定:
   - 背景画像アップロード（PNG/JPG、メモリ保持のみ）
   - 使用アバターパス表示（`/avatar/miko.vrm`）
-- YouTube Live / Twitch のライブチャットを取得して LLM パイプラインに流す
+- YouTube Live / Twitch のライブチャットを取得し、`@aituber-onair/comment-intelligence` で分析して、選ばれたコメントだけを LLM パイプラインに流す
   - YouTube は YouTube Data API v3 を利用（Google Cloud の API キーが必要）
   - Twitch は EventSub WebSocket とブラウザ上での implicit OAuth フローを利用
 
@@ -71,10 +71,12 @@ npm run dev
 
 ## ライブコメント取得（YouTube Live / Twitch）
 
-このサンプルでは YouTube Live / Twitch のライブチャットを LLM に流し込むことができます。
+このサンプルでは YouTube Live / Twitch のライブチャットを分析してから、選ばれたコメントだけを LLM に流し込むことができます。
 **Settings → Stream** から設定します。
 
 同時に有効化できるのはどちらか一方だけです。
+
+コメントインテリジェンスは初期状態で有効です。AIが処理中または発話中のコメントをまとめて、安全判定、優先度付け、未選択コメントの要約を行い、配信用コンテキストとしてAITuberへ渡します。Rules モードは追加の LLM 呼び出しなしで動作します。Hybrid / LLM-assisted モードでは、LLM 設定タブのプロバイダー、モデル、APIキー、エンドポイントをコメント分析にも利用し、使えない場合は rules にフォールバックします。
 
 ### YouTube Live
 
