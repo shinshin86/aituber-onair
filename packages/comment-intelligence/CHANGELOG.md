@@ -1,6 +1,6 @@
 # @aituber-onair/comment-intelligence
 
-## Unreleased
+## 0.0.2
 
 ### Patch Changes
 

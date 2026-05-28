@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/comment-intelligence",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Comment analysis and prioritization toolkit for AI VTubers and AI character streams.",
   "type": "module",
   "main": "dist/index.js",
