@@ -47,14 +47,21 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
   }, []);
 
   useEffect(() => {
-    if (!enabled) {
-      setStatus('checking');
-      setStatusText('');
-      setDownloadProgress(null);
-      return;
-    }
-
     let cancelled = false;
+
+    if (!enabled) {
+      queueMicrotask(() => {
+        if (cancelled) {
+          return;
+        }
+        setStatus('checking');
+        setStatusText('');
+        setDownloadProgress(null);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
 
     async function check() {
       const lm = getLanguageModel();

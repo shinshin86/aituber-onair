@@ -4,11 +4,10 @@ import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
 import { useAituberCore } from './hooks/useAituberCore';
+import { useLiveCommentIntelligence } from './hooks/useLiveCommentIntelligence';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
-import type { TwitchChatMessage } from './services/twitch/twitchService';
-import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/app.css';
 
 export default function App() {
@@ -36,6 +35,7 @@ export default function App() {
       settings: settingsHook.settings,
       getApiKeyForProvider: settingsHook.getApiKeyForProvider,
     });
+  const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
 
   const handleSend = useCallback(
     (text: string) => {
@@ -46,25 +46,28 @@ export default function App() {
     [stop, processChat],
   );
 
-  const handleYoutubeComment = useCallback(
-    (comment: YouTubeChatMessage) => {
-      stop();
-      processChat(
-        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
-      );
-    },
-    [processChat, stop],
-  );
-
-  const handleTwitchComment = useCallback(
-    (comment: TwitchChatMessage) => {
-      stop();
-      processChat(
-        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
-      );
-    },
-    [processChat, stop],
-  );
+  const { enqueueYouTubeComments, enqueueTwitchComments } =
+    useLiveCommentIntelligence({
+      messages,
+      isProcessing,
+      isSpeaking,
+      processChat,
+      streamPlatform: settingsHook.settings.stream.platform,
+      llmSettings: settingsHook.settings.llm,
+      getApiKeyForProvider: settingsHook.getApiKeyForProvider,
+      enabled: settingsHook.settings.commentIntelligence.enabled,
+      mode: settingsHook.settings.commentIntelligence.mode,
+      analysisIntervalMs:
+        settingsHook.settings.commentIntelligence.analysisIntervalMs,
+      maxCommentsPerBatch:
+        settingsHook.settings.commentIntelligence.maxCommentsPerBatch,
+      minCommentsForLLMAnalysis:
+        settingsHook.settings.commentIntelligence.minCommentsForLLMAnalysis,
+      blockHighRiskViewers:
+        settingsHook.settings.commentIntelligence.blockHighRiskViewers,
+      viewerBlockDurationMs:
+        settingsHook.settings.commentIntelligence.viewerBlockDurationMs,
+    });
 
   const handleBackgroundImageChange = useCallback((file: File | null) => {
     if (backgroundObjectUrlRef.current) {
@@ -116,8 +119,8 @@ export default function App() {
     const savedState = sessionStorage.getItem('twitchOauthState');
 
     if (token && state && state === savedState) {
-      settingsHook.updateTwitchAccessToken(token);
-      setStreamErrorMessage('');
+      updateTwitchAccessToken(token);
+      queueMicrotask(() => setStreamErrorMessage(''));
       sessionStorage.removeItem('twitchOauthState');
     }
 
@@ -126,7 +129,7 @@ export default function App() {
       '',
       window.location.pathname + window.location.search,
     );
-  }, []);
+  }, [updateTwitchAccessToken]);
 
   useYoutubeComments({
     youtubeLiveId: settingsHook.settings.stream.youtubeLiveId,
@@ -135,7 +138,7 @@ export default function App() {
       settingsHook.settings.stream.platform === 'youtube' &&
       settingsHook.settings.stream.youtubeEnabled,
     intervalMs: settingsHook.settings.stream.youtubeCommentIntervalMs,
-    onComment: handleYoutubeComment,
+    onComments: enqueueYouTubeComments,
   });
 
   useTwitchComments({
@@ -146,7 +149,7 @@ export default function App() {
       settingsHook.settings.stream.platform === 'twitch' &&
       settingsHook.settings.stream.twitchEnabled,
     intervalMs: settingsHook.settings.stream.twitchCommentIntervalMs,
-    onComment: handleTwitchComment,
+    onComments: enqueueTwitchComments,
     onTokenExpired: () => {
       settingsHook.updateTwitchAccessToken('');
       settingsHook.updateTwitchEnabled(false);

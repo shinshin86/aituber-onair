@@ -108,7 +108,7 @@ export async function retrieveLiveComments(
   liveId: string,
   activeLiveChatId: string,
   apiKey: string,
-  onComment: (comment: YouTubeChatMessage) => void,
+  onComments: (comments: YouTubeChatMessage[]) => void,
   timeLimitMinutes: number = DEFAULT_TIME_LIMIT_MINUTES,
 ): Promise<number> {
   const state = getLiveChatState(liveId);
@@ -190,11 +190,10 @@ export async function retrieveLiveComments(
     .filter((comment) => comment.userComment !== '');
 
   if (newComments.length > 0) {
-    const selected =
-      newComments[Math.floor(Math.random() * newComments.length)];
-    const hash = generateCommentHash(selected.userComment, selected.userName);
+    const latest = newComments.at(-1)!;
+    const hash = generateCommentHash(latest.userComment, latest.userName);
     state.lastProcessedComment = { hash, timestamp: Date.now() };
-    onComment(selected);
+    onComments(newComments);
   }
 
   cleanupOldCommentIds(state);
@@ -208,7 +207,7 @@ export async function retrieveLiveComments(
 export async function fetchAndProcessComments(
   liveId: string,
   apiKey: string,
-  onComment: (comment: YouTubeChatMessage) => void,
+  onComments: (comments: YouTubeChatMessage[]) => void,
   timeLimitMinutes: number = DEFAULT_TIME_LIMIT_MINUTES,
 ): Promise<number> {
   if (!apiKey || !liveId) {
@@ -222,7 +221,7 @@ export async function fetchAndProcessComments(
         liveId,
         liveChatId,
         apiKey,
-        onComment,
+        onComments,
         timeLimitMinutes,
       );
     }

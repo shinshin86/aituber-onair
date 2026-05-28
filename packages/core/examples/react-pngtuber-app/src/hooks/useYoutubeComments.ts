@@ -11,11 +11,11 @@ interface UseYoutubeCommentsParams {
   isEnabled: boolean;
   intervalMs?: number;
   timeLimitMinutes?: number;
-  onComment: (comment: YouTubeChatMessage) => void;
+  onComments: (comments: YouTubeChatMessage[]) => void;
 }
 
 /**
- * Polls YouTube Live chat comments and forwards them to onComment.
+ * Polls YouTube Live chat comments and forwards them in batches.
  *
  * Starts only when isEnabled, the live ID, and the API key are present.
  * Respects the API-recommended pollingIntervalMillis when available.
@@ -26,7 +26,7 @@ export function useYoutubeComments({
   isEnabled,
   intervalMs = 20_000,
   timeLimitMinutes = 10,
-  onComment,
+  onComments,
 }: UseYoutubeCommentsParams): void {
   const [apiRecommendedIntervalMs, setApiRecommendedIntervalMs] = useState(0);
 
@@ -38,7 +38,7 @@ export function useYoutubeComments({
     const apiRecommended = await fetchAndProcessComments(
       youtubeLiveId,
       youtubeApiKey,
-      onComment,
+      onComments,
       timeLimitMinutes,
     );
 
@@ -49,7 +49,7 @@ export function useYoutubeComments({
   }, [
     intervalMs,
     isEnabled,
-    onComment,
+    onComments,
     timeLimitMinutes,
     youtubeApiKey,
     youtubeLiveId,
