@@ -95,6 +95,8 @@ describe('createChatServiceCommentAnalysisProvider', () => {
 
     const messages = chatOnce.mock.calls[0][0];
     expect(messages[1].content).toContain('hostile_feedback');
+    expect(messages[1].content).toContain('baiting');
+    expect(messages[1].content).toContain('demoralizing');
     expect(messages[1].content).toContain('改善要望や問題報告');
   });
 });
