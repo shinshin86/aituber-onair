@@ -9,7 +9,8 @@
   "files": ["dist"],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc --project tsconfig.json",
     "example:live-comment-filter-sample": "vite --host 127.0.0.1 examples/live-comment-filter-sample",
     "example:live-comment-filter-sample:build": "vite build examples/live-comment-filter-sample --outDir ../../dist/examples/live-comment-filter-sample --emptyOutDir=false",
     "typecheck": "tsc --noEmit --project tsconfig.dev.json",
