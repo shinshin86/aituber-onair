@@ -224,6 +224,13 @@ export function SettingsPanel({
   updateTwitchChannel,
   updateTwitchEnabled,
   updateTwitchCommentIntervalMs,
+  updateCommentIntelligenceEnabled,
+  updateCommentIntelligenceMode,
+  updateCommentIntelligenceAnalysisIntervalMs,
+  updateCommentIntelligenceMaxCommentsPerBatch,
+  updateCommentIntelligenceMinCommentsForLLMAnalysis,
+  updateCommentIntelligenceBlockHighRiskViewers,
+  updateCommentIntelligenceViewerBlockDurationMs,
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
@@ -2034,6 +2041,7 @@ export function SettingsPanel({
 
       <StreamSettings
         stream={settings.stream}
+        commentIntelligence={settings.commentIntelligence}
         disabled={disabled}
         isExpanded={expandedSections.stream}
         onToggleExpand={() => toggleSection('stream')}
@@ -2048,6 +2056,23 @@ export function SettingsPanel({
         updateTwitchChannel={updateTwitchChannel}
         updateTwitchEnabled={updateTwitchEnabled}
         updateTwitchCommentIntervalMs={updateTwitchCommentIntervalMs}
+        updateCommentIntelligenceEnabled={updateCommentIntelligenceEnabled}
+        updateCommentIntelligenceMode={updateCommentIntelligenceMode}
+        updateCommentIntelligenceAnalysisIntervalMs={
+          updateCommentIntelligenceAnalysisIntervalMs
+        }
+        updateCommentIntelligenceMaxCommentsPerBatch={
+          updateCommentIntelligenceMaxCommentsPerBatch
+        }
+        updateCommentIntelligenceMinCommentsForLLMAnalysis={
+          updateCommentIntelligenceMinCommentsForLLMAnalysis
+        }
+        updateCommentIntelligenceBlockHighRiskViewers={
+          updateCommentIntelligenceBlockHighRiskViewers
+        }
+        updateCommentIntelligenceViewerBlockDurationMs={
+          updateCommentIntelligenceViewerBlockDurationMs
+        }
       />
     </div>
   );

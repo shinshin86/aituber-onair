@@ -19,6 +19,10 @@ interface UseAituberCoreOptions {
   getApiKeyForProvider: (provider: ChatProviderOption) => string;
 }
 
+type ProcessChatOptions = {
+  displayText?: string;
+};
+
 function getTtsApiKey(
   settings: AppSettings,
   getApiKeyForProvider: (provider: ChatProviderOption) => string,
@@ -392,8 +396,11 @@ export function useAituberCore({
   ]);
 
   const processChat = useCallback(
-    async (text: string) => {
+    async (text: string, options?: ProcessChatOptions) => {
       if (!coreRef.current || !text.trim()) return;
+
+      const coreInput = text.trim();
+      const displayText = (options?.displayText ?? text).trim();
 
       // Append the user message to the chat log
       setMessages((prev) => [
@@ -401,13 +408,13 @@ export function useAituberCore({
         {
           id: createMessageId(),
           role: 'user',
-          content: text.trim(),
+          content: displayText,
           timestamp: Date.now(),
         },
       ]);
 
       try {
-        await coreRef.current.processChat(text.trim());
+        await coreRef.current.processChat(coreInput);
       } catch (err) {
         console.error('processChat error:', err);
         setIsProcessing(false);

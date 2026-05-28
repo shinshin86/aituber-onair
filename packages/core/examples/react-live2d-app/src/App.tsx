@@ -3,6 +3,7 @@ import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
 import { useAituberCore } from './hooks/useAituberCore';
+import { useLiveCommentIntelligence } from './hooks/useLiveCommentIntelligence';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
@@ -18,8 +19,9 @@ import './styles/base.css';
 import './styles/app.css';
 
 export default function App() {
-  const { play, stop, audioBinding } = useAudioLipsync();
+  const { play, stop, audioBinding, isSpeaking } = useAudioLipsync();
   const settingsHook = useSettings();
+  const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [streamErrorMessage, setStreamErrorMessage] = useState('');
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
@@ -70,24 +72,41 @@ export default function App() {
     [processChat, stop],
   );
 
+  const { enqueueYouTubeComments, enqueueTwitchComments } =
+    useLiveCommentIntelligence({
+      messages,
+      isProcessing,
+      isSpeaking,
+      processChat,
+      streamPlatform: settingsHook.settings.stream.platform,
+      llmSettings: settingsHook.settings.llm,
+      getApiKeyForProvider: settingsHook.getApiKeyForProvider,
+      enabled: settingsHook.settings.commentIntelligence.enabled,
+      mode: settingsHook.settings.commentIntelligence.mode,
+      analysisIntervalMs:
+        settingsHook.settings.commentIntelligence.analysisIntervalMs,
+      maxCommentsPerBatch:
+        settingsHook.settings.commentIntelligence.maxCommentsPerBatch,
+      minCommentsForLLMAnalysis:
+        settingsHook.settings.commentIntelligence.minCommentsForLLMAnalysis,
+      blockHighRiskViewers:
+        settingsHook.settings.commentIntelligence.blockHighRiskViewers,
+      viewerBlockDurationMs:
+        settingsHook.settings.commentIntelligence.viewerBlockDurationMs,
+    });
+
   const handleYoutubeComment = useCallback(
     (comment: YouTubeChatMessage) => {
-      stop();
-      processChat(
-        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
-      );
+      enqueueYouTubeComments([comment]);
     },
-    [processChat, stop],
+    [enqueueYouTubeComments],
   );
 
   const handleTwitchComment = useCallback(
     (comment: TwitchChatMessage) => {
-      stop();
-      processChat(
-        `「${comment.userName}」さんのコメント: ${comment.userComment}`,
-      );
+      enqueueTwitchComments([comment]);
     },
-    [processChat, stop],
+    [enqueueTwitchComments],
   );
 
   const handleBackgroundImageChange = useCallback((file: File | null) => {
@@ -142,8 +161,8 @@ export default function App() {
     const savedState = sessionStorage.getItem('twitchOauthState');
 
     if (token && state && state === savedState) {
-      settingsHook.updateTwitchAccessToken(token);
-      setStreamErrorMessage('');
+      updateTwitchAccessToken(token);
+      queueMicrotask(() => setStreamErrorMessage(''));
       sessionStorage.removeItem('twitchOauthState');
     }
 
@@ -152,7 +171,7 @@ export default function App() {
       '',
       window.location.pathname + window.location.search,
     );
-  }, []);
+  }, [updateTwitchAccessToken]);
 
   useYoutubeComments({
     youtubeLiveId: settingsHook.settings.stream.youtubeLiveId,

@@ -43,8 +43,9 @@ from actual audio output volume.
 - Set visuals directly in Settings:
   - Background image upload (PNG/JPG, memory-only)
   - Fixed avatar asset path display (`/avatar/miko.vrm`)
-- Fetch live chat comments from YouTube Live or Twitch and feed them into the
-  LLM pipeline
+- Fetch live chat comments from YouTube Live or Twitch, analyze them with
+  `@aituber-onair/comment-intelligence`, and send only selected comments into
+  the LLM pipeline
   - YouTube uses the YouTube Data API v3 (requires a Google Cloud API key)
   - Twitch uses EventSub WebSocket with a browser-based implicit OAuth flow
 
@@ -72,10 +73,18 @@ For `gemini-nano`, set:
 
 ## Stream comments (YouTube Live / Twitch)
 
-This app can forward live chat comments from YouTube Live or Twitch into the LLM.
+This app can analyze live chat comments from YouTube Live or Twitch before
+forwarding selected comments into the LLM.
 Configure it from **Settings → Stream**.
 
 Only one platform can be active at a time.
+
+Comment Intelligence is enabled by default. It batches comments while the AI is
+processing or speaking, filters unsafe or disruptive comments, ranks the
+remaining comments, summarizes ignored comments, and sends compact live-chat
+context to the AITuber. Rules mode runs without an additional LLM call. Hybrid
+and LLM-assisted modes reuse the provider, model, API key, and endpoint from the
+LLM settings tab for comment analysis and fall back to rules when unavailable.
 
 ### YouTube Live
 

@@ -199,6 +199,16 @@ function getDefaultSettings(): AppSettings {
       twitchEnabled: false,
       twitchCommentIntervalMs: 20_000,
     },
+    commentIntelligence: {
+      enabled: true,
+      mode: 'rules',
+      useSameLLMSettings: true,
+      maxCommentsPerBatch: 50,
+      analysisIntervalMs: 1000,
+      minCommentsForLLMAnalysis: 8,
+      blockHighRiskViewers: true,
+      viewerBlockDurationMs: 10 * 60 * 1000,
+    },
   };
 }
 
@@ -219,6 +229,10 @@ function loadSettings(): AppSettings {
         },
         tts: { ...defaults.tts, ...saved.tts },
         stream: { ...defaults.stream, ...saved.stream },
+        commentIntelligence: {
+          ...defaults.commentIntelligence,
+          ...saved.commentIntelligence,
+        },
       };
     }
   } catch {
@@ -836,6 +850,100 @@ export function useSettings() {
     [],
   );
 
+  const updateCommentIntelligenceEnabled = useCallback((enabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      commentIntelligence: { ...prev.commentIntelligence, enabled },
+    }));
+  }, []);
+
+  const updateCommentIntelligenceMode = useCallback(
+    (mode: AppSettings['commentIntelligence']['mode']) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: { ...prev.commentIntelligence, mode },
+      }));
+    },
+    [],
+  );
+
+  const updateCommentIntelligenceAnalysisIntervalMs = useCallback(
+    (analysisIntervalMs: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: {
+          ...prev.commentIntelligence,
+          analysisIntervalMs: normalizePositiveInteger(
+            analysisIntervalMs,
+            getDefaultSettings().commentIntelligence.analysisIntervalMs,
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const updateCommentIntelligenceMaxCommentsPerBatch = useCallback(
+    (maxCommentsPerBatch: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: {
+          ...prev.commentIntelligence,
+          maxCommentsPerBatch: normalizePositiveInteger(
+            maxCommentsPerBatch,
+            getDefaultSettings().commentIntelligence.maxCommentsPerBatch,
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const updateCommentIntelligenceMinCommentsForLLMAnalysis = useCallback(
+    (minCommentsForLLMAnalysis: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: {
+          ...prev.commentIntelligence,
+          minCommentsForLLMAnalysis: normalizePositiveInteger(
+            minCommentsForLLMAnalysis,
+            getDefaultSettings().commentIntelligence.minCommentsForLLMAnalysis,
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const updateCommentIntelligenceBlockHighRiskViewers = useCallback(
+    (blockHighRiskViewers: boolean) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: {
+          ...prev.commentIntelligence,
+          blockHighRiskViewers,
+        },
+      }));
+    },
+    [],
+  );
+
+  const updateCommentIntelligenceViewerBlockDurationMs = useCallback(
+    (viewerBlockDurationMs: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: {
+          ...prev.commentIntelligence,
+          viewerBlockDurationMs: normalizePositiveInteger(
+            viewerBlockDurationMs,
+            getDefaultSettings().commentIntelligence.viewerBlockDurationMs,
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
   const getApiKeyForProvider = useCallback(
     (provider: ChatProviderOption): string => {
       if (provider === 'gemini-nano') {
@@ -896,6 +1004,13 @@ export function useSettings() {
     updateTwitchChannel,
     updateTwitchEnabled,
     updateTwitchCommentIntervalMs,
+    updateCommentIntelligenceEnabled,
+    updateCommentIntelligenceMode,
+    updateCommentIntelligenceAnalysisIntervalMs,
+    updateCommentIntelligenceMaxCommentsPerBatch,
+    updateCommentIntelligenceMinCommentsForLLMAnalysis,
+    updateCommentIntelligenceBlockHighRiskViewers,
+    updateCommentIntelligenceViewerBlockDurationMs,
     getApiKeyForProvider,
   };
 }

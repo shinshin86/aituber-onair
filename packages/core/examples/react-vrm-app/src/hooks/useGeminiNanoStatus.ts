@@ -48,9 +48,11 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
 
   useEffect(() => {
     if (!enabled) {
-      setStatus('checking');
-      setStatusText('');
-      setDownloadProgress(null);
+      queueMicrotask(() => {
+        setStatus('checking');
+        setStatusText('');
+        setDownloadProgress(null);
+      });
       return;
     }
 
