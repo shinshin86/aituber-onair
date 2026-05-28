@@ -86,6 +86,40 @@ describe('ruleBasedSafetyProvider', () => {
     ).toBe(true);
   });
 
+  it.each(['この配信つまらない。喋り方が嫌い', 'つまらない', '喋り方が嫌い'])(
+    'marks hostile feedback as medium risk: %s',
+    (text) => {
+      const report = ruleBasedSafetyProvider.check(comment(text));
+
+      expect(report.riskLevel).toBe('medium');
+      expect(report.categories).toContain('hostile_feedback');
+      expect(report.reason).toContain('hostile feedback pattern');
+    }
+  );
+
+  it('can ignore hostile feedback when medium-risk ignoring is enabled', () => {
+    const report = ruleBasedSafetyProvider.check(comment('つまらない'), {
+      ignoreMediumRisk: true,
+    });
+
+    expect(report.riskLevel).toBe('medium');
+    expect(report.categories).toContain('hostile_feedback');
+    expect(report.shouldIgnore).toBe(true);
+  });
+
+  it.each([
+    '音が少し小さいかも',
+    'もう少しゆっくり話してほしい',
+    '画面が見づらいです',
+  ])('does not block constructive feedback: %s', (text) => {
+    const report = ruleBasedSafetyProvider.check(comment(text), {
+      ignoreMediumRisk: true,
+    });
+
+    expect(report.categories).not.toContain('hostile_feedback');
+    expect(report.shouldIgnore).toBe(false);
+  });
+
   it('treats an extremely long comment as spam', () => {
     const report = ruleBasedSafetyProvider.check(comment('hello'.repeat(500)));
 

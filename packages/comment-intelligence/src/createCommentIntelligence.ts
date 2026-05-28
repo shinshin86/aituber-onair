@@ -331,6 +331,7 @@ function mergeLLMSafetyFlags(
 function normalizeSafetyCategory(category: string): SafetyCategory {
   const known: SafetyCategory[] = [
     'prompt_injection',
+    'hostile_feedback',
     'personal_info',
     'harassment',
     'sexual',

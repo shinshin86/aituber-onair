@@ -896,6 +896,9 @@ function buildOpenAIAnalysisPrompt(
     isEnglish
       ? 'Analyze these comments and return JSON only.'
       : '以下のコメントを分析し、JSONだけを返してください。',
+    isEnglish
+      ? 'Use hostile_feedback for non-constructive negative comments about the stream, speaker, voice, or content. Do not use it for constructive feedback or issue reports.'
+      : 'hostile_feedback は、配信・話し方・声・内容への非建設的で荒れやすい否定コメントに使ってください。改善要望や問題報告には使わないでください。',
     '',
     'JSON shape:',
     JSON.stringify({
@@ -906,7 +909,7 @@ function buildOpenAIAnalysisPrompt(
       safetyFlags: [
         {
           commentId: 'unsafe-comment-id',
-          category: 'prompt_injection',
+          category: 'prompt_injection | hostile_feedback',
           reason: 'why it is unsafe',
         },
       ],
@@ -1327,6 +1330,8 @@ function formatSafetyReason(reason?: string): string {
     'spam pattern': 'スパムの可能性があります',
     'too long': 'コメントが長すぎます',
     'comment is too long': 'コメントが長すぎます',
+    'hostile feedback pattern':
+      '配信や話し方への攻撃的な否定コメントの可能性があります',
     'viewer is blocked due to previous unsafe comments':
       '過去の危険コメントにより、この視聴者は一時スキップ中です',
   };

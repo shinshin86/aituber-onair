@@ -2,6 +2,7 @@ import type { LiveComment } from '../types/comment';
 import type { CommentIntelligenceConfig } from '../types/config';
 import type { SafetyCategory, SafetyReport } from '../types/safety';
 import { includesAny, normalizeText } from '../utils/text';
+import { evaluateFeedbackTone } from './evaluateFeedbackTone';
 import {
   harassmentPatterns,
   personalInfoPatterns,
@@ -57,6 +58,12 @@ export const ruleBasedSafetyProvider = {
       categories.push('harassment');
     }
 
+    const feedbackTone = evaluateFeedbackTone(comment.text);
+    if (feedbackTone.isHostile) {
+      categories.push('hostile_feedback');
+      reasons.push('hostile feedback pattern');
+    }
+
     if (includesAny(text, sexualPatterns)) {
       categories.push('sexual');
     }
@@ -72,6 +79,7 @@ export const ruleBasedSafetyProvider = {
     const hasMediumRisk =
       uniqueCategories.includes('url') ||
       uniqueCategories.includes('repetition') ||
+      uniqueCategories.includes('hostile_feedback') ||
       uniqueCategories.includes('personal_info') ||
       uniqueCategories.includes('harassment') ||
       uniqueCategories.includes('sexual') ||

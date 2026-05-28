@@ -1,5 +1,6 @@
 export type SafetyCategory =
   | 'prompt_injection'
+  | 'hostile_feedback'
   | 'personal_info'
   | 'harassment'
   | 'sexual'

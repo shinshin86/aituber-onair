@@ -86,4 +86,15 @@ describe('createChatServiceCommentAnalysisProvider', () => {
     const messages = chatOnce.mock.calls[0][0];
     expect(messages[0].content).toContain('AITuberとしての返答文は作らない');
   });
+
+  it('documents hostile feedback as a safety category', async () => {
+    const chatOnce = vi.fn().mockResolvedValue({ text: '{}' });
+    const provider = createChatServiceCommentAnalysisProvider({ chatOnce });
+
+    await provider.analyze({ comments: [comment('a')] });
+
+    const messages = chatOnce.mock.calls[0][0];
+    expect(messages[1].content).toContain('hostile_feedback');
+    expect(messages[1].content).toContain('改善要望や問題報告');
+  });
 });
