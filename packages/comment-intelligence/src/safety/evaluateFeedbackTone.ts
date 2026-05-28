@@ -19,16 +19,18 @@ const HOSTILE_THRESHOLD = 4;
 const targetPatterns: RegExp[] = [
   /(この)?配信/u,
   /喋り方|しゃべり方|話し方/u,
-  /声|内容|画面/u,
+  /声|内容|画面|企画|マイク|ゲーム/u,
+  /配信者|主/u,
   /お前|あなた|こいつ|この人/u,
-  /\b(stream|voice|talking|content|screen|you)\b/i,
+  /\b(stream|voice|talking|content|screen|mic|game|you)\b/i,
 ];
 
 const negativeStancePatterns: RegExp[] = [
   /つまらない|つまんない|おもんない/u,
   /嫌い|きらい/u,
-  /最悪|ひどい|見る価値ない/u,
-  /\bboring\b/i,
+  /最悪|ひどい|見る価値ない|時間の無駄/u,
+  /うざい|不快|だるい|内容薄い/u,
+  /\bboring\b|\bwaste of time\b/i,
   /\bhate\b/i,
   /\bawful\b|\bterrible\b/i,
 ];
@@ -41,12 +43,13 @@ const personalAttackPatterns: RegExp[] = [
 
 const baitingPatterns: RegExp[] = [
   /炎上|荒れ(そう|る)|燃え(そう|る)/u,
-  /誰も見てない|オワコン/u,
-  /\b(cringe|rage bait|drama)\b/i,
+  /誰も見てない|オワコン|コメント欄荒らそう/u,
+  /\b(cringe|rage bait|start drama|nobody is watching)\b/i,
 ];
 
 const demoralizingPatterns: RegExp[] = [
   /やめ(ろ|た方がいい)|向いてない|才能ない/u,
+  /帰れ|黙れ/u,
   /見る価値ない/u,
   /\b(give up|quit streaming|not worth watching)\b/i,
 ];

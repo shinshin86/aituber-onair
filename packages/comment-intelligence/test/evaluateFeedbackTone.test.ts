@@ -29,11 +29,26 @@ describe('evaluateFeedbackTone', () => {
   });
 
   it.each([
+    ['これは炎上するしコメント欄荒れそう', 'baiting'],
+    ['誰も見てないからもう帰れ', 'demoralizing'],
+    ['今日の内容薄いし時間の無駄', 'hostile_feedback'],
+    ['Your stream is a waste of time', 'hostile_feedback'],
+    ['Nobody is watching, quit streaming', 'baiting'],
+  ] as const)('detects disruptive intent signals: %s', (text, category) => {
+    const result = evaluateFeedbackTone(text);
+
+    expect(result.isHostile).toBe(true);
+    expect(result.categories).toContain(category);
+  });
+
+  it.each([
     '音が少し小さいかも',
     'もう少しゆっくり話してほしい',
     '画面が見づらいです',
     'マイクが大きすぎるので少し下げてください',
     'Could you speak a little slower please?',
+    '今日の内容は少し薄いかも。次は具体例があると良さそう',
+    '声が少し聞こえないので、マイクを上げてほしい',
   ])('keeps constructive feedback usable: %s', (text) => {
     const result = evaluateFeedbackTone(text);
 
