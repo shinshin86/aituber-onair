@@ -9,10 +9,10 @@ const COMMENT_ANALYSIS_INTERVAL_OPTIONS = [1000, 2000, 5000, 10000] as const;
 const COMMENT_BATCH_SIZE_OPTIONS = [10, 25, 50, 100, 200] as const;
 const COMMENT_LLM_MIN_COMMENTS_OPTIONS = [4, 8, 12, 20] as const;
 const VIEWER_BLOCK_DURATION_OPTIONS = [
-  { label: '1 min', value: 60 * 1000 },
-  { label: '5 min', value: 5 * 60 * 1000 },
-  { label: '10 min', value: 10 * 60 * 1000 },
-  { label: '30 min', value: 30 * 60 * 1000 },
+  { label: '1分', value: 60 * 1000 },
+  { label: '5分', value: 5 * 60 * 1000 },
+  { label: '10分', value: 10 * 60 * 1000 },
+  { label: '30分', value: 30 * 60 * 1000 },
 ] as const;
 
 interface StreamSettingsProps {
@@ -328,16 +328,15 @@ export function StreamSettings({
                 disabled={disabled}
                 style={{ marginRight: 8 }}
               />
-              Comment Intelligence
+              コメントインテリジェンス
             </label>
             <p className="settings-field-hint">
-              Live comments are queued while the AI is processing or speaking,
-              then ranked and filtered before one selected comment is sent.
+              AIが処理中または発話中のライブコメントを一時的にためて、優先度付けと安全判定を行い、選ばれた1件だけを送信します。
             </p>
           </div>
 
           <div className="settings-field">
-            <label htmlFor="comment-intelligence-mode">Analysis Mode</label>
+            <label htmlFor="comment-intelligence-mode">解析モード</label>
             <select
               id="comment-intelligence-mode"
               value={commentIntelligence.mode}
@@ -348,20 +347,18 @@ export function StreamSettings({
               }
               disabled={commentControlsDisabled}
             >
-              <option value="rules">Rules (no API key)</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="llm-assisted">LLM Assisted</option>
+              <option value="rules">ルール（APIキー不要）</option>
+              <option value="hybrid">ハイブリッド</option>
+              <option value="llm-assisted">LLMアシスト</option>
             </select>
             <p className="settings-field-hint">
-              Rules mode is the default. Hybrid and LLM-assisted modes reuse
-              the LLM provider and model from the LLM tab, then fall back to
-              rules when that provider is unavailable.
+              ルールは追加のLLM呼び出しなしで動作します。ハイブリッドとLLMアシストはLLMタブのプロバイダーとモデルを使い、利用できない場合はルールに戻ります。
             </p>
           </div>
 
           <div className="settings-field">
             <label htmlFor="comment-intelligence-interval">
-              Analysis Interval
+              解析間隔
             </label>
             <select
               id="comment-intelligence-interval"
@@ -383,7 +380,7 @@ export function StreamSettings({
 
           <div className="settings-field">
             <label htmlFor="comment-intelligence-batch-size">
-              Max Comments per Analysis
+              1回の解析で扱う最大コメント数
             </label>
             <select
               id="comment-intelligence-batch-size"
@@ -406,7 +403,7 @@ export function StreamSettings({
           {commentIntelligence.mode !== 'rules' && (
             <div className="settings-field">
               <label htmlFor="comment-intelligence-llm-min-comments">
-                Min Comments for LLM Analysis
+                LLM解析を使う最小コメント数
               </label>
               <select
                 id="comment-intelligence-llm-min-comments"
@@ -441,18 +438,16 @@ export function StreamSettings({
                 disabled={commentControlsDisabled}
                 style={{ marginRight: 8 }}
               />
-              Temporarily skip unsafe viewers
+              危険な視聴者を一時的にスキップ
             </label>
             <p className="settings-field-hint">
-              Viewers who send high-risk comments are skipped for later analyses
-              during the block window, so unsafe comments are not sent directly
-              to core.
+              高リスクコメントを送った視聴者は、指定期間中の解析対象から外します。危険なコメントがそのままcoreへ渡らないようにします。
             </p>
           </div>
 
           <div className="settings-field">
             <label htmlFor="comment-intelligence-block-duration">
-              Unsafe Viewer Skip Duration
+              スキップ期間
             </label>
             <select
               id="comment-intelligence-block-duration"
