@@ -197,6 +197,15 @@ npm install @aituber-onair/voice
 npm install @aituber-onair/manneri
 ```
 
+### [@aituber-onair/comment-intelligence](./packages/comment-intelligence/README.ja.md)
+
+<img src="./packages/comment-intelligence/images/aituber-onair-comment-intelligence.png" alt="AITuber OnAir Comment Intelligence ロゴ" width="240" />
+
+ライブコメントを AI キャラクターへ渡す前に整理するフィルタリングライブラリ。返答対象コメントの選択、危険コメントのブロック、未選択コメントの要約、LLM向けコンテキスト生成に対応します。ルールベースを基本に、任意で LLM アシスト分析も利用できます。
+```bash
+npm install @aituber-onair/comment-intelligence
+```
+
 ### [@aituber-onair/bushitsu-client](./packages/bushitsu-client/README_ja.md)
 
 <img src="./packages/bushitsu-client/images/aituber-onair-bushitsu-client.png" alt="AITuber OnAir Bushitsu Client ロゴ" width="240" />
@@ -233,6 +242,7 @@ aituber-onair/
     ├── chat/             # LLM プロバイダー、ストリーミング、ツール、MCP
     ├── voice/            # TTS エンジン、感情、再生
     ├── manneri/          # 会話パターン検出
+    ├── comment-intelligence/ # ライブコメントのフィルタリングと文脈生成
     ├── bushitsu-client/  # WebSocket チャットクライアント + React hooks
     └── kizuna/           # 視聴者との関係性 / 絆システム
 ```

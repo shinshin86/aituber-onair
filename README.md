@@ -203,6 +203,15 @@ Detects repetitive conversation patterns and injects topic-diversification promp
 npm install @aituber-onair/manneri
 ```
 
+### [@aituber-onair/comment-intelligence](./packages/comment-intelligence/README.md)
+
+<img src="./packages/comment-intelligence/images/aituber-onair-comment-intelligence.png" alt="AITuber OnAir Comment Intelligence logo" width="240" />
+
+Filters live comments before they reach an AI character: selects one comment to answer, blocks unsafe input, summarizes ignored comments, and builds compact LLM context. Rules-first with optional LLM-assisted analysis.
+```bash
+npm install @aituber-onair/comment-intelligence
+```
+
 ### [@aituber-onair/bushitsu-client](./packages/bushitsu-client/README.md)
 
 <img src="./packages/bushitsu-client/images/aituber-onair-bushitsu-client.png" alt="AITuber OnAir Bushitsu Client logo" width="240" />
@@ -239,6 +248,7 @@ aituber-onair/
     ├── chat/             # LLM providers, streaming, tools, MCP
     ├── voice/            # TTS engines, emotion, playback
     ├── manneri/          # Conversation pattern detection
+    ├── comment-intelligence/ # Live comment filtering and context building
     ├── bushitsu-client/  # WebSocket chat client + React hooks
     └── kizuna/           # Viewer relationship / bond system
 ```
