@@ -1,5 +1,13 @@
 # @aituber-onair/comment-intelligence
 
+## Unreleased
+
+### Patch Changes
+
+- Adds `hostile_feedback` safety classification for non-constructive negative
+  comments about the stream, speaker, voice, or content. Constructive feedback
+  and issue reports remain usable comments.
+
 ## 0.0.1
 
 ### Patch Changes
