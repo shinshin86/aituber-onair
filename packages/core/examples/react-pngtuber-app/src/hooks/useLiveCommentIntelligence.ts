@@ -262,8 +262,8 @@ function createAnalysisProviderFromLLMSettings(
     return createChatServiceCommentAnalysisProvider(
       toCommentAnalysisChatService(chatService),
     );
-  } catch (error) {
-    console.warn('Failed to create comment analysis provider:', error);
+  } catch {
+    console.warn('Failed to create comment analysis provider.');
     return undefined;
   }
 }
