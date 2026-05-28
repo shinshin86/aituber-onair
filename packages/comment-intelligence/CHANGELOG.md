@@ -7,6 +7,10 @@
 - Adds `hostile_feedback` safety classification for non-constructive negative
   comments about the stream, speaker, voice, or content. Constructive feedback
   and issue reports remain usable comments.
+- Adds `baiting` and `demoralizing` safety categories for comments that are
+  likely to stir conflict or only discourage the streamer.
+- Aligns LLM-assisted analysis prompts and the live comment filter sample with
+  the expanded hostile feedback categories.
 
 ## 0.0.1
 

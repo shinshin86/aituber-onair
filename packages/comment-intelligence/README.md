@@ -9,7 +9,8 @@ It helps your AI character decide which comment to respond to, which comments to
 ## What It Does
 
 - Detects unsafe or disruptive live comments such as prompt injection, spam,
-  repetition, URLs, and non-constructive hostile feedback.
+  repetition, URLs, non-constructive hostile feedback, baiting, and
+  demoralizing comments.
 - Ranks normalized comments with rule-based scoring.
 - Summarizes ignored comments without calling an LLM by default.
 - Builds safe context and instructions for `@aituber-onair/core`.
@@ -126,6 +127,12 @@ the way you talk" are classified as `hostile_feedback` medium-risk comments.
 Constructive feedback and issue reports, such as "Could you speak a little
 slower?" or "The audio may be too quiet", remain usable comments.
 
+The rules-based detector also separates related disruptive patterns:
+`harassment` for personal attacks, `baiting` for comments likely to stir
+conflict, and `demoralizing` for comments that only discourage the streamer.
+These categories are intended to keep the AITuber from reading or amplifying
+the comment, not to replace platform moderation.
+
 ### Separate moderation from platform bans
 
 This package does not ban users on YouTube or Twitch. It only prevents unsafe or temporarily blocked viewers from being selected for the AITuber response. Your app can still use platform moderation APIs, human moderators, or chat bot rules for actual bans/timeouts.
@@ -168,9 +175,10 @@ These convert app-specific comment shapes into `LiveComment`.
 
 Viewer comments are treated as untrusted input. High-risk comments are not selected for direct forwarding, and generated prompts explicitly tell the downstream LLM not to follow instructions inside viewer comments.
 
-Viewer safety memory and hostile feedback detection are response-selection
-guards. Use them to avoid amplifying unsafe or disruptive comments, not as the
-only moderation system for your stream.
+Viewer safety memory, hostile feedback detection, baiting detection, and
+demoralizing-comment detection are response-selection guards. Use them to avoid
+amplifying unsafe or disruptive comments, not as the only moderation system for
+your stream.
 
 ## API
 
