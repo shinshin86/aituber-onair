@@ -1,9 +1,17 @@
+import type { SafetyCategory } from '../types/safety';
 import { normalizeText } from '../utils/text';
+
+export type FeedbackToneCategory =
+  | Extract<SafetyCategory, 'hostile_feedback' | 'harassment'>
+  | 'baiting'
+  | 'demoralizing'
+  | 'constructive_feedback';
 
 export type FeedbackToneEvaluation = {
   isHostile: boolean;
   score: number;
   signals: string[];
+  categories: FeedbackToneCategory[];
 };
 
 const HOSTILE_THRESHOLD = 4;
@@ -25,6 +33,24 @@ const negativeStancePatterns: RegExp[] = [
   /\bawful\b|\bterrible\b/i,
 ];
 
+const personalAttackPatterns: RegExp[] = [
+  /喋り方|しゃべり方|話し方|声/u,
+  /嫌い|きらい|きもい|キモい|下手/u,
+  /\b(hate|annoying|bad at|terrible at)\b/i,
+];
+
+const baitingPatterns: RegExp[] = [
+  /炎上|荒れ(そう|る)|燃え(そう|る)/u,
+  /誰も見てない|オワコン/u,
+  /\b(cringe|rage bait|drama)\b/i,
+];
+
+const demoralizingPatterns: RegExp[] = [
+  /やめ(ろ|た方がいい)|向いてない|才能ない/u,
+  /見る価値ない/u,
+  /\b(give up|quit streaming|not worth watching)\b/i,
+];
+
 const constructivePatterns: RegExp[] = [
   /少し|ちょっと|もう少し/u,
   /かも|かもしれない/u,
@@ -43,13 +69,19 @@ const positiveReversalPatterns: RegExp[] = [
 export function evaluateFeedbackTone(text: string): FeedbackToneEvaluation {
   const normalized = normalizeText(text);
   const signals: string[] = [];
+  const categories: FeedbackToneCategory[] = [];
   let score = 0;
 
   const hasPositiveReversal = positiveReversalPatterns.some((pattern) =>
     pattern.test(normalized)
   );
   if (hasPositiveReversal) {
-    return { isHostile: false, score: 0, signals: ['positive_reversal'] };
+    return {
+      isHostile: false,
+      score: 0,
+      signals: ['positive_reversal'],
+      categories: [],
+    };
   }
 
   const hasNegativeStance = negativeStancePatterns.some((pattern) =>
@@ -74,6 +106,34 @@ export function evaluateFeedbackTone(text: string): FeedbackToneEvaluation {
   if (hasConstructiveCue) {
     score -= 2;
     signals.push('constructive_cue');
+    categories.push('constructive_feedback');
+  }
+
+  const hasPersonalAttack = personalAttackPatterns.some((pattern) =>
+    pattern.test(normalized)
+  );
+  if (hasNegativeStance && hasPersonalAttack && !hasConstructiveCue) {
+    score += 1;
+    signals.push('personal_attack');
+    categories.push('harassment');
+  }
+
+  const hasBaiting = baitingPatterns.some((pattern) =>
+    pattern.test(normalized)
+  );
+  if (hasBaiting && !hasConstructiveCue) {
+    score += 4;
+    signals.push('baiting');
+    categories.push('baiting');
+  }
+
+  const hasDemoralizing = demoralizingPatterns.some((pattern) =>
+    pattern.test(normalized)
+  );
+  if (hasDemoralizing && !hasConstructiveCue) {
+    score += 4;
+    signals.push('demoralizing');
+    categories.push('demoralizing');
   }
 
   const isShortDismissal = hasNegativeStance && normalized.length <= 14;
@@ -86,11 +146,14 @@ export function evaluateFeedbackTone(text: string): FeedbackToneEvaluation {
   if (isNonConstructive) {
     score += 1;
     signals.push('non_constructive');
+    categories.push('hostile_feedback');
   }
 
+  const uniqueCategories = [...new Set(categories)];
   return {
     isHostile: score >= HOSTILE_THRESHOLD,
     score,
     signals,
+    categories: score >= HOSTILE_THRESHOLD ? uniqueCategories : [],
   };
 }

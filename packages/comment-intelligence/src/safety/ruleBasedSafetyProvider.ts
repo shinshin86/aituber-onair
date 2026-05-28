@@ -60,7 +60,11 @@ export const ruleBasedSafetyProvider = {
 
     const feedbackTone = evaluateFeedbackTone(comment.text);
     if (feedbackTone.isHostile) {
-      categories.push('hostile_feedback');
+      for (const category of feedbackTone.categories) {
+        if (category !== 'constructive_feedback') {
+          categories.push(category);
+        }
+      }
       reasons.push('hostile feedback pattern');
     }
 
@@ -80,6 +84,8 @@ export const ruleBasedSafetyProvider = {
       uniqueCategories.includes('url') ||
       uniqueCategories.includes('repetition') ||
       uniqueCategories.includes('hostile_feedback') ||
+      uniqueCategories.includes('baiting') ||
+      uniqueCategories.includes('demoralizing') ||
       uniqueCategories.includes('personal_info') ||
       uniqueCategories.includes('harassment') ||
       uniqueCategories.includes('sexual') ||

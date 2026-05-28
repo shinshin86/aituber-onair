@@ -97,6 +97,21 @@ describe('ruleBasedSafetyProvider', () => {
     }
   );
 
+  it.each([
+    ['喋り方が嫌い', 'harassment'],
+    ['誰も見てないしオワコン', 'baiting'],
+    ['配信やめた方がいい。才能ない', 'demoralizing'],
+  ] as const)(
+    'adds specific safety category for hostile feedback: %s',
+    (text, category) => {
+      const report = ruleBasedSafetyProvider.check(comment(text));
+
+      expect(report.riskLevel).toBe('medium');
+      expect(report.categories).toContain(category);
+      expect(report.reason).toContain('hostile feedback pattern');
+    }
+  );
+
   it('can ignore hostile feedback when medium-risk ignoring is enabled', () => {
     const report = ruleBasedSafetyProvider.check(comment('つまらない'), {
       ignoreMediumRisk: true,

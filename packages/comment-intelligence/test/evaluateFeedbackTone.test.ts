@@ -14,6 +14,18 @@ describe('evaluateFeedbackTone', () => {
     expect(result.isHostile).toBe(true);
     expect(result.signals).toContain('negative_stance');
     expect(result.signals).toContain('non_constructive');
+    expect(result.categories).toContain('hostile_feedback');
+  });
+
+  it.each([
+    ['喋り方が嫌い', 'harassment'],
+    ['誰も見てないしオワコン', 'baiting'],
+    ['配信やめた方がいい。才能ない', 'demoralizing'],
+  ] as const)('adds a specific feedback category: %s', (text, category) => {
+    const result = evaluateFeedbackTone(text);
+
+    expect(result.isHostile).toBe(true);
+    expect(result.categories).toContain(category);
   });
 
   it.each([
@@ -27,6 +39,7 @@ describe('evaluateFeedbackTone', () => {
 
     expect(result.isHostile).toBe(false);
     expect(result.signals).toContain('constructive_cue');
+    expect(result.categories).toEqual([]);
   });
 
   it('does not classify a positive reversal as hostile', () => {
@@ -36,5 +49,6 @@ describe('evaluateFeedbackTone', () => {
 
     expect(result.isHostile).toBe(false);
     expect(result.signals).toContain('positive_reversal');
+    expect(result.categories).toEqual([]);
   });
 });
