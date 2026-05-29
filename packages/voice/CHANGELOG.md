@@ -1,5 +1,20 @@
 # @aituber-onair/voice
 
+## 0.17.0
+
+### Minor Changes
+
+- Add Gradium TTS support via `engineType: 'gradium'`.
+  - Introduce `GradiumEngine` using the one-shot Gradium REST endpoint without
+    adding the Gradium SDK.
+  - Support `gradiumApiUrl`, `gradiumOutputFormat`,
+    `gradiumTemperature`, `gradiumVoiceSimilarity`,
+    `gradiumPaddingBonus`, and `gradiumRewriteRules`.
+  - Register Gradium in the voice engine factory, public exports, internal
+    option handlers, README, and tests.
+  - Update the React example with Gradium flagship voice presets so browser
+    users can select readable names while sending voice IDs internally.
+
 ## 0.16.0
 
 ### Minor Changes

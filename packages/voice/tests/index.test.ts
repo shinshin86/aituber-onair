@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import * as voicePackage from '../src';
 import type {
+  GradiumOutputFormat,
+  GradiumVoiceServiceOptions,
   InworldVoiceServiceOptions,
   PiperPlusAssets,
   PiperPlusVoiceServiceOptions,
@@ -34,6 +36,7 @@ describe('Voice Package Exports', () => {
     expect(voicePackage.UnrealSpeechEngine).toBeDefined();
     expect(voicePackage.ElevenLabsEngine).toBeDefined();
     expect(voicePackage.InworldEngine).toBeDefined();
+    expect(voicePackage.GradiumEngine).toBeDefined();
     expect(voicePackage.GeminiTtsEngine).toBeDefined();
     expect(voicePackage.OpenAiCompatibleEngine).toBeDefined();
     expect(voicePackage.MinimaxEngine).toBeDefined();
@@ -73,6 +76,19 @@ describe('Voice Package Exports', () => {
     };
 
     expect(options.engineType).toBe('inworld');
+  });
+
+  it('should expose Gradium public types through the package root', () => {
+    const outputFormat: GradiumOutputFormat = 'wav';
+    const options: GradiumVoiceServiceOptions = {
+      engineType: 'gradium',
+      speaker: 'YTpq7expH9539ERJ',
+      apiKey: 'gradium-api-key',
+      gradiumOutputFormat: outputFormat,
+      gradiumTemperature: 0.3,
+    };
+
+    expect(options.engineType).toBe('gradium');
   });
 });
 

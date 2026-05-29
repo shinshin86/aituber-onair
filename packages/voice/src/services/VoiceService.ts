@@ -4,6 +4,7 @@ import type {
   ElevenLabsVoiceSettingsOptions,
 } from '../engines/ElevenLabsEngine';
 import type { GeminiTtsModel } from '../engines';
+import type { GradiumOutputFormat } from '../engines/GradiumEngine';
 import type {
   InworldAudioEncoding,
   InworldDeliveryMode,
@@ -220,6 +221,23 @@ export interface InworldVoiceServiceOptions extends VoiceServiceCommonOptions {
   inworldTemperature?: number;
 }
 
+export interface GradiumVoiceServiceOptions extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'gradium';
+  /** Custom Gradium one-shot TTS endpoint URL */
+  gradiumApiUrl?: string;
+  /** Gradium output audio format (default: wav) */
+  gradiumOutputFormat?: GradiumOutputFormat;
+  /** Gradium sampling temperature (0.0-1.4, default: 0.7) */
+  gradiumTemperature?: number;
+  /** Gradium voice similarity / cfg_coef (1.0-4.0, default: 2.0) */
+  gradiumVoiceSimilarity?: number;
+  /** Gradium padding bonus / speed control (-4.0-4.0, default: 0.0) */
+  gradiumPaddingBonus?: number;
+  /** Gradium text rewrite rules, such as en or TimeEn,Date */
+  gradiumRewriteRules?: string;
+}
+
 export interface GeminiTtsVoiceServiceOptions
   extends VoiceServiceCommonOptions {
   /** Engine type */
@@ -399,6 +417,7 @@ export type VoiceServiceOptions =
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
   | InworldVoiceServiceOptions
+  | GradiumVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions
@@ -431,6 +450,9 @@ export type ElevenLabsVoiceServiceOptionsUpdate = Partial<
 export type InworldVoiceServiceOptionsUpdate = Partial<
   Omit<InworldVoiceServiceOptions, 'engineType'>
 >;
+export type GradiumVoiceServiceOptionsUpdate = Partial<
+  Omit<GradiumVoiceServiceOptions, 'engineType'>
+>;
 export type GeminiTtsVoiceServiceOptionsUpdate = Partial<
   Omit<GeminiTtsVoiceServiceOptions, 'engineType'>
 >;
@@ -461,6 +483,7 @@ export type VoiceServiceOptionsUpdate =
   | UnrealSpeechVoiceServiceOptionsUpdate
   | ElevenLabsVoiceServiceOptionsUpdate
   | InworldVoiceServiceOptionsUpdate
+  | GradiumVoiceServiceOptionsUpdate
   | GeminiTtsVoiceServiceOptionsUpdate
   | OpenAiCompatibleVoiceServiceOptionsUpdate
   | AivisSpeechVoiceServiceOptionsUpdate

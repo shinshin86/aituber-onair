@@ -3,6 +3,7 @@ import {
   type AivisSpeechQueryParameterOverrides,
   type ElevenLabsApplyTextNormalization,
   type GeminiTtsModel,
+  type GradiumOutputFormat,
   type InworldAudioEncoding,
   type InworldDeliveryMode,
   type MinimaxAudioFormat,
@@ -26,6 +27,7 @@ import {
   ELEVENLABS_OUTPUT_FORMATS,
   ENGINE_DEFAULTS,
   GEMINI_TTS_MODELS,
+  GRADIUM_OUTPUT_FORMATS,
   INWORLD_AUDIO_ENCODINGS,
   INWORLD_DELIVERY_MODES,
   INWORLD_MODELS,
@@ -268,6 +270,12 @@ function App() {
   const [inworldDeliveryMode, setInworldDeliveryMode] =
     useState<InworldDeliveryModeOption>('default');
   const [inworldTemperature, setInworldTemperature] = useState('');
+  const [gradiumOutputFormat, setGradiumOutputFormat] =
+    useState<GradiumOutputFormat>(ENGINE_DEFAULTS.gradium.defaultOutputFormat);
+  const [gradiumTemperature, setGradiumTemperature] = useState('');
+  const [gradiumVoiceSimilarity, setGradiumVoiceSimilarity] = useState('');
+  const [gradiumPaddingBonus, setGradiumPaddingBonus] = useState('');
+  const [gradiumRewriteRules, setGradiumRewriteRules] = useState('');
   const [geminiTtsModel, setGeminiTtsModel] = useState<string>(
     ENGINE_DEFAULTS.geminiTts.defaultModel,
   );
@@ -444,6 +452,11 @@ function App() {
     setInworldVoiceLanguage(ENGINE_DEFAULTS.inworld.defaultLanguage);
     setInworldDeliveryMode('default');
     setInworldTemperature('');
+    setGradiumOutputFormat(ENGINE_DEFAULTS.gradium.defaultOutputFormat);
+    setGradiumTemperature('');
+    setGradiumVoiceSimilarity('');
+    setGradiumPaddingBonus('');
+    setGradiumRewriteRules('');
     setGeminiTtsModel(ENGINE_DEFAULTS.geminiTts.defaultModel);
     setGeminiTtsLanguageCode(ENGINE_DEFAULTS.geminiTts.defaultLanguageCode);
     setGeminiTtsPrompt('');
@@ -1142,6 +1155,27 @@ function App() {
         if (!Number.isNaN(parsedTemperature)) {
           options.inworldTemperature = parsedTemperature;
         }
+      } else if (engine === 'gradium') {
+        options.gradiumOutputFormat = gradiumOutputFormat;
+
+        const parsedTemperature = Number.parseFloat(gradiumTemperature);
+        if (!Number.isNaN(parsedTemperature)) {
+          options.gradiumTemperature = parsedTemperature;
+        }
+
+        const parsedVoiceSimilarity = Number.parseFloat(gradiumVoiceSimilarity);
+        if (!Number.isNaN(parsedVoiceSimilarity)) {
+          options.gradiumVoiceSimilarity = parsedVoiceSimilarity;
+        }
+
+        const parsedPaddingBonus = Number.parseFloat(gradiumPaddingBonus);
+        if (!Number.isNaN(parsedPaddingBonus)) {
+          options.gradiumPaddingBonus = parsedPaddingBonus;
+        }
+
+        if (gradiumRewriteRules.trim()) {
+          options.gradiumRewriteRules = gradiumRewriteRules.trim();
+        }
       } else if (engine === 'geminiTts') {
         options.geminiTtsModel = geminiTtsModel as GeminiTtsModel;
         options.geminiTtsLanguageCode = geminiTtsLanguageCode;
@@ -1407,6 +1441,11 @@ function App() {
               options.inworldApiUrl = apiUrl;
             }
             break;
+          case 'gradium':
+            if (apiUrl !== ENGINE_DEFAULTS.gradium.apiUrl) {
+              options.gradiumApiUrl = apiUrl;
+            }
+            break;
           case 'openaiCompatible':
             options.openAiCompatibleApiUrl = apiUrl;
             break;
@@ -1615,6 +1654,29 @@ function App() {
                   temperature: {
                     value: inworldTemperature,
                     onChange: setInworldTemperature,
+                  },
+                }}
+                gradium={{
+                  outputFormat: {
+                    value: gradiumOutputFormat,
+                    onChange: setGradiumOutputFormat,
+                  },
+                  outputFormats: GRADIUM_OUTPUT_FORMATS,
+                  temperature: {
+                    value: gradiumTemperature,
+                    onChange: setGradiumTemperature,
+                  },
+                  voiceSimilarity: {
+                    value: gradiumVoiceSimilarity,
+                    onChange: setGradiumVoiceSimilarity,
+                  },
+                  paddingBonus: {
+                    value: gradiumPaddingBonus,
+                    onChange: setGradiumPaddingBonus,
+                  },
+                  rewriteRules: {
+                    value: gradiumRewriteRules,
+                    onChange: setGradiumRewriteRules,
                   },
                 }}
                 geminiTts={{

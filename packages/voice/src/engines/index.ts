@@ -32,6 +32,11 @@ export {
   type InworldAudioEncoding,
   type InworldDeliveryMode,
 } from './InworldEngine';
+export {
+  GradiumEngine,
+  type GradiumOutputFormat,
+  type GradiumVoice,
+} from './GradiumEngine';
 export { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 export {
   MinimaxEngine,

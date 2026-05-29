@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   ENGINE_DEFAULTS,
   GEMINI_TTS_VOICES,
+  GRADIUM_VOICE_OPTIONS,
   INWORLD_VOICE_LANGUAGE_OPTIONS,
   OPENAI_VOICES,
   XAI_VOICE_OPTIONS,
@@ -63,6 +64,7 @@ export function EngineSelector({
     engine === 'unrealSpeech' ||
     engine === 'elevenLabs' ||
     engine === 'inworld' ||
+    engine === 'gradium' ||
     engine === 'geminiTts' ||
     engine === 'openaiCompatible' ||
     engine === 'aivisCloud' ||
@@ -71,6 +73,7 @@ export function EngineSelector({
     engine === 'geminiTts' ||
     engine === 'unrealSpeech' ||
     engine === 'elevenLabs' ||
+    engine === 'gradium' ||
     engine === 'openaiCompatible' ||
     engine === 'voicevox' ||
     engine === 'aivisSpeech' ||
@@ -203,6 +206,29 @@ export function EngineSelector({
               {speakerFetchError}
             </div>
           )}
+        </div>
+      );
+    }
+
+    if (engine === 'gradium') {
+      return (
+        <div className="form-group">
+          <label htmlFor="speaker">Speaker:</label>
+          <select
+            id="speaker"
+            value={speaker}
+            onChange={(e) => onSpeakerChange(e.target.value)}
+          >
+            {GRADIUM_VOICE_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="speaker-fetch-message">
+            Gradium の話者一覧 API はブラウザ CORS の制約があるため、 公式
+            flagship voice をプリセット表示しています。
+          </div>
         </div>
       );
     }
@@ -473,6 +499,7 @@ export function EngineSelector({
           <option value="unrealSpeech">Unreal Speech</option>
           <option value="elevenLabs">ElevenLabs</option>
           <option value="inworld">Inworld</option>
+          <option value="gradium">Gradium</option>
           <option value="openaiCompatible">OpenAI-Compatible TTS</option>
           <option value="piperPlus">Piper Plus (Browser WASM)</option>
         </select>

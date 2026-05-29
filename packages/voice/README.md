@@ -60,7 +60,8 @@ pnpm install @aituber-onair/voice
 
 - **Multiple TTS Engine Support**  
   Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Unreal Speech,
-  ElevenLabs, Inworld, Gemini TTS, MiniMax, AivisSpeech, Aivis Cloud, and more
+  ElevenLabs, Inworld, Gradium, Gemini TTS, MiniMax, AivisSpeech, Aivis Cloud,
+  and more
 - **Unified Interface**  
   Single API for all supported TTS engines
 - **Emotion-Aware Synthesis**  
@@ -259,6 +260,31 @@ browser apps.
 Inworld On-Demand starts free and is suitable for development. For cost
 savings, use TTS 1.5 Mini when minimizing cost; use TTS-2 or 1.5 Max when
 prioritizing quality.
+
+### Gradium
+Gradium one-shot REST TTS support using direct `fetch` calls. This engine uses
+the raw-audio response mode (`only_audio: true`) and does not add the Gradium
+SDK.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'gradium',
+  speaker: 'YTpq7expH9539ERJ',
+  apiKey: process.env.GRADIUM_API_KEY,
+  gradiumOutputFormat: 'wav',
+  gradiumTemperature: 0.7,
+  gradiumVoiceSimilarity: 2,
+  gradiumPaddingBonus: 0,
+  gradiumRewriteRules: 'en',
+});
+```
+
+Use `gradiumApiUrl` to override the default
+`https://api.gradium.ai/api/post/speech/tts` endpoint. The `speaker` value is
+sent as Gradium `voice_id`. The React example uses Gradium flagship voice
+presets so browser users can select readable names while keeping the voice ID
+as the submitted value. Gradium's voice-list endpoint may require a server-side
+call in browser apps because its CORS policy can differ from the TTS endpoint.
 
 ### OpenAI-Compatible TTS
 OpenAI-compatible speech endpoints for self-hosted servers such as Kokoro FastAPI.
@@ -486,6 +512,9 @@ const voiceService = new VoiceService({
   inworldModel: 'inworld-tts-2',
   inworldAudioEncoding: 'MP3',
   inworldSampleRateHertz: 48000,
+  gradiumOutputFormat: 'wav',
+  gradiumTemperature: 0.7,
+  gradiumVoiceSimilarity: 2,
   voicevoxSpeedScale: 1.1,
   voicevoxPitchScale: 0.05,
   voicevoxIntonationScale: 1.2,
@@ -533,6 +562,11 @@ const voiceService = new VoiceService({
   - Endpoint: `inworldApiUrl`
   - Identity/output: `speaker`, `inworldModel`, `inworldAudioEncoding`, `inworldSampleRateHertz`, `inworldBitRate`
   - Voice controls: `inworldSpeakingRate`, `inworldLanguage`, `inworldDeliveryMode`, `inworldTemperature`
+
+- **Gradium**
+  - Endpoint: `gradiumApiUrl`
+  - Identity/output: `speaker`, `gradiumOutputFormat`
+  - Voice controls: `gradiumTemperature`, `gradiumVoiceSimilarity`, `gradiumPaddingBonus`, `gradiumRewriteRules`
 
 - **VOICEVOX**
   - Endpoint: `voicevoxApiUrl`
@@ -618,6 +652,12 @@ try {
 - Configurable model, audio encoding, sample rate, bit rate, speaking rate, language, delivery mode, and temperature
 - Uses the non-streaming REST API and decodes the returned `audioContent`
 
+### Gradium Features
+- Cloud TTS endpoint with `x-api-key` authentication
+- Passes `speaker` through to `voice_id` as provided
+- Configurable output format and `json_config` controls for temperature, voice similarity, speed, and rewrite rules
+- Flagship voice presets provide readable names for browser speaker selectors
+
 ### MiniMax Features
 - 24 language support with automatic detection
 - HD quality audio output
@@ -665,6 +705,7 @@ type VoiceServiceOptions =
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
   | InworldVoiceServiceOptions
+  | GradiumVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
   | OpenAiCompatibleVoiceServiceOptions
   | AivisSpeechVoiceServiceOptions

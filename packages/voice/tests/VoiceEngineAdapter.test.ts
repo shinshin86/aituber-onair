@@ -92,6 +92,9 @@ describe('VoiceEngineAdapter', () => {
       setOutputSamplingRate: vi.fn(),
       setOutputChannels: vi.fn(),
       setEnableBillingLogs: vi.fn(),
+      setVoiceSimilarity: vi.fn(),
+      setPaddingBonus: vi.fn(),
+      setRewriteRules: vi.fn(),
     };
 
     // Set up the mock to return our mock engine
@@ -419,6 +422,46 @@ describe('VoiceEngineAdapter', () => {
         },
         'Ashley',
         'inworld-basic-key',
+      );
+    });
+  });
+
+  describe('Gradium Integration', () => {
+    it('should configure Gradium engine with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'gradium',
+        speaker: 'YTpq7expH9539ERJ',
+        apiKey: 'gradium-api-key',
+        gradiumApiUrl: 'https://example.com/api/post/speech/tts',
+        gradiumOutputFormat: 'opus',
+        gradiumTemperature: 0.3,
+        gradiumVoiceSimilarity: 2.5,
+        gradiumPaddingBonus: -1,
+        gradiumRewriteRules: 'en',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'Gradium test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/api/post/speech/tts',
+      );
+      expect(mockEngine.setOutputFormat).toHaveBeenCalledWith('opus');
+      expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.3);
+      expect(mockEngine.setVoiceSimilarity).toHaveBeenCalledWith(2.5);
+      expect(mockEngine.setPaddingBonus).toHaveBeenCalledWith(-1);
+      expect(mockEngine.setRewriteRules).toHaveBeenCalledWith('en');
+      expect(mockEngine.fetchAudio).toHaveBeenCalledWith(
+        {
+          style: 'neutral',
+          message: 'Gradium test',
+        },
+        'YTpq7expH9539ERJ',
+        'gradium-api-key',
       );
     });
   });
@@ -1352,6 +1395,39 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setLanguage).toHaveBeenCalledWith('ja-JP');
       expect(mockEngine.setDeliveryMode).toHaveBeenCalledWith('CREATIVE');
       expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.7);
+    });
+
+    it('should apply updated Gradium options for the current engine', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'gradium',
+        speaker: 'YTpq7expH9539ERJ',
+        apiKey: 'gradium-api-key',
+        onPlay: vi.fn(),
+      };
+
+      const mockAudioBuffer = new ArrayBuffer(1024);
+      mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
+
+      const adapter = new VoiceEngineAdapter(options);
+      adapter.updateOptions({
+        gradiumApiUrl: 'https://example.com/api/post/speech/tts',
+        gradiumOutputFormat: 'pcm_24000',
+        gradiumTemperature: 0.2,
+        gradiumVoiceSimilarity: 3,
+        gradiumPaddingBonus: 1.5,
+        gradiumRewriteRules: 'TimeEn,Date',
+      });
+
+      await adapter.speak({ text: 'Updated Gradium options' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/api/post/speech/tts',
+      );
+      expect(mockEngine.setOutputFormat).toHaveBeenCalledWith('pcm_24000');
+      expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.2);
+      expect(mockEngine.setVoiceSimilarity).toHaveBeenCalledWith(3);
+      expect(mockEngine.setPaddingBonus).toHaveBeenCalledWith(1.5);
+      expect(mockEngine.setRewriteRules).toHaveBeenCalledWith('TimeEn,Date');
     });
 
     it('should apply updated OpenAI-compatible options for the current engine', async () => {
