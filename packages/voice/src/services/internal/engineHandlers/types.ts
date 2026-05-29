@@ -5,6 +5,7 @@ import type {
   AivisSpeechVoiceServiceOptions,
   ElevenLabsVoiceServiceOptions,
   GeminiTtsVoiceServiceOptions,
+  GradiumVoiceServiceOptions,
   InworldVoiceServiceOptions,
   MinimaxVoiceServiceOptions,
   OpenAiVoiceServiceOptions,
@@ -130,6 +131,17 @@ export interface InworldConfigurableEngine extends VoiceEngine {
     value?: InworldVoiceServiceOptions['inworldDeliveryMode'],
   ): void;
   setTemperature?(value?: number): void;
+}
+
+export interface GradiumConfigurableEngine extends VoiceEngine {
+  setApiEndpoint?(value: string): void;
+  setOutputFormat?(
+    value?: GradiumVoiceServiceOptions['gradiumOutputFormat'],
+  ): void;
+  setTemperature?(value?: number): void;
+  setVoiceSimilarity?(value?: number): void;
+  setPaddingBonus?(value?: number): void;
+  setRewriteRules?(value?: string): void;
 }
 
 export interface GeminiTtsConfigurableEngine extends VoiceEngine {

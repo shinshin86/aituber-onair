@@ -8,6 +8,8 @@ export const UNREAL_SPEECH_TTS_API_URL =
 export const ELEVENLABS_TTS_API_URL =
   'https://api.elevenlabs.io/v1/text-to-speech';
 export const INWORLD_TTS_API_URL = 'https://api.inworld.ai/tts/v1/voice';
+export const GRADIUM_TTS_API_URL = 'https://api.gradium.ai/api/post/speech/tts';
+export const GRADIUM_VOICES_API_URL = 'https://api.gradium.ai/api/voices/';
 export const OPENAI_COMPATIBLE_TTS_API_URL =
   'http://localhost:8880/v1/audio/speech';
 

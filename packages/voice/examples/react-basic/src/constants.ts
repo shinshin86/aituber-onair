@@ -1,6 +1,7 @@
 import type {
   ElevenLabsApplyTextNormalization,
   GeminiTtsModel,
+  GradiumOutputFormat,
   InworldAudioEncoding,
   InworldDeliveryMode,
   MinimaxModel,
@@ -59,6 +60,15 @@ export const ENGINE_DEFAULTS = {
     defaultAudioEncoding: 'MP3' as InworldAudioEncoding,
     defaultSampleRateHertz: 48000,
     defaultLanguage: 'ja-JP',
+  },
+  gradium: {
+    apiUrl: 'https://api.gradium.ai/api/post/speech/tts',
+    voicesApiUrl: 'https://api.gradium.ai/api/voices/',
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'Your Gradium API key',
+    speaker: 'YTpq7expH9539ERJ',
+    defaultOutputFormat: 'wav' as GradiumOutputFormat,
   },
   geminiTts: {
     apiUrl: 'https://generativelanguage.googleapis.com/v1beta',
@@ -219,6 +229,45 @@ export const INWORLD_DELIVERY_MODES: Record<InworldDeliveryMode, string> = {
   STABLE: 'Stable',
   BALANCED: 'Balanced',
   CREATIVE: 'Creative',
+};
+
+export const GRADIUM_VOICES: Record<string, string> = {
+  YTpq7expH9539ERJ: 'Emma - English (US, feminine)',
+  LFZvm12tW_z0xfGo: 'Kent - English (US, masculine)',
+  jtEKaLYNn6iif5PR: 'Sydney - English (US, feminine)',
+  KWJiFWu2O9nMPYcR: 'John - English (US, masculine)',
+  ubuXFxVQwVYnZQhy: 'Eva - English (GB, feminine)',
+  m86j6D7UZpGzHsNu: 'Jack - English (GB, masculine)',
+  b35yykvVppLXyw_l: 'Elise - French (FR, feminine)',
+  axlOaUiFyOZhy4nv: 'Leo - French (FR, masculine)',
+  '-uP9MuGtBqAvEyxI': 'Mia - German (DE, feminine)',
+  '0y1VZjPabOBU3rWy': 'Maximilian - German (DE, masculine)',
+  B36pbz5_UoWn4BDl: 'Valentina - Spanish (MX, feminine)',
+  xu7iJ_fn2ElcWp2s: 'Sergio - Spanish (ES, masculine)',
+  pYcGZz9VOo4n2ynh: 'Alice - Portuguese (BR, feminine)',
+  'M-FvVo9c-jGR4PgP': 'Davi - Portuguese (BR, masculine)',
+};
+
+export const GRADIUM_VOICE_OPTIONS = Object.entries(GRADIUM_VOICES).map(
+  ([id, label]) => ({
+    id,
+    label,
+  }),
+);
+
+export const GRADIUM_OUTPUT_FORMATS: Record<GradiumOutputFormat, string> = {
+  wav: 'WAV',
+  pcm: 'PCM 48kHz',
+  opus: 'Opus / Ogg',
+  ulaw_8000: 'u-law 8kHz',
+  mulaw_8000: 'mu-law 8kHz',
+  alaw_8000: 'A-law 8kHz',
+  pcm_8000: 'PCM 8kHz',
+  pcm_16000: 'PCM 16kHz',
+  pcm_22050: 'PCM 22.05kHz',
+  pcm_24000: 'PCM 24kHz',
+  pcm_44100: 'PCM 44.1kHz',
+  pcm_48000: 'PCM 48kHz',
 };
 
 export const INWORLD_VOICE_LANGUAGE_OPTIONS = {
@@ -391,6 +440,14 @@ export const SLIDER_CONFIG: Record<string, SliderConfig> = {
     max: 2,
     step: 0.05,
     defaultValue: 1,
+  },
+  gradiumTemperature: { min: 0, max: 1.4, step: 0.05, defaultValue: 0.7 },
+  gradiumVoiceSimilarity: { min: 1, max: 4, step: 0.05, defaultValue: 2 },
+  gradiumPaddingBonus: {
+    min: -4,
+    max: 4,
+    step: 0.05,
+    defaultValue: 0,
   },
   aivisSpeedScale: {
     min: 0.5,

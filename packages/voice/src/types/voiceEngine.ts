@@ -6,6 +6,7 @@ export type VoiceEngineType =
   | 'unrealSpeech'
   | 'elevenLabs'
   | 'inworld'
+  | 'gradium'
   | 'geminiTts'
   | 'openaiCompatible'
   | 'aivisSpeech'

@@ -16,6 +16,7 @@ export type {
   UnrealSpeechVoiceServiceOptions,
   ElevenLabsVoiceServiceOptions,
   InworldVoiceServiceOptions,
+  GradiumVoiceServiceOptions,
   VoiceVoxQueryParameterOverrides,
   AivisSpeechQueryParameterOverrides,
 } from './services/VoiceService';

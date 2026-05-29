@@ -49,6 +49,7 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 - **OpenAI TTS** - High-quality voices with API key
 - **OpenAI-Compatible TTS** - Self-hosted OpenAI-style endpoints such as Kokoro FastAPI
 - **Inworld TTS** - Non-streaming Inworld REST API with Basic authentication
+- **Gradium TTS** - One-shot Gradium REST API with flagship voice presets
 - **VOICEVOX** - Free Japanese voices (requires local server)
 - **AIVIS Speech** - Emotion-aware synthesis
 - **VoicePeak** - Professional voice synthesis with single-tag and weighted emotion UI (`vpeakserver v0.2.0+` required for weighted mode)
@@ -143,6 +144,14 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 # Default endpoint: https://api.inworld.ai/tts/v1/voice
 # Use the Basic Base64 authorization value from Inworld as the API key.
 # Do not expose Basic credentials in production browser apps; use a backend proxy or JWT.
+```
+
+#### Gradium TTS
+```bash
+# Default endpoint: https://api.gradium.ai/api/post/speech/tts
+# Enter a Gradium API key, then select one of the built-in flagship voices.
+# The dynamic voice-list endpoint is not used in this browser example because
+# it may be blocked by CORS even when TTS generation itself is allowed.
 ```
 
 ## Piper Plus Setup

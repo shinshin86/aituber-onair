@@ -1,4 +1,5 @@
 import type {
+  GradiumOutputFormat,
   InworldAudioEncoding,
   MinimaxAudioFormat,
   MinimaxModel,
@@ -10,6 +11,7 @@ import type {
 import {
   ELEVENLABS_MODELS,
   ELEVENLABS_OUTPUT_FORMATS,
+  GRADIUM_OUTPUT_FORMATS,
   INWORLD_AUDIO_ENCODINGS,
   INWORLD_DELIVERY_MODES,
   INWORLD_MODELS,
@@ -91,6 +93,14 @@ interface EngineParametersProps {
     deliveryMode: SelectField<InworldDeliveryModeOption>;
     deliveryModes: typeof INWORLD_DELIVERY_MODES;
     temperature: StringField;
+  };
+  gradium: {
+    outputFormat: SelectField<GradiumOutputFormat>;
+    outputFormats: typeof GRADIUM_OUTPUT_FORMATS;
+    temperature: StringField;
+    voiceSimilarity: StringField;
+    paddingBonus: StringField;
+    rewriteRules: StringField;
   };
   geminiTts: {
     model: SelectField<string>;
@@ -189,6 +199,7 @@ export function EngineParameters({
   unrealSpeech,
   elevenLabs,
   inworld,
+  gradium,
   geminiTts,
   openaiCompatible,
   voicevox,
@@ -723,6 +734,86 @@ export function EngineParameters({
               </div>
             </div>
           </div>
+        </CollapsibleCard>
+      )}
+
+      {engine === 'gradium' && (
+        <CollapsibleCard
+          className="parameter-card openai-card"
+          title="Gradium TTS パラメータ"
+          description="Gradium の REST TTS エンドポイント向け設定です。voice は上部の Speaker で選択し、ここでは出力形式と json_config を調整できます。"
+        >
+          <div className="parameter-section">
+            <div className="parameter-section__title">出力フォーマット</div>
+            <div className="parameter-grid parameter-grid--two">
+              <div className="form-group">
+                <label htmlFor="gradiumOutputFormat">Output Format</label>
+                <select
+                  id="gradiumOutputFormat"
+                  value={gradium.outputFormat.value}
+                  onChange={(e) =>
+                    gradium.outputFormat.onChange(
+                      e.target.value as GradiumOutputFormat,
+                    )
+                  }
+                >
+                  {Object.entries(gradium.outputFormats).map(
+                    ([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="parameter-section">
+            <div className="parameter-section__title">生成調整</div>
+            <div className="parameter-grid parameter-grid--two">
+              <NumberSliderField
+                id="gradiumTemperature"
+                label="Temperature (0.0 - 1.4)"
+                value={gradium.temperature.value}
+                onChange={gradium.temperature.onChange}
+                config={SLIDER_CONFIG.gradiumTemperature}
+                placeholder="例: 0.7"
+              />
+              <NumberSliderField
+                id="gradiumVoiceSimilarity"
+                label="Voice Similarity / cfg_coef (1.0 - 4.0)"
+                value={gradium.voiceSimilarity.value}
+                onChange={gradium.voiceSimilarity.onChange}
+                config={SLIDER_CONFIG.gradiumVoiceSimilarity}
+                placeholder="例: 2.0"
+              />
+              <NumberSliderField
+                id="gradiumPaddingBonus"
+                label="Padding Bonus (-4.0 - 4.0)"
+                value={gradium.paddingBonus.value}
+                onChange={gradium.paddingBonus.onChange}
+                config={SLIDER_CONFIG.gradiumPaddingBonus}
+                placeholder="負の値で速く、正の値で遅く"
+              />
+              <div className="form-group">
+                <label htmlFor="gradiumRewriteRules">Rewrite Rules</label>
+                <input
+                  id="gradiumRewriteRules"
+                  type="text"
+                  value={gradium.rewriteRules.value}
+                  onChange={(e) =>
+                    gradium.rewriteRules.onChange(e.target.value)
+                  }
+                  placeholder="例: en, TimeEn,Date"
+                />
+              </div>
+            </div>
+          </div>
+
+          <p className="parameter-card__note">
+            Gradium の padding bonus は負の値で速く、正の値で遅くなります。
+          </p>
         </CollapsibleCard>
       )}
 
