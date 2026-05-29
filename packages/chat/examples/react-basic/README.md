@@ -120,7 +120,7 @@ Use the dropdown to select response length:
 - Best for: local LLMs (Ollama/LM Studio/vLLM-compatible endpoints)
 
 **Claude**
-- Models: Claude Opus 4.7, Claude Opus 4.6, Claude 4.5 (Opus, Sonnet, Haiku), plus deprecated-but-still-available Claude 4 (Sonnet, Opus) and Claude 3 Haiku
+- Models: Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude 4.5 (Opus, Sonnet, Haiku), plus deprecated-but-still-available Claude 4 (Sonnet, Opus) and Claude 3 Haiku
 - Vision: All listed Claude models
 - Best for: Long context, tool use + advanced reasoning
 
