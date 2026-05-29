@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## 0.36.0
+
+### Minor Changes
+
+- Added Claude Opus 4.8 (`claude-opus-4-8`) to the Claude constants,
+  provider supported models, vision support metadata, tests, React basic
+  selector, and English/Japanese README documentation.
+
 ## 0.35.0
 
 ### Minor Changes

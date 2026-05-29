@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_4_5_HAIKU,
-  MODEL_CLAUDE_4_7_OPUS,
+  MODEL_CLAUDE_4_8_OPUS,
 } from '../../src/constants';
 import { ClaudeChatService } from '../../src/services/providers/claude/ClaudeChatService';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
@@ -36,16 +36,16 @@ describe('ClaudeChatService', () => {
       .mockResolvedValue(createOkResponse());
     const service = new ClaudeChatService(
       'test-key',
-      MODEL_CLAUDE_4_7_OPUS,
-      MODEL_CLAUDE_4_7_OPUS,
+      MODEL_CLAUDE_4_8_OPUS,
+      MODEL_CLAUDE_4_8_OPUS,
     );
 
-    await (service as any).callClaude(messages, MODEL_CLAUDE_4_7_OPUS, false);
+    await (service as any).callClaude(messages, MODEL_CLAUDE_4_8_OPUS, false);
 
     expect(postSpy).toHaveBeenCalledTimes(1);
     expect(postSpy.mock.calls[0][0]).toBe(ENDPOINT_CLAUDE_API);
     expect(postSpy.mock.calls[0][1]).toMatchObject({
-      model: MODEL_CLAUDE_4_7_OPUS,
+      model: MODEL_CLAUDE_4_8_OPUS,
       messages: [{ role: 'user', content: 'hello' }],
       stream: false,
     });
