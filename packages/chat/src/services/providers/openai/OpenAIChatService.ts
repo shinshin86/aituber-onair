@@ -1,27 +1,22 @@
 import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision } from '../../../types';
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_4O_MINI,
-  OpenAIReasoningEffort,
   VISION_SUPPORTED_MODELS,
-  getDefaultReasoningEffortForGPT5Model,
-  isMistralReasoningEffort,
-  isMistralReasoningEffortModel,
-  isGPT5Model,
 } from '../../../constants';
-import {
-  CHAT_RESPONSE_LENGTH,
-  ChatResponseLength,
-  getMaxTokensForResponseLength,
-} from '../../../constants/chat';
-import { ToolDefinition, ToolChatCompletion } from '../../../types';
-import { MCPServerConfig } from '../../../types';
+import type { OpenAIReasoningEffort } from '../../../constants';
+import type { ChatResponseLength } from '../../../constants/chat';
+import type {
+  MCPServerConfig,
+  Message,
+  MessageWithVision,
+  ToolChatCompletion,
+  ToolDefinition,
+} from '../../../types';
 import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 import {
-  buildOpenAICompatibleTools,
   parseOpenAICompatibleOneShot,
   parseOpenAICompatibleTextStream,
   parseOpenAICompatibleToolStream,
@@ -31,30 +26,7 @@ import {
   parseOpenAIResponsesOneShot,
   parseOpenAIResponsesStream,
 } from './responsesParser';
-
-const GPT5_RESPONSE_LENGTH_MIN_TOKENS: Record<ChatResponseLength, number> = {
-  [CHAT_RESPONSE_LENGTH.VERY_SHORT]: 800,
-  [CHAT_RESPONSE_LENGTH.SHORT]: 1200,
-  [CHAT_RESPONSE_LENGTH.MEDIUM]: 2000,
-  [CHAT_RESPONSE_LENGTH.LONG]: 3000,
-  [CHAT_RESPONSE_LENGTH.VERY_LONG]: 8000,
-  [CHAT_RESPONSE_LENGTH.DEEP]: 25000,
-};
-
-const GPT5_REASONING_MIN_TOKENS: Record<OpenAIReasoningEffort, number> = {
-  none: 1200,
-  minimal: 1600,
-  low: 2500,
-  medium: 4000,
-  high: 8000,
-  xhigh: 12000,
-};
-
-const OPENAI_COMPATIBLE_CHAT_COMPLETIONS_PROVIDERS = new Set([
-  'openai-compatible',
-  'deepseek',
-  'mistral',
-]);
+import { buildOpenAIRequestBody } from './openaiRequestBuilder';
 
 /**
  * OpenAI implementation of ChatService
@@ -290,7 +262,20 @@ export class OpenAIChatService implements ChatService {
     stream: boolean = false,
     maxTokens?: number,
   ): Promise<Response> {
-    const body = this.buildRequestBody(messages, model, stream, maxTokens);
+    const body = buildOpenAIRequestBody({
+      provider: this.provider,
+      endpoint: this.endpoint,
+      messages,
+      model,
+      stream,
+      tools: this.tools,
+      mcpServers: this.mcpServers,
+      responseLength: this.responseLength,
+      verbosity: this.verbosity,
+      reasoning_effort: this.reasoning_effort,
+      enableReasoningSummary: this.enableReasoningSummary,
+      maxTokens,
+    });
     const headers: Record<string, string> = {};
 
     const shouldSendAuthorization =
@@ -303,290 +288,6 @@ export class OpenAIChatService implements ChatService {
 
     return res;
   }
-
-  /**
-   * Build request body based on the endpoint type
-   */
-  private buildRequestBody(
-    messages: (Message | MessageWithVision)[],
-    model: string,
-    stream: boolean,
-    maxTokens?: number,
-  ): any {
-    const isResponsesAPI = this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
-
-    // Validate MCP servers compatibility
-    this.validateMCPCompatibility();
-
-    const body: any = {
-      model,
-      stream,
-    };
-
-    // Add max token field based on endpoint/provider compatibility.
-    // For openai-compatible providers, omit token limit by default to avoid
-    // server-specific context-window errors on local/self-hosted models.
-    const tokenLimit = this.resolveTokenLimit(model, maxTokens);
-
-    if (isResponsesAPI) {
-      if (tokenLimit !== undefined) {
-        body.max_output_tokens = tokenLimit;
-      }
-    } else {
-      if (tokenLimit !== undefined) {
-        // OpenAI-compatible Chat Completions providers expect max_tokens.
-        if (this.usesCompatibleChatCompletions()) {
-          body.max_tokens = tokenLimit;
-        } else {
-          body.max_completion_tokens = tokenLimit;
-        }
-      }
-    }
-
-    // Handle messages format based on endpoint
-    if (isResponsesAPI) {
-      body.input = this.cleanMessagesForResponsesAPI(messages);
-    } else {
-      body.messages =
-        this.provider === 'mistral'
-          ? this.cleanMessagesForMistralChatCompletions(messages)
-          : messages;
-    }
-
-    // Add GPT-5 specific parameters
-    if (isGPT5Model(model)) {
-      // For Responses API, use nested structure
-      if (isResponsesAPI) {
-        if (this.reasoning_effort) {
-          body.reasoning = {
-            ...body.reasoning,
-            effort: this.reasoning_effort,
-          };
-          // Only add summary if explicitly enabled (requires org verification)
-          if (this.enableReasoningSummary) {
-            body.reasoning.summary = 'auto';
-          }
-        }
-        if (this.verbosity) {
-          body.text = {
-            ...body.text,
-            format: { type: 'text' },
-            verbosity: this.verbosity,
-          };
-        }
-      } else {
-        // For Chat Completions API, add GPT-5 parameters directly (flat structure)
-        // Example: { "reasoning_effort": "minimal", "verbosity": "low" }
-        if (this.reasoning_effort) {
-          body.reasoning_effort = this.reasoning_effort;
-        }
-        if (this.verbosity) {
-          body.verbosity = this.verbosity;
-        }
-      }
-    }
-
-    if (
-      this.provider === 'mistral' &&
-      isMistralReasoningEffortModel(model) &&
-      this.reasoning_effort &&
-      isMistralReasoningEffort(this.reasoning_effort)
-    ) {
-      body.reasoning_effort = this.reasoning_effort;
-    }
-
-    // Add tools if available
-    const tools = this.buildToolsDefinition();
-    if (tools.length > 0) {
-      body.tools = tools;
-
-      // Only Chat Completions API requires tool_choice
-      if (!isResponsesAPI) {
-        body.tool_choice = 'auto';
-      }
-    }
-
-    return body;
-  }
-
-  private resolveTokenLimit(
-    model: string,
-    maxTokens?: number,
-  ): number | undefined {
-    if (maxTokens !== undefined) {
-      return maxTokens;
-    }
-
-    const baseTokenLimit = this.usesCompatibleChatCompletions()
-      ? this.responseLength !== undefined
-        ? getMaxTokensForResponseLength(this.responseLength)
-        : undefined
-      : getMaxTokensForResponseLength(this.responseLength);
-
-    if (
-      this.provider !== 'openai' ||
-      !isGPT5Model(model) ||
-      this.responseLength === undefined
-    ) {
-      return baseTokenLimit;
-    }
-
-    const effectiveReasoningEffort =
-      this.reasoning_effort ?? getDefaultReasoningEffortForGPT5Model(model);
-
-    return Math.max(
-      baseTokenLimit ?? 0,
-      GPT5_RESPONSE_LENGTH_MIN_TOKENS[this.responseLength],
-      GPT5_REASONING_MIN_TOKENS[effectiveReasoningEffort],
-    );
-  }
-
-  /**
-   * Validate MCP servers compatibility with the current endpoint
-   */
-  private validateMCPCompatibility(): void {
-    if (
-      this.mcpServers.length > 0 &&
-      this.endpoint === ENDPOINT_OPENAI_CHAT_COMPLETIONS_API
-    ) {
-      throw new Error(
-        `MCP servers are not supported with Chat Completions API. ` +
-          `Current endpoint: ${this.endpoint}. ` +
-          `Please use OpenAI Responses API endpoint: ${ENDPOINT_OPENAI_RESPONSES_API}. ` +
-          `MCP tools are only available in the Responses API endpoint.`,
-      );
-    }
-  }
-
-  /**
-   * Clean messages for Responses API (remove timestamp and other extra properties)
-   */
-  private cleanMessagesForResponsesAPI(
-    messages: (Message | MessageWithVision)[],
-  ): any[] {
-    return messages.map((msg) => {
-      // Convert 'tool' role to 'user' for Responses API compatibility
-      const role = msg.role === 'tool' ? 'user' : msg.role;
-
-      const cleanMsg: any = {
-        role: role,
-      };
-
-      // Handle content (text or vision)
-      if (typeof msg.content === 'string') {
-        cleanMsg.content = msg.content;
-      } else if (Array.isArray(msg.content)) {
-        // Vision message case - convert VisionBlock types for Responses API
-        cleanMsg.content = msg.content.map((block: any) => {
-          if (block.type === 'text') {
-            // Convert 'text' to 'input_text' for Responses API
-            return {
-              type: 'input_text',
-              text: block.text,
-            };
-          } else if (block.type === 'image_url') {
-            // For Responses API, image_url should be a direct string, not an object
-            return {
-              type: 'input_image',
-              image_url: block.image_url.url, // Extract the URL string directly
-            };
-          }
-          // Return as-is for any other types
-          return block;
-        });
-      } else {
-        cleanMsg.content = msg.content;
-      }
-
-      return cleanMsg;
-    });
-  }
-
-  private cleanMessagesForMistralChatCompletions(
-    messages: (Message | MessageWithVision)[],
-  ): any[] {
-    return messages.map((msg) => {
-      const cleanMsg: any = {
-        role: msg.role,
-      };
-
-      if (!Array.isArray(msg.content)) {
-        cleanMsg.content = msg.content;
-        return cleanMsg;
-      }
-
-      cleanMsg.content = msg.content.map((block: any) => {
-        if (
-          block.type === 'image_url' &&
-          typeof block.image_url === 'object' &&
-          typeof block.image_url?.url === 'string'
-        ) {
-          return {
-            type: 'image_url',
-            image_url: block.image_url.url,
-          };
-        }
-        return block;
-      });
-
-      return cleanMsg;
-    });
-  }
-
-  /**
-   * Build tools definition based on the endpoint type
-   */
-  private buildToolsDefinition(): any[] {
-    const isResponsesAPI = this.endpoint === ENDPOINT_OPENAI_RESPONSES_API;
-    const toolDefs: any[] = [];
-
-    // Add function tools
-    if (this.tools.length > 0) {
-      toolDefs.push(
-        ...buildOpenAICompatibleTools(
-          this.tools,
-          isResponsesAPI ? 'responses' : 'chat-completions',
-        ),
-      );
-    }
-
-    // Add MCP tools (only for Responses API)
-    if (this.mcpServers.length > 0 && isResponsesAPI) {
-      toolDefs.push(...this.buildMCPToolsDefinition());
-    }
-
-    return toolDefs;
-  }
-
-  /**
-   * Build MCP tools definition for Responses API
-   */
-  private buildMCPToolsDefinition(): any[] {
-    return this.mcpServers.map((server) => {
-      const mcpDef: any = {
-        type: 'mcp', // Using 'mcp' as indicated by the error message
-        server_label: server.name, // Use server_label as required by API
-        server_url: server.url, // Use server_url instead of url
-      };
-
-      if (server.require_approval) {
-        mcpDef.require_approval = server.require_approval;
-      }
-
-      if (server.tool_configuration?.allowed_tools) {
-        mcpDef.allowed_tools = server.tool_configuration.allowed_tools;
-      }
-
-      if (server.authorization_token) {
-        mcpDef.headers = {
-          Authorization: `Bearer ${server.authorization_token}`,
-        };
-      }
-
-      return mcpDef;
-    });
-  }
-
   private async handleStream(res: Response, onPartial: (t: string) => void) {
     return parseOpenAICompatibleTextStream(res, onPartial);
   }
@@ -602,9 +303,5 @@ export class OpenAIChatService implements ChatService {
 
   private parseOneShot(data: any): ToolChatCompletion {
     return parseOpenAICompatibleOneShot(data);
-  }
-
-  private usesCompatibleChatCompletions(): boolean {
-    return OPENAI_COMPATIBLE_CHAT_COMPLETIONS_PROVIDERS.has(this.provider);
   }
 }

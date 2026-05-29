@@ -21,6 +21,14 @@ import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 import { MCPSchemaFetcher } from '../../../utils/mcpSchemaFetcher';
 import { processChatWithOptionalTools } from '../../../utils';
+import {
+  convertMessagesToGeminiFormat,
+  convertVisionMessagesToGeminiFormat,
+} from './geminiMessageConverter';
+import {
+  buildGeminiToolConfig,
+  createFallbackMCPToolSchemas,
+} from './geminiToolAdapter';
 
 /**
  * Gemini implementation of ChatService
@@ -40,23 +48,6 @@ export class GeminiChatService implements ChatService {
 
   /** id(OpenAI) → name(Gemini) mapping */
   private callIdMap = new Map<string, string>();
-
-  /* ────────────────────────────────── */
-  /*  Utilities                           */
-  /* ────────────────────────────────── */
-  private safeJsonParse(str: string) {
-    try {
-      return JSON.parse(str);
-    } catch {
-      return str; // keep as string
-    }
-  }
-
-  private normalizeToolResult(val: any) {
-    if (val === null) return { content: null };
-    if (typeof val === 'object') return val;
-    return { content: val }; // wrap primitive
-  }
 
   private isGemma4Model(model: string): boolean {
     return /^gemma-4-/.test(model);
@@ -212,21 +203,7 @@ export class GeminiChatService implements ChatService {
       this.mcpSchemasInitialized = true;
     } catch (error) {
       console.warn('Failed to initialize MCP schemas, using fallback:', error);
-      // Use fallback schemas - always provide basic functionality
-      this.mcpToolSchemas = this.mcpServers.map((server) => ({
-        name: `mcp_${server.name}_search`,
-        description: `Search using ${server.name} MCP server (fallback)`,
-        parameters: {
-          type: 'object',
-          properties: {
-            query: {
-              type: 'string',
-              description: 'Search query',
-            },
-          },
-          required: ['query'],
-        },
-      }));
+      this.mcpToolSchemas = createFallbackMCPToolSchemas(this.mcpServers);
       this.mcpSchemasInitialized = true;
     }
   }
@@ -301,76 +278,6 @@ export class GeminiChatService implements ChatService {
   }
 
   /* ────────────────────────────────── */
-  /*  OpenAI → Gemini conversion         */
-  /* ────────────────────────────────── */
-  private convertMessagesToGeminiFormat(messages: Message[]): any[] {
-    const gemini: any[] = [];
-    let currentRole: string | null = null;
-    let currentParts: any[] = [];
-
-    const pushCurrent = () => {
-      if (currentRole && currentParts.length) {
-        gemini.push({ role: currentRole, parts: [...currentParts] });
-        currentParts = [];
-      }
-    };
-
-    for (const msg of messages) {
-      const role = this.mapRoleToGemini(msg.role);
-
-      /* assistant: tool_calls -> functionCall */
-      if ((msg as any).tool_calls) {
-        pushCurrent();
-        for (const call of (msg as any).tool_calls) {
-          this.callIdMap.set(call.id, call.function.name);
-          gemini.push({
-            role: 'model',
-            parts: [
-              {
-                functionCall: {
-                  name: call.function.name,
-                  args: JSON.parse(call.function.arguments || '{}'),
-                },
-              },
-            ],
-          });
-        }
-        continue;
-      }
-
-      /* tool → functionResponse */
-      if (msg.role === 'tool') {
-        pushCurrent();
-        const funcName =
-          (msg as any).name ??
-          this.callIdMap.get((msg as any).tool_call_id) ??
-          'result';
-        gemini.push({
-          role: 'user',
-          parts: [
-            {
-              functionResponse: {
-                name: funcName,
-                response: this.normalizeToolResult(
-                  this.safeJsonParse(msg.content),
-                ),
-              },
-            },
-          ],
-        });
-        continue;
-      }
-
-      /* normal text */
-      if (role !== currentRole) pushCurrent();
-      currentRole = role;
-      currentParts.push({ text: msg.content });
-    }
-    pushCurrent();
-    return gemini;
-  }
-
-  /* ────────────────────────────────── */
   /*  HTTP call                           */
   /* ────────────────────────────────── */
   private async callGemini(
@@ -387,10 +294,15 @@ export class GeminiChatService implements ChatService {
         ),
     );
     const contents = hasVision
-      ? await this.convertVisionMessagesToGeminiFormat(
+      ? await convertVisionMessagesToGeminiFormat(
           messages as MessageWithVision[],
+          {
+            callIdMap: this.callIdMap,
+          },
         )
-      : this.convertMessagesToGeminiFormat(messages as Message[]);
+      : convertMessagesToGeminiFormat(messages as Message[], {
+          callIdMap: this.callIdMap,
+        });
 
     const body: any = {
       contents,
@@ -408,48 +320,19 @@ export class GeminiChatService implements ChatService {
         thinkingLevel: 'MINIMAL',
       };
     }
-    // Add tools configuration (regular tools + MCP tools as functionDeclarations)
-    const allToolDeclarations = [];
-
-    // Add regular function tools
-    if (this.tools.length > 0) {
-      allToolDeclarations.push(
-        ...this.tools.map((t) => ({
-          name: t.name,
-          description: t.description,
-          parameters: t.parameters,
-        })),
-      );
-    }
-
-    // Add MCP tools as functionDeclarations
+    let activeMCPToolSchemas: ToolDefinition[] = [];
     if (this.mcpServers.length > 0) {
       try {
-        // Initialize MCP schemas if not already done
         await this.initializeMCPSchemas();
-
-        // Add MCP tool schemas as regular function declarations
-        // Gemini will call these as normal functions, and ToolExecutor will handle the MCP routing
-        allToolDeclarations.push(
-          ...this.mcpToolSchemas.map((t) => ({
-            name: t.name,
-            description: t.description,
-            parameters: t.parameters,
-          })),
-        );
+        activeMCPToolSchemas = this.mcpToolSchemas;
       } catch (error) {
         console.warn('MCP initialization failed, skipping MCP tools:', error);
-        // Continue without MCP tools if initialization fails
       }
     }
 
-    if (allToolDeclarations.length > 0) {
-      body.tools = [
-        {
-          functionDeclarations: allToolDeclarations,
-        },
-      ];
-      body.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
+    const toolConfig = buildGeminiToolConfig(this.tools, activeMCPToolSchemas);
+    if (toolConfig) {
+      Object.assign(body, toolConfig);
     }
 
     const fetchOnce = async (
@@ -495,153 +378,6 @@ export class GeminiChatService implements ChatService {
         console.error('Request Body:', JSON.stringify(body, null, 2));
       }
       throw error;
-    }
-  }
-
-  /**
-   * Convert AITuber OnAir vision messages to Gemini format
-   * @param messages Array of vision messages
-   * @returns Gemini formatted vision messages
-   */
-  private async convertVisionMessagesToGeminiFormat(
-    messages: MessageWithVision[],
-  ): Promise<any[]> {
-    const geminiMessages = [];
-    let currentRole = null;
-    let currentParts = [];
-
-    for (const msg of messages) {
-      // Map AITuber OnAir roles to Gemini roles
-      const role = this.mapRoleToGemini(msg.role);
-
-      /* ----------- OpenAI compatible tool metadata ----------- */
-      // assistant: { tool_calls:[{id,name,function:{arguments}}] }
-      if ((msg as any).tool_calls) {
-        for (const call of (msg as any).tool_calls) {
-          // Gemini does not need id. Insert functionCall into parts
-          geminiMessages.push({
-            role: 'model',
-            parts: [
-              {
-                functionCall: {
-                  name: call.function.name,
-                  args: JSON.parse(call.function.arguments || '{}'),
-                },
-              },
-            ],
-          });
-        }
-        continue;
-      }
-
-      // tool role → user role + functionResponse
-      if (msg.role === 'tool') {
-        const funcName =
-          (msg as any).name ??
-          this.callIdMap.get((msg as any).tool_call_id) ??
-          'result';
-        geminiMessages.push({
-          role: 'user',
-          parts: [
-            {
-              functionResponse: {
-                name: funcName,
-                response: this.normalizeToolResult(
-                  this.safeJsonParse(msg.content as string),
-                ),
-              },
-            },
-          ],
-        });
-        continue;
-      }
-
-      // If role changes, start a new message
-      if (role !== currentRole && currentParts.length > 0) {
-        geminiMessages.push({
-          role: currentRole,
-          parts: [...currentParts],
-        });
-        currentParts = [];
-      }
-
-      currentRole = role;
-
-      // If the message has content blocks, process them
-      if (typeof msg.content === 'string') {
-        currentParts.push({ text: msg.content });
-      } else if (Array.isArray(msg.content)) {
-        // Process each content block (text or image)
-        for (const block of msg.content) {
-          if (block.type === 'text') {
-            currentParts.push({ text: block.text });
-          } else if (block.type === 'image_url') {
-            try {
-              // Fetch the image data from URL
-              const imageResponse = await ChatServiceHttpClient.get(
-                block.image_url.url,
-              );
-
-              // Convert image to blob and then to base64
-              const imageBlob = await imageResponse.blob();
-              const base64Data = await this.blobToBase64(imageBlob);
-
-              // Add image data in Gemini format
-              currentParts.push({
-                inlineData: {
-                  mimeType: imageBlob.type || 'image/jpeg',
-                  data: base64Data.split(',')[1], // Remove the "data:image/jpeg;base64," prefix
-                },
-              });
-            } catch (error: any) {
-              console.error('Error processing image:', error);
-              throw new Error(`Failed to process image: ${error.message}`);
-            }
-          }
-        }
-      }
-    }
-
-    // Add the last message
-    if (currentRole && currentParts.length > 0) {
-      geminiMessages.push({
-        role: currentRole,
-        parts: [...currentParts],
-      });
-    }
-
-    return geminiMessages;
-  }
-
-  /**
-   * Convert Blob to Base64 string
-   * @param blob Image blob
-   * @returns Promise with base64 encoded string
-   */
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
-
-  /**
-   * Map AITuber OnAir roles to Gemini roles
-   * @param role AITuber OnAir role
-   * @returns Gemini role
-   */
-  private mapRoleToGemini(role: string): string {
-    switch (role) {
-      case 'system':
-        return 'model'; // Gemini uses 'model' for system messages
-      case 'user':
-        return 'user';
-      case 'assistant':
-        return 'model';
-      default:
-        return 'user';
     }
   }
 

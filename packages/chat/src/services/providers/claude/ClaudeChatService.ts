@@ -20,6 +20,10 @@ import {
 } from '../../../constants/chat';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 import { processChatWithOptionalTools } from '../../../utils';
+import {
+  convertMessagesToClaudeFormat,
+  convertVisionMessagesToClaudeFormat,
+} from './claudeMessageConverter';
 
 export interface ClaudeToolResultBlock {
   type: 'tool_result';
@@ -184,129 +188,6 @@ export class ClaudeChatService implements ChatService {
   }
 
   /**
-   * Convert AITuber OnAir messages to Claude format
-   * @param messages Array of messages
-   * @returns Claude formatted messages
-   */
-  private convertMessagesToClaudeFormat(messages: Message[]): any[] {
-    return messages.map((msg) => {
-      return {
-        role: this.mapRoleToClaude(msg.role),
-        content: msg.content,
-      };
-    });
-  }
-
-  /**
-   * Convert AITuber OnAir vision messages to Claude format
-   * @param messages Array of vision messages
-   * @returns Claude formatted vision messages
-   */
-  private convertVisionMessagesToClaudeFormat(
-    messages: MessageWithVision[],
-  ): any[] {
-    return messages.map((msg) => {
-      // If message content is a string, create a text-only message
-      if (typeof msg.content === 'string') {
-        return {
-          role: this.mapRoleToClaude(msg.role),
-          content: [
-            {
-              type: 'text',
-              text: msg.content,
-            },
-          ],
-        };
-      }
-
-      // If message content is an array of blocks, convert each block
-      if (Array.isArray(msg.content)) {
-        const content = msg.content
-          .map((block) => {
-            if (block.type === 'image_url') {
-              // check if the image url is a data url
-              if (block.image_url.url.startsWith('data:')) {
-                const m = block.image_url.url.match(
-                  /^data:([^;]+);base64,(.+)$/,
-                );
-                if (m) {
-                  return {
-                    type: 'image',
-                    source: { type: 'base64', media_type: m[1], data: m[2] },
-                  };
-                }
-                return null;
-              }
-
-              // if the image url is a normal url
-              return {
-                type: 'image',
-                source: {
-                  type: 'url',
-                  url: block.image_url.url,
-                  media_type: this.getMimeTypeFromUrl(block.image_url.url),
-                },
-              };
-            }
-            return block;
-          })
-          .filter((b) => b);
-
-        return {
-          role: this.mapRoleToClaude(msg.role),
-          content,
-        };
-      }
-
-      return {
-        role: this.mapRoleToClaude(msg.role),
-        content: [],
-      };
-    });
-  }
-
-  /**
-   * Map AITuber OnAir roles to Claude roles
-   * @param role AITuber OnAir role
-   * @returns Claude role
-   */
-  private mapRoleToClaude(role: string): string {
-    switch (role) {
-      case 'system':
-        // Claude handles system messages separately, but we'll map it anyway
-        return 'system';
-      case 'user':
-        return 'user';
-      case 'assistant':
-        return 'assistant';
-      default:
-        return 'user';
-    }
-  }
-
-  /**
-   * Get MIME type from URL
-   * @param url Image URL
-   * @returns MIME type
-   */
-  private getMimeTypeFromUrl(url: string): string {
-    const extension = url.split('.').pop()?.toLowerCase();
-    switch (extension) {
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg';
-      case 'png':
-        return 'image/png';
-      case 'gif':
-        return 'image/gif';
-      case 'webp':
-        return 'image/webp';
-      default:
-        return 'image/jpeg';
-    }
-  }
-
-  /**
    * Call Claude API
    * @param messages Array of messages to send
    * @param model Model name
@@ -335,10 +216,8 @@ export class ClaudeChatService implements ChatService {
       model,
       system,
       messages: hasVision
-        ? this.convertVisionMessagesToClaudeFormat(
-            content as MessageWithVision[],
-          )
-        : this.convertMessagesToClaudeFormat(content as Message[]),
+        ? convertVisionMessagesToClaudeFormat(content as MessageWithVision[])
+        : convertMessagesToClaudeFormat(content as Message[]),
       stream,
       max_tokens:
         maxTokens !== undefined
