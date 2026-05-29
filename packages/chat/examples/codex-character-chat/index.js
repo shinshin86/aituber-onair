@@ -46,7 +46,7 @@ function usage() {
   console.log('Options:');
   console.log('  --name="ミコ"');
   console.log('  --systemPrompt="You are ..."');
-  console.log('  --model="codex-default"');
+  console.log('  --model="<codex model id>"');
   console.log('  --workingDirectory="/path/to/project"');
   console.log('  --skipGitRepoCheck=false');
   console.log('  --responseLength="short"');
@@ -183,10 +183,18 @@ async function main() {
 
   let history = createInitialHistory(config.systemPrompt);
 
+  // When no model is configured, the Codex SDK falls back to the model
+  // selected by your local Codex CLI/account, so the actual name is not known
+  // on the client side. Only show a concrete model name when it was set
+  // explicitly; otherwise make it clear the SDK default is used.
+  const modelLabel = config.model
+    ? service.getModel()
+    : 'Codex CLI default (set --model or CODEX_SDK_MODEL to override)';
+
   console.log('=== Codex Character Chat ===');
   console.log(`character: ${config.characterName}`);
   console.log(`provider: codex-sdk`);
-  console.log(`model: ${service.getModel()}`);
+  console.log(`model: ${modelLabel}`);
   console.log(`workingDirectory: ${config.workingDirectory}`);
   console.log('');
 

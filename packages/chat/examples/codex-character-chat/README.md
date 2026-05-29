@@ -59,12 +59,17 @@ node packages/chat/examples/codex-character-chat/index.js
 Optional settings:
 
 ```bash
-CODEX_SDK_MODEL="codex-default" \
+CODEX_SDK_MODEL="<codex model id>" \
 CODEX_WORKING_DIRECTORY="$PWD" \
 CODEX_SKIP_GIT_REPO_CHECK="true" \
 CODEX_RESPONSE_LENGTH="short" \
 node packages/chat/examples/codex-character-chat/index.js
 ```
+
+If `CODEX_SDK_MODEL` / `--model` is not set, the Codex SDK uses the default
+model selected by your local Codex CLI/account. In that case the example shows
+`Codex CLI default` instead of a concrete model name, because the resolved
+model is not reported back to the client.
 
 CLI flags are also supported:
 
