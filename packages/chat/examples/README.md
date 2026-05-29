@@ -70,6 +70,14 @@ JavaScript runtime examples for Agent SDK providers:
 - Requires the corresponding SDK package and local SDK authentication
 - Text chat only; browser/GAS/UMD environments are not supported
 
+### [Codex Character Chat](./codex-character-chat/)
+Lightweight experimental CLI for using Codex SDK as an AI character chat engine:
+
+- Uses `@aituber-onair/chat/agent` with the `codex-sdk` provider
+- Keeps a short conversation history in the terminal
+- Supports a custom character name and system prompt
+- Text-only proof of concept for agent-SDK-powered AI characters
+
 ### [AITuber Secretary Agent Example](./character-agent/)
 TypeScript CLI example for an AI character secretary:
 
