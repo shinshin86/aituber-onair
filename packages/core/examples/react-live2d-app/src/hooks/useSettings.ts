@@ -33,6 +33,9 @@ const DEFAULT_INWORLD_MODEL = 'inworld-tts-2';
 const DEFAULT_INWORLD_AUDIO_ENCODING = 'MP3';
 const DEFAULT_INWORLD_SAMPLE_RATE_HERTZ = '48000';
 const DEFAULT_INWORLD_LANGUAGE = 'ja-JP';
+const DEFAULT_GRADIUM_TTS_ENDPOINT =
+  'https://api.gradium.ai/api/post/speech/tts';
+const DEFAULT_GRADIUM_OUTPUT_FORMAT = 'wav';
 const DEFAULT_PIPER_PLUS_BASE_PATH = `${import.meta.env.BASE_URL}piper/`;
 const DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE = 'tsukuyomi-config.json';
 const DEFAULT_PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
@@ -180,6 +183,13 @@ function getDefaultSettings(): AppSettings {
       inworldLanguage: DEFAULT_INWORLD_LANGUAGE,
       inworldDeliveryMode: 'default',
       inworldTemperature: '',
+      gradiumApiKey: '',
+      gradiumApiUrl: DEFAULT_GRADIUM_TTS_ENDPOINT,
+      gradiumOutputFormat: DEFAULT_GRADIUM_OUTPUT_FORMAT,
+      gradiumTemperature: '',
+      gradiumVoiceSimilarity: '',
+      gradiumPaddingBonus: '',
+      gradiumRewriteRules: '',
       piperPlusBasePath: DEFAULT_PIPER_PLUS_BASE_PATH,
       piperPlusModelConfigFile: DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE,
       piperPlusModelFile: DEFAULT_PIPER_PLUS_MODEL_FILE,
@@ -416,6 +426,7 @@ export function useSettings() {
       unrealSpeech: 'af_bella',
       elevenLabs: '',
       inworld: '',
+      gradium: 'YTpq7expH9539ERJ',
       piperPlus: 'default',
       none: '',
     };
@@ -534,6 +545,30 @@ export function useSettings() {
           engine === 'inworld'
             ? prev.tts.inworldDeliveryMode || 'default'
             : prev.tts.inworldDeliveryMode,
+        gradiumApiUrl:
+          engine === 'gradium'
+            ? prev.tts.gradiumApiUrl || DEFAULT_GRADIUM_TTS_ENDPOINT
+            : prev.tts.gradiumApiUrl,
+        gradiumOutputFormat:
+          engine === 'gradium'
+            ? prev.tts.gradiumOutputFormat || DEFAULT_GRADIUM_OUTPUT_FORMAT
+            : prev.tts.gradiumOutputFormat,
+        gradiumTemperature:
+          engine === 'gradium'
+            ? prev.tts.gradiumTemperature || ''
+            : prev.tts.gradiumTemperature,
+        gradiumVoiceSimilarity:
+          engine === 'gradium'
+            ? prev.tts.gradiumVoiceSimilarity || ''
+            : prev.tts.gradiumVoiceSimilarity,
+        gradiumPaddingBonus:
+          engine === 'gradium'
+            ? prev.tts.gradiumPaddingBonus || ''
+            : prev.tts.gradiumPaddingBonus,
+        gradiumRewriteRules:
+          engine === 'gradium'
+            ? prev.tts.gradiumRewriteRules || ''
+            : prev.tts.gradiumRewriteRules,
         piperPlusBasePath:
           engine === 'piperPlus'
             ? prev.tts.piperPlusBasePath || DEFAULT_PIPER_PLUS_BASE_PATH

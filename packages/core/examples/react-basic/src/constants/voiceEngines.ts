@@ -15,6 +15,7 @@ export type VoiceEngineType =
   | 'unrealSpeech'
   | 'elevenLabs'
   | 'inworld'
+  | 'gradium'
   | 'piperPlus'
   | 'none';
 
@@ -133,6 +134,15 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
         audioEncoding: 'MP3',
         sampleRateHertz: 48000,
         language: 'ja-JP',
+      },
+    },
+    gradium: {
+      name: 'Gradium',
+      apiUrl: 'https://api.gradium.ai/api/post/speech/tts',
+      needsApiKey: true,
+      placeholder: 'Gradium API key',
+      defaultParams: {
+        outputFormat: 'wav',
       },
     },
     piperPlus: {

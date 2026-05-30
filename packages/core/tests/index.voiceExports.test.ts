@@ -3,6 +3,8 @@ import {
   AIVIS_CLOUD_API_URL,
   ELEVENLABS_TTS_API_URL,
   GEMINI_TTS_API_URL,
+  GRADIUM_TTS_API_URL,
+  GRADIUM_VOICES_API_URL,
   INWORLD_TTS_API_URL,
   OPENAI_COMPATIBLE_TTS_API_URL,
   UNREAL_SPEECH_TTS_API_URL,
@@ -10,12 +12,15 @@ import {
   AivisCloudEngine,
   ElevenLabsEngine,
   GeminiTtsEngine,
+  GradiumEngine,
   InworldEngine,
   OpenAiCompatibleEngine,
   PiperPlusEngine,
   UnrealSpeechEngine,
   type ElevenLabsApplyTextNormalization,
   type ElevenLabsVoiceSettingsOptions,
+  type GradiumOutputFormat,
+  type GradiumVoiceServiceOptions,
   type InworldAudioEncoding,
   type InworldDeliveryMode,
   type InworldVoiceServiceOptions,
@@ -30,6 +35,7 @@ describe('Core index voice re-exports', () => {
     expect(typeof AivisCloudEngine).toBe('function');
     expect(typeof ElevenLabsEngine).toBe('function');
     expect(typeof GeminiTtsEngine).toBe('function');
+    expect(typeof GradiumEngine).toBe('function');
     expect(typeof InworldEngine).toBe('function');
     expect(typeof OpenAiCompatibleEngine).toBe('function');
     expect(typeof PiperPlusEngine).toBe('function');
@@ -54,6 +60,10 @@ describe('Core index voice re-exports', () => {
       'https://api.elevenlabs.io/v1/text-to-speech',
     );
     expect(INWORLD_TTS_API_URL).toBe('https://api.inworld.ai/tts/v1/voice');
+    expect(GRADIUM_TTS_API_URL).toBe(
+      'https://api.gradium.ai/api/post/speech/tts',
+    );
+    expect(GRADIUM_VOICES_API_URL).toBe('https://api.gradium.ai/api/voices/');
     expect(XAI_TTS_API_URL).toBe('https://api.x.ai/v1/tts');
   });
 
@@ -94,5 +104,20 @@ describe('Core index voice re-exports', () => {
 
     expect(options.inworldAudioEncoding).toBe('MP3');
     expect(options.inworldDeliveryMode).toBe('BALANCED');
+  });
+
+  it('re-exports Gradium option types', () => {
+    const outputFormat: GradiumOutputFormat = 'wav';
+    const options: GradiumVoiceServiceOptions = {
+      engineType: 'gradium',
+      speaker: 'YTpq7expH9539ERJ',
+      apiKey: 'gradium-key',
+      gradiumOutputFormat: outputFormat,
+      gradiumTemperature: 0.7,
+      gradiumVoiceSimilarity: 2,
+    };
+
+    expect(options.gradiumOutputFormat).toBe('wav');
+    expect(options.gradiumVoiceSimilarity).toBe(2);
   });
 });

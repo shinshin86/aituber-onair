@@ -40,6 +40,7 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'unrealSpeech', label: 'Unreal Speech' },
   { value: 'elevenLabs', label: 'ElevenLabs' },
   { value: 'inworld', label: 'Inworld' },
+  { value: 'gradium', label: 'Gradium' },
   { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'none', label: 'None' },
 ];
@@ -120,6 +121,36 @@ const INWORLD_AUDIO_ENCODINGS = [
   'MULAW',
 ] as const;
 const INWORLD_DELIVERY_MODES = ['STABLE', 'BALANCED', 'CREATIVE'] as const;
+const GRADIUM_VOICES: Record<string, string> = {
+  YTpq7expH9539ERJ: 'Emma - English (US, feminine)',
+  LFZvm12tW_z0xfGo: 'Kent - English (US, masculine)',
+  jtEKaLYNn6iif5PR: 'Sydney - English (US, feminine)',
+  KWJiFWu2O9nMPYcR: 'John - English (US, masculine)',
+  ubuXFxVQwVYnZQhy: 'Eva - English (GB, feminine)',
+  m86j6D7UZpGzHsNu: 'Jack - English (GB, masculine)',
+  b35yykvVppLXyw_l: 'Elise - French (FR, feminine)',
+  axlOaUiFyOZhy4nv: 'Leo - French (FR, masculine)',
+  '-uP9MuGtBqAvEyxI': 'Mia - German (DE, feminine)',
+  '0y1VZjPabOBU3rWy': 'Maximilian - German (DE, masculine)',
+  B36pbz5_UoWn4BDl: 'Valentina - Spanish (MX, feminine)',
+  xu7iJ_fn2ElcWp2s: 'Sergio - Spanish (ES, masculine)',
+  pYcGZz9VOo4n2ynh: 'Alice - Portuguese (BR, feminine)',
+  'M-FvVo9c-jGR4PgP': 'Davi - Portuguese (BR, masculine)',
+};
+const GRADIUM_OUTPUT_FORMATS = [
+  'wav',
+  'pcm',
+  'opus',
+  'ulaw_8000',
+  'mulaw_8000',
+  'alaw_8000',
+  'pcm_8000',
+  'pcm_16000',
+  'pcm_22050',
+  'pcm_24000',
+  'pcm_44100',
+  'pcm_48000',
+] as const;
 
 const VOICEPEAK_SPEAKERS = [
   { id: 'f1', name: '日本人女性 1' },
@@ -1590,6 +1621,131 @@ export function SettingsPanel({
                       updateTtsField('inworldTemperature', e.target.value)
                     }
                     placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+              </>
+            )}
+
+            {settings.tts.engine === 'gradium' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-gradium-apikey">API Key</label>
+                  <input
+                    id="tts-gradium-apikey"
+                    type="password"
+                    value={settings.tts.gradiumApiKey || ''}
+                    onChange={(e) =>
+                      updateTtsField('gradiumApiKey', e.target.value)
+                    }
+                    placeholder="Gradium API key"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gradium-speaker">Voice</label>
+                  <select
+                    id="tts-gradium-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={disabled}
+                  >
+                    {Object.entries(GRADIUM_VOICES).map(([id, label]) => (
+                      <option key={id} value={id}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gradium-url">API URL</label>
+                  <input
+                    id="tts-gradium-url"
+                    type="text"
+                    value={settings.tts.gradiumApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('gradiumApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gradium-output">Output Format</label>
+                  <select
+                    id="tts-gradium-output"
+                    value={settings.tts.gradiumOutputFormat || 'wav'}
+                    onChange={(e) =>
+                      updateTtsField('gradiumOutputFormat', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {GRADIUM_OUTPUT_FORMATS.map((format) => (
+                      <option key={format} value={format}>
+                        {format}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gradium-temperature">Temperature</label>
+                  <input
+                    id="tts-gradium-temperature"
+                    type="number"
+                    min="0"
+                    max="1.4"
+                    step="0.05"
+                    value={settings.tts.gradiumTemperature || ''}
+                    onChange={(e) =>
+                      updateTtsField('gradiumTemperature', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gradium-similarity">
+                    Voice Similarity
+                  </label>
+                  <input
+                    id="tts-gradium-similarity"
+                    type="number"
+                    min="1"
+                    max="4"
+                    step="0.05"
+                    value={settings.tts.gradiumVoiceSimilarity || ''}
+                    onChange={(e) =>
+                      updateTtsField('gradiumVoiceSimilarity', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gradium-padding">Padding Bonus</label>
+                  <input
+                    id="tts-gradium-padding"
+                    type="number"
+                    min="-2"
+                    max="2"
+                    step="0.05"
+                    value={settings.tts.gradiumPaddingBonus || ''}
+                    onChange={(e) =>
+                      updateTtsField('gradiumPaddingBonus', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gradium-rewrite">Rewrite Rules</label>
+                  <input
+                    id="tts-gradium-rewrite"
+                    type="text"
+                    value={settings.tts.gradiumRewriteRules || ''}
+                    onChange={(e) =>
+                      updateTtsField('gradiumRewriteRules', e.target.value)
+                    }
+                    placeholder="en"
                     disabled={disabled}
                   />
                 </div>

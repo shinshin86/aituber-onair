@@ -3,6 +3,7 @@ import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
   GEMINI_NANO_MAX_CONTEXT_MESSAGES,
   MODEL_CLAUDE_4_5_HAIKU,
+  MODEL_CLAUDE_4_8_OPUS,
   MODEL_CLAUDE_4_7_OPUS,
   MODEL_CLAUDE_4_OPUS,
   MODEL_CLAUDE_4_SONNET,
@@ -88,6 +89,7 @@ describe('Core index chat re-exports', () => {
   });
 
   it('re-exports current Claude model constants', () => {
+    expect(MODEL_CLAUDE_4_8_OPUS).toBe('claude-opus-4-8');
     expect(MODEL_CLAUDE_4_7_OPUS).toBe('claude-opus-4-7');
     expect(MODEL_CLAUDE_4_5_HAIKU).toBe('claude-haiku-4-5-20251001');
     expect(MODEL_CLAUDE_4_OPUS).toBe('claude-opus-4-20250514');
