@@ -30,6 +30,7 @@ import {
   type UnrealSpeechCodec,
   type InworldAudioEncoding,
   type InworldDeliveryMode,
+  type GradiumOutputFormat,
   type EmotionTypeForVoicepeak,
   type VoicepeakEmotionWeights,
   type VoiceVoxQueryParameterOverrides,
@@ -165,6 +166,36 @@ const INWORLD_AUDIO_ENCODINGS = [
   'MULAW',
 ] as const;
 const INWORLD_DELIVERY_MODES = ['STABLE', 'BALANCED', 'CREATIVE'] as const;
+const GRADIUM_VOICES: Record<string, string> = {
+  YTpq7expH9539ERJ: 'Emma - English (US, feminine)',
+  LFZvm12tW_z0xfGo: 'Kent - English (US, masculine)',
+  jtEKaLYNn6iif5PR: 'Sydney - English (US, feminine)',
+  KWJiFWu2O9nMPYcR: 'John - English (US, masculine)',
+  ubuXFxVQwVYnZQhy: 'Eva - English (GB, feminine)',
+  m86j6D7UZpGzHsNu: 'Jack - English (GB, masculine)',
+  b35yykvVppLXyw_l: 'Elise - French (FR, feminine)',
+  axlOaUiFyOZhy4nv: 'Leo - French (FR, masculine)',
+  '-uP9MuGtBqAvEyxI': 'Mia - German (DE, feminine)',
+  '0y1VZjPabOBU3rWy': 'Maximilian - German (DE, masculine)',
+  B36pbz5_UoWn4BDl: 'Valentina - Spanish (MX, feminine)',
+  xu7iJ_fn2ElcWp2s: 'Sergio - Spanish (ES, masculine)',
+  pYcGZz9VOo4n2ynh: 'Alice - Portuguese (BR, feminine)',
+  'M-FvVo9c-jGR4PgP': 'Davi - Portuguese (BR, masculine)',
+};
+const GRADIUM_OUTPUT_FORMATS: GradiumOutputFormat[] = [
+  'wav',
+  'pcm',
+  'opus',
+  'ulaw_8000',
+  'mulaw_8000',
+  'alaw_8000',
+  'pcm_8000',
+  'pcm_16000',
+  'pcm_22050',
+  'pcm_24000',
+  'pcm_44100',
+  'pcm_48000',
+];
 
 interface ElevenLabsVoice {
   voice_id: string;
@@ -594,6 +625,13 @@ const App: React.FC = () => {
     'default' | InworldDeliveryMode
   >('default');
   const [inworldTemperature, setInworldTemperature] = useState<string>('');
+  const [gradiumOutputFormat, setGradiumOutputFormat] =
+    useState<GradiumOutputFormat>('wav');
+  const [gradiumTemperature, setGradiumTemperature] = useState<string>('');
+  const [gradiumVoiceSimilarity, setGradiumVoiceSimilarity] =
+    useState<string>('');
+  const [gradiumPaddingBonus, setGradiumPaddingBonus] = useState<string>('');
+  const [gradiumRewriteRules, setGradiumRewriteRules] = useState<string>('');
   const [voicevoxSpeedScale, setVoicevoxSpeedScale] = useState<string>('');
   const [voicevoxPitchScale, setVoicevoxPitchScale] = useState<string>('');
   const [voicevoxIntonationScale, setVoicevoxIntonationScale] =
@@ -718,6 +756,7 @@ const App: React.FC = () => {
     unrealSpeech: 'af_bella',
     elevenLabs: '',
     inworld: '',
+    gradium: 'YTpq7expH9539ERJ',
     piperPlus: 'default',
   });
   const [availableSpeakers, setAvailableSpeakers] = useState<
@@ -961,6 +1000,17 @@ const App: React.FC = () => {
       );
       setInworldDeliveryMode('default');
       setInworldTemperature('');
+    }
+
+    if (selectedVoiceEngine === 'gradium') {
+      setGradiumOutputFormat(
+        (VOICE_ENGINE_CONFIGS.gradium.defaultParams
+          ?.outputFormat as GradiumOutputFormat) || 'wav',
+      );
+      setGradiumTemperature('');
+      setGradiumVoiceSimilarity('');
+      setGradiumPaddingBonus('');
+      setGradiumRewriteRules('');
     }
 
     if (selectedVoiceEngine === 'piperPlus') {
@@ -1441,6 +1491,9 @@ const App: React.FC = () => {
             break;
           case 'inworld':
             options.inworldApiUrl = config.apiUrl;
+            break;
+          case 'gradium':
+            options.gradiumApiUrl = config.apiUrl;
             break;
         }
       }
@@ -2033,6 +2086,31 @@ const App: React.FC = () => {
           const parsedTemperature = Number.parseFloat(inworldTemperature);
           if (!Number.isNaN(parsedTemperature)) {
             options.inworldTemperature = parsedTemperature;
+          }
+
+          break;
+        }
+        case 'gradium': {
+          options.gradiumOutputFormat = gradiumOutputFormat;
+
+          const parsedTemperature = Number.parseFloat(gradiumTemperature);
+          if (!Number.isNaN(parsedTemperature)) {
+            options.gradiumTemperature = parsedTemperature;
+          }
+
+          const parsedVoiceSimilarity =
+            Number.parseFloat(gradiumVoiceSimilarity);
+          if (!Number.isNaN(parsedVoiceSimilarity)) {
+            options.gradiumVoiceSimilarity = parsedVoiceSimilarity;
+          }
+
+          const parsedPaddingBonus = Number.parseFloat(gradiumPaddingBonus);
+          if (!Number.isNaN(parsedPaddingBonus)) {
+            options.gradiumPaddingBonus = parsedPaddingBonus;
+          }
+
+          if (gradiumRewriteRules.trim()) {
+            options.gradiumRewriteRules = gradiumRewriteRules.trim();
           }
 
           break;
@@ -4211,6 +4289,104 @@ const App: React.FC = () => {
                     </div>
                   )}
 
+                  {selectedVoiceEngine === 'gradium' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        backgroundColor: '#fff4e6',
+                        borderRadius: '8px',
+                        border: '1px solid #ffd8a8',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 'bold',
+                          marginBottom: '8px',
+                          color: '#d9480f',
+                        }}
+                      >
+                        Gradium パラメータ
+                      </div>
+
+                      <label
+                        htmlFor="gradiumOutputFormat"
+                        style={{ display: 'block', marginBottom: '6px' }}
+                      >
+                        Output Format:
+                      </label>
+                      <select
+                        id="gradiumOutputFormat"
+                        value={gradiumOutputFormat}
+                        onChange={(e) =>
+                          setGradiumOutputFormat(
+                            e.target.value as GradiumOutputFormat,
+                          )
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        {GRADIUM_OUTPUT_FORMATS.map((format) => (
+                          <option key={format} value={format}>
+                            {format}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gap: '8px',
+                        }}
+                      >
+                        <input
+                          type="number"
+                          min="0"
+                          max="1.4"
+                          step="0.05"
+                          value={gradiumTemperature}
+                          onChange={(e) =>
+                            setGradiumTemperature(e.target.value)
+                          }
+                          placeholder="Temperature"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          max="4"
+                          step="0.05"
+                          value={gradiumVoiceSimilarity}
+                          onChange={(e) =>
+                            setGradiumVoiceSimilarity(e.target.value)
+                          }
+                          placeholder="Similarity"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                        <input
+                          type="number"
+                          min="-2"
+                          max="2"
+                          step="0.05"
+                          value={gradiumPaddingBonus}
+                          onChange={(e) =>
+                            setGradiumPaddingBonus(e.target.value)
+                          }
+                          placeholder="Padding"
+                          style={{ width: '100%', marginBottom: '8px' }}
+                        />
+                      </div>
+
+                      <input
+                        type="text"
+                        value={gradiumRewriteRules}
+                        onChange={(e) => setGradiumRewriteRules(e.target.value)}
+                        placeholder="Rewrite rules"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                    </div>
+                  )}
+
                   {selectedVoiceEngine === 'openai' && (
                     <div
                       style={{
@@ -5907,6 +6083,15 @@ const App: React.FC = () => {
                               </option>
                             ))}
 
+                          {selectedVoiceEngine === 'gradium' &&
+                            Object.entries(GRADIUM_VOICES).map(
+                              ([voiceId, label]) => (
+                                <option key={voiceId} value={voiceId}>
+                                  {label}
+                                </option>
+                              ),
+                            )}
+
                           {selectedVoiceEngine === 'piperPlus' && (
                             <option value="default">default</option>
                           )}
@@ -5934,21 +6119,24 @@ const App: React.FC = () => {
                                 ? 'ElevenLabsでは voice ID / model / output format / voice settings を設定できます'
                                 : selectedVoiceEngine === 'inworld'
                                   ? 'Inworldでは voice / model / audio config / delivery mode を設定できます'
-                                  : selectedVoiceEngine === 'voicevox'
-                                    ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
-                                    : selectedVoiceEngine === 'openai'
-                                      ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
-                                      : selectedVoiceEngine ===
-                                          'openaiCompatible'
-                                        ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
-                                        : selectedVoiceEngine === 'piperPlus'
-                                          ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
-                                          : selectedVoiceEngine === 'aivisCloud'
-                                            ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                  : selectedVoiceEngine === 'gradium'
+                                    ? 'Gradiumではプリセット音声と output format / temperature / similarity を設定できます'
+                                    : selectedVoiceEngine === 'voicevox'
+                                      ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
+                                      : selectedVoiceEngine === 'openai'
+                                        ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
+                                        : selectedVoiceEngine ===
+                                            'openaiCompatible'
+                                          ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
+                                          : selectedVoiceEngine === 'piperPlus'
+                                            ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
                                             : selectedVoiceEngine ===
-                                                'aivisSpeech'
-                                              ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
-                                              : '※ 音声パラメータは最適な値に固定されています'}
+                                                'aivisCloud'
+                                              ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                              : selectedVoiceEngine ===
+                                                  'aivisSpeech'
+                                                ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
+                                                : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

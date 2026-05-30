@@ -1,5 +1,25 @@
 # @aituber-onair/core
 
+## 0.25.12
+
+### Patch Changes
+
+- Synced Claude Opus 4.8 support from `@aituber-onair/chat@0.36.0` into the
+  core entry point and React basic example:
+  - re-exported `MODEL_CLAUDE_4_8_OPUS`
+  - added Claude Opus 4.8 to the core React basic example Claude model list
+- Synced Gradium TTS support from `@aituber-onair/voice@0.17.0` into the core
+  entry point and React examples:
+  - added core export test coverage for `GradiumEngine`, endpoint constants,
+    and Gradium option types
+  - added Gradium selection, preset voices, API URL, output format, and tuning
+    controls to the React basic, PNGTuber, VRM, and Live2D examples
+- Refreshed core README docs and example READMEs to mention Claude Opus 4.8
+  and Gradium support.
+- Updated dependencies []:
+  - @aituber-onair/chat@0.36.0
+  - @aituber-onair/voice@0.17.0
+
 ## 0.25.11
 
 ### Patch Changes

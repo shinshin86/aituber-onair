@@ -15,7 +15,7 @@ This example application serves as a practical implementation guide for integrat
   - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
   - Google Gemini (Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
-  - Anthropic Claude (4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
+  - Anthropic Claude (4.8 Opus, 4.7 Opus, 4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
   - DeepSeek and Mistral first-class providers
   - Seamless provider switching
 
@@ -129,6 +129,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Requires Chrome 138+ with `#optimization-guide-on-device-model` and `#prompt-api-for-gemini-nano` enabled
 
 **Claude:**
+- Claude Opus 4.8
 - Claude Opus 4.7
 - Claude 4.6 Opus
 - Claude 4.6 Sonnet
@@ -269,7 +270,12 @@ The application supports 13 different Text-to-Speech engines:
 - Fetches voices from the Inworld Voices API and lets users select by name
 - Supports model, audio encoding, sample rate, bitrate, language, delivery mode, and temperature options
 
-#### 13. **Piper Plus**
+#### 13. **Gradium**
+- Requires Gradium API key
+- Lets users select flagship Gradium voices by readable names
+- Supports output format, temperature, voice similarity, padding bonus, and rewrite rules
+
+#### 14. **Piper Plus**
 - Browser-side WASM TTS
 - No API key required
 - Requires `public/piper/` assets

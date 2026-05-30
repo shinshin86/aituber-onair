@@ -23,6 +23,7 @@ export type TTSEngineOption =
   | 'unrealSpeech'
   | 'elevenLabs'
   | 'inworld'
+  | 'gradium'
   | 'piperPlus'
   | 'none';
 export type StreamingPlatformOption = 'none' | 'youtube' | 'twitch';
@@ -104,6 +105,13 @@ export interface TTSSettings {
   inworldLanguage?: string;
   inworldDeliveryMode?: 'default' | 'STABLE' | 'BALANCED' | 'CREATIVE';
   inworldTemperature?: string;
+  gradiumApiKey?: string;
+  gradiumApiUrl?: string;
+  gradiumOutputFormat?: string;
+  gradiumTemperature?: string;
+  gradiumVoiceSimilarity?: string;
+  gradiumPaddingBonus?: string;
+  gradiumRewriteRules?: string;
   piperPlusBasePath?: string;
   piperPlusModelConfigFile?: string;
   piperPlusModelFile?: string;

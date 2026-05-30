@@ -3,6 +3,7 @@ import { AITuberOnAirCore, AITuberOnAirCoreEvent } from '@aituber-onair/core';
 import type {
   VoiceServiceOptions,
   ElevenLabsApplyTextNormalization,
+  GradiumOutputFormat,
   InworldAudioEncoding,
   InworldDeliveryMode,
   UnrealSpeechCodec,
@@ -54,6 +55,9 @@ function getTtsApiKey(
   if (settings.tts.engine === 'inworld') {
     return settings.tts.inworldApiKey || '';
   }
+  if (settings.tts.engine === 'gradium') {
+    return settings.tts.gradiumApiKey || '';
+  }
   return getApiKeyForProvider(settings.llm.provider);
 }
 
@@ -102,6 +106,15 @@ function buildVoiceOptions(
   );
   const parsedInworldTemperature = Number.parseFloat(
     tts.inworldTemperature || '',
+  );
+  const parsedGradiumTemperature = Number.parseFloat(
+    tts.gradiumTemperature || '',
+  );
+  const parsedGradiumVoiceSimilarity = Number.parseFloat(
+    tts.gradiumVoiceSimilarity || '',
+  );
+  const parsedGradiumPaddingBonus = Number.parseFloat(
+    tts.gradiumPaddingBonus || '',
   );
   const parsedPiperPlusSpeed = Number.parseFloat(tts.piperPlusSpeed || '');
   const parsedPiperPlusNoiseScale = Number.parseFloat(
@@ -207,6 +220,20 @@ function buildVoiceOptions(
     inworldTemperature: Number.isNaN(parsedInworldTemperature)
       ? undefined
       : parsedInworldTemperature,
+    gradiumApiUrl: tts.gradiumApiUrl?.trim() || undefined,
+    gradiumOutputFormat:
+      (tts.gradiumOutputFormat as GradiumOutputFormat | undefined) ||
+      undefined,
+    gradiumTemperature: Number.isNaN(parsedGradiumTemperature)
+      ? undefined
+      : parsedGradiumTemperature,
+    gradiumVoiceSimilarity: Number.isNaN(parsedGradiumVoiceSimilarity)
+      ? undefined
+      : parsedGradiumVoiceSimilarity,
+    gradiumPaddingBonus: Number.isNaN(parsedGradiumPaddingBonus)
+      ? undefined
+      : parsedGradiumPaddingBonus,
+    gradiumRewriteRules: tts.gradiumRewriteRules?.trim() || undefined,
     piperPlusBasePath: tts.piperPlusBasePath?.trim() || undefined,
     piperPlusModelConfigFile: tts.piperPlusModelConfigFile?.trim() || undefined,
     piperPlusModelFile: tts.piperPlusModelFile?.trim() || undefined,
