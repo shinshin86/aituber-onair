@@ -1,5 +1,18 @@
 # @aituber-onair/core
 
+## 0.26.0
+
+### Minor Changes
+
+- Synced the Gemini 2.0 shutdown cleanup from `@aituber-onair/chat@0.37.0`
+  into core:
+  - removed core re-exports for `MODEL_GEMINI_2_0_FLASH` and
+    `MODEL_GEMINI_2_0_FLASH_LITE`
+  - updated Gemini summarization to default to `MODEL_GEMINI_2_5_FLASH_LITE`
+  - removed Gemini 2.0 entries from the React basic example model list and docs
+- Updated dependencies []:
+  - @aituber-onair/chat@0.37.0
+
 ## 0.25.12
 
 ### Patch Changes
