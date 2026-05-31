@@ -121,7 +121,6 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Gemini 3 series (3.1 Flash-Lite, 3.1 Pro Preview, 3 Flash Preview, plus deprecated preview aliases)
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)
-- Gemini 2.0 series (Flash Lite, Flash)
 
 **Gemini Nano:**
 - Built-in Chrome `gemini-nano` model

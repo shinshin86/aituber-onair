@@ -2,7 +2,7 @@ import { Message } from '@aituber-onair/chat';
 import { Summarizer } from '../../../../core/MemoryManager';
 import {
   ENDPOINT_GEMINI_API,
-  MODEL_GEMINI_2_0_FLASH_LITE,
+  MODEL_GEMINI_2_5_FLASH_LITE,
   DEFAULT_SUMMARY_PROMPT_TEMPLATE,
 } from '@aituber-onair/chat';
 import {
@@ -26,7 +26,7 @@ export class GeminiSummarizer implements Summarizer {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_GEMINI_2_0_FLASH_LITE,
+    model: string = MODEL_GEMINI_2_5_FLASH_LITE,
     defaultPromptTemplate: string = DEFAULT_SUMMARY_PROMPT_TEMPLATE,
   ) {
     this.apiKey = apiKey;

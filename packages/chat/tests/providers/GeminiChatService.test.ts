@@ -7,7 +7,7 @@ import {
 import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
-  MODEL_GEMINI_2_0_FLASH,
+  MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
@@ -166,21 +166,22 @@ describe('GeminiChatService API version selection', () => {
     );
   });
 
-  it('uses v1 first for Gemini 2.0 flash', async () => {
+  it('uses v1 first for custom legacy Gemini models', async () => {
     const postSpy = vi
       .spyOn(ChatServiceHttpClient, 'post')
       .mockResolvedValue(createOkResponse());
+    const legacyModel = 'gemini-custom-legacy';
     const service = new GeminiChatService(
       'test-key',
-      MODEL_GEMINI_2_0_FLASH,
-      MODEL_GEMINI_2_0_FLASH,
+      legacyModel,
+      MODEL_GEMINI_3_1_FLASH_LITE,
     );
 
-    await (service as any).callGemini(messages, MODEL_GEMINI_2_0_FLASH, true);
+    await (service as any).callGemini(messages, legacyModel, true);
 
     expect(postSpy).toHaveBeenCalledTimes(1);
     expect(postSpy.mock.calls[0][0]).toContain(
-      '/v1/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=test-key',
+      '/v1/models/gemini-custom-legacy:streamGenerateContent?alt=sse&key=test-key',
     );
     expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
       'generationConfig.thinkingConfig',
@@ -192,20 +193,21 @@ describe('GeminiChatService API version selection', () => {
     postSpy
       .mockRejectedValueOnce(new HttpError(404, 'Not Found', '{}'))
       .mockResolvedValueOnce(createOkResponse());
+    const legacyModel = 'gemini-custom-legacy';
     const service = new GeminiChatService(
       'test-key',
-      MODEL_GEMINI_2_0_FLASH,
-      MODEL_GEMINI_2_0_FLASH,
+      legacyModel,
+      MODEL_GEMINI_3_1_FLASH_LITE,
     );
 
-    await (service as any).callGemini(messages, MODEL_GEMINI_2_0_FLASH, true);
+    await (service as any).callGemini(messages, legacyModel, true);
 
     expect(postSpy).toHaveBeenCalledTimes(2);
     expect(postSpy.mock.calls[0][0]).toContain(
-      '/v1/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=test-key',
+      '/v1/models/gemini-custom-legacy:streamGenerateContent?alt=sse&key=test-key',
     );
     expect(postSpy.mock.calls[1][0]).toContain(
-      '/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=test-key',
+      '/v1beta/models/gemini-custom-legacy:streamGenerateContent?alt=sse&key=test-key',
     );
   });
 });
@@ -261,8 +263,8 @@ describe('GeminiChatService thought filtering', () => {
   it('keeps non-Gemma thought parts unchanged', () => {
     const service = new GeminiChatService(
       'test-key',
-      MODEL_GEMINI_2_0_FLASH,
-      MODEL_GEMINI_2_0_FLASH,
+      MODEL_GEMINI_2_5_FLASH,
+      MODEL_GEMINI_2_5_FLASH,
     );
 
     const completion = (service as any).parseOneShot(
@@ -278,7 +280,7 @@ describe('GeminiChatService thought filtering', () => {
           },
         ],
       },
-      MODEL_GEMINI_2_0_FLASH,
+      MODEL_GEMINI_2_5_FLASH,
     );
 
     expect(completion.blocks).toEqual([

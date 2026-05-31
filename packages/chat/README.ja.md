@@ -534,9 +534,9 @@ const geminiService = ChatServiceFactory.createChatService('gemini', {
 `gemini-3.1-flash-lite` が推奨の安定版 Flash-Lite モデルです。
 現在の安定版 Flash モデルとして `gemini-3.5-flash` も利用できます。
 `gemini-3.1-flash-lite-preview`、`gemini-3-pro-preview`、
-`gemini-2.0-flash`、`gemini-2.0-flash-lite` などの preview /
-shutdown 予定モデルは後方互換のため明示的な model string では利用できますが、
-本番用途では新しいモデルへ移行してください。
+`gemini-2.5-flash-lite-preview-06-17` などの preview / deprecated
+モデルは後方互換のため明示的な model string では利用できますが、本番用途では
+新しいモデルへ移行してください。
 
 チャット用途では、`gemini-3.5-flash` に対して Gemini の
 `thinkingConfig`（`thinkingLevel: 'MINIMAL'`、`includeThoughts: false`）を
@@ -1009,7 +1009,7 @@ console.log(modelLevel); // 'unknown'
 
 - **OpenAI**: GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
-- **Gemini**: Gemini 3.5 Flash、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.0 Flash、Gemini 2.0 Flash-Lite などの lifecycle 上 deprecated なモデルは明示指定用に export を残していますが、shutdown 前に移行してください
+- **Gemini**: Gemini 3.5 Flash、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート

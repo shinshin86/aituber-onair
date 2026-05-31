@@ -19,13 +19,6 @@ export const MODEL_GEMINI_2_5_FLASH_LITE = 'gemini-2.5-flash-lite';
 /** @deprecated Use MODEL_GEMINI_3_1_FLASH_LITE instead. */
 export const MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17 =
   'gemini-2.5-flash-lite-preview-06-17';
-/** @deprecated Use MODEL_GEMINI_2_5_FLASH instead. */
-export const MODEL_GEMINI_2_0_FLASH = 'gemini-2.0-flash';
-/**
- * @deprecated Use MODEL_GEMINI_3_1_FLASH_LITE or
- * MODEL_GEMINI_2_5_FLASH_LITE instead.
- */
-export const MODEL_GEMINI_2_0_FLASH_LITE = 'gemini-2.0-flash-lite';
 
 export const GEMINI_RECOMMENDED_MODELS = [
   MODEL_GEMINI_3_5_FLASH,
@@ -43,8 +36,6 @@ export const GEMINI_DEPRECATED_MODELS = [
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-  MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_2_0_FLASH_LITE,
 ];
 
 // Vision support for Gemini models. Deprecated entries remain for explicit

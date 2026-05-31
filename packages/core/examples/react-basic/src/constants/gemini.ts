@@ -12,8 +12,6 @@ import {
   MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_2_0_FLASH_LITE,
-  MODEL_GEMINI_2_0_FLASH,
 } from '@aituber-onair/core';
 
 // Gemini models list
@@ -30,8 +28,6 @@ export const geminiModels = [
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-  MODEL_GEMINI_2_0_FLASH_LITE,
-  MODEL_GEMINI_2_0_FLASH,
 ];
 
 export const geminiNanoModels = [MODEL_GEMINI_NANO];
