@@ -56,8 +56,6 @@ import {
   MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_2_5_FLASH_LITE,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-  MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_2_0_FLASH_LITE,
   // OpenRouter models
   MODEL_GPT_OSS_20B_FREE,
   MODEL_MOONSHOTAI_KIMI_K2_5,
@@ -626,18 +624,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
     name: 'Gemini 2.5 Flash Lite Preview (Deprecated)',
-    provider: 'gemini',
-    default: false,
-  },
-  {
-    id: MODEL_GEMINI_2_0_FLASH,
-    name: 'Gemini 2.0 Flash (Deprecated)',
-    provider: 'gemini',
-    default: false,
-  },
-  {
-    id: MODEL_GEMINI_2_0_FLASH_LITE,
-    name: 'Gemini 2.0 Flash Lite (Deprecated)',
     provider: 'gemini',
     default: false,
   },

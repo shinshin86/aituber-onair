@@ -16,8 +16,6 @@ import {
   MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_2_5_FLASH_LITE,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
-  MODEL_GEMINI_2_0_FLASH,
-  MODEL_GEMINI_2_0_FLASH_LITE,
 } from '../../src/constants';
 
 // Mock GeminiChatService
@@ -59,8 +57,6 @@ describe('GeminiChatServiceProvider', () => {
       expect(models).not.toContain(MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW);
       expect(models).not.toContain(MODEL_GEMINI_3_PRO_PREVIEW);
       expect(models).not.toContain(MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17);
-      expect(models).not.toContain(MODEL_GEMINI_2_0_FLASH);
-      expect(models).not.toContain(MODEL_GEMINI_2_0_FLASH_LITE);
     });
   });
 
@@ -101,12 +97,6 @@ describe('GeminiChatServiceProvider', () => {
       expect(
         provider.supportsVisionForModel(MODEL_GEMINI_3_FLASH_PREVIEW),
       ).toBe(true);
-      expect(provider.supportsVisionForModel(MODEL_GEMINI_2_0_FLASH)).toBe(
-        true,
-      );
-      expect(provider.supportsVisionForModel(MODEL_GEMINI_2_0_FLASH_LITE)).toBe(
-        true,
-      );
     });
 
     it('should return false for non-vision models', () => {
@@ -139,15 +129,15 @@ describe('GeminiChatServiceProvider', () => {
     it('should create GeminiChatService with custom model', () => {
       const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
-        model: MODEL_GEMINI_2_0_FLASH,
+        model: MODEL_GEMINI_2_5_FLASH,
       };
 
       provider.createChatService(options);
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_2_0_FLASH,
-        MODEL_GEMINI_2_0_FLASH,
+        MODEL_GEMINI_2_5_FLASH,
+        MODEL_GEMINI_2_5_FLASH,
         [],
         [],
         undefined,
@@ -158,7 +148,7 @@ describe('GeminiChatServiceProvider', () => {
       const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
         model: 'gemini-pro',
-        visionModel: MODEL_GEMINI_2_0_FLASH,
+        visionModel: MODEL_GEMINI_2_5_FLASH,
       };
 
       provider.createChatService(options);
@@ -166,7 +156,7 @@ describe('GeminiChatServiceProvider', () => {
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
         'gemini-pro',
-        MODEL_GEMINI_2_0_FLASH,
+        MODEL_GEMINI_2_5_FLASH,
         [],
         [],
         undefined,
@@ -264,8 +254,8 @@ describe('GeminiChatServiceProvider', () => {
 
       const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
-        model: MODEL_GEMINI_2_0_FLASH,
-        visionModel: MODEL_GEMINI_2_0_FLASH,
+        model: MODEL_GEMINI_2_5_FLASH,
+        visionModel: MODEL_GEMINI_2_5_FLASH,
         tools,
       };
 
@@ -273,8 +263,8 @@ describe('GeminiChatServiceProvider', () => {
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_2_0_FLASH,
-        MODEL_GEMINI_2_0_FLASH,
+        MODEL_GEMINI_2_5_FLASH,
+        MODEL_GEMINI_2_5_FLASH,
         tools,
         [],
         undefined,
@@ -284,15 +274,15 @@ describe('GeminiChatServiceProvider', () => {
     it('should handle model as vision model when it supports vision', () => {
       const options: GeminiChatServiceOptions = {
         apiKey: 'test-api-key',
-        model: MODEL_GEMINI_2_0_FLASH,
+        model: MODEL_GEMINI_2_5_FLASH,
       };
 
       provider.createChatService(options);
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_2_0_FLASH,
-        MODEL_GEMINI_2_0_FLASH,
+        MODEL_GEMINI_2_5_FLASH,
+        MODEL_GEMINI_2_5_FLASH,
         [],
         [],
         undefined,
@@ -378,7 +368,7 @@ describe('GeminiChatServiceProvider', () => {
 
       const options = {
         apiKey: 'test-api-key',
-        model: MODEL_GEMINI_2_0_FLASH,
+        model: MODEL_GEMINI_2_5_FLASH,
         tools,
         mcpServers,
         responseLength: 'medium',
@@ -388,8 +378,8 @@ describe('GeminiChatServiceProvider', () => {
 
       expect(GeminiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GEMINI_2_0_FLASH,
-        MODEL_GEMINI_2_0_FLASH,
+        MODEL_GEMINI_2_5_FLASH,
+        MODEL_GEMINI_2_5_FLASH,
         tools,
         mcpServers,
         'medium',

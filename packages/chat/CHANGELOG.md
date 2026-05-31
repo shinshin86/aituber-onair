@@ -1,5 +1,15 @@
 # @aituber-onair/chat
 
+## 0.37.0
+
+### Minor Changes
+
+- Removed shutdown Gemini 2.0 model constants (`gemini-2.0-flash` and
+  `gemini-2.0-flash-lite`) from the Gemini exports, deprecated model metadata,
+  React basic selector, docs, and tests.
+- Kept generic custom Gemini model strings supported for callers that explicitly
+  pass model IDs through provider options.
+
 ## 0.36.0
 
 ### Minor Changes
