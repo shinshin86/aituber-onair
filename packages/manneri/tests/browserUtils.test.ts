@@ -58,6 +58,7 @@ describe('browserUtils', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -337,7 +338,8 @@ describe('browserUtils', () => {
   });
 
   describe('debounce', () => {
-    it('should debounce function calls', (done) => {
+    it('should debounce function calls', () => {
+      vi.useFakeTimers();
       const mockFn = vi.fn();
       const debouncedFn = debounce(mockFn, 100);
 
@@ -349,14 +351,12 @@ describe('browserUtils', () => {
       // Should not be called immediately
       expect(mockFn).not.toHaveBeenCalled();
 
-      // Should be called once after delay
-      setTimeout(() => {
-        expect(mockFn).toHaveBeenCalledTimes(1);
-        done();
-      }, 150);
+      vi.advanceTimersByTime(100);
+      expect(mockFn).toHaveBeenCalledTimes(1);
     });
 
     it('should support immediate execution', () => {
+      vi.useFakeTimers();
       const mockFn = vi.fn();
       const debouncedFn = debounce(mockFn, 100, true);
 
@@ -372,7 +372,8 @@ describe('browserUtils', () => {
   });
 
   describe('throttle', () => {
-    it('should throttle function calls', (done) => {
+    it('should throttle function calls', () => {
+      vi.useFakeTimers();
       const mockFn = vi.fn();
       const throttledFn = throttle(mockFn, 100);
 
@@ -384,12 +385,9 @@ describe('browserUtils', () => {
       // Should be called once immediately
       expect(mockFn).toHaveBeenCalledTimes(1);
 
-      // Should allow another call after limit
-      setTimeout(() => {
-        throttledFn();
-        expect(mockFn).toHaveBeenCalledTimes(2);
-        done();
-      }, 150);
+      vi.advanceTimersByTime(100);
+      throttledFn();
+      expect(mockFn).toHaveBeenCalledTimes(2);
     });
   });
 

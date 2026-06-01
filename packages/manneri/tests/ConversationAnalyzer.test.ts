@@ -133,6 +133,46 @@ describe('ConversationAnalyzer', () => {
       expect(result.shouldIntervene).toBe(true);
       expect(result.interventionReason).toContain('パターンの繰り返し');
     });
+
+    it('should not intervene for a normal alternating conversation with varied content', () => {
+      const normalConversation: Message[] = [
+        {
+          role: 'user',
+          content: 'What should I cook tonight?',
+          timestamp: 1000,
+        },
+        {
+          role: 'assistant',
+          content: 'A quick pasta with vegetables would work well.',
+          timestamp: 2000,
+        },
+        {
+          role: 'user',
+          content: 'I also need to plan groceries for tomorrow.',
+          timestamp: 3000,
+        },
+        {
+          role: 'assistant',
+          content: 'Start with staples like rice, eggs, and leafy greens.',
+          timestamp: 4000,
+        },
+        {
+          role: 'user',
+          content: 'Can you suggest a short workout after dinner?',
+          timestamp: 5000,
+        },
+        {
+          role: 'assistant',
+          content: 'Try ten minutes of stretching and light squats.',
+          timestamp: 6000,
+        },
+      ];
+
+      const result = analyzer.analyzeConversation(normalConversation);
+
+      expect(result.shouldIntervene).toBe(false);
+      expect(result.interventionReason).not.toContain('パターンの繰り返し');
+    });
   });
 
   describe('analyzeMessageFlow', () => {

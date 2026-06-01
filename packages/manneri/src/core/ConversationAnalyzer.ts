@@ -167,11 +167,12 @@ export class ConversationAnalyzer {
     topics: TopicInfo[],
     patterns: ConversationPattern[]
   ): boolean {
+    const actionablePatterns = this.getActionablePatterns(patterns);
     const similarityTrigger =
       similarity.isRepeated &&
       similarity.score >= this.options.similarityThreshold;
 
-    const patternTrigger = patterns.some(
+    const patternTrigger = actionablePatterns.some(
       (p) => p.frequency >= PATTERN_FREQUENCY_TRIGGER
     );
 
@@ -189,6 +190,7 @@ export class ConversationAnalyzer {
   ): string {
     const templates = this.getInterventionReasonTemplates();
     const reasons: string[] = [];
+    const actionablePatterns = this.getActionablePatterns(patterns);
 
     if (similarity.isRepeated) {
       reasons.push(
@@ -199,8 +201,10 @@ export class ConversationAnalyzer {
       );
     }
 
-    if (patterns.length > 0) {
-      const maxFrequency = Math.max(...patterns.map((p) => p.frequency));
+    if (actionablePatterns.length > 0) {
+      const maxFrequency = Math.max(
+        ...actionablePatterns.map((p) => p.frequency)
+      );
       reasons.push(
         templates.patternRepetition.replace('{count}', String(maxFrequency))
       );
@@ -223,6 +227,16 @@ export class ConversationAnalyzer {
     return reasons.length > 0
       ? reasons.join(', ')
       : templates.thresholdExceeded;
+  }
+
+  private getActionablePatterns(
+    patterns: ConversationPattern[]
+  ): ConversationPattern[] {
+    return patterns.filter((pattern) => !this.isStructuralRolePattern(pattern));
+  }
+
+  private isStructuralRolePattern(pattern: ConversationPattern): boolean {
+    return pattern.pattern.startsWith('Role sequence:');
   }
 
   private getInterventionReasonTemplates(): NonNullable<
