@@ -23,6 +23,8 @@ import {
   DEFAULT_KEYWORD_THRESHOLD,
   DEFAULT_PATTERN_THRESHOLD,
   MAX_INTERVENTION_HISTORY,
+  PATTERN_FREQUENCY_TRIGGER,
+  TOPIC_CONFIDENCE_TRIGGER,
 } from '../config/constants.js';
 import { createEventEmitter } from '../utils/browserUtils.js';
 
@@ -114,11 +116,16 @@ export class ManneriDetector {
       messages,
       options
     );
+    const contextualMetadata = this.getContextualPromptMetadata(messages);
+    const contextualPrompt: DiversificationPrompt = {
+      ...prompt,
+      ...contextualMetadata,
+    };
 
     this.recordIntervention();
-    this.emit('intervention_triggered', prompt);
+    this.emit('intervention_triggered', contextualPrompt);
 
-    return prompt;
+    return contextualPrompt;
   }
 
   analyzeConversation(messages: Message[]): AnalysisResult {
@@ -258,6 +265,83 @@ export class ManneriDetector {
     if (this.interventionHistory.length > maxHistory) {
       this.interventionHistory = this.interventionHistory.slice(-maxHistory);
     }
+  }
+
+  private getContextualPromptMetadata(
+    messages: Message[]
+  ): Pick<DiversificationPrompt, 'type' | 'priority' | 'context'> {
+    const baseContext = `Conversation length: ${messages.length} messages`;
+    const result = this.lastAnalysisResult;
+
+    if (!result?.shouldIntervene) {
+      return {
+        type: 'topic_change',
+        priority: 'medium',
+        context: baseContext,
+      };
+    }
+
+    const reason = this.getPrimaryInterventionReason(result);
+
+    if (reason === 'pattern') {
+      return {
+        type: 'pattern_break',
+        priority: 'high',
+        context: `${baseContext}; Reason: pattern`,
+      };
+    }
+
+    if (reason === 'similarity') {
+      return {
+        type: 'pattern_break',
+        priority: 'high',
+        context: `${baseContext}; Reason: similarity`,
+      };
+    }
+
+    if (reason === 'topic') {
+      return {
+        type: 'keyword_shift',
+        priority: 'medium',
+        context: `${baseContext}; Reason: topic`,
+      };
+    }
+
+    return {
+      type: 'topic_change',
+      priority: 'medium',
+      context: baseContext,
+    };
+  }
+
+  private getPrimaryInterventionReason(
+    result: AnalysisResult
+  ): 'pattern' | 'similarity' | 'topic' | 'fallback' {
+    const actionablePatterns = result.patterns.filter(
+      (pattern) => !pattern.pattern.startsWith('Role sequence:')
+    );
+    const hasActionablePattern = actionablePatterns.some(
+      (pattern) => pattern.frequency >= PATTERN_FREQUENCY_TRIGGER
+    );
+    if (hasActionablePattern) {
+      return 'pattern';
+    }
+
+    const hasSimilarity =
+      result.similarity.isRepeated &&
+      result.similarity.score >= this.config.similarityThreshold;
+    if (hasSimilarity) {
+      return 'similarity';
+    }
+
+    const hasTopicBias = result.topics.some(
+      (topic) => topic.confidence > TOPIC_CONFIDENCE_TRIGGER
+    );
+    if (hasTopicBias) {
+      return 'topic';
+    }
+
+    return 'fallback';
   }
 
   private emit<K extends keyof ManneriEvent>(

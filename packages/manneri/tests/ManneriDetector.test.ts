@@ -171,6 +171,149 @@ describe('ManneriDetector', () => {
       expect(prompt.type).toBeDefined();
       expect(prompt.priority).toBeDefined();
     });
+
+    it('should use fallback prompt metadata when no analysis result exists', () => {
+      const messages: Message[] = [
+        { role: 'user', content: 'Hello' },
+        { role: 'assistant', content: 'Hello there' },
+      ];
+
+      const prompt = detector.generateDiversificationPrompt(messages);
+
+      expect(prompt.type).toBe('topic_change');
+      expect(prompt.priority).toBe('medium');
+      expect(prompt.context).toBe('Conversation length: 2 messages');
+    });
+
+    it('should generate a high-priority pattern break prompt for high similarity', () => {
+      const similarityDetector = new ManneriDetector({
+        similarityThreshold: 0.5,
+      });
+      const messages: Message[] = [
+        { role: 'user', content: 'Tell me about cats', timestamp: 1000 },
+        {
+          role: 'assistant',
+          content: 'Cats are wonderful pets',
+          timestamp: 2000,
+        },
+        { role: 'user', content: 'Tell me about cats', timestamp: 3000 },
+        {
+          role: 'assistant',
+          content: 'Cats are wonderful pets',
+          timestamp: 4000,
+        },
+      ];
+
+      similarityDetector.analyzeConversation(messages);
+      const prompt = similarityDetector.generateDiversificationPrompt(messages);
+
+      expect(prompt.type).toBe('pattern_break');
+      expect(prompt.priority).toBe('high');
+      expect(prompt.context).toContain('Reason: similarity');
+    });
+
+    it('should generate a keyword shift prompt for topic concentration', () => {
+      const topicDetector = new ManneriDetector({
+        similarityThreshold: 0.95,
+      });
+      const messages: Message[] = [
+        {
+          role: 'user',
+          content: 'Programming architecture needs careful planning alpha',
+          timestamp: 1000,
+        },
+        {
+          role: 'assistant',
+          content:
+            'Programming projects benefit from clear module boundaries beta',
+          timestamp: 2000,
+        },
+        {
+          role: 'user',
+          content: 'Programming teams often discuss testing strategy gamma',
+          timestamp: 3000,
+        },
+        {
+          role: 'assistant',
+          content: 'Programming workflows improve with useful automation delta',
+          timestamp: 4000,
+        },
+        {
+          role: 'user',
+          content:
+            'Programming documentation supports future maintenance epsilon',
+          timestamp: 5000,
+        },
+        {
+          role: 'assistant',
+          content: 'Programming reviews catch design problems early zeta',
+          timestamp: 6000,
+        },
+        {
+          role: 'user',
+          content: 'Programming estimates should include integration work eta',
+          timestamp: 7000,
+        },
+        {
+          role: 'assistant',
+          content: 'Programming releases need stable verification steps theta',
+          timestamp: 8000,
+        },
+        {
+          role: 'user',
+          content:
+            'Programming discussions can still explore product tradeoffs iota',
+          timestamp: 9000,
+        },
+        {
+          role: 'assistant',
+          content: 'Programming choices should match user constraints kappa',
+          timestamp: 10000,
+        },
+      ];
+
+      const analysis = topicDetector.analyzeConversation(messages);
+      expect(analysis.shouldIntervene).toBe(true);
+      expect(analysis.similarity.isRepeated).toBe(false);
+
+      const prompt = topicDetector.generateDiversificationPrompt(messages);
+
+      expect(prompt.type).toBe('keyword_shift');
+      expect(prompt.priority).toBe('medium');
+      expect(prompt.context).toContain('Reason: topic');
+    });
+
+    it('should generate a pattern break prompt for repeated conversation patterns', () => {
+      const patternDetector = new ManneriDetector({
+        similarityThreshold: 0.99,
+      });
+      const messages: Message[] = [
+        { role: 'user', content: 'Question alpha', timestamp: 1000 },
+        { role: 'assistant', content: 'Answer alpha', timestamp: 2000 },
+        { role: 'user', content: 'Question beta', timestamp: 3000 },
+        { role: 'assistant', content: 'Answer beta', timestamp: 4000 },
+        { role: 'user', content: 'Question alpha', timestamp: 5000 },
+        { role: 'assistant', content: 'Answer alpha', timestamp: 6000 },
+        { role: 'user', content: 'Question beta', timestamp: 7000 },
+        { role: 'assistant', content: 'Answer beta', timestamp: 8000 },
+        { role: 'user', content: 'Question alpha', timestamp: 9000 },
+        { role: 'assistant', content: 'Answer alpha', timestamp: 10000 },
+        { role: 'user', content: 'Question beta', timestamp: 11000 },
+        { role: 'assistant', content: 'Answer beta', timestamp: 12000 },
+      ];
+
+      const analysis = patternDetector.analyzeConversation(messages);
+      expect(analysis.shouldIntervene).toBe(true);
+      expect(analysis.patterns.some((pattern) => pattern.frequency >= 3)).toBe(
+        true
+      );
+
+      const prompt = patternDetector.generateDiversificationPrompt(messages);
+
+      expect(prompt.type).toBe('pattern_break');
+      expect(prompt.priority).toBe('high');
+      expect(prompt.context).toContain('Reason: pattern');
+    });
   });
 
   describe('configuration', () => {
