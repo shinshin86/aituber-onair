@@ -25,7 +25,6 @@ import {
   type LocalizedPromptOverrides,
   type PromptTemplates,
 } from '../types/prompts.js';
-import { measurePerformance } from '../utils/browserUtils.js';
 
 const DEFAULT_INTERVENTION_REASONS: NonNullable<
   PromptTemplates['interventionReasons']
@@ -62,6 +61,8 @@ export class ConversationAnalyzer {
   private readonly patternDetector: PatternDetector;
   private readonly options: ConversationAnalyzerOptions;
   private prompts: LocalizedPrompts;
+  private totalAnalyses = 0;
+  private totalAnalysisTime = 0;
 
   constructor(options: Partial<ConversationAnalyzerOptions> = {}) {
     this.options = {
@@ -92,7 +93,9 @@ export class ConversationAnalyzer {
   }
 
   analyzeConversation(messages: Message[]): AnalysisResult {
-    return measurePerformance('analyzeConversation', () => {
+    const start = performance.now();
+
+    try {
       const analysisWindow = this.filterMessagesForAnalysis(
         this.getAnalysisWindow(messages)
       );
@@ -128,7 +131,9 @@ export class ConversationAnalyzer {
         interventionReason,
         lastIntervention: 0,
       };
-    });
+    } finally {
+      this.recordAnalysisTime(performance.now() - start);
+    }
   }
 
   private getAnalysisWindow(messages: Message[]): Message[] {
@@ -457,11 +462,19 @@ export class ConversationAnalyzer {
     const similarityStats = this.similarityAnalyzer.getCacheStats();
 
     return {
-      totalAnalyses: 0,
-      averageAnalysisTime: 0,
+      totalAnalyses: this.totalAnalyses,
+      averageAnalysisTime:
+        this.totalAnalyses > 0
+          ? Math.round(this.totalAnalysisTime / this.totalAnalyses)
+          : 0,
       cacheHitRate: similarityStats.hitRate,
       memoryUsage: similarityStats.size,
     };
+  }
+
+  private recordAnalysisTime(duration: number): void {
+    this.totalAnalyses++;
+    this.totalAnalysisTime += Math.max(0, duration);
   }
 
   clearCache(): void {

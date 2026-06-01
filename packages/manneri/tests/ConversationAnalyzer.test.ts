@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ConversationAnalyzer } from '../src/core/ConversationAnalyzer.js';
 import type { Message } from '../src/types/index.js';
 import type { PromptTemplates } from '../src/types/prompts.js';
@@ -37,6 +37,10 @@ describe('ConversationAnalyzer', () => {
   beforeEach(() => {
     analyzer = new ConversationAnalyzer();
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('constructor', () => {
@@ -249,6 +253,35 @@ describe('ConversationAnalyzer', () => {
       expect(stats).toHaveProperty('averageAnalysisTime');
       expect(stats).toHaveProperty('cacheHitRate');
       expect(stats).toHaveProperty('memoryUsage');
+    });
+
+    it('should track total analyses and average analysis time', () => {
+      const statsAnalyzer = new ConversationAnalyzer({
+        enableSimilarityAnalysis: false,
+        enablePatternDetection: false,
+        enableTopicTracking: false,
+      });
+      vi.spyOn(performance, 'now')
+        .mockReturnValueOnce(100)
+        .mockReturnValueOnce(112)
+        .mockReturnValueOnce(200)
+        .mockReturnValueOnce(208);
+
+      statsAnalyzer.analyzeConversation(mockMessages);
+      statsAnalyzer.analyzeConversation(guaranteedSimilarMessages);
+
+      const stats = statsAnalyzer.getAnalysisStats();
+      expect(stats.totalAnalyses).toBe(2);
+      expect(stats.averageAnalysisTime).toBe(10);
+    });
+
+    it('should keep analysis counters when clearing caches', () => {
+      analyzer.analyzeConversation(mockMessages);
+      analyzer.clearCache();
+
+      const stats = analyzer.getAnalysisStats();
+      expect(stats.totalAnalyses).toBe(1);
+      expect(stats.memoryUsage).toBe(0);
     });
   });
 

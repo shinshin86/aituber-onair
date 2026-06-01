@@ -765,5 +765,23 @@ describe('ManneriDetector', () => {
       const statsAfter = detector.getStatistics();
       expect(statsAfter.totalInterventions).toBe(0);
     });
+
+    it('should expose analyzer statistics', () => {
+      const messages: Message[] = [
+        { role: 'user', content: 'Hello, how are you today?' },
+        {
+          role: 'assistant',
+          content: 'I am doing well, thank you for asking.',
+        },
+        { role: 'user', content: 'Hello, how are you today?' },
+      ];
+
+      detector.analyzeConversation(messages);
+      detector.detectManneri(messages);
+
+      const stats = detector.getStatistics();
+      expect(stats.analysisStats.totalAnalyses).toBe(2);
+      expect(stats.analysisStats.averageAnalysisTime).toBeGreaterThanOrEqual(0);
+    });
   });
 });
