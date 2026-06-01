@@ -35,7 +35,7 @@ const localStorageMock = {
   key: vi.fn(),
 };
 
-describe.skip('browserUtils', () => {
+describe('browserUtils', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -55,11 +55,6 @@ describe.skip('browserUtils', () => {
       writable: true,
       configurable: true,
     });
-
-    // Mock Worker
-    (global as unknown as { Worker: unknown }).Worker = vi
-      .fn()
-      .mockImplementation(() => ({}));
   });
 
   afterEach(() => {
@@ -93,7 +88,7 @@ describe.skip('browserUtils', () => {
       patterns: [],
       interventions: [],
       lastCleanup: Date.now(),
-      version: '1.0.0',
+      settings: {},
     };
 
     it('should save data to localStorage', () => {
@@ -159,7 +154,7 @@ describe.skip('browserUtils', () => {
           patterns: [],
           interventions: [],
           lastCleanup: Date.now(),
-          version: '1.0.0',
+          settings: {},
         },
       };
 
@@ -183,7 +178,12 @@ describe.skip('browserUtils', () => {
       const storageData = {
         version: '0.9.0', // Old version
         timestamp: Date.now(),
-        data: {},
+        data: {
+          patterns: [],
+          interventions: [],
+          lastCleanup: Date.now(),
+          settings: {},
+        },
       };
 
       localStorageMock.getItem.mockReturnValue(JSON.stringify(storageData));
@@ -276,6 +276,63 @@ describe.skip('browserUtils', () => {
       const size = getStorageSize();
 
       expect(size).toBe(0);
+    });
+  });
+
+  describe('cleanupOldData', () => {
+    it('should remove old patterns and interventions', () => {
+      const now = Date.now();
+      const storageData = {
+        version: '1.0.0',
+        timestamp: now,
+        data: {
+          patterns: [
+            {
+              id: 'recent-pattern',
+              pattern: 'recent',
+              frequency: 1,
+              firstSeen: now - 1000,
+              lastSeen: now - 1000,
+              messages: [],
+            },
+            {
+              id: 'old-pattern',
+              pattern: 'old',
+              frequency: 1,
+              firstSeen: now - 48 * 60 * 60 * 1000,
+              lastSeen: now - 48 * 60 * 60 * 1000,
+              messages: [],
+            },
+          ],
+          interventions: [now - 1000, now - 48 * 60 * 60 * 1000],
+          lastCleanup: now - 1000,
+          settings: {},
+        },
+      };
+
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(storageData));
+      localStorageMock.setItem.mockImplementation(() => {});
+
+      const result = cleanupOldData('manneri_data', 24 * 60 * 60 * 1000);
+
+      expect(result).toBe(true);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'manneri_data',
+        expect.stringContaining('recent-pattern')
+      );
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'manneri_data',
+        expect.not.stringContaining('old-pattern')
+      );
+    });
+
+    it('should return false when no stored data exists', () => {
+      localStorageMock.getItem.mockReturnValue(null);
+
+      const result = cleanupOldData();
+
+      expect(result).toBe(false);
+      expect(localStorageMock.setItem).not.toHaveBeenCalled();
     });
   });
 

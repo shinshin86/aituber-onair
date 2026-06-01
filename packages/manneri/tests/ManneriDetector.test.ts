@@ -1,9 +1,23 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ManneriDetector } from '../src/core/ManneriDetector.js';
-import type { Message } from '../src/types/index.js';
+import type {
+  Message,
+  PersistenceProvider,
+  StorageData,
+} from '../src/types/index.js';
 
 describe('ManneriDetector', () => {
   let detector: ManneriDetector;
+
+  const createStorageData = (
+    overrides: Partial<StorageData> = {}
+  ): StorageData => ({
+    patterns: [],
+    interventions: [],
+    settings: {},
+    lastCleanup: Date.now(),
+    ...overrides,
+  });
 
   beforeEach(() => {
     detector = new ManneriDetector({
@@ -12,6 +26,11 @@ describe('ManneriDetector', () => {
       interventionCooldown: 1000,
       debugMode: true, // Enable debug mode to see what's happening
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   describe('detectManneri', () => {
@@ -196,6 +215,237 @@ describe('ManneriDetector', () => {
 
       detector.detectManneri(messages);
       expect(eventReceived).toBe(true);
+    });
+  });
+
+  describe('persistence provider', () => {
+    it('should report when no persistence provider is configured', async () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      expect(detector.hasPersistenceProvider()).toBe(false);
+      expect(detector.getPersistenceInfo()).toBeNull();
+      await expect(detector.save()).resolves.toBe(false);
+      await expect(detector.load()).resolves.toBe(false);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'ManneriDetector: No persistence provider configured'
+      );
+    });
+
+    it('should save exported data and emit save_success', async () => {
+      const provider: PersistenceProvider = {
+        save: vi.fn(() => true),
+        load: vi.fn(() => null),
+        clear: vi.fn(() => true),
+      };
+      const detectorWithProvider = new ManneriDetector(
+        { similarityThreshold: 0.7 },
+        { persistenceProvider: provider }
+      );
+      const saveListener = vi.fn();
+
+      detectorWithProvider.on('save_success', saveListener);
+
+      await expect(detectorWithProvider.save()).resolves.toBe(true);
+
+      expect(provider.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          patterns: [],
+          interventions: [],
+          settings: expect.objectContaining({ similarityThreshold: 0.7 }),
+        })
+      );
+      expect(saveListener).toHaveBeenCalledWith({
+        timestamp: expect.any(Number),
+      });
+    });
+
+    it('should emit save_error when provider save throws', async () => {
+      const provider: PersistenceProvider = {
+        save: vi.fn(() => {
+          throw new Error('save failed');
+        }),
+        load: vi.fn(() => null),
+        clear: vi.fn(() => true),
+      };
+      const detectorWithProvider = new ManneriDetector(
+        {},
+        { persistenceProvider: provider }
+      );
+      const errorListener = vi.fn();
+
+      detectorWithProvider.on('save_error', errorListener);
+
+      await expect(detectorWithProvider.save()).resolves.toBe(false);
+
+      expect(errorListener).toHaveBeenCalledWith({
+        error: expect.any(Error),
+      });
+    });
+
+    it('should load data, import settings, and emit load_success', async () => {
+      const storedData = createStorageData({
+        interventions: [1000, 2000],
+        settings: {
+          similarityThreshold: 0.9,
+          interventionCooldown: 1234,
+        },
+      });
+      const provider: PersistenceProvider = {
+        save: vi.fn(() => true),
+        load: vi.fn(() => storedData),
+        clear: vi.fn(() => true),
+      };
+      const detectorWithProvider = new ManneriDetector(
+        {},
+        { persistenceProvider: provider }
+      );
+      const loadListener = vi.fn();
+
+      detectorWithProvider.on('load_success', loadListener);
+
+      await expect(detectorWithProvider.load()).resolves.toBe(true);
+
+      expect(detectorWithProvider.getConfig().similarityThreshold).toBe(0.9);
+      expect(detectorWithProvider.getConfig().interventionCooldown).toBe(1234);
+      expect(detectorWithProvider.getStatistics().totalInterventions).toBe(2);
+      expect(loadListener).toHaveBeenCalledWith({
+        data: storedData,
+        timestamp: expect.any(Number),
+      });
+    });
+
+    it('should emit load_error when provider load throws', async () => {
+      const provider: PersistenceProvider = {
+        save: vi.fn(() => true),
+        load: vi.fn(() => {
+          throw new Error('load failed');
+        }),
+        clear: vi.fn(() => true),
+      };
+      const detectorWithProvider = new ManneriDetector(
+        {},
+        { persistenceProvider: provider }
+      );
+      const errorListener = vi.fn();
+
+      detectorWithProvider.on('load_error', errorListener);
+
+      await expect(detectorWithProvider.load()).resolves.toBe(false);
+
+      expect(errorListener).toHaveBeenCalledWith({
+        error: expect.any(Error),
+      });
+    });
+
+    it('should cleanup memory and provider data', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+
+      const now = Date.now();
+      const provider: PersistenceProvider = {
+        save: vi.fn(() => true),
+        load: vi.fn(() => null),
+        clear: vi.fn(() => true),
+        cleanup: vi.fn(() => 2),
+      };
+      const detectorWithProvider = new ManneriDetector(
+        {},
+        { persistenceProvider: provider }
+      );
+      const cleanupListener = vi.fn();
+
+      detectorWithProvider.importData(
+        createStorageData({
+          interventions: [now - 1000, now - 10 * 24 * 60 * 60 * 1000],
+        })
+      );
+      detectorWithProvider.on('cleanup_completed', cleanupListener);
+
+      await expect(
+        detectorWithProvider.cleanup(7 * 24 * 60 * 60 * 1000)
+      ).resolves.toBe(3);
+
+      expect(provider.cleanup).toHaveBeenCalledWith(7 * 24 * 60 * 60 * 1000);
+      expect(detectorWithProvider.getStatistics().totalInterventions).toBe(1);
+      expect(cleanupListener).toHaveBeenCalledWith({
+        removedItems: 3,
+        timestamp: now,
+      });
+    });
+
+    it('should return memory cleanup count when provider cleanup throws', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+
+      const now = Date.now();
+      const provider: PersistenceProvider = {
+        save: vi.fn(() => true),
+        load: vi.fn(() => null),
+        clear: vi.fn(() => true),
+        cleanup: vi.fn(() => {
+          throw new Error('cleanup failed');
+        }),
+      };
+      const detectorWithProvider = new ManneriDetector(
+        {},
+        { persistenceProvider: provider }
+      );
+      const errorListener = vi.fn();
+
+      detectorWithProvider.importData(
+        createStorageData({
+          interventions: [now - 1000, now - 10 * 24 * 60 * 60 * 1000],
+        })
+      );
+      detectorWithProvider.on('cleanup_error', errorListener);
+
+      await expect(
+        detectorWithProvider.cleanup(7 * 24 * 60 * 60 * 1000)
+      ).resolves.toBe(1);
+
+      expect(errorListener).toHaveBeenCalledWith({
+        error: expect.any(Error),
+      });
+    });
+
+    it('should return custom persistence info when available', () => {
+      const provider = {
+        save: vi.fn(() => true),
+        load: vi.fn(() => null),
+        clear: vi.fn(() => true),
+        getStorageInfo: vi.fn(() => ({
+          provider: 'memory',
+          available: true,
+        })),
+      };
+      const detectorWithProvider = new ManneriDetector(
+        {},
+        { persistenceProvider: provider }
+      );
+
+      expect(detectorWithProvider.hasPersistenceProvider()).toBe(true);
+      expect(detectorWithProvider.getPersistenceInfo()).toEqual({
+        provider: 'memory',
+        available: true,
+      });
+    });
+
+    it('should return default persistence info for custom providers', () => {
+      const provider: PersistenceProvider = {
+        save: vi.fn(() => true),
+        load: vi.fn(() => null),
+        clear: vi.fn(() => true),
+      };
+      const detectorWithProvider = new ManneriDetector(
+        {},
+        { persistenceProvider: provider }
+      );
+
+      expect(detectorWithProvider.getPersistenceInfo()).toEqual({
+        provider: 'custom',
+        available: true,
+      });
     });
   });
 
