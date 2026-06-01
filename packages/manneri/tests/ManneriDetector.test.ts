@@ -81,6 +81,45 @@ describe('ManneriDetector', () => {
       const result = detector.detectManneri(messages);
       expect(result).toBe(false);
     });
+
+    it('should not detect manneri for a normal alternating conversation with varied content', () => {
+      const messages: Message[] = [
+        {
+          role: 'user',
+          content: 'What should I cook tonight?',
+          timestamp: 1000,
+        },
+        {
+          role: 'assistant',
+          content: 'A quick pasta with vegetables would work well.',
+          timestamp: 2000,
+        },
+        {
+          role: 'user',
+          content: 'I also need to plan groceries for tomorrow.',
+          timestamp: 3000,
+        },
+        {
+          role: 'assistant',
+          content: 'Start with staples like rice, eggs, and leafy greens.',
+          timestamp: 4000,
+        },
+        {
+          role: 'user',
+          content: 'Can you suggest a short workout after dinner?',
+          timestamp: 5000,
+        },
+        {
+          role: 'assistant',
+          content: 'Try ten minutes of stretching and light squats.',
+          timestamp: 6000,
+        },
+      ];
+
+      const result = detector.detectManneri(messages);
+
+      expect(result).toBe(false);
+    });
   });
 
   describe('shouldIntervene', () => {
