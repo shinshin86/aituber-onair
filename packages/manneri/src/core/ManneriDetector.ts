@@ -238,6 +238,8 @@ export class ManneriDetector {
       enablePatternDetection: true,
       enableKeywordAnalysis: this.config.enableKeywordAnalysis,
       enableTopicTracking: this.config.enableTopicTracking,
+      minMessageLength: this.config.minMessageLength,
+      excludeKeywords: this.config.excludeKeywords,
       language: this.config.language,
       customPrompts: this.config.customPrompts,
       textAnalysisOptions: {

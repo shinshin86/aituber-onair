@@ -49,6 +49,8 @@ export interface ConversationAnalyzerOptions {
   enablePatternDetection: boolean;
   enableKeywordAnalysis: boolean;
   enableTopicTracking: boolean;
+  minMessageLength: number;
+  excludeKeywords: string[];
   textAnalysisOptions: Partial<TextAnalysisOptions>;
   language?: string;
   customPrompts?: LocalizedPromptOverrides;
@@ -71,6 +73,8 @@ export class ConversationAnalyzer {
       enablePatternDetection: true,
       enableKeywordAnalysis: true,
       enableTopicTracking: true,
+      minMessageLength: 0,
+      excludeKeywords: [],
       textAnalysisOptions: {},
       language: 'ja',
       customPrompts: undefined,
@@ -89,7 +93,9 @@ export class ConversationAnalyzer {
 
   analyzeConversation(messages: Message[]): AnalysisResult {
     return measurePerformance('analyzeConversation', () => {
-      const analysisWindow = this.getAnalysisWindow(messages);
+      const analysisWindow = this.filterMessagesForAnalysis(
+        this.getAnalysisWindow(messages)
+      );
 
       const similarity = this.options.enableSimilarityAnalysis
         ? this.analyzeSimilarity(analysisWindow)
@@ -128,6 +134,36 @@ export class ConversationAnalyzer {
   private getAnalysisWindow(messages: Message[]): Message[] {
     const windowSize = Math.min(this.options.analysisWindow, messages.length);
     return messages.slice(-windowSize);
+  }
+
+  private filterMessagesForAnalysis(messages: Message[]): Message[] {
+    const minLength = Math.max(0, this.options.minMessageLength);
+    const excludedKeywords = new Set(
+      this.options.excludeKeywords
+        .map((keyword) => this.normalizeExcludedText(keyword))
+        .filter((keyword) => keyword.length > 0)
+    );
+
+    if (minLength === 0 && excludedKeywords.size === 0) {
+      return messages;
+    }
+
+    return messages.filter((message) => {
+      const normalizedContent = this.normalizeExcludedText(message.content);
+      if (normalizedContent.length < minLength) {
+        return false;
+      }
+
+      return !excludedKeywords.has(normalizedContent);
+    });
+  }
+
+  private normalizeExcludedText(text: string): string {
+    return text
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .replace(/[、。！？!?.,]/g, '');
   }
 
   private analyzeSimilarity(messages: Message[]): SimilarityResult {

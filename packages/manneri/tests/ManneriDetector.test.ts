@@ -226,6 +226,75 @@ describe('ManneriDetector', () => {
       expect(result.interventionReason).toContain('High similarity override');
       expect(result.interventionReason).not.toContain('類似度が高い');
     });
+
+    it('should ignore repeated messages shorter than minMessageLength', () => {
+      const detectorWithMinLength = new ManneriDetector({
+        similarityThreshold: 0.5,
+        minMessageLength: 10,
+      });
+      const shortMessages: Message[] = [
+        { role: 'user', content: 'Hi', timestamp: 1000 },
+        { role: 'assistant', content: 'OK', timestamp: 2000 },
+        { role: 'user', content: 'Hi', timestamp: 3000 },
+        { role: 'assistant', content: 'OK', timestamp: 4000 },
+        { role: 'user', content: 'Hi', timestamp: 5000 },
+        { role: 'assistant', content: 'OK', timestamp: 6000 },
+      ];
+
+      const result = detectorWithMinLength.analyzeConversation(shortMessages);
+
+      expect(result.shouldIntervene).toBe(false);
+      expect(result.similarity.isRepeated).toBe(false);
+      expect(result.patterns).toEqual([]);
+    });
+
+    it('should ignore messages that exactly match excludeKeywords', () => {
+      const detectorWithExcludedKeywords = new ManneriDetector({
+        similarityThreshold: 0.5,
+        minMessageLength: 1,
+        excludeKeywords: ['ok', 'yes'],
+      });
+      const excludedMessages: Message[] = [
+        { role: 'user', content: 'OK', timestamp: 1000 },
+        { role: 'assistant', content: 'Yes', timestamp: 2000 },
+        { role: 'user', content: 'ok', timestamp: 3000 },
+        { role: 'assistant', content: 'yes', timestamp: 4000 },
+        { role: 'user', content: 'OK', timestamp: 5000 },
+        { role: 'assistant', content: 'Yes', timestamp: 6000 },
+      ];
+
+      const result =
+        detectorWithExcludedKeywords.analyzeConversation(excludedMessages);
+
+      expect(result.shouldIntervene).toBe(false);
+      expect(result.similarity.isRepeated).toBe(false);
+      expect(result.patterns).toEqual([]);
+    });
+
+    it('should apply updated minMessageLength and excludeKeywords to later analyses', () => {
+      const configurableDetector = new ManneriDetector({
+        similarityThreshold: 0.5,
+        minMessageLength: 1,
+        excludeKeywords: [],
+      });
+      const repeatedMessages: Message[] = [
+        { role: 'user', content: 'OK', timestamp: 1000 },
+        { role: 'assistant', content: 'Sure', timestamp: 2000 },
+        { role: 'user', content: 'OK', timestamp: 3000 },
+        { role: 'assistant', content: 'Sure', timestamp: 4000 },
+        { role: 'user', content: 'OK', timestamp: 5000 },
+        { role: 'assistant', content: 'Sure', timestamp: 6000 },
+      ];
+
+      expect(configurableDetector.detectManneri(repeatedMessages)).toBe(true);
+
+      configurableDetector.updateConfig({
+        minMessageLength: 5,
+        excludeKeywords: ['ok'],
+      });
+
+      expect(configurableDetector.detectManneri(repeatedMessages)).toBe(false);
+    });
   });
 
   describe('statistics', () => {

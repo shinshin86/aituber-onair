@@ -58,11 +58,11 @@ if (detector.shouldIntervene(messages)) {
 ```typescript
 const detector = new ManneriDetector({
   similarityThreshold: 0.75,     // Similarity threshold (0-1)
-  repetitionLimit: 3,            // (deprecated) Number of repetitions to detect
+  repetitionLimit: 3,            // (deprecated) Exposed for compatibility only
   lookbackWindow: 10,            // Number of messages to analyze
   interventionCooldown: 300000,  // Intervention interval (milliseconds)
-  minMessageLength: 10,          // Minimum character count for analysis
-  excludeKeywords: ['yes', 'no'], // Keywords to exclude
+  minMessageLength: 10,          // Ignore shorter messages during analysis
+  excludeKeywords: ['yes', 'no'], // Ignore exact keyword-only messages
   enableTopicTracking: true,     // Enable topic tracking
   enableKeywordAnalysis: true,   // Enable keyword analysis
   debugMode: false,              // Debug mode
@@ -84,6 +84,11 @@ const detector = new ManneriDetector({
   })
 });
 ```
+
+`minMessageLength` and `excludeKeywords` are applied before similarity, pattern,
+and topic analysis. `excludeKeywords` matches exact message text after trimming,
+case normalization, whitespace normalization, and basic punctuation removal.
+`repetitionLimit` is deprecated and is not used by the detection logic.
 
 ## Integration with AITuberOnAirCore
 

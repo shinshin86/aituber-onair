@@ -56,11 +56,11 @@ if (detector.shouldIntervene(messages)) {
 ```typescript
 const detector = new ManneriDetector({
   similarityThreshold: 0.75,     // 類似度閾値 (0-1)
-  repetitionLimit: 3,            // (非推奨) 繰り返し検出回数
+  repetitionLimit: 3,            // (非推奨) 互換性のために保持
   lookbackWindow: 10,            // 分析対象のメッセージ数
   interventionCooldown: 300000,  // 介入間隔（ミリ秒）
-  minMessageLength: 10,          // 分析対象の最小文字数
-  excludeKeywords: ['はい', 'いいえ'], // 除外キーワード
+  minMessageLength: 10,          // これより短いメッセージを分析から除外
+  excludeKeywords: ['はい', 'いいえ'], // キーワード単体のメッセージを除外
   enableTopicTracking: true,     // 話題追跡を有効化
   enableKeywordAnalysis: true,   // キーワード分析を有効化
   debugMode: false,              // デバッグモード
@@ -82,6 +82,11 @@ const detector = new ManneriDetector({
   })
 });
 ```
+
+`minMessageLength` と `excludeKeywords` は、類似度・パターン・話題分析の
+前に適用されます。`excludeKeywords` は、前後の空白、大文字小文字、空白の
+連続、基本的な句読点を正規化したうえで、メッセージ全体と完全一致した場合に
+除外します。`repetitionLimit` は非推奨で、現在の検出ロジックでは使用されません。
 
 ## AITuberOnAirCoreとの統合
 
