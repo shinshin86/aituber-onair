@@ -1,5 +1,13 @@
 # @aituber-onair/manneri
 
+## Unreleased
+
+### Patch Changes
+
+- Documented the current intervention triggers, contextual prompt metadata, and
+  analyzer statistics behavior.
+- Added a global 90% coverage threshold for the manneri package test suite.
+
 ## 0.3.1
 
 ### Patch Changes
