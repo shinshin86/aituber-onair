@@ -104,9 +104,7 @@ npm run dev
 
 #### Live2D Chat — ローカル Live2D フォルダ読み込み
 
-<p align="center">
-  <img src="./packages/core/examples/react-live2d-app/images/react-live2d-app-hiyori.png" alt="桃瀬ひよりを使用した Live2D サンプルアプリ" width="720" />
-</p>
+![桃瀬ひよりを使用した Live2D サンプルアプリ](./packages/core/examples/react-live2d-app/images/react-live2d-app-hiyori.png)
 
 <p align="center">
   <small>
