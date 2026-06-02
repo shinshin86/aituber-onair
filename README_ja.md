@@ -104,6 +104,19 @@ npm run dev
 
 #### Live2D Chat — ローカル Live2D フォルダ読み込み
 
+<p align="center">
+  <img src="./packages/core/examples/react-live2d-app/images/react-live2d-app-hiyori.png" alt="桃瀬ひよりを使用した Live2D サンプルアプリ" width="720" />
+</p>
+
+<p align="center">
+  <small>
+    Live2D サンプルモデル: 桃瀬ひより。イラスト: かにビーム、
+    モデリング: Live2D Inc. このコンテンツは Live2D Inc. が著作権を
+    有するサンプルデータを使用しています。詳細:
+    <a href="https://www.live2d.com/learn/sample/">Live2D サンプルデータ集</a>。
+  </small>
+</p>
+
 `.model3.json` を含むローカルの Live2D モデルフォルダをブラウザで読み込み、実際の音声出力ボリュームに合わせて口元を動かします。このサンプルは Live2D アセット自体は同梱しません。詳細は [`packages/core/examples/react-live2d-app`](./packages/core/examples/react-live2d-app) を参照。
 
 ```bash

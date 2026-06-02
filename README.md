@@ -107,6 +107,19 @@ npm run dev
 
 #### Live2D Chat — local Live2D folder loader
 
+<p align="center">
+  <img src="./packages/core/examples/react-live2d-app/images/react-live2d-app-hiyori.png" alt="Live2D example app with Hiyori Momose" width="720" />
+</p>
+
+<p align="center">
+  <small>
+    Live2D sample model: Hiyori Momose. Illustration: Kani Biimu;
+    Modeling: Live2D Inc. This content uses sample data owned and copyrighted
+    by Live2D Inc. See
+    <a href="https://www.live2d.com/en/learn/sample/">Live2D Sample Data</a>.
+  </small>
+</p>
+
 Load a local Live2D model folder that contains `.model3.json`, render it in
 the browser, and drive mouth movement from actual audio output volume. This
 example intentionally does not bundle any Live2D assets. See
