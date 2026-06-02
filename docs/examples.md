@@ -64,6 +64,18 @@ npm run dev
 
 ### Live2D App
 
+<p align="center">
+  <img src="../packages/core/examples/react-live2d-app/images/react-live2d-app-hiyori.png" alt="Live2D example app with Hiyori Momose" width="720" />
+</p>
+
+<p align="center">
+  <small>
+    Live2D sample model: Hiyori Momose. Illustration: Kani Biimu;
+    Modeling: Live2D Inc. See
+    <a href="https://www.live2d.com/en/learn/sample/">Live2D Sample Data</a>.
+  </small>
+</p>
+
 Path:
 [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app)
 
