@@ -2,8 +2,18 @@
 
 ## Unreleased
 
+## 0.3.2
+
 ### Patch Changes
 
+- Reduced false positives from structural role sequence patterns.
+- Applied `minMessageLength` and `excludeKeywords` settings during
+  conversation analysis.
+- Added contextual `type`, `priority`, and `context` metadata to generated
+  diversification prompts.
+- Tracked analyzer statistics including total analyses and average analysis
+  time.
+- Added a browser-based example for trying the package locally.
 - Documented the current intervention triggers, contextual prompt metadata, and
   analyzer statistics behavior.
 - Added a global 90% coverage threshold for the manneri package test suite.

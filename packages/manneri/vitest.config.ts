@@ -6,6 +6,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     coverage: {
+      exclude: ['examples/**'],
       thresholds: {
         statements: 90,
         branches: 90,
