@@ -71,7 +71,8 @@ npm run dev
 <p align="center">
   <small>
     Live2D sample model: Hiyori Momose. Illustration: Kani Biimu;
-    Modeling: Live2D Inc. See
+    Modeling: Live2D Inc. This content uses sample data owned and copyrighted
+    by Live2D Inc. See
     <a href="https://www.live2d.com/en/learn/sample/">Live2D Sample Data</a>.
   </small>
 </p>

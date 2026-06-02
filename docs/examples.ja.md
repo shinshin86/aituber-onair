@@ -71,7 +71,8 @@ npm run dev
 <p align="center">
   <small>
     Live2D サンプルモデル: 桃瀬ひより。イラスト: かにビーム、
-    モデリング: Live2D Inc. 詳細:
+    モデリング: Live2D Inc. このコンテンツは Live2D Inc. が著作権を
+    有するサンプルデータを使用しています。詳細:
     <a href="https://www.live2d.com/learn/sample/">Live2D サンプルデータ集</a>。
   </small>
 </p>
