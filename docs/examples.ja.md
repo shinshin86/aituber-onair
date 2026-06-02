@@ -28,6 +28,10 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 
 ### PNGTuber App
 
+<p align="center">
+  <img src="../packages/core/examples/react-pngtuber-app/images/react-pngtuber-app.png" alt="PNGTuber サンプルアプリ" width="720" />
+</p>
+
 パス:
 [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app)
 
@@ -41,6 +45,10 @@ npm run dev
 ```
 
 ### VRM App
+
+<p align="center">
+  <img src="../packages/core/examples/react-vrm-app/images/react-vrm-app.png" alt="VRM サンプルアプリ" width="720" />
+</p>
 
 パス:
 [`packages/core/examples/react-vrm-app`](../packages/core/examples/react-vrm-app)
@@ -137,6 +145,10 @@ npm run dev
   LLM に送る前にライブコメントをフィルタリングするブラウザサンプル。
 
 ## スターターテンプレート
+
+<p align="center">
+  <img src="../packages/create-aituber-onair/images/create-aituber-onair.png" alt="create-aituber-onair" width="520" />
+</p>
 
 このモノレポの外にクリーンなプロジェクトを作りたい場合は
 `create-aituber-onair` を使います。

@@ -28,6 +28,10 @@ to the package examples when you need lower-level integration.
 
 ### PNGTuber App
 
+<p align="center">
+  <img src="../packages/core/examples/react-pngtuber-app/images/react-pngtuber-app.png" alt="PNGTuber example app" width="720" />
+</p>
+
 Path:
 [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app)
 
@@ -41,6 +45,10 @@ npm run dev
 ```
 
 ### VRM App
+
+<p align="center">
+  <img src="../packages/core/examples/react-vrm-app/images/react-vrm-app.png" alt="VRM example app" width="720" />
+</p>
 
 Path:
 [`packages/core/examples/react-vrm-app`](../packages/core/examples/react-vrm-app)
@@ -140,6 +148,10 @@ npm run dev
   to an LLM.
 
 ## Starter Templates
+
+<p align="center">
+  <img src="../packages/create-aituber-onair/images/create-aituber-onair.png" alt="create-aituber-onair" width="520" />
+</p>
 
 Use `create-aituber-onair` when you want a clean project outside this monorepo:
 
