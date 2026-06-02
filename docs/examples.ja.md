@@ -2,6 +2,10 @@
 
 [English version](./examples.md)
 
+<p align="center">
+  <img src="./images/examples-cover-miko.png" alt="AITuber OnAir サンプル一覧" width="840" />
+</p>
+
 AITuber OnAir には、フル機能のアプリサンプルと、より小さなパッケージ別
 サンプルがあります。初めて使う場合は、まずフル機能の AI VTuber アプリを
 1つ動かし、その後で必要に応じてパッケージ別サンプルを確認してください。
@@ -24,6 +28,10 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 
 ### PNGTuber App
 
+<p align="center">
+  <img src="../packages/core/examples/react-pngtuber-app/images/react-pngtuber-app.png" alt="PNGTuber サンプルアプリ" width="720" />
+</p>
+
 パス:
 [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app)
 
@@ -37,6 +45,10 @@ npm run dev
 ```
 
 ### VRM App
+
+<p align="center">
+  <img src="../packages/core/examples/react-vrm-app/images/react-vrm-app.png" alt="VRM サンプルアプリ" width="720" />
+</p>
 
 パス:
 [`packages/core/examples/react-vrm-app`](../packages/core/examples/react-vrm-app)
@@ -68,22 +80,28 @@ npm run dev
 ## Core サンプル
 
 - [`packages/core/examples/react-basic`](../packages/core/examples/react-basic):
-  `@aituber-onair/core` の最小 React 統合。
+  複数 LLM プロバイダー、TTS エンジン、ツール呼び出し、MCP、画像チャット
+  に対応した React チャット統合。
 - [`packages/core/examples/coding-agent`](../packages/core/examples/coding-agent):
   コーディングエージェント風ワークフローで AITuber OnAir Core を使う例。
 
 ## Chat サンプル
 
 - [`packages/chat/examples/node-basic`](../packages/chat/examples/node-basic):
-  Node.js での基本的なチャット利用。
+  Node.js での基本チャット、プロバイダー別呼び出し、Vision、ツール呼び出し、
+  ストリーミングの例。
 - [`packages/chat/examples/react-basic`](../packages/chat/examples/react-basic):
   React ブラウザアプリでのチャット利用。
 - [`packages/chat/examples/local-llm-cli`](../packages/chat/examples/local-llm-cli):
-  ローカル LLM のコマンドライン利用。
+  ローカルまたはセルフホストの OpenAI 互換 LLM 向け対話 CLI。
 - [`packages/chat/examples/agent-providers`](../packages/chat/examples/agent-providers):
-  Agent provider の利用例。
+  Codex、Claude、Copilot など Agent SDK ベースの provider 利用例。
+- [`packages/chat/examples/character-agent`](../packages/chat/examples/character-agent):
+  ツール、JSON ストレージ、テストを備えた秘書風キャラクターエージェント。
+- [`packages/chat/examples/codex-character-chat`](../packages/chat/examples/codex-character-chat):
+  Codex agent provider を使う実験的なキャラクターチャット CLI。
 - [`packages/chat/examples/compat-probe`](../packages/chat/examples/compat-probe):
-  プロバイダー互換性の確認。
+  OpenAI 互換チャットエンドポイントの互換性確認。
 - [`packages/chat/examples/mock-openai-server`](../packages/chat/examples/mock-openai-server):
   ローカルテスト用の OpenAI 互換モックサーバー。
 - [`packages/chat/examples/discord-bot`](../packages/chat/examples/discord-bot):
@@ -98,13 +116,14 @@ npm run dev
 ## Voice サンプル
 
 - [`packages/voice/examples/node-basic`](../packages/voice/examples/node-basic):
-  Node.js での基本的な TTS 利用。
+  OpenAI 互換音声、VOICEVOX、Aivis Speech、Aivis Cloud、VoicePeak、
+  音声再生確認に対応した Node.js TTS 例。
 - [`packages/voice/examples/react-basic`](../packages/voice/examples/react-basic):
-  React ブラウザアプリでの TTS 利用。
+  エンジン切り替えと provider 別設定に対応した React ブラウザ TTS アプリ。
 - [`packages/voice/examples/bun-basic`](../packages/voice/examples/bun-basic):
-  Bun ランタイムでの利用例。
+  Bun ランタイムでの TTS 利用例。
 - [`packages/voice/examples/deno-basic`](../packages/voice/examples/deno-basic):
-  Deno ランタイムでの利用例。
+  Deno ランタイムでの TTS 利用例。
 
 ## Bushitsu Client サンプル
 
@@ -115,7 +134,21 @@ npm run dev
 - [`packages/bushitsu-client/examples/gas-send-only`](../packages/bushitsu-client/examples/gas-send-only):
   Google Apps Script の送信専用サンプル。
 
+## Manneri サンプル
+
+- [`packages/manneri/examples/browser-basic`](../packages/manneri/examples/browser-basic):
+  LLM に接続せず会話パターン検出を試せるブラウザサンプル。
+
+## Comment Intelligence サンプル
+
+- [`packages/comment-intelligence/examples/live-comment-filter-sample`](../packages/comment-intelligence/examples/live-comment-filter-sample):
+  LLM に送る前にライブコメントをフィルタリングするブラウザサンプル。
+
 ## スターターテンプレート
+
+<p align="center">
+  <img src="../packages/create-aituber-onair/images/create-aituber-onair.png" alt="create-aituber-onair" width="520" />
+</p>
 
 このモノレポの外にクリーンなプロジェクトを作りたい場合は
 `create-aituber-onair` を使います。

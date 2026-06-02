@@ -159,7 +159,9 @@ See each package README for provider setup and fuller usage.
 
 ### [create-aituber-onair](./packages/create-aituber-onair/README.md)
 
-<img src="./packages/create-aituber-onair/images/create-aituber-onair.png" alt="create-aituber-onair logo" width="240" />
+<p align="center">
+  <img src="./packages/create-aituber-onair/images/create-aituber-onair.png" alt="create-aituber-onair logo" width="360" />
+</p>
 
 CLI for creating an AITuber OnAir app from an official starter template.
 Currently includes PNGTuber and VRM templates with bundled starter assets.
@@ -169,7 +171,9 @@ npm create aituber-onair@latest
 
 ### [@aituber-onair/core](./packages/core/README.md)
 
-<img src="./packages/core/images/aituber-onair-core.png" alt="AITuber OnAir Core logo" width="240" />
+<p align="center">
+  <img src="./packages/core/images/aituber-onair-core.png" alt="AITuber OnAir Core logo" width="360" />
+</p>
 
 Core runtime tying chat, voice, memory, and conversation context together for full AITuber experiences.
 ```bash
@@ -178,7 +182,9 @@ npm install @aituber-onair/core
 
 ### [@aituber-onair/chat](./packages/chat/README.md)
 
-<img src="./packages/chat/images/aituber-onair-chat.png" alt="AITuber OnAir Chat logo" width="240" />
+<p align="center">
+  <img src="./packages/chat/images/aituber-onair-chat.png" alt="AITuber OnAir Chat logo" width="360" />
+</p>
 
 Unified LLM layer across OpenAI, Claude, Gemini, Z.ai, Kimi, DeepSeek, Mistral, and OpenRouter — streaming, tool/function calling, vision, and MCP support included.
 ```bash
@@ -187,7 +193,9 @@ npm install @aituber-onair/chat
 
 ### [@aituber-onair/voice](./packages/voice/README.md)
 
-<img src="./packages/voice/images/aituber-onair-voice.png" alt="AITuber OnAir Voice logo" width="240" />
+<p align="center">
+  <img src="./packages/voice/images/aituber-onair-voice.png" alt="AITuber OnAir Voice logo" width="360" />
+</p>
 
 Standalone TTS library with VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, AIVIS Speech, and more, plus emotion-aware synthesis.
 ```bash
@@ -196,7 +204,9 @@ npm install @aituber-onair/voice
 
 ### [@aituber-onair/manneri](./packages/manneri/README.md)
 
-<img src="./packages/manneri/images/aituber-onair-manneri.png" alt="AITuber OnAir Manneri logo" width="240" />
+<p align="center">
+  <img src="./packages/manneri/images/aituber-onair-manneri.png" alt="AITuber OnAir Manneri logo" width="360" />
+</p>
 
 Detects repetitive conversation patterns and injects topic-diversification prompts to keep dialogue fresh.
 ```bash
@@ -205,7 +215,9 @@ npm install @aituber-onair/manneri
 
 ### [@aituber-onair/comment-intelligence](./packages/comment-intelligence/README.md)
 
-<img src="./packages/comment-intelligence/images/aituber-onair-comment-intelligence.png" alt="AITuber OnAir Comment Intelligence logo" width="240" />
+<p align="center">
+  <img src="./packages/comment-intelligence/images/aituber-onair-comment-intelligence.png" alt="AITuber OnAir Comment Intelligence logo" width="360" />
+</p>
 
 Filters live comments before they reach an AI character: selects one comment to answer, blocks unsafe input, summarizes ignored comments, and builds compact LLM context. Rules-first with optional LLM-assisted analysis.
 ```bash
@@ -214,7 +226,9 @@ npm install @aituber-onair/comment-intelligence
 
 ### [@aituber-onair/bushitsu-client](./packages/bushitsu-client/README.md)
 
-<img src="./packages/bushitsu-client/images/aituber-onair-bushitsu-client.png" alt="AITuber OnAir Bushitsu Client logo" width="240" />
+<p align="center">
+  <img src="./packages/bushitsu-client/images/aituber-onair-bushitsu-client.png" alt="AITuber OnAir Bushitsu Client logo" width="360" />
+</p>
 
 WebSocket chat client with React hooks, auto-reconnect, rate limiting, mentions, and voice integration. Browser and Node.js.
 ```bash
@@ -223,7 +237,9 @@ npm install @aituber-onair/bushitsu-client
 
 ### [@aituber-onair/kizuna](./packages/kizuna/README.md)
 
-<img src="./packages/kizuna/images/aituber-onair-kizuna.png" alt="AITuber OnAir Kizuna logo" width="240" />
+<p align="center">
+  <img src="./packages/kizuna/images/aituber-onair-kizuna.png" alt="AITuber OnAir Kizuna logo" width="360" />
+</p>
 
 Relationship / bond system (絆) for AI characters and viewers: points, achievements, emotion-based bonuses, level progression, persistent storage.
 ```bash
