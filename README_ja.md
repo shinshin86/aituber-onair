@@ -155,7 +155,9 @@ await chat.processChat(
 
 ### [create-aituber-onair](./packages/create-aituber-onair/README.ja.md)
 
-<img src="./packages/create-aituber-onair/images/create-aituber-onair.png" alt="create-aituber-onair ロゴ" width="240" />
+<p align="center">
+  <img src="./packages/create-aituber-onair/images/create-aituber-onair.png" alt="create-aituber-onair ロゴ" width="360" />
+</p>
 
 公式スターターテンプレートから AITuber OnAir アプリを作成する CLI。
 現時点では、スターターアセット同梱の PNGTuber / VRM テンプレートに対応しています。
@@ -165,7 +167,9 @@ npm create aituber-onair@latest
 
 ### [@aituber-onair/core](./packages/core/README_ja.md)
 
-<img src="./packages/core/images/aituber-onair-core.png" alt="AITuber OnAir Core ロゴ" width="240" />
+<p align="center">
+  <img src="./packages/core/images/aituber-onair-core.png" alt="AITuber OnAir Core ロゴ" width="360" />
+</p>
 
 チャット・音声・メモリ・会話コンテキストをまとめて、フル機能の AITuber 体験を組み立てるためのコアランタイム。
 ```bash
@@ -174,7 +178,9 @@ npm install @aituber-onair/core
 
 ### [@aituber-onair/chat](./packages/chat/README.ja.md)
 
-<img src="./packages/chat/images/aituber-onair-chat.png" alt="AITuber OnAir Chat ロゴ" width="240" />
+<p align="center">
+  <img src="./packages/chat/images/aituber-onair-chat.png" alt="AITuber OnAir Chat ロゴ" width="360" />
+</p>
 
 OpenAI、Claude、Gemini、Z.ai、Kimi、DeepSeek、Mistral、OpenRouter を共通インターフェースで扱える LLM レイヤー。ストリーミング、ツール / 関数呼び出し、Vision、MCP に対応。
 ```bash
@@ -183,7 +189,9 @@ npm install @aituber-onair/chat
 
 ### [@aituber-onair/voice](./packages/voice/README_ja.md)
 
-<img src="./packages/voice/images/aituber-onair-voice.png" alt="AITuber OnAir Voice ロゴ" width="240" />
+<p align="center">
+  <img src="./packages/voice/images/aituber-onair-voice.png" alt="AITuber OnAir Voice ロゴ" width="360" />
+</p>
 
 VOICEVOX、VoicePeak、OpenAI TTS、MiniMax、AIVIS Speech などをサポートする独立した TTS ライブラリ。感情に応じた合成にも対応。
 ```bash
@@ -192,7 +200,9 @@ npm install @aituber-onair/voice
 
 ### [@aituber-onair/manneri](./packages/manneri/README.ja.md)
 
-<img src="./packages/manneri/images/aituber-onair-manneri.png" alt="AITuber OnAir Manneri ロゴ" width="240" />
+<p align="center">
+  <img src="./packages/manneri/images/aituber-onair-manneri.png" alt="AITuber OnAir Manneri ロゴ" width="360" />
+</p>
 
 会話の繰り返しパターンを検出し、話題を切り替えるためのプロンプトを差し込むことで、対話を飽きさせないようにします。
 ```bash
@@ -201,7 +211,9 @@ npm install @aituber-onair/manneri
 
 ### [@aituber-onair/comment-intelligence](./packages/comment-intelligence/README.ja.md)
 
-<img src="./packages/comment-intelligence/images/aituber-onair-comment-intelligence.png" alt="AITuber OnAir Comment Intelligence ロゴ" width="240" />
+<p align="center">
+  <img src="./packages/comment-intelligence/images/aituber-onair-comment-intelligence.png" alt="AITuber OnAir Comment Intelligence ロゴ" width="360" />
+</p>
 
 ライブコメントを AI キャラクターへ渡す前に整理するフィルタリングライブラリ。返答対象コメントの選択、危険コメントのブロック、未選択コメントの要約、LLM向けコンテキスト生成に対応します。ルールベースを基本に、任意で LLM アシスト分析も利用できます。
 ```bash
@@ -210,7 +222,9 @@ npm install @aituber-onair/comment-intelligence
 
 ### [@aituber-onair/bushitsu-client](./packages/bushitsu-client/README_ja.md)
 
-<img src="./packages/bushitsu-client/images/aituber-onair-bushitsu-client.png" alt="AITuber OnAir Bushitsu Client ロゴ" width="240" />
+<p align="center">
+  <img src="./packages/bushitsu-client/images/aituber-onair-bushitsu-client.png" alt="AITuber OnAir Bushitsu Client ロゴ" width="360" />
+</p>
 
 React hooks 対応の WebSocket チャットクライアント。自動再接続・レート制限・メンション・音声合成統合つき。ブラウザと Node.js の両方で動作します。
 ```bash
@@ -219,7 +233,9 @@ npm install @aituber-onair/bushitsu-client
 
 ### [@aituber-onair/kizuna](./packages/kizuna/README.ja.md)
 
-<img src="./packages/kizuna/images/aituber-onair-kizuna.png" alt="AITuber OnAir Kizuna ロゴ" width="240" />
+<p align="center">
+  <img src="./packages/kizuna/images/aituber-onair-kizuna.png" alt="AITuber OnAir Kizuna ロゴ" width="360" />
+</p>
 
 AI キャラクターと視聴者のための絆システム。ポイント、実績、感情ボーナス、レベル進行、永続ストレージに対応。
 ```bash
