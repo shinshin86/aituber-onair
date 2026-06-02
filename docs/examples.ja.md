@@ -2,6 +2,10 @@
 
 [English version](./examples.md)
 
+<p align="center">
+  <img src="./images/examples-cover-miko.png" alt="AITuber OnAir サンプル一覧" width="840" />
+</p>
+
 AITuber OnAir には、フル機能のアプリサンプルと、より小さなパッケージ別
 サンプルがあります。初めて使う場合は、まずフル機能の AI VTuber アプリを
 1つ動かし、その後で必要に応じてパッケージ別サンプルを確認してください。

@@ -2,6 +2,10 @@
 
 [日本語版はこちら](./examples.ja.md)
 
+<p align="center">
+  <img src="./images/examples-cover-miko.png" alt="AITuber OnAir Examples" width="840" />
+</p>
+
 AITuber OnAir includes full app examples and smaller package examples. If you
 are new to the project, start with one full AI VTuber app first, then move down
 to the package examples when you need lower-level integration.
