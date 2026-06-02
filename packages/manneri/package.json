@@ -9,6 +9,8 @@
   "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc --project tsconfig.json",
+    "example:browser-basic": "vite --host 127.0.0.1 examples/browser-basic",
+    "example:browser-basic:build": "vite build examples/browser-basic",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck && vitest run",
     "test:watch": "vitest",
@@ -41,6 +43,7 @@
     "@vitest/coverage-v8": "^1.3.1",
     "jsdom": "^22.1.0",
     "typescript": "^5.0.0",
+    "vite": "^5.4.21",
     "vitest": "^1.3.1"
   },
   "browserslist": ["defaults", "not IE 11"],
