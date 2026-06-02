@@ -74,6 +74,8 @@ npm run dev
 
 ### 3. サンプルアプリをローカルで動かす
 
+![AITuber OnAir サンプル一覧](./docs/images/examples-cover-miko.png)
+
 `@aituber-onair/core` をベースにしたフル機能の React サンプルを3種類用意しています。プロジェクトに合うアバター方式を選んでください。LLM / TTS プロバイダー対応範囲と **Settings** UI はどれも共通です。
 
 #### PNGTuber Chat — 2D PNG アバター

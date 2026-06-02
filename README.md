@@ -75,6 +75,8 @@ For step-by-step setup and template selection, see
 
 ### 3. Run an example app locally
 
+![AITuber OnAir Examples](./docs/images/examples-cover-miko.png)
+
 Three full, ready-to-run React apps built on `@aituber-onair/core`. Pick the
 avatar style that fits your project. All three share the same broad LLM / TTS
 provider coverage and in-app **Settings** UI.
