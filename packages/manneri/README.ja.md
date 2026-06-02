@@ -88,6 +88,26 @@ const detector = new ManneriDetector({
 連続、基本的な句読点を正規化したうえで、メッセージ全体と完全一致した場合に
 除外します。`repetitionLimit` は非推奨で、現在の検出ロジックでは使用されません。
 
+## 検出仕様
+
+Manneri は、次のいずれかの実用的なシグナルが閾値を超えたときに介入対象と
+判定します。
+
+- 最新メッセージが直近メッセージと高い類似度を持つ
+- 内容ベースの会話パターンが十分な回数繰り返される
+- 話題分析で信頼度の高い話題偏りが見つかる
+
+`user-assistant-user-assistant` のようなロール列だけのパターンは分析結果には
+残りますが、それ単体では介入トリガーになりません。これにより、通常の往復会話で
+誤検知しにくくなります。
+
+分析後に `generateDiversificationPrompt()` を呼ぶと、主な検出理由に応じて
+プロンプトのメタデータが変わります。
+
+- 類似度と内容パターンの繰り返しは `pattern_break` / high priority
+- 話題偏りは `keyword_shift` / medium priority
+- 介入対象の分析結果がない場合は `topic_change` にフォールバック
+
 ## AITuberOnAirCoreとの統合
 
 ```typescript
@@ -160,9 +180,15 @@ const stats = detector.getStatistics();
 console.log('統計:', {
   totalInterventions: stats.totalInterventions,
   averageInterval: stats.averageInterventionInterval,
-  thresholds: stats.configuredThresholds
+  thresholds: stats.configuredThresholds,
+  analysis: stats.analysisStats
 });
 ```
+
+`analysisStats` には `totalAnalyses`、`averageAnalysisTime`、
+`cacheHitRate`、`memoryUsage` が含まれます。`clearHistory()` は介入履歴と
+analyzer のキャッシュをリセットします。`ConversationAnalyzer` の
+`clearCache()` はキャッシュだけを消し、分析回数などのカウンタは維持します。
 
 ## 多言語対応
 

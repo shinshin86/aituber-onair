@@ -90,6 +90,26 @@ and topic analysis. `excludeKeywords` matches exact message text after trimming,
 case normalization, whitespace normalization, and basic punctuation removal.
 `repetitionLimit` is deprecated and is not used by the detection logic.
 
+## Detection Behavior
+
+Manneri triggers an intervention when at least one actionable signal crosses its
+threshold:
+
+- the latest message is too similar to recent messages
+- a content-based conversation pattern repeats enough times
+- topic analysis finds a high-confidence topic bias
+
+Role-only alternation patterns such as `user-assistant-user-assistant` are kept
+in analysis results for observability, but they do not trigger interventions by
+themselves. This reduces false positives in normal back-and-forth conversations.
+
+When you call `generateDiversificationPrompt()` after an analysis, the prompt
+metadata reflects the primary signal:
+
+- similarity and repeated content patterns use `pattern_break` with high priority
+- topic bias uses `keyword_shift` with medium priority
+- calls without a prior actionable analysis fall back to `topic_change`
+
 ## Integration with AITuberOnAirCore
 
 ```typescript
@@ -162,9 +182,15 @@ const stats = detector.getStatistics();
 console.log('Statistics:', {
   totalInterventions: stats.totalInterventions,
   averageInterval: stats.averageInterventionInterval,
-  thresholds: stats.configuredThresholds
+  thresholds: stats.configuredThresholds,
+  analysis: stats.analysisStats
 });
 ```
+
+`analysisStats` includes `totalAnalyses`, `averageAnalysisTime`,
+`cacheHitRate`, and `memoryUsage`. `clearHistory()` resets intervention history
+and analyzer caches. Calling `clearCache()` on `ConversationAnalyzer` clears
+caches while keeping analysis counters intact.
 
 ## Multi-Language Support
 
