@@ -107,9 +107,7 @@ npm run dev
 
 #### Live2D Chat — local Live2D folder loader
 
-<p align="center">
-  <img src="./packages/core/examples/react-live2d-app/images/react-live2d-app-hiyori.png" alt="Live2D example app with Hiyori Momose" width="720" />
-</p>
+![Live2D example app with Hiyori Momose](./packages/core/examples/react-live2d-app/images/react-live2d-app-hiyori.png)
 
 <p align="center">
   <small>
