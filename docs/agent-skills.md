@@ -81,6 +81,9 @@ Codex prompt examples:
 - "build an OpenAI-compatible speech server in Colab"
 - "connect Colab local TTS to AITuber OnAir voice"
 - "launch local-tts-on-google-colab with Colab MCP Go"
+- "Use $connect-colab-local-tts to launch Irodori-TTS from
+  local-tts-on-google-colab through Colab MCP Go, expose it with trycloudflare,
+  and verify it from @aituber-onair/voice."
 
 Claude Code prompt examples:
 
