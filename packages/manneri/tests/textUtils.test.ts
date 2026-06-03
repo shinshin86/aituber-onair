@@ -354,6 +354,24 @@ describe('textUtils', () => {
       expect(similarity).toBe(1.0);
     });
 
+    it('should detect partial overlap in short Japanese phrases', () => {
+      const similarity = calculateTextSimilarity(
+        '次へ進もう',
+        'うん、次へ進もう'
+      );
+
+      expect(similarity).toBeGreaterThanOrEqual(0.7);
+    });
+
+    it('should ignore leading bracket metadata for Japanese similarity', () => {
+      const similarity = calculateTextSimilarity(
+        '[happy]うん、次へ進もう',
+        '[relaxed]次へ進もう'
+      );
+
+      expect(similarity).toBeGreaterThanOrEqual(0.7);
+    });
+
     it('should handle mixed languages', () => {
       const similarity = calculateTextSimilarity('hello 世界', 'hello 世界');
       expect(similarity).toBe(1.0);

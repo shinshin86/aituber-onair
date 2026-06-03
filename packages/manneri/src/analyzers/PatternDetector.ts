@@ -3,6 +3,8 @@ import {
   MAX_PATTERN_AGE_MS,
   MAX_PATTERN_LENGTH,
   MAX_PATTERNS,
+  JAPANESE_SHORT_REPEATED_MAX_LENGTH,
+  JAPANESE_SHORT_REPEATED_SIMILARITY_THRESHOLD,
   MIN_PATTERN_LENGTH,
   MIN_REPEATED_ROLE_FREQUENCY,
   MIN_SEQUENCE_FREQUENCY,
@@ -14,7 +16,10 @@ import {
   SIGNATURE_WORD_COUNT,
 } from '../config/constants.js';
 import { generateId } from '../utils/browserUtils.js';
-import { calculateTextSimilarity } from '../utils/textUtils.js';
+import {
+  calculateTextSimilarity,
+  containsJapanese,
+} from '../utils/textUtils.js';
 
 export interface PatternDetectionResult {
   patterns: ConversationPattern[];
@@ -135,17 +140,9 @@ export class PatternDetector {
 
     for (const message of messages) {
       const matchingCluster = clusters.find((cluster) => {
-        const representative = cluster[0];
-        if (representative.role !== message.role) {
-          return false;
-        }
-
-        const similarity = calculateTextSimilarity(
-          this.normalizeMessageContent(representative.content),
-          this.normalizeMessageContent(message.content)
+        return cluster.some((clusterMessage) =>
+          this.isRepeatedMessage(clusterMessage, message)
         );
-
-        return similarity >= REPEATED_SIMILARITY_THRESHOLD;
       });
 
       if (matchingCluster) {
@@ -254,6 +251,36 @@ export class PatternDetector {
 
   private normalizeMessageContent(content: string): string {
     return content.trim().replace(/^(?:\[[^\]\r\n]{1,32}\]\s*)+/, '');
+  }
+
+  private isRepeatedMessage(messageA: Message, messageB: Message): boolean {
+    if (messageA.role !== messageB.role) {
+      return false;
+    }
+
+    const contentA = this.normalizeMessageContent(messageA.content);
+    const contentB = this.normalizeMessageContent(messageB.content);
+    const similarity = calculateTextSimilarity(contentA, contentB);
+    const threshold = this.getRepeatedSimilarityThreshold(contentA, contentB);
+
+    return similarity >= threshold;
+  }
+
+  private getRepeatedSimilarityThreshold(
+    contentA: string,
+    contentB: string
+  ): number {
+    const compactA = contentA.replace(/\s+/g, '');
+    const compactB = contentB.replace(/\s+/g, '');
+    const isShortJapanese =
+      containsJapanese(compactA) &&
+      containsJapanese(compactB) &&
+      Math.max(compactA.length, compactB.length) <=
+        JAPANESE_SHORT_REPEATED_MAX_LENGTH;
+
+    return isShortJapanese
+      ? JAPANESE_SHORT_REPEATED_SIMILARITY_THRESHOLD
+      : REPEATED_SIMILARITY_THRESHOLD;
   }
 
   private deduplicatePatterns(
