@@ -54,10 +54,10 @@ Colab MCP Go で Colab に接続し、指定した
 依頼例:
 
 ```text
-Use $connect-colab-local-tts to launch Irodori-TTS from
-shinshin86/local-tts-on-google-colab through Colab MCP Go, expose it with
-trycloudflare, then verify it from @aituber-onair/voice using the Node.js
-example. Use Japanese smoke text.
+$connect-colab-local-tts を使って、Colab MCP Go 経由で
+shinshin86/local-tts-on-google-colab の Irodori-TTS を起動してください。
+trycloudflare で外部 URL を発行し、@aituber-onair/voice の Node.js
+サンプルから日本語の動作確認テキストで検証してください。
 ```
 
 サンプル候補としては `Irodori-TTS`、`Piper-Plus`、
