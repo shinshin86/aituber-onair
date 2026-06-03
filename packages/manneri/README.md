@@ -99,6 +99,10 @@ threshold:
 - a content-based conversation pattern repeats enough times
 - topic analysis finds a high-confidence topic bias
 
+Repeated message detection groups similar messages from the same role into one
+content-based pattern. Leading bracket metadata such as `[happy]` is ignored for
+this comparison, so emotion tags do not mask repeated wording.
+
 Role-only alternation patterns such as `user-assistant-user-assistant` are kept
 in analysis results for observability, but they do not trigger interventions by
 themselves. This reduces false positives in normal back-and-forth conversations.

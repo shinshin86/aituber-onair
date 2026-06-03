@@ -147,6 +147,34 @@ describe('PatternDetector', () => {
       expect(repeatedPattern).toBeDefined();
     });
 
+    it('should aggregate short repeated Japanese messages into one pattern', () => {
+      const messages: Message[] = [
+        { role: 'user', content: '[happy] うん、次のコーナーに進もうね！' },
+        {
+          role: 'assistant',
+          content: '[happy] いいね、次の流れを作っていこう！',
+        },
+        { role: 'user', content: '[happy] うん、次のコーナーに進もうね' },
+        {
+          role: 'assistant',
+          content: '[happy] 次の話題に切り替えてみようか。',
+        },
+        { role: 'user', content: '[happy] うん、次のコーナーに進もうね！' },
+        {
+          role: 'assistant',
+          content: '[happy] それじゃあ新しいテーマに移ろう！',
+        },
+      ];
+
+      const result = detector.detectPatterns(messages);
+      const repeatedUserPattern = result.patterns.find((pattern) =>
+        pattern.pattern.includes('Repeated user message')
+      );
+
+      expect(repeatedUserPattern).toBeDefined();
+      expect(repeatedUserPattern?.frequency).toBe(3);
+    });
+
     it('should find patterns of various lengths', () => {
       const messages: Message[] = [];
       // Create a pattern that repeats with different lengths

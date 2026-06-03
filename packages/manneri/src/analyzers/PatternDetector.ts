@@ -131,42 +131,48 @@ export class PatternDetector {
 
   private findRepeatedPatterns(messages: Message[]): ConversationPattern[] {
     const repeatedPatterns: ConversationPattern[] = [];
-    const foundPairs = new Set<string>();
+    const clusters: Message[][] = [];
 
-    for (let i = 0; i < messages.length - 1; i++) {
-      const currentMessage = messages[i];
-
-      for (let j = i + 1; j < messages.length; j++) {
-        const compareMessage = messages[j];
-
-        if (currentMessage.role === compareMessage.role) {
-          const similarity = calculateTextSimilarity(
-            currentMessage.content,
-            compareMessage.content
-          );
-
-          if (similarity >= REPEATED_SIMILARITY_THRESHOLD) {
-            // Create a unique key for this pair to avoid duplicates
-            const pairKey = `${Math.min(i, j)}_${Math.max(i, j)}`;
-
-            if (!foundPairs.has(pairKey)) {
-              foundPairs.add(pairKey);
-
-              const pattern: ConversationPattern = {
-                id: generateId(),
-                pattern: `Repeated ${currentMessage.role} message`,
-                frequency: 2,
-                firstSeen: currentMessage.timestamp || Date.now(),
-                lastSeen: compareMessage.timestamp || Date.now(),
-                messages: [currentMessage, compareMessage],
-              };
-
-              repeatedPatterns.push(pattern);
-              this.detectedPatterns.set(pattern.id, pattern);
-            }
-          }
+    for (const message of messages) {
+      const matchingCluster = clusters.find((cluster) => {
+        const representative = cluster[0];
+        if (representative.role !== message.role) {
+          return false;
         }
+
+        const similarity = calculateTextSimilarity(
+          this.normalizeMessageContent(representative.content),
+          this.normalizeMessageContent(message.content)
+        );
+
+        return similarity >= REPEATED_SIMILARITY_THRESHOLD;
+      });
+
+      if (matchingCluster) {
+        matchingCluster.push(message);
+      } else {
+        clusters.push([message]);
       }
+    }
+
+    for (const cluster of clusters) {
+      if (cluster.length < MIN_SEQUENCE_FREQUENCY) {
+        continue;
+      }
+
+      const firstMessage = cluster[0];
+      const lastMessage = cluster[cluster.length - 1];
+      const pattern: ConversationPattern = {
+        id: generateId(),
+        pattern: `Repeated ${firstMessage.role} message`,
+        frequency: cluster.length,
+        firstSeen: firstMessage.timestamp || Date.now(),
+        lastSeen: lastMessage.timestamp || Date.now(),
+        messages: cluster,
+      };
+
+      repeatedPatterns.push(pattern);
+      this.detectedPatterns.set(pattern.id, pattern);
     }
 
     return repeatedPatterns;
@@ -238,12 +244,16 @@ export class PatternDetector {
   private createPatternSignature(messages: Message[]): string {
     return messages
       .map((m) => {
-        const contentWords = m.content
+        const contentWords = this.normalizeMessageContent(m.content)
           .split(/\s+/)
           .slice(0, SIGNATURE_WORD_COUNT);
         return `${m.role}:${contentWords.join(' ')}`;
       })
       .join('|');
+  }
+
+  private normalizeMessageContent(content: string): string {
+    return content.trim().replace(/^(?:\[[^\]\r\n]{1,32}\]\s*)+/, '');
   }
 
   private deduplicatePatterns(

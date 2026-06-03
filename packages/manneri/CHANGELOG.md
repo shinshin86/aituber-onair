@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Patch Changes
+
+- Improved content-based repeated message detection so short similar messages
+  from the same role are aggregated into a single repeated pattern.
+- Ignored leading bracket metadata such as emotion tags when comparing repeated
+  message content.
+
 ## 0.3.2
 
 ### Patch Changes

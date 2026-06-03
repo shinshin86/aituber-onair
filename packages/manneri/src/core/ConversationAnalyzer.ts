@@ -166,6 +166,7 @@ export class ConversationAnalyzer {
   private normalizeExcludedText(text: string): string {
     return text
       .trim()
+      .replace(/^(?:\[[^\]\r\n]{1,32}\]\s*)+/, '')
       .toLowerCase()
       .replace(/\s+/g, ' ')
       .replace(/[、。！？!?.,]/g, '');
