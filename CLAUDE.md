@@ -64,16 +64,19 @@ skill definitions aligned.
   - `add-tts-provider`
   - `sync-core-after-chat-upgrade`
   - `wrap-tts-as-openai-compatible`
+  - `connect-colab-local-tts`
 - Canonical sources:
   - `skills/add-chat-model/SKILL.md`
   - `skills/add-tts-provider/SKILL.md`
   - `skills/sync-core-after-chat-upgrade/SKILL.md`
   - `skills/wrap-tts-as-openai-compatible/SKILL.md`
+  - `skills/connect-colab-local-tts/SKILL.md`
 - Claude Code runtime paths:
   - `.claude/skills/add-chat-model/SKILL.md`
   - `.claude/skills/add-tts-provider/SKILL.md`
   - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
   - `.claude/skills/wrap-tts-as-openai-compatible/SKILL.md`
+  - `.claude/skills/connect-colab-local-tts/SKILL.md`
 
 Usage:
 
@@ -105,6 +108,9 @@ Usage:
 - Prefer this skill for practical local TTS engines with clean one-shot WAV
   generation. Do not force research-first or streaming-first systems into this
   workflow.
+- Invoke explicitly with `$connect-colab-local-tts`, or use prompts like
+  "connect Colab local TTS", "launch local-tts-on-google-colab with Colab MCP
+  Go", or "try a Colab OpenAI-compatible TTS URL from @aituber-onair/voice".
 - If input is missing, collect:
   `provider`, `model_id`, `model_const_name`, `display_name`,
   `supports_vision`, and optional `bump_version` (default `true`).
@@ -134,6 +140,9 @@ Maintenance:
 - For TTS compatibility-wrapper workflow updates, edit
   `skills/wrap-tts-as-openai-compatible/SKILL.md` and sync to
   `.claude/skills/wrap-tts-as-openai-compatible/SKILL.md`.
+- For Colab local TTS connection workflow updates, edit
+  `skills/connect-colab-local-tts/SKILL.md` and sync to
+  `.claude/skills/connect-colab-local-tts/SKILL.md`.
 
 ## System Architecture
 

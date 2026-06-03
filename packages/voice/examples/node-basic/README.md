@@ -8,6 +8,7 @@ This directory contains examples demonstrating how to use `@aituber-onair/voice`
 - **`voicevox-example.js`** - VOICEVOX TTS engine example
 - **`aivis-speech-example.js`** - AivisSpeech TTS engine example
 - **`voicepeak-example.js`** - VoicePeak TTS engine example
+- **`openai-compatible-colab-example.js`** - OpenAI-compatible Colab TTS endpoint example
 - **`test-speaker-playback.js`** - Cross-engine speaker playback test
 - **`.gitignore`** - Ignores generated audio files
 
@@ -114,6 +115,28 @@ node examples/node-basic/test-speaker-playback.js
 - Tests VOICEVOX, AivisSpeech, and VoicePeak
 - Verifies dynamic audio format detection
 - Confirms speaker playback functionality
+
+### OpenAI-Compatible Colab TTS Example
+
+Tests a short-lived OpenAI-compatible TTS endpoint exposed from Google Colab,
+for example a `trycloudflare` URL created by
+`shinshin86/local-tts-on-google-colab`.
+
+```bash
+OPENAI_COMPATIBLE_TTS_URL="https://xxxx.trycloudflare.com/v1/audio/speech" \
+OPENAI_COMPATIBLE_TTS_MODEL="Irodori-TTS" \
+OPENAI_COMPATIBLE_TTS_VOICE="" \
+OPENAI_COMPATIBLE_TTS_TEXT="こんにちは。AITuber OnAir Voice から再生しています。" \
+node examples/node-basic/openai-compatible-colab-example.js
+```
+
+Useful optional settings:
+
+```bash
+OPENAI_COMPATIBLE_TTS_SPEED="1.0"
+OPENAI_COMPATIBLE_TTS_OUTPUT="openai-compatible-colab-output.wav"
+OPENAI_COMPATIBLE_TTS_PLAY="0" # save only; skip Node.js playback
+```
 
 ## Generated Files
 

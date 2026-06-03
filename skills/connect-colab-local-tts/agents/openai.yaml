@@ -1,0 +1,4 @@
+interface:
+  display_name: "Connect Colab Local TTS"
+  short_description: "Launch local-tts-on-google-colab through Colab MCP Go and verify it from @aituber-onair/voice"
+  default_prompt: "Use $connect-colab-local-tts to launch a selected local-tts-on-google-colab engine through Colab MCP Go, capture the trycloudflare /v1/audio/speech URL, and validate it with the @aituber-onair/voice Node.js openaiCompatible example."

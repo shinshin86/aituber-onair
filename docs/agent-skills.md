@@ -40,6 +40,10 @@ minimal (`name`, `description`) and keep the body procedural.
   - Canonical: `skills/wrap-tts-as-openai-compatible/SKILL.md`
   - Claude Code: `.claude/skills/wrap-tts-as-openai-compatible/SKILL.md`
   - Codex metadata: `skills/wrap-tts-as-openai-compatible/agents/openai.yaml`
+- `connect-colab-local-tts`
+  - Canonical: `skills/connect-colab-local-tts/SKILL.md`
+  - Claude Code: `.claude/skills/connect-colab-local-tts/SKILL.md`
+  - Codex metadata: `skills/connect-colab-local-tts/agents/openai.yaml`
 
 Use this skill when adding a new model id to `@aituber-onair/chat`, including
 constants, provider support, tests, examples, docs, and versioning updates.
@@ -57,6 +61,10 @@ classification, and debugging of 422/500/runtime issues. This skill also
 includes validation guidance for consuming the wrapper from
 `@aituber-onair/voice`. It is optimized for practical local TTS engines rather
 than research-first or streaming-first systems.
+Use `connect-colab-local-tts` when driving
+`shinshin86/local-tts-on-google-colab` through Colab MCP Go, exposing the
+selected engine with `trycloudflare`, and validating the resulting
+OpenAI-compatible speech endpoint from `@aituber-onair/voice`.
 
 ## Usage
 
@@ -71,6 +79,8 @@ Codex prompt examples:
 - "add <provider> TTS"
 - "wrap a TTS engine as OpenAI-compatible"
 - "build an OpenAI-compatible speech server in Colab"
+- "connect Colab local TTS to AITuber OnAir voice"
+- "launch local-tts-on-google-colab with Colab MCP Go"
 
 Claude Code prompt examples:
 
@@ -106,4 +116,5 @@ diff -u skills/add-chat-model/SKILL.md .claude/skills/add-chat-model/SKILL.md
 diff -u skills/add-tts-provider/SKILL.md .claude/skills/add-tts-provider/SKILL.md
 diff -u skills/sync-core-after-chat-upgrade/SKILL.md .claude/skills/sync-core-after-chat-upgrade/SKILL.md
 diff -u skills/wrap-tts-as-openai-compatible/SKILL.md .claude/skills/wrap-tts-as-openai-compatible/SKILL.md
+diff -u skills/connect-colab-local-tts/SKILL.md .claude/skills/connect-colab-local-tts/SKILL.md
 ```
