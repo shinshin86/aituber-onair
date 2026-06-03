@@ -3,6 +3,8 @@ import {
   MAX_PATTERN_AGE_MS,
   MAX_PATTERN_LENGTH,
   MAX_PATTERNS,
+  JAPANESE_SHORT_REPEATED_MAX_LENGTH,
+  JAPANESE_SHORT_REPEATED_SIMILARITY_THRESHOLD,
   MIN_PATTERN_LENGTH,
   MIN_REPEATED_ROLE_FREQUENCY,
   MIN_SEQUENCE_FREQUENCY,
@@ -14,7 +16,10 @@ import {
   SIGNATURE_WORD_COUNT,
 } from '../config/constants.js';
 import { generateId } from '../utils/browserUtils.js';
-import { calculateTextSimilarity } from '../utils/textUtils.js';
+import {
+  calculateTextSimilarity,
+  containsJapanese,
+} from '../utils/textUtils.js';
 
 export interface PatternDetectionResult {
   patterns: ConversationPattern[];
@@ -131,42 +136,40 @@ export class PatternDetector {
 
   private findRepeatedPatterns(messages: Message[]): ConversationPattern[] {
     const repeatedPatterns: ConversationPattern[] = [];
-    const foundPairs = new Set<string>();
+    const clusters: Message[][] = [];
 
-    for (let i = 0; i < messages.length - 1; i++) {
-      const currentMessage = messages[i];
+    for (const message of messages) {
+      const matchingCluster = clusters.find((cluster) => {
+        return cluster.some((clusterMessage) =>
+          this.isRepeatedMessage(clusterMessage, message)
+        );
+      });
 
-      for (let j = i + 1; j < messages.length; j++) {
-        const compareMessage = messages[j];
-
-        if (currentMessage.role === compareMessage.role) {
-          const similarity = calculateTextSimilarity(
-            currentMessage.content,
-            compareMessage.content
-          );
-
-          if (similarity >= REPEATED_SIMILARITY_THRESHOLD) {
-            // Create a unique key for this pair to avoid duplicates
-            const pairKey = `${Math.min(i, j)}_${Math.max(i, j)}`;
-
-            if (!foundPairs.has(pairKey)) {
-              foundPairs.add(pairKey);
-
-              const pattern: ConversationPattern = {
-                id: generateId(),
-                pattern: `Repeated ${currentMessage.role} message`,
-                frequency: 2,
-                firstSeen: currentMessage.timestamp || Date.now(),
-                lastSeen: compareMessage.timestamp || Date.now(),
-                messages: [currentMessage, compareMessage],
-              };
-
-              repeatedPatterns.push(pattern);
-              this.detectedPatterns.set(pattern.id, pattern);
-            }
-          }
-        }
+      if (matchingCluster) {
+        matchingCluster.push(message);
+      } else {
+        clusters.push([message]);
       }
+    }
+
+    for (const cluster of clusters) {
+      if (cluster.length < MIN_SEQUENCE_FREQUENCY) {
+        continue;
+      }
+
+      const firstMessage = cluster[0];
+      const lastMessage = cluster[cluster.length - 1];
+      const pattern: ConversationPattern = {
+        id: generateId(),
+        pattern: `Repeated ${firstMessage.role} message`,
+        frequency: cluster.length,
+        firstSeen: firstMessage.timestamp || Date.now(),
+        lastSeen: lastMessage.timestamp || Date.now(),
+        messages: cluster,
+      };
+
+      repeatedPatterns.push(pattern);
+      this.detectedPatterns.set(pattern.id, pattern);
     }
 
     return repeatedPatterns;
@@ -238,12 +241,46 @@ export class PatternDetector {
   private createPatternSignature(messages: Message[]): string {
     return messages
       .map((m) => {
-        const contentWords = m.content
+        const contentWords = this.normalizeMessageContent(m.content)
           .split(/\s+/)
           .slice(0, SIGNATURE_WORD_COUNT);
         return `${m.role}:${contentWords.join(' ')}`;
       })
       .join('|');
+  }
+
+  private normalizeMessageContent(content: string): string {
+    return content.trim().replace(/^(?:\[[^\]\r\n]{1,32}\]\s*)+/, '');
+  }
+
+  private isRepeatedMessage(messageA: Message, messageB: Message): boolean {
+    if (messageA.role !== messageB.role) {
+      return false;
+    }
+
+    const contentA = this.normalizeMessageContent(messageA.content);
+    const contentB = this.normalizeMessageContent(messageB.content);
+    const similarity = calculateTextSimilarity(contentA, contentB);
+    const threshold = this.getRepeatedSimilarityThreshold(contentA, contentB);
+
+    return similarity >= threshold;
+  }
+
+  private getRepeatedSimilarityThreshold(
+    contentA: string,
+    contentB: string
+  ): number {
+    const compactA = contentA.replace(/\s+/g, '');
+    const compactB = contentB.replace(/\s+/g, '');
+    const isShortJapanese =
+      containsJapanese(compactA) &&
+      containsJapanese(compactB) &&
+      Math.max(compactA.length, compactB.length) <=
+        JAPANESE_SHORT_REPEATED_MAX_LENGTH;
+
+    return isShortJapanese
+      ? JAPANESE_SHORT_REPEATED_SIMILARITY_THRESHOLD
+      : REPEATED_SIMILARITY_THRESHOLD;
   }
 
   private deduplicatePatterns(

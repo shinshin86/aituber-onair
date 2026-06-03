@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.3.3
+
+### Patch Changes
+
+- Improved content-based repeated message detection so short similar messages
+  from the same role are aggregated into a single repeated pattern.
+- Added Japanese character n-gram similarity for short phrase overlap such as
+  repeated wording with conversational prefixes.
+- Ignored leading bracket metadata such as emotion tags when comparing repeated
+  message content.
+
 ## 0.3.2
 
 ### Patch Changes

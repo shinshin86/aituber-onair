@@ -120,6 +120,159 @@ describe('ManneriDetector', () => {
 
       expect(result).toBe(false);
     });
+
+    it('should detect short repeated Japanese stream chat content', () => {
+      const shortMessageDetector = new ManneriDetector({
+        minMessageLength: 0,
+      });
+      const messages: Message[] = [
+        { role: 'user', content: '[happy] 次の企画は何にする？' },
+        {
+          role: 'assistant',
+          content: '[neutral] まだ迷っているけど、コメントを見ながら決めるね。',
+        },
+        { role: 'user', content: '[happy] コメント読むのいいね！' },
+        {
+          role: 'assistant',
+          content: '[happy] みんなの反応を見ながら進めるの楽しそうだね！',
+        },
+        { role: 'user', content: '[happy] じゃあ次のコーナーに行こう！' },
+        {
+          role: 'assistant',
+          content: '[happy] いいね、次の流れを作っていこう！',
+        },
+        { role: 'user', content: '[happy] うん、次のコーナーに進もうね！' },
+        {
+          role: 'assistant',
+          content: '[relaxed] そうだね、少しずつ次へ進めよう。',
+        },
+        { role: 'user', content: '[happy] うん、次のコーナーに進もうね' },
+        {
+          role: 'assistant',
+          content: '[happy] 次の話題に切り替えてみようか。',
+        },
+        { role: 'user', content: '[happy] うん、次のコーナーに進もうね！' },
+        {
+          role: 'assistant',
+          content: '[surprised] いいタイミングだね、流れを変えてみよう！',
+        },
+        { role: 'user', content: '[happy] うん、次のコーナーに進もうね' },
+        {
+          role: 'assistant',
+          content: '[happy] それじゃあ新しいテーマに移ろう！',
+        },
+        { role: 'user', content: '[happy] そろそろ新しい話題も見たい！' },
+        {
+          role: 'assistant',
+          content: '[happy] 了解、新しいコメントを拾ってみるね！',
+        },
+      ];
+
+      const result = shortMessageDetector.analyzeConversation(messages);
+
+      expect(result.shouldIntervene).toBe(true);
+      expect(
+        result.patterns.some(
+          (pattern) =>
+            pattern.pattern.includes('Repeated user message') &&
+            pattern.frequency >= 3
+        )
+      ).toBe(true);
+    });
+
+    it('should detect Japanese stream chat stuck on similar short phrases', () => {
+      const shortMessageDetector = new ManneriDetector({
+        minMessageLength: 0,
+        lookbackWindow: 15,
+      });
+      const messages: Message[] = [
+        { role: 'user', content: '今日の配信は何から始める？' },
+        {
+          role: 'assistant',
+          content: '[neutral] まずは近況を少し話してから決めようかな。',
+        },
+        { role: 'user', content: '近況のあとで次の話題も聞きたい！' },
+        {
+          role: 'assistant',
+          content: '[happy] いいね、あとで新しいテーマに移ろう。',
+        },
+        { role: 'user', content: 'うん、次の話題へ進もう！' },
+        {
+          role: 'assistant',
+          content: '[relaxed] そうだね、次の流れを考えてみるね。',
+        },
+        { role: 'user', content: '次の話題に進もう' },
+        {
+          role: 'assistant',
+          content: '[happy] もう少しだけ今の話をまとめてから進めよう。',
+        },
+        { role: 'user', content: 'うん、次の話題に進もう' },
+        {
+          role: 'assistant',
+          content: '[relaxed] そうしよう、切り替える準備をするね。',
+        },
+        { role: 'user', content: 'そろそろ次の話題だね' },
+        {
+          role: 'assistant',
+          content: '[happy] うん、新しいテーマも見てみよう。',
+        },
+        { role: 'user', content: 'うん、次の話題へ進もう' },
+        {
+          role: 'assistant',
+          content: '[relaxed] それじゃあ次の流れに移ろう。',
+        },
+        { role: 'user', content: '次へ進もう' },
+      ];
+
+      const result = shortMessageDetector.analyzeConversation(messages);
+
+      expect(result.shouldIntervene).toBe(true);
+      expect(
+        result.patterns.some(
+          (pattern) =>
+            pattern.pattern.includes('Repeated user message') &&
+            pattern.frequency >= 3
+        )
+      ).toBe(true);
+    });
+
+    it('should not detect varied short Japanese stream chat as manneri', () => {
+      const shortMessageDetector = new ManneriDetector({
+        minMessageLength: 0,
+        lookbackWindow: 15,
+      });
+      const messages: Message[] = [
+        { role: 'user', content: '今日は何から始める？' },
+        {
+          role: 'assistant',
+          content: '[neutral] まずは最近のニュースを少し話そうかな。',
+        },
+        { role: 'user', content: '次はゲームの話も聞きたい' },
+        {
+          role: 'assistant',
+          content: '[happy] いいね、遊んだタイトルの話をしよう。',
+        },
+        { role: 'user', content: '好きな食べ物も教えて' },
+        {
+          role: 'assistant',
+          content: '[happy] 最近は辛いカレーが気になってるよ。',
+        },
+        { role: 'user', content: '週末の予定はある？' },
+        {
+          role: 'assistant',
+          content: '[relaxed] 散歩しながら配信の準備をする予定だよ。',
+        },
+        { role: 'user', content: 'おすすめの曲ある？' },
+        {
+          role: 'assistant',
+          content: '[happy] 明るいテンポの曲をあとで紹介するね。',
+        },
+      ];
+
+      const result = shortMessageDetector.analyzeConversation(messages);
+
+      expect(result.shouldIntervene).toBe(false);
+    });
   });
 
   describe('shouldIntervene', () => {
