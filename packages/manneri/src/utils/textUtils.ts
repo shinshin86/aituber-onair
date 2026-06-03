@@ -15,7 +15,7 @@ export function normalizeText(
     ...options,
   };
 
-  let normalized = text.trim();
+  let normalized = stripLeadingBracketMetadata(text.trim());
 
   if (!opts.caseSensitive) {
     normalized = normalized.toLowerCase();
@@ -35,6 +35,10 @@ export function normalizeText(
 
 export function containsJapanese(text: string): boolean {
   return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
+}
+
+function stripLeadingBracketMetadata(text: string): string {
+  return text.replace(/^(?:\[[^\]\r\n]{1,32}\]\s*)+/, '');
 }
 
 export function tokenize(
@@ -293,16 +297,31 @@ export function calculateTextSimilarity(
   // Quick check for exact match after normalization
   if (normalized1 === normalized2) return 1.0;
 
+  const hasJapanese =
+    containsJapanese(normalized1) || containsJapanese(normalized2);
+
   const tokens1 = tokenize(text1, options);
   const tokens2 = tokenize(text2, options);
 
-  if (tokens1.length === 0 && tokens2.length === 0) return 1.0;
-  if (tokens1.length === 0 || tokens2.length === 0) return 0.0;
+  if (tokens1.length === 0 && tokens2.length === 0) {
+    return hasJapanese
+      ? calculateJapaneseCharacterSimilarity(normalized1, normalized2)
+      : 1.0;
+  }
+  if (tokens1.length === 0 || tokens2.length === 0) {
+    return hasJapanese
+      ? calculateJapaneseCharacterSimilarity(normalized1, normalized2)
+      : 0.0;
+  }
 
   const set1 = new Set(tokens1);
   const set2 = new Set(tokens2);
 
   const jaccardSimilarity = calculateJaccardSimilarity(set1, set2);
+
+  const characterSimilarity = hasJapanese
+    ? calculateJapaneseCharacterSimilarity(normalized1, normalized2)
+    : 0;
 
   // For short texts or when Jaccard similarity is very high, just use Jaccard
   if (
@@ -310,7 +329,7 @@ export function calculateTextSimilarity(
     tokens2.length < SHORT_TEXT_TOKEN_LIMIT ||
     jaccardSimilarity > HIGH_JACCARD_THRESHOLD
   ) {
-    return jaccardSimilarity;
+    return Math.max(jaccardSimilarity, characterSimilarity);
   }
 
   // For longer texts, use a combination of Jaccard and token-based similarity
@@ -330,5 +349,59 @@ export function calculateTextSimilarity(
   const vector2 = vocabulary.map((term) => tokenFreq2.get(term) || 0);
   const cosineSimilarity = calculateCosineSimilarity(vector1, vector2);
 
-  return (jaccardSimilarity + cosineSimilarity) / 2;
+  return Math.max(
+    (jaccardSimilarity + cosineSimilarity) / 2,
+    characterSimilarity
+  );
+}
+
+function calculateJapaneseCharacterSimilarity(
+  text1: string,
+  text2: string
+): number {
+  const compact1 = text1.replace(/\s+/g, '');
+  const compact2 = text2.replace(/\s+/g, '');
+
+  if (compact1.length === 0 && compact2.length === 0) return 1.0;
+  if (compact1.length === 0 || compact2.length === 0) return 0.0;
+
+  return Math.max(
+    calculateCharacterNgramSimilarity(compact1, compact2, 2),
+    calculateCharacterNgramSimilarity(compact1, compact2, 3)
+  );
+}
+
+function calculateCharacterNgramSimilarity(
+  text1: string,
+  text2: string,
+  n: number
+): number {
+  const ngrams1 = createCharacterNgrams(text1, n);
+  const ngrams2 = createCharacterNgrams(text2, n);
+
+  if (ngrams1.length === 0 && ngrams2.length === 0) return 1.0;
+  if (ngrams1.length === 0 || ngrams2.length === 0) return 0.0;
+
+  const set1 = new Set(ngrams1);
+  const set2 = new Set(ngrams2);
+  const intersectionSize = [...set1].filter((ngram) => set2.has(ngram)).length;
+  const unionSize = new Set([...set1, ...set2]).size;
+  const jaccard = unionSize === 0 ? 0 : intersectionSize / unionSize;
+  const smallerSize = Math.min(set1.size, set2.size);
+  const containment =
+    smallerSize >= 3 ? intersectionSize / smallerSize : jaccard;
+
+  return Math.max(jaccard, containment);
+}
+
+function createCharacterNgrams(text: string, n: number): string[] {
+  if (n <= 0) return [];
+  if (text.length < n) return text.length === 0 ? [] : [text];
+
+  const ngrams: string[] = [];
+  for (let i = 0; i <= text.length - n; i++) {
+    ngrams.push(text.slice(i, i + n));
+  }
+
+  return ngrams;
 }
