@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.3
+
 ### Patch Changes
 
 - Improved content-based repeated message detection so short similar messages
