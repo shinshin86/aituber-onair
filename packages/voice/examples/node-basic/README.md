@@ -2,6 +2,8 @@
 
 This directory contains examples demonstrating how to use `@aituber-onair/voice` package in Node.js environments.
 
+[日本語 README](./README_ja.md)
+
 ## Files Overview
 
 - **`index.js`** - Basic setup and configuration example
