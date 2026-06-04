@@ -2,12 +2,15 @@
 
 This directory contains examples demonstrating how to use `@aituber-onair/voice` package in Node.js environments.
 
+[日本語 README](./README_ja.md)
+
 ## Files Overview
 
 - **`index.js`** - Basic setup and configuration example
 - **`voicevox-example.js`** - VOICEVOX TTS engine example
 - **`aivis-speech-example.js`** - AivisSpeech TTS engine example
 - **`voicepeak-example.js`** - VoicePeak TTS engine example
+- **`openai-compatible-colab-example.js`** - OpenAI-compatible Colab TTS endpoint example
 - **`test-speaker-playback.js`** - Cross-engine speaker playback test
 - **`.gitignore`** - Ignores generated audio files
 
@@ -114,6 +117,55 @@ node examples/node-basic/test-speaker-playback.js
 - Tests VOICEVOX, AivisSpeech, and VoicePeak
 - Verifies dynamic audio format detection
 - Confirms speaker playback functionality
+
+### OpenAI-Compatible Colab TTS Example
+
+Tests a short-lived OpenAI-compatible TTS endpoint exposed from Google Colab,
+for example a `trycloudflare` URL created by
+`shinshin86/local-tts-on-google-colab`.
+
+#### Agent-driven Colab flow
+
+When using an AI coding agent with this repository's Agent Skills, ask it to
+use `$connect-colab-local-tts`. The agent should connect to Colab through
+Colab MCP Go, launch the selected `local-tts-on-google-colab` engine, extract
+the `trycloudflare` speech URL, and run this Node.js example with the required
+environment variables.
+
+Example prompt:
+
+```text
+Use $connect-colab-local-tts to launch Irodori-TTS from
+shinshin86/local-tts-on-google-colab through Colab MCP Go, expose it with
+trycloudflare, then verify it from @aituber-onair/voice using the Node.js
+example. Use Japanese smoke text.
+```
+
+Good sample engines include `Irodori-TTS`, `Piper-Plus`, and
+`MOSS-TTS-v1.5`. `MOSS-TTS-v1.5` usually requires an A100-class Colab runtime.
+The user is still responsible for Google login, runtime selection, gated model
+license acceptance, and token/secret setup when needed.
+
+#### Manual run
+
+After the Colab server is ready, run the example manually with the public
+speech URL:
+
+```bash
+OPENAI_COMPATIBLE_TTS_URL="https://xxxx.trycloudflare.com/v1/audio/speech" \
+OPENAI_COMPATIBLE_TTS_MODEL="Irodori-TTS" \
+OPENAI_COMPATIBLE_TTS_VOICE="" \
+OPENAI_COMPATIBLE_TTS_TEXT="こんにちは。AITuber OnAir Voice から再生しています。" \
+node examples/node-basic/openai-compatible-colab-example.js
+```
+
+Useful optional settings:
+
+```bash
+OPENAI_COMPATIBLE_TTS_SPEED="1.0"
+OPENAI_COMPATIBLE_TTS_OUTPUT="openai-compatible-colab-output.wav"
+OPENAI_COMPATIBLE_TTS_PLAY="0" # save only; skip Node.js playback
+```
 
 ## Generated Files
 
