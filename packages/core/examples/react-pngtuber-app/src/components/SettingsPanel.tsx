@@ -206,7 +206,13 @@ interface InworldVoice {
   gender?: string;
 }
 
-type SectionKey = 'llm' | 'tts' | 'visual' | 'stream';
+type SectionKey =
+  | 'llm'
+  | 'tts'
+  | 'visual'
+  | 'stream'
+  | 'commentIntelligence'
+  | 'manneri';
 
 const AVATAR_IMAGE_FIELDS: { key: AvatarImageKey; label: string }[] = [
   { key: 'mouth_close_eyes_open', label: '口閉じ / 目開き' },
@@ -316,6 +322,8 @@ export function SettingsPanel({
     tts: true,
     visual: true,
     stream: true,
+    commentIntelligence: true,
+    manneri: true,
   });
 
   const selectedAivisCloudPresetId = useMemo(() => {
@@ -2269,7 +2277,11 @@ export function SettingsPanel({
         manneri={settings.manneri}
         disabled={disabled}
         isExpanded={expandedSections.stream}
+        isCommentIntelligenceExpanded={expandedSections.commentIntelligence}
+        isManneriExpanded={expandedSections.manneri}
         onToggleExpand={() => toggleSection('stream')}
+        onToggleCommentIntelligence={() => toggleSection('commentIntelligence')}
+        onToggleManneri={() => toggleSection('manneri')}
         streamErrorMessage={streamErrorMessage}
         updateStreamPlatform={updateStreamPlatform}
         updateYoutubeApiKey={updateYoutubeApiKey}

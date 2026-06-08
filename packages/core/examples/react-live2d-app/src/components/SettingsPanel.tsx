@@ -203,7 +203,13 @@ interface InworldVoice {
   gender?: string;
 }
 
-type SectionKey = 'llm' | 'tts' | 'visual' | 'stream';
+type SectionKey =
+  | 'llm'
+  | 'tts'
+  | 'visual'
+  | 'stream'
+  | 'commentIntelligence'
+  | 'manneri';
 
 export function SettingsPanel({
   settings,
@@ -305,6 +311,8 @@ export function SettingsPanel({
     tts: true,
     visual: true,
     stream: true,
+    commentIntelligence: true,
+    manneri: true,
   });
 
   useEffect(() => {
@@ -2206,7 +2214,11 @@ export function SettingsPanel({
         manneri={settings.manneri}
         disabled={disabled}
         isExpanded={expandedSections.stream}
+        isCommentIntelligenceExpanded={expandedSections.commentIntelligence}
+        isManneriExpanded={expandedSections.manneri}
         onToggleExpand={() => toggleSection('stream')}
+        onToggleCommentIntelligence={() => toggleSection('commentIntelligence')}
+        onToggleManneri={() => toggleSection('manneri')}
         streamErrorMessage={streamErrorMessage}
         updateStreamPlatform={updateStreamPlatform}
         updateYoutubeApiKey={updateYoutubeApiKey}
