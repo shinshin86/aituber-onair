@@ -49,6 +49,8 @@ from actual audio output volume.
   the LLM pipeline
   - YouTube uses the YouTube Data API v3 (requires a Google Cloud API key)
   - Twitch uses EventSub WebSocket with a browser-based implicit OAuth flow
+- Detect repetitive conversation patterns with `@aituber-onair/manneri` and
+  add an internal topic-diversification instruction before the next response
 
 ## Setup
 
@@ -86,6 +88,12 @@ remaining comments, summarizes ignored comments, and sends compact live-chat
 context to the AITuber. Rules mode runs without an additional LLM call. Hybrid
 and LLM-assisted modes reuse the provider, model, API key, and endpoint from the
 LLM settings tab for comment analysis and fall back to rules when unavailable.
+
+Manneri is enabled by default. It watches recent user and assistant messages,
+and when conversation patterns become repetitive, it injects a hidden
+topic-diversification instruction into the next LLM request. You can adjust the
+similarity threshold, lookback window, cooldown, and minimum message length in
+Settings → Stream.
 
 ### YouTube Live
 

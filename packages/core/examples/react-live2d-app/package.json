@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@aituber-onair/comment-intelligence": "../../../comment-intelligence",
 		"@aituber-onair/core": "../..",
+		"@aituber-onair/manneri": "../../../manneri",
 		"pixi-live2d-display-lipsyncpatch": "github:shinshin86/pixi-live2d-display-lipsyncpatch#release/v0.5.0-ls-7-noMaskFix",
 		"pixi.js": "^7.4.3",
 		"react": "^19.2.0",

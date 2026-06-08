@@ -144,9 +144,18 @@ export interface CommentIntelligenceSettings {
   viewerBlockDurationMs: number;
 }
 
+export interface ManneriSettings {
+  enabled: boolean;
+  similarityThreshold: number;
+  lookbackWindow: number;
+  interventionCooldownMs: number;
+  minMessageLength: number;
+}
+
 export interface AppSettings {
   llm: LLMSettings;
   tts: TTSSettings;
   stream: StreamSettings;
   commentIntelligence: CommentIntelligenceSettings;
+  manneri: ManneriSettings;
 }

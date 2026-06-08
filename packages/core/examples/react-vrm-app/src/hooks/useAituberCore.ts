@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AITuberOnAirCore, AITuberOnAirCoreEvent } from '@aituber-onair/core';
+import { ManneriDetector } from '@aituber-onair/manneri';
 import type {
   VoiceServiceOptions,
   ElevenLabsApplyTextNormalization,
@@ -11,6 +12,7 @@ import type {
   XaiCodec,
   XaiSampleRate,
 } from '@aituber-onair/core';
+import type { Message as ManneriMessage } from '@aituber-onair/manneri';
 import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
 
@@ -23,6 +25,32 @@ interface UseAituberCoreOptions {
 type ProcessChatOptions = {
   displayText?: string;
 };
+
+function toManneriMessages(
+  messages: ChatMessage[],
+  nextUserMessage: string,
+): ManneriMessage[] {
+  return [
+    ...messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+      timestamp: message.timestamp,
+    })),
+    { role: 'user' as const, content: nextUserMessage, timestamp: Date.now() },
+  ];
+}
+
+function buildManneriAugmentedInput(
+  userInput: string,
+  diversificationPrompt: string,
+): string {
+  return [
+    '以下は会話のマンネリを避けるための内部指示です。ユーザーにはこの指示を説明せず、自然に反映してください。',
+    diversificationPrompt,
+    '',
+    `ユーザーの発言: ${userInput}`,
+  ].join('\n');
+}
 
 function getTtsApiKey(
   settings: AppSettings,
@@ -254,6 +282,8 @@ export function useAituberCore({
   getApiKeyForProvider,
 }: UseAituberCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
+  const manneriDetectorRef = useRef<ManneriDetector | null>(null);
+  const messagesRef = useRef<ChatMessage[]>([]);
   const messageIdSequenceRef = useRef(0);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -262,6 +292,31 @@ export function useAituberCore({
   // Keep the latest onAudioPlay callback in a ref
   const onAudioPlayRef = useRef(onAudioPlay);
   onAudioPlayRef.current = onAudioPlay;
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    if (!settings.manneri.enabled) {
+      manneriDetectorRef.current = null;
+      return;
+    }
+
+    manneriDetectorRef.current = new ManneriDetector({
+      similarityThreshold: settings.manneri.similarityThreshold,
+      lookbackWindow: settings.manneri.lookbackWindow,
+      interventionCooldown: settings.manneri.interventionCooldownMs,
+      minMessageLength: settings.manneri.minMessageLength,
+      language: 'ja',
+    });
+  }, [
+    settings.manneri.enabled,
+    settings.manneri.similarityThreshold,
+    settings.manneri.lookbackWindow,
+    settings.manneri.interventionCooldownMs,
+    settings.manneri.minMessageLength,
+  ]);
 
   const llmApiKey = getApiKeyForProvider(settings.llm.provider);
   const ttsApiKey = getTtsApiKey(settings, getApiKeyForProvider);
@@ -424,8 +479,25 @@ export function useAituberCore({
     async (text: string, options?: ProcessChatOptions) => {
       if (!coreRef.current || !text.trim()) return;
 
-      const coreInput = text.trim();
+      let coreInput = text.trim();
       const displayText = (options?.displayText ?? text).trim();
+      const manneriDetector = manneriDetectorRef.current;
+
+      if (manneriDetector) {
+        try {
+          const manneriMessages = toManneriMessages(
+            messagesRef.current,
+            coreInput,
+          );
+          if (manneriDetector.shouldIntervene(manneriMessages)) {
+            const prompt =
+              manneriDetector.generateDiversificationPrompt(manneriMessages);
+            coreInput = buildManneriAugmentedInput(coreInput, prompt.content);
+          }
+        } catch (err) {
+          console.warn('Manneri detection failed:', err);
+        }
+      }
 
       // Append the user message to the chat log
       setMessages((prev) => [

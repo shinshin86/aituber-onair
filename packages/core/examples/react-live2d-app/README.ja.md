@@ -22,6 +22,8 @@
 - YouTube Live / Twitch のライブチャットを取得し、`@aituber-onair/comment-intelligence` で分析して、選ばれたコメントだけを LLM パイプラインに流す
   - YouTube は YouTube Data API v3 を利用（Google Cloud の API キーが必要）
   - Twitch は EventSub WebSocket とブラウザ上での implicit OAuth フローを利用
+- `@aituber-onair/manneri` で会話の繰り返し傾向を検出し、次の応答前に
+  内部的な話題転換指示を追加
 
 ## Live2D アセットの置き場所
 
@@ -90,6 +92,11 @@ npm run dev
 同時に有効化できるのはどちらか一方だけです。
 
 コメントインテリジェンスは初期状態で有効です。AIが処理中または発話中のコメントをまとめて、安全判定、優先度付け、未選択コメントの要約を行い、配信用コンテキストとしてAITuberへ渡します。Rules モードは追加の LLM 呼び出しなしで動作します。Hybrid / LLM-assisted モードでは、LLM 設定タブのプロバイダー、モデル、APIキー、エンドポイントをコメント分析にも利用し、使えない場合は rules にフォールバックします。
+
+Manneri は初期状態で有効です。直近のユーザー/アシスタント発言を見て、
+会話が似た流れに偏った場合、次の LLM リクエストへ非表示の話題転換指示を
+追加します。類似度しきい値、直近メッセージ数、介入間隔、最小メッセージ長は
+Settings → Stream から調整できます。
 
 ### YouTube Live
 
