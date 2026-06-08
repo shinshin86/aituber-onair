@@ -208,6 +208,13 @@ function getDefaultSettings(): AppSettings {
       blockHighRiskViewers: true,
       viewerBlockDurationMs: 10 * 60 * 1000,
     },
+    manneri: {
+      enabled: true,
+      similarityThreshold: 0.75,
+      lookbackWindow: 10,
+      interventionCooldownMs: 5 * 60 * 1000,
+      minMessageLength: 10,
+    },
   };
 }
 
@@ -232,6 +239,7 @@ function loadSettings(): AppSettings {
           ...defaults.commentIntelligence,
           ...saved.commentIntelligence,
         },
+        manneri: { ...defaults.manneri, ...saved.manneri },
       };
     }
   } catch {
@@ -968,6 +976,74 @@ export function useSettings() {
     [],
   );
 
+  const updateManneriEnabled = useCallback((enabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      manneri: { ...prev.manneri, enabled },
+    }));
+  }, []);
+
+  const updateManneriSimilarityThreshold = useCallback(
+    (similarityThreshold: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        manneri: {
+          ...prev.manneri,
+          similarityThreshold: Math.min(
+            1,
+            Math.max(0.1, similarityThreshold),
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const updateManneriLookbackWindow = useCallback((lookbackWindow: number) => {
+    setSettings((prev) => ({
+      ...prev,
+      manneri: {
+        ...prev.manneri,
+        lookbackWindow: normalizePositiveInteger(
+          lookbackWindow,
+          getDefaultSettings().manneri.lookbackWindow,
+        ),
+      },
+    }));
+  }, []);
+
+  const updateManneriInterventionCooldownMs = useCallback(
+    (interventionCooldownMs: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        manneri: {
+          ...prev.manneri,
+          interventionCooldownMs: normalizePositiveInteger(
+            interventionCooldownMs,
+            getDefaultSettings().manneri.interventionCooldownMs,
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const updateManneriMinMessageLength = useCallback(
+    (minMessageLength: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        manneri: {
+          ...prev.manneri,
+          minMessageLength: normalizePositiveInteger(
+            minMessageLength,
+            getDefaultSettings().manneri.minMessageLength,
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
   const getApiKeyForProvider = useCallback(
     (provider: ChatProviderOption): string => {
       if (provider === 'gemini-nano') {
@@ -1035,6 +1111,11 @@ export function useSettings() {
     updateCommentIntelligenceMinCommentsForLLMAnalysis,
     updateCommentIntelligenceBlockHighRiskViewers,
     updateCommentIntelligenceViewerBlockDurationMs,
+    updateManneriEnabled,
+    updateManneriSimilarityThreshold,
+    updateManneriLookbackWindow,
+    updateManneriInterventionCooldownMs,
+    updateManneriMinMessageLength,
     getApiKeyForProvider,
   };
 }

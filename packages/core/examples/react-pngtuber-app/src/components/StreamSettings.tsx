@@ -1,5 +1,6 @@
 import type {
   CommentIntelligenceSettings,
+  ManneriSettings,
   StreamSettings,
   StreamingPlatformOption,
 } from '../types/settings';
@@ -8,16 +9,32 @@ const STREAM_INTERVAL_OPTIONS = [5000, 10000, 20000, 30000, 60000] as const;
 const COMMENT_ANALYSIS_INTERVAL_OPTIONS = [1000, 2000, 5000, 10000] as const;
 const COMMENT_BATCH_SIZE_OPTIONS = [10, 25, 50, 100, 200] as const;
 const COMMENT_LLM_MIN_COMMENTS_OPTIONS = [4, 8, 12, 20] as const;
+const MANNERI_SIMILARITY_THRESHOLD_OPTIONS = [
+  0.6,
+  0.7,
+  0.75,
+  0.8,
+  0.9,
+] as const;
+const MANNERI_LOOKBACK_WINDOW_OPTIONS = [4, 6, 8, 10, 15, 20] as const;
+const MANNERI_MIN_MESSAGE_LENGTH_OPTIONS = [4, 8, 10, 16, 24] as const;
 const VIEWER_BLOCK_DURATION_OPTIONS = [
   { label: '1分', value: 60 * 1000 },
   { label: '5分', value: 5 * 60 * 1000 },
   { label: '10分', value: 10 * 60 * 1000 },
   { label: '30分', value: 30 * 60 * 1000 },
 ] as const;
+const MANNERI_COOLDOWN_OPTIONS = [
+  { label: '1分', value: 60 * 1000 },
+  { label: '3分', value: 3 * 60 * 1000 },
+  { label: '5分', value: 5 * 60 * 1000 },
+  { label: '10分', value: 10 * 60 * 1000 },
+] as const;
 
 interface StreamSettingsProps {
   stream: StreamSettings;
   commentIntelligence: CommentIntelligenceSettings;
+  manneri: ManneriSettings;
   disabled: boolean;
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -41,6 +58,11 @@ interface StreamSettingsProps {
   updateCommentIntelligenceMinCommentsForLLMAnalysis: (value: number) => void;
   updateCommentIntelligenceBlockHighRiskViewers: (value: boolean) => void;
   updateCommentIntelligenceViewerBlockDurationMs: (value: number) => void;
+  updateManneriEnabled: (value: boolean) => void;
+  updateManneriSimilarityThreshold: (value: number) => void;
+  updateManneriLookbackWindow: (value: number) => void;
+  updateManneriInterventionCooldownMs: (value: number) => void;
+  updateManneriMinMessageLength: (value: number) => void;
 }
 
 function getTwitchRedirectUri(): string {
@@ -54,6 +76,7 @@ function getTwitchRedirectUri(): string {
 export function StreamSettings({
   stream,
   commentIntelligence,
+  manneri,
   disabled,
   isExpanded,
   onToggleExpand,
@@ -75,6 +98,11 @@ export function StreamSettings({
   updateCommentIntelligenceMinCommentsForLLMAnalysis,
   updateCommentIntelligenceBlockHighRiskViewers,
   updateCommentIntelligenceViewerBlockDurationMs,
+  updateManneriEnabled,
+  updateManneriSimilarityThreshold,
+  updateManneriLookbackWindow,
+  updateManneriInterventionCooldownMs,
+  updateManneriMinMessageLength,
 }: StreamSettingsProps) {
   const twitchRedirectUri = getTwitchRedirectUri();
   const isYoutubeSelected = stream.platform === 'youtube';
@@ -84,6 +112,7 @@ export function StreamSettings({
     !!stream.twitchChannel.trim() &&
     !!stream.twitchClientId.trim();
   const commentControlsDisabled = disabled || !commentIntelligence.enabled;
+  const manneriControlsDisabled = disabled || !manneri.enabled;
 
   const handleConnectTwitch = () => {
     try {
@@ -479,6 +508,104 @@ export function StreamSettings({
               {VIEWER_BLOCK_DURATION_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="manneri-enabled">
+              <input
+                id="manneri-enabled"
+                type="checkbox"
+                checked={manneri.enabled}
+                onChange={(event) =>
+                  updateManneriEnabled(event.target.checked)
+                }
+                disabled={disabled}
+                style={{ marginRight: 8 }}
+              />
+              Manneri
+            </label>
+            <p className="settings-field-hint">
+              会話が似た流れに偏ったとき、応答前に話題転換の指示を内部的に追加します。
+            </p>
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="manneri-similarity-threshold">
+              類似度しきい値
+            </label>
+            <select
+              id="manneri-similarity-threshold"
+              value={manneri.similarityThreshold}
+              onChange={(event) =>
+                updateManneriSimilarityThreshold(Number(event.target.value))
+              }
+              disabled={manneriControlsDisabled}
+            >
+              {MANNERI_SIMILARITY_THRESHOLD_OPTIONS.map((threshold) => (
+                <option key={threshold} value={threshold}>
+                  {Math.round(threshold * 100)}%
+                </option>
+              ))}
+            </select>
+            <p className="settings-field-hint">
+              低いほど介入しやすく、高いほど強い重複だけを検出します。
+            </p>
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="manneri-lookback-window">直近メッセージ数</label>
+            <select
+              id="manneri-lookback-window"
+              value={manneri.lookbackWindow}
+              onChange={(event) =>
+                updateManneriLookbackWindow(Number(event.target.value))
+              }
+              disabled={manneriControlsDisabled}
+            >
+              {MANNERI_LOOKBACK_WINDOW_OPTIONS.map((lookbackWindow) => (
+                <option key={lookbackWindow} value={lookbackWindow}>
+                  {lookbackWindow}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="manneri-cooldown">介入間隔</label>
+            <select
+              id="manneri-cooldown"
+              value={manneri.interventionCooldownMs}
+              onChange={(event) =>
+                updateManneriInterventionCooldownMs(Number(event.target.value))
+              }
+              disabled={manneriControlsDisabled}
+            >
+              {MANNERI_COOLDOWN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="manneri-min-message-length">
+              最小メッセージ長
+            </label>
+            <select
+              id="manneri-min-message-length"
+              value={manneri.minMessageLength}
+              onChange={(event) =>
+                updateManneriMinMessageLength(Number(event.target.value))
+              }
+              disabled={manneriControlsDisabled}
+            >
+              {MANNERI_MIN_MESSAGE_LENGTH_OPTIONS.map((minMessageLength) => (
+                <option key={minMessageLength} value={minMessageLength}>
+                  {minMessageLength}
                 </option>
               ))}
             </select>

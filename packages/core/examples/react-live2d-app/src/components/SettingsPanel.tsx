@@ -262,6 +262,11 @@ export function SettingsPanel({
   updateCommentIntelligenceMinCommentsForLLMAnalysis,
   updateCommentIntelligenceBlockHighRiskViewers,
   updateCommentIntelligenceViewerBlockDurationMs,
+  updateManneriEnabled,
+  updateManneriSimilarityThreshold,
+  updateManneriLookbackWindow,
+  updateManneriInterventionCooldownMs,
+  updateManneriMinMessageLength,
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
@@ -2198,6 +2203,7 @@ export function SettingsPanel({
       <StreamSettings
         stream={settings.stream}
         commentIntelligence={settings.commentIntelligence}
+        manneri={settings.manneri}
         disabled={disabled}
         isExpanded={expandedSections.stream}
         onToggleExpand={() => toggleSection('stream')}
@@ -2229,6 +2235,13 @@ export function SettingsPanel({
         updateCommentIntelligenceViewerBlockDurationMs={
           updateCommentIntelligenceViewerBlockDurationMs
         }
+        updateManneriEnabled={updateManneriEnabled}
+        updateManneriSimilarityThreshold={updateManneriSimilarityThreshold}
+        updateManneriLookbackWindow={updateManneriLookbackWindow}
+        updateManneriInterventionCooldownMs={
+          updateManneriInterventionCooldownMs
+        }
+        updateManneriMinMessageLength={updateManneriMinMessageLength}
       />
     </div>
   );
