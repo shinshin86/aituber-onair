@@ -1,0 +1,9 @@
+{
+  "name": "@aituber-onair/noise-sample",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build"
+  }
+}

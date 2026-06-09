@@ -11,6 +11,13 @@ AIが無難にまとめすぎた返答を入力し、意味やキャラクター
 npm -w @aituber-onair/noise run example:noise-sample
 ```
 
+サンプルディレクトリ上から起動することもできます。
+
+```sh
+cd packages/noise/examples/noise-sample
+npm run dev
+```
+
 AIサービスの設定は画面上部の「AIを設定」から行います。外部APIを使う場合は
 APIキーとモデルを設定し、ローカルLLMを使う場合はEndpointを設定します。
 
