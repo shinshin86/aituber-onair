@@ -108,6 +108,47 @@ describe('openaiCompatibleSse', () => {
     ]);
   });
 
+  it('should keep text blocks when streaming tool arguments are invalid JSON', async () => {
+    const onPartial = vi.fn();
+    const onJsonError = vi.fn();
+    const textPayload = JSON.stringify({
+      choices: [{ delta: { content: 'Before tool. ' } }],
+    });
+    const toolPayload = JSON.stringify({
+      choices: [
+        {
+          delta: {
+            tool_calls: [
+              {
+                index: 0,
+                id: 'call_bad',
+                function: { name: 'search', arguments: '{bad json' },
+              },
+            ],
+          },
+          finish_reason: 'tool_calls',
+        },
+      ],
+    });
+    const res = createSseResponse([
+      `data: ${textPayload}\n\n`,
+      `data: ${toolPayload}\n\n`,
+      'data: [DONE]\n\n',
+    ]);
+
+    const result = await parseOpenAICompatibleToolStream(res, onPartial, {
+      onJsonError,
+    });
+
+    expect(onPartial).toHaveBeenCalledWith('Before tool. ');
+    expect(result.blocks).toEqual([
+      { type: 'text', text: 'Before tool. ' },
+      { type: 'tool_use', id: 'call_bad', name: 'search', input: {} },
+    ]);
+    expect(result.stop_reason).toBe('tool_use');
+    expect(onJsonError).toHaveBeenCalledTimes(1);
+  });
+
   it('should parse one-shot response with tool calls', () => {
     const result = parseOpenAICompatibleOneShot({
       choices: [
@@ -132,6 +173,38 @@ describe('openaiCompatibleSse', () => {
     expect(result.blocks).toEqual([
       { type: 'tool_use', id: 'call_2', name: 'search', input: { q: 'hello' } },
     ]);
+  });
+
+  it('should fall back to empty input for invalid one-shot tool arguments', () => {
+    const onJsonError = vi.fn();
+
+    const result = parseOpenAICompatibleOneShot(
+      {
+        choices: [
+          {
+            finish_reason: 'tool_calls',
+            message: {
+              tool_calls: [
+                {
+                  id: 'call_bad',
+                  function: {
+                    name: 'search',
+                    arguments: '{bad json',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      { onJsonError },
+    ) as ToolChatCompletion;
+
+    expect(result.blocks).toEqual([
+      { type: 'tool_use', id: 'call_bad', name: 'search', input: {} },
+    ]);
+    expect(result.stop_reason).toBe('tool_use');
+    expect(onJsonError).toHaveBeenCalledTimes(1);
   });
 
   it('should preserve truncation metadata for one-shot responses', () => {

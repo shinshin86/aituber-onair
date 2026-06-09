@@ -1,8 +1,10 @@
 import { ToolChatBlock, ToolChatCompletion } from '../types';
+import type { JsonParseErrorHandler } from './safeJsonParse';
+import { safeParseToolCallInput } from './safeJsonParse';
 import { StreamTextAccumulator } from './streamTextAccumulator';
 
 type SseParseOptions = {
-  onJsonError?: (payload: string, error: unknown) => void;
+  onJsonError?: JsonParseErrorHandler;
   appendTextBlock?: (blocks: ToolChatBlock[], text: string) => void;
 };
 
@@ -157,7 +159,7 @@ export async function parseOpenAICompatibleToolStream(
       type: 'tool_use',
       id: e.id,
       name: e.name,
-      input: JSON.parse(e.args || '{}'),
+      input: safeParseToolCallInput(e.args, options.onJsonError),
     }));
 
   const blocks = [...textBlocks, ...toolBlocks];
@@ -171,7 +173,10 @@ export async function parseOpenAICompatibleToolStream(
   };
 }
 
-export function parseOpenAICompatibleOneShot(data: any): ToolChatCompletion {
+export function parseOpenAICompatibleOneShot(
+  data: any,
+  options: SseParseOptions = {},
+): ToolChatCompletion {
   const choice = data?.choices?.[0];
   const blocks: ToolChatBlock[] = [];
 
@@ -181,7 +186,10 @@ export function parseOpenAICompatibleOneShot(data: any): ToolChatCompletion {
         type: 'tool_use',
         id: c.id,
         name: c.function?.name,
-        input: JSON.parse(c.function?.arguments || '{}'),
+        input: safeParseToolCallInput(
+          c.function?.arguments,
+          options.onJsonError,
+        ),
       }),
     );
   } else {

@@ -11,3 +11,4 @@ export * from './openaiCompatibleTools';
 export * from './processChatFlow';
 export * from './visionModelResolver';
 export * from './refreshOpenRouterFreeModels';
+export * from './safeJsonParse';
