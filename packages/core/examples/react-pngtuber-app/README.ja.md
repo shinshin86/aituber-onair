@@ -37,6 +37,8 @@
 - YouTube Live / Twitch のライブチャットを取得して LLM パイプラインに流す
   - YouTube は YouTube Data API v3 を利用（Google Cloud の API キーが必要）
   - Twitch は EventSub WebSocket とブラウザ上での implicit OAuth フローを利用
+- `@aituber-onair/manneri` で会話の繰り返し傾向を検出し、次の応答前に
+  内部的な話題転換指示を追加
 
 ## セットアップ
 
@@ -66,6 +68,11 @@ npm run dev
 **Settings → Stream** から設定します。
 
 同時に有効化できるのはどちらか一方だけです。
+
+Manneri は初期状態で有効です。直近のユーザー/アシスタント発言を見て、
+会話が似た流れに偏った場合、次の LLM リクエストへ非表示の話題転換指示を
+追加します。類似度しきい値、直近メッセージ数、介入間隔、最小メッセージ長は
+Settings → Stream から調整できます。
 
 ### YouTube Live
 

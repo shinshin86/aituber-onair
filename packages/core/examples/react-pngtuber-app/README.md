@@ -39,6 +39,8 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   LLM pipeline
   - YouTube uses the YouTube Data API v3 (requires a Google Cloud API key)
   - Twitch uses EventSub WebSocket with a browser-based implicit OAuth flow
+- Detect repetitive conversation patterns with `@aituber-onair/manneri` and
+  add an internal topic-diversification instruction before the next response
 
 ## Setup
 
@@ -68,6 +70,12 @@ This app can forward live chat comments from YouTube Live or Twitch into the LLM
 Configure it from **Settings → Stream**.
 
 Only one platform can be active at a time.
+
+Manneri is enabled by default. It watches recent user and assistant messages,
+and when conversation patterns become repetitive, it injects a hidden
+topic-diversification instruction into the next LLM request. You can adjust the
+similarity threshold, lookback window, cooldown, and minimum message length in
+Settings → Stream.
 
 ### YouTube Live
 

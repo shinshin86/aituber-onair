@@ -203,7 +203,13 @@ interface InworldVoice {
   gender?: string;
 }
 
-type SectionKey = 'llm' | 'tts' | 'visual' | 'stream';
+type SectionKey =
+  | 'llm'
+  | 'tts'
+  | 'visual'
+  | 'stream'
+  | 'commentIntelligence'
+  | 'manneri';
 
 export function SettingsPanel({
   settings,
@@ -262,6 +268,11 @@ export function SettingsPanel({
   updateCommentIntelligenceMinCommentsForLLMAnalysis,
   updateCommentIntelligenceBlockHighRiskViewers,
   updateCommentIntelligenceViewerBlockDurationMs,
+  updateManneriEnabled,
+  updateManneriSimilarityThreshold,
+  updateManneriLookbackWindow,
+  updateManneriInterventionCooldownMs,
+  updateManneriMinMessageLength,
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
@@ -300,6 +311,8 @@ export function SettingsPanel({
     tts: true,
     visual: true,
     stream: true,
+    commentIntelligence: true,
+    manneri: true,
   });
 
   useEffect(() => {
@@ -2198,9 +2211,14 @@ export function SettingsPanel({
       <StreamSettings
         stream={settings.stream}
         commentIntelligence={settings.commentIntelligence}
+        manneri={settings.manneri}
         disabled={disabled}
         isExpanded={expandedSections.stream}
+        isCommentIntelligenceExpanded={expandedSections.commentIntelligence}
+        isManneriExpanded={expandedSections.manneri}
         onToggleExpand={() => toggleSection('stream')}
+        onToggleCommentIntelligence={() => toggleSection('commentIntelligence')}
+        onToggleManneri={() => toggleSection('manneri')}
         streamErrorMessage={streamErrorMessage}
         updateStreamPlatform={updateStreamPlatform}
         updateYoutubeApiKey={updateYoutubeApiKey}
@@ -2229,6 +2247,13 @@ export function SettingsPanel({
         updateCommentIntelligenceViewerBlockDurationMs={
           updateCommentIntelligenceViewerBlockDurationMs
         }
+        updateManneriEnabled={updateManneriEnabled}
+        updateManneriSimilarityThreshold={updateManneriSimilarityThreshold}
+        updateManneriLookbackWindow={updateManneriLookbackWindow}
+        updateManneriInterventionCooldownMs={
+          updateManneriInterventionCooldownMs
+        }
+        updateManneriMinMessageLength={updateManneriMinMessageLength}
       />
     </div>
   );
