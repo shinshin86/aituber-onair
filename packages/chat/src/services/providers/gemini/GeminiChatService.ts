@@ -44,6 +44,7 @@ export class GeminiChatService implements ChatService {
   private mcpServers: MCPServerConfig[];
   private mcpToolSchemas: ToolDefinition[] = [];
   private mcpSchemasInitialized: boolean = false;
+  private mcpSchemaInitializationError?: unknown;
   private responseLength?: ChatResponseLength;
 
   /** id(OpenAI) → name(Gemini) mapping */
@@ -156,6 +157,7 @@ export class GeminiChatService implements ChatService {
     this.mcpServers.push(serverConfig);
     // Reset initialization flag to re-fetch schemas
     this.mcpSchemasInitialized = false;
+    this.mcpSchemaInitializationError = undefined;
   }
 
   /**
@@ -168,6 +170,7 @@ export class GeminiChatService implements ChatService {
     );
     // Reset initialization flag to re-fetch schemas
     this.mcpSchemasInitialized = false;
+    this.mcpSchemaInitializationError = undefined;
   }
 
   /**
@@ -176,6 +179,13 @@ export class GeminiChatService implements ChatService {
    */
   hasMCPServers(): boolean {
     return this.mcpServers.length > 0;
+  }
+
+  /**
+   * Get the last MCP schema initialization error, if schema fallback was used.
+   */
+  getMCPSchemaInitializationError(): unknown | undefined {
+    return this.mcpSchemaInitializationError;
   }
 
   /**
@@ -201,8 +211,10 @@ export class GeminiChatService implements ChatService {
         timeoutPromise,
       ]);
       this.mcpSchemasInitialized = true;
+      this.mcpSchemaInitializationError = undefined;
     } catch (error) {
       console.warn('Failed to initialize MCP schemas, using fallback:', error);
+      this.mcpSchemaInitializationError = error;
       this.mcpToolSchemas = createFallbackMCPToolSchemas(this.mcpServers);
       this.mcpSchemasInitialized = true;
     }
