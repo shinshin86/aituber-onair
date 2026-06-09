@@ -2,10 +2,16 @@ import { ChatServiceFactory, type ChatProviderName } from '@aituber-onair/chat';
 import {
   InMemoryNoiseMemoryStore,
   createContaminator,
+  type InterventionKind,
   type NoiseMemory,
   type NoiseMemoryStore,
   type NoiseMode,
   type NoiseQualityReport,
+  type EvaluatedCandidate,
+  type InterventionPlan,
+  type PredictabilityDiagnosis,
+  type PredictabilityIssue,
+  type PredictabilityIssueKind,
   type StreamContext,
 } from '../../../src/index';
 import { LocalStorageNoiseMemoryStore } from '../../../src/web';
@@ -34,6 +40,10 @@ interface AppState {
   error: string;
   memory?: NoiseMemory;
   quality?: NoiseQualityReport;
+  diagnosis?: PredictabilityDiagnosis;
+  plan?: InterventionPlan;
+  candidates: EvaluatedCandidate[];
+  selectedIndex: number;
   applied: string[];
   predictability: number;
   contamination: number;
@@ -117,6 +127,8 @@ const state: AppState = {
   draft: PRESETS.repeatedQuestion.draft,
   output: '',
   error: '',
+  candidates: [],
+  selectedIndex: -1,
   applied: [],
   predictability: 0,
   contamination: 0,
@@ -196,6 +208,8 @@ function render(): void {
           <button data-action="run" class="primary"${state.isRunning ? ' disabled' : ''}>${state.isRunning ? '書き換え中…' : '返答を書き換える'}</button>
           <button data-action="reset" class="secondary"${state.isRunning ? ' disabled' : ''}>記録をリセット</button>
         </section>
+
+        ${renderIntentPanel()}
 
         <section class="panel report-panel">
           <div class="panel-heading compact">
@@ -453,6 +467,324 @@ function renderVerificationReport(): string {
   `;
 }
 
+function renderIntentPanel(): string {
+  if (!state.diagnosis || !state.plan) {
+    return `
+      <section class="panel intent-panel">
+        <div class="panel-heading compact">
+          <div>
+            <h2>書き換えの意図</h2>
+            <p>どこを見て、どう直そうとしたかを表示します。</p>
+          </div>
+        </div>
+        <div class="empty-report">書き換え後に、検知した箇所と介入方針が表示されます。</div>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="panel intent-panel">
+      <div class="panel-heading compact">
+        <div>
+          <h2>書き換えの意図</h2>
+          <p>元の返答・直近コメント・配信状況から、変更理由を組み立てます。</p>
+        </div>
+      </div>
+      <div class="intent-grid">
+        <section class="annotation-surface">
+          <h3>検知した箇所</h3>
+          <div class="annotated-text">${renderAnnotatedDraft()}</div>
+          <ul class="annotation-list">
+            ${state.diagnosis.issues
+              .slice(0, 5)
+              .map((issue, index) => renderIssueItem(issue, index))
+              .join('')}
+          </ul>
+        </section>
+        <section class="annotation-surface">
+          <h3>選んだ介入</h3>
+          <div class="intent-flow">
+            ${state.plan.interventions
+              .map((intervention, index) => {
+                const percent = Math.round(intervention.strength * 100);
+                return `
+                  <article class="intent-step">
+                    <span class="intent-index">${index + 1}</span>
+                    <div>
+                      <strong>${escapeHtml(formatIntervention(intervention.kind))}</strong>
+                      <p>${escapeHtml(formatInterventionReason(intervention.reason))}</p>
+                      <div class="metric-track intent-track">
+                        <span class="metric-fill metric-after" style="width: ${percent}%"></span>
+                      </div>
+                    </div>
+                  </article>
+                `;
+              })
+              .join('')}
+          </div>
+          ${renderCandidateSummary()}
+        </section>
+      </div>
+    </section>
+  `;
+}
+
+function renderAnnotatedDraft(): string {
+  if (!state.diagnosis) {
+    return escapeHtml(state.draft);
+  }
+
+  const annotations = state.diagnosis.issues
+    .map((issue, index) => findAnnotation(issue, index))
+    .filter((annotation): annotation is TextAnnotation => Boolean(annotation))
+    .sort((left, right) => left.start - right.start);
+  const ranges: TextAnnotation[] = [];
+
+  for (const annotation of annotations) {
+    const previous = ranges[ranges.length - 1];
+
+    if (!previous || annotation.start >= previous.end) {
+      ranges.push(annotation);
+    }
+  }
+
+  if (ranges.length === 0) {
+    return escapeHtml(state.draft);
+  }
+
+  let html = '';
+  let cursor = 0;
+
+  for (const annotation of ranges) {
+    html += escapeHtml(state.draft.slice(cursor, annotation.start));
+    html += `<mark class="annotation-mark" title="${escapeHtml(annotation.title)}">${escapeHtml(state.draft.slice(annotation.start, annotation.end))}</mark>`;
+    cursor = annotation.end;
+  }
+
+  html += escapeHtml(state.draft.slice(cursor));
+  return html;
+}
+
+interface TextAnnotation {
+  start: number;
+  end: number;
+  title: string;
+}
+
+function findAnnotation(
+  issue: PredictabilityIssue,
+  index: number
+): TextAnnotation | undefined {
+  const pattern = getIssuePattern(issue.kind);
+
+  if (!pattern) {
+    return undefined;
+  }
+
+  const match = state.draft.match(pattern);
+
+  if (!match || match.index === undefined) {
+    return undefined;
+  }
+
+  return {
+    start: match.index,
+    end: match.index + match[0].length,
+    title: `${index + 1}. ${formatIssueKind(issue.kind)}`,
+  };
+}
+
+function getIssuePattern(kind: PredictabilityIssueKind): RegExp | undefined {
+  switch (kind) {
+    case 'generic_closing':
+      return /次回も楽しみに|また来て|よろしくお願いします|良い一日/;
+    case 'over_agreement':
+      return /嬉しいです|証拠なので|その通り|いいですね|もちろん/;
+    case 'over_apology':
+      return /申し訳ありません|すみません|ご不便をおかけ|少しお待ちください/;
+    case 'forced_positive':
+      return /楽しい時間|明るく進め|楽しんでもらえる|みんなで楽しく/;
+    case 'too_complete':
+      return /まとめると|結論として|最後に|順番に答えて/;
+    case 'low_context_grounding':
+      return /引き続き|ご不便をおかけ|順番に|明るく進め/;
+    case 'repeated_phrase':
+      return /同じ質問|何度か|何回|さっきも/;
+    case 'low_specificity':
+      return /コメントありがとうございます|引き続き|少し待っていてください/;
+    case 'no_streamer_judgment':
+      return /少し待っていてください|現在確認しています|引き続き/;
+    case 'persona_flattening':
+      return /ありがとうございます|申し訳ありません|少しお待ちください|丁寧/;
+    default:
+      return undefined;
+  }
+}
+
+function renderIssueItem(issue: PredictabilityIssue, index: number): string {
+  return `
+    <li>
+      <span class="issue-dot">${index + 1}</span>
+      <div>
+        <strong>${escapeHtml(formatIssueKind(issue.kind))}</strong>
+        <p>${escapeHtml(formatIssueSource(issue))}</p>
+      </div>
+    </li>
+  `;
+}
+
+function renderCandidateSummary(): string {
+  if (state.candidates.length === 0) {
+    return '';
+  }
+
+  return `
+    <div class="candidate-summary">
+      <h3>候補の選択</h3>
+      <div class="candidate-bars">
+        ${state.candidates
+          .map((candidate, index) => {
+            const percent = Math.round(candidate.evaluation.finalScore * 100);
+            const selectedClass =
+              index === state.selectedIndex ? ' selected' : '';
+
+            return `
+              <div class="candidate-row${selectedClass}">
+                <span>候補 ${index + 1}</span>
+                <div class="metric-track">
+                  <span class="metric-fill metric-quality" style="width: ${percent}%"></span>
+                </div>
+                <strong>${percent}%</strong>
+              </div>
+            `;
+          })
+          .join('')}
+      </div>
+    </div>
+  `;
+}
+
+function formatIssueKind(kind: PredictabilityIssueKind): string {
+  switch (kind) {
+    case 'generic_closing':
+      return 'きれいに閉じすぎ';
+    case 'over_agreement':
+      return '受け止め方が丸い';
+    case 'over_apology':
+      return '謝罪が事務的';
+    case 'forced_positive':
+      return '明るくまとめすぎ';
+    case 'low_context_grounding':
+      return '直近コメントが薄い';
+    case 'low_specificity':
+      return '具体的な足場が少ない';
+    case 'repeated_phrase':
+      return '繰り返し圧がある';
+    case 'too_complete':
+      return '会話を終わらせすぎ';
+    case 'no_streamer_judgment':
+      return '配信者側の判断が弱い';
+    case 'persona_flattening':
+      return 'キャラの角が丸まりすぎ';
+    default:
+      return '確認が必要';
+  }
+}
+
+function formatIssueSource(issue: PredictabilityIssue): string {
+  switch (issue.kind) {
+    case 'generic_closing':
+      return '締めの形がきれいすぎるため、会話の余白を残します。';
+    case 'over_agreement':
+      return '全部を肯定して受ける流れを弱め、少しだけ引っかかりを作ります。';
+    case 'over_apology':
+      return '謝罪文のような温度を下げ、配信中の反応として言い直します。';
+    case 'forced_positive':
+      return '無理に明るくまとめず、その場の空気を少し残します。';
+    case 'low_context_grounding':
+      return '直近コメントや配信状況との接点を増やします。';
+    case 'low_specificity':
+      return '抽象的な返答に、場面が見える具体性を足します。';
+    case 'repeated_phrase':
+      return '同じ質問が流れている圧を見て、単なる丁寧返答を避けます。';
+    case 'too_complete':
+      return '結論で閉じず、次の会話に続く余白を残します。';
+    case 'no_streamer_judgment':
+      return '受け身で流さず、配信者として何をするかを出します。';
+    case 'persona_flattening':
+      return '丁寧に丸まりすぎた言い方を、キャラクターの温度に戻します。';
+    default:
+      return `検知強度 ${Math.round(issue.severity * 100)}% の項目です。`;
+  }
+}
+
+function formatIntervention(kind: InterventionKind): string {
+  switch (kind) {
+    case 'ground_in_recent_comment':
+      return '直近コメントに寄せる';
+    case 'add_streamer_judgment':
+      return '配信者の判断を入れる';
+    case 'soft_disagreement':
+      return '少しだけ否定を混ぜる';
+    case 'self_repair':
+      return '言い直しの揺れを足す';
+    case 'unfinished_margin':
+      return '余白を残して終える';
+    case 'reduce_over_apology':
+      return '謝罪の温度を下げる';
+    case 'reduce_over_agreement':
+      return '肯定しすぎを抑える';
+    case 'increase_specificity':
+      return '具体的な足場を足す';
+    case 'acknowledge_tension':
+      return '場の緊張を拾う';
+    case 'break_clean_closing':
+      return 'きれいな締めを崩す';
+    default:
+      return '介入する';
+  }
+}
+
+function formatInterventionReason(reason: string): string {
+  if (reason.includes('clean closing')) {
+    return 'きれいに閉じる言い回しがあるため、余白を残します。';
+  }
+
+  if (reason.includes('agrees') || reason.includes('over_agreement')) {
+    return '受け止め方が丸いため、少しだけ言葉の角度を変えます。';
+  }
+
+  if (reason.includes('service apology') || reason.includes('over_apology')) {
+    return '謝罪文に寄りすぎているため、配信中の反応に戻します。';
+  }
+
+  if (reason.includes('positive landing')) {
+    return '明るくまとめすぎているため、場の違和感を残します。';
+  }
+
+  if (reason.includes('repetition pressure')) {
+    return '同じ流れが続いているため、受け答えの角度を変えます。';
+  }
+
+  if (reason.includes('stream context')) {
+    return '直近の文脈が薄いため、配信状況に接続します。';
+  }
+
+  if (reason.includes('concrete anchor')) {
+    return '抽象的に見えるため、具体的な場面を足します。';
+  }
+
+  if (reason.includes('streamer-side judgment')) {
+    return '受け身な返答を避けるため、配信者側の判断を出します。';
+  }
+
+  if (reason.includes('polite prose')) {
+    return '丁寧に丸まりすぎているため、キャラクターの温度を戻します。';
+  }
+
+  return '検知した違和感に合わせて、返答の着地をずらします。';
+}
+
 function renderMetricBar(
   label: string,
   value: number,
@@ -591,6 +923,11 @@ async function runNoise(): Promise<void> {
 
   state.error = '';
   state.output = '';
+  state.quality = undefined;
+  state.diagnosis = undefined;
+  state.plan = undefined;
+  state.candidates = [];
+  state.selectedIndex = -1;
   state.isRunning = true;
   render();
 
@@ -628,11 +965,19 @@ async function runNoise(): Promise<void> {
     state.predictability = result.score.predictability;
     state.contamination = result.score.contamination;
     state.quality = result.quality;
+    state.diagnosis = result.diagnosis;
+    state.plan = result.plan;
+    state.candidates = result.candidates;
+    state.selectedIndex = result.selectedIndex;
     state.memory = await store.load(SCOPE_ID);
   } catch (error) {
     state.error = error instanceof Error ? error.message : String(error);
     state.output = '';
     state.quality = undefined;
+    state.diagnosis = undefined;
+    state.plan = undefined;
+    state.candidates = [];
+    state.selectedIndex = -1;
   } finally {
     state.isRunning = false;
   }
@@ -656,6 +1001,10 @@ function applyPreset(key: PresetKey): void {
   state.output = '';
   state.error = '';
   state.quality = undefined;
+  state.diagnosis = undefined;
+  state.plan = undefined;
+  state.candidates = [];
+  state.selectedIndex = -1;
   render();
 }
 

@@ -376,6 +376,156 @@ textarea {
   gap: 12px;
 }
 
+.intent-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.intent-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 14px;
+}
+
+.annotation-surface {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.annotation-surface h3,
+.candidate-summary h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.annotated-text {
+  min-height: 156px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.85;
+  white-space: pre-wrap;
+}
+
+.annotation-mark {
+  padding: 1px 4px;
+  border-radius: 5px;
+  background: #d8f0f2;
+  color: var(--accent-dark);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.annotation-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.annotation-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+}
+
+.annotation-list strong {
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+.annotation-list p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.issue-dot,
+.intent-index {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.intent-flow {
+  display: grid;
+  gap: 10px;
+}
+
+.intent-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.intent-step strong {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.intent-step p {
+  margin: 3px 0 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.intent-track {
+  height: 8px;
+}
+
+.candidate-summary {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.candidate-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.candidate-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.candidate-row.selected {
+  color: var(--accent-dark);
+}
+
+.candidate-row.selected .metric-track {
+  outline: 2px solid rgba(15, 143, 154, 0.2);
+  outline-offset: 2px;
+}
+
 .report-grid {
   display: grid;
   gap: 12px;
@@ -600,6 +750,7 @@ pre {
 @media (max-width: 860px) {
   .preset-grid,
   .compare-grid,
+  .intent-grid,
   .settings-grid,
   .debug-grid {
     grid-template-columns: 1fr;
