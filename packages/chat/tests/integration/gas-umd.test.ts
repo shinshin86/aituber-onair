@@ -15,7 +15,7 @@ const hasUmdBundle = fs.existsSync(umdPath);
 
 if (!hasUmdBundle) {
   console.warn(
-    `Skipping GAS UMD tests. Run 'npm run build:umd' to create ${umdPath}.`,
+    "Skipping GAS UMD tests. Run 'npm run build:umd' to create dist/umd/aituber-onair-chat.js.",
   );
 }
 
