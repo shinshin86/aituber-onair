@@ -362,7 +362,14 @@ export class GeminiChatService implements ChatService {
           /Unknown name|Cannot find field|404/.test(e?.message || '') ||
           e?.status === 404;
         if (!requiresV1beta && looksLikeVersionMismatch) {
-          return await fetchOnce('v1beta', this.adaptKeysForApi(body));
+          try {
+            return await fetchOnce('v1beta', this.adaptKeysForApi(body));
+          } catch (fallbackError) {
+            if (fallbackError instanceof Error) {
+              (fallbackError as Error & { cause?: unknown }).cause = e;
+            }
+            throw fallbackError;
+          }
         }
         throw e; // otherwise, throw to upper layer
       }

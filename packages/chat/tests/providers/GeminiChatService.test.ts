@@ -210,6 +210,35 @@ describe('GeminiChatService API version selection', () => {
       '/v1beta/models/gemini-custom-legacy:streamGenerateContent?alt=sse&key=test-key',
     );
   });
+
+  it('preserves the v1 error as cause when v1beta fallback also fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const firstError = new HttpError(404, 'Not Found', '{"error":"v1"}');
+    const fallbackError = new HttpError(
+      500,
+      'Internal Server Error',
+      '{"error":"v1beta"}',
+    );
+    const postSpy = vi.spyOn(ChatServiceHttpClient, 'post');
+    postSpy
+      .mockRejectedValueOnce(firstError)
+      .mockRejectedValueOnce(fallbackError);
+    const legacyModel = 'gemini-custom-legacy';
+    const service = new GeminiChatService(
+      'test-key',
+      legacyModel,
+      MODEL_GEMINI_3_1_FLASH_LITE,
+    );
+
+    await expect(
+      (service as any).callGemini(messages, legacyModel, true),
+    ).rejects.toBe(fallbackError);
+
+    expect((fallbackError as Error & { cause?: unknown }).cause).toBe(
+      firstError,
+    );
+    expect(postSpy).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('GeminiChatService thought filtering', () => {
