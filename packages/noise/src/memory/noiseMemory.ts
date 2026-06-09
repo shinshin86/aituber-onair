@@ -1,7 +1,7 @@
 import type {
   ContextFingerprint,
+  PlannedIntervention,
   NoiseMemory,
-  PlannedStain,
   StainKind,
 } from '../core/types.js';
 
@@ -43,7 +43,7 @@ export function updateNoiseMemory(input: {
   before: string;
   after: string;
   context: ContextFingerprint;
-  applied: PlannedStain[];
+  applied: PlannedIntervention[];
   maxRecentEntries?: number;
 }): NoiseMemory {
   const maxRecentEntries = input.maxRecentEntries ?? DEFAULT_MAX_RECENT_ENTRIES;

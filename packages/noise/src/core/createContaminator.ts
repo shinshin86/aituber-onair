@@ -1,8 +1,15 @@
 import { createContextFingerprint } from './contextFingerprint.js';
-import { scorePredictability } from './predictability.js';
-import { evaluateNoiseQuality } from './qualityEvaluator.js';
+import {
+  evaluateRewriteCandidates,
+  selectBestCandidate,
+} from './candidateEvaluator.js';
+import { generateRewriteCandidates } from './candidateGenerator.js';
+import {
+  buildFrictionParameters,
+  buildInterventionPlan,
+} from './frictionPlanner.js';
+import { diagnosePredictability } from './predictabilityDiagnosis.js';
 import { clamp01 } from './random.js';
-import { rewriteWithStains } from './rewriteEngine.js';
 import {
   normalizeNoiseMemory,
   updateNoiseMemory,
@@ -13,7 +20,6 @@ import {
   restoreSensitiveSpans,
   safetyGuard,
 } from './safetyGuard.js';
-import { planStains } from './stainPlanner.js';
 import { createChatRewriteModel } from '../models/chatRewriteModel.js';
 import type {
   ContaminateInput,
@@ -48,56 +54,80 @@ export function createContaminator(
       const context = createContextFingerprint({
         systemPrompt: input.systemPrompt,
         messages: input.messages,
+        streamContext: input.streamContext,
       });
-      const predictability = scorePredictability({
+      const diagnosis = diagnosePredictability({
         draft: input.draft,
         context,
       });
-      const plan = planStains({
-        draft: input.draft,
+      const plan = buildInterventionPlan({
+        diagnosis,
         context,
-        predictability,
         intensity,
         mode,
         memory,
-        seed: input.seed,
+      });
+      const friction = buildFrictionParameters({
+        diagnosis,
+        context,
+        plan,
+        constraints: input.constraints,
       });
       const protectedDraft = protectSensitiveSpans(input.draft, {
         preserveCodeBlocks: input.constraints?.preserveCodeBlocks ?? true,
         preserveUrls: input.constraints?.preserveUrls ?? true,
         preserveNumbers: input.constraints?.preserveNumbers ?? true,
       });
-      const rewritten = await rewriteWithStains({
+      const generatedCandidates = await generateRewriteCandidates({
         draft: protectedDraft.text,
         systemPrompt: input.systemPrompt,
         messages: input.messages,
         context,
         plan,
+        friction,
         model,
+        candidateCount: mode === 'subtle' ? 3 : 4,
       });
-      const restored = restoreSensitiveSpans(rewritten, protectedDraft.spans);
-      const safe = safetyGuard({
-        before: input.draft,
-        after: restored,
-        constraints: input.constraints,
+      const safeCandidates = generatedCandidates.map((candidate) => {
+        const restored = restoreSensitiveSpans(
+          candidate.text,
+          protectedDraft.spans
+        );
+        const safe = safetyGuard({
+          before: input.draft,
+          after: restored,
+          constraints: input.constraints,
+        });
+
+        return {
+          ...candidate,
+          text: safe.text,
+        };
       });
-      const quality = evaluateNoiseQuality({
+      const candidates = evaluateRewriteCandidates({
         before: input.draft,
-        after: safe.text,
+        candidates: safeCandidates,
         context,
-        options: options.quality,
+        qualityOptions: options.quality,
       });
+      const { candidate: bestCandidate, index: selectedIndex } =
+        selectBestCandidate(candidates);
       const output: ContaminateOutput = {
-        text: safe.text,
+        text: bestCandidate.text,
         score: {
-          predictability,
-          rewrittenPredictability: quality.checks.predictabilityAfter,
+          predictability: diagnosis.score,
+          rewrittenPredictability:
+            bestCandidate.quality.checks.predictabilityAfter,
           contamination: plan.intensity,
         },
-        quality,
-        applied: plan.stains.map((stain) => ({
-          kind: stain.kind,
-          reason: stain.reason,
+        quality: bestCandidate.quality,
+        diagnosis,
+        plan,
+        candidates,
+        selectedIndex,
+        applied: plan.interventions.map((intervention) => ({
+          kind: intervention.kind,
+          reason: intervention.reason,
         })),
       };
 
@@ -109,7 +139,7 @@ export function createContaminator(
             before: input.draft,
             after: output.text,
             context,
-            applied: plan.stains,
+            applied: plan.interventions,
             maxRecentEntries: options.memory.maxRecentEntries,
           })
         );

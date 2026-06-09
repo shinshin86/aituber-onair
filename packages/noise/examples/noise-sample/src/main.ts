@@ -6,6 +6,7 @@ import {
   type NoiseMemoryStore,
   type NoiseMode,
   type NoiseQualityReport,
+  type StreamContext,
 } from '../../../src/index';
 import { LocalStorageNoiseMemoryStore } from '../../../src/web';
 import './styles.css';
@@ -52,6 +53,7 @@ const PRESETS: Record<
     systemPrompt: string;
     messagesText: string;
     draft: string;
+    streamContext: StreamContext;
   }
 > = {
   repeatedQuestion: {
@@ -63,6 +65,10 @@ const PRESETS: Record<
       '視聴者A: 今日のゲームなに？\n視聴者B: 今日のゲームなに？\n視聴者C: さっきも聞いたけど今日のゲームなに？',
     draft:
       '同じ質問が何度か流れていますが、みんなが興味を持ってくれている証拠なので嬉しいです。順番に答えていくので、少し待っていてくださいね。',
+    streamContext: {
+      currentSituation: '同じ質問が複数回流れている',
+      audienceMood: '少し繰り返し気味',
+    },
   },
   streamTrouble: {
     label: '配信トラブル',
@@ -73,6 +79,10 @@ const PRESETS: Record<
       '視聴者A: 音止まった？\n視聴者B: 今ちょっと無音だった\n視聴者C: 大丈夫？',
     draft:
       '音声が一時的に途切れてしまい申し訳ありません。現在確認していますので、少しお待ちください。ご不便をおかけしてすみません。',
+    streamContext: {
+      currentSituation: '音声トラブルが起きた直後',
+      audienceMood: '少し不安',
+    },
   },
   flatMood: {
     label: '空気が落ちた',
@@ -83,6 +93,10 @@ const PRESETS: Record<
       '視聴者A: ちょっと静かだね\n視聴者B: 今の流れ、少し退屈かも\n視聴者C: 何か変える？',
     draft:
       'コメントありがとうございます。今の流れも楽しんでもらえるように、引き続き明るく進めていきます。みんなで楽しい時間にしていきましょう。',
+    streamContext: {
+      currentSituation: '配信の空気が少し落ちている',
+      audienceMood: '退屈気味',
+    },
   },
 };
 
@@ -599,6 +613,7 @@ async function runNoise(): Promise<void> {
       systemPrompt: state.systemPrompt,
       messages: parseMessages(state.messagesText),
       draft: state.draft,
+      streamContext: PRESETS[state.activePreset].streamContext,
       seed: state.seed,
       constraints: {
         preserveCodeBlocks: true,

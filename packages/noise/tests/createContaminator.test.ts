@@ -1,11 +1,17 @@
 import type { ChatService } from '@aituber-onair/chat';
 import {
+  buildFrictionParameters,
+  buildInterventionPlan,
   createContaminationStream,
   createChatRewriteModel,
   createContaminator,
   createContextFingerprint,
+  diagnosePredictability,
+  evaluateRewriteCandidates,
   evaluateNoiseQuality,
+  generateRewriteCandidates,
   scorePredictability,
+  selectBestCandidate,
   type RewriteModel,
 } from '../src';
 
@@ -79,8 +85,56 @@ describe('createContaminator', () => {
     expect(capturedSystem).toContain('Preserve the character');
     expect(capturedPrompt).toContain('説明が整いすぎるときだけ少し崩す');
     expect(capturedPrompt).toContain('AITuberを続けるコツ');
-    expect(capturedPrompt).toContain('Original speech');
+    expect(capturedPrompt).toContain('"draft"');
+    expect(capturedPrompt).toContain('"interventions"');
     expect(result.text).toContain('交流');
+    expect(result.diagnosis.issues.length).toBeGreaterThan(0);
+    expect(result.plan.interventions.length).toBeGreaterThan(0);
+  });
+
+  it('selects the strongest valid candidate from structured LLM output', async () => {
+    const contaminator = createContaminator({
+      intensity: 0.8,
+      mode: 'performer',
+      model: {
+        async generate() {
+          return JSON.stringify({
+            candidates: [
+              {
+                text: '同じ質問が何度か流れていますが、順番に答えていくので少し待っていてくださいね。',
+                applied: [],
+              },
+              {
+                text: '同じ質問が続いているので、ここでまとめて答えますね。今日のゲームはこのあと紹介します。',
+                applied: ['add_streamer_judgment', 'ground_in_recent_comment'],
+              },
+            ],
+          });
+        },
+      },
+    });
+
+    const result = await contaminator.contaminate({
+      systemPrompt: 'コメント欄の空気を読むAITuberです。',
+      messages: [
+        { role: 'user', content: '視聴者A: 今日のゲームなに？' },
+        { role: 'user', content: '視聴者B: 今日のゲームなに？' },
+        { role: 'user', content: '視聴者C: 今日のゲームなに？' },
+      ],
+      draft:
+        '同じ質問が何度か流れていますが、みんなが興味を持ってくれている証拠なので嬉しいです。順番に答えていくので、少し待っていてくださいね。',
+      streamContext: {
+        currentSituation: '同じ質問が複数回流れている',
+      },
+      seed: 'candidate-selection',
+    });
+
+    expect(result.text).toContain('まとめて答えますね');
+    expect(result.candidates).toHaveLength(2);
+    expect(result.selectedIndex).toBe(1);
+    expect(result.plan.interventions.map((item) => item.kind)).toContain(
+      'add_streamer_judgment'
+    );
   });
 
   it('lets the LLM adapt overly safe live replies without changing persona itself', async () => {
@@ -272,6 +326,181 @@ describe('scorePredictability', () => {
         context,
       })
     );
+  });
+});
+
+describe('noise structural pipeline', () => {
+  it('diagnoses predictable apologies without calling an LLM', () => {
+    const context = createContextFingerprint({
+      systemPrompt:
+        'あなたは、配信中の違和感や失敗も少しだけ言葉にできるAITuberです。',
+      messages: [
+        { role: 'user', content: '音止まった？' },
+        { role: 'user', content: '今ちょっと無音だった' },
+      ],
+      streamContext: {
+        currentSituation: '音声トラブルが起きた直後',
+        audienceMood: '少し不安',
+      },
+    });
+
+    const diagnosis = diagnosePredictability({
+      draft:
+        '音声が一時的に途切れてしまい申し訳ありません。現在確認していますので、少しお待ちください。ご不便をおかけしてすみません。',
+      context,
+    });
+
+    const issueKinds = diagnosis.issues.map((issue) => issue.kind);
+
+    expect(issueKinds).toContain('over_apology');
+    expect(issueKinds).toContain('low_context_grounding');
+    expect(diagnosis.score).toBeGreaterThan(0);
+  });
+
+  it('turns repeated-question context into streamer judgment interventions', () => {
+    const context = createContextFingerprint({
+      systemPrompt: 'コメント欄の空気を読むAITuberです。',
+      messages: [
+        { role: 'user', content: '今日のゲームなに？' },
+        { role: 'user', content: '今日のゲームなに？' },
+        { role: 'user', content: '今日のゲームなに？' },
+      ],
+      streamContext: {
+        currentSituation: '同じ質問が複数回流れている',
+      },
+    });
+    const diagnosis = diagnosePredictability({
+      draft:
+        '同じ質問が何度か流れていますが、みんなが興味を持ってくれている証拠なので嬉しいです。順番に答えていくので、少し待っていてくださいね。',
+      context,
+    });
+    const plan = buildInterventionPlan({
+      diagnosis,
+      context,
+      intensity: 0.8,
+      mode: 'performer',
+    });
+
+    const interventionKinds = plan.interventions.map(
+      (intervention) => intervention.kind
+    );
+
+    expect(interventionKinds).toContain('add_streamer_judgment');
+    expect(interventionKinds).toContain('ground_in_recent_comment');
+    expect(plan.preserve).toEqual({
+      meaning: true,
+      persona: true,
+      facts: true,
+      safety: true,
+    });
+  });
+
+  it('builds friction parameters and sends them as structured LLM input', async () => {
+    let capturedPrompt = '';
+    const context = createContextFingerprint({
+      systemPrompt: 'コメント欄の空気を読むAITuberです。',
+      messages: [{ role: 'user', content: '今日のゲームなに？' }],
+      streamContext: {
+        currentSituation: '同じ質問が複数回流れている',
+      },
+    });
+    const diagnosis = diagnosePredictability({
+      draft:
+        '同じ質問が何度か流れていますが、順番に答えていくので少し待っていてくださいね。',
+      context,
+    });
+    const plan = buildInterventionPlan({
+      diagnosis,
+      context,
+      intensity: 0.75,
+      mode: 'performer',
+    });
+    const friction = buildFrictionParameters({
+      diagnosis,
+      context,
+      plan,
+    });
+    const candidates = await generateRewriteCandidates({
+      draft:
+        '同じ質問が何度か流れていますが、順番に答えていくので少し待っていてくださいね。',
+      systemPrompt: 'コメント欄の空気を読むAITuberです。',
+      messages: [{ role: 'user', content: '今日のゲームなに？' }],
+      context,
+      plan,
+      friction,
+      candidateCount: 3,
+      model: {
+        async generate({ prompt }) {
+          capturedPrompt = prompt;
+          return JSON.stringify({
+            candidates: [
+              {
+                text: '同じ質問が続いているので、ここでまとめて答えますね。',
+                applied: ['add_streamer_judgment'],
+              },
+            ],
+          });
+        },
+      },
+    });
+
+    const payload = JSON.parse(capturedPrompt) as {
+      task: string;
+      output: { candidateCount: number };
+      conversation: { repetitionPressure: number };
+      interventions: Array<{ kind: string }>;
+    };
+
+    expect(payload.task).toBe('rewrite_ai_vtuber_reply');
+    expect(payload.output.candidateCount).toBe(3);
+    expect(payload.conversation.repetitionPressure).toBeGreaterThan(0);
+    expect(payload.interventions.map((item) => item.kind)).toContain(
+      'add_streamer_judgment'
+    );
+    expect(candidates[0].appliedInterventions).toContain(
+      'add_streamer_judgment'
+    );
+  });
+
+  it('selects a grounded candidate over unchanged or aggressive candidates', () => {
+    const before =
+      '同じ質問が何度か流れていますが、みんなが興味を持ってくれている証拠なので嬉しいです。順番に答えていくので、少し待っていてくださいね。';
+    const context = createContextFingerprint({
+      systemPrompt: '穏やかにコメント欄の空気を読むAITuberです。',
+      messages: [
+        { role: 'user', content: '今日のゲームなに？' },
+        { role: 'user', content: '今日のゲームなに？' },
+      ],
+      streamContext: {
+        currentSituation: '同じ質問が複数回流れている',
+      },
+    });
+    const evaluated = evaluateRewriteCandidates({
+      before,
+      context,
+      candidates: [
+        {
+          text: before,
+          appliedInterventions: [],
+        },
+        {
+          text: 'うるさい、同じ質問ばかりしないで。',
+          appliedInterventions: ['soft_disagreement'],
+        },
+        {
+          text: '同じ質問が続いているので、ここでまとめて答えますね。今日のゲームはこのあと紹介します。',
+          appliedInterventions: [
+            'add_streamer_judgment',
+            'ground_in_recent_comment',
+          ],
+        },
+      ],
+    });
+    const selected = selectBestCandidate(evaluated);
+
+    expect(selected.index).toBe(2);
+    expect(evaluated[1].evaluation.overAggressionRisk).toBeGreaterThan(0.25);
+    expect(evaluated[0].evaluation.issues).toContain('unchanged');
   });
 });
 

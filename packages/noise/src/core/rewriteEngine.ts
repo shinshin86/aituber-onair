@@ -13,7 +13,7 @@ export async function rewriteWithStains(input: {
   plan: StainPlan;
   model: RewriteModel;
 }): Promise<string> {
-  if (input.plan.stains.length === 0) {
+  if (input.plan.interventions.length === 0) {
     return input.draft;
   }
 
@@ -54,7 +54,7 @@ function buildRewritePrompt(input: {
     JSON.stringify(
       {
         predictabilityContext: input.context,
-        noisePlan: input.plan,
+        frictionPlan: input.plan,
       },
       null,
       2

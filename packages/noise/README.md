@@ -9,8 +9,9 @@ Do not let AI responses end in predictable harmony.
 
 It is designed for AI VTubers and AI character streams where a response can feel
 too clean, too agreeable, or too neatly summarized. The package detects
-predictability, builds rewrite directives, and asks an LLM to rewrite the draft
-while preserving the character.
+predictability, builds structured friction parameters, asks an LLM for multiple
+rewrite candidates, and selects the candidate that best preserves the character
+while avoiding a predictable landing.
 
 ## Basic Usage
 
@@ -34,6 +35,9 @@ const result = await contaminator.contaminate({
   messages: [{ role: 'user', content: 'Thanks for the stream!' }],
   draft:
     'Thank you for coming today. It was a very fun stream. Please look forward to the next one.',
+  streamContext: {
+    currentSituation: 'The stream is ending too neatly.',
+  },
   seed: 'ending-1',
   constraints: {
     preserveCodeBlocks: true,
@@ -44,6 +48,8 @@ const result = await contaminator.contaminate({
 });
 
 console.log(result.text);
+console.log(result.diagnosis);
+console.log(result.plan);
 console.log(result.applied);
 console.log(result.quality);
 ```
@@ -59,17 +65,30 @@ npm -w @aituber-onair/noise run example:noise-sample
 
 ## Design
 
-The engine has three layers:
+Noise works after an LLM has already produced a draft. It is independent from
+conversation-loop detectors such as `@aituber-onair/manneri`: those tools can
+watch the conversation flow before generation, while Noise watches the response
+landing after generation.
 
-- `scorePredictability()` detects clean summaries, uniform rhythm, generic
-  agreement, and over-polished endings.
-- `planStains()` chooses a small set of rewrite directives from the current
-  context, predictability score, intensity, mode, and memory.
-- `rewriteWithStains()` asks an LLM to rewrite the draft while preserving the
-  character voice, facts, URLs, numbers, and code.
-- `evaluateNoiseQuality()` checks whether the rewrite reduced predictability
-  without drifting the character, overdoing the noise, or adding ungrounded
-  details.
+The engine has six steps:
+
+- `createContextFingerprint()` reads the persona, recent messages, and optional
+  `streamContext`.
+- `diagnosePredictability()` classifies why the draft feels too safe, generic,
+  or over-polished.
+- `buildInterventionPlan()` and `buildFrictionParameters()` turn that diagnosis
+  into structured instructions such as grounding in recent comments, reducing
+  over-apology, or adding streamer judgment.
+- `generateRewriteCandidates()` asks an LLM for multiple candidates from those
+  structured parameters.
+- `evaluateRewriteCandidates()` checks predictability reduction, context
+  grounding, specificity, persona preservation, meaning preservation,
+  aggression risk, and ungrounded detail risk.
+- `selectBestCandidate()` returns the strongest safe candidate.
+
+Noise does not import or depend on Manneri. If an app has external knowledge
+about the stream, pass it as plain `streamContext`; Noise treats it as ordinary
+runtime context, not as a package-specific integration.
 
 This package does not depend on any LLM SDK. You can use the built-in
 `@aituber-onair/chat` integration for OpenAI, OpenAI-compatible, Gemini, Claude,

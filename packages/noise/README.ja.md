@@ -30,6 +30,9 @@ const result = await contaminator.contaminate({
   messages: [{ role: 'user', content: '今日も楽しかった！！' }],
   draft:
     '今日は来てくれてありがとう。みんなのおかげでとても楽しい配信になりました。次回も楽しみにしていてね。',
+  streamContext: {
+    currentSituation: '配信の締めがきれいにまとまりすぎている',
+  },
   seed: 'ending-1',
   constraints: {
     preserveCodeBlocks: true,
@@ -40,6 +43,8 @@ const result = await contaminator.contaminate({
 });
 
 console.log(result.text);
+console.log(result.diagnosis);
+console.log(result.plan);
 console.log(result.applied);
 console.log(result.quality);
 ```
@@ -55,8 +60,25 @@ npm -w @aituber-onair/noise run example:noise-sample
 
 ## 方針
 
-- 返答の無難さをルールベースで計算します。
-- `intensity`、`mode`、会話文脈、記録から書き換え指示を決めます。
+Noise は、LLM が返答を生成したあとに動きます。会話の流れや繰り返しを
+生成前に見る `@aituber-onair/manneri` とは独立したパッケージです。
+Manneri が会話の流れを見るなら、Noise は返答の着地を見ます。
+
+- `createContextFingerprint()` でキャラクター、直近コメント、任意の
+  `streamContext` を読みます。
+- `diagnosePredictability()` で、返答がなぜ無難に見えるのかを分類します。
+- `buildInterventionPlan()` と `buildFrictionParameters()` で、直近コメントに
+  接続する、謝りすぎを弱める、配信者として判断するなどの介入方針を
+  構造化します。
+- `generateRewriteCandidates()` で、構造化されたパラメーターをLLMに渡し、
+  複数候補を生成します。
+- `evaluateRewriteCandidates()` で、無難さ、文脈接続、具体性、キャラクター維持、
+  意味の維持、攻撃性、文脈にない情報の追加を評価します。
+- `selectBestCandidate()` で安全な最良候補を選びます。
+
+Noise は Manneri を import しません。外部で分かっている配信状況がある場合は、
+パッケージ固有の連携ではなく、通常の `streamContext` として渡します。
+
 - `@aituber-onair/chat` を内部で使い、OpenAI、OpenAI-compatible、
   Gemini、Claude、OpenRouter、xAI、Kimi、DeepSeek、Mistral、
   Gemini Nano などのAIサービスを利用できます。
