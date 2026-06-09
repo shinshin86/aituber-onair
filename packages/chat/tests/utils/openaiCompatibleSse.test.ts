@@ -5,24 +5,7 @@ import {
   parseOpenAICompatibleOneShot,
 } from '../../src/utils/openaiCompatibleSse';
 import type { ToolChatCompletion } from '../../src/types';
-
-const createResponse = (chunks: string[]): Response => {
-  let index = 0;
-  const body = {
-    getReader: () => ({
-      read: async () => {
-        if (index >= chunks.length) {
-          return { done: true, value: undefined };
-        }
-        const value = new Uint8Array(Buffer.from(chunks[index], 'utf-8'));
-        index += 1;
-        return { done: false, value };
-      },
-    }),
-  };
-
-  return { body } as Response;
-};
+import { createSseResponse } from '../helpers/sse';
 
 describe('openaiCompatibleSse', () => {
   const originalTextDecoder = global.TextDecoder;
@@ -42,7 +25,7 @@ describe('openaiCompatibleSse', () => {
 
   it('should parse streaming text and call onPartial', async () => {
     const onPartial = vi.fn();
-    const res = createResponse([
+    const res = createSseResponse([
       'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n',
       'data: {"choices":[{"delta":{"content":" world"}}]}\n\n',
       'data: [DONE]\n\n',
@@ -59,7 +42,7 @@ describe('openaiCompatibleSse', () => {
   it('should ignore invalid JSON when onJsonError is provided', async () => {
     const onPartial = vi.fn();
     const onJsonError = vi.fn();
-    const res = createResponse([
+    const res = createSseResponse([
       'data: {invalid json}\n\n',
       'data: {"choices":[{"delta":{"content":"OK"}}]}\n\n',
       'data: [DONE]\n\n',
@@ -105,7 +88,7 @@ describe('openaiCompatibleSse', () => {
         },
       ],
     });
-    const res = createResponse([
+    const res = createSseResponse([
       `data: ${firstPayload}\n\n`,
       `data: ${secondPayload}\n\n`,
       'data: [DONE]\n\n',

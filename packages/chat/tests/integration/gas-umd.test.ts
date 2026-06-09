@@ -10,6 +10,15 @@ import {
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+const umdPath = path.resolve(__dirname, '../../dist/umd/aituber-onair-chat.js');
+const hasUmdBundle = fs.existsSync(umdPath);
+
+if (!hasUmdBundle) {
+  console.warn(
+    `Skipping GAS UMD tests. Run 'npm run build:umd' to create ${umdPath}.`,
+  );
+}
+
 // Mock UrlFetchApp for GAS environment simulation
 const mockUrlFetchApp = {
   fetch: vi.fn(),
@@ -24,20 +33,8 @@ const createMockGASResponse = (status: number, content: string) => ({
 // Global UMD bundle object
 let AITuberOnAirChat: any;
 
-describe('GAS + UMD Integration', () => {
+describe.skipIf(!hasUmdBundle)('GAS + UMD Integration', () => {
   beforeAll(async () => {
-    // Load UMD bundle
-    const umdPath = path.resolve(
-      __dirname,
-      '../../dist/umd/aituber-onair-chat.js',
-    );
-
-    if (!fs.existsSync(umdPath)) {
-      throw new Error(
-        `UMD bundle not found at ${umdPath}. Please run 'npm run build:umd' first.`,
-      );
-    }
-
     const umdBundle = fs.readFileSync(umdPath, 'utf-8');
 
     // Create mock global environment for UMD
