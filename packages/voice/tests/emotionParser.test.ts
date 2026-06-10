@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EmotionParser } from '../src/utils/emotionParser';
+import { EmotionParser, emotionToTalkStyle } from '../src/utils/emotionParser';
 
 describe('EmotionParser', () => {
   it('should extract emotion tags case-insensitively and clean all tags', () => {
@@ -31,5 +31,13 @@ describe('EmotionParser', () => {
     expect(EmotionParser.addEmotionTag('custom', 'Hello')).toBe(
       '[custom] Hello',
     );
+  });
+
+  it('should map emotions to talk styles with configurable fallback', () => {
+    expect(emotionToTalkStyle('happy')).toBe('happy');
+    expect(emotionToTalkStyle('surprised')).toBe('surprised');
+    expect(emotionToTalkStyle('relaxed')).toBe('talk');
+    expect(emotionToTalkStyle('unknown')).toBe('neutral');
+    expect(emotionToTalkStyle('unknown', 'talk')).toBe('talk');
   });
 });

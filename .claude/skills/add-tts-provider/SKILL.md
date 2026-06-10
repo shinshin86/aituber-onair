@@ -34,6 +34,7 @@ Collect missing inputs before editing:
 1. Run preflight checks:
    - `rg "<engine_type>|<engine_class_name>" packages/voice`
    - Inspect current provider patterns in:
+     - `packages/voice/CONTRIBUTING.md`
      - `packages/voice/src/services/VoiceService.ts`
      - `packages/voice/src/services/internal/engineHandlers/`
      - `packages/voice/src/engines/`
@@ -49,6 +50,9 @@ Collect missing inputs before editing:
 3. Add engine implementation:
    - Create `packages/voice/src/engines/<engine_class_name>.ts`.
    - Implement `VoiceEngine`.
+   - Reuse shared helpers from `packages/voice/src/engines/internal/` and
+     `packages/voice/src/utils/` for URL building, decoding, clamping, WAV
+     creation, and fetch timeout behavior.
    - Prefer explicit setter methods only when the provider needs runtime
      overrides.
    - If the provider has a default endpoint, add a constant in

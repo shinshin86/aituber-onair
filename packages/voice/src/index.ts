@@ -41,7 +41,7 @@ export {
   textsToScreenplay,
   screenplayToText,
 } from './utils/screenplay';
-export { EmotionParser } from './utils/emotionParser';
+export { EmotionParser, emotionToTalkStyle } from './utils/emotionParser';
 
 // Voice-specific messages utility
 export {

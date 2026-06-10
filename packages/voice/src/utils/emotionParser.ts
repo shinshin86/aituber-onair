@@ -1,4 +1,4 @@
-import { EmotionType, emotions } from '../types/voice';
+import { EmotionType, emotions, TalkStyle } from '../types/voice';
 
 /**
  * Regular expressions for emotion tag parsing
@@ -64,5 +64,25 @@ export class EmotionParser {
    */
   static addEmotionTag(emotion: string, text: string): string {
     return `[${emotion}] ${text}`;
+  }
+}
+
+export function emotionToTalkStyle(
+  emotion?: string,
+  fallback: TalkStyle = 'neutral',
+): TalkStyle {
+  switch ((emotion || 'neutral').toLowerCase()) {
+    case 'angry':
+      return 'angry';
+    case 'happy':
+      return 'happy';
+    case 'sad':
+      return 'sad';
+    case 'surprised':
+      return 'surprised';
+    case 'relaxed':
+      return 'talk';
+    default:
+      return fallback;
   }
 }

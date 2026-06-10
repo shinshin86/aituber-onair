@@ -1,5 +1,5 @@
-import { EmotionType, Screenplay, TalkStyle } from '../types/voice';
-import { EmotionParser } from '../utils/emotionParser';
+import { EmotionType, Screenplay } from '../types/voice';
+import { EmotionParser, emotionToTalkStyle } from '../utils/emotionParser';
 
 export const splitSentence = (text: string): string[] => {
   const splitMessages = text.split(/(?<=[。．！？\n])/g);
@@ -24,26 +24,11 @@ export const textsToScreenplay = (texts: string[]): Screenplay[] => {
     screenplays.push({
       expression: expression as EmotionType,
       talk: {
-        style: emotionToTalkStyle(expression as EmotionType),
+        style: emotionToTalkStyle(expression as EmotionType, 'talk'),
         message: cleanText,
       },
     });
   }
 
   return screenplays;
-};
-
-const emotionToTalkStyle = (emotion: EmotionType): TalkStyle => {
-  switch (emotion) {
-    case 'angry':
-      return 'angry';
-    case 'happy':
-      return 'happy';
-    case 'sad':
-      return 'sad';
-    case 'surprised':
-      return 'surprised';
-    default:
-      return 'talk';
-  }
 };
