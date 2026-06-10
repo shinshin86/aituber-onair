@@ -295,7 +295,11 @@ export class VoiceEngineAdapter implements VoiceService {
     try {
       this.validateUpdateOptions(options as VoiceServiceOptionsUpdate);
       this.mergeOptionsForCurrentEngine(options as VoiceServiceOptionsUpdate);
-    } catch {
+    } catch (error) {
+      console.warn(
+        'Invalid voice options were merged using the legacy lenient updateOptions() path. This fallback is deprecated; use switchEngine() for cross-engine changes.',
+        error,
+      );
       // Backward compatible path: accept cross-engine fields without throwing.
       this.options = {
         ...this.options,
