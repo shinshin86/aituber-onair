@@ -489,21 +489,29 @@ const App: React.FC = () => {
       return effort;
     }
 
-    const fallback = getDefaultReasoningEffortForGPT5Model(targetModel);
     if (!effort) {
-      return fallback;
+      return getDefaultReasoningEffortForGPT5Model(targetModel);
     }
-    if (effort === 'none' && !allowsReasoningNone(targetModel)) {
-      return fallback;
-    }
-    if (effort === 'minimal' && !allowsReasoningMinimal(targetModel)) {
-      return fallback;
+
+    // Round unsupported values to the nearest supported level, matching the
+    // normalization performed by the chat package.
+    if (
+      (effort === 'none' && !allowsReasoningNone(targetModel)) ||
+      (effort === 'minimal' && !allowsReasoningMinimal(targetModel))
+    ) {
+      if (effort === 'minimal' && allowsReasoningNone(targetModel)) {
+        return 'none';
+      }
+      if (effort === 'none' && allowsReasoningMinimal(targetModel)) {
+        return 'minimal';
+      }
+      return allowsReasoningLow(targetModel) ? 'low' : 'medium';
     }
     if (effort === 'low' && !allowsReasoningLow(targetModel)) {
-      return fallback;
+      return 'medium';
     }
     if (effort === 'xhigh' && !allowsReasoningXHigh(targetModel)) {
-      return fallback;
+      return 'high';
     }
     return effort;
   };
@@ -3106,7 +3114,7 @@ const App: React.FC = () => {
                           }
                         >
                           <option value="casual">
-                            Casual - Fast responses for quick questions
+                            Casual - Lowest supported reasoning for quick chats
                           </option>
                           <option value="balanced">
                             Balanced - For business tasks and problem solving
