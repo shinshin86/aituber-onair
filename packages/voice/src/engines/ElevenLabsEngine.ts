@@ -1,6 +1,6 @@
 import { ELEVENLABS_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
-import { clampNumber } from './internal/utils';
+import { clampNumber, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 export type ElevenLabsApplyTextNormalization = 'auto' | 'on' | 'off';
@@ -171,7 +171,7 @@ export class ElevenLabsEngine implements VoiceEngine {
         this.applyLanguageTextNormalization;
     }
 
-    const response = await fetch(this.createRequestUrl(speaker), {
+    const response = await fetchWithTimeout(this.createRequestUrl(speaker), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

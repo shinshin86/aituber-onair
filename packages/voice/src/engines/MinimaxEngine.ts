@@ -5,7 +5,7 @@ import {
   MINIMAX_GLOBAL_VOICE_LIST_URL,
 } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
-import { decodeHexToArrayBuffer } from './internal/utils';
+import { decodeHexToArrayBuffer, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -237,7 +237,7 @@ export class MinimaxEngine implements VoiceEngine {
       throw new Error('MiniMax API key is required');
     }
 
-    const response = await fetch(this.getVoiceListApiUrl(), {
+    const response = await fetchWithTimeout(this.getVoiceListApiUrl(), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -363,7 +363,7 @@ export class MinimaxEngine implements VoiceEngine {
       language_boost: this.language,
     };
 
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${this.getTtsApiUrl()}?GroupId=${tempGroupId}`,
       {
         method: 'POST',
@@ -487,7 +487,7 @@ export class MinimaxEngine implements VoiceEngine {
     // Use provided GroupId or temporary one for testing
     const groupIdToUse = this.groupId || '1';
 
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${this.getTtsApiUrl()}?GroupId=${groupIdToUse}`,
       {
         method: 'POST',

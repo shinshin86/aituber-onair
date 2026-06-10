@@ -1,6 +1,7 @@
 import { GEMINI_TTS_API_URL } from '../constants/voiceEngine';
 import type { Talk } from '../types/voice';
 import { createPcm16Wav } from '../utils/wavHeader';
+import { fetchWithTimeout } from './internal/utils';
 import type { VoiceEngine } from './VoiceEngine';
 
 export type GeminiTtsModel =
@@ -91,7 +92,7 @@ export class GeminiTtsEngine implements VoiceEngine {
 
     const requestText = this.prompt ? `${this.prompt}\n${text}` : text;
     const url = `${this.baseUrl}/models/${this.model}:generateContent`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 import { OPENAI_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
-import { clampNumberWithFallback } from './internal/utils';
+import { clampNumberWithFallback, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -45,7 +45,7 @@ export class OpenAiEngine implements VoiceEngine {
       throw new Error('Input text is empty');
     }
 
-    const response = await fetch(OPENAI_TTS_API_URL, {
+    const response = await fetchWithTimeout(OPENAI_TTS_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

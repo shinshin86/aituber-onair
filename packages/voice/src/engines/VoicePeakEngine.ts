@@ -5,7 +5,7 @@ import {
   VoicepeakEmotionInput,
   VoicepeakEmotionWeights,
 } from '../types/voice';
-import { buildQueryUrl } from './internal/utils';
+import { buildQueryUrl, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 const VOICEPEAK_EMOTION_KEYS: readonly EmotionTypeForVoicepeak[] = [
@@ -46,7 +46,9 @@ export class VoicePeakEngine implements VoiceEngine {
       pitch: resolvedPitch === undefined ? undefined : String(resolvedPitch),
     });
 
-    const ttsQueryResponse = await fetch(ttsQueryUrl, { method: 'POST' });
+    const ttsQueryResponse = await fetchWithTimeout(ttsQueryUrl, {
+      method: 'POST',
+    });
 
     if (!ttsQueryResponse.ok) {
       throw new Error('Failed to fetch TTS query.');
@@ -69,7 +71,7 @@ export class VoicePeakEngine implements VoiceEngine {
 
     const synthesisUrl = this.buildUrl('/synthesis', { speaker });
 
-    const synthesisResponse = await fetch(synthesisUrl, {
+    const synthesisResponse = await fetchWithTimeout(synthesisUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(ttsQueryJson),

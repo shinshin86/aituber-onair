@@ -163,13 +163,16 @@ describe('MinimaxEngine', () => {
           language: 'Japanese',
         },
       ]);
-      expect(fetchMock).toHaveBeenCalledWith(MINIMAX_GLOBAL_VOICE_LIST_URL, {
-        method: 'GET',
-        headers: {
-          Authorization: 'Bearer api-key',
-          'Content-Type': 'application/json',
-        },
-      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        MINIMAX_GLOBAL_VOICE_LIST_URL,
+        expect.objectContaining({
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer api-key',
+            'Content-Type': 'application/json',
+          },
+        }),
+      );
     });
 
     it('should validate API key and propagate voice list API errors', async () => {

@@ -1,5 +1,6 @@
 import type { Talk } from '../types/voice';
 import { float32ToPcm16Wav } from '../utils/wavHeader';
+import { fetchWithTimeout } from './internal/utils';
 import type { VoiceEngine } from './VoiceEngine';
 
 export interface PiperPlusAssets {
@@ -154,7 +155,7 @@ export class PiperPlusEngine implements VoiceEngine {
         ort.env.wasm.numThreads = 1;
         ort.env.wasm.simd = true;
 
-        const configResponse = await fetch(
+        const configResponse = await fetchWithTimeout(
           `${assets.basePath}models/${assets.modelConfigFile}`,
         );
 

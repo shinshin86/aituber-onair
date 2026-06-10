@@ -1,6 +1,6 @@
 import { OPENAI_COMPATIBLE_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
-import { clampNumberWithFallback } from './internal/utils';
+import { clampNumberWithFallback, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -66,7 +66,7 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
       requestBody.voice = trimmedSpeaker;
     }
 
-    const response = await fetch(this.apiUrl, {
+    const response = await fetchWithTimeout(this.apiUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(requestBody),

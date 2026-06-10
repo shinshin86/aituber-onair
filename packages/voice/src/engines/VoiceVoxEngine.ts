@@ -1,6 +1,6 @@
 import { VOICE_VOX_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
-import { buildQueryUrl } from './internal/utils';
+import { buildQueryUrl, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -45,7 +45,9 @@ export class VoiceVoxEngine implements VoiceEngine {
       core_version: this.coreVersion,
     });
 
-    const ttsQueryResponse = await fetch(ttsQueryUrl, { method: 'POST' });
+    const ttsQueryResponse = await fetchWithTimeout(ttsQueryUrl, {
+      method: 'POST',
+    });
 
     if (!ttsQueryResponse.ok) {
       throw new Error('Failed to fetch TTS query.');
@@ -65,7 +67,7 @@ export class VoiceVoxEngine implements VoiceEngine {
       core_version: this.coreVersion,
     });
 
-    const synthesisResponse = await fetch(synthesisUrl, {
+    const synthesisResponse = await fetchWithTimeout(synthesisUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

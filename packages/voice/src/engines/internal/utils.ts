@@ -1,3 +1,5 @@
+import { VoiceEngineError } from '../VoiceEngineError';
+
 export function buildQueryUrl(
   baseUrl: string,
   path: string,
@@ -70,4 +72,49 @@ export function clampNumberWithFallback(
 ): number {
   const clamped = Math.min(max, Math.max(min, value));
   return Number.isFinite(clamped) ? clamped : fallback;
+}
+
+export function createConfigurationError(message: string): VoiceEngineError {
+  return new VoiceEngineError(message, { kind: 'configuration' });
+}
+
+export async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs = 30_000,
+): Promise<Response> {
+  if (init.signal || typeof AbortController === 'undefined') {
+    return fetch(input, init);
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    throw new VoiceEngineError('Network error while fetching TTS audio', {
+      kind: 'network',
+      cause: error,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function throwApiError(
+  engineName: string,
+  response: Response,
+): Promise<never> {
+  const detail = await response.text().catch(() => response.statusText);
+  throw new VoiceEngineError(
+    `Failed to fetch TTS from ${engineName}: ${response.status} - ${detail}`,
+    {
+      kind: 'api',
+      statusCode: response.status,
+    },
+  );
 }

@@ -1,5 +1,6 @@
 import { XAI_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
+import { fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 export type XaiCodec = 'mp3' | 'wav' | 'pcm' | 'mulaw' | 'alaw';
@@ -99,7 +100,7 @@ export class XaiEngine implements VoiceEngine {
       outputFormat.bit_rate = this.bitRate;
     }
 
-    const response = await fetch(XAI_TTS_API_URL, {
+    const response = await fetchWithTimeout(XAI_TTS_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

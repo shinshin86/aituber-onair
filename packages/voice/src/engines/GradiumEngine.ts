@@ -3,7 +3,7 @@ import {
   GRADIUM_VOICES_API_URL,
 } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
-import { clampNumber } from './internal/utils';
+import { clampNumber, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 export type GradiumOutputFormat =
@@ -119,7 +119,7 @@ export class GradiumEngine implements VoiceEngine {
       url.searchParams.set('skip', String(options.skip));
     }
 
-    const response = await fetch(url.toString(), {
+    const response = await fetchWithTimeout(url.toString(), {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
@@ -155,7 +155,7 @@ export class GradiumEngine implements VoiceEngine {
       throw new Error('Input text is empty');
     }
 
-    const response = await fetch(this.createRequestUrl(), {
+    const response = await fetchWithTimeout(this.createRequestUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 import { INWORLD_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
-import { decodeBase64ToArrayBuffer } from './internal/utils';
+import { decodeBase64ToArrayBuffer, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 export type InworldAudioEncoding =
@@ -142,7 +142,7 @@ export class InworldEngine implements VoiceEngine {
       throw new Error('Input text is empty');
     }
 
-    const response = await fetch(this.apiEndpoint, {
+    const response = await fetchWithTimeout(this.apiEndpoint, {
       method: 'POST',
       headers: {
         Authorization: `Basic ${apiKey}`,

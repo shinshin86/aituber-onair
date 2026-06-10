@@ -1,6 +1,6 @@
 import { AIVIS_SPEECH_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
-import { buildQueryUrl } from './internal/utils';
+import { buildQueryUrl, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -40,7 +40,9 @@ export class AivisSpeechEngine implements VoiceEngine {
       text: text,
     });
 
-    const ttsQueryResponse = await fetch(queryUrl, { method: 'POST' });
+    const ttsQueryResponse = await fetchWithTimeout(queryUrl, {
+      method: 'POST',
+    });
 
     if (!ttsQueryResponse.ok) {
       throw new Error('Failed to fetch TTS query from AivisSpeech Engine.');
@@ -56,7 +58,7 @@ export class AivisSpeechEngine implements VoiceEngine {
       speaker: String(speaker),
     });
 
-    const synthesisResponse = await fetch(synthesisUrl, {
+    const synthesisResponse = await fetchWithTimeout(synthesisUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
