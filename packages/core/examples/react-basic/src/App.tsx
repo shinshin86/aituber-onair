@@ -342,6 +342,8 @@ const RESPONSE_LENGTH_BASE_TOKENS: Record<ChatResponseLength, number> = {
   [CHAT_RESPONSE_LENGTH.VERY_LONG]: 1000,
   [CHAT_RESPONSE_LENGTH.DEEP]: 5000,
 };
+const GPT5_SAMPLE_PRESET: GPT5PresetKey = 'casual';
+const GPT5_SAMPLE_RESPONSE_LENGTH = CHAT_RESPONSE_LENGTH.VERY_SHORT;
 
 interface OpenRouterDynamicFreeModelsState {
   models: string[];
@@ -467,7 +469,7 @@ const App: React.FC = () => {
     CHAT_RESPONSE_LENGTH.MEDIUM,
   );
   const [gpt5Preset, setGpt5Preset] = useState<GPT5PresetKey | 'custom'>(
-    'casual',
+    GPT5_SAMPLE_PRESET,
   );
   const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
     'medium',
@@ -1256,6 +1258,14 @@ const App: React.FC = () => {
     if (chatProvider !== 'openai') {
       return;
     }
+    if (model && isGPT5Model(model)) {
+      if (gpt5Preset !== GPT5_SAMPLE_PRESET) {
+        setGpt5Preset(GPT5_SAMPLE_PRESET);
+      }
+      if (responseLength !== GPT5_SAMPLE_RESPONSE_LENGTH) {
+        setResponseLength(GPT5_SAMPLE_RESPONSE_LENGTH);
+      }
+    }
     const normalized = normalizeReasoningEffortForModel(
       model,
       reasoning_effort,
@@ -1263,7 +1273,7 @@ const App: React.FC = () => {
     if (normalized !== reasoning_effort) {
       setReasoningEffort(normalized);
     }
-  }, [chatProvider, model, reasoning_effort]);
+  }, [chatProvider, model, gpt5Preset, reasoning_effort, responseLength]);
 
   useEffect(() => {
     if (chatProvider !== 'openai' || !model) {
@@ -1400,22 +1410,17 @@ const App: React.FC = () => {
       aituberRef.current.removeAllListeners();
     }
 
-    const normalizedReasoningEffort = normalizeReasoningEffortForModel(
-      model,
-      reasoning_effort,
-    );
+    const isOpenAIGPT5Request =
+      chatProvider === 'openai' && Boolean(model && isGPT5Model(model));
+    const effectiveResponseLength = isOpenAIGPT5Request
+      ? GPT5_SAMPLE_RESPONSE_LENGTH
+      : responseLength;
 
     // prepare provider options for GPT-5 models
     const providerOptions: Record<string, any> = {};
-    if (chatProvider === 'openai' && model && isGPT5Model(model)) {
+    if (isOpenAIGPT5Request) {
       // Add GPT-5 specific options
-      if (gpt5Preset !== 'custom') {
-        providerOptions.gpt5Preset = gpt5Preset;
-      } else {
-        // Use custom settings
-        providerOptions.verbosity = verbosity;
-        providerOptions.reasoning_effort = normalizedReasoningEffort;
-      }
+      providerOptions.gpt5Preset = GPT5_SAMPLE_PRESET;
       providerOptions.gpt5EndpointPreference = isResponsesOnlyGPT5Model(model)
         ? 'responses'
         : gpt5EndpointPreference;
@@ -2157,7 +2162,7 @@ const App: React.FC = () => {
       model: trimmedModel,
       chatOptions: {
         systemPrompt: systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
-        responseLength,
+        responseLength: effectiveResponseLength,
       },
       providerOptions,
       tools: shouldEnableTools
@@ -2779,7 +2784,7 @@ const App: React.FC = () => {
                   <label htmlFor="systemPrompt">System Prompt:</label>
                   <textarea
                     id="systemPrompt"
-                    placeholder="あなたはフレンドリーなAITuberです..."
+                    placeholder={DEFAULT_SYSTEM_PROMPT}
                     value={systemPrompt}
                     onChange={(e) => setSystemPrompt(e.target.value)}
                   />
@@ -3054,6 +3059,7 @@ const App: React.FC = () => {
                   <select
                     id="responseLength"
                     value={responseLength}
+                    disabled={isOpenAIGPT5ModelSelected}
                     onChange={(e) =>
                       setResponseLength(e.target.value as ChatResponseLength)
                     }
@@ -3091,8 +3097,8 @@ const App: React.FC = () => {
                         fontSize: '12px',
                       }}
                     >
-                      GPT-5系では途中終了を減らすため、実際の出力上限は model と
-                      reasoning effort に応じて自動補正されます。
+                      GPT-5系ではこのサンプルは Very Short と Casual
+                      に固定し、最小 reasoning で一言に近い応答を優先します。
                     </div>
                   )}
 
@@ -3107,6 +3113,7 @@ const App: React.FC = () => {
                         <select
                           id="gpt5Preset"
                           value={gpt5Preset}
+                          disabled
                           onChange={(e) =>
                             setGpt5Preset(
                               e.target.value as GPT5PresetKey | 'custom',
