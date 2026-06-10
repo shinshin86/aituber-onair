@@ -226,7 +226,7 @@ export interface AivisCloudConfigurableEngine extends VoiceEngine {
 }
 
 export interface EngineHandler<TOptions extends VoiceServiceOptions> {
-  readonly allowedUpdateKeys: readonly string[];
+  readonly allowedUpdateKeys: readonly (keyof Omit<TOptions, 'engineType'>)[];
   applyOptions(engine: VoiceEngine, options: TOptions): void;
   mergeOptions(
     current: TOptions,
