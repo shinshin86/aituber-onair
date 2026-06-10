@@ -1,6 +1,6 @@
 # @aituber-onair/noise
 
-![@aituber-onair/noise logo](./images/aituber-onair-noise.png)
+![@aituber-onair/noise logo](https://raw.githubusercontent.com/shinshin86/aituber-onair/main/packages/noise/images/aituber-onair-noise.png)
 
 AITuber OnAir Noise は、AIの返答が無難すぎるときに検出し、意味や
 キャラクターを保ったまま、配信で使いやすい言葉に書き換えるための

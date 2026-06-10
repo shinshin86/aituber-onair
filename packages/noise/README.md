@@ -1,6 +1,6 @@
 # @aituber-onair/noise
 
-![@aituber-onair/noise logo](./images/aituber-onair-noise.png)
+![@aituber-onair/noise logo](https://raw.githubusercontent.com/shinshin86/aituber-onair/main/packages/noise/images/aituber-onair-noise.png)
 
 AITuber OnAir Noise is a context-aware response rewrite engine for disturbing
 predictable LLM phrasing without changing the meaning of the reply.
