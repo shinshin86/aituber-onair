@@ -1192,21 +1192,28 @@ export default function ProviderSelector({
       return reasoning_effort;
     }
 
-    const fallback = getDefaultReasoningEffortForGPT5Model(selectedModel);
     if (!reasoning_effort) {
-      return fallback;
+      return getDefaultReasoningEffortForGPT5Model(selectedModel);
     }
-    if (reasoning_effort === 'none' && !allowsNone) {
-      return fallback;
-    }
-    if (reasoning_effort === 'minimal' && !allowsMinimal) {
-      return fallback;
+    // Round unsupported values to the nearest supported level, matching the
+    // normalization performed by the chat package.
+    if (
+      (reasoning_effort === 'none' && !allowsNone) ||
+      (reasoning_effort === 'minimal' && !allowsMinimal)
+    ) {
+      if (reasoning_effort === 'minimal' && allowsNone) {
+        return 'none';
+      }
+      if (reasoning_effort === 'none' && allowsMinimal) {
+        return 'minimal';
+      }
+      return allowsLow ? 'low' : 'medium';
     }
     if (reasoning_effort === 'low' && !allowsLow) {
-      return fallback;
+      return 'medium';
     }
     if (reasoning_effort === 'xhigh' && !allowsXHigh) {
-      return fallback;
+      return 'high';
     }
     return reasoning_effort;
   })();
@@ -1531,7 +1538,7 @@ export default function ProviderSelector({
                 >
                   <option value="">Custom Settings</option>
                   <option value="casual">
-                    Casual (fast, minimal reasoning)
+                    Casual (fastest, lowest reasoning for the model)
                   </option>
                   <option value="balanced">Balanced (medium reasoning)</option>
                   <option value="expert">Expert (deep reasoning)</option>

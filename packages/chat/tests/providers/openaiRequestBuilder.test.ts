@@ -5,6 +5,7 @@ import {
   ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_5_4,
   MODEL_GPT_5_4_MINI,
+  MODEL_GPT_5_4_NANO,
 } from '../../src/constants';
 import { buildOpenAIRequestBody } from '../../src/services/providers/openai/openaiRequestBuilder';
 import type {
@@ -46,6 +47,24 @@ describe('buildOpenAIRequestBody', () => {
     });
 
     expect(body.max_output_tokens).toBe(4000);
+  });
+
+  it('uses the none reasoning minimum for GPT-5.4-nano when effort is unspecified', () => {
+    const body = buildOpenAIRequestBody({
+      provider: 'openai',
+      endpoint: ENDPOINT_OPENAI_RESPONSES_API,
+      messages,
+      model: MODEL_GPT_5_4_NANO,
+      stream: false,
+      tools: [],
+      mcpServers: [],
+      responseLength: CHAT_RESPONSE_LENGTH.MEDIUM,
+    });
+
+    // Default effort resolves to 'none' (min 1200), so the medium
+    // response-length floor (2000) wins instead of the 'medium' effort
+    // floor (4000).
+    expect(body.max_output_tokens).toBe(2000);
   });
 
   it('keeps explicit maxTokens unchanged', () => {

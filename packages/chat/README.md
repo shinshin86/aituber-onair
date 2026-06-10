@@ -467,11 +467,54 @@ Notes:
 
 `reasoning_effort` options differ per model:
 - `gpt-5.4-pro`: `'medium' | 'high' | 'xhigh'` (Responses API only)
-- `gpt-5.5`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'` (defaults to `'none'` in this package for fast chat responses)
+- `gpt-5.5`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.4`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.4-mini` / `gpt-5.4-nano`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.1`: `'none' | 'low' | 'medium' | 'high'`
 - `gpt-5` / `gpt-5-mini` / `gpt-5-nano`: `'minimal' | 'low' | 'medium' | 'high'`
+
+Defaults and normalization in this package:
+- Models that support `'none'` (`gpt-5.1`, `gpt-5.4`, `gpt-5.4-mini`,
+  `gpt-5.4-nano`, `gpt-5.5`) default to `'none'` for fast chat responses.
+  Note that OpenAI's own default for some of these models is `'medium'`;
+  this package intentionally prioritizes low latency.
+- Other GPT-5 models default to `'medium'`.
+- Values a model does not support are rounded to the nearest supported
+  level instead of being reset (e.g. `'minimal'` on `gpt-5.4-nano`
+  resolves to `'none'`, `'none'` on `gpt-5-nano` resolves to `'minimal'`,
+  and `'xhigh'` on `gpt-5.1` resolves to `'high'`).
+
+##### GPT-5 Presets and Low-Latency Chat (AITuber-style)
+
+Instead of tuning `reasoning_effort` and `verbosity` per model, you can set
+`gpt5Preset`:
+
+- `casual` – fastest responses (`reasoning_effort: 'minimal'`,
+  `verbosity: 'low'`). On models without `'minimal'` this resolves to the
+  lowest supported effort (`'none'` on the GPT-5.1/5.4/5.5 family,
+  `'medium'` on `gpt-5.4-pro`).
+- `balanced` – `reasoning_effort: 'medium'`, `verbosity: 'medium'`.
+- `expert` – `reasoning_effort: 'high'`, `verbosity: 'high'`.
+
+Recommended settings for real-time character chat (AITuber-style), where
+time-to-first-token matters more than deep reasoning:
+
+```typescript
+const aituberChatService = ChatServiceFactory.createChatService('openai', {
+  apiKey: process.env.OPENAI_API_KEY,
+  model: 'gpt-5.4-nano',
+  gpt5Preset: 'casual', // resolves to reasoning_effort 'none' on this model
+  responseLength: 'veryShort', // or 'short' for slightly longer replies
+});
+```
+
+Caveats:
+- Low reasoning effort trades answer quality on complex questions for
+  speed. For tool/function calling or MCP-heavy flows, prefer `balanced`
+  or higher.
+- OpenAI does not support function tools combined with `reasoning_effort`
+  on the Chat Completions API for some GPT-5.4 models. When you use tools
+  with reasoning settings, set `gpt5EndpointPreference: 'responses'`.
 
 **Meet the GPT-5 family**
 
