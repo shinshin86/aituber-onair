@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AITuberOnAirCore, AITuberOnAirCoreEvent } from '@aituber-onair/core';
+import {
+  AITuberOnAirCore,
+  AITuberOnAirCoreEvent,
+  isGPT5Model,
+} from '@aituber-onair/core';
 import { ManneriDetector } from '@aituber-onair/manneri';
 import type {
   VoiceServiceOptions,
@@ -25,6 +29,11 @@ interface UseAituberCoreOptions {
 type ProcessChatOptions = {
   displayText?: string;
 };
+
+const AITUBER_SYSTEM_PROMPT =
+  'あなたはフレンドリーなAITuberです。回答はできるだけ一言で、短く自然に返してください。';
+const GPT5_SAMPLE_PROVIDER_OPTIONS = { gpt5Preset: 'casual' as const };
+const GPT5_SAMPLE_CHAT_OPTIONS = { responseLength: 'veryShort' as const };
 
 function toManneriMessages(
   messages: ChatMessage[],
@@ -329,6 +338,13 @@ export function useAituberCore({
     settings.llm.provider === 'openai-compatible'
       ? settings.llm.model.trim() || 'local-model'
       : settings.llm.model;
+  const isOpenAIGPT5Model =
+    settings.llm.provider === 'openai' && isGPT5Model(resolvedModel);
+  const providerOptions = isOpenAICompatibleProvider
+    ? { endpoint: openAICompatibleEndpoint }
+    : isOpenAIGPT5Model
+      ? GPT5_SAMPLE_PROVIDER_OPTIONS
+      : undefined;
   const createMessageId = useCallback(() => {
     messageIdSequenceRef.current += 1;
     return `${Date.now()}-${messageIdSequenceRef.current}`;
@@ -356,12 +372,10 @@ export function useAituberCore({
       apiKey: llmApiKey.trim(),
       chatProvider: settings.llm.provider,
       model: resolvedModel,
-      providerOptions: isOpenAICompatibleProvider
-        ? { endpoint: openAICompatibleEndpoint }
-        : undefined,
+      providerOptions,
       chatOptions: {
-        systemPrompt:
-          'あなたはフレンドリーなAITuberです。親しみやすい口調で応答してください。',
+        systemPrompt: AITUBER_SYSTEM_PROMPT,
+        ...(isOpenAIGPT5Model ? GPT5_SAMPLE_CHAT_OPTIONS : {}),
       },
       voiceOptions: buildVoiceOptions(
         settings.tts,

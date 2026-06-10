@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ChatServiceFactory,
+  isGPT5Model,
   type ChatService,
   type ChatServiceOptionsByProvider,
   type Message,
@@ -24,6 +25,7 @@ import type { AppSettings, ChatProviderOption } from '../types/settings';
 import { useInterval } from './useInterval';
 
 type StreamPlatform = 'youtube' | 'twitch' | 'none';
+const GPT5_SAMPLE_PROVIDER_OPTIONS = { gpt5Preset: 'casual' as const };
 
 type ProcessChat = (
   text: string,
@@ -257,6 +259,9 @@ function createAnalysisProviderFromLLMSettings(
       {
         apiKey,
         model: llmSettings.model,
+        ...(provider === 'openai' && isGPT5Model(llmSettings.model)
+          ? GPT5_SAMPLE_PROVIDER_OPTIONS
+          : {}),
       } as ChatServiceOptionsByProvider[typeof provider],
     );
     return createChatServiceCommentAnalysisProvider(

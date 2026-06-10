@@ -38,4 +38,5 @@ export const openaiModels = [
 // OpenAI default settings
 export const DEFAULT_CHAT_PROVIDER = 'openai';
 export const DEFAULT_MODEL = MODEL_GPT_4_1_NANO;
-export const DEFAULT_SYSTEM_PROMPT = 'あなたはフレンドリーなAITuberです。';
+export const DEFAULT_SYSTEM_PROMPT =
+  'あなたはフレンドリーなAITuberです。回答はできるだけ一言で、短く自然に返してください。';

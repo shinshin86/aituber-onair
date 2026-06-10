@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { isGPT5Model } from '@aituber-onair/core';
 import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
@@ -292,6 +293,8 @@ export function SettingsPanel({
   onAvatarImageChange,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
+  const isOpenAIGPT5Model =
+    settings.llm.provider === 'openai' && isGPT5Model(settings.llm.model);
   const openRouterApiKey = getApiKeyForProvider('openrouter').trim();
   const openRouterDynamicFreeModels =
     settings.llm.openRouterDynamicFreeModels?.models || [];
@@ -728,6 +731,13 @@ export function SettingsPanel({
                   disabled={disabled}
                 />
               </div>
+            )}
+
+            {isOpenAIGPT5Model && (
+              <p className="settings-field-hint">
+                GPT-5 models use the Casual preset and Very Short replies in
+                this sample.
+              </p>
             )}
 
             {settings.llm.provider === 'openrouter' && (
