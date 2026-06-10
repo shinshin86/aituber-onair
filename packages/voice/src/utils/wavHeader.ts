@@ -9,6 +9,17 @@ export interface WavFormat {
   audioFormat: number;
 }
 
+export const STANDARD_WAV_HEADER_SIZE = 44;
+
+function getChunkId(view: DataView, offset: number): string {
+  return String.fromCharCode(
+    view.getUint8(offset),
+    view.getUint8(offset + 1),
+    view.getUint8(offset + 2),
+    view.getUint8(offset + 3),
+  );
+}
+
 /**
  * Parse WAV file header to extract audio format information
  * @param buffer ArrayBuffer containing WAV file data
@@ -25,24 +36,14 @@ export function parseWavHeader(buffer: ArrayBuffer): WavFormat {
   const view = new DataView(buffer);
 
   // Check for RIFF header
-  const riff = String.fromCharCode(
-    view.getUint8(0),
-    view.getUint8(1),
-    view.getUint8(2),
-    view.getUint8(3),
-  );
+  const riff = getChunkId(view, 0);
 
   if (riff !== 'RIFF') {
     throw new Error('Invalid WAV file: missing RIFF header');
   }
 
   // Check for WAVE format
-  const wave = String.fromCharCode(
-    view.getUint8(8),
-    view.getUint8(9),
-    view.getUint8(10),
-    view.getUint8(11),
-  );
+  const wave = getChunkId(view, 8);
 
   if (wave !== 'WAVE') {
     throw new Error('Invalid WAV file: missing WAVE format');
@@ -51,12 +52,7 @@ export function parseWavHeader(buffer: ArrayBuffer): WavFormat {
   // Find fmt chunk
   let offset = 12;
   while (offset < buffer.byteLength - 8) {
-    const chunkId = String.fromCharCode(
-      view.getUint8(offset),
-      view.getUint8(offset + 1),
-      view.getUint8(offset + 2),
-      view.getUint8(offset + 3),
-    );
+    const chunkId = getChunkId(view, offset);
 
     const chunkSize = view.getUint32(offset + 4, true); // little-endian
 
@@ -80,6 +76,44 @@ export function parseWavHeader(buffer: ArrayBuffer): WavFormat {
   }
 
   throw new Error('Invalid WAV file: fmt chunk not found');
+}
+
+/**
+ * Find the byte offset where WAV audio data starts.
+ * Falls back to the standard PCM header size for malformed or non-WAV buffers.
+ */
+export function getWavDataOffset(buffer: ArrayBuffer): number {
+  if (buffer.byteLength < 12) {
+    console.warn(
+      `Buffer too small for WAV header, using default header size: ${STANDARD_WAV_HEADER_SIZE}`,
+    );
+    return STANDARD_WAV_HEADER_SIZE;
+  }
+
+  const view = new DataView(buffer);
+
+  try {
+    if (getChunkId(view, 0) !== 'RIFF') {
+      return STANDARD_WAV_HEADER_SIZE;
+    }
+
+    let offset = 12;
+    while (offset < buffer.byteLength - 8) {
+      const chunkId = getChunkId(view, offset);
+      const chunkSize = view.getUint32(offset + 4, true);
+
+      if (chunkId === 'data') {
+        return offset + 8;
+      }
+
+      offset += 8 + chunkSize;
+    }
+
+    return STANDARD_WAV_HEADER_SIZE;
+  } catch (error) {
+    console.warn('Error parsing WAV header, using default header size:', error);
+    return STANDARD_WAV_HEADER_SIZE;
+  }
 }
 
 /**

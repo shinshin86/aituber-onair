@@ -1,5 +1,5 @@
 import { AudioPlayer } from '../../types/audioPlayer';
-import { getAudioFormat } from '../../utils/wavHeader';
+import { getAudioFormat, getWavDataOffset } from '../../utils/wavHeader';
 
 /**
  * Node.js-based audio player implementation
@@ -9,6 +9,8 @@ export class NodeAudioPlayer implements AudioPlayer {
   private isPlayingAudio = false;
   private onCompleteCallback?: () => void;
   private currentProcess: any = null;
+  private activeTempFiles = new Set<string>();
+  private tempFileCounter = 0;
 
   async play(audioBuffer: ArrayBuffer): Promise<void> {
     try {
@@ -16,23 +18,15 @@ export class NodeAudioPlayer implements AudioPlayer {
 
       // Try to use available audio playback libraries
       // First, try node-speaker (requires native compilation)
-      try {
-        const Speaker = await this.tryRequire('speaker');
-        if (Speaker) {
-          return await this.playWithSpeaker(audioBuffer, Speaker);
-        }
-      } catch (e) {
-        // Speaker not available
+      const Speaker = await this.tryRequire('speaker');
+      if (Speaker) {
+        return await this.playWithSpeaker(audioBuffer, Speaker);
       }
 
       // Try play-sound (uses system audio players)
-      try {
-        const player = await this.tryRequire('play-sound');
-        if (player) {
-          return await this.playWithPlaySound(audioBuffer, player);
-        }
-      } catch (e) {
-        // play-sound not available
+      const player = await this.tryRequire('play-sound');
+      if (player) {
+        return await this.playWithPlaySound(audioBuffer, player);
       }
 
       // If no audio player is available, just complete immediately
@@ -73,8 +67,8 @@ export class NodeAudioPlayer implements AudioPlayer {
           reject(err);
         });
 
-        // Convert ArrayBuffer to Buffer, skip WAV header (44 bytes typically)
-        const wavHeaderSize = this.getWavHeaderSize(audioBuffer);
+        // Convert ArrayBuffer to Buffer, skip the WAV header.
+        const wavHeaderSize = getWavDataOffset(audioBuffer);
         const audioData = audioBuffer.slice(wavHeaderSize);
         const buffer = Buffer.from(audioData);
 
@@ -97,22 +91,20 @@ export class NodeAudioPlayer implements AudioPlayer {
         const fs = require('node:fs');
         const path = require('node:path');
         const os = require('node:os');
+        const crypto = require('node:crypto');
 
         // Create temporary file
-        const tempFile = path.join(
-          os.tmpdir(),
-          `aituber-audio-${Date.now()}.wav`,
-        );
+        const suffix =
+          typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `${Date.now()}-${this.tempFileCounter++}`;
+        const tempFile = path.join(os.tmpdir(), `aituber-audio-${suffix}.wav`);
         fs.writeFileSync(tempFile, Buffer.from(audioBuffer));
+        this.activeTempFiles.add(tempFile);
 
         const playerInstance = player();
         this.currentProcess = playerInstance.play(tempFile, (err: Error) => {
-          // Clean up temp file
-          try {
-            fs.unlinkSync(tempFile);
-          } catch (e) {
-            // Ignore cleanup errors
-          }
+          this.cleanupTempFile(tempFile);
 
           if (err) {
             this.isPlayingAudio = false;
@@ -124,6 +116,7 @@ export class NodeAudioPlayer implements AudioPlayer {
         });
       } catch (error) {
         this.isPlayingAudio = false;
+        this.cleanupTempFiles();
         reject(error);
       }
     });
@@ -133,6 +126,8 @@ export class NodeAudioPlayer implements AudioPlayer {
     if (this.currentProcess && typeof this.currentProcess.kill === 'function') {
       this.currentProcess.kill();
     }
+    this.currentProcess = null;
+    this.cleanupTempFiles();
     this.isPlayingAudio = false;
   }
 
@@ -156,67 +151,30 @@ export class NodeAudioPlayer implements AudioPlayer {
     }
   }
 
+  private cleanupTempFile(tempFile: string): void {
+    if (!this.activeTempFiles.delete(tempFile)) {
+      return;
+    }
+
+    try {
+      const fs = require('node:fs');
+      fs.unlinkSync(tempFile);
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+  }
+
+  private cleanupTempFiles(): void {
+    for (const tempFile of this.activeTempFiles) {
+      this.cleanupTempFile(tempFile);
+    }
+  }
+
   private async tryRequire(moduleName: string): Promise<any> {
     try {
       return require(moduleName);
     } catch (e) {
       return null;
-    }
-  }
-
-  /**
-   * Calculate WAV header size to skip when sending raw audio data to speaker
-   */
-  private getWavHeaderSize(buffer: ArrayBuffer): number {
-    // Check for minimum buffer size
-    if (buffer.byteLength < 12) {
-      console.warn(
-        'Buffer too small for WAV header, using default header size: 44',
-      );
-      return 44; // Standard WAV header size
-    }
-
-    const view = new DataView(buffer);
-
-    try {
-      // Check for RIFF header
-      const riff = String.fromCharCode(
-        view.getUint8(0),
-        view.getUint8(1),
-        view.getUint8(2),
-        view.getUint8(3),
-      );
-
-      if (riff !== 'RIFF') {
-        return 44; // Not a WAV file, use standard header size
-      }
-
-      // Find data chunk
-      let offset = 12;
-      while (offset < buffer.byteLength - 8) {
-        const chunkId = String.fromCharCode(
-          view.getUint8(offset),
-          view.getUint8(offset + 1),
-          view.getUint8(offset + 2),
-          view.getUint8(offset + 3),
-        );
-
-        const chunkSize = view.getUint32(offset + 4, true);
-
-        if (chunkId === 'data') {
-          return offset + 8; // Header ends here, data starts
-        }
-
-        offset += 8 + chunkSize;
-      }
-
-      return 44; // Standard WAV header size fallback
-    } catch (error) {
-      console.warn(
-        'Error parsing WAV header, using default header size:',
-        error,
-      );
-      return 44; // Standard WAV header size
     }
   }
 }
