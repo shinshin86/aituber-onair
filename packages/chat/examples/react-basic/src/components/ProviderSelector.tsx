@@ -1531,7 +1531,7 @@ export default function ProviderSelector({
                 >
                   <option value="">Custom Settings</option>
                   <option value="casual">
-                    Casual (fast, minimal reasoning)
+                    Casual (fastest, lowest reasoning for the model)
                   </option>
                   <option value="balanced">Balanced (medium reasoning)</option>
                   <option value="expert">Expert (deep reasoning)</option>

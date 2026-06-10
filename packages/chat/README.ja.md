@@ -449,11 +449,55 @@ const compatibleService = ChatServiceFactory.createChatService(
 
 `reasoning_effort` の選択肢はモデルによって異なります。
 - `gpt-5.4-pro`: `'medium' | 'high' | 'xhigh'`（Responses API 専用）
-- `gpt-5.5`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`（このパッケージでは高速なチャット応答を優先してデフォルトは `'none'`）
+- `gpt-5.5`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.4`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.4-mini` / `gpt-5.4-nano`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.1`: `'none' | 'low' | 'medium' | 'high'`
 - `gpt-5` / `gpt-5-mini` / `gpt-5-nano`: `'minimal' | 'low' | 'medium' | 'high'`
+
+このパッケージでのデフォルト値と正規化:
+- `'none'` に対応するモデル（`gpt-5.1`, `gpt-5.4`, `gpt-5.4-mini`,
+  `gpt-5.4-nano`, `gpt-5.5`）は、高速なチャット応答を優先してデフォルトが
+  `'none'` になります。OpenAI 公式のデフォルトが `'medium'` のモデルも
+  ありますが、このパッケージでは意図的に低遅延を優先しています。
+- それ以外の GPT-5 系モデルのデフォルトは `'medium'` です。
+- モデルが対応していない値はリセットされず、最も近い対応値に丸められます
+  （例: `gpt-5.4-nano` の `'minimal'` は `'none'` に、`gpt-5-nano` の
+  `'none'` は `'minimal'` に、`gpt-5.1` の `'xhigh'` は `'high'` に
+  解決されます）。
+
+##### GPT-5 プリセットと低遅延チャット（AITuber 向け）
+
+モデルごとに `reasoning_effort` と `verbosity` を調整する代わりに、
+`gpt5Preset` を指定できます。
+
+- `casual` – 最速の応答（`reasoning_effort: 'minimal'`,
+  `verbosity: 'low'`）。`'minimal'` 非対応モデルでは、そのモデルで使える
+  最小の effort に解決されます（GPT-5.1 / 5.4 / 5.5 系では `'none'`、
+  `gpt-5.4-pro` では `'medium'`）。
+- `balanced` – `reasoning_effort: 'medium'`, `verbosity: 'medium'`。
+- `expert` – `reasoning_effort: 'high'`, `verbosity: 'high'`。
+
+深い推論よりも最初の応答までの速さが重要なリアルタイムのキャラクター
+チャット(AITuber 向け)には、次の設定を推奨します。
+
+```typescript
+const aituberChatService = ChatServiceFactory.createChatService('openai', {
+  apiKey: process.env.OPENAI_API_KEY,
+  model: 'gpt-5.4-nano',
+  gpt5Preset: 'casual', // このモデルでは reasoning_effort 'none' に解決
+  responseLength: 'veryShort', // 少し長めの応答なら 'short'
+});
+```
+
+注意点:
+- 低い reasoning effort は、速度と引き換えに複雑な質問への回答品質が
+  低下する可能性があります。ツール/関数呼び出しや MCP を多用する場合は
+  `balanced` 以上を推奨します。
+- 一部の GPT-5.4 系モデルでは、Chat Completions API で function tools と
+  `reasoning_effort` の併用がサポートされていません。ツールと reasoning
+  設定を併用する場合は `gpt5EndpointPreference: 'responses'` を指定して
+  ください。
 
 **GPT-5ファミリーの概要**
 
