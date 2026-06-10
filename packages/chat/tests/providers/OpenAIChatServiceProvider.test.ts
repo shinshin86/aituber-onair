@@ -359,7 +359,7 @@ describe('OpenAIChatServiceProvider', () => {
       );
     });
 
-    it('should fallback reasoning effort to default when none is not supported', () => {
+    it('should round none up to minimal when none is not supported', () => {
       const options: OpenAIChatServiceOptions = {
         apiKey: 'test-api-key',
         model: MODEL_GPT_5,
@@ -377,7 +377,7 @@ describe('OpenAIChatServiceProvider', () => {
         [],
         undefined,
         undefined,
-        'medium',
+        'minimal',
         undefined,
         'openai',
       );
@@ -426,6 +426,102 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         'none',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should round xhigh down to high when xhigh is not supported', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_1,
+        reasoning_effort: 'xhigh',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_1,
+        MODEL_GPT_5_1,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'high',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should resolve casual preset to none for GPT-5.4 Nano', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_NANO,
+        gpt5Preset: 'casual',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_NANO,
+        MODEL_GPT_5_4_NANO,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        'low',
+        'none',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should resolve casual preset to minimal for GPT-5 Nano', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_NANO,
+        gpt5Preset: 'casual',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_NANO,
+        MODEL_GPT_5_NANO,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        'low',
+        'minimal',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should resolve casual preset to medium for GPT-5.4 Pro', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_4_PRO,
+        gpt5Preset: 'casual',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_4_PRO,
+        MODEL_GPT_5_4_PRO,
+        undefined,
+        ENDPOINT_OPENAI_RESPONSES_API,
+        [],
+        undefined,
+        'low',
+        'medium',
         undefined,
         'openai',
       );

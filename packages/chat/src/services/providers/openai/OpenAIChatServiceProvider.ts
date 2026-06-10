@@ -216,6 +216,12 @@ export class OpenAIChatServiceProvider
 
   /**
    * Normalize reasoning effort to a model-supported value
+   *
+   * Unsupported values are rounded to the nearest supported level instead of
+   * resetting to the model default, so a low-latency request stays low
+   * (e.g. 'minimal' on GPT-5.4 resolves to 'none', not 'medium') and a
+   * high-effort request stays high (e.g. 'xhigh' on GPT-5.1 resolves to
+   * 'high', not 'none').
    */
   private normalizeReasoningEffort(
     modelName: string,
@@ -225,20 +231,25 @@ export class OpenAIChatServiceProvider
       return undefined;
     }
 
-    if (effort === 'none' && !allowsReasoningNone(modelName)) {
-      return getDefaultReasoningEffortForGPT5Model(modelName);
-    }
-
-    if (effort === 'minimal' && !allowsReasoningMinimal(modelName)) {
-      return getDefaultReasoningEffortForGPT5Model(modelName);
+    if (
+      (effort === 'none' && !allowsReasoningNone(modelName)) ||
+      (effort === 'minimal' && !allowsReasoningMinimal(modelName))
+    ) {
+      if (effort === 'minimal' && allowsReasoningNone(modelName)) {
+        return 'none';
+      }
+      if (effort === 'none' && allowsReasoningMinimal(modelName)) {
+        return 'minimal';
+      }
+      return allowsReasoningLow(modelName) ? 'low' : 'medium';
     }
 
     if (effort === 'low' && !allowsReasoningLow(modelName)) {
-      return getDefaultReasoningEffortForGPT5Model(modelName);
+      return 'medium';
     }
 
     if (effort === 'xhigh' && !allowsReasoningXHigh(modelName)) {
-      return getDefaultReasoningEffortForGPT5Model(modelName);
+      return 'high';
     }
 
     return effort;
