@@ -21,6 +21,9 @@ import {
   processChatWithOptionalTools,
 } from '../../../utils';
 
+const isTokenLimitUnsupportedModel = (model: string): boolean =>
+  model.trim() === MODEL_GPT_OSS_20B_FREE;
+
 /**
  * OpenRouter implementation of ChatService
  * OpenRouter provides access to multiple AI models through a unified API
@@ -316,13 +319,13 @@ export class OpenRouterChatService implements ChatService {
         ? maxTokens
         : getMaxTokensForResponseLength(this.responseLength);
 
-    // OpenRouter gpt-oss-20b model has known issues with token limits causing empty responses
-    // Remove all token limits to ensure proper functionality
-    if (tokenLimit) {
+    // OpenRouter gpt-oss-20b has known issues with token limits causing empty responses.
+    if (tokenLimit && isTokenLimitUnsupportedModel(model)) {
       console.warn(
-        `OpenRouter: Token limits are not supported for gpt-oss-20b model due to known issues. Using unlimited tokens instead.`,
+        `OpenRouter: Token limits are not supported for ${model} due to known issues. Using unlimited tokens instead.`,
       );
-      // Do not set max_tokens - use unlimited tokens
+    } else if (tokenLimit) {
+      body.max_tokens = tokenLimit;
     }
 
     // Add OpenRouter reasoning control

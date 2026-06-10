@@ -15,5 +15,15 @@ export default defineConfig({
     },
     maxConcurrency: 1,
     fileParallelism: false,
+    coverage: {
+      include: ['src/**'],
+      reporter: ['text', 'lcov'],
+      thresholds: {
+        statements: 78,
+        branches: 82,
+        functions: 74,
+        lines: 78,
+      },
+    },
   },
 });

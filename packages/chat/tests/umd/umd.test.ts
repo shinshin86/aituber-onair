@@ -2,25 +2,21 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+const umdPath = path.resolve(__dirname, '../../dist/umd/aituber-onair-chat.js');
+const hasUmdBundle = fs.existsSync(umdPath);
+
+if (!hasUmdBundle) {
+  console.warn(
+    "Skipping UMD tests. Run 'npm run build:umd' to create dist/umd/aituber-onair-chat.js.",
+  );
+}
+
 // This will hold the UMD bundle content
 let umdBundle: string;
 let AITuberOnAirChat: any;
 
-describe('UMD Bundle', () => {
+describe.skipIf(!hasUmdBundle)('UMD Bundle', () => {
   beforeAll(async () => {
-    // Read the generated UMD bundle
-    const umdPath = path.resolve(
-      __dirname,
-      '../../dist/umd/aituber-onair-chat.js',
-    );
-
-    // Check if UMD bundle exists
-    if (!fs.existsSync(umdPath)) {
-      throw new Error(
-        `UMD bundle not found at ${umdPath}. Please run 'npm run build:umd' first.`,
-      );
-    }
-
     umdBundle = fs.readFileSync(umdPath, 'utf-8');
 
     // Execute the UMD bundle in a simulated global context

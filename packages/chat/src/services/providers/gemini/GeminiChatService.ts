@@ -44,6 +44,7 @@ export class GeminiChatService implements ChatService {
   private mcpServers: MCPServerConfig[];
   private mcpToolSchemas: ToolDefinition[] = [];
   private mcpSchemasInitialized: boolean = false;
+  private mcpSchemaInitializationError?: unknown;
   private responseLength?: ChatResponseLength;
 
   /** id(OpenAI) → name(Gemini) mapping */
@@ -156,6 +157,7 @@ export class GeminiChatService implements ChatService {
     this.mcpServers.push(serverConfig);
     // Reset initialization flag to re-fetch schemas
     this.mcpSchemasInitialized = false;
+    this.mcpSchemaInitializationError = undefined;
   }
 
   /**
@@ -168,6 +170,7 @@ export class GeminiChatService implements ChatService {
     );
     // Reset initialization flag to re-fetch schemas
     this.mcpSchemasInitialized = false;
+    this.mcpSchemaInitializationError = undefined;
   }
 
   /**
@@ -176,6 +179,13 @@ export class GeminiChatService implements ChatService {
    */
   hasMCPServers(): boolean {
     return this.mcpServers.length > 0;
+  }
+
+  /**
+   * Get the last MCP schema initialization error, if schema fallback was used.
+   */
+  getMCPSchemaInitializationError(): unknown | undefined {
+    return this.mcpSchemaInitializationError;
   }
 
   /**
@@ -193,16 +203,16 @@ export class GeminiChatService implements ChatService {
         setTimeout(() => reject(new Error('MCP schema fetch timeout')), 5000),
       );
 
-      const schemasPromise = MCPSchemaFetcher.fetchAllToolSchemas(
+      const schemasPromise = MCPSchemaFetcher.fetchAllToolSchemasWithStatus(
         this.mcpServers,
       );
-      this.mcpToolSchemas = await Promise.race([
-        schemasPromise,
-        timeoutPromise,
-      ]);
+      const result = await Promise.race([schemasPromise, timeoutPromise]);
+      this.mcpToolSchemas = result.schemas;
       this.mcpSchemasInitialized = true;
+      this.mcpSchemaInitializationError = result.failures[0]?.error;
     } catch (error) {
       console.warn('Failed to initialize MCP schemas, using fallback:', error);
+      this.mcpSchemaInitializationError = error;
       this.mcpToolSchemas = createFallbackMCPToolSchemas(this.mcpServers);
       this.mcpSchemasInitialized = true;
     }
@@ -362,7 +372,14 @@ export class GeminiChatService implements ChatService {
           /Unknown name|Cannot find field|404/.test(e?.message || '') ||
           e?.status === 404;
         if (!requiresV1beta && looksLikeVersionMismatch) {
-          return await fetchOnce('v1beta', this.adaptKeysForApi(body));
+          try {
+            return await fetchOnce('v1beta', this.adaptKeysForApi(body));
+          } catch (fallbackError) {
+            if (fallbackError instanceof Error) {
+              (fallbackError as Error & { cause?: unknown }).cause = e;
+            }
+            throw fallbackError;
+          }
         }
         throw e; // otherwise, throw to upper layer
       }

@@ -1,4 +1,6 @@
 import { ToolChatBlock, ToolChatCompletion } from '../../../types';
+import type { JsonParseErrorHandler } from '../../../utils/safeJsonParse';
+import { safeParseToolCallInput } from '../../../utils/safeJsonParse';
 import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
 
 type ResponsesMetadata = {
@@ -7,12 +9,17 @@ type ResponsesMetadata = {
   usage?: Record<string, any>;
 };
 
+type ResponsesParseOptions = {
+  onJsonError?: JsonParseErrorHandler;
+};
+
 /**
  * Parse streaming Responses API output (SSE format).
  */
 export async function parseOpenAIResponsesStream(
   res: Response,
   onPartial: (t: string) => void,
+  options: ResponsesParseOptions = {},
 ): Promise<ToolChatCompletion> {
   const reader = res.body!.getReader();
   const dec = new TextDecoder();
@@ -53,6 +60,7 @@ export async function parseOpenAIResponsesStream(
             onPartial,
             textBlocks,
             toolCallsMap,
+            options,
             (metadata) => {
               if (metadata.responseStatus !== undefined) {
                 responseStatus = metadata.responseStatus;
@@ -65,7 +73,8 @@ export async function parseOpenAIResponsesStream(
               }
             },
           );
-        } catch {
+        } catch (error) {
+          options.onJsonError?.(eventData, error);
           console.warn('Failed to parse SSE data:', eventData);
         }
         eventType = '';
@@ -99,6 +108,7 @@ function handleResponsesSSEEvent(
   onPartial: (t: string) => void,
   textBlocks: ToolChatBlock[],
   toolCallsMap: Map<string, any>,
+  options: ResponsesParseOptions,
   onMetadata: (metadata: ResponsesMetadata) => void,
 ): void {
   switch (eventType) {
@@ -114,7 +124,10 @@ function handleResponsesSSEEvent(
         toolCallsMap.set(data.item.id, {
           id: data.item.id,
           name: data.item.name,
-          input: data.item.arguments ? JSON.parse(data.item.arguments) : {},
+          input: safeParseToolCallInput(
+            data.item.arguments,
+            options.onJsonError,
+          ),
         });
       }
       break;
@@ -180,7 +193,10 @@ function extractResponsesMetadata(
 /**
  * Parse non-streaming Responses API output.
  */
-export function parseOpenAIResponsesOneShot(data: any): ToolChatCompletion {
+export function parseOpenAIResponsesOneShot(
+  data: any,
+  options: ResponsesParseOptions = {},
+): ToolChatCompletion {
   const blocks: ToolChatBlock[] = [];
 
   if (data.output && Array.isArray(data.output)) {
@@ -198,7 +214,10 @@ export function parseOpenAIResponsesOneShot(data: any): ToolChatCompletion {
           type: 'tool_use',
           id: outputItem.id,
           name: outputItem.name,
-          input: outputItem.arguments ? JSON.parse(outputItem.arguments) : {},
+          input: safeParseToolCallInput(
+            outputItem.arguments,
+            options.onJsonError,
+          ),
         });
       }
     });
