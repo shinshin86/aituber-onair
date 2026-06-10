@@ -203,15 +203,13 @@ export class GeminiChatService implements ChatService {
         setTimeout(() => reject(new Error('MCP schema fetch timeout')), 5000),
       );
 
-      const schemasPromise = MCPSchemaFetcher.fetchAllToolSchemas(
+      const schemasPromise = MCPSchemaFetcher.fetchAllToolSchemasWithStatus(
         this.mcpServers,
       );
-      this.mcpToolSchemas = await Promise.race([
-        schemasPromise,
-        timeoutPromise,
-      ]);
+      const result = await Promise.race([schemasPromise, timeoutPromise]);
+      this.mcpToolSchemas = result.schemas;
       this.mcpSchemasInitialized = true;
-      this.mcpSchemaInitializationError = undefined;
+      this.mcpSchemaInitializationError = result.failures[0]?.error;
     } catch (error) {
       console.warn('Failed to initialize MCP schemas, using fallback:', error);
       this.mcpSchemaInitializationError = error;

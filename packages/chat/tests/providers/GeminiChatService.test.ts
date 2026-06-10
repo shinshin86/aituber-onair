@@ -329,9 +329,10 @@ describe('GeminiChatService MCP schema initialization', () => {
   it('records schema initialization failures while using fallback tools', async () => {
     const schemaError = new Error('schema fetch failed');
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(MCPSchemaFetcher, 'fetchAllToolSchemas').mockRejectedValue(
-      schemaError,
-    );
+    vi.spyOn(
+      MCPSchemaFetcher,
+      'fetchAllToolSchemasWithStatus',
+    ).mockRejectedValue(schemaError);
     const mcpServers: MCPServerConfig[] = [
       {
         type: 'url',
@@ -388,16 +389,22 @@ describe('GeminiChatService MCP schema initialization', () => {
     );
 
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const fetchSpy = vi.spyOn(MCPSchemaFetcher, 'fetchAllToolSchemas');
-    fetchSpy.mockRejectedValueOnce(schemaError).mockResolvedValueOnce([
-      {
-        name: 'mcp_docs_lookup',
-        parameters: {
-          type: 'object',
-          properties: {},
+    const fetchSpy = vi.spyOn(
+      MCPSchemaFetcher,
+      'fetchAllToolSchemasWithStatus',
+    );
+    fetchSpy.mockRejectedValueOnce(schemaError).mockResolvedValueOnce({
+      schemas: [
+        {
+          name: 'mcp_docs_lookup',
+          parameters: {
+            type: 'object',
+            properties: {},
+          },
         },
-      },
-    ]);
+      ],
+      failures: [],
+    });
 
     await (service as any).initializeMCPSchemas();
     expect(service.getMCPSchemaInitializationError()).toBe(schemaError);
@@ -410,5 +417,35 @@ describe('GeminiChatService MCP schema initialization', () => {
     await (service as any).initializeMCPSchemas();
 
     expect(service.getMCPSchemaInitializationError()).toBeUndefined();
+  });
+
+  it('records per-server MCP fetch failures surfaced by schema fetcher', async () => {
+    const schemaError = new HttpError(500, 'Internal Server Error', '{}');
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(ChatServiceHttpClient, 'post').mockRejectedValue(schemaError);
+    const mcpServers: MCPServerConfig[] = [
+      {
+        type: 'url',
+        name: 'docs',
+        url: 'https://mcp.example.test',
+      },
+    ];
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_3_1_FLASH_LITE,
+      MODEL_GEMINI_3_1_FLASH_LITE,
+      [],
+      mcpServers,
+    );
+
+    await (service as any).initializeMCPSchemas();
+
+    expect(service.getMCPSchemaInitializationError()).toBe(schemaError);
+    expect((service as any).mcpToolSchemas).toEqual([
+      expect.objectContaining({
+        name: 'mcp_docs_search',
+        description: 'Search using docs MCP server (schema fetch failed)',
+      }),
+    ]);
   });
 });
