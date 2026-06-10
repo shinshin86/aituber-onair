@@ -3,6 +3,7 @@ import type {
   ContextFingerprint,
   FrictionParameters,
   InterventionPlan,
+  NoiseMode,
   RewriteCandidate,
   RewriteModel,
 } from './types.js';
@@ -23,6 +24,7 @@ export async function generateRewriteCandidates(input: {
   plan: InterventionPlan;
   friction: FrictionParameters;
   model: RewriteModel;
+  mode: NoiseMode;
   candidateCount: number;
 }): Promise<RewriteCandidate[]> {
   if (input.plan.interventions.length === 0) {
@@ -48,7 +50,8 @@ function buildCandidateSystemPrompt(): string {
     'Brand promise: do not let AI responses end in predictable harmony.',
     'You receive structured friction parameters. Follow them instead of improvising random weirdness.',
     'Preserve the character, relationship, intent, facts, URLs, numbers, and code exactly.',
-    'Do not make the character harsher, colder, more sarcastic, or more aggressive unless the original persona clearly supports it.',
+    'You may shift stance, rhythm, and emotional landing when rewriteStyle asks for it, but do not change the character core.',
+    'Do not add insults, identity attacks, threats, cruelty, or unrelated randomness.',
     'Return JSON only. Do not include markdown.',
   ].join('\n');
 }
@@ -60,6 +63,7 @@ function buildCandidatePrompt(input: {
   context: ContextFingerprint;
   plan: InterventionPlan;
   friction: FrictionParameters;
+  mode: NoiseMode;
   candidateCount: number;
 }): string {
   return [
@@ -71,6 +75,7 @@ function buildCandidatePrompt(input: {
           format:
             '{ "candidates": [{ "text": "...", "applied": ["intervention_kind"] }] }',
         },
+        rewriteStyle: getRewriteStyle(input.mode),
         context: {
           persona: input.systemPrompt,
           recentMessages: input.messages.slice(-8),
@@ -89,12 +94,69 @@ function buildCandidatePrompt(input: {
           avoidNewFacts: true,
           avoidHostility: true,
           avoidCleanGenericClosing: true,
+          allowStanceShift: input.mode !== 'subtle',
+          allowContrarianLanding:
+            input.mode === 'inversion' || input.mode === 'chaotic',
+          allowRoughLiveSpeech:
+            input.mode === 'bold' ||
+            input.mode === 'inversion' ||
+            input.mode === 'chaotic',
         },
       },
       null,
       2
     ),
   ].join('\n');
+}
+
+function getRewriteStyle(mode: NoiseMode): {
+  mode: NoiseMode;
+  amplitude: 'small' | 'medium' | 'large' | 'largest';
+  direction: string;
+  requireCandidateVariety: boolean;
+} {
+  switch (mode) {
+    case 'subtle':
+      return {
+        mode,
+        amplitude: 'small',
+        direction:
+          'Make the smallest natural change that removes templated polish.',
+        requireCandidateVariety: false,
+      };
+    case 'performer':
+      return {
+        mode,
+        amplitude: 'medium',
+        direction:
+          'Keep the character voice central while adding live-context friction.',
+        requireCandidateVariety: true,
+      };
+    case 'bold':
+      return {
+        mode,
+        amplitude: 'large',
+        direction:
+          'Make the character take a clearer live-stream stance. Prefer sharper structure, mild reservation, and concrete action over polite smoothing.',
+        requireCandidateVariety: true,
+      };
+    case 'inversion':
+      return {
+        mode,
+        amplitude: 'large',
+        direction:
+          'Invert the predictable emotional landing: agreement may become a reservation, apology may become observable action, forced positivity may become honest tension. Keep facts and the character core intact.',
+        requireCandidateVariety: true,
+      };
+    case 'chaotic':
+      return {
+        mode,
+        amplitude: 'largest',
+        direction:
+          'Create the strongest coherent live-speech disruption: interrupt clean flow, add self-repair, leave an unfinished edge, and avoid generic closure. Do not become hostile or random.',
+        requireCandidateVariety: true,
+      };
+  }
 }
 
 function parseCandidates(
@@ -160,6 +222,7 @@ function normalizeAppliedInterventions(
     'unfinished_margin',
     'reduce_over_apology',
     'reduce_over_agreement',
+    'contrarian_reframe',
     'increase_specificity',
     'acknowledge_tension',
     'break_clean_closing',

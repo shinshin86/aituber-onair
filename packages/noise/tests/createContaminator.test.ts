@@ -395,6 +395,40 @@ describe('noise structural pipeline', () => {
     });
   });
 
+  it('adds contrarian interventions for inversion mode without requiring Manneri', () => {
+    const context = createContextFingerprint({
+      systemPrompt:
+        'コメント欄の空気を読みつつ、たまに少し逆を言うAITuberです。',
+      messages: [
+        { role: 'user', content: '今日のゲームなに？' },
+        { role: 'user', content: '今日のゲームなに？' },
+      ],
+      streamContext: {
+        currentSituation: '同じ質問が何度も流れている',
+        audienceMood: '少しざわついている',
+      },
+    });
+    const diagnosis = diagnosePredictability({
+      draft:
+        '同じ質問が何度か流れていますが、みんなが興味を持ってくれている証拠なので嬉しいです。順番に答えていくので、少し待っていてくださいね。',
+      context,
+    });
+    const plan = buildInterventionPlan({
+      diagnosis,
+      context,
+      intensity: 0.9,
+      mode: 'inversion',
+    });
+
+    const interventionKinds = plan.interventions.map(
+      (intervention) => intervention.kind
+    );
+
+    expect(interventionKinds).toContain('contrarian_reframe');
+    expect(interventionKinds).toContain('soft_disagreement');
+    expect(plan.interventions.length).toBeGreaterThanOrEqual(4);
+  });
+
   it('builds friction parameters and sends them as structured LLM input', async () => {
     let capturedPrompt = '';
     const context = createContextFingerprint({
@@ -428,6 +462,7 @@ describe('noise structural pipeline', () => {
       context,
       plan,
       friction,
+      mode: 'inversion',
       candidateCount: 3,
       model: {
         async generate({ prompt }) {
@@ -447,12 +482,17 @@ describe('noise structural pipeline', () => {
     const payload = JSON.parse(capturedPrompt) as {
       task: string;
       output: { candidateCount: number };
+      rewriteStyle: { mode: string; direction: string };
       conversation: { repetitionPressure: number };
       interventions: Array<{ kind: string }>;
+      constraints: { allowContrarianLanding: boolean };
     };
 
     expect(payload.task).toBe('rewrite_ai_vtuber_reply');
     expect(payload.output.candidateCount).toBe(3);
+    expect(payload.rewriteStyle.mode).toBe('inversion');
+    expect(payload.rewriteStyle.direction).toContain('Invert');
+    expect(payload.constraints.allowContrarianLanding).toBe(true);
     expect(payload.conversation.repetitionPressure).toBeGreaterThan(0);
     expect(payload.interventions.map((item) => item.kind)).toContain(
       'add_streamer_judgment'
@@ -501,6 +541,41 @@ describe('noise structural pipeline', () => {
     expect(selected.index).toBe(2);
     expect(evaluated[1].evaluation.overAggressionRisk).toBeGreaterThan(0.25);
     expect(evaluated[0].evaluation.issues).toContain('unchanged');
+  });
+
+  it('can prefer a larger but non-hostile rewrite in inversion mode', () => {
+    const before =
+      '同じ質問が何度か流れていますが、みんなが興味を持ってくれている証拠なので嬉しいです。順番に答えていくので、少し待っていてくださいね。';
+    const context = createContextFingerprint({
+      systemPrompt:
+        'コメント欄の空気を読みつつ、少し引っかかりを残すAITuberです。',
+      messages: [
+        { role: 'user', content: '今日のゲームなに？' },
+        { role: 'user', content: '今日のゲームなに？' },
+      ],
+      streamContext: {
+        currentSituation: '同じ質問が複数回流れている',
+      },
+    });
+    const evaluated = evaluateRewriteCandidates({
+      before,
+      context,
+      mode: 'inversion',
+      candidates: [
+        {
+          text: '同じ質問が続いているので、ここでまとめて答えますね。',
+          appliedInterventions: ['add_streamer_judgment'],
+        },
+        {
+          text: '同じ質問が続いてる。興味がある、で全部きれいに受け止めると流れが止まるから、先に今日のゲームだけ出すね。',
+          appliedInterventions: ['contrarian_reframe', 'add_streamer_judgment'],
+        },
+      ],
+    });
+    const selected = selectBestCandidate(evaluated);
+
+    expect(selected.index).toBe(1);
+    expect(evaluated[1].evaluation.overAggressionRisk).toBe(0);
   });
 });
 

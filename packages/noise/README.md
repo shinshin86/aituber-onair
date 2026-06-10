@@ -54,6 +54,47 @@ console.log(result.applied);
 console.log(result.quality);
 ```
 
+## Conditional Usage
+
+Noise does not have to run on every LLM reply. In a production stream, a common
+pattern is to diagnose the draft first, then rewrite only when the response is
+likely to land too safely:
+
+```ts
+import {
+  createContextFingerprint,
+  createContaminator,
+  diagnosePredictability,
+} from '@aituber-onair/noise';
+
+const context = createContextFingerprint({
+  systemPrompt,
+  messages,
+  streamContext,
+});
+const diagnosis = diagnosePredictability({
+  draft: llmReply,
+  context,
+});
+const shouldUseNoise = diagnosis.score >= 0.45;
+
+const finalReply = shouldUseNoise
+  ? (
+      await contaminator.contaminate({
+        systemPrompt,
+        messages,
+        draft: llmReply,
+        streamContext,
+      })
+    ).text
+  : llmReply;
+```
+
+This makes Noise behave like a post-generation effect: use it for overly safe
+closings, repeated phrasing, forced positivity, and stream situations where a
+flat response would weaken the character. Skip it for precise announcements,
+system messages, and high-stakes text.
+
 ## Browser Example
 
 This package includes a browser lab for trying LLM-based rewrites and adaptive
@@ -62,6 +103,18 @@ memory providers.
 ```sh
 npm -w @aituber-onair/noise run example:noise-sample
 ```
+
+## Rewrite Modes
+
+`mode` controls how far Noise may move the response away from a predictable
+landing:
+
+- `subtle`: small edits that remove obvious polish.
+- `performer`: character-safe live-stream phrasing.
+- `bold`: stronger streamer judgment and clearer live tension.
+- `inversion`: reverses the expected emotional landing while preserving facts.
+- `chaotic`: the largest coherent disruption, with self-repair and unfinished
+  edges.
 
 ## Design
 

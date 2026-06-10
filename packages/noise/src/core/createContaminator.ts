@@ -86,7 +86,8 @@ export function createContaminator(
         plan,
         friction,
         model,
-        candidateCount: mode === 'subtle' ? 3 : 4,
+        mode,
+        candidateCount: getCandidateCount(mode),
       });
       const safeCandidates = generatedCandidates.map((candidate) => {
         const restored = restoreSensitiveSpans(
@@ -108,6 +109,7 @@ export function createContaminator(
         before: input.draft,
         candidates: safeCandidates,
         context,
+        mode,
         qualityOptions: options.quality,
       });
       const { candidate: bestCandidate, index: selectedIndex } =
@@ -148,6 +150,22 @@ export function createContaminator(
       return output;
     },
   };
+}
+
+function getCandidateCount(mode: CreateContaminatorOptions['mode']): number {
+  switch (mode) {
+    case 'subtle':
+      return 3;
+    case 'performer':
+      return 4;
+    case 'bold':
+    case 'inversion':
+      return 5;
+    case 'chaotic':
+      return 6;
+    default:
+      return 4;
+  }
 }
 
 function resolveRewriteModel(

@@ -234,7 +234,9 @@ function render(): void {
                 <select data-field="mode">
                   <option value="subtle" ${selected(state.mode, 'subtle')}>控えめ</option>
                   <option value="performer" ${selected(state.mode, 'performer')}>キャラクター重視</option>
-                  <option value="chaotic" ${selected(state.mode, 'chaotic')}>大胆</option>
+                  <option value="bold" ${selected(state.mode, 'bold')}>大胆</option>
+                  <option value="inversion" ${selected(state.mode, 'inversion')}>逆張り</option>
+                  <option value="chaotic" ${selected(state.mode, 'chaotic')}>強めに崩す</option>
                 </select>
               </label>
               <label>
@@ -726,6 +728,8 @@ function formatIntervention(kind: InterventionKind): string {
       return '配信者の判断を入れる';
     case 'soft_disagreement':
       return '少しだけ否定を混ぜる';
+    case 'contrarian_reframe':
+      return '逆の着地に振る';
     case 'self_repair':
       return '言い直しの揺れを足す';
     case 'unfinished_margin':

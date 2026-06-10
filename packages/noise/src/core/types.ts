@@ -22,7 +22,12 @@ export type LegacyStainKind =
   | 'persona_glitch'
   | 'unfinished_thought';
 
-export type NoiseMode = 'subtle' | 'performer' | 'chaotic';
+export type NoiseMode =
+  | 'subtle'
+  | 'performer'
+  | 'bold'
+  | 'inversion'
+  | 'chaotic';
 
 export interface RewriteModel {
   generate(input: {
@@ -205,6 +210,7 @@ export type InterventionKind =
   | 'ground_in_recent_comment'
   | 'add_streamer_judgment'
   | 'soft_disagreement'
+  | 'contrarian_reframe'
   | 'self_repair'
   | 'unfinished_margin'
   | 'reduce_over_apology'

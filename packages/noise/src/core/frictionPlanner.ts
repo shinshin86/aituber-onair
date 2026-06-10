@@ -21,9 +21,17 @@ const ISSUE_TO_INTERVENTIONS: Record<
   InterventionKind[]
 > = {
   generic_closing: ['break_clean_closing', 'unfinished_margin'],
-  over_agreement: ['reduce_over_agreement', 'soft_disagreement'],
+  over_agreement: [
+    'reduce_over_agreement',
+    'soft_disagreement',
+    'contrarian_reframe',
+  ],
   over_apology: ['reduce_over_apology', 'acknowledge_tension'],
-  forced_positive: ['acknowledge_tension', 'soft_disagreement'],
+  forced_positive: [
+    'acknowledge_tension',
+    'soft_disagreement',
+    'contrarian_reframe',
+  ],
   low_context_grounding: ['ground_in_recent_comment'],
   low_specificity: ['increase_specificity'],
   repeated_phrase: ['add_streamer_judgment', 'ground_in_recent_comment'],
@@ -40,8 +48,7 @@ export function buildInterventionPlan(input: {
   memory?: NoiseMemory;
 }): InterventionPlan {
   const intensity = clamp01(input.intensity);
-  const maxCount =
-    input.mode === 'subtle' ? 2 : input.mode === 'chaotic' ? 5 : 3;
+  const maxCount = getMaxInterventionCount(input.mode);
   const planned: PlannedIntervention[] = [];
   const repeatedClosings = input.memory
     ? getRepeatedClosingPatterns(input.memory)
@@ -73,6 +80,8 @@ export function buildInterventionPlan(input: {
     });
   }
 
+  planned.push(...createModePlan(input));
+
   const selected = selectInterventions({
     interventions: planned.length > 0 ? planned : createFallbackPlan(input),
     maxCount,
@@ -90,6 +99,83 @@ export function buildInterventionPlan(input: {
       safety: true,
     },
   };
+}
+
+function getMaxInterventionCount(mode: NoiseMode): number {
+  switch (mode) {
+    case 'subtle':
+      return 2;
+    case 'performer':
+      return 3;
+    case 'bold':
+      return 4;
+    case 'inversion':
+      return 5;
+    case 'chaotic':
+      return 5;
+  }
+}
+
+function createModePlan(input: {
+  context: ContextFingerprint;
+  intensity: number;
+  mode: NoiseMode;
+}): PlannedIntervention[] {
+  const intensity = clamp01(input.intensity);
+
+  switch (input.mode) {
+    case 'bold':
+      return [
+        {
+          kind: 'add_streamer_judgment',
+          reason: 'Bold mode asks for a clearer streamer-side stance.',
+          strength: clamp01(0.55 + intensity * 0.35),
+        },
+        {
+          kind: 'acknowledge_tension',
+          reason: 'Bold mode should leave more of the live tension visible.',
+          strength: clamp01(0.45 + input.context.streamTension * 0.35),
+        },
+      ];
+    case 'inversion':
+      return [
+        {
+          kind: 'contrarian_reframe',
+          reason:
+            'Inversion mode should reverse the predictable emotional landing without changing facts.',
+          strength: clamp01(0.62 + intensity * 0.32),
+        },
+        {
+          kind: 'soft_disagreement',
+          reason:
+            'Inversion mode should add a small reservation instead of clean agreement.',
+          strength: clamp01(0.52 + intensity * 0.28),
+        },
+      ];
+    case 'chaotic':
+      return [
+        {
+          kind: 'contrarian_reframe',
+          reason:
+            'Chaotic mode can bend the expected landing while staying coherent.',
+          strength: clamp01(0.58 + intensity * 0.34),
+        },
+        {
+          kind: 'self_repair',
+          reason:
+            'Chaotic mode should allow live-speech correction and interruption.',
+          strength: clamp01(0.48 + intensity * 0.35),
+        },
+        {
+          kind: 'unfinished_margin',
+          reason:
+            'Chaotic mode should avoid a clean final sentence when possible.',
+          strength: clamp01(0.48 + intensity * 0.35),
+        },
+      ];
+    default:
+      return [];
+  }
 }
 
 export function buildFrictionParameters(input: {

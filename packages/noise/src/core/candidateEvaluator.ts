@@ -4,6 +4,7 @@ import type {
   CandidateEvaluation,
   ContextFingerprint,
   EvaluatedCandidate,
+  NoiseMode,
   NoiseQualityOptions,
   RewriteCandidate,
 } from './types.js';
@@ -16,6 +17,7 @@ export function evaluateRewriteCandidates(input: {
   before: string;
   candidates: RewriteCandidate[];
   context: ContextFingerprint;
+  mode?: NoiseMode;
   qualityOptions?: NoiseQualityOptions;
 }): EvaluatedCandidate[] {
   const beforePredictability = scorePredictability({
@@ -38,6 +40,7 @@ export function evaluateRewriteCandidates(input: {
       beforePredictability,
       afterPredictability,
       qualityPassed: quality.passed,
+      mode: input.mode ?? 'performer',
     });
 
     return {
@@ -84,6 +87,7 @@ function evaluateCandidate(input: {
   beforePredictability: number;
   afterPredictability: number;
   qualityPassed: boolean;
+  mode: NoiseMode;
 }): CandidateEvaluation {
   const issues: string[] = [];
   const predictabilityReduction = Math.max(
@@ -99,7 +103,11 @@ function evaluateCandidate(input: {
   const overAggressionRisk = scoreRisk(input.after, AGGRESSION_PATTERN);
   const ungroundedDetailRisk = scoreUngroundedDetailRisk(input);
   const overRewriteRisk = scoreOverRewriteRisk(input.before, input.after);
-  const meaningPreservation = Math.max(0, 1 - overRewriteRisk * 0.65);
+  const modeProfile = getModeEvaluationProfile(input.mode);
+  const meaningPreservation = Math.max(
+    0,
+    1 - overRewriteRisk * modeProfile.meaningRiskWeight
+  );
   const personaPreservation = Math.max(0, 1 - overAggressionRisk);
 
   if (META_WORD_PATTERN.test(input.after)) {
@@ -126,7 +134,8 @@ function evaluateCandidate(input: {
     meaningPreservation * 0.2 -
     overAggressionRisk * 0.3 -
     ungroundedDetailRisk * 0.3 -
-    overRewriteRisk * 0.12 +
+    overRewriteRisk * modeProfile.overRewritePenalty +
+    noveltyBonus(overRewriteRisk, input.mode) +
     (input.qualityPassed ? 0.08 : -0.08);
 
   return {
@@ -141,6 +150,60 @@ function evaluateCandidate(input: {
     finalScore: Number(Math.max(0, Math.min(1, finalScore)).toFixed(3)),
     issues,
   };
+}
+
+function getModeEvaluationProfile(mode: NoiseMode): {
+  meaningRiskWeight: number;
+  overRewritePenalty: number;
+} {
+  switch (mode) {
+    case 'subtle':
+      return {
+        meaningRiskWeight: 0.75,
+        overRewritePenalty: 0.14,
+      };
+    case 'performer':
+      return {
+        meaningRiskWeight: 0.65,
+        overRewritePenalty: 0.12,
+      };
+    case 'bold':
+      return {
+        meaningRiskWeight: 0.5,
+        overRewritePenalty: 0.06,
+      };
+    case 'inversion':
+      return {
+        meaningRiskWeight: 0.44,
+        overRewritePenalty: 0.04,
+      };
+    case 'chaotic':
+      return {
+        meaningRiskWeight: 0.4,
+        overRewritePenalty: 0.02,
+      };
+  }
+}
+
+function noveltyBonus(overRewriteRisk: number, mode: NoiseMode): number {
+  if (mode === 'subtle' || mode === 'performer') {
+    return 0;
+  }
+
+  if (overRewriteRisk < 0.18 || overRewriteRisk > 0.72) {
+    return 0;
+  }
+
+  switch (mode) {
+    case 'bold':
+      return 0.04;
+    case 'inversion':
+      return 0.07;
+    case 'chaotic':
+      return 0.08;
+    default:
+      return 0;
+  }
 }
 
 function scoreContextGrounding(
