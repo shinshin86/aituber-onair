@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { promises as fs } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { NoiseMemory, NoiseMemoryStore } from '../core/types.js';
 import { normalizeNoiseMemory } from '../memory/noiseMemory.js';
@@ -24,8 +24,8 @@ export class JsonFileNoiseMemoryStore implements NoiseMemoryStore {
   async save(scopeId: string, memory: NoiseMemory): Promise<void> {
     const allMemories = await this.readAll();
     allMemories[scopeId] = memory;
-    await mkdir(dirname(this.filePath), { recursive: true });
-    await writeFile(
+    await fs.mkdir(dirname(this.filePath), { recursive: true });
+    await fs.writeFile(
       this.filePath,
       `${JSON.stringify(allMemories, null, 2)}\n`,
       'utf8'
@@ -37,11 +37,11 @@ export class JsonFileNoiseMemoryStore implements NoiseMemoryStore {
     delete allMemories[scopeId];
 
     if (Object.keys(allMemories).length === 0) {
-      await rm(this.filePath, { force: true });
+      await this.removeFileIfExists();
       return;
     }
 
-    await writeFile(
+    await fs.writeFile(
       this.filePath,
       `${JSON.stringify(allMemories, null, 2)}\n`,
       'utf8'
@@ -50,7 +50,7 @@ export class JsonFileNoiseMemoryStore implements NoiseMemoryStore {
 
   private async readAll(): Promise<Record<string, NoiseMemory>> {
     try {
-      const raw = await readFile(this.filePath, 'utf8');
+      const raw = await fs.readFile(this.filePath, 'utf8');
       return JSON.parse(raw) as Record<string, NoiseMemory>;
     } catch (error) {
       if (isFileNotFound(error)) {
@@ -58,6 +58,16 @@ export class JsonFileNoiseMemoryStore implements NoiseMemoryStore {
       }
 
       throw error;
+    }
+  }
+
+  private async removeFileIfExists(): Promise<void> {
+    try {
+      await fs.unlink(this.filePath);
+    } catch (error) {
+      if (!isFileNotFound(error)) {
+        throw error;
+      }
     }
   }
 }
