@@ -764,15 +764,18 @@ describe('OpenAIChatServiceProvider', () => {
     });
 
     it('should create services for all GPT-5 models correctly', () => {
-      const gpt5Models = [
-        MODEL_GPT_5_NANO,
-        MODEL_GPT_5_MINI,
-        MODEL_GPT_5,
-        MODEL_GPT_5_4_MINI,
-        MODEL_GPT_5_4_NANO,
+      const gpt5Models: Array<{
+        model: string;
+        defaultEffort: 'none' | 'medium';
+      }> = [
+        { model: MODEL_GPT_5_NANO, defaultEffort: 'medium' },
+        { model: MODEL_GPT_5_MINI, defaultEffort: 'medium' },
+        { model: MODEL_GPT_5, defaultEffort: 'medium' },
+        { model: MODEL_GPT_5_4_MINI, defaultEffort: 'none' },
+        { model: MODEL_GPT_5_4_NANO, defaultEffort: 'none' },
       ];
 
-      gpt5Models.forEach((model) => {
+      gpt5Models.forEach(({ model, defaultEffort }) => {
         // Clear previous calls
         vi.clearAllMocks();
 
@@ -793,7 +796,7 @@ describe('OpenAIChatServiceProvider', () => {
           [],
           undefined,
           undefined,
-          'medium', // default reasoning_effort for GPT-5
+          defaultEffort,
           undefined,
           'openai',
         );
