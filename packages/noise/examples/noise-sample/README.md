@@ -1,28 +1,29 @@
 # AITuber OnAir Noise Sample
 
-`@aituber-onair/noise` をブラウザで試すためのサンプルです。
+This sample lets you try `@aituber-onair/noise` in a browser.
 
-AIが無難にまとめすぎた返答を入力し、意味やキャラクターを保ったまま、
-配信で使いやすい言葉に書き換える流れを確認できます。書き換え後には、
-無難さが下がったか、キャラクターや文脈が崩れていないかをレポートで
-確認できます。
+You can enter an AI reply that feels too safe or too neatly wrapped up, then
+see how Noise rewrites it into a response that works better in a live stream
+while preserving the meaning and character. After rewriting, the sample shows
+whether predictability went down and whether the character or context drifted.
 
 ```sh
 npm -w @aituber-onair/noise run example:noise-sample
 ```
 
-サンプルディレクトリ上から起動することもできます。
+You can also run it from the sample directory:
 
 ```sh
 cd packages/noise/examples/noise-sample
 npm run dev
 ```
 
-AIサービスの設定は画面上部の「AIを設定」から行います。外部APIを使う場合は
-APIキーとモデルを設定し、ローカルLLMを使う場合はEndpointを設定します。
+Configure the rewrite AI from the `AIを設定` button at the top of the page. For
+external API providers, set the API key and model. For a local LLM, set the
+Endpoint.
 
-詳細設定の「書き換えモード」では、控えめ、キャラクター重視、大胆、逆張り、
-強めに崩す、の順に振り幅を広げられます。
+In `詳細設定`, the rewrite mode can widen the response range in this order:
+`控えめ`, `キャラクター重視`, `大胆`, `逆張り`, and `強めに崩す`.
 
-同じ表現を避けるための記録は、ブラウザ保存またはこの画面だけの保存を
-詳細設定から選べます。
+The memory used to avoid repeated phrasing can be stored in the browser or kept
+only for the current page session. You can choose this in `詳細設定`.
