@@ -224,6 +224,17 @@ Detects repetitive conversation patterns and injects topic-diversification promp
 npm install @aituber-onair/manneri
 ```
 
+### [@aituber-onair/noise](./packages/noise/README.md)
+
+<p align="center">
+  <img src="./packages/noise/images/aituber-onair-noise.png" alt="AITuber OnAir Noise logo" width="360" />
+</p>
+
+Post-generation rewrite engine that keeps AI character replies from landing too safely: detects predictable phrasing, builds structured friction, asks an LLM for rewrite candidates, and selects the safest non-generic response.
+```bash
+npm install @aituber-onair/noise
+```
+
 ### [@aituber-onair/comment-intelligence](./packages/comment-intelligence/README.md)
 
 <p align="center">
@@ -275,6 +286,7 @@ aituber-onair/
     ├── chat/             # LLM providers, streaming, tools, MCP
     ├── voice/            # TTS engines, emotion, playback
     ├── manneri/          # Conversation pattern detection
+    ├── noise/            # Post-generation response rewriting
     ├── comment-intelligence/ # Live comment filtering and context building
     ├── bushitsu-client/  # WebSocket chat client + React hooks
     └── kizuna/           # Viewer relationship / bond system

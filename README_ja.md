@@ -218,6 +218,17 @@ npm install @aituber-onair/voice
 npm install @aituber-onair/manneri
 ```
 
+### [@aituber-onair/noise](./packages/noise/README.ja.md)
+
+<p align="center">
+  <img src="./packages/noise/images/aituber-onair-noise.png" alt="AITuber OnAir Noise ロゴ" width="360" />
+</p>
+
+AI の返答が無難な着地に寄りすぎたときに使う、生成後の書き換えエンジン。予定調和な言い回しを検出し、構造化された介入方針から LLM に複数候補を作らせ、キャラクターと文脈を保ったまま最も安全な非定型の返答を選びます。
+```bash
+npm install @aituber-onair/noise
+```
+
 ### [@aituber-onair/comment-intelligence](./packages/comment-intelligence/README.ja.md)
 
 <p align="center">
@@ -269,6 +280,7 @@ aituber-onair/
     ├── chat/             # LLM プロバイダー、ストリーミング、ツール、MCP
     ├── voice/            # TTS エンジン、感情、再生
     ├── manneri/          # 会話パターン検出
+    ├── noise/            # 生成後の返答書き換え
     ├── comment-intelligence/ # ライブコメントのフィルタリングと文脈生成
     ├── bushitsu-client/  # WebSocket チャットクライアント + React hooks
     └── kizuna/           # 視聴者との関係性 / 絆システム
