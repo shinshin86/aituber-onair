@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  createPcm16Wav,
+  float32ToPcm16Wav,
   getAudioFormat,
   getWavDataOffset,
   parseWavHeader,
@@ -119,5 +121,32 @@ describe('wavHeader', () => {
     expect(getWavDataOffset(createWavBuffer({ includeData: false }))).toBe(
       STANDARD_WAV_HEADER_SIZE,
     );
+  });
+
+  it('should create WAV data from PCM16 bytes', () => {
+    const wav = createPcm16Wav(new Uint8Array([1, 2, 3, 4]), 24000);
+
+    expect(parseWavHeader(wav)).toEqual({
+      audioFormat: 1,
+      channels: 1,
+      sampleRate: 24000,
+      bitsPerSample: 16,
+    });
+    expect(getWavDataOffset(wav)).toBe(STANDARD_WAV_HEADER_SIZE);
+    expect(Array.from(new Uint8Array(wav).slice(44))).toEqual([1, 2, 3, 4]);
+  });
+
+  it('should create WAV data from Float32 samples', () => {
+    const wav = float32ToPcm16Wav(new Float32Array([-1, 0, 1]), 22050);
+    const view = new DataView(wav);
+
+    expect(parseWavHeader(wav)).toMatchObject({
+      channels: 1,
+      sampleRate: 22050,
+      bitsPerSample: 16,
+    });
+    expect(view.getInt16(44, true)).toBe(-32768);
+    expect(view.getInt16(46, true)).toBe(0);
+    expect(view.getInt16(48, true)).toBe(32767);
   });
 });

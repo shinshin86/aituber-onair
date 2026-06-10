@@ -5,6 +5,7 @@ import {
   MINIMAX_GLOBAL_VOICE_LIST_URL,
 } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
+import { decodeHexToArrayBuffer } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -413,7 +414,7 @@ export class MinimaxEngine implements VoiceEngine {
 
     // Convert hex string to ArrayBuffer
     try {
-      return this.hexToArrayBuffer(result.data.audio);
+      return decodeHexToArrayBuffer(result.data.audio);
     } catch (error) {
       console.error('Failed to convert hex audio data:', error);
       throw new Error(`Failed to process audio data: ${error}`);
@@ -537,7 +538,7 @@ export class MinimaxEngine implements VoiceEngine {
 
     // Convert hex string to ArrayBuffer
     try {
-      return this.hexToArrayBuffer(result.data.audio);
+      return decodeHexToArrayBuffer(result.data.audio);
     } catch (error) {
       console.error('Failed to convert hex audio data:', error);
       throw new Error(`Failed to process audio data: ${error}`);
@@ -665,35 +666,6 @@ export class MinimaxEngine implements VoiceEngine {
         }
       }
     }
-  }
-
-  /**
-   * Convert hex string to ArrayBuffer
-   * @param hex Hex string
-   * @returns ArrayBuffer
-   */
-  private hexToArrayBuffer(hex: string): ArrayBuffer {
-    // Remove any whitespace or newlines
-    const cleanHex = hex.replace(/[\s\n]/g, '');
-
-    // Ensure even number of characters
-    if (cleanHex.length % 2 !== 0) {
-      throw new Error('Invalid hex string: odd number of characters');
-    }
-
-    // Validate hex string
-    if (!/^[0-9a-fA-F]*$/.test(cleanHex)) {
-      throw new Error('Invalid hex string: contains non-hex characters');
-    }
-
-    const buffer = new ArrayBuffer(cleanHex.length / 2);
-    const view = new Uint8Array(buffer);
-
-    for (let i = 0; i < cleanHex.length; i += 2) {
-      view[i / 2] = Number.parseInt(cleanHex.substr(i, 2), 16);
-    }
-
-    return buffer;
   }
 
   getTestMessage(textVoiceText?: string): string {

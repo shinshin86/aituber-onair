@@ -11,6 +11,12 @@ export interface WavFormat {
 
 export const STANDARD_WAV_HEADER_SIZE = 44;
 
+function writeAscii(view: DataView, offset: number, value: string): void {
+  for (let index = 0; index < value.length; index += 1) {
+    view.setUint8(offset + index, value.charCodeAt(index));
+  }
+}
+
 function getChunkId(view: DataView, offset: number): string {
   return String.fromCharCode(
     view.getUint8(offset),
@@ -133,4 +139,57 @@ export function getAudioFormat(buffer: ArrayBuffer): WavFormat {
       bitsPerSample: 16,
     };
   }
+}
+
+export function createPcm16Wav(
+  pcmData: Uint8Array,
+  sampleRate: number,
+  channels = 1,
+): ArrayBuffer {
+  const bitsPerSample = 16;
+  const bytesPerSample = bitsPerSample / 8;
+  const byteRate = sampleRate * channels * bytesPerSample;
+  const blockAlign = channels * bytesPerSample;
+  const dataSize = pcmData.byteLength;
+  const totalSize = STANDARD_WAV_HEADER_SIZE + dataSize;
+  const wavBuffer = new ArrayBuffer(totalSize);
+  const view = new DataView(wavBuffer);
+  const bytes = new Uint8Array(wavBuffer);
+
+  writeAscii(view, 0, 'RIFF');
+  view.setUint32(4, totalSize - 8, true);
+  writeAscii(view, 8, 'WAVE');
+  writeAscii(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  writeAscii(view, 36, 'data');
+  view.setUint32(40, dataSize, true);
+  bytes.set(pcmData, STANDARD_WAV_HEADER_SIZE);
+
+  return wavBuffer;
+}
+
+export function float32ToPcm16Wav(
+  samples: Float32Array,
+  sampleRate: number,
+): ArrayBuffer {
+  const bytesPerSample = 2;
+  const dataSize = samples.length * bytesPerSample;
+  const pcmData = new Uint8Array(dataSize);
+  const view = new DataView(pcmData.buffer);
+  let offset = 0;
+
+  for (const sample of samples) {
+    const clamped = Math.max(-1, Math.min(1, sample));
+    const pcm = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
+    view.setInt16(offset, Math.round(pcm), true);
+    offset += bytesPerSample;
+  }
+
+  return createPcm16Wav(pcmData, sampleRate);
 }

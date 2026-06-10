@@ -1,5 +1,6 @@
 import { GEMINI_TTS_API_URL } from '../constants/voiceEngine';
 import type { Talk } from '../types/voice';
+import { createPcm16Wav } from '../utils/wavHeader';
 import type { VoiceEngine } from './VoiceEngine';
 
 export type GeminiTtsModel =
@@ -32,37 +33,6 @@ export class GeminiTtsEngine implements VoiceEngine {
   private model: GeminiTtsModel = DEFAULT_GEMINI_TTS_MODEL;
   private languageCode: string = DEFAULT_LANGUAGE_CODE;
   private prompt?: string;
-
-  private createWavFromPcm(pcmData: Uint8Array): ArrayBuffer {
-    const sampleRate = 24000;
-    const numChannels = 1;
-    const bitsPerSample = 16;
-    const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
-    const blockAlign = numChannels * (bitsPerSample / 8);
-    const headerSize = 44;
-    const dataSize = pcmData.byteLength;
-    const totalSize = headerSize + dataSize;
-    const wavBuffer = new ArrayBuffer(totalSize);
-    const view = new DataView(wavBuffer);
-    const bytes = new Uint8Array(wavBuffer);
-
-    bytes.set([0x52, 0x49, 0x46, 0x46], 0);
-    view.setUint32(4, totalSize - 8, true);
-    bytes.set([0x57, 0x41, 0x56, 0x45], 8);
-    bytes.set([0x66, 0x6d, 0x74, 0x20], 12);
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, byteRate, true);
-    view.setUint16(32, blockAlign, true);
-    view.setUint16(34, bitsPerSample, true);
-    bytes.set([0x64, 0x61, 0x74, 0x61], 36);
-    view.setUint32(40, dataSize, true);
-    bytes.set(pcmData, headerSize);
-
-    return wavBuffer;
-  }
 
   /**
    * Set custom Gemini TTS API endpoint
@@ -178,7 +148,7 @@ export class GeminiTtsEngine implements VoiceEngine {
       bytes[index] = decoded.charCodeAt(index);
     }
 
-    return this.createWavFromPcm(bytes);
+    return createPcm16Wav(bytes, 24000);
   }
 
   getTestMessage(textVoiceText?: string): string {

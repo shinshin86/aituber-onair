@@ -1,5 +1,6 @@
 import { ELEVENLABS_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
+import { clampNumber } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 export type ElevenLabsApplyTextNormalization = 'auto' | 'on' | 'off';
@@ -84,7 +85,7 @@ export class ElevenLabsEngine implements VoiceEngine {
   }
 
   setSpeed(value?: number): void {
-    this.updateVoiceSetting('speed', this.clampNumber(value, 0.7, 1.2));
+    this.updateVoiceSetting('speed', clampNumber(value, 0.7, 1.2));
   }
 
   setSeed(value?: number): void {
@@ -241,7 +242,7 @@ export class ElevenLabsEngine implements VoiceEngine {
       similarityBoost: this.clampZeroToOne(settings.similarityBoost),
       style: this.clampZeroToOne(settings.style),
       useSpeakerBoost: settings.useSpeakerBoost,
-      speed: this.clampNumber(settings.speed, 0.7, 1.2),
+      speed: clampNumber(settings.speed, 0.7, 1.2),
     };
   }
 
@@ -263,19 +264,7 @@ export class ElevenLabsEngine implements VoiceEngine {
   }
 
   private clampZeroToOne(value?: number): number | undefined {
-    return this.clampNumber(value, 0, 1);
-  }
-
-  private clampNumber(
-    value: number | undefined,
-    min: number,
-    max: number,
-  ): number | undefined {
-    if (value === undefined || !Number.isFinite(value)) {
-      return undefined;
-    }
-
-    return Math.max(min, Math.min(max, value));
+    return clampNumber(value, 0, 1);
   }
 
   private isApplyTextNormalization(

@@ -3,6 +3,7 @@ import {
   GRADIUM_VOICES_API_URL,
 } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
+import { clampNumber } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 export type GradiumOutputFormat =
@@ -70,21 +71,21 @@ export class GradiumEngine implements VoiceEngine {
    * Set sampling temperature (0.0-1.4).
    */
   setTemperature(value?: number): void {
-    this.temperature = this.clampNumber(value, 0, 1.4);
+    this.temperature = clampNumber(value, 0, 1.4);
   }
 
   /**
    * Set voice similarity / cfg_coef (1.0-4.0).
    */
   setVoiceSimilarity(value?: number): void {
-    this.voiceSimilarity = this.clampNumber(value, 1, 4);
+    this.voiceSimilarity = clampNumber(value, 1, 4);
   }
 
   /**
    * Set padding bonus / speed control (-4.0-4.0).
    */
   setPaddingBonus(value?: number): void {
-    this.paddingBonus = this.clampNumber(value, -4, 4);
+    this.paddingBonus = clampNumber(value, -4, 4);
   }
 
   /**
@@ -211,18 +212,6 @@ export class GradiumEngine implements VoiceEngine {
     }
 
     return config;
-  }
-
-  private clampNumber(
-    value: number | undefined,
-    min: number,
-    max: number,
-  ): number | undefined {
-    if (value === undefined || !Number.isFinite(value)) {
-      return undefined;
-    }
-
-    return Math.min(max, Math.max(min, value));
   }
 
   private isSupportedOutputFormat(

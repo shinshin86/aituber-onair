@@ -1,5 +1,6 @@
 import { OPENAI_COMPATIBLE_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
+import { clampNumberWithFallback } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -22,8 +23,7 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
    * Set speaking speed (0.25 - 4.0)
    */
   setSpeed(speed: number): void {
-    const clamped = Math.max(0.25, Math.min(4.0, speed));
-    this.speed = Number.isFinite(clamped) ? clamped : 1.0;
+    this.speed = clampNumberWithFallback(speed, 0.25, 4.0, 1.0);
   }
 
   /**

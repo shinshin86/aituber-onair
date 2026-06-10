@@ -1,5 +1,6 @@
 import { INWORLD_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
+import { decodeBase64ToArrayBuffer } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 export type InworldAudioEncoding =
@@ -162,7 +163,7 @@ export class InworldEngine implements VoiceEngine {
       throw new Error('Failed to fetch TTS from Inworld: missing audioContent');
     }
 
-    return this.base64ToArrayBuffer(data.audioContent);
+    return decodeBase64ToArrayBuffer(data.audioContent);
   }
 
   getTestMessage(textVoiceText?: string): string {
@@ -203,20 +204,6 @@ export class InworldEngine implements VoiceEngine {
     }
 
     return body;
-  }
-
-  private base64ToArrayBuffer(base64: string): ArrayBuffer {
-    const binary =
-      typeof atob === 'function'
-        ? atob(base64)
-        : Buffer.from(base64, 'base64').toString('binary');
-    const bytes = new Uint8Array(binary.length);
-
-    for (let i = 0; i < binary.length; i += 1) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-
-    return bytes.buffer;
   }
 
   private isSupportedAudioEncoding(
