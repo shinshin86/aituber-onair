@@ -66,25 +66,31 @@ const normalizeReasoningEffortForModel = (
     return effort;
   }
 
-  const defaultEffort = getDefaultReasoningEffortForGPT5Model(modelId);
   if (!effort) {
-    return defaultEffort;
+    return getDefaultReasoningEffortForGPT5Model(modelId);
   }
 
-  if (effort === 'none' && !allowsReasoningNone(modelId)) {
-    return defaultEffort;
-  }
-
-  if (effort === 'minimal' && !allowsReasoningMinimal(modelId)) {
-    return defaultEffort;
+  // Round unsupported values to the nearest supported level, matching the
+  // normalization performed by the chat package.
+  if (
+    (effort === 'none' && !allowsReasoningNone(modelId)) ||
+    (effort === 'minimal' && !allowsReasoningMinimal(modelId))
+  ) {
+    if (effort === 'minimal' && allowsReasoningNone(modelId)) {
+      return 'none';
+    }
+    if (effort === 'none' && allowsReasoningMinimal(modelId)) {
+      return 'minimal';
+    }
+    return allowsReasoningLow(modelId) ? 'low' : 'medium';
   }
 
   if (effort === 'low' && !allowsReasoningLow(modelId)) {
-    return defaultEffort;
+    return 'medium';
   }
 
   if (effort === 'xhigh' && !allowsReasoningXHigh(modelId)) {
-    return defaultEffort;
+    return 'high';
   }
 
   return effort;
