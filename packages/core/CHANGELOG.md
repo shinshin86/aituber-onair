@@ -1,5 +1,20 @@
 # @aituber-onair/core
 
+## 0.26.1
+
+### Patch Changes
+
+- Synced GPT-5 reasoning behavior from `@aituber-onair/chat@0.38.0` into the
+  React examples:
+  - updated the React basic example's local reasoning effort normalization to
+    round unsupported values to the nearest supported effort
+  - kept GPT-5 examples on the low-latency `casual` preset and very short
+    replies for AITuber-style interactions
+  - applied the same terse GPT-5 defaults to the PNGTuber, VRM, and Live2D
+    examples, including comment analysis providers
+- Updated dependencies []:
+  - @aituber-onair/chat@0.38.0
+
 ## 0.26.0
 
 ### Minor Changes
