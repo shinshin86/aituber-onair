@@ -1,5 +1,20 @@
 # @aituber-onair/chat
 
+## 0.38.0
+
+### Minor Changes
+
+- Changed the default `reasoning_effort` for GPT-5.4 Mini and GPT-5.4 Nano
+  from `medium` to `none`, so every model that supports `none` now defaults
+  to the low-latency setting.
+- Changed `reasoning_effort` normalization to round unsupported values to
+  the nearest supported level instead of resetting to the model default.
+  This fixes the `casual` preset escalating to `medium` reasoning on
+  GPT-5.4 Mini/Nano and `xhigh` dropping to `none` on GPT-5.1.
+- Documented GPT-5 presets, default/normalization rules, and recommended
+  low-latency settings for real-time character chat (AITuber-style) in the
+  English/Japanese README.
+
 ## 0.37.0
 
 ### Minor Changes
