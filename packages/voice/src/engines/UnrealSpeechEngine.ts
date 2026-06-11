@@ -1,5 +1,6 @@
 import { UNREAL_SPEECH_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
+import { fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 export type UnrealSpeechCodec = 'libmp3lame' | 'pcm_mulaw' | 'pcm_s16le';
@@ -111,7 +112,7 @@ export class UnrealSpeechEngine implements VoiceEngine {
       body.Temperature = this.temperature;
     }
 
-    const response = await fetch(this.apiEndpoint, {
+    const response = await fetchWithTimeout(this.apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,34 +1,51 @@
 import { describe, expect, it } from 'vitest';
+import { AivisCloudEngine } from '../src/engines/AivisCloudEngine';
+import { AivisSpeechEngine } from '../src/engines/AivisSpeechEngine';
 import { ElevenLabsEngine } from '../src/engines/ElevenLabsEngine';
+import { GeminiTtsEngine } from '../src/engines/GeminiTtsEngine';
+import { GradiumEngine } from '../src/engines/GradiumEngine';
 import { InworldEngine } from '../src/engines/InworldEngine';
+import { MinimaxEngine } from '../src/engines/MinimaxEngine';
+import { NoneEngine } from '../src/engines/NoneEngine';
+import { OpenAiEngine } from '../src/engines/OpenAiEngine';
+import { OpenAiCompatibleEngine } from '../src/engines/OpenAiCompatibleEngine';
 import { PiperPlusEngine } from '../src/engines/PiperPlusEngine';
 import { UnrealSpeechEngine } from '../src/engines/UnrealSpeechEngine';
 import { VoiceEngineFactory } from '../src/engines/VoiceEngineFactory';
+import { VoicePeakEngine } from '../src/engines/VoicePeakEngine';
+import { VoiceVoxEngine } from '../src/engines/VoiceVoxEngine';
+import { XaiEngine } from '../src/engines/XaiEngine';
+import type { VoiceEngineType } from '../src/types/voiceEngine';
+
+const expectedEngineConstructors = {
+  voicevox: VoiceVoxEngine,
+  voicepeak: VoicePeakEngine,
+  openai: OpenAiEngine,
+  xai: XaiEngine,
+  unrealSpeech: UnrealSpeechEngine,
+  elevenLabs: ElevenLabsEngine,
+  inworld: InworldEngine,
+  gradium: GradiumEngine,
+  geminiTts: GeminiTtsEngine,
+  openaiCompatible: OpenAiCompatibleEngine,
+  aivisSpeech: AivisSpeechEngine,
+  aivisCloud: AivisCloudEngine,
+  minimax: MinimaxEngine,
+  piperPlus: PiperPlusEngine,
+  none: NoneEngine,
+} as const satisfies Record<VoiceEngineType, new () => unknown>;
 
 describe('VoiceEngineFactory', () => {
-  it('should create a PiperPlus engine instance', () => {
-    const engine = VoiceEngineFactory.getEngine('piperPlus');
+  it.each(Object.entries(expectedEngineConstructors))(
+    'should create a %s engine instance',
+    (engineType, EngineConstructor) => {
+      const engine = VoiceEngineFactory.getEngine(
+        engineType as VoiceEngineType,
+      );
 
-    expect(engine).toBeInstanceOf(PiperPlusEngine);
-  });
-
-  it('should create an Unreal Speech engine instance', () => {
-    const engine = VoiceEngineFactory.getEngine('unrealSpeech');
-
-    expect(engine).toBeInstanceOf(UnrealSpeechEngine);
-  });
-
-  it('should create an ElevenLabs engine instance', () => {
-    const engine = VoiceEngineFactory.getEngine('elevenLabs');
-
-    expect(engine).toBeInstanceOf(ElevenLabsEngine);
-  });
-
-  it('should create an Inworld engine instance', () => {
-    const engine = VoiceEngineFactory.getEngine('inworld');
-
-    expect(engine).toBeInstanceOf(InworldEngine);
-  });
+      expect(engine).toBeInstanceOf(EngineConstructor);
+    },
+  );
 
   it('should throw for an unsupported engine type', () => {
     expect(() =>

@@ -1,5 +1,6 @@
 import { AIVIS_CLOUD_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
+import { fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -258,7 +259,7 @@ export class AivisCloudEngine implements VoiceEngine {
       requestBody.output_bitrate = this.outputBitrate;
     }
 
-    const response = await fetch(AIVIS_CLOUD_API_URL, {
+    const response = await fetchWithTimeout(AIVIS_CLOUD_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

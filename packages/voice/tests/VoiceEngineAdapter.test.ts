@@ -1484,6 +1484,7 @@ describe('VoiceEngineAdapter', () => {
         speaker: 'alloy',
         apiKey: 'test-api-key',
       };
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const adapter = new VoiceEngineAdapter(options);
 
@@ -1492,6 +1493,10 @@ describe('VoiceEngineAdapter', () => {
           minimaxModel: 'speech-2.6-hd',
         } as any),
       ).not.toThrow();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('legacy lenient updateOptions() path'),
+        expect.any(Error),
+      );
     });
 
     it('should switch engine using updateOptions for backward compatibility', async () => {

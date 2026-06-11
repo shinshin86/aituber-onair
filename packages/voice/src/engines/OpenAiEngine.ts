@@ -1,5 +1,6 @@
 import { OPENAI_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
+import { clampNumberWithFallback, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -13,8 +14,7 @@ export class OpenAiEngine implements VoiceEngine {
    * Set speaking speed (0.25 - 4.0)
    */
   setSpeed(speed: number): void {
-    const clamped = Math.max(0.25, Math.min(4.0, speed));
-    this.speed = Number.isFinite(clamped) ? clamped : 1.0;
+    this.speed = clampNumberWithFallback(speed, 0.25, 4.0, 1.0);
   }
 
   /**
@@ -45,7 +45,7 @@ export class OpenAiEngine implements VoiceEngine {
       throw new Error('Input text is empty');
     }
 
-    const response = await fetch(OPENAI_TTS_API_URL, {
+    const response = await fetchWithTimeout(OPENAI_TTS_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

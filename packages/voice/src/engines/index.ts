@@ -1,4 +1,8 @@
 export type { VoiceEngine } from './VoiceEngine';
+export {
+  VoiceEngineError,
+  type VoiceEngineErrorKind,
+} from './VoiceEngineError';
 export { VoiceEngineFactory } from './VoiceEngineFactory';
 export {
   VoiceVoxEngine,

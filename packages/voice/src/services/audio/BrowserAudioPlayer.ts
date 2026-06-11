@@ -11,9 +11,6 @@ export class BrowserAudioPlayer implements AudioPlayer {
   constructor() {
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       this.audioElement = document.createElement('audio');
-      this.audioElement.addEventListener('ended', () => {
-        this.handlePlaybackEnd();
-      });
     }
   }
 
@@ -68,6 +65,8 @@ export class BrowserAudioPlayer implements AudioPlayer {
         audioEl.src = url;
         audioEl.play().catch((error) => {
           URL.revokeObjectURL(url);
+          audioEl?.removeEventListener('ended', onEnded);
+          audioEl?.removeEventListener('error', onError);
           this.isPlayingAudio = false;
           reject(error);
         });

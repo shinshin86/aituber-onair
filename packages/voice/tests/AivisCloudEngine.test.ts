@@ -51,30 +51,33 @@ describe('AivisCloudEngine', () => {
       );
 
       expect(result).toBe(mockAudioBuffer);
-      expect(mockFetch).toHaveBeenCalledWith(AIVIS_CLOUD_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer test-api-key',
-        },
-        body: JSON.stringify({
-          model_uuid: 'test-model-uuid',
-          text: 'Hello, this is a test message.',
-          use_ssml: true,
-          language: 'ja',
-          speaking_rate: 1.0,
-          emotional_intensity: 1.1, // Adjusted for happy emotion
-          tempo_dynamics: 1.0,
-          pitch: 0.0,
-          volume: 1.0,
-          leading_silence_seconds: 0.1,
-          trailing_silence_seconds: 0.1,
-          line_break_silence_seconds: 0.4,
-          output_format: 'mp3',
-          output_sampling_rate: 44100,
-          output_audio_channels: 'mono',
+      expect(mockFetch).toHaveBeenCalledWith(
+        AIVIS_CLOUD_API_URL,
+        expect.objectContaining({
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer test-api-key',
+          },
+          body: JSON.stringify({
+            model_uuid: 'test-model-uuid',
+            text: 'Hello, this is a test message.',
+            use_ssml: true,
+            language: 'ja',
+            speaking_rate: 1.0,
+            emotional_intensity: 1.1, // Adjusted for happy emotion
+            tempo_dynamics: 1.0,
+            pitch: 0.0,
+            volume: 1.0,
+            leading_silence_seconds: 0.1,
+            trailing_silence_seconds: 0.1,
+            line_break_silence_seconds: 0.4,
+            output_format: 'mp3',
+            output_sampling_rate: 44100,
+            output_audio_channels: 'mono',
+          }),
         }),
-      });
+      );
     });
 
     it('should use speaker parameter as model UUID if modelUuid is not set', async () => {

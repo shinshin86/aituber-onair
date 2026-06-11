@@ -1,7 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  MINIMAX_CHINA_API_URL,
+  MINIMAX_GLOBAL_API_URL,
+  MINIMAX_GLOBAL_VOICE_LIST_URL,
+} from '../src/constants/voiceEngine';
 import { MinimaxEngine, type MinimaxModel } from '../src/engines/MinimaxEngine';
 
-// No API mocking needed - we only test configuration methods
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('MinimaxEngine', () => {
   describe('Configuration Methods', () => {
@@ -127,11 +134,263 @@ describe('MinimaxEngine', () => {
     });
   });
 
-  // Note: getVoiceList() API tests removed to avoid requiring API keys in CI/CD
+  describe('getVoiceList', () => {
+    it('should fetch available MiniMax voices', async () => {
+      const engine = new MinimaxEngine();
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          base_resp: { status_code: 0 },
+          data: {
+            speakers: [
+              {
+                voice_id: 'voice-1',
+                voice_name: 'Voice 1',
+                gender: 'female',
+                language: 'Japanese',
+              },
+            ],
+          },
+        }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
 
-  // Note: testVoice() API tests removed to avoid requiring API keys in CI/CD
+      await expect(engine.getVoiceList('api-key')).resolves.toEqual([
+        {
+          voice_id: 'voice-1',
+          voice_name: 'Voice 1',
+          gender: 'female',
+          language: 'Japanese',
+        },
+      ]);
+      expect(fetchMock).toHaveBeenCalledWith(
+        MINIMAX_GLOBAL_VOICE_LIST_URL,
+        expect.objectContaining({
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer api-key',
+            'Content-Type': 'application/json',
+          },
+        }),
+      );
+    });
 
-  // Note: fetchAudio() API tests removed to avoid requiring API keys in CI/CD
+    it('should validate API key and propagate voice list API errors', async () => {
+      const engine = new MinimaxEngine();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 401,
+          text: async () => 'unauthorized',
+        }),
+      );
+
+      await expect(engine.getVoiceList('')).rejects.toThrow(
+        'MiniMax API key is required',
+      );
+      await expect(engine.getVoiceList('api-key')).rejects.toThrow(
+        'Failed to fetch voice list: 401 - unauthorized',
+      );
+    });
+
+    it('should propagate MiniMax voice list base response errors', async () => {
+      const engine = new MinimaxEngine();
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            base_resp: {
+              status_code: 1001,
+              status_msg: 'invalid token',
+            },
+          }),
+        }),
+      );
+
+      await expect(engine.getVoiceList('api-key')).rejects.toThrow(
+        'MiniMax API error: 1001 - invalid token',
+      );
+    });
+  });
+
+  describe('testVoice', () => {
+    it('should synthesize a test voice without requiring configured GroupId', async () => {
+      const engine = new MinimaxEngine();
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          base_resp: { status_code: 0 },
+          data: { audio: '000102ff' },
+        }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const result = await engine.testVoice('hello', 'voice-id', 'api-key');
+
+      expect(new Uint8Array(result)).toEqual(new Uint8Array([0, 1, 2, 255]));
+      expect(fetchMock.mock.calls[0][0]).toBe(
+        `${MINIMAX_GLOBAL_API_URL}?GroupId=1`,
+      );
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+        model: 'speech-2.6-hd',
+        text: 'hello',
+        stream: false,
+        voice_setting: {
+          voice_id: 'voice-id',
+          speed: 1,
+          vol: 1,
+          pitch: 0,
+        },
+        audio_setting: {
+          sample_rate: 32000,
+          bitrate: 128000,
+          format: 'mp3',
+          channel: 1,
+        },
+        language_boost: 'Japanese',
+      });
+    });
+
+    it('should validate test voice inputs and invalid response structures', async () => {
+      const engine = new MinimaxEngine();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            base_resp: { status_code: 0 },
+            data: {},
+          }),
+        }),
+      );
+
+      await expect(engine.testVoice('hello', 'voice-id', '')).rejects.toThrow(
+        'MiniMax API key is required',
+      );
+      await expect(engine.testVoice('hello', '', 'api-key')).rejects.toThrow(
+        'Voice ID is required',
+      );
+      await expect(
+        engine.testVoice('hello', 'voice-id', 'api-key'),
+      ).rejects.toThrow('Audio data not found in MiniMax response');
+    });
+
+    it('should propagate test voice HTTP and base response errors', async () => {
+      const engine = new MinimaxEngine();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 402,
+          text: async () => 'quota exceeded',
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            base_resp: {
+              status_code: 2001,
+              status_msg: 'bad voice',
+            },
+          }),
+        });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await expect(
+        engine.testVoice('hello', 'voice-id', 'api-key'),
+      ).rejects.toThrow('Failed to test voice: 402 - quota exceeded');
+      await expect(
+        engine.testVoice('hello', 'voice-id', 'api-key'),
+      ).rejects.toThrow('MiniMax API error: 2001 - bad voice');
+    });
+
+    it('should reject invalid hex audio data', async () => {
+      const engine = new MinimaxEngine();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            base_resp: { status_code: 0 },
+            data: { audio: 'xyz' },
+          }),
+        }),
+      );
+
+      await expect(
+        engine.testVoice('hello', 'voice-id', 'api-key'),
+      ).rejects.toThrow('Failed to process audio data');
+    });
+  });
+
+  describe('fetchAudio', () => {
+    it('should synthesize production audio with GroupId', async () => {
+      const engine = new MinimaxEngine();
+      engine.setGroupId('group-id');
+      engine.setEndpoint('china');
+      engine.setModel('speech-02-hd');
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          base_resp: { status_code: 0 },
+          data: { audio: '0a0b' },
+        }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const result = await engine.fetchAudio(
+        {
+          style: 'happy',
+          message: '  hello  ',
+        },
+        'voice-id',
+        'api-key',
+      );
+
+      expect(new Uint8Array(result)).toEqual(new Uint8Array([10, 11]));
+      expect(fetchMock.mock.calls[0][0]).toBe(
+        `${MINIMAX_CHINA_API_URL}?GroupId=group-id`,
+      );
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+        model: 'speech-02-hd',
+        text: 'hello',
+        voice_setting: {
+          voice_id: 'voice-id',
+          speed: 1.1,
+          vol: 1,
+          pitch: 1,
+        },
+      });
+    });
+
+    it('should validate production synthesis inputs', async () => {
+      const engine = new MinimaxEngine();
+
+      await expect(
+        engine.fetchAudio({ style: 'talk', message: 'hello' }, 'voice-id'),
+      ).rejects.toThrow('MiniMax API key is required');
+      await expect(
+        engine.fetchAudio(
+          { style: 'talk', message: 'hello' },
+          'voice-id',
+          'api-key',
+        ),
+      ).rejects.toThrow('MiniMax GroupId is required');
+      engine.setGroupId('group-id');
+      await expect(
+        engine.fetchAudio(
+          { style: 'talk', message: 'x'.repeat(5001) },
+          'voice-id',
+          'api-key',
+        ),
+      ).rejects.toThrow('Text exceeds maximum length of 5000 characters');
+    });
+  });
 
   describe('getTestMessage', () => {
     it('should return default test message', () => {
@@ -146,6 +405,18 @@ describe('MinimaxEngine', () => {
     });
   });
 
-  // Note: MinimaxEngine doesn't implement isAvailable() and getEngineInfo() methods
-  // These are optional methods in the VoiceEngine interface
+  describe('endpoint helpers', () => {
+    it('should expose current endpoint and infer endpoint from API URL', () => {
+      const engine = new MinimaxEngine();
+
+      expect(engine.hasGroupId()).toBe(false);
+      expect(engine.getEndpoint()).toBe('global');
+      engine.setGroupId('group-id');
+      expect(engine.hasGroupId()).toBe(true);
+      engine.setApiEndpoint('https://api.minimaxi.com/v1/t2a_v2');
+      expect(engine.getEndpoint()).toBe('china');
+      engine.setApiEndpoint('https://api.minimax.io/v1/t2a_v2');
+      expect(engine.getEndpoint()).toBe('global');
+    });
+  });
 });

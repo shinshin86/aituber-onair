@@ -274,6 +274,7 @@ describe('PiperPlusEngine', () => {
     });
     expect(globalThis.fetch).toHaveBeenCalledWith(
       '/piper/models/tsukuyomi-config.json',
+      expect.objectContaining({}),
     );
     expect(runtime.phonemizer.initialize).toHaveBeenCalledWith({
       openjtalk: {

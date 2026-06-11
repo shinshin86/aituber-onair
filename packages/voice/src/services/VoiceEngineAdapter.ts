@@ -1,8 +1,9 @@
 import { AudioPlayer } from '../types/audioPlayer';
 import { VoiceEngine } from '../engines/VoiceEngine';
 import { ChatScreenplay } from '../types/chat';
-import { Talk, TalkStyle } from '../types/voice';
+import { Talk } from '../types/voice';
 import { textToScreenplay } from '../utils/screenplay';
+import { emotionToTalkStyle } from '../utils/emotionParser';
 import {
   AudioPlayOptions,
   VoiceService,
@@ -165,26 +166,11 @@ export class VoiceEngineAdapter implements VoiceService {
     }
   }
 
-  private mapEmotionToStyle(emotion?: string): TalkStyle {
-    switch ((emotion || 'neutral').toLowerCase()) {
-      case 'angry':
-        return 'angry';
-      case 'happy':
-        return 'happy';
-      case 'sad':
-        return 'sad';
-      case 'surprised':
-        return 'surprised';
-      default:
-        return 'neutral';
-    }
-  }
-
   private async fetchAudioForScreenplay(
     screenplay: ChatScreenplay,
   ): Promise<ArrayBuffer> {
     const talk: Talk = {
-      style: this.mapEmotionToStyle(screenplay.emotion),
+      style: emotionToTalkStyle(screenplay.emotion),
       message: screenplay.text,
     };
 
@@ -295,7 +281,11 @@ export class VoiceEngineAdapter implements VoiceService {
     try {
       this.validateUpdateOptions(options as VoiceServiceOptionsUpdate);
       this.mergeOptionsForCurrentEngine(options as VoiceServiceOptionsUpdate);
-    } catch {
+    } catch (error) {
+      console.warn(
+        'Invalid voice options were merged using the legacy lenient updateOptions() path. This fallback is deprecated; use switchEngine() for cross-engine changes.',
+        error,
+      );
       // Backward compatible path: accept cross-engine fields without throwing.
       this.options = {
         ...this.options,
