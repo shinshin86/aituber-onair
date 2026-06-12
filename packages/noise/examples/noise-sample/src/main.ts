@@ -61,6 +61,7 @@ interface AppState {
   skipped?: ContaminateOutput['skipped'];
   noiseEvents: string[];
   isReacting: boolean;
+  history: Array<{ before: number; after: number; skipped: boolean }>;
 }
 
 const SCOPE_ID = 'noise-sample';
@@ -150,6 +151,7 @@ const state: AppState = {
   respectRhythm: false,
   noiseEvents: [],
   isReacting: false,
+  history: [],
 };
 
 const app = document.querySelector<HTMLDivElement>('#app');
@@ -228,6 +230,8 @@ function render(): void {
           <button data-action="reset" class="secondary"${state.isRunning ? ' disabled' : ''}>記録をリセット</button>
         </section>
 
+        ${renderChangePanel()}
+
         ${renderOrchestrationPanel()}
 
         ${renderIntentPanel()}
@@ -272,12 +276,12 @@ function render(): void {
                 <input data-field="seed" value="${escapeHtml(state.seed)}" />
               </label>
               <label>
-                <span class="label-row">関係資本(視聴者との親密度)<output class="capital-value">${formatCapital(state.relationshipCapital)}</output></span>
+                <span class="label-row">視聴者との距離(親密度)<output class="capital-value">${formatCapital(state.relationshipCapital)}</output></span>
                 <input data-field="relationshipCapital" type="range" min="0" max="1" step="0.05" value="${state.relationshipCapital}" />
               </label>
               <label class="checkbox-label">
                 <input data-field="respectRhythm" type="checkbox" ${state.respectRhythm ? 'checked' : ''} />
-                リズム制御に従う(平場・クールダウン中はスキップ)
+                崩すタイミングを自動で判断させる(崩した直後などはそのまま返す)
               </label>
             </section>
 
@@ -498,6 +502,219 @@ function renderVerificationReport(): string {
   `;
 }
 
+function renderChangePanel(): string {
+  if (!state.quality && !state.skipped) {
+    return `
+      <section class="panel change-panel">
+        <div class="panel-heading compact">
+          <div>
+            <h2>どこをどう崩した?</h2>
+            <p>書き換え後に、変わった場所と「お決まり度」の変化がここに表示されます。</p>
+          </div>
+        </div>
+        <div class="empty-report">まだ書き換えていません。「返答を書き換える」を押してみてください。</div>
+      </section>
+    `;
+  }
+
+  if (state.skipped) {
+    return `
+      <section class="panel change-panel">
+        <div class="panel-heading compact">
+          <div>
+            <h2>どこをどう崩した?</h2>
+            <p>今回は崩していません。</p>
+          </div>
+        </div>
+        <div class="skip-explain">
+          <strong>今回はそのまま返しました</strong>
+          <p>${escapeHtml(formatSkipExplain(state.skipped.reason))}</p>
+        </div>
+        ${renderHistoryChart()}
+      </section>
+    `;
+  }
+
+  const before = state.quality?.checks.predictabilityBefore ?? 0;
+  const after = state.quality?.checks.predictabilityAfter ?? 0;
+  const delta = Math.round((before - after) * 100);
+
+  return `
+    <section class="panel change-panel">
+      <div class="panel-heading compact">
+        <div>
+          <h2>どこをどう崩した?</h2>
+          <p>「お決まりの返し」をどれだけ崩せたかと、実際に変わった場所です。</p>
+        </div>
+      </div>
+      <div class="harmony-meter">
+        <div class="harmony-row">
+          <span class="harmony-label">書き換え前のお決まり度</span>
+          <div class="metric-track"><span class="metric-fill metric-before" style="width: ${Math.round(before * 100)}%"></span></div>
+          <strong>${Math.round(before * 100)}%</strong>
+        </div>
+        <div class="harmony-row">
+          <span class="harmony-label">書き換え後のお決まり度</span>
+          <div class="metric-track"><span class="metric-fill metric-after" style="width: ${Math.round(after * 100)}%"></span></div>
+          <strong>${Math.round(after * 100)}%</strong>
+        </div>
+        <span class="delta-badge ${delta > 0 ? 'delta-good' : 'delta-flat'}">${delta > 0 ? `お決まり度 −${delta}pt 崩せました` : 'お決まり度はほぼ変わりませんでした'}</span>
+      </div>
+      <div class="diff-surface">
+        <div class="diff-legend">
+          <span><del class="diff-removed">取り消し線</del> = 削った「お決まり」の部分</span>
+          <span><mark class="diff-added">ハイライト</mark> = 新しく入れた「崩し」</span>
+        </div>
+        <p class="diff-text">${renderDiffText(state.draft, state.output)}</p>
+      </div>
+      ${
+        state.applied.length > 0
+          ? `
+      <div class="applied-friendly">
+        <p class="debug-label">入れた崩し</p>
+        <ul class="chips">
+          ${state.applied.map((kind) => `<li>${escapeHtml(formatIntervention(kind as InterventionKind))}</li>`).join('')}
+        </ul>
+      </div>`
+          : ''
+      }
+      ${renderHistoryChart()}
+    </section>
+  `;
+}
+
+interface DiffSegment {
+  type: 'same' | 'removed' | 'added';
+  text: string;
+}
+
+function renderDiffText(before: string, after: string): string {
+  return diffSegments(before, after)
+    .map((segment) => {
+      const text = escapeHtml(segment.text);
+
+      switch (segment.type) {
+        case 'removed':
+          return `<del class="diff-removed">${text}</del>`;
+        case 'added':
+          return `<mark class="diff-added">${text}</mark>`;
+        default:
+          return text;
+      }
+    })
+    .join('');
+}
+
+function diffSegments(before: string, after: string): DiffSegment[] {
+  const a = tokenizeForDiff(before);
+  const b = tokenizeForDiff(after);
+  const m = a.length;
+  const n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () =>
+    new Array<number>(n + 1).fill(0)
+  );
+
+  for (let i = m - 1; i >= 0; i -= 1) {
+    for (let j = n - 1; j >= 0; j -= 1) {
+      dp[i][j] =
+        a[i] === b[j]
+          ? dp[i + 1][j + 1] + 1
+          : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+
+  const segments: DiffSegment[] = [];
+  const push = (type: DiffSegment['type'], text: string): void => {
+    const last = segments[segments.length - 1];
+
+    if (last && last.type === type) {
+      last.text += text;
+    } else {
+      segments.push({ type, text });
+    }
+  };
+  let i = 0;
+  let j = 0;
+
+  while (i < m && j < n) {
+    if (a[i] === b[j]) {
+      push('same', a[i]);
+      i += 1;
+      j += 1;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+      push('removed', a[i]);
+      i += 1;
+    } else {
+      push('added', b[j]);
+      j += 1;
+    }
+  }
+
+  while (i < m) {
+    push('removed', a[i]);
+    i += 1;
+  }
+
+  while (j < n) {
+    push('added', b[j]);
+    j += 1;
+  }
+
+  return segments;
+}
+
+function tokenizeForDiff(text: string): string[] {
+  return (
+    text.match(/[A-Za-z0-9]+|[ぁ-んー]+|[ァ-ヶー]+|[一-龯々]+|\s+|[^\s]/g) ?? []
+  );
+}
+
+function renderHistoryChart(): string {
+  if (state.history.length < 2) {
+    return '';
+  }
+
+  const recent = state.history.slice(-12);
+
+  return `
+    <div class="history-chart">
+      <p class="debug-label">この画面でのお決まり度の推移(灰=書き換え前 / 緑=書き換え後)</p>
+      <div class="history-bars">
+        ${recent
+          .map((run, index) => {
+            const beforeHeight = Math.max(4, Math.round(run.before * 100));
+            const afterHeight = Math.max(4, Math.round(run.after * 100));
+
+            return `
+              <div class="history-col" title="${index + 1}回目: ${Math.round(run.before * 100)}% → ${Math.round(run.after * 100)}%${run.skipped ? '(そのまま返した)' : ''}">
+                <div class="history-pair">
+                  <span class="history-bar history-bar-before" style="height: ${beforeHeight}%"></span>
+                  <span class="history-bar ${run.skipped ? 'history-bar-skipped' : 'history-bar-after'}" style="height: ${afterHeight}%"></span>
+                </div>
+              </div>
+            `;
+          })
+          .join('')}
+      </div>
+    </div>
+  `;
+}
+
+function formatSkipExplain(reason: NoiseSkipReason): string {
+  switch (reason) {
+    case 'sincerity':
+      return '視聴者が真剣な話をしているので、ふざけずにそのまま受け止めました。';
+    case 'repair':
+      return '前回の崩しがウケなかったので、しばらく素の返答で信頼を回復しています。';
+    case 'cooldown':
+      return '崩しの連発はすぐ飽きられるので、一拍おいて次の崩しを際立たせています。';
+    case 'platform':
+      return '崩しが映えるように、まず「いつものキャラ」のターンを積んでいます。';
+    case 'low_predictability':
+      return 'この返答は十分自然なので、崩す必要がありませんでした。';
+  }
+}
+
 function renderOrchestrationPanel(): string {
   const memory = state.memory;
   const rhythm = memory?.rhythm;
@@ -508,38 +725,37 @@ function renderOrchestrationPanel(): string {
     <section class="panel orchestration-panel">
       <div class="panel-heading compact">
         <div>
-          <h2>逸脱の演出</h2>
-          <p>いま逸脱して良いか(リズム)、どこまで許されるか(関係資本・誠実度)、視聴者の反応からの学習を可視化します。</p>
+          <h2>崩しの司令塔</h2>
+          <p>「いま崩していいか」「どこまで攻めていいか」を判断している様子です。崩しは毎回入れず、関係が深いほど強くできます。</p>
         </div>
       </div>
       <div class="gate-grid">
         ${renderGateCard(
-          '誠実度ゲート',
+          '真剣な場面の検知',
           state.gates
             ? state.gates.sincerity.serious
-              ? '停止中'
-              : '通過'
+              ? 'ふざけない'
+              : '問題なし'
             : '未実行',
           state.gates?.sincerity.serious
-            ? (state.gates.sincerity.reasons[0] ??
-                '真剣な場面のためノイズを止めています。')
-            : '直近コメントに真剣な相談・弱さの開示はありません。',
+            ? '真剣な相談や弱音には、崩さずそのまま向き合います。'
+            : '直近コメントに真剣な相談・弱音はありません。崩してOKです。',
           state.gates ? !state.gates.sincerity.serious : undefined
         )}
         ${renderGateCard(
-          '関係資本ゲート',
+          '視聴者との距離',
           `${formatTier(state.gates?.relationship.tier ?? tier)} (${formatCapital(state.gates?.relationship.capital ?? state.relationshipCapital)})`,
           state.gates
-            ? `実効モード: ${formatMode(state.gates.relationship.effectiveMode)}(指定: ${formatMode(state.mode)})`
-            : `この親密度で解禁されるモード上限: ${formatMode(previewMaxMode(tier))}`,
+            ? `今回の攻め方: ${formatMode(state.gates.relationship.effectiveMode)}(設定: ${formatMode(state.mode)})。距離が近いほどイジリやツッコミが解禁されます。`
+            : `この距離なら「${formatMode(previewMaxMode(tier))}」まで攻められます。`,
           undefined
         )}
         ${renderGateCard(
-          'リズム制御',
+          '崩すタイミング',
           state.gates
             ? formatRhythmPhase(state.gates.rhythm.phase)
             : rhythm
-              ? `平場 ${rhythm.platformTurns} ターン目`
+              ? `いつも通り ${rhythm.platformTurns} ターン継続中`
               : '未実行',
           state.gates
             ? formatRhythmReason(state.gates.rhythm.reason)
@@ -552,28 +768,29 @@ function renderOrchestrationPanel(): string {
       ${rhythm ? `<p class="rhythm-counters">${escapeHtml(formatRhythmCounters(rhythm))}</p>` : ''}
       <div class="budget-row">
         <div class="metric-label">
-          <span>逸脱バジェット(視聴者の反応から学習)</span>
+          <span>攻め度メーター(視聴者の反応で増減)</span>
           <strong>${Math.round(budget * 100)}%</strong>
         </div>
         <div class="metric-track">
           <span class="metric-fill metric-quality" style="width: ${Math.round(budget * 100)}%"></span>
         </div>
+        <p class="budget-hint">ウケると上がって攻めやすくなり、スベると下がってしばらく大人しくなります。</p>
       </div>
       <div class="reaction-row">
-        <span class="reaction-label">直前の書き換えへの視聴者の反応:</span>
-        ${renderReactionButton('laughter', '草が生えた')}
-        ${renderReactionButton('positive', '好評')}
-        ${renderReactionButton('silence', '無反応')}
-        ${renderReactionButton('pushback', '反発')}
-        ${renderReactionButton('discomfort', '不快')}
+        <span class="reaction-label">いまの返答、視聴者の反応は?:</span>
+        ${renderReactionButton('laughter', '草が生えたw')}
+        ${renderReactionButton('positive', 'ウケた')}
+        ${renderReactionButton('silence', 'スルーされた')}
+        ${renderReactionButton('pushback', '反発された')}
+        ${renderReactionButton('discomfort', '引かれた')}
       </div>
       <div class="orchestration-grid">
         <div>
-          <p class="debug-label">ギャグ台帳(コールバック候補)</p>
+          <p class="debug-label">ネタ帳(また使える共有ネタ)</p>
           ${renderGagLedger()}
         </div>
         <div>
-          <p class="debug-label">イベントログ</p>
+          <p class="debug-label">何が起きたかの記録</p>
           ${renderEventLog()}
         </div>
       </div>
@@ -614,7 +831,7 @@ function renderGagLedger(): string {
   const moments = state.memory?.memorableMoments ?? [];
 
   if (moments.length === 0) {
-    return '<p class="empty-inline">まだありません。書き換えがウケる(草が生えた/好評)と、その瞬間がここに昇格します。</p>';
+    return '<p class="empty-inline">まだありません。崩しがウケると、その瞬間が「また使えるネタ」としてここに残ります。</p>';
   }
 
   return `
@@ -633,7 +850,7 @@ function renderGagLedger(): string {
 
 function renderEventLog(): string {
   if (state.noiseEvents.length === 0) {
-    return '<p class="empty-inline">まだありません。書き換えや反応に応じてイベントが流れます。</p>';
+    return '<p class="empty-inline">まだありません。書き換えや視聴者の反応に応じて、ここに記録が流れます。</p>';
   }
 
   return `
@@ -691,42 +908,42 @@ function formatMode(mode: NoiseMode): string {
 function formatRhythmPhase(phase: RhythmPhase): string {
   switch (phase) {
     case 'platform':
-      return '平場';
+      return 'いつも通り';
     case 'tilt':
-      return 'ティルト';
+      return '今回は崩した';
     case 'cooldown':
-      return 'クールダウン';
+      return '連発防止のひと休み';
     case 'repair':
-      return 'リペア';
+      return '信頼回復中';
   }
 }
 
 function formatRhythmReason(reason: string): string {
   if (reason.includes('forced by the caller')) {
-    return 'リズム制御をバイパスして書き換えました(ラボ設定)。';
+    return '(ラボ設定)タイミング判断を飛ばして、毎回崩しています。';
   }
 
   if (reason.includes('landed badly')) {
-    return '直前の逸脱がスベったため、信頼回復まで素の返答に戻しています。';
+    return '直前の崩しがスベったので、信頼が戻るまで素の返答にしています。';
   }
 
   if (reason.includes('Cooling down')) {
-    return 'ティルト直後のため、事件として際立つように一拍置いています。';
+    return '崩した直後なので一拍おいています。連発すると「事件」ではなく「芸風」になってしまうためです。';
   }
 
   if (reason.includes('Building the platform')) {
-    return '逸脱が映えるように、まず素のターンを積んでいます。';
+    return '崩しが映えるように、まず「いつものキャラ」のターンを積んでいます。';
   }
 
   if (reason.includes('not predictable enough')) {
-    return '無難さが低いため、今回は崩す必要がありません。';
+    return 'この返答は十分自然なので、崩す必要がありませんでした。';
   }
 
   if (reason.includes('No tilt for')) {
-    return '平坦が続いたため、強制的にティルトしました。';
+    return 'しばらく平坦が続いたので、飽きられる前にあえて崩しました。';
   }
 
-  return 'リズムが許可したため書き換えました。';
+  return 'タイミング的に問題ないため崩しました。';
 }
 
 function formatRhythmCounters(
@@ -734,41 +951,41 @@ function formatRhythmCounters(
 ): string {
   const sinceTilt =
     rhythm.turnsSinceTilt === -1
-      ? 'ティルトなし'
-      : `最終ティルトから ${rhythm.turnsSinceTilt} ターン`;
+      ? 'まだ崩していません'
+      : `最後に崩してから ${rhythm.turnsSinceTilt} ターン`;
 
-  return `累計 ${rhythm.totalTurns} ターン / 平場連続 ${rhythm.platformTurns} / ${sinceTilt} / クールダウン残り ${rhythm.cooldownRemaining} / リペア残り ${rhythm.repairRemaining}`;
+  return `累計 ${rhythm.totalTurns} ターン / いつも通りが連続 ${rhythm.platformTurns} / ${sinceTilt} / ひと休み残り ${rhythm.cooldownRemaining} / 信頼回復残り ${rhythm.repairRemaining}`;
 }
 
 function formatSkipReason(reason: NoiseSkipReason): string {
   switch (reason) {
     case 'sincerity':
-      return '真剣な場面';
+      return '真剣な場面なのでふざけない';
     case 'repair':
-      return 'リペア中';
+      return 'スベった後の信頼回復中';
     case 'cooldown':
-      return 'クールダウン中';
+      return '連発防止のひと休み';
     case 'platform':
-      return '平場づくり';
+      return 'まず「いつも通り」を積む';
     case 'low_predictability':
-      return '崩す必要なし';
+      return '十分自然なので崩す必要なし';
   }
 }
 
 function formatReactionSignal(signal: NoiseReactionSignal): string {
   switch (signal) {
     case 'laughter':
-      return '草が生えた';
+      return '草が生えたw';
     case 'positive':
-      return '好評';
+      return 'ウケた';
     case 'neutral':
       return 'ふつう';
     case 'silence':
-      return '無反応';
+      return 'スルーされた';
     case 'pushback':
-      return '反発';
+      return '反発された';
     case 'discomfort':
-      return '不快';
+      return '引かれた';
   }
 }
 
@@ -1308,6 +1525,14 @@ async function runNoise(): Promise<void> {
     state.selectedIndex = result.selectedIndex;
     state.gates = result.gates;
     state.skipped = result.skipped;
+    state.history = [
+      ...state.history,
+      {
+        before: result.quality.checks.predictabilityBefore,
+        after: result.quality.checks.predictabilityAfter,
+        skipped: Boolean(result.skipped),
+      },
+    ].slice(-24);
     state.memory = await store.load(SCOPE_ID);
   } catch (error) {
     state.error = error instanceof Error ? error.message : String(error);
@@ -1330,20 +1555,20 @@ function handleNoiseEvent(event: NoiseEvent): void {
   switch (event.type) {
     case 'tilt_applied':
       pushNoiseEvent(
-        `ティルト適用: ${event.interventions.map((kind) => formatIntervention(kind)).join('、') || '介入なし'}`
+        `崩しを入れた: ${event.interventions.map((kind) => formatIntervention(kind)).join('、') || '介入なし'}`
       );
       break;
     case 'noise_skipped':
-      pushNoiseEvent(`スキップ(${formatSkipReason(event.reason)})`);
+      pushNoiseEvent(`そのまま返した(${formatSkipReason(event.reason)})`);
       break;
     case 'repair_advised':
-      pushNoiseEvent('リペア推奨: しばらく素の返答に戻します');
+      pushNoiseEvent('スベった気配 → しばらく素の返答に戻します');
       break;
     case 'moment_recorded':
-      pushNoiseEvent(`ギャグ台帳に登録: ${event.summary}`);
+      pushNoiseEvent(`ネタ帳に登録: ${event.summary}`);
       break;
     case 'callback_used':
-      pushNoiseEvent(`コールバック使用: ${event.summary}`);
+      pushNoiseEvent(`過去ネタを再利用: ${event.summary}`);
       break;
   }
 }

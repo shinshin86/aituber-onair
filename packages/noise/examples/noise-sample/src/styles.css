@@ -949,3 +949,162 @@ pre {
   margin: 0;
   accent-color: var(--accent);
 }
+
+/* Change visualization panel */
+
+.change-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.harmony-meter {
+  display: grid;
+  gap: 8px;
+}
+
+.harmony-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+}
+
+.harmony-label {
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.harmony-row strong {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.delta-badge {
+  justify-self: start;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.delta-good {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+.delta-flat {
+  background: var(--page);
+  color: var(--muted);
+}
+
+.diff-surface {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.diff-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.diff-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.9;
+}
+
+.diff-removed {
+  padding: 1px 2px;
+  border-radius: 4px;
+  background: #fdecec;
+  color: #b3261e;
+  text-decoration-color: rgba(179, 38, 30, 0.6);
+}
+
+.diff-added {
+  padding: 1px 2px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+.skip-explain {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff8ec;
+}
+
+.skip-explain strong {
+  color: #9a6a0f;
+  font-size: 0.92rem;
+}
+
+.skip-explain p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+}
+
+.history-chart {
+  display: grid;
+  gap: 8px;
+}
+
+.history-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 90px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.history-col {
+  display: flex;
+  flex: 0 0 auto;
+  height: 100%;
+}
+
+.history-pair {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 100%;
+}
+
+.history-bar {
+  width: 10px;
+  border-radius: 3px 3px 0 0;
+}
+
+.history-bar-before {
+  background: #c4ccd4;
+}
+
+.history-bar-after {
+  background: var(--accent);
+}
+
+.history-bar-skipped {
+  background: #e7b75f;
+}
+
+.budget-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
