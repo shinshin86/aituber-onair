@@ -791,3 +791,161 @@ pre {
     display: grid;
   }
 }
+
+/* Deviation orchestration panel */
+
+.orchestration-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.gate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.gate-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.gate-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gate-card h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.gate-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.gate-status {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.gate-open {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+.gate-hold {
+  background: #fdecec;
+  color: #b3261e;
+}
+
+.gate-neutral {
+  background: var(--page);
+  color: var(--muted);
+}
+
+.rhythm-counters {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-row {
+  display: grid;
+  gap: 6px;
+}
+
+.reaction-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.reaction-label {
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.reaction-button {
+  min-height: 34px;
+  padding: 4px 12px;
+  font-size: 0.84rem;
+}
+
+.orchestration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.gag-list,
+.event-log {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gag-list li,
+.event-log li {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+.gag-count {
+  margin-right: 8px;
+  color: var(--accent-dark);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty-inline {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.skip-pill {
+  background: #fff4e0;
+  color: #9a6a0f;
+}
+
+.capital-value {
+  color: var(--accent-dark);
+  font-size: 0.86rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkbox-label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  min-height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+}

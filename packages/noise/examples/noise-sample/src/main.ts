@@ -2,16 +2,24 @@ import { ChatServiceFactory, type ChatProviderName } from '@aituber-onair/chat';
 import {
   InMemoryNoiseMemoryStore,
   createContaminator,
+  resolveRelationshipTier,
+  type ContaminateGates,
+  type ContaminateOutput,
   type InterventionKind,
   type NoiseMemory,
   type NoiseMemoryStore,
+  type NoiseEvent,
   type NoiseMode,
   type NoiseQualityReport,
+  type NoiseReactionSignal,
+  type NoiseSkipReason,
   type EvaluatedCandidate,
   type InterventionPlan,
   type PredictabilityDiagnosis,
   type PredictabilityIssue,
   type PredictabilityIssueKind,
+  type RelationshipTier,
+  type RhythmPhase,
   type StreamContext,
 } from '../../../src/index';
 import { LocalStorageNoiseMemoryStore } from '../../../src/web';
@@ -47,6 +55,12 @@ interface AppState {
   applied: string[];
   predictability: number;
   contamination: number;
+  relationshipCapital: number;
+  respectRhythm: boolean;
+  gates?: ContaminateGates;
+  skipped?: ContaminateOutput['skipped'];
+  noiseEvents: string[];
+  isReacting: boolean;
 }
 
 const SCOPE_ID = 'noise-sample';
@@ -132,6 +146,10 @@ const state: AppState = {
   applied: [],
   predictability: 0,
   contamination: 0,
+  relationshipCapital: 0.5,
+  respectRhythm: false,
+  noiseEvents: [],
+  isReacting: false,
 };
 
 const app = document.querySelector<HTMLDivElement>('#app');
@@ -141,6 +159,7 @@ if (!app) {
 }
 
 render();
+void loadInitialMemory();
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && state.connectionDialogOpen) {
@@ -198,7 +217,7 @@ function render(): void {
                 <h2>書き換え後</h2>
                 <p>意味とキャラクターを保ったまま、配信で使いやすく整えます。</p>
               </div>
-              ${state.quality ? `<span class="score-pill">書き換え後 ${formatScore(state.predictability)}</span>` : ''}
+              ${state.skipped ? `<span class="score-pill skip-pill">スキップ: ${escapeHtml(formatSkipReason(state.skipped.reason))}</span>` : state.quality ? `<span class="score-pill">書き換え後 ${formatScore(state.predictability)}</span>` : ''}
             </div>
             <div class="output${state.error ? ' error-output' : ''}" aria-live="polite" aria-busy="${state.isRunning}">${renderOutput()}</div>
           </section>
@@ -208,6 +227,8 @@ function render(): void {
           <button data-action="run" class="primary"${state.isRunning ? ' disabled' : ''}>${state.isRunning ? '書き換え中…' : '返答を書き換える'}</button>
           <button data-action="reset" class="secondary"${state.isRunning ? ' disabled' : ''}>記録をリセット</button>
         </section>
+
+        ${renderOrchestrationPanel()}
 
         ${renderIntentPanel()}
 
@@ -249,6 +270,14 @@ function render(): void {
               <label>
                 シード値
                 <input data-field="seed" value="${escapeHtml(state.seed)}" />
+              </label>
+              <label>
+                <span class="label-row">関係資本(視聴者との親密度)<output class="capital-value">${formatCapital(state.relationshipCapital)}</output></span>
+                <input data-field="relationshipCapital" type="range" min="0" max="1" step="0.05" value="${state.relationshipCapital}" />
+              </label>
+              <label class="checkbox-label">
+                <input data-field="respectRhythm" type="checkbox" ${state.respectRhythm ? 'checked' : ''} />
+                リズム制御に従う(平場・クールダウン中はスキップ)
               </label>
             </section>
 
@@ -467,6 +496,284 @@ function renderVerificationReport(): string {
       }
     </ul>
   `;
+}
+
+function renderOrchestrationPanel(): string {
+  const memory = state.memory;
+  const rhythm = memory?.rhythm;
+  const budget = memory?.violationBudget ?? 1;
+  const tier = resolveRelationshipTier(state.relationshipCapital);
+
+  return `
+    <section class="panel orchestration-panel">
+      <div class="panel-heading compact">
+        <div>
+          <h2>逸脱の演出</h2>
+          <p>いま逸脱して良いか(リズム)、どこまで許されるか(関係資本・誠実度)、視聴者の反応からの学習を可視化します。</p>
+        </div>
+      </div>
+      <div class="gate-grid">
+        ${renderGateCard(
+          '誠実度ゲート',
+          state.gates
+            ? state.gates.sincerity.serious
+              ? '停止中'
+              : '通過'
+            : '未実行',
+          state.gates?.sincerity.serious
+            ? (state.gates.sincerity.reasons[0] ??
+                '真剣な場面のためノイズを止めています。')
+            : '直近コメントに真剣な相談・弱さの開示はありません。',
+          state.gates ? !state.gates.sincerity.serious : undefined
+        )}
+        ${renderGateCard(
+          '関係資本ゲート',
+          `${formatTier(state.gates?.relationship.tier ?? tier)} (${formatCapital(state.gates?.relationship.capital ?? state.relationshipCapital)})`,
+          state.gates
+            ? `実効モード: ${formatMode(state.gates.relationship.effectiveMode)}(指定: ${formatMode(state.mode)})`
+            : `この親密度で解禁されるモード上限: ${formatMode(previewMaxMode(tier))}`,
+          undefined
+        )}
+        ${renderGateCard(
+          'リズム制御',
+          state.gates
+            ? formatRhythmPhase(state.gates.rhythm.phase)
+            : rhythm
+              ? `平場 ${rhythm.platformTurns} ターン目`
+              : '未実行',
+          state.gates
+            ? formatRhythmReason(state.gates.rhythm.reason)
+            : rhythm
+              ? formatRhythmCounters(rhythm)
+              : 'まだターンが記録されていません。',
+          state.gates ? state.gates.rhythm.apply : undefined
+        )}
+      </div>
+      ${rhythm ? `<p class="rhythm-counters">${escapeHtml(formatRhythmCounters(rhythm))}</p>` : ''}
+      <div class="budget-row">
+        <div class="metric-label">
+          <span>逸脱バジェット(視聴者の反応から学習)</span>
+          <strong>${Math.round(budget * 100)}%</strong>
+        </div>
+        <div class="metric-track">
+          <span class="metric-fill metric-quality" style="width: ${Math.round(budget * 100)}%"></span>
+        </div>
+      </div>
+      <div class="reaction-row">
+        <span class="reaction-label">直前の書き換えへの視聴者の反応:</span>
+        ${renderReactionButton('laughter', '草が生えた')}
+        ${renderReactionButton('positive', '好評')}
+        ${renderReactionButton('silence', '無反応')}
+        ${renderReactionButton('pushback', '反発')}
+        ${renderReactionButton('discomfort', '不快')}
+      </div>
+      <div class="orchestration-grid">
+        <div>
+          <p class="debug-label">ギャグ台帳(コールバック候補)</p>
+          ${renderGagLedger()}
+        </div>
+        <div>
+          <p class="debug-label">イベントログ</p>
+          ${renderEventLog()}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderGateCard(
+  title: string,
+  status: string,
+  detail: string,
+  passed: boolean | undefined
+): string {
+  const statusClass =
+    passed === undefined ? 'gate-neutral' : passed ? 'gate-open' : 'gate-hold';
+
+  return `
+    <article class="gate-card">
+      <header>
+        <h3>${escapeHtml(title)}</h3>
+        <span class="gate-status ${statusClass}">${escapeHtml(status)}</span>
+      </header>
+      <p>${escapeHtml(detail)}</p>
+    </article>
+  `;
+}
+
+function renderReactionButton(
+  signal: NoiseReactionSignal,
+  label: string
+): string {
+  const disabled = state.isReacting || state.isRunning ? ' disabled' : '';
+
+  return `<button data-action="react" data-signal="${signal}" class="secondary reaction-button"${disabled}>${escapeHtml(label)}</button>`;
+}
+
+function renderGagLedger(): string {
+  const moments = state.memory?.memorableMoments ?? [];
+
+  if (moments.length === 0) {
+    return '<p class="empty-inline">まだありません。書き換えがウケる(草が生えた/好評)と、その瞬間がここに昇格します。</p>';
+  }
+
+  return `
+    <ul class="gag-list">
+      ${moments
+        .slice(-6)
+        .reverse()
+        .map(
+          (moment) =>
+            `<li><span class="gag-count">×${moment.callbacks}</span>${escapeHtml(moment.summary)}</li>`
+        )
+        .join('')}
+    </ul>
+  `;
+}
+
+function renderEventLog(): string {
+  if (state.noiseEvents.length === 0) {
+    return '<p class="empty-inline">まだありません。書き換えや反応に応じてイベントが流れます。</p>';
+  }
+
+  return `
+    <ul class="event-log">
+      ${state.noiseEvents.map((entry) => `<li>${escapeHtml(entry)}</li>`).join('')}
+    </ul>
+  `;
+}
+
+function previewMaxMode(tier: RelationshipTier): NoiseMode {
+  switch (tier) {
+    case 'stranger':
+      return 'subtle';
+    case 'acquaintance':
+      return 'performer';
+    case 'regular':
+      return 'inversion';
+    case 'companion':
+      return 'chaotic';
+  }
+}
+
+function formatTier(tier: RelationshipTier): string {
+  switch (tier) {
+    case 'stranger':
+      return '初見';
+    case 'acquaintance':
+      return '顔見知り';
+    case 'regular':
+      return '常連';
+    case 'companion':
+      return '相棒';
+  }
+}
+
+function formatCapital(value: number): string {
+  return value.toFixed(2);
+}
+
+function formatMode(mode: NoiseMode): string {
+  switch (mode) {
+    case 'subtle':
+      return '控えめ';
+    case 'performer':
+      return 'キャラクター重視';
+    case 'bold':
+      return '大胆';
+    case 'inversion':
+      return '逆張り';
+    case 'chaotic':
+      return '強めに崩す';
+  }
+}
+
+function formatRhythmPhase(phase: RhythmPhase): string {
+  switch (phase) {
+    case 'platform':
+      return '平場';
+    case 'tilt':
+      return 'ティルト';
+    case 'cooldown':
+      return 'クールダウン';
+    case 'repair':
+      return 'リペア';
+  }
+}
+
+function formatRhythmReason(reason: string): string {
+  if (reason.includes('forced by the caller')) {
+    return 'リズム制御をバイパスして書き換えました(ラボ設定)。';
+  }
+
+  if (reason.includes('landed badly')) {
+    return '直前の逸脱がスベったため、信頼回復まで素の返答に戻しています。';
+  }
+
+  if (reason.includes('Cooling down')) {
+    return 'ティルト直後のため、事件として際立つように一拍置いています。';
+  }
+
+  if (reason.includes('Building the platform')) {
+    return '逸脱が映えるように、まず素のターンを積んでいます。';
+  }
+
+  if (reason.includes('not predictable enough')) {
+    return '無難さが低いため、今回は崩す必要がありません。';
+  }
+
+  if (reason.includes('No tilt for')) {
+    return '平坦が続いたため、強制的にティルトしました。';
+  }
+
+  return 'リズムが許可したため書き換えました。';
+}
+
+function formatRhythmCounters(
+  rhythm: NonNullable<NoiseMemory['rhythm']>
+): string {
+  const sinceTilt =
+    rhythm.turnsSinceTilt === -1
+      ? 'ティルトなし'
+      : `最終ティルトから ${rhythm.turnsSinceTilt} ターン`;
+
+  return `累計 ${rhythm.totalTurns} ターン / 平場連続 ${rhythm.platformTurns} / ${sinceTilt} / クールダウン残り ${rhythm.cooldownRemaining} / リペア残り ${rhythm.repairRemaining}`;
+}
+
+function formatSkipReason(reason: NoiseSkipReason): string {
+  switch (reason) {
+    case 'sincerity':
+      return '真剣な場面';
+    case 'repair':
+      return 'リペア中';
+    case 'cooldown':
+      return 'クールダウン中';
+    case 'platform':
+      return '平場づくり';
+    case 'low_predictability':
+      return '崩す必要なし';
+  }
+}
+
+function formatReactionSignal(signal: NoiseReactionSignal): string {
+  switch (signal) {
+    case 'laughter':
+      return '草が生えた';
+    case 'positive':
+      return '好評';
+    case 'neutral':
+      return 'ふつう';
+    case 'silence':
+      return '無反応';
+    case 'pushback':
+      return '反発';
+    case 'discomfort':
+      return '不快';
+  }
+}
+
+function pushNoiseEvent(entry: string): void {
+  state.noiseEvents = [entry, ...state.noiseEvents].slice(0, 8);
 }
 
 function renderIntentPanel(): string {
@@ -744,6 +1051,20 @@ function formatIntervention(kind: InterventionKind): string {
       return '場の緊張を拾う';
     case 'break_clean_closing':
       return 'きれいな締めを崩す';
+    case 'callback':
+      return '過去ネタを再登場させる';
+    case 'dispreferred_shape':
+      return '同意の形を人間らしく崩す';
+    case 'boke_bait':
+      return 'ツッコミ待ちのボケを仕込む';
+    case 'tsukkomi':
+      return '鋭く(でも遊びで)ツッコむ';
+    case 'withheld_uptake':
+      return 'あえて乗らない';
+    case 'status_seesaw':
+      return '一瞬上から→すぐ自虐';
+    case 'response_length_violation':
+      return 'あえて短く返す';
     default:
       return '介入する';
   }
@@ -834,6 +1155,8 @@ function formatQualityIssue(
       return '書き換え結果が空です。';
     case 'unchanged':
       return '元の返答からほとんど変わっていません。';
+    case 'missing_play_marker':
+      return 'イジリ系の介入に「遊びの合図」が入っていません。';
     default:
       return '品質チェックで確認が必要です。';
   }
@@ -886,6 +1209,9 @@ function bindEvents(): void {
         syncFields();
         void runNoise();
         break;
+      case 'react':
+        void reportReaction(target.dataset.signal as NoiseReactionSignal);
+        break;
       case 'reset':
         void resetMemory();
         break;
@@ -932,6 +1258,8 @@ async function runNoise(): Promise<void> {
   state.plan = undefined;
   state.candidates = [];
   state.selectedIndex = -1;
+  state.gates = undefined;
+  state.skipped = undefined;
   state.isRunning = true;
   render();
 
@@ -948,6 +1276,7 @@ async function runNoise(): Promise<void> {
       store,
       maxRecentEntries: 12,
     },
+    onNoiseEvent: handleNoiseEvent,
   });
   try {
     const result = await contaminator.contaminate({
@@ -956,9 +1285,10 @@ async function runNoise(): Promise<void> {
       draft: state.draft,
       streamContext: PRESETS[state.activePreset].streamContext,
       seed: state.seed,
-      // The lab always wants to see a rewrite, so bypass the rhythm gate
-      // that would otherwise skip turns right after a tilt.
-      forceTilt: true,
+      relationshipCapital: state.relationshipCapital,
+      // By default the lab bypasses the rhythm gate so every click shows a
+      // rewrite; enable "リズム制御に従う" to observe platform/cooldown skips.
+      forceTilt: !state.respectRhythm,
       constraints: {
         preserveCodeBlocks: true,
         preserveUrls: true,
@@ -976,6 +1306,8 @@ async function runNoise(): Promise<void> {
     state.plan = result.plan;
     state.candidates = result.candidates;
     state.selectedIndex = result.selectedIndex;
+    state.gates = result.gates;
+    state.skipped = result.skipped;
     state.memory = await store.load(SCOPE_ID);
   } catch (error) {
     state.error = error instanceof Error ? error.message : String(error);
@@ -985,6 +1317,8 @@ async function runNoise(): Promise<void> {
     state.plan = undefined;
     state.candidates = [];
     state.selectedIndex = -1;
+    state.gates = undefined;
+    state.skipped = undefined;
   } finally {
     state.isRunning = false;
   }
@@ -992,10 +1326,74 @@ async function runNoise(): Promise<void> {
   render();
 }
 
+function handleNoiseEvent(event: NoiseEvent): void {
+  switch (event.type) {
+    case 'tilt_applied':
+      pushNoiseEvent(
+        `ティルト適用: ${event.interventions.map((kind) => formatIntervention(kind)).join('、') || '介入なし'}`
+      );
+      break;
+    case 'noise_skipped':
+      pushNoiseEvent(`スキップ(${formatSkipReason(event.reason)})`);
+      break;
+    case 'repair_advised':
+      pushNoiseEvent('リペア推奨: しばらく素の返答に戻します');
+      break;
+    case 'moment_recorded':
+      pushNoiseEvent(`ギャグ台帳に登録: ${event.summary}`);
+      break;
+    case 'callback_used':
+      pushNoiseEvent(`コールバック使用: ${event.summary}`);
+      break;
+  }
+}
+
+async function reportReaction(signal: NoiseReactionSignal): Promise<void> {
+  if (state.isReacting) {
+    return;
+  }
+
+  state.isReacting = true;
+  render();
+
+  const store = getStore();
+  // reportReaction only touches memory, so no LLM configuration is needed.
+  const contaminator = createContaminator({
+    memory: {
+      scopeId: SCOPE_ID,
+      store,
+      maxRecentEntries: 12,
+    },
+    onNoiseEvent: handleNoiseEvent,
+  });
+
+  try {
+    const result = await contaminator.reportReaction({ signal });
+    pushNoiseEvent(
+      `反応「${formatReactionSignal(signal)}」→ バジェット ${Math.round(result.violationBudget * 100)}%${result.repairAdvised ? '(リペア突入)' : ''}${result.promotedMoment ? '(ギャグ昇格)' : ''}`
+    );
+    state.memory = await store.load(SCOPE_ID);
+  } catch (error) {
+    state.error = error instanceof Error ? error.message : String(error);
+  } finally {
+    state.isReacting = false;
+  }
+
+  render();
+}
+
+async function loadInitialMemory(): Promise<void> {
+  state.memory = await getStore().load(SCOPE_ID);
+  render();
+}
+
 async function resetMemory(): Promise<void> {
   const store = getStore();
   await store.clear?.(SCOPE_ID);
   state.memory = undefined;
+  state.gates = undefined;
+  state.skipped = undefined;
+  state.noiseEvents = [];
   render();
 }
 
@@ -1012,6 +1410,8 @@ function applyPreset(key: PresetKey): void {
   state.plan = undefined;
   state.candidates = [];
   state.selectedIndex = -1;
+  state.gates = undefined;
+  state.skipped = undefined;
   render();
 }
 
@@ -1035,6 +1435,21 @@ function updateField(element: HTMLElement): void {
     if (display) {
       display.textContent = state.intensity.toFixed(2);
     }
+    return;
+  }
+
+  if (key === 'relationshipCapital') {
+    state.relationshipCapital = Number(value);
+    const display = app.querySelector('.capital-value');
+    if (display) {
+      display.textContent = formatCapital(state.relationshipCapital);
+    }
+    return;
+  }
+
+  if (key === 'respectRhythm') {
+    state.respectRhythm =
+      element instanceof HTMLInputElement ? element.checked : false;
     return;
   }
 
