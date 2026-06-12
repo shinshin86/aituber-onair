@@ -214,6 +214,37 @@ during which noise stays off. Subscribe to lifecycle events via
 `moment_recorded`, `callback_used`) to let the app stage reactions — solo AI
 chaos is nonsense, chaos with a visible reactor is comedy.
 
+### Positioning: why the vocabulary sounds like comedy
+
+Noise is **not** a library for making an AI character do comedy. The goal is
+unchanged: keep LLM replies from converging to the safe, average landing. The
+comedy-flavored vocabulary (reactions like "it got laughs", boke/tsukkomi
+interventions, the gag ledger) exists for three structural reasons:
+
+1. **Every deviation is a bet, and the payoff lives in the audience.**
+   Whether a broken expectation reads as charm or as malfunction is not a
+   property of the text — expectancy violations theory shows it is decided by
+   the receiver's appraisal. An engine that injects deviation without
+   observing reception is an open-loop controller: it cannot know whether to
+   push further or pull back. `reportReaction()` is that sensor, and the
+   violation budget is the feedback loop. The API signals themselves are
+   neutral (`laughter` / `positive` / `silence` / `pushback` / `discomfort`).
+2. **Humor research is borrowed as measurement science, not as a goal.**
+   The most developed body of knowledge about when a norm violation lands as
+   *pleasure* instead of offense is humor theory (benign violation theory,
+   boke/tsukkomi as a grammar for certifying deviation as play). Noise uses
+   it to keep deviations safe, the same way it uses conversation analysis for
+   response shapes — neither makes the output a joke.
+3. **In a live stream, laughter is the most observable proxy for "the
+   deviation was accepted."** You cannot directly measure "the audience
+   appraised the violation positively", but you can literally count 草 and w
+   in chat. That is why the browser lab labels its reaction buttons in
+   streamer terms (ウケた / スベった): it is the sample's translation into
+   its own context, not the library's purpose. Likewise the gag ledger is at
+   heart a *shared-memory callback* device — resurfacing a moment the
+   audience lived through proves memory and deepens the relationship; being
+   funny is optional.
+
 ## Rewrite Modes
 
 `mode` controls how far Noise may move the response away from a predictable
