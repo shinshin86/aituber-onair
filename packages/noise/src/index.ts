@@ -2,6 +2,28 @@ export { createContaminator } from './core/createContaminator.js';
 export { createContextFingerprint } from './core/contextFingerprint.js';
 export { scorePredictability } from './core/predictability.js';
 export { diagnosePredictability } from './core/predictabilityDiagnosis.js';
+export { assessSincerity } from './core/sincerityGate.js';
+export {
+  advanceRhythmState,
+  createInitialRhythmState,
+  decideRhythm,
+  DEFAULT_RHYTHM_OPTIONS,
+} from './core/rhythmController.js';
+export {
+  gateMode,
+  getAllowedInterventions,
+  resolveRelationshipTier,
+} from './core/relationshipGate.js';
+export {
+  hasPlayMarker,
+  requiresPlayMarker,
+  TEASING_INTERVENTIONS,
+} from './core/playMarkers.js';
+export {
+  changedFinalSentence,
+  getFinalSentence,
+  scoreGenericity,
+} from './core/genericity.js';
 export {
   buildFrictionParameters,
   buildInterventionPlan,
@@ -21,10 +43,15 @@ export {
 } from './core/safetyGuard.js';
 export { planStains } from './core/stainPlanner.js';
 export {
+  addMemorableMoment,
+  applyReactionToMemory,
   createInitialNoiseMemory,
   getRecentlyOverusedStains,
   getRepeatedClosingPatterns,
+  markMomentUsed,
   normalizeNoiseMemory,
+  pickCallbackMoment,
+  recordLastTilt,
   updateNoiseMemory,
 } from './memory/noiseMemory.js';
 export { InMemoryNoiseMemoryStore } from './memory/stores/InMemoryNoiseMemoryStore.js';
@@ -37,6 +64,7 @@ export type {
   ChatRewriteModelOptions,
   CandidateEvaluation,
   ContaminateConstraints,
+  ContaminateGates,
   ContaminateInput,
   ContaminateOutput,
   Contaminator,
@@ -46,8 +74,11 @@ export type {
   FrictionParameters,
   InterventionKind,
   InterventionPlan,
+  LastTiltRecord,
   LearnedNoiseRule,
   LegacyStainKind,
+  MemorableMoment,
+  NoiseEvent,
   NoiseMemory,
   NoiseMemoryOptions,
   NoiseMemoryStore,
@@ -56,6 +87,10 @@ export type {
   NoiseQualityIssueKind,
   NoiseQualityOptions,
   NoiseQualityReport,
+  NoiseReactionInput,
+  NoiseReactionResult,
+  NoiseReactionSignal,
+  NoiseSkipReason,
   OpenAICompatibleRewriteModelOptions,
   PlannedIntervention,
   PhraseCount,
@@ -64,8 +99,15 @@ export type {
   PredictabilityIssueKind,
   ProtectedDraft,
   ProtectedSpan,
+  RecordMomentInput,
+  RelationshipTier,
   RewriteModel,
   RewriteCandidate,
+  RhythmDecision,
+  RhythmMemoryState,
+  RhythmOptions,
+  RhythmPhase,
+  SincerityAssessment,
   StainKind,
   StainPlan,
   StreamContext,

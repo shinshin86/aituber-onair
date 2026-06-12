@@ -20,10 +20,15 @@ const ISSUE_TO_INTERVENTIONS: Record<
   PredictabilityIssueKind,
   InterventionKind[]
 > = {
-  generic_closing: ['break_clean_closing', 'unfinished_margin'],
+  generic_closing: [
+    'break_clean_closing',
+    'unfinished_margin',
+    'response_length_violation',
+  ],
   over_agreement: [
     'reduce_over_agreement',
     'soft_disagreement',
+    'dispreferred_shape',
     'contrarian_reframe',
   ],
   over_apology: ['reduce_over_apology', 'acknowledge_tension'],
@@ -34,10 +39,14 @@ const ISSUE_TO_INTERVENTIONS: Record<
   ],
   low_context_grounding: ['ground_in_recent_comment'],
   low_specificity: ['increase_specificity'],
-  repeated_phrase: ['add_streamer_judgment', 'ground_in_recent_comment'],
+  repeated_phrase: [
+    'add_streamer_judgment',
+    'ground_in_recent_comment',
+    'tsukkomi',
+  ],
   too_complete: ['break_clean_closing', 'self_repair'],
   no_streamer_judgment: ['add_streamer_judgment'],
-  persona_flattening: ['self_repair', 'unfinished_margin'],
+  persona_flattening: ['self_repair', 'unfinished_margin', 'status_seesaw'],
 };
 
 export function buildInterventionPlan(input: {
@@ -46,6 +55,10 @@ export function buildInterventionPlan(input: {
   intensity: number;
   mode: NoiseMode;
   memory?: NoiseMemory;
+  /** Interventions unlocked by the relationship gate. Unset = allow all. */
+  allowedInterventions?: ReadonlySet<InterventionKind>;
+  /** A gag-ledger moment to resurface as a callback this turn. */
+  callbackMaterial?: string;
 }): InterventionPlan {
   const intensity = clamp01(input.intensity);
   const maxCount = getMaxInterventionCount(input.mode);
@@ -80,12 +93,38 @@ export function buildInterventionPlan(input: {
     });
   }
 
+  if (input.context.viewerIntent === 'banter') {
+    planned.push({
+      kind: 'boke_bait',
+      reason:
+        'Chat is in banter mode; a correctable absurdity invites the audience to retort.',
+      strength: clamp01(0.45 + intensity * 0.3),
+    });
+    planned.push({
+      kind: 'tsukkomi',
+      reason:
+        'Chat is in banter mode; a sharp playful retort reads as affection.',
+      strength: clamp01(0.4 + intensity * 0.3),
+    });
+  }
+
+  if (input.callbackMaterial) {
+    planned.push({
+      kind: 'callback',
+      reason:
+        'A shared past moment can resurface as a running gag (surprise with proof of memory).',
+      strength: clamp01(0.6 + intensity * 0.3),
+      material: input.callbackMaterial,
+    });
+  }
+
   planned.push(...createModePlan(input));
 
   const selected = selectInterventions({
     interventions: planned.length > 0 ? planned : createFallbackPlan(input),
     maxCount,
     memory: input.memory,
+    allowedInterventions: input.allowedInterventions,
   });
 
   return {
@@ -225,13 +264,19 @@ function selectInterventions(input: {
   interventions: PlannedIntervention[];
   maxCount: number;
   memory?: NoiseMemory;
+  allowedInterventions?: ReadonlySet<InterventionKind>;
 }): PlannedIntervention[] {
   const overused = new Set(
     input.memory ? getRecentlyOverusedStains(input.memory) : []
   );
+  const licensed = input.allowedInterventions
+    ? input.interventions.filter((intervention) =>
+        input.allowedInterventions?.has(intervention.kind)
+      )
+    : input.interventions;
   const byKind = new Map<InterventionKind, PlannedIntervention>();
 
-  for (const intervention of input.interventions) {
+  for (const intervention of licensed) {
     if (overused.has(intervention.kind)) {
       continue;
     }
@@ -249,9 +294,7 @@ function selectInterventions(input: {
 
   return selected.length > 0
     ? selected
-    : input.interventions
-        .sort((a, b) => b.strength - a.strength)
-        .slice(0, input.maxCount);
+    : licensed.sort((a, b) => b.strength - a.strength).slice(0, input.maxCount);
 }
 
 function createFallbackPlan(input: {

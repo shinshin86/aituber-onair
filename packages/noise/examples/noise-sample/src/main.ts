@@ -956,6 +956,9 @@ async function runNoise(): Promise<void> {
       draft: state.draft,
       streamContext: PRESETS[state.activePreset].streamContext,
       seed: state.seed,
+      // The lab always wants to see a rewrite, so bypass the rhythm gate
+      // that would otherwise skip turns right after a tilt.
+      forceTilt: true,
       constraints: {
         preserveCodeBlocks: true,
         preserveUrls: true,

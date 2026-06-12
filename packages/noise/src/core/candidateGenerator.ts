@@ -2,6 +2,7 @@ import type {
   ChatMessage,
   ContextFingerprint,
   FrictionParameters,
+  InterventionKind,
   InterventionPlan,
   NoiseMode,
   RewriteCandidate,
@@ -13,8 +14,49 @@ interface CandidateJson {
     text?: string;
     applied?: string[];
     appliedInterventions?: string[];
+    typicality?: number;
   }>;
 }
+
+/**
+ * Concrete instructions per intervention kind. The conversational-act
+ * interventions come from conversation analysis, improv theory, and manzai
+ * structure; the LLM needs the recipe, not just the label.
+ */
+const INTERVENTION_GUIDE: Record<InterventionKind, string> = {
+  ground_in_recent_comment:
+    'Reference something specific a viewer or the stream context actually said.',
+  add_streamer_judgment:
+    'Have the character make a streamer-side decision instead of only receiving.',
+  soft_disagreement: 'Replace clean agreement with a mild, warm reservation.',
+  contrarian_reframe:
+    'Reverse the expected emotional landing while keeping every fact intact.',
+  self_repair:
+    'Add a live-speech self-correction ("wait, that came out wrong") mid-flow.',
+  unfinished_margin: 'Leave the final thought slightly unfinished.',
+  reduce_over_apology:
+    'Drop service-style apology tone; acknowledge and move to action.',
+  reduce_over_agreement: 'Weaken automatic acceptance into a real opinion.',
+  increase_specificity:
+    'Add one concrete anchor: a number, a name, or a visible action.',
+  acknowledge_tension:
+    'Name the visible trouble or unease instead of painting over it.',
+  break_clean_closing: 'Avoid a tidy goodbye; end on a hook, twist, or veer.',
+  callback:
+    'Resurface the provided past moment naturally, like a running gag. Do not explain it.',
+  dispreferred_shape:
+    'Render the response with human dispreferred shape: hedges, delay tokens, partial agreement first, or a grudging concession instead of instant total agreement.',
+  boke_bait:
+    'Plant one obviously correctable, harmless absurdity that invites the audience to retort. Keep everything else accurate.',
+  tsukkomi:
+    'Answer the absurd or repeated part with a sharp but clearly playful retort, never genuine annoyance.',
+  withheld_uptake:
+    'Deliberately underreact once to the expected bid (deadpan past it) while staying warm underneath.',
+  status_seesaw:
+    'Take a brief confident or superior stance, then immediately undercut it with self-mockery.',
+  response_length_violation:
+    'Make the reply notably shorter than expected: one or two punchy sentences instead of a paragraph.',
+};
 
 export async function generateRewriteCandidates(input: {
   draft: string;
@@ -51,7 +93,12 @@ function buildCandidateSystemPrompt(): string {
     'You receive structured friction parameters. Follow them instead of improvising random weirdness.',
     'Preserve the character, relationship, intent, facts, URLs, numbers, and code exactly.',
     'You may shift stance, rhythm, and emotional landing when rewriteStyle asks for it, but do not change the character core.',
+    'Never deny what the user established; deviate inside their reality.',
+    'When a teasing-class intervention (tsukkomi, withheld_uptake, boke_bait, status_seesaw, contrarian_reframe) is applied, include a clear playful marker (laughter token, exaggeration, self-tease) in the same reply so it reads as play, not hostility.',
+    'Never tease the user identity, sincere worries, or moments of distress.',
+    'The final sentence is the highest-value position: avoid tidy summaries there; land on the twist.',
     'Do not add insults, identity attacks, threats, cruelty, or unrelated randomness.',
+    'For each candidate, also report "typicality" (0-1): how expected this reply would be from a generic polite assistant. Vary candidates so some have low typicality.',
     'Return JSON only. Do not include markdown.',
   ].join('\n');
 }
@@ -73,7 +120,7 @@ function buildCandidatePrompt(input: {
         output: {
           candidateCount: input.candidateCount,
           format:
-            '{ "candidates": [{ "text": "...", "applied": ["intervention_kind"] }] }',
+            '{ "candidates": [{ "text": "...", "applied": ["intervention_kind"], "typicality": 0.4 }] }',
         },
         rewriteStyle: getRewriteStyle(input.mode),
         context: {
@@ -86,6 +133,12 @@ function buildCandidatePrompt(input: {
         conversation: input.friction.conversation,
         personaParameters: input.friction.persona,
         interventions: input.plan.interventions,
+        interventionGuide: Object.fromEntries(
+          input.plan.interventions.map((intervention) => [
+            intervention.kind,
+            INTERVENTION_GUIDE[intervention.kind],
+          ])
+        ),
         constraints: {
           ...input.friction.constraints,
           doNotUseMetaWords: ['予定調和', 'ノイズ', 'noise'],
@@ -179,6 +232,7 @@ function parseCandidates(
             appliedInterventions: normalizeAppliedInterventions(
               candidate.appliedInterventions ?? candidate.applied ?? []
             ),
+            typicality: normalizeTypicality(candidate.typicality),
           }))
           .filter((candidate) => candidate.text.length > 0) ?? [];
 
@@ -211,6 +265,14 @@ function extractJsonObject(text: string): string | undefined {
   return text.slice(first, last + 1);
 }
 
+function normalizeTypicality(value: unknown): number | undefined {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return undefined;
+  }
+
+  return Math.max(0, Math.min(1, value));
+}
+
 function normalizeAppliedInterventions(
   values: string[]
 ): RewriteCandidate['appliedInterventions'] {
@@ -226,6 +288,13 @@ function normalizeAppliedInterventions(
     'increase_specificity',
     'acknowledge_tension',
     'break_clean_closing',
+    'callback',
+    'dispreferred_shape',
+    'boke_bait',
+    'tsukkomi',
+    'withheld_uptake',
+    'status_seesaw',
+    'response_length_violation',
   ]);
 
   return values.filter(
