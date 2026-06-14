@@ -61,6 +61,7 @@ import {
   MODEL_MOONSHOTAI_KIMI_K2_5,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENROUTER_AUTO,
+  MODEL_OPENROUTER_FUSION,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
   MODEL_OPENAI_GPT_5_5_PRO,
@@ -644,6 +645,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_OPENROUTER_AUTO,
     name: 'Auto Router (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_FUSION,
+    name: 'Fusion (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },

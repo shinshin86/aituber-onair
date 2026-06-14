@@ -604,8 +604,10 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - 応答の長さを制御するには、プロンプト内で指示してください（例：「40文字以内で返答してください」）
 - 無料階層にはレート制限があります（20リクエスト/分）
 - 無料モデル判定はモデルID末尾の `:free` で行います（動的取得した `:free` も同様にレート制限対象）
+- `openrouter/fusion` は複数モデルのパネルとジャッジモデルを実行します。単一モデルの固定単価ではなく、内部で使われた各モデル呼び出しと web search/fetch 利用分の合算で課金されます。
 - サポート対象モデル（キュレーション済み）:
   - `openrouter/auto`
+  - `openrouter/fusion`
   - `openai/gpt-oss-20b:free`
   - `~openai/gpt-latest`, `~openai/gpt-mini-latest`, `openai/gpt-5.5-pro`, `openai/gpt-5.5`
   - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
