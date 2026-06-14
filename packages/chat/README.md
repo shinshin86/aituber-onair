@@ -618,8 +618,10 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - To control response length, include instructions in your prompt (e.g., "Please respond in 40 characters or less")
 - Free tier has rate limits (20 requests/minute)
 - Free tier detection is based on the model ID suffix `:free` (dynamic `:free` IDs are also rate-limited)
+- `openrouter/fusion` runs a multi-model panel plus a judge model; OpenRouter bills the sum of the underlying model calls and any enabled web search/fetch usage, not a single fixed model rate.
 - Supported models (curated list):
   - `openrouter/auto`
+  - `openrouter/fusion`
   - `openai/gpt-oss-20b:free`
   - `~openai/gpt-latest`, `~openai/gpt-mini-latest`, `openai/gpt-5.5-pro`, `openai/gpt-5.5`
   - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`

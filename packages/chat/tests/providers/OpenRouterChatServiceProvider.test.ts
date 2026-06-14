@@ -6,6 +6,7 @@ import {
   MODEL_MOONSHOTAI_KIMI_K2_5,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENROUTER_AUTO,
+  MODEL_OPENROUTER_FUSION,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
   MODEL_OPENAI_GPT_5_5_PRO,
@@ -59,6 +60,7 @@ describe('OpenRouterChatServiceProvider', () => {
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
         MODEL_OPENROUTER_AUTO,
+        MODEL_OPENROUTER_FUSION,
         MODEL_GPT_OSS_20B_FREE,
         MODEL_ZAI_GLM_4_5_AIR_FREE,
         MODEL_OPENAI_GPT_LATEST,
@@ -114,6 +116,9 @@ describe('OpenRouterChatServiceProvider', () => {
 
     it('should return false for non-vision models', () => {
       expect(provider.supportsVisionForModel(MODEL_OPENROUTER_AUTO)).toBe(
+        false,
+      );
+      expect(provider.supportsVisionForModel(MODEL_OPENROUTER_FUSION)).toBe(
         false,
       );
       expect(provider.supportsVisionForModel(MODEL_GPT_OSS_20B_FREE)).toBe(

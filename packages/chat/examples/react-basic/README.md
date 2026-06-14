@@ -130,9 +130,10 @@ Use the dropdown to select response length:
 - Best for: Fast responses, cost-effective. Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses.
 
 **OpenRouter**
-- Models: Curated multi-provider model list (OpenRouter Auto, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
+- Models: Curated multi-provider model list (OpenRouter Auto/Fusion, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
 - Vision: Depends on selected routed model
 - Best for: Flexible model routing and unified API usage
+- Fusion Cost: `openrouter/fusion` bills the combined underlying model calls and any enabled web search/fetch usage
 - Dynamic Free Models: Click `Fetch free models` to probe currently available `:free` models and append working IDs to the model list
 - Max candidates: Adjustable in UI (default `1`) to control probe request volume
 - `Max candidates = 10` means probing up to 10 `:free` candidates (it does not continue until 10 working models are found)

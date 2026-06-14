@@ -1,5 +1,16 @@
 # @aituber-onair/chat
 
+## 0.39.0
+
+### Minor Changes
+
+- Added OpenRouter Fusion (`openrouter/fusion`) to the OpenRouter constants,
+  provider supported model list, React basic selector, tests, and
+  English/Japanese README documentation.
+- Documented that OpenRouter Fusion is billed as the sum of its underlying
+  panel, judge, and web search/fetch usage rather than a single fixed model
+  rate.
+
 ## 0.38.0
 
 ### Minor Changes
