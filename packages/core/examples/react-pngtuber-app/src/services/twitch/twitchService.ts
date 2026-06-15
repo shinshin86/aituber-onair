@@ -24,6 +24,34 @@ let buffer: TwitchChatMessage[] = [];
 let pollTimer: number | null = null;
 let reconnectInProgress = false;
 const processedMessageIds = new Set<string>();
+const MAX_TWITCH_BUFFERED_MESSAGES = 100;
+const MAX_PROCESSED_MESSAGE_IDS = 500;
+const processedMessageIdQueue: string[] = [];
+
+function enqueueMessage(message: TwitchChatMessage) {
+  if (buffer.length >= MAX_TWITCH_BUFFERED_MESSAGES) {
+    buffer.shift();
+  }
+  buffer.push(message);
+}
+
+function rememberMessageId(messageId: string): boolean {
+  if (processedMessageIds.has(messageId)) {
+    return false;
+  }
+
+  processedMessageIds.add(messageId);
+  processedMessageIdQueue.push(messageId);
+
+  while (processedMessageIdQueue.length > MAX_PROCESSED_MESSAGE_IDS) {
+    const oldestMessageId = processedMessageIdQueue.shift();
+    if (oldestMessageId) {
+      processedMessageIds.delete(oldestMessageId);
+    }
+  }
+
+  return true;
+}
 
 export async function connectTwitchChat(
   options: ConnectTwitchChatOptions,
@@ -234,12 +262,11 @@ export async function connectTwitchChat(
         message.payload.subscription.type === 'channel.chat.message'
       ) {
         const messageId = message.payload.event.message_id;
-        if (processedMessageIds.has(messageId)) {
+        if (!rememberMessageId(messageId)) {
           return;
         }
 
-        processedMessageIds.add(messageId);
-        buffer.push({
+        enqueueMessage({
           id: messageId,
           userName: message.payload.event.chatter_user_name,
           userComment: message.payload.event.message.text,
@@ -266,4 +293,5 @@ export function disconnectTwitchChat() {
   buffer = [];
   reconnectInProgress = false;
   processedMessageIds.clear();
+  processedMessageIdQueue.length = 0;
 }
