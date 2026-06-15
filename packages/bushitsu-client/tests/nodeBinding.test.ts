@@ -51,6 +51,73 @@ describe('createNodeBushitsuClient', () => {
     expect(() => client.sendMessage('some message')).not.toThrow();
     client.disconnect();
   });
+
+  it('ignores malformed WebSocket payloads', async () => {
+    const received: string[] = [];
+
+    const client = createNodeBushitsuClient({
+      serverUrl: 'http://localhost:8080',
+      room: 'test-room',
+      userName: 'tester',
+      onReceiveMessage: (text) => {
+        received.push(text);
+      },
+      webSocketImpl: MockWebSocket as unknown as typeof WebSocket,
+    });
+
+    await client.connect();
+
+    MockWebSocket.emitMessage('{"type":"chat","data":{"text":"missing"}}');
+    MockWebSocket.emitMessage(
+      JSON.stringify({
+        type: 'chat',
+        room: 'test-room',
+        timestamp: new Date().toISOString(),
+        data: {
+          from: 'another-user',
+          text: 'bad mention',
+          mention: [42],
+        },
+      }),
+    );
+
+    expect(received).toEqual([]);
+
+    client.disconnect();
+  });
+
+  it('ignores oversized WebSocket payloads', async () => {
+    const received: string[] = [];
+
+    const client = createNodeBushitsuClient({
+      serverUrl: 'http://localhost:8080',
+      room: 'test-room',
+      userName: 'tester',
+      onReceiveMessage: (text) => {
+        received.push(text);
+      },
+      webSocketImpl: MockWebSocket as unknown as typeof WebSocket,
+    });
+
+    await client.connect();
+
+    const payload: BushitsuMessage = {
+      type: 'chat',
+      room: 'test-room',
+      timestamp: new Date().toISOString(),
+      data: {
+        from: 'another-user',
+        text: 'x'.repeat(70 * 1024),
+        mention: [],
+      },
+    };
+
+    MockWebSocket.emitMessage(JSON.stringify(payload));
+
+    expect(received).toEqual([]);
+
+    client.disconnect();
+  });
 });
 
 class MockWebSocket {
