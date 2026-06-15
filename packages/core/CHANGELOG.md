@@ -1,5 +1,17 @@
 # @aituber-onair/core
 
+## 0.26.2
+
+### Patch Changes
+
+- Synced OpenRouter Fusion support from `@aituber-onair/chat@0.39.0` into
+  core:
+  - re-exported `MODEL_OPENROUTER_FUSION`
+  - added `openrouter/fusion` to the React basic example OpenRouter model list
+  - documented Fusion's multi-model billing behavior in core docs
+- Updated dependencies []:
+  - @aituber-onair/chat@0.39.0
+
 ## 0.26.1
 
 ### Patch Changes

@@ -160,7 +160,8 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Mistral Large Latest / 3, Small 4, Medium 3.1
 
 **OpenRouter:**
-- Curated multi-provider models (OpenRouter Auto, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
+- Curated multi-provider models (OpenRouter Auto/Fusion, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
+- Fusion bills the combined underlying model calls and any enabled web search/fetch usage
 - `Fetch free models` button to probe currently available `:free` models
 - Dynamic free models are added to the model select list
 - `Max candidates` means "maximum number of `:free` candidates to probe"

@@ -1397,7 +1397,7 @@ Currently, the following AI provider is built-in:
 - **Mistral**: Supports current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including vision-capable model metadata and adjustable reasoning for supported models.
 - **Z.ai**: Supports models like GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
 - **Kimi**: Supports Kimi K2.6 (`kimi-k2.6`) and Kimi K2.5 (`kimi-k2.5`) with vision support
-- **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router, latest-family aliases, OpenAI GPT-5.5, Claude, Gemini, Z.ai, and Kimi
+- **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router, Fusion, latest-family aliases, OpenAI GPT-5.5, Claude, Gemini, Z.ai, and Kimi. Fusion runs a multi-model panel plus a judge model, so usage is billed as the sum of the underlying model calls and any enabled web search/fetch usage.
 - **OpenAI-Compatible**: Supports arbitrary OpenAI-compatible Chat Completions endpoints; vision capability is treated as unknown until the target endpoint/model responds
 
 For OpenRouter free-tier discovery, you can also use

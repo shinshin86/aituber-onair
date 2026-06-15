@@ -24,6 +24,7 @@ import {
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
   MODEL_OPENROUTER_AUTO,
+  MODEL_OPENROUTER_FUSION,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
@@ -142,6 +143,7 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports OpenRouter latest routed model constants', () => {
     expect(MODEL_OPENROUTER_AUTO).toBe('openrouter/auto');
+    expect(MODEL_OPENROUTER_FUSION).toBe('openrouter/fusion');
     expect(MODEL_OPENAI_GPT_LATEST).toBe('~openai/gpt-latest');
     expect(MODEL_OPENAI_GPT_MINI_LATEST).toBe('~openai/gpt-mini-latest');
     expect(MODEL_OPENAI_GPT_5_5_PRO).toBe('openai/gpt-5.5-pro');
