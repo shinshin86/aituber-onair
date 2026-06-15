@@ -38,6 +38,14 @@ next-env.d.ts
 
 .env
 
+# python
+__pycache__/
+*.py[cod]
+.venv/
+
+# generated assets
+outputs/
+
 # Package-specific ignores (for monorepo)
 packages/*/node_modules/
 packages/*/dist/

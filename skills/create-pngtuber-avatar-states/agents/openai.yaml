@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create PNGTuber Avatar States"
+  short_description: "Generate and validate stable four-state PNGTuber avatar assets."
+  default_prompt: "Use this skill to create four PNGTuber avatar state images from a reference character image."
