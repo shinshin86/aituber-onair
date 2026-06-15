@@ -89,18 +89,21 @@
   - `sync-core-after-chat-upgrade`
   - `wrap-tts-as-openai-compatible`
   - `connect-colab-local-tts`
+  - `create-pngtuber-avatar-states`
 - Canonical skill sources:
   - `skills/add-chat-model/SKILL.md`
   - `skills/add-tts-provider/SKILL.md`
   - `skills/sync-core-after-chat-upgrade/SKILL.md`
   - `skills/wrap-tts-as-openai-compatible/SKILL.md`
   - `skills/connect-colab-local-tts/SKILL.md`
+  - `skills/create-pngtuber-avatar-states/SKILL.md`
 - Claude Code mirror paths:
   - `.claude/skills/add-chat-model/SKILL.md`
   - `.claude/skills/add-tts-provider/SKILL.md`
   - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
   - `.claude/skills/wrap-tts-as-openai-compatible/SKILL.md`
   - `.claude/skills/connect-colab-local-tts/SKILL.md`
+  - `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
 - When requests match "add a new model", "support model <model_id>", "add <provider> model", or "update supported models", follow `skills/add-chat-model/SKILL.md`.
 - When requests match "add a TTS provider", "support <provider> TTS", "add voice provider", or "update supported voice providers", follow `skills/add-tts-provider/SKILL.md`.
 - When requests ask to apply chat upgrades to core/examples, follow `skills/sync-core-after-chat-upgrade/SKILL.md`.
@@ -119,6 +122,7 @@
 - For `wrap-tts-as-openai-compatible`, first classify the upstream TTS as direct Python API, CLI/file-output, or internal runtime plus save helper, then validate the wrapper from `@aituber-onair/voice` when applicable.
 - Prefer this skill for practical local TTS engines that cleanly support one-shot WAV generation. Do not force research-first or streaming-first systems into this workflow.
 - When requests match "connect Colab local TTS", "launch local-tts-on-google-colab", "use Colab MCP Go for TTS", or "try a Colab OpenAI-compatible TTS URL from `@aituber-onair/voice`", follow `skills/connect-colab-local-tts/SKILL.md`.
+- When requests ask to create PNGTuber avatar state images, generate mouth/eye open-close variants, split a 2x2 avatar sheet, remove avatar backgrounds, or align avatar state images, follow `skills/create-pngtuber-avatar-states/SKILL.md`.
 - If required inputs are missing, collect: `provider`, `model_id`, `model_const_name`, `display_name`, `supports_vision`, and optional `bump_version` (default `true`).
 - For `add-tts-provider`, collect missing inputs: `engine_type`, `engine_class_name`, `display_name`, `provider_kind`, `default_speaker`, `requires_api_key`, `supports_emotion`, and `option_fields`, plus optional `default_api_url`, `examples_scope`, and `bump_version` (default `true`).
 - After finishing `add-chat-model`, ask whether to run `sync-core-after-chat-upgrade` unless the user already asked for end-to-end chat+core propagation.

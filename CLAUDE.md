@@ -111,6 +111,13 @@ Usage:
 - Invoke explicitly with `$connect-colab-local-tts`, or use prompts like
   "connect Colab local TTS", "launch local-tts-on-google-colab with Colab MCP
   Go", or "try a Colab OpenAI-compatible TTS URL from @aituber-onair/voice".
+- Invoke explicitly with `$create-pngtuber-avatar-states`, or use prompts like
+  "create PNGTuber avatar state images", "generate mouth and eye open-close
+  variants", "split a 2x2 avatar sheet", "remove avatar background", or
+  "align avatar state images". Claude Code cannot run the image-generation
+  phase of this skill. In Claude Code, use it only for existing image files:
+  splitting sheets, removing suitable plain backgrounds, aligning states, and
+  validating outputs.
 - If input is missing, collect:
   `provider`, `model_id`, `model_const_name`, `display_name`,
   `supports_vision`, and optional `bump_version` (default `true`).
@@ -143,6 +150,9 @@ Maintenance:
 - For Colab local TTS connection workflow updates, edit
   `skills/connect-colab-local-tts/SKILL.md` and sync to
   `.claude/skills/connect-colab-local-tts/SKILL.md`.
+- For PNGTuber avatar state image workflow updates, edit
+  `skills/create-pngtuber-avatar-states/SKILL.md` and sync to
+  `.claude/skills/create-pngtuber-avatar-states/SKILL.md`.
 
 ## System Architecture
 
