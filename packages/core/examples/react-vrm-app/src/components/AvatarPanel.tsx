@@ -25,10 +25,16 @@ import {
   createVRMAnimationClip,
 } from '@pixiv/three-vrm-animation';
 import type { VRMAnimation } from '@pixiv/three-vrm-animation';
+import {
+  VrmExpressionController,
+  runVrmOneShotAnimation,
+} from '../lib/vrmExpressionController';
+import type { VrmAvatarReaction } from '../lib/vrmReactions';
 
 interface AvatarBackgroundProps {
   mouthLevel: number;
   isSpeaking: boolean;
+  reaction?: VrmAvatarReaction | null;
 }
 
 const VRM_FILE_URL = `${import.meta.env.BASE_URL}avatar/miko.vrm`;
@@ -47,10 +53,14 @@ const DEFAULT_MODEL_Y_ROTATION = -0.12;
 export function AvatarBackground({
   mouthLevel,
   isSpeaking,
+  reaction,
 }: AvatarBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const vrmRef = useRef<VRM | null>(null);
+  const expressionControllerRef = useRef<VrmExpressionController | null>(null);
+  const mouthExpressionNameRef = useRef<string | null>(null);
+  const animationTokenRef = useRef(0);
   const targetMouthWeightRef = useRef(0);
   const mouthWeightRef = useRef(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +75,57 @@ export function AvatarBackground({
   useEffect(() => {
     targetMouthWeightRef.current = targetWeight;
   }, [targetWeight]);
+
+  useEffect(() => {
+    if (!reaction) return;
+
+    const controller = expressionControllerRef.current;
+    if (!controller) return;
+
+    if (reaction.type === 'animation') {
+      const token = animationTokenRef.current + 1;
+      animationTokenRef.current = token;
+      controller.reset(160);
+
+      void runVrmOneShotAnimation(
+        reaction.name,
+        (name, intensity, fadeMs) => {
+          controller.set(name, intensity, fadeMs);
+        },
+        () =>
+          expressionControllerRef.current === controller &&
+          animationTokenRef.current === token,
+      ).then(() => {
+        if (
+          expressionControllerRef.current === controller &&
+          animationTokenRef.current === token
+        ) {
+          controller.reset(280);
+        }
+      });
+      return;
+    }
+
+    animationTokenRef.current += 1;
+
+    if (reaction.type === 'emote') {
+      controller.emote(
+        reaction.name,
+        reaction.intensity,
+        reaction.fadeMs,
+        reaction.holdMs,
+      );
+      return;
+    }
+
+    if (reaction.type === 'gesture') {
+      controller.reset(160);
+      controller.gesture(reaction.parts, reaction.fadeMs, reaction.holdMs);
+      return;
+    }
+
+    controller.reset(reaction.fadeMs);
+  }, [reaction]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -230,6 +291,21 @@ export function AvatarBackground({
         scene.add(vrm.scene);
         loadedVrm = vrm;
         vrmRef.current = vrm;
+        try {
+          const expressionController = new VrmExpressionController(vrm);
+          expressionControllerRef.current = expressionController;
+          mouthExpressionNameRef.current =
+            expressionController.resolveExpressionName([
+              VRMExpressionPresetName.Aa,
+              'aa',
+              'a',
+              'A',
+            ]);
+        } catch (error) {
+          console.warn('VRM expressions are unavailable:', error);
+          expressionControllerRef.current = null;
+          mouthExpressionNameRef.current = null;
+        }
         setIsLoading(false);
 
         const animationLoader = new GLTFLoader();
@@ -293,13 +369,20 @@ export function AvatarBackground({
       const vrm = vrmRef.current;
       if (vrm) {
         mixer?.update(delta);
+        expressionControllerRef.current?.update(delta);
 
         const nextWeight =
           mouthWeightRef.current +
           (targetMouthWeightRef.current - mouthWeightRef.current) * 0.35;
         mouthWeightRef.current = nextWeight;
 
-        vrm.expressionManager?.setValue(VRMExpressionPresetName.Aa, nextWeight);
+        if (mouthExpressionNameRef.current) {
+          vrm.expressionManager?.setValue(
+            mouthExpressionNameRef.current,
+            nextWeight,
+          );
+        }
+        vrm.expressionManager?.update();
         vrm.update(delta);
       } else {
         mixer?.update(delta);
@@ -335,6 +418,9 @@ export function AvatarBackground({
         mixer = null;
       }
       vrmRef.current = null;
+      expressionControllerRef.current = null;
+      mouthExpressionNameRef.current = null;
+      animationTokenRef.current += 1;
       mouthWeightRef.current = 0;
       targetMouthWeightRef.current = 0;
       renderer.dispose();

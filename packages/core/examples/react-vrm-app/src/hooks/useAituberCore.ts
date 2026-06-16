@@ -17,11 +17,14 @@ import type {
   XaiSampleRate,
 } from '@aituber-onair/core';
 import type { Message as ManneriMessage } from '@aituber-onair/manneri';
+import type { ScreenplayLike } from '../lib/vrmReactions';
 import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
 
 interface UseAituberCoreOptions {
   onAudioPlay: (arrayBuffer: ArrayBuffer) => Promise<void>;
+  onSpeechStart?: (screenplay: ScreenplayLike) => void;
+  onSpeechEnd?: () => void;
   settings: AppSettings;
   getApiKeyForProvider: (provider: ChatProviderOption) => string;
 }
@@ -30,8 +33,10 @@ type ProcessChatOptions = {
   displayText?: string;
 };
 
-const AITUBER_SYSTEM_PROMPT =
-  'あなたはフレンドリーなAITuberです。回答はできるだけ一言で、短く自然に返してください。';
+const AITUBER_SYSTEM_PROMPT = [
+  'あなたはフレンドリーなAITuberです。回答はできるだけ一言で、短く自然に返してください。',
+  '感情が明確な時だけ、文頭に [happy] [sad] [angry] [surprised] [relaxed] [neutral] のいずれかを付けてください。',
+].join('\n');
 const GPT5_SAMPLE_PROVIDER_OPTIONS = { gpt5Preset: 'casual' as const };
 const GPT5_SAMPLE_CHAT_OPTIONS = { responseLength: 'veryShort' as const };
 
@@ -259,8 +264,7 @@ function buildVoiceOptions(
       : parsedInworldTemperature,
     gradiumApiUrl: tts.gradiumApiUrl?.trim() || undefined,
     gradiumOutputFormat:
-      (tts.gradiumOutputFormat as GradiumOutputFormat | undefined) ||
-      undefined,
+      (tts.gradiumOutputFormat as GradiumOutputFormat | undefined) || undefined,
     gradiumTemperature: Number.isNaN(parsedGradiumTemperature)
       ? undefined
       : parsedGradiumTemperature,
@@ -285,8 +289,34 @@ function buildVoiceOptions(
   } as VoiceServiceOptions;
 }
 
+function extractScreenplay(data: unknown): ScreenplayLike | null {
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+
+  const maybeWrapped = data as { screenplay?: unknown };
+  const source = maybeWrapped.screenplay ?? data;
+  if (!source || typeof source !== 'object') {
+    return null;
+  }
+
+  const screenplay = source as { emotion?: unknown; text?: unknown };
+  const emotion =
+    typeof screenplay.emotion === 'string' ? screenplay.emotion : undefined;
+  const text =
+    typeof screenplay.text === 'string' ? screenplay.text : undefined;
+
+  if (!emotion && !text) {
+    return null;
+  }
+
+  return { emotion, text };
+}
+
 export function useAituberCore({
   onAudioPlay,
+  onSpeechStart,
+  onSpeechEnd,
   settings,
   getApiKeyForProvider,
 }: UseAituberCoreOptions) {
@@ -301,6 +331,10 @@ export function useAituberCore({
   // Keep the latest onAudioPlay callback in a ref
   const onAudioPlayRef = useRef(onAudioPlay);
   onAudioPlayRef.current = onAudioPlay;
+  const onSpeechStartRef = useRef(onSpeechStart);
+  onSpeechStartRef.current = onSpeechStart;
+  const onSpeechEndRef = useRef(onSpeechEnd);
+  onSpeechEndRef.current = onSpeechEnd;
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -415,13 +449,16 @@ export function useAituberCore({
       } else {
         const d = data as {
           message?: { content?: string } | string;
+          screenplay?: { text?: string };
           rawText?: string;
         };
         const msg = d?.message;
+        const cleanText = d?.screenplay?.text?.trim();
         content =
-          (typeof msg === 'string' ? msg : msg?.content) ??
-          d?.rawText ??
-          String(data);
+          cleanText ||
+          ((typeof msg === 'string' ? msg : msg?.content) ??
+            d?.rawText ??
+            String(data));
       }
       setMessages((prev) => [
         ...prev,
@@ -435,9 +472,21 @@ export function useAituberCore({
       setPartialResponse('');
     });
 
+    core.on(AITuberOnAirCoreEvent.SPEECH_START, (data: unknown) => {
+      const screenplay = extractScreenplay(data);
+      if (screenplay) {
+        onSpeechStartRef.current?.(screenplay);
+      }
+    });
+
+    core.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
+      onSpeechEndRef.current?.();
+    });
+
     core.on(AITuberOnAirCoreEvent.ERROR, (error: unknown) => {
       console.error('AITuberOnAirCore error:', error);
       setIsProcessing(false);
+      onSpeechEndRef.current?.();
     });
 
     coreRef.current = core;

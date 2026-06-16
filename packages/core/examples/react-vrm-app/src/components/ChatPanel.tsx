@@ -1,4 +1,5 @@
 import type { ChatMessage } from '../types/chat';
+import type { VrmAvatarReaction } from '../lib/vrmReactions';
 import { AvatarBackground } from './AvatarPanel';
 import { ChatLog } from './ChatLog';
 import { ChatInput } from './ChatInput';
@@ -11,6 +12,7 @@ interface ChatPanelProps {
   onToggleSettings: () => void;
   mouthLevel: number;
   isSpeaking: boolean;
+  avatarReaction?: VrmAvatarReaction | null;
   backgroundImageUrl?: string | null;
 }
 
@@ -22,6 +24,7 @@ export function ChatPanel({
   onToggleSettings,
   mouthLevel,
   isSpeaking,
+  avatarReaction,
   backgroundImageUrl,
 }: ChatPanelProps) {
   const panelStyle = backgroundImageUrl
@@ -42,7 +45,11 @@ export function ChatPanel({
       >
         ⚙
       </button>
-      <AvatarBackground mouthLevel={mouthLevel} isSpeaking={isSpeaking} />
+      <AvatarBackground
+        mouthLevel={mouthLevel}
+        isSpeaking={isSpeaking}
+        reaction={avatarReaction}
+      />
       <ChatLog messages={messages} partialResponse={partialResponse} />
       <ChatInput onSend={onSend} disabled={isProcessing} />
     </div>
