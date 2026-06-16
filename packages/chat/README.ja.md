@@ -460,7 +460,11 @@ const compatibleService = ChatServiceFactory.createChatService(
   `gpt-5.4-nano`, `gpt-5.5`）は、高速なチャット応答を優先してデフォルトが
   `'none'` になります。OpenAI 公式のデフォルトが `'medium'` のモデルも
   ありますが、このパッケージでは意図的に低遅延を優先しています。
-- それ以外の GPT-5 系モデルのデフォルトは `'medium'` です。
+- 旧 GPT-5 系モデル（`gpt-5`, `gpt-5-mini`, `gpt-5-nano`）は、
+  高速なチャット応答向けに `reasoning_effort` のデフォルトが
+  `'minimal'` です。
+- `gpt-5.4-pro` は対応する最低 reasoning effort が `'medium'` のため、
+  デフォルトも `'medium'` です。
 - モデルが対応していない値はリセットされず、最も近い対応値に丸められます
   （例: `gpt-5.4-nano` の `'minimal'` は `'none'` に、`gpt-5-nano` の
   `'none'` は `'minimal'` に、`gpt-5.1` の `'xhigh'` は `'high'` に

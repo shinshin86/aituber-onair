@@ -478,7 +478,10 @@ Defaults and normalization in this package:
   `gpt-5.4-nano`, `gpt-5.5`) default to `'none'` for fast chat responses.
   Note that OpenAI's own default for some of these models is `'medium'`;
   this package intentionally prioritizes low latency.
-- Other GPT-5 models default to `'medium'`.
+- Earlier GPT-5 models (`gpt-5`, `gpt-5-mini`, `gpt-5-nano`) use
+  `'minimal'` as the default reasoning effort for fast chat responses.
+- `gpt-5.4-pro` defaults to `'medium'`, which is its lowest supported
+  reasoning effort.
 - Values a model does not support are rounded to the nearest supported
   level instead of being reset (e.g. `'minimal'` on `gpt-5.4-nano`
   resolves to `'none'`, `'none'` on `gpt-5-nano` resolves to `'minimal'`,
