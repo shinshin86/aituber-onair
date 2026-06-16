@@ -39,6 +39,9 @@ from actual audio output volume.
 - `piperPlus` expects browser assets under `public/piper/`
 - Render a VRM avatar (`miko.vrm`) with optional idle VRMA animation
 - Real-time lip-sync for VRM expression (`Aa`)
+- Apply available VRM expressions from response emotion tags, with graceful
+  fallback when a loaded VRM does not include the optional expressions
+- Add subtle randomized idle expressions while the avatar is not speaking
 - Control camera on the avatar stage:
   drag to rotate / mouse wheel to zoom / double-click to reset
 - Set visuals directly in Settings:
@@ -216,7 +219,7 @@ Place these files in `public/avatar/`:
 
 | File | Required | Description |
 |---|---|---|
-| `miko.vrm` | Yes | VRM model loaded by the viewer |
+| `miko.vrm` | Yes | VRM model loaded by the viewer, including optional expression presets for this sample |
 | `idle_loop.vrma` | Optional | Idle animation clip (if missing, only animation is skipped) |
 
 Notes:
@@ -227,6 +230,11 @@ Notes:
 
 If `miko.vrm` is missing or invalid, the app shows a load error on the
 avatar stage.
+
+The bundled model includes optional expressions such as `happy`, `sad`,
+`surprised`, `mouthSmileLeft`, and `browInnerUp`. When users replace it with a
+different VRM, unsupported expressions are ignored and the app falls back to the
+available expressions and lip-sync behavior.
 
 ## Lip-sync tuning
 

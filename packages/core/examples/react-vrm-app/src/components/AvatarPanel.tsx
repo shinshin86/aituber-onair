@@ -25,10 +25,17 @@ import {
   createVRMAnimationClip,
 } from '@pixiv/three-vrm-animation';
 import type { VRMAnimation } from '@pixiv/three-vrm-animation';
+import {
+  VrmExpressionController,
+  pickVrmIdleMotion,
+  runVrmOneShotAnimation,
+} from '../lib/vrmExpressionController';
+import type { VrmAvatarReaction } from '../lib/vrmReactions';
 
 interface AvatarBackgroundProps {
   mouthLevel: number;
   isSpeaking: boolean;
+  reaction?: VrmAvatarReaction | null;
 }
 
 const VRM_FILE_URL = `${import.meta.env.BASE_URL}avatar/miko.vrm`;
@@ -43,14 +50,32 @@ const DEFAULT_MIN_DISTANCE_RATIO = 0.9;
 const DEFAULT_MAX_DISTANCE_RATIO = 1.32;
 const DEFAULT_MODEL_X_OFFSET = 0.0;
 const DEFAULT_MODEL_Y_ROTATION = -0.12;
+const IDLE_MOTION_MIN_DELAY_MS = 4500;
+const IDLE_MOTION_MAX_DELAY_MS = 9500;
+const IDLE_MOTION_AFTER_REACTION_DELAY_MS = 4200;
+const IDLE_MOTION_AFTER_SPEECH_DELAY_MS = 2600;
+
+interface IdleMotionState {
+  nextAt: number;
+  lockUntil: number;
+}
 
 export function AvatarBackground({
   mouthLevel,
   isSpeaking,
+  reaction,
 }: AvatarBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const vrmRef = useRef<VRM | null>(null);
+  const expressionControllerRef = useRef<VrmExpressionController | null>(null);
+  const mouthExpressionNameRef = useRef<string | null>(null);
+  const animationTokenRef = useRef(0);
+  const idleMotionStateRef = useRef<IdleMotionState>({
+    nextAt: 0,
+    lockUntil: 0,
+  });
+  const isSpeakingRef = useRef(isSpeaking);
   const targetMouthWeightRef = useRef(0);
   const mouthWeightRef = useRef(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,10 +92,77 @@ export function AvatarBackground({
   }, [targetWeight]);
 
   useEffect(() => {
+    isSpeakingRef.current = isSpeaking;
+    if (isSpeaking) {
+      suppressIdleMotion(
+        idleMotionStateRef.current,
+        IDLE_MOTION_AFTER_SPEECH_DELAY_MS,
+      );
+    }
+  }, [isSpeaking]);
+
+  useEffect(() => {
+    if (!reaction) return;
+
+    const controller = expressionControllerRef.current;
+    if (!controller) return;
+
+    suppressIdleMotion(
+      idleMotionStateRef.current,
+      reaction.type === 'reset' ? 1600 : IDLE_MOTION_AFTER_REACTION_DELAY_MS,
+    );
+
+    if (reaction.type === 'animation') {
+      const token = animationTokenRef.current + 1;
+      animationTokenRef.current = token;
+      controller.reset(160);
+
+      void runVrmOneShotAnimation(
+        reaction.name,
+        (name, intensity, fadeMs) => {
+          controller.set(name, intensity, fadeMs);
+        },
+        () =>
+          expressionControllerRef.current === controller &&
+          animationTokenRef.current === token,
+      ).then(() => {
+        if (
+          expressionControllerRef.current === controller &&
+          animationTokenRef.current === token
+        ) {
+          controller.reset(280);
+        }
+      });
+      return;
+    }
+
+    animationTokenRef.current += 1;
+
+    if (reaction.type === 'emote') {
+      controller.emote(
+        reaction.name,
+        reaction.intensity,
+        reaction.fadeMs,
+        reaction.holdMs,
+      );
+      return;
+    }
+
+    if (reaction.type === 'gesture') {
+      controller.reset(160);
+      controller.gesture(reaction.parts, reaction.fadeMs, reaction.holdMs);
+      return;
+    }
+
+    controller.reset(reaction.fadeMs);
+  }, [reaction]);
+
+  useEffect(() => {
     const container = containerRef.current;
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
+    const idleMotionState = idleMotionStateRef.current;
     const scene = new Scene();
     const camera = new PerspectiveCamera(30, 1, 0.1, 30);
     camera.position.set(0, 1.35, 2.2);
@@ -230,6 +322,22 @@ export function AvatarBackground({
         scene.add(vrm.scene);
         loadedVrm = vrm;
         vrmRef.current = vrm;
+        try {
+          const expressionController = new VrmExpressionController(vrm);
+          expressionControllerRef.current = expressionController;
+          mouthExpressionNameRef.current =
+            expressionController.resolveExpressionName([
+              VRMExpressionPresetName.Aa,
+              'aa',
+              'a',
+              'A',
+            ]);
+          scheduleNextIdleMotion(idleMotionState, 2600, 5200);
+        } catch (error) {
+          console.warn('VRM expressions are unavailable:', error);
+          expressionControllerRef.current = null;
+          mouthExpressionNameRef.current = null;
+        }
         setIsLoading(false);
 
         const animationLoader = new GLTFLoader();
@@ -293,13 +401,28 @@ export function AvatarBackground({
       const vrm = vrmRef.current;
       if (vrm) {
         mixer?.update(delta);
+        const expressionController = expressionControllerRef.current;
+        if (expressionController) {
+          maybeRunIdleMotion(
+            expressionController,
+            idleMotionState,
+            isSpeakingRef.current,
+          );
+          expressionController.update(delta);
+        }
 
         const nextWeight =
           mouthWeightRef.current +
           (targetMouthWeightRef.current - mouthWeightRef.current) * 0.35;
         mouthWeightRef.current = nextWeight;
 
-        vrm.expressionManager?.setValue(VRMExpressionPresetName.Aa, nextWeight);
+        if (mouthExpressionNameRef.current) {
+          vrm.expressionManager?.setValue(
+            mouthExpressionNameRef.current,
+            nextWeight,
+          );
+        }
+        vrm.expressionManager?.update();
         vrm.update(delta);
       } else {
         mixer?.update(delta);
@@ -335,6 +458,11 @@ export function AvatarBackground({
         mixer = null;
       }
       vrmRef.current = null;
+      expressionControllerRef.current = null;
+      mouthExpressionNameRef.current = null;
+      animationTokenRef.current += 1;
+      idleMotionState.nextAt = 0;
+      idleMotionState.lockUntil = 0;
       mouthWeightRef.current = 0;
       targetMouthWeightRef.current = 0;
       renderer.dispose();
@@ -357,4 +485,52 @@ export function AvatarBackground({
       </div>
     </div>
   );
+}
+
+function maybeRunIdleMotion(
+  controller: VrmExpressionController,
+  state: IdleMotionState,
+  isSpeaking: boolean,
+) {
+  const now = window.performance.now();
+  if (isSpeaking) {
+    state.lockUntil = Math.max(
+      state.lockUntil,
+      now + IDLE_MOTION_AFTER_SPEECH_DELAY_MS,
+    );
+    return;
+  }
+
+  if (state.nextAt === 0) {
+    scheduleNextIdleMotion(state);
+    return;
+  }
+
+  if (now < state.lockUntil || now < state.nextAt) {
+    return;
+  }
+
+  const motion = pickVrmIdleMotion(controller);
+  if (motion) {
+    controller.gesture(motion.parts, motion.fadeMs, motion.holdMs);
+    state.lockUntil = now + motion.fadeMs + motion.holdMs + 900;
+  }
+
+  scheduleNextIdleMotion(state);
+}
+
+function suppressIdleMotion(state: IdleMotionState, delayMs: number) {
+  const now = window.performance.now();
+  state.lockUntil = Math.max(state.lockUntil, now + delayMs);
+  state.nextAt = Math.max(state.nextAt, state.lockUntil + 1200);
+}
+
+function scheduleNextIdleMotion(
+  state: IdleMotionState,
+  minDelayMs = IDLE_MOTION_MIN_DELAY_MS,
+  maxDelayMs = IDLE_MOTION_MAX_DELAY_MS,
+) {
+  const delayMs =
+    minDelayMs + Math.random() * Math.max(0, maxDelayMs - minDelayMs);
+  state.nextAt = window.performance.now() + delayMs;
 }
