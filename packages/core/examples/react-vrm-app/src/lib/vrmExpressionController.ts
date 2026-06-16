@@ -190,6 +190,76 @@ export class VrmExpressionController {
 
 export type VrmOneShotAnimationName = 'laugh' | 'pout' | 'teary';
 
+export interface VrmIdleMotion {
+  parts: readonly VrmExpressionPart[];
+  fadeMs: number;
+  holdMs: number;
+}
+
+const IDLE_MOTIONS: readonly VrmIdleMotion[] = [
+  {
+    parts: [
+      { name: 'relaxed', intensity: 0.42 },
+      { name: 'mouthSmileLeft', intensity: 0.34 },
+      { name: 'mouthSmileRight', intensity: 0.34 },
+    ],
+    fadeMs: 520,
+    holdMs: 2100,
+  },
+  {
+    parts: [
+      { name: 'eyeSquintLeft', intensity: 0.36 },
+      { name: 'eyeSquintRight', intensity: 0.36 },
+      { name: 'mouthSmileLeft', intensity: 0.3 },
+      { name: 'mouthSmileRight', intensity: 0.3 },
+    ],
+    fadeMs: 420,
+    holdMs: 1600,
+  },
+  {
+    parts: [
+      { name: 'browOuterUpLeft', intensity: 0.46 },
+      { name: 'browOuterUpRight', intensity: 0.34 },
+      { name: 'mouthSmileLeft', intensity: 0.22 },
+    ],
+    fadeMs: 360,
+    holdMs: 1200,
+  },
+  {
+    parts: [
+      { name: 'eyeBlinkRight', intensity: 1 },
+      { name: 'mouthSmileLeft', intensity: 0.42 },
+      { name: 'mouthSmileRight', intensity: 0.34 },
+    ],
+    fadeMs: 90,
+    holdMs: 420,
+  },
+  {
+    parts: [
+      { name: 'surprised', intensity: 0.38 },
+      { name: 'eyeWideLeft', intensity: 0.44 },
+      { name: 'eyeWideRight', intensity: 0.44 },
+      { name: 'browInnerUp', intensity: 0.32 },
+    ],
+    fadeMs: 220,
+    holdMs: 900,
+  },
+];
+
+export function pickVrmIdleMotion(
+  controller: VrmExpressionController,
+): VrmIdleMotion | null {
+  const availableMotions = IDLE_MOTIONS.filter((motion) =>
+    motion.parts.some((part) => controller.resolveExpressionName(part.name)),
+  );
+
+  if (availableMotions.length === 0) {
+    return null;
+  }
+
+  return availableMotions[Math.floor(Math.random() * availableMotions.length)];
+}
+
 export async function runVrmOneShotAnimation(
   name: VrmOneShotAnimationName,
   setExpression: (
