@@ -6,6 +6,7 @@ import {
   MODEL_GPT_5_4,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
+  MODEL_GPT_5_NANO,
 } from '../../src/constants';
 import { buildOpenAIRequestBody } from '../../src/services/providers/openai/openaiRequestBuilder';
 import type {
@@ -65,6 +66,21 @@ describe('buildOpenAIRequestBody', () => {
     // response-length floor (2000) wins instead of the 'medium' effort
     // floor (4000).
     expect(body.max_output_tokens).toBe(2000);
+  });
+
+  it('uses the minimal reasoning minimum for GPT-5-nano when effort is unspecified', () => {
+    const body = buildOpenAIRequestBody({
+      provider: 'openai',
+      endpoint: ENDPOINT_OPENAI_RESPONSES_API,
+      messages,
+      model: MODEL_GPT_5_NANO,
+      stream: false,
+      tools: [],
+      mcpServers: [],
+      responseLength: CHAT_RESPONSE_LENGTH.VERY_SHORT,
+    });
+
+    expect(body.max_output_tokens).toBe(1600);
   });
 
   it('keeps explicit maxTokens unchanged', () => {
