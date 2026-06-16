@@ -135,17 +135,13 @@ export function allowsReasoningLow(model: string): boolean {
  * Get default reasoning effort by GPT-5 model family
  * - Models that support reasoning_effort 'none'
  *   (GPT-5.1 / GPT-5.4 / GPT-5.5 family, except Pro): none
- * - Earlier GPT-5 variants that support 'minimal': minimal
- * - GPT-5.4 Pro: medium
+ * - GPT-5.4 Pro and earlier GPT-5 variants: medium
  */
 export function getDefaultReasoningEffortForGPT5Model(
   model: string,
-): 'none' | 'minimal' | 'medium' {
+): 'none' | 'medium' {
   if (allowsReasoningNone(model)) {
     return 'none';
-  }
-  if (allowsReasoningMinimal(model)) {
-    return 'minimal';
   }
   return 'medium';
 }

@@ -118,7 +118,7 @@ describe('OpenAIChatServiceProvider', () => {
         [],
         undefined,
         undefined,
-        'minimal', // default reasoning_effort for GPT-5 Nano
+        'medium', // default reasoning_effort for GPT-5
         undefined, // enableReasoningSummary
         'openai',
       );
@@ -676,7 +676,7 @@ describe('OpenAIChatServiceProvider', () => {
         [],
         undefined,
         undefined,
-        'minimal', // default reasoning_effort for GPT-5 Nano
+        'medium', // default reasoning_effort for GPT-5
         undefined,
         'openai',
       );
@@ -699,7 +699,7 @@ describe('OpenAIChatServiceProvider', () => {
         [],
         undefined,
         undefined,
-        'minimal', // default reasoning_effort for GPT-5 Nano
+        'medium', // default reasoning_effort for GPT-5
         undefined,
         'openai',
       );
@@ -728,7 +728,7 @@ describe('OpenAIChatServiceProvider', () => {
         options.mcpServers,
         undefined,
         undefined,
-        'minimal',
+        'medium',
         undefined,
         'openai',
       );
@@ -759,7 +759,7 @@ describe('OpenAIChatServiceProvider', () => {
         options.mcpServers,
         undefined,
         undefined,
-        'minimal',
+        'medium',
         undefined,
         'openai',
       );
@@ -828,7 +828,7 @@ describe('OpenAIChatServiceProvider', () => {
         [],
         'medium',
         undefined,
-        'minimal',
+        'medium',
         undefined,
         'openai',
       );
@@ -862,11 +862,11 @@ describe('OpenAIChatServiceProvider', () => {
     it('should create services for all GPT-5 models correctly', () => {
       const gpt5Models: Array<{
         model: string;
-        defaultEffort: 'none' | 'minimal' | 'medium';
+        defaultEffort: 'none' | 'medium';
       }> = [
-        { model: MODEL_GPT_5_NANO, defaultEffort: 'minimal' },
-        { model: MODEL_GPT_5_MINI, defaultEffort: 'minimal' },
-        { model: MODEL_GPT_5, defaultEffort: 'minimal' },
+        { model: MODEL_GPT_5_NANO, defaultEffort: 'medium' },
+        { model: MODEL_GPT_5_MINI, defaultEffort: 'medium' },
+        { model: MODEL_GPT_5, defaultEffort: 'medium' },
         { model: MODEL_GPT_5_4_MINI, defaultEffort: 'none' },
         { model: MODEL_GPT_5_4_NANO, defaultEffort: 'none' },
       ];

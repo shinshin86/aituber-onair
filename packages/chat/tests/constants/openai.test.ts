@@ -25,17 +25,14 @@ describe('getDefaultReasoningEffortForGPT5Model', () => {
     );
   });
 
-  it('returns minimal for models that support reasoning_effort minimal', () => {
-    expect(getDefaultReasoningEffortForGPT5Model(MODEL_GPT_5)).toBe('minimal');
+  it('returns medium for models without reasoning_effort none support', () => {
+    expect(getDefaultReasoningEffortForGPT5Model(MODEL_GPT_5)).toBe('medium');
     expect(getDefaultReasoningEffortForGPT5Model(MODEL_GPT_5_MINI)).toBe(
-      'minimal',
+      'medium',
     );
     expect(getDefaultReasoningEffortForGPT5Model(MODEL_GPT_5_NANO)).toBe(
-      'minimal',
+      'medium',
     );
-  });
-
-  it('returns medium for models whose lowest supported reasoning effort is medium', () => {
     expect(getDefaultReasoningEffortForGPT5Model(MODEL_GPT_5_4_PRO)).toBe(
       'medium',
     );
