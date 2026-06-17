@@ -1,6 +1,6 @@
 # @aituber-onair/noise
 
-## Unreleased
+## 0.0.2
 
 ### Added
 
@@ -29,8 +29,31 @@
 - Added the genericity penalty (MMI-style stock-phrase and self-repetition
   scoring), final-sentence change bonus, and verbalized-sampling typicality
   bonus to candidate evaluation.
+- Added the `noise-session-sample` browser example: a turn-by-turn stream
+  simulator that plays a scripted session, narrates each decision, shows the
+  before/after diff, exposes a per-turn pipeline trace, and includes an
+  integration code snippet.
+- Expanded the `noise-sample` browser lab to visualize the gates, violation
+  budget, gag ledger, and reaction loop.
+
+### Changed
+
 - `contaminate()` now returns `gates` (sincerity, relationship, rhythm) and
   `skipped` metadata; skipped turns return the draft unchanged.
+
+### Fixed
+
+- Made "applied interventions" consistent across `output.applied`, memory,
+  `recordLastTilt`, `tilt_applied`, and `callback_used`: the single source of
+  truth is now the intersection of the selected candidate's claims and the
+  plan. Candidates that claim unauthorized interventions are penalized
+  (teasing-class harder), and the selection diversity bonus only counts
+  planned-and-applied interventions.
+
+### Docs
+
+- Added "why this exists" and "how it works (one turn)" sections to the README
+  (English and Japanese) covering the background and per-turn pipeline.
 
 ## 0.0.1
 

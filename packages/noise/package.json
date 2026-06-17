@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/noise",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A context-aware response noise engine for AI VTubers.",
   "type": "module",
   "main": "dist/index.js",

@@ -29,6 +29,53 @@ So in addition to rewriting, Noise schedules when deviation is allowed
 certifies teasing as play (play markers), reuses shared memories as running
 gags (gag ledger), and learns from audience reactions (reaction loop).
 
+## Why this exists
+
+LLMs are trained on the average of a huge amount of text, and preference tuning
+(RLHF) pushes them further toward replies that are safe, agreeable, and neatly
+summarized. That is fine for an assistant, but for an AI character stream it
+produces **predictable harmony** (予定調和): the same temperature every time, a
+tidy closing every time, and an audience that gets bored. Human conversation is
+engaging precisely because it does *not* go to plan — a retort, a pause, a
+deliberately withheld reaction, a callback to an old joke.
+
+The hard part is **not** generating disruption — an LLM can do that. The hard
+part is that whether a broken expectation reads as *charm* or as *malfunction*
+does not live in the text; it lives in the receiver. The same blunt line is
+"endearing gap" from a beloved regular character and "rude" from a stranger.
+So Noise is less a text generator and more a controller: it manages **when, how
+far, and toward whom** a reply may deviate, and learns from how the audience
+reacts.
+
+## How it works (one turn)
+
+After the LLM produces a draft reply, Noise runs this pipeline (the same one the
+browser sample visualizes under "ノイズの判断を見る"):
+
+1. **Diagnose** — is this draft too predictable? Detect clean closings,
+   over-apology, over-agreement, etc., and score it.
+2. **Three gates — may we disrupt at all?**
+   - **Sincerity gate**: if the viewer is making a serious or vulnerable bid,
+     stop everything (failed uptake of a sincere moment is the worst violation).
+   - **Relationship capital**: unlock stronger interventions (teasing, callbacks)
+     only as the bond grows.
+   - **Rhythm**: rest right after a disruption, because constant disruption
+     becomes a new predictable style.
+3. **Plan** — choose which interventions to use, limited to what the gates allow.
+4. **Generate & score candidates** — ask the LLM for several rewrites and score
+   them on predictability reduction, character preservation, genericity, and
+   whether a play marker is present.
+5. **Select & quality-check** — pick the strongest safe candidate; reject
+   over-corrections.
+6. **Learn** — record what was actually applied; later `reportReaction()` feeds
+   the audience response back, raising or lowering how far Noise will push next
+   time and promoting well-received moments into the gag ledger.
+
+In short: **keep the character's "form", choreograph when and how far to break
+it, and always return to form.** The laughter-flavored reaction signals are not
+there to make the AI tell jokes — they are the sensor that measures whether a
+deviation (a bet) actually paid off.
+
 ## Basic Usage
 
 ```ts
