@@ -18,13 +18,17 @@ import {
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
+  MODEL_GLM_5_2,
   MODEL_GLM_5_TURBO,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
+  MODEL_KIMI_K2_7_CODE,
+  MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_FUSION,
+  MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
@@ -34,7 +38,9 @@ import {
   MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
   MODEL_GOOGLE_GEMINI_PRO_LATEST,
   MODEL_GOOGLE_GEMINI_FLASH_LATEST,
+  MODEL_ZAI_GLM_5_2,
   KIMI_VISION_SUPPORTED_MODELS,
+  KIMI_THINKING_REQUIRED_MODELS,
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_PRO,
   DEEPSEEK_SUPPORTED_MODELS,
@@ -49,6 +55,8 @@ import {
   XAIChatService,
   allowsReasoningXHigh,
   isResponsesOnlyGPT5Model,
+  isKimiThinkingRequiredModel,
+  isKimiVisionModel,
   isXaiVisionModel,
   refreshOpenRouterFreeModels,
   type RefreshOpenRouterFreeModelsResult,
@@ -97,17 +105,28 @@ describe('Core index chat re-exports', () => {
     expect(MODEL_CLAUDE_4_SONNET).toBe('claude-sonnet-4-20250514');
   });
 
-  it('re-exports GLM-5-Turbo model constant', () => {
+  it('re-exports current GLM model constants', () => {
+    expect(MODEL_GLM_5_2).toBe('glm-5.2');
     expect(MODEL_GLM_5_TURBO).toBe('glm-5-turbo');
   });
 
   it('re-exports current Kimi model constants', () => {
+    expect(MODEL_KIMI_K2_7_CODE).toBe('kimi-k2.7-code');
+    expect(MODEL_KIMI_K2_7_CODE_HIGHSPEED).toBe('kimi-k2.7-code-highspeed');
     expect(MODEL_KIMI_K2_6).toBe('kimi-k2.6');
     expect(MODEL_KIMI_K2_5).toBe('kimi-k2.5');
     expect(KIMI_VISION_SUPPORTED_MODELS).toEqual([
+      MODEL_KIMI_K2_7_CODE,
+      MODEL_KIMI_K2_7_CODE_HIGHSPEED,
       MODEL_KIMI_K2_6,
       MODEL_KIMI_K2_5,
     ]);
+    expect(KIMI_THINKING_REQUIRED_MODELS).toEqual([
+      MODEL_KIMI_K2_7_CODE,
+      MODEL_KIMI_K2_7_CODE_HIGHSPEED,
+    ]);
+    expect(isKimiVisionModel(MODEL_KIMI_K2_7_CODE)).toBe(true);
+    expect(isKimiThinkingRequiredModel(MODEL_KIMI_K2_7_CODE)).toBe(true);
   });
 
   it('re-exports xAI chat provider items', () => {
@@ -144,6 +163,8 @@ describe('Core index chat re-exports', () => {
   it('re-exports OpenRouter latest routed model constants', () => {
     expect(MODEL_OPENROUTER_AUTO).toBe('openrouter/auto');
     expect(MODEL_OPENROUTER_FUSION).toBe('openrouter/fusion');
+    expect(MODEL_ZAI_GLM_5_2).toBe('z-ai/glm-5.2');
+    expect(MODEL_MOONSHOTAI_KIMI_K2_7_CODE).toBe('moonshotai/kimi-k2.7-code');
     expect(MODEL_OPENAI_GPT_LATEST).toBe('~openai/gpt-latest');
     expect(MODEL_OPENAI_GPT_MINI_LATEST).toBe('~openai/gpt-mini-latest');
     expect(MODEL_OPENAI_GPT_5_5_PRO).toBe('openai/gpt-5.5-pro');
