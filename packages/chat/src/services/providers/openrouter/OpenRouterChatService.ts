@@ -4,6 +4,7 @@ import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_OPENROUTER_API,
   MODEL_GPT_OSS_20B_FREE,
+  MODEL_ZAI_GLM_5_2,
   isOpenRouterVisionModel,
   isOpenRouterFreeModel,
   OPENROUTER_FREE_RATE_LIMIT_PER_MINUTE,
@@ -22,7 +23,10 @@ import {
 } from '../../../utils';
 
 const isTokenLimitUnsupportedModel = (model: string): boolean =>
-  model.trim() === MODEL_GPT_OSS_20B_FREE;
+  [MODEL_GPT_OSS_20B_FREE, MODEL_ZAI_GLM_5_2].includes(model.trim());
+
+const getDefaultReasoningEffort = (model: string): 'none' | undefined =>
+  model.trim() === MODEL_ZAI_GLM_5_2 ? 'none' : undefined;
 
 /**
  * OpenRouter implementation of ChatService
@@ -319,20 +323,23 @@ export class OpenRouterChatService implements ChatService {
         ? maxTokens
         : getMaxTokensForResponseLength(this.responseLength);
 
-    // OpenRouter gpt-oss-20b has known issues with token limits causing empty responses.
+    // Some OpenRouter reasoning models can spend the whole budget on reasoning
+    // tokens before emitting visible content.
     if (tokenLimit && isTokenLimitUnsupportedModel(model)) {
       console.warn(
-        `OpenRouter: Token limits are not supported for ${model} due to known issues. Using unlimited tokens instead.`,
+        `OpenRouter: Token limits are disabled for ${model} because this model can return empty content when a token limit is set.`,
       );
     } else if (tokenLimit) {
       body.max_tokens = tokenLimit;
     }
 
     // Add OpenRouter reasoning control
+    const defaultReasoningEffort = getDefaultReasoningEffort(model);
     if (
       this.reasoning_effort !== undefined ||
       this.includeReasoning !== undefined ||
-      this.reasoningMaxTokens
+      this.reasoningMaxTokens ||
+      defaultReasoningEffort
     ) {
       body.reasoning = {};
 
@@ -341,6 +348,11 @@ export class OpenRouterChatService implements ChatService {
         const effort =
           this.reasoning_effort === 'minimal' ? 'low' : this.reasoning_effort;
         body.reasoning.effort = effort;
+      } else if (
+        this.reasoning_effort === undefined &&
+        defaultReasoningEffort
+      ) {
+        body.reasoning.effort = defaultReasoningEffort;
       }
 
       // Default to exclude reasoning to avoid empty responses unless explicitly requested

@@ -85,10 +85,13 @@ import {
   MODEL_GOOGLE_GEMINI_2_5_PRO,
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
   MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+  MODEL_ZAI_GLM_5_2,
   MODEL_ZAI_GLM_4_7_FLASH,
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_ZAI_GLM_4_5_AIR_FREE,
+  MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
   // Z.ai models
+  MODEL_GLM_5_2,
   MODEL_GLM_5,
   MODEL_GLM_5_TURBO,
   MODEL_GLM_4_7,
@@ -106,6 +109,8 @@ import {
   MODEL_GROK_4_1_FAST_NON_REASONING,
   // Kimi models
   MODEL_KIMI_K2_6,
+  MODEL_KIMI_K2_7_CODE,
+  MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_5,
   // DeepSeek models
   MODEL_DEEPSEEK_V4_FLASH,
@@ -799,6 +804,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_ZAI_GLM_5_2,
+    name: 'GLM-5.2 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_ZAI_GLM_4_7_FLASH,
     name: 'GLM-4.7 Flash (OpenRouter)',
     provider: 'openrouter',
@@ -823,6 +834,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
+    name: 'Kimi K2.7 Code (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_MOONSHOTAI_KIMI_K2_5,
     name: 'Kimi K2.5 (OpenRouter)',
     provider: 'openrouter',
@@ -830,6 +847,12 @@ export const allModels: ProviderModel[] = [
   },
 
   // Z.ai models
+  {
+    id: MODEL_GLM_5_2,
+    name: 'GLM-5.2',
+    provider: 'zai',
+    default: true,
+  },
   {
     id: MODEL_GLM_5,
     name: 'GLM-5',
@@ -846,7 +869,7 @@ export const allModels: ProviderModel[] = [
     id: MODEL_GLM_4_7,
     name: 'GLM-4.7',
     provider: 'zai',
-    default: true,
+    default: false,
   },
   {
     id: MODEL_GLM_4_7_FLASHX,
@@ -918,6 +941,18 @@ export const allModels: ProviderModel[] = [
   },
 
   // Kimi models
+  {
+    id: MODEL_KIMI_K2_7_CODE,
+    name: 'Kimi K2.7 Code',
+    provider: 'kimi',
+    default: false,
+  },
+  {
+    id: MODEL_KIMI_K2_7_CODE_HIGHSPEED,
+    name: 'Kimi K2.7 Code HighSpeed',
+    provider: 'kimi',
+    default: false,
+  },
   {
     id: MODEL_KIMI_K2_6,
     name: 'Kimi K2.6',

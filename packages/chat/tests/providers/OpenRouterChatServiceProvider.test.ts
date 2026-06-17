@@ -3,6 +3,7 @@ import { OpenRouterChatServiceProvider } from '../../src/services/providers/open
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
   MODEL_GPT_OSS_20B_FREE,
+  MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
   MODEL_MOONSHOTAI_KIMI_K2_5,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENROUTER_AUTO,
@@ -30,6 +31,7 @@ import {
   MODEL_GOOGLE_GEMINI_2_5_PRO,
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
   MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+  MODEL_ZAI_GLM_5_2,
   MODEL_ZAI_GLM_4_7_FLASH,
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_ZAI_GLM_4_5_AIR_FREE,
@@ -86,9 +88,11 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_GOOGLE_GEMINI_2_5_PRO,
         MODEL_GOOGLE_GEMINI_2_5_FLASH,
         MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+        MODEL_ZAI_GLM_5_2,
         MODEL_ZAI_GLM_4_7_FLASH,
         MODEL_ZAI_GLM_4_5_AIR,
         MODEL_MOONSHOTAI_KIMI_LATEST,
+        MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
         MODEL_MOONSHOTAI_KIMI_K2_5,
       ]);
     });
@@ -106,6 +110,9 @@ describe('OpenRouterChatServiceProvider', () => {
       expect(provider.supportsVisionForModel(MODEL_MOONSHOTAI_KIMI_K2_5)).toBe(
         true,
       );
+      expect(
+        provider.supportsVisionForModel(MODEL_MOONSHOTAI_KIMI_K2_7_CODE),
+      ).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_OPENAI_GPT_LATEST)).toBe(
         true,
       );

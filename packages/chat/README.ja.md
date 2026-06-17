@@ -609,6 +609,7 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - 無料階層にはレート制限があります（20リクエスト/分）
 - 無料モデル判定はモデルID末尾の `:free` で行います（動的取得した `:free` も同様にレート制限対象）
 - `openrouter/fusion` は複数モデルのパネルとジャッジモデルを実行します。単一モデルの固定単価ではなく、内部で使われた各モデル呼び出しと web search/fetch 利用分の合算で課金されます。
+- `z-ai/glm-5.2` は OpenRouter reasoning を `none` にし、reasoning token が出力上限を使い切って可視テキストが空になることを避けるため、トークン制限も自動的に無効化します。
 - サポート対象モデル（キュレーション済み）:
   - `openrouter/auto`
   - `openrouter/fusion`
@@ -621,8 +622,8 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
   - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
-  - `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
-  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k2.5`
+  - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
+  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
 
 **OpenRouter freeモデルの動的リフレッシュ**
 
@@ -657,7 +658,7 @@ console.log(result.fetchedAt); // Date.now() のタイムスタンプ
 ```typescript
 const zaiService = ChatServiceFactory.createChatService('zai', {
   apiKey: process.env.ZAI_API_KEY,
-  model: 'glm-5-turbo',
+  model: 'glm-5.2',
   visionModel: 'glm-4.6V-Flash', // 任意: ビジョン対応モデル
   responseFormat: { type: 'json_object' } // 任意: JSONモード
 });
@@ -665,7 +666,7 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 
 注意:
 - Z.aiはOpenAI互換のChat Completionsを利用します。
-- テキスト対応モデル: `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
+- テキスト対応モデル: `glm-5.2`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
 - ビジョン対応モデル: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
 - `thinking` はデフォルトで無効化しています。
 
@@ -699,8 +700,11 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 
 注意:
 - KimiはOpenAI互換のChat Completionsを利用します。
-- 対応モデル: `kimi-k2.6`, `kimi-k2.5`
-- ツール使用時は`thinking`を`{ type: 'disabled' }`に強制します。
+- 対応モデル: `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
+- チャット用途向けのデフォルトモデルは引き続き `kimi-k2.6` です。
+- Kimi K2.7 Code 系モデルはコーディング寄りで、thinking mode が必須のため、ツール使用時も `thinking` を有効のままにします。
+- Kimi K2.7 Code 系モデルで `thinking: { type: 'disabled' }` を明示指定すると、リクエスト送信前にエラーになります。
+- 旧 Kimi モデルでは、ツール使用時に `thinking` を `{ type: 'disabled' }` に強制します。
 
 自前ホスティング例:
 
@@ -1062,9 +1066,9 @@ console.log(modelLevel); // 'unknown'
 - **Gemini**: Gemini 3.5 Flash、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
-- **Z.ai**: GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
+- **Z.ai**: GLM-5.2/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
 - **xAI**: Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
-- **Kimi**: Kimi K2.6（`kimi-k2.6`）と Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
+- **Kimi**: Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
 - **DeepSeek**: DeepSeek V4 Flash（`deepseek-v4-flash`）と DeepSeek V4 Pro（`deepseek-v4-pro`）をOpenAI互換Chat Completions経由でサポート。legacy alias の`deepseek-chat`と`deepseek-reasoner`はDeepSeek側で非推奨です
 - **Mistral**: `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`などの現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します
 - **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Chrome 138以降でPrompt APIフラグの有効化が必要。非ストリーミング、ビジョン非対応

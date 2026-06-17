@@ -1,5 +1,6 @@
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+  MODEL_GLM_5_2,
   MODEL_GLM_5,
   MODEL_GLM_5_TURBO,
   MODEL_GLM_4_7,
@@ -69,6 +70,7 @@ export class ZAIChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_GLM_5_2,
       MODEL_GLM_5,
       MODEL_GLM_5_TURBO,
       MODEL_GLM_4_7,
@@ -85,7 +87,7 @@ export class ZAIChatServiceProvider
    * Get the default model
    */
   getDefaultModel(): string {
-    return MODEL_GLM_4_7;
+    return MODEL_GLM_5_2;
   }
 
   /**

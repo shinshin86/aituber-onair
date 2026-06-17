@@ -5,6 +5,7 @@ export const ENDPOINT_OPENROUTER_API =
 export const MODEL_OPENROUTER_AUTO = 'openrouter/auto';
 export const MODEL_OPENROUTER_FUSION = 'openrouter/fusion';
 export const MODEL_GPT_OSS_20B_FREE = 'openai/gpt-oss-20b:free';
+export const MODEL_MOONSHOTAI_KIMI_K2_7_CODE = 'moonshotai/kimi-k2.7-code';
 export const MODEL_MOONSHOTAI_KIMI_K2_5 = 'moonshotai/kimi-k2.5';
 export const MODEL_MOONSHOTAI_KIMI_LATEST = '~moonshotai/kimi-latest';
 export const MODEL_OPENAI_GPT_LATEST = '~openai/gpt-latest';
@@ -33,6 +34,7 @@ export const MODEL_GOOGLE_GEMINI_2_5_PRO = 'google/gemini-2.5-pro';
 export const MODEL_GOOGLE_GEMINI_2_5_FLASH = 'google/gemini-2.5-flash';
 export const MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025 =
   'google/gemini-2.5-flash-lite-preview-09-2025';
+export const MODEL_ZAI_GLM_5_2 = 'z-ai/glm-5.2';
 export const MODEL_ZAI_GLM_4_7_FLASH = 'z-ai/glm-4.7-flash';
 export const MODEL_ZAI_GLM_4_5_AIR = 'z-ai/glm-4.5-air';
 export const MODEL_ZAI_GLM_4_5_AIR_FREE = 'z-ai/glm-4.5-air:free';
@@ -68,6 +70,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_GOOGLE_GEMINI_2_5_PRO,
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
   MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+  MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
   MODEL_MOONSHOTAI_KIMI_K2_5,
 ];
 

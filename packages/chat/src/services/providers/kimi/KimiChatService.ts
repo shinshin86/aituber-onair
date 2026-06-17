@@ -4,6 +4,7 @@ import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   MODEL_KIMI_K2_6,
+  isKimiThinkingRequiredModel,
   isKimiVisionModel,
 } from '../../../constants/kimi';
 import {
@@ -228,8 +229,7 @@ export class KimiChatService implements ChatService {
       body.response_format = this.responseFormat;
     }
 
-    const effectiveThinking =
-      this.tools.length > 0 ? { type: 'disabled' as const } : this.thinking;
+    const effectiveThinking = this.resolveEffectiveThinking(model);
     if (effectiveThinking) {
       if (this.isSelfHostedEndpoint()) {
         if (effectiveThinking.type === 'disabled') {
@@ -258,6 +258,28 @@ export class KimiChatService implements ChatService {
 
   private normalizeEndpoint(value: string): string {
     return value.replace(/\/+$/, '');
+  }
+
+  private resolveEffectiveThinking(model: string):
+    | {
+        type: 'enabled' | 'disabled';
+        clear_thinking?: boolean;
+      }
+    | undefined {
+    if (isKimiThinkingRequiredModel(model)) {
+      if (this.thinking?.type === 'disabled') {
+        throw new Error(
+          `Model ${model} requires thinking mode and does not support thinking: disabled.`,
+        );
+      }
+      return this.thinking ?? { type: 'enabled' };
+    }
+
+    if (this.tools.length > 0) {
+      return { type: 'disabled' };
+    }
+
+    return this.thinking;
   }
 
   private buildToolsDefinition(): any[] {

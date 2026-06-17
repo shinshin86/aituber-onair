@@ -140,8 +140,8 @@ Use the dropdown to select response length:
 - Persistence: Fetched dynamic free model IDs are saved under localStorage root key `AITuberOnAirChat_example_react-basic`
 
 **Z.ai**
-- Models: GLM-5, GLM-5-Turbo, GLM-4.7/4.6, GLM-4.6V family
-- Vision: GLM-4.6V family (`glm-5` and `glm-5-turbo` are currently text-only)
+- Models: GLM-5.2, GLM-5, GLM-5-Turbo, GLM-4.7/4.6, GLM-4.6V family
+- Vision: GLM-4.6V family (`glm-5.2`, `glm-5`, and `glm-5-turbo` are currently text-only)
 - Best for: OpenAI-compatible GLM integration
 
 **xAI**
@@ -150,9 +150,9 @@ Use the dropdown to select response length:
 - Best for: Grok models with OpenAI-compatible API
 
 **Kimi**
-- Models: Kimi K2.6, Kimi K2.5
+- Models: Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6, Kimi K2.5
 - Vision: Supported
-- Best for: Moonshot models with OpenAI-compatible API
+- Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K2.7 Code models are coding-oriented.
 
 **DeepSeek**
 - Models: DeepSeek V4 Flash, DeepSeek V4 Pro

@@ -3,6 +3,8 @@ import { KimiChatServiceProvider } from '../../src/services/providers/kimi/KimiC
 import type { KimiChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  MODEL_KIMI_K2_7_CODE,
+  MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
 } from '../../src/constants';
@@ -27,7 +29,12 @@ describe('KimiChatServiceProvider', () => {
   describe('getSupportedModels', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
-      expect(models).toEqual([MODEL_KIMI_K2_6, MODEL_KIMI_K2_5]);
+      expect(models).toEqual([
+        MODEL_KIMI_K2_7_CODE,
+        MODEL_KIMI_K2_7_CODE_HIGHSPEED,
+        MODEL_KIMI_K2_6,
+        MODEL_KIMI_K2_5,
+      ]);
     });
   });
 
@@ -46,6 +53,10 @@ describe('KimiChatServiceProvider', () => {
 
   describe('supportsVisionForModel', () => {
     it('should return true for vision-supported models', () => {
+      expect(provider.supportsVisionForModel(MODEL_KIMI_K2_7_CODE)).toBe(true);
+      expect(
+        provider.supportsVisionForModel(MODEL_KIMI_K2_7_CODE_HIGHSPEED),
+      ).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_KIMI_K2_6)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_KIMI_K2_5)).toBe(true);
     });
@@ -78,9 +89,46 @@ describe('KimiChatServiceProvider', () => {
       );
     });
 
-    it('should disable thinking when tools are provided', () => {
+    it('should keep thinking enabled for Kimi K2.7 Code when tools are provided', () => {
       const options: KimiChatServiceOptions = {
         apiKey: 'test-api-key',
+        model: MODEL_KIMI_K2_7_CODE,
+        tools: [
+          {
+            name: 'lookup',
+            parameters: { type: 'object' },
+          },
+        ],
+      };
+
+      provider.createChatService(options);
+
+      expect(KimiChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_KIMI_K2_7_CODE,
+        MODEL_KIMI_K2_7_CODE,
+        options.tools,
+        ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+        undefined,
+        undefined,
+        expect.objectContaining({ type: 'enabled' }),
+      );
+    });
+
+    it('should throw when Kimi K2.7 Code explicitly disables thinking', () => {
+      expect(() => {
+        provider.createChatService({
+          apiKey: 'test-api-key',
+          model: MODEL_KIMI_K2_7_CODE,
+          thinking: { type: 'disabled' },
+        });
+      }).toThrow('requires thinking mode');
+    });
+
+    it('should disable thinking for older Kimi models when tools are provided', () => {
+      const options: KimiChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_KIMI_K2_6,
         tools: [
           {
             name: 'lookup',
