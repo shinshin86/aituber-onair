@@ -41,6 +41,8 @@ import type {
   Contaminator,
   ContextFingerprint,
   CreateContaminatorOptions,
+  InterventionKind,
+  InterventionPlan,
   NoiseEvent,
   NoiseMemory,
   NoiseMode,
@@ -48,6 +50,7 @@ import type {
   NoiseReactionInput,
   NoiseReactionResult,
   NoiseSkipReason,
+  PlannedIntervention,
   PredictabilityDiagnosis,
   RecordMomentInput,
   RewriteModel,
@@ -231,6 +234,9 @@ export function createContaminator(
           text: safe.text,
         };
       });
+      const plannedKinds = plan.interventions.map(
+        (intervention) => intervention.kind
+      );
       const candidates = evaluateRewriteCandidates({
         before: input.draft,
         candidates: safeCandidates,
@@ -238,9 +244,21 @@ export function createContaminator(
         mode: effectiveMode,
         qualityOptions: options.quality,
         recentResponses: memory.recentResponses,
+        plannedInterventions: plannedKinds,
       });
       const { candidate: bestCandidate, index: selectedIndex } =
-        selectBestCandidate(candidates);
+        selectBestCandidate(candidates, plannedKinds);
+      // Single source of truth for "what was actually applied": the
+      // intervention must be both in the plan and claimed by the selected
+      // candidate. The same normalized list feeds the public output, memory,
+      // and events so they never disagree.
+      const appliedInterventions = resolveAppliedInterventions(
+        bestCandidate.appliedInterventions,
+        plan
+      );
+      const appliedKinds = appliedInterventions.map(
+        (intervention) => intervention.kind
+      );
       const output: ContaminateOutput = {
         text: bestCandidate.text,
         score: {
@@ -254,7 +272,7 @@ export function createContaminator(
         plan,
         candidates,
         selectedIndex,
-        applied: plan.interventions.map((intervention) => ({
+        applied: appliedInterventions.map((intervention) => ({
           kind: intervention.kind,
           reason: intervention.reason,
         })),
@@ -266,12 +284,11 @@ export function createContaminator(
         before: input.draft,
         after: output.text,
         context,
-        applied: plan.interventions,
+        applied: appliedInterventions,
         maxRecentEntries: options.memory?.maxRecentEntries,
       });
       const callbackUsed =
-        callbackMoment &&
-        bestCandidate.appliedInterventions.includes('callback');
+        callbackMoment !== undefined && appliedKinds.includes('callback');
 
       if (callbackUsed) {
         nextMemory = markMomentUsed({
@@ -284,7 +301,7 @@ export function createContaminator(
       nextMemory = recordLastTilt({
         memory: nextMemory,
         text: output.text,
-        interventions: bestCandidate.appliedInterventions,
+        interventions: appliedKinds,
       });
       nextMemory = {
         ...nextMemory,
@@ -297,7 +314,7 @@ export function createContaminator(
       await saveMemory(nextMemory);
       emit({
         type: 'tilt_applied',
-        interventions: bestCandidate.appliedInterventions,
+        interventions: appliedKinds,
         text: output.text,
       });
 
@@ -351,6 +368,23 @@ export function createContaminator(
       emit({ type: 'moment_recorded', summary: moment.summary });
     },
   };
+}
+
+/**
+ * Reconcile the LLM's self-reported applied interventions against the plan.
+ * Only interventions that the plan authorized AND the selected candidate
+ * claimed count as actually applied. The plan supplies the reason/strength so
+ * downstream consumers keep the structured metadata.
+ */
+function resolveAppliedInterventions(
+  claimed: InterventionKind[],
+  plan: InterventionPlan
+): PlannedIntervention[] {
+  const claimedKinds = new Set(claimed);
+
+  return plan.interventions.filter((intervention) =>
+    claimedKinds.has(intervention.kind)
+  );
 }
 
 function skipReasonFromPhase(rhythm: RhythmDecision): NoiseSkipReason {
