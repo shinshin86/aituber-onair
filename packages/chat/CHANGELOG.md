@@ -1,5 +1,27 @@
 # @aituber-onair/chat
 
+## 0.40.0
+
+### Minor Changes
+
+- Added Kimi K2.7 Code (`kimi-k2.7-code`) and Kimi K2.7 Code HighSpeed
+  (`kimi-k2.7-code-highspeed`) to the Kimi constants, provider supported
+  model list, vision support metadata, tests, React basic selector, and
+  English/Japanese README documentation.
+- Kept thinking enabled for Kimi K2.7 Code models because those models do not
+  support non-thinking mode, including when tools are configured. Explicitly
+  setting `thinking: { type: 'disabled' }` for those models now throws before
+  sending the request.
+- Kept Kimi K2.6 as the Kimi provider default for chat-oriented usage.
+- Added Z.ai GLM-5.2 (`glm-5.2`) to the Z.ai constants, provider supported
+  model list, tests, React basic selector, and English/Japanese README
+  documentation.
+- Added OpenRouter curated entries for `moonshotai/kimi-k2.7-code` and
+  `z-ai/glm-5.2`.
+- Defaulted OpenRouter reasoning effort to `none` and disabled automatic
+  `max_tokens` for `z-ai/glm-5.2` to avoid empty responses when reasoning
+  tokens consume the whole output budget.
+
 ## 0.39.0
 
 ### Minor Changes

@@ -3,6 +3,7 @@ import { ZAIChatServiceProvider } from '../../src/services/providers/zai/ZAIChat
 import type { ZAIChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+  MODEL_GLM_5_2,
   MODEL_GLM_5,
   MODEL_GLM_5_TURBO,
   MODEL_GLM_4_7,
@@ -35,6 +36,7 @@ describe('ZAIChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GLM_5_2,
         MODEL_GLM_5,
         MODEL_GLM_5_TURBO,
         MODEL_GLM_4_7,
@@ -49,8 +51,8 @@ describe('ZAIChatServiceProvider', () => {
   });
 
   describe('getDefaultModel', () => {
-    it('should return glm-4.7 as default model', () => {
-      expect(provider.getDefaultModel()).toBe(MODEL_GLM_4_7);
+    it('should return glm-5.2 as default model', () => {
+      expect(provider.getDefaultModel()).toBe(MODEL_GLM_5_2);
     });
   });
 
@@ -74,6 +76,13 @@ describe('ZAIChatServiceProvider', () => {
       expect(provider.supportsVisionForModel(MODEL_GLM_5)).toBe(false);
     });
 
+    it('should return false for glm-5.2', () => {
+      expect(provider.supportsVisionForModel(MODEL_GLM_5_2)).toBe(false);
+      expect(provider.getVisionSupportLevelForModel(MODEL_GLM_5_2)).toBe(
+        'unsupported',
+      );
+    });
+
     it('should return false for glm-5-turbo', () => {
       expect(provider.supportsVisionForModel(MODEL_GLM_5_TURBO)).toBe(false);
       expect(provider.getVisionSupportLevelForModel(MODEL_GLM_5_TURBO)).toBe(
@@ -92,7 +101,7 @@ describe('ZAIChatServiceProvider', () => {
 
       expect(ZAIChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GLM_4_7,
+        MODEL_GLM_5_2,
         MODEL_GLM_4_6V_FLASH,
         undefined,
         ENDPOINT_ZAI_CHAT_COMPLETIONS_API,

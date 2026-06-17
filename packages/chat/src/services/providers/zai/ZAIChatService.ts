@@ -3,7 +3,7 @@ import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
-  MODEL_GLM_4_7,
+  MODEL_GLM_5_2,
   MODEL_GLM_4_6V_FLASH,
   isZaiToolStreamModel,
   isZaiVisionModel,
@@ -51,7 +51,7 @@ export class ZAIChatService implements ChatService {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_GLM_4_7,
+    model: string = MODEL_GLM_5_2,
     visionModel: string = MODEL_GLM_4_6V_FLASH,
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_ZAI_CHAT_COMPLETIONS_API,

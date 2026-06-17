@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   MODEL_GLM_4_6,
+  MODEL_GLM_5_2,
   MODEL_GLM_5_TURBO,
 } from '../../src/constants';
 import { ZAIChatService } from '../../src/services/providers/zai/ZAIChatService';
@@ -37,6 +38,26 @@ describe('ZAIChatService request body', () => {
       ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
       expect.objectContaining({
         model: MODEL_GLM_5_TURBO,
+        stream: false,
+        messages,
+      }),
+      { Authorization: 'Bearer test-key' },
+    );
+  });
+
+  it('sends glm-5.2 with OpenAI-compatible chat completions payload', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new ZAIChatService('test-key', MODEL_GLM_5_2);
+
+    await service.chatOnce(messages, false);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledWith(
+      ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+      expect.objectContaining({
+        model: MODEL_GLM_5_2,
         stream: false,
         messages,
       }),

@@ -3,6 +3,7 @@ import {
   ENDPOINT_OPENROUTER_API,
   MODEL_GPT_OSS_20B_FREE,
   MODEL_OPENAI_GPT_4O,
+  MODEL_ZAI_GLM_5_2,
 } from '../../src/constants/openrouter';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
@@ -45,7 +46,7 @@ describe('OpenRouterChatService request body', () => {
     );
   });
 
-  it('omits max_tokens only for gpt-oss-20b due to OpenRouter issue', async () => {
+  it('omits max_tokens for gpt-oss-20b due to OpenRouter issue', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const postSpy = vi
       .spyOn(ChatServiceHttpClient, 'post')
@@ -68,6 +69,30 @@ describe('OpenRouterChatService request body', () => {
     expect(body).not.toHaveProperty('max_tokens');
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining(MODEL_GPT_OSS_20B_FREE),
+    );
+  });
+
+  it('omits max_tokens and defaults reasoning effort to none for GLM-5.2', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new OpenRouterChatService('test-key', MODEL_ZAI_GLM_5_2);
+
+    await service.chatOnce(messages, false, () => {}, 128);
+
+    const [, body] = postSpy.mock.calls[0];
+    expect(body).toEqual(
+      expect.objectContaining({
+        model: MODEL_ZAI_GLM_5_2,
+        stream: false,
+        messages,
+        reasoning: { effort: 'none', exclude: true },
+      }),
+    );
+    expect(body).not.toHaveProperty('max_tokens');
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining(MODEL_ZAI_GLM_5_2),
     );
   });
 });

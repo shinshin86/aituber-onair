@@ -1,7 +1,10 @@
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  MODEL_KIMI_K2_7_CODE,
+  MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
+  isKimiThinkingRequiredModel,
   isKimiVisionModel,
 } from '../../../constants/kimi';
 import { ChatService } from '../../ChatService';
@@ -20,6 +23,8 @@ import { resolveVisionModel } from '../../../utils';
 export class KimiChatServiceProvider
   implements ChatServiceProvider<KimiChatServiceOptions>
 {
+  private readonly defaultThinking = { type: 'enabled' as const };
+
   /**
    * Create a chat service instance
    */
@@ -37,11 +42,7 @@ export class KimiChatServiceProvider
     });
 
     const tools: ToolDefinition[] | undefined = options.tools;
-    const defaultThinking = options.thinking ?? { type: 'enabled' as const };
-    const thinking =
-      tools && tools.length > 0
-        ? { type: 'disabled' as const }
-        : defaultThinking;
+    const thinking = this.resolveThinking(model, tools, options.thinking);
 
     return new KimiChatService(
       options.apiKey,
@@ -66,7 +67,12 @@ export class KimiChatServiceProvider
    * Get the list of supported models
    */
   getSupportedModels(): string[] {
-    return [MODEL_KIMI_K2_6, MODEL_KIMI_K2_5];
+    return [
+      MODEL_KIMI_K2_7_CODE,
+      MODEL_KIMI_K2_7_CODE_HIGHSPEED,
+      MODEL_KIMI_K2_6,
+      MODEL_KIMI_K2_5,
+    ];
   }
 
   /**
@@ -121,5 +127,26 @@ export class KimiChatServiceProvider
 
   private normalizeEndpoint(value: string): string {
     return value.replace(/\/+$/, '');
+  }
+
+  private resolveThinking(
+    model: string,
+    tools: ToolDefinition[] | undefined,
+    thinking: KimiChatServiceOptions['thinking'],
+  ): KimiChatServiceOptions['thinking'] {
+    if (isKimiThinkingRequiredModel(model)) {
+      if (thinking?.type === 'disabled') {
+        throw new Error(
+          `Model ${model} requires thinking mode and does not support thinking: disabled.`,
+        );
+      }
+      return thinking ?? this.defaultThinking;
+    }
+
+    if (tools && tools.length > 0) {
+      return { type: 'disabled' };
+    }
+
+    return thinking ?? this.defaultThinking;
   }
 }

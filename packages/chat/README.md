@@ -622,6 +622,7 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - Free tier has rate limits (20 requests/minute)
 - Free tier detection is based on the model ID suffix `:free` (dynamic `:free` IDs are also rate-limited)
 - `openrouter/fusion` runs a multi-model panel plus a judge model; OpenRouter bills the sum of the underlying model calls and any enabled web search/fetch usage, not a single fixed model rate.
+- For `z-ai/glm-5.2`, OpenRouter reasoning defaults to `none` and token limits are automatically disabled because reasoning tokens can otherwise exhaust the output budget before visible content is emitted.
 - Supported models (curated list):
   - `openrouter/auto`
   - `openrouter/fusion`
@@ -634,8 +635,8 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
   - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
-  - `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
-  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k2.5`
+  - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
+  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
 
 **Dynamic OpenRouter free model refresh**
 
@@ -669,7 +670,7 @@ Notes:
 ```typescript
 const zaiService = ChatServiceFactory.createChatService('zai', {
   apiKey: process.env.ZAI_API_KEY,
-  model: 'glm-5-turbo',
+  model: 'glm-5.2',
   visionModel: 'glm-4.6V-Flash', // Optional: vision-capable model
   responseFormat: { type: 'json_object' } // Optional JSON mode
 });
@@ -677,7 +678,7 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 
 Notes:
 - Z.ai uses OpenAI-compatible Chat Completions.
-- Supported text models: `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
+- Supported text models: `glm-5.2`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
 - Supported vision models: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
 - `thinking` is disabled by default to match fast response behavior.
 
@@ -711,8 +712,11 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 
 Notes:
 - Kimi uses OpenAI-compatible Chat Completions.
-- Supported models: `kimi-k2.6`, `kimi-k2.5`
-- When tools are enabled, `thinking` is forced to `{ type: 'disabled' }`.
+- Supported models: `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
+- `kimi-k2.6` remains the default model for chat-oriented usage.
+- Kimi K2.7 Code models are coding-oriented and require thinking mode, so they keep `thinking` enabled even when tools are used.
+- Explicitly setting `thinking: { type: 'disabled' }` with Kimi K2.7 Code models throws before sending the request.
+- For older Kimi models, when tools are enabled, `thinking` is forced to `{ type: 'disabled' }`.
 
 Self-hosted example:
 
@@ -1075,9 +1079,9 @@ Currently, the following AI providers are built-in:
 - **Gemini**: Supports recommended models like Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Supports current Claude API model IDs including Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
-- **Z.ai**: Supports GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)
+- **Z.ai**: Supports GLM-5.2/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)
 - **xAI**: Supports Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support
-- **Kimi**: Supports Kimi K2.6 (`kimi-k2.6`) and Kimi K2.5 (`kimi-k2.5`) with vision support
+- **Kimi**: Supports Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`) and DeepSeek V4 Pro (`deepseek-v4-pro`) via OpenAI-compatible Chat Completions. Legacy aliases `deepseek-chat` and `deepseek-reasoner` are deprecated by DeepSeek.
 - **Mistral**: Supports current Mistral generalist models including `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, and `mistral-medium-2508`, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
 - **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Chrome 138+ with Prompt API flags enabled. Non-streaming, no vision support.
