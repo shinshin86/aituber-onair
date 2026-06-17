@@ -28,6 +28,8 @@ Collect missing inputs before editing:
    - Inspect `packages/chat/package.json` and `packages/core/package.json`.
    - Read `packages/chat/CHANGELOG.md` latest entry and list what must surface
      in core (new constants/models/provider behavior).
+   - List `packages/core/examples/*/package-lock.json` files and identify every
+     lockfile that embeds the local `@aituber-onair/core` workspace metadata.
 2. Align core dependency:
    - Update `packages/core/package.json` dependency
      `@aituber-onair/chat` to include `^<chat_version>` when needed.
@@ -38,8 +40,12 @@ Collect missing inputs before editing:
 4. Update core examples when `update_examples` is `true`:
    - `packages/core/examples/react-basic/src/constants/*.ts`:
      add/replace model constants so new chat models are selectable.
-   - `packages/core/examples/react-pngtuber-app`:
-     update defaults or UI only if required by the chat change.
+   - For `packages/core/examples/react-pngtuber-app`,
+     `packages/core/examples/react-vrm-app`, and
+     `packages/core/examples/react-live2d-app`, check whether the chat change
+     requires defaults, model selectors, settings UI, or docs updates. These
+     apps usually use free-form model input rather than fixed chat model lists,
+     so code changes are only needed when behavior or defaults must change.
 5. Update docs when `update_docs` is `true`:
    - `packages/core/README.md`
    - `packages/core/README_ja.md`
@@ -54,14 +60,26 @@ Collect missing inputs before editing:
    - Add release note entry to `packages/core/CHANGELOG.md`.
 7. Lockfiles:
    - Update root `package-lock.json`.
-   - Update example lockfiles that embed workspace metadata:
+   - Update every core example lockfile that embeds local core workspace
+     metadata, not just examples with code changes. At the time of writing this
+     includes:
      - `packages/core/examples/react-basic/package-lock.json`
      - `packages/core/examples/react-pngtuber-app/package-lock.json`
+     - `packages/core/examples/react-vrm-app/package-lock.json`
+     - `packages/core/examples/react-live2d-app/package-lock.json`
+     - `packages/core/examples/coding-agent/package-lock.json`
+   - After updating, search all `packages/core/examples/*/package-lock.json`
+     files for stale `@aituber-onair/core` versions or stale
+     `@aituber-onair/chat` dependency ranges.
 8. Verify:
    - `npm -w @aituber-onair/core run test`
    - `npm -w @aituber-onair/core run build`
    - `npm --prefix packages/core/examples/react-basic run build`
    - `npm --prefix packages/core/examples/react-pngtuber-app run build`
+   - If VRM, Live2D, coding-agent, or their lockfiles changed, also run:
+     - `npm --prefix packages/core/examples/react-vrm-app run build`
+     - `npm --prefix packages/core/examples/react-live2d-app run build`
+     - `npm --prefix packages/core/examples/coding-agent run build`
 9. Final check:
    - Confirm newly added chat models/features are reachable from core exports
      and visible in examples.
@@ -75,6 +93,10 @@ npm -w @aituber-onair/core run test
 npm -w @aituber-onair/core run build
 npm --prefix packages/core/examples/react-basic run build
 npm --prefix packages/core/examples/react-pngtuber-app run build
+# Also run these when the corresponding example or lockfile changed:
+npm --prefix packages/core/examples/react-vrm-app run build
+npm --prefix packages/core/examples/react-live2d-app run build
+npm --prefix packages/core/examples/coding-agent run build
 ```
 
 ## Acceptance Criteria
@@ -83,6 +105,8 @@ npm --prefix packages/core/examples/react-pngtuber-app run build
 - Required new chat constants/features are re-exported from core.
 - Core examples can select/use newly propagated models as needed.
 - Core docs reflect the updated provider/model coverage.
-- Core version/changelog and lockfiles are consistent when `bump_version` is
-  `true`.
-- Core tests/build and both React example builds pass.
+- Core version/changelog and all core example lockfiles that embed local core
+  metadata are consistent when `bump_version` is `true`.
+- No core example lockfile still references the previous core version or stale
+  chat version range.
+- Core tests/build and affected example builds pass.
