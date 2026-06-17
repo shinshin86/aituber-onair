@@ -137,11 +137,14 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Claude 3 Haiku (deprecated but still available)
 
 **Z.ai:**
+- GLM-5.2
 - GLM-5 and GLM-5-Turbo (text-only)
 - GLM-4.7 series
 - GLM-4.6 and GLM-4.6V series
 
 **Kimi:**
+- Kimi K2.7 Code
+- Kimi K2.7 Code HighSpeed
 - Kimi K2.6
 - Kimi K2.5
 
@@ -160,8 +163,9 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Mistral Large Latest / 3, Small 4, Medium 3.1
 
 **OpenRouter:**
-- Curated multi-provider models (OpenRouter Auto/Fusion, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
+- Curated multi-provider models (OpenRouter Auto/Fusion, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai GLM-5.2, Kimi K2.7 Code)
 - Fusion bills the combined underlying model calls and any enabled web search/fetch usage
+- GLM-5.2 defaults reasoning effort to `none` and omits automatic `max_tokens`
 - `Fetch free models` button to probe currently available `:free` models
 - Dynamic free models are added to the model select list
 - `Max candidates` means "maximum number of `:free` candidates to probe"

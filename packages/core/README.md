@@ -1395,9 +1395,9 @@ Currently, the following AI provider is built-in:
 - **xAI**: Supports Grok 4.3, Grok 4.20, and Grok 4.1 Fast model families
 - **DeepSeek**: Supports DeepSeek V4 Flash and DeepSeek V4 Pro through the first-class `deepseek` provider.
 - **Mistral**: Supports current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including vision-capable model metadata and adjustable reasoning for supported models.
-- **Z.ai**: Supports models like GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
-- **Kimi**: Supports Kimi K2.6 (`kimi-k2.6`) and Kimi K2.5 (`kimi-k2.5`) with vision support
-- **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router, Fusion, latest-family aliases, OpenAI GPT-5.5, Claude, Gemini, Z.ai, and Kimi. Fusion runs a multi-model panel plus a judge model, so usage is billed as the sum of the underlying model calls and any enabled web search/fetch usage.
+- **Z.ai**: Supports models like GLM-5.2, GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
+- **Kimi**: Supports Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`), and Kimi K2.5 (`kimi-k2.5`) with vision support. Kimi K2.7 Code models require thinking mode; explicitly setting `thinking: { type: 'disabled' }` throws before the request is sent.
+- **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router, Fusion, latest-family aliases, OpenAI GPT-5.5, Claude, Gemini, Z.ai GLM-5.2, and Kimi K2.7 Code. Fusion runs a multi-model panel plus a judge model, so usage is billed as the sum of the underlying model calls and any enabled web search/fetch usage. For OpenRouter GLM-5.2, core inherits chat's default `reasoning.effort: 'none'` and omits automatic `max_tokens` to avoid reasoning tokens consuming the whole output budget.
 - **OpenAI-Compatible**: Supports arbitrary OpenAI-compatible Chat Completions endpoints; vision capability is treated as unknown until the target endpoint/model responds
 
 For OpenRouter free-tier discovery, you can also use

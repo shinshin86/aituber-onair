@@ -1,5 +1,21 @@
 # @aituber-onair/core
 
+## 0.26.3
+
+### Patch Changes
+
+- Synced Kimi K2.7 Code and GLM-5.2 support from
+  `@aituber-onair/chat@0.40.0` into core:
+  - re-exported the new Kimi, Z.ai, and OpenRouter model constants and Kimi
+    thinking capability helpers
+  - added Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, GLM-5.2, and the matching
+    OpenRouter curated IDs to the React basic example model lists
+  - documented that Kimi K2.7 Code models require thinking mode and that
+    OpenRouter GLM-5.2 avoids automatic `max_tokens` while defaulting
+    reasoning effort to `none`
+- Updated dependencies []:
+  - @aituber-onair/chat@0.40.0
+
 ## 0.26.2
 
 ### Patch Changes
