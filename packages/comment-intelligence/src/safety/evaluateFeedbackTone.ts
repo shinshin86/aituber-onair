@@ -1,5 +1,5 @@
-import type { SafetyCategory } from '../types/safety';
-import { normalizeText } from '../utils/text';
+import type { SafetyCategory } from '../types/safety.js';
+import { normalizeText } from '../utils/text.js';
 
 export type FeedbackToneCategory =
   | Extract<SafetyCategory, 'hostile_feedback' | 'harassment'>

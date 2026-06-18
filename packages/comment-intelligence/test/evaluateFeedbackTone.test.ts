@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evaluateFeedbackTone } from '../src/safety/evaluateFeedbackTone';
+import { evaluateFeedbackTone } from '../src/safety/evaluateFeedbackTone.js';
 
 describe('evaluateFeedbackTone', () => {
   it.each([

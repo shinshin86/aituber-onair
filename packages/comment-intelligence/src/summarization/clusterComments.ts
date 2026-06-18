@@ -1,6 +1,6 @@
-import type { LiveComment } from '../types/comment';
-import type { CommentCluster } from '../types/summary';
-import { normalizeText } from '../utils/text';
+import type { LiveComment } from '../types/comment.js';
+import type { CommentCluster } from '../types/summary.js';
+import { normalizeText } from '../utils/text.js';
 
 export type CommentClusterLabel =
   | 'greeting'

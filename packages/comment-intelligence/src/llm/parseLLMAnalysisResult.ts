@@ -1,4 +1,4 @@
-import type { LLMCommentAnalysisResult } from '../types/llm';
+import type { LLMCommentAnalysisResult } from '../types/llm.js';
 
 export function parseLLMAnalysisResult(text: string): LLMCommentAnalysisResult {
   const jsonText = extractJson(text);

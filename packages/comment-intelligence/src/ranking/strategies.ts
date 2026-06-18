@@ -1,4 +1,4 @@
-import type { RankingStrategy, RankingWeights } from '../types/ranking';
+import type { RankingStrategy, RankingWeights } from '../types/ranking.js';
 
 export const defaultRankingWeights: RankingWeights = {
   question: 0.25,

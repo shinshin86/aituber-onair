@@ -1,4 +1,4 @@
-import type { LiveComment } from '../types/comment';
+import type { LiveComment } from '../types/comment.js';
 
 export type NormalizableYouTubeComment = {
   id: string;

@@ -1,17 +1,17 @@
-import type { CommentIntelligenceConfig } from './types/config';
-import type { LLMCommentAnalysisResult } from './types/llm';
+import type { CommentIntelligenceConfig } from './types/config.js';
+import type { LLMCommentAnalysisResult } from './types/llm.js';
 import type {
   AnalyzeCommentsInput,
   CommentIntelligenceResult,
-} from './types/result';
-import type { SafetyCategory, SafetyReport } from './types/safety';
-import type { ViewerSafetyState } from './types/viewer';
-import { buildInstruction } from './context/buildInstruction';
-import { buildLLMContext } from './context/buildLLMContext';
-import { rankComments } from './ranking/rankComments';
-import { ruleBasedSafetyProvider } from './safety/ruleBasedSafetyProvider';
-import { summarizeIgnoredComments } from './summarization/summarizeIgnoredComments';
-import type { RankedComment } from './types/ranking';
+} from './types/result.js';
+import type { SafetyCategory, SafetyReport } from './types/safety.js';
+import type { ViewerSafetyState } from './types/viewer.js';
+import { buildInstruction } from './context/buildInstruction.js';
+import { buildLLMContext } from './context/buildLLMContext.js';
+import { rankComments } from './ranking/rankComments.js';
+import { ruleBasedSafetyProvider } from './safety/ruleBasedSafetyProvider.js';
+import { summarizeIgnoredComments } from './summarization/summarizeIgnoredComments.js';
+import type { RankedComment } from './types/ranking.js';
 
 const defaultConfig: CommentIntelligenceConfig = {
   analysis: {

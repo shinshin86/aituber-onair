@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createChatServiceCommentAnalysisProvider } from '../src/llm/createChatServiceCommentAnalysisProvider';
-import { parseLLMAnalysisResult } from '../src/llm/parseLLMAnalysisResult';
-import type { LiveComment } from '../src/types/comment';
+import { createChatServiceCommentAnalysisProvider } from '../src/llm/createChatServiceCommentAnalysisProvider.js';
+import { parseLLMAnalysisResult } from '../src/llm/parseLLMAnalysisResult.js';
+import type { LiveComment } from '../src/types/comment.js';
 
 function comment(id: string, text = 'こんにちは'): LiveComment {
   return {

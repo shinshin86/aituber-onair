@@ -1,12 +1,12 @@
-import type { LiveComment } from '../types/comment';
-import type { CommentIntelligenceConfig } from '../types/config';
-import type { StreamState } from '../types/context';
-import type { RankedComment } from '../types/ranking';
-import type { SafetyReport } from '../types/safety';
-import type { ViewerProfile, ViewerSafetyState } from '../types/viewer';
-import { normalizeText } from '../utils/text';
-import { scoreComment } from './scoring';
-import { defaultRankingWeights, getStrategyWeights } from './strategies';
+import type { LiveComment } from '../types/comment.js';
+import type { CommentIntelligenceConfig } from '../types/config.js';
+import type { StreamState } from '../types/context.js';
+import type { RankedComment } from '../types/ranking.js';
+import type { SafetyReport } from '../types/safety.js';
+import type { ViewerProfile, ViewerSafetyState } from '../types/viewer.js';
+import { normalizeText } from '../utils/text.js';
+import { scoreComment } from './scoring.js';
+import { defaultRankingWeights, getStrategyWeights } from './strategies.js';
 
 export type RankCommentsInput = {
   comments: LiveComment[];

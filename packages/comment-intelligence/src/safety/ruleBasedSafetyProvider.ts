@@ -1,8 +1,8 @@
-import type { LiveComment } from '../types/comment';
-import type { CommentIntelligenceConfig } from '../types/config';
-import type { SafetyCategory, SafetyReport } from '../types/safety';
-import { includesAny, normalizeText } from '../utils/text';
-import { evaluateFeedbackTone } from './evaluateFeedbackTone';
+import type { LiveComment } from '../types/comment.js';
+import type { CommentIntelligenceConfig } from '../types/config.js';
+import type { SafetyCategory, SafetyReport } from '../types/safety.js';
+import { includesAny, normalizeText } from '../utils/text.js';
+import { evaluateFeedbackTone } from './evaluateFeedbackTone.js';
 import {
   harassmentPatterns,
   personalInfoPatterns,
@@ -10,7 +10,7 @@ import {
   sexualPatterns,
   urlPatterns,
   violencePatterns,
-} from './patterns';
+} from './patterns.js';
 
 export const ruleBasedSafetyProvider = {
   check(

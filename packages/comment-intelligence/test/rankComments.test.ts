@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { rankComments } from '../src/ranking/rankComments';
-import type { LiveComment } from '../src/types/comment';
-import type { SafetyReport } from '../src/types/safety';
-import type { ViewerProfile } from '../src/types/viewer';
+import { rankComments } from '../src/ranking/rankComments.js';
+import type { LiveComment } from '../src/types/comment.js';
+import type { SafetyReport } from '../src/types/safety.js';
+import type { ViewerProfile } from '../src/types/viewer.js';
 
 function comment(
   id: string,
