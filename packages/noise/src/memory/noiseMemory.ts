@@ -1,21 +1,34 @@
+import { createInitialRhythmState } from '../core/rhythmController.js';
 import type {
   ContextFingerprint,
-  PlannedIntervention,
+  InterventionKind,
+  MemorableMoment,
   NoiseMemory,
+  NoiseReactionSignal,
+  PlannedIntervention,
   StainKind,
 } from '../core/types.js';
 
 const DEFAULT_MAX_RECENT_ENTRIES = 30;
+const DEFAULT_VIOLATION_BUDGET = 1;
+const MIN_VIOLATION_BUDGET = 0.2;
+const MAX_MEMORABLE_MOMENTS = 20;
+const CALLBACK_MIN_SPACING_TURNS = 6;
+const RESPONSE_SNIPPET_LENGTH = 200;
 
 export function createInitialNoiseMemory(): NoiseMemory {
   return {
     version: 1,
     recentClosings: [],
+    recentResponses: [],
     repeatedPhrases: [],
     usedStains: [],
     topicLoops: [],
     avoidedPatterns: [],
     learnedRules: [],
+    memorableMoments: [],
+    rhythm: createInitialRhythmState(),
+    violationBudget: DEFAULT_VIOLATION_BUDGET,
     updatedAt: Date.now(),
   };
 }
@@ -30,11 +43,15 @@ export function normalizeNoiseMemory(
   return {
     ...createInitialNoiseMemory(),
     ...memory,
+    recentResponses: memory.recentResponses ?? [],
     repeatedPhrases: memory.repeatedPhrases ?? [],
     usedStains: memory.usedStains ?? [],
     topicLoops: memory.topicLoops ?? [],
     avoidedPatterns: memory.avoidedPatterns ?? [],
     learnedRules: memory.learnedRules ?? [],
+    memorableMoments: memory.memorableMoments ?? [],
+    rhythm: memory.rhythm ?? createInitialRhythmState(),
+    violationBudget: memory.violationBudget ?? DEFAULT_VIOLATION_BUDGET,
   };
 }
 
@@ -58,6 +75,13 @@ export function updateNoiseMemory(input: {
       closing ? [...memory.recentClosings, closing] : memory.recentClosings,
       maxRecentEntries
     ),
+    recentResponses: trimList(
+      [
+        ...memory.recentResponses,
+        input.after.slice(0, RESPONSE_SNIPPET_LENGTH),
+      ],
+      maxRecentEntries
+    ),
     repeatedPhrases: trimPhraseCounts(
       incrementPhraseCounts(memory.repeatedPhrases, phrases),
       maxRecentEntries
@@ -79,6 +103,183 @@ export function updateNoiseMemory(input: {
         )
       : memory.topicLoops,
     updatedAt: Date.now(),
+  };
+}
+
+/** Record the latest tilt so a later positive reaction can promote it. */
+export function recordLastTilt(input: {
+  memory: NoiseMemory;
+  text: string;
+  interventions: InterventionKind[];
+}): NoiseMemory {
+  return {
+    ...input.memory,
+    lastTilt: {
+      turn: input.memory.rhythm.totalTurns,
+      summary: input.text.slice(0, 120),
+      interventions: input.interventions,
+      promoted: false,
+    },
+    updatedAt: Date.now(),
+  };
+}
+
+/** Add a memorable moment to the gag ledger. */
+export function addMemorableMoment(input: {
+  memory: NoiseMemory;
+  summary: string;
+  source?: MemorableMoment['source'];
+}): NoiseMemory {
+  const memory = input.memory;
+  const summary = input.summary.trim().slice(0, 120);
+
+  if (!summary) {
+    return memory;
+  }
+
+  const existing = memory.memorableMoments.find(
+    (moment) => moment.summary === summary
+  );
+
+  if (existing) {
+    return memory;
+  }
+
+  const moment: MemorableMoment = {
+    id: `moment-${memory.rhythm.totalTurns}-${memory.memorableMoments.length}`,
+    summary,
+    source: input.source ?? 'assistant',
+    callbacks: 0,
+    lastUsedTurn: -1,
+    createdTurn: memory.rhythm.totalTurns,
+  };
+
+  return {
+    ...memory,
+    memorableMoments: [...memory.memorableMoments, moment].slice(
+      -MAX_MEMORABLE_MOMENTS
+    ),
+    updatedAt: Date.now(),
+  };
+}
+
+/**
+ * Pick a moment for a callback intervention. Callbacks are the highest-value,
+ * lowest-risk surprise (proof of shared memory), but they must stay sparse to
+ * remain surprising, so a minimum turn spacing is enforced per moment.
+ */
+export function pickCallbackMoment(
+  memory: NoiseMemory
+): MemorableMoment | undefined {
+  const currentTurn = memory.rhythm.totalTurns;
+  const eligible = memory.memorableMoments.filter((moment) => {
+    if (moment.lastUsedTurn === -1) {
+      return currentTurn - moment.createdTurn >= 1;
+    }
+
+    return currentTurn - moment.lastUsedTurn >= CALLBACK_MIN_SPACING_TURNS;
+  });
+
+  if (eligible.length === 0) {
+    return undefined;
+  }
+
+  return [...eligible].sort((left, right) => {
+    const leftIdle =
+      currentTurn -
+      (left.lastUsedTurn === -1 ? left.createdTurn : left.lastUsedTurn);
+    const rightIdle =
+      currentTurn -
+      (right.lastUsedTurn === -1 ? right.createdTurn : right.lastUsedTurn);
+
+    return rightIdle - leftIdle;
+  })[0];
+}
+
+export function markMomentUsed(input: {
+  memory: NoiseMemory;
+  momentId: string;
+}): NoiseMemory {
+  return {
+    ...input.memory,
+    memorableMoments: input.memory.memorableMoments.map((moment) =>
+      moment.id === input.momentId
+        ? {
+            ...moment,
+            callbacks: moment.callbacks + 1,
+            lastUsedTurn: input.memory.rhythm.totalTurns,
+          }
+        : moment
+    ),
+    updatedAt: Date.now(),
+  };
+}
+
+const REACTION_BUDGET_DELTAS: Record<NoiseReactionSignal, number> = {
+  laughter: 0.08,
+  positive: 0.05,
+  neutral: 0,
+  silence: -0.08,
+  pushback: -0.15,
+  discomfort: -0.25,
+};
+
+const REPAIR_TURNS_ON_NEGATIVE = 2;
+
+/**
+ * Apply an observed audience reaction. Positive reactions widen the budget
+ * and promote the latest tilt into the gag ledger; negative reactions shrink
+ * the budget and schedule repair turns (forced platform).
+ */
+export function applyReactionToMemory(input: {
+  memory: NoiseMemory;
+  signal: NoiseReactionSignal;
+  detail?: string;
+}): {
+  memory: NoiseMemory;
+  repairAdvised: boolean;
+  promotedMoment?: MemorableMoment;
+} {
+  const memory = input.memory;
+  const delta = REACTION_BUDGET_DELTAS[input.signal];
+  const violationBudget = Math.min(
+    1,
+    Math.max(MIN_VIOLATION_BUDGET, memory.violationBudget + delta)
+  );
+  const negative = input.signal === 'pushback' || input.signal === 'discomfort';
+  const positive = input.signal === 'laughter' || input.signal === 'positive';
+  let next: NoiseMemory = {
+    ...memory,
+    violationBudget,
+    rhythm: negative
+      ? {
+          ...memory.rhythm,
+          repairRemaining: Math.max(
+            memory.rhythm.repairRemaining,
+            REPAIR_TURNS_ON_NEGATIVE
+          ),
+        }
+      : memory.rhythm,
+    updatedAt: Date.now(),
+  };
+  let promotedMoment: MemorableMoment | undefined;
+
+  if (positive && next.lastTilt && !next.lastTilt.promoted) {
+    const summary = input.detail?.trim() || next.lastTilt.summary;
+    next = addMemorableMoment({
+      memory: { ...next, lastTilt: { ...next.lastTilt, promoted: true } },
+      summary,
+      source: 'assistant',
+    });
+    promotedMoment = next.memorableMoments.find(
+      (moment) => moment.summary === summary.slice(0, 120)
+    );
+  }
+
+  return {
+    memory: next,
+    repairAdvised: negative,
+    promotedMoment,
   };
 }
 

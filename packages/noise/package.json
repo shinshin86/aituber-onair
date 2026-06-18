@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/noise",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A context-aware response noise engine for AI VTubers.",
   "type": "module",
   "main": "dist/index.js",
@@ -27,6 +27,8 @@
     "build": "npm run clean && tsc --project tsconfig.json",
     "example:noise-sample": "vite --host 127.0.0.1 examples/noise-sample",
     "example:noise-sample:build": "vite build examples/noise-sample",
+    "example:noise-session-sample": "vite --host 127.0.0.1 examples/noise-session-sample",
+    "example:noise-session-sample:build": "vite build examples/noise-session-sample",
     "typecheck": "tsc --noEmit --project tsconfig.json",
     "test": "npm run typecheck && vitest run",
     "test:watch": "vitest",

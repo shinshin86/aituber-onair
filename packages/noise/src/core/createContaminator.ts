@@ -1,9 +1,21 @@
-import { createContextFingerprint } from './contextFingerprint.js';
+import {
+  addMemorableMoment,
+  applyReactionToMemory,
+  createInitialNoiseMemory,
+  markMomentUsed,
+  normalizeNoiseMemory,
+  pickCallbackMoment,
+  recordLastTilt,
+  updateNoiseMemory,
+} from '../memory/noiseMemory.js';
+import { createChatRewriteModel } from '../models/chatRewriteModel.js';
+import { createOpenAICompatibleRewriteModel } from '../models/openAICompatibleRewriteModel.js';
 import {
   evaluateRewriteCandidates,
   selectBestCandidate,
 } from './candidateEvaluator.js';
 import { generateRewriteCandidates } from './candidateGenerator.js';
+import { createContextFingerprint } from './contextFingerprint.js';
 import {
   buildFrictionParameters,
   buildInterventionPlan,
@@ -11,30 +23,73 @@ import {
 import { diagnosePredictability } from './predictabilityDiagnosis.js';
 import { clamp01 } from './random.js';
 import {
-  normalizeNoiseMemory,
-  updateNoiseMemory,
-} from '../memory/noiseMemory.js';
-import { createOpenAICompatibleRewriteModel } from '../models/openAICompatibleRewriteModel.js';
+  gateMode,
+  getAllowedInterventions,
+  resolveRelationshipTier,
+} from './relationshipGate.js';
+import { advanceRhythmState, decideRhythm } from './rhythmController.js';
 import {
   protectSensitiveSpans,
   restoreSensitiveSpans,
   safetyGuard,
 } from './safetyGuard.js';
-import { createChatRewriteModel } from '../models/chatRewriteModel.js';
+import { assessSincerity } from './sincerityGate.js';
 import type {
+  ContaminateGates,
   ContaminateInput,
   ContaminateOutput,
   Contaminator,
+  ContextFingerprint,
   CreateContaminatorOptions,
+  InterventionKind,
+  InterventionPlan,
+  NoiseEvent,
+  NoiseMemory,
+  NoiseMode,
+  NoiseQualityReport,
+  NoiseReactionInput,
+  NoiseReactionResult,
+  NoiseSkipReason,
+  PlannedIntervention,
+  PredictabilityDiagnosis,
+  RecordMomentInput,
   RewriteModel,
+  RhythmDecision,
 } from './types.js';
+
+const DEFAULT_RELATIONSHIP_CAPITAL = 0.5;
 
 export function createContaminator(
   options: CreateContaminatorOptions = {}
 ): Contaminator {
   const defaultIntensity = clamp01(options.intensity ?? 0.3);
-  const mode = options.mode ?? 'performer';
+  const requestedMode: NoiseMode = options.mode ?? 'performer';
   const model = resolveRewriteModel(options);
+  const sincerityGateEnabled = options.sincerityGate !== false;
+  // Session-local memory used when no store is configured, so the rhythm
+  // controller and reaction loop still work within the contaminator lifetime.
+  let sessionMemory: NoiseMemory = createInitialNoiseMemory();
+
+  const emit = (event: NoiseEvent): void => {
+    options.onNoiseEvent?.(event);
+  };
+
+  const loadMemory = async (): Promise<NoiseMemory> => {
+    if (!options.memory) {
+      return sessionMemory;
+    }
+
+    const loaded = await options.memory.store.load(options.memory.scopeId);
+    return normalizeNoiseMemory(loaded);
+  };
+
+  const saveMemory = async (memory: NoiseMemory): Promise<void> => {
+    sessionMemory = memory;
+
+    if (options.memory && options.memory.autoUpdate !== false) {
+      await options.memory.store.save(options.memory.scopeId, memory);
+    }
+  };
 
   return {
     async contaminate(input: ContaminateInput): Promise<ContaminateOutput> {
@@ -44,13 +99,7 @@ export function createContaminator(
         );
       }
 
-      const intensity = clamp01(input.intensity ?? defaultIntensity);
-      const loadedMemory = options.memory
-        ? await options.memory.store.load(options.memory.scopeId)
-        : undefined;
-      const memory = options.memory
-        ? normalizeNoiseMemory(loadedMemory)
-        : undefined;
+      const memory = await loadMemory();
       const context = createContextFingerprint({
         systemPrompt: input.systemPrompt,
         messages: input.messages,
@@ -60,12 +109,92 @@ export function createContaminator(
         draft: input.draft,
         context,
       });
+
+      // Gate 1: sincerity. Failed uptake of a sincere bid is the worst-case
+      // violation, so it overrides everything including forceTilt.
+      const sincerity = sincerityGateEnabled
+        ? assessSincerity({ messages: input.messages })
+        : { serious: false, score: 0, reasons: [] };
+
+      // Gate 2: relationship capital decides the violation budget ceiling.
+      const capital = clamp01(
+        input.relationshipCapital ??
+          options.relationshipCapital ??
+          DEFAULT_RELATIONSHIP_CAPITAL
+      );
+      const tier = resolveRelationshipTier(capital);
+      const effectiveMode = gateMode(requestedMode, tier);
+
+      // Gate 3: rhythm. A tilt only reads as an event against a platform.
+      const rhythm: RhythmDecision = sincerity.serious
+        ? {
+            apply: false,
+            phase: 'platform',
+            reason: 'The user made a sincere bid; noise is suppressed.',
+          }
+        : decideRhythm({
+            state: memory.rhythm,
+            diagnosisScore: diagnosis.score,
+            options: options.rhythm,
+            forceTilt: input.forceTilt,
+          });
+
+      const gates: ContaminateGates = {
+        sincerity,
+        relationship: {
+          capital,
+          tier,
+          effectiveMode,
+        },
+        rhythm,
+      };
+
+      if (!rhythm.apply) {
+        const reason: NoiseSkipReason = sincerity.serious
+          ? 'sincerity'
+          : skipReasonFromPhase(rhythm);
+        const skippedOutput = createSkippedOutput({
+          input,
+          context,
+          diagnosis,
+          gates,
+          reason,
+        });
+
+        await saveMemory({
+          ...memory,
+          rhythm: advanceRhythmState({
+            state: memory.rhythm,
+            tilted: false,
+            options: options.rhythm,
+          }),
+        });
+        emit({
+          type: 'noise_skipped',
+          reason,
+          detail: rhythm.reason,
+        });
+
+        return skippedOutput;
+      }
+
+      const violationBudget = memory.violationBudget;
+      const intensity = clamp01(
+        clamp01(input.intensity ?? defaultIntensity) *
+          (0.5 + violationBudget * 0.5)
+      );
+      const allowedInterventions = getAllowedInterventions(tier);
+      const callbackMoment = allowedInterventions.has('callback')
+        ? pickCallbackMoment(memory)
+        : undefined;
       const plan = buildInterventionPlan({
         diagnosis,
         context,
         intensity,
-        mode,
+        mode: effectiveMode,
         memory,
+        allowedInterventions,
+        callbackMaterial: callbackMoment?.summary,
       });
       const friction = buildFrictionParameters({
         diagnosis,
@@ -86,8 +215,8 @@ export function createContaminator(
         plan,
         friction,
         model,
-        mode,
-        candidateCount: getCandidateCount(mode),
+        mode: effectiveMode,
+        candidateCount: getCandidateCount(effectiveMode),
       });
       const safeCandidates = generatedCandidates.map((candidate) => {
         const restored = restoreSensitiveSpans(
@@ -105,15 +234,31 @@ export function createContaminator(
           text: safe.text,
         };
       });
+      const plannedKinds = plan.interventions.map(
+        (intervention) => intervention.kind
+      );
       const candidates = evaluateRewriteCandidates({
         before: input.draft,
         candidates: safeCandidates,
         context,
-        mode,
+        mode: effectiveMode,
         qualityOptions: options.quality,
+        recentResponses: memory.recentResponses,
+        plannedInterventions: plannedKinds,
       });
       const { candidate: bestCandidate, index: selectedIndex } =
-        selectBestCandidate(candidates);
+        selectBestCandidate(candidates, plannedKinds);
+      // Single source of truth for "what was actually applied": the
+      // intervention must be both in the plan and claimed by the selected
+      // candidate. The same normalized list feeds the public output, memory,
+      // and events so they never disagree.
+      const appliedInterventions = resolveAppliedInterventions(
+        bestCandidate.appliedInterventions,
+        plan
+      );
+      const appliedKinds = appliedInterventions.map(
+        (intervention) => intervention.kind
+      );
       const output: ContaminateOutput = {
         text: bestCandidate.text,
         score: {
@@ -127,32 +272,192 @@ export function createContaminator(
         plan,
         candidates,
         selectedIndex,
-        applied: plan.interventions.map((intervention) => ({
+        applied: appliedInterventions.map((intervention) => ({
           kind: intervention.kind,
           reason: intervention.reason,
         })),
+        gates,
       };
 
-      if (options.memory?.autoUpdate !== false) {
-        await options.memory?.store.save(
-          options.memory.scopeId,
-          updateNoiseMemory({
-            memory,
-            before: input.draft,
-            after: output.text,
-            context,
-            applied: plan.interventions,
-            maxRecentEntries: options.memory.maxRecentEntries,
-          })
-        );
+      let nextMemory = updateNoiseMemory({
+        memory,
+        before: input.draft,
+        after: output.text,
+        context,
+        applied: appliedInterventions,
+        maxRecentEntries: options.memory?.maxRecentEntries,
+      });
+      const callbackUsed =
+        callbackMoment !== undefined && appliedKinds.includes('callback');
+
+      if (callbackUsed) {
+        nextMemory = markMomentUsed({
+          memory: nextMemory,
+          momentId: callbackMoment.id,
+        });
+        emit({ type: 'callback_used', summary: callbackMoment.summary });
       }
 
+      nextMemory = recordLastTilt({
+        memory: nextMemory,
+        text: output.text,
+        interventions: appliedKinds,
+      });
+      nextMemory = {
+        ...nextMemory,
+        rhythm: advanceRhythmState({
+          state: nextMemory.rhythm,
+          tilted: true,
+          options: options.rhythm,
+        }),
+      };
+      await saveMemory(nextMemory);
+      emit({
+        type: 'tilt_applied',
+        interventions: appliedKinds,
+        text: output.text,
+      });
+
       return output;
+    },
+
+    async reportReaction(
+      reaction: NoiseReactionInput
+    ): Promise<NoiseReactionResult> {
+      const memory = await loadMemory();
+      const result = applyReactionToMemory({
+        memory,
+        signal: reaction.signal,
+        detail: reaction.detail,
+      });
+
+      await saveMemory(result.memory);
+
+      if (result.repairAdvised) {
+        emit({
+          type: 'repair_advised',
+          detail:
+            reaction.detail ??
+            'The last deviation landed badly; return to the platform and repair in character.',
+        });
+      }
+
+      if (result.promotedMoment) {
+        emit({
+          type: 'moment_recorded',
+          summary: result.promotedMoment.summary,
+        });
+      }
+
+      return {
+        violationBudget: result.memory.violationBudget,
+        repairAdvised: result.repairAdvised,
+        promotedMoment: result.promotedMoment,
+      };
+    },
+
+    async recordMoment(moment: RecordMomentInput): Promise<void> {
+      const memory = await loadMemory();
+      const next = addMemorableMoment({
+        memory,
+        summary: moment.summary,
+        source: moment.source,
+      });
+
+      await saveMemory(next);
+      emit({ type: 'moment_recorded', summary: moment.summary });
     },
   };
 }
 
-function getCandidateCount(mode: CreateContaminatorOptions['mode']): number {
+/**
+ * Reconcile the LLM's self-reported applied interventions against the plan.
+ * Only interventions that the plan authorized AND the selected candidate
+ * claimed count as actually applied. The plan supplies the reason/strength so
+ * downstream consumers keep the structured metadata.
+ */
+function resolveAppliedInterventions(
+  claimed: InterventionKind[],
+  plan: InterventionPlan
+): PlannedIntervention[] {
+  const claimedKinds = new Set(claimed);
+
+  return plan.interventions.filter((intervention) =>
+    claimedKinds.has(intervention.kind)
+  );
+}
+
+function skipReasonFromPhase(rhythm: RhythmDecision): NoiseSkipReason {
+  switch (rhythm.phase) {
+    case 'repair':
+      return 'repair';
+    case 'cooldown':
+      return 'cooldown';
+    default:
+      return rhythm.reason.includes('not predictable enough')
+        ? 'low_predictability'
+        : 'platform';
+  }
+}
+
+function createSkippedOutput(input: {
+  input: ContaminateInput;
+  context: ContextFingerprint;
+  diagnosis: PredictabilityDiagnosis;
+  gates: ContaminateGates;
+  reason: NoiseSkipReason;
+}): ContaminateOutput {
+  return {
+    text: input.input.draft,
+    score: {
+      predictability: input.diagnosis.score,
+      rewrittenPredictability: input.diagnosis.score,
+      contamination: 0,
+    },
+    quality: createPassthroughQualityReport(input.diagnosis.score),
+    diagnosis: input.diagnosis,
+    plan: {
+      intensity: 0,
+      targetIssues: [],
+      interventions: [],
+      preserve: {
+        meaning: true,
+        persona: true,
+        facts: true,
+        safety: true,
+      },
+    },
+    candidates: [],
+    selectedIndex: -1,
+    applied: [],
+    gates: input.gates,
+    skipped: {
+      reason: input.reason,
+      detail: input.gates.rhythm.reason,
+    },
+  };
+}
+
+function createPassthroughQualityReport(
+  predictability: number
+): NoiseQualityReport {
+  return {
+    passed: true,
+    score: 1,
+    issues: [],
+    checks: {
+      predictabilityBefore: predictability,
+      predictabilityAfter: predictability,
+      predictabilityDelta: 0,
+      lengthRatio: 1,
+      preservedCharacter: true,
+      avoidedOvercorrection: true,
+      groundedInContext: true,
+    },
+  };
+}
+
+function getCandidateCount(mode: NoiseMode): number {
   switch (mode) {
     case 'subtle':
       return 3;

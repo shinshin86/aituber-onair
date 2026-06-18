@@ -1,6 +1,8 @@
+import { hasPlayMarker, requiresPlayMarker } from './playMarkers.js';
 import { scorePredictability } from './predictability.js';
 import type {
   ContextFingerprint,
+  InterventionKind,
   NoiseQualityIssue,
   NoiseQualityOptions,
   NoiseQualityReport,
@@ -18,6 +20,7 @@ export function evaluateNoiseQuality(input: {
   after: string;
   context: ContextFingerprint;
   options?: NoiseQualityOptions;
+  appliedInterventions?: InterventionKind[];
 }): NoiseQualityReport {
   const before = input.before.trim();
   const after = input.after.trim();
@@ -98,6 +101,15 @@ export function evaluateNoiseQuality(input: {
       kind: 'overdone_noise',
       severity: 'warning',
       message: 'The rewrite is much longer than the original draft.',
+    });
+  }
+
+  if (requiresPlayMarker(input.appliedInterventions) && !hasPlayMarker(after)) {
+    issues.push({
+      kind: 'missing_play_marker',
+      severity: 'warning',
+      message:
+        'A teasing-class intervention was applied without a playful marker, so the violation may read as hostility instead of play.',
     });
   }
 

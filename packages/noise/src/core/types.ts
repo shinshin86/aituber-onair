@@ -82,6 +82,66 @@ export interface ContaminateInput {
   intensity?: number;
   seed?: string | number;
   constraints?: ContaminateConstraints;
+  /**
+   * How much deviation license the audience relationship has earned (0-1).
+   * Low capital limits noise to phrasing-level edits; high capital unlocks
+   * teasing-class interventions. Apps can derive this from any bond system
+   * (for example kizuna points) and pass it as a plain number.
+   */
+  relationshipCapital?: number;
+  /** Bypass the rhythm controller and force a tilt on this turn. */
+  forceTilt?: boolean;
+}
+
+export type NoiseSkipReason =
+  | 'sincerity'
+  | 'repair'
+  | 'cooldown'
+  | 'platform'
+  | 'low_predictability';
+
+export type RhythmPhase = 'platform' | 'tilt' | 'cooldown' | 'repair';
+
+export interface RhythmDecision {
+  apply: boolean;
+  phase: RhythmPhase;
+  reason: string;
+}
+
+export interface RhythmOptions {
+  /** Un-noised turns required before a tilt is allowed. Default 0. */
+  minPlatformTurns?: number;
+  /** Un-noised turns enforced after a tilt. Default 1. */
+  cooldownTurns?: number;
+  /** Minimum diagnosis score required to tilt. Default 0 (always eligible). */
+  tiltThreshold?: number;
+  /**
+   * If no tilt happened for this many turns, tilt even below the threshold
+   * so the character never settles into a flat baseline. Default 6.
+   */
+  forcedTiltAfter?: number;
+}
+
+export type RelationshipTier =
+  | 'stranger'
+  | 'acquaintance'
+  | 'regular'
+  | 'companion';
+
+export interface SincerityAssessment {
+  serious: boolean;
+  score: number;
+  reasons: string[];
+}
+
+export interface ContaminateGates {
+  sincerity: SincerityAssessment;
+  relationship: {
+    capital: number;
+    tier: RelationshipTier;
+    effectiveMode: NoiseMode;
+  };
+  rhythm: RhythmDecision;
 }
 
 export interface ContaminateOutput {
@@ -100,10 +160,72 @@ export interface ContaminateOutput {
     kind: InterventionKind;
     reason: string;
   }>;
+  gates: ContaminateGates;
+  skipped?: {
+    reason: NoiseSkipReason;
+    detail: string;
+  };
+}
+
+export type NoiseReactionSignal =
+  | 'laughter'
+  | 'positive'
+  | 'neutral'
+  | 'silence'
+  | 'pushback'
+  | 'discomfort';
+
+export interface NoiseReactionInput {
+  signal: NoiseReactionSignal;
+  detail?: string;
+}
+
+export interface NoiseReactionResult {
+  violationBudget: number;
+  repairAdvised: boolean;
+  promotedMoment?: MemorableMoment;
+}
+
+export type NoiseEvent =
+  | {
+      type: 'tilt_applied';
+      interventions: InterventionKind[];
+      text: string;
+    }
+  | {
+      type: 'noise_skipped';
+      reason: NoiseSkipReason;
+      detail: string;
+    }
+  | {
+      type: 'repair_advised';
+      detail: string;
+    }
+  | {
+      type: 'moment_recorded';
+      summary: string;
+    }
+  | {
+      type: 'callback_used';
+      summary: string;
+    };
+
+export interface RecordMomentInput {
+  summary: string;
+  source?: MemorableMoment['source'];
 }
 
 export interface Contaminator {
   contaminate(input: ContaminateInput): Promise<ContaminateOutput>;
+  /**
+   * Feed the observed audience reaction to the latest turn back into the
+   * violation budget. Positive reactions widen future deviation and can
+   * promote the latest tilt into a running gag; negative reactions shrink
+   * the budget and advise an in-character repair.
+   */
+  reportReaction(reaction: NoiseReactionInput): Promise<NoiseReactionResult>;
+  /** Record a memorable moment for future callback interventions. */
+  recordMoment(moment: RecordMomentInput): Promise<void>;
 }
 
 export interface PhraseCount {
@@ -129,14 +251,51 @@ export interface LearnedNoiseRule {
   weight: number;
 }
 
+export interface MemorableMoment {
+  id: string;
+  summary: string;
+  source: 'user' | 'assistant' | 'accident';
+  /** How many times this moment was used as a callback. */
+  callbacks: number;
+  /** Turn counter value when this moment was last used as a callback. */
+  lastUsedTurn: number;
+  /** Turn counter value when this moment was recorded. */
+  createdTurn: number;
+}
+
+export interface RhythmMemoryState {
+  totalTurns: number;
+  platformTurns: number;
+  /** -1 means no tilt has happened yet. */
+  turnsSinceTilt: number;
+  cooldownRemaining: number;
+  repairRemaining: number;
+}
+
+export interface LastTiltRecord {
+  turn: number;
+  summary: string;
+  interventions: InterventionKind[];
+  promoted: boolean;
+}
+
 export interface NoiseMemory {
   version: 1;
   recentClosings: string[];
+  recentResponses: string[];
   repeatedPhrases: PhraseCount[];
   usedStains: UsedStainRecord[];
   topicLoops: TopicLoopRecord[];
   avoidedPatterns: string[];
   learnedRules: LearnedNoiseRule[];
+  memorableMoments: MemorableMoment[];
+  rhythm: RhythmMemoryState;
+  /**
+   * Multiplier (0-1) on intensity learned from audience reactions.
+   * Positive reactions raise it, negative reactions lower it.
+   */
+  violationBudget: number;
+  lastTilt?: LastTiltRecord;
   updatedAt: number;
 }
 
@@ -161,6 +320,13 @@ export interface CreateContaminatorOptions {
   llm?: OpenAICompatibleRewriteModelOptions;
   memory?: NoiseMemoryOptions;
   quality?: NoiseQualityOptions;
+  rhythm?: RhythmOptions;
+  /** Default relationship capital when input does not provide one. Default 0.5. */
+  relationshipCapital?: number;
+  /** Suppress noise on sincere/vulnerable user turns. Default true. */
+  sincerityGate?: boolean;
+  /** Observer for noise lifecycle events (tilts, skips, repairs, gags). */
+  onNoiseEvent?: (event: NoiseEvent) => void;
 }
 
 export interface ContextFingerprint {
@@ -217,7 +383,14 @@ export type InterventionKind =
   | 'reduce_over_agreement'
   | 'increase_specificity'
   | 'acknowledge_tension'
-  | 'break_clean_closing';
+  | 'break_clean_closing'
+  | 'callback'
+  | 'dispreferred_shape'
+  | 'boke_bait'
+  | 'tsukkomi'
+  | 'withheld_uptake'
+  | 'status_seesaw'
+  | 'response_length_violation';
 
 /**
  * @deprecated Use InterventionKind. Kept for compatibility with the first MVP.
@@ -228,6 +401,8 @@ export interface PlannedIntervention {
   kind: InterventionKind;
   reason: string;
   strength: number;
+  /** Optional concrete material for the intervention (e.g. callback moment). */
+  material?: string;
 }
 
 export interface InterventionPlan {
@@ -276,6 +451,11 @@ export interface FrictionParameters {
 export interface RewriteCandidate {
   text: string;
   appliedInterventions: InterventionKind[];
+  /**
+   * The model's own estimate (0-1) of how typical/expected this candidate is.
+   * Lower typicality earns a small selection bonus (verbalized sampling).
+   */
+  typicality?: number;
 }
 
 export interface CandidateEvaluation {
@@ -287,6 +467,7 @@ export interface CandidateEvaluation {
   overAggressionRisk: number;
   ungroundedDetailRisk: number;
   overRewriteRisk: number;
+  genericityRisk: number;
   finalScore: number;
   issues: string[];
 }
@@ -302,7 +483,8 @@ export type NoiseQualityIssueKind =
   | 'overdone_noise'
   | 'ungrounded_detail'
   | 'empty_output'
-  | 'unchanged';
+  | 'unchanged'
+  | 'missing_play_marker';
 
 export interface NoiseQualityIssue {
   kind: NoiseQualityIssueKind;

@@ -567,7 +567,7 @@ describe('noise structural pipeline', () => {
           appliedInterventions: ['add_streamer_judgment'],
         },
         {
-          text: '同じ質問が続いてる。興味がある、で全部きれいに受け止めると流れが止まるから、先に今日のゲームだけ出すね。',
+          text: '同じ質問が続いてる。興味がある、で全部きれいに受け止めると流れが止まるから、先に今日のゲームだけ出しちゃうね〜。',
           appliedInterventions: ['contrarian_reframe', 'add_streamer_judgment'],
         },
       ],
@@ -576,6 +576,34 @@ describe('noise structural pipeline', () => {
 
     expect(selected.index).toBe(1);
     expect(evaluated[1].evaluation.overAggressionRisk).toBe(0);
+  });
+
+  it('penalizes teasing-class candidates that lack a play marker', () => {
+    const before =
+      '同じ質問が何度か流れていますが、みんなが興味を持ってくれている証拠なので嬉しいです。順番に答えていくので、少し待っていてくださいね。';
+    const context = createContextFingerprint({
+      systemPrompt: 'コメント欄の空気を読むAITuberです。',
+      messages: [
+        { role: 'user', content: '今日のゲームなに？' },
+        { role: 'user', content: '今日のゲームなに？' },
+      ],
+    });
+    const evaluated = evaluateRewriteCandidates({
+      before,
+      context,
+      mode: 'inversion',
+      candidates: [
+        {
+          text: '同じ質問が続いてる。興味がある、で全部受け止めると流れが止まるから、先に今日のゲームだけ出す。',
+          appliedInterventions: ['contrarian_reframe'],
+        },
+      ],
+    });
+
+    expect(evaluated[0].evaluation.issues).toContain('missing_play_marker');
+    expect(evaluated[0].quality.issues.map((issue) => issue.kind)).toContain(
+      'missing_play_marker'
+    );
   });
 });
 
