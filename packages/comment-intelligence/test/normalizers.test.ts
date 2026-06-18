@@ -3,7 +3,7 @@ import {
   normalizeTwitchComment,
   normalizeWebComment,
   normalizeYouTubeComment,
-} from '../src';
+} from '../src/index.js';
 
 describe('normalizers', () => {
   it('normalizes a YouTube comment to LiveComment', () => {

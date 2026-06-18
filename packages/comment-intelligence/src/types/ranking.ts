@@ -1,5 +1,5 @@
-import type { LiveComment } from './comment';
-import type { SafetyReport } from './safety';
+import type { LiveComment } from './comment.js';
+import type { SafetyReport } from './safety.js';
 
 export type RankingReason =
   | 'direct_question'

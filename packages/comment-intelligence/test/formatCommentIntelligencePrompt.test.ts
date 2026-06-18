@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatCommentIntelligencePrompt } from '../src/context/formatCommentIntelligencePrompt';
-import type { CommentIntelligenceResult } from '../src/types/result';
+import { formatCommentIntelligencePrompt } from '../src/context/formatCommentIntelligencePrompt.js';
+import type { CommentIntelligenceResult } from '../src/types/result.js';
 
 const baseResult: CommentIntelligenceResult = {
   selectedComments: [

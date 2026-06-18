@@ -1,4 +1,4 @@
-import type { CommentPlatform } from './comment';
+import type { CommentPlatform } from './comment.js';
 
 export type StreamState = {
   platform?: CommentPlatform;

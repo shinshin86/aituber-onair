@@ -1,5 +1,5 @@
-import type { CommentAnalysisLLMProvider } from './llm';
-import type { RankingStrategy, RankingWeights } from './ranking';
+import type { CommentAnalysisLLMProvider } from './llm.js';
+import type { RankingStrategy, RankingWeights } from './ranking.js';
 
 export type CommentAnalysisMode = 'rules' | 'hybrid' | 'llm-assisted';
 

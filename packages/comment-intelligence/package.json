@@ -1,11 +1,18 @@
 {
   "name": "@aituber-onair/comment-intelligence",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Comment analysis and prioritization toolkit for AI VTubers and AI character streams.",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": ["dist"],
   "sideEffects": false,
   "scripts": {
@@ -14,7 +21,7 @@
     "example:live-comment-filter-sample": "vite --host 127.0.0.1 examples/live-comment-filter-sample",
     "example:live-comment-filter-sample:build": "vite build examples/live-comment-filter-sample",
     "typecheck": "tsc --noEmit --project tsconfig.dev.json",
-    "test": "npm run typecheck && vitest run",
+    "test": "npm run typecheck && vitest run && npm run build && node test/dist-smoke.mjs",
     "test:watch": "vitest",
     "fmt": "biome format . --write",
     "fmt:check": "biome format .",

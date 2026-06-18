@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ruleBasedSafetyProvider } from '../src/safety/ruleBasedSafetyProvider';
-import type { LiveComment } from '../src/types/comment';
+import { ruleBasedSafetyProvider } from '../src/safety/ruleBasedSafetyProvider.js';
+import type { LiveComment } from '../src/types/comment.js';
 
 function comment(text: string): LiveComment {
   return {

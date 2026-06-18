@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createCommentIntelligence } from '../src/createCommentIntelligence';
-import type { LiveComment } from '../src/types/comment';
+import { createCommentIntelligence } from '../src/createCommentIntelligence.js';
+import type { LiveComment } from '../src/types/comment.js';
 
 function comment(
   id: string,

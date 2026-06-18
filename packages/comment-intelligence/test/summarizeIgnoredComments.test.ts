@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { summarizeIgnoredComments } from '../src/summarization/summarizeIgnoredComments';
-import type { LiveComment } from '../src/types/comment';
+import { summarizeIgnoredComments } from '../src/summarization/summarizeIgnoredComments.js';
+import type { LiveComment } from '../src/types/comment.js';
 
 function comment(id: string, text: string): LiveComment {
   return {

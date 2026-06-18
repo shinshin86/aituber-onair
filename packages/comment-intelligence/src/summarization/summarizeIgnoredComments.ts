@@ -1,7 +1,7 @@
-import type { LiveComment } from '../types/comment';
-import type { IgnoredCommentsSummary } from '../types/summary';
-import { resolveLanguage } from '../utils/language';
-import { clusterComments } from './clusterComments';
+import type { LiveComment } from '../types/comment.js';
+import type { IgnoredCommentsSummary } from '../types/summary.js';
+import { resolveLanguage } from '../utils/language.js';
+import { clusterComments } from './clusterComments.js';
 
 const jaLabels: Record<string, string> = {
   greeting: '挨拶コメント',

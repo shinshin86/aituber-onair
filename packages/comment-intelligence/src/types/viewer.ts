@@ -1,4 +1,4 @@
-import type { SafetyCategory } from './safety';
+import type { SafetyCategory } from './safety.js';
 
 export type ViewerProfile = {
   id: string;

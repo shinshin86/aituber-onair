@@ -1,5 +1,14 @@
 # @aituber-onair/comment-intelligence
 
+## 0.0.3
+
+### Patch Changes
+
+- Fixes the published ESM package so it can be imported directly by Node.js by
+  emitting Node-compatible relative module specifiers.
+- Adds a package exports map and a built package smoke test that imports
+  `dist/index.js` with plain Node.js.
+
 ## 0.0.2
 
 ### Patch Changes

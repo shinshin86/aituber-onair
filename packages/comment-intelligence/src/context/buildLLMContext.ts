@@ -1,5 +1,5 @@
-import type { CommentIntelligenceResult } from '../types/result';
-import { resolveLanguage } from '../utils/language';
+import type { CommentIntelligenceResult } from '../types/result.js';
+import { resolveLanguage } from '../utils/language.js';
 
 export function buildLLMContext(
   result: CommentIntelligenceResult,

@@ -1,6 +1,6 @@
-import type { CommentAnalysisLLMProvider } from '../types/llm';
-import { truncateText } from '../utils/text';
-import { parseLLMAnalysisResult } from './parseLLMAnalysisResult';
+import type { CommentAnalysisLLMProvider } from '../types/llm.js';
+import { truncateText } from '../utils/text.js';
+import { parseLLMAnalysisResult } from './parseLLMAnalysisResult.js';
 
 export type ChatServiceLike = {
   chatOnce?: (
