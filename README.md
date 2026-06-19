@@ -75,8 +75,8 @@ For step-by-step setup and template selection, see
 
 ### 3. Run an example app locally
 
-Three full, ready-to-run React apps built on `@aituber-onair/core`. Pick the
-avatar style that fits your project. All three share the same broad LLM / TTS
+Four full, ready-to-run React apps built on `@aituber-onair/core`. Pick the
+avatar style that fits your project. All four share the same broad LLM / TTS
 provider coverage and in-app **Settings** UI.
 
 #### PNGTuber Chat — 2D PNG avatar
@@ -88,6 +88,19 @@ Swap in 4 PNG states (mouth/eyes open/close) and get real-time lip-sync driven f
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-pngtuber-app
+npm install
+npm run dev
+```
+
+#### Pet Chat — animated Codex Pet-style sprite
+
+Render a Codex Pet-compatible spritesheet, move it around the stage, and switch
+animations from chat state, reply mood, and real-time audio volume. See
+[`packages/core/examples/react-pet-app`](./packages/core/examples/react-pet-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-pet-app
 npm install
 npm run dev
 ```
