@@ -19,6 +19,9 @@ to the package examples when you need lower-level integration.
   [`packages/core/examples/react-vrm-app`](../packages/core/examples/react-vrm-app)
   if you want a 3D avatar with VRM assets.
 - Use
+  [`packages/core/examples/react-pet-app`](../packages/core/examples/react-pet-app)
+  if you want a small animated pet that reacts to chat state.
+- Use
   [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app)
   if you already have Live2D model assets.
 - Use package examples when you want to embed chat, voice, memory, or streaming
@@ -40,6 +43,21 @@ from actual audio output volume.
 
 ```bash
 cd packages/core/examples/react-pngtuber-app
+npm install
+npm run dev
+```
+
+### Pet App
+
+Path:
+[`packages/core/examples/react-pet-app`](../packages/core/examples/react-pet-app)
+
+Best for a lightweight animated companion. It renders a Codex Pet-compatible
+spritesheet, moves the pet around the stage, and switches animations from chat
+state, reply mood, and real-time audio volume.
+
+```bash
+cd packages/core/examples/react-pet-app
 npm install
 npm run dev
 ```

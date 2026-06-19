@@ -18,6 +18,9 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 - 3D アバターを使いたい場合は
   [`packages/core/examples/react-vrm-app`](../packages/core/examples/react-vrm-app)
   を使います。
+- 小さなアニメーション Pet をチャット状態に反応させたい場合は
+  [`packages/core/examples/react-pet-app`](../packages/core/examples/react-pet-app)
+  を使います。
 - すでに Live2D モデルアセットを持っている場合は
   [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app)
   を使います。
@@ -40,6 +43,21 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 
 ```bash
 cd packages/core/examples/react-pngtuber-app
+npm install
+npm run dev
+```
+
+### Pet App
+
+パス:
+[`packages/core/examples/react-pet-app`](../packages/core/examples/react-pet-app)
+
+軽量なアニメーション companion を使いたい場合に向いています。Codex Pet 互換
+スプライトシートを描画し、チャット状態、応答の雰囲気、実際の音声出力
+ボリュームに応じて Pet がステージ内を動きます。
+
+```bash
+cd packages/core/examples/react-pet-app
 npm install
 npm run dev
 ```
