@@ -94,6 +94,8 @@ npm run dev
 
 #### Pet Chat — animated Codex Pet-style sprite
 
+![Pet example app](./packages/core/examples/react-pet-app/images/react-pet-app.jpg)
+
 Render a Codex Pet-compatible spritesheet, move it around the stage, and switch
 animations from chat state, reply mood, and real-time audio volume. See
 [`packages/core/examples/react-pet-app`](./packages/core/examples/react-pet-app).
