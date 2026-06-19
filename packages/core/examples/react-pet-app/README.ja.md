@@ -55,8 +55,13 @@ npm run dev
 
 ## Pet の差し替え
 
-別の Codex Pet 互換パッケージを使う場合は、
-`public/pet/pet.json` と `public/pet/spritesheet.webp` を差し替えてください。
+Settings の Visual セクションから、別の Codex Pet 互換パッケージを登録
+できます。`pet.json` とスプライトシート画像を選択して `登録` を押すと、
+ブラウザ内に保存され、次回起動時もその Pet が使われます。
+
+同梱の Miko に戻したい場合は `Mikoに戻す` を押してください。
+
+`pet.json` は次のような形式です。
 
 ```json
 {
@@ -66,6 +71,9 @@ npm run dev
   "spritesheetPath": "spritesheet.webp"
 }
 ```
+
+開発時にデフォルト素材として差し替える場合は、
+`public/pet/pet.json` と `public/pet/spritesheet.webp` を置き換えてください。
 
 生成した Pet やローカル由来の素材をコミットする場合は、再配布できる素材か
 確認してください。

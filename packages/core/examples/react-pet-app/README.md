@@ -55,8 +55,13 @@ Settings are saved in `localStorage` under `react-pet-app-settings`.
 
 ## Replacing the pet
 
-Replace `public/pet/pet.json` and `public/pet/spritesheet.webp` with another
-Codex Pet-compatible package. The manifest should point to the spritesheet:
+Open the Visual section in Settings to register another Codex Pet-compatible
+package. Select `pet.json` and the spritesheet image, then press Register. The
+custom pet is stored in the browser and remains active after a reload.
+
+Use the reset button to return to the bundled Miko pet.
+
+The manifest should look like this:
 
 ```json
 {
@@ -66,6 +71,9 @@ Codex Pet-compatible package. The manifest should point to the spritesheet:
   "spritesheetPath": "spritesheet.webp"
 }
 ```
+
+For development-time defaults, replace `public/pet/pet.json` and
+`public/pet/spritesheet.webp`.
 
 Keep generated or local-only pet assets out of commits unless you have the
 right to redistribute them.

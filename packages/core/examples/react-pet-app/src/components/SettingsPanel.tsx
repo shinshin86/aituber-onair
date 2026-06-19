@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { isGPT5Model } from '@aituber-onair/core';
 import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
+import type { ActivePetAsset } from '../hooks/usePetAssets';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
 
@@ -10,8 +11,16 @@ type SettingsHook = ReturnType<typeof useSettings>;
 interface SettingsPanelProps extends SettingsHook {
   isProcessing: boolean;
   backgroundImageUrl: string | null;
+  activePet: ActivePetAsset | null;
+  petAssetError: string;
+  isLoadingPetAsset: boolean;
   streamErrorMessage?: string;
   onBackgroundImageChange: (file: File | null) => void;
+  onPetAssetRegister: (
+    manifestFile: File,
+    spritesheetFile: File,
+  ) => Promise<void>;
+  onPetAssetClear: () => Promise<void>;
 }
 
 const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
@@ -277,8 +286,13 @@ export function SettingsPanel({
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
+  activePet,
+  petAssetError,
+  isLoadingPetAsset,
   streamErrorMessage,
   onBackgroundImageChange,
+  onPetAssetRegister,
+  onPetAssetClear,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
   const isOpenAIGPT5Model =
@@ -302,6 +316,12 @@ export function SettingsPanel({
   );
   const [inworldVoices, setInworldVoices] = useState<InworldVoice[]>([]);
   const [fetchError, setFetchError] = useState('');
+  const [petManifestFile, setPetManifestFile] = useState<File | null>(null);
+  const [petSpritesheetFile, setPetSpritesheetFile] = useState<File | null>(
+    null,
+  );
+  const [petRegistrationError, setPetRegistrationError] = useState('');
+  const [isRegisteringPet, setIsRegisteringPet] = useState(false);
   const [isFetchingMinimaxVoices, setIsFetchingMinimaxVoices] = useState(false);
   const [isFetchingElevenLabsVoices, setIsFetchingElevenLabsVoices] =
     useState(false);
@@ -330,6 +350,45 @@ export function SettingsPanel({
     settings.tts.aivisCloudSpeakerUuid,
     settings.tts.aivisCloudStyleId,
   ]);
+
+  const activePetName =
+    activePet?.manifest.displayName || activePet?.manifest.id || 'Custom Pet';
+  const canRegisterPet =
+    !disabled &&
+    !isRegisteringPet &&
+    Boolean(petManifestFile && petSpritesheetFile);
+
+  const handlePetRegister = async () => {
+    if (!petManifestFile || !petSpritesheetFile) return;
+
+    setIsRegisteringPet(true);
+    setPetRegistrationError('');
+    try {
+      await onPetAssetRegister(petManifestFile, petSpritesheetFile);
+      setPetManifestFile(null);
+      setPetSpritesheetFile(null);
+    } catch (error) {
+      setPetRegistrationError(
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setIsRegisteringPet(false);
+    }
+  };
+
+  const handlePetClear = async () => {
+    setIsRegisteringPet(true);
+    setPetRegistrationError('');
+    try {
+      await onPetAssetClear();
+    } catch (error) {
+      setPetRegistrationError(
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setIsRegisteringPet(false);
+    }
+  };
 
   // Fetch speaker list for VOICEVOX / AivisSpeech
   useEffect(() => {
@@ -2220,9 +2279,95 @@ export function SettingsPanel({
               </div>
             </div>
 
+            <div className="settings-field">
+              <label htmlFor="pet-manifest">Pet manifest</label>
+              <div className="settings-file-picker-row">
+                <input
+                  id="pet-manifest"
+                  className="settings-file-input-hidden"
+                  type="file"
+                  accept="application/json,.json"
+                  disabled={disabled || isRegisteringPet}
+                  onChange={(e) => {
+                    setPetManifestFile(e.target.files?.[0] ?? null);
+                    e.currentTarget.value = '';
+                  }}
+                />
+                <label
+                  htmlFor="pet-manifest"
+                  className={`settings-file-trigger${disabled || isRegisteringPet ? ' is-disabled' : ''}`}
+                >
+                  pet.json を選択
+                </label>
+                <span className="settings-file-hint">
+                  {petManifestFile?.name || '未選択'}
+                </span>
+              </div>
+            </div>
+
+            <div className="settings-field">
+              <label htmlFor="pet-spritesheet">Pet spritesheet</label>
+              <div className="settings-file-picker-row">
+                <input
+                  id="pet-spritesheet"
+                  className="settings-file-input-hidden"
+                  type="file"
+                  accept="image/webp,image/png,image/*"
+                  disabled={disabled || isRegisteringPet}
+                  onChange={(e) => {
+                    setPetSpritesheetFile(e.target.files?.[0] ?? null);
+                    e.currentTarget.value = '';
+                  }}
+                />
+                <label
+                  htmlFor="pet-spritesheet"
+                  className={`settings-file-trigger${disabled || isRegisteringPet ? ' is-disabled' : ''}`}
+                >
+                  画像を選択
+                </label>
+                <span className="settings-file-hint">
+                  {petSpritesheetFile?.name || '未選択'}
+                </span>
+              </div>
+              <div className="settings-file-actions">
+                <span className="settings-file-status">
+                  {isLoadingPetAsset
+                    ? '読み込み中'
+                    : activePet
+                      ? `${activePetName} を使用中`
+                      : '同梱Mikoを使用中'}
+                </span>
+                <div className="settings-file-action-buttons">
+                  <button
+                    type="button"
+                    className="settings-clear-button"
+                    onClick={handlePetRegister}
+                    disabled={!canRegisterPet}
+                  >
+                    登録
+                  </button>
+                  {activePet && (
+                    <button
+                      type="button"
+                      className="settings-clear-button"
+                      onClick={handlePetClear}
+                      disabled={disabled || isRegisteringPet}
+                    >
+                      Mikoに戻す
+                    </button>
+                  )}
+                </div>
+              </div>
+              {(petRegistrationError || petAssetError) && (
+                <div className="settings-error">
+                  {petRegistrationError || petAssetError}
+                </div>
+              )}
+            </div>
+
             <p className="settings-field-hint">
-              Pet assets are loaded from public/pet/pet.json and
-              public/pet/spritesheet.webp.
+              Codex Pet 互換の 8x9 spritesheet と pet.json を登録できます。
+              未登録時は同梱Mikoを表示します。
             </p>
           </>
         )}

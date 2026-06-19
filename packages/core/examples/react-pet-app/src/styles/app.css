@@ -227,8 +227,12 @@ body {
 }
 
 .settings-file-hint {
+  min-width: 0;
+  overflow: hidden;
   font-size: 0.72rem;
   color: #8899aa;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .settings-file-actions {
@@ -240,8 +244,15 @@ body {
 }
 
 .settings-file-status {
+  min-width: 0;
   font-size: 0.72rem;
   color: #8899aa;
+}
+
+.settings-file-action-buttons {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
 }
 
 .settings-clear-button {

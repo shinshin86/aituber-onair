@@ -1,4 +1,5 @@
 import type { ChatMessage } from '../types/chat';
+import type { PetManifest } from '../types/settings';
 import { ChatLog } from './ChatLog';
 import { ChatInput } from './ChatInput';
 import { PetStage } from './PetStage';
@@ -11,6 +12,8 @@ interface ChatPanelProps {
   mouthLevel: number;
   isSpeaking: boolean;
   backgroundImageUrl?: string | null;
+  petManifest?: PetManifest | null;
+  petSpritesheetUrl?: string | null;
 }
 
 export function ChatPanel({
@@ -21,6 +24,8 @@ export function ChatPanel({
   mouthLevel,
   isSpeaking,
   backgroundImageUrl,
+  petManifest,
+  petSpritesheetUrl,
 }: ChatPanelProps) {
   const panelStyle = backgroundImageUrl
     ? {
@@ -38,6 +43,8 @@ export function ChatPanel({
         isProcessing={isProcessing}
         mouthLevel={mouthLevel}
         isSpeaking={isSpeaking}
+        petManifest={petManifest}
+        petSpritesheetUrl={petSpritesheetUrl}
       />
       <ChatLog messages={messages} partialResponse={partialResponse} />
       <ChatInput onSend={onSend} disabled={isProcessing} />

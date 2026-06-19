@@ -152,6 +152,13 @@ export interface ManneriSettings {
   minMessageLength: number;
 }
 
+export interface PetManifest {
+  id?: string;
+  displayName?: string;
+  description?: string;
+  spritesheetPath?: string;
+}
+
 export interface AppSettings {
   llm: LLMSettings;
   tts: TTSSettings;

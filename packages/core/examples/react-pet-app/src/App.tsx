@@ -4,6 +4,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
 import { useAituberCore } from './hooks/useAituberCore';
 import { useLiveCommentIntelligence } from './hooks/useLiveCommentIntelligence';
+import { usePetAssets } from './hooks/usePetAssets';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
@@ -12,6 +13,7 @@ import './styles/app.css';
 export default function App() {
   const { play, stop, mouthLevel, isSpeaking } = useAudioLipsync();
   const settingsHook = useSettings();
+  const petAssets = usePetAssets();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [streamErrorMessage, setStreamErrorMessage] = useState('');
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
@@ -177,6 +179,8 @@ export default function App() {
           mouthLevel={mouthLevel}
           isSpeaking={isSpeaking}
           backgroundImageUrl={backgroundImageUrl}
+          petManifest={petAssets.activePet?.manifest ?? null}
+          petSpritesheetUrl={petAssets.activePet?.spritesheetUrl ?? null}
         />
       </main>
 
@@ -201,6 +205,11 @@ export default function App() {
               backgroundImageUrl={backgroundImageUrl}
               streamErrorMessage={streamErrorMessage}
               onBackgroundImageChange={handleBackgroundImageChange}
+              activePet={petAssets.activePet}
+              petAssetError={petAssets.petAssetError}
+              isLoadingPetAsset={petAssets.isLoadingPetAsset}
+              onPetAssetRegister={petAssets.registerPetAsset}
+              onPetAssetClear={petAssets.clearPetAsset}
             />
           </div>
         </div>

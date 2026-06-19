@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatMessage } from '../types/chat';
+import type { PetManifest } from '../types/settings';
 
 type PetAction =
   | 'idle'
@@ -18,17 +19,14 @@ interface PetStageProps {
   isProcessing: boolean;
   isSpeaking: boolean;
   mouthLevel: number;
+  petManifest?: PetManifest | null;
+  petSpritesheetUrl?: string | null;
 }
 
 interface PetRow {
   row: number;
   frames: number;
   frameMs: number;
-}
-
-interface PetManifest {
-  displayName?: string;
-  spritesheetPath?: string;
 }
 
 interface PetPosition {
@@ -493,14 +491,16 @@ function getSpriteBackgroundPosition(row: number, frame: number) {
 }
 
 export function PetStage(props: PetStageProps) {
-  const manifest = usePetManifest();
+  const defaultManifest = usePetManifest();
+  const manifest = props.petManifest ?? defaultManifest;
   const action = usePetAction(props);
   const { stageRef, position } = usePetMovement(action, props.mouthLevel);
   const visibleAction = getMovementAction(action, position);
   const rawFrame = useSpriteFrame(visibleAction);
   const row = PET_ROWS[visibleAction];
   const frame = rawFrame % row.frames;
-  const spritesheetUrl = resolveSpritesheetUrl(manifest.spritesheetPath);
+  const spritesheetUrl =
+    props.petSpritesheetUrl ?? resolveSpritesheetUrl(manifest.spritesheetPath);
 
   return (
     <div className="pet-stage" ref={stageRef} aria-label="Pet stage">
