@@ -88,14 +88,15 @@ const SPEAKING_ACTIONS: PetAction[] = [
   'waving',
   'jumping',
 ];
-const THINKING_ACTIONS: PetAction[] = [
-  'review',
-  'running',
-  'running',
-  'jumping',
-  'running',
-  'review',
-  'running',
+
+const THINKING_ACTIONS: Array<{ action: PetAction; weight: number }> = [
+  { action: 'running', weight: 24 },
+  { action: 'jumping', weight: 22 },
+  { action: 'review', weight: 18 },
+  { action: 'waiting', weight: 14 },
+  { action: 'waving', weight: 10 },
+  { action: 'failed', weight: 8 },
+  { action: 'idle', weight: 4 },
 ];
 
 function includesAnyKeyword(text: string, keywords: string[]): boolean {
@@ -182,20 +183,82 @@ function useSpeakingAction(
 }
 
 function useThinkingAction(isProcessing: boolean): PetAction | null {
-  const [sequenceIndex, setSequenceIndex] = useState(0);
+  const [thinkingAction, setThinkingAction] = useState<PetAction>('review');
+  const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!isProcessing) return;
+    if (!isProcessing) {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      return;
+    }
 
-    const intervalId = window.setInterval(() => {
-      setSequenceIndex((current) => current + 1);
-    }, 760);
+    let active = true;
 
-    return () => window.clearInterval(intervalId);
+    const scheduleNextAction = (previousAction?: PetAction) => {
+      const nextAction = pickThinkingAction(previousAction);
+      const duration = getThinkingActionDuration(nextAction);
+      setThinkingAction(nextAction);
+      timeoutRef.current = window.setTimeout(() => {
+        if (active) {
+          scheduleNextAction(nextAction);
+        }
+      }, duration);
+    };
+
+    scheduleNextAction();
+
+    return () => {
+      active = false;
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
   }, [isProcessing]);
 
+
   if (!isProcessing) return null;
-  return THINKING_ACTIONS[sequenceIndex % THINKING_ACTIONS.length];
+  return thinkingAction;
+}
+
+function pickThinkingAction(previousAction?: PetAction): PetAction {
+  const candidates = THINKING_ACTIONS.filter(
+    ({ action }) => action !== previousAction || action === 'running',
+  );
+  const totalWeight = candidates.reduce((sum, item) => sum + item.weight, 0);
+  let cursor = Math.random() * totalWeight;
+
+  for (const item of candidates) {
+    cursor -= item.weight;
+    if (cursor <= 0) return item.action;
+  }
+
+  return candidates[0]?.action ?? 'review';
+}
+
+function getThinkingActionDuration(action: PetAction): number {
+  const randomMs = (min: number, max: number) =>
+    Math.round(min + Math.random() * (max - min));
+
+  switch (action) {
+    case 'running':
+      return randomMs(1100, 2200);
+    case 'jumping':
+      return randomMs(650, 1200);
+    case 'review':
+      return randomMs(900, 1700);
+    case 'waiting':
+      return randomMs(1000, 1900);
+    case 'failed':
+      return randomMs(1200, 2200);
+    case 'waving':
+      return randomMs(800, 1400);
+    default:
+      return randomMs(550, 950);
+  }
 }
 
 function usePetAction({
