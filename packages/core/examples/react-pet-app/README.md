@@ -1,5 +1,7 @@
 # Pet Chat
 
+![react-pet-app image](./images/react-pet-app.jpg)
+
 An AITuber chat sample that renders a Codex-style animated pet instead of a
 static PNGTuber avatar.
 
