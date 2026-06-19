@@ -2386,8 +2386,8 @@ export function SettingsPanel({
                   {isLoadingPetAsset
                     ? '読み込み中'
                     : activePet
-                      ? `${activePetName}を利用中`
-                      : 'Mikoを利用中'}
+                      ? activePetName
+                      : 'Miko'}
                 </span>
               </div>
               {(petRegistrationError || petAssetError) && (
