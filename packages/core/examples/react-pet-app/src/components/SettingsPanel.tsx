@@ -217,6 +217,7 @@ type SectionKey =
   | 'llm'
   | 'tts'
   | 'visual'
+  | 'pet'
   | 'stream'
   | 'commentIntelligence'
   | 'manneri';
@@ -332,6 +333,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    pet: true,
     stream: true,
     commentIntelligence: true,
     manneri: true,
@@ -2278,7 +2280,27 @@ export function SettingsPanel({
                 )}
               </div>
             </div>
+          </>
+        )}
+      </div>
 
+      <div className="settings-section">
+        <button
+          type="button"
+          className="settings-section-toggle"
+          onClick={() => toggleSection('pet')}
+          aria-expanded={expandedSections.pet}
+        >
+          <h3>Pet</h3>
+          <span
+            className={`settings-section-chevron${expandedSections.pet ? ' is-open' : ''}`}
+          >
+            ⌄
+          </span>
+        </button>
+
+        {expandedSections.pet && (
+          <>
             <div className="settings-field">
               <label htmlFor="pet-manifest">Pet manifest</label>
               <div className="settings-file-picker-row">
@@ -2334,8 +2356,8 @@ export function SettingsPanel({
                   {isLoadingPetAsset
                     ? '読み込み中'
                     : activePet
-                      ? `${activePetName} を使用中`
-                      : '同梱Mikoを使用中'}
+                      ? `${activePetName}を利用中`
+                      : 'Mikoを利用中'}
                 </span>
                 <div className="settings-file-action-buttons">
                   <button
@@ -2367,7 +2389,7 @@ export function SettingsPanel({
 
             <p className="settings-field-hint">
               Codex Pet 互換の 8x9 spritesheet と pet.json を登録できます。
-              未登録時は同梱Mikoを表示します。
+              未登録時は Miko を利用します。
             </p>
           </>
         )}

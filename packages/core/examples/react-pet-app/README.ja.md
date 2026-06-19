@@ -55,7 +55,7 @@ npm run dev
 
 ## Pet の差し替え
 
-Settings の Visual セクションから、別の Codex Pet 互換パッケージを登録
+Settings の Pet セクションから、別の Codex Pet 互換パッケージを登録
 できます。`pet.json` とスプライトシート画像を選択して `登録` を押すと、
 ブラウザ内に保存され、次回起動時もその Pet が使われます。
 

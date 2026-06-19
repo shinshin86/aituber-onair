@@ -55,7 +55,7 @@ Settings are saved in `localStorage` under `react-pet-app-settings`.
 
 ## Replacing the pet
 
-Open the Visual section in Settings to register another Codex Pet-compatible
+Open the Pet section in Settings to register another Codex Pet-compatible
 package. Select `pet.json` and the spritesheet image, then press Register. The
 custom pet is stored in the browser and remains active after a reload.
 
