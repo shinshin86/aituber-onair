@@ -92,21 +92,6 @@ npm install
 npm run dev
 ```
 
-#### Pet Chat — animated Codex Pet-style sprite
-
-![Pet example app](./packages/core/examples/react-pet-app/images/react-pet-app.jpg)
-
-Render a Codex Pet-compatible spritesheet, move it around the stage, and switch
-animations from chat state, reply mood, and real-time audio volume. See
-[`packages/core/examples/react-pet-app`](./packages/core/examples/react-pet-app).
-
-```bash
-git clone https://github.com/shinshin86/aituber-onair.git
-cd aituber-onair/packages/core/examples/react-pet-app
-npm install
-npm run dev
-```
-
 #### VRM Chat — 3D VRM avatar
 
 ![VRM example app](./packages/core/examples/react-vrm-app/images/react-vrm-app.png)
@@ -141,6 +126,21 @@ example intentionally does not bundle any Live2D assets. See
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+#### Pet Chat — animated Codex Pet-style sprite
+
+![Pet example app](./packages/core/examples/react-pet-app/images/react-pet-app.jpg)
+
+Render a Codex Pet-compatible spritesheet, move it around the stage, and switch
+animations from chat state, reply mood, and real-time audio volume. See
+[`packages/core/examples/react-pet-app`](./packages/core/examples/react-pet-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-pet-app
 npm install
 npm run dev
 ```

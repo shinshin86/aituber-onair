@@ -89,19 +89,6 @@ npm install
 npm run dev
 ```
 
-#### Pet Chat — アニメーションする Codex Pet 風スプライト
-
-![Pet サンプルアプリ](./packages/core/examples/react-pet-app/images/react-pet-app.jpg)
-
-Codex Pet 互換のスプライトシートを描画し、ステージ内を動き回らせながら、チャット状態、応答の雰囲気、実際の音声出力ボリュームに応じてアニメーションを切り替えます。詳細は [`packages/core/examples/react-pet-app`](./packages/core/examples/react-pet-app) を参照。
-
-```bash
-git clone https://github.com/shinshin86/aituber-onair.git
-cd aituber-onair/packages/core/examples/react-pet-app
-npm install
-npm run dev
-```
-
 #### VRM Chat — 3D VRM アバター
 
 ![VRM サンプルアプリ](./packages/core/examples/react-vrm-app/images/react-vrm-app.png)
@@ -133,6 +120,19 @@ npm run dev
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+#### Pet Chat — アニメーションする Codex Pet 風スプライト
+
+![Pet サンプルアプリ](./packages/core/examples/react-pet-app/images/react-pet-app.jpg)
+
+Codex Pet 互換のスプライトシートを描画し、ステージ内を動き回らせながら、チャット状態、応答の雰囲気、実際の音声出力ボリュームに応じてアニメーションを切り替えます。詳細は [`packages/core/examples/react-pet-app`](./packages/core/examples/react-pet-app) を参照。
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-pet-app
 npm install
 npm run dev
 ```
