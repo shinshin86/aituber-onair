@@ -24,6 +24,7 @@ npm run dev
 - `pngtuber`: 2D PNG avatar app with bundled avatar image assets
 - `vrm`: 3D VRM avatar app with bundled `miko.vrm` and idle animation assets
 - `live2d`: Live2D avatar app without bundled Live2D model assets
+- `pet`: Animated pet app with bundled Miko pet assets
 
 ## Usage
 
@@ -45,6 +46,7 @@ Advanced template selection:
 npm create aituber-onair@latest my-aituber -- --template pngtuber
 npm create aituber-onair@latest my-vrm-aituber -- --template vrm
 npm create aituber-onair@latest my-live2d-aituber -- --template live2d
+npm create aituber-onair@latest my-pet-aituber -- --template pet
 ```
 
 Install dependencies during project creation:

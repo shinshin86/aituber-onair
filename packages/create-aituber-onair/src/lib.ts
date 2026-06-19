@@ -13,7 +13,7 @@ import { TEMPLATES, type TemplateId, isTemplateId } from './templates.js';
 
 const DEFAULT_PROJECT_NAME = 'my-aituber';
 const DEFAULT_TEMPLATE_ID: TemplateId = 'pngtuber';
-const CORE_VERSION = '0.25.8';
+const CORE_VERSION = '0.26.3';
 
 export interface CliOptions {
   targetDir?: string;
@@ -190,7 +190,7 @@ Usage:
   create-aituber-onair [project-directory] [options]
 
 Options:
-  -t, --template <name>  Template to use: pngtuber, vrm, live2d
+  -t, --template <name>  Template to use: pngtuber, vrm, live2d, pet
       --install          Run npm install after creating the project
       --no-install       Do not run npm install
   -y, --yes              Use defaults for omitted values
