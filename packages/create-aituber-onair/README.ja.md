@@ -24,6 +24,7 @@ npm run dev
 - `pngtuber`: PNG アバター画像アセット同梱の 2D PNGTuber アプリ
 - `vrm`: `miko.vrm` と待機アニメーション同梱の 3D VRM アプリ
 - `live2d`: Live2D モデルアセットを同梱しない Live2D アプリ
+- `pet`: Miko ペットアセット同梱のアニメーション Pet アプリ
 
 ## 使い方
 
@@ -45,6 +46,7 @@ npm create aituber-onair@latest my-aituber
 npm create aituber-onair@latest my-aituber -- --template pngtuber
 npm create aituber-onair@latest my-vrm-aituber -- --template vrm
 npm create aituber-onair@latest my-live2d-aituber -- --template live2d
+npm create aituber-onair@latest my-pet-aituber -- --template pet
 ```
 
 作成時に依存関係もインストールする場合:

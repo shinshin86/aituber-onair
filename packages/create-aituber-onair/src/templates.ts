@@ -1,4 +1,4 @@
-export const TEMPLATE_IDS = ['pngtuber', 'vrm', 'live2d'] as const;
+export const TEMPLATE_IDS = ['pngtuber', 'vrm', 'live2d', 'pet'] as const;
 
 export type TemplateId = (typeof TEMPLATE_IDS)[number];
 
@@ -23,6 +23,11 @@ export const TEMPLATES: Record<TemplateId, TemplateDefinition> = {
     id: 'live2d',
     name: 'Live2D',
     description: 'Live2D avatar app without bundled Live2D model assets',
+  },
+  pet: {
+    id: 'pet',
+    name: 'Pet Chat',
+    description: 'Animated pet app with bundled Miko pet assets',
   },
 };
 

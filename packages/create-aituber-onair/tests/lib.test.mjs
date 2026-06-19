@@ -54,7 +54,7 @@ test('createProject copies pngtuber template and rewrites package metadata', asy
   const rootFiles = await readdir(result.projectDir);
 
   assert.equal(packageJson.name, 'my-png-app');
-  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.25.8');
+  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.3');
   assert.equal(packageJson.dependencies['@pixiv/three-vrm'], undefined);
   assert.equal(rootFiles.includes('.gitignore'), true);
   assert.equal(rootFiles.includes('_gitignore'), false);
@@ -102,6 +102,37 @@ test('createProject copies live2d template without licensed assets', async () =>
   assert.equal(packageJson.dependencies['pixi.js'], '^7.4.3');
   assert.deepEqual(modelFiles, ['.gitkeep']);
   assert.deepEqual(scriptFiles, ['.gitkeep']);
+});
+
+test('createProject copies pet template with bundled Miko assets', async () => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'create-aituber-onair-'));
+  const result = await createProject({
+    cwd,
+    targetDir: 'pet-app',
+    template: 'pet',
+    install: false,
+    templateRoot: fixtureTemplateRoot,
+  });
+
+  const packageJson = JSON.parse(
+    await readFile(path.join(result.projectDir, 'package.json'), 'utf8'),
+  );
+  const petManifest = JSON.parse(
+    await readFile(
+      path.join(result.projectDir, 'public', 'pet', 'pet.json'),
+      'utf8',
+    ),
+  );
+  const petFiles = await readdir(path.join(result.projectDir, 'public', 'pet'));
+
+  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.3');
+  assert.equal(
+    packageJson.dependencies['@aituber-onair/comment-intelligence'],
+    '^0.0.3',
+  );
+  assert.equal(packageJson.dependencies['@aituber-onair/manneri'], '^0.3.3');
+  assert.equal(petManifest.displayName, 'Miko');
+  assert.equal(petFiles.includes('spritesheet.webp'), true);
 });
 
 test('createProject runs npm install when requested', async () => {
