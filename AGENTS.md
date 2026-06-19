@@ -112,6 +112,7 @@
   core React examples that expose TTS settings:
   `packages/core/examples/react-basic`,
   `packages/core/examples/react-pngtuber-app`,
+  `packages/core/examples/react-pet-app`,
   `packages/core/examples/react-vrm-app`, and
   `packages/core/examples/react-live2d-app`. For each provider, verify the
   engine selector, persisted settings type/defaults, settings UI,

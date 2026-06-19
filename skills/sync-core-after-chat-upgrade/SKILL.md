@@ -41,6 +41,7 @@ Collect missing inputs before editing:
    - `packages/core/examples/react-basic/src/constants/*.ts`:
      add/replace model constants so new chat models are selectable.
    - For `packages/core/examples/react-pngtuber-app`,
+     `packages/core/examples/react-pet-app`,
      `packages/core/examples/react-vrm-app`, and
      `packages/core/examples/react-live2d-app`, check whether the chat change
      requires defaults, model selectors, settings UI, or docs updates. These
@@ -51,6 +52,7 @@ Collect missing inputs before editing:
    - `packages/core/README_ja.md`
    - `packages/core/examples/react-basic/README.md`
    - `packages/core/examples/react-pngtuber-app/README.md` (if relevant)
+   - `packages/core/examples/react-pet-app/README.md` (if relevant)
 6. Versioning when `bump_version` is `true`:
    - Choose bump type:
      - patch for dependency/export alignment and non-breaking propagation.
@@ -65,6 +67,7 @@ Collect missing inputs before editing:
      includes:
      - `packages/core/examples/react-basic/package-lock.json`
      - `packages/core/examples/react-pngtuber-app/package-lock.json`
+     - `packages/core/examples/react-pet-app/package-lock.json`
      - `packages/core/examples/react-vrm-app/package-lock.json`
      - `packages/core/examples/react-live2d-app/package-lock.json`
      - `packages/core/examples/coding-agent/package-lock.json`
@@ -76,7 +79,8 @@ Collect missing inputs before editing:
    - `npm -w @aituber-onair/core run build`
    - `npm --prefix packages/core/examples/react-basic run build`
    - `npm --prefix packages/core/examples/react-pngtuber-app run build`
-   - If VRM, Live2D, coding-agent, or their lockfiles changed, also run:
+   - If Pet, VRM, Live2D, coding-agent, or their lockfiles changed, also run:
+     - `npm --prefix packages/core/examples/react-pet-app run build`
      - `npm --prefix packages/core/examples/react-vrm-app run build`
      - `npm --prefix packages/core/examples/react-live2d-app run build`
      - `npm --prefix packages/core/examples/coding-agent run build`
@@ -94,6 +98,7 @@ npm -w @aituber-onair/core run build
 npm --prefix packages/core/examples/react-basic run build
 npm --prefix packages/core/examples/react-pngtuber-app run build
 # Also run these when the corresponding example or lockfile changed:
+npm --prefix packages/core/examples/react-pet-app run build
 npm --prefix packages/core/examples/react-vrm-app run build
 npm --prefix packages/core/examples/react-live2d-app run build
 npm --prefix packages/core/examples/coding-agent run build
