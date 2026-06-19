@@ -255,6 +255,32 @@ body {
   gap: 6px;
 }
 
+.settings-current-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border: 1px solid #263b57;
+  border-radius: 6px;
+  background: rgba(15, 52, 96, 0.18);
+}
+
+.settings-current-status-label,
+.settings-current-status-value {
+  min-width: 0;
+  font-size: 0.72rem;
+  color: #8899aa;
+}
+
+.settings-current-status-value {
+  overflow: hidden;
+  color: #e0e0e0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .settings-clear-button {
   border: 1px solid #0f3460;
   background: #1a1a2e;

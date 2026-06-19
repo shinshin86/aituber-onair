@@ -2353,11 +2353,9 @@ export function SettingsPanel({
               </div>
               <div className="settings-file-actions">
                 <span className="settings-file-status">
-                  {isLoadingPetAsset
-                    ? '読み込み中'
-                    : activePet
-                      ? `${activePetName}を利用中`
-                      : 'Mikoを利用中'}
+                  {petManifestFile && petSpritesheetFile
+                    ? '登録できます'
+                    : 'pet.json と画像を選択してください'}
                 </span>
                 <div className="settings-file-action-buttons">
                   <button
@@ -2379,6 +2377,18 @@ export function SettingsPanel({
                     </button>
                   )}
                 </div>
+              </div>
+              <div className="settings-current-status">
+                <span className="settings-current-status-label">
+                  表示中
+                </span>
+                <span className="settings-current-status-value">
+                  {isLoadingPetAsset
+                    ? '読み込み中'
+                    : activePet
+                      ? `${activePetName}を利用中`
+                      : 'Mikoを利用中'}
+                </span>
               </div>
               {(petRegistrationError || petAssetError) && (
                 <div className="settings-error">
