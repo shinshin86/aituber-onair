@@ -1,5 +1,14 @@
 # create-aituber-onair
 
+## 0.2.0
+
+### Minor Changes
+
+- Added a `pet` starter template aligned with the React Pet core example.
+- Added bundled Miko pet assets and setup guidance for replacing the pet with
+  user-provided Codex Pet-compatible assets.
+- Added Pet template documentation and CLI template selection support.
+
 ## 0.1.0
 
 ### Minor Changes
