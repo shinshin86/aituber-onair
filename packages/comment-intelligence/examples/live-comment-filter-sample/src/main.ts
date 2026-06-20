@@ -205,6 +205,9 @@ const COPY = {
       'Only safe comments with this score or higher can be picked. Raising it makes the filter stricter.',
     topic: 'Stream topic',
     topicValue: 'screen layout',
+    topicPanelTitle: 'Stream topic',
+    topicPanelDesc:
+      'Set the topic and choose how strictly comments must match it (off / prefer / require) to see topic-aware selection in action.',
     topicFilter: 'Topic filter',
     topicFilterOff: 'Off',
     topicFilterPrefer: 'Prefer topic matches',
@@ -332,6 +335,9 @@ const COPY = {
       'この点数以上の安全なコメントだけを拾います。上げるほど拾う条件が厳しくなります。',
     topic: '配信トピック',
     topicValue: '画面レイアウト',
+    topicPanelTitle: '配信トピック',
+    topicPanelDesc:
+      '配信テーマを設定し、コメントの一致度合い(使わない/優先/対象のみ)を選ぶと、トピックに沿ったコメント選別の動きを確認できます。',
     topicFilter: 'トピック絞り込み',
     topicFilterOff: '使わない',
     topicFilterPrefer: '優先（加点）',
@@ -498,6 +504,24 @@ function renderApp() {
           <p class="hint">${copy.openaiKeyHint}</p>
         </div>
 
+        <section class="panel topic-panel">
+          <div class="panel-heading">
+            <h2>${copy.topicPanelTitle}</h2>
+            <p>${copy.topicPanelDesc}</p>
+          </div>
+          <div class="engine-row topic-fields">
+            <label for="topic">${copy.topic}</label>
+            <input id="topic" type="text" value="${copy.topicValue}" />
+            <label for="topic-filter">${copy.topicFilter}</label>
+            <select id="topic-filter">
+              <option value="off">${copy.topicFilterOff}</option>
+              <option value="prefer" selected>${copy.topicFilterPrefer}</option>
+              <option value="require">${copy.topicFilterRequire}</option>
+            </select>
+            <p class="hint">${copy.topicFilterHint}</p>
+          </div>
+        </section>
+
         <details class="advanced">
           <summary>${copy.advanced}</summary>
           <p class="hint advanced-hint">${copy.advancedLiveHint}</p>
@@ -523,21 +547,6 @@ function renderApp() {
               <label for="min-score">${copy.minScore}</label>
               <input id="min-score" type="number" min="0" max="1" step="0.05" value="0.3" />
               <p class="hint">${copy.minScoreHint}</p>
-            </div>
-
-            <div class="field">
-              <label for="topic">${copy.topic}</label>
-              <input id="topic" type="text" value="${copy.topicValue}" />
-            </div>
-
-            <div class="field">
-              <label for="topic-filter">${copy.topicFilter}</label>
-              <select id="topic-filter">
-                <option value="off">${copy.topicFilterOff}</option>
-                <option value="prefer" selected>${copy.topicFilterPrefer}</option>
-                <option value="require">${copy.topicFilterRequire}</option>
-              </select>
-              <p class="hint">${copy.topicFilterHint}</p>
             </div>
 
             <div class="field">

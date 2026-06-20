@@ -317,6 +317,20 @@ h3 {
   margin-bottom: 4px;
 }
 
+.topic-panel {
+  margin: 0 0 18px;
+  border-left: 4px solid var(--c-brand);
+  background: linear-gradient(90deg, var(--c-brand-tint), var(--c-surface) 46%);
+}
+
+.topic-panel .engine-row {
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: 640px;
+}
+
 /* ---------- Use case cards ---------- */
 
 .usecase-grid {
