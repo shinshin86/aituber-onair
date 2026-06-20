@@ -55,16 +55,14 @@ export function ChatPanel({
       }`}
       style={panelStyle}
     >
-      {isBroadcast && (
-        <button
-          type="button"
-          className="settings-button chat-settings-button"
-          onClick={onToggleSettings}
-          aria-label="Settings"
-        >
-          ⚙
-        </button>
-      )}
+      <button
+        type="button"
+        className="settings-button chat-settings-button"
+        onClick={onToggleSettings}
+        aria-label="Settings"
+      >
+        ⚙
+      </button>
       <AvatarBackground
         mouthLevel={mouthLevel}
         isSpeaking={isSpeaking}

@@ -171,38 +171,20 @@ export default function App() {
   }, []);
 
   return (
-    <div
-      className={`app${
-        settingsHook.settings.visual.layoutMode === 'broadcast'
-          ? ' app-broadcast'
-          : ''
-      }`}
-    >
-      <header className="app-header">
-        <h1>Pet Chat</h1>
-        <button
-          className="settings-button"
-          onClick={() => setSettingsOpen((v) => !v)}
-          aria-label="Settings"
-        >
-          ⚙
-        </button>
-      </header>
-      <main className="app-main">
-        <ChatPanel
-          messages={messages}
-          partialResponse={partialResponse}
-          isProcessing={isProcessing}
-          onSend={handleSend}
-          mouthLevel={mouthLevel}
-          isSpeaking={isSpeaking}
-          backgroundImageUrl={backgroundImageUrl}
-          petManifest={petAssets.activePet?.manifest ?? null}
-          petSpritesheetUrl={petAssets.activePet?.spritesheetUrl ?? null}
-          visual={settingsHook.settings.visual}
-          onToggleSettings={() => setSettingsOpen((v) => !v)}
-        />
-      </main>
+    <div className="app">
+      <ChatPanel
+        messages={messages}
+        partialResponse={partialResponse}
+        isProcessing={isProcessing}
+        onSend={handleSend}
+        mouthLevel={mouthLevel}
+        isSpeaking={isSpeaking}
+        backgroundImageUrl={backgroundImageUrl}
+        petManifest={petAssets.activePet?.manifest ?? null}
+        petSpritesheetUrl={petAssets.activePet?.spritesheetUrl ?? null}
+        visual={settingsHook.settings.visual}
+        onToggleSettings={() => setSettingsOpen((v) => !v)}
+      />
 
       {settingsOpen && (
         <div

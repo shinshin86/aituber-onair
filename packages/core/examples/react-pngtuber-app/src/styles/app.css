@@ -23,20 +23,6 @@ body {
   height: 100vh;
 }
 
-.app-header {
-  padding: 12px 24px;
-  background: #16213e;
-  border-bottom: 1px solid #0f3460;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.app-header h1 {
-  font-size: 1.2rem;
-  color: #e94560;
-}
-
 /* ── Settings ── */
 
 .settings-button {
@@ -356,16 +342,6 @@ body {
   height: 16px;
 }
 
-.app-main {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.app-broadcast .app-header {
-  display: none;
-}
-
 /* ── Avatar Background (composited into chat background) ── */
 
 .avatar-background {
@@ -441,9 +417,12 @@ body {
   top: 12px;
   right: 16px;
   z-index: 5;
-  opacity: 0;
   background: rgba(22, 33, 62, 0.9);
   transition: opacity 0.15s;
+}
+
+.chat-panel-broadcast .chat-settings-button {
+  opacity: 0;
 }
 
 .chat-panel-broadcast:hover .chat-settings-button,
