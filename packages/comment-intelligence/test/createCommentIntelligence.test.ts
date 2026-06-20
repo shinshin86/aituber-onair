@@ -148,6 +148,29 @@ describe('createCommentIntelligence', () => {
     expect(result.debug?.usedLLM).toBe(true);
   });
 
+  it('uses LLM topicRelatedCommentIds for require topic filtering', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['a'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: { topicFilter: 'require', maxSelectedComments: 1 },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', 'さっきの設定をもう一度見せて'),
+        comment('b', '晩ごはんなに？'),
+      ],
+      streamState: { topic: 'AIツール紹介', language: 'ja' },
+    });
+
+    expect(result.selectedComments[0].id).toBe('a');
+    expect(result.selectedComments[0].reasons).toContain('topic_related');
+    expect(result.ignoredComments.map((ignored) => ignored.id)).toContain('b');
+  });
+
   it('ignores LLM selectedCommentIds outside the configured maxComments window', async () => {
     const llmProvider = provider({ selectedCommentIds: ['c'] });
     const intelligence = createCommentIntelligence({

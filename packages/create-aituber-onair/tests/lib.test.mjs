@@ -128,7 +128,7 @@ test('createProject copies pet template with bundled Miko assets', async () => {
   assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.3');
   assert.equal(
     packageJson.dependencies['@aituber-onair/comment-intelligence'],
-    '^0.0.3',
+    '^0.0.4',
   );
   assert.equal(packageJson.dependencies['@aituber-onair/manneri'], '^0.3.3');
   assert.equal(petManifest.displayName, 'Miko');

@@ -127,6 +127,31 @@ console.log(result.debug?.blockedViewerIds); // ['viewer-1']
 
 このパッケージは YouTube や Twitch 上でユーザーをBANするものではありません。あくまで「AITuberが返答対象として拾わない」ためのガードです。実際のBAN、タイムアウト、モデレーター対応は、配信アプリ側や各プラットフォームのモデレーション機能と組み合わせてください。
 
+### 配信テーマに沿ったコメントを優先する
+
+現在の配信テーマに合うコメントを拾いたい場合は、`streamState.topic`
+と `ranking.topicFilter` を設定します。初期値の `prefer` はテーマ関連
+コメントを優先しつつ、従来どおりテーマ外コメントも必要なら選択します。
+`require` はテーマ外コメントを選択対象から外します。`off` はテーマ関連
+スコアを加点しません。
+
+```ts
+const intelligence = createCommentIntelligence({
+  ranking: {
+    topicFilter: 'require',
+  },
+});
+
+const result = await intelligence.analyze({
+  comments,
+  streamState: {
+    topic: 'AIツール紹介',
+    title: '今日の便利ツールを試す',
+    language: 'ja',
+  },
+});
+```
+
 ## rules mode
 
 `rules` が初期値です。このモードでは LLM provider を呼びません。安全判定、ランキング、未選択コメント要約、LLM向け文脈生成はすべてローカルのルールで行います。

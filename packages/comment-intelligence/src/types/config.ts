@@ -23,6 +23,7 @@ export type CommentIntelligenceConfig = {
   };
   ranking?: {
     strategy?: RankingStrategy;
+    topicFilter?: 'off' | 'prefer' | 'require';
     maxSelectedComments?: number;
     minScore?: number;
     weights?: Partial<RankingWeights>;

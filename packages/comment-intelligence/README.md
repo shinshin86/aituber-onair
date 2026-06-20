@@ -137,6 +137,31 @@ the comment, not to replace platform moderation.
 
 This package does not ban users on YouTube or Twitch. It only prevents unsafe or temporarily blocked viewers from being selected for the AITuber response. Your app can still use platform moderation APIs, human moderators, or chat bot rules for actual bans/timeouts.
 
+### Prefer comments that match the stream topic
+
+Set `streamState.topic` and `ranking.topicFilter` when you want the selected
+comment to follow the current stream theme. The default `prefer` mode boosts
+topic-related comments while preserving the previous fallback behavior. Use
+`require` when the AITuber should not pick comments outside the stream topic.
+Use `off` to ignore topic relevance in scoring.
+
+```ts
+const intelligence = createCommentIntelligence({
+  ranking: {
+    topicFilter: 'require',
+  },
+});
+
+const result = await intelligence.analyze({
+  comments,
+  streamState: {
+    topic: 'AI tool demos',
+    title: 'Trying useful tools live',
+    language: 'en',
+  },
+});
+```
+
 ## Rules Mode
 
 `rules` mode is the default and never calls an LLM provider. It uses local heuristics for safety, ranking, ignored-comment summaries, and LLM context.

@@ -99,4 +99,23 @@ describe('createChatServiceCommentAnalysisProvider', () => {
     expect(messages[1].content).toContain('demoralizing');
     expect(messages[1].content).toContain('改善要望や問題報告');
   });
+
+  it('includes stream topic and title in the analysis prompt', async () => {
+    const chatOnce = vi.fn().mockResolvedValue({ text: '{}' });
+    const provider = createChatServiceCommentAnalysisProvider({ chatOnce });
+
+    await provider.analyze({
+      comments: [comment('a')],
+      streamState: {
+        topic: 'AIツール紹介',
+        title: '今日の便利ツール',
+        language: 'ja',
+      },
+    });
+
+    const messages = chatOnce.mock.calls[0][0];
+    expect(messages[1].content).toContain('配信テーマ: AIツール紹介');
+    expect(messages[1].content).toContain('タイトル: 今日の便利ツール');
+    expect(messages[1].content).toContain('topicRelatedCommentIds');
+  });
 });

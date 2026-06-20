@@ -102,6 +102,78 @@ describe('rankComments', () => {
     expect(result.rankedComments[0].reasons).toContain('topic_related');
   });
 
+  it('requires topic-related comments when topicFilter is require', () => {
+    const result = rankComments({
+      comments: [
+        comment('question', '晩ごはんなに？'),
+        comment('topic', '今日は音楽制作の続き？'),
+      ],
+      safetyReports: [],
+      streamState: { topic: '音楽制作', language: 'ja' },
+      config: { topicFilter: 'require', maxSelectedComments: 2 },
+    });
+
+    expect(result.selectedComments.map((selected) => selected.id)).toEqual([
+      'topic',
+    ]);
+    const question = result.rankedComments.find(
+      (ranked) => ranked.id === 'question'
+    );
+    expect(question?.reasons).toContain('topic_unrelated');
+  });
+
+  it('does not filter by topic when topicFilter is require but topic is unset', () => {
+    const result = rankComments({
+      comments: [comment('question', '晩ごはんなに？')],
+      safetyReports: [],
+      streamState: { language: 'ja' },
+      config: { topicFilter: 'require', maxSelectedComments: 2 },
+    });
+
+    expect(result.selectedComments.map((selected) => selected.id)).toEqual([
+      'question',
+    ]);
+  });
+
+  it('treats a whitespace-only topic as unset under require', () => {
+    const result = rankComments({
+      comments: [comment('question', '晩ごはんなに？')],
+      safetyReports: [],
+      streamState: { topic: '   ', language: 'ja' },
+      config: { topicFilter: 'require', maxSelectedComments: 2 },
+    });
+
+    expect(result.selectedComments[0].id).toBe('question');
+  });
+
+  it('keeps previous selection behavior when topicFilter is prefer', () => {
+    const result = rankComments({
+      comments: [comment('question', '晩ごはんなに？')],
+      safetyReports: [],
+      streamState: { topic: '音楽制作', language: 'ja' },
+      config: { topicFilter: 'prefer' },
+    });
+
+    expect(result.selectedComments[0].id).toBe('question');
+  });
+
+  it('does not boost topic relevance when topicFilter is off', () => {
+    const result = rankComments({
+      comments: [
+        comment('plain', 'こんにちは', 'plain', 1),
+        comment('topic', '音楽制作だね', 'topic', 1),
+      ],
+      safetyReports: [],
+      streamState: { topic: '音楽制作', language: 'ja' },
+      config: { topicFilter: 'off', weights: { freshness: 0, novelty: 0 } },
+    });
+
+    const plain = result.rankedComments.find((ranked) => ranked.id === 'plain');
+    const topic = result.rankedComments.find((ranked) => ranked.id === 'topic');
+    expect(topic?.scoreBreakdown.topicRelevance).toBe(1);
+    expect(topic?.score).toBe(plain?.score);
+  });
+
   it('strongly lowers unsafe comments with chaos-resistant strategy', () => {
     const result = rankComments({
       comments: [

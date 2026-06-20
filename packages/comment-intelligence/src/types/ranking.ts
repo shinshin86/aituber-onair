@@ -6,6 +6,7 @@ export type RankingReason =
   | 'new_viewer'
   | 'returning_viewer'
   | 'topic_related'
+  | 'topic_unrelated'
   | 'topic_change_candidate'
   | 'high_engagement'
   | 'easy_to_answer'
