@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { isGPT5Model } from '@aituber-onair/core';
+import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import type { ActivePetAsset } from '../hooks/usePetAssets';
@@ -16,6 +17,7 @@ interface SettingsPanelProps extends SettingsHook {
   isLoadingPetAsset: boolean;
   streamErrorMessage?: string;
   onBackgroundImageChange: (file: File | null) => void;
+  onVisionCapture: (imageDataUrl: string, prompt: string) => Promise<void>;
   onPetAssetRegister: (
     manifestFile: File,
     spritesheetFile: File,
@@ -292,6 +294,7 @@ export function SettingsPanel({
   isLoadingPetAsset,
   streamErrorMessage,
   onBackgroundImageChange,
+  onVisionCapture,
   onPetAssetRegister,
   onPetAssetClear,
 }: SettingsPanelProps) {
@@ -2379,9 +2382,7 @@ export function SettingsPanel({
                 </div>
               </div>
               <div className="settings-current-status">
-                <span className="settings-current-status-label">
-                  表示中
-                </span>
+                <span className="settings-current-status-label">表示中</span>
                 <span className="settings-current-status-value">
                   {isLoadingPetAsset
                     ? '読み込み中'
@@ -2403,6 +2404,11 @@ export function SettingsPanel({
             </p>
           </>
         )}
+      </div>
+
+      <div className="settings-section">
+        <h3>Screen Vision</h3>
+        <ScreenVisionPanel disabled={disabled} onCapture={onVisionCapture} />
       </div>
 
       <StreamSettings

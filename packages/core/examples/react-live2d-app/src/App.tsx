@@ -57,12 +57,17 @@ export default function App() {
     [play],
   );
 
-  const { messages, isProcessing, partialResponse, processChat } =
-    useAituberCore({
-      onAudioPlay: handleAudioPlay,
-      settings: settingsHook.settings,
-      getApiKeyForProvider: settingsHook.getApiKeyForProvider,
-    });
+  const {
+    messages,
+    isProcessing,
+    partialResponse,
+    processChat,
+    processVisionChat,
+  } = useAituberCore({
+    onAudioPlay: handleAudioPlay,
+    settings: settingsHook.settings,
+    getApiKeyForProvider: settingsHook.getApiKeyForProvider,
+  });
 
   const handleSend = useCallback(
     (text: string) => {
@@ -336,6 +341,7 @@ export default function App() {
                 backgroundImageUrl={backgroundImageUrl}
                 streamErrorMessage={streamErrorMessage}
                 onBackgroundImageChange={handleBackgroundImageChange}
+                onVisionCapture={processVisionChat}
               />
             </div>
           </div>

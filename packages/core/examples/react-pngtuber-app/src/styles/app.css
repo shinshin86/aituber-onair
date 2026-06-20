@@ -291,6 +291,27 @@ body {
   color: #8899aa;
 }
 
+.screen-vision-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.screen-vision-preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  background: #0b1020;
+  object-fit: contain;
+}
+
+.screen-vision-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 .settings-mode-help {
   margin-top: 8px;
   padding: 8px 10px;

@@ -11,7 +11,14 @@ The app keeps the same basic structure as the other React core samples:
 - TTS playback and real-time audio analysis
 - Speech input through Web Speech API
 - YouTube Live / Twitch comment ingestion
+- Manual OBS Virtual Camera frame capture through **Settings → Screen Vision**
+  for vision-capable model comments
 - Comment intelligence and manneri detection
+
+## Screen Vision
+
+Start OBS Virtual Camera, choose it from **Settings → Screen Vision**, then press
+**画面を見る** to send the current frame to the selected vision-capable model.
 
 ## Pet animation
 

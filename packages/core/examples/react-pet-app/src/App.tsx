@@ -28,12 +28,17 @@ export default function App() {
     [play],
   );
 
-  const { messages, isProcessing, partialResponse, processChat } =
-    useAituberCore({
-      onAudioPlay: handleAudioPlay,
-      settings: settingsHook.settings,
-      getApiKeyForProvider: settingsHook.getApiKeyForProvider,
-    });
+  const {
+    messages,
+    isProcessing,
+    partialResponse,
+    processChat,
+    processVisionChat,
+  } = useAituberCore({
+    onAudioPlay: handleAudioPlay,
+    settings: settingsHook.settings,
+    getApiKeyForProvider: settingsHook.getApiKeyForProvider,
+  });
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
 
   const handleSend = useCallback(
@@ -205,6 +210,7 @@ export default function App() {
               backgroundImageUrl={backgroundImageUrl}
               streamErrorMessage={streamErrorMessage}
               onBackgroundImageChange={handleBackgroundImageChange}
+              onVisionCapture={processVisionChat}
               activePet={petAssets.activePet}
               petAssetError={petAssets.petAssetError}
               isLoadingPetAsset={petAssets.isLoadingPetAsset}

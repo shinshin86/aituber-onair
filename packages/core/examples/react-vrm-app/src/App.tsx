@@ -72,14 +72,19 @@ export default function App() {
     emitAvatarReaction({ type: 'reset', fadeMs: 360 });
   }, [emitAvatarReaction]);
 
-  const { messages, isProcessing, partialResponse, processChat } =
-    useAituberCore({
-      onAudioPlay: handleAudioPlay,
-      onSpeechStart: handleSpeechStart,
-      onSpeechEnd: handleSpeechEnd,
-      settings: settingsHook.settings,
-      getApiKeyForProvider: settingsHook.getApiKeyForProvider,
-    });
+  const {
+    messages,
+    isProcessing,
+    partialResponse,
+    processChat,
+    processVisionChat,
+  } = useAituberCore({
+    onAudioPlay: handleAudioPlay,
+    onSpeechStart: handleSpeechStart,
+    onSpeechEnd: handleSpeechEnd,
+    settings: settingsHook.settings,
+    getApiKeyForProvider: settingsHook.getApiKeyForProvider,
+  });
 
   const handleSend = useCallback(
     (text: string) => {
@@ -254,6 +259,7 @@ export default function App() {
               backgroundImageUrl={backgroundImageUrl}
               streamErrorMessage={streamErrorMessage}
               onBackgroundImageChange={handleBackgroundImageChange}
+              onVisionCapture={processVisionChat}
             />
           </div>
         </div>

@@ -39,6 +39,8 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   LLM pipeline
   - YouTube uses the YouTube Data API v3 (requires a Google Cloud API key)
   - Twitch uses EventSub WebSocket with a browser-based implicit OAuth flow
+- Capture one frame from OBS Virtual Camera in **Settings → Screen Vision** and
+  send it to a vision-capable model for an avatar comment
 - Detect repetitive conversation patterns with `@aituber-onair/manneri` and
   add an internal topic-diversification instruction before the next response
 
@@ -68,6 +70,11 @@ For `gemini-nano`, set:
 
 This app can forward live chat comments from YouTube Live or Twitch into the LLM.
 Configure it from **Settings → Stream**.
+
+## Screen Vision
+
+Start OBS Virtual Camera, choose it from **Settings → Screen Vision**, then press
+**画面を見る** to send the current frame to the selected vision-capable model.
 
 Only one platform can be active at a time.
 

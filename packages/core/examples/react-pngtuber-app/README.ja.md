@@ -37,6 +37,8 @@
 - YouTube Live / Twitch のライブチャットを取得して LLM パイプラインに流す
   - YouTube は YouTube Data API v3 を利用（Google Cloud の API キーが必要）
   - Twitch は EventSub WebSocket とブラウザ上での implicit OAuth フローを利用
+- **Settings → Screen Vision** から OBS Virtual Camera の1フレームを取得し、
+  Vision 対応モデルに送ってアバターがコメント
 - `@aituber-onair/manneri` で会話の繰り返し傾向を検出し、次の応答前に
   内部的な話題転換指示を追加
 
@@ -66,6 +68,11 @@ npm run dev
 
 このサンプルでは YouTube Live / Twitch のライブチャットを LLM に流し込むことができます。
 **Settings → Stream** から設定します。
+
+## Screen Vision
+
+OBS Virtual Camera を開始し、**Settings → Screen Vision** で選択してから
+**画面を見る** を押すと、現在のフレームを Vision 対応モデルに送信します。
 
 同時に有効化できるのはどちらか一方だけです。
 

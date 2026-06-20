@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isGPT5Model } from '@aituber-onair/core';
+import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
@@ -12,6 +13,7 @@ interface SettingsPanelProps extends SettingsHook {
   backgroundImageUrl: string | null;
   streamErrorMessage?: string;
   onBackgroundImageChange: (file: File | null) => void;
+  onVisionCapture: (imageDataUrl: string, prompt: string) => Promise<void>;
 }
 
 const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
@@ -279,6 +281,7 @@ export function SettingsPanel({
   backgroundImageUrl,
   streamErrorMessage,
   onBackgroundImageChange,
+  onVisionCapture,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
   const isOpenAIGPT5Model =
@@ -2225,6 +2228,11 @@ export function SettingsPanel({
             </div>
           </>
         )}
+      </div>
+
+      <div className="settings-section">
+        <h3>Screen Vision</h3>
+        <ScreenVisionPanel disabled={disabled} onCapture={onVisionCapture} />
       </div>
 
       <StreamSettings

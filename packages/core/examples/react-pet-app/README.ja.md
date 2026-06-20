@@ -9,7 +9,14 @@ AITuber チャットサンプルです。
 - TTS 再生と音声レベル解析
 - Web Speech API による音声入力
 - YouTube Live / Twitch コメント取り込み
+- **Settings → Screen Vision** から OBS Virtual Camera の1フレームを取得し、
+  Vision 対応モデルに送ってコメント
 - Comment Intelligence とマンネリ検知
+
+## Screen Vision
+
+OBS Virtual Camera を開始し、**Settings → Screen Vision** で選択してから
+**画面を見る** を押すと、現在のフレームを Vision 対応モデルに送信します。
 
 ## Pet アニメーション
 
