@@ -49,6 +49,10 @@ npm run dev
 
 ### Pet App
 
+<p align="center">
+  <img src="../packages/core/examples/react-pet-app/images/react-pet-app.jpg" alt="Pet サンプルアプリ" width="720" />
+</p>
+
 パス:
 [`packages/core/examples/react-pet-app`](../packages/core/examples/react-pet-app)
 
