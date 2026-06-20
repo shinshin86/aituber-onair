@@ -5,6 +5,7 @@ import { useAudioLipsync } from './hooks/useAudioLipsync';
 import { useAituberCore } from './hooks/useAituberCore';
 import { useLiveCommentIntelligence } from './hooks/useLiveCommentIntelligence';
 import { usePetAssets } from './hooks/usePetAssets';
+import { useScreenVisionController } from './hooks/useScreenVisionController';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
@@ -38,6 +39,12 @@ export default function App() {
     onAudioPlay: handleAudioPlay,
     settings: settingsHook.settings,
     getApiKeyForProvider: settingsHook.getApiKeyForProvider,
+  });
+  const screenVisionController = useScreenVisionController({
+    settings: settingsHook.settings.screenVision,
+    onCapture: processVisionChat,
+    onEnabledChange: settingsHook.updateScreenVisionEnabled,
+    onDeviceIdChange: settingsHook.updateScreenVisionDeviceId,
   });
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
 
@@ -164,7 +171,13 @@ export default function App() {
   }, []);
 
   return (
-    <div className="app">
+    <div
+      className={`app${
+        settingsHook.settings.visual.layoutMode === 'broadcast'
+          ? ' app-broadcast'
+          : ''
+      }`}
+    >
       <header className="app-header">
         <h1>Pet Chat</h1>
         <button
@@ -186,6 +199,8 @@ export default function App() {
           backgroundImageUrl={backgroundImageUrl}
           petManifest={petAssets.activePet?.manifest ?? null}
           petSpritesheetUrl={petAssets.activePet?.spritesheetUrl ?? null}
+          visual={settingsHook.settings.visual}
+          onToggleSettings={() => setSettingsOpen((v) => !v)}
         />
       </main>
 
@@ -209,8 +224,8 @@ export default function App() {
               isProcessing={isProcessing}
               backgroundImageUrl={backgroundImageUrl}
               streamErrorMessage={streamErrorMessage}
+              screenVisionController={screenVisionController}
               onBackgroundImageChange={handleBackgroundImageChange}
-              onVisionCapture={processVisionChat}
               activePet={petAssets.activePet}
               petAssetError={petAssets.petAssetError}
               isLoadingPetAsset={petAssets.isLoadingPetAsset}

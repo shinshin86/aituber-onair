@@ -46,6 +46,8 @@ from actual audio output volume.
   drag to rotate / mouse wheel to zoom / double-click to reset
 - Set visuals directly in Settings:
   - Background image upload (PNG/JPG, memory-only)
+  - Green screen background mode
+  - Broadcast layout with avatar-only captions
   - Fixed avatar asset path display (`/avatar/miko.vrm`)
 - Fetch live chat comments from YouTube Live or Twitch, analyze them with
   `@aituber-onair/comment-intelligence`, and send only selected comments into
@@ -85,6 +87,14 @@ Start OBS Virtual Camera, choose it from **Settings → Screen Vision**, then pr
 **画面を見る** to send the current frame to the selected vision-capable model.
 You can also choose an automatic interval such as 30 seconds, 1 minute,
 2 minutes, or 5 minutes.
+
+## Broadcast visuals
+
+Use **Settings → Visual** to switch the background to green screen and select
+the solo broadcast layout. In solo broadcast layout, the normal chat log is
+hidden and only the avatar's latest spoken text is shown as a lower caption.
+The user input field is hidden by default, but can be enabled in the same
+Visual settings section.
 
 ## Stream comments (YouTube Live / Twitch)
 

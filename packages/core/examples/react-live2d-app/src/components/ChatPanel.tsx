@@ -1,4 +1,5 @@
 import type { ChatMessage } from '../types/chat';
+import type { VisualSettings } from '../types/settings';
 import { ChatInput } from './ChatInput';
 import { ChatLog } from './ChatLog';
 import { Live2DStage } from './Live2DStage';
@@ -15,6 +16,7 @@ interface ChatPanelProps {
   modelSource: Live2DModelSource | null;
   modelPickerError: string;
   audioBinding: Live2DAudioBinding;
+  visual: VisualSettings;
 }
 
 export function ChatPanel({
@@ -27,8 +29,19 @@ export function ChatPanel({
   modelSource,
   modelPickerError,
   audioBinding,
+  visual,
 }: ChatPanelProps) {
-  const panelStyle = backgroundImageUrl
+  const isBroadcast = visual.layoutMode === 'broadcast';
+  const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
+  const latestAssistantMessage = [...messages]
+    .reverse()
+    .find((message) => message.role === 'assistant');
+  const broadcastCaption =
+    partialResponse || latestAssistantMessage?.content.trim() || '';
+  const panelStyle =
+    visual.backgroundMode === 'green'
+      ? { backgroundColor: '#00ff00' }
+      : backgroundImageUrl
     ? {
         backgroundImage: `url(${backgroundImageUrl})`,
         backgroundSize: 'cover',
@@ -37,7 +50,12 @@ export function ChatPanel({
     : undefined;
 
   return (
-    <div className="chat-panel" style={panelStyle}>
+    <div
+      className={`chat-panel${isBroadcast ? ' chat-panel-broadcast' : ''}${
+        isBroadcast && shouldShowInput ? ' chat-panel-broadcast-input' : ''
+      }`}
+      style={panelStyle}
+    >
       <button
         type="button"
         className="settings-button chat-settings-button"
@@ -51,8 +69,14 @@ export function ChatPanel({
         modelPickerError={modelPickerError}
         audioBinding={audioBinding}
       />
-      <ChatLog messages={messages} partialResponse={partialResponse} />
-      <ChatInput onSend={onSend} disabled={isProcessing} />
+      {isBroadcast ? (
+        broadcastCaption && (
+          <div className="broadcast-caption">{broadcastCaption}</div>
+        )
+      ) : (
+        <ChatLog messages={messages} partialResponse={partialResponse} />
+      )}
+      {shouldShowInput && <ChatInput onSend={onSend} disabled={isProcessing} />}
     </div>
   );
 }

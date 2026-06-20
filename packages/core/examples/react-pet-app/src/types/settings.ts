@@ -159,9 +159,24 @@ export interface PetManifest {
   spritesheetPath?: string;
 }
 
+export interface VisualSettings {
+  backgroundMode: 'default' | 'green';
+  layoutMode: 'chat' | 'broadcast';
+  showInputInBroadcast: boolean;
+}
+
+export interface ScreenVisionSettings {
+  deviceId: string;
+  prompt: string;
+  autoIntervalMs: number;
+  enabled: boolean;
+}
+
 export interface AppSettings {
   llm: LLMSettings;
   tts: TTSSettings;
+  visual: VisualSettings;
+  screenVision: ScreenVisionSettings;
   stream: StreamSettings;
   commentIntelligence: CommentIntelligenceSettings;
   manneri: ManneriSettings;

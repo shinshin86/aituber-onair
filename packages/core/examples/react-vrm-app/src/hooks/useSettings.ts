@@ -42,6 +42,8 @@ const DEFAULT_PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
 const DEFAULT_PIPER_PLUS_VOICE_FILE = 'mei_normal.htsvoice';
 const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
 const DEFAULT_OPENROUTER_MAX_WORKING = 10;
+const DEFAULT_SCREEN_VISION_PROMPT =
+  'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
 const EMPTY_MODEL_IDS: string[] = [];
 
 function getOrderedModels(provider: ChatProviderOption): string[] {
@@ -197,6 +199,17 @@ function getDefaultSettings(): AppSettings {
       piperPlusSpeed: '',
       piperPlusNoiseScale: '',
     },
+    visual: {
+      backgroundMode: 'default',
+      layoutMode: 'chat',
+      showInputInBroadcast: false,
+    },
+    screenVision: {
+      deviceId: '',
+      prompt: DEFAULT_SCREEN_VISION_PROMPT,
+      autoIntervalMs: 0,
+      enabled: false,
+    },
     stream: {
       platform: 'none',
       youtubeApiKey: '',
@@ -245,6 +258,8 @@ function loadSettings(): AppSettings {
           ),
         },
         tts: { ...defaults.tts, ...saved.tts },
+        visual: { ...defaults.visual, ...saved.visual },
+        screenVision: { ...defaults.screenVision, ...saved.screenVision },
         stream: { ...defaults.stream, ...saved.stream },
         commentIntelligence: {
           ...defaults.commentIntelligence,
@@ -814,6 +829,67 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateVisualBackgroundMode = useCallback(
+    (backgroundMode: AppSettings['visual']['backgroundMode']) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, backgroundMode },
+      }));
+    },
+    [],
+  );
+
+  const updateVisualLayoutMode = useCallback(
+    (layoutMode: AppSettings['visual']['layoutMode']) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, layoutMode },
+      }));
+    },
+    [],
+  );
+
+  const updateVisualShowInputInBroadcast = useCallback(
+    (showInputInBroadcast: boolean) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, showInputInBroadcast },
+      }));
+    },
+    [],
+  );
+
+  const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      screenVision: { ...prev.screenVision, deviceId },
+    }));
+  }, []);
+
+  const updateScreenVisionPrompt = useCallback((prompt: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      screenVision: { ...prev.screenVision, prompt },
+    }));
+  }, []);
+
+  const updateScreenVisionAutoIntervalMs = useCallback(
+    (autoIntervalMs: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        screenVision: { ...prev.screenVision, autoIntervalMs },
+      }));
+    },
+    [],
+  );
+
+  const updateScreenVisionEnabled = useCallback((enabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      screenVision: { ...prev.screenVision, enabled },
+    }));
+  }, []);
+
   const updateStreamPlatform = useCallback(
     (platform: StreamingPlatformOption) => {
       setSettings((prev) => ({
@@ -1105,6 +1181,13 @@ export function useSettings() {
     updatePiperPlusVoiceFile,
     updatePiperPlusSpeed,
     updatePiperPlusNoiseScale,
+    updateVisualBackgroundMode,
+    updateVisualLayoutMode,
+    updateVisualShowInputInBroadcast,
+    updateScreenVisionDeviceId,
+    updateScreenVisionPrompt,
+    updateScreenVisionAutoIntervalMs,
+    updateScreenVisionEnabled,
     updateStreamPlatform,
     updateYoutubeApiKey,
     updateYoutubeLiveId,

@@ -1,12 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import type { useScreenVisionController } from '../hooks/useScreenVisionController';
+import type { ScreenVisionSettings } from '../types/settings';
+
+type ScreenVisionController = ReturnType<typeof useScreenVisionController>;
 
 interface ScreenVisionPanelProps {
   disabled?: boolean;
-  onCapture: (imageDataUrl: string, prompt: string) => Promise<void> | void;
+  settings: ScreenVisionSettings;
+  controller: ScreenVisionController;
+  onDeviceIdChange: (deviceId: string) => void;
+  onPromptChange: (prompt: string) => void;
+  onAutoIntervalMsChange: (autoIntervalMs: number) => void;
 }
 
-const DEFAULT_PROMPT =
-  'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
 const AUTO_CAPTURE_INTERVAL_OPTIONS = [
   { value: 0, label: '手動のみ' },
   { value: 30_000, label: '30秒ごと' },
@@ -15,143 +21,31 @@ const AUTO_CAPTURE_INTERVAL_OPTIONS = [
   { value: 300_000, label: '5分ごと' },
 ] as const;
 
-function captureVideoFrame(video: HTMLVideoElement): string | null {
-  if (!video.videoWidth || !video.videoHeight) {
-    return null;
-  }
-
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  if (!context) {
-    return null;
-  }
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.9);
-}
-
 export function ScreenVisionPanel({
   disabled = false,
-  onCapture,
+  settings,
+  controller,
+  onDeviceIdChange,
+  onPromptChange,
+  onAutoIntervalMsChange,
 }: ScreenVisionPanelProps) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const captureRunningRef = useRef(false);
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [deviceId, setDeviceId] = useState('');
-  const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
-  const [autoIntervalMs, setAutoIntervalMs] = useState(0);
-  const [isPreviewing, setIsPreviewing] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
+  const previewRef = useRef<HTMLVideoElement | null>(null);
 
-  const stopPreview = useCallback(() => {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setIsPreviewing(false);
-  }, []);
-
-  const refreshDevices = useCallback(async () => {
-    if (!navigator.mediaDevices?.enumerateDevices) {
-      setStatusMessage('このブラウザではカメラ入力を利用できません。');
-      return;
-    }
-
-    const nextDevices = (
-      await navigator.mediaDevices.enumerateDevices()
-    ).filter((device) => device.kind === 'videoinput');
-    setDevices(nextDevices);
-    setDeviceId((current) => current || nextDevices[0]?.deviceId || '');
-  }, []);
-
-  const startPreview = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setStatusMessage('このブラウザではカメラ入力を利用できません。');
-      return;
-    }
-
-    try {
-      stopPreview();
-      setStatusMessage('');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: deviceId ? { deviceId: { exact: deviceId } } : true,
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      setIsPreviewing(true);
-      await refreshDevices();
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'カメラを開始できませんでした。';
-      setStatusMessage(message);
-    }
-  }, [deviceId, refreshDevices, stopPreview]);
-
-  const captureAndSend = useCallback(async () => {
-    if (captureRunningRef.current) {
-      return;
-    }
-
-    const video = videoRef.current;
+  useEffect(() => {
+    const video = previewRef.current;
     if (!video) {
-      setStatusMessage('プレビューを開始してください。');
       return;
     }
 
-    const imageDataUrl = captureVideoFrame(video);
-    if (!imageDataUrl) {
-      setStatusMessage('映像フレームを取得できませんでした。');
-      return;
+    video.srcObject = controller.stream;
+    if (controller.stream) {
+      void video.play();
     }
-
-    setStatusMessage('画面を送信しています...');
-    captureRunningRef.current = true;
-    try {
-      await onCapture(imageDataUrl, prompt);
-      setStatusMessage('画面を送信しました。');
-    } finally {
-      captureRunningRef.current = false;
-    }
-  }, [onCapture, prompt]);
-
-  const handleCapture = useCallback(async () => {
-    await captureAndSend();
-  }, [captureAndSend]);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void refreshDevices();
-    }, 0);
 
     return () => {
-      window.clearTimeout(timeoutId);
-      stopPreview();
+      video.srcObject = null;
     };
-  }, [refreshDevices, stopPreview]);
-
-  useEffect(() => {
-    if (!isPreviewing || autoIntervalMs <= 0 || disabled) {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      void captureAndSend();
-    }, autoIntervalMs);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [autoIntervalMs, captureAndSend, disabled, isPreviewing]);
+  }, [controller.stream]);
 
   return (
     <div className="screen-vision-panel">
@@ -159,12 +53,14 @@ export function ScreenVisionPanel({
         <label htmlFor="screen-vision-device">カメラ入力</label>
         <select
           id="screen-vision-device"
-          value={deviceId}
-          onChange={(event) => setDeviceId(event.target.value)}
-          disabled={disabled || isPreviewing}
+          value={settings.deviceId}
+          onChange={(event) => onDeviceIdChange(event.target.value)}
+          disabled={disabled}
         >
-          {devices.length === 0 && <option value="">カメラを検出中...</option>}
-          {devices.map((device, index) => (
+          {controller.devices.length === 0 && (
+            <option value="">カメラを検出中...</option>
+          )}
+          {controller.devices.map((device, index) => (
             <option key={device.deviceId || index} value={device.deviceId}>
               {device.label || `Camera ${index + 1}`}
             </option>
@@ -176,7 +72,7 @@ export function ScreenVisionPanel({
       </div>
 
       <video
-        ref={videoRef}
+        ref={previewRef}
         className="screen-vision-preview"
         muted
         playsInline
@@ -187,8 +83,8 @@ export function ScreenVisionPanel({
         <input
           id="screen-vision-prompt"
           type="text"
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
+          value={settings.prompt}
+          onChange={(event) => onPromptChange(event.target.value)}
           disabled={disabled}
         />
       </div>
@@ -197,8 +93,10 @@ export function ScreenVisionPanel({
         <label htmlFor="screen-vision-interval">自動で見る間隔</label>
         <select
           id="screen-vision-interval"
-          value={autoIntervalMs}
-          onChange={(event) => setAutoIntervalMs(Number(event.target.value))}
+          value={settings.autoIntervalMs}
+          onChange={(event) =>
+            onAutoIntervalMsChange(Number(event.target.value))
+          }
           disabled={disabled}
         >
           {AUTO_CAPTURE_INTERVAL_OPTIONS.map((option) => (
@@ -208,7 +106,7 @@ export function ScreenVisionPanel({
           ))}
         </select>
         <p className="settings-field-hint">
-          プレビュー中だけ、選択した間隔で現在のフレームを送信します。
+          プレビュー中だけ、選択した間隔で現在のフレームを送信します。設定画面を閉じても動作します。
         </p>
       </div>
 
@@ -216,22 +114,24 @@ export function ScreenVisionPanel({
         <button
           type="button"
           className="settings-action-button"
-          onClick={isPreviewing ? stopPreview : startPreview}
+          onClick={controller.isPreviewing ? controller.stop : controller.start}
           disabled={disabled}
         >
-          {isPreviewing ? 'プレビュー停止' : 'プレビュー開始'}
+          {controller.isPreviewing ? 'プレビュー停止' : 'プレビュー開始'}
         </button>
         <button
           type="button"
           className="settings-action-button"
-          onClick={handleCapture}
-          disabled={disabled || !isPreviewing}
+          onClick={() => void controller.captureAndSend()}
+          disabled={disabled || !controller.isPreviewing}
         >
           画面を見る
         </button>
       </div>
 
-      {statusMessage && <p className="settings-field-hint">{statusMessage}</p>}
+      {controller.statusMessage && (
+        <p className="settings-field-hint">{controller.statusMessage}</p>
+      )}
     </div>
   );
 }
