@@ -17,6 +17,7 @@ AITuber チャットサンプルです。
 
 OBS Virtual Camera を開始し、**Settings → Screen Vision** で選択してから
 **画面を見る** を押すと、現在のフレームを Vision 対応モデルに送信します。
+30秒、1分、2分、5分ごとの自動送信も選択できます。
 
 ## Pet アニメーション
 

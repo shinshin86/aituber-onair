@@ -19,6 +19,8 @@ The app keeps the same basic structure as the other React core samples:
 
 Start OBS Virtual Camera, choose it from **Settings → Screen Vision**, then press
 **画面を見る** to send the current frame to the selected vision-capable model.
+You can also choose an automatic interval such as 30 seconds, 1 minute,
+2 minutes, or 5 minutes.
 
 ## Pet animation
 

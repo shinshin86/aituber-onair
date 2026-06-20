@@ -7,6 +7,13 @@ interface ScreenVisionPanelProps {
 
 const DEFAULT_PROMPT =
   'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
+const AUTO_CAPTURE_INTERVAL_OPTIONS = [
+  { value: 0, label: '手動のみ' },
+  { value: 30_000, label: '30秒ごと' },
+  { value: 60_000, label: '1分ごと' },
+  { value: 120_000, label: '2分ごと' },
+  { value: 300_000, label: '5分ごと' },
+] as const;
 
 function captureVideoFrame(video: HTMLVideoElement): string | null {
   if (!video.videoWidth || !video.videoHeight) {
@@ -31,9 +38,11 @@ export function ScreenVisionPanel({
 }: ScreenVisionPanelProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const captureRunningRef = useRef(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [deviceId, setDeviceId] = useState('');
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
+  const [autoIntervalMs, setAutoIntervalMs] = useState(0);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
@@ -88,7 +97,11 @@ export function ScreenVisionPanel({
     }
   }, [deviceId, refreshDevices, stopPreview]);
 
-  const handleCapture = useCallback(async () => {
+  const captureAndSend = useCallback(async () => {
+    if (captureRunningRef.current) {
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) {
       setStatusMessage('プレビューを開始してください。');
@@ -102,9 +115,18 @@ export function ScreenVisionPanel({
     }
 
     setStatusMessage('画面を送信しています...');
-    await onCapture(imageDataUrl, prompt);
-    setStatusMessage('画面を送信しました。');
+    captureRunningRef.current = true;
+    try {
+      await onCapture(imageDataUrl, prompt);
+      setStatusMessage('画面を送信しました。');
+    } finally {
+      captureRunningRef.current = false;
+    }
   }, [onCapture, prompt]);
+
+  const handleCapture = useCallback(async () => {
+    await captureAndSend();
+  }, [captureAndSend]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -116,6 +138,20 @@ export function ScreenVisionPanel({
       stopPreview();
     };
   }, [refreshDevices, stopPreview]);
+
+  useEffect(() => {
+    if (!isPreviewing || autoIntervalMs <= 0 || disabled) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void captureAndSend();
+    }, autoIntervalMs);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [autoIntervalMs, captureAndSend, disabled, isPreviewing]);
 
   return (
     <div className="screen-vision-panel">
@@ -155,6 +191,25 @@ export function ScreenVisionPanel({
           onChange={(event) => setPrompt(event.target.value)}
           disabled={disabled}
         />
+      </div>
+
+      <div className="settings-field">
+        <label htmlFor="screen-vision-interval">自動で見る間隔</label>
+        <select
+          id="screen-vision-interval"
+          value={autoIntervalMs}
+          onChange={(event) => setAutoIntervalMs(Number(event.target.value))}
+          disabled={disabled}
+        >
+          {AUTO_CAPTURE_INTERVAL_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <p className="settings-field-hint">
+          プレビュー中だけ、選択した間隔で現在のフレームを送信します。
+        </p>
       </div>
 
       <div className="screen-vision-actions">
