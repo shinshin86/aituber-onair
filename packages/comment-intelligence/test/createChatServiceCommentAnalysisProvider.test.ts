@@ -117,5 +117,7 @@ describe('createChatServiceCommentAnalysisProvider', () => {
     expect(messages[1].content).toContain('配信テーマ: AIツール紹介');
     expect(messages[1].content).toContain('タイトル: 今日の便利ツール');
     expect(messages[1].content).toContain('topicRelatedCommentIds');
+    expect(messages[1].content).toContain('類義語');
+    expect(messages[1].content).toContain('関連する小トピック');
   });
 });

@@ -207,7 +207,7 @@ const COPY = {
     topicValue: 'screen layout',
     topicPanelTitle: 'Stream topic',
     topicPanelDesc:
-      'Set the topic and choose how strictly comments must match it (off / prefer / require) to see topic-aware selection in action.',
+      'Set the topic and choose how strictly comments must match it (off / prefer / require) to see topic-aware selection in action. Rule-based matching is literal keyword matching; switch the engine to OpenAI for flexible, meaning-based topic matching.',
     topicFilter: 'Topic filter',
     topicFilterOff: 'Off',
     topicFilterPrefer: 'Prefer topic matches',
@@ -337,7 +337,7 @@ const COPY = {
     topicValue: '画面レイアウト',
     topicPanelTitle: '配信トピック',
     topicPanelDesc:
-      '配信テーマを設定し、コメントの一致度合い(使わない/優先/対象のみ)を選ぶと、トピックに沿ったコメント選別の動きを確認できます。',
+      '配信テーマを設定し、コメントの一致度合い(使わない/優先/対象のみ)を選ぶと、トピックに沿ったコメント選別の動きを確認できます。ルールベースは文字列(キーワード)一致です。意味の近いコメントまで柔軟に拾いたい場合はエンジンをOpenAIに切り替えてください。',
     topicFilter: 'トピック絞り込み',
     topicFilterOff: '使わない',
     topicFilterPrefer: '優先（加点）',
@@ -949,8 +949,8 @@ function buildOpenAIAnalysisPrompt(
       : undefined,
     topic
       ? isEnglish
-        ? 'Put comments that are semantically related to the stream topic in topicRelatedCommentIds.'
-        : '配信トピックに意味的に関連するコメントのIDを topicRelatedCommentIds に入れてください。'
+        ? 'Include comments that are semantically related to the stream topic - synonyms, paraphrases, and related subtopics - in topicRelatedCommentIds, not just literal keyword matches. For example, a topic of "food" should also match "meal", "lunch", or "cooking".'
+        : '配信トピックに意味的に関連するコメント(類義語・言い換え・関連する小トピックを含む)のIDを topicRelatedCommentIds に入れてください。文字どおりのキーワード一致だけに限定しないでください。例: トピックが「ご飯」なら「食事」「お昼」「料理」なども関連として扱う。'
       : undefined,
     isEnglish
       ? 'Use hostile_feedback for non-constructive negative comments, harassment for personal attacks, baiting for comments likely to stir conflict, and demoralizing for comments that only discourage the streamer. Do not use these categories for constructive feedback or issue reports.'

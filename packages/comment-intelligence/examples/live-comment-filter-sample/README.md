@@ -28,4 +28,8 @@ selection modes:
 - `prefer`: boost comments related to the stream topic.
 - `require`: only select topic-related comments when a topic is set.
 
+Rule-based topic matching uses literal keyword matching. For flexible,
+meaning-based topic matching, switch the analysis engine to OpenAI LLM assist
+and provide an API key.
+
 The UI can be switched between English and Japanese.

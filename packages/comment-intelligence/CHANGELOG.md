@@ -11,6 +11,8 @@
 - Passes stream topic and title context into LLM analysis prompts and supports
   `topicRelatedCommentIds` so LLM-assisted analysis can mark semantically
   related comments as topic-related.
+- Strengthens the LLM topic-matching prompt to include synonyms, paraphrases,
+  and related subtopics.
 - Adds stream topic, stream title, and topic priority settings to the React
   examples and starter pet template.
 
