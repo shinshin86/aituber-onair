@@ -19,4 +19,11 @@ The page shows rules-based comment filtering: selected comments, blocked unsafe
 comments, ignored summaries, safety reports, ranking scores, and viewer safety
 memory. This sample does not connect to `@aituber-onair/core` or call an LLM.
 
+Use the topic filter control with a stream topic to compare the three topic
+selection modes:
+
+- `off`: ignore topic relevance while ranking comments.
+- `prefer`: boost comments related to the stream topic.
+- `require`: only select topic-related comments when a topic is set.
+
 The UI can be switched between English and Japanese.
