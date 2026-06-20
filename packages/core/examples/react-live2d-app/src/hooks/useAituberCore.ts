@@ -32,6 +32,8 @@ type ProcessChatOptions = {
 
 const AITUBER_SYSTEM_PROMPT =
   'あなたはフレンドリーなAITuberです。回答はできるだけ一言で、短く自然に返してください。';
+const DEFAULT_VISION_PROMPT =
+  'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
 const GPT5_SAMPLE_PROVIDER_OPTIONS = { gpt5Preset: 'casual' as const };
 const GPT5_SAMPLE_CHAT_OPTIONS = { responseLength: 'veryShort' as const };
 
@@ -259,8 +261,7 @@ function buildVoiceOptions(
       : parsedInworldTemperature,
     gradiumApiUrl: tts.gradiumApiUrl?.trim() || undefined,
     gradiumOutputFormat:
-      (tts.gradiumOutputFormat as GradiumOutputFormat | undefined) ||
-      undefined,
+      (tts.gradiumOutputFormat as GradiumOutputFormat | undefined) || undefined,
     gradiumTemperature: Number.isNaN(parsedGradiumTemperature)
       ? undefined
       : parsedGradiumTemperature,
@@ -536,10 +537,36 @@ export function useAituberCore({
     [createMessageId],
   );
 
+  const processVisionChat = useCallback(
+    async (imageDataUrl: string, prompt = DEFAULT_VISION_PROMPT) => {
+      if (!coreRef.current || !imageDataUrl) return;
+
+      const trimmedPrompt = prompt.trim() || DEFAULT_VISION_PROMPT;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: createMessageId(),
+          role: 'user',
+          content: '画面を見てコメント',
+          timestamp: Date.now(),
+        },
+      ]);
+
+      try {
+        await coreRef.current.processVisionChat(imageDataUrl, trimmedPrompt);
+      } catch (err) {
+        console.error('processVisionChat error:', err);
+        setIsProcessing(false);
+      }
+    },
+    [createMessageId],
+  );
+
   return {
     messages,
     isProcessing,
     partialResponse,
     processChat,
+    processVisionChat,
   };
 }

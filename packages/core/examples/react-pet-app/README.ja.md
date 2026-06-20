@@ -9,7 +9,24 @@ AITuber チャットサンプルです。
 - TTS 再生と音声レベル解析
 - Web Speech API による音声入力
 - YouTube Live / Twitch コメント取り込み
+- **Settings → Screen Vision** から OBS Virtual Camera の1フレームを取得し、
+  Vision 対応モデルに送ってコメント
+- **Settings → Visual** からグリーンバック背景と、Pet の発話字幕だけを出す
+  ソロ配信表示を選択可能
 - Comment Intelligence とマンネリ検知
+
+## Screen Vision
+
+OBS Virtual Camera を開始し、**Settings → Screen Vision** で選択してから
+**画面を見る** を押すと、現在のフレームを Vision 対応モデルに送信します。
+30秒、1分、2分、5分ごとの自動送信も選択できます。
+
+## 配信用表示
+
+**Settings → Visual** から背景をグリーンバックに切り替え、表示モードを
+ソロ配信にできます。ソロ配信では通常のチャットログを隠し、Pet の
+最新発話だけを下部字幕として表示します。ユーザー入力欄は初期状態では
+非表示ですが、同じ Visual 設定から表示できます。
 
 ## Pet アニメーション
 

@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isGPT5Model } from '@aituber-onair/core';
+import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
+import type { useScreenVisionController } from '../hooks/useScreenVisionController';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
 
 type SettingsHook = ReturnType<typeof useSettings>;
+type ScreenVisionController = ReturnType<typeof useScreenVisionController>;
 
 interface SettingsPanelProps extends SettingsHook {
   isProcessing: boolean;
   backgroundImageUrl: string | null;
   streamErrorMessage?: string;
+  screenVisionController: ScreenVisionController;
   onBackgroundImageChange: (file: File | null) => void;
 }
 
@@ -252,6 +256,12 @@ export function SettingsPanel({
   updatePiperPlusVoiceFile,
   updatePiperPlusSpeed,
   updatePiperPlusNoiseScale,
+  updateVisualBackgroundMode,
+  updateVisualLayoutMode,
+  updateVisualShowInputInBroadcast,
+  updateScreenVisionDeviceId,
+  updateScreenVisionPrompt,
+  updateScreenVisionAutoIntervalMs,
   updateStreamPlatform,
   updateYoutubeApiKey,
   updateYoutubeLiveId,
@@ -278,6 +288,7 @@ export function SettingsPanel({
   isProcessing,
   backgroundImageUrl,
   streamErrorMessage,
+  screenVisionController,
   onBackgroundImageChange,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
@@ -2177,6 +2188,54 @@ export function SettingsPanel({
         {expandedSections.visual && (
           <>
             <div className="settings-field">
+              <label htmlFor="visual-background-mode">背景モード</label>
+              <select
+                id="visual-background-mode"
+                value={settings.visual.backgroundMode}
+                onChange={(e) =>
+                  updateVisualBackgroundMode(
+                    e.target.value as 'default' | 'green',
+                  )
+                }
+                disabled={disabled}
+              >
+                <option value="default">通常背景</option>
+                <option value="green">グリーンバック</option>
+              </select>
+            </div>
+
+            <div className="settings-field">
+              <label htmlFor="visual-layout-mode">表示モード</label>
+              <select
+                id="visual-layout-mode"
+                value={settings.visual.layoutMode}
+                onChange={(e) =>
+                  updateVisualLayoutMode(
+                    e.target.value as 'chat' | 'broadcast',
+                  )
+                }
+                disabled={disabled}
+              >
+                <option value="chat">通常チャット</option>
+                <option value="broadcast">ソロ配信</option>
+              </select>
+            </div>
+
+            <label className="settings-checkbox-field">
+              <input
+                type="checkbox"
+                checked={settings.visual.showInputInBroadcast}
+                onChange={(e) =>
+                  updateVisualShowInputInBroadcast(e.target.checked)
+                }
+                disabled={
+                  disabled || settings.visual.layoutMode !== 'broadcast'
+                }
+              />
+              <span>ソロ配信で入力欄を表示</span>
+            </label>
+
+            <div className="settings-field">
               <label htmlFor="background-image">背景画像</label>
               <div className="settings-file-picker-row">
                 <input
@@ -2216,6 +2275,18 @@ export function SettingsPanel({
             </div>
           </>
         )}
+      </div>
+
+      <div className="settings-section">
+        <h3>Screen Vision</h3>
+        <ScreenVisionPanel
+          disabled={disabled}
+          settings={settings.screenVision}
+          controller={screenVisionController}
+          onDeviceIdChange={updateScreenVisionDeviceId}
+          onPromptChange={updateScreenVisionPrompt}
+          onAutoIntervalMsChange={updateScreenVisionAutoIntervalMs}
+        />
       </div>
 
       <StreamSettings

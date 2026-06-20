@@ -5,6 +5,7 @@ import { useAudioLipsync } from './hooks/useAudioLipsync';
 import { useAituberCore } from './hooks/useAituberCore';
 import { useLiveCommentIntelligence } from './hooks/useLiveCommentIntelligence';
 import { usePetAssets } from './hooks/usePetAssets';
+import { useScreenVisionController } from './hooks/useScreenVisionController';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
@@ -28,12 +29,23 @@ export default function App() {
     [play],
   );
 
-  const { messages, isProcessing, partialResponse, processChat } =
-    useAituberCore({
-      onAudioPlay: handleAudioPlay,
-      settings: settingsHook.settings,
-      getApiKeyForProvider: settingsHook.getApiKeyForProvider,
-    });
+  const {
+    messages,
+    isProcessing,
+    partialResponse,
+    processChat,
+    processVisionChat,
+  } = useAituberCore({
+    onAudioPlay: handleAudioPlay,
+    settings: settingsHook.settings,
+    getApiKeyForProvider: settingsHook.getApiKeyForProvider,
+  });
+  const screenVisionController = useScreenVisionController({
+    settings: settingsHook.settings.screenVision,
+    onCapture: processVisionChat,
+    onEnabledChange: settingsHook.updateScreenVisionEnabled,
+    onDeviceIdChange: settingsHook.updateScreenVisionDeviceId,
+  });
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
 
   const handleSend = useCallback(
@@ -160,29 +172,19 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Pet Chat</h1>
-        <button
-          className="settings-button"
-          onClick={() => setSettingsOpen((v) => !v)}
-          aria-label="Settings"
-        >
-          ⚙
-        </button>
-      </header>
-      <main className="app-main">
-        <ChatPanel
-          messages={messages}
-          partialResponse={partialResponse}
-          isProcessing={isProcessing}
-          onSend={handleSend}
-          mouthLevel={mouthLevel}
-          isSpeaking={isSpeaking}
-          backgroundImageUrl={backgroundImageUrl}
-          petManifest={petAssets.activePet?.manifest ?? null}
-          petSpritesheetUrl={petAssets.activePet?.spritesheetUrl ?? null}
-        />
-      </main>
+      <ChatPanel
+        messages={messages}
+        partialResponse={partialResponse}
+        isProcessing={isProcessing}
+        onSend={handleSend}
+        mouthLevel={mouthLevel}
+        isSpeaking={isSpeaking}
+        backgroundImageUrl={backgroundImageUrl}
+        petManifest={petAssets.activePet?.manifest ?? null}
+        petSpritesheetUrl={petAssets.activePet?.spritesheetUrl ?? null}
+        visual={settingsHook.settings.visual}
+        onToggleSettings={() => setSettingsOpen((v) => !v)}
+      />
 
       {settingsOpen && (
         <div
@@ -204,6 +206,7 @@ export default function App() {
               isProcessing={isProcessing}
               backgroundImageUrl={backgroundImageUrl}
               streamErrorMessage={streamErrorMessage}
+              screenVisionController={screenVisionController}
               onBackgroundImageChange={handleBackgroundImageChange}
               activePet={petAssets.activePet}
               petAssetError={petAssets.petAssetError}

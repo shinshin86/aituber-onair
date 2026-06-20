@@ -33,12 +33,17 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 - Real-time lip-sync + random blink animation
 - Set visuals directly in Settings:
   - Background image (1 file)
+  - Green screen background mode
+  - Broadcast layout with avatar-only captions
   - Avatar images (4 states: mouth/eyes open/close)
-- Visual image settings are memory-only (reset on page reload)
+- Visual display settings are saved in `localStorage`; uploaded images are
+  memory-only and reset on page reload
 - Fetch live chat comments from YouTube Live or Twitch and feed them into the
   LLM pipeline
   - YouTube uses the YouTube Data API v3 (requires a Google Cloud API key)
   - Twitch uses EventSub WebSocket with a browser-based implicit OAuth flow
+- Capture one frame from OBS Virtual Camera in **Settings → Screen Vision** and
+  send it to a vision-capable model for an avatar comment
 - Detect repetitive conversation patterns with `@aituber-onair/manneri` and
   add an internal topic-diversification instruction before the next response
 
@@ -68,6 +73,21 @@ For `gemini-nano`, set:
 
 This app can forward live chat comments from YouTube Live or Twitch into the LLM.
 Configure it from **Settings → Stream**.
+
+## Screen Vision
+
+Start OBS Virtual Camera, choose it from **Settings → Screen Vision**, then press
+**画面を見る** to send the current frame to the selected vision-capable model.
+You can also choose an automatic interval such as 30 seconds, 1 minute,
+2 minutes, or 5 minutes.
+
+## Broadcast visuals
+
+Use **Settings → Visual** to switch the background to green screen and select
+the solo broadcast layout. In solo broadcast layout, the normal chat log is
+hidden and only the avatar's latest spoken text is shown as a lower caption.
+The user input field is hidden by default, but can be enabled in the same
+Visual settings section.
 
 Only one platform can be active at a time.
 

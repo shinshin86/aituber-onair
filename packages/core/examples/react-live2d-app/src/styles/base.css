@@ -277,6 +277,27 @@ body {
   color: #8899aa;
 }
 
+.screen-vision-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.screen-vision-preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  background: #0b1020;
+  object-fit: contain;
+}
+
+.screen-vision-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 .settings-mode-help {
   margin-top: 8px;
   padding: 8px 10px;
@@ -305,6 +326,20 @@ body {
   margin-top: 6px;
   font-size: 0.72rem;
   color: #ff8e8e;
+}
+
+.settings-checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  color: #d3dde8;
+}
+
+.settings-checkbox-field input {
+  width: 16px;
+  height: 16px;
 }
 
 .app-main {
@@ -386,12 +421,47 @@ body {
   position: relative;
 }
 
+.chat-panel-broadcast {
+  justify-content: flex-end;
+}
+
 .chat-settings-button {
   position: absolute;
   top: 12px;
   right: 16px;
   z-index: 4;
   background: rgba(22, 33, 62, 0.9);
+  transition: opacity 0.15s;
+}
+
+.chat-panel-broadcast .chat-settings-button {
+  opacity: 0;
+}
+
+.chat-panel-broadcast:hover .chat-settings-button,
+.chat-settings-button:focus-visible {
+  opacity: 1;
+}
+
+.broadcast-caption {
+  position: relative;
+  z-index: 4;
+  width: min(760px, calc(100% - 32px));
+  margin: 0 auto 24px;
+  padding: 14px 18px;
+  border: 1px solid rgba(15, 52, 96, 0.75);
+  border-radius: 10px;
+  background: rgba(10, 17, 32, 0.78);
+  color: #fff;
+  font-size: 1.15rem;
+  line-height: 1.55;
+  text-align: center;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-panel-broadcast-input .broadcast-caption {
+  margin-bottom: 12px;
 }
 
 /* ── Chat Log ── */

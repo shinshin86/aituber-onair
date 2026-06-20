@@ -4,6 +4,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
 import { useAituberCore } from './hooks/useAituberCore';
 import { useLiveCommentIntelligence } from './hooks/useLiveCommentIntelligence';
+import { useScreenVisionController } from './hooks/useScreenVisionController';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
@@ -72,14 +73,25 @@ export default function App() {
     emitAvatarReaction({ type: 'reset', fadeMs: 360 });
   }, [emitAvatarReaction]);
 
-  const { messages, isProcessing, partialResponse, processChat } =
-    useAituberCore({
-      onAudioPlay: handleAudioPlay,
-      onSpeechStart: handleSpeechStart,
-      onSpeechEnd: handleSpeechEnd,
-      settings: settingsHook.settings,
-      getApiKeyForProvider: settingsHook.getApiKeyForProvider,
-    });
+  const {
+    messages,
+    isProcessing,
+    partialResponse,
+    processChat,
+    processVisionChat,
+  } = useAituberCore({
+    onAudioPlay: handleAudioPlay,
+    onSpeechStart: handleSpeechStart,
+    onSpeechEnd: handleSpeechEnd,
+    settings: settingsHook.settings,
+    getApiKeyForProvider: settingsHook.getApiKeyForProvider,
+  });
+  const screenVisionController = useScreenVisionController({
+    settings: settingsHook.settings.screenVision,
+    onCapture: processVisionChat,
+    onEnabledChange: settingsHook.updateScreenVisionEnabled,
+    onDeviceIdChange: settingsHook.updateScreenVisionDeviceId,
+  });
 
   const handleSend = useCallback(
     (text: string) => {
@@ -230,6 +242,7 @@ export default function App() {
         isSpeaking={isSpeaking}
         avatarReaction={avatarReaction}
         backgroundImageUrl={backgroundImageUrl}
+        visual={settingsHook.settings.visual}
         onToggleSettings={() => setSettingsOpen((v) => !v)}
       />
 
@@ -253,6 +266,7 @@ export default function App() {
               isProcessing={isProcessing}
               backgroundImageUrl={backgroundImageUrl}
               streamErrorMessage={streamErrorMessage}
+              screenVisionController={screenVisionController}
               onBackgroundImageChange={handleBackgroundImageChange}
             />
           </div>

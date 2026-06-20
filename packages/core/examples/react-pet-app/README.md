@@ -11,7 +11,26 @@ The app keeps the same basic structure as the other React core samples:
 - TTS playback and real-time audio analysis
 - Speech input through Web Speech API
 - YouTube Live / Twitch comment ingestion
+- Manual OBS Virtual Camera frame capture through **Settings → Screen Vision**
+  for vision-capable model comments
+- Green screen background mode and a solo broadcast layout with pet-only
+  captions from **Settings → Visual**
 - Comment intelligence and manneri detection
+
+## Screen Vision
+
+Start OBS Virtual Camera, choose it from **Settings → Screen Vision**, then press
+**画面を見る** to send the current frame to the selected vision-capable model.
+You can also choose an automatic interval such as 30 seconds, 1 minute,
+2 minutes, or 5 minutes.
+
+## Broadcast visuals
+
+Use **Settings → Visual** to switch the background to green screen and select
+the solo broadcast layout. In solo broadcast layout, the normal chat log is
+hidden and only the pet's latest spoken text is shown as a lower caption. The
+user input field is hidden by default, but can be enabled in the same Visual
+settings section.
 
 ## Pet animation
 

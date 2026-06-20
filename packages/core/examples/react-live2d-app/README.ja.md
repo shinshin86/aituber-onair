@@ -17,13 +17,30 @@
   ストリーミング前提の通常チャットフローを使うこの例では含めていません
 - モデルファイルはメモリ内だけで扱い、アプリ固有の永続保存をしない
 - アバターステージ上でドラッグ移動、ホイールズーム
+- Settings → Visual からグリーンバック背景と、アバター発話字幕だけを出す
+  ソロ配信表示を選択可能
 - `@aituber-onair/core` が生成した音声を使った口パク
 - TTS エンジンは `unrealSpeech`, `elevenLabs`, `inworld` を含む cloud provider とローカル/ブラウザ内エンジンに対応し、Inworld は API キー入力後に `/voices/v1/voices` から音声一覧を取得します
 - YouTube Live / Twitch のライブチャットを取得し、`@aituber-onair/comment-intelligence` で分析して、選ばれたコメントだけを LLM パイプラインに流す
   - YouTube は YouTube Data API v3 を利用（Google Cloud の API キーが必要）
   - Twitch は EventSub WebSocket とブラウザ上での implicit OAuth フローを利用
+- **Settings → Screen Vision** から OBS Virtual Camera の1フレームを取得し、
+  Vision 対応モデルに送ってアバターがコメント
 - `@aituber-onair/manneri` で会話の繰り返し傾向を検出し、次の応答前に
   内部的な話題転換指示を追加
+
+## Screen Vision
+
+OBS Virtual Camera を開始し、**Settings → Screen Vision** で選択してから
+**画面を見る** を押すと、現在のフレームを Vision 対応モデルに送信します。
+30秒、1分、2分、5分ごとの自動送信も選択できます。
+
+## 配信用表示
+
+**Settings → Visual** から背景をグリーンバックに切り替え、表示モードを
+ソロ配信にできます。ソロ配信では通常のチャットログを隠し、アバターの
+最新発話だけを下部字幕として表示します。ユーザー入力欄は初期状態では
+非表示ですが、同じ Visual 設定から表示できます。
 
 ## Live2D アセットの置き場所
 

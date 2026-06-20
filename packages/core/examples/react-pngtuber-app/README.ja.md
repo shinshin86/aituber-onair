@@ -32,11 +32,16 @@
 - リアルタイム口パク + ランダムまばたき
 - Settings 画面から見た目をその場で設定:
   - 背景画像（1枚）
+  - グリーンバック背景
+  - アバター発話字幕だけを出すソロ配信表示
   - アバター画像（4状態: 口開閉/目開閉）
-- 画像設定はメモリ保持のみ（リロードで初期化）
+- 表示設定は `localStorage` に保存され、アップロード画像はメモリ保持のみ
+  （リロードで初期化）
 - YouTube Live / Twitch のライブチャットを取得して LLM パイプラインに流す
   - YouTube は YouTube Data API v3 を利用（Google Cloud の API キーが必要）
   - Twitch は EventSub WebSocket とブラウザ上での implicit OAuth フローを利用
+- **Settings → Screen Vision** から OBS Virtual Camera の1フレームを取得し、
+  Vision 対応モデルに送ってアバターがコメント
 - `@aituber-onair/manneri` で会話の繰り返し傾向を検出し、次の応答前に
   内部的な話題転換指示を追加
 
@@ -66,6 +71,19 @@ npm run dev
 
 このサンプルでは YouTube Live / Twitch のライブチャットを LLM に流し込むことができます。
 **Settings → Stream** から設定します。
+
+## Screen Vision
+
+OBS Virtual Camera を開始し、**Settings → Screen Vision** で選択してから
+**画面を見る** を押すと、現在のフレームを Vision 対応モデルに送信します。
+30秒、1分、2分、5分ごとの自動送信も選択できます。
+
+## 配信用表示
+
+**Settings → Visual** から背景をグリーンバックに切り替え、表示モードを
+ソロ配信にできます。ソロ配信では通常のチャットログを隠し、アバターの
+最新発話だけを下部字幕として表示します。ユーザー入力欄は初期状態では
+非表示ですが、同じ Visual 設定から表示できます。
 
 同時に有効化できるのはどちらか一方だけです。
 
