@@ -9,6 +9,8 @@ References:
   https://claude.com/blog/equipping-agents-for-the-real-world-with-agent-skills
 - Open specification: https://agentskills.io/specification
 - Claude Code skills docs: https://code.claude.com/docs/en/skills
+- Model/provider update judgment guide:
+  `docs/agent-model-provider-guidelines.md`
 
 ## Layout
 
@@ -49,13 +51,18 @@ minimal (`name`, `description`) and keep the body procedural.
   - Claude Code: `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
   - Codex metadata: `skills/create-pngtuber-avatar-states/agents/openai.yaml`
 
-Use this skill when adding a new model id to `@aituber-onair/chat`, including
-constants, provider support, tests, examples, docs, and versioning updates.
+Use `add-chat-model` when adding a new model id to `@aituber-onair/chat`,
+including constants, provider support, tests, examples, docs, and versioning
+updates.
+Before adding or reorganizing LLM/TTS models, read
+`docs/agent-model-provider-guidelines.md` to classify the model or API as
+recommended/default, supported/explicit, deprecated compatibility, or
+candidate-only.
 Use `add-tts-provider` when adding a new voice/TTS provider to
 `@aituber-onair/voice`, including engine implementation, public option types,
-internal handler wiring, tests, docs, examples, and release prep. This also
-fits OpenAI-compatible TTS endpoints such as Kokoro FastAPI when they should be
-added as a dedicated provider.
+internal handler wiring, tests, docs, examples, and release prep. This also fits
+OpenAI-compatible TTS endpoints such as `<openai-compatible-tts-endpoint>` when
+they should be added as a dedicated provider.
 Use `sync-core-after-chat-upgrade` after chat upgrades to propagate changes
 into `@aituber-onair/core` and core examples.
 Use `wrap-tts-as-openai-compatible` when exposing a local or self-hosted TTS
@@ -76,7 +83,7 @@ OpenAI-compatible speech endpoint from `@aituber-onair/voice`.
 Codex prompt examples:
 
 - "add a new model"
-- "support model claude-sonnet-4-6"
+- "support model <provider-model-id>"
 - "add claude model"
 - "update supported models"
 - "add a TTS provider"
@@ -88,13 +95,13 @@ Codex prompt examples:
 - "create PNGTuber avatar state images from this character"
 - "generate mouth and eye open-close variants for react-pngtuber-app"
 - "launch local-tts-on-google-colab with Colab MCP Go"
-- "Use $connect-colab-local-tts to launch Irodori-TTS from
+- "Use $connect-colab-local-tts to launch <local-tts-engine> from
   local-tts-on-google-colab through Colab MCP Go, expose it with trycloudflare,
   and verify it from @aituber-onair/voice."
 
 Claude Code prompt examples:
 
-- "Use $add-chat-model to add claude-sonnet-4-6 for claude."
+- "Use $add-chat-model to add <provider-model-id> for <provider>."
 - "Use $add-chat-model and wire the model through tests/docs/versioning."
 - "Use $sync-core-after-chat-upgrade for chat 0.15.0."
 
@@ -123,7 +130,8 @@ Requirements:
 
 If the request does not include all required inputs, collect:
 `provider`, `model_id`, `model_const_name`, `display_name`,
-`supports_vision`, and optional `bump_version` (default `true`).
+`supports_vision`, and optional `bump_version` (default `false`; set `true`
+only when release/version work is explicitly requested).
 
 Handoff rule:
 

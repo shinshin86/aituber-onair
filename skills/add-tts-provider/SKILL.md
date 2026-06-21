@@ -10,6 +10,11 @@ description: Add a new TTS provider to @aituber-onair/voice and wire it through 
 Add a new TTS provider for `@aituber-onair/voice` while preserving the current
 public API shape and usage style.
 
+Before adding any provider as first-class support, read
+`docs/agent-model-provider-guidelines.md`. A provider/model is not eligible for
+public support unless the exact speech endpoint, request body, response shape,
+and user configuration path are documented or live-verified.
+
 ## Inputs
 
 Collect missing inputs before editing:
@@ -26,12 +31,20 @@ Collect missing inputs before editing:
 - `default_api_url`: optional default endpoint for local or overridable services
 - `examples_scope`: optional, one of `docs-only`, `react-only`, or
   `all-examples`; default `react-only`
-- `bump_version`: boolean, default `true`
+- `bump_version`: boolean, default `false`; set `true` only when the user
+  explicitly requests release/version work
 - `next_version`: optional explicit target version
 
 ## Procedure
 
 1. Run preflight checks:
+   - Read `docs/agent-model-provider-guidelines.md` and classify the candidate
+     as recommended/default, supported/explicit, exported deprecated
+     compatibility, or candidate-only.
+   - Search for existing candidate notes or research notes:
+     `rg "<engine_type>|<provider>|candidate|research|notes" docs skills .claude`.
+     Treat any matches as non-authoritative until official docs or live API
+     behavior re-confirm them.
    - `rg "<engine_type>|<engine_class_name>" packages/voice`
    - Inspect current provider patterns in:
      - `packages/voice/CONTRIBUTING.md`
@@ -48,6 +61,14 @@ Collect missing inputs before editing:
      behavior of the existing `openai` provider, add a new provider instead of
      mutating `openai`.
 3. Add engine implementation:
+   - Confirm the provider's official docs or live API behavior for the exact
+     speech endpoint, request body, audio response format, and voice-list
+     endpoint when applicable.
+   - Do not add a first-class engine based only on a model/provider marketing
+     page or a global model list.
+   - If any hard gate in `docs/agent-model-provider-guidelines.md` fails, keep
+     the provider as candidate-only and do not add engine/type/factory/example
+     support.
    - Create `packages/voice/src/engines/<engine_class_name>.ts`.
    - Implement `VoiceEngine`.
    - Reuse shared helpers from `packages/voice/src/engines/internal/` and
@@ -145,6 +166,8 @@ rg "<engine_type>|<engine_class_name>" packages/voice
 ## Acceptance Criteria
 
 - New provider has a concrete engine implementation.
+- Official docs or live API behavior confirm the exact speech endpoint,
+  request body, response shape, and user configuration path.
 - `VoiceEngineType` includes the new engine id.
 - `VoiceServiceOptions` supports the new provider without changing existing
   public usage patterns.
@@ -153,5 +176,7 @@ rg "<engine_type>|<engine_class_name>" packages/voice
 - Adapter tests cover provider option application and `updateOptions()`.
 - English and Japanese README mention the provider.
 - Examples are updated for the requested scope.
+- Final notes include the model/provider decision record from
+  `docs/agent-model-provider-guidelines.md`.
 - Version and changelog are updated when `bump_version` is `true`.
 - Package verification commands pass.

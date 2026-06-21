@@ -59,6 +59,13 @@ This repository uses open-format Agent Skills and keeps Codex and Claude Code
 skill definitions aligned.
 
 - Skill guide: `docs/agent-skills.md`
+- Model/provider update guide:
+  `docs/agent-model-provider-guidelines.md`
+- For any LLM/TTS model or provider addition/update, first read
+  `docs/agent-model-provider-guidelines.md`. Do not add a model/provider to
+  supported lists unless the exact endpoint family, request shape, response
+  shape, capabilities, and user configuration path are documented or
+  live-verified.
 - Skills:
   - `add-chat-model`
   - `add-tts-provider`
@@ -82,10 +89,12 @@ Usage:
 
 - Invoke explicitly with `$add-chat-model`, or use prompts like
   "add a new model", "support model <model_id>", or
-  "update supported models".
+  "update supported models". Apply the hard gates in
+  `docs/agent-model-provider-guidelines.md` before editing supported lists.
 - Invoke explicitly with `$add-tts-provider`, or use prompts like
   "add a TTS provider", "support <provider> TTS", or
-  "update supported voice providers".
+  "update supported voice providers". Apply the hard gates in
+  `docs/agent-model-provider-guidelines.md` before adding first-class support.
 - Invoke `$sync-core-after-chat-upgrade` after chat upgrades when the same
   changes must be propagated into core and core examples.
 - When propagating `@aituber-onair/voice` upgrades into `@aituber-onair/core`,
@@ -121,12 +130,14 @@ Usage:
   validating outputs.
 - If input is missing, collect:
   `provider`, `model_id`, `model_const_name`, `display_name`,
-  `supports_vision`, and optional `bump_version` (default `true`).
+  `supports_vision`, and optional `bump_version` (default `false`; set `true`
+  only when release/version work is explicitly requested).
 - For `$add-tts-provider`, collect:
   `engine_type`, `engine_class_name`, `display_name`, `provider_kind`,
   `default_speaker`, `requires_api_key`, `supports_emotion`,
   `option_fields`, and optional `default_api_url`, `examples_scope`,
-  `bump_version` (default `true`).
+  `bump_version` (default `false`; set `true` only when release/version work is
+  explicitly requested).
 - Follow the skill procedure end-to-end, including tests/docs/versioning
   updates and final verification commands.
 - After `add-chat-model` completes, ask whether to run
