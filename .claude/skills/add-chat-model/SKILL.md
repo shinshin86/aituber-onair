@@ -10,54 +10,82 @@ description: Add a new chat model id to @aituber-onair/chat and wire it through 
 Add a new model id for an existing chat provider and complete all required
 code, test, docs, and version updates in one pass.
 
+Before adding any model to a supported list, read
+`docs/agent-model-provider-guidelines.md`. A model is not eligible for
+`getSupportedModels()` unless the exact endpoint family used by the provider is
+documented or live-verified for that model.
+
 ## Inputs
 
 Collect missing inputs before editing:
 
 - `provider`: one of `claude`, `gemini`, `openai`, or another existing provider
-- `model_id`: model id string (example: `claude-sonnet-4-6`)
+- `model_id`: model id string (example: `provider-chat-model-id`)
 - `model_const_name`: exported const name (example:
-  `MODEL_CLAUDE_4_6_SONNET`)
-- `display_name`: UI label (example: `Claude Sonnet 4.6`)
+  `MODEL_PROVIDER_CHAT_MODEL`)
+- `display_name`: UI label (example: `Provider Chat Model`)
 - `supports_vision`: boolean
 - `api_version_hint`: optional hint for API version routing (example:
   `v1beta only`, `v1 preferred`, `unknown`)
-- `bump_version`: boolean, default `true`
+- `bump_version`: boolean, default `false`; set `true` only when the user
+  explicitly requests release/version work
 - `next_version`: optional, explicit target version (example: `0.15.0`)
 
 ## Procedure
 
 1. Run preflight checks before editing:
+   - Read `docs/agent-model-provider-guidelines.md` and classify the candidate
+     as recommended/default, supported/explicit, exported deprecated
+     compatibility, or candidate-only.
+   - Search for existing candidate notes or research notes:
+     `rg "<model_id>|<provider>|candidate|research|notes" docs skills .claude`.
+     Treat any matches as non-authoritative until official docs or live API
+     behavior re-confirm them.
    - Grep existing usage to avoid duplicate work:
      `rg "<model_id>" packages/chat`.
    - Inspect provider constants and provider `getSupportedModels()` before
      adding anything.
    - If the model already exists, stop and switch to gap-fix mode
      (tests/docs/versioning only if missing).
-2. Locate the provider constants file and add:
+2. Validate API family and user-facing eligibility before changing supported
+   lists:
+   - Confirm whether the model must use a specific API version or endpoint
+     flavor (for example Gemini `v1` vs `v1beta`).
+   - Confirm the provider docs or live API behavior show this model working
+     with the same endpoint family used by the current service implementation
+     (for example Chat Completions vs Responses vs legacy completions).
+   - Confirm request fields, response shape, streaming format, tool-call
+     format, and vision input format match the current provider parser.
+   - Confirm users can configure the model through package options and relevant
+     example UI without undocumented setup.
+   - Do not continue to step 3 when only a global model page confirms that the
+     model exists.
+   - If any hard gate fails, keep the candidate as candidate-only or
+     export-only compatibility and do not add it to `getSupportedModels()` or
+     example selectors.
+   - Treat `api_version_hint` as a starting point, then verify in provider docs
+     or behavior.
+3. Locate the provider constants file and add:
    - `export const <model_const_name> = '<model_id>';`
    - Keep ordering consistent with neighboring entries.
    - For `claude`, edit `packages/chat/src/constants/claude.ts`.
-3. If `supports_vision` is `true`, add the new constant to the provider vision
+4. If `supports_vision` is `true`, add the new constant to the provider vision
    list.
    - For `claude`, update `CLAUDE_VISION_SUPPORTED_MODELS`.
-4. Update provider implementation so supported models include the new constant.
+5. Update provider implementation so supported models include the new constant.
    - For `claude`, edit
      `packages/chat/src/services/providers/claude/ClaudeChatServiceProvider.ts`.
-5. Update provider tests:
+6. Update provider tests:
    - Assert supported models include the new constant.
    - If `supports_vision` is `true`, assert `supportsVisionForModel` is `true`
      for that model.
    - For `claude`, edit
      `packages/chat/tests/providers/ClaudeChatServiceProvider.test.ts`.
-6. Validate API version/endpoint routing requirements for this model family:
-   - Confirm whether the model must use a specific API version or endpoint
-     flavor (for example Gemini `v1` vs `v1beta`).
-   - If special routing is required, update service request routing logic.
-   - Treat `api_version_hint` as a starting point, then verify in provider docs
-     or behavior.
 7. Add or update service-level transport tests for request routing:
    - Verify actual request path/version selection (not only provider model list).
+   - Verify the model id is sent through the intended endpoint family.
+   - Verify parser behavior still matches the response shape for that endpoint.
+   - If special routing is required, update service request routing logic.
    - Include fallback behavior tests when applicable (for example `v1` to
      `v1beta`).
 8. Update example model selector:
@@ -133,12 +161,15 @@ rg "v1beta|streamGenerateContent|generateContent" packages/chat/src/services/pro
 ## Acceptance Criteria
 
 - New model constant exists and is exported.
-- Provider supported models contain the new model.
+- Provider supported models contain the new model only when endpoint-family
+  compatibility is documented or live-verified.
 - If vision is enabled, vision support list contains the model and related tests
   pass.
 - Example selector displays the model label.
 - Service request routing matches model API requirements (version/endpoint).
 - Service-level tests cover request path/version and fallback behavior when used.
+- Final notes include the model decision record from
+  `docs/agent-model-provider-guidelines.md`.
 - English and Japanese README mention the model.
 - Version and changelog are updated when `bump_version` is `true`.
 - `@aituber-onair/core` dependency range is aligned to the new chat version.

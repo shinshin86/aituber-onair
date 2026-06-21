@@ -83,6 +83,11 @@
 
 ## Agent Skills Usage
 - Use the shared skill guide in `docs/agent-skills.md`.
+- For any LLM/TTS model or provider addition/update, first read
+  `docs/agent-model-provider-guidelines.md`. Do not add a model/provider to
+  supported lists unless the exact endpoint family, request shape, response
+  shape, capabilities, and user configuration path are documented or
+  live-verified.
 - Skills:
   - `add-chat-model`
   - `add-tts-provider`
@@ -104,8 +109,8 @@
   - `.claude/skills/wrap-tts-as-openai-compatible/SKILL.md`
   - `.claude/skills/connect-colab-local-tts/SKILL.md`
   - `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
-- When requests match "add a new model", "support model <model_id>", "add <provider> model", or "update supported models", follow `skills/add-chat-model/SKILL.md`.
-- When requests match "add a TTS provider", "support <provider> TTS", "add voice provider", or "update supported voice providers", follow `skills/add-tts-provider/SKILL.md`.
+- When requests match "add a new model", "support model <model_id>", "add <provider> model", or "update supported models", follow `skills/add-chat-model/SKILL.md` and the hard gates in `docs/agent-model-provider-guidelines.md`.
+- When requests match "add a TTS provider", "support <provider> TTS", "add voice provider", or "update supported voice providers", follow `skills/add-tts-provider/SKILL.md` and the hard gates in `docs/agent-model-provider-guidelines.md`.
 - When requests ask to apply chat upgrades to core/examples, follow `skills/sync-core-after-chat-upgrade/SKILL.md`.
 - When propagating `@aituber-onair/voice` upgrades into `@aituber-onair/core`,
   do not stop at core exports or the React basic example. Check and update all
@@ -124,7 +129,7 @@
 - Prefer this skill for practical local TTS engines that cleanly support one-shot WAV generation. Do not force research-first or streaming-first systems into this workflow.
 - When requests match "connect Colab local TTS", "launch local-tts-on-google-colab", "use Colab MCP Go for TTS", or "try a Colab OpenAI-compatible TTS URL from `@aituber-onair/voice`", follow `skills/connect-colab-local-tts/SKILL.md`.
 - When requests ask to create PNGTuber avatar state images, generate mouth/eye open-close variants, split a 2x2 avatar sheet, remove avatar backgrounds, or align avatar state images, follow `skills/create-pngtuber-avatar-states/SKILL.md`.
-- If required inputs are missing, collect: `provider`, `model_id`, `model_const_name`, `display_name`, `supports_vision`, and optional `bump_version` (default `true`).
-- For `add-tts-provider`, collect missing inputs: `engine_type`, `engine_class_name`, `display_name`, `provider_kind`, `default_speaker`, `requires_api_key`, `supports_emotion`, and `option_fields`, plus optional `default_api_url`, `examples_scope`, and `bump_version` (default `true`).
+- If required inputs are missing, collect: `provider`, `model_id`, `model_const_name`, `display_name`, `supports_vision`, and optional `bump_version` (default `false`; set `true` only when release/version work is explicitly requested).
+- For `add-tts-provider`, collect missing inputs: `engine_type`, `engine_class_name`, `display_name`, `provider_kind`, `default_speaker`, `requires_api_key`, `supports_emotion`, and `option_fields`, plus optional `default_api_url`, `examples_scope`, and `bump_version` (default `false`; set `true` only when release/version work is explicitly requested).
 - After finishing `add-chat-model`, ask whether to run `sync-core-after-chat-upgrade` unless the user already asked for end-to-end chat+core propagation.
 - Keep skill copies synchronized when updating procedures.
