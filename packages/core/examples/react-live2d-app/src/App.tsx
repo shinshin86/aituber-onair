@@ -105,6 +105,9 @@ export default function App() {
         settingsHook.settings.commentIntelligence.blockHighRiskViewers,
       viewerBlockDurationMs:
         settingsHook.settings.commentIntelligence.viewerBlockDurationMs,
+      streamTopic: settingsHook.settings.commentIntelligence.streamTopic,
+      streamTitle: settingsHook.settings.commentIntelligence.streamTitle,
+      topicFilter: settingsHook.settings.commentIntelligence.topicFilter,
     });
 
   const handleYoutubeComment = useCallback(

@@ -49,6 +49,9 @@ type UseLiveCommentIntelligenceParams = {
   minCommentsForLLMAnalysis?: number;
   blockHighRiskViewers?: boolean;
   viewerBlockDurationMs?: number;
+  streamTopic?: string;
+  streamTitle?: string;
+  topicFilter?: AppSettings['commentIntelligence']['topicFilter'];
 };
 
 export function useLiveCommentIntelligence({
@@ -66,6 +69,9 @@ export function useLiveCommentIntelligence({
   minCommentsForLLMAnalysis = 8,
   blockHighRiskViewers = true,
   viewerBlockDurationMs = 10 * 60 * 1000,
+  streamTopic = '',
+  streamTitle = '',
+  topicFilter = 'prefer',
 }: UseLiveCommentIntelligenceParams) {
   const pendingCommentsRef = useRef<LiveComment[]>([]);
   const isFlushingRef = useRef(false);
@@ -102,6 +108,7 @@ export function useLiveCommentIntelligence({
         },
         ranking: {
           strategy: 'balanced',
+          topicFilter,
           maxSelectedComments: 1,
         },
         summary: {
@@ -123,6 +130,7 @@ export function useLiveCommentIntelligence({
       llmProvider,
       minCommentsForLLMAnalysis,
       mode,
+      topicFilter,
       viewerBlockDurationMs,
     ],
   );
@@ -172,6 +180,8 @@ export function useLiveCommentIntelligence({
               ? undefined
               : (streamPlatform as CommentPlatform),
           mode: 'live',
+          topic: streamTopic.trim() || undefined,
+          title: streamTitle.trim() || undefined,
           language: 'ja',
         },
       });
@@ -200,6 +210,8 @@ export function useLiveCommentIntelligence({
     messages,
     processChat,
     streamPlatform,
+    streamTitle,
+    streamTopic,
   ]);
 
   useInterval(

@@ -53,6 +53,11 @@ interface StreamSettingsProps {
   updateCommentIntelligenceMode: (
     value: CommentIntelligenceSettings['mode'],
   ) => void;
+  updateCommentIntelligenceStreamTopic: (value: string) => void;
+  updateCommentIntelligenceStreamTitle: (value: string) => void;
+  updateCommentIntelligenceTopicFilter: (
+    value: CommentIntelligenceSettings['topicFilter'],
+  ) => void;
   updateCommentIntelligenceAnalysisIntervalMs: (value: number) => void;
   updateCommentIntelligenceMaxCommentsPerBatch: (value: number) => void;
   updateCommentIntelligenceMinCommentsForLLMAnalysis: (value: number) => void;
@@ -97,6 +102,9 @@ export function StreamSettings({
   updateTwitchCommentIntervalMs,
   updateCommentIntelligenceEnabled,
   updateCommentIntelligenceMode,
+  updateCommentIntelligenceStreamTopic,
+  updateCommentIntelligenceStreamTitle,
+  updateCommentIntelligenceTopicFilter,
   updateCommentIntelligenceAnalysisIntervalMs,
   updateCommentIntelligenceMaxCommentsPerBatch,
   updateCommentIntelligenceMinCommentsForLLMAnalysis,
@@ -434,6 +442,59 @@ export function StreamSettings({
                   毎回LLMでコメント群を分析します。文脈理解は強くなりますが、APIコストと遅延が増えます。
                 </p>
               </div>
+            </div>
+
+            <div className="settings-field">
+              <label htmlFor="comment-intelligence-stream-topic">
+                配信テーマ
+              </label>
+              <input
+                id="comment-intelligence-stream-topic"
+                type="text"
+                value={commentIntelligence.streamTopic}
+                onChange={(event) =>
+                  updateCommentIntelligenceStreamTopic(event.target.value)
+                }
+                placeholder="例: AIツール紹介"
+                disabled={commentControlsDisabled}
+              />
+            </div>
+
+            <div className="settings-field">
+              <label htmlFor="comment-intelligence-stream-title">
+                配信タイトル
+              </label>
+              <input
+                id="comment-intelligence-stream-title"
+                type="text"
+                value={commentIntelligence.streamTitle}
+                onChange={(event) =>
+                  updateCommentIntelligenceStreamTitle(event.target.value)
+                }
+                placeholder="例: 今日の便利ツールを試す"
+                disabled={commentControlsDisabled}
+              />
+            </div>
+
+            <div className="settings-field">
+              <label htmlFor="comment-intelligence-topic-filter">
+                テーマ優先度
+              </label>
+              <select
+                id="comment-intelligence-topic-filter"
+                value={commentIntelligence.topicFilter}
+                onChange={(event) =>
+                  updateCommentIntelligenceTopicFilter(
+                    event.target
+                      .value as CommentIntelligenceSettings['topicFilter'],
+                  )
+                }
+                disabled={commentControlsDisabled}
+              >
+                <option value="off">通常</option>
+                <option value="prefer">テーマ重視</option>
+                <option value="require">テーマ外を拾わない</option>
+              </select>
             </div>
 
             <div className="settings-field">

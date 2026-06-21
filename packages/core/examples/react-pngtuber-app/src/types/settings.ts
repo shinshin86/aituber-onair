@@ -137,6 +137,9 @@ export interface CommentIntelligenceSettings {
   enabled: boolean;
   mode: 'rules' | 'hybrid' | 'llm-assisted';
   useSameLLMSettings: boolean;
+  streamTopic: string;
+  streamTitle: string;
+  topicFilter: 'off' | 'prefer' | 'require';
   maxCommentsPerBatch: number;
   analysisIntervalMs: number;
   minCommentsForLLMAnalysis: number;

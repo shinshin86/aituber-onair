@@ -226,6 +226,9 @@ function getDefaultSettings(): AppSettings {
       enabled: true,
       mode: 'rules',
       useSameLLMSettings: true,
+      streamTopic: '',
+      streamTitle: '',
+      topicFilter: 'prefer',
       maxCommentsPerBatch: 50,
       analysisIntervalMs: 1000,
       minCommentsForLLMAnalysis: 8,
@@ -983,6 +986,36 @@ export function useSettings() {
     [],
   );
 
+  const updateCommentIntelligenceStreamTopic = useCallback(
+    (streamTopic: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: { ...prev.commentIntelligence, streamTopic },
+      }));
+    },
+    [],
+  );
+
+  const updateCommentIntelligenceStreamTitle = useCallback(
+    (streamTitle: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: { ...prev.commentIntelligence, streamTitle },
+      }));
+    },
+    [],
+  );
+
+  const updateCommentIntelligenceTopicFilter = useCallback(
+    (topicFilter: AppSettings['commentIntelligence']['topicFilter']) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: { ...prev.commentIntelligence, topicFilter },
+      }));
+    },
+    [],
+  );
+
   const updateCommentIntelligenceAnalysisIntervalMs = useCallback(
     (analysisIntervalMs: number) => {
       setSettings((prev) => ({
@@ -1197,6 +1230,9 @@ export function useSettings() {
     updateTwitchCommentIntervalMs,
     updateCommentIntelligenceEnabled,
     updateCommentIntelligenceMode,
+    updateCommentIntelligenceStreamTopic,
+    updateCommentIntelligenceStreamTitle,
+    updateCommentIntelligenceTopicFilter,
     updateCommentIntelligenceAnalysisIntervalMs,
     updateCommentIntelligenceMaxCommentsPerBatch,
     updateCommentIntelligenceMinCommentsForLLMAnalysis,

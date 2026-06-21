@@ -284,6 +284,9 @@ export function SettingsPanel({
   updateTwitchCommentIntervalMs,
   updateCommentIntelligenceEnabled,
   updateCommentIntelligenceMode,
+  updateCommentIntelligenceStreamTopic,
+  updateCommentIntelligenceStreamTitle,
+  updateCommentIntelligenceTopicFilter,
   updateCommentIntelligenceAnalysisIntervalMs,
   updateCommentIntelligenceMaxCommentsPerBatch,
   updateCommentIntelligenceMinCommentsForLLMAnalysis,
@@ -2376,6 +2379,15 @@ export function SettingsPanel({
         updateTwitchCommentIntervalMs={updateTwitchCommentIntervalMs}
         updateCommentIntelligenceEnabled={updateCommentIntelligenceEnabled}
         updateCommentIntelligenceMode={updateCommentIntelligenceMode}
+        updateCommentIntelligenceStreamTopic={
+          updateCommentIntelligenceStreamTopic
+        }
+        updateCommentIntelligenceStreamTitle={
+          updateCommentIntelligenceStreamTitle
+        }
+        updateCommentIntelligenceTopicFilter={
+          updateCommentIntelligenceTopicFilter
+        }
         updateCommentIntelligenceAnalysisIntervalMs={
           updateCommentIntelligenceAnalysisIntervalMs
         }

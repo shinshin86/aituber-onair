@@ -1,4 +1,7 @@
-import type { CommentIntelligenceConfig } from './types/config.js';
+import type {
+  CommentAnalysisMode,
+  CommentIntelligenceConfig,
+} from './types/config.js';
 import type { LLMCommentAnalysisResult } from './types/llm.js';
 import type {
   AnalyzeCommentsInput,
@@ -31,6 +34,7 @@ const defaultConfig: CommentIntelligenceConfig = {
   },
   ranking: {
     strategy: 'balanced',
+    topicFilter: 'prefer',
     maxSelectedComments: 1,
     minScore: 0.3,
   },
@@ -154,7 +158,9 @@ async function analyzeWithConfig(
       rulesResult,
       llmResult,
       mode,
-      new Set(llmComments.map((comment) => comment.id))
+      new Set(llmComments.map((comment) => comment.id)),
+      config.ranking,
+      input.streamState
     );
   } catch (error) {
     if (config.analysis?.llmPolicy?.fallbackToRules === false) {
@@ -224,6 +230,7 @@ function buildRulesResult(
       analyzedCommentCount: input.comments.length,
       selectedCommentIds: selectedComments.map((comment) => comment.id),
       blockedViewerIds: getBlockedViewerIds(viewerSafetyStates),
+      llmUnmatchedIds: [],
     },
   };
   result.contextForLLM = buildLLMContext(result, language);
@@ -235,38 +242,60 @@ function buildRulesResult(
 function applyLLMResult(
   rulesResult: CommentIntelligenceResult,
   llmResult: LLMCommentAnalysisResult,
-  mode: CommentIntelligenceResult['debug'] extends infer Debug
-    ? Debug extends { mode: infer Mode }
-      ? Mode
-      : never
-    : never,
-  llmCommentIds: Set<string>
+  mode: CommentAnalysisMode,
+  llmCommentIds: Set<string>,
+  rankingConfig: CommentIntelligenceConfig['ranking'],
+  streamState: AnalyzeCommentsInput['streamState']
 ): CommentIntelligenceResult {
   const safetyReports = mergeLLMSafetyFlags(
     rulesResult.safetyReports,
     llmResult,
     llmCommentIds
   );
-  const rankedById = new Map(
-    rulesResult.rankedComments.map((comment) => [comment.id, comment])
+  const rankedComments = applyLLMTopicRelatedReasons(
+    rulesResult.rankedComments,
+    llmResult,
+    llmCommentIds
   );
+  const rankedById = new Map(
+    rankedComments.map((comment) => [comment.id, comment])
+  );
+  const topicFilter = rankingConfig?.topicFilter ?? 'prefer';
+  const hasTopic = Boolean(streamState?.topic?.trim());
+  const llmReturnedIds = uniqueStrings([
+    ...(llmResult.selectedCommentIds ?? []),
+    ...(llmResult.topicRelatedCommentIds ?? []),
+  ]);
+  const llmUnmatchedIds = llmReturnedIds.filter((id) => !llmCommentIds.has(id));
+  const safetyReportByCommentId = new Map(
+    safetyReports.map((report) => [report.commentId, report])
+  );
+  const isSafeComment = (comment: RankedComment) => {
+    const report = safetyReportByCommentId.get(comment.id);
+    return !report?.shouldIgnore;
+  };
   const selectedFromLLM =
     llmResult.selectedCommentIds
       ?.filter((id) => llmCommentIds.has(id))
       ?.map((id) => rankedById.get(id))
       .filter((comment): comment is RankedComment => Boolean(comment))
-      .filter((comment) => {
-        const report = safetyReports.find(
-          (safetyReport) => safetyReport.commentId === comment.id
-        );
-        return !report?.shouldIgnore;
-      }) ?? [];
-  const selectedComments =
-    selectedFromLLM.length > 0
-      ? selectedFromLLM.slice(0, rulesResult.selectedComments.length || 1)
-      : rulesResult.selectedComments;
+      .filter(isSafeComment) ?? [];
+  const topicRelatedRanked = rankedComments
+    .filter((comment) => llmCommentIds.has(comment.id))
+    .filter((comment) => comment.reasons.includes('topic_related'))
+    .filter(isSafeComment)
+    .sort((a, b) => b.score - a.score);
+  const maxSelected = rankingConfig?.maxSelectedComments ?? 1;
+  const selectedComments = selectLLMAwareComments({
+    selectedFromLLM,
+    topicRelatedRanked,
+    rulesSelectedComments: rulesResult.selectedComments,
+    topicFilter,
+    hasTopic,
+    maxSelected,
+  });
   const selectedIds = new Set(selectedComments.map((comment) => comment.id));
-  const ignoredComments = rulesResult.rankedComments.filter(
+  const ignoredComments = rankedComments.filter(
     (comment) => !selectedIds.has(comment.id)
   );
   const contextForLLM = [
@@ -284,6 +313,7 @@ function applyLLMResult(
 
   return {
     ...rulesResult,
+    rankedComments,
     selectedComments,
     ignoredComments,
     ignoredSummary,
@@ -296,8 +326,107 @@ function applyLLMResult(
       analyzedCommentCount: rulesResult.debug?.analyzedCommentCount ?? 0,
       selectedCommentIds: selectedComments.map((comment) => comment.id),
       blockedViewerIds: rulesResult.debug?.blockedViewerIds ?? [],
+      llmUnmatchedIds,
     },
   };
+}
+
+// TODO: topicFilter selection is duplicated between rankComments and this LLM
+// path; keep them separate for now, but eventually use one selection function.
+function selectLLMAwareComments({
+  selectedFromLLM,
+  topicRelatedRanked,
+  rulesSelectedComments,
+  topicFilter,
+  hasTopic,
+  maxSelected,
+}: {
+  selectedFromLLM: RankedComment[];
+  topicRelatedRanked: RankedComment[];
+  rulesSelectedComments: RankedComment[];
+  topicFilter: NonNullable<
+    NonNullable<CommentIntelligenceConfig['ranking']>['topicFilter']
+  >;
+  hasTopic: boolean;
+  maxSelected: number;
+}): RankedComment[] {
+  if (!hasTopic || topicFilter === 'off') {
+    return selectedFromLLM.length > 0
+      ? selectedFromLLM.slice(0, maxSelected)
+      : rulesSelectedComments;
+  }
+
+  if (topicFilter === 'require') {
+    const selectedTopicMatches = selectedFromLLM.filter((comment) =>
+      comment.reasons.includes('topic_related')
+    );
+    return uniqueRankedComments([
+      ...selectedTopicMatches,
+      ...topicRelatedRanked,
+    ]).slice(0, maxSelected);
+  }
+
+  if (topicRelatedRanked.length > 0) {
+    return uniqueRankedComments([
+      ...topicRelatedRanked,
+      ...selectedFromLLM,
+    ]).slice(0, maxSelected);
+  }
+
+  return selectedFromLLM.length > 0
+    ? selectedFromLLM.slice(0, maxSelected)
+    : rulesSelectedComments;
+}
+
+function uniqueRankedComments(comments: RankedComment[]): RankedComment[] {
+  const seen = new Set<string>();
+  return comments.filter((comment) => {
+    if (seen.has(comment.id)) {
+      return false;
+    }
+    seen.add(comment.id);
+    return true;
+  });
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values)];
+}
+
+function applyLLMTopicRelatedReasons(
+  rankedComments: RankedComment[],
+  llmResult: LLMCommentAnalysisResult,
+  llmCommentIds: Set<string>
+): RankedComment[] {
+  const topicRelatedIds = new Set(
+    (llmResult.topicRelatedCommentIds ?? []).filter((id) =>
+      llmCommentIds.has(id)
+    )
+  );
+  if (topicRelatedIds.size === 0) {
+    return rankedComments;
+  }
+
+  return rankedComments.map((comment) => {
+    if (
+      !topicRelatedIds.has(comment.id) ||
+      comment.reasons.includes('topic_related')
+    ) {
+      return comment;
+    }
+
+    return {
+      ...comment,
+      reasons: [
+        ...comment.reasons.filter((reason) => reason !== 'topic_unrelated'),
+        'topic_related' as const,
+      ],
+      scoreBreakdown: {
+        ...comment.scoreBreakdown,
+        topicRelevance: Math.max(comment.scoreBreakdown.topicRelevance, 1),
+      },
+    };
+  });
 }
 
 function mergeLLMSafetyFlags(

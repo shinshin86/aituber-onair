@@ -88,6 +88,8 @@ export function scoreComment(input: {
   const topicRelevance = isTopicRelated(comment.text, streamState) ? 1 : 0;
   if (topicRelevance > 0) {
     reasons.push('topic_related');
+  } else if (streamState?.topic?.trim()) {
+    reasons.push('topic_unrelated');
   }
 
   const messageCount = viewerProfile?.messageCount ?? 0;

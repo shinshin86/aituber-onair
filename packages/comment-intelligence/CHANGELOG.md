@@ -1,5 +1,27 @@
 # @aituber-onair/comment-intelligence
 
+## 0.0.4
+
+### Patch Changes
+
+- Adds `topicFilter` ranking options (`off`, `prefer`, and `require`) for
+  prioritizing or requiring comments related to the current stream topic.
+- Adds the `topic_unrelated` ranking reason for comments that do not match a
+  configured stream topic.
+- Passes stream topic and title context into LLM analysis prompts and supports
+  `topicRelatedCommentIds` so LLM-assisted analysis can mark semantically
+  related comments as topic-related.
+- Strengthens the LLM topic-matching prompt to include synonyms, paraphrases,
+  and related subtopics.
+- Reflects LLM-provided `topicRelatedCommentIds` in selected comments for
+  `prefer` and `require` topic filtering.
+- Fixes LLM-mode selection to honor `maxSelectedComments`.
+- Exposes unmatched LLM-returned comment IDs in debug metadata.
+- Improves OpenAI sample diagnostics and uses short comment IDs that LLMs can
+  echo reliably.
+- Adds stream topic, stream title, and topic priority settings to the React
+  examples and starter pet template.
+
 ## 0.0.3
 
 ### Patch Changes

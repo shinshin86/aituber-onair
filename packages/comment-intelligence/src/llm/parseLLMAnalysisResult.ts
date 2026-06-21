@@ -42,6 +42,11 @@ function normalizeResult(
           (id): id is string => typeof id === 'string'
         )
       : undefined,
+    topicRelatedCommentIds: Array.isArray(value.topicRelatedCommentIds)
+      ? value.topicRelatedCommentIds.filter(
+          (id): id is string => typeof id === 'string'
+        )
+      : undefined,
     ignoredSummary:
       typeof value.ignoredSummary === 'string'
         ? value.ignoredSummary

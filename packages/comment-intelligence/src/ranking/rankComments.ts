@@ -24,9 +24,11 @@ export function rankComments(_input: RankCommentsInput): {
   const input = _input;
   const config = input.config ?? {};
   const strategy = config.strategy ?? 'balanced';
+  const topicFilter = config.topicFilter ?? 'prefer';
   const weights = {
     ...getStrategyWeights(strategy),
     ...config.weights,
+    ...(topicFilter === 'off' ? { topicRelevance: 0 } : {}),
   };
   const safetyById = new Map(
     input.safetyReports.map((report) => [report.commentId, report])
@@ -92,9 +94,14 @@ export function rankComments(_input: RankCommentsInput): {
 
   const maxSelectedComments = config.maxSelectedComments ?? 1;
   const minScore = config.minScore ?? 0.3;
+  const requiresTopic =
+    topicFilter === 'require' && Boolean(input.streamState?.topic?.trim());
   const selectedComments = rankedComments
     .filter((comment) => !comment.safetyReport?.shouldIgnore)
     .filter((comment) => comment.score >= minScore)
+    .filter(
+      (comment) => !requiresTopic || comment.reasons.includes('topic_related')
+    )
     .slice(0, maxSelectedComments);
 
   return {

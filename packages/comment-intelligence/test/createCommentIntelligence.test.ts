@@ -148,6 +148,250 @@ describe('createCommentIntelligence', () => {
     expect(result.debug?.usedLLM).toBe(true);
   });
 
+  it('uses LLM topicRelatedCommentIds for require topic filtering', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['a'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: { topicFilter: 'require', maxSelectedComments: 1 },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', 'さっきの設定をもう一度見せて'),
+        comment('b', '晩ごはんなに？'),
+      ],
+      streamState: { topic: 'AIツール紹介', language: 'ja' },
+    });
+
+    expect(result.selectedComments[0].id).toBe('a');
+    expect(result.selectedComments[0].reasons).toContain('topic_related');
+    expect(result.ignoredComments.map((ignored) => ignored.id)).toContain('b');
+  });
+
+  it('promotes LLM topicRelatedCommentIds for require topic filtering', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['b'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: { topicFilter: 'require', maxSelectedComments: 1 },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', 'ご飯の話をしよう'),
+        comment('b', '今使っているツールはなに？'),
+      ],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments.map((selected) => selected.id)).toContain(
+      'a'
+    );
+    expect(
+      result.selectedComments.map((selected) => selected.id)
+    ).not.toContain('b');
+    expect(result.selectedComments[0].reasons).toContain('topic_related');
+  });
+
+  it('promotes LLM topicRelatedCommentIds ahead of selectedCommentIds for prefer topic filtering', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['b'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: {
+        topicFilter: 'prefer',
+        maxSelectedComments: 2,
+        minScore: 0,
+      },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', 'ご飯の話をしよう'),
+        comment('b', '今使っているツールはなに？'),
+      ],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments[0].id).toBe('a');
+    expect(result.selectedComments.map((selected) => selected.id)).toContain(
+      'b'
+    );
+    expect(result.selectedComments[0].reasons).toContain('topic_related');
+  });
+
+  it('does not fall back to rule-selected comments when require topic filtering has no LLM topic matches', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['b'],
+      topicRelatedCommentIds: [],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: { topicFilter: 'require', maxSelectedComments: 1 },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', 'こんにちは'),
+        comment('b', '今使っているツールはなに？'),
+      ],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments).toEqual([]);
+    expect(result.ignoredComments.map((ignored) => ignored.id)).toEqual(
+      expect.arrayContaining(['a', 'b'])
+    );
+  });
+
+  it('honors maxSelectedComments for LLM topic matches when require has fewer literal matches', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['F'],
+      topicRelatedCommentIds: ['C', 'G'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: {
+        topicFilter: 'require',
+        maxSelectedComments: 2,
+        minScore: 0,
+      },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('C', '食事のおすすめは？'),
+        comment('G', '献立の話も聞きたい'),
+        comment('F', '今日はどのツールを使う？'),
+      ],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments.map((selected) => selected.id)).toEqual([
+      'C',
+      'G',
+    ]);
+    expect(
+      result.selectedComments.map((selected) => selected.id)
+    ).not.toContain('F');
+  });
+
+  describe('LLM topic filtering and maxSelectedComments', () => {
+    const cases = [
+      { topicFilter: 'off', maxSelectedComments: 1, expected: ['F'] },
+      { topicFilter: 'off', maxSelectedComments: 2, expected: ['F'] },
+      { topicFilter: 'off', maxSelectedComments: 3, expected: ['F'] },
+      { topicFilter: 'prefer', maxSelectedComments: 1, expected: ['C'] },
+      { topicFilter: 'prefer', maxSelectedComments: 2, expected: ['C', 'G'] },
+      {
+        topicFilter: 'prefer',
+        maxSelectedComments: 3,
+        expected: ['C', 'G', 'F'],
+      },
+      { topicFilter: 'require', maxSelectedComments: 1, expected: ['C'] },
+      { topicFilter: 'require', maxSelectedComments: 2, expected: ['C', 'G'] },
+      { topicFilter: 'require', maxSelectedComments: 3, expected: ['C', 'G'] },
+    ] as const;
+
+    it.each(cases)(
+      'selects $expected for $topicFilter with maxSelectedComments=$maxSelectedComments',
+      async ({ topicFilter, maxSelectedComments, expected }) => {
+        const llmProvider = provider({
+          selectedCommentIds: ['F'],
+          topicRelatedCommentIds: ['C', 'G'],
+        });
+        const intelligence = createCommentIntelligence({
+          analysis: { mode: 'llm-assisted', llmProvider },
+          ranking: {
+            topicFilter,
+            maxSelectedComments,
+            minScore: 0,
+          },
+        });
+
+        const result = await intelligence.analyze({
+          comments: [
+            comment('C', '食事のおすすめは？'),
+            comment('G', '献立の話も聞きたい'),
+            comment('F', '今日はどのツールを使う？'),
+          ],
+          streamState: { topic: '食事', language: 'ja' },
+        });
+
+        expect(result.selectedComments.map((selected) => selected.id)).toEqual(
+          expected
+        );
+        if (topicFilter === 'require') {
+          expect(
+            result.selectedComments.map((selected) => selected.id)
+          ).not.toContain('F');
+        }
+      }
+    );
+  });
+
+  it('reports LLM returned IDs that do not match analyzed comments', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['ghost:1'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [comment('a', 'こんにちは')],
+    });
+
+    expect(result.debug?.llmUnmatchedIds).toEqual(['ghost:1']);
+  });
+
+  it('keeps llmUnmatchedIds empty when LLM returned IDs match comments', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['a'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [comment('a', 'こんにちは')],
+    });
+
+    expect(result.debug?.llmUnmatchedIds).toEqual([]);
+  });
+
+  it('exposes unmatched IDs when every LLM returned ID is discarded', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['ghost:1'],
+      topicRelatedCommentIds: ['ghost:2'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: {
+        topicFilter: 'require',
+        maxSelectedComments: 2,
+        minScore: 0,
+      },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [comment('a', '献立の話も聞きたい')],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments).toEqual([]);
+    expect(result.debug?.llmUnmatchedIds).toEqual(['ghost:1', 'ghost:2']);
+  });
+
   it('ignores LLM selectedCommentIds outside the configured maxComments window', async () => {
     const llmProvider = provider({ selectedCommentIds: ['c'] });
     const intelligence = createCommentIntelligence({
