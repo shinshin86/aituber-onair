@@ -15,6 +15,7 @@
   and related subtopics.
 - Reflects LLM-provided `topicRelatedCommentIds` in selected comments for
   `prefer` and `require` topic filtering.
+- Fixes LLM-mode selection to honor `maxSelectedComments`.
 - Adds stream topic, stream title, and topic priority settings to the React
   examples and starter pet template.
 

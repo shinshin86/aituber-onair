@@ -279,7 +279,7 @@ function applyLLMResult(
     .filter((comment) => comment.reasons.includes('topic_related'))
     .filter(isSafeComment)
     .sort((a, b) => b.score - a.score);
-  const maxSelected = rulesResult.selectedComments.length || 1;
+  const maxSelected = rankingConfig?.maxSelectedComments ?? 1;
   const selectedComments = selectLLMAwareComments({
     selectedFromLLM,
     topicRelatedRanked,

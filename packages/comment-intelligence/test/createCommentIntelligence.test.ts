@@ -251,6 +251,92 @@ describe('createCommentIntelligence', () => {
     );
   });
 
+  it('honors maxSelectedComments for LLM topic matches when require has fewer literal matches', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['F'],
+      topicRelatedCommentIds: ['C', 'G'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: {
+        topicFilter: 'require',
+        maxSelectedComments: 2,
+        minScore: 0,
+      },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('C', '食事のおすすめは？'),
+        comment('G', '献立の話も聞きたい'),
+        comment('F', '今日はどのツールを使う？'),
+      ],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments.map((selected) => selected.id)).toEqual([
+      'C',
+      'G',
+    ]);
+    expect(
+      result.selectedComments.map((selected) => selected.id)
+    ).not.toContain('F');
+  });
+
+  describe('LLM topic filtering and maxSelectedComments', () => {
+    const cases = [
+      { topicFilter: 'off', maxSelectedComments: 1, expected: ['F'] },
+      { topicFilter: 'off', maxSelectedComments: 2, expected: ['F'] },
+      { topicFilter: 'off', maxSelectedComments: 3, expected: ['F'] },
+      { topicFilter: 'prefer', maxSelectedComments: 1, expected: ['C'] },
+      { topicFilter: 'prefer', maxSelectedComments: 2, expected: ['C', 'G'] },
+      {
+        topicFilter: 'prefer',
+        maxSelectedComments: 3,
+        expected: ['C', 'G', 'F'],
+      },
+      { topicFilter: 'require', maxSelectedComments: 1, expected: ['C'] },
+      { topicFilter: 'require', maxSelectedComments: 2, expected: ['C', 'G'] },
+      { topicFilter: 'require', maxSelectedComments: 3, expected: ['C', 'G'] },
+    ] as const;
+
+    it.each(cases)(
+      'selects $expected for $topicFilter with maxSelectedComments=$maxSelectedComments',
+      async ({ topicFilter, maxSelectedComments, expected }) => {
+        const llmProvider = provider({
+          selectedCommentIds: ['F'],
+          topicRelatedCommentIds: ['C', 'G'],
+        });
+        const intelligence = createCommentIntelligence({
+          analysis: { mode: 'llm-assisted', llmProvider },
+          ranking: {
+            topicFilter,
+            maxSelectedComments,
+            minScore: 0,
+          },
+        });
+
+        const result = await intelligence.analyze({
+          comments: [
+            comment('C', '食事のおすすめは？'),
+            comment('G', '献立の話も聞きたい'),
+            comment('F', '今日はどのツールを使う？'),
+          ],
+          streamState: { topic: '食事', language: 'ja' },
+        });
+
+        expect(result.selectedComments.map((selected) => selected.id)).toEqual(
+          expected
+        );
+        if (topicFilter === 'require') {
+          expect(
+            result.selectedComments.map((selected) => selected.id)
+          ).not.toContain('F');
+        }
+      }
+    );
+  });
+
   it('ignores LLM selectedCommentIds outside the configured maxComments window', async () => {
     const llmProvider = provider({ selectedCommentIds: ['c'] });
     const intelligence = createCommentIntelligence({
