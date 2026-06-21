@@ -171,6 +171,86 @@ describe('createCommentIntelligence', () => {
     expect(result.ignoredComments.map((ignored) => ignored.id)).toContain('b');
   });
 
+  it('promotes LLM topicRelatedCommentIds for require topic filtering', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['b'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: { topicFilter: 'require', maxSelectedComments: 1 },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', 'ご飯の話をしよう'),
+        comment('b', '今使っているツールはなに？'),
+      ],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments.map((selected) => selected.id)).toContain(
+      'a'
+    );
+    expect(
+      result.selectedComments.map((selected) => selected.id)
+    ).not.toContain('b');
+    expect(result.selectedComments[0].reasons).toContain('topic_related');
+  });
+
+  it('promotes LLM topicRelatedCommentIds ahead of selectedCommentIds for prefer topic filtering', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['b'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: {
+        topicFilter: 'prefer',
+        maxSelectedComments: 2,
+        minScore: 0,
+      },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', 'ご飯の話をしよう'),
+        comment('b', '今使っているツールはなに？'),
+      ],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments[0].id).toBe('a');
+    expect(result.selectedComments.map((selected) => selected.id)).toContain(
+      'b'
+    );
+    expect(result.selectedComments[0].reasons).toContain('topic_related');
+  });
+
+  it('does not fall back to rule-selected comments when require topic filtering has no LLM topic matches', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['b'],
+      topicRelatedCommentIds: [],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: { topicFilter: 'require', maxSelectedComments: 1 },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [
+        comment('a', 'こんにちは'),
+        comment('b', '今使っているツールはなに？'),
+      ],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments).toEqual([]);
+    expect(result.ignoredComments.map((ignored) => ignored.id)).toEqual(
+      expect.arrayContaining(['a', 'b'])
+    );
+  });
+
   it('ignores LLM selectedCommentIds outside the configured maxComments window', async () => {
     const llmProvider = provider({ selectedCommentIds: ['c'] });
     const intelligence = createCommentIntelligence({

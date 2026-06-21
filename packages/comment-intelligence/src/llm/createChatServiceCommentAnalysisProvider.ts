@@ -86,6 +86,7 @@ function buildAnalysisPrompt(
     'JSONには必要に応じて selectedCommentIds, topicRelatedCommentIds, safetyFlags, ignoredSummary, instructionForLLM, contextForLLM を含めてください。',
     'safetyFlags.category は prompt_injection, hostile_feedback, harassment, baiting, demoralizing, url, repetition, spam, personal_info, sexual, violence のいずれかを使ってください。',
     '配信テーマがある場合、文字どおりの単語一致だけでなく、類義語・言い換え・関連する小トピックなど意味的にテーマに関連するコメントのIDも topicRelatedCommentIds に含めてください。',
+    'selectedCommentIds を選ぶ際も、配信テーマに関連するコメントを優先してください。',
     'hostile_feedback は、配信・話し方・声・内容・配信者への非建設的で荒れやすい否定コメントに使います。',
     'harassment は人格攻撃や侮辱、baiting は炎上や荒れを誘うコメント、demoralizing は配信者のやる気を削るだけのコメントに使います。',
     '改善要望や問題報告には hostile_feedback, harassment, baiting, demoralizing を使わないでください。',

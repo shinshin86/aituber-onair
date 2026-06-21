@@ -260,27 +260,34 @@ function applyLLMResult(
   const rankedById = new Map(
     rankedComments.map((comment) => [comment.id, comment])
   );
-  const requiresTopic =
-    (rankingConfig?.topicFilter ?? 'prefer') === 'require' &&
-    Boolean(streamState?.topic?.trim());
+  const topicFilter = rankingConfig?.topicFilter ?? 'prefer';
+  const hasTopic = Boolean(streamState?.topic?.trim());
+  const isSafeComment = (comment: RankedComment) => {
+    const report = safetyReports.find(
+      (safetyReport) => safetyReport.commentId === comment.id
+    );
+    return !report?.shouldIgnore;
+  };
   const selectedFromLLM =
     llmResult.selectedCommentIds
       ?.filter((id) => llmCommentIds.has(id))
       ?.map((id) => rankedById.get(id))
       .filter((comment): comment is RankedComment => Boolean(comment))
-      .filter((comment) => {
-        const report = safetyReports.find(
-          (safetyReport) => safetyReport.commentId === comment.id
-        );
-        return !report?.shouldIgnore;
-      })
-      .filter(
-        (comment) => !requiresTopic || comment.reasons.includes('topic_related')
-      ) ?? [];
-  const selectedComments =
-    selectedFromLLM.length > 0
-      ? selectedFromLLM.slice(0, rulesResult.selectedComments.length || 1)
-      : rulesResult.selectedComments;
+      .filter(isSafeComment) ?? [];
+  const topicRelatedRanked = rankedComments
+    .filter((comment) => llmCommentIds.has(comment.id))
+    .filter((comment) => comment.reasons.includes('topic_related'))
+    .filter(isSafeComment)
+    .sort((a, b) => b.score - a.score);
+  const maxSelected = rulesResult.selectedComments.length || 1;
+  const selectedComments = selectLLMAwareComments({
+    selectedFromLLM,
+    topicRelatedRanked,
+    rulesSelectedComments: rulesResult.selectedComments,
+    topicFilter,
+    hasTopic,
+    maxSelected,
+  });
   const selectedIds = new Set(selectedComments.map((comment) => comment.id));
   const ignoredComments = rankedComments.filter(
     (comment) => !selectedIds.has(comment.id)
@@ -315,6 +322,62 @@ function applyLLMResult(
       blockedViewerIds: rulesResult.debug?.blockedViewerIds ?? [],
     },
   };
+}
+
+function selectLLMAwareComments({
+  selectedFromLLM,
+  topicRelatedRanked,
+  rulesSelectedComments,
+  topicFilter,
+  hasTopic,
+  maxSelected,
+}: {
+  selectedFromLLM: RankedComment[];
+  topicRelatedRanked: RankedComment[];
+  rulesSelectedComments: RankedComment[];
+  topicFilter: NonNullable<
+    NonNullable<CommentIntelligenceConfig['ranking']>['topicFilter']
+  >;
+  hasTopic: boolean;
+  maxSelected: number;
+}): RankedComment[] {
+  if (!hasTopic || topicFilter === 'off') {
+    return selectedFromLLM.length > 0
+      ? selectedFromLLM.slice(0, maxSelected)
+      : rulesSelectedComments;
+  }
+
+  if (topicFilter === 'require') {
+    const selectedTopicMatches = selectedFromLLM.filter((comment) =>
+      comment.reasons.includes('topic_related')
+    );
+    return uniqueRankedComments([
+      ...selectedTopicMatches,
+      ...topicRelatedRanked,
+    ]).slice(0, maxSelected);
+  }
+
+  if (topicRelatedRanked.length > 0) {
+    return uniqueRankedComments([
+      ...topicRelatedRanked,
+      ...selectedFromLLM,
+    ]).slice(0, maxSelected);
+  }
+
+  return selectedFromLLM.length > 0
+    ? selectedFromLLM.slice(0, maxSelected)
+    : rulesSelectedComments;
+}
+
+function uniqueRankedComments(comments: RankedComment[]): RankedComment[] {
+  const seen = new Set<string>();
+  return comments.filter((comment) => {
+    if (seen.has(comment.id)) {
+      return false;
+    }
+    seen.add(comment.id);
+    return true;
+  });
 }
 
 function applyLLMTopicRelatedReasons(

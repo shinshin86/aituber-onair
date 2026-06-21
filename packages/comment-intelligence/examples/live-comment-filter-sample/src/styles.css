@@ -331,6 +331,18 @@ h3 {
   max-width: 640px;
 }
 
+.fallback-alert {
+  margin: -4px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid #e7b056;
+  border-left: 4px solid var(--c-warning);
+  border-radius: var(--radius-sm);
+  background: var(--c-warning-soft);
+  color: #7a4d08;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
 /* ---------- Use case cards ---------- */
 
 .usecase-grid {

@@ -270,6 +270,8 @@ const COPY = {
     noResult: 'Run comment filter to see the result.',
     noDeveloperOutput:
       'Run the filter to see the prompt preview, ranking scores, and debug metadata.',
+    llmFallbackNotice:
+      'The LLM call failed or was not available, so this run fell back to rule-based analysis.',
     noReason: 'No reason',
     analysisComplete: (
       selectedName: string | undefined,
@@ -398,6 +400,8 @@ const COPY = {
     noResult: 'フィルタ処理を実行すると結果が表示されます。',
     noDeveloperOutput:
       'フィルタ処理を実行すると、プロンプトプレビュー、ランキングスコア、デバッグメタデータが表示されます。',
+    llmFallbackNotice:
+      'LLM呼び出しに失敗したか利用できなかったため、この実行はルールベース解析にフォールバックしました。',
     noReason: '理由なし',
     analysisComplete: (
       selectedName: string | undefined,
@@ -582,6 +586,7 @@ function renderApp() {
           <p class="kicker">${copy.step2}</p>
           <h2>${copy.decisionTitle}</h2>
         </div>
+        <div id="llm-fallback" class="fallback-alert" hidden></div>
 
         <article class="panel incoming-panel">
           <div class="incoming-heading">
@@ -952,6 +957,11 @@ function buildOpenAIAnalysisPrompt(
         ? 'Include comments that are semantically related to the stream topic - synonyms, paraphrases, and related subtopics - in topicRelatedCommentIds, not just literal keyword matches. For example, a topic of "food" should also match "meal", "lunch", or "cooking".'
         : '配信トピックに意味的に関連するコメント(類義語・言い換え・関連する小トピックを含む)のIDを topicRelatedCommentIds に入れてください。文字どおりのキーワード一致だけに限定しないでください。例: トピックが「ご飯」なら「食事」「お昼」「料理」なども関連として扱う。'
       : undefined,
+    topic
+      ? isEnglish
+        ? 'When choosing selectedCommentIds, prioritize comments related to the stream topic.'
+        : 'selectedCommentIds を選ぶ際も、配信トピックに関連するコメントを優先してください。'
+      : undefined,
     isEnglish
       ? 'Use hostile_feedback for non-constructive negative comments, harassment for personal attacks, baiting for comments likely to stir conflict, and demoralizing for comments that only discourage the streamer. Do not use these categories for constructive feedback or issue reports.'
       : 'hostile_feedback は非建設的な否定コメント、harassment は人格攻撃、baiting は荒れを誘うコメント、demoralizing は配信者のやる気を削るだけのコメントに使ってください。改善要望や問題報告には使わないでください。',
@@ -1136,6 +1146,8 @@ function renderPendingResult() {
   `;
   getElement<HTMLDivElement>('ranking').innerHTML =
     `<p class="empty">${copy.noDeveloperOutput}</p>`;
+  getElement<HTMLDivElement>('llm-fallback').hidden = true;
+  getElement<HTMLDivElement>('llm-fallback').textContent = '';
   getElement<HTMLPreElement>('debug').textContent = copy.noDeveloperOutput;
   getElement<HTMLPreElement>('prompt-preview').textContent =
     copy.noDeveloperOutput;
@@ -1175,6 +1187,13 @@ function renderResult(
       renderIncomingComment(comment, selectedCommentIds, unsafeCommentIds)
     )
     .join('');
+  const fallbackAlert = getElement<HTMLDivElement>('llm-fallback');
+  const showLLMFallbackNotice =
+    analysisEngine === 'openai' && result.debug?.usedLLM === false;
+  fallbackAlert.hidden = !showLLMFallbackNotice;
+  fallbackAlert.textContent = showLLMFallbackNotice
+    ? copy.llmFallbackNotice
+    : '';
 
   getElement<HTMLDivElement>('selected').innerHTML = result.selectedComments
     .length
