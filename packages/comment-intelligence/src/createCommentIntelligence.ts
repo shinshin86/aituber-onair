@@ -227,6 +227,7 @@ function buildRulesResult(
       analyzedCommentCount: input.comments.length,
       selectedCommentIds: selectedComments.map((comment) => comment.id),
       blockedViewerIds: getBlockedViewerIds(viewerSafetyStates),
+      llmUnmatchedIds: [],
     },
   };
   result.contextForLLM = buildLLMContext(result, language);
@@ -262,6 +263,11 @@ function applyLLMResult(
   );
   const topicFilter = rankingConfig?.topicFilter ?? 'prefer';
   const hasTopic = Boolean(streamState?.topic?.trim());
+  const llmReturnedIds = uniqueStrings([
+    ...(llmResult.selectedCommentIds ?? []),
+    ...(llmResult.topicRelatedCommentIds ?? []),
+  ]);
+  const llmUnmatchedIds = llmReturnedIds.filter((id) => !llmCommentIds.has(id));
   const isSafeComment = (comment: RankedComment) => {
     const report = safetyReports.find(
       (safetyReport) => safetyReport.commentId === comment.id
@@ -320,6 +326,7 @@ function applyLLMResult(
       analyzedCommentCount: rulesResult.debug?.analyzedCommentCount ?? 0,
       selectedCommentIds: selectedComments.map((comment) => comment.id),
       blockedViewerIds: rulesResult.debug?.blockedViewerIds ?? [],
+      llmUnmatchedIds,
     },
   };
 }
@@ -378,6 +385,10 @@ function uniqueRankedComments(comments: RankedComment[]): RankedComment[] {
     seen.add(comment.id);
     return true;
   });
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values)];
 }
 
 function applyLLMTopicRelatedReasons(

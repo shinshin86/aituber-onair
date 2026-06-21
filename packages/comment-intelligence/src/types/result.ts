@@ -12,6 +12,7 @@ export type CommentIntelligenceDebugInfo = {
   analyzedCommentCount: number;
   selectedCommentIds: string[];
   blockedViewerIds?: string[];
+  llmUnmatchedIds: string[];
 };
 
 export type CommentIntelligenceResult = {

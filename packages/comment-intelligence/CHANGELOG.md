@@ -16,6 +16,9 @@
 - Reflects LLM-provided `topicRelatedCommentIds` in selected comments for
   `prefer` and `require` topic filtering.
 - Fixes LLM-mode selection to honor `maxSelectedComments`.
+- Exposes unmatched LLM-returned comment IDs in debug metadata.
+- Improves OpenAI sample diagnostics and uses short comment IDs that LLMs can
+  echo reliably.
 - Adds stream topic, stream title, and topic priority settings to the React
   examples and starter pet template.
 

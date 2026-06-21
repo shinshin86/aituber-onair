@@ -337,6 +337,61 @@ describe('createCommentIntelligence', () => {
     );
   });
 
+  it('reports LLM returned IDs that do not match analyzed comments', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['ghost:1'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [comment('a', 'こんにちは')],
+    });
+
+    expect(result.debug?.llmUnmatchedIds).toEqual(['ghost:1']);
+  });
+
+  it('keeps llmUnmatchedIds empty when LLM returned IDs match comments', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['a'],
+      topicRelatedCommentIds: ['a'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [comment('a', 'こんにちは')],
+    });
+
+    expect(result.debug?.llmUnmatchedIds).toEqual([]);
+  });
+
+  it('exposes unmatched IDs when every LLM returned ID is discarded', async () => {
+    const llmProvider = provider({
+      selectedCommentIds: ['ghost:1'],
+      topicRelatedCommentIds: ['ghost:2'],
+    });
+    const intelligence = createCommentIntelligence({
+      analysis: { mode: 'llm-assisted', llmProvider },
+      ranking: {
+        topicFilter: 'require',
+        maxSelectedComments: 2,
+        minScore: 0,
+      },
+    });
+
+    const result = await intelligence.analyze({
+      comments: [comment('a', '献立の話も聞きたい')],
+      streamState: { topic: '食事', language: 'ja' },
+    });
+
+    expect(result.selectedComments).toEqual([]);
+    expect(result.debug?.llmUnmatchedIds).toEqual(['ghost:1', 'ghost:2']);
+  });
+
   it('ignores LLM selectedCommentIds outside the configured maxComments window', async () => {
     const llmProvider = provider({ selectedCommentIds: ['c'] });
     const intelligence = createCommentIntelligence({
