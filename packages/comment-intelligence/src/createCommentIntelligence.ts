@@ -1,4 +1,7 @@
-import type { CommentIntelligenceConfig } from './types/config.js';
+import type {
+  CommentAnalysisMode,
+  CommentIntelligenceConfig,
+} from './types/config.js';
 import type { LLMCommentAnalysisResult } from './types/llm.js';
 import type {
   AnalyzeCommentsInput,
@@ -239,11 +242,7 @@ function buildRulesResult(
 function applyLLMResult(
   rulesResult: CommentIntelligenceResult,
   llmResult: LLMCommentAnalysisResult,
-  mode: CommentIntelligenceResult['debug'] extends infer Debug
-    ? Debug extends { mode: infer Mode }
-      ? Mode
-      : never
-    : never,
+  mode: CommentAnalysisMode,
   llmCommentIds: Set<string>,
   rankingConfig: CommentIntelligenceConfig['ranking'],
   streamState: AnalyzeCommentsInput['streamState']
@@ -268,10 +267,11 @@ function applyLLMResult(
     ...(llmResult.topicRelatedCommentIds ?? []),
   ]);
   const llmUnmatchedIds = llmReturnedIds.filter((id) => !llmCommentIds.has(id));
+  const safetyReportByCommentId = new Map(
+    safetyReports.map((report) => [report.commentId, report])
+  );
   const isSafeComment = (comment: RankedComment) => {
-    const report = safetyReports.find(
-      (safetyReport) => safetyReport.commentId === comment.id
-    );
+    const report = safetyReportByCommentId.get(comment.id);
     return !report?.shouldIgnore;
   };
   const selectedFromLLM =
@@ -331,6 +331,8 @@ function applyLLMResult(
   };
 }
 
+// TODO: topicFilter selection is duplicated between rankComments and this LLM
+// path; keep them separate for now, but eventually use one selection function.
 function selectLLMAwareComments({
   selectedFromLLM,
   topicRelatedRanked,
