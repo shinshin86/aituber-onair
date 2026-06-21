@@ -200,6 +200,8 @@ const COPY = {
       'Required for OpenAI LLM assist. This browser sample sends the key directly to OpenAI, so use a temporary key for local testing.',
     strategy: 'Ranking strategy',
     maxSelected: 'Max selected',
+    maxSelectedHint:
+      'How many comments to pick per run. Require still respects this limit, so raise it to surface more topic-related comments.',
     minScore: 'Min score',
     minScoreHint:
       'Only safe comments with this score or higher can be picked. Raising it makes the filter stricter.',
@@ -332,6 +334,8 @@ const COPY = {
       'OpenAI LLMアシストを使う場合は入力してください。このブラウザサンプルはキーを直接OpenAIへ送るため、ローカル検証用の一時キーを使ってください。',
     strategy: 'ランキング戦略',
     maxSelected: '最大選択数',
+    maxSelectedHint:
+      '1回の解析で拾う最大件数です。「対象のみ」でもこの上限内で選ぶため、トピック関連を複数拾いたい場合は増やしてください。',
     minScore: '最小スコア',
     minScoreHint:
       'この点数以上の安全なコメントだけを拾います。上げるほど拾う条件が厳しくなります。',
@@ -523,6 +527,9 @@ function renderApp() {
               <option value="require">${copy.topicFilterRequire}</option>
             </select>
             <p class="hint">${copy.topicFilterHint}</p>
+            <label for="max-selected">${copy.maxSelected}</label>
+            <input id="max-selected" type="number" min="1" max="5" value="1" />
+            <p class="hint">${copy.maxSelectedHint}</p>
           </div>
         </section>
 
@@ -540,11 +547,6 @@ function renderApp() {
                 <option value="chaos-resistant">${uiLanguage === 'ja' ? '荒れ対策重視' : 'Chaos resistant'}</option>
                 <option value="q-and-a">${uiLanguage === 'ja' ? '質問重視' : 'Q and A'}</option>
               </select>
-            </div>
-
-            <div class="field">
-              <label for="max-selected">${copy.maxSelected}</label>
-              <input id="max-selected" type="number" min="1" max="5" value="1" />
             </div>
 
             <div class="field">
