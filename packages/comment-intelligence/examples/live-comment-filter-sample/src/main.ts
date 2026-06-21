@@ -276,6 +276,8 @@ const COPY = {
       'Run the filter to see the prompt preview, ranking scores, and debug metadata.',
     llmFallbackNotice:
       'The LLM call failed or was not available, so this run fell back to rule-based analysis.',
+    llmFallbackTimingHint:
+      'Slow reasoning models can take longer; this sample waits up to 30 seconds before falling back.',
     llmFailureReason: (reason: string) => `LLM failure: ${reason}`,
     llmUnknownIdsWarning: (ids: string[]) =>
       `The LLM returned unknown comment IDs. Check the ID format: ${ids.join(', ')}`,
@@ -411,6 +413,8 @@ const COPY = {
       'フィルタ処理を実行すると、プロンプトプレビュー、ランキングスコア、デバッグメタデータが表示されます。',
     llmFallbackNotice:
       'LLM呼び出しに失敗したか利用できなかったため、この実行はルールベース解析にフォールバックしました。',
+    llmFallbackTimingHint:
+      '推論に時間がかかるモデルがあります。このサンプルは最大30秒待ってからフォールバックします。',
     llmFailureReason: (reason: string) => `LLM失敗: ${reason}`,
     llmUnknownIdsWarning: (ids: string[]) =>
       `LLMが未知のコメントIDを返しました。ID形式を確認してください: ${ids.join(', ')}`,
@@ -822,6 +826,7 @@ function buildConfig(): CommentIntelligenceConfig {
         fallbackToRules: true,
         minComments: 8,
         maxComments: 12,
+        timeoutMs: 30000,
       },
     },
     safety: {
@@ -1211,6 +1216,7 @@ function renderResult(
     ? [
         copy.llmFallbackNotice,
         lastLLMError ? copy.llmFailureReason(lastLLMError) : undefined,
+        lastLLMError ? undefined : copy.llmFallbackTimingHint,
       ]
         .filter((line): line is string => Boolean(line))
         .join(' ')
