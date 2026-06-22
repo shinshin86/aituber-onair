@@ -9,7 +9,9 @@ export type ChatProviderOption =
   | 'kimi'
   | 'xai'
   | 'deepseek'
-  | 'mistral';
+  | 'mistral'
+  | 'sakana'
+  | 'plamo';
 export type TTSEngineOption =
   | 'openai'
   | 'geminiTts'
@@ -39,6 +41,8 @@ export interface ProviderApiKeys {
   xai?: string;
   deepseek?: string;
   mistral?: string;
+  sakana?: string;
+  plamo?: string;
 }
 
 export interface LLMSettings {

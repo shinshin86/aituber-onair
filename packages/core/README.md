@@ -1381,8 +1381,8 @@ This is useful when running voice engines on different ports or remote servers.
 AITuber OnAir Core adopts an extensible provider system, enabling integration with various AI APIs.
 Currently, OpenAI API, OpenAI-compatible APIs, Gemini API, Gemini Nano
 (Chrome Built-in AI), Claude API, xAI API, Z.ai API, Kimi API, and OpenRouter
-API are available. If you would like to use any other API, please submit a PR
-or send us a message.
+API, DeepSeek API, Mistral API, Sakana AI, and PLaMo are available. If you
+would like to use any other API, please submit a PR or send us a message.
 
 ### Available Providers
 
@@ -1395,6 +1395,8 @@ Currently, the following AI provider is built-in:
 - **xAI**: Supports Grok 4.3, Grok 4.20, and Grok 4.1 Fast model families
 - **DeepSeek**: Supports DeepSeek V4 Flash and DeepSeek V4 Pro through the first-class `deepseek` provider.
 - **Mistral**: Supports current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including vision-capable model metadata and adjustable reasoning for supported models.
+- **Sakana AI**: Supports Fugu (`fugu`) and Fugu Ultra (`fugu-ultra`, `fugu-ultra-20260615`) through the first-class `sakana` provider. Browser examples show this provider as disabled because direct browser requests can fail with CORS; use Node.js or a backend proxy.
+- **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`) and PLaMo 2.2 Prime (`plamo-2.2-prime`) through the first-class `plamo` provider.
 - **Z.ai**: Supports models like GLM-5.2, GLM-5/GLM-5-Turbo (text-only), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, GLM-4.6V Flash/FlashX
 - **Kimi**: Supports Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`), and Kimi K2.5 (`kimi-k2.5`) with vision support. Kimi K2.7 Code models require thinking mode; explicitly setting `thinking: { type: 'disabled' }` throws before the request is sent.
 - **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router, Fusion, latest-family aliases, OpenAI GPT-5.5, Claude, Gemini, Z.ai GLM-5.2, and Kimi K2.7 Code. Fusion runs a multi-model panel plus a judge model, so usage is billed as the sum of the underlying model calls and any enabled web search/fetch usage. For OpenRouter GLM-5.2, core inherits chat's default `reasoning.effort: 'none'` and omits automatic `max_tokens` to avoid reasoning tokens consuming the whole output budget.

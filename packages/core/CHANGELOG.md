@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.26.4
+
+### Patch Changes
+
+- Synced Sakana AI and PLaMo support from `@aituber-onair/chat@0.42.0` into
+  core:
+  - re-exported Sakana AI and PLaMo provider classes, options, model constants,
+    endpoints, and the PLaMo reasoning effort type
+  - added PLaMo to the Core React examples and showed Sakana AI as disabled in
+    browser UIs because direct browser requests can fail with CORS
+  - refreshed Core docs and example READMEs for the newly synced providers
+- Updated dependencies []:
+  - @aituber-onair/chat@0.42.0
+
 ## 0.26.3
 
 ### Patch Changes

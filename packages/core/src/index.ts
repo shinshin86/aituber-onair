@@ -21,6 +21,8 @@ export {
   type XAIChatServiceOptions,
   type DeepSeekChatServiceOptions,
   type MistralChatServiceOptions,
+  type SakanaChatServiceOptions,
+  type PlamoChatServiceOptions,
   // OpenAI provider
   OpenAIChatService,
   OpenAIChatServiceProvider,
@@ -49,6 +51,12 @@ export {
   // Mistral provider
   MistralChatService,
   MistralChatServiceProvider,
+  // Sakana provider
+  SakanaChatService,
+  SakanaChatServiceProvider,
+  // PLaMo provider
+  PlamoChatService,
+  PlamoChatServiceProvider,
   // Type definitions
   type Message,
   type MessageWithVision,
@@ -181,6 +189,20 @@ export {
   isMistralReasoningEffortModel,
   isMistralReasoningEffort,
   isMistralVisionModel,
+  // Sakana model constants
+  MODEL_FUGU,
+  MODEL_FUGU_ULTRA,
+  MODEL_FUGU_ULTRA_20260615,
+  SAKANA_SUPPORTED_MODELS,
+  SAKANA_API_BASE_URL,
+  ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
+  // PLaMo model constants
+  MODEL_PLAMO_3_0_PRIME,
+  MODEL_PLAMO_2_2_PRIME,
+  type PlamoReasoningEffort,
+  PLAMO_SUPPORTED_MODELS,
+  PLAMO_API_BASE_URL,
+  ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
   // xAI model constants
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,

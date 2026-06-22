@@ -117,6 +117,8 @@ function getDefaultSettings(): AppSettings {
         kimi: '',
         deepseek: '',
         mistral: '',
+        sakana: '',
+        plamo: '',
         'openai-compatible': '',
       },
       openRouterDynamicFreeModels: {

@@ -7,7 +7,7 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 
 ## What this app can do
 
-- Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`
+- Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`, `sakana` (disabled in browser UI), `plamo`
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
   chat models such as Claude Opus 4.8, Gemini 3.5 Flash, and GPT-5.5 are available automatically
   in Settings
