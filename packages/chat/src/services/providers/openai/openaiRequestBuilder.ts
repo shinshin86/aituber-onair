@@ -42,6 +42,7 @@ const OPENAI_COMPATIBLE_CHAT_COMPLETIONS_PROVIDERS = new Set([
   'openai-compatible',
   'deepseek',
   'mistral',
+  'sakana',
 ]);
 
 type BuildOpenAIRequestBodyOptions = {
@@ -104,6 +105,9 @@ export function buildOpenAIRequestBody({
     if (tokenLimit !== undefined) {
       // OpenAI-compatible Chat Completions providers expect max_tokens.
       if (usesCompatibleChatCompletions(provider)) {
+        // Sakana Fugu recommends max_completion_tokens for new Chat
+        // Completions integrations, but accepts legacy max_tokens. Keep
+        // max_tokens for compatible providers to preserve existing behavior.
         body.max_tokens = tokenLimit;
       } else {
         body.max_completion_tokens = tokenLimit;

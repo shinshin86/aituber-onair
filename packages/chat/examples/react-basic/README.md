@@ -4,7 +4,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
 
 ## Features
 
-- 🔄 **Provider Switching** - Switch between OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, and Kimi in real-time
+- 🔄 **Provider Switching** - Switch between OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, and browser-disabled Sakana AI in real-time
 - 💬 **Real-time Streaming** - See AI responses as they're generated
 - 📝 **Chat History** - Full conversation history with role indicators
 - 🖼️ **Vision Support** - Upload and analyze images (drag & drop supported)
@@ -76,7 +76,7 @@ react-basic/
 
 ### Basic Chat
 
-1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, or Mistral)
+1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, or browser-disabled Sakana AI)
 2. Enter your API key
 3. Type a message and press Enter or click Send
 4. Watch the AI response stream in real-time
@@ -193,7 +193,13 @@ npm install
 
 ### CORS Issues
 
-The Vite dev server proxies API requests to avoid CORS issues. For production, you'll need to:
+The Vite dev server proxies some API requests to avoid CORS issues. Sakana AI
+is shown as a disabled provider in this browser example because direct browser
+requests can fail with CORS unless Sakana enables the required CORS headers for
+your origin. Use `../sakana-basic` from Node.js, or call Sakana through your own
+backend/serverless proxy in a web app.
+
+For production, you'll need to:
 1. Use a backend proxy
 2. Configure CORS on your server
 3. Use provider SDKs that handle CORS

@@ -34,7 +34,8 @@ export type Provider =
   | 'xai'
   | 'kimi'
   | 'deepseek'
-  | 'mistral';
+  | 'mistral'
+  | 'sakana';
 
 interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
   id: string;

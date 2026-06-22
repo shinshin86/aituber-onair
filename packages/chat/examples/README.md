@@ -20,6 +20,7 @@ This directory contains examples demonstrating how to use the @aituber-onair/cha
    - **OpenRouter**: Get from [openrouter.ai](https://openrouter.ai/)
    - **Z.ai**: Get from [platform.z.ai](https://platform.z.ai/)
    - **Kimi (Moonshot)**: Get from [platform.moonshot.cn](https://platform.moonshot.cn/)
+   - **Sakana AI**: Get from [console.sakana.ai](https://console.sakana.ai/)
 
 ## 📁 Example Structure
 
@@ -53,6 +54,15 @@ Validation probe for OpenAI-compatible Chat Completions endpoints:
 
 Use this probe to verify compatibility against local LLM servers without
 adding provider-specific code.
+
+### [Sakana AI Fugu Node.js Example](./sakana-basic/)
+Minimal Node.js example for the first-class `sakana` provider:
+
+- Uses OpenAI-compatible Chat Completions
+- Defaults to `fugu`
+- Supports `fugu`, `fugu-ultra`, and `fugu-ultra-20260615`
+- Uses `responseLength: 'veryShort'` to keep the sample inexpensive
+- Avoids browser CORS issues by running in Node.js
 
 ### [Local LLM CLI](./local-llm-cli/)
 Minimal interactive CLI for local/self-hosted LLMs (Ollama/LM Studio/vLLM):
@@ -113,12 +123,16 @@ Minimal local server for CI and local validation:
 ### [React Example](./react-basic/)
 Interactive web application with TypeScript and Vite:
 
-- ✅ **Provider Switching** - Switch between OpenAI, Claude, Gemini, OpenRouter, Z.ai, and Kimi
+- ✅ **Provider Switching** - Switch between OpenAI, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, and browser-disabled Sakana AI
 - ✅ **Real-time Streaming** - See responses as they're generated
 - ✅ **Chat History** - Full conversation management
 - ✅ **Vision Support** - Upload and analyze images
 - ✅ **Response Control** - Adjust response lengths
 - ✅ **Error Handling** - Graceful error management
+
+Sakana AI is shown as disabled in the React browser example because direct
+browser requests may fail with CORS. Use the Node.js Sakana example or your own
+backend proxy for web apps.
 
 **Quick Start:**
 ```bash
