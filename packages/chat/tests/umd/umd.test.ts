@@ -140,6 +140,7 @@ describe.skipIf(!hasUmdBundle)('UMD Bundle', () => {
         'deepseek',
         'mistral',
         'sakana',
+        'plamo',
       ];
 
       for (const provider of providers) {

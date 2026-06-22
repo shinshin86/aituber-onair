@@ -1,6 +1,7 @@
 import { ChatService } from '../ChatService';
 import { ChatResponseLength, GPT5PresetKey } from '../../constants/chat';
 import type { MistralReasoningEffort } from '../../constants/mistral';
+import type { PlamoReasoningEffort } from '../../constants/plamo';
 import { ToolDefinition, MCPServerConfig } from '../../types';
 
 /**
@@ -15,7 +16,7 @@ export interface BaseChatServiceOptions {
   visionModel?: string;
   /** API endpoint URL (OpenAI-compatible full URL) */
   endpoint?: string;
-  /** Base URL for OpenAI-compatible APIs (Kimi/DeepSeek/Mistral only) */
+  /** Base URL for OpenAI-compatible APIs */
   baseUrl?: string;
   /** Response length setting */
   responseLength?: ChatResponseLength;
@@ -172,6 +173,24 @@ export type SakanaChatServiceOptions = DisallowKeys<
   | 'responseFormat'
 >;
 
+export type PlamoChatServiceOptions = Omit<
+  DisallowKeys<
+    BaseChatServiceOptions,
+    | 'verbosity'
+    | 'gpt5Preset'
+    | 'gpt5EndpointPreference'
+    | 'enableReasoningSummary'
+    | 'includeReasoning'
+    | 'reasoningMaxTokens'
+    | 'thinking'
+    | 'responseFormat'
+  >,
+  'reasoning_effort'
+> & {
+  /** PLaMo supports none or medium reasoning effort on reasoning-capable models. */
+  reasoning_effort?: PlamoReasoningEffort;
+};
+
 export type ZAIChatServiceOptions = DisallowKeys<
   BaseChatServiceOptions,
   | 'verbosity'
@@ -227,6 +246,7 @@ export type ChatServiceOptionsByProvider = {
   deepseek: DeepSeekChatServiceOptions;
   mistral: MistralChatServiceOptions;
   sakana: SakanaChatServiceOptions;
+  plamo: PlamoChatServiceOptions;
   'gemini-nano': GeminiNanoChatServiceOptions;
 };
 

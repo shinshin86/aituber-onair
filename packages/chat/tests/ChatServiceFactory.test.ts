@@ -174,6 +174,12 @@ describe('ChatServiceFactory', () => {
         apiKey: 'test-sakana-key',
       });
       expect(sakanaService).toBeDefined();
+
+      // Test PLaMo
+      const plamoService = ChatServiceFactory.createChatService('plamo', {
+        apiKey: 'test-plamo-key',
+      });
+      expect(plamoService).toBeDefined();
     });
 
     it('should accept provider-specific options', () => {
@@ -206,6 +212,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('deepseek')).toBe(true);
       expect(providers.has('mistral')).toBe(true);
       expect(providers.has('sakana')).toBe(true);
+      expect(providers.has('plamo')).toBe(true);
     });
 
     it('should return mutable map that allows modifications', () => {
@@ -236,6 +243,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('deepseek');
       expect(availableProviders).toContain('mistral');
       expect(availableProviders).toContain('sakana');
+      expect(availableProviders).toContain('plamo');
     });
 
     it('should include newly registered providers', () => {
@@ -260,6 +268,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('deepseek');
       expect(availableProviders).toContain('mistral');
       expect(availableProviders).toContain('sakana');
+      expect(availableProviders).toContain('plamo');
     });
   });
 
@@ -313,6 +322,9 @@ describe('ChatServiceFactory', () => {
         'fugu-ultra',
         'fugu-ultra-20260615',
       ]);
+
+      const plamoModels = ChatServiceFactory.getSupportedModels('plamo');
+      expect(plamoModels).toEqual(['plamo-3.0-prime', 'plamo-2.2-prime']);
     });
   });
 
@@ -364,6 +376,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('deepseek')).toBe(true);
       expect(providers.has('mistral')).toBe(true);
       expect(providers.has('sakana')).toBe(true);
+      expect(providers.has('plamo')).toBe(true);
       expect(providers.size).toBeGreaterThanOrEqual(3);
     });
   });

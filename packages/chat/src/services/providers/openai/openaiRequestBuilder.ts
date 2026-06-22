@@ -43,6 +43,7 @@ const OPENAI_COMPATIBLE_CHAT_COMPLETIONS_PROVIDERS = new Set([
   'deepseek',
   'mistral',
   'sakana',
+  'plamo',
 ]);
 
 type BuildOpenAIRequestBodyOptions = {
@@ -163,6 +164,10 @@ export function buildOpenAIRequestBody({
     reasoning_effort &&
     isMistralReasoningEffort(reasoning_effort)
   ) {
+    body.reasoning_effort = reasoning_effort;
+  }
+
+  if (provider === 'plamo' && reasoning_effort) {
     body.reasoning_effort = reasoning_effort;
   }
 

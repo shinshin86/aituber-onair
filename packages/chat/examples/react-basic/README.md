@@ -4,7 +4,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
 
 ## Features
 
-- 🔄 **Provider Switching** - Switch between OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, and browser-disabled Sakana AI in real-time
+- 🔄 **Provider Switching** - Switch between OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI, and PLaMo in real-time
 - 💬 **Real-time Streaming** - See AI responses as they're generated
 - 📝 **Chat History** - Full conversation history with role indicators
 - 🖼️ **Vision Support** - Upload and analyze images (drag & drop supported)
@@ -45,6 +45,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
   - Kimi (Moonshot): https://platform.moonshot.cn/
   - DeepSeek: https://platform.deepseek.com/
   - Mistral: https://console.mistral.ai/
+  - PLaMo: https://plamo.preferredai.jp/
 
 ### Scripts
 
@@ -76,7 +77,7 @@ react-basic/
 
 ### Basic Chat
 
-1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, or browser-disabled Sakana AI)
+1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI, or PLaMo)
 2. Enter your API key
 3. Type a message and press Enter or click Send
 4. Watch the AI response stream in real-time
@@ -163,6 +164,11 @@ Use the dropdown to select response length:
 - Models: Mistral Small Latest, Mistral Medium 3.5, Mistral Large Latest, Mistral Large 3, Mistral Small 4, Mistral Medium 3.1
 - Vision: Supported
 - Best for: Mistral Chat Completions with streaming and optional adjustable reasoning
+
+**PLaMo**
+- Models: PLaMo 3.0 Prime, PLaMo 2.2 Prime
+- Vision: Not supported by this provider
+- Best for: Japanese-focused chat through PLaMo's OpenAI-compatible API
 
 ### OpenRouter Dynamic Free Models (Manual Check)
 

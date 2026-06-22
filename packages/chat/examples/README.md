@@ -21,6 +21,7 @@ This directory contains examples demonstrating how to use the @aituber-onair/cha
    - **Z.ai**: Get from [platform.z.ai](https://platform.z.ai/)
    - **Kimi (Moonshot)**: Get from [platform.moonshot.cn](https://platform.moonshot.cn/)
    - **Sakana AI**: Get from [console.sakana.ai](https://console.sakana.ai/)
+   - **PLaMo**: Get from [plamo.preferredai.jp](https://plamo.preferredai.jp/)
 
 ## 📁 Example Structure
 
@@ -123,7 +124,7 @@ Minimal local server for CI and local validation:
 ### [React Example](./react-basic/)
 Interactive web application with TypeScript and Vite:
 
-- ✅ **Provider Switching** - Switch between OpenAI, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, and browser-disabled Sakana AI
+- ✅ **Provider Switching** - Switch between OpenAI, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI, and PLaMo
 - ✅ **Real-time Streaming** - See responses as they're generated
 - ✅ **Chat History** - Full conversation management
 - ✅ **Vision Support** - Upload and analyze images
