@@ -11,6 +11,7 @@ export * from './kimi';
 export * from './deepseek';
 export * from './mistral';
 export * from './sakana';
+export * from './plamo';
 export * from './chat';
 export * from './prompts';
 export * from './geminiNano';

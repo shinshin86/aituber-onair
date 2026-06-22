@@ -126,6 +126,9 @@ import {
   MODEL_FUGU,
   MODEL_FUGU_ULTRA,
   MODEL_FUGU_ULTRA_20260615,
+  // PLaMo models
+  MODEL_PLAMO_3_0_PRIME,
+  MODEL_PLAMO_2_2_PRIME,
   // Gemini Nano models
   MODEL_GEMINI_NANO,
 } from '@aituber-onair/chat';
@@ -416,6 +419,10 @@ const providerInfo: Record<Provider, ProviderInfo> = {
     disabled: true,
     disabledReason:
       'Disabled: browser CORS unsupported. Use Node.js or a backend proxy.',
+  },
+  plamo: {
+    name: 'PLaMo',
+    placeholder: 'plamo-...',
   },
   'gemini-nano': {
     name: 'Gemini Nano (Browser AI)',
@@ -1053,6 +1060,20 @@ export const allModels: ProviderModel[] = [
     id: MODEL_FUGU_ULTRA_20260615,
     name: 'Fugu Ultra 20260615',
     provider: 'sakana',
+    default: false,
+  },
+
+  // PLaMo models
+  {
+    id: MODEL_PLAMO_3_0_PRIME,
+    name: 'PLaMo 3.0 Prime',
+    provider: 'plamo',
+    default: true,
+  },
+  {
+    id: MODEL_PLAMO_2_2_PRIME,
+    name: 'PLaMo 2.2 Prime',
+    provider: 'plamo',
     default: false,
   },
 

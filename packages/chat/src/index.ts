@@ -27,6 +27,7 @@ export type {
   DeepSeekChatServiceOptions,
   MistralChatServiceOptions,
   SakanaChatServiceOptions,
+  PlamoChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
 } from './services/providers/ChatServiceProvider';
@@ -75,6 +76,10 @@ export { MistralChatServiceProvider } from './services/providers/mistral/Mistral
 // Sakana provider exports
 export { SakanaChatService } from './services/providers/sakana/SakanaChatService';
 export { SakanaChatServiceProvider } from './services/providers/sakana/SakanaChatServiceProvider';
+
+// PLaMo provider exports
+export { PlamoChatService } from './services/providers/plamo/PlamoChatService';
+export { PlamoChatServiceProvider } from './services/providers/plamo/PlamoChatServiceProvider';
 
 // Constants exports
 export * from './constants';

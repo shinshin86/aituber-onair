@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat ロゴ](./images/aituber-onair-chat.png)
 
-AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、DeepSeek、Mistral、Sakana AI、Agent SDKプロバイダー等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
+AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、DeepSeek、Mistral、Sakana AI、PLaMo、Agent SDKプロバイダー等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
 
 ## 機能
 
-- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、DeepSeek、Mistral、Sakana AI、Agent SDKプロバイダー
+- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、DeepSeek、Mistral、Sakana AI、PLaMo、Agent SDKプロバイダー
 - 🔄 **統一されたインターフェース**: 異なるプロバイダー間での一貫したAPI
 - 🛠️ **ツール・関数呼び出し**: AI関数呼び出しの自動反復処理をサポート
 - 💬 **ストリーミングレスポンス**: リアルタイムストリーミングチャット応答
@@ -785,6 +785,23 @@ const sakanaService = ChatServiceFactory.createChatService('sakana', {
 - Sakanaは最高性能にはResponses APIを推奨していますが、このproviderはpackageのOpenAI互換chat経路に合わせてChat Completionsを利用します。
 - ブラウザから直接呼ぶ場合、Sakana側がoriginに対してCORSを許可していないと失敗します。ブラウザ単体ではなく、Node.js、backend/serverless proxy、または`examples/sakana-basic`を利用してください。
 
+#### PLaMo
+
+```typescript
+const plamoService = ChatServiceFactory.createChatService('plamo', {
+  apiKey: process.env.PLAMO_API_KEY,
+  model: 'plamo-3.0-prime',
+});
+```
+
+注意:
+- PLaMoは`https://api.platform.preferredai.jp/v1/chat/completions`のOpenAI互換Chat Completionsを利用します。
+- 対応モデル: `plamo-3.0-prime`（デフォルト）, `plamo-2.2-prime`
+- `plamo-2.2-prime` は明示的な互換用途として残していますが、PLaMo公式docsでは2026-09-30に提供終了し、`plamo-3.0-prime`へ統合予定とされています。
+- reasoning対応モデルでは`reasoning_effort`に`none`または`medium`を指定できます。
+- このproviderではvision対応はサポート対象として扱いません。
+- PLaMoは`openai-compatible`にendpointとmodelを直接指定して使うこともできます。
+
 #### Gemini Nano（Chromeブラウザ内蔵AI）
 
 ```typescript
@@ -1088,6 +1105,7 @@ console.log(modelLevel); // 'unknown'
 - **DeepSeek**: DeepSeek V4 Flash（`deepseek-v4-flash`）と DeepSeek V4 Pro（`deepseek-v4-pro`）をOpenAI互換Chat Completions経由でサポート。legacy alias の`deepseek-chat`と`deepseek-reasoner`はDeepSeek側で非推奨です
 - **Mistral**: `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`などの現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します
 - **Sakana AI**: Fugu（`fugu`）と Fugu Ultra（`fugu-ultra`, `fugu-ultra-20260615`）をOpenAI互換Chat Completions経由でサポート
+- **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）と PLaMo 2.2 Prime（`plamo-2.2-prime`）をOpenAI互換Chat Completions経由でサポート
 - **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Chrome 138以降でPrompt APIフラグの有効化が必要。非ストリーミング、ビジョン非対応
 
 ## ライセンス
