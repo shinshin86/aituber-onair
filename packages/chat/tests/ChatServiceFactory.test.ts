@@ -168,6 +168,12 @@ describe('ChatServiceFactory', () => {
         apiKey: 'test-mistral-key',
       });
       expect(mistralService).toBeDefined();
+
+      // Test Sakana
+      const sakanaService = ChatServiceFactory.createChatService('sakana', {
+        apiKey: 'test-sakana-key',
+      });
+      expect(sakanaService).toBeDefined();
     });
 
     it('should accept provider-specific options', () => {
@@ -199,6 +205,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('kimi')).toBe(true);
       expect(providers.has('deepseek')).toBe(true);
       expect(providers.has('mistral')).toBe(true);
+      expect(providers.has('sakana')).toBe(true);
     });
 
     it('should return mutable map that allows modifications', () => {
@@ -228,6 +235,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('kimi');
       expect(availableProviders).toContain('deepseek');
       expect(availableProviders).toContain('mistral');
+      expect(availableProviders).toContain('sakana');
     });
 
     it('should include newly registered providers', () => {
@@ -251,6 +259,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('kimi');
       expect(availableProviders).toContain('deepseek');
       expect(availableProviders).toContain('mistral');
+      expect(availableProviders).toContain('sakana');
     });
   });
 
@@ -296,6 +305,13 @@ describe('ChatServiceFactory', () => {
         'mistral-large-2512',
         'mistral-small-2603',
         'mistral-medium-2508',
+      ]);
+
+      const sakanaModels = ChatServiceFactory.getSupportedModels('sakana');
+      expect(sakanaModels).toEqual([
+        'fugu',
+        'fugu-ultra',
+        'fugu-ultra-20260615',
       ]);
     });
   });
@@ -347,6 +363,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('kimi')).toBe(true);
       expect(providers.has('deepseek')).toBe(true);
       expect(providers.has('mistral')).toBe(true);
+      expect(providers.has('sakana')).toBe(true);
       expect(providers.size).toBeGreaterThanOrEqual(3);
     });
   });

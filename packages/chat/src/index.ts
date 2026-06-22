@@ -26,6 +26,7 @@ export type {
   KimiChatServiceOptions,
   DeepSeekChatServiceOptions,
   MistralChatServiceOptions,
+  SakanaChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
 } from './services/providers/ChatServiceProvider';
@@ -70,6 +71,10 @@ export { DeepSeekChatServiceProvider } from './services/providers/deepseek/DeepS
 // Mistral provider exports
 export { MistralChatService } from './services/providers/mistral/MistralChatService';
 export { MistralChatServiceProvider } from './services/providers/mistral/MistralChatServiceProvider';
+
+// Sakana provider exports
+export { SakanaChatService } from './services/providers/sakana/SakanaChatService';
+export { SakanaChatServiceProvider } from './services/providers/sakana/SakanaChatServiceProvider';
 
 // Constants exports
 export * from './constants';

@@ -159,6 +159,19 @@ export type MistralChatServiceOptions = Omit<
   reasoning_effort?: MistralReasoningEffort;
 };
 
+export type SakanaChatServiceOptions = DisallowKeys<
+  BaseChatServiceOptions,
+  | 'verbosity'
+  | 'reasoning_effort'
+  | 'gpt5Preset'
+  | 'gpt5EndpointPreference'
+  | 'enableReasoningSummary'
+  | 'includeReasoning'
+  | 'reasoningMaxTokens'
+  | 'thinking'
+  | 'responseFormat'
+>;
+
 export type ZAIChatServiceOptions = DisallowKeys<
   BaseChatServiceOptions,
   | 'verbosity'
@@ -213,6 +226,7 @@ export type ChatServiceOptionsByProvider = {
   kimi: KimiChatServiceOptions;
   deepseek: DeepSeekChatServiceOptions;
   mistral: MistralChatServiceOptions;
+  sakana: SakanaChatServiceOptions;
   'gemini-nano': GeminiNanoChatServiceOptions;
 };
 

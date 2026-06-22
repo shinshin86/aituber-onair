@@ -122,6 +122,10 @@ import {
   MODEL_MISTRAL_LARGE_2512,
   MODEL_MISTRAL_SMALL_2603,
   MODEL_MISTRAL_MEDIUM_2508,
+  // Sakana models
+  MODEL_FUGU,
+  MODEL_FUGU_ULTRA,
+  MODEL_FUGU_ULTRA_20260615,
   // Gemini Nano models
   MODEL_GEMINI_NANO,
 } from '@aituber-onair/chat';
@@ -197,6 +201,13 @@ type DynamicOpenRouterFreeModel = ProviderModel & {
   provider: 'openrouter';
   default: false;
   dynamic: true;
+};
+
+type ProviderInfo = {
+  name: string;
+  placeholder: string;
+  disabled?: boolean;
+  disabledReason?: string;
 };
 
 const EXAMPLE_STORAGE_ROOT_KEY = 'AITuberOnAirChat_example_react-basic';
@@ -358,7 +369,7 @@ const saveDynamicOpenRouterFreeModels = (
   localStorage.setItem(EXAMPLE_STORAGE_ROOT_KEY, JSON.stringify(rootObject));
 };
 
-const providerInfo = {
+const providerInfo: Record<Provider, ProviderInfo> = {
   openai: {
     name: 'OpenAI',
     placeholder: 'sk-...',
@@ -398,6 +409,13 @@ const providerInfo = {
   mistral: {
     name: 'Mistral',
     placeholder: 'xxx...',
+  },
+  sakana: {
+    name: 'Sakana AI',
+    placeholder: 'xxx...',
+    disabled: true,
+    disabledReason:
+      'Disabled: browser CORS unsupported. Use Node.js or a backend proxy.',
   },
   'gemini-nano': {
     name: 'Gemini Nano (Browser AI)',
@@ -1018,6 +1036,26 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
 
+  // Sakana models (kept for source-level parity; provider is disabled in browser UI)
+  {
+    id: MODEL_FUGU,
+    name: 'Fugu',
+    provider: 'sakana',
+    default: true,
+  },
+  {
+    id: MODEL_FUGU_ULTRA,
+    name: 'Fugu Ultra',
+    provider: 'sakana',
+    default: false,
+  },
+  {
+    id: MODEL_FUGU_ULTRA_20260615,
+    name: 'Fugu Ultra 20260615',
+    provider: 'sakana',
+    default: false,
+  },
+
   // Gemini Nano models (browser built-in AI)
   {
     id: MODEL_GEMINI_NANO,
@@ -1273,10 +1311,15 @@ export default function ProviderSelector({
                 key={key}
                 className={`provider-item ${provider === key ? 'active' : ''}`}
                 onClick={() => onProviderChange(key as Provider)}
-                disabled={disabled}
+                disabled={disabled || Boolean(value.disabled)}
                 aria-pressed={provider === key}
+                aria-disabled={value.disabled || undefined}
+                title={value.disabledReason}
               >
                 <span className="provider-name">{value.name}</span>
+                {value.disabledReason && (
+                  <span className="provider-meta">{value.disabledReason}</span>
+                )}
               </button>
             ))}
           </div>
@@ -1995,6 +2038,10 @@ export default function ProviderSelector({
           transform: none;
         }
 
+        .provider-item:disabled .provider-meta {
+          opacity: 1;
+        }
+
         .model-item {
           display: flex;
           flex-direction: column;
@@ -2003,6 +2050,14 @@ export default function ProviderSelector({
 
         .model-name {
           font-weight: 600;
+        }
+
+        .provider-meta {
+          display: block;
+          margin-top: 0.35rem;
+          font-size: 0.72rem;
+          line-height: 1.35;
+          color: var(--muted);
         }
 
         .model-meta {

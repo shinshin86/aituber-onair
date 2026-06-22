@@ -1,5 +1,19 @@
 # @aituber-onair/chat
 
+## 0.41.0
+
+### Minor Changes
+
+- Added a first-class Sakana AI provider (`provider: 'sakana'`) using
+  OpenAI-compatible Chat Completions with `fugu` as the default model and
+  `fugu-ultra` / `fugu-ultra-20260615` as supported models.
+- Added Sakana constants, service/provider exports, ChatServiceFactory
+  registration, tests, English/Japanese README documentation, and a Node.js
+  `examples/sakana-basic` smoke-test sample.
+- Kept the React basic example source-aware of Sakana models while disabling
+  the provider in the browser UI because direct browser requests can fail with
+  CORS unless Sakana enables CORS for the caller's origin.
+
 ## 0.40.0
 
 ### Minor Changes
