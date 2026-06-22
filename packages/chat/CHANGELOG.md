@@ -1,5 +1,18 @@
 # @aituber-onair/chat
 
+## 0.42.0
+
+### Minor Changes
+
+- Added a first-class PLaMo provider (`provider: 'plamo'`) using
+  OpenAI-compatible Chat Completions with `plamo-3.0-prime` as the default
+  model and `plamo-2.2-prime` as an explicit compatibility model.
+- Added PLaMo constants, service/provider exports, ChatServiceFactory
+  registration, transport-level tests, React basic selector support, and
+  English/Japanese README documentation.
+- Added PLaMo `reasoning_effort` support for the documented `none` and
+  `medium` values while keeping vision unsupported for this provider.
+
 ## 0.41.0
 
 ### Minor Changes
