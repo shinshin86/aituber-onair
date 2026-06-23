@@ -7,7 +7,7 @@
 ## このサンプルでできること
 
 - LLM / TTS の設定 UI を内蔵
-- LLM プロバイダは既存の OpenAI / Gemini / Claude / Z.ai / Kimi / xAI / OpenRouter / Gemini Nano / OpenAI-compatible に加えて `deepseek` と `mistral` に対応
+- LLM プロバイダは既存の OpenAI / Gemini / Claude / Z.ai / Kimi / xAI / OpenRouter / Gemini Nano / OpenAI-compatible に加えて `deepseek`, `mistral`, disabled 表示の `sakana`, `plamo` に対応
 - `models/` フォルダ配下の Live2D モデルを読み込み
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
   Gemini 3.5 Flash や GPT-5.5 など chat 由来の新規モデルも Settings に

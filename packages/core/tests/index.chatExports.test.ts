@@ -51,6 +51,17 @@ import {
   MISTRAL_VISION_SUPPORTED_MODELS,
   MistralChatService,
   isMistralReasoningEffortModel,
+  MODEL_FUGU,
+  MODEL_FUGU_ULTRA,
+  MODEL_FUGU_ULTRA_20260615,
+  SAKANA_SUPPORTED_MODELS,
+  ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
+  SakanaChatService,
+  MODEL_PLAMO_3_0_PRIME,
+  MODEL_PLAMO_2_2_PRIME,
+  PLAMO_SUPPORTED_MODELS,
+  ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
+  PlamoChatService,
   GeminiNanoChatService,
   XAIChatService,
   allowsReasoningXHigh,
@@ -158,6 +169,34 @@ describe('Core index chat re-exports', () => {
       MODEL_MISTRAL_SMALL_LATEST,
     );
     expect(isMistralReasoningEffortModel(MODEL_MISTRAL_MEDIUM_3_5)).toBe(true);
+  });
+
+  it('re-exports Sakana chat provider items', () => {
+    expect(typeof SakanaChatService).toBe('function');
+    expect(MODEL_FUGU).toBe('fugu');
+    expect(MODEL_FUGU_ULTRA).toBe('fugu-ultra');
+    expect(MODEL_FUGU_ULTRA_20260615).toBe('fugu-ultra-20260615');
+    expect(SAKANA_SUPPORTED_MODELS).toEqual([
+      MODEL_FUGU,
+      MODEL_FUGU_ULTRA,
+      MODEL_FUGU_ULTRA_20260615,
+    ]);
+    expect(ENDPOINT_SAKANA_CHAT_COMPLETIONS_API).toBe(
+      'https://api.sakana.ai/v1/chat/completions',
+    );
+  });
+
+  it('re-exports PLaMo chat provider items', () => {
+    expect(typeof PlamoChatService).toBe('function');
+    expect(MODEL_PLAMO_3_0_PRIME).toBe('plamo-3.0-prime');
+    expect(MODEL_PLAMO_2_2_PRIME).toBe('plamo-2.2-prime');
+    expect(PLAMO_SUPPORTED_MODELS).toEqual([
+      MODEL_PLAMO_3_0_PRIME,
+      MODEL_PLAMO_2_2_PRIME,
+    ]);
+    expect(ENDPOINT_PLAMO_CHAT_COMPLETIONS_API).toBe(
+      'https://api.platform.preferredai.jp/v1/chat/completions',
+    );
   });
 
   it('re-exports OpenRouter latest routed model constants', () => {

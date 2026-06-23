@@ -9,6 +9,8 @@ export type ChatProviderOption =
   | 'kimi'
   | 'deepseek'
   | 'mistral'
+  | 'sakana'
+  | 'plamo'
   | 'openai-compatible';
 export type TTSEngineOption =
   | 'openai'
@@ -38,6 +40,8 @@ export interface ProviderApiKeys {
   kimi?: string;
   deepseek?: string;
   mistral?: string;
+  sakana?: string;
+  plamo?: string;
   'openai-compatible'?: string;
 }
 

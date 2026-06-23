@@ -27,7 +27,11 @@ interface SettingsPanelProps extends SettingsHook {
   onPetAssetClear: () => Promise<void>;
 }
 
-const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
+const PROVIDERS: {
+  value: ChatProviderOption;
+  label: string;
+  disabled?: boolean;
+}[] = [
   { value: 'openai', label: 'OpenAI' },
   { value: 'openai-compatible', label: 'OpenAI-Compatible' },
   { value: 'openrouter', label: 'OpenRouter' },
@@ -39,6 +43,8 @@ const PROVIDERS: { value: ChatProviderOption; label: string }[] = [
   { value: 'kimi', label: 'Kimi' },
   { value: 'deepseek', label: 'DeepSeek' },
   { value: 'mistral', label: 'Mistral' },
+  { value: 'sakana', label: 'Sakana AI (Node/backend only)', disabled: true },
+  { value: 'plamo', label: 'PLaMo' },
 ];
 
 const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
@@ -744,7 +750,7 @@ export function SettingsPanel({
                 disabled={disabled}
               >
                 {PROVIDERS.map((p) => (
-                  <option key={p.value} value={p.value}>
+                  <option key={p.value} value={p.value} disabled={p.disabled}>
                     {p.label}
                   </option>
                 ))}

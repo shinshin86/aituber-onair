@@ -129,6 +129,8 @@ function getDefaultSettings(): AppSettings {
         xai: '',
         deepseek: '',
         mistral: '',
+        sakana: '',
+        plamo: '',
       },
       openRouterDynamicFreeModels: {
         models: [],

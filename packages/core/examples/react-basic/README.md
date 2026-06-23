@@ -16,7 +16,7 @@ This example application serves as a practical implementation guide for integrat
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
   - Google Gemini (Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
   - Anthropic Claude (4.8 Opus, 4.7 Opus, 4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
-  - DeepSeek and Mistral first-class providers
+  - DeepSeek, Mistral, Sakana AI (disabled in browser UI), and PLaMo first-class providers
   - Seamless provider switching
 
 - **🎙️ Comprehensive Voice Synthesis**
@@ -94,7 +94,7 @@ npm run fmt      # Format code with Biome
 
 Click the "設定" (Settings) button to configure your AI provider:
 
-1. **Select Provider**: Choose from OpenAI, Gemini, Gemini Nano, Claude, Z.ai, Kimi, xAI, DeepSeek, Mistral, OpenRouter, or OpenAI-Compatible
+1. **Select Provider**: Choose from OpenAI, Gemini, Gemini Nano, Claude, Z.ai, Kimi, xAI, DeepSeek, Mistral, PLaMo, OpenRouter, or OpenAI-Compatible. Sakana AI is shown as disabled for browser-only usage.
 2. **Enter API Key**: Provide your provider's API key (`openai-compatible` and `gemini-nano` can work without one)
 3. **Choose Model**: Select the specific model to use
 4. **System Prompt**: Customize the AI's behavior and personality
@@ -161,6 +161,15 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Mistral Small Latest
 - Mistral Medium 3.5
 - Mistral Large Latest / 3, Small 4, Medium 3.1
+
+**Sakana AI:**
+- Fugu
+- Fugu Ultra / Fugu Ultra 20260615
+- Shown as disabled in this browser example because direct browser requests can fail with CORS
+
+**PLaMo:**
+- PLaMo 3.0 Prime
+- PLaMo 2.2 Prime
 
 **OpenRouter:**
 - Curated multi-provider models (OpenRouter Auto/Fusion, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai GLM-5.2, Kimi K2.7 Code)

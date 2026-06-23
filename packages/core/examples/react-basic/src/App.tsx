@@ -51,6 +51,8 @@ import { kimiModels } from './constants/kimi';
 import { xaiModels } from './constants/xai';
 import { deepseekModels } from './constants/deepseek';
 import { mistralModels } from './constants/mistral';
+import { sakanaModels } from './constants/sakana';
+import { plamoModels } from './constants/plamo';
 import { openrouterModels } from './constants/openrouter';
 import {
   type VoiceEngineType,
@@ -1229,6 +1231,12 @@ const App: React.FC = () => {
         break;
       case 'mistral':
         setModel(mistralModels[0]);
+        break;
+      case 'sakana':
+        setModel(sakanaModels[0]);
+        break;
+      case 'plamo':
+        setModel(plamoModels[0]);
         break;
       case 'openrouter':
         setModel(openrouterModels[0]);
@@ -2806,6 +2814,10 @@ const App: React.FC = () => {
                     <option value="xai">xAI</option>
                     <option value="deepseek">DeepSeek</option>
                     <option value="mistral">Mistral</option>
+                    <option value="sakana" disabled>
+                      Sakana AI (Node/backend only)
+                    </option>
+                    <option value="plamo">PLaMo</option>
                     <option value="openrouter">OpenRouter</option>
                     <option value="openai-compatible">OpenAI-Compatible</option>
                   </select>
@@ -2875,6 +2887,18 @@ const App: React.FC = () => {
                         ))}
                       {chatProvider === 'mistral' &&
                         mistralModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'sakana' &&
+                        sakanaModels.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      {chatProvider === 'plamo' &&
+                        plamoModels.map((m) => (
                           <option key={m} value={m}>
                             {m}
                           </option>
