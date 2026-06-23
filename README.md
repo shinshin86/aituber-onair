@@ -190,7 +190,9 @@ See each package README for provider setup and fuller usage.
 </p>
 
 CLI for creating an AITuber OnAir app from an official starter template.
-Currently includes PNGTuber and VRM templates with bundled starter assets.
+Currently includes PNGTuber, VRM, Live2D, and Pet templates. PNGTuber,
+VRM, and Pet include starter assets; Live2D does not bundle Live2D model
+assets.
 ```bash
 npm create aituber-onair@latest
 ```
