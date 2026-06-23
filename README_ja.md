@@ -182,7 +182,8 @@ await chat.processChat(
 </p>
 
 公式スターターテンプレートから AITuber OnAir アプリを作成する CLI。
-現時点では、スターターアセット同梱の PNGTuber / VRM テンプレートに対応しています。
+現時点では PNGTuber / VRM / Live2D / Pet テンプレートに対応しています。
+PNGTuber / VRM / Pet はスターターアセット同梱、Live2D は Live2D モデルアセット非同梱です。
 ```bash
 npm create aituber-onair@latest
 ```
