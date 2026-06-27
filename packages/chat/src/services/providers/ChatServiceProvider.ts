@@ -2,6 +2,7 @@ import { ChatService } from '../ChatService';
 import { ChatResponseLength, GPT5PresetKey } from '../../constants/chat';
 import type { MistralReasoningEffort } from '../../constants/mistral';
 import type { PlamoReasoningEffort } from '../../constants/plamo';
+import type { XaiReasoningEffort } from '../../constants/xai';
 import { ToolDefinition, MCPServerConfig } from '../../types';
 
 /**
@@ -22,7 +23,7 @@ export interface BaseChatServiceOptions {
   responseLength?: ChatResponseLength;
   /** Verbosity level for GPT-5 models (OpenAI only) */
   verbosity?: 'low' | 'medium' | 'high';
-  /** Reasoning effort level for GPT-5 models (OpenAI) and gpt-oss models (OpenRouter) */
+  /** Reasoning effort level for reasoning-capable providers */
   reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
   /** GPT-5 usage preset (OpenAI only) - overrides individual reasoning/verbosity settings */
   gpt5Preset?: GPT5PresetKey;
@@ -206,7 +207,6 @@ export type ZAIChatServiceOptions = DisallowKeys<
 export type XAIChatServiceOptions = DisallowKeys<
   BaseChatServiceOptions,
   | 'verbosity'
-  | 'reasoning_effort'
   | 'gpt5Preset'
   | 'gpt5EndpointPreference'
   | 'enableReasoningSummary'
@@ -215,7 +215,10 @@ export type XAIChatServiceOptions = DisallowKeys<
   | 'baseUrl'
   | 'thinking'
   | 'responseFormat'
->;
+> & {
+  /** xAI reasoning effort. Only sent for models that support it. */
+  reasoning_effort?: XaiReasoningEffort;
+};
 
 export type GeminiNanoChatServiceOptions = {
   /** API Key is not needed for Gemini Nano (browser built-in AI) */

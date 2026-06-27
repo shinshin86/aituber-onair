@@ -4,8 +4,10 @@ import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
   MODEL_GROK_4_1_FAST_NON_REASONING,
+  isXaiReasoningEffortModel,
   isXaiVisionModel,
 } from '../../../constants/xai';
+import type { XaiReasoningEffort } from '../../../constants/xai';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
@@ -32,6 +34,7 @@ export class XAIChatService implements ChatService {
   private tools: ToolDefinition[];
   private endpoint: string;
   private responseLength?: ChatResponseLength;
+  private reasoningEffort?: XaiReasoningEffort;
 
   /**
    * Constructor
@@ -46,6 +49,7 @@ export class XAIChatService implements ChatService {
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_XAI_CHAT_COMPLETIONS_API,
     responseLength?: ChatResponseLength,
+    reasoningEffort?: XaiReasoningEffort,
   ) {
     this.apiKey = apiKey;
     this.model = model;
@@ -53,6 +57,7 @@ export class XAIChatService implements ChatService {
     this.endpoint = endpoint;
     this.responseLength = responseLength;
     this.visionModel = visionModel;
+    this.reasoningEffort = reasoningEffort;
   }
 
   /**
@@ -203,6 +208,10 @@ export class XAIChatService implements ChatService {
         : getMaxTokensForResponseLength(this.responseLength);
     if (tokenLimit !== undefined) {
       body.max_tokens = tokenLimit;
+    }
+
+    if (this.reasoningEffort && isXaiReasoningEffortModel(model)) {
+      body.reasoning_effort = this.reasoningEffort;
     }
 
     const tools = this.buildToolsDefinition();

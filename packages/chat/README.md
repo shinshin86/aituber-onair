@@ -688,6 +688,7 @@ Notes:
 const xaiService = ChatServiceFactory.createChatService('xai', {
   apiKey: process.env.XAI_API_KEY,
   model: 'grok-4.3',
+  reasoning_effort: 'none', // Optional for Grok 4.3: none, low, medium, high
   visionModel: 'grok-4.3', // Optional: all xAI models support vision
 });
 ```
@@ -695,6 +696,7 @@ const xaiService = ChatServiceFactory.createChatService('xai', {
 Notes:
 - xAI uses OpenAI-compatible Chat Completions.
 - Supported models: `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
+- `reasoning_effort` is sent only for `grok-4.3`, where xAI supports `none`, `low`, `medium`, and `high`. The default is `none` for fast chat responses.
 - All supported xAI models support vision and tool/function calling.
 
 #### Kimi (Moonshot)

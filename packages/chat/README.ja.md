@@ -676,6 +676,7 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 const xaiService = ChatServiceFactory.createChatService('xai', {
   apiKey: process.env.XAI_API_KEY,
   model: 'grok-4.3',
+  reasoning_effort: 'none', // 任意（Grok 4.3）: none, low, medium, high
   visionModel: 'grok-4.3', // 任意: xAI の全モデルがビジョン対応
 });
 ```
@@ -683,6 +684,7 @@ const xaiService = ChatServiceFactory.createChatService('xai', {
 注意:
 - xAIはOpenAI互換のChat Completionsを利用します。
 - 対応モデル: `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
+- `reasoning_effort` は xAI が `none`, `low`, `medium`, `high` に対応している `grok-4.3` の場合のみ送信されます。高速なチャット応答向けにデフォルトは `none` です。
 - すべての対応 xAI モデルでビジョンとツール・関数呼び出しを利用できます。
 
 #### Kimi（Moonshot）
