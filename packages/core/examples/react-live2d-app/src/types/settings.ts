@@ -1,3 +1,5 @@
+import type { XaiReasoningEffort } from '@aituber-onair/core';
+
 export type ChatProviderOption =
   | 'openai'
   | 'openai-compatible'
@@ -49,6 +51,7 @@ export interface LLMSettings {
   provider: ChatProviderOption;
   model: string;
   endpoint?: string;
+  xaiReasoningEffort?: XaiReasoningEffort;
   apiKeys: ProviderApiKeys;
   openRouterDynamicFreeModels?: {
     models: string[];

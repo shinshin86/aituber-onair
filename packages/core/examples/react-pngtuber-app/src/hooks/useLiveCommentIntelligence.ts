@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ChatServiceFactory,
+  getDefaultXaiReasoningEffort,
   isGPT5Model,
+  isXaiReasoningEffortModel,
   type ChatService,
   type ChatServiceOptionsByProvider,
   type Message,
@@ -273,6 +275,14 @@ function createAnalysisProviderFromLLMSettings(
         model: llmSettings.model,
         ...(provider === 'openai' && isGPT5Model(llmSettings.model)
           ? GPT5_SAMPLE_PROVIDER_OPTIONS
+          : {}),
+        ...(provider === 'xai' && isXaiReasoningEffortModel(llmSettings.model)
+          ? {
+              reasoning_effort:
+                llmSettings.xaiReasoningEffort ||
+                getDefaultXaiReasoningEffort(llmSettings.model) ||
+                'none',
+            }
           : {}),
       } as ChatServiceOptionsByProvider[typeof provider],
     );

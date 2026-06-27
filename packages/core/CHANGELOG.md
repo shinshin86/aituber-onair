@@ -1,5 +1,18 @@
 # @aituber-onair/core
 
+## 0.26.5
+
+### Patch Changes
+
+- Synced xAI reasoning effort support from `@aituber-onair/chat@0.43.0` into
+  core:
+  - re-exported the xAI reasoning effort type and capability helpers
+  - added xAI reasoning effort controls to the Core React examples for Grok 4.3
+  - kept the default xAI reasoning effort at `none` for low-latency character
+    chat responses
+- Updated dependencies []:
+  - @aituber-onair/chat@0.43.0
+
 ## 0.26.4
 
 ### Patch Changes
