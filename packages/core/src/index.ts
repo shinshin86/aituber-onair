@@ -209,9 +209,12 @@ export {
   MODEL_GROK_4_20_NON_REASONING,
   MODEL_GROK_4_1_FAST_REASONING,
   MODEL_GROK_4_1_FAST_NON_REASONING,
+  type XaiReasoningEffort,
   XAI_VISION_SUPPORTED_MODELS,
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
   isXaiVisionModel,
+  isXaiReasoningEffortModel,
+  getDefaultXaiReasoningEffort,
   // OpenRouter model constants
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_FUSION,

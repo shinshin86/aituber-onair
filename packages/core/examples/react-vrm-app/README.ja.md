@@ -12,6 +12,7 @@
   `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`,
   `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`,
   `sakana`（ブラウザ UI では disabled 表示）, `plamo`
+- xAI Grok 4.3 では `reasoning_effort` を設定でき、低レイテンシ向けにデフォルトは `none` です
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
   Gemini 3.5 Flash や GPT-5.5 など chat 由来の新規モデルも Settings に
   自動反映されます

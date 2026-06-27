@@ -152,6 +152,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Grok 4.3
 - Grok 4.20 series
 - Grok 4.1 Fast series
+- Grok 4.3 exposes `reasoning_effort` and defaults to `none` for lower latency
 
 **DeepSeek:**
 - DeepSeek V4 Flash

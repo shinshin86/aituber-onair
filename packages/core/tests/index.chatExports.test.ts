@@ -65,9 +65,11 @@ import {
   GeminiNanoChatService,
   XAIChatService,
   allowsReasoningXHigh,
+  getDefaultXaiReasoningEffort,
   isResponsesOnlyGPT5Model,
   isKimiThinkingRequiredModel,
   isKimiVisionModel,
+  isXaiReasoningEffortModel,
   isXaiVisionModel,
   refreshOpenRouterFreeModels,
   type RefreshOpenRouterFreeModelsResult,
@@ -148,6 +150,9 @@ describe('Core index chat re-exports', () => {
       'https://api.x.ai/v1/chat/completions',
     );
     expect(isXaiVisionModel(MODEL_GROK_4_3)).toBe(true);
+    expect(isXaiReasoningEffortModel(MODEL_GROK_4_3)).toBe(true);
+    expect(isXaiReasoningEffortModel(MODEL_GROK_4_20_REASONING)).toBe(false);
+    expect(getDefaultXaiReasoningEffort(MODEL_GROK_4_3)).toBe('none');
   });
 
   it('re-exports DeepSeek chat provider items', () => {

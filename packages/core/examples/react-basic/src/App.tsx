@@ -22,9 +22,12 @@ import {
   allowsReasoningNone,
   allowsReasoningXHigh,
   getDefaultReasoningEffortForGPT5Model,
+  getDefaultXaiReasoningEffort,
   isGPT5Model,
   isResponsesOnlyGPT5Model,
+  isXaiReasoningEffortModel,
   refreshOpenRouterFreeModels,
+  type XaiReasoningEffort,
   type MinimaxModel,
   type MinimaxAudioFormat,
   type UnrealSpeechCodec,
@@ -515,6 +518,25 @@ const App: React.FC = () => {
       return 'medium';
     }
     if (effort === 'xhigh' && !allowsReasoningXHigh(targetModel)) {
+      return 'high';
+    }
+    return effort;
+  };
+
+  const normalizeReasoningEffortForXaiModel = (
+    targetModel: string | undefined,
+    effort?: ReasoningEffortLevel,
+  ): XaiReasoningEffort => {
+    const defaultEffort = targetModel
+      ? getDefaultXaiReasoningEffort(targetModel)
+      : undefined;
+    if (!effort) {
+      return defaultEffort ?? 'none';
+    }
+    if (effort === 'minimal') {
+      return 'low';
+    }
+    if (effort === 'xhigh') {
       return 'high';
     }
     return effort;
@@ -1225,6 +1247,7 @@ const App: React.FC = () => {
         break;
       case 'xai':
         setModel(xaiModels[0]);
+        setReasoningEffort(getDefaultXaiReasoningEffort(xaiModels[0]) ?? 'none');
         break;
       case 'deepseek':
         setModel(deepseekModels[0]);
@@ -1282,6 +1305,23 @@ const App: React.FC = () => {
       setReasoningEffort(normalized);
     }
   }, [chatProvider, model, gpt5Preset, reasoning_effort, responseLength]);
+
+  useEffect(() => {
+    if (
+      chatProvider !== 'xai' ||
+      !model ||
+      !isXaiReasoningEffortModel(model)
+    ) {
+      return;
+    }
+    const normalized = normalizeReasoningEffortForXaiModel(
+      model,
+      reasoning_effort,
+    );
+    if (normalized !== reasoning_effort) {
+      setReasoningEffort(normalized);
+    }
+  }, [chatProvider, model, reasoning_effort]);
 
   useEffect(() => {
     if (chatProvider !== 'openai' || !model) {
@@ -1432,6 +1472,12 @@ const App: React.FC = () => {
       providerOptions.gpt5EndpointPreference = isResponsesOnlyGPT5Model(model)
         ? 'responses'
         : gpt5EndpointPreference;
+    }
+    if (chatProvider === 'xai' && model && isXaiReasoningEffortModel(model)) {
+      providerOptions.reasoning_effort = normalizeReasoningEffortForXaiModel(
+        model,
+        reasoning_effort,
+      );
     }
     if (chatProvider === 'kimi') {
       const trimmedBaseUrl = kimiBaseUrl.trim();
@@ -2511,6 +2557,13 @@ const App: React.FC = () => {
   const allowsXHighReasoningEffort = Boolean(
     chatProvider === 'openai' && model && allowsReasoningXHigh(model),
   );
+  const isXaiReasoningEffortModelSelected = Boolean(
+    chatProvider === 'xai' && model && isXaiReasoningEffortModel(model),
+  );
+  const xaiReasoningEffortValue: XaiReasoningEffort =
+    isXaiReasoningEffortModelSelected
+      ? normalizeReasoningEffortForXaiModel(model, reasoning_effort)
+      : 'none';
   const getResponseLengthOptionLabel = (length: ChatResponseLength): string => {
     const label = RESPONSE_LENGTH_LABELS[length];
     const baseTokens = RESPONSE_LENGTH_BASE_TOKENS[length];
@@ -3123,6 +3176,40 @@ const App: React.FC = () => {
                     >
                       GPT-5系ではこのサンプルは Very Short と Casual
                       に固定し、最小 reasoning で一言に近い応答を優先します。
+                    </div>
+                  )}
+
+                  {chatProvider === 'xai' && (
+                    <div style={{ marginTop: '16px' }}>
+                      <label htmlFor="xaiReasoningEffort">
+                        xAI Reasoning Effort:
+                      </label>
+                      <select
+                        id="xaiReasoningEffort"
+                        value={xaiReasoningEffortValue}
+                        disabled={!isXaiReasoningEffortModelSelected}
+                        onChange={(e) =>
+                          setReasoningEffort(
+                            e.target.value as ReasoningEffortLevel,
+                          )
+                        }
+                      >
+                        <option value="none">None</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                      <div
+                        style={{
+                          marginTop: '6px',
+                          color: '#666',
+                          fontSize: '12px',
+                        }}
+                      >
+                        {isXaiReasoningEffortModelSelected
+                          ? 'Grok 4.3 uses none by default for lower latency.'
+                          : 'This xAI model does not support reasoning_effort.'}
+                      </div>
                     </div>
                   )}
 

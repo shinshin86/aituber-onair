@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
+  getDefaultXaiReasoningEffort,
   isGPT5Model,
+  isXaiReasoningEffortModel,
 } from '@aituber-onair/core';
 import { ManneriDetector } from '@aituber-onair/manneri';
 import type {
@@ -341,11 +343,21 @@ export function useAituberCore({
       : settings.llm.model;
   const isOpenAIGPT5Model =
     settings.llm.provider === 'openai' && isGPT5Model(resolvedModel);
+  const xaiProviderOptions =
+    settings.llm.provider === 'xai' &&
+    isXaiReasoningEffortModel(resolvedModel)
+      ? {
+          reasoning_effort:
+            settings.llm.xaiReasoningEffort ||
+            getDefaultXaiReasoningEffort(resolvedModel) ||
+            'none',
+        }
+      : undefined;
   const providerOptions = isOpenAICompatibleProvider
     ? { endpoint: openAICompatibleEndpoint }
     : isOpenAIGPT5Model
       ? GPT5_SAMPLE_PROVIDER_OPTIONS
-      : undefined;
+      : xaiProviderOptions;
   const createMessageId = useCallback(() => {
     messageIdSequenceRef.current += 1;
     return `${Date.now()}-${messageIdSequenceRef.current}`;
@@ -452,6 +464,7 @@ export function useAituberCore({
     settings.llm.provider,
     settings.llm.model,
     settings.llm.endpoint,
+    settings.llm.xaiReasoningEffort,
     llmApiKey,
     isApiKeyOptionalProvider,
     createMessageId,

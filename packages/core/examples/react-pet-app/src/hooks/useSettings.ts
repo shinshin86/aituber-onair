@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AITuberOnAirCore,
+  getDefaultXaiReasoningEffort,
   refreshOpenRouterFreeModels,
   type RefreshOpenRouterFreeModelsResult,
+  type XaiReasoningEffort,
 } from '@aituber-onair/core';
 import type {
   AppSettings,
@@ -110,6 +112,7 @@ function getDefaultSettings(): AppSettings {
       provider: 'openai',
       model: 'gpt-4.1-nano',
       endpoint: DEFAULT_OPENAI_COMPATIBLE_ENDPOINT,
+      xaiReasoningEffort: 'none',
       apiKeys: {
         openai: '',
         xai: '',
@@ -320,6 +323,10 @@ export function useSettings() {
           ...prev.llm,
           provider,
           model: nextModel,
+          xaiReasoningEffort:
+            provider === 'xai'
+              ? getDefaultXaiReasoningEffort(nextModel) || 'none'
+              : prev.llm.xaiReasoningEffort,
           endpoint:
             provider === 'openai-compatible'
               ? prev.llm.endpoint || DEFAULT_OPENAI_COMPATIBLE_ENDPOINT
@@ -333,9 +340,26 @@ export function useSettings() {
   const updateLLMModel = useCallback((model: string) => {
     setSettings((prev) => ({
       ...prev,
-      llm: { ...prev.llm, model },
+      llm: {
+        ...prev.llm,
+        model,
+        xaiReasoningEffort:
+          prev.llm.provider === 'xai'
+            ? getDefaultXaiReasoningEffort(model) || 'none'
+            : prev.llm.xaiReasoningEffort,
+      },
     }));
   }, []);
+
+  const updateXaiReasoningEffort = useCallback(
+    (xaiReasoningEffort: XaiReasoningEffort) => {
+      setSettings((prev) => ({
+        ...prev,
+        llm: { ...prev.llm, xaiReasoningEffort },
+      }));
+    },
+    [],
+  );
 
   const updateLLMApiKey = useCallback(
     (provider: ChatProviderOption, key: string) => {
@@ -1172,6 +1196,7 @@ export function useSettings() {
     updateLLMModel,
     updateLLMApiKey,
     updateLLMEndpoint,
+    updateXaiReasoningEffort,
     refreshOpenRouterDynamicFreeModels,
     isRefreshingOpenRouterFreeModels,
     openRouterRefreshError,

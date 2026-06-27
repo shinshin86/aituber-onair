@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { isGPT5Model } from '@aituber-onair/core';
+import {
+  getDefaultXaiReasoningEffort,
+  isGPT5Model,
+  isXaiReasoningEffortModel,
+  type XaiReasoningEffort,
+} from '@aituber-onair/core';
 import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
@@ -229,6 +234,7 @@ export function SettingsPanel({
   updateLLMModel,
   updateLLMApiKey,
   updateLLMEndpoint,
+  updateXaiReasoningEffort,
   refreshOpenRouterDynamicFreeModels,
   isRefreshingOpenRouterFreeModels,
   openRouterRefreshError,
@@ -303,6 +309,15 @@ export function SettingsPanel({
   const disabled = isProcessing;
   const isOpenAIGPT5Model =
     settings.llm.provider === 'openai' && isGPT5Model(settings.llm.model);
+  const isXaiReasoningEffortModelSelected =
+    settings.llm.provider === 'xai' &&
+    isXaiReasoningEffortModel(settings.llm.model);
+  const xaiReasoningEffortValue: XaiReasoningEffort =
+    isXaiReasoningEffortModelSelected
+      ? settings.llm.xaiReasoningEffort ||
+        getDefaultXaiReasoningEffort(settings.llm.model) ||
+        'none'
+      : 'none';
   const openRouterApiKey = getApiKeyForProvider('openrouter').trim();
   const openRouterDynamicFreeModels =
     settings.llm.openRouterDynamicFreeModels?.models || [];
@@ -723,6 +738,34 @@ export function SettingsPanel({
                 GPT-5 models use the Casual preset and Very Short replies in
                 this sample.
               </p>
+            )}
+
+            {settings.llm.provider === 'xai' && (
+              <div className="settings-field">
+                <label htmlFor="xai-reasoning-effort">
+                  xAI Reasoning Effort
+                </label>
+                <select
+                  id="xai-reasoning-effort"
+                  value={xaiReasoningEffortValue}
+                  onChange={(e) =>
+                    updateXaiReasoningEffort(
+                      e.target.value as XaiReasoningEffort,
+                    )
+                  }
+                  disabled={disabled || !isXaiReasoningEffortModelSelected}
+                >
+                  <option value="none">None</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+                <p className="settings-field-hint">
+                  {isXaiReasoningEffortModelSelected
+                    ? 'Grok 4.3 uses none by default for lower latency.'
+                    : 'This xAI model does not support reasoning_effort.'}
+                </p>
+              </div>
             )}
 
             {settings.llm.provider === 'openrouter' && (

@@ -1392,7 +1392,7 @@ Currently, the following AI provider is built-in:
 - **Gemini**: Supports models like Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses; deprecated lifecycle models remain exported for explicit compatibility.
 - **Gemini Nano**: Supports the built-in Chrome `gemini-nano` model without an API key (Chrome 138+ with Prompt API flags enabled)
 - **Claude**: Supports current Claude API model IDs including Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
-- **xAI**: Supports Grok 4.3, Grok 4.20, and Grok 4.1 Fast model families
+- **xAI**: Supports Grok 4.3, Grok 4.20, and Grok 4.1 Fast model families. Grok 4.3 supports configurable `reasoning_effort`, defaulting to `none` for low-latency chat responses.
 - **DeepSeek**: Supports DeepSeek V4 Flash and DeepSeek V4 Pro through the first-class `deepseek` provider.
 - **Mistral**: Supports current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including vision-capable model metadata and adjustable reasoning for supported models.
 - **Sakana AI**: Supports Fugu (`fugu`) and Fugu Ultra (`fugu-ultra`, `fugu-ultra-20260615`) through the first-class `sakana` provider. Browser examples show this provider as disabled because direct browser requests can fail with CORS; use Node.js or a backend proxy.

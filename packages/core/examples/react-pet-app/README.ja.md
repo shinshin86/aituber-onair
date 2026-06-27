@@ -6,6 +6,7 @@ AITuber チャットサンプルです。
 基本構造は既存の React core サンプルと同じです。
 
 - `@aituber-onair/core` による LLM チャット
+- xAI Grok 4.3 では `reasoning_effort` を設定でき、低レイテンシ向けにデフォルトは `none` です
 - TTS 再生と音声レベル解析
 - Web Speech API による音声入力
 - YouTube Live / Twitch コメント取り込み
