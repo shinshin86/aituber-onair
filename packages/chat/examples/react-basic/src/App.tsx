@@ -8,6 +8,7 @@ import {
   allowsReasoningXHigh,
   getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
+  isXaiReasoningEffortModel,
   type Message,
   type MessageWithVision,
   type ChatResponseLength,
@@ -52,6 +53,7 @@ type ReasoningEffortLevel =
   | 'medium'
   | 'high'
   | 'xhigh';
+type XaiReasoningEffortLevel = 'none' | 'low' | 'medium' | 'high';
 
 const KIMI_OFFICIAL_BASE_URL = 'https://api.moonshot.ai/v1';
 const DEFAULT_OPENAI_COMPAT_ENDPOINT =
@@ -151,6 +153,12 @@ function App() {
     selectedModel,
     reasoning_effort,
   );
+  const xaiReasoningEffort: XaiReasoningEffortLevel =
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'medium' ||
+    reasoning_effort === 'high'
+      ? reasoning_effort
+      : 'none';
   const visionSupportLevel = getVisionSupportLevel(provider, selectedModel);
   const effectiveApiKey =
     provider === 'openai-compatible' ? apiKey.trim() : apiKey;
@@ -217,6 +225,10 @@ function App() {
           }
         }
 
+        if (provider === 'xai' && isXaiReasoningEffortModel(selectedModel)) {
+          options.reasoning_effort = xaiReasoningEffort;
+        }
+
         if (provider === 'zai') {
           options.thinking = {
             type: zaiThinkingType,
@@ -272,6 +284,7 @@ function App() {
     selectedModel,
     gpt5Preset,
     normalizedReasoningEffort,
+    xaiReasoningEffort,
     verbosity,
     gpt5EndpointPreference,
     openaiCompatibleEndpoint,
@@ -427,6 +440,11 @@ function App() {
                     ? getDefaultReasoningEffortForGPT5Model(defaultModel)
                     : 'medium',
                 );
+              } else if (
+                newProvider === 'xai' &&
+                isXaiReasoningEffortModel(defaultModel)
+              ) {
+                setReasoningEffort('none');
               } else {
                 setReasoningEffort('medium');
               }
@@ -449,11 +467,20 @@ function App() {
                     ? getDefaultReasoningEffortForGPT5Model(modelId)
                     : 'medium',
                 );
+              } else if (
+                newProvider === 'xai' &&
+                isXaiReasoningEffortModel(modelId)
+              ) {
+                setReasoningEffort('none');
               }
             }}
             gpt5Preset={gpt5Preset}
             onGpt5PresetChange={setGpt5Preset}
-            reasoning_effort={normalizedReasoningEffort}
+            reasoning_effort={
+              provider === 'xai'
+                ? xaiReasoningEffort
+                : normalizedReasoningEffort
+            }
             onReasoningEffortChange={setReasoningEffort}
             verbosity={verbosity}
             onVerbosityChange={setVerbosity}

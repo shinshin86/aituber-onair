@@ -8,6 +8,8 @@ export const MODEL_GROK_4_20_NON_REASONING = 'grok-4.20-0309-non-reasoning';
 export const MODEL_GROK_4_1_FAST_REASONING = 'grok-4-1-fast-reasoning';
 export const MODEL_GROK_4_1_FAST_NON_REASONING = 'grok-4-1-fast-non-reasoning';
 
+export type XaiReasoningEffort = 'none' | 'low' | 'medium' | 'high';
+
 // Vision support for models
 export const XAI_VISION_SUPPORTED_MODELS = [
   MODEL_GROK_4_3,
@@ -22,4 +24,20 @@ export const XAI_VISION_SUPPORTED_MODELS = [
  */
 export function isXaiVisionModel(model: string): boolean {
   return XAI_VISION_SUPPORTED_MODELS.includes(model);
+}
+
+/**
+ * Check if a model supports the xAI reasoning_effort parameter
+ */
+export function isXaiReasoningEffortModel(model: string): boolean {
+  return model === MODEL_GROK_4_3;
+}
+
+/**
+ * Get default reasoning effort for xAI models
+ */
+export function getDefaultXaiReasoningEffort(
+  model: string,
+): XaiReasoningEffort | undefined {
+  return isXaiReasoningEffortModel(model) ? 'none' : undefined;
 }

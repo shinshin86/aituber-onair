@@ -11,6 +11,7 @@ import {
   allowsReasoningXHigh,
   getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
+  isXaiReasoningEffortModel,
   isResponsesOnlyGPT5Model,
   isOpenRouterFreeModel,
   refreshOpenRouterFreeModels,
@@ -1185,6 +1186,14 @@ export default function ProviderSelector({
   const allowsLow = provider === 'openai' && allowsReasoningLow(selectedModel);
   const allowsXHigh =
     provider === 'openai' && allowsReasoningXHigh(selectedModel);
+  const isXaiReasoningModel =
+    provider === 'xai' && isXaiReasoningEffortModel(selectedModel);
+  const xaiReasoningEffort =
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'medium' ||
+    reasoning_effort === 'high'
+      ? reasoning_effort
+      : 'none';
   const baseModelsForProvider = useMemo(
     () => allModels.filter((model) => model.provider === provider),
     [provider],
@@ -1701,6 +1710,33 @@ export default function ProviderSelector({
                 </select>
               </div>
             </>
+          )}
+
+          {provider === 'xai' && (
+            <div className="config-group">
+              <label htmlFor="xai-reasoning-effort">xAI Reasoning Effort</label>
+              <select
+                id="xai-reasoning-effort"
+                value={xaiReasoningEffort}
+                onChange={(e) =>
+                  onReasoningEffortChange?.(
+                    e.target.value as 'none' | 'low' | 'medium' | 'high',
+                  )
+                }
+                disabled={disabled || !isXaiReasoningModel}
+                className="select-input"
+              >
+                <option value="none">None (fastest)</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+              {!isXaiReasoningModel && (
+                <span className="helper-text">
+                  Available only for Grok 4.3; omitted for other xAI models.
+                </span>
+              )}
+            </div>
           )}
 
           {provider === 'openrouter' && (

@@ -4,6 +4,8 @@ import {
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_1_FAST_NON_REASONING,
+  getDefaultXaiReasoningEffort,
+  isXaiReasoningEffortModel,
 } from '../../src/constants';
 import { XAIChatService } from '../../src/services/providers/xai/XAIChatService';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
@@ -68,6 +70,63 @@ describe('XAIChatService', () => {
         tool_choice: 'auto',
       }),
     );
+  });
+
+  it('sends reasoning_effort for Grok 4.3 when configured', () => {
+    const service = new XAIChatService(
+      'test-key',
+      MODEL_GROK_4_3,
+      MODEL_GROK_4_3,
+      undefined,
+      ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+      undefined,
+      'none',
+    );
+
+    const body = (service as any).buildRequestBody(
+      messages,
+      MODEL_GROK_4_3,
+      false,
+    );
+
+    expect(body).toEqual(
+      expect.objectContaining({
+        model: MODEL_GROK_4_3,
+        reasoning_effort: 'none',
+      }),
+    );
+  });
+
+  it('does not send reasoning_effort for unsupported xAI models', () => {
+    const service = new XAIChatService(
+      'test-key',
+      MODEL_GROK_4_20_REASONING,
+      MODEL_GROK_4_20_REASONING,
+      undefined,
+      ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+      undefined,
+      'low',
+    );
+
+    const body = (service as any).buildRequestBody(
+      messages,
+      MODEL_GROK_4_20_REASONING,
+      false,
+    );
+
+    expect(body.reasoning_effort).toBeUndefined();
+  });
+
+  it('reports reasoning_effort support only for Grok 4.3', () => {
+    expect(isXaiReasoningEffortModel(MODEL_GROK_4_3)).toBe(true);
+    expect(isXaiReasoningEffortModel(MODEL_GROK_4_20_REASONING)).toBe(false);
+  });
+
+  it('defaults xAI reasoning_effort to none only for supported models', () => {
+    expect(getDefaultXaiReasoningEffort(MODEL_GROK_4_3)).toBe('none');
+    expect(
+      getDefaultXaiReasoningEffort(MODEL_GROK_4_1_FAST_NON_REASONING),
+    ).toBeUndefined();
   });
 
   it('sends requests to the xAI chat completions endpoint', async () => {

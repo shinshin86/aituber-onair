@@ -95,6 +95,7 @@ describe('XAIChatServiceProvider', () => {
         undefined,
         ENDPOINT_XAI_CHAT_COMPLETIONS_API,
         undefined,
+        undefined,
       );
     });
 
@@ -113,6 +114,7 @@ describe('XAIChatServiceProvider', () => {
         undefined,
         ENDPOINT_XAI_CHAT_COMPLETIONS_API,
         undefined,
+        'none',
       );
     });
 
@@ -132,6 +134,27 @@ describe('XAIChatServiceProvider', () => {
         undefined,
         ENDPOINT_XAI_CHAT_COMPLETIONS_API,
         undefined,
+        undefined,
+      );
+    });
+
+    it('should forward xAI reasoning effort to the chat service', () => {
+      const options: XAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GROK_4_3,
+        reasoning_effort: 'none',
+      };
+
+      provider.createChatService(options);
+
+      expect(XAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GROK_4_3,
+        MODEL_GROK_4_3,
+        undefined,
+        ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+        undefined,
+        'none',
       );
     });
 
