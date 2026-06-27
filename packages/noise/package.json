@@ -54,7 +54,7 @@
     "directory": "packages/noise"
   },
   "dependencies": {
-    "@aituber-onair/chat": "^0.42.0"
+    "@aituber-onair/chat": "^0.43.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

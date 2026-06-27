@@ -1,5 +1,17 @@
 # @aituber-onair/chat
 
+## 0.43.0
+
+### Minor Changes
+
+- Added xAI `reasoning_effort` support for `grok-4.3`, including
+  `none`, `low`, `medium`, and `high` values.
+- Defaulted xAI `grok-4.3` reasoning effort to `none` for lower-latency
+  character chat responses, while omitting the option for unsupported xAI
+  models.
+- Updated the React basic example and English/Japanese README docs to expose
+  the xAI reasoning effort setting only when it applies.
+
 ## 0.42.0
 
 ### Minor Changes
