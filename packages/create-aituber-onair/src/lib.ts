@@ -13,7 +13,7 @@ import { TEMPLATES, type TemplateId, isTemplateId } from './templates.js';
 
 const DEFAULT_PROJECT_NAME = 'my-aituber';
 const DEFAULT_TEMPLATE_ID: TemplateId = 'pngtuber';
-const CORE_VERSION = '0.26.3';
+const FALLBACK_CORE_VERSION = '0.26.5';
 
 export interface CliOptions {
   targetDir?: string;
@@ -29,6 +29,7 @@ export interface CreateProjectOptions {
   template: TemplateId;
   install: boolean;
   templateRoot?: string;
+  coreVersion?: string;
   runCommand?: (command: string, args: string[], cwd: string) => Promise<void>;
 }
 
@@ -116,6 +117,33 @@ export function defaultTemplateRoot(): string {
   return path.resolve(path.dirname(currentFile), '..', 'templates');
 }
 
+export async function resolveDefaultCoreVersion(): Promise<string> {
+  return resolveWorkspacePackageVersion(
+    path.resolve(defaultPackageRoot(), '..', 'core', 'package.json'),
+  );
+}
+
+function defaultPackageRoot(): string {
+  const currentFile = fileURLToPath(import.meta.url);
+  return path.resolve(path.dirname(currentFile), '..');
+}
+
+async function resolveWorkspacePackageVersion(
+  packageJsonPath: string,
+): Promise<string> {
+  try {
+    const rawPackageJson = await readFile(packageJsonPath, 'utf8');
+    const packageJson = JSON.parse(rawPackageJson) as { version?: unknown };
+    if (typeof packageJson.version === 'string' && packageJson.version) {
+      return packageJson.version;
+    }
+  } catch {
+    // Published packages do not include sibling workspace package.json files.
+  }
+
+  return FALLBACK_CORE_VERSION;
+}
+
 export function resolveTargetDir(cwd: string, targetDir?: string): string {
   return path.resolve(cwd, targetDir ?? DEFAULT_PROJECT_NAME);
 }
@@ -169,7 +197,12 @@ export async function createProject(
   await mkdir(projectDir, { recursive: true });
   await copyTemplate(sourceDir, projectDir);
   await restoreTemplateDotfiles(projectDir);
-  await updatePackageJson(projectDir, packageName, options.template);
+  await updatePackageJson(
+    projectDir,
+    packageName,
+    options.template,
+    options.coreVersion ?? (await resolveDefaultCoreVersion()),
+  );
 
   if (options.install) {
     const runCommand = options.runCommand ?? defaultRunCommand;
@@ -235,6 +268,7 @@ async function updatePackageJson(
   projectDir: string,
   packageName: string,
   template: TemplateId,
+  coreVersion: string,
 ): Promise<void> {
   const packageJsonPath = path.join(projectDir, 'package.json');
   const rawPackageJson = await readFile(packageJsonPath, 'utf8');
@@ -250,7 +284,7 @@ async function updatePackageJson(
   packageJson.private = true;
   packageJson.dependencies = {
     ...packageJson.dependencies,
-    '@aituber-onair/core': `^${CORE_VERSION}`,
+    '@aituber-onair/core': `^${coreVersion}`,
   };
 
   if (template === 'vrm') {
