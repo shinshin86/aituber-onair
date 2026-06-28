@@ -17,6 +17,8 @@ import {
   XAIChatServiceOptions,
   DeepSeekChatServiceOptions,
   MistralChatServiceOptions,
+  SakanaChatServiceOptions,
+  PlamoChatServiceOptions,
 } from '@aituber-onair/chat';
 import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer';
 import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
@@ -368,8 +370,25 @@ export class AITuberOnAirCore extends EventEmitter {
           ...(providerOptions as ProviderOptionsByName<'xai'> | undefined),
         } as XAIChatServiceOptions;
       }
+      case 'sakana': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as ProviderOptionsByName<'sakana'> | undefined),
+        } as SakanaChatServiceOptions;
+      }
+      case 'plamo': {
+        return {
+          ...baseOptions,
+          ...(providerOptions as ProviderOptionsByName<'plamo'> | undefined),
+        } as PlamoChatServiceOptions;
+      }
       default:
-        return baseOptions as ChatServiceOptionsByProvider['openai'];
+        return {
+          ...baseOptions,
+          ...(providerOptions as
+            | Partial<ChatServiceOptionsByProvider[ChatProviderName]>
+            | undefined),
+        } as ChatServiceOptionsByProvider[ChatProviderName];
     }
   }
 

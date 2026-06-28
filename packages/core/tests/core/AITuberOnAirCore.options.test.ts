@@ -145,6 +145,58 @@ describe('AITuberOnAirCore buildChatServiceOptions', () => {
     );
   });
 
+  it('passes provider-specific options for sakana', () => {
+    const options = createOptions({
+      chatProvider: 'sakana',
+      model: 'fugu-ultra',
+      providerOptions: {
+        responseLength: 'short',
+        endpoint: 'https://example.invalid/v1/chat/completions',
+      },
+    });
+
+    new AITuberOnAirCore(options);
+
+    const mockCreate = vi.mocked(ChatServiceFactory.createChatService);
+    expect(mockCreate).toHaveBeenCalledWith(
+      'sakana',
+      expect.objectContaining({
+        apiKey: 'test-api-key',
+        model: 'fugu-ultra',
+        responseLength: 'short',
+        endpoint: 'https://example.invalid/v1/chat/completions',
+        tools: [],
+      }),
+    );
+  });
+
+  it('passes provider-specific options for plamo', () => {
+    const options = createOptions({
+      chatProvider: 'plamo',
+      model: 'plamo-3.0-prime',
+      providerOptions: {
+        responseLength: 'long',
+        reasoning_effort: 'medium',
+        baseUrl: 'https://example.invalid/v1',
+      },
+    });
+
+    new AITuberOnAirCore(options);
+
+    const mockCreate = vi.mocked(ChatServiceFactory.createChatService);
+    expect(mockCreate).toHaveBeenCalledWith(
+      'plamo',
+      expect.objectContaining({
+        apiKey: 'test-api-key',
+        model: 'plamo-3.0-prime',
+        responseLength: 'long',
+        reasoning_effort: 'medium',
+        baseUrl: 'https://example.invalid/v1',
+        tools: [],
+      }),
+    );
+  });
+
   it('switches voice engine via switchEngine when voice service exists', () => {
     const core = new AITuberOnAirCore(
       createOptions({
