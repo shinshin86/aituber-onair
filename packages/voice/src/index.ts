@@ -33,6 +33,10 @@ export * from './engines';
 // Types
 export * from './types/voice';
 export * from './types/voiceEngine';
+export type {
+  VoiceEngineCapabilities,
+  VoiceRuntime,
+} from './types/capabilities';
 export * from './types/chat';
 
 // Utils
@@ -42,6 +46,10 @@ export {
   screenplayToText,
 } from './utils/screenplay';
 export { EmotionParser, emotionToTalkStyle } from './utils/emotionParser';
+export {
+  getAllVoiceEngineCapabilities,
+  getVoiceEngineCapabilities,
+} from './utils/voiceEngineCapabilities';
 
 // Voice-specific messages utility
 export {
