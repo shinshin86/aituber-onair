@@ -17,3 +17,4 @@ export * from './toolChat';
 
 // MCP related type definitions
 export * from './mcp';
+export type { ChatProviderCapabilities } from './capabilities';
