@@ -4,6 +4,11 @@ export {
 } from './createCommentIntelligence.js';
 export { formatCommentIntelligencePrompt } from './context/formatCommentIntelligencePrompt.js';
 export { toAgentCommentDecision } from './agent.js';
+export {
+  ANALYZE_LIVE_COMMENTS_TOOL,
+  COMMENT_INTELLIGENCE_AGENT_TOOLS,
+} from './tools.js';
+export type { AgentToolDefinition } from './tools.js';
 export { createChatServiceCommentAnalysisProvider } from './llm/createChatServiceCommentAnalysisProvider.js';
 export { normalizeTwitchComment } from './normalizers/twitch.js';
 export { normalizeWebComment } from './normalizers/web.js';
