@@ -109,6 +109,12 @@ export {
   isValidConfig,
 } from './utils/browserUtils.js';
 
+export {
+  MANNERI_AGENT_TOOLS,
+  REVIEW_DRAFT_REPETITION_TOOL,
+} from './tools.js';
+export type { AgentToolDefinition } from './tools.js';
+
 export function createManneriDetector(
   config?: Partial<import('./types/index.js').ManneriConfig>
 ) {
