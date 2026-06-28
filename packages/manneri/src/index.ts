@@ -13,6 +13,7 @@ export type {
   TopicInfo,
   AnalysisResult,
   DiversificationPrompt,
+  DraftReviewResult,
   TextAnalysisOptions,
   StorageData,
   ManneriEvent,

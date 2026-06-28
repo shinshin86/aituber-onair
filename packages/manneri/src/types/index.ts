@@ -43,6 +43,13 @@ export interface TopicInfo {
   confidence: number;
 }
 
+export interface DraftReviewResult {
+  draft: string;
+  analysis: AnalysisResult;
+  shouldRewrite: boolean;
+  suggestion?: DiversificationPrompt;
+}
+
 export interface AnalysisResult {
   similarity: SimilarityResult;
   topics: TopicInfo[];
