@@ -21,6 +21,12 @@
   echo reliably.
 - Adds stream topic, stream title, and topic priority settings to the React
   examples and starter pet template.
+- Adds `toAgentCommentDecision()` for compact agent-facing decisions that avoid
+  returning the full ranked comment list by default.
+- Adds SDK-independent agent tool definitions through
+  `ANALYZE_LIVE_COMMENTS_TOOL` and `COMMENT_INTELLIGENCE_AGENT_TOOLS`.
+- Exports `DEFAULT_COMMENT_INTELLIGENCE_CONFIG` for agent and UI
+  introspection.
 
 ## 0.0.3
 
