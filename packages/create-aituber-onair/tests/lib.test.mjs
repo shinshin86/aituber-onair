@@ -7,6 +7,7 @@ import {
   CliError,
   createProject,
   parseArgs,
+  resolveDefaultCoreVersion,
   toPackageName,
 } from '../dist/lib.js';
 
@@ -54,7 +55,7 @@ test('createProject copies pngtuber template and rewrites package metadata', asy
   const rootFiles = await readdir(result.projectDir);
 
   assert.equal(packageJson.name, 'my-png-app');
-  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.3');
+  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.5');
   assert.equal(packageJson.dependencies['@pixiv/three-vrm'], undefined);
   assert.equal(rootFiles.includes('.gitignore'), true);
   assert.equal(rootFiles.includes('_gitignore'), false);
@@ -125,7 +126,7 @@ test('createProject copies pet template with bundled Miko assets', async () => {
   );
   const petFiles = await readdir(path.join(result.projectDir, 'public', 'pet'));
 
-  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.3');
+  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.5');
   assert.equal(
     packageJson.dependencies['@aituber-onair/comment-intelligence'],
     '^0.0.4',
@@ -157,4 +158,25 @@ test('createProject runs npm install when requested', async () => {
       cwd: path.join(cwd, 'install-app'),
     },
   ]);
+});
+
+test('createProject allows overriding the core dependency version', async () => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'create-aituber-onair-'));
+  const result = await createProject({
+    cwd,
+    targetDir: 'custom-core-app',
+    template: 'pngtuber',
+    install: false,
+    templateRoot: fixtureTemplateRoot,
+    coreVersion: '9.9.9',
+  });
+
+  const packageJson = JSON.parse(
+    await readFile(path.join(result.projectDir, 'package.json'), 'utf8'),
+  );
+  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^9.9.9');
+});
+
+test('resolveDefaultCoreVersion reads the workspace core package version', async () => {
+  assert.equal(await resolveDefaultCoreVersion(), '0.26.5');
 });
