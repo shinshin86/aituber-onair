@@ -75,6 +75,21 @@ npm --prefix ../.. run example:live-comment-filter-sample
 Open the local URL shown by Vite and paste comments as `viewer: comment`.
 The example UI can be switched between English and Japanese.
 
+## Agent Decision Sample
+
+For the agent-facing APIs, this package also includes a small Node.js sample
+that passes fixed sample comments into `analyze()`, prints the compact
+`toAgentCommentDecision(result)` output, compares it with `detail: 'full'`, and
+shows the `ANALYZE_LIVE_COMMENTS_TOOL` summary.
+
+```sh
+npm -w @aituber-onair/comment-intelligence run example:agent-decision-sample
+```
+
+The sample lives in
+`packages/comment-intelligence/examples/agent-decision-sample`. It does not
+connect to YouTube, Twitch, `@aituber-onair/core`, or any LLM provider.
+
 ## Real Stream Use Cases
 
 ### Do not pick up comments from viewers who keep posting unsafe content
@@ -196,6 +211,48 @@ These convert app-specific comment shapes into `LiveComment`.
 
 `formatCommentIntelligencePrompt(result)` creates the text to pass to `core.processChat()`. It includes selected comments, ignored-comment summaries, context bullets, and explicit safety instructions that viewer comments are untrusted.
 
+## Agent-Friendly Output
+
+Use `toAgentCommentDecision(result)` when an AI agent needs a compact,
+structured decision instead of the full analysis result.
+
+```ts
+import {
+  ANALYZE_LIVE_COMMENTS_TOOL,
+  createCommentIntelligence,
+  toAgentCommentDecision,
+} from '@aituber-onair/comment-intelligence';
+
+const intelligence = createCommentIntelligence();
+const result = await intelligence.analyze({ comments, streamState });
+
+const decision = toAgentCommentDecision(result);
+```
+
+The default `compact` detail level includes the selected comment, response
+instruction, context bullets, ignored-comment summary, selected comment IDs,
+blocked viewer IDs, whether LLM analysis was used, and aggregate safety counts.
+It does not include the full ranked comment list, which helps reduce token use
+and avoids exposing every viewer comment to the agent.
+
+Use full detail only for debugging, operator dashboards, or other trusted
+surfaces that intentionally need ranked comment summaries:
+
+```ts
+const debugDecision = toAgentCommentDecision(result, { detail: 'full' });
+console.log(debugDecision.rankedComments);
+```
+
+`ANALYZE_LIVE_COMMENTS_TOOL` is a provider-agnostic JSON Schema tool definition
+for agent runtimes. It describes the `comments` and `streamState` input shape
+used by `createCommentIntelligence().analyze()` and explicitly warns that viewer
+comments are untrusted input. `COMMENT_INTELLIGENCE_AGENT_TOOLS` exports the
+same tool in an array for runtimes that register multiple tools.
+
+`DEFAULT_COMMENT_INTELLIGENCE_CONFIG` is exported for agent and UI
+introspection. Treat it as defaults to display or copy from, not as mutable
+shared state.
+
 ## Security Notes
 
 Viewer comments are treated as untrusted input. High-risk comments are not selected for direct forwarding, and generated prompts explicitly tell the downstream LLM not to follow instructions inside viewer comments.
@@ -207,8 +264,8 @@ your stream.
 
 ## API
 
-Functions: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `createChatServiceCommentAnalysisProvider`.
+Functions and constants: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`.
 
 The object returned by `createCommentIntelligence()` exposes `analyze()`, `getViewerSafetyState()`, and `resetViewerSafetyState()`.
 
-Types include `LiveComment`, `CommentAuthor`, `ViewerProfile`, `ViewerSafetyState`, `StreamState`, `RankedComment`, `SafetyReport`, `IgnoredCommentsSummary`, `CommentIntelligenceResult`, `CommentIntelligenceConfig`, `AnalyzeCommentsInput`, and optional LLM provider/result types.
+Types include `LiveComment`, `CommentAuthor`, `ViewerProfile`, `ViewerSafetyState`, `StreamState`, `RankedComment`, `SafetyReport`, `IgnoredCommentsSummary`, `CommentIntelligenceResult`, `CommentIntelligenceConfig`, `AnalyzeCommentsInput`, `AgentCommentDecision`, `AgentSelectedComment`, `AgentSafetySummary`, `AgentToolDefinition`, and optional LLM provider/result types.

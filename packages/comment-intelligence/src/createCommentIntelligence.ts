@@ -16,7 +16,7 @@ import { ruleBasedSafetyProvider } from './safety/ruleBasedSafetyProvider.js';
 import { summarizeIgnoredComments } from './summarization/summarizeIgnoredComments.js';
 import type { RankedComment } from './types/ranking.js';
 
-const defaultConfig: CommentIntelligenceConfig = {
+export const DEFAULT_COMMENT_INTELLIGENCE_CONFIG: CommentIntelligenceConfig = {
   analysis: {
     mode: 'rules',
     llmPolicy: {
@@ -56,7 +56,7 @@ const defaultConfig: CommentIntelligenceConfig = {
 };
 
 export function createCommentIntelligence(config?: CommentIntelligenceConfig) {
-  const baseConfig = mergeConfig(defaultConfig, config);
+  const baseConfig = mergeConfig(DEFAULT_COMMENT_INTELLIGENCE_CONFIG, config);
   const viewerSafetyStates = new Map<string, ViewerSafetyState>();
 
   return {

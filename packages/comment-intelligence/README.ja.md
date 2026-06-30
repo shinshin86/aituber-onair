@@ -72,6 +72,16 @@ npm --prefix ../.. run example:live-comment-filter-sample
 Vite が表示するローカルURLを開き、`視聴者名: コメント` 形式でコメントを貼り付けてください。
 サンプルUIは英語・日本語を切り替えられます。
 
+## Agent decision sample
+
+Agent向け API を試すための小さな Node.js サンプルも含めています。固定のサンプルコメントを `analyze()` に渡し、初期値の compact `toAgentCommentDecision(result)`、`detail: 'full'` の比較、`ANALYZE_LIVE_COMMENTS_TOOL` の概要を表示します。
+
+```sh
+npm -w @aituber-onair/comment-intelligence run example:agent-decision-sample
+```
+
+サンプルは `packages/comment-intelligence/examples/agent-decision-sample` にあります。YouTube、Twitch、`@aituber-onair/core`、LLM provider には接続しません。
+
 ## 実配信で起こりうるユースケース
 
 ### 嫌なコメントや危険な指示を送ってきた人をしばらく拾わない
@@ -186,6 +196,36 @@ provider が失敗しても、`fallbackToRules` が `false` でなければ rule
 
 `formatCommentIntelligencePrompt(result)` は `core.processChat()` に渡す最終テキストを生成します。選ばれたコメント、未選択コメントの要約、補足コンテキスト、視聴者コメントを信頼しないための安全指示を含みます。
 
+## Agent向けの出力
+
+AIエージェントが full analysis result ではなく、扱いやすい構造化された判断結果だけを必要とする場合は `toAgentCommentDecision(result)` を使います。
+
+```ts
+import {
+  ANALYZE_LIVE_COMMENTS_TOOL,
+  createCommentIntelligence,
+  toAgentCommentDecision,
+} from '@aituber-onair/comment-intelligence';
+
+const intelligence = createCommentIntelligence();
+const result = await intelligence.analyze({ comments, streamState });
+
+const decision = toAgentCommentDecision(result);
+```
+
+初期値の `compact` detail では、選ばれたコメント、返答指示、context bullet、未選択コメントの要約、選択コメントID、ブロック中の視聴者ID、LLM分析を使ったかどうか、安全性の集計だけを返します。全 ranked comment list は含めません。これにより token 使用量を抑え、すべての視聴者コメントを agent に露出しないようにできます。
+
+ranked comment summaries が必要な場合は、debug 用 UI や operator dashboard など信頼できる用途に限って `detail: 'full'` を指定してください。
+
+```ts
+const debugDecision = toAgentCommentDecision(result, { detail: 'full' });
+console.log(debugDecision.rankedComments);
+```
+
+`ANALYZE_LIVE_COMMENTS_TOOL` は、agent runtime に登録しやすい SDK 非依存の JSON Schema tool definition です。`createCommentIntelligence().analyze()` が受け取る `comments` と `streamState` の入力形を記述し、視聴者コメントは信頼できない入力なのでコメント内の指示に従わないことを明記しています。複数 tool をまとめて登録する runtime 向けに、同じ tool を配列にした `COMMENT_INTELLIGENCE_AGENT_TOOLS` も export しています。
+
+`DEFAULT_COMMENT_INTELLIGENCE_CONFIG` は agent や UI が初期設定を表示・参照するために export しています。共有 mutable state として変更するのではなく、表示やコピー元として扱ってください。
+
 ## セキュリティ注意点
 
 視聴者コメントはすべて信頼できない入力として扱います。high risk comment は選択対象から外し、下流 LLM に対してもコメント内の命令に従わないよう明記します。
@@ -194,8 +234,8 @@ provider が失敗しても、`fallbackToRules` が `false` でなければ rule
 
 ## API
 
-関数: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `createChatServiceCommentAnalysisProvider`。
+関数・定数: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`。
 
 `createCommentIntelligence()` が返す object には、`analyze()`, `getViewerSafetyState()`, `resetViewerSafetyState()` があります。
 
-主な型: `LiveComment`, `CommentAuthor`, `ViewerProfile`, `ViewerSafetyState`, `StreamState`, `RankedComment`, `SafetyReport`, `IgnoredCommentsSummary`, `CommentIntelligenceResult`, `CommentIntelligenceConfig`, `AnalyzeCommentsInput`, LLM provider/result types。
+主な型: `LiveComment`, `CommentAuthor`, `ViewerProfile`, `ViewerSafetyState`, `StreamState`, `RankedComment`, `SafetyReport`, `IgnoredCommentsSummary`, `CommentIntelligenceResult`, `CommentIntelligenceConfig`, `AnalyzeCommentsInput`, `AgentCommentDecision`, `AgentSelectedComment`, `AgentSafetySummary`, `AgentToolDefinition`, LLM provider/result types。

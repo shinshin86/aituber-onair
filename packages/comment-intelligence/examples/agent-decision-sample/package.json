@@ -1,0 +1,9 @@
+{
+  "name": "comment-intelligence-agent-decision-sample",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "npm --prefix ../.. run build && node index.mjs"
+  }
+}
