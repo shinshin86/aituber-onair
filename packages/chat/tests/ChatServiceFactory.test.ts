@@ -328,6 +328,50 @@ describe('ChatServiceFactory', () => {
     });
   });
 
+  describe('getProviderCapabilities', () => {
+    it('returns machine-readable capabilities for a provider', () => {
+      const capabilities = ChatServiceFactory.getProviderCapabilities('openai');
+
+      expect(capabilities).toEqual(
+        expect.objectContaining({
+          provider: 'openai',
+          text: true,
+          streaming: true,
+          tools: true,
+          mcp: true,
+          jsonMode: true,
+          responseLength: true,
+        }),
+      );
+      expect(capabilities?.models.length).toBeGreaterThan(0);
+      expect(capabilities?.reasoningEffort).toContain('medium');
+    });
+
+    it('returns model-level vision support when a model is specified', () => {
+      const capabilities = ChatServiceFactory.getProviderCapabilities(
+        'openai-compatible',
+        'local-model',
+      );
+
+      expect(capabilities?.vision).toBe('unknown');
+      expect(capabilities?.tools).toBe(true);
+      expect(capabilities?.mcp).toBe(false);
+    });
+
+    it('returns undefined for unknown providers', () => {
+      expect(
+        ChatServiceFactory.getProviderCapabilities('unknown-provider'),
+      ).toBeUndefined();
+    });
+
+    it('returns capabilities for all registered providers', () => {
+      const capabilities = ChatServiceFactory.getAllProviderCapabilities();
+
+      expect(capabilities.map((item) => item.provider)).toContain('openai');
+      expect(capabilities.map((item) => item.provider)).toContain('plamo');
+    });
+  });
+
   describe('getVisionSupportLevel', () => {
     it('should return provider-level vision support', () => {
       const mockProvider = new MockChatServiceProvider();

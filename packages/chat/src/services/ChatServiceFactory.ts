@@ -7,6 +7,39 @@ import {
   VisionSupportLevel,
 } from './providers/ChatServiceProvider';
 import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
+import type { ChatProviderCapabilities } from '../types/capabilities';
+
+const TOOL_SUPPORTED_PROVIDERS = new Set<string>([
+  'openai',
+  'openai-compatible',
+  'openrouter',
+  'gemini',
+  'claude',
+  'zai',
+  'xai',
+  'kimi',
+  'deepseek',
+  'mistral',
+  'sakana',
+  'plamo',
+]);
+
+const MCP_SUPPORTED_PROVIDERS = new Set<string>(['openai', 'gemini', 'claude']);
+
+const JSON_MODE_SUPPORTED_PROVIDERS = new Set<string>([
+  'openai',
+  'openai-compatible',
+  'zai',
+  'kimi',
+]);
+
+const REASONING_EFFORT_BY_PROVIDER: Record<string, string[]> = {
+  openai: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh'],
+  openrouter: ['none', 'minimal', 'low', 'medium', 'high'],
+  mistral: ['low', 'medium', 'high'],
+  plamo: ['none', 'medium'],
+  xai: ['low', 'high'],
+};
 
 /**
  * Chat service factory
@@ -69,6 +102,52 @@ export class ChatServiceFactory {
   static getSupportedModels(providerName: string): string[] {
     const provider = this.providers.get(providerName);
     return provider ? provider.getSupportedModels() : [];
+  }
+
+  /**
+   * Get machine-readable provider capabilities for UI and agent planning.
+   */
+  static getProviderCapabilities(
+    providerName: string,
+    model?: string,
+  ): ChatProviderCapabilities | undefined {
+    const provider = this.providers.get(providerName);
+    if (!provider) {
+      return undefined;
+    }
+
+    const vision = model
+      ? this.getVisionSupportLevelForModel(providerName, model)
+      : provider.getVisionSupportLevel();
+
+    return {
+      provider: providerName,
+      models: provider.getSupportedModels(),
+      defaultModel:
+        typeof provider.getDefaultModel === 'function'
+          ? provider.getDefaultModel()
+          : undefined,
+      text: true,
+      streaming: true,
+      vision,
+      tools: TOOL_SUPPORTED_PROVIDERS.has(providerName),
+      mcp: MCP_SUPPORTED_PROVIDERS.has(providerName),
+      jsonMode: JSON_MODE_SUPPORTED_PROVIDERS.has(providerName),
+      responseLength: true,
+      reasoningEffort: REASONING_EFFORT_BY_PROVIDER[providerName] ?? [],
+    };
+  }
+
+  /**
+   * Get machine-readable capabilities for all registered providers.
+   */
+  static getAllProviderCapabilities(): ChatProviderCapabilities[] {
+    return this.getAvailableProviders()
+      .map((providerName) => this.getProviderCapabilities(providerName))
+      .filter(
+        (capabilities): capabilities is ChatProviderCapabilities =>
+          capabilities !== undefined,
+      );
   }
 
   /**

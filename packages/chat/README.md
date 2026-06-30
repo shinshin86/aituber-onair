@@ -1107,6 +1107,37 @@ Semantics:
 - `unsupported`: Known to reject vision before sending the request
 - `unknown`: Cannot be pre-validated, but vision requests may still succeed
 
+### Provider Capability Discovery
+
+UI and agent runtimes can inspect provider features before creating a chat
+service:
+
+```typescript
+const capabilities = ChatServiceFactory.getProviderCapabilities(
+  'openai',
+  'gpt-5.4-mini',
+);
+
+if (capabilities?.jsonMode) {
+  // Show a JSON mode toggle or pass responseFormat safely.
+}
+
+if (!capabilities?.mcp) {
+  // Disable MCP server settings for this provider.
+}
+```
+
+`getProviderCapabilities(provider, model?)` returns machine-readable metadata
+such as `models`, `defaultModel`, `vision`, `tools`, `mcp`, `jsonMode`,
+`responseLength`, and supported `reasoningEffort` values. Use
+`getAllProviderCapabilities()` to populate provider pickers or dashboards.
+
+The capability object is static planning metadata. It does not include API keys,
+endpoints, base URLs, MCP server definitions, or other user configuration. This
+helps UI surfaces hide unsupported controls before execution, and lets agents
+choose whether to use tools, MCP, vision, JSON mode, or reasoning settings
+without hard-coding provider-specific rules.
+
 ## Available Providers
 
 Currently, the following AI providers are built-in:

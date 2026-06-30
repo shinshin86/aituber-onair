@@ -1092,6 +1092,37 @@ console.log(modelLevel); // 'unknown'
 - `unsupported`: リクエスト送信前に非対応と分かっている
 - `unknown`: 事前判定できないが、実際には成功する可能性がある
 
+### プロバイダー機能の事前判定
+
+UI やエージェント実行環境は、チャットサービスを作成する前にプロバイダーの
+機能を確認できます。
+
+```typescript
+const capabilities = ChatServiceFactory.getProviderCapabilities(
+  'openai',
+  'gpt-5.4-mini',
+);
+
+if (capabilities?.jsonMode) {
+  // JSON mode のトグル表示や responseFormat の指定が安全にできます。
+}
+
+if (!capabilities?.mcp) {
+  // このプロバイダーでは MCP server 設定を無効化できます。
+}
+```
+
+`getProviderCapabilities(provider, model?)` は `models`, `defaultModel`,
+`vision`, `tools`, `mcp`, `jsonMode`, `responseLength`, 対応する
+`reasoningEffort` などの機械可読な metadata を返します。プロバイダー選択 UI
+やダッシュボードを作る場合は `getAllProviderCapabilities()` も利用できます。
+
+capability object は実行前の判断に使う静的 metadata です。API key、endpoint、
+base URL、MCP server 定義、その他のユーザー設定は含みません。これにより、UI
+では非対応の設定を実行前に非表示/無効化でき、エージェント側では tools、MCP、
+vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジックの
+ベタ書きなしで判断できます。
+
 ## 利用可能なプロバイダー
 
 現在、以下のAIプロバイダーが組み込まれています：

@@ -14,6 +14,7 @@ import type {
   ToolChatCompletion,
   ToolDefinition,
 } from '../../../types';
+import type { BaseChatServiceOptions } from '../ChatServiceProvider';
 import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 import {
@@ -27,6 +28,10 @@ import {
   parseOpenAIResponsesStream,
 } from './responsesParser';
 import { buildOpenAIRequestBody } from './openaiRequestBuilder';
+
+type OpenAIResponseFormat = NonNullable<
+  BaseChatServiceOptions['responseFormat']
+>;
 
 /**
  * OpenAI implementation of ChatService
@@ -45,6 +50,7 @@ export class OpenAIChatService implements ChatService {
   private verbosity?: 'low' | 'medium' | 'high';
   private reasoning_effort?: OpenAIReasoningEffort;
   private enableReasoningSummary?: boolean;
+  private responseFormat?: OpenAIResponseFormat;
 
   /**
    * Constructor
@@ -65,6 +71,7 @@ export class OpenAIChatService implements ChatService {
     enableReasoningSummary: boolean = false,
     provider: string = 'openai',
     validateVisionModel: boolean = true,
+    responseFormat?: OpenAIResponseFormat,
   ) {
     this.provider = provider;
     this.apiKey = apiKey;
@@ -77,6 +84,7 @@ export class OpenAIChatService implements ChatService {
     this.verbosity = verbosity;
     this.reasoning_effort = reasoning_effort;
     this.enableReasoningSummary = enableReasoningSummary;
+    this.responseFormat = responseFormat;
 
     // Official OpenAI validates vision model names strictly.
     // Compatible providers can skip this to support arbitrary local IDs.
@@ -274,6 +282,7 @@ export class OpenAIChatService implements ChatService {
       verbosity: this.verbosity,
       reasoning_effort: this.reasoning_effort,
       enableReasoningSummary: this.enableReasoningSummary,
+      responseFormat: this.responseFormat,
       maxTokens,
     });
     const headers: Record<string, string> = {};
