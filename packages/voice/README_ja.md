@@ -279,10 +279,8 @@ const voiceService = new VoiceService({
 既定の `https://api.gradium.ai/api/post/speech/tts` 以外を使う場合は
 `gradiumApiUrl` で上書きできます。`speaker` は Gradium の `voice_id`
 として送信されます。React デモでは Gradium の flagship voice プリセットを
-使い、表示名を選ばせつつ内部では voice ID を送信します。Gradium の
-voice-list エンドポイントは TTS エンドポイントと CORS 方針が異なる場合が
-あるため、ブラウザアプリで動的取得する場合はサーバー側から呼び出す必要が
-あります。
+fallback として表示し、API キーがある場合は `getVoiceEngineVoiceList()`
+経由で Gradium の voice list を取得できます。
 
 ### OpenAI互換 TTS
 Kokoro FastAPI などの OpenAI 互換エンドポイントを利用するための TTS プロバイダーです。
@@ -354,6 +352,14 @@ const voiceService = new VoiceService({
 - **複数形式**: WAV、FLAC、MP3、AAC、Opus出力
 - **感情制御**: きめ細かな感情強度設定
 - **高品質**: プロフェッショナルグレードの音声合成
+
+Aivis Cloud の model search API（例:
+`GET https://api.aivis-project.com/v1/aivm-models/search`）は、
+現在 `getVoiceEngineVoiceList()` では扱っていません。ブラウザから直接
+model/list 系 endpoint を呼び出すと CORS で失敗する場合があります。公式の
+Aivis Cloud API ドキュメントでは、ブラウザ CORS 対応は音声合成 endpoint
+について明記されています。動的に model / speaker / style を取得したい場合は、
+backend proxy 経由で呼び出してください。
 
 ### Gemini TTS
 `gemini-3.1-flash-tts-preview` を含む Gemini preview TTS モデルを
@@ -722,6 +728,46 @@ type VoiceServiceOptions =
 `switchEngine(...)` を使用してください。
 後方互換のため、`updateOptions(...)` へエンジン切替用フィールドを
 渡す使い方も引き続き受け付けます。
+
+### エンジン capabilities
+
+```typescript
+import {
+  getAllVoiceEngineCapabilities,
+  getVoiceEngineCapabilities,
+} from '@aituber-onair/voice';
+
+const gradium = getVoiceEngineCapabilities('gradium');
+console.log(gradium.supportsVoiceList); // true
+
+const allEngines = getAllVoiceEngineCapabilities();
+```
+
+capabilities は静的な metadata だけを返します。API キー、endpoint、ユーザー
+設定、その他の機密値は含みません。
+
+### ボイス一覧
+
+```typescript
+import { getVoiceEngineVoiceList } from '@aituber-onair/voice';
+
+const voices = await getVoiceEngineVoiceList('elevenLabs', {
+  apiKey: process.env.ELEVENLABS_API_KEY,
+});
+
+// [{ id: '...', label: 'Rachel (premade)' }, ...]
+```
+
+`getVoiceEngineVoiceList()` は、一覧 API を持つ engine について
+正規化済みの `{ id, label }` を返します。対象は VOICEVOX、AivisSpeech、
+xAI、ElevenLabs、Inworld、Gradium、MiniMax です。VOICEVOX 互換サーバーには
+local `apiUrl`、cloud engine には `apiKey`、Inworld の絞り込みには
+`language`、MiniMax の地域切替には `endpoint: 'global' | 'china'` を渡します。
+
+Aivis Cloud はこの helper の対象外です。公開 model search endpoint はありますが、
+ブラウザから直接 model/list 系 endpoint を呼び出すと CORS でブロックされる場合が
+あります。production UI で動的な Aivis Cloud model 選択を行う場合は、
+backend proxy を用意してください。
 
 ### VoiceServiceメソッド
 

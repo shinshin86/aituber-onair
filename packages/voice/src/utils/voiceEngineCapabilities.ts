@@ -29,10 +29,13 @@ const CUSTOM_ENDPOINT_ENGINES = new Set<VoiceEngineType>([
 ]);
 
 const VOICE_LIST_ENGINES = new Set<VoiceEngineType>([
-  'gradium',
-  'minimax',
-  'aivisCloud',
+  'voicevox',
+  'xai',
   'elevenLabs',
+  'inworld',
+  'gradium',
+  'aivisSpeech',
+  'minimax',
 ]);
 
 const EMOTION_ENGINES = new Set<VoiceEngineType>([
@@ -40,6 +43,7 @@ const EMOTION_ENGINES = new Set<VoiceEngineType>([
   'voicepeak',
   'aivisSpeech',
   'aivisCloud',
+  'minimax',
   'none',
 ]);
 

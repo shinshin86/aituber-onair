@@ -19,6 +19,7 @@ describe('voice engine capabilities', () => {
     expect(voicevox.requiresApiKey).toBe(false);
     expect(voicevox.supportsCustomEndpoint).toBe(true);
     expect(voicevox.supportsEmotion).toBe(true);
+    expect(voicevox.supportsVoiceList).toBe(true);
   });
 
   it('describes silent mode as agent-safe and keyless', () => {
@@ -27,6 +28,26 @@ describe('voice engine capabilities', () => {
     expect(none.requiresApiKey).toBe(false);
     expect(none.supportsEmotion).toBe(true);
     expect(none.runtimes).toEqual(['browser', 'node', 'server']);
+  });
+
+  it('marks engines with package voice-list support', () => {
+    expect(getVoiceEngineCapabilities('aivisSpeech').supportsVoiceList).toBe(
+      true,
+    );
+    expect(getVoiceEngineCapabilities('xai').supportsVoiceList).toBe(true);
+    expect(getVoiceEngineCapabilities('elevenLabs').supportsVoiceList).toBe(
+      true,
+    );
+    expect(getVoiceEngineCapabilities('inworld').supportsVoiceList).toBe(true);
+    expect(getVoiceEngineCapabilities('gradium').supportsVoiceList).toBe(true);
+    expect(getVoiceEngineCapabilities('minimax').supportsVoiceList).toBe(true);
+    expect(getVoiceEngineCapabilities('aivisCloud').supportsVoiceList).toBe(
+      false,
+    );
+  });
+
+  it('marks MiniMax as emotion-capable', () => {
+    expect(getVoiceEngineCapabilities('minimax').supportsEmotion).toBe(true);
   });
 
   it('lists all voice engine capabilities', () => {

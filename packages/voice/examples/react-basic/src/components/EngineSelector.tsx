@@ -211,6 +211,10 @@ export function EngineSelector({
     }
 
     if (engine === 'gradium') {
+      const gradiumSpeakerOptions = hasSpeakerOptions
+        ? speakerOptions
+        : GRADIUM_VOICE_OPTIONS;
+
       return (
         <div className="form-group">
           <label htmlFor="speaker">Speaker:</label>
@@ -219,15 +223,36 @@ export function EngineSelector({
             value={speaker}
             onChange={(e) => onSpeakerChange(e.target.value)}
           >
-            {GRADIUM_VOICE_OPTIONS.map((option) => (
+            {gradiumSpeakerOptions.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.label}
               </option>
             ))}
           </select>
+          <div className="speaker-fetch-row">
+            <button
+              type="button"
+              className="secondary-action-button"
+              onClick={onFetchSpeakers}
+              disabled={isFetchingSpeakers || !apiKey.trim()}
+              title={!apiKey.trim() ? 'API Keyを入力してください' : undefined}
+            >
+              {isFetchingSpeakers
+                ? '取得中...'
+                : hasSpeakerOptions
+                  ? '再取得'
+                  : '話者一覧を取得'}
+            </button>
+          </div>
+          {speakerFetchError && (
+            <div className="speaker-fetch-message speaker-fetch-message--error">
+              {speakerFetchError}
+            </div>
+          )}
           <div className="speaker-fetch-message">
-            Gradium の話者一覧 API はブラウザ CORS の制約があるため、 公式
-            flagship voice をプリセット表示しています。
+            API Key を入力すると Gradium
+            の話者一覧を取得できます。未取得時は公式 flagship voice
+            をプリセット表示しています。
           </div>
         </div>
       );

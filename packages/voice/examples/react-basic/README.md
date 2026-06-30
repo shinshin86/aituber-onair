@@ -149,9 +149,17 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 #### Gradium TTS
 ```bash
 # Default endpoint: https://api.gradium.ai/api/post/speech/tts
-# Enter a Gradium API key, then select one of the built-in flagship voices.
-# The dynamic voice-list endpoint is not used in this browser example because
-# it may be blocked by CORS even when TTS generation itself is allowed.
+# Enter a Gradium API key, then fetch voices or select a built-in flagship
+# voice preset.
+```
+
+#### Aivis Cloud
+```bash
+# Default endpoint: https://api.aivis-project.com/v1/tts/synthesize
+# The synthesis endpoint can be used from the browser, but Aivis Cloud
+# model/list APIs such as /v1/aivm-models/search may fail browser CORS checks.
+# Use fixed model UUID input in this example, or call model/list APIs through a
+# backend proxy in production.
 ```
 
 ## Piper Plus Setup
