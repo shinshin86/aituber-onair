@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  AIVIS_CLOUD_AIVM_MODELS_SEARCH_API_URL,
   ELEVENLABS_VOICES_API_URL,
   GRADIUM_VOICES_API_URL,
   INWORLD_VOICES_API_URL,
@@ -189,10 +190,62 @@ describe('getVoiceEngineVoiceList', () => {
     expect(init.headers).toEqual({ 'x-api-key': 'gradium-key' });
   });
 
-  it('rejects unsupported engines and missing API keys', async () => {
-    await expect(getVoiceEngineVoiceList('aivisCloud')).rejects.toThrow(
-      'Voice list is not supported for engine: aivisCloud',
+  it('fetches Aivis Cloud model voices from the model search endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        aivm_models: [
+          {
+            aivm_model_uuid: 'model-uuid',
+            name: 'まお',
+            category: 'OriginalCharacter',
+            voice_timbre: 'YouthfulFemale',
+            speakers: [
+              {
+                aivm_speaker_uuid: 'speaker-uuid',
+                name: 'まお',
+                supported_languages: ['ja'],
+                styles: [
+                  { local_id: 0, name: 'ノーマル' },
+                  { local_id: 1, name: 'あまあま' },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      getVoiceEngineVoiceList('aivisCloud', {
+        apiKey: 'aivis-key',
+        limit: 1,
+      }),
+    ).resolves.toEqual([
+      {
+        id: 'model-uuid',
+        label: 'まお',
+        metadata: {
+          speakers: 'まお',
+          styles: 'ノーマル, あまあま',
+          languages: 'ja',
+          category: 'OriginalCharacter',
+          voiceTimbre: 'YouthfulFemale',
+        },
+      },
+    ]);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    const requestUrl = new URL(url);
+    expect(`${requestUrl.origin}${requestUrl.pathname}`).toBe(
+      AIVIS_CLOUD_AIVM_MODELS_SEARCH_API_URL,
     );
+    expect(requestUrl.searchParams.get('limit')).toBe('1');
+    expect(init.headers).toEqual({ Authorization: 'Bearer aivis-key' });
+  });
+
+  it('rejects unsupported engines and missing API keys', async () => {
     await expect(getVoiceEngineVoiceList('minimax')).rejects.toThrow(
       'Voice list is not supported for engine: minimax',
     );

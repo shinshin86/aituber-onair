@@ -9,12 +9,15 @@
     `getAllVoiceEngineCapabilities()` so apps can inspect static engine
     metadata before synthesis.
   - Export `getVoiceEngineVoiceList()` to fetch normalized `{ id, label }`
-    voice choices for VOICEVOX, AivisSpeech, xAI, ElevenLabs, Inworld,
-    and Gradium.
+    voice choices for VOICEVOX, AivisSpeech, Aivis Cloud, xAI, ElevenLabs,
+    Inworld, and Gradium.
   - Update the React example to use the shared voice-list helper instead of
     duplicating provider-specific fetch logic.
   - Keep MiniMax on documented system voice ID presets because the linked
     dynamic voice-list API is currently unavailable.
+  - Mark Aivis Cloud as voice-list capable at the package level while keeping
+    browser examples on manual model UUID entry because model search can fail
+    browser CORS checks.
   - Prefer `Response.arrayBuffer()` in OpenAI TTS response handling for better
     browser and Node compatibility.
 

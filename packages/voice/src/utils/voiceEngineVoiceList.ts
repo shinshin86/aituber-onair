@@ -1,4 +1,5 @@
 import {
+  AIVIS_CLOUD_AIVM_MODELS_SEARCH_API_URL,
   AIVIS_SPEECH_API_URL,
   ELEVENLABS_VOICES_API_URL,
   GRADIUM_VOICES_API_URL,
@@ -61,6 +62,30 @@ interface GradiumVoiceResponse {
   is_catalog?: boolean;
   is_pro_clone?: boolean;
   language?: string | null;
+}
+
+interface AivisCloudStyleResponse {
+  local_id: number;
+  name: string;
+}
+
+interface AivisCloudSpeakerResponse {
+  aivm_speaker_uuid: string;
+  name: string;
+  supported_languages?: string[];
+  styles?: AivisCloudStyleResponse[];
+}
+
+interface AivisCloudModelResponse {
+  aivm_model_uuid: string;
+  name: string;
+  category?: string;
+  voice_timbre?: string;
+  speakers?: AivisCloudSpeakerResponse[];
+}
+
+interface AivisCloudModelSearchResponse {
+  aivm_models?: AivisCloudModelResponse[];
 }
 
 function trimTrailingSlash(value: string): string {
@@ -312,6 +337,62 @@ async function getGradiumVoiceList(
   }));
 }
 
+async function getAivisCloudVoiceList(
+  options: VoiceEngineVoiceListOptions,
+): Promise<VoiceEngineVoice[]> {
+  const url = new URL(
+    options.voiceListApiUrl?.trim() || AIVIS_CLOUD_AIVM_MODELS_SEARCH_API_URL,
+  );
+
+  if (options.limit !== undefined) {
+    url.searchParams.set('limit', String(options.limit));
+  }
+
+  const headers: Record<string, string> = {};
+  const apiKey = options.apiKey?.trim();
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  const result = await fetchJson<AivisCloudModelSearchResponse>(
+    url.toString(),
+    {
+      method: 'GET',
+      headers,
+    },
+    'speakers',
+  );
+
+  return (result.aivm_models ?? []).map((model) => {
+    const speakers = model.speakers ?? [];
+    const speakerNames = speakers.map((speaker) => speaker.name);
+    const styleNames = speakers.flatMap((speaker) =>
+      (speaker.styles ?? []).map((style) => style.name),
+    );
+    const languages = speakers.flatMap(
+      (speaker) => speaker.supported_languages ?? [],
+    );
+
+    return {
+      id: model.aivm_model_uuid,
+      label: model.name,
+      metadata: {
+        ...(speakerNames.length > 0
+          ? { speakers: Array.from(new Set(speakerNames)).join(', ') }
+          : {}),
+        ...(styleNames.length > 0
+          ? { styles: Array.from(new Set(styleNames)).join(', ') }
+          : {}),
+        ...(languages.length > 0
+          ? { languages: Array.from(new Set(languages)).join(', ') }
+          : {}),
+        ...(model.category ? { category: model.category } : {}),
+        ...(model.voice_timbre ? { voiceTimbre: model.voice_timbre } : {}),
+      },
+    };
+  });
+}
+
 export async function getVoiceEngineVoiceList(
   engineType: VoiceEngineType,
   options: VoiceEngineVoiceListOptions = {},
@@ -328,6 +409,8 @@ export async function getVoiceEngineVoiceList(
       return getInworldVoiceList(options);
     case 'gradium':
       return getGradiumVoiceList(options);
+    case 'aivisCloud':
+      return getAivisCloudVoiceList(options);
     default:
       throw new Error(`Voice list is not supported for engine: ${engineType}`);
   }
