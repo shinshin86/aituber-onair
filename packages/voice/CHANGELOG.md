@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.18.0
+
 ### Minor Changes
 
 - Add engine capability and voice-list introspection helpers.
