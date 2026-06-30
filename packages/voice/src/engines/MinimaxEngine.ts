@@ -1,8 +1,6 @@
 import {
   MINIMAX_CHINA_API_URL,
-  MINIMAX_CHINA_VOICE_LIST_URL,
   MINIMAX_GLOBAL_API_URL,
-  MINIMAX_GLOBAL_VOICE_LIST_URL,
 } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
 import { decodeHexToArrayBuffer, fetchWithTimeout } from './internal/utils';
@@ -67,7 +65,7 @@ export interface MinimaxAudioSettingsOptions {
 export class MinimaxEngine implements VoiceEngine {
   private groupId?: string;
   private model: MinimaxModel = 'speech-2.6-hd';
-  private defaultVoiceId: string = 'male-qn-qingse';
+  private defaultVoiceId: string = 'Japanese_IntellectualSenior';
   private language: string = 'Japanese';
   private endpoint: MinimaxEndpoint = 'global';
   private voiceOverrides: MinimaxVoiceSettingsOptions = {};
@@ -217,67 +215,15 @@ export class MinimaxEngine implements VoiceEngine {
   }
 
   /**
-   * Get current voice list API endpoint URL based on selected endpoint
-   * @returns Voice list API endpoint URL
-   */
-  private getVoiceListApiUrl(): string {
-    return this.endpoint === 'china'
-      ? MINIMAX_CHINA_VOICE_LIST_URL
-      : MINIMAX_GLOBAL_VOICE_LIST_URL;
-  }
-
-  /**
    * Get available voice speakers list
-   * Requires only API key
-   * @param apiKey MiniMax API key
-   * @returns Promise<MinimaxVoiceSpeaker[]>
+   *
+   * MiniMax currently documents system voice IDs in its public FAQ, but the
+   * linked dynamic voice-list endpoint is not available.
    */
-  async getVoiceList(apiKey: string): Promise<MinimaxVoiceSpeaker[]> {
-    if (!apiKey) {
-      throw new Error('MiniMax API key is required');
-    }
-
-    const response = await fetchWithTimeout(this.getVoiceListApiUrl(), {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      let errorMessage = `Failed to fetch voice list: ${response.status}`;
-      try {
-        const errorText = await response.text();
-        console.error(
-          'Failed to fetch voice list from MiniMax:',
-          response.status,
-          errorText,
-        );
-        errorMessage = `Failed to fetch voice list: ${response.status} - ${errorText}`;
-      } catch (e) {
-        console.error(
-          'Failed to fetch voice list from MiniMax:',
-          response.status,
-          response.statusText,
-        );
-        errorMessage = `Failed to fetch voice list: ${response.status} - ${response.statusText}`;
-      }
-      throw new Error(errorMessage);
-    }
-
-    const result = await response.json();
-
-    // Check base_resp for API errors
-    if (result.base_resp && result.base_resp.status_code !== 0) {
-      const errorMsg = result.base_resp.status_msg || 'Unknown error';
-      throw new Error(
-        `MiniMax API error: ${result.base_resp.status_code} - ${errorMsg}`,
-      );
-    }
-
-    // Return voice speakers data
-    return result.data?.speakers || [];
+  async getVoiceList(_apiKey?: string): Promise<MinimaxVoiceSpeaker[]> {
+    throw new Error(
+      'MiniMax voice list API is not supported. Use MiniMax system voice IDs from the official documentation.',
+    );
   }
 
   /**

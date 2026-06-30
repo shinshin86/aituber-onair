@@ -120,7 +120,7 @@ export const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'Your MiniMax API key',
     groupIdPlaceholder: 'Your Group ID',
-    speaker: '',
+    speaker: 'Japanese_IntellectualSenior',
     defaultModel: 'speech-2.6-hd' as MinimaxModel,
   },
   piperPlus: {
@@ -150,6 +150,44 @@ export const MINIMAX_MODELS: Record<MinimaxModel, string> = {
   'speech-01-hd': 'Rich Voices, Expressive Emotions, Authentic Languages',
   'speech-01-turbo': 'Excellent performance and low latency',
 };
+
+export const MINIMAX_SYSTEM_VOICES: Record<string, string> = {
+  Japanese_IntellectualSenior: 'Japanese - Intellectual Senior',
+  Japanese_DecisivePrincess: 'Japanese - Decisive Princess',
+  Japanese_LoyalKnight: 'Japanese - Loyal Knight',
+  Japanese_DominantMan: 'Japanese - Dominant Man',
+  Japanese_SeriousCommander: 'Japanese - Serious Commander',
+  Japanese_ColdQueen: 'Japanese - Cold Queen',
+  Japanese_DependableWoman: 'Japanese - Dependable Woman',
+  Japanese_GentleButler: 'Japanese - Gentle Butler',
+  Japanese_KindLady: 'Japanese - Kind Lady',
+  Japanese_CalmLady: 'Japanese - Calm Lady',
+  Japanese_OptimisticYouth: 'Japanese - Optimistic Youth',
+  Japanese_GenerousIzakayaOwner: 'Japanese - Generous Izakaya Owner',
+  Japanese_SportyStudent: 'Japanese - Sporty Student',
+  Japanese_InnocentBoy: 'Japanese - Innocent Boy',
+  Japanese_GracefulMaiden: 'Japanese - Graceful Maiden',
+  English_expressive_narrator: 'English - Expressive Narrator',
+  English_radiant_girl: 'English - Radiant Girl',
+  English_magnetic_voiced_man: 'English - Magnetic-voiced Male',
+  English_Upbeat_Woman: 'English - Upbeat Woman',
+  English_Trustworth_Man: 'English - Trustworthy Man',
+  English_CalmWoman: 'English - Calm Woman',
+  'Chinese (Mandarin)_Reliable_Executive':
+    'Chinese (Mandarin) - Reliable Executive',
+  'Chinese (Mandarin)_News_Anchor': 'Chinese (Mandarin) - News Anchor',
+  Korean_CalmLady: 'Korean - Calm Lady',
+  Korean_OptimisticYouth: 'Korean - Optimistic Youth',
+  Spanish_SereneWoman: 'Spanish - Serene Woman',
+  French_Male_Speech_New: 'French - Level-Headed Man',
+};
+
+export const MINIMAX_SYSTEM_VOICE_OPTIONS = Object.entries(
+  MINIMAX_SYSTEM_VOICES,
+).map(([id, label]) => ({
+  id,
+  label,
+}));
 
 export const GEMINI_TTS_MODELS: Record<string, string> = {
   'gemini-3.1-flash-tts-preview':

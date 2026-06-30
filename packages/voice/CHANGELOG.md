@@ -10,9 +10,11 @@
     metadata before synthesis.
   - Export `getVoiceEngineVoiceList()` to fetch normalized `{ id, label }`
     voice choices for VOICEVOX, AivisSpeech, xAI, ElevenLabs, Inworld,
-    Gradium, and MiniMax.
+    and Gradium.
   - Update the React example to use the shared voice-list helper instead of
     duplicating provider-specific fetch logic.
+  - Keep MiniMax on documented system voice ID presets because the linked
+    dynamic voice-list API is currently unavailable.
   - Prefer `Response.arrayBuffer()` in OpenAI TTS response handling for better
     browser and Node compatibility.
 

@@ -20,7 +20,9 @@ export const OPENAI_COMPATIBLE_TTS_API_URL =
 export const MINIMAX_GLOBAL_API_URL = 'https://api.minimax.io/v1/t2a_v2';
 export const MINIMAX_CHINA_API_URL = 'https://api.minimaxi.com/v1/t2a_v2';
 
-// MiniMax voice list endpoint
+// Deprecated: MiniMax currently documents system voice IDs instead of exposing
+// a confirmed dynamic voice-list API. These endpoints are kept for backward
+// compatibility but should not be used for new integrations.
 export const MINIMAX_GLOBAL_VOICE_LIST_URL =
   'https://api.minimax.io/v1/query/tts_speakers';
 export const MINIMAX_CHINA_VOICE_LIST_URL =

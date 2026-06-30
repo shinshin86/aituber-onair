@@ -1,7 +1,6 @@
 import type { VoiceEngineType } from './voiceEngine';
 
 export type VoiceRuntime = 'browser' | 'node' | 'server' | 'unknown';
-export type VoiceListEndpoint = 'global' | 'china';
 
 export interface VoiceEngineCapabilities {
   engineType: VoiceEngineType;
@@ -22,7 +21,6 @@ export interface VoiceEngineVoiceListOptions {
   apiKey?: string;
   apiUrl?: string;
   voiceListApiUrl?: string;
-  endpoint?: VoiceListEndpoint;
   language?: string;
   includeCatalog?: boolean;
   limit?: number;

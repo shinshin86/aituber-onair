@@ -3,7 +3,6 @@ import {
   ELEVENLABS_VOICES_API_URL,
   GRADIUM_VOICES_API_URL,
   INWORLD_VOICES_API_URL,
-  MINIMAX_CHINA_VOICE_LIST_URL,
   XAI_VOICES_API_URL,
   getVoiceEngineVoiceList,
 } from '../src/index';
@@ -190,55 +189,12 @@ describe('getVoiceEngineVoiceList', () => {
     expect(init.headers).toEqual({ 'x-api-key': 'gradium-key' });
   });
 
-  it('fetches MiniMax voices from the selected endpoint', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        base_resp: { status_code: 0 },
-        data: {
-          speakers: [
-            {
-              voice_id: 'voice-1',
-              voice_name: 'Voice 1',
-              gender: 'female',
-              language: 'Japanese',
-            },
-          ],
-        },
-      }),
-    });
-    vi.stubGlobal('fetch', fetchMock);
-
-    await expect(
-      getVoiceEngineVoiceList('minimax', {
-        apiKey: 'minimax-key',
-        endpoint: 'china',
-      }),
-    ).resolves.toEqual([
-      {
-        id: 'voice-1',
-        label: 'Voice 1 (female)',
-        metadata: { gender: 'female', language: 'Japanese' },
-      },
-    ]);
-    expect(fetchMock).toHaveBeenCalledWith(
-      MINIMAX_CHINA_VOICE_LIST_URL,
-      expect.objectContaining({
-        method: 'GET',
-        headers: {
-          Authorization: 'Bearer minimax-key',
-          'Content-Type': 'application/json',
-        },
-      }),
-    );
-  });
-
   it('rejects unsupported engines and missing API keys', async () => {
     await expect(getVoiceEngineVoiceList('aivisCloud')).rejects.toThrow(
       'Voice list is not supported for engine: aivisCloud',
     );
     await expect(getVoiceEngineVoiceList('minimax')).rejects.toThrow(
-      'MiniMax API key is required',
+      'Voice list is not supported for engine: minimax',
     );
   });
 });

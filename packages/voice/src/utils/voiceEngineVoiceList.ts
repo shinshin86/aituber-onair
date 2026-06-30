@@ -3,8 +3,6 @@ import {
   ELEVENLABS_VOICES_API_URL,
   GRADIUM_VOICES_API_URL,
   INWORLD_VOICES_API_URL,
-  MINIMAX_CHINA_VOICE_LIST_URL,
-  MINIMAX_GLOBAL_VOICE_LIST_URL,
   VOICE_VOX_API_URL,
   XAI_VOICES_API_URL,
 } from '../constants/voiceEngine';
@@ -63,23 +61,6 @@ interface GradiumVoiceResponse {
   is_catalog?: boolean;
   is_pro_clone?: boolean;
   language?: string | null;
-}
-
-interface MinimaxSpeakerResponse {
-  voice_id: string;
-  voice_name: string;
-  gender?: string;
-  language?: string;
-}
-
-interface MinimaxSpeakerListResponse {
-  base_resp?: {
-    status_code?: number;
-    status_msg?: string;
-  };
-  data?: {
-    speakers?: MinimaxSpeakerResponse[];
-  };
 }
 
 function trimTrailingSlash(value: string): string {
@@ -331,49 +312,6 @@ async function getGradiumVoiceList(
   }));
 }
 
-async function getMinimaxVoiceList(
-  options: VoiceEngineVoiceListOptions,
-): Promise<VoiceEngineVoice[]> {
-  const apiKey = requireApiKey('MiniMax', options.apiKey);
-  const url =
-    options.voiceListApiUrl?.trim() ||
-    (options.endpoint === 'china'
-      ? MINIMAX_CHINA_VOICE_LIST_URL
-      : MINIMAX_GLOBAL_VOICE_LIST_URL);
-  const result = await fetchJson<MinimaxSpeakerListResponse>(
-    url,
-    {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    },
-    'speakers',
-  );
-
-  if (
-    result.base_resp?.status_code !== undefined &&
-    result.base_resp.status_code !== 0
-  ) {
-    const statusMessage = result.base_resp.status_msg ?? 'Unknown error';
-    throw new Error(
-      `MiniMax API error: ${result.base_resp.status_code} - ${statusMessage}`,
-    );
-  }
-
-  return (result.data?.speakers ?? []).map((voice) => ({
-    id: voice.voice_id,
-    label: voice.gender
-      ? `${voice.voice_name} (${voice.gender})`
-      : voice.voice_name,
-    metadata: {
-      ...(voice.gender ? { gender: voice.gender } : {}),
-      ...(voice.language ? { language: voice.language } : {}),
-    },
-  }));
-}
-
 export async function getVoiceEngineVoiceList(
   engineType: VoiceEngineType,
   options: VoiceEngineVoiceListOptions = {},
@@ -390,8 +328,6 @@ export async function getVoiceEngineVoiceList(
       return getInworldVoiceList(options);
     case 'gradium':
       return getGradiumVoiceList(options);
-    case 'minimax':
-      return getMinimaxVoiceList(options);
     default:
       throw new Error(`Voice list is not supported for engine: ${engineType}`);
   }

@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   MINIMAX_CHINA_API_URL,
   MINIMAX_GLOBAL_API_URL,
-  MINIMAX_GLOBAL_VOICE_LIST_URL,
 } from '../src/constants/voiceEngine';
 import { MinimaxEngine, type MinimaxModel } from '../src/engines/MinimaxEngine';
 
@@ -135,83 +134,11 @@ describe('MinimaxEngine', () => {
   });
 
   describe('getVoiceList', () => {
-    it('should fetch available MiniMax voices', async () => {
+    it('should reject because MiniMax does not expose a confirmed voice list API', async () => {
       const engine = new MinimaxEngine();
-      const fetchMock = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          base_resp: { status_code: 0 },
-          data: {
-            speakers: [
-              {
-                voice_id: 'voice-1',
-                voice_name: 'Voice 1',
-                gender: 'female',
-                language: 'Japanese',
-              },
-            ],
-          },
-        }),
-      });
-      vi.stubGlobal('fetch', fetchMock);
 
-      await expect(engine.getVoiceList('api-key')).resolves.toEqual([
-        {
-          voice_id: 'voice-1',
-          voice_name: 'Voice 1',
-          gender: 'female',
-          language: 'Japanese',
-        },
-      ]);
-      expect(fetchMock).toHaveBeenCalledWith(
-        MINIMAX_GLOBAL_VOICE_LIST_URL,
-        expect.objectContaining({
-          method: 'GET',
-          headers: {
-            Authorization: 'Bearer api-key',
-            'Content-Type': 'application/json',
-          },
-        }),
-      );
-    });
-
-    it('should validate API key and propagate voice list API errors', async () => {
-      const engine = new MinimaxEngine();
-      vi.spyOn(console, 'error').mockImplementation(() => {});
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue({
-          ok: false,
-          status: 401,
-          text: async () => 'unauthorized',
-        }),
-      );
-
-      await expect(engine.getVoiceList('')).rejects.toThrow(
-        'MiniMax API key is required',
-      );
-      await expect(engine.getVoiceList('api-key')).rejects.toThrow(
-        'Failed to fetch voice list: 401 - unauthorized',
-      );
-    });
-
-    it('should propagate MiniMax voice list base response errors', async () => {
-      const engine = new MinimaxEngine();
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue({
-          ok: true,
-          json: async () => ({
-            base_resp: {
-              status_code: 1001,
-              status_msg: 'invalid token',
-            },
-          }),
-        }),
-      );
-
-      await expect(engine.getVoiceList('api-key')).rejects.toThrow(
-        'MiniMax API error: 1001 - invalid token',
+      await expect(engine.getVoiceList()).rejects.toThrow(
+        'MiniMax voice list API is not supported',
       );
     });
   });

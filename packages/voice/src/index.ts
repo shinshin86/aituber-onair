@@ -37,7 +37,6 @@ export type {
   VoiceEngineCapabilities,
   VoiceEngineVoice,
   VoiceEngineVoiceListOptions,
-  VoiceListEndpoint,
   VoiceRuntime,
 } from './types/capabilities';
 export * from './types/chat';

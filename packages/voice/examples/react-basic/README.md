@@ -13,9 +13,9 @@ This example solves the local development problems with the HTML-based examples:
 - ✅ **Production ready** - Can be built and deployed
 - ✅ **Familiar workflow** - Standard React + Vite development
 
-Provider APIs can still enforce their own browser CORS policies. If a cloud
-voice-list endpoint rejects direct browser requests, use a backend relay/proxy
-for that lookup in production.
+Provider APIs can still enforce their own browser CORS policies. If a supported
+cloud voice-list endpoint rejects direct browser requests, use a backend
+relay/proxy for that lookup in production.
 
 ## 🚀 Quick Start
 
@@ -130,6 +130,10 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 #### MiniMax
 ```bash
 # API key format: "your-api-key:your-group-id"
+# MiniMax uses documented system voice IDs. This example shows representative
+# presets from https://platform.minimax.io/docs/faq/system-voice-id instead of
+# fetching a dynamic voice list, because the linked Get Voice API is currently
+# unavailable.
 ```
 
 #### OpenAI TTS
@@ -232,7 +236,7 @@ The Piper Plus engine uses the following third-party components. By downloading 
 
 1. **Import errors** - `npm run dev` and `npm run build` rebuild `@aituber-onair/voice` automatically. If you still see stale behavior, restart the dev server once.
 2. **API errors** - Check your API keys and ensure services are running
-3. **CORS errors** - For browser use, the target server or provider API must return proper CORS headers. If it does not, use your own backend relay/proxy in production. This can affect cloud voice-list endpoints even when synthesis itself works.
+3. **CORS errors** - For browser use, the target server or provider API must return proper CORS headers. If it does not, use your own backend relay/proxy in production. This can affect supported cloud voice-list endpoints even when synthesis itself works.
 
 ### Audio Playback
 

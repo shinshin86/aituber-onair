@@ -310,7 +310,7 @@ Multi-language TTS supporting 24 languages with HD quality.
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'minimax',
-  speaker: 'male-qn-qingse',
+  speaker: 'Japanese_IntellectualSenior',
   apiKey: 'your-minimax-api-key',
   groupId: 'your-group-id', // Required for MiniMax
   endpoint: 'global' // or 'china'
@@ -318,6 +318,12 @@ const voiceService = new VoiceService({
 ```
 
 **Note**: MiniMax requires both API key and GroupId for authentication. The GroupId is used for user group management, usage tracking, and billing.
+
+Use MiniMax system voice IDs for `speaker`, such as
+`Japanese_IntellectualSenior`. MiniMax documents these IDs in its
+[System Voice ID List](https://platform.minimax.io/docs/faq/system-voice-id).
+The linked dynamic Get Voice API is not currently available, so
+`getVoiceEngineVoiceList()` does not expose MiniMax voice-list fetching.
 
 ### AivisSpeech
 AI-powered speech synthesis with natural voice quality.
@@ -674,6 +680,7 @@ try {
 - HD quality audio output
 - Dual-region endpoints (global/china)
 - Advanced emotion synthesis
+- Uses documented system voice IDs instead of dynamic voice-list fetching
 
 ### Gemini TTS Features
 - Gemini API-based high-quality voice synthesis
@@ -763,9 +770,8 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 
 `getVoiceEngineVoiceList()` returns normalized `{ id, label }` items for
 engines that expose list APIs: VOICEVOX, AivisSpeech, xAI, ElevenLabs,
-Inworld, Gradium, and MiniMax. Pass local `apiUrl` for VOICEVOX-compatible
-servers, `apiKey` for cloud engines, `language` for Inworld filtering, and
-`endpoint: 'global' | 'china'` for MiniMax.
+Inworld, and Gradium. Pass local `apiUrl` for VOICEVOX-compatible servers,
+`apiKey` for cloud engines, and `language` for Inworld filtering.
 
 For browser apps, cloud provider voice-list endpoints must allow CORS. If a
 provider blocks direct browser requests, call `getVoiceEngineVoiceList()` from
@@ -775,6 +781,9 @@ Aivis Cloud is intentionally excluded from this helper for browser apps. While
 Aivis Cloud exposes public model search endpoints, browser requests to those
 model/list endpoints can be blocked by CORS; use a backend proxy before wiring
 dynamic Aivis Cloud model selection into a production UI.
+
+MiniMax is also excluded from this helper. Use the documented system voice IDs
+directly because the linked dynamic Get Voice API is currently unavailable.
 
 ### VoiceService Methods
 

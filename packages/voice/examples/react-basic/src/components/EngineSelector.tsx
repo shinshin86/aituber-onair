@@ -4,6 +4,7 @@ import {
   GEMINI_TTS_VOICES,
   GRADIUM_VOICE_OPTIONS,
   INWORLD_VOICE_LANGUAGE_OPTIONS,
+  MINIMAX_SYSTEM_VOICE_OPTIONS,
   OPENAI_VOICES,
   XAI_VOICE_OPTIONS,
   type EngineType,
@@ -172,40 +173,19 @@ export function EngineSelector({
           <label htmlFor="speaker">Speaker:</label>
           <select
             id="speaker"
-            value={hasSpeakerOptions ? speaker : ''}
+            value={speaker}
             onChange={(e) => onSpeakerChange(e.target.value)}
-            disabled={!hasSpeakerOptions}
           >
-            {hasSpeakerOptions ? (
-              speakerOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))
-            ) : (
-              <option value="">-- 話者一覧を取得してください --</option>
-            )}
+            {MINIMAX_SYSTEM_VOICE_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
           </select>
-          <div className="speaker-fetch-row">
-            <button
-              type="button"
-              className="secondary-action-button"
-              onClick={onFetchSpeakers}
-              disabled={isFetchingSpeakers || !apiKey.trim()}
-              title={!apiKey.trim() ? 'API Keyを入力してください' : undefined}
-            >
-              {isFetchingSpeakers
-                ? '取得中...'
-                : hasSpeakerOptions
-                  ? '再取得'
-                  : '話者一覧を取得'}
-            </button>
+          <div className="speaker-fetch-message">
+            MiniMax の動的な voice list API は現在確認できないため、公式 System
+            Voice ID List の代表的なプリセットを表示しています。
           </div>
-          {speakerFetchError && (
-            <div className="speaker-fetch-message speaker-fetch-message--error">
-              {speakerFetchError}
-            </div>
-          )}
         </div>
       );
     }

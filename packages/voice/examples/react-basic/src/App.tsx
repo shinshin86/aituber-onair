@@ -437,7 +437,6 @@ function App() {
     if (
       engine !== 'voicevox' &&
       engine !== 'aivisSpeech' &&
-      engine !== 'minimax' &&
       engine !== 'xai' &&
       engine !== 'elevenLabs' &&
       engine !== 'inworld' &&
