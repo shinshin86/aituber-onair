@@ -566,7 +566,7 @@ CI/ローカルで再現性を高める場合は
 ```typescript
 const claudeService = ChatServiceFactory.createChatService('claude', {
   apiKey: process.env.ANTHROPIC_API_KEY,
-  model: 'claude-opus-4-8'
+  model: 'claude-sonnet-5'
 });
 ```
 
@@ -1130,7 +1130,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **OpenAI**: GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.5 Flash、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
-- **Claude**: Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
+- **Claude**: Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5.2/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
 - **xAI**: Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
