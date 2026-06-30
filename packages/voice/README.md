@@ -283,7 +283,10 @@ Use `gradiumApiUrl` to override the default
 `https://api.gradium.ai/api/post/speech/tts` endpoint. The `speaker` value is
 sent as Gradium `voice_id`. The React example uses Gradium flagship voice
 presets as a fallback and can fetch the Gradium voice list through
-`getVoiceEngineVoiceList()` when an API key is provided.
+`getVoiceEngineVoiceList()` when an API key is provided. Browser-side voice
+list requests may fail if the Gradium API does not allow direct CORS access;
+use a backend proxy for production browser UIs that need dynamic Gradium voice
+selection.
 
 ### OpenAI-Compatible TTS
 OpenAI-compatible speech endpoints for self-hosted servers such as Kokoro FastAPI.
@@ -664,6 +667,7 @@ try {
 - Passes `speaker` through to `voice_id` as provided
 - Configurable output format and `json_config` controls for temperature, voice similarity, speed, and rewrite rules
 - Flagship voice presets provide readable names for browser speaker selectors
+- Dynamic voice-list lookups may require a backend proxy in browser apps if the provider blocks direct CORS access
 
 ### MiniMax Features
 - 24 language support with automatic detection
@@ -762,6 +766,10 @@ engines that expose list APIs: VOICEVOX, AivisSpeech, xAI, ElevenLabs,
 Inworld, Gradium, and MiniMax. Pass local `apiUrl` for VOICEVOX-compatible
 servers, `apiKey` for cloud engines, `language` for Inworld filtering, and
 `endpoint: 'global' | 'china'` for MiniMax.
+
+For browser apps, cloud provider voice-list endpoints must allow CORS. If a
+provider blocks direct browser requests, call `getVoiceEngineVoiceList()` from
+your backend or expose a small backend relay/proxy for the list endpoint.
 
 Aivis Cloud is intentionally excluded from this helper for browser apps. While
 Aivis Cloud exposes public model search endpoints, browser requests to those

@@ -280,7 +280,10 @@ const voiceService = new VoiceService({
 `gradiumApiUrl` で上書きできます。`speaker` は Gradium の `voice_id`
 として送信されます。React デモでは Gradium の flagship voice プリセットを
 fallback として表示し、API キーがある場合は `getVoiceEngineVoiceList()`
-経由で Gradium の voice list を取得できます。
+経由で Gradium の voice list 取得を試せます。Gradium API がブラウザからの
+直接 CORS アクセスを許可していない場合は失敗するため、production の
+browser UI で動的な Gradium voice 選択を行う場合は backend proxy を
+使用してください。
 
 ### OpenAI互換 TTS
 Kokoro FastAPI などの OpenAI 互換エンドポイントを利用するための TTS プロバイダーです。
@@ -665,6 +668,7 @@ try {
 - 指定した `speaker` をそのまま `voice_id` として送信
 - output format と、temperature / voice similarity / speed / rewrite rules 用の `json_config` 調整に対応
 - flagship voice プリセットの読みやすい音声名を Speaker セレクターに表示
+- provider が直接 CORS アクセスをブロックする場合、browser app での動的な voice list 取得には backend proxy が必要
 
 ### MiniMaxの機能
 - 自動検出付き24言語サポート
@@ -763,6 +767,11 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 xAI、ElevenLabs、Inworld、Gradium、MiniMax です。VOICEVOX 互換サーバーには
 local `apiUrl`、cloud engine には `apiKey`、Inworld の絞り込みには
 `language`、MiniMax の地域切替には `endpoint: 'global' | 'china'` を渡します。
+
+browser app では、cloud provider の voice list endpoint が CORS を許可している
+必要があります。provider がブラウザからの直接リクエストをブロックする場合は、
+backend 側で `getVoiceEngineVoiceList()` を呼ぶか、小さな relay/proxy を
+用意してください。
 
 Aivis Cloud はこの helper の対象外です。公開 model search endpoint はありますが、
 ブラウザから直接 model/list 系 endpoint を呼び出すと CORS でブロックされる場合が

@@ -63,6 +63,21 @@ const createInitialVoicepeakEmotionWeights = (): Record<
   surprised: '',
 });
 
+function formatSpeakerFetchError(error: unknown): string {
+  const message =
+    error instanceof Error ? error.message : 'Failed to fetch speakers';
+
+  if (
+    message === 'Failed to fetch' ||
+    message.includes('NetworkError') ||
+    message.includes('Load failed')
+  ) {
+    return `${message}. This may be a browser CORS or network failure. If the provider does not allow direct browser requests, use a backend proxy for voice list lookups.`;
+  }
+
+  return message;
+}
+
 function App() {
   const [engine, setEngine] = useState<EngineType>('openai');
   const [apiKey, setApiKey] = useState('');
@@ -465,9 +480,7 @@ function App() {
             : String(ENGINE_DEFAULTS.xai.speaker),
         );
       }
-      setSpeakerFetchError(
-        error instanceof Error ? error.message : 'Failed to fetch speakers',
-      );
+      setSpeakerFetchError(formatSpeakerFetchError(error));
     } finally {
       setIsFetchingSpeakers(false);
     }

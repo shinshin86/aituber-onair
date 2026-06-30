@@ -250,9 +250,9 @@ export function EngineSelector({
             </div>
           )}
           <div className="speaker-fetch-message">
-            API Key を入力すると Gradium
-            の話者一覧を取得できます。未取得時は公式 flagship voice
-            をプリセット表示しています。
+            API Key を入力すると Gradium の話者一覧取得を試せます。ブラウザ CORS
+            で失敗する場合は backend proxy を使用してください。未取得時は 公式
+            flagship voice をプリセット表示しています。
           </div>
         </div>
       );

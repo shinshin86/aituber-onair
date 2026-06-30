@@ -4,14 +4,18 @@ This is a React + Vite example demonstrating how to use the `@aituber-onair/voic
 
 ## 🎯 Why React Example?
 
-This example solves all the problems with the HTML-based examples:
+This example solves the local development problems with the HTML-based examples:
 
-- ✅ **No CORS issues** - Vite dev server handles everything
+- ✅ **No local file/module CORS issues** - Vite dev server handles local assets and imports
 - ✅ **No .js extension problems** - Bundler resolves imports automatically  
 - ✅ **Hot reload** - Fast development experience
 - ✅ **TypeScript support** - Full type safety
 - ✅ **Production ready** - Can be built and deployed
 - ✅ **Familiar workflow** - Standard React + Vite development
+
+Provider APIs can still enforce their own browser CORS policies. If a cloud
+voice-list endpoint rejects direct browser requests, use a backend relay/proxy
+for that lookup in production.
 
 ## 🚀 Quick Start
 
@@ -149,8 +153,10 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 #### Gradium TTS
 ```bash
 # Default endpoint: https://api.gradium.ai/api/post/speech/tts
-# Enter a Gradium API key, then fetch voices or select a built-in flagship
-# voice preset.
+# Enter a Gradium API key, then try fetching voices or select a built-in
+# flagship voice preset.
+# If the voice-list request fails CORS in the browser, use a backend proxy for
+# dynamic voice selection in production.
 ```
 
 #### Aivis Cloud
@@ -226,7 +232,7 @@ The Piper Plus engine uses the following third-party components. By downloading 
 
 1. **Import errors** - `npm run dev` and `npm run build` rebuild `@aituber-onair/voice` automatically. If you still see stale behavior, restart the dev server once.
 2. **API errors** - Check your API keys and ensure services are running
-3. **CORS errors** - For browser use, the target server must return proper CORS headers. If it does not, use your own backend relay/proxy in production.
+3. **CORS errors** - For browser use, the target server or provider API must return proper CORS headers. If it does not, use your own backend relay/proxy in production. This can affect cloud voice-list endpoints even when synthesis itself works.
 
 ### Audio Playback
 
