@@ -233,4 +233,99 @@ describe('rankComments', () => {
     expect(result.rankedComments[1].reasons).toContain('duplicate');
     expect(result.rankedComments[1].scoreBreakdown.penalty).toBeGreaterThan(0);
   });
+
+  it('deprioritizes answered comments and marks them ignored_recently', () => {
+    const result = rankComments({
+      comments: [
+        comment('answered', '今日なにするの？', 'viewer-1', 1),
+        comment('fresh', 'どうやるの？', 'viewer-2', 1),
+      ],
+      safetyReports: [],
+      answeredStates: [{ commentId: 'answered', answeredAt: Date.now() }],
+      config: {
+        answeredMemory: { enabled: true, mode: 'deprioritize' },
+      },
+    });
+
+    expect(result.selectedComments[0].id).toBe('fresh');
+    const answered = result.rankedComments.find(
+      (ranked) => ranked.id === 'answered'
+    );
+    expect(answered?.reasons).toContain('ignored_recently');
+    expect(answered?.scoreBreakdown.novelty).toBe(0);
+    expect(answered?.scoreBreakdown.freshness).toBe(0);
+    expect(answered?.scoreBreakdown.penalty).toBeGreaterThan(0);
+  });
+
+  it('keeps answered comments ranked but excludes them from selection', () => {
+    const result = rankComments({
+      comments: [
+        comment('answered', '今日なにするの？', 'viewer-1', 1),
+        comment('fallback', 'こんにちは', 'viewer-2', 1),
+      ],
+      safetyReports: [],
+      answeredStates: [{ commentId: 'answered', answeredAt: Date.now() }],
+      config: {
+        answeredMemory: { enabled: true, mode: 'exclude' },
+      },
+    });
+
+    expect(result.rankedComments.map((ranked) => ranked.id)).toContain(
+      'answered'
+    );
+    expect(
+      result.selectedComments.map((selected) => selected.id)
+    ).not.toContain('answered');
+  });
+
+  it('deprioritizes comments from answered viewers when dedupeByViewer is enabled', () => {
+    const result = rankComments({
+      comments: [
+        comment('same-viewer', '今日なにするの？', 'viewer-1', 1),
+        comment('other-viewer', 'どうやるの？', 'viewer-2', 1),
+      ],
+      safetyReports: [],
+      answeredStates: [
+        {
+          commentId: 'old-comment',
+          authorId: 'viewer-1',
+          answeredAt: Date.now(),
+        },
+      ],
+      config: {
+        answeredMemory: {
+          enabled: true,
+          mode: 'deprioritize',
+          dedupeByViewer: true,
+        },
+      },
+    });
+
+    expect(result.selectedComments[0].id).toBe('other-viewer');
+    expect(
+      result.rankedComments.find((ranked) => ranked.id === 'same-viewer')
+        ?.reasons
+    ).toContain('ignored_recently');
+  });
+
+  it('does not change ranking when answered memory is empty', () => {
+    const comments = [
+      comment('greeting', 'こんにちは', 'viewer-1', 1),
+      comment('question', '今日なにするの？', 'viewer-2', 1),
+    ];
+    const baseline = rankComments({ comments, safetyReports: [] });
+    const withEmptyAnswered = rankComments({
+      comments,
+      safetyReports: [],
+      answeredStates: [],
+      config: { answeredMemory: { enabled: true } },
+    });
+
+    expect(withEmptyAnswered.rankedComments.map((ranked) => ranked.id)).toEqual(
+      baseline.rankedComments.map((ranked) => ranked.id)
+    );
+    expect(
+      withEmptyAnswered.selectedComments.map((selected) => selected.id)
+    ).toEqual(baseline.selectedComments.map((selected) => selected.id));
+  });
 });

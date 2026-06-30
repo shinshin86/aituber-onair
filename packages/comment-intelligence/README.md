@@ -15,6 +15,8 @@ It helps your AI character decide which comment to respond to, which comments to
 - Summarizes ignored comments without calling an LLM by default.
 - Builds safe context and instructions for `@aituber-onair/core`.
 - Keeps short-lived viewer safety memory so repeat unsafe viewers can be skipped.
+- Keeps short-lived answered comment memory so already answered comments can be
+  deprioritized or excluded in later ranking.
 - Optionally accepts an injected LLM analysis provider.
 
 ## What It Does Not Do
@@ -53,6 +55,20 @@ await core.processChat(promptForCore);
 ```
 
 Keep the same `intelligence` instance for a live stream if you want viewer safety memory to work across batches. The stateless `analyzeComments()` helper is useful for one-shot analysis, but it does not remember previous viewers.
+
+Use `markAnswered()` on the same instance after your app finishes reading or
+replying to a selected comment. Later `rules` analysis will mark matching
+comments with `ignored_recently` and deprioritize them by default.
+
+```ts
+const result = await intelligence.analyze({ comments });
+const selected = result.selectedComments[0];
+
+if (selected) {
+  await core.processChat(selected.text);
+  intelligence.markAnswered(selected.id, { authorId: selected.author.id });
+}
+```
 
 ## Live Comment Filter Example
 
@@ -177,6 +193,41 @@ const result = await intelligence.analyze({
 });
 ```
 
+### Avoid answering the same comment or viewer repeatedly
+
+Answered memory is enabled by default, but it is a no-op until the app provides
+an explicit signal. Call `markAnswered(commentId)` after the selected comment
+has been handled, or pass `answeredCommentIds` / `answeredViewerIds` to a single
+`analyze()` call. The instance keeps answered state for the configured TTL.
+
+```ts
+const intelligence = createCommentIntelligence({
+  ranking: {
+    answeredMemory: {
+      ttlMs: 10 * 60 * 1000,
+      mode: 'deprioritize', // or 'exclude'
+      dedupeByViewer: true,
+    },
+  },
+});
+
+intelligence.markAnswered('comment-1', {
+  authorId: 'viewer-1',
+});
+
+const result = await intelligence.analyze({
+  comments,
+  answeredCommentIds: ['comment-from-app-state'],
+});
+
+console.log(result.answeredCommentIds);
+console.log(intelligence.listAnsweredStates());
+```
+
+Use `clearAnswered(commentId)` to forget one comment or `clearAnswered()` to
+clear the stream-local answered memory. `getAnsweredState(commentId)` and
+`listAnsweredStates()` are intended for dashboards and debugging.
+
 ## Rules Mode
 
 `rules` mode is the default and never calls an LLM provider. It uses local heuristics for safety, ranking, ignored-comment summaries, and LLM context.
@@ -266,6 +317,13 @@ your stream.
 
 Functions and constants: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`.
 
-The object returned by `createCommentIntelligence()` exposes `analyze()`, `getViewerSafetyState()`, and `resetViewerSafetyState()`.
+The object returned by `createCommentIntelligence()` exposes `analyze()`,
+`markAnswered()`, `getAnsweredState()`, `listAnsweredStates()`,
+`clearAnswered()`, `getViewerSafetyState()`, and `resetViewerSafetyState()`.
 
-Types include `LiveComment`, `CommentAuthor`, `ViewerProfile`, `ViewerSafetyState`, `StreamState`, `RankedComment`, `SafetyReport`, `IgnoredCommentsSummary`, `CommentIntelligenceResult`, `CommentIntelligenceConfig`, `AnalyzeCommentsInput`, `AgentCommentDecision`, `AgentSelectedComment`, `AgentSafetySummary`, `AgentToolDefinition`, and optional LLM provider/result types.
+Types include `LiveComment`, `CommentAuthor`, `ViewerProfile`,
+`ViewerSafetyState`, `AnsweredState`, `StreamState`, `RankedComment`,
+`SafetyReport`, `IgnoredCommentsSummary`, `CommentIntelligenceResult`,
+`CommentIntelligenceConfig`, `AnalyzeCommentsInput`, `AgentCommentDecision`,
+`AgentSelectedComment`, `AgentSafetySummary`, `AgentToolDefinition`, and
+optional LLM provider/result types.
