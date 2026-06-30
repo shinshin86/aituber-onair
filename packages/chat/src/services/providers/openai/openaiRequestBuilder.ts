@@ -18,7 +18,12 @@ import type {
   MessageWithVision,
   ToolDefinition,
 } from '../../../types';
+import type { BaseChatServiceOptions } from '../ChatServiceProvider';
 import { buildOpenAIToolsDefinition } from './openaiToolBuilder';
+
+type OpenAIResponseFormat = NonNullable<
+  BaseChatServiceOptions['responseFormat']
+>;
 
 const GPT5_RESPONSE_LENGTH_MIN_TOKENS: Record<ChatResponseLength, number> = {
   [CHAT_RESPONSE_LENGTH.VERY_SHORT]: 800,
@@ -58,8 +63,20 @@ type BuildOpenAIRequestBodyOptions = {
   verbosity?: 'low' | 'medium' | 'high';
   reasoning_effort?: OpenAIReasoningEffort;
   enableReasoningSummary?: boolean;
+  responseFormat?: OpenAIResponseFormat;
   maxTokens?: number;
 };
+
+function toResponsesTextFormat(responseFormat: OpenAIResponseFormat): any {
+  if (responseFormat.type !== 'json_schema') {
+    return responseFormat;
+  }
+
+  return {
+    type: responseFormat.type,
+    ...responseFormat.json_schema,
+  };
+}
 
 /**
  * Build request body based on the endpoint type.
@@ -76,6 +93,7 @@ export function buildOpenAIRequestBody({
   verbosity,
   reasoning_effort,
   enableReasoningSummary,
+  responseFormat,
   maxTokens,
 }: BuildOpenAIRequestBodyOptions): any {
   const isResponsesAPI = endpoint === ENDPOINT_OPENAI_RESPONSES_API;
@@ -155,6 +173,17 @@ export function buildOpenAIRequestBody({
       if (verbosity) {
         body.verbosity = verbosity;
       }
+    }
+  }
+
+  if (responseFormat) {
+    if (isResponsesAPI) {
+      body.text = {
+        ...body.text,
+        format: toResponsesTextFormat(responseFormat),
+      };
+    } else {
+      body.response_format = responseFormat;
     }
   }
 

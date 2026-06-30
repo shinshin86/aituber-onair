@@ -91,7 +91,7 @@ export class OpenAIChatServiceProvider
         ? ENDPOINT_OPENAI_RESPONSES_API
         : ENDPOINT_OPENAI_CHAT_COMPLETIONS_API);
 
-    return new OpenAIChatService(
+    const serviceArgs: ConstructorParameters<typeof OpenAIChatService> = [
       optimizedOptions.apiKey,
       modelName,
       visionModel,
@@ -103,7 +103,13 @@ export class OpenAIChatServiceProvider
       optimizedOptions.reasoning_effort,
       optimizedOptions.enableReasoningSummary,
       this.getProviderName(),
-    );
+    ];
+
+    if (optimizedOptions.responseFormat !== undefined) {
+      serviceArgs.push(true, optimizedOptions.responseFormat);
+    }
+
+    return new OpenAIChatService(...serviceArgs);
   }
 
   /**

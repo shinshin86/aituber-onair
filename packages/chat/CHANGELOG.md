@@ -1,5 +1,13 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+### Minor Changes
+
+- Added provider capability discovery APIs for UI and agent planning, including
+  metadata for tools, MCP, JSON mode, vision, response length, and reasoning
+  effort support.
+
 ## 0.43.0
 
 ### Minor Changes

@@ -18,7 +18,7 @@ export class OpenAICompatibleChatServiceProvider
 {
   createChatService(options: OpenAICompatibleChatServiceOptions): ChatService {
     this.validateRequiredOptions(options);
-    return new OpenAIChatService(
+    const serviceArgs: ConstructorParameters<typeof OpenAIChatService> = [
       options.apiKey?.trim() ?? '',
       options.model,
       options.visionModel ?? options.model,
@@ -31,7 +31,13 @@ export class OpenAICompatibleChatServiceProvider
       options.enableReasoningSummary,
       this.getProviderName(),
       false,
-    );
+    ];
+
+    if (options.responseFormat !== undefined) {
+      serviceArgs.push(options.responseFormat);
+    }
+
+    return new OpenAIChatService(...serviceArgs);
   }
 
   getProviderName(): string {

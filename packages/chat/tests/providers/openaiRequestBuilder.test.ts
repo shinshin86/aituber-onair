@@ -146,6 +146,66 @@ describe('buildOpenAIRequestBody', () => {
     ]);
   });
 
+  it('adds response_format for chat completions JSON mode', () => {
+    const body = buildOpenAIRequestBody({
+      provider: 'openai',
+      endpoint: ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+      messages,
+      model: MODEL_GPT_5_4_MINI,
+      stream: false,
+      tools: [],
+      mcpServers: [],
+      responseFormat: { type: 'json_object' },
+    });
+
+    expect(body.response_format).toEqual({ type: 'json_object' });
+  });
+
+  it('maps responseFormat into responses text.format', () => {
+    const body = buildOpenAIRequestBody({
+      provider: 'openai',
+      endpoint: ENDPOINT_OPENAI_RESPONSES_API,
+      messages,
+      model: MODEL_GPT_5_4_MINI,
+      stream: false,
+      tools: [],
+      mcpServers: [],
+      verbosity: 'low',
+      responseFormat: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'sample',
+          schema: {
+            type: 'object',
+            properties: {
+              answer: { type: 'string' },
+            },
+            required: ['answer'],
+            additionalProperties: false,
+          },
+          strict: true,
+        },
+      },
+    });
+
+    expect(body.text).toEqual({
+      verbosity: 'low',
+      format: {
+        type: 'json_schema',
+        name: 'sample',
+        schema: {
+          type: 'object',
+          properties: {
+            answer: { type: 'string' },
+          },
+          required: ['answer'],
+          additionalProperties: false,
+        },
+        strict: true,
+      },
+    });
+  });
+
   it('normalizes Mistral image_url blocks to string URLs', () => {
     const visionMessages: MessageWithVision[] = [
       {
