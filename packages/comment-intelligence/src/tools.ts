@@ -59,6 +59,18 @@ export const ANALYZE_LIVE_COMMENTS_TOOL: AgentToolDefinition = {
           language: { type: 'string', enum: ['ja', 'en', 'auto'] },
         },
       },
+      answeredCommentIds: {
+        type: 'array',
+        description:
+          'Comment ids that have already been answered in this session and should be deprioritized or excluded.',
+        items: { type: 'string' },
+      },
+      answeredViewerIds: {
+        type: 'array',
+        description:
+          'Viewer ids that have already been answered recently and should be deprioritized or excluded.',
+        items: { type: 'string' },
+      },
     },
     required: ['comments'],
   },

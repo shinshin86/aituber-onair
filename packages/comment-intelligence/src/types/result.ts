@@ -23,6 +23,7 @@ export type CommentIntelligenceResult = {
   safetyReports: SafetyReport[];
   contextForLLM: string[];
   instructionForLLM: string;
+  answeredCommentIds?: string[];
   debug?: CommentIntelligenceDebugInfo;
 };
 
@@ -30,6 +31,8 @@ export type AnalyzeCommentsInput = {
   comments: LiveComment[];
   recentMessages?: RecentAiMessage[];
   recentAiMessages?: RecentAiMessage[];
+  answeredCommentIds?: string[];
+  answeredViewerIds?: string[];
   viewerProfiles?: ViewerProfile[];
   streamState?: StreamState;
   options?: Partial<import('./config.js').CommentIntelligenceConfig>;

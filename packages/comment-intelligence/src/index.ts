@@ -20,6 +20,7 @@ export type {
   LiveComment,
 } from './types/comment.js';
 export { DEFAULT_COMMENT_INTELLIGENCE_CONFIG } from './createCommentIntelligence.js';
+export type { AnsweredState } from './types/answered.js';
 export type { CommentIntelligenceConfig } from './types/config.js';
 export type { CommentAnalysisMode } from './types/config.js';
 export type { RecentAiMessage, StreamState } from './types/context.js';

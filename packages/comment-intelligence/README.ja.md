@@ -13,6 +13,7 @@ AIチューバーがライブコメントを安全かつ自然に扱うための
 - LLMなしで未選択コメントを要約します。
 - `@aituber-onair/core` に渡す安全な文脈と指示を生成します。
 - ルール違反した視聴者を短時間覚えて、以降のコメントを拾わないようにできます。
+- 返答済みコメントを短時間覚えて、以降のランキングで下げる、または除外できます。
 - 必要な場合だけ、アプリ側から注入された LLM provider を使えます。
 
 ## やらないこと
@@ -51,6 +52,20 @@ await core.processChat(promptForCore);
 ```
 
 ライブ配信中に視聴者ごとの安全状態を覚えたい場合は、同じ `intelligence` インスタンスを使い続けてください。関数型の `analyzeComments()` は単発分析には便利ですが、過去の視聴者状態は覚えません。
+
+アプリが選択コメントを読み上げ・返答し終えたら、同じインスタンスに
+`markAnswered()` を呼んでください。以降の rules 分析では一致する
+コメントに `ignored_recently` が付き、初期設定では優先度が下がります。
+
+```ts
+const result = await intelligence.analyze({ comments });
+const selected = result.selectedComments[0];
+
+if (selected) {
+  await core.processChat(selected.text);
+  intelligence.markAnswered(selected.id, { authorId: selected.author.id });
+}
+```
 
 ## ライブコメントフィルターサンプル
 
@@ -162,6 +177,42 @@ const result = await intelligence.analyze({
 });
 ```
 
+### 同じコメント・同じ視聴者を何度も拾わない
+
+answered memory は初期状態で有効ですが、アプリから明示シグナルが渡る
+までは何もしません。選択コメントの処理後に `markAnswered(commentId)`
+を呼ぶか、単発の `analyze()` に `answeredCommentIds` /
+`answeredViewerIds` を渡します。インスタンスは設定された TTL の間だけ
+返答済み状態を保持します。
+
+```ts
+const intelligence = createCommentIntelligence({
+  ranking: {
+    answeredMemory: {
+      ttlMs: 10 * 60 * 1000,
+      mode: 'deprioritize', // または 'exclude'
+      dedupeByViewer: true,
+    },
+  },
+});
+
+intelligence.markAnswered('comment-1', {
+  authorId: 'viewer-1',
+});
+
+const result = await intelligence.analyze({
+  comments,
+  answeredCommentIds: ['comment-from-app-state'],
+});
+
+console.log(result.answeredCommentIds);
+console.log(intelligence.listAnsweredStates());
+```
+
+`clearAnswered(commentId)` で1件だけ、`clearAnswered()` で配信ローカルの
+answered memory 全体を消せます。`getAnsweredState(commentId)` と
+`listAnsweredStates()` は dashboard や debug 用に使えます。
+
 ## rules mode
 
 `rules` が初期値です。このモードでは LLM provider を呼びません。安全判定、ランキング、未選択コメント要約、LLM向け文脈生成はすべてローカルのルールで行います。
@@ -236,6 +287,8 @@ console.log(debugDecision.rankedComments);
 
 関数・定数: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`。
 
-`createCommentIntelligence()` が返す object には、`analyze()`, `getViewerSafetyState()`, `resetViewerSafetyState()` があります。
+`createCommentIntelligence()` が返す object には、`analyze()`,
+`markAnswered()`, `getAnsweredState()`, `listAnsweredStates()`,
+`clearAnswered()`, `getViewerSafetyState()`, `resetViewerSafetyState()` があります。
 
-主な型: `LiveComment`, `CommentAuthor`, `ViewerProfile`, `ViewerSafetyState`, `StreamState`, `RankedComment`, `SafetyReport`, `IgnoredCommentsSummary`, `CommentIntelligenceResult`, `CommentIntelligenceConfig`, `AnalyzeCommentsInput`, `AgentCommentDecision`, `AgentSelectedComment`, `AgentSafetySummary`, `AgentToolDefinition`, LLM provider/result types。
+主な型: `LiveComment`, `CommentAuthor`, `ViewerProfile`, `ViewerSafetyState`, `AnsweredState`, `StreamState`, `RankedComment`, `SafetyReport`, `IgnoredCommentsSummary`, `CommentIntelligenceResult`, `CommentIntelligenceConfig`, `AnalyzeCommentsInput`, `AgentCommentDecision`, `AgentSelectedComment`, `AgentSafetySummary`, `AgentToolDefinition`, LLM provider/result types。

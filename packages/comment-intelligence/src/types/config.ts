@@ -26,6 +26,12 @@ export type CommentIntelligenceConfig = {
     topicFilter?: 'off' | 'prefer' | 'require';
     maxSelectedComments?: number;
     minScore?: number;
+    answeredMemory?: {
+      enabled?: boolean;
+      ttlMs?: number;
+      mode?: 'deprioritize' | 'exclude';
+      dedupeByViewer?: boolean;
+    };
     weights?: Partial<RankingWeights>;
   };
   summary?: {
