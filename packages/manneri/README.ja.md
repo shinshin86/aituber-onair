@@ -167,6 +167,9 @@ if (review.shouldRewrite) {
 繰り返しパターン、話題偏り、介入理由を確認できます。`suggestion` は
 `shouldRewrite` が `false` のときは含まれません。
 
+`examples/draft-review-basic` には、送信可否、レビュー理由、書き直し
+suggestion を一連の流れで確認できるブラウザサンプルがあります。
+
 ### Agent tool 定義
 
 `REVIEW_DRAFT_REPETITION_TOOL` は `reviewDraft(messages, draft)` の入力を

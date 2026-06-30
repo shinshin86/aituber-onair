@@ -171,6 +171,9 @@ The returned `analysis` is the same shape as `analyzeConversation()`, so you can
 inspect similarity, repeated patterns, topic bias, and the intervention reason.
 `suggestion` is omitted when `shouldRewrite` is `false`.
 
+See `examples/draft-review-basic` for a browser sample that shows the send vs.
+regenerate decision, review reason, and rewrite suggestion in one flow.
+
 ### Agent Tool Definition
 
 `REVIEW_DRAFT_REPETITION_TOOL` is a provider-agnostic JSON Schema tool

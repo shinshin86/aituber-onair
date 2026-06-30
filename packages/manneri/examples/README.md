@@ -14,3 +14,18 @@ Build the example:
 ```sh
 npm -w @aituber-onair/manneri run example:browser-basic:build
 ```
+
+## Draft Review Basic
+
+Browser UI for trying `reviewDraft()` with sample conversation history and a
+draft reply before sending it to users.
+
+```sh
+npm -w @aituber-onair/manneri run example:draft-review
+```
+
+Build the example:
+
+```sh
+npm -w @aituber-onair/manneri run example:draft-review:build
+```

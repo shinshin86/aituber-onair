@@ -11,6 +11,8 @@
     "build": "tsc --project tsconfig.json",
     "example:browser-basic": "vite --host 127.0.0.1 examples/browser-basic",
     "example:browser-basic:build": "vite build examples/browser-basic",
+    "example:draft-review": "vite --host 127.0.0.1 examples/draft-review-basic",
+    "example:draft-review:build": "vite build examples/draft-review-basic",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck && vitest run",
     "test:watch": "vitest",
