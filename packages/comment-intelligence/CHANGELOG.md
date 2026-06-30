@@ -27,6 +27,8 @@
   `ANALYZE_LIVE_COMMENTS_TOOL` and `COMMENT_INTELLIGENCE_AGENT_TOOLS`.
 - Exports `DEFAULT_COMMENT_INTELLIGENCE_CONFIG` for agent and UI
   introspection.
+- Adds a small Node.js agent decision sample that demonstrates compact output,
+  full detail output, and the tool definition summary.
 
 ## 0.0.3
 

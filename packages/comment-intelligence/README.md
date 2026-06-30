@@ -75,6 +75,21 @@ npm --prefix ../.. run example:live-comment-filter-sample
 Open the local URL shown by Vite and paste comments as `viewer: comment`.
 The example UI can be switched between English and Japanese.
 
+## Agent Decision Sample
+
+For the agent-facing APIs, this package also includes a small Node.js sample
+that passes fixed sample comments into `analyze()`, prints the compact
+`toAgentCommentDecision(result)` output, compares it with `detail: 'full'`, and
+shows the `ANALYZE_LIVE_COMMENTS_TOOL` summary.
+
+```sh
+npm -w @aituber-onair/comment-intelligence run example:agent-decision-sample
+```
+
+The sample lives in
+`packages/comment-intelligence/examples/agent-decision-sample`. It does not
+connect to YouTube, Twitch, `@aituber-onair/core`, or any LLM provider.
+
 ## Real Stream Use Cases
 
 ### Do not pick up comments from viewers who keep posting unsafe content

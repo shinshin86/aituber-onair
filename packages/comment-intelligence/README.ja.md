@@ -72,6 +72,16 @@ npm --prefix ../.. run example:live-comment-filter-sample
 Vite が表示するローカルURLを開き、`視聴者名: コメント` 形式でコメントを貼り付けてください。
 サンプルUIは英語・日本語を切り替えられます。
 
+## Agent decision sample
+
+Agent向け API を試すための小さな Node.js サンプルも含めています。固定のサンプルコメントを `analyze()` に渡し、初期値の compact `toAgentCommentDecision(result)`、`detail: 'full'` の比較、`ANALYZE_LIVE_COMMENTS_TOOL` の概要を表示します。
+
+```sh
+npm -w @aituber-onair/comment-intelligence run example:agent-decision-sample
+```
+
+サンプルは `packages/comment-intelligence/examples/agent-decision-sample` にあります。YouTube、Twitch、`@aituber-onair/core`、LLM provider には接続しません。
+
 ## 実配信で起こりうるユースケース
 
 ### 嫌なコメントや危険な指示を送ってきた人をしばらく拾わない
