@@ -2,11 +2,16 @@
 
 ## Unreleased
 
+## 0.44.0
+
 ### Minor Changes
 
 - Added provider capability discovery APIs for UI and agent planning, including
   metadata for tools, MCP, JSON mode, vision, response length, and reasoning
   effort support.
+- Added Claude Sonnet 5 (`claude-sonnet-5`) to the Claude constants, provider
+  supported model list, vision support metadata, tests, React basic selector,
+  and English/Japanese README documentation.
 
 ## 0.43.0
 
