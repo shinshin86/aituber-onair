@@ -4,6 +4,7 @@ import {
   GEMINI_TTS_VOICES,
   GRADIUM_VOICE_OPTIONS,
   INWORLD_VOICE_LANGUAGE_OPTIONS,
+  MINIMAX_SYSTEM_VOICE_OPTIONS,
   OPENAI_VOICES,
   XAI_VOICE_OPTIONS,
   type EngineType,
@@ -172,19 +173,41 @@ export function EngineSelector({
           <label htmlFor="speaker">Speaker:</label>
           <select
             id="speaker"
-            value={hasSpeakerOptions ? speaker : ''}
+            value={speaker}
             onChange={(e) => onSpeakerChange(e.target.value)}
-            disabled={!hasSpeakerOptions}
           >
-            {hasSpeakerOptions ? (
-              speakerOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))
-            ) : (
-              <option value="">-- 話者一覧を取得してください --</option>
-            )}
+            {MINIMAX_SYSTEM_VOICE_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="speaker-fetch-message">
+            MiniMax の動的な voice list API は現在確認できないため、公式 System
+            Voice ID List の代表的なプリセットを表示しています。
+          </div>
+        </div>
+      );
+    }
+
+    if (engine === 'gradium') {
+      const gradiumSpeakerOptions = hasSpeakerOptions
+        ? speakerOptions
+        : GRADIUM_VOICE_OPTIONS;
+
+      return (
+        <div className="form-group">
+          <label htmlFor="speaker">Speaker:</label>
+          <select
+            id="speaker"
+            value={speaker}
+            onChange={(e) => onSpeakerChange(e.target.value)}
+          >
+            {gradiumSpeakerOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
           </select>
           <div className="speaker-fetch-row">
             <button
@@ -206,27 +229,9 @@ export function EngineSelector({
               {speakerFetchError}
             </div>
           )}
-        </div>
-      );
-    }
-
-    if (engine === 'gradium') {
-      return (
-        <div className="form-group">
-          <label htmlFor="speaker">Speaker:</label>
-          <select
-            id="speaker"
-            value={speaker}
-            onChange={(e) => onSpeakerChange(e.target.value)}
-          >
-            {GRADIUM_VOICE_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
           <div className="speaker-fetch-message">
-            Gradium の話者一覧 API はブラウザ CORS の制約があるため、 公式
+            API Key を入力すると Gradium の話者一覧取得を試せます。ブラウザ CORS
+            で失敗する場合は backend proxy を使用してください。未取得時は 公式
             flagship voice をプリセット表示しています。
           </div>
         </div>

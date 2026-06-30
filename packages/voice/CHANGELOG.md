@@ -1,5 +1,23 @@
 # @aituber-onair/voice
 
+## Unreleased
+
+### Minor Changes
+
+- Add engine capability and voice-list introspection helpers.
+  - Export `getVoiceEngineCapabilities()` and
+    `getAllVoiceEngineCapabilities()` so apps can inspect static engine
+    metadata before synthesis.
+  - Export `getVoiceEngineVoiceList()` to fetch normalized `{ id, label }`
+    voice choices for VOICEVOX, AivisSpeech, xAI, ElevenLabs, Inworld,
+    and Gradium.
+  - Update the React example to use the shared voice-list helper instead of
+    duplicating provider-specific fetch logic.
+  - Keep MiniMax on documented system voice ID presets because the linked
+    dynamic voice-list API is currently unavailable.
+  - Prefer `Response.arrayBuffer()` in OpenAI TTS response handling for better
+    browser and Node compatibility.
+
 ## 0.17.0
 
 ### Minor Changes

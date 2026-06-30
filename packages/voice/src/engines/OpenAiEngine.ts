@@ -69,6 +69,10 @@ export class OpenAiEngine implements VoiceEngine {
       throw new Error('Failed to fetch TTS from OpenAI TTS.');
     }
 
+    if (typeof response.arrayBuffer === 'function') {
+      return await response.arrayBuffer();
+    }
+
     const blob = await response.blob();
     return await blob.arrayBuffer();
   }

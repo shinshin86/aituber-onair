@@ -282,9 +282,11 @@ const voiceService = new VoiceService({
 Use `gradiumApiUrl` to override the default
 `https://api.gradium.ai/api/post/speech/tts` endpoint. The `speaker` value is
 sent as Gradium `voice_id`. The React example uses Gradium flagship voice
-presets so browser users can select readable names while keeping the voice ID
-as the submitted value. Gradium's voice-list endpoint may require a server-side
-call in browser apps because its CORS policy can differ from the TTS endpoint.
+presets as a fallback and can fetch the Gradium voice list through
+`getVoiceEngineVoiceList()` when an API key is provided. Browser-side voice
+list requests may fail if the Gradium API does not allow direct CORS access;
+use a backend proxy for production browser UIs that need dynamic Gradium voice
+selection.
 
 ### OpenAI-Compatible TTS
 OpenAI-compatible speech endpoints for self-hosted servers such as Kokoro FastAPI.
@@ -308,7 +310,7 @@ Multi-language TTS supporting 24 languages with HD quality.
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'minimax',
-  speaker: 'male-qn-qingse',
+  speaker: 'Japanese_IntellectualSenior',
   apiKey: 'your-minimax-api-key',
   groupId: 'your-group-id', // Required for MiniMax
   endpoint: 'global' // or 'china'
@@ -316,6 +318,12 @@ const voiceService = new VoiceService({
 ```
 
 **Note**: MiniMax requires both API key and GroupId for authentication. The GroupId is used for user group management, usage tracking, and billing.
+
+Use MiniMax system voice IDs for `speaker`, such as
+`Japanese_IntellectualSenior`. MiniMax documents these IDs in its
+[System Voice ID List](https://platform.minimax.io/docs/faq/system-voice-id).
+The linked dynamic Get Voice API is not currently available, so
+`getVoiceEngineVoiceList()` does not expose MiniMax voice-list fetching.
 
 ### AivisSpeech
 AI-powered speech synthesis with natural voice quality.
@@ -356,6 +364,14 @@ const voiceService = new VoiceService({
 - **Multiple Formats**: WAV, FLAC, MP3, AAC, Opus output
 - **Emotion Control**: Fine-grained emotional intensity settings
 - **High Quality**: Professional-grade voice synthesis
+
+The Aivis Cloud model search APIs, such as
+`GET https://api.aivis-project.com/v1/aivm-models/search`, are not exposed
+through `getVoiceEngineVoiceList()` because browser-side requests currently
+fail CORS checks. The official Aivis Cloud API documentation explicitly
+describes browser CORS support for the speech synthesis endpoint; model/list
+lookups should be called from a backend proxy if your app needs dynamic model,
+speaker, or style selection.
 
 ### Gemini TTS
 Gemini API text-to-speech with Gemini preview TTS models, including
@@ -657,12 +673,14 @@ try {
 - Passes `speaker` through to `voice_id` as provided
 - Configurable output format and `json_config` controls for temperature, voice similarity, speed, and rewrite rules
 - Flagship voice presets provide readable names for browser speaker selectors
+- Dynamic voice-list lookups may require a backend proxy in browser apps if the provider blocks direct CORS access
 
 ### MiniMax Features
 - 24 language support with automatic detection
 - HD quality audio output
 - Dual-region endpoints (global/china)
 - Advanced emotion synthesis
+- Uses documented system voice IDs instead of dynamic voice-list fetching
 
 ### Gemini TTS Features
 - Gemini API-based high-quality voice synthesis
@@ -720,6 +738,52 @@ Use `updateOptions(...)` for same-engine updates and `switchEngine(...)`
 for cross-engine changes.
 For backward compatibility, cross-engine fields in `updateOptions(...)`
 are still accepted.
+
+### Engine Capabilities
+
+```typescript
+import {
+  getAllVoiceEngineCapabilities,
+  getVoiceEngineCapabilities,
+} from '@aituber-onair/voice';
+
+const gradium = getVoiceEngineCapabilities('gradium');
+console.log(gradium.supportsVoiceList); // true
+
+const allEngines = getAllVoiceEngineCapabilities();
+```
+
+Capabilities are static metadata only. They do not include API keys,
+endpoints, user configuration, or other sensitive values.
+
+### Voice Lists
+
+```typescript
+import { getVoiceEngineVoiceList } from '@aituber-onair/voice';
+
+const voices = await getVoiceEngineVoiceList('elevenLabs', {
+  apiKey: process.env.ELEVENLABS_API_KEY,
+});
+
+// [{ id: '...', label: 'Rachel (premade)' }, ...]
+```
+
+`getVoiceEngineVoiceList()` returns normalized `{ id, label }` items for
+engines that expose list APIs: VOICEVOX, AivisSpeech, xAI, ElevenLabs,
+Inworld, and Gradium. Pass local `apiUrl` for VOICEVOX-compatible servers,
+`apiKey` for cloud engines, and `language` for Inworld filtering.
+
+For browser apps, cloud provider voice-list endpoints must allow CORS. If a
+provider blocks direct browser requests, call `getVoiceEngineVoiceList()` from
+your backend or expose a small backend relay/proxy for the list endpoint.
+
+Aivis Cloud is intentionally excluded from this helper for browser apps. While
+Aivis Cloud exposes public model search endpoints, browser requests to those
+model/list endpoints can be blocked by CORS; use a backend proxy before wiring
+dynamic Aivis Cloud model selection into a production UI.
+
+MiniMax is also excluded from this helper. Use the documented system voice IDs
+directly because the linked dynamic Get Voice API is currently unavailable.
 
 ### VoiceService Methods
 
