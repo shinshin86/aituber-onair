@@ -15,6 +15,14 @@ Before adding any model to a supported list, read
 `getSupportedModels()` unless the exact endpoint family used by the provider is
 documented or live-verified for that model.
 
+This skill is a `@aituber-onair/chat` model-addition and optional
+`@aituber-onair/chat` release-prep workflow. It is not a multi-package release
+workflow. When release work is requested for a chat model addition, the only
+package that should receive a version bump and changelog entry from this skill
+is `@aituber-onair/chat`. Dependent packages may need dependency range and
+lockfile metadata updates for install consistency, but they must not be treated
+as release targets.
+
 ## Inputs
 
 Collect missing inputs before editing:
@@ -119,8 +127,20 @@ Collect missing inputs before editing:
    - Align dependent ranges:
      - Update `packages/core/package.json` dependency
        `@aituber-onair/chat` to the new range (for example `^0.14.0`).
-     - Do not bump `@aituber-onair/core` version only for this dependency range
-       change.
+     - Update other direct workspace dependents of `@aituber-onair/chat` only
+       when their `0.x` dependency range would not include the new chat
+       version.
+     - Do not bump dependent package versions only for dependency range
+       alignment.
+     - Do not add dependent package changelog entries only for dependency range
+       alignment.
+     - In particular, do not bump or add release notes for
+       `@aituber-onair/core`, `@aituber-onair/noise`, or
+       `create-aituber-onair` unless the user explicitly asks to release those
+       packages or a separate package-specific skill requires it.
+     - If a dependent package test fails because you accidentally changed that
+       package's version, revert the version/changelog change rather than
+       expanding the release scope.
    - Update lockfiles affected by version/range changes:
      - `package-lock.json`
      - package/example lockfiles that embed workspace metadata when changed
@@ -143,6 +163,8 @@ Collect missing inputs before editing:
      `chat_version`.
    - Skip the question only when the user already requested end-to-end chat+core
      propagation in the same task.
+   - Do not silently perform core propagation or core release work as part of
+     this skill.
 
 ## Verification Commands
 
