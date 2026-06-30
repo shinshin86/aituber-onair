@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Minor Changes
+
+- Added `ManneriDetector.reviewDraft(messages, draft)` for checking a drafted
+  assistant reply before it is sent. This lets agents and chat applications
+  rewrite only the replies that repeat recent wording, topic flow, or response
+  patterns.
+- Added provider-agnostic agent tool definitions:
+  `REVIEW_DRAFT_REPETITION_TOOL` and `MANNERI_AGENT_TOOLS`.
+
 ## 0.3.3
 
 ### Patch Changes
