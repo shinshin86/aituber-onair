@@ -12,7 +12,7 @@ export interface BushitsuMessage {
     mention?: string[];
     event?: string; // user_event type
     user?: string; // user_event type
-    details?: any; // system type
+    details?: unknown; // system type
   };
 }
 

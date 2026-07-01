@@ -21,6 +21,78 @@ interface BushitsuClientDependencies {
   transport?: BushitsuTransport;
 }
 
+const MAX_INCOMING_MESSAGE_BYTES = 64 * 1024;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string');
+
+const getUtf8ByteLength = (value: string): number => {
+  if (typeof TextEncoder !== 'undefined') {
+    return new TextEncoder().encode(value).byteLength;
+  }
+  return value.length;
+};
+
+const parseBushitsuMessage = (rawData: string): BushitsuMessage | null => {
+  if (getUtf8ByteLength(rawData) > MAX_INCOMING_MESSAGE_BYTES) {
+    console.warn('[BushitsuClient] Ignoring oversized WebSocket message');
+    return null;
+  }
+
+  const parsed: unknown = JSON.parse(rawData);
+  if (!isRecord(parsed)) {
+    return null;
+  }
+
+  const { type, room, timestamp, data } = parsed;
+  if (
+    type !== 'chat' &&
+    type !== 'user_event' &&
+    type !== 'system'
+  ) {
+    return null;
+  }
+  if (typeof room !== 'string' || typeof timestamp !== 'string') {
+    return null;
+  }
+  if (!isRecord(data) || typeof data.from !== 'string') {
+    return null;
+  }
+  if (data.fromId !== undefined && typeof data.fromId !== 'string') {
+    return null;
+  }
+  if (data.text !== undefined && typeof data.text !== 'string') {
+    return null;
+  }
+  if (data.mention !== undefined && !isStringArray(data.mention)) {
+    return null;
+  }
+  if (data.event !== undefined && typeof data.event !== 'string') {
+    return null;
+  }
+  if (data.user !== undefined && typeof data.user !== 'string') {
+    return null;
+  }
+
+  return {
+    type,
+    room,
+    timestamp,
+    data: {
+      from: data.from,
+      fromId: data.fromId,
+      text: data.text,
+      mention: data.mention,
+      event: data.event,
+      user: data.user,
+      details: data.details,
+    },
+  };
+};
+
 export class BushitsuClient {
   private readonly options: BushitsuClientOptions;
   private readonly transport: BushitsuTransport;
@@ -111,7 +183,11 @@ export class BushitsuClient {
    */
   private handleMessage(event: BushitsuTransportMessageEvent) {
     try {
-      const message: BushitsuMessage = JSON.parse(event.data);
+      const message = parseBushitsuMessage(event.data);
+      if (!message) {
+        console.warn('[BushitsuClient] Ignoring invalid WebSocket message');
+        return;
+      }
 
       if (message.type === 'chat') {
         const { from, fromId, text, mention } = message.data;
