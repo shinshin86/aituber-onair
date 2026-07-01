@@ -5,6 +5,17 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
+    fakeTimers: {
+      toFake: [
+        'Date',
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+        'setImmediate',
+        'clearImmediate',
+      ],
+    },
     coverage: {
       exclude: ['examples/**'],
       thresholds: {
