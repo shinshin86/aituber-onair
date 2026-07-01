@@ -363,13 +363,14 @@ const voiceService = new VoiceService({
 - **感情制御**: きめ細かな感情強度設定
 - **高品質**: プロフェッショナルグレードの音声合成
 
-Aivis Cloud の model search API（例:
-`GET https://api.aivis-project.com/v1/aivm-models/search`）は、
-現在 `getVoiceEngineVoiceList()` では扱っていません。ブラウザから直接
-model/list 系 endpoint を呼び出すと CORS で失敗する場合があります。公式の
-Aivis Cloud API ドキュメントでは、ブラウザ CORS 対応は音声合成 endpoint
-について明記されています。動的に model / speaker / style を取得したい場合は、
-backend proxy 経由で呼び出してください。
+`getVoiceEngineVoiceList('aivisCloud')` は Aivis Cloud の model search API
+（`GET https://api.aivis-project.com/v1/aivm-models/search`）を使い、
+`speaker` または `aivisCloudModelUuid` に渡せる model UUID の選択肢を返します。
+ただし、ブラウザから直接 model/list 系 endpoint を呼び出すと CORS で失敗する
+場合があります。動的に model / speaker / style を取得したい browser app では、
+Node.js backend や backend relay/proxy 側でこの helper を呼び出してください。
+React example は、ブラウザから model search endpoint を直接呼ばず、手入力の
+model UUID を使う形を維持しています。
 
 ### Gemini TTS
 `gemini-3.1-flash-tts-preview` を含む Gemini preview TTS モデルを
@@ -772,18 +773,19 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 
 `getVoiceEngineVoiceList()` は、一覧 API を持つ engine について
 正規化済みの `{ id, label }` を返します。対象は VOICEVOX、AivisSpeech、
-xAI、ElevenLabs、Inworld、Gradium です。VOICEVOX 互換サーバーには
-local `apiUrl`、cloud engine には `apiKey`、Inworld の絞り込みには
-`language` を渡します。
+Aivis Cloud、xAI、ElevenLabs、Inworld、Gradium です。VOICEVOX 互換サーバーには
+local `apiUrl`、API key が必要な cloud engine には `apiKey`、Inworld の
+絞り込みには `language` を渡します。
 
 browser app では、cloud provider の voice list endpoint が CORS を許可している
 必要があります。provider がブラウザからの直接リクエストをブロックする場合は、
 backend 側で `getVoiceEngineVoiceList()` を呼ぶか、小さな relay/proxy を
 用意してください。
 
-Aivis Cloud はこの helper の対象外です。公開 model search endpoint はありますが、
-ブラウザから直接 model/list 系 endpoint を呼び出すと CORS でブロックされる場合が
-あります。production UI で動的な Aivis Cloud model 選択を行う場合は、
+Aivis Cloud の voice-list 対応は、model search endpoint に対する
+package-level の対応です。ブラウザから Aivis Cloud の model/list 系 endpoint を
+直接呼び出すと CORS でブロックされる場合があります。production UI で動的な
+Aivis Cloud model 選択を行う場合は、Node.js/backend 側で helper を呼ぶか
 backend proxy を用意してください。
 
 MiniMax もこの helper の対象外です。リンクされている動的な Get Voice API は

@@ -168,8 +168,9 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 # Default endpoint: https://api.aivis-project.com/v1/tts/synthesize
 # The synthesis endpoint can be used from the browser, but Aivis Cloud
 # model/list APIs such as /v1/aivm-models/search may fail browser CORS checks.
-# Use fixed model UUID input in this example, or call model/list APIs through a
-# backend proxy in production.
+# This example keeps fixed model UUID input. For dynamic model selection, call
+# getVoiceEngineVoiceList('aivisCloud') from a Node.js backend or proxy in
+# production.
 ```
 
 ## Piper Plus Setup

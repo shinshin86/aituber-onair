@@ -42,7 +42,7 @@ describe('voice engine capabilities', () => {
     expect(getVoiceEngineCapabilities('gradium').supportsVoiceList).toBe(true);
     expect(getVoiceEngineCapabilities('minimax').supportsVoiceList).toBe(false);
     expect(getVoiceEngineCapabilities('aivisCloud').supportsVoiceList).toBe(
-      false,
+      true,
     );
   });
 

@@ -365,13 +365,14 @@ const voiceService = new VoiceService({
 - **Emotion Control**: Fine-grained emotional intensity settings
 - **High Quality**: Professional-grade voice synthesis
 
-The Aivis Cloud model search APIs, such as
-`GET https://api.aivis-project.com/v1/aivm-models/search`, are not exposed
-through `getVoiceEngineVoiceList()` because browser-side requests currently
-fail CORS checks. The official Aivis Cloud API documentation explicitly
-describes browser CORS support for the speech synthesis endpoint; model/list
-lookups should be called from a backend proxy if your app needs dynamic model,
-speaker, or style selection.
+`getVoiceEngineVoiceList('aivisCloud')` uses the Aivis Cloud model search API
+(`GET https://api.aivis-project.com/v1/aivm-models/search`) and returns model
+UUID choices that can be passed as `speaker` or `aivisCloudModelUuid`. Direct
+browser requests to model/list endpoints can fail CORS checks, so browser apps
+should call this helper from a Node.js backend or relay/proxy when they need
+dynamic model, speaker, or style selection. The React example intentionally
+keeps manual model UUID input instead of calling the model search endpoint from
+the browser.
 
 ### Gemini TTS
 Gemini API text-to-speech with Gemini preview TTS models, including
@@ -769,18 +770,19 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 ```
 
 `getVoiceEngineVoiceList()` returns normalized `{ id, label }` items for
-engines that expose list APIs: VOICEVOX, AivisSpeech, xAI, ElevenLabs,
-Inworld, and Gradium. Pass local `apiUrl` for VOICEVOX-compatible servers,
-`apiKey` for cloud engines, and `language` for Inworld filtering.
+engines that expose list APIs: VOICEVOX, AivisSpeech, Aivis Cloud, xAI,
+ElevenLabs, Inworld, and Gradium. Pass local `apiUrl` for VOICEVOX-compatible
+servers, `apiKey` for cloud engines that require it, and `language` for Inworld
+filtering.
 
 For browser apps, cloud provider voice-list endpoints must allow CORS. If a
 provider blocks direct browser requests, call `getVoiceEngineVoiceList()` from
 your backend or expose a small backend relay/proxy for the list endpoint.
 
-Aivis Cloud is intentionally excluded from this helper for browser apps. While
-Aivis Cloud exposes public model search endpoints, browser requests to those
-model/list endpoints can be blocked by CORS; use a backend proxy before wiring
-dynamic Aivis Cloud model selection into a production UI.
+Aivis Cloud voice-list support is package-level support for the model search
+endpoint. Browser requests to Aivis Cloud model/list endpoints can be blocked
+by CORS; call the helper from Node.js/backend or expose a backend proxy before
+wiring dynamic Aivis Cloud model selection into a production UI.
 
 MiniMax is also excluded from this helper. Use the documented system voice IDs
 directly because the linked dynamic Get Voice API is currently unavailable.
