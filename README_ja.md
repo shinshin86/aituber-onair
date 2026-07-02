@@ -19,6 +19,7 @@
   <a href="https://aituberonair.com">Web アプリを試す</a> ・
   <a href="./docs/quickstart.ja.md">クイックスタート</a> ・
   <a href="./docs/examples.ja.md">サンプル一覧</a> ・
+  <a href="./docs/avatar.ja.md">アバターガイド</a> ・
   <a href="#パッケージ">パッケージ</a>
 </p>
 
@@ -172,6 +173,8 @@ await chat.processChat(
   テンプレート選択、プロバイダー設定、ローカル起動まで。
 - [サンプル一覧](./docs/examples.ja.md): フル機能の AI VTuber アプリ、
   パッケージ別サンプル、Bot サンプル、ローカル実行例の選び方。
+- [アバターガイド](./docs/avatar.ja.md): アバター方式の選び方と、
+  AI キャラクター表現を豊かにする拡張方法。
 
 ## パッケージ
 
