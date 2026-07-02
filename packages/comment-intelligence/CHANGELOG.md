@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.0.5
+
 ### Patch Changes
 
 - Adds `toAgentCommentDecision()` for compact agent-facing decisions that avoid
