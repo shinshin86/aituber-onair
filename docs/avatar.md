@@ -37,7 +37,7 @@ Start from
 
 Use Live2D when you already have a Cubism model folder and want a 2D character
 with model-driven motion. The Live2D example loads a local `.model3.json` model
-folder. Live2D assets are not bundled.
+folder that you have the right to use.
 
 Start from
 [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app).
@@ -88,8 +88,36 @@ inspect and verify each model before producing an extended VRM.
 After preparing an extended VRM, place it in the VRM example's `public/avatar/`
 directory and update the loaded file path if needed.
 
+## Related Resources and License Checks
+
+These links explain the formats, tools, and related projects behind each avatar
+style. Before reusing, modifying, publishing, or redistributing avatar assets,
+check the terms for the specific tool, model, sample data, and source artwork
+you use.
+
+| Avatar style | Source or reference | Notes |
+|---|---|---|
+| PNGTuber | [Easy PNGTuber](https://github.com/rotejin/EasyPNGTuber) | Easy PNGTuber is an MIT-licensed tool for preparing four PNGTuber image states. The tool license does not decide the rights for the source character image or generated avatar assets, so check those separately. |
+| VRM | [vrm.dev](https://vrm.dev/en/) | vrm.dev is the official information site for VRM, a glTF-based 3D humanoid avatar format. Each `.vrm` model may include its own license metadata or external usage terms, so confirm the model-specific conditions before use. |
+| Live2D | [Live2D](https://www.live2d.com/en/) | Live2D is the official site for Cubism tools and SDKs. Model assets, sample data, Cubism Editor, and Cubism SDK can be covered by separate terms, including the [sample data terms](https://www.live2d.com/en/learn/sample/model-terms/) and [SDK release license](https://www.live2d.com/en/sdk/license/). |
+| Pet | [Codex Pets](https://developers.openai.com/codex/app/settings#codex-pets) | Codex Pets are optional animated companions in the Codex app. The AITuber OnAir pet example uses a Codex Pet-compatible spritesheet style; check the rights for any spritesheet artwork you create, adapt, or distribute. |
+
+## Ready-to-use Miko Assets
+
+If you want to try AITuber OnAir but do not yet have avatar assets, the project
+provides free Miko assets:
+
+[Miko Character Usage Guidelines and Downloads](https://miko.aituberonair.com/)
+
+Miko is the image character of AITuber OnAir. The page provides assets such as
+a VRM model, PNGTuber image states, and three-view reference images. The linked
+guideline page describes the current permissions, prohibited uses, attribution
+guidance, and redistribution limits. Review the latest page before using,
+modifying, sharing, or redistributing the assets.
+
 ## License Notes
 
-Generated or modified avatar assets inherit the source model's license terms.
+Generated or modified avatar assets may remain subject to the licenses and
+usage terms of their source assets, tools, sample data, or reference artwork.
 Before sharing an extended VRM, Live2D model, PNG avatar, or spritesheet, check
-the original asset license and attribution requirements.
+the relevant license and attribution requirements.
