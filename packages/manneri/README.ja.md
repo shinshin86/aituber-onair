@@ -15,6 +15,7 @@
 - 🎨 **カスタマイズ可能なプロンプト**: 任意の言語で介入メッセージや推奨事項を設定可能
 - 🇯🇵 **日本語対応**: 日本語テキストの適切な処理（ひらがな、カタカナ、漢字）
 - 💾 **柔軟な永続化**: 複数のストレージバックエンドをサポートする設定可能なデータ永続化
+- 📝 **エージェント向け draft レビュー**: 送信前の assistant 返答案を検査し、直近会話の繰り返しになっている場合だけ書き直し判断を返します
 
 ## インストール
 
@@ -116,6 +117,92 @@ Manneri は、次のいずれかの実用的なシグナルが閾値を超えた
 - 類似度と内容パターンの繰り返しは `pattern_break` / high priority
 - 話題偏りは `keyword_shift` / medium priority
 - 介入対象の分析結果がない場合は `topic_change` にフォールバック
+
+## 送信前の draft レビュー
+
+`reviewDraft()` は、AI エージェントやチャット処理がすでに返答案を
+生成したあと、「このまま送ってよいか」を判定したいときに使います。
+draft を次の assistant message として分析し、繰り返しの兆候がある場合だけ
+`shouldRewrite` と `suggestion` を返します。
+
+> **考え方:** manneri は判定して結果を返すだけで、送信・停止・書き換えは
+> しません。いつ判定するか、結果を受けて送る・書き換える・やめるのどれに
+> するかは、呼び出し側のエージェントやアプリが決めます。
+> `generateDiversificationPrompt()` が会話全体から「次の生成」を誘導するのに
+> 対し、`reviewDraft()` は送信直前に「特定の返答案1件」を評価します。
+> また、`review_draft_repetition` という agent tool としても公開されている
+> ため、エージェント自身が判定を呼べます。判定は `similarityThreshold` で
+> 制御される類似度と繰り返しパターンによる決定的な処理で、LLM は呼びません。
+
+この機能により、次のような利便性が得られます。
+
+- ライブ配信 AI キャラクターが、同じリアクション・挨拶・締め方を
+  何度も返す前に検知できる
+- チャットボットが、ユーザーに返す直前に軽量な自己レビューを挟める
+- エージェントワークフローで、必要な場合だけ再生成に回せるため、
+  毎回無条件に書き直すより制御しやすい
+- ダッシュボードや運用画面で、draft を採用した理由・書き直した理由を
+  分析結果として表示できる
+
+```typescript
+import { ManneriDetector, type Message } from '@aituber-onair/manneri';
+
+const detector = new ManneriDetector({
+  minMessageLength: 0,
+  similarityThreshold: 0.75
+});
+
+const messages: Message[] = [
+  { role: 'user', content: '今日の夕飯、何がいい？' },
+  { role: 'assistant', content: '手軽なパスタがよさそうです。' },
+  { role: 'user', content: '他には？' },
+  { role: 'assistant', content: '手軽なパスタがよさそうです。' },
+  { role: 'user', content: 'もう一つ案を出して' }
+];
+
+const review = detector.reviewDraft(
+  messages,
+  '手軽なパスタがよさそうです。'
+);
+
+if (review.shouldRewrite) {
+  console.log('LLMに渡す書き換え指示:', review.suggestion?.content);
+} else {
+  console.log('この draft は送信できます。');
+}
+```
+
+返却される `analysis` は `analyzeConversation()` と同じ形なので、類似度、
+繰り返しパターン、話題偏り、介入理由を確認できます。`suggestion` は
+「書き換え済みの返答文」ではなく、LLM に渡して書き換えさせるための指示
+（多様化プロンプト）です。実際の書き換えは呼び出し側が行います。
+`suggestion` は `shouldRewrite` が `false` のときは含まれません。
+
+`examples/draft-review-basic` には、送る・書き換える・やめるの分岐、
+レビュー理由、LLM に渡す書き換え指示を一連の流れで確認できる
+ブラウザサンプルがあります。
+
+### Agent tool 定義
+
+`REVIEW_DRAFT_REPETITION_TOOL` は `reviewDraft(messages, draft)` の入力を
+表す SDK 非依存の JSON Schema tool 定義です。OpenAI tools、MCP 風の
+tool registry、独自の agent runtime などに合わせて利用できます。
+
+```typescript
+import {
+  MANNERI_AGENT_TOOLS,
+  REVIEW_DRAFT_REPETITION_TOOL
+} from '@aituber-onair/manneri';
+
+console.log(REVIEW_DRAFT_REPETITION_TOOL.name);
+// "review_draft_repetition"
+
+// Manneri の agent tool をまとめて登録
+agent.registerTools(MANNERI_AGENT_TOOLS);
+```
+
+tool には、アプリケーションが扱う会話履歴と draft を渡す想定です。
+秘密情報や private な system prompt を tool input に含めないようにしてください。
 
 ## AITuberOnAirCoreとの統合
 

@@ -3,6 +3,7 @@ import type {
   ManneriConfig,
   AnalysisResult,
   DiversificationPrompt,
+  DraftReviewResult,
   ManneriEvent,
   ManneriEventHandler,
   StorageData,
@@ -128,6 +129,30 @@ export class ManneriDetector {
     return contextualPrompt;
   }
 
+  reviewDraft(messages: Message[], draft: string): DraftReviewResult {
+    const draftMessage: Message = {
+      role: 'assistant',
+      content: draft,
+      timestamp: Date.now(),
+    };
+    const analysis = this.analyzeConversation([...messages, draftMessage]);
+    const shouldRewrite = analysis.shouldIntervene;
+
+    return {
+      draft,
+      analysis,
+      shouldRewrite,
+      ...(shouldRewrite
+        ? {
+            suggestion: this.buildDraftReviewSuggestion(
+              [...messages, draftMessage],
+              analysis
+            ),
+          }
+        : {}),
+    };
+  }
+
   analyzeConversation(messages: Message[]): AnalysisResult {
     const result = this.analyzer.analyzeConversation(messages);
     this.lastAnalysisResult = result;
@@ -233,6 +258,24 @@ export class ManneriDetector {
     if (data.settings) {
       this.updateConfig(data.settings);
     }
+  }
+
+  private buildDraftReviewSuggestion(
+    messages: Message[],
+    analysis: AnalysisResult
+  ): DiversificationPrompt {
+    const metadata = this.getContextualPromptMetadata(messages);
+    const reason = analysis.interventionReason || 'Potential repetition';
+
+    return {
+      content: [
+        this.promptGenerator.generateDiversificationPrompt(messages, {
+          language: this.config.language,
+        }).content,
+        `Avoid repeating the current draft pattern. Reason: ${reason}.`,
+      ].join(' '),
+      ...metadata,
+    };
   }
 
   private createAnalyzerOptions(): ConversationAnalyzerOptions {
