@@ -1,7 +1,11 @@
 # Manneri Draft Review Basic Example
 
-Browser example that shows `ManneriDetector.reviewDraft()` as an agent
-pre-send gate.
+Browser example for checking a drafted reply with
+`ManneriDetector.reviewDraft()` before it is sent.
+
+The example is intentionally small: manneri only returns the review result for
+the draft. The app or agent can then decide whether to send the draft, pass the
+returned suggestion to an LLM for rewriting, or stop sending.
 
 Run from the repository root:
 
@@ -15,13 +19,11 @@ Run from this example directory:
 npm run dev
 ```
 
-Open the shown local URL, choose whether the mock agent generated a repetitive
-or fresh draft, then run the pre-send review. The page shows:
-
-- where the agent tool call happens before sending
-- whether the draft is blocked or allowed
-- the minimal tool result: `shouldRewrite`, reason, and optional suggestion
-- what product features this enables for users
+The page includes repetitive and natural samples, Japanese and English UI, and a
+small `review_draft_repetition` tool label to show that the same check can be
+called from an agent tool. The similarity threshold is `0.70`, and `suggestion`
+is shown only when `shouldRewrite` is true. `suggestion` is a rewrite
+instruction for the LLM, not a finished rewritten reply.
 
 Build from the repository root:
 

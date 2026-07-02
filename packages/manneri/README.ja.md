@@ -125,6 +125,15 @@ Manneri は、次のいずれかの実用的なシグナルが閾値を超えた
 draft を次の assistant message として分析し、繰り返しの兆候がある場合だけ
 `shouldRewrite` と `suggestion` を返します。
 
+> **考え方:** manneri は判定して結果を返すだけで、送信・停止・書き換えは
+> しません。いつ判定するか、結果を受けて送る・書き換える・やめるのどれに
+> するかは、呼び出し側のエージェントやアプリが決めます。
+> `generateDiversificationPrompt()` が会話全体から「次の生成」を誘導するのに
+> 対し、`reviewDraft()` は送信直前に「特定の返答案1件」を評価します。
+> また、`review_draft_repetition` という agent tool としても公開されている
+> ため、エージェント自身が判定を呼べます。判定は `similarityThreshold` で
+> 制御される類似度と繰り返しパターンによる決定的な処理で、LLM は呼びません。
+
 この機能により、次のような利便性が得られます。
 
 - ライブ配信 AI キャラクターが、同じリアクション・挨拶・締め方を
@@ -157,7 +166,7 @@ const review = detector.reviewDraft(
 );
 
 if (review.shouldRewrite) {
-  console.log('この draft は書き直し推奨:', review.suggestion?.content);
+  console.log('LLMに渡す書き換え指示:', review.suggestion?.content);
 } else {
   console.log('この draft は送信できます。');
 }
@@ -165,10 +174,13 @@ if (review.shouldRewrite) {
 
 返却される `analysis` は `analyzeConversation()` と同じ形なので、類似度、
 繰り返しパターン、話題偏り、介入理由を確認できます。`suggestion` は
-`shouldRewrite` が `false` のときは含まれません。
+「書き換え済みの返答文」ではなく、LLM に渡して書き換えさせるための指示
+（多様化プロンプト）です。実際の書き換えは呼び出し側が行います。
+`suggestion` は `shouldRewrite` が `false` のときは含まれません。
 
-`examples/draft-review-basic` には、送信可否、レビュー理由、書き直し
-suggestion を一連の流れで確認できるブラウザサンプルがあります。
+`examples/draft-review-basic` には、送る・書き換える・やめるの分岐、
+レビュー理由、LLM に渡す書き換え指示を一連の流れで確認できる
+ブラウザサンプルがあります。
 
 ### Agent tool 定義
 

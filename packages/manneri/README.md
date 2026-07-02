@@ -128,6 +128,16 @@ reply and needs to decide whether to send it as-is. Manneri analyzes the draft a
 the next assistant message, then returns `shouldRewrite` and an optional
 `suggestion` only when the draft appears repetitive.
 
+> **How to think about it:** Manneri only detects and returns a result. It never
+> sends, stops, or rewrites for you. Both when to run the check and what to do
+> with the result (send as-is, rewrite, or skip) are decided by your agent or
+> app. Unlike `generateDiversificationPrompt()`, which steers the next
+> generation from the conversation so far, `reviewDraft()` evaluates one
+> specific candidate reply right before sending. It is also exposed as the
+> `review_draft_repetition` agent tool so an agent can call the check itself.
+> Detection is deterministic: text similarity and repetition patterns controlled
+> by `similarityThreshold`. It does not call an LLM.
+
 This is useful for:
 
 - live-stream AI characters that should avoid repeating the same reaction,
@@ -161,7 +171,7 @@ const review = detector.reviewDraft(
 );
 
 if (review.shouldRewrite) {
-  console.log('Rewrite this draft:', review.suggestion?.content);
+  console.log('Rewrite instruction for the LLM:', review.suggestion?.content);
 } else {
   console.log('Draft is safe to send.');
 }
@@ -169,10 +179,12 @@ if (review.shouldRewrite) {
 
 The returned `analysis` is the same shape as `analyzeConversation()`, so you can
 inspect similarity, repeated patterns, topic bias, and the intervention reason.
-`suggestion` is omitted when `shouldRewrite` is `false`.
+`suggestion` is a diversification instruction or prompt to feed to your LLM for
+a rewrite. It is not a finished rewritten reply. Your code or agent performs the
+actual rewrite. `suggestion` is omitted when `shouldRewrite` is `false`.
 
 See `examples/draft-review-basic` for a browser sample that shows the send vs.
-regenerate decision, review reason, and rewrite suggestion in one flow.
+rewrite vs. skip decision, review reason, and rewrite instruction in one flow.
 
 ### Agent Tool Definition
 
