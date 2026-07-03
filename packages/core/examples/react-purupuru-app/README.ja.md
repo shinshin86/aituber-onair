@@ -1,0 +1,47 @@
+# PuruPuru PNGTuber Chat
+
+`@aituber-onair/core` のチャット/TTS と、`.purupuru` アバターパッケージ用
+PNGTuber レンダラーを組み合わせた React example です。
+
+## 機能
+
+- Settings の Visual セクションから `.purupuru` パッケージを読み込み
+- 目 2 状態 x 口 3 状態の 6 face PNG を描画
+- back hair、face、front hair、任意の item layer を Canvas で合成
+- `settings.json` の breath/roll 設定に基づく待機モーション
+- 2-6 秒間隔のランダム blink
+- TTS 音声の lip-sync による closed/half/open の口パク
+- チャット、TTS 設定、配信コメント、Screen Vision、broadcast 表示を維持
+
+## 起動
+
+```bash
+cd packages/core/examples/react-purupuru-app
+npm install
+npm run dev
+```
+
+起動後、Settings を開き、Visual セクションで `.purupuru` ファイルを選択して
+ください。読み込み前は組み込みの placeholder avatar を表示します。
+
+## 検証
+
+```bash
+npm run build
+npm run lint
+```
+
+## 対応フォーマット
+
+この example は format version 1 の uncompressed ZIP (`ZIP_STORED`) のみを
+読み込みます。圧縮 ZIP、過大サイズ、危険なパス、CRC32 不一致は拒否します。
+
+Phase 1 では hair spring physics、face tracking、mesh deformation、OBS preset
+export、emotion-driven reaction は対象外です。
+
+## Attribution
+
+`.purupuru` フォーマットとレンダラー挙動は Apache-2.0 ライセンスの
+PuruPuruPNGTuber を参考にしています。この example では Phase 1 に必要な
+package loading、face-state selection、idle motion、blink、audio mouth-state
+behavior のみを移植しています。
