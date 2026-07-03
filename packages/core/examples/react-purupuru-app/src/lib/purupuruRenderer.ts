@@ -58,6 +58,14 @@ interface LayerParallax {
   frontHair: number;
 }
 
+type ItemLayerSlot =
+  | 'stageBack'
+  | 'characterBack'
+  | 'faceBack'
+  | 'faceFront'
+  | 'frontHairFront'
+  | 'stageFront';
+
 interface NormalizedReaction {
   impulse: {
     bounce: number;
@@ -99,6 +107,15 @@ const GAZE_TURN_TILT = 0.026;
 const BACK_HAIR_PARALLAX_RATIO = 0.006;
 const FACE_PARALLAX_RATIO = 0.034;
 const FRONT_HAIR_PARALLAX_RATIO = 0.01;
+const FALLBACK_ITEM_LAYER_SLOT: ItemLayerSlot = 'frontHairFront';
+const ITEM_LAYER_SLOTS = new Set<string>([
+  'stageBack',
+  'characterBack',
+  'faceBack',
+  'faceFront',
+  'frontHairFront',
+  'stageFront',
+]);
 
 export function createPuruPuruRenderer(
   options: RendererOptions,
@@ -388,20 +405,24 @@ function renderFrame(
   const { images, itemLayers } = avatarPackage;
   const parallax = createLayerParallax(images.eyesOpenMouthClosed, gaze);
 
+  drawStageItemLayers(context, canvas, avatarPackage, itemLayers, 'stageBack');
+
   context.save();
   applyAvatarTransform(context, canvas, avatarPackage, pose);
+  drawRigidItemLayers(context, itemLayers, 'characterBack');
   drawHairLayer(context, images.backHair, hair.back, parallax.backHair);
-  drawImageCentered(context, images[faceKey], parallax.face);
-  drawItemLayers(
+  drawSpringItemLayers(
     context,
     itemLayers,
-    'backHairFront',
+    'faceBack',
     hair.back,
     images.backHair,
     parallax.backHair,
   );
+  drawImageCentered(context, images[faceKey], parallax.face);
+  drawRigidItemLayers(context, itemLayers, 'faceFront', parallax.face);
   drawHairLayer(context, images.frontHair, hair.front, parallax.frontHair);
-  drawItemLayers(
+  drawSpringItemLayers(
     context,
     itemLayers,
     'frontHairFront',
@@ -410,6 +431,8 @@ function renderFrame(
     parallax.frontHair,
   );
   context.restore();
+
+  drawStageItemLayers(context, canvas, avatarPackage, itemLayers, 'stageFront');
 }
 
 function applyAvatarTransform(
@@ -418,6 +441,21 @@ function applyAvatarTransform(
   avatarPackage: PuruPuruAvatarPackage,
   pose: Pose,
 ): void {
+  const settings = avatarPackage.settings;
+  const baseScale = calculateAvatarBaseScale(canvas, avatarPackage);
+
+  context.translate(
+    canvas.width / 2 + settings.avatarX + pose.x,
+    canvas.height / 2 + settings.avatarY + pose.y,
+  );
+  context.rotate(pose.rotation);
+  context.scale(baseScale, baseScale * pose.scale);
+}
+
+function calculateAvatarBaseScale(
+  canvas: HTMLCanvasElement,
+  avatarPackage: PuruPuruAvatarPackage,
+): number {
   const settings = avatarPackage.settings;
   const sourceWidth =
     settings.sourceImageWidth || avatarPackage.images.eyesOpenMouthClosed.width;
@@ -429,13 +467,7 @@ function applyAvatarTransform(
     (canvas.height * 0.94) / sourceHeight,
   );
   const packageScale = Math.max(0.1, settings.avatarSize / 100);
-
-  context.translate(
-    canvas.width / 2 + settings.avatarX + pose.x,
-    canvas.height / 2 + settings.avatarY + pose.y,
-  );
-  context.rotate(pose.rotation);
-  context.scale(fitScale * packageScale, fitScale * packageScale * pose.scale);
+  return fitScale * packageScale;
 }
 
 function drawImageCentered(
@@ -459,16 +491,47 @@ function drawHairLayer(
   context.restore();
 }
 
-function drawItemLayers(
+function drawStageItemLayers(
+  context: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  avatarPackage: PuruPuruAvatarPackage,
+  itemLayers: PuruPuruItemLayer[],
+  slot: ItemLayerSlot,
+): void {
+  context.save();
+  const baseScale = calculateAvatarBaseScale(canvas, avatarPackage);
+  context.translate(canvas.width / 2, canvas.height / 2);
+  context.scale(baseScale, baseScale);
+  drawRigidItemLayers(context, itemLayers, slot);
+  context.restore();
+}
+
+function drawRigidItemLayers(
   context: CanvasRenderingContext2D,
   itemLayers: PuruPuruItemLayer[],
-  slot: string,
+  slot: ItemLayerSlot,
+  offsetX = 0,
+): void {
+  for (const layer of itemLayers) {
+    if (!shouldDrawItemLayer(layer, slot)) continue;
+    context.save();
+    context.translate(offsetX, 0);
+    applyItemLayerTransform(context, layer);
+    drawImageCentered(context, layer.image);
+    context.restore();
+  }
+}
+
+function drawSpringItemLayers(
+  context: CanvasRenderingContext2D,
+  itemLayers: PuruPuruItemLayer[],
+  slot: ItemLayerSlot,
   spring: HairSpringOutput,
   hairImage: HTMLImageElement,
   parallaxX: number,
 ): void {
   for (const layer of itemLayers) {
-    if (!layer.visible || layer.slot !== slot) continue;
+    if (!shouldDrawItemLayer(layer, slot)) continue;
     context.save();
     context.translate(parallaxX, 0);
     applyHairSpringTransform(
@@ -477,14 +540,34 @@ function drawItemLayers(
       spring,
       layer.followStrength / 100,
     );
-    context.globalAlpha = Math.max(0, Math.min(layer.opacity / 100, 1));
-    context.translate(layer.x, layer.y);
-    context.rotate((layer.rotation * Math.PI) / 180);
-    const scale = Math.max(0.01, layer.scale / 100);
-    context.scale(scale, scale);
+    applyItemLayerTransform(context, layer);
     drawImageCentered(context, layer.image);
     context.restore();
   }
+}
+
+function shouldDrawItemLayer(
+  layer: PuruPuruItemLayer,
+  slot: ItemLayerSlot,
+): boolean {
+  return layer.visible && normalizeItemLayerSlot(layer.slot) === slot;
+}
+
+function normalizeItemLayerSlot(slot: string): ItemLayerSlot {
+  return ITEM_LAYER_SLOTS.has(slot)
+    ? (slot as ItemLayerSlot)
+    : FALLBACK_ITEM_LAYER_SLOT;
+}
+
+function applyItemLayerTransform(
+  context: CanvasRenderingContext2D,
+  layer: PuruPuruItemLayer,
+): void {
+  context.globalAlpha = Math.max(0, Math.min(layer.opacity / 100, 1));
+  context.translate(layer.x, layer.y);
+  context.rotate((layer.rotation * Math.PI) / 180);
+  const scale = Math.max(0.01, layer.scale / 100);
+  context.scale(scale, scale);
 }
 
 function createLayerParallax(
@@ -505,7 +588,7 @@ function applyHairSpringTransform(
   spring: HairSpringOutput,
   followStrength: number,
 ): void {
-  const follow = clamp(followStrength, 0, 1);
+  const follow = clamp(followStrength, 0, 2);
   if (follow <= 0) return;
 
   const anchorY = -hairImage.height * 0.38;

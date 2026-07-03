@@ -40,8 +40,13 @@ npm run lint
 読み込みます。圧縮 ZIP、過大サイズ、危険なパス、CRC32 不一致は拒否します。
 
 `hairSpring` が `0` の場合、hair physics は無効になり、髪は頭部に固定され
-ます。Hair slot の item layer は `followStrength` (0-100) に応じて spring
+ます。Hair slot の item layer は `followStrength` (0-200) に応じて spring
 transform に追従します。
+
+item layer slot は PuruPuruPNGTuber の描画順に合わせ、`stageBack`,
+`characterBack`, `faceBack`, `faceFront`, `frontHairFront`, `stageFront` に対応
+します。未知の slot は将来の package export でも描画されるよう
+`frontHairFront` として扱います。
 
 現フェーズでは face tracking、mesh deformation、OBS preset export は対象外です。
 
@@ -109,7 +114,7 @@ package `settings.json` の値:
 | `avatarY` | avatar が下へ移動する |
 | `idleMotionEnabled` | runtime では無視され、app-level の Visual 設定が優先される。camera tracking 前提の package は `false` で出力されることが多いため |
 
-表示中の `itemLayers` は `followStrength` (`0`-`100`) で hair spring transform
+表示中の `itemLayers` は `followStrength` (`0`-`200`) で hair spring transform
 への追従度を決めます。
 
 ## Attribution

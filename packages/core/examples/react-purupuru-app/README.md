@@ -83,7 +83,12 @@ The Phase 1 renderer reads these values from `settings.json`:
 
 `hairSpring` scales the hair spring response. A value of `0` disables physics and
 keeps hair rigidly attached to the head. Visible item layers in hair slots use
-their `followStrength` value (0-100) to follow the spring transform.
+their `followStrength` value (0-200) to follow the spring transform.
+
+Supported item layer slots follow the original PuruPuruPNGTuber draw order:
+`stageBack`, `characterBack`, `faceBack`, `faceFront`, `frontHairFront`, and
+`stageFront`. Unknown slots fall back to `frontHairFront` so future package
+exports still render.
 
 Face tracking, mesh deformation, eye highlights, and OBS preset export are
 intentionally out of scope for the current phase.
@@ -154,7 +159,7 @@ Package values in `settings.json`:
 | `avatarY` | moves the avatar down |
 | `idleMotionEnabled` | ignored at runtime in favor of the app-level Visual setting, because camera-tracking-authored packages often ship this as `false` |
 
-Visible `itemLayers` use `followStrength` (`0`-`100`) to decide how strongly
+Visible `itemLayers` use `followStrength` (`0`-`200`) to decide how strongly
 they follow the hair spring transform.
 
 ## Attribution
