@@ -116,6 +116,7 @@ export function createPuruPuruRenderer(
   let disposed = false;
   let previousFrameAt = performance.now();
   let previousAvatarPackage: PuruPuruAvatarPackage | null = null;
+  let idlePhaseSeconds = 0;
 
   const resizeObserver = new ResizeObserver(() => resizeCanvas(options));
   resizeObserver.observe(options.container);
@@ -155,6 +156,7 @@ export function createPuruPuruRenderer(
     if (disposed) return;
     const avatarPackage = options.getAvatarPackage();
     const deltaSeconds = Math.max(0, (now - previousFrameAt) / 1000);
+    const phaseDeltaSeconds = clamp(deltaSeconds, 0, 0.05);
     previousFrameAt = now;
 
     if (avatarPackage !== previousAvatarPackage) {
@@ -166,10 +168,18 @@ export function createPuruPuruRenderer(
 
     resizeCanvas(options);
     updateReactionState(reactionState, deltaSeconds);
+    idlePhaseSeconds +=
+      phaseDeltaSeconds * getReactionIdleSpeedScale(reactionState);
     if (updateBlink(blink, now)) {
       triggerBounce(0.42);
     }
-    updateIdleTarget(targetPose, avatarPackage, now, reactionState);
+    updateIdleTarget(
+      targetPose,
+      avatarPackage,
+      idlePhaseSeconds,
+      now,
+      reactionState,
+    );
     followPose(pose, targetPose);
 
     const poseVelocity = calculatePoseVelocity(pose, previousPose, deltaSeconds);
@@ -237,6 +247,7 @@ function updateBlink(blink: BlinkState, now: number): boolean {
 function updateIdleTarget(
   targetPose: Pose,
   avatarPackage: PuruPuruAvatarPackage | null,
+  idlePhaseSeconds: number,
   now: number,
   reactionState: ReactionState,
 ): void {
@@ -244,9 +255,6 @@ function updateIdleTarget(
   const reactionWeight = reaction ? reactionState.weight : 0;
   const idleScale = reaction
     ? mix(1, reaction.sustain.idleScale, reactionWeight)
-    : 1;
-  const idleSpeedScale = reaction
-    ? mix(1, reaction.sustain.idleSpeedScale, reactionWeight)
     : 1;
   const reactionTilt = reaction
     ? reaction.sustain.tilt * reactionWeight
@@ -276,7 +284,7 @@ function updateIdleTarget(
     return;
   }
 
-  const seconds = (now / 1000) * idleSpeedScale;
+  const seconds = idlePhaseSeconds;
   const breathPixels = settings.breathStrength * 0.18 * idleScale;
   const rollRadians = settings.rollStrength * 0.0016 * idleScale;
   targetPose.x =
@@ -534,6 +542,12 @@ function updateReactionState(
   );
   state.shakeStrength = Math.max(0, state.shakeStrength - delta * 2.8);
   clampReactionState(state);
+}
+
+function getReactionIdleSpeedScale(state: ReactionState): number {
+  const reaction = state.current;
+  if (!reaction) return 1;
+  return mix(1, reaction.sustain.idleSpeedScale, state.weight);
 }
 
 function integrateTransientAxis(
