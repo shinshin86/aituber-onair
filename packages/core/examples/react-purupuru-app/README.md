@@ -13,6 +13,7 @@ PNGTuber-style avatar renderer for `.purupuru` avatar packages.
   item layers.
 - Apply subtle idle breathing and roll sway from the package settings.
 - Apply spring-driven hair lag and bounce to front/back hair layers.
+- Add occasional idle gaze turns with subtle layer parallax.
 - React to speech emotion tags from `SPEECH_START`.
 - Blink at random 2-6 second intervals.
 - Drive mouth states from TTS audio lip-sync while speech is playing.
@@ -104,6 +105,17 @@ actually starts so the motion is synchronized with audible speech.
 
 Tune the mapping in `src/lib/purupuruReactions.ts`. Renderer sustain and impulse
 handling lives in `src/lib/purupuruRenderer.ts`.
+
+## Idle Gaze
+
+While idle, a loaded avatar occasionally glances left or right. The motion feeds
+into the same target pose used by breathing and roll, so existing pose easing and
+hair spring physics make the hair swing naturally. The renderer also applies
+subtle horizontal parallax: face moves the most, front hair follows, and back hair
+moves the least.
+
+Tune the scheduler in `src/lib/idleGaze.ts` and the turn/parallax ratios in
+`src/lib/purupuruRenderer.ts`.
 
 ## Attribution
 

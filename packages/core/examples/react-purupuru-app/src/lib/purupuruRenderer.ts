@@ -11,6 +11,11 @@ import {
   triggerHairSpringBounce,
   updateHairSpring,
 } from './hairSpring';
+import {
+  createIdleGazeState,
+  resetIdleGaze,
+  updateIdleGaze,
+} from './idleGaze';
 import { selectFaceKey } from './purupuruPackage';
 
 interface RendererOptions {
@@ -44,6 +49,12 @@ export interface PuruPuruRendererControls {
 interface HairRigOutput {
   back: HairSpringOutput;
   front: HairSpringOutput;
+}
+
+interface LayerParallax {
+  backHair: number;
+  face: number;
+  frontHair: number;
 }
 
 interface NormalizedReaction {
@@ -82,6 +93,11 @@ const MIN_BLINK_HOLD_MS = 100;
 const MAX_BLINK_HOLD_MS = 200;
 const POSE_FOLLOW = 0.08;
 const DEFAULT_REACTION_FADE_MS = 360;
+const GAZE_TURN_OFFSET_RATIO = 0.014;
+const GAZE_TURN_TILT = 0.026;
+const BACK_HAIR_PARALLAX_RATIO = 0.006;
+const FACE_PARALLAX_RATIO = 0.014;
+const FRONT_HAIR_PARALLAX_RATIO = 0.01;
 
 export function createPuruPuruRenderer(
   options: RendererOptions,
@@ -96,6 +112,7 @@ export function createPuruPuruRenderer(
   const previousPose: Pose = { ...pose };
   const backHairSpring = createHairSpringState();
   const frontHairSpring = createHairSpringState();
+  const idleGaze = createIdleGazeState();
   const reactionState: ReactionState = {
     current: null,
     weight: 0,
@@ -162,6 +179,7 @@ export function createPuruPuruRenderer(
     if (avatarPackage !== previousAvatarPackage) {
       resetHairSpring(backHairSpring);
       resetHairSpring(frontHairSpring);
+      resetIdleGaze(idleGaze);
       copyPose(previousPose, pose);
       previousAvatarPackage = avatarPackage;
     }
@@ -173,12 +191,22 @@ export function createPuruPuruRenderer(
     if (updateBlink(blink, now)) {
       triggerBounce(0.42);
     }
+    const gaze = updateIdleGaze(idleGaze, {
+      deltaSeconds,
+      enabled: Boolean(avatarPackage?.settings.idleMotionEnabled),
+      amplitudeScale: getReactionIdleAmplitudeScale(reactionState),
+      frequencyScale: getReactionIdleSpeedScale(reactionState),
+    });
+    if (gaze.justSettled && Math.random() < 0.6) {
+      blink.nextBlinkAt = now;
+    }
     updateIdleTarget(
       targetPose,
       avatarPackage,
       idlePhaseSeconds,
       now,
       reactionState,
+      gaze.gaze,
     );
     followPose(pose, targetPose);
 
@@ -191,7 +219,7 @@ export function createPuruPuruRenderer(
       poseVelocity,
     );
 
-    renderFrame(context, options, pose, blink.eyesClosed, hair);
+    renderFrame(context, options, pose, blink.eyesClosed, hair, gaze.gaze);
     copyPose(previousPose, pose);
     animationFrameId = requestAnimationFrame(frame);
   };
@@ -250,6 +278,7 @@ function updateIdleTarget(
   idlePhaseSeconds: number,
   now: number,
   reactionState: ReactionState,
+  gaze: number,
 ): void {
   const reaction = reactionState.current;
   const reactionWeight = reaction ? reactionState.weight : 0;
@@ -268,6 +297,12 @@ function updateIdleTarget(
       : 0;
 
   const settings = avatarPackage?.settings;
+  const sourceWidth =
+    avatarPackage?.settings.sourceImageWidth ||
+    avatarPackage?.images.eyesOpenMouthClosed.width ||
+    1024;
+  const gazeOffset = gaze * sourceWidth * GAZE_TURN_OFFSET_RATIO;
+  const gazeTilt = gaze * GAZE_TURN_TILT;
   if (!settings) {
     targetPose.x = shake * 2;
     targetPose.y = reactionOffsetY;
@@ -289,13 +324,15 @@ function updateIdleTarget(
   const rollRadians = settings.rollStrength * 0.0016 * idleScale;
   targetPose.x =
     Math.sin(seconds * 0.72) * settings.rollStrength * 0.18 * idleScale +
-    shake * 2;
+    shake * 2 +
+    gazeOffset;
   targetPose.y =
     Math.sin(seconds * Math.PI * 2 * 0.34) * breathPixels -
     Math.max(0, settings.breathStrength) * 0.08 +
     reactionOffsetY;
   targetPose.rotation =
     Math.sin(seconds * 0.64) * rollRadians +
+    gazeTilt +
     reactionTilt +
     reactionState.transientTilt +
     shake * 0.006;
@@ -318,6 +355,7 @@ function renderFrame(
   pose: Pose,
   eyesClosed: boolean,
   hair: HairRigOutput,
+  gaze: number,
 ): void {
   const canvas = options.canvas;
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -344,25 +382,28 @@ function renderFrame(
     mouthState,
   );
   const { images, itemLayers } = avatarPackage;
+  const parallax = createLayerParallax(images.eyesOpenMouthClosed, gaze);
 
   context.save();
   applyAvatarTransform(context, canvas, avatarPackage, pose);
-  drawHairLayer(context, images.backHair, hair.back);
-  drawImageCentered(context, images[faceKey]);
+  drawHairLayer(context, images.backHair, hair.back, parallax.backHair);
+  drawImageCentered(context, images[faceKey], parallax.face);
   drawItemLayers(
     context,
     itemLayers,
     'backHairFront',
     hair.back,
     images.backHair,
+    parallax.backHair,
   );
-  drawHairLayer(context, images.frontHair, hair.front);
+  drawHairLayer(context, images.frontHair, hair.front, parallax.frontHair);
   drawItemLayers(
     context,
     itemLayers,
     'frontHairFront',
     hair.front,
     images.frontHair,
+    parallax.frontHair,
   );
   context.restore();
 }
@@ -396,16 +437,19 @@ function applyAvatarTransform(
 function drawImageCentered(
   context: CanvasRenderingContext2D,
   image: HTMLImageElement,
+  offsetX = 0,
 ): void {
-  context.drawImage(image, -image.width / 2, -image.height / 2);
+  context.drawImage(image, -image.width / 2 + offsetX, -image.height / 2);
 }
 
 function drawHairLayer(
   context: CanvasRenderingContext2D,
   image: HTMLImageElement,
   spring: HairSpringOutput,
+  parallaxX: number,
 ): void {
   context.save();
+  context.translate(parallaxX, 0);
   applyHairSpringTransform(context, image, spring, 1);
   drawImageCentered(context, image);
   context.restore();
@@ -417,10 +461,12 @@ function drawItemLayers(
   slot: string,
   spring: HairSpringOutput,
   hairImage: HTMLImageElement,
+  parallaxX: number,
 ): void {
   for (const layer of itemLayers) {
     if (!layer.visible || layer.slot !== slot) continue;
     context.save();
+    context.translate(parallaxX, 0);
     applyHairSpringTransform(
       context,
       hairImage,
@@ -435,6 +481,18 @@ function drawItemLayers(
     drawImageCentered(context, layer.image);
     context.restore();
   }
+}
+
+function createLayerParallax(
+  faceImage: HTMLImageElement,
+  gaze: number,
+): LayerParallax {
+  const width = faceImage.width || 1024;
+  return {
+    backHair: gaze * width * BACK_HAIR_PARALLAX_RATIO,
+    face: gaze * width * FACE_PARALLAX_RATIO,
+    frontHair: gaze * width * FRONT_HAIR_PARALLAX_RATIO,
+  };
 }
 
 function applyHairSpringTransform(
@@ -548,6 +606,12 @@ function getReactionIdleSpeedScale(state: ReactionState): number {
   const reaction = state.current;
   if (!reaction) return 1;
   return mix(1, reaction.sustain.idleSpeedScale, state.weight);
+}
+
+function getReactionIdleAmplitudeScale(state: ReactionState): number {
+  const reaction = state.current;
+  if (!reaction) return 1;
+  return mix(1, reaction.sustain.idleScale, state.weight);
 }
 
 function integrateTransientAxis(
