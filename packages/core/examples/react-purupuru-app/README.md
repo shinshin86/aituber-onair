@@ -12,6 +12,7 @@ PNGTuber-style avatar renderer for `.purupuru` avatar packages.
 - Draw the package layers in order: back hair, face, front hair, and optional
   item layers.
 - Apply subtle idle breathing and roll sway from the package settings.
+- Apply spring-driven hair lag and bounce to front/back hair layers.
 - Blink at random 2-6 second intervals.
 - Drive mouth states from TTS audio lip-sync while speech is playing.
 - Keep the rich React example shell features: chat, TTS settings, stream comment
@@ -72,12 +73,17 @@ The Phase 1 renderer reads these values from `settings.json`:
 - `avatarY`
 - `breathStrength`
 - `rollStrength`
+- `hairSpring`
 - `idleMotionEnabled`
 - `bgColor` (loaded for compatibility; the app background controls the final
   presentation)
 
-Hair spring physics, face tracking, mesh deformation, eye highlights, OBS preset
-export, and emotion-driven reactions are intentionally out of scope for Phase 1.
+`hairSpring` scales the hair spring response. A value of `0` disables physics and
+keeps hair rigidly attached to the head. Visible item layers in hair slots use
+their `followStrength` value (0-100) to follow the spring transform.
+
+Face tracking, mesh deformation, eye highlights, OBS preset export, and
+emotion-driven reactions are intentionally out of scope for the current phase.
 
 ## Attribution
 

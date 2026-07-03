@@ -26,6 +26,7 @@ export interface PuruPuruAvatarSettings {
   avatarY: number;
   breathStrength: number;
   rollStrength: number;
+  hairSpring: number;
   idleMotionEnabled: boolean;
   bgColor?: string;
   sourceImageWidth?: number;
@@ -41,6 +42,7 @@ export interface PuruPuruItemLayer {
   scale: number;
   rotation: number;
   opacity: number;
+  followStrength: number;
   visible: boolean;
 }
 
@@ -83,6 +85,7 @@ interface PuruPuruSettingsPayload {
     scale?: number;
     rotation?: number;
     opacity?: number;
+    followStrength?: number;
     visible?: boolean;
   }>;
 }
@@ -441,6 +444,7 @@ async function loadItemLayers(
       scale: numberOrDefault(layer.scale, 100),
       rotation: numberOrDefault(layer.rotation, 0),
       opacity: numberOrDefault(layer.opacity, 100),
+      followStrength: numberOrDefault(layer.followStrength, 100),
       visible: true,
     });
   }
@@ -458,6 +462,7 @@ function normalizeSettings(
     avatarY: numberOrDefault(state.avatarY, 0),
     breathStrength: numberOrDefault(state.breathStrength, 16),
     rollStrength: numberOrDefault(state.rollStrength, 8),
+    hairSpring: numberOrDefault(state.hairSpring, 20),
     idleMotionEnabled: state.idleMotionEnabled !== false,
     bgColor: typeof state.bgColor === 'string' ? state.bgColor : undefined,
     sourceImageWidth: numberOrDefault(settingsPayload.avatarImageSize?.width, 0),

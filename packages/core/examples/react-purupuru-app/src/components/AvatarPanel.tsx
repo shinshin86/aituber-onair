@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
+import type { PuruPuruRendererControls } from '../lib/purupuruRenderer';
 import { createPuruPuruRenderer } from '../lib/purupuruRenderer';
 
 interface AvatarBackgroundProps {
@@ -37,9 +38,9 @@ export function AvatarBackground({
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
-    let dispose: (() => void) | null = null;
+    let controls: PuruPuruRendererControls | null = null;
     try {
-      dispose = createPuruPuruRenderer({
+      controls = createPuruPuruRenderer({
         canvas,
         container,
         getAvatarPackage: () => avatarPackageRef.current,
@@ -51,7 +52,7 @@ export function AvatarBackground({
     }
 
     return () => {
-      dispose?.();
+      controls?.dispose();
     };
   }, []);
 

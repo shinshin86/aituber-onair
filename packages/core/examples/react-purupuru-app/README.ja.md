@@ -9,6 +9,7 @@ PNGTuber レンダラーを組み合わせた React example です。
 - 目 2 状態 x 口 3 状態の 6 face PNG を描画
 - back hair、face、front hair、任意の item layer を Canvas で合成
 - `settings.json` の breath/roll 設定に基づく待機モーション
+- front/back hair に spring-driven な遅れと bounce を適用
 - 2-6 秒間隔のランダム blink
 - TTS 音声の lip-sync による closed/half/open の口パク
 - チャット、TTS 設定、配信コメント、Screen Vision、broadcast 表示を維持
@@ -36,8 +37,12 @@ npm run lint
 この example は format version 1 の uncompressed ZIP (`ZIP_STORED`) のみを
 読み込みます。圧縮 ZIP、過大サイズ、危険なパス、CRC32 不一致は拒否します。
 
-Phase 1 では hair spring physics、face tracking、mesh deformation、OBS preset
-export、emotion-driven reaction は対象外です。
+`hairSpring` が `0` の場合、hair physics は無効になり、髪は頭部に固定され
+ます。Hair slot の item layer は `followStrength` (0-100) に応じて spring
+transform に追従します。
+
+現フェーズでは face tracking、mesh deformation、OBS preset export、
+emotion-driven reaction は対象外です。
 
 ## Attribution
 

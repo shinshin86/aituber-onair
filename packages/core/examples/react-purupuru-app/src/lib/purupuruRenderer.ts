@@ -3,6 +3,13 @@ import type {
   PuruPuruItemLayer,
   PuruPuruMouthState,
 } from './purupuruPackage';
+import type { HairSpringOutput } from './hairSpring';
+import {
+  createHairSpringState,
+  resetHairSpring,
+  triggerHairSpringBounce,
+  updateHairSpring,
+} from './hairSpring';
 import { selectFaceKey } from './purupuruPackage';
 
 interface RendererOptions {
@@ -26,6 +33,16 @@ interface BlinkState {
   reopenAt: number;
 }
 
+export interface PuruPuruRendererControls {
+  dispose: () => void;
+  triggerBounce: (strength: number) => void;
+}
+
+interface HairRigOutput {
+  back: HairSpringOutput;
+  front: HairSpringOutput;
+}
+
 const RMS_CEILING = 0.12;
 const HALF_MOUTH_THRESHOLD = 0.22;
 const OPEN_MOUTH_THRESHOLD = 0.78;
@@ -35,7 +52,9 @@ const MIN_BLINK_HOLD_MS = 100;
 const MAX_BLINK_HOLD_MS = 200;
 const POSE_FOLLOW = 0.08;
 
-export function createPuruPuruRenderer(options: RendererOptions): () => void {
+export function createPuruPuruRenderer(
+  options: RendererOptions,
+): PuruPuruRendererControls {
   const context = options.canvas.getContext('2d');
   if (!context) {
     throw new Error('Canvas 2D rendering is not supported.');
@@ -43,6 +62,9 @@ export function createPuruPuruRenderer(options: RendererOptions): () => void {
 
   const pose: Pose = { x: 0, y: 0, rotation: 0, scale: 1 };
   const targetPose: Pose = { x: 0, y: 0, rotation: 0, scale: 1 };
+  const previousPose: Pose = { ...pose };
+  const backHairSpring = createHairSpringState();
+  const frontHairSpring = createHairSpringState();
   const blink: BlinkState = {
     eyesClosed: false,
     nextBlinkAt: performance.now() + randomBlinkDelay(),
@@ -51,27 +73,63 @@ export function createPuruPuruRenderer(options: RendererOptions): () => void {
 
   let animationFrameId = 0;
   let disposed = false;
+  let previousFrameAt = performance.now();
+  let previousAvatarPackage: PuruPuruAvatarPackage | null = null;
 
   const resizeObserver = new ResizeObserver(() => resizeCanvas(options));
   resizeObserver.observe(options.container);
   resizeCanvas(options);
 
+  const triggerBounce = (strength: number) => {
+    const avatarPackage = options.getAvatarPackage();
+    if (!avatarPackage || avatarPackage.settings.hairSpring <= 0) return;
+    triggerHairSpringBounce(backHairSpring, strength * 0.7);
+    triggerHairSpringBounce(frontHairSpring, strength);
+  };
+
   const frame = (now: number) => {
     if (disposed) return;
+    const avatarPackage = options.getAvatarPackage();
+    const deltaSeconds = Math.max(0, (now - previousFrameAt) / 1000);
+    previousFrameAt = now;
+
+    if (avatarPackage !== previousAvatarPackage) {
+      resetHairSpring(backHairSpring);
+      resetHairSpring(frontHairSpring);
+      copyPose(previousPose, pose);
+      previousAvatarPackage = avatarPackage;
+    }
+
     resizeCanvas(options);
-    updateBlink(blink, now);
-    updateIdleTarget(targetPose, options.getAvatarPackage(), now);
+    if (updateBlink(blink, now)) {
+      triggerBounce(0.42);
+    }
+    updateIdleTarget(targetPose, avatarPackage, now);
     followPose(pose, targetPose);
-    renderFrame(context, options, pose, blink.eyesClosed);
+
+    const poseVelocity = calculatePoseVelocity(pose, previousPose, deltaSeconds);
+    const hair = updateHairRig(
+      avatarPackage,
+      backHairSpring,
+      frontHairSpring,
+      deltaSeconds,
+      poseVelocity,
+    );
+
+    renderFrame(context, options, pose, blink.eyesClosed, hair);
+    copyPose(previousPose, pose);
     animationFrameId = requestAnimationFrame(frame);
   };
 
   animationFrameId = requestAnimationFrame(frame);
 
-  return () => {
-    disposed = true;
-    cancelAnimationFrame(animationFrameId);
-    resizeObserver.disconnect();
+  return {
+    dispose: () => {
+      disposed = true;
+      cancelAnimationFrame(animationFrameId);
+      resizeObserver.disconnect();
+    },
+    triggerBounce,
   };
 }
 
@@ -90,20 +148,23 @@ function resizeCanvas({ canvas, container }: RendererOptions): void {
   }
 }
 
-function updateBlink(blink: BlinkState, now: number): void {
+function updateBlink(blink: BlinkState, now: number): boolean {
   if (blink.eyesClosed) {
     if (now >= blink.reopenAt) {
       blink.eyesClosed = false;
       blink.nextBlinkAt = now + randomBlinkDelay();
     }
-    return;
+    return false;
   }
 
   if (now >= blink.nextBlinkAt) {
     blink.eyesClosed = true;
     blink.reopenAt =
       now + randomBetween(MIN_BLINK_HOLD_MS, MAX_BLINK_HOLD_MS);
+    return true;
   }
+
+  return false;
 }
 
 function updateIdleTarget(
@@ -143,6 +204,7 @@ function renderFrame(
   options: RendererOptions,
   pose: Pose,
   eyesClosed: boolean,
+  hair: HairRigOutput,
 ): void {
   const canvas = options.canvas;
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -172,11 +234,23 @@ function renderFrame(
 
   context.save();
   applyAvatarTransform(context, canvas, avatarPackage, pose);
-  drawImageCentered(context, images.backHair);
+  drawHairLayer(context, images.backHair, hair.back);
   drawImageCentered(context, images[faceKey]);
-  drawItemLayers(context, itemLayers, 'backHairFront');
-  drawImageCentered(context, images.frontHair);
-  drawItemLayers(context, itemLayers, 'frontHairFront');
+  drawItemLayers(
+    context,
+    itemLayers,
+    'backHairFront',
+    hair.back,
+    images.backHair,
+  );
+  drawHairLayer(context, images.frontHair, hair.front);
+  drawItemLayers(
+    context,
+    itemLayers,
+    'frontHairFront',
+    hair.front,
+    images.frontHair,
+  );
   context.restore();
 }
 
@@ -213,14 +287,33 @@ function drawImageCentered(
   context.drawImage(image, -image.width / 2, -image.height / 2);
 }
 
+function drawHairLayer(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  spring: HairSpringOutput,
+): void {
+  context.save();
+  applyHairSpringTransform(context, image, spring, 1);
+  drawImageCentered(context, image);
+  context.restore();
+}
+
 function drawItemLayers(
   context: CanvasRenderingContext2D,
   itemLayers: PuruPuruItemLayer[],
   slot: string,
+  spring: HairSpringOutput,
+  hairImage: HTMLImageElement,
 ): void {
   for (const layer of itemLayers) {
     if (!layer.visible || layer.slot !== slot) continue;
     context.save();
+    applyHairSpringTransform(
+      context,
+      hairImage,
+      spring,
+      layer.followStrength / 100,
+    );
     context.globalAlpha = Math.max(0, Math.min(layer.opacity / 100, 1));
     context.translate(layer.x, layer.y);
     context.rotate((layer.rotation * Math.PI) / 180);
@@ -229,6 +322,77 @@ function drawItemLayers(
     drawImageCentered(context, layer.image);
     context.restore();
   }
+}
+
+function applyHairSpringTransform(
+  context: CanvasRenderingContext2D,
+  hairImage: HTMLImageElement,
+  spring: HairSpringOutput,
+  followStrength: number,
+): void {
+  const follow = clamp(followStrength, 0, 1);
+  if (follow <= 0) return;
+
+  const anchorY = -hairImage.height * 0.38;
+  context.translate(spring.offsetX * follow, spring.offsetY * follow);
+  context.translate(0, anchorY);
+  context.rotate(spring.angle * follow);
+  context.scale(
+    1 + (spring.stretchX - 1) * follow,
+    1 + (spring.stretchY - 1) * follow,
+  );
+  context.translate(0, -anchorY);
+}
+
+function updateHairRig(
+  avatarPackage: PuruPuruAvatarPackage | null,
+  backHairSpring: ReturnType<typeof createHairSpringState>,
+  frontHairSpring: ReturnType<typeof createHairSpringState>,
+  deltaSeconds: number,
+  poseVelocity: Pick<Pose, 'x' | 'y' | 'rotation'>,
+): HairRigOutput {
+  const hairSpring = avatarPackage?.settings.hairSpring ?? 0;
+  return {
+    back: updateHairSpring(backHairSpring, {
+      deltaSeconds,
+      hairSpring,
+      poseVelocityX: poseVelocity.x,
+      poseVelocityY: poseVelocity.y,
+      poseRotationVelocity: poseVelocity.rotation,
+      layerResponse: 0.72,
+    }),
+    front: updateHairSpring(frontHairSpring, {
+      deltaSeconds,
+      hairSpring,
+      poseVelocityX: poseVelocity.x,
+      poseVelocityY: poseVelocity.y,
+      poseRotationVelocity: poseVelocity.rotation,
+      layerResponse: 1,
+    }),
+  };
+}
+
+function calculatePoseVelocity(
+  pose: Pose,
+  previousPose: Pose,
+  deltaSeconds: number,
+): Pick<Pose, 'x' | 'y' | 'rotation'> {
+  if (deltaSeconds <= 0) {
+    return { x: 0, y: 0, rotation: 0 };
+  }
+
+  return {
+    x: (pose.x - previousPose.x) / deltaSeconds,
+    y: (pose.y - previousPose.y) / deltaSeconds,
+    rotation: (pose.rotation - previousPose.rotation) / deltaSeconds,
+  };
+}
+
+function copyPose(target: Pose, source: Pose): void {
+  target.x = source.x;
+  target.y = source.y;
+  target.rotation = source.rotation;
+  target.scale = source.scale;
 }
 
 function resolveMouthState(
@@ -327,4 +491,8 @@ function randomBlinkDelay(): number {
 
 function randomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }
