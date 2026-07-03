@@ -253,7 +253,13 @@ function readStoredZip(zipU8: Uint8Array): ZipEntry[] {
       throw new Error('Invalid ZIP entry name length.');
     }
 
-    const name = assertSafePackagePath(textDecoder.decode(zipU8.slice(nameStart, nameEnd)));
+    const rawName = textDecoder.decode(zipU8.slice(nameStart, nameEnd));
+    if (rawName.endsWith('/') && uncompressedSize === 0) {
+      offset = nextOffset;
+      continue;
+    }
+
+    const name = assertSafePackagePath(rawName);
     totalUnzipped += uncompressedSize;
     if (totalUnzipped > MAX_UNZIPPED_BYTES) {
       throw new Error('The ZIP package expands beyond 120 MB.');

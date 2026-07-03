@@ -203,7 +203,7 @@ function applyAvatarTransform(
     canvas.height / 2 + settings.avatarY + pose.y,
   );
   context.rotate(pose.rotation);
-  context.scale(fitScale * packageScale * pose.scale, fitScale * packageScale);
+  context.scale(fitScale * packageScale, fitScale * packageScale * pose.scale);
 }
 
 function drawImageCentered(
