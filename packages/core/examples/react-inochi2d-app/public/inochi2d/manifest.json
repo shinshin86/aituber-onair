@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "runtime": {
+    "bridge": "./runtime/inochi_bridge.js",
+    "wasm": "./runtime/inochi2d_bg.wasm",
+    "maxDevicePixelRatio": 1.25
+  },
+  "defaultModelId": "aka",
+  "models": [
+    {
+      "id": "aka",
+      "name": "Aka",
+      "model": "./models/Aka.original-rig.inx",
+      "motion": "./models/Aka.original.motion.json",
+      "attribution": {
+        "title": "Aka",
+        "author": "seagetch",
+        "license": "Creative Commons Attribution 4.0 International",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "sourceUrl": "https://github.com/Inochi2D/example-models",
+        "changes": "Rig and idle motion adapted for the AITuber OnAir Inochi2D example."
+      },
+      "autoAnimation": "original_idle_live2d_focus",
+      "idleAnimations": [
+        "original_idle_calm_breath",
+        "original_idle_soft_sway",
+        "original_idle_live2d_focus",
+        "original_idle_expressive_flow",
+        "original_idle_attentive",
+        "original_idle_quick_attention",
+        "original_idle_gentle_wave"
+      ],
+      "reactionAnimations": {
+        "tap": [
+          "original_reaction_nod",
+          "original_reaction_surprised",
+          "original_reaction_thinking_tilt",
+          "original_reaction_listen_in"
+        ],
+        "flick": [
+          "original_reaction_face_wave",
+          "original_reaction_small_wave",
+          "original_reaction_big_wave",
+          "original_reaction_happy_bounce",
+          "original_reaction_emphasis"
+        ],
+        "flickDown": ["original_reaction_nod", "original_reaction_sad_dip"],
+        "flickUp": [
+          "original_reaction_face_wave",
+          "original_reaction_small_wave",
+          "original_reaction_big_wave",
+          "original_reaction_happy_bounce"
+        ],
+        "small_nod": ["original_reaction_nod"],
+        "look_left": [
+          "original_reaction_listen_in",
+          "original_reaction_thinking_tilt"
+        ],
+        "speaking": [
+          "original_speaking_happy_talk",
+          "original_speaking_thinking_talk",
+          "original_reaction_emphasis"
+        ],
+        "small_nod_speaking": [
+          "original_speaking_thinking_talk",
+          "original_reaction_nod"
+        ],
+        "emphasis": ["original_reaction_emphasis"]
+      },
+      "emotionAnimations": {
+        "neutral": [
+          "original_idle_live2d_focus",
+          "original_idle_expressive_flow",
+          "original_idle_soft_sway",
+          "original_idle_calm_breath"
+        ],
+        "happy": [
+          "original_reaction_happy_bounce",
+          "original_idle_playful_bounce",
+          "original_speaking_happy_talk",
+          "original_reaction_emphasis"
+        ],
+        "sad": ["original_reaction_sad_dip", "original_idle_sad_sway"],
+        "relaxed": [
+          "original_idle_live2d_focus",
+          "original_idle_expressive_flow",
+          "original_idle_calm_breath",
+          "original_idle_soft_sway"
+        ],
+        "thinking": [
+          "original_reaction_thinking_tilt",
+          "original_speaking_thinking_talk",
+          "original_reaction_listen_in",
+          "original_idle_quick_attention",
+          "original_idle_live2d_focus",
+          "original_idle_attentive"
+        ],
+        "surprised": [
+          "original_reaction_surprised",
+          "original_reaction_happy_bounce"
+        ],
+        "speaking": [
+          "original_speaking_happy_talk",
+          "original_speaking_thinking_talk",
+          "original_reaction_emphasis"
+        ],
+        "listening": [
+          "original_reaction_listen_in",
+          "original_idle_attentive",
+          "original_idle_quick_attention"
+        ]
+      },
+      "parameters": [],
+      "idleAnimationProfiles": {
+        "original_idle_calm_breath": {
+          "type": "base",
+          "weight": 3
+        },
+        "original_idle_soft_sway": {
+          "type": "base",
+          "weight": 3
+        },
+        "original_idle_live2d_focus": {
+          "type": "attention",
+          "weight": 2
+        },
+        "original_idle_expressive_flow": {
+          "type": "attention",
+          "weight": 2
+        },
+        "original_idle_attentive": {
+          "type": "attention",
+          "weight": 2
+        },
+        "original_idle_quick_attention": {
+          "type": "attention",
+          "weight": 1
+        },
+        "original_idle_playful_bounce": {
+          "type": "emotion",
+          "weight": 1
+        },
+        "original_idle_sad_sway": {
+          "type": "emotion",
+          "weight": 1
+        },
+        "original_idle_gentle_wave": {
+          "type": "rareGesture",
+          "cooldownMs": 45000,
+          "weight": 1
+        }
+      }
+    }
+  ]
+}

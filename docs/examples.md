@@ -24,6 +24,9 @@ to the package examples when you need lower-level integration.
 - Use
   [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app)
   if you already have Live2D model assets.
+- Use
+  [`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
+  if you want an experimental Inochi2D avatar with a prebuilt runtime.
 - Use package examples when you want to embed chat, voice, memory, or streaming
   behavior into an existing application.
 
@@ -108,6 +111,23 @@ are not bundled.
 
 ```bash
 cd packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+### Inochi2D App (experimental)
+
+Path:
+[`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
+
+Best for trying Inochi2D avatars. It renders an Inochi2D model on a WebGL stage
+using a prebuilt Inochi2D runtime and drives mouth movement from audio output
+volume. It bundles the Aka Inochi2D model for first-run display, and you can
+also load a local `.inx` / `.inp` file or register another model in
+`public/inochi2d/manifest.json`.
+
+```bash
+cd packages/core/examples/react-inochi2d-app
 npm install
 npm run dev
 ```

@@ -24,6 +24,9 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 - すでに Live2D モデルアセットを持っている場合は
   [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app)
   を使います。
+- 実験的な Inochi2D アバター（ビルド済みランタイム）を試したい場合は
+  [`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
+  を使います。
 - 既存アプリにチャット、音声、メモリ、配信連携を組み込みたい場合は、
   パッケージ別サンプルを参照してください。
 
@@ -108,6 +111,23 @@ Live2D モデルアセットは同梱していません。
 
 ```bash
 cd packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+### Inochi2D App（実験的）
+
+パス:
+[`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
+
+Inochi2D アバターを試したい場合に向いています。ビルド済みの Inochi2D
+ランタイムを使って Inochi2D モデルを WebGL ステージに描画し、音声出力
+ボリュームから口元を動かします。初回表示用に Aka Inochi2D モデルを同梱しています。
+ローカルの `.inx` / `.inp` ファイルを読み込むか、`public/inochi2d/manifest.json`
+に別モデルを登録することもできます。
+
+```bash
+cd packages/core/examples/react-inochi2d-app
 npm install
 npm run dev
 ```
