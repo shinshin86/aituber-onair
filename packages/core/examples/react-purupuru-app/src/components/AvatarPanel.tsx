@@ -10,6 +10,7 @@ interface AvatarBackgroundProps {
   isSpeaking: boolean;
   avatarPackage?: PuruPuruAvatarPackage | null;
   avatarReaction?: PuruPuruReaction | null;
+  idleMotionEnabled: boolean;
 }
 
 /** Avatar composited into the chat background. */
@@ -19,6 +20,7 @@ export function AvatarBackground({
   isSpeaking,
   avatarPackage,
   avatarReaction,
+  idleMotionEnabled,
 }: AvatarBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -26,6 +28,7 @@ export function AvatarBackground({
   const controlsRef = useRef<PuruPuruRendererControls | null>(null);
   const voiceLevelRef = useRef(0);
   const isSpeakingRef = useRef(false);
+  const idleMotionEnabledRef = useRef(true);
 
   useEffect(() => {
     avatarPackageRef.current = avatarPackage || null;
@@ -36,6 +39,10 @@ export function AvatarBackground({
     voiceLevelRef.current = Math.max(voiceLevel, normalizedMouthLevel * 0.12);
     isSpeakingRef.current = isSpeaking;
   }, [isSpeaking, mouthLevel, voiceLevel]);
+
+  useEffect(() => {
+    idleMotionEnabledRef.current = idleMotionEnabled;
+  }, [idleMotionEnabled]);
 
   useEffect(() => {
     if (avatarReaction) {
@@ -59,6 +66,7 @@ export function AvatarBackground({
         getAvatarPackage: () => avatarPackageRef.current,
         getVoiceLevel: () => voiceLevelRef.current,
         getIsSpeaking: () => isSpeakingRef.current,
+        getIdleMotionEnabled: () => idleMotionEnabledRef.current,
       });
       controlsRef.current = controls;
     } catch (error) {

@@ -27,6 +27,10 @@ export interface PuruPuruAvatarSettings {
   breathStrength: number;
   rollStrength: number;
   hairSpring: number;
+  /**
+   * Preserved from package settings for reference; runtime idle motion is
+   * controlled by app visual.idleMotionEnabled.
+   */
   idleMotionEnabled: boolean;
   bgColor?: string;
   sourceImageWidth?: number;

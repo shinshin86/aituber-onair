@@ -166,6 +166,7 @@ export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
+  idleMotionEnabled: boolean;
 }
 
 export interface ScreenVisionSettings {

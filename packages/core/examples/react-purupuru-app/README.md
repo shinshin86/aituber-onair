@@ -76,7 +76,8 @@ The Phase 1 renderer reads these values from `settings.json`:
 - `breathStrength`
 - `rollStrength`
 - `hairSpring`
-- `idleMotionEnabled`
+- `idleMotionEnabled` (parsed for compatibility; the app-level Visual setting
+  controls runtime idle motion)
 - `bgColor` (loaded for compatibility; the app background controls the final
   presentation)
 
@@ -116,6 +117,45 @@ moves the least.
 
 Tune the scheduler in `src/lib/idleGaze.ts` and the turn/parallax ratios in
 `src/lib/purupuruRenderer.ts`.
+
+## Motion Tuning
+
+Renderer constants in `src/lib/purupuruRenderer.ts`:
+
+| Value | Default | Increasing it makes... |
+| --- | ---: | --- |
+| `GAZE_TURN_OFFSET_RATIO` | `0.014` | the head/face drift farther sideways during idle gaze |
+| `GAZE_TURN_TILT` | `0.026` | the head tilt more during idle gaze |
+| `FACE_PARALLAX_RATIO` | `0.034` | the face layer move farther with gaze parallax |
+| `FRONT_HAIR_PARALLAX_RATIO` | `0.01` | front hair follow gaze parallax more strongly |
+| `BACK_HAIR_PARALLAX_RATIO` | `0.006` | back hair follow gaze parallax more strongly |
+
+Keep parallax ordered as `face > frontHair > backHair` so depth reads
+naturally.
+
+Idle gaze scheduler constants in `src/lib/idleGaze.ts`:
+
+| Value | Default | Increasing it makes... |
+| --- | ---: | --- |
+| `MIN_WAIT_SECONDS` / `MAX_WAIT_SECONDS` | `5` / `14` | idle gaze turns less frequent |
+| `MIN_HOLD_SECONDS` / `MAX_HOLD_SECONDS` | `0.6` / `1.8` | gaze holds longer before returning |
+| `FULL_TURN_MIN` / `FULL_TURN_MAX` | `0.65` / `1` | full turns reach farther left/right |
+| `SMALL_TURN_MAX` / `SMALL_TURN_CHANCE` | `0.3` / `0.3` | small turns become wider / more common |
+
+Package values in `settings.json`:
+
+| Value | Effect when increased |
+| --- | --- |
+| `breathStrength` | stronger vertical breathing motion |
+| `rollStrength` | stronger side sway and head roll |
+| `hairSpring` | more visible spring lag and bounce |
+| `avatarSize` | larger rendered avatar |
+| `avatarX` | moves the avatar right |
+| `avatarY` | moves the avatar down |
+| `idleMotionEnabled` | ignored at runtime in favor of the app-level Visual setting, because camera-tracking-authored packages often ship this as `false` |
+
+Visible `itemLayers` use `followStrength` (`0`-`100`) to decide how strongly
+they follow the hair spring transform.
 
 ## Attribution
 

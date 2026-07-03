@@ -24,6 +24,7 @@ interface RendererOptions {
   getAvatarPackage: () => PuruPuruAvatarPackage | null;
   getVoiceLevel: () => number;
   getIsSpeaking: () => boolean;
+  getIdleMotionEnabled: () => boolean;
 }
 
 interface Pose {
@@ -186,6 +187,7 @@ export function createPuruPuruRenderer(
 
     resizeCanvas(options);
     updateReactionState(reactionState, deltaSeconds);
+    const idleMotionEnabled = options.getIdleMotionEnabled();
     idlePhaseSeconds +=
       phaseDeltaSeconds * getReactionIdleSpeedScale(reactionState);
     if (updateBlink(blink, now)) {
@@ -193,7 +195,7 @@ export function createPuruPuruRenderer(
     }
     const gaze = updateIdleGaze(idleGaze, {
       deltaSeconds,
-      enabled: Boolean(avatarPackage?.settings.idleMotionEnabled),
+      enabled: Boolean(avatarPackage && idleMotionEnabled),
       amplitudeScale: getReactionIdleAmplitudeScale(reactionState),
       frequencyScale: getReactionIdleSpeedScale(reactionState),
     });
@@ -207,6 +209,7 @@ export function createPuruPuruRenderer(
       now,
       reactionState,
       gaze.gaze,
+      idleMotionEnabled,
     );
     followPose(pose, targetPose);
 
@@ -279,6 +282,7 @@ function updateIdleTarget(
   now: number,
   reactionState: ReactionState,
   gaze: number,
+  idleMotionEnabled: boolean,
 ): void {
   const reaction = reactionState.current;
   const reactionWeight = reaction ? reactionState.weight : 0;
@@ -311,7 +315,7 @@ function updateIdleTarget(
     return;
   }
 
-  if (!settings.idleMotionEnabled) {
+  if (!idleMotionEnabled) {
     targetPose.x = shake * 2;
     targetPose.y = reactionOffsetY;
     targetPose.rotation = reactionTilt + reactionState.transientTilt;

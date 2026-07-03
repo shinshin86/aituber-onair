@@ -74,6 +74,7 @@ export function ChatPanel({
         isSpeaking={isSpeaking}
         avatarPackage={avatarPackage}
         avatarReaction={avatarReaction}
+        idleMotionEnabled={visual.idleMotionEnabled}
       />
       {isBroadcast ? (
         broadcastCaption && (

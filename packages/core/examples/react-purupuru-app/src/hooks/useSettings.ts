@@ -208,6 +208,7 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      idleMotionEnabled: true,
     },
     screenVision: {
       deviceId: '',
@@ -888,6 +889,16 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualIdleMotionEnabled = useCallback(
+    (idleMotionEnabled: boolean) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, idleMotionEnabled },
+      }));
+    },
+    [],
+  );
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1244,6 +1255,7 @@ export function useSettings() {
     updateVisualBackgroundMode,
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
+    updateVisualIdleMotionEnabled,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

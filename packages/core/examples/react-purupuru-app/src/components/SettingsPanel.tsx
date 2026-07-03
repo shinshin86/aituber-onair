@@ -275,6 +275,7 @@ export function SettingsPanel({
   updateVisualBackgroundMode,
   updateVisualLayoutMode,
   updateVisualShowInputInBroadcast,
+  updateVisualIdleMotionEnabled,
   updateScreenVisionDeviceId,
   updateScreenVisionPrompt,
   updateScreenVisionAutoIntervalMs,
@@ -2294,6 +2295,21 @@ export function SettingsPanel({
               />
               <span>ソロ配信で入力欄を表示</span>
             </label>
+
+            <label className="settings-checkbox-field">
+              <input
+                type="checkbox"
+                checked={settings.visual.idleMotionEnabled}
+                onChange={(e) =>
+                  updateVisualIdleMotionEnabled(e.target.checked)
+                }
+                disabled={disabled}
+              />
+              <span>アイドルモーション</span>
+            </label>
+            <p className="settings-field-hint">
+              パッケージ内の idleMotionEnabled より優先されます。
+            </p>
 
             <div className="settings-field">
               <label htmlFor="background-image">背景画像</label>
