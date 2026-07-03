@@ -245,6 +245,12 @@ body {
   cursor: not-allowed;
 }
 
+.settings-inline-button {
+  width: 100%;
+  margin-top: 2px;
+  padding: 6px 8px;
+}
+
 .settings-field select:disabled,
 .settings-field input:disabled {
   opacity: 0.4;
@@ -379,6 +385,16 @@ body {
   height: 100%;
   display: block;
   pointer-events: none;
+}
+
+.avatar-canvas.is-interactive {
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.avatar-canvas.is-dragging {
+  cursor: grabbing;
 }
 
 .avatar-error {

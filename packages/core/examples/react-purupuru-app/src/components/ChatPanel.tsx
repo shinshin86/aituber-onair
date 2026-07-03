@@ -1,5 +1,5 @@
 import type { ChatMessage } from '../types/chat';
-import type { VisualSettings } from '../types/settings';
+import type { AvatarViewTransform, VisualSettings } from '../types/settings';
 import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
 import type { PuruPuruReaction } from '../lib/purupuruReactions';
 import { AvatarBackground } from './AvatarPanel';
@@ -19,6 +19,8 @@ interface ChatPanelProps {
   avatarReaction?: PuruPuruReaction | null;
   backgroundImageUrl?: string | null;
   visual: VisualSettings;
+  avatarViewTransform: AvatarViewTransform;
+  onAvatarViewTransformChange: (transform: AvatarViewTransform) => void;
 }
 
 export function ChatPanel({
@@ -34,6 +36,8 @@ export function ChatPanel({
   avatarReaction,
   backgroundImageUrl,
   visual,
+  avatarViewTransform,
+  onAvatarViewTransformChange,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -75,6 +79,8 @@ export function ChatPanel({
         avatarPackage={avatarPackage}
         avatarReaction={avatarReaction}
         idleMotionEnabled={visual.idleMotionEnabled}
+        avatarViewTransform={avatarViewTransform}
+        onAvatarViewTransformChange={onAvatarViewTransformChange}
       />
       {isBroadcast ? (
         broadcastCaption && (

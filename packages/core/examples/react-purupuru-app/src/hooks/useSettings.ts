@@ -8,9 +8,11 @@ import {
 } from '@aituber-onair/core';
 import type {
   AppSettings,
+  AvatarViewTransform,
   ChatProviderOption,
   StreamingPlatformOption,
   TTSEngineOption,
+  VisualSettings,
 } from '../types/settings';
 
 type ApiKeyProvider = Exclude<ChatProviderOption, 'gemini-nano'>;
@@ -47,6 +49,9 @@ const DEFAULT_OPENROUTER_MAX_WORKING = 10;
 const DEFAULT_SCREEN_VISION_PROMPT =
   'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
 const EMPTY_MODEL_IDS: string[] = [];
+const AVATAR_VIEW_MIN_SCALE = 0.2;
+const AVATAR_VIEW_MAX_SCALE = 3;
+const AVATAR_VIEW_MAX_OFFSET = 100_000;
 
 function getOrderedModels(provider: ChatProviderOption): string[] {
   const models = AITuberOnAirCore.getSupportedModels(provider);
@@ -64,6 +69,59 @@ function normalizePositiveInteger(
     return fallback;
   }
   return Math.max(1, Math.floor(value));
+}
+
+function normalizeFiniteNumber(
+  value: number | undefined,
+  fallback: number,
+): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : fallback;
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function normalizeAvatarViewTransform(
+  value: Partial<AvatarViewTransform> | undefined,
+): AvatarViewTransform {
+  return {
+    x: clampNumber(
+      normalizeFiniteNumber(value?.x, 0),
+      -AVATAR_VIEW_MAX_OFFSET,
+      AVATAR_VIEW_MAX_OFFSET,
+    ),
+    y: clampNumber(
+      normalizeFiniteNumber(value?.y, 0),
+      -AVATAR_VIEW_MAX_OFFSET,
+      AVATAR_VIEW_MAX_OFFSET,
+    ),
+    scale: clampNumber(
+      normalizeFiniteNumber(value?.scale, 1),
+      AVATAR_VIEW_MIN_SCALE,
+      AVATAR_VIEW_MAX_SCALE,
+    ),
+  };
+}
+
+function normalizeVisualSettings(
+  value: Partial<VisualSettings> | undefined,
+  defaults: VisualSettings,
+): VisualSettings {
+  const merged = { ...defaults, ...value };
+  const avatarView = normalizeAvatarViewTransform({
+    x: merged.avatarViewX,
+    y: merged.avatarViewY,
+    scale: merged.avatarViewScale,
+  });
+  return {
+    ...merged,
+    avatarViewX: avatarView.x,
+    avatarViewY: avatarView.y,
+    avatarViewScale: avatarView.scale,
+  };
 }
 
 function normalizeModelIds(modelIds: string[]): string[] {
@@ -209,6 +267,9 @@ function getDefaultSettings(): AppSettings {
       layoutMode: 'chat',
       showInputInBroadcast: false,
       idleMotionEnabled: true,
+      avatarViewX: 0,
+      avatarViewY: 0,
+      avatarViewScale: 1,
     },
     screenVision: {
       deviceId: '',
@@ -267,7 +328,7 @@ function loadSettings(): AppSettings {
           ),
         },
         tts: { ...defaults.tts, ...saved.tts },
-        visual: { ...defaults.visual, ...saved.visual },
+        visual: normalizeVisualSettings(saved.visual, defaults.visual),
         screenVision: { ...defaults.screenVision, ...saved.screenVision },
         stream: { ...defaults.stream, ...saved.stream },
         commentIntelligence: {
@@ -899,6 +960,26 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualAvatarView = useCallback(
+    (avatarView: AvatarViewTransform) => {
+      const normalized = normalizeAvatarViewTransform(avatarView);
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          avatarViewX: normalized.x,
+          avatarViewY: normalized.y,
+          avatarViewScale: normalized.scale,
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualAvatarView = useCallback(() => {
+    updateVisualAvatarView({ x: 0, y: 0, scale: 1 });
+  }, [updateVisualAvatarView]);
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1256,6 +1337,8 @@ export function useSettings() {
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
     updateVisualIdleMotionEnabled,
+    updateVisualAvatarView,
+    resetVisualAvatarView,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

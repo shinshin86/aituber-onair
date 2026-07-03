@@ -167,6 +167,15 @@ export interface VisualSettings {
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
   idleMotionEnabled: boolean;
+  avatarViewX: number;
+  avatarViewY: number;
+  avatarViewScale: number;
+}
+
+export interface AvatarViewTransform {
+  x: number;
+  y: number;
+  scale: number;
 }
 
 export interface ScreenVisionSettings {

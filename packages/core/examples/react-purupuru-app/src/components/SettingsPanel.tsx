@@ -276,6 +276,7 @@ export function SettingsPanel({
   updateVisualLayoutMode,
   updateVisualShowInputInBroadcast,
   updateVisualIdleMotionEnabled,
+  resetVisualAvatarView,
   updateScreenVisionDeviceId,
   updateScreenVisionPrompt,
   updateScreenVisionAutoIntervalMs,
@@ -2309,6 +2310,18 @@ export function SettingsPanel({
             </label>
             <p className="settings-field-hint">
               パッケージ内の idleMotionEnabled より優先されます。
+            </p>
+
+            <button
+              type="button"
+              className="settings-clear-button settings-inline-button"
+              onClick={resetVisualAvatarView}
+              disabled={disabled || !avatarPackage}
+            >
+              アバター位置をリセット
+            </button>
+            <p className="settings-field-hint">
+              ドラッグ位置とホイール拡大率を初期値に戻します。
             </p>
 
             <div className="settings-field">

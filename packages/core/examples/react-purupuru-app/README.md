@@ -14,6 +14,7 @@ PNGTuber-style avatar renderer for `.purupuru` avatar packages.
 - Apply subtle idle breathing and roll sway from the package settings.
 - Apply spring-driven hair lag and bounce to front/back hair layers.
 - Add occasional idle gaze turns with subtle layer parallax.
+- Reposition the loaded avatar by dragging and resize it with the mouse wheel.
 - React to speech emotion tags from `SPEECH_START`.
 - Blink at random 2-6 second intervals.
 - Drive mouth states from TTS audio lip-sync while speech is playing.
@@ -54,6 +55,11 @@ npm run dev
 Open the local Vite URL, then open Settings and choose a `.purupuru` package in
 the Visual section. Until a package is loaded, the app renders a built-in
 placeholder avatar.
+
+After a package is loaded, drag the avatar on the canvas to reposition it and use
+the mouse wheel to zoom. Double-click the canvas, or use the Visual section's
+`アバター位置をリセット` button, to reset the placement. The app persists the
+drag/zoom placement across reloads.
 
 For a local manual test package, use a `.purupuru` file from a separate checkout
 or your own exported avatar package. Do not commit binary avatar packages to this

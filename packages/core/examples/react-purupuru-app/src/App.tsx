@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -279,6 +279,19 @@ export default function App() {
     };
   }, []);
 
+  const avatarViewTransform = useMemo(
+    () => ({
+      x: settingsHook.settings.visual.avatarViewX,
+      y: settingsHook.settings.visual.avatarViewY,
+      scale: settingsHook.settings.visual.avatarViewScale,
+    }),
+    [
+      settingsHook.settings.visual.avatarViewX,
+      settingsHook.settings.visual.avatarViewY,
+      settingsHook.settings.visual.avatarViewScale,
+    ],
+  );
+
   return (
     <div className="app">
       <ChatPanel
@@ -293,6 +306,8 @@ export default function App() {
         avatarReaction={avatarReaction}
         backgroundImageUrl={backgroundImageUrl}
         visual={settingsHook.settings.visual}
+        avatarViewTransform={avatarViewTransform}
+        onAvatarViewTransformChange={settingsHook.updateVisualAvatarView}
         onToggleSettings={() => setSettingsOpen((v) => !v)}
       />
 

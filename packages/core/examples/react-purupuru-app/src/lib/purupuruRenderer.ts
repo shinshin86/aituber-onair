@@ -17,6 +17,7 @@ import {
   updateIdleGaze,
 } from './idleGaze';
 import { selectFaceKey } from './purupuruPackage';
+import type { AvatarViewTransform } from '../types/settings';
 
 interface RendererOptions {
   canvas: HTMLCanvasElement;
@@ -25,6 +26,7 @@ interface RendererOptions {
   getVoiceLevel: () => number;
   getIsSpeaking: () => boolean;
   getIdleMotionEnabled: () => boolean;
+  getViewTransform: () => AvatarViewTransform;
 }
 
 interface Pose {
@@ -108,6 +110,9 @@ const BACK_HAIR_PARALLAX_RATIO = 0.006;
 const FACE_PARALLAX_RATIO = 0.034;
 const FRONT_HAIR_PARALLAX_RATIO = 0.01;
 const FALLBACK_ITEM_LAYER_SLOT: ItemLayerSlot = 'frontHairFront';
+const AVATAR_VIEW_MIN_SCALE = 0.2;
+const AVATAR_VIEW_MAX_SCALE = 3;
+const AVATAR_VIEW_MAX_OFFSET = 100_000;
 const ITEM_LAYER_SLOTS = new Set<string>([
   'stageBack',
   'characterBack',
@@ -404,11 +409,12 @@ function renderFrame(
   );
   const { images, itemLayers } = avatarPackage;
   const parallax = createLayerParallax(images.eyesOpenMouthClosed, gaze);
+  const viewTransform = sanitizeViewTransform(options.getViewTransform());
 
   drawStageItemLayers(context, canvas, avatarPackage, itemLayers, 'stageBack');
 
   context.save();
-  applyAvatarTransform(context, canvas, avatarPackage, pose);
+  applyAvatarTransform(context, canvas, avatarPackage, pose, viewTransform);
   drawRigidItemLayers(context, itemLayers, 'characterBack');
   drawHairLayer(context, images.backHair, hair.back, parallax.backHair);
   drawSpringItemLayers(
@@ -440,16 +446,23 @@ function applyAvatarTransform(
   canvas: HTMLCanvasElement,
   avatarPackage: PuruPuruAvatarPackage,
   pose: Pose,
+  viewTransform: AvatarViewTransform,
 ): void {
   const settings = avatarPackage.settings;
   const baseScale = calculateAvatarBaseScale(canvas, avatarPackage);
+  const ratioX = canvas.width / Math.max(1, canvas.clientWidth || canvas.width);
+  const ratioY =
+    canvas.height / Math.max(1, canvas.clientHeight || canvas.height);
 
   context.translate(
-    canvas.width / 2 + settings.avatarX + pose.x,
-    canvas.height / 2 + settings.avatarY + pose.y,
+    canvas.width / 2 + settings.avatarX + pose.x + viewTransform.x * ratioX,
+    canvas.height / 2 + settings.avatarY + pose.y + viewTransform.y * ratioY,
   );
   context.rotate(pose.rotation);
-  context.scale(baseScale, baseScale * pose.scale);
+  context.scale(
+    baseScale * viewTransform.scale,
+    baseScale * viewTransform.scale * pose.scale,
+  );
 }
 
 function calculateAvatarBaseScale(
@@ -600,6 +613,30 @@ function applyHairSpringTransform(
     1 + (spring.stretchY - 1) * follow,
   );
   context.translate(0, -anchorY);
+}
+
+function sanitizeViewTransform(
+  transform: AvatarViewTransform,
+): AvatarViewTransform {
+  return {
+    x: clampFinite(transform.x, -AVATAR_VIEW_MAX_OFFSET, AVATAR_VIEW_MAX_OFFSET),
+    y: clampFinite(transform.y, -AVATAR_VIEW_MAX_OFFSET, AVATAR_VIEW_MAX_OFFSET),
+    scale: clampFinite(
+      transform.scale,
+      AVATAR_VIEW_MIN_SCALE,
+      AVATAR_VIEW_MAX_SCALE,
+      1,
+    ),
+  };
+}
+
+function clampFinite(
+  value: number,
+  min: number,
+  max: number,
+  fallback = 0,
+): number {
+  return clamp(Number.isFinite(value) ? value : fallback, min, max);
 }
 
 function updateHairRig(

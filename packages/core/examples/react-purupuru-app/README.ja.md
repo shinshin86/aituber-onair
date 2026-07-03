@@ -11,6 +11,7 @@ PNGTuber レンダラーを組み合わせた React example です。
 - `settings.json` の breath/roll 設定に基づく待機モーション
 - front/back hair に spring-driven な遅れと bounce を適用
 - 待機中に左右へ軽く視線/向きを変える idle gaze と layer parallax
+- 読み込み済み avatar のドラッグ移動と mouse wheel zoom
 - `SPEECH_START` の emotion tag に応じたリアクション
 - 2-6 秒間隔のランダム blink
 - TTS 音声の lip-sync による closed/half/open の口パク
@@ -26,6 +27,11 @@ npm run dev
 
 起動後、Settings を開き、Visual セクションで `.purupuru` ファイルを選択して
 ください。読み込み前は組み込みの placeholder avatar を表示します。
+
+パッケージ読み込み後は、canvas 上で avatar をドラッグして位置を調整し、mouse
+wheel で拡大/縮小できます。canvas をダブルクリックするか、Visual セクションの
+`アバター位置をリセット` ボタンを押すと初期位置に戻ります。ドラッグ位置と zoom
+倍率は reload 後も保持されます。
 
 ## 検証
 
