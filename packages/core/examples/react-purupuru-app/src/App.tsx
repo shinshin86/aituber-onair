@@ -10,6 +10,15 @@ import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import type { PuruPuruAvatarPackage } from './lib/purupuruPackage';
 import { loadPuruPuruPackage } from './lib/purupuruPackage';
+import type {
+  PuruPuruReaction,
+  PuruPuruReactionDraft,
+  ScreenplayLike,
+} from './lib/purupuruReactions';
+import {
+  createPuruPuruReactionFromScreenplay,
+  withReactionId,
+} from './lib/purupuruReactions';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/app.css';
@@ -29,13 +38,44 @@ export default function App() {
     useState<PuruPuruAvatarPackage | null>(null);
   const [avatarLoadError, setAvatarLoadError] = useState<string | null>(null);
   const avatarPackageRef = useRef<PuruPuruAvatarPackage | null>(null);
+  const avatarReactionIdRef = useRef(0);
+  const speechReactionRef = useRef<PuruPuruReactionDraft | null>(null);
+  const [avatarReaction, setAvatarReaction] =
+    useState<PuruPuruReaction | null>(null);
+
+  const emitAvatarReaction = useCallback((draft: PuruPuruReactionDraft) => {
+    avatarReactionIdRef.current += 1;
+    setAvatarReaction(withReactionId(draft, avatarReactionIdRef.current));
+  }, []);
+
+  const resetAvatarReaction = useCallback(() => {
+    speechReactionRef.current = null;
+    setAvatarReaction(null);
+  }, []);
 
   const handleAudioPlay = useCallback(
     async (arrayBuffer: ArrayBuffer) => {
-      await play(arrayBuffer);
+      await play(arrayBuffer, {
+        onStart: () => {
+          if (speechReactionRef.current) {
+            emitAvatarReaction(speechReactionRef.current);
+          } else {
+            setAvatarReaction(null);
+          }
+        },
+      });
     },
-    [play],
+    [emitAvatarReaction, play],
   );
+
+  const handleSpeechStart = useCallback((screenplay: ScreenplayLike) => {
+    speechReactionRef.current =
+      createPuruPuruReactionFromScreenplay(screenplay);
+  }, []);
+
+  const handleSpeechEnd = useCallback(() => {
+    resetAvatarReaction();
+  }, [resetAvatarReaction]);
 
   const {
     messages,
@@ -45,6 +85,8 @@ export default function App() {
     processVisionChat,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
+    onSpeechStart: handleSpeechStart,
+    onSpeechEnd: handleSpeechEnd,
     settings: settingsHook.settings,
     getApiKeyForProvider: settingsHook.getApiKeyForProvider,
   });
@@ -59,9 +101,10 @@ export default function App() {
     (text: string) => {
       // Stop previous audio if speech is currently playing
       stop();
+      resetAvatarReaction();
       processChat(text);
     },
-    [stop, processChat],
+    [stop, resetAvatarReaction, processChat],
   );
 
   const { enqueueYouTubeComments, enqueueTwitchComments } =
@@ -247,6 +290,7 @@ export default function App() {
         voiceLevel={smoothedValue}
         isSpeaking={isSpeaking}
         avatarPackage={avatarPackage}
+        avatarReaction={avatarReaction}
         backgroundImageUrl={backgroundImageUrl}
         visual={settingsHook.settings.visual}
         onToggleSettings={() => setSettingsOpen((v) => !v)}

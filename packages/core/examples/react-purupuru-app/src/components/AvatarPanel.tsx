@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
+import type { PuruPuruReaction } from '../lib/purupuruReactions';
 import type { PuruPuruRendererControls } from '../lib/purupuruRenderer';
 import { createPuruPuruRenderer } from '../lib/purupuruRenderer';
 
@@ -8,6 +9,7 @@ interface AvatarBackgroundProps {
   voiceLevel: number;
   isSpeaking: boolean;
   avatarPackage?: PuruPuruAvatarPackage | null;
+  avatarReaction?: PuruPuruReaction | null;
 }
 
 /** Avatar composited into the chat background. */
@@ -16,10 +18,12 @@ export function AvatarBackground({
   voiceLevel,
   isSpeaking,
   avatarPackage,
+  avatarReaction,
 }: AvatarBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const avatarPackageRef = useRef<PuruPuruAvatarPackage | null>(null);
+  const controlsRef = useRef<PuruPuruRendererControls | null>(null);
   const voiceLevelRef = useRef(0);
   const isSpeakingRef = useRef(false);
 
@@ -32,6 +36,15 @@ export function AvatarBackground({
     voiceLevelRef.current = Math.max(voiceLevel, normalizedMouthLevel * 0.12);
     isSpeakingRef.current = isSpeaking;
   }, [isSpeaking, mouthLevel, voiceLevel]);
+
+  useEffect(() => {
+    if (avatarReaction) {
+      controlsRef.current?.applyReaction(avatarReaction);
+      return;
+    }
+
+    controlsRef.current?.resetReaction();
+  }, [avatarReaction]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -47,11 +60,13 @@ export function AvatarBackground({
         getVoiceLevel: () => voiceLevelRef.current,
         getIsSpeaking: () => isSpeakingRef.current,
       });
+      controlsRef.current = controls;
     } catch (error) {
       console.error('Failed to initialize the PuruPuru renderer:', error);
     }
 
     return () => {
+      controlsRef.current = null;
       controls?.dispose();
     };
   }, []);

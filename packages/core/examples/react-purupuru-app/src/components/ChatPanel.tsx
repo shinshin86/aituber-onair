@@ -1,6 +1,7 @@
 import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
 import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
+import type { PuruPuruReaction } from '../lib/purupuruReactions';
 import { AvatarBackground } from './AvatarPanel';
 import { ChatLog } from './ChatLog';
 import { ChatInput } from './ChatInput';
@@ -15,6 +16,7 @@ interface ChatPanelProps {
   voiceLevel: number;
   isSpeaking: boolean;
   avatarPackage?: PuruPuruAvatarPackage | null;
+  avatarReaction?: PuruPuruReaction | null;
   backgroundImageUrl?: string | null;
   visual: VisualSettings;
 }
@@ -29,6 +31,7 @@ export function ChatPanel({
   voiceLevel,
   isSpeaking,
   avatarPackage,
+  avatarReaction,
   backgroundImageUrl,
   visual,
 }: ChatPanelProps) {
@@ -70,6 +73,7 @@ export function ChatPanel({
         voiceLevel={voiceLevel}
         isSpeaking={isSpeaking}
         avatarPackage={avatarPackage}
+        avatarReaction={avatarReaction}
       />
       {isBroadcast ? (
         broadcastCaption && (

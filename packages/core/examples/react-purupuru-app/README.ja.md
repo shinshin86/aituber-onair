@@ -10,6 +10,7 @@ PNGTuber レンダラーを組み合わせた React example です。
 - back hair、face、front hair、任意の item layer を Canvas で合成
 - `settings.json` の breath/roll 設定に基づく待機モーション
 - front/back hair に spring-driven な遅れと bounce を適用
+- `SPEECH_START` の emotion tag に応じたリアクション
 - 2-6 秒間隔のランダム blink
 - TTS 音声の lip-sync による closed/half/open の口パク
 - チャット、TTS 設定、配信コメント、Screen Vision、broadcast 表示を維持
@@ -41,8 +42,25 @@ npm run lint
 ます。Hair slot の item layer は `followStrength` (0-100) に応じて spring
 transform に追従します。
 
-現フェーズでは face tracking、mesh deformation、OBS preset export、
-emotion-driven reaction は対象外です。
+現フェーズでは face tracking、mesh deformation、OBS preset export は対象外です。
+
+## Emotion reactions
+
+Core は `[happy]` などの emotion tag を `screenplay = { emotion, text }` に
+変換し、`SPEECH_START` で通知します。この example はその時点で reaction
+draft を保持し、TTS 音声が実際に再生開始したタイミングで適用します。
+
+| Emotion | Reaction |
+| --- | --- |
+| `happy` | 強めの hair bounce、少し上向き、軽い scale pop |
+| `surprised` | 素早い tilt impulse、bounce、scale pop |
+| `sad` | うつむき気味の sustain と柔らかい idle |
+| `angry` | 短い shake impulse と速めの idle |
+| `relaxed` | ゆっくり柔らかい idle と小さな bounce |
+| `neutral` | 追加 reaction なし |
+
+Mapping は `src/lib/purupuruReactions.ts`、renderer 側の sustain/impulse 処理は
+`src/lib/purupuruRenderer.ts` で調整できます。
 
 ## Attribution
 

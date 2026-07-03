@@ -13,6 +13,7 @@ PNGTuber-style avatar renderer for `.purupuru` avatar packages.
   item layers.
 - Apply subtle idle breathing and roll sway from the package settings.
 - Apply spring-driven hair lag and bounce to front/back hair layers.
+- React to speech emotion tags from `SPEECH_START`.
 - Blink at random 2-6 second intervals.
 - Drive mouth states from TTS audio lip-sync while speech is playing.
 - Keep the rich React example shell features: chat, TTS settings, stream comment
@@ -82,8 +83,27 @@ The Phase 1 renderer reads these values from `settings.json`:
 keeps hair rigidly attached to the head. Visible item layers in hair slots use
 their `followStrength` value (0-100) to follow the spring transform.
 
-Face tracking, mesh deformation, eye highlights, OBS preset export, and
-emotion-driven reactions are intentionally out of scope for the current phase.
+Face tracking, mesh deformation, eye highlights, and OBS preset export are
+intentionally out of scope for the current phase.
+
+## Emotion Reactions
+
+The core parses leading emotion tags such as `[happy]` into
+`screenplay = { emotion, text }` and emits them through `SPEECH_START`. This app
+stashes the reaction draft at that event, then applies it when TTS playback
+actually starts so the motion is synchronized with audible speech.
+
+| Emotion | Reaction |
+| --- | --- |
+| `happy` | Strong hair bounce, slight lift, small scale pop |
+| `surprised` | Quick tilt impulse, bounce, scale pop |
+| `sad` | Sustained head-down pose and softer idle motion |
+| `angry` | Sharp shake impulse and faster idle motion |
+| `relaxed` | Slower, softer idle motion and tiny settle bounce |
+| `neutral` | No extra reaction |
+
+Tune the mapping in `src/lib/purupuruReactions.ts`. Renderer sustain and impulse
+handling lives in `src/lib/purupuruRenderer.ts`.
 
 ## Attribution
 

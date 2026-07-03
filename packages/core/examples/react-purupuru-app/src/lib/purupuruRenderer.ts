@@ -3,6 +3,7 @@ import type {
   PuruPuruItemLayer,
   PuruPuruMouthState,
 } from './purupuruPackage';
+import type { PuruPuruReaction } from './purupuruReactions';
 import type { HairSpringOutput } from './hairSpring';
 import {
   createHairSpringState,
@@ -36,11 +37,40 @@ interface BlinkState {
 export interface PuruPuruRendererControls {
   dispose: () => void;
   triggerBounce: (strength: number) => void;
+  applyReaction: (reaction: PuruPuruReaction) => void;
+  resetReaction: () => void;
 }
 
 interface HairRigOutput {
   back: HairSpringOutput;
   front: HairSpringOutput;
+}
+
+interface NormalizedReaction {
+  impulse: {
+    bounce: number;
+    tilt: number;
+    shake: number;
+    scalePop: number;
+  };
+  sustain: {
+    offsetY: number;
+    tilt: number;
+    idleScale: number;
+    idleSpeedScale: number;
+  };
+  fadeMs: number;
+}
+
+interface ReactionState {
+  current: NormalizedReaction | null;
+  weight: number;
+  targetWeight: number;
+  transientTilt: number;
+  transientTiltVelocity: number;
+  transientScale: number;
+  transientScaleVelocity: number;
+  shakeStrength: number;
 }
 
 const RMS_CEILING = 0.12;
@@ -51,6 +81,7 @@ const MAX_BLINK_DELAY_MS = 6000;
 const MIN_BLINK_HOLD_MS = 100;
 const MAX_BLINK_HOLD_MS = 200;
 const POSE_FOLLOW = 0.08;
+const DEFAULT_REACTION_FADE_MS = 360;
 
 export function createPuruPuruRenderer(
   options: RendererOptions,
@@ -65,6 +96,16 @@ export function createPuruPuruRenderer(
   const previousPose: Pose = { ...pose };
   const backHairSpring = createHairSpringState();
   const frontHairSpring = createHairSpringState();
+  const reactionState: ReactionState = {
+    current: null,
+    weight: 0,
+    targetWeight: 0,
+    transientTilt: 0,
+    transientTiltVelocity: 0,
+    transientScale: 0,
+    transientScaleVelocity: 0,
+    shakeStrength: 0,
+  };
   const blink: BlinkState = {
     eyesClosed: false,
     nextBlinkAt: performance.now() + randomBlinkDelay(),
@@ -87,6 +128,29 @@ export function createPuruPuruRenderer(
     triggerHairSpringBounce(frontHairSpring, strength);
   };
 
+  const applyReaction = (reaction: PuruPuruReaction) => {
+    if (!reaction || typeof reaction !== 'object') {
+      resetReaction();
+      return;
+    }
+
+    const normalizedReaction = normalizeReaction(reaction);
+    reactionState.current = normalizedReaction;
+    reactionState.targetWeight = 1;
+    reactionState.transientTiltVelocity += normalizedReaction.impulse.tilt * 0.1;
+    reactionState.transientScaleVelocity +=
+      normalizedReaction.impulse.scalePop * 0.055;
+    reactionState.shakeStrength = Math.max(
+      reactionState.shakeStrength,
+      normalizedReaction.impulse.shake,
+    );
+    triggerBounce(normalizedReaction.impulse.bounce);
+  };
+
+  const resetReaction = () => {
+    reactionState.targetWeight = 0;
+  };
+
   const frame = (now: number) => {
     if (disposed) return;
     const avatarPackage = options.getAvatarPackage();
@@ -101,10 +165,11 @@ export function createPuruPuruRenderer(
     }
 
     resizeCanvas(options);
+    updateReactionState(reactionState, deltaSeconds);
     if (updateBlink(blink, now)) {
       triggerBounce(0.42);
     }
-    updateIdleTarget(targetPose, avatarPackage, now);
+    updateIdleTarget(targetPose, avatarPackage, now, reactionState);
     followPose(pose, targetPose);
 
     const poseVelocity = calculatePoseVelocity(pose, previousPose, deltaSeconds);
@@ -130,6 +195,8 @@ export function createPuruPuruRenderer(
       resizeObserver.disconnect();
     },
     triggerBounce,
+    applyReaction,
+    resetReaction,
   };
 }
 
@@ -171,25 +238,63 @@ function updateIdleTarget(
   targetPose: Pose,
   avatarPackage: PuruPuruAvatarPackage | null,
   now: number,
+  reactionState: ReactionState,
 ): void {
+  const reaction = reactionState.current;
+  const reactionWeight = reaction ? reactionState.weight : 0;
+  const idleScale = reaction
+    ? mix(1, reaction.sustain.idleScale, reactionWeight)
+    : 1;
+  const idleSpeedScale = reaction
+    ? mix(1, reaction.sustain.idleSpeedScale, reactionWeight)
+    : 1;
+  const reactionTilt = reaction
+    ? reaction.sustain.tilt * reactionWeight
+    : 0;
+  const reactionOffsetY = reaction
+    ? reaction.sustain.offsetY * reactionWeight
+    : 0;
+  const shake =
+    reactionState.shakeStrength > 0
+      ? Math.sin((now / 1000) * 56) * reactionState.shakeStrength
+      : 0;
+
   const settings = avatarPackage?.settings;
-  if (!settings?.idleMotionEnabled) {
-    targetPose.x = 0;
-    targetPose.y = 0;
-    targetPose.rotation = 0;
-    targetPose.scale = 1;
+  if (!settings) {
+    targetPose.x = shake * 2;
+    targetPose.y = reactionOffsetY;
+    targetPose.rotation = reactionState.transientTilt;
+    targetPose.scale = 1 + reactionState.transientScale;
     return;
   }
 
-  const seconds = now / 1000;
-  const breathPixels = settings.breathStrength * 0.18;
-  const rollRadians = settings.rollStrength * 0.0016;
-  targetPose.x = Math.sin(seconds * 0.72) * settings.rollStrength * 0.18;
+  if (!settings.idleMotionEnabled) {
+    targetPose.x = shake * 2;
+    targetPose.y = reactionOffsetY;
+    targetPose.rotation = reactionTilt + reactionState.transientTilt;
+    targetPose.scale = 1 + reactionState.transientScale;
+    return;
+  }
+
+  const seconds = (now / 1000) * idleSpeedScale;
+  const breathPixels = settings.breathStrength * 0.18 * idleScale;
+  const rollRadians = settings.rollStrength * 0.0016 * idleScale;
+  targetPose.x =
+    Math.sin(seconds * 0.72) * settings.rollStrength * 0.18 * idleScale +
+    shake * 2;
   targetPose.y =
     Math.sin(seconds * Math.PI * 2 * 0.34) * breathPixels -
-    Math.max(0, settings.breathStrength) * 0.08;
-  targetPose.rotation = Math.sin(seconds * 0.64) * rollRadians;
-  targetPose.scale = 1 + Math.sin(seconds * Math.PI * 2 * 0.34) * 0.006;
+    Math.max(0, settings.breathStrength) * 0.08 +
+    reactionOffsetY;
+  targetPose.rotation =
+    Math.sin(seconds * 0.64) * rollRadians +
+    reactionTilt +
+    reactionState.transientTilt +
+    shake * 0.006;
+  targetPose.scale =
+    1 +
+    Math.sin(seconds * Math.PI * 2 * 0.34) * 0.006 * idleScale +
+    reactionState.transientScale;
 }
 
 function followPose(pose: Pose, targetPose: Pose): void {
@@ -395,6 +500,100 @@ function copyPose(target: Pose, source: Pose): void {
   target.scale = source.scale;
 }
 
+function updateReactionState(
+  state: ReactionState,
+  deltaSeconds: number,
+): void {
+  const delta = clamp(deltaSeconds, 0, 0.05);
+  if (delta <= 0) return;
+
+  const fadeMs = state.current?.fadeMs ?? DEFAULT_REACTION_FADE_MS;
+  const fadeSeconds = clamp(fadeMs / 1000, 0.12, 0.8);
+  const weightFollow = 1 - Math.exp((-delta * 5.5) / fadeSeconds);
+  state.weight += (state.targetWeight - state.weight) * weightFollow;
+  if (state.targetWeight === 0 && state.weight < 0.002) {
+    state.weight = 0;
+    state.current = null;
+  }
+
+  integrateTransientAxis(
+    state,
+    'transientTilt',
+    'transientTiltVelocity',
+    42,
+    13,
+    delta,
+  );
+  integrateTransientAxis(
+    state,
+    'transientScale',
+    'transientScaleVelocity',
+    52,
+    15,
+    delta,
+  );
+  state.shakeStrength = Math.max(0, state.shakeStrength - delta * 2.8);
+  clampReactionState(state);
+}
+
+function integrateTransientAxis(
+  state: ReactionState,
+  positionKey: 'transientTilt' | 'transientScale',
+  velocityKey: 'transientTiltVelocity' | 'transientScaleVelocity',
+  stiffness: number,
+  damping: number,
+  deltaSeconds: number,
+): void {
+  state[velocityKey] +=
+    (-state[positionKey] * stiffness - state[velocityKey] * damping) *
+    deltaSeconds;
+  state[positionKey] += state[velocityKey] * deltaSeconds;
+}
+
+function normalizeReaction(reaction: unknown): NormalizedReaction {
+  const source: Partial<PuruPuruReaction> =
+    reaction && typeof reaction === 'object'
+      ? (reaction as PuruPuruReaction)
+      : {};
+
+  return {
+    impulse: {
+      bounce: clampNumber(source.impulse?.bounce, 0, -1.2, 1.2),
+      tilt: clampNumber(source.impulse?.tilt, 0, -1, 1),
+      shake: clampNumber(source.impulse?.shake, 0, 0, 1),
+      scalePop: clampNumber(source.impulse?.scalePop, 0, -1, 1),
+    },
+    sustain: {
+      offsetY: clampNumber(source.sustain?.offsetY, 0, -24, 24),
+      tilt: clampNumber(source.sustain?.tilt, 0, -0.08, 0.08),
+      idleScale: clampNumber(source.sustain?.idleScale, 1, 0.35, 1.5),
+      idleSpeedScale: clampNumber(
+        source.sustain?.idleSpeedScale,
+        1,
+        0.45,
+        1.6,
+      ),
+    },
+    fadeMs: clampNumber(source.fadeMs, DEFAULT_REACTION_FADE_MS, 120, 800),
+  };
+}
+
+function clampReactionState(state: ReactionState): void {
+  state.weight = sanitize(clamp(state.weight, 0, 1), 0);
+  state.targetWeight = sanitize(clamp(state.targetWeight, 0, 1), 0);
+  state.transientTilt = sanitize(clamp(state.transientTilt, -0.08, 0.08), 0);
+  state.transientTiltVelocity = sanitize(
+    clamp(state.transientTiltVelocity, -1.2, 1.2),
+    0,
+  );
+  state.transientScale = sanitize(clamp(state.transientScale, -0.035, 0.035), 0);
+  state.transientScaleVelocity = sanitize(
+    clamp(state.transientScaleVelocity, -0.8, 0.8),
+    0,
+  );
+  state.shakeStrength = sanitize(clamp(state.shakeStrength, 0, 1), 0);
+}
+
 function resolveMouthState(
   smoothedValue: number,
   isSpeaking: boolean,
@@ -493,6 +692,25 @@ function randomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
+function mix(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+function clampNumber(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? clamp(value, min, max)
+    : fallback;
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+function sanitize(value: number, fallback: number): number {
+  return Number.isFinite(value) ? value : fallback;
 }
