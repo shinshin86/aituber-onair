@@ -28,7 +28,7 @@ const MAX_WAIT_SECONDS = 14;
 const MIN_HOLD_SECONDS = 0.6;
 const MAX_HOLD_SECONDS = 1.8;
 const MAX_DELTA_SECONDS = 0.05;
-const FULL_TURN_MIN = 0.45;
+const FULL_TURN_MIN = 0.65;
 const FULL_TURN_MAX = 1;
 const SMALL_TURN_MAX = 0.3;
 const SMALL_TURN_CHANCE = 0.3;
@@ -65,8 +65,8 @@ export function updateIdleGaze(
   input: IdleGazeUpdateInput,
 ): IdleGazeUpdateOutput {
   const deltaSeconds = clamp(input.deltaSeconds, 0, MAX_DELTA_SECONDS);
-  const amplitudeScale = clamp(input.amplitudeScale, 0, 1.4);
-  const frequencyScale = clamp(input.frequencyScale, 0.35, 1.8);
+  const amplitudeScale = clamp(input.amplitudeScale, 0, 2.4);
+  const frequencyScale = clamp(input.frequencyScale, 0.35, 2.8);
   let justSettled = false;
 
   if (!input.enabled || amplitudeScale <= 0.001) {
