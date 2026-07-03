@@ -74,7 +74,7 @@ npm run lint
 
 ## Tunables Used by the Renderer
 
-The Phase 1 renderer reads these values from `settings.json`:
+This example's renderer reads these values from `settings.json`:
 
 - `avatarSize`
 - `avatarX`
@@ -96,8 +96,8 @@ Supported item layer slots follow the original PuruPuruPNGTuber draw order:
 `stageFront`. Unknown slots fall back to `frontHairFront` so future package
 exports still render.
 
-Face tracking, mesh deformation, eye highlights, and OBS preset export are
-intentionally out of scope for the current phase.
+This example intentionally does not implement face tracking, mesh deformation,
+eye highlights, or OBS preset export.
 
 ## Emotion Reactions
 
@@ -171,6 +171,7 @@ they follow the hair spring transform.
 ## Attribution
 
 The `.purupuru` package format and renderer behavior are based on
-PuruPuruPNGTuber, licensed under Apache-2.0. This example ports only the
-package-loading, face-state selection, idle motion, blink, and audio mouth-state
-behavior needed for Phase 1.
+PuruPuruPNGTuber, licensed under Apache-2.0. This example focuses on
+package-loading, face-state selection, idle motion, hair physics, emotion
+reactions, item layers, drag/zoom placement, blink, and audio mouth-state
+behavior.

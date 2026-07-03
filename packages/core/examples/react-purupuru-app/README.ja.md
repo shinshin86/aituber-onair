@@ -54,7 +54,8 @@ item layer slot は PuruPuruPNGTuber の描画順に合わせ、`stageBack`,
 します。未知の slot は将来の package export でも描画されるよう
 `frontHairFront` として扱います。
 
-現フェーズでは face tracking、mesh deformation、OBS preset export は対象外です。
+この example は face tracking、mesh deformation、OBS preset export には対応して
+いません。
 
 ## Emotion reactions
 
@@ -126,6 +127,7 @@ package `settings.json` の値:
 ## Attribution
 
 `.purupuru` フォーマットとレンダラー挙動は Apache-2.0 ライセンスの
-PuruPuruPNGTuber を参考にしています。この example では Phase 1 に必要な
-package loading、face-state selection、idle motion、blink、audio mouth-state
-behavior のみを移植しています。
+PuruPuruPNGTuber を参考にしています。この example は package loading、
+face-state selection、idle motion、hair physics、emotion reactions、item
+layers、drag/zoom placement、blink、audio mouth-state behavior に対応して
+います。
