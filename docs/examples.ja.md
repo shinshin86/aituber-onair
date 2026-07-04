@@ -64,7 +64,8 @@ npm run dev
 アイドルモーション・まばたき・音声リップシンク・髪のバネ物理・振り向き・
 感情リアクションを駆動します。AITuber OnAir 公式キャラクター「ミコ」を
 デフォルトアバターとして同梱しています。`.purupuru` アバター形式は
-rotejin さんの [PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber) 由来です。
+rotejin さんが開発された [PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber)
+によるもので、このサンプルはその AITuber 向け移植です。
 
 ```bash
 cd packages/core/examples/react-purupuru-app

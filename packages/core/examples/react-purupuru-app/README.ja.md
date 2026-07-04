@@ -150,10 +150,11 @@ transform に追従します。
 
 ## Attribution
 
-`.purupuru` パッケージ形式とレンダラーの挙動は、rotejin さんによる
-Apache-2.0 ライセンスの [PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber)
-を参考にしています。表情差分 PNG に前髪・後ろ髪のレイヤーを組み合わせて
-リッチな PNGTuber を作れるローカル Web アプリで、素晴らしい本家プロジェクトに
-感謝します。このサンプルアプリは、パッケージ読み込み、
+`.purupuru` パッケージ形式とレンダラーの挙動は、rotejin さんが開発された
+[PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber)
+（Apache-2.0）によるものです。表情差分 PNG に前髪・後ろ髪のレイヤーを
+組み合わせてリッチな PNGTuber を作れるローカル Web アプリで、このサンプルは
+それを AITuber 用途向け（カメラトラッキングなし）に移植・再実装したものです。
+素晴らしい本家プロジェクトに感謝します。このサンプルアプリは、パッケージ読み込み、
 表情選択、待機モーション、髪の物理表現、emotion reactions、アイテムレイヤー、
 ドラッグとズームによる配置調整、まばたき、音声に合わせた口パクに対応しています。

@@ -189,10 +189,11 @@ they follow the hair spring transform.
 
 ## Attribution
 
-The `.purupuru` package format and renderer behavior are based on
-[PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber) by rotejin,
-licensed under Apache-2.0 — a local web app that combines expression-swap PNGs
-with front/back hair layers to create rich PNGTubers. Many thanks to the
-original project. This example supports package
+The `.purupuru` package format and the renderer behavior were created by
+rotejin in [PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber)
+(Apache-2.0) — a local web app that combines expression-swap PNGs with
+front/back hair layers to create rich PNGTubers. This example is an
+AITuber-oriented reimplementation of that work, adapted to run without camera
+tracking. Many thanks to the original project. This example supports package
 loading, face-state selection, idle motion, hair physics, emotion reactions, item
 layers, drag/zoom placement, blink, and audio mouth-state behavior.
