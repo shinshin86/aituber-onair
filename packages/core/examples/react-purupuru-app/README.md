@@ -164,6 +164,9 @@ Package values in `settings.json`:
 | `avatarX` | moves the avatar right |
 | `avatarY` | moves the avatar down |
 | `idleMotionEnabled` | ignored at runtime in favor of the app-level Visual setting, because camera-tracking-authored packages often ship this as `false` |
+| `faceParallaxRatio` | overrides `FACE_PARALLAX_RATIO` for this avatar only; valid range is `0`-`0.1` |
+| `frontHairParallaxRatio` | overrides `FRONT_HAIR_PARALLAX_RATIO` for this avatar only; valid range is `0`-`0.1` |
+| `backHairParallaxRatio` | overrides `BACK_HAIR_PARALLAX_RATIO` for this avatar only; valid range is `0`-`0.1` |
 
 Visible `itemLayers` use `followStrength` (`0`-`200`) to decide how strongly
 they follow the hair spring transform.

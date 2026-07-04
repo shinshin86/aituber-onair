@@ -1,5 +1,6 @@
 import type {
   PuruPuruAvatarPackage,
+  PuruPuruAvatarSettings,
   PuruPuruItemLayer,
   PuruPuruMouthState,
 } from './purupuruPackage';
@@ -408,7 +409,11 @@ function renderFrame(
     mouthState,
   );
   const { images, itemLayers } = avatarPackage;
-  const parallax = createLayerParallax(images.eyesOpenMouthClosed, gaze);
+  const parallax = createLayerParallax(
+    images.eyesOpenMouthClosed,
+    gaze,
+    avatarPackage.settings,
+  );
   const viewTransform = sanitizeViewTransform(options.getViewTransform());
 
   drawStageItemLayers(context, canvas, avatarPackage, itemLayers, 'stageBack');
@@ -586,12 +591,19 @@ function applyItemLayerTransform(
 function createLayerParallax(
   faceImage: HTMLImageElement,
   gaze: number,
+  settings: PuruPuruAvatarSettings,
 ): LayerParallax {
   const width = faceImage.width || 1024;
+  const backHairRatio =
+    settings.backHairParallaxRatio ?? BACK_HAIR_PARALLAX_RATIO;
+  const faceRatio = settings.faceParallaxRatio ?? FACE_PARALLAX_RATIO;
+  const frontHairRatio =
+    settings.frontHairParallaxRatio ?? FRONT_HAIR_PARALLAX_RATIO;
+
   return {
-    backHair: gaze * width * BACK_HAIR_PARALLAX_RATIO,
-    face: gaze * width * FACE_PARALLAX_RATIO,
-    frontHair: gaze * width * FRONT_HAIR_PARALLAX_RATIO,
+    backHair: gaze * width * backHairRatio,
+    face: gaze * width * faceRatio,
+    frontHair: gaze * width * frontHairRatio,
   };
 }
 

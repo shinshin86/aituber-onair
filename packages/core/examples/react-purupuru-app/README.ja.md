@@ -120,6 +120,9 @@ package `settings.json` の値:
 | `avatarX` | avatar が右へ移動する |
 | `avatarY` | avatar が下へ移動する |
 | `idleMotionEnabled` | runtime では無視され、app-level の Visual 設定が優先される。camera tracking 前提の package は `false` で出力されることが多いため |
+| `faceParallaxRatio` | この avatar だけ `FACE_PARALLAX_RATIO` を上書きする。有効範囲は `0`-`0.1` |
+| `frontHairParallaxRatio` | この avatar だけ `FRONT_HAIR_PARALLAX_RATIO` を上書きする。有効範囲は `0`-`0.1` |
+| `backHairParallaxRatio` | この avatar だけ `BACK_HAIR_PARALLAX_RATIO` を上書きする。有効範囲は `0`-`0.1` |
 
 表示中の `itemLayers` は `followStrength` (`0`-`200`) で hair spring transform
 への追従度を決めます。

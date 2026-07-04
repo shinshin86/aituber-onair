@@ -33,6 +33,9 @@ export interface PuruPuruAvatarSettings {
    */
   idleMotionEnabled: boolean;
   bgColor?: string;
+  faceParallaxRatio?: number;
+  frontHairParallaxRatio?: number;
+  backHairParallaxRatio?: number;
   sourceImageWidth?: number;
   sourceImageHeight?: number;
 }
@@ -469,6 +472,17 @@ function normalizeSettings(
     hairSpring: numberOrDefault(state.hairSpring, 20),
     idleMotionEnabled: state.idleMotionEnabled !== false,
     bgColor: typeof state.bgColor === 'string' ? state.bgColor : undefined,
+    faceParallaxRatio: optionalClampedNumber(state.faceParallaxRatio, 0, 0.1),
+    frontHairParallaxRatio: optionalClampedNumber(
+      state.frontHairParallaxRatio,
+      0,
+      0.1,
+    ),
+    backHairParallaxRatio: optionalClampedNumber(
+      state.backHairParallaxRatio,
+      0,
+      0.1,
+    ),
     sourceImageWidth: numberOrDefault(settingsPayload.avatarImageSize?.width, 0),
     sourceImageHeight: numberOrDefault(
       settingsPayload.avatarImageSize?.height,
@@ -494,6 +508,15 @@ function copyToArrayBuffer(data: Uint8Array): ArrayBuffer {
 
 function numberOrDefault(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function optionalClampedNumber(
+  value: unknown,
+  min: number,
+  max: number,
+): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+  return Math.min(Math.max(value, min), max);
 }
 
 export const puruPuruFaceKeys = FACE_KEYS;
