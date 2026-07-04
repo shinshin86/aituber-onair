@@ -4,6 +4,7 @@ import {
   INOCHI2D_MANIFEST_VERSION,
 } from './inochi2dConstants';
 import type {
+  InochiCameraTransform,
   InochiIdleAnimationProfile,
   InochiManifest,
   InochiModelAttribution,
@@ -251,6 +252,28 @@ const normalizeModelAttribution = (
     : undefined;
 };
 
+const normalizeCameraNumber = (value: unknown) =>
+  typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+
+const normalizeModelCamera = (
+  value: unknown,
+): Partial<InochiCameraTransform> | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const scale = normalizeCameraNumber(value.scale);
+  const camera = {
+    x: normalizeCameraNumber(value.x),
+    y: normalizeCameraNumber(value.y),
+    scale: scale !== undefined && scale > 0 ? scale : undefined,
+  } satisfies Partial<InochiCameraTransform>;
+
+  return Object.values(camera).some((field) => field !== undefined)
+    ? camera
+    : undefined;
+};
+
 const normalizeModel = (
   value: unknown,
   manifestUrl: string,
@@ -296,6 +319,7 @@ const normalizeModel = (
     reactionAnimations: normalizeAnimationGroups(value.reactionAnimations),
     emotionAnimations: normalizeAnimationGroups(value.emotionAnimations),
     attribution: normalizeModelAttribution(value.attribution, manifestUrl),
+    camera: normalizeModelCamera(value.camera),
     thumbnailUrl:
       typeof value.thumbnail === 'string' && value.thumbnail.length > 0
         ? resolveInochiAssetUrl(value.thumbnail, manifestUrl)

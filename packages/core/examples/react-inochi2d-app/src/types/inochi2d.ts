@@ -42,6 +42,7 @@ export type InochiModelDefinition = {
   reactionAnimations?: Record<string, string[]>;
   emotionAnimations?: Record<string, string[]>;
   attribution?: InochiModelAttribution;
+  camera?: Partial<InochiCameraTransform>;
   parameters?: InochiParameterDefinition[];
 };
 
@@ -77,6 +78,7 @@ export type ResolvedInochiModelDefinition = {
   reactionAnimations?: Record<string, string[]>;
   emotionAnimations?: Record<string, string[]>;
   attribution?: InochiModelAttribution;
+  camera?: Partial<InochiCameraTransform>;
   parameters: ResolvedInochiParameterDefinition[];
 };
 

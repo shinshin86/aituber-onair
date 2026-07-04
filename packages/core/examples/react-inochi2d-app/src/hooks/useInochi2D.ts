@@ -116,6 +116,14 @@ const DEFAULT_CAMERA_TRANSFORM: InochiCameraTransform = {
   scale: INOCHI2D_DEFAULT_CAMERA_SCALE,
 };
 
+const resolveModelCameraTransform = (
+  model: ResolvedInochiModelDefinition | null,
+): InochiCameraTransform => ({
+  x: model?.camera?.x ?? DEFAULT_CAMERA_TRANSFORM.x,
+  y: model?.camera?.y ?? DEFAULT_CAMERA_TRANSFORM.y,
+  scale: model?.camera?.scale ?? DEFAULT_CAMERA_TRANSFORM.scale,
+});
+
 const isPerformanceProfilerRequested = (debugEnabled: boolean) => {
   if (!debugEnabled || typeof window === 'undefined') {
     return false;
@@ -310,7 +318,9 @@ export const useInochi2D = ({
   );
 
   const resetCameraTransform = useCallback(async () => {
-    await setCameraTransform(DEFAULT_CAMERA_TRANSFORM);
+    await setCameraTransform(
+      resolveModelCameraTransform(activeModelRef.current),
+    );
   }, [setCameraTransform]);
 
   const applyInteractionImpulse = useCallback(
@@ -415,6 +425,7 @@ export const useInochi2D = ({
         activeModelRef.current = model;
         setActiveModel(model);
         syncRuntimeSession();
+        await setCameraTransform(resolveModelCameraTransform(model));
         onModelResolvedRef.current?.(model.id);
       }
 
@@ -423,7 +434,7 @@ export const useInochi2D = ({
       resetInochi2DMouthToIdle();
       setStatus('ready');
     },
-    [applyParameters, applyResize, syncRuntimeSession],
+    [applyParameters, applyResize, setCameraTransform, syncRuntimeSession],
   );
 
   useEffect(() => {
