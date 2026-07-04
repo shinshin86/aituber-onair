@@ -1,5 +1,7 @@
 # PuruPuru PNGTuber Chat
 
+![react-purupuru-app image](./images/react-purupuru-app.png)
+
 `@aituber-onair/core` のチャット/TTS 機能と、`.purupuru` アバター
 パッケージ向けの PNGTuber レンダラーを組み合わせた React サンプルアプリです。
 

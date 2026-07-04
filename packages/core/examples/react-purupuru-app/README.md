@@ -1,5 +1,7 @@
 # PuruPuru PNGTuber Chat
 
+![react-purupuru-app image](./images/react-purupuru-app.png)
+
 A React example app that combines `@aituber-onair/core` chat/TTS with a
 PNGTuber-style avatar renderer for `.purupuru` avatar packages.
 
