@@ -3,8 +3,8 @@
 [日本語版はこちら](./avatar.ja.md)
 
 AITuber OnAir is not only a chat and voice toolkit. It is also a starting
-point for building richer AI character presentation with PNG, VRM, Live2D, and
-animated pet avatars.
+point for building richer AI character presentation with PNG, PuruPuru
+PNGTuber, VRM, Live2D, and animated pet avatars.
 
 This guide explains which avatar style to start with and where to extend avatar
 assets when you want more expressive AI characters.
@@ -23,6 +23,23 @@ The PNGTuber example uses four image states:
 
 Start from
 [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app).
+
+### PuruPuru PNGTuber
+
+Use PuruPuru PNGTuber when you want a livelier 2D avatar without preparing
+tracking or 3D assets. A single `.purupuru` package combines six face states
+with front/back hair layers, and the example drives idle motion, blinking,
+audio lip-sync, hair spring physics, idle gaze turns, and emotion-driven
+reactions. Miko, the official AITuber OnAir character, is bundled as the
+default avatar. The avatar format and motion design were created by rotejin in
+[PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber).
+
+Start from
+[`packages/core/examples/react-purupuru-app`](../packages/core/examples/react-purupuru-app).
+
+To create your own `.purupuru` avatar, the ImageGen-based
+[asset production kit](https://github.com/shinshin86/PuruPuruPNGTuber/tree/codex/add-imagegen-asset-production-kit/asset-production)
+for PuruPuruPNGTuber may be a helpful starting point.
 
 ### VRM
 
@@ -98,6 +115,7 @@ you use.
 | Avatar style | Source or reference | Notes |
 |---|---|---|
 | PNGTuber | [Easy PNGTuber](https://github.com/rotejin/EasyPNGTuber) | Easy PNGTuber is an MIT-licensed tool for preparing four PNGTuber image states. The tool license does not decide the rights for the source character image or generated avatar assets, so check those separately. |
+| PuruPuru PNGTuber | [PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber) | PuruPuruPNGTuber is an Apache-2.0 local web app by rotejin for building rich PNGTubers from expression-swap PNGs and hair layers. The AITuber OnAir example is an AITuber-oriented reimplementation of its format and motion. The tool license does not decide the rights for source character images or generated avatar assets, so check those separately. |
 | VRM | [vrm.dev](https://vrm.dev/en/) | vrm.dev is the official information site for VRM, a glTF-based 3D humanoid avatar format. Each `.vrm` model may include its own license metadata or external usage terms, so confirm the model-specific conditions before use. |
 | Live2D | [Live2D](https://www.live2d.com/en/) | Live2D is the official site for Cubism tools and SDKs. Model assets, sample data, Cubism Editor, and Cubism SDK can be covered by separate terms, including the [sample data terms](https://www.live2d.com/en/learn/sample/model-terms/) and [SDK release license](https://www.live2d.com/en/sdk/license/). |
 | Pet | [Codex Pets](https://developers.openai.com/codex/app/settings#codex-pets) | Codex Pets are optional animated companions in the Codex app. The AITuber OnAir pet example uses a Codex Pet-compatible spritesheet style; check the rights for any spritesheet artwork you create, adapt, or distribute. |
@@ -110,7 +128,9 @@ provides free Miko assets:
 [Miko Character Usage Guidelines and Downloads](https://miko.aituberonair.com/)
 
 Miko is the image character of AITuber OnAir. The page provides assets such as
-a VRM model, PNGTuber image states, and three-view reference images. The linked
+a VRM model, PNGTuber image states, and three-view reference images. The
+PuruPuru PNGTuber example also bundles a ready-to-use Miko `.purupuru` package
+as its default avatar. The linked
 guideline page describes the current permissions, prohibited uses, attribution
 guidance, and redistribution limits. Review the latest page before using,
 modifying, sharing, or redistributing the assets.
