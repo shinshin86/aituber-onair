@@ -50,10 +50,10 @@ npm install
 npm run dev
 ```
 
-### PuruPuru PNGTuber App
+### ぷるぷるPNGTuber App
 
 <p align="center">
-  <img src="../packages/core/examples/react-purupuru-app/images/react-purupuru-app.png" alt="PuruPuru PNGTuber サンプルアプリ" width="720" />
+  <img src="../packages/core/examples/react-purupuru-app/images/react-purupuru-app.png" alt="ぷるぷるPNGTuber サンプルアプリ" width="720" />
 </p>
 
 パス:
@@ -64,7 +64,7 @@ npm run dev
 アイドルモーション・まばたき・音声リップシンク・髪のバネ物理・振り向き・
 感情リアクションを駆動します。AITuber OnAir 公式キャラクター「ミコ」を
 デフォルトアバターとして同梱しています。`.purupuru` アバター形式は
-rotejin さんが開発された [PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber)
+rotejin さんが開発された [ぷるぷるPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber)
 によるもので、このサンプルはその AITuber 向け移植です。
 
 ```bash
