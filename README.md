@@ -19,6 +19,7 @@
   <a href="https://aituberonair.com">Try the hosted web app</a> ・
   <a href="./docs/quickstart.md">Quickstart</a> ・
   <a href="./docs/examples.md">Examples</a> ・
+  <a href="./docs/avatar.md">Avatar Guide</a> ・
   <a href="#packages">Packages</a>
 </p>
 
@@ -200,6 +201,8 @@ See each package README for provider setup and fuller usage.
   configure providers, and run locally.
 - [Examples](./docs/examples.md): choose from full AI VTuber apps, package
   examples, bot examples, and local runtime examples.
+- [Avatar Guide](./docs/avatar.md): choose avatar styles and expand avatar
+  expressions for richer AI character presentation.
 
 ## Packages
 

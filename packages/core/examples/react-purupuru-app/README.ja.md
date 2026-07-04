@@ -1,4 +1,6 @@
-# PuruPuru PNGTuber Chat
+# ぷるぷるPNGTuber Chat
+
+![react-purupuru-app image](./images/react-purupuru-app.png)
 
 `@aituber-onair/core` のチャット/TTS 機能と、`.purupuru` アバター
 パッケージ向けの PNGTuber レンダラーを組み合わせた React サンプルアプリです。
@@ -31,7 +33,7 @@ npm run dev
 ファイルを選択してください。読み込みに失敗した場合は、アバターパッケージが
 読み込まれるまで Canvas には何も描画されません。
 
-自分で `.purupuru` アバターを作ってみたい場合は、PuruPuruPNGTuber 用の
+自分で `.purupuru` アバターを作ってみたい場合は、ぷるぷるPNGTuber 用の
 ImageGen ベースの[アセット制作キット](https://github.com/shinshin86/PuruPuruPNGTuber/tree/codex/add-imagegen-asset-production-kit/asset-production)も参考になるかもしれません。
 
 アバターは Canvas 上でドラッグして位置を調整できます。マウスホイールで拡大・
@@ -72,7 +74,7 @@ CRC32 が一致しないファイルは拒否します。
 髪スロットに配置されたアイテムレイヤーは、`followStrength` (`0`-`200`) に
 応じて髪の揺れに追従します。
 
-アイテムレイヤーのスロットは、PuruPuruPNGTuber の描画順に合わせて
+アイテムレイヤーのスロットは、ぷるぷるPNGTuber の描画順に合わせて
 `stageBack`, `characterBack`, `faceBack`, `faceFront`, `frontHairFront`,
 `stageFront` に対応しています。未知のスロットは、将来のパッケージ出力でも
 表示できるように `frontHairFront` として扱います。
@@ -154,7 +156,7 @@ transform に追従します。
 ## Attribution
 
 `.purupuru` パッケージ形式とレンダラーの挙動は、rotejin さんが開発された
-[PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber)
+[ぷるぷるPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber)
 （Apache-2.0）によるものです。表情差分 PNG に前髪・後ろ髪のレイヤーを
 組み合わせてリッチな PNGTuber を作れるローカル Web アプリで、このサンプルは
 それを AITuber 用途向け（カメラトラッキングなし）に移植・再実装したものです。
