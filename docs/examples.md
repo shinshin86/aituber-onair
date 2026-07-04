@@ -63,7 +63,8 @@ Best when you want a lively 2D avatar without preparing tracking or 3D assets.
 It loads a single-file `.purupuru` avatar package and drives idle motion,
 blinking, audio lip-sync, hair spring physics, idle gaze turns, and
 emotion-driven reactions. Miko, the official AITuber OnAir character, is
-bundled as the default avatar.
+bundled as the default avatar. The `.purupuru` avatar format comes from
+[PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber) by rotejin.
 
 ```bash
 cd packages/core/examples/react-purupuru-app

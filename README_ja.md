@@ -93,7 +93,7 @@ npm run dev
 
 ![PuruPuru PNGTuber サンプルアプリ](./packages/core/examples/react-purupuru-app/images/react-purupuru-app.png)
 
-`.purupuru` 形式のアバターパッケージ（1ファイル）を読み込むだけで、アイドルモーション・まばたき・音声駆動リップシンク・髪のバネ物理・振り向き（疑似奥行きパララックス付き）・感情タグによるリアクションが動きます。カメラやトラッキングは不要です。AITuber OnAir 公式キャラクター「ミコ」をデフォルトアバターとして同梱しています。アバター形式は [PuruPuruPNGTuber](https://github.com/shinshin86/PuruPuruPNGTuber) 由来です。詳細は [`packages/core/examples/react-purupuru-app`](./packages/core/examples/react-purupuru-app) を参照。
+`.purupuru` 形式のアバターパッケージ（1ファイル）を読み込むだけで、アイドルモーション・まばたき・音声駆動リップシンク・髪のバネ物理・振り向き（疑似奥行きパララックス付き）・感情タグによるリアクションが動きます。カメラやトラッキングは不要です。AITuber OnAir 公式キャラクター「ミコ」をデフォルトアバターとして同梱しています。アバター形式は rotejin さんの [PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber) 由来です。詳細は [`packages/core/examples/react-purupuru-app`](./packages/core/examples/react-purupuru-app) を参照。
 
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
