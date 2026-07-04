@@ -21,6 +21,7 @@ interface SettingsPanelProps extends SettingsHook {
   backgroundImageUrl: string | null;
   streamErrorMessage?: string;
   avatarPackage: PuruPuruAvatarPackage | null;
+  avatarPackageSource: 'default' | 'user' | null;
   avatarLoadError?: string | null;
   screenVisionController: ScreenVisionController;
   onBackgroundImageChange: (file: File | null) => void;
@@ -310,6 +311,7 @@ export function SettingsPanel({
   backgroundImageUrl,
   streamErrorMessage,
   avatarPackage,
+  avatarPackageSource,
   avatarLoadError,
   screenVisionController,
   onBackgroundImageChange,
@@ -2272,9 +2274,7 @@ export function SettingsPanel({
                 id="visual-layout-mode"
                 value={settings.visual.layoutMode}
                 onChange={(e) =>
-                  updateVisualLayoutMode(
-                    e.target.value as 'chat' | 'broadcast',
-                  )
+                  updateVisualLayoutMode(e.target.value as 'chat' | 'broadcast')
                 }
                 disabled={disabled}
               >
@@ -2363,7 +2363,7 @@ export function SettingsPanel({
               </div>
             </div>
             <div className="settings-field">
-              <label htmlFor="purupuru-avatar">Avatar package</label>
+              <label htmlFor="purupuru-avatar">アバターパッケージ</label>
               <div className="settings-file-picker-row">
                 <input
                   id="purupuru-avatar"
@@ -2386,11 +2386,13 @@ export function SettingsPanel({
               </div>
               <div className="settings-file-actions">
                 <span className="settings-file-status">
-                  {avatarPackage
-                    ? `${avatarPackage.name} loaded`
-                    : 'Placeholder avatar'}
+                  {avatarPackageSource === 'default'
+                    ? 'ミコ（デフォルト）読み込み済み'
+                    : avatarPackage
+                      ? `${avatarPackage.name} 読み込み済み`
+                      : 'プレースホルダー表示'}
                 </span>
-                {avatarPackage && (
+                {avatarPackageSource === 'user' && (
                   <button
                     type="button"
                     className="settings-clear-button"

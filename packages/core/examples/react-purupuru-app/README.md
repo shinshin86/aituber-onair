@@ -5,7 +5,8 @@ PNGTuber-style avatar renderer for `.purupuru` avatar packages.
 
 ## Features
 
-- Load a `.purupuru` package from the settings panel.
+- Load the bundled Miko `.purupuru` package as the default avatar.
+- Replace the default from the Visual section in Settings.
 - Render the 6 face states from the package:
   - eyes open/closed
   - mouth closed/half/open
@@ -14,7 +15,7 @@ PNGTuber-style avatar renderer for `.purupuru` avatar packages.
 - Apply subtle idle breathing and roll sway from the package settings.
 - Apply spring-driven hair lag and bounce to front/back hair layers.
 - Add occasional idle gaze turns with subtle layer parallax.
-- Reposition the loaded avatar by dragging and resize it with the mouse wheel.
+- Reposition the avatar by dragging and resize it with the mouse wheel.
 - React to speech emotion tags from `SPEECH_START`.
 - Blink at random 2-6 second intervals.
 - Drive mouth states from TTS audio lip-sync while speech is playing.
@@ -52,18 +53,33 @@ npm install
 npm run dev
 ```
 
-Open the local Vite URL, then open Settings and choose a `.purupuru` package in
-the Visual section. Until a package is loaded, the app renders a built-in
-placeholder avatar.
+Open the local Vite URL. The bundled Miko avatar loads automatically. To use a
+different `.purupuru` file, open Settings and choose a package in the Visual
+section. If the bundled avatar cannot be loaded, the app silently falls back to
+the placeholder avatar.
 
-After a package is loaded, drag the avatar on the canvas to reposition it and use
-the mouse wheel to zoom. Double-click the canvas, or use the Visual section's
+Drag the avatar on the canvas to reposition it and use the mouse wheel to zoom.
+Double-click the canvas, or use the Visual section's
 `アバター位置をリセット` button, to reset the placement. The app persists the
 drag/zoom placement across reloads.
 
-For a local manual test package, use a `.purupuru` file from a separate checkout
-or your own exported avatar package. Do not commit binary avatar packages to this
-repository.
+For local manual testing, use a `.purupuru` file from a separate checkout or
+your own exported avatar package. Keep additional binary avatar packages out of
+this repository.
+
+## Bundled Default Avatar
+
+This example ships with `public/avatar/miko.purupuru`, Miko, the official
+character of AITuber OnAir. It is loaded automatically as the default avatar
+when the app starts.
+
+You can replace it anytime from Settings > Visual. When a user-selected package
+is loaded, the `クリア` button returns the app to Miko. The `クリア` button is
+hidden while the bundled Miko avatar is already active.
+
+The bundled Miko avatar (c) AITuber OnAir / shinshin86. It is included for use
+with this example application. Do not extract, redistribute, or reuse the avatar
+images as your own character, and do not use them for AI/model training.
 
 ## Build and Lint
 
@@ -103,7 +119,7 @@ eye highlights, or OBS preset export.
 
 The core parses leading emotion tags such as `[happy]` into
 `screenplay = { emotion, text }` and emits them through `SPEECH_START`. This app
-stashes the reaction draft at that event, then applies it when TTS playback
+stores the reaction draft at that event, then applies it when TTS playback
 actually starts so the motion is synchronized with audible speech.
 
 | Emotion | Reaction |
@@ -164,9 +180,9 @@ Package values in `settings.json`:
 | `avatarX` | moves the avatar right |
 | `avatarY` | moves the avatar down |
 | `idleMotionEnabled` | ignored at runtime in favor of the app-level Visual setting, because camera-tracking-authored packages often ship this as `false` |
-| `faceParallaxRatio` | overrides `FACE_PARALLAX_RATIO` for this avatar only; valid range is `0`-`0.1` |
-| `frontHairParallaxRatio` | overrides `FRONT_HAIR_PARALLAX_RATIO` for this avatar only; valid range is `0`-`0.1` |
-| `backHairParallaxRatio` | overrides `BACK_HAIR_PARALLAX_RATIO` for this avatar only; valid range is `0`-`0.1` |
+| `faceParallaxRatio` | overrides `FACE_PARALLAX_RATIO` for this avatar; valid range is `0`-`0.1` |
+| `frontHairParallaxRatio` | overrides `FRONT_HAIR_PARALLAX_RATIO` for this avatar; valid range is `0`-`0.1` |
+| `backHairParallaxRatio` | overrides `BACK_HAIR_PARALLAX_RATIO` for this avatar; valid range is `0`-`0.1` |
 
 Visible `itemLayers` use `followStrength` (`0`-`200`) to decide how strongly
 they follow the hair spring transform.
@@ -174,7 +190,6 @@ they follow the hair spring transform.
 ## Attribution
 
 The `.purupuru` package format and renderer behavior are based on
-PuruPuruPNGTuber, licensed under Apache-2.0. This example focuses on
-package-loading, face-state selection, idle motion, hair physics, emotion
-reactions, item layers, drag/zoom placement, blink, and audio mouth-state
-behavior.
+PuruPuruPNGTuber, licensed under Apache-2.0. This example supports package
+loading, face-state selection, idle motion, hair physics, emotion reactions, item
+layers, drag/zoom placement, blink, and audio mouth-state behavior.

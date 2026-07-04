@@ -23,6 +23,11 @@ import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/app.css';
 
+type AvatarPackageSource = 'default' | 'user';
+
+const DEFAULT_AVATAR_URL = `${import.meta.env.BASE_URL}avatar/miko.purupuru`;
+const DEFAULT_AVATAR_FILE_NAME = 'miko.purupuru';
+
 export default function App() {
   const { play, stop, mouthLevel, isSpeaking, smoothedValue } =
     useAudioLipsync();
@@ -36,12 +41,16 @@ export default function App() {
   const backgroundObjectUrlRef = useRef<string | null>(null);
   const [avatarPackage, setAvatarPackage] =
     useState<PuruPuruAvatarPackage | null>(null);
+  const [avatarPackageSource, setAvatarPackageSource] =
+    useState<AvatarPackageSource | null>(null);
   const [avatarLoadError, setAvatarLoadError] = useState<string | null>(null);
   const avatarPackageRef = useRef<PuruPuruAvatarPackage | null>(null);
+  const avatarLoadRequestRef = useRef(0);
   const avatarReactionIdRef = useRef(0);
   const speechReactionRef = useRef<PuruPuruReactionDraft | null>(null);
-  const [avatarReaction, setAvatarReaction] =
-    useState<PuruPuruReaction | null>(null);
+  const [avatarReaction, setAvatarReaction] = useState<PuruPuruReaction | null>(
+    null,
+  );
 
   const emitAvatarReaction = useCallback((draft: PuruPuruReactionDraft) => {
     avatarReactionIdRef.current += 1;
@@ -163,27 +172,80 @@ export default function App() {
     setBackgroundImageUrl(nextUrl);
   }, []);
 
+  const installAvatarPackage = useCallback(
+    (loaded: PuruPuruAvatarPackage, source: AvatarPackageSource) => {
+      setAvatarPackage((current) => {
+        current?.dispose();
+        avatarPackageRef.current = loaded;
+        return loaded;
+      });
+      setAvatarPackageSource(source);
+    },
+    [],
+  );
+
+  const clearAvatarPackage = useCallback(() => {
+    setAvatarPackage((current) => {
+      current?.dispose();
+      avatarPackageRef.current = null;
+      return null;
+    });
+    setAvatarPackageSource(null);
+  }, []);
+
+  const loadDefaultAvatarPackage = useCallback(async () => {
+    const requestId = avatarLoadRequestRef.current + 1;
+    avatarLoadRequestRef.current = requestId;
+
+    try {
+      const response = await fetch(DEFAULT_AVATAR_URL);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${DEFAULT_AVATAR_URL}.`);
+      }
+
+      const blob = await response.blob();
+      const file = new File([blob], DEFAULT_AVATAR_FILE_NAME, {
+        type: blob.type || 'application/zip',
+      });
+      const loaded = await loadPuruPuruPackage(file);
+
+      if (requestId !== avatarLoadRequestRef.current) {
+        loaded.dispose();
+        return;
+      }
+
+      setAvatarLoadError(null);
+      installAvatarPackage(loaded, 'default');
+    } catch (error) {
+      if (requestId !== avatarLoadRequestRef.current) return;
+      console.warn('Failed to load the bundled default avatar.', error);
+      setAvatarLoadError(null);
+      clearAvatarPackage();
+    }
+  }, [clearAvatarPackage, installAvatarPackage]);
+
   const handleAvatarPackageChange = useCallback(
     async (file: File | null) => {
       if (!file) {
-        setAvatarPackage((current) => {
-          current?.dispose();
-          avatarPackageRef.current = null;
-          return null;
-        });
-        setAvatarLoadError(null);
+        void loadDefaultAvatarPackage();
         return;
       }
+
+      const requestId = avatarLoadRequestRef.current + 1;
+      avatarLoadRequestRef.current = requestId;
 
       try {
         setAvatarLoadError(null);
         const loaded = await loadPuruPuruPackage(file);
-        setAvatarPackage((current) => {
-          current?.dispose();
-          avatarPackageRef.current = loaded;
-          return loaded;
-        });
+
+        if (requestId !== avatarLoadRequestRef.current) {
+          loaded.dispose();
+          return;
+        }
+
+        installAvatarPackage(loaded, 'user');
       } catch (error) {
+        if (requestId !== avatarLoadRequestRef.current) return;
         setAvatarLoadError(
           error instanceof Error
             ? error.message
@@ -191,8 +253,12 @@ export default function App() {
         );
       }
     },
-    [],
+    [installAvatarPackage, loadDefaultAvatarPackage],
   );
+
+  useEffect(() => {
+    void loadDefaultAvatarPackage();
+  }, [loadDefaultAvatarPackage]);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -274,6 +340,7 @@ export default function App() {
 
   useEffect(() => {
     return () => {
+      avatarLoadRequestRef.current += 1;
       avatarPackageRef.current?.dispose();
       avatarPackageRef.current = null;
     };
@@ -332,6 +399,7 @@ export default function App() {
               backgroundImageUrl={backgroundImageUrl}
               streamErrorMessage={streamErrorMessage}
               avatarPackage={avatarPackage}
+              avatarPackageSource={avatarPackageSource}
               avatarLoadError={avatarLoadError}
               screenVisionController={screenVisionController}
               onBackgroundImageChange={handleBackgroundImageChange}
