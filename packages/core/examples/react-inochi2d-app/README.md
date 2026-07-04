@@ -1,5 +1,7 @@
 # Inochi2D Chat
 
+![react-inochi2d-app image](./images/react-inochi2d-app.png)
+
 A React example app built on `@aituber-onair/core` that renders an Inochi2D
 avatar on a full-screen stage, plays synthesized speech with lip sync, and keeps
 the chat / streaming settings format aligned with the other `packages/core`

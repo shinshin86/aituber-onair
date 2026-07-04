@@ -76,6 +76,27 @@ npm install
 npm run dev
 ```
 
+### Inochi2D App（実験的）
+
+<p align="center">
+  <img src="../packages/core/examples/react-inochi2d-app/images/react-inochi2d-app.png" alt="Inochi2D サンプルアプリ" width="720" />
+</p>
+
+パス:
+[`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
+
+Inochi2D アバターを試したい場合に向いています。ビルド済みの Inochi2D
+ランタイムを使って Inochi2D モデルを WebGL ステージに描画し、音声出力
+ボリュームから口元を動かします。初回表示用に Aka Inochi2D モデルを同梱しています。
+ローカルの `.inx` / `.inp` ファイルを読み込むか、`public/inochi2d/manifest.json`
+に別モデルを登録することもできます。
+
+```bash
+cd packages/core/examples/react-inochi2d-app
+npm install
+npm run dev
+```
+
 ### Pet App
 
 <p align="center">
@@ -137,23 +158,6 @@ Live2D モデルアセットは同梱していません。
 
 ```bash
 cd packages/core/examples/react-live2d-app
-npm install
-npm run dev
-```
-
-### Inochi2D App（実験的）
-
-パス:
-[`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
-
-Inochi2D アバターを試したい場合に向いています。ビルド済みの Inochi2D
-ランタイムを使って Inochi2D モデルを WebGL ステージに描画し、音声出力
-ボリュームから口元を動かします。初回表示用に Aka Inochi2D モデルを同梱しています。
-ローカルの `.inx` / `.inp` ファイルを読み込むか、`public/inochi2d/manifest.json`
-に別モデルを登録することもできます。
-
-```bash
-cd packages/core/examples/react-inochi2d-app
 npm install
 npm run dev
 ```

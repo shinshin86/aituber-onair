@@ -151,6 +151,23 @@ npm install
 npm run dev
 ```
 
+#### Inochi2D Chat — Inochi2D avatar (experimental)
+
+![Inochi2D example app](./packages/core/examples/react-inochi2d-app/images/react-inochi2d-app.png)
+
+Render an Inochi2D avatar on a WebGL stage with a prebuilt Inochi2D runtime, and
+drive mouth movement from actual audio output volume. This example bundles the
+Aka Inochi2D model for first-run display, and you can also load a local `.inx` /
+`.inp` file or register another model in `public/inochi2d/manifest.json`. See
+[`packages/core/examples/react-inochi2d-app`](./packages/core/examples/react-inochi2d-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-inochi2d-app
+npm install
+npm run dev
+```
+
 #### Pet Chat — animated Codex Pet-style sprite
 
 ![Pet example app](./packages/core/examples/react-pet-app/images/react-pet-app.jpg)
@@ -162,21 +179,6 @@ animations from chat state, reply mood, and real-time audio volume. See
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-pet-app
-npm install
-npm run dev
-```
-
-#### Inochi2D Chat — Inochi2D avatar (experimental)
-
-Render an Inochi2D avatar on a WebGL stage with a prebuilt Inochi2D runtime, and
-drive mouth movement from actual audio output volume. This example bundles the
-Aka Inochi2D model for first-run display, and you can also load a local `.inx` /
-`.inp` file or register another model in `public/inochi2d/manifest.json`. See
-[`packages/core/examples/react-inochi2d-app`](./packages/core/examples/react-inochi2d-app).
-
-```bash
-git clone https://github.com/shinshin86/aituber-onair.git
-cd aituber-onair/packages/core/examples/react-inochi2d-app
 npm install
 npm run dev
 ```

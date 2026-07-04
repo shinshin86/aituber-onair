@@ -1,5 +1,7 @@
 # Inochi2D Chat
 
+![react-inochi2d-app image](./images/react-inochi2d-app.png)
+
 `@aituber-onair/core` を使った React サンプルアプリです。Inochi2D
 アバターをフルスクリーンのステージに表示し、音声合成の再生に合わせて
 リップシンクします。チャット、配信コメント、画面認識、設定 UI は既存の
