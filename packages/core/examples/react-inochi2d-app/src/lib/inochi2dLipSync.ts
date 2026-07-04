@@ -66,6 +66,43 @@ type LipSyncFrameState = {
 };
 
 let sharedAudioContext: AudioContext | null = null;
+let gestureResumeAttached = false;
+
+// createMediaElementSource reroutes the element's output through the shared
+// AudioContext, so playback stays silent while the context is suspended by
+// the browser autoplay policy. resume() only succeeds inside a user gesture,
+// hence the one-time gesture fallback.
+const ensureAudioContextResumed = (audioContext: AudioContext) => {
+  if (audioContext.state !== 'suspended') {
+    return;
+  }
+
+  void audioContext.resume().catch(() => {
+    // Blocked by autoplay policy; wait for a user gesture below.
+  });
+
+  if (gestureResumeAttached) {
+    return;
+  }
+  gestureResumeAttached = true;
+
+  const handleGesture = () => {
+    void audioContext
+      .resume()
+      .catch(() => {
+        // Keep listening for the next gesture.
+      })
+      .then(() => {
+        if (audioContext.state !== 'suspended') {
+          window.removeEventListener('pointerdown', handleGesture);
+          window.removeEventListener('keydown', handleGesture);
+          gestureResumeAttached = false;
+        }
+      });
+  };
+  window.addEventListener('pointerdown', handleGesture);
+  window.addEventListener('keydown', handleGesture);
+};
 
 const getAudioContext = () => {
   if (!sharedAudioContext) {
@@ -414,11 +451,7 @@ export const startInochi2DLipSync = (
     rafId = requestAnimationFrame(update);
   };
 
-  if (audioContext.state === 'suspended') {
-    audioContext.resume().catch(() => {
-      // ignore resume errors
-    });
-  }
+  ensureAudioContextResumed(audioContext);
 
   return {
     stop: cleanup,

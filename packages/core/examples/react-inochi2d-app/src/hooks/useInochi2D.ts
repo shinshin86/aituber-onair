@@ -182,6 +182,7 @@ export const useInochi2D = ({
     ReturnType<typeof loadInochiManifest>
   > | null>(null);
   const initRunIdRef = useRef(0);
+  const initChainRef = useRef<Promise<void>>(Promise.resolve());
   const modelRunIdRef = useRef(0);
   const parameterValuesRef = useRef(parameterValues);
   const selectedModelIdRef = useRef(selectedModelId);
@@ -530,7 +531,11 @@ export const useInochi2D = ({
       }
     };
 
-    void initialize();
+    // Serialize init runs: a superseded run may still be awaiting mount, and
+    // its guard-triggered unmount must finish before the next run touches the
+    // same canvas.
+    const previousInit = initChainRef.current;
+    initChainRef.current = previousInit.then(initialize);
 
     return () => {
       active = false;
@@ -569,7 +574,14 @@ export const useInochi2D = ({
       return;
     }
     queueMicrotask(() => {
-      void loadModelIntoController(selectedModelId);
+      loadModelIntoController(selectedModelId).catch((loadError: unknown) => {
+        if (!controllerRef.current) {
+          return;
+        }
+        console.error(`${INOCHI2D_LOG_PREFIX} model switch failed`, loadError);
+        setStatus('error');
+        setError(getErrorMessage(loadError));
+      });
     });
   }, [loadModelIntoController, selectedModelId]);
 

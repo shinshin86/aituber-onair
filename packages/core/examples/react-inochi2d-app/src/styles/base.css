@@ -361,26 +361,6 @@ body {
   z-index: 2;
 }
 
-.vrm-stage {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  pointer-events: auto;
-}
-
-.vrm-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-  cursor: grab;
-  pointer-events: auto;
-  touch-action: none;
-}
-
-.vrm-canvas.is-dragging {
-  cursor: grabbing;
-}
-
 .avatar-error {
   position: absolute;
   left: 50%;
@@ -643,10 +623,5 @@ body {
 @media (max-width: 640px) {
   .avatar-background {
     padding-bottom: 86px;
-  }
-
-  .vrm-stage {
-    width: 100%;
-    height: 100%;
   }
 }
