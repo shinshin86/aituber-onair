@@ -55,7 +55,7 @@ test('createProject copies pngtuber template and rewrites package metadata', asy
   const rootFiles = await readdir(result.projectDir);
 
   assert.equal(packageJson.name, 'my-png-app');
-  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.5');
+  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.6');
   assert.equal(packageJson.dependencies['@pixiv/three-vrm'], undefined);
   assert.equal(rootFiles.includes('.gitignore'), true);
   assert.equal(rootFiles.includes('_gitignore'), false);
@@ -126,12 +126,12 @@ test('createProject copies pet template with bundled Miko assets', async () => {
   );
   const petFiles = await readdir(path.join(result.projectDir, 'public', 'pet'));
 
-  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.5');
+  assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.6');
   assert.equal(
     packageJson.dependencies['@aituber-onair/comment-intelligence'],
-    '^0.0.4',
+    '^0.0.5',
   );
-  assert.equal(packageJson.dependencies['@aituber-onair/manneri'], '^0.3.3');
+  assert.equal(packageJson.dependencies['@aituber-onair/manneri'], '^0.4.0');
   assert.equal(petManifest.displayName, 'Miko');
   assert.equal(petFiles.includes('spritesheet.webp'), true);
 });
@@ -178,5 +178,5 @@ test('createProject allows overriding the core dependency version', async () => 
 });
 
 test('resolveDefaultCoreVersion reads the workspace core package version', async () => {
-  assert.equal(await resolveDefaultCoreVersion(), '0.26.5');
+  assert.equal(await resolveDefaultCoreVersion(), '0.26.6');
 });

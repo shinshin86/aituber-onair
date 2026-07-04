@@ -1,6 +1,18 @@
 # @aituber-onair/manneri
 
-## Unreleased
+## 0.4.0
+
+### Minor Changes
+
+- Added `ManneriDetector.reviewDraft(messages, draft)`: run a repetition check
+  on a specific candidate reply right before sending. Returns `shouldRewrite`,
+  the analysis, and -- only when repetitive -- a `suggestion` (a diversification
+  prompt to pass to your LLM, not a rewritten reply). Detection is deterministic
+  and similarity/pattern based; Manneri does not send, stop, or rewrite -- your
+  agent or app decides what to do with the result.
+- Added provider-agnostic agent tool definitions
+  `REVIEW_DRAFT_REPETITION_TOOL` and `MANNERI_AGENT_TOOLS`, so an AI agent can
+  invoke this check itself as a `review_draft_repetition` tool.
 
 ## 0.3.3
 

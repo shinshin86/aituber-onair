@@ -1,5 +1,12 @@
 # create-aituber-onair
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated starter templates to depend on `@aituber-onair/core@^0.26.6`.
+- Updated the Pet starter template to use `@aituber-onair/manneri@^0.4.0`.
+
 ## 0.2.0
 
 ### Minor Changes

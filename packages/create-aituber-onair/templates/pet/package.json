@@ -10,9 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aituber-onair/comment-intelligence": "^0.0.4",
-    "@aituber-onair/core": "^0.26.3",
-    "@aituber-onair/manneri": "^0.3.3",
+    "@aituber-onair/comment-intelligence": "^0.0.5",
+    "@aituber-onair/core": "^0.26.6",
+    "@aituber-onair/manneri": "^0.4.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

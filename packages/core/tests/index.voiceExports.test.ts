@@ -17,6 +17,9 @@ import {
   OpenAiCompatibleEngine,
   PiperPlusEngine,
   UnrealSpeechEngine,
+  getAllVoiceEngineCapabilities,
+  getVoiceEngineCapabilities,
+  getVoiceEngineVoiceList,
   type ElevenLabsApplyTextNormalization,
   type ElevenLabsVoiceSettingsOptions,
   type GradiumOutputFormat,
@@ -25,6 +28,9 @@ import {
   type InworldDeliveryMode,
   type InworldVoiceServiceOptions,
   type UnrealSpeechCodec,
+  type VoiceEngineCapabilities,
+  type VoiceEngineVoice,
+  type VoiceEngineVoiceListOptions,
   type VoicepeakEmotionInput,
   type VoicepeakEmotionWeights,
   XaiEngine,
@@ -119,5 +125,30 @@ describe('Core index voice re-exports', () => {
 
     expect(options.gradiumOutputFormat).toBe('wav');
     expect(options.gradiumVoiceSimilarity).toBe(2);
+  });
+
+  it('re-exports voice engine capability helpers', () => {
+    expect(typeof getVoiceEngineVoiceList).toBe('function');
+
+    const capabilities = getVoiceEngineCapabilities('gradium');
+    const sampleCapabilities: VoiceEngineCapabilities = capabilities;
+    const voiceListOptions: VoiceEngineVoiceListOptions = {
+      apiKey: 'test-key',
+    };
+    const voice: VoiceEngineVoice = {
+      id: 'YTpq7expH9539ERJ',
+      label: 'Sample Voice',
+    };
+
+    expect(sampleCapabilities).toEqual(
+      expect.objectContaining({
+        engineType: 'gradium',
+        requiresApiKey: true,
+        supportsVoiceList: true,
+      }),
+    );
+    expect(voiceListOptions.apiKey).toBe('test-key');
+    expect(voice.id).toBe('YTpq7expH9539ERJ');
+    expect(getAllVoiceEngineCapabilities().length).toBeGreaterThan(0);
   });
 });

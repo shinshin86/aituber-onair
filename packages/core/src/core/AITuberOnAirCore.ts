@@ -5,6 +5,7 @@ import {
   ChatService,
   ChatServiceFactory,
   ChatProviderName,
+  ChatProviderCapabilities,
   ChatServiceOptionsByProvider,
   OpenAIChatServiceOptions,
   OpenAICompatibleChatServiceOptions,
@@ -19,6 +20,7 @@ import {
   MistralChatServiceOptions,
   SakanaChatServiceOptions,
   PlamoChatServiceOptions,
+  VisionSupportLevel,
 } from '@aituber-onair/chat';
 import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer';
 import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
@@ -916,5 +918,51 @@ export class AITuberOnAirCore extends EventEmitter {
    */
   static getSupportedModels(providerName: string): string[] {
     return ChatServiceFactory.getSupportedModels(providerName);
+  }
+
+  /**
+   * Get machine-readable provider capabilities for UI and agent planning.
+   * @param providerName Provider name
+   * @param model Optional model name for model-level vision support
+   * @returns Provider capabilities or undefined if the provider is unavailable
+   */
+  static getProviderCapabilities(
+    providerName: string,
+    model?: string,
+  ): ChatProviderCapabilities | undefined {
+    return ChatServiceFactory.getProviderCapabilities(providerName, model);
+  }
+
+  /**
+   * Get machine-readable capabilities for all available providers.
+   * @returns Array of provider capability metadata
+   */
+  static getAllProviderCapabilities(): ChatProviderCapabilities[] {
+    return ChatServiceFactory.getAllProviderCapabilities();
+  }
+
+  /**
+   * Get provider-level vision support status.
+   * @param providerName Provider name
+   * @returns Vision support level
+   */
+  static getVisionSupportLevel(providerName: string): VisionSupportLevel {
+    return ChatServiceFactory.getVisionSupportLevel(providerName);
+  }
+
+  /**
+   * Get model-level vision support status.
+   * @param providerName Provider name
+   * @param model Model name
+   * @returns Vision support level
+   */
+  static getVisionSupportLevelForModel(
+    providerName: string,
+    model: string,
+  ): VisionSupportLevel {
+    return ChatServiceFactory.getVisionSupportLevelForModel(
+      providerName,
+      model,
+    );
   }
 }

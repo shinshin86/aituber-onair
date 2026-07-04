@@ -93,6 +93,26 @@ npm install
 npm run dev
 ```
 
+#### PuruPuru PNGTuber Chat — 2D avatar with hair physics
+
+![PuruPuru PNGTuber example app](./packages/core/examples/react-purupuru-app/images/react-purupuru-app.png)
+
+Load a single-file `.purupuru` avatar package and get idle motion, blinking,
+audio-driven lip-sync, hair spring physics, idle gaze turns with pseudo-depth
+parallax, and emotion-driven reactions — no camera or tracking required. Miko,
+the official AITuber OnAir character, is bundled as the default avatar. The
+avatar format and motion design were created by rotejin in
+[PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber); this example is
+an AITuber-oriented reimplementation. See
+[`packages/core/examples/react-purupuru-app`](./packages/core/examples/react-purupuru-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-purupuru-app
+npm install
+npm run dev
+```
+
 #### VRM Chat — 3D VRM avatar
 
 ![VRM example app](./packages/core/examples/react-vrm-app/images/react-vrm-app.png)

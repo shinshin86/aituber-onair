@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AITuberOnAirCore,
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
   GEMINI_NANO_MAX_CONTEXT_MESSAGES,
   MODEL_CLAUDE_4_5_HAIKU,
@@ -7,6 +8,7 @@ import {
   MODEL_CLAUDE_4_7_OPUS,
   MODEL_CLAUDE_4_OPUS,
   MODEL_CLAUDE_4_SONNET,
+  MODEL_CLAUDE_5_SONNET,
   MODEL_GEMINI_NANO,
   MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_1_FLASH_LITE,
@@ -63,6 +65,8 @@ import {
   ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
   PlamoChatService,
   GeminiNanoChatService,
+  OpenRouterChatService,
+  OpenRouterChatServiceProvider,
   XAIChatService,
   allowsReasoningXHigh,
   getDefaultXaiReasoningEffort,
@@ -72,6 +76,7 @@ import {
   isXaiReasoningEffortModel,
   isXaiVisionModel,
   refreshOpenRouterFreeModels,
+  type ChatProviderCapabilities,
   type RefreshOpenRouterFreeModelsResult,
   type VisionSupportLevel,
 } from '../src/index';
@@ -111,6 +116,7 @@ describe('Core index chat re-exports', () => {
   });
 
   it('re-exports current Claude model constants', () => {
+    expect(MODEL_CLAUDE_5_SONNET).toBe('claude-sonnet-5');
     expect(MODEL_CLAUDE_4_8_OPUS).toBe('claude-opus-4-8');
     expect(MODEL_CLAUDE_4_7_OPUS).toBe('claude-opus-4-7');
     expect(MODEL_CLAUDE_4_5_HAIKU).toBe('claude-haiku-4-5-20251001');
@@ -205,6 +211,8 @@ describe('Core index chat re-exports', () => {
   });
 
   it('re-exports OpenRouter latest routed model constants', () => {
+    expect(typeof OpenRouterChatService).toBe('function');
+    expect(typeof OpenRouterChatServiceProvider).toBe('function');
     expect(MODEL_OPENROUTER_AUTO).toBe('openrouter/auto');
     expect(MODEL_OPENROUTER_FUSION).toBe('openrouter/fusion');
     expect(MODEL_ZAI_GLM_5_2).toBe('z-ai/glm-5.2');
@@ -241,5 +249,33 @@ describe('Core index chat re-exports', () => {
     const sample: VisionSupportLevel = 'unknown';
 
     expect(sample).toBe('unknown');
+  });
+
+  it('exposes provider capabilities through AITuberOnAirCore', () => {
+    const capabilities = AITuberOnAirCore.getProviderCapabilities(
+      'claude',
+      MODEL_CLAUDE_5_SONNET,
+    );
+
+    expect(capabilities).toEqual(
+      expect.objectContaining({
+        provider: 'claude',
+        tools: true,
+        mcp: true,
+        vision: 'supported',
+      }),
+    );
+
+    const sample: ChatProviderCapabilities = capabilities!;
+    expect(sample.models).toContain(MODEL_CLAUDE_5_SONNET);
+    expect(
+      AITuberOnAirCore.getAllProviderCapabilities().length,
+    ).toBeGreaterThan(0);
+    expect(
+      AITuberOnAirCore.getVisionSupportLevelForModel(
+        'claude',
+        MODEL_CLAUDE_5_SONNET,
+      ),
+    ).toBe('supported');
   });
 });

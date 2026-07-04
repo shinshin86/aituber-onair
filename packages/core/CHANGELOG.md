@@ -1,5 +1,22 @@
 # @aituber-onair/core
 
+## 0.26.6
+
+### Patch Changes
+
+- Synced package upgrade surfaces from `@aituber-onair/chat@0.44.0` and
+  `@aituber-onair/voice@0.18.0` into core:
+  - re-exported chat provider capability metadata, OpenRouter provider classes,
+    Claude Sonnet 5, and related provider option types
+  - added `AITuberOnAirCore` static helpers for provider capability and vision
+    support discovery
+  - re-exported voice engine capability and voice-list helpers from core
+  - refreshed Core example lockfile metadata for the updated voice, manneri,
+    and comment-intelligence package versions
+- Updated dependencies []:
+  - @aituber-onair/chat@0.44.0
+  - @aituber-onair/voice@0.18.0
+
 ## 0.26.5
 
 ### Patch Changes

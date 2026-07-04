@@ -35,6 +35,7 @@ const VOICE_LIST_ENGINES = new Set<VoiceEngineType>([
   'inworld',
   'gradium',
   'aivisSpeech',
+  'aivisCloud',
 ]);
 
 const EMOTION_ENGINES = new Set<VoiceEngineType>([
