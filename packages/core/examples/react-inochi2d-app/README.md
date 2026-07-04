@@ -24,13 +24,22 @@ packages/core/examples/react-inochi2d-app/public/inochi2d/runtime/
 ├── inochi2d.js
 ├── inochi2d_bg.wasm
 ├── inochi_bridge.js
-└── secondary_motion.js
+├── secondary_motion.js
+└── THIRD-PARTY-NOTICES.md
 ```
 
 These are prebuilt browser artifacts for the Inochi2D runtime. Treat them as
 build output for this example: the app loads them at runtime and they are not
 meant to be hand-edited. If you regenerate the runtime, replace only the
 generated browser files under `public/inochi2d/runtime/`.
+
+The wasm runtime (`inochi2d_bg.wasm` with its wasm-bindgen glue `inochi2d.js`)
+is compiled from Rust and statically links
+[Inox2D](https://github.com/Inochi2D/inox2d) (BSD 2-Clause), the officially
+supported Rust implementation of Inochi2D, along with other open-source Rust
+crates. The required license notices are distributed with the binaries in
+[`public/inochi2d/runtime/THIRD-PARTY-NOTICES.md`](./public/inochi2d/runtime/THIRD-PARTY-NOTICES.md);
+keep that file next to the runtime files when redistributing them.
 
 This example bundles the Aka Inochi2D model for first-run display. The bundled
 model files are placed under:

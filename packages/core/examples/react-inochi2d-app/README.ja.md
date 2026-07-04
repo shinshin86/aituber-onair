@@ -23,13 +23,23 @@ packages/core/examples/react-inochi2d-app/public/inochi2d/runtime/
 ├── inochi2d.js
 ├── inochi2d_bg.wasm
 ├── inochi_bridge.js
-└── secondary_motion.js
+├── secondary_motion.js
+└── THIRD-PARTY-NOTICES.md
 ```
 
 これらは Inochi2D ランタイムのビルド済みブラウザ向け成果物です。このサンプルの
 ビルド出力として扱ってください。アプリは実行時にこれらを読み込むため、手作業で
 直接編集しないでください。ランタイムを再生成する場合は、`public/inochi2d/runtime/`
 配下の生成物だけを差し替えてください。
+
+wasm ランタイム(`inochi2d_bg.wasm` と wasm-bindgen glue の `inochi2d.js`)は
+Rust 製で、Inochi2D 公式の Rust 実装である
+[Inox2D](https://github.com/Inochi2D/inox2d)(BSD 2-Clause)などの
+オープンソース Rust クレートを静的リンクしています。必要なライセンス表記は
+バイナリと同じ場所の
+[`public/inochi2d/runtime/THIRD-PARTY-NOTICES.md`](./public/inochi2d/runtime/THIRD-PARTY-NOTICES.md)
+に同梱しています。ランタイムを再配布する場合は、このファイルも一緒に
+配置してください。
 
 このサンプルには初回表示用に Aka Inochi2D モデルを同梱しています。同梱モデルは
 以下に配置しています。
