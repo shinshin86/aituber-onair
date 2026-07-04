@@ -243,7 +243,7 @@ export function AvatarBackground({
         aria-label={
           avatarPackage
             ? `${avatarPackage.name} PuruPuru avatar`
-            : 'PuruPuru placeholder avatar'
+            : 'No avatar loaded'
         }
       />
     </div>

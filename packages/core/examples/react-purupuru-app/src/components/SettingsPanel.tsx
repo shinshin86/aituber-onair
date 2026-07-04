@@ -2390,7 +2390,7 @@ export function SettingsPanel({
                     ? 'ミコ（デフォルト）読み込み済み'
                     : avatarPackage
                       ? `${avatarPackage.name} 読み込み済み`
-                      : 'プレースホルダー表示'}
+                      : 'アバター未読み込み'}
                 </span>
                 {avatarPackageSource === 'user' && (
                   <button

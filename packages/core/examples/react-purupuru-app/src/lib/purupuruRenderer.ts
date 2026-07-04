@@ -389,14 +389,6 @@ function renderFrame(
 
   const avatarPackage = options.getAvatarPackage();
   if (!avatarPackage) {
-    drawFallbackAvatar(
-      context,
-      canvas.width,
-      canvas.height,
-      resolveMouthState(options.getVoiceLevel(), options.getIsSpeaking()),
-      eyesClosed,
-      pose,
-    );
     return;
   }
 
@@ -817,85 +809,6 @@ function resolveMouthState(
   if (normalized >= OPEN_MOUTH_THRESHOLD) return 'open';
   if (normalized >= HALF_MOUTH_THRESHOLD) return 'half';
   return 'closed';
-}
-
-function drawFallbackAvatar(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  mouthState: PuruPuruMouthState,
-  eyesClosed: boolean,
-  pose: Pose,
-): void {
-  const size = Math.min(width, height) * 0.46;
-  const centerX = width / 2 + pose.x;
-  const centerY = height / 2 + pose.y;
-
-  context.save();
-  context.translate(centerX, centerY);
-  context.rotate(pose.rotation);
-  context.scale(pose.scale, pose.scale);
-
-  context.fillStyle = '#fde2c7';
-  context.strokeStyle = '#7c4a2d';
-  context.lineWidth = Math.max(3, size * 0.025);
-  context.beginPath();
-  context.arc(0, 0, size, 0, Math.PI * 2);
-  context.fill();
-  context.stroke();
-
-  context.strokeStyle = '#3c2f2f';
-  context.fillStyle = '#3c2f2f';
-  context.lineCap = 'round';
-  context.lineWidth = Math.max(3, size * 0.045);
-  drawFallbackEye(context, -size * 0.36, -size * 0.18, eyesClosed, size);
-  drawFallbackEye(context, size * 0.36, -size * 0.18, eyesClosed, size);
-
-  const mouthWidth =
-    mouthState === 'open'
-      ? size * 0.28
-      : mouthState === 'half'
-        ? size * 0.22
-        : size * 0.18;
-  const mouthHeight =
-    mouthState === 'open'
-      ? size * 0.22
-      : mouthState === 'half'
-        ? size * 0.1
-        : size * 0.025;
-  context.fillStyle = mouthState === 'closed' ? '#3c2f2f' : '#9d2735';
-  context.beginPath();
-  context.ellipse(
-    0,
-    size * 0.26,
-    mouthWidth,
-    mouthHeight,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  context.fill();
-  context.restore();
-}
-
-function drawFallbackEye(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  eyesClosed: boolean,
-  size: number,
-): void {
-  if (eyesClosed) {
-    context.beginPath();
-    context.moveTo(x - size * 0.1, y);
-    context.lineTo(x + size * 0.1, y);
-    context.stroke();
-    return;
-  }
-
-  context.beginPath();
-  context.arc(x, y, size * 0.075, 0, Math.PI * 2);
-  context.fill();
 }
 
 function randomBlinkDelay(): number {

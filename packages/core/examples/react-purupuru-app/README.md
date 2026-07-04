@@ -55,8 +55,8 @@ npm run dev
 
 Open the local Vite URL. The bundled Miko avatar loads automatically. To use a
 different `.purupuru` file, open Settings and choose a package in the Visual
-section. If the bundled avatar cannot be loaded, the app silently falls back to
-the placeholder avatar.
+section. If the bundled avatar cannot be loaded, the canvas stays empty until an
+avatar package is loaded.
 
 Drag the avatar on the canvas to reposition it and use the mouse wheel to zoom.
 Double-click the canvas, or use the Visual section's
