@@ -20,11 +20,6 @@
         "sourceUrl": "https://github.com/Inochi2D/example-models",
         "changes": "Rig and idle motion adapted for the AITuber OnAir Inochi2D example."
       },
-      "camera": {
-        "x": 0,
-        "y": 1450,
-        "scale": 0.32
-      },
       "autoAnimation": "original_idle_calm_breath",
       "idleAnimations": [
         "original_idle_calm_breath",

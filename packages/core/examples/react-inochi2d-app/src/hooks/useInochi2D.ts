@@ -1,6 +1,8 @@
 import {
   INOCHI2D_DEBUG_ENABLED,
   INOCHI2D_DEFAULT_CAMERA_SCALE,
+  INOCHI2D_DEFAULT_CAMERA_X,
+  INOCHI2D_DEFAULT_CAMERA_Y,
   INOCHI2D_LOG_PREFIX,
   INOCHI2D_MAX_CAMERA_SCALE,
   INOCHI2D_MIN_CAMERA_SCALE,
@@ -111,8 +113,8 @@ const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
 const DEFAULT_CAMERA_TRANSFORM: InochiCameraTransform = {
-  x: 0,
-  y: 0,
+  x: INOCHI2D_DEFAULT_CAMERA_X,
+  y: INOCHI2D_DEFAULT_CAMERA_Y,
   scale: INOCHI2D_DEFAULT_CAMERA_SCALE,
 };
 

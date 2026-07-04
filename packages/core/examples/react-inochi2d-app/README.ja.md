@@ -76,23 +76,26 @@ packages/core/examples/react-inochi2d-app/public/inochi2d/models/
         "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
         "sourceUrl": "https://github.com/Inochi2D/example-models",
         "changes": "Rig and idle motion adapted for the AITuber OnAir Inochi2D example."
-      },
-      "camera": {
-        "x": 0,
-        "y": 1450,
-        "scale": 0.32
       }
     }
   ]
 }
 ```
 
-任意項目の `camera` は、そのモデルの初期表示位置を指定します。`scale` が
-ズーム倍率、`x` / `y` はモデル空間での移動量です(`y` を正にするとモデルが
-画面下方向へ移動します)。同梱の Aka は VRM サンプルに近いバストアップ表示に
-しています。`camera` 未指定のモデル(ローカル `.inx` / `.inp` 読み込みを含む)
-は従来の引きの全身表示になります。ドラッグで移動、ホイールでズーム、
-ダブルクリックでこの初期表示にリセットできます。
+すべてのモデル(manifest 登録モデルとローカル `.inx` / `.inp` 読み込み)は、
+VRM サンプルに近いバストアップの初期表示で開きます。デフォルト値は
+`src/lib/inochi2dConstants.ts`(`INOCHI2D_DEFAULT_CAMERA_*`)にあります。
+カメラのオフセットはモデル空間の単位なので、単位スケールが大きく異なる
+モデルでは表示位置の調整が必要になることがあります。その場合は manifest の
+モデル定義に任意項目 `camera` を追加してデフォルトを上書きしてください。
+
+```json
+"camera": { "x": 0, "y": 1450, "scale": 0.32 }
+```
+
+`scale` がズーム倍率、`x` / `y` はモデル空間での移動量です(`y` を正にすると
+モデルが画面下方向へ移動します)。ドラッグで移動、ホイールでズーム、
+ダブルクリックでそのモデルの初期表示にリセットできます。
 
 追加で別モデルを確認する場合は、設定画面からローカルの `.inx` または `.inp`
 ファイルを選択できます。この場合は別ファイルの motion JSON を紐づけないため、

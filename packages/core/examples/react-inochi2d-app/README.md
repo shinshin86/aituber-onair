@@ -76,23 +76,26 @@ add entries to `public/inochi2d/manifest.json`:
         "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
         "sourceUrl": "https://github.com/Inochi2D/example-models",
         "changes": "Rig and idle motion adapted for the AITuber OnAir Inochi2D example."
-      },
-      "camera": {
-        "x": 0,
-        "y": 1450,
-        "scale": 0.32
       }
     }
   ]
 }
 ```
 
-The optional `camera` entry sets the initial framing for that model: `scale`
-is the zoom level and `x` / `y` shift the model in model space (positive `y`
-moves the model down on screen). The bundled Aka entry uses a bust-up framing
-similar to the VRM example; models without a `camera` entry (including local
-`.inx` / `.inp` files) fall back to a zoomed-out full-body view. Drag to pan,
-use the mouse wheel to zoom, and double-click to reset to this framing.
+Every model (manifest models and local `.inx` / `.inp` files) opens with the
+same bust-up framing, similar to the VRM example. The default lives in
+`src/lib/inochi2dConstants.ts` (`INOCHI2D_DEFAULT_CAMERA_*`). Because the
+camera offset is expressed in model space, a model with a very different unit
+scale may need its own framing — add an optional `camera` entry to its
+manifest model definition to override the default:
+
+```json
+"camera": { "x": 0, "y": 1450, "scale": 0.32 }
+```
+
+`scale` is the zoom level and `x` / `y` shift the model in model space
+(positive `y` moves the model down on screen). Drag to pan, use the mouse
+wheel to zoom, and double-click to reset to the model's initial framing.
 
 For quick local testing, open settings and choose a local `.inx` or `.inp` file.
 Local file loading does not attach a separate motion JSON; use the manifest path
