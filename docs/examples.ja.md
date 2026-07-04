@@ -24,6 +24,9 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 - すでに Live2D モデルアセットを持っている場合は
   [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app)
   を使います。
+- トラッキングや 3D アセットなしで、よく動く 2D アバターを使いたい場合は
+  [`packages/core/examples/react-purupuru-app`](../packages/core/examples/react-purupuru-app)
+  を使います。
 - 実験的な Inochi2D アバター（ビルド済みランタイム）を試したい場合は
   [`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
   を使います。
@@ -46,6 +49,29 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 
 ```bash
 cd packages/core/examples/react-pngtuber-app
+npm install
+npm run dev
+```
+
+### ぷるぷるPNGTuber App
+
+<p align="center">
+  <img src="../packages/core/examples/react-purupuru-app/images/react-purupuru-app.png" alt="ぷるぷるPNGTuber サンプルアプリ" width="720" />
+</p>
+
+パス:
+[`packages/core/examples/react-purupuru-app`](../packages/core/examples/react-purupuru-app)
+
+トラッキングや 3D アセットを用意せずに、よく動く 2D アバターを使いたい場合に
+最適です。`.purupuru` 形式のアバターパッケージ（1ファイル）を読み込み、
+アイドルモーション・まばたき・音声リップシンク・髪のバネ物理・振り向き・
+感情リアクションを駆動します。AITuber OnAir 公式キャラクター「ミコ」を
+デフォルトアバターとして同梱しています。`.purupuru` アバター形式は
+rotejin さんが開発された [ぷるぷるPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber)
+によるもので、このサンプルはその AITuber 向け移植です。
+
+```bash
+cd packages/core/examples/react-purupuru-app
 npm install
 npm run dev
 ```

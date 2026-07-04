@@ -19,6 +19,7 @@
   <a href="https://aituberonair.com">Web アプリを試す</a> ・
   <a href="./docs/quickstart.ja.md">クイックスタート</a> ・
   <a href="./docs/examples.ja.md">サンプル一覧</a> ・
+  <a href="./docs/avatar.ja.md">アバターガイド</a> ・
   <a href="#パッケージ">パッケージ</a>
 </p>
 
@@ -85,6 +86,19 @@ npm run dev
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-pngtuber-app
+npm install
+npm run dev
+```
+
+#### ぷるぷるPNGTuber Chat — 髪が揺れる 2D アバター
+
+![ぷるぷるPNGTuber サンプルアプリ](./packages/core/examples/react-purupuru-app/images/react-purupuru-app.png)
+
+`.purupuru` 形式のアバターパッケージ（1ファイル）を読み込むだけで、アイドルモーション・まばたき・音声駆動リップシンク・髪のバネ物理・振り向き（疑似奥行きパララックス付き）・感情タグによるリアクションが動きます。カメラやトラッキングは不要です。AITuber OnAir 公式キャラクター「ミコ」をデフォルトアバターとして同梱しています。アバター形式とモーション表現は rotejin さんが開発された [ぷるぷるPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber) によるもので、このサンプルはその AITuber 向け移植です。詳細は [`packages/core/examples/react-purupuru-app`](./packages/core/examples/react-purupuru-app) を参照。
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-purupuru-app
 npm install
 npm run dev
 ```
@@ -183,6 +197,8 @@ await chat.processChat(
   テンプレート選択、プロバイダー設定、ローカル起動まで。
 - [サンプル一覧](./docs/examples.ja.md): フル機能の AI VTuber アプリ、
   パッケージ別サンプル、Bot サンプル、ローカル実行例の選び方。
+- [アバターガイド](./docs/avatar.ja.md): アバター方式の選び方と、
+  AI キャラクター表現を豊かにする拡張方法。
 
 ## パッケージ
 

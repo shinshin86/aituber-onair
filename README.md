@@ -19,6 +19,7 @@
   <a href="https://aituberonair.com">Try the hosted web app</a> ・
   <a href="./docs/quickstart.md">Quickstart</a> ・
   <a href="./docs/examples.md">Examples</a> ・
+  <a href="./docs/avatar.md">Avatar Guide</a> ・
   <a href="#packages">Packages</a>
 </p>
 
@@ -88,6 +89,26 @@ Swap in 4 PNG states (mouth/eyes open/close) and get real-time lip-sync driven f
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-pngtuber-app
+npm install
+npm run dev
+```
+
+#### PuruPuru PNGTuber Chat — 2D avatar with hair physics
+
+![PuruPuru PNGTuber example app](./packages/core/examples/react-purupuru-app/images/react-purupuru-app.png)
+
+Load a single-file `.purupuru` avatar package and get idle motion, blinking,
+audio-driven lip-sync, hair spring physics, idle gaze turns with pseudo-depth
+parallax, and emotion-driven reactions — no camera or tracking required. Miko,
+the official AITuber OnAir character, is bundled as the default avatar. The
+avatar format and motion design were created by rotejin in
+[PuruPuruPNGTuber](https://github.com/rotejin/PuruPuruPNGTuber); this example is
+an AITuber-oriented reimplementation. See
+[`packages/core/examples/react-purupuru-app`](./packages/core/examples/react-purupuru-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-purupuru-app
 npm install
 npm run dev
 ```
@@ -195,6 +216,8 @@ See each package README for provider setup and fuller usage.
   configure providers, and run locally.
 - [Examples](./docs/examples.md): choose from full AI VTuber apps, package
   examples, bot examples, and local runtime examples.
+- [Avatar Guide](./docs/avatar.md): choose avatar styles and expand avatar
+  expressions for richer AI character presentation.
 
 ## Packages
 
