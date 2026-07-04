@@ -58,6 +58,10 @@ different `.purupuru` file, open Settings and choose a package in the Visual
 section. If the bundled avatar cannot be loaded, the canvas stays empty until an
 avatar package is loaded.
 
+If you want to create your own `.purupuru` avatar, the ImageGen-based
+[asset production kit](https://github.com/shinshin86/PuruPuruPNGTuber/tree/codex/add-imagegen-asset-production-kit/asset-production)
+for PuruPuruPNGTuber may be a helpful starting point.
+
 Drag the avatar on the canvas to reposition it and use the mouse wheel to zoom.
 Double-click the canvas, or use the Visual section's
 `アバター位置をリセット` button, to reset the placement. The app persists the

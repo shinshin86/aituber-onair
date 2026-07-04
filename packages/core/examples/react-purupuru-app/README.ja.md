@@ -31,6 +31,9 @@ npm run dev
 ファイルを選択してください。読み込みに失敗した場合は、アバターパッケージが
 読み込まれるまで Canvas には何も描画されません。
 
+自分で `.purupuru` アバターを作ってみたい場合は、PuruPuruPNGTuber 用の
+ImageGen ベースの[アセット制作キット](https://github.com/shinshin86/PuruPuruPNGTuber/tree/codex/add-imagegen-asset-production-kit/asset-production)も参考になるかもしれません。
+
 アバターは Canvas 上でドラッグして位置を調整できます。マウスホイールで拡大・
 縮小し、Canvas をダブルクリックするか Visual セクションの
 `アバター位置をリセット` ボタンを押すと初期位置に戻ります。ドラッグ位置と
