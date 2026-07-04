@@ -42,8 +42,9 @@ Collect missing inputs before editing:
      add/replace model constants so new chat models are selectable.
    - For `packages/core/examples/react-pngtuber-app`,
      `packages/core/examples/react-pet-app`,
-     `packages/core/examples/react-vrm-app`, and
-     `packages/core/examples/react-live2d-app`, check whether the chat change
+     `packages/core/examples/react-vrm-app`,
+     `packages/core/examples/react-live2d-app`, and
+     `packages/core/examples/react-purupuru-app`, check whether the chat change
      requires defaults, model selectors, settings UI, or docs updates. These
      apps usually use free-form model input rather than fixed chat model lists,
      so code changes are only needed when behavior or defaults must change.

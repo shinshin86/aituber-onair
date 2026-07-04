@@ -24,6 +24,9 @@ to the package examples when you need lower-level integration.
 - Use
   [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app)
   if you already have Live2D model assets.
+- Use
+  [`packages/core/examples/react-purupuru-app`](../packages/core/examples/react-purupuru-app)
+  if you want a 2D avatar with hair physics and rich idle motion out of the box.
 - Use package examples when you want to embed chat, voice, memory, or streaming
   behavior into an existing application.
 
@@ -43,6 +46,27 @@ from actual audio output volume.
 
 ```bash
 cd packages/core/examples/react-pngtuber-app
+npm install
+npm run dev
+```
+
+### PuruPuru PNGTuber App
+
+<p align="center">
+  <img src="../packages/core/examples/react-purupuru-app/images/react-purupuru-app.png" alt="PuruPuru PNGTuber example app" width="720" />
+</p>
+
+Path:
+[`packages/core/examples/react-purupuru-app`](../packages/core/examples/react-purupuru-app)
+
+Best when you want a lively 2D avatar without preparing tracking or 3D assets.
+It loads a single-file `.purupuru` avatar package and drives idle motion,
+blinking, audio lip-sync, hair spring physics, idle gaze turns, and
+emotion-driven reactions. Miko, the official AITuber OnAir character, is
+bundled as the default avatar.
+
+```bash
+cd packages/core/examples/react-purupuru-app
 npm install
 npm run dev
 ```
