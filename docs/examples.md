@@ -27,6 +27,9 @@ to the package examples when you need lower-level integration.
 - Use
   [`packages/core/examples/react-purupuru-app`](../packages/core/examples/react-purupuru-app)
   if you want a 2D avatar with hair physics and rich idle motion out of the box.
+- Use
+  [`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
+  if you want an experimental Inochi2D avatar with a prebuilt runtime.
 - Use package examples when you want to embed chat, voice, memory, or streaming
   behavior into an existing application.
 
@@ -69,6 +72,27 @@ this example is an AITuber-oriented reimplementation.
 
 ```bash
 cd packages/core/examples/react-purupuru-app
+npm install
+npm run dev
+```
+
+### Inochi2D App (experimental)
+
+<p align="center">
+  <img src="../packages/core/examples/react-inochi2d-app/images/react-inochi2d-app.png" alt="Inochi2D example app" width="720" />
+</p>
+
+Path:
+[`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
+
+Best for trying Inochi2D avatars. It renders an Inochi2D model on a WebGL stage
+using a prebuilt Inochi2D runtime and drives mouth movement from audio output
+volume. It bundles the Aka Inochi2D model for first-run display, and you can
+also load a local `.inx` / `.inp` file or register another model in
+`public/inochi2d/manifest.json`.
+
+```bash
+cd packages/core/examples/react-inochi2d-app
 npm install
 npm run dev
 ```

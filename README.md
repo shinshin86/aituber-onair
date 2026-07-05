@@ -76,8 +76,8 @@ For step-by-step setup and template selection, see
 
 ### 3. Run an example app locally
 
-Four full, ready-to-run React apps built on `@aituber-onair/core`. Pick the
-avatar style that fits your project. All four share the same broad LLM / TTS
+Five full, ready-to-run React apps built on `@aituber-onair/core`. Pick the
+avatar style that fits your project. All of them share the same broad LLM / TTS
 provider coverage and in-app **Settings** UI.
 
 #### PNGTuber Chat — 2D PNG avatar
@@ -147,6 +147,23 @@ example intentionally does not bundle any Live2D assets. See
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+#### Inochi2D Chat — Inochi2D avatar (experimental)
+
+![Inochi2D example app](./packages/core/examples/react-inochi2d-app/images/react-inochi2d-app.png)
+
+Render an Inochi2D avatar on a WebGL stage with a prebuilt Inochi2D runtime, and
+drive mouth movement from actual audio output volume. This example bundles the
+Aka Inochi2D model for first-run display, and you can also load a local `.inx` /
+`.inp` file or register another model in `public/inochi2d/manifest.json`. See
+[`packages/core/examples/react-inochi2d-app`](./packages/core/examples/react-inochi2d-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-inochi2d-app
 npm install
 npm run dev
 ```

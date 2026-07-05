@@ -75,7 +75,7 @@ npm run dev
 
 ### 3. サンプルアプリをローカルで動かす
 
-`@aituber-onair/core` をベースにしたフル機能の React サンプルを4種類用意しています。プロジェクトに合うアバター方式を選んでください。LLM / TTS プロバイダー対応範囲と **Settings** UI はどれも共通です。
+`@aituber-onair/core` をベースにしたフル機能の React サンプルを5種類用意しています。プロジェクトに合うアバター方式を選んでください。LLM / TTS プロバイダー対応範囲と **Settings** UI はどれも共通です。
 
 #### PNGTuber Chat — 2D PNG アバター
 
@@ -134,6 +134,19 @@ npm run dev
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+#### Inochi2D Chat — Inochi2D アバター（実験的）
+
+![Inochi2D サンプルアプリ](./packages/core/examples/react-inochi2d-app/images/react-inochi2d-app.png)
+
+ビルド済みの Inochi2D ランタイムを使って Inochi2D アバターを WebGL ステージに描画し、実際の音声出力ボリュームに合わせて口元を動かします。このサンプルは初回表示用に Aka Inochi2D モデルを同梱しています。ローカルの `.inx` / `.inp` ファイルを読み込むか、`public/inochi2d/manifest.json` に別モデルを登録することもできます。詳細は [`packages/core/examples/react-inochi2d-app`](./packages/core/examples/react-inochi2d-app) を参照。
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-inochi2d-app
 npm install
 npm run dev
 ```
