@@ -8,7 +8,6 @@ import {
 } from '@aituber-onair/core';
 import type {
   AppSettings,
-  AvatarViewTransform,
   ChatProviderOption,
   StreamingPlatformOption,
   TTSEngineOption,
@@ -198,9 +197,6 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
-      avatarViewX: 0,
-      avatarViewY: 0,
-      avatarViewScale: 1,
       motionEnabled: true,
       motionIntensity: 1,
     },
@@ -251,6 +247,16 @@ function loadSettings(): AppSettings {
     if (raw) {
       const saved = JSON.parse(raw) as Partial<AppSettings>;
       const defaults = getDefaultSettings();
+      const savedVisual = { ...(saved.visual || {}) } as Partial<
+        AppSettings['visual']
+      > & {
+        avatarViewX?: unknown;
+        avatarViewY?: unknown;
+        avatarViewScale?: unknown;
+      };
+      delete savedVisual.avatarViewX;
+      delete savedVisual.avatarViewY;
+      delete savedVisual.avatarViewScale;
       return {
         llm: {
           ...defaults.llm,
@@ -261,7 +267,7 @@ function loadSettings(): AppSettings {
           ),
         },
         tts: { ...defaults.tts, ...saved.tts },
-        visual: { ...defaults.visual, ...saved.visual },
+        visual: { ...defaults.visual, ...savedVisual },
         screenVision: { ...defaults.screenVision, ...saved.screenVision },
         stream: { ...defaults.stream, ...saved.stream },
         commentIntelligence: {
@@ -883,33 +889,6 @@ export function useSettings() {
     [],
   );
 
-  const updateVisualAvatarView = useCallback(
-    (transform: AvatarViewTransform) => {
-      setSettings((prev) => ({
-        ...prev,
-        visual: {
-          ...prev.visual,
-          avatarViewX: transform.x,
-          avatarViewY: transform.y,
-          avatarViewScale: transform.scale,
-        },
-      }));
-    },
-    [],
-  );
-
-  const resetVisualAvatarView = useCallback(() => {
-    setSettings((prev) => ({
-      ...prev,
-      visual: {
-        ...prev.visual,
-        avatarViewX: 0,
-        avatarViewY: 0,
-        avatarViewScale: 1,
-      },
-    }));
-  }, []);
-
   const updateVisualMotionEnabled = useCallback((motionEnabled: boolean) => {
     setSettings((prev) => ({
       ...prev,
@@ -1281,8 +1260,6 @@ export function useSettings() {
     updateVisualBackgroundMode,
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
-    updateVisualAvatarView,
-    resetVisualAvatarView,
     updateVisualMotionEnabled,
     updateVisualMotionIntensity,
     updateScreenVisionDeviceId,

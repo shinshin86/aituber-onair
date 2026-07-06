@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -9,7 +9,14 @@ import { usePsdAvatar } from './hooks/usePsdAvatar';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
+import type { AvatarViewTransform } from './types/settings';
 import './styles/app.css';
+
+const DEFAULT_AVATAR_VIEW_TRANSFORM: AvatarViewTransform = {
+  x: 0,
+  y: 0,
+  scale: 1,
+};
 
 export default function App() {
   const { play, stop, mouthLevel, isSpeaking, smoothedValue } =
@@ -21,6 +28,8 @@ export default function App() {
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
     null,
   );
+  const [avatarViewTransform, setAvatarViewTransform] =
+    useState<AvatarViewTransform>(DEFAULT_AVATAR_VIEW_TRANSFORM);
   const backgroundObjectUrlRef = useRef<string | null>(null);
 
   const handleAudioPlay = useCallback(
@@ -48,18 +57,9 @@ export default function App() {
     onDeviceIdChange: settingsHook.updateScreenVisionDeviceId,
   });
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
-  const avatarViewTransform = useMemo(
-    () => ({
-      x: settingsHook.settings.visual.avatarViewX,
-      y: settingsHook.settings.visual.avatarViewY,
-      scale: settingsHook.settings.visual.avatarViewScale,
-    }),
-    [
-      settingsHook.settings.visual.avatarViewScale,
-      settingsHook.settings.visual.avatarViewX,
-      settingsHook.settings.visual.avatarViewY,
-    ],
-  );
+  const resetVisualAvatarView = useCallback(() => {
+    setAvatarViewTransform(DEFAULT_AVATAR_VIEW_TRANSFORM);
+  }, []);
 
   const handleSend = useCallback(
     (text: string) => {
@@ -200,7 +200,7 @@ export default function App() {
         psdAvatar={psdAvatar}
         visual={settingsHook.settings.visual}
         avatarViewTransform={avatarViewTransform}
-        onAvatarViewTransformChange={settingsHook.updateVisualAvatarView}
+        onAvatarViewTransformChange={setAvatarViewTransform}
         onToggleSettings={() => setSettingsOpen((v) => !v)}
       />
 
@@ -227,6 +227,7 @@ export default function App() {
               streamErrorMessage={streamErrorMessage}
               screenVisionController={screenVisionController}
               onBackgroundImageChange={handleBackgroundImageChange}
+              resetVisualAvatarView={resetVisualAvatarView}
             />
           </div>
         </div>

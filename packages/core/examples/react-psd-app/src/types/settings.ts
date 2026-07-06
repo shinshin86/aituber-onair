@@ -172,9 +172,6 @@ export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
-  avatarViewX: number;
-  avatarViewY: number;
-  avatarViewScale: number;
   motionEnabled: boolean;
   motionIntensity: number;
 }

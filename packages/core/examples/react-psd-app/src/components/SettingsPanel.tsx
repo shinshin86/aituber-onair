@@ -26,6 +26,7 @@ interface SettingsPanelProps extends SettingsHook {
   streamErrorMessage?: string;
   screenVisionController: ScreenVisionController;
   onBackgroundImageChange: (file: File | null) => void;
+  resetVisualAvatarView: () => void;
 }
 
 const PROVIDERS: {
