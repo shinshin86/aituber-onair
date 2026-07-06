@@ -6,12 +6,23 @@ import { readPsd } from 'ag-psd';
 
 export interface Anime25RigLayer {
   name: string;
+  x?: number;
+  y?: number;
+  w?: number;
+  h?: number;
+  z?: number;
+  depth?: number;
   group?: string;
   phys?: string | null;
   fade?: string | null;
   side?: string | null;
   strands?: { x: number; rootY: number; tipY: number }[] | null;
   synthetic?: boolean;
+  img?: {
+    width: number;
+    height: number;
+    data: Uint8ClampedArray;
+  };
 }
 
 export interface Anime25RigResult {
@@ -68,10 +79,9 @@ const REQUIRED_PARTS = [
   'eyewhite',
   'irides',
   'eyelash',
-  'eye_close',
   'mouth_open',
-  'mouth_close',
 ];
+const REQUIRED_ANCHORS = ['face', 'eyeL', 'eyeR', 'mouth'];
 
 function getRigger(): Anime25Rigger | null {
   return globalThis.Rigger || null;
@@ -120,6 +130,11 @@ export function summarizeAnime25Rig(
   };
 }
 
+function getMissingRequiredAnchors(rig: Anime25RigResult): string[] {
+  const anchors = new Set(Object.keys(rig.anchors));
+  return REQUIRED_ANCHORS.filter((anchor) => !anchors.has(anchor));
+}
+
 export async function detectAnime25RigFromBuffer(
   buffer: ArrayBuffer,
 ): Promise<Anime25RigDetection> {
@@ -142,7 +157,13 @@ export async function detectAnime25RigFromBuffer(
     const preprocessed = rigger.cleanPsdLayers(psd);
     const rig = rigger.buildRig(psd);
     const summary = summarizeAnime25Rig(rig, rigger, preprocessed);
-    const usable = summary.missingRequiredParts.length === 0;
+    const missingRequiredAnchors = getMissingRequiredAnchors(rig);
+    const blockingReasons = [
+      ...summary.missingRequiredParts.map((part) => `missing part: ${part}`),
+      ...missingRequiredAnchors.map((anchor) => `missing anchor: ${anchor}`),
+      ...rig.warnings,
+    ];
+    const usable = blockingReasons.length === 0;
 
     return {
       mode: usable ? 'motion' : 'static',
@@ -151,7 +172,7 @@ export async function detectAnime25RigFromBuffer(
       summary,
       reason: usable
         ? 'Anime2.5DRig parts detected.'
-        : `Missing rig parts: ${summary.missingRequiredParts.join(', ')}`,
+        : blockingReasons.join('; '),
     };
   } catch (error) {
     return {

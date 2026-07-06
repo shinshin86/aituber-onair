@@ -249,4 +249,30 @@ describe('Anime2.5DRig detection helpers', () => {
     });
     expect(summary.partsFound).toContain('front hair');
   });
+
+  it('does not require an eye_close layer when eye anchors are available', () => {
+    const summary = summarizeAnime25Rig(
+      {
+        canvas: { w: 512, h: 512 },
+        layers: [
+          { name: 'face' },
+          { name: 'eyewhite_l' },
+          { name: 'eyewhite_r' },
+          { name: 'irides_l' },
+          { name: 'irides_r' },
+          { name: 'eyelash_l' },
+          { name: 'eyelash_r' },
+          { name: 'mouth_open' },
+          { name: 'mouth_close' },
+          { name: 'front hair_1', strands: [{ x: 1, rootY: 2, tipY: 3 }] },
+        ],
+        anchors: { face: {}, eyeL: {}, eyeR: {}, mouth: {} },
+        warnings: [],
+      },
+      { baseName: (name) => name.replace(/_\d+$/, '') },
+      { noisy: 0, layers: 10 },
+    );
+
+    expect(summary.missingRequiredParts).toEqual([]);
+  });
 });

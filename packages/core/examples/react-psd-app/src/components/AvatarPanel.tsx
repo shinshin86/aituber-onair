@@ -2,6 +2,10 @@ import { useEffect, useRef } from 'react';
 import { useBlink } from '../hooks/useBlink';
 import type { PsdAvatarController } from '../hooks/usePsdAvatar';
 import { renderPsdToCanvas } from '../lib/psdRenderer';
+import {
+  createAnime25RigAvatar,
+  type Anime25RigAvatar,
+} from '../lib/rig/anime25Renderer';
 
 interface AvatarPanelProps {
   mouthLevel: number;
@@ -106,6 +110,42 @@ function PsdCanvasAvatar({
   );
 }
 
+function MotionRigCanvasAvatar({
+  psdAvatar,
+  mouthOpen,
+}: {
+  psdAvatar: PsdAvatarController;
+  mouthOpen: boolean;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const avatarRef = useRef<Anime25RigAvatar | null>(null);
+  const rig = psdAvatar.rig?.rig;
+
+  useEffect(() => {
+    if (!rig || !canvasRef.current) return;
+    avatarRef.current?.dispose();
+    avatarRef.current = createAnime25RigAvatar(canvasRef.current, rig);
+    return () => {
+      avatarRef.current?.dispose();
+      avatarRef.current = null;
+    };
+  }, [rig]);
+
+  useEffect(() => {
+    avatarRef.current?.setMouthOpen(mouthOpen ? 0.8 : 0);
+  }, [mouthOpen]);
+
+  if (!rig) return null;
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="avatar-image avatar-canvas"
+      aria-label="Motion PSD avatar"
+    />
+  );
+}
+
 export function AvatarPanel({
   mouthLevel,
   isSpeaking,
@@ -121,7 +161,9 @@ export function AvatarPanel({
   return (
     <div className="avatar-panel">
       <div className="avatar-container">
-        {psdAvatar.model ? (
+        {psdAvatar.mode === 'motion' && psdAvatar.rig?.rig ? (
+          <MotionRigCanvasAvatar psdAvatar={psdAvatar} mouthOpen={mouthOpen} />
+        ) : psdAvatar.model ? (
           <PsdCanvasAvatar
             psdAvatar={psdAvatar}
             mouthOpen={mouthOpen}
@@ -164,7 +206,9 @@ export function AvatarBackground({
   return (
     <div className="avatar-background">
       <div className="avatar-container">
-        {psdAvatar.model ? (
+        {psdAvatar.mode === 'motion' && psdAvatar.rig?.rig ? (
+          <MotionRigCanvasAvatar psdAvatar={psdAvatar} mouthOpen={mouthOpen} />
+        ) : psdAvatar.model ? (
           <PsdCanvasAvatar
             psdAvatar={psdAvatar}
             mouthOpen={mouthOpen}
