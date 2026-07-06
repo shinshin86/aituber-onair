@@ -93,6 +93,21 @@ npm install
 npm run dev
 ```
 
+#### PSD Tachie Chat — PSDTool-style 2D tachie avatar
+
+Load a single PSD file at runtime, composite PSD layers on canvas, and drive
+mouth/eye layers with real-time lip-sync and blinking. Supports PSDTool-style
+leading `!` forced-visible layers and leading `*` radio layers. A bundled
+`sample.psd` animates with zero setup. See
+[`packages/core/examples/react-psd-app`](./packages/core/examples/react-psd-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-psd-app
+npm install
+npm run dev
+```
+
 #### PuruPuru PNGTuber Chat — 2D avatar with hair physics
 
 ![PuruPuru PNGTuber example app](./packages/core/examples/react-purupuru-app/images/react-purupuru-app.png)
