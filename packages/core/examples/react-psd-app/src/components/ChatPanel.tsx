@@ -38,6 +38,9 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
+  const hasPsdAvatar = Boolean(
+    psdAvatar.source || psdAvatar.model || psdAvatar.rig,
+  );
   const latestAssistantMessage = [...messages]
     .reverse()
     .find((message) => message.role === 'assistant');
@@ -84,7 +87,11 @@ export function ChatPanel({
           <div className="broadcast-caption">{broadcastCaption}</div>
         )
       ) : (
-        <ChatLog messages={messages} partialResponse={partialResponse} />
+        <ChatLog
+          messages={messages}
+          partialResponse={partialResponse}
+          hideEmptyState={hasPsdAvatar}
+        />
       )}
       {shouldShowInput && <ChatInput onSend={onSend} disabled={isProcessing} />}
     </div>

@@ -18,6 +18,10 @@ PNGTuber sample images, so the app animates with zero setup.
 - Toggle PSD layers in Settings with PSDTool-style forced/radio behavior
 - Bind PSD layers to `mouthOpen`, `mouthClosed`, `eyesOpen`, and `eyesClosed`
 - Auto-detect mouth and eye role bindings from Japanese/English layer names
+- Auto-detect Anime2.5DRig-compatible PSD layer names for motion mode
+- Animate supported PSDs with idle motion, blink fallback, hair physics, and
+  audio-driven mouth movement
+- Drag, wheel-zoom, and reset the avatar view from the canvas / Settings
 - Persist visibility overrides and role bindings in `localStorage`, keyed by
   `${fileName}:${fileSize}`
 - Keep uploaded PSD pixel data in memory only; re-select the same file after
@@ -49,6 +53,48 @@ npm run generate:sample-psd
 
 This uses `ag-psd` as a dev-only generator. Runtime PSD parsing uses
 `@webtoon/psd`.
+
+## Auto-rig motion mode
+
+When a loaded PSD matches the Anime2.5DRig layer naming convention, the app
+selects **Motion (auto-rig)** instead of the static PSDTool-style renderer.
+Motion mode uses `ag-psd` to read pixel layers and the vendored
+Anime2.5DRig-compatible rigger under `src/vendor/anime25drig/`.
+
+The auto-rig detector requires usable face, left/right eye, and mouth anchors.
+`eye_close_l` / `eye_close_r` are optional; when they are missing, the renderer
+keeps eyelashes visible and compresses eye-open layers as a blink fallback.
+
+Motion settings are in **Settings -> Visual**:
+
+| Control | Behavior |
+|---|---|
+| `PSD motion` | Enables or disables idle motion, blink, and physics for motion-mode PSDs. |
+| `Motion intensity` | Scales idle sway, breathing, and hair motion from `0.0` to `2.0`. |
+| `Avatar view reset` | Restores avatar position and scale to `{ x: 0, y: 0, scale: 1 }`. |
+
+Wheel zoom scales around the avatar's own center. Dragging is the only operation
+that changes avatar position, and offsets are clamped so the avatar cannot be
+lost completely off-screen.
+
+## Auto-rig layer naming
+
+Use a flat PSD layer structure with these names. Side-specific parts use `_l`
+and `_r` suffixes. Hair strands can use numbered suffixes such as
+`front hair_1`.
+
+| Part | Required | Notes |
+|---|---:|---|
+| `face` | Yes | Main face region used as the primary anchor. |
+| `eyewhite_l`, `eyewhite_r` | Yes | Eye masks / whites for left and right eyes. |
+| `irides_l`, `irides_r` | Yes | Iris layers clipped by the eyewhite stencil. |
+| `eyelash_l`, `eyelash_r` | Yes | Eye-open eyelash layers. |
+| `eye_close_l`, `eye_close_r` | Optional | Improves blink shape when present. |
+| `mouth_open`, `mouth_close` | Yes | Cross-faded and deformed by audio level. |
+| `front hair`, `front hair_1`, ... | Optional | Strand data is used for hair physics. |
+| `back hair` | Optional | Can participate in hair physics when detected. |
+| `eyebrow_l`, `eyebrow_r` | Optional | Follows eye/head deformation. |
+| `nose`, `ears`, `neck`, `topwear`, `bottomwear`, `handwear`, `headwear` | Optional | Rendered and grouped into head/body motion when present. |
 
 ## PSDTool notation support
 
@@ -90,6 +136,19 @@ It warns once in the console when a loaded PSD uses unsupported features.
 
 Group visibility still nests correctly: a node is visible only when its own
 visibility and all ancestor group visibility states are visible.
+
+Motion mode has a separate auto-rig path. It is intentionally naming-driven and
+falls back to static mode when required anchors or required part names are not
+usable. The selected mode and rejection reason are shown in **Settings ->
+Visual**.
+
+## Credits
+
+- Anime2.5DRig-compatible auto-rigging is based on
+  [Anime2.5DRig](https://github.com/852wa/Anime2.5DRig) by 852wa (hakoniwa),
+  MIT License. The vendored files live in `src/vendor/anime25drig/`.
+- The bundled `public/avatar/sample.psd` is generated from this repository's
+  PNGTuber sample images and is safe to ship with this example.
 
 ## Stream comments and Screen Vision
 

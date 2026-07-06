@@ -12,6 +12,13 @@ import {
   createAnime25RigAvatar,
   type Anime25RigAvatar,
 } from '../lib/rig/anime25Renderer';
+import {
+  AVATAR_VIEW_WHEEL_STEP,
+  calculateCenteredZoomTransform,
+  clampAvatarViewScale,
+  sanitizeAvatarViewTransform,
+  type AvatarViewBounds,
+} from '../lib/avatarViewTransform';
 import type { AvatarViewTransform } from '../types/settings';
 
 interface AvatarPanelProps {
@@ -25,51 +32,11 @@ interface AvatarPanelProps {
   onAvatarViewTransformChange: (transform: AvatarViewTransform) => void;
 }
 
-const AVATAR_VIEW_MIN_SCALE = 0.2;
-const AVATAR_VIEW_MAX_SCALE = 3;
-const AVATAR_VIEW_MAX_OFFSET = 2_000;
-const AVATAR_VIEW_WHEEL_STEP = 0.08;
 const AVATAR_VIEW_COMMIT_DELAY_MS = 180;
-const AVATAR_VIEW_MIN_VISIBLE_PX = 64;
 const RMS_CEILING = 0.12;
-
-interface AvatarViewBounds {
-  width: number;
-  height: number;
-}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
-}
-
-function sanitizeAvatarViewTransform(
-  transform: AvatarViewTransform,
-  bounds?: AvatarViewBounds,
-): AvatarViewTransform {
-  const scale = clamp(
-    transform.scale || 1,
-    AVATAR_VIEW_MIN_SCALE,
-    AVATAR_VIEW_MAX_SCALE,
-  );
-  const maxX = bounds
-    ? Math.max(
-        0,
-        (bounds.width * scale + bounds.width) / 2 - AVATAR_VIEW_MIN_VISIBLE_PX,
-      )
-    : AVATAR_VIEW_MAX_OFFSET;
-  const maxY = bounds
-    ? Math.max(
-        0,
-        (bounds.height * scale + bounds.height) / 2 -
-          AVATAR_VIEW_MIN_VISIBLE_PX,
-      )
-    : AVATAR_VIEW_MAX_OFFSET;
-
-  return {
-    x: clamp(transform.x || 0, -maxX, maxX),
-    y: clamp(transform.y || 0, -maxY, maxY),
-    scale,
-  };
 }
 
 function getAvatarViewBounds(element: HTMLElement): AvatarViewBounds {
@@ -77,21 +44,6 @@ function getAvatarViewBounds(element: HTMLElement): AvatarViewBounds {
     width: element.offsetWidth || 1,
     height: element.offsetHeight || 1,
   };
-}
-
-function calculateCenteredZoomTransform(
-  transform: AvatarViewTransform,
-  nextScale: number,
-  bounds: AvatarViewBounds,
-): AvatarViewTransform {
-  return sanitizeAvatarViewTransform(
-    {
-      x: transform.x,
-      y: transform.y,
-      scale: nextScale,
-    },
-    bounds,
-  );
 }
 
 function avatarViewTransformKey(transform: AvatarViewTransform): string {
@@ -107,6 +59,7 @@ function AvatarViewLayer({
   onTransformChange: (transform: AvatarViewTransform) => void;
   children: ReactNode;
 }) {
+  const layerRef = useRef<HTMLDivElement | null>(null);
   const [localTransform, setLocalTransform] = useState(() =>
     sanitizeAvatarViewTransform(transform),
   );
@@ -147,6 +100,35 @@ function AvatarViewLayer({
     [commitTransform],
   );
 
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      event.preventDefault();
+      const delta = -Math.sign(event.deltaY) * AVATAR_VIEW_WHEEL_STEP;
+      const nextScale = clampAvatarViewScale(
+        localTransformRef.current.scale + delta,
+      );
+      const element = layerRef.current;
+      if (!element) return;
+      applyTransform(
+        calculateCenteredZoomTransform(
+          localTransformRef.current,
+          nextScale,
+          getAvatarViewBounds(element),
+        ),
+      );
+    },
+    [applyTransform],
+  );
+
+  useEffect(() => {
+    const element = layerRef.current;
+    if (!element) return;
+    element.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      element.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleWheel]);
+
   useEffect(() => {
     return () => {
       if (commitTimerRef.current) {
@@ -157,6 +139,7 @@ function AvatarViewLayer({
 
   return (
     <div
+      ref={layerRef}
       className="avatar-view-layer"
       style={{
         transform: `translate(${localTransform.x}px, ${localTransform.y}px) scale(${localTransform.scale})`,
@@ -198,22 +181,6 @@ function AvatarViewLayer({
       }}
       onDoubleClick={() => {
         applyTransform({ x: 0, y: 0, scale: 1 });
-      }}
-      onWheel={(event) => {
-        event.preventDefault();
-        const delta = -Math.sign(event.deltaY) * AVATAR_VIEW_WHEEL_STEP;
-        const nextScale = clamp(
-          localTransformRef.current.scale + delta,
-          AVATAR_VIEW_MIN_SCALE,
-          AVATAR_VIEW_MAX_SCALE,
-        );
-        applyTransform(
-          calculateCenteredZoomTransform(
-            localTransformRef.current,
-            nextScale,
-            getAvatarViewBounds(event.currentTarget),
-          ),
-        );
       }}
     >
       {children}

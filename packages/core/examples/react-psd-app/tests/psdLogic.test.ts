@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { autoDetectRoleBindings } from '../src/lib/psdBinding';
 import {
+  calculateCenteredZoomTransform,
+  sanitizeAvatarViewTransform,
+} from '../src/lib/avatarViewTransform';
+import {
   getPsdNodeOptions,
   type PsdModel,
   type PsdModelNode,
@@ -274,5 +278,26 @@ describe('Anime2.5DRig detection helpers', () => {
     );
 
     expect(summary.missingRequiredParts).toEqual([]);
+  });
+});
+
+describe('PSD avatar view transform helpers', () => {
+  it('zooms around the avatar center without changing x/y', () => {
+    expect(
+      calculateCenteredZoomTransform({ x: 120, y: -80, scale: 1 }, 1.4, {
+        width: 480,
+        height: 480,
+      }),
+    ).toEqual({ x: 120, y: -80, scale: 1.4 });
+  });
+
+  it('clamps unbounded avatar offsets to a recoverable range', () => {
+    expect(
+      sanitizeAvatarViewTransform({
+        x: 10_000,
+        y: -10_000,
+        scale: 10,
+      }),
+    ).toEqual({ x: 2_000, y: -2_000, scale: 3 });
   });
 });

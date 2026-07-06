@@ -4,9 +4,14 @@ import type { ChatMessage } from '../types/chat';
 interface ChatLogProps {
   messages: ChatMessage[];
   partialResponse: string;
+  hideEmptyState?: boolean;
 }
 
-export function ChatLog({ messages, partialResponse }: ChatLogProps) {
+export function ChatLog({
+  messages,
+  partialResponse,
+  hideEmptyState = false,
+}: ChatLogProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -15,7 +20,7 @@ export function ChatLog({ messages, partialResponse }: ChatLogProps) {
 
   return (
     <div className="chat-log">
-      {messages.length === 0 && !partialResponse && (
+      {messages.length === 0 && !partialResponse && !hideEmptyState && (
         <div className="chat-empty">メッセージを送信してください</div>
       )}
       {messages.map((msg) => (
