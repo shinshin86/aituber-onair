@@ -9,13 +9,15 @@
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview",
-    "generate:sample-psd": "node scripts/generate-sample-psd.mjs"
+    "generate:sample-psd": "node scripts/generate-sample-psd.mjs",
+    "rig:smoke": "node scripts/rig-smoke.mjs"
   },
   "dependencies": {
     "@aituber-onair/comment-intelligence": "../../../comment-intelligence",
     "@aituber-onair/core": "../..",
     "@aituber-onair/manneri": "../../../manneri",
     "@webtoon/psd": "^0.4.0",
+    "ag-psd": "^31.0.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
@@ -25,7 +27,6 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
-    "ag-psd": "^31.0.2",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

@@ -5,6 +5,7 @@ import {
   type PsdModel,
   type PsdModelNode,
 } from '../src/lib/psdModel';
+import { summarizeAnime25Rig } from '../src/lib/rig/anime25Rig';
 import { getComposedOpacityForNode } from '../src/lib/psdRenderer';
 import { getInitialVisibility } from '../src/lib/psdVisibility';
 
@@ -202,5 +203,50 @@ describe('PSD renderer helpers', () => {
     expect(getComposedOpacityForNode(testModel, 'group/layer')).toBeCloseTo(
       (128 / 255) * (128 / 255),
     );
+  });
+});
+
+describe('Anime2.5DRig detection helpers', () => {
+  it('summarizes rig parts, anchors, and strands', () => {
+    const summary = summarizeAnime25Rig(
+      {
+        canvas: { w: 512, h: 512 },
+        layers: [
+          { name: 'face' },
+          { name: 'eyewhite_l' },
+          { name: 'eyewhite_r' },
+          { name: 'irides_l' },
+          { name: 'irides_r' },
+          { name: 'eyelash_l' },
+          { name: 'eyelash_r' },
+          { name: 'eye_close_l' },
+          { name: 'eye_close_r' },
+          { name: 'mouth_open' },
+          { name: 'mouth_close' },
+          {
+            name: 'front hair_1',
+            strands: [
+              { x: 1, rootY: 2, tipY: 3 },
+              { x: 4, rootY: 5, tipY: 6 },
+            ],
+          },
+        ],
+        anchors: { face: {}, eyeL: {}, eyeR: {}, mouth: {} },
+        warnings: [],
+      },
+      { baseName: (name) => name.replace(/_\d+$/, '') },
+      { noisy: 1, layers: 12 },
+    );
+
+    expect(summary).toMatchObject({
+      canvasWidth: 512,
+      canvasHeight: 512,
+      layerCount: 12,
+      anchorCount: 4,
+      strandCount: 2,
+      missingRequiredParts: [],
+      preprocessed: { noisy: 1, layers: 12 },
+    });
+    expect(summary.partsFound).toContain('front hair');
   });
 });

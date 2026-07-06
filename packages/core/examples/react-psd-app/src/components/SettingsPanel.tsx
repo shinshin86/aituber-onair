@@ -2369,20 +2369,24 @@ export function SettingsPanel({
                 <span className="settings-file-status">
                   {psdAvatar.loading
                     ? '読み込み中'
-                    : psdAvatar.model
-                      ? '設定済み'
+                    : psdAvatar.source
+                      ? psdAvatar.mode === 'motion'
+                        ? 'Motion (auto-rig)'
+                        : 'Static (PSDTool)'
                       : '未設定'}
                 </span>
-                {psdAvatar.model && (
+                {psdAvatar.source && (
                   <>
-                    <button
-                      type="button"
-                      className="settings-clear-button"
-                      onClick={psdAvatar.resetCurrentSettings}
-                      disabled={disabled}
-                    >
-                      設定をリセット
-                    </button>
+                    {psdAvatar.mode === 'static' && (
+                      <button
+                        type="button"
+                        className="settings-clear-button"
+                        onClick={psdAvatar.resetCurrentSettings}
+                        disabled={disabled}
+                      >
+                        設定をリセット
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="settings-clear-button"
@@ -2398,6 +2402,13 @@ export function SettingsPanel({
                 PSD file data is kept in memory only. Visibility and role
                 settings are restored when selecting the same file again.
               </p>
+              {psdAvatar.mode === 'motion' && psdAvatar.rig?.summary && (
+                <p className="settings-note">
+                  Auto-rig detected: {psdAvatar.rig.summary.layerCount} parts,{' '}
+                  {psdAvatar.rig.summary.anchorCount} anchors,{' '}
+                  {psdAvatar.rig.summary.strandCount} strands.
+                </p>
+              )}
               {psdAvatar.error && (
                 <p className="settings-error">{psdAvatar.error}</p>
               )}
@@ -2405,7 +2416,10 @@ export function SettingsPanel({
 
             <div className="settings-field">
               <label>Layer tree</label>
-              <LayerTreePanel psdAvatar={psdAvatar} disabled={disabled} />
+              <LayerTreePanel
+                psdAvatar={psdAvatar}
+                disabled={disabled || psdAvatar.mode === 'motion'}
+              />
             </div>
 
             <div className="settings-field">
@@ -2416,7 +2430,11 @@ export function SettingsPanel({
                     <span>{getRoleLabel(role)}</span>
                     <select
                       value={psdAvatar.roles[role][0] || ''}
-                      disabled={disabled || !psdAvatar.model}
+                      disabled={
+                        disabled ||
+                        !psdAvatar.model ||
+                        psdAvatar.mode === 'motion'
+                      }
                       onChange={(event) =>
                         psdAvatar.setRoleBinding(
                           role,

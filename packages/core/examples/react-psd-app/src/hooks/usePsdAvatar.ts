@@ -7,6 +7,10 @@ import {
 } from '../lib/psdModel';
 import { autoDetectRoleBindings, mergeRoleBindings } from '../lib/psdBinding';
 import {
+  detectAnime25RigFromBuffer,
+  type Anime25RigDetection,
+} from '../lib/rig/anime25Rig';
+import {
   getInitialVisibility,
   setNodeVisible,
   type PsdRole,
@@ -30,7 +34,9 @@ export interface PsdSourceInfo {
 }
 
 export interface PsdAvatarController {
+  mode: 'static' | 'motion';
   model: PsdModel | null;
+  rig: Anime25RigDetection | null;
   source: PsdSourceInfo | null;
   visibility: PsdVisibilityOverrides;
   roles: PsdRoleBindings;
@@ -63,7 +69,9 @@ function sourceKey(name: string, size: number) {
 }
 
 export function usePsdAvatar(): PsdAvatarController {
+  const [mode, setMode] = useState<'static' | 'motion'>('static');
   const [model, setModel] = useState<PsdModel | null>(null);
+  const [rig, setRig] = useState<Anime25RigDetection | null>(null);
   const [source, setSource] = useState<PsdSourceInfo | null>(null);
   const [visibility, setVisibility] = useState<PsdVisibilityOverrides>({});
   const [roles, setRoles] = useState<PsdRoleBindings>({
@@ -86,11 +94,31 @@ export function usePsdAvatar(): PsdAvatarController {
     [],
   );
 
+  const applyMotionRig = useCallback(
+    (nextRig: Anime25RigDetection, nextSource: PsdSourceInfo) => {
+      replaceModel(null, nextSource);
+      setMode('motion');
+      setRig(nextRig);
+      setVisibility({});
+      setRoles({
+        mouthOpen: [],
+        mouthClosed: [],
+        eyesOpen: [],
+        eyesClosed: [],
+      });
+      setError('');
+      console.info('Anime2.5DRig motion mode selected:', nextRig.summary);
+    },
+    [replaceModel],
+  );
+
   const applyLoadedModel = useCallback(
     (nextModel: PsdModel, nextSource: PsdSourceInfo) => {
       const detectedRoles = autoDetectRoleBindings(nextModel);
       const stored = readStore()[nextSource.key];
       replaceModel(nextModel, nextSource);
+      setMode('static');
+      setRig(null);
       setVisibility(stored?.visibility || getInitialVisibility(nextModel));
       setRoles(mergeRoleBindings(detectedRoles, stored?.roles));
       setError('');
@@ -111,6 +139,19 @@ export function usePsdAvatar(): PsdAvatarController {
       setLoading(true);
       setError('');
       try {
+        const rigDetection = await detectAnime25RigFromBuffer(buffer);
+        if (rigDetection.usable) {
+          applyMotionRig(rigDetection, nextSource);
+          return;
+        }
+
+        if (rigDetection.reason) {
+          console.info(
+            `PSD static mode selected for ${nextSource.name}:`,
+            rigDetection.reason,
+          );
+        }
+
         const nextModel = await parsePsdModel(buffer);
         applyLoadedModel(nextModel, nextSource);
       } catch (loadError) {
@@ -124,7 +165,7 @@ export function usePsdAvatar(): PsdAvatarController {
         setLoading(false);
       }
     },
-    [applyLoadedModel],
+    [applyLoadedModel, applyMotionRig],
   );
 
   const loadFile = useCallback(
@@ -142,6 +183,8 @@ export function usePsdAvatar(): PsdAvatarController {
 
   const clearModel = useCallback(() => {
     replaceModel(null, null);
+    setMode('static');
+    setRig(null);
     setVisibility({});
     setRoles({
       mouthOpen: [],
@@ -210,7 +253,9 @@ export function usePsdAvatar(): PsdAvatarController {
 
   return useMemo(
     () => ({
+      mode,
       model,
+      rig,
       source,
       visibility,
       roles,
@@ -227,8 +272,10 @@ export function usePsdAvatar(): PsdAvatarController {
       error,
       loadFile,
       loading,
+      mode,
       model,
       resetCurrentSettings,
+      rig,
       roles,
       setLayerVisible,
       setRoleBinding,
