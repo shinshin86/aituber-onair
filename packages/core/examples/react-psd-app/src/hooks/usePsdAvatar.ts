@@ -113,12 +113,16 @@ export function usePsdAvatar(): PsdAvatarController {
   );
 
   const applyLoadedModel = useCallback(
-    (nextModel: PsdModel, nextSource: PsdSourceInfo) => {
+    (
+      nextModel: PsdModel,
+      nextSource: PsdSourceInfo,
+      rigDetection: Anime25RigDetection | null = null,
+    ) => {
       const detectedRoles = autoDetectRoleBindings(nextModel);
       const stored = readStore()[nextSource.key];
       replaceModel(nextModel, nextSource);
       setMode('static');
-      setRig(null);
+      setRig(rigDetection);
       setVisibility(stored?.visibility || getInitialVisibility(nextModel));
       setRoles(mergeRoleBindings(detectedRoles, stored?.roles));
       setError('');
@@ -153,7 +157,7 @@ export function usePsdAvatar(): PsdAvatarController {
         }
 
         const nextModel = await parsePsdModel(buffer);
-        applyLoadedModel(nextModel, nextSource);
+        applyLoadedModel(nextModel, nextSource, rigDetection);
       } catch (loadError) {
         const message =
           loadError instanceof Error

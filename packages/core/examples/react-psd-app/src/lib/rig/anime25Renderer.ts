@@ -120,6 +120,7 @@ interface MotionParams {
 export interface Anime25RigAvatar {
   setMouthOpen: (value: number) => void;
   setIntensity: (value: number) => void;
+  setMotionEnabled: (value: boolean) => void;
   getAverageFps: () => number;
   dispose: () => void;
 }
@@ -509,6 +510,7 @@ export function createAnime25RigAvatar(
   let nextBlink = last + 1800;
   let nextRandom = 0;
   let intensity = 1;
+  let motionEnabled = true;
   let mouthInput = 0;
   let averageFps = 0;
   let fpsFrames = 0;
@@ -572,7 +574,9 @@ export function createAnime25RigAvatar(
           const tuck = smooth((0.32 - eyeOpen) / 0.32);
           y = eyeAnchor.closeY + (y - eyeAnchor.closeY) * (1 - 0.8 * tuck);
         } else {
-          y = eyeAnchor.closeY + (y - eyeAnchor.closeY) * (1 - 0.85 * (1 - eyeOpen));
+          y =
+            eyeAnchor.closeY +
+            (y - eyeAnchor.closeY) * (1 - 0.85 * (1 - eyeOpen));
         }
       }
 
@@ -586,7 +590,9 @@ export function createAnime25RigAvatar(
       }
 
       if (layer.fade === 'mouthOpen') {
-        y = anchors.mouth.y0 + (y - anchors.mouth.y0) * (0.5 + 0.5 * params.mouthOpen);
+        y =
+          anchors.mouth.y0 +
+          (y - anchors.mouth.y0) * (0.5 + 0.5 * params.mouthOpen);
         const q = Math.abs(x - anchors.mouth.cx) / (mouthHalfWidth + 4);
         y -= params.mouthForm * 6 * faceScale * (q ** 1.5 - 0.35);
       }
@@ -680,7 +686,9 @@ export function createAnime25RigAvatar(
       }
 
       if (strandCount && layer.sw && layer.su && layer.spr) {
-        const u = isFrontHair ? Math.min(1, layer.su[vertex] * 1.6) : layer.su[vertex];
+        const u = isFrontHair
+          ? Math.min(1, layer.su[vertex] * 1.6)
+          : layer.su[vertex];
         const amplitude =
           u ** (isFrontHair ? 1.8 : 2.1) *
           (isFrontHair ? params.fhAmp : params.physAmp) *
@@ -691,7 +699,9 @@ export function createAnime25RigAvatar(
           const weight = layer.sw[vertex * strandCount + strand];
           if (weight < 0.001) continue;
           const spring = layer.spr[strand];
-          dx += weight * (spring.stiff.dx * (1 - softMix) + spring.soft.dx * softMix);
+          dx +=
+            weight *
+            (spring.stiff.dx * (1 - softMix) + spring.soft.dx * softMix);
         }
         x += dx * amplitude;
         y += Math.abs(dx) * amplitude * 0.12;
@@ -721,19 +731,20 @@ export function createAnime25RigAvatar(
     last = now;
     const time = now / 1000;
     Object.assign(target, DEFAULT_PARAMS);
+    const activeIntensity = motionEnabled ? intensity : 0;
 
     target.angleX +=
-      intensity *
+      activeIntensity *
       IDLE_SWAY_SCALE *
       (0.13 * Math.sin(time * 0.42) + 0.05 * Math.sin(time * 1.13));
     target.angleY +=
-      intensity * IDLE_SWAY_SCALE * 0.08 * Math.sin(time * 0.31 + 1.7);
+      activeIntensity * IDLE_SWAY_SCALE * 0.08 * Math.sin(time * 0.31 + 1.7);
     target.angleZ +=
-      intensity * IDLE_SWAY_SCALE * 0.07 * Math.sin(time * 0.23 + 0.5);
+      activeIntensity * IDLE_SWAY_SCALE * 0.07 * Math.sin(time * 0.23 + 0.5);
     target.body +=
-      intensity * IDLE_SWAY_SCALE * 0.1 * Math.sin(time * 0.19 + 2.1);
+      activeIntensity * IDLE_SWAY_SCALE * 0.1 * Math.sin(time * 0.19 + 2.1);
 
-    if (now > nextRandom) {
+    if (motionEnabled && now > nextRandom) {
       nextRandom = now + 1400 + Math.random() * 2600;
       randomTarget.ax = (Math.random() * 2 - 1) * 0.75;
       randomTarget.ay = (Math.random() * 2 - 1) * 0.55;
@@ -743,20 +754,32 @@ export function createAnime25RigAvatar(
       randomTarget.ey = (Math.random() * 2 - 1) * 0.5;
     }
 
-    target.angleX = clamp(target.angleX + randomTarget.ax * intensity, -1, 1);
-    target.angleY = clamp(target.angleY + randomTarget.ay * intensity, -1, 1);
-    target.angleZ = clamp(target.angleZ + randomTarget.az * intensity, -1, 1);
-    target.body = clamp(target.body + randomTarget.bd * intensity, -1, 1);
-    target.eyeX = clamp(randomTarget.ex * intensity, -1, 1);
-    target.eyeY = clamp(randomTarget.ey * intensity, -1, 1);
+    target.angleX = clamp(
+      target.angleX + randomTarget.ax * activeIntensity,
+      -1,
+      1,
+    );
+    target.angleY = clamp(
+      target.angleY + randomTarget.ay * activeIntensity,
+      -1,
+      1,
+    );
+    target.angleZ = clamp(
+      target.angleZ + randomTarget.az * activeIntensity,
+      -1,
+      1,
+    );
+    target.body = clamp(target.body + randomTarget.bd * activeIntensity, -1, 1);
+    target.eyeX = clamp(randomTarget.ex * activeIntensity, -1, 1);
+    target.eyeY = clamp(randomTarget.ey * activeIntensity, -1, 1);
     target.mouthOpen = clamp(mouthInput, 0, 1);
 
-    if (blinkT < 0 && now > nextBlink) {
+    if (motionEnabled && blinkT < 0 && now > nextBlink) {
       blinkT = 0;
       nextBlink = now + 1600 + Math.random() * 3800;
       if (Math.random() < 0.18) nextBlink = now + 280;
     }
-    if (blinkT >= 0) {
+    if (motionEnabled && blinkT >= 0) {
       blinkT += dt;
       let value = 1;
       if (blinkT < 0.08) value = 1 - blinkT / 0.08;
@@ -772,23 +795,25 @@ export function createAnime25RigAvatar(
     }
 
     const params = { ...current };
-    params.physAmp *= intensity;
-    params.soft *= intensity;
-    params.fhAmp *= intensity;
-    params.fhSoft *= intensity;
+    params.physAmp *= activeIntensity;
+    params.soft *= activeIntensity;
+    params.fhAmp *= activeIntensity;
+    params.fhSoft *= activeIntensity;
     params.breath =
-      intensity * (0.5 + 0.5 * Math.sin((time * 2 * Math.PI) / 3.4));
+      activeIntensity * (0.5 + 0.5 * Math.sin((time * 2 * Math.PI) / 3.4));
     params.breathHead =
-      intensity * (0.5 + 0.5 * Math.sin((time * 2 * Math.PI) / 3.4 - 0.6));
+      activeIntensity *
+      (0.5 + 0.5 * Math.sin((time * 2 * Math.PI) / 3.4 - 0.6));
 
     const headDX =
-      (params.angleX * 14 + params.angleZ * 0.07 * (neckPivot.cy - faceCenter.y)) *
+      (params.angleX * 14 +
+        params.angleZ * 0.07 * (neckPivot.cy - faceCenter.y)) *
       faceScale;
     for (const layer of layers) {
       if (!layer.spr) continue;
       for (const spring of layer.spr) {
         const wind =
-          intensity *
+          activeIntensity *
           HAIR_WIND_SCALE *
           (1.8 * Math.sin(time * 0.8 + spring.phase) +
             Math.sin(time * 1.9 + spring.phase * 2.3));
@@ -802,7 +827,8 @@ export function createAnime25RigAvatar(
         spring.stiff.dx = -(spring.stiff.x - targetX) * 2.2;
         kk = 16;
         damping = 1.3;
-        acceleration = -kk * (spring.soft.x - targetX) - damping * spring.soft.v;
+        acceleration =
+          -kk * (spring.soft.x - targetX) - damping * spring.soft.v;
         spring.soft.v += acceleration * dt;
         spring.soft.x += spring.soft.v * dt;
         spring.soft.dx = -(spring.soft.x - targetX) * 3;
@@ -823,7 +849,10 @@ export function createAnime25RigAvatar(
     gl.uniform2f(locRes, canvasWidth, canvasHeight);
     for (const layer of layers) {
       const alpha = fadeAlpha(layer, params, hasEyeClose);
-      if (alpha < 0.004 && !(layer.fade === 'eyeOpen' && layer.name.startsWith('eyewhite'))) {
+      if (
+        alpha < 0.004 &&
+        !(layer.fade === 'eyeOpen' && layer.name.startsWith('eyewhite'))
+      ) {
         continue;
       }
       deform(layer, params);
@@ -871,6 +900,18 @@ export function createAnime25RigAvatar(
     },
     setIntensity(value: number) {
       intensity = clamp(value, 0, 2);
+    },
+    setMotionEnabled(value: boolean) {
+      motionEnabled = value;
+      if (!value) {
+        blinkT = -1;
+        randomTarget.ax = 0;
+        randomTarget.ay = 0;
+        randomTarget.az = 0;
+        randomTarget.bd = 0;
+        randomTarget.ex = 0;
+        randomTarget.ey = 0;
+      }
     },
     getAverageFps() {
       return averageFps;

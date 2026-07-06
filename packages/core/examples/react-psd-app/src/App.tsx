@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -12,7 +12,8 @@ import { useYoutubeComments } from './hooks/useYoutubeComments';
 import './styles/app.css';
 
 export default function App() {
-  const { play, stop, mouthLevel, isSpeaking } = useAudioLipsync();
+  const { play, stop, mouthLevel, isSpeaking, smoothedValue } =
+    useAudioLipsync();
   const settingsHook = useSettings();
   const psdAvatar = usePsdAvatar();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -47,6 +48,18 @@ export default function App() {
     onDeviceIdChange: settingsHook.updateScreenVisionDeviceId,
   });
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
+  const avatarViewTransform = useMemo(
+    () => ({
+      x: settingsHook.settings.visual.avatarViewX,
+      y: settingsHook.settings.visual.avatarViewY,
+      scale: settingsHook.settings.visual.avatarViewScale,
+    }),
+    [
+      settingsHook.settings.visual.avatarViewScale,
+      settingsHook.settings.visual.avatarViewX,
+      settingsHook.settings.visual.avatarViewY,
+    ],
+  );
 
   const handleSend = useCallback(
     (text: string) => {
@@ -182,9 +195,12 @@ export default function App() {
         onSend={handleSend}
         mouthLevel={mouthLevel}
         isSpeaking={isSpeaking}
+        smoothedValue={smoothedValue}
         backgroundImageUrl={backgroundImageUrl}
         psdAvatar={psdAvatar}
         visual={settingsHook.settings.visual}
+        avatarViewTransform={avatarViewTransform}
+        onAvatarViewTransformChange={settingsHook.updateVisualAvatarView}
         onToggleSettings={() => setSettingsOpen((v) => !v)}
       />
 

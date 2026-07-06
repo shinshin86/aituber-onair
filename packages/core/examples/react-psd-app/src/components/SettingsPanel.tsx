@@ -276,6 +276,9 @@ export function SettingsPanel({
   updateVisualBackgroundMode,
   updateVisualLayoutMode,
   updateVisualShowInputInBroadcast,
+  resetVisualAvatarView,
+  updateVisualMotionEnabled,
+  updateVisualMotionIntensity,
   updateScreenVisionDeviceId,
   updateScreenVisionPrompt,
   updateScreenVisionAutoIntervalMs,
@@ -338,6 +341,9 @@ export function SettingsPanel({
   const geminiNano = useGeminiNanoStatus(
     settings.llm.provider === 'gemini-nano',
   );
+  const isPsdMotionMode = psdAvatar.mode === 'motion';
+  const psdMotionDecisionReason =
+    psdAvatar.rig && !psdAvatar.rig.usable ? psdAvatar.rig.reason : '';
 
   const [voicevoxSpeakers, setVoicevoxSpeakers] = useState<VoiceSpeaker[]>([]);
   const [aivisSpeakers, setAivisSpeakers] = useState<VoiceSpeaker[]>([]);
@@ -2300,6 +2306,44 @@ export function SettingsPanel({
               <span>ソロ配信で入力欄を表示</span>
             </label>
 
+            <label className="settings-checkbox-field">
+              <input
+                type="checkbox"
+                checked={settings.visual.motionEnabled}
+                onChange={(e) => updateVisualMotionEnabled(e.target.checked)}
+                disabled={disabled}
+              />
+              <span>PSD motion</span>
+            </label>
+
+            <div className="settings-field">
+              <label htmlFor="motion-intensity">Motion intensity</label>
+              <div className="settings-range-row">
+                <input
+                  id="motion-intensity"
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={settings.visual.motionIntensity}
+                  onChange={(e) =>
+                    updateVisualMotionIntensity(Number(e.target.value))
+                  }
+                  disabled={disabled || !settings.visual.motionEnabled}
+                />
+                <output>{settings.visual.motionIntensity.toFixed(1)}</output>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="settings-action-button"
+              onClick={resetVisualAvatarView}
+              disabled={disabled}
+            >
+              Avatar view reset
+            </button>
+
             <div className="settings-field">
               <label htmlFor="background-image">背景画像</label>
               <div className="settings-file-picker-row">
@@ -2398,15 +2442,21 @@ export function SettingsPanel({
                   </>
                 )}
               </div>
-              <p className="settings-note">
-                PSD file data is kept in memory only. Visibility and role
-                settings are restored when selecting the same file again.
-              </p>
-              {psdAvatar.mode === 'motion' && psdAvatar.rig?.summary && (
+              {isPsdMotionMode && psdAvatar.rig?.summary ? (
                 <p className="settings-note">
                   Auto-rig detected: {psdAvatar.rig.summary.layerCount} parts,{' '}
                   {psdAvatar.rig.summary.anchorCount} anchors,{' '}
                   {psdAvatar.rig.summary.strandCount} strands.
+                </p>
+              ) : (
+                <p className="settings-note">
+                  PSD file data is kept in memory only. Visibility and role
+                  settings are restored when selecting the same file again.
+                </p>
+              )}
+              {psdMotionDecisionReason && (
+                <p className="settings-note">
+                  Motion mode rejected: {psdMotionDecisionReason}
                 </p>
               )}
               {psdAvatar.error && (
@@ -2414,45 +2464,42 @@ export function SettingsPanel({
               )}
             </div>
 
-            <div className="settings-field">
-              <label>Layer tree</label>
-              <LayerTreePanel
-                psdAvatar={psdAvatar}
-                disabled={disabled || psdAvatar.mode === 'motion'}
-              />
-            </div>
+            {!isPsdMotionMode && (
+              <>
+                <div className="settings-field">
+                  <label>Layer tree</label>
+                  <LayerTreePanel psdAvatar={psdAvatar} disabled={disabled} />
+                </div>
 
-            <div className="settings-field">
-              <label>Role assignment</label>
-              <div className="psd-role-grid">
-                {PSD_ROLES.map((role) => (
-                  <label className="settings-sub-field" key={role}>
-                    <span>{getRoleLabel(role)}</span>
-                    <select
-                      value={psdAvatar.roles[role][0] || ''}
-                      disabled={
-                        disabled ||
-                        !psdAvatar.model ||
-                        psdAvatar.mode === 'motion'
-                      }
-                      onChange={(event) =>
-                        psdAvatar.setRoleBinding(
-                          role,
-                          event.target.value ? [event.target.value] : [],
-                        )
-                      }
-                    >
-                      <option value="">未設定</option>
-                      {psdLayerOptions.map((option) => (
-                        <option value={option.value} key={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ))}
-              </div>
-            </div>
+                <div className="settings-field">
+                  <label>Role assignment</label>
+                  <div className="psd-role-grid">
+                    {PSD_ROLES.map((role) => (
+                      <label className="settings-sub-field" key={role}>
+                        <span>{getRoleLabel(role)}</span>
+                        <select
+                          value={psdAvatar.roles[role][0] || ''}
+                          disabled={disabled || !psdAvatar.model}
+                          onChange={(event) =>
+                            psdAvatar.setRoleBinding(
+                              role,
+                              event.target.value ? [event.target.value] : [],
+                            )
+                          }
+                        >
+                          <option value="">未設定</option>
+                          {psdLayerOptions.map((option) => (
+                            <option value={option.value} key={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

@@ -170,6 +170,24 @@ body {
   border-color: #e94560;
 }
 
+.settings-range-row {
+  display: grid;
+  grid-template-columns: 1fr 40px;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-range-row input[type="range"] {
+  width: 100%;
+  accent-color: #e94560;
+}
+
+.settings-range-row output {
+  color: #d3dde8;
+  font-size: 0.76rem;
+  text-align: right;
+}
+
 .settings-file-picker-row {
   display: flex;
   align-items: center;
@@ -436,6 +454,10 @@ body {
   z-index: 2;
 }
 
+.avatar-background .avatar-view-layer {
+  pointer-events: auto;
+}
+
 .avatar-container {
   width: 480px;
   height: 480px;
@@ -443,6 +465,22 @@ body {
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+.avatar-view-layer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.avatar-view-layer:active {
+  cursor: grabbing;
 }
 
 .avatar-image {

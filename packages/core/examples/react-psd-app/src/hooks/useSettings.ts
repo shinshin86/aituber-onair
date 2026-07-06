@@ -8,6 +8,7 @@ import {
 } from '@aituber-onair/core';
 import type {
   AppSettings,
+  AvatarViewTransform,
   ChatProviderOption,
   StreamingPlatformOption,
   TTSEngineOption,
@@ -197,6 +198,11 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      avatarViewX: 0,
+      avatarViewY: 0,
+      avatarViewScale: 1,
+      motionEnabled: true,
+      motionIntensity: 1,
     },
     screenVision: {
       deviceId: '',
@@ -877,6 +883,51 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualAvatarView = useCallback(
+    (transform: AvatarViewTransform) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          avatarViewX: transform.x,
+          avatarViewY: transform.y,
+          avatarViewScale: transform.scale,
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualAvatarView = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      visual: {
+        ...prev.visual,
+        avatarViewX: 0,
+        avatarViewY: 0,
+        avatarViewScale: 1,
+      },
+    }));
+  }, []);
+
+  const updateVisualMotionEnabled = useCallback((motionEnabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      visual: { ...prev.visual, motionEnabled },
+    }));
+  }, []);
+
+  const updateVisualMotionIntensity = useCallback((motionIntensity: number) => {
+    const normalized =
+      typeof motionIntensity === 'number' && Number.isFinite(motionIntensity)
+        ? Math.max(0, Math.min(2, motionIntensity))
+        : 1;
+    setSettings((prev) => ({
+      ...prev,
+      visual: { ...prev.visual, motionIntensity: normalized },
+    }));
+  }, []);
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1230,6 +1281,10 @@ export function useSettings() {
     updateVisualBackgroundMode,
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
+    updateVisualAvatarView,
+    resetVisualAvatarView,
+    updateVisualMotionEnabled,
+    updateVisualMotionIntensity,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

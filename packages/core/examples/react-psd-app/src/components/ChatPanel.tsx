@@ -1,5 +1,5 @@
 import type { ChatMessage } from '../types/chat';
-import type { VisualSettings } from '../types/settings';
+import type { AvatarViewTransform, VisualSettings } from '../types/settings';
 import type { PsdAvatarController } from '../hooks/usePsdAvatar';
 import { AvatarBackground } from './AvatarPanel';
 import { ChatLog } from './ChatLog';
@@ -12,9 +12,12 @@ interface ChatPanelProps {
   onSend: (text: string) => void;
   mouthLevel: number;
   isSpeaking: boolean;
+  smoothedValue: number;
   backgroundImageUrl?: string | null;
   psdAvatar: PsdAvatarController;
   visual: VisualSettings;
+  avatarViewTransform: AvatarViewTransform;
+  onAvatarViewTransformChange: (transform: AvatarViewTransform) => void;
   onToggleSettings: () => void;
 }
 
@@ -25,9 +28,12 @@ export function ChatPanel({
   onSend,
   mouthLevel,
   isSpeaking,
+  smoothedValue,
   backgroundImageUrl,
   psdAvatar,
   visual,
+  avatarViewTransform,
+  onAvatarViewTransformChange,
   onToggleSettings,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
@@ -66,7 +72,12 @@ export function ChatPanel({
       <AvatarBackground
         mouthLevel={mouthLevel}
         isSpeaking={isSpeaking}
+        smoothedValue={smoothedValue}
         psdAvatar={psdAvatar}
+        avatarViewTransform={avatarViewTransform}
+        motionEnabled={visual.motionEnabled}
+        motionIntensity={visual.motionIntensity}
+        onAvatarViewTransformChange={onAvatarViewTransformChange}
       />
       {isBroadcast ? (
         broadcastCaption && (
