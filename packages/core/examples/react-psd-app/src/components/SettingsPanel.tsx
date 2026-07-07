@@ -292,7 +292,9 @@ function BackgroundImageSection({
     <section className="settings-card-section">
       <h4>背景画像</h4>
       <div className="settings-field">
-        <label htmlFor="background-image">背景画像</label>
+        <label className="settings-visually-hidden" htmlFor="background-image">
+          背景画像
+        </label>
         <div className="settings-file-picker-row">
           <input
             id="background-image"
@@ -354,7 +356,9 @@ function PsdAvatarSection({
     <section className="settings-card-section">
       <h4>PSD avatar</h4>
       <div className="settings-field">
-        <label htmlFor="psd-avatar-file">PSD avatar</label>
+        <label className="settings-visually-hidden" htmlFor="psd-avatar-file">
+          PSD avatar
+        </label>
         <div className="settings-file-picker-row">
           <input
             id="psd-avatar-file"
