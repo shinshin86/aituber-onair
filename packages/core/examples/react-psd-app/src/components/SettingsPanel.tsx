@@ -14,7 +14,7 @@ import type { useScreenVisionController } from '../hooks/useScreenVisionControll
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
 import { PSD_ROLES, getRoleLabel } from '../lib/psdBinding';
-import { getPsdNodeOptions } from '../lib/psdModel';
+import { getPsdNodeOptions, hasPsdToolLayerControls } from '../lib/psdModel';
 
 type SettingsHook = ReturnType<typeof useSettings>;
 type ScreenVisionController = ReturnType<typeof useScreenVisionController>;
@@ -233,6 +233,247 @@ type SectionKey =
   | 'commentIntelligence'
   | 'manneri';
 
+function splitMotionReasons(reason: string): string[] {
+  return reason
+    .split(';')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function toJapaneseMotionReason(reason: string): string {
+  if (reason.startsWith('missing part: ')) {
+    return `不足パーツ: ${reason.slice('missing part: '.length)}`;
+  }
+  if (reason.startsWith('missing anchor: ')) {
+    return `不足アンカー: ${reason.slice('missing anchor: '.length)}`;
+  }
+  if (reason === 'Anime2.5DRig rigger runtime is not loaded.') {
+    return 'Anime2.5DRig ランタイムが読み込まれていません。';
+  }
+  if (reason === 'Failed to detect Anime2.5DRig parts.') {
+    return 'Anime2.5DRig パーツを検出できませんでした。';
+  }
+  return reason;
+}
+
+function MotionDecisionDetails({ reason }: { reason: string }) {
+  const reasons = splitMotionReasons(reason);
+  if (reasons.length === 0) return null;
+
+  return (
+    <div className="settings-motion-status">
+      <p className="settings-note">
+        静的モード: モーション不可（理由 {reasons.length}件）
+      </p>
+      <details className="settings-details">
+        <summary>モーション判定の詳細</summary>
+        <ul>
+          {reasons.map((item) => (
+            <li key={item}>{toJapaneseMotionReason(item)}</li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  );
+}
+
+interface BackgroundImageSectionProps {
+  disabled: boolean;
+  backgroundImageUrl: string | null;
+  onBackgroundImageChange: (file: File | null) => void;
+}
+
+function BackgroundImageSection({
+  disabled,
+  backgroundImageUrl,
+  onBackgroundImageChange,
+}: BackgroundImageSectionProps) {
+  return (
+    <section className="settings-card-section">
+      <h4>背景画像</h4>
+      <div className="settings-field">
+        <label htmlFor="background-image">背景画像</label>
+        <div className="settings-file-picker-row">
+          <input
+            id="background-image"
+            className="settings-file-input-hidden"
+            type="file"
+            accept="image/*"
+            disabled={disabled}
+            onChange={(e) => {
+              onBackgroundImageChange(e.target.files?.[0] ?? null);
+              e.currentTarget.value = '';
+            }}
+          />
+          <label
+            htmlFor="background-image"
+            className={`settings-file-trigger${disabled ? ' is-disabled' : ''}`}
+          >
+            画像を選択
+          </label>
+          <span className="settings-file-hint">PNG / JPG</span>
+        </div>
+        <div className="settings-file-actions">
+          <span className="settings-file-status">
+            {backgroundImageUrl ? '設定済み' : '未設定'}
+          </span>
+          {backgroundImageUrl && (
+            <button
+              type="button"
+              className="settings-clear-button"
+              onClick={() => onBackgroundImageChange(null)}
+              disabled={disabled}
+            >
+              クリア
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+interface PsdAvatarSectionProps {
+  disabled: boolean;
+  psdAvatar: PsdAvatarController;
+  psdLayerOptions: ReturnType<typeof getPsdNodeOptions>;
+  isPsdMotionMode: boolean;
+  psdMotionDecisionReason: string;
+  showPsdToolLayerControls: boolean;
+}
+
+function PsdAvatarSection({
+  disabled,
+  psdAvatar,
+  psdLayerOptions,
+  isPsdMotionMode,
+  psdMotionDecisionReason,
+  showPsdToolLayerControls,
+}: PsdAvatarSectionProps) {
+  return (
+    <section className="settings-card-section">
+      <h4>PSD avatar</h4>
+      <div className="settings-field">
+        <label htmlFor="psd-avatar-file">PSD avatar</label>
+        <div className="settings-file-picker-row">
+          <input
+            id="psd-avatar-file"
+            className="settings-file-input-hidden"
+            type="file"
+            accept=".psd,image/vnd.adobe.photoshop"
+            disabled={disabled || psdAvatar.loading}
+            onChange={(e) => {
+              void psdAvatar.loadFile(e.target.files?.[0] ?? null);
+              e.currentTarget.value = '';
+            }}
+          />
+          <label
+            htmlFor="psd-avatar-file"
+            className={`settings-file-trigger${
+              disabled || psdAvatar.loading ? ' is-disabled' : ''
+            }`}
+          >
+            PSDを選択
+          </label>
+          <span className="settings-file-hint">
+            {psdAvatar.source?.name || 'sample.psd'}
+          </span>
+        </div>
+        <div className="settings-file-actions">
+          <span className="settings-file-status">
+            {psdAvatar.loading
+              ? '読み込み中'
+              : psdAvatar.source
+                ? psdAvatar.mode === 'motion'
+                  ? 'Motion (auto-rig)'
+                  : 'Static (PSDTool)'
+                : '未設定'}
+          </span>
+          {psdAvatar.source && (
+            <>
+              {psdAvatar.mode === 'static' && showPsdToolLayerControls && (
+                <button
+                  type="button"
+                  className="settings-clear-button"
+                  onClick={psdAvatar.resetCurrentSettings}
+                  disabled={disabled}
+                >
+                  設定をリセット
+                </button>
+              )}
+              <button
+                type="button"
+                className="settings-clear-button"
+                onClick={psdAvatar.clearModel}
+                disabled={disabled}
+              >
+                クリア
+              </button>
+            </>
+          )}
+        </div>
+        {isPsdMotionMode && psdAvatar.rig?.summary ? (
+          <p className="settings-note">
+            Auto-rig detected: {psdAvatar.rig.summary.layerCount} parts,{' '}
+            {psdAvatar.rig.summary.anchorCount} anchors,{' '}
+            {psdAvatar.rig.summary.strandCount} strands.
+          </p>
+        ) : (
+          <p className="settings-note">
+            PSD file data is kept in memory only. Visibility and role settings
+            are restored when selecting the same file again.
+          </p>
+        )}
+        <MotionDecisionDetails reason={psdMotionDecisionReason} />
+        {psdAvatar.error && <p className="settings-error">{psdAvatar.error}</p>}
+      </div>
+
+      {!isPsdMotionMode && psdAvatar.model && !showPsdToolLayerControls && (
+        <p className="settings-note">
+          PSDTool形式のレイヤー構造はありません。
+        </p>
+      )}
+
+      {!isPsdMotionMode && showPsdToolLayerControls && (
+        <>
+          <div className="settings-field">
+            <label>Layer tree</label>
+            <LayerTreePanel psdAvatar={psdAvatar} disabled={disabled} />
+          </div>
+
+          <div className="settings-field">
+            <label>Role assignment</label>
+            <div className="psd-role-grid">
+              {PSD_ROLES.map((role) => (
+                <label className="settings-sub-field" key={role}>
+                  <span>{getRoleLabel(role)}</span>
+                  <select
+                    value={psdAvatar.roles[role][0] || ''}
+                    disabled={disabled || !psdAvatar.model}
+                    onChange={(event) =>
+                      psdAvatar.setRoleBinding(
+                        role,
+                        event.target.value ? [event.target.value] : [],
+                      )
+                    }
+                  >
+                    <option value="">未設定</option>
+                    {psdLayerOptions.map((option) => (
+                      <option value={option.value} key={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 export function SettingsPanel({
   settings,
   availableModels,
@@ -345,6 +586,8 @@ export function SettingsPanel({
   const isPsdMotionMode = psdAvatar.mode === 'motion';
   const psdMotionDecisionReason =
     psdAvatar.rig && !psdAvatar.rig.usable ? psdAvatar.rig.reason : '';
+  const showPsdToolLayerControls =
+    !isPsdMotionMode && hasPsdToolLayerControls(psdAvatar.model);
 
   const [voicevoxSpeakers, setVoicevoxSpeakers] = useState<VoiceSpeaker[]>([]);
   const [aivisSpeakers, setAivisSpeakers] = useState<VoiceSpeaker[]>([]);
@@ -2345,162 +2588,20 @@ export function SettingsPanel({
               Avatar view reset
             </button>
 
-            <div className="settings-field">
-              <label htmlFor="background-image">背景画像</label>
-              <div className="settings-file-picker-row">
-                <input
-                  id="background-image"
-                  className="settings-file-input-hidden"
-                  type="file"
-                  accept="image/*"
-                  disabled={disabled}
-                  onChange={(e) => {
-                    onBackgroundImageChange(e.target.files?.[0] ?? null);
-                    e.currentTarget.value = '';
-                  }}
-                />
-                <label
-                  htmlFor="background-image"
-                  className={`settings-file-trigger${disabled ? ' is-disabled' : ''}`}
-                >
-                  画像を選択
-                </label>
-                <span className="settings-file-hint">PNG / JPG</span>
-              </div>
-              <div className="settings-file-actions">
-                <span className="settings-file-status">
-                  {backgroundImageUrl ? '設定済み' : '未設定'}
-                </span>
-                {backgroundImageUrl && (
-                  <button
-                    type="button"
-                    className="settings-clear-button"
-                    onClick={() => onBackgroundImageChange(null)}
-                    disabled={disabled}
-                  >
-                    クリア
-                  </button>
-                )}
-              </div>
-            </div>
+            <BackgroundImageSection
+              disabled={disabled}
+              backgroundImageUrl={backgroundImageUrl}
+              onBackgroundImageChange={onBackgroundImageChange}
+            />
 
-            <div className="settings-field">
-              <label htmlFor="psd-avatar-file">PSD avatar</label>
-              <div className="settings-file-picker-row">
-                <input
-                  id="psd-avatar-file"
-                  className="settings-file-input-hidden"
-                  type="file"
-                  accept=".psd,image/vnd.adobe.photoshop"
-                  disabled={disabled || psdAvatar.loading}
-                  onChange={(e) => {
-                    void psdAvatar.loadFile(e.target.files?.[0] ?? null);
-                    e.currentTarget.value = '';
-                  }}
-                />
-                <label
-                  htmlFor="psd-avatar-file"
-                  className={`settings-file-trigger${
-                    disabled || psdAvatar.loading ? ' is-disabled' : ''
-                  }`}
-                >
-                  PSDを選択
-                </label>
-                <span className="settings-file-hint">
-                  {psdAvatar.source?.name || 'sample.psd'}
-                </span>
-              </div>
-              <div className="settings-file-actions">
-                <span className="settings-file-status">
-                  {psdAvatar.loading
-                    ? '読み込み中'
-                    : psdAvatar.source
-                      ? psdAvatar.mode === 'motion'
-                        ? 'Motion (auto-rig)'
-                        : 'Static (PSDTool)'
-                      : '未設定'}
-                </span>
-                {psdAvatar.source && (
-                  <>
-                    {psdAvatar.mode === 'static' && (
-                      <button
-                        type="button"
-                        className="settings-clear-button"
-                        onClick={psdAvatar.resetCurrentSettings}
-                        disabled={disabled}
-                      >
-                        設定をリセット
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="settings-clear-button"
-                      onClick={psdAvatar.clearModel}
-                      disabled={disabled}
-                    >
-                      クリア
-                    </button>
-                  </>
-                )}
-              </div>
-              {isPsdMotionMode && psdAvatar.rig?.summary ? (
-                <p className="settings-note">
-                  Auto-rig detected: {psdAvatar.rig.summary.layerCount} parts,{' '}
-                  {psdAvatar.rig.summary.anchorCount} anchors,{' '}
-                  {psdAvatar.rig.summary.strandCount} strands.
-                </p>
-              ) : (
-                <p className="settings-note">
-                  PSD file data is kept in memory only. Visibility and role
-                  settings are restored when selecting the same file again.
-                </p>
-              )}
-              {psdMotionDecisionReason && (
-                <p className="settings-note">
-                  Motion mode rejected: {psdMotionDecisionReason}
-                </p>
-              )}
-              {psdAvatar.error && (
-                <p className="settings-error">{psdAvatar.error}</p>
-              )}
-            </div>
-
-            {!isPsdMotionMode && (
-              <>
-                <div className="settings-field">
-                  <label>Layer tree</label>
-                  <LayerTreePanel psdAvatar={psdAvatar} disabled={disabled} />
-                </div>
-
-                <div className="settings-field">
-                  <label>Role assignment</label>
-                  <div className="psd-role-grid">
-                    {PSD_ROLES.map((role) => (
-                      <label className="settings-sub-field" key={role}>
-                        <span>{getRoleLabel(role)}</span>
-                        <select
-                          value={psdAvatar.roles[role][0] || ''}
-                          disabled={disabled || !psdAvatar.model}
-                          onChange={(event) =>
-                            psdAvatar.setRoleBinding(
-                              role,
-                              event.target.value ? [event.target.value] : [],
-                            )
-                          }
-                        >
-                          <option value="">未設定</option>
-                          {psdLayerOptions.map((option) => (
-                            <option value={option.value} key={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
+            <PsdAvatarSection
+              disabled={disabled}
+              psdAvatar={psdAvatar}
+              psdLayerOptions={psdLayerOptions}
+              isPsdMotionMode={isPsdMotionMode}
+              psdMotionDecisionReason={psdMotionDecisionReason}
+              showPsdToolLayerControls={showPsdToolLayerControls}
+            />
           </>
         )}
       </div>

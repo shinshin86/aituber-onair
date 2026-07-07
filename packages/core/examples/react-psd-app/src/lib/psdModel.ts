@@ -275,6 +275,13 @@ export function getPsdNodeOptions(model: PsdModel | null) {
     }));
 }
 
+export function hasPsdToolLayerControls(model: PsdModel | null): boolean {
+  if (!model) return false;
+  return Object.values(model.nodes).some(
+    (node) => node.kind === 'group' || node.radio || node.forcedVisible,
+  );
+}
+
 export function summarizeUnsupported(summary: PsdUnsupportedSummary): string[] {
   const lines: string[] = [];
   if (summary.nonNormalBlendModeLayers.length > 0) {

@@ -6,6 +6,7 @@ import {
 } from '../src/lib/avatarViewTransform';
 import {
   getPsdNodeOptions,
+  hasPsdToolLayerControls,
   type PsdModel,
   type PsdModelNode,
 } from '../src/lib/psdModel';
@@ -132,6 +133,53 @@ describe('PSD visibility logic', () => {
 });
 
 describe('PSD role binding helpers', () => {
+  it('detects when PSDTool layer controls are useful', () => {
+    expect(
+      hasPsdToolLayerControls(
+        model({
+          body: baseNode('body', null, 'body', { kind: 'layer' }),
+          mouth: baseNode('mouth', null, 'mouth', { kind: 'layer' }),
+        }),
+      ),
+    ).toBe(false);
+
+    expect(
+      hasPsdToolLayerControls(
+        model({
+          group: baseNode('group', null, 'group', {
+            kind: 'group',
+            childIds: ['group/layer'],
+          }),
+          'group/layer': baseNode('group/layer', 'group', 'group/layer', {
+            kind: 'layer',
+          }),
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      hasPsdToolLayerControls(
+        model({
+          radio: baseNode('radio', null, '*radio', {
+            kind: 'layer',
+            radio: true,
+          }),
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      hasPsdToolLayerControls(
+        model({
+          forced: baseNode('forced', null, '!forced', {
+            kind: 'layer',
+            forcedVisible: true,
+          }),
+        }),
+      ),
+    ).toBe(true);
+  });
+
   it('includes group nodes in role binding options', () => {
     const testModel = model({
       mouth: baseNode('mouth', null, '口', {

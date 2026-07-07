@@ -141,6 +141,26 @@ body {
   margin-bottom: 10px;
 }
 
+.settings-card-section {
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  background: #10182d;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.settings-card-section h4 {
+  margin: 0 0 10px;
+  color: #d3dde8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.settings-card-section .settings-field:last-child {
+  margin-bottom: 0;
+}
+
 .settings-field label {
   display: block;
   font-size: 0.75rem;
@@ -300,6 +320,34 @@ body {
   font-size: 0.72rem;
   line-height: 1.45;
   color: #aab6c2;
+}
+
+.settings-motion-status {
+  margin-top: 6px;
+}
+
+.settings-motion-status .settings-note {
+  margin: 0 0 4px;
+}
+
+.settings-details {
+  border: 1px solid #263b57;
+  border-radius: 6px;
+  background: #0d1426;
+  padding: 6px 8px;
+  color: #aab6c2;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.settings-details summary {
+  cursor: pointer;
+  color: #d3dde8;
+}
+
+.settings-details ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
 }
 
 .settings-error {
