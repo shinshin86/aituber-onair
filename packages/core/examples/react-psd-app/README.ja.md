@@ -43,6 +43,10 @@ npm run dev
 選択します。ファイル自体は保存されません。表示状態と role 設定だけが、
 そのファイル名とサイズに紐づいて保存されます。
 
+対応 PSD 形式、motion/static の判定、Anime2.5DRig レイヤー名、
+PSDTool 記法、制限、troubleshooting は
+**[PSD-FORMATS.ja.md](./PSD-FORMATS.ja.md)** を参照してください。
+
 同梱サンプルは次のコマンドで再生成できます。
 
 ```bash
@@ -52,16 +56,15 @@ npm run generate:sample-psd
 生成には dev-only の `ag-psd` を使います。実行時の PSD 読み込みは
 `@webtoon/psd` を使います。
 
-## auto-rig motion mode
+## PSD modes
 
-読み込んだ PSD が Anime2.5DRig のレイヤー命名に合う場合、static な
-PSDTool 風 renderer ではなく **Motion (auto-rig)** が選択されます。
-motion mode では `ag-psd` で pixel layer を読み取り、
-`src/vendor/anime25drig/` に vendoring した Anime2.5DRig 互換 rigger を使います。
+アプリはまず vendored Anime2.5DRig 互換 rigger で motion auto-rig 判定を行います。
+必須 part、anchor、rigger check をすべて満たした場合だけ motion mode になります。
+それ以外の PSD は static PSDTool mode に fallback します。
 
-auto-rig detector は、face、左右の eye、mouth anchor が使えることを要求します。
-`eye_close_l` / `eye_close_r` は optional です。存在しない場合は eyelashes を表示したまま、
-eye-open layer を閉じ方向に圧縮する blink fallback を使います。
+static mode は PSDTool 風の `!` 強制表示、`*` radio item、口と目の role
+自動検出に対応しています。同梱の `public/avatar/sample.psd` は static PSDTool
+sample です。
 
 motion 関連の設定は **Settings -> Visual** にあります。
 
@@ -74,69 +77,6 @@ motion 関連の設定は **Settings -> Visual** にあります。
 ホイールズームはアバター自身の中心を基準に拡大縮小します。位置を変える操作は
 ドラッグだけです。offset は clamp されるため、アバターが完全に画面外へ消えて
 復帰できなくなることはありません。
-
-## auto-rig レイヤー命名
-
-PSD は flat なレイヤー構造にし、次の名前を使います。左右別パーツは `_l` と `_r`
-suffix を使います。髪の strand は `front hair_1` のような numbered suffix を使えます。
-
-| Part | 必須 | 補足 |
-|---|---:|---|
-| `face` | 必須 | 主な face region として anchor に使います。 |
-| `eyewhite_l`, `eyewhite_r` | 必須 | 左右の eye mask / 白目として使います。 |
-| `irides_l`, `irides_r` | 必須 | eyewhite stencil で切り抜かれる iris layer です。 |
-| `eyelash_l`, `eyelash_r` | 必須 | eye-open の eyelash layer です。 |
-| `eye_close_l`, `eye_close_r` | 任意 | 存在すると blink 形状がより自然になります。 |
-| `mouth_open`, `mouth_close` | 必須 | 音声レベルに応じて cross-fade / 変形します。 |
-| `front hair`, `front hair_1`, ... | 任意 | strand data が検出されると髪揺れに使います。 |
-| `back hair` | 任意 | 検出されると髪揺れに参加します。 |
-| `eyebrow_l`, `eyebrow_r` | 任意 | 目や頭部の変形に追従します。 |
-| `nose`, `ears`, `neck`, `topwear`, `bottomwear`, `handwear`, `headwear` | 任意 | 存在する場合は head/body motion の group として描画します。 |
-
-## PSDTool 記法の対応
-
-| 記法 | 対応 | 挙動 |
-|---|---:|---|
-| 先頭 `!` | 対応 | 強制表示。常に合成され、チェックボックスは表示されません。 |
-| 先頭 `*` | 対応 | ラジオ項目。同じ親グループ内の sibling `*` 項目を排他表示します。 |
-| `:flipx` | parse のみ | 表示名からは除去しますが、v1 では反転しません。 |
-| `:flipy` | parse のみ | 表示名からは除去しますが、v1 では反転しません。 |
-| `:flipxy` | parse のみ | 表示名からは除去しますが、v1 では反転しません。 |
-
-表示名は、これらの marker を取り除いたレイヤー名です。
-
-## role 自動検出
-
-読み込み時に、次のパターンでレイヤー/グループ名を探索します。
-
-| Role | グループ名のヒント | レイヤー名のヒント |
-|---|---|---|
-| `mouthOpen` | `口`, `mouth`, `くち` | `開`, `あ`, `open` |
-| `mouthClosed` | `口`, `mouth`, `くち` | `閉`, `ん`, `close`, `むっ` |
-| `eyesOpen` | `目`, `eye`, `め` | `開`, `open` |
-| `eyesClosed` | `目`, `eye`, `め` | `閉`, `close`, `つぶり` |
-
-4つの割り当ては **Settings → Visual → Role assignment** で上書きできます。
-
-## 制限
-
-v1 renderer は通常の pixel layer 合成だけを対象にしています。読み込んだ PSD に
-未対応機能が含まれる場合は、console に一度だけ警告を出します。
-
-- normal 以外の blend mode は parse しますが通常の alpha 合成として描画します
-- layer mask / vector mask は無視します
-- clipping mask は無視します
-- adjustment layer は無視します
-- `:flip*` variant は parse しますが反転しません
-- この example UI では PSB は未対応です
-- PSDTool faview/simple-view metadata は未対応です
-
-グループ表示はネストを考慮します。自分自身と全 ancestor group が表示状態の時だけ、
-その node は表示されます。
-
-motion mode は static renderer とは別の auto-rig path です。レイヤー名と anchor を
-重視し、必須 anchor や必須 part が使えない場合は static mode に戻ります。
-選択された mode と rejection reason は **Settings -> Visual** に表示されます。
 
 ## Credits
 

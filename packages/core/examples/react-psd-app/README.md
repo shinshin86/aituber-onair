@@ -45,6 +45,10 @@ Open **Settings → Visual** and use **PSD avatar** to select a local `.psd`
 file. The file itself is not stored. Visibility and role settings are stored
 only as layer IDs for that exact file name and size.
 
+For supported PSD formats, motion/static mode selection, Anime2.5DRig layer
+names, PSDTool notation, limitations, and troubleshooting, see
+**[PSD-FORMATS.md](./PSD-FORMATS.md)**.
+
 The bundled sample can be regenerated with:
 
 ```bash
@@ -54,16 +58,16 @@ npm run generate:sample-psd
 This uses `ag-psd` as a dev-only generator. Runtime PSD parsing uses
 `@webtoon/psd`.
 
-## Auto-rig motion mode
+## PSD modes
 
-When a loaded PSD matches the Anime2.5DRig layer naming convention, the app
-selects **Motion (auto-rig)** instead of the static PSDTool-style renderer.
-Motion mode uses `ag-psd` to read pixel layers and the vendored
-Anime2.5DRig-compatible rigger under `src/vendor/anime25drig/`.
+The app first tries motion auto-rig detection with the vendored
+Anime2.5DRig-compatible rigger. Motion mode is used only when required parts,
+anchors, and rigger checks all pass. Otherwise, the file falls back to static
+PSDTool mode.
 
-The auto-rig detector requires usable face, left/right eye, and mouth anchors.
-`eye_close_l` / `eye_close_r` are optional; when they are missing, the renderer
-keeps eyelashes visible and compresses eye-open layers as a blink fallback.
+Static mode supports PSDTool-style `!` forced visibility, `*` radio items, and
+role auto-detection for mouth and eye layers. The bundled
+`public/avatar/sample.psd` is a static PSDTool sample.
 
 Motion settings are in **Settings -> Visual**:
 
@@ -76,71 +80,6 @@ Motion settings are in **Settings -> Visual**:
 Wheel zoom scales around the avatar's own center. Dragging is the only operation
 that changes avatar position, and offsets are clamped so the avatar cannot be
 lost completely off-screen.
-
-## Auto-rig layer naming
-
-Use a flat PSD layer structure with these names. Side-specific parts use `_l`
-and `_r` suffixes. Hair strands can use numbered suffixes such as
-`front hair_1`.
-
-| Part | Required | Notes |
-|---|---:|---|
-| `face` | Yes | Main face region used as the primary anchor. |
-| `eyewhite_l`, `eyewhite_r` | Yes | Eye masks / whites for left and right eyes. |
-| `irides_l`, `irides_r` | Yes | Iris layers clipped by the eyewhite stencil. |
-| `eyelash_l`, `eyelash_r` | Yes | Eye-open eyelash layers. |
-| `eye_close_l`, `eye_close_r` | Optional | Improves blink shape when present. |
-| `mouth_open`, `mouth_close` | Yes | Cross-faded and deformed by audio level. |
-| `front hair`, `front hair_1`, ... | Optional | Strand data is used for hair physics. |
-| `back hair` | Optional | Can participate in hair physics when detected. |
-| `eyebrow_l`, `eyebrow_r` | Optional | Follows eye/head deformation. |
-| `nose`, `ears`, `neck`, `topwear`, `bottomwear`, `handwear`, `headwear` | Optional | Rendered and grouped into head/body motion when present. |
-
-## PSDTool notation support
-
-| Notation | Support | Behavior |
-|---|---:|---|
-| Leading `!` | Yes | Forced visible. The layer/group is always composited and has no checkbox. |
-| Leading `*` | Yes | Radio item. Selecting it hides sibling `*` items in the same parent group. |
-| `:flipx` | Parsed | Marker is stripped from display name; flipping is not applied in v1. |
-| `:flipy` | Parsed | Marker is stripped from display name; flipping is not applied in v1. |
-| `:flipxy` | Parsed | Marker is stripped from display name; flipping is not applied in v1. |
-
-Display names are the raw layer names with these markers removed.
-
-## Role auto-detection
-
-On load, the app searches layer/group names for these patterns:
-
-| Role | Group hints | Layer hints |
-|---|---|---|
-| `mouthOpen` | `口`, `mouth`, `くち` | `開`, `あ`, `open` |
-| `mouthClosed` | `口`, `mouth`, `くち` | `閉`, `ん`, `close`, `むっ` |
-| `eyesOpen` | `目`, `eye`, `め` | `開`, `open` |
-| `eyesClosed` | `目`, `eye`, `め` | `閉`, `close`, `つぶり` |
-
-You can override all four bindings in **Settings → Visual → Role assignment**.
-
-## Limitations
-
-The v1 renderer intentionally supports normal pixel-layer compositing only.
-It warns once in the console when a loaded PSD uses unsupported features.
-
-- Non-normal blend modes are parsed but rendered as normal alpha compositing
-- Layer masks and vector masks are ignored
-- Clipping masks are ignored
-- Adjustment layers are ignored
-- `:flip*` variants are parsed but not flipped
-- PSB is not supported by this example UI
-- PSDTool faview/simple-view metadata is not supported
-
-Group visibility still nests correctly: a node is visible only when its own
-visibility and all ancestor group visibility states are visible.
-
-Motion mode has a separate auto-rig path. It is intentionally naming-driven and
-falls back to static mode when required anchors or required part names are not
-usable. The selected mode and rejection reason are shown in **Settings ->
-Visual**.
 
 ## Credits
 
