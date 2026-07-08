@@ -1,5 +1,7 @@
 # PSD Tachie Chat
 
+![react-psd-app image](./images/react-psd-app.webp)
+
 A PSD-based tachie chat app built with `@aituber-onair/core`.
 It keeps the same LLM, TTS, stream-comment, screen-vision, lip-sync, blink,
 green-screen, and broadcast UI flow as `react-pngtuber-app`, but renders the

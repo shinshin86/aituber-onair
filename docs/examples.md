@@ -30,6 +30,10 @@ to the package examples when you need lower-level integration.
 - Use
   [`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
   if you want an experimental Inochi2D avatar with a prebuilt runtime.
+- Use
+  [`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app)
+  if you want a PSDTool-style or Anime2.5DRig-compatible 2D tachie avatar from
+  a single PSD file.
 - Use package examples when you want to embed chat, voice, memory, or streaming
   behavior into an existing application.
 
@@ -158,6 +162,26 @@ are not bundled.
 
 ```bash
 cd packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+### PSD Tachie App
+
+<p align="center">
+  <img src="../packages/core/examples/react-psd-app/images/react-psd-app.webp" alt="PSD Tachie example app" width="720" />
+</p>
+
+Path:
+[`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app)
+
+Best when you want to load a PSDTool-style or Anime2.5DRig-compatible 2D tachie
+avatar from one PSD file. It composites PSD layers on canvas, drives mouth and
+eye layers with lip-sync and blinking, and includes a bundled motion sample
+that works with zero setup.
+
+```bash
+cd packages/core/examples/react-psd-app
 npm install
 npm run dev
 ```

@@ -1,5 +1,7 @@
 # PSD 立ち絵 Chat
 
+![react-psd-app image](./images/react-psd-app.webp)
+
 `@aituber-onair/core` を使った PSD 立ち絵チャットアプリです。
 `react-pngtuber-app` と同じ LLM、TTS、ライブコメント、Screen Vision、
 口パク、まばたき、グリーンバック、配信用表示を保ちつつ、アバターだけを

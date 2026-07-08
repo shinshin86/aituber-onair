@@ -30,6 +30,10 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 - 実験的な Inochi2D アバター（ビルド済みランタイム）を試したい場合は
   [`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
   を使います。
+- 1つの PSD ファイルから PSDTool 風または Anime2.5DRig 互換の 2D 立ち絵
+  アバターを使いたい場合は
+  [`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app)
+  を使います。
 - 既存アプリにチャット、音声、メモリ、配信連携を組み込みたい場合は、
   パッケージ別サンプルを参照してください。
 
@@ -158,6 +162,26 @@ Live2D モデルアセットは同梱していません。
 
 ```bash
 cd packages/core/examples/react-live2d-app
+npm install
+npm run dev
+```
+
+### PSD 立ち絵 App
+
+<p align="center">
+  <img src="../packages/core/examples/react-psd-app/images/react-psd-app.webp" alt="PSD 立ち絵サンプルアプリ" width="720" />
+</p>
+
+パス:
+[`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app)
+
+1つの PSD ファイルから PSDTool 風または Anime2.5DRig 互換の 2D 立ち絵
+アバターを読み込みたい場合に向いています。PSD レイヤーを canvas に合成し、
+口・目レイヤーをリップシンクやまばたきで動かします。追加設定なしで動く
+motion sample も同梱しています。
+
+```bash
+cd packages/core/examples/react-psd-app
 npm install
 npm run dev
 ```

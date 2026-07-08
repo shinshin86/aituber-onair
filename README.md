@@ -76,7 +76,7 @@ For step-by-step setup and template selection, see
 
 ### 3. Run an example app locally
 
-Five full, ready-to-run React apps built on `@aituber-onair/core`. Pick the
+Full, ready-to-run React apps built on `@aituber-onair/core`. Pick the
 avatar style that fits your project. All of them share the same broad LLM / TTS
 provider coverage and in-app **Settings** UI.
 
@@ -89,21 +89,6 @@ Swap in 4 PNG states (mouth/eyes open/close) and get real-time lip-sync driven f
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-pngtuber-app
-npm install
-npm run dev
-```
-
-#### PSD Tachie Chat — PSDTool-style 2D tachie avatar
-
-Load a single PSD file at runtime, composite PSD layers on canvas, and drive
-mouth/eye layers with real-time lip-sync and blinking. Supports PSDTool-style
-leading `!` forced-visible layers and leading `*` radio layers. A bundled
-`sample.psd` animates with zero setup. See
-[`packages/core/examples/react-psd-app`](./packages/core/examples/react-psd-app).
-
-```bash
-git clone https://github.com/shinshin86/aituber-onair.git
-cd aituber-onair/packages/core/examples/react-psd-app
 npm install
 npm run dev
 ```
@@ -194,6 +179,24 @@ animations from chat state, reply mood, and real-time audio volume. See
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-pet-app
+npm install
+npm run dev
+```
+
+#### PSD Tachie Chat — PSDTool / Anime2.5DRig-compatible 2D tachie avatar
+
+![PSD Tachie example app](./packages/core/examples/react-psd-app/images/react-psd-app.webp)
+
+Load a single PSD file at runtime, composite PSD layers on canvas, and drive
+mouth/eye layers with real-time lip-sync and blinking. Supports both
+PSDTool-style leading `!` forced-visible / leading `*` radio layers and
+Anime2.5DRig-compatible layer names for motion mode. A bundled `sample.psd`
+animates with zero setup. See
+[`packages/core/examples/react-psd-app`](./packages/core/examples/react-psd-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-psd-app
 npm install
 npm run dev
 ```
