@@ -433,9 +433,7 @@ function PsdAvatarSection({
       </div>
 
       {!isPsdMotionMode && psdAvatar.model && !showPsdToolLayerControls && (
-        <p className="settings-note">
-          PSDTool形式のレイヤー構造はありません。
-        </p>
+        <p className="settings-note">PSDTool形式のレイヤー構造はありません。</p>
       )}
 
       {!isPsdMotionMode && showPsdToolLayerControls && (
@@ -2554,6 +2552,15 @@ export function SettingsPanel({
               <span>ソロ配信で入力欄を表示</span>
             </label>
 
+            <PsdAvatarSection
+              disabled={disabled}
+              psdAvatar={psdAvatar}
+              psdLayerOptions={psdLayerOptions}
+              isPsdMotionMode={isPsdMotionMode}
+              psdMotionDecisionReason={psdMotionDecisionReason}
+              showPsdToolLayerControls={showPsdToolLayerControls}
+            />
+
             <label className="settings-checkbox-field">
               <input
                 type="checkbox"
@@ -2596,15 +2603,6 @@ export function SettingsPanel({
               disabled={disabled}
               backgroundImageUrl={backgroundImageUrl}
               onBackgroundImageChange={onBackgroundImageChange}
-            />
-
-            <PsdAvatarSection
-              disabled={disabled}
-              psdAvatar={psdAvatar}
-              psdLayerOptions={psdLayerOptions}
-              isPsdMotionMode={isPsdMotionMode}
-              psdMotionDecisionReason={psdMotionDecisionReason}
-              showPsdToolLayerControls={showPsdToolLayerControls}
             />
           </>
         )}
