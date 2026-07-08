@@ -5,8 +5,8 @@
 口パク、まばたき、グリーンバック、配信用表示を保ちつつ、アバターだけを
 1つの PSD ファイルから canvas 合成して表示します。
 
-同梱の `public/avatar/sample.psd` は、このリポジトリ内の PNGTuber サンプル
-画像から生成しているため、追加設定なしでアニメーションを確認できます。
+同梱の `public/avatar/sample.psd` は、ライセンス上安全な procedural motion
+sample です。追加設定なしで motion animation を確認できます。
 
 ## このアプリでできること
 
@@ -47,13 +47,24 @@ npm run dev
 PSDTool 記法、制限、troubleshooting は
 **[PSD-FORMATS.ja.md](./PSD-FORMATS.ja.md)** を参照してください。
 
-同梱サンプルは次のコマンドで再生成できます。
+同梱 motion sample は次のコマンドで再生成できます。
 
 ```bash
-npm run generate:sample-psd
+uv run --with pillow python scripts/draw_doodle_parts.py local-assets/doodle-parts
+npm run build:doodle-sample
 ```
 
-生成には dev-only の `ag-psd` を使います。実行時の PSD 読み込みは
+Python script は supersampled antialiasing 付きで 10 個の透明 part PNG を描画します。
+`build:doodle-sample` は dev dependency の `ag-psd` でそれらを
+`public/avatar/sample.psd` に組み立てます。
+
+static PSDTool 記法の sample は次のコマンドで再生成できます。
+
+```bash
+npm run generate:static-sample
+```
+
+これは `public/avatar/sample-static.psd` を出力します。実行時の static PSD 読み込みは
 `@webtoon/psd` を使います。
 
 ## PSD modes
@@ -63,8 +74,9 @@ npm run generate:sample-psd
 それ以外の PSD は static PSDTool mode に fallback します。
 
 static mode は PSDTool 風の `!` 強制表示、`*` radio item、口と目の role
-自動検出に対応しています。同梱の `public/avatar/sample.psd` は static PSDTool
-sample です。
+自動検出に対応しています。これらの control を確認するには、
+**Settings -> Visual -> PSD avatar** から `public/avatar/sample-static.psd` を
+読み込んでください。
 
 motion 関連の設定は **Settings -> Visual** にあります。
 
@@ -83,8 +95,8 @@ motion 関連の設定は **Settings -> Visual** にあります。
 - Anime2.5DRig 互換の auto-rigging は、852wa (hakoniwa) さんの
   [Anime2.5DRig](https://github.com/852wa/Anime2.5DRig) を元にしています。
   License は MIT です。vendored file は `src/vendor/anime25drig/` にあります。
-- 同梱の `public/avatar/sample.psd` は、このリポジトリ内の PNGTuber サンプル画像から
-  生成しており、この example に含めて配布できます。
+- 同梱の `public/avatar/sample.psd` と `sample-static.psd` は、この example 内で
+  procedural に生成しており、この example に含めて配布できます。
 
 ## ライブコメントと Screen Vision
 

@@ -154,10 +154,37 @@ If a PSD fails with color mode or bit depth errors, export it again as an
 | `未知のレイヤー名 "..." — head/body として扱います` | The layer name is not in the rigger slot table or alias table. | Rename it to a recognized base name. Avoid side suffixes such as `eyewhite_l` and hyphenated names such as `eyewhite-l`. |
 | `目のアンカーが不完全です（eyewhite/irides を確認）` | Eye anchor detection did not find both eyes. | Make `eyewhite` and `irides` flat pixel layers with two separable eye components. |
 
-## Bundled `sample.psd`
+## Bundled Samples
 
-`public/avatar/sample.psd` is a static PSDTool sample, not a motion sample.
-Its verified layer tree is:
+`public/avatar/sample.psd` is a procedurally drawn motion-mode demo. It is
+generated from 10 transparent PNG parts drawn by
+`scripts/draw_doodle_parts.py` and assembled by `scripts/build-doodle-sample.mjs`.
+The PSD uses a fixed 1024x1536 canvas and these bottom-to-top flat layer names:
+
+```text
+back hair
+topwear
+face
+mouth_open
+eyewhite
+eyelash
+irides
+front hair
+mouth_close
+eye_close
+```
+
+Regenerate it with:
+
+```bash
+uv run --with pillow python scripts/draw_doodle_parts.py local-assets/doodle-parts
+npm run build:doodle-sample
+```
+
+The static PSDTool notation demo is `public/avatar/sample-static.psd`. Load it
+from **Settings -> Visual -> PSD avatar** when you want to inspect layer-tree,
+radio, forced visibility, and role-assignment behavior. Its verified layer tree
+is:
 
 ```text
 ROOT
@@ -171,10 +198,14 @@ ROOT
 ```
 
 The `口` and `目` groups demonstrate radio items. `!body` demonstrates forced
-visibility.
+visibility. Regenerate it with:
 
-The motion detector rejects this file because it has no flat Anime2.5DRig
-parts such as `face`, `eyewhite`, `irides`, `eyelash`, `mouth_open`, or hair
-layers. A rig smoke check reports `!body` as an unknown layer and reports
-incomplete eye and mouth anchors, so the app correctly uses static mode.
+```bash
+npm run generate:static-sample
+```
 
+The motion detector rejects `sample-static.psd` because it has no flat
+Anime2.5DRig parts such as `face`, `eyewhite`, `irides`, `eyelash`,
+`mouth_open`, or hair layers. A rig smoke check reports `!body` as an unknown
+layer and reports incomplete eye and mouth anchors, so the app correctly uses
+static mode.

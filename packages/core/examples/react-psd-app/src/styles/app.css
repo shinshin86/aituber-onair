@@ -509,8 +509,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   pointer-events: none;
   z-index: 2;
+  contain: layout paint size;
 }
 
 .avatar-background .avatar-view-layer {
@@ -524,6 +526,9 @@ body {
   align-items: center;
   justify-content: center;
   position: relative;
+  flex: 0 0 auto;
+  overflow: hidden;
+  contain: layout paint size;
 }
 
 .avatar-view-layer {

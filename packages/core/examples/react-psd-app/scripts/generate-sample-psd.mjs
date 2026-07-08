@@ -5,7 +5,7 @@ import { writePsdBuffer } from 'ag-psd';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const SOURCE_DIR = resolve(ROOT, '../react-pngtuber-app/public/avatar');
-const OUTPUT = resolve(ROOT, 'public/avatar/sample.psd');
+const OUTPUT = resolve(ROOT, 'public/avatar/sample-static.psd');
 const SAMPLE_SIZE = 512;
 
 const SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);

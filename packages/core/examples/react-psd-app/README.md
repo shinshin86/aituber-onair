@@ -5,8 +5,8 @@ It keeps the same LLM, TTS, stream-comment, screen-vision, lip-sync, blink,
 green-screen, and broadcast UI flow as `react-pngtuber-app`, but renders the
 avatar from one runtime-loaded PSD file on a canvas.
 
-The bundled `public/avatar/sample.psd` is generated from this repository's
-PNGTuber sample images, so the app animates with zero setup.
+The bundled `public/avatar/sample.psd` is a license-clean procedural motion
+sample, so the app animates with zero setup.
 
 ## What this app can do
 
@@ -49,13 +49,24 @@ For supported PSD formats, motion/static mode selection, Anime2.5DRig layer
 names, PSDTool notation, limitations, and troubleshooting, see
 **[PSD-FORMATS.md](./PSD-FORMATS.md)**.
 
-The bundled sample can be regenerated with:
+The bundled motion sample can be regenerated with:
 
 ```bash
-npm run generate:sample-psd
+uv run --with pillow python scripts/draw_doodle_parts.py local-assets/doodle-parts
+npm run build:doodle-sample
 ```
 
-This uses `ag-psd` as a dev-only generator. Runtime PSD parsing uses
+The Python script draws 10 transparent part PNGs with supersampled
+antialiasing. `build:doodle-sample` assembles those parts into
+`public/avatar/sample.psd` with `ag-psd`.
+
+The static PSDTool notation sample can be regenerated with:
+
+```bash
+npm run generate:static-sample
+```
+
+This writes `public/avatar/sample-static.psd`. Runtime static PSD parsing uses
 `@webtoon/psd`.
 
 ## PSD modes
@@ -66,8 +77,8 @@ anchors, and rigger checks all pass. Otherwise, the file falls back to static
 PSDTool mode.
 
 Static mode supports PSDTool-style `!` forced visibility, `*` radio items, and
-role auto-detection for mouth and eye layers. The bundled
-`public/avatar/sample.psd` is a static PSDTool sample.
+role auto-detection for mouth and eye layers. To inspect those controls, load
+`public/avatar/sample-static.psd` from **Settings -> Visual -> PSD avatar**.
 
 Motion settings are in **Settings -> Visual**:
 
@@ -86,8 +97,8 @@ lost completely off-screen.
 - Anime2.5DRig-compatible auto-rigging is based on
   [Anime2.5DRig](https://github.com/852wa/Anime2.5DRig) by 852wa (hakoniwa),
   MIT License. The vendored files live in `src/vendor/anime25drig/`.
-- The bundled `public/avatar/sample.psd` is generated from this repository's
-  PNGTuber sample images and is safe to ship with this example.
+- The bundled `public/avatar/sample.psd` and `sample-static.psd` are
+  procedurally generated in this example and are safe to ship.
 
 ## Stream comments and Screen Vision
 
