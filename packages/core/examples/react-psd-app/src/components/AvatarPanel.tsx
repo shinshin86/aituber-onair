@@ -188,71 +188,6 @@ function AvatarViewLayer({
   );
 }
 
-/** Fallback SVG when image is unavailable */
-function FallbackAvatar({
-  mouthOpen,
-  eyesClosed,
-}: { mouthOpen: boolean; eyesClosed: boolean }) {
-  const mouthHeight = mouthOpen ? 14 : 2;
-  const mouthY = 130 - mouthHeight / 2;
-  return (
-    <svg
-      width="200"
-      height="200"
-      viewBox="0 0 200 200"
-      style={{ display: 'block', margin: '0 auto' }}
-    >
-      {/* Face */}
-      <circle
-        cx="100"
-        cy="100"
-        r="80"
-        fill="#FFE0B2"
-        stroke="#E0A060"
-        strokeWidth="2"
-      />
-      {/* Left eye */}
-      {eyesClosed ? (
-        <line
-          x1="58"
-          y1="85"
-          x2="82"
-          y2="85"
-          stroke="#333"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      ) : (
-        <circle cx="70" cy="85" r="8" fill="#333" />
-      )}
-      {/* Right eye */}
-      {eyesClosed ? (
-        <line
-          x1="118"
-          y1="85"
-          x2="142"
-          y2="85"
-          stroke="#333"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      ) : (
-        <circle cx="130" cy="85" r="8" fill="#333" />
-      )}
-      {/* Mouth */}
-      <ellipse
-        cx="100"
-        cy={mouthY + mouthHeight / 2}
-        rx={mouthOpen ? 15 : 12}
-        ry={Math.max(mouthHeight / 2, 1)}
-        fill={mouthOpen ? '#C62828' : '#333'}
-        stroke="#333"
-        strokeWidth="1"
-      />
-    </svg>
-  );
-}
-
 function PsdCanvasAvatar({
   psdAvatar,
   mouthOpen,
@@ -369,9 +304,7 @@ export function AvatarPanel({
               mouthOpen={mouthOpen}
               eyesClosed={eyesClosed}
             />
-          ) : (
-            <FallbackAvatar mouthOpen={mouthOpen} eyesClosed={eyesClosed} />
-          )}
+          ) : null}
         </AvatarViewLayer>
         {psdAvatar.loading && (
           <div className="avatar-loading" role="status">
@@ -433,9 +366,7 @@ export function AvatarBackground({
               mouthOpen={mouthOpen}
               eyesClosed={eyesClosed}
             />
-          ) : (
-            <FallbackAvatar mouthOpen={mouthOpen} eyesClosed={eyesClosed} />
-          )}
+          ) : null}
         </AvatarViewLayer>
       </div>
     </div>

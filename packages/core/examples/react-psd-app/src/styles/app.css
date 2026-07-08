@@ -519,6 +519,12 @@ body {
   pointer-events: auto;
 }
 
+.avatar-background .avatar-container {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
 .avatar-container {
   width: 480px;
   height: 480px;
@@ -827,7 +833,7 @@ body {
 
 @media (max-width: 640px) {
   .avatar-background .avatar-container {
-    width: 480px;
-    height: 480px;
+    width: 100%;
+    height: 100%;
   }
 }
