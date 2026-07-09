@@ -15,6 +15,7 @@ import type { EngineHandler } from './types';
 import { unrealSpeechEngineHandler } from './unrealSpeech';
 import { voicePeakEngineHandler } from './voicepeak';
 import { voiceVoxEngineHandler } from './voicevox';
+import { webSpeechEngineHandler } from './webSpeech';
 import { xaiEngineHandler } from './xai';
 
 type EngineType = VoiceServiceOptions['engineType'];
@@ -41,6 +42,7 @@ const engineHandlers = {
   aivisCloud: aivisCloudEngineHandler,
   minimax: minimaxEngineHandler,
   piperPlus: piperPlusEngineHandler,
+  webSpeech: webSpeechEngineHandler,
   none: noneEngineHandler,
 } as const satisfies EngineHandlerRegistry;
 

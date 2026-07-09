@@ -24,7 +24,7 @@ npm run dev
 
 ### Features
 
-- **Multiple TTS Engines**: OpenAI TTS, OpenAI-Compatible TTS, Gradium, VOICEVOX, AIVIS Speech, VoicePeak, MiniMax
+- **Multiple TTS Engines**: OpenAI TTS, OpenAI-Compatible TTS, Gradium, VOICEVOX, AIVIS Speech, VoicePeak, MiniMax, Web Speech API
 - **AivisSpeech Controls**: Tune speed, pitch, intonation strength, tempo dynamics, and silence lengths with AivisSpeech独自拡張
 - **VOICEVOX Query Controls**: Adjust talk speed, pitch, intonation, silence lengths, sampling rate, stereo, and query flags directly from the UI
 - **MiniMax Parameter Controls**: Adjust speed, volume, pitch, sample rate, bitrate, and format directly from the settings UI
@@ -110,6 +110,14 @@ const openaiCompatibleService = new VoiceEngineAdapter({
     openAiCompatibleApiUrl: 'http://localhost:8880/v1/audio/speech',
     openAiCompatibleModel: 'your-model-id',
 });
+
+// Browser-native Web Speech API (audio is played directly by the browser)
+const webSpeechService = new VoiceEngineAdapter({
+    engineType: 'webSpeech',
+    speaker: '', // Optional SpeechSynthesisVoice name or voiceURI
+    webSpeechLanguage: 'ja-JP',
+});
+
 // MiniMax (API key + Group ID + customizable parameters)
 const minimaxService = new VoiceEngineAdapter({
     engineType: 'minimax',

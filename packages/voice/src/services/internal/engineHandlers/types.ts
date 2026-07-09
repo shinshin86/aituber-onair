@@ -14,6 +14,7 @@ import type {
   VoicePeakVoiceServiceOptions,
   VoiceServiceOptions,
   VoiceVoxVoiceServiceOptions,
+  WebSpeechVoiceServiceOptions,
   XaiVoiceServiceOptions,
 } from '../../VoiceService';
 
@@ -188,6 +189,13 @@ export interface PiperPlusConfigurableEngine extends VoiceEngine {
   setAssets?(assets: PiperPlusAssets): void;
   setSpeed?(value?: number): void;
   setNoiseScale?(value?: number): void;
+}
+
+export interface WebSpeechConfigurableEngine extends VoiceEngine {
+  setRate?(value?: number): void;
+  setPitch?(value?: number): void;
+  setVolume?(value?: number): void;
+  setLanguage?(value?: string): void;
 }
 
 export interface AivisCloudConfigurableEngine extends VoiceEngine {

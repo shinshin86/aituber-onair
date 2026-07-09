@@ -139,6 +139,12 @@ Handoff rule:
   `$sync-core-after-chat-upgrade`.
 - If the user already requested chat + core propagation in one task, continue
   directly without asking again.
+- When `$add-tts-provider` performs voice release prep, keep version/changelog
+  changes scoped to `@aituber-onair/voice`. Do not bump `@aituber-onair/core`
+  or `create-aituber-onair` for dependency alignment unless the user explicitly
+  requests those package releases in the same task.
+- After voice release prep, ask before starting core propagation/release work;
+  treat it as a separate follow-up unless it was explicitly requested up front.
 
 ## Update Workflow
 

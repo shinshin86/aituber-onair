@@ -130,6 +130,13 @@ export const ENGINE_DEFAULTS = {
     placeholder: '',
     speaker: 'default',
   },
+  webSpeech: {
+    apiUrl: '',
+    needsApiKey: false,
+    acceptsApiKey: false,
+    placeholder: 'No API key needed',
+    speaker: '',
+  },
 } as const;
 
 export type EngineType = keyof typeof ENGINE_DEFAULTS;
@@ -321,6 +328,19 @@ export const INWORLD_VOICE_LANGUAGE_OPTIONS = {
   'it-IT': 'Italian (it-IT)',
 } as const;
 
+export const WEB_SPEECH_VOICE_LANGUAGE_OPTIONS = {
+  all: 'All languages',
+  ja: 'Japanese',
+  en: 'English',
+  zh: 'Chinese',
+  ko: 'Korean',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  pt: 'Portuguese',
+  it: 'Italian',
+} as const;
+
 export const VOICEPEAK_WEIGHT_KEYS = [
   'happy',
   'fun',
@@ -365,6 +385,7 @@ export const GEMINI_TTS_VOICES: Record<string, string> = {
 export interface SpeakerOption {
   id: string;
   label: string;
+  language?: string;
 }
 
 export interface SliderConfig {
@@ -571,6 +592,8 @@ export type DefaultBooleanOption = 'default' | 'true' | 'false';
 export type InworldDeliveryModeOption = 'default' | InworldDeliveryMode;
 export type InworldVoiceLanguageOption =
   keyof typeof INWORLD_VOICE_LANGUAGE_OPTIONS;
+export type WebSpeechVoiceLanguageOption =
+  keyof typeof WEB_SPEECH_VOICE_LANGUAGE_OPTIONS;
 export type ElevenLabsApplyTextNormalizationOption =
   | 'default'
   | ElevenLabsApplyTextNormalization;

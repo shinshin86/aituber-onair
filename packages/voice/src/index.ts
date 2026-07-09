@@ -13,6 +13,7 @@ export type {
   MinimaxAudioSettingsOptions,
   MinimaxAudioFormat,
   PiperPlusVoiceServiceOptions,
+  WebSpeechVoiceServiceOptions,
   UnrealSpeechVoiceServiceOptions,
   ElevenLabsVoiceServiceOptions,
   InworldVoiceServiceOptions,

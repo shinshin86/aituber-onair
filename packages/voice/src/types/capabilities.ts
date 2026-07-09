@@ -26,4 +26,5 @@ export interface VoiceEngineVoiceListOptions {
   limit?: number;
   skip?: number;
   pageSize?: number;
+  timeoutMs?: number;
 }

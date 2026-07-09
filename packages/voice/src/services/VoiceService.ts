@@ -347,6 +347,20 @@ export interface PiperPlusVoiceServiceOptions
   piperPlusNoiseScale?: number;
 }
 
+export interface WebSpeechVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'webSpeech';
+  /** Web Speech API speaking rate (0.1-10, default: browser voice default) */
+  webSpeechRate?: number;
+  /** Web Speech API pitch (0-2, default: browser voice default) */
+  webSpeechPitch?: number;
+  /** Web Speech API volume (0-1, default: browser voice default) */
+  webSpeechVolume?: number;
+  /** Web Speech API language tag, such as ja-JP */
+  webSpeechLanguage?: string;
+}
+
 export interface AivisCloudVoiceServiceOptions
   extends VoiceServiceCommonOptions {
   /** Engine type */
@@ -424,6 +438,7 @@ export type VoiceServiceOptions =
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions
   | PiperPlusVoiceServiceOptions
+  | WebSpeechVoiceServiceOptions
   | NoneVoiceServiceOptions;
 
 /**
@@ -471,6 +486,9 @@ export type MinimaxVoiceServiceOptionsUpdate = Partial<
 export type PiperPlusVoiceServiceOptionsUpdate = Partial<
   Omit<PiperPlusVoiceServiceOptions, 'engineType'>
 >;
+export type WebSpeechVoiceServiceOptionsUpdate = Partial<
+  Omit<WebSpeechVoiceServiceOptions, 'engineType'>
+>;
 export type NoneVoiceServiceOptionsUpdate = Partial<
   Omit<NoneVoiceServiceOptions, 'engineType'>
 >;
@@ -490,6 +508,7 @@ export type VoiceServiceOptionsUpdate =
   | AivisCloudVoiceServiceOptionsUpdate
   | MinimaxVoiceServiceOptionsUpdate
   | PiperPlusVoiceServiceOptionsUpdate
+  | WebSpeechVoiceServiceOptionsUpdate
   | NoneVoiceServiceOptionsUpdate;
 
 /**

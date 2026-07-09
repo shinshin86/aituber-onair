@@ -245,6 +245,32 @@ describe('getVoiceEngineVoiceList', () => {
     expect(init.headers).toEqual({ Authorization: 'Bearer aivis-key' });
   });
 
+  it('gets Web Speech voices from browser speechSynthesis', async () => {
+    vi.stubGlobal('speechSynthesis', {
+      getVoices: vi.fn().mockReturnValue([
+        {
+          name: 'Kyoko',
+          voiceURI: 'kyoko-uri',
+          lang: 'ja-JP',
+          localService: true,
+          default: true,
+        },
+      ]),
+    });
+
+    await expect(getVoiceEngineVoiceList('webSpeech')).resolves.toEqual([
+      {
+        id: 'kyoko-uri',
+        label: 'Kyoko (ja-JP)',
+        metadata: {
+          language: 'ja-JP',
+          localService: 'true',
+          default: 'true',
+        },
+      },
+    ]);
+  });
+
   it('rejects unsupported engines and missing API keys', async () => {
     await expect(getVoiceEngineVoiceList('minimax')).rejects.toThrow(
       'Voice list is not supported for engine: minimax',

@@ -50,6 +50,7 @@ describe('VoiceEngineAdapter', () => {
       setLanguageCode: vi.fn(),
       setPrompt: vi.fn(),
       setCodec: vi.fn(),
+      setRate: vi.fn(),
       setEmotion: vi.fn(),
       setLanguage: vi.fn(),
       setVoiceSettings: vi.fn(),
@@ -880,6 +881,84 @@ describe('VoiceEngineAdapter', () => {
     });
   });
 
+  describe('Web Speech Integration', () => {
+    it('should speak directly without fetching or playing audio buffers', async () => {
+      const onPlay = vi.fn();
+      const onComplete = vi.fn();
+      const webSpeechEngine = {
+        ...mockEngine,
+        playsAudioDirectly: true,
+        speakDirectly: vi.fn().mockResolvedValue(undefined),
+        stopSpeaking: vi.fn(),
+        isSpeaking: vi.fn().mockReturnValue(false),
+      };
+      mockGetEngine.mockReturnValue(webSpeechEngine);
+
+      const adapter = new VoiceEngineAdapter({
+        engineType: 'webSpeech',
+        speaker: 'Kyoko',
+        webSpeechRate: 1.2,
+        webSpeechPitch: 1.1,
+        webSpeechVolume: 0.8,
+        webSpeechLanguage: 'ja-JP',
+        onPlay,
+        onComplete,
+      });
+
+      await adapter.speak({ text: 'Web Speech test', emotion: 'happy' });
+
+      expect(webSpeechEngine.setRate).toHaveBeenCalledWith(1.2);
+      expect(webSpeechEngine.setPitch).toHaveBeenCalledWith(1.1);
+      expect(webSpeechEngine.setVolume).toHaveBeenCalledWith(0.8);
+      expect(webSpeechEngine.setLanguage).toHaveBeenCalledWith('ja-JP');
+      expect(webSpeechEngine.fetchAudio).not.toHaveBeenCalled();
+      expect(webSpeechEngine.speakDirectly).toHaveBeenCalledWith(
+        {
+          style: 'happy',
+          message: 'Web Speech test',
+        },
+        'Kyoko',
+      );
+      expect(onPlay).not.toHaveBeenCalled();
+      expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+
+    it('should stop active direct speech playback', async () => {
+      let resolveSpeech: (() => void) | undefined;
+      const webSpeechEngine = {
+        ...mockEngine,
+        playsAudioDirectly: true,
+        speakDirectly: vi.fn(
+          () =>
+            new Promise<void>((resolve) => {
+              resolveSpeech = resolve;
+            }),
+        ),
+        stopSpeaking: vi.fn(),
+        isSpeaking: vi.fn().mockReturnValue(true),
+      };
+      mockGetEngine.mockReturnValue(webSpeechEngine);
+
+      const adapter = new VoiceEngineAdapter({
+        engineType: 'webSpeech',
+        speaker: 'Kyoko',
+      });
+
+      const speechPromise = adapter.speak({ text: 'stop me' });
+      await vi.waitFor(() => {
+        expect(webSpeechEngine.speakDirectly).toHaveBeenCalled();
+      });
+
+      expect(adapter.isPlaying()).toBe(true);
+      adapter.stop();
+
+      await expect(speechPromise).rejects.toThrow('Speech playback stopped');
+      expect(webSpeechEngine.stopSpeaking).toHaveBeenCalledTimes(1);
+
+      resolveSpeech?.();
+    });
+  });
+
   describe('Gemini TTS Integration', () => {
     it('should configure Gemini TTS engine with provided overrides', async () => {
       const options: VoiceServiceOptions = {
@@ -1476,6 +1555,30 @@ describe('VoiceEngineAdapter', () => {
 
       expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.1);
       expect(mockEngine.setNoiseScale).toHaveBeenCalledWith(0.6);
+    });
+
+    it('should apply updated Web Speech options for the current engine', async () => {
+      const webSpeechEngine = {
+        ...mockEngine,
+        playsAudioDirectly: true,
+        speakDirectly: vi.fn().mockResolvedValue(undefined),
+        stopSpeaking: vi.fn(),
+      };
+      mockGetEngine.mockReturnValue(webSpeechEngine);
+
+      const adapter = new VoiceEngineAdapter({
+        engineType: 'webSpeech',
+        speaker: 'Kyoko',
+      });
+      adapter.updateOptions({
+        webSpeechRate: 1.35,
+        webSpeechLanguage: 'ja-JP',
+      });
+
+      await adapter.speak({ text: 'Updated webSpeech options' });
+
+      expect(webSpeechEngine.setRate).toHaveBeenCalledWith(1.35);
+      expect(webSpeechEngine.setLanguage).toHaveBeenCalledWith('ja-JP');
     });
 
     it('should allow cross-engine options in updateOptions for backward compatibility', () => {

@@ -36,6 +36,7 @@ const VOICE_LIST_ENGINES = new Set<VoiceEngineType>([
   'gradium',
   'aivisSpeech',
   'aivisCloud',
+  'webSpeech',
 ]);
 
 const EMOTION_ENGINES = new Set<VoiceEngineType>([
@@ -62,6 +63,7 @@ const RUNTIME_BY_ENGINE: Record<VoiceEngineType, VoiceRuntime[]> = {
   aivisCloud: ['browser', 'node', 'server'],
   minimax: ['browser', 'node', 'server'],
   piperPlus: ['browser'],
+  webSpeech: ['browser'],
   none: ['browser', 'node', 'server'],
 };
 

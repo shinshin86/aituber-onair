@@ -19,7 +19,7 @@ import {
   type XaiCodec,
   type XaiSampleRate,
 } from '@aituber-onair/voice';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import { EngineParameters } from './components/EngineParameters';
 import { EngineSelector } from './components/EngineSelector';
@@ -46,6 +46,7 @@ import {
   type LocalOutputSamplingRateOption,
   type OutputStereoOption,
   type SpeakerOption,
+  type WebSpeechVoiceLanguageOption,
   type VoicePeakEmotionOption,
   type VoicepeakEmotionMode,
   VOICEPEAK_WEIGHT_KEYS,
@@ -197,6 +198,8 @@ function App() {
     useState<InworldVoiceLanguageOption>(
       ENGINE_DEFAULTS.inworld.defaultLanguage,
     );
+  const [webSpeechVoiceLanguage, setWebSpeechVoiceLanguage] =
+    useState<WebSpeechVoiceLanguageOption>('all');
   const [inworldDeliveryMode, setInworldDeliveryMode] =
     useState<InworldDeliveryModeOption>('default');
   const [inworldTemperature, setInworldTemperature] = useState('');
@@ -309,6 +312,30 @@ function App() {
     }
   };
 
+  const changeWebSpeechVoiceLanguage = (
+    nextLanguage: WebSpeechVoiceLanguageOption,
+  ) => {
+    setWebSpeechVoiceLanguage(nextLanguage);
+
+    if (nextLanguage === 'all') {
+      setSpeaker((currentSpeaker) =>
+        speakerOptions.some((option) => option.id === currentSpeaker)
+          ? currentSpeaker
+          : (speakerOptions[0]?.id ?? ''),
+      );
+      return;
+    }
+
+    const matchingSpeakers = speakerOptions.filter((option) =>
+      option.language?.toLowerCase().startsWith(nextLanguage),
+    );
+    setSpeaker((currentSpeaker) =>
+      matchingSpeakers.some((option) => option.id === currentSpeaker)
+        ? currentSpeaker
+        : (matchingSpeakers[0]?.id ?? ''),
+    );
+  };
+
   useEffect(() => {
     const defaults = ENGINE_DEFAULTS[engine];
     const minimaxDefaults = ENGINE_DEFAULTS.minimax;
@@ -380,6 +407,7 @@ function App() {
     setInworldSpeakingRate('');
     setInworldLanguage(ENGINE_DEFAULTS.inworld.defaultLanguage);
     setInworldVoiceLanguage(ENGINE_DEFAULTS.inworld.defaultLanguage);
+    setWebSpeechVoiceLanguage('all');
     setInworldDeliveryMode('default');
     setInworldTemperature('');
     setGradiumOutputFormat(ENGINE_DEFAULTS.gradium.defaultOutputFormat);
@@ -428,19 +456,22 @@ function App() {
     setStatus(
       engine === 'piperPlus'
         ? 'Switched to piperPlus. Place assets in public/piper/ and review the setup guide below.'
-        : `Switched to ${engine}. Default URL: ${defaults.apiUrl}`,
+        : engine === 'webSpeech'
+          ? 'Switched to webSpeech. Browser SpeechSynthesis will play audio directly.'
+          : `Switched to ${engine}. Default URL: ${defaults.apiUrl}`,
     );
     setStatusType('success');
   }, [engine]);
 
-  const fetchSpeakers = async () => {
+  const fetchSpeakers = useCallback(async () => {
     if (
       engine !== 'voicevox' &&
       engine !== 'aivisSpeech' &&
       engine !== 'xai' &&
       engine !== 'elevenLabs' &&
       engine !== 'inworld' &&
-      engine !== 'gradium'
+      engine !== 'gradium' &&
+      engine !== 'webSpeech'
     ) {
       return;
     }
@@ -457,9 +488,18 @@ function App() {
       const nextSpeakerOptions: SpeakerOption[] = voices.map((voice) => ({
         id: voice.id,
         label: voice.label,
+        language: voice.metadata?.language,
       }));
 
       if (nextSpeakerOptions.length === 0) {
+        if (engine === 'webSpeech') {
+          setSpeakerOptions([]);
+          setSpeaker('');
+          setStatus('No browser voices found. Using browser default voice.');
+          setStatusType('info');
+          return;
+        }
+
         throw new Error('No speakers found');
       }
 
@@ -483,7 +523,15 @@ function App() {
     } finally {
       setIsFetchingSpeakers(false);
     }
-  };
+  }, [apiKey, apiUrl, engine, inworldVoiceLanguage]);
+
+  useEffect(() => {
+    if (engine !== 'webSpeech') {
+      return;
+    }
+
+    void fetchSpeakers();
+  }, [engine, fetchSpeakers]);
 
   const speak = async () => {
     if (!text) {
@@ -1249,6 +1297,8 @@ function App() {
               onMinimaxGroupIdChange={setMinimaxGroupId}
               inworldVoiceLanguage={inworldVoiceLanguage}
               onInworldVoiceLanguageChange={changeInworldVoiceLanguage}
+              webSpeechVoiceLanguage={webSpeechVoiceLanguage}
+              onWebSpeechVoiceLanguageChange={changeWebSpeechVoiceLanguage}
               apiKeyIsRequired={apiKeyIsRequired}
               piperPlusAvailable={piperPlusAvailable}
               piperPlusLoading={piperPlusLoading}

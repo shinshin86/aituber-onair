@@ -44,10 +44,21 @@ describe('voice engine capabilities', () => {
     expect(getVoiceEngineCapabilities('aivisCloud').supportsVoiceList).toBe(
       true,
     );
+    expect(getVoiceEngineCapabilities('webSpeech').supportsVoiceList).toBe(
+      true,
+    );
   });
 
   it('marks MiniMax as emotion-capable', () => {
     expect(getVoiceEngineCapabilities('minimax').supportsEmotion).toBe(true);
+  });
+
+  it('describes Web Speech as browser-only and keyless', () => {
+    const webSpeech = getVoiceEngineCapabilities('webSpeech');
+
+    expect(webSpeech.requiresApiKey).toBe(false);
+    expect(webSpeech.supportsCustomEndpoint).toBe(false);
+    expect(webSpeech.runtimes).toEqual(['browser']);
   });
 
   it('lists all voice engine capabilities', () => {
@@ -57,5 +68,6 @@ describe('voice engine capabilities', () => {
     expect(capabilities.map((item) => item.engineType)).toContain(
       'openaiCompatible',
     );
+    expect(capabilities.map((item) => item.engineType)).toContain('webSpeech');
   });
 });
