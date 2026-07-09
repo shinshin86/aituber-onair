@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 0.19.0
+
+### Minor Changes
+
+- Add browser-native Web Speech API support via `engineType: 'webSpeech'`.
+  - Introduce `WebSpeechEngine` for browser `speechSynthesis` playback,
+    including voice selection by `SpeechSynthesisVoice.name` or `voiceURI`.
+  - Add self-playing voice engine support in `VoiceEngineAdapter` for engines
+    that play audio directly instead of returning audio bytes.
+  - Support `webSpeechRate`, `webSpeechPitch`, `webSpeechVolume`, and
+    `webSpeechLanguage` options.
+  - Add Web Speech voice-list support through `getVoiceEngineVoiceList()`,
+    including browser `voiceschanged` handling for delayed voice population.
+  - Update the React voice example with automatic Web Speech voice loading,
+    sample-side language filtering, and browser-only setup notes.
+
 ## 0.18.0
 
 ### Minor Changes

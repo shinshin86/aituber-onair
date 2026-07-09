@@ -19,7 +19,7 @@ import {
   type XaiCodec,
   type XaiSampleRate,
 } from '@aituber-onair/voice';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import { EngineParameters } from './components/EngineParameters';
 import { EngineSelector } from './components/EngineSelector';
@@ -463,7 +463,7 @@ function App() {
     setStatusType('success');
   }, [engine]);
 
-  const fetchSpeakers = async () => {
+  const fetchSpeakers = useCallback(async () => {
     if (
       engine !== 'voicevox' &&
       engine !== 'aivisSpeech' &&
@@ -523,7 +523,7 @@ function App() {
     } finally {
       setIsFetchingSpeakers(false);
     }
-  };
+  }, [apiKey, apiUrl, engine, inworldVoiceLanguage]);
 
   useEffect(() => {
     if (engine !== 'webSpeech') {
@@ -531,7 +531,7 @@ function App() {
     }
 
     void fetchSpeakers();
-  }, [engine]);
+  }, [engine, fetchSpeakers]);
 
   const speak = async () => {
     if (!text) {
