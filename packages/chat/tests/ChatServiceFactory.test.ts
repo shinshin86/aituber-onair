@@ -358,6 +358,17 @@ describe('ChatServiceFactory', () => {
       expect(capabilities?.mcp).toBe(false);
     });
 
+    it('returns xAI reasoning effort capabilities', () => {
+      const capabilities = ChatServiceFactory.getProviderCapabilities('xai');
+
+      expect(capabilities?.reasoningEffort).toEqual([
+        'none',
+        'low',
+        'medium',
+        'high',
+      ]);
+    });
+
     it('returns undefined for unknown providers', () => {
       expect(
         ChatServiceFactory.getProviderCapabilities('unknown-provider'),

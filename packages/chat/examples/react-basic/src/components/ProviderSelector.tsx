@@ -10,8 +10,10 @@ import {
   allowsReasoningNone,
   allowsReasoningXHigh,
   getDefaultReasoningEffortForGPT5Model,
+  getDefaultXaiReasoningEffort,
   isGPT5Model,
   isXaiReasoningEffortModel,
+  isXaiReasoningEffortNoneModel,
   isResponsesOnlyGPT5Model,
   isOpenRouterFreeModel,
   refreshOpenRouterFreeModels,
@@ -104,6 +106,7 @@ import {
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,
   // xAI models
+  MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_20_NON_REASONING,
@@ -943,6 +946,12 @@ export const allModels: ProviderModel[] = [
 
   // xAI models
   {
+    id: MODEL_GROK_4_5,
+    name: 'Grok 4.5',
+    provider: 'xai',
+    default: false,
+  },
+  {
     id: MODEL_GROK_4_3,
     name: 'Grok 4.3',
     provider: 'xai',
@@ -1195,12 +1204,14 @@ export default function ProviderSelector({
     provider === 'openai' && allowsReasoningXHigh(selectedModel);
   const isXaiReasoningModel =
     provider === 'xai' && isXaiReasoningEffortModel(selectedModel);
+  const isXaiReasoningNoneModelSelected =
+    provider === 'xai' && isXaiReasoningEffortNoneModel(selectedModel);
   const xaiReasoningEffort =
     reasoning_effort === 'low' ||
     reasoning_effort === 'medium' ||
     reasoning_effort === 'high'
       ? reasoning_effort
-      : 'none';
+      : (getDefaultXaiReasoningEffort(selectedModel) ?? 'none');
   const baseModelsForProvider = useMemo(
     () => allModels.filter((model) => model.provider === provider),
     [provider],
@@ -1733,14 +1744,17 @@ export default function ProviderSelector({
                 disabled={disabled || !isXaiReasoningModel}
                 className="select-input"
               >
-                <option value="none">None (fastest)</option>
+                {isXaiReasoningNoneModelSelected && (
+                  <option value="none">None (fastest)</option>
+                )}
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
               </select>
               {!isXaiReasoningModel && (
                 <span className="helper-text">
-                  Available only for Grok 4.3; omitted for other xAI models.
+                  Available only for Grok 4.5 and Grok 4.3; omitted for other
+                  xAI models.
                 </span>
               )}
             </div>

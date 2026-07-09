@@ -687,17 +687,17 @@ Notes:
 ```typescript
 const xaiService = ChatServiceFactory.createChatService('xai', {
   apiKey: process.env.XAI_API_KEY,
-  model: 'grok-4.3',
-  reasoning_effort: 'none', // Optional for Grok 4.3: none, low, medium, high
-  visionModel: 'grok-4.3', // Optional: all xAI models support vision
+  model: 'grok-4.5',
+  reasoning_effort: 'low', // Optional for Grok 4.5: low, medium, high
+  visionModel: 'grok-4.3', // Optional: use a vision-capable xAI model
 });
 ```
 
 Notes:
 - xAI uses OpenAI-compatible Chat Completions.
-- Supported models: `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
-- `reasoning_effort` is sent only for `grok-4.3`, where xAI supports `none`, `low`, `medium`, and `high`. The default is `none` for fast chat responses.
-- All supported xAI models support vision and tool/function calling.
+- Supported models: `grok-4.5`, `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
+- `reasoning_effort` is sent only for models that support it. `grok-4.5` supports `low`, `medium`, and `high` and defaults to `low` for chat-style responses. `grok-4.3` supports `none`, `low`, `medium`, and `high` and defaults to `none`.
+- Supported xAI models can be used with vision and tool/function calling. Grok 4.5 vision support is enabled so image chat can be validated directly in the React basic sample.
 
 #### Kimi (Moonshot)
 
@@ -1148,7 +1148,7 @@ Currently, the following AI providers are built-in:
 - **Claude**: Supports current Claude API model IDs including Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5.2/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)
-- **xAI**: Supports Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support
+- **xAI**: Supports Grok 4.5 with `reasoning_effort: 'low'` by default for chat-style responses, plus Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support.
 - **Kimi**: Supports Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`) and DeepSeek V4 Pro (`deepseek-v4-pro`) via OpenAI-compatible Chat Completions. Legacy aliases `deepseek-chat` and `deepseek-reasoner` are deprecated by DeepSeek.
 - **Mistral**: Supports current Mistral generalist models including `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, and `mistral-medium-2508`, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.

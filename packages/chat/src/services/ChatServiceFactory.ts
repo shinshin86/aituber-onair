@@ -38,7 +38,7 @@ const REASONING_EFFORT_BY_PROVIDER: Record<string, string[]> = {
   openrouter: ['none', 'minimal', 'low', 'medium', 'high'],
   mistral: ['low', 'medium', 'high'],
   plamo: ['none', 'medium'],
-  xai: ['low', 'high'],
+  xai: ['none', 'low', 'medium', 'high'],
 };
 
 /**
