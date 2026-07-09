@@ -675,17 +675,17 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 ```typescript
 const xaiService = ChatServiceFactory.createChatService('xai', {
   apiKey: process.env.XAI_API_KEY,
-  model: 'grok-4.3',
-  reasoning_effort: 'none', // 任意（Grok 4.3）: none, low, medium, high
-  visionModel: 'grok-4.3', // 任意: xAI の全モデルがビジョン対応
+  model: 'grok-4.5',
+  reasoning_effort: 'low', // 任意（Grok 4.5）: low, medium, high
+  visionModel: 'grok-4.3', // 任意: ビジョン対応の xAI モデルを指定
 });
 ```
 
 注意:
 - xAIはOpenAI互換のChat Completionsを利用します。
-- 対応モデル: `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
-- `reasoning_effort` は xAI が `none`, `low`, `medium`, `high` に対応している `grok-4.3` の場合のみ送信されます。高速なチャット応答向けにデフォルトは `none` です。
-- すべての対応 xAI モデルでビジョンとツール・関数呼び出しを利用できます。
+- 対応モデル: `grok-4.5`, `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
+- `reasoning_effort` は対応モデルにのみ送信されます。`grok-4.5` は `low`, `medium`, `high` に対応し、チャット用途向けにデフォルトは `low` です。`grok-4.3` は `none`, `low`, `medium`, `high` に対応し、デフォルトは `none` です。
+- 対応 xAI モデルではビジョンとツール・関数呼び出しを利用できます。Grok 4.5 も React basic サンプルで画像チャットを直接検証できるようにビジョン対応として有効化しています。
 
 #### Kimi（Moonshot）
 
@@ -1133,7 +1133,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **Claude**: Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5.2/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
-- **xAI**: Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
+- **xAI**: Grok 4.5 をチャット用途向けに `reasoning_effort: 'low'` デフォルトでサポート。加えて Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
 - **Kimi**: Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
 - **DeepSeek**: DeepSeek V4 Flash（`deepseek-v4-flash`）と DeepSeek V4 Pro（`deepseek-v4-pro`）をOpenAI互換Chat Completions経由でサポート。legacy alias の`deepseek-chat`と`deepseek-reasoner`はDeepSeek側で非推奨です
 - **Mistral**: `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`などの現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します

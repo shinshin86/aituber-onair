@@ -9,6 +9,7 @@ import {
   getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
   isXaiReasoningEffortModel,
+  normalizeXaiReasoningEffort,
   type Message,
   type MessageWithVision,
   type ChatResponseLength,
@@ -154,11 +155,14 @@ function App() {
     reasoning_effort,
   );
   const xaiReasoningEffort: XaiReasoningEffortLevel =
-    reasoning_effort === 'low' ||
-    reasoning_effort === 'medium' ||
-    reasoning_effort === 'high'
-      ? reasoning_effort
-      : 'none';
+    normalizeXaiReasoningEffort(
+      selectedModel,
+      reasoning_effort === 'low' ||
+        reasoning_effort === 'medium' ||
+        reasoning_effort === 'high'
+        ? reasoning_effort
+        : 'none',
+    ) ?? 'none';
   const visionSupportLevel = getVisionSupportLevel(provider, selectedModel);
   const effectiveApiKey =
     provider === 'openai-compatible' ? apiKey.trim() : apiKey;

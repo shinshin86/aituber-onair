@@ -3,6 +3,7 @@ import { XAIChatServiceProvider } from '../../src/services/providers/xai/XAIChat
 import type { XAIChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+  MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_20_NON_REASONING,
@@ -31,6 +32,7 @@ describe('XAIChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GROK_4_5,
         MODEL_GROK_4_3,
         MODEL_GROK_4_20_REASONING,
         MODEL_GROK_4_20_NON_REASONING,
@@ -56,7 +58,7 @@ describe('XAIChatServiceProvider', () => {
   });
 
   describe('supportsVisionForModel', () => {
-    it('should return true for all supported models', () => {
+    it('should return true for supported vision models', () => {
       expect(provider.supportsVisionForModel(MODEL_GROK_4_3)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GROK_4_20_REASONING)).toBe(
         true,
@@ -70,6 +72,7 @@ describe('XAIChatServiceProvider', () => {
       expect(
         provider.supportsVisionForModel(MODEL_GROK_4_1_FAST_NON_REASONING),
       ).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GROK_4_5)).toBe(true);
     });
 
     it('should return false for unknown models', () => {
@@ -115,6 +118,25 @@ describe('XAIChatServiceProvider', () => {
         ENDPOINT_XAI_CHAT_COMPLETIONS_API,
         undefined,
         'none',
+      );
+    });
+
+    it('should default Grok 4.5 reasoning effort to low for chat use', () => {
+      const options: XAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GROK_4_5,
+      };
+
+      provider.createChatService(options);
+
+      expect(XAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GROK_4_5,
+        MODEL_GROK_4_5,
+        undefined,
+        ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+        undefined,
+        'low',
       );
     });
 

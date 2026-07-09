@@ -6,6 +6,7 @@ import {
   MODEL_GROK_4_1_FAST_NON_REASONING,
   isXaiReasoningEffortModel,
   isXaiVisionModel,
+  normalizeXaiReasoningEffort,
 } from '../../../constants/xai';
 import type { XaiReasoningEffort } from '../../../constants/xai';
 import {
@@ -211,7 +212,10 @@ export class XAIChatService implements ChatService {
     }
 
     if (this.reasoningEffort && isXaiReasoningEffortModel(model)) {
-      body.reasoning_effort = this.reasoningEffort;
+      body.reasoning_effort = normalizeXaiReasoningEffort(
+        model,
+        this.reasoningEffort,
+      );
     }
 
     const tools = this.buildToolsDefinition();

@@ -146,9 +146,10 @@ Use the dropdown to select response length:
 - Best for: OpenAI-compatible GLM integration
 
 **xAI**
-- Models: Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, Grok 4-1 Fast Reasoning/Non-Reasoning
+- Models: Grok 4.5, Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, Grok 4-1 Fast Reasoning/Non-Reasoning
 - Vision: Supported
 - Best for: Grok models with OpenAI-compatible API
+- Grok 4.5 exposes `reasoning_effort` and defaults to `low` for chat-style responses; Grok 4.3 defaults to `none` for lower latency
 
 **Kimi**
 - Models: Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6, Kimi K2.5

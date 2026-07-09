@@ -1,6 +1,13 @@
 # @aituber-onair/chat
 
-## Unreleased
+## 0.45.0
+
+### Minor Changes
+
+- Added xAI Grok 4.5 (`grok-4.5`) as an explicit chat model with
+  `reasoning_effort` defaulting to `low` for chat-style responses.
+- Enabled Grok 4.5 in the xAI vision support list so the React basic sample can
+  send image chat requests with this model.
 
 ## 0.44.0
 
