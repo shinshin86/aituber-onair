@@ -137,6 +137,19 @@ Collect missing inputs before editing:
     - Update `packages/voice/package.json`.
     - Update `packages/voice/CHANGELOG.md`.
     - Update affected lockfiles when workspace metadata changes.
+    - Keep this release prep scoped to `@aituber-onair/voice`.
+    - Do not bump dependent package versions or add dependent package
+      changelog entries only for dependency range alignment.
+    - In particular, do not bump or add release notes for
+      `@aituber-onair/core` or `create-aituber-onair` unless the user
+      explicitly asks to release those packages in the same task.
+    - If root lockfile resolution adds a nested previous voice version for a
+      dependent package because of `0.x` semver ranges, keep the dependent
+      package range unchanged unless a separate core propagation/release task is
+      explicitly requested.
+    - After voice release prep is complete, ask whether to handle core
+      propagation/release as a separate follow-up. Skip that question only when
+      the user already requested voice + core release work in the same task.
 12. Verify:
     - Run package-level `fmt`, `lint`, `test`, and `build`.
     - If the React example changed, run its `build` too.
