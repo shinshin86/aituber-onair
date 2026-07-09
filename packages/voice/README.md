@@ -61,7 +61,7 @@ pnpm install @aituber-onair/voice
 - **Multiple TTS Engine Support**  
   Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Unreal Speech,
   ElevenLabs, Inworld, Gradium, Gemini TTS, MiniMax, AivisSpeech, Aivis Cloud,
-  and more
+  Web Speech API, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
 - **Emotion-Aware Synthesis**  
@@ -395,6 +395,29 @@ const voiceService = new VoiceService({
 `x-goog-api-key` to the Gemini API. Available voices include Zephyr, Aoede,
 Kore, Puck, Charon, and 25+ more prebuilt voices.
 
+### Web Speech API
+Browser-native speech synthesis through `window.speechSynthesis`. This engine
+does not return audio bytes; the browser plays speech directly.
+
+```typescript
+const voiceService = new VoiceEngineAdapter({
+  engineType: 'webSpeech',
+  speaker: '', // Optional: SpeechSynthesisVoice name or voiceURI
+  webSpeechLanguage: 'ja-JP',
+  webSpeechRate: 1.1,
+  webSpeechPitch: 1.0,
+  webSpeechVolume: 1.0,
+});
+
+await voiceService.speak({ text: 'こんにちは' });
+```
+
+Use `getVoiceEngineVoiceList('webSpeech')` in a browser to list available
+`SpeechSynthesisVoice` entries. Some browsers populate voices asynchronously,
+so the helper waits briefly for `voiceschanged`. Because no `ArrayBuffer` is
+available, `onPlay(audioBuffer)` is skipped for this engine; `onComplete` still
+runs when the utterance ends. Runtime support is browser-only.
+
 ### None (Silent Mode)
 No audio output - useful for testing or text-only scenarios.
 
@@ -691,6 +714,12 @@ try {
 - Configurable Gemini API base URL
 - 24+ language support including Japanese
 
+### Web Speech API Features
+- Browser-native `speechSynthesis` playback with no API key
+- Browser-only runtime; no Node.js or server audio byte output
+- Supports voice selection by `SpeechSynthesisVoice.name` or `voiceURI`
+- Supports rate, pitch, volume, and language options where the browser voice honors them
+
 ## Integration with AITuber OnAir Core
 
 While this package can be used independently, it integrates seamlessly with [@aituber-onair/core](https://www.npmjs.com/package/@aituber-onair/core):
@@ -731,6 +760,7 @@ type VoiceServiceOptions =
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions
   | PiperPlusVoiceServiceOptions
+  | WebSpeechVoiceServiceOptions
   | NoneVoiceServiceOptions;
 ```
 
@@ -771,9 +801,9 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 
 `getVoiceEngineVoiceList()` returns normalized `{ id, label }` items for
 engines that expose list APIs: VOICEVOX, AivisSpeech, Aivis Cloud, xAI,
-ElevenLabs, Inworld, and Gradium. Pass local `apiUrl` for VOICEVOX-compatible
-servers, `apiKey` for cloud engines that require it, and `language` for Inworld
-filtering.
+ElevenLabs, Inworld, Gradium, and Web Speech API. Pass local `apiUrl` for
+VOICEVOX-compatible servers, `apiKey` for cloud engines that require it, and
+`language` for Inworld filtering.
 
 For browser apps, cloud provider voice-list endpoints must allow CORS. If a
 provider blocks direct browser requests, call `getVoiceEngineVoiceList()` from

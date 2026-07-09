@@ -14,6 +14,7 @@ import { UnrealSpeechEngine } from './UnrealSpeechEngine';
 import { VoiceEngine } from './VoiceEngine';
 import { VoicePeakEngine } from './VoicePeakEngine';
 import { VoiceVoxEngine } from './VoiceVoxEngine';
+import { WebSpeechEngine } from './WebSpeechEngine';
 import { XaiEngine } from './XaiEngine';
 
 const ENGINE_CONSTRUCTORS = {
@@ -31,6 +32,7 @@ const ENGINE_CONSTRUCTORS = {
   openaiCompatible: OpenAiCompatibleEngine,
   minimax: MinimaxEngine,
   piperPlus: PiperPlusEngine,
+  webSpeech: WebSpeechEngine,
   none: NoneEngine,
 } as const satisfies Record<VoiceEngineType, new () => VoiceEngine>;
 

@@ -13,4 +13,5 @@ export type VoiceEngineType =
   | 'aivisCloud'
   | 'minimax'
   | 'piperPlus'
+  | 'webSpeech'
   | 'none';

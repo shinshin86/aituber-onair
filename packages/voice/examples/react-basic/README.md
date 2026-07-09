@@ -58,6 +58,7 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 - **AIVIS Speech** - Emotion-aware synthesis
 - **VoicePeak** - Professional voice synthesis with single-tag and weighted emotion UI (`vpeakserver v0.2.0+` required for weighted mode)
 - **MiniMax** - Advanced Chinese/Japanese TTS
+- **Web Speech API** - Browser-native speechSynthesis playback with no API key and sample-side language filtering
 
 ### Dynamic Configuration
 
@@ -171,6 +172,13 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 # This example keeps fixed model UUID input. For dynamic model selection, call
 # getVoiceEngineVoiceList('aivisCloud') from a Node.js backend or proxy in
 # production.
+```
+
+#### Web Speech API
+```bash
+# No API key or server is required. The browser plays audio directly through
+# window.speechSynthesis, so audio ArrayBuffer callbacks are not available.
+# Use the "Browser voice list" button to select a local browser voice.
 ```
 
 ## Piper Plus Setup

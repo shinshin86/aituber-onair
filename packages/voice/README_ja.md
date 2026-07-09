@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloudなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloud、Web Speech APIなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -393,6 +393,30 @@ const voiceService = new VoiceService({
 API に `x-goog-api-key` として送信されます。利用可能なボイスには
 Zephyr、Aoede、Kore、Puck、Charon など 30 種類のプリセットボイスがあります。
 
+### Web Speech API
+`window.speechSynthesis` を使うブラウザ標準の音声合成です。この engine は
+音声バイト列を返さず、ブラウザが直接再生します。
+
+```typescript
+const voiceService = new VoiceEngineAdapter({
+  engineType: 'webSpeech',
+  speaker: '', // オプション：SpeechSynthesisVoice の name または voiceURI
+  webSpeechLanguage: 'ja-JP',
+  webSpeechRate: 1.1,
+  webSpeechPitch: 1.0,
+  webSpeechVolume: 1.0,
+});
+
+await voiceService.speak({ text: 'こんにちは' });
+```
+
+ブラウザ上で `getVoiceEngineVoiceList('webSpeech')` を呼ぶと、利用可能な
+`SpeechSynthesisVoice` を取得できます。一部ブラウザでは voice list が非同期に
+読み込まれるため、この helper は短時間 `voiceschanged` を待ちます。
+`ArrayBuffer` が存在しないため、この engine では `onPlay(audioBuffer)` は
+呼ばれません。utterance 終了時の `onComplete` は呼ばれます。実行環境は
+ブラウザのみです。
+
 ### None（サイレントモード）
 音声出力なし - テストやテキストのみのシナリオに便利。
 
@@ -693,6 +717,12 @@ try {
 - Gemini API ベース URL の切り替えに対応
 - 日本語を含む24以上の言語サポート
 
+### Web Speech API の機能
+- API キー不要のブラウザ標準 `speechSynthesis` 再生
+- ブラウザ専用。Node.js / server runtime では音声バイト列を出力しません
+- `SpeechSynthesisVoice.name` または `voiceURI` による話者選択
+- ブラウザ voice が対応する範囲で rate、pitch、volume、language を指定可能
+
 ## AITuber OnAir Coreとの統合
 
 このパッケージは独立して使用できますが、[@aituber-onair/core](https://www.npmjs.com/package/@aituber-onair/core)とシームレスに統合されます：
@@ -733,6 +763,7 @@ type VoiceServiceOptions =
   | AivisCloudVoiceServiceOptions
   | MinimaxVoiceServiceOptions
   | PiperPlusVoiceServiceOptions
+  | WebSpeechVoiceServiceOptions
   | NoneVoiceServiceOptions;
 ```
 
@@ -773,9 +804,9 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 
 `getVoiceEngineVoiceList()` は、一覧 API を持つ engine について
 正規化済みの `{ id, label }` を返します。対象は VOICEVOX、AivisSpeech、
-Aivis Cloud、xAI、ElevenLabs、Inworld、Gradium です。VOICEVOX 互換サーバーには
-local `apiUrl`、API key が必要な cloud engine には `apiKey`、Inworld の
-絞り込みには `language` を渡します。
+Aivis Cloud、xAI、ElevenLabs、Inworld、Gradium、Web Speech API です。
+VOICEVOX 互換サーバーには local `apiUrl`、API key が必要な cloud engine には
+`apiKey`、Inworld の絞り込みには `language` を渡します。
 
 browser app では、cloud provider の voice list endpoint が CORS を許可している
 必要があります。provider がブラウザからの直接リクエストをブロックする場合は、

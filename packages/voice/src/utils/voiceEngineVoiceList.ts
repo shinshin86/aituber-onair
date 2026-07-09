@@ -13,6 +13,7 @@ import type {
 } from '../types/capabilities';
 import type { VoiceEngineType } from '../types/voiceEngine';
 import { fetchWithTimeout } from '../engines/internal/utils';
+import { getWebSpeechVoiceList } from '../engines/WebSpeechEngine';
 
 interface LocalSpeakerStyleResponse {
   id: number | string;
@@ -393,6 +394,28 @@ async function getAivisCloudVoiceList(
   });
 }
 
+async function getBrowserWebSpeechVoiceList(
+  options: VoiceEngineVoiceListOptions,
+): Promise<VoiceEngineVoice[]> {
+  const voices = await getWebSpeechVoiceList({
+    timeoutMs: options.timeoutMs,
+  });
+
+  return voices.map((voice) => ({
+    id: voice.voiceURI || voice.name,
+    label: `${voice.name}${voice.lang ? ` (${voice.lang})` : ''}`,
+    metadata: {
+      ...(voice.lang ? { language: voice.lang } : {}),
+      ...(voice.localService !== undefined
+        ? { localService: String(voice.localService) }
+        : {}),
+      ...(voice.default !== undefined
+        ? { default: String(voice.default) }
+        : {}),
+    },
+  }));
+}
+
 export async function getVoiceEngineVoiceList(
   engineType: VoiceEngineType,
   options: VoiceEngineVoiceListOptions = {},
@@ -411,6 +434,8 @@ export async function getVoiceEngineVoiceList(
       return getGradiumVoiceList(options);
     case 'aivisCloud':
       return getAivisCloudVoiceList(options);
+    case 'webSpeech':
+      return getBrowserWebSpeechVoiceList(options);
     default:
       throw new Error(`Voice list is not supported for engine: ${engineType}`);
   }

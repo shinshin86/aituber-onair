@@ -6,6 +6,7 @@ import type {
   InworldVoiceServiceOptions,
   PiperPlusAssets,
   PiperPlusVoiceServiceOptions,
+  WebSpeechVoiceServiceOptions,
 } from '../src';
 import { EmotionParser, VoiceEngineAdapter, textToScreenplay } from '../src';
 
@@ -41,6 +42,7 @@ describe('Voice Package Exports', () => {
     expect(voicePackage.OpenAiCompatibleEngine).toBeDefined();
     expect(voicePackage.MinimaxEngine).toBeDefined();
     expect(voicePackage.PiperPlusEngine).toBeDefined();
+    expect(voicePackage.WebSpeechEngine).toBeDefined();
   });
 
   it('should keep NoneEngine out of the public engine exports', () => {
@@ -63,6 +65,17 @@ describe('Voice Package Exports', () => {
 
     expect(assets.modelFile).toBe('model.onnx');
     expect(options.engineType).toBe('piperPlus');
+  });
+
+  it('should expose Web Speech public types through the package root', () => {
+    const options: WebSpeechVoiceServiceOptions = {
+      engineType: 'webSpeech',
+      speaker: 'Kyoko',
+      webSpeechRate: 1.2,
+      webSpeechLanguage: 'ja-JP',
+    };
+
+    expect(options.engineType).toBe('webSpeech');
   });
 
   it('should expose Inworld public types through the package root', () => {

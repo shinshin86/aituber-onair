@@ -14,6 +14,7 @@ import { UnrealSpeechEngine } from '../src/engines/UnrealSpeechEngine';
 import { VoiceEngineFactory } from '../src/engines/VoiceEngineFactory';
 import { VoicePeakEngine } from '../src/engines/VoicePeakEngine';
 import { VoiceVoxEngine } from '../src/engines/VoiceVoxEngine';
+import { WebSpeechEngine } from '../src/engines/WebSpeechEngine';
 import { XaiEngine } from '../src/engines/XaiEngine';
 import type { VoiceEngineType } from '../src/types/voiceEngine';
 
@@ -32,6 +33,7 @@ const expectedEngineConstructors = {
   aivisCloud: AivisCloudEngine,
   minimax: MinimaxEngine,
   piperPlus: PiperPlusEngine,
+  webSpeech: WebSpeechEngine,
   none: NoneEngine,
 } as const satisfies Record<VoiceEngineType, new () => unknown>;
 

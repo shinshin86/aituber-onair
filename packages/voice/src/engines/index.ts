@@ -50,3 +50,9 @@ export {
   type MinimaxAudioFormat,
 } from './MinimaxEngine';
 export { PiperPlusEngine, type PiperPlusAssets } from './PiperPlusEngine';
+export {
+  WebSpeechEngine,
+  getWebSpeechVoiceList,
+  waitForWebSpeechVoices,
+  type WebSpeechEngineDependencies,
+} from './WebSpeechEngine';

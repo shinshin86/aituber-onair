@@ -1,5 +1,9 @@
 import { AudioPlayer } from '../types/audioPlayer';
-import { VoiceEngine } from '../engines/VoiceEngine';
+import {
+  isSelfPlayingVoiceEngine,
+  SelfPlayingVoiceEngine,
+  VoiceEngine,
+} from '../engines/VoiceEngine';
 import { ChatScreenplay } from '../types/chat';
 import { Talk } from '../types/voice';
 import { textToScreenplay } from '../utils/screenplay';
@@ -21,12 +25,23 @@ interface SpeechRequest {
   id: number;
   screenplay: ChatScreenplay;
   options?: AudioPlayOptions;
-  audioPromise: Promise<ArrayBuffer>;
+  speechPromise: Promise<PreparedSpeech>;
   resolve: () => void;
   reject: (error: unknown) => void;
   completionPromise: Promise<void>;
   cancelled: boolean;
 }
+
+type PreparedSpeech =
+  | {
+      kind: 'audio';
+      audioBuffer: ArrayBuffer;
+    }
+  | {
+      kind: 'direct';
+      engine: SelfPlayingVoiceEngine;
+      talk: Talk;
+    };
 
 const COMMON_UPDATE_KEYS = [
   'speaker',
@@ -44,6 +59,7 @@ export class VoiceEngineAdapter implements VoiceService {
   private requestQueue: SpeechRequest[] = [];
   private isProcessingQueue = false;
   private activeRequest?: SpeechRequest;
+  private activeSelfPlayingEngine?: SelfPlayingVoiceEngine;
   private requestIdCounter = 0;
   private cachedPiperPlusEngine?: VoiceEngine;
 
@@ -107,15 +123,15 @@ export class VoiceEngineAdapter implements VoiceService {
       rejectInner(error);
     };
 
-    const audioPromise = this.fetchAudioForScreenplay(screenplay);
+    const speechPromise = this.prepareSpeechForScreenplay(screenplay);
     // Prevent unhandled rejections; actual handling occurs in processQueue.
-    audioPromise.catch(() => {});
+    speechPromise.catch(() => {});
 
     return {
       id,
       screenplay,
       options,
-      audioPromise,
+      speechPromise,
       resolve: resolveFn,
       reject: rejectFn,
       completionPromise,
@@ -134,9 +150,9 @@ export class VoiceEngineAdapter implements VoiceService {
       while (this.requestQueue.length > 0) {
         const request = this.requestQueue[0];
 
-        let audioBuffer: ArrayBuffer;
+        let preparedSpeech: PreparedSpeech;
         try {
-          audioBuffer = await request.audioPromise;
+          preparedSpeech = await request.speechPromise;
         } catch (error) {
           console.error('Error fetching audio for speech:', error);
           request.reject(error);
@@ -151,12 +167,13 @@ export class VoiceEngineAdapter implements VoiceService {
 
         try {
           this.activeRequest = request;
-          await this.playAudioBuffer(audioBuffer, request.options);
+          await this.playPreparedSpeech(preparedSpeech, request.options);
           request.resolve();
         } catch (error) {
           console.error('Error in speech playback:', error);
           request.reject(error);
         } finally {
+          this.activeSelfPlayingEngine = undefined;
           this.activeRequest = undefined;
           this.requestQueue.shift();
         }
@@ -166,9 +183,9 @@ export class VoiceEngineAdapter implements VoiceService {
     }
   }
 
-  private async fetchAudioForScreenplay(
+  private async prepareSpeechForScreenplay(
     screenplay: ChatScreenplay,
-  ): Promise<ArrayBuffer> {
+  ): Promise<PreparedSpeech> {
     const talk: Talk = {
       style: emotionToTalkStyle(screenplay.emotion),
       message: screenplay.text,
@@ -178,12 +195,25 @@ export class VoiceEngineAdapter implements VoiceService {
 
     applyOptionsToEngine(engine, this.options);
 
+    if (isSelfPlayingVoiceEngine(engine)) {
+      return {
+        kind: 'direct',
+        engine,
+        talk,
+      };
+    }
+
     // Get audio data
-    return await engine.fetchAudio(
+    const audioBuffer = await engine.fetchAudio(
       talk,
       this.options.speaker ?? '',
       this.options.apiKey,
     );
+
+    return {
+      kind: 'audio',
+      audioBuffer,
+    };
   }
 
   private async getEngine(): Promise<VoiceEngine> {
@@ -216,6 +246,26 @@ export class VoiceEngineAdapter implements VoiceService {
     await this.audioPlayer.play(audioBuffer, options?.audioElementId);
   }
 
+  private async playPreparedSpeech(
+    preparedSpeech: PreparedSpeech,
+    options?: AudioPlayOptions,
+  ): Promise<void> {
+    if (preparedSpeech.kind === 'audio') {
+      await this.playAudioBuffer(preparedSpeech.audioBuffer, options);
+      return;
+    }
+
+    this.activeSelfPlayingEngine = preparedSpeech.engine;
+    await preparedSpeech.engine.speakDirectly(
+      preparedSpeech.talk,
+      this.options.speaker ?? '',
+    );
+
+    if (this.options.onComplete) {
+      this.options.onComplete();
+    }
+  }
+
   /**
    * Speak text as audio
    * @param text Text (with emotion tags) to speak
@@ -231,6 +281,10 @@ export class VoiceEngineAdapter implements VoiceService {
    * Get whether currently playing
    */
   isPlaying(): boolean {
+    if (this.activeSelfPlayingEngine?.isSpeaking?.()) {
+      return true;
+    }
+
     return this.audioPlayer.isPlaying();
   }
 
@@ -245,6 +299,7 @@ export class VoiceEngineAdapter implements VoiceService {
    * Stop playback
    */
   stop(): void {
+    this.activeSelfPlayingEngine?.stopSpeaking();
     this.audioPlayer.stop();
 
     const stopError = new Error('Speech playback stopped');
