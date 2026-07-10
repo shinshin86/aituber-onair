@@ -9,6 +9,10 @@ import {
   MODEL_GPT_5_1,
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
+  MODEL_GPT_5_6,
+  MODEL_GPT_5_6_SOL,
+  MODEL_GPT_5_6_TERRA,
+  MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
@@ -52,6 +56,10 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_GPT_5_1,
         MODEL_GPT_5_4,
         MODEL_GPT_5_5,
+        MODEL_GPT_5_6,
+        MODEL_GPT_5_6_SOL,
+        MODEL_GPT_5_6_TERRA,
+        MODEL_GPT_5_6_LUNA,
         MODEL_GPT_5_4_MINI,
         MODEL_GPT_5_4_NANO,
         MODEL_GPT_5_4_PRO,
@@ -87,6 +95,10 @@ describe('OpenAIChatServiceProvider', () => {
       expect(provider.supportsVisionForModel(MODEL_GPT_5_1)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_4)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_5)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_5_6)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_5_6_SOL)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_5_6_TERRA)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_5_6_LUNA)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_4_MINI)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_4_NANO)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_4_PRO)).toBe(true);
@@ -211,6 +223,78 @@ describe('OpenAIChatServiceProvider', () => {
         undefined,
         undefined,
         'none',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should use Chat Completions with max reasoning for GPT-5.6 by default', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_6,
+        reasoning_effort: 'max',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_6,
+        MODEL_GPT_5_6,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'max',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should use Responses API for GPT-5.6 Terra when requested', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_6_TERRA,
+        gpt5EndpointPreference: 'responses',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_6_TERRA,
+        MODEL_GPT_5_6_TERRA,
+        undefined,
+        ENDPOINT_OPENAI_RESPONSES_API,
+        [],
+        undefined,
+        undefined,
+        'none',
+        undefined,
+        'openai',
+      );
+    });
+
+    it('should round max reasoning down to xhigh for GPT-5.5', () => {
+      const options: OpenAIChatServiceOptions = {
+        apiKey: 'test-api-key',
+        model: MODEL_GPT_5_5,
+        reasoning_effort: 'max',
+      };
+
+      provider.createChatService(options);
+
+      expect(OpenAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GPT_5_5,
+        MODEL_GPT_5_5,
+        undefined,
+        ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+        [],
+        undefined,
+        undefined,
+        'xhigh',
         undefined,
         'openai',
       );

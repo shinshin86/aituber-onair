@@ -448,6 +448,8 @@ const compatibleService = ChatServiceFactory.createChatService(
 - 既存の `openai` プロバイダーの挙動は変更されません。
 
 `reasoning_effort` の選択肢はモデルによって異なります。
+- `gpt-5.6` / `gpt-5.6-sol` / `gpt-5.6-terra` / `gpt-5.6-luna`:
+  `'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'`
 - `gpt-5.4-pro`: `'medium' | 'high' | 'xhigh'`（Responses API 専用）
 - `gpt-5.5`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.4`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
@@ -457,8 +459,8 @@ const compatibleService = ChatServiceFactory.createChatService(
 
 このパッケージでのデフォルト値と正規化:
 - `'none'` に対応するモデル（`gpt-5.1`, `gpt-5.4`, `gpt-5.4-mini`,
-  `gpt-5.4-nano`, `gpt-5.5`）は、高速なチャット応答を優先してデフォルトが
-  `'none'` になります。OpenAI 公式のデフォルトが `'medium'` のモデルも
+  `gpt-5.4-nano`, `gpt-5.5`, GPT-5.6 family）は、高速なチャット応答を
+  優先してデフォルトが `'none'` になります。OpenAI 公式のデフォルトが `'medium'` のモデルも
   ありますが、このパッケージでは意図的に低遅延を優先しています。
 - 旧 GPT-5 系モデル（`gpt-5`, `gpt-5-mini`, `gpt-5-nano`）は、
   高速なチャット応答向けに `reasoning_effort` のデフォルトが
@@ -477,7 +479,7 @@ const compatibleService = ChatServiceFactory.createChatService(
 
 - `casual` – 最速の応答（`reasoning_effort: 'minimal'`,
   `verbosity: 'low'`）。`'minimal'` 非対応モデルでは、そのモデルで使える
-  最小の effort に解決されます（GPT-5.1 / 5.4 / 5.5 系では `'none'`、
+  最小の effort に解決されます（GPT-5.1 / 5.4 / 5.5 / 5.6 系では `'none'`、
   `gpt-5.4-pro` では `'medium'`）。
 - `balanced` – `reasoning_effort: 'medium'`, `verbosity: 'medium'`。
 - `expert` – `reasoning_effort: 'high'`, `verbosity: 'high'`。
@@ -505,7 +507,10 @@ const aituberChatService = ChatServiceFactory.createChatService('openai', {
 
 **GPT-5ファミリーの概要**
 
-- `gpt-5.5` – 複雑なプロフェッショナル用途向けの OpenAI 最新フロンティアモデル。テキスト/画像入力に対応し、Chat Completions API と Responses API の両方で利用できます。
+- `gpt-5.6` / `gpt-5.6-sol` – 複雑なプロフェッショナル用途向けの GPT-5.6 フラッグシップ tier。`gpt-5.6` は Sol にルーティングされる alias です。
+- `gpt-5.6-terra` – GPT-5.6 の知能とコストのバランスを重視したモデル。
+- `gpt-5.6-luna` – コスト重視の高頻度ワークロード向け GPT-5.6 モデル。
+- `gpt-5.5` – 一世代前のフロンティアモデル。テキスト/画像入力に対応し、Chat Completions API と Responses API の両方で利用できます。
 - `gpt-5.4-pro` – GPT-5.4 の上位モデル。Responses API でのみ利用可能。
 - `gpt-5.4` – コーディング、指示追従、長い文脈を伴うエージェント用途を強化した一世代前の GPT-5 系モデル。
 - `gpt-5.4-mini` – コーディング、ツール利用、マルチモーダル用途向けの高速な GPT-5.4 系小型モデル。
@@ -895,7 +900,8 @@ const tools: ToolDefinition[] = [{
 
 ただし OpenAI の GPT-5 family
 （`gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5.1`, `gpt-5.4`,
-`gpt-5.5`, `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`）では、これらは基準値として
+`gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`,
+`gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`）では、これらは基準値として
 扱われます。途中終了を減らすため、実際に送信される
 `max_completion_tokens` / `max_output_tokens` は、model と
 `reasoning_effort` に応じて自動的に引き上げられることがあります。
@@ -1127,7 +1133,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
+- **OpenAI**: GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.5 Flash、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート

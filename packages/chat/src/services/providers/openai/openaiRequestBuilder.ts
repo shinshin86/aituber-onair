@@ -41,6 +41,7 @@ const GPT5_REASONING_MIN_TOKENS: Record<OpenAIReasoningEffort, number> = {
   medium: 4000,
   high: 8000,
   xhigh: 12000,
+  max: 25000,
 };
 
 const OPENAI_COMPATIBLE_CHAT_COMPLETIONS_PROVIDERS = new Set([

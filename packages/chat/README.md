@@ -466,6 +466,8 @@ Notes:
 - Existing `openai` provider behavior is unchanged.
 
 `reasoning_effort` options differ per model:
+- `gpt-5.6` / `gpt-5.6-sol` / `gpt-5.6-terra` / `gpt-5.6-luna`:
+  `'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'`
 - `gpt-5.4-pro`: `'medium' | 'high' | 'xhigh'` (Responses API only)
 - `gpt-5.5`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
 - `gpt-5.4`: `'none' | 'low' | 'medium' | 'high' | 'xhigh'`
@@ -475,7 +477,8 @@ Notes:
 
 Defaults and normalization in this package:
 - Models that support `'none'` (`gpt-5.1`, `gpt-5.4`, `gpt-5.4-mini`,
-  `gpt-5.4-nano`, `gpt-5.5`) default to `'none'` for fast chat responses.
+  `gpt-5.4-nano`, `gpt-5.5`, and the GPT-5.6 family) default to `'none'`
+  for fast chat responses.
   Note that OpenAI's own default for some of these models is `'medium'`;
   this package intentionally prioritizes low latency.
 - Earlier GPT-5 models (`gpt-5`, `gpt-5-mini`, `gpt-5-nano`) use
@@ -494,7 +497,7 @@ Instead of tuning `reasoning_effort` and `verbosity` per model, you can set
 
 - `casual` – fastest responses (`reasoning_effort: 'minimal'`,
   `verbosity: 'low'`). On models without `'minimal'` this resolves to the
-  lowest supported effort (`'none'` on the GPT-5.1/5.4/5.5 family,
+  lowest supported effort (`'none'` on the GPT-5.1/5.4/5.5/5.6 family,
   `'medium'` on `gpt-5.4-pro`).
 - `balanced` – `reasoning_effort: 'medium'`, `verbosity: 'medium'`.
 - `expert` – `reasoning_effort: 'high'`, `verbosity: 'high'`.
@@ -521,7 +524,10 @@ Caveats:
 
 **Meet the GPT-5 family**
 
-- `gpt-5.5` – OpenAI's newest frontier model for complex professional work, with text and image input support and both Chat Completions and Responses API support.
+- `gpt-5.6` / `gpt-5.6-sol` – The GPT-5.6 flagship tier for complex professional work. `gpt-5.6` is an alias that routes to Sol.
+- `gpt-5.6-terra` – Balances GPT-5.6 intelligence and cost.
+- `gpt-5.6-luna` – GPT-5.6 tier for cost-sensitive, high-volume workloads.
+- `gpt-5.5` – Previous frontier model for complex professional work, with text and image input support and both Chat Completions and Responses API support.
 - `gpt-5.4-pro` – Highest-tier GPT-5.4 model. Use with Responses API only.
 - `gpt-5.4` – Previous GPT-5 generation model optimized for stronger coding, instruction following, and long-context agentic work.
 - `gpt-5.4-mini` – Faster GPT-5.4-class small model for coding, tool use, and multimodal workloads.
@@ -909,7 +915,8 @@ Base preset token targets are:
 - `deep`: 5000
 
 For the OpenAI GPT-5 family (`gpt-5`, `gpt-5-mini`, `gpt-5-nano`,
-`gpt-5.1`, `gpt-5.4`, `gpt-5.5`, `gpt-5.4-mini`, `gpt-5.4-nano`,
+`gpt-5.1`, `gpt-5.4`, `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`,
+`gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.4-mini`, `gpt-5.4-nano`,
 `gpt-5.4-pro`),
 these values are treated as base presets. The library may raise the actual
 `max_completion_tokens` or `max_output_tokens` to reduce premature truncation,
@@ -1142,7 +1149,7 @@ without hard-coding provider-specific rules.
 
 Currently, the following AI providers are built-in:
 
-- **OpenAI**: Supports models like GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
+- **OpenAI**: Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Supports current Claude API model IDs including Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
