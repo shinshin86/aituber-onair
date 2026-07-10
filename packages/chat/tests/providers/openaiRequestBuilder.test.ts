@@ -6,6 +6,8 @@ import {
   MODEL_GPT_5_4,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
+  MODEL_GPT_5_6,
+  MODEL_GPT_5_6_TERRA,
   MODEL_GPT_5_NANO,
 } from '../../src/constants';
 import { buildOpenAIRequestBody } from '../../src/services/providers/openai/openaiRequestBuilder';
@@ -18,6 +20,50 @@ import type {
 const messages: Message[] = [{ role: 'user', content: 'hello' }];
 
 describe('buildOpenAIRequestBody', () => {
+  it('builds a GPT-5.6 Chat Completions request with max reasoning', () => {
+    const body = buildOpenAIRequestBody({
+      provider: 'openai',
+      endpoint: ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+      messages,
+      model: MODEL_GPT_5_6,
+      stream: true,
+      tools: [],
+      mcpServers: [],
+      responseLength: CHAT_RESPONSE_LENGTH.MEDIUM,
+      reasoning_effort: 'max',
+    });
+
+    expect(body).toEqual({
+      model: MODEL_GPT_5_6,
+      stream: true,
+      max_completion_tokens: 25000,
+      messages,
+      reasoning_effort: 'max',
+    });
+  });
+
+  it('builds a GPT-5.6 Terra Responses request with max reasoning', () => {
+    const body = buildOpenAIRequestBody({
+      provider: 'openai',
+      endpoint: ENDPOINT_OPENAI_RESPONSES_API,
+      messages,
+      model: MODEL_GPT_5_6_TERRA,
+      stream: true,
+      tools: [],
+      mcpServers: [],
+      responseLength: CHAT_RESPONSE_LENGTH.MEDIUM,
+      reasoning_effort: 'max',
+    });
+
+    expect(body).toEqual({
+      model: MODEL_GPT_5_6_TERRA,
+      stream: true,
+      max_output_tokens: 25000,
+      input: messages,
+      reasoning: { effort: 'max' },
+    });
+  });
+
   it('raises chat completions token limit for GPT-5.4 responseLength presets', () => {
     const body = buildOpenAIRequestBody({
       provider: 'openai',

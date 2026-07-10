@@ -345,6 +345,7 @@ describe('ChatServiceFactory', () => {
       );
       expect(capabilities?.models.length).toBeGreaterThan(0);
       expect(capabilities?.reasoningEffort).toContain('medium');
+      expect(capabilities?.reasoningEffort).toContain('max');
     });
 
     it('returns model-level vision support when a model is specified', () => {

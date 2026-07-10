@@ -7,6 +7,10 @@ import {
   MODEL_GPT_5_1,
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
+  MODEL_GPT_5_6,
+  MODEL_GPT_5_6_SOL,
+  MODEL_GPT_5_6_TERRA,
+  MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
@@ -22,6 +26,7 @@ import {
   isGPT5Model,
   isResponsesOnlyGPT5Model,
   allowsReasoningXHigh,
+  allowsReasoningMax,
   allowsReasoningNone,
   allowsReasoningMinimal,
   allowsReasoningLow,
@@ -132,6 +137,10 @@ export class OpenAIChatServiceProvider
       MODEL_GPT_5_1,
       MODEL_GPT_5_4,
       MODEL_GPT_5_5,
+      MODEL_GPT_5_6,
+      MODEL_GPT_5_6_SOL,
+      MODEL_GPT_5_6_TERRA,
+      MODEL_GPT_5_6_LUNA,
       MODEL_GPT_5_4_MINI,
       MODEL_GPT_5_4_NANO,
       MODEL_GPT_5_4_PRO,
@@ -256,6 +265,10 @@ export class OpenAIChatServiceProvider
 
     if (effort === 'xhigh' && !allowsReasoningXHigh(modelName)) {
       return 'high';
+    }
+
+    if (effort === 'max' && !allowsReasoningMax(modelName)) {
+      return allowsReasoningXHigh(modelName) ? 'xhigh' : 'high';
     }
 
     return effort;

@@ -6,6 +6,7 @@ import {
   type GPT5PresetKey,
   type VisionSupportLevel,
   allowsReasoningLow,
+  allowsReasoningMax,
   allowsReasoningMinimal,
   allowsReasoningNone,
   allowsReasoningXHigh,
@@ -24,6 +25,10 @@ import {
   MODEL_GPT_5_1,
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
+  MODEL_GPT_5_6,
+  MODEL_GPT_5_6_SOL,
+  MODEL_GPT_5_6_TERRA,
+  MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
@@ -149,9 +154,16 @@ interface ProviderSelectorProps {
   onModelChange: (model: string) => void;
   gpt5Preset?: GPT5PresetKey;
   onGpt5PresetChange?: (preset: GPT5PresetKey | undefined) => void;
-  reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+  reasoning_effort?:
+    | 'none'
+    | 'minimal'
+    | 'low'
+    | 'medium'
+    | 'high'
+    | 'xhigh'
+    | 'max';
   onReasoningEffortChange?: (
-    effort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh',
+    effort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max',
   ) => void;
   verbosity?: 'low' | 'medium' | 'high';
   onVerbosityChange?: (verbosity: 'low' | 'medium' | 'high') => void;
@@ -470,6 +482,30 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GPT_5_5,
     name: 'GPT-5.5',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_5_6,
+    name: 'GPT-5.6 (Sol alias)',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_5_6_SOL,
+    name: 'GPT-5.6 Sol',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_5_6_TERRA,
+    name: 'GPT-5.6 Terra',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_5_6_LUNA,
+    name: 'GPT-5.6 Luna',
     provider: 'openai',
     default: false,
   },
@@ -1202,6 +1238,7 @@ export default function ProviderSelector({
   const allowsLow = provider === 'openai' && allowsReasoningLow(selectedModel);
   const allowsXHigh =
     provider === 'openai' && allowsReasoningXHigh(selectedModel);
+  const allowsMax = provider === 'openai' && allowsReasoningMax(selectedModel);
   const isXaiReasoningModel =
     provider === 'xai' && isXaiReasoningEffortModel(selectedModel);
   const isXaiReasoningNoneModelSelected =
@@ -1342,6 +1379,9 @@ export default function ProviderSelector({
     }
     if (reasoning_effort === 'xhigh' && !allowsXHigh) {
       return 'high';
+    }
+    if (reasoning_effort === 'max' && !allowsMax) {
+      return allowsXHigh ? 'xhigh' : 'high';
     }
     return reasoning_effort;
   })();
@@ -1691,7 +1731,8 @@ export default function ProviderSelector({
                         | 'low'
                         | 'medium'
                         | 'high'
-                        | 'xhigh',
+                        | 'xhigh'
+                        | 'max',
                     )
                   }
                   disabled={disabled || Boolean(gpt5Preset)}
@@ -1706,6 +1747,7 @@ export default function ProviderSelector({
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                   {allowsXHigh && <option value="xhigh">XHigh</option>}
+                  {allowsMax && <option value="max">Max</option>}
                 </select>
               </div>
 

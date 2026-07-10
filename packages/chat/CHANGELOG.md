@@ -1,5 +1,17 @@
 # @aituber-onair/chat
 
+## 0.46.0
+
+### Minor Changes
+
+- Added OpenAI GPT-5.6 (`gpt-5.6` / `gpt-5.6-sol`), GPT-5.6 Terra
+  (`gpt-5.6-terra`), and GPT-5.6 Luna (`gpt-5.6-luna`) to the shared
+  constants, supported-model and vision lists, React basic selector, tests,
+  and English/Japanese documentation.
+- Added GPT-5.6 `max` reasoning effort support for Chat Completions and
+  Responses API requests, including model-aware normalization and output-token
+  budgeting.
+
 ## 0.45.0
 
 ### Minor Changes

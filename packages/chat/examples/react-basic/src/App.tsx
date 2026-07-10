@@ -3,6 +3,7 @@ import {
   ChatServiceFactory,
   ChatService,
   allowsReasoningLow,
+  allowsReasoningMax,
   allowsReasoningMinimal,
   allowsReasoningNone,
   allowsReasoningXHigh,
@@ -53,7 +54,8 @@ type ReasoningEffortLevel =
   | 'low'
   | 'medium'
   | 'high'
-  | 'xhigh';
+  | 'xhigh'
+  | 'max';
 type XaiReasoningEffortLevel = 'none' | 'low' | 'medium' | 'high';
 
 const KIMI_OFFICIAL_BASE_URL = 'https://api.moonshot.ai/v1';
@@ -96,6 +98,10 @@ const normalizeReasoningEffortForModel = (
 
   if (effort === 'xhigh' && !allowsReasoningXHigh(modelId)) {
     return 'high';
+  }
+
+  if (effort === 'max' && !allowsReasoningMax(modelId)) {
+    return allowsReasoningXHigh(modelId) ? 'xhigh' : 'high';
   }
 
   return effort;
