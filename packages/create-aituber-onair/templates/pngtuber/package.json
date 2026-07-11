@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aituber-onair/core": "^0.26.7",
+    "@aituber-onair/core": "^0.26.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

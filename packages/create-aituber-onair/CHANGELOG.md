@@ -1,11 +1,5 @@
 # create-aituber-onair
 
-## 0.2.2
-
-### Patch Changes
-
-- Updated starter templates to depend on `@aituber-onair/core@^0.26.7`.
-
 ## 0.2.1
 
 ### Patch Changes
