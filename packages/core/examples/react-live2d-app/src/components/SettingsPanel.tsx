@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   getDefaultXaiReasoningEffort,
+  getVoiceEngineVoiceList,
   isGPT5Model,
   isXaiReasoningEffortModel,
+  isXaiReasoningEffortNoneModel,
+  normalizeXaiReasoningEffort,
+  type VoiceEngineVoice,
   type XaiReasoningEffort,
 } from '@aituber-onair/core';
 import { ScreenVisionPanel } from './ScreenVisionPanel';
@@ -58,6 +62,7 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'inworld', label: 'Inworld' },
   { value: 'gradium', label: 'Gradium' },
   { value: 'piperPlus', label: 'Piper Plus' },
+  { value: 'webSpeech', label: 'Web Speech API' },
   { value: 'none', label: 'None' },
 ];
 
@@ -314,10 +319,16 @@ export function SettingsPanel({
     isXaiReasoningEffortModel(settings.llm.model);
   const xaiReasoningEffortValue: XaiReasoningEffort =
     isXaiReasoningEffortModelSelected
-      ? settings.llm.xaiReasoningEffort ||
-        getDefaultXaiReasoningEffort(settings.llm.model) ||
+      ? normalizeXaiReasoningEffort(
+          settings.llm.model,
+          settings.llm.xaiReasoningEffort ||
+            getDefaultXaiReasoningEffort(settings.llm.model),
+        ) ||
         'none'
       : 'none';
+  const allowsXaiNoneReasoningEffort =
+    settings.llm.provider === 'xai' &&
+    isXaiReasoningEffortNoneModel(settings.llm.model);
   const openRouterApiKey = getApiKeyForProvider('openrouter').trim();
   const openRouterDynamicFreeModels =
     settings.llm.openRouterDynamicFreeModels?.models || [];
@@ -336,6 +347,11 @@ export function SettingsPanel({
     [],
   );
   const [inworldVoices, setInworldVoices] = useState<InworldVoice[]>([]);
+  const [webSpeechVoices, setWebSpeechVoices] = useState<VoiceEngineVoice[]>(
+    [],
+  );
+  const [isFetchingWebSpeechVoices, setIsFetchingWebSpeechVoices] =
+    useState(false);
   const [fetchError, setFetchError] = useState('');
   const [isFetchingMinimaxVoices, setIsFetchingMinimaxVoices] = useState(false);
   const [isFetchingElevenLabsVoices, setIsFetchingElevenLabsVoices] =
@@ -648,6 +664,44 @@ export function SettingsPanel({
     updateTTSSpeaker,
   ]);
 
+
+  useEffect(() => {
+    if (settings.tts.engine !== 'webSpeech') {
+      return;
+    }
+
+    let active = true;
+    const fetchWebSpeechVoices = async () => {
+      setIsFetchingWebSpeechVoices(true);
+      try {
+        const voices = await getVoiceEngineVoiceList('webSpeech');
+        if (!active) return;
+        setWebSpeechVoices(voices);
+        setFetchError('');
+        if (
+          voices.length > 0 &&
+          !voices.some((voice) => voice.id === settings.tts.speaker)
+        ) {
+          updateTTSSpeaker(voices[0].id);
+        }
+      } catch (error) {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : String(error);
+        setWebSpeechVoices([]);
+        setFetchError(`Web Speech音声一覧エラー: ${message}`);
+      } finally {
+        if (active) {
+          setIsFetchingWebSpeechVoices(false);
+        }
+      }
+    };
+
+    void fetchWebSpeechVoices();
+    return () => {
+      active = false;
+    };
+  }, [settings.tts.engine, settings.tts.speaker, updateTTSSpeaker]);
+
   const handleAivisCloudPresetChange = (presetId: string) => {
     const preset = AIVIS_CLOUD_PRESETS.find((item) => item.id === presetId);
     if (!preset) return;
@@ -755,14 +809,18 @@ export function SettingsPanel({
                   }
                   disabled={disabled || !isXaiReasoningEffortModelSelected}
                 >
-                  <option value="none">None</option>
+                  {allowsXaiNoneReasoningEffort && (
+                    <option value="none">None</option>
+                  )}
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                 </select>
                 <p className="settings-field-hint">
                   {isXaiReasoningEffortModelSelected
-                    ? 'Grok 4.3 uses none by default for lower latency.'
+                    ? settings.llm.model === 'grok-4.5'
+                      ? 'Grok 4.5 uses low by default; none is not supported.'
+                      : 'Grok 4.3 uses none by default for lower latency.'
                     : 'This xAI model does not support reasoning_effort.'}
                 </p>
               </div>
@@ -1916,6 +1974,102 @@ export function SettingsPanel({
                     `public/piper/` 配下に `dist/`, `src/`, `assets/`, `models/`
                     を配置してください。
                   </small>
+                </div>
+              </>
+            )}
+
+            {settings.tts.engine === 'webSpeech' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-web-speech-voice">Browser Voice</label>
+                  <select
+                    id="tts-web-speech-voice"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={disabled || isFetchingWebSpeechVoices}
+                  >
+                    {webSpeechVoices.length > 0 ? (
+                      webSpeechVoices.map((voice) => (
+                        <option key={voice.id} value={voice.id}>
+                          {voice.label}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">
+                        {isFetchingWebSpeechVoices
+                          ? 'Loading browser voices...'
+                          : 'Browser default voice'}
+                      </option>
+                    )}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-web-speech-language">Language</label>
+                  <input
+                    id="tts-web-speech-language"
+                    type="text"
+                    value={settings.tts.webSpeechLanguage || ''}
+                    onChange={(e) =>
+                      updateTtsField('webSpeechLanguage', e.target.value)
+                    }
+                    placeholder="ja-JP"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-web-speech-rate">Rate (0.1 - 10)</label>
+                  <input
+                    id="tts-web-speech-rate"
+                    type="number"
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                    value={settings.tts.webSpeechRate || ''}
+                    onChange={(e) =>
+                      updateTtsField('webSpeechRate', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-web-speech-pitch">Pitch (0 - 2)</label>
+                  <input
+                    id="tts-web-speech-pitch"
+                    type="number"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={settings.tts.webSpeechPitch || ''}
+                    onChange={(e) =>
+                      updateTtsField('webSpeechPitch', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-web-speech-volume">Volume (0 - 1)</label>
+                  <input
+                    id="tts-web-speech-volume"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={settings.tts.webSpeechVolume || ''}
+                    onChange={(e) =>
+                      updateTtsField('webSpeechVolume', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <small>
+                    Web Speech API はブラウザが直接再生します。音声バッファを
+                    取得できないため、このサンプルのリップシンクには対応して
+                    いません。
+                  </small>
+                  {fetchError.startsWith('Web Speech') && (
+                    <small className="settings-field-error">{fetchError}</small>
+                  )}
                 </div>
               </>
             )}

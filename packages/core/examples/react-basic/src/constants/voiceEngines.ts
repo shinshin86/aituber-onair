@@ -17,6 +17,7 @@ export type VoiceEngineType =
   | 'inworld'
   | 'gradium'
   | 'piperPlus'
+  | 'webSpeech'
   | 'none';
 
 export interface VoiceEngineConfig {
@@ -149,6 +150,17 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       name: 'Piper Plus',
       needsApiKey: false,
       placeholder: '',
+    },
+    webSpeech: {
+      name: 'Web Speech API',
+      needsApiKey: false,
+      placeholder: '',
+      defaultParams: {
+        rate: 1,
+        pitch: 1,
+        volume: 1,
+        language: 'ja-JP',
+      },
     },
     none: {
       name: '音声なし',

@@ -1,5 +1,24 @@
 # @aituber-onair/core
 
+## 0.26.7
+
+### Patch Changes
+
+- Synced Chat updates through `@aituber-onair/chat@0.46.0` into Core:
+  - re-exported Grok 4.5, GPT-5.6 family constants, and the related reasoning
+    capability helpers
+  - updated React examples for Grok 4.5's `low` reasoning default and GPT-5.6
+    model selection
+- Synced Web Speech support from `@aituber-onair/voice@0.19.0` into Core:
+  - re-exported the Web Speech engine, option types, and voice-list helpers
+  - added browser voice selection and rate, pitch, volume, and language
+    settings to all Core React examples
+  - documented that Web Speech plays directly through the browser and does not
+    support the examples' audio-buffer-based lip sync
+- Updated dependencies []:
+  - @aituber-onair/chat@0.46.0
+  - @aituber-onair/voice@0.19.0
+
 ## 0.26.6
 
 ### Patch Changes

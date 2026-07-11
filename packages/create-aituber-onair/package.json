@@ -1,6 +1,6 @@
 {
   "name": "create-aituber-onair",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Create an AITuber OnAir app from an official starter template",
   "type": "module",
   "bin": {

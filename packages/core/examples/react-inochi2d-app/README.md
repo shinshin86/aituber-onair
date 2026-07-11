@@ -1,5 +1,9 @@
 # Inochi2D Chat
 
+Web Speech API TTS is available with browser voice selection and rate, pitch,
+volume, and language controls. Because the browser plays it directly without
+exposing audio bytes, lip sync is not supported when this engine is selected.
+
 ![react-inochi2d-app image](./images/react-inochi2d-app.png)
 
 A React example app built on `@aituber-onair/core` that renders an Inochi2D

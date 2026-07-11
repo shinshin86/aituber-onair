@@ -166,6 +166,9 @@ function buildVoiceOptions(
   const parsedPiperPlusNoiseScale = Number.parseFloat(
     tts.piperPlusNoiseScale || '',
   );
+  const parsedWebSpeechRate = Number.parseFloat(tts.webSpeechRate || '');
+  const parsedWebSpeechPitch = Number.parseFloat(tts.webSpeechPitch || '');
+  const parsedWebSpeechVolume = Number.parseFloat(tts.webSpeechVolume || '');
   const trimmedSpeaker = tts.speaker.trim();
 
   return {
@@ -289,6 +292,16 @@ function buildVoiceOptions(
     piperPlusNoiseScale: Number.isNaN(parsedPiperPlusNoiseScale)
       ? undefined
       : parsedPiperPlusNoiseScale,
+    webSpeechRate: Number.isNaN(parsedWebSpeechRate)
+      ? undefined
+      : parsedWebSpeechRate,
+    webSpeechPitch: Number.isNaN(parsedWebSpeechPitch)
+      ? undefined
+      : parsedWebSpeechPitch,
+    webSpeechVolume: Number.isNaN(parsedWebSpeechVolume)
+      ? undefined
+      : parsedWebSpeechVolume,
+    webSpeechLanguage: tts.webSpeechLanguage?.trim() || undefined,
     onPlay,
   } as VoiceServiceOptions;
 }
@@ -550,6 +563,10 @@ export function useAituberCore({
     settings.tts.xaiCodec,
     settings.tts.xaiSampleRate,
     settings.tts.xaiBitRate,
+    settings.tts.webSpeechRate,
+    settings.tts.webSpeechPitch,
+    settings.tts.webSpeechVolume,
+    settings.tts.webSpeechLanguage,
     ttsApiKey,
   ]);
 

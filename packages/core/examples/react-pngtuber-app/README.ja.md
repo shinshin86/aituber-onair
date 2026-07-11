@@ -1,5 +1,9 @@
 # PNGTuber Chat
 
+Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、language
+を設定できます。ブラウザが直接再生して音声バッファを取得できないため、
+このエンジン選択時はリップシンク非対応です。
+
 ![react-pngtuber-app image](./images/react-pngtuber-app.png)
 
 `@aituber-onair/core` を使った PNGTuber 風チャットアプリです。  
@@ -8,9 +12,9 @@
 ## このアプリでできること
 
 - LLM プロバイダ切り替え: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`, `sakana`（ブラウザ UI では disabled 表示）, `plamo`
-- xAI Grok 4.3 では `reasoning_effort` を設定でき、低レイテンシ向けにデフォルトは `none` です
+- xAI Grok 4.5 の `reasoning_effort` は `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
-  Gemini 3.5 Flash や GPT-5.5 など chat 由来の新規モデルも Settings に
+  Gemini 3.5 Flash や GPT-5.6 など chat 由来の新規モデルも Settings に
   自動反映されます
 - Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します
 - `gpt-5.5-pro` は OpenAI のドキュメント上でストリーミング非対応のため、
@@ -19,7 +23,7 @@
   - `Fetch free models` で候補を疎通確認し、通ったモデルを一覧に追加
   - `Max candidates` は「疎通確認する `:free` 候補の最大件数」
     （「N件見つかるまで試行」ではありません）
-- TTS エンジン切り替え: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`, `elevenLabs`, `inworld`, `piperPlus`, `none`
+- TTS エンジン切り替え: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`, `elevenLabs`, `inworld`, `piperPlus`, `webSpeech`, `none`
 - `geminiTts` は `gemini-3.1-flash-tts-preview` を既定利用し、30 種類のプリセットボイスとスタイル / audio-tag プロンプト入力に対応
 - スピーカー一覧の動的取得と選択:
   - `voicevox` / `aivisSpeech`: `/speakers` から取得

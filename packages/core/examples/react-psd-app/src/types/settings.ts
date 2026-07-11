@@ -29,6 +29,7 @@ export type TTSEngineOption =
   | 'inworld'
   | 'gradium'
   | 'piperPlus'
+  | 'webSpeech'
   | 'none';
 export type StreamingPlatformOption = 'none' | 'youtube' | 'twitch';
 
@@ -125,6 +126,10 @@ export interface TTSSettings {
   piperPlusVoiceFile?: string;
   piperPlusSpeed?: string;
   piperPlusNoiseScale?: string;
+  webSpeechRate?: string;
+  webSpeechPitch?: string;
+  webSpeechVolume?: string;
+  webSpeechLanguage?: string;
 }
 
 export interface StreamSettings {

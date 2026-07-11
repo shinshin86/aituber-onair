@@ -16,12 +16,17 @@ import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
+  MODEL_GPT_5_6,
+  MODEL_GPT_5_6_SOL,
+  MODEL_GPT_5_6_TERRA,
+  MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GLM_5_2,
   MODEL_GLM_5_TURBO,
+  MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_KIMI_K2_7_CODE,
@@ -69,12 +74,15 @@ import {
   OpenRouterChatServiceProvider,
   XAIChatService,
   allowsReasoningXHigh,
+  allowsReasoningMax,
   getDefaultXaiReasoningEffort,
   isResponsesOnlyGPT5Model,
   isKimiThinkingRequiredModel,
   isKimiVisionModel,
   isXaiReasoningEffortModel,
+  isXaiReasoningEffortNoneModel,
   isXaiVisionModel,
+  normalizeXaiReasoningEffort,
   refreshOpenRouterFreeModels,
   type ChatProviderCapabilities,
   type RefreshOpenRouterFreeModelsResult,
@@ -102,9 +110,13 @@ describe('Core index chat re-exports', () => {
     expect(MODEL_GEMMA_4_26B_A4B_IT).toBe('gemma-4-26b-a4b-it');
   });
 
-  it('re-exports GPT-5.4/5.5 model constants and capability helpers', () => {
+  it('re-exports GPT-5.4/5.5/5.6 model constants and capability helpers', () => {
     expect(MODEL_GPT_5_4).toBe('gpt-5.4');
     expect(MODEL_GPT_5_5).toBe('gpt-5.5');
+    expect(MODEL_GPT_5_6).toBe('gpt-5.6');
+    expect(MODEL_GPT_5_6_SOL).toBe('gpt-5.6-sol');
+    expect(MODEL_GPT_5_6_TERRA).toBe('gpt-5.6-terra');
+    expect(MODEL_GPT_5_6_LUNA).toBe('gpt-5.6-luna');
     expect(MODEL_GPT_5_4_MINI).toBe('gpt-5.4-mini');
     expect(MODEL_GPT_5_4_NANO).toBe('gpt-5.4-nano');
     expect(MODEL_GPT_5_4_PRO).toBe('gpt-5.4-pro');
@@ -113,6 +125,8 @@ describe('Core index chat re-exports', () => {
     expect(allowsReasoningXHigh(MODEL_GPT_5_5)).toBe(true);
     expect(allowsReasoningXHigh(MODEL_GPT_5_4_MINI)).toBe(true);
     expect(allowsReasoningXHigh(MODEL_GPT_5_4_NANO)).toBe(true);
+    expect(allowsReasoningMax(MODEL_GPT_5_6)).toBe(true);
+    expect(allowsReasoningMax(MODEL_GPT_5_5)).toBe(false);
   });
 
   it('re-exports current Claude model constants', () => {
@@ -150,15 +164,21 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports xAI chat provider items', () => {
     expect(typeof XAIChatService).toBe('function');
+    expect(MODEL_GROK_4_5).toBe('grok-4.5');
     expect(MODEL_GROK_4_3).toBe('grok-4.3');
     expect(MODEL_GROK_4_20_REASONING).toBe('grok-4.20-0309-reasoning');
     expect(ENDPOINT_XAI_CHAT_COMPLETIONS_API).toBe(
       'https://api.x.ai/v1/chat/completions',
     );
     expect(isXaiVisionModel(MODEL_GROK_4_3)).toBe(true);
+    expect(isXaiVisionModel(MODEL_GROK_4_5)).toBe(true);
+    expect(isXaiReasoningEffortModel(MODEL_GROK_4_5)).toBe(true);
     expect(isXaiReasoningEffortModel(MODEL_GROK_4_3)).toBe(true);
     expect(isXaiReasoningEffortModel(MODEL_GROK_4_20_REASONING)).toBe(false);
     expect(getDefaultXaiReasoningEffort(MODEL_GROK_4_3)).toBe('none');
+    expect(getDefaultXaiReasoningEffort(MODEL_GROK_4_5)).toBe('low');
+    expect(isXaiReasoningEffortNoneModel(MODEL_GROK_4_5)).toBe(false);
+    expect(normalizeXaiReasoningEffort(MODEL_GROK_4_5, 'none')).toBe('low');
   });
 
   it('re-exports DeepSeek chat provider items', () => {

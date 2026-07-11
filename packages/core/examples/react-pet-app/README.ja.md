@@ -1,12 +1,16 @@
 # Pet Chat
 
+Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、language
+を設定できます。ブラウザが直接再生して音声バッファを取得できないため、
+このエンジン選択時はリップシンク非対応です。
+
 静止画の PNGTuber ではなく、Codex Pet 互換のスプライトシートを動かす
 AITuber チャットサンプルです。
 
 基本構造は既存の React core サンプルと同じです。
 
 - `@aituber-onair/core` による LLM チャット
-- xAI Grok 4.3 では `reasoning_effort` を設定でき、低レイテンシ向けにデフォルトは `none` です
+- xAI Grok 4.5 の `reasoning_effort` は `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです
 - TTS 再生と音声レベル解析
 - Web Speech API による音声入力
 - YouTube Live / Twitch コメント取り込み

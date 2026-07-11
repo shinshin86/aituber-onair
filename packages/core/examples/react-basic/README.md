@@ -11,7 +11,7 @@ This example application serves as a practical implementation guide for integrat
 ### Key Features
 
 - **🤖 Multi-Provider LLM Support**
-  - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.5 and GPT-5.4/5.4 Mini/5.4 Nano/5.4 Pro)
+  - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.6 Sol/Terra/Luna, GPT-5.5, and GPT-5.4 variants)
   - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
   - Google Gemini (Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
@@ -20,7 +20,7 @@ This example application serves as a practical implementation guide for integrat
   - Seamless provider switching
 
 - **🎙️ Comprehensive Voice Synthesis**
-  - 13 different TTS engines with unique capabilities
+  - 15 different TTS engines with unique capabilities
   - Real-time voice streaming
   - Speaker selection for each engine
   - Emotion-aware synthesis support
@@ -149,10 +149,10 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Kimi K2.5
 
 **xAI:**
-- Grok 4.3
+- Grok 4.5 and Grok 4.3
 - Grok 4.20 series
 - Grok 4.1 Fast series
-- Grok 4.3 exposes `reasoning_effort` and defaults to `none` for lower latency
+- Grok 4.5 exposes `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for lower latency
 
 **DeepSeek:**
 - DeepSeek V4 Flash
@@ -213,7 +213,7 @@ while this example uses the standard streaming chat flow.
 
 ### Supported TTS Engines
 
-The application supports 13 different Text-to-Speech engines:
+The application supports 15 different Text-to-Speech engines:
 
 #### 1. **OpenAI TTS**
 - Requires OpenAI API key
@@ -294,6 +294,11 @@ The application supports 13 different Text-to-Speech engines:
 - No API key required
 - Requires `public/piper/` assets
 - Supports speed and noise scale
+
+#### 15. **Web Speech API**
+- Browser-native speech synthesis with no API key
+- Loads the browser's available voices and supports language, rate, pitch, and volume
+- Plays directly through the browser, so audio-buffer-based lip sync is not supported
 
 ### Speech Chunking Settings
 

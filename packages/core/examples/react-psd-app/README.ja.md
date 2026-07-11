@@ -1,5 +1,9 @@
 # PSD 立ち絵 Chat
 
+Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、language
+を設定できます。ブラウザが直接再生して音声バッファを取得できないため、
+このエンジン選択時はリップシンク非対応です。
+
 ![react-psd-app image](./images/react-psd-app.webp)
 
 `@aituber-onair/core` を使った PSD 立ち絵チャットアプリです。

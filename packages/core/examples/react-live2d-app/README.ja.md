@@ -1,5 +1,9 @@
 # Live2D Chat
 
+Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、language
+を設定できます。ブラウザが直接再生して音声バッファを取得できないため、
+このエンジン選択時はリップシンク非対応です。
+
 `@aituber-onair/core` を使った React 製のサンプルです。`models/`
 フォルダ配下の Live2D モデルを読み込み、`@aituber-onair/core` が
 生成した音声を再生して口パクを動かします。
@@ -8,10 +12,10 @@
 
 - LLM / TTS の設定 UI を内蔵
 - LLM プロバイダは既存の OpenAI / Gemini / Claude / Z.ai / Kimi / xAI / OpenRouter / Gemini Nano / OpenAI-compatible に加えて `deepseek`, `mistral`, disabled 表示の `sakana`, `plamo` に対応
-- xAI Grok 4.3 では `reasoning_effort` を設定でき、低レイテンシ向けにデフォルトは `none` です
+- xAI Grok 4.5 の `reasoning_effort` は `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです
 - `models/` フォルダ配下の Live2D モデルを読み込み
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
-  Gemini 3.5 Flash や GPT-5.5 など chat 由来の新規モデルも Settings に
+  Gemini 3.5 Flash や GPT-5.6 など chat 由来の新規モデルも Settings に
   自動反映されます
 - Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します
 - `gpt-5.5-pro` は OpenAI のドキュメント上でストリーミング非対応のため、

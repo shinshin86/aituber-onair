@@ -261,6 +261,10 @@ function getDefaultSettings(): AppSettings {
       piperPlusVoiceFile: DEFAULT_PIPER_PLUS_VOICE_FILE,
       piperPlusSpeed: '',
       piperPlusNoiseScale: '',
+      webSpeechRate: '1',
+      webSpeechPitch: '1',
+      webSpeechVolume: '1',
+      webSpeechLanguage: 'ja-JP',
     },
     visual: {
       backgroundMode: 'default',
@@ -545,6 +549,7 @@ export function useSettings() {
       inworld: '',
       gradium: 'YTpq7expH9539ERJ',
       piperPlus: 'default',
+      webSpeech: '',
       none: '',
     };
     setSettings((prev) => ({
