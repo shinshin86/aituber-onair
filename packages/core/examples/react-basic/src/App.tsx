@@ -17,15 +17,20 @@ import {
   MODEL_GEMINI_NANO,
   type VisionSupportLevel,
   type ElevenLabsApplyTextNormalization,
+  type VoiceEngineVoice,
+  allowsReasoningMax,
   allowsReasoningLow,
   allowsReasoningMinimal,
   allowsReasoningNone,
   allowsReasoningXHigh,
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
+  getVoiceEngineVoiceList,
   isGPT5Model,
   isResponsesOnlyGPT5Model,
   isXaiReasoningEffortModel,
+  isXaiReasoningEffortNoneModel,
+  normalizeXaiReasoningEffort,
   refreshOpenRouterFreeModels,
   type XaiReasoningEffort,
   type MinimaxModel,
@@ -112,7 +117,8 @@ type ReasoningEffortLevel =
   | 'low'
   | 'medium'
   | 'high'
-  | 'xhigh';
+  | 'xhigh'
+  | 'max';
 type ChatProvider = NonNullable<AITuberOnAirCoreOptions['chatProvider']>;
 
 // MiniMax Voice IDs with descriptions
@@ -520,6 +526,9 @@ const App: React.FC = () => {
     if (effort === 'xhigh' && !allowsReasoningXHigh(targetModel)) {
       return 'high';
     }
+    if (effort === 'max' && !allowsReasoningMax(targetModel)) {
+      return allowsReasoningXHigh(targetModel) ? 'xhigh' : 'high';
+    }
     return effort;
   };
 
@@ -536,10 +545,13 @@ const App: React.FC = () => {
     if (effort === 'minimal') {
       return 'low';
     }
-    if (effort === 'xhigh') {
-      return 'high';
-    }
-    return effort;
+    const supportedEffort =
+      effort === 'xhigh' || effort === 'max' ? 'high' : effort;
+    return (
+      normalizeXaiReasoningEffort(targetModel || '', supportedEffort) ??
+      defaultEffort ??
+      'none'
+    );
   };
 
   // chat messages state
@@ -775,6 +787,11 @@ const App: React.FC = () => {
   >('default');
   const [piperPlusSpeed, setPiperPlusSpeed] = useState<string>('');
   const [piperPlusNoiseScale, setPiperPlusNoiseScale] = useState<string>('');
+  const [webSpeechRate, setWebSpeechRate] = useState<string>('1');
+  const [webSpeechPitch, setWebSpeechPitch] = useState<string>('1');
+  const [webSpeechVolume, setWebSpeechVolume] = useState<string>('1');
+  const [webSpeechLanguage, setWebSpeechLanguage] =
+    useState<string>('ja-JP');
   const [selectedSpeakers, setSelectedSpeakers] = useState<
     Record<string, string | number>
   >({
@@ -792,6 +809,7 @@ const App: React.FC = () => {
     inworld: '',
     gradium: 'YTpq7expH9539ERJ',
     piperPlus: 'default',
+    webSpeech: '',
   });
   const [availableSpeakers, setAvailableSpeakers] = useState<
     Record<string, any[]>
@@ -866,6 +884,17 @@ const App: React.FC = () => {
           }
           break;
         }
+        case 'webSpeech': {
+          const voices = await getVoiceEngineVoiceList('webSpeech');
+          setAvailableSpeakers((prev) => ({ ...prev, webSpeech: voices }));
+          if (!selectedSpeakers.webSpeech && voices.length > 0) {
+            setSelectedSpeakers((prev) => ({
+              ...prev,
+              webSpeech: voices[0].id,
+            }));
+          }
+          break;
+        }
       }
     } catch (error) {
       console.error(`Failed to fetch speakers for ${engine}:`, error);
@@ -877,7 +906,9 @@ const App: React.FC = () => {
    */
   useEffect(() => {
     if (selectedVoiceEngine !== 'none') {
-      if (['voicevox', 'aivisSpeech'].includes(selectedVoiceEngine)) {
+      if (
+        ['voicevox', 'aivisSpeech', 'webSpeech'].includes(selectedVoiceEngine)
+      ) {
         fetchSpeakers(selectedVoiceEngine);
       }
     }
@@ -2200,6 +2231,22 @@ const App: React.FC = () => {
 
           break;
         }
+        case 'webSpeech': {
+          const parsedRate = Number.parseFloat(webSpeechRate);
+          const parsedPitch = Number.parseFloat(webSpeechPitch);
+          const parsedVolume = Number.parseFloat(webSpeechVolume);
+          if (!Number.isNaN(parsedRate)) {
+            options.webSpeechRate = parsedRate;
+          }
+          if (!Number.isNaN(parsedPitch)) {
+            options.webSpeechPitch = parsedPitch;
+          }
+          if (!Number.isNaN(parsedVolume)) {
+            options.webSpeechVolume = parsedVolume;
+          }
+          options.webSpeechLanguage = webSpeechLanguage.trim() || undefined;
+          break;
+        }
       }
 
       return options;
@@ -2556,6 +2603,14 @@ const App: React.FC = () => {
   );
   const allowsXHighReasoningEffort = Boolean(
     chatProvider === 'openai' && model && allowsReasoningXHigh(model),
+  );
+  const allowsMaxReasoningEffort = Boolean(
+    chatProvider === 'openai' && model && allowsReasoningMax(model),
+  );
+  const allowsXaiNoneReasoningEffort = Boolean(
+    chatProvider === 'xai' &&
+      model &&
+      isXaiReasoningEffortNoneModel(model),
   );
   const isXaiReasoningEffortModelSelected = Boolean(
     chatProvider === 'xai' && model && isXaiReasoningEffortModel(model),
@@ -3194,7 +3249,9 @@ const App: React.FC = () => {
                           )
                         }
                       >
-                        <option value="none">None</option>
+                        {allowsXaiNoneReasoningEffort && (
+                          <option value="none">None</option>
+                        )}
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
                         <option value="high">High</option>
@@ -3207,7 +3264,9 @@ const App: React.FC = () => {
                         }}
                       >
                         {isXaiReasoningEffortModelSelected
-                          ? 'Grok 4.3 uses none by default for lower latency.'
+                          ? model === 'grok-4.5'
+                            ? 'Grok 4.5 uses low by default; none is not supported.'
+                            : 'Grok 4.3 uses none by default for lower latency.'
                           : 'This xAI model does not support reasoning_effort.'}
                       </div>
                     </div>
@@ -3286,6 +3345,9 @@ const App: React.FC = () => {
                               <option value="high">High</option>
                               {allowsXHighReasoningEffort && (
                                 <option value="xhigh">XHigh</option>
+                              )}
+                              {allowsMaxReasoningEffort && (
+                                <option value="max">Max</option>
                               )}
                             </select>
                           </>
@@ -4833,6 +4895,68 @@ const App: React.FC = () => {
                     </div>
                   )}
 
+                  {selectedVoiceEngine === 'webSpeech' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        backgroundColor: '#f3f8ff',
+                        borderRadius: '8px',
+                        border: '1px solid #b6d4fe',
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                        Web Speech パラメータ
+                      </div>
+                      <label htmlFor="webSpeechLanguage">Language:</label>
+                      <input
+                        id="webSpeechLanguage"
+                        type="text"
+                        value={webSpeechLanguage}
+                        onChange={(e) => setWebSpeechLanguage(e.target.value)}
+                        placeholder="ja-JP"
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                      <label htmlFor="webSpeechRate">Rate (0.1–10):</label>
+                      <input
+                        id="webSpeechRate"
+                        type="number"
+                        min="0.1"
+                        max="10"
+                        step="0.1"
+                        value={webSpeechRate}
+                        onChange={(e) => setWebSpeechRate(e.target.value)}
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                      <label htmlFor="webSpeechPitch">Pitch (0–2):</label>
+                      <input
+                        id="webSpeechPitch"
+                        type="number"
+                        min="0"
+                        max="2"
+                        step="0.1"
+                        value={webSpeechPitch}
+                        onChange={(e) => setWebSpeechPitch(e.target.value)}
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                      <label htmlFor="webSpeechVolume">Volume (0–1):</label>
+                      <input
+                        id="webSpeechVolume"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={webSpeechVolume}
+                        onChange={(e) => setWebSpeechVolume(e.target.value)}
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      />
+                      <div style={{ fontSize: '0.8em', color: '#5c677d' }}>
+                        ブラウザが直接再生するため音声バッファを取得できず、
+                        リップシンクには対応していません。
+                      </div>
+                    </div>
+                  )}
+
                   {selectedVoiceEngine === 'voicevox' && (
                     <div
                       style={{
@@ -6221,6 +6345,17 @@ const App: React.FC = () => {
                           {selectedVoiceEngine === 'piperPlus' && (
                             <option value="default">default</option>
                           )}
+
+                          {selectedVoiceEngine === 'webSpeech' &&
+                            (
+                              availableSpeakers.webSpeech as
+                                | VoiceEngineVoice[]
+                                | undefined
+                            )?.map((voice) => (
+                              <option key={voice.id} value={voice.id}>
+                                {voice.label}
+                              </option>
+                            ))}
                         </select>
                       </>
                     )}
@@ -6256,6 +6391,9 @@ const App: React.FC = () => {
                                           ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
                                           : selectedVoiceEngine === 'piperPlus'
                                             ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
+                                            : selectedVoiceEngine ===
+                                                'webSpeech'
+                                              ? 'Web Speech APIはブラウザが直接再生します。音声バッファを取得できないためリップシンク非対応です'
                                             : selectedVoiceEngine ===
                                                 'aivisCloud'
                                               ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'

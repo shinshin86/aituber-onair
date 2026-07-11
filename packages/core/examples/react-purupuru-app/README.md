@@ -1,5 +1,9 @@
 # PuruPuru PNGTuber Chat
 
+Web Speech API TTS is available with browser voice selection and rate, pitch,
+volume, and language controls. Because the browser plays it directly without
+exposing audio bytes, lip sync is not supported when this engine is selected.
+
 ![react-purupuru-app image](./images/react-purupuru-app.png)
 
 A React example app that combines `@aituber-onair/core` chat/TTS with a

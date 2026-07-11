@@ -1,5 +1,9 @@
 # VRM Chat
 
+Web Speech API TTS is available with browser voice selection and rate, pitch,
+volume, and language controls. Because the browser plays it directly without
+exposing audio bytes, lip sync is not supported when this engine is selected.
+
 ![react-vrm-app image](./images/react-vrm-app.png)
 
 A VRM avatar chat app built with `@aituber-onair/core`.  
@@ -12,9 +16,9 @@ from actual audio output volume.
   `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`,
   `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`,
   `sakana` (disabled in browser UI), `plamo`
-- xAI Grok 4.3 exposes `reasoning_effort` and defaults to `none` for lower latency
+- xAI Grok 4.5 exposes `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for lower latency
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
-  chat models such as Claude Opus 4.8, Gemini 3.5 Flash, and GPT-5.5 are available automatically
+  chat models such as Claude Opus 4.8, Gemini 3.5 Flash, and GPT-5.6 are available automatically
   in Settings
 - Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses
 - `gpt-5.5-pro` is intentionally omitted because OpenAI documents it as
@@ -26,7 +30,7 @@ from actual audio output volume.
 - Use TTS engines:
   `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`,
   `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`,
-  `elevenLabs`, `inworld`, `gradium`, `piperPlus`, `none`
+  `elevenLabs`, `inworld`, `gradium`, `piperPlus`, `webSpeech`, `none`
 - `geminiTts` defaults to `gemini-3.1-flash-tts-preview` and exposes 30
   prebuilt voices plus style/audio-tag prompt input
 - Fetch and select speaker lists dynamically:

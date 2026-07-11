@@ -1,5 +1,9 @@
 # Inochi2D Chat
 
+Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、language
+を設定できます。ブラウザが直接再生して音声バッファを取得できないため、
+このエンジン選択時はリップシンク非対応です。
+
 ![react-inochi2d-app image](./images/react-inochi2d-app.png)
 
 `@aituber-onair/core` を使った React サンプルアプリです。Inochi2D

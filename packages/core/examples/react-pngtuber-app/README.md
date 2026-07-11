@@ -1,5 +1,9 @@
 # PNGTuber Chat
 
+Web Speech API TTS is available with browser voice selection and rate, pitch,
+volume, and language controls. Because the browser plays it directly without
+exposing audio bytes, lip sync is not supported when this engine is selected.
+
 ![react-pngtuber-app image](./images/react-pngtuber-app.png)
 
 A PNGTuber-style chat app built with `@aituber-onair/core`.  
@@ -8,9 +12,9 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 ## What this app can do
 
 - Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`, `sakana` (disabled in browser UI), `plamo`
-- xAI Grok 4.3 exposes `reasoning_effort` and defaults to `none` for lower latency
+- xAI Grok 4.5 exposes `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for lower latency
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
-  chat models such as Claude Opus 4.8, Gemini 3.5 Flash, and GPT-5.5 are available automatically
+  chat models such as Claude Opus 4.8, Gemini 3.5 Flash, and GPT-5.6 are available automatically
   in Settings
 - Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses
 - `gpt-5.5-pro` is intentionally omitted because OpenAI documents it as
@@ -19,7 +23,7 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   - `Fetch free models` probes candidates and appends working models to the model list
   - `Max candidates` is the maximum number of `:free` candidates to probe
     (not a target number of working models)
-- Use TTS engines: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`, `elevenLabs`, `inworld`, `gradium`, `piperPlus`, `none`
+- Use TTS engines: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`, `elevenLabs`, `inworld`, `gradium`, `piperPlus`, `webSpeech`, `none`
 - `geminiTts` defaults to `gemini-3.1-flash-tts-preview` and exposes 30 prebuilt voices plus style/audio-tag prompt input
 - Fetch and select speaker lists dynamically:
   - `voicevox` / `aivisSpeech`: from `/speakers`

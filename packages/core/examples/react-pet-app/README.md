@@ -1,5 +1,9 @@
 # Pet Chat
 
+Web Speech API TTS is available with browser voice selection and rate, pitch,
+volume, and language controls. Because the browser plays it directly without
+exposing audio bytes, lip sync is not supported when this engine is selected.
+
 ![react-pet-app image](./images/react-pet-app.jpg)
 
 An AITuber chat sample that renders a Codex-style animated pet instead of a
@@ -8,7 +12,7 @@ static PNGTuber avatar.
 The app keeps the same basic structure as the other React core samples:
 
 - LLM chat through `@aituber-onair/core`
-- xAI Grok 4.3 exposes `reasoning_effort` and defaults to `none` for lower latency
+- xAI Grok 4.5 exposes `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for lower latency
 - TTS playback and real-time audio analysis
 - Speech input through Web Speech API
 - YouTube Live / Twitch comment ingestion
