@@ -197,6 +197,39 @@ export function createContaminator(
         allowedInterventions,
         callbackMaterial: callbackMoment?.summary,
       });
+      // The relationship gate can strip every planned intervention (e.g. a
+      // stranger-tier audience while the diagnosis only suggests higher-tier
+      // moves). There is nothing licensed to ask the model for, so skip
+      // before spending an LLM call.
+      if (plan.interventions.length === 0) {
+        const detail =
+          'The relationship tier licenses none of the planned interventions this turn.';
+        const skippedOutput = createSkippedOutput({
+          input,
+          context,
+          diagnosis,
+          gates,
+          reason: 'no_licensed_intervention',
+          detail,
+        });
+
+        await saveMemory({
+          ...memory,
+          rhythm: advanceRhythmState({
+            state: memory.rhythm,
+            tilted: false,
+            options: options.rhythm,
+          }),
+        });
+        emit({
+          type: 'noise_skipped',
+          reason: 'no_licensed_intervention',
+          detail,
+        });
+
+        return skippedOutput;
+      }
+
       const friction = buildFrictionParameters({
         diagnosis,
         context,

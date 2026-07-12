@@ -100,7 +100,8 @@ export type NoiseSkipReason =
   | 'platform'
   | 'low_predictability'
   | 'model_error'
-  | 'quality_fail';
+  | 'quality_fail'
+  | 'no_licensed_intervention';
 
 export type RhythmPhase = 'platform' | 'tilt' | 'cooldown' | 'repair';
 

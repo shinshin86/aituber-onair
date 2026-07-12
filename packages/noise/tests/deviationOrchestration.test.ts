@@ -223,6 +223,35 @@ describe('relationship gate', () => {
     expect(gateMode('chaotic', 'companion')).toBe('chaotic');
   });
 
+  it('skips without an LLM call when the tier licenses no planned intervention', async () => {
+    const contaminator = createContaminator({
+      intensity: 0.8,
+      mode: 'performer',
+      model: {
+        async generate() {
+          throw new Error('the model must not be called');
+        },
+      },
+    });
+
+    // The only diagnosed issue (no_streamer_judgment) maps solely to
+    // add_streamer_judgment, which the stranger tier does not license.
+    const result = await contaminator.contaminate({
+      systemPrompt: 'AITuberです。',
+      messages: [{ role: 'user', content: '音声トラブル大丈夫？' }],
+      draft: '音声トラブルのこと、ちゃんと見てるよ。',
+      streamContext: {
+        currentSituation: '音声トラブルが起きた直後',
+      },
+      relationshipCapital: 0.1,
+      forceTilt: true,
+    });
+
+    expect(result.skipped?.reason).toBe('no_licensed_intervention');
+    expect(result.text).toBe('音声トラブルのこと、ちゃんと見てるよ。');
+    expect(result.plan.interventions).toHaveLength(0);
+  });
+
   it('filters licensed interventions inside the contaminator', async () => {
     const contaminator = createContaminator({
       intensity: 0.9,
