@@ -1,6 +1,14 @@
+import {
+  getLoopedTopicPatterns,
+  getOverusedPhrases,
+  getRepeatedClosingPatterns,
+} from '../memory/noiseMemory.js';
+import { getFinalSentence } from './genericity.js';
 import { scorePredictability } from './predictability.js';
+import { clamp01 } from './random.js';
 import type {
   ContextFingerprint,
+  NoiseMemory,
   PredictabilityDiagnosis,
   PredictabilityIssue,
   PredictabilityIssueKind,
@@ -51,8 +59,13 @@ const ISSUE_PATTERNS: Array<{
 export function diagnosePredictability(input: {
   draft: string;
   context: ContextFingerprint;
+  /**
+   * Adaptive noise memory. When provided, the character's own recorded
+   * habits (repeated closings, overused phrases, topic loops) count as
+   * predictability on top of the built-in lexicon.
+   */
+  memory?: NoiseMemory;
 }): PredictabilityDiagnosis {
-  const score = scorePredictability(input);
   const issues: PredictabilityIssue[] = [];
 
   for (const issue of ISSUE_PATTERNS) {
@@ -114,10 +127,74 @@ export function diagnosePredictability(input: {
     });
   }
 
+  const memoryIssues = input.memory
+    ? diagnoseFromMemory(input.draft, input.context, input.memory)
+    : [];
+  issues.push(...memoryIssues);
+
+  const score = clamp01(
+    scorePredictability(input) + (memoryIssues.length > 0 ? 0.15 : 0)
+  );
+
   return {
     score,
     issues: dedupeIssues(issues),
   };
+}
+
+/**
+ * Learned-habit checks: the deepest predictable harmony is the character
+ * repeating itself, which no static lexicon can know in advance.
+ */
+function diagnoseFromMemory(
+  draft: string,
+  context: ContextFingerprint,
+  memory: NoiseMemory
+): PredictabilityIssue[] {
+  const issues: PredictabilityIssue[] = [];
+  // Match the normalization used when closings are recorded in memory.
+  const draftClosing = getFinalSentence(draft).slice(0, 80);
+
+  if (
+    draftClosing &&
+    getRepeatedClosingPatterns(memory).includes(draftClosing)
+  ) {
+    issues.push({
+      kind: 'generic_closing',
+      severity: 0.75,
+      evidence:
+        'Memory shows the character has landed on this exact closing multiple times.',
+    });
+  }
+
+  const lowerDraft = draft.toLowerCase();
+  if (
+    getOverusedPhrases(memory).some((phrase) => lowerDraft.includes(phrase))
+  ) {
+    issues.push({
+      kind: 'repeated_phrase',
+      severity: 0.6,
+      evidence:
+        'The draft reuses a phrase the character has already leaned on repeatedly.',
+    });
+  }
+
+  if (
+    draftClosing &&
+    getLoopedTopicPatterns(memory).some(
+      (loop) =>
+        loop.pattern === draftClosing && context.topicHints.includes(loop.topic)
+    )
+  ) {
+    issues.push({
+      kind: 'too_complete',
+      severity: 0.6,
+      evidence:
+        'This topic has repeatedly ended on the same closing; the loop is becoming a pattern.',
+    });
+  }
+
+  return issues;
 }
 
 function hasLowContextGrounding(

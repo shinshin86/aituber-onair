@@ -295,6 +295,30 @@ export function getRecentlyOverusedStains(memory: NoiseMemory): StainKind[] {
     .map(([kind]) => kind);
 }
 
+/**
+ * Phrases the character has leaned on repeatedly (3+ recorded uses). Fed back
+ * into the predictability diagnosis so habitual wording counts as
+ * predictable even when it is not in the built-in lexicon.
+ */
+export function getOverusedPhrases(memory: NoiseMemory): string[] {
+  return memory.repeatedPhrases
+    .filter((item) => item.count >= 3)
+    .map((item) => item.phrase);
+}
+
+/**
+ * Topic/closing pairs the character has fallen into repeatedly (2+ times).
+ * Used by the diagnosis to flag a reply that is about to land the same topic
+ * on the same closing yet again.
+ */
+export function getLoopedTopicPatterns(
+  memory: NoiseMemory
+): Array<{ topic: string; pattern: string }> {
+  return memory.topicLoops
+    .filter((item) => item.count >= 2)
+    .map((item) => ({ topic: item.topic, pattern: item.pattern }));
+}
+
 export function getRepeatedClosingPatterns(memory: NoiseMemory): string[] {
   const counts = new Map<string, number>();
 

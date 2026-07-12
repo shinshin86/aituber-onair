@@ -46,6 +46,8 @@ export {
   addMemorableMoment,
   applyReactionToMemory,
   createInitialNoiseMemory,
+  getLoopedTopicPatterns,
+  getOverusedPhrases,
   getRecentlyOverusedStains,
   getRepeatedClosingPatterns,
   markMomentUsed,

@@ -109,6 +109,7 @@ export function createContaminator(
       const diagnosis = diagnosePredictability({
         draft: input.draft,
         context,
+        memory,
       });
 
       // Gate 1: sincerity. Failed uptake of a sincere bid is the worst-case
