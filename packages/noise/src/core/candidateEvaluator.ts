@@ -6,11 +6,13 @@ import {
 } from './playMarkers.js';
 import { scorePredictability } from './predictability.js';
 import { evaluateNoiseQuality } from './qualityEvaluator.js';
+import { CONCRETE_ACTION_EN_PATTERN } from './predictabilityDiagnosis.js';
 import type {
   CandidateEvaluation,
   ContextFingerprint,
   EvaluatedCandidate,
   InterventionKind,
+  NoiseLexicon,
   NoiseMode,
   NoiseQualityOptions,
   RewriteCandidate,
@@ -35,10 +37,13 @@ export function evaluateRewriteCandidates(input: {
    * penalty is applied.
    */
   plannedInterventions?: InterventionKind[];
+  /** Character/app-specific vocabulary extending the built-in lexicons. */
+  lexicon?: NoiseLexicon;
 }): EvaluatedCandidate[] {
   const beforePredictability = scorePredictability({
     draft: input.before,
     context: input.context,
+    lexicon: input.lexicon,
   });
   const plannedKinds = input.plannedInterventions
     ? new Set(input.plannedInterventions)
@@ -51,6 +56,7 @@ export function evaluateRewriteCandidates(input: {
       context: input.context,
       options: input.qualityOptions,
       appliedInterventions: candidate.appliedInterventions,
+      lexicon: input.lexicon,
     });
     const afterPredictability = quality.checks.predictabilityAfter;
     const evaluation = evaluateCandidate({
@@ -64,6 +70,7 @@ export function evaluateRewriteCandidates(input: {
       candidate,
       recentResponses: input.recentResponses,
       plannedKinds,
+      lexicon: input.lexicon,
     });
 
     return {
@@ -127,6 +134,7 @@ function evaluateCandidate(input: {
   candidate: RewriteCandidate;
   recentResponses?: string[];
   plannedKinds?: Set<InterventionKind>;
+  lexicon?: NoiseLexicon;
 }): CandidateEvaluation {
   const issues: string[] = [];
   const predictabilityReduction = Math.max(
@@ -145,6 +153,7 @@ function evaluateCandidate(input: {
   const genericityRisk = scoreGenericity({
     text: input.after,
     recentResponses: input.recentResponses,
+    lexicon: input.lexicon,
   });
   const modeProfile = getModeEvaluationProfile(input.mode);
   const meaningPreservation = Math.max(
@@ -154,7 +163,7 @@ function evaluateCandidate(input: {
   const personaPreservation = Math.max(0, 1 - overAggressionRisk);
   const missingPlayMarker =
     requiresPlayMarker(input.candidate.appliedInterventions) &&
-    !hasPlayMarker(input.after);
+    !hasPlayMarker(input.after, input.lexicon);
   const unplanned = input.plannedKinds
     ? scoreUnplannedInterventions(
         input.candidate.appliedInterventions,
@@ -350,7 +359,8 @@ function scoreSpecificity(text: string, context: ContextFingerprint): number {
   }
 
   if (
-    /ここで|先に|画面|音|コメント|質問|ゲーム|紹介|止め|切り替え/.test(text)
+    /ここで|先に|画面|音|コメント|質問|ゲーム|紹介|止め|切り替え/.test(text) ||
+    CONCRETE_ACTION_EN_PATTERN.test(text)
   ) {
     score += 0.35;
   }

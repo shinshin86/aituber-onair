@@ -4,15 +4,24 @@ import {
   getRepeatedClosingPatterns,
 } from '../memory/noiseMemory.js';
 import { getFinalSentence } from './genericity.js';
+import { matchesPredictableLexicon } from './lexicon.js';
 import { scorePredictability } from './predictability.js';
 import { clamp01 } from './random.js';
 import type {
   ContextFingerprint,
+  NoiseLexicon,
   NoiseMemory,
   PredictabilityDiagnosis,
   PredictabilityIssue,
   PredictabilityIssueKind,
 } from './types.js';
+
+/**
+ * English equivalent of the Japanese concrete-action lexicon so English
+ * streams are not systematically scored as unspecific.
+ */
+export const CONCRETE_ACTION_EN_PATTERN =
+  /\b(here|first|now|screen|audio|sound|comment|question|game|show|switch|pause|stop|next up)\b/i;
 
 const ISSUE_PATTERNS: Array<{
   kind: PredictabilityIssueKind;
@@ -65,8 +74,18 @@ export function diagnosePredictability(input: {
    * predictability on top of the built-in lexicon.
    */
   memory?: NoiseMemory;
+  /** App-supplied phrases that also count as predictable wording. */
+  lexicon?: NoiseLexicon;
 }): PredictabilityDiagnosis {
   const issues: PredictabilityIssue[] = [];
+
+  if (matchesPredictableLexicon(input.draft, input.lexicon)) {
+    issues.push({
+      kind: 'repeated_phrase',
+      severity: 0.62,
+      evidence: 'The draft uses a phrase the app lexicon marks as predictable.',
+    });
+  }
 
   for (const issue of ISSUE_PATTERNS) {
     if (issue.pattern.test(input.draft)) {
@@ -133,7 +152,11 @@ export function diagnosePredictability(input: {
   issues.push(...memoryIssues);
 
   const score = clamp01(
-    scorePredictability(input) + (memoryIssues.length > 0 ? 0.15 : 0)
+    scorePredictability({
+      draft: input.draft,
+      context: input.context,
+      lexicon: input.lexicon,
+    }) + (memoryIssues.length > 0 ? 0.15 : 0)
   );
 
   return {
@@ -215,7 +238,8 @@ function hasLowSpecificity(
   const hasNumber = /\d/.test(draft);
   const hasTopic = context.topicHints.some((hint) => draft.includes(hint));
   const hasConcreteAction =
-    /ここで|先に|画面|音|コメント|質問|ゲーム|紹介/.test(draft);
+    /ここで|先に|画面|音|コメント|質問|ゲーム|紹介/.test(draft) ||
+    CONCRETE_ACTION_EN_PATTERN.test(draft);
 
   return draft.length >= 40 && !hasNumber && !hasTopic && !hasConcreteAction;
 }

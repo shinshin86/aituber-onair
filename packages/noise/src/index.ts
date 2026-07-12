@@ -81,6 +81,7 @@ export type {
   LegacyStainKind,
   MemorableMoment,
   NoiseEvent,
+  NoiseLexicon,
   NoiseMemory,
   NoiseMemoryOptions,
   NoiseMemoryStore,

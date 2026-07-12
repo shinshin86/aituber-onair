@@ -128,6 +128,7 @@ export function createContaminator(
       draft: input.draft,
       context,
       memory,
+      lexicon: options.lexicon,
     });
 
     // Gate 1: sincerity. Failed uptake of a sincere bid is the worst-case
@@ -350,6 +351,7 @@ export function createContaminator(
       qualityOptions: options.quality,
       recentResponses: memory.recentResponses,
       plannedInterventions: plannedKinds,
+      lexicon: options.lexicon,
     });
     const { candidate: bestCandidate, index: selectedIndex } =
       selectBestCandidate(candidates, plannedKinds);

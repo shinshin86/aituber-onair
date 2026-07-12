@@ -322,6 +322,31 @@ export interface NoiseMemoryOptions {
   maxRecentEntries?: number;
 }
 
+/**
+ * App-supplied vocabulary that extends the built-in detection lexicons.
+ * The built-in patterns only know generic assistant phrasing; a character's
+ * own catchphrases, habitual closings, and play-marker style are
+ * app-specific knowledge, so pass them here. Matching is case-insensitive
+ * substring matching.
+ */
+export interface NoiseLexicon {
+  /**
+   * Phrases that should count as predictable/templated wording during
+   * diagnosis (habitual closings, service-tone catchphrases, etc.).
+   */
+  predictablePhrases?: string[];
+  /**
+   * Phrases that should count as generic could-reply-to-anything stock
+   * replies for the genericity penalty.
+   */
+  stockReplies?: string[];
+  /**
+   * Extra "this is play" markers accepted for teasing-class interventions
+   * (character-specific laugh tokens, catchphrase suffixes, emoji).
+   */
+  playMarkers?: string[];
+}
+
 export interface CreateContaminatorOptions {
   intensity?: number;
   mode?: NoiseMode;
@@ -348,6 +373,8 @@ export interface CreateContaminatorOptions {
    * expected to check `quality.passed`).
    */
   fallbackToDraftOnQualityFail?: boolean;
+  /** Character/app-specific vocabulary extending the built-in lexicons. */
+  lexicon?: NoiseLexicon;
   /** Suppress noise on sincere/vulnerable user turns. Default true. */
   sincerityGate?: boolean;
   /** Observer for noise lifecycle events (tilts, skips, repairs, gags). */
