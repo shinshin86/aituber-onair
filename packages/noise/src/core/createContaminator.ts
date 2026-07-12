@@ -298,6 +298,51 @@ export function createContaminator(
       });
       const { candidate: bestCandidate, index: selectedIndex } =
         selectBestCandidate(candidates, plannedKinds);
+
+      if (
+        options.fallbackToDraftOnQualityFail &&
+        !bestCandidate.quality.passed
+      ) {
+        const detail =
+          'Every candidate failed the quality report; returning the draft unchanged.';
+
+        await saveMemory({
+          ...memory,
+          rhythm: advanceRhythmState({
+            state: memory.rhythm,
+            tilted: false,
+            options: options.rhythm,
+          }),
+        });
+        emit({
+          type: 'noise_skipped',
+          reason: 'quality_fail',
+          detail,
+        });
+
+        return {
+          text: input.draft,
+          score: {
+            predictability: diagnosis.score,
+            rewrittenPredictability: diagnosis.score,
+            contamination: 0,
+          },
+          // Keep the failing report and candidates observable so apps can
+          // see why the rewrite was rejected.
+          quality: bestCandidate.quality,
+          diagnosis,
+          plan,
+          candidates,
+          selectedIndex,
+          applied: [],
+          gates,
+          skipped: {
+            reason: 'quality_fail',
+            detail,
+          },
+        };
+      }
+
       // Single source of truth for "what was actually applied": the
       // intervention must be both in the plan and claimed by the selected
       // candidate. The same normalized list feeds the public output, memory,

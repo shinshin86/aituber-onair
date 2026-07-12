@@ -99,7 +99,8 @@ export type NoiseSkipReason =
   | 'cooldown'
   | 'platform'
   | 'low_predictability'
-  | 'model_error';
+  | 'model_error'
+  | 'quality_fail';
 
 export type RhythmPhase = 'platform' | 'tilt' | 'cooldown' | 'repair';
 
@@ -331,6 +332,14 @@ export interface CreateContaminatorOptions {
    * live stream, a missing reply is not, so model failures never throw.
    */
   modelTimeoutMs?: number;
+  /**
+   * When the best candidate still fails the quality report, return the draft
+   * unchanged (`skipped.reason === 'quality_fail'`) instead of the rewrite.
+   * The failing candidates stay observable via `output.candidates` and
+   * `output.quality`. Default false (the rewrite is returned and the app is
+   * expected to check `quality.passed`).
+   */
+  fallbackToDraftOnQualityFail?: boolean;
   /** Suppress noise on sincere/vulnerable user turns. Default true. */
   sincerityGate?: boolean;
   /** Observer for noise lifecycle events (tilts, skips, repairs, gags). */
