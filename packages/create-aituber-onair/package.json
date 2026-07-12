@@ -1,20 +1,32 @@
 {
   "name": "create-aituber-onair",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Create an AITuber OnAir app from an official starter template",
   "type": "module",
   "bin": {
     "create-aituber-onair": "dist/index.js"
   },
   "main": "dist/index.js",
-  "files": ["dist", "templates", "README.ja.md"],
+  "files": [
+    "dist",
+    "templates",
+    "template-manifest.json",
+    "README.ja.md"
+  ],
   "scripts": {
+    "clean:templates": "node scripts/generate-templates.mjs --clean",
+    "generate:templates": "node scripts/generate-templates.mjs",
+    "verify:templates": "node scripts/verify-templates.mjs",
+    "verify:registry": "node scripts/verify-registry-dependencies.mjs",
+    "verify:registry:strict": "node scripts/verify-registry-dependencies.mjs --strict",
     "build": "tsc --project tsconfig.json",
     "typecheck": "tsc --noEmit",
+    "pretest": "npm run generate:templates && npm run verify:templates",
     "test": "npm run build && node --test tests/*.test.mjs",
     "fmt": "biome format . --write",
     "fmt:check": "biome format .",
     "lint": "biome lint .",
+    "prepack": "npm run build && npm run generate:templates && npm run verify:templates",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

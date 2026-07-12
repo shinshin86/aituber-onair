@@ -1,4 +1,16 @@
-export const TEMPLATE_IDS = ['pngtuber', 'vrm', 'live2d', 'pet'] as const;
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+export const TEMPLATE_IDS = [
+  'pngtuber',
+  'vrm',
+  'live2d',
+  'pet',
+  'purupuru',
+  'psd',
+  'inochi2d',
+] as const;
 
 export type TemplateId = (typeof TEMPLATE_IDS)[number];
 
@@ -8,28 +20,32 @@ export interface TemplateDefinition {
   description: string;
 }
 
-export const TEMPLATES: Record<TemplateId, TemplateDefinition> = {
-  pngtuber: {
-    id: 'pngtuber',
-    name: 'PNGTuber 2D',
-    description: '2D PNG avatar app with bundled avatar image assets',
-  },
-  vrm: {
-    id: 'vrm',
-    name: 'VRM 3D',
-    description: '3D VRM avatar app with bundled VRM and idle animation assets',
-  },
-  live2d: {
-    id: 'live2d',
-    name: 'Live2D',
-    description: 'Live2D avatar app without bundled Live2D model assets',
-  },
-  pet: {
-    id: 'pet',
-    name: 'Pet Chat',
-    description: 'Animated pet app with bundled Miko pet assets',
-  },
-};
+interface TemplateManifest {
+  templates: Array<TemplateDefinition & { id: string }>;
+}
+
+const packageRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+);
+const manifest = JSON.parse(
+  readFileSync(path.join(packageRoot, 'template-manifest.json'), 'utf8'),
+) as TemplateManifest;
+const manifestIds = manifest.templates.map((template) => template.id);
+
+if (
+  manifestIds.length !== TEMPLATE_IDS.length ||
+  TEMPLATE_IDS.some((id, index) => id !== manifestIds[index])
+) {
+  throw new Error('template-manifest.json and TEMPLATE_IDS are out of sync.');
+}
+
+export const TEMPLATES = Object.fromEntries(
+  manifest.templates.map(({ id, name, description }) => [
+    id,
+    { id, name, description },
+  ]),
+) as Record<TemplateId, TemplateDefinition>;
 
 export function isTemplateId(value: string): value is TemplateId {
   return (TEMPLATE_IDS as readonly string[]).includes(value);

@@ -1,5 +1,17 @@
 # create-aituber-onair
 
+## 0.2.2
+
+### Patch Changes
+
+- Generate starter templates from the matching Core React examples during
+  testing and package creation, removing the manually maintained copies.
+- Added PuruPuru PNGTuber, PSD Tachie, and Inochi2D starter templates.
+- Updated the existing starters to match current Core example features,
+  including the latest chat, voice, screen-vision, and live-comment settings.
+- Added an optional, integrity-checked Aka model download for the Inochi2D
+  starter without bundling the large model files in the npm package.
+
 ## 0.2.1
 
 ### Patch Changes

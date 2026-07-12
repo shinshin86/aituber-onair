@@ -13,14 +13,13 @@ import { TEMPLATES, type TemplateId, isTemplateId } from './templates.js';
 
 const DEFAULT_PROJECT_NAME = 'my-aituber';
 const DEFAULT_TEMPLATE_ID: TemplateId = 'pngtuber';
-const FALLBACK_CORE_VERSION = '0.26.5';
-
 export interface CliOptions {
   targetDir?: string;
   template?: TemplateId;
   install?: boolean;
   yes?: boolean;
   help?: boolean;
+  downloadAssets?: boolean;
 }
 
 export interface CreateProjectOptions {
@@ -31,12 +30,18 @@ export interface CreateProjectOptions {
   templateRoot?: string;
   coreVersion?: string;
   runCommand?: (command: string, args: string[], cwd: string) => Promise<void>;
+  downloadAssets?: boolean;
 }
 
 export interface CreateProjectResult {
   projectDir: string;
   packageName: string;
   template: TemplateId;
+  assetDownload: {
+    attempted: boolean;
+    succeeded: boolean;
+    error?: string;
+  };
 }
 
 export class CliError extends Error {
@@ -70,6 +75,16 @@ export function parseArgs(argv: string[]): CliOptions {
 
     if (arg === '--no-install') {
       options.install = false;
+      continue;
+    }
+
+    if (arg === '--download-assets') {
+      options.downloadAssets = true;
+      continue;
+    }
+
+    if (arg === '--no-download-assets') {
+      options.downloadAssets = false;
       continue;
     }
 
@@ -118,9 +133,24 @@ export function defaultTemplateRoot(): string {
 }
 
 export async function resolveDefaultCoreVersion(): Promise<string> {
-  return resolveWorkspacePackageVersion(
+  const workspaceVersion = await resolveWorkspacePackageVersion(
     path.resolve(defaultPackageRoot(), '..', 'core', 'package.json'),
   );
+  if (workspaceVersion) return workspaceVersion;
+
+  const templatePackageJson = JSON.parse(
+    await readFile(
+      path.join(defaultTemplateRoot(), 'pngtuber', 'package.json'),
+      'utf8',
+    ),
+  ) as { dependencies?: Record<string, string> };
+  const version = templatePackageJson.dependencies?.['@aituber-onair/core'];
+  if (!version) {
+    throw new CliError(
+      'Unable to resolve the default @aituber-onair/core version.',
+    );
+  }
+  return version.replace(/^[~^]/, '');
 }
 
 function defaultPackageRoot(): string {
@@ -130,7 +160,7 @@ function defaultPackageRoot(): string {
 
 async function resolveWorkspacePackageVersion(
   packageJsonPath: string,
-): Promise<string> {
+): Promise<string | undefined> {
   try {
     const rawPackageJson = await readFile(packageJsonPath, 'utf8');
     const packageJson = JSON.parse(rawPackageJson) as { version?: unknown };
@@ -141,7 +171,7 @@ async function resolveWorkspacePackageVersion(
     // Published packages do not include sibling workspace package.json files.
   }
 
-  return FALLBACK_CORE_VERSION;
+  return undefined;
 }
 
 export function resolveTargetDir(cwd: string, targetDir?: string): string {
@@ -200,12 +230,31 @@ export async function createProject(
   await updatePackageJson(
     projectDir,
     packageName,
-    options.template,
     options.coreVersion ?? (await resolveDefaultCoreVersion()),
   );
 
+  const assetDownload = {
+    attempted: false,
+    succeeded: false,
+  } as CreateProjectResult['assetDownload'];
+  const runCommand = options.runCommand ?? defaultRunCommand;
+
+  if (options.template === 'inochi2d' && options.downloadAssets) {
+    assetDownload.attempted = true;
+    try {
+      await runCommand(
+        process.execPath,
+        ['scripts/download-inochi2d-sample-model.mjs'],
+        projectDir,
+      );
+      assetDownload.succeeded = true;
+    } catch (error) {
+      assetDownload.error =
+        error instanceof Error ? error.message : String(error);
+    }
+  }
+
   if (options.install) {
-    const runCommand = options.runCommand ?? defaultRunCommand;
     await runCommand('npm', ['install'], projectDir);
   }
 
@@ -213,6 +262,7 @@ export async function createProject(
     projectDir,
     packageName,
     template: options.template,
+    assetDownload,
   };
 }
 
@@ -223,9 +273,13 @@ Usage:
   create-aituber-onair [project-directory] [options]
 
 Options:
-  -t, --template <name>  Template to use: pngtuber, vrm, live2d, pet
+  -t, --template <name>  Template to use: pngtuber, vrm, live2d, pet,
+                         purupuru, psd, inochi2d
       --install          Run npm install after creating the project
       --no-install       Do not run npm install
+      --download-assets  Download optional template assets
+      --no-download-assets
+                         Skip optional template asset downloads
   -y, --yes              Use defaults for omitted values
   -h, --help             Show this help
 `;
@@ -267,7 +321,6 @@ async function restoreTemplateDotfiles(projectDir: string): Promise<void> {
 async function updatePackageJson(
   projectDir: string,
   packageName: string,
-  template: TemplateId,
   coreVersion: string,
 ): Promise<void> {
   const packageJsonPath = path.join(projectDir, 'package.json');
@@ -286,23 +339,6 @@ async function updatePackageJson(
     ...packageJson.dependencies,
     '@aituber-onair/core': `^${coreVersion}`,
   };
-
-  if (template === 'vrm') {
-    packageJson.dependencies = {
-      ...packageJson.dependencies,
-      '@pixiv/three-vrm': '^1.0.9',
-      three: '^0.151.3',
-    };
-  }
-
-  if (template === 'live2d') {
-    packageJson.dependencies = {
-      ...packageJson.dependencies,
-      'pixi-live2d-display-lipsyncpatch':
-        'github:shinshin86/pixi-live2d-display-lipsyncpatch#release/v0.5.0-ls-7-noMaskFix',
-      'pixi.js': '^7.4.3',
-    };
-  }
 
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 }

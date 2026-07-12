@@ -27,6 +27,10 @@ Choose the template that matches the kind of avatar you want to build first.
 - `vrm`: 3D VRM avatar app with bundled `miko.vrm` and idle animation assets.
 - `live2d`: Live2D avatar app for users who already have their own Live2D
   model assets.
+- `pet`: Animated Codex Pet-compatible spritesheet app.
+- `purupuru`: Physics-driven PuruPuru PNGTuber app with bundled assets.
+- `psd`: PSD Tachie app with motion and static sample files.
+- `inochi2d`: Inochi2D app with an optional Aka sample-model download.
 
 If this is your first time, start with `pngtuber`. It has the smallest asset
 surface and is the quickest way to confirm that chat, voice, and lip sync are
@@ -38,7 +42,15 @@ You can also select a template directly:
 npm create aituber-onair@latest my-pngtuber -- --template pngtuber
 npm create aituber-onair@latest my-vrm-aituber -- --template vrm
 npm create aituber-onair@latest my-live2d-aituber -- --template live2d
+npm create aituber-onair@latest my-pet-aituber -- --template pet
+npm create aituber-onair@latest my-purupuru -- --template purupuru
+npm create aituber-onair@latest my-psd-aituber -- --template psd
+npm create aituber-onair@latest my-inochi2d-aituber -- --template inochi2d
 ```
+
+When selecting `inochi2d`, the CLI asks whether to download the Aka sample
+model. Skip it with `--no-download-assets` and run
+`npm run setup:sample-model` later if needed.
 
 ## 3. Configure Providers
 
@@ -70,7 +82,8 @@ avatar template.
 ## Next Steps
 
 - Customize the character prompt and speaking style.
-- Replace the avatar assets with your own PNG, VRM, or Live2D model.
+- Replace the avatar assets with your own PNG, VRM, Live2D, PuruPuru, PSD, or
+  Inochi2D model.
 - Connect stream comments from YouTube, Twitch, or a WebSocket source.
 - Try a different voice provider.
 - Use `@aituber-onair/core` directly when you need deeper integration.
