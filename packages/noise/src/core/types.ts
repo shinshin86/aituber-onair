@@ -115,7 +115,11 @@ export interface RhythmOptions {
   minPlatformTurns?: number;
   /** Un-noised turns enforced after a tilt. Default 1. */
   cooldownTurns?: number;
-  /** Minimum diagnosis score required to tilt. Default 0 (always eligible). */
+  /**
+   * Minimum diagnosis score required to tilt. Default 0.35, so drafts that
+   * already land naturally are left untouched out of the box. Set 0 to make
+   * every turn eligible.
+   */
   tiltThreshold?: number;
   /**
    * If no tilt happened for this many turns, tilt even below the threshold

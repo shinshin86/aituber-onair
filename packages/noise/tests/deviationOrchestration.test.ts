@@ -157,6 +157,23 @@ describe('rhythm controller', () => {
     expect(third.skipped).toBeUndefined();
   });
 
+  it('leaves already-natural drafts untouched by default', async () => {
+    const contaminator = createContaminator({
+      intensity: 0.7,
+      model: createStaticModel('書き換えられてはいけないテキスト。'),
+    });
+    const naturalDraft = '配信の音、少し割れてるから先に直すね。';
+
+    const result = await contaminator.contaminate({
+      systemPrompt: 'AITuberです。',
+      messages: [{ role: 'user', content: '音大丈夫？' }],
+      draft: naturalDraft,
+    });
+
+    expect(result.skipped?.reason).toBe('low_predictability');
+    expect(result.text).toBe(naturalDraft);
+  });
+
   it('bypasses the rhythm gate with forceTilt', async () => {
     const contaminator = createContaminator({
       intensity: 0.7,

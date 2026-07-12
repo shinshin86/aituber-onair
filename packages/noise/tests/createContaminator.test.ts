@@ -65,6 +65,7 @@ describe('createContaminator', () => {
     const contaminator = createContaminator({
       intensity: 0.7,
       mode: 'performer',
+      rhythm: { tiltThreshold: 0 },
       model: {
         async generate({ system, prompt }) {
           capturedSystem = system;
@@ -183,6 +184,7 @@ describe('createContaminator', () => {
       messages: [],
       draft,
       seed: 1,
+      forceTilt: true,
     });
 
     expect(result.text).toContain('https://example.com');
@@ -205,6 +207,7 @@ describe('createContaminator', () => {
       messages: [],
       draft,
       seed: 'max',
+      forceTilt: true,
       constraints: {
         maxAddedChars: 0,
       },
