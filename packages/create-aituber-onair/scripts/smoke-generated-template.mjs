@@ -19,6 +19,49 @@ const runnerRoot = path.join(smokeRoot, 'runner');
 const projectRoot = path.join(smokeRoot, 'generated-app');
 const packageCache =
   process.env.SMOKE_NPM_CACHE ?? path.join(smokeRoot, 'npm-cache');
+const isWindows = process.platform === 'win32';
+
+function signalProcessTree(child, signal) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+
+  try {
+    if (isWindows || child.pid === undefined) {
+      child.kill(signal);
+    } else {
+      process.kill(-child.pid, signal);
+    }
+  } catch (error) {
+    if (error.code !== 'ESRCH') throw error;
+  }
+}
+
+function waitForClose(child, timeoutMs) {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return Promise.resolve(true);
+  }
+
+  return new Promise((resolve) => {
+    const onClose = () => {
+      clearTimeout(timeout);
+      resolve(true);
+    };
+    const timeout = setTimeout(() => {
+      child.off('close', onClose);
+      resolve(false);
+    }, timeoutMs);
+    child.once('close', onClose);
+  });
+}
+
+async function stopProcessTree(child) {
+  signalProcessTree(child, 'SIGTERM');
+  if (await waitForClose(child, 5_000)) return;
+
+  signalProcessTree(child, 'SIGKILL');
+  if (!(await waitForClose(child, 5_000))) {
+    throw new Error('Dev server process tree did not stop.');
+  }
+}
 
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
@@ -49,7 +92,8 @@ async function verifyDevServer() {
       cwd: projectRoot,
       env: { ...process.env, npm_config_cache: packageCache },
       stdio: ['ignore', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
+      shell: isWindows,
+      detached: !isWindows,
     },
   );
   let output = '';
@@ -73,7 +117,7 @@ async function verifyDevServer() {
     }
     throw new Error(`Dev server did not become ready.\n${output}`);
   } finally {
-    child.kill('SIGTERM');
+    await stopProcessTree(child);
   }
 }
 
@@ -115,7 +159,12 @@ try {
   console.log(`Smoke test passed: ${template}`);
 } finally {
   if (process.env.SMOKE_KEEP !== '1') {
-    await rm(smokeRoot, { recursive: true, force: true });
+    await rm(smokeRoot, {
+      recursive: true,
+      force: true,
+      maxRetries: 5,
+      retryDelay: 200,
+    });
   } else {
     console.log(`Smoke files kept at ${smokeRoot}`);
   }
