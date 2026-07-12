@@ -222,6 +222,7 @@ export function createContaminator(
             model,
             mode: effectiveMode,
             candidateCount: getCandidateCount(effectiveMode),
+            protectedTokens: protectedDraft.spans.map((span) => span.token),
           }),
           options.modelTimeoutMs
         );
@@ -259,6 +260,19 @@ export function createContaminator(
           candidate.text,
           protectedDraft.spans
         );
+
+        // If the model dropped or mangled a protected span (the safety guard
+        // does not cover code blocks), the candidate is unusable: degrade it
+        // to the draft instead of silently shipping a reply that lost
+        // protected content.
+        if (!protectedSpansSurvived(restored, protectedDraft.spans)) {
+          return {
+            ...candidate,
+            text: input.draft,
+            appliedInterventions: [],
+          };
+        }
+
         const safe = safetyGuard({
           before: input.draft,
           after: restored,
@@ -473,6 +487,28 @@ function createSkippedOutput(input: {
       detail: input.detail ?? input.gates.rhythm.reason,
     },
   };
+}
+
+const LEFTOVER_SPAN_TOKEN_PATTERN = /__AITUBER_NOISE_SPAN_\d+__/;
+
+/**
+ * Whether every protected span value made it back into the restored text and
+ * no placeholder token was left behind (e.g. mangled by the model so the
+ * restore step could not replace it).
+ */
+function protectedSpansSurvived(
+  restored: string,
+  spans: Array<{ token: string; value: string }>
+): boolean {
+  if (spans.length === 0) {
+    return true;
+  }
+
+  if (LEFTOVER_SPAN_TOKEN_PATTERN.test(restored)) {
+    return false;
+  }
+
+  return spans.every((span) => restored.includes(span.value));
 }
 
 async function withTimeout<T>(
