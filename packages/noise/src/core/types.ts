@@ -80,7 +80,6 @@ export interface ContaminateInput {
   draft: string;
   streamContext?: StreamContext;
   intensity?: number;
-  seed?: string | number;
   constraints?: ContaminateConstraints;
   /**
    * How much deviation license the audience relationship has earned (0-1).
@@ -251,13 +250,6 @@ export interface TopicLoopRecord {
   count: number;
 }
 
-export interface LearnedNoiseRule {
-  trigger: string;
-  avoid: string[];
-  preferStains: StainKind[];
-  weight: number;
-}
-
 export interface MemorableMoment {
   id: string;
   summary: string;
@@ -293,8 +285,6 @@ export interface NoiseMemory {
   repeatedPhrases: PhraseCount[];
   usedStains: UsedStainRecord[];
   topicLoops: TopicLoopRecord[];
-  avoidedPatterns: string[];
-  learnedRules: LearnedNoiseRule[];
   memorableMoments: MemorableMoment[];
   rhythm: RhythmMemoryState;
   /**

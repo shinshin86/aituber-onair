@@ -77,7 +77,6 @@ export type {
   InterventionKind,
   InterventionPlan,
   LastTiltRecord,
-  LearnedNoiseRule,
   LegacyStainKind,
   MemorableMoment,
   NoiseEvent,

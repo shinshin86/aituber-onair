@@ -101,7 +101,6 @@ const result = await contaminator.contaminate({
   streamContext: {
     currentSituation: 'The stream is ending too neatly.',
   },
-  seed: 'ending-1',
   constraints: {
     preserveCodeBlocks: true,
     preserveUrls: true,
