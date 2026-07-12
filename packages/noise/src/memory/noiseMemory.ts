@@ -231,6 +231,8 @@ export function applyReactionToMemory(input: {
   memory: NoiseMemory;
   signal: NoiseReactionSignal;
   detail?: string;
+  /** When set, only promote the latest tilt if it is still this turn. */
+  turnId?: number;
 }): {
   memory: NoiseMemory;
   repairAdvised: boolean;
@@ -260,7 +262,15 @@ export function applyReactionToMemory(input: {
   };
   let promotedMoment: MemorableMoment | undefined;
 
-  if (positive && next.lastTilt && !next.lastTilt.promoted) {
+  const reactionTargetsLastTilt =
+    input.turnId === undefined || input.turnId === memory.lastTilt?.turn;
+
+  if (
+    positive &&
+    next.lastTilt &&
+    !next.lastTilt.promoted &&
+    reactionTargetsLastTilt
+  ) {
     const summary = input.detail?.trim() || next.lastTilt.summary;
     next = addMemorableMoment({
       memory: { ...next, lastTilt: { ...next.lastTilt, promoted: true } },

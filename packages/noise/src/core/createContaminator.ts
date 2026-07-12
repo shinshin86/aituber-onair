@@ -101,6 +101,9 @@ export function createContaminator(
       }
 
       const memory = await loadMemory();
+      // The rhythm turn counter before this turn is recorded; also what
+      // recordLastTilt stores, so reactions can be matched to their tilt.
+      const turnId = memory.rhythm.totalTurns;
       const context = createContextFingerprint({
         systemPrompt: input.systemPrompt,
         messages: input.messages,
@@ -161,6 +164,7 @@ export function createContaminator(
           diagnosis,
           gates,
           reason,
+          turnId,
         });
 
         await saveMemory({
@@ -212,6 +216,7 @@ export function createContaminator(
           gates,
           reason: 'no_licensed_intervention',
           detail,
+          turnId,
         });
 
         await saveMemory({
@@ -271,6 +276,7 @@ export function createContaminator(
           gates,
           reason: 'model_error',
           detail,
+          turnId,
         });
 
         await saveMemory({
@@ -356,6 +362,7 @@ export function createContaminator(
 
         return {
           text: input.draft,
+          turnId,
           score: {
             predictability: diagnosis.score,
             rewrittenPredictability: diagnosis.score,
@@ -390,6 +397,7 @@ export function createContaminator(
       );
       const output: ContaminateOutput = {
         text: bestCandidate.text,
+        turnId,
         score: {
           predictability: diagnosis.score,
           rewrittenPredictability:
@@ -458,6 +466,7 @@ export function createContaminator(
         memory,
         signal: reaction.signal,
         detail: reaction.detail,
+        turnId: reaction.turnId,
       });
 
       await saveMemory(result.memory);
@@ -536,9 +545,11 @@ function createSkippedOutput(input: {
   gates: ContaminateGates;
   reason: NoiseSkipReason;
   detail?: string;
+  turnId: number;
 }): ContaminateOutput {
   return {
     text: input.input.draft,
+    turnId: input.turnId,
     score: {
       predictability: input.diagnosis.score,
       rewrittenPredictability: input.diagnosis.score,

@@ -152,6 +152,12 @@ export interface ContaminateGates {
 
 export interface ContaminateOutput {
   text: string;
+  /**
+   * Identifier of this turn (the rhythm turn counter before this turn was
+   * recorded). Pass it back via reportReaction({ turnId }) so a late
+   * reaction can only promote the tilt it actually belongs to.
+   */
+  turnId: number;
   score: {
     predictability: number;
     rewrittenPredictability: number;
@@ -184,6 +190,13 @@ export type NoiseReactionSignal =
 export interface NoiseReactionInput {
   signal: NoiseReactionSignal;
   detail?: string;
+  /**
+   * The turnId of the ContaminateOutput this reaction belongs to. When set,
+   * gag-ledger promotion only happens if the latest tilt is still that turn,
+   * so a reaction that arrives late cannot promote the wrong tilt. The
+   * violation budget and repair scheduling always apply.
+   */
+  turnId?: number;
 }
 
 export interface NoiseReactionResult {
