@@ -34,6 +34,7 @@ export {
   selectBestCandidate,
 } from './core/candidateEvaluator.js';
 export { evaluateNoiseQuality } from './core/qualityEvaluator.js';
+export { inferReactionFromComments } from './core/reactionInference.js';
 export { detectNoiseRuntime } from './core/runtime.js';
 export { rewriteWithStains } from './core/rewriteEngine.js';
 export {
