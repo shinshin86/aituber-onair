@@ -53,6 +53,7 @@ import type {
   PlannedIntervention,
   PredictabilityDiagnosis,
   RecordMomentInput,
+  RewriteCandidate,
   RewriteModel,
   RhythmDecision,
 } from './types.js';
@@ -207,17 +208,52 @@ export function createContaminator(
         preserveUrls: input.constraints?.preserveUrls ?? true,
         preserveNumbers: input.constraints?.preserveNumbers ?? true,
       });
-      const generatedCandidates = await generateRewriteCandidates({
-        draft: protectedDraft.text,
-        systemPrompt: input.systemPrompt,
-        messages: input.messages,
-        context,
-        plan,
-        friction,
-        model,
-        mode: effectiveMode,
-        candidateCount: getCandidateCount(effectiveMode),
-      });
+      let generatedCandidates: RewriteCandidate[];
+
+      try {
+        generatedCandidates = await withTimeout(
+          generateRewriteCandidates({
+            draft: protectedDraft.text,
+            systemPrompt: input.systemPrompt,
+            messages: input.messages,
+            context,
+            plan,
+            friction,
+            model,
+            mode: effectiveMode,
+            candidateCount: getCandidateCount(effectiveMode),
+          }),
+          options.modelTimeoutMs
+        );
+      } catch (error) {
+        // Noise is a post-generation effect: losing a rewrite is fine on a
+        // live stream, losing the reply is not, so degrade to the draft.
+        const detail = `The rewrite model failed; returning the draft unchanged. (${describeError(error)})`;
+        const skippedOutput = createSkippedOutput({
+          input,
+          context,
+          diagnosis,
+          gates,
+          reason: 'model_error',
+          detail,
+        });
+
+        await saveMemory({
+          ...memory,
+          rhythm: advanceRhythmState({
+            state: memory.rhythm,
+            tilted: false,
+            options: options.rhythm,
+          }),
+        });
+        emit({
+          type: 'noise_skipped',
+          reason: 'model_error',
+          detail,
+        });
+
+        return skippedOutput;
+      }
       const safeCandidates = generatedCandidates.map((candidate) => {
         const restored = restoreSensitiveSpans(
           candidate.text,
@@ -406,6 +442,7 @@ function createSkippedOutput(input: {
   diagnosis: PredictabilityDiagnosis;
   gates: ContaminateGates;
   reason: NoiseSkipReason;
+  detail?: string;
 }): ContaminateOutput {
   return {
     text: input.input.draft,
@@ -433,9 +470,44 @@ function createSkippedOutput(input: {
     gates: input.gates,
     skipped: {
       reason: input.reason,
-      detail: input.gates.rhythm.reason,
+      detail: input.detail ?? input.gates.rhythm.reason,
     },
   };
+}
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number | undefined
+): Promise<T> {
+  if (!timeoutMs || timeoutMs <= 0) {
+    return promise;
+  }
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(
+            new Error(`The rewrite model timed out after ${timeoutMs}ms.`)
+          );
+        }, timeoutMs);
+      }),
+    ]);
+  } catch (error) {
+    // The losing promise may still settle later; swallow its rejection so a
+    // timed-out model call cannot surface as an unhandled rejection.
+    promise.catch(() => undefined);
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function createPassthroughQualityReport(

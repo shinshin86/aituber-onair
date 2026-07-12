@@ -98,7 +98,8 @@ export type NoiseSkipReason =
   | 'repair'
   | 'cooldown'
   | 'platform'
-  | 'low_predictability';
+  | 'low_predictability'
+  | 'model_error';
 
 export type RhythmPhase = 'platform' | 'tilt' | 'cooldown' | 'repair';
 
@@ -323,6 +324,13 @@ export interface CreateContaminatorOptions {
   rhythm?: RhythmOptions;
   /** Default relationship capital when input does not provide one. Default 0.5. */
   relationshipCapital?: number;
+  /**
+   * Abort the rewrite model call after this many milliseconds and return the
+   * draft unchanged (`skipped.reason === 'model_error'`). Unset = no timeout.
+   * Noise is a post-generation effect: a missing rewrite is acceptable on a
+   * live stream, a missing reply is not, so model failures never throw.
+   */
+  modelTimeoutMs?: number;
   /** Suppress noise on sincere/vulnerable user turns. Default true. */
   sincerityGate?: boolean;
   /** Observer for noise lifecycle events (tilts, skips, repairs, gags). */
