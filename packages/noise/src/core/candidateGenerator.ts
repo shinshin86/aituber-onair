@@ -240,8 +240,20 @@ function parseCandidates(
         return candidates;
       }
     } catch {
-      // Fall through to plain-text compatibility mode.
+      // Fall through to the structured/plain-text handling below.
     }
+  }
+
+  // The model tried to return the structured format but it was truncated or
+  // malformed. Shipping the raw output would put JSON garbage on stream, so
+  // fall back to the untouched draft instead.
+  if (looksLikeStructuredOutput(trimmed)) {
+    return [
+      {
+        text: input.draft,
+        appliedInterventions: [],
+      },
+    ];
   }
 
   return [
@@ -252,6 +264,14 @@ function parseCandidates(
       ),
     },
   ];
+}
+
+function looksLikeStructuredOutput(text: string): boolean {
+  return (
+    text.startsWith('{') ||
+    text.startsWith('```') ||
+    /"candidates"\s*:/.test(text)
+  );
 }
 
 function extractJsonObject(text: string): string | undefined {
