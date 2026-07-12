@@ -1,0 +1,114 @@
+{
+  "templates": [
+    {
+      "id": "pngtuber",
+      "name": "PNGTuber 2D",
+      "description": "2D PNG avatar app with bundled avatar image assets",
+      "sourcePath": "packages/core/examples/react-pngtuber-app",
+      "requiredFiles": [
+        "_gitignore",
+        "package.json",
+        "src/main.tsx",
+        "public/avatar/mouth_open_eyes_open.png"
+      ],
+      "dependencyOverrides": {}
+    },
+    {
+      "id": "vrm",
+      "name": "VRM 3D",
+      "description": "3D VRM avatar app with bundled VRM and idle animation assets",
+      "sourcePath": "packages/core/examples/react-vrm-app",
+      "requiredFiles": [
+        "_gitignore",
+        "package.json",
+        "src/main.tsx",
+        "public/avatar/miko.vrm",
+        "public/avatar/idle_loop.vrma"
+      ],
+      "dependencyOverrides": {
+        "@pixiv/three-vrm": "^1.0.9",
+        "three": "^0.151.3"
+      },
+      "transform": "vrmStandalone"
+    },
+    {
+      "id": "live2d",
+      "name": "Live2D",
+      "description": "Live2D avatar app without bundled Live2D model assets",
+      "sourcePath": "packages/core/examples/react-live2d-app",
+      "requiredFiles": [
+        "_gitignore",
+        "package.json",
+        "src/main.tsx",
+        "models/.gitkeep",
+        "public/scripts/.gitkeep"
+      ],
+      "dependencyOverrides": {}
+    },
+    {
+      "id": "pet",
+      "name": "Pet Chat",
+      "description": "Animated pet app with bundled Miko pet assets",
+      "sourcePath": "packages/core/examples/react-pet-app",
+      "requiredFiles": [
+        "_gitignore",
+        "package.json",
+        "src/main.tsx",
+        "public/pet/pet.json",
+        "public/pet/spritesheet.webp"
+      ],
+      "dependencyOverrides": {}
+    },
+    {
+      "id": "purupuru",
+      "name": "PuruPuru PNGTuber",
+      "description": "Physics-driven PNGTuber app with a bundled PuruPuru avatar",
+      "sourcePath": "packages/core/examples/react-purupuru-app",
+      "requiredFiles": [
+        "_gitignore",
+        "package.json",
+        "src/main.tsx",
+        "public/avatar/miko.purupuru"
+      ],
+      "dependencyOverrides": {}
+    },
+    {
+      "id": "psd",
+      "name": "PSD Tachie",
+      "description": "PSD avatar app with motion and static sample files",
+      "sourcePath": "packages/core/examples/react-psd-app",
+      "requiredFiles": [
+        "_gitignore",
+        "package.json",
+        "src/main.tsx",
+        "public/avatar/sample.psd",
+        "public/avatar/sample-static.psd",
+        "PSD-FORMATS.md",
+        "PSD-FORMATS.ja.md"
+      ],
+      "dependencyOverrides": {}
+    },
+    {
+      "id": "inochi2d",
+      "name": "Inochi2D",
+      "description": "Inochi2D app with an optional downloadable Aka sample model",
+      "sourcePath": "packages/core/examples/react-inochi2d-app",
+      "requiredFiles": [
+        "_gitignore",
+        "package.json",
+        "src/main.tsx",
+        "public/inochi2d/manifest.json",
+        "public/inochi2d/runtime/inochi2d_bg.wasm",
+        "public/inochi2d/runtime/THIRD-PARTY-NOTICES.md",
+        "public/inochi2d/models/Aka.ATTRIBUTION.md",
+        "scripts/download-inochi2d-sample-model.mjs"
+      ],
+      "excludeTracked": [
+        "public/inochi2d/models/Aka.original-rig.inx",
+        "public/inochi2d/models/Aka.original.motion.json"
+      ],
+      "dependencyOverrides": {},
+      "transform": "inochi2dOptionalSample"
+    }
+  ]
+}

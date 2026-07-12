@@ -1,0 +1,51 @@
+name: Create Template Smoke
+
+on:
+  pull_request:
+    paths:
+      - "packages/create-aituber-onair/**"
+      - "packages/core/examples/**"
+      - ".github/workflows/create-template-smoke.yml"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: ${{ matrix.template }} starter
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template:
+          - pngtuber
+          - vrm
+          - live2d
+          - pet
+          - purupuru
+          - psd
+          - inochi2d
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      - name: Pack create-aituber-onair
+        id: pack
+        working-directory: packages/create-aituber-onair
+        run: |
+          mkdir -p "$RUNNER_TEMP/create-package"
+          npm pack --pack-destination "$RUNNER_TEMP/create-package"
+          echo "tarball=$(find "$RUNNER_TEMP/create-package" -name '*.tgz' -print -quit)" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke generated starter
+        run: >-
+          node packages/create-aituber-onair/scripts/smoke-generated-template.mjs
+          "${{ matrix.template }}"
+          "${{ steps.pack.outputs.tarball }}"

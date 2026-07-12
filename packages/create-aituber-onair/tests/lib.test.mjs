@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, readdir } from 'node:fs/promises';
+import { access, mkdtemp, readFile, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -10,6 +10,7 @@ import {
   resolveDefaultCoreVersion,
   toPackageName,
 } from '../dist/lib.js';
+import { TEMPLATE_IDS } from '../dist/templates.js';
 
 const fixtureTemplateRoot = path.resolve('templates');
 
@@ -26,6 +27,33 @@ test('parseArgs reads no-install flag', () => {
     targetDir: 'my-app',
     install: false,
   });
+});
+
+test('parseArgs reads optional asset flags', () => {
+  assert.deepEqual(
+    parseArgs(['my-app', '--template', 'inochi2d', '--download-assets']),
+    {
+      targetDir: 'my-app',
+      template: 'inochi2d',
+      downloadAssets: true,
+    },
+  );
+  assert.deepEqual(parseArgs(['my-app', '--no-download-assets']), {
+    targetDir: 'my-app',
+    downloadAssets: false,
+  });
+});
+
+test('template list includes every supported core starter', () => {
+  assert.deepEqual(TEMPLATE_IDS, [
+    'pngtuber',
+    'vrm',
+    'live2d',
+    'pet',
+    'purupuru',
+    'psd',
+    'inochi2d',
+  ]);
 });
 
 test('parseArgs rejects unknown templates', () => {
@@ -134,6 +162,98 @@ test('createProject copies pet template with bundled Miko assets', async () => {
   assert.equal(packageJson.dependencies['@aituber-onair/manneri'], '^0.4.0');
   assert.equal(petManifest.displayName, 'Miko');
   assert.equal(petFiles.includes('spritesheet.webp'), true);
+});
+
+test('createProject copies PuruPuru and PSD template assets', async () => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'create-aituber-onair-'));
+
+  const purupuru = await createProject({
+    cwd,
+    targetDir: 'purupuru-app',
+    template: 'purupuru',
+    install: false,
+    templateRoot: fixtureTemplateRoot,
+  });
+  await access(
+    path.join(purupuru.projectDir, 'public', 'avatar', 'miko.purupuru'),
+  );
+
+  const psd = await createProject({
+    cwd,
+    targetDir: 'psd-app',
+    template: 'psd',
+    install: false,
+    templateRoot: fixtureTemplateRoot,
+  });
+  await access(path.join(psd.projectDir, 'public', 'avatar', 'sample.psd'));
+  await access(
+    path.join(psd.projectDir, 'public', 'avatar', 'sample-static.psd'),
+  );
+});
+
+test('createProject keeps the Inochi2D sample model optional', async () => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'create-aituber-onair-'));
+  const commands = [];
+  const result = await createProject({
+    cwd,
+    targetDir: 'inochi2d-app',
+    template: 'inochi2d',
+    install: true,
+    downloadAssets: true,
+    templateRoot: fixtureTemplateRoot,
+    runCommand: async (command, args, commandCwd) => {
+      commands.push({ command, args, cwd: commandCwd });
+    },
+  });
+
+  assert.deepEqual(commands, [
+    {
+      command: process.execPath,
+      args: ['scripts/download-inochi2d-sample-model.mjs'],
+      cwd: result.projectDir,
+    },
+    {
+      command: 'npm',
+      args: ['install'],
+      cwd: result.projectDir,
+    },
+  ]);
+  assert.deepEqual(result.assetDownload, {
+    attempted: true,
+    succeeded: true,
+  });
+  await assert.rejects(
+    access(
+      path.join(
+        result.projectDir,
+        'public',
+        'inochi2d',
+        'models',
+        'Aka.original-rig.inx',
+      ),
+    ),
+  );
+});
+
+test('createProject reports an optional asset download failure', async () => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'create-aituber-onair-'));
+  const result = await createProject({
+    cwd,
+    targetDir: 'inochi2d-app',
+    template: 'inochi2d',
+    install: false,
+    downloadAssets: true,
+    templateRoot: fixtureTemplateRoot,
+    runCommand: async () => {
+      throw new Error('offline');
+    },
+  });
+
+  assert.deepEqual(result.assetDownload, {
+    attempted: true,
+    succeeded: false,
+    error: 'offline',
+  });
 });
 
 test('createProject runs npm install when requested', async () => {

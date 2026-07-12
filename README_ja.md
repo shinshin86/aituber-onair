@@ -54,8 +54,9 @@ npm run dev
 
 ### 2. スターターアプリを作成する
 
-`create-aituber-onair` を使うと、公式の PNGTuber / VRM / Live2D スターター
-テンプレートから自分の AITuber OnAir アプリを作成できます。
+`create-aituber-onair` を使うと、公式の PNGTuber / VRM / Live2D / Pet /
+ぷるぷる PNGTuber / PSD / Inochi2D スターターから自分の AITuber OnAir
+アプリを作成できます。
 
 ```bash
 npm create aituber-onair@latest
@@ -230,8 +231,9 @@ await chat.processChat(
 </p>
 
 公式スターターテンプレートから AITuber OnAir アプリを作成する CLI。
-現時点では PNGTuber / VRM / Live2D / Pet テンプレートに対応しています。
-PNGTuber / VRM / Pet はスターターアセット同梱、Live2D は Live2D モデルアセット非同梱です。
+PNGTuber / VRM / Live2D / Pet / ぷるぷる PNGTuber / PSD / Inochi2D
+テンプレートに対応しています。Live2D はライセンス対象モデルを同梱せず、
+Inochi2D の大きな Aka サンプルモデルは整合性検証付きで任意取得できます。
 ```bash
 npm create aituber-onair@latest
 ```

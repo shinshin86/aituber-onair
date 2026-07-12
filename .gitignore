@@ -51,3 +51,6 @@ packages/*/node_modules/
 packages/*/dist/
 packages/*/build/
 packages/*/*.tsbuildinfo
+
+# Generated from packages/core/examples during create-aituber-onair tests/pack
+packages/create-aituber-onair/templates/

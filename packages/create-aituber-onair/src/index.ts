@@ -24,11 +24,14 @@ async function main(): Promise<void> {
         options.targetDir,
         options.template,
         options.install,
+        options.downloadAssets,
       )
     : {
         targetDir: options.targetDir ?? 'my-aituber',
         template: options.template ?? 'pngtuber',
         install: options.install ?? false,
+        downloadAssets:
+          options.downloadAssets ?? options.template === 'inochi2d',
       };
 
   const result = await createProject({
@@ -36,6 +39,7 @@ async function main(): Promise<void> {
     targetDir: answers.targetDir,
     template: answers.template,
     install: answers.install,
+    downloadAssets: answers.downloadAssets,
   });
 
   console.log('');
@@ -58,6 +62,23 @@ async function main(): Promise<void> {
   console.log('');
   console.log('After launch, open Settings and configure your LLM / TTS keys.');
 
+  if (result.template === 'inochi2d') {
+    console.log('');
+    if (result.assetDownload.succeeded) {
+      console.log('Inochi2D setup: Aka sample model downloaded.');
+    } else if (result.assetDownload.attempted) {
+      console.warn(
+        `Inochi2D sample model download failed: ${result.assetDownload.error}`,
+      );
+      console.log('Retry later with: npm run setup:sample-model');
+    } else {
+      console.log('Inochi2D setup:');
+      console.log(
+        '  Run npm run setup:sample-model to download the Aka sample.',
+      );
+    }
+  }
+
   if (result.template === 'live2d') {
     console.log('');
     console.log('Live2D setup:');
@@ -73,7 +94,13 @@ async function promptForMissingOptions(
   initialTargetDir: string | undefined,
   initialTemplate: TemplateId | undefined,
   initialInstall: boolean | undefined,
-): Promise<{ targetDir: string; template: TemplateId; install: boolean }> {
+  initialDownloadAssets: boolean | undefined,
+): Promise<{
+  targetDir: string;
+  template: TemplateId;
+  install: boolean;
+  downloadAssets: boolean;
+}> {
   const rl = createInterface({ input, output });
 
   try {
@@ -85,16 +112,32 @@ async function promptForMissingOptions(
         'my-aituber');
 
     const template = initialTemplate ?? (await promptForTemplate(rl));
+    const downloadAssets =
+      template === 'inochi2d'
+        ? (initialDownloadAssets ?? (await promptForAssetDownload(rl)))
+        : false;
     const install = initialInstall ?? (await promptForInstall(rl));
 
     return {
       targetDir,
       template,
       install,
+      downloadAssets,
     };
   } finally {
     rl.close();
   }
+}
+
+async function promptForAssetDownload(
+  rl: ReturnType<typeof createInterface>,
+): Promise<boolean> {
+  const answer =
+    (await rl.question('Download the Aka sample model? (Y/n): ', {
+      signal: AbortSignal.timeout(300000),
+    })) || 'yes';
+
+  return !['n', 'no'].includes(answer.trim().toLowerCase());
 }
 
 async function promptForTemplate(

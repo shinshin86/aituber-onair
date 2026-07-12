@@ -55,8 +55,8 @@ walkthrough.
 
 ### 2. Create a starter app
 
-Use `create-aituber-onair` to scaffold your own app from an official PNGTuber,
-VRM, or Live2D starter template.
+Use `create-aituber-onair` to scaffold your own app from the official
+PNGTuber, VRM, Live2D, Pet, PuruPuru, PSD, or Inochi2D starter templates.
 
 ```bash
 npm create aituber-onair@latest
@@ -248,9 +248,9 @@ See each package README for provider setup and fuller usage.
 </p>
 
 CLI for creating an AITuber OnAir app from an official starter template.
-Currently includes PNGTuber, VRM, Live2D, and Pet templates. PNGTuber,
-VRM, and Pet include starter assets; Live2D does not bundle Live2D model
-assets.
+Includes PNGTuber, VRM, Live2D, Pet, PuruPuru, PSD, and Inochi2D templates.
+Live2D does not bundle licensed model assets, and Inochi2D offers its large Aka
+sample model as an optional integrity-checked download.
 ```bash
 npm create aituber-onair@latest
 ```
