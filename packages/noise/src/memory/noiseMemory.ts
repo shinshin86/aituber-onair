@@ -24,8 +24,6 @@ export function createInitialNoiseMemory(): NoiseMemory {
     repeatedPhrases: [],
     usedStains: [],
     topicLoops: [],
-    avoidedPatterns: [],
-    learnedRules: [],
     memorableMoments: [],
     rhythm: createInitialRhythmState(),
     violationBudget: DEFAULT_VIOLATION_BUDGET,
@@ -47,8 +45,6 @@ export function normalizeNoiseMemory(
     repeatedPhrases: memory.repeatedPhrases ?? [],
     usedStains: memory.usedStains ?? [],
     topicLoops: memory.topicLoops ?? [],
-    avoidedPatterns: memory.avoidedPatterns ?? [],
-    learnedRules: memory.learnedRules ?? [],
     memorableMoments: memory.memorableMoments ?? [],
     rhythm: memory.rhythm ?? createInitialRhythmState(),
     violationBudget: memory.violationBudget ?? DEFAULT_VIOLATION_BUDGET,
@@ -235,6 +231,8 @@ export function applyReactionToMemory(input: {
   memory: NoiseMemory;
   signal: NoiseReactionSignal;
   detail?: string;
+  /** When set, only promote the latest tilt if it is still this turn. */
+  turnId?: number;
 }): {
   memory: NoiseMemory;
   repairAdvised: boolean;
@@ -264,7 +262,15 @@ export function applyReactionToMemory(input: {
   };
   let promotedMoment: MemorableMoment | undefined;
 
-  if (positive && next.lastTilt && !next.lastTilt.promoted) {
+  const reactionTargetsLastTilt =
+    input.turnId === undefined || input.turnId === memory.lastTilt?.turn;
+
+  if (
+    positive &&
+    next.lastTilt &&
+    !next.lastTilt.promoted &&
+    reactionTargetsLastTilt
+  ) {
     const summary = input.detail?.trim() || next.lastTilt.summary;
     next = addMemorableMoment({
       memory: { ...next, lastTilt: { ...next.lastTilt, promoted: true } },
@@ -293,6 +299,30 @@ export function getRecentlyOverusedStains(memory: NoiseMemory): StainKind[] {
   return [...counts.entries()]
     .filter(([, count]) => count >= 3)
     .map(([kind]) => kind);
+}
+
+/**
+ * Phrases the character has leaned on repeatedly (3+ recorded uses). Fed back
+ * into the predictability diagnosis so habitual wording counts as
+ * predictable even when it is not in the built-in lexicon.
+ */
+export function getOverusedPhrases(memory: NoiseMemory): string[] {
+  return memory.repeatedPhrases
+    .filter((item) => item.count >= 3)
+    .map((item) => item.phrase);
+}
+
+/**
+ * Topic/closing pairs the character has fallen into repeatedly (2+ times).
+ * Used by the diagnosis to flag a reply that is about to land the same topic
+ * on the same closing yet again.
+ */
+export function getLoopedTopicPatterns(
+  memory: NoiseMemory
+): Array<{ topic: string; pattern: string }> {
+  return memory.topicLoops
+    .filter((item) => item.count >= 2)
+    .map((item) => ({ topic: item.topic, pattern: item.pattern }));
 }
 
 export function getRepeatedClosingPatterns(memory: NoiseMemory): string[] {

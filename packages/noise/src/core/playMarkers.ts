@@ -1,4 +1,5 @@
-import type { InterventionKind } from './types.js';
+import { matchesPlayMarkerLexicon } from './lexicon.js';
+import type { InterventionKind, NoiseLexicon } from './types.js';
 
 /**
  * Interventions that constitute a social violation (teasing-class). Benign
@@ -18,8 +19,10 @@ const PLAY_MARKER_PATTERN =
   /[wｗ]|草|笑|（笑）|♪|☆|✨|😆|🤣|😂|！{2,}|!{2,}|〜|なんてね|なーんて|冗談|うそうそ|嘘うそ|知らんけど|でしょ[？?]|haha|lol|just kidding|kidding|joking|;\)/i;
 
 /** Whether the text carries at least one decodable "this is play" marker. */
-export function hasPlayMarker(text: string): boolean {
-  return PLAY_MARKER_PATTERN.test(text);
+export function hasPlayMarker(text: string, lexicon?: NoiseLexicon): boolean {
+  return (
+    PLAY_MARKER_PATTERN.test(text) || matchesPlayMarkerLexicon(text, lexicon)
+  );
 }
 
 export function requiresPlayMarker(

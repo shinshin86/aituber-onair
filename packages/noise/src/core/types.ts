@@ -80,7 +80,6 @@ export interface ContaminateInput {
   draft: string;
   streamContext?: StreamContext;
   intensity?: number;
-  seed?: string | number;
   constraints?: ContaminateConstraints;
   /**
    * How much deviation license the audience relationship has earned (0-1).
@@ -98,7 +97,10 @@ export type NoiseSkipReason =
   | 'repair'
   | 'cooldown'
   | 'platform'
-  | 'low_predictability';
+  | 'low_predictability'
+  | 'model_error'
+  | 'quality_fail'
+  | 'no_licensed_intervention';
 
 export type RhythmPhase = 'platform' | 'tilt' | 'cooldown' | 'repair';
 
@@ -113,7 +115,11 @@ export interface RhythmOptions {
   minPlatformTurns?: number;
   /** Un-noised turns enforced after a tilt. Default 1. */
   cooldownTurns?: number;
-  /** Minimum diagnosis score required to tilt. Default 0 (always eligible). */
+  /**
+   * Minimum diagnosis score required to tilt. Default 0.35, so drafts that
+   * already land naturally are left untouched out of the box. Set 0 to make
+   * every turn eligible.
+   */
   tiltThreshold?: number;
   /**
    * If no tilt happened for this many turns, tilt even below the threshold
@@ -146,6 +152,12 @@ export interface ContaminateGates {
 
 export interface ContaminateOutput {
   text: string;
+  /**
+   * Identifier of this turn (the rhythm turn counter before this turn was
+   * recorded). Pass it back via reportReaction({ turnId }) so a late
+   * reaction can only promote the tilt it actually belongs to.
+   */
+  turnId: number;
   score: {
     predictability: number;
     rewrittenPredictability: number;
@@ -178,6 +190,13 @@ export type NoiseReactionSignal =
 export interface NoiseReactionInput {
   signal: NoiseReactionSignal;
   detail?: string;
+  /**
+   * The turnId of the ContaminateOutput this reaction belongs to. When set,
+   * gag-ledger promotion only happens if the latest tilt is still that turn,
+   * so a reaction that arrives late cannot promote the wrong tilt. The
+   * violation budget and repair scheduling always apply.
+   */
+  turnId?: number;
 }
 
 export interface NoiseReactionResult {
@@ -244,13 +263,6 @@ export interface TopicLoopRecord {
   count: number;
 }
 
-export interface LearnedNoiseRule {
-  trigger: string;
-  avoid: string[];
-  preferStains: StainKind[];
-  weight: number;
-}
-
 export interface MemorableMoment {
   id: string;
   summary: string;
@@ -286,8 +298,6 @@ export interface NoiseMemory {
   repeatedPhrases: PhraseCount[];
   usedStains: UsedStainRecord[];
   topicLoops: TopicLoopRecord[];
-  avoidedPatterns: string[];
-  learnedRules: LearnedNoiseRule[];
   memorableMoments: MemorableMoment[];
   rhythm: RhythmMemoryState;
   /**
@@ -312,6 +322,31 @@ export interface NoiseMemoryOptions {
   maxRecentEntries?: number;
 }
 
+/**
+ * App-supplied vocabulary that extends the built-in detection lexicons.
+ * The built-in patterns only know generic assistant phrasing; a character's
+ * own catchphrases, habitual closings, and play-marker style are
+ * app-specific knowledge, so pass them here. Matching is case-insensitive
+ * substring matching.
+ */
+export interface NoiseLexicon {
+  /**
+   * Phrases that should count as predictable/templated wording during
+   * diagnosis (habitual closings, service-tone catchphrases, etc.).
+   */
+  predictablePhrases?: string[];
+  /**
+   * Phrases that should count as generic could-reply-to-anything stock
+   * replies for the genericity penalty.
+   */
+  stockReplies?: string[];
+  /**
+   * Extra "this is play" markers accepted for teasing-class interventions
+   * (character-specific laugh tokens, catchphrase suffixes, emoji).
+   */
+  playMarkers?: string[];
+}
+
 export interface CreateContaminatorOptions {
   intensity?: number;
   mode?: NoiseMode;
@@ -323,6 +358,23 @@ export interface CreateContaminatorOptions {
   rhythm?: RhythmOptions;
   /** Default relationship capital when input does not provide one. Default 0.5. */
   relationshipCapital?: number;
+  /**
+   * Abort the rewrite model call after this many milliseconds and return the
+   * draft unchanged (`skipped.reason === 'model_error'`). Unset = no timeout.
+   * Noise is a post-generation effect: a missing rewrite is acceptable on a
+   * live stream, a missing reply is not, so model failures never throw.
+   */
+  modelTimeoutMs?: number;
+  /**
+   * When the best candidate still fails the quality report, return the draft
+   * unchanged (`skipped.reason === 'quality_fail'`) instead of the rewrite.
+   * The failing candidates stay observable via `output.candidates` and
+   * `output.quality`. Default false (the rewrite is returned and the app is
+   * expected to check `quality.passed`).
+   */
+  fallbackToDraftOnQualityFail?: boolean;
+  /** Character/app-specific vocabulary extending the built-in lexicons. */
+  lexicon?: NoiseLexicon;
   /** Suppress noise on sincere/vulnerable user turns. Default true. */
   sincerityGate?: boolean;
   /** Observer for noise lifecycle events (tilts, skips, repairs, gags). */

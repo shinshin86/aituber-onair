@@ -1,4 +1,5 @@
-import type { ContextFingerprint } from './types.js';
+import type { ContextFingerprint, NoiseLexicon } from './types.js';
+import { matchesPredictableLexicon } from './lexicon.js';
 import { clamp01 } from './random.js';
 
 const CLEAN_CLOSING_PATTERN =
@@ -13,6 +14,8 @@ const CLEAN_ENDING_PATTERN =
 export function scorePredictability(input: {
   draft: string;
   context: ContextFingerprint;
+  /** App-supplied phrases that also count as predictable wording. */
+  lexicon?: NoiseLexicon;
 }): number {
   const text = input.draft.trim();
 
@@ -23,6 +26,10 @@ export function scorePredictability(input: {
   let score = 0;
 
   if (CLEAN_CLOSING_PATTERN.test(text)) {
+    score += 0.18;
+  }
+
+  if (matchesPredictableLexicon(text, input.lexicon)) {
     score += 0.18;
   }
 

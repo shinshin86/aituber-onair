@@ -34,7 +34,6 @@ interface AppState {
   storeKind: StoreKind;
   mode: NoiseMode;
   intensity: number;
-  seed: string;
   apiKey: string;
   provider: UiProviderName;
   model: string;
@@ -130,7 +129,6 @@ const state: AppState = {
   storeKind: 'localStorage',
   mode: 'performer',
   intensity: 0.75,
-  seed: 'noise-sample',
   apiKey: '',
   provider: 'openai',
   model: 'gpt-4o-mini',
@@ -270,10 +268,6 @@ function render(): void {
                   <option value="localStorage" ${selected(state.storeKind, 'localStorage')}>ブラウザに保存</option>
                   <option value="memory" ${selected(state.storeKind, 'memory')}>この画面だけ</option>
                 </select>
-              </label>
-              <label>
-                シード値
-                <input data-field="seed" value="${escapeHtml(state.seed)}" />
               </label>
               <label>
                 <span class="label-row">視聴者との距離(親密度)<output class="capital-value">${formatCapital(state.relationshipCapital)}</output></span>
@@ -1501,7 +1495,6 @@ async function runNoise(): Promise<void> {
       messages: parseMessages(state.messagesText),
       draft: state.draft,
       streamContext: PRESETS[state.activePreset].streamContext,
-      seed: state.seed,
       relationshipCapital: state.relationshipCapital,
       // By default the lab bypasses the rhythm gate so every click shows a
       // rewrite; enable "リズム制御に従う" to observe platform/cooldown skips.
@@ -1696,7 +1689,6 @@ function updateField(element: HTMLElement): void {
   }
 
   if (
-    key === 'seed' ||
     key === 'apiKey' ||
     key === 'model' ||
     key === 'endpoint' ||

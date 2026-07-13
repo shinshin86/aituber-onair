@@ -1,10 +1,27 @@
+import {
+  getLoopedTopicPatterns,
+  getOverusedPhrases,
+  getRepeatedClosingPatterns,
+} from '../memory/noiseMemory.js';
+import { getFinalSentence } from './genericity.js';
+import { matchesPredictableLexicon } from './lexicon.js';
 import { scorePredictability } from './predictability.js';
+import { clamp01 } from './random.js';
 import type {
   ContextFingerprint,
+  NoiseLexicon,
+  NoiseMemory,
   PredictabilityDiagnosis,
   PredictabilityIssue,
   PredictabilityIssueKind,
 } from './types.js';
+
+/**
+ * English equivalent of the Japanese concrete-action lexicon so English
+ * streams are not systematically scored as unspecific.
+ */
+export const CONCRETE_ACTION_EN_PATTERN =
+  /\b(here|first|now|screen|audio|sound|comment|question|game|show|switch|pause|stop|next up)\b/i;
 
 const ISSUE_PATTERNS: Array<{
   kind: PredictabilityIssueKind;
@@ -51,9 +68,24 @@ const ISSUE_PATTERNS: Array<{
 export function diagnosePredictability(input: {
   draft: string;
   context: ContextFingerprint;
+  /**
+   * Adaptive noise memory. When provided, the character's own recorded
+   * habits (repeated closings, overused phrases, topic loops) count as
+   * predictability on top of the built-in lexicon.
+   */
+  memory?: NoiseMemory;
+  /** App-supplied phrases that also count as predictable wording. */
+  lexicon?: NoiseLexicon;
 }): PredictabilityDiagnosis {
-  const score = scorePredictability(input);
   const issues: PredictabilityIssue[] = [];
+
+  if (matchesPredictableLexicon(input.draft, input.lexicon)) {
+    issues.push({
+      kind: 'repeated_phrase',
+      severity: 0.62,
+      evidence: 'The draft uses a phrase the app lexicon marks as predictable.',
+    });
+  }
 
   for (const issue of ISSUE_PATTERNS) {
     if (issue.pattern.test(input.draft)) {
@@ -114,10 +146,78 @@ export function diagnosePredictability(input: {
     });
   }
 
+  const memoryIssues = input.memory
+    ? diagnoseFromMemory(input.draft, input.context, input.memory)
+    : [];
+  issues.push(...memoryIssues);
+
+  const score = clamp01(
+    scorePredictability({
+      draft: input.draft,
+      context: input.context,
+      lexicon: input.lexicon,
+    }) + (memoryIssues.length > 0 ? 0.15 : 0)
+  );
+
   return {
     score,
     issues: dedupeIssues(issues),
   };
+}
+
+/**
+ * Learned-habit checks: the deepest predictable harmony is the character
+ * repeating itself, which no static lexicon can know in advance.
+ */
+function diagnoseFromMemory(
+  draft: string,
+  context: ContextFingerprint,
+  memory: NoiseMemory
+): PredictabilityIssue[] {
+  const issues: PredictabilityIssue[] = [];
+  // Match the normalization used when closings are recorded in memory.
+  const draftClosing = getFinalSentence(draft).slice(0, 80);
+
+  if (
+    draftClosing &&
+    getRepeatedClosingPatterns(memory).includes(draftClosing)
+  ) {
+    issues.push({
+      kind: 'generic_closing',
+      severity: 0.75,
+      evidence:
+        'Memory shows the character has landed on this exact closing multiple times.',
+    });
+  }
+
+  const lowerDraft = draft.toLowerCase();
+  if (
+    getOverusedPhrases(memory).some((phrase) => lowerDraft.includes(phrase))
+  ) {
+    issues.push({
+      kind: 'repeated_phrase',
+      severity: 0.6,
+      evidence:
+        'The draft reuses a phrase the character has already leaned on repeatedly.',
+    });
+  }
+
+  if (
+    draftClosing &&
+    getLoopedTopicPatterns(memory).some(
+      (loop) =>
+        loop.pattern === draftClosing && context.topicHints.includes(loop.topic)
+    )
+  ) {
+    issues.push({
+      kind: 'too_complete',
+      severity: 0.6,
+      evidence:
+        'This topic has repeatedly ended on the same closing; the loop is becoming a pattern.',
+    });
+  }
+
+  return issues;
 }
 
 function hasLowContextGrounding(
@@ -138,7 +238,8 @@ function hasLowSpecificity(
   const hasNumber = /\d/.test(draft);
   const hasTopic = context.topicHints.some((hint) => draft.includes(hint));
   const hasConcreteAction =
-    /ここで|先に|画面|音|コメント|質問|ゲーム|紹介/.test(draft);
+    /ここで|先に|画面|音|コメント|質問|ゲーム|紹介/.test(draft) ||
+    CONCRETE_ACTION_EN_PATTERN.test(draft);
 
   return draft.length >= 40 && !hasNumber && !hasTopic && !hasConcreteAction;
 }

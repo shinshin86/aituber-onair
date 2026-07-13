@@ -44,7 +44,6 @@ describe('createContaminator', () => {
       messages: [{ role: 'user' as const, content: '今日も楽しかった！！' }],
       draft:
         '今日は来てくれてありがとう。みんなのおかげでとても楽しい配信になりました。次回も楽しみにしていてね。',
-      seed: 'live-ending',
     };
 
     const result = await contaminator.contaminate(input);
@@ -65,6 +64,7 @@ describe('createContaminator', () => {
     const contaminator = createContaminator({
       intensity: 0.7,
       mode: 'performer',
+      rhythm: { tiltThreshold: 0 },
       model: {
         async generate({ system, prompt }) {
           capturedSystem = system;
@@ -79,7 +79,6 @@ describe('createContaminator', () => {
       messages: [{ role: 'user', content: 'AITuberを続けるコツってある？' }],
       draft:
         'まず、継続することが大切です。次に、視聴者との交流を楽しむことが重要です。最後に、自分らしい配信を心がけることをおすすめします。',
-      seed: 'contextual',
     });
 
     expect(capturedSystem).toContain('Preserve the character');
@@ -126,7 +125,6 @@ describe('createContaminator', () => {
       streamContext: {
         currentSituation: '同じ質問が複数回流れている',
       },
-      seed: 'candidate-selection',
     });
 
     expect(result.text).toContain('まとめて答えますね');
@@ -158,7 +156,6 @@ describe('createContaminator', () => {
       ],
       draft:
         '同じ質問が何度か流れていますが、みんなが興味を持ってくれている証拠なので嬉しいです。順番に答えていくので、少し待っていてくださいね。',
-      seed: 'repeated-question',
     });
 
     expect(result.text).toContain('まとめて答えますね');
@@ -182,7 +179,7 @@ describe('createContaminator', () => {
       systemPrompt: 'AITuber',
       messages: [],
       draft,
-      seed: 1,
+      forceTilt: true,
     });
 
     expect(result.text).toContain('https://example.com');
@@ -204,7 +201,7 @@ describe('createContaminator', () => {
       systemPrompt: 'AITuber',
       messages: [],
       draft,
-      seed: 'max',
+      forceTilt: true,
       constraints: {
         maxAddedChars: 0,
       },
@@ -223,7 +220,6 @@ describe('createContaminator', () => {
       systemPrompt: 'AITuber',
       messages: [],
       draft: '来てくれてありがとう。次回も楽しみにしていてね。',
-      seed: 'model',
     });
 
     expect(result.text).toBe('来てくれてありがとう。少しだけ余白が残った。');
@@ -261,7 +257,6 @@ describe('createContaminator', () => {
       systemPrompt: 'AITuber',
       messages: [],
       draft: '来てくれてありがとう。次回も楽しみにしていてね。',
-      seed: 'openai-compatible',
     });
 
     expect(result.text).toContain('余白');
@@ -284,7 +279,6 @@ describe('createContaminator', () => {
       systemPrompt: 'AITuber',
       messages: [],
       draft: '来てくれてありがとう。次回も楽しみにしていてね。',
-      seed: 'chat-service',
     });
 
     expect(result.text).toContain('余白');
@@ -655,7 +649,6 @@ describe('createContaminationStream', () => {
     const stream = createContaminationStream(contaminator, {
       systemPrompt: 'AITuber',
       messages: [],
-      seed: 'stream',
     });
     const writer = stream.writable.getWriter();
     const reader = stream.readable.getReader();

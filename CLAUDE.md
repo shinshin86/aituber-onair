@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of six main packages:
+AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of seven main packages:
 
 - **`@aituber-onair/core`** - Core library for AI-driven virtual streaming applications with memory management and event-driven architecture
 - **`@aituber-onair/chat`** - Chat and LLM API integration library supporting multiple AI providers (OpenAI, Claude, Gemini) with unified interface
@@ -12,8 +12,9 @@ AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for
 - **`@aituber-onair/manneri`** - Conversation pattern detection library that identifies repetitive dialogue and provides topic diversification prompts
 - **`@aituber-onair/bushitsu-client`** - WebSocket client library for chat functionality with React hooks support, auto-reconnection, rate limiting, and mention support
 - **`@aituber-onair/kizuna`** - Sophisticated bond system for managing user-AI character relationships with points, achievements, and emotion-based interactions
+- **`@aituber-onair/noise`** - Context-aware response noise engine (deviation orchestration) that rewrites overly predictable LLM replies after generation, with rhythm/relationship/sincerity gates and a reaction-learning loop
 
-Each package can be used independently or together. The chat package handles LLM interactions, voice package provides TTS functionality, manneri handles conversation variety, bushitsu-client enables WebSocket chat communication, kizuna manages user relationships and engagement, and core integrates everything for full AITuber functionality.
+Each package can be used independently or together. The chat package handles LLM interactions, voice package provides TTS functionality, manneri handles conversation variety, bushitsu-client enables WebSocket chat communication, kizuna manages user relationships and engagement, noise disturbs overly predictable response landings after generation, and core integrates everything for full AITuber functionality.
 
 ## Common Development Commands
 
@@ -30,7 +31,7 @@ npm run fmt
 # Run linting
 npm run lint
 
-# Package-specific commands (replace [package] with: core, chat, voice, manneri, bushitsu-client, or kizuna)
+# Package-specific commands (replace [package] with: core, chat, voice, manneri, bushitsu-client, kizuna, or noise)
 cd packages/[package] && npm run build      # Build specific package
 cd packages/[package] && npm run typecheck  # Type check only
 cd packages/[package] && npm run test       # Run tests
@@ -195,8 +196,10 @@ packages/
 │   └── examples/   # Conversation pattern detection examples
 ├── bushitsu-client/# WebSocket client, React hooks
 │   └── examples/   # WebSocket client usage examples
-└── kizuna/         # KizunaManager, storage providers, point system
-    └── examples/   # Bond system implementation examples
+├── kizuna/         # KizunaManager, storage providers, point system
+│   └── examples/   # Bond system implementation examples
+└── noise/          # Contaminator pipeline, gates, gag ledger, reaction loop
+    └── examples/   # Browser labs for noise rewrites and session simulation
 ```
 
 Each package contains an `examples/` directory with code samples demonstrating typical usage patterns and integration scenarios.
@@ -385,6 +388,7 @@ Essential `package.json` fields:
 
 - **Core**: Includes chat and voice as dependencies for full functionality
 - **Chat, Voice, Manneri, Bushitsu-client, Kizuna**: Completely independent, zero inter-package dependencies
+- **Noise**: Depends only on chat (lazily loaded) for the optional built-in LLM rewrite backend; custom `model` adapters need no dependency
 - **Browser Compatibility**: Kizuna and Manneri designed for zero external dependencies
 
 ---

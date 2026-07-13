@@ -1,3 +1,6 @@
+import { matchesStockReplyLexicon } from './lexicon.js';
+import type { NoiseLexicon } from './types.js';
+
 /**
  * MMI-style anti-genericity scoring: a reply that would be a plausible
  * response to *any* prompt (stock phrases) or that closely repeats the
@@ -10,8 +13,14 @@ const STOCK_REPLY_PATTERN =
 export function scoreGenericity(input: {
   text: string;
   recentResponses?: string[];
+  /** App-supplied phrases that also count as stock replies. */
+  lexicon?: NoiseLexicon;
 }): number {
-  const stockScore = STOCK_REPLY_PATTERN.test(input.text) ? 0.5 : 0;
+  const stockScore =
+    STOCK_REPLY_PATTERN.test(input.text) ||
+    matchesStockReplyLexicon(input.text, input.lexicon)
+      ? 0.5
+      : 0;
   const responses = input.recentResponses ?? [];
   let maxSimilarity = 0;
 

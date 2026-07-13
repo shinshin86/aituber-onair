@@ -101,7 +101,6 @@ const result = await contaminator.contaminate({
   streamContext: {
     currentSituation: 'The stream is ending too neatly.',
   },
-  seed: 'ending-1',
   constraints: {
     preserveCodeBlocks: true,
     preserveUrls: true,
@@ -186,9 +185,13 @@ const contaminator = createContaminator({
 });
 ```
 
+By default `tiltThreshold` is `0.35`, so drafts that already land naturally
+are left untouched out of the box; set it to `0` to make every turn eligible.
+
 When a turn is skipped, `contaminate()` returns the draft unchanged with
 `result.skipped` describing why (`'cooldown'`, `'platform'`,
-`'low_predictability'`, `'repair'`, or `'sincerity'`). Pass
+`'low_predictability'`, `'repair'`, `'sincerity'`,
+`'no_licensed_intervention'`, `'model_error'`, or `'quality_fail'`). Pass
 `forceTilt: true` in the input to bypass the rhythm gate.
 
 ### Relationship capital
@@ -213,6 +216,14 @@ const result = await contaminator.contaminate({
   relationshipCapital: 0.7,
 });
 console.log(result.gates.relationship.tier); // 'regular'
+```
+
+With `@aituber-onair/kizuna` the mapping is one line — normalize the user's
+points into 0-1:
+
+```ts
+const user = await kizuna.getUser(userId);
+const relationshipCapital = Math.min(1, (user?.points ?? 0) / 1000);
 ```
 
 ### Sincerity gate
@@ -252,6 +263,21 @@ Every deviation is a bet; feed the observed result back:
 ```ts
 const reaction = await contaminator.reportReaction({ signal: 'laughter' });
 // 'laughter' | 'positive' | 'neutral' | 'silence' | 'pushback' | 'discomfort'
+```
+
+In a live stream the reaction is directly observable in chat, so you can infer
+the signal instead of hand-labelling it. Pass the output's `turnId` back so a
+late reaction can only promote the tilt it belongs to:
+
+```ts
+import { inferReactionFromComments } from '@aituber-onair/noise';
+
+const output = await contaminator.contaminate({ ... });
+// ...collect the comments that arrived in the next few seconds...
+await contaminator.reportReaction({
+  ...inferReactionFromComments(commentsAfterTilt),
+  turnId: output.turnId,
+});
 ```
 
 Positive signals widen the violation budget and promote the latest tilt into
@@ -407,6 +433,29 @@ medical, legal, and financial text.
 The purpose of this package is not to make the AI more human or to break facts.
 It only disturbs the way a reply lands when it is becoming too predictable.
 
+## Failure Handling
+
+Noise is a post-generation effect: losing a rewrite is acceptable on a live
+stream, losing the reply is not. `contaminate()` therefore never throws on
+rewrite-model failures — any model error returns the draft unchanged with
+`skipped.reason === 'model_error'`, and malformed/truncated candidate JSON
+falls back to the draft instead of shipping raw model output. Two options
+tighten this further:
+
+```ts
+const contaminator = createContaminator({
+  // Abort a hanging rewrite call and return the draft.
+  modelTimeoutMs: 4000,
+  // If every candidate fails the quality report, return the draft
+  // (skipped.reason === 'quality_fail') instead of the failing rewrite.
+  fallbackToDraftOnQualityFail: true,
+});
+```
+
+Protected spans (code blocks, URLs, numbers) are replaced with placeholder
+tokens before the rewrite; the model is instructed to keep them verbatim, and
+any candidate that drops or mangles one degrades to the draft.
+
 ## Quality Report
 
 Every rewrite returns a `quality` report:
@@ -420,6 +469,32 @@ if (!result.quality.passed) {
 The report is intentionally conservative. It flags outputs that are still too
 predictable, too aggressive for the character, over-explain the noise, or add
 details that were not present in the draft or recent conversation.
+
+## Custom Lexicon
+
+The built-in detection vocabulary only knows generic assistant phrasing. A
+character's own catchphrases, habitual closings, and play-marker style are
+app-specific knowledge — pass them as a lexicon (case-insensitive substring
+matching):
+
+```ts
+const contaminator = createContaminator({
+  lexicon: {
+    // Counts as predictable wording during diagnosis.
+    predictablePhrases: ['それでは今日のまとめコーナー'],
+    // Counts as generic stock replies for the genericity penalty.
+    stockReplies: ['ナイスファイトです'],
+    // Accepted as "this is play" markers for teasing-class interventions.
+    playMarkers: ['にゃはは'],
+  },
+});
+```
+
+The same option is accepted by the standalone `scorePredictability()`,
+`diagnosePredictability()`, `scoreGenericity()`, `hasPlayMarker()`, and
+`evaluateRewriteCandidates()` functions. The adaptive memory complements this
+at runtime: closings and phrases the character actually repeats are learned
+and fed back into the diagnosis automatically.
 
 ## Adaptive Memory
 
@@ -475,6 +550,9 @@ const store = new JsonFileNoiseMemoryStore({
 recommended production style is to import `@aituber-onair/noise/web` or
 `@aituber-onair/noise/node` explicitly. This keeps browser bundles from pulling
 in Node.js modules.
+
+The package ships dual ESM (`dist/esm`) and CommonJS (`dist/cjs`) builds, so
+both `import` and `require` work in Node.js.
 
 ## Streaming
 

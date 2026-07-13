@@ -7,7 +7,7 @@ import type {
 export const DEFAULT_RHYTHM_OPTIONS: Required<RhythmOptions> = {
   minPlatformTurns: 0,
   cooldownTurns: 1,
-  tiltThreshold: 0,
+  tiltThreshold: 0.35,
   forcedTiltAfter: 6,
 };
 

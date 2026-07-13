@@ -29,7 +29,6 @@ describe('noise memory stores', () => {
       systemPrompt: 'AITuber',
       messages: [{ role: 'user', content: '今日もありがとう！' }],
       draft: '今日は来てくれてありがとう。次回も楽しみにしていてね。',
-      seed: 'memory',
     });
 
     const memory = await store.load('stream-a');
@@ -52,8 +51,6 @@ describe('noise memory stores', () => {
       repeatedPhrases: [],
       usedStains: [],
       topicLoops: [],
-      avoidedPatterns: [],
-      learnedRules: [],
       updatedAt: 1,
     });
 
@@ -73,8 +70,6 @@ describe('noise memory stores', () => {
       repeatedPhrases: [],
       usedStains: [],
       topicLoops: [],
-      avoidedPatterns: [],
-      learnedRules: [],
       updatedAt: 1,
     });
 

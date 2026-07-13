@@ -3,6 +3,7 @@ import { scorePredictability } from './predictability.js';
 import type {
   ContextFingerprint,
   InterventionKind,
+  NoiseLexicon,
   NoiseQualityIssue,
   NoiseQualityOptions,
   NoiseQualityReport,
@@ -21,16 +22,19 @@ export function evaluateNoiseQuality(input: {
   context: ContextFingerprint;
   options?: NoiseQualityOptions;
   appliedInterventions?: InterventionKind[];
+  lexicon?: NoiseLexicon;
 }): NoiseQualityReport {
   const before = input.before.trim();
   const after = input.after.trim();
   const predictabilityBefore = scorePredictability({
     draft: before,
     context: input.context,
+    lexicon: input.lexicon,
   });
   const predictabilityAfter = scorePredictability({
     draft: after,
     context: input.context,
+    lexicon: input.lexicon,
   });
   const predictabilityDelta = predictabilityBefore - predictabilityAfter;
   const lengthRatio = before.length > 0 ? after.length / before.length : 1;
@@ -104,7 +108,10 @@ export function evaluateNoiseQuality(input: {
     });
   }
 
-  if (requiresPlayMarker(input.appliedInterventions) && !hasPlayMarker(after)) {
+  if (
+    requiresPlayMarker(input.appliedInterventions) &&
+    !hasPlayMarker(after, input.lexicon)
+  ) {
     issues.push({
       kind: 'missing_play_marker',
       severity: 'warning',

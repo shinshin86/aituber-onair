@@ -68,6 +68,11 @@ export async function generateRewriteCandidates(input: {
   model: RewriteModel;
   mode: NoiseMode;
   candidateCount: number;
+  /**
+   * Placeholder tokens that stand in for protected spans (code blocks, URLs,
+   * numbers) in the draft. They must survive the rewrite verbatim.
+   */
+  protectedTokens?: string[];
 }): Promise<RewriteCandidate[]> {
   if (input.plan.interventions.length === 0) {
     return [
@@ -92,6 +97,7 @@ function buildCandidateSystemPrompt(): string {
     'Brand promise: do not let AI responses end in predictable harmony.',
     'You receive structured friction parameters. Follow them instead of improvising random weirdness.',
     'Preserve the character, relationship, intent, facts, URLs, numbers, and code exactly.',
+    'The draft may contain placeholder tokens like __AITUBER_NOISE_SPAN_0__ standing in for protected content. Copy every placeholder token into each candidate exactly as written; never drop, alter, or explain them.',
     'You may shift stance, rhythm, and emotional landing when rewriteStyle asks for it, but do not change the character core.',
     'Never deny what the user established; deviate inside their reality.',
     'When a teasing-class intervention (tsukkomi, withheld_uptake, boke_bait, status_seesaw, contrarian_reframe) is applied, include a clear playful marker (laughter token, exaggeration, self-tease) in the same reply so it reads as play, not hostility.',
@@ -112,6 +118,7 @@ function buildCandidatePrompt(input: {
   friction: FrictionParameters;
   mode: NoiseMode;
   candidateCount: number;
+  protectedTokens?: string[];
 }): string {
   return [
     JSON.stringify(
@@ -141,6 +148,9 @@ function buildCandidatePrompt(input: {
         ),
         constraints: {
           ...input.friction.constraints,
+          ...(input.protectedTokens && input.protectedTokens.length > 0
+            ? { keepPlaceholderTokensVerbatim: input.protectedTokens }
+            : {}),
           doNotUseMetaWords: ['予定調和', 'ノイズ', 'noise'],
           keepSameMeaning: true,
           keepSamePersona: true,
@@ -240,8 +250,20 @@ function parseCandidates(
         return candidates;
       }
     } catch {
-      // Fall through to plain-text compatibility mode.
+      // Fall through to the structured/plain-text handling below.
     }
+  }
+
+  // The model tried to return the structured format but it was truncated or
+  // malformed. Shipping the raw output would put JSON garbage on stream, so
+  // fall back to the untouched draft instead.
+  if (looksLikeStructuredOutput(trimmed)) {
+    return [
+      {
+        text: input.draft,
+        appliedInterventions: [],
+      },
+    ];
   }
 
   return [
@@ -252,6 +274,14 @@ function parseCandidates(
       ),
     },
   ];
+}
+
+function looksLikeStructuredOutput(text: string): boolean {
+  return (
+    text.startsWith('{') ||
+    text.startsWith('```') ||
+    /"candidates"\s*:/.test(text)
+  );
 }
 
 function extractJsonObject(text: string): string | undefined {

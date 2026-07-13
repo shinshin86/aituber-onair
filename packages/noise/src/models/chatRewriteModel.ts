@@ -1,20 +1,32 @@
-import { ChatServiceFactory } from '@aituber-onair/chat';
-import type { Message } from '@aituber-onair/chat';
+import type { ChatService, Message } from '@aituber-onair/chat';
 import type { ChatRewriteModelOptions, RewriteModel } from '../core/types.js';
 
 export function createChatRewriteModel(
   options: ChatRewriteModelOptions
 ): RewriteModel {
-  const service =
-    'service' in options
-      ? options.service
-      : ChatServiceFactory.createChatService(
+  // Load @aituber-onair/chat lazily so importing this package never pulls it
+  // in unless the chat-provider option is actually used (a pre-created
+  // ChatService instance needs no factory at all).
+  let servicePromise: Promise<ChatService> | undefined;
+  const resolveService = (): Promise<ChatService> => {
+    if ('service' in options) {
+      return Promise.resolve(options.service);
+    }
+
+    servicePromise ??= import('@aituber-onair/chat').then(
+      ({ ChatServiceFactory }) =>
+        ChatServiceFactory.createChatService(
           options.provider,
           options.options as never
-        );
+        )
+    );
+
+    return servicePromise;
+  };
 
   return {
     async generate(input) {
+      const service = await resolveService();
       const messages: Message[] = [
         {
           role: 'system',
