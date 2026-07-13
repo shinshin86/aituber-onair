@@ -1,6 +1,6 @@
 # @aituber-onair/noise
 
-## Unreleased
+## 0.0.3
 
 ### Added
 
