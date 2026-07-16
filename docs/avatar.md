@@ -1,5 +1,7 @@
 # Avatar Guide
 
+![Hero illustration showing the avatar styles supported by AITuber OnAir](./images/avatar-guide-hero.webp)
+
 [日本語版はこちら](./avatar.ja.md)
 
 AITuber OnAir is not only a chat and voice toolkit. It is also a starting

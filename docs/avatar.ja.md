@@ -1,5 +1,7 @@
 # アバターガイド
 
+![AITuber OnAir の多様なアバター方式を表したヒーロー画像](./images/avatar-guide-hero.webp)
+
 [English version](./avatar.md)
 
 AITuber OnAir は、チャットや音声の裏側だけを扱うツールキットではありません。
