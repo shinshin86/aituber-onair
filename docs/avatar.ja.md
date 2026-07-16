@@ -5,7 +5,7 @@
 [English version](./avatar.md)
 
 AITuber OnAir は、チャットや音声の裏側だけを扱うツールキットではありません。
-PNG / ぷるぷるPNGTuber / VRM / Live2D / Pet などのアバター表現を
+PNG / ぷるぷるPNGTuber / VRM / Live2D / Inochi2D / PSD / Pet などのアバター表現を
 組み合わせて、より豊かな AI キャラクター体験を作るための入口にもなります。
 
 このガイドでは、どのアバター方式から始めるとよいか、表現力を増やしたい
@@ -63,6 +63,31 @@ PNGTuber サンプルでは、次の4状態画像を使います。
 
 まずは
 [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app)
+を参照してください。
+
+### Inochi2D
+
+Inochi2D モデルを WebGL ステージで表示し、リグやモーションを活かした
+2D アバターを試したい場合に向いています。サンプルは `.inx` / `.inp` を
+読み込み、音声リップシンク、対応ランタイムでの発話表情、ドラッグ・ズーム、
+タップやフリックへの反応を駆動します。初回表示用の Aka モデルを同梱しており、
+モーション付きモデルは manifest から登録できます。
+
+まずは
+[`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app)
+を参照してください。
+
+### PSD
+
+1つの `.psd` ファイルにまとめたレイヤー付き 2D 立ち絵を、そのまま
+アバターとして使いたい場合に向いています。PSD サンプルはレイヤーを canvas 上で
+合成し、口・目レイヤーを音声リップシンクやまばたきに割り当てます。対応する
+PSD では、PSDTool 風の静的レイヤー切り替え、または Anime2.5DRig 互換の
+待機モーションや髪揺れを利用できます。追加設定なしで試せるモーションサンプルも
+同梱しています。
+
+まずは
+[`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app)
 を参照してください。
 
 ### Pet

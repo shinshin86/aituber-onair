@@ -6,7 +6,7 @@
 
 AITuber OnAir is not only a chat and voice toolkit. It is also a starting
 point for building richer AI character presentation with PNG, PuruPuru
-PNGTuber, VRM, Live2D, and animated pet avatars.
+PNGTuber, VRM, Live2D, Inochi2D, PSD, and animated pet avatars.
 
 This guide explains which avatar style to start with and where to extend avatar
 assets when you want more expressive AI characters.
@@ -59,6 +59,28 @@ folder that you have the right to use.
 
 Start from
 [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app).
+
+### Inochi2D
+
+Use Inochi2D when you want to try a rigged 2D avatar on a WebGL stage. The
+example loads `.inx` / `.inp` models and drives audio lip-sync, speaking
+expressions when supported, drag and zoom controls, and tap or flick reactions.
+It bundles the Aka model for first-run display, and motion-enabled models can be
+registered through the manifest.
+
+Start from
+[`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app).
+
+### PSD
+
+Use PSD when you want to load a layered 2D character from a single `.psd`
+file. The PSD example composites layers on a canvas and binds mouth and eye
+layers to audio lip-sync and blinking. Compatible files can use either
+PSDTool-style static layer switching or Anime2.5DRig-compatible idle motion
+and hair physics. A bundled motion sample works without additional setup.
+
+Start from
+[`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app).
 
 ### Pet
 
