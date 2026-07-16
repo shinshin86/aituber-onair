@@ -671,8 +671,8 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 
 注意:
 - Z.aiはOpenAI互換のChat Completionsを利用します。
-- テキスト対応モデル: `glm-5.2`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
-- ビジョン対応モデル: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
+- テキスト対応モデル: `glm-5.2`, `glm-5.1`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
+- ビジョン対応モデル: `glm-5v-turbo`, `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
 - `thinking` はデフォルトで無効化しています。
 
 #### xAI（Grok）
@@ -760,7 +760,8 @@ await mistralService.processChat(
 注意:
 - Mistralは`https://api.mistral.ai/v1/chat/completions`のChat Completionsを利用します。
 - デフォルトモデルは`mistral-small-latest`です。低コスト、汎用チャット品質、vision対応、adjustable reasoning対応のバランスがよいためサンプル向けの既定値にしています。
-- 対応モデル: `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`
+- 対応モデル: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`
+- Ministral 3系は同じChat Completions endpointでtext、vision、streaming、function callingに対応します。
 - `reasoning_effort`は`'none' | 'high'`に対応し、Mistral公式docsに合わせて`mistral-small-latest`と`mistral-medium-3-5`にだけ送信します。それ以外のモデルでは省略します。
 
 reasoning例:
@@ -1138,11 +1139,11 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **Gemini**: Gemini 3.5 Flash、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
-- **Z.ai**: GLM-5.2/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-4.6V系（ビジョン）をサポート
+- **Z.ai**: GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-5V-Turbo/GLM-4.6V系（ビジョン）をサポート
 - **xAI**: Grok 4.5 をチャット用途向けに `reasoning_effort: 'low'` デフォルトでサポート。加えて Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
 - **Kimi**: Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
 - **DeepSeek**: DeepSeek V4 Flash（`deepseek-v4-flash`）と DeepSeek V4 Pro（`deepseek-v4-pro`）をOpenAI互換Chat Completions経由でサポート。legacy alias の`deepseek-chat`と`deepseek-reasoner`はDeepSeek側で非推奨です
-- **Mistral**: `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`などの現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します
+- **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します
 - **Sakana AI**: Fugu（`fugu`）と Fugu Ultra（`fugu-ultra`, `fugu-ultra-20260615`）をOpenAI互換Chat Completions経由でサポート
 - **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）と PLaMo 2.2 Prime（`plamo-2.2-prime`）をOpenAI互換Chat Completions経由でサポート
 - **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Chrome 138以降でPrompt APIフラグの有効化が必要。非ストリーミング、ビジョン非対応

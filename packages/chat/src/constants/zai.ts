@@ -3,8 +3,10 @@ export const ENDPOINT_ZAI_CHAT_COMPLETIONS_API =
 
 // Z.ai GLM models
 export const MODEL_GLM_5_2 = 'glm-5.2';
+export const MODEL_GLM_5_1 = 'glm-5.1';
 export const MODEL_GLM_5 = 'glm-5';
 export const MODEL_GLM_5_TURBO = 'glm-5-turbo';
+export const MODEL_GLM_5V_TURBO = 'glm-5v-turbo';
 export const MODEL_GLM_4_7 = 'glm-4.7';
 export const MODEL_GLM_4_7_FLASHX = 'glm-4.7-FlashX';
 export const MODEL_GLM_4_7_FLASH = 'glm-4.7-Flash';
@@ -15,6 +17,7 @@ export const MODEL_GLM_4_6V_FLASH = 'glm-4.6V-Flash';
 
 // Vision support for models
 export const ZAI_VISION_SUPPORTED_MODELS = [
+  MODEL_GLM_5V_TURBO,
   MODEL_GLM_4_6V,
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,

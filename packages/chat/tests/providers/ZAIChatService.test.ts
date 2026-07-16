@@ -2,12 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   MODEL_GLM_4_6,
+  MODEL_GLM_5_1,
   MODEL_GLM_5_2,
   MODEL_GLM_5_TURBO,
+  MODEL_GLM_5V_TURBO,
 } from '../../src/constants';
 import { ZAIChatService } from '../../src/services/providers/zai/ZAIChatService';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
-import type { Message, ToolDefinition } from '../../src/types';
+import type {
+  Message,
+  MessageWithVision,
+  ToolDefinition,
+} from '../../src/types';
 
 const messages: Message[] = [{ role: 'user', content: 'hello' }];
 
@@ -60,6 +66,60 @@ describe('ZAIChatService request body', () => {
         model: MODEL_GLM_5_2,
         stream: false,
         messages,
+      }),
+      { Authorization: 'Bearer test-key' },
+    );
+  });
+
+  it('sends glm-5.1 with OpenAI-compatible chat completions payload', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new ZAIChatService('test-key', MODEL_GLM_5_1);
+
+    await service.chatOnce(messages, false);
+
+    expect(postSpy).toHaveBeenCalledWith(
+      ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+      expect.objectContaining({
+        model: MODEL_GLM_5_1,
+        stream: false,
+        messages,
+      }),
+      { Authorization: 'Bearer test-key' },
+    );
+  });
+
+  it('sends glm-5v-turbo vision messages through chat completions', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const visionMessages: MessageWithVision[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Describe this image.' },
+          {
+            type: 'image_url',
+            image_url: { url: 'https://example.com/image.png' },
+          },
+        ],
+      },
+    ];
+    const service = new ZAIChatService(
+      'test-key',
+      MODEL_GLM_5_1,
+      MODEL_GLM_5V_TURBO,
+    );
+
+    await service.visionChatOnce(visionMessages, false);
+
+    expect(postSpy).toHaveBeenCalledWith(
+      ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+      expect.objectContaining({
+        model: MODEL_GLM_5V_TURBO,
+        stream: false,
+        messages: visionMessages,
       }),
       { Authorization: 'Bearer test-key' },
     );

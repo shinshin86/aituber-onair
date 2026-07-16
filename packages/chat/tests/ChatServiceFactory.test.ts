@@ -309,6 +309,9 @@ describe('ChatServiceFactory', () => {
       const mistralModels = ChatServiceFactory.getSupportedModels('mistral');
       expect(mistralModels).toEqual([
         'mistral-small-latest',
+        'ministral-3b-2512',
+        'ministral-8b-2512',
+        'ministral-14b-2512',
         'mistral-medium-3-5',
         'mistral-large-latest',
         'mistral-large-2512',

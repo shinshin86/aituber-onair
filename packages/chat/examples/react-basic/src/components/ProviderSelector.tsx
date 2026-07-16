@@ -101,8 +101,10 @@ import {
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
   // Z.ai models
   MODEL_GLM_5_2,
+  MODEL_GLM_5_1,
   MODEL_GLM_5,
   MODEL_GLM_5_TURBO,
+  MODEL_GLM_5V_TURBO,
   MODEL_GLM_4_7,
   MODEL_GLM_4_7_FLASHX,
   MODEL_GLM_4_7_FLASH,
@@ -126,6 +128,9 @@ import {
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_PRO,
   // Mistral models
+  MODEL_MINISTRAL_3B_2512,
+  MODEL_MINISTRAL_8B_2512,
+  MODEL_MINISTRAL_14B_2512,
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_MEDIUM_3_5,
   MODEL_MISTRAL_LARGE_LATEST,
@@ -926,6 +931,12 @@ export const allModels: ProviderModel[] = [
     default: true,
   },
   {
+    id: MODEL_GLM_5_1,
+    name: 'GLM-5.1',
+    provider: 'zai',
+    default: false,
+  },
+  {
     id: MODEL_GLM_5,
     name: 'GLM-5',
     provider: 'zai',
@@ -934,6 +945,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GLM_5_TURBO,
     name: 'GLM-5-Turbo',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_5V_TURBO,
+    name: 'GLM-5V-Turbo',
     provider: 'zai',
     default: false,
   },
@@ -1064,6 +1081,24 @@ export const allModels: ProviderModel[] = [
     name: 'Mistral Small Latest',
     provider: 'mistral',
     default: true,
+  },
+  {
+    id: MODEL_MINISTRAL_3B_2512,
+    name: 'Ministral 3 3B',
+    provider: 'mistral',
+    default: false,
+  },
+  {
+    id: MODEL_MINISTRAL_8B_2512,
+    name: 'Ministral 3 8B',
+    provider: 'mistral',
+    default: false,
+  },
+  {
+    id: MODEL_MINISTRAL_14B_2512,
+    name: 'Ministral 3 14B',
+    provider: 'mistral',
+    default: false,
   },
   {
     id: MODEL_MISTRAL_MEDIUM_3_5,
