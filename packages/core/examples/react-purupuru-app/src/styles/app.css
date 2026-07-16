@@ -405,6 +405,58 @@ body {
   cursor: grabbing;
 }
 
+.avatar-expression-controls {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: calc(100% - 88px);
+  padding: 7px 8px;
+  border: 1px solid rgba(15, 52, 96, 0.9);
+  border-radius: 8px;
+  background: rgba(22, 33, 62, 0.9);
+  pointer-events: auto;
+  transition: opacity 0.15s;
+}
+
+.avatar-expression-controls-label {
+  margin: 0 2px;
+  color: #aabbcc;
+  font-size: 0.72rem;
+}
+
+.avatar-expression-button {
+  padding: 4px 8px;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-family: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.avatar-expression-button:hover:not(:disabled),
+.avatar-expression-button:focus-visible {
+  border-color: #e94560;
+  background: #16213e;
+  outline: none;
+}
+
+.avatar-expression-button.is-reset {
+  color: #aabbcc;
+}
+
+.avatar-expression-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .avatar-error {
   position: absolute;
   left: 50%;
@@ -462,8 +514,17 @@ body {
   opacity: 0;
 }
 
+.chat-panel-broadcast .avatar-expression-controls {
+  opacity: 0;
+}
+
 .chat-panel-broadcast:hover .chat-settings-button,
 .chat-settings-button:focus-visible {
+  opacity: 1;
+}
+
+.chat-panel-broadcast:hover .avatar-expression-controls,
+.avatar-expression-controls:focus-within {
   opacity: 1;
 }
 
@@ -667,5 +728,22 @@ body {
 @media (max-width: 640px) {
   .avatar-background {
     inset: 0;
+  }
+
+  .avatar-expression-controls {
+    top: 8px;
+    left: 8px;
+    max-width: calc(100% - 64px);
+    gap: 4px;
+    padding: 5px 6px;
+  }
+
+  .avatar-expression-controls-label {
+    display: none;
+  }
+
+  .avatar-expression-button {
+    padding: 3px 6px;
+    font-size: 0.68rem;
   }
 }

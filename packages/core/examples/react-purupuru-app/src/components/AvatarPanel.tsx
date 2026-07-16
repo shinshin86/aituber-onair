@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
-import type { PuruPuruReaction } from '../lib/purupuruReactions';
+import type {
+  PuruPuruEmotionEffect,
+  PuruPuruReaction,
+} from '../lib/purupuruReactions';
 import type { PuruPuruRendererControls } from '../lib/purupuruRenderer';
 import { createPuruPuruRenderer } from '../lib/purupuruRenderer';
 import type { AvatarViewTransform } from '../types/settings';
@@ -15,6 +18,17 @@ const DEFAULT_AVATAR_VIEW_TRANSFORM: AvatarViewTransform = {
   y: 0,
   scale: 1,
 };
+const AVATAR_EXPRESSION_OPTIONS = [
+  { emotion: 'happy', label: '喜び' },
+  { emotion: 'surprised', label: '驚き' },
+  { emotion: 'sad', label: '悲しみ' },
+  { emotion: 'angry', label: '怒り' },
+  { emotion: 'relaxed', label: '安らぎ' },
+  { emotion: 'thinking', label: '考え中' },
+] as const satisfies ReadonlyArray<{
+  emotion: PuruPuruEmotionEffect;
+  label: string;
+}>;
 
 interface DragState {
   pointerId: number;
@@ -246,6 +260,34 @@ export function AvatarBackground({
             : 'No avatar loaded'
         }
       />
+      <div
+        className="avatar-expression-controls"
+        role="group"
+        aria-label="アバター感情表現プレビュー"
+      >
+        <span className="avatar-expression-controls-label">感情表現</span>
+        {AVATAR_EXPRESSION_OPTIONS.map((option) => (
+          <button
+            key={option.emotion}
+            type="button"
+            className="avatar-expression-button"
+            disabled={!avatarPackage}
+            onClick={() => controlsRef.current?.previewEmotion(option.emotion)}
+            aria-label={`${option.label}の感情表現をプレビュー`}
+          >
+            {option.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="avatar-expression-button is-reset"
+          disabled={!avatarPackage}
+          onClick={() => controlsRef.current?.resetReaction()}
+          aria-label="感情表現を解除"
+        >
+          解除
+        </button>
+      </div>
     </div>
   );
 }
@@ -282,8 +324,16 @@ function sanitizeAvatarViewTransform(
   transform: AvatarViewTransform,
 ): AvatarViewTransform {
   return {
-    x: clampFinite(transform.x, -AVATAR_VIEW_MAX_OFFSET, AVATAR_VIEW_MAX_OFFSET),
-    y: clampFinite(transform.y, -AVATAR_VIEW_MAX_OFFSET, AVATAR_VIEW_MAX_OFFSET),
+    x: clampFinite(
+      transform.x,
+      -AVATAR_VIEW_MAX_OFFSET,
+      AVATAR_VIEW_MAX_OFFSET,
+    ),
+    y: clampFinite(
+      transform.y,
+      -AVATAR_VIEW_MAX_OFFSET,
+      AVATAR_VIEW_MAX_OFFSET,
+    ),
     scale: clampFinite(
       transform.scale,
       AVATAR_VIEW_MIN_SCALE,

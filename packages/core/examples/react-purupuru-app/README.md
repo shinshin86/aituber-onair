@@ -23,6 +23,7 @@ PNGTuber-style avatar renderer for `.purupuru` avatar packages.
 - Add occasional idle gaze turns with subtle layer parallax.
 - Reposition the avatar by dragging and resize it with the mouse wheel.
 - React to speech emotion tags from `SPEECH_START`.
+- Preview emotion direction composed from color, aura, symbols, and particles.
 - Blink at random 2-6 second intervals.
 - Drive mouth states from TTS audio lip-sync while speech is playing.
 - Keep the rich React example shell features: chat, TTS settings, stream comment
@@ -75,6 +76,11 @@ Drag the avatar on the canvas to reposition it and use the mouse wheel to zoom.
 Double-click the canvas, or use the Visual section's
 `アバター位置をリセット` button, to reset the placement. The app persists the
 drag/zoom placement across reloads.
+
+Use the emotion controls in the upper-left to preview happy, surprised, sad,
+angry, relaxed, and thinking direction. The renderer keeps the avatar rooted
+while combining small impulses, idle behavior, color grading, aura, particles,
+and manga-style symbols. Previews fade automatically.
 
 For local manual testing, use a `.purupuru` file from a separate checkout or
 your own exported avatar package. Keep additional binary avatar packages out of
@@ -137,15 +143,17 @@ actually starts so the motion is synchronized with audible speech.
 
 | Emotion | Reaction |
 | --- | --- |
-| `happy` | Strong hair bounce, slight lift, small scale pop |
-| `surprised` | Quick tilt impulse, bounce, scale pop |
-| `sad` | Sustained head-down pose and softer idle motion |
-| `angry` | Sharp shake impulse and faster idle motion |
-| `relaxed` | Slower, softer idle motion and tiny settle bounce |
+| `happy` | Warm aura, sparkles, and a hair bounce |
+| `surprised` | Bright ring, radial marks, and a brief scale pop |
+| `sad` | Blue color grade, tears, and softer idle motion |
+| `angry` | Red aura, anger symbol, and a brief shake |
+| `relaxed` | Soft cool aura, bubbles, and slower idle motion |
 | `neutral` | No extra reaction |
 
-Tune the mapping in `src/lib/purupuruReactions.ts`. Renderer sustain and impulse
-handling lives in `src/lib/purupuruRenderer.ts`.
+Tune the mapping in `src/lib/purupuruReactions.ts` and Canvas drawing in
+`src/lib/purupuruEmotionEffects.ts`. Renderer sustain and impulse handling lives
+in `src/lib/purupuruRenderer.ts`. `thinking` is available only in the manual
+preview. Existing PNG files and `.purupuru` packages are not modified.
 
 ## Idle Gaze
 

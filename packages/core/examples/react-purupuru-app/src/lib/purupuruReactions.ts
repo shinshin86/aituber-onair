@@ -3,7 +3,20 @@ export interface ScreenplayLike {
   text?: string;
 }
 
+export const PURUPURU_EMOTION_EFFECTS = [
+  'happy',
+  'surprised',
+  'sad',
+  'angry',
+  'relaxed',
+  'thinking',
+] as const;
+
+export type PuruPuruEmotionEffect =
+  (typeof PURUPURU_EMOTION_EFFECTS)[number];
+
 export interface PuruPuruReactionDraft {
+  effect?: PuruPuruEmotionEffect;
   impulse?: {
     bounce?: number;
     tilt?: number;
@@ -32,51 +45,67 @@ export function createPuruPuruReactionFromScreenplay(
       ? source.emotion.toLowerCase().trim()
       : '';
 
-  if (emotion === 'happy') {
+  return createPuruPuruReactionFromEmotion(emotion);
+}
+
+export function createPuruPuruReactionFromEmotion(
+  emotion: string,
+): PuruPuruReactionDraft | null {
+  const normalizedEmotion = emotion.toLowerCase().trim();
+
+  if (normalizedEmotion === 'happy') {
     return {
-      impulse: { bounce: 1, scalePop: 0.34 },
-      sustain: { offsetY: -5, idleScale: 1.08, idleSpeedScale: 1.08 },
+      effect: 'happy',
+      impulse: { bounce: 0.55, scalePop: 0.12 },
+      sustain: { idleScale: 1.08, idleSpeedScale: 1.08 },
       fadeMs: 340,
     };
   }
 
-  if (emotion === 'surprised') {
+  if (normalizedEmotion === 'surprised') {
     return {
-      impulse: { bounce: 0.8, tilt: -0.65, scalePop: 0.48 },
-      sustain: { offsetY: -2, tilt: -0.025, idleScale: 1.12 },
+      effect: 'surprised',
+      impulse: { bounce: 0.5, scalePop: 0.3 },
+      sustain: { idleScale: 1.08 },
       fadeMs: 320,
     };
   }
 
-  if (emotion === 'sad') {
+  if (normalizedEmotion === 'sad') {
     return {
-      sustain: {
-        offsetY: 10,
-        tilt: 0.025,
-        idleScale: 0.5,
-        idleSpeedScale: 0.72,
-      },
+      effect: 'sad',
+      sustain: { idleScale: 0.5, idleSpeedScale: 0.72 },
       fadeMs: 420,
     };
   }
 
-  if (emotion === 'angry') {
+  if (normalizedEmotion === 'angry') {
     return {
-      impulse: { bounce: 0.45, tilt: 0.42, shake: 0.8 },
-      sustain: { tilt: -0.012, idleScale: 0.9, idleSpeedScale: 1.28 },
+      effect: 'angry',
+      impulse: { bounce: 0.2, shake: 0.45 },
+      sustain: { idleScale: 0.9, idleSpeedScale: 1.28 },
       fadeMs: 280,
     };
   }
 
-  if (emotion === 'relaxed') {
+  if (normalizedEmotion === 'relaxed') {
     return {
-      impulse: { bounce: 0.18 },
-      sustain: { offsetY: 2, idleScale: 0.62, idleSpeedScale: 0.68 },
+      effect: 'relaxed',
+      impulse: { bounce: 0.1 },
+      sustain: { idleScale: 0.62, idleSpeedScale: 0.68 },
       fadeMs: 460,
     };
   }
 
-  if (emotion === 'neutral') {
+  if (normalizedEmotion === 'thinking') {
+    return {
+      effect: 'thinking',
+      sustain: { idleScale: 0.55, idleSpeedScale: 0.75 },
+      fadeMs: 420,
+    };
+  }
+
+  if (normalizedEmotion === 'neutral') {
     return null;
   }
 
@@ -88,4 +117,10 @@ export function withReactionId(
   id: number,
 ): PuruPuruReaction {
   return { ...draft, id };
+}
+
+export function isPuruPuruEmotionEffect(
+  value: unknown,
+): value is PuruPuruEmotionEffect {
+  return PURUPURU_EMOTION_EFFECTS.some((effect) => effect === value);
 }
