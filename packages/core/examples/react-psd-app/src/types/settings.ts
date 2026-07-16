@@ -1,4 +1,9 @@
 import type { XaiReasoningEffort } from '@aituber-onair/core';
+import type {
+  PsdEmotionEffectAnchor,
+  PsdEmotionEffectControlMode,
+  PsdEmotionEffectMap,
+} from '../lib/psdEmotionEffects';
 
 export type ChatProviderOption =
   | 'openai'
@@ -180,6 +185,9 @@ export interface VisualSettings {
   showInputInBroadcast: boolean;
   motionEnabled: boolean;
   motionIntensity: number;
+  psdEmotionEffectControlMode: PsdEmotionEffectControlMode;
+  psdEmotionEffectMap: PsdEmotionEffectMap;
+  psdEmotionEffectAnchors: Record<string, PsdEmotionEffectAnchor>;
 }
 
 export interface ScreenVisionSettings {

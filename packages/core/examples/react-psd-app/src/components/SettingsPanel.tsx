@@ -20,6 +20,11 @@ import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
 import { PSD_ROLES, getRoleLabel } from '../lib/psdBinding';
 import { getPsdNodeOptions, hasPsdToolLayerControls } from '../lib/psdModel';
+import type {
+  PsdEmotionEffect,
+  PsdEmotionEffectControlMode,
+  PsdReactionEmotion,
+} from '../lib/psdEmotionEffects';
 
 type SettingsHook = ReturnType<typeof useSettings>;
 type ScreenVisionController = ReturnType<typeof useScreenVisionController>;
@@ -71,6 +76,32 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'webSpeech', label: 'Web Speech API' },
   { value: 'none', label: 'None' },
+];
+
+const PSD_REACTION_EMOTION_OPTIONS: ReadonlyArray<{
+  value: PsdReactionEmotion;
+  label: string;
+}> = [
+  { value: 'happy', label: '喜び（happy）' },
+  { value: 'surprised', label: '驚き（surprised）' },
+  { value: 'sad', label: '悲しみ（sad）' },
+  { value: 'angry', label: '怒り（angry）' },
+  { value: 'relaxed', label: '安らぎ（relaxed）' },
+  { value: 'thinking', label: '考え中（thinking）' },
+  { value: 'neutral', label: '通常（neutral）' },
+];
+
+const PSD_EFFECT_OPTIONS: ReadonlyArray<{
+  value: PsdEmotionEffect | 'none';
+  label: string;
+}> = [
+  { value: 'none', label: 'なし' },
+  { value: 'happy', label: 'きらめき（happy）' },
+  { value: 'surprised', label: '驚き線（surprised）' },
+  { value: 'sad', label: '涙（sad）' },
+  { value: 'angry', label: '怒りマーク（angry）' },
+  { value: 'relaxed', label: '泡・安らぎ（relaxed）' },
+  { value: 'thinking', label: '思考マーク（thinking）' },
 ];
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
@@ -235,6 +266,7 @@ type SectionKey =
   | 'llm'
   | 'tts'
   | 'visual'
+  | 'emotionEffects'
   | 'stream'
   | 'commentIntelligence'
   | 'manneri';
@@ -530,6 +562,9 @@ export function SettingsPanel({
   resetVisualAvatarView,
   updateVisualMotionEnabled,
   updateVisualMotionIntensity,
+  updateVisualPsdEmotionEffectControlMode,
+  updateVisualPsdEmotionEffect,
+  resetVisualPsdEmotionEffectMap,
   updateScreenVisionDeviceId,
   updateScreenVisionPrompt,
   updateScreenVisionAutoIntervalMs,
@@ -591,8 +626,7 @@ export function SettingsPanel({
           settings.llm.model,
           settings.llm.xaiReasoningEffort ||
             getDefaultXaiReasoningEffort(settings.llm.model),
-        ) ||
-        'none'
+        ) || 'none'
       : 'none';
   const allowsXaiNoneReasoningEffort =
     settings.llm.provider === 'xai' &&
@@ -636,6 +670,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    emotionEffects: true,
     stream: true,
     commentIntelligence: true,
     manneri: true,
@@ -944,7 +979,6 @@ export function SettingsPanel({
     settings.tts.speaker,
     updateTTSSpeaker,
   ]);
-
 
   useEffect(() => {
     if (settings.tts.engine !== 'webSpeech') {
@@ -1260,7 +1294,6 @@ export function SettingsPanel({
                 </div>
               </>
             )}
-
           </>
         )}
       </div>
@@ -2650,6 +2683,109 @@ export function SettingsPanel({
                   {fetchError}
                 </div>
               )}
+          </>
+        )}
+      </div>
+
+      <div className="settings-section">
+        <button
+          type="button"
+          className="settings-section-toggle"
+          onClick={() => toggleSection('emotionEffects')}
+          aria-expanded={expandedSections.emotionEffects}
+        >
+          <h3>感情表現エフェクト</h3>
+          <span
+            className={`settings-section-chevron${
+              expandedSections.emotionEffects ? ' is-open' : ''
+            }`}
+          >
+            ⌄
+          </span>
+        </button>
+
+        {expandedSections.emotionEffects && (
+          <>
+            <div className="settings-field">
+              <label htmlFor="psd-emotion-effect-control-mode">操作方法</label>
+              <select
+                id="psd-emotion-effect-control-mode"
+                value={settings.visual.psdEmotionEffectControlMode}
+                onChange={(event) =>
+                  updateVisualPsdEmotionEffectControlMode(
+                    event.target.value as PsdEmotionEffectControlMode,
+                  )
+                }
+                disabled={disabled}
+              >
+                <option value="none">なし</option>
+                <option value="manual">手動ボタン＋アンカー設定ボタン</option>
+                <option value="linked">発話感情に連動のみ</option>
+              </select>
+              <p className="settings-field-hint">
+                {settings.visual.psdEmotionEffectControlMode === 'none'
+                  ? 'ボタン類を表示せず、発話時のエフェクトも再生しません。'
+                  : settings.visual.psdEmotionEffectControlMode === 'manual'
+                    ? 'アバター上に感情ボタンとアンカー設定ボタンを表示します。'
+                    : 'ボタン類を表示せず、発話の emotion タグから自動再生します。'}
+              </p>
+            </div>
+
+            <div className="settings-field">
+              <span className="settings-field-label">
+                感情とエフェクトの対応
+              </span>
+              <div className="settings-emotion-mapping-list">
+                {PSD_REACTION_EMOTION_OPTIONS.map((emotionOption) => (
+                  <label
+                    key={emotionOption.value}
+                    className="settings-emotion-mapping-row"
+                    htmlFor={`psd-effect-${emotionOption.value}`}
+                  >
+                    <span>{emotionOption.label}</span>
+                    <select
+                      id={`psd-effect-${emotionOption.value}`}
+                      value={
+                        settings.visual.psdEmotionEffectMap[
+                          emotionOption.value
+                        ] || 'none'
+                      }
+                      onChange={(event) => {
+                        const effect = event.target.value;
+                        updateVisualPsdEmotionEffect(
+                          emotionOption.value,
+                          effect === 'none'
+                            ? null
+                            : (effect as PsdEmotionEffect),
+                        );
+                      }}
+                      disabled={disabled}
+                    >
+                      {PSD_EFFECT_OPTIONS.map((effectOption) => (
+                        <option
+                          key={effectOption.value}
+                          value={effectOption.value}
+                        >
+                          {effectOption.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="settings-clear-button settings-inline-button"
+                onClick={resetVisualPsdEmotionEffectMap}
+                disabled={disabled}
+              >
+                感情の割り当てを初期値に戻す
+              </button>
+              <p className="settings-field-hint">
+                例: happy はきらめき、sad
+                は涙。手動ボタンと自動連動で同じ割り当てを使います。
+              </p>
+            </div>
           </>
         )}
       </div>

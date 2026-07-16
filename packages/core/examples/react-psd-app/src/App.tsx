@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -9,6 +9,14 @@ import { usePsdAvatar } from './hooks/usePsdAvatar';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
+import {
+  createPsdEmotionReactionFromScreenplay,
+  getPsdEmotionEffectAnchor,
+  withPsdEmotionReactionId,
+  type PsdEmotionEffectAnchor,
+  type PsdEmotionReaction,
+  type PsdEmotionReactionDraft,
+} from './lib/psdEmotionEffects';
 import type { AvatarViewTransform } from './types/settings';
 import './styles/app.css';
 
@@ -23,6 +31,11 @@ export default function App() {
     useAudioLipsync();
   const settingsHook = useSettings();
   const psdAvatar = usePsdAvatar();
+  const updateVisualPsdEmotionEffectAnchor =
+    settingsHook.updateVisualPsdEmotionEffectAnchor;
+  const resetVisualPsdEmotionEffectAnchor =
+    settingsHook.resetVisualPsdEmotionEffectAnchor;
+  const psdAvatarProfileId = psdAvatar.source?.key;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [streamErrorMessage, setStreamErrorMessage] = useState('');
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
@@ -31,13 +44,77 @@ export default function App() {
   const [avatarViewTransform, setAvatarViewTransform] =
     useState<AvatarViewTransform>(DEFAULT_AVATAR_VIEW_TRANSFORM);
   const backgroundObjectUrlRef = useRef<string | null>(null);
+  const reactionIdRef = useRef(0);
+  const speechReactionRef = useRef<PsdEmotionReactionDraft | null>(null);
+  const [avatarReaction, setAvatarReaction] =
+    useState<PsdEmotionReaction | null>(null);
+
+  const emitAvatarReaction = useCallback((draft: PsdEmotionReactionDraft) => {
+    reactionIdRef.current += 1;
+    setAvatarReaction(withPsdEmotionReactionId(draft, reactionIdRef.current));
+  }, []);
+
+  const resetAvatarReaction = useCallback(() => {
+    speechReactionRef.current = null;
+    setAvatarReaction(null);
+  }, []);
 
   const handleAudioPlay = useCallback(
     async (arrayBuffer: ArrayBuffer) => {
-      await play(arrayBuffer);
+      await play(arrayBuffer, {
+        onStart: () => {
+          if (speechReactionRef.current) {
+            emitAvatarReaction(speechReactionRef.current);
+          } else {
+            setAvatarReaction(null);
+          }
+        },
+      });
     },
-    [play],
+    [emitAvatarReaction, play],
   );
+
+  const handleSpeechStart = useCallback(
+    (screenplay: { emotion?: string; text?: string }) => {
+      speechReactionRef.current =
+        settingsHook.settings.visual.psdEmotionEffectControlMode === 'linked'
+          ? createPsdEmotionReactionFromScreenplay(
+              screenplay,
+              settingsHook.settings.visual.psdEmotionEffectMap,
+            )
+          : null;
+    },
+    [
+      settingsHook.settings.visual.psdEmotionEffectControlMode,
+      settingsHook.settings.visual.psdEmotionEffectMap,
+    ],
+  );
+
+  const handleSpeechEnd = useCallback(() => {
+    resetAvatarReaction();
+  }, [resetAvatarReaction]);
+
+  const effectAnchor = useMemo(
+    () =>
+      getPsdEmotionEffectAnchor(
+        settingsHook.settings.visual.psdEmotionEffectAnchors,
+        psdAvatarProfileId,
+      ),
+    [psdAvatarProfileId, settingsHook.settings.visual.psdEmotionEffectAnchors],
+  );
+
+  const handleEffectAnchorChange = useCallback(
+    (anchor: PsdEmotionEffectAnchor) => {
+      if (!psdAvatarProfileId) return;
+      updateVisualPsdEmotionEffectAnchor(psdAvatarProfileId, anchor);
+    },
+    [psdAvatarProfileId, updateVisualPsdEmotionEffectAnchor],
+  );
+
+  const handleEffectAnchorReset = useCallback(() => {
+    if (!psdAvatarProfileId) return;
+    resetVisualPsdEmotionEffectAnchor(psdAvatarProfileId);
+  }, [psdAvatarProfileId, resetVisualPsdEmotionEffectAnchor]);
 
   const {
     messages,
@@ -47,6 +124,8 @@ export default function App() {
     processVisionChat,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
+    onSpeechStart: handleSpeechStart,
+    onSpeechEnd: handleSpeechEnd,
     settings: settingsHook.settings,
     getApiKeyForProvider: settingsHook.getApiKeyForProvider,
   });
@@ -65,9 +144,10 @@ export default function App() {
     (text: string) => {
       // Stop previous audio if speech is currently playing
       stop();
+      resetAvatarReaction();
       processChat(text);
     },
-    [stop, processChat],
+    [stop, resetAvatarReaction, processChat],
   );
 
   const { enqueueYouTubeComments, enqueueTwitchComments } =
@@ -198,9 +278,13 @@ export default function App() {
         smoothedValue={smoothedValue}
         backgroundImageUrl={backgroundImageUrl}
         psdAvatar={psdAvatar}
+        avatarReaction={avatarReaction}
         visual={settingsHook.settings.visual}
         avatarViewTransform={avatarViewTransform}
         onAvatarViewTransformChange={setAvatarViewTransform}
+        effectAnchor={effectAnchor}
+        onEffectAnchorChange={handleEffectAnchorChange}
+        onEffectAnchorReset={handleEffectAnchorReset}
         onToggleSettings={() => setSettingsOpen((v) => !v)}
       />
 

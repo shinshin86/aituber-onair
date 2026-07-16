@@ -7,6 +7,15 @@ import {
   type XaiReasoningEffort,
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
+import {
+  DEFAULT_PSD_EMOTION_EFFECT_MAP,
+  isPsdEmotionEffectControlMode,
+  normalizePsdEmotionEffectAnchor,
+  normalizePsdEmotionEffectMap,
+  type PsdEmotionEffect,
+  type PsdEmotionEffectAnchor,
+  type PsdEmotionEffectControlMode,
+} from '../lib/psdEmotionEffects';
 import type {
   AppSettings,
   ChatProviderOption,
@@ -45,6 +54,7 @@ const DEFAULT_PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
 const DEFAULT_PIPER_PLUS_VOICE_FILE = 'mei_normal.htsvoice';
 const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
 const DEFAULT_OPENROUTER_MAX_WORKING = 10;
+const MAX_PSD_EMOTION_EFFECT_ANCHORS = 32;
 const DEFAULT_SCREEN_VISION_PROMPT =
   'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
 const EMPTY_MODEL_IDS: string[] = [];
@@ -57,6 +67,26 @@ function normalizePositiveInteger(
     return fallback;
   }
   return Math.max(1, Math.floor(value));
+}
+
+function normalizePsdEmotionEffectAnchors(
+  value: unknown,
+): Record<string, PsdEmotionEffectAnchor> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const anchors: Record<string, PsdEmotionEffectAnchor> = {};
+  const unsafeKeys = new Set(['__proto__', 'constructor', 'prototype']);
+
+  for (const [profileId, anchor] of Object.entries(value).slice(
+    -MAX_PSD_EMOTION_EFFECT_ANCHORS,
+  )) {
+    if (!profileId || unsafeKeys.has(profileId)) continue;
+    anchors[profileId] = normalizePsdEmotionEffectAnchor(
+      anchor && typeof anchor === 'object' && !Array.isArray(anchor)
+        ? (anchor as Partial<PsdEmotionEffectAnchor>)
+        : undefined,
+    );
+  }
+  return anchors;
 }
 
 function normalizeModelIds(modelIds: string[]): string[] {
@@ -205,6 +235,9 @@ function getDefaultSettings(): AppSettings {
       showInputInBroadcast: false,
       motionEnabled: true,
       motionIntensity: 1,
+      psdEmotionEffectControlMode: 'none',
+      psdEmotionEffectMap: { ...DEFAULT_PSD_EMOTION_EFFECT_MAP },
+      psdEmotionEffectAnchors: {},
     },
     screenVision: {
       deviceId: '',
@@ -273,7 +306,21 @@ function loadSettings(): AppSettings {
           ),
         },
         tts: { ...defaults.tts, ...saved.tts },
-        visual: { ...defaults.visual, ...savedVisual },
+        visual: {
+          ...defaults.visual,
+          ...savedVisual,
+          psdEmotionEffectControlMode: isPsdEmotionEffectControlMode(
+            savedVisual.psdEmotionEffectControlMode,
+          )
+            ? savedVisual.psdEmotionEffectControlMode
+            : defaults.visual.psdEmotionEffectControlMode,
+          psdEmotionEffectMap: normalizePsdEmotionEffectMap(
+            savedVisual.psdEmotionEffectMap,
+          ),
+          psdEmotionEffectAnchors: normalizePsdEmotionEffectAnchors(
+            savedVisual.psdEmotionEffectAnchors,
+          ),
+        },
         screenVision: { ...defaults.screenVision, ...saved.screenVision },
         stream: { ...defaults.stream, ...saved.stream },
         commentIntelligence: {
@@ -921,6 +968,80 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateVisualPsdEmotionEffectControlMode = useCallback(
+    (psdEmotionEffectControlMode: PsdEmotionEffectControlMode) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, psdEmotionEffectControlMode },
+      }));
+    },
+    [],
+  );
+
+  const updateVisualPsdEmotionEffect = useCallback(
+    (
+      emotion: keyof typeof DEFAULT_PSD_EMOTION_EFFECT_MAP,
+      effect: PsdEmotionEffect | null,
+    ) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          psdEmotionEffectMap: {
+            ...prev.visual.psdEmotionEffectMap,
+            [emotion]: effect,
+          },
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualPsdEmotionEffectMap = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      visual: {
+        ...prev.visual,
+        psdEmotionEffectMap: { ...DEFAULT_PSD_EMOTION_EFFECT_MAP },
+      },
+    }));
+  }, []);
+
+  const updateVisualPsdEmotionEffectAnchor = useCallback(
+    (profileId: string, anchor: PsdEmotionEffectAnchor) => {
+      if (!profileId) return;
+      const normalized = normalizePsdEmotionEffectAnchor(anchor);
+      setSettings((prev) => {
+        const entries = Object.entries(
+          prev.visual.psdEmotionEffectAnchors,
+        ).filter(([key]) => key !== profileId);
+        entries.push([profileId, normalized]);
+        return {
+          ...prev,
+          visual: {
+            ...prev.visual,
+            psdEmotionEffectAnchors: Object.fromEntries(
+              entries.slice(-MAX_PSD_EMOTION_EFFECT_ANCHORS),
+            ),
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const resetVisualPsdEmotionEffectAnchor = useCallback((profileId: string) => {
+    if (!profileId) return;
+    setSettings((prev) => {
+      const remaining = { ...prev.visual.psdEmotionEffectAnchors };
+      delete remaining[profileId];
+      return {
+        ...prev,
+        visual: { ...prev.visual, psdEmotionEffectAnchors: remaining },
+      };
+    });
+  }, []);
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1277,6 +1398,11 @@ export function useSettings() {
     updateVisualShowInputInBroadcast,
     updateVisualMotionEnabled,
     updateVisualMotionIntensity,
+    updateVisualPsdEmotionEffectControlMode,
+    updateVisualPsdEmotionEffect,
+    resetVisualPsdEmotionEffectMap,
+    updateVisualPsdEmotionEffectAnchor,
+    resetVisualPsdEmotionEffectAnchor,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

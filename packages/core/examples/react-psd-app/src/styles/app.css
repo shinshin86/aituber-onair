@@ -141,6 +141,44 @@ body {
   margin-bottom: 10px;
 }
 
+.settings-field-label {
+  display: block;
+  margin-bottom: 6px;
+  color: #8899aa;
+  font-size: 0.75rem;
+}
+
+.settings-emotion-mapping-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.settings-field .settings-emotion-mapping-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  overflow: hidden;
+}
+
+.settings-emotion-mapping-row span {
+  overflow: hidden;
+  color: #b8c4d0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-field .settings-emotion-mapping-row select {
+  min-width: 0;
+}
+
+.settings-inline-button {
+  margin-top: 2px;
+}
+
 .settings-card-section {
   border: 1px solid #0f3460;
   border-radius: 8px;
@@ -561,6 +599,43 @@ body {
   cursor: grabbing;
 }
 
+.avatar-view-layer.is-interaction-disabled {
+  cursor: default;
+}
+
+.avatar-effect-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-effect-stack > .avatar-image {
+  position: absolute;
+  inset: 0;
+}
+
+.avatar-model-canvas {
+  z-index: 1;
+}
+
+.avatar-effect-canvas {
+  pointer-events: none;
+}
+
+.avatar-effect-canvas.is-back {
+  z-index: 0;
+}
+
+.avatar-effect-canvas.is-front {
+  z-index: 2;
+}
+
+.avatar-effect-canvas.is-anchor-editing {
+  cursor: crosshair;
+  pointer-events: auto;
+  touch-action: none;
+}
+
 .avatar-image {
   width: 100%;
   height: 100%;
@@ -569,6 +644,113 @@ body {
 
 .avatar-canvas {
   display: block;
+}
+
+.avatar-expression-controls {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: calc(100% - 88px);
+  padding: 7px 8px;
+  border: 1px solid rgba(15, 52, 96, 0.9);
+  border-radius: 8px;
+  background: rgba(22, 33, 62, 0.9);
+  pointer-events: auto;
+}
+
+.avatar-expression-controls-label {
+  margin: 0 2px;
+  color: #aabbcc;
+  font-size: 0.72rem;
+}
+
+.avatar-expression-button {
+  padding: 4px 8px;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-family: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.avatar-expression-button:hover:not(:disabled),
+.avatar-expression-button:focus-visible {
+  border-color: #e94560;
+  background: #16213e;
+  outline: none;
+}
+
+.avatar-expression-button.is-reset {
+  color: #aabbcc;
+}
+
+.avatar-expression-button.is-active {
+  border-color: #e94560;
+  background: #243654;
+  color: #fff;
+}
+
+.avatar-expression-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.avatar-anchor-editor {
+  position: absolute;
+  top: 58px;
+  left: 16px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 9px 10px;
+  border: 1px solid rgba(233, 69, 96, 0.78);
+  border-radius: 8px;
+  background: rgba(12, 23, 45, 0.94);
+  box-shadow: 0 8px 24px rgba(7, 12, 24, 0.28);
+  color: #d7e0ea;
+  pointer-events: auto;
+}
+
+.avatar-anchor-editor-label {
+  flex-basis: 100%;
+  font-size: 0.72rem;
+  color: #b8c8d8;
+}
+
+.avatar-anchor-targets,
+.avatar-anchor-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.avatar-anchor-scale {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.avatar-anchor-scale input {
+  width: 96px;
+  accent-color: #e94560;
+}
+
+.avatar-anchor-scale output {
+  width: 34px;
+  color: #fff;
+  text-align: right;
 }
 
 .avatar-loading {
