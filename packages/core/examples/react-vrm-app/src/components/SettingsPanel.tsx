@@ -769,6 +769,31 @@ export function SettingsPanel({
               </select>
             </div>
 
+            {settings.llm.provider !== 'gemini-nano' && (
+              <div className="settings-field">
+                <label htmlFor="llm-apikey">
+                  API Key ({settings.llm.provider})
+                  {settings.llm.provider === 'openai-compatible'
+                    ? ' (任意)'
+                    : ''}
+                </label>
+                <input
+                  id="llm-apikey"
+                  type="password"
+                  value={getApiKeyForProvider(settings.llm.provider)}
+                  onChange={(e) =>
+                    updateLLMApiKey(settings.llm.provider, e.target.value)
+                  }
+                  placeholder={
+                    settings.llm.provider === 'openai-compatible'
+                      ? '必要な場合のみ入力'
+                      : 'XXX-...'
+                  }
+                  disabled={disabled}
+                />
+              </div>
+            )}
+
             {settings.llm.provider === 'openai-compatible' ? (
               <div className="settings-field">
                 <label htmlFor="llm-model">Model</label>
@@ -853,24 +878,6 @@ export function SettingsPanel({
                       : 'Grok 4.3 uses none by default for lower latency.'
                     : 'This xAI model does not support reasoning_effort.'}
                 </p>
-              </div>
-            )}
-
-            {settings.llm.provider === 'openrouter' && (
-              <div className="settings-field">
-                <label htmlFor="llm-apikey">
-                  API Key ({settings.llm.provider})
-                </label>
-                <input
-                  id="llm-apikey"
-                  type="password"
-                  value={getApiKeyForProvider(settings.llm.provider)}
-                  onChange={(e) =>
-                    updateLLMApiKey(settings.llm.provider, e.target.value)
-                  }
-                  placeholder="XXX-..."
-                  disabled={disabled}
-                />
               </div>
             )}
 
@@ -988,31 +995,6 @@ export function SettingsPanel({
               </>
             )}
 
-            {settings.llm.provider !== 'openrouter' &&
-              settings.llm.provider !== 'gemini-nano' && (
-                <div className="settings-field">
-                  <label htmlFor="llm-apikey">
-                    API Key ({settings.llm.provider})
-                    {settings.llm.provider === 'openai-compatible'
-                      ? ' (任意)'
-                      : ''}
-                  </label>
-                  <input
-                    id="llm-apikey"
-                    type="password"
-                    value={getApiKeyForProvider(settings.llm.provider)}
-                    onChange={(e) =>
-                      updateLLMApiKey(settings.llm.provider, e.target.value)
-                    }
-                    placeholder={
-                      settings.llm.provider === 'openai-compatible'
-                        ? '必要な場合のみ入力'
-                        : 'XXX-...'
-                    }
-                    disabled={disabled}
-                  />
-                </div>
-              )}
           </>
         )}
       </div>

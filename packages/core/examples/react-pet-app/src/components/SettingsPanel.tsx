@@ -837,6 +837,31 @@ export function SettingsPanel({
               </select>
             </div>
 
+            {settings.llm.provider !== 'gemini-nano' && (
+              <div className="settings-field">
+                <label htmlFor="llm-apikey">
+                  API Key ({settings.llm.provider})
+                  {settings.llm.provider === 'openai-compatible'
+                    ? ' - optional'
+                    : ''}
+                </label>
+                <input
+                  id="llm-apikey"
+                  type="password"
+                  value={getApiKeyForProvider(settings.llm.provider)}
+                  onChange={(e) =>
+                    updateLLMApiKey(settings.llm.provider, e.target.value)
+                  }
+                  placeholder={
+                    settings.llm.provider === 'openai-compatible'
+                      ? 'optional'
+                      : 'XXX-...'
+                  }
+                  disabled={disabled}
+                />
+              </div>
+            )}
+
             <div className="settings-field">
               <label htmlFor="llm-model">Model</label>
               {settings.llm.provider === 'openai-compatible' ? (
@@ -863,24 +888,6 @@ export function SettingsPanel({
                 </select>
               )}
             </div>
-
-            {settings.llm.provider === 'openrouter' && (
-              <div className="settings-field">
-                <label htmlFor="llm-apikey">
-                  API Key ({settings.llm.provider})
-                </label>
-                <input
-                  id="llm-apikey"
-                  type="password"
-                  value={getApiKeyForProvider(settings.llm.provider)}
-                  onChange={(e) =>
-                    updateLLMApiKey(settings.llm.provider, e.target.value)
-                  }
-                  placeholder="XXX-..."
-                  disabled={disabled}
-                />
-              </div>
-            )}
 
             <div className="settings-field">
               <label htmlFor="llm-system-prompt">System Prompt</label>
@@ -1053,31 +1060,6 @@ export function SettingsPanel({
               </>
             )}
 
-            {settings.llm.provider !== 'openrouter' &&
-              settings.llm.provider !== 'gemini-nano' && (
-                <div className="settings-field">
-                  <label htmlFor="llm-apikey">
-                    API Key ({settings.llm.provider})
-                    {settings.llm.provider === 'openai-compatible'
-                      ? ' - optional'
-                      : ''}
-                  </label>
-                  <input
-                    id="llm-apikey"
-                    type="password"
-                    value={getApiKeyForProvider(settings.llm.provider)}
-                    onChange={(e) =>
-                      updateLLMApiKey(settings.llm.provider, e.target.value)
-                    }
-                    placeholder={
-                      settings.llm.provider === 'openai-compatible'
-                        ? 'optional'
-                        : 'XXX-...'
-                    }
-                    disabled={disabled}
-                  />
-                </div>
-              )}
           </>
         )}
       </div>
