@@ -79,14 +79,17 @@ export function ScreenVisionPanel({
       />
 
       <div className="settings-field">
-        <label htmlFor="screen-vision-prompt">画面を見る時の指示</label>
-        <input
+        <label htmlFor="screen-vision-prompt">画面認識時の追加指示</label>
+        <textarea
           id="screen-vision-prompt"
-          type="text"
+          rows={4}
           value={settings.prompt}
           onChange={(event) => onPromptChange(event.target.value)}
           disabled={disabled}
         />
+        <p className="settings-field-hint">
+          LLM設定の共通System Promptに加えて、画像と一緒に送信されます。
+        </p>
       </div>
 
       <div className="settings-field">
