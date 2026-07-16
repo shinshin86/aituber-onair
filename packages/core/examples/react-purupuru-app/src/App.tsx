@@ -8,6 +8,7 @@ import { useScreenVisionController } from './hooks/useScreenVisionController';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
+import { getPuruPuruEffectAnchor } from './lib/purupuruEffectAnchor';
 import type { PuruPuruAvatarPackage } from './lib/purupuruPackage';
 import { loadPuruPuruPackage } from './lib/purupuruPackage';
 import type {
@@ -19,6 +20,7 @@ import {
   createPuruPuruReactionFromScreenplay,
   withReactionId,
 } from './lib/purupuruReactions';
+import type { PuruPuruEffectAnchor } from './types/settings';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/app.css';
@@ -33,6 +35,10 @@ export default function App() {
     useAudioLipsync();
   const settingsHook = useSettings();
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
+  const updateVisualPuruPuruEffectAnchor =
+    settingsHook.updateVisualPuruPuruEffectAnchor;
+  const resetVisualPuruPuruEffectAnchor =
+    settingsHook.resetVisualPuruPuruEffectAnchor;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [streamErrorMessage, setStreamErrorMessage] = useState('');
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
@@ -77,10 +83,21 @@ export default function App() {
     [emitAvatarReaction, play],
   );
 
-  const handleSpeechStart = useCallback((screenplay: ScreenplayLike) => {
-    speechReactionRef.current =
-      createPuruPuruReactionFromScreenplay(screenplay);
-  }, []);
+  const handleSpeechStart = useCallback(
+    (screenplay: ScreenplayLike) => {
+      speechReactionRef.current =
+        settingsHook.settings.visual.purupuruReactionControlMode === 'linked'
+          ? createPuruPuruReactionFromScreenplay(
+              screenplay,
+              settingsHook.settings.visual.purupuruEmotionEffectMap,
+            )
+          : null;
+    },
+    [
+      settingsHook.settings.visual.purupuruEmotionEffectMap,
+      settingsHook.settings.visual.purupuruReactionControlMode,
+    ],
+  );
 
   const handleSpeechEnd = useCallback(() => {
     resetAvatarReaction();
@@ -359,6 +376,35 @@ export default function App() {
     ],
   );
 
+  const effectAnchor = useMemo(
+    () =>
+      getPuruPuruEffectAnchor(
+        settingsHook.settings.visual.purupuruEffectAnchors,
+        avatarPackage?.profileId,
+      ),
+    [
+      avatarPackage?.profileId,
+      settingsHook.settings.visual.purupuruEffectAnchors,
+    ],
+  );
+
+  const handleEffectAnchorChange = useCallback(
+    (anchor: PuruPuruEffectAnchor) => {
+      const profileId = avatarPackageRef.current?.profileId;
+      if (profileId) {
+        updateVisualPuruPuruEffectAnchor(profileId, anchor);
+      }
+    },
+    [updateVisualPuruPuruEffectAnchor],
+  );
+
+  const handleEffectAnchorReset = useCallback(() => {
+    const profileId = avatarPackageRef.current?.profileId;
+    if (profileId) {
+      resetVisualPuruPuruEffectAnchor(profileId);
+    }
+  }, [resetVisualPuruPuruEffectAnchor]);
+
   return (
     <div className="app">
       <ChatPanel
@@ -375,6 +421,9 @@ export default function App() {
         visual={settingsHook.settings.visual}
         avatarViewTransform={avatarViewTransform}
         onAvatarViewTransformChange={settingsHook.updateVisualAvatarView}
+        effectAnchor={effectAnchor}
+        onEffectAnchorChange={handleEffectAnchorChange}
+        onEffectAnchorReset={handleEffectAnchorReset}
         onToggleSettings={() => setSettingsOpen((v) => !v)}
       />
 

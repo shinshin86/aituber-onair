@@ -1,8 +1,10 @@
+import type { PuruPuruEffectAnchor } from '../types/settings';
 import type { PuruPuruEmotionEffect } from './purupuruReactions';
 
 export interface PuruPuruEffectGeometry {
   width: number;
   height: number;
+  anchor: PuruPuruEffectAnchor;
 }
 
 interface ColorGrade {
@@ -19,8 +21,6 @@ interface AuraStyle {
 }
 
 const MIN_EFFECT_WEIGHT = 0.002;
-const FACE_Y_RATIO = -0.24;
-const TEAR_LOWERING_RATIO = 0.025;
 const TWO_PI = Math.PI * 2;
 
 const COLOR_GRADES: Record<PuruPuruEmotionEffect, ColorGrade> = {
@@ -134,15 +134,25 @@ export function drawPuruPuruReactionBackEffect(
   if (!effect || amount < MIN_EFFECT_WEIGHT) return;
 
   const style = AURA_STYLES[effect];
-  const faceY = geometry.height * FACE_Y_RATIO;
+  const { anchor } = geometry;
+  const faceX = geometry.width * anchor.faceX;
+  const faceY = geometry.height * anchor.faceY;
   const pulse = style.pulse ? 0.92 + Math.sin(now * 0.004) * 0.08 : 1;
-  const x = geometry.width * style.xRatio;
-  const y = faceY + geometry.height * style.yRatio;
-  const radius = geometry.width * style.radiusRatio * pulse;
+  const x = faceX + geometry.width * style.xRatio * anchor.effectScale;
+  const y = faceY + geometry.height * style.yRatio * anchor.effectScale;
+  const radius =
+    geometry.width * style.radiusRatio * pulse * anchor.effectScale;
 
   drawAura(context, x, y, radius, style.color, amount);
   if (effect === 'surprised') {
-    drawPulseRing(context, 0, faceY, geometry.width * 0.3, amount, now);
+    drawPulseRing(
+      context,
+      faceX,
+      faceY,
+      geometry.width * 0.3 * anchor.effectScale,
+      amount,
+      now,
+    );
   }
 }
 
@@ -156,33 +166,67 @@ export function drawPuruPuruReactionFrontEffect(
   const amount = clampWeight(weight);
   if (!effect || amount < MIN_EFFECT_WEIGHT) return;
 
-  const faceY = geometry.height * FACE_Y_RATIO;
+  const faceX = geometry.width * geometry.anchor.faceX;
+  const faceY = geometry.height * geometry.anchor.faceY;
   const time = now / 1000;
 
   if (effect === 'happy') {
-    drawHappyEffect(context, geometry, faceY, amount, time);
+    drawHappyEffect(context, geometry, faceX, faceY, amount, time);
   } else if (effect === 'surprised') {
-    drawSurprisedEffect(context, geometry, faceY, amount, time);
+    drawSurprisedEffect(context, geometry, faceX, faceY, amount, time);
   } else if (effect === 'sad') {
-    drawSadEffect(context, geometry, faceY, amount, time);
+    drawSadEffect(context, geometry, amount, time);
   } else if (effect === 'angry') {
     drawAngerMark(
       context,
-      geometry.width * 0.25,
-      faceY - geometry.height * 0.16,
-      geometry.width * 0.06,
+      faceX + geometry.width * 0.25 * geometry.anchor.effectScale,
+      faceY - geometry.height * 0.16 * geometry.anchor.effectScale,
+      geometry.width * 0.06 * geometry.anchor.effectScale,
       amount,
     );
   } else if (effect === 'relaxed') {
-    drawFloatingBubbles(context, geometry, faceY, amount, time);
+    drawFloatingBubbles(context, geometry, faceX, faceY, amount, time);
   } else {
-    drawThinkingMark(context, geometry, faceY, amount, time);
+    drawThinkingMark(context, geometry, faceX, faceY, amount, time);
   }
+}
+
+export function drawPuruPuruEffectAnchorGuides(
+  context: CanvasRenderingContext2D,
+  geometry: PuruPuruEffectGeometry,
+): void {
+  const { anchor, width, height } = geometry;
+  const markerRadius = Math.max(width * 0.018, 5);
+  drawAnchorMarker(
+    context,
+    width * anchor.faceX,
+    height * anchor.faceY,
+    markerRadius * 1.25,
+    '#ffc857',
+    '顔',
+  );
+  drawAnchorMarker(
+    context,
+    width * anchor.leftEyeX,
+    height * anchor.leftEyeY,
+    markerRadius,
+    '#66d9ff',
+    '左',
+  );
+  drawAnchorMarker(
+    context,
+    width * anchor.rightEyeX,
+    height * anchor.rightEyeY,
+    markerRadius,
+    '#ff91ca',
+    '右',
+  );
 }
 
 function drawHappyEffect(
   context: CanvasRenderingContext2D,
   geometry: PuruPuruEffectGeometry,
+  faceX: number,
   faceY: number,
   amount: number,
   time: number,
@@ -191,9 +235,11 @@ function drawHappyEffect(
     const shimmer = 0.55 + Math.sin(time * 4 + index * 1.4) * 0.45;
     drawSparkle(
       context,
-      geometry.width * xRatio,
-      faceY + geometry.height * yRatio,
-      geometry.width * (0.015 + (index % 2) * 0.006),
+      faceX + geometry.width * xRatio * geometry.anchor.effectScale,
+      faceY + geometry.height * yRatio * geometry.anchor.effectScale,
+      geometry.width *
+        (0.015 + (index % 2) * 0.006) *
+        geometry.anchor.effectScale,
       amount * shimmer,
     );
   });
@@ -202,17 +248,19 @@ function drawHappyEffect(
 function drawSurprisedEffect(
   context: CanvasRenderingContext2D,
   geometry: PuruPuruEffectGeometry,
+  faceX: number,
   faceY: number,
   amount: number,
   time: number,
 ): void {
-  drawSurpriseRays(context, geometry.width, faceY, amount, time);
+  const scale = geometry.anchor.effectScale;
+  drawSurpriseRays(context, geometry.width * scale, faceX, faceY, amount, time);
   drawEmotionText(
     context,
     '!',
-    geometry.width * 0.28,
-    faceY - geometry.height * 0.18,
-    geometry.width * 0.09,
+    faceX + geometry.width * 0.28 * scale,
+    faceY - geometry.height * 0.18 * scale,
+    geometry.width * 0.09 * scale,
     '#fff4a8',
     amount,
   );
@@ -221,24 +269,22 @@ function drawSurprisedEffect(
 function drawSadEffect(
   context: CanvasRenderingContext2D,
   geometry: PuruPuruEffectGeometry,
-  faceY: number,
   amount: number,
   time: number,
 ): void {
   const fall = (time * geometry.height * 0.07) % (geometry.height * 0.08);
-  const tearLowering = geometry.height * TEAR_LOWERING_RATIO;
   drawTeardrop(
     context,
-    -geometry.width * 0.095,
-    faceY + geometry.height * 0.09 + tearLowering + fall,
-    geometry.width * 0.018,
+    geometry.width * geometry.anchor.leftEyeX,
+    geometry.height * geometry.anchor.leftEyeY + fall,
+    geometry.width * 0.018 * geometry.anchor.effectScale,
     amount,
   );
   drawTeardrop(
     context,
-    geometry.width * 0.105,
-    faceY + geometry.height * 0.075 + tearLowering + fall * 0.7,
-    geometry.width * 0.014,
+    geometry.width * geometry.anchor.rightEyeX,
+    geometry.height * geometry.anchor.rightEyeY + fall * 0.7,
+    geometry.width * 0.014 * geometry.anchor.effectScale,
     amount * 0.8,
   );
 }
@@ -308,12 +354,13 @@ function drawSparkle(
 function drawSurpriseRays(
   context: CanvasRenderingContext2D,
   width: number,
+  faceX: number,
   faceY: number,
   alpha: number,
   time: number,
 ): void {
   context.save();
-  context.translate(0, faceY);
+  context.translate(faceX, faceY);
   context.rotate(Math.sin(time * 2.5) * 0.025);
   context.globalAlpha = alpha * 0.72;
   context.strokeStyle = '#fff4a8';
@@ -393,23 +440,25 @@ function drawAngerMark(
 function drawFloatingBubbles(
   context: CanvasRenderingContext2D,
   geometry: PuruPuruEffectGeometry,
+  faceX: number,
   faceY: number,
   alpha: number,
   time: number,
 ): void {
+  const scale = geometry.anchor.effectScale;
   for (const [xRatio, yRatio, sizeRatio] of RELAXED_BUBBLES) {
     const floatOffset =
-      Math.sin(time * 1.4 + xRatio * 8) * geometry.height * 0.014;
+      Math.sin(time * 1.4 + xRatio * 8) * geometry.height * 0.014 * scale;
     context.save();
     context.globalAlpha = alpha * 0.56;
     context.fillStyle = 'rgba(175, 255, 237, 0.22)';
     context.strokeStyle = '#a8f3df';
-    context.lineWidth = geometry.width * 0.004;
+    context.lineWidth = geometry.width * 0.004 * scale;
     context.beginPath();
     context.arc(
-      geometry.width * xRatio,
-      faceY + geometry.height * yRatio + floatOffset,
-      geometry.width * sizeRatio,
+      faceX + geometry.width * xRatio * scale,
+      faceY + geometry.height * yRatio * scale + floatOffset,
+      geometry.width * sizeRatio * scale,
       0,
       TWO_PI,
     );
@@ -422,20 +471,22 @@ function drawFloatingBubbles(
 function drawThinkingMark(
   context: CanvasRenderingContext2D,
   geometry: PuruPuruEffectGeometry,
+  faceX: number,
   faceY: number,
   alpha: number,
   time: number,
 ): void {
-  const floatOffset = Math.sin(time * 1.8) * geometry.height * 0.012;
-  const x = geometry.width * 0.27;
-  const y = faceY - geometry.height * 0.14 + floatOffset;
+  const scale = geometry.anchor.effectScale;
+  const floatOffset = Math.sin(time * 1.8) * geometry.height * 0.012 * scale;
+  const x = faceX + geometry.width * 0.27 * scale;
+  const y = faceY - geometry.height * 0.14 * scale + floatOffset;
   context.save();
   context.globalAlpha = alpha;
   context.fillStyle = 'rgba(42, 61, 94, 0.84)';
   context.strokeStyle = '#b8d4ff';
-  context.lineWidth = geometry.width * 0.006;
+  context.lineWidth = geometry.width * 0.006 * scale;
   context.beginPath();
-  context.arc(x, y, geometry.width * 0.075, 0, TWO_PI);
+  context.arc(x, y, geometry.width * 0.075 * scale, 0, TWO_PI);
   context.fill();
   context.stroke();
   context.restore();
@@ -443,8 +494,8 @@ function drawThinkingMark(
     context,
     '?',
     x,
-    y + geometry.width * 0.004,
-    geometry.width * 0.075,
+    y + geometry.width * 0.004 * scale,
+    geometry.width * 0.075 * scale,
     '#dceaff',
     alpha,
   );
@@ -454,15 +505,46 @@ function drawThinkingMark(
     context.fillStyle = '#b8d4ff';
     context.beginPath();
     context.arc(
-      x - geometry.width * (0.09 + index * 0.045),
-      y + geometry.height * (0.075 + index * 0.045),
-      geometry.width * (0.014 - index * 0.003),
+      x - geometry.width * (0.09 + index * 0.045) * scale,
+      y + geometry.height * (0.075 + index * 0.045) * scale,
+      geometry.width * (0.014 - index * 0.003) * scale,
       0,
       TWO_PI,
     );
     context.fill();
     context.restore();
   }
+}
+
+function drawAnchorMarker(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  color: string,
+  label: string,
+): void {
+  context.save();
+  context.globalAlpha = 0.95;
+  context.strokeStyle = color;
+  context.fillStyle = 'rgba(15, 23, 42, 0.78)';
+  context.lineWidth = Math.max(radius * 0.18, 2);
+  context.beginPath();
+  context.arc(x, y, radius, 0, TWO_PI);
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.moveTo(x - radius * 1.45, y);
+  context.lineTo(x + radius * 1.45, y);
+  context.moveTo(x, y - radius * 1.45);
+  context.lineTo(x, y + radius * 1.45);
+  context.stroke();
+  context.fillStyle = color;
+  context.font = `700 ${Math.max(radius, 9)}px system-ui, sans-serif`;
+  context.textAlign = 'center';
+  context.textBaseline = 'bottom';
+  context.fillText(label, x, y - radius * 1.65);
+  context.restore();
 }
 
 function drawEmotionText(

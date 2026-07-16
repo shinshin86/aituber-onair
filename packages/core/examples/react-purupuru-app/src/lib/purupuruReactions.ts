@@ -12,8 +12,35 @@ export const PURUPURU_EMOTION_EFFECTS = [
   'thinking',
 ] as const;
 
-export type PuruPuruEmotionEffect =
-  (typeof PURUPURU_EMOTION_EFFECTS)[number];
+export type PuruPuruEmotionEffect = (typeof PURUPURU_EMOTION_EFFECTS)[number];
+
+export const PURUPURU_REACTION_EMOTIONS = [
+  'happy',
+  'surprised',
+  'sad',
+  'angry',
+  'relaxed',
+  'thinking',
+  'neutral',
+] as const;
+
+export type PuruPuruReactionEmotion =
+  (typeof PURUPURU_REACTION_EMOTIONS)[number];
+export type PuruPuruReactionControlMode = 'none' | 'manual' | 'linked';
+export type PuruPuruEmotionEffectMap = Record<
+  PuruPuruReactionEmotion,
+  PuruPuruEmotionEffect | null
+>;
+
+export const DEFAULT_PURUPURU_EMOTION_EFFECT_MAP: PuruPuruEmotionEffectMap = {
+  happy: 'happy',
+  surprised: 'surprised',
+  sad: 'sad',
+  angry: 'angry',
+  relaxed: 'relaxed',
+  thinking: 'thinking',
+  neutral: null,
+};
 
 export interface PuruPuruReactionDraft {
   effect?: PuruPuruEmotionEffect;
@@ -36,6 +63,7 @@ export type PuruPuruReaction = PuruPuruReactionDraft & { id: number };
 
 export function createPuruPuruReactionFromScreenplay(
   screenplay: unknown,
+  effectMap: PuruPuruEmotionEffectMap = DEFAULT_PURUPURU_EMOTION_EFFECT_MAP,
 ): PuruPuruReactionDraft | null {
   if (!screenplay || typeof screenplay !== 'object') return null;
 
@@ -45,7 +73,42 @@ export function createPuruPuruReactionFromScreenplay(
       ? source.emotion.toLowerCase().trim()
       : '';
 
-  return createPuruPuruReactionFromEmotion(emotion);
+  const effect = resolvePuruPuruEmotionEffect(emotion, effectMap);
+  return effect ? createPuruPuruReactionFromEmotion(effect) : null;
+}
+
+export function resolvePuruPuruEmotionEffect(
+  emotion: unknown,
+  effectMap: PuruPuruEmotionEffectMap,
+): PuruPuruEmotionEffect | null {
+  if (typeof emotion !== 'string') return null;
+  const normalized = emotion.toLowerCase().trim();
+  return isPuruPuruReactionEmotion(normalized) ? effectMap[normalized] : null;
+}
+
+export function normalizePuruPuruEmotionEffectMap(
+  value: unknown,
+): PuruPuruEmotionEffectMap {
+  const source =
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Partial<PuruPuruEmotionEffectMap>)
+      : {};
+  return Object.fromEntries(
+    PURUPURU_REACTION_EMOTIONS.map((emotion) => {
+      const candidate = source[emotion];
+      const effect =
+        candidate === null || isPuruPuruEmotionEffect(candidate)
+          ? candidate
+          : DEFAULT_PURUPURU_EMOTION_EFFECT_MAP[emotion];
+      return [emotion, effect];
+    }),
+  ) as PuruPuruEmotionEffectMap;
+}
+
+export function isPuruPuruReactionControlMode(
+  value: unknown,
+): value is PuruPuruReactionControlMode {
+  return value === 'none' || value === 'manual' || value === 'linked';
 }
 
 export function createPuruPuruReactionFromEmotion(
@@ -123,4 +186,10 @@ export function isPuruPuruEmotionEffect(
   value: unknown,
 ): value is PuruPuruEmotionEffect {
   return PURUPURU_EMOTION_EFFECTS.some((effect) => effect === value);
+}
+
+function isPuruPuruReactionEmotion(
+  value: unknown,
+): value is PuruPuruReactionEmotion {
+  return PURUPURU_REACTION_EMOTIONS.some((emotion) => emotion === value);
 }

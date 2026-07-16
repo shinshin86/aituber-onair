@@ -1,12 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
+import {
+  DEFAULT_PURUPURU_EFFECT_ANCHOR,
+  MAX_EFFECT_SCALE,
+  MIN_EFFECT_SCALE,
+  normalizePuruPuruEffectAnchor,
+} from '../lib/purupuruEffectAnchor';
 import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
 import type {
-  PuruPuruEmotionEffect,
+  PuruPuruEmotionEffectMap,
   PuruPuruReaction,
+  PuruPuruReactionControlMode,
+  PuruPuruReactionEmotion,
 } from '../lib/purupuruReactions';
 import type { PuruPuruRendererControls } from '../lib/purupuruRenderer';
 import { createPuruPuruRenderer } from '../lib/purupuruRenderer';
-import type { AvatarViewTransform } from '../types/settings';
+import type {
+  AvatarViewTransform,
+  PuruPuruEffectAnchor,
+} from '../types/settings';
 
 const AVATAR_VIEW_MIN_SCALE = 0.2;
 const AVATAR_VIEW_MAX_SCALE = 3;
@@ -26,7 +37,7 @@ const AVATAR_EXPRESSION_OPTIONS = [
   { emotion: 'relaxed', label: '安らぎ' },
   { emotion: 'thinking', label: '考え中' },
 ] as const satisfies ReadonlyArray<{
-  emotion: PuruPuruEmotionEffect;
+  emotion: PuruPuruReactionEmotion;
   label: string;
 }>;
 
@@ -35,6 +46,17 @@ interface DragState {
   lastClientX: number;
   lastClientY: number;
 }
+
+type EffectAnchorTarget = 'face' | 'leftEye' | 'rightEye';
+
+const EFFECT_ANCHOR_TARGETS = [
+  { target: 'face', label: '顔中心' },
+  { target: 'leftEye', label: '左目' },
+  { target: 'rightEye', label: '右目' },
+] as const satisfies ReadonlyArray<{
+  target: EffectAnchorTarget;
+  label: string;
+}>;
 
 interface AvatarBackgroundProps {
   mouthLevel: number;
@@ -45,6 +67,11 @@ interface AvatarBackgroundProps {
   idleMotionEnabled: boolean;
   avatarViewTransform: AvatarViewTransform;
   onAvatarViewTransformChange: (transform: AvatarViewTransform) => void;
+  effectAnchor: PuruPuruEffectAnchor;
+  onEffectAnchorChange: (anchor: PuruPuruEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
+  reactionControlMode: PuruPuruReactionControlMode;
+  emotionEffectMap: PuruPuruEmotionEffectMap;
 }
 
 /** Avatar composited into the chat background. */
@@ -57,6 +84,11 @@ export function AvatarBackground({
   idleMotionEnabled,
   avatarViewTransform,
   onAvatarViewTransformChange,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
+  reactionControlMode,
+  emotionEffectMap,
 }: AvatarBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -69,9 +101,18 @@ export function AvatarBackground({
     sanitizeAvatarViewTransform(avatarViewTransform),
   );
   const onAvatarViewTransformChangeRef = useRef(onAvatarViewTransformChange);
+  const effectAnchorRef = useRef(effectAnchor);
+  const onEffectAnchorChangeRef = useRef(onEffectAnchorChange);
+  const effectAnchorEditorEnabledRef = useRef(false);
+  const effectAnchorTargetRef = useRef<EffectAnchorTarget>('face');
   const dragStateRef = useRef<DragState | null>(null);
   const wheelCommitTimerRef = useRef<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isEffectAnchorEditorOpen, setIsEffectAnchorEditorOpen] =
+    useState(false);
+  const [effectAnchorTarget, setEffectAnchorTarget] =
+    useState<EffectAnchorTarget>('face');
+  const showManualControls = reactionControlMode === 'manual';
 
   useEffect(() => {
     avatarPackageRef.current = avatarPackage || null;
@@ -97,13 +138,21 @@ export function AvatarBackground({
   }, [onAvatarViewTransformChange]);
 
   useEffect(() => {
-    if (avatarReaction) {
+    effectAnchorRef.current = effectAnchor;
+  }, [effectAnchor]);
+
+  useEffect(() => {
+    onEffectAnchorChangeRef.current = onEffectAnchorChange;
+  }, [onEffectAnchorChange]);
+
+  useEffect(() => {
+    if (reactionControlMode === 'linked' && avatarReaction) {
       controlsRef.current?.applyReaction(avatarReaction);
       return;
     }
 
     controlsRef.current?.resetReaction();
-  }, [avatarReaction]);
+  }, [avatarReaction, reactionControlMode]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -120,6 +169,9 @@ export function AvatarBackground({
         getIsSpeaking: () => isSpeakingRef.current,
         getIdleMotionEnabled: () => idleMotionEnabledRef.current,
         getViewTransform: () => avatarViewTransformRef.current,
+        getEffectAnchor: () => effectAnchorRef.current,
+        getEffectAnchorEditorEnabled: () =>
+          effectAnchorEditorEnabledRef.current,
       });
       controlsRef.current = controls;
     } catch (error) {
@@ -172,6 +224,26 @@ export function AvatarBackground({
       if (!avatarPackageRef.current || event.button !== 0) return;
       event.preventDefault();
       clearWheelCommitTimer();
+      if (effectAnchorEditorEnabledRef.current) {
+        const point = controlsRef.current?.clientPointToAvatar(
+          event.clientX,
+          event.clientY,
+        );
+        if (!point) return;
+        const current = effectAnchorRef.current;
+        const target = effectAnchorTargetRef.current;
+        const next = normalizePuruPuruEffectAnchor({
+          ...current,
+          ...(target === 'face'
+            ? { faceX: point.xRatio, faceY: point.yRatio }
+            : target === 'leftEye'
+              ? { leftEyeX: point.xRatio, leftEyeY: point.yRatio }
+              : { rightEyeX: point.xRatio, rightEyeY: point.yRatio }),
+        });
+        effectAnchorRef.current = next;
+        onEffectAnchorChangeRef.current(next);
+        return;
+      }
       dragStateRef.current = {
         pointerId: event.pointerId,
         lastClientX: event.clientX,
@@ -200,6 +272,7 @@ export function AvatarBackground({
       const avatarPackage = avatarPackageRef.current;
       if (!avatarPackage) return;
       event.preventDefault();
+      if (effectAnchorEditorEnabledRef.current) return;
       const current = sanitizeAvatarViewTransform(
         avatarViewTransformRef.current,
       );
@@ -224,6 +297,7 @@ export function AvatarBackground({
     const handleDoubleClick = (event: MouseEvent) => {
       if (!avatarPackageRef.current) return;
       event.preventDefault();
+      if (effectAnchorEditorEnabledRef.current) return;
       clearWheelCommitTimer();
       avatarViewTransformRef.current = DEFAULT_AVATAR_VIEW_TRANSFORM;
       commitAvatarViewTransform();
@@ -253,6 +327,10 @@ export function AvatarBackground({
         ref={canvasRef}
         className={`avatar-canvas${avatarPackage ? ' is-interactive' : ''}${
           isDragging ? ' is-dragging' : ''
+        }${
+          isEffectAnchorEditorOpen && showManualControls
+            ? ' is-anchor-editing'
+            : ''
         }`}
         aria-label={
           avatarPackage
@@ -260,34 +338,129 @@ export function AvatarBackground({
             : 'No avatar loaded'
         }
       />
-      <div
-        className="avatar-expression-controls"
-        role="group"
-        aria-label="アバター感情表現プレビュー"
-      >
-        <span className="avatar-expression-controls-label">感情表現</span>
-        {AVATAR_EXPRESSION_OPTIONS.map((option) => (
-          <button
-            key={option.emotion}
-            type="button"
-            className="avatar-expression-button"
-            disabled={!avatarPackage}
-            onClick={() => controlsRef.current?.previewEmotion(option.emotion)}
-            aria-label={`${option.label}の感情表現をプレビュー`}
-          >
-            {option.label}
-          </button>
-        ))}
-        <button
-          type="button"
-          className="avatar-expression-button is-reset"
-          disabled={!avatarPackage}
-          onClick={() => controlsRef.current?.resetReaction()}
-          aria-label="感情表現を解除"
+      {showManualControls && (
+        <div
+          className="avatar-expression-controls"
+          role="group"
+          aria-label="アバター感情表現とアンカー設定"
         >
-          解除
-        </button>
-      </div>
+          <span className="avatar-expression-controls-label">感情表現</span>
+          {AVATAR_EXPRESSION_OPTIONS.map((option) => {
+            const effect = emotionEffectMap[option.emotion];
+            return (
+              <button
+                key={option.emotion}
+                type="button"
+                className="avatar-expression-button"
+                disabled={!avatarPackage || !effect}
+                onClick={() => {
+                  if (effect) controlsRef.current?.previewEmotion(effect);
+                }}
+                aria-label={`${option.label}の感情表現をプレビュー`}
+                title={
+                  effect ? undefined : 'エフェクトが割り当てられていません'
+                }
+              >
+                {option.label}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            className="avatar-expression-button is-reset"
+            disabled={!avatarPackage}
+            onClick={() => controlsRef.current?.resetReaction()}
+            aria-label="感情表現を解除"
+          >
+            解除
+          </button>
+          <button
+            type="button"
+            className={`avatar-expression-button is-anchor${
+              isEffectAnchorEditorOpen ? ' is-active' : ''
+            }`}
+            disabled={!avatarPackage}
+            aria-pressed={isEffectAnchorEditorOpen}
+            onClick={() => {
+              const next = !isEffectAnchorEditorOpen;
+              effectAnchorEditorEnabledRef.current = next;
+              setIsEffectAnchorEditorOpen(next);
+            }}
+          >
+            アンカー調整
+          </button>
+        </div>
+      )}
+      {showManualControls && isEffectAnchorEditorOpen && avatarPackage && (
+        <div
+          className="avatar-anchor-editor"
+          role="group"
+          aria-label="感情表現アンカー調整"
+        >
+          <span className="avatar-anchor-editor-label">
+            配置先を選び、アバター上をクリック
+          </span>
+          <div className="avatar-anchor-targets">
+            {EFFECT_ANCHOR_TARGETS.map((option) => (
+              <button
+                key={option.target}
+                type="button"
+                className={`avatar-expression-button${
+                  effectAnchorTarget === option.target ? ' is-active' : ''
+                }`}
+                aria-pressed={effectAnchorTarget === option.target}
+                onClick={() => {
+                  effectAnchorTargetRef.current = option.target;
+                  setEffectAnchorTarget(option.target);
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <label className="avatar-anchor-scale">
+            <span>エフェクトサイズ</span>
+            <input
+              type="range"
+              min={MIN_EFFECT_SCALE * 100}
+              max={MAX_EFFECT_SCALE * 100}
+              step="5"
+              value={Math.round(effectAnchor.effectScale * 100)}
+              onChange={(event) => {
+                const next = normalizePuruPuruEffectAnchor({
+                  ...effectAnchorRef.current,
+                  effectScale: Number(event.target.value) / 100,
+                });
+                effectAnchorRef.current = next;
+                onEffectAnchorChangeRef.current(next);
+              }}
+            />
+            <output>{Math.round(effectAnchor.effectScale * 100)}%</output>
+          </label>
+          <div className="avatar-anchor-actions">
+            <button
+              type="button"
+              className="avatar-expression-button is-reset"
+              onClick={() => {
+                effectAnchorRef.current = DEFAULT_PURUPURU_EFFECT_ANCHOR;
+                onEffectAnchorReset();
+              }}
+            >
+              初期値に戻す
+            </button>
+            <button
+              type="button"
+              className="avatar-expression-button"
+              onClick={() => {
+                effectAnchorEditorEnabledRef.current = false;
+                setIsEffectAnchorEditorOpen(false);
+              }}
+            >
+              完了
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

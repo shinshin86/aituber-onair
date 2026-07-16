@@ -11,6 +11,7 @@ import {
   type PuruPuruReaction,
 } from './purupuruReactions';
 import {
+  drawPuruPuruEffectAnchorGuides,
   drawPuruPuruReactionBackEffect,
   drawPuruPuruReactionColorGrade,
   drawPuruPuruReactionFrontEffect,
@@ -24,7 +25,10 @@ import {
 } from './hairSpring';
 import { createIdleGazeState, resetIdleGaze, updateIdleGaze } from './idleGaze';
 import { selectFaceKey } from './purupuruPackage';
-import type { AvatarViewTransform } from '../types/settings';
+import type {
+  AvatarViewTransform,
+  PuruPuruEffectAnchor,
+} from '../types/settings';
 
 interface RendererOptions {
   canvas: HTMLCanvasElement;
@@ -34,6 +38,8 @@ interface RendererOptions {
   getIsSpeaking: () => boolean;
   getIdleMotionEnabled: () => boolean;
   getViewTransform: () => AvatarViewTransform;
+  getEffectAnchor: () => PuruPuruEffectAnchor;
+  getEffectAnchorEditorEnabled: () => boolean;
 }
 
 interface Pose {
@@ -56,6 +62,10 @@ export interface PuruPuruRendererControls {
   applyReaction: (reaction: PuruPuruReaction) => void;
   resetReaction: () => void;
   previewEmotion: (emotion: PuruPuruEmotionEffect) => void;
+  clientPointToAvatar: (
+    clientX: number,
+    clientY: number,
+  ) => { xRatio: number; yRatio: number } | null;
 }
 
 interface HairRigOutput {
@@ -176,6 +186,7 @@ export function createPuruPuruRenderer(
   let previousAvatarPackage: PuruPuruAvatarPackage | null = null;
   let idlePhaseSeconds = 0;
   let emotionPreviewEndsAt: number | null = null;
+  let avatarTransformInverse: DOMMatrix | null = null;
 
   const resizeObserver = new ResizeObserver(() => resizeCanvas(options));
   resizeObserver.observe(options.container);
@@ -249,11 +260,17 @@ export function createPuruPuruRenderer(
       reactionState.targetWeight = 0;
     }
     updateReactionState(reactionState, deltaSeconds);
-    const idleMotionEnabled = options.getIdleMotionEnabled();
+    const effectAnchorEditorEnabled = options.getEffectAnchorEditorEnabled();
+    const idleMotionEnabled =
+      options.getIdleMotionEnabled() && !effectAnchorEditorEnabled;
     idlePhaseSeconds +=
       phaseDeltaSeconds * getReactionIdleSpeedScale(reactionState);
-    if (updateBlink(blink, now)) {
+    if (!effectAnchorEditorEnabled && updateBlink(blink, now)) {
       triggerBounce(0.42);
+    }
+    if (effectAnchorEditorEnabled) {
+      blink.eyesClosed = false;
+      blink.nextBlinkAt = now + randomBlinkDelay();
     }
     const gaze = updateIdleGaze(idleGaze, {
       deltaSeconds,
@@ -297,6 +314,9 @@ export function createPuruPuruRenderer(
       gaze.gaze,
       reactionState,
       now,
+      (inverse) => {
+        avatarTransformInverse = inverse;
+      },
     );
     copyPose(previousPose, pose);
     animationFrameId = requestAnimationFrame(frame);
@@ -314,6 +334,22 @@ export function createPuruPuruRenderer(
     applyReaction,
     resetReaction,
     previewEmotion,
+    clientPointToAvatar: (clientX, clientY) => {
+      const avatarPackage = options.getAvatarPackage();
+      if (!avatarPackage || !avatarTransformInverse) return null;
+      const rect = options.canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+      const canvasPoint = new DOMPoint(
+        ((clientX - rect.left) / rect.width) * options.canvas.width,
+        ((clientY - rect.top) / rect.height) * options.canvas.height,
+      );
+      const avatarPoint = avatarTransformInverse.transformPoint(canvasPoint);
+      const sourceSize = getAvatarSourceSize(avatarPackage);
+      return {
+        xRatio: avatarPoint.x / sourceSize.width,
+        yRatio: avatarPoint.y / sourceSize.height,
+      };
+    },
   };
 }
 
@@ -439,12 +475,14 @@ function renderFrame(
   gaze: number,
   reactionState: ReactionState,
   now: number,
+  setAvatarTransformInverse: (inverse: DOMMatrix | null) => void,
 ): void {
   const canvas = options.canvas;
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   const avatarPackage = options.getAvatarPackage();
   if (!avatarPackage) {
+    setAvatarTransformInverse(null);
     return;
   }
 
@@ -465,9 +503,13 @@ function renderFrame(
 
   context.save();
   applyAvatarTransform(context, canvas, avatarPackage, pose, viewTransform);
+  setAvatarTransformInverse(context.getTransform().inverse());
   const effect = reactionState.current?.effect ?? null;
   const effectWeight = effect ? reactionState.weight : 0;
-  const effectGeometry = getAvatarSourceSize(avatarPackage);
+  const effectGeometry = {
+    ...getAvatarSourceSize(avatarPackage),
+    anchor: options.getEffectAnchor(),
+  };
   drawPuruPuruReactionBackEffect(
     context,
     effectGeometry,
@@ -504,6 +546,9 @@ function renderFrame(
     effectWeight,
     now,
   );
+  if (options.getEffectAnchorEditorEnabled()) {
+    drawPuruPuruEffectAnchorGuides(context, effectGeometry);
+  }
   context.restore();
 
   drawStageItemLayers(context, canvas, avatarPackage, itemLayers, 'stageFront');

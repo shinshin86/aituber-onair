@@ -7,10 +7,20 @@ import {
   type XaiReasoningEffort,
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
+import { normalizePuruPuruEffectAnchor } from '../lib/purupuruEffectAnchor';
+import {
+  DEFAULT_PURUPURU_EMOTION_EFFECT_MAP,
+  isPuruPuruReactionControlMode,
+  normalizePuruPuruEmotionEffectMap,
+  type PuruPuruEmotionEffect,
+  type PuruPuruReactionControlMode,
+  type PuruPuruReactionEmotion,
+} from '../lib/purupuruReactions';
 import type {
   AppSettings,
   AvatarViewTransform,
   ChatProviderOption,
+  PuruPuruEffectAnchor,
   StreamingPlatformOption,
   TTSEngineOption,
   VisualSettings,
@@ -53,6 +63,7 @@ const EMPTY_MODEL_IDS: string[] = [];
 const AVATAR_VIEW_MIN_SCALE = 0.2;
 const AVATAR_VIEW_MAX_SCALE = 3;
 const AVATAR_VIEW_MAX_OFFSET = 100_000;
+const MAX_PURUPURU_EFFECT_ANCHOR_PROFILES = 32;
 
 function getOrderedModels(provider: ChatProviderOption): string[] {
   const models = AITuberOnAirCore.getSupportedModels(provider);
@@ -76,9 +87,7 @@ function normalizeFiniteNumber(
   value: number | undefined,
   fallback: number,
 ): number {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? value
-    : fallback;
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
 function clampNumber(value: number, min: number, max: number): number {
@@ -122,7 +131,40 @@ function normalizeVisualSettings(
     avatarViewX: avatarView.x,
     avatarViewY: avatarView.y,
     avatarViewScale: avatarView.scale,
+    purupuruEffectAnchors: normalizePuruPuruEffectAnchors(
+      value?.purupuruEffectAnchors,
+    ),
+    purupuruReactionControlMode: isPuruPuruReactionControlMode(
+      value?.purupuruReactionControlMode,
+    )
+      ? value.purupuruReactionControlMode
+      : defaults.purupuruReactionControlMode,
+    purupuruEmotionEffectMap: normalizePuruPuruEmotionEffectMap(
+      value?.purupuruEmotionEffectMap,
+    ),
   };
+}
+
+function normalizePuruPuruEffectAnchors(
+  value: unknown,
+): Record<string, PuruPuruEffectAnchor> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+
+  const anchors: Record<string, PuruPuruEffectAnchor> = {};
+  const unsafeKeys = new Set(['__proto__', 'constructor', 'prototype']);
+  for (const [profileId, anchor] of Object.entries(value).slice(
+    -MAX_PURUPURU_EFFECT_ANCHOR_PROFILES,
+  )) {
+    if (!profileId || unsafeKeys.has(profileId)) continue;
+    anchors[profileId] = normalizePuruPuruEffectAnchor(
+      anchor && typeof anchor === 'object'
+        ? (anchor as Partial<PuruPuruEffectAnchor>)
+        : undefined,
+    );
+  }
+  return anchors;
 }
 
 function normalizeModelIds(modelIds: string[]): string[] {
@@ -276,6 +318,9 @@ function getDefaultSettings(): AppSettings {
       avatarViewX: 0,
       avatarViewY: 0,
       avatarViewScale: 1,
+      purupuruEffectAnchors: {},
+      purupuruReactionControlMode: 'none',
+      purupuruEmotionEffectMap: { ...DEFAULT_PURUPURU_EMOTION_EFFECT_MAP },
     },
     screenVision: {
       deviceId: '',
@@ -974,6 +1019,45 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualPuruPuruReactionControlMode = useCallback(
+    (purupuruReactionControlMode: PuruPuruReactionControlMode) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, purupuruReactionControlMode },
+      }));
+    },
+    [],
+  );
+
+  const updateVisualPuruPuruEmotionEffect = useCallback(
+    (
+      emotion: PuruPuruReactionEmotion,
+      effect: PuruPuruEmotionEffect | null,
+    ) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          purupuruEmotionEffectMap: {
+            ...prev.visual.purupuruEmotionEffectMap,
+            [emotion]: effect,
+          },
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualPuruPuruEmotionEffectMap = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      visual: {
+        ...prev.visual,
+        purupuruEmotionEffectMap: { ...DEFAULT_PURUPURU_EMOTION_EFFECT_MAP },
+      },
+    }));
+  }, []);
+
   const updateVisualAvatarView = useCallback(
     (avatarView: AvatarViewTransform) => {
       const normalized = normalizeAvatarViewTransform(avatarView);
@@ -993,6 +1077,41 @@ export function useSettings() {
   const resetVisualAvatarView = useCallback(() => {
     updateVisualAvatarView({ x: 0, y: 0, scale: 1 });
   }, [updateVisualAvatarView]);
+
+  const updateVisualPuruPuruEffectAnchor = useCallback(
+    (profileId: string, anchor: PuruPuruEffectAnchor) => {
+      if (!profileId) return;
+      const normalized = normalizePuruPuruEffectAnchor(anchor);
+      setSettings((prev) => {
+        const entries = Object.entries(
+          prev.visual.purupuruEffectAnchors,
+        ).filter(([key]) => key !== profileId);
+        entries.push([profileId, normalized]);
+        return {
+          ...prev,
+          visual: {
+            ...prev.visual,
+            purupuruEffectAnchors: Object.fromEntries(
+              entries.slice(-MAX_PURUPURU_EFFECT_ANCHOR_PROFILES),
+            ),
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const resetVisualPuruPuruEffectAnchor = useCallback((profileId: string) => {
+    if (!profileId) return;
+    setSettings((prev) => {
+      const remaining = { ...prev.visual.purupuruEffectAnchors };
+      delete remaining[profileId];
+      return {
+        ...prev,
+        visual: { ...prev.visual, purupuruEffectAnchors: remaining },
+      };
+    });
+  }, []);
 
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
@@ -1241,10 +1360,7 @@ export function useSettings() {
         ...prev,
         manneri: {
           ...prev.manneri,
-          similarityThreshold: Math.min(
-            1,
-            Math.max(0.1, similarityThreshold),
-          ),
+          similarityThreshold: Math.min(1, Math.max(0.1, similarityThreshold)),
         },
       }));
     },
@@ -1352,8 +1468,13 @@ export function useSettings() {
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
     updateVisualIdleMotionEnabled,
+    updateVisualPuruPuruReactionControlMode,
+    updateVisualPuruPuruEmotionEffect,
+    resetVisualPuruPuruEmotionEffectMap,
     updateVisualAvatarView,
     resetVisualAvatarView,
+    updateVisualPuruPuruEffectAnchor,
+    resetVisualPuruPuruEffectAnchor,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

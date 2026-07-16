@@ -1,5 +1,9 @@
 import type { ChatMessage } from '../types/chat';
-import type { AvatarViewTransform, VisualSettings } from '../types/settings';
+import type {
+  AvatarViewTransform,
+  PuruPuruEffectAnchor,
+  VisualSettings,
+} from '../types/settings';
 import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
 import type { PuruPuruReaction } from '../lib/purupuruReactions';
 import { AvatarBackground } from './AvatarPanel';
@@ -21,6 +25,9 @@ interface ChatPanelProps {
   visual: VisualSettings;
   avatarViewTransform: AvatarViewTransform;
   onAvatarViewTransformChange: (transform: AvatarViewTransform) => void;
+  effectAnchor: PuruPuruEffectAnchor;
+  onEffectAnchorChange: (anchor: PuruPuruEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
 }
 
 export function ChatPanel({
@@ -38,6 +45,9 @@ export function ChatPanel({
   visual,
   avatarViewTransform,
   onAvatarViewTransformChange,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -50,12 +60,12 @@ export function ChatPanel({
     visual.backgroundMode === 'green'
       ? { backgroundColor: '#00ff00' }
       : backgroundImageUrl
-    ? {
-        backgroundImage: `url(${backgroundImageUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
-    : undefined;
+        ? {
+            backgroundImage: `url(${backgroundImageUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }
+        : undefined;
 
   return (
     <div
@@ -73,6 +83,7 @@ export function ChatPanel({
         ⚙
       </button>
       <AvatarBackground
+        key={visual.purupuruReactionControlMode}
         mouthLevel={mouthLevel}
         voiceLevel={voiceLevel}
         isSpeaking={isSpeaking}
@@ -81,6 +92,11 @@ export function ChatPanel({
         idleMotionEnabled={visual.idleMotionEnabled}
         avatarViewTransform={avatarViewTransform}
         onAvatarViewTransformChange={onAvatarViewTransformChange}
+        effectAnchor={effectAnchor}
+        onEffectAnchorChange={onEffectAnchorChange}
+        onEffectAnchorReset={onEffectAnchorReset}
+        reactionControlMode={visual.purupuruReactionControlMode}
+        emotionEffectMap={visual.purupuruEmotionEffectMap}
       />
       {isBroadcast ? (
         broadcastCaption && (
