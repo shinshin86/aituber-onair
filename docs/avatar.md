@@ -37,9 +37,8 @@ default avatar. The avatar format and motion design were created by rotejin in
 Start from
 [`packages/core/examples/react-purupuru-app`](../packages/core/examples/react-purupuru-app).
 
-To create your own `.purupuru` avatar, the ImageGen-based
-[asset production kit](https://github.com/shinshin86/PuruPuruPNGTuber/tree/codex/add-imagegen-asset-production-kit/asset-production)
-for PuruPuruPNGTuber may be a helpful starting point.
+To create your own `.purupuru` avatar, you can use the ImageGen-based asset
+production kit described below.
 
 ### VRM
 
@@ -72,6 +71,36 @@ Start from
 
 AITuber OnAir examples are designed so richer avatar assets can improve the
 final presentation without changing the core chat or voice pipeline.
+
+## Related Tool: PuruPuru PNGTuber Asset Production Kit
+
+The [PuruPuru PNGTuber Asset Production Kit](https://github.com/shinshin86/PuruPuruPNGTuber/tree/codex/add-imagegen-asset-production-kit/asset-production)
+provides a production workflow for turning character images created with
+ImageGen or manual editing into the layer structure expected by PuruPuru
+PNGTuber.
+
+Its character brief, ImageGen prompt templates, asset checklists, and layout
+guides help you prepare the eight required images: six face states combining
+two eye states with three mouth states, plus front and back hair layers. It also
+includes templates for optional `items/` layers such as hair accessories, hats,
+glasses, and body layers.
+
+The finished assets are normalized as transparent PNGs on the same canvas and
+at the same coordinates. The inspection harness checks required files, PNG
+format, canvas sizes, transparency, and alignment differences between face
+states, then produces a contact sheet and review JSON. Example prompts are
+included for delegating character design, asset creation, inspection, and
+`.purupuru` package creation to Codex and ImageGen.
+
+Automated checks cannot determine whether front and back hair are separated
+semantically, whether the drawing style stays consistent across expressions,
+or whether deformation looks natural. Perform the final review and adjustment
+in the PuruPuru PNGTuber browser app. After creating a `.purupuru` package,
+start the AITuber OnAir PuruPuru PNGTuber example and choose the file from the
+Visual section in Settings.
+
+Check the rights and usage terms for generated images, source images, reference
+images, and accessory artwork separately from the production kit's license.
 
 For VRM avatars, the bundled example can use expression names such as `happy`,
 `sad`, `surprised`, `relaxed`, `mouthSmileLeft`, `mouthSmileRight`,
