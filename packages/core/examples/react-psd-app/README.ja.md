@@ -26,6 +26,7 @@ sample です。追加設定なしで motion animation を確認できます。
 - 日本語/英語のレイヤー名から口・目レイヤーを自動検出
 - Anime2.5DRig 互換の PSD レイヤー名から motion mode を自動検出
 - 対応 PSD では idle motion、まばたき fallback、髪揺れ、音声連動の口パクを表示
+- static / motion の両方で、モデルに依存しない感情表現エフェクトを重ねて表示
 - canvas 上のドラッグ/ホイールズームと Settings からの表示位置リセット
 - `${fileName}:${fileSize}` をキーに、表示状態と role 割り当てを
   `localStorage` に保存
@@ -97,6 +98,26 @@ motion 関連の設定は **Settings -> Visual** にあります。
 ホイールズームはアバター自身の中心を基準に拡大縮小します。位置を変える操作は
 ドラッグだけです。offset は clamp されるため、アバターが完全に画面外へ消えて
 復帰できなくなることはありません。
+
+## 感情表現エフェクト
+
+**Settings -> 感情表現エフェクト** では、次の3種類から操作方法を選べます。
+
+| 操作方法 | 挙動 |
+|---|---|
+| `なし` | 従来どおりボタンもエフェクトも表示しません。 |
+| `手動ボタン＋アンカー設定ボタン` | アバター上にプレビューボタンとアンカー調整UIを表示します。 |
+| `発話感情に連動のみ` | 発話中に `happy` や `sad` などの screenplay emotion タグをエフェクトへ割り当てます。 |
+
+エフェクトは PSD layer ではなく procedural canvas overlay です。そのため、
+きらめき、驚き線、涙、怒りマーク、泡、思考マークを static PSDTool avatar と
+Anime2.5DRig motion avatar の両方で共通利用できます。感情タグとエフェクトの
+組み合わせは Settings で変更できます。
+
+手動モードの **アンカー調整** では、顔中心と両目の位置、エフェクトサイズを
+設定できます。アンカーは PSD profile（`${fileName}:${fileSize}`）ごとに
+`react-psd-app-settings` へ保存されます。PSD の pixel data やファイル自体を
+この設定へ保存することはありません。
 
 ## Credits
 

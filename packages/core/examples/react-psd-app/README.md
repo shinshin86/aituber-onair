@@ -27,6 +27,7 @@ sample, so the app animates with zero setup.
 - Auto-detect Anime2.5DRig-compatible PSD layer names for motion mode
 - Animate supported PSDs with idle motion, blink fallback, hair physics, and
   audio-driven mouth movement
+- Overlay model-independent emotion effects in both static and motion modes
 - Drag, wheel-zoom, and reset the avatar view from the canvas / Settings
 - Persist visibility overrides and role bindings in `localStorage`, keyed by
   `${fileName}:${fileSize}`
@@ -99,6 +100,26 @@ Motion settings are in **Settings -> Visual**:
 Wheel zoom scales around the avatar's own center. Dragging is the only operation
 that changes avatar position, and offsets are clamped so the avatar cannot be
 lost completely off-screen.
+
+## Emotion expression effects
+
+Open **Settings -> Emotion expression effects** and choose one of these modes:
+
+| Mode | Behavior |
+|---|---|
+| `None` | Preserves the original display: no controls and no effects. |
+| `Manual buttons + anchor settings` | Shows preview buttons and an anchor editor over the avatar. |
+| `Link to speech emotions only` | Maps screenplay emotion tags such as `happy` and `sad` to effects during speech. |
+
+The effects are procedural canvas overlays rather than PSD layers, so the same
+sparkles, surprise lines, tears, anger mark, bubbles, and thinking mark work for
+both static PSDTool avatars and Anime2.5DRig motion avatars. The mapping from
+emotion tags to effects can be changed in Settings.
+
+In manual mode, use **Anchor settings** to place the face center and both eyes,
+and to adjust effect size. Anchor values are saved per PSD profile
+(`${fileName}:${fileSize}`) in `react-psd-app-settings`. The PSD pixels and PSD
+file itself are never copied into this setting.
 
 ## Credits
 
