@@ -27,6 +27,9 @@ PNGTuber-style avatar renderer for `.purupuru` avatar packages.
 - Drive mouth states from TTS audio lip-sync while speech is playing.
 - Keep the rich React example shell features: chat, TTS settings, stream comment
   panels, screen vision, broadcast layout, and background image selection.
+- Edit the system prompt from the LLM section in Settings. Changes are applied
+  when the field loses focus. Keep the default emotion-tag instruction to retain
+  avatar reactions.
 
 ## `.purupuru` Format
 

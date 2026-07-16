@@ -72,6 +72,9 @@ npm run dev
 
 起動後に **Settings** を開き、API キーや各種設定を入力してください。  
 設定値は `localStorage`（`react-vrm-app-settings`）に保存されます。
+LLM セクションではシステムプロンプトも編集できます。入力欄からフォーカスが
+外れた時に反映されます。表情連動を利用する場合は、初期値に含まれる emotion
+tag の指示を残してください。
 
 `openai-compatible` 利用時は以下を設定してください。
 - `Endpoint URL`（必須。`/v1/chat/completions` まで含む URL）

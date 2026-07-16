@@ -13,6 +13,7 @@ import { StreamSettings } from './StreamSettings';
 import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { LayerTreePanel } from './LayerTreePanel';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
+import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import type { PsdAvatarController } from '../hooks/usePsdAvatar';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
@@ -486,6 +487,7 @@ export function SettingsPanel({
   availableModels,
   updateLLMProvider,
   updateLLMModel,
+  updateLLMSystemPrompt,
   updateLLMApiKey,
   updateLLMEndpoint,
   updateXaiReasoningEffort,
@@ -565,6 +567,15 @@ export function SettingsPanel({
   onBackgroundImageChange,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
+  const [systemPromptDraft, setSystemPromptDraft] = useState(
+    settings.llm.systemPrompt,
+  );
+
+  const commitSystemPrompt = () => {
+    if (systemPromptDraft !== settings.llm.systemPrompt) {
+      updateLLMSystemPrompt(systemPromptDraft);
+    }
+  };
   const psdLayerOptions = useMemo(
     () => getPsdNodeOptions(psdAvatar.model),
     [psdAvatar.model],
@@ -1052,6 +1063,24 @@ export function SettingsPanel({
                   ))}
                 </select>
               )}
+            </div>
+
+            <div className="settings-field">
+              <label htmlFor="llm-system-prompt">System Prompt</label>
+              <textarea
+                id="llm-system-prompt"
+                rows={6}
+                value={systemPromptDraft}
+                onChange={(event) => setSystemPromptDraft(event.target.value)}
+                onBlur={commitSystemPrompt}
+                placeholder={DEFAULT_SYSTEM_PROMPT}
+                disabled={disabled}
+              />
+              <p className="settings-field-hint">
+                入力欄からフォーカスが外れた時に反映されます。空欄の場合は
+                既定値を使用します。アバター固有の制御指示を削除すると、
+                表情連動に影響する場合があります。
+              </p>
             </div>
 
             {settings.llm.provider === 'openrouter' && (

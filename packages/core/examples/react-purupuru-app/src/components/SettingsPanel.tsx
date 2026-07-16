@@ -12,6 +12,7 @@ import {
 import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
+import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
 import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
@@ -242,6 +243,7 @@ export function SettingsPanel({
   availableModels,
   updateLLMProvider,
   updateLLMModel,
+  updateLLMSystemPrompt,
   updateLLMApiKey,
   updateLLMEndpoint,
   updateXaiReasoningEffort,
@@ -323,6 +325,15 @@ export function SettingsPanel({
   onAvatarPackageChange,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
+  const [systemPromptDraft, setSystemPromptDraft] = useState(
+    settings.llm.systemPrompt,
+  );
+
+  const commitSystemPrompt = () => {
+    if (systemPromptDraft !== settings.llm.systemPrompt) {
+      updateLLMSystemPrompt(systemPromptDraft);
+    }
+  };
   const isOpenAIGPT5Model =
     settings.llm.provider === 'openai' && isGPT5Model(settings.llm.model);
   const isXaiReasoningEffortModelSelected =
@@ -798,6 +809,24 @@ export function SettingsPanel({
                 </select>
               </div>
             )}
+
+            <div className="settings-field">
+              <label htmlFor="llm-system-prompt">System Prompt</label>
+              <textarea
+                id="llm-system-prompt"
+                rows={6}
+                value={systemPromptDraft}
+                onChange={(event) => setSystemPromptDraft(event.target.value)}
+                onBlur={commitSystemPrompt}
+                placeholder={DEFAULT_SYSTEM_PROMPT}
+                disabled={disabled}
+              />
+              <p className="settings-field-hint">
+                入力欄からフォーカスが外れた時に反映されます。空欄の場合は
+                既定値を使用します。アバター固有の制御指示を削除すると、
+                表情連動に影響する場合があります。
+              </p>
+            </div>
 
             {isOpenAIGPT5Model && (
               <p className="settings-field-hint">

@@ -180,6 +180,7 @@ body {
 }
 
 .settings-field select,
+.settings-field textarea,
 .settings-field input[type="password"],
 .settings-field input[type="text"],
 .settings-field input[type="number"] {
@@ -194,7 +195,13 @@ body {
   font-family: inherit;
 }
 
+.settings-field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
 .settings-field select:focus,
+.settings-field textarea:focus,
 .settings-field input[type="password"]:focus,
 .settings-field input[type="text"]:focus,
 .settings-field input[type="number"]:focus {
@@ -295,6 +302,7 @@ body {
 }
 
 .settings-field select:disabled,
+.settings-field textarea:disabled,
 .settings-field input:disabled {
   opacity: 0.4;
   cursor: not-allowed;

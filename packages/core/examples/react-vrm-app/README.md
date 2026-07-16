@@ -75,6 +75,9 @@ npm run dev
 
 After launch, open **Settings** and set API keys / provider options.  
 All settings are saved in `localStorage` (`react-vrm-app-settings`).
+The LLM section also lets you edit the system prompt. It is applied when the
+field loses focus. Keep the default emotion-tag instruction if you want avatar
+expressions to follow the response.
 
 For `openai-compatible`, set:
 - `Endpoint URL` (required, full `/v1/chat/completions` URL)

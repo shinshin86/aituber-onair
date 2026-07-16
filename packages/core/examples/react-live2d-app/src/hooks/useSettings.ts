@@ -6,6 +6,7 @@ import {
   type RefreshOpenRouterFreeModelsResult,
   type XaiReasoningEffort,
 } from '@aituber-onair/core';
+import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import type {
   AppSettings,
   ChatProviderOption,
@@ -119,6 +120,7 @@ function getDefaultSettings(): AppSettings {
     llm: {
       provider: 'openai',
       model: 'gpt-4.1-nano',
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
       endpoint: DEFAULT_OPENAI_COMPATIBLE_ENDPOINT,
       xaiReasoningEffort: 'none',
       apiKeys: {
@@ -363,6 +365,13 @@ export function useSettings() {
             ? getDefaultXaiReasoningEffort(model) || 'none'
             : prev.llm.xaiReasoningEffort,
       },
+    }));
+  }, []);
+
+  const updateLLMSystemPrompt = useCallback((systemPrompt: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      llm: { ...prev.llm, systemPrompt },
     }));
   }, []);
 
@@ -1207,6 +1216,7 @@ export function useSettings() {
     availableModels,
     updateLLMProvider,
     updateLLMModel,
+    updateLLMSystemPrompt,
     updateLLMApiKey,
     updateLLMEndpoint,
     updateXaiReasoningEffort,

@@ -44,6 +44,8 @@ npm run dev
 After launch, open **Settings** and set API keys / provider options there.
 General app settings are saved in `localStorage` under
 `react-psd-app-settings`.
+The LLM section also lets you edit the system prompt. It is applied when the
+field loses focus and is saved with the other settings.
 
 ## PSD avatar
 
