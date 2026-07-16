@@ -54,6 +54,7 @@ export interface PuruPuruItemLayer {
 }
 
 export interface PuruPuruAvatarPackage {
+  profileId: string;
   name: string;
   thumbnailUrl: string | null;
   images: PuruPuruAvatarImages;
@@ -138,12 +139,21 @@ export async function loadPuruPuruPackage(
     throw new Error('The .purupuru package is larger than 80 MB.');
   }
 
-  const entries = readStoredZip(new Uint8Array(await file.arrayBuffer()));
+  const packageBytes = new Uint8Array(await file.arrayBuffer());
+  const profileId = `purupuru-v1-${packageBytes.byteLength}-${crc32(
+    packageBytes,
+  )
+    .toString(16)
+    .padStart(8, '0')}`;
+  const entries = readStoredZip(packageBytes);
   const entryMap = new Map(entries.map((entry) => [entry.name, entry.data]));
   const urls: string[] = [];
 
   try {
-    const manifest = parseJsonEntry<PuruPuruManifest>(entryMap, 'manifest.json');
+    const manifest = parseJsonEntry<PuruPuruManifest>(
+      entryMap,
+      'manifest.json',
+    );
     validateManifest(manifest);
 
     const settingsPath = assertSafePackagePath(manifest.settings);
@@ -152,7 +162,9 @@ export async function loadPuruPuruPackage(
       settingsPath,
     );
     if (settingsPayload.type !== 'purupuru-pngtuber-settings') {
-      throw new Error('settings.json is not a PuruPuru PNGTuber settings file.');
+      throw new Error(
+        'settings.json is not a PuruPuru PNGTuber settings file.',
+      );
     }
 
     const images = {} as PuruPuruAvatarImages;
@@ -166,6 +178,7 @@ export async function loadPuruPuruPackage(
     const name = file.name.replace(/\.purupuru$/i, '') || 'PuruPuru Avatar';
 
     return {
+      profileId,
       name,
       thumbnailUrl,
       images,
@@ -483,7 +496,10 @@ function normalizeSettings(
       0,
       0.1,
     ),
-    sourceImageWidth: numberOrDefault(settingsPayload.avatarImageSize?.width, 0),
+    sourceImageWidth: numberOrDefault(
+      settingsPayload.avatarImageSize?.width,
+      0,
+    ),
     sourceImageHeight: numberOrDefault(
       settingsPayload.avatarImageSize?.height,
       0,

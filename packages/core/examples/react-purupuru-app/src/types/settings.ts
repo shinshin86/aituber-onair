@@ -1,4 +1,8 @@
 import type { XaiReasoningEffort } from '@aituber-onair/core';
+import type {
+  PuruPuruEmotionEffectMap,
+  PuruPuruReactionControlMode,
+} from '../lib/purupuruReactions';
 
 export type ChatProviderOption =
   | 'openai'
@@ -168,6 +172,16 @@ export interface ManneriSettings {
   minMessageLength: number;
 }
 
+export interface PuruPuruEffectAnchor {
+  faceX: number;
+  faceY: number;
+  leftEyeX: number;
+  leftEyeY: number;
+  rightEyeX: number;
+  rightEyeY: number;
+  effectScale: number;
+}
+
 export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
@@ -176,6 +190,9 @@ export interface VisualSettings {
   avatarViewX: number;
   avatarViewY: number;
   avatarViewScale: number;
+  purupuruEffectAnchors: Record<string, PuruPuruEffectAnchor>;
+  purupuruReactionControlMode: PuruPuruReactionControlMode;
+  purupuruEmotionEffectMap: PuruPuruEmotionEffectMap;
 }
 
 export interface AvatarViewTransform {

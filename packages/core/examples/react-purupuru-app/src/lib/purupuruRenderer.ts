@@ -4,7 +4,18 @@ import type {
   PuruPuruItemLayer,
   PuruPuruMouthState,
 } from './purupuruPackage';
-import type { PuruPuruReaction } from './purupuruReactions';
+import {
+  createPuruPuruReactionFromEmotion,
+  isPuruPuruEmotionEffect,
+  type PuruPuruEmotionEffect,
+  type PuruPuruReaction,
+} from './purupuruReactions';
+import {
+  drawPuruPuruEffectAnchorGuides,
+  drawPuruPuruReactionBackEffect,
+  drawPuruPuruReactionColorGrade,
+  drawPuruPuruReactionFrontEffect,
+} from './purupuruEmotionEffects';
 import type { HairSpringOutput } from './hairSpring';
 import {
   createHairSpringState,
@@ -12,13 +23,12 @@ import {
   triggerHairSpringBounce,
   updateHairSpring,
 } from './hairSpring';
-import {
-  createIdleGazeState,
-  resetIdleGaze,
-  updateIdleGaze,
-} from './idleGaze';
+import { createIdleGazeState, resetIdleGaze, updateIdleGaze } from './idleGaze';
 import { selectFaceKey } from './purupuruPackage';
-import type { AvatarViewTransform } from '../types/settings';
+import type {
+  AvatarViewTransform,
+  PuruPuruEffectAnchor,
+} from '../types/settings';
 
 interface RendererOptions {
   canvas: HTMLCanvasElement;
@@ -28,13 +38,16 @@ interface RendererOptions {
   getIsSpeaking: () => boolean;
   getIdleMotionEnabled: () => boolean;
   getViewTransform: () => AvatarViewTransform;
+  getEffectAnchor: () => PuruPuruEffectAnchor;
+  getEffectAnchorEditorEnabled: () => boolean;
 }
 
 interface Pose {
   x: number;
   y: number;
   rotation: number;
-  scale: number;
+  scaleX: number;
+  scaleY: number;
 }
 
 interface BlinkState {
@@ -48,6 +61,11 @@ export interface PuruPuruRendererControls {
   triggerBounce: (strength: number) => void;
   applyReaction: (reaction: PuruPuruReaction) => void;
   resetReaction: () => void;
+  previewEmotion: (emotion: PuruPuruEmotionEffect) => void;
+  clientPointToAvatar: (
+    clientX: number,
+    clientY: number,
+  ) => { xRatio: number; yRatio: number } | null;
 }
 
 interface HairRigOutput {
@@ -70,6 +88,7 @@ type ItemLayerSlot =
   | 'stageFront';
 
 interface NormalizedReaction {
+  effect: PuruPuruEmotionEffect | null;
   impulse: {
     bounce: number;
     tilt: number;
@@ -114,6 +133,8 @@ const FALLBACK_ITEM_LAYER_SLOT: ItemLayerSlot = 'frontHairFront';
 const AVATAR_VIEW_MIN_SCALE = 0.2;
 const AVATAR_VIEW_MAX_SCALE = 3;
 const AVATAR_VIEW_MAX_OFFSET = 100_000;
+const EMOTION_PREVIEW_DURATION_MS = 2600;
+const AVATAR_ROOT_Y_RATIO = 0.46;
 const ITEM_LAYER_SLOTS = new Set<string>([
   'stageBack',
   'characterBack',
@@ -131,8 +152,14 @@ export function createPuruPuruRenderer(
     throw new Error('Canvas 2D rendering is not supported.');
   }
 
-  const pose: Pose = { x: 0, y: 0, rotation: 0, scale: 1 };
-  const targetPose: Pose = { x: 0, y: 0, rotation: 0, scale: 1 };
+  const pose: Pose = {
+    x: 0,
+    y: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+  };
+  const targetPose: Pose = { ...pose };
   const previousPose: Pose = { ...pose };
   const backHairSpring = createHairSpringState();
   const frontHairSpring = createHairSpringState();
@@ -158,6 +185,8 @@ export function createPuruPuruRenderer(
   let previousFrameAt = performance.now();
   let previousAvatarPackage: PuruPuruAvatarPackage | null = null;
   let idlePhaseSeconds = 0;
+  let emotionPreviewEndsAt: number | null = null;
+  let avatarTransformInverse: DOMMatrix | null = null;
 
   const resizeObserver = new ResizeObserver(() => resizeCanvas(options));
   resizeObserver.observe(options.container);
@@ -170,7 +199,7 @@ export function createPuruPuruRenderer(
     triggerHairSpringBounce(frontHairSpring, strength);
   };
 
-  const applyReaction = (reaction: PuruPuruReaction) => {
+  const activateReaction = (reaction: PuruPuruReaction) => {
     if (!reaction || typeof reaction !== 'object') {
       resetReaction();
       return;
@@ -179,7 +208,8 @@ export function createPuruPuruRenderer(
     const normalizedReaction = normalizeReaction(reaction);
     reactionState.current = normalizedReaction;
     reactionState.targetWeight = 1;
-    reactionState.transientTiltVelocity += normalizedReaction.impulse.tilt * 0.1;
+    reactionState.transientTiltVelocity +=
+      normalizedReaction.impulse.tilt * 0.1;
     reactionState.transientScaleVelocity +=
       normalizedReaction.impulse.scalePop * 0.055;
     reactionState.shakeStrength = Math.max(
@@ -189,8 +219,22 @@ export function createPuruPuruRenderer(
     triggerBounce(normalizedReaction.impulse.bounce);
   };
 
+  const applyReaction = (reaction: PuruPuruReaction) => {
+    emotionPreviewEndsAt = null;
+    activateReaction(reaction);
+  };
+
   const resetReaction = () => {
+    emotionPreviewEndsAt = null;
     reactionState.targetWeight = 0;
+  };
+
+  const previewEmotion = (emotion: PuruPuruEmotionEffect) => {
+    if (!options.getAvatarPackage()) return;
+    const reaction = createPuruPuruReactionFromEmotion(emotion);
+    if (!reaction) return;
+    activateReaction({ ...reaction, id: 0 });
+    emotionPreviewEndsAt = performance.now() + EMOTION_PREVIEW_DURATION_MS;
   };
 
   const frame = (now: number) => {
@@ -206,15 +250,27 @@ export function createPuruPuruRenderer(
       resetIdleGaze(idleGaze);
       copyPose(previousPose, pose);
       previousAvatarPackage = avatarPackage;
+      emotionPreviewEndsAt = null;
+      reactionState.targetWeight = 0;
     }
 
     resizeCanvas(options);
+    if (emotionPreviewEndsAt !== null && now >= emotionPreviewEndsAt) {
+      emotionPreviewEndsAt = null;
+      reactionState.targetWeight = 0;
+    }
     updateReactionState(reactionState, deltaSeconds);
-    const idleMotionEnabled = options.getIdleMotionEnabled();
+    const effectAnchorEditorEnabled = options.getEffectAnchorEditorEnabled();
+    const idleMotionEnabled =
+      options.getIdleMotionEnabled() && !effectAnchorEditorEnabled;
     idlePhaseSeconds +=
       phaseDeltaSeconds * getReactionIdleSpeedScale(reactionState);
-    if (updateBlink(blink, now)) {
+    if (!effectAnchorEditorEnabled && updateBlink(blink, now)) {
       triggerBounce(0.42);
+    }
+    if (effectAnchorEditorEnabled) {
+      blink.eyesClosed = false;
+      blink.nextBlinkAt = now + randomBlinkDelay();
     }
     const gaze = updateIdleGaze(idleGaze, {
       deltaSeconds,
@@ -236,7 +292,11 @@ export function createPuruPuruRenderer(
     );
     followPose(pose, targetPose);
 
-    const poseVelocity = calculatePoseVelocity(pose, previousPose, deltaSeconds);
+    const poseVelocity = calculatePoseVelocity(
+      pose,
+      previousPose,
+      deltaSeconds,
+    );
     const hair = updateHairRig(
       avatarPackage,
       backHairSpring,
@@ -245,7 +305,19 @@ export function createPuruPuruRenderer(
       poseVelocity,
     );
 
-    renderFrame(context, options, pose, blink.eyesClosed, hair, gaze.gaze);
+    renderFrame(
+      context,
+      options,
+      pose,
+      blink.eyesClosed,
+      hair,
+      gaze.gaze,
+      reactionState,
+      now,
+      (inverse) => {
+        avatarTransformInverse = inverse;
+      },
+    );
     copyPose(previousPose, pose);
     animationFrameId = requestAnimationFrame(frame);
   };
@@ -261,6 +333,23 @@ export function createPuruPuruRenderer(
     triggerBounce,
     applyReaction,
     resetReaction,
+    previewEmotion,
+    clientPointToAvatar: (clientX, clientY) => {
+      const avatarPackage = options.getAvatarPackage();
+      if (!avatarPackage || !avatarTransformInverse) return null;
+      const rect = options.canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+      const canvasPoint = new DOMPoint(
+        ((clientX - rect.left) / rect.width) * options.canvas.width,
+        ((clientY - rect.top) / rect.height) * options.canvas.height,
+      );
+      const avatarPoint = avatarTransformInverse.transformPoint(canvasPoint);
+      const sourceSize = getAvatarSourceSize(avatarPackage);
+      return {
+        xRatio: avatarPoint.x / sourceSize.width,
+        yRatio: avatarPoint.y / sourceSize.height,
+      };
+    },
   };
 }
 
@@ -290,8 +379,7 @@ function updateBlink(blink: BlinkState, now: number): boolean {
 
   if (now >= blink.nextBlinkAt) {
     blink.eyesClosed = true;
-    blink.reopenAt =
-      now + randomBetween(MIN_BLINK_HOLD_MS, MAX_BLINK_HOLD_MS);
+    blink.reopenAt = now + randomBetween(MIN_BLINK_HOLD_MS, MAX_BLINK_HOLD_MS);
     return true;
   }
 
@@ -312,9 +400,7 @@ function updateIdleTarget(
   const idleScale = reaction
     ? mix(1, reaction.sustain.idleScale, reactionWeight)
     : 1;
-  const reactionTilt = reaction
-    ? reaction.sustain.tilt * reactionWeight
-    : 0;
+  const reactionTilt = reaction ? reaction.sustain.tilt * reactionWeight : 0;
   const reactionOffsetY = reaction
     ? reaction.sustain.offsetY * reactionWeight
     : 0;
@@ -334,7 +420,8 @@ function updateIdleTarget(
     targetPose.x = shake * 2;
     targetPose.y = reactionOffsetY;
     targetPose.rotation = reactionState.transientTilt;
-    targetPose.scale = 1 + reactionState.transientScale;
+    targetPose.scaleX = 1 + reactionState.transientScale;
+    targetPose.scaleY = 1 + reactionState.transientScale;
     return;
   }
 
@@ -342,7 +429,8 @@ function updateIdleTarget(
     targetPose.x = shake * 2;
     targetPose.y = reactionOffsetY;
     targetPose.rotation = reactionTilt + reactionState.transientTilt;
-    targetPose.scale = 1 + reactionState.transientScale;
+    targetPose.scaleX = 1 + reactionState.transientScale;
+    targetPose.scaleY = 1 + reactionState.transientScale;
     return;
   }
 
@@ -363,7 +451,8 @@ function updateIdleTarget(
     reactionTilt +
     reactionState.transientTilt +
     shake * 0.006;
-  targetPose.scale =
+  targetPose.scaleX = 1 + reactionState.transientScale;
+  targetPose.scaleY =
     1 +
     Math.sin(seconds * Math.PI * 2 * 0.34) * 0.006 * idleScale +
     reactionState.transientScale;
@@ -373,7 +462,8 @@ function followPose(pose: Pose, targetPose: Pose): void {
   pose.x += (targetPose.x - pose.x) * POSE_FOLLOW;
   pose.y += (targetPose.y - pose.y) * POSE_FOLLOW;
   pose.rotation += (targetPose.rotation - pose.rotation) * POSE_FOLLOW;
-  pose.scale += (targetPose.scale - pose.scale) * POSE_FOLLOW;
+  pose.scaleX += (targetPose.scaleX - pose.scaleX) * POSE_FOLLOW;
+  pose.scaleY += (targetPose.scaleY - pose.scaleY) * POSE_FOLLOW;
 }
 
 function renderFrame(
@@ -383,12 +473,16 @@ function renderFrame(
   eyesClosed: boolean,
   hair: HairRigOutput,
   gaze: number,
+  reactionState: ReactionState,
+  now: number,
+  setAvatarTransformInverse: (inverse: DOMMatrix | null) => void,
 ): void {
   const canvas = options.canvas;
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   const avatarPackage = options.getAvatarPackage();
   if (!avatarPackage) {
+    setAvatarTransformInverse(null);
     return;
   }
 
@@ -396,10 +490,7 @@ function renderFrame(
     options.getVoiceLevel(),
     options.getIsSpeaking(),
   );
-  const faceKey = selectFaceKey(
-    eyesClosed ? 'closed' : 'open',
-    mouthState,
-  );
+  const faceKey = selectFaceKey(eyesClosed ? 'closed' : 'open', mouthState);
   const { images, itemLayers } = avatarPackage;
   const parallax = createLayerParallax(
     images.eyesOpenMouthClosed,
@@ -412,6 +503,20 @@ function renderFrame(
 
   context.save();
   applyAvatarTransform(context, canvas, avatarPackage, pose, viewTransform);
+  setAvatarTransformInverse(context.getTransform().inverse());
+  const effect = reactionState.current?.effect ?? null;
+  const effectWeight = effect ? reactionState.weight : 0;
+  const effectGeometry = {
+    ...getAvatarSourceSize(avatarPackage),
+    anchor: options.getEffectAnchor(),
+  };
+  drawPuruPuruReactionBackEffect(
+    context,
+    effectGeometry,
+    effect,
+    effectWeight,
+    now,
+  );
   drawRigidItemLayers(context, itemLayers, 'characterBack');
   drawHairLayer(context, images.backHair, hair.back, parallax.backHair);
   drawSpringItemLayers(
@@ -433,6 +538,17 @@ function renderFrame(
     images.frontHair,
     parallax.frontHair,
   );
+  drawPuruPuruReactionColorGrade(context, effectGeometry, effect, effectWeight);
+  drawPuruPuruReactionFrontEffect(
+    context,
+    effectGeometry,
+    effect,
+    effectWeight,
+    now,
+  );
+  if (options.getEffectAnchorEditorEnabled()) {
+    drawPuruPuruEffectAnchorGuides(context, effectGeometry);
+  }
   context.restore();
 
   drawStageItemLayers(context, canvas, avatarPackage, itemLayers, 'stageFront');
@@ -447,19 +563,24 @@ function applyAvatarTransform(
 ): void {
   const settings = avatarPackage.settings;
   const baseScale = calculateAvatarBaseScale(canvas, avatarPackage);
+  const sourceHeight = getAvatarSourceSize(avatarPackage).height;
+  const rootY = sourceHeight * AVATAR_ROOT_Y_RATIO;
   const ratioX = canvas.width / Math.max(1, canvas.clientWidth || canvas.width);
   const ratioY =
     canvas.height / Math.max(1, canvas.clientHeight || canvas.height);
+  const displayScale = baseScale * viewTransform.scale;
 
   context.translate(
     canvas.width / 2 + settings.avatarX + pose.x + viewTransform.x * ratioX,
-    canvas.height / 2 + settings.avatarY + pose.y + viewTransform.y * ratioY,
+    canvas.height / 2 +
+      settings.avatarY +
+      pose.y +
+      viewTransform.y * ratioY +
+      rootY * displayScale,
   );
   context.rotate(pose.rotation);
-  context.scale(
-    baseScale * viewTransform.scale,
-    baseScale * viewTransform.scale * pose.scale,
-  );
+  context.scale(displayScale * pose.scaleX, displayScale * pose.scaleY);
+  context.translate(0, -rootY);
 }
 
 function calculateAvatarBaseScale(
@@ -467,17 +588,27 @@ function calculateAvatarBaseScale(
   avatarPackage: PuruPuruAvatarPackage,
 ): number {
   const settings = avatarPackage.settings;
-  const sourceWidth =
-    settings.sourceImageWidth || avatarPackage.images.eyesOpenMouthClosed.width;
-  const sourceHeight =
-    settings.sourceImageHeight ||
-    avatarPackage.images.eyesOpenMouthClosed.height;
+  const { width: sourceWidth, height: sourceHeight } =
+    getAvatarSourceSize(avatarPackage);
   const fitScale = Math.min(
     (canvas.width * 0.78) / sourceWidth,
     (canvas.height * 0.94) / sourceHeight,
   );
   const packageScale = Math.max(0.1, settings.avatarSize / 100);
   return fitScale * packageScale;
+}
+
+function getAvatarSourceSize(avatarPackage: PuruPuruAvatarPackage): {
+  width: number;
+  height: number;
+} {
+  const fallbackImage = avatarPackage.images.eyesOpenMouthClosed;
+  return {
+    width:
+      avatarPackage.settings.sourceImageWidth || fallbackImage.width || 1024,
+    height:
+      avatarPackage.settings.sourceImageHeight || fallbackImage.height || 1024,
+  };
 }
 
 function drawImageCentered(
@@ -623,8 +754,16 @@ function sanitizeViewTransform(
   transform: AvatarViewTransform,
 ): AvatarViewTransform {
   return {
-    x: clampFinite(transform.x, -AVATAR_VIEW_MAX_OFFSET, AVATAR_VIEW_MAX_OFFSET),
-    y: clampFinite(transform.y, -AVATAR_VIEW_MAX_OFFSET, AVATAR_VIEW_MAX_OFFSET),
+    x: clampFinite(
+      transform.x,
+      -AVATAR_VIEW_MAX_OFFSET,
+      AVATAR_VIEW_MAX_OFFSET,
+    ),
+    y: clampFinite(
+      transform.y,
+      -AVATAR_VIEW_MAX_OFFSET,
+      AVATAR_VIEW_MAX_OFFSET,
+    ),
     scale: clampFinite(
       transform.scale,
       AVATAR_VIEW_MIN_SCALE,
@@ -691,13 +830,11 @@ function copyPose(target: Pose, source: Pose): void {
   target.x = source.x;
   target.y = source.y;
   target.rotation = source.rotation;
-  target.scale = source.scale;
+  target.scaleX = source.scaleX;
+  target.scaleY = source.scaleY;
 }
 
-function updateReactionState(
-  state: ReactionState,
-  deltaSeconds: number,
-): void {
+function updateReactionState(state: ReactionState, deltaSeconds: number): void {
   const delta = clamp(deltaSeconds, 0, 0.05);
   if (delta <= 0) return;
 
@@ -763,6 +900,7 @@ function normalizeReaction(reaction: unknown): NormalizedReaction {
       : {};
 
   return {
+    effect: isPuruPuruEmotionEffect(source.effect) ? source.effect : null,
     impulse: {
       bounce: clampNumber(source.impulse?.bounce, 0, -1.2, 1.2),
       tilt: clampNumber(source.impulse?.tilt, 0, -1, 1),
@@ -773,12 +911,7 @@ function normalizeReaction(reaction: unknown): NormalizedReaction {
       offsetY: clampNumber(source.sustain?.offsetY, 0, -24, 24),
       tilt: clampNumber(source.sustain?.tilt, 0, -0.08, 0.08),
       idleScale: clampNumber(source.sustain?.idleScale, 1, 0.35, 1.5),
-      idleSpeedScale: clampNumber(
-        source.sustain?.idleSpeedScale,
-        1,
-        0.45,
-        1.6,
-      ),
+      idleSpeedScale: clampNumber(source.sustain?.idleSpeedScale, 1, 0.45, 1.6),
     },
     fadeMs: clampNumber(source.fadeMs, DEFAULT_REACTION_FADE_MS, 120, 800),
   };
@@ -792,7 +925,10 @@ function clampReactionState(state: ReactionState): void {
     clamp(state.transientTiltVelocity, -1.2, 1.2),
     0,
   );
-  state.transientScale = sanitize(clamp(state.transientScale, -0.035, 0.035), 0);
+  state.transientScale = sanitize(
+    clamp(state.transientScale, -0.035, 0.035),
+    0,
+  );
   state.transientScaleVelocity = sanitize(
     clamp(state.transientScaleVelocity, -0.8, 0.8),
     0,

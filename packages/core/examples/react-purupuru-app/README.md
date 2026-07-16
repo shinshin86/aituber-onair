@@ -23,6 +23,11 @@ PNGTuber-style avatar renderer for `.purupuru` avatar packages.
 - Add occasional idle gaze turns with subtle layer parallax.
 - Reposition the avatar by dragging and resize it with the mouse wheel.
 - React to speech emotion tags from `SPEECH_START`.
+- Preview emotion direction composed from color, aura, symbols, and particles.
+- Disable emotion effects, show manual controls, or link effects to speech
+  emotions, and customize the emotion-to-effect mapping.
+- Adjust face and eye anchors for emotion effects without editing the avatar
+  package.
 - Blink at random 2-6 second intervals.
 - Drive mouth states from TTS audio lip-sync while speech is playing.
 - Keep the rich React example shell features: chat, TTS settings, stream comment
@@ -75,6 +80,24 @@ Drag the avatar on the canvas to reposition it and use the mouse wheel to zoom.
 Double-click the canvas, or use the Visual section's
 `アバター位置をリセット` button, to reset the placement. The app persists the
 drag/zoom placement across reloads.
+
+In manual mode, use the emotion controls in the upper-left to preview happy,
+surprised, sad, angry, relaxed, and thinking direction. The renderer keeps the
+avatar rooted while combining small impulses, idle behavior, color grading,
+aura, particles, and manga-style symbols. Previews fade automatically.
+
+In manual mode, select `アンカー調整` to place the face center, left eye, and
+right eye directly on the canvas and to resize the effects. These settings are
+saved per avatar in the browser. The app identifies the package from an
+anonymous fingerprint of its contents, so it does not store the local file name
+or modify the `.purupuru` package and PNG files.
+
+In Settings > Visual, `感情表現の操作方法` selects one of three exclusive
+modes: no controls or automatic effects, manual emotion and anchor controls, or
+automatic speech-emotion linking without buttons. The default is no effects.
+`感情とエフェクトの対応` maps inputs such as `happy` and `sad` to effects
+such as sparkles and tears. Manual previews and automatic reactions share the
+same mapping.
 
 For local manual testing, use a `.purupuru` file from a separate checkout or
 your own exported avatar package. Keep additional binary avatar packages out of
@@ -134,18 +157,24 @@ The core parses leading emotion tags such as `[happy]` into
 `screenplay = { emotion, text }` and emits them through `SPEECH_START`. This app
 stores the reaction draft at that event, then applies it when TTS playback
 actually starts so the motion is synchronized with audible speech.
+Automatic playback runs only when the Visual setting is set to speech-emotion
+linking.
 
 | Emotion | Reaction |
 | --- | --- |
-| `happy` | Strong hair bounce, slight lift, small scale pop |
-| `surprised` | Quick tilt impulse, bounce, scale pop |
-| `sad` | Sustained head-down pose and softer idle motion |
-| `angry` | Sharp shake impulse and faster idle motion |
-| `relaxed` | Slower, softer idle motion and tiny settle bounce |
+| `happy` | Warm aura, sparkles, and a hair bounce |
+| `surprised` | Bright ring, radial marks, and a brief scale pop |
+| `sad` | Blue color grade, tears, and softer idle motion |
+| `angry` | Red aura, anger symbol, and a brief shake |
+| `relaxed` | Soft cool aura, bubbles, and slower idle motion |
 | `neutral` | No extra reaction |
 
-Tune the mapping in `src/lib/purupuruReactions.ts`. Renderer sustain and impulse
-handling lives in `src/lib/purupuruRenderer.ts`.
+Tune the mapping in `src/lib/purupuruReactions.ts` and Canvas drawing in
+`src/lib/purupuruEmotionEffects.ts`. Renderer sustain and impulse handling lives
+in `src/lib/purupuruRenderer.ts`. The default system prompt does not request
+`thinking`, but it remains available to manual preview and custom emotion tags.
+Face/eye anchor overrides are stored only in the browser and existing PNG files
+and `.purupuru` packages are not modified.
 
 ## Idle Gaze
 
