@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
-  MODEL_MISTRAL_LARGE_2512,
+  MODEL_MINISTRAL_8B_2512,
   MODEL_MISTRAL_MEDIUM_2508,
   MODEL_MISTRAL_MEDIUM_3_5,
   MODEL_MISTRAL_SMALL_LATEST,
@@ -58,10 +58,7 @@ describe('MistralChatService', () => {
     const postSpy = vi
       .spyOn(ChatServiceHttpClient, 'post')
       .mockResolvedValue(createOneShotResponse('ok'));
-    const service = new MistralChatService(
-      'test-key',
-      MODEL_MISTRAL_LARGE_2512,
-    );
+    const service = new MistralChatService('test-key', MODEL_MINISTRAL_8B_2512);
 
     await service.chatOnce(messages, false);
 
@@ -69,7 +66,7 @@ describe('MistralChatService', () => {
     expect(postSpy).toHaveBeenCalledWith(
       ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
       expect.objectContaining({
-        model: MODEL_MISTRAL_LARGE_2512,
+        model: MODEL_MINISTRAL_8B_2512,
         stream: false,
         messages,
       }),

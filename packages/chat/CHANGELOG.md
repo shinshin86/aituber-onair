@@ -1,5 +1,17 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+### Minor Changes
+
+- Added the Ministral 3 family (`ministral-3b-2512`,
+  `ministral-8b-2512`, and `ministral-14b-2512`) to the Mistral provider,
+  including vision support, the React basic selector, tests, and
+  English/Japanese documentation.
+- Added Z.ai GLM-5.1 (`glm-5.1`) for text chat and GLM-5V-Turbo
+  (`glm-5v-turbo`) for vision chat, including provider support, the React
+  basic selector, tests, and English/Japanese documentation.
+
 ## 0.46.0
 
 ### Minor Changes

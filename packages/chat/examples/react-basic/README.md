@@ -141,8 +141,8 @@ Use the dropdown to select response length:
 - Persistence: Fetched dynamic free model IDs are saved under localStorage root key `AITuberOnAirChat_example_react-basic`
 
 **Z.ai**
-- Models: GLM-5.2, GLM-5, GLM-5-Turbo, GLM-4.7/4.6, GLM-4.6V family
-- Vision: GLM-4.6V family (`glm-5.2`, `glm-5`, and `glm-5-turbo` are currently text-only)
+- Models: GLM-5.2, GLM-5.1, GLM-5, GLM-5-Turbo, GLM-5V-Turbo, GLM-4.7/4.6, GLM-4.6V family
+- Vision: GLM-5V-Turbo and GLM-4.6V family (`glm-5.2`, `glm-5.1`, `glm-5`, and `glm-5-turbo` are text-only)
 - Best for: OpenAI-compatible GLM integration
 
 **xAI**
@@ -162,7 +162,7 @@ Use the dropdown to select response length:
 - Best for: DeepSeek's OpenAI-compatible API without manually configuring an endpoint
 
 **Mistral**
-- Models: Mistral Small Latest, Mistral Medium 3.5, Mistral Large Latest, Mistral Large 3, Mistral Small 4, Mistral Medium 3.1
+- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Medium 3.5, Mistral Large Latest, Mistral Large 3, Mistral Small 4, Mistral Medium 3.1
 - Vision: Supported
 - Best for: Mistral Chat Completions with streaming and optional adjustable reasoning
 

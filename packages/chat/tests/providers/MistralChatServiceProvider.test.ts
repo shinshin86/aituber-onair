@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
+  MODEL_MINISTRAL_14B_2512,
+  MODEL_MINISTRAL_3B_2512,
+  MODEL_MINISTRAL_8B_2512,
   MODEL_MISTRAL_LARGE_2512,
   MODEL_MISTRAL_LARGE_LATEST,
   MODEL_MISTRAL_MEDIUM_2508,
@@ -21,6 +24,9 @@ describe('MistralChatServiceProvider', () => {
   it('returns current Mistral supported models', () => {
     expect(provider.getSupportedModels()).toEqual([
       MODEL_MISTRAL_SMALL_LATEST,
+      MODEL_MINISTRAL_3B_2512,
+      MODEL_MINISTRAL_8B_2512,
+      MODEL_MINISTRAL_14B_2512,
       MODEL_MISTRAL_MEDIUM_3_5,
       MODEL_MISTRAL_LARGE_LATEST,
       MODEL_MISTRAL_LARGE_2512,
@@ -36,6 +42,11 @@ describe('MistralChatServiceProvider', () => {
   it('reports vision support for supported Mistral models', () => {
     expect(provider.supportsVision()).toBe(true);
     expect(provider.supportsVisionForModel(MODEL_MISTRAL_SMALL_LATEST)).toBe(
+      true,
+    );
+    expect(provider.supportsVisionForModel(MODEL_MINISTRAL_3B_2512)).toBe(true);
+    expect(provider.supportsVisionForModel(MODEL_MINISTRAL_8B_2512)).toBe(true);
+    expect(provider.supportsVisionForModel(MODEL_MINISTRAL_14B_2512)).toBe(
       true,
     );
     expect(provider.getVisionSupportLevel()).toBe('supported');

@@ -684,8 +684,8 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 
 Notes:
 - Z.ai uses OpenAI-compatible Chat Completions.
-- Supported text models: `glm-5.2`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
-- Supported vision models: `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
+- Supported text models: `glm-5.2`, `glm-5.1`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
+- Supported vision models: `glm-5v-turbo`, `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
 - `thinking` is disabled by default to match fast response behavior.
 
 #### xAI (Grok)
@@ -773,7 +773,8 @@ await mistralService.processChat(
 Notes:
 - Mistral uses Chat Completions at `https://api.mistral.ai/v1/chat/completions`.
 - Default model: `mistral-small-latest`, chosen for the sample-friendly balance of low cost, strong general chat quality, vision support, and adjustable reasoning support.
-- Supported models: `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`.
+- Supported models: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`.
+- Ministral 3 models support text, vision, streaming, and function calling through the same Chat Completions endpoint.
 - `reasoning_effort` is supported as `'none' | 'high'` and is only sent for `mistral-small-latest` and `mistral-medium-3-5`, matching Mistral's adjustable reasoning docs. It is omitted for other models.
 
 Reasoning example:
@@ -1154,11 +1155,11 @@ Currently, the following AI providers are built-in:
 - **Gemini**: Supports recommended models like Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Supports current Claude API model IDs including Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
-- **Z.ai**: Supports GLM-5.2/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-4.6V family (vision)
+- **Z.ai**: Supports GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-5V-Turbo/GLM-4.6V family (vision)
 - **xAI**: Supports Grok 4.5 with `reasoning_effort: 'low'` by default for chat-style responses, plus Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support.
 - **Kimi**: Supports Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`) and DeepSeek V4 Pro (`deepseek-v4-pro`) via OpenAI-compatible Chat Completions. Legacy aliases `deepseek-chat` and `deepseek-reasoner` are deprecated by DeepSeek.
-- **Mistral**: Supports current Mistral generalist models including `mistral-small-latest`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, and `mistral-medium-2508`, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
+- **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
 - **Sakana AI**: Supports Fugu (`fugu`) and Fugu Ultra (`fugu-ultra`, `fugu-ultra-20260615`) via OpenAI-compatible Chat Completions.
 - **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) and PLaMo 2.2 Prime (`plamo-2.2-prime`) via OpenAI-compatible Chat Completions.
 - **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Chrome 138+ with Prompt API flags enabled. Non-streaming, no vision support.
