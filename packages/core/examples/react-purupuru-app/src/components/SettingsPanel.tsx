@@ -265,6 +265,7 @@ type SectionKey =
   | 'llm'
   | 'tts'
   | 'visual'
+  | 'emotionEffects'
   | 'stream'
   | 'commentIntelligence'
   | 'manneri';
@@ -419,6 +420,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    emotionEffects: true,
     stream: true,
     commentIntelligence: true,
     manneri: true,
@@ -2508,89 +2510,6 @@ export function SettingsPanel({
               パッケージ内の idleMotionEnabled より優先されます。
             </p>
 
-            <div className="settings-field">
-              <label htmlFor="purupuru-reaction-control-mode">
-                感情表現の操作方法
-              </label>
-              <select
-                id="purupuru-reaction-control-mode"
-                value={settings.visual.purupuruReactionControlMode}
-                onChange={(event) =>
-                  updateVisualPuruPuruReactionControlMode(
-                    event.target.value as PuruPuruReactionControlMode,
-                  )
-                }
-                disabled={disabled}
-              >
-                <option value="none">なし</option>
-                <option value="manual">手動ボタン＋アンカー設定ボタン</option>
-                <option value="linked">発話感情に連動のみ</option>
-              </select>
-              <p className="settings-field-hint">
-                {settings.visual.purupuruReactionControlMode === 'none'
-                  ? 'ボタン類を表示せず、発話時のエフェクトも再生しません。'
-                  : settings.visual.purupuruReactionControlMode === 'manual'
-                    ? 'Canvas上に感情ボタンとアンカー設定ボタンを表示します。'
-                    : 'ボタン類を表示せず、発話の emotion タグから自動再生します。'}
-              </p>
-            </div>
-
-            <div className="settings-field">
-              <span className="settings-field-label">
-                感情とエフェクトの対応
-              </span>
-              <div className="settings-emotion-mapping-list">
-                {PURUPURU_REACTION_EMOTION_OPTIONS.map((emotionOption) => (
-                  <label
-                    key={emotionOption.value}
-                    className="settings-emotion-mapping-row"
-                    htmlFor={`purupuru-effect-${emotionOption.value}`}
-                  >
-                    <span>{emotionOption.label}</span>
-                    <select
-                      id={`purupuru-effect-${emotionOption.value}`}
-                      value={
-                        settings.visual.purupuruEmotionEffectMap[
-                          emotionOption.value
-                        ] || 'none'
-                      }
-                      onChange={(event) => {
-                        const effect = event.target.value;
-                        updateVisualPuruPuruEmotionEffect(
-                          emotionOption.value,
-                          effect === 'none'
-                            ? null
-                            : (effect as PuruPuruEmotionEffect),
-                        );
-                      }}
-                      disabled={disabled}
-                    >
-                      {PURUPURU_EFFECT_OPTIONS.map((effectOption) => (
-                        <option
-                          key={effectOption.value}
-                          value={effectOption.value}
-                        >
-                          {effectOption.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="settings-clear-button settings-inline-button"
-                onClick={resetVisualPuruPuruEmotionEffectMap}
-                disabled={disabled}
-              >
-                感情の割り当てを初期値に戻す
-              </button>
-              <p className="settings-field-hint">
-                例: happy はきらめき、sad
-                は涙。手動ボタンと自動連動で同じ割り当てを使います。
-              </p>
-            </div>
-
             <button
               type="button"
               className="settings-clear-button settings-inline-button"
@@ -2692,6 +2611,107 @@ export function SettingsPanel({
               {avatarLoadError && (
                 <p className="settings-inline-error">{avatarLoadError}</p>
               )}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="settings-section">
+        <button
+          type="button"
+          className="settings-section-toggle"
+          onClick={() => toggleSection('emotionEffects')}
+          aria-expanded={expandedSections.emotionEffects}
+        >
+          <h3>感情表現</h3>
+          <span
+            className={`settings-section-chevron${expandedSections.emotionEffects ? ' is-open' : ''}`}
+          >
+            ⌄
+          </span>
+        </button>
+
+        {expandedSections.emotionEffects && (
+          <>
+            <div className="settings-field">
+              <label htmlFor="purupuru-reaction-control-mode">操作方法</label>
+              <select
+                id="purupuru-reaction-control-mode"
+                value={settings.visual.purupuruReactionControlMode}
+                onChange={(event) =>
+                  updateVisualPuruPuruReactionControlMode(
+                    event.target.value as PuruPuruReactionControlMode,
+                  )
+                }
+                disabled={disabled}
+              >
+                <option value="none">なし</option>
+                <option value="manual">手動ボタン＋アンカー設定ボタン</option>
+                <option value="linked">発話感情に連動のみ</option>
+              </select>
+              <p className="settings-field-hint">
+                {settings.visual.purupuruReactionControlMode === 'none'
+                  ? 'ボタン類を表示せず、発話時のエフェクトも再生しません。'
+                  : settings.visual.purupuruReactionControlMode === 'manual'
+                    ? 'Canvas上に感情ボタンとアンカー設定ボタンを表示します。'
+                    : 'ボタン類を表示せず、発話の emotion タグから自動再生します。'}
+              </p>
+            </div>
+
+            <div className="settings-field">
+              <span className="settings-field-label">
+                感情とエフェクトの対応
+              </span>
+              <div className="settings-emotion-mapping-list">
+                {PURUPURU_REACTION_EMOTION_OPTIONS.map((emotionOption) => (
+                  <label
+                    key={emotionOption.value}
+                    className="settings-emotion-mapping-row"
+                    htmlFor={`purupuru-effect-${emotionOption.value}`}
+                  >
+                    <span>{emotionOption.label}</span>
+                    <select
+                      id={`purupuru-effect-${emotionOption.value}`}
+                      value={
+                        settings.visual.purupuruEmotionEffectMap[
+                          emotionOption.value
+                        ] || 'none'
+                      }
+                      onChange={(event) => {
+                        const effect = event.target.value;
+                        updateVisualPuruPuruEmotionEffect(
+                          emotionOption.value,
+                          effect === 'none'
+                            ? null
+                            : (effect as PuruPuruEmotionEffect),
+                        );
+                      }}
+                      disabled={disabled}
+                    >
+                      {PURUPURU_EFFECT_OPTIONS.map((effectOption) => (
+                        <option
+                          key={effectOption.value}
+                          value={effectOption.value}
+                        >
+                          {effectOption.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="settings-clear-button settings-inline-button"
+                onClick={resetVisualPuruPuruEmotionEffectMap}
+                disabled={disabled}
+              >
+                感情の割り当てを初期値に戻す
+              </button>
+              <p className="settings-field-hint">
+                例: happy はきらめき、sad
+                は涙。手動ボタンと自動連動で同じ割り当てを使います。
+              </p>
             </div>
           </>
         )}
