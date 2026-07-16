@@ -105,6 +105,30 @@ inspect and verify each model before producing an extended VRM.
 After preparing an extended VRM, place it in the VRM example's `public/avatar/`
 directory and update the loaded file path if needed.
 
+## Related Tool: Live2D Motion WebUI
+
+[live2d-add-motion-sample-web-ui](https://github.com/shinshin86/live2d-add-motion-sample-web-ui)
+is a companion repository for generating and registering `.motion3.json`
+motions within the parameters of an existing Live2D model, without using
+Cubism Editor, and previewing them in a browser.
+
+It analyzes the model's parameters, safe value ranges, and physics-driven
+outputs, then generates motions from model-specific definitions. An independent
+validator checks the generated files, and a headless Chrome workflow captures
+peak poses for visual review. The repository also includes a working guide for
+AI agents such as Codex and Claude Code, so you can delegate model setup, motion
+design, generation, and verification.
+
+The tool does not add new parameters, rigs, or meshes to a model. The motions
+you can create and their quality depend on the parameters and existing motions
+the model already provides, and each model needs its own motion definitions.
+
+After generating and verifying motions, place the complete generated model
+folder—including the updated `.model3.json` and all referenced assets—under
+[`packages/core/examples/react-live2d-app/models/`](../packages/core/examples/react-live2d-app/models/).
+Check the terms for the model and its source assets before moving, modifying,
+publishing, or redistributing them.
+
 ## Related Resources and License Checks
 
 These links explain the formats, tools, and related projects behind each avatar
