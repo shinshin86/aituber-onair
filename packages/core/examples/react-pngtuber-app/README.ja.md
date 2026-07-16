@@ -60,6 +60,8 @@ npm run dev
 
 起動後に **Settings** を開き、APIキーや各種設定を入力してください。  
 設定値は `localStorage`（`react-pngtuber-app-settings`）に保存されます。
+LLM セクションではシステムプロンプトも編集できます。入力欄からフォーカスが
+外れた時に反映され、ほかの設定と一緒に保存されます。
 
 `openai-compatible` 利用時は以下を設定してください。
 - `Endpoint URL`（必須。`/v1/chat/completions` まで含む URL）

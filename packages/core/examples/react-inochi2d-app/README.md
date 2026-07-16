@@ -131,6 +131,8 @@ npm run dev
 
 Open the URL printed by Vite and configure API keys / models from the settings
 button.
+The LLM section also lets you edit the system prompt. It is applied when the
+field loses focus and is saved with the other settings.
 
 ## Build
 

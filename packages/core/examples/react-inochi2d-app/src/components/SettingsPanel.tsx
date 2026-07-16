@@ -12,6 +12,7 @@ import {
 import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
+import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
@@ -237,6 +238,7 @@ export function SettingsPanel({
   availableModels,
   updateLLMProvider,
   updateLLMModel,
+  updateLLMSystemPrompt,
   updateLLMApiKey,
   updateLLMEndpoint,
   updateXaiReasoningEffort,
@@ -312,6 +314,15 @@ export function SettingsPanel({
   onBackgroundImageChange,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
+  const [systemPromptDraft, setSystemPromptDraft] = useState(
+    settings.llm.systemPrompt,
+  );
+
+  const commitSystemPrompt = () => {
+    if (systemPromptDraft !== settings.llm.systemPrompt) {
+      updateLLMSystemPrompt(systemPromptDraft);
+    }
+  };
   const isOpenAIGPT5Model =
     settings.llm.provider === 'openai' && isGPT5Model(settings.llm.model);
   const isXaiReasoningEffortModelSelected =
@@ -757,6 +768,31 @@ export function SettingsPanel({
               </select>
             </div>
 
+            {settings.llm.provider !== 'gemini-nano' && (
+              <div className="settings-field">
+                <label htmlFor="llm-apikey">
+                  API Key ({settings.llm.provider})
+                  {settings.llm.provider === 'openai-compatible'
+                    ? ' (任意)'
+                    : ''}
+                </label>
+                <input
+                  id="llm-apikey"
+                  type="password"
+                  value={getApiKeyForProvider(settings.llm.provider)}
+                  onChange={(e) =>
+                    updateLLMApiKey(settings.llm.provider, e.target.value)
+                  }
+                  placeholder={
+                    settings.llm.provider === 'openai-compatible'
+                      ? '必要な場合のみ入力'
+                      : 'XXX-...'
+                  }
+                  disabled={disabled}
+                />
+              </div>
+            )}
+
             {settings.llm.provider === 'openai-compatible' ? (
               <div className="settings-field">
                 <label htmlFor="llm-model">Model</label>
@@ -786,6 +822,24 @@ export function SettingsPanel({
                 </select>
               </div>
             )}
+
+            <div className="settings-field">
+              <label htmlFor="llm-system-prompt">System Prompt</label>
+              <textarea
+                id="llm-system-prompt"
+                rows={6}
+                value={systemPromptDraft}
+                onChange={(event) => setSystemPromptDraft(event.target.value)}
+                onBlur={commitSystemPrompt}
+                placeholder={DEFAULT_SYSTEM_PROMPT}
+                disabled={disabled}
+              />
+              <p className="settings-field-hint">
+                入力欄からフォーカスが外れた時に反映されます。空欄の場合は
+                既定値を使用します。アバター固有の制御指示を削除すると、
+                表情連動に影響する場合があります。
+              </p>
+            </div>
 
             {isOpenAIGPT5Model && (
               <p className="settings-field-hint">
@@ -823,24 +877,6 @@ export function SettingsPanel({
                       : 'Grok 4.3 uses none by default for lower latency.'
                     : 'This xAI model does not support reasoning_effort.'}
                 </p>
-              </div>
-            )}
-
-            {settings.llm.provider === 'openrouter' && (
-              <div className="settings-field">
-                <label htmlFor="llm-apikey">
-                  API Key ({settings.llm.provider})
-                </label>
-                <input
-                  id="llm-apikey"
-                  type="password"
-                  value={getApiKeyForProvider(settings.llm.provider)}
-                  onChange={(e) =>
-                    updateLLMApiKey(settings.llm.provider, e.target.value)
-                  }
-                  placeholder="XXX-..."
-                  disabled={disabled}
-                />
               </div>
             )}
 
@@ -958,31 +994,6 @@ export function SettingsPanel({
               </>
             )}
 
-            {settings.llm.provider !== 'openrouter' &&
-              settings.llm.provider !== 'gemini-nano' && (
-                <div className="settings-field">
-                  <label htmlFor="llm-apikey">
-                    API Key ({settings.llm.provider})
-                    {settings.llm.provider === 'openai-compatible'
-                      ? ' (任意)'
-                      : ''}
-                  </label>
-                  <input
-                    id="llm-apikey"
-                    type="password"
-                    value={getApiKeyForProvider(settings.llm.provider)}
-                    onChange={(e) =>
-                      updateLLMApiKey(settings.llm.provider, e.target.value)
-                    }
-                    placeholder={
-                      settings.llm.provider === 'openai-compatible'
-                        ? '必要な場合のみ入力'
-                        : 'XXX-...'
-                    }
-                    disabled={disabled}
-                  />
-                </div>
-              )}
           </>
         )}
       </div>

@@ -21,6 +21,7 @@ import type {
 import type { Message as ManneriMessage } from '@aituber-onair/manneri';
 import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
+import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 
 interface UseAituberCoreOptions {
   onAudioPlay: (arrayBuffer: ArrayBuffer) => Promise<void>;
@@ -32,8 +33,6 @@ type ProcessChatOptions = {
   displayText?: string;
 };
 
-const AITUBER_SYSTEM_PROMPT =
-  'あなたはフレンドリーなAITuberです。回答はできるだけ一言で、短く自然に返してください。';
 const DEFAULT_VISION_PROMPT =
   'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
 const GPT5_SAMPLE_PROVIDER_OPTIONS = { gpt5Preset: 'casual' as const };
@@ -307,6 +306,9 @@ export function useAituberCore({
   getApiKeyForProvider,
 }: UseAituberCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
+  const chatHistoryRef = useRef<
+    ReturnType<AITuberOnAirCore['getChatHistory']>
+  >([]);
   const manneriDetectorRef = useRef<ManneriDetector | null>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
   const messageIdSequenceRef = useRef(0);
@@ -402,7 +404,8 @@ export function useAituberCore({
       model: resolvedModel,
       providerOptions,
       chatOptions: {
-        systemPrompt: AITUBER_SYSTEM_PROMPT,
+        systemPrompt:
+          settings.llm.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
         ...(isOpenAIGPT5Model ? GPT5_SAMPLE_CHAT_OPTIONS : {}),
       },
       voiceOptions: buildVoiceOptions(
@@ -414,6 +417,10 @@ export function useAituberCore({
       ),
       debug: false,
     } as ConstructorParameters<typeof AITuberOnAirCore>[0]);
+
+    if (chatHistoryRef.current.length > 0) {
+      core.setChatHistory(chatHistoryRef.current);
+    }
 
     // Subscribe to core events
     core.on(AITuberOnAirCoreEvent.PROCESSING_START, () => {
@@ -471,13 +478,17 @@ export function useAituberCore({
     coreRef.current = core;
 
     return () => {
+      chatHistoryRef.current = core.getChatHistory();
       core.offAll();
-      coreRef.current = null;
+      if (coreRef.current === core) {
+        coreRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     settings.llm.provider,
     settings.llm.model,
+    settings.llm.systemPrompt,
     settings.llm.endpoint,
     settings.llm.xaiReasoningEffort,
     llmApiKey,

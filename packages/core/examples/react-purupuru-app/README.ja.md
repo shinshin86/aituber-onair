@@ -23,6 +23,9 @@ Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、
 - 2-6 秒間隔のランダムなまばたき
 - TTS 音声の lip-sync による closed / half / open の口パク
 - チャット、TTS 設定、配信コメント、Screen Vision、ソロ配信表示に対応
+- Settings の LLM セクションからシステムプロンプトを編集可能。入力欄から
+  フォーカスが外れた時に反映。リアクションを維持する場合は初期値の emotion
+  tag 指示を残す
 
 ## 起動
 

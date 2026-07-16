@@ -51,6 +51,7 @@ export interface ProviderApiKeys {
 export interface LLMSettings {
   provider: ChatProviderOption;
   model: string;
+  systemPrompt: string;
   endpoint?: string;
   xaiReasoningEffort?: XaiReasoningEffort;
   apiKeys: ProviderApiKeys;

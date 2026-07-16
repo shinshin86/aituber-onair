@@ -74,6 +74,8 @@ npm run dev
 
 起動後、Settings で LLM / TTS provider を設定してください。
 設定は `react-pet-app-settings` として `localStorage` に保存されます。
+LLM セクションではシステムプロンプトも編集できます。入力欄からフォーカスが
+外れた時に反映され、ほかの設定と一緒に保存されます。
 
 ## Pet の差し替え
 

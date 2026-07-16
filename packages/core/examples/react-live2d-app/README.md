@@ -118,6 +118,9 @@ Open `http://localhost:5173`, open `設定`, then:
 2. If you placed models under `models/`, choose one from the list and click
    `読み込む`
 
+The LLM section also lets you edit the system prompt. It is applied when the
+field loses focus and is saved with the other settings.
+
 ## Stream comments (YouTube Live / Twitch)
 
 This app can analyze live chat comments from YouTube Live or Twitch before

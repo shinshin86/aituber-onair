@@ -78,6 +78,8 @@ npm run dev
 
 Open Settings and configure LLM / TTS providers.
 Settings are saved in `localStorage` under `react-pet-app-settings`.
+The LLM section also lets you edit the system prompt. It is applied when the
+field loses focus and is saved with the other settings.
 
 ## Replacing the pet
 
