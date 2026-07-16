@@ -1,10 +1,12 @@
 # Avatar Guide
 
+![Hero illustration showing the avatar styles supported by AITuber OnAir](./images/avatar-guide-hero.webp)
+
 [日本語版はこちら](./avatar.ja.md)
 
 AITuber OnAir is not only a chat and voice toolkit. It is also a starting
 point for building richer AI character presentation with PNG, PuruPuru
-PNGTuber, VRM, Live2D, and animated pet avatars.
+PNGTuber, VRM, Live2D, Inochi2D, PSD, and animated pet avatars.
 
 This guide explains which avatar style to start with and where to extend avatar
 assets when you want more expressive AI characters.
@@ -37,9 +39,8 @@ default avatar. The avatar format and motion design were created by rotejin in
 Start from
 [`packages/core/examples/react-purupuru-app`](../packages/core/examples/react-purupuru-app).
 
-To create your own `.purupuru` avatar, the ImageGen-based
-[asset production kit](https://github.com/shinshin86/PuruPuruPNGTuber/tree/codex/add-imagegen-asset-production-kit/asset-production)
-for PuruPuruPNGTuber may be a helpful starting point.
+To create your own `.purupuru` avatar, you can use the ImageGen-based asset
+production kit described below.
 
 ### VRM
 
@@ -59,6 +60,28 @@ folder that you have the right to use.
 Start from
 [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app).
 
+### Inochi2D
+
+Use Inochi2D when you want to try a rigged 2D avatar on a WebGL stage. The
+example loads `.inx` / `.inp` models and drives audio lip-sync, speaking
+expressions when supported, drag and zoom controls, and tap or flick reactions.
+It bundles the Aka model for first-run display, and motion-enabled models can be
+registered through the manifest.
+
+Start from
+[`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app).
+
+### PSD
+
+Use PSD when you want to load a layered 2D character from a single `.psd`
+file. The PSD example composites layers on a canvas and binds mouth and eye
+layers to audio lip-sync and blinking. Compatible files can use either
+PSDTool-style static layer switching or Anime2.5DRig-compatible idle motion
+and hair physics. A bundled motion sample works without additional setup.
+
+Start from
+[`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app).
+
 ### Pet
 
 Use the pet example when you want a compact animated companion instead of a
@@ -72,6 +95,36 @@ Start from
 
 AITuber OnAir examples are designed so richer avatar assets can improve the
 final presentation without changing the core chat or voice pipeline.
+
+## Related Tool: PuruPuru PNGTuber Asset Production Kit
+
+The [PuruPuru PNGTuber Asset Production Kit](https://github.com/shinshin86/PuruPuruPNGTuber/tree/codex/add-imagegen-asset-production-kit/asset-production)
+provides a production workflow for turning character images created with
+ImageGen or manual editing into the layer structure expected by PuruPuru
+PNGTuber.
+
+Its character brief, ImageGen prompt templates, asset checklists, and layout
+guides help you prepare the eight required images: six face states combining
+two eye states with three mouth states, plus front and back hair layers. It also
+includes templates for optional `items/` layers such as hair accessories, hats,
+glasses, and body layers.
+
+The finished assets are normalized as transparent PNGs on the same canvas and
+at the same coordinates. The inspection harness checks required files, PNG
+format, canvas sizes, transparency, and alignment differences between face
+states, then produces a contact sheet and review JSON. Example prompts are
+included for delegating character design, asset creation, inspection, and
+`.purupuru` package creation to Codex and ImageGen.
+
+Automated checks cannot determine whether front and back hair are separated
+semantically, whether the drawing style stays consistent across expressions,
+or whether deformation looks natural. Perform the final review and adjustment
+in the PuruPuru PNGTuber browser app. After creating a `.purupuru` package,
+start the AITuber OnAir PuruPuru PNGTuber example and choose the file from the
+Visual section in Settings.
+
+Check the rights and usage terms for generated images, source images, reference
+images, and accessory artwork separately from the production kit's license.
 
 For VRM avatars, the bundled example can use expression names such as `happy`,
 `sad`, `surprised`, `relaxed`, `mouthSmileLeft`, `mouthSmileRight`,
@@ -104,6 +157,30 @@ inspect and verify each model before producing an extended VRM.
 
 After preparing an extended VRM, place it in the VRM example's `public/avatar/`
 directory and update the loaded file path if needed.
+
+## Related Tool: Live2D Motion WebUI
+
+[live2d-add-motion-sample-web-ui](https://github.com/shinshin86/live2d-add-motion-sample-web-ui)
+is a companion repository for generating and registering `.motion3.json`
+motions within the parameters of an existing Live2D model, without using
+Cubism Editor, and previewing them in a browser.
+
+It analyzes the model's parameters, safe value ranges, and physics-driven
+outputs, then generates motions from model-specific definitions. An independent
+validator checks the generated files, and a headless Chrome workflow captures
+peak poses for visual review. The repository also includes a working guide for
+AI agents such as Codex and Claude Code, so you can delegate model setup, motion
+design, generation, and verification.
+
+The tool does not add new parameters, rigs, or meshes to a model. The motions
+you can create and their quality depend on the parameters and existing motions
+the model already provides, and each model needs its own motion definitions.
+
+After generating and verifying motions, place the complete generated model
+folder—including the updated `.model3.json` and all referenced assets—under
+[`packages/core/examples/react-live2d-app/models/`](../packages/core/examples/react-live2d-app/models/).
+Check the terms for the model and its source assets before moving, modifying,
+publishing, or redistributing them.
 
 ## Related Resources and License Checks
 
