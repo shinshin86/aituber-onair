@@ -93,6 +93,114 @@ hyphen numbering は除去されません。
   `missing anchor: eyeL` または `missing anchor: eyeR` で motion 不採用に
   なります。
 
+## Motion profile
+
+**Settings -> Visual** の **PSDモーション調整** は、motion-mode PSD を
+読み込んでいる時だけ表示されます。slider の変更は renderer の動的 profile API
+へ渡すため、既存の rig、mesh、texture、animation loop は作り直しません。
+保存済み profile がない場合と、すべての control が初期値の場合は、従来の
+motion-mode の既定表示と同じです。
+
+調整できる parameter は次の通りです。
+
+| グループ | Parameter |
+|---|---|
+| 顔・体 | `angleX`, `angleY`, `angleZ`, `body`, `armY`, `armPos` |
+| 目・眉 | `eyeOpenL`, `eyeOpenR`, `eyeX`, `eyeY`, `irisScale`, `eyeEase`, `eyeCY`, `eyeCAng`, `eyeScaleL`, `eyeScaleR`, `brow`, `browAngL`, `browAngR`, `browAngSym` |
+| 口 | `mouthOpen`, `mouthForm`, `mouthCY`, `mouthEase`, `mouthCAng`, `mouthScale` |
+| 髪・物理 | `physAmp`, `soft`, `fhAmp`, `fhSoft`, `bangL`, `bangC`, `bangR`, `bust`, `bustY` |
+
+`angleX`, `angleY`, `angleZ`, `body`, `armY`, `armPos` は自動 motion に加算する
+基準 offset です。`mouthOpen` は口の基準値で、TTS 口パク中は音声入力値との
+大きい方を renderer が使います。demo 用の random 口パクは生成しません。
+
+`idle`, `randomMotion`, `blink`, `physics` の自動動作 switch は PSD ごとに
+保存します。既存の `PSD motion` は全体の master switch のままです。
+`Motion intensity` は profile の個別 amplitude 調整に加え、自動 motion と
+physics 全体へ倍率を適用します。
+
+### PSD 識別と自動保存
+
+PSD 内容の hash は `crypto.subtle.digest('SHA-256', buffer)` で計算します。
+motion profile はファイル名や size ではなく、この hash で選択します。同梱 sample
+にも同じ処理を使います。そのため、同じ PSD を別名にしても同じ profile を復元し、
+同名・同 size でも内容が異なる PSD を取り違えません。
+
+`layerSignature` は、canvas の width/height と、全 rig layer の正規化名、array
+順序、整数へ丸めた `x`, `y`, `width`, `height` bounds から作った canonical
+description の SHA-256 です。import の互換性判定だけに使い、保存 key は PSD
+内容全体の SHA-256 のままです。
+
+motion profile 専用の localStorage key は
+`react-psd-app-psd-motion-profiles-v1` です。value は次の構造です。
+
+```ts
+{
+  format: 'aituber-onair-psd-motion-profile-store';
+  version: 1;
+  profiles: Record<string, {
+    parameters: PsdMotionParameters;
+    automation: {
+      idle: boolean;
+      randomMotion: boolean;
+      blink: boolean;
+      physics: boolean;
+    };
+  }>;
+}
+```
+
+`profiles` の各 key は小文字64文字の PSD SHA-256 です。slider と checkbox の
+変更時に即時保存します。**初期値へ戻す** は現在の hash entry を削除します。
+保存データが壊れている場合や localStorage が利用できない場合も、初期値へ fallback
+して PSD 表示を継続します。この store は既存 static PSDTool の表示/role store と
+分離しています。
+
+### JSON sidecar のexport / import
+
+**モーション設定を書き出す** は UTF-8 の整形済み JSON を
+`<PSD名>.motion.json` として download します。version 1 の schema は次の通りです。
+
+```ts
+interface PsdMotionProfileFile {
+  format: 'aituber-onair-psd-motion-profile';
+  version: 1;
+  exportedAt: string;
+  model: {
+    sha256: string;
+    width: number;
+    height: number;
+    layerSignature: string;
+    fileNameHint?: string;
+  };
+  parameters: PsdMotionParameters;
+  automation: {
+    idle: boolean;
+    randomMotion: boolean;
+    blink: boolean;
+    physics: boolean;
+  };
+}
+```
+
+sidecar には PSD pixel、API key、localStorage 全体、絶対 path、chat/voice 設定、
+camera/microphone/mouse 状態を含めません。XMP metadata ではなく、PSD 本体へ
+埋め込んだり、PSD を書き換えたりもしません。
+
+import は64KB以下に制限します。parser は `format` と `version` の完全一致を要求し、
+許可 property だけから profile を再構築します。finite でない値や number でない値は
+採用せず、範囲外値を clamp し、未知 property は無視します。互換性判定は次の通りです。
+
+| Importした識別情報 | 結果 |
+|---|---|
+| SHA-256 が一致 | 即時適用し、現在の PSD 用に保存します。 |
+| SHA-256 は異なるが canvas と `layerSignature` が一致 | 別ファイル警告を表示し、ユーザーが明示的に確認した場合だけ適用します。 |
+| canvas または `layerSignature` が不一致 | 非互換エラーを表示し、適用しません。 |
+
+別ブラウザ・別 PC へ移行するには sidecar を export し、移行先で対象の motion PSD
+を読み込んでから JSON を import します。static PSDTool mode では motion profile
+の import/export を利用できません。
+
 ## Static PSDTool Mode
 
 static mode は `@webtoon/psd` で PSD レイヤーツリーを読み取り、canvas に合成します。

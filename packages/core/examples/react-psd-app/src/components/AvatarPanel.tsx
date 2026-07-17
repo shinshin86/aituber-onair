@@ -308,6 +308,10 @@ function MotionRigCanvasAvatar({
     avatarRef.current?.setIntensity(motionIntensity);
   }, [motionEnabled, motionIntensity]);
 
+  useEffect(() => {
+    avatarRef.current?.setMotionProfile(psdAvatar.motionProfile);
+  }, [psdAvatar.motionProfile]);
+
   if (!rig) return null;
   return (
     <canvas

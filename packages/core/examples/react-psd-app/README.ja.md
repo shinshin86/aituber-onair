@@ -26,6 +26,8 @@ sample です。追加設定なしで motion animation を確認できます。
 - 日本語/英語のレイヤー名から口・目レイヤーを自動検出
 - Anime2.5DRig 互換の PSD レイヤー名から motion mode を自動検出
 - 対応 PSD では idle motion、まばたき fallback、髪揺れ、音声連動の口パクを表示
+- motion-mode の姿勢、目、眉、口、髪、physics をリアルタイム調整
+- PSD の SHA-256 ごとに motion profile を自動保存し、JSON sidecar で移行
 - static / motion の両方で、モデルに依存しない感情表現エフェクトを重ねて表示
 - canvas 上のドラッグ/ホイールズームと Settings からの表示位置リセット
 - `${fileName}:${fileSize}` をキーに、表示状態と role 割り当てを
@@ -98,6 +100,31 @@ motion 関連の設定は **Settings -> Visual** にあります。
 ホイールズームはアバター自身の中心を基準に拡大縮小します。位置を変える操作は
 ドラッグだけです。offset は clamp されるため、アバターが完全に画面外へ消えて
 復帰できなくなることはありません。
+
+### PSD モーション調整と移行
+
+motion-mode PSD を読み込むと、**Settings -> Visual** に折りたたみ式の
+**PSDモーション調整** が表示されます。slider の値は既存 renderer へリアルタイムに
+渡され、rig や WebGL texture は作り直しません。`PSD motion` は引き続き全体の
+master switch、`Motion intensity` は自動 motion と physics への追加倍率です。
+口の基準値と音声由来の口パク値は、大きい方を使って合成します。
+
+変更値は `react-psd-app-psd-motion-profiles-v1` に、PSD 内容の SHA-256 ごとに
+自動保存されます。同じ PSD を別名で選んでも同じ profile が復元されます。
+**初期値へ戻す** はその PSD の保存 entry を削除し、従来の motion-mode の
+見た目と挙動へ戻します。
+
+**モーション設定を書き出す** で整形済みの `<PSD名>.motion.json` sidecar を保存し、
+別ブラウザや別 PC で **モーション設定を読み込む** を選ぶと移行できます。
+sidecar に含むのは version 付き motion profile と PSD 識別情報だけです。
+PSD pixel、API key、絶対 path、chat/voice 設定、camera/microphone 状態、XMP
+metadata は含まず、PSD 本体へ設定を埋め込むこともありません。
+
+SHA-256 が一致する import は即時適用します。SHA-256 が異なっても canvas と
+layer signature が一致する場合は、明示的な確認後だけ適用します。layer signature
+が異なる profile は適用しません。static PSDTool mode ではこの機能を利用できません。
+parameter、識別、sidecar の詳細は
+[PSD-FORMATS.ja.md](./PSD-FORMATS.ja.md) を参照してください。
 
 ## 感情表現エフェクト
 

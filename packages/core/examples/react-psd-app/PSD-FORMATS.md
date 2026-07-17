@@ -92,6 +92,117 @@ uses numbered hair layers for strand grouping. Hyphen numbering such as
   motion and the unavailable side is skipped. The incomplete-anchor warning is
   diagnostic and does not disable motion mode.
 
+## Motion Profiles
+
+The **PSD motion tuning** section appears under **Settings -> Visual** only
+while a motion-mode PSD is loaded. Slider changes are applied through the
+renderer's dynamic profile API, so the existing rig, meshes, textures, and
+animation loop stay alive. With no saved profile, or with every control at its
+default, rendering matches the original motion-mode defaults.
+
+The adjustable parameters are:
+
+| Group | Parameters |
+|---|---|
+| Face / body | `angleX`, `angleY`, `angleZ`, `body`, `armY`, `armPos` |
+| Eyes / brows | `eyeOpenL`, `eyeOpenR`, `eyeX`, `eyeY`, `irisScale`, `eyeEase`, `eyeCY`, `eyeCAng`, `eyeScaleL`, `eyeScaleR`, `brow`, `browAngL`, `browAngR`, `browAngSym` |
+| Mouth | `mouthOpen`, `mouthForm`, `mouthCY`, `mouthEase`, `mouthCAng`, `mouthScale` |
+| Hair / physics | `physAmp`, `soft`, `fhAmp`, `fhSoft`, `bangL`, `bangC`, `bangR`, `bust`, `bustY` |
+
+`angleX`, `angleY`, `angleZ`, `body`, `armY`, and `armPos` are base offsets
+added to automatic movement. `mouthOpen` is a baseline; while TTS lip sync is
+active, the renderer uses the larger of the baseline and audio input. No random
+demo lip sync is generated.
+
+The `idle`, `randomMotion`, `blink`, and `physics` automation switches are
+stored per PSD. The existing `PSD motion` setting remains the master switch.
+`Motion intensity` scales automatic movement and physics in addition to the
+profile's individual amplitude controls.
+
+### PSD identity and automatic storage
+
+The app calculates the content hash with
+`crypto.subtle.digest('SHA-256', buffer)`. The hash, rather than the file name
+or size, selects the motion profile, including for the bundled sample. Identical
+PSD content therefore restores the same profile after a rename, while different
+content with the same name and size does not collide.
+
+`layerSignature` is a SHA-256 of a canonical description containing the canvas
+width/height and every rig layer's normalized name, array order, and
+integer-rounded `x`, `y`, `width`, and `height` bounds. It is used only for
+import compatibility checks; the full PSD content hash remains the storage key.
+
+Motion profiles use the dedicated localStorage key
+`react-psd-app-psd-motion-profiles-v1`. Its value has this structure:
+
+```ts
+{
+  format: 'aituber-onair-psd-motion-profile-store';
+  version: 1;
+  profiles: Record<string, {
+    parameters: PsdMotionParameters;
+    automation: {
+      idle: boolean;
+      randomMotion: boolean;
+      blink: boolean;
+      physics: boolean;
+    };
+  }>;
+}
+```
+
+Each `profiles` key is a lower-case 64-character PSD SHA-256. Slider and
+checkbox changes are saved immediately. **Reset to defaults** deletes the
+current hash entry. Invalid or unavailable localStorage falls back to defaults
+without preventing the PSD from rendering. This store is separate from the
+existing static PSDTool visibility/role store.
+
+### JSON sidecar export and import
+
+**Export motion settings** downloads UTF-8, formatted JSON named
+`<PSD-name>.motion.json`. The version 1 file schema is:
+
+```ts
+interface PsdMotionProfileFile {
+  format: 'aituber-onair-psd-motion-profile';
+  version: 1;
+  exportedAt: string;
+  model: {
+    sha256: string;
+    width: number;
+    height: number;
+    layerSignature: string;
+    fileNameHint?: string;
+  };
+  parameters: PsdMotionParameters;
+  automation: {
+    idle: boolean;
+    randomMotion: boolean;
+    blink: boolean;
+    physics: boolean;
+  };
+}
+```
+
+The sidecar contains no PSD pixels, API keys, localStorage dump, absolute
+paths, chat/voice settings, or camera/microphone/mouse state. It is not XMP and
+is never embedded into or written back to the PSD.
+
+Imports are limited to 64 KB. The parser requires the exact `format` and
+`version`, rebuilds the profile from allowed properties only, rejects
+non-finite/non-number values, clamps ranges, and ignores unknown properties.
+Compatibility is decided as follows:
+
+| Imported identity | Result |
+|---|---|
+| SHA-256 matches | Apply immediately and save for the current PSD. |
+| SHA-256 differs; canvas and `layerSignature` match | Show a different-file warning and apply only after explicit confirmation. |
+| Canvas or `layerSignature` differs | Show an incompatibility error and do not apply. |
+
+To move settings to another browser or PC, export the sidecar, load the target
+motion PSD there, and then import the JSON. Motion profile import/export is not
+available in static PSDTool mode.
+
 ## Static PSDTool Mode
 
 Static mode renders a PSD layer tree with `@webtoon/psd` and canvas

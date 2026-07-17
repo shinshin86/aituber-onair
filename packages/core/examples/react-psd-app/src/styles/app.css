@@ -414,6 +414,82 @@ body {
   color: #ff8e8e;
 }
 
+.settings-motion-profile {
+  margin: 12px 0;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  background: #10182d;
+}
+
+.settings-motion-profile > summary {
+  padding: 10px 12px;
+  color: #d3dde8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-motion-profile-content {
+  padding: 0 12px 12px;
+}
+
+.settings-motion-parameter-group {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #263b57;
+}
+
+.settings-motion-parameter-group h5 {
+  margin: 0 0 9px;
+  color: #e94560;
+  font-size: 0.75rem;
+}
+
+.settings-motion-range-row {
+  grid-template-columns: minmax(0, 1fr) 48px;
+}
+
+.settings-motion-automation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 10px;
+}
+
+.settings-motion-profile-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.settings-motion-import-trigger {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.settings-motion-profile-message {
+  margin: 9px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #aab6c2;
+}
+
+.settings-motion-profile-message.is-warning {
+  color: #ffd27d;
+}
+
+.settings-motion-profile-message.is-error {
+  color: #ff8e8e;
+}
+
+.settings-motion-import-confirmation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .layer-tree-panel {
   max-height: 240px;
   overflow: auto;

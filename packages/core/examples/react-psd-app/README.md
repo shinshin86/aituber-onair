@@ -27,6 +27,8 @@ sample, so the app animates with zero setup.
 - Auto-detect Anime2.5DRig-compatible PSD layer names for motion mode
 - Animate supported PSDs with idle motion, blink fallback, hair physics, and
   audio-driven mouth movement
+- Tune motion-mode pose, eyes, brows, mouth, hair, and physics in real time
+- Auto-save motion profiles by PSD SHA-256 and transfer them as JSON sidecars
 - Overlay model-independent emotion effects in both static and motion modes
 - Drag, wheel-zoom, and reset the avatar view from the canvas / Settings
 - Persist visibility overrides and role bindings in `localStorage`, keyed by
@@ -101,6 +103,33 @@ Motion settings are in **Settings -> Visual**:
 Wheel zoom scales around the avatar's own center. Dragging is the only operation
 that changes avatar position, and offsets are clamped so the avatar cannot be
 lost completely off-screen.
+
+### PSD motion tuning and transfer
+
+When a motion-mode PSD is loaded, expand **PSD motion tuning** under
+**Settings -> Visual**. The sliders update the existing renderer in real time;
+they do not rebuild the rig or WebGL textures. The `PSD motion` control remains
+the master switch, and `Motion intensity` remains an additional multiplier for
+automatic motion and physics. The mouth baseline is combined with audio lip
+sync by using whichever value is larger.
+
+Changes are saved automatically for the PSD content SHA-256 in
+`react-psd-app-psd-motion-profiles-v1`. Selecting identical PSD content under a
+different file name restores the same profile. **Reset to defaults** removes
+that PSD's saved entry and restores the original motion-mode behavior.
+
+Use **Export motion settings** to download a formatted
+`<PSD-name>.motion.json` sidecar, then use **Import motion settings** in another
+browser or on another PC. The sidecar contains only the versioned motion
+profile and PSD identity; it does not contain PSD pixels, API keys, paths,
+chat/voice settings, camera/microphone state, or XMP metadata, and it is never
+embedded into the PSD itself.
+
+Imports with the same SHA-256 apply immediately. A different SHA-256 with the
+same canvas and layer signature requires explicit confirmation. A mismatched
+layer signature is rejected. Motion profile controls are not available in
+static PSDTool mode. See [PSD-FORMATS.md](./PSD-FORMATS.md) for the parameter,
+identity, and sidecar details.
 
 ## Emotion expression effects
 
