@@ -16,7 +16,7 @@ import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
 import {
-  createVrmReactionFromScreenplay,
+  createLinkedVrmReaction,
   sustainVrmReactionForSpeech,
   withReactionId,
 } from './lib/vrmReactions';
@@ -54,7 +54,6 @@ export default function App() {
   const settingsDialogRef = useRef<HTMLDivElement | null>(null);
   const settingsDialogDragRef = useRef<SettingsDialogDragState | null>(null);
   const avatarReactionIdRef = useRef(0);
-  const speechReactionRef = useRef<VrmAvatarReactionDraft | null>(null);
   const [avatarReaction, setAvatarReaction] =
     useState<VrmAvatarReaction | null>(null);
 
@@ -134,32 +133,32 @@ export default function App() {
 
   const handleAudioPlay = useCallback(
     async (arrayBuffer: ArrayBuffer) => {
-      await play(arrayBuffer, {
-        onStart: () => {
-          if (speechReactionRef.current) {
-            emitAvatarReaction(speechReactionRef.current);
-          }
-        },
-      });
+      await play(arrayBuffer);
     },
-    [emitAvatarReaction, play],
+    [play],
   );
 
   const handleSpeechStart = useCallback(
     (screenplay: ScreenplayLike) => {
-      speechReactionRef.current = null;
-      const reaction = createVrmReactionFromScreenplay(screenplay);
+      const reaction = createLinkedVrmReaction(
+        settingsHook.settings.visual.vrmReactionControlMode,
+        screenplay,
+        settingsHook.settings.visual.vrmEmotionEffectMap,
+      );
       if (reaction) {
-        const speechReaction = sustainVrmReactionForSpeech(reaction);
-        speechReactionRef.current = speechReaction;
-        emitAvatarReaction(speechReaction);
+        emitAvatarReaction(sustainVrmReactionForSpeech(reaction));
+      } else {
+        emitAvatarReaction({ type: 'reset', fadeMs: 220 });
       }
     },
-    [emitAvatarReaction],
+    [
+      emitAvatarReaction,
+      settingsHook.settings.visual.vrmEmotionEffectMap,
+      settingsHook.settings.visual.vrmReactionControlMode,
+    ],
   );
 
   const handleSpeechEnd = useCallback(() => {
-    speechReactionRef.current = null;
     emitAvatarReaction({ type: 'reset', fadeMs: 360 });
   }, [emitAvatarReaction]);
 
@@ -187,7 +186,6 @@ export default function App() {
     (text: string) => {
       // Stop previous audio if speech is currently playing
       stop();
-      speechReactionRef.current = null;
       emitAvatarReaction({ type: 'reset', fadeMs: 160 });
       processChat(text);
     },
@@ -342,6 +340,10 @@ export default function App() {
         mouthLevel={mouthLevel}
         isSpeaking={isSpeaking}
         avatarReaction={avatarReaction}
+        reactionControlMode={
+          settingsHook.settings.visual.vrmReactionControlMode
+        }
+        emotionEffectMap={settingsHook.settings.visual.vrmEmotionEffectMap}
         backgroundImageUrl={backgroundImageUrl}
         visual={settingsHook.settings.visual}
         onToggleSettings={toggleSettingsDialog}

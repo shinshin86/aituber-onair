@@ -30,12 +30,21 @@ import {
   pickVrmIdleMotion,
   runVrmOneShotAnimation,
 } from '../lib/vrmExpressionController';
-import type { VrmAvatarReaction } from '../lib/vrmReactions';
+import {
+  createVrmReactionFromEffect,
+  withReactionId,
+  type VrmAvatarReaction,
+  type VrmEmotionEffectMap,
+  type VrmReactionControlMode,
+  type VrmReactionEmotion,
+} from '../lib/vrmReactions';
 
 interface AvatarBackgroundProps {
   mouthLevel: number;
   isSpeaking: boolean;
   reaction?: VrmAvatarReaction | null;
+  reactionControlMode: VrmReactionControlMode;
+  emotionEffectMap: VrmEmotionEffectMap;
 }
 
 const VRM_FILE_URL = `${import.meta.env.BASE_URL}avatar/miko.vrm`;
@@ -54,6 +63,17 @@ const IDLE_MOTION_MIN_DELAY_MS = 4500;
 const IDLE_MOTION_MAX_DELAY_MS = 9500;
 const IDLE_MOTION_AFTER_REACTION_DELAY_MS = 4200;
 const IDLE_MOTION_AFTER_SPEECH_DELAY_MS = 2600;
+const AVATAR_EXPRESSION_OPTIONS = [
+  { emotion: 'happy', label: '喜び' },
+  { emotion: 'surprised', label: '驚き' },
+  { emotion: 'sad', label: '悲しみ' },
+  { emotion: 'angry', label: '怒り' },
+  { emotion: 'relaxed', label: '安らぎ' },
+  { emotion: 'thinking', label: '考え中' },
+] as const satisfies ReadonlyArray<{
+  emotion: VrmReactionEmotion;
+  label: string;
+}>;
 
 interface IdleMotionState {
   nextAt: number;
@@ -64,6 +84,8 @@ export function AvatarBackground({
   mouthLevel,
   isSpeaking,
   reaction,
+  reactionControlMode,
+  emotionEffectMap,
 }: AvatarBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -80,6 +102,16 @@ export function AvatarBackground({
   const mouthWeightRef = useRef(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [manualReaction, setManualReaction] =
+    useState<VrmAvatarReaction | null>(null);
+  const manualReactionIdRef = useRef(0);
+  const showManualControls = reactionControlMode === 'manual';
+  const effectiveReaction =
+    reactionControlMode === 'linked'
+      ? reaction || null
+      : showManualControls
+        ? manualReaction
+        : null;
 
   const targetWeight = useMemo(() => {
     if (!isSpeaking) return 0;
@@ -102,23 +134,29 @@ export function AvatarBackground({
   }, [isSpeaking]);
 
   useEffect(() => {
-    if (!reaction) return;
-
     const controller = expressionControllerRef.current;
     if (!controller) return;
 
+    if (!effectiveReaction) {
+      animationTokenRef.current += 1;
+      controller.reset(220);
+      return;
+    }
+
     suppressIdleMotion(
       idleMotionStateRef.current,
-      reaction.type === 'reset' ? 1600 : IDLE_MOTION_AFTER_REACTION_DELAY_MS,
+      effectiveReaction.type === 'reset'
+        ? 1600
+        : IDLE_MOTION_AFTER_REACTION_DELAY_MS,
     );
 
-    if (reaction.type === 'animation') {
+    if (effectiveReaction.type === 'animation') {
       const token = animationTokenRef.current + 1;
       animationTokenRef.current = token;
       controller.reset(160);
 
       void runVrmOneShotAnimation(
-        reaction.name,
+        effectiveReaction.name,
         (name, intensity, fadeMs) => {
           controller.set(name, intensity, fadeMs);
         },
@@ -138,24 +176,28 @@ export function AvatarBackground({
 
     animationTokenRef.current += 1;
 
-    if (reaction.type === 'emote') {
+    if (effectiveReaction.type === 'emote') {
       controller.emote(
-        reaction.name,
-        reaction.intensity,
-        reaction.fadeMs,
-        reaction.holdMs,
+        effectiveReaction.name,
+        effectiveReaction.intensity,
+        effectiveReaction.fadeMs,
+        effectiveReaction.holdMs,
       );
       return;
     }
 
-    if (reaction.type === 'gesture') {
+    if (effectiveReaction.type === 'gesture') {
       controller.reset(160);
-      controller.gesture(reaction.parts, reaction.fadeMs, reaction.holdMs);
+      controller.gesture(
+        effectiveReaction.parts,
+        effectiveReaction.fadeMs,
+        effectiveReaction.holdMs,
+      );
       return;
     }
 
-    controller.reset(reaction.fadeMs);
-  }, [reaction]);
+    controller.reset(effectiveReaction.fadeMs);
+  }, [effectiveReaction, isLoading]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -483,6 +525,51 @@ export function AvatarBackground({
         )}
         {loadError && <div className="avatar-error">{loadError}</div>}
       </div>
+      {showManualControls && (
+        <div
+          className="avatar-expression-controls"
+          role="group"
+          aria-label="VRMアバター感情表現エフェクト"
+        >
+          <span className="avatar-expression-controls-label">
+            感情表現エフェクト
+          </span>
+          {AVATAR_EXPRESSION_OPTIONS.map((option) => {
+            const effect = emotionEffectMap[option.emotion];
+            return (
+              <button
+                key={option.emotion}
+                type="button"
+                className="avatar-expression-button"
+                disabled={Boolean(loadError) || isLoading || !effect}
+                onClick={() => {
+                  if (!effect) return;
+                  manualReactionIdRef.current += 1;
+                  setManualReaction(
+                    withReactionId(
+                      createVrmReactionFromEffect(effect),
+                      manualReactionIdRef.current,
+                    ),
+                  );
+                }}
+                title={
+                  effect ? undefined : 'エフェクトが割り当てられていません'
+                }
+              >
+                {option.label}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            className="avatar-expression-button is-reset"
+            disabled={Boolean(loadError) || isLoading}
+            onClick={() => setManualReaction(null)}
+          >
+            解除
+          </button>
+        </div>
+      )}
     </div>
   );
 }

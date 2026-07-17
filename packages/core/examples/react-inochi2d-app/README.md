@@ -19,6 +19,10 @@ React examples.
 - Drag, wheel zoom, double-click reset, tap/flick reactions
 - TTS playback lip sync and speaking expression presets when supported by the
   runtime bridge
+- Native expression presets and emotion animations with configurable emotion
+  mappings and disabled, manual preview, or linked control modes
+- Linked emotion expressions start when the response emotion is received,
+  independently of TTS playback
 - Shared settings UI for LLM, TTS, screen vision, and live-comment handling
 
 ## Runtime and assets

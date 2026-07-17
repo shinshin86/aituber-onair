@@ -5,6 +5,7 @@ import { ChatLog } from './ChatLog';
 import { Live2DStage } from './Live2DStage';
 import type { Live2DModelSource } from '../lib/live2dModel';
 import type { Live2DAudioBinding } from '../hooks/useAudioLipsync';
+import type { Live2DReaction } from '../lib/live2dReactions';
 
 interface ChatPanelProps {
   messages: ChatMessage[];
@@ -16,6 +17,7 @@ interface ChatPanelProps {
   modelSource: Live2DModelSource | null;
   modelPickerError: string;
   audioBinding: Live2DAudioBinding;
+  avatarReaction?: Live2DReaction | null;
   visual: VisualSettings;
 }
 
@@ -29,6 +31,7 @@ export function ChatPanel({
   modelSource,
   modelPickerError,
   audioBinding,
+  avatarReaction,
   visual,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
@@ -42,12 +45,12 @@ export function ChatPanel({
     visual.backgroundMode === 'green'
       ? { backgroundColor: '#00ff00' }
       : backgroundImageUrl
-    ? {
-        backgroundImage: `url(${backgroundImageUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
-    : undefined;
+        ? {
+            backgroundImage: `url(${backgroundImageUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }
+        : undefined;
 
   return (
     <div
@@ -68,6 +71,9 @@ export function ChatPanel({
         modelSource={modelSource}
         modelPickerError={modelPickerError}
         audioBinding={audioBinding}
+        reaction={avatarReaction}
+        reactionControlMode={visual.live2dReactionControlMode}
+        emotionEffectMap={visual.live2dEmotionEffectMap}
       />
       {isBroadcast ? (
         broadcastCaption && (

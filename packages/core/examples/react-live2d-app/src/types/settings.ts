@@ -1,4 +1,8 @@
 import type { XaiReasoningEffort } from '@aituber-onair/core';
+import type {
+  Live2DEmotionEffectMap,
+  Live2DReactionControlMode,
+} from '../lib/live2dReactions';
 
 export type ChatProviderOption =
   | 'openai'
@@ -172,6 +176,8 @@ export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
+  live2dReactionControlMode: Live2DReactionControlMode;
+  live2dEmotionEffectMap: Live2DEmotionEffectMap;
 }
 
 export interface ScreenVisionSettings {

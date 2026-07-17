@@ -8,6 +8,39 @@ export interface ScreenplayLike {
   text?: string;
 }
 
+export const VRM_EMOTION_EFFECTS = [
+  'happy',
+  'surprised',
+  'sad',
+  'angry',
+  'relaxed',
+  'thinking',
+] as const;
+
+export type VrmEmotionEffect = (typeof VRM_EMOTION_EFFECTS)[number];
+
+export const VRM_REACTION_EMOTIONS = [
+  ...VRM_EMOTION_EFFECTS,
+  'neutral',
+] as const;
+
+export type VrmReactionEmotion = (typeof VRM_REACTION_EMOTIONS)[number];
+export type VrmReactionControlMode = 'none' | 'manual' | 'linked';
+export type VrmEmotionEffectMap = Record<
+  VrmReactionEmotion,
+  VrmEmotionEffect | null
+>;
+
+export const DEFAULT_VRM_EMOTION_EFFECT_MAP: VrmEmotionEffectMap = {
+  happy: 'happy',
+  surprised: 'surprised',
+  sad: 'sad',
+  angry: 'angry',
+  relaxed: 'relaxed',
+  thinking: 'thinking',
+  neutral: null,
+};
+
 export type VrmAvatarReactionDraft =
   | {
       type: 'emote';
@@ -44,29 +77,49 @@ const REACTION_KEYWORDS = {
 
 export function createVrmReactionFromScreenplay(
   screenplay: ScreenplayLike,
+  effectMap: VrmEmotionEffectMap = DEFAULT_VRM_EMOTION_EFFECT_MAP,
 ): VrmAvatarReactionDraft | null {
   const emotion = screenplay.emotion?.toLowerCase().trim();
   const text = screenplay.text ?? '';
 
-  if (emotion === 'happy') {
+  if (!isVrmReactionEmotion(emotion)) return null;
+  const effect = effectMap[emotion];
+  return effect ? createVrmReactionFromEffect(effect, text) : null;
+}
+
+export function createLinkedVrmReaction(
+  controlMode: VrmReactionControlMode,
+  screenplay: ScreenplayLike,
+  effectMap: VrmEmotionEffectMap,
+): VrmAvatarReactionDraft | null {
+  return controlMode === 'linked'
+    ? createVrmReactionFromScreenplay(screenplay, effectMap)
+    : null;
+}
+
+export function createVrmReactionFromEffect(
+  effect: VrmEmotionEffect,
+  text = '',
+): VrmAvatarReactionDraft {
+  if (effect === 'happy') {
     return REACTION_KEYWORDS.laugh.test(text)
       ? { type: 'animation', name: 'laugh' }
       : { type: 'emote', name: 'happy', intensity: 0.8, holdMs: 3500 };
   }
 
-  if (emotion === 'angry') {
+  if (effect === 'angry') {
     return REACTION_KEYWORDS.pout.test(text)
       ? { type: 'animation', name: 'pout' }
       : { type: 'emote', name: 'angry', intensity: 0.75, holdMs: 2500 };
   }
 
-  if (emotion === 'sad') {
+  if (effect === 'sad') {
     return REACTION_KEYWORDS.teary.test(text)
       ? { type: 'animation', name: 'teary' }
       : { type: 'emote', name: 'sad', intensity: 0.7, holdMs: 3000 };
   }
 
-  if (emotion === 'surprised') {
+  if (effect === 'surprised') {
     return {
       type: 'gesture',
       parts: [
@@ -79,39 +132,54 @@ export function createVrmReactionFromScreenplay(
     };
   }
 
-  if (emotion === 'relaxed') {
+  if (effect === 'relaxed') {
     return { type: 'emote', name: 'relaxed', intensity: 0.45, holdMs: 3000 };
   }
 
-  if (emotion === 'neutral') {
-    return { type: 'reset', fadeMs: 220 };
-  }
+  return {
+    type: 'gesture',
+    parts: [
+      { name: 'relaxed', intensity: 0.28 },
+      { name: 'browInnerUp', intensity: 0.42 },
+      { name: 'eyeSquintLeft', intensity: 0.18 },
+      { name: 'eyeSquintRight', intensity: 0.18 },
+    ],
+    holdMs: 3000,
+  };
+}
 
-  if (REACTION_KEYWORDS.laugh.test(text)) {
-    return { type: 'animation', name: 'laugh' };
-  }
+export function normalizeVrmEmotionEffectMap(
+  value: unknown,
+): VrmEmotionEffectMap {
+  const source =
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Partial<VrmEmotionEffectMap>)
+      : {};
 
-  if (REACTION_KEYWORDS.pout.test(text)) {
-    return { type: 'animation', name: 'pout' };
-  }
+  return Object.fromEntries(
+    VRM_REACTION_EMOTIONS.map((emotion) => {
+      const candidate = source[emotion];
+      const effect =
+        candidate === null || isVrmEmotionEffect(candidate)
+          ? candidate
+          : DEFAULT_VRM_EMOTION_EFFECT_MAP[emotion];
+      return [emotion, effect];
+    }),
+  ) as VrmEmotionEffectMap;
+}
 
-  if (REACTION_KEYWORDS.teary.test(text)) {
-    return { type: 'animation', name: 'teary' };
-  }
+export function isVrmReactionControlMode(
+  value: unknown,
+): value is VrmReactionControlMode {
+  return value === 'none' || value === 'manual' || value === 'linked';
+}
 
-  if (REACTION_KEYWORDS.surprised.test(text)) {
-    return { type: 'emote', name: 'surprised', intensity: 0.65, holdMs: 1600 };
-  }
+export function isVrmEmotionEffect(value: unknown): value is VrmEmotionEffect {
+  return VRM_EMOTION_EFFECTS.some((effect) => effect === value);
+}
 
-  if (REACTION_KEYWORDS.happy.test(text)) {
-    return { type: 'emote', name: 'happy', intensity: 0.75, holdMs: 3000 };
-  }
-
-  if (REACTION_KEYWORDS.relaxed.test(text)) {
-    return { type: 'emote', name: 'relaxed', intensity: 0.4, holdMs: 2600 };
-  }
-
-  return null;
+function isVrmReactionEmotion(value: unknown): value is VrmReactionEmotion {
+  return VRM_REACTION_EMOTIONS.some((emotion) => emotion === value);
 }
 
 export function sustainVrmReactionForSpeech(

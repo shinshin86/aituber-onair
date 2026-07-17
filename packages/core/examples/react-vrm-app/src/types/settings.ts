@@ -1,4 +1,8 @@
 import type { XaiReasoningEffort } from '@aituber-onair/core';
+import type {
+  VrmEmotionEffectMap,
+  VrmReactionControlMode,
+} from '../lib/vrmReactions';
 
 export type ChatProviderOption =
   | 'openai'
@@ -172,6 +176,8 @@ export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
+  vrmReactionControlMode: VrmReactionControlMode;
+  vrmEmotionEffectMap: VrmEmotionEffectMap;
 }
 
 export interface ScreenVisionSettings {

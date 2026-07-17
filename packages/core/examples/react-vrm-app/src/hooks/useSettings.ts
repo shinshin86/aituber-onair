@@ -7,6 +7,14 @@ import {
   type XaiReasoningEffort,
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
+import {
+  DEFAULT_VRM_EMOTION_EFFECT_MAP,
+  isVrmReactionControlMode,
+  normalizeVrmEmotionEffectMap,
+  type VrmEmotionEffect,
+  type VrmReactionControlMode,
+  type VrmReactionEmotion,
+} from '../lib/vrmReactions';
 import type {
   AppSettings,
   ChatProviderOption,
@@ -214,6 +222,8 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      vrmReactionControlMode: 'none',
+      vrmEmotionEffectMap: { ...DEFAULT_VRM_EMOTION_EFFECT_MAP },
     },
     screenVision: {
       deviceId: '',
@@ -272,7 +282,18 @@ function loadSettings(): AppSettings {
           ),
         },
         tts: { ...defaults.tts, ...saved.tts },
-        visual: { ...defaults.visual, ...saved.visual },
+        visual: {
+          ...defaults.visual,
+          ...saved.visual,
+          vrmReactionControlMode: isVrmReactionControlMode(
+            saved.visual?.vrmReactionControlMode,
+          )
+            ? saved.visual.vrmReactionControlMode
+            : defaults.visual.vrmReactionControlMode,
+          vrmEmotionEffectMap: normalizeVrmEmotionEffectMap(
+            saved.visual?.vrmEmotionEffectMap,
+          ),
+        },
         screenVision: { ...defaults.screenVision, ...saved.screenVision },
         stream: { ...defaults.stream, ...saved.stream },
         commentIntelligence: {
@@ -902,6 +923,42 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualVrmReactionControlMode = useCallback(
+    (vrmReactionControlMode: VrmReactionControlMode) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, vrmReactionControlMode },
+      }));
+    },
+    [],
+  );
+
+  const updateVisualVrmEmotionEffect = useCallback(
+    (emotion: VrmReactionEmotion, effect: VrmEmotionEffect | null) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          vrmEmotionEffectMap: {
+            ...prev.visual.vrmEmotionEffectMap,
+            [emotion]: effect,
+          },
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualVrmEmotionEffectMap = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      visual: {
+        ...prev.visual,
+        vrmEmotionEffectMap: { ...DEFAULT_VRM_EMOTION_EFFECT_MAP },
+      },
+    }));
+  }, []);
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1149,10 +1206,7 @@ export function useSettings() {
         ...prev,
         manneri: {
           ...prev.manneri,
-          similarityThreshold: Math.min(
-            1,
-            Math.max(0.1, similarityThreshold),
-          ),
+          similarityThreshold: Math.min(1, Math.max(0.1, similarityThreshold)),
         },
       }));
     },
@@ -1259,6 +1313,9 @@ export function useSettings() {
     updateVisualBackgroundMode,
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
+    updateVisualVrmReactionControlMode,
+    updateVisualVrmEmotionEffect,
+    resetVisualVrmEmotionEffectMap,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

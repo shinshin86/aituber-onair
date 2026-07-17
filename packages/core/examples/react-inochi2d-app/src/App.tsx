@@ -20,6 +20,12 @@ import {
   buildCustomInochiModel,
   loadInochiManifest,
 } from './lib/inochi2dManifest';
+import {
+  createLinkedInochi2DReaction,
+  withInochi2DReactionId,
+  type Inochi2DReaction,
+  type Inochi2DReactionDraft,
+} from './lib/inochi2dReactions';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import type { ResolvedInochiModelDefinition } from './types/inochi2d';
@@ -36,8 +42,11 @@ interface SettingsDialogDragState {
 }
 
 export default function App() {
-  const { play, stop, isSpeaking } = useAudioLipsync();
   const settingsHook = useSettings();
+  const { play, stop, isSpeaking } = useAudioLipsync({
+    preserveExpression:
+      settingsHook.settings.visual.inochi2dReactionControlMode !== 'none',
+  });
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsDialogOffset, setSettingsDialogOffset] =
@@ -59,6 +68,15 @@ export default function App() {
   const customModelObjectUrlRef = useRef<string | null>(null);
   const settingsDialogRef = useRef<HTMLDivElement | null>(null);
   const settingsDialogDragRef = useRef<SettingsDialogDragState | null>(null);
+  const reactionIdRef = useRef(0);
+  const [avatarReaction, setAvatarReaction] = useState<Inochi2DReaction | null>(
+    null,
+  );
+
+  const emitAvatarReaction = useCallback((draft: Inochi2DReactionDraft) => {
+    reactionIdRef.current += 1;
+    setAvatarReaction(withInochi2DReactionId(draft, reactionIdRef.current));
+  }, []);
 
   const handleSettingsDialogPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -136,6 +154,30 @@ export default function App() {
     [play],
   );
 
+  const handleSpeechStart = useCallback(
+    (screenplay: { emotion?: string; text?: string }) => {
+      const reaction = createLinkedInochi2DReaction(
+        settingsHook.settings.visual.inochi2dReactionControlMode,
+        screenplay,
+        settingsHook.settings.visual.inochi2dEmotionEffectMap,
+      );
+      if (reaction) {
+        emitAvatarReaction(reaction);
+      } else {
+        setAvatarReaction(null);
+      }
+    },
+    [
+      emitAvatarReaction,
+      settingsHook.settings.visual.inochi2dEmotionEffectMap,
+      settingsHook.settings.visual.inochi2dReactionControlMode,
+    ],
+  );
+
+  const handleSpeechEnd = useCallback(() => {
+    setAvatarReaction(null);
+  }, []);
+
   const {
     messages,
     isProcessing,
@@ -144,6 +186,8 @@ export default function App() {
     processVisionChat,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
+    onSpeechStart: handleSpeechStart,
+    onSpeechEnd: handleSpeechEnd,
     settings: settingsHook.settings,
     getApiKeyForProvider: settingsHook.getApiKeyForProvider,
   });
@@ -157,6 +201,7 @@ export default function App() {
   const handleSend = useCallback(
     (text: string) => {
       stop();
+      setAvatarReaction(null);
       processChat(text);
     },
     [processChat, stop],
@@ -402,6 +447,7 @@ export default function App() {
         customModel={customModel}
         modelPickerError={modelPickerError}
         onModelResolved={setSelectedModelId}
+        avatarReaction={avatarReaction}
         visual={settingsHook.settings.visual}
       />
 
