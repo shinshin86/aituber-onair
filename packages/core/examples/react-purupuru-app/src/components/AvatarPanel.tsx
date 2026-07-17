@@ -342,9 +342,11 @@ export function AvatarBackground({
         <div
           className="avatar-expression-controls"
           role="group"
-          aria-label="アバター感情表現とアンカー設定"
+          aria-label="アバター感情表現エフェクトとアンカー設定"
         >
-          <span className="avatar-expression-controls-label">感情表現</span>
+          <span className="avatar-expression-controls-label">
+            感情表現エフェクト
+          </span>
           {AVATAR_EXPRESSION_OPTIONS.map((option) => {
             const effect = emotionEffectMap[option.emotion];
             return (
@@ -356,7 +358,7 @@ export function AvatarBackground({
                 onClick={() => {
                   if (effect) controlsRef.current?.previewEmotion(effect);
                 }}
-                aria-label={`${option.label}の感情表現をプレビュー`}
+                aria-label={`${option.label}の感情表現エフェクトをプレビュー`}
                 title={
                   effect ? undefined : 'エフェクトが割り当てられていません'
                 }
@@ -370,7 +372,7 @@ export function AvatarBackground({
             className="avatar-expression-button is-reset"
             disabled={!avatarPackage}
             onClick={() => controlsRef.current?.resetReaction()}
-            aria-label="感情表現を解除"
+            aria-label="感情表現エフェクトを解除"
           >
             解除
           </button>
@@ -395,7 +397,7 @@ export function AvatarBackground({
         <div
           className="avatar-anchor-editor"
           role="group"
-          aria-label="感情表現アンカー調整"
+          aria-label="感情表現エフェクトアンカー調整"
         >
           <span className="avatar-anchor-editor-label">
             配置先を選び、アバター上をクリック

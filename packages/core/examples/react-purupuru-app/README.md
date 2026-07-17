@@ -92,7 +92,7 @@ saved per avatar in the browser. The app identifies the package from an
 anonymous fingerprint of its contents, so it does not store the local file name
 or modify the `.purupuru` package and PNG files.
 
-In Settings > Visual, `感情表現の操作方法` selects one of three exclusive
+In Settings > Visual, `感情表現エフェクトの操作方法` selects one of three exclusive
 modes: no controls or automatic effects, manual emotion and anchor controls, or
 automatic speech-emotion linking without buttons. The default is no effects.
 `感情とエフェクトの対応` maps inputs such as `happy` and `sad` to effects

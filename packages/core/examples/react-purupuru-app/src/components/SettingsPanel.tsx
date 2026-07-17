@@ -2623,7 +2623,7 @@ export function SettingsPanel({
           onClick={() => toggleSection('emotionEffects')}
           aria-expanded={expandedSections.emotionEffects}
         >
-          <h3>感情表現</h3>
+          <h3>感情表現エフェクト</h3>
           <span
             className={`settings-section-chevron${expandedSections.emotionEffects ? ' is-open' : ''}`}
           >
