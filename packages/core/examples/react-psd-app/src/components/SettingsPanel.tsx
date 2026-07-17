@@ -20,6 +20,16 @@ import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
 import { PSD_ROLES, getRoleLabel } from '../lib/psdBinding';
 import { getPsdNodeOptions, hasPsdToolLayerControls } from '../lib/psdModel';
+import type {
+  PsdEmotionEffect,
+  PsdEmotionEffectControlMode,
+  PsdReactionEmotion,
+} from '../lib/psdEmotionEffects';
+import {
+  PSD_MOTION_PARAMETER_DEFINITIONS,
+  type PsdMotionAutomation,
+  type PsdMotionParameterGroup,
+} from '../lib/psdMotionProfile';
 
 type SettingsHook = ReturnType<typeof useSettings>;
 type ScreenVisionController = ReturnType<typeof useScreenVisionController>;
@@ -71,6 +81,32 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'webSpeech', label: 'Web Speech API' },
   { value: 'none', label: 'None' },
+];
+
+const PSD_REACTION_EMOTION_OPTIONS: ReadonlyArray<{
+  value: PsdReactionEmotion;
+  label: string;
+}> = [
+  { value: 'happy', label: '喜び（happy）' },
+  { value: 'surprised', label: '驚き（surprised）' },
+  { value: 'sad', label: '悲しみ（sad）' },
+  { value: 'angry', label: '怒り（angry）' },
+  { value: 'relaxed', label: '安らぎ（relaxed）' },
+  { value: 'thinking', label: '考え中（thinking）' },
+  { value: 'neutral', label: '通常（neutral）' },
+];
+
+const PSD_EFFECT_OPTIONS: ReadonlyArray<{
+  value: PsdEmotionEffect | 'none';
+  label: string;
+}> = [
+  { value: 'none', label: 'なし' },
+  { value: 'happy', label: 'きらめき（happy）' },
+  { value: 'surprised', label: '驚き線（surprised）' },
+  { value: 'sad', label: '涙（sad）' },
+  { value: 'angry', label: '怒りマーク（angry）' },
+  { value: 'relaxed', label: '泡・安らぎ（relaxed）' },
+  { value: 'thinking', label: '思考マーク（thinking）' },
 ];
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
@@ -235,6 +271,7 @@ type SectionKey =
   | 'llm'
   | 'tts'
   | 'visual'
+  | 'emotionEffects'
   | 'stream'
   | 'commentIntelligence'
   | 'manneri';
@@ -482,6 +519,193 @@ function PsdAvatarSection({
   );
 }
 
+const PSD_MOTION_GROUPS: ReadonlyArray<{
+  value: PsdMotionParameterGroup;
+  label: string;
+}> = [
+  { value: 'face', label: '顔・体' },
+  { value: 'eyes', label: '目・眉' },
+  { value: 'mouth', label: '口' },
+  { value: 'physics', label: '髪・物理' },
+];
+
+const PSD_MOTION_AUTOMATION_OPTIONS: ReadonlyArray<{
+  value: keyof PsdMotionAutomation;
+  label: string;
+}> = [
+  { value: 'idle', label: 'Idle' },
+  { value: 'randomMotion', label: 'Random motion' },
+  { value: 'blink', label: 'Blink' },
+  { value: 'physics', label: 'Hair / body physics' },
+];
+
+interface PsdMotionProfileSectionProps {
+  disabled: boolean;
+  motionEnabled: boolean;
+  psdAvatar: PsdAvatarController;
+}
+
+function PsdMotionProfileSection({
+  disabled,
+  motionEnabled,
+  psdAvatar,
+}: PsdMotionProfileSectionProps) {
+  const profileAvailable = Boolean(psdAvatar.motionIdentity);
+  const controlsDisabled = disabled || !motionEnabled || !profileAvailable;
+  const fileActionsDisabled = disabled || !profileAvailable;
+
+  return (
+    <details className="settings-motion-profile">
+      <summary>PSDモーション調整</summary>
+      <div className="settings-motion-profile-content">
+        <p className="settings-note">
+          このPSDのSHA-256に関連付けて自動保存します。PSD本体は変更しません。
+        </p>
+        {!motionEnabled && (
+          <p className="settings-note">
+            PSD motionを有効にすると調整値がrendererへ適用されます。
+          </p>
+        )}
+
+        {PSD_MOTION_GROUPS.map((group) => (
+          <section
+            className="settings-motion-parameter-group"
+            key={group.value}
+          >
+            <h5>{group.label}</h5>
+            {PSD_MOTION_PARAMETER_DEFINITIONS.filter(
+              (definition) => definition.group === group.value,
+            ).map((definition) => {
+              const value = psdAvatar.motionProfile.parameters[definition.key];
+              return (
+                <div className="settings-field" key={definition.key}>
+                  <label htmlFor={`psd-motion-${definition.key}`}>
+                    {definition.label}
+                  </label>
+                  <div className="settings-range-row settings-motion-range-row">
+                    <input
+                      id={`psd-motion-${definition.key}`}
+                      type="range"
+                      min={definition.min}
+                      max={definition.max}
+                      step={definition.step}
+                      value={value}
+                      disabled={controlsDisabled}
+                      onChange={(event) =>
+                        psdAvatar.updateMotionParameter(
+                          definition.key,
+                          Number(event.target.value),
+                        )
+                      }
+                    />
+                    <output>{value.toFixed(2)}</output>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        ))}
+
+        <section className="settings-motion-parameter-group">
+          <h5>自動動作</h5>
+          <div className="settings-motion-automation-grid">
+            {PSD_MOTION_AUTOMATION_OPTIONS.map((option) => (
+              <label className="settings-checkbox-field" key={option.value}>
+                <input
+                  type="checkbox"
+                  checked={psdAvatar.motionProfile.automation[option.value]}
+                  disabled={controlsDisabled}
+                  onChange={(event) =>
+                    psdAvatar.updateMotionAutomation(
+                      option.value,
+                      event.target.checked,
+                    )
+                  }
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <div className="settings-motion-profile-actions">
+          <button
+            type="button"
+            className="settings-action-button"
+            onClick={psdAvatar.resetMotionProfile}
+            disabled={fileActionsDisabled}
+          >
+            初期値へ戻す
+          </button>
+          <button
+            type="button"
+            className="settings-action-button"
+            onClick={psdAvatar.exportMotionProfile}
+            disabled={fileActionsDisabled}
+          >
+            モーション設定を書き出す
+          </button>
+          <input
+            id="psd-motion-profile-file"
+            className="settings-file-input-hidden"
+            type="file"
+            accept=".json,application/json"
+            disabled={fileActionsDisabled}
+            onChange={(event) => {
+              void psdAvatar.importMotionProfile(
+                event.currentTarget.files?.[0] ?? null,
+              );
+              event.currentTarget.value = '';
+            }}
+          />
+          <label
+            htmlFor="psd-motion-profile-file"
+            className={`settings-file-trigger settings-motion-import-trigger${
+              fileActionsDisabled ? ' is-disabled' : ''
+            }`}
+          >
+            モーション設定を読み込む
+          </label>
+        </div>
+
+        {psdAvatar.motionProfileMessage.text && (
+          <p
+            className={`settings-motion-profile-message is-${psdAvatar.motionProfileMessage.kind}`}
+            role={
+              psdAvatar.motionProfileMessage.kind === 'error'
+                ? 'alert'
+                : 'status'
+            }
+          >
+            {psdAvatar.motionProfileMessage.text}
+          </p>
+        )}
+
+        {psdAvatar.motionImportNeedsConfirmation && (
+          <div className="settings-motion-import-confirmation">
+            <button
+              type="button"
+              className="settings-action-button"
+              onClick={psdAvatar.confirmMotionProfileImport}
+              disabled={disabled}
+            >
+              構成一致を確認して適用
+            </button>
+            <button
+              type="button"
+              className="settings-clear-button"
+              onClick={psdAvatar.cancelMotionProfileImport}
+              disabled={disabled}
+            >
+              キャンセル
+            </button>
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
 export function SettingsPanel({
   settings,
   availableModels,
@@ -530,6 +754,9 @@ export function SettingsPanel({
   resetVisualAvatarView,
   updateVisualMotionEnabled,
   updateVisualMotionIntensity,
+  updateVisualPsdEmotionEffectControlMode,
+  updateVisualPsdEmotionEffect,
+  resetVisualPsdEmotionEffectMap,
   updateScreenVisionDeviceId,
   updateScreenVisionPrompt,
   updateScreenVisionAutoIntervalMs,
@@ -591,8 +818,7 @@ export function SettingsPanel({
           settings.llm.model,
           settings.llm.xaiReasoningEffort ||
             getDefaultXaiReasoningEffort(settings.llm.model),
-        ) ||
-        'none'
+        ) || 'none'
       : 'none';
   const allowsXaiNoneReasoningEffort =
     settings.llm.provider === 'xai' &&
@@ -636,6 +862,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    emotionEffects: true,
     stream: true,
     commentIntelligence: true,
     manneri: true,
@@ -944,7 +1171,6 @@ export function SettingsPanel({
     settings.tts.speaker,
     updateTTSSpeaker,
   ]);
-
 
   useEffect(() => {
     if (settings.tts.engine !== 'webSpeech') {
@@ -1260,7 +1486,6 @@ export function SettingsPanel({
                 </div>
               </>
             )}
-
           </>
         )}
       </div>
@@ -2658,6 +2883,109 @@ export function SettingsPanel({
         <button
           type="button"
           className="settings-section-toggle"
+          onClick={() => toggleSection('emotionEffects')}
+          aria-expanded={expandedSections.emotionEffects}
+        >
+          <h3>感情表現エフェクト</h3>
+          <span
+            className={`settings-section-chevron${
+              expandedSections.emotionEffects ? ' is-open' : ''
+            }`}
+          >
+            ⌄
+          </span>
+        </button>
+
+        {expandedSections.emotionEffects && (
+          <>
+            <div className="settings-field">
+              <label htmlFor="psd-emotion-effect-control-mode">操作方法</label>
+              <select
+                id="psd-emotion-effect-control-mode"
+                value={settings.visual.psdEmotionEffectControlMode}
+                onChange={(event) =>
+                  updateVisualPsdEmotionEffectControlMode(
+                    event.target.value as PsdEmotionEffectControlMode,
+                  )
+                }
+                disabled={disabled}
+              >
+                <option value="none">なし</option>
+                <option value="manual">手動ボタン＋アンカー設定ボタン</option>
+                <option value="linked">発話感情に連動のみ</option>
+              </select>
+              <p className="settings-field-hint">
+                {settings.visual.psdEmotionEffectControlMode === 'none'
+                  ? 'ボタン類を表示せず、発話時のエフェクトも再生しません。'
+                  : settings.visual.psdEmotionEffectControlMode === 'manual'
+                    ? 'アバター上に感情ボタンとアンカー設定ボタンを表示します。'
+                    : 'ボタン類を表示せず、発話の emotion タグから自動再生します。'}
+              </p>
+            </div>
+
+            <div className="settings-field">
+              <span className="settings-field-label">
+                感情とエフェクトの対応
+              </span>
+              <div className="settings-emotion-mapping-list">
+                {PSD_REACTION_EMOTION_OPTIONS.map((emotionOption) => (
+                  <label
+                    key={emotionOption.value}
+                    className="settings-emotion-mapping-row"
+                    htmlFor={`psd-effect-${emotionOption.value}`}
+                  >
+                    <span>{emotionOption.label}</span>
+                    <select
+                      id={`psd-effect-${emotionOption.value}`}
+                      value={
+                        settings.visual.psdEmotionEffectMap[
+                          emotionOption.value
+                        ] || 'none'
+                      }
+                      onChange={(event) => {
+                        const effect = event.target.value;
+                        updateVisualPsdEmotionEffect(
+                          emotionOption.value,
+                          effect === 'none'
+                            ? null
+                            : (effect as PsdEmotionEffect),
+                        );
+                      }}
+                      disabled={disabled}
+                    >
+                      {PSD_EFFECT_OPTIONS.map((effectOption) => (
+                        <option
+                          key={effectOption.value}
+                          value={effectOption.value}
+                        >
+                          {effectOption.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="settings-clear-button settings-inline-button"
+                onClick={resetVisualPsdEmotionEffectMap}
+                disabled={disabled}
+              >
+                感情の割り当てを初期値に戻す
+              </button>
+              <p className="settings-field-hint">
+                例: happy はきらめき、sad
+                は涙。手動ボタンと自動連動で同じ割り当てを使います。
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="settings-section">
+        <button
+          type="button"
+          className="settings-section-toggle"
           onClick={() => toggleSection('visual')}
           aria-expanded={expandedSections.visual}
         >
@@ -2754,6 +3082,14 @@ export function SettingsPanel({
                 <output>{settings.visual.motionIntensity.toFixed(1)}</output>
               </div>
             </div>
+
+            {isPsdMotionMode && (
+              <PsdMotionProfileSection
+                disabled={disabled}
+                motionEnabled={settings.visual.motionEnabled}
+                psdAvatar={psdAvatar}
+              />
+            )}
 
             <button
               type="button"

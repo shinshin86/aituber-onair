@@ -27,6 +27,9 @@ sample, so the app animates with zero setup.
 - Auto-detect Anime2.5DRig-compatible PSD layer names for motion mode
 - Animate supported PSDs with idle motion, blink fallback, hair physics, and
   audio-driven mouth movement
+- Tune motion-mode pose, eyes, brows, mouth, hair, and physics in real time
+- Auto-save motion profiles by PSD SHA-256 and transfer them as JSON sidecars
+- Overlay model-independent emotion effects in both static and motion modes
 - Drag, wheel-zoom, and reset the avatar view from the canvas / Settings
 - Persist visibility overrides and role bindings in `localStorage`, keyed by
   `${fileName}:${fileSize}`
@@ -80,9 +83,10 @@ This writes `public/avatar/sample-static.psd`. Runtime static PSD parsing uses
 ## PSD modes
 
 The app first tries motion auto-rig detection with the vendored
-Anime2.5DRig-compatible rigger. Motion mode is used only when required parts,
-anchors, and rigger checks all pass. Otherwise, the file falls back to static
-PSDTool mode.
+Anime2.5DRig-compatible rigger. A flat PSD with a detected `face` part uses
+motion mode. Missing optional eye, mouth, or hair parts remain diagnostic
+warnings and only disable the corresponding motion capability. PSDs without a
+`face` motion part fall back to static PSDTool mode.
 
 Static mode supports PSDTool-style `!` forced visibility, `*` radio items, and
 role auto-detection for mouth and eye layers. To inspect those controls, load
@@ -99,6 +103,53 @@ Motion settings are in **Settings -> Visual**:
 Wheel zoom scales around the avatar's own center. Dragging is the only operation
 that changes avatar position, and offsets are clamped so the avatar cannot be
 lost completely off-screen.
+
+### PSD motion tuning and transfer
+
+When a motion-mode PSD is loaded, expand **PSD motion tuning** under
+**Settings -> Visual**. The sliders update the existing renderer in real time;
+they do not rebuild the rig or WebGL textures. The `PSD motion` control remains
+the master switch, and `Motion intensity` remains an additional multiplier for
+automatic motion and physics. The mouth baseline is combined with audio lip
+sync by using whichever value is larger.
+
+Changes are saved automatically for the PSD content SHA-256 in
+`react-psd-app-psd-motion-profiles-v1`. Selecting identical PSD content under a
+different file name restores the same profile. **Reset to defaults** removes
+that PSD's saved entry and restores the original motion-mode behavior.
+
+Use **Export motion settings** to download a formatted
+`<PSD-name>.motion.json` sidecar, then use **Import motion settings** in another
+browser or on another PC. The sidecar contains only the versioned motion
+profile and PSD identity; it does not contain PSD pixels, API keys, paths,
+chat/voice settings, camera/microphone state, or XMP metadata, and it is never
+embedded into the PSD itself.
+
+Imports with the same SHA-256 apply immediately. A different SHA-256 with the
+same canvas and layer signature requires explicit confirmation. A mismatched
+layer signature is rejected. Motion profile controls are not available in
+static PSDTool mode. See [PSD-FORMATS.md](./PSD-FORMATS.md) for the parameter,
+identity, and sidecar details.
+
+## Emotion expression effects
+
+Open **Settings -> Emotion expression effects** and choose one of these modes:
+
+| Mode | Behavior |
+|---|---|
+| `None` | Preserves the original display: no controls and no effects. |
+| `Manual buttons + anchor settings` | Shows preview buttons and an anchor editor over the avatar. |
+| `Link to speech emotions only` | Maps screenplay emotion tags such as `happy` and `sad` to effects during speech. |
+
+The effects are procedural canvas overlays rather than PSD layers, so the same
+sparkles, surprise lines, tears, anger mark, bubbles, and thinking mark work for
+both static PSDTool avatars and Anime2.5DRig motion avatars. The mapping from
+emotion tags to effects can be changed in Settings.
+
+In manual mode, use **Anchor settings** to place the face center and both eyes,
+and to adjust effect size. Anchor values are saved per PSD profile
+(`${fileName}:${fileSize}`) in `react-psd-app-settings`. The PSD pixels and PSD
+file itself are never copied into this setting.
 
 ## Credits
 

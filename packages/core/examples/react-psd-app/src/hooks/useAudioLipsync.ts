@@ -7,6 +7,10 @@ const SMOOTH_FACTOR = 0.5;
 /** RMS normalization ceiling (this value maps to 1.0) */
 const RMS_CEILING = 0.12;
 
+interface PlayAudioOptions {
+  onStart?: () => void;
+}
+
 export function useAudioLipsync() {
   const [mouthLevel, setMouthLevel] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -48,7 +52,10 @@ export function useAudioLipsync() {
   }, []);
 
   const play = useCallback(
-    async (arrayBuffer: ArrayBuffer): Promise<void> => {
+    async (
+      arrayBuffer: ArrayBuffer,
+      options?: PlayAudioOptions,
+    ): Promise<void> => {
       // Stop previous playback
       stopCurrent();
 
@@ -128,6 +135,7 @@ export function useAudioLipsync() {
           resolve();
         };
         source.start(0);
+        options?.onStart?.();
       });
     },
     [stopCurrent, getAudioContext],

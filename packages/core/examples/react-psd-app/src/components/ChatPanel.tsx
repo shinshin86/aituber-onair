@@ -1,6 +1,10 @@
 import type { ChatMessage } from '../types/chat';
 import type { AvatarViewTransform, VisualSettings } from '../types/settings';
 import type { PsdAvatarController } from '../hooks/usePsdAvatar';
+import type {
+  PsdEmotionEffectAnchor,
+  PsdEmotionReaction,
+} from '../lib/psdEmotionEffects';
 import { AvatarBackground } from './AvatarPanel';
 import { ChatLog } from './ChatLog';
 import { ChatInput } from './ChatInput';
@@ -15,9 +19,13 @@ interface ChatPanelProps {
   smoothedValue: number;
   backgroundImageUrl?: string | null;
   psdAvatar: PsdAvatarController;
+  avatarReaction?: PsdEmotionReaction | null;
   visual: VisualSettings;
   avatarViewTransform: AvatarViewTransform;
   onAvatarViewTransformChange: (transform: AvatarViewTransform) => void;
+  effectAnchor: PsdEmotionEffectAnchor;
+  onEffectAnchorChange: (anchor: PsdEmotionEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
   onToggleSettings: () => void;
 }
 
@@ -31,9 +39,13 @@ export function ChatPanel({
   smoothedValue,
   backgroundImageUrl,
   psdAvatar,
+  avatarReaction,
   visual,
   avatarViewTransform,
   onAvatarViewTransformChange,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
   onToggleSettings,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
@@ -73,14 +85,21 @@ export function ChatPanel({
         ⚙
       </button>
       <AvatarBackground
+        key={visual.psdEmotionEffectControlMode}
         mouthLevel={mouthLevel}
         isSpeaking={isSpeaking}
         smoothedValue={smoothedValue}
         psdAvatar={psdAvatar}
+        avatarReaction={avatarReaction}
         avatarViewTransform={avatarViewTransform}
         motionEnabled={visual.motionEnabled}
         motionIntensity={visual.motionIntensity}
         onAvatarViewTransformChange={onAvatarViewTransformChange}
+        effectAnchor={effectAnchor}
+        onEffectAnchorChange={onEffectAnchorChange}
+        onEffectAnchorReset={onEffectAnchorReset}
+        emotionEffectControlMode={visual.psdEmotionEffectControlMode}
+        emotionEffectMap={visual.psdEmotionEffectMap}
       />
       {isBroadcast ? (
         broadcastCaption && (

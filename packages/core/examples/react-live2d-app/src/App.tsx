@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -8,6 +14,7 @@ import { useScreenVisionController } from './hooks/useScreenVisionController';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
+import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
 import {
   createBundledLive2DModelSource,
   getBundledLive2DModels,
@@ -19,11 +26,23 @@ import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/base.css';
 import './styles/app.css';
 
+const DEFAULT_SETTINGS_DIALOG_OFFSET: DialogDragPoint = { x: 0, y: 0 };
+
+interface SettingsDialogDragState {
+  pointerId: number;
+  pointerStart: DialogDragPoint;
+  offsetStart: DialogDragPoint;
+  rect: DOMRect;
+}
+
 export default function App() {
   const { play, stop, audioBinding, isSpeaking } = useAudioLipsync();
   const settingsHook = useSettings();
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsDialogOffset, setSettingsDialogOffset] =
+    useState<DialogDragPoint>(DEFAULT_SETTINGS_DIALOG_OFFSET);
+  const [settingsDialogDragging, setSettingsDialogDragging] = useState(false);
   const [streamErrorMessage, setStreamErrorMessage] = useState('');
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
     null,
@@ -40,6 +59,77 @@ export default function App() {
   const [modelPickerError, setModelPickerError] = useState('');
   const backgroundObjectUrlRef = useRef<string | null>(null);
   const modelSourceRef = useRef<Live2DModelSource | null>(null);
+  const settingsDialogRef = useRef<HTMLDivElement | null>(null);
+  const settingsDialogDragRef = useRef<SettingsDialogDragState | null>(null);
+
+  const handleSettingsDialogPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return;
+      if ((event.target as Element).closest('button')) return;
+      const dialog = settingsDialogRef.current;
+      if (!dialog) return;
+
+      settingsDialogDragRef.current = {
+        pointerId: event.pointerId,
+        pointerStart: { x: event.clientX, y: event.clientY },
+        offsetStart: settingsDialogOffset,
+        rect: dialog.getBoundingClientRect(),
+      };
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setSettingsDialogDragging(true);
+      event.preventDefault();
+    },
+    [settingsDialogOffset],
+  );
+
+  const handleSettingsDialogPointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const drag = settingsDialogDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const delta = clampDialogDragDelta(
+        {
+          x: event.clientX - drag.pointerStart.x,
+          y: event.clientY - drag.pointerStart.y,
+        },
+        drag.rect,
+        { width: window.innerWidth, height: window.innerHeight },
+      );
+      setSettingsDialogOffset({
+        x: drag.offsetStart.x + delta.x,
+        y: drag.offsetStart.y + delta.y,
+      });
+    },
+    [],
+  );
+
+  const finishSettingsDialogDrag = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const drag = settingsDialogDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      settingsDialogDragRef.current = null;
+      setSettingsDialogDragging(false);
+    },
+    [],
+  );
+
+  const resetSettingsDialogPosition = useCallback(() => {
+    settingsDialogDragRef.current = null;
+    setSettingsDialogDragging(false);
+    setSettingsDialogOffset(DEFAULT_SETTINGS_DIALOG_OFFSET);
+  }, []);
+
+  const closeSettingsDialog = useCallback(() => {
+    resetSettingsDialogPosition();
+    setSettingsOpen(false);
+  }, [resetSettingsDialogPosition]);
+
+  const toggleSettingsDialog = useCallback(() => {
+    resetSettingsDialogPosition();
+    setSettingsOpen((open) => !open);
+  }, [resetSettingsDialogPosition]);
 
   const replaceModelSource = useCallback(
     (nextSource: Live2DModelSource | null) => {
@@ -232,13 +322,21 @@ export default function App() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setSettingsOpen(false);
+        closeSettingsDialog();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [settingsOpen]);
+  }, [closeSettingsDialog, settingsOpen]);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+
+    const handleResize = () => resetSettingsDialogPosition();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [resetSettingsDialogPosition, settingsOpen]);
 
   useEffect(() => {
     return () => {
@@ -256,7 +354,7 @@ export default function App() {
         partialResponse={partialResponse}
         isProcessing={isProcessing}
         onSend={handleSend}
-        onToggleSettings={() => setSettingsOpen((current) => !current)}
+        onToggleSettings={toggleSettingsDialog}
         backgroundImageUrl={backgroundImageUrl}
         modelSource={modelSource}
         modelPickerError={modelPickerError}
@@ -265,19 +363,27 @@ export default function App() {
       />
 
       {settingsOpen && (
-        <div
-          className="settings-dialog-overlay"
-          onClick={() => setSettingsOpen(false)}
-        >
+        <div className="settings-dialog-overlay" onClick={closeSettingsDialog}>
           <div
+            ref={settingsDialogRef}
             className="settings-dialog"
+            style={{
+              transform: `translate3d(${settingsDialogOffset.x}px, ${settingsDialogOffset.y}px, 0)`,
+            }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="settings-dialog-header">
+            <div
+              className={`settings-dialog-header${settingsDialogDragging ? ' is-dragging' : ''}`}
+              onPointerDown={handleSettingsDialogPointerDown}
+              onPointerMove={handleSettingsDialogPointerMove}
+              onPointerUp={finishSettingsDialogDrag}
+              onPointerCancel={finishSettingsDialogDrag}
+              onLostPointerCapture={finishSettingsDialogDrag}
+            >
               <h2>設定</h2>
               <button
                 className="settings-dialog-close"
-                onClick={() => setSettingsOpen(false)}
+                onClick={closeSettingsDialog}
                 type="button"
               >
                 &times;

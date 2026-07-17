@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -9,6 +16,15 @@ import { usePsdAvatar } from './hooks/usePsdAvatar';
 import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
+import {
+  createLinkedPsdEmotionReaction,
+  getPsdEmotionEffectAnchor,
+  withPsdEmotionReactionId,
+  type PsdEmotionEffectAnchor,
+  type PsdEmotionReaction,
+  type PsdEmotionReactionDraft,
+} from './lib/psdEmotionEffects';
+import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
 import type { AvatarViewTransform } from './types/settings';
 import './styles/app.css';
 
@@ -18,12 +34,29 @@ const DEFAULT_AVATAR_VIEW_TRANSFORM: AvatarViewTransform = {
   scale: 1,
 };
 
+const DEFAULT_SETTINGS_DIALOG_OFFSET: DialogDragPoint = { x: 0, y: 0 };
+
+interface SettingsDialogDragState {
+  pointerId: number;
+  pointerStart: DialogDragPoint;
+  offsetStart: DialogDragPoint;
+  rect: DOMRect;
+}
+
 export default function App() {
   const { play, stop, mouthLevel, isSpeaking, smoothedValue } =
     useAudioLipsync();
   const settingsHook = useSettings();
   const psdAvatar = usePsdAvatar();
+  const updateVisualPsdEmotionEffectAnchor =
+    settingsHook.updateVisualPsdEmotionEffectAnchor;
+  const resetVisualPsdEmotionEffectAnchor =
+    settingsHook.resetVisualPsdEmotionEffectAnchor;
+  const psdAvatarProfileId = psdAvatar.source?.key;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsDialogOffset, setSettingsDialogOffset] =
+    useState<DialogDragPoint>(DEFAULT_SETTINGS_DIALOG_OFFSET);
+  const [settingsDialogDragging, setSettingsDialogDragging] = useState(false);
   const [streamErrorMessage, setStreamErrorMessage] = useState('');
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
     null,
@@ -31,6 +64,89 @@ export default function App() {
   const [avatarViewTransform, setAvatarViewTransform] =
     useState<AvatarViewTransform>(DEFAULT_AVATAR_VIEW_TRANSFORM);
   const backgroundObjectUrlRef = useRef<string | null>(null);
+  const settingsDialogRef = useRef<HTMLDivElement | null>(null);
+  const settingsDialogDragRef = useRef<SettingsDialogDragState | null>(null);
+  const reactionIdRef = useRef(0);
+  const [avatarReaction, setAvatarReaction] =
+    useState<PsdEmotionReaction | null>(null);
+
+  const emitAvatarReaction = useCallback((draft: PsdEmotionReactionDraft) => {
+    reactionIdRef.current += 1;
+    setAvatarReaction(withPsdEmotionReactionId(draft, reactionIdRef.current));
+  }, []);
+
+  const handleSettingsDialogPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return;
+      if ((event.target as Element).closest('button')) return;
+      const dialog = settingsDialogRef.current;
+      if (!dialog) return;
+
+      settingsDialogDragRef.current = {
+        pointerId: event.pointerId,
+        pointerStart: { x: event.clientX, y: event.clientY },
+        offsetStart: settingsDialogOffset,
+        rect: dialog.getBoundingClientRect(),
+      };
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setSettingsDialogDragging(true);
+      event.preventDefault();
+    },
+    [settingsDialogOffset],
+  );
+
+  const handleSettingsDialogPointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const drag = settingsDialogDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const delta = clampDialogDragDelta(
+        {
+          x: event.clientX - drag.pointerStart.x,
+          y: event.clientY - drag.pointerStart.y,
+        },
+        drag.rect,
+        { width: window.innerWidth, height: window.innerHeight },
+      );
+      setSettingsDialogOffset({
+        x: drag.offsetStart.x + delta.x,
+        y: drag.offsetStart.y + delta.y,
+      });
+    },
+    [],
+  );
+
+  const finishSettingsDialogDrag = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const drag = settingsDialogDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      settingsDialogDragRef.current = null;
+      setSettingsDialogDragging(false);
+    },
+    [],
+  );
+
+  const resetSettingsDialogPosition = useCallback(() => {
+    settingsDialogDragRef.current = null;
+    setSettingsDialogDragging(false);
+    setSettingsDialogOffset(DEFAULT_SETTINGS_DIALOG_OFFSET);
+  }, []);
+
+  const closeSettingsDialog = useCallback(() => {
+    resetSettingsDialogPosition();
+    setSettingsOpen(false);
+  }, [resetSettingsDialogPosition]);
+
+  const toggleSettingsDialog = useCallback(() => {
+    resetSettingsDialogPosition();
+    setSettingsOpen((open) => !open);
+  }, [resetSettingsDialogPosition]);
+
+  const resetAvatarReaction = useCallback(() => {
+    setAvatarReaction(null);
+  }, []);
 
   const handleAudioPlay = useCallback(
     async (arrayBuffer: ArrayBuffer) => {
@@ -38,6 +154,53 @@ export default function App() {
     },
     [play],
   );
+
+  const handleSpeechStart = useCallback(
+    (screenplay: { emotion?: string; text?: string }) => {
+      const reaction = createLinkedPsdEmotionReaction(
+        settingsHook.settings.visual.psdEmotionEffectControlMode,
+        screenplay,
+        settingsHook.settings.visual.psdEmotionEffectMap,
+      );
+
+      if (reaction) {
+        emitAvatarReaction(reaction);
+      } else {
+        setAvatarReaction(null);
+      }
+    },
+    [
+      emitAvatarReaction,
+      settingsHook.settings.visual.psdEmotionEffectControlMode,
+      settingsHook.settings.visual.psdEmotionEffectMap,
+    ],
+  );
+
+  const handleSpeechEnd = useCallback(() => {
+    resetAvatarReaction();
+  }, [resetAvatarReaction]);
+
+  const effectAnchor = useMemo(
+    () =>
+      getPsdEmotionEffectAnchor(
+        settingsHook.settings.visual.psdEmotionEffectAnchors,
+        psdAvatarProfileId,
+      ),
+    [psdAvatarProfileId, settingsHook.settings.visual.psdEmotionEffectAnchors],
+  );
+
+  const handleEffectAnchorChange = useCallback(
+    (anchor: PsdEmotionEffectAnchor) => {
+      if (!psdAvatarProfileId) return;
+      updateVisualPsdEmotionEffectAnchor(psdAvatarProfileId, anchor);
+    },
+    [psdAvatarProfileId, updateVisualPsdEmotionEffectAnchor],
+  );
+
+  const handleEffectAnchorReset = useCallback(() => {
+    if (!psdAvatarProfileId) return;
+    resetVisualPsdEmotionEffectAnchor(psdAvatarProfileId);
+  }, [psdAvatarProfileId, resetVisualPsdEmotionEffectAnchor]);
 
   const {
     messages,
@@ -47,6 +210,8 @@ export default function App() {
     processVisionChat,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
+    onSpeechStart: handleSpeechStart,
+    onSpeechEnd: handleSpeechEnd,
     settings: settingsHook.settings,
     getApiKeyForProvider: settingsHook.getApiKeyForProvider,
   });
@@ -65,9 +230,10 @@ export default function App() {
     (text: string) => {
       // Stop previous audio if speech is currently playing
       stop();
+      resetAvatarReaction();
       processChat(text);
     },
-    [stop, processChat],
+    [stop, resetAvatarReaction, processChat],
   );
 
   const { enqueueYouTubeComments, enqueueTwitchComments } =
@@ -170,11 +336,19 @@ export default function App() {
   useEffect(() => {
     if (!settingsOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSettingsOpen(false);
+      if (e.key === 'Escape') closeSettingsDialog();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [settingsOpen]);
+  }, [closeSettingsDialog, settingsOpen]);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+
+    const handleResize = () => resetSettingsDialogPosition();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [resetSettingsDialogPosition, settingsOpen]);
 
   useEffect(() => {
     const backgroundObjectUrl = backgroundObjectUrlRef;
@@ -198,23 +372,38 @@ export default function App() {
         smoothedValue={smoothedValue}
         backgroundImageUrl={backgroundImageUrl}
         psdAvatar={psdAvatar}
+        avatarReaction={avatarReaction}
         visual={settingsHook.settings.visual}
         avatarViewTransform={avatarViewTransform}
         onAvatarViewTransformChange={setAvatarViewTransform}
-        onToggleSettings={() => setSettingsOpen((v) => !v)}
+        effectAnchor={effectAnchor}
+        onEffectAnchorChange={handleEffectAnchorChange}
+        onEffectAnchorReset={handleEffectAnchorReset}
+        onToggleSettings={toggleSettingsDialog}
       />
 
       {settingsOpen && (
-        <div
-          className="settings-dialog-overlay"
-          onClick={() => setSettingsOpen(false)}
-        >
-          <div className="settings-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="settings-dialog-header">
+        <div className="settings-dialog-overlay" onClick={closeSettingsDialog}>
+          <div
+            ref={settingsDialogRef}
+            className="settings-dialog"
+            style={{
+              transform: `translate3d(${settingsDialogOffset.x}px, ${settingsDialogOffset.y}px, 0)`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className={`settings-dialog-header${settingsDialogDragging ? ' is-dragging' : ''}`}
+              onPointerDown={handleSettingsDialogPointerDown}
+              onPointerMove={handleSettingsDialogPointerMove}
+              onPointerUp={finishSettingsDialogDrag}
+              onPointerCancel={finishSettingsDialogDrag}
+              onLostPointerCapture={finishSettingsDialogDrag}
+            >
               <h2>Settings</h2>
               <button
                 className="settings-dialog-close"
-                onClick={() => setSettingsOpen(false)}
+                onClick={closeSettingsDialog}
               >
                 &times;
               </button>

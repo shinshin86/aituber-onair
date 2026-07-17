@@ -10,7 +10,10 @@ import {
   type PsdModel,
   type PsdModelNode,
 } from '../src/lib/psdModel';
-import { summarizeAnime25Rig } from '../src/lib/rig/anime25Rig';
+import {
+  isAnime25RigUsable,
+  summarizeAnime25Rig,
+} from '../src/lib/rig/anime25Rig';
 import { getComposedOpacityForNode } from '../src/lib/psdRenderer';
 import { getInitialVisibility } from '../src/lib/psdVisibility';
 
@@ -326,6 +329,47 @@ describe('Anime2.5DRig detection helpers', () => {
     );
 
     expect(summary.missingRequiredParts).toEqual([]);
+  });
+
+  it('accepts a warning-bearing single-eye motion rig with a face layer', () => {
+    const summary = summarizeAnime25Rig(
+      {
+        canvas: { w: 1280, h: 1280 },
+        layers: [
+          { name: 'face' },
+          { name: 'eyewhite_r' },
+          { name: 'irides_r' },
+          { name: 'eye_close_r' },
+          { name: 'mouth_open' },
+          { name: 'mouth_close' },
+          { name: 'front hair_1' },
+        ],
+        anchors: { face: {}, eyeR: {}, mouth: {} },
+        warnings: ['Optional left eye anchor is unavailable.'],
+      },
+      { baseName: (name) => name.replace(/_\d+$/, '') },
+      { noisy: 0, layers: 7 },
+    );
+
+    expect(summary.missingRequiredParts).toEqual([]);
+    expect(summary.warnings).toHaveLength(1);
+    expect(isAnime25RigUsable(summary)).toBe(true);
+  });
+
+  it('keeps static fallback for rigs without a face layer', () => {
+    const summary = summarizeAnime25Rig(
+      {
+        canvas: { w: 512, h: 512 },
+        layers: [{ name: '!body' }],
+        anchors: {},
+        warnings: ['Unknown layer.'],
+      },
+      { baseName: (name) => name },
+      { noisy: 0, layers: 1 },
+    );
+
+    expect(summary.missingRequiredParts).toEqual(['face']);
+    expect(isAnime25RigUsable(summary)).toBe(false);
   });
 });
 
