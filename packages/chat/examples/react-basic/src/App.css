@@ -6,32 +6,83 @@
 .app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
   width: 100%;
-  background: var(--bg);
+  background: transparent;
 }
 
 .app-header {
-  padding: 2rem 2.5rem 1rem;
+  position: relative;
+  isolation: isolate;
+  min-height: 164px;
+  margin: 1.5rem 2.5rem 0;
+  padding: 1.6rem 2rem;
+  overflow: hidden;
+  border: 1px solid rgba(198, 212, 212, 0.72);
+  border-radius: 18px;
+  background-color: var(--brand-tint);
+  background-image: linear-gradient(
+    90deg,
+    rgba(239, 250, 249, 0.99) 0%,
+    rgba(239, 250, 249, 0.96) 42%,
+    rgba(239, 250, 249, 0.78) 66%,
+    rgba(239, 250, 249, 0.48) 100%
+  );
+  box-shadow: var(--shadow);
+}
+
+.app-header::after {
+  position: absolute;
+  top: -72px;
+  right: clamp(16px, 4vw, 56px);
+  bottom: -72px;
+  width: min(760px, 68vw);
+  background-image: url("../../../images/aituber-onair-chat.png");
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: contain;
+  content: "";
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .brand {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  align-items: flex-start;
+  max-width: 560px;
+}
+
+.brand-eyebrow {
+  display: inline-flex;
+  margin-bottom: 0.65rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .brand-title {
-  font-size: 1.6rem;
-  font-weight: 600;
+  margin: 0;
+  font-size: clamp(1.9rem, 3vw, 2.65rem);
+  font-weight: 700;
+  line-height: 1.08;
   letter-spacing: -0.02em;
   color: var(--text);
 }
 
 .brand-subtitle {
-  font-size: 0.95rem;
-  color: var(--muted);
+  margin: 0.6rem 0 0;
+  font-size: 1rem;
+  color: var(--text-soft);
 }
 
 .app-main {
@@ -39,7 +90,7 @@
   display: flex;
   align-items: stretch;
   gap: 1.5rem;
-  padding: 1.5rem 2.5rem 2.5rem;
+  padding: 1.25rem 2.5rem 1.5rem;
   min-height: 0;
 }
 
@@ -66,6 +117,7 @@
   min-height: 0;
   flex: 1 1 auto;
   min-width: 0;
+  box-shadow: var(--shadow);
 }
 
 .error-message {
@@ -80,25 +132,32 @@
 }
 
 .app-footer {
-  padding: 0 2.5rem 2rem;
+  padding: 0 2.5rem 1rem;
   font-size: 0.85rem;
   color: var(--muted);
 }
 
+.app-footer p {
+  margin: 0;
+}
+
 .app-footer a {
-  color: var(--text);
+  color: var(--brand-strong);
   text-decoration: none;
   margin-left: 0.5rem;
 }
 
 .app-footer a:hover {
+  color: var(--brand);
   text-decoration: underline;
 }
 
 /* Responsive */
 @media (max-width: 980px) {
   .app-header {
-    padding: 1.5rem 1.5rem 0.75rem;
+    min-height: 150px;
+    margin: 1.25rem 1.5rem 0;
+    padding: 1.4rem 1.5rem;
   }
 
   .app-main {
@@ -109,6 +168,58 @@
   .config-section {
     flex: 0 0 auto;
     height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .app {
+    height: auto;
+  }
+
+  .app-header {
+    min-height: 164px;
+    margin: 1rem 1rem 0;
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  .app-header::after {
+    top: -28px;
+    right: -96px;
+    bottom: -28px;
+    width: 500px;
+    opacity: 0.18;
+  }
+
+  .brand {
+    max-width: 82%;
+  }
+
+  .brand-title {
+    font-size: 1.75rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .app-main {
+    gap: 1rem;
+    padding: 1rem 1rem 1.5rem;
+  }
+
+  .config-section {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  .chat-section {
+    min-height: 520px;
+    border-radius: 16px;
+  }
+
+  .app-footer {
+    padding: 0 1rem 1.5rem;
   }
 }
 
@@ -226,7 +337,7 @@
   padding: 0.5em 1.2em;
   font-size: 0.88rem;
   font-weight: 500;
-  background: var(--text);
+  background: var(--brand-strong);
   color: var(--panel);
   border: none;
   border-radius: 8px;
@@ -248,7 +359,7 @@
 
 .gemini-nano-progress__bar {
   height: 100%;
-  background: var(--text);
+  background: var(--brand);
   border-radius: 3px;
   transition: width 0.3s ease;
 }

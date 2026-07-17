@@ -423,10 +423,11 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="brand">
-          <div className="brand-title">AITuber OnAir Chat</div>
-          <div className="brand-subtitle">
+          <span className="brand-eyebrow">@aituber-onair/chat</span>
+          <h1 className="brand-title">AITuber OnAir Chat</h1>
+          <p className="brand-subtitle">
             Sample UI for provider + model selection
-          </div>
+          </p>
         </div>
       </header>
 

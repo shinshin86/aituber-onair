@@ -178,16 +178,16 @@ export default function MessageList({
         }
 
         .user .message-body {
-          background: #0f0f0f;
+          background: var(--brand-strong);
           color: white;
           border-bottom-right-radius: 6px;
         }
 
         .assistant .message-body {
-          background: #f6f6f6;
+          background: var(--surface-soft);
           color: var(--text);
           border-bottom-left-radius: 6px;
-          border-color: #ececec;
+          border-color: var(--border);
         }
 
         .message-text {
@@ -228,16 +228,16 @@ export default function MessageList({
         }
 
         .message-list::-webkit-scrollbar-track {
-          background: #f1f1f1;
+          background: var(--surface-soft);
         }
 
         .message-list::-webkit-scrollbar-thumb {
-          background: #bdbdbd;
+          background: var(--border-strong);
           border-radius: 4px;
         }
 
         .message-list::-webkit-scrollbar-thumb:hover {
-          background: #9a9a9a;
+          background: var(--brand);
         }
 
         @media (max-width: 768px) {

@@ -5,22 +5,30 @@
     sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #0f0f0f;
-  background-color: #f7f7f7;
+  color: #0f1f22;
+  background-color: #eef4f4;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --bg: #f7f7f7;
+  --bg: #eef4f4;
   --panel: #ffffff;
-  --text: #0f0f0f;
-  --muted: #6f6f6f;
-  --border: #e3e3e3;
-  --shadow: 0 20px 60px rgba(15, 15, 15, 0.06);
-  --input-bg: #fafafa;
-  --input-border: #d7d7d7;
-  --input-focus: #0f0f0f;
+  --surface-soft: #f6fafa;
+  --text: #0f1f22;
+  --text-soft: #2a3a3d;
+  --muted: #5b6b6e;
+  --border: #dfe7e7;
+  --border-strong: #c6d4d4;
+  --brand: #16a39b;
+  --brand-strong: #0f8079;
+  --brand-soft: #d8efed;
+  --brand-tint: #effaf9;
+  --brand-ink: #093f3b;
+  --shadow: 0 10px 28px -18px rgba(15, 31, 34, 0.32);
+  --input-bg: #f6fafa;
+  --input-border: #c6d4d4;
+  --input-focus: #16a39b;
 }
 
 * {
@@ -33,11 +41,15 @@ body {
   min-height: 100vh;
   background: var(--bg);
   background-image: radial-gradient(
-      circle at 20% 20%,
-      rgba(15, 15, 15, 0.04),
-      transparent 55%
+      1100px 520px at 12% -10%,
+      var(--brand-tint) 0%,
+      transparent 60%
     ),
-    radial-gradient(circle at 80% 10%, rgba(15, 15, 15, 0.03), transparent 45%);
+    radial-gradient(
+      900px 440px at 100% 0%,
+      rgba(22, 163, 155, 0.08) 0%,
+      transparent 65%
+    );
   color: var(--text);
 }
 
@@ -49,7 +61,7 @@ textarea {
 }
 
 button {
-  border-radius: 999px;
+  border-radius: 10px;
   border: 1px solid transparent;
   padding: 0.6em 1.1em;
   font-size: 0.95rem;
@@ -64,6 +76,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #0f0f0f;
-  outline-offset: 2px;
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(22, 163, 155, 0.18);
 }
