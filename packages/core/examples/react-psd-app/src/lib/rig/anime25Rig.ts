@@ -74,14 +74,7 @@ declare global {
   var Rigger: Anime25Rigger | undefined;
 }
 
-const REQUIRED_PARTS = [
-  'face',
-  'eyewhite',
-  'irides',
-  'eyelash',
-  'mouth_open',
-];
-const REQUIRED_ANCHORS = ['face', 'eyeL', 'eyeR', 'mouth'];
+const REQUIRED_PARTS = ['face'];
 
 function getRigger(): Anime25Rigger | null {
   return globalThis.Rigger || null;
@@ -108,11 +101,6 @@ export function summarizeAnime25Rig(
   ];
   const parts = new Set(partsFound);
   const missingRequiredParts = REQUIRED_PARTS.filter((part) => !parts.has(part));
-  const hasHair = parts.has('front hair') || parts.has('back hair');
-
-  if (!hasHair) {
-    missingRequiredParts.push('front hair or back hair');
-  }
 
   return {
     canvasWidth: rig.canvas.w,
@@ -130,9 +118,8 @@ export function summarizeAnime25Rig(
   };
 }
 
-function getMissingRequiredAnchors(rig: Anime25RigResult): string[] {
-  const anchors = new Set(Object.keys(rig.anchors));
-  return REQUIRED_ANCHORS.filter((anchor) => !anchors.has(anchor));
+export function isAnime25RigUsable(summary: Anime25RigSummary): boolean {
+  return summary.missingRequiredParts.length === 0;
 }
 
 export async function detectAnime25RigFromBuffer(
@@ -157,13 +144,10 @@ export async function detectAnime25RigFromBuffer(
     const preprocessed = rigger.cleanPsdLayers(psd);
     const rig = rigger.buildRig(psd);
     const summary = summarizeAnime25Rig(rig, rigger, preprocessed);
-    const missingRequiredAnchors = getMissingRequiredAnchors(rig);
     const blockingReasons = [
       ...summary.missingRequiredParts.map((part) => `missing part: ${part}`),
-      ...missingRequiredAnchors.map((anchor) => `missing anchor: ${anchor}`),
-      ...rig.warnings,
     ];
-    const usable = blockingReasons.length === 0;
+    const usable = isAnime25RigUsable(summary);
 
     return {
       mode: usable ? 'motion' : 'static',
@@ -171,7 +155,9 @@ export async function detectAnime25RigFromBuffer(
       rig,
       summary,
       reason: usable
-        ? 'Anime2.5DRig parts detected.'
+        ? rig.warnings.length > 0
+          ? `Anime2.5DRig parts detected with warnings: ${rig.warnings.join('; ')}`
+          : 'Anime2.5DRig parts detected.'
         : blockingReasons.join('; '),
     };
   } catch (error) {

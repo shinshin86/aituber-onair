@@ -81,9 +81,10 @@ This writes `public/avatar/sample-static.psd`. Runtime static PSD parsing uses
 ## PSD modes
 
 The app first tries motion auto-rig detection with the vendored
-Anime2.5DRig-compatible rigger. Motion mode is used only when required parts,
-anchors, and rigger checks all pass. Otherwise, the file falls back to static
-PSDTool mode.
+Anime2.5DRig-compatible rigger. A flat PSD with a detected `face` part uses
+motion mode. Missing optional eye, mouth, or hair parts remain diagnostic
+warnings and only disable the corresponding motion capability. PSDs without a
+`face` motion part fall back to static PSDTool mode.
 
 Static mode supports PSDTool-style `!` forced visibility, `*` radio items, and
 role auto-detection for mouth and eye layers. To inspect those controls, load

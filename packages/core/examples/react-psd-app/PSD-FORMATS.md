@@ -12,11 +12,10 @@ for motion, it falls back to static mode.
 
 1. The selected `.psd` is inspected by `src/lib/rig/anime25Rig.ts` with the
    vendored rigger in `src/vendor/anime25drig/rigger.js`.
-2. Motion mode is selected only when all of these are true:
-   - Required parts are present: `face`, `eyewhite`, `irides`, `eyelash`,
-     `mouth_open`, and at least one of `front hair` or `back hair`.
-   - Required anchors are present: `face`, `eyeL`, `eyeR`, and `mouth`.
-   - The rigger produced no blocking warnings.
+2. Motion mode is selected when the rigger produces a normalized `face` part.
+   Eye, mouth, and hair parts add their corresponding motion capabilities but
+   are not required. Missing optional parts and incomplete eye anchors remain
+   visible as non-blocking diagnostic warnings.
 3. Otherwise the app parses the file with `@webtoon/psd` and uses static
    PSDTool mode.
 
@@ -47,12 +46,12 @@ Layer names are normalized by `normName` in `rigger.js`:
 | Input name | Eligibility | Notes |
 |---|---:|---|
 | `face` | Required | Main face region and face anchor source. |
-| `eyewhite` | Required | Split internally into left/right eye whites by component position. |
-| `irides` | Required | Split internally into left/right irises by component position. |
-| `eyelash` | Required | Split internally into left/right open-eye lashes. |
-| `mouth_open` | Required | Required by this app for motion eligibility. |
-| `front hair` | Required if no `back hair` | Hair layer. Numbered variants are allowed. |
-| `back hair` | Required if no `front hair` | Hair layer. Numbered variants are allowed. |
+| `eyewhite` | Optional | Split internally into visible left/right eye whites and used to derive eye anchors. A single detected side is supported. |
+| `irides` | Optional | Split internally into visible left/right irises for gaze motion. |
+| `eyelash` | Optional | Split internally into visible left/right open-eye lashes. |
+| `mouth_open` | Optional | Enables the open-mouth side of audio-driven lip sync. |
+| `front hair` | Optional | Hair layer with physics. Numbered variants are allowed. |
+| `back hair` | Optional | Hair layer with physics. Numbered variants are allowed. |
 | `mouth_close` | Optional | Used for closed-mouth shape and may help mouth anchor placement. |
 | `eye_close` | Optional | Split internally into left/right closed eyes. If missing, blink falls back to compressing eye-open layers. |
 | `eyebrow` | Optional | Split internally into left/right brows. |
@@ -88,10 +87,10 @@ uses numbered hair layers for strand grouping. Hyphen numbering such as
 - `eyewhite_l`, `irides_r`, `eyewhite-l`, and `irides-r` are not recognized
   input slot names by the vendored rigger.
 - Unknown names are demoted to `body` or `head` placement and produce a
-  blocking warning like `未知のレイヤー名 "..." — head/body として扱います`.
-- If the rigger cannot derive both eye anchors, motion eligibility fails with
-  `目のアンカーが不完全です（eyewhite/irides を確認）` and
-  `missing anchor: eyeL` or `missing anchor: eyeR`.
+  diagnostic warning like `未知のレイヤー名 "..." — head/body として扱います`.
+- If the rigger derives only one eye anchor, the detected side keeps its eye
+  motion and the unavailable side is skipped. The incomplete-anchor warning is
+  diagnostic and does not disable motion mode.
 
 ## Static PSDTool Mode
 
@@ -139,7 +138,8 @@ These limits apply to this example unless noted otherwise:
 - Adjustment/effect layers are not rendered as Photoshop effects.
 - `:flip*` variants are parsed but not visually flipped.
 - PSDTool faview/simple-view metadata is not supported.
-- Motion mode has idle/breath/hair/eye/mouth animation controls, but no camera
+- Motion mode has idle and breathing motion. Hair, eye, blink, and mouth motion
+  are applied when their corresponding layers can be detected. It has no camera
   tracking.
 
 If a PSD fails with color mode or bit depth errors, export it again as an
@@ -149,10 +149,9 @@ If a PSD fails with color mode or bit depth errors, export it again as an
 
 | Message | Meaning | Fix |
 |---|---|---|
-| `missing part: face` or `missing part: X` | A required motion slot was not found after rigger name normalization. | Rename a flat pixel layer to the required base name, for example `face`, `eyewhite`, `irides`, `eyelash`, `mouth_open`, `front hair`, or `back hair`. |
-| `missing anchor: eyeL` | The rigger could not derive the left eye anchor. | Check that `eyewhite` and `irides` are visible pixel layers and separate into usable left/right components. |
-| `未知のレイヤー名 "..." — head/body として扱います` | The layer name is not in the rigger slot table or alias table. | Rename it to a recognized base name. Avoid side suffixes such as `eyewhite_l` and hyphenated names such as `eyewhite-l`. |
-| `目のアンカーが不完全です（eyewhite/irides を確認）` | Eye anchor detection did not find both eyes. | Make `eyewhite` and `irides` flat pixel layers with two separable eye components. |
+| `missing part: face` | The required face motion slot was not found after rigger name normalization. | Rename the main flat face pixel layer to `face`, or use static PSDTool mode. |
+| `未知のレイヤー名 "..." — head/body として扱います` | The layer name is not in the rigger slot table or alias table. Motion mode can still run when `face` is present. | Rename it to a recognized base name when it should receive part-specific motion. Avoid side suffixes such as `eyewhite_l` and hyphenated names such as `eyewhite-l`. |
+| `目のアンカーが不完全です（eyewhite/irides を確認）` | Eye anchor detection found only one side or no usable eye components. Motion mode can still run. | No change is needed for a deliberate single-eye/profile avatar. Otherwise, make `eyewhite` and `irides` flat pixel layers with separable eye components. |
 
 ## Bundled Samples
 
@@ -204,8 +203,6 @@ visibility. Regenerate it with:
 npm run generate:static-sample
 ```
 
-The motion detector rejects `sample-static.psd` because it has no flat
-Anime2.5DRig parts such as `face`, `eyewhite`, `irides`, `eyelash`,
-`mouth_open`, or hair layers. A rig smoke check reports `!body` as an unknown
-layer and reports incomplete eye and mouth anchors, so the app correctly uses
-static mode.
+The motion detector rejects `sample-static.psd` because it has no flat `face`
+motion part. A rig smoke check reports `!body` as an unknown layer and reports
+incomplete eye and mouth anchors, so the app correctly uses static mode.
