@@ -17,17 +17,14 @@ import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import {
-  createPsdEmotionReactionFromScreenplay,
+  createLinkedPsdEmotionReaction,
   getPsdEmotionEffectAnchor,
   withPsdEmotionReactionId,
   type PsdEmotionEffectAnchor,
   type PsdEmotionReaction,
   type PsdEmotionReactionDraft,
 } from './lib/psdEmotionEffects';
-import {
-  clampDialogDragDelta,
-  type DialogDragPoint,
-} from './lib/dialogDrag';
+import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
 import type { AvatarViewTransform } from './types/settings';
 import './styles/app.css';
 
@@ -70,7 +67,6 @@ export default function App() {
   const settingsDialogRef = useRef<HTMLDivElement | null>(null);
   const settingsDialogDragRef = useRef<SettingsDialogDragState | null>(null);
   const reactionIdRef = useRef(0);
-  const speechReactionRef = useRef<PsdEmotionReactionDraft | null>(null);
   const [avatarReaction, setAvatarReaction] =
     useState<PsdEmotionReaction | null>(null);
 
@@ -149,36 +145,32 @@ export default function App() {
   }, [resetSettingsDialogPosition]);
 
   const resetAvatarReaction = useCallback(() => {
-    speechReactionRef.current = null;
     setAvatarReaction(null);
   }, []);
 
   const handleAudioPlay = useCallback(
     async (arrayBuffer: ArrayBuffer) => {
-      await play(arrayBuffer, {
-        onStart: () => {
-          if (speechReactionRef.current) {
-            emitAvatarReaction(speechReactionRef.current);
-          } else {
-            setAvatarReaction(null);
-          }
-        },
-      });
+      await play(arrayBuffer);
     },
-    [emitAvatarReaction, play],
+    [play],
   );
 
   const handleSpeechStart = useCallback(
     (screenplay: { emotion?: string; text?: string }) => {
-      speechReactionRef.current =
-        settingsHook.settings.visual.psdEmotionEffectControlMode === 'linked'
-          ? createPsdEmotionReactionFromScreenplay(
-              screenplay,
-              settingsHook.settings.visual.psdEmotionEffectMap,
-            )
-          : null;
+      const reaction = createLinkedPsdEmotionReaction(
+        settingsHook.settings.visual.psdEmotionEffectControlMode,
+        screenplay,
+        settingsHook.settings.visual.psdEmotionEffectMap,
+      );
+
+      if (reaction) {
+        emitAvatarReaction(reaction);
+      } else {
+        setAvatarReaction(null);
+      }
     },
     [
+      emitAvatarReaction,
       settingsHook.settings.visual.psdEmotionEffectControlMode,
       settingsHook.settings.visual.psdEmotionEffectMap,
     ],
@@ -391,10 +383,7 @@ export default function App() {
       />
 
       {settingsOpen && (
-        <div
-          className="settings-dialog-overlay"
-          onClick={closeSettingsDialog}
-        >
+        <div className="settings-dialog-overlay" onClick={closeSettingsDialog}>
           <div
             ref={settingsDialogRef}
             className="settings-dialog"

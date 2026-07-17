@@ -443,7 +443,7 @@ function EmotionEffectCanvas({
       aria-hidden={!anchorEditorOpen || layer !== 'front'}
       aria-label={
         anchorEditorOpen && layer === 'front'
-          ? '感情表現アンカー配置エリア'
+          ? '感情表現エフェクトアンカー配置エリア'
           : undefined
       }
       onPointerDown={(event) => {
@@ -602,9 +602,11 @@ function AvatarCanvasContent({
         <div
           className="avatar-expression-controls"
           role="group"
-          aria-label="PSDアバター感情表現とアンカー設定"
+          aria-label="PSDアバター感情表現エフェクトとアンカー設定"
         >
-          <span className="avatar-expression-controls-label">感情表現</span>
+          <span className="avatar-expression-controls-label">
+            感情表現エフェクト
+          </span>
           {AVATAR_EXPRESSION_OPTIONS.map((option) => {
             const effect = emotionEffectMap[option.emotion];
             return (
@@ -623,7 +625,7 @@ function AvatarCanvasContent({
                     ),
                   );
                 }}
-                aria-label={`${option.label}の感情表現をプレビュー`}
+                aria-label={`${option.label}の感情表現エフェクトをプレビュー`}
                 title={
                   effect ? undefined : 'エフェクトが割り当てられていません'
                 }
@@ -637,7 +639,7 @@ function AvatarCanvasContent({
             className="avatar-expression-button is-reset"
             disabled={!hasAvatar}
             onClick={() => setManualReaction(null)}
-            aria-label="感情表現を解除"
+            aria-label="感情表現エフェクトを解除"
           >
             解除
           </button>
@@ -659,7 +661,7 @@ function AvatarCanvasContent({
         <div
           className="avatar-anchor-editor"
           role="group"
-          aria-label="感情表現アンカー調整"
+          aria-label="感情表現エフェクトアンカー調整"
         >
           <span className="avatar-anchor-editor-label">
             配置先を選び、アバター上をクリック

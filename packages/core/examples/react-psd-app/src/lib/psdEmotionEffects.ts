@@ -167,6 +167,16 @@ export function createPsdEmotionReactionFromScreenplay(
   return effect ? { effect } : null;
 }
 
+export function createLinkedPsdEmotionReaction(
+  controlMode: PsdEmotionEffectControlMode,
+  screenplay: unknown,
+  effectMap: PsdEmotionEffectMap,
+): PsdEmotionReactionDraft | null {
+  return controlMode === 'linked'
+    ? createPsdEmotionReactionFromScreenplay(screenplay, effectMap)
+    : null;
+}
+
 export function withPsdEmotionReactionId(
   draft: PsdEmotionReactionDraft,
   id: number,

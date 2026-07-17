@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_PSD_EMOTION_EFFECT_ANCHOR,
   DEFAULT_PSD_EMOTION_EFFECT_MAP,
+  createLinkedPsdEmotionReaction,
   createPsdEmotionReactionFromScreenplay,
   getPsdEmotionEffectAnchor,
   isPsdEmotionEffectControlMode,
@@ -63,6 +64,49 @@ describe('PSD emotion effect settings', () => {
 });
 
 describe('PSD emotion reactions', () => {
+  it('creates the mapped reaction immediately in linked mode', () => {
+    expect(
+      createLinkedPsdEmotionReaction(
+        'linked',
+        { emotion: 'happy', text: 'うれしい！' },
+        DEFAULT_PSD_EMOTION_EFFECT_MAP,
+      ),
+    ).toEqual({ effect: 'happy' });
+  });
+
+  it('uses a customized emotion effect mapping in linked mode', () => {
+    expect(
+      createLinkedPsdEmotionReaction(
+        'linked',
+        { emotion: 'happy' },
+        { ...DEFAULT_PSD_EMOTION_EFFECT_MAP, happy: 'surprised' },
+      ),
+    ).toEqual({ effect: 'surprised' });
+  });
+
+  it('returns null when the linked emotion mapping is none', () => {
+    expect(
+      createLinkedPsdEmotionReaction(
+        'linked',
+        { emotion: 'happy' },
+        { ...DEFAULT_PSD_EMOTION_EFFECT_MAP, happy: null },
+      ),
+    ).toBeNull();
+  });
+
+  it.each(['none', 'manual'] as const)(
+    'does not create an automatic reaction in %s mode',
+    (controlMode) => {
+      expect(
+        createLinkedPsdEmotionReaction(
+          controlMode,
+          { emotion: 'happy' },
+          DEFAULT_PSD_EMOTION_EFFECT_MAP,
+        ),
+      ).toBeNull();
+    },
+  );
+
   it('maps a screenplay emotion to its configured effect', () => {
     expect(
       createPsdEmotionReactionFromScreenplay({ emotion: ' HAPPY ' }),
