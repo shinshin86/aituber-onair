@@ -1,6 +1,6 @@
 # @aituber-onair/chat
 
-## Unreleased
+## 0.47.0
 
 ### Minor Changes
 
@@ -11,6 +11,9 @@
 - Added Z.ai GLM-5.1 (`glm-5.1`) for text chat and GLM-5V-Turbo
   (`glm-5v-turbo`) for vision chat, including provider support, the React
   basic selector, tests, and English/Japanese documentation.
+- Refreshed the React basic example with the package logo artwork, shared teal
+  design tokens, coordinated selection and chat controls, and responsive
+  desktop and mobile layouts.
 
 ## 0.46.0
 
