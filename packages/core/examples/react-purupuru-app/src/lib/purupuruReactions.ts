@@ -77,6 +77,16 @@ export function createPuruPuruReactionFromScreenplay(
   return effect ? createPuruPuruReactionFromEmotion(effect) : null;
 }
 
+export function createLinkedPuruPuruReaction(
+  controlMode: PuruPuruReactionControlMode,
+  screenplay: unknown,
+  effectMap: PuruPuruEmotionEffectMap,
+): PuruPuruReactionDraft | null {
+  return controlMode === 'linked'
+    ? createPuruPuruReactionFromScreenplay(screenplay, effectMap)
+    : null;
+}
+
 export function resolvePuruPuruEmotionEffect(
   emotion: unknown,
   effectMap: PuruPuruEmotionEffectMap,
