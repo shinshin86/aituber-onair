@@ -2158,7 +2158,7 @@ export default function ProviderSelector({
 
         .provider-list::-webkit-scrollbar-thumb,
         .model-list::-webkit-scrollbar-thumb {
-          background: #bdbdbd;
+          background: var(--border-strong);
           border-radius: 999px;
         }
 
@@ -2175,14 +2175,15 @@ export default function ProviderSelector({
 
         .provider-item:hover:not(:disabled),
         .model-item:hover:not(:disabled) {
-          background: #f1f1f1;
+          border-color: var(--brand);
+          background: var(--brand-tint);
           transform: translateY(-1px);
         }
 
         .provider-item.active,
         .model-item.active {
-          border-color: #0f0f0f;
-          background: #0f0f0f;
+          border-color: var(--brand-strong);
+          background: var(--brand-strong);
           color: white;
         }
 
@@ -2259,7 +2260,7 @@ export default function ProviderSelector({
           border: 1px solid var(--border);
           border-radius: 999px;
           padding: 0.2rem 0.6rem;
-          background: #fafafa;
+          background: var(--surface-soft);
         }
 
         .settings-panel[open] .summary-action::after {
@@ -2317,7 +2318,7 @@ export default function ProviderSelector({
         }
 
         .small-input:disabled {
-          background: #f1f1f1;
+          background: var(--brand-soft);
           color: #9a9a9a;
           cursor: not-allowed;
         }
@@ -2334,7 +2335,7 @@ export default function ProviderSelector({
         }
 
         .action-button:hover:not(:disabled) {
-          background: #fff;
+          background: var(--brand-tint);
           border-color: var(--input-focus);
           transform: translateY(-1px);
         }
@@ -2383,7 +2384,7 @@ export default function ProviderSelector({
         .text-input:disabled,
         .select-input:disabled,
         .text-area:disabled {
-          background: #f1f1f1;
+          background: var(--brand-soft);
           color: #9a9a9a;
           cursor: not-allowed;
         }
