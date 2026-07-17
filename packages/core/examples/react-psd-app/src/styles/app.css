@@ -69,6 +69,13 @@ body {
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid #0f3460;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.settings-dialog-header.is-dragging {
+  cursor: grabbing;
 }
 
 .settings-dialog-header h2 {
