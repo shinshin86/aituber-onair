@@ -17,7 +17,7 @@ import type {
   ScreenplayLike,
 } from './lib/purupuruReactions';
 import {
-  createPuruPuruReactionFromScreenplay,
+  createLinkedPuruPuruReaction,
   withReactionId,
 } from './lib/purupuruReactions';
 import type { PuruPuruEffectAnchor } from './types/settings';
@@ -53,7 +53,6 @@ export default function App() {
   const avatarPackageRef = useRef<PuruPuruAvatarPackage | null>(null);
   const avatarLoadRequestRef = useRef(0);
   const avatarReactionIdRef = useRef(0);
-  const speechReactionRef = useRef<PuruPuruReactionDraft | null>(null);
   const [avatarReaction, setAvatarReaction] = useState<PuruPuruReaction | null>(
     null,
   );
@@ -64,36 +63,32 @@ export default function App() {
   }, []);
 
   const resetAvatarReaction = useCallback(() => {
-    speechReactionRef.current = null;
     setAvatarReaction(null);
   }, []);
 
   const handleAudioPlay = useCallback(
     async (arrayBuffer: ArrayBuffer) => {
-      await play(arrayBuffer, {
-        onStart: () => {
-          if (speechReactionRef.current) {
-            emitAvatarReaction(speechReactionRef.current);
-          } else {
-            setAvatarReaction(null);
-          }
-        },
-      });
+      await play(arrayBuffer);
     },
-    [emitAvatarReaction, play],
+    [play],
   );
 
   const handleSpeechStart = useCallback(
     (screenplay: ScreenplayLike) => {
-      speechReactionRef.current =
-        settingsHook.settings.visual.purupuruReactionControlMode === 'linked'
-          ? createPuruPuruReactionFromScreenplay(
-              screenplay,
-              settingsHook.settings.visual.purupuruEmotionEffectMap,
-            )
-          : null;
+      const reaction = createLinkedPuruPuruReaction(
+        settingsHook.settings.visual.purupuruReactionControlMode,
+        screenplay,
+        settingsHook.settings.visual.purupuruEmotionEffectMap,
+      );
+
+      if (reaction) {
+        emitAvatarReaction(reaction);
+      } else {
+        setAvatarReaction(null);
+      }
     },
     [
+      emitAvatarReaction,
       settingsHook.settings.visual.purupuruEmotionEffectMap,
       settingsHook.settings.visual.purupuruReactionControlMode,
     ],
