@@ -45,10 +45,13 @@ from actual audio output volume.
 - `piperPlus` expects browser assets under `public/piper/`
 - Render a VRM avatar (`miko.vrm`) with optional idle VRMA animation
 - Real-time lip-sync for VRM expression (`Aa`)
-- Configure emotion-to-expression mappings in **Settings → 感情表現エフェクト**
+- Configure emotion-to-effect mappings in **Settings → 感情表現エフェクト**
   and choose disabled, manual preview, or response-emotion-linked control
-- Apply linked VRM expressions as soon as a response emotion is received,
-  independently of TTS playback
+- Display the same layered emotion effects as the PSD/PuruPuru samples, such as
+  background auras, sparkles, tears, and emotion marks, as soon as a response
+  emotion is received, independently of TTS playback
+- Adjust face and eye anchors and effect size in manual mode; the anchors follow
+  the VRM camera view and are saved for the avatar
 - Add subtle randomized idle expressions while the avatar is not speaking
 - Control camera on the avatar stage:
   drag to rotate / mouse wheel to zoom / double-click to reset
@@ -78,8 +81,8 @@ npm run dev
 After launch, open **Settings** and set API keys / provider options.  
 All settings are saved in `localStorage` (`react-vrm-app-settings`).
 The LLM section also lets you edit the system prompt. It is applied when the
-field loses focus. Keep the default emotion-tag instruction if you want avatar
-expressions to follow the response.
+field loses focus. Keep the default emotion-tag instruction if you want visual
+effects to follow the response.
 
 For `openai-compatible`, set:
 - `Endpoint URL` (required, full `/v1/chat/completions` URL)

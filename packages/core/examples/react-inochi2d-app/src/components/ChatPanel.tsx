@@ -2,6 +2,7 @@ import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
 import type { ResolvedInochiModelDefinition } from '../types/inochi2d';
 import type { Inochi2DReaction } from '../lib/inochi2dReactions';
+import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
 import { ChatInput } from './ChatInput';
 import { ChatLog } from './ChatLog';
 import { Inochi2DStage } from './Inochi2DStage';
@@ -19,6 +20,9 @@ interface ChatPanelProps {
   onModelResolved: (modelId: string) => void;
   avatarReaction?: Inochi2DReaction | null;
   visual: VisualSettings;
+  effectAnchor: EmotionEffectAnchor;
+  onEffectAnchorChange: (anchor: EmotionEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
 }
 
 export function ChatPanel({
@@ -34,6 +38,9 @@ export function ChatPanel({
   onModelResolved,
   avatarReaction,
   visual,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -76,6 +83,9 @@ export function ChatPanel({
         reaction={avatarReaction}
         reactionControlMode={visual.inochi2dReactionControlMode}
         emotionEffectMap={visual.inochi2dEmotionEffectMap}
+        effectAnchor={effectAnchor}
+        onEffectAnchorChange={onEffectAnchorChange}
+        onEffectAnchorReset={onEffectAnchorReset}
       />
       {isBroadcast ? (
         broadcastCaption && (

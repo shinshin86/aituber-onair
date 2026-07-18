@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AmbientLight,
   AnimationClip,
   AnimationMixer,
   Box3,
+  CanvasTexture,
   Clock,
   DirectionalLight,
   LoopRepeat,
   PerspectiveCamera,
   Scene,
+  Sprite,
+  SpriteMaterial,
   Vector3,
   WebGLRenderer,
 } from 'three';
@@ -31,20 +34,40 @@ import {
   runVrmOneShotAnimation,
 } from '../lib/vrmExpressionController';
 import {
-  createVrmReactionFromEffect,
-  withReactionId,
+  DEFAULT_EMOTION_EFFECT_ANCHOR,
+  MAX_EMOTION_EFFECT_SCALE,
+  MIN_EMOTION_EFFECT_SCALE,
+  normalizeEmotionEffectAnchor,
+  type EmotionEffectAnchor,
+} from '../lib/emotionEffectAnchor';
+import {
+  withVrmEmotionEffectReactionId,
   type VrmAvatarReaction,
+  type VrmEmotionEffectReaction,
   type VrmEmotionEffectMap,
   type VrmReactionControlMode,
   type VrmReactionEmotion,
 } from '../lib/vrmReactions';
+import {
+  EmotionEffectOverlay,
+  type EmotionEffectGeometry,
+  type EmotionEffectPlayback,
+} from './EmotionEffectOverlay';
+import {
+  drawEmotionEffectAura,
+  type EmotionEffect,
+} from '../lib/emotionEffectRendering';
 
 interface AvatarBackgroundProps {
   mouthLevel: number;
   isSpeaking: boolean;
   reaction?: VrmAvatarReaction | null;
+  emotionEffectReaction?: VrmEmotionEffectReaction | null;
   reactionControlMode: VrmReactionControlMode;
   emotionEffectMap: VrmEmotionEffectMap;
+  effectAnchor: EmotionEffectAnchor;
+  onEffectAnchorChange: (anchor: EmotionEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
 }
 
 const VRM_FILE_URL = `${import.meta.env.BASE_URL}avatar/miko.vrm`;
@@ -63,6 +86,16 @@ const IDLE_MOTION_MIN_DELAY_MS = 4500;
 const IDLE_MOTION_MAX_DELAY_MS = 9500;
 const IDLE_MOTION_AFTER_REACTION_DELAY_MS = 4200;
 const IDLE_MOTION_AFTER_SPEECH_DELAY_MS = 2600;
+const MANUAL_EFFECT_DURATION_MS = 2600;
+type EffectAnchorTarget = 'face' | 'leftEye' | 'rightEye';
+const EFFECT_ANCHOR_TARGETS = [
+  { target: 'face', label: '顔' },
+  { target: 'leftEye', label: '左目' },
+  { target: 'rightEye', label: '右目' },
+] as const satisfies ReadonlyArray<{
+  target: EffectAnchorTarget;
+  label: string;
+}>;
 const AVATAR_EXPRESSION_OPTIONS = [
   { emotion: 'happy', label: '喜び' },
   { emotion: 'surprised', label: '驚き' },
@@ -75,17 +108,358 @@ const AVATAR_EXPRESSION_OPTIONS = [
   label: string;
 }>;
 
+const VRM_EFFECT_TEXTURE_SIZE = 256;
+const VRM_AURA_TEXTURE_RADIUS = 124;
+const VRM_RING_TEXTURE_RADIUS = 112;
+const VRM_BACK_EFFECT_OCCLUSION_SCALE = 1.45;
+const MIN_EFFECT_WEIGHT = 0.002;
+
+interface VrmBackEffectSprites {
+  auraCanvas: HTMLCanvasElement;
+  auraTexture: CanvasTexture;
+  auraMaterial: SpriteMaterial;
+  auraSprite: Sprite;
+  auraEffect: EmotionEffect | null;
+  ringMaterial: SpriteMaterial;
+  ringSprite: Sprite;
+  ringTexture: CanvasTexture;
+}
+
+function createVrmBackEffectSprites(scene: Scene): VrmBackEffectSprites {
+  const auraCanvas = document.createElement('canvas');
+  auraCanvas.width = VRM_EFFECT_TEXTURE_SIZE;
+  auraCanvas.height = VRM_EFFECT_TEXTURE_SIZE;
+  const auraTexture = new CanvasTexture(auraCanvas);
+  const auraMaterial = new SpriteMaterial({
+    map: auraTexture,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  const auraSprite = new Sprite(auraMaterial);
+  auraSprite.visible = false;
+  auraSprite.renderOrder = -1001;
+  auraSprite.frustumCulled = false;
+
+  const ringCanvas = document.createElement('canvas');
+  ringCanvas.width = VRM_EFFECT_TEXTURE_SIZE;
+  ringCanvas.height = VRM_EFFECT_TEXTURE_SIZE;
+  const ringContext = ringCanvas.getContext('2d');
+  if (ringContext) {
+    ringContext.strokeStyle = '#fff0a0';
+    ringContext.lineWidth = 4;
+    ringContext.beginPath();
+    ringContext.arc(
+      VRM_EFFECT_TEXTURE_SIZE / 2,
+      VRM_EFFECT_TEXTURE_SIZE / 2,
+      VRM_RING_TEXTURE_RADIUS,
+      0,
+      Math.PI * 2,
+    );
+    ringContext.stroke();
+  }
+  const ringTexture = new CanvasTexture(ringCanvas);
+  const ringMaterial = new SpriteMaterial({
+    map: ringTexture,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  const ringSprite = new Sprite(ringMaterial);
+  ringSprite.visible = false;
+  ringSprite.renderOrder = -1000;
+  ringSprite.frustumCulled = false;
+
+  scene.add(auraSprite);
+  scene.add(ringSprite);
+  return {
+    auraCanvas,
+    auraTexture,
+    auraMaterial,
+    auraSprite,
+    auraEffect: null,
+    ringMaterial,
+    ringSprite,
+    ringTexture,
+  };
+}
+
+function positionVrmBackEffectSprite(
+  sprite: Sprite,
+  diameterPixels: number,
+  geometry: EmotionEffectGeometry,
+  bounds: Box3,
+  camera: PerspectiveCamera,
+  width: number,
+  height: number,
+): void {
+  const ray = new Vector3(
+    (geometry.faceX / width) * 2 - 1,
+    1 - (geometry.faceY / height) * 2,
+    0.5,
+  )
+    .unproject(camera)
+    .sub(camera.position)
+    .normalize();
+  const boundsCenter = bounds.getCenter(new Vector3());
+  const boundsRadius = bounds.getSize(new Vector3()).length() / 2;
+  const rayDistance =
+    camera.position.distanceTo(boundsCenter) + boundsRadius + 0.05;
+  sprite.position.copy(camera.position).addScaledVector(ray, rayDistance);
+
+  const cameraDirection = camera.getWorldDirection(new Vector3());
+  const viewDepth = Math.max(rayDistance * ray.dot(cameraDirection), 0.1);
+  const viewportWorldHeight =
+    2 * Math.tan((camera.fov * Math.PI) / 360) * viewDepth;
+  const spriteSize =
+    (diameterPixels / Math.max(height, 1)) * viewportWorldHeight;
+  sprite.scale.set(spriteSize, spriteSize, 1);
+}
+
+function updateVrmBackEffectSprites(
+  sprites: VrmBackEffectSprites,
+  playback: EmotionEffectPlayback,
+  geometry: EmotionEffectGeometry,
+  bounds: Box3,
+  camera: PerspectiveCamera,
+  width: number,
+  height: number,
+  now: number,
+): void {
+  const { effect, weight } = playback;
+  if (!effect || weight < MIN_EFFECT_WEIGHT) {
+    sprites.auraSprite.visible = false;
+    sprites.ringSprite.visible = false;
+    return;
+  }
+
+  if (sprites.auraEffect !== effect) {
+    const context = sprites.auraCanvas.getContext('2d');
+    if (context) {
+      context.clearRect(0, 0, VRM_EFFECT_TEXTURE_SIZE, VRM_EFFECT_TEXTURE_SIZE);
+      drawEmotionEffectAura(
+        context,
+        VRM_EFFECT_TEXTURE_SIZE / 2,
+        VRM_EFFECT_TEXTURE_SIZE / 2,
+        VRM_AURA_TEXTURE_RADIUS,
+        effect,
+        1,
+      );
+      sprites.auraTexture.needsUpdate = true;
+    }
+    sprites.auraEffect = effect;
+  }
+
+  const pulse = 0.94 + Math.sin(now * 0.004) * 0.06;
+  const radiusScale = effect === 'angry' ? 0.45 : 0.39;
+  const auraDiameter =
+    geometry.unit *
+    radiusScale *
+    pulse *
+    2 *
+    (VRM_EFFECT_TEXTURE_SIZE / (VRM_AURA_TEXTURE_RADIUS * 2)) *
+    VRM_BACK_EFFECT_OCCLUSION_SCALE;
+  positionVrmBackEffectSprite(
+    sprites.auraSprite,
+    auraDiameter,
+    geometry,
+    bounds,
+    camera,
+    width,
+    height,
+  );
+  sprites.auraMaterial.opacity = weight;
+  sprites.auraSprite.visible = true;
+
+  if (effect !== 'surprised') {
+    sprites.ringSprite.visible = false;
+    return;
+  }
+  const ringProgress = (now % 1100) / 1100;
+  const ringRadius = geometry.unit * (0.2 + ringProgress * 0.22);
+  const ringDiameter =
+    ringRadius *
+    2 *
+    (VRM_EFFECT_TEXTURE_SIZE / (VRM_RING_TEXTURE_RADIUS * 2)) *
+    VRM_BACK_EFFECT_OCCLUSION_SCALE;
+  positionVrmBackEffectSprite(
+    sprites.ringSprite,
+    ringDiameter,
+    geometry,
+    bounds,
+    camera,
+    width,
+    height,
+  );
+  sprites.ringMaterial.opacity = weight * (1 - ringProgress) * 0.7;
+  sprites.ringSprite.visible = true;
+}
+
+function disposeVrmBackEffectSprites(
+  scene: Scene,
+  sprites: VrmBackEffectSprites,
+): void {
+  scene.remove(sprites.auraSprite);
+  scene.remove(sprites.ringSprite);
+  sprites.auraTexture.dispose();
+  sprites.ringTexture.dispose();
+  sprites.auraMaterial.dispose();
+  sprites.ringMaterial.dispose();
+}
+
 interface IdleMotionState {
   nextAt: number;
   lockUntil: number;
+}
+
+function createVrmAnchorPoint(bounds: Box3, xRatio: number, yRatio: number) {
+  return new Vector3(
+    bounds.min.x + (bounds.max.x - bounds.min.x) * xRatio,
+    bounds.max.y - (bounds.max.y - bounds.min.y) * yRatio,
+    bounds.max.z,
+  );
+}
+
+function projectVrmPoint(
+  point: Vector3,
+  camera: PerspectiveCamera,
+  width: number,
+  height: number,
+) {
+  const projected = point.clone().project(camera);
+  return {
+    x: ((projected.x + 1) / 2) * width,
+    y: ((1 - projected.y) / 2) * height,
+  };
+}
+
+function createVrmEffectGeometry(
+  vrm: VRM,
+  bounds: Box3,
+  camera: PerspectiveCamera,
+  width: number,
+  height: number,
+  anchor: EmotionEffectAnchor,
+): EmotionEffectGeometry {
+  const projectBone = (boneName: 'head' | 'leftEye' | 'rightEye' | 'chest') => {
+    const bone = vrm.humanoid.getNormalizedBoneNode(boneName);
+    return bone
+      ? projectVrmPoint(
+          bone.getWorldPosition(new Vector3()),
+          camera,
+          width,
+          height,
+        )
+      : null;
+  };
+  const head = projectBone('head');
+  const projectedLeftEye = projectBone('leftEye');
+  const projectedRightEye = projectBone('rightEye');
+  const chest = projectBone('chest');
+  const fallbackFace = projectVrmPoint(
+    createVrmAnchorPoint(
+      bounds,
+      DEFAULT_EMOTION_EFFECT_ANCHOR.faceX,
+      DEFAULT_EMOTION_EFFECT_ANCHOR.faceY,
+    ),
+    camera,
+    width,
+    height,
+  );
+  const leftEye = projectedLeftEye || {
+    x: fallbackFace.x - Math.min(width, height) * 0.035,
+    y: fallbackFace.y - Math.min(width, height) * 0.015,
+  };
+  const rightEye = projectedRightEye || {
+    x: fallbackFace.x + Math.min(width, height) * 0.035,
+    y: fallbackFace.y - Math.min(width, height) * 0.015,
+  };
+  const eyeDistance = Math.max(
+    Math.hypot(rightEye.x - leftEye.x, rightEye.y - leftEye.y),
+    24,
+  );
+  const headToChest =
+    head && chest ? Math.hypot(head.x - chest.x, head.y - chest.y) : 0;
+  const baseUnit = Math.min(
+    Math.min(width, height),
+    Math.max(eyeDistance * 4.5, headToChest * 2.4, 120),
+  );
+  const baseFace = {
+    x: (leftEye.x + rightEye.x) / 2,
+    y:
+      (leftEye.y + rightEye.y) / 2 +
+      Math.max(eyeDistance * 0.42, headToChest * 0.16),
+  };
+  const offsetPoint = (
+    point: { x: number; y: number },
+    xRatio: number,
+    yRatio: number,
+    defaultX: number,
+    defaultY: number,
+  ) => ({
+    x: point.x + (xRatio - defaultX) * baseUnit,
+    y: point.y + (yRatio - defaultY) * baseUnit,
+  });
+  const face = offsetPoint(
+    baseFace,
+    anchor.faceX,
+    anchor.faceY,
+    DEFAULT_EMOTION_EFFECT_ANCHOR.faceX,
+    DEFAULT_EMOTION_EFFECT_ANCHOR.faceY,
+  );
+  const anchoredLeftEye = offsetPoint(
+    leftEye,
+    anchor.leftEyeX,
+    anchor.leftEyeY,
+    DEFAULT_EMOTION_EFFECT_ANCHOR.leftEyeX,
+    DEFAULT_EMOTION_EFFECT_ANCHOR.leftEyeY,
+  );
+  const anchoredRightEye = offsetPoint(
+    rightEye,
+    anchor.rightEyeX,
+    anchor.rightEyeY,
+    DEFAULT_EMOTION_EFFECT_ANCHOR.rightEyeX,
+    DEFAULT_EMOTION_EFFECT_ANCHOR.rightEyeY,
+  );
+  const top = projectVrmPoint(
+    new Vector3(bounds.getCenter(new Vector3()).x, bounds.max.y, bounds.max.z),
+    camera,
+    width,
+    height,
+  );
+  const bottom = projectVrmPoint(
+    new Vector3(bounds.getCenter(new Vector3()).x, bounds.min.y, bounds.max.z),
+    camera,
+    width,
+    height,
+  );
+  return {
+    faceX: face.x,
+    faceY: face.y,
+    leftEyeX: anchoredLeftEye.x,
+    leftEyeY: anchoredLeftEye.y,
+    rightEyeX: anchoredRightEye.x,
+    rightEyeY: anchoredRightEye.y,
+    unit:
+      Math.min(
+        Math.min(width, height),
+        Math.max(baseUnit, Math.hypot(bottom.x - top.x, bottom.y - top.y)),
+      ) * anchor.effectScale,
+  };
 }
 
 export function AvatarBackground({
   mouthLevel,
   isSpeaking,
   reaction,
+  emotionEffectReaction,
   reactionControlMode,
   emotionEffectMap,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
 }: AvatarBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -100,18 +474,79 @@ export function AvatarBackground({
   const isSpeakingRef = useRef(isSpeaking);
   const targetMouthWeightRef = useRef(0);
   const mouthWeightRef = useRef(0);
+  const effectAnchorRef = useRef(effectAnchor);
+  const effectGeometryRef = useRef<EmotionEffectGeometry | null>(null);
+  const effectPlaybackRef = useRef<EmotionEffectPlayback>({
+    effect: null,
+    weight: 0,
+  });
+  const effectProjectionRef = useRef<{
+    baseGeometry: EmotionEffectGeometry;
+    width: number;
+    height: number;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [manualReaction, setManualReaction] =
-    useState<VrmAvatarReaction | null>(null);
-  const manualReactionIdRef = useRef(0);
+  const [manualEmotionEffectReaction, setManualEmotionEffectReaction] =
+    useState<VrmEmotionEffectReaction | null>(null);
+  const manualEmotionEffectReactionIdRef = useRef(0);
+  const [anchorEditorOpen, setAnchorEditorOpen] = useState(false);
+  const [anchorTarget, setAnchorTarget] = useState<EffectAnchorTarget>('face');
   const showManualControls = reactionControlMode === 'manual';
-  const effectiveReaction =
+  const activeEmotionEffectReaction =
     reactionControlMode === 'linked'
-      ? reaction || null
+      ? emotionEffectReaction || null
       : showManualControls
-        ? manualReaction
+        ? manualEmotionEffectReaction
         : null;
+
+  useEffect(() => {
+    effectAnchorRef.current = effectAnchor;
+  }, [effectAnchor]);
+
+  const handleAnchorPoint = useCallback(
+    (x: number, y: number) => {
+      const projection = effectProjectionRef.current;
+      if (!projection) return;
+      const { baseGeometry } = projection;
+      const current = effectAnchorRef.current;
+      const targetPoint =
+        anchorTarget === 'face'
+          ? { x: baseGeometry.faceX, y: baseGeometry.faceY }
+          : anchorTarget === 'leftEye'
+            ? { x: baseGeometry.leftEyeX, y: baseGeometry.leftEyeY }
+            : { x: baseGeometry.rightEyeX, y: baseGeometry.rightEyeY };
+      const currentX =
+        anchorTarget === 'face'
+          ? current.faceX
+          : anchorTarget === 'leftEye'
+            ? current.leftEyeX
+            : current.rightEyeX;
+      const currentY =
+        anchorTarget === 'face'
+          ? current.faceY
+          : anchorTarget === 'leftEye'
+            ? current.leftEyeY
+            : current.rightEyeY;
+      const unit = Math.max(
+        baseGeometry.unit / Math.max(current.effectScale, 0.001),
+        1,
+      );
+      const xRatio = currentX + (x - targetPoint.x) / unit;
+      const yRatio = currentY + (y - targetPoint.y) / unit;
+      const next = normalizeEmotionEffectAnchor({
+        ...current,
+        ...(anchorTarget === 'face'
+          ? { faceX: xRatio, faceY: yRatio }
+          : anchorTarget === 'leftEye'
+            ? { leftEyeX: xRatio, leftEyeY: yRatio }
+            : { rightEyeX: xRatio, rightEyeY: yRatio }),
+      });
+      effectAnchorRef.current = next;
+      onEffectAnchorChange(next);
+    },
+    [anchorTarget, onEffectAnchorChange],
+  );
 
   const targetWeight = useMemo(() => {
     if (!isSpeaking) return 0;
@@ -137,7 +572,7 @@ export function AvatarBackground({
     const controller = expressionControllerRef.current;
     if (!controller) return;
 
-    if (!effectiveReaction) {
+    if (!reaction) {
       animationTokenRef.current += 1;
       controller.reset(220);
       return;
@@ -145,18 +580,16 @@ export function AvatarBackground({
 
     suppressIdleMotion(
       idleMotionStateRef.current,
-      effectiveReaction.type === 'reset'
-        ? 1600
-        : IDLE_MOTION_AFTER_REACTION_DELAY_MS,
+      reaction.type === 'reset' ? 1600 : IDLE_MOTION_AFTER_REACTION_DELAY_MS,
     );
 
-    if (effectiveReaction.type === 'animation') {
+    if (reaction.type === 'animation') {
       const token = animationTokenRef.current + 1;
       animationTokenRef.current = token;
       controller.reset(160);
 
       void runVrmOneShotAnimation(
-        effectiveReaction.name,
+        reaction.name,
         (name, intensity, fadeMs) => {
           controller.set(name, intensity, fadeMs);
         },
@@ -176,28 +609,24 @@ export function AvatarBackground({
 
     animationTokenRef.current += 1;
 
-    if (effectiveReaction.type === 'emote') {
+    if (reaction.type === 'emote') {
       controller.emote(
-        effectiveReaction.name,
-        effectiveReaction.intensity,
-        effectiveReaction.fadeMs,
-        effectiveReaction.holdMs,
+        reaction.name,
+        reaction.intensity,
+        reaction.fadeMs,
+        reaction.holdMs,
       );
       return;
     }
 
-    if (effectiveReaction.type === 'gesture') {
+    if (reaction.type === 'gesture') {
       controller.reset(160);
-      controller.gesture(
-        effectiveReaction.parts,
-        effectiveReaction.fadeMs,
-        effectiveReaction.holdMs,
-      );
+      controller.gesture(reaction.parts, reaction.fadeMs, reaction.holdMs);
       return;
     }
 
-    controller.reset(effectiveReaction.fadeMs);
-  }, [effectiveReaction, isLoading]);
+    controller.reset(reaction.fadeMs);
+  }, [reaction, isLoading]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -214,6 +643,8 @@ export function AvatarBackground({
     directionalLight.position.set(1.0, 1.8, 1.2);
     scene.add(ambientLight);
     scene.add(directionalLight);
+    const backEffectScene = new Scene();
+    const backEffectSprites = createVrmBackEffectSprites(backEffectScene);
 
     let renderer: WebGLRenderer;
     try {
@@ -225,6 +656,7 @@ export function AvatarBackground({
       });
     } catch (error) {
       console.error('Failed to initialize WebGLRenderer:', error);
+      disposeVrmBackEffectSprites(backEffectScene, backEffectSprites);
       window.setTimeout(() => {
         setLoadError('WebGLの初期化に失敗しました。');
         setIsLoading(false);
@@ -241,6 +673,9 @@ export function AvatarBackground({
     } else if ('outputEncoding' in rendererColorSpace) {
       rendererColorSpace.outputEncoding = 3001;
     }
+    renderer.setClearColor(0x000000, 0);
+    renderer.setClearAlpha(0);
+    renderer.autoClear = false;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.domElement.style.touchAction = 'none';
 
@@ -296,6 +731,7 @@ export function AvatarBackground({
     let animationFrameId = 0;
     let loadedVrm: VRM | null = null;
     let mixer: AnimationMixer | null = null;
+    let effectBounds: Box3 | null = null;
 
     const loader = new GLTFLoader();
     loader.register((parser) => new VRMLoaderPlugin(parser));
@@ -321,6 +757,7 @@ export function AvatarBackground({
         vrm.scene.position.y -= bounds.min.y;
         vrm.scene.position.x += DEFAULT_MODEL_X_OFFSET;
         vrm.scene.rotation.y += DEFAULT_MODEL_Y_ROTATION;
+        effectBounds = new Box3().setFromObject(vrm.scene);
 
         const modelHeight = Math.max(size.y, 1.0);
         const modelWidth = Math.max(size.x, 0.6);
@@ -436,7 +873,7 @@ export function AvatarBackground({
     );
 
     const clock = new Clock();
-    const animate = () => {
+    const animate = (now: number) => {
       if (disposed) return;
 
       const delta = clock.getDelta();
@@ -471,6 +908,40 @@ export function AvatarBackground({
       }
 
       controls.update();
+      if (effectBounds && vrm) {
+        const width = Math.max(container.clientWidth, 1);
+        const height = Math.max(container.clientHeight, 1);
+        const geometry = createVrmEffectGeometry(
+          vrm,
+          effectBounds,
+          camera,
+          width,
+          height,
+          effectAnchorRef.current,
+        );
+        effectGeometryRef.current = geometry;
+        effectProjectionRef.current = {
+          baseGeometry: geometry,
+          width,
+          height,
+        };
+        updateVrmBackEffectSprites(
+          backEffectSprites,
+          effectPlaybackRef.current,
+          geometry,
+          effectBounds,
+          camera,
+          width,
+          height,
+          now,
+        );
+      } else {
+        backEffectSprites.auraSprite.visible = false;
+        backEffectSprites.ringSprite.visible = false;
+      }
+      renderer.clear();
+      renderer.render(backEffectScene, camera);
+      renderer.clearDepth();
       renderer.render(scene, camera);
       animationFrameId = requestAnimationFrame(animate);
     };
@@ -507,6 +978,10 @@ export function AvatarBackground({
       idleMotionState.lockUntil = 0;
       mouthWeightRef.current = 0;
       targetMouthWeightRef.current = 0;
+      effectGeometryRef.current = null;
+      effectProjectionRef.current = null;
+      effectPlaybackRef.current = { effect: null, weight: 0 };
+      disposeVrmBackEffectSprites(backEffectScene, backEffectSprites);
       renderer.dispose();
     };
   }, []);
@@ -515,6 +990,15 @@ export function AvatarBackground({
     <div className="avatar-background">
       <div className="vrm-stage" ref={containerRef}>
         <canvas ref={canvasRef} className="vrm-canvas" />
+        <EmotionEffectOverlay
+          reaction={activeEmotionEffectReaction}
+          anchor={effectAnchor}
+          geometryRef={effectGeometryRef}
+          playbackMirrorRef={effectPlaybackRef}
+          renderBackEffect={false}
+          anchorEditorOpen={showManualControls && anchorEditorOpen}
+          onAnchorPoint={handleAnchorPoint}
+        />
         {isLoading && !loadError && (
           <div className="avatar-status">VRMモデルを読み込み中...</div>
         )}
@@ -544,11 +1028,11 @@ export function AvatarBackground({
                 disabled={Boolean(loadError) || isLoading || !effect}
                 onClick={() => {
                   if (!effect) return;
-                  manualReactionIdRef.current += 1;
-                  setManualReaction(
-                    withReactionId(
-                      createVrmReactionFromEffect(effect),
-                      manualReactionIdRef.current,
+                  manualEmotionEffectReactionIdRef.current += 1;
+                  setManualEmotionEffectReaction(
+                    withVrmEmotionEffectReactionId(
+                      { effect, durationMs: MANUAL_EFFECT_DURATION_MS },
+                      manualEmotionEffectReactionIdRef.current,
                     ),
                   );
                 }}
@@ -564,10 +1048,86 @@ export function AvatarBackground({
             type="button"
             className="avatar-expression-button is-reset"
             disabled={Boolean(loadError) || isLoading}
-            onClick={() => setManualReaction(null)}
+            onClick={() => setManualEmotionEffectReaction(null)}
           >
             解除
           </button>
+          <button
+            type="button"
+            className={`avatar-expression-button is-anchor${
+              anchorEditorOpen ? ' is-active' : ''
+            }`}
+            disabled={Boolean(loadError) || isLoading}
+            aria-pressed={anchorEditorOpen}
+            onClick={() => setAnchorEditorOpen((current) => !current)}
+          >
+            アンカー調整
+          </button>
+        </div>
+      )}
+      {showManualControls && anchorEditorOpen && !isLoading && !loadError && (
+        <div
+          className="avatar-anchor-editor"
+          role="group"
+          aria-label="感情表現エフェクトアンカー調整"
+        >
+          <span className="avatar-anchor-editor-label">
+            配置先を選び、アバター上をクリック
+          </span>
+          <div className="avatar-anchor-targets">
+            {EFFECT_ANCHOR_TARGETS.map((option) => (
+              <button
+                key={option.target}
+                type="button"
+                className={`avatar-expression-button${
+                  anchorTarget === option.target ? ' is-active' : ''
+                }`}
+                aria-pressed={anchorTarget === option.target}
+                onClick={() => setAnchorTarget(option.target)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <label className="avatar-anchor-scale">
+            <span>エフェクトサイズ</span>
+            <input
+              type="range"
+              min={MIN_EMOTION_EFFECT_SCALE * 100}
+              max={MAX_EMOTION_EFFECT_SCALE * 100}
+              step="5"
+              value={Math.round(effectAnchor.effectScale * 100)}
+              onChange={(event) => {
+                const next = normalizeEmotionEffectAnchor({
+                  ...effectAnchorRef.current,
+                  effectScale: Number(event.target.value) / 100,
+                });
+                effectAnchorRef.current = next;
+                onEffectAnchorChange(next);
+              }}
+            />
+            <output>{Math.round(effectAnchor.effectScale * 100)}%</output>
+          </label>
+          <div className="avatar-anchor-actions">
+            <button
+              type="button"
+              className="avatar-expression-button is-reset"
+              onClick={() => {
+                effectAnchorRef.current = DEFAULT_EMOTION_EFFECT_ANCHOR;
+                onEffectAnchorReset();
+                setAnchorTarget('face');
+              }}
+            >
+              初期値に戻す
+            </button>
+            <button
+              type="button"
+              className="avatar-expression-button"
+              onClick={() => setAnchorEditorOpen(false)}
+            >
+              完了
+            </button>
+          </div>
         </div>
       )}
     </div>

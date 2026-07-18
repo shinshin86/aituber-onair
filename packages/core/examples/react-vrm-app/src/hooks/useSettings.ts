@@ -8,6 +8,11 @@ import {
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import {
+  normalizeEmotionEffectAnchor,
+  normalizeEmotionEffectAnchors,
+  type EmotionEffectAnchor,
+} from '../lib/emotionEffectAnchor';
+import {
   DEFAULT_VRM_EMOTION_EFFECT_MAP,
   isVrmReactionControlMode,
   normalizeVrmEmotionEffectMap,
@@ -222,6 +227,7 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      vrmEmotionEffectAnchors: {},
       vrmReactionControlMode: 'none',
       vrmEmotionEffectMap: { ...DEFAULT_VRM_EMOTION_EFFECT_MAP },
     },
@@ -285,6 +291,9 @@ function loadSettings(): AppSettings {
         visual: {
           ...defaults.visual,
           ...saved.visual,
+          vrmEmotionEffectAnchors: normalizeEmotionEffectAnchors(
+            saved.visual?.vrmEmotionEffectAnchors,
+          ),
           vrmReactionControlMode: isVrmReactionControlMode(
             saved.visual?.vrmReactionControlMode,
           )
@@ -959,6 +968,38 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateVisualVrmEmotionEffectAnchor = useCallback(
+    (profileId: string, anchor: EmotionEffectAnchor) => {
+      if (!profileId) return;
+      const normalized = normalizeEmotionEffectAnchor(anchor);
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          vrmEmotionEffectAnchors: Object.fromEntries(
+            Object.entries({
+              ...prev.visual.vrmEmotionEffectAnchors,
+              [profileId]: normalized,
+            }).slice(-24),
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualVrmEmotionEffectAnchor = useCallback((profileId: string) => {
+    if (!profileId) return;
+    setSettings((prev) => {
+      const remaining = { ...prev.visual.vrmEmotionEffectAnchors };
+      delete remaining[profileId];
+      return {
+        ...prev,
+        visual: { ...prev.visual, vrmEmotionEffectAnchors: remaining },
+      };
+    });
+  }, []);
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1316,6 +1357,8 @@ export function useSettings() {
     updateVisualVrmReactionControlMode,
     updateVisualVrmEmotionEffect,
     resetVisualVrmEmotionEffectMap,
+    updateVisualVrmEmotionEffectAnchor,
+    resetVisualVrmEmotionEffectAnchor,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

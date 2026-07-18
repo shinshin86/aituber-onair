@@ -34,6 +34,7 @@ export const DEFAULT_INOCHI2D_EMOTION_EFFECT_MAP: Inochi2DEmotionEffectMap = {
 
 export interface Inochi2DReactionDraft {
   effect: Inochi2DEmotionEffect;
+  durationMs?: number;
 }
 
 export type Inochi2DReaction = Inochi2DReactionDraft & { id: number };

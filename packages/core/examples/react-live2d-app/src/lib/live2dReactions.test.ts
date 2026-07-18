@@ -4,46 +4,33 @@ import {
   DEFAULT_LIVE2D_EMOTION_EFFECT_MAP,
 } from './live2dReactions';
 
-const expressions = ['Smile', 'Surprise', 'Sad'];
-
 describe('createLinkedLive2DReaction', () => {
-  it('resolves a model expression immediately in linked mode', () => {
+  it('creates a visual effect immediately in linked mode', () => {
     expect(
       createLinkedLive2DReaction(
         'linked',
         { emotion: 'happy' },
         DEFAULT_LIVE2D_EMOTION_EFFECT_MAP,
-        expressions,
       ),
-    ).toEqual({ expression: 'Smile' });
+    ).toEqual({ effect: 'happy' });
   });
 
-  it('uses a customized model expression mapping', () => {
+  it('uses a customized visual effect mapping', () => {
     expect(
       createLinkedLive2DReaction(
         'linked',
         { emotion: 'happy' },
-        { ...DEFAULT_LIVE2D_EMOTION_EFFECT_MAP, happy: 'Surprise' },
-        expressions,
+        { ...DEFAULT_LIVE2D_EMOTION_EFFECT_MAP, happy: 'surprised' },
       ),
-    ).toEqual({ expression: 'Surprise' });
+    ).toEqual({ effect: 'surprised' });
   });
 
-  it('returns null when the mapping or model expression is unavailable', () => {
+  it('returns null when the mapping is none', () => {
     expect(
       createLinkedLive2DReaction(
         'linked',
         { emotion: 'happy' },
         { ...DEFAULT_LIVE2D_EMOTION_EFFECT_MAP, happy: null },
-        expressions,
-      ),
-    ).toBeNull();
-    expect(
-      createLinkedLive2DReaction(
-        'linked',
-        { emotion: 'angry' },
-        DEFAULT_LIVE2D_EMOTION_EFFECT_MAP,
-        expressions,
       ),
     ).toBeNull();
   });
@@ -56,7 +43,6 @@ describe('createLinkedLive2DReaction', () => {
           mode,
           { emotion: 'happy' },
           DEFAULT_LIVE2D_EMOTION_EFFECT_MAP,
-          expressions,
         ),
       ).toBeNull();
     },

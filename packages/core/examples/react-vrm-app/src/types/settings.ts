@@ -1,4 +1,5 @@
 import type { XaiReasoningEffort } from '@aituber-onair/core';
+import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
 import type {
   VrmEmotionEffectMap,
   VrmReactionControlMode,
@@ -176,6 +177,7 @@ export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
+  vrmEmotionEffectAnchors: Record<string, EmotionEffectAnchor>;
   vrmReactionControlMode: VrmReactionControlMode;
   vrmEmotionEffectMap: VrmEmotionEffectMap;
 }

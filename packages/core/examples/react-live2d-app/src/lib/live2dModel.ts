@@ -39,7 +39,6 @@ export interface Live2DModelSource {
   folderName: string;
   modelFilePath: string;
   modelJsonUrl: string;
-  expressionNames: string[];
   revoke: () => void;
 }
 
@@ -292,9 +291,6 @@ export async function createBundledLive2DModelSource(
     }
     return response.json();
   })) as Live2DModelJson;
-  const expressionNames = (modelJson.FileReferences?.Expressions || [])
-    .map((expression) => expression.Name?.trim())
-    .filter((name): name is string => Boolean(name));
   const revokers: string[] = [];
 
   await rewriteModelJsonReferences(modelJson, async (targetPath) => {
@@ -317,7 +313,6 @@ export async function createBundledLive2DModelSource(
     folderName: registryEntry.folderName,
     modelFilePath: registryEntry.modelFilePath,
     modelJsonUrl: createModelJsonBlobUrl(modelJson, revokers),
-    expressionNames,
     revoke: () => {
       for (const url of revokers) {
         URL.revokeObjectURL(url);

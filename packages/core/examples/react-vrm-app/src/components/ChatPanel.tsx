@@ -1,7 +1,9 @@
 import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
+import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
 import type {
   VrmAvatarReaction,
+  VrmEmotionEffectReaction,
   VrmEmotionEffectMap,
   VrmReactionControlMode,
 } from '../lib/vrmReactions';
@@ -18,8 +20,12 @@ interface ChatPanelProps {
   mouthLevel: number;
   isSpeaking: boolean;
   avatarReaction?: VrmAvatarReaction | null;
+  emotionEffectReaction?: VrmEmotionEffectReaction | null;
   reactionControlMode: VrmReactionControlMode;
   emotionEffectMap: VrmEmotionEffectMap;
+  effectAnchor: EmotionEffectAnchor;
+  onEffectAnchorChange: (anchor: EmotionEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
   backgroundImageUrl?: string | null;
   visual: VisualSettings;
 }
@@ -33,8 +39,12 @@ export function ChatPanel({
   mouthLevel,
   isSpeaking,
   avatarReaction,
+  emotionEffectReaction,
   reactionControlMode,
   emotionEffectMap,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
   backgroundImageUrl,
   visual,
 }: ChatPanelProps) {
@@ -75,8 +85,12 @@ export function ChatPanel({
         mouthLevel={mouthLevel}
         isSpeaking={isSpeaking}
         reaction={avatarReaction}
+        emotionEffectReaction={emotionEffectReaction}
         reactionControlMode={reactionControlMode}
         emotionEffectMap={emotionEffectMap}
+        effectAnchor={effectAnchor}
+        onEffectAnchorChange={onEffectAnchorChange}
+        onEffectAnchorReset={onEffectAnchorReset}
       />
       {isBroadcast ? (
         broadcastCaption && (

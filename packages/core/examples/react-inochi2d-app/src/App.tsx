@@ -15,6 +15,7 @@ import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
+import { getEmotionEffectAnchor } from './lib/emotionEffectAnchor';
 import {
   INOCHI2D_CUSTOM_MODEL_ID,
   buildCustomInochiModel,
@@ -43,10 +44,7 @@ interface SettingsDialogDragState {
 
 export default function App() {
   const settingsHook = useSettings();
-  const { play, stop, isSpeaking } = useAudioLipsync({
-    preserveExpression:
-      settingsHook.settings.visual.inochi2dReactionControlMode !== 'none',
-  });
+  const { play, stop, isSpeaking } = useAudioLipsync();
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsDialogOffset, setSettingsDialogOffset] =
@@ -449,6 +447,25 @@ export default function App() {
         onModelResolved={setSelectedModelId}
         avatarReaction={avatarReaction}
         visual={settingsHook.settings.visual}
+        effectAnchor={getEmotionEffectAnchor(
+          settingsHook.settings.visual.inochi2dEmotionEffectAnchors,
+          selectedModelId || customModel?.id,
+        )}
+        onEffectAnchorChange={(anchor) => {
+          const profileId = selectedModelId || customModel?.id;
+          if (profileId) {
+            settingsHook.updateVisualInochi2DEmotionEffectAnchor(
+              profileId,
+              anchor,
+            );
+          }
+        }}
+        onEffectAnchorReset={() => {
+          const profileId = selectedModelId || customModel?.id;
+          if (profileId) {
+            settingsHook.resetVisualInochi2DEmotionEffectAnchor(profileId);
+          }
+        }}
       />
 
       {settingsOpen && (
