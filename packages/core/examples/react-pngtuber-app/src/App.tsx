@@ -16,6 +16,12 @@ import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
+import {
+  createLinkedPngTuberEmotionReaction,
+  withPngTuberEmotionReactionId,
+  type PngTuberEmotionReaction,
+  type PngTuberEmotionReactionDraft,
+} from './lib/pngtuberEmotionEffects';
 import './styles/app.css';
 
 const DEFAULT_SETTINGS_DIALOG_OFFSET: DialogDragPoint = { x: 0, y: 0 };
@@ -43,6 +49,19 @@ export default function App() {
   const avatarObjectUrlRef = useRef<AvatarImageUrls>({});
   const settingsDialogRef = useRef<HTMLDivElement | null>(null);
   const settingsDialogDragRef = useRef<SettingsDialogDragState | null>(null);
+  const reactionIdRef = useRef(0);
+  const [avatarReaction, setAvatarReaction] =
+    useState<PngTuberEmotionReaction | null>(null);
+
+  const emitAvatarReaction = useCallback(
+    (draft: PngTuberEmotionReactionDraft) => {
+      reactionIdRef.current += 1;
+      setAvatarReaction(
+        withPngTuberEmotionReactionId(draft, reactionIdRef.current),
+      );
+    },
+    [],
+  );
 
   const handleSettingsDialogPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -120,6 +139,30 @@ export default function App() {
     [play],
   );
 
+  const handleSpeechStart = useCallback(
+    (screenplay: { emotion?: string; text?: string }) => {
+      const reaction = createLinkedPngTuberEmotionReaction(
+        settingsHook.settings.visual.pngtuberReactionControlMode,
+        screenplay,
+        settingsHook.settings.visual.pngtuberEmotionEffectMap,
+      );
+      if (reaction) {
+        emitAvatarReaction(reaction);
+      } else {
+        setAvatarReaction(null);
+      }
+    },
+    [
+      emitAvatarReaction,
+      settingsHook.settings.visual.pngtuberEmotionEffectMap,
+      settingsHook.settings.visual.pngtuberReactionControlMode,
+    ],
+  );
+
+  const handleSpeechEnd = useCallback(() => {
+    setAvatarReaction(null);
+  }, []);
+
   const {
     messages,
     isProcessing,
@@ -128,6 +171,8 @@ export default function App() {
     processVisionChat,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
+    onSpeechStart: handleSpeechStart,
+    onSpeechEnd: handleSpeechEnd,
     settings: settingsHook.settings,
     getApiKeyForProvider: settingsHook.getApiKeyForProvider,
   });
@@ -143,6 +188,7 @@ export default function App() {
     (text: string) => {
       // Stop previous audio if speech is currently playing
       stop();
+      setAvatarReaction(null);
       processChat(text);
     },
     [stop, processChat],
@@ -311,6 +357,7 @@ export default function App() {
         isSpeaking={isSpeaking}
         backgroundImageUrl={backgroundImageUrl}
         avatarImageUrls={avatarImageUrls}
+        avatarReaction={avatarReaction}
         visual={settingsHook.settings.visual}
         onToggleSettings={toggleSettingsDialog}
       />

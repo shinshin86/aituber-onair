@@ -1,4 +1,8 @@
 import type { XaiReasoningEffort } from '@aituber-onair/core';
+import type {
+  Inochi2DEmotionEffectMap,
+  Inochi2DReactionControlMode,
+} from '../lib/inochi2dReactions';
 
 export type ChatProviderOption =
   | 'openai'
@@ -172,6 +176,8 @@ export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
+  inochi2dReactionControlMode: Inochi2DReactionControlMode;
+  inochi2dEmotionEffectMap: Inochi2DEmotionEffectMap;
 }
 
 export interface ScreenVisionSettings {

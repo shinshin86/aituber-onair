@@ -23,8 +23,15 @@ import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 
+interface ScreenplayLike {
+  emotion?: string;
+  text?: string;
+}
+
 interface UseAituberCoreOptions {
   onAudioPlay: (arrayBuffer: ArrayBuffer) => Promise<void>;
+  onSpeechStart?: (screenplay: ScreenplayLike) => void;
+  onSpeechEnd?: () => void;
   settings: AppSettings;
   getApiKeyForProvider: (provider: ChatProviderOption) => string;
 }
@@ -300,15 +307,29 @@ function buildVoiceOptions(
   } as VoiceServiceOptions;
 }
 
+function extractScreenplay(data: unknown): ScreenplayLike | null {
+  if (!data || typeof data !== 'object') return null;
+  const source = (data as { screenplay?: unknown }).screenplay ?? data;
+  if (!source || typeof source !== 'object') return null;
+  const screenplay = source as { emotion?: unknown; text?: unknown };
+  const emotion =
+    typeof screenplay.emotion === 'string' ? screenplay.emotion : undefined;
+  const text =
+    typeof screenplay.text === 'string' ? screenplay.text : undefined;
+  return emotion || text ? { emotion, text } : null;
+}
+
 export function useAituberCore({
   onAudioPlay,
+  onSpeechStart,
+  onSpeechEnd,
   settings,
   getApiKeyForProvider,
 }: UseAituberCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
-  const chatHistoryRef = useRef<
-    ReturnType<AITuberOnAirCore['getChatHistory']>
-  >([]);
+  const chatHistoryRef = useRef<ReturnType<AITuberOnAirCore['getChatHistory']>>(
+    [],
+  );
   const manneriDetectorRef = useRef<ManneriDetector | null>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
   const messageIdSequenceRef = useRef(0);
@@ -318,9 +339,13 @@ export function useAituberCore({
 
   // Keep the latest onAudioPlay callback in a ref
   const onAudioPlayRef = useRef(onAudioPlay);
+  const onSpeechStartRef = useRef(onSpeechStart);
+  const onSpeechEndRef = useRef(onSpeechEnd);
   useEffect(() => {
     onAudioPlayRef.current = onAudioPlay;
-  }, [onAudioPlay]);
+    onSpeechStartRef.current = onSpeechStart;
+    onSpeechEndRef.current = onSpeechEnd;
+  }, [onAudioPlay, onSpeechEnd, onSpeechStart]);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -361,8 +386,7 @@ export function useAituberCore({
   const isOpenAIGPT5Model =
     settings.llm.provider === 'openai' && isGPT5Model(resolvedModel);
   const xaiProviderOptions =
-    settings.llm.provider === 'xai' &&
-    isXaiReasoningEffortModel(resolvedModel)
+    settings.llm.provider === 'xai' && isXaiReasoningEffortModel(resolvedModel)
       ? {
           reasoning_effort:
             settings.llm.xaiReasoningEffort ||
@@ -404,8 +428,7 @@ export function useAituberCore({
       model: resolvedModel,
       providerOptions,
       chatOptions: {
-        systemPrompt:
-          settings.llm.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+        systemPrompt: settings.llm.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
         ...(isOpenAIGPT5Model ? GPT5_SAMPLE_CHAT_OPTIONS : {}),
       },
       voiceOptions: buildVoiceOptions(
@@ -451,12 +474,15 @@ export function useAituberCore({
         const d = data as {
           message?: { content?: string } | string;
           rawText?: string;
+          screenplay?: { text?: string };
         };
         const msg = d?.message;
+        const cleanText = d?.screenplay?.text?.trim();
         content =
-          (typeof msg === 'string' ? msg : msg?.content) ??
-          d?.rawText ??
-          String(data);
+          cleanText ||
+          ((typeof msg === 'string' ? msg : msg?.content) ??
+            d?.rawText ??
+            String(data));
       }
       setMessages((prev) => [
         ...prev,
@@ -470,9 +496,19 @@ export function useAituberCore({
       setPartialResponse('');
     });
 
+    core.on(AITuberOnAirCoreEvent.SPEECH_START, (data: unknown) => {
+      const screenplay = extractScreenplay(data);
+      if (screenplay) onSpeechStartRef.current?.(screenplay);
+    });
+
+    core.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
+      onSpeechEndRef.current?.();
+    });
+
     core.on(AITuberOnAirCoreEvent.ERROR, (error: unknown) => {
       console.error('AITuberOnAirCore error:', error);
       setIsProcessing(false);
+      onSpeechEndRef.current?.();
     });
 
     coreRef.current = core;

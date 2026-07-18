@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type React from 'react';
 import { useInochi2D } from '../hooks/useInochi2D';
+import { applyInochi2DExpression } from '../lib/inochi2dExpression';
+import {
+  withInochi2DReactionId,
+  type Inochi2DEmotionEffectMap,
+  type Inochi2DReaction,
+  type Inochi2DReactionControlMode,
+  type Inochi2DReactionEmotion,
+} from '../lib/inochi2dReactions';
 import type {
   InochiCameraTransform,
   ResolvedInochiModelDefinition,
@@ -11,13 +19,31 @@ interface Inochi2DStageProps {
   customModel?: ResolvedInochiModelDefinition | null;
   modelPickerError: string;
   onModelResolved: (modelId: string) => void;
+  reaction?: Inochi2DReaction | null;
+  reactionControlMode: Inochi2DReactionControlMode;
+  emotionEffectMap: Inochi2DEmotionEffectMap;
 }
+
+const AVATAR_EXPRESSION_OPTIONS = [
+  { emotion: 'happy', label: '喜び' },
+  { emotion: 'surprised', label: '驚き' },
+  { emotion: 'sad', label: '悲しみ' },
+  { emotion: 'angry', label: '怒り' },
+  { emotion: 'relaxed', label: '安らぎ' },
+  { emotion: 'thinking', label: '考え中' },
+] as const satisfies ReadonlyArray<{
+  emotion: Inochi2DReactionEmotion;
+  label: string;
+}>;
 
 export function Inochi2DStage({
   selectedModelId,
   customModel,
   modelPickerError,
   onModelResolved,
+  reaction,
+  reactionControlMode,
+  emotionEffectMap,
 }: Inochi2DStageProps) {
   const {
     canvasRef,
@@ -30,12 +56,24 @@ export function Inochi2DStage({
     resetCameraTransform,
     applyInteractionImpulse,
     playReactionAnimation,
+    playEmotionAnimation,
   } = useInochi2D({
     selectedModelId,
     customModel,
     onModelResolved,
   });
   const [isDraggingCamera, setIsDraggingCamera] = useState(false);
+  const [manualReaction, setManualReaction] = useState<Inochi2DReaction | null>(
+    null,
+  );
+  const manualReactionIdRef = useRef(0);
+  const showManualControls = reactionControlMode === 'manual';
+  const effectiveReaction =
+    reactionControlMode === 'linked'
+      ? reaction || null
+      : showManualControls
+        ? manualReaction
+        : null;
   const canvasElementRef = useRef<HTMLCanvasElement | null>(null);
   const dragStateRef = useRef<{
     pointerId: number;
@@ -153,6 +191,15 @@ export function Inochi2DStage({
     };
   }, [cameraTransform, setCameraTransform, status]);
 
+  useEffect(() => {
+    if (status !== 'ready' || !activeModel) return;
+    const effect = effectiveReaction?.effect || 'neutral';
+    void applyInochi2DExpression(effect);
+    if (effectiveReaction) {
+      void playEmotionAnimation(effect);
+    }
+  }, [activeModel, effectiveReaction, playEmotionAnimation, status]);
+
   const overlayMessage =
     status === 'loading'
       ? 'Inochi2D モデルを読み込み中...'
@@ -208,6 +255,51 @@ export function Inochi2DStage({
           </>
         )}
       </div>
+      {showManualControls && (
+        <div
+          className="avatar-expression-controls"
+          role="group"
+          aria-label="Inochi2Dアバター感情表現エフェクト"
+        >
+          <span className="avatar-expression-controls-label">
+            感情表現エフェクト
+          </span>
+          {AVATAR_EXPRESSION_OPTIONS.map((option) => {
+            const effect = emotionEffectMap[option.emotion];
+            return (
+              <button
+                key={option.emotion}
+                type="button"
+                className="avatar-expression-button"
+                disabled={status !== 'ready' || !activeModel || !effect}
+                onClick={() => {
+                  if (!effect) return;
+                  manualReactionIdRef.current += 1;
+                  setManualReaction(
+                    withInochi2DReactionId(
+                      { effect },
+                      manualReactionIdRef.current,
+                    ),
+                  );
+                }}
+                title={
+                  effect ? undefined : 'エフェクトが割り当てられていません'
+                }
+              >
+                {option.label}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            className="avatar-expression-button is-reset"
+            disabled={status !== 'ready' || !activeModel}
+            onClick={() => setManualReaction(null)}
+          >
+            解除
+          </button>
+        </div>
+      )}
     </div>
   );
 }

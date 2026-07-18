@@ -1,6 +1,7 @@
 import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
 import type { AvatarImageUrls } from './AvatarPanel';
+import type { PngTuberEmotionReaction } from '../lib/pngtuberEmotionEffects';
 import { AvatarBackground } from './AvatarPanel';
 import { ChatLog } from './ChatLog';
 import { ChatInput } from './ChatInput';
@@ -14,6 +15,7 @@ interface ChatPanelProps {
   isSpeaking: boolean;
   backgroundImageUrl?: string | null;
   avatarImageUrls?: AvatarImageUrls;
+  avatarReaction?: PngTuberEmotionReaction | null;
   visual: VisualSettings;
   onToggleSettings: () => void;
 }
@@ -27,6 +29,7 @@ export function ChatPanel({
   isSpeaking,
   backgroundImageUrl,
   avatarImageUrls,
+  avatarReaction,
   visual,
   onToggleSettings,
 }: ChatPanelProps) {
@@ -41,12 +44,12 @@ export function ChatPanel({
     visual.backgroundMode === 'green'
       ? { backgroundColor: '#00ff00' }
       : backgroundImageUrl
-    ? {
-        backgroundImage: `url(${backgroundImageUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
-    : undefined;
+        ? {
+            backgroundImage: `url(${backgroundImageUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }
+        : undefined;
 
   return (
     <div
@@ -67,6 +70,9 @@ export function ChatPanel({
         mouthLevel={mouthLevel}
         isSpeaking={isSpeaking}
         avatarImageUrls={avatarImageUrls}
+        avatarReaction={avatarReaction}
+        reactionControlMode={visual.pngtuberReactionControlMode}
+        emotionEffectMap={visual.pngtuberEmotionEffectMap}
       />
       {isBroadcast ? (
         broadcastCaption && (

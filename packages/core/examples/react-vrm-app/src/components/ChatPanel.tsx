@@ -1,6 +1,10 @@
 import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
-import type { VrmAvatarReaction } from '../lib/vrmReactions';
+import type {
+  VrmAvatarReaction,
+  VrmEmotionEffectMap,
+  VrmReactionControlMode,
+} from '../lib/vrmReactions';
 import { AvatarBackground } from './AvatarPanel';
 import { ChatLog } from './ChatLog';
 import { ChatInput } from './ChatInput';
@@ -14,6 +18,8 @@ interface ChatPanelProps {
   mouthLevel: number;
   isSpeaking: boolean;
   avatarReaction?: VrmAvatarReaction | null;
+  reactionControlMode: VrmReactionControlMode;
+  emotionEffectMap: VrmEmotionEffectMap;
   backgroundImageUrl?: string | null;
   visual: VisualSettings;
 }
@@ -27,6 +33,8 @@ export function ChatPanel({
   mouthLevel,
   isSpeaking,
   avatarReaction,
+  reactionControlMode,
+  emotionEffectMap,
   backgroundImageUrl,
   visual,
 }: ChatPanelProps) {
@@ -41,12 +49,12 @@ export function ChatPanel({
     visual.backgroundMode === 'green'
       ? { backgroundColor: '#00ff00' }
       : backgroundImageUrl
-    ? {
-        backgroundImage: `url(${backgroundImageUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
-    : undefined;
+        ? {
+            backgroundImage: `url(${backgroundImageUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }
+        : undefined;
 
   return (
     <div
@@ -67,6 +75,8 @@ export function ChatPanel({
         mouthLevel={mouthLevel}
         isSpeaking={isSpeaking}
         reaction={avatarReaction}
+        reactionControlMode={reactionControlMode}
+        emotionEffectMap={emotionEffectMap}
       />
       {isBroadcast ? (
         broadcastCaption && (

@@ -21,6 +21,12 @@ import {
   type BundledLive2DModelEntry,
   type Live2DModelSource,
 } from './lib/live2dModel';
+import {
+  createLinkedLive2DReaction,
+  withLive2DReactionId,
+  type Live2DReaction,
+  type Live2DReactionDraft,
+} from './lib/live2dReactions';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/base.css';
@@ -61,6 +67,15 @@ export default function App() {
   const modelSourceRef = useRef<Live2DModelSource | null>(null);
   const settingsDialogRef = useRef<HTMLDivElement | null>(null);
   const settingsDialogDragRef = useRef<SettingsDialogDragState | null>(null);
+  const reactionIdRef = useRef(0);
+  const [avatarReaction, setAvatarReaction] = useState<Live2DReaction | null>(
+    null,
+  );
+
+  const emitAvatarReaction = useCallback((draft: Live2DReactionDraft) => {
+    reactionIdRef.current += 1;
+    setAvatarReaction(withLive2DReactionId(draft, reactionIdRef.current));
+  }, []);
 
   const handleSettingsDialogPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -148,6 +163,32 @@ export default function App() {
     [play],
   );
 
+  const handleSpeechStart = useCallback(
+    (screenplay: { emotion?: string; text?: string }) => {
+      const reaction = createLinkedLive2DReaction(
+        settingsHook.settings.visual.live2dReactionControlMode,
+        screenplay,
+        settingsHook.settings.visual.live2dEmotionEffectMap,
+        modelSource?.expressionNames || [],
+      );
+      if (reaction) {
+        emitAvatarReaction(reaction);
+      } else {
+        setAvatarReaction(null);
+      }
+    },
+    [
+      emitAvatarReaction,
+      modelSource?.expressionNames,
+      settingsHook.settings.visual.live2dEmotionEffectMap,
+      settingsHook.settings.visual.live2dReactionControlMode,
+    ],
+  );
+
+  const handleSpeechEnd = useCallback(() => {
+    setAvatarReaction(null);
+  }, []);
+
   const {
     messages,
     isProcessing,
@@ -156,6 +197,8 @@ export default function App() {
     processVisionChat,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
+    onSpeechStart: handleSpeechStart,
+    onSpeechEnd: handleSpeechEnd,
     settings: settingsHook.settings,
     getApiKeyForProvider: settingsHook.getApiKeyForProvider,
   });
@@ -169,6 +212,7 @@ export default function App() {
   const handleSend = useCallback(
     (text: string) => {
       stop();
+      setAvatarReaction(null);
       processChat(text);
     },
     [processChat, stop],
@@ -358,6 +402,7 @@ export default function App() {
         backgroundImageUrl={backgroundImageUrl}
         modelSource={modelSource}
         modelPickerError={modelPickerError}
+        avatarReaction={avatarReaction}
         audioBinding={audioBinding}
         visual={settingsHook.settings.visual}
       />
@@ -459,6 +504,7 @@ export default function App() {
                 streamErrorMessage={streamErrorMessage}
                 screenVisionController={screenVisionController}
                 onBackgroundImageChange={handleBackgroundImageChange}
+                live2dExpressionNames={modelSource?.expressionNames || []}
               />
             </div>
           </div>

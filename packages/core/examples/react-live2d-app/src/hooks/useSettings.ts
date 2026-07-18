@@ -7,6 +7,13 @@ import {
   type XaiReasoningEffort,
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
+import {
+  DEFAULT_LIVE2D_EMOTION_EFFECT_MAP,
+  isLive2DReactionControlMode,
+  normalizeLive2DEmotionEffectMap,
+  type Live2DReactionControlMode,
+  type Live2DReactionEmotion,
+} from '../lib/live2dReactions';
 import type {
   AppSettings,
   ChatProviderOption,
@@ -214,6 +221,8 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      live2dReactionControlMode: 'none',
+      live2dEmotionEffectMap: { ...DEFAULT_LIVE2D_EMOTION_EFFECT_MAP },
     },
     screenVision: {
       deviceId: '',
@@ -272,7 +281,18 @@ function loadSettings(): AppSettings {
           ),
         },
         tts: { ...defaults.tts, ...saved.tts },
-        visual: { ...defaults.visual, ...saved.visual },
+        visual: {
+          ...defaults.visual,
+          ...saved.visual,
+          live2dReactionControlMode: isLive2DReactionControlMode(
+            saved.visual?.live2dReactionControlMode,
+          )
+            ? saved.visual.live2dReactionControlMode
+            : defaults.visual.live2dReactionControlMode,
+          live2dEmotionEffectMap: normalizeLive2DEmotionEffectMap(
+            saved.visual?.live2dEmotionEffectMap,
+          ),
+        },
         screenVision: { ...defaults.screenVision, ...saved.screenVision },
         stream: { ...defaults.stream, ...saved.stream },
         commentIntelligence: {
@@ -899,6 +919,42 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualLive2DReactionControlMode = useCallback(
+    (live2dReactionControlMode: Live2DReactionControlMode) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, live2dReactionControlMode },
+      }));
+    },
+    [],
+  );
+
+  const updateVisualLive2DEmotionEffect = useCallback(
+    (emotion: Live2DReactionEmotion, effect: string | null) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          live2dEmotionEffectMap: {
+            ...prev.visual.live2dEmotionEffectMap,
+            [emotion]: effect,
+          },
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualLive2DEmotionEffectMap = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      visual: {
+        ...prev.visual,
+        live2dEmotionEffectMap: { ...DEFAULT_LIVE2D_EMOTION_EFFECT_MAP },
+      },
+    }));
+  }, []);
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1146,10 +1202,7 @@ export function useSettings() {
         ...prev,
         manneri: {
           ...prev.manneri,
-          similarityThreshold: Math.min(
-            1,
-            Math.max(0.1, similarityThreshold),
-          ),
+          similarityThreshold: Math.min(1, Math.max(0.1, similarityThreshold)),
         },
       }));
     },
@@ -1256,6 +1309,9 @@ export function useSettings() {
     updateVisualBackgroundMode,
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
+    updateVisualLive2DReactionControlMode,
+    updateVisualLive2DEmotionEffect,
+    resetVisualLive2DEmotionEffectMap,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

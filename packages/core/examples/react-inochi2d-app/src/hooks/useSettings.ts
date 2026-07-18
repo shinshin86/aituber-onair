@@ -7,6 +7,14 @@ import {
   type XaiReasoningEffort,
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
+import {
+  DEFAULT_INOCHI2D_EMOTION_EFFECT_MAP,
+  isInochi2DReactionControlMode,
+  normalizeInochi2DEmotionEffectMap,
+  type Inochi2DEmotionEffect,
+  type Inochi2DReactionControlMode,
+  type Inochi2DReactionEmotion,
+} from '../lib/inochi2dReactions';
 import type {
   AppSettings,
   ChatProviderOption,
@@ -214,6 +222,8 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      inochi2dReactionControlMode: 'none',
+      inochi2dEmotionEffectMap: { ...DEFAULT_INOCHI2D_EMOTION_EFFECT_MAP },
     },
     screenVision: {
       deviceId: '',
@@ -272,7 +282,18 @@ function loadSettings(): AppSettings {
           ),
         },
         tts: { ...defaults.tts, ...saved.tts },
-        visual: { ...defaults.visual, ...saved.visual },
+        visual: {
+          ...defaults.visual,
+          ...saved.visual,
+          inochi2dReactionControlMode: isInochi2DReactionControlMode(
+            saved.visual?.inochi2dReactionControlMode,
+          )
+            ? saved.visual.inochi2dReactionControlMode
+            : defaults.visual.inochi2dReactionControlMode,
+          inochi2dEmotionEffectMap: normalizeInochi2DEmotionEffectMap(
+            saved.visual?.inochi2dEmotionEffectMap,
+          ),
+        },
         screenVision: { ...defaults.screenVision, ...saved.screenVision },
         stream: { ...defaults.stream, ...saved.stream },
         commentIntelligence: {
@@ -899,6 +920,47 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualInochi2DReactionControlMode = useCallback(
+    (inochi2dReactionControlMode: Inochi2DReactionControlMode) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, inochi2dReactionControlMode },
+      }));
+    },
+    [],
+  );
+
+  const updateVisualInochi2DEmotionEffect = useCallback(
+    (
+      emotion: Inochi2DReactionEmotion,
+      effect: Inochi2DEmotionEffect | null,
+    ) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          inochi2dEmotionEffectMap: {
+            ...prev.visual.inochi2dEmotionEffectMap,
+            [emotion]: effect,
+          },
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualInochi2DEmotionEffectMap = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      visual: {
+        ...prev.visual,
+        inochi2dEmotionEffectMap: {
+          ...DEFAULT_INOCHI2D_EMOTION_EFFECT_MAP,
+        },
+      },
+    }));
+  }, []);
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1253,6 +1315,9 @@ export function useSettings() {
     updateVisualBackgroundMode,
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
+    updateVisualInochi2DReactionControlMode,
+    updateVisualInochi2DEmotionEffect,
+    resetVisualInochi2DEmotionEffectMap,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

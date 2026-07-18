@@ -45,8 +45,10 @@ from actual audio output volume.
 - `piperPlus` expects browser assets under `public/piper/`
 - Render a VRM avatar (`miko.vrm`) with optional idle VRMA animation
 - Real-time lip-sync for VRM expression (`Aa`)
-- Apply available VRM expressions from response emotion tags, with graceful
-  fallback when a loaded VRM does not include the optional expressions
+- Configure emotion-to-expression mappings in **Settings → 感情表現エフェクト**
+  and choose disabled, manual preview, or response-emotion-linked control
+- Apply linked VRM expressions as soon as a response emotion is received,
+  independently of TTS playback
 - Add subtle randomized idle expressions while the avatar is not speaking
 - Control camera on the avatar stage:
   drag to rotate / mouse wheel to zoom / double-click to reset

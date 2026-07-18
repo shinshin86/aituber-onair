@@ -14,6 +14,11 @@ import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
+import type {
+  PngTuberEmotionEffect,
+  PngTuberReactionControlMode,
+  PngTuberReactionEmotion,
+} from '../lib/pngtuberEmotionEffects';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { AvatarImageKey, AvatarImageUrls } from './AvatarPanel';
 import type { useSettings } from '../hooks/useSettings';
@@ -68,6 +73,32 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'webSpeech', label: 'Web Speech API' },
   { value: 'none', label: 'None' },
+];
+
+const PNGTUBER_REACTION_EMOTION_OPTIONS: ReadonlyArray<{
+  value: PngTuberReactionEmotion;
+  label: string;
+}> = [
+  { value: 'happy', label: '喜び（happy）' },
+  { value: 'surprised', label: '驚き（surprised）' },
+  { value: 'sad', label: '悲しみ（sad）' },
+  { value: 'angry', label: '怒り（angry）' },
+  { value: 'relaxed', label: '安らぎ（relaxed）' },
+  { value: 'thinking', label: '考え中（thinking）' },
+  { value: 'neutral', label: '通常（neutral）' },
+];
+
+const PNGTUBER_EFFECT_OPTIONS: ReadonlyArray<{
+  value: PngTuberEmotionEffect | 'none';
+  label: string;
+}> = [
+  { value: 'none', label: 'なし' },
+  { value: 'happy', label: 'きらめき（happy）' },
+  { value: 'surprised', label: '驚き線（surprised）' },
+  { value: 'sad', label: '涙（sad）' },
+  { value: 'angry', label: '怒りマーク（angry）' },
+  { value: 'relaxed', label: '泡・安らぎ（relaxed）' },
+  { value: 'thinking', label: '思考マーク（thinking）' },
 ];
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
@@ -232,6 +263,7 @@ type SectionKey =
   | 'llm'
   | 'tts'
   | 'visual'
+  | 'emotionEffects'
   | 'stream'
   | 'commentIntelligence'
   | 'manneri';
@@ -288,6 +320,9 @@ export function SettingsPanel({
   updateVisualBackgroundMode,
   updateVisualLayoutMode,
   updateVisualShowInputInBroadcast,
+  updateVisualPngTuberReactionControlMode,
+  updateVisualPngTuberEmotionEffect,
+  resetVisualPngTuberEmotionEffectMap,
   updateScreenVisionDeviceId,
   updateScreenVisionPrompt,
   updateScreenVisionAutoIntervalMs,
@@ -346,8 +381,7 @@ export function SettingsPanel({
           settings.llm.model,
           settings.llm.xaiReasoningEffort ||
             getDefaultXaiReasoningEffort(settings.llm.model),
-        ) ||
-        'none'
+        ) || 'none'
       : 'none';
   const allowsXaiNoneReasoningEffort =
     settings.llm.provider === 'xai' &&
@@ -386,6 +420,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    emotionEffects: true,
     stream: true,
     commentIntelligence: true,
     manneri: true,
@@ -694,7 +729,6 @@ export function SettingsPanel({
     settings.tts.speaker,
     updateTTSSpeaker,
   ]);
-
 
   useEffect(() => {
     if (settings.tts.engine !== 'webSpeech') {
@@ -1010,7 +1044,6 @@ export function SettingsPanel({
                 </div>
               </>
             )}
-
           </>
         )}
       </div>
@@ -2444,9 +2477,7 @@ export function SettingsPanel({
                 id="visual-layout-mode"
                 value={settings.visual.layoutMode}
                 onChange={(e) =>
-                  updateVisualLayoutMode(
-                    e.target.value as 'chat' | 'broadcast',
-                  )
+                  updateVisualLayoutMode(e.target.value as 'chat' | 'broadcast')
                 }
                 disabled={disabled}
               >
@@ -2553,6 +2584,103 @@ export function SettingsPanel({
                 </div>
               </div>
             ))}
+          </>
+        )}
+      </div>
+
+      <div className="settings-section">
+        <button
+          type="button"
+          className="settings-section-toggle"
+          onClick={() => toggleSection('emotionEffects')}
+          aria-expanded={expandedSections.emotionEffects}
+        >
+          <h3>感情表現エフェクト</h3>
+          <span
+            className={`settings-section-chevron${expandedSections.emotionEffects ? ' is-open' : ''}`}
+          >
+            ⌄
+          </span>
+        </button>
+
+        {expandedSections.emotionEffects && (
+          <>
+            <div className="settings-field">
+              <label htmlFor="pngtuber-reaction-control-mode">操作方法</label>
+              <select
+                id="pngtuber-reaction-control-mode"
+                value={settings.visual.pngtuberReactionControlMode}
+                onChange={(event) =>
+                  updateVisualPngTuberReactionControlMode(
+                    event.target.value as PngTuberReactionControlMode,
+                  )
+                }
+                disabled={disabled}
+              >
+                <option value="none">なし</option>
+                <option value="manual">手動ボタン</option>
+                <option value="linked">発話感情に連動のみ</option>
+              </select>
+              <p className="settings-field-hint">
+                {settings.visual.pngtuberReactionControlMode === 'none'
+                  ? '手動ボタンを表示せず、発話時のエフェクトも再生しません。'
+                  : settings.visual.pngtuberReactionControlMode === 'manual'
+                    ? 'アバター上のボタンからCanvasエフェクトをプレビューします。'
+                    : '発話の emotion タグを受け取った時点でCanvasエフェクトを再生します。'}
+              </p>
+            </div>
+
+            <div className="settings-field">
+              <span className="settings-field-label">
+                感情とエフェクトの対応
+              </span>
+              <div className="settings-emotion-mapping-list">
+                {PNGTUBER_REACTION_EMOTION_OPTIONS.map((emotionOption) => (
+                  <label
+                    key={emotionOption.value}
+                    className="settings-emotion-mapping-row"
+                    htmlFor={`pngtuber-effect-${emotionOption.value}`}
+                  >
+                    <span>{emotionOption.label}</span>
+                    <select
+                      id={`pngtuber-effect-${emotionOption.value}`}
+                      value={
+                        settings.visual.pngtuberEmotionEffectMap[
+                          emotionOption.value
+                        ] || 'none'
+                      }
+                      onChange={(event) => {
+                        const effect = event.target.value;
+                        updateVisualPngTuberEmotionEffect(
+                          emotionOption.value,
+                          effect === 'none'
+                            ? null
+                            : (effect as PngTuberEmotionEffect),
+                        );
+                      }}
+                      disabled={disabled}
+                    >
+                      {PNGTUBER_EFFECT_OPTIONS.map((effectOption) => (
+                        <option
+                          key={effectOption.value}
+                          value={effectOption.value}
+                        >
+                          {effectOption.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="settings-clear-button settings-inline-button"
+                onClick={resetVisualPngTuberEmotionEffectMap}
+                disabled={disabled}
+              >
+                感情の割り当てを初期値に戻す
+              </button>
+            </div>
           </>
         )}
       </div>

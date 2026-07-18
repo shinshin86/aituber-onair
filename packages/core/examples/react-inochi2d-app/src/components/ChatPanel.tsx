@@ -1,6 +1,7 @@
 import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
 import type { ResolvedInochiModelDefinition } from '../types/inochi2d';
+import type { Inochi2DReaction } from '../lib/inochi2dReactions';
 import { ChatInput } from './ChatInput';
 import { ChatLog } from './ChatLog';
 import { Inochi2DStage } from './Inochi2DStage';
@@ -16,6 +17,7 @@ interface ChatPanelProps {
   customModel?: ResolvedInochiModelDefinition | null;
   modelPickerError: string;
   onModelResolved: (modelId: string) => void;
+  avatarReaction?: Inochi2DReaction | null;
   visual: VisualSettings;
 }
 
@@ -30,6 +32,7 @@ export function ChatPanel({
   customModel,
   modelPickerError,
   onModelResolved,
+  avatarReaction,
   visual,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
@@ -70,6 +73,9 @@ export function ChatPanel({
         customModel={customModel}
         modelPickerError={modelPickerError}
         onModelResolved={onModelResolved}
+        reaction={avatarReaction}
+        reactionControlMode={visual.inochi2dReactionControlMode}
+        emotionEffectMap={visual.inochi2dEmotionEffectMap}
       />
       {isBroadcast ? (
         broadcastCaption && (

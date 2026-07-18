@@ -14,6 +14,10 @@ import { StreamSettings } from './StreamSettings';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
+import type {
+  Live2DReactionControlMode,
+  Live2DReactionEmotion,
+} from '../lib/live2dReactions';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
 
@@ -26,6 +30,7 @@ interface SettingsPanelProps extends SettingsHook {
   streamErrorMessage?: string;
   screenVisionController: ScreenVisionController;
   onBackgroundImageChange: (file: File | null) => void;
+  live2dExpressionNames: readonly string[];
 }
 
 const PROVIDERS: {
@@ -65,6 +70,19 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'webSpeech', label: 'Web Speech API' },
   { value: 'none', label: 'None' },
+];
+
+const LIVE2D_REACTION_EMOTION_OPTIONS: ReadonlyArray<{
+  value: Live2DReactionEmotion;
+  label: string;
+}> = [
+  { value: 'happy', label: '喜び（happy）' },
+  { value: 'surprised', label: '驚き（surprised）' },
+  { value: 'sad', label: '悲しみ（sad）' },
+  { value: 'angry', label: '怒り（angry）' },
+  { value: 'relaxed', label: '安らぎ（relaxed）' },
+  { value: 'thinking', label: '考え中（thinking）' },
+  { value: 'neutral', label: '通常（neutral）' },
 ];
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
@@ -229,6 +247,7 @@ type SectionKey =
   | 'llm'
   | 'tts'
   | 'visual'
+  | 'emotionEffects'
   | 'stream'
   | 'commentIntelligence'
   | 'manneri';
@@ -278,6 +297,9 @@ export function SettingsPanel({
   updateVisualBackgroundMode,
   updateVisualLayoutMode,
   updateVisualShowInputInBroadcast,
+  updateVisualLive2DReactionControlMode,
+  updateVisualLive2DEmotionEffect,
+  resetVisualLive2DEmotionEffectMap,
   updateScreenVisionDeviceId,
   updateScreenVisionPrompt,
   updateScreenVisionAutoIntervalMs,
@@ -312,6 +334,7 @@ export function SettingsPanel({
   streamErrorMessage,
   screenVisionController,
   onBackgroundImageChange,
+  live2dExpressionNames,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
   const [systemPromptDraft, setSystemPromptDraft] = useState(
@@ -334,8 +357,7 @@ export function SettingsPanel({
           settings.llm.model,
           settings.llm.xaiReasoningEffort ||
             getDefaultXaiReasoningEffort(settings.llm.model),
-        ) ||
-        'none'
+        ) || 'none'
       : 'none';
   const allowsXaiNoneReasoningEffort =
     settings.llm.provider === 'xai' &&
@@ -375,6 +397,7 @@ export function SettingsPanel({
     llm: true,
     tts: true,
     visual: true,
+    emotionEffects: true,
     stream: true,
     commentIntelligence: true,
     manneri: true,
@@ -674,7 +697,6 @@ export function SettingsPanel({
     settings.tts.inworldLanguage,
     updateTTSSpeaker,
   ]);
-
 
   useEffect(() => {
     if (settings.tts.engine !== 'webSpeech') {
@@ -993,7 +1015,6 @@ export function SettingsPanel({
                 </div>
               </>
             )}
-
           </>
         )}
       </div>
@@ -2427,9 +2448,7 @@ export function SettingsPanel({
                 id="visual-layout-mode"
                 value={settings.visual.layoutMode}
                 onChange={(e) =>
-                  updateVisualLayoutMode(
-                    e.target.value as 'chat' | 'broadcast',
-                  )
+                  updateVisualLayoutMode(e.target.value as 'chat' | 'broadcast')
                 }
                 disabled={disabled}
               >
@@ -2489,6 +2508,107 @@ export function SettingsPanel({
                   </button>
                 )}
               </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="settings-section">
+        <button
+          type="button"
+          className="settings-section-toggle"
+          onClick={() => toggleSection('emotionEffects')}
+          aria-expanded={expandedSections.emotionEffects}
+        >
+          <h3>感情表現エフェクト</h3>
+          <span
+            className={`settings-section-chevron${expandedSections.emotionEffects ? ' is-open' : ''}`}
+          >
+            ⌄
+          </span>
+        </button>
+
+        {expandedSections.emotionEffects && (
+          <>
+            <div className="settings-field">
+              <label htmlFor="live2d-reaction-control-mode">操作方法</label>
+              <select
+                id="live2d-reaction-control-mode"
+                value={settings.visual.live2dReactionControlMode}
+                onChange={(event) =>
+                  updateVisualLive2DReactionControlMode(
+                    event.target.value as Live2DReactionControlMode,
+                  )
+                }
+                disabled={disabled}
+              >
+                <option value="none">なし</option>
+                <option value="manual">手動ボタン</option>
+                <option value="linked">発話感情に連動のみ</option>
+              </select>
+              <p className="settings-field-hint">
+                {settings.visual.live2dReactionControlMode === 'none'
+                  ? '手動ボタンを表示せず、発話時の表情も再生しません。'
+                  : settings.visual.live2dReactionControlMode === 'manual'
+                    ? 'アバター上のボタンからLive2D表情をプレビューします。'
+                    : '発話の emotion タグを受け取った時点でLive2D表情を再生します。'}
+              </p>
+            </div>
+
+            <div className="settings-field">
+              <span className="settings-field-label">感情と表情の対応</span>
+              <div className="settings-emotion-mapping-list">
+                {LIVE2D_REACTION_EMOTION_OPTIONS.map((emotionOption) => {
+                  const current =
+                    settings.visual.live2dEmotionEffectMap[emotionOption.value];
+                  const currentIsUnavailable =
+                    Boolean(current) &&
+                    !live2dExpressionNames.includes(current as string);
+                  return (
+                    <label
+                      key={emotionOption.value}
+                      className="settings-emotion-mapping-row"
+                      htmlFor={`live2d-effect-${emotionOption.value}`}
+                    >
+                      <span>{emotionOption.label}</span>
+                      <select
+                        id={`live2d-effect-${emotionOption.value}`}
+                        value={current || 'none'}
+                        onChange={(event) =>
+                          updateVisualLive2DEmotionEffect(
+                            emotionOption.value,
+                            event.target.value === 'none'
+                              ? null
+                              : event.target.value,
+                          )
+                        }
+                        disabled={disabled}
+                      >
+                        <option value="none">なし</option>
+                        {currentIsUnavailable && current && (
+                          <option value={current}>{current}（自動候補）</option>
+                        )}
+                        {live2dExpressionNames.map((expressionName) => (
+                          <option key={expressionName} value={expressionName}>
+                            {expressionName}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                className="settings-clear-button settings-inline-button"
+                onClick={resetVisualLive2DEmotionEffectMap}
+                disabled={disabled}
+              >
+                感情の割り当てを初期値に戻す
+              </button>
+              <p className="settings-field-hint">
+                モデル読込後は、そのモデルJSONに含まれる表情名を選択できます。
+              </p>
             </div>
           </>
         )}

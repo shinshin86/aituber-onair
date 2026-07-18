@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import type { Live2DModelSource } from '../lib/live2dModel';
+import {
+  resolveLive2DExpressionName,
+  withLive2DReactionId,
+  type Live2DEmotionEffectMap,
+  type Live2DReaction,
+  type Live2DReactionControlMode,
+  type Live2DReactionEmotion,
+} from '../lib/live2dReactions';
 import type { Live2DModelCtor, Live2DModelInstance } from '../types/live2d';
 import type { Live2DAudioBinding } from '../hooks/useAudioLipsync';
 import {
@@ -19,12 +27,41 @@ interface Live2DStageProps {
   modelSource: Live2DModelSource | null;
   modelPickerError: string;
   audioBinding: Live2DAudioBinding;
+  reaction?: Live2DReaction | null;
+  reactionControlMode: Live2DReactionControlMode;
+  emotionEffectMap: Live2DEmotionEffectMap;
+}
+
+const AVATAR_EXPRESSION_OPTIONS = [
+  { emotion: 'happy', label: '喜び' },
+  { emotion: 'surprised', label: '驚き' },
+  { emotion: 'sad', label: '悲しみ' },
+  { emotion: 'angry', label: '怒り' },
+  { emotion: 'relaxed', label: '安らぎ' },
+  { emotion: 'thinking', label: '考え中' },
+] as const satisfies ReadonlyArray<{
+  emotion: Live2DReactionEmotion;
+  label: string;
+}>;
+
+function applyLive2DReaction(
+  model: Live2DModelInstance,
+  reaction: Live2DReaction | null,
+) {
+  if (reaction) {
+    void model.expression(reaction.expression);
+    return;
+  }
+  model.internalModel?.motionManager?.expressionManager?.resetExpression();
 }
 
 export function Live2DStage({
   modelSource,
   modelPickerError,
   audioBinding,
+  reaction,
+  reactionControlMode,
+  emotionEffectMap,
 }: Live2DStageProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -32,12 +69,31 @@ export function Live2DStage({
   const modelRef = useRef<Live2DModelInstance | null>(null);
   const zoomCleanupRef = useRef<(() => void) | null>(null);
   const audioBindingRef = useRef(audioBinding);
+  const effectiveReactionRef = useRef<Live2DReaction | null>(null);
   const [stageError, setStageError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [manualReaction, setManualReaction] = useState<Live2DReaction | null>(
+    null,
+  );
+  const manualReactionIdRef = useRef(0);
+  const showManualControls = reactionControlMode === 'manual';
+  const effectiveReaction =
+    reactionControlMode === 'linked'
+      ? reaction || null
+      : showManualControls
+        ? manualReaction
+        : null;
 
   useEffect(() => {
     audioBindingRef.current = audioBinding;
   }, [audioBinding]);
+
+  useEffect(() => {
+    effectiveReactionRef.current = effectiveReaction;
+    if (modelRef.current) {
+      applyLive2DReaction(modelRef.current, effectiveReaction);
+    }
+  }, [effectiveReaction]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -154,6 +210,7 @@ export function Live2DStage({
         makeDraggable(model);
         zoomCleanupRef.current = makeZoomable(model, canvas);
         modelRef.current = model;
+        applyLive2DReaction(model, effectiveReactionRef.current);
       } catch (error) {
         const message =
           error instanceof Error
@@ -204,6 +261,56 @@ export function Live2DStage({
           </div>
         )}
       </div>
+      {showManualControls && (
+        <div
+          className="avatar-expression-controls"
+          role="group"
+          aria-label="Live2Dアバター感情表現エフェクト"
+        >
+          <span className="avatar-expression-controls-label">
+            感情表現エフェクト
+          </span>
+          {AVATAR_EXPRESSION_OPTIONS.map((option) => {
+            const configuredExpression = emotionEffectMap[option.emotion];
+            const expression = configuredExpression
+              ? resolveLive2DExpressionName(
+                  configuredExpression,
+                  option.emotion,
+                  modelSource?.expressionNames || [],
+                )
+              : null;
+            return (
+              <button
+                key={option.emotion}
+                type="button"
+                className="avatar-expression-button"
+                disabled={!modelSource || isLoading || !expression}
+                onClick={() => {
+                  if (!expression) return;
+                  manualReactionIdRef.current += 1;
+                  setManualReaction(
+                    withLive2DReactionId(
+                      { expression },
+                      manualReactionIdRef.current,
+                    ),
+                  );
+                }}
+                title={expression ? undefined : '利用可能な表情がありません'}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            className="avatar-expression-button is-reset"
+            disabled={!modelSource || isLoading}
+            onClick={() => setManualReaction(null)}
+          >
+            解除
+          </button>
+        </div>
+      )}
     </div>
   );
 }

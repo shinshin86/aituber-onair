@@ -36,6 +36,10 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   - `まお` (`a59cb814-0083-4369-8542-f51a29e72af7`)
 - `piperPlus` expects browser assets under `public/piper/`
 - Real-time lip-sync + random blink animation
+- Canvas-based emotion effects for happy, surprised, sad, angry, relaxed, and
+  thinking responses, with disabled, manual preview, and linked control modes
+- Emotion effects start when the response emotion is received and do not depend
+  on TTS playback
 - Set visuals directly in Settings:
   - Background image (1 file)
   - Green screen background mode

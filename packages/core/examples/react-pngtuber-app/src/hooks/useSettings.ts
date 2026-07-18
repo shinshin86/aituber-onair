@@ -7,6 +7,14 @@ import {
   type XaiReasoningEffort,
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
+import {
+  DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP,
+  isPngTuberReactionControlMode,
+  normalizePngTuberEmotionEffectMap,
+  type PngTuberEmotionEffect,
+  type PngTuberReactionControlMode,
+  type PngTuberReactionEmotion,
+} from '../lib/pngtuberEmotionEffects';
 import type {
   AppSettings,
   ChatProviderOption,
@@ -203,6 +211,8 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      pngtuberReactionControlMode: 'none',
+      pngtuberEmotionEffectMap: { ...DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP },
     },
     screenVision: {
       deviceId: '',
@@ -261,7 +271,18 @@ function loadSettings(): AppSettings {
           ),
         },
         tts: { ...defaults.tts, ...saved.tts },
-        visual: { ...defaults.visual, ...saved.visual },
+        visual: {
+          ...defaults.visual,
+          ...saved.visual,
+          pngtuberReactionControlMode: isPngTuberReactionControlMode(
+            saved.visual?.pngtuberReactionControlMode,
+          )
+            ? saved.visual.pngtuberReactionControlMode
+            : defaults.visual.pngtuberReactionControlMode,
+          pngtuberEmotionEffectMap: normalizePngTuberEmotionEffectMap(
+            saved.visual?.pngtuberEmotionEffectMap,
+          ),
+        },
         screenVision: { ...defaults.screenVision, ...saved.screenVision },
         stream: { ...defaults.stream, ...saved.stream },
         commentIntelligence: {
@@ -891,6 +912,47 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualPngTuberReactionControlMode = useCallback(
+    (pngtuberReactionControlMode: PngTuberReactionControlMode) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, pngtuberReactionControlMode },
+      }));
+    },
+    [],
+  );
+
+  const updateVisualPngTuberEmotionEffect = useCallback(
+    (
+      emotion: PngTuberReactionEmotion,
+      effect: PngTuberEmotionEffect | null,
+    ) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          pngtuberEmotionEffectMap: {
+            ...prev.visual.pngtuberEmotionEffectMap,
+            [emotion]: effect,
+          },
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualPngTuberEmotionEffectMap = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      visual: {
+        ...prev.visual,
+        pngtuberEmotionEffectMap: {
+          ...DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP,
+        },
+      },
+    }));
+  }, []);
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1138,10 +1200,7 @@ export function useSettings() {
         ...prev,
         manneri: {
           ...prev.manneri,
-          similarityThreshold: Math.min(
-            1,
-            Math.max(0.1, similarityThreshold),
-          ),
+          similarityThreshold: Math.min(1, Math.max(0.1, similarityThreshold)),
         },
       }));
     },
@@ -1248,6 +1307,9 @@ export function useSettings() {
     updateVisualBackgroundMode,
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
+    updateVisualPngTuberReactionControlMode,
+    updateVisualPngTuberEmotionEffect,
+    resetVisualPngTuberEmotionEffectMap,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

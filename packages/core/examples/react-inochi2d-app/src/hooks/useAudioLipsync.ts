@@ -6,7 +6,9 @@ import {
 } from '../lib/inochi2dLipSync';
 import { applyInochi2DExpression } from '../lib/inochi2dExpression';
 
-export function useAudioLipsync() {
+export function useAudioLipsync({
+  preserveExpression = false,
+}: { preserveExpression?: boolean } = {}) {
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -14,6 +16,11 @@ export function useAudioLipsync() {
   const lipSyncRef = useRef<Inochi2DLipSyncController | null>(null);
   const playbackGenerationRef = useRef(0);
   const settlePlaybackRef = useRef<(() => void) | null>(null);
+  const preserveExpressionRef = useRef(preserveExpression);
+
+  useEffect(() => {
+    preserveExpressionRef.current = preserveExpression;
+  }, [preserveExpression]);
 
   const finalizePlayback = useCallback(() => {
     settlePlaybackRef.current?.();
@@ -25,7 +32,9 @@ export function useAudioLipsync() {
       lipSyncRef.current?.stop();
       lipSyncRef.current = null;
       resetInochi2DMouthToIdle();
-      void applyInochi2DExpression('neutral');
+      if (!preserveExpressionRef.current) {
+        void applyInochi2DExpression('neutral');
+      }
 
       const audio = audioRef.current;
       if (audio) {
@@ -70,7 +79,9 @@ export function useAudioLipsync() {
       audioRef.current = audio;
       lipSyncRef.current = startInochi2DLipSync(audio);
       setIsSpeaking(true);
-      void applyInochi2DExpression('speaking', { weight: 0.72 });
+      if (!preserveExpressionRef.current) {
+        void applyInochi2DExpression('speaking', { weight: 0.72 });
+      }
 
       return new Promise<void>((resolve, reject) => {
         settlePlaybackRef.current = resolve;
