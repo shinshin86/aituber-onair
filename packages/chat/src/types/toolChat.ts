@@ -18,6 +18,26 @@ export interface ToolResultBlock {
 
 export type CoreToolChatBlock = TextBlock | ToolUseBlock | ToolResultBlock;
 
+export interface ChatCompletionToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+/**
+ * Assistant message that can be appended to OpenAI-compatible chat history.
+ */
+export interface ChatCompletionAssistantMessage {
+  role: 'assistant';
+  content: string;
+  reasoning_content?: string;
+  tool_calls?: ChatCompletionToolCall[];
+  [key: string]: unknown;
+}
+
 export interface ToolChatCompletion<B = CoreToolChatBlock> {
   blocks: B[];
   stop_reason: 'tool_use' | 'end';
@@ -26,6 +46,8 @@ export interface ToolChatCompletion<B = CoreToolChatBlock> {
   response_status?: string;
   incomplete_details?: { reason?: string; [key: string]: any } | null;
   usage?: Record<string, any>;
+  /** Complete assistant message for provider-compatible multi-turn history. */
+  assistant_message?: ChatCompletionAssistantMessage;
 }
 export type ToolChatBlock = CoreToolChatBlock;
 

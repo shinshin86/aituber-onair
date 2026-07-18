@@ -3,9 +3,12 @@ import { StreamTextAccumulator } from './streamTextAccumulator';
 
 type ProcessChatFlowOptions<B = ToolChatBlock> = {
   hasTools: boolean;
-  runWithoutTools: () => Promise<string>;
+  runWithoutTools: () => Promise<string | ToolChatCompletion<B>>;
   runWithTools: () => Promise<ToolChatCompletion<B>>;
-  onCompleteResponse: (text: string) => Promise<void>;
+  onCompleteResponse: (
+    text: string,
+    completion?: ToolChatCompletion<B>,
+  ) => Promise<void>;
   toolErrorMessage: string;
   onToolBlocks?: (blocks: B[]) => void;
 };
@@ -14,8 +17,16 @@ export async function processChatWithOptionalTools<B = ToolChatBlock>(
   options: ProcessChatFlowOptions<B>,
 ): Promise<void> {
   if (!options.hasTools) {
-    const full = await options.runWithoutTools();
-    await options.onCompleteResponse(full);
+    const result = await options.runWithoutTools();
+    if (typeof result === 'string') {
+      await options.onCompleteResponse(result);
+      return;
+    }
+
+    const full = StreamTextAccumulator.getFullText(
+      result.blocks as ToolChatBlock[],
+    );
+    await options.onCompleteResponse(full, result);
     return;
   }
 
@@ -28,7 +39,7 @@ export async function processChatWithOptionalTools<B = ToolChatBlock>(
     const full = StreamTextAccumulator.getFullText(
       result.blocks as ToolChatBlock[],
     );
-    await options.onCompleteResponse(full);
+    await options.onCompleteResponse(full, result);
     return;
   }
 

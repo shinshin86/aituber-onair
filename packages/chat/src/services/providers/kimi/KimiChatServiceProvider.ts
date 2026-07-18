@@ -1,9 +1,12 @@
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  MODEL_KIMI_K3,
   MODEL_KIMI_K2_7_CODE,
   MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
+  getKimiSupportedReasoningEfforts,
+  isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
   isKimiVisionModel,
 } from '../../../constants/kimi';
@@ -43,6 +46,10 @@ export class KimiChatServiceProvider
 
     const tools: ToolDefinition[] | undefined = options.tools;
     const thinking = this.resolveThinking(model, tools, options.thinking);
+    const reasoningEffort = this.resolveReasoningEffort(
+      model,
+      options.reasoning_effort,
+    );
 
     return new KimiChatService(
       options.apiKey,
@@ -53,6 +60,7 @@ export class KimiChatServiceProvider
       options.responseLength,
       options.responseFormat,
       thinking,
+      reasoningEffort,
     );
   }
 
@@ -68,6 +76,7 @@ export class KimiChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_KIMI_K3,
       MODEL_KIMI_K2_7_CODE,
       MODEL_KIMI_K2_7_CODE_HIGHSPEED,
       MODEL_KIMI_K2_6,
@@ -134,6 +143,15 @@ export class KimiChatServiceProvider
     tools: ToolDefinition[] | undefined,
     thinking: KimiChatServiceOptions['thinking'],
   ): KimiChatServiceOptions['thinking'] {
+    if (isKimiReasoningEffortModel(model)) {
+      if (thinking) {
+        throw new Error(
+          `Model ${model} uses reasoning_effort and does not support the K2.x thinking option.`,
+        );
+      }
+      return undefined;
+    }
+
     if (isKimiThinkingRequiredModel(model)) {
       if (thinking?.type === 'disabled') {
         throw new Error(
@@ -148,5 +166,30 @@ export class KimiChatServiceProvider
     }
 
     return thinking ?? this.defaultThinking;
+  }
+
+  private resolveReasoningEffort(
+    model: string,
+    reasoningEffort: KimiChatServiceOptions['reasoning_effort'],
+  ): KimiChatServiceOptions['reasoning_effort'] {
+    const supported = getKimiSupportedReasoningEfforts(model);
+
+    if (supported.length === 0) {
+      if (reasoningEffort !== undefined) {
+        throw new Error(
+          `Model ${model} does not support the reasoning_effort option.`,
+        );
+      }
+      return undefined;
+    }
+
+    const resolved = reasoningEffort ?? supported[0]!;
+    if (!supported.includes(resolved)) {
+      throw new Error(
+        `Model ${model} supports reasoning_effort values: ${supported.join(', ')}.`,
+      );
+    }
+
+    return resolved;
   }
 }

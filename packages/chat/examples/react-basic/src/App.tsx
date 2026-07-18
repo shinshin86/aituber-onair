@@ -9,12 +9,14 @@ import {
   allowsReasoningXHigh,
   getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
+  isKimiReasoningEffortModel,
   isXaiReasoningEffortModel,
   normalizeXaiReasoningEffort,
   type Message,
   type MessageWithVision,
   type ChatResponseLength,
   type GPT5PresetKey,
+  type ChatCompletionAssistantMessage,
 } from '@aituber-onair/chat';
 import './App.css';
 import ChatInterface from './components/ChatInterface';
@@ -46,6 +48,7 @@ interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
   timestamp: Date;
   content: Message['content'] | MessageWithVision['content'];
   isStreaming?: boolean;
+  assistantMessage?: ChatCompletionAssistantMessage;
 }
 
 type ReasoningEffortLevel =
@@ -269,7 +272,11 @@ function App() {
         }
 
         if (provider === 'kimi') {
-          options.thinking = { type: kimiThinkingType };
+          if (isKimiReasoningEffortModel(selectedModel)) {
+            options.reasoning_effort = 'max';
+          } else {
+            options.thinking = { type: kimiThinkingType };
+          }
           if (kimiBaseUrl.trim()) {
             options.baseUrl = kimiBaseUrl.trim();
           }
@@ -371,8 +378,14 @@ function App() {
 
       try {
         const chatMessages: (Message | MessageWithVision)[] = messages
-          .filter((m) => m.role !== 'assistant' || m.content)
-          .map(({ role, content }) => ({ role, content }));
+          .filter(
+            (m) => m.role !== 'assistant' || m.content || m.assistantMessage,
+          )
+          .map((message) =>
+            message.assistantMessage
+              ? message.assistantMessage
+              : { role: message.role, content: message.content },
+          );
 
         chatMessages.push(apiMessage);
 
@@ -392,11 +405,16 @@ function App() {
               ),
             );
           },
-          async (complete) => {
+          async (complete, completion) => {
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === assistantMessage.id
-                  ? { ...msg, content: complete, isStreaming: false }
+                  ? {
+                      ...msg,
+                      content: complete,
+                      isStreaming: false,
+                      assistantMessage: completion?.assistant_message,
+                    }
                   : msg,
               ),
             );

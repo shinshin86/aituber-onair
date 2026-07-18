@@ -3,6 +3,7 @@ import { ChatResponseLength, GPT5PresetKey } from '../../constants/chat';
 import type { MistralReasoningEffort } from '../../constants/mistral';
 import type { PlamoReasoningEffort } from '../../constants/plamo';
 import type { XaiReasoningEffort } from '../../constants/xai';
+import type { KimiReasoningEffort } from '../../constants/kimi';
 import { ToolDefinition, MCPServerConfig } from '../../types';
 
 /**
@@ -126,16 +127,21 @@ export type ClaudeChatServiceOptions = DisallowKeys<
   mcpServers?: MCPServerConfig[];
 };
 
-export type KimiChatServiceOptions = DisallowKeys<
-  BaseChatServiceOptions,
-  | 'verbosity'
-  | 'reasoning_effort'
-  | 'gpt5Preset'
-  | 'gpt5EndpointPreference'
-  | 'enableReasoningSummary'
-  | 'includeReasoning'
-  | 'reasoningMaxTokens'
->;
+export type KimiChatServiceOptions = Omit<
+  DisallowKeys<
+    BaseChatServiceOptions,
+    | 'verbosity'
+    | 'gpt5Preset'
+    | 'gpt5EndpointPreference'
+    | 'enableReasoningSummary'
+    | 'includeReasoning'
+    | 'reasoningMaxTokens'
+  >,
+  'reasoning_effort'
+> & {
+  /** Kimi K3 reasoning effort. Currently only max is supported. */
+  reasoning_effort?: KimiReasoningEffort;
+};
 
 export type DeepSeekChatServiceOptions = DisallowKeys<
   BaseChatServiceOptions,

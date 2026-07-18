@@ -120,6 +120,7 @@ import {
   MODEL_GROK_4_1_FAST_REASONING,
   MODEL_GROK_4_1_FAST_NON_REASONING,
   // Kimi models
+  MODEL_KIMI_K3,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_7_CODE,
   MODEL_KIMI_K2_7_CODE_HIGHSPEED,
@@ -146,6 +147,7 @@ import {
   MODEL_PLAMO_2_2_PRIME,
   // Gemini Nano models
   MODEL_GEMINI_NANO,
+  isKimiReasoningEffortModel,
 } from '@aituber-onair/chat';
 
 interface ProviderSelectorProps {
@@ -1037,6 +1039,12 @@ export const allModels: ProviderModel[] = [
 
   // Kimi models
   {
+    id: MODEL_KIMI_K3,
+    name: 'Kimi K3',
+    provider: 'kimi',
+    default: false,
+  },
+  {
     id: MODEL_KIMI_K2_7_CODE,
     name: 'Kimi K2.7 Code',
     provider: 'kimi',
@@ -1278,6 +1286,8 @@ export default function ProviderSelector({
     provider === 'xai' && isXaiReasoningEffortModel(selectedModel);
   const isXaiReasoningNoneModelSelected =
     provider === 'xai' && isXaiReasoningEffortNoneModel(selectedModel);
+  const isKimiReasoningModel =
+    provider === 'kimi' && isKimiReasoningEffortModel(selectedModel);
   const xaiReasoningEffort =
     reasoning_effort === 'low' ||
     reasoning_effort === 'medium' ||
@@ -2071,23 +2081,43 @@ export default function ProviderSelector({
 
           {provider === 'kimi' && (
             <>
-              <div className="config-group">
-                <label htmlFor="kimi-thinking-type">Thinking</label>
-                <select
-                  id="kimi-thinking-type"
-                  value={kimiThinkingType || 'enabled'}
-                  onChange={(e) =>
-                    onKimiThinkingTypeChange?.(
-                      e.target.value as 'enabled' | 'disabled',
-                    )
-                  }
-                  disabled={disabled}
-                  className="select-input"
-                >
-                  <option value="enabled">Enabled</option>
-                  <option value="disabled">Disabled</option>
-                </select>
-              </div>
+              {isKimiReasoningModel ? (
+                <div className="config-group">
+                  <label htmlFor="kimi-reasoning-effort">
+                    Reasoning Effort
+                  </label>
+                  <select
+                    id="kimi-reasoning-effort"
+                    value="max"
+                    disabled
+                    className="select-input"
+                  >
+                    <option value="max">Max (currently required)</option>
+                  </select>
+                  <span className="helper-text">
+                    Kimi K3 currently supports max only. Lower levels will be
+                    added after the official API supports them.
+                  </span>
+                </div>
+              ) : (
+                <div className="config-group">
+                  <label htmlFor="kimi-thinking-type">Thinking</label>
+                  <select
+                    id="kimi-thinking-type"
+                    value={kimiThinkingType || 'enabled'}
+                    onChange={(e) =>
+                      onKimiThinkingTypeChange?.(
+                        e.target.value as 'enabled' | 'disabled',
+                      )
+                    }
+                    disabled={disabled}
+                    className="select-input"
+                  >
+                    <option value="enabled">Enabled</option>
+                    <option value="disabled">Disabled</option>
+                  </select>
+                </div>
+              )}
 
               <div className="config-group config-full">
                 <label htmlFor="kimi-base-url">Base URL</label>

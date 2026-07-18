@@ -1,4 +1,9 @@
-import { ToolChatBlock, ToolChatCompletion } from '../types';
+import {
+  ChatCompletionAssistantMessage,
+  ChatCompletionToolCall,
+  ToolChatBlock,
+  ToolChatCompletion,
+} from '../types';
 import type { JsonParseErrorHandler } from './safeJsonParse';
 import { safeParseToolCallInput } from './safeJsonParse';
 import { StreamTextAccumulator } from './streamTextAccumulator';
@@ -6,6 +11,7 @@ import { StreamTextAccumulator } from './streamTextAccumulator';
 type SseParseOptions = {
   onJsonError?: JsonParseErrorHandler;
   appendTextBlock?: (blocks: ToolChatBlock[], text: string) => void;
+  preserveAssistantMessage?: boolean;
 };
 
 const parseJsonPayload = (
@@ -115,6 +121,8 @@ export async function parseOpenAICompatibleToolStream(
 ): Promise<ToolChatCompletion> {
   const textBlocks: ToolChatBlock[] = [];
   const toolCallsMap = new Map<number, any>();
+  let fullContent = '';
+  let reasoningContent = '';
   let finishReason: string | undefined;
   let usage: Record<string, any> | undefined;
   const appendTextBlock =
@@ -138,15 +146,25 @@ export async function parseOpenAICompatibleToolStream(
     if (content) {
       onPartial(content);
       appendTextBlock(textBlocks, content);
+      fullContent += content;
+    }
+
+    const reasoning = extractTextContent(delta?.reasoning_content);
+    if (reasoning) {
+      reasoningContent += reasoning;
     }
 
     if (delta?.tool_calls) {
       delta.tool_calls.forEach((c: any) => {
         const entry = toolCallsMap.get(c.index) ?? {
           id: c.id,
+          type: c.type,
           name: c.function?.name,
           args: '',
         };
+        if (c.id) entry.id = c.id;
+        if (c.type) entry.type = c.type;
+        if (c.function?.name) entry.name = c.function.name;
         entry.args += c.function?.arguments || '';
         toolCallsMap.set(c.index, entry);
       });
@@ -163,6 +181,26 @@ export async function parseOpenAICompatibleToolStream(
     }));
 
   const blocks = [...textBlocks, ...toolBlocks];
+  const assistantToolCalls: ChatCompletionToolCall[] = Array.from(
+    toolCallsMap.entries(),
+  )
+    .sort((a, b) => a[0] - b[0])
+    .map(([_, entry]) => ({
+      id: entry.id,
+      type: 'function',
+      function: {
+        name: entry.name,
+        arguments: entry.args,
+      },
+    }));
+  const assistantMessage: ChatCompletionAssistantMessage = {
+    role: 'assistant',
+    content: fullContent,
+    ...(reasoningContent ? { reasoning_content: reasoningContent } : {}),
+    ...(assistantToolCalls.length > 0
+      ? { tool_calls: assistantToolCalls }
+      : {}),
+  };
 
   return {
     blocks,
@@ -170,6 +208,9 @@ export async function parseOpenAICompatibleToolStream(
     truncated: finishReason === 'length',
     finish_reason: finishReason,
     usage,
+    ...(options.preserveAssistantMessage
+      ? { assistant_message: assistantMessage }
+      : {}),
   };
 }
 
@@ -179,6 +220,7 @@ export function parseOpenAICompatibleOneShot(
 ): ToolChatCompletion {
   const choice = data?.choices?.[0];
   const blocks: ToolChatBlock[] = [];
+  const content = extractTextContent(choice?.message?.content);
 
   if (choice?.message?.tool_calls?.length) {
     choice.message.tool_calls.forEach((c: any) =>
@@ -192,12 +234,17 @@ export function parseOpenAICompatibleOneShot(
         ),
       }),
     );
-  } else {
-    const content = extractTextContent(choice?.message?.content);
-    if (content) {
-      blocks.push({ type: 'text', text: content });
-    }
+  } else if (content) {
+    blocks.push({ type: 'text', text: content });
   }
+
+  const assistantMessage = choice?.message
+    ? ({
+        ...choice.message,
+        role: 'assistant',
+        content,
+      } as ChatCompletionAssistantMessage)
+    : undefined;
 
   return {
     blocks,
@@ -209,5 +256,8 @@ export function parseOpenAICompatibleOneShot(
     truncated: choice?.finish_reason === 'length',
     finish_reason: choice?.finish_reason,
     usage: data?.usage,
+    ...(options.preserveAssistantMessage
+      ? { assistant_message: assistantMessage }
+      : {}),
   };
 }

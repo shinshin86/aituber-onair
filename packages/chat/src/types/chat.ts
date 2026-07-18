@@ -2,6 +2,8 @@
  * AITuber OnAir Core type definitions
  */
 
+import type { ChatCompletionToolCall } from './toolChat';
+
 /**
  * Chat message basic type
  */
@@ -9,6 +11,14 @@ export interface Message {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
   timestamp?: number;
+  /** Provider reasoning state that must be preserved for some models. */
+  reasoning_content?: string;
+  /** OpenAI-compatible assistant tool calls. */
+  tool_calls?: ChatCompletionToolCall[];
+  /** OpenAI-compatible tool result reference. */
+  tool_call_id?: string;
+  /** Optional message or tool name. */
+  name?: string;
 }
 
 /**
@@ -27,8 +37,7 @@ export type VisionBlock =
 /**
  * Message type corresponding to vision (image)
  */
-export interface MessageWithVision {
-  role: 'system' | 'user' | 'assistant' | 'tool';
+export interface MessageWithVision extends Omit<Message, 'content'> {
   content: string | VisionBlock[];
 }
 
