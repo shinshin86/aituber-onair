@@ -42,7 +42,33 @@ describe('processChatWithOptionalTools', () => {
     expect(runWithoutTools).not.toHaveBeenCalled();
     expect(runWithTools).toHaveBeenCalledTimes(1);
     expect(onToolBlocks).toHaveBeenCalledWith([{ type: 'text', text: 'ok' }]);
-    expect(onCompleteResponse).toHaveBeenCalledWith('ok');
+    expect(onCompleteResponse).toHaveBeenCalledWith(
+      'ok',
+      expect.objectContaining({ stop_reason: 'end' }),
+    );
+  });
+
+  it('should pass completion metadata through the no-tools flow', async () => {
+    const completion = {
+      blocks: [{ type: 'text', text: 'hello' }],
+      stop_reason: 'end',
+      assistant_message: {
+        role: 'assistant',
+        content: 'hello',
+        reasoning_content: 'reasoning',
+      },
+    } as ToolChatCompletion;
+    const onCompleteResponse = vi.fn().mockResolvedValue(undefined);
+
+    await processChatWithOptionalTools({
+      hasTools: false,
+      runWithoutTools: vi.fn().mockResolvedValue(completion),
+      runWithTools: vi.fn(),
+      onCompleteResponse,
+      toolErrorMessage: 'tool error',
+    });
+
+    expect(onCompleteResponse).toHaveBeenCalledWith('hello', completion);
   });
 
   it('should throw when tool calls are present', async () => {

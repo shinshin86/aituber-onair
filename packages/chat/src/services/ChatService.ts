@@ -30,7 +30,10 @@ export interface ChatService {
   processChat(
     messages: Message[],
     onPartialResponse: (text: string) => void,
-    onCompleteResponse: (text: string) => Promise<void>,
+    onCompleteResponse: (
+      text: string,
+      completion?: ToolChatCompletion,
+    ) => Promise<void>,
   ): Promise<void>;
 
   /**
@@ -42,7 +45,10 @@ export interface ChatService {
   processVisionChat(
     messages: MessageWithVision[],
     onPartialResponse: (text: string) => void,
-    onCompleteResponse: (text: string) => Promise<void>,
+    onCompleteResponse: (
+      text: string,
+      completion?: ToolChatCompletion,
+    ) => Promise<void>,
   ): Promise<void>;
 
   /**

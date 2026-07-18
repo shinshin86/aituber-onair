@@ -152,9 +152,10 @@ Use the dropdown to select response length:
 - Grok 4.5 exposes `reasoning_effort` and defaults to `low` for chat-style responses; Grok 4.3 defaults to `none` for lower latency
 
 **Kimi**
-- Models: Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6, Kimi K2.5
+- Models: Kimi K3, Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6, Kimi K2.5
 - Vision: Supported
-- Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K2.7 Code models are coding-oriented.
+- Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K3 is an explicit max-reasoning option, and Kimi K2.7 Code models are coding-oriented.
+- Kimi K3 reasoning: `max` only until the official API exposes lower reasoning levels.
 
 **DeepSeek**
 - Models: DeepSeek V4 Flash, DeepSeek V4 Pro

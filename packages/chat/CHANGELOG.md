@@ -1,5 +1,19 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+### Minor Changes
+
+- Added Kimi K3 (`kimi-k3`) as an explicit Kimi model with vision support,
+  while keeping Kimi K2.6 (`kimi-k2.6`) as the default chat model.
+- Added Kimi K3 request handling for its currently required
+  `reasoning_effort: 'max'`, `max_completion_tokens`, streaming, and tool-call
+  flows, including preservation of `reasoning_content` and `tool_calls` for
+  multi-turn history.
+- Updated the React basic example, tests, and English/Japanese documentation
+  for Kimi K3, with the reasoning control fixed to `max` until lower effort
+  levels become available in the official API.
+
 ## 0.47.0
 
 ### Minor Changes

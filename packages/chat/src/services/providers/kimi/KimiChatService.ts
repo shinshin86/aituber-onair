@@ -3,7 +3,10 @@ import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  KimiReasoningEffort,
   MODEL_KIMI_K2_6,
+  getKimiSupportedReasoningEfforts,
+  isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
   isKimiVisionModel,
 } from '../../../constants/kimi';
@@ -15,7 +18,6 @@ import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
 import {
   buildOpenAICompatibleTools,
   parseOpenAICompatibleOneShot,
-  parseOpenAICompatibleTextStream,
   parseOpenAICompatibleToolStream,
   processChatWithOptionalTools,
 } from '../../../utils';
@@ -41,6 +43,7 @@ export class KimiChatService implements ChatService {
     type: 'enabled' | 'disabled';
     clear_thinking?: boolean;
   };
+  private reasoningEffort?: KimiReasoningEffort;
 
   /**
    * Constructor
@@ -63,6 +66,7 @@ export class KimiChatService implements ChatService {
       type: 'enabled' | 'disabled';
       clear_thinking?: boolean;
     },
+    reasoningEffort?: KimiReasoningEffort,
   ) {
     this.apiKey = apiKey;
     this.model = model;
@@ -70,7 +74,21 @@ export class KimiChatService implements ChatService {
     this.endpoint = endpoint;
     this.responseLength = responseLength;
     this.responseFormat = responseFormat;
-    this.thinking = thinking ?? { type: 'enabled' };
+    this.thinking = thinking;
+    const supportedReasoningEfforts = getKimiSupportedReasoningEfforts(model);
+    if (
+      reasoningEffort !== undefined &&
+      !supportedReasoningEfforts.includes(reasoningEffort)
+    ) {
+      throw new Error(
+        `Model ${model} does not support reasoning_effort: ${reasoningEffort}.`,
+      );
+    }
+    this.reasoningEffort =
+      reasoningEffort ??
+      (isKimiReasoningEffortModel(model)
+        ? supportedReasoningEfforts[0]
+        : undefined);
 
     this.visionModel = visionModel;
   }
@@ -95,14 +113,14 @@ export class KimiChatService implements ChatService {
   async processChat(
     messages: Message[],
     onPartialResponse: (text: string) => void,
-    onCompleteResponse: (text: string) => Promise<void>,
+    onCompleteResponse: (
+      text: string,
+      completion?: ToolChatCompletion,
+    ) => Promise<void>,
   ): Promise<void> {
     await processChatWithOptionalTools({
       hasTools: this.tools.length > 0,
-      runWithoutTools: async () => {
-        const res = await this.callKimi(messages, this.model, true);
-        return this.handleStream(res, onPartialResponse);
-      },
+      runWithoutTools: () => this.chatOnce(messages, true, onPartialResponse),
       runWithTools: () => this.chatOnce(messages, true, onPartialResponse),
       onCompleteResponse,
       toolErrorMessage:
@@ -117,7 +135,10 @@ export class KimiChatService implements ChatService {
   async processVisionChat(
     messages: MessageWithVision[],
     onPartialResponse: (text: string) => void,
-    onCompleteResponse: (text: string) => Promise<void>,
+    onCompleteResponse: (
+      text: string,
+      completion?: ToolChatCompletion,
+    ) => Promise<void>,
   ): Promise<void> {
     if (!isKimiVisionModel(this.visionModel)) {
       throw new Error(
@@ -127,10 +148,8 @@ export class KimiChatService implements ChatService {
 
     await processChatWithOptionalTools({
       hasTools: this.tools.length > 0,
-      runWithoutTools: async () => {
-        const res = await this.callKimi(messages, this.visionModel, true);
-        return this.handleStream(res, onPartialResponse);
-      },
+      runWithoutTools: () =>
+        this.visionChatOnce(messages, true, onPartialResponse),
       runWithTools: () =>
         this.visionChatOnce(messages, true, onPartialResponse),
       onCompleteResponse,
@@ -222,11 +241,19 @@ export class KimiChatService implements ChatService {
         ? maxTokens
         : getMaxTokensForResponseLength(this.responseLength);
     if (tokenLimit !== undefined) {
-      body.max_tokens = tokenLimit;
+      if (isKimiReasoningEffortModel(model)) {
+        body.max_completion_tokens = tokenLimit;
+      } else {
+        body.max_tokens = tokenLimit;
+      }
     }
 
     if (this.responseFormat) {
       body.response_format = this.responseFormat;
+    }
+
+    if (isKimiReasoningEffortModel(model)) {
+      body.reasoning_effort = this.reasoningEffort ?? 'max';
     }
 
     const effectiveThinking = this.resolveEffectiveThinking(model);
@@ -266,6 +293,15 @@ export class KimiChatService implements ChatService {
         clear_thinking?: boolean;
       }
     | undefined {
+    if (isKimiReasoningEffortModel(model)) {
+      if (this.thinking) {
+        throw new Error(
+          `Model ${model} uses reasoning_effort and does not support the K2.x thinking option.`,
+        );
+      }
+      return undefined;
+    }
+
     if (isKimiThinkingRequiredModel(model)) {
       if (this.thinking?.type === 'disabled') {
         throw new Error(
@@ -279,18 +315,11 @@ export class KimiChatService implements ChatService {
       return { type: 'disabled' };
     }
 
-    return this.thinking;
+    return this.thinking ?? { type: 'enabled' };
   }
 
   private buildToolsDefinition(): any[] {
     return buildOpenAICompatibleTools(this.tools, 'chat-completions');
-  }
-
-  private async handleStream(res: Response, onPartial: (t: string) => void) {
-    return parseOpenAICompatibleTextStream(res, onPartial, {
-      onJsonError: (payload) =>
-        console.debug('Failed to parse SSE data:', payload),
-    });
   }
 
   /**
@@ -301,6 +330,7 @@ export class KimiChatService implements ChatService {
     onPartial: (t: string) => void,
   ): Promise<ToolChatCompletion> {
     return parseOpenAICompatibleToolStream(res, onPartial, {
+      preserveAssistantMessage: true,
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
     });
@@ -310,6 +340,8 @@ export class KimiChatService implements ChatService {
    * Parse non-streaming response
    */
   private parseOneShot(data: any): ToolChatCompletion {
-    return parseOpenAICompatibleOneShot(data);
+    return parseOpenAICompatibleOneShot(data, {
+      preserveAssistantMessage: true,
+    });
   }
 }
