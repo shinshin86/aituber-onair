@@ -29,6 +29,7 @@ import {
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
+  MODEL_KIMI_K3,
   MODEL_KIMI_K2_7_CODE,
   MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_6,
@@ -76,7 +77,9 @@ import {
   allowsReasoningXHigh,
   allowsReasoningMax,
   getDefaultXaiReasoningEffort,
+  getKimiSupportedReasoningEfforts,
   isResponsesOnlyGPT5Model,
+  isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
   isKimiVisionModel,
   isXaiReasoningEffortModel,
@@ -85,6 +88,7 @@ import {
   normalizeXaiReasoningEffort,
   refreshOpenRouterFreeModels,
   type ChatProviderCapabilities,
+  type KimiReasoningEffort,
   type RefreshOpenRouterFreeModelsResult,
   type VisionSupportLevel,
 } from '../src/index';
@@ -144,11 +148,15 @@ describe('Core index chat re-exports', () => {
   });
 
   it('re-exports current Kimi model constants', () => {
+    const reasoningEffort: KimiReasoningEffort = 'max';
+
+    expect(MODEL_KIMI_K3).toBe('kimi-k3');
     expect(MODEL_KIMI_K2_7_CODE).toBe('kimi-k2.7-code');
     expect(MODEL_KIMI_K2_7_CODE_HIGHSPEED).toBe('kimi-k2.7-code-highspeed');
     expect(MODEL_KIMI_K2_6).toBe('kimi-k2.6');
     expect(MODEL_KIMI_K2_5).toBe('kimi-k2.5');
     expect(KIMI_VISION_SUPPORTED_MODELS).toEqual([
+      MODEL_KIMI_K3,
       MODEL_KIMI_K2_7_CODE,
       MODEL_KIMI_K2_7_CODE_HIGHSPEED,
       MODEL_KIMI_K2_6,
@@ -158,6 +166,10 @@ describe('Core index chat re-exports', () => {
       MODEL_KIMI_K2_7_CODE,
       MODEL_KIMI_K2_7_CODE_HIGHSPEED,
     ]);
+    expect(reasoningEffort).toBe('max');
+    expect(getKimiSupportedReasoningEfforts(MODEL_KIMI_K3)).toEqual(['max']);
+    expect(isKimiReasoningEffortModel(MODEL_KIMI_K3)).toBe(true);
+    expect(isKimiVisionModel(MODEL_KIMI_K3)).toBe(true);
     expect(isKimiVisionModel(MODEL_KIMI_K2_7_CODE)).toBe(true);
     expect(isKimiThinkingRequiredModel(MODEL_KIMI_K2_7_CODE)).toBe(true);
   });

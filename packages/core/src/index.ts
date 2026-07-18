@@ -171,13 +171,17 @@ export {
   ZAI_VISION_SUPPORTED_MODELS,
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   // Kimi model constants
+  MODEL_KIMI_K3,
   MODEL_KIMI_K2_7_CODE,
   MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
+  type KimiReasoningEffort,
   KIMI_VISION_SUPPORTED_MODELS,
   KIMI_THINKING_REQUIRED_MODELS,
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  getKimiSupportedReasoningEfforts,
+  isKimiReasoningEffortModel,
   isKimiVisionModel,
   isKimiThinkingRequiredModel,
   // DeepSeek model constants
