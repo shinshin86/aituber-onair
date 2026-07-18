@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type React from 'react';
 import { useInochi2D } from '../hooks/useInochi2D';
-import { applyInochi2DExpression } from '../lib/inochi2dExpression';
+import {
+  DEFAULT_EMOTION_EFFECT_ANCHOR,
+  MAX_EMOTION_EFFECT_SCALE,
+  MIN_EMOTION_EFFECT_SCALE,
+  normalizeEmotionEffectAnchor,
+  type EmotionEffectAnchor,
+} from '../lib/emotionEffectAnchor';
 import {
   withInochi2DReactionId,
   type Inochi2DEmotionEffectMap,
@@ -13,6 +19,15 @@ import type {
   InochiCameraTransform,
   ResolvedInochiModelDefinition,
 } from '../types/inochi2d';
+import {
+  INOCHI2D_DEFAULT_CAMERA_SCALE,
+  INOCHI2D_DEFAULT_CAMERA_X,
+  INOCHI2D_DEFAULT_CAMERA_Y,
+} from '../lib/inochi2dConstants';
+import {
+  EmotionEffectOverlay,
+  type EmotionEffectGeometry,
+} from './EmotionEffectOverlay';
 
 interface Inochi2DStageProps {
   selectedModelId?: string;
@@ -22,6 +37,9 @@ interface Inochi2DStageProps {
   reaction?: Inochi2DReaction | null;
   reactionControlMode: Inochi2DReactionControlMode;
   emotionEffectMap: Inochi2DEmotionEffectMap;
+  effectAnchor: EmotionEffectAnchor;
+  onEffectAnchorChange: (anchor: EmotionEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
 }
 
 const AVATAR_EXPRESSION_OPTIONS = [
@@ -36,6 +54,17 @@ const AVATAR_EXPRESSION_OPTIONS = [
   label: string;
 }>;
 
+const MANUAL_EFFECT_DURATION_MS = 2600;
+type EffectAnchorTarget = 'face' | 'leftEye' | 'rightEye';
+const EFFECT_ANCHOR_TARGETS = [
+  { target: 'face', label: '顔' },
+  { target: 'leftEye', label: '左目' },
+  { target: 'rightEye', label: '右目' },
+] as const satisfies ReadonlyArray<{
+  target: EffectAnchorTarget;
+  label: string;
+}>;
+
 export function Inochi2DStage({
   selectedModelId,
   customModel,
@@ -44,6 +73,9 @@ export function Inochi2DStage({
   reaction,
   reactionControlMode,
   emotionEffectMap,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
 }: Inochi2DStageProps) {
   const {
     canvasRef,
@@ -56,7 +88,6 @@ export function Inochi2DStage({
     resetCameraTransform,
     applyInteractionImpulse,
     playReactionAnimation,
-    playEmotionAnimation,
   } = useInochi2D({
     selectedModelId,
     customModel,
@@ -67,6 +98,10 @@ export function Inochi2DStage({
     null,
   );
   const manualReactionIdRef = useRef(0);
+  const effectAnchorRef = useRef(effectAnchor);
+  const effectGeometryRef = useRef<EmotionEffectGeometry | null>(null);
+  const [anchorEditorOpen, setAnchorEditorOpen] = useState(false);
+  const [anchorTarget, setAnchorTarget] = useState<EffectAnchorTarget>('face');
   const showManualControls = reactionControlMode === 'manual';
   const effectiveReaction =
     reactionControlMode === 'linked'
@@ -85,6 +120,138 @@ export function Inochi2DStage({
     lastStepDeltaY: number;
     originTransform: InochiCameraTransform;
   } | null>(null);
+
+  useEffect(() => {
+    effectAnchorRef.current = effectAnchor;
+  }, [effectAnchor]);
+
+  const getCameraTransforms = useCallback(() => {
+    const canvas = canvasElementRef.current;
+    const base = {
+      x: activeModel?.camera?.x ?? INOCHI2D_DEFAULT_CAMERA_X,
+      y: activeModel?.camera?.y ?? INOCHI2D_DEFAULT_CAMERA_Y,
+      scale: activeModel?.camera?.scale ?? INOCHI2D_DEFAULT_CAMERA_SCALE,
+    };
+    const numberFromDataset = (value: string | undefined, fallback: number) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+    return {
+      base,
+      actual: {
+        x: numberFromDataset(
+          canvas?.dataset.inochi2dCameraX,
+          cameraTransform.x,
+        ),
+        y: numberFromDataset(
+          canvas?.dataset.inochi2dCameraY,
+          cameraTransform.y,
+        ),
+        scale: numberFromDataset(
+          canvas?.dataset.inochi2dCameraScale,
+          cameraTransform.scale,
+        ),
+      },
+    };
+  }, [activeModel, cameraTransform]);
+
+  const referenceRatioToScreen = useCallback(
+    (xRatio: number, yRatio: number, width: number, height: number) => {
+      const { base, actual } = getCameraTransforms();
+      const modelX = (width * xRatio - width / 2) / base.scale - base.x;
+      const modelY = (height * yRatio - height / 2) / base.scale - base.y;
+      return {
+        x: width / 2 + (modelX + actual.x) * actual.scale,
+        y: height / 2 + (modelY + actual.y) * actual.scale,
+      };
+    },
+    [getCameraTransforms],
+  );
+
+  const updateEffectGeometry = useCallback(() => {
+    const canvas = canvasElementRef.current;
+    if (!canvas || !activeModel) {
+      effectGeometryRef.current = null;
+      return;
+    }
+    const width = Math.max(canvas.clientWidth, 1);
+    const height = Math.max(canvas.clientHeight, 1);
+    const current = effectAnchorRef.current;
+    const face = referenceRatioToScreen(
+      current.faceX,
+      current.faceY,
+      width,
+      height,
+    );
+    const leftEye = referenceRatioToScreen(
+      current.leftEyeX,
+      current.leftEyeY,
+      width,
+      height,
+    );
+    const rightEye = referenceRatioToScreen(
+      current.rightEyeX,
+      current.rightEyeY,
+      width,
+      height,
+    );
+    const { base, actual } = getCameraTransforms();
+    effectGeometryRef.current = {
+      faceX: face.x,
+      faceY: face.y,
+      leftEyeX: leftEye.x,
+      leftEyeY: leftEye.y,
+      rightEyeX: rightEye.x,
+      rightEyeY: rightEye.y,
+      unit:
+        Math.min(width, height) *
+        (actual.scale / base.scale) *
+        current.effectScale,
+    };
+  }, [activeModel, getCameraTransforms, referenceRatioToScreen]);
+
+  const handleAnchorPoint = useCallback(
+    (x: number, y: number) => {
+      const canvas = canvasElementRef.current;
+      if (!canvas || !activeModel) return;
+      const width = Math.max(canvas.clientWidth, 1);
+      const height = Math.max(canvas.clientHeight, 1);
+      const { base, actual } = getCameraTransforms();
+      const modelX = (x - width / 2) / actual.scale - actual.x;
+      const modelY = (y - height / 2) / actual.scale - actual.y;
+      const xRatio = (width / 2 + (modelX + base.x) * base.scale) / width;
+      const yRatio = (height / 2 + (modelY + base.y) * base.scale) / height;
+      const current = effectAnchorRef.current;
+      const next = normalizeEmotionEffectAnchor({
+        ...current,
+        ...(anchorTarget === 'face'
+          ? { faceX: xRatio, faceY: yRatio }
+          : anchorTarget === 'leftEye'
+            ? { leftEyeX: xRatio, leftEyeY: yRatio }
+            : { rightEyeX: xRatio, rightEyeY: yRatio }),
+      });
+      effectAnchorRef.current = next;
+      onEffectAnchorChange(next);
+      updateEffectGeometry();
+    },
+    [
+      activeModel,
+      anchorTarget,
+      getCameraTransforms,
+      onEffectAnchorChange,
+      updateEffectGeometry,
+    ],
+  );
+
+  useEffect(() => {
+    let animationFrame = 0;
+    const update = () => {
+      updateEffectGeometry();
+      animationFrame = requestAnimationFrame(update);
+    };
+    animationFrame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [updateEffectGeometry]);
 
   const setCombinedCanvasRef = useCallback(
     (node: HTMLCanvasElement | null) => {
@@ -191,15 +358,6 @@ export function Inochi2DStage({
     };
   }, [cameraTransform, setCameraTransform, status]);
 
-  useEffect(() => {
-    if (status !== 'ready' || !activeModel) return;
-    const effect = effectiveReaction?.effect || 'neutral';
-    void applyInochi2DExpression(effect);
-    if (effectiveReaction) {
-      void playEmotionAnimation(effect);
-    }
-  }, [activeModel, effectiveReaction, playEmotionAnimation, status]);
-
   const overlayMessage =
     status === 'loading'
       ? 'Inochi2D モデルを読み込み中...'
@@ -231,6 +389,13 @@ export function Inochi2DStage({
           onLostPointerCapture={endDrag}
           onPointerMove={handlePointerMove}
           onPointerUp={endDrag}
+        />
+        <EmotionEffectOverlay
+          reaction={effectiveReaction}
+          anchor={effectAnchor}
+          geometryRef={effectGeometryRef}
+          anchorEditorOpen={showManualControls && anchorEditorOpen}
+          onAnchorPoint={handleAnchorPoint}
         />
         {showOverlay && (
           <div className={`inochi2d-status${hasError ? ' is-error' : ''}`}>
@@ -277,7 +442,7 @@ export function Inochi2DStage({
                   manualReactionIdRef.current += 1;
                   setManualReaction(
                     withInochi2DReactionId(
-                      { effect },
+                      { effect, durationMs: MANUAL_EFFECT_DURATION_MS },
                       manualReactionIdRef.current,
                     ),
                   );
@@ -298,8 +463,89 @@ export function Inochi2DStage({
           >
             解除
           </button>
+          <button
+            type="button"
+            className={`avatar-expression-button is-anchor${
+              anchorEditorOpen ? ' is-active' : ''
+            }`}
+            disabled={status !== 'ready' || !activeModel}
+            aria-pressed={anchorEditorOpen}
+            onClick={() => setAnchorEditorOpen((current) => !current)}
+          >
+            アンカー調整
+          </button>
         </div>
       )}
+      {showManualControls &&
+        anchorEditorOpen &&
+        status === 'ready' &&
+        activeModel && (
+          <div
+            className="avatar-anchor-editor"
+            role="group"
+            aria-label="感情表現エフェクトアンカー調整"
+          >
+            <span className="avatar-anchor-editor-label">
+              配置先を選び、アバター上をクリック
+            </span>
+            <div className="avatar-anchor-targets">
+              {EFFECT_ANCHOR_TARGETS.map((option) => (
+                <button
+                  key={option.target}
+                  type="button"
+                  className={`avatar-expression-button${
+                    anchorTarget === option.target ? ' is-active' : ''
+                  }`}
+                  aria-pressed={anchorTarget === option.target}
+                  onClick={() => setAnchorTarget(option.target)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <label className="avatar-anchor-scale">
+              <span>エフェクトサイズ</span>
+              <input
+                type="range"
+                min={MIN_EMOTION_EFFECT_SCALE * 100}
+                max={MAX_EMOTION_EFFECT_SCALE * 100}
+                step="5"
+                value={Math.round(effectAnchor.effectScale * 100)}
+                onChange={(event) => {
+                  const next = normalizeEmotionEffectAnchor({
+                    ...effectAnchorRef.current,
+                    effectScale: Number(event.target.value) / 100,
+                  });
+                  effectAnchorRef.current = next;
+                  onEffectAnchorChange(next);
+                  updateEffectGeometry();
+                }}
+              />
+              <output>{Math.round(effectAnchor.effectScale * 100)}%</output>
+            </label>
+            <div className="avatar-anchor-actions">
+              <button
+                type="button"
+                className="avatar-expression-button is-reset"
+                onClick={() => {
+                  effectAnchorRef.current = DEFAULT_EMOTION_EFFECT_ANCHOR;
+                  onEffectAnchorReset();
+                  setAnchorTarget('face');
+                  updateEffectGeometry();
+                }}
+              >
+                初期値に戻す
+              </button>
+              <button
+                type="button"
+                className="avatar-expression-button"
+                onClick={() => setAnchorEditorOpen(false)}
+              >
+                完了
+              </button>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

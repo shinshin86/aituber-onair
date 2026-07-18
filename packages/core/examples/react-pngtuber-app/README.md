@@ -40,6 +40,10 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   thinking responses, with disabled, manual preview, and linked control modes
 - Emotion effects start when the response emotion is received and do not depend
   on TTS playback
+- Uses the same layered background auras and foreground effect designs as the
+  PSD/PuruPuru samples
+- Face and eye anchors and effect size can be adjusted in manual mode and are
+  saved for the current avatar image set
 - Set visuals directly in Settings:
   - Background image (1 file)
   - Green screen background mode

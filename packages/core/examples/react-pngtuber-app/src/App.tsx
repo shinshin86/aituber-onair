@@ -16,6 +16,7 @@ import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
+import { getEmotionEffectAnchor } from './lib/emotionEffectAnchor';
 import {
   createLinkedPngTuberEmotionReaction,
   withPngTuberEmotionReactionId,
@@ -25,6 +26,7 @@ import {
 import './styles/app.css';
 
 const DEFAULT_SETTINGS_DIALOG_OFFSET: DialogDragPoint = { x: 0, y: 0 };
+const PNGTUBER_EFFECT_ANCHOR_PROFILE_ID = 'avatar-image-set';
 
 interface SettingsDialogDragState {
   pointerId: number;
@@ -359,6 +361,21 @@ export default function App() {
         avatarImageUrls={avatarImageUrls}
         avatarReaction={avatarReaction}
         visual={settingsHook.settings.visual}
+        effectAnchor={getEmotionEffectAnchor(
+          settingsHook.settings.visual.pngtuberEmotionEffectAnchors,
+          PNGTUBER_EFFECT_ANCHOR_PROFILE_ID,
+        )}
+        onEffectAnchorChange={(anchor) =>
+          settingsHook.updateVisualPngTuberEmotionEffectAnchor(
+            PNGTUBER_EFFECT_ANCHOR_PROFILE_ID,
+            anchor,
+          )
+        }
+        onEffectAnchorReset={() =>
+          settingsHook.resetVisualPngTuberEmotionEffectAnchor(
+            PNGTUBER_EFFECT_ANCHOR_PROFILE_ID,
+          )
+        }
         onToggleSettings={toggleSettingsDialog}
       />
 

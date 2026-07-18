@@ -59,6 +59,29 @@
   pointer-events: auto;
 }
 
+.avatar-effect-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.avatar-effect-canvas.is-back {
+  z-index: 0;
+}
+
+.avatar-effect-canvas.is-front {
+  z-index: 2;
+}
+
+.avatar-effect-canvas.is-anchor-editing {
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
 .avatar-expression-controls {
   position: absolute;
   top: 12px;
@@ -104,12 +127,71 @@
   color: #aabbcc;
 }
 
+.avatar-expression-button.is-active,
+.avatar-expression-button.is-anchor.is-active {
+  border-color: #e94560;
+  background: #3a1930;
+  color: #fff;
+}
+
 .avatar-expression-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
+.avatar-anchor-editor {
+  position: absolute;
+  top: 58px;
+  left: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 9px 10px;
+  border: 1px solid rgba(233, 69, 96, 0.78);
+  border-radius: 8px;
+  background: rgba(12, 23, 45, 0.94);
+  box-shadow: 0 8px 24px rgba(7, 12, 24, 0.28);
+  color: #d7e0ea;
+  pointer-events: auto;
+}
+
+.avatar-anchor-editor-label {
+  flex-basis: 100%;
+  font-size: 0.72rem;
+  color: #b8c8d8;
+}
+
+.avatar-anchor-targets,
+.avatar-anchor-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.avatar-anchor-scale {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.avatar-anchor-scale input {
+  width: 96px;
+  accent-color: #e94560;
+}
+
+.avatar-anchor-scale output {
+  width: 34px;
+  color: #fff;
+  text-align: right;
+}
+
 .live2d-canvas {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   display: block;

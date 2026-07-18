@@ -8,9 +8,15 @@ import {
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import {
+  normalizeEmotionEffectAnchor,
+  normalizeEmotionEffectAnchors,
+  type EmotionEffectAnchor,
+} from '../lib/emotionEffectAnchor';
+import {
   DEFAULT_LIVE2D_EMOTION_EFFECT_MAP,
   isLive2DReactionControlMode,
   normalizeLive2DEmotionEffectMap,
+  type Live2DEmotionEffect,
   type Live2DReactionControlMode,
   type Live2DReactionEmotion,
 } from '../lib/live2dReactions';
@@ -221,6 +227,7 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      live2dEmotionEffectAnchors: {},
       live2dReactionControlMode: 'none',
       live2dEmotionEffectMap: { ...DEFAULT_LIVE2D_EMOTION_EFFECT_MAP },
     },
@@ -284,6 +291,9 @@ function loadSettings(): AppSettings {
         visual: {
           ...defaults.visual,
           ...saved.visual,
+          live2dEmotionEffectAnchors: normalizeEmotionEffectAnchors(
+            saved.visual?.live2dEmotionEffectAnchors,
+          ),
           live2dReactionControlMode: isLive2DReactionControlMode(
             saved.visual?.live2dReactionControlMode,
           )
@@ -930,7 +940,7 @@ export function useSettings() {
   );
 
   const updateVisualLive2DEmotionEffect = useCallback(
-    (emotion: Live2DReactionEmotion, effect: string | null) => {
+    (emotion: Live2DReactionEmotion, effect: Live2DEmotionEffect | null) => {
       setSettings((prev) => ({
         ...prev,
         visual: {
@@ -954,6 +964,41 @@ export function useSettings() {
       },
     }));
   }, []);
+
+  const updateVisualLive2DEmotionEffectAnchor = useCallback(
+    (profileId: string, anchor: EmotionEffectAnchor) => {
+      if (!profileId) return;
+      const normalized = normalizeEmotionEffectAnchor(anchor);
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          live2dEmotionEffectAnchors: Object.fromEntries(
+            Object.entries({
+              ...prev.visual.live2dEmotionEffectAnchors,
+              [profileId]: normalized,
+            }).slice(-24),
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualLive2DEmotionEffectAnchor = useCallback(
+    (profileId: string) => {
+      if (!profileId) return;
+      setSettings((prev) => {
+        const remaining = { ...prev.visual.live2dEmotionEffectAnchors };
+        delete remaining[profileId];
+        return {
+          ...prev,
+          visual: { ...prev.visual, live2dEmotionEffectAnchors: remaining },
+        };
+      });
+    },
+    [],
+  );
 
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
@@ -1312,6 +1357,8 @@ export function useSettings() {
     updateVisualLive2DReactionControlMode,
     updateVisualLive2DEmotionEffect,
     resetVisualLive2DEmotionEffectMap,
+    updateVisualLive2DEmotionEffectAnchor,
+    resetVisualLive2DEmotionEffectAnchor,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

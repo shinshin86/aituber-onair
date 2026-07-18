@@ -8,9 +8,6 @@ export interface Live2DMotionManagerLike {
   currentAudio?: HTMLAudioElement;
   currentAnalyzer?: AnalyserNode;
   currentContext?: AudioContext;
-  expressionManager?: {
-    resetExpression(): void;
-  };
 }
 
 export interface Live2DModelInstance extends PIXI.Container {
@@ -37,7 +34,6 @@ export interface Live2DModelInstance extends PIXI.Container {
       enabled: boolean;
     };
   };
-  expression(id: string | number): Promise<boolean>;
   destroy(options?: unknown): void;
 }
 

@@ -1,4 +1,5 @@
 import type { XaiReasoningEffort } from '@aituber-onair/core';
+import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
 import type {
   Inochi2DEmotionEffectMap,
   Inochi2DReactionControlMode,
@@ -176,6 +177,7 @@ export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
+  inochi2dEmotionEffectAnchors: Record<string, EmotionEffectAnchor>;
   inochi2dReactionControlMode: Inochi2DReactionControlMode;
   inochi2dEmotionEffectMap: Inochi2DEmotionEffectMap;
 }

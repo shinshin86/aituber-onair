@@ -8,6 +8,11 @@ import {
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import {
+  normalizeEmotionEffectAnchor,
+  normalizeEmotionEffectAnchors,
+  type EmotionEffectAnchor,
+} from '../lib/emotionEffectAnchor';
+import {
   DEFAULT_INOCHI2D_EMOTION_EFFECT_MAP,
   isInochi2DReactionControlMode,
   normalizeInochi2DEmotionEffectMap,
@@ -222,6 +227,7 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      inochi2dEmotionEffectAnchors: {},
       inochi2dReactionControlMode: 'none',
       inochi2dEmotionEffectMap: { ...DEFAULT_INOCHI2D_EMOTION_EFFECT_MAP },
     },
@@ -285,6 +291,9 @@ function loadSettings(): AppSettings {
         visual: {
           ...defaults.visual,
           ...saved.visual,
+          inochi2dEmotionEffectAnchors: normalizeEmotionEffectAnchors(
+            saved.visual?.inochi2dEmotionEffectAnchors,
+          ),
           inochi2dReactionControlMode: isInochi2DReactionControlMode(
             saved.visual?.inochi2dReactionControlMode,
           )
@@ -961,6 +970,41 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateVisualInochi2DEmotionEffectAnchor = useCallback(
+    (profileId: string, anchor: EmotionEffectAnchor) => {
+      if (!profileId) return;
+      const normalized = normalizeEmotionEffectAnchor(anchor);
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          inochi2dEmotionEffectAnchors: Object.fromEntries(
+            Object.entries({
+              ...prev.visual.inochi2dEmotionEffectAnchors,
+              [profileId]: normalized,
+            }).slice(-24),
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualInochi2DEmotionEffectAnchor = useCallback(
+    (profileId: string) => {
+      if (!profileId) return;
+      setSettings((prev) => {
+        const remaining = { ...prev.visual.inochi2dEmotionEffectAnchors };
+        delete remaining[profileId];
+        return {
+          ...prev,
+          visual: { ...prev.visual, inochi2dEmotionEffectAnchors: remaining },
+        };
+      });
+    },
+    [],
+  );
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1318,6 +1362,8 @@ export function useSettings() {
     updateVisualInochi2DReactionControlMode,
     updateVisualInochi2DEmotionEffect,
     resetVisualInochi2DEmotionEffectMap,
+    updateVisualInochi2DEmotionEffectAnchor,
+    resetVisualInochi2DEmotionEffectAnchor,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

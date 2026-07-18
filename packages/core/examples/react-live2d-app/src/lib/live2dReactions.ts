@@ -1,10 +1,16 @@
-export const LIVE2D_REACTION_EMOTIONS = [
+export const LIVE2D_EMOTION_EFFECTS = [
   'happy',
   'surprised',
   'sad',
   'angry',
   'relaxed',
   'thinking',
+] as const;
+
+export type Live2DEmotionEffect = (typeof LIVE2D_EMOTION_EFFECTS)[number];
+
+export const LIVE2D_REACTION_EMOTIONS = [
+  ...LIVE2D_EMOTION_EFFECTS,
   'neutral',
 ] as const;
 
@@ -12,7 +18,7 @@ export type Live2DReactionEmotion = (typeof LIVE2D_REACTION_EMOTIONS)[number];
 export type Live2DReactionControlMode = 'none' | 'manual' | 'linked';
 export type Live2DEmotionEffectMap = Record<
   Live2DReactionEmotion,
-  string | null
+  Live2DEmotionEffect | null
 >;
 
 export const DEFAULT_LIVE2D_EMOTION_EFFECT_MAP: Live2DEmotionEffectMap = {
@@ -26,27 +32,16 @@ export const DEFAULT_LIVE2D_EMOTION_EFFECT_MAP: Live2DEmotionEffectMap = {
 };
 
 export interface Live2DReactionDraft {
-  expression: string;
+  effect: Live2DEmotionEffect;
+  durationMs?: number;
 }
 
 export type Live2DReaction = Live2DReactionDraft & { id: number };
-
-const EXPRESSION_CANDIDATES: Record<Live2DReactionEmotion, readonly string[]> =
-  {
-    happy: ['happy', 'smile', 'joy', 'warai'],
-    surprised: ['surprised', 'surprise', 'shock', 'odoroki'],
-    sad: ['sad', 'sorrow', 'cry', 'kanashii'],
-    angry: ['angry', 'anger', 'mad', 'ikari'],
-    relaxed: ['relaxed', 'relax', 'calm', 'smile'],
-    thinking: ['thinking', 'think', 'question', 'confused'],
-    neutral: [],
-  };
 
 export function createLinkedLive2DReaction(
   controlMode: Live2DReactionControlMode,
   screenplay: unknown,
   effectMap: Live2DEmotionEffectMap,
-  availableExpressionNames: readonly string[],
 ): Live2DReactionDraft | null {
   if (
     controlMode !== 'linked' ||
@@ -60,32 +55,8 @@ export function createLinkedLive2DReaction(
   if (typeof emotion !== 'string') return null;
   const normalized = emotion.toLowerCase().trim();
   if (!isLive2DReactionEmotion(normalized)) return null;
-  const configuredExpression = effectMap[normalized];
-  if (!configuredExpression) return null;
-  const expression = resolveLive2DExpressionName(
-    configuredExpression,
-    normalized,
-    availableExpressionNames,
-  );
-  return expression ? { expression } : null;
-}
-
-export function resolveLive2DExpressionName(
-  configuredExpression: string,
-  emotion: Live2DReactionEmotion,
-  availableExpressionNames: readonly string[],
-): string | null {
-  const normalizedNames = new Map(
-    availableExpressionNames.map((name) => [name.toLowerCase(), name]),
-  );
-  const exact = normalizedNames.get(configuredExpression.toLowerCase());
-  if (exact) return exact;
-
-  for (const candidate of EXPRESSION_CANDIDATES[emotion]) {
-    const match = normalizedNames.get(candidate);
-    if (match) return match;
-  }
-  return null;
+  const effect = effectMap[normalized];
+  return effect ? { effect } : null;
 }
 
 export function normalizeLive2DEmotionEffectMap(
@@ -100,8 +71,7 @@ export function normalizeLive2DEmotionEffectMap(
     LIVE2D_REACTION_EMOTIONS.map((emotion) => {
       const candidate = source[emotion];
       const effect =
-        candidate === null ||
-        (typeof candidate === 'string' && candidate.trim())
+        candidate === null || isLive2DEmotionEffect(candidate)
           ? candidate
           : DEFAULT_LIVE2D_EMOTION_EFFECT_MAP[emotion];
       return [emotion, effect];
@@ -120,6 +90,10 @@ export function withLive2DReactionId(
   id: number,
 ): Live2DReaction {
   return { ...draft, id };
+}
+
+function isLive2DEmotionEffect(value: unknown): value is Live2DEmotionEffect {
+  return LIVE2D_EMOTION_EFFECTS.some((effect) => effect === value);
 }
 
 function isLive2DReactionEmotion(

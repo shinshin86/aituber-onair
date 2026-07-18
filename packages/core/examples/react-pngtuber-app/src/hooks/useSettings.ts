@@ -8,6 +8,11 @@ import {
 } from '@aituber-onair/core';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import {
+  normalizeEmotionEffectAnchor,
+  normalizeEmotionEffectAnchors,
+  type EmotionEffectAnchor,
+} from '../lib/emotionEffectAnchor';
+import {
   DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP,
   isPngTuberReactionControlMode,
   normalizePngTuberEmotionEffectMap,
@@ -211,6 +216,7 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      pngtuberEmotionEffectAnchors: {},
       pngtuberReactionControlMode: 'none',
       pngtuberEmotionEffectMap: { ...DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP },
     },
@@ -274,6 +280,9 @@ function loadSettings(): AppSettings {
         visual: {
           ...defaults.visual,
           ...saved.visual,
+          pngtuberEmotionEffectAnchors: normalizeEmotionEffectAnchors(
+            saved.visual?.pngtuberEmotionEffectAnchors,
+          ),
           pngtuberReactionControlMode: isPngTuberReactionControlMode(
             saved.visual?.pngtuberReactionControlMode,
           )
@@ -953,6 +962,41 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateVisualPngTuberEmotionEffectAnchor = useCallback(
+    (profileId: string, anchor: EmotionEffectAnchor) => {
+      if (!profileId) return;
+      const normalized = normalizeEmotionEffectAnchor(anchor);
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          pngtuberEmotionEffectAnchors: Object.fromEntries(
+            Object.entries({
+              ...prev.visual.pngtuberEmotionEffectAnchors,
+              [profileId]: normalized,
+            }).slice(-24),
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualPngTuberEmotionEffectAnchor = useCallback(
+    (profileId: string) => {
+      if (!profileId) return;
+      setSettings((prev) => {
+        const remaining = { ...prev.visual.pngtuberEmotionEffectAnchors };
+        delete remaining[profileId];
+        return {
+          ...prev,
+          visual: { ...prev.visual, pngtuberEmotionEffectAnchors: remaining },
+        };
+      });
+    },
+    [],
+  );
+
   const updateScreenVisionDeviceId = useCallback((deviceId: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1310,6 +1354,8 @@ export function useSettings() {
     updateVisualPngTuberReactionControlMode,
     updateVisualPngTuberEmotionEffect,
     resetVisualPngTuberEmotionEffectMap,
+    updateVisualPngTuberEmotionEffectAnchor,
+    resetVisualPngTuberEmotionEffectAnchor,
     updateScreenVisionDeviceId,
     updateScreenVisionPrompt,
     updateScreenVisionAutoIntervalMs,

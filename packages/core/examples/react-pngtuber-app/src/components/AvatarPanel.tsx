@@ -6,13 +6,22 @@ import {
   type MutableRefObject,
 } from 'react';
 import {
-  drawPngTuberEmotionEffect,
+  drawPngTuberEmotionEffectAnchorGuides,
+  drawPngTuberEmotionEffectBack,
+  drawPngTuberEmotionEffectFront,
   withPngTuberEmotionReactionId,
   type PngTuberEmotionEffectMap,
   type PngTuberEmotionReaction,
   type PngTuberReactionControlMode,
   type PngTuberReactionEmotion,
 } from '../lib/pngtuberEmotionEffects';
+import {
+  DEFAULT_EMOTION_EFFECT_ANCHOR,
+  MAX_EMOTION_EFFECT_SCALE,
+  MIN_EMOTION_EFFECT_SCALE,
+  normalizeEmotionEffectAnchor,
+  type EmotionEffectAnchor,
+} from '../lib/emotionEffectAnchor';
 
 interface AvatarPanelProps {
   mouthLevel: number;
@@ -36,6 +45,9 @@ interface AvatarBackgroundProps
   avatarReaction?: PngTuberEmotionReaction | null;
   reactionControlMode: PngTuberReactionControlMode;
   emotionEffectMap: PngTuberEmotionEffectMap;
+  effectAnchor: EmotionEffectAnchor;
+  onEffectAnchorChange: (anchor: EmotionEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
 }
 
 interface EffectPlayback {
@@ -46,6 +58,15 @@ interface EffectPlayback {
 const MANUAL_EFFECT_DURATION_MS = 2600;
 const EFFECT_FADE_IN_MS = 180;
 const EFFECT_FADE_OUT_MS = 320;
+type EffectAnchorTarget = 'face' | 'leftEye' | 'rightEye';
+const EFFECT_ANCHOR_TARGETS = [
+  { target: 'face', label: '顔' },
+  { target: 'leftEye', label: '左目' },
+  { target: 'rightEye', label: '右目' },
+] as const satisfies ReadonlyArray<{
+  target: EffectAnchorTarget;
+  label: string;
+}>;
 const AVATAR_EXPRESSION_OPTIONS = [
   { emotion: 'happy', label: '喜び' },
   { emotion: 'surprised', label: '驚き' },
@@ -218,8 +239,18 @@ function useEmotionPlayback(
 }
 
 function EmotionEffectCanvas({
+  layer,
   playbackRef,
-}: { playbackRef: MutableRefObject<EffectPlayback> }) {
+  anchor,
+  anchorEditorOpen,
+  onAnchorPoint,
+}: {
+  layer: 'back' | 'front';
+  playbackRef: MutableRefObject<EffectPlayback>;
+  anchor: EmotionEffectAnchor;
+  anchorEditorOpen: boolean;
+  onAnchorPoint: (xRatio: number, yRatio: number) => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -248,14 +279,22 @@ function EmotionEffectCanvas({
         context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
         context.clearRect(0, 0, width, height);
         const playback = playbackRef.current;
-        drawPngTuberEmotionEffect(
+        const drawEffect =
+          layer === 'back'
+            ? drawPngTuberEmotionEffectBack
+            : drawPngTuberEmotionEffectFront;
+        drawEffect(
           context,
           width,
           height,
           playback.effect,
           playback.weight,
           now,
+          anchor,
         );
+        if (layer === 'front' && anchorEditorOpen) {
+          drawPngTuberEmotionEffectAnchorGuides(context, width, height, anchor);
+        }
       }
       animationFrame = requestAnimationFrame(draw);
     };
@@ -265,9 +304,35 @@ function EmotionEffectCanvas({
       observer.disconnect();
       cancelAnimationFrame(animationFrame);
     };
-  }, [playbackRef]);
+  }, [anchor, anchorEditorOpen, layer, playbackRef]);
 
-  return <canvas ref={canvasRef} className="avatar-effect-canvas" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className={`avatar-effect-canvas is-${layer}${
+        anchorEditorOpen ? ' is-anchor-editing' : ''
+      }`}
+      aria-hidden={layer === 'back' || !anchorEditorOpen}
+      aria-label={
+        layer === 'front' && anchorEditorOpen
+          ? '感情表現エフェクトアンカー配置エリア'
+          : undefined
+      }
+      onPointerDown={(event) => {
+        if (layer !== 'front' || !anchorEditorOpen || event.button !== 0) {
+          return;
+        }
+        const bounds = event.currentTarget.getBoundingClientRect();
+        if (bounds.width <= 0 || bounds.height <= 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onAnchorPoint(
+          (event.clientX - bounds.left) / bounds.width,
+          (event.clientY - bounds.top) / bounds.height,
+        );
+      }}
+    />
+  );
 }
 
 export function AvatarPanel({
@@ -331,6 +396,9 @@ export function AvatarBackground({
   avatarReaction,
   reactionControlMode,
   emotionEffectMap,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
 }: AvatarBackgroundProps) {
   const eyesClosed = useBlink();
   const mouthOpen = isSpeaking && mouthLevel >= 1;
@@ -338,6 +406,9 @@ export function AvatarBackground({
   const [manualReaction, setManualReaction] =
     useState<PngTuberEmotionReaction | null>(null);
   const manualReactionIdRef = useRef(0);
+  const effectAnchorRef = useRef(effectAnchor);
+  const [anchorEditorOpen, setAnchorEditorOpen] = useState(false);
+  const [anchorTarget, setAnchorTarget] = useState<EffectAnchorTarget>('face');
   const showManualControls = reactionControlMode === 'manual';
   const activeReaction =
     reactionControlMode === 'linked'
@@ -346,6 +417,24 @@ export function AvatarBackground({
         ? manualReaction
         : null;
   const playbackRef = useEmotionPlayback(activeReaction);
+
+  useEffect(() => {
+    effectAnchorRef.current = effectAnchor;
+  }, [effectAnchor]);
+
+  const handleAnchorPoint = (xRatio: number, yRatio: number) => {
+    const current = effectAnchorRef.current;
+    const next = normalizeEmotionEffectAnchor({
+      ...current,
+      ...(anchorTarget === 'face'
+        ? { faceX: xRatio, faceY: yRatio }
+        : anchorTarget === 'leftEye'
+          ? { leftEyeX: xRatio, leftEyeY: yRatio }
+          : { rightEyeX: xRatio, rightEyeY: yRatio }),
+    });
+    effectAnchorRef.current = next;
+    onEffectAnchorChange(next);
+  };
 
   const imageKey = useMemo(
     () => selectImageKey(mouthOpen, eyesClosed),
@@ -357,6 +446,13 @@ export function AvatarBackground({
   return (
     <div className="avatar-background">
       <div className="avatar-container">
+        <EmotionEffectCanvas
+          layer="back"
+          playbackRef={playbackRef}
+          anchor={effectAnchor}
+          anchorEditorOpen={false}
+          onAnchorPoint={handleAnchorPoint}
+        />
         {showImage && (
           <img
             src={imageSrc}
@@ -370,7 +466,13 @@ export function AvatarBackground({
         {!showImage && (
           <FallbackAvatar mouthOpen={mouthOpen} eyesClosed={eyesClosed} />
         )}
-        <EmotionEffectCanvas playbackRef={playbackRef} />
+        <EmotionEffectCanvas
+          layer="front"
+          playbackRef={playbackRef}
+          anchor={effectAnchor}
+          anchorEditorOpen={showManualControls && anchorEditorOpen}
+          onAnchorPoint={handleAnchorPoint}
+        />
       </div>
       {showManualControls && (
         <div
@@ -414,6 +516,81 @@ export function AvatarBackground({
           >
             解除
           </button>
+          <button
+            type="button"
+            className={`avatar-expression-button is-anchor${
+              anchorEditorOpen ? ' is-active' : ''
+            }`}
+            aria-pressed={anchorEditorOpen}
+            onClick={() => setAnchorEditorOpen((current) => !current)}
+          >
+            アンカー調整
+          </button>
+        </div>
+      )}
+      {showManualControls && anchorEditorOpen && (
+        <div
+          className="avatar-anchor-editor"
+          role="group"
+          aria-label="感情表現エフェクトアンカー調整"
+        >
+          <span className="avatar-anchor-editor-label">
+            配置先を選び、アバター上をクリック
+          </span>
+          <div className="avatar-anchor-targets">
+            {EFFECT_ANCHOR_TARGETS.map((option) => (
+              <button
+                key={option.target}
+                type="button"
+                className={`avatar-expression-button${
+                  anchorTarget === option.target ? ' is-active' : ''
+                }`}
+                aria-pressed={anchorTarget === option.target}
+                onClick={() => setAnchorTarget(option.target)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <label className="avatar-anchor-scale">
+            <span>エフェクトサイズ</span>
+            <input
+              type="range"
+              min={MIN_EMOTION_EFFECT_SCALE * 100}
+              max={MAX_EMOTION_EFFECT_SCALE * 100}
+              step="5"
+              value={Math.round(effectAnchor.effectScale * 100)}
+              onChange={(event) => {
+                const next = normalizeEmotionEffectAnchor({
+                  ...effectAnchorRef.current,
+                  effectScale: Number(event.target.value) / 100,
+                });
+                effectAnchorRef.current = next;
+                onEffectAnchorChange(next);
+              }}
+            />
+            <output>{Math.round(effectAnchor.effectScale * 100)}%</output>
+          </label>
+          <div className="avatar-anchor-actions">
+            <button
+              type="button"
+              className="avatar-expression-button is-reset"
+              onClick={() => {
+                effectAnchorRef.current = DEFAULT_EMOTION_EFFECT_ANCHOR;
+                onEffectAnchorReset();
+                setAnchorTarget('face');
+              }}
+            >
+              初期値に戻す
+            </button>
+            <button
+              type="button"
+              className="avatar-expression-button"
+              onClick={() => setAnchorEditorOpen(false)}
+            >
+              完了
+            </button>
+          </div>
         </div>
       )}
     </div>

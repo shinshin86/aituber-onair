@@ -19,10 +19,14 @@ React examples.
 - Drag, wheel zoom, double-click reset, tap/flick reactions
 - TTS playback lip sync and speaking expression presets when supported by the
   runtime bridge
-- Native expression presets and emotion animations with configurable emotion
-  mappings and disabled, manual preview, or linked control modes
-- Linked emotion expressions start when the response emotion is received,
+- Model-independent visual effects such as sparkles or tears with configurable
+  emotion mappings and disabled, manual preview, or linked control modes
+- Uses the same layered background auras and foreground effect designs as the
+  PSD/PuruPuru samples
+- Linked visual effects start when the response emotion is received,
   independently of TTS playback
+- Face and eye anchors and effect size can be adjusted in manual mode; anchors
+  follow camera dragging and zoom and are saved per model
 - Shared settings UI for LLM, TTS, screen vision, and live-comment handling
 
 ## Runtime and assets

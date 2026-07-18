@@ -15,6 +15,7 @@ import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
 import type {
+  Live2DEmotionEffect,
   Live2DReactionControlMode,
   Live2DReactionEmotion,
 } from '../lib/live2dReactions';
@@ -30,7 +31,6 @@ interface SettingsPanelProps extends SettingsHook {
   streamErrorMessage?: string;
   screenVisionController: ScreenVisionController;
   onBackgroundImageChange: (file: File | null) => void;
-  live2dExpressionNames: readonly string[];
 }
 
 const PROVIDERS: {
@@ -83,6 +83,19 @@ const LIVE2D_REACTION_EMOTION_OPTIONS: ReadonlyArray<{
   { value: 'relaxed', label: '安らぎ（relaxed）' },
   { value: 'thinking', label: '考え中（thinking）' },
   { value: 'neutral', label: '通常（neutral）' },
+];
+
+const LIVE2D_EFFECT_OPTIONS: ReadonlyArray<{
+  value: Live2DEmotionEffect | 'none';
+  label: string;
+}> = [
+  { value: 'none', label: 'なし' },
+  { value: 'happy', label: '喜び（キラキラ）' },
+  { value: 'surprised', label: '驚き（放射線）' },
+  { value: 'sad', label: '悲しみ（涙）' },
+  { value: 'angry', label: '怒り（怒りマーク）' },
+  { value: 'relaxed', label: '安らぎ（泡）' },
+  { value: 'thinking', label: '考え中（思考バブル）' },
 ];
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
@@ -334,7 +347,6 @@ export function SettingsPanel({
   streamErrorMessage,
   screenVisionController,
   onBackgroundImageChange,
-  live2dExpressionNames,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
   const [systemPromptDraft, setSystemPromptDraft] = useState(
@@ -859,7 +871,7 @@ export function SettingsPanel({
               <p className="settings-field-hint">
                 入力欄からフォーカスが外れた時に反映されます。空欄の場合は
                 既定値を使用します。アバター固有の制御指示を削除すると、
-                表情連動に影響する場合があります。
+                感情表現エフェクトの連動に影響する場合があります。
               </p>
             </div>
 
@@ -2548,55 +2560,53 @@ export function SettingsPanel({
               </select>
               <p className="settings-field-hint">
                 {settings.visual.live2dReactionControlMode === 'none'
-                  ? '手動ボタンを表示せず、発話時の表情も再生しません。'
+                  ? '手動ボタンを表示せず、発話時のエフェクトも表示しません。'
                   : settings.visual.live2dReactionControlMode === 'manual'
-                    ? 'アバター上のボタンからLive2D表情をプレビューします。'
-                    : '発話の emotion タグを受け取った時点でLive2D表情を再生します。'}
+                    ? 'アバター上のボタンから視覚エフェクトをプレビューします。'
+                    : '発話の emotion タグを受け取った時点で視覚エフェクトを表示します。'}
               </p>
             </div>
 
             <div className="settings-field">
-              <span className="settings-field-label">感情と表情の対応</span>
+              <span className="settings-field-label">
+                感情とエフェクトの対応
+              </span>
               <div className="settings-emotion-mapping-list">
-                {LIVE2D_REACTION_EMOTION_OPTIONS.map((emotionOption) => {
-                  const current =
-                    settings.visual.live2dEmotionEffectMap[emotionOption.value];
-                  const currentIsUnavailable =
-                    Boolean(current) &&
-                    !live2dExpressionNames.includes(current as string);
-                  return (
-                    <label
-                      key={emotionOption.value}
-                      className="settings-emotion-mapping-row"
-                      htmlFor={`live2d-effect-${emotionOption.value}`}
+                {LIVE2D_REACTION_EMOTION_OPTIONS.map((emotionOption) => (
+                  <label
+                    key={emotionOption.value}
+                    className="settings-emotion-mapping-row"
+                    htmlFor={`live2d-effect-${emotionOption.value}`}
+                  >
+                    <span>{emotionOption.label}</span>
+                    <select
+                      id={`live2d-effect-${emotionOption.value}`}
+                      value={
+                        settings.visual.live2dEmotionEffectMap[
+                          emotionOption.value
+                        ] || 'none'
+                      }
+                      onChange={(event) =>
+                        updateVisualLive2DEmotionEffect(
+                          emotionOption.value,
+                          event.target.value === 'none'
+                            ? null
+                            : (event.target.value as Live2DEmotionEffect),
+                        )
+                      }
+                      disabled={disabled}
                     >
-                      <span>{emotionOption.label}</span>
-                      <select
-                        id={`live2d-effect-${emotionOption.value}`}
-                        value={current || 'none'}
-                        onChange={(event) =>
-                          updateVisualLive2DEmotionEffect(
-                            emotionOption.value,
-                            event.target.value === 'none'
-                              ? null
-                              : event.target.value,
-                          )
-                        }
-                        disabled={disabled}
-                      >
-                        <option value="none">なし</option>
-                        {currentIsUnavailable && current && (
-                          <option value={current}>{current}（自動候補）</option>
-                        )}
-                        {live2dExpressionNames.map((expressionName) => (
-                          <option key={expressionName} value={expressionName}>
-                            {expressionName}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  );
-                })}
+                      {LIVE2D_EFFECT_OPTIONS.map((effectOption) => (
+                        <option
+                          key={effectOption.value}
+                          value={effectOption.value}
+                        >
+                          {effectOption.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
               </div>
               <button
                 type="button"
@@ -2606,9 +2616,6 @@ export function SettingsPanel({
               >
                 感情の割り当てを初期値に戻す
               </button>
-              <p className="settings-field-hint">
-                モデル読込後は、そのモデルJSONに含まれる表情名を選択できます。
-              </p>
             </div>
           </>
         )}

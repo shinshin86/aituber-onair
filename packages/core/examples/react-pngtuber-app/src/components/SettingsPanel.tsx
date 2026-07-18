@@ -888,7 +888,7 @@ export function SettingsPanel({
               <p className="settings-field-hint">
                 入力欄からフォーカスが外れた時に反映されます。空欄の場合は
                 既定値を使用します。アバター固有の制御指示を削除すると、
-                表情連動に影響する場合があります。
+                感情表現エフェクトの連動に影響する場合があります。
               </p>
             </div>
 

@@ -1,47 +1,22 @@
-export const PNGTUBER_EMOTION_EFFECTS = [
-  'happy',
-  'surprised',
-  'sad',
-  'angry',
-  'relaxed',
-  'thinking',
-] as const;
+import { useEffect, useRef, type MutableRefObject } from 'react';
+import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
+import {
+  drawEmotionEffectAura,
+  type EmotionEffect,
+} from '../lib/emotionEffectRendering';
 
-export type PngTuberEmotionEffect = (typeof PNGTUBER_EMOTION_EFFECTS)[number];
-
-export const PNGTUBER_REACTION_EMOTIONS = [
-  ...PNGTUBER_EMOTION_EFFECTS,
-  'neutral',
-] as const;
-
-export type PngTuberReactionEmotion =
-  (typeof PNGTUBER_REACTION_EMOTIONS)[number];
-export type PngTuberReactionControlMode = 'none' | 'manual' | 'linked';
-export type PngTuberEmotionEffectMap = Record<
-  PngTuberReactionEmotion,
-  PngTuberEmotionEffect | null
->;
-
-export const DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP: PngTuberEmotionEffectMap = {
-  happy: 'happy',
-  surprised: 'surprised',
-  sad: 'sad',
-  angry: 'angry',
-  relaxed: 'relaxed',
-  thinking: 'thinking',
-  neutral: null,
-};
-
-export interface PngTuberEmotionReactionDraft {
-  effect: PngTuberEmotionEffect;
+export interface EmotionEffectReactionLike {
+  id: number;
+  effect: EmotionEffect;
   durationMs?: number;
 }
 
-export type PngTuberEmotionReaction = PngTuberEmotionReactionDraft & {
-  id: number;
-};
+export interface EmotionEffectPlayback {
+  effect: EmotionEffect | null;
+  weight: number;
+}
 
-interface PngTuberEffectGeometry {
+export interface EmotionEffectGeometry {
   faceX: number;
   faceY: number;
   leftEyeX: number;
@@ -51,90 +26,233 @@ interface PngTuberEffectGeometry {
   unit: number;
 }
 
+interface EmotionEffectOverlayProps {
+  reaction: EmotionEffectReactionLike | null;
+  anchor: EmotionEffectAnchor;
+  geometryRef?: MutableRefObject<EmotionEffectGeometry | null>;
+  playbackMirrorRef?: MutableRefObject<EmotionEffectPlayback>;
+  renderBackEffect?: boolean;
+  anchorEditorOpen?: boolean;
+  onAnchorPoint?: (x: number, y: number) => void;
+}
+
+const EFFECT_FADE_IN_MS = 180;
+const EFFECT_FADE_OUT_MS = 320;
 const MIN_EFFECT_WEIGHT = 0.002;
 const TWO_PI = Math.PI * 2;
-const AURA_COLORS: Record<PngTuberEmotionEffect, string> = {
-  happy: 'rgba(255, 205, 70, 0.34)',
-  surprised: 'rgba(255, 242, 160, 0.36)',
-  sad: 'rgba(72, 145, 230, 0.3)',
-  angry: 'rgba(238, 52, 73, 0.36)',
-  relaxed: 'rgba(114, 232, 206, 0.28)',
-  thinking: 'rgba(132, 178, 255, 0.24)',
-};
 
-export function createLinkedPngTuberEmotionReaction(
-  controlMode: PngTuberReactionControlMode,
-  screenplay: unknown,
-  effectMap: PngTuberEmotionEffectMap,
-): PngTuberEmotionReactionDraft | null {
-  if (
-    controlMode !== 'linked' ||
-    !screenplay ||
-    typeof screenplay !== 'object'
-  ) {
-    return null;
-  }
-  const emotion = (screenplay as { emotion?: unknown }).emotion;
-  if (typeof emotion !== 'string') return null;
-  const normalized = emotion.toLowerCase().trim();
-  if (!isPngTuberReactionEmotion(normalized)) return null;
-  const effect = effectMap[normalized];
-  return effect ? { effect } : null;
+function useEmotionEffectPlayback(
+  reaction: EmotionEffectReactionLike | null,
+): MutableRefObject<EmotionEffectPlayback> {
+  const playbackRef = useRef<EmotionEffectPlayback>({
+    effect: null,
+    weight: 0,
+  });
+
+  useEffect(() => {
+    let animationFrame = 0;
+    const start = performance.now();
+    const startPlayback = playbackRef.current;
+
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      if (!reaction) {
+        const weight = Math.max(
+          0,
+          startPlayback.weight * (1 - elapsed / EFFECT_FADE_OUT_MS),
+        );
+        playbackRef.current = {
+          effect: weight > 0 ? startPlayback.effect : null,
+          weight,
+        };
+        if (weight > 0) animationFrame = requestAnimationFrame(tick);
+        return;
+      }
+
+      const fadeIn = Math.min(elapsed / EFFECT_FADE_IN_MS, 1);
+      const fadeOut = reaction.durationMs
+        ? Math.max(
+            0,
+            Math.min((reaction.durationMs - elapsed) / EFFECT_FADE_OUT_MS, 1),
+          )
+        : 1;
+      const weight = Math.min(fadeIn, fadeOut);
+      playbackRef.current = {
+        effect: weight > 0 ? reaction.effect : null,
+        weight,
+      };
+      if (!reaction.durationMs || elapsed < reaction.durationMs) {
+        animationFrame = requestAnimationFrame(tick);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [reaction]);
+
+  return playbackRef;
 }
 
-export function normalizePngTuberEmotionEffectMap(
-  value: unknown,
-): PngTuberEmotionEffectMap {
-  const source =
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? (value as Partial<PngTuberEmotionEffectMap>)
-      : {};
+export function EmotionEffectOverlay({
+  reaction,
+  anchor,
+  geometryRef,
+  playbackMirrorRef,
+  renderBackEffect = true,
+  anchorEditorOpen = false,
+  onAnchorPoint,
+}: EmotionEffectOverlayProps) {
+  const backCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const frontCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const playbackRef = useEmotionEffectPlayback(reaction);
 
-  return Object.fromEntries(
-    PNGTUBER_REACTION_EMOTIONS.map((emotion) => {
-      const candidate = source[emotion];
-      const effect =
-        candidate === null || isPngTuberEmotionEffect(candidate)
-          ? candidate
-          : DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP[emotion];
-      return [emotion, effect];
-    }),
-  ) as PngTuberEmotionEffectMap;
+  useEffect(() => {
+    const backCanvas = backCanvasRef.current;
+    const frontCanvas = frontCanvasRef.current;
+    const container = frontCanvas?.parentElement;
+    if (!backCanvas || !frontCanvas || !container) return;
+
+    let animationFrame = 0;
+    let width = 1;
+    let height = 1;
+    let devicePixelRatio = 1;
+
+    const resize = () => {
+      width = Math.max(container.clientWidth, 1);
+      height = Math.max(container.clientHeight, 1);
+      devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      for (const canvas of [backCanvas, frontCanvas]) {
+        canvas.width = Math.round(width * devicePixelRatio);
+        canvas.height = Math.round(height * devicePixelRatio);
+      }
+    };
+
+    const observer = new ResizeObserver(resize);
+    observer.observe(container);
+    resize();
+
+    const draw = (now: number) => {
+      const backContext = backCanvas.getContext('2d');
+      const frontContext = frontCanvas.getContext('2d');
+      if (backContext && frontContext) {
+        for (const context of [backContext, frontContext]) {
+          context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+          context.clearRect(0, 0, width, height);
+        }
+        const playback = playbackRef.current;
+        if (playbackMirrorRef) {
+          playbackMirrorRef.current = playback;
+        }
+        const geometry =
+          geometryRef?.current || createViewportGeometry(width, height, anchor);
+        if (renderBackEffect) {
+          drawEmotionEffectBack(
+            backContext,
+            geometry,
+            playback.effect,
+            playback.weight,
+            now,
+          );
+        }
+        drawEmotionEffectFront(
+          frontContext,
+          geometry,
+          playback.effect,
+          playback.weight,
+          now,
+        );
+        if (anchorEditorOpen) {
+          drawEmotionEffectAnchorGuides(frontContext, geometry);
+        }
+      }
+      animationFrame = requestAnimationFrame(draw);
+    };
+
+    animationFrame = requestAnimationFrame(draw);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(animationFrame);
+      if (playbackMirrorRef) {
+        playbackMirrorRef.current = { effect: null, weight: 0 };
+      }
+    };
+  }, [
+    anchor,
+    anchorEditorOpen,
+    geometryRef,
+    playbackMirrorRef,
+    playbackRef,
+    renderBackEffect,
+  ]);
+
+  return (
+    <>
+      <canvas
+        ref={backCanvasRef}
+        className="avatar-effect-canvas is-back"
+        aria-hidden="true"
+      />
+      <canvas
+        ref={frontCanvasRef}
+        className={`avatar-effect-canvas is-front${
+          anchorEditorOpen ? ' is-anchor-editing' : ''
+        }`}
+        aria-hidden={!anchorEditorOpen}
+        aria-label={
+          anchorEditorOpen ? '感情表現エフェクトアンカー配置エリア' : undefined
+        }
+        onPointerDown={(event) => {
+          if (!anchorEditorOpen || !onAnchorPoint || event.button !== 0) return;
+          const bounds = event.currentTarget.getBoundingClientRect();
+          if (bounds.width <= 0 || bounds.height <= 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          onAnchorPoint(
+            ((event.clientX - bounds.left) / bounds.width) *
+              event.currentTarget.clientWidth,
+            ((event.clientY - bounds.top) / bounds.height) *
+              event.currentTarget.clientHeight,
+          );
+        }}
+      />
+    </>
+  );
 }
 
-export function isPngTuberReactionControlMode(
-  value: unknown,
-): value is PngTuberReactionControlMode {
-  return value === 'none' || value === 'manual' || value === 'linked';
-}
-
-export function withPngTuberEmotionReactionId(
-  draft: PngTuberEmotionReactionDraft,
-  id: number,
-): PngTuberEmotionReaction {
-  return { ...draft, id };
-}
-
-export function drawPngTuberEmotionEffectBack(
-  context: CanvasRenderingContext2D,
+function createViewportGeometry(
   width: number,
   height: number,
-  effect: PngTuberEmotionEffect | null,
+  anchor: EmotionEffectAnchor,
+): EmotionEffectGeometry {
+  return {
+    faceX: width * anchor.faceX,
+    faceY: height * anchor.faceY,
+    leftEyeX: width * anchor.leftEyeX,
+    leftEyeY: height * anchor.leftEyeY,
+    rightEyeX: width * anchor.rightEyeX,
+    rightEyeY: height * anchor.rightEyeY,
+    unit: Math.min(width, height) * anchor.effectScale,
+  };
+}
+
+function drawEmotionEffectBack(
+  context: CanvasRenderingContext2D,
+  geometry: EmotionEffectGeometry,
+  effect: EmotionEffect | null,
   weight: number,
   now: number,
-  anchor: EmotionEffectAnchor,
 ): void {
   const amount = clampWeight(weight);
   if (!effect || amount < MIN_EFFECT_WEIGHT) return;
-  const geometry = createEffectGeometry(width, height, anchor);
+  const unit = Math.max(geometry.unit, 1);
   const pulse = 0.94 + Math.sin(now * 0.004) * 0.06;
   const radiusScale = effect === 'angry' ? 0.45 : 0.39;
-  drawAura(
+  drawEmotionEffectAura(
     context,
     geometry.faceX,
     geometry.faceY,
-    geometry.unit * radiusScale * pulse,
-    AURA_COLORS[effect],
+    unit * radiusScale * pulse,
+    effect,
     amount,
   );
 
@@ -143,12 +261,12 @@ export function drawPngTuberEmotionEffectBack(
     context.save();
     context.globalAlpha = amount * (1 - ringProgress) * 0.7;
     context.strokeStyle = '#fff0a0';
-    context.lineWidth = Math.max(2, geometry.unit * 0.008);
+    context.lineWidth = Math.max(2, unit * 0.008);
     context.beginPath();
     context.arc(
       geometry.faceX,
       geometry.faceY,
-      geometry.unit * (0.2 + ringProgress * 0.22),
+      unit * (0.2 + ringProgress * 0.22),
       0,
       TWO_PI,
     );
@@ -157,18 +275,15 @@ export function drawPngTuberEmotionEffectBack(
   }
 }
 
-export function drawPngTuberEmotionEffectFront(
+function drawEmotionEffectFront(
   context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  effect: PngTuberEmotionEffect | null,
+  geometry: EmotionEffectGeometry,
+  effect: EmotionEffect | null,
   weight: number,
   now: number,
-  anchor: EmotionEffectAnchor,
 ): void {
   const amount = clampWeight(weight);
   if (!effect || amount < MIN_EFFECT_WEIGHT) return;
-  const geometry = createEffectGeometry(width, height, anchor);
   if (effect === 'happy') drawHappy(context, geometry, amount, now);
   if (effect === 'surprised') drawSurprised(context, geometry, amount, now);
   if (effect === 'sad') drawSad(context, geometry, amount, now);
@@ -179,7 +294,7 @@ export function drawPngTuberEmotionEffectFront(
 
 function drawHappy(
   context: CanvasRenderingContext2D,
-  geometry: PngTuberEffectGeometry,
+  geometry: EmotionEffectGeometry,
   amount: number,
   now: number,
 ): void {
@@ -205,7 +320,7 @@ function drawHappy(
 
 function drawSurprised(
   context: CanvasRenderingContext2D,
-  geometry: PngTuberEffectGeometry,
+  geometry: EmotionEffectGeometry,
   amount: number,
   now: number,
 ): void {
@@ -235,7 +350,7 @@ function drawSurprised(
 
 function drawSad(
   context: CanvasRenderingContext2D,
-  geometry: PngTuberEffectGeometry,
+  geometry: EmotionEffectGeometry,
   amount: number,
   now: number,
 ): void {
@@ -258,7 +373,7 @@ function drawSad(
 
 function drawAngry(
   context: CanvasRenderingContext2D,
-  geometry: PngTuberEffectGeometry,
+  geometry: EmotionEffectGeometry,
   amount: number,
   now: number,
 ): void {
@@ -288,7 +403,7 @@ function drawAngry(
 
 function drawRelaxed(
   context: CanvasRenderingContext2D,
-  geometry: PngTuberEffectGeometry,
+  geometry: EmotionEffectGeometry,
   amount: number,
   now: number,
 ): void {
@@ -319,7 +434,7 @@ function drawRelaxed(
 
 function drawThinking(
   context: CanvasRenderingContext2D,
-  geometry: PngTuberEffectGeometry,
+  geometry: EmotionEffectGeometry,
   amount: number,
   now: number,
 ): void {
@@ -352,30 +467,22 @@ function drawThinking(
   context.restore();
 }
 
-export function drawPngTuberEmotionEffectAnchorGuides(
+function drawEmotionEffectAnchorGuides(
   context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  anchor: EmotionEffectAnchor,
-): void {
+  geometry: EmotionEffectGeometry,
+) {
+  drawAnchorMarker(context, geometry.faceX, geometry.faceY, '#ffcf5a', '顔');
   drawAnchorMarker(
     context,
-    width * anchor.faceX,
-    height * anchor.faceY,
-    '#ffcf5a',
-    '顔',
-  );
-  drawAnchorMarker(
-    context,
-    width * anchor.leftEyeX,
-    height * anchor.leftEyeY,
+    geometry.leftEyeX,
+    geometry.leftEyeY,
     '#63c8ff',
     '左目',
   );
   drawAnchorMarker(
     context,
-    width * anchor.rightEyeX,
-    height * anchor.rightEyeY,
+    geometry.rightEyeX,
+    geometry.rightEyeY,
     '#ff82b2',
     '右目',
   );
@@ -466,56 +573,6 @@ function drawTear(
   context.restore();
 }
 
-function drawAura(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  radius: number,
-  color: string,
-  amount: number,
-): void {
-  const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
-  gradient.addColorStop(0, color);
-  gradient.addColorStop(0.6, color);
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  context.save();
-  context.globalAlpha = amount;
-  context.fillStyle = gradient;
-  context.beginPath();
-  context.arc(x, y, radius, 0, TWO_PI);
-  context.fill();
-  context.restore();
-}
-
-function createEffectGeometry(
-  width: number,
-  height: number,
-  anchor: EmotionEffectAnchor,
-): PngTuberEffectGeometry {
-  return {
-    faceX: width * anchor.faceX,
-    faceY: height * anchor.faceY,
-    leftEyeX: width * anchor.leftEyeX,
-    leftEyeY: height * anchor.leftEyeY,
-    rightEyeX: width * anchor.rightEyeX,
-    rightEyeY: height * anchor.rightEyeY,
-    unit: Math.min(width, height) * anchor.effectScale,
-  };
-}
-
 function clampWeight(weight: number): number {
   return Math.min(Math.max(Number.isFinite(weight) ? weight : 0, 0), 1);
 }
-
-function isPngTuberEmotionEffect(
-  value: unknown,
-): value is PngTuberEmotionEffect {
-  return PNGTUBER_EMOTION_EFFECTS.some((effect) => effect === value);
-}
-
-function isPngTuberReactionEmotion(
-  value: unknown,
-): value is PngTuberReactionEmotion {
-  return PNGTUBER_REACTION_EMOTIONS.some((emotion) => emotion === value);
-}
-import type { EmotionEffectAnchor } from './emotionEffectAnchor';

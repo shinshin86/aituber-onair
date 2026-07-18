@@ -15,6 +15,7 @@ import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
+import { getEmotionEffectAnchor } from './lib/emotionEffectAnchor';
 import {
   createBundledLive2DModelSource,
   getBundledLive2DModels,
@@ -169,7 +170,6 @@ export default function App() {
         settingsHook.settings.visual.live2dReactionControlMode,
         screenplay,
         settingsHook.settings.visual.live2dEmotionEffectMap,
-        modelSource?.expressionNames || [],
       );
       if (reaction) {
         emitAvatarReaction(reaction);
@@ -179,7 +179,6 @@ export default function App() {
     },
     [
       emitAvatarReaction,
-      modelSource?.expressionNames,
       settingsHook.settings.visual.live2dEmotionEffectMap,
       settingsHook.settings.visual.live2dReactionControlMode,
     ],
@@ -405,6 +404,25 @@ export default function App() {
         avatarReaction={avatarReaction}
         audioBinding={audioBinding}
         visual={settingsHook.settings.visual}
+        effectAnchor={getEmotionEffectAnchor(
+          settingsHook.settings.visual.live2dEmotionEffectAnchors,
+          modelSource?.modelFilePath,
+        )}
+        onEffectAnchorChange={(anchor) => {
+          if (modelSource?.modelFilePath) {
+            settingsHook.updateVisualLive2DEmotionEffectAnchor(
+              modelSource.modelFilePath,
+              anchor,
+            );
+          }
+        }}
+        onEffectAnchorReset={() => {
+          if (modelSource?.modelFilePath) {
+            settingsHook.resetVisualLive2DEmotionEffectAnchor(
+              modelSource.modelFilePath,
+            );
+          }
+        }}
       />
 
       {settingsOpen && (
@@ -504,7 +522,6 @@ export default function App() {
                 streamErrorMessage={streamErrorMessage}
                 screenVisionController={screenVisionController}
                 onBackgroundImageChange={handleBackgroundImageChange}
-                live2dExpressionNames={modelSource?.expressionNames || []}
               />
             </div>
           </div>

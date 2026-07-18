@@ -31,6 +31,15 @@ export type VrmEmotionEffectMap = Record<
   VrmEmotionEffect | null
 >;
 
+export interface VrmEmotionEffectReactionDraft {
+  effect: VrmEmotionEffect;
+  durationMs?: number;
+}
+
+export type VrmEmotionEffectReaction = VrmEmotionEffectReactionDraft & {
+  id: number;
+};
+
 export const DEFAULT_VRM_EMOTION_EFFECT_MAP: VrmEmotionEffectMap = {
   happy: 'happy',
   surprised: 'surprised',
@@ -87,13 +96,23 @@ export function createVrmReactionFromScreenplay(
   return effect ? createVrmReactionFromEffect(effect, text) : null;
 }
 
-export function createLinkedVrmReaction(
+export function createVrmEmotionEffectReactionFromScreenplay(
+  screenplay: ScreenplayLike,
+  effectMap: VrmEmotionEffectMap = DEFAULT_VRM_EMOTION_EFFECT_MAP,
+): VrmEmotionEffectReactionDraft | null {
+  const emotion = screenplay.emotion?.toLowerCase().trim();
+  if (!isVrmReactionEmotion(emotion)) return null;
+  const effect = effectMap[emotion];
+  return effect ? { effect } : null;
+}
+
+export function createLinkedVrmEmotionEffectReaction(
   controlMode: VrmReactionControlMode,
   screenplay: ScreenplayLike,
   effectMap: VrmEmotionEffectMap,
-): VrmAvatarReactionDraft | null {
+): VrmEmotionEffectReactionDraft | null {
   return controlMode === 'linked'
-    ? createVrmReactionFromScreenplay(screenplay, effectMap)
+    ? createVrmEmotionEffectReactionFromScreenplay(screenplay, effectMap)
     : null;
 }
 
@@ -233,6 +252,13 @@ export function withReactionId(
   id: number,
 ): VrmAvatarReaction {
   return { ...draft, id } as VrmAvatarReaction;
+}
+
+export function withVrmEmotionEffectReactionId(
+  draft: VrmEmotionEffectReactionDraft,
+  id: number,
+): VrmEmotionEffectReaction {
+  return { ...draft, id };
 }
 
 function createSmileGesture(): VrmAvatarReactionDraft {

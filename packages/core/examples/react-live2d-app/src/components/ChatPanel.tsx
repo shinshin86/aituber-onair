@@ -6,6 +6,7 @@ import { Live2DStage } from './Live2DStage';
 import type { Live2DModelSource } from '../lib/live2dModel';
 import type { Live2DAudioBinding } from '../hooks/useAudioLipsync';
 import type { Live2DReaction } from '../lib/live2dReactions';
+import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
 
 interface ChatPanelProps {
   messages: ChatMessage[];
@@ -19,6 +20,9 @@ interface ChatPanelProps {
   audioBinding: Live2DAudioBinding;
   avatarReaction?: Live2DReaction | null;
   visual: VisualSettings;
+  effectAnchor: EmotionEffectAnchor;
+  onEffectAnchorChange: (anchor: EmotionEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
 }
 
 export function ChatPanel({
@@ -33,6 +37,9 @@ export function ChatPanel({
   audioBinding,
   avatarReaction,
   visual,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -74,6 +81,9 @@ export function ChatPanel({
         reaction={avatarReaction}
         reactionControlMode={visual.live2dReactionControlMode}
         emotionEffectMap={visual.live2dEmotionEffectMap}
+        effectAnchor={effectAnchor}
+        onEffectAnchorChange={onEffectAnchorChange}
+        onEffectAnchorReset={onEffectAnchorReset}
       />
       {isBroadcast ? (
         broadcastCaption && (

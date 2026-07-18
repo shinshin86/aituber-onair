@@ -2,6 +2,7 @@ import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
 import type { AvatarImageUrls } from './AvatarPanel';
 import type { PngTuberEmotionReaction } from '../lib/pngtuberEmotionEffects';
+import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
 import { AvatarBackground } from './AvatarPanel';
 import { ChatLog } from './ChatLog';
 import { ChatInput } from './ChatInput';
@@ -17,6 +18,9 @@ interface ChatPanelProps {
   avatarImageUrls?: AvatarImageUrls;
   avatarReaction?: PngTuberEmotionReaction | null;
   visual: VisualSettings;
+  effectAnchor: EmotionEffectAnchor;
+  onEffectAnchorChange: (anchor: EmotionEffectAnchor) => void;
+  onEffectAnchorReset: () => void;
   onToggleSettings: () => void;
 }
 
@@ -31,6 +35,9 @@ export function ChatPanel({
   avatarImageUrls,
   avatarReaction,
   visual,
+  effectAnchor,
+  onEffectAnchorChange,
+  onEffectAnchorReset,
   onToggleSettings,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
@@ -73,6 +80,9 @@ export function ChatPanel({
         avatarReaction={avatarReaction}
         reactionControlMode={visual.pngtuberReactionControlMode}
         emotionEffectMap={visual.pngtuberEmotionEffectMap}
+        effectAnchor={effectAnchor}
+        onEffectAnchorChange={onEffectAnchorChange}
+        onEffectAnchorReset={onEffectAnchorReset}
       />
       {isBroadcast ? (
         broadcastCaption && (

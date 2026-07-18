@@ -871,7 +871,7 @@ export function SettingsPanel({
               <p className="settings-field-hint">
                 入力欄からフォーカスが外れた時に反映されます。空欄の場合は
                 既定値を使用します。アバター固有の制御指示を削除すると、
-                表情連動に影響する場合があります。
+                感情表現エフェクトの連動に影響する場合があります。
               </p>
             </div>
 
@@ -2560,10 +2560,10 @@ export function SettingsPanel({
               </select>
               <p className="settings-field-hint">
                 {settings.visual.inochi2dReactionControlMode === 'none'
-                  ? '手動ボタンを表示せず、発話時の表情も再生しません。'
+                  ? '手動ボタンを表示せず、発話時のエフェクトも表示しません。'
                   : settings.visual.inochi2dReactionControlMode === 'manual'
-                    ? 'アバター上のボタンからInochi2D表情をプレビューします。'
-                    : '発話の emotion タグを受け取った時点でInochi2D表情を再生します。'}
+                    ? 'アバター上のボタンから視覚エフェクトをプレビューします。'
+                    : '発話の emotion タグを受け取った時点で視覚エフェクトを表示します。'}
               </p>
             </div>
 
