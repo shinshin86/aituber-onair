@@ -142,6 +142,22 @@ npm install
 npm run dev
 ```
 
+### [Customer Support Bot](./customer-support-bot/)
+Embedded support-widget example with React, TypeScript, and Vite:
+
+- Uses a curated package knowledge file in the system prompt (no RAG)
+- Streams replies into a compact floating chat panel
+- Switches between OpenAI, Claude, and Gemini models
+- Persists provider, model, API key, and persona settings in localStorage
+- Demonstrates a production-style widget shell with browser security guidance
+
+**Quick Start:**
+```bash
+cd customer-support-bot
+npm install
+npm run dev
+```
+
 ## 🔑 API Key Management
 
 ### Environment Variables (Recommended for Production)
