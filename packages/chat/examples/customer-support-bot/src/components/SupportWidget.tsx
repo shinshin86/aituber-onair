@@ -1,19 +1,12 @@
-import { useState } from 'react';
-import {
-  ChatServiceFactory,
-  type ChatProviderName,
-  type ChatServiceOptionsByProvider,
-  type Message,
-} from '@aituber-onair/chat';
+import { useEffect, useState } from 'react';
 import ChatPanel from './ChatPanel';
 import type { SupportMessage } from './MessageList';
 import {
-  hasRequiredSettings,
-  loadSettings,
-  type SupportSettings,
-} from './SettingsPanel';
-import { buildSystemPrompt } from '../prompts/systemPrompt';
-import { type Language, SETTINGS_STORAGE_KEY, translations } from '../i18n';
+  getSupportStatus,
+  streamSupportChat,
+  type SupportChatMessage,
+} from '../api';
+import { type Language, translations } from '../i18n';
 
 let messageSequence = 0;
 
@@ -27,28 +20,6 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
   return fallback;
 };
 
-const createChatService = (settings: SupportSettings) => {
-  const options: Record<string, unknown> = {
-    model: settings.model,
-    responseLength: 'short',
-  };
-
-  if (settings.provider !== 'gemini-nano') {
-    options.apiKey = settings.apiKey;
-  }
-  if (settings.provider === 'openai') {
-    options.gpt5Preset = 'casual';
-  }
-  if (settings.provider === 'openai-compatible') {
-    options.endpoint = settings.endpoint;
-  }
-
-  return ChatServiceFactory.createChatService(
-    settings.provider,
-    options as ChatServiceOptionsByProvider[ChatProviderName],
-  );
-};
-
 interface SupportWidgetProps {
   language: Language;
 }
@@ -56,8 +27,9 @@ interface SupportWidgetProps {
 export default function SupportWidget({ language }: SupportWidgetProps) {
   const t = translations[language];
   const [isOpen, setIsOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settings, setSettings] = useState<SupportSettings>(loadSettings);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
+  const [hasStatusError, setHasStatusError] = useState(false);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const welcomeMessage: SupportMessage = {
@@ -66,23 +38,32 @@ export default function SupportWidget({ language }: SupportWidgetProps) {
     content: t.chat.welcome,
   };
 
-  const saveSettings = (nextSettings: SupportSettings) => {
-    const localizedSettings = { ...nextSettings, language };
-    setSettings(localizedSettings);
-    localStorage.setItem(
-      SETTINGS_STORAGE_KEY,
-      JSON.stringify(localizedSettings),
-    );
-    setIsSettingsOpen(false);
-  };
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    setIsConfigured(null);
+    setHasStatusError(false);
+    void getSupportStatus()
+      .then(({ configured }) => {
+        if (!cancelled) setIsConfigured(configured);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIsConfigured(false);
+          setHasStatusError(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   const sendMessage = async (content: string) => {
     if (isLoading) return;
 
-    if (!hasRequiredSettings(settings)) {
-      setIsSettingsOpen(true);
-      return;
-    }
+    if (isConfigured !== true) return;
 
     const userMessage: SupportMessage = {
       id: createMessageId('user'),
@@ -97,11 +78,7 @@ export default function SupportWidget({ language }: SupportWidgetProps) {
       state: 'streaming',
     };
 
-    const conversation: Message[] = [
-      {
-        role: 'system',
-        content: buildSystemPrompt(settings.persona),
-      },
+    const conversation: SupportChatMessage[] = [
       {
         role: welcomeMessage.role,
         content: welcomeMessage.content,
@@ -119,28 +96,21 @@ export default function SupportWidget({ language }: SupportWidgetProps) {
     setIsLoading(true);
 
     try {
-      const service = createChatService(settings);
-
-      await service.processChat(
-        conversation,
-        (partial) => {
-          setMessages((current) =>
-            current.map((message) =>
-              message.id === assistantId
-                ? { ...message, content: message.content + partial }
-                : message,
-            ),
-          );
-        },
-        async (complete) => {
-          setMessages((current) =>
-            current.map((message) =>
-              message.id === assistantId
-                ? { ...message, content: complete, state: undefined }
-                : message,
-            ),
-          );
-        },
+      const complete = await streamSupportChat(conversation, (delta) => {
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === assistantId
+              ? { ...message, content: message.content + delta }
+              : message,
+          ),
+        );
+      });
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantId
+            ? { ...message, content: complete, state: undefined }
+            : message,
+        ),
       );
     } catch (error) {
       const detail = getErrorMessage(error, t.chat.providerErrorFallback);
@@ -165,21 +135,24 @@ export default function SupportWidget({ language }: SupportWidgetProps) {
       {isOpen && (
         <ChatPanel
           messages={[welcomeMessage, ...messages]}
-          settings={settings}
           language={language}
+          isConfigured={isConfigured}
+          hasStatusError={hasStatusError}
           isLoading={isLoading}
-          isSettingsOpen={isSettingsOpen}
+          isMenuOpen={isMenuOpen}
           onClose={() => setIsOpen(false)}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          onCloseSettings={() => setIsSettingsOpen(false)}
-          onSaveSettings={saveSettings}
+          onOpenMenu={() => setIsMenuOpen(true)}
+          onCloseMenu={() => setIsMenuOpen(false)}
           onSend={sendMessage}
         />
       )}
       <button
         type="button"
         className={`support-launcher${isOpen ? ' support-launcher--open' : ''}`}
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={() => {
+          setIsOpen((open) => !open);
+          setIsMenuOpen(false);
+        }}
         aria-label={isOpen ? t.chat.closeChat : t.chat.openChat}
         aria-expanded={isOpen}
       >

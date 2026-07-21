@@ -143,18 +143,20 @@ npm run dev
 ```
 
 ### [Customer Support Bot](./customer-support-bot/)
-Embedded support-widget example with React, TypeScript, and Vite:
+Server-backed support-widget example with React, TypeScript, Vite, and Node.js:
 
-- Uses a curated package knowledge file in the system prompt (no RAG)
-- Streams replies into a compact floating chat panel
-- Discovers browser-compatible providers and models from `ChatServiceFactory`
-- Persists provider, model, API key, persona, and EN/JA UI settings in localStorage
-- Demonstrates a production-style widget shell with browser security guidance
+- Keeps provider credentials, persona, and curated knowledge on a Node server
+- Streams server-proxied replies into a compact floating chat panel with SSE
+- Discovers server providers and models dynamically from `ChatServiceFactory`
+- Provides a bilingual admin dashboard at `/admin`
+- Persists only the EN/JA preference in browser localStorage
 
 **Quick Start:**
 ```bash
 cd customer-support-bot
 npm install
+npm run server
+# In another terminal:
 npm run dev
 ```
 

@@ -1,27 +1,42 @@
 # Customer Support Bot Example
 
-A realistic customer-support chat widget built with React, Vite, TypeScript,
-and `@aituber-onair/chat`. The surrounding page is a small documentation-site
-mockup so the widget behaves like an embedded product feature rather than a
-standalone chat demo.
+A production-shaped customer-support example built with React, Vite,
+TypeScript, a zero-dependency Node.js server, and `@aituber-onair/chat`.
+The floating customer widget sends only conversation messages to the server.
+Provider credentials, model selection, persona, and curated package knowledge
+stay on the server.
+
+## Architecture
+
+```text
+Customer widget (/)
+  │  GET /api/support/status
+  │  POST /api/support/chat (SSE)
+  ▼
+Node.js support server (:8787)
+  ├─ @aituber-onair/chat → selected provider
+  ├─ server/chat-package-knowledge.md
+  └─ server/data/settings.json (gitignored)
+        ▲
+        │  /api/admin/*
+Admin dashboard (/admin)
+```
+
+The browser never receives the stored API key. `GET /api/admin/settings`
+returns only a masked value and a `hasApiKey` flag.
 
 ## What it demonstrates
 
-- Discovering browser-compatible providers and models through
-  `ChatServiceFactory`
-- Switching provider and model settings without maintaining a second model list
-- Switching the complete widget and landing-page UI between English and Japanese
-- Rendering partial text as it arrives through streaming callbacks
-- Passing the full conversation history and a curated system prompt each turn
-- Importing a markdown knowledge file with Vite's `?raw` query
-- Persisting demo settings in `localStorage`
-- Handling missing credentials and provider errors inside the widget
+- Streaming a server-proxied `@aituber-onair/chat` response to a customer
+  widget with SSE
+- Discovering providers, models, and default models dynamically on the server
+- Keeping provider credentials and curated knowledge out of the customer bundle
+- Serving a bilingual EN/JA admin dashboard at `/admin` without a router
+- Persisting operator settings in a gitignored server-side JSON file
+- Serving the built SPA and `/admin` fallback from a plain Node.js `http` server
+- Keeping only the language preference in browser `localStorage`
 
-The bot answers questions about AITuber OnAir packages, with an emphasis on
-`@aituber-onair/chat`. Its knowledge is intentionally curated from the package
-README; this example does not use RAG or fetch documentation at runtime.
-
-## Run locally
+## Run in development
 
 Build `@aituber-onair/chat` from the repository root first:
 
@@ -30,49 +45,104 @@ npm ci
 npm -w @aituber-onair/chat run build
 ```
 
-Then install and run the example:
+Install the example dependencies:
 
 ```bash
 cd packages/chat/examples/customer-support-bot
 npm install
+```
+
+Use two terminals from the example directory.
+
+Terminal 1 — start the API server on `127.0.0.1:8787`:
+
+```bash
+npm run server
+```
+
+Terminal 2 — start Vite. Development `/api` requests are proxied to the Node
+server:
+
+```bash
 npm run dev
 ```
 
-Open the Vite URL, select the floating avatar, and use the gear button to add
-provider settings.
+Open the Vite URL for the customer site. Open `/admin` on the same origin to
+configure the server-side provider.
 
-## Settings
+Set `SUPPORT_BOT_PORT` to override the API server's default port. Update the
+Vite proxy target too when using a different development port.
 
-- **Provider**: populated from providers registered with `ChatServiceFactory`;
-  browser-incompatible providers are excluded with a small denylist
-- **Model**: populated from `ChatServiceFactory.getSupportedModels()`
-- **API key**: the credential used by the selected provider; not required for
-  Gemini Nano and optional for OpenAI-compatible endpoints
-- **Chat completions endpoint**: shown for OpenAI-compatible servers
-- **Persona**: additional behavior appended to the support system prompt
-- **Language**: EN/JA switch, initially selected from `navigator.language`
-  and persisted with the other demo settings
+## Run the built app
 
-The default provider is OpenAI and the default model is GPT-5.6 Terra
-(`gpt-5.6-terra`).
-
-## Security note
-
-This is a browser-only demo. Its API key is stored in the browser's
-`localStorage` and requests are made from the client. That pattern is useful
-for a local example, but it does not protect secrets from users or scripts
-running on the page.
-
-In production, keep provider credentials on a trusted server or serverless
-function and proxy chat requests through that backend. Never commit an API key.
-
-Direct browser requests also depend on each provider's CORS policy. Use a
-backend proxy when a provider does not allow requests from your origin.
-
-## Build
+Build the frontend, then start the Node server:
 
 ```bash
 npm run build
+npm run server
 ```
 
-The output is generated in `dist/` and should not be committed.
+Open `http://127.0.0.1:8787/`. The Node server serves `dist/` and falls back to
+`index.html` for `/admin`.
+
+## Admin dashboard
+
+The `/admin` page loads its provider and model options from
+`ChatServiceFactory` on the server. New package models therefore appear without
+maintaining a second frontend list.
+
+- **Provider**: all normal server providers; Agent SDK providers and the
+  Chrome-only Gemini Nano provider are excluded. Sakana AI is available because
+  the request is server-side and is not blocked by browser CORS.
+- **Model**: validated against the provider registry. OpenAI-compatible servers
+  accept a free-form model identifier.
+- **API key**: stored only in `server/data/settings.json`. Leave the field blank
+  to retain the current key.
+- **Chat completions endpoint**: required for OpenAI-compatible servers.
+- **Persona**: appended to the server-owned support system prompt.
+- **Language**: the EN/JA choice is the only setting stored in browser
+  `localStorage`.
+
+## Security warning: protect the admin routes
+
+> **The demo `/admin` page and `/api/admin/*` routes are intentionally
+> unauthenticated. Do not expose them publicly. Add real authentication and
+> authorization before using this architecture in production.**
+
+The API key is kept out of customer-facing responses and the browser bundle,
+and `server/data/` is ignored by Git. Those protections do not replace admin
+authentication, HTTPS, access controls, secret management, rate limiting, or
+request abuse protection in a real deployment.
+
+Never commit `server/data/settings.json`.
+
+## HTTP API
+
+Customer-facing routes:
+
+- `GET /api/support/status` returns only `{ configured }`.
+- `POST /api/support/chat` accepts user/assistant message history and streams
+  `delta`, `done`, or safe `error` SSE events. The server prepends its own
+  system prompt and knowledge.
+
+Demo admin routes:
+
+- `GET /api/admin/providers`
+- `GET /api/admin/settings`
+- `PUT /api/admin/settings`
+
+## Test with the mock OpenAI-compatible server
+
+Start the repository mock in a third terminal:
+
+```bash
+node ../mock-openai-server/server.js
+```
+
+In `/admin`, select OpenAI-Compatible and use:
+
+- Endpoint: `http://127.0.0.1:18080/v1/chat/completions`
+- Model: `mock-chat-model`
+- API key: `test-key`
+
+After saving, the customer widget streams mock replies through the Node server.

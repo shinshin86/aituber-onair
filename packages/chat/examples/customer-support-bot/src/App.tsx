@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css';
+import LanguageSwitch from './components/LanguageSwitch';
 import SupportWidget from './components/SupportWidget';
 import {
   getInitialLanguage,
@@ -7,8 +8,6 @@ import {
   persistLanguage,
   translations,
 } from './i18n';
-
-const LANGUAGE_OPTIONS: Language[] = ['en', 'ja'];
 
 const ArrowIcon = () => (
   <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -52,22 +51,7 @@ function App() {
               {t.nav.github}
             </a>
           </nav>
-          <fieldset className="language-switch" aria-label={t.language.label}>
-            {LANGUAGE_OPTIONS.map((option) => (
-              <button
-                type="button"
-                key={option}
-                className={language === option ? 'is-active' : undefined}
-                aria-pressed={language === option}
-                aria-label={
-                  option === 'en' ? t.language.english : t.language.japanese
-                }
-                onClick={() => changeLanguage(option)}
-              >
-                {option.toUpperCase()}
-              </button>
-            ))}
-          </fieldset>
+          <LanguageSwitch language={language} onChange={changeLanguage} />
         </div>
       </header>
 

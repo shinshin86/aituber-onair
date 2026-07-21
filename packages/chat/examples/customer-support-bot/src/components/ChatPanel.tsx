@@ -1,37 +1,33 @@
 import MessageInput from './MessageInput';
 import MessageList, { type SupportMessage } from './MessageList';
-import SettingsPanel, {
-  hasRequiredSettings,
-  type SupportSettings,
-} from './SettingsPanel';
+import WidgetMenu from './WidgetMenu';
 import { type Language, translations } from '../i18n';
 
 interface ChatPanelProps {
   messages: SupportMessage[];
-  settings: SupportSettings;
   language: Language;
+  isConfigured: boolean | null;
+  hasStatusError: boolean;
   isLoading: boolean;
-  isSettingsOpen: boolean;
+  isMenuOpen: boolean;
   onClose: () => void;
-  onOpenSettings: () => void;
-  onCloseSettings: () => void;
-  onSaveSettings: (settings: SupportSettings) => void;
+  onOpenMenu: () => void;
+  onCloseMenu: () => void;
   onSend: (message: string) => void;
 }
 
 export default function ChatPanel({
   messages,
-  settings,
   language,
+  isConfigured,
+  hasStatusError,
   isLoading,
-  isSettingsOpen,
+  isMenuOpen,
   onClose,
-  onOpenSettings,
-  onCloseSettings,
-  onSaveSettings,
+  onOpenMenu,
+  onCloseMenu,
   onSend,
 }: ChatPanelProps) {
-  const isProviderReady = hasRequiredSettings(settings);
   const t = translations[language];
 
   return (
@@ -50,9 +46,9 @@ export default function ChatPanel({
         <div className="chat-header-actions">
           <button
             type="button"
-            onClick={onOpenSettings}
-            aria-label={t.chat.openSettings}
-            title={t.chat.settingsTitle}
+            onClick={onOpenMenu}
+            aria-label={t.chat.openMenu}
+            title={t.chat.menuTitle}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
@@ -72,29 +68,40 @@ export default function ChatPanel({
         </div>
       </header>
 
-      {isSettingsOpen ? (
-        <SettingsPanel
-          settings={settings}
-          language={language}
-          onSave={onSaveSettings}
-          onCancel={onCloseSettings}
-        />
+      {isMenuOpen ? (
+        <WidgetMenu language={language} onClose={onCloseMenu} />
       ) : (
         <>
           <MessageList messages={messages} language={language} />
-          {!isProviderReady && (
-            <output className="api-key-notice">
+          {isConfigured !== true && (
+            <output
+              className={`api-key-notice${
+                hasStatusError ? ' api-key-notice--error' : ''
+              }`}
+            >
               <div>
-                <strong>{t.chat.setupTitle}</strong>
-                <span>{t.chat.setupDescription}</span>
+                <strong>
+                  {isConfigured === null
+                    ? t.chat.checkingStatus
+                    : hasStatusError
+                      ? t.chat.statusUnavailableTitle
+                      : t.chat.notConfiguredTitle}
+                </strong>
+                <span>
+                  {hasStatusError
+                    ? t.chat.statusUnavailableDescription
+                    : t.chat.notConfiguredDescription}
+                </span>
               </div>
-              <button type="button" onClick={onOpenSettings}>
-                {t.chat.openSettingsButton}
-              </button>
+              {isConfigured === false && !hasStatusError && (
+                <a href="/admin" target="_blank" rel="noreferrer">
+                  {t.chat.openAdminDashboard}
+                </a>
+              )}
             </output>
           )}
           <MessageInput
-            disabled={!isProviderReady || isLoading}
+            disabled={isConfigured !== true || isLoading}
             isLoading={isLoading}
             language={language}
             onSend={onSend}

@@ -1,4 +1,5 @@
-import packageKnowledge from '../knowledge/chat-package-knowledge.md?raw';
+export const DEFAULT_PERSONA =
+  'You are the friendly support assistant for AITuber OnAir. Be cheerful, concise, warm, practical, and easy to understand.';
 
 const SUPPORT_RULES = `
 Rules you must follow:
@@ -9,7 +10,7 @@ Rules you must follow:
 - Prefer concise, actionable answers with a small code example when it helps.
 `;
 
-export function buildSystemPrompt(persona: string): string {
+export function buildSystemPrompt(persona, packageKnowledge) {
   return `${persona.trim()}
 
 ${SUPPORT_RULES.trim()}

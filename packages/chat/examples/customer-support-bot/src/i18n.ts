@@ -61,15 +61,21 @@ export interface TranslationRecord {
     avatarAlt: string;
     online: string;
     subtitle: string;
-    openSettings: string;
-    settingsTitle: string;
+    openMenu: string;
+    menuEyebrow: string;
+    menuTitle: string;
+    closeMenu: string;
+    menuDescription: string;
+    openAdminDashboard: string;
     closeChat: string;
     close: string;
     openChat: string;
     welcome: string;
-    setupTitle: string;
-    setupDescription: string;
-    openSettingsButton: string;
+    checkingStatus: string;
+    notConfiguredTitle: string;
+    notConfiguredDescription: string;
+    statusUnavailableTitle: string;
+    statusUnavailableDescription: string;
     inputDisabledPlaceholder: string;
     inputPlaceholder: string;
     messageLabel: string;
@@ -79,10 +85,19 @@ export interface TranslationRecord {
     providerErrorFallback: string;
     providerErrorPrefix: string;
   };
-  settings: {
+  admin: {
+    documentTitle: string;
+    documentDescription: string;
+    backToSite: string;
     configuration: string;
     title: string;
-    close: string;
+    intro: string;
+    securityTitle: string;
+    securityDescription: string;
+    formLabel: string;
+    loading: string;
+    loadError: string;
+    noProviders: string;
     provider: string;
     model: string;
     modelPlaceholder: string;
@@ -90,21 +105,23 @@ export interface TranslationRecord {
     modelHelp: string;
     endpoint: string;
     endpointHelp: string;
-    geminiNanoHelp: string;
     apiKey: string;
     optional: string;
-    optionalBearerToken: string;
     apiKeyPlaceholder: string;
-    storageHelp: string;
+    apiKeyConfigured: string;
+    apiKeyHelp: string;
     persona: string;
     personaHelp: string;
-    cancel: string;
     save: string;
+    saving: string;
+    saved: string;
+    saveError: string;
   };
 }
 
-export const SETTINGS_STORAGE_KEY =
+const LEGACY_SETTINGS_STORAGE_KEY =
   'aituber-onair.chat.customer-support-bot.settings';
+const LANGUAGE_STORAGE_KEY = 'aituber-onair.chat.customer-support-bot.language';
 
 export const translations: Record<Language, TranslationRecord> = {
   en: {
@@ -175,30 +192,51 @@ export const translations: Record<Language, TranslationRecord> = {
       avatarAlt: 'Support assistant avatar',
       online: 'Online',
       subtitle: 'AITuber OnAir',
-      openSettings: 'Open settings',
-      settingsTitle: 'Settings',
+      openMenu: 'Open support options',
+      menuEyebrow: 'Support options',
+      menuTitle: 'Widget settings',
+      closeMenu: 'Close support options',
+      menuDescription:
+        'Use the EN/JA switch in the site header to change language. Provider settings are managed securely on the server.',
+      openAdminDashboard: 'Open admin dashboard',
       closeChat: 'Close support chat',
       close: 'Close',
       openChat: 'Open support chat',
       welcome:
         "Hi! I'm the support assistant for AITuber OnAir. Ask me anything about @aituber-onair/chat — providers, streaming, tools, vision, or setup.",
-      setupTitle: 'Complete provider setup to start chatting',
-      setupDescription: 'Demo settings stay in this browser.',
-      openSettingsButton: 'Open settings',
-      inputDisabledPlaceholder: 'Complete Settings to start chatting',
+      checkingStatus: 'Checking support availability…',
+      notConfiguredTitle: 'The support assistant is not configured yet',
+      notConfiguredDescription:
+        'An operator can finish setup in the admin dashboard.',
+      statusUnavailableTitle: 'The support service is unavailable',
+      statusUnavailableDescription:
+        'Start the Node server and try opening the widget again.',
+      inputDisabledPlaceholder: 'Support is not available yet',
       inputPlaceholder: 'Ask about @aituber-onair/chat…',
       messageLabel: 'Message the support assistant',
       sendMessage: 'Send message',
       typing: 'The support assistant is typing',
       poweredBy: 'Powered by',
       providerErrorFallback:
-        'The provider request failed. Check your API key and model settings.',
-      providerErrorPrefix: "Sorry, I couldn't reach the provider.",
+        'The support request failed. Please try again later.',
+      providerErrorPrefix: 'Sorry, support is unavailable.',
     },
-    settings: {
+    admin: {
+      documentTitle: 'Support Admin — AITuber OnAir',
+      documentDescription:
+        'Server-side provider settings for the customer support bot example',
+      backToSite: 'Back to site',
       configuration: 'Configuration',
-      title: 'Support bot settings',
-      close: 'Close settings',
+      title: 'Support admin dashboard',
+      intro:
+        'Configure the server-side provider used by the customer support widget.',
+      securityTitle: 'Demo admin routes are unauthenticated',
+      securityDescription:
+        'Add real authentication and authorization before using this pattern in production.',
+      formLabel: 'Support provider configuration',
+      loading: 'Loading server settings…',
+      loadError: 'Could not load settings from the Node server.',
+      noProviders: 'No server providers are available.',
       provider: 'Provider',
       model: 'Model',
       modelPlaceholder: 'Model identifier',
@@ -206,17 +244,18 @@ export const translations: Record<Language, TranslationRecord> = {
       modelHelp: 'Enter the model exposed by your compatible server.',
       endpoint: 'Chat completions endpoint',
       endpointHelp: 'Use the full URL for your OpenAI-compatible endpoint.',
-      geminiNanoHelp:
-        "Gemini Nano runs through Chrome's built-in Prompt API and does not require an API key.",
       apiKey: 'API key',
       optional: 'optional',
-      optionalBearerToken: 'Optional bearer token',
-      apiKeyPlaceholder: 'API key',
-      storageHelp: "Stored only in this browser's localStorage for the demo.",
+      apiKeyPlaceholder: 'Enter a server-side API key',
+      apiKeyConfigured: 'A masked API key is already configured',
+      apiKeyHelp:
+        'Leave blank to keep the stored key. The browser never receives the raw value.',
       persona: 'Persona',
       personaHelp: 'This text is appended to the support system prompt.',
-      cancel: 'Cancel',
-      save: 'Save settings',
+      save: 'Save server settings',
+      saving: 'Saving…',
+      saved: 'Server settings saved.',
+      saveError: 'Could not save server settings.',
     },
   },
   ja: {
@@ -287,30 +326,51 @@ export const translations: Record<Language, TranslationRecord> = {
       avatarAlt: 'サポートアシスタントのアバター',
       online: 'オンライン',
       subtitle: 'AITuber OnAir',
-      openSettings: '設定を開く',
-      settingsTitle: '設定',
+      openMenu: 'サポートオプションを開く',
+      menuEyebrow: 'サポートオプション',
+      menuTitle: 'ウィジェット設定',
+      closeMenu: 'サポートオプションを閉じる',
+      menuDescription:
+        '表示言語はサイト上部のEN／JAスイッチで変更できます。プロバイダー設定はサーバーで安全に管理されます。',
+      openAdminDashboard: '管理ダッシュボードを開く',
       closeChat: 'サポートチャットを閉じる',
       close: '閉じる',
       openChat: 'サポートチャットを開く',
       welcome:
         'こんにちは。AITuber OnAirのサポートアシスタントです。@aituber-onair/chat のプロバイダー、ストリーミング、ツール、画像入力、セットアップについて何でも聞いてください。',
-      setupTitle: 'チャットを始めるにはプロバイダーを設定してください',
-      setupDescription: 'デモ設定はこのブラウザ内に保存されます。',
-      openSettingsButton: '設定を開く',
-      inputDisabledPlaceholder: '設定を完了するとチャットできます',
+      checkingStatus: 'サポートの利用状況を確認しています…',
+      notConfiguredTitle: 'サポートアシスタントはまだ設定されていません',
+      notConfiguredDescription:
+        '運用担当者が管理ダッシュボードで設定を完了できます。',
+      statusUnavailableTitle: 'サポートサービスを利用できません',
+      statusUnavailableDescription:
+        'Nodeサーバーを起動してから、ウィジェットを開き直してください。',
+      inputDisabledPlaceholder: 'サポートはまだ利用できません',
       inputPlaceholder: '@aituber-onair/chat について質問する…',
       messageLabel: 'サポートアシスタントへのメッセージ',
       sendMessage: 'メッセージを送信',
       typing: 'サポートアシスタントが入力中',
       poweredBy: '提供',
       providerErrorFallback:
-        'プロバイダーへのリクエストに失敗しました。APIキーとモデル設定を確認してください。',
-      providerErrorPrefix: 'プロバイダーに接続できませんでした。',
+        'サポートリクエストに失敗しました。しばらくしてからお試しください。',
+      providerErrorPrefix: '申し訳ありません。サポートを利用できません。',
     },
-    settings: {
+    admin: {
+      documentTitle: 'サポート管理 — AITuber OnAir',
+      documentDescription:
+        'カスタマーサポートボット例のサーバー側プロバイダー設定',
+      backToSite: 'サイトに戻る',
       configuration: '設定',
-      title: 'サポートボット設定',
-      close: '設定を閉じる',
+      title: 'サポート管理ダッシュボード',
+      intro:
+        'カスタマーサポートウィジェットが使用するサーバー側プロバイダーを設定します。',
+      securityTitle: 'デモの管理APIには認証がありません',
+      securityDescription:
+        '本番利用する前に、必ず認証と認可を追加してください。',
+      formLabel: 'サポートプロバイダー設定',
+      loading: 'サーバー設定を読み込んでいます…',
+      loadError: 'Nodeサーバーから設定を読み込めませんでした。',
+      noProviders: '利用可能なサーバープロバイダーがありません。',
       provider: 'プロバイダー',
       model: 'モデル',
       modelPlaceholder: 'モデルID',
@@ -318,18 +378,18 @@ export const translations: Record<Language, TranslationRecord> = {
       modelHelp: '互換サーバーが公開しているモデルIDを入力してください。',
       endpoint: 'Chat Completionsエンドポイント',
       endpointHelp: 'OpenAI互換エンドポイントの完全なURLを入力してください。',
-      geminiNanoHelp:
-        'Gemini NanoはChrome組み込みのPrompt APIで動作するため、APIキーは不要です。',
       apiKey: 'APIキー',
       optional: '任意',
-      optionalBearerToken: '任意のBearerトークン',
-      apiKeyPlaceholder: 'APIキー',
-      storageHelp:
-        'デモ用として、このブラウザのlocalStorageにのみ保存されます。',
+      apiKeyPlaceholder: 'サーバー側APIキーを入力',
+      apiKeyConfigured: 'マスク済みのAPIキーが設定されています',
+      apiKeyHelp:
+        '空欄のまま保存すると現在のキーを維持します。生の値はブラウザへ返されません。',
       persona: 'ペルソナ',
       personaHelp: 'この文章はサポート用のシステムプロンプトに追加されます。',
-      cancel: 'キャンセル',
-      save: '設定を保存',
+      save: 'サーバー設定を保存',
+      saving: '保存中…',
+      saved: 'サーバー設定を保存しました。',
+      saveError: 'サーバー設定を保存できませんでした。',
     },
   },
 };
@@ -344,36 +404,46 @@ const detectBrowserLanguage = (): Language =>
     : 'en';
 
 export const getInitialLanguage = (): Language => {
+  let language: Language | undefined;
+
   try {
-    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as { language?: unknown };
-      if (isLanguage(parsed.language)) return parsed.language;
+    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (isLanguage(storedLanguage)) language = storedLanguage;
+
+    if (!language) {
+      const legacySettings = localStorage.getItem(LEGACY_SETTINGS_STORAGE_KEY);
+      if (legacySettings) {
+        const parsed = JSON.parse(legacySettings) as { language?: unknown };
+        if (isLanguage(parsed.language)) language = parsed.language;
+      }
     }
   } catch {
     // Fall through to browser language detection.
+  } finally {
+    try {
+      localStorage.removeItem(LEGACY_SETTINGS_STORAGE_KEY);
+    } catch {
+      // Ignore unavailable browser storage in the example.
+    }
+  }
+
+  if (language) {
+    try {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    } catch {
+      // Ignore unavailable browser storage in the example.
+    }
+    return language;
   }
 
   return detectBrowserLanguage();
 };
 
 export const persistLanguage = (language: Language): void => {
-  let settings: Record<string, unknown> = {};
-
   try {
-    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as unknown;
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        settings = parsed as Record<string, unknown>;
-      }
-    }
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    localStorage.removeItem(LEGACY_SETTINGS_STORAGE_KEY);
   } catch {
-    // Replace invalid demo settings with a valid language preference.
+    // Ignore unavailable browser storage in the example.
   }
-
-  localStorage.setItem(
-    SETTINGS_STORAGE_KEY,
-    JSON.stringify({ ...settings, language }),
-  );
 };
