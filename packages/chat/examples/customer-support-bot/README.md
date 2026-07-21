@@ -10,6 +10,7 @@ standalone chat demo.
 - Discovering browser-compatible providers and models through
   `ChatServiceFactory`
 - Switching provider and model settings without maintaining a second model list
+- Switching the complete widget and landing-page UI between English and Japanese
 - Rendering partial text as it arrives through streaming callbacks
 - Passing the full conversation history and a curated system prompt each turn
 - Importing a markdown knowledge file with Vite's `?raw` query
@@ -49,6 +50,8 @@ provider settings.
   Gemini Nano and optional for OpenAI-compatible endpoints
 - **Chat completions endpoint**: shown for OpenAI-compatible servers
 - **Persona**: additional behavior appended to the support system prompt
+- **Language**: EN/JA switch, initially selected from `navigator.language`
+  and persisted with the other demo settings
 
 The default provider is OpenAI and the default model is GPT-5.6 Terra
 (`gpt-5.6-terra`).

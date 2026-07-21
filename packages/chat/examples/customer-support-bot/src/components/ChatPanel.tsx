@@ -4,10 +4,12 @@ import SettingsPanel, {
   hasRequiredSettings,
   type SupportSettings,
 } from './SettingsPanel';
+import { type Language, translations } from '../i18n';
 
 interface ChatPanelProps {
   messages: SupportMessage[];
   settings: SupportSettings;
+  language: Language;
   isLoading: boolean;
   isSettingsOpen: boolean;
   onClose: () => void;
@@ -20,6 +22,7 @@ interface ChatPanelProps {
 export default function ChatPanel({
   messages,
   settings,
+  language,
   isLoading,
   isSettingsOpen,
   onClose,
@@ -29,26 +32,27 @@ export default function ChatPanel({
   onSend,
 }: ChatPanelProps) {
   const isProviderReady = hasRequiredSettings(settings);
+  const t = translations[language];
 
   return (
-    <section className="chat-panel" aria-label="AITuber OnAir support chat">
+    <section className="chat-panel" aria-label={t.chat.panelLabel}>
       <header className="chat-header">
         <div className="chat-agent">
           <div className="chat-avatar-wrap">
             <img src="/support-avatar.png" alt="Onair-chan" />
-            <span className="online-dot" aria-label="Online" />
+            <span className="online-dot" aria-label={t.chat.online} />
           </div>
           <div>
             <strong>Onair-chan</strong>
-            <span>AITuber OnAir support</span>
+            <span>{t.chat.subtitle}</span>
           </div>
         </div>
         <div className="chat-header-actions">
           <button
             type="button"
             onClick={onOpenSettings}
-            aria-label="Open settings"
-            title="Settings"
+            aria-label={t.chat.openSettings}
+            title={t.chat.settingsTitle}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
@@ -58,8 +62,8 @@ export default function ChatPanel({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close support chat"
-            title="Close"
+            aria-label={t.chat.closeChat}
+            title={t.chat.close}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="m6 6 12 12M18 6 6 18" />
@@ -71,30 +75,32 @@ export default function ChatPanel({
       {isSettingsOpen ? (
         <SettingsPanel
           settings={settings}
+          language={language}
           onSave={onSaveSettings}
           onCancel={onCloseSettings}
         />
       ) : (
         <>
-          <MessageList messages={messages} />
+          <MessageList messages={messages} language={language} />
           {!isProviderReady && (
             <output className="api-key-notice">
               <div>
-                <strong>Complete provider setup to start chatting</strong>
-                <span>Demo settings stay in this browser.</span>
+                <strong>{t.chat.setupTitle}</strong>
+                <span>{t.chat.setupDescription}</span>
               </div>
               <button type="button" onClick={onOpenSettings}>
-                Open settings
+                {t.chat.openSettingsButton}
               </button>
             </output>
           )}
           <MessageInput
             disabled={!isProviderReady || isLoading}
             isLoading={isLoading}
+            language={language}
             onSend={onSend}
           />
           <div className="chat-powered-by">
-            Powered by <strong>@aituber-onair/chat</strong>
+            {t.chat.poweredBy} <strong>@aituber-onair/chat</strong>
           </div>
         </>
       )}

@@ -1,5 +1,14 @@
+import { useEffect, useState } from 'react';
 import './App.css';
 import SupportWidget from './components/SupportWidget';
+import {
+  getInitialLanguage,
+  type Language,
+  persistLanguage,
+  translations,
+} from './i18n';
+
+const LANGUAGE_OPTIONS: Language[] = ['en', 'ja'];
 
 const ArrowIcon = () => (
   <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -8,38 +17,69 @@ const ArrowIcon = () => (
 );
 
 function App() {
+  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  const t = translations[language];
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.title = t.document.title;
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute('content', t.document.description);
+  }, [language, t.document.description, t.document.title]);
+
+  const changeLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
+    persistLanguage(nextLanguage);
+  };
+
   return (
     <div className="site-shell">
       <header className="site-header">
-        <a className="site-brand" href="#top" aria-label="OnAir Docs home">
+        <a className="site-brand" href="#top" aria-label={t.nav.homeLabel}>
           <span className="site-brand-mark">AO</span>
           <span>OnAir Docs</span>
         </a>
-        <nav className="site-nav" aria-label="Main navigation">
-          <a href="#guides">Guides</a>
-          <a href="#reference">API Reference</a>
-          <a
-            href="https://github.com/shinshin86/aituber-onair"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
-        </nav>
+        <div className="site-header-actions">
+          <nav className="site-nav" aria-label={t.nav.mainLabel}>
+            <a href="#guides">{t.nav.guides}</a>
+            <a href="#reference">{t.nav.apiReference}</a>
+            <a
+              href="https://github.com/shinshin86/aituber-onair"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t.nav.github}
+            </a>
+          </nav>
+          <fieldset className="language-switch" aria-label={t.language.label}>
+            {LANGUAGE_OPTIONS.map((option) => (
+              <button
+                type="button"
+                key={option}
+                className={language === option ? 'is-active' : undefined}
+                aria-pressed={language === option}
+                aria-label={
+                  option === 'en' ? t.language.english : t.language.japanese
+                }
+                onClick={() => changeLanguage(option)}
+              >
+                {option.toUpperCase()}
+              </button>
+            ))}
+          </fieldset>
+        </div>
       </header>
 
       <main id="top">
         <section className="hero-section">
           <div className="hero-copy">
             <span className="eyebrow">@aituber-onair/chat</span>
-            <h1>One chat interface. Every character you can imagine.</h1>
-            <p>
-              Connect OpenAI, Claude, and Gemini through a consistent, strongly
-              typed API built for responsive AI character experiences.
-            </p>
+            <h1>{t.hero.title}</h1>
+            <p>{t.hero.description}</p>
             <div className="hero-actions">
               <a className="primary-link" href="#quick-start">
-                Start building <ArrowIcon />
+                {t.hero.startBuilding} <ArrowIcon />
               </a>
               <a
                 className="secondary-link"
@@ -47,12 +87,12 @@ function App() {
                 target="_blank"
                 rel="noreferrer"
               >
-                Read the README
+                {t.hero.readReadme}
               </a>
             </div>
           </div>
 
-          <div className="hero-code" aria-label="Quick start code example">
+          <div className="hero-code" aria-label={t.hero.codeLabel}>
             <div className="code-window-bar">
               <span />
               <span />
@@ -75,58 +115,46 @@ await chat.processChat(
           </div>
         </section>
 
-        <section className="trust-strip" aria-label="Package highlights">
-          <span>Typed provider abstraction</span>
-          <span>Streaming by default</span>
-          <span>Browser and server runtimes</span>
+        <section className="trust-strip" aria-label={t.trust.label}>
+          <span>{t.trust.providers}</span>
+          <span>{t.trust.streaming}</span>
+          <span>{t.trust.runtimes}</span>
         </section>
 
         <section className="docs-section" id="guides">
           <div className="section-heading">
-            <span className="eyebrow">Build with confidence</span>
-            <h2>Everything a conversational product needs</h2>
-            <p>
-              Keep the application layer stable while providers and models
-              evolve underneath it.
-            </p>
+            <span className="eyebrow">{t.docs.eyebrow}</span>
+            <h2>{t.docs.title}</h2>
+            <p>{t.docs.description}</p>
           </div>
 
           <div className="feature-grid">
             <article className="feature-card">
               <span className="feature-number">01</span>
-              <h3>Unified providers</h3>
-              <p>
-                Create OpenAI, Claude, Gemini, and other services from one
-                factory with a consistent message contract.
-              </p>
+              <h3>{t.docs.providersTitle}</h3>
+              <p>{t.docs.providersDescription}</p>
               <a href="#reference">
-                Explore providers <ArrowIcon />
+                {t.docs.providersLink} <ArrowIcon />
               </a>
             </article>
             <article className="feature-card">
               <span className="feature-number">02</span>
-              <h3>Token streaming</h3>
-              <p>
-                Render each partial response as it arrives so character and
-                support experiences feel immediate.
-              </p>
+              <h3>{t.docs.streamingTitle}</h3>
+              <p>{t.docs.streamingDescription}</p>
               <a href="#quick-start">
-                View quick start <ArrowIcon />
+                {t.docs.streamingLink} <ArrowIcon />
               </a>
             </article>
             <article className="feature-card">
               <span className="feature-number">03</span>
-              <h3>Tools, vision, and MCP</h3>
-              <p>
-                Move beyond text with model-aware capabilities and structured
-                integrations.
-              </p>
+              <h3>{t.docs.capabilitiesTitle}</h3>
+              <p>{t.docs.capabilitiesDescription}</p>
               <a
                 href="https://github.com/shinshin86/aituber-onair/tree/main/packages/chat#features"
                 target="_blank"
                 rel="noreferrer"
               >
-                See capabilities <ArrowIcon />
+                {t.docs.capabilitiesLink} <ArrowIcon />
               </a>
             </article>
           </div>
@@ -134,8 +162,8 @@ await chat.processChat(
 
         <section className="quick-start-section" id="quick-start">
           <div>
-            <span className="eyebrow">Quick start</span>
-            <h2>From install to first response in minutes.</h2>
+            <span className="eyebrow">{t.quickStart.eyebrow}</span>
+            <h2>{t.quickStart.title}</h2>
           </div>
           <div className="install-command">
             <code>npm install @aituber-onair/chat</code>
@@ -144,20 +172,17 @@ await chat.processChat(
         </section>
 
         <section className="reference-section" id="reference">
-          <span>Need a hand?</span>
-          <p>
-            Open the support widget to ask Onair-chan about installation,
-            providers, streaming, tools, vision, or MCP.
-          </p>
+          <span>{t.supportCta.title}</span>
+          <p>{t.supportCta.description}</p>
         </section>
       </main>
 
       <footer className="site-footer">
         <span>AITuber OnAir</span>
-        <span>Support widget example</span>
+        <span>{t.footer.example}</span>
       </footer>
 
-      <SupportWidget />
+      <SupportWidget language={language} />
     </div>
   );
 }

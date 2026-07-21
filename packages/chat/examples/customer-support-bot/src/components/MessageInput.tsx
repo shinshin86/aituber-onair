@@ -1,17 +1,21 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
+import { type Language, translations } from '../i18n';
 
 interface MessageInputProps {
   disabled: boolean;
   isLoading: boolean;
+  language: Language;
   onSend: (message: string) => void;
 }
 
 export default function MessageInput({
   disabled,
   isLoading,
+  language,
   onSend,
 }: MessageInputProps) {
   const [message, setMessage] = useState('');
+  const t = translations[language];
 
   const submit = () => {
     const trimmed = message.trim();
@@ -40,10 +44,10 @@ export default function MessageInput({
         onKeyDown={handleKeyDown}
         placeholder={
           disabled && !isLoading
-            ? 'Complete Settings to start chatting'
-            : 'Ask about @aituber-onair/chat…'
+            ? t.chat.inputDisabledPlaceholder
+            : t.chat.inputPlaceholder
         }
-        aria-label="Message Onair-chan"
+        aria-label={t.chat.messageLabel}
         rows={1}
         disabled={disabled}
       />
@@ -51,7 +55,7 @@ export default function MessageInput({
         type="submit"
         className="send-message-button"
         disabled={disabled || !message.trim()}
-        aria-label="Send message"
+        aria-label={t.chat.sendMessage}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="m4 12 16-8-5 16-3-6-8-2Z" />

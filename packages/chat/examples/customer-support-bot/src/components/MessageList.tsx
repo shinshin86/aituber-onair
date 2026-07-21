@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import TypingIndicator from './TypingIndicator';
+import type { Language } from '../i18n';
 
 export interface SupportMessage {
   id: string;
@@ -10,9 +11,10 @@ export interface SupportMessage {
 
 interface MessageListProps {
   messages: SupportMessage[];
+  language: Language;
 }
 
-export default function MessageList({ messages }: MessageListProps) {
+export default function MessageList({ messages, language }: MessageListProps) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export default function MessageList({ messages }: MessageListProps) {
             <img className="message-avatar" src="/support-avatar.png" alt="" />
           )}
           {message.state === 'streaming' && !message.content ? (
-            <TypingIndicator />
+            <TypingIndicator language={language} />
           ) : (
             <div
               className={`message-bubble${

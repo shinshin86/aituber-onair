@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react';
 import { ChatServiceFactory, type ChatProviderName } from '@aituber-onair/chat';
+import {
+  getInitialLanguage,
+  isLanguage,
+  type Language,
+  SETTINGS_STORAGE_KEY,
+  translations,
+} from '../i18n';
 
 const DEFAULT_OPENAI_MODEL = 'gpt-5.6-terra';
 const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
@@ -32,15 +39,11 @@ const PROVIDER_LABELS: Partial<Record<ChatProviderName, string>> = {
 
 const API_KEY_PLACEHOLDERS: Partial<Record<ChatProviderName, string>> = {
   openai: 'sk-…',
-  'openai-compatible': 'Optional bearer token',
   openrouter: 'sk-or-…',
   gemini: 'AI…',
   claude: 'sk-ant-…',
-  zai: 'API key',
   xai: 'xai-…',
-  kimi: 'API key',
   deepseek: 'sk-…',
-  mistral: 'API key',
   plamo: 'plamo-…',
 };
 
@@ -85,12 +88,22 @@ export const hasRequiredSettings = (settings: SupportSettings): boolean => {
   return !providerRequiresApiKey(settings.provider) || Boolean(settings.apiKey);
 };
 
-const formatProviderLabel = (provider: ChatProviderName): string =>
-  PROVIDER_LABELS[provider] ??
-  provider
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+const formatProviderLabel = (
+  provider: ChatProviderName,
+  language: Language,
+): string => {
+  if (provider === 'gemini-nano' && language === 'ja') {
+    return 'Gemini Nano（ブラウザAI）';
+  }
+
+  return (
+    PROVIDER_LABELS[provider] ??
+    provider
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+  );
+};
 
 export interface SupportSettings {
   provider: ChatProviderName;
@@ -98,10 +111,8 @@ export interface SupportSettings {
   apiKey: string;
   endpoint: string;
   persona: string;
+  language: Language;
 }
-
-export const SETTINGS_STORAGE_KEY =
-  'aituber-onair.chat.customer-support-bot.settings';
 
 export const DEFAULT_PERSONA =
   'You are Onair-chan, a cheerful and concise support guide. Be warm, practical, and easy to understand.';
@@ -112,6 +123,7 @@ export const DEFAULT_SETTINGS: SupportSettings = {
   apiKey: '',
   endpoint: DEFAULT_OPENAI_COMPATIBLE_ENDPOINT,
   persona: DEFAULT_PERSONA,
+  language: getInitialLanguage(),
 };
 
 export function loadSettings(): SupportSettings {
@@ -125,10 +137,16 @@ export function loadSettings(): SupportSettings {
       AVAILABLE_BROWSER_PROVIDERS.includes(parsed.provider as ChatProviderName)
         ? (parsed.provider as ChatProviderName)
         : DEFAULT_SETTINGS.provider;
+    const model =
+      typeof parsed.model === 'string'
+        ? normalizeModel(provider, parsed.model)
+        : provider === DEFAULT_SETTINGS.provider
+          ? DEFAULT_SETTINGS.model
+          : getDefaultModel(provider);
 
     return {
       provider,
-      model: normalizeModel(provider, parsed.model),
+      model,
       apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
       endpoint:
         typeof parsed.endpoint === 'string' && parsed.endpoint.trim()
@@ -138,6 +156,9 @@ export function loadSettings(): SupportSettings {
         typeof parsed.persona === 'string' && parsed.persona.trim()
           ? parsed.persona
           : DEFAULT_PERSONA,
+      language: isLanguage(parsed.language)
+        ? parsed.language
+        : getInitialLanguage(),
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -146,12 +167,14 @@ export function loadSettings(): SupportSettings {
 
 interface SettingsPanelProps {
   settings: SupportSettings;
+  language: Language;
   onSave: (settings: SupportSettings) => void;
   onCancel: () => void;
 }
 
 export default function SettingsPanel({
   settings,
+  language,
   onSave,
   onCancel,
 }: SettingsPanelProps) {
@@ -161,6 +184,7 @@ export default function SettingsPanel({
     [draft.provider],
   );
   const requiresApiKey = providerRequiresApiKey(draft.provider);
+  const t = translations[language];
 
   const handleProviderChange = (provider: ChatProviderName) => {
     setDraft((current) => ({
@@ -174,10 +198,10 @@ export default function SettingsPanel({
     <div className="settings-panel">
       <div className="settings-heading">
         <div>
-          <span>Configuration</span>
-          <h2>Support bot settings</h2>
+          <span>{t.settings.configuration}</span>
+          <h2>{t.settings.title}</h2>
         </div>
-        <button type="button" onClick={onCancel} aria-label="Close settings">
+        <button type="button" onClick={onCancel} aria-label={t.settings.close}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="m6 6 12 12M18 6 6 18" />
           </svg>
@@ -185,7 +209,7 @@ export default function SettingsPanel({
       </div>
 
       <label className="settings-field">
-        <span>Provider</span>
+        <span>{t.settings.provider}</span>
         <select
           value={draft.provider}
           onChange={(event) =>
@@ -194,14 +218,14 @@ export default function SettingsPanel({
         >
           {AVAILABLE_BROWSER_PROVIDERS.map((provider) => (
             <option value={provider} key={provider}>
-              {formatProviderLabel(provider)}
+              {formatProviderLabel(provider, language)}
             </option>
           ))}
         </select>
       </label>
 
       <label className="settings-field" htmlFor="support-model">
-        <span>Model</span>
+        <span>{t.settings.model}</span>
         {modelOptions.length > 0 ? (
           <select
             id="support-model"
@@ -224,7 +248,7 @@ export default function SettingsPanel({
             id="support-model"
             type="text"
             value={draft.model}
-            placeholder="Model identifier"
+            placeholder={t.settings.modelPlaceholder}
             onChange={(event) =>
               setDraft((current) => ({
                 ...current,
@@ -235,14 +259,14 @@ export default function SettingsPanel({
         )}
         <small>
           {modelOptions.length > 0
-            ? 'Loaded from the provider registry.'
-            : 'Enter the model exposed by your compatible server.'}
+            ? t.settings.modelsLoaded
+            : t.settings.modelHelp}
         </small>
       </label>
 
       {draft.provider === 'openai-compatible' && (
         <label className="settings-field">
-          <span>Chat completions endpoint</span>
+          <span>{t.settings.endpoint}</span>
           <input
             type="url"
             value={draft.endpoint}
@@ -254,22 +278,29 @@ export default function SettingsPanel({
               }))
             }
           />
-          <small>Use the full URL for your OpenAI-compatible endpoint.</small>
+          <small>{t.settings.endpointHelp}</small>
         </label>
       )}
 
       {draft.provider === 'gemini-nano' ? (
         <div className="settings-provider-note">
-          Gemini Nano runs through Chrome's built-in Prompt API and does not
-          require an API key.
+          {t.settings.geminiNanoHelp}
         </div>
       ) : (
         <label className="settings-field">
-          <span>API key{requiresApiKey ? '' : ' (optional)'}</span>
+          <span>
+            {t.settings.apiKey}
+            {requiresApiKey ? '' : ` (${t.settings.optional})`}
+          </span>
           <input
             type="password"
             value={draft.apiKey}
-            placeholder={API_KEY_PLACEHOLDERS[draft.provider] ?? 'API key'}
+            placeholder={
+              API_KEY_PLACEHOLDERS[draft.provider] ??
+              (draft.provider === 'openai-compatible'
+                ? t.settings.optionalBearerToken
+                : t.settings.apiKeyPlaceholder)
+            }
             autoComplete="off"
             onChange={(event) =>
               setDraft((current) => ({
@@ -278,14 +309,12 @@ export default function SettingsPanel({
               }))
             }
           />
-          <small>
-            Stored only in this browser's localStorage for the demo.
-          </small>
+          <small>{t.settings.storageHelp}</small>
         </label>
       )}
 
       <label className="settings-field settings-field--persona">
-        <span>Persona</span>
+        <span>{t.settings.persona}</span>
         <textarea
           value={draft.persona}
           rows={5}
@@ -296,12 +325,12 @@ export default function SettingsPanel({
             }))
           }
         />
-        <small>This text is appended to the support system prompt.</small>
+        <small>{t.settings.personaHelp}</small>
       </label>
 
       <div className="settings-actions">
         <button type="button" className="settings-cancel" onClick={onCancel}>
-          Cancel
+          {t.settings.cancel}
         </button>
         <button
           type="button"
@@ -317,7 +346,7 @@ export default function SettingsPanel({
             })
           }
         >
-          Save settings
+          {t.settings.save}
         </button>
       </div>
     </div>

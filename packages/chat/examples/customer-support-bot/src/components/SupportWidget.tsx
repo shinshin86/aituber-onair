@@ -10,17 +10,10 @@ import type { SupportMessage } from './MessageList';
 import {
   hasRequiredSettings,
   loadSettings,
-  SETTINGS_STORAGE_KEY,
   type SupportSettings,
 } from './SettingsPanel';
 import { buildSystemPrompt } from '../prompts/systemPrompt';
-
-const WELCOME_MESSAGE: SupportMessage = {
-  id: 'welcome',
-  role: 'assistant',
-  content:
-    "Hi! I'm Onair-chan. Ask me anything about @aituber-onair/chat — providers, streaming, tools, vision, or setup.",
-};
+import { type Language, SETTINGS_STORAGE_KEY, translations } from '../i18n';
 
 let messageSequence = 0;
 
@@ -29,9 +22,9 @@ const createMessageId = (prefix: string) => {
   return `${prefix}-${Date.now()}-${messageSequence}`;
 };
 
-const getErrorMessage = (error: unknown): string => {
+const getErrorMessage = (error: unknown, fallback: string): string => {
   if (error instanceof Error && error.message) return error.message;
-  return 'The provider request failed. Check your API key and model settings.';
+  return fallback;
 };
 
 const createChatService = (settings: SupportSettings) => {
@@ -56,16 +49,30 @@ const createChatService = (settings: SupportSettings) => {
   );
 };
 
-export default function SupportWidget() {
+interface SupportWidgetProps {
+  language: Language;
+}
+
+export default function SupportWidget({ language }: SupportWidgetProps) {
+  const t = translations[language];
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<SupportSettings>(loadSettings);
-  const [messages, setMessages] = useState<SupportMessage[]>([WELCOME_MESSAGE]);
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const welcomeMessage: SupportMessage = {
+    id: 'welcome',
+    role: 'assistant',
+    content: t.chat.welcome,
+  };
 
   const saveSettings = (nextSettings: SupportSettings) => {
-    setSettings(nextSettings);
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(nextSettings));
+    const localizedSettings = { ...nextSettings, language };
+    setSettings(localizedSettings);
+    localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify(localizedSettings),
+    );
     setIsSettingsOpen(false);
   };
 
@@ -94,6 +101,10 @@ export default function SupportWidget() {
       {
         role: 'system',
         content: buildSystemPrompt(settings.persona),
+      },
+      {
+        role: welcomeMessage.role,
+        content: welcomeMessage.content,
       },
       ...messages
         .filter((message) => message.state !== 'error')
@@ -132,13 +143,13 @@ export default function SupportWidget() {
         },
       );
     } catch (error) {
-      const detail = getErrorMessage(error);
+      const detail = getErrorMessage(error, t.chat.providerErrorFallback);
       setMessages((current) =>
         current.map((message) =>
           message.id === assistantId
             ? {
                 ...message,
-                content: `Sorry, I couldn't reach the provider. ${detail}`,
+                content: `${t.chat.providerErrorPrefix} ${detail}`,
                 state: 'error',
               }
             : message,
@@ -153,8 +164,9 @@ export default function SupportWidget() {
     <div className="support-widget">
       {isOpen && (
         <ChatPanel
-          messages={messages}
+          messages={[welcomeMessage, ...messages]}
           settings={settings}
+          language={language}
           isLoading={isLoading}
           isSettingsOpen={isSettingsOpen}
           onClose={() => setIsOpen(false)}
@@ -168,7 +180,7 @@ export default function SupportWidget() {
         type="button"
         className={`support-launcher${isOpen ? ' support-launcher--open' : ''}`}
         onClick={() => setIsOpen((open) => !open)}
-        aria-label={isOpen ? 'Close support chat' : 'Open support chat'}
+        aria-label={isOpen ? t.chat.closeChat : t.chat.openChat}
         aria-expanded={isOpen}
       >
         <img src="/support-avatar.png" alt="" />

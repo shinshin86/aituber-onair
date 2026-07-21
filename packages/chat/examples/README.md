@@ -148,7 +148,7 @@ Embedded support-widget example with React, TypeScript, and Vite:
 - Uses a curated package knowledge file in the system prompt (no RAG)
 - Streams replies into a compact floating chat panel
 - Discovers browser-compatible providers and models from `ChatServiceFactory`
-- Persists provider, model, API key, and persona settings in localStorage
+- Persists provider, model, API key, persona, and EN/JA UI settings in localStorage
 - Demonstrates a production-style widget shell with browser security guidance
 
 **Quick Start:**
