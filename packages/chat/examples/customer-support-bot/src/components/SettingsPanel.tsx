@@ -1,61 +1,102 @@
 import { useMemo, useState } from 'react';
-import {
-  MODEL_CLAUDE_3_HAIKU,
-  MODEL_CLAUDE_4_5_HAIKU,
-  MODEL_CLAUDE_4_5_OPUS,
-  MODEL_CLAUDE_4_5_SONNET,
-  MODEL_CLAUDE_4_6_OPUS,
-  MODEL_CLAUDE_4_6_SONNET,
-  MODEL_CLAUDE_4_7_OPUS,
-  MODEL_CLAUDE_4_8_OPUS,
-  MODEL_CLAUDE_5_SONNET,
-  MODEL_GEMINI_2_5_FLASH,
-  MODEL_GEMINI_2_5_FLASH_LITE,
-  MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_3_1_FLASH_LITE,
-  MODEL_GEMINI_3_1_PRO_PREVIEW,
-  MODEL_GEMINI_3_5_FLASH,
-  MODEL_GEMINI_3_FLASH_PREVIEW,
-  MODEL_GEMMA_4_26B_A4B_IT,
-  MODEL_GEMMA_4_31B_IT,
-  MODEL_GPT_4_1,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1_NANO,
-  MODEL_GPT_4O,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_5,
-  MODEL_GPT_5_1,
-  MODEL_GPT_5_4,
-  MODEL_GPT_5_4_MINI,
-  MODEL_GPT_5_4_NANO,
-  MODEL_GPT_5_4_PRO,
-  MODEL_GPT_5_5,
-  MODEL_GPT_5_6,
-  MODEL_GPT_5_6_LUNA,
-  MODEL_GPT_5_6_SOL,
-  MODEL_GPT_5_6_TERRA,
-  MODEL_GPT_5_MINI,
-  MODEL_GPT_5_NANO,
-} from '@aituber-onair/chat';
+import { ChatServiceFactory, type ChatProviderName } from '@aituber-onair/chat';
 
-export type BrowserProvider = 'openai' | 'claude' | 'gemini';
+const DEFAULT_OPENAI_MODEL = 'gpt-5.6-terra';
+const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
+  'http://127.0.0.1:18080/v1/chat/completions';
 
-interface ModelOption {
-  id: string;
-  label: string;
-}
+// Keep this as a denylist so newly registered browser providers appear without
+// an example-side update. Agent SDK providers require server-side runtimes, and
+// Sakana AI currently blocks direct browser requests with CORS.
+const BROWSER_INCOMPATIBLE_PROVIDERS = new Set([
+  'codex-sdk',
+  'claude-agent-sdk',
+  'copilot-sdk',
+  'sakana',
+]);
 
-interface ProviderOption {
-  label: string;
-  keyPlaceholder: string;
-  defaultModel: string;
-  models: ModelOption[];
-}
+const PROVIDER_LABELS: Partial<Record<ChatProviderName, string>> = {
+  openai: 'OpenAI',
+  'openai-compatible': 'OpenAI-Compatible',
+  openrouter: 'OpenRouter',
+  gemini: 'Gemini',
+  'gemini-nano': 'Gemini Nano (Browser AI)',
+  claude: 'Claude',
+  zai: 'Z.ai',
+  xai: 'xAI',
+  kimi: 'Kimi',
+  deepseek: 'DeepSeek',
+  mistral: 'Mistral',
+  plamo: 'PLaMo',
+};
+
+const API_KEY_PLACEHOLDERS: Partial<Record<ChatProviderName, string>> = {
+  openai: 'sk-…',
+  'openai-compatible': 'Optional bearer token',
+  openrouter: 'sk-or-…',
+  gemini: 'AI…',
+  claude: 'sk-ant-…',
+  zai: 'API key',
+  xai: 'xai-…',
+  kimi: 'API key',
+  deepseek: 'sk-…',
+  mistral: 'API key',
+  plamo: 'plamo-…',
+};
+
+export const AVAILABLE_BROWSER_PROVIDERS =
+  ChatServiceFactory.getAvailableProviders().filter(
+    (provider) => !BROWSER_INCOMPATIBLE_PROVIDERS.has(provider),
+  ) as ChatProviderName[];
+
+const getModels = (provider: ChatProviderName): string[] =>
+  ChatServiceFactory.getSupportedModels(provider);
+
+export const getDefaultModel = (provider: ChatProviderName): string =>
+  ChatServiceFactory.getProviderCapabilities(provider)?.defaultModel ??
+  getModels(provider)[0] ??
+  '';
+
+const normalizeModel = (
+  provider: ChatProviderName,
+  candidate: unknown,
+): string => {
+  const models = getModels(provider);
+  const candidateModel = typeof candidate === 'string' ? candidate.trim() : '';
+
+  // OpenAI-compatible endpoints expose their own model identifiers and the
+  // package intentionally reports no fixed model list for this provider.
+  if (models.length === 0) {
+    return candidateModel || getDefaultModel(provider);
+  }
+
+  if (models.includes(candidateModel)) return candidateModel;
+  return getDefaultModel(provider);
+};
+
+export const providerRequiresApiKey = (provider: ChatProviderName): boolean =>
+  provider !== 'gemini-nano' && provider !== 'openai-compatible';
+
+export const hasRequiredSettings = (settings: SupportSettings): boolean => {
+  if (!settings.model.trim()) return false;
+  if (settings.provider === 'openai-compatible') {
+    return Boolean(settings.endpoint.trim());
+  }
+  return !providerRequiresApiKey(settings.provider) || Boolean(settings.apiKey);
+};
+
+const formatProviderLabel = (provider: ChatProviderName): string =>
+  PROVIDER_LABELS[provider] ??
+  provider
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 
 export interface SupportSettings {
-  provider: BrowserProvider;
+  provider: ChatProviderName;
   model: string;
   apiKey: string;
+  endpoint: string;
   persona: string;
 }
 
@@ -65,79 +106,11 @@ export const SETTINGS_STORAGE_KEY =
 export const DEFAULT_PERSONA =
   'You are Onair-chan, a cheerful and concise support guide. Be warm, practical, and easy to understand.';
 
-export const PROVIDERS: Record<BrowserProvider, ProviderOption> = {
-  openai: {
-    label: 'OpenAI',
-    keyPlaceholder: 'sk-…',
-    defaultModel: MODEL_GPT_5_6_TERRA,
-    models: [
-      { id: MODEL_GPT_5_6, label: 'GPT-5.6 (Sol alias)' },
-      { id: MODEL_GPT_5_6_SOL, label: 'GPT-5.6 Sol' },
-      { id: MODEL_GPT_5_6_TERRA, label: 'GPT-5.6 Terra' },
-      { id: MODEL_GPT_5_6_LUNA, label: 'GPT-5.6 Luna' },
-      { id: MODEL_GPT_5_5, label: 'GPT-5.5' },
-      { id: MODEL_GPT_5_4_PRO, label: 'GPT-5.4 Pro' },
-      { id: MODEL_GPT_5_4, label: 'GPT-5.4' },
-      { id: MODEL_GPT_5_4_MINI, label: 'GPT-5.4 Mini' },
-      { id: MODEL_GPT_5_4_NANO, label: 'GPT-5.4 Nano' },
-      { id: MODEL_GPT_5_1, label: 'GPT-5.1' },
-      { id: MODEL_GPT_5, label: 'GPT-5' },
-      { id: MODEL_GPT_5_MINI, label: 'GPT-5 Mini' },
-      { id: MODEL_GPT_5_NANO, label: 'GPT-5 Nano' },
-      { id: MODEL_GPT_4_1, label: 'GPT-4.1' },
-      { id: MODEL_GPT_4_1_MINI, label: 'GPT-4.1 Mini' },
-      { id: MODEL_GPT_4_1_NANO, label: 'GPT-4.1 Nano' },
-      { id: MODEL_GPT_4O, label: 'GPT-4o' },
-      { id: MODEL_GPT_4O_MINI, label: 'GPT-4o Mini' },
-    ],
-  },
-  claude: {
-    label: 'Claude',
-    keyPlaceholder: 'sk-ant-…',
-    defaultModel: MODEL_CLAUDE_4_5_HAIKU,
-    models: [
-      { id: MODEL_CLAUDE_5_SONNET, label: 'Claude Sonnet 5' },
-      { id: MODEL_CLAUDE_4_8_OPUS, label: 'Claude Opus 4.8' },
-      { id: MODEL_CLAUDE_4_7_OPUS, label: 'Claude Opus 4.7' },
-      { id: MODEL_CLAUDE_4_6_OPUS, label: 'Claude Opus 4.6' },
-      { id: MODEL_CLAUDE_4_6_SONNET, label: 'Claude Sonnet 4.6' },
-      { id: MODEL_CLAUDE_4_5_OPUS, label: 'Claude Opus 4.5' },
-      { id: MODEL_CLAUDE_4_5_SONNET, label: 'Claude Sonnet 4.5' },
-      { id: MODEL_CLAUDE_4_5_HAIKU, label: 'Claude Haiku 4.5' },
-      { id: MODEL_CLAUDE_3_HAIKU, label: 'Claude 3 Haiku' },
-    ],
-  },
-  gemini: {
-    label: 'Gemini',
-    keyPlaceholder: 'AI…',
-    defaultModel: MODEL_GEMINI_3_1_FLASH_LITE,
-    models: [
-      { id: MODEL_GEMINI_3_5_FLASH, label: 'Gemini 3.5 Flash' },
-      {
-        id: MODEL_GEMINI_3_1_FLASH_LITE,
-        label: 'Gemini 3.1 Flash-Lite',
-      },
-      {
-        id: MODEL_GEMINI_3_1_PRO_PREVIEW,
-        label: 'Gemini 3.1 Pro Preview',
-      },
-      { id: MODEL_GEMINI_3_FLASH_PREVIEW, label: 'Gemini 3 Flash Preview' },
-      { id: MODEL_GEMINI_2_5_PRO, label: 'Gemini 2.5 Pro' },
-      { id: MODEL_GEMINI_2_5_FLASH, label: 'Gemini 2.5 Flash' },
-      {
-        id: MODEL_GEMINI_2_5_FLASH_LITE,
-        label: 'Gemini 2.5 Flash Lite',
-      },
-      { id: MODEL_GEMMA_4_31B_IT, label: 'Gemma 4 31B IT' },
-      { id: MODEL_GEMMA_4_26B_A4B_IT, label: 'Gemma 4 26B A4B IT' },
-    ],
-  },
-};
-
 export const DEFAULT_SETTINGS: SupportSettings = {
   provider: 'openai',
-  model: MODEL_GPT_5_6_TERRA,
+  model: DEFAULT_OPENAI_MODEL,
   apiKey: '',
+  endpoint: DEFAULT_OPENAI_COMPATIBLE_ENDPOINT,
   persona: DEFAULT_PERSONA,
 };
 
@@ -148,18 +121,19 @@ export function loadSettings(): SupportSettings {
 
     const parsed = JSON.parse(stored) as Partial<SupportSettings>;
     const provider =
-      parsed.provider && parsed.provider in PROVIDERS
-        ? parsed.provider
+      typeof parsed.provider === 'string' &&
+      AVAILABLE_BROWSER_PROVIDERS.includes(parsed.provider as ChatProviderName)
+        ? (parsed.provider as ChatProviderName)
         : DEFAULT_SETTINGS.provider;
-    const providerConfig = PROVIDERS[provider];
-    const model = providerConfig.models.some(({ id }) => id === parsed.model)
-      ? (parsed.model as string)
-      : providerConfig.defaultModel;
 
     return {
       provider,
-      model,
+      model: normalizeModel(provider, parsed.model),
       apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
+      endpoint:
+        typeof parsed.endpoint === 'string' && parsed.endpoint.trim()
+          ? parsed.endpoint
+          : DEFAULT_SETTINGS.endpoint,
       persona:
         typeof parsed.persona === 'string' && parsed.persona.trim()
           ? parsed.persona
@@ -182,17 +156,17 @@ export default function SettingsPanel({
   onCancel,
 }: SettingsPanelProps) {
   const [draft, setDraft] = useState(settings);
-  const providerConfig = PROVIDERS[draft.provider];
   const modelOptions = useMemo(
-    () => providerConfig.models,
-    [providerConfig.models],
+    () => getModels(draft.provider),
+    [draft.provider],
   );
+  const requiresApiKey = providerRequiresApiKey(draft.provider);
 
-  const handleProviderChange = (provider: BrowserProvider) => {
+  const handleProviderChange = (provider: ChatProviderName) => {
     setDraft((current) => ({
       ...current,
       provider,
-      model: PROVIDERS[provider].defaultModel,
+      model: getDefaultModel(provider),
     }));
   };
 
@@ -215,52 +189,100 @@ export default function SettingsPanel({
         <select
           value={draft.provider}
           onChange={(event) =>
-            handleProviderChange(event.target.value as BrowserProvider)
+            handleProviderChange(event.target.value as ChatProviderName)
           }
         >
-          {(Object.keys(PROVIDERS) as BrowserProvider[]).map((provider) => (
+          {AVAILABLE_BROWSER_PROVIDERS.map((provider) => (
             <option value={provider} key={provider}>
-              {PROVIDERS[provider].label}
+              {formatProviderLabel(provider)}
             </option>
           ))}
         </select>
       </label>
 
-      <label className="settings-field">
+      <label className="settings-field" htmlFor="support-model">
         <span>Model</span>
-        <select
-          value={draft.model}
-          onChange={(event) =>
-            setDraft((current) => ({
-              ...current,
-              model: event.target.value,
-            }))
-          }
-        >
-          {modelOptions.map((model) => (
-            <option value={model.id} key={model.id}>
-              {model.label}
-            </option>
-          ))}
-        </select>
+        {modelOptions.length > 0 ? (
+          <select
+            id="support-model"
+            value={draft.model}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                model: event.target.value,
+              }))
+            }
+          >
+            {modelOptions.map((model) => (
+              <option value={model} key={model}>
+                {model}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            id="support-model"
+            type="text"
+            value={draft.model}
+            placeholder="Model identifier"
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                model: event.target.value,
+              }))
+            }
+          />
+        )}
+        <small>
+          {modelOptions.length > 0
+            ? 'Loaded from the provider registry.'
+            : 'Enter the model exposed by your compatible server.'}
+        </small>
       </label>
 
-      <label className="settings-field">
-        <span>API key</span>
-        <input
-          type="password"
-          value={draft.apiKey}
-          placeholder={providerConfig.keyPlaceholder}
-          autoComplete="off"
-          onChange={(event) =>
-            setDraft((current) => ({
-              ...current,
-              apiKey: event.target.value,
-            }))
-          }
-        />
-        <small>Stored only in this browser's localStorage for the demo.</small>
-      </label>
+      {draft.provider === 'openai-compatible' && (
+        <label className="settings-field">
+          <span>Chat completions endpoint</span>
+          <input
+            type="url"
+            value={draft.endpoint}
+            placeholder="http://127.0.0.1:18080/v1/chat/completions"
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                endpoint: event.target.value,
+              }))
+            }
+          />
+          <small>Use the full URL for your OpenAI-compatible endpoint.</small>
+        </label>
+      )}
+
+      {draft.provider === 'gemini-nano' ? (
+        <div className="settings-provider-note">
+          Gemini Nano runs through Chrome's built-in Prompt API and does not
+          require an API key.
+        </div>
+      ) : (
+        <label className="settings-field">
+          <span>API key{requiresApiKey ? '' : ' (optional)'}</span>
+          <input
+            type="password"
+            value={draft.apiKey}
+            placeholder={API_KEY_PLACEHOLDERS[draft.provider] ?? 'API key'}
+            autoComplete="off"
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                apiKey: event.target.value,
+              }))
+            }
+          />
+          <small>
+            Stored only in this browser's localStorage for the demo.
+          </small>
+        </label>
+      )}
 
       <label className="settings-field settings-field--persona">
         <span>Persona</span>
@@ -284,10 +306,13 @@ export default function SettingsPanel({
         <button
           type="button"
           className="settings-save"
+          disabled={!hasRequiredSettings(draft)}
           onClick={() =>
             onSave({
               ...draft,
+              model: draft.model.trim(),
               apiKey: draft.apiKey.trim(),
+              endpoint: draft.endpoint.trim(),
               persona: draft.persona.trim() || DEFAULT_PERSONA,
             })
           }

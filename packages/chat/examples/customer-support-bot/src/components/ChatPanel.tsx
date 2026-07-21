@@ -1,6 +1,9 @@
 import MessageInput from './MessageInput';
 import MessageList, { type SupportMessage } from './MessageList';
-import SettingsPanel, { type SupportSettings } from './SettingsPanel';
+import SettingsPanel, {
+  hasRequiredSettings,
+  type SupportSettings,
+} from './SettingsPanel';
 
 interface ChatPanelProps {
   messages: SupportMessage[];
@@ -25,7 +28,7 @@ export default function ChatPanel({
   onSaveSettings,
   onSend,
 }: ChatPanelProps) {
-  const hasApiKey = Boolean(settings.apiKey.trim());
+  const isProviderReady = hasRequiredSettings(settings);
 
   return (
     <section className="chat-panel" aria-label="AITuber OnAir support chat">
@@ -74,11 +77,11 @@ export default function ChatPanel({
       ) : (
         <>
           <MessageList messages={messages} />
-          {!hasApiKey && (
+          {!isProviderReady && (
             <output className="api-key-notice">
               <div>
-                <strong>Connect a provider to start chatting</strong>
-                <span>Your API key stays in this browser.</span>
+                <strong>Complete provider setup to start chatting</strong>
+                <span>Demo settings stay in this browser.</span>
               </div>
               <button type="button" onClick={onOpenSettings}>
                 Open settings
@@ -86,7 +89,7 @@ export default function ChatPanel({
             </output>
           )}
           <MessageInput
-            disabled={!hasApiKey || isLoading}
+            disabled={!isProviderReady || isLoading}
             isLoading={isLoading}
             onSend={onSend}
           />

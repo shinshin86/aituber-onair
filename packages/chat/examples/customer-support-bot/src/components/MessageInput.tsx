@@ -40,7 +40,7 @@ export default function MessageInput({
         onKeyDown={handleKeyDown}
         placeholder={
           disabled && !isLoading
-            ? 'Add an API key in Settings to chat'
+            ? 'Complete Settings to start chatting'
             : 'Ask about @aituber-onair/chat…'
         }
         aria-label="Message Onair-chan"

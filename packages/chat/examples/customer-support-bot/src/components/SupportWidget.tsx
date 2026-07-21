@@ -1,8 +1,14 @@
 import { useState } from 'react';
-import { ChatServiceFactory, type Message } from '@aituber-onair/chat';
+import {
+  ChatServiceFactory,
+  type ChatProviderName,
+  type ChatServiceOptionsByProvider,
+  type Message,
+} from '@aituber-onair/chat';
 import ChatPanel from './ChatPanel';
 import type { SupportMessage } from './MessageList';
 import {
+  hasRequiredSettings,
   loadSettings,
   SETTINGS_STORAGE_KEY,
   type SupportSettings,
@@ -28,6 +34,28 @@ const getErrorMessage = (error: unknown): string => {
   return 'The provider request failed. Check your API key and model settings.';
 };
 
+const createChatService = (settings: SupportSettings) => {
+  const options: Record<string, unknown> = {
+    model: settings.model,
+    responseLength: 'short',
+  };
+
+  if (settings.provider !== 'gemini-nano') {
+    options.apiKey = settings.apiKey;
+  }
+  if (settings.provider === 'openai') {
+    options.gpt5Preset = 'casual';
+  }
+  if (settings.provider === 'openai-compatible') {
+    options.endpoint = settings.endpoint;
+  }
+
+  return ChatServiceFactory.createChatService(
+    settings.provider,
+    options as ChatServiceOptionsByProvider[ChatProviderName],
+  );
+};
+
 export default function SupportWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -42,7 +70,7 @@ export default function SupportWidget() {
   };
 
   const sendMessage = async (content: string) => {
-    if (isLoading || !settings.apiKey.trim()) {
+    if (isLoading || !hasRequiredSettings(settings)) {
       setIsSettingsOpen(true);
       return;
     }
@@ -78,20 +106,7 @@ export default function SupportWidget() {
     setIsLoading(true);
 
     try {
-      const commonOptions = {
-        apiKey: settings.apiKey,
-        model: settings.model,
-        responseLength: 'short' as const,
-      };
-      const service =
-        settings.provider === 'openai'
-          ? ChatServiceFactory.createChatService('openai', {
-              ...commonOptions,
-              gpt5Preset: 'casual',
-            })
-          : settings.provider === 'claude'
-            ? ChatServiceFactory.createChatService('claude', commonOptions)
-            : ChatServiceFactory.createChatService('gemini', commonOptions);
+      const service = createChatService(settings);
 
       await service.processChat(
         conversation,

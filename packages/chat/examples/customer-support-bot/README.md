@@ -7,8 +7,9 @@ standalone chat demo.
 
 ## What it demonstrates
 
-- Creating OpenAI, Claude, and Gemini services through `ChatServiceFactory`
-- Switching provider and model settings without changing the chat UI
+- Discovering browser-compatible providers and models through
+  `ChatServiceFactory`
+- Switching provider and model settings without maintaining a second model list
 - Rendering partial text as it arrives through streaming callbacks
 - Passing the full conversation history and a curated system prompt each turn
 - Importing a markdown knowledge file with Vite's `?raw` query
@@ -41,9 +42,12 @@ provider settings.
 
 ## Settings
 
-- **Provider**: OpenAI, Claude, or Gemini
-- **Model**: populated from model constants exported by the package
-- **API key**: the credential used by the selected provider
+- **Provider**: populated from providers registered with `ChatServiceFactory`;
+  browser-incompatible providers are excluded with a small denylist
+- **Model**: populated from `ChatServiceFactory.getSupportedModels()`
+- **API key**: the credential used by the selected provider; not required for
+  Gemini Nano and optional for OpenAI-compatible endpoints
+- **Chat completions endpoint**: shown for OpenAI-compatible servers
 - **Persona**: additional behavior appended to the support system prompt
 
 The default provider is OpenAI and the default model is GPT-5.6 Terra
