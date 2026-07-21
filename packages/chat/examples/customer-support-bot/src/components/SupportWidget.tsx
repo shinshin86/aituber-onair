@@ -70,7 +70,9 @@ export default function SupportWidget() {
   };
 
   const sendMessage = async (content: string) => {
-    if (isLoading || !hasRequiredSettings(settings)) {
+    if (isLoading) return;
+
+    if (!hasRequiredSettings(settings)) {
       setIsSettingsOpen(true);
       return;
     }
