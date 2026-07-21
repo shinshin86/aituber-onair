@@ -39,11 +39,11 @@ export default function ChatPanel({
       <header className="chat-header">
         <div className="chat-agent">
           <div className="chat-avatar-wrap">
-            <img src="/support-avatar.png" alt="Onair-chan" />
+            <img src="/support-avatar.png" alt={t.chat.avatarAlt} />
             <span className="online-dot" aria-label={t.chat.online} />
           </div>
           <div>
-            <strong>Onair-chan</strong>
+            <strong>{t.chat.displayName}</strong>
             <span>{t.chat.subtitle}</span>
           </div>
         </div>

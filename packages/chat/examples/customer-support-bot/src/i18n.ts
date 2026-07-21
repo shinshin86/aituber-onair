@@ -57,6 +57,8 @@ export interface TranslationRecord {
   };
   chat: {
     panelLabel: string;
+    displayName: string;
+    avatarAlt: string;
     online: string;
     subtitle: string;
     openSettings: string;
@@ -162,30 +164,32 @@ export const translations: Record<Language, TranslationRecord> = {
     supportCta: {
       title: 'Need a hand?',
       description:
-        'Open the support widget to ask Onair-chan about installation, providers, streaming, tools, vision, or MCP.',
+        'Open the support widget to ask the support assistant about installation, providers, streaming, tools, vision, or MCP.',
     },
     footer: {
       example: 'Support widget example',
     },
     chat: {
       panelLabel: 'AITuber OnAir support chat',
+      displayName: 'Support',
+      avatarAlt: 'Support assistant avatar',
       online: 'Online',
-      subtitle: 'AITuber OnAir support',
+      subtitle: 'AITuber OnAir',
       openSettings: 'Open settings',
       settingsTitle: 'Settings',
       closeChat: 'Close support chat',
       close: 'Close',
       openChat: 'Open support chat',
       welcome:
-        "Hi! I'm Onair-chan. Ask me anything about @aituber-onair/chat — providers, streaming, tools, vision, or setup.",
+        "Hi! I'm the support assistant for AITuber OnAir. Ask me anything about @aituber-onair/chat — providers, streaming, tools, vision, or setup.",
       setupTitle: 'Complete provider setup to start chatting',
       setupDescription: 'Demo settings stay in this browser.',
       openSettingsButton: 'Open settings',
       inputDisabledPlaceholder: 'Complete Settings to start chatting',
       inputPlaceholder: 'Ask about @aituber-onair/chat…',
-      messageLabel: 'Message Onair-chan',
+      messageLabel: 'Message the support assistant',
       sendMessage: 'Send message',
-      typing: 'Onair-chan is typing',
+      typing: 'The support assistant is typing',
       poweredBy: 'Powered by',
       providerErrorFallback:
         'The provider request failed. Check your API key and model settings.',
@@ -272,30 +276,32 @@ export const translations: Record<Language, TranslationRecord> = {
     supportCta: {
       title: 'お困りですか？',
       description:
-        'サポートウィジェットを開き、インストール、プロバイダー、ストリーミング、ツール、画像入力、MCPについてOnair-chanに質問できます。',
+        'サポートウィジェットを開き、インストール、プロバイダー、ストリーミング、ツール、画像入力、MCPについてサポートアシスタントに質問できます。',
     },
     footer: {
       example: 'サポートウィジェット例',
     },
     chat: {
       panelLabel: 'AITuber OnAir サポートチャット',
+      displayName: 'サポート',
+      avatarAlt: 'サポートアシスタントのアバター',
       online: 'オンライン',
-      subtitle: 'AITuber OnAir サポート',
+      subtitle: 'AITuber OnAir',
       openSettings: '設定を開く',
       settingsTitle: '設定',
       closeChat: 'サポートチャットを閉じる',
       close: '閉じる',
       openChat: 'サポートチャットを開く',
       welcome:
-        'こんにちは、Onair-chanです。@aituber-onair/chat のプロバイダー、ストリーミング、ツール、画像入力、セットアップについて何でも聞いてください。',
+        'こんにちは。AITuber OnAirのサポートアシスタントです。@aituber-onair/chat のプロバイダー、ストリーミング、ツール、画像入力、セットアップについて何でも聞いてください。',
       setupTitle: 'チャットを始めるにはプロバイダーを設定してください',
       setupDescription: 'デモ設定はこのブラウザ内に保存されます。',
       openSettingsButton: '設定を開く',
       inputDisabledPlaceholder: '設定を完了するとチャットできます',
       inputPlaceholder: '@aituber-onair/chat について質問する…',
-      messageLabel: 'Onair-chanへのメッセージ',
+      messageLabel: 'サポートアシスタントへのメッセージ',
       sendMessage: 'メッセージを送信',
-      typing: 'Onair-chanが入力中',
+      typing: 'サポートアシスタントが入力中',
       poweredBy: '提供',
       providerErrorFallback:
         'プロバイダーへのリクエストに失敗しました。APIキーとモデル設定を確認してください。',

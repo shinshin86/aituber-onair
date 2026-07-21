@@ -115,7 +115,7 @@ export interface SupportSettings {
 }
 
 export const DEFAULT_PERSONA =
-  'You are Onair-chan, a cheerful and concise support guide. Be warm, practical, and easy to understand.';
+  'You are the friendly support assistant for AITuber OnAir. Be cheerful, concise, warm, practical, and easy to understand.';
 
 export const DEFAULT_SETTINGS: SupportSettings = {
   provider: 'openai',
