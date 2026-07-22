@@ -6,8 +6,15 @@ type GeminiMessage = {
   parts: any[];
 };
 
+export type GeminiFunctionCallContext = {
+  name: string;
+  providerCallId?: string;
+  thoughtSignature?: string;
+};
+
 type ConverterOptions = {
   callIdMap?: Map<string, string>;
+  functionCallContextMap?: Map<string, GeminiFunctionCallContext>;
 };
 
 type VisionConverterOptions = ConverterOptions & {
@@ -41,6 +48,7 @@ export function convertMessagesToGeminiFormat(
       gemini.push({ role: currentRole, parts: [...currentParts] });
       currentParts = [];
     }
+    currentRole = null;
   };
 
   for (const msg of messages) {
@@ -48,18 +56,13 @@ export function convertMessagesToGeminiFormat(
 
     if ((msg as any).tool_calls) {
       pushCurrent();
-      for (const call of (msg as any).tool_calls) {
-        options.callIdMap?.set(call.id, call.function.name);
+      const parts = (msg as any).tool_calls.map((call: any) =>
+        createFunctionCallPart(call, options),
+      );
+      if (parts.length > 0) {
         gemini.push({
           role: 'model',
-          parts: [
-            {
-              functionCall: {
-                name: call.function.name,
-                args: JSON.parse(call.function.arguments || '{}'),
-              },
-            },
-          ],
+          parts,
         });
       }
       continue;
@@ -67,21 +70,7 @@ export function convertMessagesToGeminiFormat(
 
     if (msg.role === 'tool') {
       pushCurrent();
-      const funcName =
-        (msg as any).name ??
-        options.callIdMap?.get((msg as any).tool_call_id) ??
-        'result';
-      gemini.push({
-        role: 'user',
-        parts: [
-          {
-            functionResponse: {
-              name: funcName,
-              response: normalizeToolResult(safeJsonParse(msg.content)),
-            },
-          },
-        ],
-      });
+      appendFunctionResponse(gemini, createFunctionResponsePart(msg, options));
       continue;
     }
 
@@ -104,53 +93,45 @@ export async function convertVisionMessagesToGeminiFormat(
   let currentRole: string | null = null;
   let currentParts: any[] = [];
 
+  const pushCurrent = () => {
+    if (currentRole && currentParts.length > 0) {
+      geminiMessages.push({
+        role: currentRole,
+        parts: [...currentParts],
+      });
+      currentParts = [];
+    }
+    currentRole = null;
+  };
+
   for (const msg of messages) {
     const role = mapRoleToGemini(msg.role);
 
     if ((msg as any).tool_calls) {
-      for (const call of (msg as any).tool_calls) {
+      pushCurrent();
+      const parts = (msg as any).tool_calls.map((call: any) =>
+        createFunctionCallPart(call, options),
+      );
+      if (parts.length > 0) {
         geminiMessages.push({
           role: 'model',
-          parts: [
-            {
-              functionCall: {
-                name: call.function.name,
-                args: JSON.parse(call.function.arguments || '{}'),
-              },
-            },
-          ],
+          parts,
         });
       }
       continue;
     }
 
     if (msg.role === 'tool') {
-      const funcName =
-        (msg as any).name ??
-        options.callIdMap?.get((msg as any).tool_call_id) ??
-        'result';
-      geminiMessages.push({
-        role: 'user',
-        parts: [
-          {
-            functionResponse: {
-              name: funcName,
-              response: normalizeToolResult(
-                safeJsonParse(msg.content as string),
-              ),
-            },
-          },
-        ],
-      });
+      pushCurrent();
+      appendFunctionResponse(
+        geminiMessages,
+        createFunctionResponsePart(msg, options),
+      );
       continue;
     }
 
     if (role !== currentRole && currentParts.length > 0) {
-      geminiMessages.push({
-        role: currentRole,
-        parts: [...currentParts],
-      });
-      currentParts = [];
+      pushCurrent();
     }
 
     currentRole = role;
@@ -182,14 +163,60 @@ export async function convertVisionMessagesToGeminiFormat(
     }
   }
 
-  if (currentRole && currentParts.length > 0) {
-    geminiMessages.push({
-      role: currentRole,
-      parts: [...currentParts],
-    });
-  }
+  pushCurrent();
 
   return geminiMessages;
+}
+
+function createFunctionCallPart(call: any, options: ConverterOptions) {
+  options.callIdMap?.set(call.id, call.function.name);
+  const context = options.functionCallContextMap?.get(call.id);
+  const part: any = {
+    functionCall: {
+      ...(context?.providerCallId ? { id: context.providerCallId } : {}),
+      name: call.function.name,
+      args: JSON.parse(call.function.arguments || '{}'),
+    },
+  };
+
+  if (context?.thoughtSignature) {
+    part.thoughtSignature = context.thoughtSignature;
+  }
+
+  return part;
+}
+
+function createFunctionResponsePart(msg: any, options: ConverterOptions) {
+  const toolCallId = msg.tool_call_id;
+  const context = options.functionCallContextMap?.get(toolCallId);
+  const functionResponse: any = {
+    ...(context?.providerCallId ? { id: context.providerCallId } : {}),
+    name:
+      msg.name ??
+      context?.name ??
+      options.callIdMap?.get(toolCallId) ??
+      'result',
+    response: normalizeToolResult(safeJsonParse(msg.content as string)),
+  };
+
+  return { functionResponse };
+}
+
+function appendFunctionResponse(
+  messages: GeminiMessage[],
+  part: { functionResponse: any },
+) {
+  const previous = messages[messages.length - 1];
+  const isFunctionResponseGroup =
+    previous?.role === 'user' &&
+    previous.parts.every((item) => item.functionResponse);
+
+  if (isFunctionResponseGroup) {
+    previous.parts.push(part);
+    return;
+  }
+
+  messages.push({ role: 'user', parts: [part] });
 }
 
 function safeJsonParse(str: string) {

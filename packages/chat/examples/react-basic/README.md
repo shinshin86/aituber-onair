@@ -126,7 +126,7 @@ Use the dropdown to select response length:
 - Best for: Long context, tool use + advanced reasoning
 
 **Gemini**
-- Models: Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
+- Models: Gemini 3.6 Flash, Gemini 3.5 Flash/Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - Vision: Supported for all listed Gemini models. Deprecated lifecycle models remain selectable with a deprecated label for explicit compatibility.
 - Best for: Fast responses, cost-effective. Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses.
 

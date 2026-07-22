@@ -598,17 +598,22 @@ const geminiService = ChatServiceFactory.createChatService('gemini', {
 });
 ```
 
-`gemini-3.1-flash-lite` is the recommended stable Flash-Lite model. Deprecated
+`gemini-3.1-flash-lite` remains the default Flash-Lite model.
+`gemini-3.5-flash-lite` is available as the latest stable, low-latency
+Flash-Lite option, while `gemini-3.6-flash` is available for stronger agentic
+and multimodal tasks. Deprecated
 preview and shutdown-scheduled models such as `gemini-3.1-flash-lite-preview`,
 `gemini-3-pro-preview`, and `gemini-2.5-flash-lite-preview-06-17` remain usable
 by explicit model string for backward compatibility, but are no longer
 advertised in the standard supported-model list for production use.
-`gemini-3.5-flash` is also available as the current stable Flash model.
+`gemini-3.5-flash` is also available as a stable Flash model.
 
-For chat-style usage, `gemini-3.5-flash` automatically sends Gemini
-`thinkingConfig` with `thinkingLevel: 'MINIMAL'` and `includeThoughts: false`.
-No user-facing option is required; this keeps default chat responses fast and
-reduces hidden thinking token usage.
+For chat-style usage, `gemini-3.6-flash`, `gemini-3.5-flash`, and
+`gemini-3.5-flash-lite` automatically send Gemini `thinkingConfig` with
+`thinkingLevel: 'MINIMAL'` and `includeThoughts: false`. This overrides the
+medium thinking default of Gemini 3.6/3.5 Flash and explicitly preserves the
+minimal behavior of Flash-Lite. It prioritizes fast conversational responses
+and reduces the risk of hidden thinking exhausting short output limits.
 
 #### OpenRouter
 
@@ -1155,7 +1160,7 @@ Currently, the following AI providers are built-in:
 
 - **OpenAI**: Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
-- **Gemini**: Supports recommended models like Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
+- **Gemini**: Supports recommended models like Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3.6 Flash, Gemini 3.5 Flash, and Gemini 3.5 Flash-Lite automatically use minimal thinking for chat-style responses. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Supports current Claude API model IDs including Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-5V-Turbo/GLM-4.6V family (vision)

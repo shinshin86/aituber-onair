@@ -4,6 +4,15 @@
 
 ### Minor Changes
 
+- Added Gemini 3.6 Flash (`gemini-3.6-flash`) and Gemini 3.5 Flash-Lite
+  (`gemini-3.5-flash-lite`) to the Gemini constants, supported-model and
+  vision lists, React basic selector, tests, and English/Japanese
+  documentation, while keeping Gemini 3.1 Flash-Lite as the default. Both new
+  models use minimal thinking by default for low-latency chat and to reduce the
+  risk of hidden thinking exhausting short output limits.
+- Updated Gemini 3 tool-call history handling to preserve provider call IDs
+  and thought signatures and to group parallel function calls and responses
+  for Gemini API compatibility.
 - Added Kimi K3 (`kimi-k3`) as an explicit Kimi model with vision support,
   while keeping Kimi K2.6 (`kimi-k2.6`) as the default chat model.
 - Added Kimi K3 request handling for its currently required

@@ -40,6 +40,109 @@ describe('geminiMessageConverter', () => {
     ]);
   });
 
+  it('preserves ids and signatures while grouping parallel tool exchanges', () => {
+    const messages = [
+      { role: 'user', content: 'Compare Tokyo and Osaka weather.' },
+      {
+        role: 'assistant',
+        content: '',
+        tool_calls: [
+          {
+            id: 'common-call-1',
+            type: 'function',
+            function: {
+              name: 'get_weather',
+              arguments: '{"city":"Tokyo"}',
+            },
+          },
+          {
+            id: 'common-call-2',
+            type: 'function',
+            function: {
+              name: 'get_weather',
+              arguments: '{"city":"Osaka"}',
+            },
+          },
+        ],
+      },
+      {
+        role: 'tool',
+        content: '{"temperature":25}',
+        tool_call_id: 'common-call-1',
+      },
+      {
+        role: 'tool',
+        content: '{"temperature":27}',
+        tool_call_id: 'common-call-2',
+      },
+    ] as Message[];
+    const functionCallContextMap = new Map([
+      [
+        'common-call-1',
+        {
+          name: 'get_weather',
+          providerCallId: 'gemini-call-1',
+          thoughtSignature: 'signed-context',
+        },
+      ],
+      [
+        'common-call-2',
+        {
+          name: 'get_weather',
+          providerCallId: 'gemini-call-2',
+        },
+      ],
+    ]);
+
+    expect(
+      convertMessagesToGeminiFormat(messages, { functionCallContextMap }),
+    ).toEqual([
+      {
+        role: 'user',
+        parts: [{ text: 'Compare Tokyo and Osaka weather.' }],
+      },
+      {
+        role: 'model',
+        parts: [
+          {
+            functionCall: {
+              id: 'gemini-call-1',
+              name: 'get_weather',
+              args: { city: 'Tokyo' },
+            },
+            thoughtSignature: 'signed-context',
+          },
+          {
+            functionCall: {
+              id: 'gemini-call-2',
+              name: 'get_weather',
+              args: { city: 'Osaka' },
+            },
+          },
+        ],
+      },
+      {
+        role: 'user',
+        parts: [
+          {
+            functionResponse: {
+              id: 'gemini-call-1',
+              name: 'get_weather',
+              response: { temperature: 25 },
+            },
+          },
+          {
+            functionResponse: {
+              id: 'gemini-call-2',
+              name: 'get_weather',
+              response: { temperature: 27 },
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
   it('converts text and image vision blocks to Gemini parts', async () => {
     const imageFetcher = vi.fn().mockResolvedValue({
       blob: async () => new Blob(['fake-image'], { type: 'image/png' }),
