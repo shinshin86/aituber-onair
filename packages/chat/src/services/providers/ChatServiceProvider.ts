@@ -1,5 +1,6 @@
 import { ChatService } from '../ChatService';
 import { ChatResponseLength, GPT5PresetKey } from '../../constants/chat';
+import type { GeminiReasoningEffort } from '../../constants/gemini';
 import type { MistralReasoningEffort } from '../../constants/mistral';
 import type { PlamoReasoningEffort } from '../../constants/plamo';
 import type { XaiReasoningEffort } from '../../constants/xai';
@@ -98,7 +99,6 @@ export type GeminiChatServiceOptions = DisallowKeys<
   | 'endpoint'
   | 'baseUrl'
   | 'verbosity'
-  | 'reasoning_effort'
   | 'gpt5Preset'
   | 'gpt5EndpointPreference'
   | 'enableReasoningSummary'
@@ -107,6 +107,8 @@ export type GeminiChatServiceOptions = DisallowKeys<
   | 'responseFormat'
   | 'thinking'
 > & {
+  /** Gemini 3 thinking level. Defaults to the lowest supported effort. */
+  reasoning_effort?: GeminiReasoningEffort;
   mcpServers?: MCPServerConfig[];
 };
 

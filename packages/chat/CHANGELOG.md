@@ -4,6 +4,11 @@
 
 ### Minor Changes
 
+- Added model-aware Gemini `reasoning_effort` support and an Advanced control
+  to the React basic example. Gemini 3 Flash / Flash-Lite supports
+  `minimal`, `low`, `medium`, and `high` with `minimal` as the chat default;
+  Gemini 3 Pro supports `low`, `medium`, and `high` with `low` as the default.
+  Gemini 2.5 remains excluded because it uses `thinkingBudget` instead.
 - Added Gemini 3.6 Flash (`gemini-3.6-flash`) and Gemini 3.5 Flash-Lite
   (`gemini-3.5-flash-lite`) to the Gemini constants, supported-model and
   vision lists, React basic selector, tests, and English/Japanese

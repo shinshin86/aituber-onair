@@ -48,3 +48,82 @@ export const GEMINI_VISION_SUPPORTED_MODELS = [
   ...GEMINI_RECOMMENDED_MODELS,
   ...GEMINI_DEPRECATED_MODELS,
 ];
+
+export type GeminiReasoningEffort = 'minimal' | 'low' | 'medium' | 'high';
+
+const GEMINI_FLASH_REASONING_EFFORTS: readonly GeminiReasoningEffort[] = [
+  'minimal',
+  'low',
+  'medium',
+  'high',
+];
+
+const GEMINI_PRO_REASONING_EFFORTS: readonly GeminiReasoningEffort[] = [
+  'low',
+  'medium',
+  'high',
+];
+
+const GEMINI_FLASH_REASONING_EFFORT_MODELS = [
+  MODEL_GEMINI_3_6_FLASH,
+  MODEL_GEMINI_3_5_FLASH,
+  MODEL_GEMINI_3_5_FLASH_LITE,
+  MODEL_GEMINI_3_1_FLASH_LITE,
+  MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
+  MODEL_GEMINI_3_FLASH_PREVIEW,
+];
+
+const GEMINI_PRO_REASONING_EFFORT_MODELS = [
+  MODEL_GEMINI_3_1_PRO_PREVIEW,
+  MODEL_GEMINI_3_PRO_PREVIEW,
+];
+
+/**
+ * Return the reasoning effort values supported by a Gemini 3 model.
+ * Gemini 2.5 uses thinkingBudget instead and is intentionally excluded.
+ */
+export function getGeminiSupportedReasoningEfforts(
+  model: string,
+): readonly GeminiReasoningEffort[] {
+  if (GEMINI_FLASH_REASONING_EFFORT_MODELS.includes(model)) {
+    return GEMINI_FLASH_REASONING_EFFORTS;
+  }
+
+  if (GEMINI_PRO_REASONING_EFFORT_MODELS.includes(model)) {
+    return GEMINI_PRO_REASONING_EFFORTS;
+  }
+
+  return [];
+}
+
+export function isGeminiReasoningEffortModel(model: string): boolean {
+  return getGeminiSupportedReasoningEfforts(model).length > 0;
+}
+
+/**
+ * Chat-oriented default: minimal for Flash families, low for Pro families.
+ */
+export function getDefaultGeminiReasoningEffort(
+  model: string,
+): GeminiReasoningEffort | undefined {
+  return getGeminiSupportedReasoningEfforts(model)[0];
+}
+
+/**
+ * Normalize an effort to the closest low-latency value supported by the model.
+ */
+export function normalizeGeminiReasoningEffort(
+  model: string,
+  effort?: GeminiReasoningEffort,
+): GeminiReasoningEffort | undefined {
+  const supported = getGeminiSupportedReasoningEfforts(model);
+  if (supported.length === 0) {
+    return undefined;
+  }
+
+  if (effort && supported.includes(effort)) {
+    return effort;
+  }
+
+  return supported[0];
+}

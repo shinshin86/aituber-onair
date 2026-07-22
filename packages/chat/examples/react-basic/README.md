@@ -128,7 +128,8 @@ Use the dropdown to select response length:
 **Gemini**
 - Models: Gemini 3.6 Flash, Gemini 3.5 Flash/Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - Vision: Supported for all listed Gemini models. Deprecated lifecycle models remain selectable with a deprecated label for explicit compatibility.
-- Best for: Fast responses, cost-effective. Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses.
+- Reasoning Effort: Gemini 3 Flash/Flash-Lite exposes Minimal/Low/Medium/High and defaults to Minimal; Gemini 3 Pro exposes Low/Medium/High and defaults to Low. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models.
+- Best for: Fast responses, cost-effective. Minimal thinking keeps chat latency and hidden-token usage low.
 
 **OpenRouter**
 - Models: Curated multi-provider model list (OpenRouter Auto/Fusion, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)

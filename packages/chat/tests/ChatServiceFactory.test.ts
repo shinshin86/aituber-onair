@@ -373,6 +373,17 @@ describe('ChatServiceFactory', () => {
       ]);
     });
 
+    it('returns Gemini reasoning effort capabilities', () => {
+      const capabilities = ChatServiceFactory.getProviderCapabilities('gemini');
+
+      expect(capabilities?.reasoningEffort).toEqual([
+        'minimal',
+        'low',
+        'medium',
+        'high',
+      ]);
+    });
+
     it('returns undefined for unknown providers', () => {
       expect(
         ChatServiceFactory.getProviderCapabilities('unknown-provider'),

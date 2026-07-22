@@ -7,15 +7,19 @@ import {
   allowsReasoningMinimal,
   allowsReasoningNone,
   allowsReasoningXHigh,
+  getDefaultGeminiReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
   isGPT5Model,
+  isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isXaiReasoningEffortModel,
+  normalizeGeminiReasoningEffort,
   normalizeXaiReasoningEffort,
   type Message,
   type MessageWithVision,
   type ChatResponseLength,
   type GPT5PresetKey,
+  type GeminiReasoningEffort,
   type ChatCompletionAssistantMessage,
 } from '@aituber-onair/chat';
 import './App.css';
@@ -163,6 +167,17 @@ function App() {
     selectedModel,
     reasoning_effort,
   );
+  const requestedGeminiReasoningEffort: GeminiReasoningEffort | undefined =
+    reasoning_effort === 'minimal' ||
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'medium' ||
+    reasoning_effort === 'high'
+      ? reasoning_effort
+      : undefined;
+  const geminiReasoningEffort = normalizeGeminiReasoningEffort(
+    selectedModel,
+    requestedGeminiReasoningEffort,
+  );
   const xaiReasoningEffort: XaiReasoningEffortLevel =
     normalizeXaiReasoningEffort(
       selectedModel,
@@ -218,6 +233,13 @@ function App() {
             throw new Error('OpenAI-compatible endpoint is required.');
           }
           options.endpoint = endpoint;
+        }
+
+        if (
+          provider === 'gemini' &&
+          isGeminiReasoningEffortModel(selectedModel)
+        ) {
+          options.reasoning_effort = geminiReasoningEffort;
         }
 
         if (provider === 'openrouter') {
@@ -301,6 +323,7 @@ function App() {
     selectedModel,
     gpt5Preset,
     normalizedReasoningEffort,
+    geminiReasoningEffort,
     xaiReasoningEffort,
     verbosity,
     gpt5EndpointPreference,
@@ -469,6 +492,10 @@ function App() {
                     ? getDefaultReasoningEffortForGPT5Model(defaultModel)
                     : 'medium',
                 );
+              } else if (newProvider === 'gemini') {
+                setReasoningEffort(
+                  getDefaultGeminiReasoningEffort(defaultModel) ?? 'minimal',
+                );
               } else if (
                 newProvider === 'xai' &&
                 isXaiReasoningEffortModel(defaultModel)
@@ -496,6 +523,18 @@ function App() {
                     ? getDefaultReasoningEffortForGPT5Model(modelId)
                     : 'medium',
                 );
+              } else if (newProvider === 'gemini') {
+                const requestedEffort =
+                  reasoning_effort === 'minimal' ||
+                  reasoning_effort === 'low' ||
+                  reasoning_effort === 'medium' ||
+                  reasoning_effort === 'high'
+                    ? reasoning_effort
+                    : undefined;
+                setReasoningEffort(
+                  normalizeGeminiReasoningEffort(modelId, requestedEffort) ??
+                    'minimal',
+                );
               } else if (
                 newProvider === 'xai' &&
                 isXaiReasoningEffortModel(modelId)
@@ -508,7 +547,9 @@ function App() {
             reasoning_effort={
               provider === 'xai'
                 ? xaiReasoningEffort
-                : normalizedReasoningEffort
+                : provider === 'gemini'
+                  ? (geminiReasoningEffort ?? 'minimal')
+                  : normalizedReasoningEffort
             }
             onReasoningEffortChange={setReasoningEffort}
             verbosity={verbosity}

@@ -2,6 +2,8 @@ import {
   GEMINI_VISION_SUPPORTED_MODELS,
   GEMINI_RECOMMENDED_MODELS,
   MODEL_GEMINI_3_1_FLASH_LITE,
+  isGeminiReasoningEffortModel,
+  normalizeGeminiReasoningEffort,
 } from '../../../constants';
 import { ChatService } from '../../ChatService';
 import { GeminiChatService } from './GeminiChatService';
@@ -24,9 +26,21 @@ export class GeminiChatServiceProvider
    * @returns GeminiChatService instance
    */
   createChatService(options: GeminiChatServiceOptions): ChatService {
+    const model = options.model || this.getDefaultModel();
+    if (
+      options.reasoning_effort !== undefined &&
+      !isGeminiReasoningEffortModel(model)
+    ) {
+      throw new Error(
+        `Model ${model} does not support Gemini reasoning_effort. ` +
+          'Use it with Gemini 3 thinkingLevel models; ' +
+          'Gemini 2.5 models use thinkingBudget instead.',
+      );
+    }
+
     // Use the visionModel if provided, otherwise use the model that supports vision
     const visionModel = resolveVisionModel({
-      model: options.model,
+      model,
       visionModel: options.visionModel,
       defaultModel: this.getDefaultModel(),
       defaultVisionModel: this.getDefaultModel(),
@@ -36,11 +50,12 @@ export class GeminiChatServiceProvider
 
     return new GeminiChatService(
       options.apiKey,
-      options.model || this.getDefaultModel(),
+      model,
       visionModel,
       options.tools || [],
       options.mcpServers || [],
       options.responseLength,
+      normalizeGeminiReasoningEffort(model, options.reasoning_effort),
     );
   }
 

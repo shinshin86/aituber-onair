@@ -12,6 +12,7 @@ import {
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_5_FLASH_LITE,
+  MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
@@ -95,6 +96,75 @@ describe('GeminiChatService API version selection', () => {
         },
       },
     });
+  });
+
+  it('sends a configured Gemini reasoning effort as thinkingLevel', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_3_6_FLASH,
+      MODEL_GEMINI_3_6_FLASH,
+      [],
+      [],
+      undefined,
+      'high',
+    );
+
+    await (service as any).callGemini(messages, MODEL_GEMINI_3_6_FLASH, true);
+
+    expect(postSpy.mock.calls[0][1]).toMatchObject({
+      generationConfig: {
+        thinkingConfig: {
+          includeThoughts: false,
+          thinkingLevel: 'HIGH',
+        },
+      },
+    });
+  });
+
+  it('uses low thinking by default for Gemini 3 Pro', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_3_1_PRO_PREVIEW,
+      MODEL_GEMINI_3_1_PRO_PREVIEW,
+    );
+
+    await (service as any).callGemini(
+      messages,
+      MODEL_GEMINI_3_1_PRO_PREVIEW,
+      true,
+    );
+
+    expect(postSpy.mock.calls[0][1]).toMatchObject({
+      generationConfig: {
+        thinkingConfig: {
+          includeThoughts: false,
+          thinkingLevel: 'LOW',
+        },
+      },
+    });
+  });
+
+  it('does not send thinkingLevel to Gemini 2.5 models', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_2_5_FLASH,
+      MODEL_GEMINI_2_5_FLASH,
+    );
+
+    await (service as any).callGemini(messages, MODEL_GEMINI_2_5_FLASH, true);
+
+    expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
+      'generationConfig.thinkingConfig',
+    );
   });
 
   it('uses v1beta for Gemini 3 preview models', async () => {

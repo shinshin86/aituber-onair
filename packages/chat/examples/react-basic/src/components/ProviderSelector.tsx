@@ -12,12 +12,15 @@ import {
   allowsReasoningXHigh,
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
+  getGeminiSupportedReasoningEfforts,
   isGPT5Model,
   isXaiReasoningEffortModel,
   isXaiReasoningEffortNoneModel,
   isResponsesOnlyGPT5Model,
   isOpenRouterFreeModel,
   refreshOpenRouterFreeModels,
+  normalizeGeminiReasoningEffort,
+  type GeminiReasoningEffort,
   // OpenAI models
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
@@ -1302,6 +1305,23 @@ export default function ProviderSelector({
     provider === 'xai' && isXaiReasoningEffortNoneModel(selectedModel);
   const isKimiReasoningModel =
     provider === 'kimi' && isKimiReasoningEffortModel(selectedModel);
+  const geminiSupportedReasoningEfforts =
+    provider === 'gemini'
+      ? getGeminiSupportedReasoningEfforts(selectedModel)
+      : [];
+  const isGeminiReasoningModel =
+    provider === 'gemini' && geminiSupportedReasoningEfforts.length > 0;
+  const requestedGeminiReasoningEffort: GeminiReasoningEffort | undefined =
+    reasoning_effort === 'minimal' ||
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'medium' ||
+    reasoning_effort === 'high'
+      ? reasoning_effort
+      : undefined;
+  const geminiReasoningEffort = normalizeGeminiReasoningEffort(
+    selectedModel,
+    requestedGeminiReasoningEffort,
+  );
   const xaiReasoningEffort =
     reasoning_effort === 'low' ||
     reasoning_effort === 'medium' ||
@@ -1696,6 +1716,43 @@ export default function ProviderSelector({
                 </span>
               </div>
             </>
+          )}
+
+          {provider === 'gemini' && (
+            <div className="config-group">
+              <label htmlFor="gemini-reasoning-effort">
+                Gemini Reasoning Effort
+              </label>
+              <select
+                id="gemini-reasoning-effort"
+                value={geminiReasoningEffort ?? ''}
+                onChange={(e) =>
+                  onReasoningEffortChange?.(
+                    e.target.value as GeminiReasoningEffort,
+                  )
+                }
+                disabled={disabled || !isGeminiReasoningModel}
+                className="select-input"
+              >
+                {!isGeminiReasoningModel && (
+                  <option value="">Not available</option>
+                )}
+                {geminiSupportedReasoningEfforts.map((effort) => (
+                  <option key={effort} value={effort}>
+                    {effort === 'minimal'
+                      ? 'Minimal (fastest)'
+                      : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                  </option>
+                ))}
+              </select>
+              <span className="helper-text">
+                {isGeminiReasoningModel
+                  ? geminiSupportedReasoningEfforts.includes('minimal')
+                    ? 'Mapped to Gemini thinkingLevel. Minimal is optimized for chat latency.'
+                    : 'Mapped to Gemini thinkingLevel. Low is the lowest level supported by Gemini 3 Pro.'
+                  : 'Gemini 2.5 uses thinkingBudget; other models may not expose configurable thinkingLevel.'}
+              </span>
+            </div>
           )}
 
           {isGPT5 && (

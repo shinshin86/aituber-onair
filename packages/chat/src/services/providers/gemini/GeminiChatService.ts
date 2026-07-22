@@ -9,11 +9,10 @@ import {
 } from '../../../types';
 import {
   ENDPOINT_GEMINI_API,
-  MODEL_GEMINI_3_6_FLASH,
-  MODEL_GEMINI_3_5_FLASH,
-  MODEL_GEMINI_3_5_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS,
+  normalizeGeminiReasoningEffort,
+  type GeminiReasoningEffort,
 } from '../../../constants';
 import {
   ChatResponseLength,
@@ -49,6 +48,7 @@ export class GeminiChatService implements ChatService {
   private mcpSchemasInitialized: boolean = false;
   private mcpSchemaInitializationError?: unknown;
   private responseLength?: ChatResponseLength;
+  private reasoningEffort?: GeminiReasoningEffort;
 
   /** id(OpenAI) → name(Gemini) mapping */
   private callIdMap = new Map<string, string>();
@@ -59,13 +59,32 @@ export class GeminiChatService implements ChatService {
     return /^gemma-4-/.test(model);
   }
 
-  private shouldMinimizeThinking(model: string): boolean {
-    return (
-      model === MODEL_GEMINI_3_6_FLASH ||
-      model === MODEL_GEMINI_3_5_FLASH ||
-      model === MODEL_GEMINI_3_5_FLASH_LITE ||
-      this.isGemma4Model(model)
-    );
+  private resolveThinkingConfig(model: string):
+    | {
+        includeThoughts: false;
+        thinkingLevel: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
+      }
+    | undefined {
+    const effort = normalizeGeminiReasoningEffort(model, this.reasoningEffort);
+    if (effort) {
+      return {
+        includeThoughts: false,
+        thinkingLevel: effort.toUpperCase() as
+          | 'MINIMAL'
+          | 'LOW'
+          | 'MEDIUM'
+          | 'HIGH',
+      };
+    }
+
+    if (this.isGemma4Model(model)) {
+      return {
+        includeThoughts: false,
+        thinkingLevel: 'MINIMAL',
+      };
+    }
+
+    return undefined;
   }
 
   private shouldExposeTextPart(part: any, model: string): boolean {
@@ -120,10 +139,12 @@ export class GeminiChatService implements ChatService {
     tools: ToolDefinition[] = [],
     mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,
+    reasoningEffort?: GeminiReasoningEffort,
   ) {
     this.apiKey = apiKey;
     this.model = model;
     this.responseLength = responseLength;
+    this.reasoningEffort = reasoningEffort;
 
     // check if the vision model is supported
     if (!GEMINI_VISION_SUPPORTED_MODELS.includes(visionModel)) {
@@ -337,11 +358,9 @@ export class GeminiChatService implements ChatService {
       },
     };
 
-    if (this.shouldMinimizeThinking(model)) {
-      body.generationConfig.thinkingConfig = {
-        includeThoughts: false,
-        thinkingLevel: 'MINIMAL',
-      };
+    const thinkingConfig = this.resolveThinkingConfig(model);
+    if (thinkingConfig) {
+      body.generationConfig.thinkingConfig = thinkingConfig;
     }
     let activeMCPToolSchemas: ToolDefinition[] = [];
     if (this.mcpServers.length > 0) {
