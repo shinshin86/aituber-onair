@@ -293,3 +293,12 @@ You can tune constants in `src/hooks/useAudioLipsync.ts`:
 - `three`, `@pixiv/three-vrm`, `@pixiv/three-vrm-animation`
 - Web Speech API (speech input)
 - Web Audio API + `AnalyserNode` (lip-sync analysis)
+
+## Bundled Miko asset terms
+
+The default VRM model depicts Miko, the official character of AITuber OnAir.
+It is not covered by the software's MIT License. See
+[Miko Asset Terms](./MIKO_ASSET_TERMS.md) for a link to the
+authoritative Japanese guidelines. The asset may be distributed as an integral part of a
+work or other content, but standalone redistribution and asset collections are
+prohibited.

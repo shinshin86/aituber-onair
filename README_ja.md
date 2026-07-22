@@ -352,7 +352,16 @@ aituber-onair/
 
 ## ライセンス
 
-MIT — 詳細は [LICENSE](./LICENSE) を参照してください。
+ソフトウェアとドキュメントには MIT License が適用されます。詳しくは
+[LICENSE](./LICENSE) を参照してください。
+
+同梱されているミコのアバター画像、モデル、スプライトシート、パッケージは
+MIT License の対象外です。公式サイトの
+[ミコ キャラクター利用ガイドライン](https://miko.aituberonair.com/#terms)
+が適用されます（正式版は日本語版です）。ソフトウェア、アプリ、ゲーム、映像、Webサイトその他の
+作品・コンテンツの一部として一体で再配布できますが、素材単体・素材集としての
+再配布や素材提供を主目的とする配布は禁止されます。英語での概要は
+[Miko Asset Terms](./MIKO_ASSET_TERMS.md)を参照してください。
 
 ## Special Thanks
 

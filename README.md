@@ -369,7 +369,15 @@ aituber-onair/
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+The software and documentation are licensed under the MIT License — see
+[LICENSE](./LICENSE).
+
+Bundled Miko avatar images, models, spritesheets, and packages are not covered
+by the MIT License. They are governed by the authoritative Japanese
+[Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms); see
+[Miko Asset Terms](./MIKO_ASSET_TERMS.md) for a short English summary. The assets may be distributed as an integral part of software, apps,
+games, videos, websites, and other works or content, including third-party
+projects. Standalone redistribution and asset collections are prohibited.
 
 ## Special Thanks
 

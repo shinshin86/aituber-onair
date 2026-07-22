@@ -268,3 +268,11 @@ public/piper/
 - `three`, `@pixiv/three-vrm`, `@pixiv/three-vrm-animation`
 - Web Speech API（音声入力）
 - Web Audio API + `AnalyserNode`（口パク解析）
+
+## 同梱ミコ素材の利用条件
+
+デフォルトVRMモデルは、AITuber OnAir公式キャラクター「ミコ」の素材であり、
+ソフトウェアのMIT License対象外です。作品・コンテンツの一部として一体で
+再配布できますが、素材単体・素材集としての再配布は禁止されています。
+正式版である日本語ガイドラインについては
+[Miko Asset Terms](./MIKO_ASSET_TERMS.md)を参照してください。
