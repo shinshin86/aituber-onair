@@ -5,7 +5,12 @@ import { createRequire } from 'node:module';
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildSystemPrompt, DEFAULT_PERSONA } from './system-prompt.js';
+import {
+  buildSystemPrompt,
+  DEFAULT_PERSONA_EN,
+  DEFAULT_PERSONA_JA,
+  resolvePersona,
+} from './system-prompt.js';
 
 const require = createRequire(import.meta.url);
 const { ChatServiceFactory } = require('@aituber-onair/chat');
@@ -48,7 +53,7 @@ const DEFAULT_SETTINGS = {
   model: 'gpt-5.6-terra',
   apiKey: '',
   endpoint: DEFAULT_OPENAI_COMPATIBLE_ENDPOINT,
-  persona: DEFAULT_PERSONA,
+  persona: DEFAULT_PERSONA_EN,
 };
 
 const packageKnowledge = await readFile(KNOWLEDGE_FILE, 'utf8');
@@ -108,10 +113,7 @@ const normalizeStoredSettings = (candidate) => {
       typeof candidate?.endpoint === 'string' && candidate.endpoint.trim()
         ? candidate.endpoint.trim()
         : DEFAULT_SETTINGS.endpoint,
-    persona:
-      typeof candidate?.persona === 'string' && candidate.persona.trim()
-        ? candidate.persona.trim()
-        : DEFAULT_PERSONA,
+    persona: resolvePersona(candidate?.persona),
   };
 };
 
@@ -172,6 +174,10 @@ const adminSettingsResponse = () => ({
   hasApiKey: Boolean(settings.apiKey),
   endpoint: settings.endpoint,
   persona: settings.persona,
+  defaultPersonas: {
+    en: DEFAULT_PERSONA_EN,
+    ja: DEFAULT_PERSONA_JA,
+  },
 });
 
 const sendJson = (res, statusCode, payload) => {
@@ -307,7 +313,10 @@ const validateSettingsPayload = (payload) => {
     model,
     apiKey: payload.apiKey?.trim() || settings.apiKey,
     endpoint,
-    persona: payload.persona?.trim() || settings.persona || DEFAULT_PERSONA,
+    persona:
+      payload.persona === undefined
+        ? settings.persona
+        : resolvePersona(payload.persona),
   };
 };
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import './App.css';
 import './AdminPage.css';
 import {
@@ -6,6 +6,7 @@ import {
   getAdminSettings,
   saveAdminSettings,
   type AdminProvider,
+  type DefaultPersonas,
 } from './api';
 import LanguageSwitch from './components/LanguageSwitch';
 import {
@@ -14,6 +15,13 @@ import {
   persistLanguage,
   translations,
 } from './i18n';
+import {
+  acceptPersonaReset,
+  changePersonaLanguage,
+  declinePersonaReset,
+  reconcileSavedPersona,
+  resolveLoadedPersona,
+} from './personaLanguage';
 
 const PROVIDER_LABELS: Record<string, string> = {
   openai: 'OpenAI',
@@ -47,8 +55,13 @@ interface AdminDraft {
 
 export default function AdminPage() {
   const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  const languageRef = useRef(language);
+  const languageRevisionRef = useRef(0);
   const [providers, setProviders] = useState<AdminProvider[]>([]);
   const [draft, setDraft] = useState<AdminDraft | null>(null);
+  const [defaultPersonas, setDefaultPersonas] =
+    useState<DefaultPersonas | null>(null);
+  const [personaResetLanguage, setPersonaResetLanguage] = useState<Language>();
   const [maskedApiKey, setMaskedApiKey] = useState('');
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,13 +85,21 @@ export default function AdminPage() {
     void Promise.all([getAdminProviders(), getAdminSettings()])
       .then(([availableProviders, settings]) => {
         if (cancelled) return;
+        const personaChange = resolveLoadedPersona(
+          settings.persona,
+          settings.defaultPersonas,
+          languageRef.current,
+          languageRevisionRef.current > 0,
+        );
         setProviders(availableProviders);
+        setDefaultPersonas(settings.defaultPersonas);
+        setPersonaResetLanguage(personaChange.pendingResetLanguage);
         setDraft({
           provider: settings.provider,
           model: settings.model,
           apiKey: '',
           endpoint: settings.endpoint,
-          persona: settings.persona,
+          persona: personaChange.persona,
         });
         setMaskedApiKey(settings.apiKey);
         setHasApiKey(settings.hasApiKey);
@@ -101,8 +122,37 @@ export default function AdminPage() {
   );
 
   const changeLanguage = (nextLanguage: Language) => {
+    languageRef.current = nextLanguage;
+    languageRevisionRef.current += 1;
     setLanguage(nextLanguage);
     persistLanguage(nextLanguage);
+
+    if (draft && defaultPersonas) {
+      const personaChange = changePersonaLanguage(
+        draft.persona,
+        defaultPersonas,
+        nextLanguage,
+      );
+      setDraft({ ...draft, persona: personaChange.persona });
+      setPersonaResetLanguage(personaChange.pendingResetLanguage);
+    }
+  };
+
+  const confirmPersonaReset = () => {
+    if (!draft || !defaultPersonas || !personaResetLanguage) return;
+    const personaChange = acceptPersonaReset(
+      defaultPersonas,
+      personaResetLanguage,
+    );
+    setDraft({ ...draft, persona: personaChange.persona });
+    setPersonaResetLanguage(personaChange.pendingResetLanguage);
+  };
+
+  const keepPersona = () => {
+    if (!draft) return;
+    const personaChange = declinePersonaReset(draft.persona);
+    setDraft({ ...draft, persona: personaChange.persona });
+    setPersonaResetLanguage(personaChange.pendingResetLanguage);
   };
 
   const changeProvider = (providerId: string) => {
@@ -133,6 +183,7 @@ export default function AdminPage() {
 
     setIsSaving(true);
     setFeedback(undefined);
+    const saveLanguageRevision = languageRevisionRef.current;
     try {
       const saved = await saveAdminSettings({
         provider: draft.provider,
@@ -141,18 +192,34 @@ export default function AdminPage() {
         persona: draft.persona.trim(),
         ...(draft.apiKey.trim() ? { apiKey: draft.apiKey.trim() } : {}),
       });
-      setDraft({
+      const languageChangedWhileSaving =
+        languageRevisionRef.current !== saveLanguageRevision;
+      setDefaultPersonas(saved.defaultPersonas);
+      if (!languageChangedWhileSaving) setPersonaResetLanguage(undefined);
+      setDraft((current) => ({
         provider: saved.provider,
         model: saved.model,
         apiKey: '',
         endpoint: saved.endpoint,
-        persona: saved.persona,
-      });
+        persona: current
+          ? reconcileSavedPersona(
+              current.persona,
+              saved.persona,
+              languageChangedWhileSaving,
+            )
+          : saved.persona,
+      }));
       setMaskedApiKey(saved.apiKey);
       setHasApiKey(saved.hasApiKey);
-      setFeedback({ kind: 'success', text: t.admin.saved });
+      setFeedback({
+        kind: 'success',
+        text: translations[languageRef.current].admin.saved,
+      });
     } catch {
-      setFeedback({ kind: 'error', text: t.admin.saveError });
+      setFeedback({
+        kind: 'error',
+        text: translations[languageRef.current].admin.saveError,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -282,17 +349,36 @@ export default function AdminPage() {
                 <small>{t.admin.apiKeyHelp}</small>
               </label>
 
-              <label className="admin-field">
-                <span>{t.admin.persona}</span>
+              <div className="admin-field">
+                <label htmlFor="admin-persona">{t.admin.persona}</label>
                 <textarea
+                  id="admin-persona"
                   value={draft.persona}
                   rows={6}
-                  onChange={(event) =>
-                    setDraft({ ...draft, persona: event.target.value })
-                  }
+                  onChange={(event) => {
+                    setDraft({ ...draft, persona: event.target.value });
+                    setPersonaResetLanguage(undefined);
+                  }}
                 />
                 <small>{t.admin.personaHelp}</small>
-              </label>
+                {personaResetLanguage && (
+                  <div className="admin-persona-reset" role="alert">
+                    <p>{t.admin.personaResetPrompt}</p>
+                    <div className="admin-persona-reset-actions">
+                      <button type="button" onClick={confirmPersonaReset}>
+                        {t.admin.personaReset}
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-persona-reset-keep"
+                        onClick={keepPersona}
+                      >
+                        {t.admin.personaKeep}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="admin-form-footer">
                 {feedback && (

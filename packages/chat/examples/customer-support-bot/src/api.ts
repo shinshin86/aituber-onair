@@ -22,6 +22,12 @@ export interface AdminSettings {
   hasApiKey: boolean;
   endpoint: string;
   persona: string;
+  defaultPersonas: DefaultPersonas;
+}
+
+export interface DefaultPersonas {
+  en: string;
+  ja: string;
 }
 
 export interface AdminSettingsInput {

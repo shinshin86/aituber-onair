@@ -112,6 +112,9 @@ export interface TranslationRecord {
     apiKeyHelp: string;
     persona: string;
     personaHelp: string;
+    personaResetPrompt: string;
+    personaReset: string;
+    personaKeep: string;
     save: string;
     saving: string;
     saved: string;
@@ -252,6 +255,10 @@ export const translations: Record<Language, TranslationRecord> = {
         'Leave blank to keep the stored key. The browser never receives the raw value.',
       persona: 'Persona',
       personaHelp: 'This text is appended to the support system prompt.',
+      personaResetPrompt:
+        'Reset the customized persona to the English default?',
+      personaReset: 'Use English default',
+      personaKeep: 'Keep current persona',
       save: 'Save server settings',
       saving: 'Saving…',
       saved: 'Server settings saved.',
@@ -386,6 +393,10 @@ export const translations: Record<Language, TranslationRecord> = {
         '空欄のまま保存すると現在のキーを維持します。生の値はブラウザへ返されません。',
       persona: 'ペルソナ',
       personaHelp: 'この文章はサポート用のシステムプロンプトに追加されます。',
+      personaResetPrompt:
+        'カスタマイズしたペルソナを日本語のデフォルトに戻しますか？',
+      personaReset: '日本語のデフォルトを使う',
+      personaKeep: '現在のペルソナを維持',
       save: 'サーバー設定を保存',
       saving: '保存中…',
       saved: 'サーバー設定を保存しました。',

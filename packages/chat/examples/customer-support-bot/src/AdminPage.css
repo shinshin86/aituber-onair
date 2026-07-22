@@ -103,7 +103,8 @@
   margin-bottom: 19px;
 }
 
-.admin-field > span {
+.admin-field > span,
+.admin-field > label {
   color: #35433c;
   font-size: 12px;
   font-weight: 800;
@@ -136,6 +137,47 @@
   color: #748078;
   font-size: 10px;
   line-height: 1.5;
+}
+
+.admin-persona-reset {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid #edc6a4;
+  border-radius: 10px;
+  color: #71421d;
+  background: #fff8ef;
+}
+
+.admin-persona-reset p {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.admin-persona-reset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-persona-reset-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--green-dark);
+  border-radius: 8px;
+  color: white;
+  background: var(--green-dark);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-persona-reset-actions .admin-persona-reset-keep {
+  color: var(--green-dark);
+  background: white;
 }
 
 .admin-form-footer {

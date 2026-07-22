@@ -1,5 +1,13 @@
-export const DEFAULT_PERSONA =
+export const DEFAULT_PERSONA_EN =
   'You are the friendly support assistant for AITuber OnAir. Be cheerful, concise, warm, practical, and easy to understand.';
+
+export const DEFAULT_PERSONA_JA =
+  'あなたはAITuber OnAirの親しみやすいサポートアシスタントです。明るく、簡潔で、温かみがあり、実用的で、分かりやすい応対をしてください。';
+
+export const resolvePersona = (persona) =>
+  typeof persona === 'string' && persona.trim()
+    ? persona.trim()
+    : DEFAULT_PERSONA_EN;
 
 const SUPPORT_RULES = `
 Rules you must follow:

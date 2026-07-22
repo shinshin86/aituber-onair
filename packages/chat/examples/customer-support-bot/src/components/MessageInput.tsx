@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { type Language, translations } from '../i18n';
+import { shouldSubmitMessageOnKeyDown } from './messageInputKeydown';
 
 interface MessageInputProps {
   disabled: boolean;
@@ -30,7 +31,7 @@ export default function MessageInput({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (shouldSubmitMessageOnKeyDown(event)) {
       event.preventDefault();
       submit();
     }
