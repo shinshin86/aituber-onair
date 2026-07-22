@@ -9,9 +9,10 @@ import {
 } from '../../../types';
 import {
   ENDPOINT_GEMINI_API,
-  MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_1_FLASH_LITE,
   GEMINI_VISION_SUPPORTED_MODELS,
+  normalizeGeminiReasoningEffort,
+  type GeminiReasoningEffort,
 } from '../../../constants';
 import {
   ChatResponseLength,
@@ -24,6 +25,7 @@ import { processChatWithOptionalTools } from '../../../utils';
 import {
   convertMessagesToGeminiFormat,
   convertVisionMessagesToGeminiFormat,
+  type GeminiFunctionCallContext,
 } from './geminiMessageConverter';
 import {
   buildGeminiToolConfig,
@@ -46,16 +48,43 @@ export class GeminiChatService implements ChatService {
   private mcpSchemasInitialized: boolean = false;
   private mcpSchemaInitializationError?: unknown;
   private responseLength?: ChatResponseLength;
+  private reasoningEffort?: GeminiReasoningEffort;
 
   /** id(OpenAI) → name(Gemini) mapping */
   private callIdMap = new Map<string, string>();
+  /** Common tool id → Gemini function-call metadata required for replay. */
+  private functionCallContextMap = new Map<string, GeminiFunctionCallContext>();
 
   private isGemma4Model(model: string): boolean {
     return /^gemma-4-/.test(model);
   }
 
-  private shouldMinimizeThinking(model: string): boolean {
-    return model === MODEL_GEMINI_3_5_FLASH || this.isGemma4Model(model);
+  private resolveThinkingConfig(model: string):
+    | {
+        includeThoughts: false;
+        thinkingLevel: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
+      }
+    | undefined {
+    const effort = normalizeGeminiReasoningEffort(model, this.reasoningEffort);
+    if (effort) {
+      return {
+        includeThoughts: false,
+        thinkingLevel: effort.toUpperCase() as
+          | 'MINIMAL'
+          | 'LOW'
+          | 'MEDIUM'
+          | 'HIGH',
+      };
+    }
+
+    if (this.isGemma4Model(model)) {
+      return {
+        includeThoughts: false,
+        thinkingLevel: 'MINIMAL',
+      };
+    }
+
+    return undefined;
   }
 
   private shouldExposeTextPart(part: any, model: string): boolean {
@@ -81,6 +110,7 @@ export class GeminiChatService implements ChatService {
       functionDeclarations: 'function_declarations',
       functionCall: 'function_call',
       functionResponse: 'function_response',
+      thoughtSignature: 'thought_signature',
     };
     if (Array.isArray(obj)) return obj.map((v) => this.adaptKeysForApi(v));
     if (obj && typeof obj === 'object') {
@@ -109,10 +139,12 @@ export class GeminiChatService implements ChatService {
     tools: ToolDefinition[] = [],
     mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,
+    reasoningEffort?: GeminiReasoningEffort,
   ) {
     this.apiKey = apiKey;
     this.model = model;
     this.responseLength = responseLength;
+    this.reasoningEffort = reasoningEffort;
 
     // check if the vision model is supported
     if (!GEMINI_VISION_SUPPORTED_MODELS.includes(visionModel)) {
@@ -308,10 +340,12 @@ export class GeminiChatService implements ChatService {
           messages as MessageWithVision[],
           {
             callIdMap: this.callIdMap,
+            functionCallContextMap: this.functionCallContextMap,
           },
         )
       : convertMessagesToGeminiFormat(messages as Message[], {
           callIdMap: this.callIdMap,
+          functionCallContextMap: this.functionCallContextMap,
         });
 
     const body: any = {
@@ -324,11 +358,9 @@ export class GeminiChatService implements ChatService {
       },
     };
 
-    if (this.shouldMinimizeThinking(model)) {
-      body.generationConfig.thinkingConfig = {
-        includeThoughts: false,
-        thinkingLevel: 'MINIMAL',
-      };
+    const thinkingConfig = this.resolveThinkingConfig(model);
+    if (thinkingConfig) {
+      body.generationConfig.thinkingConfig = thinkingConfig;
     }
     let activeMCPToolSchemas: ToolDefinition[] = [];
     if (this.mcpServers.length > 0) {
@@ -398,6 +430,37 @@ export class GeminiChatService implements ChatService {
     }
   }
 
+  private createFunctionCallBlock(part: any): ToolChatBlock | undefined {
+    const functionCall = part.functionCall ?? part.function_call;
+    if (!functionCall) return undefined;
+
+    const toolUseId = functionCall.id ?? this.genUUID();
+    this.callIdMap.set(toolUseId, functionCall.name);
+    this.functionCallContextMap.set(toolUseId, {
+      name: functionCall.name,
+      providerCallId: functionCall.id,
+      thoughtSignature: part.thoughtSignature ?? part.thought_signature,
+    });
+
+    return {
+      type: 'tool_use',
+      id: toolUseId,
+      name: functionCall.name,
+      input: functionCall.args ?? {},
+    };
+  }
+
+  private createFunctionResponseBlock(part: any): ToolChatBlock | undefined {
+    const functionResponse = part.functionResponse ?? part.function_response;
+    if (!functionResponse) return undefined;
+
+    return {
+      type: 'tool_result',
+      tool_use_id: functionResponse.id ?? functionResponse.name,
+      content: JSON.stringify(functionResponse.response),
+    };
+  }
+
   /* ────────────────────────────────────────────────────────── */
   /*  Convert NDJSON stream to common format             */
   /* ────────────────────────────────────────────────────────── */
@@ -428,21 +491,10 @@ export class GeminiChatService implements ChatService {
             onPartial(part.text);
             StreamTextAccumulator.addTextBlock(textBlocks, part.text);
           }
-          if (part.functionCall) {
-            toolBlocks.push({
-              type: 'tool_use',
-              id: this.genUUID(),
-              name: part.functionCall.name,
-              input: part.functionCall.args ?? {},
-            });
-          }
-          if (part.functionResponse) {
-            toolBlocks.push({
-              type: 'tool_result',
-              tool_use_id: part.functionResponse.name,
-              content: JSON.stringify(part.functionResponse.response),
-            });
-          }
+          const functionCallBlock = this.createFunctionCallBlock(part);
+          if (functionCallBlock) toolBlocks.push(functionCallBlock);
+          const functionResponseBlock = this.createFunctionResponseBlock(part);
+          if (functionResponseBlock) toolBlocks.push(functionResponseBlock);
         }
       }
     };
@@ -492,21 +544,10 @@ export class GeminiChatService implements ChatService {
         if (this.shouldExposeTextPart(part, model)) {
           textBlocks.push({ type: 'text', text: part.text });
         }
-        if (part.functionCall) {
-          toolBlocks.push({
-            type: 'tool_use',
-            id: this.genUUID(),
-            name: part.functionCall.name,
-            input: part.functionCall.args ?? {},
-          });
-        }
-        if (part.functionResponse) {
-          toolBlocks.push({
-            type: 'tool_result',
-            tool_use_id: part.functionResponse.name,
-            content: JSON.stringify(part.functionResponse.response),
-          });
-        }
+        const functionCallBlock = this.createFunctionCallBlock(part);
+        if (functionCallBlock) toolBlocks.push(functionCallBlock);
+        const functionResponseBlock = this.createFunctionResponseBlock(part);
+        if (functionResponseBlock) toolBlocks.push(functionResponseBlock);
       }
     }
 

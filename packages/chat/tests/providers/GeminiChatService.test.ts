@@ -9,7 +9,10 @@ import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMINI_2_5_FLASH,
+  MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
+  MODEL_GEMINI_3_5_FLASH_LITE,
+  MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
@@ -31,6 +34,43 @@ describe('GeminiChatService API version selection', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
+
+  it.each([
+    [MODEL_GEMINI_3_6_FLASH, 'gemini-3.6-flash'],
+    [MODEL_GEMINI_3_5_FLASH_LITE, 'gemini-3.5-flash-lite'],
+  ])(
+    'uses v1beta and minimal thinking for stable model %s',
+    async (model, modelId) => {
+      const postSpy = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(createOkResponse());
+      const service = new GeminiChatService('test-key', model, model);
+
+      await (service as any).callGemini(messages, model, true);
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy.mock.calls[0][0]).toContain(
+        `/v1beta/models/${modelId}:streamGenerateContent?alt=sse&key=test-key`,
+      );
+      expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
+        'generationConfig.temperature',
+      );
+      expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
+        'generationConfig.topP',
+      );
+      expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
+        'generationConfig.topK',
+      );
+      expect(postSpy.mock.calls[0][1]).toMatchObject({
+        generationConfig: {
+          thinkingConfig: {
+            includeThoughts: false,
+            thinkingLevel: 'MINIMAL',
+          },
+        },
+      });
+    },
+  );
 
   it('uses v1beta for stable Gemini 3.5 Flash', async () => {
     const postSpy = vi
@@ -56,6 +96,75 @@ describe('GeminiChatService API version selection', () => {
         },
       },
     });
+  });
+
+  it('sends a configured Gemini reasoning effort as thinkingLevel', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_3_6_FLASH,
+      MODEL_GEMINI_3_6_FLASH,
+      [],
+      [],
+      undefined,
+      'high',
+    );
+
+    await (service as any).callGemini(messages, MODEL_GEMINI_3_6_FLASH, true);
+
+    expect(postSpy.mock.calls[0][1]).toMatchObject({
+      generationConfig: {
+        thinkingConfig: {
+          includeThoughts: false,
+          thinkingLevel: 'HIGH',
+        },
+      },
+    });
+  });
+
+  it('uses low thinking by default for Gemini 3 Pro', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_3_1_PRO_PREVIEW,
+      MODEL_GEMINI_3_1_PRO_PREVIEW,
+    );
+
+    await (service as any).callGemini(
+      messages,
+      MODEL_GEMINI_3_1_PRO_PREVIEW,
+      true,
+    );
+
+    expect(postSpy.mock.calls[0][1]).toMatchObject({
+      generationConfig: {
+        thinkingConfig: {
+          includeThoughts: false,
+          thinkingLevel: 'LOW',
+        },
+      },
+    });
+  });
+
+  it('does not send thinkingLevel to Gemini 2.5 models', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_2_5_FLASH,
+      MODEL_GEMINI_2_5_FLASH,
+    );
+
+    await (service as any).callGemini(messages, MODEL_GEMINI_2_5_FLASH, true);
+
+    expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
+      'generationConfig.thinkingConfig',
+    );
   });
 
   it('uses v1beta for Gemini 3 preview models', async () => {
@@ -240,6 +349,116 @@ describe('GeminiChatService API version selection', () => {
       firstError,
     );
     expect(postSpy).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('GeminiChatService function-call context', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('replays Gemini call ids and thought signatures in tool history', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_3_6_FLASH,
+      MODEL_GEMINI_3_6_FLASH,
+    );
+
+    const streamPayload = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                functionCall: {
+                  id: 'gemini-call-1',
+                  name: 'get_weather',
+                  args: { city: 'Tokyo' },
+                },
+                thoughtSignature: 'signed-context',
+              },
+            ],
+          },
+        },
+      ],
+    };
+    const completion = await (service as any).parseStream(
+      new Response(`data: ${JSON.stringify(streamPayload)}\n\n`),
+      vi.fn(),
+      MODEL_GEMINI_3_6_FLASH,
+    );
+
+    expect(completion.blocks).toEqual([
+      {
+        type: 'tool_use',
+        id: 'gemini-call-1',
+        name: 'get_weather',
+        input: { city: 'Tokyo' },
+      },
+    ]);
+
+    const toolMessages = [
+      { role: 'user', content: 'What is the weather?' },
+      {
+        role: 'assistant',
+        content: '',
+        tool_calls: [
+          {
+            id: 'gemini-call-1',
+            type: 'function',
+            function: {
+              name: 'get_weather',
+              arguments: '{"city":"Tokyo"}',
+            },
+          },
+        ],
+      },
+      {
+        role: 'tool',
+        content: '{"temperature":25}',
+        tool_call_id: 'gemini-call-1',
+      },
+    ] as Message[];
+
+    await (service as any).callGemini(
+      toolMessages,
+      MODEL_GEMINI_3_6_FLASH,
+      false,
+    );
+
+    expect(postSpy.mock.calls[0][1]).toMatchObject({
+      contents: [
+        { role: 'user', parts: [{ text: 'What is the weather?' }] },
+        {
+          role: 'model',
+          parts: [
+            {
+              function_call: {
+                id: 'gemini-call-1',
+                name: 'get_weather',
+                args: { city: 'Tokyo' },
+              },
+              thought_signature: 'signed-context',
+            },
+          ],
+        },
+        {
+          role: 'user',
+          parts: [
+            {
+              function_response: {
+                id: 'gemini-call-1',
+                name: 'get_weather',
+                response: { temperature: 25 },
+              },
+            },
+          ],
+        },
+      ],
+    });
   });
 });
 

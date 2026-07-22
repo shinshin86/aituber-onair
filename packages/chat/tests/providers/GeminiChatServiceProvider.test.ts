@@ -6,7 +6,9 @@ import type { MCPServerConfig } from '../../src/types/mcp';
 import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
+  MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
+  MODEL_GEMINI_3_5_FLASH_LITE,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
@@ -40,7 +42,9 @@ describe('GeminiChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GEMINI_3_6_FLASH,
         MODEL_GEMINI_3_5_FLASH,
+        MODEL_GEMINI_3_5_FLASH_LITE,
         MODEL_GEMINI_3_1_FLASH_LITE,
         MODEL_GEMINI_3_1_PRO_PREVIEW,
         MODEL_GEMINI_3_FLASH_PREVIEW,
@@ -85,6 +89,12 @@ describe('GeminiChatServiceProvider', () => {
       expect(provider.supportsVisionForModel(MODEL_GEMINI_3_5_FLASH)).toBe(
         true,
       );
+      expect(provider.supportsVisionForModel(MODEL_GEMINI_3_6_FLASH)).toBe(
+        true,
+      );
+      expect(provider.supportsVisionForModel(MODEL_GEMINI_3_5_FLASH_LITE)).toBe(
+        true,
+      );
       expect(provider.supportsVisionForModel(MODEL_GEMINI_3_1_FLASH_LITE)).toBe(
         true,
       );
@@ -123,6 +133,7 @@ describe('GeminiChatServiceProvider', () => {
         [],
         [],
         undefined,
+        'minimal',
       );
     });
 
@@ -140,6 +151,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_5_FLASH,
         [],
         [],
+        undefined,
         undefined,
       );
     });
@@ -160,6 +172,7 @@ describe('GeminiChatServiceProvider', () => {
         [],
         [],
         undefined,
+        undefined,
       );
     });
 
@@ -177,6 +190,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_3_1_FLASH_LITE,
         [],
         [],
+        undefined,
         undefined,
       );
     });
@@ -214,6 +228,7 @@ describe('GeminiChatServiceProvider', () => {
         tools,
         [],
         undefined,
+        'minimal',
       );
     });
 
@@ -232,6 +247,7 @@ describe('GeminiChatServiceProvider', () => {
         [],
         [],
         undefined,
+        'minimal',
       );
     });
 
@@ -268,6 +284,7 @@ describe('GeminiChatServiceProvider', () => {
         tools,
         [],
         undefined,
+        undefined,
       );
     });
 
@@ -285,6 +302,7 @@ describe('GeminiChatServiceProvider', () => {
         MODEL_GEMINI_2_5_FLASH,
         [],
         [],
+        undefined,
         undefined,
       );
     });
@@ -304,6 +322,7 @@ describe('GeminiChatServiceProvider', () => {
         [],
         [],
         'long',
+        'minimal',
       );
     });
 
@@ -335,6 +354,7 @@ describe('GeminiChatServiceProvider', () => {
         [],
         mcpServers,
         undefined,
+        'minimal',
       );
     });
 
@@ -383,7 +403,54 @@ describe('GeminiChatServiceProvider', () => {
         tools,
         mcpServers,
         'medium',
+        undefined,
       );
+    });
+
+    it('should pass a configured Gemini reasoning effort', () => {
+      provider.createChatService({
+        apiKey: 'test-api-key',
+        model: MODEL_GEMINI_3_6_FLASH,
+        reasoning_effort: 'high',
+      });
+
+      expect(GeminiChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GEMINI_3_6_FLASH,
+        MODEL_GEMINI_3_6_FLASH,
+        [],
+        [],
+        undefined,
+        'high',
+      );
+    });
+
+    it('should normalize minimal reasoning to low for Gemini Pro', () => {
+      provider.createChatService({
+        apiKey: 'test-api-key',
+        model: MODEL_GEMINI_3_1_PRO_PREVIEW,
+        reasoning_effort: 'minimal',
+      });
+
+      expect(GeminiChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GEMINI_3_1_PRO_PREVIEW,
+        MODEL_GEMINI_3_1_PRO_PREVIEW,
+        [],
+        [],
+        undefined,
+        'low',
+      );
+    });
+
+    it('should reject reasoning_effort for Gemini 2.5 models', () => {
+      expect(() =>
+        provider.createChatService({
+          apiKey: 'test-api-key',
+          model: MODEL_GEMINI_2_5_FLASH,
+          reasoning_effort: 'medium',
+        }),
+      ).toThrow('Gemini 2.5 models use thinkingBudget instead');
     });
   });
 });
