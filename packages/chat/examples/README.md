@@ -155,9 +155,7 @@ Server-backed support-widget example with React, TypeScript, Vite, and Node.js:
 ```bash
 cd customer-support-bot
 npm install
-npm run server
-# In another terminal:
-npm run dev
+npm run dev # Starts the Node server and Vite together
 ```
 
 ## 🔑 API Key Management

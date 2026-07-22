@@ -52,20 +52,16 @@ cd packages/chat/examples/customer-support-bot
 npm install
 ```
 
-Use two terminals from the example directory.
-
-Terminal 1 — start the API server on `127.0.0.1:8787`:
-
-```bash
-npm run server
-```
-
-Terminal 2 — start Vite. Development `/api` requests are proxied to the Node
-server:
+Start the API server and Vite together. Development `/api` requests are
+proxied to the Node server:
 
 ```bash
 npm run dev
 ```
+
+The development launcher prefixes output from both processes and stops them
+together when you press Ctrl+C. To run either process separately for debugging,
+use `npm run server` or `npm run dev:web`.
 
 Open the Vite URL for the customer site. Open `/admin` on the same origin to
 configure the server-side provider.
