@@ -1,6 +1,6 @@
 # @aituber-onair/chat
 
-## Unreleased
+## 0.48.0
 
 ### Minor Changes
 
