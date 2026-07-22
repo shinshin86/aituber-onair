@@ -292,3 +292,12 @@ If it still fails, check whether your npm config/environment omits
 - `@aituber-onair/core` (LLM + TTS)
 - Web Speech API (speech input)
 - Web Audio API + `AnalyserNode` (lip-sync analysis)
+
+## Bundled Miko asset terms
+
+The four default PNGTuber images depict Miko, the official character of
+AITuber OnAir. They are not covered by the software's MIT License. See
+[Miko Asset Terms](./MIKO_ASSET_TERMS.md) for a link to the
+authoritative Japanese guidelines. The assets may be distributed as an integral part of a
+work or other content, but standalone redistribution and asset collections are
+prohibited.

@@ -204,13 +204,21 @@ provides free Miko assets:
 
 [Miko Character Usage Guidelines and Downloads](https://miko.aituberonair.com/)
 
-Miko is the image character of AITuber OnAir. The page provides assets such as
+Miko is the official character of AITuber OnAir. The page provides assets such as
 a VRM model, PNGTuber image states, and three-view reference images. The
 PuruPuru PNGTuber example also bundles a ready-to-use Miko `.purupuru` package
 as its default avatar. The linked
 guideline page describes the current permissions, prohibited uses, attribution
 guidance, and redistribution limits. Review the latest page before using,
 modifying, sharing, or redistributing the assets.
+
+Miko avatar assets bundled in this repository are not covered by the
+repository's MIT License. The authoritative Japanese
+[Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms) permit
+redistribution as an integral part of software, apps, games, videos, websites,
+and other works or content, including third-party projects. Standalone
+redistribution and asset collections are prohibited. See
+[Miko Asset Terms](../MIKO_ASSET_TERMS.md) for a short English summary.
 
 ## License Notes
 

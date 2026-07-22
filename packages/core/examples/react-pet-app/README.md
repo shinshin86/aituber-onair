@@ -105,3 +105,12 @@ For development-time defaults, replace `public/pet/pet.json` and
 
 Keep generated or local-only pet assets out of commits unless you have the
 right to redistribute them.
+
+## Bundled Miko asset terms
+
+The default Pet spritesheet depicts Miko, the official character of AITuber
+OnAir. It is not covered by the software's MIT License. See
+[Miko Asset Terms](./MIKO_ASSET_TERMS.md) for a link to the
+authoritative Japanese guidelines. The asset may be distributed as an integral part of a
+work or other content, but standalone redistribution and asset collections are
+prohibited.

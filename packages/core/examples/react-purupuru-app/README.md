@@ -113,9 +113,11 @@ You can replace it anytime from Settings > Visual. When a user-selected package
 is loaded, the `クリア` button returns the app to Miko. The `クリア` button is
 hidden while the bundled Miko avatar is already active.
 
-The bundled Miko avatar (c) AITuber OnAir / shinshin86. It is included for use
-with this example application. Do not extract, redistribute, or reuse the avatar
-images as your own character, and do not use them for AI/model training.
+© Yuki Shindo (AITuber OnAir). The bundled avatar is not covered by the
+software's MIT License. See [Miko Asset Terms](./MIKO_ASSET_TERMS.md) for a link to the
+authoritative Japanese guidelines. The asset may be distributed
+as an integral part of a work or other content, but standalone redistribution
+and asset collections are prohibited.
 
 ## Build and Lint
 
