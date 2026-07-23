@@ -214,6 +214,11 @@ Each package contains an `examples/` directory with code samples demonstrating t
 - Document public APIs with JSDoc comments
 - Prefer async/await for potentially long operations
 - Use Vitest for all tests following AAA pattern
+- In docs, do not single out a specific model/provider as an unexplained
+  exception. State the general rule first (which group it belongs to and why),
+  then name the current instances — e.g., "providers whose APIs cannot be
+  called directly from the browser are shown disabled — currently only
+  Sakana AI" instead of "Sakana AI is disabled here"
 
 ### Important Considerations
 

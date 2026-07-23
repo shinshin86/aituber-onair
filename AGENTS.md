@@ -30,6 +30,8 @@
 - TypeScript + Biome (2‑space indent, single quotes, 80‑char width). Code/comments in English.
 - Use barrel exports (`index.ts`) to define public API; minimize external deps.
 - Tests live in `tests` with `*.test.ts` naming.
+- Docs: when naming a specific model/provider as an exception, state the
+  general rule first (which group and why), then the current instances.
 
 ## Testing Guidelines
 - Framework: Vitest (jsdom where browser APIs are needed).

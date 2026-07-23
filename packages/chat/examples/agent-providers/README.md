@@ -61,24 +61,17 @@ Authenticate the SDK provider before running the example:
 ## Run
 
 ```bash
-node packages/chat/examples/agent-providers/agent-provider-example.js codex \
-  "Say hello in one sentence."
-```
-
-```bash
-node packages/chat/examples/agent-providers/agent-provider-example.js claude \
-  "Say hello in one sentence."
-```
-
-```bash
-node packages/chat/examples/agent-providers/agent-provider-example.js copilot \
-  "Say hello in one sentence."
-```
-
-The `index.js` file is a shortcut to the same shared example:
-
-```bash
 node packages/chat/examples/agent-providers/index.js codex \
+  "Say hello in one sentence."
+```
+
+```bash
+node packages/chat/examples/agent-providers/index.js claude \
+  "Say hello in one sentence."
+```
+
+```bash
+node packages/chat/examples/agent-providers/index.js copilot \
   "Say hello in one sentence."
 ```
 
@@ -92,17 +85,78 @@ Optional model overrides:
 
 ```bash
 CODEX_SDK_MODEL="gpt-5.1-codex" \
-node packages/chat/examples/agent-providers/agent-provider-example.js codex
+node packages/chat/examples/agent-providers/index.js codex
 
 CLAUDE_AGENT_SDK_MODEL="claude-sonnet-4-6" \
-node packages/chat/examples/agent-providers/agent-provider-example.js claude
+node packages/chat/examples/agent-providers/index.js claude
 
 COPILOT_SDK_MODEL="gpt-4.1" \
-node packages/chat/examples/agent-providers/agent-provider-example.js copilot
+node packages/chat/examples/agent-providers/index.js copilot
 
 COPILOT_SDK_APPROVE_ALL_PERMISSIONS=1 \
-node packages/chat/examples/agent-providers/agent-provider-example.js copilot
+node packages/chat/examples/agent-providers/index.js copilot
 ```
+
+## Character Chat (Codex SDK)
+
+`character-chat.js` is a lightweight experimental CLI that uses the `codex-sdk`
+provider as an AI character chat engine. It is meant as a small proof of
+concept for using an agent SDK as the conversation brain of an AI character:
+text-only, with a short conversation history kept in the terminal, and no
+voice, avatar rendering, or streaming chat platform connections.
+
+Install and authenticate the Codex SDK as described above, then run:
+
+```bash
+# Interactive chat
+node packages/chat/examples/agent-providers/character-chat.js
+
+# One-shot prompt
+node packages/chat/examples/agent-providers/character-chat.js \
+  --once="AITuber OnAirについて短く紹介して"
+
+# Prompt as a positional argument
+node packages/chat/examples/agent-providers/character-chat.js \
+  "今日の配信の最初の挨拶を考えて"
+```
+
+Customize the character:
+
+```bash
+CODEX_CHARACTER_NAME="ミコ" \
+CODEX_CHARACTER_SYSTEM_PROMPT="あなたは明るいAI配信者です。日本語で短く返答してください。" \
+node packages/chat/examples/agent-providers/character-chat.js
+```
+
+Optional settings:
+
+```bash
+CODEX_SDK_MODEL="<codex model id>" \
+CODEX_WORKING_DIRECTORY="$PWD" \
+CODEX_SKIP_GIT_REPO_CHECK="true" \
+CODEX_RESPONSE_LENGTH="short" \
+node packages/chat/examples/agent-providers/character-chat.js
+```
+
+If `CODEX_SDK_MODEL` / `--model` is not set, the Codex SDK uses the default
+model selected by your local Codex CLI/account. In that case the example shows
+`Codex CLI default` instead of a concrete model name, because the resolved
+model is not reported back to the client.
+
+CLI flags are also supported:
+
+```bash
+node packages/chat/examples/agent-providers/character-chat.js \
+  --name="ミコ" \
+  --responseLength="short" \
+  --workingDirectory="$PWD" \
+  --skipGitRepoCheck=true
+```
+
+Interactive commands:
+
+- `/exit` or `/quit`: quit the CLI
+- `/reset`: clear conversation history and keep the character prompt
 
 ## Current Limitations
 
@@ -110,3 +164,5 @@ node packages/chat/examples/agent-providers/agent-provider-example.js copilot
 - Vision chat, tools, and MCP servers are intentionally unsupported.
 - The agent SDK packages are dynamically loaded and are not dependencies of
   `@aituber-onair/chat`.
+- The Codex SDK provider returns the final response through the chat callback
+  after the SDK run completes; it is not token-by-token streaming.
