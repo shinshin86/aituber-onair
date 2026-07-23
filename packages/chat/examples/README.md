@@ -110,6 +110,15 @@ Minimal local server for CI and local validation:
 - Supports both non-stream and SSE stream responses
 - Provides `GET /health` for readiness checks
 
+### [Google Apps Script Example](./gas-basic/)
+Non-streaming chat from Google Apps Script using the UMD bundle:
+
+- Uses the UMD build (`dist/umd/aituber-onair-chat.js`) because GAS has no
+  npm/ES Modules support
+- Injects a minimal fetch backed by `UrlFetchApp` via `installGASFetch()`
+- Includes an applied recipe (`forms-autodraft-openai.js`) that turns a Google
+  Form submission into a Gmail thank-you draft with an OpenAI-generated summary
+
 ### [React Example](./react-basic/)
 Interactive web application with TypeScript and Vite:
 

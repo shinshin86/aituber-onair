@@ -197,18 +197,17 @@ npm run dev
 ## Chat サンプル
 
 - [`packages/chat/examples/node-basic`](../packages/chat/examples/node-basic):
-  Node.js での基本チャット、プロバイダー別呼び出し、Vision、ツール呼び出し、
-  ストリーミングの例。
+  Node.js での基本チャット、プロバイダー別呼び出し（Sakana AI Fugu の
+  スモークテストを含む）、Vision、ツール呼び出し、ストリーミングの例。
 - [`packages/chat/examples/react-basic`](../packages/chat/examples/react-basic):
   React ブラウザアプリでのチャット利用。
 - [`packages/chat/examples/local-llm-cli`](../packages/chat/examples/local-llm-cli):
   ローカルまたはセルフホストの OpenAI 互換 LLM 向け対話 CLI。
 - [`packages/chat/examples/agent-providers`](../packages/chat/examples/agent-providers):
   Codex、Claude、Copilot など Agent SDK ベースの provider 利用例。
+  実験的な Codex キャラクターチャット CLI を含む。
 - [`packages/chat/examples/character-agent`](../packages/chat/examples/character-agent):
   ツール、JSON ストレージ、テストを備えた秘書風キャラクターエージェント。
-- [`packages/chat/examples/codex-character-chat`](../packages/chat/examples/codex-character-chat):
-  Codex agent provider を使う実験的なキャラクターチャット CLI。
 - [`packages/chat/examples/compat-probe`](../packages/chat/examples/compat-probe):
   OpenAI 互換チャットエンドポイントの互換性確認。
 - [`packages/chat/examples/mock-openai-server`](../packages/chat/examples/mock-openai-server):
@@ -218,9 +217,8 @@ npm run dev
 - [`packages/chat/examples/slack-bot`](../packages/chat/examples/slack-bot):
   Slack Bot サンプル。
 - [`packages/chat/examples/gas-basic`](../packages/chat/examples/gas-basic):
-  Google Apps Script のチャットサンプル。
-- [`packages/chat/examples/gas-forms-autodraft-openai`](../packages/chat/examples/gas-forms-autodraft-openai):
-  OpenAI を使った Google Forms 自動下書きサンプル。
+  Google Apps Script のチャットサンプル。OpenAI を使った
+  Google Forms → Gmail 下書きレシピを含む。
 
 ## Voice サンプル
 

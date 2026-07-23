@@ -197,18 +197,17 @@ npm run dev
 ## Chat Examples
 
 - [`packages/chat/examples/node-basic`](../packages/chat/examples/node-basic):
-  Node.js examples for basic chat, provider-specific calls, vision, tool
-  calling, and streaming.
+  Node.js examples for basic chat, provider-specific calls (including a
+  Sakana AI Fugu smoke test), vision, tool calling, and streaming.
 - [`packages/chat/examples/react-basic`](../packages/chat/examples/react-basic):
   browser-based React chat usage.
 - [`packages/chat/examples/local-llm-cli`](../packages/chat/examples/local-llm-cli):
   interactive CLI for local or self-hosted OpenAI-compatible LLM servers.
 - [`packages/chat/examples/agent-providers`](../packages/chat/examples/agent-providers):
-  examples for Agent SDK backed providers such as Codex, Claude, and Copilot.
+  examples for Agent SDK backed providers such as Codex, Claude, and Copilot,
+  including an experimental Codex character chat CLI.
 - [`packages/chat/examples/character-agent`](../packages/chat/examples/character-agent):
   secretary-style character agent with tools, JSON storage, and tests.
-- [`packages/chat/examples/codex-character-chat`](../packages/chat/examples/codex-character-chat):
-  experimental character chat CLI using the Codex agent provider.
 - [`packages/chat/examples/compat-probe`](../packages/chat/examples/compat-probe):
   compatibility probe for OpenAI-compatible chat endpoints.
 - [`packages/chat/examples/mock-openai-server`](../packages/chat/examples/mock-openai-server):
@@ -218,9 +217,8 @@ npm run dev
 - [`packages/chat/examples/slack-bot`](../packages/chat/examples/slack-bot):
   Slack bot example.
 - [`packages/chat/examples/gas-basic`](../packages/chat/examples/gas-basic):
-  Google Apps Script chat example.
-- [`packages/chat/examples/gas-forms-autodraft-openai`](../packages/chat/examples/gas-forms-autodraft-openai):
-  Google Forms auto-draft example with OpenAI.
+  Google Apps Script chat example, including a Google Forms → Gmail draft
+  recipe with OpenAI.
 
 ## Voice Examples
 
