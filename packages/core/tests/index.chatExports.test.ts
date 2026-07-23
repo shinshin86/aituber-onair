@@ -10,7 +10,9 @@ import {
   MODEL_CLAUDE_4_SONNET,
   MODEL_CLAUDE_5_SONNET,
   MODEL_GEMINI_NANO,
+  MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
+  MODEL_GEMINI_3_5_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMMA_4_31B_IT,
@@ -25,7 +27,9 @@ import {
   MODEL_GPT_5_4_PRO,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GLM_5_2,
+  MODEL_GLM_5_1,
   MODEL_GLM_5_TURBO,
+  MODEL_GLM_5V_TURBO,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
@@ -53,6 +57,9 @@ import {
   MODEL_DEEPSEEK_V4_PRO,
   DEEPSEEK_SUPPORTED_MODELS,
   DeepSeekChatService,
+  MODEL_MINISTRAL_3B_2512,
+  MODEL_MINISTRAL_8B_2512,
+  MODEL_MINISTRAL_14B_2512,
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_MEDIUM_3_5,
   MISTRAL_SUPPORTED_MODELS,
@@ -77,8 +84,11 @@ import {
   allowsReasoningXHigh,
   allowsReasoningMax,
   getDefaultXaiReasoningEffort,
+  getDefaultGeminiReasoningEffort,
+  getGeminiSupportedReasoningEfforts,
   getKimiSupportedReasoningEfforts,
   isResponsesOnlyGPT5Model,
+  isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
   isKimiVisionModel,
@@ -86,8 +96,10 @@ import {
   isXaiReasoningEffortNoneModel,
   isXaiVisionModel,
   normalizeXaiReasoningEffort,
+  normalizeGeminiReasoningEffort,
   refreshOpenRouterFreeModels,
   type ChatProviderCapabilities,
+  type GeminiReasoningEffort,
   type KimiReasoningEffort,
   type RefreshOpenRouterFreeModelsResult,
   type VisionSupportLevel,
@@ -98,11 +110,29 @@ describe('Core index chat re-exports', () => {
     expect(typeof refreshOpenRouterFreeModels).toBe('function');
   });
 
-  it('re-exports Gemini 3.5 and 3.1 Flash-Lite model constants', () => {
+  it('re-exports current Gemini models and reasoning helpers', () => {
+    const reasoningEffort: GeminiReasoningEffort = 'minimal';
+
+    expect(MODEL_GEMINI_3_6_FLASH).toBe('gemini-3.6-flash');
     expect(MODEL_GEMINI_3_5_FLASH).toBe('gemini-3.5-flash');
+    expect(MODEL_GEMINI_3_5_FLASH_LITE).toBe('gemini-3.5-flash-lite');
     expect(MODEL_GEMINI_3_1_FLASH_LITE).toBe('gemini-3.1-flash-lite');
     expect(MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW).toBe(
       'gemini-3.1-flash-lite-preview',
+    );
+    expect(reasoningEffort).toBe('minimal');
+    expect(getGeminiSupportedReasoningEfforts(MODEL_GEMINI_3_6_FLASH)).toEqual([
+      'minimal',
+      'low',
+      'medium',
+      'high',
+    ]);
+    expect(isGeminiReasoningEffortModel(MODEL_GEMINI_3_6_FLASH)).toBe(true);
+    expect(getDefaultGeminiReasoningEffort(MODEL_GEMINI_3_6_FLASH)).toBe(
+      'minimal',
+    );
+    expect(normalizeGeminiReasoningEffort(MODEL_GEMINI_3_6_FLASH, 'low')).toBe(
+      'low',
     );
   });
 
@@ -144,7 +174,9 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports current GLM model constants', () => {
     expect(MODEL_GLM_5_2).toBe('glm-5.2');
+    expect(MODEL_GLM_5_1).toBe('glm-5.1');
     expect(MODEL_GLM_5_TURBO).toBe('glm-5-turbo');
+    expect(MODEL_GLM_5V_TURBO).toBe('glm-5v-turbo');
   });
 
   it('re-exports current Kimi model constants', () => {
@@ -205,12 +237,16 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports Mistral chat provider items', () => {
     expect(typeof MistralChatService).toBe('function');
+    expect(MODEL_MINISTRAL_3B_2512).toBe('ministral-3b-2512');
+    expect(MODEL_MINISTRAL_8B_2512).toBe('ministral-8b-2512');
+    expect(MODEL_MINISTRAL_14B_2512).toBe('ministral-14b-2512');
     expect(MODEL_MISTRAL_SMALL_LATEST).toBe('mistral-small-latest');
     expect(MODEL_MISTRAL_MEDIUM_3_5).toBe('mistral-medium-3-5');
     expect(MISTRAL_SUPPORTED_MODELS).toContain(MODEL_MISTRAL_SMALL_LATEST);
     expect(MISTRAL_VISION_SUPPORTED_MODELS).toContain(
       MODEL_MISTRAL_SMALL_LATEST,
     );
+    expect(MISTRAL_VISION_SUPPORTED_MODELS).toContain(MODEL_MINISTRAL_14B_2512);
     expect(isMistralReasoningEffortModel(MODEL_MISTRAL_MEDIUM_3_5)).toBe(true);
   });
 

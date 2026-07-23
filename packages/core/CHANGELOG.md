@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.26.8
+
+### Patch Changes
+
+- Synced LLM updates through `@aituber-onair/chat@0.48.0` into Core:
+  - re-exported Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Ministral 3,
+    GLM-5.1, GLM-5V-Turbo, and Gemini reasoning-effort helpers
+  - added Gemini 3 model-aware reasoning controls and Kimi K3's required
+    `reasoning_effort: 'max'` behavior to the React basic example
+  - refreshed Core example model lists and documentation for the new Gemini,
+    Kimi, Mistral, and Z.ai models
+- Updated dependencies []:
+  - @aituber-onair/chat@0.48.0
+
 ## 0.26.7
 
 ### Patch Changes

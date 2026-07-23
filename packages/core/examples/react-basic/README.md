@@ -14,7 +14,7 @@ This example application serves as a practical implementation guide for integrat
   - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.6 Sol/Terra/Luna, GPT-5.5, and GPT-5.4 variants)
   - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
-  - Google Gemini (Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
+  - Google Gemini (Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
   - Anthropic Claude (4.8 Opus, 4.7 Opus, 4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
   - DeepSeek, Mistral, Sakana AI (disabled in browser UI), and PLaMo first-class providers
   - Seamless provider switching
@@ -117,10 +117,12 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **Gemini:**
 - Gemma 4 series (31B IT, 26B A4B IT)
-- Gemini 3.5 Flash with automatic minimal thinking for chat-style responses
+- Gemini 3.6 Flash and Gemini 3.5 Flash / Flash-Lite
 - Gemini 3 series (3.1 Flash-Lite, 3.1 Pro Preview, 3 Flash Preview, plus deprecated preview aliases)
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)
+- Gemini 3 Flash-family models expose `reasoning_effort`; Flash defaults to `minimal`, while Pro defaults to `low`
+- Gemini 2.5 keeps using `thinkingBudget` and does not expose this control
 
 **Gemini Nano:**
 - Built-in Chrome `gemini-nano` model
@@ -138,11 +140,14 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **Z.ai:**
 - GLM-5.2
+- GLM-5.1
+- GLM-5V-Turbo (vision)
 - GLM-5 and GLM-5-Turbo (text-only)
 - GLM-4.7 series
 - GLM-4.6 and GLM-4.6V series
 
 **Kimi:**
+- Kimi K3 with vision and the currently required `reasoning_effort: 'max'`
 - Kimi K2.7 Code
 - Kimi K2.7 Code HighSpeed
 - Kimi K2.6
@@ -159,6 +164,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - DeepSeek V4 Pro
 
 **Mistral:**
+- Ministral 3 (3B, 8B, and 14B; vision-capable)
 - Mistral Small Latest
 - Mistral Medium 3.5
 - Mistral Large Latest / 3, Small 4, Medium 3.1
@@ -203,7 +209,7 @@ When using GPT-5 models, additional configuration options become available:
 
 #### Custom Settings
 - **Verbosity**: Low, Medium, High
-- **Reasoning Effort**: `none`/`minimal`/`low`/`medium`/`high`/`xhigh` (options change by model capability)
+- **Reasoning Effort**: `none`/`minimal`/`low`/`medium`/`high`/`xhigh`/`max` (options change by provider and model capability)
 - **Endpoint**: Chat Completions API or Responses API (`gpt-5.4-pro` is fixed to Responses API)
 
 `gpt-5.5-pro` is not listed because OpenAI documents it as non-streaming,

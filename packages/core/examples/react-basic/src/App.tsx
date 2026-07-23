@@ -23,15 +23,21 @@ import {
   allowsReasoningMinimal,
   allowsReasoningNone,
   allowsReasoningXHigh,
+  getDefaultGeminiReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
+  getGeminiSupportedReasoningEfforts,
   getVoiceEngineVoiceList,
   isGPT5Model,
+  isGeminiReasoningEffortModel,
+  isKimiReasoningEffortModel,
   isResponsesOnlyGPT5Model,
   isXaiReasoningEffortModel,
   isXaiReasoningEffortNoneModel,
+  normalizeGeminiReasoningEffort,
   normalizeXaiReasoningEffort,
   refreshOpenRouterFreeModels,
+  type GeminiReasoningEffort,
   type XaiReasoningEffort,
   type MinimaxModel,
   type MinimaxAudioFormat,
@@ -1263,6 +1269,9 @@ const App: React.FC = () => {
         break;
       case 'gemini':
         setModel(geminiModels[0]);
+        setReasoningEffort(
+          getDefaultGeminiReasoningEffort(geminiModels[0]) ?? 'minimal',
+        );
         break;
       case 'gemini-nano':
         setModel(MODEL_GEMINI_NANO);
@@ -1336,6 +1345,27 @@ const App: React.FC = () => {
       setReasoningEffort(normalized);
     }
   }, [chatProvider, model, gpt5Preset, reasoning_effort, responseLength]);
+
+  useEffect(() => {
+    if (
+      chatProvider !== 'gemini' ||
+      !model ||
+      !isGeminiReasoningEffortModel(model)
+    ) {
+      return;
+    }
+    const requestedEffort: GeminiReasoningEffort | undefined =
+      reasoning_effort === 'minimal' ||
+      reasoning_effort === 'low' ||
+      reasoning_effort === 'medium' ||
+      reasoning_effort === 'high'
+        ? reasoning_effort
+        : undefined;
+    const normalized = normalizeGeminiReasoningEffort(model, requestedEffort);
+    if (normalized && normalized !== reasoning_effort) {
+      setReasoningEffort(normalized);
+    }
+  }, [chatProvider, model, reasoning_effort]);
 
   useEffect(() => {
     if (
@@ -1510,7 +1540,27 @@ const App: React.FC = () => {
         reasoning_effort,
       );
     }
+    if (
+      chatProvider === 'gemini' &&
+      model &&
+      isGeminiReasoningEffortModel(model)
+    ) {
+      const requestedEffort: GeminiReasoningEffort | undefined =
+        reasoning_effort === 'minimal' ||
+        reasoning_effort === 'low' ||
+        reasoning_effort === 'medium' ||
+        reasoning_effort === 'high'
+          ? reasoning_effort
+          : undefined;
+      providerOptions.reasoning_effort = normalizeGeminiReasoningEffort(
+        model,
+        requestedEffort,
+      );
+    }
     if (chatProvider === 'kimi') {
+      if (model && isKimiReasoningEffortModel(model)) {
+        providerOptions.reasoning_effort = 'max';
+      }
       const trimmedBaseUrl = kimiBaseUrl.trim();
       if (trimmedBaseUrl) {
         providerOptions.baseUrl = trimmedBaseUrl;
@@ -2619,6 +2669,25 @@ const App: React.FC = () => {
     isXaiReasoningEffortModelSelected
       ? normalizeReasoningEffortForXaiModel(model, reasoning_effort)
       : 'none';
+  const geminiSupportedReasoningEfforts =
+    chatProvider === 'gemini' && model
+      ? getGeminiSupportedReasoningEfforts(model)
+      : [];
+  const isGeminiReasoningEffortModelSelected =
+    geminiSupportedReasoningEfforts.length > 0;
+  const requestedGeminiReasoningEffort: GeminiReasoningEffort | undefined =
+    reasoning_effort === 'minimal' ||
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'medium' ||
+    reasoning_effort === 'high'
+      ? reasoning_effort
+      : undefined;
+  const geminiReasoningEffortValue = model
+    ? normalizeGeminiReasoningEffort(model, requestedGeminiReasoningEffort)
+    : undefined;
+  const isKimiReasoningEffortModelSelected = Boolean(
+    chatProvider === 'kimi' && model && isKimiReasoningEffortModel(model),
+  );
   const getResponseLengthOptionLabel = (length: ChatResponseLength): string => {
     const label = RESPONSE_LENGTH_LABELS[length];
     const baseTokens = RESPONSE_LENGTH_BASE_TOKENS[length];
@@ -3088,6 +3157,32 @@ const App: React.FC = () => {
 
                   {chatProvider === 'kimi' && (
                     <>
+                      {isKimiReasoningEffortModelSelected && (
+                        <>
+                          <label htmlFor="kimiReasoningEffort">
+                            Kimi Reasoning Effort:
+                          </label>
+                          <select
+                            id="kimiReasoningEffort"
+                            value="max"
+                            disabled
+                          >
+                            <option value="max">Max (currently required)</option>
+                          </select>
+                          <div
+                            style={{
+                              marginTop: '6px',
+                              marginBottom: '12px',
+                              color: '#666',
+                              fontSize: '12px',
+                            }}
+                          >
+                            Kimi K3 currently supports max only. Lower levels
+                            will be available after the official API supports
+                            them.
+                          </div>
+                        </>
+                      )}
                       <label htmlFor="kimiBaseUrl">Base URL (optional):</label>
                       <input
                         id="kimiBaseUrl"
@@ -3268,6 +3363,48 @@ const App: React.FC = () => {
                             ? 'Grok 4.5 uses low by default; none is not supported.'
                             : 'Grok 4.3 uses none by default for lower latency.'
                           : 'This xAI model does not support reasoning_effort.'}
+                      </div>
+                    </div>
+                  )}
+
+                  {chatProvider === 'gemini' && (
+                    <div style={{ marginTop: '16px' }}>
+                      <label htmlFor="geminiReasoningEffort">
+                        Gemini Reasoning Effort:
+                      </label>
+                      <select
+                        id="geminiReasoningEffort"
+                        value={geminiReasoningEffortValue ?? ''}
+                        disabled={!isGeminiReasoningEffortModelSelected}
+                        onChange={(e) =>
+                          setReasoningEffort(
+                            e.target.value as GeminiReasoningEffort,
+                          )
+                        }
+                      >
+                        {!isGeminiReasoningEffortModelSelected && (
+                          <option value="">Not available</option>
+                        )}
+                        {geminiSupportedReasoningEfforts.map((effort) => (
+                          <option key={effort} value={effort}>
+                            {effort === 'minimal'
+                              ? 'Minimal (fastest)'
+                              : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                          </option>
+                        ))}
+                      </select>
+                      <div
+                        style={{
+                          marginTop: '6px',
+                          color: '#666',
+                          fontSize: '12px',
+                        }}
+                      >
+                        {isGeminiReasoningEffortModelSelected
+                          ? geminiSupportedReasoningEfforts.includes('minimal')
+                            ? 'Mapped to Gemini thinkingLevel. Minimal is optimized for chat latency.'
+                            : 'Mapped to Gemini thinkingLevel. Low is the lowest level supported by Gemini 3 Pro.'
+                          : 'Gemini 2.5 uses thinkingBudget; other models may not expose configurable thinkingLevel.'}
                       </div>
                     </div>
                   )}
