@@ -35,6 +35,9 @@ Simple JavaScript runtime examples demonstrating core functionality:
 - **Vision Chat** (`vision-example.js`) - Image analysis with vision models
 - **Tool Calling** (`tool-calling-example.js`) - Function calling demonstration
 - **Streaming** (`streaming-example.js`) - Real-time streaming responses
+- **Sakana AI Fugu** (`sakana-example.js`) - Minimal Sakana AI Fugu smoke test
+  (`fugu`, `fugu-ultra`, `fugu-ultra-20260615`); run from Node.js to avoid
+  browser CORS issues
 
 **Quick Start:**
 ```bash
@@ -55,15 +58,6 @@ Validation probe for OpenAI-compatible Chat Completions endpoints:
 
 Use this probe to verify compatibility against local LLM servers without
 adding provider-specific code.
-
-### [Sakana AI Fugu Node.js Example](./sakana-basic/)
-Minimal Node.js example for the first-class `sakana` provider:
-
-- Uses OpenAI-compatible Chat Completions
-- Defaults to `fugu`
-- Supports `fugu`, `fugu-ultra`, and `fugu-ultra-20260615`
-- Uses `responseLength: 'veryShort'` to keep the sample inexpensive
-- Avoids browser CORS issues by running in Node.js
 
 ### [Local LLM CLI](./local-llm-cli/)
 Minimal interactive CLI for local/self-hosted LLMs (Ollama/LM Studio/vLLM):
@@ -132,8 +126,8 @@ Interactive web application with TypeScript and Vite:
 - ✅ **Error Handling** - Graceful error management
 
 Sakana AI is shown as disabled in the React browser example because direct
-browser requests may fail with CORS. Use the Node.js Sakana example or your own
-backend proxy for web apps.
+browser requests may fail with CORS. Use the Node.js Sakana example
+(`node-basic/sakana-example.js`) or your own backend proxy for web apps.
 
 **Quick Start:**
 ```bash

@@ -819,7 +819,7 @@ Notes:
 - Supported models: `fugu` (default), `fugu-ultra`, and `fugu-ultra-20260615`.
 - Sakana recommends `max_completion_tokens` for new Chat Completions integrations, but also accepts legacy `max_tokens`. This provider keeps `max_tokens` to match existing OpenAI-compatible provider behavior.
 - Sakana recommends the Responses API for best performance, but this provider uses Chat Completions because it matches the package's OpenAI-compatible chat path.
-- Direct browser usage may fail with CORS unless Sakana enables CORS for your origin. Use Node.js, a backend/serverless proxy, or `examples/sakana-basic` instead of calling Sakana directly from browser-only apps.
+- Direct browser usage may fail with CORS unless Sakana enables CORS for your origin. Use Node.js, a backend/serverless proxy, or `examples/node-basic/sakana-example.js` instead of calling Sakana directly from browser-only apps.
 
 #### PLaMo
 

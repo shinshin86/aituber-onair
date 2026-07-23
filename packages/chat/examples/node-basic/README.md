@@ -59,6 +59,34 @@ node claude-example.js
 node gemini-example.js
 ```
 
+#### Sakana AI Fugu (`sakana-example.js`)
+Minimal smoke test for the first-class `sakana` provider:
+- Uses OpenAI-compatible Chat Completions
+- Defaults to `fugu`; also supports `fugu-ultra` and `fugu-ultra-20260615`
+- Uses the smallest working response length presets (`veryShort` for `fugu`,
+  `medium` for Fugu Ultra models because smaller presets can leave no visible
+  output after orchestration/reasoning)
+```bash
+export FUGU_API_KEY="xxx..."
+node sakana-example.js
+
+# Try another model
+FUGU_MODEL="fugu-ultra" node sakana-example.js
+
+# Run all supported models with a tiny prompt
+node sakana-example.js --all
+
+# Optional custom base URL (defaults to https://api.sakana.ai/v1)
+FUGU_BASE_URL="https://api.sakana.ai/v1" node sakana-example.js
+```
+**Browser note**: The React browser example shows Sakana AI as disabled because
+direct browser requests can fail with CORS unless Sakana enables the required
+CORS headers for your origin. Run this Node.js example, or use a backend or
+serverless proxy for browser apps. If an Ultra model prints no text, increase
+the response length preset in `sakana-example.js`; Sakana documents that the
+token limit applies only to the final Fugu Ultra response, while orchestration
+work uses its own maximum token limit.
+
 ### Advanced Features
 
 #### Vision Chat (`vision-example.js`)

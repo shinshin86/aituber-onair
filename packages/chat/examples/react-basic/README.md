@@ -205,7 +205,7 @@ npm install
 The Vite dev server proxies some API requests to avoid CORS issues. Sakana AI
 is shown as a disabled provider in this browser example because direct browser
 requests can fail with CORS unless Sakana enables the required CORS headers for
-your origin. Use `../sakana-basic` from Node.js, or call Sakana through your own
+your origin. Use `../node-basic/sakana-example.js` from Node.js, or call Sakana through your own
 backend/serverless proxy in a web app.
 
 For production, you'll need to:
