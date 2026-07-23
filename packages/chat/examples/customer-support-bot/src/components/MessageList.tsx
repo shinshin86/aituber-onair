@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import TypingIndicator from './TypingIndicator';
+import { renderMarkdownContent } from './markdownContent';
 import type { Language } from '../i18n';
 
 export interface SupportMessage {
@@ -39,9 +40,26 @@ export default function MessageList({ messages, language }: MessageListProps) {
                 message.state === 'error' ? ' message-bubble--error' : ''
               }`}
             >
-              {message.content}
-              {message.state === 'streaming' && (
-                <span className="stream-cursor" aria-hidden="true" />
+              {message.role === 'assistant' ? (
+                <div className="markdown-content">
+                  {renderMarkdownContent(
+                    message.content,
+                    message.state === 'streaming' ? (
+                      <span
+                        className="stream-cursor"
+                        aria-hidden="true"
+                        key="stream-cursor"
+                      />
+                    ) : undefined,
+                  )}
+                </div>
+              ) : (
+                <>
+                  {message.content}
+                  {message.state === 'streaming' && (
+                    <span className="stream-cursor" aria-hidden="true" />
+                  )}
+                </>
               )}
             </div>
           )}
