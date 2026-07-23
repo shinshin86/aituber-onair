@@ -14,9 +14,11 @@ Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、
 - LLM プロバイダ切り替え: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`, `sakana`（ブラウザ UI では disabled 表示）, `plamo`
 - xAI Grok 4.5 の `reasoning_effort` は `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
-  Gemini 3.5 Flash や GPT-5.6 など chat 由来の新規モデルも Settings に
+  Gemini 3.6 Flash、Kimi K3、Ministral 3、GLM-5V-Turbo、GPT-5.6 など
+  chat 由来の新規モデルも Settings に
   自動反映されます
-- Gemini 3.5 Flash はチャット用途向けに minimal thinking を自動適用します
+- Gemini 3 Flash 系はチャット用途向けに minimal thinking、Gemini 3 Pro
+  は low をデフォルトで適用します
 - `gpt-5.5-pro` は OpenAI のドキュメント上でストリーミング非対応のため、
   ストリーミング前提の通常チャットフローを使うこの例では含めていません
 - `openrouter` では Settings から現在使える `:free` モデルを取得可能:

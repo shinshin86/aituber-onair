@@ -14,9 +14,11 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 - Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`, `sakana` (disabled in browser UI), `plamo`
 - xAI Grok 4.5 exposes `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for lower latency
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
-  chat models such as Claude Opus 4.8, Gemini 3.5 Flash, and GPT-5.6 are available automatically
+  chat models such as Gemini 3.6 Flash, Kimi K3, Ministral 3, GLM-5V-Turbo,
+  and GPT-5.6 are available automatically
   in Settings
-- Gemini 3.5 Flash automatically uses minimal thinking for chat-style responses
+- Gemini 3 Flash-family models use minimal thinking by default for chat-style
+  responses; Gemini 3 Pro uses low
 - `gpt-5.5-pro` is intentionally omitted because OpenAI documents it as
   non-streaming, while this example uses the standard streaming chat flow
 - For `openrouter`, fetch currently working `:free` models from Settings:
