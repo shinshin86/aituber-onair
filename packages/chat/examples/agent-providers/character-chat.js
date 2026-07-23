@@ -35,12 +35,12 @@ function usage() {
   console.log('(experimental CLI AI character chat using @openai/codex-sdk)');
   console.log('');
   console.log('Usage:');
-  console.log('  node packages/chat/examples/codex-character-chat/index.js');
+  console.log('  node packages/chat/examples/agent-providers/character-chat.js');
   console.log(
-    '  node packages/chat/examples/codex-character-chat/index.js --once="こんにちは"',
+    '  node packages/chat/examples/agent-providers/character-chat.js --once="こんにちは"',
   );
   console.log(
-    '  node packages/chat/examples/codex-character-chat/index.js "短く自己紹介して"',
+    '  node packages/chat/examples/agent-providers/character-chat.js "短く自己紹介して"',
   );
   console.log('');
   console.log('Options:');
