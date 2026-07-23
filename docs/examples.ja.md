@@ -198,13 +198,13 @@ npm run dev
 
 - [`packages/chat/examples/node-basic`](../packages/chat/examples/node-basic):
   Node.js での基本チャット、プロバイダー別呼び出し、Vision、ツール呼び出し、
-  ストリーミングの例。ブラウザから直接呼べないプロバイダーの入口でもあり、
-  Sakana AI Fugu はブラウザアプリでは CORS で失敗するため、react-basic では
-  なくここの `sakana-example.js` から試す。
+  ストリーミングの例。ブラウザから直接呼べないプロバイダーもここから試す
+  （現状該当するのは、API がブラウザからの CORS リクエストを許可していない
+  Sakana AI Fugu のみ。`sakana-example.js` を利用）。
 - [`packages/chat/examples/react-basic`](../packages/chat/examples/react-basic):
-  React ブラウザアプリでのチャット利用。Sakana AI はブラウザからの直接
-  リクエストが CORS で失敗しうるため、このサンプルでは無効化されている。
-  試す場合は node-basic か自前の backend proxy を利用する。
+  React ブラウザアプリでのチャット利用。ブラウザから直接呼べない
+  プロバイダーは無効化して表示している（現状該当するのは Sakana AI のみ）。
+  該当プロバイダーは node-basic か自前の backend proxy から試せる。
 - [`packages/chat/examples/local-llm-cli`](../packages/chat/examples/local-llm-cli):
   ローカルまたはセルフホストの OpenAI 互換 LLM 向け対話 CLI。
 - [`packages/chat/examples/agent-providers`](../packages/chat/examples/agent-providers):

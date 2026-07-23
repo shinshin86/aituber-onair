@@ -198,14 +198,14 @@ npm run dev
 
 - [`packages/chat/examples/node-basic`](../packages/chat/examples/node-basic):
   Node.js examples for basic chat, provider-specific calls, vision, tool
-  calling, and streaming. This is also the entry point for providers that
-  cannot be called directly from the browser: Sakana AI Fugu fails with CORS
-  in browser apps, so try it here via `sakana-example.js` instead of
-  react-basic.
+  calling, and streaming. Providers whose APIs cannot be called directly from
+  the browser are also tried here — currently that is only Sakana AI Fugu
+  (`sakana-example.js`), whose API does not allow browser CORS requests.
 - [`packages/chat/examples/react-basic`](../packages/chat/examples/react-basic):
-  browser-based React chat usage. Sakana AI is shown as a disabled provider
-  in this example because direct browser requests can fail with CORS; use
-  node-basic or your own backend proxy for it.
+  browser-based React chat usage. Providers whose APIs cannot be called
+  directly from the browser are shown disabled in this example — currently
+  that is only Sakana AI — and can be tried from node-basic or through your
+  own backend proxy instead.
 - [`packages/chat/examples/local-llm-cli`](../packages/chat/examples/local-llm-cli):
   interactive CLI for local or self-hosted OpenAI-compatible LLM servers.
 - [`packages/chat/examples/agent-providers`](../packages/chat/examples/agent-providers):
