@@ -35,7 +35,9 @@ function usage() {
   console.log('(experimental CLI AI character chat using @openai/codex-sdk)');
   console.log('');
   console.log('Usage:');
-  console.log('  node packages/chat/examples/agent-providers/character-chat.js');
+  console.log(
+    '  node packages/chat/examples/agent-providers/character-chat.js',
+  );
   console.log(
     '  node packages/chat/examples/agent-providers/character-chat.js --once="こんにちは"',
   );
