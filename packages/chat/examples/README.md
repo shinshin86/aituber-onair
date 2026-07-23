@@ -142,6 +142,22 @@ npm install
 npm run dev
 ```
 
+### [Customer Support Bot](./customer-support-bot/)
+Server-backed support-widget example with React, TypeScript, Vite, and Node.js:
+
+- Keeps provider credentials, persona, and curated knowledge on a Node server
+- Streams server-proxied replies into a compact floating chat panel with SSE
+- Discovers server providers and models dynamically from `ChatServiceFactory`
+- Provides a bilingual admin dashboard at `/admin`
+- Persists only the EN/JA preference in browser localStorage
+
+**Quick Start:**
+```bash
+cd customer-support-bot
+npm install
+npm run dev # Starts the Node server and Vite together
+```
+
 ## 🔑 API Key Management
 
 ### Environment Variables (Recommended for Production)
