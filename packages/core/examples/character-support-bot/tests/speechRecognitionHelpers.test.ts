@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   appendTranscript,
   DEFAULT_SPEECH_LANGUAGE,
+  DEFAULT_SPEECH_RECOGNITION_MESSAGES,
   getSpeechRecognitionErrorMessage,
   resolveSpeechLanguage,
 } from '../src/lib/speechRecognition';
@@ -33,6 +34,15 @@ describe('speech recognition helpers', () => {
     expect(getSpeechRecognitionErrorMessage('not-allowed')).toContain(
       'keep typing',
     );
+  });
+
+  it('uses localized recognition error messages', () => {
+    expect(
+      getSpeechRecognitionErrorMessage('not-allowed', {
+        ...DEFAULT_SPEECH_RECOGNITION_MESSAGES,
+        permissionDenied: 'マイクを利用できません。',
+      }),
+    ).toBe('マイクを利用できません。');
   });
 
   it('does not surface expected aborts as errors', () => {

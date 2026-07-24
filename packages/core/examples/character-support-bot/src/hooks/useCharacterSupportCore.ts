@@ -4,6 +4,8 @@ import {
   createPuruPuruReactionFromScreenplay,
   type PuruPuruReaction,
 } from '../lib/purupuruReactions';
+import type { Language } from '../i18n';
+import { getLanguageAwareChatEndpoint } from '../personaLanguage';
 
 const CLIENT_SYSTEM_PROMPT = [
   'You are the AITuber OnAir character support assistant.',
@@ -25,6 +27,8 @@ interface ScreenplayLike {
 
 interface UseCharacterSupportCoreOptions {
   enabled: boolean;
+  language: Language;
+  errorMessage: string;
   onAudioPlay: (audioBuffer: ArrayBuffer) => Promise<void>;
 }
 
@@ -77,16 +81,22 @@ const getAssistantText = (value: unknown): string => {
 
 export function useCharacterSupportCore({
   enabled,
+  language,
+  errorMessage,
   onAudioPlay,
 }: UseCharacterSupportCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
   const onAudioPlayRef = useRef(onAudioPlay);
+  const errorMessageRef = useRef(errorMessage);
+  const chatHistoryRef = useRef<ReturnType<AITuberOnAirCore['getChatHistory']>>(
+    [],
+  );
   const activeAssistantIdRef = useRef<string | null>(null);
   const partialTextRef = useRef('');
   const sequenceRef = useRef(0);
   const reactionSequenceRef = useRef(0);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
-  const [isReady, setIsReady] = useState(false);
+  const [readyLanguage, setReadyLanguage] = useState<Language | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeechActive, setIsSpeechActive] = useState(false);
   const [reaction, setReaction] = useState<PuruPuruReaction | null>(null);
@@ -94,6 +104,10 @@ export function useCharacterSupportCore({
   useEffect(() => {
     onAudioPlayRef.current = onAudioPlay;
   }, [onAudioPlay]);
+
+  useEffect(() => {
+    errorMessageRef.current = errorMessage;
+  }, [errorMessage]);
 
   const createId = useCallback((prefix: string) => {
     sequenceRef.current += 1;
@@ -104,7 +118,10 @@ export function useCharacterSupportCore({
     if (!enabled) return;
     let cancelled = false;
 
-    const endpoint = `${window.location.origin}/api/support/chat/completions`;
+    const endpoint = getLanguageAwareChatEndpoint(
+      window.location.origin,
+      language,
+    );
     const ttsEndpoint = `${window.location.origin}/api/support/tts`;
     const core = new AITuberOnAirCore({
       apiKey: '',
@@ -126,6 +143,10 @@ export function useCharacterSupportCore({
       },
       debug: false,
     } as ConstructorParameters<typeof AITuberOnAirCore>[0]);
+
+    if (chatHistoryRef.current.length > 0) {
+      core.setChatHistory(chatHistoryRef.current);
+    }
 
     core.on(AITuberOnAirCoreEvent.PROCESSING_START, () => {
       setIsProcessing(true);
@@ -194,8 +215,7 @@ export function useCharacterSupportCore({
             message.id === activeId
               ? {
                   ...message,
-                  content:
-                    'I could not complete that request. Check the server configuration and try again.',
+                  content: errorMessageRef.current,
                   state: 'error',
                 }
               : message,
@@ -211,17 +231,19 @@ export function useCharacterSupportCore({
 
     coreRef.current = core;
     queueMicrotask(() => {
-      if (!cancelled) setIsReady(true);
+      if (!cancelled) setReadyLanguage(language);
     });
 
     return () => {
       cancelled = true;
+      chatHistoryRef.current = core.getChatHistory();
       core.stopSpeech();
       core.offAll();
+      setIsProcessing(false);
       setIsSpeechActive(false);
       if (coreRef.current === core) coreRef.current = null;
     };
-  }, [enabled]);
+  }, [enabled, language]);
 
   const sendMessage = useCallback(
     async (text: string): Promise<void> => {
@@ -251,7 +273,7 @@ export function useCharacterSupportCore({
 
   return {
     messages,
-    isReady,
+    isReady: enabled && readyLanguage === language,
     isProcessing,
     isSpeechActive,
     reaction,

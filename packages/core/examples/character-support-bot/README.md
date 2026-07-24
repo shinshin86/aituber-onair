@@ -28,6 +28,8 @@ The example enforces one useful boundary even in local development:
 - The browser bundle creates `AITuberOnAirCore` with an empty key.
 - Browser chat and speech requests never include provider credentials.
 - The Node server adds credentials only to its upstream provider requests.
+- The selected EN/JA display language is the only preference stored in browser
+  `localStorage`.
 
 ## Architecture
 
@@ -37,7 +39,7 @@ Browser
     microphone -> interim and final text -> composer (no automatic send)
   AITuberOnAirCore
     chatProvider: openai-compatible
-      -> POST /api/support/chat/completions (no key)
+      -> POST /api/support/chat/completions?language=en|ja (no key)
     voice engine: openaiCompatible
       -> POST /api/support/tts (no key)
       <- audio bytes -> Web Audio playback + lip sync
@@ -55,6 +57,25 @@ The server replaces browser-supplied system messages with a server-owned
 persona, support rules, emotion-tag contract, and curated Core package
 knowledge.
 
+## Language switching
+
+The EN/JA controls on the landing page, support widget, and admin page share
+one display-language preference. The initial value follows `navigator.language`
+when no preference has been saved, and later selections are stored in browser
+`localStorage`.
+
+The selected language controls three parts of the example together:
+
+- All landing page, widget, status, voice-input, and admin UI copy.
+- Web Speech API recognition locale (`en-US` or `ja-JP`). Active recognition
+  restarts with the new locale when the language changes.
+- Miko's response language. The browser passes the selected language to the
+  same-origin chat proxy, and the server adds the matching language instruction
+  to its protected system prompt.
+
+Provider keys, persona text, and other server settings are not stored in
+browser storage.
+
 ## Voice input
 
 The microphone button uses the browser's `SpeechRecognition` or
@@ -66,8 +87,7 @@ service and does not require an API key.
 - Recognition pauses between Core's `SPEECH_START` and `SPEECH_END` events so
   Miko does not transcribe her own TTS output. It resumes afterward when the
   microphone toggle is still active.
-- The recognition language follows `navigator.language` and falls back to
-  `ja-JP` when the browser does not provide one.
+- The recognition language follows the EN/JA display-language selection.
 - Permission denials and recognition errors leave normal text input available
   and show a small status message instead of repeatedly logging errors.
 
@@ -156,6 +176,8 @@ After building, `npm run server` serves `dist` and the API together at
 
 - `src/hooks/useCharacterSupportCore.ts`: browser-side Core configuration and
   event mapping.
+- `src/i18n.ts`: EN/JA UI resources and the browser-only language preference.
+- `src/personaLanguage.ts`: chat endpoint and speech-recognition locale mapping.
 - `src/hooks/useAudioLipsync.ts`: audio playback, AudioContext unlock, and RMS
   analysis.
 - `src/hooks/useSpeechRecognition.ts`: browser microphone recognition,

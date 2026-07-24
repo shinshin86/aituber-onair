@@ -4,6 +4,7 @@ import {
   buildSystemPrompt,
   DEFAULT_PERSONA,
   resolvePersona,
+  resolveResponseLanguage,
 } from '../server/system-prompt.js';
 
 describe('character support server helpers', () => {
@@ -16,7 +17,16 @@ describe('character support server helpers', () => {
 
     expect(prompt).toContain('You are Test Miko.');
     expect(prompt).toContain('[happy]');
+    expect(prompt).toContain('Reply in English');
     expect(prompt).toContain('Known fact.');
+  });
+
+  it('adds the selected response language to the system prompt', () => {
+    const prompt = buildSystemPrompt('You are Test Miko.', 'Known fact.', 'ja');
+
+    expect(prompt).toContain('Reply in Japanese');
+    expect(resolveResponseLanguage('ja')).toBe('ja');
+    expect(resolveResponseLanguage('unsupported')).toBe('en');
   });
 
   it('creates a decodable PCM WAV envelope for local lip-sync checks', () => {

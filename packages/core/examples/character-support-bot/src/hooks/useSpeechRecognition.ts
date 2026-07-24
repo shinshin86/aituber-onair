@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  DEFAULT_SPEECH_RECOGNITION_MESSAGES,
   getSpeechRecognitionErrorMessage,
   resolveSpeechLanguage,
+  type SpeechRecognitionMessages,
 } from '../lib/speechRecognition';
 
 interface UseSpeechRecognitionOptions {
   language?: string;
+  messages?: SpeechRecognitionMessages;
   suspended?: boolean;
   onFinalTranscript?: (text: string) => void;
 }
@@ -14,6 +17,7 @@ const RESTART_DELAY_MS = 160;
 
 export function useSpeechRecognition({
   language,
+  messages = DEFAULT_SPEECH_RECOGNITION_MESSAGES,
   suspended = false,
   onFinalTranscript,
 }: UseSpeechRecognitionOptions = {}) {
@@ -24,9 +28,14 @@ export function useSpeechRecognition({
   const supported = SpeechRecognitionCtor !== undefined;
   const recognitionLanguage = resolveSpeechLanguage(language);
   const [active, setActive] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [interimTranscript, setInterimTranscript] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [listeningLanguage, setListeningLanguage] = useState<string | null>(
+    null,
+  );
+  const [interimState, setInterimState] = useState({
+    language: recognitionLanguage,
+    transcript: '',
+  });
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const activeRef = useRef(false);
   const suspendedRef = useRef(suspended);
@@ -38,6 +47,13 @@ export function useSpeechRecognition({
   useEffect(() => {
     onFinalTranscriptRef.current = onFinalTranscript;
   }, [onFinalTranscript]);
+
+  useEffect(
+    () => () => {
+      activeRef.current = false;
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!SpeechRecognitionCtor) return;
@@ -74,10 +90,8 @@ export function useSpeechRecognition({
         ) {
           activeRef.current = false;
           setActive(false);
-          setListening(false);
-          setErrorMessage(
-            'Voice input could not start. You can keep typing instead.',
-          );
+          setListeningLanguage(null);
+          setErrorCode('start-failed');
         }
       }
     };
@@ -97,8 +111,8 @@ export function useSpeechRecognition({
         recognition.abort();
         return;
       }
-      setListening(true);
-      setErrorMessage(null);
+      setListeningLanguage(recognitionLanguage);
+      setErrorCode(null);
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -120,33 +134,46 @@ export function useSpeechRecognition({
         }
       }
 
-      setInterimTranscript(interim);
+      setInterimState({
+        language: recognitionLanguage,
+        transcript: interim,
+      });
       if (final.trim()) {
         onFinalTranscriptRef.current?.(final.trim());
       }
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      setListening(false);
+      setListeningLanguage(null);
       if (event.error === 'aborted') return;
 
       activeRef.current = false;
       setActive(false);
-      setInterimTranscript('');
-      setErrorMessage(getSpeechRecognitionErrorMessage(event.error));
+      setInterimState({
+        language: recognitionLanguage,
+        transcript: '',
+      });
+      setErrorCode(event.error);
     };
 
     recognition.onend = () => {
-      setListening(false);
+      setListeningLanguage(null);
       if (activeRef.current && !suspendedRef.current) {
         scheduleStart();
       }
     };
 
+    if (activeRef.current && !suspendedRef.current) {
+      scheduleStart();
+    }
+
     return () => {
-      activeRef.current = false;
       clearRestartTimer();
       ignoreResultsRef.current = true;
+      recognition.onstart = null;
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
       recognition.abort();
       recognitionRef.current = null;
       scheduleStartRef.current = () => undefined;
@@ -162,7 +189,7 @@ export function useSpeechRecognition({
       if (activeRef.current) {
         ignoreResultsRef.current = true;
         recognitionRef.current?.abort();
-        setListening(false);
+        setListeningLanguage(null);
       }
       return;
     }
@@ -177,40 +204,57 @@ export function useSpeechRecognition({
     if (!supported || activeRef.current) return;
     activeRef.current = true;
     setActive(true);
-    setInterimTranscript('');
-    setErrorMessage(null);
+    setInterimState({
+      language: recognitionLanguage,
+      transcript: '',
+    });
+    setErrorCode(null);
     if (!suspendedRef.current) {
       scheduleStartRef.current();
     }
-  }, [supported]);
+  }, [recognitionLanguage, supported]);
 
   const stop = useCallback(() => {
     activeRef.current = false;
     setActive(false);
-    setListening(false);
-    setInterimTranscript('');
-    setErrorMessage(null);
+    setListeningLanguage(null);
+    setInterimState({
+      language: recognitionLanguage,
+      transcript: '',
+    });
+    setErrorCode(null);
     ignoreResultsRef.current = true;
     if (restartTimerRef.current !== null) {
       window.clearTimeout(restartTimerRef.current);
       restartTimerRef.current = null;
     }
     recognitionRef.current?.stop();
-  }, []);
+  }, [recognitionLanguage]);
 
   const resetInterim = useCallback(() => {
-    setInterimTranscript('');
-  }, []);
+    setInterimState({
+      language: recognitionLanguage,
+      transcript: '',
+    });
+  }, [recognitionLanguage]);
 
+  const listening = listeningLanguage === recognitionLanguage;
+  const interimTranscript =
+    interimState.language === recognitionLanguage
+      ? interimState.transcript
+      : '';
   const paused = active && suspended;
+  const errorMessage = errorCode
+    ? getSpeechRecognitionErrorMessage(errorCode, messages)
+    : null;
   const statusMessage = errorMessage
     ? errorMessage
     : paused
-      ? 'Voice input paused while Miko is speaking.'
+      ? messages.paused
       : listening
-        ? `Listening in ${recognitionLanguage}…`
+        ? messages.listening.replace('{language}', recognitionLanguage)
         : active
-          ? 'Starting voice input…'
+          ? messages.starting
           : null;
 
   return {

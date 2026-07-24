@@ -6,6 +6,8 @@ import {
   type AdminSettings,
   type ProviderRecord,
 } from './api';
+import LanguageSwitch from './components/LanguageSwitch';
+import { type Language, translations } from './i18n';
 
 interface SettingsDraft {
   llm: {
@@ -43,7 +45,15 @@ const toDraft = (settings: AdminSettings): SettingsDraft => ({
   },
 });
 
-export default function AdminPage() {
+interface AdminPageProps {
+  language: Language;
+  onLanguageChange: (language: Language) => void;
+}
+
+export default function AdminPage({
+  language,
+  onLanguageChange,
+}: AdminPageProps) {
   const [llmProviders, setLlmProviders] = useState<ProviderRecord[]>([]);
   const [ttsProviders, setTtsProviders] = useState<ProviderRecord[]>([]);
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
@@ -53,11 +63,15 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<
-    { kind: 'success' | 'error'; text: string } | undefined
+    | {
+        kind: 'success' | 'error';
+        key: 'saved' | 'saveError';
+      }
+    | undefined
   >();
+  const t = translations[language];
 
   useEffect(() => {
-    document.title = 'Character Support Bot — Server Settings';
     let cancelled = false;
     void Promise.all([getAdminProviders(), getAdminSettings()])
       .then(([providers, settings]) => {
@@ -68,12 +82,7 @@ export default function AdminPage() {
         setDraft(toDraft(settings));
       })
       .catch(() => {
-        if (!cancelled) {
-          setFeedback({
-            kind: 'error',
-            text: 'Could not load the server configuration.',
-          });
-        }
+        // The translated load error is rendered when no draft is available.
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -164,15 +173,12 @@ export default function AdminPage() {
       setDraft(toDraft(saved));
       setFeedback({
         kind: 'success',
-        text: 'Server settings saved. The character widget is ready to retry.',
+        key: 'saved',
       });
-    } catch (error) {
+    } catch {
       setFeedback({
         kind: 'error',
-        text:
-          error instanceof Error
-            ? error.message
-            : 'Could not save the server configuration.',
+        key: 'saveError',
       });
     } finally {
       setIsSaving(false);
@@ -203,55 +209,46 @@ export default function AdminPage() {
           <span className="brand-mark">AO</span>
           <span>
             <strong>AITuber OnAir</strong>
-            <small>Character Support Bot</small>
+            <small>{t.brand.adminSubtitle}</small>
           </span>
         </a>
-        <a className="back-link" href="/">
-          ← Back to example
-        </a>
+        <div className="admin-header-actions">
+          <a className="back-link" href="/">
+            ← {t.admin.back}
+          </a>
+          <LanguageSwitch language={language} onChange={onLanguageChange} />
+        </div>
       </header>
 
       <main className="admin-main">
         <section className="admin-intro">
-          <span className="eyebrow">SERVER-SIDE CONFIGURATION</span>
-          <h1>Connect Miko’s chat and voice</h1>
-          <p>
-            Provider credentials are saved only by the local Node server. The
-            browser receives masked values and calls same-origin proxy routes.
-          </p>
+          <span className="eyebrow">{t.admin.eyebrow}</span>
+          <h1>{t.admin.title}</h1>
+          <p>{t.admin.intro}</p>
           <div className="security-callout">
-            <strong>Local demo only — do not expose this admin page.</strong>
-            <span>
-              This example intentionally has no authentication. Add access
-              control, CSRF protection, and deployment-specific secret storage
-              before adapting it for any public environment.
-            </span>
+            <strong>{t.admin.securityTitle}</strong>
+            <span>{t.admin.securityDescription}</span>
           </div>
         </section>
 
         {isLoading ? (
-          <div className="admin-loading">Loading configuration…</div>
+          <div className="admin-loading">{t.admin.loading}</div>
         ) : !draft ? (
-          <div className="admin-loading is-error">
-            The configuration could not be loaded.
-          </div>
+          <div className="admin-loading is-error">{t.admin.loadError}</div>
         ) : (
           <form className="admin-form" onSubmit={handleSubmit}>
             <section className="settings-card">
               <div className="settings-card-heading">
                 <span>01</span>
                 <div>
-                  <h2>Language model</h2>
-                  <p>
-                    The Node server calls this provider through
-                    @aituber-onair/chat.
-                  </p>
+                  <h2>{t.admin.llmTitle}</h2>
+                  <p>{t.admin.llmDescription}</p>
                 </div>
               </div>
 
               <div className="settings-grid">
                 <label>
-                  <span>Provider</span>
+                  <span>{t.admin.provider}</span>
                   <select
                     value={draft.llm.provider}
                     onChange={(event) => changeLlmProvider(event.target.value)}
@@ -265,7 +262,7 @@ export default function AdminPage() {
                 </label>
 
                 <label>
-                  <span>Model</span>
+                  <span>{t.admin.model}</span>
                   {selectedLlm?.models.length ? (
                     <select
                       value={draft.llm.model}
@@ -298,7 +295,7 @@ export default function AdminPage() {
 
                 {selectedLlm?.supportsCustomEndpoint && (
                   <label className="field-wide">
-                    <span>Chat completions endpoint</span>
+                    <span>{t.admin.chatEndpoint}</span>
                     <input
                       type="url"
                       value={draft.llm.endpoint}
@@ -315,7 +312,7 @@ export default function AdminPage() {
 
                 {selectedLlm?.requiresApiKey && (
                   <label className="field-wide">
-                    <span>API key</span>
+                    <span>{t.admin.apiKey}</span>
                     <input
                       type="password"
                       autoComplete="new-password"
@@ -328,15 +325,15 @@ export default function AdminPage() {
                       }
                       placeholder={
                         savedSettings?.llm.hasApiKey
-                          ? `Saved: ${savedSettings.llm.apiKey}`
-                          : 'Enter a server-side key'
+                          ? `${t.admin.savedKeyPrefix} ${savedSettings.llm.apiKey}`
+                          : t.admin.enterServerKey
                       }
                     />
                   </label>
                 )}
 
                 <label className="field-wide">
-                  <span>Character persona</span>
+                  <span>{t.admin.persona}</span>
                   <textarea
                     rows={4}
                     value={draft.llm.persona}
@@ -355,31 +352,30 @@ export default function AdminPage() {
               <div className="settings-card-heading">
                 <span>02</span>
                 <div>
-                  <h2>Text-to-speech</h2>
-                  <p>
-                    Audio bytes return through the server proxy so the browser
-                    can play them and drive Miko’s lip sync.
-                  </p>
+                  <h2>{t.admin.ttsTitle}</h2>
+                  <p>{t.admin.ttsDescription}</p>
                 </div>
               </div>
 
               <div className="settings-grid">
                 <label>
-                  <span>Provider</span>
+                  <span>{t.admin.provider}</span>
                   <select
                     value={draft.tts.provider}
                     onChange={(event) => changeTtsProvider(event.target.value)}
                   >
                     {ttsProviders.map((provider) => (
                       <option key={provider.provider} value={provider.provider}>
-                        {provider.label}
+                        {provider.provider === 'mock'
+                          ? t.admin.mockProviderLabel
+                          : provider.label}
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <label>
-                  <span>Model</span>
+                  <span>{t.admin.model}</span>
                   {selectedTts?.models.length ? (
                     <select
                       value={draft.tts.model}
@@ -411,7 +407,7 @@ export default function AdminPage() {
                 </label>
 
                 <label>
-                  <span>Voice</span>
+                  <span>{t.admin.voice}</span>
                   {selectedTts?.voices?.length ? (
                     <select
                       value={draft.tts.voice}
@@ -437,13 +433,13 @@ export default function AdminPage() {
                           tts: { ...draft.tts, voice: event.target.value },
                         })
                       }
-                      placeholder="Optional voice ID"
+                      placeholder={t.admin.optionalVoice}
                     />
                   )}
                 </label>
 
                 <label>
-                  <span>Speed</span>
+                  <span>{t.admin.speed}</span>
                   <input
                     type="number"
                     min="0.25"
@@ -464,7 +460,7 @@ export default function AdminPage() {
 
                 {selectedTts?.supportsCustomEndpoint && (
                   <label className="field-wide">
-                    <span>Speech endpoint</span>
+                    <span>{t.admin.speechEndpoint}</span>
                     <input
                       type="url"
                       value={draft.tts.endpoint}
@@ -481,7 +477,7 @@ export default function AdminPage() {
 
                 {selectedTts?.requiresApiKey && (
                   <label className="field-wide">
-                    <span>API key</span>
+                    <span>{t.admin.apiKey}</span>
                     <input
                       type="password"
                       autoComplete="new-password"
@@ -494,18 +490,15 @@ export default function AdminPage() {
                       }
                       placeholder={
                         savedSettings?.tts.hasApiKey
-                          ? `Saved: ${savedSettings.tts.apiKey}`
-                          : 'Enter a server-side key'
+                          ? `${t.admin.savedKeyPrefix} ${savedSettings.tts.apiKey}`
+                          : t.admin.enterServerKey
                       }
                     />
                   </label>
                 )}
 
                 {selectedTts?.developmentOnly && (
-                  <div className="mock-note field-wide">
-                    The built-in mock returns a short generated WAV for local
-                    lip-sync testing. It is not a production TTS provider.
-                  </div>
+                  <div className="mock-note field-wide">{t.admin.mockNote}</div>
                 )}
               </div>
             </section>
@@ -513,11 +506,11 @@ export default function AdminPage() {
             <div className="admin-actions">
               {feedback && (
                 <output className={`feedback is-${feedback.kind}`}>
-                  {feedback.text}
+                  {t.admin[feedback.key]}
                 </output>
               )}
               <button type="submit" disabled={!canSave || isSaving}>
-                {isSaving ? 'Saving…' : 'Save server settings'}
+                {isSaving ? t.admin.saving : t.admin.save}
               </button>
             </div>
           </form>

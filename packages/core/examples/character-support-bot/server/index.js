@@ -10,6 +10,7 @@ import {
   buildSystemPrompt,
   DEFAULT_PERSONA,
   resolvePersona,
+  resolveResponseLanguage,
 } from './system-prompt.js';
 
 const require = createRequire(import.meta.url);
@@ -545,7 +546,7 @@ const createChatChunk = (model, content, finishReason = null) => ({
   ],
 });
 
-const handleSupportChat = async (req, res) => {
+const handleSupportChat = async (req, res, language) => {
   let payload;
   try {
     payload = await readJsonBody(req);
@@ -604,7 +605,11 @@ const handleSupportChat = async (req, res) => {
       [
         {
           role: 'system',
-          content: buildSystemPrompt(currentSettings.persona, packageKnowledge),
+          content: buildSystemPrompt(
+            currentSettings.persona,
+            packageKnowledge,
+            language,
+          ),
         },
         ...messages,
       ],
@@ -811,7 +816,11 @@ const server = http.createServer(async (req, res) => {
     url.pathname === '/api/support/chat/completions' &&
     req.method === 'POST'
   ) {
-    await handleSupportChat(req, res);
+    await handleSupportChat(
+      req,
+      res,
+      resolveResponseLanguage(url.searchParams.get('language')),
+    );
     return;
   }
 

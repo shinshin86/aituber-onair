@@ -9,8 +9,11 @@ import { getSupportStatus } from '../api';
 import { useAudioLipsync } from '../hooks/useAudioLipsync';
 import { useCharacterSupportCore } from '../hooks/useCharacterSupportCore';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { type Language, translations } from '../i18n';
 import { appendTranscript } from '../lib/speechRecognition';
+import { getSpeechRecognitionLanguage } from '../personaLanguage';
 import AvatarCanvas from './AvatarCanvas';
+import LanguageSwitch from './LanguageSwitch';
 
 const MAX_MESSAGE_LENGTH = 2000;
 
@@ -34,7 +37,16 @@ const MicrophoneIcon = () => (
   </svg>
 );
 
-export default function SupportWidget() {
+interface SupportWidgetProps {
+  language: Language;
+  onLanguageChange: (language: Language) => void;
+}
+
+export default function SupportWidget({
+  language,
+  onLanguageChange,
+}: SupportWidgetProps) {
+  const t = translations[language];
   const [isOpen, setIsOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
   const [draft, setDraft] = useState('');
@@ -53,6 +65,8 @@ export default function SupportWidget() {
     sendMessage,
   } = useCharacterSupportCore({
     enabled: hasOpened,
+    language,
+    errorMessage: t.chat.coreError,
     onAudioPlay: play,
   });
   const handleFinalTranscript = useCallback((transcript: string) => {
@@ -76,7 +90,8 @@ export default function SupportWidget() {
     stop: stopVoiceInput,
     resetInterim,
   } = useSpeechRecognition({
-    language: typeof navigator === 'undefined' ? undefined : navigator.language,
+    language: getSpeechRecognitionLanguage(language),
+    messages: t.voiceInput,
     suspended: isSpeechActive,
     onFinalTranscript: handleFinalTranscript,
   });
@@ -171,10 +186,10 @@ export default function SupportWidget() {
           ? 'starting'
           : 'idle';
   const voiceInputLabel = voiceInputPaused
-    ? 'Voice input paused while Miko speaks'
+    ? t.voiceInput.pausedLabel
     : voiceInputActive
-      ? 'Stop voice input'
-      : 'Start voice input';
+      ? t.voiceInput.stopLabel
+      : t.voiceInput.startLabel;
   const canSend =
     configured === true &&
     isReady &&
@@ -183,25 +198,26 @@ export default function SupportWidget() {
     draft.trim().length > 0;
 
   return (
-    <aside className="support-widget" aria-label="Character support">
+    <aside className="support-widget" aria-label={t.chat.widgetLabel}>
       {isOpen && (
-        <section className="support-panel" aria-label="Chat with Miko">
+        <section className="support-panel" aria-label={t.chat.panelLabel}>
           <header className="support-header">
             <div>
-              <span className="support-kicker">CHARACTER SUPPORT</span>
+              <span className="support-kicker">{t.chat.kicker}</span>
               <strong>Miko</strong>
               <span className="support-presence">
-                <i /> {isSpeaking ? 'Speaking now' : 'Online'}
+                <i /> {isSpeaking ? t.chat.speaking : t.chat.online}
               </span>
             </div>
             <div className="support-header-actions">
+              <LanguageSwitch language={language} onChange={onLanguageChange} />
               <a href="/admin" target="_blank" rel="noreferrer">
-                Settings
+                {t.chat.settings}
               </a>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                aria-label="Close support"
+                aria-label={t.chat.close}
               >
                 <span aria-hidden="true">×</span>
               </button>
@@ -216,9 +232,7 @@ export default function SupportWidget() {
 
           <div className="conversation" ref={messageListRef} aria-live="polite">
             <div className="message-row message-row--assistant">
-              <div className="message-bubble">
-                Hi! I’m Miko. Ask me anything about AITuber OnAir Core.
-              </div>
+              <div className="message-bubble">{t.chat.welcome}</div>
             </div>
             {messages.map((message) => (
               <div
@@ -232,7 +246,7 @@ export default function SupportWidget() {
                 >
                   {message.content ||
                     (message.state === 'streaming' ? (
-                      <span className="typing-dots" aria-label="Miko is typing">
+                      <span className="typing-dots" aria-label={t.chat.typing}>
                         <i />
                         <i />
                         <i />
@@ -252,29 +266,27 @@ export default function SupportWidget() {
               <div>
                 <strong>
                   {configured === null
-                    ? 'Checking server configuration…'
+                    ? t.chat.checkingConfiguration
                     : statusError
-                      ? 'Support server unavailable'
-                      : 'Configuration required'}
+                      ? t.chat.serverUnavailable
+                      : t.chat.configurationRequired}
                 </strong>
                 {configured === false && (
                   <span>
-                    {statusError
-                      ? 'Start the example server and try again.'
-                      : 'Add the server-side LLM and TTS settings to begin.'}
+                    {statusError ? t.chat.startServer : t.chat.addSettings}
                   </span>
                 )}
               </div>
               {configured === false && !statusError && (
                 <a href="/admin" target="_blank" rel="noreferrer">
-                  Open admin
+                  {t.chat.openAdmin}
                 </a>
               )}
             </div>
           )}
 
           <form className="message-composer" onSubmit={submitMessage}>
-            <label htmlFor="support-message">Message Miko</label>
+            <label htmlFor="support-message">{t.chat.messageLabel}</label>
             <div>
               <textarea
                 id="support-message"
@@ -296,7 +308,7 @@ export default function SupportWidget() {
                 }}
                 rows={1}
                 maxLength={MAX_MESSAGE_LENGTH}
-                placeholder="Ask about setup, chat, voice, or events…"
+                placeholder={t.chat.inputPlaceholder}
                 disabled={configured !== true || !isReady || isProcessing}
                 aria-describedby={
                   voiceInputStatus ? 'voice-input-status' : undefined
@@ -318,7 +330,11 @@ export default function SupportWidget() {
                     <MicrophoneIcon />
                   </button>
                 )}
-                <button type="submit" disabled={!canSend} aria-label="Send">
+                <button
+                  type="submit"
+                  disabled={!canSend}
+                  aria-label={t.chat.send}
+                >
                   <SendIcon />
                 </button>
               </span>
@@ -336,7 +352,7 @@ export default function SupportWidget() {
             )}
           </form>
           <footer className="support-footer">
-            Powered by <strong>@aituber-onair/core</strong>
+            {t.chat.poweredBy} <strong>@aituber-onair/core</strong>
           </footer>
         </section>
       )}
@@ -346,9 +362,7 @@ export default function SupportWidget() {
         className={`support-launcher${isOpen ? ' is-open' : ''}`}
         onClick={toggleWidget}
         aria-expanded={isOpen}
-        aria-label={
-          isOpen ? 'Close character support' : 'Open character support'
-        }
+        aria-label={isOpen ? t.chat.closeWidget : t.chat.openWidget}
       >
         {isOpen ? (
           <span className="launcher-close" aria-hidden="true">
@@ -360,8 +374,8 @@ export default function SupportWidget() {
               <SparkIcon />
             </span>
             <span>
-              <small>NEED A HAND?</small>
-              Ask Miko
+              <small>{t.chat.launcherKicker}</small>
+              {t.chat.launcherTitle}
             </span>
           </>
         )}

@@ -1,6 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import AdminPage from './AdminPage';
+import LanguageSwitch from './components/LanguageSwitch';
 import SupportWidget from './components/SupportWidget';
+import {
+  getInitialLanguage,
+  type Language,
+  persistLanguage,
+  translations,
+} from './i18n';
 
 const ArrowIcon = () => (
   <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -18,14 +25,28 @@ const OrbitIcon = () => (
 
 export default function App() {
   const isAdmin = window.location.pathname === '/admin';
+  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  const t = translations[language];
 
   useEffect(() => {
-    if (!isAdmin) {
-      document.title = 'AITuber OnAir Core — Character Support Bot';
-    }
-  }, [isAdmin]);
+    document.documentElement.lang = language;
+    document.title = isAdmin ? t.document.adminTitle : t.document.landingTitle;
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute(
+        'content',
+        isAdmin ? t.document.adminDescription : t.document.landingDescription,
+      );
+  }, [isAdmin, language, t.document]);
 
-  if (isAdmin) return <AdminPage />;
+  const changeLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
+    persistLanguage(nextLanguage);
+  };
+
+  if (isAdmin) {
+    return <AdminPage language={language} onLanguageChange={changeLanguage} />;
+  }
 
   return (
     <div className="site-shell" id="top">
@@ -34,12 +55,12 @@ export default function App() {
           <span className="brand-mark">AO</span>
           <span>
             <strong>AITuber OnAir</strong>
-            <small>Open source character toolkit</small>
+            <small>{t.brand.landingSubtitle}</small>
           </span>
         </a>
-        <nav aria-label="Main navigation">
-          <a href="#features">Features</a>
-          <a href="#how-it-works">How it works</a>
+        <nav aria-label={t.nav.label}>
+          <a href="#features">{t.nav.features}</a>
+          <a href="#how-it-works">{t.nav.howItWorks}</a>
           <a
             href="https://github.com/shinshin86/aituber-onair"
             target="_blank"
@@ -48,9 +69,12 @@ export default function App() {
             GitHub
           </a>
         </nav>
-        <a className="header-cta" href="#quick-start">
-          Start building
-        </a>
+        <div className="site-header-actions">
+          <LanguageSwitch language={language} onChange={changeLanguage} />
+          <a className="header-cta" href="#quick-start">
+            {t.nav.startBuilding}
+          </a>
+        </div>
       </header>
 
       <main>
@@ -60,18 +84,14 @@ export default function App() {
               <i /> @aituber-onair/core
             </span>
             <h1>
-              Give your AI
+              {t.hero.titleLead}
               <br />
-              <em>a face and a voice.</em>
+              <em>{t.hero.titleEmphasis}</em>
             </h1>
-            <p>
-              One event-driven core connects streaming chat, expressive speech,
-              memory, and animated characters—without locking your app to one
-              provider.
-            </p>
+            <p>{t.hero.description}</p>
             <div className="hero-actions">
               <a className="primary-button" href="#quick-start">
-                Explore the core <ArrowIcon />
+                {t.hero.explore} <ArrowIcon />
               </a>
               <button
                 type="button"
@@ -82,48 +102,51 @@ export default function App() {
                     ?.click()
                 }
               >
-                Meet Miko <span aria-hidden="true">↘</span>
+                {t.hero.meetMiko} <span aria-hidden="true">↘</span>
               </button>
             </div>
             <div className="hero-meta">
-              <span>TypeScript first</span>
-              <span>Browser + server</span>
-              <span>Provider agnostic</span>
+              <span>{t.hero.typeScriptFirst}</span>
+              <span>{t.hero.browserServer}</span>
+              <span>{t.hero.providerAgnostic}</span>
             </div>
           </div>
 
-          <div className="hero-visual" aria-label="AITuber OnAir event flow">
+          <div className="hero-visual" aria-label={t.diagram.label}>
             <div className="orbit orbit--outer" />
             <div className="orbit orbit--inner" />
             <div className="core-node">
               <OrbitIcon />
               <strong>CORE</strong>
-              <small>orchestration</small>
+              <small>{t.diagram.orchestration}</small>
             </div>
             <div className="satellite satellite--chat">
               <span>01</span>
               <strong>CHAT</strong>
-              <small>streaming LLM</small>
+              <small>{t.diagram.streamingLlm}</small>
             </div>
             <div className="satellite satellite--voice">
               <span>02</span>
               <strong>VOICE</strong>
-              <small>expressive TTS</small>
+              <small>{t.diagram.expressiveTts}</small>
             </div>
             <div className="satellite satellite--avatar">
               <span>03</span>
               <strong>AVATAR</strong>
-              <small>live reaction</small>
+              <small>{t.diagram.liveReaction}</small>
             </div>
             <div className="visual-caption">
-              Events in.
+              {t.diagram.captionLead}
               <br />
-              Character out.
+              {t.diagram.captionEnd}
             </div>
           </div>
         </section>
 
-        <section className="signal-strip" aria-label="Core capabilities">
+        <section
+          className="signal-strip"
+          aria-label={t.diagram.capabilitiesLabel}
+        >
           <span>PROCESSING_START</span>
           <i />
           <span>ASSISTANT_PARTIAL</span>
@@ -135,39 +158,27 @@ export default function App() {
 
         <section className="feature-section" id="features">
           <div className="section-intro">
-            <span className="eyebrow">BUILT FOR CHARACTERS</span>
-            <h2>Everything moves through one clear event flow.</h2>
-            <p>
-              Keep the experience responsive while swapping the providers and
-              presentation layers underneath it.
-            </p>
+            <span className="eyebrow">{t.features.eyebrow}</span>
+            <h2>{t.features.title}</h2>
+            <p>{t.features.description}</p>
           </div>
           <div className="feature-grid">
             <article>
               <span className="feature-index">01 / STREAM</span>
-              <h3>Responses arrive as they happen.</h3>
-              <p>
-                Partial-response events let your interface feel immediate while
-                the complete answer moves into speech.
-              </p>
+              <h3>{t.features.streamTitle}</h3>
+              <p>{t.features.streamDescription}</p>
               <code>ASSISTANT_PARTIAL → UI</code>
             </article>
             <article>
               <span className="feature-index">02 / SPEAK</span>
-              <h3>Voice is part of the orchestration.</h3>
-              <p>
-                Route text through interchangeable TTS engines and receive the
-                audio bytes your character animation needs.
-              </p>
+              <h3>{t.features.speakTitle}</h3>
+              <p>{t.features.speakDescription}</p>
               <code>SPEECH_START → TTS</code>
             </article>
             <article>
               <span className="feature-index">03 / REACT</span>
-              <h3>Emotion becomes visible behavior.</h3>
-              <p>
-                Parse screenplay emotion tags into avatar reactions, blinks,
-                idle motion, and audio-driven lip sync.
-              </p>
+              <h3>{t.features.reactTitle}</h3>
+              <p>{t.features.reactDescription}</p>
               <code>[happy] → bounce + smile</code>
             </article>
           </div>
@@ -175,38 +186,29 @@ export default function App() {
 
         <section className="flow-section" id="how-it-works">
           <div>
-            <span className="eyebrow">HOW THIS EXAMPLE WORKS</span>
-            <h2>
-              Keys stay on the server. The character stays in the browser.
-            </h2>
+            <span className="eyebrow">{t.flow.eyebrow}</span>
+            <h2>{t.flow.title}</h2>
           </div>
           <ol>
             <li>
               <span>1</span>
               <div>
-                <strong>Core streams through a same-origin endpoint</strong>
-                <p>
-                  The browser uses the OpenAI-compatible adapter with no API
-                  key.
-                </p>
+                <strong>{t.flow.coreTitle}</strong>
+                <p>{t.flow.coreDescription}</p>
               </div>
             </li>
             <li>
               <span>2</span>
               <div>
-                <strong>The Node proxy owns provider credentials</strong>
-                <p>
-                  LLM and TTS keys are loaded from a gitignored settings file.
-                </p>
+                <strong>{t.flow.proxyTitle}</strong>
+                <p>{t.flow.proxyDescription}</p>
               </div>
             </li>
             <li>
               <span>3</span>
               <div>
-                <strong>Audio bytes drive Miko’s mouth</strong>
-                <p>
-                  Web Audio analysis turns speech amplitude into live lip sync.
-                </p>
+                <strong>{t.flow.audioTitle}</strong>
+                <p>{t.flow.audioDescription}</p>
               </div>
             </li>
           </ol>
@@ -214,18 +216,18 @@ export default function App() {
 
         <section className="quick-start" id="quick-start">
           <div>
-            <span className="eyebrow">QUICK START</span>
-            <h2>Build a character, not a pile of integrations.</h2>
+            <span className="eyebrow">{t.quickStart.eyebrow}</span>
+            <h2>{t.quickStart.title}</h2>
           </div>
           <div className="install-card">
-            <span>TERMINAL</span>
+            <span>{t.quickStart.terminal}</span>
             <code>npm install @aituber-onair/core</code>
             <a
               href="https://github.com/shinshin86/aituber-onair/tree/main/packages/core"
               target="_blank"
               rel="noreferrer"
             >
-              Read the documentation <ArrowIcon />
+              {t.quickStart.documentation} <ArrowIcon />
             </a>
           </div>
         </section>
@@ -233,9 +235,9 @@ export default function App() {
 
       <footer className="site-footer">
         <span>AITuber OnAir</span>
-        <span>Character Support Bot example</span>
+        <span>{t.footer.example}</span>
       </footer>
-      <SupportWidget />
+      <SupportWidget language={language} onLanguageChange={changeLanguage} />
     </div>
   );
 }
