@@ -1113,6 +1113,13 @@ button {
   color: var(--color-disabled-text);
 }
 
+.composer-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
 .message-composer button {
   display: grid;
   width: 36px;
@@ -1139,6 +1146,88 @@ button {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.5;
+}
+
+.message-composer .microphone-button {
+  border-color: var(--color-primary);
+  background: var(--color-secondary);
+  color: var(--color-primary-deep);
+}
+
+.message-composer .microphone-button.is-starting {
+  background: var(--color-primary);
+  color: var(--color-on-dark);
+}
+
+.message-composer .microphone-button.is-listening {
+  border-color: var(--color-accent-dark);
+  background: var(--color-accent);
+  color: var(--color-on-dark);
+  animation: microphone-pulse 900ms ease-in-out infinite alternate;
+}
+
+.message-composer .microphone-button.is-paused {
+  border-color: var(--color-primary-deep);
+  background: var(--color-primary-deep);
+  color: var(--color-on-dark);
+}
+
+.message-composer .microphone-button.is-error {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-dark);
+}
+
+.message-composer .microphone-button:disabled {
+  border-color: var(--color-disabled);
+  background: var(--color-disabled);
+  color: var(--color-disabled-text);
+  animation: none;
+}
+
+.voice-input-status {
+  display: flex;
+  min-height: 18px;
+  padding: 5px 4px 0;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+}
+
+.voice-input-status i {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.voice-input-status.is-listening i {
+  background: var(--color-accent);
+  box-shadow: 0 0 0 4px var(--color-accent-soft);
+}
+
+.voice-input-status.is-paused i {
+  background: var(--color-secondary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.voice-input-status.is-error {
+  color: var(--color-accent-dark);
+}
+
+.voice-input-status.is-error i {
+  background: var(--color-accent);
+}
+
+@keyframes microphone-pulse {
+  to {
+    box-shadow: 0 0 0 5px var(--color-accent-soft);
+  }
 }
 
 .support-footer {

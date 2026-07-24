@@ -1,8 +1,18 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from 'react';
 import { getSupportStatus } from '../api';
 import { useAudioLipsync } from '../hooks/useAudioLipsync';
 import { useCharacterSupportCore } from '../hooks/useCharacterSupportCore';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { appendTranscript } from '../lib/speechRecognition';
 import AvatarCanvas from './AvatarCanvas';
+
+const MAX_MESSAGE_LENGTH = 2000;
 
 const SendIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -17,6 +27,13 @@ const SparkIcon = () => (
   </svg>
 );
 
+const MicrophoneIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v4M9 21h6" />
+  </svg>
+);
+
 export default function SupportWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
@@ -24,13 +41,45 @@ export default function SupportWidget() {
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [statusError, setStatusError] = useState(false);
   const messageListRef = useRef<HTMLDivElement | null>(null);
+  const committedDraftRef = useRef('');
   const { isSpeaking, mouthLevel, smoothedValue, play, unlock } =
     useAudioLipsync();
-  const { messages, isReady, isProcessing, reaction, sendMessage } =
-    useCharacterSupportCore({
-      enabled: hasOpened,
-      onAudioPlay: play,
-    });
+  const {
+    messages,
+    isReady,
+    isProcessing,
+    isSpeechActive,
+    reaction,
+    sendMessage,
+  } = useCharacterSupportCore({
+    enabled: hasOpened,
+    onAudioPlay: play,
+  });
+  const handleFinalTranscript = useCallback((transcript: string) => {
+    const nextDraft = appendTranscript(
+      committedDraftRef.current,
+      transcript,
+      MAX_MESSAGE_LENGTH,
+    );
+    committedDraftRef.current = nextDraft;
+    setDraft(nextDraft);
+  }, []);
+  const {
+    supported: speechRecognitionSupported,
+    active: voiceInputActive,
+    listening: voiceInputListening,
+    paused: voiceInputPaused,
+    interimTranscript,
+    errorMessage: voiceInputError,
+    statusMessage: voiceInputStatus,
+    start: startVoiceInput,
+    stop: stopVoiceInput,
+    resetInterim,
+  } = useSpeechRecognition({
+    language: typeof navigator === 'undefined' ? undefined : navigator.language,
+    suspended: isSpeechActive,
+    onFinalTranscript: handleFinalTranscript,
+  });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -55,6 +104,28 @@ export default function SupportWidget() {
     if (element) element.scrollTop = element.scrollHeight;
   }, [messages]);
 
+  useEffect(() => {
+    if (!voiceInputActive) return;
+    setDraft(
+      appendTranscript(
+        committedDraftRef.current,
+        interimTranscript,
+        MAX_MESSAGE_LENGTH,
+      ),
+    );
+  }, [interimTranscript, voiceInputActive]);
+
+  useEffect(() => {
+    if (!voiceInputError) return;
+    setDraft(committedDraftRef.current);
+  }, [voiceInputError]);
+
+  useEffect(() => {
+    if (!isOpen && voiceInputActive) {
+      stopVoiceInput();
+    }
+  }, [isOpen, stopVoiceInput, voiceInputActive]);
+
   const toggleWidget = () => {
     void unlock().catch((error) => {
       console.warn('Audio context could not be unlocked yet:', error);
@@ -74,12 +145,42 @@ export default function SupportWidget() {
       return;
     }
     setDraft('');
+    committedDraftRef.current = '';
+    resetInterim();
     await unlock();
     await sendMessage(content);
   };
 
+  const toggleVoiceInput = () => {
+    if (voiceInputActive) {
+      stopVoiceInput();
+      committedDraftRef.current = draft;
+      return;
+    }
+    committedDraftRef.current = draft;
+    startVoiceInput();
+  };
+
+  const voiceInputState = voiceInputError
+    ? 'error'
+    : voiceInputPaused
+      ? 'paused'
+      : voiceInputListening
+        ? 'listening'
+        : voiceInputActive
+          ? 'starting'
+          : 'idle';
+  const voiceInputLabel = voiceInputPaused
+    ? 'Voice input paused while Miko speaks'
+    : voiceInputActive
+      ? 'Stop voice input'
+      : 'Start voice input';
   const canSend =
-    configured === true && isReady && !isProcessing && draft.trim().length > 0;
+    configured === true &&
+    isReady &&
+    !isProcessing &&
+    !interimTranscript &&
+    draft.trim().length > 0;
 
   return (
     <aside className="support-widget" aria-label="Character support">
@@ -178,7 +279,11 @@ export default function SupportWidget() {
               <textarea
                 id="support-message"
                 value={draft}
-                onChange={(event) => setDraft(event.target.value)}
+                onChange={(event) => {
+                  if (voiceInputActive) stopVoiceInput();
+                  committedDraftRef.current = event.target.value;
+                  setDraft(event.target.value);
+                }}
                 onKeyDown={(event) => {
                   if (
                     event.key === 'Enter' &&
@@ -190,14 +295,45 @@ export default function SupportWidget() {
                   }
                 }}
                 rows={1}
-                maxLength={2000}
+                maxLength={MAX_MESSAGE_LENGTH}
                 placeholder="Ask about setup, chat, voice, or events…"
                 disabled={configured !== true || !isReady || isProcessing}
+                aria-describedby={
+                  voiceInputStatus ? 'voice-input-status' : undefined
+                }
               />
-              <button type="submit" disabled={!canSend} aria-label="Send">
-                <SendIcon />
-              </button>
+              <span className="composer-actions">
+                {speechRecognitionSupported && (
+                  <button
+                    type="button"
+                    className={`microphone-button is-${voiceInputState}`}
+                    onClick={toggleVoiceInput}
+                    disabled={configured !== true || !isReady}
+                    aria-label={voiceInputLabel}
+                    aria-pressed={voiceInputActive}
+                    data-testid="voice-input-toggle"
+                    data-voice-state={voiceInputState}
+                    title={voiceInputStatus ?? voiceInputLabel}
+                  >
+                    <MicrophoneIcon />
+                  </button>
+                )}
+                <button type="submit" disabled={!canSend} aria-label="Send">
+                  <SendIcon />
+                </button>
+              </span>
             </div>
+            {voiceInputStatus && (
+              <span
+                id="voice-input-status"
+                className={`voice-input-status is-${voiceInputState}`}
+                role="status"
+                data-testid="voice-input-status"
+              >
+                <i aria-hidden="true" />
+                {voiceInputStatus}
+              </span>
+            )}
           </form>
           <footer className="support-footer">
             Powered by <strong>@aituber-onair/core</strong>

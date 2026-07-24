@@ -8,7 +8,8 @@ core streams chat through a same-origin OpenAI-compatible route, sends the
 completed screenplay to a same-origin speech route, plays the returned audio
 bytes, and uses Web Audio amplitude analysis for lip sync. Emotion tags from
 `SPEECH_START` also drive PuruPuru reactions, while the renderer keeps its idle
-motion and blink behavior.
+motion and blink behavior. Browsers that expose the Web Speech API also get
+key-free microphone dictation with live interim text.
 
 ## Security warning
 
@@ -32,6 +33,8 @@ The example enforces one useful boundary even in local development:
 
 ```text
 Browser
+  SpeechRecognition / webkitSpeechRecognition
+    microphone -> interim and final text -> composer (no automatic send)
   AITuberOnAirCore
     chatProvider: openai-compatible
       -> POST /api/support/chat/completions (no key)
@@ -51,6 +54,27 @@ Node server
 The server replaces browser-supplied system messages with a server-owned
 persona, support rules, emotion-tag contract, and curated Core package
 knowledge.
+
+## Voice input
+
+The microphone button uses the browser's `SpeechRecognition` or
+`webkitSpeechRecognition` implementation. It does not call a server-side STT
+service and does not require an API key.
+
+- Interim recognition results appear live in the message composer.
+- Final text remains in the composer until the user presses Send or Enter.
+- Recognition pauses between Core's `SPEECH_START` and `SPEECH_END` events so
+  Miko does not transcribe her own TTS output. It resumes afterward when the
+  microphone toggle is still active.
+- The recognition language follows `navigator.language` and falls back to
+  `ja-JP` when the browser does not provide one.
+- Permission denials and recognition errors leave normal text input available
+  and show a small status message instead of repeatedly logging errors.
+
+The microphone control is shown only when the Web Speech API is available. It
+is generally available in Chromium-based browsers such as Chrome and Edge, but
+not in Firefox. Browser implementations may use an online recognition service,
+so review browser privacy behavior before production use.
 
 ## Run locally
 
@@ -134,6 +158,8 @@ After building, `npm run server` serves `dist` and the API together at
   event mapping.
 - `src/hooks/useAudioLipsync.ts`: audio playback, AudioContext unlock, and RMS
   analysis.
+- `src/hooks/useSpeechRecognition.ts`: browser microphone recognition,
+  interim results, permission fallback, and TTS echo prevention.
 - `src/components/AvatarCanvas.tsx`: bundled avatar loading and PuruPuru
   renderer integration.
 - `server/index.js`: static server, masked admin settings, LLM SSE adapter, and

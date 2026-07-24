@@ -88,6 +88,7 @@ export function useCharacterSupportCore({
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSpeechActive, setIsSpeechActive] = useState(false);
   const [reaction, setReaction] = useState<PuruPuruReaction | null>(null);
 
   useEffect(() => {
@@ -168,6 +169,7 @@ export function useCharacterSupportCore({
     });
 
     core.on(AITuberOnAirCoreEvent.SPEECH_START, (value: unknown) => {
+      setIsSpeechActive(true);
       const screenplay = getScreenplay(value);
       const draft = createPuruPuruReactionFromScreenplay(screenplay);
       if (!draft) {
@@ -179,6 +181,7 @@ export function useCharacterSupportCore({
     });
 
     core.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
+      setIsSpeechActive(false);
       setReaction(null);
     });
 
@@ -202,6 +205,7 @@ export function useCharacterSupportCore({
       activeAssistantIdRef.current = null;
       partialTextRef.current = '';
       setIsProcessing(false);
+      setIsSpeechActive(false);
       setReaction(null);
     });
 
@@ -214,6 +218,7 @@ export function useCharacterSupportCore({
       cancelled = true;
       core.stopSpeech();
       core.offAll();
+      setIsSpeechActive(false);
       if (coreRef.current === core) coreRef.current = null;
     };
   }, [enabled]);
@@ -248,6 +253,7 @@ export function useCharacterSupportCore({
     messages,
     isReady,
     isProcessing,
+    isSpeechActive,
     reaction,
     sendMessage,
   };
