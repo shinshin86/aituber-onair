@@ -1,18 +1,48 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 :root {
-  color: #141a22;
-  background: #f4f2ed;
+  --color-primary: #265bcd;
+  --color-primary-hover: #1746ad;
+  --color-primary-deep: #042777;
+  --color-secondary: #a9d7f2;
+  --color-secondary-soft: #eaf6fd;
+  --color-accent: #d62629;
+  --color-accent-dark: #9f1e22;
+  --color-accent-soft: #fff0f1;
+  --color-background: #ffffff;
+  --color-surface: #f7fbff;
+  --color-surface-raised: #ffffff;
+  --color-text: #10234b;
+  --color-text-muted: #52627a;
+  --color-dark: #071936;
+  --color-dark-raised: #0c2550;
+  --color-dark-soft: #17345f;
+  --color-on-dark: #ffffff;
+  --color-on-dark-muted: #b9c9df;
+  --color-line: rgba(4, 39, 119, 0.18);
+  --color-grid: rgba(4, 39, 119, 0.045);
+  --color-grid-dark: rgba(255, 255, 255, 0.07);
+  --color-on-dark-line: rgba(255, 255, 255, 0.24);
+  --color-on-dark-subtle: rgba(255, 255, 255, 0.7);
+  --color-surface-translucent: rgba(255, 255, 255, 0.72);
+  --color-dark-translucent: rgba(4, 25, 62, 0.72);
+  --color-primary-shadow: rgba(38, 91, 205, 0.42);
+  --color-primary-glow: rgba(169, 215, 242, 0.3);
+  --color-focus-ring: rgba(38, 91, 205, 0.18);
+  --color-shadow: rgba(4, 39, 119, 0.22);
+  --color-disabled: #dce5ef;
+  --color-disabled-text: #75849a;
+  --color-warning: #7a4b0b;
+  --color-warning-border: #c68a24;
+  --color-warning-soft: #fff6dc;
+  --color-success: #176346;
+  --color-success-border: #57a889;
+  --color-success-soft: #e9f8f2;
+  color: var(--color-text);
+  background: var(--color-background);
   font-family: "Manrope", system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --ink: #141a22;
-  --paper: #f4f2ed;
-  --lime: #c8ff47;
-  --orange: #ff7043;
-  --blue: #3257ff;
-  --muted: #66717f;
-  --line: rgba(20, 26, 34, 0.14);
 }
 
 * {
@@ -53,9 +83,9 @@ button {
 .site-shell {
   min-height: 100vh;
   overflow: hidden;
-  background: linear-gradient(rgba(20, 26, 34, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(20, 26, 34, 0.035) 1px, transparent 1px),
-    var(--paper);
+  background: linear-gradient(var(--color-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid) 1px, transparent 1px),
+    var(--color-background);
   background-size: 34px 34px;
 }
 
@@ -69,7 +99,7 @@ button {
   margin: 0 auto;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--color-line);
 }
 
 .brand {
@@ -83,12 +113,13 @@ button {
   width: 40px;
   height: 40px;
   place-items: center;
-  border: 1px solid var(--ink);
-  background: var(--lime);
+  border: 1px solid var(--color-primary-deep);
+  background: var(--color-primary);
+  color: var(--color-on-dark);
   font-family: "DM Mono", monospace;
   font-size: 13px;
   font-weight: 500;
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--color-accent);
 }
 
 .brand > span:last-child {
@@ -103,7 +134,7 @@ button {
 }
 
 .brand small {
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-family: "DM Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
@@ -125,14 +156,14 @@ button {
 }
 
 .site-header nav a:hover {
-  color: var(--blue);
+  color: var(--color-primary);
 }
 
 .header-cta {
   padding: 11px 17px;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: white;
+  border: 1px solid var(--color-primary-deep);
+  background: var(--color-primary-deep);
+  color: var(--color-on-dark);
   font-family: "DM Mono", monospace;
   font-size: 10px;
   letter-spacing: 0.05em;
@@ -165,8 +196,8 @@ button {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--orange);
-  box-shadow: 0 0 0 4px rgba(255, 112, 67, 0.15);
+  background: var(--color-accent);
+  box-shadow: 0 0 0 4px var(--color-accent-soft);
 }
 
 .hero h1 {
@@ -179,14 +210,14 @@ button {
 }
 
 .hero h1 em {
-  color: var(--blue);
+  color: var(--color-primary);
   font-style: normal;
 }
 
 .hero-copy > p {
   max-width: 590px;
   margin: 0;
-  color: #4e5966;
+  color: var(--color-text-muted);
   font-size: 17px;
   line-height: 1.75;
 }
@@ -203,19 +234,20 @@ button {
   padding: 15px 20px;
   align-items: center;
   gap: 30px;
-  border: 1px solid var(--ink);
-  background: var(--lime);
+  border: 1px solid var(--color-accent-dark);
+  background: var(--color-accent);
+  color: var(--color-on-dark);
   font-family: "DM Mono", monospace;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.03em;
-  box-shadow: 5px 5px 0 var(--ink);
+  box-shadow: 5px 5px 0 var(--color-primary-deep);
   text-transform: uppercase;
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
 .primary-button:hover {
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 2px 2px 0 var(--color-primary-deep);
   transform: translate(3px, 3px);
 }
 
@@ -232,7 +264,7 @@ button {
 .text-button {
   padding: 10px 0;
   border: 0;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--color-text);
   background: transparent;
   cursor: pointer;
   font-family: "DM Mono", monospace;
@@ -242,7 +274,7 @@ button {
 }
 
 .text-button span {
-  color: var(--orange);
+  color: var(--color-accent);
 }
 
 .hero-meta {
@@ -254,9 +286,9 @@ button {
 
 .hero-meta span {
   padding: 7px 10px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.45);
-  color: #56616e;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-translucent);
+  color: var(--color-text-muted);
   font-family: "DM Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.04em;
@@ -267,21 +299,21 @@ button {
   position: relative;
   min-height: 520px;
   overflow: hidden;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--color-primary-deep);
   background: radial-gradient(
       circle at 50% 47%,
-      rgba(200, 255, 71, 0.24),
+      var(--color-primary-glow),
       transparent 31%
-    ), #18202b;
-  color: white;
-  box-shadow: 12px 12px 0 var(--orange);
+    ), var(--color-dark);
+  color: var(--color-on-dark);
+  box-shadow: 12px 12px 0 var(--color-accent);
 }
 
 .hero-visual::before,
 .hero-visual::after {
   position: absolute;
   z-index: 0;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-grid-dark);
   content: "";
 }
 
@@ -303,7 +335,7 @@ button {
   position: absolute;
   top: 50%;
   left: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--color-on-dark-line);
   border-radius: 50%;
   transform: translate(-50%, -50%) rotate(-18deg);
 }
@@ -330,9 +362,9 @@ button {
   height: 150px;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--lime);
-  background: var(--ink);
-  box-shadow: 0 0 70px rgba(200, 255, 71, 0.2);
+  border: 1px solid var(--color-secondary);
+  background: var(--color-primary-deep);
+  box-shadow: 0 0 70px var(--color-primary-glow);
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
@@ -345,7 +377,7 @@ button {
   top: 18px;
   width: 48px;
   fill: none;
-  stroke: var(--lime);
+  stroke: var(--color-secondary);
   stroke-width: 1;
 }
 
@@ -358,7 +390,7 @@ button {
 
 .core-node small {
   margin-top: 66px;
-  color: #aab4c0;
+  color: var(--color-on-dark-muted);
   font-family: "DM Mono", monospace;
   font-size: 8px;
   text-transform: uppercase;
@@ -370,14 +402,14 @@ button {
   display: grid;
   width: 125px;
   padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.32);
-  background: #202a37;
+  border: 1px solid var(--color-on-dark-line);
+  background: var(--color-dark-raised);
   grid-template-columns: auto 1fr;
   gap: 2px 8px;
 }
 
 .satellite span {
-  color: var(--lime);
+  color: var(--color-secondary);
   font-family: "DM Mono", monospace;
   font-size: 8px;
 }
@@ -390,7 +422,7 @@ button {
 
 .satellite small {
   grid-column: 2;
-  color: #9ba7b4;
+  color: var(--color-on-dark-muted);
   font-size: 8px;
 }
 
@@ -413,7 +445,7 @@ button {
   position: absolute;
   bottom: 22px;
   left: 24px;
-  color: rgba(255, 255, 255, 0.68);
+  color: var(--color-on-dark-subtle);
   font-family: "DM Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.09em;
@@ -428,8 +460,8 @@ button {
   align-items: center;
   justify-content: center;
   gap: 22px;
-  background: var(--ink);
-  color: white;
+  background: var(--color-primary-deep);
+  color: var(--color-on-dark);
   font-family: "DM Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
@@ -440,7 +472,7 @@ button {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--lime);
+  background: var(--color-secondary);
 }
 
 .feature-section,
@@ -474,32 +506,32 @@ button {
 
 .section-intro p {
   margin: 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-size: 14px;
   line-height: 1.7;
 }
 
 .feature-grid {
   display: grid;
-  border-top: 1px solid var(--ink);
-  border-left: 1px solid var(--ink);
+  border-top: 1px solid var(--color-primary-deep);
+  border-left: 1px solid var(--color-primary-deep);
   grid-template-columns: repeat(3, 1fr);
 }
 
 .feature-grid article {
   min-height: 355px;
   padding: 32px;
-  border-right: 1px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
-  background: rgba(255, 255, 255, 0.52);
+  border-right: 1px solid var(--color-primary-deep);
+  border-bottom: 1px solid var(--color-primary-deep);
+  background: var(--color-secondary-soft);
 }
 
 .feature-grid article:nth-child(2) {
-  background: #fff;
+  background: var(--color-surface-raised);
 }
 
 .feature-index {
-  color: var(--blue);
+  color: var(--color-primary);
   font-family: "DM Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
@@ -515,7 +547,7 @@ button {
 
 .feature-grid p {
   margin: 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.7;
 }
@@ -524,7 +556,7 @@ button {
   display: inline-block;
   margin-top: 26px;
   padding: 8px 10px;
-  background: #e9edf0;
+  background: var(--color-secondary-soft);
   font-family: "DM Mono", monospace;
   font-size: 9px;
 }
@@ -532,7 +564,7 @@ button {
 .flow-section {
   display: grid;
   padding: 110px 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--color-line);
   grid-template-columns: 1fr 1fr;
   gap: 100px;
 }
@@ -551,7 +583,7 @@ button {
 .flow-section li {
   display: grid;
   padding: 25px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--color-line);
   grid-template-columns: 48px 1fr;
   gap: 18px;
 }
@@ -561,7 +593,7 @@ button {
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--color-primary-deep);
   border-radius: 50%;
   font-family: "DM Mono", monospace;
   font-size: 10px;
@@ -573,7 +605,7 @@ button {
 
 .flow-section li p {
   margin: 7px 0 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -582,11 +614,11 @@ button {
   display: grid;
   margin-bottom: 100px;
   padding: 68px;
-  background: var(--blue);
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-dark);
   grid-template-columns: 1fr 1fr;
   gap: 70px;
-  box-shadow: 10px 10px 0 var(--lime);
+  box-shadow: 10px 10px 0 var(--color-secondary);
 }
 
 .quick-start h2 {
@@ -596,14 +628,14 @@ button {
 .install-card {
   display: flex;
   padding: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(10, 19, 72, 0.35);
+  border: 1px solid var(--color-on-dark-line);
+  background: var(--color-dark-translucent);
   flex-direction: column;
   gap: 24px;
 }
 
 .install-card > span {
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--color-on-dark-subtle);
   font-family: "DM Mono", monospace;
   font-size: 8px;
   letter-spacing: 0.1em;
@@ -611,7 +643,7 @@ button {
 
 .install-card code {
   padding: 18px;
-  background: #101633;
+  background: var(--color-primary-deep);
   font-family: "DM Mono", monospace;
   font-size: 12px;
 }
@@ -633,8 +665,8 @@ button {
   margin: 0 auto;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
+  border-top: 1px solid var(--color-line);
+  color: var(--color-text-muted);
   font-family: "DM Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.05em;
@@ -655,18 +687,18 @@ button {
   padding: 7px 16px 7px 8px;
   align-items: center;
   gap: 11px;
-  border: 1px solid #0b1017;
+  border: 1px solid var(--color-primary-deep);
   border-radius: 2px;
-  background: #0f1722;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-dark);
   cursor: pointer;
-  box-shadow: 6px 6px 0 rgba(50, 87, 255, 0.7);
+  box-shadow: 6px 6px 0 var(--color-accent);
   text-align: left;
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
 .support-launcher:hover {
-  box-shadow: 3px 3px 0 rgba(50, 87, 255, 0.8);
+  box-shadow: 3px 3px 0 var(--color-accent-dark);
   transform: translate(3px, 3px);
 }
 
@@ -682,8 +714,8 @@ button {
   width: 42px;
   height: 42px;
   place-items: center;
-  background: var(--lime);
-  color: var(--ink);
+  background: var(--color-secondary);
+  color: var(--color-primary-deep);
 }
 
 .launcher-icon svg {
@@ -702,7 +734,7 @@ button {
 }
 
 .support-launcher small {
-  color: #96a3b3;
+  color: var(--color-on-dark-muted);
   font-family: "DM Mono", monospace;
   font-size: 7px;
   letter-spacing: 0.1em;
@@ -722,11 +754,11 @@ button {
   width: min(390px, calc(100vw - 32px));
   height: min(690px, calc(100vh - 118px));
   overflow: hidden;
-  border: 1px solid #0c131d;
+  border: 1px solid var(--color-primary-deep);
   border-radius: 4px;
-  background: #f7f7f4;
-  box-shadow: 9px 9px 0 rgba(15, 23, 34, 0.85), 0 22px 70px
-    rgba(9, 17, 28, 0.25);
+  background: var(--color-surface);
+  box-shadow: 9px 9px 0 var(--color-primary-deep), 0 22px 70px
+    var(--color-shadow);
   grid-template-rows: auto 238px minmax(80px, 1fr) auto auto auto;
   animation: panel-in 180ms ease-out;
 }
@@ -744,8 +776,8 @@ button {
   padding: 14px 16px;
   align-items: center;
   justify-content: space-between;
-  background: #111925;
-  color: white;
+  background: var(--color-primary-deep);
+  color: var(--color-on-dark);
 }
 
 .support-header > div:first-child {
@@ -757,7 +789,7 @@ button {
 
 .support-kicker {
   grid-column: 1 / -1;
-  color: var(--lime);
+  color: var(--color-secondary);
   font-family: "DM Mono", monospace;
   font-size: 7px;
   letter-spacing: 0.12em;
@@ -773,7 +805,7 @@ button {
   padding-bottom: 2px;
   align-items: center;
   gap: 5px;
-  color: #aab5c3;
+  color: var(--color-on-dark-muted);
   font-size: 9px;
 }
 
@@ -781,8 +813,8 @@ button {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--lime);
-  box-shadow: 0 0 7px var(--lime);
+  background: var(--color-secondary);
+  box-shadow: 0 0 7px var(--color-secondary);
 }
 
 .support-header-actions {
@@ -793,7 +825,7 @@ button {
 
 .support-header-actions a {
   padding: 7px 9px;
-  color: #aab5c3;
+  color: var(--color-on-dark-muted);
   font-family: "DM Mono", monospace;
   font-size: 8px;
   letter-spacing: 0.04em;
@@ -805,9 +837,9 @@ button {
   width: 30px;
   height: 30px;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--color-on-dark-line);
   background: transparent;
-  color: white;
+  color: var(--color-on-dark);
   cursor: pointer;
 }
 
@@ -820,10 +852,15 @@ button {
   position: relative;
   min-height: 0;
   overflow: hidden;
-  border-bottom: 1px solid #26303d;
-  background: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    radial-gradient(circle at 50% 62%, #344258 0, #1a2431 52%, #101721 100%);
+  border-bottom: 1px solid var(--color-primary);
+  background: linear-gradient(var(--color-grid-dark) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid-dark) 1px, transparent 1px),
+    radial-gradient(
+      circle at 50% 62%,
+      var(--color-dark-soft) 0,
+      var(--color-dark-raised) 52%,
+      var(--color-dark) 100%
+    );
   background-size: 24px 24px, 24px 24px, auto;
 }
 
@@ -833,7 +870,12 @@ button {
   bottom: 0;
   left: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--lime), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-secondary),
+    transparent
+  );
   content: "";
   opacity: 0.65;
 }
@@ -845,7 +887,7 @@ button {
   width: 210px;
   height: 210px;
   border-radius: 50%;
-  background: rgba(200, 255, 71, 0.12);
+  background: var(--color-primary-glow);
   filter: blur(28px);
   transform: translate(-50%, -50%);
 }
@@ -864,14 +906,14 @@ button {
   z-index: 2;
   top: 50%;
   left: 50%;
-  color: #b8c2cf;
+  color: var(--color-on-dark-muted);
   font-family: "DM Mono", monospace;
   font-size: 9px;
   transform: translate(-50%, -50%);
 }
 
 .avatar-status--error {
-  color: #ff9675;
+  color: var(--color-accent-soft);
 }
 
 .speaking-indicator {
@@ -885,18 +927,18 @@ button {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(7, 13, 21, 0.68);
+  border: 1px solid var(--color-on-dark-line);
+  background: var(--color-dark-translucent);
 }
 
 .speaking-indicator i {
   width: 2px;
   height: 5px;
-  background: #6c7786;
+  background: var(--color-on-dark-muted);
 }
 
 .speaking-indicator.is-active i {
-  background: var(--lime);
+  background: var(--color-secondary);
   animation: voice-bar 500ms ease-in-out infinite alternate;
 }
 
@@ -918,8 +960,8 @@ button {
   min-height: 80px;
   overflow-y: auto;
   padding: 16px;
-  background: linear-gradient(rgba(20, 26, 34, 0.025) 1px, transparent 1px),
-    #f7f7f4;
+  background: linear-gradient(var(--color-grid) 1px, transparent 1px),
+    var(--color-surface);
   background-size: 100% 26px;
   scrollbar-width: thin;
 }
@@ -936,26 +978,26 @@ button {
 .message-bubble {
   max-width: 82%;
   padding: 10px 12px;
-  border: 1px solid #d7dce0;
+  border: 1px solid var(--color-line);
   border-radius: 2px 12px 12px;
-  background: white;
-  color: #293442;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
   font-size: 12px;
   line-height: 1.55;
   white-space: pre-wrap;
 }
 
 .message-row--user .message-bubble {
-  border-color: #233044;
+  border-color: var(--color-primary-deep);
   border-radius: 12px 2px 12px 12px;
-  background: #192433;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-dark);
 }
 
 .message-bubble.is-error {
-  border-color: #e6a08b;
-  background: #fff0eb;
-  color: #87351f;
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-dark);
 }
 
 .typing-dots {
@@ -969,7 +1011,7 @@ button {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #75808b;
+  background: var(--color-text-muted);
   animation: typing 800ms ease-in-out infinite alternate;
 }
 
@@ -995,13 +1037,13 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  border: 1px solid #d3aa43;
-  background: #fff7d7;
+  border: 1px solid var(--color-warning-border);
+  background: var(--color-warning-soft);
 }
 
 .configuration-notice.is-error {
-  border-color: #dc8f77;
-  background: #ffebe5;
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .configuration-notice > div {
@@ -1015,7 +1057,7 @@ button {
 }
 
 .configuration-notice span {
-  color: #6e6550;
+  color: var(--color-warning);
   font-size: 8px;
   line-height: 1.4;
 }
@@ -1046,13 +1088,13 @@ button {
   min-height: 46px;
   padding: 4px;
   align-items: end;
-  border: 1px solid #bfc6cd;
-  background: white;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-raised);
 }
 
 .message-composer:focus-within > div {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px rgba(50, 87, 255, 0.12);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 .message-composer textarea {
@@ -1068,7 +1110,7 @@ button {
 }
 
 .message-composer textarea::placeholder {
-  color: #8d97a2;
+  color: var(--color-disabled-text);
 }
 
 .message-composer button {
@@ -1077,15 +1119,16 @@ button {
   height: 36px;
   flex: 0 0 36px;
   place-items: center;
-  border: 1px solid #101721;
-  background: var(--lime);
+  border: 1px solid var(--color-accent-dark);
+  background: var(--color-accent);
+  color: var(--color-on-dark);
   cursor: pointer;
 }
 
 .message-composer button:disabled {
-  border-color: #d4d8dd;
-  background: #e9ecef;
-  color: #9ca5af;
+  border-color: var(--color-disabled);
+  background: var(--color-disabled);
+  color: var(--color-disabled-text);
   cursor: not-allowed;
 }
 
@@ -1100,24 +1143,24 @@ button {
 
 .support-footer {
   padding: 8px 12px;
-  border-top: 1px solid #dde1e4;
-  color: #8a939e;
+  border-top: 1px solid var(--color-line);
+  color: var(--color-disabled-text);
   font-family: "DM Mono", monospace;
   font-size: 7px;
   text-align: center;
 }
 
 .support-footer strong {
-  color: #56616e;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
 .admin-shell {
   min-height: 100vh;
   padding-bottom: 100px;
-  background: linear-gradient(rgba(20, 26, 34, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(20, 26, 34, 0.035) 1px, transparent 1px),
-    var(--paper);
+  background: linear-gradient(var(--color-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid) 1px, transparent 1px),
+    var(--color-background);
   background-size: 34px 34px;
 }
 
@@ -1145,7 +1188,7 @@ button {
 .admin-intro > p {
   max-width: 670px;
   margin: 20px 0 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.7;
 }
@@ -1154,8 +1197,8 @@ button {
   display: flex;
   margin-top: 30px;
   padding: 18px 20px;
-  border: 1px solid #dd6b49;
-  background: #fff0e9;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent-soft);
   flex-direction: column;
   gap: 6px;
 }
@@ -1165,21 +1208,21 @@ button {
 }
 
 .security-callout span {
-  color: #765044;
+  color: var(--color-accent-dark);
   font-size: 11px;
   line-height: 1.6;
 }
 
 .admin-loading {
   padding: 40px;
-  border: 1px solid var(--line);
-  background: white;
-  color: var(--muted);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
 }
 
 .admin-loading.is-error {
-  border-color: #dc8f77;
-  color: #87351f;
+  border-color: var(--color-accent);
+  color: var(--color-accent-dark);
 }
 
 .admin-form {
@@ -1189,23 +1232,23 @@ button {
 }
 
 .settings-card {
-  border: 1px solid var(--ink);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 6px 6px 0 rgba(20, 26, 34, 0.12);
+  border: 1px solid var(--color-primary-deep);
+  background: var(--color-surface-translucent);
+  box-shadow: 6px 6px 0 var(--color-primary-shadow);
 }
 
 .settings-card-heading {
   display: grid;
   padding: 24px 28px;
-  border-bottom: 1px solid var(--ink);
-  background: #17202c;
-  color: white;
+  border-bottom: 1px solid var(--color-primary-deep);
+  background: var(--color-primary-deep);
+  color: var(--color-on-dark);
   grid-template-columns: 48px 1fr;
   gap: 16px;
 }
 
 .settings-card-heading > span {
-  color: var(--lime);
+  color: var(--color-secondary);
   font-family: "DM Mono", monospace;
   font-size: 10px;
 }
@@ -1218,7 +1261,7 @@ button {
 
 .settings-card-heading p {
   margin: 5px 0 0;
-  color: #aab5c3;
+  color: var(--color-on-dark-muted);
   font-size: 11px;
 }
 
@@ -1248,19 +1291,19 @@ button {
 .settings-grid textarea {
   width: 100%;
   padding: 11px 12px;
-  border: 1px solid #bec5cc;
+  border: 1px solid var(--color-line);
   border-radius: 0;
   outline: 0;
-  background: white;
-  color: var(--ink);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
   font-size: 12px;
 }
 
 .settings-grid input:focus,
 .settings-grid select:focus,
 .settings-grid textarea:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px rgba(50, 87, 255, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 .settings-grid textarea {
@@ -1274,9 +1317,9 @@ button {
 
 .mock-note {
   padding: 13px 15px;
-  border: 1px solid #a7c84f;
-  background: #f3ffd8;
-  color: #526530;
+  border: 1px solid var(--color-success-border);
+  background: var(--color-success-soft);
+  color: var(--color-success);
   font-size: 10px;
   line-height: 1.5;
 }
@@ -1291,19 +1334,20 @@ button {
 
 .admin-actions button {
   padding: 14px 20px;
-  border: 1px solid var(--ink);
-  background: var(--lime);
+  border: 1px solid var(--color-accent-dark);
+  background: var(--color-accent);
+  color: var(--color-on-dark);
   cursor: pointer;
   font-family: "DM Mono", monospace;
   font-size: 10px;
   font-weight: 500;
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--color-primary-deep);
   text-transform: uppercase;
 }
 
 .admin-actions button:disabled {
-  background: #dadddf;
-  color: #7f8993;
+  background: var(--color-disabled);
+  color: var(--color-disabled-text);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -1314,11 +1358,11 @@ button {
 }
 
 .feedback.is-success {
-  color: #3f6814;
+  color: var(--color-success);
 }
 
 .feedback.is-error {
-  color: #a23f25;
+  color: var(--color-accent-dark);
 }
 
 @media (max-width: 960px) {
@@ -1393,7 +1437,7 @@ button {
 
   .hero-visual {
     min-height: 430px;
-    box-shadow: 7px 7px 0 var(--orange);
+    box-shadow: 7px 7px 0 var(--color-accent);
   }
 
   .orbit--outer {
@@ -1442,7 +1486,7 @@ button {
   .quick-start {
     margin-bottom: 70px;
     padding: 36px 26px;
-    box-shadow: 7px 7px 0 var(--lime);
+    box-shadow: 7px 7px 0 var(--color-secondary);
   }
 
   .support-widget {
