@@ -188,7 +188,7 @@ export const translations: Record<Language, TranslationRecord> = {
       capabilitiesLabel: 'Core capabilities',
     },
     features: {
-      eyebrow: 'BUILT FOR CHARACTERS',
+      eyebrow: 'Built for characters',
       title: 'Everything moves through one clear event flow.',
       description:
         'Keep the experience responsive while swapping the providers and presentation layers underneath it.',
@@ -203,7 +203,7 @@ export const translations: Record<Language, TranslationRecord> = {
         'Parse screenplay emotion tags into avatar reactions, blinks, idle motion, and audio-driven lip sync.',
     },
     flow: {
-      eyebrow: 'HOW THIS EXAMPLE WORKS',
+      eyebrow: 'How this example works',
       title: 'Keys stay on the server. The character stays in the browser.',
       coreTitle: 'Core streams through a same-origin endpoint',
       coreDescription:
@@ -216,9 +216,9 @@ export const translations: Record<Language, TranslationRecord> = {
         'Web Audio analysis turns speech amplitude into live lip sync.',
     },
     quickStart: {
-      eyebrow: 'QUICK START',
+      eyebrow: 'Quick start',
       title: 'Build a character, not a pile of integrations.',
-      terminal: 'TERMINAL',
+      terminal: 'Terminal',
       documentation: 'Read the documentation',
     },
     footer: {
@@ -227,7 +227,7 @@ export const translations: Record<Language, TranslationRecord> = {
     chat: {
       widgetLabel: 'Character support',
       panelLabel: 'Chat with Miko',
-      kicker: 'CHARACTER SUPPORT',
+      kicker: 'Character support',
       speaking: 'Speaking now',
       online: 'Online',
       settings: 'Settings',
@@ -246,7 +246,7 @@ export const translations: Record<Language, TranslationRecord> = {
       poweredBy: 'Powered by',
       closeWidget: 'Close character support',
       openWidget: 'Open character support',
-      launcherKicker: 'NEED A HAND?',
+      launcherKicker: 'Need a hand?',
       launcherTitle: 'Ask Miko',
       coreError:
         'I could not complete that request. Check the server configuration and try again.',
@@ -269,7 +269,7 @@ export const translations: Record<Language, TranslationRecord> = {
     },
     admin: {
       back: 'Back to example',
-      eyebrow: 'SERVER-SIDE CONFIGURATION',
+      eyebrow: 'Server-side configuration',
       title: 'Connect Miko’s chat and voice',
       intro:
         'Provider credentials are saved only by the local Node server. The browser receives masked values and calls same-origin proxy routes.',

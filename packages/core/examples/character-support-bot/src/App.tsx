@@ -164,19 +164,19 @@ export default function App() {
           </div>
           <div className="feature-grid">
             <article>
-              <span className="feature-index">01 / STREAM</span>
+              <span className="feature-index">01 / Stream</span>
               <h3>{t.features.streamTitle}</h3>
               <p>{t.features.streamDescription}</p>
               <code>ASSISTANT_PARTIAL → UI</code>
             </article>
             <article>
-              <span className="feature-index">02 / SPEAK</span>
+              <span className="feature-index">02 / Speak</span>
               <h3>{t.features.speakTitle}</h3>
               <p>{t.features.speakDescription}</p>
               <code>SPEECH_START → TTS</code>
             </article>
             <article>
-              <span className="feature-index">03 / REACT</span>
+              <span className="feature-index">03 / React</span>
               <h3>{t.features.reactTitle}</h3>
               <p>{t.features.reactDescription}</p>
               <code>[happy] → bounce + smile</code>
