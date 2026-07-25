@@ -85,6 +85,7 @@ import {
   allowsReasoningMax,
   getDefaultXaiReasoningEffort,
   getDefaultGeminiReasoningEffort,
+  getDefaultKimiReasoningEffort,
   getGeminiSupportedReasoningEfforts,
   getKimiSupportedReasoningEfforts,
   isResponsesOnlyGPT5Model,
@@ -180,7 +181,7 @@ describe('Core index chat re-exports', () => {
   });
 
   it('re-exports current Kimi model constants', () => {
-    const reasoningEffort: KimiReasoningEffort = 'max';
+    const reasoningEfforts: KimiReasoningEffort[] = ['low', 'high', 'max'];
 
     expect(MODEL_KIMI_K3).toBe('kimi-k3');
     expect(MODEL_KIMI_K2_7_CODE).toBe('kimi-k2.7-code');
@@ -198,8 +199,13 @@ describe('Core index chat re-exports', () => {
       MODEL_KIMI_K2_7_CODE,
       MODEL_KIMI_K2_7_CODE_HIGHSPEED,
     ]);
-    expect(reasoningEffort).toBe('max');
-    expect(getKimiSupportedReasoningEfforts(MODEL_KIMI_K3)).toEqual(['max']);
+    expect(reasoningEfforts).toEqual(['low', 'high', 'max']);
+    expect(getKimiSupportedReasoningEfforts(MODEL_KIMI_K3)).toEqual([
+      'low',
+      'high',
+      'max',
+    ]);
+    expect(getDefaultKimiReasoningEffort(MODEL_KIMI_K3)).toBe('max');
     expect(isKimiReasoningEffortModel(MODEL_KIMI_K3)).toBe(true);
     expect(isKimiVisionModel(MODEL_KIMI_K3)).toBe(true);
     expect(isKimiVisionModel(MODEL_KIMI_K2_7_CODE)).toBe(true);

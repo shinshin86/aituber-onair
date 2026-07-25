@@ -171,6 +171,8 @@ Its free model IDs use the `:free` suffix.
 Z.ai uses provider name `zai` and GLM models.
 xAI uses provider name `xai` and Grok models.
 Kimi uses provider name `kimi` and Moonshot model IDs.
+Kimi K3 accepts `low`, `high`, or `max` reasoning effort and defaults to
+`max`; its reasoning cannot be disabled.
 DeepSeek uses provider name `deepseek` and current V4 Flash or V4 Pro models.
 Mistral uses provider name `mistral` and supports current Mistral and Ministral
 models.

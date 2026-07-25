@@ -48,8 +48,12 @@ describe('KimiChatServiceProvider', () => {
   });
 
   describe('reasoning effort support', () => {
-    it('should expose only max for Kimi K3', () => {
-      expect(getKimiSupportedReasoningEfforts(MODEL_KIMI_K3)).toEqual(['max']);
+    it('should expose the official Kimi K3 reasoning levels', () => {
+      expect(getKimiSupportedReasoningEfforts(MODEL_KIMI_K3)).toEqual([
+        'low',
+        'high',
+        'max',
+      ]);
       expect(getKimiSupportedReasoningEfforts(MODEL_KIMI_K2_6)).toEqual([]);
     });
   });
@@ -120,6 +124,39 @@ describe('KimiChatServiceProvider', () => {
         undefined,
         'max',
       );
+    });
+
+    it.each(['low', 'high'] as const)(
+      'should create Kimi K3 with %s reasoning when configured',
+      (reasoningEffort) => {
+        provider.createChatService({
+          apiKey: 'test-api-key',
+          model: MODEL_KIMI_K3,
+          reasoning_effort: reasoningEffort,
+        });
+
+        expect(KimiChatService).toHaveBeenCalledWith(
+          'test-api-key',
+          MODEL_KIMI_K3,
+          MODEL_KIMI_K3,
+          undefined,
+          ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+          undefined,
+          undefined,
+          undefined,
+          reasoningEffort,
+        );
+      },
+    );
+
+    it('should reject unsupported Kimi K3 reasoning values at runtime', () => {
+      expect(() => {
+        provider.createChatService({
+          apiKey: 'test-api-key',
+          model: MODEL_KIMI_K3,
+          reasoning_effort: 'medium',
+        } as KimiChatServiceOptions);
+      }).toThrow('supports reasoning_effort values: low, high, max');
     });
 
     it('should reject the K2 thinking option for Kimi K3', () => {

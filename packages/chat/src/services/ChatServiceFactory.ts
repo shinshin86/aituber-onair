@@ -9,6 +9,7 @@ import {
 import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 import type { ChatProviderCapabilities } from '../types/capabilities';
 import { getClaudeSupportedReasoningEfforts } from '../constants/claude';
+import { getKimiSupportedReasoningEfforts } from '../constants/kimi';
 
 const TOOL_SUPPORTED_PROVIDERS = new Set<string>([
   'openai',
@@ -39,6 +40,7 @@ const REASONING_EFFORT_BY_PROVIDER: Record<string, string[]> = {
   claude: ['low', 'medium', 'high', 'xhigh', 'max'],
   gemini: ['minimal', 'low', 'medium', 'high'],
   openrouter: ['none', 'minimal', 'low', 'medium', 'high'],
+  kimi: ['low', 'high', 'max'],
   mistral: ['low', 'medium', 'high'],
   plamo: ['none', 'medium'],
   xai: ['none', 'low', 'medium', 'high'],
@@ -140,7 +142,9 @@ export class ChatServiceFactory {
       reasoningEffort:
         providerName === 'claude' && model
           ? [...getClaudeSupportedReasoningEfforts(model)]
-          : (REASONING_EFFORT_BY_PROVIDER[providerName] ?? []),
+          : providerName === 'kimi' && model
+            ? [...getKimiSupportedReasoningEfforts(model)]
+            : (REASONING_EFFORT_BY_PROVIDER[providerName] ?? []),
     };
   }
 

@@ -5,6 +5,7 @@ import {
   MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
+  getDefaultKimiReasoningEffort,
   getKimiSupportedReasoningEfforts,
   isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
@@ -183,7 +184,8 @@ export class KimiChatServiceProvider
       return undefined;
     }
 
-    const resolved = reasoningEffort ?? supported[0]!;
+    const resolved =
+      reasoningEffort ?? getDefaultKimiReasoningEffort(model) ?? supported[0]!;
     if (!supported.includes(resolved)) {
       throw new Error(
         `Model ${model} supports reasoning_effort values: ${supported.join(', ')}.`,

@@ -63,48 +63,51 @@ describe('KimiChatService request body', () => {
     } as typeof TextDecoder;
   });
 
-  it('sends Kimi K3 through Chat Completions with max reasoning', async () => {
-    const postSpy = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
-      createOneShotResponse({
+  it.each(['low', 'high', 'max'] as const)(
+    'sends Kimi K3 through Chat Completions with %s reasoning',
+    async (reasoningEffort) => {
+      const postSpy = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+        createOneShotResponse({
+          role: 'assistant',
+          content: 'K3 response',
+          reasoning_content: 'K3 reasoning',
+        }),
+      );
+      const service = new KimiChatService(
+        'test-key',
+        MODEL_KIMI_K3,
+        MODEL_KIMI_K3,
+        undefined,
+        ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+        'short',
+        undefined,
+        undefined,
+        reasoningEffort,
+      );
+
+      const result = await service.chatOnce(messages, false);
+
+      expect(postSpy).toHaveBeenCalledWith(
+        ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+        expect.objectContaining({
+          model: MODEL_KIMI_K3,
+          stream: false,
+          messages,
+          reasoning_effort: reasoningEffort,
+          max_completion_tokens: expect.any(Number),
+        }),
+        { Authorization: 'Bearer test-key' },
+      );
+      const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
+      expect(body.thinking).toBeUndefined();
+      expect(body.max_tokens).toBeUndefined();
+      expect(result.assistant_message).toEqual({
         role: 'assistant',
         content: 'K3 response',
         reasoning_content: 'K3 reasoning',
-      }),
-    );
-    const service = new KimiChatService(
-      'test-key',
-      MODEL_KIMI_K3,
-      MODEL_KIMI_K3,
-      undefined,
-      ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
-      'short',
-      undefined,
-      undefined,
-      'max',
-    );
-
-    const result = await service.chatOnce(messages, false);
-
-    expect(postSpy).toHaveBeenCalledWith(
-      ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
-      expect.objectContaining({
-        model: MODEL_KIMI_K3,
-        stream: false,
-        messages,
-        reasoning_effort: 'max',
-        max_completion_tokens: expect.any(Number),
-      }),
-      { Authorization: 'Bearer test-key' },
-    );
-    const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
-    expect(body.thinking).toBeUndefined();
-    expect(body.max_tokens).toBeUndefined();
-    expect(result.assistant_message).toEqual({
-      role: 'assistant',
-      content: 'K3 response',
-      reasoning_content: 'K3 reasoning',
-    });
-  });
+      });
+    },
+  );
 
   it('preserves Kimi K3 reasoning in streaming completion metadata', async () => {
     vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(

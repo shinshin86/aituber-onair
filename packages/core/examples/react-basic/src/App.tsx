@@ -24,9 +24,11 @@ import {
   allowsReasoningNone,
   allowsReasoningXHigh,
   getDefaultGeminiReasoningEffort,
+  getDefaultKimiReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
   getGeminiSupportedReasoningEfforts,
+  getKimiSupportedReasoningEfforts,
   getVoiceEngineVoiceList,
   isGPT5Model,
   isGeminiReasoningEffortModel,
@@ -38,6 +40,7 @@ import {
   normalizeXaiReasoningEffort,
   refreshOpenRouterFreeModels,
   type GeminiReasoningEffort,
+  type KimiReasoningEffort,
   type XaiReasoningEffort,
   type MinimaxModel,
   type MinimaxAudioFormat,
@@ -126,6 +129,29 @@ type ReasoningEffortLevel =
   | 'xhigh'
   | 'max';
 type ChatProvider = NonNullable<AITuberOnAirCoreOptions['chatProvider']>;
+
+const normalizeReasoningEffortForKimiModel = (
+  targetModel: string | undefined,
+  effort?: ReasoningEffortLevel,
+): KimiReasoningEffort | undefined => {
+  if (!targetModel) {
+    return undefined;
+  }
+
+  const supportedEfforts = getKimiSupportedReasoningEfforts(targetModel);
+  const requestedEffort: KimiReasoningEffort | undefined =
+    effort === 'low' || effort === 'high' || effort === 'max'
+      ? effort
+      : undefined;
+
+  if (requestedEffort && supportedEfforts.includes(requestedEffort)) {
+    return requestedEffort;
+  }
+
+  return (
+    getDefaultKimiReasoningEffort(targetModel) ?? supportedEfforts[0]
+  );
+};
 
 // MiniMax Voice IDs with descriptions
 const MINIMAX_VOICES: Record<string, string> = {
@@ -1284,6 +1310,9 @@ const App: React.FC = () => {
         break;
       case 'kimi':
         setModel(kimiModels[0]);
+        setReasoningEffort(
+          getDefaultKimiReasoningEffort(kimiModels[0]) ?? 'max',
+        );
         break;
       case 'xai':
         setModel(xaiModels[0]);
@@ -1380,6 +1409,23 @@ const App: React.FC = () => {
       reasoning_effort,
     );
     if (normalized !== reasoning_effort) {
+      setReasoningEffort(normalized);
+    }
+  }, [chatProvider, model, reasoning_effort]);
+
+  useEffect(() => {
+    if (
+      chatProvider !== 'kimi' ||
+      !model ||
+      !isKimiReasoningEffortModel(model)
+    ) {
+      return;
+    }
+    const normalized = normalizeReasoningEffortForKimiModel(
+      model,
+      reasoning_effort,
+    );
+    if (normalized && normalized !== reasoning_effort) {
       setReasoningEffort(normalized);
     }
   }, [chatProvider, model, reasoning_effort]);
@@ -1559,7 +1605,8 @@ const App: React.FC = () => {
     }
     if (chatProvider === 'kimi') {
       if (model && isKimiReasoningEffortModel(model)) {
-        providerOptions.reasoning_effort = 'max';
+        providerOptions.reasoning_effort =
+          normalizeReasoningEffortForKimiModel(model, reasoning_effort);
       }
       const trimmedBaseUrl = kimiBaseUrl.trim();
       if (trimmedBaseUrl) {
@@ -2685,9 +2732,14 @@ const App: React.FC = () => {
   const geminiReasoningEffortValue = model
     ? normalizeGeminiReasoningEffort(model, requestedGeminiReasoningEffort)
     : undefined;
-  const isKimiReasoningEffortModelSelected = Boolean(
-    chatProvider === 'kimi' && model && isKimiReasoningEffortModel(model),
-  );
+  const kimiSupportedReasoningEfforts =
+    chatProvider === 'kimi' && model
+      ? getKimiSupportedReasoningEfforts(model)
+      : [];
+  const isKimiReasoningEffortModelSelected =
+    kimiSupportedReasoningEfforts.length > 0;
+  const kimiReasoningEffortValue: KimiReasoningEffort =
+    normalizeReasoningEffortForKimiModel(model, reasoning_effort) ?? 'max';
   const getResponseLengthOptionLabel = (length: ChatResponseLength): string => {
     const label = RESPONSE_LENGTH_LABELS[length];
     const baseTokens = RESPONSE_LENGTH_BASE_TOKENS[length];
@@ -3164,10 +3216,21 @@ const App: React.FC = () => {
                           </label>
                           <select
                             id="kimiReasoningEffort"
-                            value="max"
-                            disabled
+                            value={kimiReasoningEffortValue}
+                            onChange={(e) =>
+                              setReasoningEffort(
+                                e.target.value as KimiReasoningEffort,
+                              )
+                            }
                           >
-                            <option value="max">Max (currently required)</option>
+                            {kimiSupportedReasoningEfforts.map((effort) => (
+                              <option key={effort} value={effort}>
+                                {effort === 'max'
+                                  ? 'Max (API default)'
+                                  : effort.charAt(0).toUpperCase() +
+                                    effort.slice(1)}
+                              </option>
+                            ))}
                           </select>
                           <div
                             style={{
@@ -3177,9 +3240,8 @@ const App: React.FC = () => {
                               fontSize: '12px',
                             }}
                           >
-                            Kimi K3 currently supports max only. Lower levels
-                            will be available after the official API supports
-                            them.
+                            Kimi K3 always reasons. Use Low for shorter
+                            reasoning, or Max to keep the API default.
                           </div>
                         </>
                       )}
