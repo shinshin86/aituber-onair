@@ -12,6 +12,7 @@ type SseParseOptions = {
   onJsonError?: JsonParseErrorHandler;
   appendTextBlock?: (blocks: ToolChatBlock[], text: string) => void;
   preserveAssistantMessage?: boolean;
+  throwOnApiError?: boolean;
 };
 
 const parseJsonPayload = (
@@ -54,6 +55,23 @@ const extractTextContent = (content: unknown): string => {
       return '';
     })
     .join('');
+};
+
+const throwIfApiError = (data: any): void => {
+  const choice = data.choices?.[0];
+  const error = data.error ?? choice?.error;
+  if (!error && choice?.finish_reason !== 'error') {
+    return;
+  }
+
+  const message =
+    typeof error === 'string'
+      ? error
+      : typeof error?.message === 'string'
+        ? error.message
+        : 'The provider ended the response with an error.';
+
+  throw new Error(`Provider response error: ${message}`);
 };
 
 const forEachSsePayload = async (
@@ -103,6 +121,9 @@ export async function parseOpenAICompatibleTextStream(
   await forEachSsePayload(res, (payload) => {
     const json = parseJsonPayload(payload, options.onJsonError);
     if (!json) return;
+    if (options.throwOnApiError) {
+      throwIfApiError(json);
+    }
 
     const content = extractTextContent(json.choices?.[0]?.delta?.content);
     if (content) {
@@ -131,6 +152,9 @@ export async function parseOpenAICompatibleToolStream(
   await forEachSsePayload(res, (payload) => {
     const json = parseJsonPayload(payload, options.onJsonError);
     if (!json) return;
+    if (options.throwOnApiError) {
+      throwIfApiError(json);
+    }
 
     const choice = json.choices?.[0];
     if (typeof choice?.finish_reason === 'string') {
@@ -218,6 +242,10 @@ export function parseOpenAICompatibleOneShot(
   data: any,
   options: SseParseOptions = {},
 ): ToolChatCompletion {
+  if (options.throwOnApiError) {
+    throwIfApiError(data);
+  }
+
   const choice = data?.choices?.[0];
   const blocks: ToolChatBlock[] = [];
   const content = extractTextContent(choice?.message?.content);

@@ -107,6 +107,11 @@ Use the dropdown to select response length:
 - Very Long: ~1000 tokens
 - Deep: ~5000 tokens
 
+OpenRouter dynamic routers (`openrouter/auto` and `openrouter/auto-beta`) do not
+send token limits derived from these presets because a routed reasoning model
+can consume the output budget before producing visible text. Use a length
+instruction in the prompt when selecting either router.
+
 For Gemini Nano, the presets also apply concrete sentence-count guidance:
 `Very Short` up to 1 sentence, `Short` up to 2, `Medium` up to 3, `Long` up
 to 5, and `Very Long` up to 10. `Deep` has no sentence-count limit. The
@@ -142,9 +147,11 @@ built-in model status is `available`.
 - Best for: Fast responses, cost-effective. Minimal thinking keeps chat latency and hidden-token usage low.
 
 **OpenRouter**
-- Models: Curated multi-provider model list (OpenRouter Auto/Fusion, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
+- Models: Curated multi-provider model list (OpenRouter Auto/Auto Beta/Fusion, OpenAI GPT-5.6, Claude Opus 5, Gemini 3.6/3.5, Z.ai, xAI, Kimi K3, KAT-Coder V2.5)
 - Vision: Depends on selected routed model
 - Best for: Flexible model routing and unified API usage
+- Auto Beta: Selects a model per request and charges the selected model's rate
+- Coding models: KAT-Coder-Air/Pro V2.5 are explicit text-only options, not defaults
 - Fusion Cost: `openrouter/fusion` bills the combined underlying model calls and any enabled web search/fetch usage
 - Dynamic Free Models: Click `Fetch free models` to probe currently available `:free` models and append working IDs to the model list
 - Max candidates: Adjustable in UI (default `1`) to control probe request volume

@@ -3,13 +3,18 @@ export const ENDPOINT_OPENROUTER_API =
 
 // OpenRouter models
 export const MODEL_OPENROUTER_AUTO = 'openrouter/auto';
+export const MODEL_OPENROUTER_AUTO_BETA = 'openrouter/auto-beta';
 export const MODEL_OPENROUTER_FUSION = 'openrouter/fusion';
 export const MODEL_GPT_OSS_20B_FREE = 'openai/gpt-oss-20b:free';
+export const MODEL_MOONSHOTAI_KIMI_K3 = 'moonshotai/kimi-k3';
 export const MODEL_MOONSHOTAI_KIMI_K2_7_CODE = 'moonshotai/kimi-k2.7-code';
 export const MODEL_MOONSHOTAI_KIMI_K2_5 = 'moonshotai/kimi-k2.5';
 export const MODEL_MOONSHOTAI_KIMI_LATEST = '~moonshotai/kimi-latest';
 export const MODEL_OPENAI_GPT_LATEST = '~openai/gpt-latest';
 export const MODEL_OPENAI_GPT_MINI_LATEST = '~openai/gpt-mini-latest';
+export const MODEL_OPENAI_GPT_5_6_SOL = 'openai/gpt-5.6-sol';
+export const MODEL_OPENAI_GPT_5_6_TERRA = 'openai/gpt-5.6-terra';
+export const MODEL_OPENAI_GPT_5_6_LUNA = 'openai/gpt-5.6-luna';
 export const MODEL_OPENAI_GPT_5_5_PRO = 'openai/gpt-5.5-pro';
 export const MODEL_OPENAI_GPT_5_5 = 'openai/gpt-5.5';
 export const MODEL_OPENAI_GPT_5_1_CHAT = 'openai/gpt-5.1-chat';
@@ -23,6 +28,7 @@ export const MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST =
   '~anthropic/claude-sonnet-latest';
 export const MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST =
   '~anthropic/claude-haiku-latest';
+export const MODEL_ANTHROPIC_CLAUDE_OPUS_5 = 'anthropic/claude-opus-5';
 export const MODEL_ANTHROPIC_CLAUDE_OPUS_4 = 'anthropic/claude-opus-4';
 export const MODEL_ANTHROPIC_CLAUDE_SONNET_4 = 'anthropic/claude-sonnet-4';
 export const MODEL_ANTHROPIC_CLAUDE_3_7_SONNET = 'anthropic/claude-3.7-sonnet';
@@ -30,6 +36,9 @@ export const MODEL_ANTHROPIC_CLAUDE_3_5_SONNET = 'anthropic/claude-3.5-sonnet';
 export const MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU = 'anthropic/claude-haiku-4.5';
 export const MODEL_GOOGLE_GEMINI_PRO_LATEST = '~google/gemini-pro-latest';
 export const MODEL_GOOGLE_GEMINI_FLASH_LATEST = '~google/gemini-flash-latest';
+export const MODEL_GOOGLE_GEMINI_3_6_FLASH = 'google/gemini-3.6-flash';
+export const MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE =
+  'google/gemini-3.5-flash-lite';
 export const MODEL_GOOGLE_GEMINI_2_5_PRO = 'google/gemini-2.5-pro';
 export const MODEL_GOOGLE_GEMINI_2_5_FLASH = 'google/gemini-2.5-flash';
 export const MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025 =
@@ -38,6 +47,12 @@ export const MODEL_ZAI_GLM_5_2 = 'z-ai/glm-5.2';
 export const MODEL_ZAI_GLM_4_7_FLASH = 'z-ai/glm-4.7-flash';
 export const MODEL_ZAI_GLM_4_5_AIR = 'z-ai/glm-4.5-air';
 export const MODEL_ZAI_GLM_4_5_AIR_FREE = 'z-ai/glm-4.5-air:free';
+export const MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5 =
+  'kwaipilot/kat-coder-air-v2.5';
+export const MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5 =
+  'kwaipilot/kat-coder-pro-v2.5';
+export const MODEL_XAI_GROK_LATEST = '~x-ai/grok-latest';
+export const MODEL_XAI_GROK_4_5 = 'x-ai/grok-4.5';
 
 // Free tier models
 export const OPENROUTER_FREE_MODELS = [
@@ -47,9 +62,14 @@ export const OPENROUTER_FREE_MODELS = [
 
 // Vision supported models on OpenRouter
 export const OPENROUTER_VISION_SUPPORTED_MODELS = [
+  MODEL_OPENROUTER_AUTO_BETA,
+  MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
+  MODEL_OPENAI_GPT_5_6_SOL,
+  MODEL_OPENAI_GPT_5_6_TERRA,
+  MODEL_OPENAI_GPT_5_6_LUNA,
   MODEL_OPENAI_GPT_5_5_PRO,
   MODEL_OPENAI_GPT_5_5,
   MODEL_OPENAI_GPT_5_1_CHAT,
@@ -61,17 +81,22 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_OPENAI_GPT_4_1_NANO,
   MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_4,
   MODEL_ANTHROPIC_CLAUDE_SONNET_4,
   MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
   MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
   MODEL_GOOGLE_GEMINI_PRO_LATEST,
   MODEL_GOOGLE_GEMINI_FLASH_LATEST,
+  MODEL_GOOGLE_GEMINI_3_6_FLASH,
+  MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   MODEL_GOOGLE_GEMINI_2_5_PRO,
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
   MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
   MODEL_MOONSHOTAI_KIMI_K2_5,
+  MODEL_XAI_GROK_LATEST,
+  MODEL_XAI_GROK_4_5,
 ];
 
 // Rate limits for free tier

@@ -56,6 +56,42 @@ describe('openaiCompatibleSse', () => {
     expect(onJsonError).toHaveBeenCalledTimes(1);
   });
 
+  it('should throw text stream errors when enabled', async () => {
+    const res = createSseResponse([
+      'data: {"error":{"code":502,"message":"Provider disconnected"},"choices":[{"delta":{"content":""},"finish_reason":"error"}]}\n\n',
+    ]);
+
+    await expect(
+      parseOpenAICompatibleTextStream(res, () => {}, {
+        throwOnApiError: true,
+      }),
+    ).rejects.toThrow('Provider response error: Provider disconnected');
+  });
+
+  it('should throw tool stream errors when enabled', async () => {
+    const res = createSseResponse([
+      'data: {"error":{"code":429,"message":"Provider overloaded"},"choices":[{"delta":{"content":""},"finish_reason":"error"}]}\n\n',
+    ]);
+
+    await expect(
+      parseOpenAICompatibleToolStream(res, () => {}, {
+        throwOnApiError: true,
+      }),
+    ).rejects.toThrow('Provider response error: Provider overloaded');
+  });
+
+  it('should throw one-shot errors when enabled', () => {
+    expect(() =>
+      parseOpenAICompatibleOneShot(
+        {
+          error: { code: 502, message: 'Provider disconnected' },
+          choices: [{ message: { content: '' }, finish_reason: 'error' }],
+        },
+        { throwOnApiError: true },
+      ),
+    ).toThrow('Provider response error: Provider disconnected');
+  });
+
   it('should parse streaming tool calls with arguments spanning chunks', async () => {
     const onPartial = vi.fn();
     const firstPayload = JSON.stringify({
