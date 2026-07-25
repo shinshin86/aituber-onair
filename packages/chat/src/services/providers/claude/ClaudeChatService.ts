@@ -13,7 +13,9 @@ import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_4_5_HAIKU,
   CLAUDE_VISION_SUPPORTED_MODELS,
+  getClaudeSupportedReasoningEfforts,
 } from '../../../constants';
+import type { ClaudeReasoningEffort } from '../../../constants/claude';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
@@ -40,6 +42,7 @@ type ClaudeToolChatBlock =
 // Internal extended completion type for MCP support
 type ClaudeInternalCompletion = {
   blocks: ClaudeToolChatBlock[];
+  providerContent: Record<string, any>[];
   stop_reason: 'tool_use' | 'end';
 };
 
@@ -56,6 +59,7 @@ export class ClaudeChatService implements ChatService {
   private tools: ToolDefinition[];
   private mcpServers: MCPServerConfig[];
   private responseLength?: ChatResponseLength;
+  private reasoningEffort?: ClaudeReasoningEffort;
 
   /**
    * Constructor
@@ -73,6 +77,7 @@ export class ClaudeChatService implements ChatService {
     tools: ToolDefinition[] = [],
     mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,
+    reasoningEffort?: ClaudeReasoningEffort,
   ) {
     this.apiKey = apiKey;
     this.model = model || MODEL_CLAUDE_4_5_HAIKU;
@@ -80,6 +85,7 @@ export class ClaudeChatService implements ChatService {
     this.tools = tools;
     this.mcpServers = mcpServers;
     this.responseLength = responseLength;
+    this.reasoningEffort = reasoningEffort;
 
     // Validate vision model supports vision capabilities
     if (!CLAUDE_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
@@ -225,6 +231,13 @@ export class ClaudeChatService implements ChatService {
           : getMaxTokensForResponseLength(this.responseLength),
     };
 
+    if (
+      this.reasoningEffort !== undefined &&
+      getClaudeSupportedReasoningEfforts(model).includes(this.reasoningEffort)
+    ) {
+      body.output_config = { effort: this.reasoningEffort };
+    }
+
     if (this.tools.length) {
       body.tools = this.tools.map((t) => ({
         name: t.name,
@@ -274,6 +287,7 @@ export class ClaudeChatService implements ChatService {
     const dec = new TextDecoder();
 
     const textBlocks: ClaudeToolChatBlock[] = [];
+    const providerBlocks = new Map<number, Record<string, any>>();
     const toolCalls = new Map<
       number,
       { id: string; name: string; args: string; server_name?: string }
@@ -296,10 +310,48 @@ export class ClaudeChatService implements ChatService {
 
         const ev = JSON.parse(payload);
 
+        if (
+          ev.type === 'content_block_start' &&
+          ev.content_block &&
+          typeof ev.index === 'number'
+        ) {
+          providerBlocks.set(ev.index, { ...ev.content_block });
+        }
+
         /* content delta */
-        if (ev.type === 'content_block_delta' && ev.delta?.text) {
+        if (
+          ev.type === 'content_block_delta' &&
+          ev.delta?.type === 'text_delta'
+        ) {
           onPartial(ev.delta.text);
           textBlocks.push({ type: 'text', text: ev.delta.text });
+
+          const block = providerBlocks.get(ev.index);
+          if (block?.type === 'text') {
+            block.text = `${block.text ?? ''}${ev.delta.text}`;
+          }
+        }
+
+        if (
+          ev.type === 'content_block_delta' &&
+          ev.delta?.type === 'thinking_delta'
+        ) {
+          const block = providerBlocks.get(ev.index);
+          if (block?.type === 'thinking') {
+            block.thinking = `${block.thinking ?? ''}${ev.delta.thinking ?? ''}`;
+          }
+        }
+
+        if (
+          ev.type === 'content_block_delta' &&
+          ev.delta?.type === 'signature_delta'
+        ) {
+          const block = providerBlocks.get(ev.index);
+          if (block?.type === 'thinking') {
+            block.signature = `${block.signature ?? ''}${
+              ev.delta.signature ?? ''
+            }`;
+          }
         }
 
         /* tool_call delta */
@@ -357,6 +409,12 @@ export class ClaudeChatService implements ChatService {
         /* case of content_block_stop */
         if (ev.type === 'content_block_stop' && toolCalls.has(ev.index)) {
           const { id, name, args, server_name } = toolCalls.get(ev.index)!;
+          const input = JSON.parse(args || '{}');
+          const providerBlock = providerBlocks.get(ev.index);
+          if (providerBlock) {
+            providerBlock.input = input;
+          }
+
           if (server_name) {
             // MCP tool use
             textBlocks.push({
@@ -364,7 +422,7 @@ export class ClaudeChatService implements ChatService {
               id,
               name,
               server_name,
-              input: JSON.parse(args || '{}'),
+              input,
             });
           } else {
             // Standard tool use
@@ -372,7 +430,7 @@ export class ClaudeChatService implements ChatService {
               type: 'tool_use',
               id,
               name,
-              input: JSON.parse(args || '{}'),
+              input,
             });
           }
           toolCalls.delete(ev.index);
@@ -382,6 +440,9 @@ export class ClaudeChatService implements ChatService {
 
     return {
       blocks: textBlocks,
+      providerContent: [...providerBlocks.entries()]
+        .sort(([a], [b]) => a - b)
+        .map(([, block]) => block),
       stop_reason: textBlocks.some(
         (b) => b.type === 'tool_use' || b.type === 'mcp_tool_use',
       )
@@ -440,6 +501,7 @@ export class ClaudeChatService implements ChatService {
 
     return {
       blocks,
+      providerContent: (data.content ?? []).map((block: any) => ({ ...block })),
       stop_reason: blocks.some(
         (b) => b.type === 'tool_use' || b.type === 'mcp_tool_use',
       )
@@ -521,6 +583,14 @@ export class ClaudeChatService implements ChatService {
     return {
       blocks: standardBlocks,
       stop_reason: completion.stop_reason,
+      assistant_message: {
+        role: 'assistant',
+        content: standardBlocks
+          .filter((block) => block.type === 'text')
+          .map((block) => block.text)
+          .join(''),
+        provider_content: completion.providerContent,
+      },
     };
   }
 }

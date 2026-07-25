@@ -7,18 +7,22 @@ import {
   allowsReasoningMinimal,
   allowsReasoningNone,
   allowsReasoningXHigh,
+  getDefaultClaudeReasoningEffort,
   getDefaultGeminiReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
+  isClaudeReasoningEffortModel,
   isGPT5Model,
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isXaiReasoningEffortModel,
   normalizeGeminiReasoningEffort,
+  normalizeClaudeReasoningEffort,
   normalizeXaiReasoningEffort,
   type Message,
   type MessageWithVision,
   type ChatResponseLength,
   type GPT5PresetKey,
+  type ClaudeReasoningEffort,
   type GeminiReasoningEffort,
   type GeminiNanoInitialPrompt,
   type ChatCompletionAssistantMessage,
@@ -174,6 +178,18 @@ function App() {
     selectedModel,
     reasoning_effort,
   );
+  const requestedClaudeReasoningEffort: ClaudeReasoningEffort | undefined =
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'medium' ||
+    reasoning_effort === 'high' ||
+    reasoning_effort === 'xhigh' ||
+    reasoning_effort === 'max'
+      ? reasoning_effort
+      : undefined;
+  const claudeReasoningEffort = normalizeClaudeReasoningEffort(
+    selectedModel,
+    requestedClaudeReasoningEffort,
+  );
   const requestedGeminiReasoningEffort: GeminiReasoningEffort | undefined =
     reasoning_effort === 'minimal' ||
     reasoning_effort === 'low' ||
@@ -242,6 +258,13 @@ function App() {
             throw new Error('OpenAI-compatible endpoint is required.');
           }
           options.endpoint = endpoint;
+        }
+
+        if (
+          provider === 'claude' &&
+          isClaudeReasoningEffortModel(selectedModel)
+        ) {
+          options.reasoning_effort = claudeReasoningEffort;
         }
 
         if (
@@ -339,6 +362,7 @@ function App() {
     selectedModel,
     gpt5Preset,
     normalizedReasoningEffort,
+    claudeReasoningEffort,
     geminiReasoningEffort,
     xaiReasoningEffort,
     verbosity,
@@ -508,6 +532,10 @@ function App() {
                     ? getDefaultReasoningEffortForGPT5Model(defaultModel)
                     : 'medium',
                 );
+              } else if (newProvider === 'claude') {
+                setReasoningEffort(
+                  getDefaultClaudeReasoningEffort(defaultModel) ?? 'high',
+                );
               } else if (newProvider === 'gemini') {
                 setReasoningEffort(
                   getDefaultGeminiReasoningEffort(defaultModel) ?? 'minimal',
@@ -539,6 +567,19 @@ function App() {
                     ? getDefaultReasoningEffortForGPT5Model(modelId)
                     : 'medium',
                 );
+              } else if (newProvider === 'claude') {
+                const requestedEffort =
+                  reasoning_effort === 'low' ||
+                  reasoning_effort === 'medium' ||
+                  reasoning_effort === 'high' ||
+                  reasoning_effort === 'xhigh' ||
+                  reasoning_effort === 'max'
+                    ? reasoning_effort
+                    : undefined;
+                setReasoningEffort(
+                  normalizeClaudeReasoningEffort(modelId, requestedEffort) ??
+                    'high',
+                );
               } else if (newProvider === 'gemini') {
                 const requestedEffort =
                   reasoning_effort === 'minimal' ||
@@ -563,9 +604,11 @@ function App() {
             reasoning_effort={
               provider === 'xai'
                 ? xaiReasoningEffort
-                : provider === 'gemini'
-                  ? (geminiReasoningEffort ?? 'minimal')
-                  : normalizedReasoningEffort
+                : provider === 'claude'
+                  ? (claudeReasoningEffort ?? 'high')
+                  : provider === 'gemini'
+                    ? (geminiReasoningEffort ?? 'minimal')
+                    : normalizedReasoningEffort
             }
             onReasoningEffortChange={setReasoningEffort}
             verbosity={verbosity}
