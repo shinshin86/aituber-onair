@@ -147,7 +147,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - GLM-4.6 and GLM-4.6V series
 
 **Kimi:**
-- Kimi K3 with vision and the currently required `reasoning_effort: 'max'`
+- Kimi K3 with vision and configurable `reasoning_effort` (`low`, `high`, or `max`; defaults to `max` and cannot be disabled)
 - Kimi K2.7 Code
 - Kimi K2.7 Code HighSpeed
 - Kimi K2.6

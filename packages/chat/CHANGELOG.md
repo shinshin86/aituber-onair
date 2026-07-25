@@ -9,6 +9,10 @@
 - Added model-aware Claude `reasoning_effort` support through Anthropic's
   `output_config.effort`, including a configurable effort control in the React
   basic example.
+- Expanded model-aware Kimi `reasoning_effort` support for models that expose
+  the top-level Chat Completions option. Kimi K3 now accepts `low`, `high`, and
+  `max`, keeps `max` as the default, and exposes all three levels in the React
+  basic example.
 
 ### Patch Changes
 

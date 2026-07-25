@@ -1397,7 +1397,7 @@ OpenRouter API、DeepSeek API、Mistral API、Sakana AI、PLaMo が利用可能�
 - **Sakana AI**: first-class `sakana` provider として Fugu（`fugu`）と Fugu Ultra（`fugu-ultra`, `fugu-ultra-20260615`）をサポート。ブラウザ例では CORS により直接呼び出しが失敗する場合があるため disabled 表示にしています。Node.js または backend proxy 経由で利用してください
 - **PLaMo**: first-class `plamo` provider として PLaMo 3.0 Prime（`plamo-3.0-prime`）と PLaMo 2.2 Prime（`plamo-2.2-prime`）をサポート
 - **Z.ai**: GLM-5.2、GLM-5.1、GLM-5/GLM-5-Turbo（テキスト専用）、GLM-5V-Turbo（Vision 対応）、GLM-4.7、GLM-4.7 Flash/FlashX、GLM-4.6、GLM-4.6V、GLM-4.6V Flash/FlashX をサポート
-- **Kimi**: Kimi K3（`kimi-k3`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`）、Kimi K2.5（`kimi-k2.5`）を Vision 対応でサポート。Kimi K3 は現在 `reasoning_effort: 'max'` が必須で、Kimi K2.7 Code 系は thinking mode が必須です
+- **Kimi**: Kimi K3（`kimi-k3`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`）、Kimi K2.5（`kimi-k2.5`）を Vision 対応でサポート。`reasoning_effort` を公開するモデルでは公式の対応値とデフォルトを使用します。Kimi K3 は `low`、`high`、`max` を指定でき、デフォルトは `max` です。推論自体は無効化できません。Kimi K2.7 Code 系は thinking mode が必須です
 - **OpenRouter**: Auto Router、Fusion、latest 系 alias、OpenAI GPT-5.5、Claude、Gemini、Z.ai GLM-5.2、Kimi K2.7 Code を含む OpenRouter のキュレーション済みモデル一覧をサポート。Fusion は複数モデルのパネルとジャッジモデルを実行するため、内部で使われた各モデル呼び出しと web search/fetch 利用分の合算で課金されます。OpenRouter GLM-5.2 では、reasoning token が出力上限を使い切ることを避けるため、chat 側の `reasoning.effort: 'none'` default と automatic `max_tokens` 省略を core でもそのまま利用します
 - **OpenAI-Compatible**: 任意の OpenAI 互換 Chat Completions endpoint をサポートし、Vision 対応は endpoint / model の応答まで `unknown` として扱います
 

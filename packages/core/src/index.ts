@@ -189,6 +189,7 @@ export {
   KIMI_VISION_SUPPORTED_MODELS,
   KIMI_THINKING_REQUIRED_MODELS,
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+  getDefaultKimiReasoningEffort,
   getKimiSupportedReasoningEfforts,
   isKimiReasoningEffortModel,
   isKimiVisionModel,
