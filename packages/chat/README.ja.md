@@ -636,26 +636,36 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 ```
 
 **OpenRouterの重要な注意事項:**
-- `gpt-oss-20b:free`モデルでは、技術的制限によりトークン制限が自動的に無効化されます
-- 応答の長さを制御するには、プロンプト内で指示してください（例：「40文字以内で返答してください」）
+- `openrouter/auto` と `openrouter/auto-beta` では、ルーティング先のreasoningモデルが可視テキストの生成前に出力予算を使い切ることを避けるため、`responseLength` 由来のトークン制限を自動的に無効化します。明示的に指定した `maxTokens` はそのまま使用します。
+- `gpt-oss-20b:free` と `z-ai/glm-5.2` では、すべてのトークン制限を引き続き無効化します。これらのモデルと動的Routerでは、応答の長さをプロンプトで指示してください（例:「40文字以内で回答してください」）。
 - 無料階層にはレート制限があります（20リクエスト/分）
 - 無料モデル判定はモデルID末尾の `:free` で行います（動的取得した `:free` も同様にレート制限対象）
+- `openrouter/auto-beta` はタスクを判定するBetaルーターです。リクエストごとにモデルを選択し、そのモデルの料金が適用されます。選択結果はレスポンスの `model` またはOpenRouter Activityで確認できます。
 - `openrouter/fusion` は複数モデルのパネルとジャッジモデルを実行します。単一モデルの固定単価ではなく、内部で使われた各モデル呼び出しと web search/fetch 利用分の合算で課金されます。
-- `z-ai/glm-5.2` は OpenRouter reasoning を `none` にし、reasoning token が出力上限を使い切って可視テキストが空になることを避けるため、トークン制限も自動的に無効化します。
+- `z-ai/glm-5.2` は OpenRouter reasoning も `none` にします。
+- コーディング特化モデルはデフォルトではなく明示的な選択肢です。`kwaipilot/kat-coder-air-v2.5` と `kwaipilot/kat-coder-pro-v2.5` はテキスト専用です。
+- `moonshotai/kimi-k3` の可用性は上流キャパシティに依存し、混雑時はOpenRouterから429レスポンスが返る場合があります。
+- `x-ai/grok-4.5` には現在のEU制限を含む地域別の可用性制限があります。`~x-ai/grok-latest` がGrok 4.5へ解決される場合も同じ制限を受けます。
 - サポート対象モデル（キュレーション済み）:
-  - `openrouter/auto`
+  - `openrouter/auto`, `openrouter/auto-beta`
   - `openrouter/fusion`
   - `openai/gpt-oss-20b:free`
-  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`, `openai/gpt-5.5-pro`, `openai/gpt-5.5`
+  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`
+  - `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`
+  - `openai/gpt-5.5-pro`, `openai/gpt-5.5`
   - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
   - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
   - `~anthropic/claude-sonnet-latest`, `~anthropic/claude-haiku-latest`
+  - `anthropic/claude-opus-5`
   - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
   - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
   - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
+  - `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite`
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
   - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
-  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
+  - `~x-ai/grok-latest`, `x-ai/grok-4.5`
+  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
+  - `kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`
 
 **OpenRouter freeモデルの動的リフレッシュ**
 
@@ -1233,7 +1243,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。チャット用途向けに Gemini 3 Flash は minimal thinking、Gemini 3 Pro は low thinking を既定値にします。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート。調整可能な `reasoning_effort` は対応モデルに限り `output_config.effort` として送信します
-- **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
+- **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/Kwaipilot）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-5V-Turbo/GLM-4.6V系（ビジョン）をサポート
 - **xAI**: Grok 4.5 をチャット用途向けに `reasoning_effort: 'low'` デフォルトでサポート。加えて Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
 - **Kimi**: Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、デフォルトは `max`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート

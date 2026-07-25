@@ -2,14 +2,24 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
+  MODEL_ANTHROPIC_CLAUDE_OPUS_5,
   MODEL_GPT_OSS_20B_FREE,
+  MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
+  MODEL_GOOGLE_GEMINI_3_6_FLASH,
+  MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
+  MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
+  MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
   MODEL_MOONSHOTAI_KIMI_K2_5,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENROUTER_AUTO,
+  MODEL_OPENROUTER_AUTO_BETA,
   MODEL_OPENROUTER_FUSION,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
+  MODEL_OPENAI_GPT_5_6_SOL,
+  MODEL_OPENAI_GPT_5_6_TERRA,
+  MODEL_OPENAI_GPT_5_6_LUNA,
   MODEL_OPENAI_GPT_5_5_PRO,
   MODEL_OPENAI_GPT_5_5,
   MODEL_OPENAI_GPT_5_1_CHAT,
@@ -35,7 +45,27 @@ import {
   MODEL_ZAI_GLM_4_7_FLASH,
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_ZAI_GLM_4_5_AIR_FREE,
+  MODEL_XAI_GROK_4_5,
+  MODEL_XAI_GROK_LATEST,
 } from '../../src/constants/openrouter';
+
+const recentOpenRouterVisionModels = [
+  MODEL_OPENROUTER_AUTO_BETA,
+  MODEL_MOONSHOTAI_KIMI_K3,
+  MODEL_OPENAI_GPT_5_6_SOL,
+  MODEL_OPENAI_GPT_5_6_TERRA,
+  MODEL_OPENAI_GPT_5_6_LUNA,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+  MODEL_GOOGLE_GEMINI_3_6_FLASH,
+  MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
+  MODEL_XAI_GROK_LATEST,
+  MODEL_XAI_GROK_4_5,
+];
+
+const recentOpenRouterTextOnlyModels = [
+  MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
+  MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
+];
 
 describe('OpenRouterChatServiceProvider', () => {
   let provider: OpenRouterChatServiceProvider;
@@ -62,11 +92,15 @@ describe('OpenRouterChatServiceProvider', () => {
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
         MODEL_OPENROUTER_AUTO,
+        MODEL_OPENROUTER_AUTO_BETA,
         MODEL_OPENROUTER_FUSION,
         MODEL_GPT_OSS_20B_FREE,
         MODEL_ZAI_GLM_4_5_AIR_FREE,
         MODEL_OPENAI_GPT_LATEST,
         MODEL_OPENAI_GPT_MINI_LATEST,
+        MODEL_OPENAI_GPT_5_6_SOL,
+        MODEL_OPENAI_GPT_5_6_TERRA,
+        MODEL_OPENAI_GPT_5_6_LUNA,
         MODEL_OPENAI_GPT_5_5_PRO,
         MODEL_OPENAI_GPT_5_5,
         MODEL_OPENAI_GPT_5_1_CHAT,
@@ -78,6 +112,7 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_OPENAI_GPT_4_1_NANO,
         MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
         MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
+        MODEL_ANTHROPIC_CLAUDE_OPUS_5,
         MODEL_ANTHROPIC_CLAUDE_OPUS_4,
         MODEL_ANTHROPIC_CLAUDE_SONNET_4,
         MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
@@ -85,15 +120,22 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
         MODEL_GOOGLE_GEMINI_PRO_LATEST,
         MODEL_GOOGLE_GEMINI_FLASH_LATEST,
+        MODEL_GOOGLE_GEMINI_3_6_FLASH,
+        MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
         MODEL_GOOGLE_GEMINI_2_5_PRO,
         MODEL_GOOGLE_GEMINI_2_5_FLASH,
         MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
         MODEL_ZAI_GLM_5_2,
         MODEL_ZAI_GLM_4_7_FLASH,
         MODEL_ZAI_GLM_4_5_AIR,
+        MODEL_XAI_GROK_LATEST,
+        MODEL_XAI_GROK_4_5,
         MODEL_MOONSHOTAI_KIMI_LATEST,
+        MODEL_MOONSHOTAI_KIMI_K3,
         MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
         MODEL_MOONSHOTAI_KIMI_K2_5,
+        MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
+        MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
       ]);
     });
   });
@@ -121,6 +163,13 @@ describe('OpenRouterChatServiceProvider', () => {
       ).toBe(true);
     });
 
+    it.each(recentOpenRouterVisionModels)(
+      'should return true for recent vision model %s',
+      (model) => {
+        expect(provider.supportsVisionForModel(model)).toBe(true);
+      },
+    );
+
     it('should return false for non-vision models', () => {
       expect(provider.supportsVisionForModel(MODEL_OPENROUTER_AUTO)).toBe(
         false,
@@ -136,6 +185,13 @@ describe('OpenRouterChatServiceProvider', () => {
         provider.getVisionSupportLevelForModel(MODEL_GPT_OSS_20B_FREE),
       ).toBe('unsupported');
     });
+
+    it.each(recentOpenRouterTextOnlyModels)(
+      'should return false for recent text-only model %s',
+      (model) => {
+        expect(provider.supportsVisionForModel(model)).toBe(false);
+      },
+    );
   });
 
   describe('getFreeModels', () => {

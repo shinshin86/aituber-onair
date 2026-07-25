@@ -654,26 +654,36 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 ```
 
 **Important Notes for OpenRouter:**
-- Token limits are automatically disabled for the `gpt-oss-20b:free` model due to technical limitations
-- To control response length, include instructions in your prompt (e.g., "Please respond in 40 characters or less")
+- Automatic token limits from `responseLength` are disabled for `openrouter/auto` and `openrouter/auto-beta` because a routed reasoning model can spend the entire output budget before emitting visible content. An explicitly supplied `maxTokens` is still honored.
+- All token limits remain disabled for `gpt-oss-20b:free` and `z-ai/glm-5.2`. For these models and the dynamic routers, control response length with prompt instructions (e.g., "Please respond in 40 characters or less").
 - Free tier has rate limits (20 requests/minute)
 - Free tier detection is based on the model ID suffix `:free` (dynamic `:free` IDs are also rate-limited)
+- `openrouter/auto-beta` is a Beta task-aware router. It chooses a model for each request and charges that routed model's rate; inspect the response `model` field or OpenRouter Activity to see the selection.
 - `openrouter/fusion` runs a multi-model panel plus a judge model; OpenRouter bills the sum of the underlying model calls and any enabled web search/fetch usage, not a single fixed model rate.
-- For `z-ai/glm-5.2`, OpenRouter reasoning defaults to `none` and token limits are automatically disabled because reasoning tokens can otherwise exhaust the output budget before visible content is emitted.
+- For `z-ai/glm-5.2`, OpenRouter reasoning also defaults to `none`.
+- Specialized coding models are explicit options rather than defaults. This includes `kwaipilot/kat-coder-air-v2.5` and `kwaipilot/kat-coder-pro-v2.5`, which are text-only.
+- `moonshotai/kimi-k3` availability depends on upstream capacity; OpenRouter may return 429 responses when capacity is constrained.
+- `x-ai/grok-4.5` has region-specific availability, including a current EU limitation. `~x-ai/grok-latest` inherits those limits when it resolves to Grok 4.5.
 - Supported models (curated list):
-  - `openrouter/auto`
+  - `openrouter/auto`, `openrouter/auto-beta`
   - `openrouter/fusion`
   - `openai/gpt-oss-20b:free`
-  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`, `openai/gpt-5.5-pro`, `openai/gpt-5.5`
+  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`
+  - `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`
+  - `openai/gpt-5.5-pro`, `openai/gpt-5.5`
   - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
   - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
   - `~anthropic/claude-sonnet-latest`, `~anthropic/claude-haiku-latest`
+  - `anthropic/claude-opus-5`
   - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
   - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
   - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
+  - `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite`
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
   - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
-  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
+  - `~x-ai/grok-latest`, `x-ai/grok-4.5`
+  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
+  - `kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`
 
 **Dynamic OpenRouter free model refresh**
 
@@ -1258,7 +1268,7 @@ Currently, the following AI providers are built-in:
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 Flash models default to minimal thinking for chat-style responses, while Gemini 3 Pro models default to low. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Supports current Claude API model IDs including Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it
-- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
+- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/Kwaipilot). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-5V-Turbo/GLM-4.6V family (vision)
 - **xAI**: Supports Grok 4.5 with `reasoning_effort: 'low'` by default for chat-style responses, plus Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support.
 - **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support

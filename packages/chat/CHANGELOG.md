@@ -1,9 +1,13 @@
 # @aituber-onair/chat
 
-## Unreleased
+## 0.49.0
 
 ### Minor Changes
 
+- Expanded curated OpenRouter support with `openrouter/auto-beta`,
+  `moonshotai/kimi-k3`, KAT-Coder Air/Pro V2.5, OpenAI GPT-5.6 Sol/Terra/Luna,
+  Claude Opus 5, Gemini 3.6 Flash/3.5 Flash-Lite, and xAI Grok Latest/4.5.
+  These are explicit options and do not change the existing default model.
 - Added Claude Opus 5 (`claude-opus-5`) as an explicit Claude model with
   vision support, while keeping Claude Haiku 4.5 as the default.
 - Added model-aware Claude `reasoning_effort` support through Anthropic's
@@ -16,6 +20,11 @@
 
 ### Patch Changes
 
+- Prevented blank Auto Router responses by omitting `responseLength`-derived
+  token limits for `openrouter/auto` and `openrouter/auto-beta`, surfacing API
+  errors, and rejecting empty or whitespace-only streaming, tool, and one-shot
+  responses. Explicit `maxTokens` values and directly selected model behavior
+  remain unchanged.
 - Preserved Claude provider-native thinking and tool-use blocks in
   `completion.assistant_message` so Claude 5 multi-turn tool continuations can
   return signed thinking blocks unchanged to the Messages API.
