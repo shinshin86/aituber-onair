@@ -1,5 +1,21 @@
 # @aituber-onair/core
 
+## 0.26.9
+
+### Patch Changes
+
+- Synced Chat updates through `@aituber-onair/chat@0.49.0` into Core:
+  - re-exported Claude Opus 5, Claude reasoning-effort helpers, Gemini Nano
+    initial-prompt types, and the expanded curated OpenRouter model constants
+  - added model-aware Claude reasoning controls to the React basic example
+    while keeping Claude Haiku 4.5 as the default
+  - refreshed the React basic Claude and OpenRouter model lists and documented
+    Auto Router token-limit behavior and model availability constraints
+  - refreshed every Core example lockfile so React examples that source model
+    lists from Core receive the Chat 0.49.0 models automatically
+- Updated dependencies []:
+  - @aituber-onair/chat@0.49.0
+
 ## 0.26.8
 
 ### Patch Changes

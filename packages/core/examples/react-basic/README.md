@@ -15,7 +15,7 @@ This example application serves as a practical implementation guide for integrat
   - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
   - Google Gemini (Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
-  - Anthropic Claude (4.8 Opus, 4.7 Opus, 4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
+  - Anthropic Claude (Opus 5, Sonnet 5, 4.8 Opus, 4.7 Opus, 4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
   - DeepSeek, Mistral, Sakana AI (disabled in browser UI), and PLaMo first-class providers
   - Seamless provider switching
 
@@ -130,6 +130,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Requires Chrome 138+ with `#optimization-guide-on-device-model` and `#prompt-api-for-gemini-nano` enabled
 
 **Claude:**
+- Claude Opus 5 and Claude Sonnet 5
 - Claude Opus 4.8
 - Claude Opus 4.7
 - Claude 4.6 Opus
@@ -137,6 +138,8 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Claude 4.5 series (Opus, Sonnet, Haiku)
 - Claude 4 series (Sonnet, Opus, deprecated but still available)
 - Claude 3 Haiku (deprecated but still available)
+- Supported models expose `reasoning_effort`, mapped to Claude
+  `output_config.effort`; the API default is `high`
 
 **Z.ai:**
 - GLM-5.2
@@ -179,9 +182,14 @@ Click the "設定" (Settings) button to configure your AI provider:
 - PLaMo 2.2 Prime
 
 **OpenRouter:**
-- Curated multi-provider models (OpenRouter Auto/Fusion, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai GLM-5.2, Kimi K2.7 Code)
+- Curated multi-provider models, including Auto Router Beta, OpenAI GPT-5.6,
+  Claude Opus 5, Gemini 3.6/3.5, Grok 4.5, Kimi K3, and KAT-Coder V2.5
+- `responseLength`-derived token limits are omitted for Auto Router and Auto
+  Router Beta; explicitly supplied `maxTokens` values remain effective
 - Fusion bills the combined underlying model calls and any enabled web search/fetch usage
 - GLM-5.2 defaults reasoning effort to `none` and omits automatic `max_tokens`
+- Kimi K3 can return 429 when upstream capacity is constrained; Grok 4.5 has
+  region-specific availability limits
 - `Fetch free models` button to probe currently available `:free` models
 - Dynamic free models are added to the model select list
 - `Max candidates` means "maximum number of `:free` candidates to probe"
