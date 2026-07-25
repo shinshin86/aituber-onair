@@ -51,12 +51,15 @@ describe('GeminiNanoChatService', () => {
       expect(mockCreate).toHaveBeenCalledTimes(1);
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          systemPrompt: 'You are helpful.',
-          expectedInputs: [{ type: 'text', languages: ['ja'] }],
+          initialPrompts: [{ role: 'system', content: 'You are helpful.' }],
+          expectedInputs: [{ type: 'text', languages: ['ja', 'en'] }],
           expectedOutputs: [{ type: 'text', languages: ['ja'] }],
         }),
       );
-      expect(mockAvailability).toHaveBeenCalledTimes(1);
+      expect(mockAvailability).toHaveBeenCalledWith({
+        expectedInputs: [{ type: 'text', languages: ['ja', 'en'] }],
+        expectedOutputs: [{ type: 'text', languages: ['ja'] }],
+      });
       expect(mockPrompt).toHaveBeenCalledWith('Hi');
       expect(mockDestroy).toHaveBeenCalledTimes(1);
       expect(onPartial).toHaveBeenCalledWith('Hello from Nano!');
@@ -90,7 +93,7 @@ describe('GeminiNanoChatService', () => {
       expect(mockDestroy).toHaveBeenCalledTimes(2);
     });
 
-    it('should include conversation history in system prompt', async () => {
+    it('should preserve conversation history roles in initial prompts', async () => {
       mockPrompt.mockResolvedValue('Response');
 
       const service = new GeminiNanoChatService();
@@ -108,10 +111,43 @@ describe('GeminiNanoChatService', () => {
       );
 
       const createCall = mockCreate.mock.calls[0][0];
-      expect(createCall.systemPrompt).toContain('User: Q1');
-      expect(createCall.systemPrompt).toContain('Assistant: A1');
-      expect(createCall.systemPrompt).not.toContain('User: Q2');
+      expect(createCall.initialPrompts).toEqual([
+        { role: 'system', content: 'System' },
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'A1' },
+      ]);
       expect(mockPrompt).toHaveBeenCalledWith('Q2');
+    });
+
+    it('should place configured examples after the system prompt', async () => {
+      mockPrompt.mockResolvedValue('Response');
+
+      const service = new GeminiNanoChatService({
+        initialPrompts: [
+          { role: 'user', content: 'Example question' },
+          { role: 'assistant', content: 'Short example answer.' },
+          { role: 'system', content: 'Use a friendly tone.' },
+        ],
+      });
+
+      await service.processChat(
+        [
+          { role: 'system', content: 'You are a character.' },
+          { role: 'user', content: 'Current question' },
+        ],
+        vi.fn(),
+        vi.fn().mockResolvedValue(undefined),
+      );
+
+      const createCall = mockCreate.mock.calls[0][0];
+      expect(createCall.initialPrompts).toEqual([
+        {
+          role: 'system',
+          content: 'You are a character.\n\nUse a friendly tone.',
+        },
+        { role: 'user', content: 'Example question' },
+        { role: 'assistant', content: 'Short example answer.' },
+      ]);
     });
   });
 
@@ -223,7 +259,7 @@ describe('GeminiNanoChatService', () => {
   });
 
   describe('responseLength', () => {
-    it('should inject an English token budget into system prompt', async () => {
+    it('should inject concrete short-response rules into the system prompt', async () => {
       mockPrompt.mockResolvedValue('短い回答');
 
       const service = new GeminiNanoChatService({
@@ -240,10 +276,13 @@ describe('GeminiNanoChatService', () => {
       );
 
       const createCall = mockCreate.mock.calls[0][0];
-      expect(createCall.systemPrompt).toContain('あなたは親切です。');
-      expect(createCall.systemPrompt).toMatch(
-        /within approximately 100 tokens/,
+      const systemPrompt = createCall.initialPrompts[0].content as string;
+      expect(systemPrompt).toContain('あなたは親切です。');
+      expect(systemPrompt).toContain(
+        'Reply in no more than two concise sentences',
       );
+      expect(systemPrompt).toContain('Do not use a preamble');
+      expect(systemPrompt).toMatch(/within approximately 100 tokens/);
     });
 
     it('should inject only the length instruction when system prompt is empty', async () => {
@@ -260,16 +299,68 @@ describe('GeminiNanoChatService', () => {
       );
 
       const createCall = mockCreate.mock.calls[0][0];
-      expect(createCall.systemPrompt).toContain(
+      const systemPrompt = createCall.initialPrompts[0].content as string;
+      expect(systemPrompt).toContain(
         `within approximately ${MAX_TOKENS_BY_LENGTH.short} tokens`,
       );
-      expect(createCall.systemPrompt).toContain(
-        'Please keep your response concise',
+      expect(systemPrompt).toContain(
+        'Reply in no more than two concise sentences',
       );
-      expect(createCall.systemPrompt.startsWith('\n\n')).toBe(false);
+      expect(systemPrompt.startsWith('\n\n')).toBe(false);
     });
 
-    it('should place length instruction before conversation history in system prompt', async () => {
+    it.each([
+      ['veryShort', 'no more than one concise sentence', 40],
+      ['short', 'no more than two concise sentences', 100],
+      ['medium', 'no more than three concise sentences', 200],
+      ['long', 'no more than five sentences', 300],
+      ['veryLong', 'no more than ten sentences', 1000],
+    ] as const)(
+      'should apply the %s sentence profile',
+      async (responseLength, sentenceRule, maxTokens) => {
+        mockPrompt.mockResolvedValue('回答');
+
+        const service = new GeminiNanoChatService({ responseLength });
+
+        await service.processChat(
+          [{ role: 'user', content: '説明して' }],
+          vi.fn(),
+          vi.fn().mockResolvedValue(undefined),
+        );
+
+        const createCall = mockCreate.mock.calls[0][0];
+        const systemPrompt = createCall.initialPrompts[0].content as string;
+        expect(systemPrompt).toContain(sentenceRule);
+        expect(systemPrompt).toContain(
+          `within approximately ${maxTokens} tokens`,
+        );
+      },
+    );
+
+    it('should leave sentence count unrestricted for deep responses', async () => {
+      mockPrompt.mockResolvedValue('詳細な回答');
+
+      const service = new GeminiNanoChatService({
+        responseLength: 'deep',
+      });
+
+      await service.processChat(
+        [{ role: 'user', content: '詳しく説明して' }],
+        vi.fn(),
+        vi.fn().mockResolvedValue(undefined),
+      );
+
+      const createCall = mockCreate.mock.calls[0][0];
+      const systemPrompt = createCall.initialPrompts[0].content as string;
+      expect(systemPrompt).toContain(
+        'No sentence-count limit applies at this level',
+      );
+      expect(systemPrompt).toContain(
+        `within approximately ${MAX_TOKENS_BY_LENGTH.deep} tokens`,
+      );
+    });
+
+    it('should keep the length instruction in the leading system prompt', async () => {
       mockPrompt.mockResolvedValue('短い回答');
 
       const service = new GeminiNanoChatService({
@@ -289,20 +380,18 @@ describe('GeminiNanoChatService', () => {
       );
 
       const createCall = mockCreate.mock.calls[0][0];
-      const systemPrompt = createCall.systemPrompt as string;
+      const systemPrompt = createCall.initialPrompts[0].content as string;
       const baseIndex = systemPrompt.indexOf('あなたは親切です。');
       const lengthIndex = systemPrompt.indexOf(
         `within approximately ${MAX_TOKENS_BY_LENGTH.short} tokens`,
       );
-      const historyIndex = systemPrompt.indexOf(
-        'The following is the prior conversation history',
-      );
 
       expect(baseIndex).toBeGreaterThanOrEqual(0);
       expect(lengthIndex).toBeGreaterThan(baseIndex);
-      expect(historyIndex).toBeGreaterThan(lengthIndex);
-      expect(systemPrompt).toContain('User: 最初の質問');
-      expect(systemPrompt).toContain('Assistant: 最初の回答');
+      expect(createCall.initialPrompts.slice(1)).toEqual([
+        { role: 'user', content: '最初の質問' },
+        { role: 'assistant', content: '最初の回答' },
+      ]);
     });
 
     it('should not inject a token budget when responseLength is unset', async () => {
@@ -320,10 +409,9 @@ describe('GeminiNanoChatService', () => {
       );
 
       const createCall = mockCreate.mock.calls[0][0];
-      expect(createCall.systemPrompt).toBe('あなたは親切です。');
-      expect(createCall.systemPrompt).not.toMatch(
-        /within approximately \d+ tokens/,
-      );
+      const systemPrompt = createCall.initialPrompts[0].content as string;
+      expect(systemPrompt).toBe('あなたは親切です。');
+      expect(systemPrompt).not.toMatch(/within approximately \d+ tokens/);
     });
   });
 });

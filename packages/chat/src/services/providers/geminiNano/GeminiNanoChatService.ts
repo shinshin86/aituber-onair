@@ -6,18 +6,36 @@ import {
   GEMINI_NANO_MAX_CONTEXT_MESSAGES,
 } from '../../../constants/geminiNano';
 import {
+  CHAT_RESPONSE_LENGTH,
   type ChatResponseLength,
   MAX_TOKENS_BY_LENGTH,
 } from '../../../constants/chat';
-import type { GeminiNanoChatServiceOptions } from '../ChatServiceProvider';
+import type {
+  GeminiNanoChatServiceOptions,
+  GeminiNanoInitialPrompt,
+} from '../ChatServiceProvider';
+
+interface LanguageModelTextExpectation {
+  type: 'text';
+  languages: string[];
+}
+
+interface LanguageModelOptions {
+  expectedInputs: LanguageModelTextExpectation[];
+  expectedOutputs: LanguageModelTextExpectation[];
+}
+
+interface LanguageModelCreateOptions extends LanguageModelOptions {
+  initialPrompts?: GeminiNanoInitialPrompt[];
+}
 
 /**
  * LanguageModel API types (Chrome 138+ Prompt API).
  * Local type definitions — not global declarations.
  */
 interface LanguageModelAPI {
-  availability(options?: Record<string, unknown>): Promise<string>;
-  create(options?: Record<string, unknown>): Promise<LanguageModelSession>;
+  availability(options?: LanguageModelOptions): Promise<string>;
+  create(options?: LanguageModelCreateOptions): Promise<LanguageModelSession>;
 }
 
 interface LanguageModelSession {
@@ -46,11 +64,18 @@ export class GeminiNanoChatService implements ChatService {
 
   private expectedInputLanguages: string[];
   private expectedOutputLanguages: string[];
+  private initialPrompts: GeminiNanoInitialPrompt[];
   private _responseLength?: ChatResponseLength;
 
   constructor(options: GeminiNanoChatServiceOptions = {}) {
-    this.expectedInputLanguages = options.expectedInputLanguages ?? ['ja'];
+    this.expectedInputLanguages = options.expectedInputLanguages ?? [
+      'ja',
+      'en',
+    ];
     this.expectedOutputLanguages = options.expectedOutputLanguages ?? ['ja'];
+    this.initialPrompts = (options.initialPrompts ?? []).map((prompt) => ({
+      ...prompt,
+    }));
     this._responseLength = options.responseLength;
   }
 
@@ -121,7 +146,8 @@ export class GeminiNanoChatService implements ChatService {
       );
     }
 
-    const availability = await api.availability();
+    const modelOptions = this.getModelOptions();
+    const availability = await api.availability(modelOptions);
     if (availability !== 'available' && availability !== 'downloadable') {
       throw new Error(
         'Gemini Nano Prompt API is not ready in this environment. ' +
@@ -136,22 +162,23 @@ export class GeminiNanoChatService implements ChatService {
 
     // Get conversation messages (exclude system)
     const conversationMessages = messages
-      .filter((m) => m.role !== 'system')
+      .filter((m) => m.role === 'user' || m.role === 'assistant')
       .slice(-GEMINI_NANO_MAX_CONTEXT_MESSAGES);
 
     // Get the last user message to send via prompt()
-    const lastUserMessage = [...conversationMessages]
-      .reverse()
-      .find((m) => m.role === 'user');
+    const lastUserMessageIndex =
+      this.findLastUserMessageIndex(conversationMessages);
 
-    if (!lastUserMessage) {
+    if (lastUserMessageIndex === -1) {
       throw new Error('No user message found in the provided messages.');
     }
 
+    const lastUserMessage = conversationMessages[lastUserMessageIndex];
     const session = await this.createSession(
       api,
       systemPrompt,
-      conversationMessages,
+      conversationMessages.slice(0, lastUserMessageIndex),
+      modelOptions,
     );
 
     try {
@@ -166,36 +193,78 @@ export class GeminiNanoChatService implements ChatService {
   }
 
   /**
-   * Create a new LanguageModel session with system prompt and context history.
-   * Context history (excluding the last user message) is embedded in the system prompt.
+   * Create a new LanguageModel session with structured initial prompts.
+   * System instructions, few-shot examples, and conversation history retain
+   * their roles instead of being flattened into a single string.
    */
   private async createSession(
     api: LanguageModelAPI,
     systemPrompt: string,
     contextHistory: Message[],
+    modelOptions: LanguageModelOptions,
   ): Promise<LanguageModelSession> {
-    let prompt = this.buildSystemPrompt(systemPrompt);
+    const initialPrompts = this.buildInitialPrompts(
+      systemPrompt,
+      contextHistory,
+    );
+    const createOptions: LanguageModelCreateOptions = {
+      ...modelOptions,
+      ...(initialPrompts.length > 0 ? { initialPrompts } : {}),
+    };
 
-    // Embed conversation history into system prompt (exclude last user msg)
-    const historyMessages = contextHistory.slice(0, -1);
-    if (historyMessages.length > 0) {
-      const history = historyMessages
-        .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
-        .join('\n');
-      prompt +=
-        '\n\nThe following is the prior conversation history. Use it as context for your response:\n' +
-        history;
-    }
+    return api.create(createOptions);
+  }
 
-    return api.create({
-      systemPrompt: prompt,
+  private getModelOptions(): LanguageModelOptions {
+    return {
       expectedInputs: [
         { type: 'text', languages: this.expectedInputLanguages },
       ],
       expectedOutputs: [
         { type: 'text', languages: this.expectedOutputLanguages },
       ],
-    });
+    };
+  }
+
+  private buildInitialPrompts(
+    systemPrompt: string,
+    contextHistory: Message[],
+  ): GeminiNanoInitialPrompt[] {
+    const configuredSystemPrompts = this.initialPrompts
+      .filter((prompt) => prompt.role === 'system')
+      .map((prompt) => prompt.content);
+    const combinedSystemPrompt = this.buildSystemPrompt(
+      [systemPrompt, ...configuredSystemPrompts].filter(Boolean).join('\n\n'),
+    );
+    const prompts: GeminiNanoInitialPrompt[] = [];
+
+    if (combinedSystemPrompt) {
+      prompts.push({ role: 'system', content: combinedSystemPrompt });
+    }
+
+    prompts.push(
+      ...this.initialPrompts
+        .filter((prompt) => prompt.role !== 'system')
+        .map((prompt) => ({ ...prompt })),
+      ...contextHistory
+        .filter(
+          (message): message is Message & { role: 'user' | 'assistant' } =>
+            message.role === 'user' || message.role === 'assistant',
+        )
+        .map(({ role, content }) => ({ role, content })),
+    );
+
+    return prompts;
+  }
+
+  private findLastUserMessageIndex(messages: Message[]): number {
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      if (messages[index].role === 'user') {
+        return index;
+      }
+    }
+
+    return -1;
   }
 
   private buildSystemPrompt(systemPrompt?: string): string {
@@ -223,10 +292,48 @@ export class GeminiNanoChatService implements ChatService {
       return undefined;
     }
 
-    // Chrome LanguageModel API does not expose a max output length parameter,
-    // so we inject a soft output-length instruction into the prompt instead.
-    // We express the instruction in English so it is language-neutral across
-    // any value of expectedOutputLanguages.
-    return `Please keep your response concise, within approximately ${maxTokens} tokens.`;
+    switch (this._responseLength) {
+      case CHAT_RESPONSE_LENGTH.VERY_SHORT:
+        return (
+          'Reply in no more than one concise sentence. Do not use a ' +
+          'preamble, summary, bullet points, or Markdown. Keep the reaction ' +
+          'and answer short enough to read in one breath. Stay within ' +
+          `approximately ${maxTokens} tokens.`
+        );
+      case CHAT_RESPONSE_LENGTH.SHORT:
+        return (
+          'Reply in no more than two concise sentences. Do not use a ' +
+          'preamble, summary, bullet points, or Markdown. Keep the reaction ' +
+          'and answer short enough to read in one breath. Use natural ' +
+          `conversational language. Stay within approximately ${maxTokens} tokens.`
+        );
+      case CHAT_RESPONSE_LENGTH.MEDIUM:
+        return (
+          'Reply in no more than three concise sentences. Answer directly ' +
+          'and include only the context needed to understand the answer. Do ' +
+          'not use a preamble, summary, bullet points, or Markdown. Use ' +
+          `natural conversational language. Stay within approximately ${maxTokens} tokens.`
+        );
+      case CHAT_RESPONSE_LENGTH.LONG:
+        return (
+          'Reply in no more than five sentences. Explain the important ' +
+          'details clearly, but avoid unnecessary preambles, repetition, ' +
+          'bullet points, or Markdown. Use natural conversational language. ' +
+          `Stay within approximately ${maxTokens} tokens.`
+        );
+      case CHAT_RESPONSE_LENGTH.VERY_LONG:
+        return (
+          'Reply in no more than ten sentences. Give a thorough but focused ' +
+          'answer. Use short plain-text paragraphs when helpful, and avoid ' +
+          'unnecessary repetition, bullet points, or Markdown. Stay within ' +
+          `approximately ${maxTokens} tokens.`
+        );
+      case CHAT_RESPONSE_LENGTH.DEEP:
+        return (
+          'Give a detailed response and organize it in the way that best ' +
+          'fits the request. No sentence-count limit applies at this level. ' +
+          `Stay within approximately ${maxTokens} tokens.`
+        );
+    }
   }
 }

@@ -20,6 +20,7 @@ export type {
   OpenRouterChatServiceOptions,
   GeminiChatServiceOptions,
   GeminiNanoChatServiceOptions,
+  GeminiNanoInitialPrompt,
   ClaudeChatServiceOptions,
   ZAIChatServiceOptions,
   XAIChatServiceOptions,

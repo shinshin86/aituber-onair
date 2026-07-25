@@ -100,11 +100,20 @@ react-basic/
 ### Response Length Control
 
 Use the dropdown to select response length:
-- Very Short: ~50 tokens
+- Very Short: ~40 tokens
 - Short: ~100 tokens
 - Medium: ~200 tokens (default)
-- Long: ~500 tokens
+- Long: ~300 tokens
 - Very Long: ~1000 tokens
+- Deep: ~5000 tokens
+
+For Gemini Nano, the presets also apply concrete sentence-count guidance:
+`Very Short` up to 1 sentence, `Short` up to 2, `Medium` up to 3, `Long` up
+to 5, and `Very Long` up to 10. `Deep` has no sentence-count limit. The
+example supplies two short Japanese user/assistant examples through
+`initialPrompts` only for `Very Short` and `Short`, so longer presets are not
+biased toward one-sentence answers. Chat input remains disabled until the
+built-in model status is `available`.
 
 ### Provider-Specific Features
 

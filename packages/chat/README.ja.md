@@ -827,12 +827,33 @@ const plamoService = ChatServiceFactory.createChatService('plamo', {
 
 ```typescript
 const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
-  responseLength: 'medium'
+  responseLength: 'short',
+  initialPrompts: [
+    {
+      role: 'system',
+      content: 'あなたは明るく自然な話し方をするキャラクターです。'
+    },
+    { role: 'user', content: '今日はどんな気分？' },
+    { role: 'assistant', content: '元気いっぱいで、お話しするのが楽しみだよ！' },
+    { role: 'user', content: '準備できた？' },
+    { role: 'assistant', content: 'うん、いつでも始められるよ！' }
+  ]
 });
 ```
 
 注意:
 - APIキー不要 — ChromeのLanguageModel API（Prompt API）を使用します。
+- システム指示、設定した会話例、直近の会話履歴は、roleを維持した
+  `initialPrompts`として渡されます。
+- 設定した`initialPrompts`にsystemメッセージがある場合は、必ず先頭へ
+  正規化されます。会話例はオンデバイスモデルのコンテキストを消費するため、
+  短い例を使用してください。
+- Gemini Nanoでは、トークン数の目安に加えて、`veryShort`は最大1文、
+  `short`は最大2文、`medium`は最大3文、`long`は最大5文、
+  `veryLong`は最大10文となるよう具体的に指示します。`deep`は約5000
+  トークンの目安だけを残し、文数は制限しません。ただし、出力長は厳密保証
+  ではありません。
+- 構造化された履歴として、直近20件までのuser/assistantメッセージを渡します。
 - **Chrome 138以降**で、以下のフラグを有効にする必要があります:
   - `chrome://flags/#optimization-guide-on-device-model` → Enabled
   - `chrome://flags/#prompt-api-for-gemini-nano` → Enabled
@@ -840,6 +861,50 @@ const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
 - 非ストリーミングのみ — レスポンスは完全なテキストとして一括返却されます。
 - ビジョン（画像入力）は非対応です。
 - 初回のモデルダウンロードにはユーザー操作が必要で、数分かかる場合があります。
+
+##### Tips: 会話例で応答長の安定性を高める
+
+`responseLength`を設定すると、Gemini Nano向けの文数、書式、トークン数の
+目安が自動的に指示へ追加されます。さらに、短いuser/assistantの会話例を
+2〜3組ほど`initialPrompts`で渡すと、指示をより強く補強できます。
+
+```typescript
+import {
+  ChatServiceFactory,
+  type GeminiNanoInitialPrompt
+} from '@aituber-onair/chat';
+
+const veryShortExamples: GeminiNanoInitialPrompt[] = [
+  { role: 'user', content: '今日はどんな気分？' },
+  { role: 'assistant', content: 'みんなと話せて元気いっぱいだよ！' },
+  { role: 'user', content: '好きな食べ物は？' },
+  { role: 'assistant', content: '特にサーモンのお寿司が好き！' }
+];
+
+const service = ChatServiceFactory.createChatService('gemini-nano', {
+  responseLength: 'veryShort',
+  initialPrompts: veryShortExamples
+});
+```
+
+会話例は任意です。`initialPrompts`を省略しても、パッケージ側の応答長指示は
+適用されます。会話例を加えることで、期待する文章量、口調、リアクション、
+会話のテンポをオンデバイスモデルへ具体的に伝えられます。
+
+- assistantの例文は選択したプリセットに合わせてください。`veryShort`なら
+  1文、`short`なら最大2文にします。
+- 例文は対象キャラクターの口調で記述してください。汎用的な固定例文は
+  キャラクター性を変える可能性があるため、パッケージからは自動追加しません。
+- 明確に長い回答が必要な`medium`以上へ1文の例を流用すると、短い回答へ
+  偏る可能性があります。
+- 例文はシステムプロンプトや会話履歴と同じコンテキストを消費するため、
+  少数かつ短く保ってください。
+- `responseLength`または`initialPrompts`を変更した場合は、チャットサービスを
+  作り直してください。React Basic Exampleではこれを自動的に行い、短い例文は
+  `veryShort`と`short`だけに適用しています。
+- これは応答長の安定性を高める制御であり、厳密な出力上限ではありません。
+  ChromeのLanguageModel APIにはmax output tokens相当の設定がないため、
+  指定した文数を超える場合があります。
 
 ### ビジョンチャット
 

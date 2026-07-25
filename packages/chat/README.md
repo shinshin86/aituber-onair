@@ -844,12 +844,34 @@ Notes:
 
 ```typescript
 const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
-  responseLength: 'medium'
+  responseLength: 'short',
+  initialPrompts: [
+    {
+      role: 'system',
+      content: 'You are a cheerful character who speaks naturally.'
+    },
+    { role: 'user', content: 'How are you feeling today?' },
+    { role: 'assistant', content: 'I feel great and ready to chat!' },
+    { role: 'user', content: 'Are you ready?' },
+    { role: 'assistant', content: 'Yes, we can start anytime!' }
+  ]
 });
 ```
 
 Notes:
 - No API key required — uses Chrome's built-in LanguageModel API (Prompt API).
+- System instructions, configured examples, and the most recent conversation
+  history are passed through `initialPrompts` with their roles preserved.
+- If configured `initialPrompts` contain a system message, it is normalized to
+  the first entry. Keep few-shot examples short because they consume the
+  on-device model's context window.
+- Gemini Nano uses concrete sentence-count guidance in addition to the soft
+  token budget: `veryShort` up to 1 sentence, `short` up to 2, `medium` up to
+  3, `long` up to 5, and `veryLong` up to 10. `deep` keeps its approximately
+  5000-token guidance without a sentence-count limit. Output length is still
+  best effort.
+- Up to the most recent 20 user/assistant messages are included as structured
+  history.
 - Requires **Chrome 138+** with the following flags enabled:
   - `chrome://flags/#optimization-guide-on-device-model` → Enabled
   - `chrome://flags/#prompt-api-for-gemini-nano` → Enabled
@@ -857,6 +879,54 @@ Notes:
 - Non-streaming only — responses are returned as a single complete text.
 - Vision is not supported.
 - The initial model download requires a user action and may take a few minutes.
+
+##### Tip: improve response-length consistency with examples
+
+Setting `responseLength` automatically adds Gemini Nano-specific sentence-count,
+formatting, and soft token-budget instructions. You can reinforce those
+instructions by also passing two or three short user/assistant examples through
+`initialPrompts`:
+
+```typescript
+import {
+  ChatServiceFactory,
+  type GeminiNanoInitialPrompt
+} from '@aituber-onair/chat';
+
+const veryShortExamples: GeminiNanoInitialPrompt[] = [
+  { role: 'user', content: 'How are you feeling today?' },
+  { role: 'assistant', content: 'I feel great and ready to chat!' },
+  { role: 'user', content: 'What food do you like?' },
+  { role: 'assistant', content: 'Salmon sushi is my favorite!' }
+];
+
+const service = ChatServiceFactory.createChatService('gemini-nano', {
+  responseLength: 'veryShort',
+  initialPrompts: veryShortExamples
+});
+```
+
+The examples are optional; the package applies the length instruction even
+when `initialPrompts` is omitted. Examples help the on-device model learn the
+desired response size, speaking style, reaction level, and tempo more
+consistently.
+
+- Match every assistant example to the selected preset. For `veryShort`, use
+  one sentence; for `short`, use no more than two.
+- Write examples in the target character's voice. Hardcoded generic examples
+  are not added by the package because they could change the character's
+  personality.
+- Do not reuse one-sentence examples for `medium` or longer responses when you
+  want visibly longer answers; those examples can bias the model toward short
+  output.
+- Keep the set small because examples share the on-device context window with
+  the system prompt and conversation history.
+- Recreate the chat service when `responseLength` or `initialPrompts` changes.
+  The React basic example does this automatically and applies its short
+  examples only to `veryShort` and `short`.
+- These controls improve consistency but do not provide a strict output limit.
+  Chrome's LanguageModel API currently has no max-output-token option, so
+  Gemini Nano may occasionally exceed the requested sentence count.
 
 ### Vision Chat
 

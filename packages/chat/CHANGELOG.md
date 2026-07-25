@@ -1,5 +1,22 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+### Patch Changes
+
+- Improved Gemini Nano character-chat responses by passing system
+  instructions, optional few-shot examples, and recent conversation history
+  through role-preserving Prompt API `initialPrompts`.
+- Added concrete Gemini Nano response-length guidance for `veryShort`,
+  `short`, `medium`, `long`, and `veryLong`, while keeping `deep` unrestricted
+  by sentence count. The React basic example reinforces short presets with
+  concise Japanese examples.
+- Recreate Gemini Nano sessions with the latest configuration and prevent
+  message submission while the browser model is still preparing in the React
+  basic example.
+- Documented English and Japanese usage tips for improving response-length
+  consistency with character-appropriate examples.
+
 ## 0.48.0
 
 ### Minor Changes

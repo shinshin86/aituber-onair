@@ -20,6 +20,7 @@ import {
   type ChatResponseLength,
   type GPT5PresetKey,
   type GeminiReasoningEffort,
+  type GeminiNanoInitialPrompt,
   type ChatCompletionAssistantMessage,
 } from '@aituber-onair/chat';
 import './App.css';
@@ -68,6 +69,12 @@ type XaiReasoningEffortLevel = 'none' | 'low' | 'medium' | 'high';
 const KIMI_OFFICIAL_BASE_URL = 'https://api.moonshot.ai/v1';
 const DEFAULT_OPENAI_COMPAT_ENDPOINT =
   'http://127.0.0.1:18080/v1/chat/completions';
+const GEMINI_NANO_SHORT_INITIAL_PROMPTS: GeminiNanoInitialPrompt[] = [
+  { role: 'user', content: '一言で挨拶して' },
+  { role: 'assistant', content: 'こんにちは、今日もよろしくね！' },
+  { role: 'user', content: '準備できた？' },
+  { role: 'assistant', content: 'うん、いつでも始められるよ！' },
+];
 
 const normalizeReasoningEffortForModel = (
   modelId?: string,
@@ -190,6 +197,8 @@ function App() {
   const visionSupportLevel = getVisionSupportLevel(provider, selectedModel);
   const effectiveApiKey =
     provider === 'openai-compatible' ? apiKey.trim() : apiKey;
+  const isGeminiNanoReady =
+    provider !== 'gemini-nano' || geminiNano.status === 'available';
 
   // Auto-scroll to bottom when messages change
   // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally want to scroll when messages change
@@ -240,6 +249,13 @@ function App() {
           isGeminiReasoningEffortModel(selectedModel)
         ) {
           options.reasoning_effort = geminiReasoningEffort;
+        }
+
+        if (
+          provider === 'gemini-nano' &&
+          (responseLength === 'veryShort' || responseLength === 'short')
+        ) {
+          options.initialPrompts = GEMINI_NANO_SHORT_INITIAL_PROMPTS;
         }
 
         if (provider === 'openrouter') {
@@ -600,7 +616,12 @@ function App() {
 
           <ChatInterface
             onSendMessage={sendMessage}
-            disabled={!chatService || isLoading}
+            disabled={!chatService || isLoading || !isGeminiNanoReady}
+            disabledPlaceholder={
+              provider === 'gemini-nano' && !isGeminiNanoReady
+                ? 'Preparing Gemini Nano...'
+                : undefined
+            }
             isLoading={isLoading}
             onClearChat={clearChat}
             visionSupportLevel={visionSupportLevel}

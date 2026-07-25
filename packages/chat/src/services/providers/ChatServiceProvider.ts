@@ -235,6 +235,11 @@ export type XAIChatServiceOptions = DisallowKeys<
   reasoning_effort?: XaiReasoningEffort;
 };
 
+export type GeminiNanoInitialPrompt = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
 export type GeminiNanoChatServiceOptions = {
   /** API Key is not needed for Gemini Nano (browser built-in AI) */
   apiKey?: never;
@@ -242,7 +247,12 @@ export type GeminiNanoChatServiceOptions = {
   model?: string;
   /** Response length setting */
   responseLength?: ChatResponseLength;
-  /** Expected input languages for the Prompt API (default: ['ja']) */
+  /**
+   * Initial system instructions and few-shot examples for the Prompt API.
+   * System prompts are normalized to the first entry before session creation.
+   */
+  initialPrompts?: GeminiNanoInitialPrompt[];
+  /** Expected input languages for the Prompt API (default: ['ja', 'en']) */
   expectedInputLanguages?: string[];
   /** Expected output languages for the Prompt API (default: ['ja']) */
   expectedOutputLanguages?: string[];
