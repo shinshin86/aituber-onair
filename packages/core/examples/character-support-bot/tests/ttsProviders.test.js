@@ -136,6 +136,25 @@ describe('character support TTS providers', () => {
     ).toThrow('Group ID');
   });
 
+  it('validates speed against each provider range', () => {
+    const elevenLabsSettings = {
+      provider: 'elevenLabs',
+      model: 'eleven_multilingual_v2',
+      voice: 'voice-id',
+      apiKey: 'test-key',
+      endpoint: 'https://api.elevenlabs.io/v1/text-to-speech',
+      speed: 0.65,
+      groupId: '',
+    };
+
+    expect(() => validateTtsSettings(elevenLabsSettings, {})).toThrow(
+      'between 0.7 and 1.2',
+    );
+    expect(
+      validateTtsSettings({ ...elevenLabsSettings, speed: 1.2 }, {}),
+    ).toMatchObject({ speed: 1.2 });
+  });
+
   it('maps generic settings onto the package adapter options', () => {
     expect(
       createVoiceServiceOptions(

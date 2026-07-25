@@ -39,6 +39,11 @@ export interface AdminSettings {
     hasApiKey: boolean;
     endpoint: string;
     persona: string;
+    defaultPersonas: {
+      en: string;
+      ja: string;
+    };
+    defaultPersonaAliases: string[];
   };
   tts: {
     provider: string;
@@ -53,7 +58,10 @@ export interface AdminSettings {
 }
 
 export interface AdminSettingsInput {
-  llm: Omit<AdminSettings['llm'], 'apiKey' | 'hasApiKey'> & {
+  llm: Omit<
+    AdminSettings['llm'],
+    'apiKey' | 'hasApiKey' | 'defaultPersonas' | 'defaultPersonaAliases'
+  > & {
     apiKey?: string;
   };
   tts: Omit<AdminSettings['tts'], 'apiKey' | 'hasApiKey'> & {

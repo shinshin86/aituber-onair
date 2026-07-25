@@ -8,7 +8,9 @@ import { fileURLToPath } from 'node:url';
 import { createMockWav } from './mock-audio.js';
 import {
   buildSystemPrompt,
-  DEFAULT_PERSONA,
+  DEFAULT_PERSONA_EN,
+  DEFAULT_PERSONA_JA,
+  LEGACY_DEFAULT_PERSONAS,
   resolvePersona,
   resolveResponseLanguage,
 } from './system-prompt.js';
@@ -122,7 +124,7 @@ const createDefaultSettings = () => ({
     model: getDefaultModel('openai'),
     apiKey: '',
     endpoint: DEFAULT_COMPATIBLE_CHAT_ENDPOINT,
-    persona: DEFAULT_PERSONA,
+    persona: DEFAULT_PERSONA_EN,
   },
   tts: createDefaultTtsSettings(),
 });
@@ -219,6 +221,11 @@ const adminSettingsResponse = () => ({
     hasApiKey: Boolean(settings.llm.apiKey),
     endpoint: settings.llm.endpoint,
     persona: settings.llm.persona,
+    defaultPersonas: {
+      en: DEFAULT_PERSONA_EN,
+      ja: DEFAULT_PERSONA_JA,
+    },
+    defaultPersonaAliases: LEGACY_DEFAULT_PERSONAS,
   },
   tts: {
     provider: settings.tts.provider,

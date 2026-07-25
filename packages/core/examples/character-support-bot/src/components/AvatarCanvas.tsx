@@ -11,10 +11,11 @@ import {
 } from '../lib/purupuruRenderer';
 import type { AvatarViewTransform } from '../types/settings';
 
+// Frame the bundled full-height artwork as a chest-up portrait in the widget.
 const DEFAULT_VIEW_TRANSFORM: AvatarViewTransform = {
   x: 0,
-  y: 0,
-  scale: 1,
+  y: 70,
+  scale: 1.75,
 };
 
 interface AvatarCanvasProps {

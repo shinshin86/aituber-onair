@@ -8,8 +8,9 @@ core streams chat through a same-origin OpenAI-compatible route, sends the
 completed screenplay to a same-origin speech route, plays the returned audio
 bytes, and uses Web Audio amplitude analysis for lip sync. Emotion tags from
 `SPEECH_START` also drive PuruPuru reactions, while the renderer keeps its idle
-motion and blink behavior. Browsers that expose the Web Speech API also get
-key-free microphone dictation with live interim text.
+motion and blink behavior. The widget frames the full-height source art as a
+chest-up portrait. Browsers that expose the Web Speech API also get key-free
+microphone dictation with live interim text.
 
 ## Security warning
 
@@ -72,9 +73,14 @@ The selected language controls three parts of the example together:
 - Miko's response language. The browser passes the selected language to the
   same-origin chat proxy, and the server adds the matching language instruction
   to its protected system prompt.
+- The built-in admin persona. English and Japanese defaults follow the selected
+  display language; a saved persona that the user edited is left unchanged.
 
 Provider keys, persona text, and other server settings are not stored in
 browser storage.
+
+By default, the server prompt asks Miko to answer in one to three natural
+spoken sentences. She gives more detail when the user explicitly asks for it.
 
 ## Voice input
 
@@ -84,6 +90,8 @@ service and does not require an API key.
 
 - Interim recognition results appear live in the message composer.
 - Final text remains in the composer until the user presses Send or Enter.
+- The short placeholder stays on one line and truncates with an ellipsis when
+  the composer is narrow.
 - Recognition pauses between Core's `SPEECH_START` and `SPEECH_END` events so
   Miko does not transcribe her own TTS output. It resumes afterward when the
   microphone toggle is still active.
@@ -145,7 +153,9 @@ includes these exclusion reasons alongside the selectable providers.
 VOICEVOX and AivisSpeech use configurable local endpoints without API keys.
 Providers with a voice-list API can load choices in `/admin`; if that API is
 unreachable, the voice field remains editable so a voice or speaker ID can be
-entered manually. Provider credentials are used only by the Node server.
+entered manually. Providers with speed control use a slider with the supported
+range and current multiplier shown. Provider credentials are used only by the
+Node server.
 
 The browser always uses Core's `openaiCompatible` voice engine against the
 local proxy, regardless of which upstream TTS provider the server uses.

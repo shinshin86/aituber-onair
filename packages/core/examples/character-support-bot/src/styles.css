@@ -1219,8 +1219,17 @@ code {
   resize: none;
 }
 
+.message-composer textarea:placeholder-shown {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .message-composer textarea::placeholder {
+  overflow: hidden;
   color: var(--color-disabled-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .composer-actions {
@@ -1553,6 +1562,41 @@ code {
 .settings-grid textarea {
   line-height: 1.6;
   resize: vertical;
+}
+
+.speed-field-heading,
+.speed-field-bounds {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.speed-field-heading output {
+  color: var(--color-primary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-grid .speed-field input[type="range"] {
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--color-primary);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.settings-grid .speed-field input[type="range"]:focus-visible {
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.settings-grid .speed-field-bounds {
+  color: var(--color-text-muted);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
 }
 
 .field-wide {

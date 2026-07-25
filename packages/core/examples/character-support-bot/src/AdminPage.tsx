@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   getAdminProviders,
   getAdminSettings,
@@ -10,6 +10,10 @@ import {
 } from './api';
 import LanguageSwitch from './components/LanguageSwitch';
 import { type Language, translations } from './i18n';
+import {
+  type DefaultPersonas,
+  resolvePersonaForLanguage,
+} from './personaLanguage';
 
 interface SettingsDraft {
   llm: {
@@ -30,13 +34,21 @@ interface SettingsDraft {
   };
 }
 
-const toDraft = (settings: AdminSettings): SettingsDraft => ({
+const toDraft = (
+  settings: AdminSettings,
+  language: Language,
+): SettingsDraft => ({
   llm: {
     provider: settings.llm.provider,
     model: settings.llm.model,
     apiKey: '',
     endpoint: settings.llm.endpoint,
-    persona: settings.llm.persona,
+    persona: resolvePersonaForLanguage(
+      settings.llm.persona,
+      settings.llm.defaultPersonas,
+      language,
+      settings.llm.defaultPersonaAliases,
+    ),
   },
   tts: {
     provider: settings.tts.provider,
@@ -54,16 +66,24 @@ interface AdminPageProps {
   onLanguageChange: (language: Language) => void;
 }
 
+const formatSpeed = (speed: number): string =>
+  `${speed.toFixed(2).replace(/\.?0+$/, '')}×`;
+
 export default function AdminPage({
   language,
   onLanguageChange,
 }: AdminPageProps) {
+  const languageRef = useRef(language);
   const [llmProviders, setLlmProviders] = useState<ProviderRecord[]>([]);
   const [ttsProviders, setTtsProviders] = useState<ProviderRecord[]>([]);
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
   const [savedSettings, setSavedSettings] = useState<AdminSettings | null>(
     null,
   );
+  const [personaDefaults, setPersonaDefaults] = useState<{
+    values: DefaultPersonas;
+    aliases: string[];
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [voiceOptions, setVoiceOptions] = useState<VoiceOption[]>([]);
@@ -80,6 +100,10 @@ export default function AdminPage({
   const t = translations[language];
 
   useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
+
+  useEffect(() => {
     let cancelled = false;
     void Promise.all([getAdminProviders(), getAdminSettings()])
       .then(([providers, settings]) => {
@@ -87,7 +111,11 @@ export default function AdminPage({
         setLlmProviders(providers.llm);
         setTtsProviders(providers.tts);
         setSavedSettings(settings);
-        setDraft(toDraft(settings));
+        setPersonaDefaults({
+          values: settings.llm.defaultPersonas,
+          aliases: settings.llm.defaultPersonaAliases,
+        });
+        setDraft(toDraft(settings, languageRef.current));
       })
       .catch(() => {
         // The translated load error is rendered when no draft is available.
@@ -106,6 +134,29 @@ export default function AdminPage({
   const selectedTts = ttsProviders.find(
     (provider) => provider.provider === draft?.tts.provider,
   );
+
+  const changeLanguage = (nextLanguage: Language) => {
+    languageRef.current = nextLanguage;
+    if (personaDefaults) {
+      setDraft((current) =>
+        current
+          ? {
+              ...current,
+              llm: {
+                ...current.llm,
+                persona: resolvePersonaForLanguage(
+                  current.llm.persona,
+                  personaDefaults.values,
+                  nextLanguage,
+                  personaDefaults.aliases,
+                ),
+              },
+            }
+          : current,
+      );
+    }
+    onLanguageChange(nextLanguage);
+  };
 
   const changeLlmProvider = (providerId: string) => {
     const provider = llmProviders.find((item) => item.provider === providerId);
@@ -201,7 +252,11 @@ export default function AdminPage({
         },
       });
       setSavedSettings(saved);
-      setDraft(toDraft(saved));
+      setPersonaDefaults({
+        values: saved.llm.defaultPersonas,
+        aliases: saved.llm.defaultPersonaAliases,
+      });
+      setDraft(toDraft(saved, languageRef.current));
       setFeedback({
         kind: 'success',
         key: 'saved',
@@ -283,7 +338,7 @@ export default function AdminPage({
           <a className="back-link" href="/">
             ← {t.admin.back}
           </a>
-          <LanguageSwitch language={language} onChange={onLanguageChange} />
+          <LanguageSwitch language={language} onChange={changeLanguage} />
         </div>
       </header>
 
@@ -528,14 +583,21 @@ export default function AdminPage({
                 </div>
 
                 {selectedTts?.supportsSpeed && (
-                  <label>
-                    <span>{t.admin.speed}</span>
+                  <label className="speed-field" htmlFor="tts-speed">
+                    <span className="speed-field-heading">
+                      <span>{t.admin.speed}</span>
+                      <output htmlFor="tts-speed">
+                        {formatSpeed(draft.tts.speed)}
+                      </output>
+                    </span>
                     <input
-                      type="number"
+                      id="tts-speed"
+                      type="range"
                       min={selectedTts.speedMin ?? 0.25}
                       max={selectedTts.speedMax ?? 4}
                       step={selectedTts.speedStep ?? 0.05}
                       value={draft.tts.speed}
+                      aria-valuetext={formatSpeed(draft.tts.speed)}
                       onChange={(event) =>
                         setDraft({
                           ...draft,
@@ -546,6 +608,10 @@ export default function AdminPage({
                         })
                       }
                     />
+                    <span className="speed-field-bounds" aria-hidden="true">
+                      <span>{formatSpeed(selectedTts.speedMin ?? 0.25)}</span>
+                      <span>{formatSpeed(selectedTts.speedMax ?? 4)}</span>
+                    </span>
                   </label>
                 )}
 
