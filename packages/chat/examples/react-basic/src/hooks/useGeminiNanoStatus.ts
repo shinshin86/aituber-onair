@@ -22,7 +22,7 @@ export interface GeminiNanoState {
 }
 
 const MODEL_IO = {
-  expectedInputs: [{ type: 'text', languages: ['ja'] }],
+  expectedInputs: [{ type: 'text', languages: ['ja', 'en'] }],
   expectedOutputs: [{ type: 'text', languages: ['ja'] }],
 };
 
@@ -119,7 +119,9 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
 
     lm.create({
       ...MODEL_IO,
-      systemPrompt: 'You are a helpful assistant.',
+      initialPrompts: [
+        { role: 'system', content: 'You are a helpful assistant.' },
+      ],
       monitor: (m: {
         addEventListener(
           event: string,

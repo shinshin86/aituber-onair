@@ -18,6 +18,7 @@ export class GeminiNanoChatServiceProvider
     return new GeminiNanoChatService({
       expectedInputLanguages: options.expectedInputLanguages,
       expectedOutputLanguages: options.expectedOutputLanguages,
+      initialPrompts: options.initialPrompts,
       responseLength: options.responseLength,
     });
   }
