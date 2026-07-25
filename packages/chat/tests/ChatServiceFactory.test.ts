@@ -6,7 +6,12 @@ import type {
   ChatServiceOptions,
   VisionSupportLevel,
 } from '../src/services/providers/ChatServiceProvider';
-import { MODEL_CLAUDE_4_5_HAIKU, MODEL_CLAUDE_5_OPUS } from '../src/constants';
+import {
+  MODEL_CLAUDE_4_5_HAIKU,
+  MODEL_CLAUDE_5_OPUS,
+  MODEL_KIMI_K3,
+  MODEL_KIMI_K2_6,
+} from '../src/constants';
 
 // Mock provider for testing
 class MockChatServiceProvider implements ChatServiceProvider {
@@ -383,6 +388,17 @@ describe('ChatServiceFactory', () => {
         'medium',
         'high',
       ]);
+    });
+
+    it('returns model-aware Kimi reasoning effort capabilities', () => {
+      expect(
+        ChatServiceFactory.getProviderCapabilities('kimi', MODEL_KIMI_K3)
+          ?.reasoningEffort,
+      ).toEqual(['low', 'high', 'max']);
+      expect(
+        ChatServiceFactory.getProviderCapabilities('kimi', MODEL_KIMI_K2_6)
+          ?.reasoningEffort,
+      ).toEqual([]);
     });
 
     it('returns Claude reasoning effort capabilities', () => {

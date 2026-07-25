@@ -2224,15 +2224,28 @@ export default function ProviderSelector({
                   </label>
                   <select
                     id="kimi-reasoning-effort"
-                    value="max"
-                    disabled
+                    value={
+                      reasoning_effort === 'low' ||
+                      reasoning_effort === 'high' ||
+                      reasoning_effort === 'max'
+                        ? reasoning_effort
+                        : 'max'
+                    }
+                    onChange={(e) =>
+                      onReasoningEffortChange?.(
+                        e.target.value as 'low' | 'high' | 'max',
+                      )
+                    }
+                    disabled={disabled}
                     className="select-input"
                   >
-                    <option value="max">Max (currently required)</option>
+                    <option value="low">Low</option>
+                    <option value="high">High</option>
+                    <option value="max">Max (default)</option>
                   </select>
                   <span className="helper-text">
-                    Kimi K3 currently supports max only. Lower levels will be
-                    added after the official API supports them.
+                    Kimi K3 always reasons. Use Low for shorter reasoning or Max
+                    for the API default.
                   </span>
                 </div>
               ) : (

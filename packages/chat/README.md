@@ -745,7 +745,7 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
   // Optional: override endpoint or baseUrl
   // endpoint: 'https://api.moonshot.ai/v1/chat/completions',
   // baseUrl: 'https://api.moonshot.ai/v1',
-  reasoning_effort: 'max'
+  reasoning_effort: 'low'
 });
 ```
 
@@ -753,7 +753,7 @@ Notes:
 - Kimi uses OpenAI-compatible Chat Completions.
 - Supported models: `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
 - `kimi-k2.6` remains the default model for chat-oriented usage.
-- Kimi K3 is an explicit high-reasoning option. It currently supports only `reasoning_effort: 'max'` and does not accept the K2.x `thinking` option.
+- Kimi K3 is an explicit reasoning model. It accepts `reasoning_effort: 'low' | 'high' | 'max'`, defaults to `max`, always reasons, and does not accept the K2.x `thinking` option. `none`, `minimal`, and `medium` are not supported.
 - Kimi K3 uses `max_completion_tokens` for configured response limits.
 - For Kimi K3 multi-turn and tool-call flows, append the returned `completion.assistant_message` to history so `reasoning_content` and `tool_calls` are preserved.
 - Kimi K2.7 Code models are coding-oriented and require thinking mode, so they keep `thinking` enabled even when tools are used.
@@ -1261,7 +1261,7 @@ Currently, the following AI providers are built-in:
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-5V-Turbo/GLM-4.6V family (vision)
 - **xAI**: Supports Grok 4.5 with `reasoning_effort: 'low'` by default for chat-style responses, plus Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support.
-- **Kimi**: Supports Kimi K3 (`kimi-k3`, max reasoning only), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
+- **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`) and DeepSeek V4 Pro (`deepseek-v4-pro`) via OpenAI-compatible Chat Completions. Legacy aliases `deepseek-chat` and `deepseek-reasoner` are deprecated by DeepSeek.
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
 - **Sakana AI**: Supports Fugu (`fugu`) and Fugu Ultra (`fugu-ultra`, `fugu-ultra-20260615`) via OpenAI-compatible Chat Completions.

@@ -9,6 +9,7 @@ import {
   allowsReasoningXHigh,
   getDefaultClaudeReasoningEffort,
   getDefaultGeminiReasoningEffort,
+  getDefaultKimiReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
   isClaudeReasoningEffortModel,
   isGPT5Model,
@@ -25,6 +26,7 @@ import {
   type ClaudeReasoningEffort,
   type GeminiReasoningEffort,
   type GeminiNanoInitialPrompt,
+  type KimiReasoningEffort,
   type ChatCompletionAssistantMessage,
 } from '@aituber-onair/chat';
 import './App.css';
@@ -210,6 +212,16 @@ function App() {
         ? reasoning_effort
         : 'none',
     ) ?? 'none';
+  const requestedKimiReasoningEffort: KimiReasoningEffort | undefined =
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'high' ||
+    reasoning_effort === 'max'
+      ? reasoning_effort
+      : undefined;
+  const kimiReasoningEffort =
+    requestedKimiReasoningEffort ??
+    getDefaultKimiReasoningEffort(selectedModel) ??
+    'max';
   const visionSupportLevel = getVisionSupportLevel(provider, selectedModel);
   const effectiveApiKey =
     provider === 'openai-compatible' ? apiKey.trim() : apiKey;
@@ -334,7 +346,7 @@ function App() {
 
         if (provider === 'kimi') {
           if (isKimiReasoningEffortModel(selectedModel)) {
-            options.reasoning_effort = 'max';
+            options.reasoning_effort = kimiReasoningEffort;
           } else {
             options.thinking = { type: kimiThinkingType };
           }
@@ -365,6 +377,7 @@ function App() {
     claudeReasoningEffort,
     geminiReasoningEffort,
     xaiReasoningEffort,
+    kimiReasoningEffort,
     verbosity,
     gpt5EndpointPreference,
     openaiCompatibleEndpoint,
@@ -541,6 +554,13 @@ function App() {
                   getDefaultGeminiReasoningEffort(defaultModel) ?? 'minimal',
                 );
               } else if (
+                newProvider === 'kimi' &&
+                isKimiReasoningEffortModel(defaultModel)
+              ) {
+                setReasoningEffort(
+                  getDefaultKimiReasoningEffort(defaultModel) ?? 'max',
+                );
+              } else if (
                 newProvider === 'xai' &&
                 isXaiReasoningEffortModel(defaultModel)
               ) {
@@ -597,6 +617,13 @@ function App() {
                 isXaiReasoningEffortModel(modelId)
               ) {
                 setReasoningEffort('none');
+              } else if (
+                newProvider === 'kimi' &&
+                isKimiReasoningEffortModel(modelId)
+              ) {
+                setReasoningEffort(
+                  getDefaultKimiReasoningEffort(modelId) ?? 'max',
+                );
               }
             }}
             gpt5Preset={gpt5Preset}
@@ -608,7 +635,9 @@ function App() {
                   ? (claudeReasoningEffort ?? 'high')
                   : provider === 'gemini'
                     ? (geminiReasoningEffort ?? 'minimal')
-                    : normalizedReasoningEffort
+                    : provider === 'kimi'
+                      ? kimiReasoningEffort
+                      : normalizedReasoningEffort
             }
             onReasoningEffortChange={setReasoningEffort}
             verbosity={verbosity}

@@ -146,7 +146,7 @@ export type KimiChatServiceOptions = Omit<
   >,
   'reasoning_effort'
 > & {
-  /** Kimi K3 reasoning effort. Currently only max is supported. */
+  /** Kimi K3 reasoning effort. Defaults to max. */
   reasoning_effort?: KimiReasoningEffort;
 };
 
