@@ -575,6 +575,11 @@ const claudeService = ChatServiceFactory.createChatService('claude', {
 });
 ```
 
+`claude-opus-5` は高性能用途向けの明示的な選択肢として利用でき、パッケージの
+既定値にはしていません。Claude Opus 5 は adaptive thinking が既定で有効です。
+複数ターンのツール呼び出しでは provider 固有の thinking / tool-use ブロックを
+保持するため、返された `completion.assistant_message` を会話履歴へ追加してください。
+
 #### Google Gemini
 
 ```typescript
@@ -1215,7 +1220,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **OpenAI**: GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。チャット用途向けに Gemini 3 Flash は minimal thinking、Gemini 3 Pro は low thinking を既定値にします。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
-- **Claude**: Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
+- **Claude**: Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-5V-Turbo/GLM-4.6V系（ビジョン）をサポート
 - **xAI**: Grok 4.5 をチャット用途向けに `reasoning_effort: 'low'` デフォルトでサポート。加えて Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応

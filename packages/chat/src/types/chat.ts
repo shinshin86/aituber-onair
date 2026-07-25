@@ -13,6 +13,8 @@ export interface Message {
   timestamp?: number;
   /** Provider reasoning state that must be preserved for some models. */
   reasoning_content?: string;
+  /** Provider-native content blocks that must be preserved across turns. */
+  provider_content?: unknown[];
   /** OpenAI-compatible assistant tool calls. */
   tool_calls?: ChatCompletionToolCall[];
   /** OpenAI-compatible tool result reference. */

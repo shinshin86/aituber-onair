@@ -2,8 +2,16 @@
 
 ## Unreleased
 
+### Minor Changes
+
+- Added Claude Opus 5 (`claude-opus-5`) as an explicit Claude model with
+  vision support, while keeping Claude Haiku 4.5 as the default.
+
 ### Patch Changes
 
+- Preserved Claude provider-native thinking and tool-use blocks in
+  `completion.assistant_message` so Claude 5 multi-turn tool continuations can
+  return signed thinking blocks unchanged to the Messages API.
 - Improved Gemini Nano character-chat responses by passing system
   instructions, optional few-shot examples, and recent conversation history
   through role-preserving Prompt API `initialPrompts`.

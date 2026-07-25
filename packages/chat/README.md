@@ -589,6 +589,12 @@ const claudeService = ChatServiceFactory.createChatService('claude', {
 });
 ```
 
+`claude-opus-5` is available as an explicit high-capability option and is not
+the package default. Claude Opus 5 has adaptive thinking enabled by default.
+For multi-turn tool calls, append the returned
+`completion.assistant_message` to history so its provider-native thinking and
+tool-use blocks are preserved.
+
 #### Google Gemini
 
 ```typescript
@@ -1238,7 +1244,7 @@ Currently, the following AI providers are built-in:
 - **OpenAI**: Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 Flash models default to minimal thinking for chat-style responses, while Gemini 3 Pro models default to low. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
-- **Claude**: Supports current Claude API model IDs including Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
+- **Claude**: Supports current Claude API model IDs including Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
 - **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-5V-Turbo/GLM-4.6V family (vision)
 - **xAI**: Supports Grok 4.5 with `reasoning_effort: 'low'` by default for chat-style responses, plus Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support.
