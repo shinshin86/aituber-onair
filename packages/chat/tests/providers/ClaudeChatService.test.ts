@@ -87,6 +87,29 @@ describe('ClaudeChatService', () => {
       'x-api-key': 'test-key',
       'anthropic-version': '2023-06-01',
     });
+    expect(postSpy.mock.calls[0][1].output_config).toBeUndefined();
+  });
+
+  it('maps reasoning_effort to Claude output_config.effort', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new ClaudeChatService(
+      'test-key',
+      MODEL_CLAUDE_5_OPUS,
+      MODEL_CLAUDE_5_OPUS,
+      [],
+      [],
+      undefined,
+      'low',
+    );
+
+    await (service as any).callClaude(messages, MODEL_CLAUDE_5_OPUS, false);
+
+    expect(postSpy.mock.calls[0][1]).toMatchObject({
+      model: MODEL_CLAUDE_5_OPUS,
+      output_config: { effort: 'low' },
+    });
   });
 
   it('sends Claude Sonnet 5 through the same Messages API route', async () => {

@@ -13,7 +13,9 @@ import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_4_5_HAIKU,
   CLAUDE_VISION_SUPPORTED_MODELS,
+  getClaudeSupportedReasoningEfforts,
 } from '../../../constants';
+import type { ClaudeReasoningEffort } from '../../../constants/claude';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
@@ -57,6 +59,7 @@ export class ClaudeChatService implements ChatService {
   private tools: ToolDefinition[];
   private mcpServers: MCPServerConfig[];
   private responseLength?: ChatResponseLength;
+  private reasoningEffort?: ClaudeReasoningEffort;
 
   /**
    * Constructor
@@ -74,6 +77,7 @@ export class ClaudeChatService implements ChatService {
     tools: ToolDefinition[] = [],
     mcpServers: MCPServerConfig[] = [],
     responseLength?: ChatResponseLength,
+    reasoningEffort?: ClaudeReasoningEffort,
   ) {
     this.apiKey = apiKey;
     this.model = model || MODEL_CLAUDE_4_5_HAIKU;
@@ -81,6 +85,7 @@ export class ClaudeChatService implements ChatService {
     this.tools = tools;
     this.mcpServers = mcpServers;
     this.responseLength = responseLength;
+    this.reasoningEffort = reasoningEffort;
 
     // Validate vision model supports vision capabilities
     if (!CLAUDE_VISION_SUPPORTED_MODELS.includes(this.visionModel)) {
@@ -225,6 +230,13 @@ export class ClaudeChatService implements ChatService {
           ? maxTokens
           : getMaxTokensForResponseLength(this.responseLength),
     };
+
+    if (
+      this.reasoningEffort !== undefined &&
+      getClaudeSupportedReasoningEfforts(model).includes(this.reasoningEffort)
+    ) {
+      body.output_config = { effort: this.reasoningEffort };
+    }
 
     if (this.tools.length) {
       body.tools = this.tools.map((t) => ({

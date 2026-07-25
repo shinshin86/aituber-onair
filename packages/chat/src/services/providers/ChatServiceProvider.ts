@@ -1,6 +1,7 @@
 import { ChatService } from '../ChatService';
 import { ChatResponseLength, GPT5PresetKey } from '../../constants/chat';
 import type { GeminiReasoningEffort } from '../../constants/gemini';
+import type { ClaudeReasoningEffort } from '../../constants/claude';
 import type { MistralReasoningEffort } from '../../constants/mistral';
 import type { PlamoReasoningEffort } from '../../constants/plamo';
 import type { XaiReasoningEffort } from '../../constants/xai';
@@ -112,20 +113,24 @@ export type GeminiChatServiceOptions = DisallowKeys<
   mcpServers?: MCPServerConfig[];
 };
 
-export type ClaudeChatServiceOptions = DisallowKeys<
-  BaseChatServiceOptions,
-  | 'endpoint'
-  | 'baseUrl'
-  | 'verbosity'
-  | 'reasoning_effort'
-  | 'gpt5Preset'
-  | 'gpt5EndpointPreference'
-  | 'enableReasoningSummary'
-  | 'includeReasoning'
-  | 'reasoningMaxTokens'
-  | 'responseFormat'
-  | 'thinking'
+export type ClaudeChatServiceOptions = Omit<
+  DisallowKeys<
+    BaseChatServiceOptions,
+    | 'endpoint'
+    | 'baseUrl'
+    | 'verbosity'
+    | 'gpt5Preset'
+    | 'gpt5EndpointPreference'
+    | 'enableReasoningSummary'
+    | 'includeReasoning'
+    | 'reasoningMaxTokens'
+    | 'responseFormat'
+    | 'thinking'
+  >,
+  'reasoning_effort'
 > & {
+  /** Claude output effort, mapped to output_config.effort. */
+  reasoning_effort?: ClaudeReasoningEffort;
   mcpServers?: MCPServerConfig[];
 };
 

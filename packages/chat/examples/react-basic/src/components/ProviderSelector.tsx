@@ -10,6 +10,7 @@ import {
   allowsReasoningMinimal,
   allowsReasoningNone,
   allowsReasoningXHigh,
+  getClaudeSupportedReasoningEfforts,
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
   getGeminiSupportedReasoningEfforts,
@@ -19,7 +20,9 @@ import {
   isResponsesOnlyGPT5Model,
   isOpenRouterFreeModel,
   refreshOpenRouterFreeModels,
+  normalizeClaudeReasoningEffort,
   normalizeGeminiReasoningEffort,
+  type ClaudeReasoningEffort,
   type GeminiReasoningEffort,
   // OpenAI models
   MODEL_GPT_5_NANO,
@@ -1312,6 +1315,24 @@ export default function ProviderSelector({
     provider === 'xai' && isXaiReasoningEffortNoneModel(selectedModel);
   const isKimiReasoningModel =
     provider === 'kimi' && isKimiReasoningEffortModel(selectedModel);
+  const claudeSupportedReasoningEfforts =
+    provider === 'claude'
+      ? getClaudeSupportedReasoningEfforts(selectedModel)
+      : [];
+  const isClaudeReasoningModel =
+    provider === 'claude' && claudeSupportedReasoningEfforts.length > 0;
+  const requestedClaudeReasoningEffort: ClaudeReasoningEffort | undefined =
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'medium' ||
+    reasoning_effort === 'high' ||
+    reasoning_effort === 'xhigh' ||
+    reasoning_effort === 'max'
+      ? reasoning_effort
+      : undefined;
+  const claudeReasoningEffort = normalizeClaudeReasoningEffort(
+    selectedModel,
+    requestedClaudeReasoningEffort,
+  );
   const geminiSupportedReasoningEfforts =
     provider === 'gemini'
       ? getGeminiSupportedReasoningEfforts(selectedModel)
@@ -1758,6 +1779,43 @@ export default function ProviderSelector({
                     ? 'Mapped to Gemini thinkingLevel. Minimal is optimized for chat latency.'
                     : 'Mapped to Gemini thinkingLevel. Low is the lowest level supported by Gemini 3 Pro.'
                   : 'Gemini 2.5 uses thinkingBudget; other models may not expose configurable thinkingLevel.'}
+              </span>
+            </div>
+          )}
+
+          {provider === 'claude' && (
+            <div className="config-group">
+              <label htmlFor="claude-reasoning-effort">Claude Effort</label>
+              <select
+                id="claude-reasoning-effort"
+                value={claudeReasoningEffort ?? ''}
+                onChange={(e) =>
+                  onReasoningEffortChange?.(
+                    e.target.value as ClaudeReasoningEffort,
+                  )
+                }
+                disabled={disabled || !isClaudeReasoningModel}
+                className="select-input"
+              >
+                {!isClaudeReasoningModel && (
+                  <option value="">Not available</option>
+                )}
+                {claudeSupportedReasoningEfforts.map((effort) => (
+                  <option key={effort} value={effort}>
+                    {effort === 'low'
+                      ? 'Low (fastest)'
+                      : effort === 'high'
+                        ? 'High (API default)'
+                        : effort === 'xhigh'
+                          ? 'XHigh'
+                          : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                  </option>
+                ))}
+              </select>
+              <span className="helper-text">
+                {isClaudeReasoningModel
+                  ? 'Mapped to Claude output_config.effort. Lower effort prioritizes latency and token efficiency.'
+                  : 'The selected Claude model does not expose configurable effort.'}
               </span>
             </div>
           )}

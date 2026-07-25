@@ -6,6 +6,9 @@
 
 - Added Claude Opus 5 (`claude-opus-5`) as an explicit Claude model with
   vision support, while keeping Claude Haiku 4.5 as the default.
+- Added model-aware Claude `reasoning_effort` support through Anthropic's
+  `output_config.effort`, including a configurable effort control in the React
+  basic example.
 
 ### Patch Changes
 

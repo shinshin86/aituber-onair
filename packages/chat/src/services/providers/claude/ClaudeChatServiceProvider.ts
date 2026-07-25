@@ -12,6 +12,7 @@ import {
   MODEL_CLAUDE_5_SONNET,
   MODEL_CLAUDE_5_OPUS,
   CLAUDE_VISION_SUPPORTED_MODELS,
+  getClaudeSupportedReasoningEfforts,
 } from '../../../constants';
 import { ChatService } from '../../ChatService';
 import { ClaudeChatService } from './ClaudeChatService';
@@ -35,9 +36,25 @@ export class ClaudeChatServiceProvider
    * @returns ClaudeChatService instance
    */
   createChatService(options: ClaudeChatServiceOptions): ChatService {
+    const model = options.model || this.getDefaultModel();
+    const supportedReasoningEfforts = getClaudeSupportedReasoningEfforts(model);
+    if (
+      options.reasoning_effort !== undefined &&
+      !supportedReasoningEfforts.includes(options.reasoning_effort)
+    ) {
+      const supportedMessage =
+        supportedReasoningEfforts.length > 0
+          ? `Supported values: ${supportedReasoningEfforts.join(', ')}.`
+          : 'This model does not expose configurable effort.';
+      throw new Error(
+        `Model ${model} does not support Claude reasoning_effort: ` +
+          `${options.reasoning_effort}. ${supportedMessage}`,
+      );
+    }
+
     // Use the visionModel if provided, otherwise use the model that supports vision
     const visionModel = resolveVisionModel({
-      model: options.model,
+      model,
       visionModel: options.visionModel,
       defaultModel: this.getDefaultModel(),
       defaultVisionModel: this.getDefaultModel(),
@@ -47,11 +64,12 @@ export class ClaudeChatServiceProvider
 
     return new ClaudeChatService(
       options.apiKey,
-      options.model || this.getDefaultModel(),
+      model,
       visionModel,
       options.tools ?? [],
       options.mcpServers ?? [],
       options.responseLength,
+      options.reasoning_effort,
     );
   }
 

@@ -8,6 +8,7 @@ import {
 } from './providers/ChatServiceProvider';
 import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 import type { ChatProviderCapabilities } from '../types/capabilities';
+import { getClaudeSupportedReasoningEfforts } from '../constants/claude';
 
 const TOOL_SUPPORTED_PROVIDERS = new Set<string>([
   'openai',
@@ -35,6 +36,7 @@ const JSON_MODE_SUPPORTED_PROVIDERS = new Set<string>([
 
 const REASONING_EFFORT_BY_PROVIDER: Record<string, string[]> = {
   openai: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
+  claude: ['low', 'medium', 'high', 'xhigh', 'max'],
   gemini: ['minimal', 'low', 'medium', 'high'],
   openrouter: ['none', 'minimal', 'low', 'medium', 'high'],
   mistral: ['low', 'medium', 'high'],
@@ -135,7 +137,10 @@ export class ChatServiceFactory {
       mcp: MCP_SUPPORTED_PROVIDERS.has(providerName),
       jsonMode: JSON_MODE_SUPPORTED_PROVIDERS.has(providerName),
       responseLength: true,
-      reasoningEffort: REASONING_EFFORT_BY_PROVIDER[providerName] ?? [],
+      reasoningEffort:
+        providerName === 'claude' && model
+          ? [...getClaudeSupportedReasoningEfforts(model)]
+          : (REASONING_EFFORT_BY_PROVIDER[providerName] ?? []),
     };
   }
 

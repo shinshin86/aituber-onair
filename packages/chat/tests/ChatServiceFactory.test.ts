@@ -6,6 +6,7 @@ import type {
   ChatServiceOptions,
   VisionSupportLevel,
 } from '../src/services/providers/ChatServiceProvider';
+import { MODEL_CLAUDE_4_5_HAIKU, MODEL_CLAUDE_5_OPUS } from '../src/constants';
 
 // Mock provider for testing
 class MockChatServiceProvider implements ChatServiceProvider {
@@ -382,6 +383,33 @@ describe('ChatServiceFactory', () => {
         'medium',
         'high',
       ]);
+    });
+
+    it('returns Claude reasoning effort capabilities', () => {
+      const capabilities = ChatServiceFactory.getProviderCapabilities('claude');
+
+      expect(capabilities?.reasoningEffort).toEqual([
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+        'max',
+      ]);
+    });
+
+    it('returns model-aware Claude reasoning effort capabilities', () => {
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'claude',
+          MODEL_CLAUDE_5_OPUS,
+        )?.reasoningEffort,
+      ).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'claude',
+          MODEL_CLAUDE_4_5_HAIKU,
+        )?.reasoningEffort,
+      ).toEqual([]);
     });
 
     it('returns undefined for unknown providers', () => {

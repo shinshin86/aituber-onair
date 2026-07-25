@@ -132,6 +132,7 @@ built-in model status is `available`.
 **Claude**
 - Models: Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude 4.5 (Opus, Sonnet, Haiku), plus deprecated-but-still-available Claude 4 (Sonnet, Opus) and Claude 3 Haiku
 - Vision: All listed Claude models
+- Effort: Supported models expose model-aware Low/Medium/High/XHigh/Max options. The control maps to `output_config.effort` and defaults to High.
 - Best for: Long context, tool use + advanced reasoning
 
 **Gemini**
