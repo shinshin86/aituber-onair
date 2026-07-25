@@ -36,6 +36,15 @@ jobs:
       - name: Install workspace dependencies
         run: npm ci
 
+      - name: Pack Core
+        id: pack-core
+        working-directory: packages/core
+        run: |
+          npm run build
+          mkdir -p "$RUNNER_TEMP/core-package"
+          npm pack --pack-destination "$RUNNER_TEMP/core-package"
+          echo "tarball=$(find "$RUNNER_TEMP/core-package" -name '*.tgz' -print -quit)" >> "$GITHUB_OUTPUT"
+
       - name: Pack create-aituber-onair
         id: pack
         working-directory: packages/create-aituber-onair
@@ -49,3 +58,4 @@ jobs:
           node packages/create-aituber-onair/scripts/smoke-generated-template.mjs
           "${{ matrix.template }}"
           "${{ steps.pack.outputs.tarball }}"
+          "${{ steps.pack-core.outputs.tarball }}"
