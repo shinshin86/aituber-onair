@@ -23,6 +23,8 @@ import {
   allowsReasoningMinimal,
   allowsReasoningNone,
   allowsReasoningXHigh,
+  getClaudeSupportedReasoningEfforts,
+  getDefaultClaudeReasoningEffort,
   getDefaultGeminiReasoningEffort,
   getDefaultKimiReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
@@ -30,15 +32,18 @@ import {
   getGeminiSupportedReasoningEfforts,
   getKimiSupportedReasoningEfforts,
   getVoiceEngineVoiceList,
+  isClaudeReasoningEffortModel,
   isGPT5Model,
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isResponsesOnlyGPT5Model,
   isXaiReasoningEffortModel,
   isXaiReasoningEffortNoneModel,
+  normalizeClaudeReasoningEffort,
   normalizeGeminiReasoningEffort,
   normalizeXaiReasoningEffort,
   refreshOpenRouterFreeModels,
+  type ClaudeReasoningEffort,
   type GeminiReasoningEffort,
   type KimiReasoningEffort,
   type XaiReasoningEffort,
@@ -130,6 +135,26 @@ type ReasoningEffortLevel =
   | 'max';
 type ChatProvider = NonNullable<AITuberOnAirCoreOptions['chatProvider']>;
 
+const normalizeReasoningEffortForClaudeModel = (
+  targetModel: string | undefined,
+  effort?: ReasoningEffortLevel,
+): ClaudeReasoningEffort | undefined => {
+  if (!targetModel) {
+    return undefined;
+  }
+
+  const requestedEffort: ClaudeReasoningEffort | undefined =
+    effort === 'low' ||
+    effort === 'medium' ||
+    effort === 'high' ||
+    effort === 'xhigh' ||
+    effort === 'max'
+      ? effort
+      : undefined;
+
+  return normalizeClaudeReasoningEffort(targetModel, requestedEffort);
+};
+
 const normalizeReasoningEffortForKimiModel = (
   targetModel: string | undefined,
   effort?: ReasoningEffortLevel,
@@ -148,9 +173,7 @@ const normalizeReasoningEffortForKimiModel = (
     return requestedEffort;
   }
 
-  return (
-    getDefaultKimiReasoningEffort(targetModel) ?? supportedEfforts[0]
-  );
+  return getDefaultKimiReasoningEffort(targetModel) ?? supportedEfforts[0];
 };
 
 // MiniMax Voice IDs with descriptions
@@ -822,8 +845,7 @@ const App: React.FC = () => {
   const [webSpeechRate, setWebSpeechRate] = useState<string>('1');
   const [webSpeechPitch, setWebSpeechPitch] = useState<string>('1');
   const [webSpeechVolume, setWebSpeechVolume] = useState<string>('1');
-  const [webSpeechLanguage, setWebSpeechLanguage] =
-    useState<string>('ja-JP');
+  const [webSpeechLanguage, setWebSpeechLanguage] = useState<string>('ja-JP');
   const [selectedSpeakers, setSelectedSpeakers] = useState<
     Record<string, string | number>
   >({
@@ -1304,6 +1326,9 @@ const App: React.FC = () => {
         break;
       case 'claude':
         setModel(claudeModels[0]);
+        setReasoningEffort(
+          getDefaultClaudeReasoningEffort(claudeModels[0]) ?? 'high',
+        );
         break;
       case 'zai':
         setModel(zaiModels[0]);
@@ -1316,7 +1341,9 @@ const App: React.FC = () => {
         break;
       case 'xai':
         setModel(xaiModels[0]);
-        setReasoningEffort(getDefaultXaiReasoningEffort(xaiModels[0]) ?? 'none');
+        setReasoningEffort(
+          getDefaultXaiReasoningEffort(xaiModels[0]) ?? 'none',
+        );
         break;
       case 'deepseek':
         setModel(deepseekModels[0]);
@@ -1377,6 +1404,23 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (
+      chatProvider !== 'claude' ||
+      !model ||
+      !isClaudeReasoningEffortModel(model)
+    ) {
+      return;
+    }
+    const normalized = normalizeReasoningEffortForClaudeModel(
+      model,
+      reasoning_effort,
+    );
+    if (normalized && normalized !== reasoning_effort) {
+      setReasoningEffort(normalized);
+    }
+  }, [chatProvider, model, reasoning_effort]);
+
+  useEffect(() => {
+    if (
       chatProvider !== 'gemini' ||
       !model ||
       !isGeminiReasoningEffortModel(model)
@@ -1397,11 +1441,7 @@ const App: React.FC = () => {
   }, [chatProvider, model, reasoning_effort]);
 
   useEffect(() => {
-    if (
-      chatProvider !== 'xai' ||
-      !model ||
-      !isXaiReasoningEffortModel(model)
-    ) {
+    if (chatProvider !== 'xai' || !model || !isXaiReasoningEffortModel(model)) {
       return;
     }
     const normalized = normalizeReasoningEffortForXaiModel(
@@ -1587,6 +1627,16 @@ const App: React.FC = () => {
       );
     }
     if (
+      chatProvider === 'claude' &&
+      model &&
+      isClaudeReasoningEffortModel(model)
+    ) {
+      providerOptions.reasoning_effort = normalizeReasoningEffortForClaudeModel(
+        model,
+        reasoning_effort,
+      );
+    }
+    if (
       chatProvider === 'gemini' &&
       model &&
       isGeminiReasoningEffortModel(model)
@@ -1605,8 +1655,10 @@ const App: React.FC = () => {
     }
     if (chatProvider === 'kimi') {
       if (model && isKimiReasoningEffortModel(model)) {
-        providerOptions.reasoning_effort =
-          normalizeReasoningEffortForKimiModel(model, reasoning_effort);
+        providerOptions.reasoning_effort = normalizeReasoningEffortForKimiModel(
+          model,
+          reasoning_effort,
+        );
       }
       const trimmedBaseUrl = kimiBaseUrl.trim();
       if (trimmedBaseUrl) {
@@ -2293,8 +2345,9 @@ const App: React.FC = () => {
             options.gradiumTemperature = parsedTemperature;
           }
 
-          const parsedVoiceSimilarity =
-            Number.parseFloat(gradiumVoiceSimilarity);
+          const parsedVoiceSimilarity = Number.parseFloat(
+            gradiumVoiceSimilarity,
+          );
           if (!Number.isNaN(parsedVoiceSimilarity)) {
             options.gradiumVoiceSimilarity = parsedVoiceSimilarity;
           }
@@ -2705,9 +2758,7 @@ const App: React.FC = () => {
     chatProvider === 'openai' && model && allowsReasoningMax(model),
   );
   const allowsXaiNoneReasoningEffort = Boolean(
-    chatProvider === 'xai' &&
-      model &&
-      isXaiReasoningEffortNoneModel(model),
+    chatProvider === 'xai' && model && isXaiReasoningEffortNoneModel(model),
   );
   const isXaiReasoningEffortModelSelected = Boolean(
     chatProvider === 'xai' && model && isXaiReasoningEffortModel(model),
@@ -2716,6 +2767,16 @@ const App: React.FC = () => {
     isXaiReasoningEffortModelSelected
       ? normalizeReasoningEffortForXaiModel(model, reasoning_effort)
       : 'none';
+  const claudeSupportedReasoningEfforts =
+    chatProvider === 'claude' && model
+      ? getClaudeSupportedReasoningEfforts(model)
+      : [];
+  const isClaudeReasoningEffortModelSelected =
+    claudeSupportedReasoningEfforts.length > 0;
+  const claudeReasoningEffortValue = normalizeReasoningEffortForClaudeModel(
+    model,
+    reasoning_effort,
+  );
   const geminiSupportedReasoningEfforts =
     chatProvider === 'gemini' && model
       ? getGeminiSupportedReasoningEfforts(model)
@@ -3425,6 +3486,50 @@ const App: React.FC = () => {
                             ? 'Grok 4.5 uses low by default; none is not supported.'
                             : 'Grok 4.3 uses none by default for lower latency.'
                           : 'This xAI model does not support reasoning_effort.'}
+                      </div>
+                    </div>
+                  )}
+
+                  {chatProvider === 'claude' && (
+                    <div style={{ marginTop: '16px' }}>
+                      <label htmlFor="claudeReasoningEffort">
+                        Claude Reasoning Effort:
+                      </label>
+                      <select
+                        id="claudeReasoningEffort"
+                        value={claudeReasoningEffortValue ?? ''}
+                        disabled={!isClaudeReasoningEffortModelSelected}
+                        onChange={(e) =>
+                          setReasoningEffort(
+                            e.target.value as ClaudeReasoningEffort,
+                          )
+                        }
+                      >
+                        {!isClaudeReasoningEffortModelSelected && (
+                          <option value="">Not available</option>
+                        )}
+                        {claudeSupportedReasoningEfforts.map((effort) => (
+                          <option key={effort} value={effort}>
+                            {effort === 'low'
+                              ? 'Low (fastest)'
+                              : effort === 'high'
+                                ? 'High (API default)'
+                                : effort === 'xhigh'
+                                  ? 'XHigh'
+                                  : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                          </option>
+                        ))}
+                      </select>
+                      <div
+                        style={{
+                          marginTop: '6px',
+                          color: '#666',
+                          fontSize: '12px',
+                        }}
+                      >
+                        {isClaudeReasoningEffortModelSelected
+                          ? 'Mapped to Claude output_config.effort. Lower effort prioritizes latency and token efficiency.'
+                          : 'The selected Claude model does not expose configurable effort.'}
                       </div>
                     </div>
                   )}
@@ -6593,13 +6698,13 @@ const App: React.FC = () => {
                                             : selectedVoiceEngine ===
                                                 'webSpeech'
                                               ? 'Web Speech APIはブラウザが直接再生します。音声バッファを取得できないためリップシンク非対応です'
-                                            : selectedVoiceEngine ===
-                                                'aivisCloud'
-                                              ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
                                               : selectedVoiceEngine ===
-                                                  'aivisSpeech'
-                                                ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
-                                                : '※ 音声パラメータは最適な値に固定されています'}
+                                                  'aivisCloud'
+                                                ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                                : selectedVoiceEngine ===
+                                                    'aivisSpeech'
+                                                  ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
+                                                  : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

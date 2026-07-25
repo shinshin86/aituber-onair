@@ -9,11 +9,15 @@ import {
   MODEL_CLAUDE_3_HAIKU,
   MODEL_CLAUDE_4_SONNET,
   MODEL_CLAUDE_4_OPUS,
+  MODEL_CLAUDE_5_SONNET,
+  MODEL_CLAUDE_5_OPUS,
 } from '@aituber-onair/core';
 
 // Claude models list
 export const claudeModels = [
   MODEL_CLAUDE_4_5_HAIKU,
+  MODEL_CLAUDE_5_OPUS,
+  MODEL_CLAUDE_5_SONNET,
   MODEL_CLAUDE_4_8_OPUS,
   MODEL_CLAUDE_4_7_OPUS,
   MODEL_CLAUDE_4_6_OPUS,
