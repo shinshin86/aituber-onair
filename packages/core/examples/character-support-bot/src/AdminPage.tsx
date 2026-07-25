@@ -2,9 +2,11 @@ import { useEffect, useState, type FormEvent } from 'react';
 import {
   getAdminProviders,
   getAdminSettings,
+  getTtsVoices,
   saveAdminSettings,
   type AdminSettings,
   type ProviderRecord,
+  type VoiceOption,
 } from './api';
 import LanguageSwitch from './components/LanguageSwitch';
 import { type Language, translations } from './i18n';
@@ -24,6 +26,7 @@ interface SettingsDraft {
     apiKey: string;
     endpoint: string;
     speed: number;
+    groupId: string;
   };
 }
 
@@ -42,6 +45,7 @@ const toDraft = (settings: AdminSettings): SettingsDraft => ({
     apiKey: '',
     endpoint: settings.tts.endpoint,
     speed: settings.tts.speed,
+    groupId: settings.tts.groupId,
   },
 });
 
@@ -62,6 +66,10 @@ export default function AdminPage({
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [voiceOptions, setVoiceOptions] = useState<VoiceOption[]>([]);
+  const [voiceListStatus, setVoiceListStatus] = useState<
+    'idle' | 'loading' | 'loaded' | 'error'
+  >('idle');
   const [feedback, setFeedback] = useState<
     | {
         kind: 'success' | 'error';
@@ -132,14 +140,36 @@ export default function AdminPage({
               provider: provider.provider,
               model: provider.defaultModel,
               voice: provider.defaultVoice ?? '',
+              apiKey: '',
               endpoint: provider.supportsCustomEndpoint
-                ? current.tts.endpoint
+                ? (provider.defaultEndpoint ?? '')
                 : '',
+              speed: 1,
+              groupId: '',
             },
           }
         : current,
     );
+    setVoiceOptions([]);
+    setVoiceListStatus('idle');
     setFeedback(undefined);
+  };
+
+  const loadVoiceOptions = async () => {
+    if (!draft || !selectedTts?.supportsVoiceList) return;
+    setVoiceListStatus('loading');
+    try {
+      const response = await getTtsVoices(
+        selectedTts.provider,
+        draft.tts.endpoint,
+        draft.tts.apiKey,
+      );
+      setVoiceOptions(response.voices);
+      setVoiceListStatus('loaded');
+    } catch {
+      setVoiceOptions([]);
+      setVoiceListStatus('error');
+    }
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -164,6 +194,7 @@ export default function AdminPage({
           voice: draft.tts.voice.trim(),
           endpoint: draft.tts.endpoint.trim(),
           speed: draft.tts.speed,
+          groupId: draft.tts.groupId.trim(),
           ...(draft.tts.apiKey.trim()
             ? { apiKey: draft.tts.apiKey.trim() }
             : {}),
@@ -191,15 +222,51 @@ export default function AdminPage({
     Boolean(draft?.llm.apiKey.trim());
   const ttsKeyReady =
     !selectedTts?.requiresApiKey ||
-    savedSettings?.tts.hasApiKey ||
+    Boolean(
+      savedSettings &&
+        savedSettings.tts.provider === draft?.tts.provider &&
+        savedSettings.tts.hasApiKey,
+    ) ||
     Boolean(draft?.tts.apiKey.trim());
+  const ttsGroupIdReady =
+    !selectedTts?.requiresGroupId ||
+    Boolean(
+      savedSettings &&
+        savedSettings.tts.provider === draft?.tts.provider &&
+        savedSettings.tts.groupId,
+    ) ||
+    Boolean(draft?.tts.groupId.trim());
+  const ttsModelReady =
+    !selectedTts?.modelRequired || Boolean(draft?.tts.model.trim());
+  const ttsVoiceReady =
+    !selectedTts?.voiceRequired || Boolean(draft?.tts.voice.trim());
+  const currentTtsSpeed = draft?.tts.speed;
+  const ttsSpeedReady =
+    !selectedTts?.supportsSpeed ||
+    (typeof currentTtsSpeed === 'number' &&
+      Number.isFinite(currentTtsSpeed) &&
+      currentTtsSpeed >= (selectedTts.speedMin ?? 0.25) &&
+      currentTtsSpeed <= (selectedTts.speedMax ?? 4));
   const canSave = Boolean(
     draft?.llm.model.trim() &&
-      draft.tts.model.trim() &&
+      ttsModelReady &&
+      ttsVoiceReady &&
       llmKeyReady &&
       ttsKeyReady &&
+      ttsGroupIdReady &&
+      ttsSpeedReady &&
       (!selectedLlm?.supportsCustomEndpoint || draft.llm.endpoint.trim()) &&
       (!selectedTts?.supportsCustomEndpoint || draft.tts.endpoint.trim()),
+  );
+  const combinedVoiceOptions = [
+    ...(selectedTts?.voices ?? []).map((voice) => ({
+      id: voice,
+      label: voice,
+    })),
+    ...voiceOptions,
+  ].filter(
+    (voice, index, voices) =>
+      voices.findIndex((candidate) => candidate.id === voice.id) === index,
   );
 
   return (
@@ -374,42 +441,47 @@ export default function AdminPage({
                   </select>
                 </label>
 
-                <label>
-                  <span>{t.admin.model}</span>
-                  {selectedTts?.models.length ? (
-                    <select
-                      value={draft.tts.model}
-                      onChange={(event) =>
-                        setDraft({
-                          ...draft,
-                          tts: { ...draft.tts, model: event.target.value },
-                        })
-                      }
-                    >
-                      {selectedTts.models.map((model) => (
-                        <option key={model} value={model}>
-                          {model}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      value={draft.tts.model}
-                      onChange={(event) =>
-                        setDraft({
-                          ...draft,
-                          tts: { ...draft.tts, model: event.target.value },
-                        })
-                      }
-                      placeholder="tts-model"
-                    />
-                  )}
-                </label>
+                {(selectedTts?.modelRequired ||
+                  selectedTts?.models.length ||
+                  selectedTts?.defaultModel) && (
+                  <label>
+                    <span>{t.admin.model}</span>
+                    {selectedTts?.models.length ? (
+                      <select
+                        value={draft.tts.model}
+                        onChange={(event) =>
+                          setDraft({
+                            ...draft,
+                            tts: { ...draft.tts, model: event.target.value },
+                          })
+                        }
+                      >
+                        {selectedTts.models.map((model) => (
+                          <option key={model} value={model}>
+                            {model}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        value={draft.tts.model}
+                        onChange={(event) =>
+                          setDraft({
+                            ...draft,
+                            tts: { ...draft.tts, model: event.target.value },
+                          })
+                        }
+                        placeholder="tts-model"
+                      />
+                    )}
+                  </label>
+                )}
 
-                <label>
-                  <span>{t.admin.voice}</span>
-                  {selectedTts?.voices?.length ? (
-                    <select
+                <div className="voice-field">
+                  <label>
+                    <span>{t.admin.voice}</span>
+                    <input
+                      list="tts-voice-options"
                       value={draft.tts.voice}
                       onChange={(event) =>
                         setDraft({
@@ -417,46 +489,65 @@ export default function AdminPage({
                           tts: { ...draft.tts, voice: event.target.value },
                         })
                       }
-                    >
-                      {selectedTts.voices.map((voice) => (
-                        <option key={voice} value={voice}>
-                          {voice}
+                      placeholder={t.admin.voiceId}
+                    />
+                    <datalist id="tts-voice-options">
+                      {combinedVoiceOptions.map((voice) => (
+                        <option key={voice.id} value={voice.id}>
+                          {voice.label}
                         </option>
                       ))}
-                    </select>
-                  ) : (
+                    </datalist>
+                  </label>
+                  {selectedTts?.supportsVoiceList && (
+                    <div className="voice-list-controls">
+                      <button
+                        type="button"
+                        onClick={() => void loadVoiceOptions()}
+                        disabled={voiceListStatus === 'loading'}
+                      >
+                        {voiceListStatus === 'loading'
+                          ? t.admin.loadingVoices
+                          : t.admin.loadVoices}
+                      </button>
+                      {voiceListStatus === 'loaded' && (
+                        <span>
+                          {t.admin.voicesLoaded.replace(
+                            '{count}',
+                            String(voiceOptions.length),
+                          )}
+                        </span>
+                      )}
+                      {voiceListStatus === 'error' && (
+                        <span className="is-error">
+                          {t.admin.voiceListUnavailable}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {selectedTts?.supportsSpeed && (
+                  <label>
+                    <span>{t.admin.speed}</span>
                     <input
-                      value={draft.tts.voice}
+                      type="number"
+                      min={selectedTts.speedMin ?? 0.25}
+                      max={selectedTts.speedMax ?? 4}
+                      step={selectedTts.speedStep ?? 0.05}
+                      value={draft.tts.speed}
                       onChange={(event) =>
                         setDraft({
                           ...draft,
-                          tts: { ...draft.tts, voice: event.target.value },
+                          tts: {
+                            ...draft.tts,
+                            speed: Number(event.target.value),
+                          },
                         })
                       }
-                      placeholder={t.admin.optionalVoice}
                     />
-                  )}
-                </label>
-
-                <label>
-                  <span>{t.admin.speed}</span>
-                  <input
-                    type="number"
-                    min="0.25"
-                    max="4"
-                    step="0.05"
-                    value={draft.tts.speed}
-                    onChange={(event) =>
-                      setDraft({
-                        ...draft,
-                        tts: {
-                          ...draft.tts,
-                          speed: Number(event.target.value),
-                        },
-                      })
-                    }
-                  />
-                </label>
+                  </label>
+                )}
 
                 {selectedTts?.supportsCustomEndpoint && (
                   <label className="field-wide">
@@ -470,12 +561,15 @@ export default function AdminPage({
                           tts: { ...draft.tts, endpoint: event.target.value },
                         })
                       }
-                      placeholder="http://127.0.0.1:8880/v1/audio/speech"
+                      placeholder={
+                        selectedTts.defaultEndpoint ||
+                        'http://127.0.0.1:8880/v1/audio/speech'
+                      }
                     />
                   </label>
                 )}
 
-                {selectedTts?.requiresApiKey && (
+                {selectedTts?.acceptsApiKey && (
                   <label className="field-wide">
                     <span>{t.admin.apiKey}</span>
                     <input
@@ -489,10 +583,27 @@ export default function AdminPage({
                         })
                       }
                       placeholder={
-                        savedSettings?.tts.hasApiKey
+                        savedSettings?.tts.provider === draft.tts.provider &&
+                        savedSettings.tts.hasApiKey
                           ? `${t.admin.savedKeyPrefix} ${savedSettings.tts.apiKey}`
                           : t.admin.enterServerKey
                       }
+                    />
+                  </label>
+                )}
+
+                {selectedTts?.requiresGroupId && (
+                  <label className="field-wide">
+                    <span>{t.admin.groupId}</span>
+                    <input
+                      value={draft.tts.groupId}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          tts: { ...draft.tts, groupId: event.target.value },
+                        })
+                      }
+                      placeholder={t.admin.enterGroupId}
                     />
                   </label>
                 )}

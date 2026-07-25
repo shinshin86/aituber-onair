@@ -16,6 +16,7 @@
   "dependencies": {
     "@aituber-onair/chat": "file:../../../chat",
     "@aituber-onair/core": "file:../..",
+    "@aituber-onair/voice": "file:../../../voice",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

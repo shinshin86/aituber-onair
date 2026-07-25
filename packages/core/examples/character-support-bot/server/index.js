@@ -12,6 +12,18 @@ import {
   resolvePersona,
   resolveResponseLanguage,
 } from './system-prompt.js';
+import {
+  createDefaultTtsSettings,
+  detectAudioContentType,
+  getExcludedTtsProviderRecords,
+  getTtsProvider,
+  getTtsProviderRecords,
+  getTtsVoiceList,
+  isTtsConfigured,
+  normalizeStoredTtsSettings,
+  synthesizeTtsAudio,
+  validateTtsSettings,
+} from './tts-providers.js';
 
 const require = createRequire(import.meta.url);
 const { ChatServiceFactory } = require('@aituber-onair/chat');
@@ -29,10 +41,8 @@ const DATA_DIR = join(SERVER_DIR, 'data');
 const SETTINGS_FILE = join(DATA_DIR, 'settings.json');
 const SETTINGS_TEMP_FILE = join(DATA_DIR, 'settings.json.tmp');
 const KNOWLEDGE_FILE = join(SERVER_DIR, 'core-package-knowledge.md');
-const OPENAI_TTS_ENDPOINT = 'https://api.openai.com/v1/audio/speech';
 const DEFAULT_COMPATIBLE_CHAT_ENDPOINT =
   'http://127.0.0.1:18080/v1/chat/completions';
-const DEFAULT_COMPATIBLE_TTS_ENDPOINT = 'http://127.0.0.1:8880/v1/audio/speech';
 const EXCLUDED_SERVER_PROVIDERS = new Set([
   'codex-sdk',
   'claude-agent-sdk',
@@ -54,51 +64,6 @@ const PROVIDER_LABELS = {
   sakana: 'Sakana AI',
   plamo: 'PLaMo',
 };
-
-const TTS_PROVIDERS = [
-  {
-    provider: 'openai',
-    label: 'OpenAI',
-    models: ['gpt-4o-mini-tts', 'tts-1', 'tts-1-hd'],
-    voices: [
-      'alloy',
-      'ash',
-      'ballad',
-      'coral',
-      'echo',
-      'fable',
-      'nova',
-      'onyx',
-      'sage',
-      'shimmer',
-    ],
-    defaultModel: 'gpt-4o-mini-tts',
-    defaultVoice: 'coral',
-    requiresApiKey: true,
-    supportsCustomEndpoint: false,
-  },
-  {
-    provider: 'openai-compatible',
-    label: 'OpenAI-Compatible',
-    models: [],
-    voices: [],
-    defaultModel: 'tts-1',
-    defaultVoice: '',
-    requiresApiKey: false,
-    supportsCustomEndpoint: true,
-  },
-  {
-    provider: 'mock',
-    label: 'Built-in mock (development)',
-    models: ['mock-tts'],
-    voices: ['miko'],
-    defaultModel: 'mock-tts',
-    defaultVoice: 'miko',
-    requiresApiKey: false,
-    supportsCustomEndpoint: false,
-    developmentOnly: true,
-  },
-];
 
 const MIME_TYPES = new Map([
   ['.css', 'text/css; charset=utf-8'],
@@ -151,9 +116,6 @@ const getLlmProviderRecords = () =>
     };
   });
 
-const getTtsProvider = (provider) =>
-  TTS_PROVIDERS.find((candidate) => candidate.provider === provider);
-
 const createDefaultSettings = () => ({
   llm: {
     provider: 'openai',
@@ -162,14 +124,7 @@ const createDefaultSettings = () => ({
     endpoint: DEFAULT_COMPATIBLE_CHAT_ENDPOINT,
     persona: DEFAULT_PERSONA,
   },
-  tts: {
-    provider: 'openai',
-    model: 'gpt-4o-mini-tts',
-    voice: 'coral',
-    apiKey: '',
-    endpoint: DEFAULT_COMPATIBLE_TTS_ENDPOINT,
-    speed: 1,
-  },
+  tts: createDefaultTtsSettings(),
 });
 
 const normalizeHttpUrl = (value, fallback) => {
@@ -182,11 +137,6 @@ const normalizeHttpUrl = (value, fallback) => {
   } catch {
     return fallback;
   }
-};
-
-const clampSpeed = (value) => {
-  const speed = Number(value);
-  return Number.isFinite(speed) ? Math.min(4, Math.max(0.25, speed)) : 1;
 };
 
 const normalizeStoredSettings = (candidate) => {
@@ -205,15 +155,6 @@ const normalizeStoredSettings = (candidate) => {
       : llmModels.includes(candidateLlmModel)
         ? candidateLlmModel
         : getDefaultModel(llmProvider);
-  const ttsProvider =
-    getTtsProvider(ttsCandidate?.provider) ?? getTtsProvider('openai');
-  const candidateTtsModel =
-    typeof ttsCandidate?.model === 'string' ? ttsCandidate.model.trim() : '';
-  const ttsModel =
-    ttsProvider.models.length === 0 ||
-    ttsProvider.models.includes(candidateTtsModel)
-      ? candidateTtsModel || ttsProvider.defaultModel
-      : ttsProvider.defaultModel;
 
   return {
     llm: {
@@ -226,20 +167,7 @@ const normalizeStoredSettings = (candidate) => {
       endpoint: normalizeHttpUrl(llmCandidate?.endpoint, defaults.llm.endpoint),
       persona: resolvePersona(llmCandidate?.persona),
     },
-    tts: {
-      provider: ttsProvider.provider,
-      model: ttsModel,
-      voice:
-        typeof ttsCandidate?.voice === 'string'
-          ? ttsCandidate.voice.trim()
-          : ttsProvider.defaultVoice,
-      apiKey:
-        typeof ttsCandidate?.apiKey === 'string'
-          ? ttsCandidate.apiKey.trim()
-          : '',
-      endpoint: normalizeHttpUrl(ttsCandidate?.endpoint, defaults.tts.endpoint),
-      speed: clampSpeed(ttsCandidate?.speed),
-    },
+    tts: normalizeStoredTtsSettings(ttsCandidate),
   };
 };
 
@@ -277,14 +205,6 @@ const isLlmConfigured = (candidate) => {
     : Boolean(candidate.apiKey);
 };
 
-const isTtsConfigured = (candidate) => {
-  const provider = getTtsProvider(candidate.provider);
-  if (!provider || !candidate.model) return false;
-  if (provider.provider === 'mock') return true;
-  if (provider.supportsCustomEndpoint && !candidate.endpoint) return false;
-  return !provider.requiresApiKey || Boolean(candidate.apiKey);
-};
-
 const maskApiKey = (apiKey) => {
   if (!apiKey) return '';
   if (apiKey.length <= 4) return '••••';
@@ -308,6 +228,7 @@ const adminSettingsResponse = () => ({
     hasApiKey: Boolean(settings.tts.apiKey),
     endpoint: settings.tts.endpoint,
     speed: settings.tts.speed,
+    groupId: settings.tts.groupId,
   },
 });
 
@@ -377,7 +298,15 @@ const validateSettingsPayload = (payload) => {
   );
   assertObjectWithKeys(
     payload.tts,
-    new Set(['provider', 'model', 'voice', 'apiKey', 'endpoint', 'speed']),
+    new Set([
+      'provider',
+      'model',
+      'voice',
+      'apiKey',
+      'endpoint',
+      'speed',
+      'groupId',
+    ]),
     'TTS settings',
   );
 
@@ -412,33 +341,7 @@ const validateSettingsPayload = (payload) => {
         )
       : settings.llm.endpoint;
 
-  const ttsProvider = getTtsProvider(payload.tts.provider);
-  if (!ttsProvider) throw new Error('Select a registered TTS provider.');
-  if (typeof payload.tts.model !== 'string' || !payload.tts.model.trim()) {
-    throw new Error('A TTS model is required.');
-  }
-  const ttsModel = payload.tts.model.trim();
-  if (ttsProvider.models.length > 0 && !ttsProvider.models.includes(ttsModel)) {
-    throw new Error('Select a model registered for the TTS provider.');
-  }
-  for (const key of ['apiKey', 'endpoint', 'voice']) {
-    if (
-      payload.tts[key] !== undefined &&
-      typeof payload.tts[key] !== 'string'
-    ) {
-      throw new Error(`TTS ${key} must be text.`);
-    }
-  }
-  const speed = Number(payload.tts.speed);
-  if (!Number.isFinite(speed) || speed < 0.25 || speed > 4) {
-    throw new Error('TTS speed must be between 0.25 and 4.');
-  }
-  const ttsEndpoint = ttsProvider.supportsCustomEndpoint
-    ? validateHttpUrl(
-        payload.tts.endpoint?.trim() || settings.tts.endpoint,
-        'The speech endpoint',
-      )
-    : settings.tts.endpoint;
+  const nextTtsSettings = validateTtsSettings(payload.tts, settings.tts);
 
   const nextSettings = {
     llm: {
@@ -448,24 +351,11 @@ const validateSettingsPayload = (payload) => {
       endpoint: llmEndpoint,
       persona: resolvePersona(payload.llm.persona),
     },
-    tts: {
-      provider: ttsProvider.provider,
-      model: ttsModel,
-      voice:
-        payload.tts.voice?.trim() ||
-        ttsProvider.defaultVoice ||
-        settings.tts.voice,
-      apiKey: payload.tts.apiKey?.trim() || settings.tts.apiKey,
-      endpoint: ttsEndpoint,
-      speed,
-    },
+    tts: nextTtsSettings,
   };
 
   if (!isLlmConfigured(nextSettings.llm)) {
     throw new Error('The LLM provider requires a server-side API key.');
-  }
-  if (!isTtsConfigured(nextSettings.tts)) {
-    throw new Error('The TTS provider requires a server-side API key.');
   }
   return nextSettings;
 };
@@ -683,49 +573,14 @@ const handleSupportTts = async (req, res) => {
     return;
   }
 
-  const endpoint =
-    currentSettings.provider === 'openai'
-      ? OPENAI_TTS_ENDPOINT
-      : currentSettings.endpoint;
-  const headers = { 'Content-Type': 'application/json' };
-  if (currentSettings.apiKey) {
-    headers.Authorization = `Bearer ${currentSettings.apiKey}`;
-  }
-  const upstreamPayload = {
-    model: currentSettings.model,
-    input,
-    speed: currentSettings.speed,
-    ...(currentSettings.voice ? { voice: currentSettings.voice } : {}),
-  };
-
   try {
-    const upstream = await fetch(endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(upstreamPayload),
-      signal: AbortSignal.timeout(90_000),
-    });
-    if (!upstream.ok) {
-      const detail = await upstream.text().catch(() => '');
-      console.error('TTS provider request failed:', upstream.status, detail);
-      sendJson(res, 502, {
-        error: 'The TTS provider request failed.',
-      });
-      return;
-    }
-    const contentLength = Number(upstream.headers.get('content-length') || 0);
-    if (contentLength > MAX_AUDIO_BYTES) {
-      sendJson(res, 502, { error: 'The TTS response is too large.' });
-      return;
-    }
-    const audio = Buffer.from(await upstream.arrayBuffer());
+    const audio = await synthesizeTtsAudio(currentSettings, input);
     if (audio.length > MAX_AUDIO_BYTES) {
       sendJson(res, 502, { error: 'The TTS response is too large.' });
       return;
     }
     res.writeHead(200, {
-      'Content-Type':
-        upstream.headers.get('content-type') || 'application/octet-stream',
+      'Content-Type': detectAudioContentType(audio),
       'Content-Length': audio.length,
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
@@ -735,6 +590,41 @@ const handleSupportTts = async (req, res) => {
     console.error('TTS proxy request failed:', error);
     sendJson(res, 502, {
       error: 'The TTS request failed. Check the server configuration.',
+    });
+  }
+};
+
+const handleTtsVoiceList = async (req, res) => {
+  let payload;
+  try {
+    payload = await readJsonBody(req);
+    assertObjectWithKeys(
+      payload,
+      new Set(['provider', 'endpoint', 'apiKey']),
+      'Voice list request',
+    );
+    for (const key of ['provider', 'endpoint', 'apiKey']) {
+      if (payload[key] !== undefined && typeof payload[key] !== 'string') {
+        throw new Error(`Voice list ${key} must be text.`);
+      }
+    }
+    const provider = getTtsProvider(payload.provider);
+    if (!provider) throw new Error('Select a registered TTS provider.');
+    const sameProvider = provider.provider === settings.tts.provider;
+    const voices = await getTtsVoiceList({
+      provider: provider.provider,
+      endpoint:
+        payload.endpoint?.trim() ||
+        (sameProvider ? settings.tts.endpoint : provider.defaultEndpoint),
+      apiKey:
+        payload.apiKey?.trim() || (sameProvider ? settings.tts.apiKey : ''),
+    });
+    sendJson(res, 200, { voices });
+  } catch (error) {
+    console.error('TTS voice-list request failed:', error);
+    sendJson(res, 502, {
+      error:
+        'The voice list could not be loaded. Enter a voice or speaker ID manually.',
     });
   }
 };
@@ -832,8 +722,14 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/api/admin/providers' && req.method === 'GET') {
     sendJson(res, 200, {
       llm: getLlmProviderRecords(),
-      tts: TTS_PROVIDERS,
+      tts: getTtsProviderRecords(),
+      ttsExcluded: getExcludedTtsProviderRecords(),
     });
+    return;
+  }
+
+  if (url.pathname === '/api/admin/tts/voices' && req.method === 'POST') {
+    await handleTtsVoiceList(req, res);
     return;
   }
 

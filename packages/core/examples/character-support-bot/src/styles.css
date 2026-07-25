@@ -1484,6 +1484,46 @@ code {
   gap: 8px;
 }
 
+.voice-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.voice-list-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.voice-list-controls button {
+  padding: 7px 10px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.voice-list-controls button:disabled {
+  border-color: var(--color-disabled);
+  color: var(--color-disabled-text);
+  cursor: wait;
+}
+
+.voice-list-controls span {
+  color: var(--color-text-muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.voice-list-controls span.is-error {
+  color: var(--color-accent);
+}
+
 .settings-grid label > span {
   font-size: 10px;
   font-weight: 700;

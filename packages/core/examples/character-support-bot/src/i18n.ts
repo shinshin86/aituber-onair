@@ -128,7 +128,13 @@ interface TranslationRecord {
     persona: string;
     voice: string;
     speed: string;
-    optionalVoice: string;
+    voiceId: string;
+    loadVoices: string;
+    loadingVoices: string;
+    voicesLoaded: string;
+    voiceListUnavailable: string;
+    groupId: string;
+    enterGroupId: string;
     mockProviderLabel: string;
     mockNote: string;
     save: string;
@@ -294,7 +300,14 @@ export const translations: Record<Language, TranslationRecord> = {
       persona: 'Character persona',
       voice: 'Voice',
       speed: 'Speed',
-      optionalVoice: 'Optional voice ID',
+      voiceId: 'Voice or speaker ID',
+      loadVoices: 'Load available voices',
+      loadingVoices: 'Loading voices…',
+      voicesLoaded: '{count} voices loaded. You can also enter an ID manually.',
+      voiceListUnavailable:
+        'The voice list is unavailable. Enter a voice or speaker ID manually.',
+      groupId: 'Group ID',
+      enterGroupId: 'Enter the MiniMax Group ID',
       mockProviderLabel: 'Built-in mock (development)',
       mockNote:
         'The built-in mock returns a short generated WAV for local lip-sync testing. It is not a production TTS provider.',
@@ -457,7 +470,15 @@ export const translations: Record<Language, TranslationRecord> = {
       persona: 'キャラクターのペルソナ',
       voice: '音声',
       speed: '速度',
-      optionalVoice: '任意の音声ID',
+      voiceId: '音声または話者ID',
+      loadVoices: '利用可能な音声を取得',
+      loadingVoices: '音声一覧を取得中…',
+      voicesLoaded:
+        '{count}件の音声を取得しました。IDを直接入力することもできます。',
+      voiceListUnavailable:
+        '音声一覧を取得できませんでした。音声または話者IDを直接入力してください。',
+      groupId: 'グループID',
+      enterGroupId: 'MiniMaxのグループIDを入力',
       mockProviderLabel: '組み込みモック（開発用）',
       mockNote:
         '組み込みモックは、ローカルのリップシンク確認用に短いWAVを生成します。本番用のTTSプロバイダーではありません。',

@@ -11,9 +11,24 @@ export interface ProviderRecord {
   voices?: string[];
   defaultModel: string;
   defaultVoice?: string;
+  defaultEndpoint?: string;
   requiresApiKey: boolean;
+  acceptsApiKey?: boolean;
   supportsCustomEndpoint: boolean;
+  supportsVoiceList?: boolean;
+  supportsSpeed?: boolean;
+  speedMin?: number;
+  speedMax?: number;
+  speedStep?: number;
+  modelRequired?: boolean;
+  voiceRequired?: boolean;
+  requiresGroupId?: boolean;
   developmentOnly?: boolean;
+}
+
+export interface VoiceOption {
+  id: string;
+  label: string;
 }
 
 export interface AdminSettings {
@@ -33,6 +48,7 @@ export interface AdminSettings {
     hasApiKey: boolean;
     endpoint: string;
     speed: number;
+    groupId: string;
   };
 }
 
@@ -48,6 +64,7 @@ export interface AdminSettingsInput {
 interface ProvidersResponse {
   llm: ProviderRecord[];
   tts: ProviderRecord[];
+  ttsExcluded: Array<{ provider: string; reason: string }>;
 }
 
 const readError = async (response: Response): Promise<string> => {
@@ -85,4 +102,19 @@ export const saveAdminSettings = (
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(settings),
+  });
+
+export const getTtsVoices = (
+  provider: string,
+  endpoint: string,
+  apiKey?: string,
+): Promise<{ voices: VoiceOption[] }> =>
+  requestJson<{ voices: VoiceOption[] }>('/api/admin/tts/voices', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      provider,
+      endpoint,
+      ...(apiKey?.trim() ? { apiKey: apiKey.trim() } : {}),
+    }),
   });

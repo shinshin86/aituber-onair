@@ -49,7 +49,7 @@ Node server
     -> @aituber-onair/chat -> configured LLM provider
     <- OpenAI-compatible SSE
   /api/support/tts
-    -> configured OpenAI or OpenAI-compatible speech endpoint
+    -> @aituber-onair/voice -> configured server-capable voice engine
     <- audio bytes
 ```
 
@@ -128,13 +128,24 @@ model ID.
 
 ### TTS
 
-The example supports:
+The server discovers engines from `@aituber-onair/voice` capabilities and uses
+the package's adapters for synthesis. The general rule is that an engine must
+run in a Node/server runtime and return audio bytes to the same-origin speech
+route.
 
-- **OpenAI**: predefined models and voices; a key is required.
-- **OpenAI-compatible**: a full `/v1/audio/speech`-style URL, model, optional
-  voice, and optional key.
-- **Built-in mock**: generates a short PCM WAV for local UI, playback, and
-  lip-sync checks. It is not a production voice.
+The current server-capable engines are VOICEVOX, VOICEPEAK, OpenAI, xAI,
+Unreal Speech, ElevenLabs, Inworld, Gradium, Gemini TTS, OpenAI-compatible,
+AivisSpeech, Aivis Cloud API, and MiniMax. The built-in mock remains available
+for local playback and lip-sync checks.
+
+Browser-only PiperPlus and Web Speech are excluded. The `none` engine is also
+excluded because it intentionally returns no audio. `/api/admin/providers`
+includes these exclusion reasons alongside the selectable providers.
+
+VOICEVOX and AivisSpeech use configurable local endpoints without API keys.
+Providers with a voice-list API can load choices in `/admin`; if that API is
+unreachable, the voice field remains editable so a voice or speaker ID can be
+entered manually. Provider credentials are used only by the Node server.
 
 The browser always uses Core's `openaiCompatible` voice engine against the
 local proxy, regardless of which upstream TTS provider the server uses.
@@ -186,6 +197,8 @@ After building, `npm run server` serves `dist` and the API together at
   renderer integration.
 - `server/index.js`: static server, masked admin settings, LLM SSE adapter, and
   TTS proxy.
+- `server/tts-providers.js`: capability-driven server engine catalog, settings
+  validation, voice-list loading, and `@aituber-onair/voice` adapter mapping.
 - `server/core-package-knowledge.md`: curated support knowledge supplied by the
   server.
 
