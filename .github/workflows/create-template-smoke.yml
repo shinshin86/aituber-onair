@@ -40,6 +40,8 @@ jobs:
         id: pack-core
         working-directory: packages/core
         run: |
+          npm -w @aituber-onair/chat run build
+          npm -w @aituber-onair/voice run build
           npm run build
           mkdir -p "$RUNNER_TEMP/core-package"
           npm pack --pack-destination "$RUNNER_TEMP/core-package"
