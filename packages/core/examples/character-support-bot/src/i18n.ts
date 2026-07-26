@@ -129,6 +129,8 @@ interface TranslationRecord {
     voice: string;
     speed: string;
     voiceId: string;
+    selectVoice: string;
+    unknownSavedVoice: string;
     loadVoices: string;
     loadingVoices: string;
     voicesLoaded: string;
@@ -302,9 +304,11 @@ export const translations: Record<Language, TranslationRecord> = {
       voice: 'Voice',
       speed: 'Speed',
       voiceId: 'Voice or speaker ID',
+      selectVoice: 'Select a voice',
+      unknownSavedVoice: 'Unknown (saved: {id})',
       loadVoices: 'Load available voices',
       loadingVoices: 'Loading voices…',
-      voicesLoaded: '{count} voices loaded. You can also enter an ID manually.',
+      voicesLoaded: '{count} voices loaded. Select a voice by name.',
       voiceListUnavailable:
         'The voice list is unavailable. Enter a voice or speaker ID manually.',
       groupId: 'Group ID',
@@ -472,10 +476,11 @@ export const translations: Record<Language, TranslationRecord> = {
       voice: '音声',
       speed: '速度',
       voiceId: '音声または話者ID',
+      selectVoice: '音声を選択',
+      unknownSavedVoice: '不明（保存済み: {id}）',
       loadVoices: '利用可能な音声を取得',
       loadingVoices: '音声一覧を取得中…',
-      voicesLoaded:
-        '{count}件の音声を取得しました。IDを直接入力することもできます。',
+      voicesLoaded: '{count}件の音声を取得しました。話者名から選択できます。',
       voiceListUnavailable:
         '音声一覧を取得できませんでした。音声または話者IDを直接入力してください。',
       groupId: 'グループID',

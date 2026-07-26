@@ -14,6 +14,11 @@ import {
   type DefaultPersonas,
   resolvePersonaForLanguage,
 } from './personaLanguage';
+import {
+  buildVoiceSelectOptions,
+  shouldUseVoiceSelect,
+  type VoiceListStatus,
+} from './voiceSelection';
 
 interface SettingsDraft {
   llm: {
@@ -87,9 +92,8 @@ export default function AdminPage({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [voiceOptions, setVoiceOptions] = useState<VoiceOption[]>([]);
-  const [voiceListStatus, setVoiceListStatus] = useState<
-    'idle' | 'loading' | 'loaded' | 'error'
-  >('idle');
+  const [voiceListStatus, setVoiceListStatus] =
+    useState<VoiceListStatus>('idle');
   const [feedback, setFeedback] = useState<
     | {
         kind: 'success' | 'error';
@@ -313,15 +317,11 @@ export default function AdminPage({
       (!selectedLlm?.supportsCustomEndpoint || draft.llm.endpoint.trim()) &&
       (!selectedTts?.supportsCustomEndpoint || draft.tts.endpoint.trim()),
   );
-  const combinedVoiceOptions = [
-    ...(selectedTts?.voices ?? []).map((voice) => ({
-      id: voice,
-      label: voice,
-    })),
-    ...voiceOptions,
-  ].filter(
-    (voice, index, voices) =>
-      voices.findIndex((candidate) => candidate.id === voice.id) === index,
+  const useVoiceSelect = shouldUseVoiceSelect(voiceListStatus, voiceOptions);
+  const selectableVoiceOptions = buildVoiceSelectOptions(
+    voiceOptions,
+    draft?.tts.voice ?? '',
+    t.admin.unknownSavedVoice,
   );
 
   return (
@@ -535,24 +535,39 @@ export default function AdminPage({
                 <div className="voice-field">
                   <label>
                     <span>{t.admin.voice}</span>
-                    <input
-                      list="tts-voice-options"
-                      value={draft.tts.voice}
-                      onChange={(event) =>
-                        setDraft({
-                          ...draft,
-                          tts: { ...draft.tts, voice: event.target.value },
-                        })
-                      }
-                      placeholder={t.admin.voiceId}
-                    />
-                    <datalist id="tts-voice-options">
-                      {combinedVoiceOptions.map((voice) => (
-                        <option key={voice.id} value={voice.id}>
-                          {voice.label}
-                        </option>
-                      ))}
-                    </datalist>
+                    {useVoiceSelect ? (
+                      <select
+                        value={draft.tts.voice}
+                        onChange={(event) =>
+                          setDraft({
+                            ...draft,
+                            tts: { ...draft.tts, voice: event.target.value },
+                          })
+                        }
+                      >
+                        {!draft.tts.voice && (
+                          <option value="" disabled>
+                            {t.admin.selectVoice}
+                          </option>
+                        )}
+                        {selectableVoiceOptions.map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        value={draft.tts.voice}
+                        onChange={(event) =>
+                          setDraft({
+                            ...draft,
+                            tts: { ...draft.tts, voice: event.target.value },
+                          })
+                        }
+                        placeholder={t.admin.voiceId}
+                      />
+                    )}
                   </label>
                   {selectedTts?.supportsVoiceList && (
                     <div className="voice-list-controls">
