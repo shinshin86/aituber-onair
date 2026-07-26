@@ -3,7 +3,7 @@ import type { Message, MessageWithVision } from '../../../types';
 export function convertMessagesToClaudeFormat(messages: Message[]): any[] {
   return messages.map((msg) => ({
     role: mapRoleToClaude(msg.role),
-    content: msg.content,
+    content: msg.provider_content ?? msg.content,
   }));
 }
 
@@ -11,6 +11,13 @@ export function convertVisionMessagesToClaudeFormat(
   messages: MessageWithVision[],
 ): any[] {
   return messages.map((msg) => {
+    if (msg.provider_content) {
+      return {
+        role: mapRoleToClaude(msg.role),
+        content: msg.provider_content,
+      };
+    }
+
     if (typeof msg.content === 'string') {
       return {
         role: mapRoleToClaude(msg.role),

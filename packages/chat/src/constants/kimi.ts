@@ -8,13 +8,13 @@ export const MODEL_KIMI_K2_7_CODE_HIGHSPEED = 'kimi-k2.7-code-highspeed';
 export const MODEL_KIMI_K2_6 = 'kimi-k2.6';
 export const MODEL_KIMI_K2_5 = 'kimi-k2.5';
 
-export type KimiReasoningEffort = 'max';
+export type KimiReasoningEffort = 'low' | 'high' | 'max';
 
 const KIMI_REASONING_EFFORTS_BY_MODEL: Record<
   string,
   readonly KimiReasoningEffort[]
 > = {
-  [MODEL_KIMI_K3]: ['max'],
+  [MODEL_KIMI_K3]: ['low', 'high', 'max'],
 };
 
 // Vision support for models
@@ -53,6 +53,15 @@ export function getKimiSupportedReasoningEfforts(
   model: string,
 ): readonly KimiReasoningEffort[] {
   return KIMI_REASONING_EFFORTS_BY_MODEL[model] ?? [];
+}
+
+/**
+ * Get the official default reasoning effort for a Kimi model.
+ */
+export function getDefaultKimiReasoningEffort(
+  model: string,
+): KimiReasoningEffort | undefined {
+  return model === MODEL_KIMI_K3 ? 'max' : undefined;
 }
 
 /**

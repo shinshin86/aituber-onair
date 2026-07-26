@@ -10,6 +10,7 @@ import {
   allowsReasoningMinimal,
   allowsReasoningNone,
   allowsReasoningXHigh,
+  getClaudeSupportedReasoningEfforts,
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
   getGeminiSupportedReasoningEfforts,
@@ -19,7 +20,9 @@ import {
   isResponsesOnlyGPT5Model,
   isOpenRouterFreeModel,
   refreshOpenRouterFreeModels,
+  normalizeClaudeReasoningEffort,
   normalizeGeminiReasoningEffort,
+  type ClaudeReasoningEffort,
   type GeminiReasoningEffort,
   // OpenAI models
   MODEL_GPT_5_NANO,
@@ -54,6 +57,7 @@ import {
   MODEL_CLAUDE_4_7_OPUS,
   MODEL_CLAUDE_4_8_OPUS,
   MODEL_CLAUDE_5_SONNET,
+  MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_3_HAIKU,
   // Gemini models
   MODEL_GEMMA_4_31B_IT,
@@ -71,13 +75,23 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   // OpenRouter models
+  MODEL_ANTHROPIC_CLAUDE_OPUS_5,
   MODEL_GPT_OSS_20B_FREE,
+  MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
+  MODEL_GOOGLE_GEMINI_3_6_FLASH,
+  MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
+  MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
+  MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_K2_5,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENROUTER_AUTO,
+  MODEL_OPENROUTER_AUTO_BETA,
   MODEL_OPENROUTER_FUSION,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
+  MODEL_OPENAI_GPT_5_6_SOL,
+  MODEL_OPENAI_GPT_5_6_TERRA,
+  MODEL_OPENAI_GPT_5_6_LUNA,
   MODEL_OPENAI_GPT_5_5_PRO,
   MODEL_OPENAI_GPT_5_5,
   MODEL_OPENAI_GPT_5_1_CHAT,
@@ -104,6 +118,8 @@ import {
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_ZAI_GLM_4_5_AIR_FREE,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
+  MODEL_XAI_GROK_4_5,
+  MODEL_XAI_GROK_LATEST,
   // Z.ai models
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
@@ -590,6 +606,12 @@ export const allModels: ProviderModel[] = [
 
   // Claude models
   {
+    id: MODEL_CLAUDE_5_OPUS,
+    name: 'Claude Opus 5',
+    provider: 'claude',
+    default: false,
+  },
+  {
     id: MODEL_CLAUDE_5_SONNET,
     name: 'Claude Sonnet 5',
     provider: 'claude',
@@ -750,6 +772,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_OPENROUTER_AUTO_BETA,
+    name: 'Auto Router Beta (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_OPENROUTER_FUSION,
     name: 'Fusion (OpenRouter)',
     provider: 'openrouter',
@@ -770,6 +798,24 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_OPENAI_GPT_MINI_LATEST,
     name: 'GPT Mini Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_5_6_SOL,
+    name: 'GPT-5.6 Sol (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_5_6_TERRA,
+    name: 'GPT-5.6 Terra (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_5_6_LUNA,
+    name: 'GPT-5.6 Luna (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -840,6 +886,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+    name: 'Claude Opus 5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_ANTHROPIC_CLAUDE_OPUS_4,
     name: 'Claude 4 Opus (OpenRouter)',
     provider: 'openrouter',
@@ -878,6 +930,18 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GOOGLE_GEMINI_FLASH_LATEST,
     name: 'Gemini Flash Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_3_6_FLASH,
+    name: 'Gemini 3.6 Flash (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
+    name: 'Gemini 3.5 Flash Lite (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -924,8 +988,26 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_XAI_GROK_LATEST,
+    name: 'Grok Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_XAI_GROK_4_5,
+    name: 'Grok 4.5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_MOONSHOTAI_KIMI_LATEST,
     name: 'Kimi Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_MOONSHOTAI_KIMI_K3,
+    name: 'Kimi K3 (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -938,6 +1020,18 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_MOONSHOTAI_KIMI_K2_5,
     name: 'Kimi K2.5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
+    name: 'KAT-Coder-Air V2.5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
+    name: 'KAT-Coder-Pro V2.5 (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -1305,6 +1399,24 @@ export default function ProviderSelector({
     provider === 'xai' && isXaiReasoningEffortNoneModel(selectedModel);
   const isKimiReasoningModel =
     provider === 'kimi' && isKimiReasoningEffortModel(selectedModel);
+  const claudeSupportedReasoningEfforts =
+    provider === 'claude'
+      ? getClaudeSupportedReasoningEfforts(selectedModel)
+      : [];
+  const isClaudeReasoningModel =
+    provider === 'claude' && claudeSupportedReasoningEfforts.length > 0;
+  const requestedClaudeReasoningEffort: ClaudeReasoningEffort | undefined =
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'medium' ||
+    reasoning_effort === 'high' ||
+    reasoning_effort === 'xhigh' ||
+    reasoning_effort === 'max'
+      ? reasoning_effort
+      : undefined;
+  const claudeReasoningEffort = normalizeClaudeReasoningEffort(
+    selectedModel,
+    requestedClaudeReasoningEffort,
+  );
   const geminiSupportedReasoningEfforts =
     provider === 'gemini'
       ? getGeminiSupportedReasoningEfforts(selectedModel)
@@ -1755,6 +1867,43 @@ export default function ProviderSelector({
             </div>
           )}
 
+          {provider === 'claude' && (
+            <div className="config-group">
+              <label htmlFor="claude-reasoning-effort">Claude Effort</label>
+              <select
+                id="claude-reasoning-effort"
+                value={claudeReasoningEffort ?? ''}
+                onChange={(e) =>
+                  onReasoningEffortChange?.(
+                    e.target.value as ClaudeReasoningEffort,
+                  )
+                }
+                disabled={disabled || !isClaudeReasoningModel}
+                className="select-input"
+              >
+                {!isClaudeReasoningModel && (
+                  <option value="">Not available</option>
+                )}
+                {claudeSupportedReasoningEfforts.map((effort) => (
+                  <option key={effort} value={effort}>
+                    {effort === 'low'
+                      ? 'Low (fastest)'
+                      : effort === 'high'
+                        ? 'High (API default)'
+                        : effort === 'xhigh'
+                          ? 'XHigh'
+                          : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                  </option>
+                ))}
+              </select>
+              <span className="helper-text">
+                {isClaudeReasoningModel
+                  ? 'Mapped to Claude output_config.effort. Lower effort prioritizes latency and token efficiency.'
+                  : 'The selected Claude model does not expose configurable effort.'}
+              </span>
+            </div>
+          )}
+
           {isGPT5 && (
             <>
               <div className="config-group">
@@ -2159,15 +2308,28 @@ export default function ProviderSelector({
                   </label>
                   <select
                     id="kimi-reasoning-effort"
-                    value="max"
-                    disabled
+                    value={
+                      reasoning_effort === 'low' ||
+                      reasoning_effort === 'high' ||
+                      reasoning_effort === 'max'
+                        ? reasoning_effort
+                        : 'max'
+                    }
+                    onChange={(e) =>
+                      onReasoningEffortChange?.(
+                        e.target.value as 'low' | 'high' | 'max',
+                      )
+                    }
+                    disabled={disabled}
                     className="select-input"
                   >
-                    <option value="max">Max (currently required)</option>
+                    <option value="low">Low</option>
+                    <option value="high">High</option>
+                    <option value="max">Max (default)</option>
                   </select>
                   <span className="helper-text">
-                    Kimi K3 currently supports max only. Lower levels will be
-                    added after the official API supports them.
+                    Kimi K3 always reasons. Use Low for shorter reasoning or Max
+                    for the API default.
                   </span>
                 </div>
               ) : (

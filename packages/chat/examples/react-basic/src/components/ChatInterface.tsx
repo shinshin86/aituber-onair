@@ -4,6 +4,7 @@ import type { VisionSupportLevel } from '@aituber-onair/chat';
 interface ChatInterfaceProps {
   onSendMessage: (message: string, imageData?: string) => void;
   disabled: boolean;
+  disabledPlaceholder?: string;
   isLoading: boolean;
   onClearChat: () => void;
   visionSupportLevel: VisionSupportLevel;
@@ -12,6 +13,7 @@ interface ChatInterfaceProps {
 export default function ChatInterface({
   onSendMessage,
   disabled,
+  disabledPlaceholder,
   isLoading,
   onClearChat,
   visionSupportLevel,
@@ -84,7 +86,8 @@ export default function ChatInterface({
             onChange={(e) => setMessage(e.target.value)}
             placeholder={
               disabled
-                ? 'Enter API key above to start chatting...'
+                ? (disabledPlaceholder ??
+                  'Enter API key above to start chatting...')
                 : 'Type your message...'
             }
             disabled={disabled}

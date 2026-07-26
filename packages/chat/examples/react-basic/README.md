@@ -100,11 +100,25 @@ react-basic/
 ### Response Length Control
 
 Use the dropdown to select response length:
-- Very Short: ~50 tokens
+- Very Short: ~40 tokens
 - Short: ~100 tokens
 - Medium: ~200 tokens (default)
-- Long: ~500 tokens
+- Long: ~300 tokens
 - Very Long: ~1000 tokens
+- Deep: ~5000 tokens
+
+OpenRouter dynamic routers (`openrouter/auto` and `openrouter/auto-beta`) do not
+send token limits derived from these presets because a routed reasoning model
+can consume the output budget before producing visible text. Use a length
+instruction in the prompt when selecting either router.
+
+For Gemini Nano, the presets also apply concrete sentence-count guidance:
+`Very Short` up to 1 sentence, `Short` up to 2, `Medium` up to 3, `Long` up
+to 5, and `Very Long` up to 10. `Deep` has no sentence-count limit. The
+example supplies two short Japanese user/assistant examples through
+`initialPrompts` only for `Very Short` and `Short`, so longer presets are not
+biased toward one-sentence answers. Chat input remains disabled until the
+built-in model status is `available`.
 
 ### Provider-Specific Features
 
@@ -121,8 +135,9 @@ Use the dropdown to select response length:
 - Best for: local LLMs (Ollama/LM Studio/vLLM-compatible endpoints)
 
 **Claude**
-- Models: Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude 4.5 (Opus, Sonnet, Haiku), plus deprecated-but-still-available Claude 4 (Sonnet, Opus) and Claude 3 Haiku
+- Models: Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude 4.5 (Opus, Sonnet, Haiku), plus deprecated-but-still-available Claude 4 (Sonnet, Opus) and Claude 3 Haiku
 - Vision: All listed Claude models
+- Effort: Supported models expose model-aware Low/Medium/High/XHigh/Max options. The control maps to `output_config.effort` and defaults to High.
 - Best for: Long context, tool use + advanced reasoning
 
 **Gemini**
@@ -132,9 +147,11 @@ Use the dropdown to select response length:
 - Best for: Fast responses, cost-effective. Minimal thinking keeps chat latency and hidden-token usage low.
 
 **OpenRouter**
-- Models: Curated multi-provider model list (OpenRouter Auto/Fusion, OpenAI/Claude/Gemini latest aliases, OpenAI GPT-5.5, Z.ai, Kimi)
+- Models: Curated multi-provider model list (OpenRouter Auto/Auto Beta/Fusion, OpenAI GPT-5.6, Claude Opus 5, Gemini 3.6/3.5, Z.ai, xAI, Kimi K3, KAT-Coder V2.5)
 - Vision: Depends on selected routed model
 - Best for: Flexible model routing and unified API usage
+- Auto Beta: Selects a model per request and charges the selected model's rate
+- Coding models: KAT-Coder-Air/Pro V2.5 are explicit text-only options, not defaults
 - Fusion Cost: `openrouter/fusion` bills the combined underlying model calls and any enabled web search/fetch usage
 - Dynamic Free Models: Click `Fetch free models` to probe currently available `:free` models and append working IDs to the model list
 - Max candidates: Adjustable in UI (default `1`) to control probe request volume
@@ -155,8 +172,8 @@ Use the dropdown to select response length:
 **Kimi**
 - Models: Kimi K3, Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6, Kimi K2.5
 - Vision: Supported
-- Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K3 is an explicit max-reasoning option, and Kimi K2.7 Code models are coding-oriented.
-- Kimi K3 reasoning: `max` only until the official API exposes lower reasoning levels.
+- Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K3 is an explicit reasoning option, and Kimi K2.7 Code models are coding-oriented.
+- Kimi K3 reasoning: selectable `low`, `high`, or `max`, with `max` as the API default. Reasoning cannot be disabled.
 
 **DeepSeek**
 - Models: DeepSeek V4 Flash, DeepSeek V4 Pro

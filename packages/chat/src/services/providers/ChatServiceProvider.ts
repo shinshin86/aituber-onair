@@ -1,6 +1,7 @@
 import { ChatService } from '../ChatService';
 import { ChatResponseLength, GPT5PresetKey } from '../../constants/chat';
 import type { GeminiReasoningEffort } from '../../constants/gemini';
+import type { ClaudeReasoningEffort } from '../../constants/claude';
 import type { MistralReasoningEffort } from '../../constants/mistral';
 import type { PlamoReasoningEffort } from '../../constants/plamo';
 import type { XaiReasoningEffort } from '../../constants/xai';
@@ -112,20 +113,24 @@ export type GeminiChatServiceOptions = DisallowKeys<
   mcpServers?: MCPServerConfig[];
 };
 
-export type ClaudeChatServiceOptions = DisallowKeys<
-  BaseChatServiceOptions,
-  | 'endpoint'
-  | 'baseUrl'
-  | 'verbosity'
-  | 'reasoning_effort'
-  | 'gpt5Preset'
-  | 'gpt5EndpointPreference'
-  | 'enableReasoningSummary'
-  | 'includeReasoning'
-  | 'reasoningMaxTokens'
-  | 'responseFormat'
-  | 'thinking'
+export type ClaudeChatServiceOptions = Omit<
+  DisallowKeys<
+    BaseChatServiceOptions,
+    | 'endpoint'
+    | 'baseUrl'
+    | 'verbosity'
+    | 'gpt5Preset'
+    | 'gpt5EndpointPreference'
+    | 'enableReasoningSummary'
+    | 'includeReasoning'
+    | 'reasoningMaxTokens'
+    | 'responseFormat'
+    | 'thinking'
+  >,
+  'reasoning_effort'
 > & {
+  /** Claude output effort, mapped to output_config.effort. */
+  reasoning_effort?: ClaudeReasoningEffort;
   mcpServers?: MCPServerConfig[];
 };
 
@@ -141,7 +146,7 @@ export type KimiChatServiceOptions = Omit<
   >,
   'reasoning_effort'
 > & {
-  /** Kimi K3 reasoning effort. Currently only max is supported. */
+  /** Kimi K3 reasoning effort. Defaults to max. */
   reasoning_effort?: KimiReasoningEffort;
 };
 
@@ -235,6 +240,11 @@ export type XAIChatServiceOptions = DisallowKeys<
   reasoning_effort?: XaiReasoningEffort;
 };
 
+export type GeminiNanoInitialPrompt = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
 export type GeminiNanoChatServiceOptions = {
   /** API Key is not needed for Gemini Nano (browser built-in AI) */
   apiKey?: never;
@@ -242,7 +252,12 @@ export type GeminiNanoChatServiceOptions = {
   model?: string;
   /** Response length setting */
   responseLength?: ChatResponseLength;
-  /** Expected input languages for the Prompt API (default: ['ja']) */
+  /**
+   * Initial system instructions and few-shot examples for the Prompt API.
+   * System prompts are normalized to the first entry before session creation.
+   */
+  initialPrompts?: GeminiNanoInitialPrompt[];
+  /** Expected input languages for the Prompt API (default: ['ja', 'en']) */
   expectedInputLanguages?: string[];
   /** Expected output languages for the Prompt API (default: ['ja']) */
   expectedOutputLanguages?: string[];

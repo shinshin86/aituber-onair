@@ -5,6 +5,7 @@ import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   KimiReasoningEffort,
   MODEL_KIMI_K2_6,
+  getDefaultKimiReasoningEffort,
   getKimiSupportedReasoningEfforts,
   isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
@@ -85,10 +86,7 @@ export class KimiChatService implements ChatService {
       );
     }
     this.reasoningEffort =
-      reasoningEffort ??
-      (isKimiReasoningEffortModel(model)
-        ? supportedReasoningEfforts[0]
-        : undefined);
+      reasoningEffort ?? getDefaultKimiReasoningEffort(model);
 
     this.visionModel = visionModel;
   }
@@ -253,7 +251,8 @@ export class KimiChatService implements ChatService {
     }
 
     if (isKimiReasoningEffortModel(model)) {
-      body.reasoning_effort = this.reasoningEffort ?? 'max';
+      body.reasoning_effort =
+        this.reasoningEffort ?? getDefaultKimiReasoningEffort(model);
     }
 
     const effectiveThinking = this.resolveEffectiveThinking(model);

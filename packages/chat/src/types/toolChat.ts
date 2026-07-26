@@ -27,13 +27,12 @@ export interface ChatCompletionToolCall {
   };
 }
 
-/**
- * Assistant message that can be appended to OpenAI-compatible chat history.
- */
+/** Assistant message that can be appended to provider-compatible history. */
 export interface ChatCompletionAssistantMessage {
   role: 'assistant';
   content: string;
   reasoning_content?: string;
+  provider_content?: unknown[];
   tool_calls?: ChatCompletionToolCall[];
   [key: string]: unknown;
 }

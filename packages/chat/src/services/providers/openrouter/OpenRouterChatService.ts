@@ -4,6 +4,8 @@ import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_OPENROUTER_API,
   MODEL_GPT_OSS_20B_FREE,
+  MODEL_OPENROUTER_AUTO,
+  MODEL_OPENROUTER_AUTO_BETA,
   MODEL_ZAI_GLM_5_2,
   isOpenRouterVisionModel,
   isOpenRouterFreeModel,
@@ -22,11 +24,30 @@ import {
   processChatWithOptionalTools,
 } from '../../../utils';
 
+const isOpenRouterAutoModel = (model: string): boolean =>
+  [MODEL_OPENROUTER_AUTO, MODEL_OPENROUTER_AUTO_BETA].includes(model.trim());
+
 const isTokenLimitUnsupportedModel = (model: string): boolean =>
   [MODEL_GPT_OSS_20B_FREE, MODEL_ZAI_GLM_5_2].includes(model.trim());
 
 const getDefaultReasoningEffort = (model: string): 'none' | undefined =>
   model.trim() === MODEL_ZAI_GLM_5_2 ? 'none' : undefined;
+
+const ensureAutoRouterOutput = (
+  model: string,
+  hasVisibleOutput: boolean,
+): void => {
+  if (isOpenRouterAutoModel(model) && !hasVisibleOutput) {
+    throw new Error(
+      'OpenRouter Auto Router returned no visible content. Please retry.',
+    );
+  }
+};
+
+const hasUsableCompletionOutput = (completion: ToolChatCompletion): boolean =>
+  completion.blocks.some(
+    (block) => block.type !== 'text' || block.text.trim().length > 0,
+  );
 
 /**
  * OpenRouter implementation of ChatService
@@ -159,7 +180,7 @@ export class OpenRouterChatService implements ChatService {
       hasTools: this.tools.length > 0,
       runWithoutTools: async () => {
         const res = await this.callOpenRouter(messages, this.model, true);
-        return this.handleStream(res, onPartialResponse);
+        return this.handleStream(res, onPartialResponse, this.model);
       },
       runWithTools: () => this.chatOnce(messages, true, onPartialResponse),
       onCompleteResponse,
@@ -199,7 +220,7 @@ export class OpenRouterChatService implements ChatService {
             this.visionModel,
             true,
           );
-          return this.handleStream(res, onPartialResponse);
+          return this.handleStream(res, onPartialResponse, this.visionModel);
         },
         runWithTools: () =>
           this.visionChatOnce(messages, true, onPartialResponse),
@@ -236,8 +257,8 @@ export class OpenRouterChatService implements ChatService {
       maxTokens,
     );
     return stream
-      ? this.parseStream(res, onPartialResponse)
-      : this.parseOneShot(await res.json());
+      ? this.parseStream(res, onPartialResponse, this.model)
+      : this.parseOneShot(await res.json(), this.model);
   }
 
   /**
@@ -269,8 +290,8 @@ export class OpenRouterChatService implements ChatService {
       maxTokens,
     );
     return stream
-      ? this.parseStream(res, onPartialResponse)
-      : this.parseOneShot(await res.json());
+      ? this.parseStream(res, onPartialResponse, this.visionModel)
+      : this.parseOneShot(await res.json(), this.visionModel);
   }
 
   /**
@@ -323,9 +344,13 @@ export class OpenRouterChatService implements ChatService {
         ? maxTokens
         : getMaxTokensForResponseLength(this.responseLength);
 
-    // Some OpenRouter reasoning models can spend the whole budget on reasoning
-    // tokens before emitting visible content.
-    if (tokenLimit && isTokenLimitUnsupportedModel(model)) {
+    // Dynamic routers and some reasoning models can spend the whole budget on
+    // reasoning tokens before emitting visible content.
+    const shouldOmitTokenLimit =
+      isTokenLimitUnsupportedModel(model) ||
+      (isOpenRouterAutoModel(model) && maxTokens === undefined);
+
+    if (tokenLimit && shouldOmitTokenLimit) {
       console.warn(
         `OpenRouter: Token limits are disabled for ${model} because this model can return empty content when a token limit is set.`,
       );
@@ -384,11 +409,15 @@ export class OpenRouterChatService implements ChatService {
   private async handleStream(
     res: Response,
     onPartial: (t: string) => void,
+    model: string,
   ): Promise<string> {
-    return parseOpenAICompatibleTextStream(res, onPartial, {
+    const text = await parseOpenAICompatibleTextStream(res, onPartial, {
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
+      throwOnApiError: isOpenRouterAutoModel(model),
     });
+    ensureAutoRouterOutput(model, text.trim().length > 0);
+    return text;
   }
 
   /**
@@ -397,17 +426,25 @@ export class OpenRouterChatService implements ChatService {
   private async parseStream(
     res: Response,
     onPartial: (t: string) => void,
+    model: string,
   ): Promise<ToolChatCompletion> {
-    return parseOpenAICompatibleToolStream(res, onPartial, {
+    const completion = await parseOpenAICompatibleToolStream(res, onPartial, {
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
+      throwOnApiError: isOpenRouterAutoModel(model),
     });
+    ensureAutoRouterOutput(model, hasUsableCompletionOutput(completion));
+    return completion;
   }
 
   /**
    * Parse non-streaming response
    */
-  private parseOneShot(data: any): ToolChatCompletion {
-    return parseOpenAICompatibleOneShot(data);
+  private parseOneShot(data: any, model: string): ToolChatCompletion {
+    const completion = parseOpenAICompatibleOneShot(data, {
+      throwOnApiError: isOpenRouterAutoModel(model),
+    });
+    ensureAutoRouterOutput(model, hasUsableCompletionOutput(completion));
+    return completion;
   }
 }

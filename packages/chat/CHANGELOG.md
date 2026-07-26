@@ -1,5 +1,46 @@
 # @aituber-onair/chat
 
+## 0.49.0
+
+### Minor Changes
+
+- Expanded curated OpenRouter support with `openrouter/auto-beta`,
+  `moonshotai/kimi-k3`, KAT-Coder Air/Pro V2.5, OpenAI GPT-5.6 Sol/Terra/Luna,
+  Claude Opus 5, Gemini 3.6 Flash/3.5 Flash-Lite, and xAI Grok Latest/4.5.
+  These are explicit options and do not change the existing default model.
+- Added Claude Opus 5 (`claude-opus-5`) as an explicit Claude model with
+  vision support, while keeping Claude Haiku 4.5 as the default.
+- Added model-aware Claude `reasoning_effort` support through Anthropic's
+  `output_config.effort`, including a configurable effort control in the React
+  basic example.
+- Expanded model-aware Kimi `reasoning_effort` support for models that expose
+  the top-level Chat Completions option. Kimi K3 now accepts `low`, `high`, and
+  `max`, keeps `max` as the default, and exposes all three levels in the React
+  basic example.
+
+### Patch Changes
+
+- Prevented blank Auto Router responses by omitting `responseLength`-derived
+  token limits for `openrouter/auto` and `openrouter/auto-beta`, surfacing API
+  errors, and rejecting empty or whitespace-only streaming, tool, and one-shot
+  responses. Explicit `maxTokens` values and directly selected model behavior
+  remain unchanged.
+- Preserved Claude provider-native thinking and tool-use blocks in
+  `completion.assistant_message` so Claude 5 multi-turn tool continuations can
+  return signed thinking blocks unchanged to the Messages API.
+- Improved Gemini Nano character-chat responses by passing system
+  instructions, optional few-shot examples, and recent conversation history
+  through role-preserving Prompt API `initialPrompts`.
+- Added concrete Gemini Nano response-length guidance for `veryShort`,
+  `short`, `medium`, `long`, and `veryLong`, while keeping `deep` unrestricted
+  by sentence count. The React basic example reinforces short presets with
+  concise Japanese examples.
+- Recreate Gemini Nano sessions with the latest configuration and prevent
+  message submission while the browser model is still preparing in the React
+  basic example.
+- Documented English and Japanese usage tips for improving response-length
+  consistency with character-appropriate examples.
+
 ## 0.48.0
 
 ### Minor Changes

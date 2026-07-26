@@ -585,9 +585,28 @@ For CI/local deterministic runs, pair it with `examples/mock-openai-server`.
 ```typescript
 const claudeService = ChatServiceFactory.createChatService('claude', {
   apiKey: process.env.ANTHROPIC_API_KEY,
-  model: 'claude-sonnet-5'
+  model: 'claude-opus-5',
+  reasoning_effort: 'low'
 });
 ```
+
+`claude-opus-5` is available as an explicit high-capability option and is not
+the package default. Claude Opus 5 has adaptive thinking enabled by default.
+Supported Claude models accept `reasoning_effort`, which maps to Anthropic's
+`output_config.effort`. The Claude API defaults to `high` when it is omitted:
+
+- Claude Opus 5, Sonnet 5, Opus 4.8, and Opus 4.7:
+  `low`, `medium`, `high`, `xhigh`, or `max`.
+- Claude Opus 4.6 and Sonnet 4.6:
+  `low`, `medium`, `high`, or `max`.
+- Claude Opus 4.5: `low`, `medium`, or `high`.
+
+Lower effort prioritizes latency and token efficiency, but does not guarantee
+a shorter visible response. Use response-length prompting as well when concise
+output is required.
+For multi-turn tool calls, append the returned
+`completion.assistant_message` to history so its provider-native thinking and
+tool-use blocks are preserved.
 
 #### Google Gemini
 
@@ -635,26 +654,36 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 ```
 
 **Important Notes for OpenRouter:**
-- Token limits are automatically disabled for the `gpt-oss-20b:free` model due to technical limitations
-- To control response length, include instructions in your prompt (e.g., "Please respond in 40 characters or less")
+- Automatic token limits from `responseLength` are disabled for `openrouter/auto` and `openrouter/auto-beta` because a routed reasoning model can spend the entire output budget before emitting visible content. An explicitly supplied `maxTokens` is still honored.
+- All token limits remain disabled for `gpt-oss-20b:free` and `z-ai/glm-5.2`. For these models and the dynamic routers, control response length with prompt instructions (e.g., "Please respond in 40 characters or less").
 - Free tier has rate limits (20 requests/minute)
 - Free tier detection is based on the model ID suffix `:free` (dynamic `:free` IDs are also rate-limited)
+- `openrouter/auto-beta` is a Beta task-aware router. It chooses a model for each request and charges that routed model's rate; inspect the response `model` field or OpenRouter Activity to see the selection.
 - `openrouter/fusion` runs a multi-model panel plus a judge model; OpenRouter bills the sum of the underlying model calls and any enabled web search/fetch usage, not a single fixed model rate.
-- For `z-ai/glm-5.2`, OpenRouter reasoning defaults to `none` and token limits are automatically disabled because reasoning tokens can otherwise exhaust the output budget before visible content is emitted.
+- For `z-ai/glm-5.2`, OpenRouter reasoning also defaults to `none`.
+- Specialized coding models are explicit options rather than defaults. This includes `kwaipilot/kat-coder-air-v2.5` and `kwaipilot/kat-coder-pro-v2.5`, which are text-only.
+- `moonshotai/kimi-k3` availability depends on upstream capacity; OpenRouter may return 429 responses when capacity is constrained.
+- `x-ai/grok-4.5` has region-specific availability, including a current EU limitation. `~x-ai/grok-latest` inherits those limits when it resolves to Grok 4.5.
 - Supported models (curated list):
-  - `openrouter/auto`
+  - `openrouter/auto`, `openrouter/auto-beta`
   - `openrouter/fusion`
   - `openai/gpt-oss-20b:free`
-  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`, `openai/gpt-5.5-pro`, `openai/gpt-5.5`
+  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`
+  - `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`
+  - `openai/gpt-5.5-pro`, `openai/gpt-5.5`
   - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
   - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
   - `~anthropic/claude-sonnet-latest`, `~anthropic/claude-haiku-latest`
+  - `anthropic/claude-opus-5`
   - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
   - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
   - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
+  - `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite`
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
   - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
-  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
+  - `~x-ai/grok-latest`, `x-ai/grok-4.5`
+  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
+  - `kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`
 
 **Dynamic OpenRouter free model refresh**
 
@@ -726,7 +755,7 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
   // Optional: override endpoint or baseUrl
   // endpoint: 'https://api.moonshot.ai/v1/chat/completions',
   // baseUrl: 'https://api.moonshot.ai/v1',
-  reasoning_effort: 'max'
+  reasoning_effort: 'low'
 });
 ```
 
@@ -734,7 +763,7 @@ Notes:
 - Kimi uses OpenAI-compatible Chat Completions.
 - Supported models: `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
 - `kimi-k2.6` remains the default model for chat-oriented usage.
-- Kimi K3 is an explicit high-reasoning option. It currently supports only `reasoning_effort: 'max'` and does not accept the K2.x `thinking` option.
+- Kimi K3 is an explicit reasoning model. It accepts `reasoning_effort: 'low' | 'high' | 'max'`, defaults to `max`, always reasons, and does not accept the K2.x `thinking` option. `none`, `minimal`, and `medium` are not supported.
 - Kimi K3 uses `max_completion_tokens` for configured response limits.
 - For Kimi K3 multi-turn and tool-call flows, append the returned `completion.assistant_message` to history so `reasoning_content` and `tool_calls` are preserved.
 - Kimi K2.7 Code models are coding-oriented and require thinking mode, so they keep `thinking` enabled even when tools are used.
@@ -844,12 +873,34 @@ Notes:
 
 ```typescript
 const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
-  responseLength: 'medium'
+  responseLength: 'short',
+  initialPrompts: [
+    {
+      role: 'system',
+      content: 'You are a cheerful character who speaks naturally.'
+    },
+    { role: 'user', content: 'How are you feeling today?' },
+    { role: 'assistant', content: 'I feel great and ready to chat!' },
+    { role: 'user', content: 'Are you ready?' },
+    { role: 'assistant', content: 'Yes, we can start anytime!' }
+  ]
 });
 ```
 
 Notes:
 - No API key required — uses Chrome's built-in LanguageModel API (Prompt API).
+- System instructions, configured examples, and the most recent conversation
+  history are passed through `initialPrompts` with their roles preserved.
+- If configured `initialPrompts` contain a system message, it is normalized to
+  the first entry. Keep few-shot examples short because they consume the
+  on-device model's context window.
+- Gemini Nano uses concrete sentence-count guidance in addition to the soft
+  token budget: `veryShort` up to 1 sentence, `short` up to 2, `medium` up to
+  3, `long` up to 5, and `veryLong` up to 10. `deep` keeps its approximately
+  5000-token guidance without a sentence-count limit. Output length is still
+  best effort.
+- Up to the most recent 20 user/assistant messages are included as structured
+  history.
 - Requires **Chrome 138+** with the following flags enabled:
   - `chrome://flags/#optimization-guide-on-device-model` → Enabled
   - `chrome://flags/#prompt-api-for-gemini-nano` → Enabled
@@ -857,6 +908,54 @@ Notes:
 - Non-streaming only — responses are returned as a single complete text.
 - Vision is not supported.
 - The initial model download requires a user action and may take a few minutes.
+
+##### Tip: improve response-length consistency with examples
+
+Setting `responseLength` automatically adds Gemini Nano-specific sentence-count,
+formatting, and soft token-budget instructions. You can reinforce those
+instructions by also passing two or three short user/assistant examples through
+`initialPrompts`:
+
+```typescript
+import {
+  ChatServiceFactory,
+  type GeminiNanoInitialPrompt
+} from '@aituber-onair/chat';
+
+const veryShortExamples: GeminiNanoInitialPrompt[] = [
+  { role: 'user', content: 'How are you feeling today?' },
+  { role: 'assistant', content: 'I feel great and ready to chat!' },
+  { role: 'user', content: 'What food do you like?' },
+  { role: 'assistant', content: 'Salmon sushi is my favorite!' }
+];
+
+const service = ChatServiceFactory.createChatService('gemini-nano', {
+  responseLength: 'veryShort',
+  initialPrompts: veryShortExamples
+});
+```
+
+The examples are optional; the package applies the length instruction even
+when `initialPrompts` is omitted. Examples help the on-device model learn the
+desired response size, speaking style, reaction level, and tempo more
+consistently.
+
+- Match every assistant example to the selected preset. For `veryShort`, use
+  one sentence; for `short`, use no more than two.
+- Write examples in the target character's voice. Hardcoded generic examples
+  are not added by the package because they could change the character's
+  personality.
+- Do not reuse one-sentence examples for `medium` or longer responses when you
+  want visibly longer answers; those examples can bias the model toward short
+  output.
+- Keep the set small because examples share the on-device context window with
+  the system prompt and conversation history.
+- Recreate the chat service when `responseLength` or `initialPrompts` changes.
+  The React basic example does this automatically and applies its short
+  examples only to `veryShort` and `short`.
+- These controls improve consistency but do not provide a strict output limit.
+  Chrome's LanguageModel API currently has no max-output-token option, so
+  Gemini Nano may occasionally exceed the requested sentence count.
 
 ### Vision Chat
 
@@ -1168,11 +1267,11 @@ Currently, the following AI providers are built-in:
 - **OpenAI**: Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 Flash models default to minimal thinking for chat-style responses, while Gemini 3 Pro models default to low. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
-- **Claude**: Supports current Claude API model IDs including Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku
-- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/Kimi). See the OpenRouter section for model IDs.
+- **Claude**: Supports current Claude API model IDs including Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it
+- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/Kwaipilot). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-5V-Turbo/GLM-4.6V family (vision)
 - **xAI**: Supports Grok 4.5 with `reasoning_effort: 'low'` by default for chat-style responses, plus Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support.
-- **Kimi**: Supports Kimi K3 (`kimi-k3`, max reasoning only), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
+- **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`) and DeepSeek V4 Pro (`deepseek-v4-pro`) via OpenAI-compatible Chat Completions. Legacy aliases `deepseek-chat` and `deepseek-reasoner` are deprecated by DeepSeek.
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
 - **Sakana AI**: Supports Fugu (`fugu`) and Fugu Ultra (`fugu-ultra`, `fugu-ultra-20260615`) via OpenAI-compatible Chat Completions.

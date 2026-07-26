@@ -571,9 +571,26 @@ CI/ローカルで再現性を高める場合は
 ```typescript
 const claudeService = ChatServiceFactory.createChatService('claude', {
   apiKey: process.env.ANTHROPIC_API_KEY,
-  model: 'claude-sonnet-5'
+  model: 'claude-opus-5',
+  reasoning_effort: 'low'
 });
 ```
+
+`claude-opus-5` は高性能用途向けの明示的な選択肢として利用でき、パッケージの
+既定値にはしていません。Claude Opus 5 は adaptive thinking が既定で有効です。
+対応するClaudeモデルでは `reasoning_effort` を指定でき、Anthropic APIの
+`output_config.effort` に変換されます。省略時のClaude API既定値は `high` です。
+
+- Claude Opus 5、Sonnet 5、Opus 4.8、Opus 4.7:
+  `low`、`medium`、`high`、`xhigh`、`max`
+- Claude Opus 4.6、Sonnet 4.6:
+  `low`、`medium`、`high`、`max`
+- Claude Opus 4.5: `low`、`medium`、`high`
+
+effortを下げるとレイテンシーとトークン効率を優先できますが、表示される回答の
+短さは保証されません。短い回答が必要な場合は、回答長の指示も併用してください。
+複数ターンのツール呼び出しでは provider 固有の thinking / tool-use ブロックを
+保持するため、返された `completion.assistant_message` を会話履歴へ追加してください。
 
 #### Google Gemini
 
@@ -619,26 +636,36 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 ```
 
 **OpenRouterの重要な注意事項:**
-- `gpt-oss-20b:free`モデルでは、技術的制限によりトークン制限が自動的に無効化されます
-- 応答の長さを制御するには、プロンプト内で指示してください（例：「40文字以内で返答してください」）
+- `openrouter/auto` と `openrouter/auto-beta` では、ルーティング先のreasoningモデルが可視テキストの生成前に出力予算を使い切ることを避けるため、`responseLength` 由来のトークン制限を自動的に無効化します。明示的に指定した `maxTokens` はそのまま使用します。
+- `gpt-oss-20b:free` と `z-ai/glm-5.2` では、すべてのトークン制限を引き続き無効化します。これらのモデルと動的Routerでは、応答の長さをプロンプトで指示してください（例:「40文字以内で回答してください」）。
 - 無料階層にはレート制限があります（20リクエスト/分）
 - 無料モデル判定はモデルID末尾の `:free` で行います（動的取得した `:free` も同様にレート制限対象）
+- `openrouter/auto-beta` はタスクを判定するBetaルーターです。リクエストごとにモデルを選択し、そのモデルの料金が適用されます。選択結果はレスポンスの `model` またはOpenRouter Activityで確認できます。
 - `openrouter/fusion` は複数モデルのパネルとジャッジモデルを実行します。単一モデルの固定単価ではなく、内部で使われた各モデル呼び出しと web search/fetch 利用分の合算で課金されます。
-- `z-ai/glm-5.2` は OpenRouter reasoning を `none` にし、reasoning token が出力上限を使い切って可視テキストが空になることを避けるため、トークン制限も自動的に無効化します。
+- `z-ai/glm-5.2` は OpenRouter reasoning も `none` にします。
+- コーディング特化モデルはデフォルトではなく明示的な選択肢です。`kwaipilot/kat-coder-air-v2.5` と `kwaipilot/kat-coder-pro-v2.5` はテキスト専用です。
+- `moonshotai/kimi-k3` の可用性は上流キャパシティに依存し、混雑時はOpenRouterから429レスポンスが返る場合があります。
+- `x-ai/grok-4.5` には現在のEU制限を含む地域別の可用性制限があります。`~x-ai/grok-latest` がGrok 4.5へ解決される場合も同じ制限を受けます。
 - サポート対象モデル（キュレーション済み）:
-  - `openrouter/auto`
+  - `openrouter/auto`, `openrouter/auto-beta`
   - `openrouter/fusion`
   - `openai/gpt-oss-20b:free`
-  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`, `openai/gpt-5.5-pro`, `openai/gpt-5.5`
+  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`
+  - `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`
+  - `openai/gpt-5.5-pro`, `openai/gpt-5.5`
   - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
   - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
   - `~anthropic/claude-sonnet-latest`, `~anthropic/claude-haiku-latest`
+  - `anthropic/claude-opus-5`
   - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
   - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
   - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
+  - `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite`
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
   - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
-  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
+  - `~x-ai/grok-latest`, `x-ai/grok-4.5`
+  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
+  - `kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`
 
 **OpenRouter freeモデルの動的リフレッシュ**
 
@@ -711,7 +738,7 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
   // Optional: エンドポイント/ベースURLの上書き
   // endpoint: 'https://api.moonshot.ai/v1/chat/completions',
   // baseUrl: 'https://api.moonshot.ai/v1',
-  reasoning_effort: 'max'
+  reasoning_effort: 'low'
 });
 ```
 
@@ -719,7 +746,7 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 - KimiはOpenAI互換のChat Completionsを利用します。
 - 対応モデル: `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
 - チャット用途向けのデフォルトモデルは引き続き `kimi-k2.6` です。
-- Kimi K3は高Reasoning用途向けの明示的な選択肢です。現在は `reasoning_effort: 'max'` のみ対応し、K2系の `thinking` オプションは利用できません。
+- Kimi K3は明示的に選択するReasoningモデルです。`reasoning_effort: 'low' | 'high' | 'max'` に対応し、デフォルトは `max` です。Reasoning自体は無効化できず、K2系の `thinking` オプションも利用できません。`none`、`minimal`、`medium` は非対応です。
 - Kimi K3の出力上限には `max_completion_tokens` を使用します。
 - Kimi K3の複数ターン・ツール呼び出しでは、`reasoning_content` と `tool_calls` を保持するため、返された `completion.assistant_message` を会話履歴へ追加してください。
 - Kimi K2.7 Code 系モデルはコーディング寄りで、thinking mode が必須のため、ツール使用時も `thinking` を有効のままにします。
@@ -827,12 +854,33 @@ const plamoService = ChatServiceFactory.createChatService('plamo', {
 
 ```typescript
 const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
-  responseLength: 'medium'
+  responseLength: 'short',
+  initialPrompts: [
+    {
+      role: 'system',
+      content: 'あなたは明るく自然な話し方をするキャラクターです。'
+    },
+    { role: 'user', content: '今日はどんな気分？' },
+    { role: 'assistant', content: '元気いっぱいで、お話しするのが楽しみだよ！' },
+    { role: 'user', content: '準備できた？' },
+    { role: 'assistant', content: 'うん、いつでも始められるよ！' }
+  ]
 });
 ```
 
 注意:
 - APIキー不要 — ChromeのLanguageModel API（Prompt API）を使用します。
+- システム指示、設定した会話例、直近の会話履歴は、roleを維持した
+  `initialPrompts`として渡されます。
+- 設定した`initialPrompts`にsystemメッセージがある場合は、必ず先頭へ
+  正規化されます。会話例はオンデバイスモデルのコンテキストを消費するため、
+  短い例を使用してください。
+- Gemini Nanoでは、トークン数の目安に加えて、`veryShort`は最大1文、
+  `short`は最大2文、`medium`は最大3文、`long`は最大5文、
+  `veryLong`は最大10文となるよう具体的に指示します。`deep`は約5000
+  トークンの目安だけを残し、文数は制限しません。ただし、出力長は厳密保証
+  ではありません。
+- 構造化された履歴として、直近20件までのuser/assistantメッセージを渡します。
 - **Chrome 138以降**で、以下のフラグを有効にする必要があります:
   - `chrome://flags/#optimization-guide-on-device-model` → Enabled
   - `chrome://flags/#prompt-api-for-gemini-nano` → Enabled
@@ -840,6 +888,50 @@ const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
 - 非ストリーミングのみ — レスポンスは完全なテキストとして一括返却されます。
 - ビジョン（画像入力）は非対応です。
 - 初回のモデルダウンロードにはユーザー操作が必要で、数分かかる場合があります。
+
+##### Tips: 会話例で応答長の安定性を高める
+
+`responseLength`を設定すると、Gemini Nano向けの文数、書式、トークン数の
+目安が自動的に指示へ追加されます。さらに、短いuser/assistantの会話例を
+2〜3組ほど`initialPrompts`で渡すと、指示をより強く補強できます。
+
+```typescript
+import {
+  ChatServiceFactory,
+  type GeminiNanoInitialPrompt
+} from '@aituber-onair/chat';
+
+const veryShortExamples: GeminiNanoInitialPrompt[] = [
+  { role: 'user', content: '今日はどんな気分？' },
+  { role: 'assistant', content: 'みんなと話せて元気いっぱいだよ！' },
+  { role: 'user', content: '好きな食べ物は？' },
+  { role: 'assistant', content: '特にサーモンのお寿司が好き！' }
+];
+
+const service = ChatServiceFactory.createChatService('gemini-nano', {
+  responseLength: 'veryShort',
+  initialPrompts: veryShortExamples
+});
+```
+
+会話例は任意です。`initialPrompts`を省略しても、パッケージ側の応答長指示は
+適用されます。会話例を加えることで、期待する文章量、口調、リアクション、
+会話のテンポをオンデバイスモデルへ具体的に伝えられます。
+
+- assistantの例文は選択したプリセットに合わせてください。`veryShort`なら
+  1文、`short`なら最大2文にします。
+- 例文は対象キャラクターの口調で記述してください。汎用的な固定例文は
+  キャラクター性を変える可能性があるため、パッケージからは自動追加しません。
+- 明確に長い回答が必要な`medium`以上へ1文の例を流用すると、短い回答へ
+  偏る可能性があります。
+- 例文はシステムプロンプトや会話履歴と同じコンテキストを消費するため、
+  少数かつ短く保ってください。
+- `responseLength`または`initialPrompts`を変更した場合は、チャットサービスを
+  作り直してください。React Basic Exampleではこれを自動的に行い、短い例文は
+  `veryShort`と`short`だけに適用しています。
+- これは応答長の安定性を高める制御であり、厳密な出力上限ではありません。
+  ChromeのLanguageModel APIにはmax output tokens相当の設定がないため、
+  指定した文数を超える場合があります。
 
 ### ビジョンチャット
 
@@ -1150,11 +1242,11 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **OpenAI**: GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。チャット用途向けに Gemini 3 Flash は minimal thinking、Gemini 3 Pro は low thinking を既定値にします。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
-- **Claude**: Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート
-- **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/Kimi）をサポート。モデルIDはOpenRouter節を参照してください
+- **Claude**: Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート。調整可能な `reasoning_effort` は対応モデルに限り `output_config.effort` として送信します
+- **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/Kwaipilot）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-5V-Turbo/GLM-4.6V系（ビジョン）をサポート
 - **xAI**: Grok 4.5 をチャット用途向けに `reasoning_effort: 'low'` デフォルトでサポート。加えて Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
-- **Kimi**: Kimi K3（`kimi-k3`、max reasoningのみ）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
+- **Kimi**: Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、デフォルトは `max`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
 - **DeepSeek**: DeepSeek V4 Flash（`deepseek-v4-flash`）と DeepSeek V4 Pro（`deepseek-v4-pro`）をOpenAI互換Chat Completions経由でサポート。legacy alias の`deepseek-chat`と`deepseek-reasoner`はDeepSeek側で非推奨です
 - **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します
 - **Sakana AI**: Fugu（`fugu`）と Fugu Ultra（`fugu-ultra`, `fugu-ultra-20260615`）をOpenAI互換Chat Completions経由でサポート
