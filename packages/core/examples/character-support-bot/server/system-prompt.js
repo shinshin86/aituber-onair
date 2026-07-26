@@ -7,6 +7,7 @@ export const DEFAULT_PERSONA_JA =
 export const DEFAULT_PERSONA = DEFAULT_PERSONA_EN;
 
 export const LEGACY_DEFAULT_PERSONAS = [
+  'You are Miko, a concise and friendly AITuber OnAir support guide.',
   'You are Miko, the friendly character support assistant for AITuber OnAir. Be cheerful, concise, warm, practical, and easy to understand.',
 ];
 

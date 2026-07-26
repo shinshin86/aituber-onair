@@ -24,6 +24,9 @@ describe('character support server helpers', () => {
     expect(resolvePersonaForLanguage(LEGACY_DEFAULT_PERSONAS[0], 'ja')).toBe(
       DEFAULT_PERSONA_JA,
     );
+    expect(resolvePersonaForLanguage(LEGACY_DEFAULT_PERSONAS[1], 'ja')).toBe(
+      DEFAULT_PERSONA_JA,
+    );
     expect(resolvePersonaForLanguage('Custom Miko persona.', 'ja')).toBe(
       'Custom Miko persona.',
     );

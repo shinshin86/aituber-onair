@@ -9,6 +9,8 @@ const defaultPersonas = {
   en: 'English default persona',
   ja: '日本語の既定ペルソナ',
 };
+const firstDefaultPersona =
+  'You are Miko, a concise and friendly AITuber OnAir support guide.';
 
 describe('persona language routing', () => {
   it('maps the display language to the speech recognition locale', () => {
@@ -33,16 +35,13 @@ describe('persona language routing', () => {
 
   it('recognizes legacy defaults without replacing edited personas', () => {
     expect(
-      resolvePersonaForLanguage(
-        'Legacy default persona',
-        defaultPersonas,
-        'ja',
-        ['Legacy default persona'],
-      ),
+      resolvePersonaForLanguage(firstDefaultPersona, defaultPersonas, 'ja', [
+        firstDefaultPersona,
+      ]),
     ).toBe(defaultPersonas.ja);
     expect(
       resolvePersonaForLanguage('My edited persona', defaultPersonas, 'ja', [
-        'Legacy default persona',
+        firstDefaultPersona,
       ]),
     ).toBe('My edited persona');
   });
