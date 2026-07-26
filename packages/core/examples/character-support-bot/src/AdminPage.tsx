@@ -16,9 +16,11 @@ import {
 } from './personaLanguage';
 import {
   buildVoiceSelectOptions,
-  shouldUseVoiceSelect,
+  resolveVoiceFieldMode,
   type VoiceListStatus,
 } from './voiceSelection';
+
+const VOICE_LIST_DEBOUNCE_MS = 150;
 
 interface SettingsDraft {
   llm: {
@@ -37,6 +39,12 @@ interface SettingsDraft {
     speed: number;
     groupId: string;
   };
+}
+
+interface VoiceLookupTarget {
+  provider: string;
+  endpoint: string;
+  apiKey: string;
 }
 
 const toDraft = (
@@ -94,6 +102,9 @@ export default function AdminPage({
   const [voiceOptions, setVoiceOptions] = useState<VoiceOption[]>([]);
   const [voiceListStatus, setVoiceListStatus] =
     useState<VoiceListStatus>('idle');
+  const [voiceLookupTarget, setVoiceLookupTarget] =
+    useState<VoiceLookupTarget | null>(null);
+  const voiceLookupRequestRef = useRef(0);
   const [feedback, setFeedback] = useState<
     | {
         kind: 'success' | 'error';
@@ -120,6 +131,17 @@ export default function AdminPage({
           aliases: settings.llm.defaultPersonaAliases,
         });
         setDraft(toDraft(settings, languageRef.current));
+        const currentTtsProvider = providers.tts.find(
+          (provider) => provider.provider === settings.tts.provider,
+        );
+        if (currentTtsProvider?.supportsVoiceList) {
+          setVoiceListStatus('loading');
+          setVoiceLookupTarget({
+            provider: currentTtsProvider.provider,
+            endpoint: settings.tts.endpoint,
+            apiKey: '',
+          });
+        }
       })
       .catch(() => {
         // The translated load error is rendered when no draft is available.
@@ -131,6 +153,50 @@ export default function AdminPage({
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!voiceLookupTarget) return;
+    const requestId = voiceLookupRequestRef.current + 1;
+    voiceLookupRequestRef.current = requestId;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void getTtsVoices(
+        voiceLookupTarget.provider,
+        voiceLookupTarget.endpoint,
+        voiceLookupTarget.apiKey,
+        controller.signal,
+      )
+        .then((response) => {
+          if (
+            controller.signal.aborted ||
+            requestId !== voiceLookupRequestRef.current
+          ) {
+            return;
+          }
+          if (response.voices.length === 0) {
+            setVoiceOptions([]);
+            setVoiceListStatus('error');
+            return;
+          }
+          setVoiceOptions(response.voices);
+          setVoiceListStatus('loaded');
+        })
+        .catch(() => {
+          if (
+            controller.signal.aborted ||
+            requestId !== voiceLookupRequestRef.current
+          ) {
+            return;
+          }
+          setVoiceOptions([]);
+          setVoiceListStatus('error');
+        });
+    }, VOICE_LIST_DEBOUNCE_MS);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [voiceLookupTarget]);
 
   const selectedLlm = llmProviders.find(
     (provider) => provider.provider === draft?.llm.provider,
@@ -186,6 +252,10 @@ export default function AdminPage({
   const changeTtsProvider = (providerId: string) => {
     const provider = ttsProviders.find((item) => item.provider === providerId);
     if (!provider) return;
+    voiceLookupRequestRef.current += 1;
+    const endpoint = provider.supportsCustomEndpoint
+      ? (provider.defaultEndpoint ?? '')
+      : '';
     setDraft((current) =>
       current
         ? {
@@ -196,9 +266,7 @@ export default function AdminPage({
               model: provider.defaultModel,
               voice: provider.defaultVoice ?? '',
               apiKey: '',
-              endpoint: provider.supportsCustomEndpoint
-                ? (provider.defaultEndpoint ?? '')
-                : '',
+              endpoint,
               speed: 1,
               groupId: '',
             },
@@ -206,25 +274,30 @@ export default function AdminPage({
         : current,
     );
     setVoiceOptions([]);
-    setVoiceListStatus('idle');
+    if (provider.supportsVoiceList) {
+      setVoiceListStatus('loading');
+      setVoiceLookupTarget({
+        provider: provider.provider,
+        endpoint,
+        apiKey: '',
+      });
+    } else {
+      setVoiceListStatus('idle');
+      setVoiceLookupTarget(null);
+    }
     setFeedback(undefined);
   };
 
-  const loadVoiceOptions = async () => {
+  const retryVoiceOptions = () => {
     if (!draft || !selectedTts?.supportsVoiceList) return;
+    voiceLookupRequestRef.current += 1;
+    setVoiceOptions([]);
     setVoiceListStatus('loading');
-    try {
-      const response = await getTtsVoices(
-        selectedTts.provider,
-        draft.tts.endpoint,
-        draft.tts.apiKey,
-      );
-      setVoiceOptions(response.voices);
-      setVoiceListStatus('loaded');
-    } catch {
-      setVoiceOptions([]);
-      setVoiceListStatus('error');
-    }
+    setVoiceLookupTarget({
+      provider: selectedTts.provider,
+      endpoint: draft.tts.endpoint,
+      apiKey: draft.tts.apiKey,
+    });
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -306,6 +379,9 @@ export default function AdminPage({
       Number.isFinite(currentTtsSpeed) &&
       currentTtsSpeed >= (selectedTts.speedMin ?? 0.25) &&
       currentTtsSpeed <= (selectedTts.speedMax ?? 4));
+  const ttsEndpointReady =
+    !selectedTts?.supportsCustomEndpoint ||
+    Boolean(draft?.tts.endpoint.trim() || selectedTts.defaultEndpoint?.trim());
   const canSave = Boolean(
     draft?.llm.model.trim() &&
       ttsModelReady &&
@@ -314,10 +390,14 @@ export default function AdminPage({
       ttsKeyReady &&
       ttsGroupIdReady &&
       ttsSpeedReady &&
-      (!selectedLlm?.supportsCustomEndpoint || draft.llm.endpoint.trim()) &&
-      (!selectedTts?.supportsCustomEndpoint || draft.tts.endpoint.trim()),
+      ttsEndpointReady &&
+      (!selectedLlm?.supportsCustomEndpoint || draft.llm.endpoint.trim()),
   );
-  const useVoiceSelect = shouldUseVoiceSelect(voiceListStatus, voiceOptions);
+  const voiceFieldMode = resolveVoiceFieldMode(
+    Boolean(selectedTts?.supportsVoiceList),
+    voiceListStatus,
+    voiceOptions,
+  );
   const selectableVoiceOptions = buildVoiceSelectOptions(
     voiceOptions,
     draft?.tts.voice ?? '',
@@ -535,7 +615,11 @@ export default function AdminPage({
                 <div className="voice-field">
                   <label>
                     <span>{t.admin.voice}</span>
-                    {useVoiceSelect ? (
+                    {voiceFieldMode === 'loading' ? (
+                      <select value="" disabled aria-busy="true">
+                        <option value="">{t.admin.loadingVoices}</option>
+                      </select>
+                    ) : voiceFieldMode === 'select' ? (
                       <select
                         value={draft.tts.voice}
                         onChange={(event) =>
@@ -571,15 +655,6 @@ export default function AdminPage({
                   </label>
                   {selectedTts?.supportsVoiceList && (
                     <div className="voice-list-controls">
-                      <button
-                        type="button"
-                        onClick={() => void loadVoiceOptions()}
-                        disabled={voiceListStatus === 'loading'}
-                      >
-                        {voiceListStatus === 'loading'
-                          ? t.admin.loadingVoices
-                          : t.admin.loadVoices}
-                      </button>
                       {voiceListStatus === 'loaded' && (
                         <span>
                           {t.admin.voicesLoaded.replace(
@@ -592,6 +667,13 @@ export default function AdminPage({
                         <span className="is-error">
                           {t.admin.voiceListUnavailable}
                         </span>
+                      )}
+                      {voiceListStatus !== 'loading' && (
+                        <button type="button" onClick={retryVoiceOptions}>
+                          {voiceListStatus === 'error'
+                            ? t.admin.retryVoices
+                            : t.admin.reloadVoices}
+                        </button>
                       )}
                     </div>
                   )}

@@ -131,7 +131,8 @@ interface TranslationRecord {
     voiceId: string;
     selectVoice: string;
     unknownSavedVoice: string;
-    loadVoices: string;
+    reloadVoices: string;
+    retryVoices: string;
     loadingVoices: string;
     voicesLoaded: string;
     voiceListUnavailable: string;
@@ -306,7 +307,8 @@ export const translations: Record<Language, TranslationRecord> = {
       voiceId: 'Voice or speaker ID',
       selectVoice: 'Select a voice',
       unknownSavedVoice: 'Unknown (saved: {id})',
-      loadVoices: 'Load available voices',
+      reloadVoices: 'Reload voice list',
+      retryVoices: 'Retry voice list',
       loadingVoices: 'Loading voices…',
       voicesLoaded: '{count} voices loaded. Select a voice by name.',
       voiceListUnavailable:
@@ -478,7 +480,8 @@ export const translations: Record<Language, TranslationRecord> = {
       voiceId: '音声または話者ID',
       selectVoice: '音声を選択',
       unknownSavedVoice: '不明（保存済み: {id}）',
-      loadVoices: '利用可能な音声を取得',
+      reloadVoices: '音声一覧を再取得',
+      retryVoices: '音声一覧の取得を再試行',
       loadingVoices: '音声一覧を取得中…',
       voicesLoaded: '{count}件の音声を取得しました。話者名から選択できます。',
       voiceListUnavailable:

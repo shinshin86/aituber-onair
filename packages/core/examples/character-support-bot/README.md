@@ -151,14 +151,16 @@ excluded because it intentionally returns no audio. `/api/admin/providers`
 includes these exclusion reasons alongside the selectable providers.
 
 VOICEVOX and AivisSpeech use configurable local endpoints without API keys.
-Providers with a voice-list API can load choices in `/admin`; if that API is
-reachable, the voice field becomes a select box that shows voice and style
-names while saving the corresponding ID. A saved ID that is missing from the
-latest list remains available as an unknown saved option. If the API is
-unreachable or unsupported, the field remains editable so a voice or speaker ID
-can be entered manually. Providers with speed control use a slider with the
-supported range and current multiplier shown. Provider credentials are used
-only by the Node server.
+For providers with a voice-list API, `/admin` automatically loads choices on
+page load and provider changes. The field hides the raw saved ID while loading,
+then becomes a select box that shows voice and style names while saving the
+corresponding ID. A saved ID that is missing from the latest list remains
+available as an unknown saved option. If the API is unreachable or returns no
+voices, the field falls back to editable voice or speaker ID input with a retry
+button. Providers without a voice-list API use that input immediately. Endpoint
+edits do not trigger another request; use the reload button when needed.
+Providers with speed control use a slider with the supported range and current
+multiplier shown. Provider credentials are used only by the Node server.
 
 The browser always uses Core's `openaiCompatible` voice engine against the
 local proxy, regardless of which upstream TTS provider the server uses.

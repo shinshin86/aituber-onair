@@ -39,5 +39,7 @@ describe('character support language preference', () => {
     expect(translations.ja.admin.selectVoice).toBe('音声を選択');
     expect(translations.en.admin.unknownSavedVoice).toContain('{id}');
     expect(translations.ja.admin.unknownSavedVoice).toContain('{id}');
+    expect(translations.en.admin.retryVoices).toContain('Retry');
+    expect(translations.ja.admin.retryVoices).toContain('再試行');
   });
 });

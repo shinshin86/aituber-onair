@@ -1,11 +1,18 @@
 import type { VoiceOption } from './api';
 
 export type VoiceListStatus = 'idle' | 'loading' | 'loaded' | 'error';
+export type VoiceFieldMode = 'loading' | 'select' | 'input';
 
-export const shouldUseVoiceSelect = (
+export const resolveVoiceFieldMode = (
+  supportsVoiceList: boolean,
   status: VoiceListStatus,
   voices: VoiceOption[],
-): boolean => status === 'loaded' && voices.length > 0;
+): VoiceFieldMode => {
+  if (!supportsVoiceList) return 'input';
+  if (status === 'loaded' && voices.length > 0) return 'select';
+  if (status === 'error' || status === 'loaded') return 'input';
+  return 'loading';
+};
 
 export const buildVoiceSelectOptions = (
   voices: VoiceOption[],

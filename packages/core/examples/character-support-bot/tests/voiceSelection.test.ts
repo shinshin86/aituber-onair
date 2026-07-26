@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildVoiceSelectOptions,
-  shouldUseVoiceSelect,
+  resolveVoiceFieldMode,
 } from '../src/voiceSelection';
 
 const loadedVoices = [
@@ -10,11 +10,20 @@ const loadedVoices = [
 ];
 
 describe('admin voice selection', () => {
+  it('hides raw IDs while a supported voice list is loading', () => {
+    expect(resolveVoiceFieldMode(true, 'idle', [])).toBe('loading');
+    expect(resolveVoiceFieldMode(true, 'loading', [])).toBe('loading');
+  });
+
   it('uses a select only after a non-empty voice list loads', () => {
-    expect(shouldUseVoiceSelect('loaded', loadedVoices)).toBe(true);
-    expect(shouldUseVoiceSelect('loaded', [])).toBe(false);
-    expect(shouldUseVoiceSelect('error', loadedVoices)).toBe(false);
-    expect(shouldUseVoiceSelect('idle', loadedVoices)).toBe(false);
+    expect(resolveVoiceFieldMode(true, 'loaded', loadedVoices)).toBe('select');
+    expect(resolveVoiceFieldMode(true, 'loaded', [])).toBe('input');
+    expect(resolveVoiceFieldMode(true, 'error', loadedVoices)).toBe('input');
+  });
+
+  it('uses free-form input immediately for unsupported providers', () => {
+    expect(resolveVoiceFieldMode(false, 'idle', [])).toBe('input');
+    expect(resolveVoiceFieldMode(false, 'loading', loadedVoices)).toBe('input');
   });
 
   it('shows labels while keeping voice IDs as option values', () => {

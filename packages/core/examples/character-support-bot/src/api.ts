@@ -116,10 +116,12 @@ export const getTtsVoices = (
   provider: string,
   endpoint: string,
   apiKey?: string,
+  signal?: AbortSignal,
 ): Promise<{ voices: VoiceOption[] }> =>
   requestJson<{ voices: VoiceOption[] }>('/api/admin/tts/voices', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal,
     body: JSON.stringify({
       provider,
       endpoint,
