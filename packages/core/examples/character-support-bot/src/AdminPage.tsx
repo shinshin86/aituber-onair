@@ -1,0 +1,795 @@
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  getAdminProviders,
+  getAdminSettings,
+  getTtsVoices,
+  saveAdminSettings,
+  type AdminSettings,
+  type ProviderRecord,
+  type VoiceOption,
+} from './api';
+import LanguageSwitch from './components/LanguageSwitch';
+import { type Language, translations } from './i18n';
+import {
+  type DefaultPersonas,
+  resolvePersonaForLanguage,
+} from './personaLanguage';
+import {
+  buildVoiceSelectOptions,
+  resolveVoiceFieldMode,
+  type VoiceListStatus,
+} from './voiceSelection';
+
+const VOICE_LIST_DEBOUNCE_MS = 150;
+
+interface SettingsDraft {
+  llm: {
+    provider: string;
+    model: string;
+    apiKey: string;
+    endpoint: string;
+    persona: string;
+  };
+  tts: {
+    provider: string;
+    model: string;
+    voice: string;
+    apiKey: string;
+    endpoint: string;
+    speed: number;
+    groupId: string;
+  };
+}
+
+interface VoiceLookupTarget {
+  provider: string;
+  endpoint: string;
+  apiKey: string;
+}
+
+const toDraft = (
+  settings: AdminSettings,
+  language: Language,
+): SettingsDraft => ({
+  llm: {
+    provider: settings.llm.provider,
+    model: settings.llm.model,
+    apiKey: '',
+    endpoint: settings.llm.endpoint,
+    persona: resolvePersonaForLanguage(
+      settings.llm.persona,
+      settings.llm.defaultPersonas,
+      language,
+      settings.llm.defaultPersonaAliases,
+    ),
+  },
+  tts: {
+    provider: settings.tts.provider,
+    model: settings.tts.model,
+    voice: settings.tts.voice,
+    apiKey: '',
+    endpoint: settings.tts.endpoint,
+    speed: settings.tts.speed,
+    groupId: settings.tts.groupId,
+  },
+});
+
+interface AdminPageProps {
+  language: Language;
+  onLanguageChange: (language: Language) => void;
+}
+
+const formatSpeed = (speed: number): string =>
+  `${speed.toFixed(2).replace(/\.?0+$/, '')}×`;
+
+export default function AdminPage({
+  language,
+  onLanguageChange,
+}: AdminPageProps) {
+  const languageRef = useRef(language);
+  const [llmProviders, setLlmProviders] = useState<ProviderRecord[]>([]);
+  const [ttsProviders, setTtsProviders] = useState<ProviderRecord[]>([]);
+  const [draft, setDraft] = useState<SettingsDraft | null>(null);
+  const [savedSettings, setSavedSettings] = useState<AdminSettings | null>(
+    null,
+  );
+  const [personaDefaults, setPersonaDefaults] = useState<{
+    values: DefaultPersonas;
+    aliases: string[];
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [voiceOptions, setVoiceOptions] = useState<VoiceOption[]>([]);
+  const [voiceListStatus, setVoiceListStatus] =
+    useState<VoiceListStatus>('idle');
+  const [voiceLookupTarget, setVoiceLookupTarget] =
+    useState<VoiceLookupTarget | null>(null);
+  const voiceLookupRequestRef = useRef(0);
+  const [feedback, setFeedback] = useState<
+    | {
+        kind: 'success' | 'error';
+        key: 'saved' | 'saveError';
+      }
+    | undefined
+  >();
+  const t = translations[language];
+
+  useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all([getAdminProviders(), getAdminSettings()])
+      .then(([providers, settings]) => {
+        if (cancelled) return;
+        setLlmProviders(providers.llm);
+        setTtsProviders(providers.tts);
+        setSavedSettings(settings);
+        setPersonaDefaults({
+          values: settings.llm.defaultPersonas,
+          aliases: settings.llm.defaultPersonaAliases,
+        });
+        setDraft(toDraft(settings, languageRef.current));
+        const currentTtsProvider = providers.tts.find(
+          (provider) => provider.provider === settings.tts.provider,
+        );
+        if (currentTtsProvider?.supportsVoiceList) {
+          setVoiceListStatus('loading');
+          setVoiceLookupTarget({
+            provider: currentTtsProvider.provider,
+            endpoint: settings.tts.endpoint,
+            apiKey: '',
+          });
+        }
+      })
+      .catch(() => {
+        // The translated load error is rendered when no draft is available.
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!voiceLookupTarget) return;
+    const requestId = voiceLookupRequestRef.current + 1;
+    voiceLookupRequestRef.current = requestId;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void getTtsVoices(
+        voiceLookupTarget.provider,
+        voiceLookupTarget.endpoint,
+        voiceLookupTarget.apiKey,
+        controller.signal,
+      )
+        .then((response) => {
+          if (
+            controller.signal.aborted ||
+            requestId !== voiceLookupRequestRef.current
+          ) {
+            return;
+          }
+          if (response.voices.length === 0) {
+            setVoiceOptions([]);
+            setVoiceListStatus('error');
+            return;
+          }
+          setVoiceOptions(response.voices);
+          setVoiceListStatus('loaded');
+        })
+        .catch(() => {
+          if (
+            controller.signal.aborted ||
+            requestId !== voiceLookupRequestRef.current
+          ) {
+            return;
+          }
+          setVoiceOptions([]);
+          setVoiceListStatus('error');
+        });
+    }, VOICE_LIST_DEBOUNCE_MS);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [voiceLookupTarget]);
+
+  const selectedLlm = llmProviders.find(
+    (provider) => provider.provider === draft?.llm.provider,
+  );
+  const selectedTts = ttsProviders.find(
+    (provider) => provider.provider === draft?.tts.provider,
+  );
+
+  const changeLanguage = (nextLanguage: Language) => {
+    languageRef.current = nextLanguage;
+    if (personaDefaults) {
+      setDraft((current) =>
+        current
+          ? {
+              ...current,
+              llm: {
+                ...current.llm,
+                persona: resolvePersonaForLanguage(
+                  current.llm.persona,
+                  personaDefaults.values,
+                  nextLanguage,
+                  personaDefaults.aliases,
+                ),
+              },
+            }
+          : current,
+      );
+    }
+    onLanguageChange(nextLanguage);
+  };
+
+  const changeLlmProvider = (providerId: string) => {
+    const provider = llmProviders.find((item) => item.provider === providerId);
+    if (!provider) return;
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            llm: {
+              ...current.llm,
+              provider: provider.provider,
+              model: provider.defaultModel,
+              endpoint: provider.supportsCustomEndpoint
+                ? current.llm.endpoint
+                : '',
+            },
+          }
+        : current,
+    );
+    setFeedback(undefined);
+  };
+
+  const changeTtsProvider = (providerId: string) => {
+    const provider = ttsProviders.find((item) => item.provider === providerId);
+    if (!provider) return;
+    voiceLookupRequestRef.current += 1;
+    const endpoint = provider.supportsCustomEndpoint
+      ? (provider.defaultEndpoint ?? '')
+      : '';
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            tts: {
+              ...current.tts,
+              provider: provider.provider,
+              model: provider.defaultModel,
+              voice: provider.defaultVoice ?? '',
+              apiKey: '',
+              endpoint,
+              speed: 1,
+              groupId: '',
+            },
+          }
+        : current,
+    );
+    setVoiceOptions([]);
+    if (provider.supportsVoiceList) {
+      setVoiceListStatus('loading');
+      setVoiceLookupTarget({
+        provider: provider.provider,
+        endpoint,
+        apiKey: '',
+      });
+    } else {
+      setVoiceListStatus('idle');
+      setVoiceLookupTarget(null);
+    }
+    setFeedback(undefined);
+  };
+
+  const retryVoiceOptions = () => {
+    if (!draft || !selectedTts?.supportsVoiceList) return;
+    voiceLookupRequestRef.current += 1;
+    setVoiceOptions([]);
+    setVoiceListStatus('loading');
+    setVoiceLookupTarget({
+      provider: selectedTts.provider,
+      endpoint: draft.tts.endpoint,
+      apiKey: draft.tts.apiKey,
+    });
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!draft || isSaving) return;
+    setIsSaving(true);
+    setFeedback(undefined);
+    try {
+      const saved = await saveAdminSettings({
+        llm: {
+          provider: draft.llm.provider,
+          model: draft.llm.model.trim(),
+          endpoint: draft.llm.endpoint.trim(),
+          persona: draft.llm.persona.trim(),
+          ...(draft.llm.apiKey.trim()
+            ? { apiKey: draft.llm.apiKey.trim() }
+            : {}),
+        },
+        tts: {
+          provider: draft.tts.provider,
+          model: draft.tts.model.trim(),
+          voice: draft.tts.voice.trim(),
+          endpoint: draft.tts.endpoint.trim(),
+          speed: draft.tts.speed,
+          groupId: draft.tts.groupId.trim(),
+          ...(draft.tts.apiKey.trim()
+            ? { apiKey: draft.tts.apiKey.trim() }
+            : {}),
+        },
+      });
+      setSavedSettings(saved);
+      setPersonaDefaults({
+        values: saved.llm.defaultPersonas,
+        aliases: saved.llm.defaultPersonaAliases,
+      });
+      setDraft(toDraft(saved, languageRef.current));
+      setFeedback({
+        kind: 'success',
+        key: 'saved',
+      });
+    } catch {
+      setFeedback({
+        kind: 'error',
+        key: 'saveError',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const llmKeyReady =
+    !selectedLlm?.requiresApiKey ||
+    savedSettings?.llm.hasApiKey ||
+    Boolean(draft?.llm.apiKey.trim());
+  const ttsKeyReady =
+    !selectedTts?.requiresApiKey ||
+    Boolean(
+      savedSettings &&
+        savedSettings.tts.provider === draft?.tts.provider &&
+        savedSettings.tts.hasApiKey,
+    ) ||
+    Boolean(draft?.tts.apiKey.trim());
+  const ttsGroupIdReady =
+    !selectedTts?.requiresGroupId ||
+    Boolean(
+      savedSettings &&
+        savedSettings.tts.provider === draft?.tts.provider &&
+        savedSettings.tts.groupId,
+    ) ||
+    Boolean(draft?.tts.groupId.trim());
+  const ttsModelReady =
+    !selectedTts?.modelRequired || Boolean(draft?.tts.model.trim());
+  const ttsVoiceReady =
+    !selectedTts?.voiceRequired || Boolean(draft?.tts.voice.trim());
+  const currentTtsSpeed = draft?.tts.speed;
+  const ttsSpeedReady =
+    !selectedTts?.supportsSpeed ||
+    (typeof currentTtsSpeed === 'number' &&
+      Number.isFinite(currentTtsSpeed) &&
+      currentTtsSpeed >= (selectedTts.speedMin ?? 0.25) &&
+      currentTtsSpeed <= (selectedTts.speedMax ?? 4));
+  const ttsEndpointReady =
+    !selectedTts?.supportsCustomEndpoint ||
+    Boolean(draft?.tts.endpoint.trim() || selectedTts.defaultEndpoint?.trim());
+  const canSave = Boolean(
+    draft?.llm.model.trim() &&
+      ttsModelReady &&
+      ttsVoiceReady &&
+      llmKeyReady &&
+      ttsKeyReady &&
+      ttsGroupIdReady &&
+      ttsSpeedReady &&
+      ttsEndpointReady &&
+      (!selectedLlm?.supportsCustomEndpoint || draft.llm.endpoint.trim()),
+  );
+  const voiceFieldMode = resolveVoiceFieldMode(
+    Boolean(selectedTts?.supportsVoiceList),
+    voiceListStatus,
+    voiceOptions,
+  );
+  const selectableVoiceOptions = buildVoiceSelectOptions(
+    voiceOptions,
+    draft?.tts.voice ?? '',
+    t.admin.unknownSavedVoice,
+  );
+
+  return (
+    <div className="admin-shell">
+      <header className="admin-header">
+        <a className="brand" href="/">
+          <span className="brand-mark">AO</span>
+          <span>
+            <strong>AITuber OnAir</strong>
+            <small>{t.brand.adminSubtitle}</small>
+          </span>
+        </a>
+        <div className="admin-header-actions">
+          <a className="back-link" href="/">
+            ← {t.admin.back}
+          </a>
+          <LanguageSwitch language={language} onChange={changeLanguage} />
+        </div>
+      </header>
+
+      <main className="admin-main">
+        <section className="admin-intro">
+          <span className="eyebrow">{t.admin.eyebrow}</span>
+          <h1>{t.admin.title}</h1>
+          <p>{t.admin.intro}</p>
+          <div className="security-callout">
+            <strong>{t.admin.securityTitle}</strong>
+            <span>{t.admin.securityDescription}</span>
+          </div>
+        </section>
+
+        {isLoading ? (
+          <div className="admin-loading">{t.admin.loading}</div>
+        ) : !draft ? (
+          <div className="admin-loading is-error">{t.admin.loadError}</div>
+        ) : (
+          <form className="admin-form" onSubmit={handleSubmit}>
+            <section className="settings-card">
+              <div className="settings-card-heading">
+                <span>01</span>
+                <div>
+                  <h2>{t.admin.llmTitle}</h2>
+                  <p>{t.admin.llmDescription}</p>
+                </div>
+              </div>
+
+              <div className="settings-grid">
+                <label>
+                  <span>{t.admin.provider}</span>
+                  <select
+                    value={draft.llm.provider}
+                    onChange={(event) => changeLlmProvider(event.target.value)}
+                  >
+                    {llmProviders.map((provider) => (
+                      <option key={provider.provider} value={provider.provider}>
+                        {provider.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>{t.admin.model}</span>
+                  {selectedLlm?.models.length ? (
+                    <select
+                      value={draft.llm.model}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          llm: { ...draft.llm, model: event.target.value },
+                        })
+                      }
+                    >
+                      {selectedLlm.models.map((model) => (
+                        <option key={model} value={model}>
+                          {model}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      value={draft.llm.model}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          llm: { ...draft.llm, model: event.target.value },
+                        })
+                      }
+                      placeholder="model-id"
+                    />
+                  )}
+                </label>
+
+                {selectedLlm?.supportsCustomEndpoint && (
+                  <label className="field-wide">
+                    <span>{t.admin.chatEndpoint}</span>
+                    <input
+                      type="url"
+                      value={draft.llm.endpoint}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          llm: { ...draft.llm, endpoint: event.target.value },
+                        })
+                      }
+                      placeholder="http://127.0.0.1:18080/v1/chat/completions"
+                    />
+                  </label>
+                )}
+
+                {selectedLlm?.requiresApiKey && (
+                  <label className="field-wide">
+                    <span>{t.admin.apiKey}</span>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      value={draft.llm.apiKey}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          llm: { ...draft.llm, apiKey: event.target.value },
+                        })
+                      }
+                      placeholder={
+                        savedSettings?.llm.hasApiKey
+                          ? `${t.admin.savedKeyPrefix} ${savedSettings.llm.apiKey}`
+                          : t.admin.enterServerKey
+                      }
+                    />
+                  </label>
+                )}
+
+                <label className="field-wide">
+                  <span>{t.admin.persona}</span>
+                  <textarea
+                    rows={4}
+                    value={draft.llm.persona}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        llm: { ...draft.llm, persona: event.target.value },
+                      })
+                    }
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="settings-card">
+              <div className="settings-card-heading">
+                <span>02</span>
+                <div>
+                  <h2>{t.admin.ttsTitle}</h2>
+                  <p>{t.admin.ttsDescription}</p>
+                </div>
+              </div>
+
+              <div className="settings-grid">
+                <label>
+                  <span>{t.admin.provider}</span>
+                  <select
+                    value={draft.tts.provider}
+                    onChange={(event) => changeTtsProvider(event.target.value)}
+                  >
+                    {ttsProviders.map((provider) => (
+                      <option key={provider.provider} value={provider.provider}>
+                        {provider.provider === 'mock'
+                          ? t.admin.mockProviderLabel
+                          : provider.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {(selectedTts?.modelRequired ||
+                  selectedTts?.models.length ||
+                  selectedTts?.defaultModel) && (
+                  <label>
+                    <span>{t.admin.model}</span>
+                    {selectedTts?.models.length ? (
+                      <select
+                        value={draft.tts.model}
+                        onChange={(event) =>
+                          setDraft({
+                            ...draft,
+                            tts: { ...draft.tts, model: event.target.value },
+                          })
+                        }
+                      >
+                        {selectedTts.models.map((model) => (
+                          <option key={model} value={model}>
+                            {model}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        value={draft.tts.model}
+                        onChange={(event) =>
+                          setDraft({
+                            ...draft,
+                            tts: { ...draft.tts, model: event.target.value },
+                          })
+                        }
+                        placeholder="tts-model"
+                      />
+                    )}
+                  </label>
+                )}
+
+                <div className="voice-field">
+                  <label>
+                    <span>{t.admin.voice}</span>
+                    {voiceFieldMode === 'loading' ? (
+                      <select value="" disabled aria-busy="true">
+                        <option value="">{t.admin.loadingVoices}</option>
+                      </select>
+                    ) : voiceFieldMode === 'select' ? (
+                      <select
+                        value={draft.tts.voice}
+                        onChange={(event) =>
+                          setDraft({
+                            ...draft,
+                            tts: { ...draft.tts, voice: event.target.value },
+                          })
+                        }
+                      >
+                        {!draft.tts.voice && (
+                          <option value="" disabled>
+                            {t.admin.selectVoice}
+                          </option>
+                        )}
+                        {selectableVoiceOptions.map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        value={draft.tts.voice}
+                        onChange={(event) =>
+                          setDraft({
+                            ...draft,
+                            tts: { ...draft.tts, voice: event.target.value },
+                          })
+                        }
+                        placeholder={t.admin.voiceId}
+                      />
+                    )}
+                  </label>
+                  {selectedTts?.supportsVoiceList && (
+                    <div className="voice-list-controls">
+                      {voiceListStatus === 'loaded' && (
+                        <span>
+                          {t.admin.voicesLoaded.replace(
+                            '{count}',
+                            String(voiceOptions.length),
+                          )}
+                        </span>
+                      )}
+                      {voiceListStatus === 'error' && (
+                        <span className="is-error">
+                          {t.admin.voiceListUnavailable}
+                        </span>
+                      )}
+                      {voiceListStatus !== 'loading' && (
+                        <button type="button" onClick={retryVoiceOptions}>
+                          {voiceListStatus === 'error'
+                            ? t.admin.retryVoices
+                            : t.admin.reloadVoices}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {selectedTts?.supportsSpeed && (
+                  <label className="speed-field" htmlFor="tts-speed">
+                    <span className="speed-field-heading">
+                      <span>{t.admin.speed}</span>
+                      <output htmlFor="tts-speed">
+                        {formatSpeed(draft.tts.speed)}
+                      </output>
+                    </span>
+                    <input
+                      id="tts-speed"
+                      type="range"
+                      min={selectedTts.speedMin ?? 0.25}
+                      max={selectedTts.speedMax ?? 4}
+                      step={selectedTts.speedStep ?? 0.05}
+                      value={draft.tts.speed}
+                      aria-valuetext={formatSpeed(draft.tts.speed)}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          tts: {
+                            ...draft.tts,
+                            speed: Number(event.target.value),
+                          },
+                        })
+                      }
+                    />
+                    <span className="speed-field-bounds" aria-hidden="true">
+                      <span>{formatSpeed(selectedTts.speedMin ?? 0.25)}</span>
+                      <span>{formatSpeed(selectedTts.speedMax ?? 4)}</span>
+                    </span>
+                  </label>
+                )}
+
+                {selectedTts?.supportsCustomEndpoint && (
+                  <label className="field-wide">
+                    <span>{t.admin.speechEndpoint}</span>
+                    <input
+                      type="url"
+                      value={draft.tts.endpoint}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          tts: { ...draft.tts, endpoint: event.target.value },
+                        })
+                      }
+                      placeholder={
+                        selectedTts.defaultEndpoint ||
+                        'http://127.0.0.1:8880/v1/audio/speech'
+                      }
+                    />
+                  </label>
+                )}
+
+                {selectedTts?.acceptsApiKey && (
+                  <label className="field-wide">
+                    <span>{t.admin.apiKey}</span>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      value={draft.tts.apiKey}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          tts: { ...draft.tts, apiKey: event.target.value },
+                        })
+                      }
+                      placeholder={
+                        savedSettings?.tts.provider === draft.tts.provider &&
+                        savedSettings.tts.hasApiKey
+                          ? `${t.admin.savedKeyPrefix} ${savedSettings.tts.apiKey}`
+                          : t.admin.enterServerKey
+                      }
+                    />
+                  </label>
+                )}
+
+                {selectedTts?.requiresGroupId && (
+                  <label className="field-wide">
+                    <span>{t.admin.groupId}</span>
+                    <input
+                      value={draft.tts.groupId}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          tts: { ...draft.tts, groupId: event.target.value },
+                        })
+                      }
+                      placeholder={t.admin.enterGroupId}
+                    />
+                  </label>
+                )}
+
+                {selectedTts?.developmentOnly && (
+                  <div className="mock-note field-wide">{t.admin.mockNote}</div>
+                )}
+              </div>
+            </section>
+
+            <div className="admin-actions">
+              {feedback && (
+                <output className={`feedback is-${feedback.kind}`}>
+                  {t.admin[feedback.key]}
+                </output>
+              )}
+              <button type="submit" disabled={!canSave || isSaving}>
+                {isSaving ? t.admin.saving : t.admin.save}
+              </button>
+            </div>
+          </form>
+        )}
+      </main>
+    </div>
+  );
+}
