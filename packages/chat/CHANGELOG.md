@@ -1,5 +1,15 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+### Patch Changes
+
+- Added a browser-only Gemini Nano customer-support example with EN/JA
+  selection, Enter-to-send with IME-safe newline handling, concise replies,
+  built-in model preparation, and the server example's complete public support
+  knowledge. Updated Prompt API guidance for stable web support in Chrome 148+
+  without flags, while retaining Chrome 138+ guidance for extensions.
+
 ## 0.49.0
 
 ### Minor Changes
@@ -20,11 +30,6 @@
 
 ### Patch Changes
 
-- Added a browser-only Gemini Nano customer-support example with EN/JA
-  selection, Enter-to-send with IME-safe newline handling, concise replies,
-  built-in model preparation, and the server example's complete public support
-  knowledge. Updated Prompt API guidance for stable web support in Chrome 148+
-  without flags, while retaining Chrome 138+ guidance for extensions.
 - Prevented blank Auto Router responses by omitting `responseLength`-derived
   token limits for `openrouter/auto` and `openrouter/auto-beta`, surfacing API
   errors, and rejecting empty or whitespace-only streaming, tool, and one-shot
