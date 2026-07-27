@@ -881,12 +881,15 @@ const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
   トークンの目安だけを残し、文数は制限しません。ただし、出力長は厳密保証
   ではありません。
 - 構造化された履歴として、直近20件までのuser/assistantメッセージを渡します。
-- **Chrome 138以降**で、以下のフラグを有効にする必要があります:
-  - `chrome://flags/#optimization-guide-on-device-model` → Enabled
-  - `chrome://flags/#prompt-api-for-gemini-nano` → Enabled
+- Webページでは、対応するデスクトップ端末上の**Chrome 148以降**が必要です。
+  Prompt APIは標準で有効なため、Chromeフラグの設定は不要です。
+  Chrome拡張ではChrome 138以降から利用できます。
 - モデルはすべてデバイス上で実行され、推論時にネットワーク通信は発生しません。
 - 非ストリーミングのみ — レスポンスは完全なテキストとして一括返却されます。
 - ビジョン（画像入力）は非対応です。
+- EN／JAの言語選択とフロントエンドだけでのモデル準備は、
+  [ブラウザ完結Gemini Nanoカスタマーサポート例](./examples/gemini-nano-customer-support-bot/)
+  を参照してください。
 - 初回のモデルダウンロードにはユーザー操作が必要で、数分かかる場合があります。
 
 ##### Tips: 会話例で応答長の安定性を高める
@@ -1251,7 +1254,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します
 - **Sakana AI**: Fugu（`fugu`）と Fugu Ultra（`fugu-ultra`, `fugu-ultra-20260615`）をOpenAI互換Chat Completions経由でサポート
 - **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）と PLaMo 2.2 Prime（`plamo-2.2-prime`）をOpenAI互換Chat Completions経由でサポート
-- **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Chrome 138以降でPrompt APIフラグの有効化が必要。非ストリーミング、ビジョン非対応
+- **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Webページでは対応するデスクトップ端末上のChrome 148以降が必要で、Chromeフラグの設定は不要。非ストリーミング、ビジョン非対応
 
 ## ライセンス
 

@@ -62,7 +62,7 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
         if (!cancelled) {
           setStatus('unavailable');
           setStatusText(
-            'Built-in AI is not available. Chrome 138+ with flags enabled is required.',
+            'Built-in AI is not available. Chrome 148+ on a supported desktop device is required.',
           );
         }
         return;
@@ -88,7 +88,7 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
         } else {
           setStatus('unavailable');
           setStatusText(
-            'Built-in AI is not available. Chrome 138+ with flags enabled is required.',
+            'Built-in AI is not available. Chrome 148+ on a supported desktop device is required.',
           );
         }
       } catch {

@@ -1762,27 +1762,14 @@ export default function ProviderSelector({
                   </summary>
                   <div className="gemini-nano-setup__body">
                     <p>
-                      <strong>Chrome 138+</strong> is required. Enable the
-                      following flags to use Built-in AI:
+                      Web pages require <strong>Chrome 148+</strong> on a
+                      supported desktop device. No Chrome flags are required.
                     </p>
-                    <ol className="gemini-nano-steps">
-                      <li>
-                        Open <code>chrome://flags</code> in the address bar
-                      </li>
-                      <li>
-                        Set <code>#optimization-guide-on-device-model</code> to
-                        &quot;Enabled&quot;
-                      </li>
-                      <li>
-                        Set <code>#prompt-api-for-gemini-nano</code> to
-                        &quot;Enabled&quot;
-                      </li>
-                      <li>Restart Chrome</li>
-                    </ol>
                     <p className="gemini-nano-note">
-                      After enabling the flags, press &quot;Prepare Model&quot;
-                      above to start the model download. The initial download
-                      may take a few minutes.
+                      Press &quot;Prepare Model&quot; above to start the initial
+                      model download. Chrome extensions have supported the
+                      Prompt API since Chrome 138, but normal web pages require
+                      Chrome 148 or later.
                     </p>
                   </div>
                 </details>
