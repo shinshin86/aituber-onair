@@ -30,7 +30,7 @@ interface LanguageModelCreateOptions extends LanguageModelOptions {
 }
 
 /**
- * LanguageModel API types (Chrome 138+ Prompt API).
+ * LanguageModel API types (Prompt API for web pages in Chrome 148+).
  * Local type definitions — not global declarations.
  */
 interface LanguageModelAPI {
@@ -56,7 +56,7 @@ function getLanguageModelAPI(): LanguageModelAPI | undefined {
 
 /**
  * Gemini Nano implementation of ChatService.
- * Uses Chrome's built-in LanguageModel API (Prompt API, Chrome 138+).
+ * Uses Chrome's built-in LanguageModel API (Prompt API, Chrome 148+ on web).
  * Runs entirely in the browser — no API key or network required.
  */
 export class GeminiNanoChatService implements ChatService {
@@ -142,7 +142,7 @@ export class GeminiNanoChatService implements ChatService {
     if (!api) {
       throw new Error(
         'Gemini Nano is not available in this environment. ' +
-          'Chrome 138+ with Prompt API enabled is required.',
+          'Chrome 148+ on a supported desktop device is required for web pages.',
       );
     }
 

@@ -6,6 +6,10 @@ The floating customer widget sends only conversation messages to the server.
 Provider credentials, model selection, persona, and curated package knowledge
 stay on the server.
 
+For a frontend-only alternative that uses Chrome's built-in Gemini Nano
+without an application server or API key, see
+[`../gemini-nano-customer-support-bot`](../gemini-nano-customer-support-bot/).
+
 ## Architecture
 
 ```text

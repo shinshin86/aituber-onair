@@ -901,12 +901,15 @@ Notes:
   best effort.
 - Up to the most recent 20 user/assistant messages are included as structured
   history.
-- Requires **Chrome 138+** with the following flags enabled:
-  - `chrome://flags/#optimization-guide-on-device-model` → Enabled
-  - `chrome://flags/#prompt-api-for-gemini-nano` → Enabled
+- Web pages require **Chrome 148+** on a supported desktop device. The Prompt
+  API is enabled by default, so no Chrome flags are required. Chrome extensions
+  have supported the Prompt API since Chrome 138.
 - The model runs entirely on-device; no network requests are made for inference.
 - Non-streaming only — responses are returned as a single complete text.
 - Vision is not supported.
+- See the
+  [browser-only Gemini Nano customer-support example](./examples/gemini-nano-customer-support-bot/)
+  for EN/JA language selection and frontend-only model preparation.
 - The initial model download requires a user action and may take a few minutes.
 
 ##### Tip: improve response-length consistency with examples
@@ -1276,7 +1279,7 @@ Currently, the following AI providers are built-in:
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
 - **Sakana AI**: Supports Fugu (`fugu`) and Fugu Ultra (`fugu-ultra`, `fugu-ultra-20260615`) via OpenAI-compatible Chat Completions.
 - **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) and PLaMo 2.2 Prime (`plamo-2.2-prime`) via OpenAI-compatible Chat Completions.
-- **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Chrome 138+ with Prompt API flags enabled. Non-streaming, no vision support.
+- **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Web pages require Chrome 148+ on a supported desktop device; no Chrome flags are required. Non-streaming, no vision support.
 
 ## License
 
