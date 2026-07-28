@@ -954,7 +954,7 @@
 
 .message-composer:focus-within > div {
   border-color: var(--blue);
-  box-shadow: 0 0 0 2px rgb(29 131 212 / 15%);
+  box-shadow: 0 0 0 3px rgb(15 95 168 / 65%);
 }
 
 .message-composer textarea {
@@ -967,6 +967,10 @@
   font-size: 11px;
   line-height: 1.4;
   resize: none;
+}
+
+.message-composer textarea:focus-visible {
+  outline: none;
 }
 
 .message-composer textarea::placeholder {

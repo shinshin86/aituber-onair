@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import {
   getAssistantText,
@@ -25,6 +26,11 @@ import {
   stripEmotionTag,
   SUPPORT_RESPONSE_LENGTH,
 } from '../src/support';
+
+const supportStyles = readFileSync(
+  new URL('../src/styles.css', import.meta.url),
+  'utf8',
+);
 
 describe('Gemini Nano character support configuration', () => {
   it('resolves the avatar below the configured Vite base path', () => {
@@ -98,6 +104,40 @@ describe('Gemini Nano character support configuration', () => {
     );
     expect(TSUKUYOMI_CORPUS_URL).toBe(
       'https://tyc.rei-yumesaki.net/material/corpus/',
+    );
+  });
+
+  it('uses natural Japanese copy for the main support UI', () => {
+    expect(translations.ja.hero.eyebrow).toBe(
+      '端末内で動くキャラクターサポート',
+    );
+    expect(translations.ja.hero.description).toBe(
+      'Chrome内蔵のGemini Nanoと、日本語PiperPlus・英語Web Speechの音声、PuruPuruアバターを、@aituber-onair/core がひとつにつなぎます。',
+    );
+    expect(translations.ja.model.description).toBe(
+      'サポート知識の参照も会話の生成も、すべてこのブラウザ内で完結します。',
+    );
+    expect(translations.ja.model.unavailable).toContain(
+      'Gemini Nanoに対応するデスクトップ端末',
+    );
+    expect(translations.ja.details.avatarDescription).toBe(
+      'Coreのイベントを通じて、感情タグをPuruPuruアバターの表情に、RMSによる口パクと疑似口パクを口の動きに反映します。',
+    );
+    expect(translations.ja.details.voiceTitle).toBe(
+      '言語に合わせて端末内で読み上げ',
+    );
+    expect(translations.ja.voice.checkingAssets).toContain('端末内');
+    expect(translations.ja.chat.local).toContain('Chrome内だけ');
+    expect(translations.ja.chat.welcome).toBe(
+      'こんにちは、ミコです。@aituber-onair/core について、短い質問をどうぞ。',
+    );
+  });
+
+  it('uses the composer wrapper as the only visible focus ring', () => {
+    expect(supportStyles).toContain('.message-composer textarea:focus-visible');
+    expect(supportStyles).toContain('outline: none');
+    expect(supportStyles).toContain(
+      'box-shadow: 0 0 0 3px rgb(15 95 168 / 65%)',
     );
   });
 
