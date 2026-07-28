@@ -450,6 +450,14 @@
   font-weight: 680;
 }
 
+.site-footer a {
+  display: grid;
+  max-width: 420px;
+  color: inherit;
+  line-height: 1.5;
+  text-align: right;
+}
+
 .support-widget {
   position: fixed;
   z-index: 30;
@@ -536,7 +544,7 @@
   border-radius: 22px;
   background: var(--paper);
   box-shadow: 0 30px 72px rgb(7 26 53 / 30%);
-  grid-template-rows: auto 230px auto minmax(84px, 1fr) auto auto;
+  grid-template-rows: auto 230px auto auto minmax(84px, 1fr) auto auto;
   animation: panel-in 180ms ease-out;
 }
 
@@ -786,6 +794,66 @@
   opacity: 0.6;
 }
 
+.widget-voice-state {
+  display: grid;
+  min-height: 42px;
+  padding: 8px 14px;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  color: #4a6178;
+  background: #f4f8fb;
+  font-size: 8px;
+  font-weight: 690;
+  line-height: 1.45;
+}
+
+.widget-voice-state--available {
+  color: #25644c;
+  background: #f2faf6;
+}
+
+.widget-voice-state--missing,
+.widget-voice-state--error {
+  color: var(--danger);
+  background: #fff3f1;
+}
+
+.widget-voice-state--checking,
+.widget-voice-state--initializing {
+  color: #62552c;
+  background: #fbf7df;
+}
+
+.voice-progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(98 85 44 / 16%);
+}
+
+.voice-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #d2a932;
+  transition: width 160ms ease;
+}
+
+.voice-progress.is-indeterminate i {
+  width: 34%;
+  animation: voice-progress 1.1s ease-in-out infinite;
+}
+
+@keyframes voice-progress {
+  from {
+    transform: translateX(-110%);
+  }
+
+  to {
+    transform: translateX(300%);
+  }
+}
+
 .conversation {
   min-height: 84px;
   overflow-y: auto;
@@ -938,11 +1006,19 @@
 }
 
 .support-footer {
+  display: grid;
   padding: 8px 12px;
+  gap: 3px;
   border-top: 1px solid var(--line);
   color: #99a4b2;
   font-size: 7px;
   text-align: center;
+}
+
+.support-footer a {
+  display: grid;
+  color: #7f8d9e;
+  line-height: 1.35;
 }
 
 .support-footer strong {
@@ -1005,6 +1081,10 @@
     gap: 6px;
   }
 
+  .site-footer a {
+    text-align: left;
+  }
+
   .support-widget {
     right: 12px;
     bottom: 12px;
@@ -1017,7 +1097,7 @@
     height: auto;
     border-radius: 17px;
     grid-template-rows:
-      auto minmax(185px, 34vh) auto minmax(84px, 1fr) auto
+      auto minmax(185px, 34vh) auto auto minmax(84px, 1fr) auto
       auto;
   }
 }

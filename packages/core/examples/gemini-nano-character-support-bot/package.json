@@ -9,7 +9,8 @@
     "test": "vitest run",
     "lint": "eslint .",
     "fmt": "biome format . --write",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup:piper": "bash scripts/setup-piper-assets.sh"
   },
   "dependencies": {
     "@aituber-onair/chat": "file:../../../chat",

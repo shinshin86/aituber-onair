@@ -1,8 +1,16 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from 'react';
+import { useAudioLipsync } from '../hooks/useAudioLipsync';
 import { useCharacterSupportCore } from '../hooks/useCharacterSupportCore';
 import type { GeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
+import { usePiperPlusAssets } from '../hooks/usePiperPlusAssets';
 import { useSyntheticLipsync } from '../hooks/useSyntheticLipsync';
-import { type Language, translations } from '../i18n';
+import { type Language, translations, TSUKUYOMI_CORPUS_URL } from '../i18n';
 import AvatarCanvas from './AvatarCanvas';
 import LanguageSwitch from './LanguageSwitch';
 
@@ -42,9 +50,39 @@ export default function SupportWidget({
   const [isOpen, setIsOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
   const [draft, setDraft] = useState('');
+  const [piperInitialized, setPiperInitialized] = useState(false);
+  const [piperRuntimeError, setPiperRuntimeError] = useState(false);
   const messageListRef = useRef<HTMLDivElement | null>(null);
   const modelAvailable = status === 'available';
   const canPrepare = status === 'downloadable' || status === 'downloading';
+  const piperAssets = usePiperPlusAssets(language === 'ja');
+  const {
+    mouthLevel: rmsMouthLevel,
+    isSpeaking: isAudioSpeaking,
+    smoothedValue,
+    unlock,
+    play,
+    stop,
+  } = useAudioLipsync();
+  const handleAudioPlay = useCallback(
+    async (audioBuffer: ArrayBuffer) => {
+      setPiperInitialized(true);
+      setPiperRuntimeError(false);
+      try {
+        await play(audioBuffer);
+      } catch (error) {
+        setPiperInitialized(false);
+        setPiperRuntimeError(true);
+        throw error;
+      }
+    },
+    [play],
+  );
+  const handleSpeechError = useCallback(() => {
+    setPiperRuntimeError(true);
+  }, []);
+  const voiceAvailable =
+    language === 'en' || piperAssets.status === 'available';
   const {
     messages,
     isReady,
@@ -54,11 +92,54 @@ export default function SupportWidget({
     sendMessage,
     resetConversation,
   } = useCharacterSupportCore({
-    enabled: hasOpened && modelAvailable,
+    enabled: hasOpened && modelAvailable && voiceAvailable,
     language,
     errorMessage: t.chat.coreError,
+    onAudioPlay: handleAudioPlay,
+    onAudioStop: stop,
+    onSpeechError: handleSpeechError,
   });
-  const mouthLevel = useSyntheticLipsync(isSpeechActive);
+  const isBusy = isProcessing || isSpeechActive;
+  const syntheticMouthLevel = useSyntheticLipsync(
+    language === 'en' && isSpeechActive,
+  );
+  const mouthLevel =
+    language === 'ja'
+      ? Math.max(smoothedValue, (rmsMouthLevel / 4) * 0.12)
+      : syntheticMouthLevel;
+  const avatarIsSpeaking = language === 'ja' ? isAudioSpeaking : isSpeechActive;
+  const piperIsInitializing =
+    language === 'ja' && isSpeechActive && !piperInitialized;
+  const piperAssetState =
+    piperAssets.status === 'idle' ? 'checking' : piperAssets.status;
+  const piperProgress =
+    piperAssets.total === 0
+      ? 0
+      : Math.round((piperAssets.checked / piperAssets.total) * 100);
+  const voiceState =
+    language === 'en'
+      ? 'available'
+      : piperRuntimeError
+        ? 'error'
+        : piperIsInitializing
+          ? 'initializing'
+          : piperAssetState;
+  const voiceStatusText =
+    language === 'en'
+      ? t.voice.webSpeechReady
+      : piperRuntimeError
+        ? t.voice.runtimeError
+        : piperIsInitializing
+          ? t.voice.initializing
+          : piperAssetState === 'checking'
+            ? t.voice.checkingAssets
+            : piperAssetState === 'available'
+              ? piperInitialized
+                ? t.voice.ready
+                : t.voice.assetsReady
+              : piperAssetState === 'missing'
+                ? t.voice.missing
+                : t.voice.error;
 
   useEffect(() => {
     const element = messageListRef.current;
@@ -66,11 +147,16 @@ export default function SupportWidget({
   }, [messages]);
 
   useEffect(() => {
-    onBusyChange(isProcessing);
+    onBusyChange(isBusy);
     return () => onBusyChange(false);
-  }, [isProcessing, onBusyChange]);
+  }, [isBusy, onBusyChange]);
 
   const toggleWidget = () => {
+    if (language === 'ja') {
+      void unlock().catch((error) => {
+        console.warn('Audio context could not be unlocked yet:', error);
+      });
+    }
     setHasOpened(true);
     setIsOpen((current) => !current);
   };
@@ -78,14 +164,40 @@ export default function SupportWidget({
   const submitMessage = async (event: FormEvent) => {
     event.preventDefault();
     const content = draft.trim();
-    if (!content || !isReady || isProcessing) return;
+    if (!content || !isReady || isBusy) return;
 
+    if (language === 'ja') {
+      try {
+        await unlock();
+      } catch (error) {
+        console.error('Audio context could not be unlocked:', error);
+        setPiperRuntimeError(true);
+        return;
+      }
+    }
     setDraft('');
     await sendMessage(content);
   };
 
+  const changeLanguage = (nextLanguage: Language) => {
+    stop();
+    setPiperInitialized(false);
+    setPiperRuntimeError(false);
+    onLanguageChange(nextLanguage);
+  };
+
+  const reset = () => {
+    stop();
+    setPiperRuntimeError(false);
+    resetConversation();
+  };
+
   const canSend =
-    isReady && !isProcessing && draft.trim().length > 0 && modelAvailable;
+    isReady &&
+    !isBusy &&
+    draft.trim().length > 0 &&
+    modelAvailable &&
+    voiceAvailable;
 
   return (
     <aside className="support-widget" aria-label={t.chat.widgetLabel}>
@@ -102,13 +214,13 @@ export default function SupportWidget({
             <div className="support-header-actions">
               <LanguageSwitch
                 language={language}
-                onChange={onLanguageChange}
-                disabled={isProcessing || isPreparing}
+                onChange={changeLanguage}
+                disabled={isBusy || isPreparing}
               />
               <button
                 type="button"
-                onClick={resetConversation}
-                disabled={isProcessing}
+                onClick={reset}
+                disabled={isBusy}
                 aria-label={t.chat.reset}
                 title={t.chat.reset}
               >
@@ -127,7 +239,7 @@ export default function SupportWidget({
 
           <AvatarCanvas
             voiceLevel={mouthLevel}
-            isSpeaking={isSpeechActive}
+            isSpeaking={avatarIsSpeaking}
             reaction={reaction}
           />
 
@@ -141,6 +253,36 @@ export default function SupportWidget({
                 {isPreparing ? t.model.preparing : t.model.prepare}
               </button>
             )}
+          </div>
+
+          <div
+            className={`widget-voice-state widget-voice-state--${voiceState}`}
+            role="status"
+          >
+            <span>{voiceStatusText}</span>
+            {language === 'ja' &&
+              (piperAssetState === 'checking' || piperIsInitializing) && (
+                <div
+                  className={`voice-progress${
+                    piperIsInitializing ? ' is-indeterminate' : ''
+                  }`}
+                  role="progressbar"
+                  aria-label={t.voice.progress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={
+                    piperIsInitializing ? undefined : piperProgress
+                  }
+                >
+                  <i
+                    style={
+                      piperIsInitializing
+                        ? undefined
+                        : { width: `${piperProgress}%` }
+                    }
+                  />
+                </div>
+              )}
           </div>
 
           <div className="conversation" ref={messageListRef} aria-live="polite">
@@ -191,11 +333,13 @@ export default function SupportWidget({
                 rows={1}
                 maxLength={MAX_MESSAGE_LENGTH}
                 placeholder={
-                  modelAvailable
-                    ? t.chat.inputPlaceholder
-                    : t.chat.inputDisabled
+                  !modelAvailable
+                    ? t.chat.inputDisabled
+                    : !voiceAvailable
+                      ? t.voice.missing
+                      : t.chat.inputPlaceholder
                 }
-                disabled={!isReady || isProcessing}
+                disabled={!isReady || isBusy}
               />
               <button
                 type="submit"
@@ -207,7 +351,19 @@ export default function SupportWidget({
             </div>
           </form>
           <footer className="support-footer">
-            {t.chat.poweredBy} <strong>@aituber-onair/core</strong>
+            <span>
+              {t.chat.poweredBy} <strong>@aituber-onair/core</strong>
+            </span>
+            <a
+              href={TSUKUYOMI_CORPUS_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={t.voice.creditLinkLabel}
+            >
+              <span>{t.voice.credit}</span>
+              <span>{t.voice.creditCorpus}</span>
+              <span>{TSUKUYOMI_CORPUS_URL}</span>
+            </a>
           </footer>
         </section>
       )}

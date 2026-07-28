@@ -1,4 +1,6 @@
 export type Language = 'en' | 'ja';
+export const TSUKUYOMI_CORPUS_URL =
+  'https://tyc.rei-yumesaki.net/material/corpus/';
 
 type ModelStatus =
   | 'checking'
@@ -47,6 +49,20 @@ interface TranslationRecord {
     avatarTitle: string;
     avatarDescription: string;
   };
+  voice: {
+    webSpeechReady: string;
+    checkingAssets: string;
+    assetsReady: string;
+    initializing: string;
+    ready: string;
+    missing: string;
+    error: string;
+    runtimeError: string;
+    progress: string;
+    credit: string;
+    creditCorpus: string;
+    creditLinkLabel: string;
+  };
   chat: {
     widgetLabel: string;
     panelLabel: string;
@@ -79,7 +95,7 @@ export const translations: Record<Language, TranslationRecord> = {
     document: {
       title: 'Gemini Nano Character Support — AITuber OnAir',
       description:
-        'A browser-only character support bot powered by Gemini Nano, Web Speech, and AITuber OnAir Core.',
+        'A browser-only character support bot powered by Gemini Nano, PiperPlus, Web Speech, and AITuber OnAir Core.',
     },
     language: {
       label: 'Display and response language',
@@ -91,7 +107,7 @@ export const translations: Record<Language, TranslationRecord> = {
       titleLead: 'Chat, voice, and reactions.',
       titleEmphasis: 'Entirely in Chrome.',
       description:
-        'Miko combines Chrome built-in Gemini Nano, Web Speech, and a PuruPuru avatar through @aituber-onair/core. No server or API key is required.',
+        'Miko combines Chrome built-in Gemini Nano, Japanese PiperPlus or English Web Speech, and a PuruPuru avatar through @aituber-onair/core.',
       openChat: 'Talk with Miko',
       readPackage: 'Read the Core README',
       localBadge: 'On-device chat',
@@ -114,18 +130,38 @@ export const translations: Record<Language, TranslationRecord> = {
       prepare: 'Prepare Gemini Nano',
       preparing: 'Preparing…',
       progress: 'Model download progress',
-      requirements: 'Chrome 148+ desktop · Web Speech API',
+      requirements: 'Chrome 148+ desktop · PiperPlus assets for Japanese',
     },
     details: {
       chatTitle: 'Private, local chat',
       chatDescription:
         'Gemini Nano answers from the public Core knowledge bundled with this page.',
-      voiceTitle: 'Built-in browser voice',
+      voiceTitle: 'Language-aware local voice',
       voiceDescription:
-        'Web Speech speaks each answer directly without a voice server or audio upload.',
+        'Japanese uses PiperPlus with Tsukuyomi-chan; English uses the browser Web Speech voice.',
       avatarTitle: 'Emotion-aware Miko',
       avatarDescription:
-        'Core events connect emotion tags and synthetic lip sync to the PuruPuru avatar.',
+        'Core events connect emotion tags, RMS lip sync, and synthetic lip sync to the PuruPuru avatar.',
+    },
+    voice: {
+      webSpeechReady: 'English voice: Web Speech is ready.',
+      checkingAssets: 'Checking local PiperPlus assets…',
+      assetsReady:
+        'Japanese voice: PiperPlus assets are ready. The first reply initializes the model.',
+      initializing:
+        'Initializing PiperPlus and the Tsukuyomi-chan model for the first reply…',
+      ready: 'Japanese voice: PiperPlus with Tsukuyomi-chan is ready.',
+      missing:
+        'PiperPlus assets are missing. Run npm run setup:piper, then reload this page.',
+      error:
+        'PiperPlus assets could not be checked. Run npm run setup:piper and reload.',
+      runtimeError:
+        'PiperPlus audio could not start. Run npm run setup:piper -- --force, reload, and try again.',
+      progress: 'PiperPlus preparation progress',
+      credit:
+        'This software uses voice data made freely available by the free material character "Tsukuyomi-chan" (c) Rei Yumesaki for speech synthesis.',
+      creditCorpus: 'Tsukuyomi-chan Corpus (CV. Rei Yumesaki)',
+      creditLinkLabel: 'Tsukuyomi-chan Corpus terms',
     },
     chat: {
       widgetLabel: 'Gemini Nano character support',
@@ -156,7 +192,7 @@ export const translations: Record<Language, TranslationRecord> = {
     document: {
       title: 'Gemini Nano キャラクターサポート — AITuber OnAir',
       description:
-        'Gemini Nano、Web Speech、AITuber OnAir Coreで動くブラウザ完結のキャラクターサポートボットです。',
+        'Gemini Nano、PiperPlus、Web Speech、AITuber OnAir Coreで動くブラウザ完結のキャラクターサポートボットです。',
     },
     language: {
       label: '表示言語と回答言語',
@@ -168,7 +204,7 @@ export const translations: Record<Language, TranslationRecord> = {
       titleLead: 'チャット、音声、リアクション。',
       titleEmphasis: 'すべてChromeの中で。',
       description:
-        'ミコがChrome内蔵のGemini Nano、Web Speech、PuruPuruアバターを@aituber-onair/coreで連携します。サーバーもAPIキーも不要です。',
+        'ミコがChrome内蔵のGemini Nano、日本語PiperPlus、英語Web Speech、PuruPuruアバターを@aituber-onair/coreで連携します。',
       openChat: 'ミコと話す',
       readPackage: 'CoreのREADMEを読む',
       localBadge: '端末内チャット',
@@ -191,18 +227,39 @@ export const translations: Record<Language, TranslationRecord> = {
       prepare: 'Gemini Nanoを準備',
       preparing: '準備中…',
       progress: 'モデルのダウンロード進捗',
-      requirements: 'デスクトップ版Chrome 148以降 · Web Speech API',
+      requirements:
+        'デスクトップ版Chrome 148以降 · 日本語はPiperPlusアセットが必要',
     },
     details: {
       chatTitle: '端末内で完結するチャット',
       chatDescription:
         'ページに同梱した公開Core知識をもとに、Gemini Nanoが回答します。',
-      voiceTitle: 'ブラウザ内蔵音声',
+      voiceTitle: '言語に合わせたローカル音声',
       voiceDescription:
-        'Web Speechが音声サーバーやアップロードなしで回答を直接読み上げます。',
+        '日本語はPiperPlusのつくよみちゃん、英語はブラウザのWeb Speechで読み上げます。',
       avatarTitle: '感情に反応するミコ',
       avatarDescription:
-        'Coreイベントが感情タグと疑似口パクをPuruPuruアバターへつなぎます。',
+        'Coreイベントが感情タグ、RMS口パク、疑似口パクをPuruPuruアバターへつなぎます。',
+    },
+    voice: {
+      webSpeechReady: '英語音声: Web Speechを利用できます。',
+      checkingAssets: 'ローカルのPiperPlusアセットを確認しています…',
+      assetsReady:
+        '日本語音声: PiperPlusアセットを確認しました。初回回答時にモデルを初期化します。',
+      initializing:
+        '初回回答用にPiperPlusとつくよみちゃんモデルを初期化しています…',
+      ready: '日本語音声: PiperPlusのつくよみちゃんを利用できます。',
+      missing:
+        'PiperPlusアセットがありません。npm run setup:piper を実行してページを再読み込みしてください。',
+      error:
+        'PiperPlusアセットを確認できません。npm run setup:piper を実行して再読み込みしてください。',
+      runtimeError:
+        'PiperPlus音声を開始できません。npm run setup:piper -- --force を実行し、再読み込みしてからもう一度お試しください。',
+      progress: 'PiperPlusの準備進捗',
+      credit:
+        '本ソフトウェアの音声合成には、フリー素材キャラクター「つくよみちゃん」(c) Rei Yumesaki が無料公開している音声データを使用しています。',
+      creditCorpus: 'つくよみちゃんコーパス（CV.夢前黎）',
+      creditLinkLabel: 'つくよみちゃんコーパス利用規約',
     },
     chat: {
       widgetLabel: 'Gemini Nano キャラクターサポート',

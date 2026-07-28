@@ -1,10 +1,52 @@
 import packageKnowledge from './core-package-knowledge.md?raw';
+import type { VoiceServiceOptions } from '@aituber-onair/core';
+import piperAssetManifest from '../scripts/piper-assets-manifest.txt?raw';
 import type { Language } from './i18n';
 
 export const PACKAGE_KNOWLEDGE = packageKnowledge;
 export const SUPPORT_RESPONSE_LENGTH = 'veryShort' as const;
+export const PIPER_PLUS_MODEL_CONFIG_FILE = 'tsukuyomi-config.json';
+export const PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
+export const PIPER_PLUS_VOICE_FILE = 'mei_normal.htsvoice';
+export const PIPER_PLUS_ASSETS = piperAssetManifest
+  .trim()
+  .split('\n')
+  .map((line) => {
+    const [size, ...pathParts] = line.trim().split(/\s+/);
+    return {
+      path: pathParts.join(' '),
+      size: Number(size),
+    };
+  })
+  .filter(({ path, size }) => path.length > 0 && Number.isSafeInteger(size));
+export const PIPER_PLUS_ASSET_FILES = PIPER_PLUS_ASSETS.map(({ path }) => path);
+
+const withTrailingSlash = (value: string): string =>
+  value.endsWith('/') ? value : `${value}/`;
+
 export const resolveAvatarPackageUrl = (baseUrl: string): string =>
-  `${baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`}avatar/miko.purupuru`;
+  `${withTrailingSlash(baseUrl)}avatar/miko.purupuru`;
+
+export const resolvePiperPlusBasePath = (baseUrl: string): string =>
+  `${withTrailingSlash(baseUrl)}piper/`;
+
+export const getPiperPlusAssetUrls = (baseUrl: string): string[] => {
+  const piperBasePath = resolvePiperPlusBasePath(baseUrl);
+  return PIPER_PLUS_ASSET_FILES.map(
+    (relativePath) => `${piperBasePath}${relativePath}`,
+  );
+};
+
+export const getPiperPlusAssetChecks = (
+  baseUrl: string,
+): Array<{ url: string; size: number }> => {
+  const piperBasePath = resolvePiperPlusBasePath(baseUrl);
+  return PIPER_PLUS_ASSETS.map(({ path, size }) => ({
+    url: `${piperBasePath}${path}`,
+    size,
+  }));
+};
+
 export const SUPPORTED_EMOTIONS = [
   'happy',
   'sad',
@@ -24,8 +66,26 @@ export const getGeminiNanoLanguageOptions = (language: Language) => ({
   expectedOutputLanguages: [language],
 });
 
-export const getWebSpeechLanguage = (language: Language): string =>
-  language === 'ja' ? 'ja-JP' : 'en-US';
+export const getSupportVoiceOptions = (
+  language: Language,
+  baseUrl: string,
+  onPlay?: (audioBuffer: ArrayBuffer) => Promise<void>,
+): VoiceServiceOptions =>
+  language === 'ja'
+    ? {
+        engineType: 'piperPlus',
+        speaker: 'tsukuyomi',
+        piperPlusBasePath: resolvePiperPlusBasePath(baseUrl),
+        piperPlusModelConfigFile: PIPER_PLUS_MODEL_CONFIG_FILE,
+        piperPlusModelFile: PIPER_PLUS_MODEL_FILE,
+        piperPlusVoiceFile: PIPER_PLUS_VOICE_FILE,
+        onPlay,
+      }
+    : {
+        engineType: 'webSpeech',
+        speaker: '',
+        webSpeechLanguage: 'en-US',
+      };
 
 export const stripEmotionTag = (text: string): string =>
   text.replace(/^\s*\[[a-z]+\]\s*/i, '').trim();

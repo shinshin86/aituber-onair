@@ -8,7 +8,7 @@ import {
 import {
   buildSupportSystemPrompt,
   getGeminiNanoLanguageOptions,
-  getWebSpeechLanguage,
+  getSupportVoiceOptions,
   normalizeEmotion,
   stripEmotionTag,
   SUPPORT_RESPONSE_LENGTH,
@@ -30,6 +30,9 @@ interface UseCharacterSupportCoreOptions {
   enabled: boolean;
   language: Language;
   errorMessage: string;
+  onAudioPlay: (audioBuffer: ArrayBuffer) => Promise<void>;
+  onAudioStop: () => void;
+  onSpeechError: () => void;
 }
 
 export const normalizeScreenplayEvent = (
@@ -87,19 +90,32 @@ export function useCharacterSupportCore({
   enabled,
   language,
   errorMessage,
+  onAudioPlay,
+  onAudioStop,
+  onSpeechError,
 }: UseCharacterSupportCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
+  const onAudioPlayRef = useRef(onAudioPlay);
+  const onAudioStopRef = useRef(onAudioStop);
+  const onSpeechErrorRef = useRef(onSpeechError);
   const errorMessageRef = useRef(errorMessage);
   const activeAssistantIdRef = useRef<string | null>(null);
   const partialTextRef = useRef('');
   const sequenceRef = useRef(0);
   const reactionSequenceRef = useRef(0);
   const processingRef = useRef(false);
+  const speechActiveRef = useRef(false);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [readyLanguage, setReadyLanguage] = useState<Language | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeechActive, setIsSpeechActive] = useState(false);
   const [reaction, setReaction] = useState<PuruPuruReaction | null>(null);
+
+  useEffect(() => {
+    onAudioPlayRef.current = onAudioPlay;
+    onAudioStopRef.current = onAudioStop;
+    onSpeechErrorRef.current = onSpeechError;
+  }, [onAudioPlay, onAudioStop, onSpeechError]);
 
   useEffect(() => {
     errorMessageRef.current = errorMessage;
@@ -138,11 +154,13 @@ export function useCharacterSupportCore({
       chatOptions: {
         systemPrompt: buildSupportSystemPrompt(language),
       },
-      voiceOptions: {
-        engineType: 'webSpeech',
-        speaker: '',
-        webSpeechLanguage: getWebSpeechLanguage(language),
-      },
+      voiceOptions: getSupportVoiceOptions(
+        language,
+        import.meta.env.BASE_URL,
+        async (audioBuffer) => {
+          await onAudioPlayRef.current(audioBuffer);
+        },
+      ),
       debug: false,
     });
 
@@ -192,6 +210,7 @@ export function useCharacterSupportCore({
     });
 
     core.on(AITuberOnAirCoreEvent.SPEECH_START, (value: unknown) => {
+      speechActiveRef.current = true;
       setIsSpeechActive(true);
       const screenplay = normalizeScreenplayEvent(value);
       const draft = createPuruPuruReactionFromScreenplay(screenplay);
@@ -205,12 +224,14 @@ export function useCharacterSupportCore({
     });
 
     core.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
+      speechActiveRef.current = false;
       setIsSpeechActive(false);
       setReaction(null);
     });
 
     core.on(AITuberOnAirCoreEvent.ERROR, (error: unknown) => {
       console.error('Gemini Nano character support error:', error);
+      if (speechActiveRef.current) onSpeechErrorRef.current();
       const activeId = activeAssistantIdRef.current;
       if (activeId) {
         setMessages((current) =>
@@ -228,6 +249,7 @@ export function useCharacterSupportCore({
       activeAssistantIdRef.current = null;
       partialTextRef.current = '';
       processingRef.current = false;
+      speechActiveRef.current = false;
       setIsProcessing(false);
       setIsSpeechActive(false);
       setReaction(null);
@@ -242,7 +264,9 @@ export function useCharacterSupportCore({
       cancelled = true;
       core.stopSpeech();
       core.offAll();
+      onAudioStopRef.current();
       processingRef.current = false;
+      speechActiveRef.current = false;
       setIsProcessing(false);
       setIsSpeechActive(false);
       setReaction(null);
@@ -292,7 +316,9 @@ export function useCharacterSupportCore({
   const resetConversation = useCallback(() => {
     if (processingRef.current) return;
     coreRef.current?.stopSpeech();
+    onAudioStopRef.current();
     coreRef.current?.clearChatHistory();
+    speechActiveRef.current = false;
     activeAssistantIdRef.current = null;
     partialTextRef.current = '';
     setIsSpeechActive(false);

@@ -4,6 +4,7 @@ import SupportWidget from './components/SupportWidget';
 import {
   getInitialLanguage,
   persistLanguage,
+  TSUKUYOMI_CORPUS_URL,
   translations,
   type Language,
 } from './i18n';
@@ -174,6 +175,11 @@ export default function App() {
       <footer className="site-footer">
         <span>AITuber OnAir</span>
         <span>{t.footer}</span>
+        <a href={TSUKUYOMI_CORPUS_URL} target="_blank" rel="noreferrer">
+          <span>{t.voice.credit}</span>
+          <span>{t.voice.creditCorpus}</span>
+          <span>{TSUKUYOMI_CORPUS_URL}</span>
+        </a>
       </footer>
 
       <SupportWidget
