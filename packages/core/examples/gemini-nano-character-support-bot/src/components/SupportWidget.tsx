@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type ReactNode,
 } from 'react';
 import { useAudioLipsync } from '../hooks/useAudioLipsync';
 import { useCharacterSupportCore } from '../hooks/useCharacterSupportCore';
@@ -11,6 +12,11 @@ import type { GeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import { usePiperPlusAssets } from '../hooks/usePiperPlusAssets';
 import { useSyntheticLipsync } from '../hooks/useSyntheticLipsync';
 import { type Language, translations, TSUKUYOMI_CORPUS_URL } from '../i18n';
+import {
+  isModelNoticeDismissible,
+  isVoiceNoticeDismissible,
+  type VoiceNoticeKind,
+} from '../noticeDismissal';
 import AvatarCanvas from './AvatarCanvas';
 import LanguageSwitch from './LanguageSwitch';
 
@@ -28,6 +34,44 @@ const SparkIcon = () => (
     <path d="M12 2c.7 5.8 4.2 9.3 10 10-5.8.7-9.3 4.2-10 10-.7-5.8-4.2-9.3-10-10 5.8-.7 9.3-4.2 10-10Z" />
   </svg>
 );
+
+interface StatusNoticeProps {
+  className: string;
+  dismissible: boolean;
+  dismissLabel: string;
+  children: ReactNode;
+}
+
+const StatusNotice = ({
+  className,
+  dismissible,
+  dismissLabel,
+  children,
+}: StatusNoticeProps) => {
+  const [isDismissed, setIsDismissed] = useState(false);
+
+  if (isDismissed) return null;
+
+  return (
+    <div
+      className={`${className}${dismissible ? ' is-dismissible' : ''}`}
+      role="status"
+    >
+      {children}
+      {dismissible && (
+        <button
+          type="button"
+          className="widget-status-dismiss"
+          onClick={() => setIsDismissed(true)}
+          aria-label={dismissLabel}
+          title={dismissLabel}
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      )}
+    </div>
+  );
+};
 
 interface SupportWidgetProps {
   language: Language;
@@ -124,22 +168,23 @@ export default function SupportWidget({
         : piperIsInitializing
           ? 'initializing'
           : piperAssetState;
-  const voiceStatusText =
+  const voiceNoticeKind: VoiceNoticeKind =
     language === 'en'
-      ? t.voice.webSpeechReady
+      ? 'webSpeechReady'
       : piperRuntimeError
-        ? t.voice.runtimeError
+        ? 'runtimeError'
         : piperIsInitializing
-          ? t.voice.initializing
+          ? 'initializing'
           : piperAssetState === 'checking'
-            ? t.voice.checkingAssets
+            ? 'checkingAssets'
             : piperAssetState === 'available'
               ? piperInitialized
-                ? t.voice.ready
-                : t.voice.assetsReady
+                ? 'ready'
+                : 'assetsReady'
               : piperAssetState === 'missing'
-                ? t.voice.missing
-                : t.voice.error;
+                ? 'missing'
+                : 'error';
+  const voiceStatusText = t.voice[voiceNoticeKind];
 
   useEffect(() => {
     const element = messageListRef.current;
@@ -243,9 +288,11 @@ export default function SupportWidget({
             reaction={reaction}
           />
 
-          <div
+          <StatusNotice
+            key={`model-${status}`}
             className={`widget-model-state widget-model-state--${status}`}
-            role="status"
+            dismissible={isModelNoticeDismissible(status)}
+            dismissLabel={t.chat.dismissModelStatus}
           >
             <span>{t.model[status]}</span>
             {canPrepare && (
@@ -253,11 +300,13 @@ export default function SupportWidget({
                 {isPreparing ? t.model.preparing : t.model.prepare}
               </button>
             )}
-          </div>
+          </StatusNotice>
 
-          <div
+          <StatusNotice
+            key={`voice-${voiceNoticeKind}`}
             className={`widget-voice-state widget-voice-state--${voiceState}`}
-            role="status"
+            dismissible={isVoiceNoticeDismissible(voiceNoticeKind)}
+            dismissLabel={t.chat.dismissVoiceStatus}
           >
             <span>{voiceStatusText}</span>
             {language === 'ja' &&
@@ -283,7 +332,7 @@ export default function SupportWidget({
                   />
                 </div>
               )}
-          </div>
+          </StatusNotice>
 
           <div className="conversation" ref={messageListRef} aria-live="polite">
             <div className="message-row message-row--assistant">

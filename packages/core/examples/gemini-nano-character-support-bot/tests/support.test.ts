@@ -13,6 +13,10 @@ import { checkPiperPlusAssets } from '../src/hooks/usePiperPlusAssets';
 import { getSyntheticMouthLevel } from '../src/hooks/useSyntheticLipsync';
 import { translations, TSUKUYOMI_CORPUS_URL } from '../src/i18n';
 import {
+  isModelNoticeDismissible,
+  isVoiceNoticeDismissible,
+} from '../src/noticeDismissal';
+import {
   buildSupportSystemPrompt,
   getGeminiNanoLanguageOptions,
   getPiperPlusAssetChecks,
@@ -139,6 +143,58 @@ describe('Gemini Nano character support configuration', () => {
     expect(supportStyles).toContain(
       'box-shadow: 0 0 0 3px rgb(15 95 168 / 65%)',
     );
+  });
+
+  it('allows dismissing only completed status notices', () => {
+    expect(isModelNoticeDismissible('available')).toBe(true);
+    for (const status of [
+      'checking',
+      'downloadable',
+      'downloading',
+      'unavailable',
+      'promptTooLarge',
+      'error',
+    ] as const) {
+      expect(isModelNoticeDismissible(status)).toBe(false);
+    }
+
+    expect(isVoiceNoticeDismissible('assetsReady')).toBe(true);
+    expect(isVoiceNoticeDismissible('ready')).toBe(true);
+    expect(isVoiceNoticeDismissible('webSpeechReady')).toBe(true);
+    expect(isVoiceNoticeDismissible('checkingAssets')).toBe(false);
+    expect(isVoiceNoticeDismissible('initializing')).toBe(false);
+    expect(isVoiceNoticeDismissible('missing')).toBe(false);
+    expect(isVoiceNoticeDismissible('error')).toBe(false);
+    expect(isVoiceNoticeDismissible('runtimeError')).toBe(false);
+  });
+
+  it('provides localized accessible labels for both dismiss buttons', () => {
+    expect(translations.en.chat.dismissModelStatus).toBe(
+      'Dismiss model status',
+    );
+    expect(translations.en.chat.dismissVoiceStatus).toBe(
+      'Dismiss voice status',
+    );
+    expect(translations.ja.chat.dismissModelStatus).toBe(
+      'モデルの状態を閉じる',
+    );
+    expect(translations.ja.chat.dismissVoiceStatus).toBe('音声の状態を閉じる');
+  });
+
+  it('keeps the panel grid rows stable when status notices are dismissed', () => {
+    for (const [selector, row] of [
+      ['support-header', 1],
+      ['avatar-stage', 2],
+      ['widget-model-state', 3],
+      ['widget-voice-state', 4],
+      ['conversation', 5],
+      ['message-composer', 6],
+      ['support-footer', 7],
+    ] as const) {
+      expect(supportStyles).toMatch(
+        new RegExp(`\\.${selector} \\{[^}]*grid-row: ${row};`),
+      );
+    }
   });
 
   it('requests a one-sentence tagged response in the selected language', () => {

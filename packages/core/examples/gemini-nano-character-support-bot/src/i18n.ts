@@ -71,6 +71,8 @@ interface TranslationRecord {
     local: string;
     reset: string;
     close: string;
+    dismissModelStatus: string;
+    dismissVoiceStatus: string;
     welcome: string;
     typing: string;
     messageLabel: string;
@@ -171,6 +173,8 @@ export const translations: Record<Language, TranslationRecord> = {
       local: 'Local in Chrome',
       reset: 'Reset conversation',
       close: 'Close support',
+      dismissModelStatus: 'Dismiss model status',
+      dismissVoiceStatus: 'Dismiss voice status',
       welcome:
         'Hi! I’m Miko. Ask me a short question about @aituber-onair/core.',
       typing: 'Miko is thinking',
@@ -269,6 +273,8 @@ export const translations: Record<Language, TranslationRecord> = {
       local: 'Chrome内だけで動作中',
       reset: '会話をリセット',
       close: 'サポートを閉じる',
+      dismissModelStatus: 'モデルの状態を閉じる',
+      dismissVoiceStatus: '音声の状態を閉じる',
       welcome:
         'こんにちは、ミコです。@aituber-onair/core について、短い質問をどうぞ。',
       typing: 'ミコが回答を考えています',
