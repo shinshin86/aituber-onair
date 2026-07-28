@@ -46,6 +46,10 @@ minimal (`name`, `description`) and keep the body procedural.
   - Canonical: `skills/connect-colab-local-tts/SKILL.md`
   - Claude Code: `.claude/skills/connect-colab-local-tts/SKILL.md`
   - Codex metadata: `skills/connect-colab-local-tts/agents/openai.yaml`
+- `connect-colab-local-llm`
+  - Canonical: `skills/connect-colab-local-llm/SKILL.md`
+  - Claude Code: `.claude/skills/connect-colab-local-llm/SKILL.md`
+  - Codex metadata: `skills/connect-colab-local-llm/agents/openai.yaml`
 - `create-pngtuber-avatar-states`
   - Canonical: `skills/create-pngtuber-avatar-states/SKILL.md`
   - Claude Code: `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
@@ -77,6 +81,14 @@ Use `connect-colab-local-tts` when driving
 `shinshin86/local-tts-on-google-colab` through Colab MCP Go, exposing the
 selected engine with `trycloudflare`, and validating the resulting
 OpenAI-compatible speech endpoint from `@aituber-onair/voice`.
+Use `connect-colab-local-llm` when launching a user-selected local LLM on
+Google Colab through Colab MCP Go, exposing its OpenAI-compatible Chat
+Completions endpoint through a cloudflared Quick Tunnel, and validating it with
+the chat compatibility probe and a Core React sample. The implemented first
+path is vLLM. Because Quick Tunnel behavior can change, its SSE support must be
+proved live in every session. The skill generates a temporary LLM API key
+automatically; the user only copies the endpoint, model, and key into the Core
+sample. It does not use ngrok.
 
 ## Usage
 
@@ -98,6 +110,11 @@ Codex prompt examples:
 - "Use $connect-colab-local-tts to launch <local-tts-engine> from
   local-tts-on-google-colab through Colab MCP Go, expose it with trycloudflare,
   and verify it from @aituber-onair/voice."
+- "launch vLLM on Google Colab with Colab MCP Go"
+- "connect a Colab local LLM to the Core PNGTuber sample"
+- "Use $connect-colab-local-llm with backend vllm and model
+  <hugging-face-model-id>, issue a temporary URL with cloudflared, run the chat
+  compatibility probe, and verify react-pngtuber-app."
 
 Claude Code prompt examples:
 
@@ -164,5 +181,6 @@ diff -u skills/add-tts-provider/SKILL.md .claude/skills/add-tts-provider/SKILL.m
 diff -u skills/sync-core-after-chat-upgrade/SKILL.md .claude/skills/sync-core-after-chat-upgrade/SKILL.md
 diff -u skills/wrap-tts-as-openai-compatible/SKILL.md .claude/skills/wrap-tts-as-openai-compatible/SKILL.md
 diff -u skills/connect-colab-local-tts/SKILL.md .claude/skills/connect-colab-local-tts/SKILL.md
+diff -u skills/connect-colab-local-llm/SKILL.md .claude/skills/connect-colab-local-llm/SKILL.md
 diff -u skills/create-pngtuber-avatar-states/SKILL.md .claude/skills/create-pngtuber-avatar-states/SKILL.md
 ```

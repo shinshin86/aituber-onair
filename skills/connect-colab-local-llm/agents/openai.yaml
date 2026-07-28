@@ -1,0 +1,4 @@
+interface:
+  display_name: "Connect Colab Local LLM"
+  short_description: "Launch a Colab local LLM through cloudflared"
+  default_prompt: "Use $connect-colab-local-llm to launch a vLLM OpenAI-compatible server through Colab MCP Go, issue a temporary URL with cloudflared, run the chat compatibility probe, and verify a Core React sample."
