@@ -797,10 +797,35 @@ export function SettingsPanel({
   const [systemPromptDraft, setSystemPromptDraft] = useState(
     settings.llm.systemPrompt,
   );
+  const committedEndpoint = settings.llm.endpoint || '';
+  const [endpointDraft, setEndpointDraft] = useState(committedEndpoint);
+  const [endpointError, setEndpointError] = useState('');
 
   const commitSystemPrompt = () => {
     if (systemPromptDraft !== settings.llm.systemPrompt) {
       updateLLMSystemPrompt(systemPromptDraft);
+    }
+  };
+  const commitEndpoint = () => {
+    const endpoint = endpointDraft.trim();
+    let endpointUrl: URL;
+
+    try {
+      endpointUrl = new URL(endpoint);
+    } catch {
+      setEndpointError('Enter a full http:// or https:// URL.');
+      return;
+    }
+
+    if (endpointUrl.protocol !== 'http:' && endpointUrl.protocol !== 'https:') {
+      setEndpointError('Enter a full http:// or https:// URL.');
+      return;
+    }
+
+    setEndpointError('');
+    setEndpointDraft(endpoint);
+    if (endpoint !== committedEndpoint) {
+      updateLLMEndpoint(endpoint);
     }
   };
   const psdLayerOptions = useMemo(
@@ -1439,11 +1464,29 @@ export function SettingsPanel({
                 <input
                   id="llm-endpoint"
                   type="text"
-                  value={settings.llm.endpoint || ''}
-                  onChange={(e) => updateLLMEndpoint(e.target.value)}
+                  value={endpointDraft}
+                  onChange={(event) => {
+                    setEndpointDraft(event.target.value);
+                    setEndpointError('');
+                  }}
+                  onBlur={commitEndpoint}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.currentTarget.blur();
+                    }
+                  }}
+                  aria-invalid={endpointError ? true : undefined}
+                  aria-describedby={
+                    endpointError ? 'llm-endpoint-error' : undefined
+                  }
                   placeholder="http://localhost:11434/v1/chat/completions"
                   disabled={disabled}
                 />
+                {endpointError && (
+                  <p id="llm-endpoint-error" className="settings-field-error">
+                    {endpointError}
+                  </p>
+                )}
               </div>
             )}
 
