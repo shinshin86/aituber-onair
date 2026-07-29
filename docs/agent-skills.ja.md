@@ -49,6 +49,11 @@ Codex と Claude Code の運用をそろえています。
   - Claude Code: `.claude/skills/connect-colab-local-tts/SKILL.md`
   - Codex メタデータ:
     `skills/connect-colab-local-tts/agents/openai.yaml`
+- `connect-colab-local-llm`
+  - 正本: `skills/connect-colab-local-llm/SKILL.md`
+  - Claude Code: `.claude/skills/connect-colab-local-llm/SKILL.md`
+  - Codex メタデータ:
+    `skills/connect-colab-local-llm/agents/openai.yaml`
 - `create-pngtuber-avatar-states`
   - 正本: `skills/create-pngtuber-avatar-states/SKILL.md`
   - Claude Code: `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
@@ -70,7 +75,55 @@ chat 更新後に `@aituber-onair/core` と core examples へ反映する場合�
 `shinshin86/local-tts-on-google-colab` を Colab MCP Go で起動し、
 `trycloudflare` URL を発行して `@aituber-onair/voice` から検証する場合は
 `connect-colab-local-tts` を使います。
+Colab MCP Go を使って Google Colab 上でローカル LLM を起動し、
+cloudflared Quick Tunnel 経由の OpenAI 互換 Chat Completions API として
+公開して、chat 互換性プローブと Core React サンプルで検証する場合は
+`connect-colab-local-llm` を使います。Hugging Face の通常形式には vLLM、
+GGUF 形式には llama.cpp を使用します。API キーはセッションごとに
+自動生成され、ngrok は使用しません。
 PNGTuber 向けの目・口開閉4状態画像、2x2状態シート、背景透過、位置合わせ、検証を行う場合は `create-pngtuber-avatar-states` を使います。画像生成フェーズは Codex の ImageGen など画像生成ツールが使える環境を前提にします。Claude Code では新規画像生成は行わず、既存画像の切り出し、適切な場合の背景透過、位置合わせ、検証に限定して使います。
+
+## Google Colab ローカル LLM クイックスタート
+
+最初に Google Colab でノートブックを開き、GPU ランタイムを選択して
+接続し、Colab MCP Go からノートブックを操作できる状態にします。
+その後、検証済みの L4 構成を使う場合は、次の依頼文を Codex に
+貼り付けます。
+
+```text
+$connect-colab-local-llm を使って、Google Colab の L4 上で次のローカル LLM
+を起動し、AITuber OnAir Core の PNGTuber サンプルから利用できる状態まで
+セットアップしてください。
+
+- backend: llama.cpp
+- model_id: google/gemma-4-12B-it-qat-q4_0-gguf
+- gguf_filename: gemma-4-12b-it-qat-q4_0.gguf
+- served_model_name: gemma-4-12b-it-qat-q4_0
+- context_size: 4096
+- core_example: react-pngtuber-app
+- exposure: public
+
+API キーは自動生成し、cloudflared Quick Tunnel を使用してください。
+公開 SSE、互換性プローブ T1〜T6、Core での逐次表示まで確認してください。
+私がブラウザで試すため、確認後もセッションを停止せずに残してください。
+```
+
+AI はバックエンドのインストール、モデルのダウンロードと検証、
+一時 API キーの生成、cloudflared の起動、公開 API と Core サンプルの
+動作確認を行います。完了後、次の3項目が提示されます。
+
+- `/v1/chat/completions` を含む完全な Endpoint URL
+- Core に設定する Model 名
+- セッション限定の API Key
+
+Core サンプルでは Provider に `OpenAI-Compatible` を選び、上記3項目を
+設定します。テキスト生成の確認時は、まず TTS Engine を `None` にします。
+URL と API キーは、トンネルまたは Colab ランタイムの終了時に無効に
+なります。
+
+任意の GGUF、vLLM、バックエンド自動選択、終了処理の依頼文は
+[`skills/connect-colab-local-llm/references/request-examples.md`](../skills/connect-colab-local-llm/references/request-examples.md)
+を参照してください。
 
 ## 使い方
 
@@ -88,6 +141,15 @@ Codex での依頼例:
 - "$connect-colab-local-tts を使って、Colab MCP Go 経由で <local-tts-engine> を
   local-tts-on-google-colab から起動し、trycloudflare で外部 URL を発行して
   @aituber-onair/voice から検証してください"
+- "Colab MCP Go を使って Google Colab 上で vLLM を起動してください"
+- "Google Colab 上で GGUF モデルを llama.cpp から起動してください"
+- "Colab のローカル LLM を Core PNGTuber サンプルに接続してください"
+- "$connect-colab-local-llm を使って、backend vllm、model
+  <hugging-face-model-id> を cloudflared で一時公開し、chat 互換性プローブと
+  react-pngtuber-app で検証してください"
+- "$connect-colab-local-llm を使って、backend llama.cpp、model
+  <hugging-face-model-id>、GGUF file <filename> を cloudflared で一時公開し、
+  chat 互換性プローブと react-pngtuber-app で検証してください"
 
 Claude Code での依頼例:
 
@@ -155,5 +217,6 @@ diff -u skills/add-tts-provider/SKILL.md .claude/skills/add-tts-provider/SKILL.m
 diff -u skills/sync-core-after-chat-upgrade/SKILL.md .claude/skills/sync-core-after-chat-upgrade/SKILL.md
 diff -u skills/wrap-tts-as-openai-compatible/SKILL.md .claude/skills/wrap-tts-as-openai-compatible/SKILL.md
 diff -u skills/connect-colab-local-tts/SKILL.md .claude/skills/connect-colab-local-tts/SKILL.md
+diff -u skills/connect-colab-local-llm/SKILL.md .claude/skills/connect-colab-local-llm/SKILL.md
 diff -u skills/create-pngtuber-avatar-states/SKILL.md .claude/skills/create-pngtuber-avatar-states/SKILL.md
 ```
