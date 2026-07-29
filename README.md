@@ -401,7 +401,11 @@ npm run fmt
 ### Agent Skills
 
 Shared Agent Skills so Codex and Claude Code use the same workflow definitions.
-See [`docs/agent-skills.md`](./docs/agent-skills.md) for the full guide. Canonical sources live in `skills/`, with Claude Code runtime copies under `.claude/skills/`.
+See [`docs/agent-skills.md`](./docs/agent-skills.md) for the full guide,
+including a
+[copy-paste Google Colab local LLM request](./docs/agent-skills.md#google-colab-local-llm-quick-start).
+Canonical sources live in `skills/`, with Claude Code runtime copies under
+`.claude/skills/`.
 
 ### Releases
 

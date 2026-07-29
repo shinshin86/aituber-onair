@@ -134,8 +134,20 @@
 - For `wrap-tts-as-openai-compatible`, first classify the upstream TTS as direct Python API, CLI/file-output, or internal runtime plus save helper, then validate the wrapper from `@aituber-onair/voice` when applicable.
 - Prefer this skill for practical local TTS engines that cleanly support one-shot WAV generation. Do not force research-first or streaming-first systems into this workflow.
 - When requests match "connect Colab local TTS", "launch local-tts-on-google-colab", "use Colab MCP Go for TTS", or "try a Colab OpenAI-compatible TTS URL from `@aituber-onair/voice`", follow `skills/connect-colab-local-tts/SKILL.md`.
-- When requests match "connect Colab local LLM", "launch vLLM on Colab", "use Colab MCP Go for a local LLM", or "validate a Colab OpenAI-compatible chat endpoint from a Core sample", follow `skills/connect-colab-local-llm/SKILL.md`.
-- For `connect-colab-local-llm`, collect `backend` (default `vllm`), required `model_id`, and optional `served_model_name`, `model_revision`, `vllm_version`, `cuda_variant`, `cloudflared_version`, `core_example`, `test_prompt`, `exposure`, and runtime settings. A loopback-only diagnostic may omit API authentication. Before opening a cloudflared Quick Tunnel, generate a random per-session API key automatically so the user only needs to paste the endpoint, model, and key into Core. Quick Tunnel streaming must pass the live compatibility probe in every session; do not fall back to ngrok.
+- When requests match "connect Colab local LLM", "launch vLLM on Colab",
+  "serve GGUF with llama.cpp on Colab", "use Colab MCP Go for a local LLM", or
+  "validate a Colab OpenAI-compatible chat endpoint from a Core sample", follow
+  `skills/connect-colab-local-llm/SKILL.md`.
+- For `connect-colab-local-llm`, collect `backend` (default `vllm`; infer
+  `llama.cpp` for GGUF), required `model_id`, and optional
+  `served_model_name`, `model_revision`, `vllm_version`, `cuda_variant`,
+  `llama_cpp_revision`, `gguf_filename`, `cloudflared_version`,
+  `core_example`, `test_prompt`, `exposure`, and backend runtime settings. A
+  loopback-only diagnostic may omit API authentication. Before opening a
+  cloudflared Quick Tunnel, generate a random per-session API key automatically
+  so the user only needs to paste the endpoint, model, and key into Core. Quick
+  Tunnel streaming must pass the live compatibility probe in every session; do
+  not fall back to ngrok.
 - When requests ask to create PNGTuber avatar state images, generate mouth/eye open-close variants, split a 2x2 avatar sheet, remove avatar backgrounds, or align avatar state images, follow `skills/create-pngtuber-avatar-states/SKILL.md`.
 - If required inputs are missing, collect: `provider`, `model_id`, `model_const_name`, `display_name`, `supports_vision`, and optional `bump_version` (default `false`; set `true` only when release/version work is explicitly requested).
 - For `add-tts-provider`, collect missing inputs: `engine_type`, `engine_class_name`, `display_name`, `provider_kind`, `default_speaker`, `requires_api_key`, `supports_emotion`, and `option_fields`, plus optional `default_api_url`, `examples_scope`, and `bump_version` (default `false`; set `true` only when release/version work is explicitly requested).

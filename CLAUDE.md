@@ -127,11 +127,13 @@ Usage:
   "connect Colab local TTS", "launch local-tts-on-google-colab with Colab MCP
   Go", or "try a Colab OpenAI-compatible TTS URL from @aituber-onair/voice".
 - Invoke explicitly with `$connect-colab-local-llm`, or use prompts like
-  "launch vLLM on Colab", "connect a Colab local LLM to a Core sample", or
-  "verify a Colab OpenAI-compatible chat endpoint with
-  @aituber-onair/chat". Issue the temporary public URL with a cloudflared Quick
-  Tunnel, generate the vLLM API key automatically, and rerun the streaming
-  compatibility probe in every session. Do not fall back to ngrok.
+  "launch vLLM on Colab", "serve a GGUF model with llama.cpp on Colab",
+  "connect a Colab local LLM to a Core sample", or "verify a Colab
+  OpenAI-compatible chat endpoint with @aituber-onair/chat". Use vLLM for
+  native Hugging Face checkpoints and llama.cpp for GGUF artifacts. Issue the
+  temporary public URL with a cloudflared Quick Tunnel, generate the backend
+  API key automatically, and rerun the streaming compatibility probe in every
+  session. Do not fall back to ngrok.
 - Invoke explicitly with `$create-pngtuber-avatar-states`, or use prompts like
   "create PNGTuber avatar state images", "generate mouth and eye open-close
   variants", "split a 2x2 avatar sheet", "remove avatar background", or

@@ -1,6 +1,6 @@
 ---
 name: connect-colab-local-llm
-description: Launch a local LLM as an OpenAI-compatible Chat Completions server on Google Colab through Colab MCP Go, issue a temporary trycloudflare URL with cloudflared, and verify it with the @aituber-onair/chat compatibility probe and an AITuber OnAir Core React sample. Use when requests mention running vLLM on Colab, connecting a Colab local LLM to Core, testing an OpenAI-compatible Colab endpoint, cloudflared Quick Tunnels, or operating Colab MCP Go for local LLM development.
+description: Launch vLLM or llama.cpp as an OpenAI-compatible Chat Completions server on Google Colab through Colab MCP Go, issue a temporary trycloudflare URL with cloudflared, and verify it with the @aituber-onair/chat compatibility probe and an AITuber OnAir Core React sample. Use when requests mention running vLLM, serving a GGUF model with llama.cpp, connecting a Colab local LLM to Core, testing an OpenAI-compatible Colab endpoint, cloudflared Quick Tunnels, or operating Colab MCP Go for local LLM development.
 ---
 
 # Connect Colab Local LLM
@@ -11,29 +11,39 @@ Use Colab MCP Go to launch a user-selected local LLM backend on Google Colab,
 expose its OpenAI-compatible API safely, and prove that it works through the
 same `@aituber-onair/chat` and Core paths used by AITuber OnAir.
 
-Start with vLLM. Do not claim support for another backend until its endpoint,
-request and response shapes, streaming behavior, and model-specific options
-have been documented or live-verified.
+Use the implemented vLLM adapter for native Hugging Face generation
+checkpoints and the implemented llama.cpp adapter for GGUF artifacts. Keep
+other backends candidate-only until their endpoint, request and response
+shapes, streaming behavior, authentication, and model-specific options have
+been documented and live-verified.
 
 ## Inputs
 
 Collect or infer:
 
-- `backend`: default `vllm`; this skill currently implements vLLM
+- `backend`: default `vllm`; infer `llama.cpp` when the requested artifact is
+  GGUF
 - `model_id`: required Hugging Face model id or accessible model path
 - `served_model_name`: default to `model_id`
 - `model_revision`: optional tag or commit; prefer one for reproducible runs
 - `vllm_version`: default `0.25.1`
 - `cuda_variant`: infer from the current official release assets and Colab
   driver; the initial live-validated A100 path uses `cu129`
+- `llama_cpp_revision`: default to the last live-validated revision recorded
+  in `references/llama-cpp.md`; change it only after checking upstream support
+  and recording the resolved commit
+- `gguf_filename`: required for a multi-file GGUF repository; infer it only
+  when the repository exposes one unambiguous artifact
 - `core_example`: default `react-pngtuber-app`
 - `test_prompt`: short Japanese prompt for the final Core check
 - `cloudflared_version`: default `2026.7.3`; update only after checking the
   official release and rerunning the public streaming probe
 - `exposure`: default `public` for Colab-to-Core; use `local` only for
   notebook-internal diagnostics
-- optional runtime settings: `dtype`, `quantization`, `max_model_len`, and
+- optional vLLM settings: `dtype`, `quantization`, `max_model_len`, and
   `gpu_memory_utilization`
+- optional llama.cpp settings: `context_size` (default `4096`),
+  `n_gpu_layers` (default `99` on NVIDIA), and `parallel` (default `1`)
 - `trust_remote_code`: default `false`; enable only when the model requires it
   and the user accepts the risk
 
@@ -45,6 +55,10 @@ Cloudflare account or tunnel token.
 
 1. Read `skills/connect-colab-local-llm/references/backends.md` before choosing
    the backend, cloudflared version, install command, or model-specific flags.
+   When `backend=llama.cpp`, also read
+   `skills/connect-colab-local-llm/references/llama-cpp.md`.
+   When the user asks how to invoke this workflow or wants a copy-paste request,
+   read `skills/connect-colab-local-llm/references/request-examples.md`.
 2. Confirm Colab MCP Go is available.
    - Use `open_colab_browser_connection` when no Colab session is connected.
    - Then call `list_colab_tools`.
@@ -67,36 +81,41 @@ Cloudflare account or tunnel token.
      loopback for notebook-internal diagnostics.
    - Ask the user to provide missing gated-model credentials in Colab Secrets
      instead of requesting the token value in chat.
-5. Install a pinned vLLM release into a dedicated virtual environment and
-   record the resolved versions.
-   - Prefer the official `uv` installation flow with automatic PyTorch backend
-     selection when it resolves a matching wheel.
-   - On Colab, prefer an explicit official CUDA wheel in
-     `/content/aituber-local-llm/.venv` over `--system`; the system environment
-     can already contain a different PyTorch CUDA build.
-   - Do not silently replace the Colab system PyTorch/CUDA stack. If the first
-     clean installation fails, inspect the compatibility error before changing
-     versions or CUDA variants.
-6. Start `vllm serve` on `127.0.0.1`.
+5. Install the selected backend without replacing the Colab system
+   environment.
+   - For vLLM, install a pinned release in a dedicated virtual environment.
+     Prefer the official `uv` flow and an explicit compatible CUDA wheel.
+   - For llama.cpp, clone the pinned revision and build `llama-server` with
+     `GGML_CUDA=ON`. Record the resolved commit and build options.
+   - For GGUF, download the exact requested file and verify its `GGUF` magic,
+     byte size, and SHA-256 against the official hosting metadata before
+     loading it.
+   - Do not silently replace the Colab system PyTorch or CUDA stack. Inspect
+     compatibility failures before changing versions or CUDA variants.
+6. Start the selected backend on `127.0.0.1`.
    - Require API-key authentication for public exposure. A loopback-only
      diagnostic server may omit it.
-   - Pass the temporary key through the child process environment as
-     `VLLM_API_KEY`; do not put it in `--api-key`, the command line, or
-     notebook source.
-   - Set `--served-model-name` explicitly.
-   - Write server output to `/content/aituber-local-llm/logs/vllm.log`.
+   - For vLLM, pass the key through `VLLM_API_KEY` and set
+     `--served-model-name` explicitly.
+   - For llama.cpp, pass the key through `LLAMA_API_KEY`. Use router mode with
+     a pinned INI preset, `--no-models-autoload`, and the preset section name
+     equal to `served_model_name`. Do not use single-model mode for the final
+     probe because it accepts unknown model names.
+   - Write output under `/content/aituber-local-llm/logs/` using a
+     backend-specific filename.
    - Redact known secrets before displaying any log excerpt. Do not print the
      full command environment or process environment.
    - Start the server in its own process group so cleanup stops API and engine
      worker processes together.
-   - Add optional flags only when justified by the selected model or available
-     VRAM.
+   - Add optional flags only when justified by the selected model, backend
+     documentation, or available VRAM.
    - Do not enable arbitrary remote code by default.
 7. Wait for local readiness before opening a tunnel.
    - Confirm the server process is alive.
    - Confirm `GET /health`.
    - Confirm authenticated `GET /v1/models` returns `served_model_name`.
-   - On failure, inspect the vLLM log tail before changing settings.
+   - On failure, inspect the selected backend log tail before changing
+     settings.
 8. Open a cloudflared Quick Tunnel.
    - Download the pinned official `cloudflared` Linux binary and record its
      resolved version.
@@ -105,10 +124,11 @@ Cloudflare account or tunnel token.
    - Extract the temporary `https://...trycloudflare.com` URL from its log.
    - Do not require a Cloudflare account, tunnel token, or custom domain.
    - Cloudflare's documentation warns that Quick Tunnels do not support SSE,
-     even though cloudflared `2026.7.3` passed the live vLLM streaming probe.
+     even though cloudflared `2026.7.3` passed live vLLM and llama.cpp
+     streaming probes.
      Therefore rerun the public SSE probe for every session and never infer
      compatibility from a previous run.
-   - Treat every public URL as temporary and sensitive. Keep vLLM API-key
+   - Treat every public URL as temporary and sensitive. Keep backend API-key
      authentication enabled while the Quick Tunnel is running.
 9. Print only the connection handoff needed by the user:
    - endpoint:
@@ -117,7 +137,8 @@ Cloudflare account or tunnel token.
    - API key: the temporary per-session key
    - server and tunnel process identifiers or cleanup instructions
 10. Validate the public endpoint in increasing scope.
-    - Confirm a request without the vLLM API key is rejected.
+    - Confirm a Chat Completions request without the backend API key is
+      rejected.
     - Confirm authenticated `GET /v1/models`.
     - Confirm a non-streaming `POST /v1/chat/completions`.
     - Confirm streaming returns incremental SSE deltas through the tunnel.
@@ -167,7 +188,7 @@ Complete the task only when:
 
 - the chosen backend and exact version are recorded
 - the model fits the selected Colab runtime and reaches ready state
-- the public endpoint requires a non-default API key
+- the public Chat Completions endpoint requires a non-default API key
 - `/v1/models`, non-streaming chat, SSE streaming, and CORS preflight pass
 - all required compatibility-probe checks pass
 - one Core React sample receives and displays a streamed response
@@ -192,6 +213,13 @@ Do not describe it as Core-compatible or silently switch to another tunnel.
   equivalent without noting the tradeoff.
 - vLLM reports a missing chat template: choose a model with a documented chat
   template or pass a verified template. Do not invent one.
+- llama.cpp CUDA build is slow: build only the selected pinned revision, record
+  the detected GPU architecture, and use a conservative parallel job count.
+  Do not replace the verified source build with an unverified binary.
+- GGUF verification fails: delete only the incomplete artifact, redownload it,
+  and recheck the official byte size and SHA-256 before starting the server.
+- llama.cpp wrong-model `4xx` probe fails: stop single-model mode and use the
+  router preset with `--no-models-autoload`; do not weaken or skip the probe.
 - Local API works but public API fails: inspect the tunnel process and test
   `/v1/models` before debugging Core.
 - Non-streaming works but streaming stalls: verify the tunnel supports SSE.
@@ -199,12 +227,13 @@ Do not describe it as Core-compatible or silently switch to another tunnel.
   report the Quick Tunnel as incompatible for that session and stop before the
   Core sample.
 - Browser request fails while command-line requests pass: inspect the CORS
-  preflight and vLLM allowed origins/headers.
-- `401 Unauthorized`: confirm that the same temporary vLLM API key is used by
-  the probe and Core settings.
+  preflight and selected backend allowed origins/headers.
+- `401 Unauthorized`: confirm that the same temporary backend API key is used
+  by the probe and Core settings.
 - API key appears in a log or process list: stop the non-public server, rotate
-  the key, and restart with `VLLM_API_KEY` in the child environment instead of
-  `--api-key`. Redact the old value from every diagnostic excerpt.
+  the key, and restart with `VLLM_API_KEY` or `LLAMA_API_KEY` in the child
+  environment instead of `--api-key`. Redact the old value from every
+  diagnostic excerpt.
 - Wrong-model `4xx` probe fails: inspect the backend response and verify it
   follows the OpenAI-compatible error path before changing the probe.
 
@@ -217,5 +246,5 @@ Do not describe it as Core-compatible or silently switch to another tunnel.
 - Do not fall back to ngrok or require an ngrok account.
 - Do not use this workflow as production hosting. Colab runtimes and temporary
   tunnels can expire without notice.
-- Do not implement llama.cpp or SGLang inside a vLLM run. Treat them as separate
-  backend adapters with their own verified launch and acceptance evidence.
+- Do not mix vLLM, llama.cpp, or a future SGLang path in one backend adapter.
+  Keep separate launch, authentication, cleanup, and acceptance evidence.

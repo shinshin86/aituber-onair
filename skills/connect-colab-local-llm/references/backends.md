@@ -8,6 +8,7 @@ changed.
 
 - Support status and runtime sizing
 - vLLM installation, launch, authentication, and cleanup
+- llama.cpp routing: `llama-cpp.md`
 - cloudflared Quick Tunnel launch and connection handoff
 - Readiness and endpoint checks
 - Initial live validation
@@ -18,12 +19,13 @@ changed.
 | Backend | Status in this skill | Best fit |
 | --- | --- | --- |
 | vLLM | Implemented first path | Hugging Face generation models on NVIDIA GPUs |
-| llama.cpp server | Candidate only | GGUF and lower-memory or heavily quantized runs |
+| llama.cpp server | Implemented | GGUF and lower-memory or heavily quantized runs |
 | SGLang | Candidate only | Model-specific reasoning, tool use, or serving features |
 
-`candidate only` means the agent may assess and propose the backend, but must
-not claim a reusable Colab workflow until it has passed the same endpoint,
-streaming, CORS, compatibility-probe, and Core checks as vLLM.
+Read `llama-cpp.md` before using the llama.cpp adapter. `candidate only` means
+the agent may assess and propose the backend, but must not claim a reusable
+Colab workflow until it has passed the same endpoint, streaming, CORS,
+compatibility-probe, and Core checks as the implemented adapters.
 
 ## Colab Runtime Sizing
 
@@ -36,8 +38,9 @@ An L4 is a useful lower-cost follow-up target:
 - sub-4B generation models should generally be the easiest starting point
 - 7B/8B models may be practical, but context length, dtype, quantization, and
   vLLM overhead determine whether they fit
-- 14B and larger models usually require more aggressive tradeoffs than an L4
-  provides; prefer an A100 for the first proof
+- models above 8B require quantization and context-specific sizing on L4; a
+  live-validated 12B Q4_0 GGUF with a 4K context used about 7.5 GiB of L4 VRAM,
+  but do not generalize that result to other architectures or formats
 
 Estimate weight memory before download:
 
@@ -230,7 +233,7 @@ incrementally and passed all six repository compatibility checks. Treat the
 live probe as the authority for the current session: rerun it every time and
 stop before Core if streaming fails.
 
-Start cloudflared only after local vLLM checks pass:
+Start cloudflared only after the selected backend passes its local checks:
 
 ```python
 import os
@@ -295,10 +298,10 @@ if not public_base_url:
 print("cloudflared:", resolved_version)
 ```
 
-The generated vLLM API key is a temporary credential for the current private
-notebook session. Do not copy it into repository files or public logs. The user
-does not need to configure any Cloudflare or LLM API credential. For each run,
-present a compact handoff:
+The generated backend API key is a temporary credential for the current
+private notebook session. Do not copy it into repository files or public logs.
+The user does not need to configure any Cloudflare or LLM API credential. For
+each run, present a compact handoff:
 
 ```python
 print("=== AITuber OnAir Core Connection ===")
@@ -407,17 +410,6 @@ Colab, model, or Core combination. Keep the public SSE and Core browser checks
 mandatory for each run.
 
 ## Future Backend Adapters
-
-### llama.cpp server
-
-Official server documentation:
-https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
-
-Use this candidate when the requested artifact is GGUF or the available GPU
-memory makes a supported quantized build more suitable than vLLM. Before
-promoting it to implemented status, document the Colab build/binary source,
-model download integrity, authentication layer, CORS behavior, streaming shape,
-and cleanup flow.
 
 ### SGLang
 
