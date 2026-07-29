@@ -1,98 +1,97 @@
 # Colab Local LLM Request Examples
 
-Copy one of these prompts when asking an AI agent to prepare a Google Colab
-local LLM for AITuber OnAir Core.
+Use these examples when asking an AI agent to prepare a Google Colab local LLM
+for AITuber OnAir Core. Start with the verified configuration unless you
+already know which model or file you want to use.
 
 ## Before You Start
 
 1. Open a Google Colab notebook.
-2. Select a GPU runtime. Use L4 for the verified Gemma 4 GGUF example below.
+2. Select a GPU runtime. Use L4 for the verified Gemma 4 example below.
 3. Connect the runtime.
-4. Make sure Colab MCP Go can access the notebook.
+4. Connect Colab MCP Go so that the agent can operate the notebook.
 
-The agent handles backend installation, model download, temporary API-key
-generation, cloudflared startup, API checks, and Core validation. The user
-handles Google login, GPU selection, gated-model license acceptance, and
-`HF_TOKEN` setup when a model requires authentication.
+The agent prepares the required software, downloads the model, creates a
+protected temporary connection, and checks it from Core. The user handles
+Google login, GPU selection, gated-model license acceptance, and `HF_TOKEN`
+setup when a model requires authentication.
 
-## Verified Gemma 4 on L4
+## Recommended First Request
 
-This is the recommended copy-paste request for the exact combination verified
-on 2026-07-29.
+This is the shortest request for the configuration verified on 2026-07-29:
 
 ```text
-$connect-colab-local-llm を使って、Google Colab の L4 上で次のローカル LLM
-を起動し、AITuber OnAir Core の PNGTuber サンプルから利用できる状態まで
-セットアップしてください。
+$connect-colab-local-llm を使って、接続済みの Google Colab L4 ランタイムで
+検証済みの Gemma 4 12B Q4_0 構成を起動してください。
 
-- backend: llama.cpp
-- model_id: google/gemma-4-12B-it-qat-q4_0-gguf
-- gguf_filename: gemma-4-12b-it-qat-q4_0.gguf
-- served_model_name: gemma-4-12b-it-qat-q4_0
-- context_size: 4096
-- core_example: react-pngtuber-app
-- exposure: public
-
-要件:
-- Colab MCP Go でランタイムを操作する
-- API キーはセッションごとに自動生成する
-- cloudflared Quick Tunnel を使い、ngrok は使わない
-- 公開 URL で認証、通常応答、SSE、CORS を確認する
-- @aituber-onair/chat の互換性プローブ T1〜T6 を実行する
-- Core サンプルで日本語の応答が逐次表示されることを確認する
-- 接続用の Endpoint、Model、API Key を最後に提示する
-- 私がブラウザで試すため、確認完了後もサーバー、トンネル、
-  Core サンプルを停止せずに残す
+AITuber OnAir Core の PNGTuber サンプルへ接続し、日本語の応答がブラウザに
+少しずつ表示されるところまで確認してください。最後に、Core へ入力する
+3つの設定値を提示してください。私も試したいので、確認後は停止せずに
+残してください。
 ```
 
-This model is anonymously downloadable. A future repository or hosting-policy
-change can still require authentication, so the agent must verify access in
-the current session.
+The agent infers the verified settings:
 
-## Generic GGUF Model
+- model repository: `google/gemma-4-12B-it-qat-q4_0-gguf`
+- model file: `gemma-4-12b-it-qat-q4_0.gguf`
+- backend: llama.cpp
+- context size: 4,096
+- Core sample: `react-pngtuber-app`
 
-Replace the placeholders with the exact Hugging Face repository and GGUF
-filename.
+The model was anonymously downloadable during live validation. The agent must
+still verify current access before starting the download.
+
+## Let the Agent Choose for Another Model
+
+Use this when you know the Hugging Face model but do not know its file format
+or the appropriate serving software:
 
 ```text
-Use $connect-colab-local-llm to launch this GGUF model on Google Colab and
-connect it to the AITuber OnAir Core PNGTuber sample.
+Use $connect-colab-local-llm to run <hugging-face-model-id> on the connected
+Google Colab runtime and connect it to the AITuber OnAir Core PNGTuber sample.
 
-- backend: llama.cpp
+Choose the appropriate setup for the model and current GPU. Verify normal and
+streaming responses in Core, show me the three connection values, and keep the
+session running until I finish testing.
+```
+
+The agent selects vLLM for a native Hugging Face generation checkpoint or
+llama.cpp for a GGUF file and explains the selection.
+
+## Specify a GGUF File
+
+Use this only when you already know the exact Hugging Face repository and GGUF
+filename:
+
+```text
+Use $connect-colab-local-llm to launch this GGUF model on the connected Google
+Colab runtime and connect it to the AITuber OnAir Core PNGTuber sample.
+
 - model_id: <hugging-face-model-id>
 - gguf_filename: <exact-gguf-filename>
 - served_model_name: <model-name-used-by-core>
-- context_size: 4096
-- core_example: react-pngtuber-app
-- exposure: public
 
-Use Colab MCP Go, generate a temporary API key automatically, expose only
-through a cloudflared Quick Tunnel, run the public SSE and T1-T6 compatibility
-checks, and verify incremental text in the Core browser sample. Report the
-Endpoint, Model, and API Key. Keep the session running until I finish testing.
+Use llama.cpp, create a protected temporary connection, run the repository
+compatibility checks, and verify that text appears incrementally in the Core
+browser sample. Show me the Endpoint, Model, and API Key. Keep the session
+running until I finish testing.
 ```
 
-## Generic vLLM Model
+## Specify a vLLM Model
 
-Use this for a native Hugging Face generation checkpoint rather than a GGUF
-artifact.
+Use this for a native Hugging Face generation checkpoint:
 
 ```text
-Use $connect-colab-local-llm to launch this Hugging Face model with vLLM on
-Google Colab and connect it to the AITuber OnAir Core PNGTuber sample.
+Use $connect-colab-local-llm to launch this model with vLLM on the connected
+Google Colab runtime and connect it to the AITuber OnAir Core PNGTuber sample.
 
-- backend: vllm
 - model_id: <hugging-face-model-id>
 - served_model_name: <model-name-used-by-core>
-- core_example: react-pngtuber-app
-- exposure: public
 
-Inspect the current Colab GPU and CUDA environment before choosing the vLLM
-wheel and runtime settings. Use Colab MCP Go, generate a temporary API key
-automatically, expose only through a cloudflared Quick Tunnel, run the public
-SSE and T1-T6 compatibility checks, and verify incremental text in the Core
-browser sample. Report the Endpoint, Model, and API Key. Keep the session
-running until I finish testing.
+Inspect the current GPU before choosing memory and context settings. Create a
+protected temporary connection, run the repository compatibility checks, and
+verify that text appears incrementally in the Core browser sample. Show me the
+Endpoint, Model, and API Key. Keep the session running until I finish testing.
 ```
 
 For a small, previously verified vLLM smoke test, use:
@@ -103,22 +102,7 @@ For a small, previously verified vLLM smoke test, use:
 - `max_model_len`: `4096`
 - `gpu_memory_utilization`: `0.50`
 
-## Let the Agent Choose the Backend
-
-Use this when the model is known but its artifact format is not.
-
-```text
-Use $connect-colab-local-llm to run <hugging-face-model-id> on Google Colab
-and connect it to the AITuber OnAir Core PNGTuber sample.
-
-Inspect the model artifacts and choose vLLM for a native Hugging Face
-generation checkpoint or llama.cpp for GGUF. Explain the selected backend,
-check that the model fits the current GPU, generate a temporary API key, use a
-cloudflared Quick Tunnel, and complete the public API, compatibility-probe,
-and Core browser checks. Keep the session running until I finish testing.
-```
-
-## Core Connection
+## Connect Core
 
 After setup, the agent returns three session-specific values:
 
@@ -134,7 +118,7 @@ Enter them in the Core sample:
 - API Key: the returned `API Key`
 - TTS Engine: start with `None` when testing text generation
 
-The URL and API key expire when the cloudflared process or Colab runtime
+The URL and API key expire when the temporary connection or Colab runtime
 stops. Do not save either value in repository files.
 
 ## Cleanup Request
@@ -142,8 +126,8 @@ stops. Do not save either value in repository files.
 After browser testing, send:
 
 ```text
-動作確認が終わりました。Colab の LLM サーバーと cloudflared、ローカルの
-Core サンプル、caffeinate を停止し、停止結果を確認してください。
+動作確認が終わりました。今回起動した Colab の LLM、外部接続、Core サンプル、
+スリープ防止処理を停止し、停止結果を確認してください。
 ```
 
 After cleanup succeeds, the Colab runtime can be disconnected and deleted.

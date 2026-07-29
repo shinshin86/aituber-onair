@@ -82,42 +82,35 @@ Use `connect-colab-local-tts` when driving
 selected engine with `trycloudflare`, and validating the resulting
 OpenAI-compatible speech endpoint from `@aituber-onair/voice`.
 Use `connect-colab-local-llm` when launching a user-selected local LLM on
-Google Colab through Colab MCP Go, exposing its OpenAI-compatible Chat
-Completions endpoint through a cloudflared Quick Tunnel, and validating it with
-the chat compatibility probe and a Core React sample. Implemented backends are
-vLLM for native Hugging Face generation checkpoints and llama.cpp for GGUF
-artifacts. Because Quick Tunnel behavior can change, its SSE support must be
-proved live in every session. The skill generates a temporary LLM API key
-automatically; the user only copies the endpoint, model, and key into the Core
-sample. It does not use ngrok.
+Google Colab through Colab MCP Go and connecting it to a Core React sample.
+The skill uses vLLM for native Hugging Face generation checkpoints and
+llama.cpp for GGUF files. It creates a temporary connection URL and API key,
+checks normal and streaming responses, and verifies the result in Core. The
+user only copies the endpoint, model, and key into the Core sample.
 
 ### Google Colab Local LLM Quick Start
 
-Before starting, open a Google Colab notebook, select and connect a GPU
-runtime, and make sure Colab MCP Go can access the notebook. Then copy this
-verified L4 request into Codex:
+Before starting:
+
+1. Open a Google Colab notebook.
+2. Select an L4 GPU runtime and connect it.
+3. Make sure Colab MCP Go can access the notebook so that Codex can operate it.
+
+Then copy this request into Codex:
 
 ```text
-$connect-colab-local-llm を使って、Google Colab の L4 上で次のローカル LLM
-を起動し、AITuber OnAir Core の PNGTuber サンプルから利用できる状態まで
-セットアップしてください。
+Use $connect-colab-local-llm to launch the verified Gemma 4 12B Q4_0 setup
+on the connected Google Colab L4 runtime.
 
-- backend: llama.cpp
-- model_id: google/gemma-4-12B-it-qat-q4_0-gguf
-- gguf_filename: gemma-4-12b-it-qat-q4_0.gguf
-- served_model_name: gemma-4-12b-it-qat-q4_0
-- context_size: 4096
-- core_example: react-pngtuber-app
-- exposure: public
-
-API キーは自動生成し、cloudflared Quick Tunnel を使用してください。
-公開 SSE、互換性プローブ T1〜T6、Core での逐次表示まで確認してください。
-私がブラウザで試すため、確認後もセッションを停止せずに残してください。
+Connect it to the AITuber OnAir Core PNGTuber sample, verify that Japanese
+responses appear incrementally in the browser, and show me the three values I
+need to enter in Core. Keep the session running after validation so that I can
+try it myself.
 ```
 
-The agent installs the selected backend, downloads and verifies the model,
-generates a temporary API key, opens the cloudflared tunnel, and validates the
-public endpoint and Core sample. It then returns:
+The agent installs the required software, downloads and verifies the model,
+creates a protected temporary connection, and checks the Core sample. It then
+returns:
 
 - the full `/v1/chat/completions` endpoint
 - the exact served model name
@@ -125,7 +118,8 @@ public endpoint and Core sample. It then returns:
 
 Enter those values in the Core sample with Provider set to
 `OpenAI-Compatible`. Start with TTS Engine set to `None` when validating text
-generation. The URL and key expire when the tunnel or Colab runtime stops.
+generation. The URL and key expire when the temporary connection or Colab
+runtime stops.
 
 For generic GGUF, vLLM, automatic backend selection, and cleanup prompts, see
 [`skills/connect-colab-local-llm/references/request-examples.md`](../skills/connect-colab-local-llm/references/request-examples.md).
@@ -153,13 +147,10 @@ Codex prompt examples:
 - "launch vLLM on Google Colab with Colab MCP Go"
 - "launch a GGUF model with llama.cpp on Google Colab"
 - "connect a Colab local LLM to the Core PNGTuber sample"
-- "Use $connect-colab-local-llm with backend vllm and model
-  <hugging-face-model-id>, issue a temporary URL with cloudflared, run the chat
-  compatibility probe, and verify react-pngtuber-app."
-- "Use $connect-colab-local-llm with backend llama.cpp, model
-  <hugging-face-model-id>, and GGUF file <filename>, issue a temporary URL with
-  cloudflared, run the chat compatibility probe, and verify
-  react-pngtuber-app."
+- "Use $connect-colab-local-llm to set up the verified Gemma 4 configuration
+  on an L4 runtime and keep it running for browser testing."
+- "Use $connect-colab-local-llm to run <hugging-face-model-id> on Colab,
+  choose the appropriate backend, and verify it with react-pngtuber-app."
 
 Claude Code prompt examples:
 

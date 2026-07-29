@@ -76,41 +76,36 @@ chat 更新後に `@aituber-onair/core` と core examples へ反映する場合�
 `trycloudflare` URL を発行して `@aituber-onair/voice` から検証する場合は
 `connect-colab-local-tts` を使います。
 Colab MCP Go を使って Google Colab 上でローカル LLM を起動し、
-cloudflared Quick Tunnel 経由の OpenAI 互換 Chat Completions API として
-公開して、chat 互換性プローブと Core React サンプルで検証する場合は
-`connect-colab-local-llm` を使います。Hugging Face の通常形式には vLLM、
-GGUF 形式には llama.cpp を使用します。API キーはセッションごとに
-自動生成され、ngrok は使用しません。
+Core React サンプルへ接続する場合は `connect-colab-local-llm` を使います。
+Hugging Face の通常形式には vLLM、GGUF 形式には llama.cpp を使用します。
+このスキルは一時的な接続 URL と API キーを作り、通常応答と
+ストリーミング応答を確認してから、Core での動作まで検証します。
+ユーザーが Core に入力するのは Endpoint、Model、API Key の3項目です。
 PNGTuber 向けの目・口開閉4状態画像、2x2状態シート、背景透過、位置合わせ、検証を行う場合は `create-pngtuber-avatar-states` を使います。画像生成フェーズは Codex の ImageGen など画像生成ツールが使える環境を前提にします。Claude Code では新規画像生成は行わず、既存画像の切り出し、適切な場合の背景透過、位置合わせ、検証に限定して使います。
 
 ## Google Colab ローカル LLM クイックスタート
 
-最初に Google Colab でノートブックを開き、GPU ランタイムを選択して
-接続し、Colab MCP Go からノートブックを操作できる状態にします。
-その後、検証済みの L4 構成を使う場合は、次の依頼文を Codex に
-貼り付けます。
+最初に次の準備をします。
+
+1. Google Colab でノートブックを開きます。
+2. L4 GPU ランタイムを選択して接続します。
+3. Codex がノートブックを操作できるように、Colab MCP Go を接続します。
+
+準備できたら、次の依頼文を Codex に貼り付けます。
 
 ```text
-$connect-colab-local-llm を使って、Google Colab の L4 上で次のローカル LLM
-を起動し、AITuber OnAir Core の PNGTuber サンプルから利用できる状態まで
-セットアップしてください。
+$connect-colab-local-llm を使って、接続済みの Google Colab L4 ランタイムで
+検証済みの Gemma 4 12B Q4_0 構成を起動してください。
 
-- backend: llama.cpp
-- model_id: google/gemma-4-12B-it-qat-q4_0-gguf
-- gguf_filename: gemma-4-12b-it-qat-q4_0.gguf
-- served_model_name: gemma-4-12b-it-qat-q4_0
-- context_size: 4096
-- core_example: react-pngtuber-app
-- exposure: public
-
-API キーは自動生成し、cloudflared Quick Tunnel を使用してください。
-公開 SSE、互換性プローブ T1〜T6、Core での逐次表示まで確認してください。
-私がブラウザで試すため、確認後もセッションを停止せずに残してください。
+AITuber OnAir Core の PNGTuber サンプルへ接続し、日本語の応答がブラウザに
+少しずつ表示されるところまで確認してください。最後に、Core へ入力する
+3つの設定値を提示してください。私も試したいので、確認後は停止せずに
+残してください。
 ```
 
-AI はバックエンドのインストール、モデルのダウンロードと検証、
-一時 API キーの生成、cloudflared の起動、公開 API と Core サンプルの
-動作確認を行います。完了後、次の3項目が提示されます。
+AI は必要なソフトウェアの準備、モデルのダウンロードと検証、
+保護された一時接続の作成、Core サンプルの動作確認を行います。
+完了後、次の3項目が提示されます。
 
 - `/v1/chat/completions` を含む完全な Endpoint URL
 - Core に設定する Model 名
@@ -118,8 +113,8 @@ AI はバックエンドのインストール、モデルのダウンロード�
 
 Core サンプルでは Provider に `OpenAI-Compatible` を選び、上記3項目を
 設定します。テキスト生成の確認時は、まず TTS Engine を `None` にします。
-URL と API キーは、トンネルまたは Colab ランタイムの終了時に無効に
-なります。
+URL と API キーは、一時接続または Colab ランタイムの終了時に
+無効になります。
 
 任意の GGUF、vLLM、バックエンド自動選択、終了処理の依頼文は
 [`skills/connect-colab-local-llm/references/request-examples.md`](../skills/connect-colab-local-llm/references/request-examples.md)
@@ -144,12 +139,11 @@ Codex での依頼例:
 - "Colab MCP Go を使って Google Colab 上で vLLM を起動してください"
 - "Google Colab 上で GGUF モデルを llama.cpp から起動してください"
 - "Colab のローカル LLM を Core PNGTuber サンプルに接続してください"
-- "$connect-colab-local-llm を使って、backend vllm、model
-  <hugging-face-model-id> を cloudflared で一時公開し、chat 互換性プローブと
-  react-pngtuber-app で検証してください"
-- "$connect-colab-local-llm を使って、backend llama.cpp、model
-  <hugging-face-model-id>、GGUF file <filename> を cloudflared で一時公開し、
-  chat 互換性プローブと react-pngtuber-app で検証してください"
+- "$connect-colab-local-llm を使って、L4 で検証済みの Gemma 4 構成を
+  セットアップし、私がブラウザで試せるように起動したままにしてください"
+- "$connect-colab-local-llm を使って <hugging-face-model-id> に適した
+  実行方法を選び、Colab 上で起動して react-pngtuber-app から
+  動作確認してください"
 
 Claude Code での依頼例:
 
