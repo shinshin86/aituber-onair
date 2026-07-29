@@ -7,9 +7,15 @@ already know which model or file you want to use.
 ## Before You Start
 
 1. Open a Google Colab notebook.
-2. Select a GPU runtime. Use L4 for the verified Gemma 4 example below.
+2. Select a GPU runtime suitable for the model. Use L4 for the verified
+   Gemma 4 example below.
 3. Connect the runtime.
 4. Connect Colab MCP Go so that the agent can operate the notebook.
+
+Do not assume that every model fits on L4. GPU requirements depend on the
+model, file format, quantization, context length, and backend. The verified
+vLLM smoke test used an A100, although vLLM does not always require one. The
+agent must inspect the current GPU before downloading the model.
 
 The agent prepares the required software, downloads the model, creates a
 protected temporary connection, and checks it from Core. The user handles
@@ -52,7 +58,9 @@ Google Colab runtime and connect it to the AITuber OnAir Core PNGTuber sample.
 
 Choose the appropriate setup for the model and current GPU. Verify normal and
 streaming responses in Core, show me the three connection values, and keep the
-session running until I finish testing.
+session running until I finish testing. If the current GPU is insufficient,
+stop before downloading the model and tell me which runtime or settings are
+needed.
 ```
 
 The agent selects vLLM for a native Hugging Face generation checkpoint or
