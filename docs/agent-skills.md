@@ -93,14 +93,11 @@ user only copies the endpoint, model, and key into the Core sample.
 Before starting:
 
 1. Open a Google Colab notebook.
-2. Select and connect a GPU runtime suitable for the model. For the verified
-   Gemma 4 example below, use L4.
+2. Select and connect a GPU runtime. The Gemma 4 example below uses L4.
 3. Make sure Colab MCP Go can access the notebook so that Codex can operate it.
 
-L4 is not guaranteed to work with every model. Required GPU memory depends on
-the model, file format, quantization, context length, and backend. The verified
-vLLM smoke test used an A100, although vLLM does not always require one. The
-agent checks the current GPU before downloading the model.
+Whether L4 is sufficient depends on the model and settings. For another model,
+the agent checks the connected GPU before setup.
 
 Then copy this request into Codex:
 
