@@ -46,6 +46,10 @@ minimal (`name`, `description`) and keep the body procedural.
   - Canonical: `skills/connect-colab-local-tts/SKILL.md`
   - Claude Code: `.claude/skills/connect-colab-local-tts/SKILL.md`
   - Codex metadata: `skills/connect-colab-local-tts/agents/openai.yaml`
+- `connect-colab-local-llm`
+  - Canonical: `skills/connect-colab-local-llm/SKILL.md`
+  - Claude Code: `.claude/skills/connect-colab-local-llm/SKILL.md`
+  - Codex metadata: `skills/connect-colab-local-llm/agents/openai.yaml`
 - `create-pngtuber-avatar-states`
   - Canonical: `skills/create-pngtuber-avatar-states/SKILL.md`
   - Claude Code: `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
@@ -77,6 +81,51 @@ Use `connect-colab-local-tts` when driving
 `shinshin86/local-tts-on-google-colab` through Colab MCP Go, exposing the
 selected engine with `trycloudflare`, and validating the resulting
 OpenAI-compatible speech endpoint from `@aituber-onair/voice`.
+Use `connect-colab-local-llm` when launching a user-selected local LLM on
+Google Colab through Colab MCP Go and connecting it to a Core React sample.
+The skill uses vLLM for native Hugging Face generation checkpoints and
+llama.cpp for GGUF files. It creates a temporary connection URL and API key,
+checks normal and streaming responses, and verifies the result in Core. The
+user only copies the endpoint, model, and key into the Core sample.
+
+### Google Colab Local LLM Quick Start
+
+Before starting:
+
+1. Open a Google Colab notebook.
+2. Select and connect a GPU runtime. The Gemma 4 example below uses L4.
+3. Make sure Colab MCP Go can access the notebook so that Codex can operate it.
+
+Whether L4 is sufficient depends on the model and settings. For another model,
+the agent checks the connected GPU before setup.
+
+Then copy this request into Codex:
+
+```text
+Use $connect-colab-local-llm to launch the verified Gemma 4 12B Q4_0 setup
+on the connected Google Colab L4 runtime.
+
+Connect it to the AITuber OnAir Core PNGTuber sample, verify that Japanese
+responses appear incrementally in the browser, and show me the three values I
+need to enter in Core. Keep the session running after validation so that I can
+try it myself.
+```
+
+The agent installs the required software, downloads and verifies the model,
+creates a protected temporary connection, and checks the Core sample. It then
+returns:
+
+- the full `/v1/chat/completions` endpoint
+- the exact served model name
+- the temporary API key
+
+Enter those values in the Core sample with Provider set to
+`OpenAI-Compatible`. Start with TTS Engine set to `None` when validating text
+generation. The URL and key expire when the temporary connection or Colab
+runtime stops.
+
+For generic GGUF, vLLM, automatic backend selection, and cleanup prompts, see
+[`skills/connect-colab-local-llm/references/request-examples.md`](../skills/connect-colab-local-llm/references/request-examples.md).
 
 ## Usage
 
@@ -98,6 +147,13 @@ Codex prompt examples:
 - "Use $connect-colab-local-tts to launch <local-tts-engine> from
   local-tts-on-google-colab through Colab MCP Go, expose it with trycloudflare,
   and verify it from @aituber-onair/voice."
+- "launch vLLM on Google Colab with Colab MCP Go"
+- "launch a GGUF model with llama.cpp on Google Colab"
+- "connect a Colab local LLM to the Core PNGTuber sample"
+- "Use $connect-colab-local-llm to set up the verified Gemma 4 configuration
+  on an L4 runtime and keep it running for browser testing."
+- "Use $connect-colab-local-llm to run <hugging-face-model-id> on Colab,
+  choose the appropriate backend, and verify it with react-pngtuber-app."
 
 Claude Code prompt examples:
 
@@ -164,5 +220,6 @@ diff -u skills/add-tts-provider/SKILL.md .claude/skills/add-tts-provider/SKILL.m
 diff -u skills/sync-core-after-chat-upgrade/SKILL.md .claude/skills/sync-core-after-chat-upgrade/SKILL.md
 diff -u skills/wrap-tts-as-openai-compatible/SKILL.md .claude/skills/wrap-tts-as-openai-compatible/SKILL.md
 diff -u skills/connect-colab-local-tts/SKILL.md .claude/skills/connect-colab-local-tts/SKILL.md
+diff -u skills/connect-colab-local-llm/SKILL.md .claude/skills/connect-colab-local-llm/SKILL.md
 diff -u skills/create-pngtuber-avatar-states/SKILL.md .claude/skills/create-pngtuber-avatar-states/SKILL.md
 ```

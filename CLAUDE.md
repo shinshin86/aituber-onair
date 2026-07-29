@@ -73,18 +73,21 @@ skill definitions aligned.
   - `sync-core-after-chat-upgrade`
   - `wrap-tts-as-openai-compatible`
   - `connect-colab-local-tts`
+  - `connect-colab-local-llm`
 - Canonical sources:
   - `skills/add-chat-model/SKILL.md`
   - `skills/add-tts-provider/SKILL.md`
   - `skills/sync-core-after-chat-upgrade/SKILL.md`
   - `skills/wrap-tts-as-openai-compatible/SKILL.md`
   - `skills/connect-colab-local-tts/SKILL.md`
+  - `skills/connect-colab-local-llm/SKILL.md`
 - Claude Code runtime paths:
   - `.claude/skills/add-chat-model/SKILL.md`
   - `.claude/skills/add-tts-provider/SKILL.md`
   - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
   - `.claude/skills/wrap-tts-as-openai-compatible/SKILL.md`
   - `.claude/skills/connect-colab-local-tts/SKILL.md`
+  - `.claude/skills/connect-colab-local-llm/SKILL.md`
 
 Usage:
 
@@ -123,6 +126,14 @@ Usage:
 - Invoke explicitly with `$connect-colab-local-tts`, or use prompts like
   "connect Colab local TTS", "launch local-tts-on-google-colab with Colab MCP
   Go", or "try a Colab OpenAI-compatible TTS URL from @aituber-onair/voice".
+- Invoke explicitly with `$connect-colab-local-llm`, or use prompts like
+  "launch vLLM on Colab", "serve a GGUF model with llama.cpp on Colab",
+  "connect a Colab local LLM to a Core sample", or "verify a Colab
+  OpenAI-compatible chat endpoint with @aituber-onair/chat". Use vLLM for
+  native Hugging Face checkpoints and llama.cpp for GGUF artifacts. Issue the
+  temporary public URL with a cloudflared Quick Tunnel, generate the backend
+  API key automatically, and rerun the streaming compatibility probe in every
+  session. Do not fall back to ngrok.
 - Invoke explicitly with `$create-pngtuber-avatar-states`, or use prompts like
   "create PNGTuber avatar state images", "generate mouth and eye open-close
   variants", "split a 2x2 avatar sheet", "remove avatar background", or
@@ -164,6 +175,9 @@ Maintenance:
 - For Colab local TTS connection workflow updates, edit
   `skills/connect-colab-local-tts/SKILL.md` and sync to
   `.claude/skills/connect-colab-local-tts/SKILL.md`.
+- For Colab local LLM connection workflow updates, edit
+  `skills/connect-colab-local-llm/SKILL.md` and sync to
+  `.claude/skills/connect-colab-local-llm/SKILL.md`.
 - For PNGTuber avatar state image workflow updates, edit
   `skills/create-pngtuber-avatar-states/SKILL.md` and sync to
   `.claude/skills/create-pngtuber-avatar-states/SKILL.md`.

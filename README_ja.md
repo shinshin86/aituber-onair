@@ -385,7 +385,13 @@ npm run fmt
 
 ### Agent Skills
 
-Codex と Claude Code の両方で同じ手順を使えるよう、共通の Agent Skills を管理しています。詳しくは [`docs/agent-skills.ja.md`](./docs/agent-skills.ja.md) を参照してください。正本は `skills/` 以下、Claude Code 用の配置は `.claude/skills/` 以下にあります。
+Codex と Claude Code の両方で同じ手順を使えるよう、共通の Agent
+Skills を管理しています。詳しくは
+[`docs/agent-skills.ja.md`](./docs/agent-skills.ja.md) を参照してください。
+Google Colab でローカル LLM を起動する場合は、
+[そのまま使える依頼文](./docs/agent-skills.ja.md#google-colab-ローカル-llm-クイックスタート)
+を利用できます。正本は `skills/` 以下、Claude Code 用の配置は
+`.claude/skills/` 以下にあります。
 
 ### リリース
 
