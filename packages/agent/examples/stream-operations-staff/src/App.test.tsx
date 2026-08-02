@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act } from 'react';
+import { act, StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
@@ -9,12 +9,6 @@ const voiceMockState = vi.hoisted(() => ({
   engine: 'off',
   aivisState: 'unchecked',
   voiceError: null as string | null,
-}));
-
-vi.mock('@aituber-onair/comment-intelligence', () => ({
-  createCommentIntelligence: () => ({
-    analyze: vi.fn(async () => ({ safetyReports: [] })),
-  }),
 }));
 
 vi.mock('./components/AvatarCanvas', () => ({
@@ -54,8 +48,16 @@ describe('stream operations fixture playback', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
     container = document.createElement('div');
     document.body.append(container);
+    window.localStorage.clear();
     root = createRoot(container);
-    await act(async () => root.render(<App />));
+    await act(async () =>
+      root.render(
+        <StrictMode>
+          <App />
+        </StrictMode>
+      )
+    );
+    await act(async () => Promise.resolve());
   });
 
   afterEach(async () => {
@@ -75,7 +77,13 @@ describe('stream operations fixture playback', () => {
     voiceMockState.aivisState = 'unavailable';
     voiceMockState.voiceError =
       'AivisSpeechに接続できませんでした。アプリを起動して再確認してください';
-    await act(async () => root.render(<App />));
+    await act(async () =>
+      root.render(
+        <StrictMode>
+          <App />
+        </StrictMode>
+      )
+    );
 
     const engineSelect = container.querySelector('#miko-voice-engine');
     expect((engineSelect as HTMLSelectElement).value).toBe('aivisSpeech');
@@ -92,7 +100,7 @@ describe('stream operations fixture playback', () => {
     expect(endButton.disabled).toBe(true);
 
     await click(getButton('4x'));
-    await click(getButtonByLabel('フィクスチャ再生を開始'));
+    await click(getButtonByLabel('コメント再生を開始'));
     for (let step = 0; step < 24; step += 1) {
       await act(async () => vi.advanceTimersByTimeAsync(300));
     }

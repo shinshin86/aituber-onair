@@ -1,10 +1,4 @@
-import type {
-  FixtureAgentEvent,
-  FixtureComment,
-  FixtureReport,
-  ReportArtifact,
-  ToolRun,
-} from './types';
+import type { FixtureComment, FixtureReport } from './types';
 
 const BASE_TIME = Date.UTC(2026, 6, 31, 10, 0, 0);
 
@@ -81,7 +75,7 @@ export const COMMENTS: readonly FixtureComment[] = [
     displayBody: '攻撃的な表現を含むコメント（本文は抑制表示）',
     timestamp: BASE_TIME + 47_000,
     atSeconds: 47,
-    author: { id: 'u07', name: '匿名視聴者' },
+    author: { id: 'u06', name: 'viewer_404' },
     labels: ['要注意', '対応不要'],
     attention: '安全性注意',
   },
@@ -258,137 +252,6 @@ export const REPORTS: readonly FixtureReport[] = [
     evidenceIds: ['c13', 'c14'],
   },
 ] as const;
-
-export const AGENT_EVENTS: readonly FixtureAgentEvent[] = [
-  {
-    id: 'e01',
-    atCount: 1,
-    time: '00:06',
-    type: 'message.delta',
-    summary: 'コメント入力を受信',
-  },
-  {
-    id: 'e02',
-    atCount: 2,
-    time: '00:14',
-    type: 'tool.requested',
-    summary: 'comments.analyze を要求',
-  },
-  {
-    id: 'e03',
-    atCount: 2,
-    time: '00:14',
-    type: 'tool.completed',
-    summary: 'rules mode の分析が完了',
-  },
-  {
-    id: 'e04',
-    atCount: 5,
-    time: '00:36',
-    type: 'artifact.created',
-    summary: '質問増加レポートを作成',
-  },
-  {
-    id: 'e05',
-    atCount: 7,
-    time: '00:47',
-    type: 'tool.completed',
-    summary: '安全性ルール判定が完了',
-  },
-  {
-    id: 'e06',
-    atCount: 10,
-    time: '01:11',
-    type: 'turn.completed',
-    summary: '観測カードの更新が完了',
-  },
-  {
-    id: 'e07',
-    atCount: 13,
-    time: '01:39',
-    type: 'tool.requested',
-    summary: '分析エラーを検知し再試行',
-  },
-  {
-    id: 'e08',
-    atCount: 14,
-    time: '01:48',
-    type: 'tool.completed',
-    summary: '再試行が完了',
-  },
-  {
-    id: 'e09',
-    atCount: 16,
-    time: '02:10',
-    type: 'turn.completed',
-    summary: 'フィクスチャ再生が完了',
-  },
-] as const;
-
-export const TOOL_RUNS: readonly ToolRun[] = [
-  {
-    id: 't01',
-    atCount: 2,
-    name: 'comments.analyze',
-    time: '00:14',
-    state: '完了',
-    result: '2件を rules mode で分析',
-  },
-  {
-    id: 't02',
-    atCount: 7,
-    name: 'comments.analyze',
-    time: '00:47',
-    state: '完了',
-    result: '安全性注意 2件を検出・応答対象外',
-  },
-  {
-    id: 't03',
-    atCount: 13,
-    name: 'comments.analyze',
-    time: '01:39',
-    state: 'エラー',
-    result: '固定フィクスチャの一時エラー（自動復旧）',
-  },
-  {
-    id: 't04',
-    atCount: 14,
-    name: 'comments.analyze',
-    time: '01:48',
-    state: '完了',
-    result: '再試行で 14件を分析',
-  },
-] as const;
-
-export const REPORT_ARTIFACT: ReportArtifact = {
-  id: 'stream-report-fixture-001',
-  type: 'stream-operations-report',
-  version: 1,
-  title: '配信後レポート',
-  data: {
-    status: 'fixture',
-    evidenceCommentIds: [
-      'c02',
-      'c03',
-      'c05',
-      'c06',
-      'c07',
-      'c08',
-      'c09',
-      'c10',
-      'c11',
-      'c12',
-      'c13',
-      'c14',
-    ],
-  },
-  createdAt: '2026-07-31T10:02:20.000Z',
-  source: {
-    agentId: 'stream-ops-miko',
-    sessionId: 'fixture-session-001',
-    turnId: 'fixture-turn-report',
-  },
-};
 
 export const formatElapsed = (seconds: number) => {
   const minutes = Math.floor(seconds / 60)

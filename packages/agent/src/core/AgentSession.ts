@@ -25,6 +25,7 @@ import { validateToolInput } from '../tools/schemaValidation.js';
 import type {
   AgentApprovalDecision,
   AgentApprovalRequest,
+  AgentArtifact,
   AgentAudience,
   AgentBackendCapabilities,
   AgentBackendEvent,
@@ -395,7 +396,11 @@ export class AgentSessionRuntime implements AgentSession {
               'output',
               candidate
             )) as AgentRunResult;
-            assertRunResult(runResult, turn.id);
+            assertRunResult(runResult, {
+              agentId: this.agentId,
+              sessionId: this.id,
+              turnId: turn.id,
+            });
             break backendEvents;
           }
           default:
@@ -411,6 +416,15 @@ export class AgentSessionRuntime implements AgentSession {
         throw new AgentBackendProtocolError(
           'The backend event stream ended without a completed event.'
         );
+      }
+
+      for (const artifact of runResult.artifacts) {
+        turn.queue.push({
+          ...this.eventBase(turn.id),
+          type: 'artifact.created',
+          turnId: turn.id,
+          artifact,
+        });
       }
 
       afterTurnAttempted = true;
@@ -985,7 +999,11 @@ function raceWithAbort<T>(
 
 function assertRunResult(
   value: unknown,
-  expectedTurnId: string
+  expectedSource: {
+    readonly agentId: string;
+    readonly sessionId: string;
+    readonly turnId: string;
+  }
 ): asserts value is AgentRunResult {
   const candidate =
     typeof value === 'object' && value !== null
@@ -993,7 +1011,7 @@ function assertRunResult(
       : undefined;
   if (
     !candidate ||
-    candidate.turnId !== expectedTurnId ||
+    candidate.turnId !== expectedSource.turnId ||
     typeof candidate.message !== 'string' ||
     !Array.isArray(candidate.artifacts)
   ) {
@@ -1001,6 +1019,75 @@ function assertRunResult(
       'Agent hooks for "output" must return an AgentRunResult.'
     );
   }
+  for (const artifact of candidate.artifacts) {
+    assertAgentArtifact(artifact, expectedSource);
+  }
+}
+
+function assertAgentArtifact(
+  value: unknown,
+  expectedSource: {
+    readonly agentId: string;
+    readonly sessionId: string;
+    readonly turnId: string;
+  }
+): void {
+  const artifact =
+    typeof value === 'object' && value !== null
+      ? (value as Partial<AgentArtifact>)
+      : undefined;
+  const source = artifact?.source;
+  if (
+    !artifact ||
+    typeof artifact.id !== 'string' ||
+    !artifact.id.trim() ||
+    typeof artifact.type !== 'string' ||
+    !artifact.type.trim() ||
+    !Number.isInteger(artifact.version) ||
+    Number(artifact.version) <= 0 ||
+    (artifact.title !== undefined && typeof artifact.title !== 'string') ||
+    typeof artifact.createdAt !== 'string' ||
+    !artifact.createdAt.trim() ||
+    !source ||
+    source.agentId !== expectedSource.agentId ||
+    source.sessionId !== expectedSource.sessionId ||
+    source.turnId !== expectedSource.turnId ||
+    !isJsonValue(artifact.data)
+  ) {
+    throw new AgentHookError(
+      'Agent output hooks returned an invalid AgentArtifact.'
+    );
+  }
+}
+
+function isJsonValue(
+  value: unknown,
+  ancestors = new WeakSet<object>()
+): boolean {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'boolean'
+  ) {
+    return true;
+  }
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (typeof value !== 'object') return false;
+  if (ancestors.has(value)) return false;
+
+  ancestors.add(value);
+  let valid: boolean;
+  if (Array.isArray(value)) {
+    valid = value.every((item) => isJsonValue(item, ancestors));
+  } else {
+    const prototype = Object.getPrototypeOf(value);
+    valid =
+      (prototype === Object.prototype || prototype === null) &&
+      Object.getOwnPropertySymbols(value).length === 0 &&
+      Object.values(value).every((item) => isJsonValue(item, ancestors));
+  }
+  ancestors.delete(value);
+  return valid;
 }
 
 function isToolTimeoutError(error: AgentError): boolean {

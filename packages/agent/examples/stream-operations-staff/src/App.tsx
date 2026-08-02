@@ -1,23 +1,28 @@
+import type { AgentEvent } from '@aituber-onair/agent';
 import {
-  type CommentIntelligenceResult,
-  createCommentIntelligence,
-} from '@aituber-onair/comment-intelligence';
-import { useEffect, useMemo, useRef, useState } from 'react';
+  type Dispatch,
+  type SetStateAction,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {
+  createStreamOperationsStaffRuntime,
+  type StreamAlertData,
+  type StreamOperationsStaffRuntime,
+  type StreamReportData,
+  type StreamStaffArtifact,
+  type StreamStaffInitialization,
+  type StreamStaffTurn,
+} from './agentRuntime';
 import AvatarCanvas from './components/AvatarCanvas';
 import {
   canCreatePostStreamReport,
   getRepeatedSoftwareQuestionCount,
   getUnansweredQuestionTopics,
 } from './demoInsights';
-import {
-  AGENT_EVENTS,
-  COMMENTS,
-  REPORTS,
-  REPORT_ARTIFACT,
-  STREAM_TITLE,
-  TOOL_RUNS,
-  formatElapsed,
-} from './fixtures';
+import { COMMENTS, STREAM_TITLE, formatElapsed } from './fixtures';
 import {
   type AivisConnectionState,
   type MikoVoiceEngine,
@@ -32,11 +37,13 @@ import {
 import {
   type BottomTab,
   type DemoPhase,
+  type DisplayAgentEvent,
   type FixtureComment,
   type FixtureReport,
   MIKO_STAFF,
   type RulesSnapshot,
   type StaffPhase,
+  type ToolRun,
 } from './types';
 
 const SPEEDS = [1, 2, 4] as const;
@@ -47,6 +54,14 @@ const PLATFORM_LABELS: Record<string, string> = {
   twitch: 'Twitch',
   web: 'Web',
 };
+
+type RuntimeState =
+  | { readonly status: 'initializing' }
+  | {
+      readonly status: 'ready';
+      readonly initialization: StreamStaffInitialization;
+    }
+  | { readonly status: 'error'; readonly message: string };
 
 const getStaffPhase = (
   phase: DemoPhase,
@@ -94,6 +109,169 @@ const getMikoAvatarState = (
   };
 };
 
+function presentTurn(turn: StreamStaffTurn, atCount: number) {
+  const elapsed =
+    atCount > COMMENTS.length
+      ? '02:20'
+      : formatElapsed(COMMENTS[Math.max(0, atCount - 1)]?.atSeconds ?? 0);
+  const artifacts = turn.result.artifacts as readonly StreamStaffArtifact[];
+  return {
+    events: turn.events.map((event) => ({
+      id: event.id,
+      atCount,
+      time: elapsed,
+      type: event.type,
+      summary: describeAgentEvent(event),
+    })),
+    tools: turn.events.flatMap((event): readonly ToolRun[] => {
+      if (event.type === 'tool.failed') {
+        return [
+          {
+            id: event.id,
+            atCount,
+            name: event.toolId,
+            time: elapsed,
+            state: 'エラー',
+            result: `${event.error.message}（Agent が再試行）`,
+          },
+        ];
+      }
+      if (event.type !== 'tool.completed') return [];
+      return [
+        {
+          id: event.id,
+          atCount,
+          name: event.toolId,
+          time: elapsed,
+          state: '完了',
+          result: describeToolOutput(event.toolId, event.output),
+        },
+      ];
+    }),
+    reports: artifacts
+      .filter(
+        (
+          artifact
+        ): artifact is StreamStaffArtifact & {
+          readonly data: StreamAlertData;
+        } => artifact.data.kind === 'live-alert'
+      )
+      .map((artifact) => ({
+        id: artifact.data.reportId,
+        atCount: artifact.data.atCount,
+        time: artifact.data.time,
+        kind: artifact.data.category,
+        severity: artifact.data.severity,
+        observation: artifact.data.observation,
+        suggestion: artifact.data.suggestion,
+        evidenceIds: artifact.data.evidenceCommentIds,
+      })),
+    reportArtifact:
+      artifacts.find(
+        (artifact) => artifact.data.kind === 'post-stream-report'
+      ) ?? null,
+  };
+}
+
+function applyPresentedTurn(
+  turn: StreamStaffTurn,
+  atCount: number,
+  setters: {
+    readonly setAgentEvents: Dispatch<
+      SetStateAction<readonly DisplayAgentEvent[]>
+    >;
+    readonly setToolRuns: Dispatch<SetStateAction<readonly ToolRun[]>>;
+    readonly setReports: Dispatch<SetStateAction<readonly FixtureReport[]>>;
+    readonly setReportArtifact: Dispatch<
+      SetStateAction<StreamStaffArtifact | null>
+    >;
+  }
+): void {
+  const presented = presentTurn(turn, atCount);
+  setters.setAgentEvents((current) => [...current, ...presented.events]);
+  setters.setToolRuns((current) => [...current, ...presented.tools]);
+  setters.setReports((current) => {
+    const byId = new Map(current.map((report) => [report.id, report]));
+    for (const report of presented.reports) byId.set(report.id, report);
+    return [...byId.values()];
+  });
+  if (presented.reportArtifact) {
+    setters.setReportArtifact(presented.reportArtifact);
+  }
+}
+
+function describeAgentEvent(event: AgentEvent): string {
+  switch (event.type) {
+    case 'session.started':
+      return 'Agent Session を開始';
+    case 'session.resumed':
+      return 'Agent Session を再開';
+    case 'turn.started':
+      return 'Turn を開始';
+    case 'message.delta':
+      return '応答ストリームを受信';
+    case 'message.completed':
+      return event.text;
+    case 'tool.requested':
+      return `${event.toolId} を要求`;
+    case 'tool.started':
+      return `${event.toolId} を実行`;
+    case 'tool.completed':
+      return `${event.toolId} が完了`;
+    case 'tool.failed':
+      return `${event.toolId} が失敗: ${event.error.message}`;
+    case 'approval.requested':
+      return 'ホスト承認を要求';
+    case 'approval.resolved':
+      return `ホスト承認を解決: ${event.decision}`;
+    case 'artifact.created':
+      return `${event.artifact.title ?? event.artifact.type} を作成`;
+    case 'turn.completed':
+      return event.result.message;
+    case 'turn.interrupted':
+    case 'turn.failed':
+      return event.error.message;
+    case 'session.closed':
+      return 'Agent Session を終了';
+  }
+}
+
+function describeToolOutput(toolId: string, output: unknown): string {
+  if (toolId === 'comments.analyze' && isRecord(output)) {
+    const analyzed = output.analyzedCommentCount;
+    const attention = output.safetyAttentionCount;
+    if (typeof analyzed === 'number' && typeof attention === 'number') {
+      return `${analyzed}件を分析 · 安全性注意 ${attention}件`;
+    }
+  }
+  if (toolId === 'host.escalate') {
+    return '人間への確認依頼をローカル下書きとして保存';
+  }
+  if (toolId === 'report.submit') {
+    return '構造化レポートをローカル下書きとして保存（外部送信なし）';
+  }
+  return 'Tool 実行が完了';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function describeError(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+  const cause = (error as Error & { readonly cause?: unknown }).cause;
+  if (cause instanceof Error) return `${error.message}: ${cause.message}`;
+  if (isRecord(cause) && typeof cause.message === 'string') {
+    return `${error.message}: ${cause.message}`;
+  }
+  const metadata = (error as Error & { readonly metadata?: unknown }).metadata;
+  if (isRecord(metadata) && isRecord(metadata.lastError)) {
+    const message = metadata.lastError.message;
+    if (typeof message === 'string') return `${error.message}: ${message}`;
+  }
+  return error.message;
+}
+
 function App() {
   const [visibleCount, setVisibleCount] = useState(0);
   const [phase, setPhase] = useState<DemoPhase>('pre');
@@ -112,27 +290,31 @@ function App() {
     pending: false,
     error: null,
   });
-  const simulatedErrorIdsRef = useRef(new Set<string>());
+  const [runtimeState, setRuntimeState] = useState<RuntimeState>({
+    status: 'initializing',
+  });
+  const [agentEvents, setAgentEvents] = useState<readonly DisplayAgentEvent[]>(
+    []
+  );
+  const [toolRuns, setToolRuns] = useState<readonly ToolRun[]>([]);
+  const [reports, setReports] = useState<readonly FixtureReport[]>([]);
+  const [reportArtifact, setReportArtifact] =
+    useState<StreamStaffArtifact | null>(null);
+  const safetyTimerRef = useRef<number | undefined>(undefined);
+  const runtimeLeaseCountsRef = useRef(
+    new Map<StreamOperationsStaffRuntime, number>()
+  );
 
-  const intelligence = useMemo(() => {
+  const runtime = useMemo(() => {
     void runId;
-    return createCommentIntelligence({
-      analysis: { mode: 'rules' },
-      ranking: { strategy: 'chaos-resistant', maxSelectedComments: 8 },
-      context: { language: 'ja', style: 'aituber-live' },
-      viewerSafety: { enabled: true, blockOnHighRisk: true },
-    });
+    return createStreamOperationsStaffRuntime();
   }, [runId]);
 
   const visibleComments = useMemo(
     () => COMMENTS.slice(0, visibleCount),
     [visibleCount]
   );
-  const visibleReports = useMemo(
-    () =>
-      [...REPORTS.filter((report) => report.atCount <= visibleCount)].reverse(),
-    [visibleCount]
-  );
+  const visibleReports = useMemo(() => [...reports].reverse(), [reports]);
   const mikoVoice = useMikoVoice({
     reports: visibleReports,
     phase,
@@ -166,64 +348,114 @@ function App() {
     [staffPhase]
   );
 
-  const selectedReport = REPORTS.find(
+  const selectedReport = reports.find(
     (report) => report.id === selectedReportId
   );
   const evidenceIds = selectedReport?.evidenceIds ?? [];
   const linkedReportIds = selectedCommentId
-    ? REPORTS.filter((report) =>
-        report.evidenceIds.includes(selectedCommentId)
-      ).map((report) => report.id)
+    ? reports
+        .filter((report) => report.evidenceIds.includes(selectedCommentId))
+        .map((report) => report.id)
     : [];
 
   useEffect(() => {
-    if (phase !== 'monitoring' || visibleCount >= COMMENTS.length) return;
-    const timer = window.setTimeout(() => {
-      setVisibleCount((count) => Math.min(count + 1, COMMENTS.length));
-    }, 1_200 / speed);
-    return () => window.clearTimeout(timer);
-  }, [phase, speed, visibleCount]);
-
-  useEffect(() => {
-    void runId;
-    if (phase !== 'ending') return;
-    const timer = window.setTimeout(() => setPhase('complete'), 1_100);
-    return () => window.clearTimeout(timer);
-  }, [phase, runId]);
-
-  useEffect(() => {
-    if (visibleCount === 0 || phase !== 'monitoring') return;
-    const latestComment = COMMENTS[visibleCount - 1];
-    setAnalyzing(true);
-    const analysisTimer = window.setTimeout(
-      () => setAnalyzing(false),
-      Math.max(120, 360 / speed)
-    );
-
-    let safetyTimer = 0;
-    if (isSafetyComment(latestComment)) {
-      setSafetyAttention(true);
-      safetyTimer = window.setTimeout(
-        () => setSafetyAttention(false),
-        Math.max(400, 1_000 / speed)
-      );
-    } else {
-      setSafetyAttention(false);
-    }
-
-    if (
-      latestComment.simulateAnalysisError &&
-      !simulatedErrorIdsRef.current.has(latestComment.id)
-    ) {
-      simulatedErrorIdsRef.current.add(latestComment.id);
-      setPhase('error');
-    }
-
+    let active = true;
+    const leaseCounts = runtimeLeaseCountsRef.current;
+    leaseCounts.set(runtime, (leaseCounts.get(runtime) ?? 0) + 1);
+    setRuntimeState({ status: 'initializing' });
+    runtime
+      .initialize()
+      .then((initialization) => {
+        if (active) setRuntimeState({ status: 'ready', initialization });
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setRuntimeState({
+          status: 'error',
+          message: describeError(error, 'Agent initialization error'),
+        });
+      });
     return () => {
-      window.clearTimeout(analysisTimer);
-      window.clearTimeout(safetyTimer);
+      active = false;
+      if (safetyTimerRef.current !== undefined) {
+        window.clearTimeout(safetyTimerRef.current);
+      }
+      queueMicrotask(() => {
+        const remaining = (leaseCounts.get(runtime) ?? 1) - 1;
+        if (remaining <= 0) {
+          leaseCounts.delete(runtime);
+          void runtime.close();
+        } else {
+          leaseCounts.set(runtime, remaining);
+        }
+      });
     };
-  }, [phase, speed, visibleCount]);
+  }, [runtime]);
+
+  useEffect(() => {
+    if (
+      phase !== 'monitoring' ||
+      runtimeState.status !== 'ready' ||
+      analyzing ||
+      visibleCount >= COMMENTS.length
+    )
+      return;
+
+    let active = true;
+    const timer = window.setTimeout(async () => {
+      const nextCount = Math.min(visibleCount + 1, COMMENTS.length);
+      const latestComment = COMMENTS[nextCount - 1];
+      setVisibleCount(nextCount);
+      setAnalyzing(true);
+      setRulesSnapshot((current) => ({
+        ...current,
+        pending: true,
+        error: null,
+      }));
+      setSafetyAttention(isSafetyComment(latestComment));
+      if (safetyTimerRef.current !== undefined) {
+        window.clearTimeout(safetyTimerRef.current);
+      }
+      if (isSafetyComment(latestComment)) {
+        safetyTimerRef.current = window.setTimeout(
+          () => setSafetyAttention(false),
+          Math.max(400, 1_000 / speed)
+        );
+      }
+
+      try {
+        const turn = await runtime.analyzeComments(
+          COMMENTS.slice(0, nextCount)
+        );
+        if (!active) return;
+        applyPresentedTurn(turn, nextCount, {
+          setAgentEvents,
+          setToolRuns,
+          setReports,
+          setReportArtifact,
+        });
+        setRulesSnapshot({
+          result: turn.analysis ?? null,
+          pending: false,
+          error: null,
+        });
+        if (turn.events.some((event) => event.type === 'tool.failed')) {
+          setPhase('error');
+        }
+      } catch (error) {
+        if (!active) return;
+        const message = describeError(error, 'Agent analysis error');
+        setRulesSnapshot({ result: null, pending: false, error: message });
+        setPhase('error');
+      } finally {
+        if (active) setAnalyzing(false);
+      }
+    }, 1_200 / speed);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [analyzing, phase, runtime, runtimeState.status, speed, visibleCount]);
 
   useEffect(() => {
     if (phase !== 'error') return;
@@ -231,43 +463,8 @@ function App() {
     return () => window.clearTimeout(recoveryTimer);
   }, [phase]);
 
-  useEffect(() => {
-    let active = true;
-    if (visibleComments.length === 0) {
-      setRulesSnapshot({ result: null, pending: false, error: null });
-      return;
-    }
-
-    setRulesSnapshot((current) => ({ ...current, pending: true, error: null }));
-    intelligence
-      .analyze({
-        comments: [...visibleComments],
-        streamState: {
-          platform: 'youtube',
-          mode: 'live',
-          language: 'ja',
-          title: STREAM_TITLE,
-          topic: '配信画面制作',
-        },
-      })
-      .then((result: CommentIntelligenceResult) => {
-        if (active) setRulesSnapshot({ result, pending: false, error: null });
-      })
-      .catch((error: unknown) => {
-        if (!active) return;
-        setRulesSnapshot({
-          result: null,
-          pending: false,
-          error: error instanceof Error ? error.message : 'rules mode error',
-        });
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [intelligence, visibleComments]);
-
   const togglePlayback = () => {
+    if (runtimeState.status !== 'ready') return;
     if (phase === 'pre' || phase === 'paused') {
       setPhase('monitoring');
       return;
@@ -285,13 +482,35 @@ function App() {
     setSelectedReportId(null);
     setSelectedCommentId(null);
     setAcknowledgedIds([]);
-    simulatedErrorIdsRef.current.clear();
+    setRulesSnapshot({ result: null, pending: false, error: null });
+    setRuntimeState({ status: 'initializing' });
+    setAgentEvents([]);
+    setToolRuns([]);
+    setReports([]);
+    setReportArtifact(null);
   };
 
-  const endStream = () => {
-    if (!canCreateReport) return;
+  const endStream = async () => {
+    if (!canCreateReport || runtimeState.status !== 'ready') return;
     setPhase('ending');
     setBottomTab('report');
+    try {
+      const turn = await runtime.createPostStreamReport();
+      applyPresentedTurn(turn, COMMENTS.length + 1, {
+        setAgentEvents,
+        setToolRuns,
+        setReports,
+        setReportArtifact,
+      });
+      setPhase('complete');
+    } catch (error) {
+      setRulesSnapshot({
+        result: rulesSnapshot.result,
+        pending: false,
+        error: describeError(error, 'Agent report creation error'),
+      });
+      setPhase('error');
+    }
   };
 
   const showEvidence = (report: FixtureReport) => {
@@ -307,7 +526,7 @@ function App() {
   const showLinkedReports = (commentId: string) => {
     setSelectedCommentId(commentId);
     setSelectedReportId(null);
-    const linkedReport = REPORTS.find((report) =>
+    const linkedReport = reports.find((report) =>
       report.evidenceIds.includes(commentId)
     );
     if (linkedReport) {
@@ -383,12 +602,15 @@ function App() {
             className="primary-control"
             onClick={togglePlayback}
             disabled={
-              phase === 'ending' || phase === 'complete' || phase === 'error'
+              runtimeState.status !== 'ready' ||
+              phase === 'ending' ||
+              phase === 'complete' ||
+              phase === 'error'
             }
             aria-label={
               phase === 'monitoring'
-                ? 'フィクスチャ再生を一時停止'
-                : 'フィクスチャ再生を開始'
+                ? 'コメント再生を一時停止'
+                : 'コメント再生を開始'
             }
           >
             <span aria-hidden="true">{phase === 'monitoring' ? 'Ⅱ' : '▶'}</span>
@@ -414,11 +636,11 @@ function App() {
             type="button"
             className="end-control"
             onClick={endStream}
-            disabled={!canCreateReport}
+            disabled={!canCreateReport || runtimeState.status !== 'ready'}
             title={
               canCreateReport
                 ? undefined
-                : `固定フィクスチャ全${COMMENTS.length}件の再生後に作成できます`
+                : `全${COMMENTS.length}件のコメント再生後に作成できます`
             }
           >
             ◼ 配信を終了してレポート作成
@@ -429,7 +651,16 @@ function App() {
       <output className="connection-strip" aria-live="polite">
         <span className={`state-dot state-${phase}`} aria-hidden="true" />
         <strong>{staffPhase}</strong>
-        <span>固定フィクスチャ #{runId + 1}</span>
+        <span>Agent 実行 #{runId + 1}</span>
+        <span>
+          {runtimeState.status === 'initializing'
+            ? 'Agent workspace 初期化中'
+            : runtimeState.status === 'error'
+              ? `Agent 初期化エラー: ${runtimeState.message}`
+              : runtimeState.initialization.firstBootstrapAction === 'resumed'
+                ? 'Agent workspace 再開済み'
+                : 'Agent workspace 構成済み'}
+        </span>
         <span className="rules-status">
           {rulesSnapshot.pending
             ? 'rules mode 分析中'
@@ -570,7 +801,9 @@ function App() {
         tab={bottomTab}
         setTab={setBottomTab}
         phase={phase}
-        visibleCount={visibleCount}
+        events={agentEvents}
+        tools={toolRuns}
+        reportArtifact={reportArtifact}
         onCommentEvidence={showLinkedReports}
       />
     </main>
@@ -1046,13 +1279,17 @@ function BottomPanel({
   tab,
   setTab,
   phase,
-  visibleCount,
+  events,
+  tools,
+  reportArtifact,
   onCommentEvidence,
 }: {
   tab: BottomTab;
   setTab: (tab: BottomTab) => void;
   phase: DemoPhase;
-  visibleCount: number;
+  events: readonly DisplayAgentEvent[];
+  tools: readonly ToolRun[];
+  reportArtifact: StreamStaffArtifact | null;
   onCommentEvidence: (commentId: string) => void;
 }) {
   const tabs: readonly { id: BottomTab; label: string }[] = [
@@ -1060,12 +1297,8 @@ function BottomPanel({
     { id: 'tools', label: 'Tool Activity' },
     { id: 'report', label: '配信後レポート' },
   ];
-  const events = [
-    ...AGENT_EVENTS.filter((event) => event.atCount <= visibleCount),
-  ].reverse();
-  const tools = [
-    ...TOOL_RUNS.filter((run) => run.atCount <= visibleCount),
-  ].reverse();
+  const visibleEvents = [...events].reverse();
+  const visibleTools = [...tools].reverse();
 
   return (
     <section
@@ -1085,10 +1318,8 @@ function BottomPanel({
             onClick={() => setTab(item.id)}
           >
             {item.label}
-            {item.id === 'events' && <span>{events.length}</span>}
-            {item.id === 'tools' && (
-              <span>{tools.length + (phase === 'complete' ? 1 : 0)}</span>
-            )}
+            {item.id === 'events' && <span>{visibleEvents.length}</span>}
+            {item.id === 'tools' && <span>{visibleTools.length}</span>}
             {item.id === 'report' && phase === 'complete' && <span>完成</span>}
           </button>
         ))}
@@ -1102,14 +1333,14 @@ function BottomPanel({
       >
         {tab === 'events' && (
           <div className="event-grid">
-            {events.length === 0 ? (
+            {visibleEvents.length === 0 ? (
               <EmptyState
                 icon="···"
                 title="イベント待機中"
                 body="内部思考ではなく、公開可能な実行イベントだけを表示します。"
               />
             ) : (
-              events.map((event) => (
+              visibleEvents.map((event) => (
                 <div className="event-row" key={event.id}>
                   <time>{event.time}</time>
                   <code>{event.type}</code>
@@ -1122,26 +1353,16 @@ function BottomPanel({
 
         {tab === 'tools' && (
           <div className="tool-grid">
-            {tools.length === 0 ? (
+            {visibleTools.length === 0 ? (
               <EmptyState
                 icon="◇"
                 title="ツール実行待機中"
                 body="comments.analyze の実行状態と結果だけを表示します。"
               />
             ) : (
-              <>
-                {phase === 'complete' && (
-                  <ToolActivityRow
-                    name="report.submit"
-                    time="02:20"
-                    state="完了"
-                    result={`成果物 ${REPORT_ARTIFACT.id} を作成（外部送信なし）`}
-                  />
-                )}
-                {tools.map((tool) => (
-                  <ToolActivityRow key={tool.id} {...tool} />
-                ))}
-              </>
+              visibleTools.map((tool) => (
+                <ToolActivityRow key={tool.id} {...tool} />
+              ))
             )}
           </div>
         )}
@@ -1149,6 +1370,7 @@ function BottomPanel({
         {tab === 'report' && (
           <PostStreamReport
             phase={phase}
+            artifact={reportArtifact}
             onCommentEvidence={onCommentEvidence}
           />
         )}
@@ -1182,9 +1404,11 @@ function ToolActivityRow({
 
 function PostStreamReport({
   phase,
+  artifact,
   onCommentEvidence,
 }: {
   phase: DemoPhase;
+  artifact: StreamStaffArtifact | null;
   onCommentEvidence: (commentId: string) => void;
 }) {
   if (phase === 'ending') {
@@ -1201,7 +1425,7 @@ function PostStreamReport({
     );
   }
 
-  if (phase !== 'complete') {
+  if (phase !== 'complete' || artifact?.data.kind !== 'post-stream-report') {
     return (
       <EmptyState
         icon="□"
@@ -1211,12 +1435,13 @@ function PostStreamReport({
     );
   }
 
-  const evidenceIds = REPORT_ARTIFACT.data.evidenceCommentIds;
+  const report = artifact.data as StreamReportData;
+  const evidenceIds = report.evidence.map((item) => item.commentId);
   return (
     <div className="post-report">
       <div className="post-report-header">
         <div>
-          <span>STREAM REPORT · FIXTURE</span>
+          <span>STREAM REPORT · AGENT ARTIFACT v{artifact.version}</span>
           <h2>配信後レポート</h2>
         </div>
         <span className="complete-badge">✓ 作成完了 · 外部送信なし</span>
@@ -1224,60 +1449,35 @@ function PostStreamReport({
 
       <section className="overall-summary">
         <span>全体サマリー · 観測</span>
-        <p>
-          固定フィクスチャ16件を分析。制作ソフトへの質問が3件、具体的な改善提案が2件、安全性注意が2件ありました。後半は配色とブラシ設定へ関心が移りました。
-        </p>
+        <p>{report.summary}</p>
       </section>
 
       <div className="report-sections">
-        <ReportSection
-          title="視聴者の反応"
-          items={[
-            'トランジションへの肯定的反応が2件連続',
-            '落ち着いた画面への好意的反応',
-          ]}
-        />
-        <ReportSection
-          title="注目トピック"
-          items={[
-            '待機画面の制作ソフト',
-            '手描きトランジション',
-            '配色の決め方',
-          ]}
-        />
+        <ReportSection title="視聴者の反応" items={[report.viewerSentiment]} />
+        <ReportSection title="注目トピック" items={report.notableTopics} />
         <ReportSection
           title="安全性メモ"
-          items={['攻撃的な表現を2件検出', '本文は抑制し、応答・操作は未実施']}
+          items={report.safetyConcerns}
           tone="danger"
         />
-        <ReportSection
-          title="頻出質問"
-          items={['使用している制作ソフトは何か（3件）']}
-        />
+        <ReportSection title="頻出質問" items={report.frequentQuestions} />
         <ReportSection
           title="未回答の質問"
-          items={[
-            '使用している制作ソフト',
-            '素材を商用配信で使う場合のライセンス条件',
-            'ブラシ設定の詳細',
-          ]}
+          items={report.unansweredQuestions}
           tone="warn"
         />
         <ReportSection
           title="建設的フィードバック"
-          items={[
-            'BGMを声より少し下げてほしい',
-            '説明をもう少しゆっくりしてほしい',
-          ]}
+          items={report.constructiveFeedback}
         />
       </div>
 
       <section className="next-suggestions">
         <span>次回への提案 · MIKO</span>
         <ol>
-          <li>配信冒頭に使用ソフトと素材ライセンスの案内を固定表示する。</li>
-          <li>次回テーマ候補として「配色の決め方」を扱う。</li>
-          <li>開始前チェックにBGMと音声の音量差を追加する。</li>
+          {report.nextStreamSuggestions.map((suggestion) => (
+            <li key={suggestion}>{suggestion}</li>
+          ))}
         </ol>
       </section>
 

@@ -14,13 +14,13 @@
     "lint": "biome lint ."
   },
   "dependencies": {
+    "@aituber-onair/agent": "file:../..",
     "@aituber-onair/comment-intelligence": "file:../../../comment-intelligence",
     "@aituber-onair/voice": "file:../../../voice",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@aituber-onair/agent": "file:../..",
     "@biomejs/biome": "1.9.4",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

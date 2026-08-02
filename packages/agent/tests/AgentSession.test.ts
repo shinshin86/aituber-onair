@@ -1,6 +1,7 @@
 import { createAgent } from '../src/index.js';
 import {
   AgentBackendProtocolError,
+  AgentHookError,
   AgentInterruptedError,
   AgentSessionClosedError,
   AgentTimeoutError,
@@ -131,6 +132,113 @@ describe('AgentSession', () => {
     expect(result.message).toBe('Reviewed: Backend response');
     expect(result.backendMetadata).toMatchObject({ reviewed: true });
     expect(afterTurn).toHaveBeenCalledOnce();
+  });
+
+  it('emits validated output artifacts before Turn completion', async () => {
+    const backend = new MockBackend(() => completedTextStream('Ready'));
+    const agent = createAgent({
+      ...agentDefinition,
+      backend,
+      hooks: [
+        {
+          id: 'create-artifact',
+          phase: 'output',
+          onError: 'fail-turn',
+          run: ({ value, agentId, sessionId, turnId }) => ({
+            ...(value as AgentRunResult),
+            artifacts: [
+              {
+                id: 'alert-1',
+                type: 'stream-alert',
+                version: 1,
+                data: { severity: 'medium' },
+                createdAt: '2026-08-02T00:00:00.000Z',
+                source: { agentId, sessionId, turnId },
+              },
+            ],
+          }),
+        },
+      ],
+    });
+    const session = await startSession(agent);
+
+    const events = await collectEvents(
+      session.runStream({ instruction: 'Create an alert.' })
+    );
+
+    expect(events.map((event) => event.type)).toEqual([
+      'session.started',
+      'turn.started',
+      'message.delta',
+      'message.delta',
+      'message.completed',
+      'artifact.created',
+      'turn.completed',
+    ]);
+    const artifactEvent = events.find(
+      (event) => event.type === 'artifact.created'
+    );
+    expect(artifactEvent).toMatchObject({
+      type: 'artifact.created',
+      artifact: { id: 'alert-1', type: 'stream-alert' },
+    });
+  });
+
+  it('rejects malformed artifacts returned by an output hook', async () => {
+    const backend = new MockBackend(() => completedTextStream('Ready'));
+    const agent = createAgent({
+      ...agentDefinition,
+      backend,
+      hooks: [
+        {
+          id: 'invalid-artifact',
+          phase: 'output',
+          onError: 'fail-turn',
+          run: ({ value }) => ({
+            ...(value as AgentRunResult),
+            artifacts: [{ id: 'missing-fields' }],
+          }),
+        },
+      ],
+    });
+    const session = await startSession(agent);
+
+    await expect(
+      session.run({ instruction: 'Create an alert.' })
+    ).rejects.toThrow(AgentHookError);
+  });
+
+  it('rejects non-JSON artifact data returned by an output hook', async () => {
+    const backend = new MockBackend(() => completedTextStream('Ready'));
+    const agent = createAgent({
+      ...agentDefinition,
+      backend,
+      hooks: [
+        {
+          id: 'non-json-artifact',
+          phase: 'output',
+          onError: 'fail-turn',
+          run: ({ value, agentId, sessionId, turnId }) => ({
+            ...(value as AgentRunResult),
+            artifacts: [
+              {
+                id: 'invalid-data',
+                type: 'stream-alert',
+                version: 1,
+                data: { callback: () => undefined },
+                createdAt: '2026-08-02T00:00:00.000Z',
+                source: { agentId, sessionId, turnId },
+              },
+            ],
+          }),
+        },
+      ],
+    });
+    const session = await startSession(agent);
+
+    await expect(
+      session.run({ instruction: 'Create an alert.' })
+    ).rejects.toThrow(AgentHookError);
   });
 
   it('runs a failing after-Turn hook only once', async () => {

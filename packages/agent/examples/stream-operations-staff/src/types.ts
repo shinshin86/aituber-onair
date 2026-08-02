@@ -1,4 +1,4 @@
-import type { AgentArtifact, AgentBackendEvent } from '@aituber-onair/agent';
+import type { AgentEvent } from '@aituber-onair/agent';
 import type {
   CommentIntelligenceResult,
   LiveComment,
@@ -65,29 +65,18 @@ export type DemoPhase =
 
 export type BottomTab = 'events' | 'tools' | 'report';
 
-export type FixtureAgentEventType =
-  | AgentBackendEvent['type']
-  | 'tool.completed'
-  | 'artifact.created'
-  | 'turn.completed';
-
-export interface FixtureAgentEvent {
+export interface DisplayAgentEvent {
   readonly id: string;
   readonly atCount: number;
   readonly time: string;
-  readonly type: FixtureAgentEventType;
+  readonly type: AgentEvent['type'];
   readonly summary: string;
 }
-
-export type ReportArtifact = AgentArtifact<{
-  readonly status: 'fixture';
-  readonly evidenceCommentIds: readonly string[];
-}>;
 
 export interface ToolRun {
   readonly id: string;
   readonly atCount: number;
-  readonly name: 'comments.analyze' | 'report.submit';
+  readonly name: string;
   readonly time: string;
   readonly state: '完了' | '実行中' | 'エラー';
   readonly result: string;
