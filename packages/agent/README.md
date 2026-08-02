@@ -70,8 +70,10 @@ A host application can:
 The dashboard, platform connections, and notification delivery remain the
 responsibility of the host application.
 
-The existing `stream-operations-staff` example is a visual prototype that uses
-fixed data. It does not yet run an actual Agent.
+The `stream-operations-staff` example runs an Agent with separate public and
+private Sessions against a deterministic local backend. It uses fixed comment
+data so the Tool, policy, event, and artifact flow can be tried without API
+credentials. It is not a Codex app-server or LLM demo.
 
 ### A resident character inside a product
 

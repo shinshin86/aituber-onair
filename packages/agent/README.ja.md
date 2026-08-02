@@ -68,8 +68,10 @@ JavaScript／TypeScriptプロダクトへ、管理された専属キャラクタ
 
 ダッシュボード、配信platformとの接続、通知の配信はホストアプリが担当します。
 
-現在の`stream-operations-staff`サンプルは、固定データを使った画面プロトタイプ
-です。まだ実際のAgentは動いていません。
+`stream-operations-staff`サンプルは、公開用と非公開用のSessionを分けたAgentを、
+決定的なローカルバックエンドで実行します。API認証情報なしでTool、policy、event、
+artifactの流れを試せるように固定コメントを使っています。Codex app-serverやLLMを
+実行するサンプルではありません。
 
 ### プロダクトに常駐するAIキャラクター
 
