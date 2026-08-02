@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { isOpenRouterFreeModel } from '../../src/constants/openrouter';
+import {
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+  getDefaultOpenRouterReasoningEffort,
+  getOpenRouterSupportedReasoningEfforts,
+  isOpenRouterFreeModel,
+  normalizeOpenRouterReasoningEffort,
+} from '../../src/constants/openrouter';
 
 describe('isOpenRouterFreeModel', () => {
   it('returns true for model IDs ending with :free', () => {
@@ -16,5 +23,46 @@ describe('isOpenRouterFreeModel', () => {
     expect(isOpenRouterFreeModel('openai/gpt-oss-20b:free-preview')).toBe(
       false,
     );
+  });
+});
+
+describe('OpenRouter reasoning effort helpers', () => {
+  it('uses the documented efforts for unversioned DeepSeek V4 Flash', () => {
+    expect(
+      getOpenRouterSupportedReasoningEfforts(
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+      ),
+    ).toEqual(['none', 'high', 'xhigh']);
+    expect(
+      getDefaultOpenRouterReasoningEffort(MODEL_OPENROUTER_DEEPSEEK_V4_FLASH),
+    ).toBe('none');
+  });
+
+  it('uses the documented efforts for DeepSeek V4 Flash 0731', () => {
+    expect(
+      getOpenRouterSupportedReasoningEfforts(
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+      ),
+    ).toEqual(['none', 'low', 'high', 'max']);
+    expect(
+      getDefaultOpenRouterReasoningEffort(
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+      ),
+    ).toBe('none');
+  });
+
+  it('normalizes unsupported DeepSeek efforts toward responsive chat', () => {
+    expect(
+      normalizeOpenRouterReasoningEffort(
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+        'low',
+      ),
+    ).toBe('none');
+    expect(
+      normalizeOpenRouterReasoningEffort(
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+        'medium',
+      ),
+    ).toBe('low');
   });
 });

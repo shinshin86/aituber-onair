@@ -72,7 +72,7 @@ describe('DeepSeekChatService', () => {
     );
   });
 
-  it('does not add DeepSeek thinking or reasoning parameters by default', async () => {
+  it('disables DeepSeek thinking by default for responsive chat', async () => {
     const postSpy = vi
       .spyOn(ChatServiceHttpClient, 'post')
       .mockResolvedValue(createOneShotResponse('ok'));
@@ -82,8 +82,98 @@ describe('DeepSeekChatService', () => {
 
     const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
     expect(body.model).toBe(MODEL_DEEPSEEK_V4_FLASH);
-    expect(body.thinking).toBeUndefined();
+    expect(body.thinking).toEqual({ type: 'disabled' });
     expect(body.reasoning_effort).toBeUndefined();
+  });
+
+  it.each(['low', 'high', 'max'] as const)(
+    'enables DeepSeek V4 Flash thinking with %s effort',
+    async (reasoningEffort) => {
+      const postSpy = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(createOneShotResponse('ok'));
+      const service = new DeepSeekChatService(
+        'test-key',
+        MODEL_DEEPSEEK_V4_FLASH,
+        MODEL_DEEPSEEK_V4_FLASH,
+        undefined,
+        ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
+        undefined,
+        reasoningEffort,
+      );
+
+      await service.chatOnce(messages, false);
+
+      const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
+      expect(body.thinking).toEqual({ type: 'enabled' });
+      expect(body.reasoning_effort).toBe(reasoningEffort);
+    },
+  );
+
+  it('normalizes V4 Pro low reasoning to high', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOneShotResponse('ok'));
+    const service = new DeepSeekChatService(
+      'test-key',
+      MODEL_DEEPSEEK_V4_PRO,
+      MODEL_DEEPSEEK_V4_PRO,
+      undefined,
+      ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
+      undefined,
+      'low',
+    );
+
+    await service.chatOnce(messages, false);
+
+    const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
+    expect(body.thinking).toEqual({ type: 'enabled' });
+    expect(body.reasoning_effort).toBe('high');
+  });
+
+  it('rejects thinking with tools until reasoning history replay is supported', () => {
+    expect(
+      () =>
+        new DeepSeekChatService(
+          'test-key',
+          MODEL_DEEPSEEK_V4_FLASH,
+          MODEL_DEEPSEEK_V4_FLASH,
+          [
+            {
+              name: 'search',
+              description: 'Search',
+              parameters: { type: 'object', properties: {} },
+            },
+          ],
+          ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
+          undefined,
+          'low',
+        ),
+    ).toThrow("Use reasoning_effort: 'none' for tool calling");
+  });
+
+  it('allows tool calling with the default non-thinking mode', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOneShotResponse('ok'));
+    const service = new DeepSeekChatService(
+      'test-key',
+      MODEL_DEEPSEEK_V4_FLASH,
+      MODEL_DEEPSEEK_V4_FLASH,
+      [
+        {
+          name: 'search',
+          description: 'Search',
+          parameters: { type: 'object', properties: {} },
+        },
+      ],
+    );
+
+    await service.chatOnce(messages, false);
+
+    const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
+    expect(body.thinking).toEqual({ type: 'disabled' });
+    expect(body.tool_choice).toBe('auto');
   });
 
   it('uses max_tokens for configured response length', async () => {
@@ -143,5 +233,31 @@ describe('DeepSeekChatService', () => {
       { type: 'text', text: 'Seek' },
     ]);
     expect(result.stop_reason).toBe('end');
+  });
+
+  it('ignores reasoning_content and streams visible text in thinking mode', async () => {
+    vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+      createStreamResponse([
+        'data: {"choices":[{"delta":{"reasoning_content":"Think"}}]}\n\n',
+        'data: {"choices":[{"delta":{"content":"Answer"}}]}\n\n',
+        'data: [DONE]\n\n',
+      ]),
+    );
+    const service = new DeepSeekChatService(
+      'test-key',
+      MODEL_DEEPSEEK_V4_FLASH,
+      MODEL_DEEPSEEK_V4_FLASH,
+      undefined,
+      ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
+      undefined,
+      'low',
+    );
+    const onPartial = vi.fn();
+
+    const result = await service.chatOnce(messages, true, onPartial);
+
+    expect(onPartial).toHaveBeenCalledOnce();
+    expect(onPartial).toHaveBeenCalledWith('Answer');
+    expect(result.blocks).toEqual([{ type: 'text', text: 'Answer' }]);
   });
 });

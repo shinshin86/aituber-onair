@@ -147,8 +147,9 @@ built-in model status is `available`.
 - Best for: Fast responses, cost-effective. Minimal thinking keeps chat latency and hidden-token usage low.
 
 **OpenRouter**
-- Models: Curated multi-provider model list (OpenRouter Auto/Auto Beta/Fusion, OpenAI GPT-5.6, Claude Opus 5, Gemini 3.6/3.5, Z.ai, xAI, Kimi K3, KAT-Coder V2.5)
+- Models: Curated multi-provider model list (OpenRouter Auto/Auto Beta/Fusion, OpenAI GPT-5.6, Claude Opus 5, Gemini 3.6/3.5, Z.ai, xAI, Kimi K3, DeepSeek V4 Flash 0731/0423, KAT-Coder V2.5)
 - Vision: Depends on selected routed model
+- Reasoning Effort: Model-aware options. DeepSeek V4 Flash 0731 exposes None/Low/High/Max; the older unversioned 0423 snapshot exposes None/High/XHigh. None is the default and disables reasoning rather than only hiding it.
 - Best for: Flexible model routing and unified API usage
 - Auto Beta: Selects a model per request and charges the selected model's rate
 - Coding models: KAT-Coder-Air/Pro V2.5 are explicit text-only options, not defaults
@@ -178,6 +179,7 @@ built-in model status is `available`.
 **DeepSeek**
 - Models: DeepSeek V4 Flash, DeepSeek V4 Pro
 - Vision: Not pre-validated as supported
+- Reasoning Effort: V4 Flash exposes None/Low/High/Max; V4 Pro exposes None/High/Max. None is the default for responsive chat. Thinking with tool calling is not supported yet.
 - Best for: DeepSeek's OpenAI-compatible API without manually configuring an endpoint
 
 **Mistral**

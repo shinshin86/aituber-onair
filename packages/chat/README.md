@@ -646,7 +646,8 @@ those models.
 ```typescript
 const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   apiKey: process.env.OPENROUTER_API_KEY,
-  model: 'openai/gpt-oss-20b:free', // Free tier model
+  model: 'deepseek/deepseek-v4-flash-0731',
+  reasoning_effort: 'none', // Fastest chat-oriented setting
   // Optional: Add app information for analytics
   appName: 'Your App Name',
   appUrl: 'https://your-app-url.com'
@@ -661,6 +662,10 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - `openrouter/auto-beta` is a Beta task-aware router. It chooses a model for each request and charges that routed model's rate; inspect the response `model` field or OpenRouter Activity to see the selection.
 - `openrouter/fusion` runs a multi-model panel plus a judge model; OpenRouter bills the sum of the underlying model calls and any enabled web search/fetch usage, not a single fixed model rate.
 - For `z-ai/glm-5.2`, OpenRouter reasoning also defaults to `none`.
+- OpenRouter reasoning uses `reasoning.effort: 'none'` to disable reasoning. `exclude: true` only controls whether reasoning content is returned; it does not disable reasoning by itself.
+- DeepSeek V4 Flash snapshots are explicit text-only options rather than the OpenRouter default so applications can choose a reproducible version. Both default to `none` for responsive chat:
+  - `deepseek/deepseek-v4-flash-0731`: current fixed 0731 snapshot; supports `none`, `low`, `high`, and `max`.
+  - `deepseek/deepseek-v4-flash`: older unversioned 0423 snapshot; supports `none`, `high`, and `xhigh`.
 - Specialized coding models are explicit options rather than defaults. This includes `kwaipilot/kat-coder-air-v2.5` and `kwaipilot/kat-coder-pro-v2.5`, which are text-only.
 - `moonshotai/kimi-k3` availability depends on upstream capacity; OpenRouter may return 429 responses when capacity is constrained.
 - `x-ai/grok-4.5` has region-specific availability, including a current EU limitation. `~x-ai/grok-latest` inherits those limits when it resolves to Grok 4.5.
@@ -682,6 +687,7 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
   - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
   - `~x-ai/grok-latest`, `x-ai/grok-4.5`
+  - `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4-flash`
   - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
   - `kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`
 
@@ -789,6 +795,7 @@ Notes for self-hosted:
 const deepSeekService = ChatServiceFactory.createChatService('deepseek', {
   apiKey: process.env.DEEPSEEK_API_KEY,
   model: 'deepseek-v4-flash',
+  reasoning_effort: 'none', // Default: disable thinking for responsive chat
 });
 ```
 
@@ -797,7 +804,9 @@ Notes:
 - Recommended models: `deepseek-v4-flash` (default) and `deepseek-v4-pro`.
 - Legacy aliases `deepseek-chat` and `deepseek-reasoner` remain exported for explicit compatibility, but DeepSeek marks them deprecated and scheduled for removal on 2026-07-24.
 - You can still use DeepSeek through `openai-compatible` by providing the full endpoint and model manually, but the first-class `deepseek` provider supplies the endpoint and default model for you.
-- DeepSeek documents thinking/reasoning controls, but this package does not add DeepSeek-specific request parameters by default. Standard chat and streaming are prioritized here.
+- `deepseek-v4-flash` accepts `reasoning_effort: 'none' | 'low' | 'high' | 'max'`. The package defaults to `none`, mapped to `thinking: { type: 'disabled' }`, for responsive chat. Other levels enable thinking and are sent as DeepSeek `reasoning_effort`.
+- `deepseek-v4-pro` exposes `none`, `high`, and `max`. DeepSeek currently maps a requested `low` to `high`, so the package normalizes it explicitly.
+- Thinking with tool calling is intentionally rejected for now because DeepSeek requires `reasoning_content` replay across tool turns and does not accept the normal `tool_choice` request shape in thinking mode. Tool calling works with the default `none` setting.
 
 #### Mistral
 
@@ -1271,11 +1280,11 @@ Currently, the following AI providers are built-in:
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 Flash models default to minimal thinking for chat-style responses, while Gemini 3 Pro models default to low. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Supports current Claude API model IDs including Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it
-- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/Kwaipilot). See the OpenRouter section for model IDs.
+- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Kwaipilot). See the OpenRouter section for model IDs.
 - **Z.ai**: Supports GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-5V-Turbo/GLM-4.6V family (vision)
 - **xAI**: Supports Grok 4.5 with `reasoning_effort: 'low'` by default for chat-style responses, plus Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, and Grok 4-1 Fast Reasoning/Non-Reasoning, all with vision support.
 - **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
-- **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`) and DeepSeek V4 Pro (`deepseek-v4-pro`) via OpenAI-compatible Chat Completions. Legacy aliases `deepseek-chat` and `deepseek-reasoner` are deprecated by DeepSeek.
+- **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`) and DeepSeek V4 Pro (`deepseek-v4-pro`) via OpenAI-compatible Chat Completions. Thinking defaults to disabled for low-latency chat and can be enabled with model-aware `reasoning_effort`. Legacy aliases `deepseek-chat` and `deepseek-reasoner` are deprecated by DeepSeek.
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
 - **Sakana AI**: Supports Fugu (`fugu`) and Fugu Ultra (`fugu-ultra`, `fugu-ultra-20260615`) via OpenAI-compatible Chat Completions.
 - **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) and PLaMo 2.2 Prime (`plamo-2.2-prime`) via OpenAI-compatible Chat Completions.

@@ -52,6 +52,17 @@ describe('DeepSeekChatServiceProvider', () => {
       ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
     );
     expect((service as any).provider).toBe('deepseek');
+    expect((service as any).reasoning_effort).toBe('none');
+  });
+
+  it('passes explicit reasoning effort to the service', () => {
+    const service = provider.createChatService({
+      apiKey: 'test-key',
+      model: MODEL_DEEPSEEK_V4_FLASH,
+      reasoning_effort: 'low',
+    });
+
+    expect((service as any).reasoning_effort).toBe('low');
   });
 
   it('uses /chat/completions when baseUrl is provided', () => {
