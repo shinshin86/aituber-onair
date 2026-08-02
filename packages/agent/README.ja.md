@@ -5,15 +5,11 @@
 JavaScript／TypeScriptプロダクトの中で、AIキャラクターに仕事を与えるための
 組み込み型ランタイムです。
 
-> [!NOTE]
-> このパッケージは現在開発中です。まだ実際のLLMへ接続して動く、完成した
-> AIエージェントとしては利用できません。以下は完成時に提供する機能の概要です。
-
 ## このパッケージについて
 
 `@aituber-onair/chat`は、アプリケーションから言語モデルと会話するための
 パッケージです。`@aituber-onair/agent`は、AIキャラクターをプロダクト内で働く
-一員として管理できるようにすることを目的としています。キャラクターは与えられた
+一員として管理するためのパッケージです。キャラクターは与えられた
 役割を理解し、自分の働き方を整理し、許可された能力を使い、必要なときは人間へ
 判断を求めます。
 
@@ -25,7 +21,7 @@ JavaScript／TypeScriptプロダクトの中で、AIキャラクターに仕事�
 - キャラクターの仕事を開始・再開させるプロダクトevent
 
 キャラクターは、与えられた範囲内で、メモ、手順、database、長期的な作業状態を
-どのように構成するかを自分で選べるようになります。役職、責任、タスクキュー、
+どのように構成するかを自分で選べます。役職、責任、タスクキュー、
 キャラクター記憶を、パッケージ固有のschemaへ当てはめる必要はありません。
 
 Agentのライフサイクルと権限は、常にホストアプリが管理します。キャラクターが
@@ -49,18 +45,18 @@ Agentのライフサイクルと権限は、常にホストアプリが管理し
 | 統合対象 | 汎用的なメッセージ、Tool、自動化 | プロダクトeventとAITuber OnAirパッケージ |
 
 本パッケージは、OpenClawやHermes Agentの小型版や置き換えではありません。
-AIアシスタント自体が製品ならパーソナルAIアシスタントを選びます。完成後の
-本パッケージは、既存のJavaScript／TypeScriptプロダクトへ専属キャラクターを
-組み込む用途を対象とします。
+AIアシスタント自体が製品ならパーソナルAIアシスタントを選びます。既存の
+JavaScript／TypeScriptプロダクトへ、管理された専属キャラクターを組み込む場合は
+本パッケージを選びます。
 
 ## 代表的なユースケース
 
 ### ライブ配信を監視・管理するAIスタッフ
 
 同じキャラクターを、配信に出演する存在としてだけでなく、ライブ配信を非公開で
-監視・支援するスタッフとしても動かせるようになります。
+監視・支援するスタッフとしても動かせます。
 
-ホストアプリは、次のような処理を組み立てられるようになります。
+ホストアプリは、次のような処理を組み立てられます。
 
 1. YouTube、Twitch、WebSocketなどからコメントを受信する
 2. `@aituber-onair/comment-intelligence`で安全性、重要度、話題、質問、
@@ -112,7 +108,7 @@ Node.jsアプリから、同じキャラクターをCodex app-serverなどの制
 
 ## 責任範囲
 
-Agentパッケージは、完成時に次を担当します。
+Agentパッケージは、次を担当します。
 
 - AgentとSessionのライフサイクル
 - キャラクターbriefのバックエンドへの伝達
@@ -128,6 +124,71 @@ Agentパッケージは、完成時に次を担当します。
 - schedulerとAgentを起動するevent
 - 認証情報、storage上限、暗号化、backup、削除
 - 外部操作や破壊的操作に対する最終判断
+
+## @aituber-onair/chatへ接続する
+
+両方のパッケージをインストールし、factoryからChatServiceを作成します。factoryは
+Agent Sessionごとに1回実行され、そのSessionから見えるTool定義だけを受け取ります。
+
+```ts
+import { ChatServiceFactory } from '@aituber-onair/chat';
+import { createAgent } from '@aituber-onair/agent';
+import { createChatServiceBackend } from '@aituber-onair/agent/chat';
+
+export function createStreamStaff(apiKey: string) {
+  const backend = createChatServiceBackend({
+    provider: 'openai',
+    createChatService: ({ tools }) =>
+      ChatServiceFactory.createChatService('openai', {
+        apiKey,
+        tools,
+      }),
+  });
+
+  return createAgent({
+    id: 'stream-staff-miko',
+    brief: 'あなたはライブ配信の運営を担当するAIスタッフ、ミコです。',
+    backend,
+    tools: [analyzeComments],
+    policy: {
+      defaultDecision: 'deny',
+      allowTools: ['comments.analyze'],
+    },
+  });
+}
+```
+
+公開会話と非公開の運営作業には、別々のSessionを作ります。briefは1つのsystem
+messageになります。Turnごとのホスト指示、context、会話入力は別messageになるため、
+視聴者の文章がsystem messageへコピーされることはありません。
+
+```ts
+const publicSession = await agent.startSession({
+  purpose: '公開コメントへ応答する',
+  audience: 'public',
+  inputTrust: 'untrusted',
+  allowedTools: ['comments.analyze'],
+});
+
+const result = await publicSession.run({
+  instruction: '返信する価値がある場合だけ応答してください。',
+  input: {
+    kind: 'viewer-comment',
+    data: { text: viewerComment },
+  },
+});
+```
+
+組み込みChat provider名を指定した場合は、`ChatServiceFactory`のcapability metadataを
+fallbackとして使います。独自providerでは`capabilities`を明示してください。Tool非対応の
+providerへは空のTool一覧を渡します。現在の`codex-sdk` Chat providerはtext-onlyで、
+streaming deltaではなく完了後の全文を返します。
+
+会話履歴とTool履歴はSessionごとに保持します。1 Turnで利用できるprovider Tool roundは
+既定で6回です。必要に応じて`maxToolRounds`へ、より小さい正の整数を指定できます。
+`AbortSignal`とAgentのtimeoutはAgent Turnを停止し、遅れて届いた結果を無視します。
+汎用の`ChatService` interfaceは、すでに実行中のprovider requestがnetwork transport層でも
+cancelされることまでは保証しません。
 
 ## Tool実行ルール
 
@@ -264,24 +325,16 @@ flowchart LR
     Core --> Avatar["アバター / UI"]
 ```
 
-既存のAITuber OnAirパッケージは、これまでどおり単独でも利用できます。完成後の
-Agentは、各パッケージのドメインロジックを取り込むのではなく、Tool、context、
-hook、eventを通じて組み合わせる予定です。
+既存のAITuber OnAirパッケージは、これまでどおり単独でも利用できます。Agentは、
+各パッケージのドメインロジックを取り込むのではなく、Tool、context、hook、eventを
+通じて組み合わせます。
 
-## 対応予定のバックエンド
+## Codex app-serverとの統合
 
-### ChatServiceバックエンド
-
-`@aituber-onair/chat`と接続し、公開会話やアプリケーション固有の処理を実行する
-予定です。各Sessionには、そのSessionで利用を許可されたToolだけを公開する
-予定です。
-
-### Codex app-serverバックエンド
-
-Node.js専用のバックエンドとして、Codex app-serverを使った制限付き
-ワークスペース作業に対応する予定です。キャラクターbriefはCodex本来の指示を
-置き換えずに追加し、ワークスペース操作にはCodexのsandboxと承認設定を適用する
-予定です。
+Node.js専用entry pointは、ChatServiceバックエンドとは分離されています。
+ランタイムadapterはまだ利用できません。Codex app-serverを使った制限付き
+ワークスペース作業を対象とし、キャラクターbriefをCodex本来の指示を置き換えずに
+追加し、ワークスペース操作にはCodexのsandboxと承認設定を適用する構成です。
 
 基盤となるprotocolについては、公式の
 [Codex App Server documentation](https://developers.openai.com/codex/app-server)

@@ -25,6 +25,7 @@ import { processChatWithOptionalTools } from '../../../utils';
 import {
   convertMessagesToGeminiFormat,
   convertVisionMessagesToGeminiFormat,
+  extractGeminiSystemInstruction,
   type GeminiFunctionCallContext,
 } from './geminiMessageConverter';
 import {
@@ -357,6 +358,8 @@ export class GeminiChatService implements ChatService {
             : getMaxTokensForResponseLength(this.responseLength),
       },
     };
+    const systemInstruction = extractGeminiSystemInstruction(messages);
+    if (systemInstruction) body.systemInstruction = systemInstruction;
 
     const thinkingConfig = this.resolveThinkingConfig(model);
     if (thinkingConfig) {

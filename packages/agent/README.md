@@ -5,39 +5,35 @@
 An embeddable runtime for giving an AI character a job inside a JavaScript or
 TypeScript product.
 
-> [!NOTE]
-> This package is under development and is not yet usable as a complete
-> LLM-backed agent. The sections below describe the product being built.
-
 ## What this package is
 
 `@aituber-onair/chat` lets an application communicate with language models.
-`@aituber-onair/agent` is intended to turn an AI character into a managed member
+`@aituber-onair/agent` turns an AI character into a managed member
 of a product: a character that understands its assignment, organizes its work,
 uses approved capabilities, and asks a human for help when necessary.
 
-The host application will provide:
+The host application provides:
 
 - a natural-language brief describing the character and its assignment;
 - the tools, services, credentials, and workspace the character may use;
 - rules for operations that must be denied or approved; and
 - product events that start or resume the character's work.
 
-Within those limits, the character will be able to choose how to organize its
-notes, procedures, database, and long-term working state. The package will not
-force applications to use fixed schemas for job titles, responsibilities, task
+Within those limits, the character can choose how to organize its notes,
+procedures, database, and long-term working state. The package does not force
+applications to use fixed schemas for job titles, responsibilities, task
 queues, or character memory.
 
-The host application will always own the Agent's lifecycle and authority. The
-character will not be able to grant itself new tools, credentials, network
-access, or writable locations.
+The host application always owns the Agent's lifecycle and authority. The
+character cannot grant itself new tools, credentials, network access, or
+writable locations.
 
 ## How it differs from personal AI assistants
 
 [OpenClaw](https://docs.openclaw.ai/) and
 [Hermes Agent](https://hermes-agent.nousresearch.com/docs/) are primarily
 complete runtimes for an assistant that works for its user.
-`@aituber-onair/agent` is intended for a different situation: a developer
+`@aituber-onair/agent` is designed for a different situation: a developer
 already has a product and wants an AI character to work inside it.
 
 | | Personal AI assistant | `@aituber-onair/agent` |
@@ -49,18 +45,18 @@ already has a product and wants an AI character to work inside it.
 | Integration | General messaging, tools, and automation | Product events and AITuber OnAir packages |
 
 This package is not intended to replace OpenClaw or Hermes Agent. Choose a
-personal AI assistant when the assistant itself is the product. When complete,
-this package is intended for existing JavaScript or TypeScript products that
-need their own AI character.
+personal AI assistant when the assistant itself is the product. Choose this
+package when an existing JavaScript or TypeScript product needs its own managed
+AI character.
 
 ## Use cases
 
 ### AI staff for live-stream monitoring and operations
 
-The same character will be able to appear on a live stream and also work
+The same character can appear on a live stream and also work
 privately as staff that monitors and supports the stream.
 
-A host application will be able to:
+A host application can:
 
 1. receive comments from YouTube, Twitch, WebSocket, or another source;
 2. analyze safety, priority, topics, questions, and repetition with
@@ -117,7 +113,7 @@ enter a privileged workspace Session.
 
 ## Responsibilities
 
-The Agent package is intended to handle:
+The Agent package handles:
 
 - Agent and Session lifecycle;
 - delivery of the character brief to each backend;
@@ -133,6 +129,75 @@ The host application remains responsible for:
 - scheduling and wake-up events;
 - credentials, storage limits, encryption, backup, and deletion; and
 - the final decision about external or destructive operations.
+
+## Connect to @aituber-onair/chat
+
+Install both packages and create the ChatService through a factory. The factory
+runs once for each Agent Session and receives only the Tool definitions visible
+to that Session.
+
+```ts
+import { ChatServiceFactory } from '@aituber-onair/chat';
+import { createAgent } from '@aituber-onair/agent';
+import { createChatServiceBackend } from '@aituber-onair/agent/chat';
+
+export function createStreamStaff(apiKey: string) {
+  const backend = createChatServiceBackend({
+    provider: 'openai',
+    createChatService: ({ tools }) =>
+      ChatServiceFactory.createChatService('openai', {
+        apiKey,
+        tools,
+      }),
+  });
+
+  return createAgent({
+    id: 'stream-staff-miko',
+    brief: 'You are Miko, AI staff responsible for stream operations.',
+    backend,
+    tools: [analyzeComments],
+    policy: {
+      defaultDecision: 'deny',
+      allowTools: ['comments.analyze'],
+    },
+  });
+}
+```
+
+Start separate Sessions for public conversation and private operations. The
+brief becomes one system message. Each Turn adds the host instruction, context,
+and conversational input as separate messages, so viewer text is never copied
+into the system message.
+
+```ts
+const publicSession = await agent.startSession({
+  purpose: 'Respond to public comments',
+  audience: 'public',
+  inputTrust: 'untrusted',
+  allowedTools: ['comments.analyze'],
+});
+
+const result = await publicSession.run({
+  instruction: 'Respond only when a reply is useful.',
+  input: {
+    kind: 'viewer-comment',
+    data: { text: viewerComment },
+  },
+});
+```
+
+Built-in Chat provider names use `ChatServiceFactory` capability metadata as a
+fallback. Supply `capabilities` explicitly for a custom provider. Providers
+without Tool support receive an empty Tool list; for example, the current
+`codex-sdk` Chat provider is text-only and returns completed text rather than
+streaming deltas.
+
+The backend keeps conversation and Tool history inside each Session and limits
+one Turn to six provider Tool rounds by default. Set `maxToolRounds` to a lower
+positive integer when needed. `AbortSignal` and Agent timeouts stop the Agent
+Turn and ignore late results. The generic `ChatService` interface does not
+guarantee that an already-running provider request is cancelled at the network
+transport layer.
 
 ## Tool execution rules
 
@@ -269,24 +334,17 @@ flowchart LR
     Core --> Avatar["Avatar / UI"]
 ```
 
-The existing AITuber OnAir packages remain independently usable. Agent will
-combine them through tools, context, hooks, and events rather than moving their
+The existing AITuber OnAir packages remain independently usable. Agent combines
+them through tools, context, hooks, and events rather than moving their
 domain logic into one large package.
 
-## Planned backends
+## Codex app-server integration
 
-### ChatService backend
-
-The ChatService backend will connect to `@aituber-onair/chat` for public
-conversation and application-defined workflows. Each Session will receive only
-the tools it is allowed to see.
-
-### Codex app-server backend
-
-The Node.js-only Codex backend will support restricted workspace work through
-Codex app-server. The character brief will be applied without replacing Codex's
-base instructions, and workspace actions will remain subject to Codex sandbox
-and approval settings.
+The dedicated Node.js entry point is separate from the ChatService backend. The
+runtime adapter is not available yet. It is intended for restricted workspace
+work through Codex app-server, where the character brief is added without
+replacing Codex's base instructions and workspace actions remain subject to
+Codex sandbox and approval settings.
 
 See the official
 [Codex App Server documentation](https://developers.openai.com/codex/app-server)

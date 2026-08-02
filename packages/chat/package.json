@@ -17,6 +17,11 @@
       "import": "./dist/esm/agent.js",
       "require": "./dist/cjs/agent.js"
     },
+    "./backend": {
+      "types": "./dist/cjs/backend.d.ts",
+      "import": "./dist/cjs/backend.js",
+      "require": "./dist/cjs/backend.js"
+    },
     "./dist/cjs/*": "./dist/cjs/*",
     "./dist/esm/*": "./dist/esm/*",
     "./umd": "./dist/umd/aituber-onair-chat.js"

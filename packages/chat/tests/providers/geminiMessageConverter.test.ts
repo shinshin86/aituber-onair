@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   convertMessagesToGeminiFormat,
   convertVisionMessagesToGeminiFormat,
+  extractGeminiSystemInstruction,
   mapRoleToGemini,
 } from '../../src/services/providers/gemini/geminiMessageConverter';
 import type { Message, MessageWithVision } from '../../src/types';
@@ -15,7 +16,7 @@ describe('geminiMessageConverter', () => {
     expect(mapRoleToGemini('unknown')).toBe('user');
   });
 
-  it('groups adjacent text messages by mapped Gemini role', () => {
+  it('separates system instructions from conversational contents', () => {
     const messages: Message[] = [
       { role: 'system', content: 'system prompt' },
       { role: 'assistant', content: 'assistant context' },
@@ -25,10 +26,7 @@ describe('geminiMessageConverter', () => {
     ];
 
     expect(convertMessagesToGeminiFormat(messages)).toEqual([
-      {
-        role: 'model',
-        parts: [{ text: 'system prompt' }, { text: 'assistant context' }],
-      },
+      { role: 'model', parts: [{ text: 'assistant context' }] },
       {
         role: 'user',
         parts: [{ text: 'hello' }, { text: 'follow up' }],
@@ -38,6 +36,9 @@ describe('geminiMessageConverter', () => {
         parts: [{ text: 'answer' }],
       },
     ]);
+    expect(extractGeminiSystemInstruction(messages)).toEqual({
+      parts: [{ text: 'system prompt' }],
+    });
   });
 
   it('preserves ids and signatures while grouping parallel tool exchanges', () => {

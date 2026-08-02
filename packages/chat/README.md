@@ -1022,6 +1022,21 @@ const tools: ToolDefinition[] = [{
 // Configure tool handlers when creating the service
 ```
 
+If your application executes Tools outside ChatService, use the backend helper
+to append provider-compatible assistant and Tool-result messages. It preserves
+provider-native continuation data for providers such as OpenAI and Claude.
+
+```typescript
+import { buildToolContinuationMessages } from '@aituber-onair/chat/backend';
+
+const nextMessages = buildToolContinuationMessages({
+  provider: chatService.provider,
+  messages,
+  completion,
+  toolResults,
+});
+```
+
 ### Response Length Control
 
 Base preset token targets are:

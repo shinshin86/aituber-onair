@@ -35,6 +35,7 @@ import type {
   ChatServiceBackendOptions,
   ChatServiceFactoryInput,
 } from '../src/chat.js';
+import { createChatServiceBackend } from '../src/chat.js';
 import type {
   CodexAppServerBackend,
   CodexAppServerBackendCapabilities,
@@ -129,6 +130,7 @@ describe('public type surface', () => {
   });
 
   it('exports Chat backend contracts without constructing a service', () => {
+    expectTypeOf(createChatServiceBackend).toBeFunction();
     expectTypeOf<ChatServiceBackend>().toBeObject();
     expectTypeOf<ChatServiceBackendOptions>().toBeObject();
     expectTypeOf<ChatServiceBackendCapabilities>().toBeObject();
@@ -136,6 +138,12 @@ describe('public type surface', () => {
     expectTypeOf<ChatServiceFactoryInput['tools']>().toEqualTypeOf<
       ToolDefinition[]
     >();
+    expectTypeOf<
+      ChatServiceBackendCapabilities['sessionResume']
+    >().toEqualTypeOf<false>();
+    expectTypeOf<
+      ChatServiceBackendCapabilities['approvals']
+    >().toEqualTypeOf<false>();
   });
 
   it('requires an explicit Codex executable path or PATH opt-in', () => {

@@ -10,21 +10,7 @@ import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 import type { ChatProviderCapabilities } from '../types/capabilities';
 import { getClaudeSupportedReasoningEfforts } from '../constants/claude';
 import { getKimiSupportedReasoningEfforts } from '../constants/kimi';
-
-const TOOL_SUPPORTED_PROVIDERS = new Set<string>([
-  'openai',
-  'openai-compatible',
-  'openrouter',
-  'gemini',
-  'claude',
-  'zai',
-  'xai',
-  'kimi',
-  'deepseek',
-  'mistral',
-  'sakana',
-  'plamo',
-]);
+import { getChatBackendProviderCapabilities } from '../backend';
 
 const MCP_SUPPORTED_PROVIDERS = new Set<string>(['openai', 'gemini', 'claude']);
 
@@ -124,6 +110,8 @@ export class ChatServiceFactory {
     const vision = model
       ? this.getVisionSupportLevelForModel(providerName, model)
       : provider.getVisionSupportLevel();
+    const backendCapabilities =
+      getChatBackendProviderCapabilities(providerName);
 
     return {
       provider: providerName,
@@ -133,9 +121,9 @@ export class ChatServiceFactory {
           ? provider.getDefaultModel()
           : undefined,
       text: true,
-      streaming: true,
+      streaming: backendCapabilities?.streaming ?? true,
       vision,
-      tools: TOOL_SUPPORTED_PROVIDERS.has(providerName),
+      tools: backendCapabilities?.tools ?? false,
       mcp: MCP_SUPPORTED_PROVIDERS.has(providerName),
       jsonMode: JSON_MODE_SUPPORTED_PROVIDERS.has(providerName),
       responseLength: true,

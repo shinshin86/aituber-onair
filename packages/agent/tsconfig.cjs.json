@@ -3,6 +3,11 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@aituber-onair/chat": ["../chat/dist/cjs/index.d.ts"],
+      "@aituber-onair/chat/backend": ["../chat/dist/cjs/backend.d.ts"]
+    },
     "outDir": "./dist/cjs"
   }
 }

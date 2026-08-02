@@ -15,8 +15,8 @@ assert.equal(typeof esmBase.AgentError, 'function');
 assert.equal(typeof cjsBase.AgentError, 'function');
 assert.equal(typeof esmBase.createAgent, 'function');
 assert.equal(typeof cjsBase.createAgent, 'function');
-assert.deepEqual(Object.keys(esmChat), []);
-assert.deepEqual(Object.keys(cjsChat), []);
+assert.equal(typeof esmChat.createChatServiceBackend, 'function');
+assert.equal(typeof cjsChat.createChatServiceBackend, 'function');
 assert.deepEqual(Object.keys(esmCodex), []);
 assert.deepEqual(Object.keys(cjsCodex), []);
 

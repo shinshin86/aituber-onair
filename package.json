@@ -6,7 +6,7 @@
         "packages/*"
     ],
     "scripts": {
-        "build": "npm run build --workspaces",
+        "build": "node scripts/build-workspaces.mjs",
         "test": "npm run test --workspaces",
         "fmt": "npm run fmt --workspaces",
         "fmt:check": "npm run fmt:check --workspaces",

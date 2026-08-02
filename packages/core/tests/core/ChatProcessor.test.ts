@@ -555,6 +555,15 @@ describe('ChatProcessor', () => {
 
     it('should handle Claude provider specific format', async () => {
       // Arrange - Simulate Claude provider
+      const providerContent = [
+        { type: 'thinking', signature: 'signed-thinking' },
+        {
+          type: 'tool_use',
+          id: 'tool-1',
+          name: 'calculator',
+          input: { operation: 'add', a: 2, b: 3 },
+        },
+      ];
       const mockClaudeService = {
         provider: 'claude',
         chatOnce: vi
@@ -573,6 +582,11 @@ describe('ChatProcessor', () => {
                   },
                 ],
                 stop_reason: 'tool_use',
+                assistant_message: {
+                  role: 'assistant',
+                  content: '',
+                  provider_content: providerContent,
+                },
               };
             }
 
@@ -621,6 +635,11 @@ describe('ChatProcessor', () => {
       expect(toolResultMessage).toBeDefined();
       expect(toolResultMessage.content[0].tool_use_id).toBe('tool-1');
       expect(toolResultMessage.content[0].content).toBe('5');
+      expect(secondCallMessages).toContainEqual({
+        role: 'assistant',
+        content: '',
+        provider_content: providerContent,
+      });
     });
 
     it('should handle non-Claude provider format', async () => {
