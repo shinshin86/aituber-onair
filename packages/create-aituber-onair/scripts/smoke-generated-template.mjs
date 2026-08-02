@@ -4,23 +4,16 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const [template, tarballArgument, coreTarballArgument, chatTarballArgument] =
-  process.argv.slice(2);
-if (
-  !template ||
-  !tarballArgument ||
-  !coreTarballArgument ||
-  !chatTarballArgument
-) {
+const [template, tarballArgument, coreTarballArgument] = process.argv.slice(2);
+if (!template || !tarballArgument || !coreTarballArgument) {
   console.error(
-    'Usage: node scripts/smoke-generated-template.mjs <template> <tarball> <core-tarball> <chat-tarball>',
+    'Usage: node scripts/smoke-generated-template.mjs <template> <tarball> <core-tarball>',
   );
   process.exit(1);
 }
 
 const tarball = path.resolve(tarballArgument);
 const coreTarball = path.resolve(coreTarballArgument);
-const chatTarball = path.resolve(chatTarballArgument);
 const smokeRoot = await mkdtemp(
   path.join(tmpdir(), `create-aituber-${template}-smoke-`),
 );
@@ -130,13 +123,12 @@ async function verifyDevServer() {
   }
 }
 
-async function useLocalWorkspaceTarballs() {
+async function useLocalCoreTarball() {
   const packageJsonPath = path.join(projectRoot, 'package.json');
   const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
   packageJson.dependencies = {
     ...packageJson.dependencies,
     '@aituber-onair/core': pathToFileURL(coreTarball).href,
-    '@aituber-onair/chat': pathToFileURL(chatTarball).href,
   };
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 }
@@ -171,7 +163,7 @@ try {
     ],
     { cwd: smokeRoot },
   );
-  await useLocalWorkspaceTarballs();
+  await useLocalCoreTarball();
   await run('npm', ['install', '--no-audit', '--no-fund'], {
     cwd: projectRoot,
   });

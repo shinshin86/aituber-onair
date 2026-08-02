@@ -14,7 +14,7 @@ new chat capabilities from `@aituber-onair/core` immediately.
 
 Collect missing inputs before editing:
 
-- `chat_version`: target chat version already released/prepared (example:
+- `chat_version`: target chat version already published to npm (example:
   `0.15.0`)
 - `core_next_version`: optional explicit target core version (example:
   `0.23.1`)
@@ -26,6 +26,12 @@ Collect missing inputs before editing:
 
 1. Preflight:
    - Inspect `packages/chat/package.json` and `packages/core/package.json`.
+   - Confirm the exact target version is already available from the public npm
+     registry (for example,
+     `npm view @aituber-onair/chat@<chat_version> version`).
+   - Treat Chat -> Core as a hard release-order gate. Do not prepare or release
+     Chat and Core in the same PR. If the target Chat version is unavailable,
+     stop Core release work until the Chat release succeeds.
    - Read `packages/chat/CHANGELOG.md` latest entry and list what must surface
      in core (new constants/models/provider behavior).
    - List `packages/core/examples/*/package-lock.json` files and identify every
@@ -85,6 +91,10 @@ Collect missing inputs before editing:
      - `npm --prefix packages/core/examples/react-vrm-app run build`
      - `npm --prefix packages/core/examples/react-live2d-app run build`
      - `npm --prefix packages/core/examples/coding-agent run build`
+   - Starter/template smoke tests must install the published Chat dependency
+     from npm while using the local Core release-candidate tarball. Do not
+     inject a local Chat tarball: doing so can hide an unpublished or incorrect
+     Core dependency range.
 9. Final check:
    - Confirm newly added chat models/features are reachable from core exports
      and visible in examples.
@@ -108,6 +118,8 @@ npm --prefix packages/core/examples/coding-agent run build
 ## Acceptance Criteria
 
 - Core depends on the intended chat version range.
+- The target Chat version is already published to npm before the Core release
+  PR is prepared.
 - Required new chat constants/features are re-exported from core.
 - Core examples can select/use newly propagated models as needed.
 - Core docs reflect the updated provider/model coverage.
