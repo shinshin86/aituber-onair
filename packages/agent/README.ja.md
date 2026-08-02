@@ -129,6 +129,23 @@ Agentパッケージは、完成時に次を担当します。
 - 認証情報、storage上限、暗号化、backup、削除
 - 外部操作や破壊的操作に対する最終判断
 
+## Tool実行ルール
+
+- `allowedTools`は、Sessionがバックエンドへ公開するTool定義を制御します。
+  Toolが公開されていても、ホストが許可または承認要求のpolicyを設定しない限り、
+  実行は既定で拒否されます。
+- Tool入力schemaは、`type`、`properties`、`required`、`items`、`enum`、
+  `description`、boolean値の`additionalProperties`に対応します。未対応のkeywordは
+  無視せず、Agent作成時に拒否します。
+- `sensitiveFields`には、ドット区切りのobject pathを指定できます。一致する入力値は
+  Tool eventと承認eventでは秘匿化します。ホストのhandlerには、承認時と同じ入力値を
+  固定した変更不可のsnapshotを渡します。
+- Toolの成功、handler失敗、timeout、Turnのcancelは別々の結果として扱います。
+  ホストが承認を拒否した場合、handlerは実行しません。timeout時はhandlerのsignalを
+  abortしてTurnを失敗させます。JavaScriptではsignalを無視するhandlerを強制停止
+  できないため、副作用を持つhandlerはcancelへ協調し、必要に応じて`toolCallId`を
+  idempotency keyとして使用する必要があります。
+
 ## AITuber OnAir内での位置づけ
 
 ```mermaid

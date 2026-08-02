@@ -9,6 +9,11 @@ const browserEntrySources = [
   '../src/core/AgentSession.ts',
   '../src/core/AsyncEventQueue.ts',
   '../src/core/ids.ts',
+  '../src/core/runHooks.ts',
+  '../src/policy/DefaultAgentPolicy.ts',
+  '../src/tools/defineAgentTool.ts',
+  '../src/tools/sanitize.ts',
+  '../src/tools/schemaValidation.ts',
 ] as const;
 
 describe('browser entry boundary', () => {

@@ -6,7 +6,12 @@ import {
   AgentTimeoutError,
   AgentTurnInProgressError,
 } from '../src/errors.js';
-import type { AgentBackendEvent, AgentEvent } from '../src/types.js';
+import type {
+  AgentBackendEvent,
+  AgentEvent,
+  AgentHook,
+  AgentRunResult,
+} from '../src/types.js';
 import {
   MockBackend,
   completedTextStream,
@@ -58,6 +63,99 @@ describe('AgentSession', () => {
     }
     expect(result.message).toBe('Backend response');
     expect(backend.sessions[0].runInputs).toHaveLength(2);
+  });
+
+  it('applies input, context, response, output, and after-Turn hooks', async () => {
+    const afterTurn = vi.fn();
+    const hooks: AgentHook[] = [
+      {
+        id: 'normalize-input',
+        phase: 'input',
+        onError: 'fail-turn',
+        run: ({ value }) => ({
+          ...(value as Record<string, unknown>),
+          data: { text: 'normalized' },
+        }),
+      },
+      {
+        id: 'enrich-context',
+        phase: 'context',
+        onError: 'fail-turn',
+        run: () => ({ streamState: 'live', accepted: true }),
+      },
+      {
+        id: 'review-response',
+        phase: 'draft-response',
+        onError: 'fail-turn',
+        run: ({ value }) => `Reviewed: ${String(value)}`,
+      },
+      {
+        id: 'annotate-output',
+        phase: 'output',
+        onError: 'fail-turn',
+        run: ({ value }) => {
+          const result = value as AgentRunResult;
+          return {
+            ...result,
+            backendMetadata: { ...result.backendMetadata, reviewed: true },
+          };
+        },
+      },
+      {
+        id: 'observe-turn',
+        phase: 'after-turn',
+        onError: 'skip',
+        run: ({ value }) => {
+          afterTurn(value);
+          return value;
+        },
+      },
+    ];
+    const backend = new MockBackend(() =>
+      completedTextStream('Backend response')
+    );
+    const agent = createAgent({ ...agentDefinition, backend, hooks });
+    const session = await startSession(agent);
+
+    const result = await session.run({
+      instruction: 'Respond safely.',
+      input: { kind: 'viewer-comment', data: { text: 'raw' } },
+      context: { streamState: 'starting' },
+    });
+
+    expect(backend.sessions[0].runInputs[0]).toMatchObject({
+      instruction: 'Respond safely.',
+      input: { kind: 'viewer-comment', data: { text: 'normalized' } },
+      context: { streamState: 'live', accepted: true },
+    });
+    expect(result.message).toBe('Reviewed: Backend response');
+    expect(result.backendMetadata).toMatchObject({ reviewed: true });
+    expect(afterTurn).toHaveBeenCalledOnce();
+  });
+
+  it('runs a failing after-Turn hook only once', async () => {
+    const afterTurn = vi.fn(() => {
+      throw new Error('after-Turn failed');
+    });
+    const backend = new MockBackend(() => completedTextStream());
+    const agent = createAgent({
+      ...agentDefinition,
+      backend,
+      hooks: [
+        {
+          id: 'after-turn',
+          phase: 'after-turn',
+          onError: 'fail-turn',
+          run: afterTurn,
+        },
+      ],
+    });
+    const session = await startSession(agent);
+
+    await expect(
+      session.run({ instruction: 'Complete once.' })
+    ).rejects.toThrow('after-turn');
+    expect(afterTurn).toHaveBeenCalledOnce();
   });
 
   it('emits one failed terminal event and preserves backend causes', async () => {

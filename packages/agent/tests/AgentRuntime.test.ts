@@ -1,5 +1,6 @@
 import { createAgent } from '../src/index.js';
 import {
+  AgentBackendProtocolError,
   AgentCapabilityError,
   AgentConfigurationError,
   AgentSessionClosedError,
@@ -39,7 +40,7 @@ describe('AgentRuntime', () => {
       createAgent({
         ...agentDefinition,
         backend,
-        policy: { defaultDecision: 'allow' },
+        character: { name: 'Miko' },
       } as never)
     ).toThrow(AgentConfigurationError);
     expect(() =>
@@ -48,7 +49,9 @@ describe('AgentRuntime', () => {
   });
 
   it('starts isolated Sessions with deny-by-default Tool visibility', async () => {
-    const backend = new MockBackend(() => completedTextStream());
+    const backend = new MockBackend(() => completedTextStream(), {
+      tools: true,
+    });
     const agent = createAgent({
       ...agentDefinition,
       backend,
@@ -100,6 +103,70 @@ describe('AgentRuntime', () => {
       })
     ).rejects.toThrow(AgentConfigurationError);
     expect(backend.startInputs).toHaveLength(0);
+  });
+
+  it('rejects a Tool backend that cannot receive results before execution', async () => {
+    const backend = new MockBackend(() => completedTextStream(), {
+      tools: true,
+    });
+    const close = vi.fn(async () => undefined);
+    vi.spyOn(backend, 'startSession').mockResolvedValue({
+      runStream: () => completedTextStream(),
+      close,
+    });
+    const agent = createAgent({
+      ...agentDefinition,
+      backend,
+      tools: [readTool],
+    });
+
+    await expect(
+      agent.startSession({
+        purpose: 'operations',
+        audience: 'operator',
+        inputTrust: 'trusted',
+        allowedTools: ['comments.analyze'],
+      })
+    ).rejects.toThrow(AgentBackendProtocolError);
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it('rejects policy references to unregistered Tools', () => {
+    const backend = new MockBackend(() => completedTextStream(), {
+      tools: true,
+    });
+
+    expect(() =>
+      createAgent({
+        ...agentDefinition,
+        backend,
+        tools: [readTool],
+        policy: {
+          defaultDecision: 'deny',
+          allowTools: ['workspace.write'],
+        },
+      })
+    ).toThrow(AgentConfigurationError);
+  });
+
+  it('rejects unknown policy options instead of silently weakening approval', () => {
+    const backend = new MockBackend(() => completedTextStream(), {
+      tools: true,
+    });
+
+    expect(() =>
+      createAgent({
+        ...agentDefinition,
+        backend,
+        tools: [readTool],
+        policy: {
+          defaultDecision: 'allow',
+          requireApproval: {
+            riskAtleast: 'read',
+          },
+        } as never,
+      })
+    ).toThrow(AgentConfigurationError);
   });
 
   it('resumes only when the backend declares resume support', async () => {

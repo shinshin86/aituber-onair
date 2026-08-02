@@ -4,6 +4,7 @@ import type {
   AgentBackendEvent,
   AgentBackendSession,
   AgentBackendSessionInput,
+  AgentBackendToolResult,
   AgentRunInput,
   AgentRunOptions,
 } from '../../src/types.js';
@@ -28,6 +29,7 @@ export class MockBackendSession implements AgentBackendSession {
   readonly id: string;
   readonly runInputs: AgentRunInput[] = [];
   readonly runOptions: (AgentRunOptions | undefined)[] = [];
+  readonly toolResults: AgentBackendToolResult[] = [];
   interruptCalls = 0;
   closeCalls = 0;
 
@@ -45,6 +47,10 @@ export class MockBackendSession implements AgentBackendSession {
     this.runInputs.push(input);
     this.runOptions.push(options);
     return this.streamFactory(input, options, this);
+  }
+
+  async submitToolResult(result: AgentBackendToolResult): Promise<void> {
+    this.toolResults.push(result);
   }
 
   async interrupt(): Promise<void> {

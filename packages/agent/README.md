@@ -134,6 +134,24 @@ The host application remains responsible for:
 - credentials, storage limits, encryption, backup, and deletion; and
 - the final decision about external or destructive operations.
 
+## Tool execution rules
+
+- `allowedTools` controls which Tool definitions a Session exposes to its
+  backend. Tool execution is still denied by default unless the host supplies a
+  policy that allows it or requests approval.
+- Tool input schemas support `type`, `properties`, `required`, `items`, `enum`,
+  `description`, and boolean `additionalProperties`. Unsupported keywords are
+  rejected when the Agent is created instead of being silently ignored.
+- `sensitiveFields` accepts dot-separated object paths. Matching input values
+  are redacted in Tool and approval events, while the original validated values
+  are copied into the immutable snapshot passed to the host handler. Approval
+  and execution therefore use the same input values.
+- Tool success, handler failure, timeout, and Turn cancellation remain distinct
+  results. A host approval denial never runs the handler. A timeout aborts the
+  handler's signal and fails the Turn; JavaScript cannot forcibly stop a
+  handler that ignores that signal, so side-effecting handlers must cooperate
+  with cancellation and use `toolCallId` as an idempotency key where needed.
+
 ## Position in AITuber OnAir
 
 ```mermaid

@@ -31,7 +31,7 @@ export function assertAgentDefinition(value: unknown): asserts value is {
   if (!isNonEmptyString(candidate.brief)) {
     issues.push('agent.brief must be a non-empty string');
   }
-  for (const key of ['character', 'memory', 'policy', 'hooks']) {
+  for (const key of ['character', 'memory']) {
     if (candidate[key] !== undefined) {
       issues.push(`agent.${key} is not a supported createAgent option`);
     }

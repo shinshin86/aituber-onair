@@ -237,9 +237,26 @@ export interface AgentBackendSession {
     input: AgentRunInput,
     options?: AgentRunOptions
   ): AsyncIterable<AgentBackendEvent>;
+  /**
+   * Returns a host-executed Tool result to a backend that requested it.
+   * Required when the backend emits `tool.requested`.
+   */
+  submitToolResult?(result: AgentBackendToolResult): Promise<void>;
   interrupt?(): Promise<void>;
   close(): Promise<void>;
 }
+
+export type AgentBackendToolResult =
+  | {
+      readonly type: 'success';
+      readonly toolCallId: string;
+      readonly output: unknown;
+    }
+  | {
+      readonly type: 'error';
+      readonly toolCallId: string;
+      readonly error: AgentEventError;
+    };
 
 export interface AgentBackend {
   readonly name: string;
@@ -257,6 +274,13 @@ export interface AgentSessionOptions {
 
 export interface AgentResumeSessionOptions extends AgentSessionOptions {
   readonly backendSessionId: string;
+}
+
+export interface AgentRuntimeLimits {
+  /** Maximum number of Tool calls accepted during one Turn. */
+  readonly maxToolCallsPerTurn?: number;
+  /** Maximum time the runtime waits for one host approval. */
+  readonly approvalTimeoutMs?: number;
 }
 
 export interface AgentSession {
@@ -288,6 +312,10 @@ export interface AgentOptions {
   readonly brief: string;
   readonly backend: AgentBackend;
   readonly tools?: readonly AgentToolSpec[];
+  /** Defaults to deny when omitted. */
+  readonly policy?: AgentPolicy | AgentPolicyConfig;
+  readonly hooks?: readonly AgentHook[];
+  readonly limits?: AgentRuntimeLimits;
 }
 
 export interface Agent {
@@ -363,6 +391,13 @@ export interface AgentToolCompletedEvent
   readonly output: unknown;
 }
 
+export interface AgentToolFailedEvent extends AgentEventBase<'tool.failed'> {
+  readonly turnId: string;
+  readonly toolCallId: string;
+  readonly toolId: string;
+  readonly error: AgentEventError;
+}
+
 export interface AgentApprovalRequestedEvent
   extends AgentEventBase<'approval.requested'> {
   readonly turnId: string;
@@ -413,6 +448,7 @@ export type AgentEvent =
   | AgentToolRequestedEvent
   | AgentToolStartedEvent
   | AgentToolCompletedEvent
+  | AgentToolFailedEvent
   | AgentApprovalRequestedEvent
   | AgentApprovalResolvedEvent
   | AgentArtifactCreatedEvent

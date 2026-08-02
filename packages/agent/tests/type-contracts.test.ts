@@ -5,20 +5,23 @@ import type {
   AgentArtifact,
   AgentBackend,
   AgentBackendCapabilities,
+  AgentBackendToolResult,
   AgentBackendTool,
   AgentConversationInput,
   AgentEvent,
   AgentHook,
   AgentOptions,
   AgentPolicy,
+  AgentPolicyConfig,
   AgentPolicyDecision,
   AgentRunInput,
   AgentRunResult,
+  AgentRuntimeLimits,
   AgentSession,
   AgentToolHandler,
   AgentToolSpec,
 } from '../src/index.js';
-import { createAgent } from '../src/index.js';
+import { createAgent, defineAgentTool } from '../src/index.js';
 import type { ToolDefinition } from '@aituber-onair/chat';
 import type {
   ChatServiceBackend,
@@ -58,6 +61,7 @@ describe('public type surface', () => {
 
   it('exports the complete Phase 1 contract families', () => {
     expectTypeOf(createAgent).toBeFunction();
+    expectTypeOf(defineAgentTool).toBeFunction();
     expectTypeOf<Agent>().toBeObject();
     expectTypeOf<AgentOptions>().toBeObject();
     expectTypeOf<AgentOptions['id']>().toEqualTypeOf<string>();
@@ -67,9 +71,11 @@ describe('public type surface', () => {
     expectTypeOf<AgentBackend>().toBeObject();
     expectTypeOf<AgentBackendCapabilities>().toBeObject();
     expectTypeOf<AgentBackendTool>().toBeObject();
+    expectTypeOf<AgentBackendToolResult>().toBeObject();
     expectTypeOf<AgentToolSpec>().toBeObject();
     expectTypeOf<AgentToolHandler>().toBeFunction();
     expectTypeOf<AgentPolicy>().toBeObject();
+    expectTypeOf<AgentPolicyConfig>().toBeObject();
     expectTypeOf<AgentPolicyDecision>().toBeObject();
     expectTypeOf<AgentApprovalRequest>().toBeObject();
     expectTypeOf<AgentApprovalDecision>().toEqualTypeOf<
@@ -78,6 +84,7 @@ describe('public type surface', () => {
     expectTypeOf<AgentEvent>().toBeObject();
     expectTypeOf<AgentRunInput>().toBeObject();
     expectTypeOf<AgentRunResult>().toBeObject();
+    expectTypeOf<AgentRuntimeLimits>().toBeObject();
     expectTypeOf<AgentArtifact>().toBeObject();
     expectTypeOf<AgentHook>().toBeObject();
   });
