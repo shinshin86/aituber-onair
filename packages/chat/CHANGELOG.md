@@ -1,6 +1,18 @@
 # @aituber-onair/chat
 
-## Unreleased
+## 0.50.0
+
+### Minor Changes
+
+- Added model-aware DeepSeek thinking controls for the official
+  `deepseek-v4-flash` and `deepseek-v4-pro` Chat Completions models. Thinking
+  now defaults to `reasoning_effort: 'none'` for responsive chat, while
+  supported higher efforts remain selectable. Thinking with tool calling is
+  rejected until DeepSeek `reasoning_content` replay is supported.
+- Added the text-only OpenRouter models `deepseek/deepseek-v4-flash-0731` and
+  `deepseek/deepseek-v4-flash` as explicit options with model-aware reasoning
+  efforts. OpenRouter `none` now sends `reasoning.effort: 'none'` so reasoning
+  is disabled instead of only hidden with `exclude: true`.
 
 ### Patch Changes
 
