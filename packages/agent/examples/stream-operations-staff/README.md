@@ -4,18 +4,22 @@ AITuber OnAir公式キャラクターのAI配信運営スタッフ「Miko」が�
 
 ## 起動
 
-このディレクトリ内で実行します。
+リポジトリのルートでworkspace依存をインストールし、公開package exportが参照する`dist`を先に生成します。その後、このexampleの依存をインストールして起動します。
 
 ```sh
-npm install
-npm run dev
+npm ci
+npm run build
+npm --prefix packages/agent/examples/stream-operations-staff ci
+npm --prefix packages/agent/examples/stream-operations-staff run dev
 ```
 
 本番ビルドの確認:
 
 ```sh
-npm run build
+npm --prefix packages/agent/examples/stream-operations-staff run build
 ```
+
+`@aituber-onair/agent`、`@aituber-onair/voice`、`@aituber-onair/comment-intelligence`はビルド済みの公開エントリを利用します。そのため、新規チェックアウトではルートの`npm run build`を省略できません。
 
 ## デモ操作
 
@@ -23,9 +27,9 @@ npm run build
 2. `1x / 2x / 4x` で再生速度を変更できます。速度を変えてもコメント、分析カード、集計結果は同じです。
 3. コメントを選ぶと、そのコメントを根拠に含む中央の観測カードが強調されます。
 4. 観測カードの `根拠を表示` を押すと、引用元コメントが左列で強調されます。
-5. `配信を終了してレポート作成` を押すと、処理中状態を経て配信後レポートが表示されます。
+5. 固定コメント16件の再生が完了すると`配信を終了してレポート作成`が有効になります。押すと、処理中状態を経て配信後レポートが表示されます。
 6. `リセット` は再生件数、確認済み状態、根拠選択、分析メモリをすべて初期化します。何度実行しても同じシナリオを再現します。
-7. `Mikoの音声` は初期状態が `OFF` です。`ブラウザ標準（Web Speech）` または、ローカル接続を確認できた `AivisSpeech` を選ぶと、その後に新しく作成された観測カードだけを「観測→提案」の順で読み上げます。
+7. `Mikoの音声` は初期状態が `OFF`、AivisSpeechは`未確認`です。`ブラウザ標準（Web Speech）` または、`再確認`でローカル接続を確認できた`AivisSpeech`を選ぶと、その後に新しく作成された観測カードだけを「観測→提案」の順で読み上げます。
 
 一時停止、リセット、配信終了、音声エンジン変更、`OFF` への変更では、再生中の音声と待機キューを停止します。安全性注意カードも抑制済みの観測・提案だけを読み上げ、元コメントの攻撃的な本文は音声へ渡しません。
 
@@ -50,6 +54,17 @@ npm run build
 - `message.delta`、`tool.requested`、`artifact.created` などのイベント行は、UI表示確認用の公開可能なサンプルです。chain-of-thought や内部推論は含みません。
 - 分析エラーと自動復旧も、状態表示を確認するための固定シナリオです。
 - `report.submit` は画面内にローカル成果物を作る演出だけで、外部投稿・モデレーション・削除・BAN・タイムアウトは一切実行しません。
+
+## 品質確認
+
+ルートのworkspaceをビルドした後、このexampleに対して次を実行できます。
+
+```sh
+npm --prefix packages/agent/examples/stream-operations-staff run fmt:check
+npm --prefix packages/agent/examples/stream-operations-staff run lint
+npm --prefix packages/agent/examples/stream-operations-staff run test
+npm --prefix packages/agent/examples/stream-operations-staff run build
+```
 
 ## Mikoアバター
 

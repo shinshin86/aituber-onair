@@ -1212,7 +1212,7 @@ button:disabled {
   color: var(--subtext);
   background: transparent;
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -1574,7 +1574,7 @@ button:disabled {
   .comments-list,
   .report-list {
     flex: none;
-    height: 470px;
+    height: clamp(340px, 48vh, 410px);
   }
 
   .staff-card {

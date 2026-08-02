@@ -8,7 +8,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DemoPhase, FixtureReport } from '../types';
 
 export type MikoVoiceEngine = 'off' | 'webSpeech' | 'aivisSpeech';
-export type AivisConnectionState = 'checking' | 'available' | 'unavailable';
+export type AivisConnectionState =
+  | 'unchecked'
+  | 'checking'
+  | 'available'
+  | 'unavailable';
 
 const AIVIS_CHECK_TIMEOUT_MS = 1_500;
 const DEFAULT_UTTERANCE_TIMEOUT_MS = 30_000;
@@ -63,7 +67,7 @@ export function useMikoVoice({ reports, phase, runId }: UseMikoVoiceOptions) {
   const [engine, setEngineState] = useState<MikoVoiceEngine>('off');
   const [webVoice, setWebVoice] = useState<VoiceEngineVoice | null>(null);
   const [aivisState, setAivisState] =
-    useState<AivisConnectionState>('checking');
+    useState<AivisConnectionState>('unchecked');
   const [aivisVoices, setAivisVoices] = useState<readonly VoiceEngineVoice[]>(
     []
   );
@@ -145,12 +149,10 @@ export function useMikoVoice({ reports, phase, runId }: UseMikoVoiceOptions) {
         if (active) setWebVoice(null);
       });
 
-    void refreshAivis();
-
     return () => {
       active = false;
     };
-  }, [refreshAivis]);
+  }, []);
 
   useEffect(() => {
     cancelQueue();

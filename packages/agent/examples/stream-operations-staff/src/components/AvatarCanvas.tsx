@@ -18,6 +18,7 @@ const DEFAULT_VIEW_TRANSFORM: AvatarViewTransform = {
   y: 44,
   scale: 2,
 };
+const MIKO_AVATAR_URL = `${import.meta.env.BASE_URL}avatar/miko.purupuru`;
 
 interface AvatarCanvasProps {
   reaction: PuruPuruReaction | null;
@@ -60,7 +61,7 @@ export default function AvatarCanvas({
     let cancelled = false;
     let loadedPackage: PuruPuruAvatarPackage | null = null;
 
-    void fetch('/avatar/miko.purupuru')
+    void fetch(MIKO_AVATAR_URL)
       .then(async (response) => {
         if (!response.ok) {
           throw new Error(`Avatar request failed: ${response.status}`);

@@ -2,8 +2,13 @@ import {
   type CommentIntelligenceResult,
   createCommentIntelligence,
 } from '@aituber-onair/comment-intelligence';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import AvatarCanvas from './components/AvatarCanvas';
+import {
+  canCreatePostStreamReport,
+  getRepeatedSoftwareQuestionCount,
+  getUnansweredQuestionTopics,
+} from './demoInsights';
 import {
   AGENT_EVENTS,
   COMMENTS,
@@ -35,6 +40,7 @@ import {
 } from './types';
 
 const SPEEDS = [1, 2, 4] as const;
+const THUMBNAIL_URL = `${import.meta.env.BASE_URL}avatar/thumbnail.png`;
 
 const PLATFORM_LABELS: Record<string, string> = {
   youtube: 'YouTube',
@@ -106,6 +112,7 @@ function App() {
     pending: false,
     error: null,
   });
+  const simulatedErrorIdsRef = useRef(new Set<string>());
 
   const intelligence = useMemo(() => {
     void runId;
@@ -132,14 +139,17 @@ function App() {
     runId,
   });
   const elapsedSeconds = visibleComments.at(-1)?.atSeconds ?? 0;
-  const questionCount = visibleComments.filter((comment) =>
-    comment.labels.includes('質問')
-  ).length;
-  const answeredQuestionIds = new Set(['c02', 'c05', 'c10']);
-  const unansweredCount = visibleComments.filter(
-    (comment) =>
-      comment.labels.includes('質問') && !answeredQuestionIds.has(comment.id)
-  ).length;
+  const repeatedSoftwareQuestionCount =
+    getRepeatedSoftwareQuestionCount(visibleComments);
+  const unansweredTopics = getUnansweredQuestionTopics(visibleComments);
+  const importantUnansweredTopics = unansweredTopics.filter(
+    (topic) => topic.important
+  );
+  const canCreateReport = canCreatePostStreamReport(
+    phase,
+    visibleCount,
+    COMMENTS.length
+  );
   const fixtureFlaggedCount = visibleComments.filter(isSafetyComment).length;
   const flaggedCount = rulesSnapshot.result
     ? rulesSnapshot.result.safetyReports.filter(
@@ -201,18 +211,25 @@ function App() {
       setSafetyAttention(false);
     }
 
-    let recoveryTimer = 0;
-    if (latestComment.simulateAnalysisError) {
+    if (
+      latestComment.simulateAnalysisError &&
+      !simulatedErrorIdsRef.current.has(latestComment.id)
+    ) {
+      simulatedErrorIdsRef.current.add(latestComment.id);
       setPhase('error');
-      recoveryTimer = window.setTimeout(() => setPhase('monitoring'), 900);
     }
 
     return () => {
       window.clearTimeout(analysisTimer);
       window.clearTimeout(safetyTimer);
-      window.clearTimeout(recoveryTimer);
     };
   }, [phase, speed, visibleCount]);
+
+  useEffect(() => {
+    if (phase !== 'error') return;
+    const recoveryTimer = window.setTimeout(() => setPhase('monitoring'), 900);
+    return () => window.clearTimeout(recoveryTimer);
+  }, [phase]);
 
   useEffect(() => {
     let active = true;
@@ -268,10 +285,11 @@ function App() {
     setSelectedReportId(null);
     setSelectedCommentId(null);
     setAcknowledgedIds([]);
+    simulatedErrorIdsRef.current.clear();
   };
 
   const endStream = () => {
-    if (phase === 'pre' || phase === 'ending' || phase === 'complete') return;
+    if (!canCreateReport) return;
     setPhase('ending');
     setBottomTab('report');
   };
@@ -332,7 +350,7 @@ function App() {
               {formatElapsed(elapsedSeconds)}
             </span>
             <span className="staff-inline">
-              <img src="/avatar/thumbnail.png" alt="" aria-hidden="true" />
+              <img src={THUMBNAIL_URL} alt="" aria-hidden="true" />
               Miko · {staffPhase}
             </span>
           </div>
@@ -342,7 +360,11 @@ function App() {
         <dl className="stream-stats" aria-label="配信統計">
           <Stat label="コメント" value={visibleComments.length.toString()} />
           <Stat label="件/分" value={commentsPerMinute.toString()} />
-          <Stat label="未回答" value={unansweredCount.toString()} tone="warn" />
+          <Stat
+            label="未回答"
+            value={unansweredTopics.length.toString()}
+            tone="warn"
+          />
           <Stat
             label="要注意"
             value={flaggedCount.toString()}
@@ -392,8 +414,11 @@ function App() {
             type="button"
             className="end-control"
             onClick={endStream}
-            disabled={
-              phase === 'pre' || phase === 'ending' || phase === 'complete'
+            disabled={!canCreateReport}
+            title={
+              canCreateReport
+                ? undefined
+                : `固定フィクスチャ全${COMMENTS.length}件の再生後に作成できます`
             }
           >
             ◼ 配信を終了してレポート作成
@@ -535,8 +560,8 @@ function App() {
 
         <StreamPulse
           visibleComments={visibleComments}
-          questionCount={questionCount}
-          unansweredCount={unansweredCount}
+          repeatedSoftwareQuestionCount={repeatedSoftwareQuestionCount}
+          importantUnansweredTopics={importantUnansweredTopics}
           flaggedCount={flaggedCount}
         />
       </section>
@@ -625,11 +650,13 @@ function VoiceControls({
   error: string | null;
 }) {
   const aivisStatus =
-    aivisState === 'checking'
-      ? '確認中…'
-      : aivisState === 'available'
-        ? '接続済み'
-        : '起動していません';
+    aivisState === 'unchecked'
+      ? '未確認'
+      : aivisState === 'checking'
+        ? '確認中…'
+        : aivisState === 'available'
+          ? '接続済み'
+          : '起動していません';
 
   return (
     <section className="voice-controls" aria-label="Mikoの音声設定">
@@ -856,13 +883,13 @@ function ReportCard({
 
 function StreamPulse({
   visibleComments,
-  questionCount,
-  unansweredCount,
+  repeatedSoftwareQuestionCount,
+  importantUnansweredTopics,
   flaggedCount,
 }: {
   visibleComments: readonly FixtureComment[];
-  questionCount: number;
-  unansweredCount: number;
+  repeatedSoftwareQuestionCount: number;
+  importantUnansweredTopics: readonly { label: string }[];
   flaggedCount: number;
 }) {
   const total = Math.max(visibleComments.length, 1);
@@ -954,14 +981,14 @@ function StreamPulse({
           />
           <PulseRow
             label="繰り返し質問"
-            value={`制作ソフト · ${Math.min(questionCount, 3)}件`}
-            badge={Math.min(questionCount, 3)}
+            value={`制作ソフト · ${repeatedSoftwareQuestionCount}件`}
+            badge={repeatedSoftwareQuestionCount}
           />
           <PulseRow
             label="重要な未回答"
-            value={unansweredCount > 0 ? 'ライセンス条件' : '—'}
-            badge={unansweredCount}
-            tone={unansweredCount > 0 ? 'warn' : 'default'}
+            value={importantUnansweredTopics[0]?.label ?? '—'}
+            badge={importantUnansweredTopics.length}
+            tone={importantUnansweredTopics.length > 0 ? 'warn' : 'default'}
           />
           <PulseRow
             label="建設的FB"
@@ -1232,6 +1259,7 @@ function PostStreamReport({
         <ReportSection
           title="未回答の質問"
           items={[
+            '使用している制作ソフト',
             '素材を商用配信で使う場合のライセンス条件',
             'ブラシ設定の詳細',
           ]}
