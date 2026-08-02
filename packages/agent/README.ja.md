@@ -146,6 +146,107 @@ Agentパッケージは、完成時に次を担当します。
   できないため、副作用を持つhandlerはcancelへ協調し、必要に応じて`toolCallId`を
   idempotency keyとして使用する必要があります。
 
+## キャラクターのワークスペースを準備する
+
+`agent.bootstrap()`は、キャラクターが役割を確認し、自分の作業状態を準備するための
+非公開かつ制限付きのTurnを1回実行します。キャラクターは、ホストが許可したToolと
+バックエンドのワークスペースを使い、ファイル、table、index、メモなどから適切な
+表現を選べます。Agent coreは、その構成を固定しません。
+
+```ts
+import {
+  createAgent,
+  defineAgentTool,
+  type AgentWorkspaceMetadataStore,
+} from '@aituber-onair/agent';
+
+const workspaceMetadata = {
+  load: (agentId) => appDatabase.agentWorkspaces.get(agentId),
+  save: async (metadata, expectedRevision) => {
+    const saved = await appDatabase.agentWorkspaces.compareAndSet(
+      metadata.agentId,
+      expectedRevision,
+      metadata
+    );
+    if (!saved) throw new Error('Workspace metadata changed concurrently.');
+  },
+} satisfies AgentWorkspaceMetadataStore;
+
+const agent = createAgent({
+  id: 'stream-staff-miko',
+  brief: 'あなたはライブ配信の運営を担当するAIスタッフ、ミコです。',
+  backend,
+  tools: [workspaceRead, workspaceWrite],
+  capabilityCatalog: [
+    {
+      id: 'workspace.local',
+      kind: 'workspace',
+      description: 'このキャラクターだけが使えるワークスペース',
+      requiredTools: ['workspace.read', 'workspace.write'],
+      limits: [{ name: 'maxBytes', value: 1_000_000, unit: 'bytes' }],
+    },
+  ],
+  policy,
+});
+
+const bootstrap = await agent.bootstrap({
+  workspace: workspaceMetadata,
+  version: 'stream-operations-v1',
+  allowedTools: ['workspace.read', 'workspace.write'],
+  allowedCapabilities: ['workspace.local'],
+  context: {
+    trust: 'trusted',
+    data: { product: 'stream-dashboard' },
+  },
+});
+```
+
+メタデータstoreが保存するのは、ホスト管理のライフサイクル状態だけです。状態は
+`fresh`、`bootstrapping`、`ready`、`degraded`、`failed`のいずれかです。成功した
+`version`は再実行せずに再開します。途中で失敗した場合は、以前のバックエンドSessionと
+作成途中のワークスペースを引き継いで再試行できます。briefや必要な作業状態を変更した
+場合は、`version`を更新します。
+
+`save`は`expectedRevision`を比較し、recordの更新までをatomicに行う必要があります。
+古いwriterは、新しいBootstrap状態を上書きせずに失敗させます。
+
+Capability descriptorは、キャラクターが利用可能な能力を知るための情報であり、
+権限そのものではありません。Capabilityは、必要な`requiredTools`がすべて公開される
+場合だけ表示されます。各Tool callには、上記のランタイムpolicyと承認処理が引き続き
+適用されます。Capabilityの数値上限は、ホストが与えた範囲を表します。ワークスペースの
+byte数など、resource固有の上限は、そのresourceを所有するTool handlerまたは
+バックエンドが強制します。各Bootstrap attemptは1 Turnだけです。`timeoutMs`はその
+Turnを制限し、ランタイムはTool call数と再試行回数にも上限を適用します。メタデータstoreと
+バックエンドSessionの開始・終了はホスト管理の処理であり、各実装側で適切なtimeoutと
+cancelを適用する必要があります。product contextを渡すには、ホストが明示的に
+`trust: 'trusted'`と宣言します。生の視聴者入力をtrustedにしたり、ワークスペース全体を
+渡したりしてはいけません。
+
+人間への相談は、固定のエスカレーションschemaではなく、通常のホストToolとして
+用意できます。
+
+```ts
+const askOperator = defineAgentTool({
+  id: 'human.ask',
+  definition: {
+    name: 'human_ask',
+    description: '運営者の確認用inboxへ質問を追加する',
+    parameters: {
+      type: 'object',
+      properties: { question: { type: 'string' } },
+      required: ['question'],
+      additionalProperties: false,
+    },
+  },
+  risk: 'write',
+  execute: ({ question }: { question: string }) =>
+    operatorInbox.add({ question }),
+});
+```
+
+ホストは、このローカルな確認依頼だけを許可し、外部操作や破壊的操作にはランタイムの
+強制承認を求める、といった運用ができます。
+
 ## AITuber OnAir内での位置づけ
 
 ```mermaid

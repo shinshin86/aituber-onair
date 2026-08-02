@@ -1,3 +1,5 @@
+import type { AgentWorkspaceMetadata } from './types.js';
+
 export interface AgentErrorOptions {
   readonly code?: string;
   readonly cause?: unknown;
@@ -109,6 +111,58 @@ export class AgentToolExecutionError extends AgentError {
 export class AgentToolLoopLimitError extends AgentError {
   constructor(message = 'The Agent Tool loop limit was reached.') {
     super(message, { code: 'AGENT_TOOL_LOOP_LIMIT' });
+  }
+}
+
+export class AgentBootstrapInProgressError extends AgentError {
+  constructor(
+    message = 'The Agent already has an active bootstrap operation.'
+  ) {
+    super(message, { code: 'AGENT_BOOTSTRAP_IN_PROGRESS' });
+  }
+}
+
+export class AgentBootstrapLimitError extends AgentError {
+  readonly metadata: AgentWorkspaceMetadata;
+
+  constructor(metadata: AgentWorkspaceMetadata) {
+    super('The Agent bootstrap attempt limit was reached.', {
+      code: 'AGENT_BOOTSTRAP_LIMIT',
+      details: {
+        attempt: metadata.attempt,
+        status: metadata.status,
+        targetVersion: metadata.targetVersion,
+      },
+    });
+    this.metadata = metadata;
+  }
+}
+
+export class AgentBootstrapError extends AgentError {
+  readonly metadata: AgentWorkspaceMetadata;
+
+  constructor(
+    message: string,
+    metadata: AgentWorkspaceMetadata,
+    options: Omit<AgentErrorOptions, 'code'> = {}
+  ) {
+    super(message, {
+      ...options,
+      code: 'AGENT_BOOTSTRAP_FAILED',
+      details: {
+        ...options.details,
+        attempt: metadata.attempt,
+        status: metadata.status,
+        targetVersion: metadata.targetVersion,
+      },
+    });
+    this.metadata = metadata;
+  }
+}
+
+export class AgentWorkspaceStateError extends AgentError {
+  constructor(message: string, options: AgentErrorOptions = {}) {
+    super(message, { ...options, code: 'AGENT_WORKSPACE_STATE' });
   }
 }
 

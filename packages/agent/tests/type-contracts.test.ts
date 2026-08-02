@@ -7,6 +7,10 @@ import type {
   AgentBackendCapabilities,
   AgentBackendToolResult,
   AgentBackendTool,
+  AgentBootstrapOptions,
+  AgentBootstrapContext,
+  AgentBootstrapResult,
+  AgentCapabilityDescriptor,
   AgentConversationInput,
   AgentEvent,
   AgentHook,
@@ -20,6 +24,8 @@ import type {
   AgentSession,
   AgentToolHandler,
   AgentToolSpec,
+  AgentWorkspaceMetadata,
+  AgentWorkspaceMetadataStore,
 } from '../src/index.js';
 import { createAgent, defineAgentTool } from '../src/index.js';
 import type { ToolDefinition } from '@aituber-onair/chat';
@@ -59,7 +65,7 @@ describe('public type surface', () => {
     expect(invalidConversation.kind).toBe('viewer-comment');
   });
 
-  it('exports the complete Phase 1 contract families', () => {
+  it('exports the public contract families', () => {
     expectTypeOf(createAgent).toBeFunction();
     expectTypeOf(defineAgentTool).toBeFunction();
     expectTypeOf<Agent>().toBeObject();
@@ -87,6 +93,13 @@ describe('public type surface', () => {
     expectTypeOf<AgentRuntimeLimits>().toBeObject();
     expectTypeOf<AgentArtifact>().toBeObject();
     expectTypeOf<AgentHook>().toBeObject();
+    expectTypeOf<AgentCapabilityDescriptor>().toBeObject();
+    expectTypeOf<AgentWorkspaceMetadata>().toBeObject();
+    expectTypeOf<AgentWorkspaceMetadataStore>().toBeObject();
+    expectTypeOf<AgentBootstrapOptions>().toBeObject();
+    expectTypeOf<AgentBootstrapContext['trust']>().toEqualTypeOf<'trusted'>();
+    expectTypeOf<AgentBootstrapResult>().toBeObject();
+    expectTypeOf<Agent['bootstrap']>().toBeFunction();
   });
 
   it('keeps executable Tool handlers out of backend descriptors', () => {
@@ -101,6 +114,18 @@ describe('public type surface', () => {
 
     // @ts-expect-error Backend descriptors never expose host handlers.
     expect(backendTool.execute).toBeUndefined();
+  });
+
+  it('keeps credentials out of capability descriptors', () => {
+    const capability: AgentCapabilityDescriptor = {
+      id: 'workspace.local',
+      kind: 'workspace',
+      description: 'A bounded local workspace',
+      // @ts-expect-error Capability discovery metadata cannot carry credentials.
+      credentials: { token: 'not-allowed' },
+    };
+
+    expect(capability.id).toBe('workspace.local');
   });
 
   it('exports Chat backend contracts without constructing a service', () => {

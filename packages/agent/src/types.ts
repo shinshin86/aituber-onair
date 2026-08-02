@@ -100,10 +100,12 @@ export interface AgentToolExecutionContext {
   readonly signal: AbortSignal;
 }
 
-export type AgentToolHandler<TInput = unknown, TOutput = unknown> = (
-  input: TInput,
-  context: AgentToolExecutionContext
-) => Promise<TOutput> | TOutput;
+export type AgentToolHandler<TInput = unknown, TOutput = unknown> = {
+  bivarianceHack(
+    input: TInput,
+    context: AgentToolExecutionContext
+  ): Promise<TOutput> | TOutput;
+}['bivarianceHack'];
 
 export interface AgentToolSpec<TInput = unknown, TOutput = unknown> {
   /** Stable logical ID used by policy and audit events. */
@@ -199,6 +201,33 @@ export interface AgentBackendCapabilities {
   readonly detailedEvents: boolean;
 }
 
+export interface AgentCapabilityLimit {
+  readonly name: string;
+  readonly value: number;
+  readonly unit?: string;
+}
+
+/**
+ * Host-granted capability metadata for Agent discovery. Credentials and
+ * executable handlers are deliberately excluded.
+ */
+export interface AgentCapabilityDescriptor {
+  readonly id: string;
+  readonly kind: string;
+  readonly description: string;
+  /** Tools that must be visible before this capability may be advertised. */
+  readonly requiredTools?: readonly string[];
+  readonly limits?: readonly AgentCapabilityLimit[];
+}
+
+/** Model-visible capability metadata with enforcement details removed. */
+export interface AgentBackendCapability {
+  readonly id: string;
+  readonly kind: string;
+  readonly description: string;
+  readonly limits?: readonly AgentCapabilityLimit[];
+}
+
 export interface AgentBackendSessionDescriptor {
   readonly agentId: string;
   readonly sessionId: string;
@@ -212,6 +241,7 @@ export interface AgentBackendSessionInput
   /** Natural-language identity, role, goals, and operating context. */
   readonly brief: string;
   readonly tools: readonly AgentBackendTool[];
+  readonly capabilities: readonly AgentBackendCapability[];
   readonly backendSessionId?: string;
 }
 
@@ -270,6 +300,9 @@ export interface AgentSessionOptions {
   readonly audience: AgentAudience;
   readonly inputTrust: AgentInputTrust;
   readonly allowedTools?: readonly string[];
+  readonly allowedCapabilities?: readonly string[];
+  /** Session limits may only narrow the Agent-wide limits. */
+  readonly limits?: AgentRuntimeLimits;
 }
 
 export interface AgentResumeSessionOptions extends AgentSessionOptions {
@@ -283,12 +316,83 @@ export interface AgentRuntimeLimits {
   readonly approvalTimeoutMs?: number;
 }
 
+export type AgentWorkspaceStatus =
+  | 'fresh'
+  | 'bootstrapping'
+  | 'ready'
+  | 'degraded'
+  | 'failed';
+
+/**
+ * Host-owned lifecycle metadata. It does not prescribe files, tables, or a
+ * memory schema inside the workspace.
+ */
+export interface AgentWorkspaceMetadata {
+  readonly agentId: string;
+  readonly status: AgentWorkspaceStatus;
+  readonly revision: number;
+  readonly targetVersion: string;
+  readonly readyVersion?: string;
+  readonly attempt: number;
+  readonly updatedAt: string;
+  readonly completedAt?: string;
+  readonly backendSessionId?: string;
+  readonly lastError?: AgentEventError;
+}
+
+/**
+ * The host chooses where this small lifecycle record is persisted. `save`
+ * must atomically reject a stale `expectedRevision`.
+ */
+export interface AgentWorkspaceMetadataStore {
+  load(agentId: string): Promise<AgentWorkspaceMetadata | undefined>;
+  save(
+    metadata: AgentWorkspaceMetadata,
+    expectedRevision: number
+  ): Promise<void>;
+}
+
+export interface AgentBootstrapLimits {
+  /** Attempts allowed for one bootstrap version. Defaults to 3. */
+  readonly maxAttempts?: number;
+  /** Tool calls allowed in the single bootstrap Turn. Defaults to 4. */
+  readonly maxToolCallsPerTurn?: number;
+  /** Elapsed time allowed for the bootstrap Turn. Defaults to 60 seconds. */
+  readonly timeoutMs?: number;
+}
+
+/** Explicit host assertion for bootstrap-only product context. */
+export interface AgentBootstrapContext {
+  readonly trust: 'trusted';
+  readonly data: JsonValue;
+}
+
+export interface AgentBootstrapOptions {
+  readonly workspace: AgentWorkspaceMetadataStore;
+  /** Bump when the host wants the Agent to revise its operating state. */
+  readonly version?: string;
+  readonly allowedTools?: readonly string[];
+  readonly allowedCapabilities?: readonly string[];
+  /** Host-selected product context. Raw viewer data must not be marked trusted. */
+  readonly context?: AgentBootstrapContext;
+  readonly limits?: AgentBootstrapLimits;
+}
+
+export interface AgentBootstrapResult {
+  readonly action: 'bootstrapped' | 'resumed';
+  readonly metadata: AgentWorkspaceMetadata;
+  /** Present only when this call performed a bootstrap Turn. */
+  readonly run?: AgentRunResult;
+}
+
 export interface AgentSession {
   readonly id: string;
   readonly purpose: string;
   readonly audience: AgentAudience;
   readonly inputTrust: AgentInputTrust;
   readonly allowedTools: readonly string[];
+  readonly allowedCapabilities: readonly string[];
+  readonly backendSessionId?: string;
   run(input: AgentRunInput, options?: AgentRunOptions): Promise<AgentRunResult>;
   runStream(
     input: AgentRunInput,
@@ -312,6 +416,7 @@ export interface AgentOptions {
   readonly brief: string;
   readonly backend: AgentBackend;
   readonly tools?: readonly AgentToolSpec[];
+  readonly capabilityCatalog?: readonly AgentCapabilityDescriptor[];
   /** Defaults to deny when omitted. */
   readonly policy?: AgentPolicy | AgentPolicyConfig;
   readonly hooks?: readonly AgentHook[];
@@ -322,6 +427,7 @@ export interface Agent {
   readonly id: string;
   readonly brief: string;
   readonly capabilities: Readonly<AgentBackendCapabilities>;
+  bootstrap(options: AgentBootstrapOptions): Promise<AgentBootstrapResult>;
   startSession(options: AgentSessionOptions): Promise<AgentSession>;
   resumeSession(options: AgentResumeSessionOptions): Promise<AgentSession>;
   close(): Promise<void>;

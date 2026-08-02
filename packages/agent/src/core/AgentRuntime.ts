@@ -1,17 +1,24 @@
 import {
   AgentBackendError,
   AgentBackendProtocolError,
+  AgentBootstrapInProgressError,
   AgentCapabilityError,
   AgentConfigurationError,
   AgentSessionClosedError,
 } from '../errors.js';
+import { runAgentBootstrap } from '../bootstrap/bootstrapAgent.js';
 import {
   assertAgentDefinition,
   snapshotBackendCapabilities,
 } from '../internal/contracts.js';
 import type {
   Agent,
+  AgentBackendCapability,
   AgentBackendSessionInput,
+  AgentBootstrapOptions,
+  AgentBootstrapResult,
+  AgentCapabilityDescriptor,
+  AgentCapabilityLimit,
   AgentHook,
   AgentOptions,
   AgentPolicyConfig,
@@ -58,6 +65,33 @@ const POLICY_CONFIG_KEYS = new Set([
 
 const APPROVAL_RULE_KEYS = new Set(['riskAtLeast', 'tools']);
 
+const AGENT_AUDIENCES = new Set(['operator', 'owner', 'private', 'public']);
+
+const INPUT_TRUST_LEVELS = new Set(['trusted', 'untrusted']);
+
+const RUNTIME_LIMIT_KEYS = new Set([
+  'approvalTimeoutMs',
+  'maxToolCallsPerTurn',
+]);
+
+const CAPABILITY_DESCRIPTOR_KEYS = new Set([
+  'description',
+  'id',
+  'kind',
+  'limits',
+  'requiredTools',
+]);
+
+const CAPABILITY_LIMIT_KEYS = new Set(['name', 'unit', 'value']);
+
+interface ResolvedSessionRequest {
+  readonly allowedTools: readonly string[];
+  readonly allowedCapabilities: readonly string[];
+  readonly visibleTools: readonly AgentToolSpec[];
+  readonly visibleCapabilities: readonly AgentCapabilityDescriptor[];
+  readonly limits: Required<AgentRuntimeLimits>;
+}
+
 export function createAgent(options: AgentOptions): Agent {
   return new AgentRuntime(options);
 }
@@ -69,6 +103,10 @@ class AgentRuntime implements Agent {
 
   private readonly backend: AgentOptions['backend'];
   private readonly toolsById: ReadonlyMap<string, AgentToolSpec>;
+  private readonly capabilityCatalog: ReadonlyMap<
+    string,
+    AgentCapabilityDescriptor
+  >;
   private readonly policy: ReturnType<typeof createPolicy>;
   private readonly hooks: readonly AgentHook[];
   private readonly limits: Required<AgentRuntimeLimits>;
@@ -77,6 +115,7 @@ class AgentRuntime implements Agent {
   private readonly pendingSessionStarts = new Set<Promise<AgentSession>>();
   private closed = false;
   private closePromise?: Promise<void>;
+  private bootstrapPromise?: Promise<AgentBootstrapResult>;
 
   constructor(options: AgentOptions) {
     assertAgentDefinition(options);
@@ -104,6 +143,10 @@ class AgentRuntime implements Agent {
       ]);
     }
     this.toolsById = createToolMap(options.tools ?? []);
+    this.capabilityCatalog = createCapabilityMap(
+      options.capabilityCatalog ?? [],
+      this.toolsById
+    );
     validatePolicyConfig(options.policy, this.toolsById);
     this.policy = createPolicy(options.policy);
     this.hooks = snapshotHooks(options.hooks ?? []);
@@ -112,6 +155,34 @@ class AgentRuntime implements Agent {
 
   startSession(options: AgentSessionOptions): Promise<AgentSession> {
     return this.trackSessionStart(this.createSession(options));
+  }
+
+  bootstrap(options: AgentBootstrapOptions): Promise<AgentBootstrapResult> {
+    this.assertOpen();
+    if (this.bootstrapPromise) {
+      return Promise.reject(new AgentBootstrapInProgressError());
+    }
+    const operation = runAgentBootstrap(
+      {
+        agentId: this.id,
+        canResumeSession: this.capabilities.sessionResume,
+        maxToolCallsPerTurn: this.limits.maxToolCallsPerTurn,
+        validateSession: (sessionOptions) => {
+          this.resolveSessionRequest(sessionOptions);
+        },
+        startSession: (sessionOptions) => this.startSession(sessionOptions),
+        resumeSession: (sessionOptions) => this.resumeSession(sessionOptions),
+      },
+      options
+    );
+    this.bootstrapPromise = operation;
+    const clear = () => {
+      if (this.bootstrapPromise === operation) {
+        this.bootstrapPromise = undefined;
+      }
+    };
+    void operation.then(clear, clear);
+    return operation;
   }
 
   resumeSession(options: AgentResumeSessionOptions): Promise<AgentSession> {
@@ -129,9 +200,11 @@ class AgentRuntime implements Agent {
     if (this.closePromise) return this.closePromise;
     this.closed = true;
     this.closePromise = (async () => {
+      const bootstrap = this.bootstrapPromise;
       await Promise.allSettled([...this.pendingSessionStarts]);
       const sessions = [...this.sessions.values()];
       await Promise.all(sessions.map((session) => session.close()));
+      if (bootstrap) await Promise.allSettled([bootstrap]);
     })();
     return this.closePromise;
   }
@@ -145,12 +218,94 @@ class AgentRuntime implements Agent {
     return start;
   }
 
+  private resolveSessionRequest(
+    options: AgentSessionOptions,
+    backendSessionId?: string
+  ): ResolvedSessionRequest {
+    const issues = validateSessionOptions(options, backendSessionId);
+    const optionsObject =
+      typeof options === 'object' &&
+      options !== null &&
+      !Array.isArray(options);
+    const allowedTools = [
+      ...new Set(
+        optionsObject && Array.isArray(options.allowedTools)
+          ? options.allowedTools
+          : []
+      ),
+    ];
+    const allowedCapabilities = [
+      ...new Set(
+        optionsObject && Array.isArray(options.allowedCapabilities)
+          ? options.allowedCapabilities
+          : []
+      ),
+    ];
+    const unknownTools = allowedTools.filter(
+      (toolId) => !this.toolsById.has(toolId)
+    );
+    if (unknownTools.length > 0) {
+      issues.push(
+        `Session allowedTools contains unknown Tool IDs: ${unknownTools.join(', ')}`
+      );
+    }
+    const unknownCapabilities = allowedCapabilities.filter(
+      (capabilityId) => !this.capabilityCatalog.has(capabilityId)
+    );
+    if (unknownCapabilities.length > 0) {
+      issues.push(
+        `Session allowedCapabilities contains unknown capability IDs: ${unknownCapabilities.join(', ')}`
+      );
+    }
+    const visibleCapabilities = allowedCapabilities
+      .map((capabilityId) => this.capabilityCatalog.get(capabilityId))
+      .filter(
+        (capability): capability is AgentCapabilityDescriptor =>
+          capability !== undefined
+      );
+    for (const capability of visibleCapabilities) {
+      const hiddenRequiredTools = (capability.requiredTools ?? []).filter(
+        (toolId) => !allowedTools.includes(toolId)
+      );
+      if (hiddenRequiredTools.length > 0) {
+        issues.push(
+          `Capability "${capability.id}" requires visible Tools: ${hiddenRequiredTools.join(', ')}`
+        );
+      }
+    }
+    const limits = resolveSessionLimits(
+      optionsObject ? options.limits : undefined,
+      this.limits,
+      issues
+    );
+    const visibleTools = allowedTools
+      .map((toolId) => this.toolsById.get(toolId))
+      .filter((tool): tool is AgentToolSpec => tool !== undefined);
+    if (issues.length > 0) {
+      throw new AgentConfigurationError(
+        'Agent Session options are invalid.',
+        issues
+      );
+    }
+    if (visibleTools.length > 0 && !this.capabilities.tools) {
+      throw new AgentCapabilityError('tools', this.backend.name);
+    }
+    return {
+      allowedTools,
+      allowedCapabilities,
+      visibleTools,
+      visibleCapabilities,
+      limits,
+    };
+  }
+
   private async createSession(
     options: AgentSessionOptions,
     backendSessionId?: string
   ): Promise<AgentSession> {
     this.assertOpen();
-    const issues = validateSessionOptions(options, backendSessionId);
+    const request = this.resolveSessionRequest(options, backendSessionId);
+    const issues: string[] = [];
     const optionsObject =
       typeof options === 'object' &&
       options !== null &&
@@ -166,21 +321,6 @@ class AgentRuntime implements Agent {
       issues.push(`Session ID "${sessionId}" is already in use`);
     }
 
-    const allowedTools = [
-      ...new Set(
-        optionsObject && Array.isArray(options.allowedTools)
-          ? options.allowedTools
-          : []
-      ),
-    ];
-    const unknownTools = allowedTools.filter(
-      (toolId) => !this.toolsById.has(toolId)
-    );
-    if (unknownTools.length > 0) {
-      issues.push(
-        `Session allowedTools contains unknown Tool IDs: ${unknownTools.join(', ')}`
-      );
-    }
     if (issues.length > 0) {
       throw new AgentConfigurationError(
         'Agent Session options are invalid.',
@@ -188,16 +328,18 @@ class AgentRuntime implements Agent {
       );
     }
 
-    const visibleTools = allowedTools.map(
-      (toolId) => this.toolsById.get(toolId) as AgentToolSpec
-    );
-    if (visibleTools.length > 0 && !this.capabilities.tools) {
-      throw new AgentCapabilityError('tools', this.backend.name);
-    }
+    const {
+      allowedTools,
+      allowedCapabilities,
+      visibleTools,
+      visibleCapabilities,
+      limits: sessionLimits,
+    } = request;
     const backendTools = visibleTools.map((tool) => ({
       id: tool.id,
       definition: tool.definition,
     }));
+    const backendCapabilities = visibleCapabilities.map(toBackendCapability);
     const backendInput: AgentBackendSessionInput = {
       agentId: this.id,
       sessionId,
@@ -206,12 +348,22 @@ class AgentRuntime implements Agent {
       inputTrust: options.inputTrust,
       brief: this.brief,
       tools: backendTools,
+      capabilities: backendCapabilities,
       ...(backendSessionId ? { backendSessionId } : {}),
     };
 
     this.startingSessionIds.add(sessionId);
     try {
       const backendSession = await this.backend.startSession(backendInput);
+      if (
+        backendSession.id !== undefined &&
+        (typeof backendSession.id !== 'string' || !backendSession.id.trim())
+      ) {
+        await backendSession.close();
+        throw new AgentBackendProtocolError(
+          `Backend "${this.backend.name}" returned an invalid Session ID.`
+        );
+      }
       if (
         visibleTools.length > 0 &&
         typeof backendSession.submitToolResult !== 'function'
@@ -235,13 +387,14 @@ class AgentRuntime implements Agent {
         audience: options.audience,
         inputTrust: options.inputTrust,
         allowedTools,
+        allowedCapabilities,
         toolIdsByBackendName: new Map(
           visibleTools.map((tool) => [tool.definition.name, tool.id])
         ),
         toolsById: new Map(visibleTools.map((tool) => [tool.id, tool])),
         policy: this.policy,
         hooks: this.hooks,
-        limits: this.limits,
+        limits: sessionLimits,
         backendName: this.backend.name,
         backendCapabilities: this.capabilities,
         backendSession,
@@ -345,6 +498,178 @@ function createToolMap(
   return byId;
 }
 
+function createCapabilityMap(
+  capabilities: readonly AgentCapabilityDescriptor[],
+  toolsById: ReadonlyMap<string, AgentToolSpec>
+): ReadonlyMap<string, AgentCapabilityDescriptor> {
+  if (!Array.isArray(capabilities)) {
+    throw new AgentConfigurationError('Agent capability registration failed.', [
+      'agent.capabilityCatalog must be an array',
+    ]);
+  }
+  const byId = new Map<string, AgentCapabilityDescriptor>();
+  const issues: string[] = [];
+  for (const capability of capabilities) {
+    if (
+      typeof capability !== 'object' ||
+      capability === null ||
+      Array.isArray(capability)
+    ) {
+      issues.push('Capability descriptors must be objects');
+      continue;
+    }
+    if (typeof capability.id !== 'string' || !capability.id.trim()) {
+      issues.push('Capability IDs must be non-empty strings');
+      continue;
+    }
+    for (const key of Object.keys(capability)) {
+      if (!CAPABILITY_DESCRIPTOR_KEYS.has(key)) {
+        issues.push(
+          `Capability "${capability.id}" contains unsupported option "${key}"`
+        );
+      }
+    }
+    if (byId.has(capability.id)) {
+      issues.push(`Duplicate capability ID: ${capability.id}`);
+    }
+    if (typeof capability.kind !== 'string' || !capability.kind.trim()) {
+      issues.push(`Capability "${capability.id}" must have a kind`);
+    }
+    if (
+      typeof capability.description !== 'string' ||
+      !capability.description.trim()
+    ) {
+      issues.push(`Capability "${capability.id}" must have a description`);
+    }
+    if (
+      capability.requiredTools !== undefined &&
+      !Array.isArray(capability.requiredTools)
+    ) {
+      issues.push(
+        `Capability "${capability.id}" requiredTools must be an array`
+      );
+    }
+    const rawRequiredTools: readonly unknown[] = Array.isArray(
+      capability.requiredTools
+    )
+      ? capability.requiredTools
+      : [];
+    for (const toolId of rawRequiredTools) {
+      if (typeof toolId !== 'string' || !toolId.trim()) {
+        issues.push(
+          `Capability "${capability.id}" requiredTools must contain non-empty Tool IDs`
+        );
+      } else if (!toolsById.has(toolId)) {
+        issues.push(
+          `Capability "${capability.id}" requires unknown Tool "${toolId}"`
+        );
+      }
+    }
+    const requiredTools = [
+      ...new Set(
+        rawRequiredTools.filter(
+          (toolId): toolId is string =>
+            typeof toolId === 'string' && toolId.trim().length > 0
+        )
+      ),
+    ];
+    if (capability.limits !== undefined && !Array.isArray(capability.limits)) {
+      issues.push(`Capability "${capability.id}" limits must be an array`);
+    }
+    const rawLimits: readonly unknown[] = Array.isArray(capability.limits)
+      ? capability.limits
+      : [];
+    const limitNames = new Set<string>();
+    const validLimits: AgentCapabilityLimit[] = [];
+    for (const limit of rawLimits) {
+      if (typeof limit !== 'object' || limit === null || Array.isArray(limit)) {
+        issues.push(`Capability "${capability.id}" limits must be objects`);
+        continue;
+      }
+      const candidate = limit as Partial<AgentCapabilityLimit>;
+      let valid = true;
+      for (const key of Object.keys(candidate)) {
+        if (!CAPABILITY_LIMIT_KEYS.has(key)) {
+          issues.push(
+            `Capability "${capability.id}" limit contains unsupported option "${key}"`
+          );
+          valid = false;
+        }
+      }
+      if (typeof candidate.name !== 'string' || !candidate.name.trim()) {
+        issues.push(
+          `Capability "${capability.id}" limit names must be non-empty`
+        );
+        valid = false;
+      } else if (limitNames.has(candidate.name)) {
+        issues.push(
+          `Capability "${capability.id}" has duplicate limit "${candidate.name}"`
+        );
+        valid = false;
+      }
+      if (
+        !Number.isFinite(candidate.value) ||
+        (candidate.value as number) < 0
+      ) {
+        issues.push(
+          `Capability "${capability.id}" limit "${String(candidate.name)}" must be non-negative and finite`
+        );
+        valid = false;
+      }
+      if (
+        candidate.unit !== undefined &&
+        (typeof candidate.unit !== 'string' || !candidate.unit.trim())
+      ) {
+        issues.push(
+          `Capability "${capability.id}" limit "${String(candidate.name)}" unit must be non-empty`
+        );
+        valid = false;
+      }
+      if (typeof candidate.name === 'string') {
+        limitNames.add(candidate.name);
+      }
+      if (valid) {
+        validLimits.push({
+          name: candidate.name as string,
+          value: candidate.value as number,
+          ...(candidate.unit ? { unit: candidate.unit } : {}),
+        });
+      }
+    }
+
+    byId.set(
+      capability.id,
+      Object.freeze({
+        id: capability.id,
+        kind: capability.kind,
+        description: capability.description,
+        requiredTools: Object.freeze(requiredTools),
+        limits: capability.limits
+          ? Object.freeze(validLimits.map((limit) => Object.freeze(limit)))
+          : undefined,
+      })
+    );
+  }
+  if (issues.length > 0) {
+    throw new AgentConfigurationError(
+      'Agent capability registration failed.',
+      issues
+    );
+  }
+  return byId;
+}
+
+function toBackendCapability(
+  capability: AgentCapabilityDescriptor
+): AgentBackendCapability {
+  return Object.freeze({
+    id: capability.id,
+    kind: capability.kind,
+    description: capability.description,
+    limits: capability.limits,
+  });
+}
+
 function snapshotTool(tool: AgentToolSpec): AgentToolSpec {
   return Object.freeze({
     ...tool,
@@ -420,6 +745,11 @@ function snapshotLimits(
   }
   const snapshot = { ...DEFAULT_LIMITS, ...limits };
   const issues: string[] = [];
+  for (const key of Object.keys(limits ?? {})) {
+    if (!RUNTIME_LIMIT_KEYS.has(key)) {
+      issues.push(`limits contains unsupported option "${key}"`);
+    }
+  }
   if (
     !Number.isInteger(snapshot.maxToolCallsPerTurn) ||
     snapshot.maxToolCallsPerTurn <= 0
@@ -439,6 +769,51 @@ function snapshotLimits(
     );
   }
   return Object.freeze(snapshot);
+}
+
+function resolveSessionLimits(
+  requested: AgentRuntimeLimits | undefined,
+  maximum: Required<AgentRuntimeLimits>,
+  issues: string[]
+): Required<AgentRuntimeLimits> {
+  if (
+    requested !== undefined &&
+    (typeof requested !== 'object' ||
+      requested === null ||
+      Array.isArray(requested))
+  ) {
+    issues.push('session.limits must be an object');
+    return maximum;
+  }
+  const candidate = { ...maximum, ...requested };
+  for (const key of Object.keys(requested ?? {})) {
+    if (!RUNTIME_LIMIT_KEYS.has(key)) {
+      issues.push(`session.limits contains unsupported option "${key}"`);
+    }
+  }
+  if (
+    !Number.isInteger(candidate.maxToolCallsPerTurn) ||
+    candidate.maxToolCallsPerTurn <= 0
+  ) {
+    issues.push(
+      'session.limits.maxToolCallsPerTurn must be a positive integer'
+    );
+  } else if (candidate.maxToolCallsPerTurn > maximum.maxToolCallsPerTurn) {
+    issues.push(
+      'session.limits.maxToolCallsPerTurn cannot exceed the Agent limit'
+    );
+  }
+  if (
+    !Number.isFinite(candidate.approvalTimeoutMs) ||
+    candidate.approvalTimeoutMs <= 0
+  ) {
+    issues.push('session.limits.approvalTimeoutMs must be positive and finite');
+  } else if (candidate.approvalTimeoutMs > maximum.approvalTimeoutMs) {
+    issues.push(
+      'session.limits.approvalTimeoutMs cannot exceed the Agent limit'
+    );
+  }
+  return Object.freeze(candidate);
 }
 
 function validatePolicyConfig(
@@ -526,13 +901,25 @@ function validateSessionOptions(
   ) {
     return ['session options must be an object'];
   }
-  if (options.id !== undefined && !options.id.trim()) {
+  if (
+    options.id !== undefined &&
+    (typeof options.id !== 'string' || !options.id.trim())
+  ) {
     issues.push('session.id must be a non-empty string when provided');
   }
-  if (!options.purpose?.trim()) {
+  if (typeof options.purpose !== 'string' || !options.purpose.trim()) {
     issues.push('session.purpose must be a non-empty string');
   }
-  if (backendSessionId !== undefined && !backendSessionId.trim()) {
+  if (!AGENT_AUDIENCES.has(options.audience)) {
+    issues.push('session.audience is invalid');
+  }
+  if (!INPUT_TRUST_LEVELS.has(options.inputTrust)) {
+    issues.push('session.inputTrust is invalid');
+  }
+  if (
+    backendSessionId !== undefined &&
+    (typeof backendSessionId !== 'string' || !backendSessionId.trim())
+  ) {
     issues.push('backendSessionId must be a non-empty string');
   }
   if (
@@ -543,6 +930,18 @@ function validateSessionOptions(
       ))
   ) {
     issues.push('session.allowedTools must contain only non-empty strings');
+  }
+  if (
+    options.allowedCapabilities !== undefined &&
+    (!Array.isArray(options.allowedCapabilities) ||
+      options.allowedCapabilities.some(
+        (capabilityId) =>
+          typeof capabilityId !== 'string' || !capabilityId.trim()
+      ))
+  ) {
+    issues.push(
+      'session.allowedCapabilities must contain only non-empty strings'
+    );
   }
   return issues;
 }

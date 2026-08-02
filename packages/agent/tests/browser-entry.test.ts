@@ -5,6 +5,7 @@ const browserEntrySources = [
   '../src/errors.ts',
   '../src/types.ts',
   '../src/chat.ts',
+  '../src/bootstrap/bootstrapAgent.ts',
   '../src/core/AgentRuntime.ts',
   '../src/core/AgentSession.ts',
   '../src/core/AsyncEventQueue.ts',

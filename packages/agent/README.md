@@ -152,6 +152,106 @@ The host application remains responsible for:
   handler that ignores that signal, so side-effecting handlers must cooperate
   with cancellation and use `toolCallId` as an idempotency key where needed.
 
+## Bootstrapping a character workspace
+
+`agent.bootstrap()` gives a character one bounded, private Turn to inspect its
+assignment and prepare its own operating state. The Agent may choose files,
+tables, indexes, notes, or another representation through the Tools and backend
+workspace that the host has granted. Agent core does not define their layout.
+
+```ts
+import {
+  createAgent,
+  defineAgentTool,
+  type AgentWorkspaceMetadataStore,
+} from '@aituber-onair/agent';
+
+const workspaceMetadata = {
+  load: (agentId) => appDatabase.agentWorkspaces.get(agentId),
+  save: async (metadata, expectedRevision) => {
+    const saved = await appDatabase.agentWorkspaces.compareAndSet(
+      metadata.agentId,
+      expectedRevision,
+      metadata
+    );
+    if (!saved) throw new Error('Workspace metadata changed concurrently.');
+  },
+} satisfies AgentWorkspaceMetadataStore;
+
+const agent = createAgent({
+  id: 'stream-staff-miko',
+  brief: 'You are Miko, AI staff responsible for stream operations.',
+  backend,
+  tools: [workspaceRead, workspaceWrite],
+  capabilityCatalog: [
+    {
+      id: 'workspace.local',
+      kind: 'workspace',
+      description: 'A workspace limited to this character',
+      requiredTools: ['workspace.read', 'workspace.write'],
+      limits: [{ name: 'maxBytes', value: 1_000_000, unit: 'bytes' }],
+    },
+  ],
+  policy,
+});
+
+const bootstrap = await agent.bootstrap({
+  workspace: workspaceMetadata,
+  version: 'stream-operations-v1',
+  allowedTools: ['workspace.read', 'workspace.write'],
+  allowedCapabilities: ['workspace.local'],
+  context: {
+    trust: 'trusted',
+    data: { product: 'stream-dashboard' },
+  },
+});
+```
+
+The metadata store contains only host-owned lifecycle state: `fresh`,
+`bootstrapping`, `ready`, `degraded`, or `failed`. A successful `version` is not
+run again. A failed attempt can resume the previous backend Session and any
+partial workspace state. Bump `version` when the brief or required operating
+state changes.
+
+`save` must compare `expectedRevision` and update the record atomically. A
+stale writer must reject instead of overwriting a newer bootstrap operation.
+
+Capability descriptors are discovery metadata, not permission grants. A
+capability is shown only when all of its `requiredTools` are visible, and every
+Tool call still passes through the runtime policy and approval path described
+above. Numeric capability limits describe the host's envelope; the Tool handler
+or backend that owns the resource must enforce limits such as workspace bytes.
+Each bootstrap attempt is limited to one Turn. `timeoutMs` bounds that Turn,
+and the runtime also limits Tool calls and retry attempts. Metadata storage and
+backend Session start/close are host-owned operations; their implementations
+must apply appropriate timeouts and cancellation. Bootstrap accepts product
+context only with an explicit `trust: 'trusted'` host assertion. Do not mark raw
+viewer input as trusted or inject the entire workspace.
+
+Asking a human is an ordinary host Tool rather than a fixed escalation schema:
+
+```ts
+const askOperator = defineAgentTool({
+  id: 'human.ask',
+  definition: {
+    name: 'human_ask',
+    description: 'Add a question to the operator review inbox',
+    parameters: {
+      type: 'object',
+      properties: { question: { type: 'string' } },
+      required: ['question'],
+      additionalProperties: false,
+    },
+  },
+  risk: 'write',
+  execute: ({ question }: { question: string }) =>
+    operatorInbox.add({ question }),
+});
+```
+
+The host may allow this local review request while still requiring a hard
+runtime approval for external or destructive Tools.
+
 ## Position in AITuber OnAir
 
 ```mermaid

@@ -85,6 +85,7 @@ export interface AgentSessionRuntimeOptions {
   readonly audience: AgentAudience;
   readonly inputTrust: AgentInputTrust;
   readonly allowedTools: readonly string[];
+  readonly allowedCapabilities: readonly string[];
   readonly toolIdsByBackendName: ReadonlyMap<string, string>;
   readonly toolsById: ReadonlyMap<string, AgentToolSpec>;
   readonly policy: AgentPolicy;
@@ -103,6 +104,8 @@ export class AgentSessionRuntime implements AgentSession {
   readonly audience: AgentAudience;
   readonly inputTrust: AgentInputTrust;
   readonly allowedTools: readonly string[];
+  readonly allowedCapabilities: readonly string[];
+  readonly backendSessionId?: string;
 
   private readonly agentId: string;
   private readonly toolIdsByBackendName: ReadonlyMap<string, string>;
@@ -127,6 +130,8 @@ export class AgentSessionRuntime implements AgentSession {
     this.audience = options.audience;
     this.inputTrust = options.inputTrust;
     this.allowedTools = Object.freeze([...options.allowedTools]);
+    this.allowedCapabilities = Object.freeze([...options.allowedCapabilities]);
+    this.backendSessionId = options.backendSession.id;
     this.toolIdsByBackendName = options.toolIdsByBackendName;
     this.toolsById = options.toolsById;
     this.policy = options.policy;

@@ -131,6 +131,26 @@ describe('AgentRuntime', () => {
     expect(close).toHaveBeenCalledOnce();
   });
 
+  it('rejects an invalid backend Session ID before exposing the Session', async () => {
+    const backend = new MockBackend(() => completedTextStream());
+    const close = vi.fn(async () => undefined);
+    vi.spyOn(backend, 'startSession').mockResolvedValue({
+      id: '',
+      runStream: () => completedTextStream(),
+      close,
+    });
+    const agent = createAgent({ ...agentDefinition, backend });
+
+    await expect(
+      agent.startSession({
+        purpose: 'operations',
+        audience: 'operator',
+        inputTrust: 'trusted',
+      })
+    ).rejects.toThrow(AgentBackendProtocolError);
+    expect(close).toHaveBeenCalledOnce();
+  });
+
   it('rejects policy references to unregistered Tools', () => {
     const backend = new MockBackend(() => completedTextStream(), {
       tools: true,
@@ -147,6 +167,48 @@ describe('AgentRuntime', () => {
         },
       })
     ).toThrow(AgentConfigurationError);
+  });
+
+  it('rejects credentials and unknown fields in capability descriptors', () => {
+    const backend = new MockBackend(() => completedTextStream());
+
+    expect(() =>
+      createAgent({
+        ...agentDefinition,
+        backend,
+        capabilityCatalog: [
+          {
+            id: 'workspace.local',
+            kind: 'workspace',
+            description: 'A bounded workspace',
+            credentials: { token: 'not-allowed' },
+          },
+        ],
+      } as never)
+    ).toThrow(AgentConfigurationError);
+  });
+
+  it('rejects unknown Agent and Session limit keys', async () => {
+    const backend = new MockBackend(() => completedTextStream());
+
+    expect(() =>
+      createAgent({
+        ...agentDefinition,
+        backend,
+        limits: { maxToolCallPerTurn: 1 },
+      } as never)
+    ).toThrow(AgentConfigurationError);
+
+    const agent = createAgent({ ...agentDefinition, backend });
+    await expect(
+      agent.startSession({
+        purpose: 'operations',
+        audience: 'operator',
+        inputTrust: 'trusted',
+        limits: { maxToolCallPerTurn: 1 },
+      } as never)
+    ).rejects.toThrow(AgentConfigurationError);
+    expect(backend.startInputs).toHaveLength(0);
   });
 
   it('rejects unknown policy options instead of silently weakening approval', () => {
