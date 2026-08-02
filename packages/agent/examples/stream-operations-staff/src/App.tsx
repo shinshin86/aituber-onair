@@ -34,7 +34,7 @@ import {
   type DemoPhase,
   type FixtureComment,
   type FixtureReport,
-  MIKO_PROFILE,
+  MIKO_STAFF,
   type RulesSnapshot,
   type StaffPhase,
 } from './types';
@@ -490,8 +490,8 @@ function App() {
             />
             <div className="staff-copy">
               <span className="staff-kicker">AI STAFF BRIEFING</span>
-              <h2 id="briefing-heading">{MIKO_PROFILE.name}</h2>
-              <p>{MIKO_PROFILE.role}</p>
+              <h2 id="briefing-heading">{MIKO_STAFF.name}</h2>
+              <p>{MIKO_STAFF.role}</p>
               <VoiceSpeakingIndicator
                 engine={mikoVoice.engine}
                 isSpeaking={mikoVoice.isSpeaking}

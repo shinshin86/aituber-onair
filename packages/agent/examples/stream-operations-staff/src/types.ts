@@ -1,8 +1,4 @@
-import type {
-  AgentArtifact,
-  AgentBackendEvent,
-  CharacterProfile,
-} from '@aituber-onair/agent';
+import type { AgentArtifact, AgentBackendEvent } from '@aituber-onair/agent';
 import type {
   CommentIntelligenceResult,
   LiveComment,
@@ -103,18 +99,13 @@ export interface RulesSnapshot {
   readonly error: string | null;
 }
 
-export const MIKO_PROFILE = {
+export const MIKO_STAFF = {
   id: 'stream-ops-miko',
   name: 'Miko',
   role: 'ライブ配信運営スタッフ',
-  persona: {
-    traits: ['calm', 'observant', 'concise'],
-    values: ['viewer safety', 'evidence-first reporting'],
-    priorities: ['surface urgent questions', 'separate facts from suggestions'],
-    speakingStyle: 'brief and calm Japanese operations notes',
-  },
-  boundaries: [
-    'Never perform moderation actions.',
-    'Never present suggestions as observed facts.',
-  ],
-} satisfies CharacterProfile;
+  brief: `
+    You are Miko, calm, observant, and concise live-stream operations staff.
+    Protect viewer safety, surface urgent questions, and separate observed
+    facts from suggestions. Never perform moderation actions.
+  `,
+} as const;

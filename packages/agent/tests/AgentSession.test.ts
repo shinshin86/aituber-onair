@@ -6,22 +6,16 @@ import {
   AgentTimeoutError,
   AgentTurnInProgressError,
 } from '../src/errors.js';
-import type {
-  AgentBackendEvent,
-  AgentEvent,
-  CharacterProfile,
-} from '../src/types.js';
+import type { AgentBackendEvent, AgentEvent } from '../src/types.js';
 import {
   MockBackend,
   completedTextStream,
   waitForAbort,
 } from './helpers/mockBackend.js';
 
-const character: CharacterProfile = {
+const agentDefinition = {
   id: 'miko',
-  name: 'Miko',
-  role: 'AI staff',
-  persona: { traits: ['calm'] },
+  brief: 'You are Miko, calm AI staff.',
 };
 
 describe('AgentSession', () => {
@@ -29,7 +23,7 @@ describe('AgentSession', () => {
     const backend = new MockBackend(() =>
       completedTextStream('Backend response')
     );
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
 
     const events = await collectEvents(
@@ -72,7 +66,7 @@ describe('AgentSession', () => {
       yield { type: 'message.delta', text: 'partial' };
       throw cause;
     });
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
     const events: AgentEvent[] = [];
 
@@ -93,7 +87,7 @@ describe('AgentSession', () => {
     const backend = new MockBackend((_input, options) =>
       pendingStream(options?.signal)
     );
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
     const first = session.runStream({ instruction: 'First' });
 
@@ -111,7 +105,7 @@ describe('AgentSession', () => {
     const backend = new MockBackend((_input, options) =>
       pendingStream(options?.signal)
     );
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
     const events: AgentEvent[] = [];
     const consuming = consume(
@@ -133,7 +127,7 @@ describe('AgentSession', () => {
       (_input, options) => pendingStream(options?.signal),
       { interruption: false }
     );
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
     const consuming = collectEvents(
       session.runStream({ instruction: 'Keep running' })
@@ -153,7 +147,7 @@ describe('AgentSession', () => {
     const backend = new MockBackend((_input, options) =>
       pendingStream(options?.signal)
     );
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
     const controller = new AbortController();
     const events: AgentEvent[] = [];
@@ -178,7 +172,7 @@ describe('AgentSession', () => {
       const backend = new MockBackend((_input, options) =>
         pendingStream(options?.signal)
       );
-      const agent = createAgent({ character, backend });
+      const agent = createAgent({ ...agentDefinition, backend });
       const session = await startSession(agent);
       const events: AgentEvent[] = [];
       const consuming = consume(
@@ -203,7 +197,7 @@ describe('AgentSession', () => {
     const backend = new MockBackend((_input, options) =>
       pendingStream(options?.signal)
     );
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
     const events: AgentEvent[] = [];
     const consuming = consume(
@@ -236,7 +230,7 @@ describe('AgentSession', () => {
         }
       })();
     });
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
 
     for await (const event of session.runStream({ instruction: 'Start' })) {
@@ -252,7 +246,7 @@ describe('AgentSession', () => {
     const backend = new MockBackend(async function* () {
       yield { type: 'message.completed', text: 'orphaned' };
     });
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
 
     await expect(session.run({ instruction: 'Incomplete' })).rejects.toThrow(
@@ -270,7 +264,7 @@ describe('AgentSession', () => {
         backendCleanedUp = true;
       }
     });
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await startSession(agent);
 
     await expect(session.run({ instruction: 'Finish' })).resolves.toMatchObject(

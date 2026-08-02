@@ -5,7 +5,7 @@ import {
   AgentSessionClosedError,
 } from '../errors.js';
 import {
-  assertCharacterProfile,
+  assertAgentDefinition,
   snapshotBackendCapabilities,
 } from '../internal/contracts.js';
 import type {
@@ -26,7 +26,7 @@ export function createAgent(options: AgentOptions): Agent {
 
 class AgentRuntime implements Agent {
   readonly id: string;
-  readonly character: AgentOptions['character'];
+  readonly brief: string;
   readonly capabilities: Agent['capabilities'];
 
   private readonly backend: AgentOptions['backend'];
@@ -38,7 +38,7 @@ class AgentRuntime implements Agent {
   private closePromise?: Promise<void>;
 
   constructor(options: AgentOptions) {
-    assertCharacterProfile(options.character);
+    assertAgentDefinition(options);
     if (
       !options.backend ||
       typeof options.backend.startSession !== 'function'
@@ -51,8 +51,8 @@ class AgentRuntime implements Agent {
       throw new AgentCapabilityError('text', options.backend.name);
     }
 
-    this.id = options.character.id;
-    this.character = options.character;
+    this.id = options.id;
+    this.brief = options.brief;
     this.backend = options.backend;
     this.capabilities = snapshotBackendCapabilities(
       options.backend.capabilities
@@ -128,14 +128,18 @@ class AgentRuntime implements Agent {
     const visibleTools = allowedTools.map(
       (toolId) => this.toolsById.get(toolId) as AgentToolSpec
     );
+    const backendTools = visibleTools.map((tool) => ({
+      id: tool.id,
+      definition: tool.definition,
+    }));
     const backendInput: AgentBackendSessionInput = {
       agentId: this.id,
       sessionId,
       purpose: options.purpose,
       audience: options.audience,
       inputTrust: options.inputTrust,
-      character: this.character,
-      tools: visibleTools,
+      brief: this.brief,
+      tools: backendTools,
       ...(backendSessionId ? { backendSessionId } : {}),
     };
 

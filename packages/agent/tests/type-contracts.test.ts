@@ -5,10 +5,10 @@ import type {
   AgentArtifact,
   AgentBackend,
   AgentBackendCapabilities,
+  AgentBackendTool,
   AgentConversationInput,
   AgentEvent,
   AgentHook,
-  AgentMemoryStore,
   AgentOptions,
   AgentPolicy,
   AgentPolicyDecision,
@@ -17,7 +17,6 @@ import type {
   AgentSession,
   AgentToolHandler,
   AgentToolSpec,
-  CharacterProfile,
 } from '../src/index.js';
 import { createAgent } from '../src/index.js';
 import type { ToolDefinition } from '@aituber-onair/chat';
@@ -59,12 +58,15 @@ describe('public type surface', () => {
 
   it('exports the complete Phase 1 contract families', () => {
     expectTypeOf(createAgent).toBeFunction();
-    expectTypeOf<CharacterProfile>().toBeObject();
     expectTypeOf<Agent>().toBeObject();
     expectTypeOf<AgentOptions>().toBeObject();
+    expectTypeOf<AgentOptions['id']>().toEqualTypeOf<string>();
+    expectTypeOf<AgentOptions['brief']>().toEqualTypeOf<string>();
+    expectTypeOf<Agent['brief']>().toEqualTypeOf<string>();
     expectTypeOf<AgentSession>().toBeObject();
     expectTypeOf<AgentBackend>().toBeObject();
     expectTypeOf<AgentBackendCapabilities>().toBeObject();
+    expectTypeOf<AgentBackendTool>().toBeObject();
     expectTypeOf<AgentToolSpec>().toBeObject();
     expectTypeOf<AgentToolHandler>().toBeFunction();
     expectTypeOf<AgentPolicy>().toBeObject();
@@ -73,12 +75,25 @@ describe('public type surface', () => {
     expectTypeOf<AgentApprovalDecision>().toEqualTypeOf<
       'allow-once' | 'deny'
     >();
-    expectTypeOf<AgentMemoryStore>().toBeObject();
     expectTypeOf<AgentEvent>().toBeObject();
     expectTypeOf<AgentRunInput>().toBeObject();
     expectTypeOf<AgentRunResult>().toBeObject();
     expectTypeOf<AgentArtifact>().toBeObject();
     expectTypeOf<AgentHook>().toBeObject();
+  });
+
+  it('keeps executable Tool handlers out of backend descriptors', () => {
+    const backendTool: AgentBackendTool = {
+      id: 'comments.analyze',
+      definition: {
+        name: 'comments_analyze',
+        description: 'Analyze comments',
+        parameters: { type: 'object' },
+      },
+    };
+
+    // @ts-expect-error Backend descriptors never expose host handlers.
+    expect(backendTool.execute).toBeUndefined();
   });
 
   it('exports Chat backend contracts without constructing a service', () => {

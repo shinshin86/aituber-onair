@@ -5,26 +5,6 @@ export type JsonValue =
   | { readonly [key: string]: JsonValue }
   | readonly JsonValue[];
 
-export interface CharacterPersona {
-  readonly traits?: readonly string[];
-  readonly values?: readonly string[];
-  readonly priorities?: readonly string[];
-  readonly speakingStyle?: string;
-  readonly vocabulary?: readonly string[];
-  readonly prohibitedExpressions?: readonly string[];
-}
-
-export interface CharacterProfile {
-  readonly id: string;
-  readonly name: string;
-  readonly role: string;
-  readonly persona: CharacterPersona;
-  readonly instructions?: readonly string[];
-  readonly relationshipToUser?: string;
-  readonly boundaries?: readonly string[];
-  readonly metadata?: Readonly<Record<string, JsonValue>>;
-}
-
 export type AgentInputTrust = 'trusted' | 'untrusted';
 
 export type AgentAudience = 'operator' | 'owner' | 'private' | 'public';
@@ -103,6 +83,15 @@ export interface AgentToolDefinition {
   readonly parameters: Readonly<Record<string, unknown>>;
 }
 
+/**
+ * Backend-visible Tool metadata. Executable handlers and enforcement metadata
+ * remain inside the Agent runtime and never cross the backend boundary.
+ */
+export interface AgentBackendTool {
+  readonly id: string;
+  readonly definition: AgentToolDefinition;
+}
+
 export interface AgentToolExecutionContext {
   readonly agentId: string;
   readonly sessionId: string;
@@ -176,48 +165,6 @@ export interface AgentApprovalRequest {
 
 export type AgentApprovalDecision = 'allow-once' | 'deny';
 
-export interface AgentMemoryMetadata {
-  /** Absolute Unix epoch time in milliseconds. */
-  readonly expiresAt?: number;
-  readonly data?: Readonly<Record<string, JsonValue>>;
-}
-
-export interface AgentMemoryEntry<TValue extends JsonValue = JsonValue> {
-  readonly namespace: string;
-  readonly key: string;
-  readonly value: TValue;
-  readonly metadata?: AgentMemoryMetadata;
-}
-
-export interface AgentMemoryListOptions {
-  readonly prefix?: string;
-  readonly limit?: number;
-  readonly cursor?: string;
-}
-
-export interface AgentMemoryListResult<TValue extends JsonValue = JsonValue> {
-  readonly entries: readonly AgentMemoryEntry<TValue>[];
-  readonly nextCursor?: string;
-}
-
-export interface AgentMemoryStore {
-  get<TValue extends JsonValue = JsonValue>(
-    namespace: string,
-    key: string
-  ): Promise<AgentMemoryEntry<TValue> | undefined>;
-  set<TValue extends JsonValue = JsonValue>(
-    namespace: string,
-    key: string,
-    value: TValue,
-    metadata?: AgentMemoryMetadata
-  ): Promise<void>;
-  delete(namespace: string, key: string): Promise<boolean>;
-  list<TValue extends JsonValue = JsonValue>(
-    namespace: string,
-    options?: AgentMemoryListOptions
-  ): Promise<AgentMemoryListResult<TValue>>;
-}
-
 export type AgentHookPhase =
   | 'input'
   | 'context'
@@ -262,8 +209,9 @@ export interface AgentBackendSessionDescriptor {
 
 export interface AgentBackendSessionInput
   extends AgentBackendSessionDescriptor {
-  readonly character: CharacterProfile;
-  readonly tools: readonly AgentToolSpec[];
+  /** Natural-language identity, role, goals, and operating context. */
+  readonly brief: string;
+  readonly tools: readonly AgentBackendTool[];
   readonly backendSessionId?: string;
 }
 
@@ -331,17 +279,20 @@ export interface AgentSession {
 }
 
 export interface AgentOptions {
-  readonly character: CharacterProfile;
+  /** Stable application-owned identity used for events and persisted state. */
+  readonly id: string;
+  /**
+   * Natural-language seed for identity and assignment. The Agent may develop
+   * its own operating model, but this brief remains host-owned authority.
+   */
+  readonly brief: string;
   readonly backend: AgentBackend;
   readonly tools?: readonly AgentToolSpec[];
-  readonly memory?: AgentMemoryStore;
-  readonly policy?: AgentPolicy | AgentPolicyConfig;
-  readonly hooks?: readonly AgentHook[];
 }
 
 export interface Agent {
   readonly id: string;
-  readonly character: CharacterProfile;
+  readonly brief: string;
   readonly capabilities: Readonly<AgentBackendCapabilities>;
   startSession(options: AgentSessionOptions): Promise<AgentSession>;
   resumeSession(options: AgentResumeSessionOptions): Promise<AgentSession>;

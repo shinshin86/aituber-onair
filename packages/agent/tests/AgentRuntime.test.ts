@@ -4,17 +4,12 @@ import {
   AgentConfigurationError,
   AgentSessionClosedError,
 } from '../src/errors.js';
-import type { AgentToolSpec, CharacterProfile } from '../src/types.js';
+import type { AgentToolSpec } from '../src/types.js';
 import { MockBackend, completedTextStream } from './helpers/mockBackend.js';
 
-const character: CharacterProfile = {
+const agentDefinition = {
   id: 'miko',
-  name: 'Miko',
-  role: 'AI staff',
-  persona: {
-    traits: ['calm'],
-    values: ['evidence first'],
-  },
+  brief: 'You are Miko, calm AI staff who reports evidence first.',
 };
 
 const readTool: AgentToolSpec = {
@@ -29,20 +24,36 @@ const readTool: AgentToolSpec = {
 };
 
 describe('AgentRuntime', () => {
-  it('validates the character before creating an Agent', () => {
+  it('validates the definition before creating an Agent', () => {
     const backend = new MockBackend(() => completedTextStream());
 
+    expect(() => createAgent(null as never)).toThrow(AgentConfigurationError);
     expect(() =>
       createAgent({
-        character: { ...character, name: '' },
+        ...agentDefinition,
+        brief: '',
         backend,
       })
+    ).toThrow(AgentConfigurationError);
+    expect(() =>
+      createAgent({
+        ...agentDefinition,
+        backend,
+        policy: { defaultDecision: 'allow' },
+      } as never)
+    ).toThrow(AgentConfigurationError);
+    expect(() =>
+      createAgent({ ...agentDefinition, backend, memory: {} } as never)
     ).toThrow(AgentConfigurationError);
   });
 
   it('starts isolated Sessions with deny-by-default Tool visibility', async () => {
     const backend = new MockBackend(() => completedTextStream());
-    const agent = createAgent({ character, backend, tools: [readTool] });
+    const agent = createAgent({
+      ...agentDefinition,
+      backend,
+      tools: [readTool],
+    });
 
     const performer = await agent.startSession({
       purpose: 'performer',
@@ -56,18 +67,29 @@ describe('AgentRuntime', () => {
       allowedTools: ['comments.analyze'],
     });
 
-    expect(agent.id).toBe(character.id);
+    expect(agent.id).toBe(agentDefinition.id);
+    expect(agent.brief).toBe(agentDefinition.brief);
     expect(agent.capabilities).toEqual(backend.capabilities);
     expect(Object.isFrozen(agent.capabilities)).toBe(true);
     expect(performer.allowedTools).toEqual([]);
     expect(operator.allowedTools).toEqual(['comments.analyze']);
+    expect(backend.startInputs[0].brief).toBe(agentDefinition.brief);
+    expect(backend.startInputs[1].brief).toBe(agentDefinition.brief);
     expect(backend.startInputs[0].tools).toEqual([]);
-    expect(backend.startInputs[1].tools).toEqual([readTool]);
+    expect(backend.startInputs[1].tools).toEqual([
+      { id: readTool.id, definition: readTool.definition },
+    ]);
+    expect(backend.startInputs[1].tools[0]).not.toHaveProperty('execute');
+    expect(backend.startInputs[1].tools[0]).not.toHaveProperty('risk');
   });
 
   it('rejects an unknown Session Tool before starting the backend', async () => {
     const backend = new MockBackend(() => completedTextStream());
-    const agent = createAgent({ character, backend, tools: [readTool] });
+    const agent = createAgent({
+      ...agentDefinition,
+      backend,
+      tools: [readTool],
+    });
 
     await expect(
       agent.startSession({
@@ -85,7 +107,7 @@ describe('AgentRuntime', () => {
       sessionResume: false,
     });
     const unsupportedAgent = createAgent({
-      character,
+      ...agentDefinition,
       backend: unsupportedBackend,
     });
 
@@ -99,7 +121,7 @@ describe('AgentRuntime', () => {
     ).rejects.toThrow(AgentCapabilityError);
 
     const backend = new MockBackend(() => completedTextStream());
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const session = await agent.resumeSession({
       id: 'workspace-session',
       backendSessionId: 'existing-thread',
@@ -120,7 +142,7 @@ describe('AgentRuntime', () => {
 
   it('closes all Sessions and rejects new Sessions afterwards', async () => {
     const backend = new MockBackend(() => completedTextStream());
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     await agent.startSession({
       purpose: 'one',
       audience: 'private',
@@ -158,7 +180,7 @@ describe('AgentRuntime', () => {
       await startGate;
       return originalStartSession(input);
     });
-    const agent = createAgent({ character, backend });
+    const agent = createAgent({ ...agentDefinition, backend });
     const starting = agent.startSession({
       purpose: 'pending',
       audience: 'private',

@@ -50,7 +50,7 @@ npm --prefix packages/agent/examples/stream-operations-staff run build
 ### 固定フィクスチャ / モック
 
 - YouTube / Twitch のコメント受信、再生タイマー、コメントのUIラベル、Mikoの観測・提案、Agent Event、Tool Activity、配信後レポートは決定的な固定フィクスチャです。
-- `@aituber-onair/agent` は `CharacterProfile`、`AgentBackendEvent`、`AgentArtifact` などの型だけを `import type` で参照します。Agent runtime を起動・模倣しているとは主張しません。
+- `@aituber-onair/agent` は `AgentBackendEvent`、`AgentArtifact` などの型だけを `import type` で参照します。Agent runtime を起動・模倣しているとは主張しません。
 - `message.delta`、`tool.requested`、`artifact.created` などのイベント行は、UI表示確認用の公開可能なサンプルです。chain-of-thought や内部推論は含みません。
 - 分析エラーと自動復旧も、状態表示を確認するための固定シナリオです。
 - `report.submit` は画面内にローカル成果物を作る演出だけで、外部投稿・モデレーション・削除・BAN・タイムアウトは一切実行しません。

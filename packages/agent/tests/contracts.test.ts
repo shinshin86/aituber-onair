@@ -4,23 +4,17 @@ import {
   AgentError,
 } from '../src/errors.js';
 import {
-  assertCharacterProfile,
+  assertAgentDefinition,
   snapshotBackendCapabilities,
 } from '../src/internal/contracts.js';
-import type {
-  AgentBackendCapabilities,
-  CharacterProfile,
-} from '../src/types.js';
+import type { AgentBackendCapabilities } from '../src/types.js';
 
-const validCharacter: CharacterProfile = {
+const validAgentDefinition = {
   id: 'stream-operations-staff',
-  name: 'Mika',
-  role: 'Live-stream operations staff',
-  persona: {
-    traits: ['calm', 'observant'],
-    values: ['viewer safety'],
-  },
-  instructions: ['Separate observations from suggestions.'],
+  brief: `
+    You are Mika, calm and observant live-stream operations staff.
+    Protect viewer safety and separate observations from suggestions.
+  `,
 };
 
 const capabilities: AgentBackendCapabilities = {
@@ -34,41 +28,29 @@ const capabilities: AgentBackendCapabilities = {
 };
 
 describe('Phase 1 contracts', () => {
-  it('accepts a valid CharacterProfile', () => {
-    expect(() => assertCharacterProfile(validCharacter)).not.toThrow();
+  it('accepts a natural-language Agent definition', () => {
+    expect(() => assertAgentDefinition(validAgentDefinition)).not.toThrow();
   });
 
-  it('rejects invalid CharacterProfile fields with actionable issues', () => {
+  it('rejects invalid Agent definitions with actionable issues', () => {
     expect(() =>
-      assertCharacterProfile({
+      assertAgentDefinition({
         id: ' ',
-        name: '',
-        role: 42,
-        persona: {
-          traits: ['valid', ''],
-          speakingStyle: '',
-        },
-        instructions: ['valid', ''],
+        brief: '',
       })
     ).toThrow(AgentConfigurationError);
 
     try {
-      assertCharacterProfile({
+      assertAgentDefinition({
         id: ' ',
-        name: '',
-        role: 42,
-        persona: {
-          traits: ['valid', ''],
-        },
+        brief: 42,
       });
     } catch (error) {
       expect(error).toBeInstanceOf(AgentConfigurationError);
       expect((error as AgentConfigurationError).issues).toEqual(
         expect.arrayContaining([
-          'character.id must be a non-empty string',
-          'character.name must be a non-empty string',
-          'character.role must be a non-empty string',
-          'character.persona.traits must contain only non-empty strings',
+          'agent.id must be a non-empty string',
+          'agent.brief must be a non-empty string',
         ])
       );
     }

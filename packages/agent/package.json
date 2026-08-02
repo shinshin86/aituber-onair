@@ -2,7 +2,7 @@
   "name": "@aituber-onair/agent",
   "version": "0.0.0",
   "private": true,
-  "description": "Character-first agent runtime contracts for AITuber OnAir",
+  "description": "Embeddable runtime for giving AI characters jobs inside JavaScript and TypeScript products",
   "type": "module",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -40,7 +40,13 @@
     "fmt:check": "biome format .",
     "lint": "biome lint ."
   },
-  "keywords": ["aituber", "agent", "persona", "ai-character", "live-stream"],
+  "keywords": [
+    "aituber",
+    "agent",
+    "agent-runtime",
+    "ai-character",
+    "live-stream"
+  ],
   "author": "shinshin86 (https://github.com/shinshin86)",
   "license": "MIT",
   "repository": {
