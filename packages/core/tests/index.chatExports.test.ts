@@ -41,6 +41,8 @@ import {
   MODEL_KIMI_K2_5,
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_AUTO_BETA,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
   MODEL_OPENROUTER_FUSION,
   MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
@@ -98,13 +100,18 @@ import {
   allowsReasoningMax,
   getClaudeSupportedReasoningEfforts,
   getDefaultClaudeReasoningEffort,
+  getDefaultDeepSeekReasoningEffort,
   getDefaultXaiReasoningEffort,
   getDefaultGeminiReasoningEffort,
   getDefaultKimiReasoningEffort,
+  getDefaultOpenRouterReasoningEffort,
+  getDeepSeekSupportedReasoningEfforts,
   getGeminiSupportedReasoningEfforts,
   getKimiSupportedReasoningEfforts,
+  getOpenRouterSupportedReasoningEfforts,
   isResponsesOnlyGPT5Model,
   isClaudeReasoningEffortModel,
+  isDeepSeekReasoningEffortModel,
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
@@ -114,13 +121,17 @@ import {
   isXaiVisionModel,
   normalizeXaiReasoningEffort,
   normalizeClaudeReasoningEffort,
+  normalizeDeepSeekReasoningEffort,
   normalizeGeminiReasoningEffort,
+  normalizeOpenRouterReasoningEffort,
   refreshOpenRouterFreeModels,
   type ChatProviderCapabilities,
   type ClaudeReasoningEffort,
+  type DeepSeekReasoningEffort,
   type GeminiReasoningEffort,
   type GeminiNanoInitialPrompt,
   type KimiReasoningEffort,
+  type OpenRouterReasoningEffort,
   type RefreshOpenRouterFreeModelsResult,
   type VisionSupportLevel,
 } from '../src/index';
@@ -267,6 +278,8 @@ describe('Core index chat re-exports', () => {
   });
 
   it('re-exports DeepSeek chat provider items', () => {
+    const reasoningEffort: DeepSeekReasoningEffort = 'none';
+
     expect(typeof DeepSeekChatService).toBe('function');
     expect(MODEL_DEEPSEEK_V4_FLASH).toBe('deepseek-v4-flash');
     expect(MODEL_DEEPSEEK_V4_PRO).toBe('deepseek-v4-pro');
@@ -274,6 +287,17 @@ describe('Core index chat re-exports', () => {
       MODEL_DEEPSEEK_V4_FLASH,
       MODEL_DEEPSEEK_V4_PRO,
     ]);
+    expect(reasoningEffort).toBe('none');
+    expect(
+      getDeepSeekSupportedReasoningEfforts(MODEL_DEEPSEEK_V4_FLASH),
+    ).toEqual(['none', 'low', 'high', 'max']);
+    expect(isDeepSeekReasoningEffortModel(MODEL_DEEPSEEK_V4_FLASH)).toBe(true);
+    expect(getDefaultDeepSeekReasoningEffort(MODEL_DEEPSEEK_V4_FLASH)).toBe(
+      'none',
+    );
+    expect(
+      normalizeDeepSeekReasoningEffort(MODEL_DEEPSEEK_V4_FLASH, 'low'),
+    ).toBe('low');
   });
 
   it('re-exports Mistral chat provider items', () => {
@@ -320,11 +344,36 @@ describe('Core index chat re-exports', () => {
   });
 
   it('re-exports OpenRouter latest routed model constants', () => {
+    const reasoningEffort: OpenRouterReasoningEffort = 'none';
+
     expect(typeof OpenRouterChatService).toBe('function');
     expect(typeof OpenRouterChatServiceProvider).toBe('function');
     expect(MODEL_OPENROUTER_AUTO).toBe('openrouter/auto');
     expect(MODEL_OPENROUTER_AUTO_BETA).toBe('openrouter/auto-beta');
     expect(MODEL_OPENROUTER_FUSION).toBe('openrouter/fusion');
+    expect(MODEL_OPENROUTER_DEEPSEEK_V4_FLASH).toBe(
+      'deepseek/deepseek-v4-flash',
+    );
+    expect(MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731).toBe(
+      'deepseek/deepseek-v4-flash-0731',
+    );
+    expect(reasoningEffort).toBe('none');
+    expect(
+      getOpenRouterSupportedReasoningEfforts(
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+      ),
+    ).toEqual(['none', 'low', 'high', 'max']);
+    expect(
+      getDefaultOpenRouterReasoningEffort(
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+      ),
+    ).toBe('none');
+    expect(
+      normalizeOpenRouterReasoningEffort(
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+        'medium',
+      ),
+    ).toBe('low');
     expect(MODEL_ZAI_GLM_5_2).toBe('z-ai/glm-5.2');
     expect(MODEL_MOONSHOTAI_KIMI_K3).toBe('moonshotai/kimi-k3');
     expect(MODEL_MOONSHOTAI_KIMI_K2_7_CODE).toBe('moonshotai/kimi-k2.7-code');
@@ -407,6 +456,8 @@ describe('Core index chat re-exports', () => {
     expect(AITuberOnAirCore.getSupportedModels('openrouter')).toEqual(
       expect.arrayContaining([
         MODEL_OPENROUTER_AUTO_BETA,
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
         MODEL_MOONSHOTAI_KIMI_K3,
         MODEL_ANTHROPIC_CLAUDE_OPUS_5,
         MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,

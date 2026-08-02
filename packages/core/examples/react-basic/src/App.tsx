@@ -25,14 +25,19 @@ import {
   allowsReasoningXHigh,
   getClaudeSupportedReasoningEfforts,
   getDefaultClaudeReasoningEffort,
+  getDefaultDeepSeekReasoningEffort,
   getDefaultGeminiReasoningEffort,
   getDefaultKimiReasoningEffort,
+  getDefaultOpenRouterReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
+  getDeepSeekSupportedReasoningEfforts,
   getGeminiSupportedReasoningEfforts,
   getKimiSupportedReasoningEfforts,
+  getOpenRouterSupportedReasoningEfforts,
   getVoiceEngineVoiceList,
   isClaudeReasoningEffortModel,
+  isDeepSeekReasoningEffortModel,
   isGPT5Model,
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
@@ -40,12 +45,16 @@ import {
   isXaiReasoningEffortModel,
   isXaiReasoningEffortNoneModel,
   normalizeClaudeReasoningEffort,
+  normalizeDeepSeekReasoningEffort,
   normalizeGeminiReasoningEffort,
+  normalizeOpenRouterReasoningEffort,
   normalizeXaiReasoningEffort,
   refreshOpenRouterFreeModels,
   type ClaudeReasoningEffort,
+  type DeepSeekReasoningEffort,
   type GeminiReasoningEffort,
   type KimiReasoningEffort,
+  type OpenRouterReasoningEffort,
   type XaiReasoningEffort,
   type MinimaxModel,
   type MinimaxAudioFormat,
@@ -174,6 +183,39 @@ const normalizeReasoningEffortForKimiModel = (
   }
 
   return getDefaultKimiReasoningEffort(targetModel) ?? supportedEfforts[0];
+};
+
+const normalizeReasoningEffortForDeepSeekModel = (
+  targetModel: string | undefined,
+  effort?: ReasoningEffortLevel,
+): DeepSeekReasoningEffort | undefined => {
+  if (!targetModel) {
+    return undefined;
+  }
+
+  const requestedEffort: DeepSeekReasoningEffort | undefined =
+    effort === 'none' ||
+    effort === 'low' ||
+    effort === 'high' ||
+    effort === 'max'
+      ? effort
+      : undefined;
+
+  return normalizeDeepSeekReasoningEffort(targetModel, requestedEffort);
+};
+
+const normalizeReasoningEffortForOpenRouterModel = (
+  targetModel: string | undefined,
+  effort?: ReasoningEffortLevel,
+): OpenRouterReasoningEffort | undefined => {
+  if (!targetModel) {
+    return undefined;
+  }
+
+  return normalizeOpenRouterReasoningEffort(
+    targetModel,
+    effort as OpenRouterReasoningEffort | undefined,
+  );
 };
 
 // MiniMax Voice IDs with descriptions
@@ -1347,6 +1389,9 @@ const App: React.FC = () => {
         break;
       case 'deepseek':
         setModel(deepseekModels[0]);
+        setReasoningEffort(
+          getDefaultDeepSeekReasoningEffort(deepseekModels[0]) ?? 'none',
+        );
         break;
       case 'mistral':
         setModel(mistralModels[0]);
@@ -1359,6 +1404,9 @@ const App: React.FC = () => {
         break;
       case 'openrouter':
         setModel(openrouterModels[0]);
+        setReasoningEffort(
+          getDefaultOpenRouterReasoningEffort(openrouterModels[0]) ?? 'none',
+        );
         break;
       case 'openai-compatible':
         setModel(OPENAI_COMPATIBLE_DEFAULT_MODEL);
@@ -1471,6 +1519,36 @@ const App: React.FC = () => {
   }, [chatProvider, model, reasoning_effort]);
 
   useEffect(() => {
+    if (
+      chatProvider !== 'deepseek' ||
+      !model ||
+      !isDeepSeekReasoningEffortModel(model)
+    ) {
+      return;
+    }
+    const normalized = normalizeReasoningEffortForDeepSeekModel(
+      model,
+      reasoning_effort,
+    );
+    if (normalized && normalized !== reasoning_effort) {
+      setReasoningEffort(normalized);
+    }
+  }, [chatProvider, model, reasoning_effort]);
+
+  useEffect(() => {
+    if (chatProvider !== 'openrouter' || !model) {
+      return;
+    }
+    const normalized = normalizeReasoningEffortForOpenRouterModel(
+      model,
+      reasoning_effort,
+    );
+    if (normalized && normalized !== reasoning_effort) {
+      setReasoningEffort(normalized);
+    }
+  }, [chatProvider, model, reasoning_effort]);
+
+  useEffect(() => {
     if (chatProvider !== 'openai' || !model) {
       return;
     }
@@ -1486,14 +1564,18 @@ const App: React.FC = () => {
    * when GPT-5 preset changes, update verbosity and reasoning_effort
    */
   useEffect(() => {
-    if (gpt5Preset !== 'custom' && gpt5Preset in GPT5_PRESETS) {
+    if (
+      chatProvider === 'openai' &&
+      gpt5Preset !== 'custom' &&
+      gpt5Preset in GPT5_PRESETS
+    ) {
       const preset = GPT5_PRESETS[gpt5Preset];
       setVerbosity(preset.verbosity);
       setReasoningEffort(
         normalizeReasoningEffortForModel(model, preset.reasoning_effort),
       );
     }
-  }, [gpt5Preset, model]);
+  }, [chatProvider, gpt5Preset, model]);
 
   useEffect(() => {
     saveOpenRouterDynamicState(openRouterDynamicState);
@@ -1665,7 +1747,18 @@ const App: React.FC = () => {
         providerOptions.baseUrl = trimmedBaseUrl;
       }
     }
+    if (
+      chatProvider === 'deepseek' &&
+      model &&
+      isDeepSeekReasoningEffortModel(model)
+    ) {
+      providerOptions.reasoning_effort =
+        normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort);
+    }
     if (chatProvider === 'openrouter') {
+      providerOptions.reasoning_effort =
+        normalizeReasoningEffortForOpenRouterModel(model, reasoning_effort) ??
+        'none';
       const trimmedBaseUrl = openRouterBaseUrl.trim();
       if (trimmedBaseUrl) {
         providerOptions.baseUrl = trimmedBaseUrl;
@@ -2801,6 +2894,20 @@ const App: React.FC = () => {
     kimiSupportedReasoningEfforts.length > 0;
   const kimiReasoningEffortValue: KimiReasoningEffort =
     normalizeReasoningEffortForKimiModel(model, reasoning_effort) ?? 'max';
+  const deepSeekSupportedReasoningEfforts =
+    chatProvider === 'deepseek' && model
+      ? getDeepSeekSupportedReasoningEfforts(model)
+      : [];
+  const deepSeekReasoningEffortValue: DeepSeekReasoningEffort =
+    normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort) ??
+    'none';
+  const openRouterSupportedReasoningEfforts =
+    chatProvider === 'openrouter' && model
+      ? getOpenRouterSupportedReasoningEfforts(model)
+      : [];
+  const openRouterReasoningEffortValue: OpenRouterReasoningEffort =
+    normalizeReasoningEffortForOpenRouterModel(model, reasoning_effort) ??
+    'none';
   const getResponseLengthOptionLabel = (length: ChatResponseLength): string => {
     const label = RESPONSE_LENGTH_LABELS[length];
     const baseTokens = RESPONSE_LENGTH_BASE_TOKENS[length];
@@ -3317,6 +3424,42 @@ const App: React.FC = () => {
                     </>
                   )}
 
+                  {chatProvider === 'deepseek' && (
+                    <>
+                      <label htmlFor="deepSeekReasoningEffort">
+                        DeepSeek Reasoning Effort:
+                      </label>
+                      <select
+                        id="deepSeekReasoningEffort"
+                        value={deepSeekReasoningEffortValue}
+                        onChange={(e) =>
+                          setReasoningEffort(
+                            e.target.value as DeepSeekReasoningEffort,
+                          )
+                        }
+                      >
+                        {deepSeekSupportedReasoningEfforts.map((effort) => (
+                          <option key={effort} value={effort}>
+                            {effort === 'none'
+                              ? 'None (fastest)'
+                              : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                          </option>
+                        ))}
+                      </select>
+                      <div
+                        style={{
+                          marginTop: '6px',
+                          marginBottom: '12px',
+                          color: '#666',
+                          fontSize: '12px',
+                        }}
+                      >
+                        None disables thinking for responsive chat. Thinking
+                        with tool calling is not supported yet.
+                      </div>
+                    </>
+                  )}
+
                   {chatProvider === 'openrouter' && (
                     <>
                       <label htmlFor="openRouterBaseUrl">
@@ -3329,6 +3472,39 @@ const App: React.FC = () => {
                         value={openRouterBaseUrl}
                         onChange={(e) => setOpenRouterBaseUrl(e.target.value)}
                       />
+                      <label htmlFor="openRouterReasoningEffort">
+                        Reasoning Effort:
+                      </label>
+                      <select
+                        id="openRouterReasoningEffort"
+                        value={openRouterReasoningEffortValue}
+                        onChange={(e) =>
+                          setReasoningEffort(
+                            e.target.value as OpenRouterReasoningEffort,
+                          )
+                        }
+                      >
+                        {openRouterSupportedReasoningEfforts.map((effort) => (
+                          <option key={effort} value={effort}>
+                            {effort === 'none'
+                              ? 'None (fastest)'
+                              : effort === 'xhigh'
+                                ? 'XHigh'
+                                : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                          </option>
+                        ))}
+                      </select>
+                      <div
+                        style={{
+                          marginTop: '6px',
+                          marginBottom: '12px',
+                          color: '#666',
+                          fontSize: '12px',
+                        }}
+                      >
+                        Options follow the selected model. None explicitly
+                        disables reasoning for faster responses.
+                      </div>
                       <label htmlFor="openRouterMaxCandidates">
                         Max candidates:
                       </label>
