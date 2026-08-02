@@ -123,9 +123,12 @@ event を通じてそれらを組み合わせます。
 
 ## 公開型
 
-base entry point は、実行環境に依存しない型と型付きエラーを公開します。
+base entry point は、実行環境に依存しない Agent factory、型、型付きエラーを
+公開します。
 
 ```ts
+import { createAgent } from '@aituber-onair/agent';
+
 import type {
   Agent,
   AgentArtifact,
@@ -185,6 +188,8 @@ CharacterProfile は provider 固有の prompt 文字列ではありません。
 組み合わせた実行単位です。
 
 同じ Agent から、目的と権限が異なる複数の Session を作成できます。
+`createAgent({ character, backend, ... })`で作成し、Session を開始する前に
+CharacterProfile の検証と backend capability の snapshot を行います。
 
 ### AgentSession
 

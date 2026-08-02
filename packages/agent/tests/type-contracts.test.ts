@@ -19,6 +19,7 @@ import type {
   AgentToolSpec,
   CharacterProfile,
 } from '../src/index.js';
+import { createAgent } from '../src/index.js';
 import type { ToolDefinition } from '@aituber-onair/chat';
 import type {
   ChatServiceBackend,
@@ -57,6 +58,7 @@ describe('public type surface', () => {
   });
 
   it('exports the complete Phase 1 contract families', () => {
+    expectTypeOf(createAgent).toBeFunction();
     expectTypeOf<CharacterProfile>().toBeObject();
     expectTypeOf<Agent>().toBeObject();
     expectTypeOf<AgentOptions>().toBeObject();

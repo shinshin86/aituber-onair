@@ -125,9 +125,12 @@ tools, hooks, context, and events.
 
 ## Public contracts
 
-The base entry point contains cross-runtime contracts and typed errors:
+The base entry point contains the cross-runtime Agent factory, contracts, and
+typed errors:
 
 ```ts
+import { createAgent } from '@aituber-onair/agent';
+
 import type {
   Agent,
   AgentArtifact,
@@ -187,6 +190,9 @@ An execution unit that combines one CharacterProfile with a backend, tools,
 memory, hooks, and policy.
 
 One Agent can create multiple Sessions with different purposes and permissions.
+Create it with `createAgent({ character, backend, ... })`; the factory validates
+the CharacterProfile and snapshots backend capabilities before any Session is
+started.
 
 ### AgentSession
 

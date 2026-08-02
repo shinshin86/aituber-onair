@@ -5,6 +5,10 @@ const browserEntrySources = [
   '../src/errors.ts',
   '../src/types.ts',
   '../src/chat.ts',
+  '../src/core/AgentRuntime.ts',
+  '../src/core/AgentSession.ts',
+  '../src/core/AsyncEventQueue.ts',
+  '../src/core/ids.ts',
 ] as const;
 
 describe('browser entry boundary', () => {

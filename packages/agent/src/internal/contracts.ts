@@ -24,7 +24,7 @@ function validateOptionalStringArray(
 }
 
 /**
- * Runtime validation used by the future createAgent implementation.
+ * Runtime validation used by createAgent.
  * Kept internal until a standalone validator has a demonstrated public use.
  */
 export function assertCharacterProfile(

@@ -1,0 +1,181 @@
+import { createAgent } from '../src/index.js';
+import {
+  AgentCapabilityError,
+  AgentConfigurationError,
+  AgentSessionClosedError,
+} from '../src/errors.js';
+import type { AgentToolSpec, CharacterProfile } from '../src/types.js';
+import { MockBackend, completedTextStream } from './helpers/mockBackend.js';
+
+const character: CharacterProfile = {
+  id: 'miko',
+  name: 'Miko',
+  role: 'AI staff',
+  persona: {
+    traits: ['calm'],
+    values: ['evidence first'],
+  },
+};
+
+const readTool: AgentToolSpec = {
+  id: 'comments.analyze',
+  definition: {
+    name: 'comments_analyze',
+    description: 'Analyze comments',
+    parameters: { type: 'object' },
+  },
+  risk: 'read',
+  execute: async () => ({ ok: true }),
+};
+
+describe('AgentRuntime', () => {
+  it('validates the character before creating an Agent', () => {
+    const backend = new MockBackend(() => completedTextStream());
+
+    expect(() =>
+      createAgent({
+        character: { ...character, name: '' },
+        backend,
+      })
+    ).toThrow(AgentConfigurationError);
+  });
+
+  it('starts isolated Sessions with deny-by-default Tool visibility', async () => {
+    const backend = new MockBackend(() => completedTextStream());
+    const agent = createAgent({ character, backend, tools: [readTool] });
+
+    const performer = await agent.startSession({
+      purpose: 'performer',
+      audience: 'public',
+      inputTrust: 'untrusted',
+    });
+    const operator = await agent.startSession({
+      purpose: 'operations',
+      audience: 'operator',
+      inputTrust: 'trusted',
+      allowedTools: ['comments.analyze'],
+    });
+
+    expect(agent.id).toBe(character.id);
+    expect(agent.capabilities).toEqual(backend.capabilities);
+    expect(Object.isFrozen(agent.capabilities)).toBe(true);
+    expect(performer.allowedTools).toEqual([]);
+    expect(operator.allowedTools).toEqual(['comments.analyze']);
+    expect(backend.startInputs[0].tools).toEqual([]);
+    expect(backend.startInputs[1].tools).toEqual([readTool]);
+  });
+
+  it('rejects an unknown Session Tool before starting the backend', async () => {
+    const backend = new MockBackend(() => completedTextStream());
+    const agent = createAgent({ character, backend, tools: [readTool] });
+
+    await expect(
+      agent.startSession({
+        purpose: 'operations',
+        audience: 'operator',
+        inputTrust: 'trusted',
+        allowedTools: ['workspace.write'],
+      })
+    ).rejects.toThrow(AgentConfigurationError);
+    expect(backend.startInputs).toHaveLength(0);
+  });
+
+  it('resumes only when the backend declares resume support', async () => {
+    const unsupportedBackend = new MockBackend(() => completedTextStream(), {
+      sessionResume: false,
+    });
+    const unsupportedAgent = createAgent({
+      character,
+      backend: unsupportedBackend,
+    });
+
+    await expect(
+      unsupportedAgent.resumeSession({
+        backendSessionId: 'existing-thread',
+        purpose: 'workspace',
+        audience: 'owner',
+        inputTrust: 'trusted',
+      })
+    ).rejects.toThrow(AgentCapabilityError);
+
+    const backend = new MockBackend(() => completedTextStream());
+    const agent = createAgent({ character, backend });
+    const session = await agent.resumeSession({
+      id: 'workspace-session',
+      backendSessionId: 'existing-thread',
+      purpose: 'workspace',
+      audience: 'owner',
+      inputTrust: 'trusted',
+    });
+    const events = await collectEvents(
+      session.runStream({ instruction: 'Inspect the workspace.' })
+    );
+
+    expect(backend.startInputs[0].backendSessionId).toBe('existing-thread');
+    expect(events[0]).toMatchObject({
+      type: 'session.resumed',
+      backendSessionId: 'existing-thread',
+    });
+  });
+
+  it('closes all Sessions and rejects new Sessions afterwards', async () => {
+    const backend = new MockBackend(() => completedTextStream());
+    const agent = createAgent({ character, backend });
+    await agent.startSession({
+      purpose: 'one',
+      audience: 'private',
+      inputTrust: 'trusted',
+    });
+    await agent.startSession({
+      purpose: 'two',
+      audience: 'private',
+      inputTrust: 'trusted',
+    });
+
+    await agent.close();
+    await agent.close();
+
+    expect(backend.sessions.map((session) => session.closeCalls)).toEqual([
+      1, 1,
+    ]);
+    await expect(
+      agent.startSession({
+        purpose: 'late',
+        audience: 'private',
+        inputTrust: 'trusted',
+      })
+    ).rejects.toThrow(AgentSessionClosedError);
+  });
+
+  it('waits for a Session that is still starting before Agent close completes', async () => {
+    const backend = new MockBackend(() => completedTextStream());
+    const originalStartSession = backend.startSession.bind(backend);
+    let releaseStart: (() => void) | undefined;
+    const startGate = new Promise<void>((resolve) => {
+      releaseStart = resolve;
+    });
+    vi.spyOn(backend, 'startSession').mockImplementation(async (input) => {
+      await startGate;
+      return originalStartSession(input);
+    });
+    const agent = createAgent({ character, backend });
+    const starting = agent.startSession({
+      purpose: 'pending',
+      audience: 'private',
+      inputTrust: 'trusted',
+    });
+
+    const closing = agent.close();
+    releaseStart?.();
+
+    await expect(starting).rejects.toThrow(AgentSessionClosedError);
+    await closing;
+    expect(backend.sessions[0].closeCalls).toBe(1);
+  });
+});
+
+async function collectEvents<T>(events: AsyncIterable<T>): Promise<T[]> {
+  const collected: T[] = [];
+  for await (const event of events) collected.push(event);
+  return collected;
+}
