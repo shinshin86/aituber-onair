@@ -10,6 +10,8 @@ import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 import type { ChatProviderCapabilities } from '../types/capabilities';
 import { getClaudeSupportedReasoningEfforts } from '../constants/claude';
 import { getKimiSupportedReasoningEfforts } from '../constants/kimi';
+import { getDeepSeekSupportedReasoningEfforts } from '../constants/deepseek';
+import { getOpenRouterSupportedReasoningEfforts } from '../constants/openrouter';
 
 const TOOL_SUPPORTED_PROVIDERS = new Set<string>([
   'openai',
@@ -39,11 +41,12 @@ const REASONING_EFFORT_BY_PROVIDER: Record<string, string[]> = {
   openai: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
   claude: ['low', 'medium', 'high', 'xhigh', 'max'],
   gemini: ['minimal', 'low', 'medium', 'high'],
-  openrouter: ['none', 'minimal', 'low', 'medium', 'high'],
+  openrouter: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
   kimi: ['low', 'high', 'max'],
   mistral: ['low', 'medium', 'high'],
   plamo: ['none', 'medium'],
   xai: ['none', 'low', 'medium', 'high'],
+  deepseek: ['none', 'low', 'high', 'max'],
 };
 
 /**
@@ -144,7 +147,11 @@ export class ChatServiceFactory {
           ? [...getClaudeSupportedReasoningEfforts(model)]
           : providerName === 'kimi' && model
             ? [...getKimiSupportedReasoningEfforts(model)]
-            : (REASONING_EFFORT_BY_PROVIDER[providerName] ?? []),
+            : providerName === 'deepseek' && model
+              ? [...getDeepSeekSupportedReasoningEfforts(model)]
+              : providerName === 'openrouter' && model
+                ? [...getOpenRouterSupportedReasoningEfforts(model)]
+                : (REASONING_EFFORT_BY_PROVIDER[providerName] ?? []),
     };
   }
 

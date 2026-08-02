@@ -10,15 +10,19 @@ import {
   getDefaultClaudeReasoningEffort,
   getDefaultGeminiReasoningEffort,
   getDefaultKimiReasoningEffort,
+  getDefaultDeepSeekReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
   isClaudeReasoningEffortModel,
   isGPT5Model,
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
+  isDeepSeekReasoningEffortModel,
   isXaiReasoningEffortModel,
   normalizeGeminiReasoningEffort,
   normalizeClaudeReasoningEffort,
   normalizeXaiReasoningEffort,
+  normalizeDeepSeekReasoningEffort,
+  normalizeOpenRouterReasoningEffort,
   type Message,
   type MessageWithVision,
   type ChatResponseLength,
@@ -27,6 +31,8 @@ import {
   type GeminiReasoningEffort,
   type GeminiNanoInitialPrompt,
   type KimiReasoningEffort,
+  type DeepSeekReasoningEffort,
+  type OpenRouterReasoningEffort,
   type ChatCompletionAssistantMessage,
 } from '@aituber-onair/chat';
 import './App.css';
@@ -151,9 +157,8 @@ function App() {
     DEFAULT_OPENAI_COMPAT_ENDPOINT,
   );
   const [enableReasoningSummary, setEnableReasoningSummary] = useState(false);
-  const [openrouterReasoningEffort, setOpenrouterReasoningEffort] = useState<
-    'none' | 'minimal' | 'low' | 'medium' | 'high'
-  >('none');
+  const [openrouterReasoningEffort, setOpenrouterReasoningEffort] =
+    useState<OpenRouterReasoningEffort>('none');
   const [openrouterIncludeReasoning, setOpenrouterIncludeReasoning] =
     useState(false);
   const [openrouterReasoningMaxTokens, setOpenrouterReasoningMaxTokens] =
@@ -222,6 +227,18 @@ function App() {
     requestedKimiReasoningEffort ??
     getDefaultKimiReasoningEffort(selectedModel) ??
     'max';
+  const requestedDeepSeekReasoningEffort: DeepSeekReasoningEffort | undefined =
+    reasoning_effort === 'none' ||
+    reasoning_effort === 'low' ||
+    reasoning_effort === 'high' ||
+    reasoning_effort === 'max'
+      ? reasoning_effort
+      : undefined;
+  const deepSeekReasoningEffort =
+    normalizeDeepSeekReasoningEffort(
+      selectedModel,
+      requestedDeepSeekReasoningEffort,
+    ) ?? 'none';
   const visionSupportLevel = getVisionSupportLevel(provider, selectedModel);
   const effectiveApiKey =
     provider === 'openai-compatible' ? apiKey.trim() : apiKey;
@@ -311,6 +328,13 @@ function App() {
           }
         }
 
+        if (
+          provider === 'deepseek' &&
+          isDeepSeekReasoningEffortModel(selectedModel)
+        ) {
+          options.reasoning_effort = deepSeekReasoningEffort;
+        }
+
         if (provider === 'xai' && isXaiReasoningEffortModel(selectedModel)) {
           options.reasoning_effort = xaiReasoningEffort;
         }
@@ -378,6 +402,7 @@ function App() {
     geminiReasoningEffort,
     xaiReasoningEffort,
     kimiReasoningEffort,
+    deepSeekReasoningEffort,
     verbosity,
     gpt5EndpointPreference,
     openaiCompatibleEndpoint,
@@ -565,6 +590,10 @@ function App() {
                 isXaiReasoningEffortModel(defaultModel)
               ) {
                 setReasoningEffort('none');
+              } else if (newProvider === 'deepseek') {
+                setReasoningEffort(
+                  getDefaultDeepSeekReasoningEffort(defaultModel) ?? 'none',
+                );
               } else {
                 setReasoningEffort('medium');
               }
@@ -624,6 +653,20 @@ function App() {
                 setReasoningEffort(
                   getDefaultKimiReasoningEffort(modelId) ?? 'max',
                 );
+              } else if (newProvider === 'deepseek') {
+                setReasoningEffort(
+                  normalizeDeepSeekReasoningEffort(
+                    modelId,
+                    requestedDeepSeekReasoningEffort,
+                  ) ?? 'none',
+                );
+              } else if (newProvider === 'openrouter') {
+                setOpenrouterReasoningEffort(
+                  normalizeOpenRouterReasoningEffort(
+                    modelId,
+                    openrouterReasoningEffort,
+                  ) ?? 'none',
+                );
               }
             }}
             gpt5Preset={gpt5Preset}
@@ -637,7 +680,9 @@ function App() {
                     ? (geminiReasoningEffort ?? 'minimal')
                     : provider === 'kimi'
                       ? kimiReasoningEffort
-                      : normalizedReasoningEffort
+                      : provider === 'deepseek'
+                        ? deepSeekReasoningEffort
+                        : normalizedReasoningEffort
             }
             onReasoningEffortChange={setReasoningEffort}
             verbosity={verbosity}

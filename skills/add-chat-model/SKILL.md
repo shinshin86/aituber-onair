@@ -20,8 +20,9 @@ This skill is a `@aituber-onair/chat` model-addition and optional
 workflow. When release work is requested for a chat model addition, the only
 package that should receive a version bump and changelog entry from this skill
 is `@aituber-onair/chat`. Dependent packages may need dependency range and
-lockfile metadata updates for install consistency, but they must not be treated
-as release targets.
+root lockfile updates for install consistency, but they must not be treated as
+release targets. Example lockfiles are updated only when their own manifests or
+an explicitly requested core propagation change requires it.
 
 ## Inputs
 
@@ -142,10 +143,29 @@ Collect missing inputs before editing:
        package's version, revert the version/changelog change rather than
        expanding the release scope.
    - Update lockfiles affected by version/range changes:
-     - `package-lock.json`
-     - package/example lockfiles that embed workspace metadata when changed
+     - Always refresh the repository root `package-lock.json` after changing
+       package versions or direct workspace dependency ranges.
+     - Update a package/example lockfile only when its own `package.json`
+       changed or an explicitly requested propagation task requires it.
+     - Do not mechanically refresh `packages/core/examples/*/package-lock.json`
+       only because their embedded `file:../..` workspace metadata reflects the
+       new chat version. These files trigger `Create Template Smoke` through
+       `.github/workflows/create-template-smoke.yml`.
+     - Before the new chat version is published, that smoke workflow packs
+       `@aituber-onair/core` locally but resolves its chat dependency from the
+       npm registry. If a core example lockfile refresh changes the embedded
+       range to the unreleased version, all generated starters fail with
+       `ETARGET: No matching version found for @aituber-onair/chat@^<version>`.
+     - If core example changes are genuinely required, use
+       `$sync-core-after-chat-upgrade` and ensure the smoke flow provides the
+       unreleased chat package as a local tarball, or keep the propagation
+       separate until the chat version is published. Do not rely on the npm
+       registry to resolve an unreleased workspace version.
    - Follow repository rule: do not create `.changeset/*`.
 11. Verify:
+   - Compare the branch against its base and remove incidental core example
+     lockfile-only changes before committing:
+     `git diff --name-only origin/main -- packages/core/examples`.
    - Run lockfile/install sanity check.
    - Run chat package tests.
    - Run typecheck/build for chat package.
@@ -176,6 +196,7 @@ npm -w @aituber-onair/chat run test
 npm -w @aituber-onair/chat run typecheck
 npm -w @aituber-onair/chat run build
 npm -w @aituber-onair/core run typecheck
+git diff --name-only origin/main -- packages/core/examples
 rg "<model_id>" packages/chat
 rg "v1beta|streamGenerateContent|generateContent" packages/chat/src/services/providers
 ```
@@ -196,5 +217,7 @@ rg "v1beta|streamGenerateContent|generateContent" packages/chat/src/services/pro
 - Version and changelog are updated when `bump_version` is `true`.
 - `@aituber-onair/core` dependency range is aligned to the new chat version.
 - Lockfiles are consistent and `npm ci` succeeds.
+- No incidental `packages/core/examples/*/package-lock.json` refresh causes
+  template smoke tests to resolve an unreleased chat version from npm.
 - The user is asked whether to run `$sync-core-after-chat-upgrade` after chat
   updates finish (unless already requested explicitly).
