@@ -5,6 +5,12 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
+const voiceMockState = vi.hoisted(() => ({
+  engine: 'off',
+  aivisState: 'unchecked',
+  voiceError: null as string | null,
+}));
+
 vi.mock('@aituber-onair/comment-intelligence', () => ({
   createCommentIntelligence: () => ({
     analyze: vi.fn(async () => ({ safetyReports: [] })),
@@ -17,10 +23,10 @@ vi.mock('./components/AvatarCanvas', () => ({
 
 vi.mock('./hooks/useMikoVoice', () => ({
   useMikoVoice: () => ({
-    engine: 'off',
+    engine: voiceMockState.engine,
     setEngine: vi.fn(),
     webVoice: null,
-    aivisState: 'unchecked',
+    aivisState: voiceMockState.aivisState,
     aivisVoices: [],
     aivisSpeaker: '',
     selectAivisSpeaker: vi.fn(),
@@ -28,7 +34,7 @@ vi.mock('./hooks/useMikoVoice', () => ({
     isSpeaking: false,
     speakingReportKind: null,
     voiceNotice: null,
-    voiceError: null,
+    voiceError: voiceMockState.voiceError,
   }),
 }));
 
@@ -38,6 +44,9 @@ describe('stream operations fixture playback', () => {
 
   beforeEach(async () => {
     vi.useFakeTimers();
+    voiceMockState.engine = 'off';
+    voiceMockState.aivisState = 'unchecked';
+    voiceMockState.voiceError = null;
     (
       globalThis as typeof globalThis & {
         IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -53,6 +62,29 @@ describe('stream operations fixture playback', () => {
     await act(async () => root.unmount());
     container.remove();
     vi.useRealTimers();
+  });
+
+  it('allows AivisSpeech to be selected before a connection check', () => {
+    const option = container.querySelector('option[value="aivisSpeech"]');
+    expect(option).toBeInstanceOf(HTMLOptionElement);
+    expect((option as HTMLOptionElement).disabled).toBe(false);
+  });
+
+  it('shows the AivisSpeech connection error without changing the selection', async () => {
+    voiceMockState.engine = 'aivisSpeech';
+    voiceMockState.aivisState = 'unavailable';
+    voiceMockState.voiceError =
+      'AivisSpeechに接続できませんでした。アプリを起動して再確認してください';
+    await act(async () => root.render(<App />));
+
+    const engineSelect = container.querySelector('#miko-voice-engine');
+    expect((engineSelect as HTMLSelectElement).value).toBe('aivisSpeech');
+    expect(
+      container.querySelector('.voice-source-status')?.textContent
+    ).toContain('接続できません');
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      'AivisSpeechに接続できませんでした'
+    );
   });
 
   it('recovers from the fixture error and completes all comments', async () => {

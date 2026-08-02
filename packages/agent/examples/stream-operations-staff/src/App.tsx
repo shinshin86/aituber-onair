@@ -656,7 +656,7 @@ function VoiceControls({
         ? '確認中…'
         : aivisState === 'available'
           ? '接続済み'
-          : '起動していません';
+          : '接続できません';
 
   return (
     <section className="voice-controls" aria-label="Mikoの音声設定">
@@ -671,9 +671,7 @@ function VoiceControls({
         >
           <option value="off">OFF</option>
           <option value="webSpeech">ブラウザ標準（Web Speech）</option>
-          <option value="aivisSpeech" disabled={aivisState !== 'available'}>
-            AivisSpeech（ローカル）
-          </option>
+          <option value="aivisSpeech">AivisSpeech（ローカル）</option>
         </select>
       </div>
 

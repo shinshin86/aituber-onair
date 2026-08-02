@@ -17,6 +17,10 @@ export type AivisConnectionState =
 const AIVIS_CHECK_TIMEOUT_MS = 1_500;
 const DEFAULT_UTTERANCE_TIMEOUT_MS = 30_000;
 const VOICE_TIMEOUT_NOTICE = '音声の生成に時間がかかったためスキップしました';
+const AIVIS_CONNECTION_ERROR =
+  'AivisSpeechに接続できませんでした。アプリを起動して再確認してください';
+const AIVIS_DISCONNECTED_ERROR =
+  'AivisSpeechとの接続が切れました。接続状態を確認して再確認してください';
 
 class VoiceUtteranceTimeoutError extends Error {
   constructor() {
@@ -126,9 +130,7 @@ export function useMikoVoice({ reports, phase, runId }: UseMikoVoiceOptions) {
       setAivisVoices([]);
       setAivisSpeaker('');
       setAivisState('unavailable');
-      setEngineState((current) =>
-        current === 'aivisSpeech' ? 'off' : current
-      );
+      setVoiceError(AIVIS_CONNECTION_ERROR);
     } finally {
       window.clearTimeout(timeoutId);
     }
@@ -156,7 +158,6 @@ export function useMikoVoice({ reports, phase, runId }: UseMikoVoiceOptions) {
 
   useEffect(() => {
     cancelQueue();
-    setVoiceError(null);
 
     if (engine === 'webSpeech') {
       serviceFactoryRef.current = () =>
@@ -223,11 +224,16 @@ export function useMikoVoice({ reports, phase, runId }: UseMikoVoiceOptions) {
           }
 
           queueRef.current = [];
-          setVoiceError(
-            error instanceof Error
-              ? error.message
-              : '音声を再生できませんでした'
-          );
+          if (engine === 'aivisSpeech') {
+            setAivisState('unavailable');
+            setVoiceError(AIVIS_DISCONNECTED_ERROR);
+          } else {
+            setVoiceError(
+              error instanceof Error
+                ? error.message
+                : '音声を再生できませんでした'
+            );
+          }
           break;
         } finally {
           if (generation === generationRef.current) {
@@ -241,7 +247,7 @@ export function useMikoVoice({ reports, phase, runId }: UseMikoVoiceOptions) {
         activeWorkerRef.current = null;
       }
     })();
-  }, []);
+  }, [engine]);
 
   useEffect(() => {
     const unseenReports = [...reports]
@@ -285,13 +291,13 @@ export function useMikoVoice({ reports, phase, runId }: UseMikoVoiceOptions) {
 
   const setEngine = useCallback(
     (nextEngine: MikoVoiceEngine) => {
-      if (nextEngine === 'aivisSpeech' && aivisState !== 'available') return;
       cancelQueue();
       setVoiceNotice(null);
       setVoiceError(null);
       setEngineState(nextEngine);
+      if (nextEngine === 'aivisSpeech') void refreshAivis();
     },
-    [aivisState, cancelQueue]
+    [cancelQueue, refreshAivis]
   );
 
   const selectAivisSpeaker = useCallback(
