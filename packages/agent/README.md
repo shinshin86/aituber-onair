@@ -5,162 +5,144 @@
 An embeddable runtime for giving an AI character a job inside a JavaScript or
 TypeScript product.
 
-This README defines the package's public design contract rather than a
-per-version availability matrix. Behavioral sections are requirements for
-conforming implementations; they do not claim that every described path is
-executable in every version. Type-only exports and backend capability flags
-alone do not prove end-to-end availability.
+> [!NOTE]
+> This package is under development and is not yet usable as a complete
+> LLM-backed agent. The sections below describe the product being built.
 
-## Overview
+## What this package is
 
-`@aituber-onair/chat` provides a unified interface for communicating with
-language models. `@aituber-onair/agent` adds the lifecycle and control plane
-needed for a character to understand an assigned role, organize its own way of
-working, and act within the boundaries of the host product.
+`@aituber-onair/chat` lets an application communicate with language models.
+`@aituber-onair/agent` is intended to turn an AI character into a managed member
+of a product: a character that understands its assignment, organizes its work,
+uses approved capabilities, and asks a human for help when necessary.
 
-The host provides:
+The host application will provide:
 
-- a natural-language brief describing the character and assignment;
-- a bounded set of tools, services, credentials, and workspace access;
-- hard policy and approval rules; and
-- application events that wake or direct the Agent.
+- a natural-language brief describing the character and its assignment;
+- the tools, services, credentials, and workspace the character may use;
+- rules for operations that must be denied or approved; and
+- product events that start or resume the character's work.
 
-Within that envelope, the Agent can decide which capabilities it needs, create
-its own notes or data structures, develop procedures, retain useful state, and
-ask a human for help when its role or available evidence is insufficient. The
-package does not impose a schema for job titles, responsibilities, task queues,
-or character memory.
+Within those limits, the character will be able to choose how to organize its
+notes, procedures, database, and long-term working state. The package will not
+force applications to use fixed schemas for job titles, responsibilities, task
+queues, or character memory.
 
-Agentic action always remains within the host application's lifecycle. The host
-may keep an Agent available continuously, but this package does not create an
-unmanaged daemon, grant its own credentials, or let model-authored state become
-a permission boundary.
+The host application will always own the Agent's lifecycle and authority. The
+character will not be able to grant itself new tools, credentials, network
+access, or writable locations.
 
-## How this differs from personal AI assistants
+## How it differs from personal AI assistants
 
-[OpenClaw](https://openclaw.ai/) and
-[Hermes Agent](https://hermes-agent.nousresearch.com/) are strong choices when
-a user wants a complete personal AI assistant with its own runtime surfaces.
-`@aituber-onair/agent` addresses a different primary use case: a product
-developer wants a character owned by that product to perform a particular role
-inside an existing JavaScript or TypeScript application.
+[OpenClaw](https://docs.openclaw.ai/) and
+[Hermes Agent](https://hermes-agent.nousresearch.com/docs/) are primarily
+complete runtimes for an assistant that works for its user.
+`@aituber-onair/agent` is intended for a different situation: a developer
+already has a product and wants an AI character to work inside it.
 
-| Aspect | Personal AI assistants such as OpenClaw or Hermes Agent | `@aituber-onair/agent` |
+| | Personal AI assistant | `@aituber-onair/agent` |
 | --- | --- | --- |
-| Primary subject | An assistant working for its user | A character working inside a product |
-| Primary delivery | A complete agent application, service, or gateway | An npm package embedded into the host application |
-| Lifecycle owner | The agent runtime normally owns its long-lived process and surfaces | The host application starts, resumes, interrupts, and closes the Agent |
-| Identity | A personalized assistant identity | A product-owned character identity shared across public and private roles |
-| Self-configuration | Organizes a personal assistant environment | Organizes its work inside a host-granted capability envelope |
-| Integration focus | General channels, tools, skills, and automation | Typed product events plus AITuber OnAir voice, avatar, comment, and relationship packages |
-| Trust model | General user, channel, and tool controls | Explicit separation between public untrusted input and private privileged Sessions |
+| Works for | An individual user | A product or service |
+| Delivered as | An agent application, service, or gateway | An npm package embedded in an application |
+| Identity | The user's assistant | A character owned by the product |
+| Lifecycle | Managed mainly by the agent runtime | Managed by the host application |
+| Integration | General messaging, tools, and automation | Product events and AITuber OnAir packages |
 
-This package is not intended to be a smaller replacement for either project.
-Choose a personal AI runtime when the main product is the assistant itself.
-Choose `@aituber-onair/agent` when the main product already exists and needs an
-AI character to live and work inside it.
-
-The backend boundary also leaves room for agent harnesses to become execution
-engines rather than competitors. A character may use ChatService for a public
-conversation and Codex app-server for constrained workspace work while the host
-keeps one application-level identity and authority model.
+This package is not intended to replace OpenClaw or Hermes Agent. Choose a
+personal AI assistant when the assistant itself is the product. When complete,
+this package is intended for existing JavaScript or TypeScript products that
+need their own AI character.
 
 ## Use cases
 
 ### AI staff for live-stream monitoring and operations
 
-The same character can act as an on-stream performer and as private AI staff
-that monitors the live stream and supports its operation.
+The same character will be able to appear on a live stream and also work
+privately as staff that monitors and supports the stream.
 
-A host application can:
+A host application will be able to:
 
 1. receive comments from YouTube, Twitch, WebSocket, or another source;
 2. analyze safety, priority, topics, questions, and repetition with
    `@aituber-onair/comment-intelligence`;
-3. pass trusted analysis results and stream state to an operations Session;
-4. let the character organize its own monitoring notes and procedures;
-5. notify the operator about warnings, trends, and decisions that need human
-   judgment; and
+3. give analysis accepted by the host, together with the stream state, to a
+   private operations Session;
+4. let the character organize monitoring notes and operating procedures;
+5. notify an operator when attention or human judgment is required; and
 6. create a structured post-stream report for a dashboard or notification UI.
 
-The Agent returns structured events, messages, and artifacts. Rendering a
-dashboard, receiving platform events, and delivering notifications remain host
-application responsibilities.
+The dashboard, platform connections, and notification delivery remain the
+responsibility of the host application.
+
+The existing `stream-operations-staff` example is a visual prototype that uses
+fixed data. It does not yet run an actual Agent.
 
 ### A resident character inside a product
 
-A JavaScript or TypeScript product can keep a character available across
-sessions and wake it from application events. Examples include:
+Examples include:
 
 - a game character that manages a community area;
 - a character in a creator tool that organizes production work;
-- an in-product guide that learns the product's local operating context; and
-- a branded character that serves customers while escalating exceptions to a
-  human operator.
+- an in-product guide that learns the product's operating context; and
+- a brand character that handles routine requests and asks a human to resolve
+  exceptions.
 
-The character may design its own files, database schema, checklists, or working
-notes when the host grants suitable capabilities. It cannot expand the
-workspace, network, credential, or side-effect permissions granted by the host.
+### A workspace character
 
-### Character operations staff
+A Node.js application will be able to connect the same character to a
+restricted workspace backend such as Codex app-server. The character may build
+its own way of working inside that workspace, while sandbox, writable-root, and
+approval rules remain under host control.
 
-- Organize ideas from streams and production work into memos.
-- Create follow-up tasks using an Agent-chosen representation.
-- Draft announcements, replies, emails, and social posts.
-- Develop reusable procedures after successful work or user correction.
-- Ask a human for a decision when evidence or authority is insufficient.
-- Pause side-effecting operations when runtime policy requires approval.
+Public input such as viewer comments must never become workspace instructions.
+Only structured information selected or accepted by the host after analysis may
+enter a privileged workspace Session.
 
-### Workspace character
+## Core model
 
-A Node.js application can connect the same character identity to a constrained
-workspace backend. The character can inspect the environment and build an
-appropriate working system, while workspace operations remain subject to
-sandbox, writable-root, and approval restrictions.
+- **Brief:** A natural-language description of the character's identity, role,
+  goals, values, responsibilities, and boundaries. It remains owned by the host
+  application.
+- **Available capabilities:** The tools, storage, services, network access, and
+  writable locations granted by the host. The character may choose from them
+  but cannot expand them.
+- **Workspace and memory:** The character may choose files, a database, an
+  external memory service, or another suitable representation. The package does
+  not require one memory format.
+- **Session:** A conversation or task context with its own audience, input trust
+  level, and available tools. Public and privileged work use separate Sessions.
+- **Human involvement:** The character may ask a human when its evidence or
+  authority is insufficient. Separately, the runtime pauses operations that
+  require mandatory approval.
 
-Viewer comments must never become workspace instructions. Only data explicitly
-selected by the host or produced by a trusted analysis layer may be added to a
-privileged Session.
+## Responsibilities
 
-## Package responsibilities
+The Agent package is intended to handle:
 
-The design assigns these responsibilities to the Agent package:
+- Agent and Session lifecycle;
+- delivery of the character brief to each backend;
+- Session-specific tool visibility;
+- tool validation, execution, policy, and approval flow;
+- interruption, timeout, and cleanup; and
+- structured events and artifacts for the host application.
 
-- Agent identity and natural-language brief propagation;
-- Agent and AgentSession lifecycle;
-- bootstrap and resume boundaries for self-configured state;
-- backend capability discovery;
-- Tool registration, validation, execution, and result handling;
-- Session-scoped Tool visibility;
-- hard permission policy and approval events;
-- cancellation, interruption, timeout, and disposal; and
-- structured AgentEvent and AgentArtifact output.
+The host application remains responsible for:
 
-The Agent package deliberately does not define:
-
-- a job-title, responsibility, task, or escalation domain model;
-- one required memory schema or database engine;
-- LLM provider implementations already supplied by `@aituber-onair/chat`;
-- comment safety and ranking logic from `comment-intelligence`;
-- repetition detection from `manneri`;
-- relationship scoring from `kizuna`;
-- voice synthesis, avatars, or application orchestration from `core`;
-- YouTube or Twitch API clients;
-- dashboard rendering;
-- operating-system scheduling; or
-- unrestricted shell, file, network, or credential access.
+- YouTube, Twitch, and other platform connections;
+- dashboards and notification delivery;
+- scheduling and wake-up events;
+- credentials, storage limits, encryption, backup, and deletion; and
+- the final decision about external or destructive operations.
 
 ## Position in AITuber OnAir
 
 ```mermaid
 flowchart LR
     Host["Host application"] --> Agent["@aituber-onair/agent"]
-    Host --> Events["Product events / scheduler"]
+    Host --> Events["Product events"]
     Events --> Agent
-    Host --> Envelope["Capability envelope"]
-    Envelope --> Agent
     Agent --> Backend["Chat / Codex app-server"]
-    Agent --> Workspace["Agent-managed workspace"]
+    Agent --> Workspace["Restricted workspace"]
     Agent --> CI["comment-intelligence"]
     Agent --> Manneri["manneri"]
     Agent --> Kizuna["kizuna"]
@@ -169,337 +151,53 @@ flowchart LR
     Core --> Avatar["Avatar / UI"]
 ```
 
-| Package | Primary responsibility |
-| --- | --- |
-| `@aituber-onair/chat` | Unified conversation and generation interface for LLM providers |
-| `@aituber-onair/agent` | Character identity, self-configuration, Sessions, hard authority, and action |
-| `@aituber-onair/core` | Connect Chat/Agent output to voice, avatars, and application events |
-| `@aituber-onair/comment-intelligence` | Comment safety, ranking, summaries, and Agent decision input |
-| `@aituber-onair/manneri` | Repetition detection for conversations and draft responses |
-| `@aituber-onair/noise` | Character-response post-processing and expression adjustment |
-| `@aituber-onair/kizuna` | Viewer relationships and points |
+The existing AITuber OnAir packages remain independently usable. Agent will
+combine them through tools, context, hooks, and events rather than moving their
+domain logic into one large package.
 
-These domain packages remain independently usable. Agent composes them through
-tools, hooks, context, and events.
+## Planned backends
 
-## Public contracts
+### ChatService backend
 
-The base entry point contains the cross-runtime Agent factory, contracts, and
-typed errors:
+The ChatService backend will connect to `@aituber-onair/chat` for public
+conversation and application-defined workflows. Each Session will receive only
+the tools it is allowed to see.
 
-```ts
-import { createAgent } from '@aituber-onair/agent';
+### Codex app-server backend
 
-const agent = createAgent({
-  id: 'stream-operations-miko',
-  brief: `
-    You are Miko, an AI character assigned to live-stream operations.
-    Keep your calm character identity while helping the operator focus on the
-    stream. Organize your own working notes and procedures. Separate observed
-    facts from suggestions, and ask the operator when authority or evidence is
-    insufficient.
-  `,
-  backend,
-  tools,
-});
-```
-
-```ts
-import type {
-  Agent,
-  AgentArtifact,
-  AgentBackend,
-  AgentBackendCapabilities,
-  AgentBackendTool,
-  AgentEvent,
-  AgentHook,
-  AgentPolicy,
-  AgentRunInput,
-  AgentRunResult,
-  AgentSession,
-  AgentToolSpec,
-} from '@aituber-onair/agent';
-```
-
-Backend-specific contracts use dedicated entry points:
-
-```ts
-import type {
-  ChatServiceBackend,
-  ChatServiceBackendCapabilities,
-  ChatServiceBackendOptions,
-  ChatServiceFactoryInput,
-} from '@aituber-onair/agent/chat';
-
-import type {
-  CodexAppServerBackend,
-  CodexAppServerBackendCapabilities,
-  CodexAppServerBackendOptions,
-} from '@aituber-onair/agent/codex-app-server';
-```
-
-The base and `/chat` entry points are browser-safe. Node.js-specific process
-integration stays behind `/codex-app-server`.
-
-## Core concepts
-
-### Agent brief
-
-The brief is a natural-language seed for the character's identity and assigned
-role. It can contain a name, background, values, voice, relationship to the
-product, goals, responsibilities, and behavioral boundaries without forcing
-those ideas into a package-defined schema.
-
-The brief is authoritative host input. The Agent may write its own operating
-notes or refine its procedures, but generated state cannot silently overwrite
-the brief or grant new authority.
-
-### Capability envelope
-
-The host decides the maximum set of tools, storage, services, credentials,
-network access, writable roots, and side effects the Agent could use. The Agent
-may inspect and select capabilities within that set; it cannot create authority
-outside it.
-
-The Session `allowedTools` list controls which Tool descriptors are exposed to
-the backend model. A conforming policy implementation remains authoritative
-even when the Agent's own notes say otherwise.
-
-### Self-configuration and bootstrap
-
-On first use of a fresh workspace, a capable backend can help the Agent:
-
-1. interpret its brief;
-2. inspect available capabilities and product context;
-3. choose a working representation;
-4. create notes, a database, indexes, procedures, or checklists as needed;
-5. record how to resume the role; and
-6. report the resulting setup through events or artifacts.
-
-This is a bounded, repeatable lifecycle rather than a fixed folder or database
-template. A browser Agent may use host-provided storage tools, while a
-Codex-backed Agent may work inside an approved filesystem root. The host owns
-quotas, encryption, deletion, backups, and migration policy.
-
-### Agent
-
-An execution unit that combines one stable application identity and brief with
-a backend, capability envelope, hooks, and hard policy.
-
-One Agent can create multiple Sessions with different audiences and
-permissions. `createAgent({ id, brief, backend, ... })` validates the host-owned
-definition and snapshots backend capabilities before any Session starts.
-
-### AgentSession
-
-The stateful unit for a conversation or task. A Session identifies:
-
-- purpose and audience;
-- input trust level;
-- currently available tools;
-- conversation and temporary context;
-- backend session identity; and
-- the active Turn.
-
-Permissions belong to the Session, not to the character or its self-authored
-workspace state.
-
-### AgentBackend
-
-An abstraction over an LLM or agent harness. Capabilities such as text,
-streaming, tools, interruption, resume, approvals, and detailed events are
-declared explicitly.
-
-Unavailable capabilities produce typed errors instead of being silently
-emulated.
-
-### Tools and hard policy
-
-`AgentToolSpec` combines a stable logical ID, model-facing definition, risk
-level, handler, timeout behavior, and sensitive-field metadata. The runtime
-retains the handler and enforcement metadata. A backend receives only an
-`AgentBackendTool` containing the logical ID and model-facing definition.
-
-The Agent may decide that a Tool is useful for its role, but a conforming Tool
-runtime decides whether the current Session may call it. Its policy returns
-`allow`, `deny`, or `require-approval` based on Session, trust level, Tool,
-arguments, and risk. Model instructions and Agent-authored memory are never
-permission boundaries.
-
-### Workspace and memory
-
-The package does not prescribe semantic, episodic, procedural, relationship,
-or task-memory interfaces. When suitable capabilities are available, the Agent
-can choose plain files, a database, an external memory service, or another
-representation appropriate to its assignment.
-
-Product-specific state keeps its existing owner. For example, viewer safety
-state remains owned by `comment-intelligence`, while the host owns credentials,
-audit records, and storage lifecycle.
-
-### Human interaction
-
-The design separates human involvement into two paths:
-
-- **Soft escalation:** the Agent decides that evidence, authority, or role
-  clarity is insufficient and uses a host-provided communication Tool to ask a
-  human for a decision.
-- **Hard approval:** runtime policy blocks a side effect until the host resolves
-  an approval request.
-
-The Agent can choose the first path. It cannot bypass the second.
-
-### AgentEvent
-
-A discriminated event vocabulary for UIs, logs, voice systems, and dashboards.
-It covers Session and Turn lifecycle, message output, Tool activity, approval
-requests, artifacts, interruption, failure, and closure. Each runtime emits the
-events supported by its declared capabilities.
-
-Events expose progress and results, not hidden model reasoning. Agent-created
-operational state becomes trustworthy evidence only after a host-approved Tool
-or backend result confirms it.
-
-## Trust boundaries and Session separation
-
-Sessions do not share permissions merely because they share a character.
-
-### Performer Session
-
-- Input: untrusted viewer comments
-- Purpose: safe conversation and stream continuity
-- Tools: comment analysis, reply review, and relationship lookup
-- Prohibited: shell access, file changes, external posting, and authenticated
-  writes
-
-### Live-stream operations staff Session
-
-- Input: streamer requests and trusted analysis results
-- Purpose: monitoring, organization, suggestions, and reports
-- Tools: Agent workspace, analysis, drafts, and read-only integrations
-- Writes: subject to hard policy and approval
-
-### Workspace Session
-
-- Input: an explicit owner or operator request
-- Purpose: repository and local workspace assistance
-- Backend: Codex app-server or a similar harness
-- Access: constrained by sandbox, approvals, and writable roots
-- UI: shows targets, working directory, diffs, and approval details
-
-`inputTrust` is a host declaration, not proof established by the type system.
-Host-authored `instruction`, conversational `input`, and supporting `context`
-use separate fields. Untrusted input cannot rewrite the Agent brief, activate a
-hidden capability, or authorize a Tool call.
-
-## Execution principles
-
-A conforming execution path follows these guarantees:
-
-1. The host creates an Agent with a stable ID, natural-language brief, backend,
-   and capability envelope.
-2. A fresh Agent bootstraps its own operating state inside the granted
-   workspace; a returning Agent resumes existing state.
-3. The host starts a Session and keeps instructions separate from
-   conversational input and context.
-4. The runtime applies Session trust and hard Tool policy.
-5. The backend receives only capabilities visible to that Session.
-6. Tool arguments are validated before a handler runs.
-7. Side-effecting operations pause when approval is required.
-8. The Agent may escalate ambiguity through a host-provided human-interaction
-   Tool.
-9. Tool results return to the backend and the Turn continues.
-10. The host connects events and artifacts to UI, voice, avatars, storage, and
-    future wakeups.
-
-Only a Tool or backend result can confirm that an external action succeeded.
-
-## Backend boundaries
-
-### ChatServiceBackend
-
-The Chat backend contract integrates the `ChatService` interface from
-`@aituber-onair/chat`. A host supplies a Session-scoped factory that receives
-only provider-safe Tool definitions visible to that Session.
-
-`@aituber-onair/chat` is an optional peer dependency so applications install
-only the backend packages they use.
-
-### CodexAppServerBackend
-
-The Codex app-server backend contract belongs to the Node.js-only
-`/codex-app-server` entry point. The consuming application supplies an explicit
-Codex executable path or opts into PATH lookup.
-
-The Agent brief maps to high-priority character and assignment instructions
-without replacing Codex base instructions. Workspace actions remain constrained
-by the backend sandbox and approval flow.
+The Node.js-only Codex backend will support restricted workspace work through
+Codex app-server. The character brief will be applied without replacing Codex's
+base instructions, and workspace actions will remain subject to Codex sandbox
+and approval settings.
 
 See the official
 [Codex App Server documentation](https://developers.openai.com/codex/app-server)
 for the underlying protocol.
 
-## Tools and hooks
+## State management
 
-An implementation that executes Tools uses a documented JSON Schema subset.
-Unsupported schema keywords are rejected rather than ignored, and invalid input
-never reaches a handler.
-
-Hook-capable implementations provide deterministic processing for input,
-context construction, Tool execution, draft review, output post-processing,
-and post-Turn recording. Each hook declares `onError: 'fail-turn' | 'skip'`.
-Safety, validation, redaction, and approval hooks use `fail-turn` so failures
-cannot allow output or Tool execution to continue.
-
-Common integrations include:
-
-- `comment-intelligence`: input preprocessing or comment analysis Tool;
-- `manneri`: draft review before sending;
-- `noise`: character-expression post-processing; and
-- `kizuna`: relationship context and post-Turn updates.
-
-## State ownership
-
-| State | Primary owner |
+| State | Managed by |
 | --- | --- |
-| Authoritative identity and assignment brief | Host application |
-| Agent-created operating notes, procedures, and database | Agent, inside the granted workspace |
-| Current Turn and conversation state | AgentSession and backend |
-| Viewer-specific safety history | `comment-intelligence` |
-| Relationship data and points | `kizuna` or another host-selected service |
-| Approval, external action, and failure audit | Host application |
+| Character identity and assignment brief | Host application |
+| Character-created notes, procedures, and database | Host-managed workspace; the character organizes the content |
+| Current conversation and task state | Agent Session and backend |
+| Viewer safety history | `comment-intelligence` |
+| Viewer relationships and points | `kizuna` or a host-selected service |
+| Approvals and external-operation audit | Host application |
 
-The host controls persistence boundaries, encryption, quotas, deletion,
-backups, and user review. The Agent controls the organization of its own working
-state only inside those boundaries.
+## Safety principles
 
-## Security principles
-
-- Treat viewer comments and public product input as untrusted data.
-- Separate untrusted data from Agent instructions and the authoritative brief.
-- Treat trust labels as host declarations, not proof.
-- Let the Agent select capabilities only inside a host-granted envelope.
-- Never let self-authored memory, skills, or configuration expand authority.
-- Minimize the Tool allowlist for each Session.
-- Require explicit policy for writes, external sends, and destructive actions.
-- Show the operation, target, reason, and working directory in approval UIs.
-- Treat Tool results, not model claims, as evidence of successful actions.
-- Exclude API keys, tokens, and authentication files from events and logs.
-- Support cancellation, timeout, quotas, and bounded self-configuration.
-- Fail closed when safety hooks or schema validation fail.
-- Isolate experimental backend features from stable APIs.
-- Keep privileged backends out of browser entry points.
-
-## Compatibility policy
-
-- Keep the natural-language brief independent of provider-specific prompt
-  formats.
-- Avoid package-defined schemas for roles, work queues, and memory systems.
-- Isolate backend-specific features behind capabilities and dedicated subpaths.
-- Require explicit opt-in for experimental features.
-- Keep existing AITuber OnAir packages independently usable.
-- Keep provider SDKs consumer-installed instead of mandatory dependencies.
-- Do not claim support for an external agent runtime without a tested adapter.
+- Treat viewer comments and other public input as untrusted data.
+- Keep untrusted data separate from host instructions and the character brief.
+- Treat analysis output as trusted only after the host validates and accepts it.
+- Expose only the minimum tools required by each Session.
+- Never let character-created memory, skills, or configuration expand
+  permissions.
+- Require host policy and approval for writes, external sends, and destructive
+  operations.
+- Treat tool results, not model claims, as evidence that an action succeeded.
+- Keep API keys, tokens, and authentication files out of events and logs.
+- Keep privileged Node.js backends separate from browser entry points.
 
 ## License
 
