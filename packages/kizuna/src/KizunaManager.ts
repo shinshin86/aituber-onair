@@ -205,7 +205,7 @@ export class KizunaManager
     const newLevel = this.calculateLevel(user.points);
     const leveledUp = newLevel > oldLevel;
     user.level = newLevel;
-    const triggeredThresholds = this.checkThresholds(user);
+    const triggeredThresholds = this.checkThresholds(user, oldPoints);
     const result: PointResult = {
       pointsAdded,
       totalPoints: user.points,
@@ -337,12 +337,16 @@ export class KizunaManager
     this.isInitialized = true;
   }
 
-  private checkThresholds(user: KizunaUser): TriggeredThreshold[] {
+  private checkThresholds(
+    user: KizunaUser,
+    oldPoints: number,
+  ): TriggeredThreshold[] {
     const triggeredThresholds: TriggeredThreshold[] = [];
     for (const threshold of this.config.thresholds) {
       const thresholdId = threshold.id ?? this.createThresholdId(threshold);
       const hasTriggered = user.triggeredThresholds.includes(thresholdId);
       if (
+        oldPoints >= threshold.points ||
         user.points < threshold.points ||
         (!threshold.repeatable && hasTriggered)
       ) {

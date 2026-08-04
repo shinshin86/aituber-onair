@@ -179,7 +179,7 @@ describe('KizunaManager', () => {
     });
   });
 
-  it('fires non-repeatable thresholds once and repeatable thresholds again', async () => {
+  it('fires repeatable thresholds only on each upward crossing', async () => {
     const thresholds: Threshold[] = [
       {
         id: 'once',
@@ -194,16 +194,33 @@ describe('KizunaManager', () => {
         repeatable: true,
       },
     ];
-    const manager = createManager(thresholds, 5);
+    const config = createConfig(thresholds, 5);
+    const storage = createMemoryStorage();
+    const manager = new KizunaManager(config, storage, 'kizuna-test');
     const first = await manager.processInteraction(createInteraction());
     const second = await manager.processInteraction(createInteraction());
+
     expect(first.triggeredActions).toHaveLength(2);
-    expect(second.triggeredActions).toHaveLength(1);
-    expect(second.triggeredActions[0]?.type).toBe('custom');
+    expect(second.triggeredActions).toEqual([]);
     expect(manager.getUser('user-1')?.triggeredThresholds).toEqual([
       'once',
       'repeat',
     ]);
+
+    const saved = await storage.load<{
+      users: Record<string, { points: number }>;
+    }>('kizuna-test');
+    if (!saved?.users['user-1']) throw new Error('Expected persisted user');
+    saved.users['user-1'].points = 0;
+    await storage.save('kizuna-test', saved);
+    manager.destroy();
+
+    const restored = new KizunaManager(config, storage, 'kizuna-test');
+    await restored.initialize();
+    const reCrossing = await restored.processInteraction(createInteraction());
+
+    expect(reCrossing.triggeredActions).toHaveLength(1);
+    expect(reCrossing.triggeredActions[0]?.type).toBe('custom');
   });
 
   it('does not mark an invalid achievement action as completed', async () => {
