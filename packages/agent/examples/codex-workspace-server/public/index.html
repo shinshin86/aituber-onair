@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Codex Workspace Staff — Rin</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b1020;
+        --panel: #121a30;
+        --panel-2: #0e1528;
+        --line: #24304f;
+        --text: #e8edf7;
+        --muted: #9aa7c4;
+        --accent: #5eead4;
+        --warn: #fbbf24;
+        --danger: #f87171;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Segoe UI', 'Hiragino Sans', system-ui, sans-serif;
+        background:
+          radial-gradient(circle at top left, #16213e 0, transparent 34rem),
+          var(--bg);
+        color: var(--text);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--line);
+        background: rgb(18 26 48 / 92%);
+      }
+      header h1 { font-size: 1rem; margin: 0; letter-spacing: 0.04em; }
+      .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+      .badge {
+        font-size: 0.75rem;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+      }
+      .badge.on { color: var(--accent); border-color: var(--accent); }
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: 14px;
+        padding: 14px 20px;
+        max-width: 1280px;
+        margin: 0 auto;
+        min-height: calc(100vh - 58px);
+      }
+      section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px;
+        min-width: 0;
+      }
+      section h2 {
+        margin: 0 0 10px;
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      #conversation { grid-row: span 2; display: flex; flex-direction: column; }
+      #messages { flex: 1; overflow-y: auto; min-height: 320px; max-height: 60vh; }
+      .workspace {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 0.75rem;
+        overflow-wrap: anywhere;
+      }
+      .msg {
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.92rem;
+        line-height: 1.55;
+      }
+      .msg.user { border-left: 3px solid var(--muted); color: var(--muted); }
+      .msg.staff { border-left: 3px solid var(--accent); }
+      .msg.streaming::after { content: '▌'; color: var(--accent); }
+      .msg.error { border-left: 3px solid var(--danger); color: var(--danger); }
+      .msg.notice { border-left: 3px solid var(--warn); color: var(--warn); }
+      form { display: flex; gap: 8px; margin-top: 10px; }
+      textarea {
+        flex: 1;
+        resize: vertical;
+        min-height: 56px;
+        background: var(--panel-2);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        font: inherit;
+      }
+      button {
+        font: inherit;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel-2);
+        color: var(--text);
+        padding: 8px 16px;
+        cursor: pointer;
+      }
+      button.primary { border-color: var(--accent); color: var(--accent); }
+      button:disabled { opacity: 0.45; cursor: not-allowed; }
+      button:focus-visible, textarea:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .button-stack { display: flex; flex-direction: column; gap: 8px; }
+      .approval {
+        border: 1px solid var(--warn);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        font-size: 0.88rem;
+      }
+      .approval .meta { color: var(--warn); font-weight: 600; }
+      .approval pre {
+        background: var(--panel-2);
+        border-radius: 6px;
+        padding: 8px;
+        overflow-x: auto;
+        font-size: 0.8rem;
+      }
+      .approval .actions { display: flex; gap: 8px; }
+      #eventLog {
+        max-height: 32vh;
+        overflow-y: auto;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 0.78rem;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+      #eventLog .type { color: var(--accent); }
+      .empty { color: var(--muted); font-size: 0.85rem; }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      @media (max-width: 900px) {
+        main { grid-template-columns: 1fr; }
+        #conversation { grid-row: auto; }
+      }
+      @media (max-width: 560px) {
+        header, main { padding-left: 12px; padding-right: 12px; }
+        form { flex-direction: column; }
+        .button-stack { flex-direction: row; }
+        .button-stack button { flex: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Codex Workspace Staff — Rin</h1>
+      <div class="badges" aria-label="Server status">
+        <span id="connectionBadge" class="badge">connecting</span>
+        <span id="turnBadge" class="badge">idle</span>
+        <span id="sandboxBadge" class="badge"></span>
+        <span id="sessionBadge" class="badge"></span>
+      </div>
+    </header>
+    <main>
+      <section id="conversation">
+        <h2>Conversation</h2>
+        <p id="workspacePath" class="workspace"></p>
+        <div id="messages" role="log" aria-live="polite">
+          <p class="empty">Send an instruction to the staff.</p>
+        </div>
+        <form id="runForm">
+          <label for="instruction" class="sr-only">Instruction</label>
+          <textarea
+            id="instruction"
+            placeholder="e.g. Read NOTES.md and stream-report.md, then summarize what needs attention."
+          ></textarea>
+          <div class="button-stack">
+            <button type="submit" class="primary" id="runButton">Run</button>
+            <button type="button" id="interruptButton" disabled>Interrupt</button>
+          </div>
+        </form>
+      </section>
+      <section>
+        <h2>Approvals</h2>
+        <div id="approvals" aria-live="polite">
+          <p class="empty">No pending approvals.</p>
+        </div>
+      </section>
+      <section>
+        <h2>Agent events</h2>
+        <div id="eventLog" role="log" aria-live="polite"></div>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
