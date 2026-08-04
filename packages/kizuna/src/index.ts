@@ -9,6 +9,12 @@
 export { KizunaManager } from './KizunaManager';
 export { UserManager } from './UserManager';
 export { PointCalculator } from './PointCalculator';
+export { BondEvaluator, type ContinuityBucket } from './BondEvaluator';
+export { BondContextBuilder } from './context/BondContextBuilder';
+export {
+  createDefaultKizunaConfig,
+  DEFAULT_BOND_STAGES,
+} from './defaultConfig';
 
 // Storage providers
 export { StorageProvider } from './storage/StorageProvider';
@@ -20,7 +26,6 @@ export {
 } from './storage/ExternalStorageProvider';
 
 // Utilities
-export { generateUserId, parseUserId } from './utils/userIdGenerator';
 export {
   detectEnvironment,
   isBrowser,
@@ -35,8 +40,10 @@ export {
 // Type definitions
 export type {
   // Basic types
+  InteractionKind,
+  Interaction,
+  UserRole,
   UserType,
-  ChatType,
   LogLevel,
   // User-related
   KizunaUser,
@@ -54,9 +61,22 @@ export type {
   // Configuration
   KizunaConfig,
   OwnerConfig,
-  PlatformPointConfig,
   StorageConfig,
   DevConfig,
+  BondStage,
+  LevelConfig,
+  WarmthConfig,
+  ContinuityUnit,
+  ContinuityConfig,
+  ContinuityStats,
+  SessionInfo,
+  BondContextLanguage,
+  BondContextOptions,
+  BondContextTemplate,
+  BondContextConfig,
+  BondContinuitySnapshot,
+  FavoriteEmotion,
+  BondSnapshot,
   // Events
   KizunaEventType,
   KizunaEventData,

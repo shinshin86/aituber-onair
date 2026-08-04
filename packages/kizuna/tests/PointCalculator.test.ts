@@ -1,67 +1,51 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { BondEvaluator } from '../src/BondEvaluator';
 import { PointCalculator } from '../src/PointCalculator';
+import { createDefaultKizunaConfig } from '../src/defaultConfig';
 import type {
+  Interaction,
   KizunaConfig,
   KizunaUser,
-  PointContext,
   PointRule,
 } from '../src/types';
 
-const createConfig = (customRules: PointRule[] = []): KizunaConfig => ({
-  enabled: true,
-  owner: {
-    initialPoints: 0,
-    pointMultiplier: 2,
-    specialCommands: [],
-    exclusiveAchievements: [],
-    dailyBonus: 0,
-  },
-  platforms: {
-    youtube: {
-      basePoints: { comment: 1 },
-    },
-    chatForm: {
-      basePoints: { message: 2 },
-    },
-  },
-  thresholds: [],
-  storage: {
-    maxUsers: 100,
-    dataRetentionDays: 30,
-    cleanupIntervalHours: 24,
-  },
-  dev: {
-    debugMode: false,
-    logLevel: 'error',
-    showDebugPanel: false,
-  },
-  customRules,
+const createConfig = (rules: PointRule[] = []): KizunaConfig => ({
+  ...createDefaultKizunaConfig(),
+  basePoints: { message: 1 },
+  rules,
+  stages: undefined,
+  continuity: { unit: 'day' },
 });
 
-const createUser = (type: KizunaUser['type'] = 'youtube'): KizunaUser => ({
-  id: `${type}:user`,
+const createUser = (role: KizunaUser['role'] = 'guest'): KizunaUser => ({
+  id: `${role}-user`,
   displayName: 'User',
-  type,
+  role,
   points: 0,
   level: 1,
   achievements: [],
   triggeredThresholds: [],
   stats: {
-    totalMessages: 1,
+    totalInteractions: 1,
     totalPointsEarned: 0,
-    dailyStreak: 1,
+    continuity: {
+      streak: 1,
+      totalActiveBuckets: 1,
+      lastContactAt: new Date(),
+      lastBucketKey: 'day:0',
+      lastBucketIndex: 0,
+    },
     favoriteEmotions: {},
-    todayMessages: 1,
   },
   firstSeen: new Date(),
   lastSeen: new Date(),
 });
 
-const createContext = (
-  overrides: Partial<PointContext> = {},
-): PointContext => ({
-  userId: 'youtube:user',
-  platform: 'youtube',
+const createInteraction = (
+  overrides: Partial<Interaction> = {},
+): Interaction => ({
+  userId: 'guest-user',
+  kind: 'message',
   message: 'Hello',
   isOwner: false,
   timestamp: Date.now(),
@@ -86,68 +70,128 @@ describe('PointCalculator', () => {
       points: 5,
       cooldown: 1_000,
     };
-    const calculator = new PointCalculator(createConfig([rule]));
+    const config = createConfig([rule]);
+    const calculator = new PointCalculator(config, new BondEvaluator(config));
     const user = createUser();
-    const context = createContext();
+    const interaction = createInteraction();
 
-    expect(calculator.calculatePoints(context, user).points).toBe(6);
-    expect(calculator.calculatePoints(context, user).points).toBe(1);
-
+    expect(calculator.calculatePoints(interaction, user).points).toBe(6);
+    expect(calculator.calculatePoints(interaction, user).points).toBe(1);
     vi.advanceTimersByTime(1_000);
-
-    expect(calculator.calculatePoints(context, user).points).toBe(6);
+    expect(calculator.calculatePoints(interaction, user).points).toBe(6);
   });
 
-  it('resets a daily rule limit at the next UTC day boundary', () => {
+  it('resets a rule bucket limit in the next continuity bucket', () => {
     const rule: PointRule = {
-      id: 'daily-limit',
-      name: 'Daily bonus',
+      id: 'bucket-limit',
+      name: 'Bucket bonus',
       condition: () => true,
       points: 4,
-      dailyLimit: 1,
+      bucketLimit: 1,
     };
-    const calculator = new PointCalculator(createConfig([rule]));
+    const config = createConfig([rule]);
+    const calculator = new PointCalculator(config, new BondEvaluator(config));
     const user = createUser();
-    const context = createContext();
+    const first = createInteraction();
 
-    expect(calculator.calculatePoints(context, user).points).toBe(5);
-    expect(calculator.calculatePoints(context, user).points).toBe(1);
-
-    vi.setSystemTime(new Date('2026-01-02T12:00:00Z'));
-
-    expect(calculator.calculatePoints(context, user).points).toBe(5);
-  });
-
-  it('applies the owner multiplier to base and rule points', () => {
-    const rule: PointRule = {
-      id: 'owner-rule',
-      name: 'Owner bonus',
-      condition: () => true,
-      points: 3,
-    };
-    const calculator = new PointCalculator(createConfig([rule]));
-    const user = createUser('owner');
-    const context = createContext({
-      userId: 'owner:default',
-      platform: 'chatForm',
-      isOwner: true,
+    expect(calculator.calculatePoints(first, user).points).toBe(5);
+    expect(calculator.calculatePoints(first, user).points).toBe(1);
+    const nextDay = createInteraction({
+      timestamp: new Date('2026-01-02T12:00:00Z').getTime(),
     });
-
-    expect(calculator.calculatePoints(context, user).points).toBe(10);
+    expect(calculator.calculatePoints(nextDay, user).points).toBe(5);
   });
 
-  it('ignores a rule whose condition throws', () => {
+  it('keeps cooldown records isolated for opaque user IDs', () => {
     const rule: PointRule = {
-      id: 'broken-condition',
-      name: 'Broken condition',
-      condition: () => {
-        throw new Error('condition failed');
-      },
-      points: 100,
+      id: 'cooldown',
+      name: 'Cooldown bonus',
+      condition: () => true,
+      points: 5,
+      cooldown: 1_000,
     };
-    const calculator = new PointCalculator(createConfig([rule]));
+    const config = createConfig([rule]);
+    const calculator = new PointCalculator(config, new BondEvaluator(config));
+    const user = createUser();
+    user.id = 'group:user';
+    const interaction = createInteraction({ userId: user.id });
 
-    const result = calculator.calculatePoints(createContext(), createUser());
+    expect(calculator.calculatePoints(interaction, user).points).toBe(6);
+    calculator.resetUserCooldowns('group');
+
+    expect(calculator.calculatePoints(interaction, user).points).toBe(1);
+  });
+
+  it('applies functional rule points before the owner multiplier', () => {
+    const rule: PointRule = {
+      id: 'dynamic',
+      name: 'Dynamic bonus',
+      condition: () => true,
+      points: (interaction) => (interaction.kind === 'message' ? 3 : 0),
+    };
+    const config = createConfig([rule]);
+    config.basePoints.message = 2;
+    config.owner.pointMultiplier = 2;
+    const calculator = new PointCalculator(config, new BondEvaluator(config));
+    const user = createUser('owner');
+
+    const result = calculator.calculatePoints(
+      createInteraction({ userId: user.id, isOwner: true }),
+      user,
+    );
+
+    expect(result.points).toBe(10);
+  });
+
+  it('awards the owner first-contact bonus once per bucket', () => {
+    const config = createConfig();
+    config.owner.firstContactBonus = 7;
+    const calculator = new PointCalculator(config, new BondEvaluator(config));
+    const user = createUser('owner');
+    const first = createInteraction({ userId: user.id, isOwner: true });
+
+    expect(
+      calculator.calculatePoints(first, user, undefined, true).points,
+    ).toBe(8);
+    expect(
+      calculator.calculatePoints(first, user, undefined, false).points,
+    ).toBe(1);
+    const nextDay = createInteraction({
+      userId: user.id,
+      isOwner: true,
+      timestamp: new Date('2026-01-02T12:00:00Z').getTime(),
+    });
+    expect(
+      calculator.calculatePoints(nextDay, user, undefined, true).points,
+    ).toBe(8);
+  });
+
+  it('ignores rules whose conditions or point functions throw', () => {
+    const rules: PointRule[] = [
+      {
+        id: 'broken-condition',
+        name: 'Broken condition',
+        condition: () => {
+          throw new Error('condition failed');
+        },
+        points: 100,
+      },
+      {
+        id: 'broken-points',
+        name: 'Broken points',
+        condition: () => true,
+        points: () => {
+          throw new Error('points failed');
+        },
+      },
+    ];
+    const config = createConfig(rules);
+    const calculator = new PointCalculator(config, new BondEvaluator(config));
+
+    const result = calculator.calculatePoints(
+      createInteraction(),
+      createUser(),
+    );
 
     expect(result.points).toBe(1);
     expect(result.appliedRules).toEqual([]);

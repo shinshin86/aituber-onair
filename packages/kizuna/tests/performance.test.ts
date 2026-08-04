@@ -33,13 +33,13 @@ global.performance = performance;
 // Test data of various sizes
 const generateTestData = (size: number) => {
   const userData = {
-    userId: 'youtube:testuser123',
+    userId: 'user-123',
     points: 150,
     level: 2,
-    achievements: ['first_comment', 'loyal_viewer'],
+    achievements: ['first_contact', 'regular'],
     stats: {
-      totalMessages: 50,
-      todayMessages: 3,
+      totalInteractions: 50,
+      continuity: { streak: 3, totalActiveBuckets: 8 },
       favoriteEmotions: { happy: 10, excited: 5 },
     },
     // Pad with additional data to reach target size
@@ -237,21 +237,27 @@ describe('LocalStorageProvider Performance Tests', () => {
 
   it('should test typical Kizuna user data', async () => {
     const typicalUserData = {
-      'youtube:user123': {
-        id: 'youtube:user123',
-        displayName: 'user123',
-        type: 'youtube',
+      'user-123': {
+        id: 'user-123',
+        displayName: 'Aki',
+        role: 'guest',
         points: 150,
         level: 2,
         achievements: [
-          { id: 'first_comment', title: 'First Comment', earnedAt: new Date() },
+          { id: 'first_contact', title: 'First Contact', earnedAt: new Date() },
         ],
+        triggeredThresholds: ['first_contact'],
         stats: {
-          totalMessages: 50,
+          totalInteractions: 50,
           totalPointsEarned: 150,
-          dailyStreak: 3,
+          continuity: {
+            streak: 3,
+            totalActiveBuckets: 8,
+            lastContactAt: new Date(),
+            lastBucketKey: 'day:1',
+            lastBucketIndex: 1,
+          },
           favoriteEmotions: { happy: 10, excited: 5 },
-          todayMessages: 3,
         },
         firstSeen: new Date(),
         lastSeen: new Date(),
