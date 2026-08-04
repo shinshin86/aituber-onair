@@ -79,6 +79,95 @@ p {
   padding: 24px clamp(14px, 3vw, 42px) 52px;
 }
 
+.relationship-toast {
+  position: fixed;
+  z-index: 20;
+  top: 20px;
+  right: 20px;
+  width: min(340px, calc(100vw - 28px));
+  padding: 14px;
+  border: 1px solid rgba(216, 87, 107, 0.35);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20px 50px -24px rgba(85, 38, 59, 0.62);
+  animation: toast-enter 260ms ease-out both;
+}
+
+.relationship-toast > div:first-child {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+
+.relationship-toast > div:first-child > span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--accent-soft);
+}
+
+.relationship-toast > div:first-child > div {
+  display: grid;
+}
+
+.relationship-toast strong {
+  font-size: 0.82rem;
+}
+
+.relationship-toast small,
+.relationship-toast p {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.relationship-toast.stage-changed {
+  border-color: rgba(181, 123, 36, 0.58);
+  background: #fffbf1;
+}
+
+.toast-meter {
+  height: 9px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ece5e8;
+}
+
+.toast-meter i {
+  display: block;
+  width: var(--to);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--violet), var(--accent));
+  transform-origin: left;
+  animation: intimacy-stretch 820ms cubic-bezier(0.2, 0.9, 0.22, 1.16) both;
+}
+
+.relationship-toast p {
+  margin: 5px 0 0;
+  text-align: right;
+  font-weight: 850;
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes intimacy-stretch {
+  from {
+    width: var(--from);
+  }
+  to {
+    width: var(--to);
+  }
+}
+
 .hero {
   position: relative;
   min-height: 250px;
@@ -546,10 +635,43 @@ h1 em {
   transition: width 240ms ease;
 }
 
+.intimacy-card-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.intimacy-card-label strong {
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+}
+
+.intimacy-meter i {
+  background: linear-gradient(90deg, var(--violet), var(--accent));
+  transform-origin: left;
+  animation: intimacy-card-stretch 620ms cubic-bezier(0.2, 0.9, 0.2, 1.1);
+}
+
+@keyframes intimacy-card-stretch {
+  from {
+    transform: scaleX(0.82);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .bond-card-meta {
   display: flex;
   justify-content: space-between;
   font-weight: 800;
+}
+
+.bond-card-meta b {
+  color: var(--ink);
 }
 
 .bond-empty {
@@ -920,6 +1042,14 @@ h1 em {
 
   .metric-grid > div:last-child {
     grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .relationship-toast,
+  .toast-meter i,
+  .intimacy-meter i {
+    animation-duration: 0.01ms;
   }
 }
 

@@ -256,11 +256,17 @@ npm run dev
 ## Kizuna Examples
 
 - [`packages/kizuna/examples/kizuna-sample`](../packages/kizuna/examples/kizuna-sample):
-  interactive browser lab for contact kinds, bond stages, warmth decay,
-  continuity, achievements, simulated time, and LLM context output.
-- [`packages/core/examples/react-basic`](../packages/core/examples/react-basic):
-  opt-in Kizuna integration that records messages and response emotions, then
-  injects the current bond context into the system prompt.
+  browser lab that explains points, warmth, continuity, bond stages, simulated
+  time, and LLM context output for each viewer. Relationship bars and change
+  notifications make each interaction visible.
+- [`packages/kizuna/examples/chat-bond-sample`](../packages/kizuna/examples/chat-bond-sample):
+  one-to-one browser chat with scripted replies and no LLM or TTS. Each exchange
+  updates points, warmth, the relationship stage, an animated intimacy bar, and
+  an SVG history graph.
+- [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app):
+  optional Kizuna integration for form, YouTube, and Twitch conversations. It
+  records messages and response emotions, adds the current relationship context
+  to the system prompt, and shows top-right relationship notifications.
 - [`packages/noise/examples/noise-session-sample`](../packages/noise/examples/noise-session-sample):
   uses Kizuna's normalized relationship value to control Noise relationship
   gates, with a manual override for diagnostics.

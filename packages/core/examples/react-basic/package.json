@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@aituber-onair/core": "file:../..",
-    "@aituber-onair/kizuna": "file:../../../kizuna",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

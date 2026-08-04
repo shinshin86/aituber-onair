@@ -32,6 +32,23 @@ interface EventEntry {
   text: string;
 }
 
+interface RelationshipChange {
+  userName: string;
+  icon: string;
+  pointsAdded: number;
+  previousCapital: number;
+  nextCapital: number;
+  previousStage: string;
+  nextStage: string;
+}
+
+const stageLabels: Record<string, string> = {
+  stranger: '知り合ったばかり',
+  acquaintance: '知り合い',
+  regular: '常連',
+  companion: '相棒',
+};
+
 interface FocusToken {
   action?: string;
   field?: string;
@@ -121,6 +138,8 @@ let selectedEmotion = emotions[0]?.id ?? '';
 let pendingSkipHours = 24;
 let eventSequence = 0;
 let isProcessing = false;
+let relationshipChange: RelationshipChange | null = null;
+let relationshipChangeTimer: number | null = null;
 let eventEntries: EventEntry[] = [
   {
     id: eventSequence++,
@@ -136,6 +155,13 @@ const app = getAppRoot();
 bindManagerEvents();
 render();
 
+window.addEventListener('beforeunload', () => {
+  if (relationshipChangeTimer !== null) {
+    window.clearTimeout(relationshipChangeTimer);
+  }
+  manager.destroy();
+});
+
 document.addEventListener('click', (event) => {
   const target = event.target as HTMLElement | null;
   const actionTarget = target?.closest<HTMLElement>('[data-action]');
@@ -150,10 +176,10 @@ document.addEventListener('click', (event) => {
       void processContact(actionTarget.dataset.kind ?? 'message');
       break;
     case 'advance-time':
-      advanceTime(Number(actionTarget.dataset.hours ?? 0));
+      if (!isProcessing) advanceTime(Number(actionTarget.dataset.hours ?? 0));
       break;
     case 'apply-time':
-      advanceTime(pendingSkipHours);
+      if (!isProcessing) advanceTime(pendingSkipHours);
       break;
     case 'reset':
       resetLab();
@@ -199,21 +225,21 @@ function createAchievementThresholds(): Threshold[] {
       'first_bond',
       100,
       '心が通じた',
-      'acquaintance ステージに到達しました。',
+      '「知り合い」ステージに到達しました。',
       '🌸',
     ),
     createAchievementThreshold(
       'trusted_regular',
       500,
       'いつもの安心感',
-      'regular ステージに到達しました。',
+      '「常連」ステージに到達しました。',
       '🏡',
     ),
     createAchievementThreshold(
       'lasting_companion',
       1_000,
       'かけがえのない相棒',
-      'companion ステージに到達しました。',
+      '「相棒」ステージに到達しました。',
       '💎',
     ),
   ];
@@ -288,6 +314,8 @@ async function processContact(kind: string): Promise<void> {
   if (!user || !contact) return;
 
   isProcessing = true;
+  const previousSnapshot = manager.getBondSnapshot(user.id);
+  const previousCapital = manager.toRelationshipCapital(user.id);
   const focusToken: FocusToken = { action: 'contact', kind };
   render(focusToken);
   try {
@@ -300,7 +328,19 @@ async function processContact(kind: string): Promise<void> {
       timestamp: simulatedNow,
       metadata: { displayName: user.name },
     };
-    await manager.processInteraction(interaction);
+    const result = await manager.processInteraction(interaction);
+    const nextSnapshot = manager.getBondSnapshot(user.id);
+    if (nextSnapshot) {
+      showRelationshipChange({
+        userName: user.name,
+        icon: user.icon,
+        pointsAdded: result.pointsAdded,
+        previousCapital,
+        nextCapital: manager.toRelationshipCapital(user.id),
+        previousStage: previousSnapshot?.stage ?? '未接触',
+        nextStage: nextSnapshot.stage,
+      });
+    }
     pushEvent(contact.icon, `${user.name}: ${contact.label}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -328,10 +368,27 @@ function resetLab(): void {
   selectedEmotion = emotions[0]?.id ?? '';
   pendingSkipHours = 24;
   eventEntries = [];
+  relationshipChange = null;
+  if (relationshipChangeTimer !== null) {
+    window.clearTimeout(relationshipChangeTimer);
+    relationshipChangeTimer = null;
+  }
   manager = createManager();
   bindManagerEvents();
   pushEvent('↺', 'ラボを最初の状態に戻しました。');
   render();
+}
+
+function showRelationshipChange(change: RelationshipChange): void {
+  relationshipChange = change;
+  if (relationshipChangeTimer !== null) {
+    window.clearTimeout(relationshipChangeTimer);
+  }
+  relationshipChangeTimer = window.setTimeout(() => {
+    relationshipChange = null;
+    relationshipChangeTimer = null;
+    render();
+  }, 4_000);
 }
 
 function pushEvent(icon: string, text: string): void {
@@ -354,39 +411,41 @@ function render(focusToken: FocusToken | null = captureFocus()): void {
       <header class="hero">
         <div class="hero-copy">
           <a class="eyebrow" href="https://github.com/shinshin86/aituber-onair" target="_blank" rel="noreferrer">@aituber-onair/kizuna</a>
-          <p class="kicker">BOND SIMULATION LAB</p>
-          <h1>ふれあうほど、<br /><em>関係が育つ。</em></h1>
-          <p class="lead">話す、反応する、そばにいる。小さな接触が積み重なり、AIキャラクターとの絆になっていく様子を試せます。</p>
-          <div class="stage-path" aria-label="絆ステージ">
-            <span>stranger</span><i></i><span>acquaintance</span><i></i><span>regular</span><i></i><span>companion</span>
+          <p class="kicker">このデモで確認できること</p>
+          <h1>Kizuna<br /><em>関係性ラボ</em></h1>
+          <p class="lead">視聴者と接触の種類を選ぶと、人物ごとの親密度ポイント・温かさ・関係ステージがどう変わるかを試せます。実アプリでは、ここに表示される関係性をLLMプロンプトへ渡して応答を変えられます。</p>
+          <div class="stage-path" aria-label="関係ステージ">
+            <span>知り合ったばかり</span><i></i><span>知り合い</span><i></i><span>常連</span><i></i><span>相棒</span>
           </div>
         </div>
       </header>
 
+      ${renderRelationshipToast()}
+
       <section class="clock-bar" aria-label="シミュレーション時計">
         <div class="clock-now">
-          <span>SIMULATED TIME</span>
+          <span>シミュレーション時刻</span>
           <strong>${formatDateTime(simulatedNow)}</strong>
         </div>
         <div class="quick-time">
-          <button data-action="advance-time" data-hours="1">+1時間</button>
-          <button data-action="advance-time" data-hours="24">+1日</button>
-          <button data-action="advance-time" data-hours="168">+1週間</button>
+          <button data-action="advance-time" data-hours="1" ${isProcessing ? 'disabled' : ''}>+1時間</button>
+          <button data-action="advance-time" data-hours="24" ${isProcessing ? 'disabled' : ''}>+1日</button>
+          <button data-action="advance-time" data-hours="168" ${isProcessing ? 'disabled' : ''}>+1週間</button>
         </div>
         <label class="time-slider">
           <span>まとめて進める <output id="skip-output">${formatDuration(pendingSkipHours)}</output></span>
-          <input data-field="skip-hours" type="range" min="1" max="168" step="1" value="${pendingSkipHours}" />
+          <input data-field="skip-hours" type="range" min="1" max="168" step="1" value="${pendingSkipHours}" ${isProcessing ? 'disabled' : ''} />
         </label>
-        <button class="secondary" data-action="apply-time">適用</button>
-        <button class="ghost" data-action="reset">リセット</button>
+        <button class="secondary" data-action="apply-time" ${isProcessing ? 'disabled' : ''}>適用</button>
+        <button class="ghost" data-action="reset" ${isProcessing ? 'disabled' : ''}>リセット</button>
       </section>
 
       <main class="lab-layout">
         <section class="workspace">
           <section class="panel contact-panel">
             <div class="section-heading">
-              <div><span class="step">01</span><h2>誰とふれあう？</h2></div>
-              <p>人物を選ぶと、その人の絆が右側に表示されます。</p>
+              <div><span class="step">01</span><h2>視聴者を選ぶ</h2></div>
+              <p>選んだ視聴者の関係性が右側に表示されます。</p>
             </div>
             <div class="people-grid">
               ${users.map((user) => renderPersonButton(user)).join('')}
@@ -394,7 +453,7 @@ function render(focusToken: FocusToken | null = captureFocus()): void {
 
             <div class="contact-divider"></div>
             <div class="section-heading compact">
-              <div><span class="step">02</span><h2>どんな接触？</h2></div>
+              <div><span class="step">02</span><h2>接触の種類を選ぶ</h2></div>
               <label class="emotion-field">
                 <span>今の感情</span>
                 <select data-field="emotion">
@@ -405,13 +464,13 @@ function render(focusToken: FocusToken | null = captureFocus()): void {
             <div class="contact-grid">
               ${contacts.map((contact) => renderContactButton(contact)).join('')}
             </div>
-            <p class="contact-hint">時間を進めると warmth が下がります。次の接触で continuity の変化が確定します。</p>
+            <p class="contact-hint">時間を進めると「温かさ」が下がります。次の接触で「継続」の変化が確定します。</p>
           </section>
 
           <section class="panel roster-panel">
             <div class="section-heading">
-              <div><span class="step">03</span><h2>みんなの絆</h2></div>
-              <p>接触した人物の状態を並べて比較できます。</p>
+              <div><span class="step">03</span><h2>視聴者ごとの関係性</h2></div>
+              <p>ポイント・温かさ・親密度の変化を比較できます。</p>
             </div>
             <div class="bond-grid">
               ${users.map((user) => renderBondCard(user)).join('')}
@@ -423,14 +482,14 @@ function render(focusToken: FocusToken | null = captureFocus()): void {
           ${renderSelectedBond(selectedUser, selectedSnapshot)}
           <section class="panel context-panel">
             <div class="panel-title-row">
-              <div><span class="mini-label">LLM CONTEXT</span><h2>AIが受け取る関係性</h2></div>
-              <span class="live-dot">LIVE</span>
+              <div><span class="mini-label">LLMへ渡す情報</span><h2>AIが受け取る関係性</h2></div>
+              <span class="live-dot">現在値</span>
             </div>
             <pre>${escapeHtml(context || '最初の接触後に、ここへ関係性の文脈が表示されます。')}</pre>
           </section>
           <section class="panel event-panel">
             <div class="panel-title-row">
-              <div><span class="mini-label">EVENT STREAM</span><h2>絆の変化</h2></div>
+              <div><h2>変化ログ</h2></div>
               <span class="event-count">${eventEntries.length}</span>
             </div>
             <ol class="event-list">
@@ -451,7 +510,7 @@ function renderPersonButton(user: DemoUser): string {
     <button class="person ${selected ? 'selected' : ''}" data-action="select-user" data-user-id="${user.id}" aria-pressed="${selected}">
       <span class="person-icon">${user.icon}</span>
       <span class="person-copy"><strong>${user.name}</strong><small>${user.note}</small></span>
-      <span class="person-stage">${snapshot?.stage ?? 'まだ出会っていない'}</span>
+      <span class="person-stage">${snapshot ? formatStage(snapshot.stage) : 'まだ出会っていない'}</span>
     </button>
   `;
 }
@@ -475,11 +534,13 @@ function renderBondCard(user: DemoUser): string {
       </button>
     `;
   }
+  const capital = manager.toRelationshipCapital(user.id);
   return `
     <button class="bond-card ${user.id === selectedUserId ? 'selected' : ''}" data-action="select-user" data-user-id="${user.id}">
-      <div class="bond-card-head"><span>${user.icon}</span><div><strong>${user.name}</strong><small>${snapshot.stage}</small></div><b>Lv.${snapshot.level}</b></div>
-      <div class="micro-meter"><i style="width:${snapshot.warmth * 100}%"></i></div>
-      <div class="bond-card-meta"><span>${snapshot.points} pt</span><span>🔥 ${snapshot.continuity.streak}</span><span>${Math.round(snapshot.warmth * 100)}%</span></div>
+      <div class="bond-card-head"><span>${user.icon}</span><div><strong>${user.name}</strong><small>${formatStage(snapshot.stage)}</small></div><b>Lv.${snapshot.level}</b></div>
+      <div class="intimacy-card-label"><span>親密度</span><strong>${Math.round(capital * 100)}%</strong></div>
+      <div class="micro-meter intimacy-meter"><i style="width:${capital * 100}%"></i></div>
+      <div class="bond-card-meta"><span><b>${snapshot.points}</b> ポイント</span><span><b>${Math.round(snapshot.warmth * 100)}%</b> 温かさ</span><span><b>${snapshot.continuity.streak}</b> 継続</span></div>
     </button>
   `;
 }
@@ -492,9 +553,9 @@ function renderSelectedBond(
     return `
       <section class="panel focus-panel empty-focus">
         <span class="focus-avatar">${user?.icon ?? '🌱'}</span>
-        <span class="mini-label">SELECTED BOND</span>
+        <span class="mini-label">選択中の視聴者との関係性</span>
         <h2>${user?.name ?? '人物を選択'}</h2>
-        <p>接触すると、絆の温度と積み重なりがここに現れます。</p>
+        <p>接触すると、絆の温かさと積み重なりがここに現れます。</p>
       </section>
     `;
   }
@@ -519,22 +580,35 @@ function renderSelectedBond(
     <section class="panel focus-panel">
       <div class="focus-head">
         <span class="focus-avatar">${user.icon}</span>
-        <div><span class="mini-label">SELECTED BOND</span><h2>${user.name}</h2><p>${snapshot.role === 'owner' ? 'owner' : 'guest'} · Lv.${snapshot.level}</p></div>
-        <span class="stage-badge">${snapshot.stage}</span>
+        <div><span class="mini-label">選択中の視聴者との関係性</span><h2>${user.name}</h2><p>${snapshot.role === 'owner' ? '配信者の相棒' : '視聴者'} · Lv.${snapshot.level}</p></div>
+        <span class="stage-badge">${formatStage(snapshot.stage)}</span>
       </div>
       <div class="warmth-block">
-        <div class="metric-label"><span>WARMTH</span><strong>${Math.round(snapshot.warmth * 100)}%</strong></div>
+        <div class="metric-label"><span>温かさ（しばらく接触がないと下がる親密さ）</span><strong>${Math.round(snapshot.warmth * 100)}%</strong></div>
         <div class="warmth-meter"><i style="width:${snapshot.warmth * 100}%"></i></div>
         <p>最後の接触: ${formatDateTime(snapshot.continuity.lastContactAt.getTime())}</p>
       </div>
       <div class="metric-grid">
-        <div><span>POINTS</span><strong>${snapshot.points}</strong></div>
-        <div><span>CONTINUITY</span><strong>${snapshot.continuity.streak}</strong><small>${snapshot.continuity.totalActiveBuckets} buckets</small></div>
-        <div><span>CAPITAL</span><strong>${capital.toFixed(2)}</strong><small>Noise bridge</small></div>
+        <div><span>ポイント（累計・減らない）</span><strong>${snapshot.points}</strong><small>接触のたびに加算</small></div>
+        <div><span>継続（連続して会えている期間）</span><strong>${snapshot.continuity.streak}</strong><small>活動日 ${snapshot.continuity.totalActiveBuckets}回</small></div>
+        <div title="Kizunaのポイントと温かさを0〜1へ正規化し、@aituber-onair/noiseの関係性ゲートに渡せる値です。"><span>noise連携用の値</span><strong>${capital.toFixed(2)}</strong><small>ポイントと温かさを0〜1へ正規化</small></div>
       </div>
-      <div class="favorite-row"><span>FAVORITE EMOTIONS</span><div>${favoriteEmotions}</div></div>
-      <div class="achievement-block"><span>ACHIEVEMENTS</span><ul>${achievements}</ul></div>
+      <div class="favorite-row"><span>よく記録された感情</span><div>${favoriteEmotions}</div></div>
+      <div class="achievement-block"><span>実績</span><ul>${achievements}</ul></div>
     </section>
+  `;
+}
+
+function renderRelationshipToast(): string {
+  if (!relationshipChange) return '';
+  const stageChanged =
+    relationshipChange.previousStage !== relationshipChange.nextStage;
+  return `
+    <aside class="relationship-toast ${stageChanged ? 'stage-changed' : ''}" role="status">
+      <div><span>${relationshipChange.icon}</span><div><strong>${relationshipChange.userName}の親密度が上がりました</strong><small>+${relationshipChange.pointsAdded}ポイント${stageChanged ? ` · ${formatStage(relationshipChange.previousStage)} → ${formatStage(relationshipChange.nextStage)}` : ''}</small></div></div>
+      <div class="toast-meter"><i style="--from:${relationshipChange.previousCapital * 100}%;--to:${relationshipChange.nextCapital * 100}%"></i></div>
+      <p>${Math.round(relationshipChange.previousCapital * 100)}% → ${Math.round(relationshipChange.nextCapital * 100)}%</p>
+    </aside>
   `;
 }
 
@@ -553,6 +627,10 @@ function formatDateTime(timestamp: number): string {
     hour12: false,
     timeZone: 'UTC',
   }).format(timestamp);
+}
+
+function formatStage(stage: string): string {
+  return stageLabels[stage] ?? stage;
 }
 
 function formatTime(timestamp: number): string {

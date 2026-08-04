@@ -1,0 +1,381 @@
+import {
+  KizunaManager,
+  createDefaultKizunaConfig,
+  type BondSnapshot,
+  type Interaction,
+} from '../../../src/index';
+import './styles.css';
+
+interface ChatMessage {
+  id: number;
+  role: 'assistant' | 'user';
+  text: string;
+  emotion?: string;
+}
+
+interface ScriptedReply {
+  text: string;
+  emotion: string;
+}
+
+interface HistoryPoint {
+  intimacy: number;
+}
+
+const USER_ID = 'one-to-one-owner';
+const DISPLAY_NAME = 'あなた';
+const MAX_HISTORY = 24;
+const stageLabels: Record<string, string> = {
+  stranger: '知り合ったばかり',
+  acquaintance: '知り合い',
+  regular: '常連',
+  companion: '相棒',
+};
+const cannedReplies: Record<string, ScriptedReply[]> = {
+  curious: [
+    {
+      text: 'いい質問だね。もう少し一緒に考えてみたいな。',
+      emotion: 'curious',
+    },
+    { text: 'その続きが気になる。どうしてそう思ったの？', emotion: 'curious' },
+  ],
+  excited: [
+    {
+      text: 'わあ、うれしい！ その話を聞けて元気が出たよ。',
+      emotion: 'excited',
+    },
+    { text: 'すごく楽しそう！ 私も一緒にやってみたいな。', emotion: 'happy' },
+  ],
+  calm: [
+    { text: 'うん。急がず、ここでゆっくり話そう。', emotion: 'calm' },
+    {
+      text: '話してくれてありがとう。ちゃんと聞いているよ。',
+      emotion: 'relaxed',
+    },
+  ],
+};
+
+let manager = createManager();
+let messages: ChatMessage[] = [
+  {
+    id: 0,
+    role: 'assistant',
+    text: 'こんにちは。今日はどんなことがあった？',
+    emotion: 'happy',
+  },
+];
+let messageSequence = 1;
+let replySequence = 0;
+let renderedMessageCount = 0;
+let history: HistoryPoint[] = [{ intimacy: 0 }];
+let displayedIntimacy = 0;
+let displayedPoints = 0;
+let isProcessing = false;
+
+const app = document.querySelector<HTMLDivElement>('#app');
+if (!app) throw new Error('App root was not found.');
+
+app.innerHTML = renderShell();
+
+const form = requireElement<HTMLFormElement>('#chat-form');
+const input = requireElement<HTMLInputElement>('#chat-input');
+const submitButton = requireElement<HTMLButtonElement>('#send-button');
+const resetButton = requireElement<HTMLButtonElement>('#reset-button');
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  void sendMessage();
+});
+
+input.addEventListener('input', updateSubmitState);
+resetButton.addEventListener('click', resetChat);
+
+renderState();
+
+function createManager(): KizunaManager {
+  const config = createDefaultKizunaConfig();
+  config.basePoints = {
+    ...config.basePoints,
+    message: 28,
+    reaction: 12,
+  };
+  config.owner = {
+    ...config.owner,
+    initialPoints: 0,
+    firstContactBonus: 0,
+    pointMultiplier: 1,
+  };
+  return new KizunaManager(config, undefined, 'chat-bond-sample');
+}
+
+async function sendMessage(): Promise<void> {
+  const text = input.value.trim();
+  if (!text || isProcessing) return;
+
+  isProcessing = true;
+  input.value = '';
+  updateSubmitState();
+  input.disabled = true;
+  messages.push({ id: messageSequence++, role: 'user', text });
+  renderMessages();
+
+  try {
+    await recordInteraction({
+      userId: USER_ID,
+      kind: 'message',
+      message: text,
+      isOwner: true,
+      timestamp: Date.now(),
+      metadata: { displayName: DISPLAY_NAME, source: 'one-to-one-chat' },
+    });
+
+    await delay(360);
+    const reply = selectReply(text);
+    messages.push({
+      id: messageSequence++,
+      role: 'assistant',
+      text: reply.text,
+      emotion: reply.emotion,
+    });
+    await recordInteraction({
+      userId: USER_ID,
+      kind: 'reaction',
+      message: reply.text,
+      emotion: reply.emotion,
+      isOwner: true,
+      timestamp: Date.now(),
+      metadata: { displayName: DISPLAY_NAME, source: 'scripted-reply' },
+    });
+
+    history.push({ intimacy: manager.toRelationshipCapital(USER_ID) });
+    history = history.slice(-MAX_HISTORY);
+    renderState();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    showChange(`更新できませんでした: ${message}`, true);
+  } finally {
+    isProcessing = false;
+    input.disabled = false;
+    updateSubmitState();
+    input.focus();
+  }
+}
+
+async function recordInteraction(interaction: Interaction): Promise<void> {
+  await manager.processInteraction(interaction);
+}
+
+function selectReply(text: string): ScriptedReply {
+  const group = /\?|？|どう|なぜ/.test(text)
+    ? cannedReplies.curious
+    : /！|!|嬉|うれ|最高|楽し|好き/.test(text)
+      ? cannedReplies.excited
+      : cannedReplies.calm;
+  const fallback: ScriptedReply = {
+    text: '話してくれてありがとう。もう少し聞かせて。',
+    emotion: 'happy',
+  };
+  const reply = group?.[replySequence % group.length] ?? fallback;
+  replySequence++;
+  return reply;
+}
+
+function renderState(): void {
+  renderMessages();
+  const snapshot = manager.getBondSnapshot(USER_ID);
+  const nextIntimacy = manager.toRelationshipCapital(USER_ID);
+  const previousPoints = displayedPoints;
+  renderRelationship(snapshot, displayedIntimacy, nextIntimacy);
+  renderGraph();
+  renderContext();
+  if (nextIntimacy > displayedIntimacy) {
+    const added = snapshot ? snapshot.points - previousPoints : 0;
+    showChange(
+      `親密度が上がりました · ${added > 0 ? `+${added}ポイント` : '会話を記録'}`,
+    );
+  }
+  displayedIntimacy = nextIntimacy;
+  displayedPoints = snapshot?.points ?? 0;
+}
+
+function renderRelationship(
+  snapshot: BondSnapshot | null,
+  from: number,
+  to: number,
+): void {
+  setText('#points-value', String(snapshot?.points ?? 0));
+  setText('#warmth-value', `${Math.round((snapshot?.warmth ?? 0) * 100)}%`);
+  setText(
+    '#stage-value',
+    snapshot ? formatStage(snapshot.stage) : 'まだ会話していません',
+  );
+  setText('#intimacy-value', `${Math.round(to * 100)}%`);
+
+  const fill = requireElement<HTMLDivElement>('#intimacy-fill');
+  fill.style.transition = 'none';
+  fill.style.width = `${from * 100}%`;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      fill.style.transition = '';
+      fill.style.width = `${to * 100}%`;
+    });
+  });
+}
+
+function renderMessages(): void {
+  const log = requireElement<HTMLDivElement>('#chat-log');
+  const newMarkup = messages
+    .slice(renderedMessageCount)
+    .map(
+      (message) => `
+        <article class="message ${message.role}">
+          <div class="message-meta"><strong>${message.role === 'user' ? DISPLAY_NAME : 'Luna'}</strong>${message.emotion ? `<span>${escapeHtml(message.emotion)}</span>` : ''}</div>
+          <p>${escapeHtml(message.text)}</p>
+        </article>`,
+    )
+    .join('');
+  log.insertAdjacentHTML('beforeend', newMarkup);
+  renderedMessageCount = messages.length;
+  log.scrollTop = log.scrollHeight;
+}
+
+function renderGraph(): void {
+  const width = 420;
+  const height = 112;
+  const points = history.map(({ intimacy }, index) => {
+    const x = history.length <= 1 ? 0 : (index / (history.length - 1)) * width;
+    const y = height - Math.min(1, Math.max(0, intimacy)) * (height - 12) - 6;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const polyline =
+    points.length === 1 ? `${points[0]} ${points[0]}` : points.join(' ');
+  requireElement<SVGPolylineElement>('#history-line').setAttribute(
+    'points',
+    polyline,
+  );
+}
+
+function renderContext(): void {
+  const context = manager.getBondContext(USER_ID, { language: 'ja' });
+  requireElement<HTMLElement>('#bond-context').textContent =
+    context || '最初の会話後に、LLMへ渡せる関係性の文脈が表示されます。';
+}
+
+function showChange(text: string, isError = false): void {
+  const note = requireElement<HTMLDivElement>('#change-note');
+  note.textContent = text;
+  note.classList.toggle('error', isError);
+  note.classList.remove('visible');
+  void note.offsetWidth;
+  note.classList.add('visible');
+}
+
+function resetChat(): void {
+  if (isProcessing) return;
+  manager.destroy();
+  manager = createManager();
+  messages = [
+    {
+      id: messageSequence++,
+      role: 'assistant',
+      text: '最初の状態に戻しました。何か話しかけてみてね。',
+      emotion: 'happy',
+    },
+  ];
+  history = [{ intimacy: 0 }];
+  displayedIntimacy = 0;
+  displayedPoints = 0;
+  renderedMessageCount = 0;
+  requireElement<HTMLDivElement>('#chat-log').innerHTML = '';
+  renderState();
+  showChange('関係性をリセットしました。');
+  input.focus();
+}
+
+function updateSubmitState(): void {
+  submitButton.disabled = isProcessing || !input.value.trim();
+}
+
+function setText(selector: string, value: string): void {
+  requireElement<HTMLElement>(selector).textContent = value;
+}
+
+function requireElement<T extends Element>(selector: string): T {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw new Error(`Element was not found: ${selector}`);
+  return element;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function formatStage(stage: string): string {
+  return stageLabels[stage] ?? stage;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function renderShell(): string {
+  return `
+    <main class="page-shell">
+      <header class="intro">
+        <div>
+          <p class="package-name">@aituber-onair/kizuna</p>
+          <h1>Kizuna 1対1チャットデモ</h1>
+          <p>入力したメッセージとキャラクターの感情付き定型応答を、1人分の関係性として記録します。会話するたび、右側のポイント・温かさ・関係ステージ・親密度が変わります。</p>
+        </div>
+        <button id="reset-button" type="button">リセット</button>
+      </header>
+
+      <section class="demo-grid">
+        <section class="chat-card" aria-label="1対1チャット">
+          <div class="chat-card-heading">
+            <div><span class="avatar">☾</span><div><strong>Luna</strong><small>感情付きの定型文で返答</small></div></div>
+            <span class="local-badge">LLM / TTS 不要</span>
+          </div>
+          <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-relevant="additions" aria-label="会話履歴"></div>
+          <form id="chat-form" class="chat-form">
+            <label for="chat-input">あなたのメッセージ</label>
+            <div>
+              <input id="chat-input" maxlength="160" autocomplete="off" placeholder="例: 今日も会えてうれしい！" />
+              <button id="send-button" type="submit" disabled>送信</button>
+            </div>
+          </form>
+        </section>
+
+        <aside class="relationship-card" aria-label="あなたとの関係性">
+          <div class="relationship-heading"><div><span class="avatar owner">あ</span><div><small>あなたとの関係性</small><h2 id="stage-value">まだ会話していません</h2></div></div><span id="intimacy-value">0%</span></div>
+          <div class="intimacy-block">
+            <div><strong>親密度</strong><small>ポイントと温かさを0〜100%へ正規化した値</small></div>
+            <div class="intimacy-track"><div id="intimacy-fill"></div></div>
+            <div id="change-note" class="change-note" role="status"></div>
+          </div>
+          <dl class="metrics">
+            <div><dt>ポイント</dt><dd id="points-value">0</dd><small>会話で累積し、減りません</small></div>
+            <div><dt>温かさ</dt><dd id="warmth-value">0%</dd><small>接触がない時間で下がります</small></div>
+          </dl>
+          <div class="graph-block">
+            <div><strong>親密度の推移</strong><small>会話1往復ごとの変化</small></div>
+            <svg viewBox="0 0 420 112" role="img" aria-label="親密度の推移グラフ">
+              <line x1="0" y1="106" x2="420" y2="106"></line>
+              <polyline id="history-line" points="0,106 0,106"></polyline>
+            </svg>
+          </div>
+          <details>
+            <summary>LLMへ渡せる関係性の文脈</summary>
+            <pre id="bond-context"></pre>
+          </details>
+        </aside>
+      </section>
+    </main>`;
+}
+
+window.addEventListener('beforeunload', () => manager.destroy());

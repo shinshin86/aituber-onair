@@ -253,11 +253,16 @@ npm run dev
 ## Kizuna サンプル
 
 - [`packages/kizuna/examples/kizuna-sample`](../packages/kizuna/examples/kizuna-sample):
-  接触種別、絆ステージ、温かさの減衰、継続、実績、時間経過、LLM
-  コンテキスト出力を試せる対話型ブラウザラボ。
-- [`packages/core/examples/react-basic`](../packages/core/examples/react-basic):
-  メッセージと応答感情を記録し、現在の絆コンテキストをシステムプロンプトへ
-  注入する、任意で有効化できる Kizuna 統合。
+  視聴者ごとのポイント、温かさ、継続、関係ステージ、時間経過、LLM
+  コンテキスト出力を確認できるブラウザラボ。接触後は関係性バーと変更通知で
+  数値の変化を確認できる。
+- [`packages/kizuna/examples/chat-bond-sample`](../packages/kizuna/examples/chat-bond-sample):
+  LLM・TTSを使わず、定型応答で1対1の会話を試せるブラウザサンプル。
+  会話ごとにポイント、温かさ、関係ステージ、親密度バー、履歴グラフが更新される。
+- [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app):
+  フォーム入力、YouTube、Twitchの会話で任意に有効化できる Kizuna 統合。
+  メッセージと応答感情を記録し、現在の関係性をシステムプロンプトへ追加して、
+  画面右上に関係性の変更通知を表示する。
 - [`packages/noise/examples/noise-session-sample`](../packages/noise/examples/noise-session-sample):
   Kizuna の正規化された関係値で Noise の関係性ゲートを制御し、診断用の
   手動上書きも備えたサンプル。

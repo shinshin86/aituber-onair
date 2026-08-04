@@ -61,6 +61,14 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   send it to a vision-capable model for an avatar comment
 - Detect repetitive conversation patterns with `@aituber-onair/manneri` and
   add an internal topic-diversification instruction before the next response
+- Optionally track each viewer's relationship with `@aituber-onair/kizuna`:
+  form input uses a stable local owner identity, while YouTube and Twitch use
+  separate identities based on the commenter's name
+  - Each message and the avatar's response emotion update the relationship
+  - The current relationship context is added to the system prompt before the
+    response
+  - A top-right notification shows the viewer name, points, intimacy change,
+    and any relationship stage or level change
 
 ## Setup
 
@@ -74,6 +82,8 @@ After launch, open **Settings** and set API keys / provider options there.
 All settings are saved in `localStorage` (`react-pngtuber-app-settings`).
 The LLM section also lets you edit the system prompt. It is applied when the
 field loses focus and is saved with the other settings.
+The same section includes the disabled-by-default Kizuna toggle. Enable it to
+record relationship changes for form, YouTube, and Twitch conversations.
 
 For `openai-compatible`, set:
 - `Endpoint URL` (required, full `/v1/chat/completions` URL)
