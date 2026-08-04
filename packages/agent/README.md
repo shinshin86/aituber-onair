@@ -5,6 +5,11 @@
 An embeddable runtime for giving an AI character a job inside a JavaScript or
 TypeScript product.
 
+> **Status: unreleased development version.** This package is implemented and
+> tested inside the AITuber OnAir monorepo but is not published to npm yet
+> (`version 0.0.0`, `private`). The documented API describes the current
+> implementation.
+
 ## What this package is
 
 `@aituber-onair/chat` lets an application communicate with language models.
@@ -87,7 +92,7 @@ Examples include:
 
 ### A workspace character
 
-A Node.js application will be able to connect the same character to a
+A Node.js application can connect the same character to a
 restricted workspace backend such as Codex app-server. The character may build
 its own way of working inside that workspace, while sandbox, writable-root, and
 approval rules remain under host control.
@@ -134,9 +139,9 @@ The host application remains responsible for:
 
 ## Connect to @aituber-onair/chat
 
-Install both packages and create the ChatService through a factory. The factory
-runs once for each Agent Session and receives only the Tool definitions visible
-to that Session.
+Use both packages together and create the ChatService through a factory. The
+factory runs once for each Agent Session and receives only the Tool definitions
+visible to that Session.
 
 ```ts
 import { ChatServiceFactory } from '@aituber-onair/chat';
@@ -195,11 +200,15 @@ without Tool support receive an empty Tool list; for example, the current
 streaming deltas.
 
 The backend keeps conversation and Tool history inside each Session and limits
-one Turn to six provider Tool rounds by default. Set `maxToolRounds` to a lower
+one Turn to six provider Tool rounds by default. Set `maxToolRounds` to another
 positive integer when needed. `AbortSignal` and Agent timeouts stop the Agent
 Turn and ignore late results. The generic `ChatService` interface does not
 guarantee that an already-running provider request is cancelled at the network
-transport layer.
+transport layer. For the same reason, capabilities derived from built-in
+provider metadata declare `interruption: false` and `sessionResume: false`:
+cancel ChatService backend Turns with `AbortSignal` or timeouts, and use a
+backend that declares `sessionResume`, such as the Codex app-server backend,
+when `agent.resumeSession(...)` is required.
 
 ## Tool execution rules
 
@@ -209,6 +218,11 @@ transport layer.
 - Tool input schemas support `type`, `properties`, `required`, `items`, `enum`,
   `description`, and boolean `additionalProperties`. Unsupported keywords are
   rejected when the Agent is created instead of being silently ignored.
+- Approval requests wait for `session.resolveApproval(requestId, decision)`
+  up to `limits.approvalTimeoutMs` (default 30 seconds) and are denied on
+  timeout, abort, or Session close. Raise the limit in `createAgent` when a
+  human operator answers approvals. `limits.maxToolCallsPerTurn` (default 8)
+  bounds runtime Tool executions per Turn.
 - `sensitiveFields` accepts dot-separated object paths. Matching input values
   are redacted in Tool and approval events, while the original validated values
   are copied into the immutable snapshot passed to the host handler. Approval
@@ -276,8 +290,8 @@ const bootstrap = await agent.bootstrap({
 
 The metadata store contains only host-owned lifecycle state: `fresh`,
 `bootstrapping`, `ready`, `degraded`, or `failed`. A successful `version` is not
-run again. A failed attempt can resume the previous backend Session and any
-partial workspace state. Bump `version` when the brief or required operating
+run again; it resumes the existing state. A failed attempt can resume the
+previous backend Session and any partial workspace state. Bump `version` when the brief or required operating
 state changes.
 
 `save` must compare `expectedRevision` and update the record atomically. A
@@ -288,8 +302,9 @@ capability is shown only when all of its `requiredTools` are visible, and every
 Tool call still passes through the runtime policy and approval path described
 above. Numeric capability limits describe the host's envelope; the Tool handler
 or backend that owns the resource must enforce limits such as workspace bytes.
-Each bootstrap attempt is limited to one Turn. `timeoutMs` bounds that Turn,
-and the runtime also limits Tool calls and retry attempts. Metadata storage and
+Each bootstrap attempt is limited to one Turn. `limits.timeoutMs` bounds that
+Turn (default 60 seconds), and the runtime also limits Tool calls and retry
+attempts. Metadata storage and
 backend Session start/close are host-owned operations; their implementations
 must apply appropriate timeouts and cancellation. Bootstrap accepts product
 context only with an explicit `trust: 'trusted'` host assertion. Do not mark raw
@@ -342,15 +357,119 @@ domain logic into one large package.
 
 ## Codex app-server integration
 
-The dedicated Node.js entry point is separate from the ChatService backend. The
-runtime adapter is not available yet. It is intended for restricted workspace
-work through Codex app-server, where the character brief is added without
-replacing Codex's base instructions and workspace actions remain subject to
-Codex sandbox and approval settings.
+Use the Node.js-only entry point when a character needs to inspect or work in a
+restricted local workspace through Codex. The backend launches the locally
+installed Codex CLI over JSONL stdio and uses that CLI's existing
+authentication. After signing in with `codex login`, this can use the ChatGPT
+plan access supported by Codex without passing an OpenAI API key to Agent.
+
+The current integration is pinned to Codex CLI `0.145.0`. Install that exact
+version and sign in before starting the application. The backend rejects a different CLI
+version before starting app-server.
+
+```bash
+npm install --global @openai/codex@0.145.0
+codex login
+```
+
+```ts
+import { createAgent } from '@aituber-onair/agent';
+import {
+  CODEX_APP_SERVER_SCHEMA_VERSION,
+  CODEX_APP_SERVER_SUPPORTED_VERSION,
+  createCodexAppServerBackend,
+} from '@aituber-onair/agent/codex-app-server';
+
+const backend = createCodexAppServerBackend({
+  // PATH lookup is never implicit. Alternatively, provide an absolute codexPath.
+  allowPathLookup: true,
+  workingDirectory: '/absolute/path/to/character-workspace',
+  compatibility: {
+    expectedVersion: CODEX_APP_SERVER_SUPPORTED_VERSION,
+    schemaVersion: CODEX_APP_SERVER_SCHEMA_VERSION,
+  },
+  sandbox: 'read-only',
+  approvalPolicy: 'on-request',
+});
+
+const agent = createAgent({
+  id: 'stream-operations-staff',
+  brief:
+    'You are AI staff responsible for monitoring stream operations. Inspect available state, report anomalies, and escalate decisions that require the operator.',
+  backend,
+});
+
+const session = await agent.startSession({
+  purpose: 'Review the latest stream report',
+  audience: 'owner',
+  inputTrust: 'trusted',
+});
+
+try {
+  for await (const event of session.runStream({
+    instruction: 'Inspect the workspace and summarize issues that need attention.',
+  })) {
+    if (event.type === 'approval.requested') {
+      // Replace this with an operator decision in a real application.
+      await session.resolveApproval(event.request.id, 'deny');
+    }
+    if (event.type === 'message.completed') console.log(event.text);
+  }
+} finally {
+  await session.close();
+  await agent.close();
+}
+```
+
+`read-only` and `on-request` are also the defaults. A host decision of
+`allow-once` maps to Codex `accept`; `deny` maps to `decline`; interruption,
+timeout, and shutdown map to `cancel`. The backend never grants Codex
+`acceptForSession`, because that would widen permission beyond one host
+decision.
+
+The Agent brief is applied as Codex developer instructions for new and resumed
+Threads. On the first Turn after a cold resume, the backend also includes one
+host-controlled brief reminder to mitigate the current resume behavior tracked
+in [openai/codex#19045](https://github.com/openai/codex/issues/19045). Persist
+`session.backendSessionId` in host-owned state and pass it to
+`agent.resumeSession(...)` when resuming.
+
+The entry point intentionally supports only the pinned stable protocol subset:
+
+- local stdio transport on Node.js; no remote WebSocket transport
+- Thread start/resume and Turn start/interrupt; Turn steering exists on the
+  Codex backend Session type but is not yet exposed through `AgentSession`
+- account and model reads (`backend.readAccount()`, `backend.listModels()`),
+  streamed messages, safe artifacts, and command/file approval requests
+- no experimental API, `thread/shellCommand`, raw Codex
+  configuration/authentication access, or dynamic Tools
+- no Agent domain Tools in Codex Sessions; use the ChatService backend for
+  host-executed domain integrations
 
 See the official
 [Codex App Server documentation](https://developers.openai.com/codex/app-server)
 for the underlying protocol.
+
+## Observing progress
+
+`session.run(...)` resolves with the final result, and
+`session.runStream(...)` yields the same execution as typed events. The
+`AgentEvent` union contains:
+
+| Event | Meaning |
+| --- | --- |
+| `session.started` / `session.resumed` / `session.closed` | Session lifecycle |
+| `turn.started` | A Turn began |
+| `message.delta` / `message.completed` | Streaming text and the final message |
+| `tool.requested` / `tool.started` / `tool.completed` / `tool.failed` | Tool call lifecycle |
+| `approval.requested` / `approval.resolved` | Approval flow; resolve with `session.resolveApproval(...)` |
+| `artifact.created` | A structured `AgentArtifact` was produced |
+| `turn.completed` / `turn.interrupted` / `turn.failed` | Exactly one of these ends every Turn |
+
+Runtime failures are typed error classes exported from the base entry point,
+such as `AgentPolicyDeniedError`, `AgentApprovalTimeoutError`,
+`AgentCapabilityError`, `AgentToolValidationError`, and
+`AgentBackendCompatibilityError`.
 
 ## State management
 

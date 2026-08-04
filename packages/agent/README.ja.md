@@ -5,6 +5,10 @@
 JavaScript／TypeScriptプロダクトの中で、AIキャラクターに仕事を与えるための
 組み込み型ランタイムです。
 
+> **Status: 未リリースの開発版。** 本パッケージはAITuber OnAirモノレポ内で
+> 実装・テスト済みですが、npmへはまだ公開されていません（`version 0.0.0`、
+> `private`）。このREADMEは現在の実装を説明しています。
+
 ## このパッケージについて
 
 `@aituber-onair/chat`は、アプリケーションから言語モデルと会話するための
@@ -85,7 +89,7 @@ artifactの流れを試せるように固定コメントを使っています。
 ### ワークスペースで働くキャラクター
 
 Node.jsアプリから、同じキャラクターをCodex app-serverなどの制限付き
-ワークスペースへ接続できるようにします。キャラクターはその範囲内で自分の
+ワークスペースへ接続できます。キャラクターはその範囲内で自分の
 働き方を構築できますが、sandbox、書き込み可能範囲、承認ルールはホストが
 管理します。
 
@@ -129,7 +133,7 @@ Agentパッケージは、次を担当します。
 
 ## @aituber-onair/chatへ接続する
 
-両方のパッケージをインストールし、factoryからChatServiceを作成します。factoryは
+両方のパッケージを組み合わせて、factoryからChatServiceを作成します。factoryは
 Agent Sessionごとに1回実行され、そのSessionから見えるTool定義だけを受け取ります。
 
 ```ts
@@ -187,10 +191,14 @@ providerへは空のTool一覧を渡します。現在の`codex-sdk` Chat provid
 streaming deltaではなく完了後の全文を返します。
 
 会話履歴とTool履歴はSessionごとに保持します。1 Turnで利用できるprovider Tool roundは
-既定で6回です。必要に応じて`maxToolRounds`へ、より小さい正の整数を指定できます。
+既定で6回です。必要に応じて`maxToolRounds`へ別の正の整数を指定できます。
 `AbortSignal`とAgentのtimeoutはAgent Turnを停止し、遅れて届いた結果を無視します。
 汎用の`ChatService` interfaceは、すでに実行中のprovider requestがnetwork transport層でも
-cancelされることまでは保証しません。
+cancelされることまでは保証しません。同じ理由で、組み込みprovider metadataから導出した
+capabilityは`interruption: false`と`sessionResume: false`を宣言します。ChatService
+バックエンドのTurnは`AbortSignal`またはtimeoutで停止してください。
+`agent.resumeSession(...)`が必要な場合は、Codex app-serverバックエンドのように
+`sessionResume`を宣言するバックエンドを使用します。
 
 ## Tool実行ルール
 
@@ -200,6 +208,11 @@ cancelされることまでは保証しません。
 - Tool入力schemaは、`type`、`properties`、`required`、`items`、`enum`、
   `description`、boolean値の`additionalProperties`に対応します。未対応のkeywordは
   無視せず、Agent作成時に拒否します。
+- 承認要求は`session.resolveApproval(requestId, decision)`の応答を
+  `limits.approvalTimeoutMs`（既定30秒）まで待ち、timeout、abort、Session終了時は
+  拒否として扱います。人間の運営者が承認へ応答する場合は、`createAgent`で上限を
+  引き上げてください。`limits.maxToolCallsPerTurn`（既定8回）は1 Turnあたりの
+  ランタイムTool実行数を制限します。
 - `sensitiveFields`には、ドット区切りのobject pathを指定できます。一致する入力値は
   Tool eventと承認eventでは秘匿化します。ホストのhandlerには、承認時と同じ入力値を
   固定した変更不可のsnapshotを渡します。
@@ -278,7 +291,7 @@ Capability descriptorは、キャラクターが利用可能な能力を知る�
 場合だけ表示されます。各Tool callには、上記のランタイムpolicyと承認処理が引き続き
 適用されます。Capabilityの数値上限は、ホストが与えた範囲を表します。ワークスペースの
 byte数など、resource固有の上限は、そのresourceを所有するTool handlerまたは
-バックエンドが強制します。各Bootstrap attemptは1 Turnだけです。`timeoutMs`はその
+バックエンドが強制します。各Bootstrap attemptは1 Turnだけです。`limits.timeoutMs`（既定60秒）はその
 Turnを制限し、ランタイムはTool call数と再試行回数にも上限を適用します。メタデータstoreと
 バックエンドSessionの開始・終了はホスト管理の処理であり、各実装側で適切なtimeoutと
 cancelを適用する必要があります。product contextを渡すには、ホストが明示的に
@@ -333,14 +346,117 @@ flowchart LR
 
 ## Codex app-serverとの統合
 
-Node.js専用entry pointは、ChatServiceバックエンドとは分離されています。
-ランタイムadapterはまだ利用できません。Codex app-serverを使った制限付き
-ワークスペース作業を対象とし、キャラクターbriefをCodex本来の指示を置き換えずに
-追加し、ワークスペース操作にはCodexのsandboxと承認設定を適用する構成です。
+キャラクターに制限付きのローカルworkspaceを調査・作業させる場合は、Node.js専用
+entry pointを使います。バックエンドはローカルにインストールされたCodex CLIを
+JSONL stdioで起動し、そのCLIの認証状態を利用します。`codex login`でログインして
+おけば、AgentへOpenAI API keyを渡さずに、Codexが対応するChatGPTプランの利用枠を
+使用できます。
+
+現在の統合はCodex CLI `0.145.0`に固定されています。アプリを起動する前に、
+同じバージョンをインストールしてログインしてください。異なるCLIバージョンは、
+app-serverを起動する前に拒否されます。
+
+```bash
+npm install --global @openai/codex@0.145.0
+codex login
+```
+
+```ts
+import { createAgent } from '@aituber-onair/agent';
+import {
+  CODEX_APP_SERVER_SCHEMA_VERSION,
+  CODEX_APP_SERVER_SUPPORTED_VERSION,
+  createCodexAppServerBackend,
+} from '@aituber-onair/agent/codex-app-server';
+
+const backend = createCodexAppServerBackend({
+  // PATH検索は暗黙に行いません。代わりに絶対パスのcodexPathも指定できます。
+  allowPathLookup: true,
+  workingDirectory: '/absolute/path/to/character-workspace',
+  compatibility: {
+    expectedVersion: CODEX_APP_SERVER_SUPPORTED_VERSION,
+    schemaVersion: CODEX_APP_SERVER_SCHEMA_VERSION,
+  },
+  sandbox: 'read-only',
+  approvalPolicy: 'on-request',
+});
+
+const agent = createAgent({
+  id: 'stream-operations-staff',
+  brief:
+    'あなたはライブ配信の運用監視を担当するAIスタッフです。利用できる状態を確認し、異常を報告し、運営者の判断が必要な事項をエスカレーションしてください。',
+  backend,
+});
+
+const session = await agent.startSession({
+  purpose: '最新の配信レポートを確認する',
+  audience: 'owner',
+  inputTrust: 'trusted',
+});
+
+try {
+  for await (const event of session.runStream({
+    instruction: 'workspaceを確認し、対応が必要な問題を要約してください。',
+  })) {
+    if (event.type === 'approval.requested') {
+      // 実際のアプリでは運営者の判断に置き換えます。
+      await session.resolveApproval(event.request.id, 'deny');
+    }
+    if (event.type === 'message.completed') console.log(event.text);
+  }
+} finally {
+  await session.close();
+  await agent.close();
+}
+```
+
+`read-only`と`on-request`は省略時の既定値でもあります。ホストの`allow-once`は
+Codexの`accept`へ、`deny`は`decline`へ対応します。中断、timeout、終了時は
+`cancel`を返します。1回のホスト判断より権限を広げるため、
+`acceptForSession`は使用しません。
+
+Agent briefは、新規Threadと再開ThreadのCodex developer instructionsとして
+適用されます。cold resume後の最初のTurnには、
+[openai/codex#19045](https://github.com/openai/codex/issues/19045)で追跡されている
+再開時の挙動を緩和するため、ホスト管理のbrief reminderも1回だけ追加します。
+再開する場合は、`session.backendSessionId`をホスト側で保存し、
+`agent.resumeSession(...)`へ渡してください。
+
+このentry pointが対応するのは、固定バージョンのstable protocol subsetだけです。
+
+- Node.jsのローカルstdio transport。remote WebSocket transportには非対応
+- Threadのstart/resumeとTurnのstart/interrupt。Turn steerはCodexバックエンドの
+  Session型には存在しますが、`AgentSession`からはまだ利用できません
+- account/modelの取得（`backend.readAccount()`、`backend.listModels()`）、
+  message stream、安全なartifact、command/file変更の承認
+- experimental API、`thread/shellCommand`、Codexの生の設定・認証への
+  アクセス、dynamic Toolsには非対応
+- Codex SessionではAgentのdomain Toolを利用不可。ホストが実行するdomain連携には
+  ChatServiceバックエンドを使用
 
 基盤となるprotocolについては、公式の
 [Codex App Server documentation](https://developers.openai.com/codex/app-server)
 を参照してください。
+
+## 進行状況の購読
+
+`session.run(...)`は最終結果を返し、`session.runStream(...)`は同じ実行を型付き
+eventとして届けます。`AgentEvent` unionには次が含まれます。
+
+| Event | 意味 |
+| --- | --- |
+| `session.started` / `session.resumed` / `session.closed` | Sessionライフサイクル |
+| `turn.started` | Turnの開始 |
+| `message.delta` / `message.completed` | streamingテキストと最終message |
+| `tool.requested` / `tool.started` / `tool.completed` / `tool.failed` | Tool callのライフサイクル |
+| `approval.requested` / `approval.resolved` | 承認フロー。`session.resolveApproval(...)`で解決 |
+| `artifact.created` | 構造化された`AgentArtifact`の生成 |
+| `turn.completed` / `turn.interrupted` / `turn.failed` | すべてのTurnはいずれか1つで終了 |
+
+ランタイムの失敗は、`AgentPolicyDeniedError`、`AgentApprovalTimeoutError`、
+`AgentCapabilityError`、`AgentToolValidationError`、
+`AgentBackendCompatibilityError`などの型付きerror classとして、ベースentry point
+からエクスポートされます。
 
 ## 状態の管理
 
