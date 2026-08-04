@@ -91,6 +91,8 @@ export interface KizunaUser {
   level: number;
   /** Earned achievements */
   achievements: Achievement[];
+  /** Threshold identifiers that have fired at least once */
+  triggeredThresholds: string[];
   /** Statistics */
   stats: UserStats;
   /** First contact time */
@@ -181,6 +183,8 @@ export interface ThresholdAction {
 
 /** Threshold definition */
 export interface Threshold {
+  /** Stable threshold identifier */
+  id?: string;
   /** Required points */
   points: number;
   /** Action to execute */
@@ -320,4 +324,6 @@ export interface KizunaManagerInterface {
   calculateLevel(points: number): number;
   /** Get statistics */
   getStats(): Record<string, unknown>;
+  /** Release timers and event listeners */
+  destroy(): void;
 }

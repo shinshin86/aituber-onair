@@ -326,7 +326,8 @@ export class UserManager {
       points: initialPoints,
       level: this.calculateLevel(initialPoints),
       achievements: [],
-      stats: this.createInitialStats(),
+      triggeredThresholds: [],
+      stats: this.createInitialStats(context),
       firstSeen: new Date(),
       lastSeen: new Date(),
       customData: {},
@@ -366,12 +367,12 @@ export class UserManager {
   /**
    * Create initial statistics
    */
-  private createInitialStats(): UserStats {
+  private createInitialStats(context: PointContext): UserStats {
     return {
       totalMessages: 1,
       totalPointsEarned: 0,
       dailyStreak: 1,
-      favoriteEmotions: {},
+      favoriteEmotions: context.emotion ? { [context.emotion]: 1 } : {},
       todayMessages: 1,
       interactionHistory: [],
     };
@@ -502,8 +503,19 @@ export class UserManager {
             earnedAt: new Date(achievement.earnedAt as string),
           };
         }) || [],
+      triggeredThresholds: Array.isArray(data.triggeredThresholds)
+        ? (data.triggeredThresholds as string[])
+        : [],
       stats: {
         ...(data.stats as Record<string, unknown>),
+        ...((data.stats as Record<string, unknown>)?.lastPointsEarned
+          ? {
+              lastPointsEarned: new Date(
+                (data.stats as Record<string, unknown>)
+                  .lastPointsEarned as string,
+              ),
+            }
+          : {}),
         interactionHistory:
           (
             (data.stats as Record<string, unknown>)?.interactionHistory as
