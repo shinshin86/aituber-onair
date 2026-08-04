@@ -75,10 +75,10 @@ A host application can:
 The dashboard, platform connections, and notification delivery remain the
 responsibility of the host application.
 
-The `stream-operations-staff` example runs an Agent with separate public and
-private Sessions against a deterministic local backend. It uses fixed comment
-data so the Tool, policy, event, and artifact flow can be tried without API
-credentials. It is not a Codex app-server or LLM demo.
+The `stream-operations-staff` example runs Miko against a real Codex app-server.
+Its Node server preprocesses fixed comments with `comment-intelligence`, sends
+only text-free structured observations to Codex, validates Codex-generated
+cards and reports, and streams Agent Events to the existing React dashboard.
 
 ### A resident character inside a product
 

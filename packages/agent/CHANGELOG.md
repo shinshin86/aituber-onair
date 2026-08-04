@@ -13,5 +13,6 @@
 - Adds a Node.js Codex app-server backend pinned to Codex CLI 0.145.0 with
   streamed Turns, resume support, approvals, safe artifacts, and compatibility
   checks.
-- Adds a live-stream operations staff example backed by the real Agent runtime
-  and a deterministic local backend.
+- Adds a live-stream operations staff example backed by a real Codex app-server,
+  server-side comment preprocessing, validated generated artifacts, and an
+  HTTP/SSE dashboard client.

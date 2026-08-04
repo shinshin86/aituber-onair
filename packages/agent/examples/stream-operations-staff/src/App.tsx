@@ -12,6 +12,7 @@ import {
   type StreamAlertData,
   type StreamOperationsStaffRuntime,
   type StreamReportData,
+  type StreamServerState,
   type StreamStaffArtifact,
   type StreamStaffInitialization,
   type StreamStaffTurn,
@@ -114,7 +115,8 @@ function presentTurn(turn: StreamStaffTurn, atCount: number) {
     atCount > COMMENTS.length
       ? '02:20'
       : formatElapsed(COMMENTS[Math.max(0, atCount - 1)]?.atSeconds ?? 0);
-  const artifacts = turn.result.artifacts as readonly StreamStaffArtifact[];
+  const artifacts = (turn.result?.artifacts ??
+    []) as readonly StreamStaffArtifact[];
   return {
     events: turn.events.map((event) => ({
       id: event.id,
@@ -293,6 +295,9 @@ function App() {
   const [runtimeState, setRuntimeState] = useState<RuntimeState>({
     status: 'initializing',
   });
+  const [serverState, setServerState] = useState<StreamServerState | null>(
+    null
+  );
   const [agentEvents, setAgentEvents] = useState<readonly DisplayAgentEvent[]>(
     []
   );
@@ -301,6 +306,7 @@ function App() {
   const [reportArtifact, setReportArtifact] =
     useState<StreamStaffArtifact | null>(null);
   const safetyTimerRef = useRef<number | undefined>(undefined);
+  const playbackGenerationRef = useRef(0);
   const runtimeLeaseCountsRef = useRef(
     new Map<StreamOperationsStaffRuntime, number>()
   );
@@ -360,8 +366,11 @@ function App() {
 
   useEffect(() => {
     let active = true;
+    const generation = playbackGenerationRef.current + 1;
+    playbackGenerationRef.current = generation;
     const leaseCounts = runtimeLeaseCountsRef.current;
     leaseCounts.set(runtime, (leaseCounts.get(runtime) ?? 0) + 1);
+    const unsubscribeState = runtime.subscribeState(setServerState);
     setRuntimeState({ status: 'initializing' });
     runtime
       .initialize()
@@ -377,6 +386,10 @@ function App() {
       });
     return () => {
       active = false;
+      if (playbackGenerationRef.current === generation) {
+        playbackGenerationRef.current += 1;
+      }
+      unsubscribeState();
       if (safetyTimerRef.current !== undefined) {
         window.clearTimeout(safetyTimerRef.current);
       }
@@ -401,8 +414,11 @@ function App() {
     )
       return;
 
-    let active = true;
+    let timerPending = true;
+    const generation = playbackGenerationRef.current;
     const timer = window.setTimeout(async () => {
+      if (!timerPending) return;
+      timerPending = false;
       const nextCount = Math.min(visibleCount + 1, COMMENTS.length);
       const latestComment = COMMENTS[nextCount - 1];
       setVisibleCount(nextCount);
@@ -427,7 +443,7 @@ function App() {
         const turn = await runtime.analyzeComments(
           COMMENTS.slice(0, nextCount)
         );
-        if (!active) return;
+        if (playbackGenerationRef.current !== generation) return;
         applyPresentedTurn(turn, nextCount, {
           setAgentEvents,
           setToolRuns,
@@ -443,16 +459,18 @@ function App() {
           setPhase('error');
         }
       } catch (error) {
-        if (!active) return;
+        if (playbackGenerationRef.current !== generation) return;
         const message = describeError(error, 'Agent analysis error');
         setRulesSnapshot({ result: null, pending: false, error: message });
         setPhase('error');
       } finally {
-        if (active) setAnalyzing(false);
+        if (playbackGenerationRef.current === generation) {
+          setAnalyzing(false);
+        }
       }
     }, 1_200 / speed);
     return () => {
-      active = false;
+      timerPending = false;
       window.clearTimeout(timer);
     };
   }, [analyzing, phase, runtime, runtimeState.status, speed, visibleCount]);
@@ -472,7 +490,24 @@ function App() {
     if (phase === 'monitoring') setPhase('paused');
   };
 
-  const resetDemo = () => {
+  const resetDemo = async () => {
+    playbackGenerationRef.current += 1;
+    try {
+      await runtime.reset();
+    } catch (error) {
+      const message = describeError(error, 'Agent reset error');
+      setAnalyzing(false);
+      setRulesSnapshot((current) => ({
+        ...current,
+        pending: false,
+        error: message,
+      }));
+      setRuntimeState({
+        status: 'error',
+        message,
+      });
+      return;
+    }
     setVisibleCount(0);
     setPhase('pre');
     setRunId((id) => id + 1);
@@ -484,6 +519,7 @@ function App() {
     setAcknowledgedIds([]);
     setRulesSnapshot({ result: null, pending: false, error: null });
     setRuntimeState({ status: 'initializing' });
+    setServerState(null);
     setAgentEvents([]);
     setToolRuns([]);
     setReports([]);
@@ -510,6 +546,31 @@ function App() {
         error: describeError(error, 'Agent report creation error'),
       });
       setPhase('error');
+    }
+  };
+
+  const resolveApproval = async (
+    requestId: string,
+    decision: 'allow-once' | 'deny'
+  ) => {
+    try {
+      await runtime.resolveApproval(requestId, decision);
+    } catch (error) {
+      setRulesSnapshot((current) => ({
+        ...current,
+        error: describeError(error, 'Approval error'),
+      }));
+    }
+  };
+
+  const interruptTurn = async () => {
+    try {
+      await runtime.interrupt();
+    } catch (error) {
+      setRulesSnapshot((current) => ({
+        ...current,
+        error: describeError(error, 'Interrupt error'),
+      }));
     }
   };
 
@@ -657,7 +718,7 @@ function App() {
             ? 'Agent workspace 初期化中'
             : runtimeState.status === 'error'
               ? `Agent 初期化エラー: ${runtimeState.message}`
-              : runtimeState.initialization.firstBootstrapAction === 'resumed'
+              : runtimeState.initialization.resumed
                 ? 'Agent workspace 再開済み'
                 : 'Agent workspace 構成済み'}
         </span>
@@ -668,12 +729,30 @@ function App() {
               ? 'rules mode エラー'
               : 'comment-intelligence · rules mode'}
         </span>
+        {rulesSnapshot.error && (
+          <span className="turn-error-message" role="alert">
+            {rulesSnapshot.error}
+          </span>
+        )}
+        {serverState?.turnActive && (
+          <button type="button" className="trace-clear" onClick={interruptTurn}>
+            Turn を中断
+          </button>
+        )}
         {(selectedCommentId || selectedReportId) && (
           <button type="button" className="trace-clear" onClick={clearTrace}>
             根拠ハイライトを解除
           </button>
         )}
       </output>
+
+      {serverState && serverState.pendingApprovals.length > 0 && (
+        <ApprovalPanel
+          state={serverState}
+          onResolve={resolveApproval}
+          onInterrupt={interruptTurn}
+        />
+      )}
 
       <section className="dashboard-grid" aria-label="配信運営ダッシュボード">
         <section
@@ -807,6 +886,63 @@ function App() {
         onCommentEvidence={showLinkedReports}
       />
     </main>
+  );
+}
+
+function ApprovalPanel({
+  state,
+  onResolve,
+  onInterrupt,
+}: {
+  state: StreamServerState;
+  onResolve: (requestId: string, decision: 'allow-once' | 'deny') => void;
+  onInterrupt: () => void;
+}) {
+  return (
+    <section className="approval-panel" aria-label="Codex 実行制御">
+      <div>
+        <strong>
+          {state.pendingApprovals.length > 0
+            ? 'Codex が承認を求めています'
+            : 'Codex Turn を実行中'}
+        </strong>
+        <p>許可は1回限りです。セッション全体の承認は行いません。</p>
+      </div>
+      {state.pendingApprovals.map((request) => (
+        <article key={request.id} className="approval-request">
+          <div>
+            <code>{request.toolId}</code>
+            <span>{request.risk}</span>
+            <p>{request.reason}</p>
+            <pre>{JSON.stringify(request.arguments, null, 2)}</pre>
+          </div>
+          <div className="approval-actions">
+            <button
+              type="button"
+              onClick={() => onResolve(request.id, 'allow-once')}
+            >
+              この要求だけ許可
+            </button>
+            <button
+              type="button"
+              className="approval-deny"
+              onClick={() => onResolve(request.id, 'deny')}
+            >
+              拒否
+            </button>
+          </div>
+        </article>
+      ))}
+      {state.turnActive && (
+        <button
+          type="button"
+          className="approval-interrupt"
+          onClick={onInterrupt}
+        >
+          Turn を中断
+        </button>
+      )}
+    </section>
   );
 }
 
@@ -1356,8 +1492,8 @@ function BottomPanel({
             {visibleTools.length === 0 ? (
               <EmptyState
                 icon="◇"
-                title="ツール実行待機中"
-                body="comments.analyze の実行状態と結果だけを表示します。"
+                title="Backend activity 待機中"
+                body="Codex backend のTool実行結果がある場合だけ表示します。"
               />
             ) : (
               visibleTools.map((tool) => (
@@ -1474,11 +1610,15 @@ function PostStreamReport({
 
       <section className="next-suggestions">
         <span>次回への提案 · MIKO</span>
-        <ol>
-          {report.nextStreamSuggestions.map((suggestion) => (
-            <li key={suggestion}>{suggestion}</li>
-          ))}
-        </ol>
+        {report.nextStreamSuggestions.length === 0 ? (
+          <p className="report-section-empty">該当なし</p>
+        ) : (
+          <ol>
+            {report.nextStreamSuggestions.map((suggestion) => (
+              <li key={suggestion}>{suggestion}</li>
+            ))}
+          </ol>
+        )}
       </section>
 
       <section className="evidence-data">
@@ -1517,11 +1657,15 @@ function ReportSection({
   return (
     <section className={`report-section report-section-${tone}`}>
       <h3>{title}</h3>
-      <ul>
-        {items.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
+      {items.length === 0 ? (
+        <p className="report-section-empty">該当なし</p>
+      ) : (
+        <ul>
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import type { FixtureComment, FixtureReport } from './types';
+import type { FixtureComment } from './types.js';
 
 const BASE_TIME = Date.UTC(2026, 6, 31, 10, 0, 0);
 
@@ -169,87 +169,6 @@ export const COMMENTS: readonly FixtureComment[] = [
     author: { id: 'u16', name: 'yui' },
     labels: ['注目'],
     attention: '通常',
-  },
-] as const;
-
-export const REPORTS: readonly FixtureReport[] = [
-  {
-    id: 'r01',
-    atCount: 2,
-    time: '00:14',
-    kind: '情報',
-    severity: '低',
-    observation: '制作ソフトについて、最初の質問が届きました。',
-    suggestion: '作業が一区切りした時点で、使用ソフト名を短く案内できます。',
-    evidenceIds: ['c02'],
-  },
-  {
-    id: 'r02',
-    atCount: 5,
-    time: '00:36',
-    kind: '質問増加',
-    severity: '中',
-    observation: '制作ソフトを尋ねる同趣旨の質問が、2名から届いています。',
-    suggestion: '同じ疑問をまとめて回答すると、進行を止めずに解消できます。',
-    evidenceIds: ['c02', 'c05'],
-  },
-  {
-    id: 'r03',
-    atCount: 5,
-    time: '00:36',
-    kind: '建設的フィードバック',
-    severity: '中',
-    observation:
-      'BGMが声より大きく聞こえるという具体的なフィードバックが1件あります。',
-    suggestion: '音量メーターを確認し、必要ならBGMを少し下げてください。',
-    evidenceIds: ['c03'],
-  },
-  {
-    id: 'r04',
-    atCount: 7,
-    time: '00:47',
-    kind: '安全性注意',
-    severity: '高',
-    observation:
-      '短時間に攻撃的な表現を含むコメントが2件検出されました。本文は表示を抑制しています。',
-    suggestion:
-      '反応せず監視を継続してください。実際のモデレーション操作は行いません。',
-    evidenceIds: ['c06', 'c07'],
-  },
-  {
-    id: 'r05',
-    atCount: 10,
-    time: '01:11',
-    kind: '注目',
-    severity: '低',
-    observation:
-      'トランジションへの肯定的な反応が続き、制作ソフトの質問は3件になりました。',
-    suggestion:
-      'トランジションを少し長く見せた後、使用ソフトも案内すると流れが自然です。',
-    evidenceIds: ['c08', 'c09', 'c10'],
-  },
-  {
-    id: 'r06',
-    atCount: 12,
-    time: '01:31',
-    kind: '質問増加',
-    severity: '高',
-    observation:
-      '商用利用時のライセンス条件について、未回答の重要質問が1件あります。',
-    suggestion:
-      '確認が必要な内容として保留を伝え、配信後に概要欄へ追記する案があります。',
-    evidenceIds: ['c12'],
-  },
-  {
-    id: 'r07',
-    atCount: 14,
-    time: '01:48',
-    kind: '話題変化',
-    severity: '中',
-    observation:
-      '関心が制作ソフトから、ブラシ設定と次回の配色解説へ移っています。',
-    suggestion: '次回テーマ候補として「配色の決め方」をメモしておけます。',
-    evidenceIds: ['c13', 'c14'],
   },
 ] as const;
 

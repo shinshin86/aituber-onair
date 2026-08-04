@@ -1425,6 +1425,13 @@ button:disabled {
   line-height: 1.5;
 }
 
+.report-section-empty {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 0.64rem;
+  line-height: 1.5;
+}
+
 .next-suggestions {
   border-color: rgb(79 209 197 / 24%);
   background: rgb(79 209 197 / 4%);
@@ -1669,6 +1676,72 @@ button:disabled {
   .evidence-chips {
     margin-left: 0;
   }
+}
+
+.approval-panel {
+  display: grid;
+  gap: 10px;
+  margin: 0 18px 12px;
+  padding: 12px 14px;
+  border: 1px solid #d49a3a;
+  border-radius: 10px;
+  background: #fff8e9;
+  color: #422c0d;
+}
+
+.turn-error-message {
+  color: #b33232;
+  font-weight: 700;
+}
+
+.approval-panel p {
+  margin: 3px 0 0;
+}
+
+.approval-request {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid #ead2a7;
+}
+
+.approval-request span {
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.approval-request pre {
+  max-width: min(720px, 70vw);
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.approval-actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.approval-actions button,
+.approval-interrupt {
+  padding: 7px 10px;
+  border: 1px solid #9f6c1d;
+  border-radius: 7px;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+}
+
+.approval-actions .approval-deny,
+.approval-interrupt {
+  border-color: #a84a4a;
+  color: #8b2020;
+}
+
+.approval-interrupt {
+  justify-self: end;
 }
 
 @media (prefers-reduced-motion: reduce) {

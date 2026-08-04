@@ -72,10 +72,10 @@ JavaScript／TypeScriptプロダクトへ、管理された専属キャラクタ
 
 ダッシュボード、配信platformとの接続、通知の配信はホストアプリが担当します。
 
-`stream-operations-staff`サンプルは、公開用と非公開用のSessionを分けたAgentを、
-決定的なローカルバックエンドで実行します。API認証情報なしでTool、policy、event、
-artifactの流れを試せるように固定コメントを使っています。Codex app-serverやLLMを
-実行するサンプルではありません。
+`stream-operations-staff`サンプルは、Mikoを実Codex app-serverで動かします。
+Node serverが固定コメントを `comment-intelligence` で前処理し、本文を除いた構造化
+観測だけをCodexへ渡します。Codex生成のカードとレポートを検証し、Agent Eventを
+既存React dashboardへstreamします。
 
 ### プロダクトに常駐するAIキャラクター
 

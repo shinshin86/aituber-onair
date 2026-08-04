@@ -1,8 +1,6 @@
 import type { AgentEvent } from '@aituber-onair/agent';
-import type {
-  CommentIntelligenceResult,
-  LiveComment,
-} from '@aituber-onair/comment-intelligence';
+import type { LiveComment } from '@aituber-onair/comment-intelligence';
+import type { CommentAnalysisSnapshot } from './protocol.js';
 
 export type CommentLabel =
   | '質問'
@@ -83,7 +81,7 @@ export interface ToolRun {
 }
 
 export interface RulesSnapshot {
-  readonly result: CommentIntelligenceResult | null;
+  readonly result: CommentAnalysisSnapshot | null;
   readonly pending: boolean;
   readonly error: string | null;
 }
