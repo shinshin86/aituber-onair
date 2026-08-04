@@ -7,12 +7,18 @@ export type InteractionKind =
   | 'touch'
   | (string & {});
 
+export type InteractionValence = 'positive' | 'neutral' | 'negative';
+
+export type NegativeSeverity = 'light' | 'grave';
+
 /** A contact between an application user and an AI character. */
 export interface Interaction {
   userId: string;
   kind: InteractionKind;
   message?: string;
   emotion?: string;
+  valence?: InteractionValence;
+  severity?: NegativeSeverity;
   isOwner: boolean;
   timestamp: number;
   metadata?: Record<string, unknown>;
@@ -43,6 +49,31 @@ export interface UserStats {
   favoriteEmotions: Record<string, number>;
   lastPointsEarned?: Date;
   interactionHistory?: InteractionRecord[];
+  dynamics?: BondDynamicsState;
+}
+
+export type BondTrend = 'rising' | 'steady' | 'falling' | 'repairing';
+
+export type BondAtmosphere = 'warm' | 'neutral' | 'cool' | 'cold';
+
+export interface BondScar {
+  id: string;
+  summary: string;
+  createdAt: Date;
+  healedAt?: Date;
+}
+
+export interface BondDynamicsState {
+  warmth: number;
+  warmthUpdatedAt: Date;
+  conflictChilled: boolean;
+  trend: BondTrend;
+  currentStage: string;
+  offenseTimestamps: Date[];
+  positiveBucketCounts: Record<string, number>;
+  graveBucketKeys: string[];
+  positiveInteractionsSinceScar: number;
+  positiveBucketKeysSinceScar: string[];
 }
 
 export interface Achievement {
@@ -61,6 +92,8 @@ export interface InteractionRecord {
   emotion?: string;
   kind: InteractionKind;
   appliedRules: string[];
+  valence?: InteractionValence;
+  severity?: NegativeSeverity;
 }
 
 export interface KizunaUser {
@@ -70,6 +103,7 @@ export interface KizunaUser {
   points: number;
   level: number;
   achievements: Achievement[];
+  scars?: BondScar[];
   triggeredThresholds: string[];
   stats: UserStats;
   firstSeen: Date;
@@ -84,6 +118,8 @@ export interface PointRule {
   points: number | ((interaction: Interaction, user?: KizunaUser) => number);
   cooldown?: number;
   bucketLimit?: number;
+  valence?: InteractionValence;
+  severity?: NegativeSeverity;
   description?: string;
 }
 
@@ -131,6 +167,33 @@ export interface LevelConfig {
 export interface WarmthConfig {
   halfLifeMs: number;
   floor: number;
+}
+
+export type BondDynamicsPreset = 'human' | 'forgiving' | 'strict';
+
+export interface BondDynamicsConfig {
+  preset?: BondDynamicsPreset;
+  negativityBias?: number;
+  offenseWindowMs?: number;
+  firstOffenseMultiplier?: number;
+  secondOffenseMultiplier?: number;
+  repeatedOffenseMultiplier?: number;
+  maxEscalationMultiplier?: number;
+  stageBuffers?: Record<string, number>;
+  graveBaseDamage?: number;
+  positiveRepeatMultiplier?: number;
+  consistencyBonusPerBucket?: number;
+  maxConsistencyBonus?: number;
+  giftWarmthThreshold?: number;
+  lowWarmthGiftMultiplier?: number;
+  lightWarmthPenalty?: number;
+  graveWarmthPenalty?: number;
+  conflictRecoveryRate?: number;
+  reunionRecoveryByStage?: Record<string, number>;
+  demotionHysteresis?: number;
+  scarHealingPositiveInteractions?: number;
+  scarHealingPositiveBuckets?: number;
+  maxTrackedBuckets?: number;
 }
 
 export interface SessionInfo {
@@ -195,6 +258,7 @@ export interface KizunaConfig {
   stages?: BondStage[];
   levels?: LevelConfig;
   context?: BondContextConfig;
+  dynamics?: BondDynamicsConfig;
   now?: () => number;
 }
 
@@ -217,16 +281,22 @@ export interface BondSnapshot {
   level: number;
   points: number;
   warmth: number;
+  trend: BondTrend;
+  atmosphere: BondAtmosphere;
   continuity: BondContinuitySnapshot;
   favoriteEmotions: FavoriteEmotion[];
   firstSeen: Date;
   lastSeen: Date;
   achievements: Achievement[];
+  scars: BondScar[];
 }
 
 export type KizunaEventType =
   | 'points_updated'
   | 'level_up'
+  | 'stage_down'
+  | 'scar_created'
+  | 'scar_healed'
   | 'threshold_reached'
   | 'achievement_earned'
   | 'user_created'

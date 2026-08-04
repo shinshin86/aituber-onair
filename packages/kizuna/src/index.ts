@@ -10,6 +10,10 @@ export { KizunaManager } from './KizunaManager';
 export { UserManager } from './UserManager';
 export { PointCalculator } from './PointCalculator';
 export { BondEvaluator, type ContinuityBucket } from './BondEvaluator';
+export {
+  BondDynamics,
+  type BondDynamicsEvaluation,
+} from './BondDynamics';
 export { BondContextBuilder } from './context/BondContextBuilder';
 export {
   createDefaultKizunaConfig,
@@ -42,6 +46,8 @@ export type {
   // Basic types
   InteractionKind,
   Interaction,
+  InteractionValence,
+  NegativeSeverity,
   UserRole,
   UserType,
   LogLevel,
@@ -50,6 +56,10 @@ export type {
   UserStats,
   Achievement,
   InteractionRecord,
+  BondScar,
+  BondDynamicsState,
+  BondTrend,
+  BondAtmosphere,
   // Point system
   PointContext,
   PointRule,
@@ -66,6 +76,8 @@ export type {
   BondStage,
   LevelConfig,
   WarmthConfig,
+  BondDynamicsPreset,
+  BondDynamicsConfig,
   ContinuityUnit,
   ContinuityConfig,
   ContinuityStats,

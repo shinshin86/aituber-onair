@@ -323,6 +323,14 @@ h1 {
   color: #a22b2b;
 }
 
+.change-note.decrease {
+  color: #983f52;
+}
+
+.intimacy-track:has(+ .change-note.decrease) #intimacy-fill {
+  background: linear-gradient(90deg, #81495b, #c65e6c);
+}
+
 @keyframes note-in {
   to {
     opacity: 1;

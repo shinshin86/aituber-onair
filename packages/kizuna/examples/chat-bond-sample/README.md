@@ -10,6 +10,11 @@ intimacy value. Its bar stretches from the previous value to the new value, and
 the SVG history graph records each exchange. The sample uses no LLM, TTS, API
 key, network service, or runtime dependency.
 
+Try `I'm happy to see you` → `stupid` → several kind messages. Rude input
+produces an `angry` scripted reply, so the message and reaction visibly lower
+the bar and graph before calm exchanges repair warmth and score. Absence is not
+punished, and the reply sets a boundary without guilt-tripping the user.
+
 From the repository root:
 
 ```sh

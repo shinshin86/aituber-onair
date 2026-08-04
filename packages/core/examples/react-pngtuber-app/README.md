@@ -65,6 +65,8 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   form input uses a stable local owner identity, while YouTube and Twitch use
   separate identities based on the commenter's name
   - Each message and the avatar's response emotion update the relationship
+  - Positive replies can grow the bond; an `angry` reply cools it and produces
+    a decrease notification, while later calm exchanges repair it gradually
   - The current relationship context is added to the system prompt before the
     response
   - A top-right notification shows the viewer name, points, intimacy change,

@@ -5,11 +5,16 @@ with a viewer. Choose a viewer, contact kind, and emotion to update that
 viewer's points, warmth, relationship stage, continuity, achievements, and
 LLM-ready relationship context.
 
-Points accumulate and do not decrease. Warmth represents recent contact and
-decreases as simulated time passes. The normalized relationship value can be
-passed to `@aituber-onair/noise`. Each contact also displays a top-right change
-notification and animates the per-viewer intimacy bar, so the cause and effect
-are visible immediately.
+The bond score grows and can decrease after conflict. Warmth reacts quickly to
+conflict or repair and cools toward a floor as simulated time passes. Try a
+fight → chill → repair arc with the light negative contacts, or create a grave
+scar and repair it through kind contact across several simulated days. The
+top-right notification and per-viewer intimacy bar animate both increases and
+decreases.
+
+Absence never lowers the bond score or stage; it only cools warmth. Gifts are
+also less effective while warmth is low, so trust cannot be bought back right
+after a fight.
 
 No LLM or API key is required. The simulated clock makes warmth decay and
 continuity gaps visible without waiting in real time.

@@ -19,25 +19,95 @@ this:
 
 ```text
 # First contact
-Bond with Aki: stranger (level 1, 1 points). Warmth: 1.00; continuity: 1 buckets. Favorite emotions: curious. Respond in a way that fits this bond depth and current warmth.
+Bond with Aki: stranger (level 1, 1 points). Trend: rising; current atmosphere: warm (warmth 1.00). Continuity: 1 buckets. Favorite emotions: curious. Respond in a way that fits this bond depth and atmosphere without inducing guilt.
 
 # Continued contact
-Bond with Aki: regular (level 3, 500 points). Warmth: 1.00; continuity: 12 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and current warmth.
+Bond with Aki: regular (level 3, 500 points). Trend: rising; current atmosphere: warm (warmth 1.00). Continuity: 12 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and atmosphere without inducing guilt.
 
 # After time apart
-Bond with Aki: regular (level 3, 500 points). Warmth: 0.50; continuity: 12 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and current warmth.
+Bond with Aki: regular (level 3, 500 points). Trend: rising; current atmosphere: neutral (warmth 0.50). Continuity: 12 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and atmosphere without inducing guilt.
 
 # Contact resumes
-Bond with Aki: regular (level 3, 501 points). Warmth: 1.00; continuity: 1 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and current warmth.
+Bond with Aki: regular (level 3, 501 points). Trend: rising; current atmosphere: warm (warmth 0.95). Continuity: 1 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and atmosphere without inducing guilt.
 
 # A lasting bond
-Bond with Aki: companion (level 4, 1000 points). Warmth: 1.00; continuity: 20 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and current warmth.
+Bond with Aki: companion (level 4, 1000 points). Trend: steady; current atmosphere: warm (warmth 1.00). Continuity: 20 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and atmosphere without inducing guilt.
 ```
 
-Points express accumulated history. Warmth expresses recency. Continuity
-expresses repeated contact across days, weeks, sessions, or custom buckets.
-These signals stay separate so an established bond can cool off and later be
-rekindled without becoming a first meeting again.
+The signed bond score expresses slow-moving history. Warmth expresses the
+current atmosphere. Continuity expresses repeated contact across days, weeks,
+sessions, or custom buckets. These signals stay separate so an established
+bond can cool, recover, or remember a serious violation without becoming a
+first meeting again.
+
+## How the relationship moves
+
+The default `human` preset treats growth and deterioration as equally real
+parts of a relationship. Applications can select `forgiving` for a
+streamer-safe, faster-repairing model or `strict` for firmer boundaries.
+
+| Contact | Bond score | Warmth and memory |
+| --- | --- | --- |
+| Kind contact | Grows slowly; repeated contact in one bucket has diminishing returns. | Recovers warmth, with a small bonus for continuity across buckets. |
+| Light negative contact | Drops with a first-offense discount and a deeper-stage buffer. | Chills immediately, then repairs over several kind exchanges. |
+| Grave violation | Drops sharply and bypasses the stage buffer. | Creates one scar per user and bucket; gifts cannot erase it. |
+| Gift while warmth is low | Receives only part of its normal bond gain. | Cannot purchase immediate forgiveness. |
+| Time apart | **Never lowers the bond score or stage.** | Warmth cools toward a floor and re-warms on reunion. |
+| Sustained repair | Gradually restores the score and warmth. | Heals scars only after a configurable positive pattern across buckets. |
+| Delayed contact | Its score effect is recorded with the original bucket's anti-farming rules. | Does not rewrite the current atmosphere, conflict history, or scar lifecycle. |
+
+Negative emotion defaults such as `angry`, an explicit `valence`, or a
+rule-provided valence can mark an interaction as negative. Use `severity:
+'grave'` only for an application-confirmed integrity violation.
+
+```typescript
+config.dynamics = {
+  preset: 'human', // 'human' | 'forgiving' | 'strict'
+  negativityBias: 3,
+  maxTrackedBuckets: 128, // bounded persisted anti-farming history
+};
+
+await kizuna.processInteraction({
+  userId: 'person-42',
+  kind: 'reaction',
+  emotion: 'angry',
+  valence: 'negative',
+  severity: 'light',
+  isOwner: false,
+  timestamp: Date.now(),
+});
+```
+
+### Design notes and ethical stance
+
+The defaults are product heuristics grounded in relationship research, not a
+claim that software can reproduce or diagnose human relationships:
+
+- The default 3x negativity weight is informed by Baumeister et al.,
+  [“Bad Is Stronger Than Good”](https://doi.org/10.1037/1089-2680.5.4.323),
+  and trust asymmetry by Slovic,
+  [“Perceived Risk, Trust, and Democracy”](https://doi.org/10.1111/j.1539-6924.1993.tb01329.x).
+- The light/grave split and sustained repair follow the distinction between
+  competence- and integrity-based trust violations studied by
+  [Kim et al.](https://doi.org/10.1037/0021-9010.89.1.104).
+- Per-bucket saturation is inspired by Zajonc's
+  [mere-exposure work](https://doi.org/10.1037/h0025848); continuity rewards
+  frequency rather than unlimited same-session intensity.
+- A warmth floor and fast reunion are informed by Levin, Walter, and
+  Murnighan's [dormant-ties research](https://doi.org/10.1287/orsc.1100.0576).
+- Per-viewer tracking reflects evidence that parasocial connection and
+  emotional attachment matter in virtual-streamer participation and support
+  ([VTuber donation study](https://doi.org/10.1108/JRIM-11-2024-0512),
+  [AI VTuber fandom study](https://arxiv.org/abs/2509.10427)).
+- The CHI 2025
+  [taxonomy of harmful AI-companion behavior](https://doi.org/10.1145/3706598.3713429)
+  motivates a hard constraint: **absence never damages the bond score, Kizuna
+  adds no guilt mechanics, and cooling is transparent and explainable.**
+
+The popularized “Gottman 5:1” ratio is not used as a parameter or design
+driver. The default is the documented `negativityBias: 3`, and applications
+should tune it through scene tests rather than treating any social-science
+ratio as a universal law.
 
 ## Features
 
@@ -45,7 +115,7 @@ rekindled without becoming a first meeting again.
   or your own string kind
 - Stable roles: `owner` and `guest`
 - Configurable points, rules, cooldowns, per-bucket limits, and thresholds
-- Bond stages, levels, recency-based warmth, and continuity streaks
+- Signed bond scores, stage hysteresis, fast warmth, scars, and continuity
 - Structured snapshots plus English, Japanese, or custom LLM context
 - A normalized `0..1` relationship value for downstream systems
 - Optional persistence through browser storage or an injected adapter
@@ -128,6 +198,10 @@ config.continuity = {
   unit: 'day',
   grace: 1,
 };
+
+config.dynamics = {
+  preset: 'human',
+};
 ```
 
 The highest stage threshold is also the normalization target used by
@@ -156,8 +230,10 @@ config.rules = [
 ];
 ```
 
-Rule points may also be a function of the interaction and current user.
-Invalid numbers are ignored, and total points never decrease.
+Rule points may also be a function of the interaction and current user. Rules
+can provide `valence` and `severity`; explicit interaction values take
+precedence. Invalid numbers are ignored. Bond scores are signed in motion but
+floored at zero, while `stats.totalPointsEarned` counts positive gains only.
 
 ### Threshold actions and achievements
 
@@ -258,8 +334,9 @@ core.updateChatOptions({
 await core.processChat(interaction.message ?? '');
 ```
 
-The `react-basic` Core example includes this integration as an opt-in setting
-and also records emotions from assistant response events.
+The `react-pngtuber-app` Core example includes this integration and records
+emotions from assistant response events, including negative relationship
+changes.
 
 ### Control Noise relationship gates
 
@@ -320,9 +397,10 @@ kizuna.on('achievement_earned', (event) => {
 ```
 
 The manager currently emits `user_created`, `points_updated`, `level_up`,
-`threshold_reached`, `achievement_earned`, and `error`. `KizunaEventType` also
-retains `user_updated` and `action_executed` for compatibility, but the manager
-does not currently emit them. Listeners receive `KizunaEventData` with `type`,
+`stage_down`, `scar_created`, `scar_healed`, `threshold_reached`,
+`achievement_earned`, and `error`. `KizunaEventType` also retains
+`user_updated` and `action_executed` for compatibility, but the manager does
+not currently emit them. Listeners receive `KizunaEventData` with `type`,
 `userId`, `data`, and `timestamp`.
 
 ## API reference
@@ -338,16 +416,18 @@ does not currently emit them. Listeners receive `KizunaEventData` with `type`,
 | `toRelationshipCapital(userId)` | Return a warmth-adjusted value from `0` to `1`. |
 | `beginSession(id?)` / `endSession()` | Manage session continuity buckets. |
 | `getUser(userId)` / `getAllUsers()` | Read user records. |
-| `addPoints(userId, points)` | Add non-negative points to an existing user. |
+| `addPoints(userId, points)` | Apply a signed adjustment, floored at zero, to an existing user. |
 | `calculateLevel(points)` | Resolve a level from the current configuration. |
 | `getStats()` | Return aggregate counts and point totals. |
 | `destroy()` | Stop cleanup and remove listeners. |
 
 ### Main types and helpers
 
-- `Interaction`, `InteractionKind`, `UserRole`, `KizunaUser`, `PointRule`,
-  `PointResult`, `Threshold`, `Achievement`
-- `KizunaConfig`, `BondStage`, `WarmthConfig`, `ContinuityConfig`
+- `Interaction`, `InteractionKind`, `InteractionValence`, `NegativeSeverity`,
+  `UserRole`, `KizunaUser`, `PointRule`, `PointResult`, `Threshold`,
+  `Achievement`
+- `KizunaConfig`, `BondStage`, `WarmthConfig`, `ContinuityConfig`,
+  `BondDynamicsConfig`, `BondDynamicsPreset`
 - `BondSnapshot`, `BondContextOptions`, `BondContextTemplate`
 - `createDefaultKizunaConfig()`, `DEFAULT_BOND_STAGES`
 - `BondEvaluator`, `BondContextBuilder`, `PointCalculator`, `UserManager`
@@ -400,8 +480,8 @@ See [CHANGELOG.md](./CHANGELOG.md) for the complete breaking-change summary.
 
 ## Browser lab
 
-From a repository checkout, run the interactive sample to explore points,
-stages, warmth, continuity, achievements, context output, and simulated time:
+From a repository checkout, run the interactive sample to explore growth,
+conflict, repair, stages, warmth, scars, context output, and simulated time:
 
 ```bash
 npm -w @aituber-onair/kizuna run example:kizuna-sample

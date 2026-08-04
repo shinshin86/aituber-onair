@@ -50,4 +50,26 @@ describe('BondToastStack', () => {
     expect(html).toContain('レベル3に上がりました');
     expect(html).toContain('bond-toast-highlight');
   });
+
+  it('shows a decrease variant for an angry reply', () => {
+    const html = renderToStaticMarkup(
+      createElement(BondToastStack, {
+        toasts: [
+          {
+            ...baseToast,
+            pointsAdded: -7.5,
+            previousIntimacy: 0.2,
+            nextIntimacy: 0.12,
+            previousStage: '知り合い',
+            nextStage: '知り合い',
+          },
+        ],
+        onDismiss: () => undefined,
+      }),
+    );
+
+    expect(html).toContain('-7.5ポイント');
+    expect(html).toContain('親密度 20% → 12%');
+    expect(html).toContain('bond-toast-decreased');
+  });
 });

@@ -235,6 +235,20 @@ body {
   box-shadow: 0 18px 44px -20px rgba(240, 184, 79, 0.6);
 }
 
+.bond-toast-decreased {
+  border-color: rgba(179, 71, 87, 0.55);
+  background: rgba(255, 246, 247, 0.97);
+}
+
+.bond-toast-decreased .bond-toast-heading span {
+  color: #9e3045;
+  background: rgba(179, 71, 87, 0.12);
+}
+
+.bond-toast-decreased .bond-toast-track i {
+  background: linear-gradient(90deg, #8c4054, #c85a68);
+}
+
 .bond-toast-dismiss {
   position: absolute;
   top: 7px;

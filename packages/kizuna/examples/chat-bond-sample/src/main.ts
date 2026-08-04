@@ -25,6 +25,7 @@ interface HistoryPoint {
 const USER_ID = 'one-to-one-owner';
 const DISPLAY_NAME = 'あなた';
 const MAX_HISTORY = 24;
+const VISIBLE_INTIMACY_CHANGE = 0.0005;
 const stageLabels: Record<string, string> = {
   stranger: '知り合ったばかり',
   acquaintance: '知り合い',
@@ -32,6 +33,16 @@ const stageLabels: Record<string, string> = {
   companion: '相棒',
 };
 const cannedReplies: Record<string, ScriptedReply[]> = {
+  rude: [
+    {
+      text: 'その言い方は受け止められないよ。落ち着いて話せるときに続けよう。',
+      emotion: 'angry',
+    },
+    {
+      text: '今の言葉には距離を置きたいな。穏やかに話し直してくれたら聞くよ。',
+      emotion: 'angry',
+    },
+  ],
   curious: [
     {
       text: 'いい質問だね。もう少し一緒に考えてみたいな。',
@@ -88,9 +99,21 @@ form.addEventListener('submit', (event) => {
 });
 
 input.addEventListener('input', updateSubmitState);
-resetButton.addEventListener('click', resetChat);
+resetButton.addEventListener('click', () => {
+  void resetChat();
+});
 
-renderState();
+input.disabled = true;
+void initializeRelationship()
+  .then(() => renderState())
+  .catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    showChange(`初期化できませんでした: ${message}`, 'error');
+  })
+  .finally(() => {
+    input.disabled = false;
+    updateSubmitState();
+  });
 
 function createManager(): KizunaManager {
   const config = createDefaultKizunaConfig();
@@ -101,7 +124,7 @@ function createManager(): KizunaManager {
   };
   config.owner = {
     ...config.owner,
-    initialPoints: 0,
+    initialPoints: 100,
     firstContactBonus: 0,
     pointMultiplier: 1,
   };
@@ -120,10 +143,12 @@ async function sendMessage(): Promise<void> {
   renderMessages();
 
   try {
+    const rude = isRudeInput(text);
     await recordInteraction({
       userId: USER_ID,
       kind: 'message',
       message: text,
+      ...(rude && { valence: 'negative' as const }),
       isOwner: true,
       timestamp: Date.now(),
       metadata: { displayName: DISPLAY_NAME, source: 'one-to-one-chat' },
@@ -152,7 +177,7 @@ async function sendMessage(): Promise<void> {
     renderState();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    showChange(`更新できませんでした: ${message}`, true);
+    showChange(`更新できませんでした: ${message}`, 'error');
   } finally {
     isProcessing = false;
     input.disabled = false;
@@ -166,11 +191,13 @@ async function recordInteraction(interaction: Interaction): Promise<void> {
 }
 
 function selectReply(text: string): ScriptedReply {
-  const group = /\?|？|どう|なぜ/.test(text)
-    ? cannedReplies.curious
-    : /！|!|嬉|うれ|最高|楽し|好き/.test(text)
-      ? cannedReplies.excited
-      : cannedReplies.calm;
+  const group = isRudeInput(text)
+    ? cannedReplies.rude
+    : /\?|？|どう|なぜ/.test(text)
+      ? cannedReplies.curious
+      : /！|!|嬉|うれ|最高|楽し|好き/.test(text)
+        ? cannedReplies.excited
+        : cannedReplies.calm;
   const fallback: ScriptedReply = {
     text: '話してくれてありがとう。もう少し聞かせて。',
     emotion: 'happy',
@@ -188,10 +215,16 @@ function renderState(): void {
   renderRelationship(snapshot, displayedIntimacy, nextIntimacy);
   renderGraph();
   renderContext();
-  if (nextIntimacy > displayedIntimacy) {
+  if (nextIntimacy - displayedIntimacy > VISIBLE_INTIMACY_CHANGE) {
     const added = snapshot ? snapshot.points - previousPoints : 0;
     showChange(
-      `親密度が上がりました · ${added > 0 ? `+${added}ポイント` : '会話を記録'}`,
+      `親密度が上がりました · ${added > 0 ? `${formatSignedPoints(added)}ポイント` : '会話を記録'}`,
+    );
+  } else if (displayedIntimacy - nextIntimacy > VISIBLE_INTIMACY_CHANGE) {
+    const added = snapshot ? snapshot.points - previousPoints : 0;
+    showChange(
+      `親密度が下がりました · ${formatSignedPoints(added)}ポイント · 穏やかな会話で少しずつ修復できます`,
+      'decrease',
     );
   }
   displayedIntimacy = nextIntimacy;
@@ -203,7 +236,7 @@ function renderRelationship(
   from: number,
   to: number,
 ): void {
-  setText('#points-value', String(snapshot?.points ?? 0));
+  setText('#points-value', formatPoints(snapshot?.points ?? 0));
   setText('#warmth-value', `${Math.round((snapshot?.warmth ?? 0) * 100)}%`);
   setText(
     '#stage-value',
@@ -261,17 +294,22 @@ function renderContext(): void {
     context || '最初の会話後に、LLMへ渡せる関係性の文脈が表示されます。';
 }
 
-function showChange(text: string, isError = false): void {
+function showChange(
+  text: string,
+  tone: 'normal' | 'decrease' | 'error' = 'normal',
+): void {
   const note = requireElement<HTMLDivElement>('#change-note');
   note.textContent = text;
-  note.classList.toggle('error', isError);
+  note.classList.toggle('error', tone === 'error');
+  note.classList.toggle('decrease', tone === 'decrease');
   note.classList.remove('visible');
   void note.offsetWidth;
   note.classList.add('visible');
 }
 
-function resetChat(): void {
+async function resetChat(): Promise<void> {
   if (isProcessing) return;
+  isProcessing = true;
   manager.destroy();
   manager = createManager();
   messages = [
@@ -282,14 +320,29 @@ function resetChat(): void {
       emotion: 'happy',
     },
   ];
-  history = [{ intimacy: 0 }];
-  displayedIntimacy = 0;
-  displayedPoints = 0;
+  await initializeRelationship();
   renderedMessageCount = 0;
   requireElement<HTMLDivElement>('#chat-log').innerHTML = '';
   renderState();
   showChange('関係性をリセットしました。');
+  isProcessing = false;
+  updateSubmitState();
   input.focus();
+}
+
+async function initializeRelationship(): Promise<void> {
+  await manager.processInteraction({
+    userId: USER_ID,
+    kind: 'presence',
+    valence: 'neutral',
+    isOwner: true,
+    timestamp: Date.now(),
+    metadata: { displayName: DISPLAY_NAME, source: 'sample-baseline' },
+  });
+  const intimacy = manager.toRelationshipCapital(USER_ID);
+  history = [{ intimacy }];
+  displayedIntimacy = intimacy;
+  displayedPoints = manager.getBondSnapshot(USER_ID)?.points ?? 0;
 }
 
 function updateSubmitState(): void {
@@ -308,6 +361,21 @@ function requireElement<T extends Element>(selector: string): T {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function isRudeInput(text: string): boolean {
+  return /ばか|バカ|嫌い|うるさい|黙れ|最悪|idiot|stupid|hate|shut up/i.test(
+    text,
+  );
+}
+
+function formatPoints(points: number): string {
+  return Number.isInteger(points) ? String(points) : points.toFixed(1);
+}
+
+function formatSignedPoints(points: number): string {
+  const formatted = formatPoints(points);
+  return points > 0 ? `+${formatted}` : formatted;
 }
 
 function formatStage(stage: string): string {
@@ -330,7 +398,7 @@ function renderShell(): string {
         <div>
           <p class="package-name">@aituber-onair/kizuna</p>
           <h1>Kizuna 1対1チャットデモ</h1>
-          <p>入力したメッセージとキャラクターの感情付き定型応答を、1人分の関係性として記録します。会話するたび、右側のポイント・温かさ・関係ステージ・親密度が変わります。</p>
+          <p>入力したメッセージとキャラクターの感情付き定型応答を、1人分の関係性として記録します。「今日も会えてうれしい」→「ばか」→穏やかな言葉を数回、の順で、不和による低下と修復を試せます。</p>
         </div>
         <button id="reset-button" type="button">リセット</button>
       </header>
@@ -359,8 +427,8 @@ function renderShell(): string {
             <div id="change-note" class="change-note" role="status"></div>
           </div>
           <dl class="metrics">
-            <div><dt>ポイント</dt><dd id="points-value">0</dd><small>会話で累積し、減りません</small></div>
-            <div><dt>温かさ</dt><dd id="warmth-value">0%</dd><small>接触がない時間で下がります</small></div>
+            <div><dt>絆スコア</dt><dd id="points-value">0</dd><small>親切で増え、不和で下がります</small></div>
+            <div><dt>温かさ</dt><dd id="warmth-value">0%</dd><small>不和で冷え、穏やかな会話で戻ります</small></div>
           </dl>
           <div class="graph-block">
             <div><strong>親密度の推移</strong><small>会話1往復ごとの変化</small></div>

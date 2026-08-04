@@ -20,8 +20,11 @@ export function BondToastStack({
   return (
     <aside className="bond-toast-stack" aria-label="親密度の変化通知">
       {toasts.map((toast) => {
+        const decreased = toast.nextIntimacy < toast.previousIntimacy;
         const highlighted =
-          toast.leveledUp || toast.previousStage !== toast.nextStage;
+          decreased ||
+          toast.leveledUp ||
+          toast.previousStage !== toast.nextStage;
         const style: ToastStyle = {
           '--bond-from': `${toast.previousIntimacy * 100}%`,
           '--bond-to': `${toast.nextIntimacy * 100}%`,
@@ -29,7 +32,7 @@ export function BondToastStack({
         return (
           <section
             key={toast.id}
-            className={`bond-toast${highlighted ? ' bond-toast-highlight' : ''}`}
+            className={`bond-toast${highlighted ? ' bond-toast-highlight' : ''}${decreased ? ' bond-toast-decreased' : ''}`}
             role="status"
           >
             <button
@@ -42,7 +45,7 @@ export function BondToastStack({
             </button>
             <div className="bond-toast-heading">
               <strong>{toast.displayName}</strong>
-              <span>+{toast.pointsAdded}ポイント</span>
+              <span>{formatSignedPoints(toast.pointsAdded)}ポイント</span>
             </div>
             <p>
               親密度 {Math.round(toast.previousIntimacy * 100)}% →{' '}
@@ -63,4 +66,9 @@ export function BondToastStack({
       })}
     </aside>
   );
+}
+
+function formatSignedPoints(points: number): string {
+  const formatted = Number.isInteger(points) ? String(points) : points.toFixed(1);
+  return points > 0 ? `+${formatted}` : formatted;
 }

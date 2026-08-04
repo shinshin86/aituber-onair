@@ -1,4 +1,5 @@
 import { BondEvaluator } from './BondEvaluator';
+import { BondDynamics } from './BondDynamics';
 import { BondContextBuilder } from './context/BondContextBuilder';
 import { PointCalculator, type PersistedLimitRecord } from './PointCalculator';
 import type {
@@ -71,6 +72,7 @@ export class KizunaManager
   private readonly userManager: UserManager;
   private readonly pointCalculator: PointCalculator;
   private readonly bondEvaluator: BondEvaluator;
+  private readonly bondDynamics: BondDynamics;
   private readonly contextBuilder: BondContextBuilder;
   private readonly now: () => number;
   private readonly storageProvider: StorageProvider | null;
@@ -98,7 +100,12 @@ export class KizunaManager
     this.storageProvider = storageProvider ?? null;
     this.now = config.now ?? Date.now;
     this.bondEvaluator = new BondEvaluator(config);
-    this.userManager = new UserManager(config, this.bondEvaluator);
+    this.bondDynamics = new BondDynamics(config, this.bondEvaluator);
+    this.userManager = new UserManager(
+      config,
+      this.bondEvaluator,
+      this.bondDynamics,
+    );
     this.pointCalculator = new PointCalculator(config, this.bondEvaluator);
     this.contextBuilder = new BondContextBuilder(config.context);
   }
@@ -118,6 +125,7 @@ export class KizunaManager
   }
 
   async processInteraction(interaction: Interaction): Promise<PointResult> {
+    assertValidTimestamp(interaction.timestamp, 'Interaction timestamp');
     if (!this.isInitialized) await this.initialize();
     try {
       const previousUserCount = this.userManager.getUserCount();
@@ -148,9 +156,16 @@ export class KizunaManager
         this.activeSession,
         isFirstContactInBucket,
       );
+      const dynamics = this.bondDynamics.applyInteraction(
+        user,
+        interaction,
+        calculation.points,
+        calculation.appliedRules,
+        bucket.key,
+      );
       const result = await this.addPoints(
         user.id,
-        calculation.points,
+        dynamics.points,
         interaction,
         calculation.appliedRules,
       );
@@ -159,7 +174,15 @@ export class KizunaManager
         interaction,
         result.pointsAdded,
         result.appliedRules.map(({ id }) => id),
+        dynamics.valence,
+        dynamics.severity,
       );
+      for (const scar of dynamics.createdScars) {
+        this.emitEvent('scar_created', { userId: user.id, scar, user });
+      }
+      for (const scar of dynamics.healedScars) {
+        this.emitEvent('scar_healed', { userId: user.id, scar, user });
+      }
       if (this.storageProvider) await this.saveToStorage();
       return result;
     } catch (error) {
@@ -182,18 +205,25 @@ export class KizunaManager
     interaction?: Interaction,
     appliedRules: PointRule[] = [],
   ): Promise<PointResult> {
+    const occurredAt = interaction?.timestamp ?? this.now();
+    assertValidTimestamp(occurredAt, 'Point adjustment timestamp');
     const user = this.userManager.getUser(userId);
     if (!user) throw new Error(`User not found: ${userId}`);
 
     const oldPoints = user.points;
     const oldLevel = user.level;
-    const occurredAt = interaction?.timestamp ?? this.now();
-    const pointsAdded = Number.isFinite(points) ? Math.max(0, points) : 0;
-    user.points += pointsAdded;
+    const dynamics = this.bondDynamics.ensureState(user, interaction);
+    const oldStage = dynamics.currentStage;
+    const requestedPoints = Number.isFinite(points) ? points : 0;
+    const adjustedPoints = user.points + requestedPoints;
+    user.points = Number.isFinite(adjustedPoints)
+      ? Math.max(0, adjustedPoints)
+      : oldPoints;
+    const pointsAdded = user.points - oldPoints;
     if (occurredAt > user.lastSeen.getTime()) {
       user.lastSeen = new Date(occurredAt);
     }
-    user.stats.totalPointsEarned += pointsAdded;
+    user.stats.totalPointsEarned += Math.max(0, pointsAdded);
     if (
       pointsAdded > 0 &&
       (!user.stats.lastPointsEarned ||
@@ -202,8 +232,16 @@ export class KizunaManager
       user.stats.lastPointsEarned = new Date(occurredAt);
     }
 
-    const newLevel = this.calculateLevel(user.points);
+    const newStage = this.bondDynamics.resolveStage(user, user.points);
+    dynamics.currentStage = newStage;
+    const newLevel = this.bondEvaluator.calculateLevelForStage(
+      user.points,
+      newStage,
+    );
     const leveledUp = newLevel > oldLevel;
+    const stagedDown =
+      this.bondEvaluator.getStageIndex(newStage) <
+      this.bondEvaluator.getStageIndex(oldStage);
     user.level = newLevel;
     const triggeredThresholds = this.checkThresholds(user, oldPoints);
     const result: PointResult = {
@@ -223,6 +261,15 @@ export class KizunaManager
     });
     if (leveledUp) {
       this.emitEvent('level_up', { userId, oldLevel, newLevel });
+    }
+    if (stagedDown) {
+      this.emitEvent('stage_down', {
+        userId,
+        oldStage,
+        newStage,
+        oldPoints,
+        newPoints: user.points,
+      });
     }
     for (const { threshold, achievement } of triggeredThresholds) {
       this.emitEvent('threshold_reached', { userId, threshold, user });
@@ -259,16 +306,18 @@ export class KizunaManager
   getBondSnapshot(userId: string): BondSnapshot | null {
     const user = this.userManager.getUser(userId);
     if (!user) return null;
+    const dynamics = this.bondDynamics.ensureState(user);
+    const warmth = this.bondDynamics.getWarmth(user, this.now());
     return {
       userId: user.id,
       displayName: user.displayName,
       role: user.role,
-      stage: this.bondEvaluator.resolveStage(user.points).id,
+      stage: dynamics.currentStage,
       level: user.level,
       points: user.points,
-      warmth: this.bondEvaluator.calculateWarmth(
-        user.stats.continuity.lastContactAt,
-      ),
+      warmth,
+      trend: dynamics.trend,
+      atmosphere: this.bondDynamics.getAtmosphere(warmth),
       continuity: {
         streak: user.stats.continuity.streak,
         totalActiveBuckets: user.stats.continuity.totalActiveBuckets,
@@ -282,6 +331,11 @@ export class KizunaManager
       achievements: user.achievements.map((achievement) => ({
         ...achievement,
         earnedAt: new Date(achievement.earnedAt),
+      })),
+      scars: (user.scars ?? []).map((scar) => ({
+        ...scar,
+        createdAt: new Date(scar.createdAt),
+        ...(scar.healedAt && { healedAt: new Date(scar.healedAt) }),
       })),
     };
   }
@@ -564,5 +618,14 @@ export class KizunaManager
       return;
     const prefix = `[Kizuna ${new Date(this.now()).toISOString()}]`;
     console[level](prefix, message, ...arguments_);
+  }
+}
+
+function assertValidTimestamp(timestamp: number, label: string): void {
+  if (
+    !Number.isFinite(timestamp) ||
+    !Number.isFinite(new Date(timestamp).getTime())
+  ) {
+    throw new RangeError(`${label} must be a finite valid date value`);
   }
 }

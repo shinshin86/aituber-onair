@@ -21,10 +21,11 @@
   `InteractionKind` and `KizunaConfig.basePoints` instead.
 - Changed low-level helper APIs. `UserManager` now requires a `BondEvaluator`
   as its second constructor argument, and `getUserCountByPlatform()` became
-  `getUserCountByRole()`. `resetUserPoints()` was removed because point updates
-  are monotonic. `PointCalculator.recordRuleApplication()` now requires the
-  relevant `Interaction` as its third argument. Prefer `KizunaManager` unless
-  the application needs to compose these helpers directly.
+  `getUserCountByRole()`. `resetUserPoints()` was removed in favor of signed
+  adjustments through `KizunaManager`.
+  `PointCalculator.recordRuleApplication()` now requires the relevant
+  `Interaction` as its third argument. Prefer `KizunaManager` unless the
+  application needs to compose these helpers directly.
 - Added required bond output and session lifecycle methods to
   `KizunaManagerInterface`: `getBondSnapshot()`, `getBondContext()`,
   `toRelationshipCapital()`, `beginSession()`, `endSession()`, and `destroy()`.
@@ -49,13 +50,25 @@ preserved.
   data.
 - A browser bond simulator with four people, five contact kinds, emotion
   selection, simulated time, achievements, event history, and context preview.
-- Kizuna integrations in the Noise session sample and the opt-in Core
-  `react-basic` example.
+- Kizuna integrations in the Noise session sample and the Core
+  `react-pngtuber-app` example.
+- Human-modeled relationship dynamics with `human`, `forgiving`, and `strict`
+  presets, signed bond changes, fast warmth, stage buffering, grave-event
+  scars, sustained repair, and mood-gated gifts.
+- `stage_down`, `scar_created`, and `scar_healed` lifecycle events plus trend,
+  atmosphere, and scar memory in bond snapshots and LLM context.
 
 ### Changed
 
 - Consolidated all user ownership and updates under `UserManager`.
-- Made points monotonic: invalid or negative additions cannot reduce a bond.
+- Made bond scores signed in motion and floored at zero; positive earnings
+  remain separately accumulated in `stats.totalPointsEarned`.
+- Added per-bucket diminishing returns, continuity bonuses, demotion
+  hysteresis, bounded offense escalation, and one grave event per user and
+  continuity bucket. Persisted anti-farming bucket history is bounded, and
+  delayed contacts cannot rewrite the current atmosphere or scar lifecycle.
+- Made absence affect only explainable warmth decay, never the bond score or
+  stage, and documented the no-guilt design stance.
 - Hardened continuity against out-of-order contacts and persistence against
   unsafe IDs, lifecycle races, and stale asynchronous writes.
 - Rewrote the English and Japanese READMEs around the bond lifecycle, added an

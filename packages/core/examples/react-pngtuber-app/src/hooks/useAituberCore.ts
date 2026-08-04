@@ -66,6 +66,7 @@ const GPT5_SAMPLE_PROVIDER_OPTIONS = { gpt5Preset: 'casual' as const };
 const GPT5_SAMPLE_CHAT_OPTIONS = { responseLength: 'veryShort' as const };
 const MAX_BOND_TOASTS = 4;
 const BOND_TOAST_DURATION_MS = 4_500;
+const VISIBLE_BOND_CHANGE = 0.0005;
 
 function createPngTuberKizunaManager(): KizunaManager {
   const config = createDefaultKizunaConfig();
@@ -422,7 +423,7 @@ export function useAituberCore({
       if (!nextSnapshot) return null;
 
       const nextIntimacy = manager.toRelationshipCapital(identity.userId);
-      if (nextIntimacy > previousIntimacy) {
+      if (Math.abs(nextIntimacy - previousIntimacy) > VISIBLE_BOND_CHANGE) {
         bondToastSequenceRef.current += 1;
         const id = bondToastSequenceRef.current;
         const toast: BondToast = {

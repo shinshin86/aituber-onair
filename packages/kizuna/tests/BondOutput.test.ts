@@ -52,8 +52,8 @@ describe('bond output APIs', () => {
 
     now += 2_000;
 
-    expect(manager.getBondSnapshot('user-1')?.warmth).toBe(0.25);
-    expect(manager.toRelationshipCapital('user-1')).toBe(0.125);
+    expect(manager.getBondSnapshot('user-1')?.warmth).toBe(0.4);
+    expect(manager.toRelationshipCapital('user-1')).toBe(0.2);
     manager.destroy();
   });
 

@@ -1,10 +1,14 @@
 import type { BondEvaluator } from './BondEvaluator';
+import { BondDynamics } from './BondDynamics';
 import type {
   Achievement,
+  BondScar,
   Interaction,
+  InteractionValence,
   InteractionRecord,
   KizunaConfig,
   KizunaUser,
+  NegativeSeverity,
   SessionInfo,
   UserRole,
   UserStats,
@@ -17,6 +21,7 @@ export class UserManager {
   constructor(
     private readonly config: KizunaConfig,
     private readonly bondEvaluator: BondEvaluator,
+    private readonly bondDynamics = new BondDynamics(config, bondEvaluator),
   ) {
     this.now = config.now ?? Date.now;
   }
@@ -84,6 +89,8 @@ export class UserManager {
     interaction: Interaction,
     pointsEarned: number,
     appliedRules: string[],
+    valence?: InteractionValence,
+    severity?: NegativeSeverity,
   ): void {
     const user = this.users.get(userId);
     if (!user) return;
@@ -95,6 +102,8 @@ export class UserManager {
       emotion: interaction.emotion,
       kind: interaction.kind,
       appliedRules,
+      ...(valence && { valence }),
+      ...(severity && { severity }),
     };
     user.stats.interactionHistory ??= [];
     user.stats.interactionHistory.push(record);
@@ -143,7 +152,10 @@ export class UserManager {
     session?: SessionInfo,
   ): KizunaUser {
     const role: UserRole = interaction.isOwner ? 'owner' : 'guest';
-    const points = role === 'owner' ? this.config.owner.initialPoints : 0;
+    const initialPoints =
+      role === 'owner' ? this.config.owner.initialPoints : 0;
+    const points =
+      Number.isFinite(initialPoints) && initialPoints > 0 ? initialPoints : 0;
     const user: KizunaUser = {
       id: interaction.userId,
       displayName: this.resolveDisplayName(interaction),
@@ -151,12 +163,14 @@ export class UserManager {
       points,
       level: this.bondEvaluator.calculateLevel(points),
       achievements: [],
+      scars: [],
       triggeredThresholds: [],
       stats: this.createInitialStats(interaction, session),
       firstSeen: new Date(interaction.timestamp),
       lastSeen: new Date(interaction.timestamp),
       customData: {},
     };
+    user.stats.dynamics = this.bondDynamics.createState(interaction, points);
     if (role === 'owner') this.grantOwnerAchievements(user);
     return user;
   }
@@ -248,18 +262,36 @@ export class UserManager {
           isOwner: role === 'owner',
           timestamp: lastSeen.getTime(),
         });
+    const points = Math.max(0, Number(data.points ?? 0) || 0);
+    const fallbackInteraction: Interaction = {
+      userId,
+      kind: 'presence',
+      isOwner: role === 'owner',
+      timestamp: lastSeen.getTime(),
+    };
+    const dynamics = this.bondDynamics.normalizeState(
+      stats.dynamics,
+      fallbackInteraction,
+      points,
+    );
 
     return {
       id: userId,
       displayName:
         typeof data.displayName === 'string' ? data.displayName : userId,
       role,
-      points: Number(data.points ?? 0),
-      level: this.bondEvaluator.calculateLevel(Number(data.points ?? 0)),
+      points,
+      level: this.bondEvaluator.calculateLevelForStage(
+        points,
+        dynamics.currentStage,
+      ),
       achievements: ((data.achievements as unknown[]) ?? []).map((item) => {
         const achievement = item as Achievement;
         return { ...achievement, earnedAt: new Date(achievement.earnedAt) };
       }),
+      scars: ((data.scars as unknown[]) ?? [])
+        .map((item) => this.normalizeScar(item))
+        .filter((scar): scar is BondScar => scar !== null),
       triggeredThresholds: Array.isArray(data.triggeredThresholds)
         ? (data.triggeredThresholds as string[])
         : [],
@@ -296,9 +328,16 @@ export class UserManager {
                     (ruleId): ruleId is string => typeof ruleId === 'string',
                   )
                 : [],
+              ...(isInteractionValence(record.valence) && {
+                valence: record.valence,
+              }),
+              ...(isNegativeSeverity(record.severity) && {
+                severity: record.severity,
+              }),
             };
           },
         ),
+        dynamics,
       },
       firstSeen,
       lastSeen,
@@ -320,6 +359,25 @@ export class UserManager {
     };
   }
 
+  private normalizeScar(value: unknown): BondScar | null {
+    if (!value || typeof value !== 'object') return null;
+    const scar = value as Record<string, unknown>;
+    if (typeof scar.id !== 'string' || typeof scar.summary !== 'string') {
+      return null;
+    }
+    const createdAt = new Date(scar.createdAt as string);
+    if (!Number.isFinite(createdAt.getTime())) return null;
+    const healedAt = scar.healedAt
+      ? new Date(scar.healedAt as string)
+      : undefined;
+    return {
+      id: scar.id,
+      summary: scar.summary,
+      createdAt,
+      ...(healedAt && Number.isFinite(healedAt.getTime()) && { healedAt }),
+    };
+  }
+
   private generateInteractionId(): string {
     return `interaction_${this.now()}_${Math.random().toString(36).slice(2, 8)}`;
   }
@@ -327,4 +385,12 @@ export class UserManager {
   private log(message: string): void {
     if (this.config.dev.debugMode) console.log(`[UserManager] ${message}`);
   }
+}
+
+function isInteractionValence(value: unknown): value is InteractionValence {
+  return value === 'positive' || value === 'neutral' || value === 'negative';
+}
+
+function isNegativeSeverity(value: unknown): value is NegativeSeverity {
+  return value === 'light' || value === 'grave';
 }

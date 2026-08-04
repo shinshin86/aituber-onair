@@ -88,18 +88,18 @@ describe('KizunaManager', () => {
     const user = manager.getUser('user-1');
     expect(user?.stats).toMatchObject({
       totalInteractions: 2,
-      totalPointsEarned: 2,
       continuity: { streak: 2, totalActiveBuckets: 2 },
       favoriteEmotions: { happy: 1, calm: 1 },
     });
+    expect(user?.stats.totalPointsEarned).toBeCloseTo(2.03);
     expect(user?.stats.interactionHistory).toHaveLength(2);
     expect(user?.stats.interactionHistory?.[1]).toMatchObject({
-      points: 1,
       message: 'Next bucket',
       emotion: 'calm',
       kind: 'message',
       appliedRules: [],
     });
+    expect(user?.stats.interactionHistory?.[1]?.points).toBeCloseTo(1.03);
   });
 
   it('keeps only the latest 100 interaction records', async () => {
@@ -127,14 +127,14 @@ describe('KizunaManager', () => {
     expect(manager.getUser('user-1')?.level).toBe(2);
   });
 
-  it('never decreases accumulated points', async () => {
+  it('supports signed adjustments while flooring the bond score at zero', async () => {
     const manager = createManager();
     await manager.processInteraction(createInteraction());
 
     const result = await manager.addPoints('user-1', -10);
 
-    expect(result).toMatchObject({ pointsAdded: 0, totalPoints: 1 });
-    expect(manager.getUser('user-1')?.points).toBe(1);
+    expect(result).toMatchObject({ pointsAdded: -1, totalPoints: 0 });
+    expect(manager.getUser('user-1')?.points).toBe(0);
   });
 
   it('ignores non-finite point adjustments', async () => {
@@ -145,6 +145,31 @@ describe('KizunaManager', () => {
 
     expect(result).toMatchObject({ pointsAdded: 0, totalPoints: 1 });
     expect(manager.getUser('user-1')?.points).toBe(1);
+  });
+
+  it('rejects invalid interaction timestamps before creating state', async () => {
+    const manager = createManager();
+
+    for (const timestamp of [Number.NaN, Number.POSITIVE_INFINITY, 9e15]) {
+      await expect(
+        manager.processInteraction(createInteraction({ timestamp })),
+      ).rejects.toThrow('Interaction timestamp must be a finite valid date');
+    }
+
+    expect(manager.getUser('user-1')).toBeNull();
+    manager.destroy();
+  });
+
+  it('ignores a finite adjustment that would overflow the bond score', async () => {
+    const manager = createManager();
+    await manager.processInteraction(createInteraction());
+    await manager.addPoints('user-1', Number.MAX_VALUE);
+
+    const result = await manager.addPoints('user-1', Number.MAX_VALUE);
+
+    expect(result.pointsAdded).toBe(0);
+    expect(result.totalPoints).toBe(Number.MAX_VALUE);
+    manager.destroy();
   });
 
   it('does not move contact timestamps backwards', async () => {
@@ -217,6 +242,7 @@ describe('KizunaManager', () => {
 
     const restored = new KizunaManager(config, storage, 'kizuna-test');
     await restored.initialize();
+    vi.setSystemTime(new Date('2026-01-02T12:00:00Z'));
     const reCrossing = await restored.processInteraction(createInteraction());
 
     expect(reCrossing.triggeredActions).toHaveLength(1);
@@ -308,6 +334,42 @@ describe('KizunaManager', () => {
     restoredManager.destroy();
   });
 
+  it('restores a hysteresis-held stage and its matching level', async () => {
+    const storage = createMemoryStorage();
+    const config = createConfig();
+    const firstManager = new KizunaManager(
+      config,
+      storage,
+      'hysteresis-persistence-test',
+    );
+    await firstManager.processInteraction(createInteraction());
+    await firstManager.addPoints('user-1', 499);
+    await firstManager.addPoints('user-1', -10);
+    await firstManager.processInteraction(
+      createInteraction({ kind: 'presence', valence: 'neutral' }),
+    );
+    expect(firstManager.getBondSnapshot('user-1')).toMatchObject({
+      points: 490,
+      stage: 'regular',
+      level: 3,
+    });
+    firstManager.destroy();
+
+    const restoredManager = new KizunaManager(
+      config,
+      storage,
+      'hysteresis-persistence-test',
+    );
+    await restoredManager.initialize();
+
+    expect(restoredManager.getBondSnapshot('user-1')).toMatchObject({
+      points: 490,
+      stage: 'regular',
+      level: 3,
+    });
+    restoredManager.destroy();
+  });
+
   it('does not repeat an owner first-contact bonus after restoration', async () => {
     const storage = createMemoryStorage();
     const firstConfig = createConfig();
@@ -333,7 +395,7 @@ describe('KizunaManager', () => {
     const second = await restoredManager.processInteraction(
       createInteraction({ userId: 'owner-1', isOwner: true }),
     );
-    expect(second.pointsAdded).toBe(1);
+    expect(second.pointsAdded).toBeCloseTo(0.85);
     restoredManager.destroy();
   });
 
@@ -464,7 +526,7 @@ describe('KizunaManager', () => {
     expect(
       (await restoredManager.processInteraction(createInteraction()))
         .pointsAdded,
-    ).toBe(1);
+    ).toBeCloseTo(0.85);
     restoredManager.destroy();
   });
 
@@ -517,7 +579,7 @@ describe('KizunaManager', () => {
     expect(snapshots[1]).toMatchObject({
       users: {
         'user-1': {
-          points: 2,
+          points: 1.85,
           stats: {
             interactionHistory: [{ message: 'First' }, { message: 'Second' }],
           },

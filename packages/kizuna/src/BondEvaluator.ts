@@ -58,6 +58,24 @@ export class BondEvaluator {
     return resolved;
   }
 
+  resolveStageWithHysteresis(
+    points: number,
+    currentStageId: string,
+    margin: number,
+  ): BondStage {
+    const rawStage = this.resolveStage(points);
+    const currentIndex = this.stages.findIndex(
+      ({ id }) => id === currentStageId,
+    );
+    const rawIndex = this.stages.indexOf(rawStage);
+    if (currentIndex < 0 || rawIndex >= currentIndex) return rawStage;
+    const currentStage = this.stages[currentIndex];
+    if (!currentStage) return rawStage;
+    return points < currentStage.minPoints - Math.max(0, margin)
+      ? rawStage
+      : currentStage;
+  }
+
   calculateLevel(points: number): number {
     if (this.usesStageLevels) {
       const stage = this.resolveStage(points);
@@ -67,6 +85,16 @@ export class BondEvaluator {
       Math.floor(Math.max(0, points) / this.pointsPerLevel) + 1,
       this.maxLevel,
     );
+  }
+
+  calculateLevelForStage(points: number, stageId: string): number {
+    if (!this.usesStageLevels) return this.calculateLevel(points);
+    const stageIndex = this.stages.findIndex(({ id }) => id === stageId);
+    return stageIndex >= 0 ? stageIndex + 1 : this.calculateLevel(points);
+  }
+
+  getStageIndex(stageId: string): number {
+    return this.stages.findIndex(({ id }) => id === stageId);
   }
 
   calculateWarmth(lastContactAt: Date, at = this.now()): number {

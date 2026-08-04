@@ -47,5 +47,8 @@ export function createDefaultKizunaConfig(): KizunaConfig {
     context: {
       defaultLanguage: 'en',
     },
+    dynamics: {
+      preset: 'human',
+    },
   };
 }

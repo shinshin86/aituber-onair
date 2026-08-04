@@ -128,6 +128,19 @@ p {
   background: #fffbf1;
 }
 
+.relationship-toast.decreased {
+  border-color: rgba(160, 55, 71, 0.58);
+  background: #fff6f6;
+}
+
+.relationship-toast.decreased > div:first-child > span {
+  background: #f8dfe3;
+}
+
+.relationship-toast.decreased .toast-meter i {
+  background: linear-gradient(90deg, #8e3e56, #c85a64);
+}
+
 .toast-meter {
   height: 9px;
   margin-top: 10px;

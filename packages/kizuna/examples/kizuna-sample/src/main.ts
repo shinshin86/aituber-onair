@@ -4,7 +4,9 @@ import {
   type BondSnapshot,
   type Interaction,
   type InteractionKind,
+  type InteractionValence,
   type KizunaEventData,
+  type NegativeSeverity,
   type Threshold,
 } from '../../../src/index';
 import './styles.css';
@@ -23,6 +25,8 @@ interface ContactOption {
   icon: string;
   points: number;
   message: string;
+  valence?: InteractionValence;
+  severity?: NegativeSeverity;
 }
 
 interface EventEntry {
@@ -115,6 +119,31 @@ const contacts: ContactOption[] = [
     points: 18,
     message: 'なでなで',
   },
+  {
+    kind: 'tease',
+    label: 'からかいすぎる',
+    icon: '😬',
+    points: 10,
+    message: '冗談が少し行きすぎた',
+    valence: 'negative',
+  },
+  {
+    kind: 'insult',
+    label: '失礼なことを言う',
+    icon: '💢',
+    points: 24,
+    message: '傷つく言い方をした',
+    valence: 'negative',
+  },
+  {
+    kind: 'betrayal',
+    label: '信頼を裏切る',
+    icon: '⚡',
+    points: 40,
+    message: '重大な信頼違反があった',
+    valence: 'negative',
+    severity: 'grave',
+  },
 ];
 
 const emotions = [
@@ -128,6 +157,9 @@ const eventTypes = [
   'user_created',
   'points_updated',
   'level_up',
+  'stage_down',
+  'scar_created',
+  'scar_healed',
   'threshold_reached',
   'achievement_earned',
 ] as const;
@@ -283,16 +315,27 @@ function describeEvent(
   switch (event.type) {
     case 'user_created':
       return { icon: '🌱', text: `${userName}との絆が生まれました。` };
-    case 'points_updated':
+    case 'points_updated': {
+      const pointsAdded = Number(data.pointsAdded ?? 0);
       return {
-        icon: '✦',
-        text: `${userName}の絆ポイント +${String(data.pointsAdded ?? 0)}`,
+        icon: pointsAdded < 0 ? '↘' : '✦',
+        text: `${userName}の絆スコア ${formatSignedPoints(pointsAdded)}`,
       };
+    }
     case 'level_up':
       return {
         icon: '↗',
         text: `${userName}がレベル${String(data.newLevel ?? '')}になりました。`,
       };
+    case 'stage_down':
+      return {
+        icon: '↘',
+        text: `${userName}の関係ステージが${formatStage(String(data.newStage ?? ''))}へ下がりました。`,
+      };
+    case 'scar_created':
+      return { icon: '⚡', text: `${userName}との関係に傷が残りました。` };
+    case 'scar_healed':
+      return { icon: '🩹', text: `${userName}との関係の傷が癒えました。` };
     case 'achievement_earned': {
       const achievement = data.achievement as
         | { title?: string; icon?: string }
@@ -324,6 +367,8 @@ async function processContact(kind: string): Promise<void> {
       kind: contact.kind,
       message: contact.message,
       emotion: selectedEmotion,
+      ...(contact.valence && { valence: contact.valence }),
+      ...(contact.severity && { severity: contact.severity }),
       isOwner: user.isOwner,
       timestamp: simulatedNow,
       metadata: { displayName: user.name },
@@ -464,7 +509,7 @@ function render(focusToken: FocusToken | null = captureFocus()): void {
             <div class="contact-grid">
               ${contacts.map((contact) => renderContactButton(contact)).join('')}
             </div>
-            <p class="contact-hint">時間を進めると「温かさ」が下がります。次の接触で「継続」の変化が確定します。</p>
+            <p class="contact-hint"><strong>試す流れ:</strong> 「話す」で関係を作る → 「失礼なことを言う」で冷える → 「話す」を数回重ねて仲直り。重大な「信頼を裏切る」は傷として残り、複数日にわたる修復が必要です。</p>
           </section>
 
           <section class="panel roster-panel">
@@ -520,7 +565,7 @@ function renderContactButton(contact: ContactOption): string {
     <button class="contact" data-action="contact" data-kind="${contact.kind}" ${isProcessing ? 'disabled' : ''}>
       <span>${contact.icon}</span>
       <strong>${contact.label}</strong>
-      <small>基本 +${contact.points} pt</small>
+      <small>基本 ${contact.valence === 'negative' ? '−' : '+'}${contact.points} pt${contact.severity === 'grave' ? ' · 重大' : ''}</small>
     </button>
   `;
 }
@@ -540,7 +585,7 @@ function renderBondCard(user: DemoUser): string {
       <div class="bond-card-head"><span>${user.icon}</span><div><strong>${user.name}</strong><small>${formatStage(snapshot.stage)}</small></div><b>Lv.${snapshot.level}</b></div>
       <div class="intimacy-card-label"><span>親密度</span><strong>${Math.round(capital * 100)}%</strong></div>
       <div class="micro-meter intimacy-meter"><i style="width:${capital * 100}%"></i></div>
-      <div class="bond-card-meta"><span><b>${snapshot.points}</b> ポイント</span><span><b>${Math.round(snapshot.warmth * 100)}%</b> 温かさ</span><span><b>${snapshot.continuity.streak}</b> 継続</span></div>
+      <div class="bond-card-meta"><span><b>${formatPoints(snapshot.points)}</b> スコア</span><span><b>${Math.round(snapshot.warmth * 100)}%</b> 温かさ</span><span><b>${snapshot.continuity.streak}</b> 継続</span></div>
     </button>
   `;
 }
@@ -584,16 +629,17 @@ function renderSelectedBond(
         <span class="stage-badge">${formatStage(snapshot.stage)}</span>
       </div>
       <div class="warmth-block">
-        <div class="metric-label"><span>温かさ（しばらく接触がないと下がる親密さ）</span><strong>${Math.round(snapshot.warmth * 100)}%</strong></div>
+        <div class="metric-label"><span>温かさ（不和や時間経過で冷え、穏やかな接触で戻る）</span><strong>${Math.round(snapshot.warmth * 100)}%</strong></div>
         <div class="warmth-meter"><i style="width:${snapshot.warmth * 100}%"></i></div>
         <p>最後の接触: ${formatDateTime(snapshot.continuity.lastContactAt.getTime())}</p>
       </div>
       <div class="metric-grid">
-        <div><span>ポイント（累計・減らない）</span><strong>${snapshot.points}</strong><small>接触のたびに加算</small></div>
+        <div><span>絆スコア（ゆっくり増減）</span><strong>${formatPoints(snapshot.points)}</strong><small>不和では下がり、0が下限</small></div>
         <div><span>継続（連続して会えている期間）</span><strong>${snapshot.continuity.streak}</strong><small>活動日 ${snapshot.continuity.totalActiveBuckets}回</small></div>
         <div title="Kizunaのポイントと温かさを0〜1へ正規化し、@aituber-onair/noiseの関係性ゲートに渡せる値です。"><span>noise連携用の値</span><strong>${capital.toFixed(2)}</strong><small>ポイントと温かさを0〜1へ正規化</small></div>
       </div>
       <div class="favorite-row"><span>よく記録された感情</span><div>${favoriteEmotions}</div></div>
+      <div class="favorite-row"><span>現在の空気</span><div><span>${formatAtmosphere(snapshot.atmosphere)} · ${formatTrend(snapshot.trend)}</span><span>未修復の傷 ${snapshot.scars.filter(({ healedAt }) => !healedAt).length}</span></div></div>
       <div class="achievement-block"><span>実績</span><ul>${achievements}</ul></div>
     </section>
   `;
@@ -603,9 +649,16 @@ function renderRelationshipToast(): string {
   if (!relationshipChange) return '';
   const stageChanged =
     relationshipChange.previousStage !== relationshipChange.nextStage;
+  const decreased =
+    relationshipChange.nextCapital < relationshipChange.previousCapital;
+  const title = decreased
+    ? '親密度が下がりました'
+    : relationshipChange.nextCapital > relationshipChange.previousCapital
+      ? '親密度が上がりました'
+      : '関係性を記録しました';
   return `
-    <aside class="relationship-toast ${stageChanged ? 'stage-changed' : ''}" role="status">
-      <div><span>${relationshipChange.icon}</span><div><strong>${relationshipChange.userName}の親密度が上がりました</strong><small>+${relationshipChange.pointsAdded}ポイント${stageChanged ? ` · ${formatStage(relationshipChange.previousStage)} → ${formatStage(relationshipChange.nextStage)}` : ''}</small></div></div>
+    <aside class="relationship-toast ${stageChanged ? 'stage-changed' : ''} ${decreased ? 'decreased' : ''}" role="status">
+      <div><span>${relationshipChange.icon}</span><div><strong>${relationshipChange.userName}の${title}</strong><small>${formatSignedPoints(relationshipChange.pointsAdded)}ポイント${stageChanged ? ` · ${formatStage(relationshipChange.previousStage)} → ${formatStage(relationshipChange.nextStage)}` : ''}</small></div></div>
       <div class="toast-meter"><i style="--from:${relationshipChange.previousCapital * 100}%;--to:${relationshipChange.nextCapital * 100}%"></i></div>
       <p>${Math.round(relationshipChange.previousCapital * 100)}% → ${Math.round(relationshipChange.nextCapital * 100)}%</p>
     </aside>
@@ -631,6 +684,33 @@ function formatDateTime(timestamp: number): string {
 
 function formatStage(stage: string): string {
   return stageLabels[stage] ?? stage;
+}
+
+function formatPoints(points: number): string {
+  return Number.isInteger(points) ? String(points) : points.toFixed(1);
+}
+
+function formatSignedPoints(points: number): string {
+  const formatted = formatPoints(points);
+  return points > 0 ? `+${formatted}` : formatted;
+}
+
+function formatAtmosphere(atmosphere: BondSnapshot['atmosphere']): string {
+  return {
+    warm: '温かい',
+    neutral: '落ち着いている',
+    cool: '冷えている',
+    cold: 'かなり冷えている',
+  }[atmosphere];
+}
+
+function formatTrend(trend: BondSnapshot['trend']): string {
+  return {
+    rising: '育っている',
+    steady: '安定',
+    falling: '悪化中',
+    repairing: '修復中',
+  }[trend];
 }
 
 function formatTime(timestamp: number): string {
