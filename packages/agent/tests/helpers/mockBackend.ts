@@ -1,5 +1,6 @@
 import type {
   AgentBackend,
+  AgentBackendApprovalResult,
   AgentBackendCapabilities,
   AgentBackendEvent,
   AgentBackendSession,
@@ -30,6 +31,7 @@ export class MockBackendSession implements AgentBackendSession {
   readonly runInputs: AgentRunInput[] = [];
   readonly runOptions: (AgentRunOptions | undefined)[] = [];
   readonly toolResults: AgentBackendToolResult[] = [];
+  readonly approvalResults: AgentBackendApprovalResult[] = [];
   interruptCalls = 0;
   closeCalls = 0;
 
@@ -51,6 +53,12 @@ export class MockBackendSession implements AgentBackendSession {
 
   async submitToolResult(result: AgentBackendToolResult): Promise<void> {
     this.toolResults.push(result);
+  }
+
+  async submitApprovalResult(
+    result: AgentBackendApprovalResult
+  ): Promise<void> {
+    this.approvalResults.push(result);
   }
 
   async interrupt(): Promise<void> {

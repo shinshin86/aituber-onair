@@ -17,8 +17,10 @@ assert.equal(typeof esmBase.createAgent, 'function');
 assert.equal(typeof cjsBase.createAgent, 'function');
 assert.equal(typeof esmChat.createChatServiceBackend, 'function');
 assert.equal(typeof cjsChat.createChatServiceBackend, 'function');
-assert.deepEqual(Object.keys(esmCodex), []);
-assert.deepEqual(Object.keys(cjsCodex), []);
+assert.equal(typeof esmCodex.createCodexAppServerBackend, 'function');
+assert.equal(typeof cjsCodex.createCodexAppServerBackend, 'function');
+assert.equal(esmCodex.CODEX_APP_SERVER_SUPPORTED_VERSION, '0.145.0');
+assert.equal(cjsCodex.CODEX_APP_SERVER_SCHEMA_VERSION, 'v2@0.145.0');
 
 const browserOutputFiles = [
   '../dist/esm/index.js',

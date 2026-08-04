@@ -228,6 +228,19 @@ export interface AgentBackendCapability {
   readonly limits?: readonly AgentCapabilityLimit[];
 }
 
+export interface AgentBackendArtifact {
+  readonly type: string;
+  readonly title?: string;
+  readonly data: JsonValue;
+}
+
+export type AgentBackendApprovalDecision = AgentApprovalDecision | 'cancel';
+
+export interface AgentBackendApprovalResult {
+  readonly approvalId: string;
+  readonly decision: AgentBackendApprovalDecision;
+}
+
 export interface AgentBackendSessionDescriptor {
   readonly agentId: string;
   readonly sessionId: string;
@@ -255,8 +268,18 @@ export type AgentBackendEvent =
       readonly arguments: unknown;
     }
   | {
+      readonly type: 'approval.requested';
+      readonly approvalId: string;
+      readonly toolCallId: string;
+      readonly toolId: string;
+      readonly risk: AgentToolRisk;
+      readonly arguments: unknown;
+      readonly reason: string;
+    }
+  | {
       readonly type: 'completed';
       readonly message: string;
+      readonly artifacts?: readonly AgentBackendArtifact[];
       readonly usage?: AgentUsage;
       readonly metadata?: Readonly<Record<string, JsonValue>>;
     };
@@ -272,6 +295,8 @@ export interface AgentBackendSession {
    * Required when the backend emits `tool.requested`.
    */
   submitToolResult?(result: AgentBackendToolResult): Promise<void>;
+  /** Returns a host decision to a backend-owned approval request. */
+  submitApprovalResult?(result: AgentBackendApprovalResult): Promise<void>;
   interrupt?(): Promise<void>;
   close(): Promise<void>;
 }

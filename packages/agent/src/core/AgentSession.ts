@@ -67,6 +67,7 @@ interface ActiveTurn {
   timeoutId?: ReturnType<typeof setTimeout>;
   toolCallCount: number;
   readonly toolCallIds: Set<string>;
+  readonly backendApprovalIds: Set<string>;
 }
 
 interface PendingApproval {
@@ -76,6 +77,7 @@ interface PendingApproval {
   readonly onAbort: () => void;
   readonly resolve: (decision: AgentApprovalDecision) => void;
   readonly reject: (error: AgentError) => void;
+  readonly rejectOnDeny: boolean;
   timeoutId?: ReturnType<typeof setTimeout>;
 }
 
@@ -187,6 +189,7 @@ export class AgentSessionRuntime implements AgentSession {
       completion: Promise.resolve(),
       toolCallCount: 0,
       toolCallIds: new Set(),
+      backendApprovalIds: new Set(),
     };
     this.activeTurn = turn;
     turn.completion = this.executeTurn(turn, input, options);
@@ -374,6 +377,10 @@ export class AgentSessionRuntime implements AgentSession {
             await this.handleToolRequest(turn, event);
             break;
           }
+          case 'approval.requested': {
+            await this.handleBackendApprovalRequest(turn, event);
+            break;
+          }
           case 'completed': {
             backendCompleted = true;
             const message =
@@ -387,7 +394,19 @@ export class AgentSessionRuntime implements AgentSession {
             const candidate: AgentRunResult = {
               turnId: turn.id,
               message,
-              artifacts: [],
+              artifacts: (event.artifacts ?? []).map((artifact) => ({
+                id: createCorrelationId('artifact'),
+                type: artifact.type,
+                version: 1,
+                title: artifact.title,
+                data: artifact.data,
+                createdAt: createTimestamp(),
+                source: {
+                  agentId: this.agentId,
+                  sessionId: this.id,
+                  turnId: turn.id,
+                },
+              })),
               usage: event.usage,
               backendMetadata: event.metadata,
             };
@@ -659,6 +678,62 @@ export class AgentSessionRuntime implements AgentSession {
     });
   }
 
+  private async handleBackendApprovalRequest(
+    turn: ActiveTurn,
+    event: Extract<AgentBackendEvent, { readonly type: 'approval.requested' }>
+  ): Promise<void> {
+    if (!this.backendCapabilities.approvals) {
+      throw new AgentBackendProtocolError(
+        `Backend "${this.backendName}" requested approval without declaring approval support.`
+      );
+    }
+    const submit = this.backendSession.submitApprovalResult;
+    if (!submit) {
+      throw new AgentBackendProtocolError(
+        `Backend "${this.backendName}" requested approval but cannot receive a decision.`
+      );
+    }
+    if (!event.approvalId.trim()) {
+      throw new AgentBackendProtocolError(
+        'The backend emitted an approval request without an approval ID.'
+      );
+    }
+    if (turn.backendApprovalIds.has(event.approvalId)) {
+      throw new AgentBackendProtocolError(
+        `The backend reused approval ID "${event.approvalId}".`
+      );
+    }
+    turn.backendApprovalIds.add(event.approvalId);
+
+    const request: AgentApprovalRequest = {
+      id: createCorrelationId('approval'),
+      agentId: this.agentId,
+      sessionId: this.id,
+      turnId: turn.id,
+      toolCallId: event.toolCallId,
+      toolId: event.toolId,
+      risk: event.risk,
+      arguments: event.arguments,
+      reason: event.reason,
+    };
+
+    try {
+      const decision = await this.waitForApprovalDecision(turn, request, false);
+      await this.submitBackendApprovalResult(turn, event.approvalId, decision);
+    } catch (error) {
+      try {
+        const cancellation = submit.call(this.backendSession, {
+          approvalId: event.approvalId,
+          decision: 'cancel',
+        });
+        void cancellation.catch(() => undefined);
+      } catch {
+        // Preserve the Turn cancellation or timeout as the primary failure.
+      }
+      throw error;
+    }
+  }
+
   private async executeTool(
     turn: ActiveTurn,
     toolCallId: string,
@@ -753,6 +828,14 @@ export class AgentSessionRuntime implements AgentSession {
       reason,
     };
 
+    return this.waitForApprovalDecision(turn, request, true);
+  }
+
+  private waitForApprovalDecision(
+    turn: ActiveTurn,
+    request: AgentApprovalRequest,
+    rejectOnDeny: boolean
+  ): Promise<AgentApprovalDecision> {
     return new Promise<AgentApprovalDecision>((resolve, reject) => {
       const onAbort = () => {
         const pending = this.pendingApprovals.get(request.id);
@@ -770,6 +853,7 @@ export class AgentSessionRuntime implements AgentSession {
         onAbort,
         resolve,
         reject,
+        rejectOnDeny,
       };
       pending.timeoutId = setTimeout(() => {
         this.settleApproval(pending, 'deny', new AgentApprovalTimeoutError());
@@ -801,9 +885,33 @@ export class AgentSessionRuntime implements AgentSession {
       decision,
     });
     if (error) pending.reject(error);
-    else if (decision === 'deny')
+    else if (decision === 'deny' && pending.rejectOnDeny)
       pending.reject(new AgentApprovalDeniedError());
     else pending.resolve(decision);
+  }
+
+  private async submitBackendApprovalResult(
+    turn: ActiveTurn,
+    approvalId: string,
+    decision: AgentApprovalDecision
+  ): Promise<void> {
+    const submit = this.backendSession.submitApprovalResult;
+    if (!submit) {
+      throw new AgentBackendProtocolError(
+        `Backend "${this.backendName}" cannot receive an approval decision.`
+      );
+    }
+    try {
+      await raceWithAbort(
+        submit.call(this.backendSession, { approvalId, decision }),
+        turn.controller.signal
+      );
+    } catch (error) {
+      throw new AgentBackendError(
+        `Backend "${this.backendName}" failed to accept an approval decision.`,
+        { cause: error }
+      );
+    }
   }
 
   private removePendingApproval(pending: PendingApproval): void {

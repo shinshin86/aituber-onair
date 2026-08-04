@@ -122,7 +122,9 @@ import * as codex from '@aituber-onair/agent/codex-app-server';
 assert.equal(typeof agent.createAgent, 'function');
 assert.equal(typeof agent.defineAgentTool, 'function');
 assert.equal(typeof chat.createChatServiceBackend, 'function');
-assert.deepEqual(Object.keys(codex), []);
+assert.equal(typeof codex.createCodexAppServerBackend, 'function');
+assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, '0.145.0');
+assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, 'v2@0.145.0');
 `
   );
   await writeFile(
@@ -136,7 +138,9 @@ const codex = require('@aituber-onair/agent/codex-app-server');
 assert.equal(typeof agent.createAgent, 'function');
 assert.equal(typeof agent.defineAgentTool, 'function');
 assert.equal(typeof chat.createChatServiceBackend, 'function');
-assert.deepEqual(Object.keys(codex), []);
+assert.equal(typeof codex.createCodexAppServerBackend, 'function');
+assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, '0.145.0');
+assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, 'v2@0.145.0');
 `
   );
 
@@ -156,6 +160,11 @@ import {
   type AgentWorkspaceMetadataStore,
 } from '@aituber-onair/agent';
 import { createChatServiceBackend } from '@aituber-onair/agent/chat';
+import {
+  CODEX_APP_SERVER_SCHEMA_VERSION,
+  CODEX_APP_SERVER_SUPPORTED_VERSION,
+  createCodexAppServerBackend,
+} from '@aituber-onair/agent/codex-app-server';
 
 const analyzeComments = defineAgentTool({
   id: 'comments.analyze',
@@ -277,6 +286,41 @@ const bootstrap = workspaceAgent.bootstrap({
   },
 });
 
+const codexBackend = createCodexAppServerBackend({
+  allowPathLookup: true,
+  workingDirectory: '/path/to/character-workspace',
+  compatibility: {
+    expectedVersion: CODEX_APP_SERVER_SUPPORTED_VERSION,
+    schemaVersion: CODEX_APP_SERVER_SCHEMA_VERSION,
+  },
+  sandbox: 'read-only',
+  approvalPolicy: 'on-request',
+});
+const codexAgent = createAgent({
+  id: 'stream-operations-staff',
+  brief: 'You are AI staff responsible for monitoring stream operations.',
+  backend: codexBackend,
+});
+async function runCodexStaff() {
+  const session = await codexAgent.startSession({
+    purpose: 'Review the latest stream report',
+    audience: 'owner',
+    inputTrust: 'trusted',
+  });
+  try {
+    for await (const event of session.runStream({
+      instruction: 'Inspect the workspace and summarize issues.',
+    })) {
+      if (event.type === 'approval.requested') {
+        await session.resolveApproval(event.request.id, 'deny');
+      }
+    }
+  } finally {
+    await session.close();
+    await codexAgent.close();
+  }
+}
+
 const operatorInbox = new Set<{ question: string }>();
 const askOperator = defineAgentTool({
   id: 'human.ask',
@@ -298,6 +342,8 @@ const askOperator = defineAgentTool({
 void runPublicSession;
 void bootstrap;
 void askOperator;
+void codexBackend;
+void runCodexStaff;
 `
   );
 

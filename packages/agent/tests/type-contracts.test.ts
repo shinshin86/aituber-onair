@@ -42,6 +42,11 @@ import type {
   CodexAppServerBackendOptions,
   CodexAppServerCompatibility,
 } from '../src/codex-app-server.js';
+import {
+  CODEX_APP_SERVER_SCHEMA_VERSION,
+  CODEX_APP_SERVER_SUPPORTED_VERSION,
+  createCodexAppServerBackend,
+} from '../src/codex-app-server.js';
 
 describe('public type surface', () => {
   it('keeps host instructions separate from conversational input', () => {
@@ -148,8 +153,8 @@ describe('public type surface', () => {
 
   it('requires an explicit Codex executable path or PATH opt-in', () => {
     const compatibility: CodexAppServerCompatibility = {
-      expectedVersion: 'pinned-version',
-      schemaVersion: 'pinned-schema',
+      expectedVersion: CODEX_APP_SERVER_SUPPORTED_VERSION,
+      schemaVersion: CODEX_APP_SERVER_SCHEMA_VERSION,
     };
     const explicitPath: CodexAppServerBackendOptions = {
       codexPath: '/path/to/codex',
@@ -171,6 +176,14 @@ describe('public type surface', () => {
     expect(explicitPath.codexPath).toBe('/path/to/codex');
     expect(pathLookup.allowPathLookup).toBe(true);
     expect(implicitPathLookup.workingDirectory).toBe('/path/to/workspace');
+    expect(
+      createCodexAppServerBackend({
+        ...explicitPath,
+        sandbox: 'read-only',
+        approvalPolicy: 'on-request',
+      }).kind
+    ).toBe('codex-app-server');
+    expectTypeOf(createCodexAppServerBackend).toBeFunction();
     expectTypeOf<CodexAppServerBackend>().toBeObject();
     expectTypeOf<CodexAppServerBackendCapabilities>().toBeObject();
   });

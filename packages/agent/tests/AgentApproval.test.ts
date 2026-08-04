@@ -174,6 +174,83 @@ describe('Agent approval flow', () => {
     await rejected;
     expect(approvalTool.execute).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['allow-once', 'allow-once'],
+    ['deny', 'deny'],
+  ] as const)(
+    'returns backend-owned approval decision %s without running a host Tool',
+    async (hostDecision, backendDecision) => {
+      const backend = new MockBackend(backendApprovalStream, {
+        approvals: true,
+      });
+      const agent = createAgent({
+        id: 'miko',
+        brief: 'You are Miko, AI operations staff.',
+        backend,
+      });
+      const session = await agent.startSession({
+        purpose: 'workspace operations',
+        audience: 'operator',
+        inputTrust: 'trusted',
+      });
+      const events: AgentEvent[] = [];
+      const running = consume(
+        session.runStream({ instruction: 'Inspect the workspace.' }),
+        events
+      );
+      await waitUntil(() => findApproval(events) !== undefined);
+
+      await session.resolveApproval(
+        findApproval(events)?.request.id as string,
+        hostDecision
+      );
+      await running;
+
+      expect(backend.sessions[0].approvalResults).toEqual([
+        { approvalId: 'codex-approval-1', decision: backendDecision },
+      ]);
+      expect(events.at(-1)?.type).toBe('turn.completed');
+    }
+  );
+
+  it('cancels a backend-owned approval when the Turn is aborted', async () => {
+    const backend = new MockBackend(backendApprovalStream, { approvals: true });
+    const agent = createAgent({
+      id: 'miko',
+      brief: 'You are Miko, AI operations staff.',
+      backend,
+    });
+    const session = await agent.startSession({
+      purpose: 'workspace operations',
+      audience: 'operator',
+      inputTrust: 'trusted',
+    });
+    vi.spyOn(backend.sessions[0], 'submitApprovalResult').mockImplementation(
+      async (result) => {
+        backend.sessions[0].approvalResults.push(result);
+        await new Promise(() => undefined);
+      }
+    );
+    const controller = new AbortController();
+    const events: AgentEvent[] = [];
+    const running = consume(
+      session.runStream(
+        { instruction: 'Inspect the workspace.' },
+        { signal: controller.signal }
+      ),
+      events
+    );
+    const rejected = expect(running).rejects.toThrow(AgentInterruptedError);
+    await waitUntil(() => findApproval(events) !== undefined);
+
+    controller.abort();
+
+    await rejected;
+    expect(backend.sessions[0].approvalResults).toEqual([
+      { approvalId: 'codex-approval-1', decision: 'cancel' },
+    ]);
+  });
 });
 
 async function createApprovalSession(
@@ -213,6 +290,24 @@ async function* approvalStream(
   };
   await waitUntil(() => session.toolResults.length === 1);
   yield { type: 'completed', message: 'Published' };
+}
+
+async function* backendApprovalStream(
+  _input: unknown,
+  _options: unknown,
+  session: MockBackendSession
+): AsyncIterable<AgentBackendEvent> {
+  yield {
+    type: 'approval.requested',
+    approvalId: 'codex-approval-1',
+    toolCallId: 'command-1',
+    toolId: 'codex.command-execution',
+    risk: 'external',
+    arguments: { command: 'npm test' },
+    reason: 'Codex requested command execution.',
+  };
+  await waitUntil(() => session.approvalResults.length === 1);
+  yield { type: 'completed', message: 'Workspace inspected.' };
 }
 
 function findApproval(events: readonly AgentEvent[]) {
