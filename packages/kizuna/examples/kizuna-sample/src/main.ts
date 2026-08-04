@@ -9,20 +9,38 @@ import {
 } from '../../../src/index';
 import './styles.css';
 
-interface DemoUser {
+type StreamCommentType = Extract<
+  InteractionKind,
+  'message' | 'reaction' | 'gift'
+>;
+
+interface CommentScript {
+  type: StreamCommentType;
+  text: string;
+  emotion: string;
+}
+
+interface ViewerPersona {
   id: string;
   name: string;
   icon: string;
   isOwner: boolean;
   note: string;
+  cadenceMs: number;
+  accent: string;
+  scripts: CommentScript[];
 }
 
-interface ContactOption {
-  kind: InteractionKind;
-  label: string;
+interface ChatEntry {
+  id: number;
+  author: 'character' | 'viewer';
+  userId?: string;
+  name: string;
   icon: string;
-  points: number;
-  message: string;
+  type: StreamCommentType | 'reply';
+  text: string;
+  emotion: string;
+  time: number;
 }
 
 interface EventEntry {
@@ -32,80 +50,117 @@ interface EventEntry {
   text: string;
 }
 
+interface BondHistoryPoint {
+  time: number;
+  capital: number;
+}
+
 interface FocusToken {
   action?: string;
   field?: string;
   userId?: string;
-  kind?: string;
-  hours?: string;
+  selectionStart?: number | null;
+  selectionEnd?: number | null;
 }
 
-const HOUR_MS = 60 * 60 * 1_000;
+const MINUTE_MS = 60 * 1_000;
+const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
-const INITIAL_TIME = Date.UTC(2026, 0, 12, 10);
-const users: DemoUser[] = [
+const INITIAL_TIME = Date.UTC(2026, 0, 12, 19);
+const MAX_CHAT_ENTRIES = 36;
+const MAX_HISTORY_POINTS = 24;
+
+const viewers: ViewerPersona[] = [
   {
     id: 'aki',
     name: 'Aki',
     icon: '🌱',
     isOwner: false,
-    note: 'はじめまして',
+    note: '質問好きの新しい視聴者',
+    cadenceMs: 4_800,
+    accent: '#67c7a1',
+    scripts: [
+      {
+        type: 'message',
+        text: '今日のテーマ、すごく気になる！',
+        emotion: 'curious',
+      },
+      { type: 'reaction', text: 'その話もっと聞きたい 👀', emotion: 'curious' },
+      { type: 'message', text: '初見だけど雰囲気が好きです', emotion: 'happy' },
+      { type: 'message', text: '次は何を見せてくれるの？', emotion: 'excited' },
+    ],
   },
   {
     id: 'mio',
     name: 'Mio',
     icon: '🎨',
     isOwner: false,
-    note: 'よく話す人',
+    note: '絵文字多めのムードメーカー',
+    cadenceMs: 7_200,
+    accent: '#f18eaa',
+    scripts: [
+      { type: 'reaction', text: 'かわいい〜！👏✨', emotion: 'excited' },
+      { type: 'message', text: '背景の色合い、今日も最高！', emotion: 'happy' },
+      { type: 'gift', text: '創作応援ギフトをどうぞ 🎁', emotion: 'excited' },
+      {
+        type: 'message',
+        text: 'その表情、イラストにしたい！',
+        emotion: 'happy',
+      },
+    ],
   },
   {
     id: 'ren',
     name: 'Ren',
     icon: '🎧',
     isOwner: false,
-    note: '静かな常連',
+    note: '短文で見守る静かな常連',
+    cadenceMs: 10_600,
+    accent: '#8097cf',
+    scripts: [
+      { type: 'message', text: '今日も来たよ', emotion: 'calm' },
+      { type: 'reaction', text: 'いいね', emotion: 'calm' },
+      { type: 'message', text: 'そのペース、落ち着く', emotion: 'calm' },
+      { type: 'message', text: 'また続き聞かせて', emotion: 'happy' },
+    ],
   },
   {
     id: 'sora',
     name: 'Sora',
     icon: '✨',
     isOwner: true,
-    note: 'キャラクターの相棒',
+    note: '配信を支える相棒兼モデレーター',
+    cadenceMs: 13_400,
+    accent: '#a684d6',
+    scripts: [
+      {
+        type: 'message',
+        text: 'みんな、今日もゆっくりしていってね',
+        emotion: 'calm',
+      },
+      { type: 'reaction', text: 'ナイスリアクション！', emotion: 'happy' },
+      {
+        type: 'gift',
+        text: '今日の配信準備、おつかれさま ☕',
+        emotion: 'happy',
+      },
+      {
+        type: 'message',
+        text: '次のコーナーも準備できてるよ',
+        emotion: 'excited',
+      },
+    ],
   },
 ];
 
-const contacts: ContactOption[] = [
-  { kind: 'message', label: '話す', icon: '💬', points: 24, message: 'やあ！' },
-  {
-    kind: 'reaction',
-    label: '反応する',
-    icon: '💫',
-    points: 14,
-    message: '👏',
-  },
-  { kind: 'gift', label: '贈る', icon: '🎁', points: 120, message: 'どうぞ！' },
-  {
-    kind: 'presence',
-    label: 'そばにいる',
-    icon: '🫧',
-    points: 8,
-    message: '…',
-  },
-  {
-    kind: 'touch',
-    label: 'ふれる',
-    icon: '🤍',
-    points: 18,
-    message: 'なでなで',
-  },
-];
-
-const emotions = [
-  { id: 'happy', label: 'うれしい', icon: '😊' },
-  { id: 'curious', label: '気になる', icon: '🧐' },
-  { id: 'calm', label: 'おだやか', icon: '😌' },
-  { id: 'excited', label: 'わくわく', icon: '🤩' },
-];
+const commentTypeMeta: Record<
+  StreamCommentType,
+  { icon: string; label: string; points: number }
+> = {
+  message: { icon: '💬', label: 'コメント', points: 18 },
+  reaction: { icon: '💫', label: 'リアクション', points: 8 },
+  gift: { icon: '🎁', label: 'ギフト', points: 90 },
+};
 
 const eventTypes = [
   'user_created',
@@ -116,25 +171,56 @@ const eventTypes = [
 ] as const;
 
 let simulatedNow = INITIAL_TIME;
-let selectedUserId = users[0]?.id ?? '';
-let selectedEmotion = emotions[0]?.id ?? '';
+let selectedViewerId = viewers[0]?.id ?? '';
+let manualViewerId = selectedViewerId;
+let manualCommentType: StreamCommentType = 'message';
+let manualDraft = '';
 let pendingSkipHours = 24;
+let autoPlaying = true;
+let pendingInteractions = 0;
 let eventSequence = 0;
-let isProcessing = false;
+let chatSequence = 0;
+let replySequence = 0;
+let labGeneration = 0;
+let workQueue = Promise.resolve();
+
+const scriptPositions = new Map(viewers.map(({ id }) => [id, 0]));
+const nextAutoPostAt = new Map<string, number>();
+let bondHistory = createEmptyBondHistory();
 let eventEntries: EventEntry[] = [
   {
     id: eventSequence++,
     time: simulatedNow,
-    icon: '🧭',
-    text: '人物と接触を選んで、最初の絆を作ってみましょう。',
+    icon: '📡',
+    text: 'モック配信を開始しました。コメントから絆が育ちます。',
   },
 ];
+let chatEntries: ChatEntry[] = [
+  {
+    id: chatSequence++,
+    author: 'character',
+    name: 'Luna',
+    icon: '☾',
+    type: 'reply',
+    text: 'こんばんは！ 今日もコメントを読みながら話していくね。',
+    emotion: 'happy',
+    time: simulatedNow,
+  },
+];
+let lastReply = chatEntries[0];
 let manager = createManager();
 
 const app = getAppRoot();
 
 bindManagerEvents();
+scheduleInitialAutoPosts();
 render();
+
+const autoTimer = window.setInterval(runAutoPostTick, 400);
+window.addEventListener('beforeunload', () => {
+  window.clearInterval(autoTimer);
+  manager.destroy();
+});
 
 document.addEventListener('click', (event) => {
   const target = event.target as HTMLElement | null;
@@ -142,31 +228,55 @@ document.addEventListener('click', (event) => {
   if (!actionTarget) return;
 
   switch (actionTarget.dataset.action) {
-    case 'select-user':
-      selectedUserId = actionTarget.dataset.userId ?? selectedUserId;
+    case 'select-viewer':
+      selectedViewerId = actionTarget.dataset.userId ?? selectedViewerId;
+      manualViewerId = selectedViewerId;
       render();
       break;
-    case 'contact':
-      void processContact(actionTarget.dataset.kind ?? 'message');
+    case 'toggle-auto':
+      autoPlaying = !autoPlaying;
+      if (autoPlaying) scheduleInitialAutoPosts();
+      pushEvent(
+        autoPlaying ? '▶' : '⏸',
+        autoPlaying
+          ? '自動コメントを再開しました。'
+          : '自動コメントを一時停止しました。',
+      );
+      render();
       break;
     case 'advance-time':
-      advanceTime(Number(actionTarget.dataset.hours ?? 0));
+      if (pendingInteractions === 0) {
+        advanceTime(Number(actionTarget.dataset.hours ?? 0));
+      }
       break;
     case 'apply-time':
-      advanceTime(pendingSkipHours);
+      if (pendingInteractions === 0) advanceTime(pendingSkipHours);
+      break;
+    case 'post-next-auto':
+      postNextAutoComment(actionTarget.dataset.userId);
       break;
     case 'reset':
-      resetLab();
+      if (pendingInteractions === 0) resetSimulator();
       break;
   }
+});
+
+document.addEventListener('submit', (event) => {
+  const form = event.target as HTMLFormElement | null;
+  if (form?.dataset.form !== 'manual-comment') return;
+  event.preventDefault();
+  postManualComment();
 });
 
 document.addEventListener('input', (event) => {
   const target = event.target as HTMLInputElement | HTMLSelectElement | null;
   if (!target) return;
-  if (target.dataset.field === 'emotion') {
-    selectedEmotion = target.value;
-    render();
+  if (target.dataset.field === 'manual-draft') {
+    manualDraft = target.value;
+    const submitButton = document.querySelector<HTMLButtonElement>(
+      '[data-form="manual-comment"] button[type="submit"]',
+    );
+    if (submitButton) submitButton.disabled = !manualDraft.trim();
   }
   if (target.dataset.field === 'skip-hours') {
     pendingSkipHours = Number(target.value);
@@ -175,12 +285,29 @@ document.addEventListener('input', (event) => {
   }
 });
 
+document.addEventListener('change', (event) => {
+  const target = event.target as HTMLSelectElement | null;
+  if (!target) return;
+  if (target.dataset.field === 'manual-viewer') {
+    manualViewerId = target.value;
+    selectedViewerId = target.value;
+    render();
+  }
+  if (target.dataset.field === 'manual-type') {
+    manualCommentType = isStreamCommentType(target.value)
+      ? target.value
+      : 'message';
+  }
+});
+
 function createManager(): KizunaManager {
   const config = createDefaultKizunaConfig();
   config.now = () => simulatedNow;
-  config.basePoints = Object.fromEntries(
-    contacts.map(({ kind, points }) => [kind, points]),
-  );
+  config.basePoints = {
+    message: commentTypeMeta.message.points,
+    reaction: commentTypeMeta.reaction.points,
+    gift: commentTypeMeta.gift.points,
+  };
   config.owner = {
     initialPoints: 25,
     pointMultiplier: 1.25,
@@ -190,7 +317,7 @@ function createManager(): KizunaManager {
   config.warmth = { halfLifeMs: DAY_MS, floor: 0.2 };
   config.continuity = { unit: 'day', grace: 0 };
   config.thresholds = createAchievementThresholds();
-  return new KizunaManager(config, undefined, 'kizuna-browser-lab');
+  return new KizunaManager(config, undefined, 'kizuna-stream-simulator');
 }
 
 function createAchievementThresholds(): Threshold[] {
@@ -241,9 +368,8 @@ function bindManagerEvents(): void {
   for (const eventType of eventTypes) {
     manager.on(eventType, (payload) => {
       const event = payload as KizunaEventData;
-      const user = users.find(({ id }) => id === event.userId);
-      const label = user?.name ?? event.userId;
-      const entry = describeEvent(event, label);
+      const viewer = viewers.find(({ id }) => id === event.userId);
+      const entry = describeEvent(event, viewer?.name ?? event.userId);
       if (entry) pushEvent(entry.icon, entry.text);
     });
   }
@@ -251,29 +377,36 @@ function bindManagerEvents(): void {
 
 function describeEvent(
   event: KizunaEventData,
-  userName: string,
+  viewerName: string,
 ): Pick<EventEntry, 'icon' | 'text'> | null {
   const data = event.data as Record<string, unknown>;
   switch (event.type) {
     case 'user_created':
-      return { icon: '🌱', text: `${userName}との絆が生まれました。` };
+      return { icon: '🌱', text: `${viewerName}との絆が生まれました。` };
     case 'points_updated':
       return {
         icon: '✦',
-        text: `${userName}の絆ポイント +${String(data.pointsAdded ?? 0)}`,
+        text: `${viewerName}の絆ポイント +${String(data.pointsAdded ?? 0)}`,
       };
     case 'level_up':
       return {
         icon: '↗',
-        text: `${userName}がレベル${String(data.newLevel ?? '')}になりました。`,
+        text: `${viewerName}がレベル${String(data.newLevel ?? '')}になりました。`,
       };
+    case 'threshold_reached': {
+      const threshold = data.threshold as { points?: number } | undefined;
+      return {
+        icon: '◎',
+        text: `${viewerName}が${String(threshold?.points ?? '')}ポイントを越えました。`,
+      };
+    }
     case 'achievement_earned': {
       const achievement = data.achievement as
         | { title?: string; icon?: string }
         | undefined;
       return {
         icon: achievement?.icon ?? '🏅',
-        text: `${userName}が「${achievement?.title ?? '新しい実績'}」を獲得しました。`,
+        text: `${viewerName}が「${achievement?.title ?? '新しい実績'}」を獲得しました。`,
       };
     }
     default:
@@ -281,229 +414,460 @@ function describeEvent(
   }
 }
 
-async function processContact(kind: string): Promise<void> {
-  if (isProcessing) return;
-  const user = users.find(({ id }) => id === selectedUserId);
-  const contact = contacts.find((option) => option.kind === kind);
-  if (!user || !contact) return;
+function scheduleInitialAutoPosts(): void {
+  const now = Date.now();
+  viewers.forEach((viewer, index) => {
+    nextAutoPostAt.set(viewer.id, now + 900 + index * 850);
+  });
+}
 
-  isProcessing = true;
-  const focusToken: FocusToken = { action: 'contact', kind };
-  render(focusToken);
-  try {
-    const interaction: Interaction = {
-      userId: user.id,
-      kind: contact.kind,
-      message: contact.message,
-      emotion: selectedEmotion,
-      isOwner: user.isOwner,
-      timestamp: simulatedNow,
-      metadata: { displayName: user.name },
-    };
-    await manager.processInteraction(interaction);
-    pushEvent(contact.icon, `${user.name}: ${contact.label}`);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    pushEvent('⚠️', `接触を処理できませんでした: ${message}`);
-  } finally {
-    isProcessing = false;
-    render(focusToken);
-  }
+function runAutoPostTick(): void {
+  if (!autoPlaying || pendingInteractions > 1) return;
+  const now = Date.now();
+  const dueViewer = viewers.find(
+    (viewer) =>
+      now >= (nextAutoPostAt.get(viewer.id) ?? Number.POSITIVE_INFINITY),
+  );
+  if (!dueViewer) return;
+  nextAutoPostAt.set(dueViewer.id, now + dueViewer.cadenceMs);
+  enqueueViewerComment(dueViewer, nextScriptFor(dueViewer));
+}
+
+function postNextAutoComment(userId?: string): void {
+  const viewer = viewers.find(({ id }) => id === userId) ?? viewers[0];
+  if (!viewer) return;
+  enqueueViewerComment(viewer, nextScriptFor(viewer));
+}
+
+function nextScriptFor(viewer: ViewerPersona): CommentScript {
+  const position = scriptPositions.get(viewer.id) ?? 0;
+  const script = viewer.scripts[position % viewer.scripts.length];
+  scriptPositions.set(viewer.id, position + 1);
+  return script ?? { type: 'message', text: 'こんばんは！', emotion: 'happy' };
+}
+
+function postManualComment(): void {
+  const viewer = viewers.find(({ id }) => id === manualViewerId);
+  const text = manualDraft.trim();
+  if (!viewer || !text) return;
+  const script: CommentScript = {
+    type: manualCommentType,
+    text,
+    emotion: inferEmotion(text, manualCommentType),
+  };
+  manualDraft = '';
+  selectedViewerId = viewer.id;
+  enqueueViewerComment(viewer, script);
+}
+
+function enqueueViewerComment(
+  viewer: ViewerPersona,
+  comment: CommentScript,
+): void {
+  const generation = labGeneration;
+  const activeManager = manager;
+  pendingInteractions++;
+  render();
+  workQueue = workQueue
+    .then(async () => {
+      if (generation !== labGeneration) return;
+      await processViewerComment(activeManager, viewer, comment, generation);
+    })
+    .catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      pushEvent('⚠️', `コメントを処理できませんでした: ${message}`);
+    })
+    .finally(() => {
+      pendingInteractions = Math.max(0, pendingInteractions - 1);
+      if (generation === labGeneration) render();
+    });
+}
+
+async function processViewerComment(
+  activeManager: KizunaManager,
+  viewer: ViewerPersona,
+  comment: CommentScript,
+  generation: number,
+): Promise<void> {
+  simulatedNow += 2 * MINUTE_MS;
+  chatEntries.push({
+    id: chatSequence++,
+    author: 'viewer',
+    userId: viewer.id,
+    name: viewer.name,
+    icon: viewer.icon,
+    type: comment.type,
+    text: comment.text,
+    emotion: comment.emotion,
+    time: simulatedNow,
+  });
+  trimChatEntries();
+  render();
+
+  const interaction: Interaction = {
+    userId: viewer.id,
+    kind: comment.type,
+    message: comment.text,
+    emotion: comment.emotion,
+    isOwner: viewer.isOwner,
+    timestamp: simulatedNow,
+    metadata: {
+      displayName: viewer.name,
+      source: 'mock-live-stream',
+      commentType: comment.type,
+    },
+  };
+  await activeManager.processInteraction(interaction);
+  if (generation !== labGeneration) return;
+
+  recordBondPoint(viewer.id);
+  const reply = createCannedReply(viewer, comment);
+  simulatedNow += MINUTE_MS;
+  chatEntries.push(reply);
+  lastReply = reply;
+  trimChatEntries();
+  pushEvent(
+    commentTypeMeta[comment.type].icon,
+    `${viewer.name}の${commentTypeMeta[comment.type].label}を絆へ記録しました。`,
+  );
+  render();
+}
+
+function createCannedReply(
+  viewer: ViewerPersona,
+  comment: CommentScript,
+): ChatEntry {
+  const typeReplies: Record<StreamCommentType, string[]> = {
+    message: [
+      `${viewer.name}、コメントありがとう。ちゃんと読んでるよ！`,
+      `${viewer.name}の言葉、次の話題につなげてみるね。`,
+      `来てくれてうれしい、${viewer.name}。一緒に楽しもう！`,
+    ],
+    reaction: [
+      `${viewer.name}のリアクション届いたよ、ありがとう！`,
+      `その反応うれしい！ ${viewer.name}にも伝わったんだね。`,
+    ],
+    gift: [
+      `${viewer.name}、応援ありがとう！ 大切に受け取ったよ。`,
+      `すてきな応援をありがとう、${viewer.name}。無理なく楽しんでね。`,
+    ],
+  };
+  const options = typeReplies[comment.type];
+  const text = options[replySequence % options.length] ?? 'ありがとう！';
+  replySequence++;
+  return {
+    id: chatSequence++,
+    author: 'character',
+    name: 'Luna',
+    icon: '☾',
+    type: 'reply',
+    text,
+    emotion: comment.emotion,
+    time: simulatedNow,
+  };
+}
+
+function inferEmotion(text: string, type: StreamCommentType): string {
+  if (type === 'gift' || /最高|すごい|応援|！|!/.test(text)) return 'excited';
+  if (/\?|？|なぜ|どう/.test(text)) return 'curious';
+  if (/落ち着|ゆっくり|静か|安心/.test(text)) return 'calm';
+  return 'happy';
 }
 
 function advanceTime(hours: number): void {
   if (!Number.isFinite(hours) || hours <= 0) return;
   simulatedNow += hours * HOUR_MS;
+  for (const viewer of viewers) {
+    if (manager.getBondSnapshot(viewer.id)) recordBondPoint(viewer.id);
+  }
   pushEvent(
     hours >= 24 ? '🌙' : '🕰️',
-    `時計を${formatDuration(hours)}進めました。`,
+    `時計を${formatDuration(hours)}進め、warmthを再評価しました。`,
   );
   render();
 }
 
-function resetLab(): void {
+function resetSimulator(): void {
+  labGeneration++;
   manager.destroy();
   simulatedNow = INITIAL_TIME;
-  selectedUserId = users[0]?.id ?? '';
-  selectedEmotion = emotions[0]?.id ?? '';
+  selectedViewerId = viewers[0]?.id ?? '';
+  manualViewerId = selectedViewerId;
+  manualCommentType = 'message';
+  manualDraft = '';
   pendingSkipHours = 24;
+  autoPlaying = true;
+  pendingInteractions = 0;
   eventEntries = [];
+  chatEntries = [
+    {
+      id: chatSequence++,
+      author: 'character',
+      name: 'Luna',
+      icon: '☾',
+      type: 'reply',
+      text: '配信をリセットしました。コメントを待っているね！',
+      emotion: 'happy',
+      time: simulatedNow,
+    },
+  ];
+  lastReply = chatEntries[0];
+  bondHistory = createEmptyBondHistory();
+  scriptPositions.clear();
+  for (const viewer of viewers) scriptPositions.set(viewer.id, 0);
   manager = createManager();
   bindManagerEvents();
-  pushEvent('↺', 'ラボを最初の状態に戻しました。');
+  scheduleInitialAutoPosts();
+  pushEvent('↺', 'モック配信を最初の状態に戻しました。');
   render();
+}
+
+function createEmptyBondHistory(): Map<string, BondHistoryPoint[]> {
+  return new Map(
+    viewers.map(({ id }) => [id, [{ time: INITIAL_TIME, capital: 0 }]]),
+  );
+}
+
+function recordBondPoint(userId: string): void {
+  const points = bondHistory.get(userId) ?? [];
+  points.push({
+    time: simulatedNow,
+    capital: manager.toRelationshipCapital(userId),
+  });
+  bondHistory.set(userId, points.slice(-MAX_HISTORY_POINTS));
+}
+
+function trimChatEntries(): void {
+  chatEntries = chatEntries.slice(-MAX_CHAT_ENTRIES);
 }
 
 function pushEvent(icon: string, text: string): void {
   eventEntries.unshift({ id: eventSequence++, time: simulatedNow, icon, text });
-  eventEntries = eventEntries.slice(0, 24);
+  eventEntries = eventEntries.slice(0, 28);
 }
 
 function render(focusToken: FocusToken | null = captureFocus()): void {
-  const selectedUser =
-    users.find(({ id }) => id === selectedUserId) ?? users[0];
-  const selectedSnapshot = selectedUser
-    ? manager.getBondSnapshot(selectedUser.id)
+  const selectedViewer =
+    viewers.find(({ id }) => id === selectedViewerId) ?? viewers[0];
+  const selectedSnapshot = selectedViewer
+    ? manager.getBondSnapshot(selectedViewer.id)
     : null;
-  const context = selectedUser
-    ? manager.getBondContext(selectedUser.id, { language: 'ja' })
+  const context = selectedViewer
+    ? manager.getBondContext(selectedViewer.id, { language: 'ja' })
     : '';
+  const disabledWhileProcessing = pendingInteractions > 0 ? 'disabled' : '';
 
   app.innerHTML = `
     <div class="app-shell">
       <header class="hero">
-        <div class="hero-copy">
+        <div>
           <a class="eyebrow" href="https://github.com/shinshin86/aituber-onair" target="_blank" rel="noreferrer">@aituber-onair/kizuna</a>
-          <p class="kicker">BOND SIMULATION LAB</p>
-          <h1>ふれあうほど、<br /><em>関係が育つ。</em></h1>
-          <p class="lead">話す、反応する、そばにいる。小さな接触が積み重なり、AIキャラクターとの絆になっていく様子を試せます。</p>
-          <div class="stage-path" aria-label="絆ステージ">
-            <span>stranger</span><i></i><span>acquaintance</span><i></i><span>regular</span><i></i><span>companion</span>
-          </div>
+          <p class="kicker">MOCK LIVE-STREAM · ONE APPLICATION SCENARIO</p>
+          <h1>会話の流れから、<em>絆が育つ。</em></h1>
+          <p class="lead">4人の視聴者がそれぞれのペースでコメントする架空配信です。配信UIは一例で、Kizuna本体は接触元に依存しません。</p>
+        </div>
+        <div class="hero-status">
+          <span class="on-air"><i></i> ON AIR</span>
+          <strong>${autoPlaying ? 'AUTO PLAYING' : 'PAUSED'}</strong>
+          <small>API KEY / LLM不要</small>
         </div>
       </header>
 
       <section class="clock-bar" aria-label="シミュレーション時計">
-        <div class="clock-now">
-          <span>SIMULATED TIME</span>
-          <strong>${formatDateTime(simulatedNow)}</strong>
-        </div>
+        <div class="clock-now"><span>SIMULATED TIME</span><strong>${formatDateTime(simulatedNow)}</strong></div>
         <div class="quick-time">
-          <button data-action="advance-time" data-hours="1">+1時間</button>
-          <button data-action="advance-time" data-hours="24">+1日</button>
-          <button data-action="advance-time" data-hours="168">+1週間</button>
+          <button data-action="advance-time" data-hours="1" ${disabledWhileProcessing}>+1時間</button>
+          <button data-action="advance-time" data-hours="24" ${disabledWhileProcessing}>+1日</button>
+          <button data-action="advance-time" data-hours="168" ${disabledWhileProcessing}>+1週間</button>
         </div>
         <label class="time-slider">
           <span>まとめて進める <output id="skip-output">${formatDuration(pendingSkipHours)}</output></span>
-          <input data-field="skip-hours" type="range" min="1" max="168" step="1" value="${pendingSkipHours}" />
+          <input data-field="skip-hours" type="range" min="1" max="168" step="1" value="${pendingSkipHours}" ${disabledWhileProcessing} />
         </label>
-        <button class="secondary" data-action="apply-time">適用</button>
-        <button class="ghost" data-action="reset">リセット</button>
+        <button class="secondary" data-action="apply-time" ${disabledWhileProcessing}>適用</button>
+        <button class="ghost" data-action="reset" ${disabledWhileProcessing}>リセット</button>
       </section>
 
-      <main class="lab-layout">
+      <main class="dashboard">
         <section class="workspace">
-          <section class="panel contact-panel">
-            <div class="section-heading">
-              <div><span class="step">01</span><h2>誰とふれあう？</h2></div>
-              <p>人物を選ぶと、その人の絆が右側に表示されます。</p>
-            </div>
-            <div class="people-grid">
-              ${users.map((user) => renderPersonButton(user)).join('')}
-            </div>
-
-            <div class="contact-divider"></div>
-            <div class="section-heading compact">
-              <div><span class="step">02</span><h2>どんな接触？</h2></div>
-              <label class="emotion-field">
-                <span>今の感情</span>
-                <select data-field="emotion">
-                  ${emotions.map((emotion) => `<option value="${emotion.id}" ${emotion.id === selectedEmotion ? 'selected' : ''}>${emotion.icon} ${emotion.label}</option>`).join('')}
-                </select>
-              </label>
-            </div>
-            <div class="contact-grid">
-              ${contacts.map((contact) => renderContactButton(contact)).join('')}
-            </div>
-            <p class="contact-hint">時間を進めると warmth が下がります。次の接触で continuity の変化が確定します。</p>
+          <section class="stream-shell">
+            ${renderStreamStage()}
+            ${renderLiveChat()}
           </section>
-
-          <section class="panel roster-panel">
+          <section class="panel bond-panel">
             <div class="section-heading">
-              <div><span class="step">03</span><h2>みんなの絆</h2></div>
-              <p>接触した人物の状態を並べて比較できます。</p>
+              <div><span class="section-mark">LIVE</span><h2>視聴者ごとの絆</h2></div>
+              <p>コメントのたびにポイント・温度・推移を更新</p>
             </div>
             <div class="bond-grid">
-              ${users.map((user) => renderBondCard(user)).join('')}
+              ${viewers.map(renderBondCard).join('')}
             </div>
           </section>
+          ${renderDebugDrawer()}
         </section>
 
         <aside class="inspector">
-          ${renderSelectedBond(selectedUser, selectedSnapshot)}
+          ${renderSelectedBond(selectedViewer, selectedSnapshot)}
           <section class="panel context-panel">
             <div class="panel-title-row">
-              <div><span class="mini-label">LLM CONTEXT</span><h2>AIが受け取る関係性</h2></div>
-              <span class="live-dot">LIVE</span>
+              <div><span class="mini-label">GETBONDCONTEXT</span><h2>AIが受け取る関係性</h2></div>
+              <span class="context-live">LIVE</span>
             </div>
-            <pre>${escapeHtml(context || '最初の接触後に、ここへ関係性の文脈が表示されます。')}</pre>
+            <pre>${escapeHtml(context || '最初のコメント後に、選択中の視聴者との関係性が表示されます。')}</pre>
           </section>
           <section class="panel event-panel">
             <div class="panel-title-row">
-              <div><span class="mini-label">EVENT STREAM</span><h2>絆の変化</h2></div>
+              <div><span class="mini-label">EVENT STREAM</span><h2>Kizunaの変化</h2></div>
               <span class="event-count">${eventEntries.length}</span>
             </div>
-            <ol class="event-list">
-              ${eventEntries.map(renderEvent).join('')}
-            </ol>
+            <ol class="event-list">${eventEntries.map(renderEvent).join('')}</ol>
           </section>
         </aside>
       </main>
     </div>
   `;
   restoreFocus(focusToken);
+  scrollChatToLatest();
 }
 
-function renderPersonButton(user: DemoUser): string {
-  const snapshot = manager.getBondSnapshot(user.id);
-  const selected = user.id === selectedUserId;
+function renderStreamStage(): string {
   return `
-    <button class="person ${selected ? 'selected' : ''}" data-action="select-user" data-user-id="${user.id}" aria-pressed="${selected}">
-      <span class="person-icon">${user.icon}</span>
-      <span class="person-copy"><strong>${user.name}</strong><small>${user.note}</small></span>
-      <span class="person-stage">${snapshot?.stage ?? 'まだ出会っていない'}</span>
+    <section class="stream-stage" aria-label="モック配信ステージ">
+      <div class="stream-topline">
+        <span class="live-badge"><i></i> LIVE</span>
+        <span class="viewer-count">◉ 1,248</span>
+      </div>
+      <div class="stage-light light-one"></div>
+      <div class="stage-light light-two"></div>
+      <div class="character-placeholder" aria-label="AIキャラクターのプレースホルダー">
+        <span class="character-halo"></span>
+        <span class="character-face">☾</span>
+        <small>CHARACTER PLACEHOLDER</small>
+      </div>
+      <div class="stage-caption">
+        <span class="emotion-tag">[${escapeHtml(lastReply?.emotion ?? 'happy')}]</span>
+        <p>${escapeHtml(lastReply?.text ?? 'コメントを待っています。')}</p>
+      </div>
+      <div class="stream-title"><span>NOW STREAMING</span><strong>夜のまったり雑談室</strong></div>
+    </section>
+  `;
+}
+
+function renderLiveChat(): string {
+  return `
+    <section class="live-chat" aria-label="ライブチャット">
+      <div class="chat-header">
+        <div><span class="mini-label">LIVE CHAT</span><h2>コメント</h2></div>
+        <button class="auto-toggle ${autoPlaying ? 'playing' : ''}" data-action="toggle-auto" aria-pressed="${autoPlaying}">
+          ${autoPlaying ? '⏸ 一時停止' : '▶ 自動再生'}
+        </button>
+      </div>
+      <div class="chat-feed" data-chat-feed>
+        ${chatEntries.map(renderChatEntry).join('')}
+      </div>
+      <form class="chat-composer" data-form="manual-comment">
+        <div class="composer-options">
+          <label><span>投稿者</span><select data-field="manual-viewer">
+            ${viewers.map((viewer) => `<option value="${viewer.id}" ${viewer.id === manualViewerId ? 'selected' : ''}>${viewer.icon} ${viewer.name}</option>`).join('')}
+          </select></label>
+          <label><span>種別</span><select data-field="manual-type">
+            ${(['message', 'reaction', 'gift'] as const).map((type) => `<option value="${type}" ${type === manualCommentType ? 'selected' : ''}>${commentTypeMeta[type].icon} ${commentTypeMeta[type].label}</option>`).join('')}
+          </select></label>
+        </div>
+        <div class="composer-row">
+          <input data-field="manual-draft" value="${escapeHtml(manualDraft)}" placeholder="選んだ視聴者としてコメント…" maxlength="120" aria-label="手動コメント" />
+          <button type="submit" ${manualDraft.trim() ? '' : 'disabled'}>投稿</button>
+        </div>
+        <p>${pendingInteractions > 0 ? `${pendingInteractions}件を処理中…` : '投稿内容から感情を推定し、Kizunaへ記録します。'}</p>
+      </form>
+    </section>
+  `;
+}
+
+function renderChatEntry(entry: ChatEntry): string {
+  const viewer = entry.userId
+    ? viewers.find(({ id }) => id === entry.userId)
+    : undefined;
+  const typeLabel =
+    entry.type === 'reply' ? 'AI REPLY' : commentTypeMeta[entry.type].label;
+  const authorLabel = viewer
+    ? `<button class="chat-author" data-action="select-viewer" data-user-id="${viewer.id}">${escapeHtml(entry.name)}</button>`
+    : `<strong>${escapeHtml(entry.name)}</strong>`;
+  return `
+    <article class="chat-message ${entry.author} type-${entry.type}" style="--viewer-accent:${viewer?.accent ?? '#d8576b'}">
+      <span class="chat-avatar">${entry.icon}</span>
+      <div>
+        <div class="chat-meta">${authorLabel}<span>${typeLabel}</span><time>${formatTime(entry.time)}</time></div>
+        <p>${escapeHtml(entry.text)}</p>
+        <small>[${escapeHtml(entry.emotion)}]</small>
+      </div>
+    </article>
+  `;
+}
+
+function renderBondCard(viewer: ViewerPersona): string {
+  const snapshot = manager.getBondSnapshot(viewer.id);
+  const warmth = snapshot?.warmth ?? 0;
+  const selected = viewer.id === selectedViewerId;
+  return `
+    <button class="bond-card ${selected ? 'selected' : ''}" data-action="select-viewer" data-user-id="${viewer.id}" aria-pressed="${selected}">
+      <div class="bond-card-top">
+        <span class="viewer-avatar" style="--viewer-accent:${viewer.accent}">${viewer.icon}</span>
+        <div><strong>${viewer.name}</strong><small>${viewer.note}</small></div>
+        <span class="stage-badge stage-${snapshot?.stage ?? 'waiting'}">${snapshot?.stage ?? 'waiting'}</span>
+      </div>
+      <div class="bond-numbers"><span><b>${snapshot?.points ?? 0}</b> pt</span><span>WARMTH <b>${Math.round(warmth * 100)}%</b></span></div>
+      <div class="warmth-meter"><i style="width:${warmth * 100}%"></i></div>
+      <div class="sparkline-row">
+        <span>BOND TREND</span>
+        ${renderSparkline(viewer)}
+      </div>
     </button>
   `;
 }
 
-function renderContactButton(contact: ContactOption): string {
+function renderSparkline(viewer: ViewerPersona): string {
+  const history = bondHistory.get(viewer.id) ?? [];
+  const width = 150;
+  const height = 42;
+  const points = history.slice(-18).map(({ capital }, index, items) => {
+    const x = items.length <= 1 ? width : (index / (items.length - 1)) * width;
+    const y = height - Math.max(0, Math.min(1, capital)) * (height - 4) - 2;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const polyline =
+    points.length === 1 ? `${points[0]} ${points[0]}` : points.join(' ');
   return `
-    <button class="contact" data-action="contact" data-kind="${contact.kind}" ${isProcessing ? 'disabled' : ''}>
-      <span>${contact.icon}</span>
-      <strong>${contact.label}</strong>
-      <small>基本 +${contact.points} pt</small>
-    </button>
-  `;
-}
-
-function renderBondCard(user: DemoUser): string {
-  const snapshot = manager.getBondSnapshot(user.id);
-  if (!snapshot) {
-    return `
-      <button class="bond-card bond-empty" data-action="select-user" data-user-id="${user.id}">
-        <span>${user.icon}</span><strong>${user.name}</strong><small>最初の接触を待っています</small>
-      </button>
-    `;
-  }
-  return `
-    <button class="bond-card ${user.id === selectedUserId ? 'selected' : ''}" data-action="select-user" data-user-id="${user.id}">
-      <div class="bond-card-head"><span>${user.icon}</span><div><strong>${user.name}</strong><small>${snapshot.stage}</small></div><b>Lv.${snapshot.level}</b></div>
-      <div class="micro-meter"><i style="width:${snapshot.warmth * 100}%"></i></div>
-      <div class="bond-card-meta"><span>${snapshot.points} pt</span><span>🔥 ${snapshot.continuity.streak}</span><span>${Math.round(snapshot.warmth * 100)}%</span></div>
-    </button>
+    <svg class="sparkline" viewBox="0 0 ${width} ${height}" role="img" aria-label="${viewer.name}の絆推移">
+      <line x1="0" y1="${height - 2}" x2="${width}" y2="${height - 2}"></line>
+      <polyline points="${polyline}" style="--viewer-accent:${viewer.accent}"></polyline>
+    </svg>
   `;
 }
 
 function renderSelectedBond(
-  user: DemoUser | undefined,
+  viewer: ViewerPersona | undefined,
   snapshot: BondSnapshot | null,
 ): string {
-  if (!user || !snapshot) {
+  if (!viewer || !snapshot) {
     return `
       <section class="panel focus-panel empty-focus">
-        <span class="focus-avatar">${user?.icon ?? '🌱'}</span>
-        <span class="mini-label">SELECTED BOND</span>
-        <h2>${user?.name ?? '人物を選択'}</h2>
-        <p>接触すると、絆の温度と積み重なりがここに現れます。</p>
+        <span class="focus-avatar">${viewer?.icon ?? '🌱'}</span>
+        <span class="mini-label">SELECTED VIEWER</span>
+        <h2>${viewer?.name ?? '視聴者を選択'}</h2>
+        <p>コメントが届くと、会話から生まれた絆がここに現れます。</p>
       </section>
     `;
   }
 
-  const capital = manager.toRelationshipCapital(user.id);
+  const capital = manager.toRelationshipCapital(viewer.id);
   const favoriteEmotions = snapshot.favoriteEmotions.length
     ? snapshot.favoriteEmotions
         .slice(0, 3)
-        .map(({ emotion, count }) => `<span>${emotion} ×${count}</span>`)
+        .map(
+          ({ emotion, count }) =>
+            `<span>${escapeHtml(emotion)} ×${count}</span>`,
+        )
         .join('')
     : '<span>まだありません</span>';
   const achievements = snapshot.achievements.length
@@ -513,28 +877,45 @@ function renderSelectedBond(
             `<li><span>${icon ?? '🏅'}</span><strong>${escapeHtml(title)}</strong></li>`,
         )
         .join('')
-    : '<li class="muted-achievement">次のステージで実績が開きます</li>';
+    : '<li class="muted-achievement">会話を重ねると実績が開きます</li>';
 
   return `
     <section class="panel focus-panel">
       <div class="focus-head">
-        <span class="focus-avatar">${user.icon}</span>
-        <div><span class="mini-label">SELECTED BOND</span><h2>${user.name}</h2><p>${snapshot.role === 'owner' ? 'owner' : 'guest'} · Lv.${snapshot.level}</p></div>
-        <span class="stage-badge">${snapshot.stage}</span>
+        <span class="focus-avatar" style="--viewer-accent:${viewer.accent}">${viewer.icon}</span>
+        <div><span class="mini-label">SELECTED VIEWER</span><h2>${viewer.name}</h2><p>${snapshot.role} · Lv.${snapshot.level}</p></div>
+        <span class="stage-badge stage-${snapshot.stage}">${snapshot.stage}</span>
       </div>
-      <div class="warmth-block">
-        <div class="metric-label"><span>WARMTH</span><strong>${Math.round(snapshot.warmth * 100)}%</strong></div>
+      <div class="focus-warmth">
+        <div><span>WARMTH</span><strong>${Math.round(snapshot.warmth * 100)}%</strong></div>
         <div class="warmth-meter"><i style="width:${snapshot.warmth * 100}%"></i></div>
-        <p>最後の接触: ${formatDateTime(snapshot.continuity.lastContactAt.getTime())}</p>
+        <p>最後の接触 ${formatDateTime(snapshot.continuity.lastContactAt.getTime())}</p>
       </div>
       <div class="metric-grid">
         <div><span>POINTS</span><strong>${snapshot.points}</strong></div>
-        <div><span>CONTINUITY</span><strong>${snapshot.continuity.streak}</strong><small>${snapshot.continuity.totalActiveBuckets} buckets</small></div>
-        <div><span>CAPITAL</span><strong>${capital.toFixed(2)}</strong><small>Noise bridge</small></div>
+        <div><span>STREAK</span><strong>${snapshot.continuity.streak}</strong><small>${snapshot.continuity.totalActiveBuckets} buckets</small></div>
+        <div><span>CAPITAL</span><strong>${capital.toFixed(2)}</strong><small>0.00—1.00</small></div>
       </div>
       <div class="favorite-row"><span>FAVORITE EMOTIONS</span><div>${favoriteEmotions}</div></div>
       <div class="achievement-block"><span>ACHIEVEMENTS</span><ul>${achievements}</ul></div>
     </section>
+  `;
+}
+
+function renderDebugDrawer(): string {
+  return `
+    <details class="debug-drawer">
+      <summary>DEBUG · コメント種別とポイントの対応を見る</summary>
+      <div>
+        <p>配信UIは一例です。Kizunaへ渡すのは汎用的な <code>Interaction.kind</code> です。</p>
+        <div class="debug-actions">
+          ${viewers.map((viewer) => `<button data-action="post-next-auto" data-user-id="${viewer.id}">${viewer.icon} ${viewer.name}の次の投稿</button>`).join('')}
+        </div>
+        <ul>
+          ${(['message', 'reaction', 'gift'] as const).map((type) => `<li><code>${type}</code><span>${commentTypeMeta[type].label}</span><b>+${commentTypeMeta[type].points} pt</b></li>`).join('')}
+        </ul>
+      </div>
+    </details>
   `;
 }
 
@@ -571,6 +952,10 @@ function formatDuration(hours: number): string {
   return `${Math.floor(hours / 24)}日 ${hours % 24}時間`;
 }
 
+function isStreamCommentType(value: string): value is StreamCommentType {
+  return value === 'message' || value === 'reaction' || value === 'gift';
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -587,11 +972,22 @@ function getAppRoot(): HTMLDivElement {
 }
 
 function captureFocus(): FocusToken | null {
-  const element = document.activeElement as HTMLElement | null;
+  const element = document.activeElement as
+    | HTMLInputElement
+    | HTMLElement
+    | null;
   if (!element || !app.contains(element)) return null;
-  const { action, field, userId, kind, hours } = element.dataset;
+  const { action, field, userId } = element.dataset;
   if (!action && !field) return null;
-  return { action, field, userId, kind, hours };
+  return {
+    action,
+    field,
+    userId,
+    selectionStart:
+      element instanceof HTMLInputElement ? element.selectionStart : undefined,
+    selectionEnd:
+      element instanceof HTMLInputElement ? element.selectionEnd : undefined,
+  };
 }
 
 function restoreFocus(token: FocusToken | null): void {
@@ -603,12 +999,22 @@ function restoreFocus(token: FocusToken | null): void {
     if (
       candidate.dataset.action === token.action &&
       candidate.dataset.field === token.field &&
-      candidate.dataset.userId === token.userId &&
-      candidate.dataset.kind === token.kind &&
-      candidate.dataset.hours === token.hours
+      candidate.dataset.userId === token.userId
     ) {
       candidate.focus();
+      if (
+        candidate instanceof HTMLInputElement &&
+        token.selectionStart !== undefined &&
+        token.selectionEnd !== undefined
+      ) {
+        candidate.setSelectionRange(token.selectionStart, token.selectionEnd);
+      }
       return;
     }
   }
+}
+
+function scrollChatToLatest(): void {
+  const feed = document.querySelector<HTMLElement>('[data-chat-feed]');
+  if (feed) feed.scrollTop = feed.scrollHeight;
 }
