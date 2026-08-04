@@ -253,6 +253,18 @@ npm run dev
   browser example for trying conversation pattern detection without connecting
   to an LLM.
 
+## Kizuna Examples
+
+- [`packages/kizuna/examples/kizuna-sample`](../packages/kizuna/examples/kizuna-sample):
+  interactive browser lab for contact kinds, bond stages, warmth decay,
+  continuity, achievements, simulated time, and LLM context output.
+- [`packages/core/examples/react-basic`](../packages/core/examples/react-basic):
+  opt-in Kizuna integration that records messages and response emotions, then
+  injects the current bond context into the system prompt.
+- [`packages/noise/examples/noise-session-sample`](../packages/noise/examples/noise-session-sample):
+  uses Kizuna's normalized relationship value to control Noise relationship
+  gates, with a manual override for diagnostics.
+
 ## Comment Intelligence Examples
 
 - [`packages/comment-intelligence/examples/live-comment-filter-sample`](../packages/comment-intelligence/examples/live-comment-filter-sample):

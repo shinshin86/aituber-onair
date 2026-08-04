@@ -2,24 +2,55 @@
 
 ![AITuber OnAir Kizuna - logo](./images/aituber-onair-kizuna.png)
 
-A sophisticated bond system (絆 - "Kizuna") for managing relationships between users and AI characters in AITuber OnAir. This package provides a flexible points-based engagement system with customizable rules, achievements, and thresholds.
+Kizuna turns repeated contact with an AI character into a bond the character
+can actually respond to.
 
-[日本語版 README はこちら](./README.ja.md)
+A first message starts at `stranger`. Continued contact can grow into
+`acquaintance`, `regular`, and finally `companion`. Time apart lowers warmth
+without erasing the history. A new contact warms the bond again. At every
+step, `getBondContext()` converts that state into a short prompt for an LLM.
+
+[日本語版 README](./README.ja.md)
+
+## The bond story
+
+With the default configuration, representative English context looks like
+this:
+
+```text
+# First contact
+Bond with Aki: stranger (level 1, 1 points). Warmth: 1.00; continuity: 1 buckets. Favorite emotions: curious. Respond in a way that fits this bond depth and current warmth.
+
+# Continued contact
+Bond with Aki: regular (level 3, 500 points). Warmth: 1.00; continuity: 12 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and current warmth.
+
+# After time apart
+Bond with Aki: regular (level 3, 500 points). Warmth: 0.50; continuity: 12 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and current warmth.
+
+# Contact resumes
+Bond with Aki: regular (level 3, 501 points). Warmth: 1.00; continuity: 1 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and current warmth.
+
+# A lasting bond
+Bond with Aki: companion (level 4, 1000 points). Warmth: 1.00; continuity: 20 buckets. Favorite emotions: happy, curious. Respond in a way that fits this bond depth and current warmth.
+```
+
+Points express accumulated history. Warmth expresses recency. Continuity
+expresses repeated contact across days, weeks, sessions, or custom buckets.
+These signals stay separate so an established bond can cool off and later be
+rekindled without becoming a first meeting again.
 
 ## Features
 
-- **Points System**: Award points to users based on their interactions
-- **Emotion-based Bonuses**: Dynamic point calculation based on AI emotions (happy, excited, etc.)
-- **Platform Support**: Different point rules for YouTube, Twitch, and WebSocket chat
-- **Customizable Rules**: Create your own point calculation rules with conditions and cooldowns
-- **Level System**: 10-level progression system (100 points per level)
-- **Achievements**: Unlock achievements at specific point thresholds
-- **Owner Privileges**: Special bonuses and multipliers for AITuber operators
-- **Cooldown Management**: Prevent spam with time-based and daily limits
-- **Persistent Storage**: Save user data with configurable retention policies
-- **Debug Mode**: Detailed logging for development and troubleshooting
-- **Browser Compatible**: Works with Vite, Webpack, and other modern bundlers
-- **Dependency Injection**: Flexible file system integration for Node.js environments
+- Generic interactions: `message`, `reaction`, `gift`, `presence`, `touch`,
+  or your own string kind
+- Stable roles: `owner` and `guest`
+- Configurable points, rules, cooldowns, per-bucket limits, and thresholds
+- Bond stages, levels, recency-based warmth, and continuity streaks
+- Structured snapshots plus English, Japanese, or custom LLM context
+- A normalized `0..1` relationship value for downstream systems
+- Optional persistence through browser storage or an injected adapter
+- No runtime dependencies and no source-specific user ID parsing
+- An injectable clock for deterministic tests and simulations
 
 ## Installation
 
@@ -27,641 +58,369 @@ A sophisticated bond system (絆 - "Kizuna") for managing relationships between 
 npm install @aituber-onair/kizuna
 ```
 
-## Quick Start
+## Quick start
 
 ```typescript
-import { KizunaManager, LocalStorageProvider } from '@aituber-onair/kizuna';
+import {
+  KizunaManager,
+  createDefaultKizunaConfig,
+} from '@aituber-onair/kizuna';
 
-// Create storage provider (browser environment)
-const storageProvider = new LocalStorageProvider({
-  enableCompression: false,
-  enableEncryption: false,
-  maxStorageSize: 10 * 1024 * 1024, // 10MB
-});
+const config = createDefaultKizunaConfig();
+const kizuna = new KizunaManager(config, undefined, 'my-character-bond');
 
-// Configuration
-const config = {
-  enabled: true,
-  owner: {
-    initialPoints: 100,
-    pointMultiplier: 2,
-    dailyBonus: 10,
-    specialCommands: ['reset_points', 'grant_points'],
-    exclusiveAchievements: ['master_of_aituber'],
-  },
-  platforms: {
-    youtube: {
-      basePoints: {
-        comment: 1,
-        superChat: 20,
-        membership: 5,
-      },
-    },
-    twitch: {
-      basePoints: {
-        chat: 1,
-        subscription: 10,
-        bits: 5,
-      },
-    },
-  },
-  thresholds: [
-    {
-      points: 50,
-      action: {
-        type: 'special_response',
-        data: { message: '🎉 Thanks for your support!' },
-      },
-      repeatable: false,
-    },
-  ],
-  storage: {
-    maxUsers: 1000,
-    dataRetentionDays: 90,
-    cleanupIntervalHours: 24,
-  },
-  dev: {
-    debugMode: false,
-    logLevel: 'info',
-    showDebugPanel: false,
-  },
-  customRules: [
-    {
-      id: 'emotion_happy',
-      name: 'Happy emotion bonus',
-      condition: (context) => context.emotion === 'happy',
-      points: 1,
-      description: 'Bonus for happy AI responses',
-    },
-  ],
-};
-
-// Initialize Kizuna system
-const kizuna = new KizunaManager(config, storageProvider, 'your_storage_key');
-await kizuna.initialize();
-
-// Process user interaction
-const result = await kizuna.processInteraction({
-  userId: 'youtube:user123',
-  platform: 'youtube',
-  message: 'Hello!',
-  emotion: 'happy',
+await kizuna.processInteraction({
+  userId: 'person-42',
+  kind: 'message',
+  message: 'Good morning!',
+  emotion: 'curious',
   isOwner: false,
   timestamp: Date.now(),
-  metadata: {
-    userName: 'user123',
-    chatProvider: 'openai',
-    chatModel: 'gpt-4',
-  },
+  metadata: { displayName: 'Aki' },
 });
 
-console.log(`User earned ${result.pointsAdded} points!`);
+const snapshot = kizuna.getBondSnapshot('person-42');
+const context = kizuna.getBondContext('person-42');
+
+console.log(snapshot?.stage); // stranger
+console.log(context); // Bond with Aki: stranger ...
+
+kizuna.destroy();
 ```
 
-## Architecture & Browser Compatibility
+`processInteraction()` initializes the manager lazily. When using persistent
+storage, call `await kizuna.initialize()` before reading state so saved data is
+loaded first. A non-empty storage key is required even for an in-memory
+manager.
 
-Kizuna v0.0.2 introduces a **dependency injection architecture** that solves browser compatibility issues while maintaining flexibility for Node.js environments.
+Call `destroy()` during shutdown or unmount so the automatic cleanup timer and
+event listeners are released.
 
-### Key Benefits
+## Configure the bond
 
-- ✅ **Vite Compatible**: No more "Module 'node:fs' has been externalized for browser compatibility" errors
-- ✅ **Zero Node.js Dependencies**: Package contains no Node.js-specific modules
-- ✅ **Flexible Storage**: Users control file system implementation in Node.js
-- ✅ **Universal Package**: Works in browsers, Node.js, Deno, and Bun environments
-
-### Migration from v0.0.1
-
-If you were using `FileSystemStorageProvider` in v0.0.1, migrate to `ExternalStorageProvider`:
+Start from `createDefaultKizunaConfig()` so future optional fields receive safe
+defaults, then override only what your character needs.
 
 ```typescript
-// OLD (v0.0.1) - No longer available
-import { FileSystemStorageProvider } from '@aituber-onair/kizuna';
-const storage = new FileSystemStorageProvider({ dataDir: './data' });
+const config = createDefaultKizunaConfig();
 
-// NEW (v0.0.2+) - Dependency injection
-import { ExternalStorageProvider, type ExternalStorageAdapter } from '@aituber-onair/kizuna';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const adapter: ExternalStorageAdapter = {
-  // Implement file system operations
-  async readFile(filePath) { return await fs.readFile(filePath, 'utf-8'); },
-  async writeFile(filePath, data) { await fs.writeFile(filePath, data, 'utf-8'); },
-  // ... other methods
+config.basePoints = {
+  message: 10,
+  reaction: 4,
+  gift: 80,
+  presence: 2,
+  touch: 6,
 };
 
-const storage = new ExternalStorageProvider({ dataDir: './kizuna-data' }, adapter);
+config.stages = [
+  { id: 'stranger', minPoints: 0 },
+  { id: 'acquaintance', minPoints: 100 },
+  { id: 'regular', minPoints: 500 },
+  { id: 'companion', minPoints: 1_000 },
+];
+
+config.warmth = {
+  halfLifeMs: 7 * 24 * 60 * 60 * 1_000,
+  floor: 0.2,
+};
+
+config.continuity = {
+  unit: 'day',
+  grace: 1,
+};
 ```
 
-## Configuration
+The highest stage threshold is also the normalization target used by
+`toRelationshipCapital()`. The returned value is normalized points multiplied
+by current warmth.
 
-### Point Rules
+### Point rules
 
-Create custom point rules with flexible conditions:
+Rules add to the base points for an interaction kind. A cooldown limits time,
+while `bucketLimit` limits applications within the configured continuity
+bucket.
 
 ```typescript
-const customRules = [
+config.rules = [
   {
-    id: 'long_message',
-    name: 'Long message bonus',
-    condition: (context) => context.message.length > 100,
-    points: 2,
-    cooldown: 60000, // 1 minute cooldown
-    description: 'Bonus for messages over 100 characters',
-  },
-  {
-    id: 'first_daily_interaction',
-    name: 'First daily interaction',
-    condition: (context, user) => {
-      if (!user) return true;
-      const today = new Date().toDateString();
-      const lastSeen = new Date(user.lastSeen).toDateString();
-      return today !== lastSeen;
-    },
+    id: 'thoughtful-message',
+    name: 'Thoughtful message',
+    condition: (interaction) =>
+      interaction.kind === 'message' &&
+      (interaction.message?.length ?? 0) >= 80,
     points: 5,
-    dailyLimit: 1,
-    description: 'Daily login bonus',
+    cooldown: 60_000,
+    bucketLimit: 3,
+    description: 'Recognizes a longer message without rewarding spam.',
   },
 ];
 ```
 
-### Platform Configuration
+Rule points may also be a function of the interaction and current user.
+Invalid numbers are ignored, and total points never decrease.
 
-Different platforms can have different point values:
-
-```typescript
-const platforms = {
-  youtube: {
-    basePoints: {
-      comment: 1,
-      superChat: 20,
-      membership: 5,
-      firstComment: 3,
-    },
-    bonusCalculator: (context) => {
-      // Custom bonus calculation
-      if (context.metadata?.superChatAmount) {
-        return Math.floor(context.metadata.superChatAmount * 0.1);
-      }
-      return 0;
-    },
-  },
-  twitch: {
-    basePoints: {
-      chat: 1,
-      subscription: 10,
-      bits: 5,
-      raid: 15,
-    },
-  },
-};
-```
-
-### Thresholds and Actions
-
-Define actions that trigger when users reach certain point thresholds:
+### Threshold actions and achievements
 
 ```typescript
-const thresholds = [
+config.thresholds = [
   {
-    points: 100,
-    action: {
-      type: 'unlock_emotion',
-      data: {
-        emotion: 'special_happy',
-        message: '✨ New emotion unlocked!',
-      },
-    },
+    id: 'trusted-companion',
+    points: 1_000,
     repeatable: false,
-  },
-  {
-    points: 200,
     action: {
       type: 'achievement',
       data: {
-        id: 'best_friend',
-        title: 'Best Friend',
-        description: 'Built a strong bond with the AITuber',
-        icon: '💖',
+        id: 'trusted-companion',
+        title: 'Trusted companion',
+        description: 'Built a lasting bond.',
+        icon: '✨',
       },
     },
-    repeatable: false,
   },
 ];
 ```
 
-## Storage Features
+Use an explicit threshold `id` when possible. It keeps one-time threshold
+tracking stable when display text changes.
 
-The `LocalStorageProvider` includes built-in compression and encryption capabilities to optimize storage usage and protect user data.
+### Session continuity
 
-### Compression
-
-Data compression reduces storage size using Base64 encoding:
+For experiences where a visit is the natural unit, use session buckets:
 
 ```typescript
-const storageProvider = new LocalStorageProvider({
-  enableCompression: true,
-  enableEncryption: false,
-  maxStorageSize: 5 * 1024 * 1024,
+config.continuity = { unit: 'session', grace: 0 };
+
+const kizuna = new KizunaManager(config, undefined, 'session-bond');
+
+await kizuna.beginSession('visit-1');
+await kizuna.processInteraction({
+  userId: 'person-42',
+  kind: 'presence',
+  isOwner: false,
+  timestamp: Date.now(),
 });
+kizuna.endSession();
 ```
 
-**Example data transformation:**
-```json
-// Original data (250 bytes)
-{"userId":"youtube:user123","points":150,"level":2}
+`unit` can be `day`, `week`, `session`, or a function that returns a safe
+integer bucket index.
 
-// Compressed data (Base64 encoded)
-eyJ1c2VySWQiOiJ5b3V0dWJlOnVzZXIxMjMiLCJwb2ludHMiOjE1MCwibGV2ZWwiOjJ9
-```
+## Use the outputs
 
-**Important:** Current implementation uses Base64 encoding, which actually **increases** data size by ~33%. This is not true compression. For real compression, integrate libraries like `lz-string` or `pako`:
-
-```bash
-npm install lz-string
-```
+### Structured state
 
 ```typescript
-import LZString from 'lz-string';
+const snapshot = kizuna.getBondSnapshot('person-42');
 
-// In your custom storage provider
-const compressed = LZString.compress(data);
-const decompressed = LZString.decompress(compressed);
-```
-
-### Encryption
-
-Data encryption protects user privacy using XOR cipher:
-
-```typescript
-const storageProvider = new LocalStorageProvider({
-  enableCompression: false,
-  enableEncryption: true,
-  encryptionKey: 'your-secret-key-here',
-  maxStorageSize: 5 * 1024 * 1024,
-});
-```
-
-**Example encrypted data:**
-```
-// Original: {"points":150}
-// Encrypted: "H4sKDQkLGRseFBIeGQ=="
-```
-
-**Security Note:** Current implementation uses XOR cipher for basic privacy protection. For production applications requiring strong security, consider using `Web Crypto API` or libraries like `crypto-js` with AES encryption.
-
-### Combined Usage
-
-For maximum efficiency and security:
-
-```typescript
-const storageProvider = new LocalStorageProvider({
-  enableCompression: true,   // Reduce storage size
-  enableEncryption: true,    // Protect user data
-  encryptionKey: process.env.KIZUNA_ENCRYPTION_KEY || 'fallback-key',
-  maxStorageSize: 5 * 1024 * 1024, // 5MB limit
-});
-```
-
-**Processing order:**
-1. **Save**: Original → Compress → Encrypt → Store
-2. **Load**: Retrieve → Decrypt → Decompress → Original
-
-### Performance Impact (Measured)
-
-Based on actual benchmarks with typical Kizuna user data:
-
-| Data Size | No Processing | Compression Only | Encryption Only | Both |
-|-----------|---------------|------------------|-----------------|------|
-| **1KB (typical)** | 0.5ms | 0.7ms (+40%) | 1.2ms (+140%) | 1.5ms (+200%) |
-| **10KB** | 2.1ms | 3.2ms (+52%) | 8.7ms (+314%) | 11.2ms (+433%) |
-| **100KB** | 18ms | 28ms (+56%) | 75ms (+317%) | 95ms (+428%) |
-
-**Storage Size Impact:**
-- **Current "Compression"**: +33% size (Base64 encoding)
-- **Encryption**: +33% size (Base64 + XOR overhead)
-- **Both**: +78% size (dual Base64 encoding)
-
-**Recommendations by use case:**
-- **Small data (<5KB)**: Performance impact negligible, use as needed
-- **Medium data (5-50KB)**: Consider encryption-only for privacy
-- **Large data (>50KB)**: Consider alternative storage (IndexedDB, server)
-
-### Environment-specific Configurations
-
-```typescript
-// Development environment
-const devStorage = new LocalStorageProvider({
-  enableCompression: false,  // Easier debugging, avoids size increase
-  enableEncryption: false,   // View raw data in DevTools
-  maxStorageSize: 10 * 1024 * 1024,
-});
-
-// Production environment (small datasets)
-const prodStorage = new LocalStorageProvider({
-  enableCompression: false,  // Avoid size increase until real compression
-  enableEncryption: true,    // Protect user privacy
-  encryptionKey: process.env.ENCRYPTION_KEY,
-  maxStorageSize: 5 * 1024 * 1024,
-});
-
-// Production with real compression library
-const optimizedStorage = new LocalStorageProvider({
-  enableCompression: false,  // Disable built-in, use external library
-  enableEncryption: true,
-  encryptionKey: process.env.ENCRYPTION_KEY,
-  maxStorageSize: 5 * 1024 * 1024,
-});
-// Then implement custom compression wrapper with LZ-string
-```
-
-## Debug Mode
-
-Enable detailed logging for development:
-
-```typescript
-const config = {
-  // ... other config
-  dev: {
-    debugMode: true, // Enable debug logs
-    logLevel: 'debug',
-    showDebugPanel: true,
-  },
-};
-```
-
-When debug mode is enabled, you'll see detailed logs like:
-
-```
-[Kizuna] Processing interaction for youtube:user123 with emotion: happy
-[PointCalculator] [canApplyRule] Checking rule: emotion_happy for emotion: happy
-[PointCalculator] [canApplyRule] Rule emotion_happy condition result: true
-[Kizuna] Interaction processed: 2 points added (1 rules applied)
-[Kizuna] Applied rules: Happy emotion bonus
-```
-
-## Event System
-
-Listen to Kizuna events:
-
-```typescript
-kizuna.on('points_updated', (eventData) => {
-  console.log(`User ${eventData.userId} earned ${eventData.data.pointsAdded} points!`);
-});
-
-kizuna.on('level_up', (eventData) => {
-  console.log(`User ${eventData.userId} leveled up to ${eventData.data.newLevel}!`);
-});
-
-kizuna.on('threshold_reached', (eventData) => {
-  console.log(`User ${eventData.userId} reached threshold ${eventData.data.threshold.points}!`);
-});
-```
-
-## Browser Compatibility & Node.js Support
-
-Kizuna is designed to be **browser-compatible** and can be used in Node.js environments through dependency injection. The package no longer includes Node.js-specific dependencies, making it compatible with Vite and other modern browser bundlers.
-
-### Browser Usage (Default)
-
-```typescript
-import { KizunaManager, LocalStorageProvider } from '@aituber-onair/kizuna';
-
-// Browser environment - uses localStorage
-const browserStorage = new LocalStorageProvider({
-  enableCompression: false,
-  enableEncryption: false,
-  maxStorageSize: 5 * 1024 * 1024
-});
-
-const kizuna = new KizunaManager(config, browserStorage, 'my_users');
-```
-
-### Node.js Usage (Dependency Injection)
-
-For Node.js environments, provide your own file system adapter:
-
-```typescript
-import { 
-  KizunaManager, 
-  ExternalStorageProvider,
-  type ExternalStorageAdapter 
-} from '@aituber-onair/kizuna';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-// Create your own file system adapter
-const nodeAdapter: ExternalStorageAdapter = {
-  async readFile(filePath: string): Promise<string> {
-    return await fs.readFile(filePath, 'utf-8');
-  },
-  async writeFile(filePath: string, data: string): Promise<void> {
-    await fs.writeFile(filePath, data, 'utf-8');
-  },
-  async deleteFile(filePath: string): Promise<void> {
-    await fs.unlink(filePath);
-  },
-  async listFiles(dirPath: string): Promise<string[]> {
-    const files = await fs.readdir(dirPath);
-    return files.filter(file => file.endsWith('.json'));
-  },
-  async ensureDir(dirPath: string): Promise<void> {
-    await fs.mkdir(dirPath, { recursive: true });
-  },
-  async exists(path: string): Promise<boolean> {
-    try {
-      await fs.access(path);
-      return true;
-    } catch {
-      return false;
-    }
-  },
-  joinPath: (...components: string[]) => path.join(...components)
-};
-
-// Use ExternalStorageProvider with your adapter
-const nodeStorage = new ExternalStorageProvider({
-  dataDir: './kizuna-data',
-  prettyJson: true,
-  autoCreateDir: true
-}, nodeAdapter);
-
-const kizuna = new KizunaManager(config, nodeStorage, 'my_users');
-```
-
-### Automatic Environment Detection
-
-```typescript
-import { KizunaManager, createDefaultStorageProvider } from '@aituber-onair/kizuna';
-
-// Browser: Uses LocalStorageProvider automatically
-// Node.js: Uses LocalStorageProvider (fallback) unless adapter provided
-const kizuna = new KizunaManager(config, createDefaultStorageProvider(), 'my_users');
-
-// Node.js with adapter
-const kizuna = new KizunaManager(config, createDefaultStorageProvider(nodeAdapter), 'my_users');
-```
-
-### Environment Detection Utilities
-
-```typescript
-import { detectEnvironment, isBrowser, isNode } from '@aituber-onair/kizuna';
-
-console.log(detectEnvironment()); // 'browser' or 'node'
-console.log(isBrowser()); // true in browser
-console.log(isNode()); // true in Node.js
-```
-
-## API Reference
-
-### KizunaManager
-
-Main class for managing the Kizuna system.
-
-#### Methods
-
-- `processInteraction(context: PointContext): Promise<PointResult>` - Process user interaction and award points
-- `getUser(userId: string): KizunaUser | null` - Get user data
-- `getAllUsers(): KizunaUser[]` - Get all users
-- `addPoints(userId: string, points: number): Promise<PointResult>` - Manually add points
-- `calculateLevel(points: number): number` - Calculate level from points
-- `getStats(): Record<string, any>` - Get system statistics
-
-### LocalStorageProvider
-
-Storage provider using browser localStorage.
-
-#### Constructor Options
-
-- `enableCompression: boolean` - Enable data compression
-- `enableEncryption: boolean` - Enable data encryption
-- `encryptionKey?: string` - Encryption key (if encryption enabled)
-- `maxStorageSize: number` - Maximum storage size in bytes
-
-### ExternalStorageProvider
-
-Storage provider using dependency injection for file system operations.
-
-#### Constructor Options
-
-- `config: object` - Configuration object with dataDir, encoding, prettyJson, autoCreateDir
-- `adapter: ExternalStorageAdapter` - User-provided file system adapter
-
-#### ExternalStorageAdapter Interface
-
-```typescript
-interface ExternalStorageAdapter {
-  readFile(filePath: string): Promise<string>;
-  writeFile(filePath: string, data: string): Promise<void>;
-  deleteFile(filePath: string): Promise<void>;
-  listFiles(dirPath: string): Promise<string[]>;
-  ensureDir(dirPath: string): Promise<void>;
-  exists(path: string): Promise<boolean>;
-  getFileStats?(filePath: string): Promise<{ size: number }>;
-  joinPath(...components: string[]): string;
+if (snapshot) {
+  console.log(snapshot.stage);
+  console.log(snapshot.points);
+  console.log(snapshot.warmth);
+  console.log(snapshot.continuity.streak);
+  console.log(snapshot.favoriteEmotions);
+  console.log(snapshot.achievements);
 }
 ```
 
-## Future Storage Providers (TODO)
+### LLM context
 
-The following storage providers are planned for future releases:
+```typescript
+const japaneseContext = kizuna.getBondContext('person-42', {
+  language: 'ja',
+  maxFavoriteEmotions: 2,
+});
+```
 
-### SQLiteStorageProvider
-- **Use case**: Medium-scale applications requiring SQL queries
-- **Features**: Transactions, complex queries, better performance
-- **Example**: Discord bots, CLI tools
+Custom templates can be supplied in `config.context.templates`. A template
+receives the complete `BondSnapshot`.
 
-### MongoDBStorageProvider
-- **Use case**: Large-scale applications, cloud deployment
-- **Features**: Flexible schema, horizontal scaling, aggregation
-- **Example**: Web services, microservices
+### Relationship capital
 
-### RedisStorageProvider
-- **Use case**: High-performance, real-time applications
-- **Features**: In-memory storage, pub/sub, distributed caching
-- **Example**: High-traffic streaming platforms
+```typescript
+const relationshipCapital = kizuna.toRelationshipCapital('person-42');
+```
 
-### CloudStorageProvider
-- **Use case**: Serverless applications, unlimited storage
-- **Features**: AWS S3, Google Cloud Storage, Azure Blob
-- **Example**: Production web applications
+This is useful when another system wants a single bounded value while Kizuna
+retains the richer state.
 
-**Contributing**: If you need any of these storage providers, please create an issue or submit a pull request!
+## Integration patterns
 
-## Integration with AITuber OnAir
+### Update a Core system prompt
 
-This package is designed specifically for AITuber OnAir but can be adapted for other AI character systems. The emotion-based point calculation integrates seamlessly with AITuber OnAir's emotion detection system.
+```typescript
+await kizuna.processInteraction(interaction);
+
+const bondContext = kizuna.getBondContext(interaction.userId);
+core.updateChatOptions({
+  systemPrompt: `${baseSystemPrompt}\n\nCurrent bond context:\n${bondContext}`,
+});
+
+await core.processChat(interaction.message ?? '');
+```
+
+The `react-basic` Core example includes this integration as an opt-in setting
+and also records emotions from assistant response events.
+
+### Control Noise relationship gates
+
+```typescript
+const result = await noise.contaminate({
+  systemPrompt,
+  messages,
+  draft,
+  relationshipCapital: kizuna.toRelationshipCapital(interaction.userId),
+});
+```
+
+The Noise session example uses this bridge and keeps a manual override for
+diagnostics.
+
+### Map application events
+
+Keep application-specific information in `metadata` and map it to generic
+interaction kinds. For example, a chat line can become `message`, an emoji can
+become `reaction`, and a gift can represent an item purchase or a super chat.
+Kizuna does not parse or generate source-specific IDs.
+
+## Persistence
+
+Browser persistence uses `LocalStorageProvider`. Other runtimes can inject an
+`ExternalStorageAdapter` into `ExternalStorageProvider`.
+
+```typescript
+import {
+  KizunaManager,
+  LocalStorageProvider,
+  createDefaultKizunaConfig,
+} from '@aituber-onair/kizuna';
+
+const storage = new LocalStorageProvider();
+const kizuna = new KizunaManager(
+  createDefaultKizunaConfig(),
+  storage,
+  'character:bond:v1',
+);
+
+await kizuna.initialize();
+```
+
+Compression, encryption, adapter examples, persistence format, and security
+limitations are documented in [Storage](./docs/storage.md).
+
+## Events
+
+```typescript
+kizuna.on('points_updated', (event) => {
+  console.log(event);
+});
+
+kizuna.on('achievement_earned', (event) => {
+  console.log(event);
+});
+```
+
+The manager currently emits `user_created`, `points_updated`, `level_up`,
+`threshold_reached`, `achievement_earned`, and `error`. `KizunaEventType` also
+retains `user_updated` and `action_executed` for compatibility, but the manager
+does not currently emit them. Listeners receive `KizunaEventData` with `type`,
+`userId`, `data`, and `timestamp`.
+
+## API reference
+
+### `KizunaManager`
+
+| Method | Purpose |
+| --- | --- |
+| `initialize()` | Load persisted state and start cleanup. |
+| `processInteraction(interaction)` | Record contact, calculate points, update bond state, and persist it. |
+| `getBondSnapshot(userId)` | Return structured bond state or `null`. |
+| `getBondContext(userId, options?)` | Return prompt-ready context or an empty string. |
+| `toRelationshipCapital(userId)` | Return a warmth-adjusted value from `0` to `1`. |
+| `beginSession(id?)` / `endSession()` | Manage session continuity buckets. |
+| `getUser(userId)` / `getAllUsers()` | Read user records. |
+| `addPoints(userId, points)` | Add non-negative points to an existing user. |
+| `calculateLevel(points)` | Resolve a level from the current configuration. |
+| `getStats()` | Return aggregate counts and point totals. |
+| `destroy()` | Stop cleanup and remove listeners. |
+
+### Main types and helpers
+
+- `Interaction`, `InteractionKind`, `UserRole`, `KizunaUser`, `PointRule`,
+  `PointResult`, `Threshold`, `Achievement`
+- `KizunaConfig`, `BondStage`, `WarmthConfig`, `ContinuityConfig`
+- `BondSnapshot`, `BondContextOptions`, `BondContextTemplate`
+- `createDefaultKizunaConfig()`, `DEFAULT_BOND_STAGES`
+- `BondEvaluator`, `BondContextBuilder`, `PointCalculator`, `UserManager`
+- `LocalStorageProvider`, `ExternalStorageProvider`,
+  `createStorageProvider()`, `createDefaultStorageProvider()`
+- `detectEnvironment()`, `isBrowser()`, `isNode()`
+
+`PointContext` and `UserType` remain as deprecated aliases. New code should use
+`Interaction` and `UserRole`.
+
+## Migration to 0.0.3
+
+Version 0.0.3 replaces source-specific interaction and user shapes with the
+generic bond model.
+
+```typescript
+// Before
+await kizuna.processInteraction({
+  userId: 'person-42',
+  platform: 'chat',
+  message: 'Hello',
+  isOwner: false,
+  timestamp: Date.now(),
+});
+
+// 0.0.3
+await kizuna.processInteraction({
+  userId: 'person-42',
+  kind: 'message',
+  message: 'Hello',
+  isOwner: false,
+  timestamp: Date.now(),
+  metadata: { source: 'chat' },
+});
+```
+
+Configuration now uses `basePoints` and `rules` instead of `platforms` and
+`customRules`. `KizunaUser.type` becomes `role`; message counters become
+generic interaction and continuity statistics. `PointRule.dailyLimit` becomes
+`bucketLimit`. The exported `ChatType` and `PlatformPointConfig` types were
+removed; use `InteractionKind` and `KizunaConfig.basePoints`. The exported
+`generateUserId()` and `parseUserId()` helpers were also removed because the
+application now owns opaque user IDs and any source mapping.
+
+Direct users of `UserManager` or `PointCalculator` should also review their
+constructor and method changes in the changelog. `KizunaManager` remains the
+recommended integration surface.
+
+See [CHANGELOG.md](./CHANGELOG.md) for the complete breaking-change summary.
+
+## Browser lab
+
+From a repository checkout, run the interactive sample to explore points,
+stages, warmth, continuity, achievements, context output, and simulated time:
+
+```bash
+npm -w @aituber-onair/kizuna run example:kizuna-sample
+```
+
+## Development
+
+```bash
+npm -w @aituber-onair/kizuna run fmt
+npm -w @aituber-onair/kizuna run lint
+npm -w @aituber-onair/kizuna run test
+npm -w @aituber-onair/kizuna run build
+```
+
+The test suite covers bond evaluation, point calculation, persistence,
+environment detection, storage factories, output adapters, and manager
+lifecycle behavior. It is not a guarantee that every integration or custom
+configuration is covered.
 
 ## License
 
 MIT
-
-## Development
-
-### Testing
-
-The package includes comprehensive test coverage for all major features:
-
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run tests in watch mode (for development)
-npm run test:watch
-```
-
-### Test Structure
-
-- **`tests/performance.test.ts`** - LocalStorageProvider compression and encryption performance benchmarks
-- **`tests/environmentDetector.test.ts`** - Environment detection utilities
-- **`tests/storageFactory.test.ts`** - Storage provider factory and dependency injection
-
-### Test Coverage
-
-- ✅ All storage providers (LocalStorage, ExternalStorage)
-- ✅ Environment detection and dependency injection
-- ✅ Performance benchmarks and measurements
-- ✅ Error handling and edge cases
-- ✅ Configuration options and customization
-- ✅ Integration tests with real data scenarios
-
-### Building
-
-```bash
-# Build for production
-npm run build
-
-# Build in watch mode (for development)
-npm run dev
-
-# Type checking
-npm run typecheck
-
-# Linting
-npm run lint
-npm run lint:fix
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Development Setup
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Run tests: `npm test`
-4. Build: `npm run build`
-
-### Adding New Storage Providers
-
-If you want to add a new storage provider (SQLite, MongoDB, Redis, etc.):
-
-1. Create a new file in `src/storage/`
-2. Implement the `StorageProvider` interface
-3. Add comprehensive tests in `src/tests/`
-4. Update the storage factory if needed
-5. Update documentation

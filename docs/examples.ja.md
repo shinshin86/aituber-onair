@@ -250,6 +250,18 @@ npm run dev
 - [`packages/manneri/examples/browser-basic`](../packages/manneri/examples/browser-basic):
   LLM に接続せず会話パターン検出を試せるブラウザサンプル。
 
+## Kizuna サンプル
+
+- [`packages/kizuna/examples/kizuna-sample`](../packages/kizuna/examples/kizuna-sample):
+  接触種別、絆ステージ、温かさの減衰、継続、実績、時間経過、LLM
+  コンテキスト出力を試せる対話型ブラウザラボ。
+- [`packages/core/examples/react-basic`](../packages/core/examples/react-basic):
+  メッセージと応答感情を記録し、現在の絆コンテキストをシステムプロンプトへ
+  注入する、任意で有効化できる Kizuna 統合。
+- [`packages/noise/examples/noise-session-sample`](../packages/noise/examples/noise-session-sample):
+  Kizuna の正規化された関係値で Noise の関係性ゲートを制御し、診断用の
+  手動上書きも備えたサンプル。
+
 ## Comment Intelligence サンプル
 
 - [`packages/comment-intelligence/examples/live-comment-filter-sample`](../packages/comment-intelligence/examples/live-comment-filter-sample):

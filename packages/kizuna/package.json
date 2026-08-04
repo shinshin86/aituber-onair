@@ -1,12 +1,19 @@
 {
   "name": "@aituber-onair/kizuna",
-  "version": "0.0.2",
-  "description": "A sophisticated bond system (絆 - Kizuna) for managing relationships between users and AI characters in AITuber OnAir.",
+  "version": "0.0.3",
+  "description": "A bond model for relationships between people and AI characters, with warmth, continuity, and LLM context.",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "docs",
+    "images",
+    "CHANGELOG.md",
+    "README.md",
+    "README.ja.md"
+  ],
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "example:kizuna-sample": "vite --host 127.0.0.1 examples/kizuna-sample",
@@ -24,6 +31,10 @@
   },
   "keywords": [
     "aituber",
+    "bond",
+    "relationship",
+    "kizuna",
+    "ai-character",
     "points",
     "gamification",
     "user-engagement",
