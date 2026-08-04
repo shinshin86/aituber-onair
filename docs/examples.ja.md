@@ -253,12 +253,11 @@ npm run dev
 ## Kizuna サンプル
 
 - [`packages/kizuna/examples/kizuna-sample`](../packages/kizuna/examples/kizuna-sample):
-  4人の架空視聴者が異なるペースでコメントし、会話の流れで絆が更新される
-  モックライブ配信シミュレーター。配信風は応用例の一つであり、Kizuna本体は
-  プラットフォーム非依存です。
+  接触種別、絆ステージ、温かさの減衰、継続、実績、時間経過、LLM
+  コンテキスト出力を試せる対話型ブラウザラボ。
 - [`packages/core/examples/react-basic`](../packages/core/examples/react-basic):
   メッセージと応答感情を記録し、現在の絆コンテキストをシステムプロンプトへ
-  注入する、任意で有効化できる1対1会話向けの Kizuna 統合。
+  注入する、任意で有効化できる Kizuna 統合。
 - [`packages/noise/examples/noise-session-sample`](../packages/noise/examples/noise-session-sample):
   Kizuna の正規化された関係値で Noise の関係性ゲートを制御し、診断用の
   手動上書きも備えたサンプル。

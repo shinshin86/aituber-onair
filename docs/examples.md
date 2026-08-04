@@ -256,13 +256,11 @@ npm run dev
 ## Kizuna Examples
 
 - [`packages/kizuna/examples/kizuna-sample`](../packages/kizuna/examples/kizuna-sample):
-  mock live-stream simulator where four fictional viewers comment at different
-  rhythms and bonds update during the conversation. This is one stream-style
-  application scenario; the Kizuna core remains platform-agnostic.
+  interactive browser lab for contact kinds, bond stages, warmth decay,
+  continuity, achievements, simulated time, and LLM context output.
 - [`packages/core/examples/react-basic`](../packages/core/examples/react-basic):
-  one-to-one chat example with opt-in Kizuna integration. It records messages
-  and response emotions, then injects the current bond context into the system
-  prompt.
+  opt-in Kizuna integration that records messages and response emotions, then
+  injects the current bond context into the system prompt.
 - [`packages/noise/examples/noise-session-sample`](../packages/noise/examples/noise-session-sample):
   uses Kizuna's normalized relationship value to control Noise relationship
   gates, with a manual override for diagnostics.
