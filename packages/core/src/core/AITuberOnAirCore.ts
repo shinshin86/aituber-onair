@@ -497,6 +497,16 @@ export class AITuberOnAirCore extends EventEmitter {
   }
 
   /**
+   * Update chat processor options without recreating the core instance.
+   * Useful for injecting request-scoped context such as a live bond summary.
+   */
+  updateChatOptions(
+    options: Partial<AITuberOnAirCoreOptions['chatOptions']>,
+  ): void {
+    this.chatProcessor.updateOptions(options);
+  }
+
+  /**
    * Update voice service
    * @param options New voice service options
    */

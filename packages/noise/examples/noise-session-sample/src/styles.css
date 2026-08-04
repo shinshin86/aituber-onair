@@ -198,6 +198,11 @@ h3 {
   width: 100%;
 }
 
+.range-field input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .check-field {
   display: flex;
   align-items: center;

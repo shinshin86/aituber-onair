@@ -67,6 +67,11 @@ import {
   type VoiceVoxQueryParameterOverrides,
   type AivisSpeechQueryParameterOverrides,
 } from '@aituber-onair/core';
+import {
+  KizunaManager,
+  createDefaultKizunaConfig,
+  type BondSnapshot,
+} from '@aituber-onair/kizuna';
 
 // Constants imports
 import {
@@ -452,6 +457,26 @@ const RESPONSE_LENGTH_BASE_TOKENS: Record<ChatResponseLength, number> = {
 };
 const GPT5_SAMPLE_PRESET: GPT5PresetKey = 'casual';
 const GPT5_SAMPLE_RESPONSE_LENGTH = CHAT_RESPONSE_LENGTH.VERY_SHORT;
+const CORE_BOND_USER_ID = 'react-basic-user';
+
+function createCoreBondManager(): KizunaManager {
+  const config = createDefaultKizunaConfig();
+  config.basePoints = {
+    ...config.basePoints,
+    message: 20,
+    reaction: 5,
+  };
+  return new KizunaManager(config, undefined, 'react-basic-bond');
+}
+
+function buildBondAwareSystemPrompt(
+  basePrompt: string,
+  bondContext: string,
+): string {
+  return bondContext
+    ? `${basePrompt}\n\nCurrent bond context:\n${bondContext}`
+    : basePrompt;
+}
 
 interface OpenRouterDynamicFreeModelsState {
   models: string[];
@@ -571,6 +596,14 @@ const App: React.FC = () => {
 
   // DeepWiki MCP enable flag
   const [enableDeepWikiMcp, setEnableDeepWikiMcp] = useState<boolean>(false);
+
+  // Kizuna bond context is opt-in and kept in memory for this example.
+  const [enableKizuna, setEnableKizuna] = useState<boolean>(false);
+  const [bondSnapshot, setBondSnapshot] = useState<BondSnapshot | null>(null);
+  const kizunaRef = useRef<KizunaManager | null>(null);
+  if (!kizunaRef.current) {
+    kizunaRef.current = createCoreBondManager();
+  }
 
   // GPT-5 and response settings
   const [responseLength, setResponseLength] = useState<ChatResponseLength>(
@@ -1597,6 +1630,13 @@ const App: React.FC = () => {
     messagesRef.current = messages;
   }, [messages]);
 
+  useEffect(
+    () => () => {
+      kizunaRef.current?.destroy();
+    },
+    [],
+  );
+
   /**
    * convert messages to API format
    */
@@ -2500,12 +2540,18 @@ const App: React.FC = () => {
     // create options
     const shouldEnableTools =
       chatProvider !== 'openai-compatible' && chatProvider !== 'gemini-nano';
+    const baseSystemPrompt = systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT;
+    const bondContext = enableKizuna
+      ? kizunaRef.current?.getBondContext(CORE_BOND_USER_ID, {
+          language: 'ja',
+        }) || ''
+      : '';
     const aituberOptions: AITuberOnAirCoreOptions = {
       chatProvider,
       apiKey: trimmedApiKey,
       model: trimmedModel,
       chatOptions: {
-        systemPrompt: systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+        systemPrompt: buildBondAwareSystemPrompt(baseSystemPrompt, bondContext),
         responseLength: effectiveResponseLength,
       },
       providerOptions,
@@ -2572,7 +2618,7 @@ const App: React.FC = () => {
     );
 
     instance.on(AITuberOnAirCoreEvent.ASSISTANT_RESPONSE, async (data: any) => {
-      const { message } = data;
+      const { message, screenplay } = data;
       console.log('Assistant response completed:', message.content);
       removeAssistantPartial();
 
@@ -2582,6 +2628,23 @@ const App: React.FC = () => {
         kind: 'text',
         content: message.content,
       });
+
+      if (enableKizuna && screenplay?.emotion && kizunaRef.current) {
+        try {
+          await kizunaRef.current.processInteraction({
+            userId: CORE_BOND_USER_ID,
+            kind: 'reaction',
+            message: message.content,
+            emotion: screenplay.emotion,
+            isOwner: false,
+            timestamp: Date.now(),
+            metadata: { displayName: 'あなた' },
+          });
+          setBondSnapshot(kizunaRef.current.getBondSnapshot(CORE_BOND_USER_ID));
+        } catch (error) {
+          console.error('Failed to record Kizuna emotion:', error);
+        }
+      }
 
       // Generate avatar image if enabled
       if (enableAvatarGeneration && geminiImageApiKey.trim()) {
@@ -2711,6 +2774,45 @@ const App: React.FC = () => {
       if (!userMessage) {
         return;
       }
+    }
+
+    const baseSystemPrompt = systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT;
+    if (enableKizuna && kizunaRef.current) {
+      try {
+        await kizunaRef.current.processInteraction({
+          userId: CORE_BOND_USER_ID,
+          kind: 'message',
+          message: userMessage || '[image]',
+          isOwner: false,
+          timestamp: Date.now(),
+          metadata: {
+            displayName: 'あなた',
+            hasImage: Boolean(attachedImageUrl),
+          },
+        });
+        const nextSnapshot =
+          kizunaRef.current.getBondSnapshot(CORE_BOND_USER_ID);
+        const bondContext = kizunaRef.current.getBondContext(
+          CORE_BOND_USER_ID,
+          { language: 'ja' },
+        );
+        setBondSnapshot(nextSnapshot);
+        aituberRef.current.updateChatOptions({
+          systemPrompt: buildBondAwareSystemPrompt(
+            baseSystemPrompt,
+            bondContext,
+          ),
+        });
+      } catch (error) {
+        console.error('Failed to update Kizuna bond context:', error);
+        aituberRef.current.updateChatOptions({
+          systemPrompt: baseSystemPrompt,
+        });
+      }
+    } else {
+      aituberRef.current.updateChatOptions({
+        systemPrompt: baseSystemPrompt,
+      });
     }
 
     const drafts: Message[] = [];
@@ -2899,8 +3001,7 @@ const App: React.FC = () => {
       ? getDeepSeekSupportedReasoningEfforts(model)
       : [];
   const deepSeekReasoningEffortValue: DeepSeekReasoningEffort =
-    normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort) ??
-    'none';
+    normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort) ?? 'none';
   const openRouterSupportedReasoningEfforts =
     chatProvider === 'openrouter' && model
       ? getOpenRouterSupportedReasoningEfforts(model)
@@ -2966,6 +3067,14 @@ const App: React.FC = () => {
           <div>
             選択中のモデル：{chatProvider} / {model}
           </div>
+          {enableKizuna && (
+            <div style={{ color: '#8a5b16' }}>
+              Kizuna:{' '}
+              {bondSnapshot
+                ? `${bondSnapshot.stage} / ${bondSnapshot.points} points / warmth ${bondSnapshot.warmth.toFixed(2)}`
+                : '最初のメッセージを待っています'}
+            </div>
+          )}
           {visionSupportLevel === 'unknown' && (
             <div style={{ color: '#6b7280' }}>
               この endpoint / model
@@ -3193,6 +3302,29 @@ const App: React.FC = () => {
                     value={systemPrompt}
                     onChange={(e) => setSystemPrompt(e.target.value)}
                   />
+
+                  <div style={{ marginBottom: '12px' }}>
+                    <label htmlFor="enableKizuna">
+                      Kizunaの絆コンテキストを有効にする:
+                    </label>
+                    <input
+                      type="checkbox"
+                      id="enableKizuna"
+                      checked={enableKizuna}
+                      onChange={(e) => setEnableKizuna(e.target.checked)}
+                      style={{ marginLeft: '8px' }}
+                    />
+                    <div
+                      style={{
+                        color: '#666',
+                        fontSize: '12px',
+                        marginTop: '4px',
+                      }}
+                    >
+                      入力と応答感情から関係性を育て、System
+                      Promptへ反映します。
+                    </div>
+                  </div>
 
                   <label htmlFor="chatProvider">Chat Provider:</label>
                   <select
