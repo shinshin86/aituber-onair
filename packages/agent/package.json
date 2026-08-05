@@ -33,7 +33,7 @@
     "build:esm": "tsc --project tsconfig.esm.json",
     "build:cjs": "tsc --project tsconfig.cjs.json && node -e \"require('node:fs').writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }))\"",
     "typecheck": "tsc --noEmit --project tsconfig.test.json",
-    "test": "npm run typecheck && vitest run && npm run build && node test/dist-smoke.mjs && node test/package-smoke.mjs",
+    "test": "npm run typecheck && npm run build && vitest run && node test/dist-smoke.mjs && node test/package-smoke.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "fmt": "biome format . --write",

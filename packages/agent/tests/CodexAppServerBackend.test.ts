@@ -891,9 +891,12 @@ async function waitUntilMessage(
 }
 
 async function waitUntil(predicate: () => boolean): Promise<void> {
-  for (let attempts = 0; attempts < 200; attempts += 1) {
+  // Wall-clock deadline: event-loop-turn counting starves real I/O
+  // completions on slow or contended CI runners.
+  const deadline = Date.now() + 5_000;
+  while (Date.now() <= deadline) {
     if (predicate()) return;
-    await new Promise<void>((resolve) => setImmediate(resolve));
+    await new Promise<void>((resolve) => setTimeout(resolve, 1));
   }
   throw new Error('Condition was not reached');
 }
