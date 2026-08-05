@@ -1026,67 +1026,84 @@ function VoiceControls({
         : aivisState === 'available'
           ? '接続済み'
           : '接続できません';
+  const engineLabel =
+    engine === 'off'
+      ? 'OFF'
+      : engine === 'webSpeech'
+        ? 'ブラウザ標準（Web Speech）'
+        : 'AivisSpeech（ローカル）';
 
   return (
-    <section className="voice-controls" aria-label="Mikoの音声設定">
-      <div className="voice-field">
-        <label htmlFor="miko-voice-engine">Mikoの音声</label>
-        <select
-          id="miko-voice-engine"
-          value={engine}
-          onChange={(event) =>
-            onEngineChange(event.target.value as MikoVoiceEngine)
-          }
-        >
-          <option value="off">OFF</option>
-          <option value="webSpeech">ブラウザ標準（Web Speech）</option>
-          <option value="aivisSpeech">AivisSpeech（ローカル）</option>
-        </select>
-      </div>
-
-      {engine === 'aivisSpeech' && aivisState === 'available' && (
-        <div className="voice-field voice-field-speaker">
-          <label htmlFor="miko-aivis-speaker">話者</label>
+    <details className="voice-controls">
+      <summary aria-label={`Mikoの音声設定を開閉（現在: ${engineLabel}）`}>
+        <span className="voice-summary-title">Mikoの音声</span>
+        <span className="voice-summary-value">{engineLabel}</span>
+        {error && (
+          <span className="voice-summary-alert" aria-hidden="true">
+            ⚠
+          </span>
+        )}
+      </summary>
+      <div className="voice-controls-body">
+        <div className="voice-field">
+          <label htmlFor="miko-voice-engine">音声エンジン</label>
           <select
-            id="miko-aivis-speaker"
-            value={aivisSpeaker}
-            onChange={(event) => onAivisSpeakerChange(event.target.value)}
+            id="miko-voice-engine"
+            value={engine}
+            onChange={(event) =>
+              onEngineChange(event.target.value as MikoVoiceEngine)
+            }
           >
-            {aivisVoices.map((voice) => (
-              <option key={voice.id} value={voice.id}>
-                {voice.label}
-              </option>
-            ))}
+            <option value="off">OFF</option>
+            <option value="webSpeech">ブラウザ標準（Web Speech）</option>
+            <option value="aivisSpeech">AivisSpeech（ローカル）</option>
           </select>
         </div>
-      )}
 
-      <output className={`voice-source-status voice-source-${aivisState}`}>
-        <span aria-hidden="true">●</span>
-        AivisSpeech: {aivisStatus}
-      </output>
-      <button
-        type="button"
-        className="voice-refresh"
-        onClick={() => void onRefreshAivis()}
-        disabled={aivisState === 'checking'}
-      >
-        再確認
-      </button>
+        {engine === 'aivisSpeech' && aivisState === 'available' && (
+          <div className="voice-field voice-field-speaker">
+            <label htmlFor="miko-aivis-speaker">話者</label>
+            <select
+              id="miko-aivis-speaker"
+              value={aivisSpeaker}
+              onChange={(event) => onAivisSpeakerChange(event.target.value)}
+            >
+              {aivisVoices.map((voice) => (
+                <option key={voice.id} value={voice.id}>
+                  {voice.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
-      {engine === 'webSpeech' && (
-        <p className="voice-detail">
-          {webVoiceLabel
-            ? `日本語音声: ${webVoiceLabel}`
-            : '日本語（ja-JP）をブラウザに指定'}
-        </p>
-      )}
-      {error && (
-        <p className="voice-error" role="alert">
-          音声エラー: {error}
-        </p>
-      )}
-    </section>
+        <output className={`voice-source-status voice-source-${aivisState}`}>
+          <span aria-hidden="true">●</span>
+          AivisSpeech: {aivisStatus}
+        </output>
+        <button
+          type="button"
+          className="voice-refresh"
+          onClick={() => void onRefreshAivis()}
+          disabled={aivisState === 'checking'}
+        >
+          再確認
+        </button>
+
+        {engine === 'webSpeech' && (
+          <p className="voice-detail">
+            {webVoiceLabel
+              ? `日本語音声: ${webVoiceLabel}`
+              : '日本語（ja-JP）をブラウザに指定'}
+          </p>
+        )}
+        {error && (
+          <p className="voice-error" role="alert">
+            音声エラー: {error}
+          </p>
+        )}
+      </div>
+    </details>
   );
 }
 

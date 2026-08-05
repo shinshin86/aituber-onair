@@ -779,13 +779,51 @@ button:disabled {
 }
 
 .voice-controls {
-  display: flex;
-  min-height: 56px;
-  gap: 8px;
-  align-items: flex-end;
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   background: #10192a;
+}
+
+.voice-controls > summary {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  min-height: 24px;
+  cursor: pointer;
+  color: var(--subtext);
+  font-size: 0.56rem;
+  font-weight: 700;
+}
+
+.voice-controls > summary::before {
+  content: "▸";
+  color: var(--muted);
+  font-size: 0.6rem;
+}
+
+.voice-controls[open] > summary::before {
+  content: "▾";
+}
+
+.voice-controls > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.voice-summary-value {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.voice-summary-alert {
+  color: var(--warn);
+}
+
+.voice-controls-body {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding-top: 8px;
 }
 
 .voice-field {
@@ -1602,7 +1640,7 @@ button:disabled {
     grid-template-columns: 64px 64px 1fr;
   }
 
-  .voice-controls {
+  .voice-controls-body {
     flex-wrap: wrap;
     align-items: center;
   }
