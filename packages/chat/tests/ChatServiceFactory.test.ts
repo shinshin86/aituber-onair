@@ -11,6 +11,10 @@ import {
   MODEL_CLAUDE_5_OPUS,
   MODEL_KIMI_K3,
   MODEL_KIMI_K2_6,
+  MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_PRO,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
 } from '../src/constants';
 
 // Mock provider for testing
@@ -399,6 +403,36 @@ describe('ChatServiceFactory', () => {
         ChatServiceFactory.getProviderCapabilities('kimi', MODEL_KIMI_K2_6)
           ?.reasoningEffort,
       ).toEqual([]);
+    });
+
+    it('returns model-aware DeepSeek reasoning effort capabilities', () => {
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'deepseek',
+          MODEL_DEEPSEEK_V4_FLASH,
+        )?.reasoningEffort,
+      ).toEqual(['none', 'low', 'high', 'max']);
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'deepseek',
+          MODEL_DEEPSEEK_V4_PRO,
+        )?.reasoningEffort,
+      ).toEqual(['none', 'high', 'max']);
+    });
+
+    it('returns model-aware OpenRouter DeepSeek reasoning efforts', () => {
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'openrouter',
+          MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+        )?.reasoningEffort,
+      ).toEqual(['none', 'high', 'xhigh']);
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'openrouter',
+          MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+        )?.reasoningEffort,
+      ).toEqual(['none', 'low', 'high', 'max']);
     });
 
     it('returns Claude reasoning effort capabilities', () => {

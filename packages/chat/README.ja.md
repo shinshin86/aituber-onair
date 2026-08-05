@@ -628,7 +628,8 @@ Gemini 3 モデルでは `reasoning_effort` を指定できます。この値は
 ```typescript
 const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   apiKey: process.env.OPENROUTER_API_KEY,
-  model: 'openai/gpt-oss-20b:free', // 無料利用枠モデル
+  model: 'deepseek/deepseek-v4-flash-0731',
+  reasoning_effort: 'none', // チャット向けの最速設定
   // オプション: 分析用アプリ情報を追加
   appName: 'あなたのアプリ名',
   appUrl: 'https://your-app-url.com'
@@ -643,6 +644,10 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - `openrouter/auto-beta` はタスクを判定するBetaルーターです。リクエストごとにモデルを選択し、そのモデルの料金が適用されます。選択結果はレスポンスの `model` またはOpenRouter Activityで確認できます。
 - `openrouter/fusion` は複数モデルのパネルとジャッジモデルを実行します。単一モデルの固定単価ではなく、内部で使われた各モデル呼び出しと web search/fetch 利用分の合算で課金されます。
 - `z-ai/glm-5.2` は OpenRouter reasoning も `none` にします。
+- OpenRouterのreasoning無効化には `reasoning.effort: 'none'` を送ります。`exclude: true` はreasoning内容を返すかどうかだけを制御し、reasoning自体は無効化しません。
+- DeepSeek V4 Flashのスナップショットは、再現可能なバージョンを選べるようOpenRouterのデフォルトではなく明示的なテキスト専用選択肢にしています。どちらも応答性重視で`none`がデフォルトです:
+  - `deepseek/deepseek-v4-flash-0731`: 現行の固定0731スナップショット。`none`, `low`, `high`, `max`に対応。
+  - `deepseek/deepseek-v4-flash`: 旧無印0423スナップショット。`none`, `high`, `xhigh`に対応。
 - コーディング特化モデルはデフォルトではなく明示的な選択肢です。`kwaipilot/kat-coder-air-v2.5` と `kwaipilot/kat-coder-pro-v2.5` はテキスト専用です。
 - `moonshotai/kimi-k3` の可用性は上流キャパシティに依存し、混雑時はOpenRouterから429レスポンスが返る場合があります。
 - `x-ai/grok-4.5` には現在のEU制限を含む地域別の可用性制限があります。`~x-ai/grok-latest` がGrok 4.5へ解決される場合も同じ制限を受けます。
@@ -664,6 +669,7 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
   - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
   - `~x-ai/grok-latest`, `x-ai/grok-4.5`
+  - `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4-flash`
   - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
   - `kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`
 
@@ -772,6 +778,7 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 const deepSeekService = ChatServiceFactory.createChatService('deepseek', {
   apiKey: process.env.DEEPSEEK_API_KEY,
   model: 'deepseek-v4-flash',
+  reasoning_effort: 'none', // デフォルト: 応答性重視でthinkingを無効化
 });
 ```
 
@@ -780,7 +787,9 @@ const deepSeekService = ChatServiceFactory.createChatService('deepseek', {
 - 推奨モデルは`deepseek-v4-flash`（デフォルト）と`deepseek-v4-pro`です。
 - legacy alias の`deepseek-chat`と`deepseek-reasoner`は互換用にexportしていますが、DeepSeek側で非推奨かつ2026-07-24廃止予定です。
 - `openai-compatible`にendpoint/modelを直接指定して使うこともできますが、`deepseek` providerならendpointとデフォルトモデル指定が簡単です。
-- DeepSeek固有のthinking/reasoning制御は公式docsにありますが、このpackageはデフォルトでは独自パラメータを追加せず、標準chat/streamingを優先します。
+- `deepseek-v4-flash`は`reasoning_effort: 'none' | 'low' | 'high' | 'max'`に対応します。packageのデフォルトは応答性重視の`none`で、`thinking: { type: 'disabled' }`へ変換します。それ以外はthinkingを有効化してDeepSeekの`reasoning_effort`として送信します。
+- `deepseek-v4-pro`では`none`, `high`, `max`を公開します。DeepSeek側で`low`が`high`へ変換されるため、packageでも明示的に正規化します。
+- ThinkingとTool Callingの併用は、DeepSeekがtool turn間での`reasoning_content`再送を要求し、thinking時に通常の`tool_choice`形式を受け付けないため、現時点では明示的に拒否します。デフォルトの`none`ではTool Callingを利用できます。
 
 #### Mistral
 
@@ -1261,11 +1270,11 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。チャット用途向けに Gemini 3 Flash は minimal thinking、Gemini 3 Pro は low thinking を既定値にします。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート。調整可能な `reasoning_effort` は対応モデルに限り `output_config.effort` として送信します
-- **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/Kwaipilot）をサポート。モデルIDはOpenRouter節を参照してください
+- **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Kwaipilot）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-5V-Turbo/GLM-4.6V系（ビジョン）をサポート
 - **xAI**: Grok 4.5 をチャット用途向けに `reasoning_effort: 'low'` デフォルトでサポート。加えて Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
 - **Kimi**: Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、デフォルトは `max`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
-- **DeepSeek**: DeepSeek V4 Flash（`deepseek-v4-flash`）と DeepSeek V4 Pro（`deepseek-v4-pro`）をOpenAI互換Chat Completions経由でサポート。legacy alias の`deepseek-chat`と`deepseek-reasoner`はDeepSeek側で非推奨です
+- **DeepSeek**: DeepSeek V4 Flash（`deepseek-v4-flash`）と DeepSeek V4 Pro（`deepseek-v4-pro`）をOpenAI互換Chat Completions経由でサポート。低遅延チャット向けにthinkingはデフォルト無効で、モデル別の`reasoning_effort`から有効化できます。legacy alias の`deepseek-chat`と`deepseek-reasoner`はDeepSeek側で非推奨です
 - **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します
 - **Sakana AI**: Fugu（`fugu`）と Fugu Ultra（`fugu-ultra`, `fugu-ultra-20260615`）をOpenAI互換Chat Completions経由でサポート
 - **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）と PLaMo 2.2 Prime（`plamo-2.2-prime`）をOpenAI互換Chat Completions経由でサポート

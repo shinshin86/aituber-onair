@@ -163,8 +163,9 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Grok 4.5 exposes `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for lower latency
 
 **DeepSeek:**
-- DeepSeek V4 Flash
-- DeepSeek V4 Pro
+- DeepSeek V4 Flash and DeepSeek V4 Pro with model-aware reasoning controls
+- Defaults to `none` for responsive chat; higher supported efforts remain selectable
+- Thinking and tool calling cannot currently be combined in one request
 
 **Mistral:**
 - Ministral 3 (3B, 8B, and 14B; vision-capable)
@@ -183,7 +184,12 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **OpenRouter:**
 - Curated multi-provider models, including Auto Router Beta, OpenAI GPT-5.6,
-  Claude Opus 5, Gemini 3.6/3.5, Grok 4.5, Kimi K3, and KAT-Coder V2.5
+  Claude Opus 5, Gemini 3.6/3.5, Grok 4.5, Kimi K3, KAT-Coder V2.5, and
+  DeepSeek V4 Flash
+- DeepSeek V4 Flash offers the fixed current `deepseek/deepseek-v4-flash-0731`
+  model and the separate `deepseek/deepseek-v4-flash` preview snapshot
+- Reasoning effort options follow the selected model and default to explicit
+  `none` for responsive chat
 - `responseLength`-derived token limits are omitted for Auto Router and Auto
   Router Beta; explicitly supplied `maxTokens` values remain effective
 - Fusion bills the combined underlying model calls and any enabled web search/fetch usage

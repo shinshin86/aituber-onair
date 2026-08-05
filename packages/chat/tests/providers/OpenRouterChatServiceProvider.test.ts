@@ -47,6 +47,8 @@ import {
   MODEL_ZAI_GLM_4_5_AIR_FREE,
   MODEL_XAI_GROK_4_5,
   MODEL_XAI_GROK_LATEST,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
 } from '../../src/constants/openrouter';
 
 const recentOpenRouterVisionModels = [
@@ -63,6 +65,8 @@ const recentOpenRouterVisionModels = [
 ];
 
 const recentOpenRouterTextOnlyModels = [
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
   MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
   MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
 ];
@@ -130,6 +134,8 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_ZAI_GLM_4_5_AIR,
         MODEL_XAI_GROK_LATEST,
         MODEL_XAI_GROK_4_5,
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
         MODEL_MOONSHOTAI_KIMI_LATEST,
         MODEL_MOONSHOTAI_KIMI_K3,
         MODEL_MOONSHOTAI_KIMI_K2_7_CODE,

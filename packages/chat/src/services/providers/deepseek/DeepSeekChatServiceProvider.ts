@@ -28,6 +28,7 @@ export class DeepSeekChatServiceProvider
       tools,
       this.resolveEndpoint(options),
       options.responseLength,
+      options.reasoning_effort,
     );
   }
 

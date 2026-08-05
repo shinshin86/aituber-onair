@@ -1,5 +1,21 @@
 # @aituber-onair/core
 
+## 0.26.10
+
+### Patch Changes
+
+- Synced Chat updates through `@aituber-onair/chat@0.50.0` into Core:
+  - re-exported DeepSeek and OpenRouter reasoning-effort types, defaults,
+    normalization helpers, and the OpenRouter DeepSeek V4 Flash model constants
+  - added the fixed DeepSeek V4 Flash 0731 and preview OpenRouter model IDs to
+    the React basic example
+  - added model-aware DeepSeek and OpenRouter reasoning controls that default
+    to `none` for responsive chat
+  - refreshed every Core example lockfile so all examples use the Chat 0.50.0
+    provider behavior
+- Updated dependencies []:
+  - @aituber-onair/chat@0.50.0
+
 ## 0.26.9
 
 ### Patch Changes

@@ -14,6 +14,8 @@ import {
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
   getGeminiSupportedReasoningEfforts,
+  getDeepSeekSupportedReasoningEfforts,
+  getOpenRouterSupportedReasoningEfforts,
   isGPT5Model,
   isXaiReasoningEffortModel,
   isXaiReasoningEffortNoneModel,
@@ -24,6 +26,8 @@ import {
   normalizeGeminiReasoningEffort,
   type ClaudeReasoningEffort,
   type GeminiReasoningEffort,
+  type DeepSeekReasoningEffort,
+  type OpenRouterReasoningEffort,
   // OpenAI models
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
@@ -87,6 +91,8 @@ import {
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_OPENROUTER_FUSION,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
   MODEL_OPENAI_GPT_5_6_SOL,
@@ -203,9 +209,9 @@ interface ProviderSelectorProps {
   onOpenaiCompatibleEndpointChange?: (endpoint: string) => void;
   enableReasoningSummary?: boolean;
   onEnableReasoningSummaryChange?: (enabled: boolean) => void;
-  openrouterReasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
+  openrouterReasoningEffort?: OpenRouterReasoningEffort;
   onOpenrouterReasoningEffortChange?: (
-    effort: 'none' | 'minimal' | 'low' | 'medium' | 'high',
+    effort: OpenRouterReasoningEffort,
   ) => void;
   openrouterIncludeReasoning?: boolean;
   onOpenrouterIncludeReasoningChange?: (enabled: boolean) => void;
@@ -780,6 +786,18 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_OPENROUTER_FUSION,
     name: 'Fusion (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+    name: 'DeepSeek V4 Flash 0731 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+    name: 'DeepSeek V4 Flash 0423 (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -1434,6 +1452,14 @@ export default function ProviderSelector({
     selectedModel,
     requestedGeminiReasoningEffort,
   );
+  const deepSeekSupportedReasoningEfforts =
+    provider === 'deepseek'
+      ? getDeepSeekSupportedReasoningEfforts(selectedModel)
+      : [];
+  const openRouterSupportedReasoningEfforts =
+    provider === 'openrouter'
+      ? getOpenRouterSupportedReasoningEfforts(selectedModel)
+      : [];
   const xaiReasoningEffort =
     reasoning_effort === 'low' ||
     reasoning_effort === 'medium' ||
@@ -2054,6 +2080,39 @@ export default function ProviderSelector({
             </div>
           )}
 
+          {provider === 'deepseek' && (
+            <div className="config-group">
+              <label htmlFor="deepseek-reasoning-effort">
+                DeepSeek Reasoning Effort
+              </label>
+              <select
+                id="deepseek-reasoning-effort"
+                value={reasoning_effort ?? 'none'}
+                onChange={(e) =>
+                  onReasoningEffortChange?.(
+                    e.target.value as DeepSeekReasoningEffort,
+                  )
+                }
+                disabled={
+                  disabled || deepSeekSupportedReasoningEfforts.length === 0
+                }
+                className="select-input"
+              >
+                {deepSeekSupportedReasoningEfforts.map((effort) => (
+                  <option key={effort} value={effort}>
+                    {effort === 'none'
+                      ? 'None (fastest)'
+                      : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                  </option>
+                ))}
+              </select>
+              <span className="helper-text">
+                None disables thinking for responsive chat. Thinking with tool
+                calling is not supported yet.
+              </span>
+            </div>
+          )}
+
           {provider === 'openrouter' && (
             <>
               <div className="config-group config-full">
@@ -2123,23 +2182,26 @@ export default function ProviderSelector({
                   value={openrouterReasoningEffort || 'none'}
                   onChange={(e) =>
                     onOpenrouterReasoningEffortChange?.(
-                      e.target.value as
-                        | 'none'
-                        | 'minimal'
-                        | 'low'
-                        | 'medium'
-                        | 'high',
+                      e.target.value as OpenRouterReasoningEffort,
                     )
                   }
                   disabled={disabled}
                   className="select-input"
                 >
-                  <option value="none">None</option>
-                  <option value="minimal">Minimal</option>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  {openRouterSupportedReasoningEfforts.map((effort) => (
+                    <option key={effort} value={effort}>
+                      {effort === 'none'
+                        ? 'None (fastest)'
+                        : effort === 'xhigh'
+                          ? 'XHigh'
+                          : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                    </option>
+                  ))}
                 </select>
+                <span className="helper-text">
+                  Options are filtered for the selected model. None disables
+                  reasoning instead of only hiding it.
+                </span>
               </div>
 
               <div className="config-group">

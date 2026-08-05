@@ -7,6 +7,9 @@ import {
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_ZAI_GLM_5_2,
+  type OpenRouterReasoningEffort,
+  getDefaultOpenRouterReasoningEffort,
+  normalizeOpenRouterReasoningEffort,
   isOpenRouterVisionModel,
   isOpenRouterFreeModel,
   OPENROUTER_FREE_RATE_LIMIT_PER_MINUTE,
@@ -29,9 +32,6 @@ const isOpenRouterAutoModel = (model: string): boolean =>
 
 const isTokenLimitUnsupportedModel = (model: string): boolean =>
   [MODEL_GPT_OSS_20B_FREE, MODEL_ZAI_GLM_5_2].includes(model.trim());
-
-const getDefaultReasoningEffort = (model: string): 'none' | undefined =>
-  model.trim() === MODEL_ZAI_GLM_5_2 ? 'none' : undefined;
 
 const ensureAutoRouterOutput = (
   model: string,
@@ -65,7 +65,7 @@ export class OpenRouterChatService implements ChatService {
   private responseLength?: ChatResponseLength;
   private appName?: string;
   private appUrl?: string;
-  private reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
+  private reasoning_effort?: OpenRouterReasoningEffort;
   private includeReasoning?: boolean;
   private reasoningMaxTokens?: number;
   private lastRequestTime: number = 0;
@@ -94,7 +94,7 @@ export class OpenRouterChatService implements ChatService {
     responseLength?: ChatResponseLength,
     appName?: string,
     appUrl?: string,
-    reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high',
+    reasoning_effort?: OpenRouterReasoningEffort,
     includeReasoning?: boolean,
     reasoningMaxTokens?: number,
   ) {
@@ -359,29 +359,29 @@ export class OpenRouterChatService implements ChatService {
     }
 
     // Add OpenRouter reasoning control
-    const defaultReasoningEffort = getDefaultReasoningEffort(model);
+    const defaultReasoningEffort = getDefaultOpenRouterReasoningEffort(model);
+    const reasoningEffort = normalizeOpenRouterReasoningEffort(
+      model,
+      this.reasoning_effort,
+    );
     if (
-      this.reasoning_effort !== undefined ||
+      reasoningEffort !== undefined ||
       this.includeReasoning !== undefined ||
       this.reasoningMaxTokens ||
       defaultReasoningEffort
     ) {
       body.reasoning = {};
 
-      if (this.reasoning_effort && this.reasoning_effort !== 'none') {
+      if (reasoningEffort) {
         // OpenRouter uses 'low' as the minimum effort level, map 'minimal' to 'low'
-        const effort =
-          this.reasoning_effort === 'minimal' ? 'low' : this.reasoning_effort;
+        const effort = reasoningEffort === 'minimal' ? 'low' : reasoningEffort;
         body.reasoning.effort = effort;
-      } else if (
-        this.reasoning_effort === undefined &&
-        defaultReasoningEffort
-      ) {
+      } else if (defaultReasoningEffort) {
         body.reasoning.effort = defaultReasoningEffort;
       }
 
       // Default to exclude reasoning to avoid empty responses unless explicitly requested
-      if (this.reasoning_effort === 'none' || this.includeReasoning !== true) {
+      if (reasoningEffort === 'none' || this.includeReasoning !== true) {
         body.reasoning.exclude = true;
       }
 

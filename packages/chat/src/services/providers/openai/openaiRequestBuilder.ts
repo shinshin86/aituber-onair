@@ -201,6 +201,15 @@ export function buildOpenAIRequestBody({
     body.reasoning_effort = reasoning_effort;
   }
 
+  if (provider === 'deepseek' && reasoning_effort) {
+    body.thinking = {
+      type: reasoning_effort === 'none' ? 'disabled' : 'enabled',
+    };
+    if (reasoning_effort !== 'none') {
+      body.reasoning_effort = reasoning_effort;
+    }
+  }
+
   const toolDefinitions = buildOpenAIToolsDefinition({
     tools,
     mcpServers,

@@ -53,6 +53,39 @@ export const MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5 =
   'kwaipilot/kat-coder-pro-v2.5';
 export const MODEL_XAI_GROK_LATEST = '~x-ai/grok-latest';
 export const MODEL_XAI_GROK_4_5 = 'x-ai/grok-4.5';
+export const MODEL_OPENROUTER_DEEPSEEK_V4_FLASH = 'deepseek/deepseek-v4-flash';
+export const MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731 =
+  'deepseek/deepseek-v4-flash-0731';
+
+export type OpenRouterReasoningEffort =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh'
+  | 'max';
+
+const DEFAULT_OPENROUTER_REASONING_EFFORTS = [
+  'none',
+  'minimal',
+  'low',
+  'medium',
+  'high',
+] as const satisfies readonly OpenRouterReasoningEffort[];
+
+const OPENROUTER_DEEPSEEK_V4_FLASH_REASONING_EFFORTS = [
+  'none',
+  'high',
+  'xhigh',
+] as const satisfies readonly OpenRouterReasoningEffort[];
+
+const OPENROUTER_DEEPSEEK_V4_FLASH_0731_REASONING_EFFORTS = [
+  'none',
+  'low',
+  'high',
+  'max',
+] as const satisfies readonly OpenRouterReasoningEffort[];
 
 // Free tier models
 export const OPENROUTER_FREE_MODELS = [
@@ -123,4 +156,61 @@ export function isOpenRouterVisionModel(model: string): boolean {
   return OPENROUTER_VISION_SUPPORTED_MODELS.some((visionModel) =>
     model.includes(visionModel),
   );
+}
+
+export function getOpenRouterSupportedReasoningEfforts(
+  model: string,
+): readonly OpenRouterReasoningEffort[] {
+  const normalizedModel = model.trim();
+  if (normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH) {
+    return OPENROUTER_DEEPSEEK_V4_FLASH_REASONING_EFFORTS;
+  }
+
+  if (normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731) {
+    return OPENROUTER_DEEPSEEK_V4_FLASH_0731_REASONING_EFFORTS;
+  }
+
+  return DEFAULT_OPENROUTER_REASONING_EFFORTS;
+}
+
+export function getDefaultOpenRouterReasoningEffort(
+  model: string,
+): OpenRouterReasoningEffort | undefined {
+  const normalizedModel = model.trim();
+  return normalizedModel === MODEL_ZAI_GLM_5_2 ||
+    normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH ||
+    normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731
+    ? 'none'
+    : undefined;
+}
+
+export function normalizeOpenRouterReasoningEffort(
+  model: string,
+  effort?: OpenRouterReasoningEffort,
+): OpenRouterReasoningEffort | undefined {
+  const normalizedModel = model.trim();
+  const requested = effort ?? getDefaultOpenRouterReasoningEffort(model);
+  if (!requested) {
+    return undefined;
+  }
+
+  const supported = getOpenRouterSupportedReasoningEfforts(model);
+  if (supported.includes(requested)) {
+    return requested;
+  }
+
+  if (normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH) {
+    return requested === 'max' ? 'xhigh' : 'none';
+  }
+
+  if (normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731) {
+    if (requested === 'minimal' || requested === 'medium') {
+      return 'low';
+    }
+    if (requested === 'xhigh') {
+      return 'high';
+    }
+  }
+
+  return requested;
 }

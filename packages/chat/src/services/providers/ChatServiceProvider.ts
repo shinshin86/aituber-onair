@@ -6,6 +6,8 @@ import type { MistralReasoningEffort } from '../../constants/mistral';
 import type { PlamoReasoningEffort } from '../../constants/plamo';
 import type { XaiReasoningEffort } from '../../constants/xai';
 import type { KimiReasoningEffort } from '../../constants/kimi';
+import type { DeepSeekReasoningEffort } from '../../constants/deepseek';
+import type { OpenRouterReasoningEffort } from '../../constants/openrouter';
 import { ToolDefinition, MCPServerConfig } from '../../types';
 
 /**
@@ -90,7 +92,7 @@ export type OpenRouterChatServiceOptions = DisallowKeys<
   | 'thinking'
   | 'responseFormat'
 > & {
-  reasoning_effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
+  reasoning_effort?: OpenRouterReasoningEffort;
   appName?: string;
   appUrl?: string;
 };
@@ -150,18 +152,23 @@ export type KimiChatServiceOptions = Omit<
   reasoning_effort?: KimiReasoningEffort;
 };
 
-export type DeepSeekChatServiceOptions = DisallowKeys<
-  BaseChatServiceOptions,
-  | 'verbosity'
-  | 'reasoning_effort'
-  | 'gpt5Preset'
-  | 'gpt5EndpointPreference'
-  | 'enableReasoningSummary'
-  | 'includeReasoning'
-  | 'reasoningMaxTokens'
-  | 'thinking'
-  | 'responseFormat'
->;
+export type DeepSeekChatServiceOptions = Omit<
+  DisallowKeys<
+    BaseChatServiceOptions,
+    | 'verbosity'
+    | 'gpt5Preset'
+    | 'gpt5EndpointPreference'
+    | 'enableReasoningSummary'
+    | 'includeReasoning'
+    | 'reasoningMaxTokens'
+    | 'thinking'
+    | 'responseFormat'
+  >,
+  'reasoning_effort'
+> & {
+  /** DeepSeek thinking effort. Defaults to none for responsive chat. */
+  reasoning_effort?: DeepSeekReasoningEffort;
+};
 
 export type MistralChatServiceOptions = Omit<
   DisallowKeys<
