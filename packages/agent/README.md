@@ -1,5 +1,7 @@
 # @aituber-onair/agent
 
+![@aituber-onair/agent logo](https://raw.githubusercontent.com/shinshin86/aituber-onair/main/packages/agent/images/aituber-onair-agent.png)
+
 [English README](README.md) | [日本語版 README](README.ja.md)
 
 An embeddable runtime for giving an AI character a job inside a JavaScript or

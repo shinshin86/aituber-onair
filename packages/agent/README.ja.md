@@ -1,5 +1,7 @@
 # @aituber-onair/agent
 
+![@aituber-onair/agent ロゴ](https://raw.githubusercontent.com/shinshin86/aituber-onair/main/packages/agent/images/aituber-onair-agent.png)
+
 [English README](README.md) | [日本語版 README](README.ja.md)
 
 JavaScript／TypeScriptプロダクトの中で、AIキャラクターに仕事を与えるための
