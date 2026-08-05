@@ -1006,6 +1006,21 @@ const tools: ToolDefinition[] = [{
 // サービス作成時にツールハンドラーを設定してください
 ```
 
+アプリケーション側でToolを実行する場合は、backend helperを使ってprovider互換の
+assistant messageとTool結果messageを追加できます。OpenAIやClaudeなどの
+provider固有の継続データも保持します。
+
+```typescript
+import { buildToolContinuationMessages } from '@aituber-onair/chat/backend';
+
+const nextMessages = buildToolContinuationMessages({
+  provider: chatService.provider,
+  messages,
+  completion,
+  toolResults,
+});
+```
+
 ### 応答長制御
 
 プリセットの基準トークン値は次の通りです。

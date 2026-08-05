@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "server",
+    "tests",
+    "src/fixtures.ts",
+    "src/protocol.ts",
+    "src/types.ts"
+  ]
+}

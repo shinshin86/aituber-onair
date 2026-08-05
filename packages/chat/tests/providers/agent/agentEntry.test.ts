@@ -12,6 +12,9 @@ describe('Agent chat entry', () => {
       'claude-agent-sdk',
     );
     expect(ChatServiceFactory.getAvailableProviders()).toContain('copilot-sdk');
+    expect(
+      ChatServiceFactory.getProviderCapabilities('codex-sdk'),
+    ).toMatchObject({ streaming: false, tools: false });
   });
 
   it('creates agent services with typed helper', async () => {

@@ -35,6 +35,35 @@ describe('GeminiChatService API version selection', () => {
     vi.restoreAllMocks();
   });
 
+  it('sends system messages as systemInstruction instead of model contents', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_3_6_FLASH,
+      MODEL_GEMINI_3_6_FLASH,
+    );
+
+    await (service as any).callGemini(
+      [
+        { role: 'system', content: 'Trusted character brief' },
+        { role: 'user', content: 'Untrusted viewer comment' },
+      ] as Message[],
+      MODEL_GEMINI_3_6_FLASH,
+      false,
+    );
+
+    expect(postSpy.mock.calls[0][1]).toMatchObject({
+      systemInstruction: {
+        parts: [{ text: 'Trusted character brief' }],
+      },
+      contents: [
+        { role: 'user', parts: [{ text: 'Untrusted viewer comment' }] },
+      ],
+    });
+  });
+
   it.each([
     [MODEL_GEMINI_3_6_FLASH, 'gemini-3.6-flash'],
     [MODEL_GEMINI_3_5_FLASH_LITE, 'gemini-3.5-flash-lite'],

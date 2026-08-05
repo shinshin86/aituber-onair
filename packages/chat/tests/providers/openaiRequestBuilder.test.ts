@@ -10,6 +10,7 @@ import {
   MODEL_GPT_5_6_TERRA,
   MODEL_GPT_5_NANO,
 } from '../../src/constants';
+import { buildToolContinuationMessages } from '../../src/backend';
 import { buildOpenAIRequestBody } from '../../src/services/providers/openai/openaiRequestBuilder';
 import type {
   MCPServerConfig,
@@ -20,6 +21,69 @@ import type {
 const messages: Message[] = [{ role: 'user', content: 'hello' }];
 
 describe('buildOpenAIRequestBody', () => {
+  it('preserves Responses API Tool and reasoning items across a host Tool loop', () => {
+    const providerContent = [
+      {
+        type: 'reasoning',
+        id: 'reasoning-1',
+        encrypted_content: 'opaque-state',
+      },
+      {
+        type: 'function_call',
+        id: 'item-1',
+        call_id: 'call-1',
+        name: 'get_weather',
+        arguments: '{"city":"Tokyo"}',
+      },
+    ];
+    const continued = buildToolContinuationMessages({
+      provider: 'openai',
+      messages: [{ role: 'user', content: 'Weather in Tokyo?' }],
+      completion: {
+        blocks: [
+          {
+            type: 'tool_use',
+            id: 'call-1',
+            name: 'get_weather',
+            input: { city: 'Tokyo' },
+          },
+        ],
+        assistant_message: {
+          role: 'assistant',
+          content: '',
+          provider_content: providerContent,
+        },
+      },
+      toolResults: [
+        {
+          type: 'tool_result',
+          tool_use_id: 'call-1',
+          content: '{"temperature":25}',
+        },
+      ],
+    });
+
+    const body = buildOpenAIRequestBody({
+      provider: 'openai',
+      endpoint: ENDPOINT_OPENAI_RESPONSES_API,
+      messages: continued,
+      model: MODEL_GPT_5_4,
+      stream: false,
+      tools: [],
+      mcpServers: [],
+    });
+
+    expect(body.input).toEqual([
+      { role: 'user', content: 'Weather in Tokyo?' },
+      ...providerContent,
+      {
+        type: 'function_call_output',
+        call_id: 'call-1',
+        output: '{"temperature":25}',
+      },
+    ]);
+  });
+
   it('builds a GPT-5.6 Chat Completions request with max reasoning', () => {
     const body = buildOpenAIRequestBody({
       provider: 'openai',
@@ -146,7 +210,7 @@ describe('buildOpenAIRequestBody', () => {
     expect(body.max_output_tokens).toBe(300);
   });
 
-  it('converts responses vision blocks and maps tool role to user', () => {
+  it('converts responses vision blocks and preserves legacy Tool fallback', () => {
     const visionMessages: MessageWithVision[] = [
       {
         role: 'user',

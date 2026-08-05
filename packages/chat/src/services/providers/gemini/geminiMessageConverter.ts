@@ -52,6 +52,7 @@ export function convertMessagesToGeminiFormat(
   };
 
   for (const msg of messages) {
+    if (msg.role === 'system') continue;
     const role = mapRoleToGemini(msg.role);
 
     if ((msg as any).tool_calls) {
@@ -105,6 +106,7 @@ export async function convertVisionMessagesToGeminiFormat(
   };
 
   for (const msg of messages) {
+    if (msg.role === 'system') continue;
     const role = mapRoleToGemini(msg.role);
 
     if ((msg as any).tool_calls) {
@@ -166,6 +168,21 @@ export async function convertVisionMessagesToGeminiFormat(
   pushCurrent();
 
   return geminiMessages;
+}
+
+export function extractGeminiSystemInstruction(
+  messages: readonly (Message | MessageWithVision)[],
+): { parts: { text: string }[] } | undefined {
+  const parts = messages.flatMap((message) => {
+    if (message.role !== 'system') return [];
+    if (typeof message.content === 'string') {
+      return message.content ? [{ text: message.content }] : [];
+    }
+    return message.content.flatMap((block) =>
+      block.type === 'text' && block.text ? [{ text: block.text }] : [],
+    );
+  });
+  return parts.length > 0 ? { parts } : undefined;
 }
 
 function createFunctionCallPart(call: any, options: ConverterOptions) {

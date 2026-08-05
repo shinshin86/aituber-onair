@@ -65,6 +65,39 @@ describe('OpenAI responses parsing', () => {
     expect(onJsonError).toHaveBeenCalledTimes(1);
   });
 
+  it('preserves Responses output items and uses call_id for Tool results', () => {
+    const reasoning = {
+      type: 'reasoning',
+      id: 'reasoning-1',
+      encrypted_content: 'opaque-state',
+    };
+    const functionCall = {
+      type: 'function_call',
+      id: 'item-1',
+      call_id: 'call-1',
+      name: 'lookup',
+      arguments: '{"query":"weather"}',
+    };
+
+    const result = parseOpenAIResponsesOneShot({
+      output: [reasoning, functionCall],
+    });
+
+    expect(result.blocks).toEqual([
+      {
+        type: 'tool_use',
+        id: 'call-1',
+        name: 'lookup',
+        input: { query: 'weather' },
+      },
+    ]);
+    expect(result.assistant_message).toEqual({
+      role: 'assistant',
+      content: '',
+      provider_content: [reasoning, functionCall],
+    });
+  });
+
   it('keeps streamed text when responses function arguments are invalid', async () => {
     const onPartial = vi.fn();
     const onJsonError = vi.fn();
@@ -98,5 +131,46 @@ describe('OpenAI responses parsing', () => {
     ]);
     expect(result.stop_reason).toBe('tool_use');
     expect(onJsonError).toHaveBeenCalledTimes(1);
+  });
+
+  it('collects streamed function arguments and provider output state', async () => {
+    const reasoning = {
+      type: 'reasoning',
+      id: 'reasoning-1',
+      encrypted_content: 'opaque-state',
+    };
+    const functionCall = {
+      type: 'function_call',
+      id: 'item-1',
+      call_id: 'call-1',
+      name: 'lookup',
+      arguments: '',
+    };
+    const completedFunctionCall = {
+      ...functionCall,
+      arguments: '{"query":"weather"}',
+    };
+    const res = createSseResponse([
+      `event: response.output_item.added\ndata: ${JSON.stringify({ item: reasoning })}\n\n`,
+      `event: response.output_item.added\ndata: ${JSON.stringify({ item: functionCall })}\n\n`,
+      `event: response.function_call_arguments.delta\ndata: ${JSON.stringify({ item_id: 'item-1', delta: '{"query":' })}\n\n`,
+      `event: response.function_call_arguments.done\ndata: ${JSON.stringify({ item_id: 'item-1', arguments: '{"query":"weather"}' })}\n\n`,
+      `event: response.output_item.done\ndata: ${JSON.stringify({ item: completedFunctionCall })}\n\n`,
+    ]);
+
+    const result = await parseOpenAIResponsesStream(res, vi.fn());
+
+    expect(result.blocks).toEqual([
+      {
+        type: 'tool_use',
+        id: 'call-1',
+        name: 'lookup',
+        input: { query: 'weather' },
+      },
+    ]);
+    expect(result.assistant_message?.provider_content).toEqual([
+      reasoning,
+      completedFunctionCall,
+    ]);
   });
 });

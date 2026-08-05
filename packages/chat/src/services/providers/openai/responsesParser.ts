@@ -26,6 +26,7 @@ export async function parseOpenAIResponsesStream(
 
   const textBlocks: ToolChatBlock[] = [];
   const toolCallsMap = new Map<string, any>();
+  const providerItems = new Map<string, any>();
   let responseStatus: string | undefined;
   let incompleteDetails: Record<string, any> | null | undefined;
   let usage: Record<string, any> | undefined;
@@ -60,7 +61,7 @@ export async function parseOpenAIResponsesStream(
             onPartial,
             textBlocks,
             toolCallsMap,
-            options,
+            providerItems,
             (metadata) => {
               if (metadata.responseStatus !== undefined) {
                 responseStatus = metadata.responseStatus;
@@ -88,9 +89,12 @@ export async function parseOpenAIResponsesStream(
       type: 'tool_use',
       id: tool.id,
       name: tool.name,
-      input: tool.input || {},
+      input: safeParseToolCallInput(tool.arguments, options.onJsonError),
     }),
   );
+
+  const providerContent = Array.from(providerItems.values());
+  const text = StreamTextAccumulator.getFullText(textBlocks);
 
   return {
     blocks: [...textBlocks, ...toolBlocks],
@@ -99,6 +103,15 @@ export async function parseOpenAIResponsesStream(
     response_status: responseStatus,
     incomplete_details: incompleteDetails,
     usage,
+    ...(providerContent.length > 0
+      ? {
+          assistant_message: {
+            role: 'assistant',
+            content: text,
+            provider_content: providerContent,
+          },
+        }
+      : {}),
   };
 }
 
@@ -108,11 +121,12 @@ function handleResponsesSSEEvent(
   onPartial: (t: string) => void,
   textBlocks: ToolChatBlock[],
   toolCallsMap: Map<string, any>,
-  options: ResponsesParseOptions,
+  providerItems: Map<string, any>,
   onMetadata: (metadata: ResponsesMetadata) => void,
 ): void {
   switch (eventType) {
     case 'response.output_item.added':
+      rememberProviderItem(providerItems, data.item);
       if (data.item?.type === 'message' && Array.isArray(data.item.content)) {
         data.item.content.forEach((c: any) => {
           if (c.type === 'output_text' && c.text) {
@@ -122,12 +136,44 @@ function handleResponsesSSEEvent(
         });
       } else if (data.item?.type === 'function_call') {
         toolCallsMap.set(data.item.id, {
-          id: data.item.id,
+          id: data.item.call_id ?? data.item.id,
           name: data.item.name,
-          input: safeParseToolCallInput(
-            data.item.arguments,
-            options.onJsonError,
-          ),
+          arguments: data.item.arguments ?? '',
+        });
+      }
+      break;
+
+    case 'response.function_call_arguments.delta': {
+      const tool = toolCallsMap.get(data.item_id);
+      if (tool && typeof data.delta === 'string') {
+        tool.arguments += data.delta;
+      }
+      const item = providerItems.get(data.item_id);
+      if (item && typeof data.delta === 'string') {
+        item.arguments = `${item.arguments ?? ''}${data.delta}`;
+      }
+      break;
+    }
+
+    case 'response.function_call_arguments.done': {
+      const tool = toolCallsMap.get(data.item_id);
+      if (tool && typeof data.arguments === 'string') {
+        tool.arguments = data.arguments;
+      }
+      const item = providerItems.get(data.item_id);
+      if (item && typeof data.arguments === 'string') {
+        item.arguments = data.arguments;
+      }
+      break;
+    }
+
+    case 'response.output_item.done':
+      rememberProviderItem(providerItems, data.item);
+      if (data.item?.type === 'function_call') {
+        toolCallsMap.set(data.item.id, {
+          id: data.item.call_id ?? data.item.id,
+          name: data.item.name,
+          arguments: data.item.arguments ?? '',
         });
       }
       break;
@@ -173,6 +219,15 @@ function handleResponsesSSEEvent(
   }
 }
 
+function rememberProviderItem(items: Map<string, any>, item: any): void {
+  if (!item || typeof item !== 'object') return;
+  const key =
+    typeof item.id === 'string' && item.id
+      ? item.id
+      : `output-item-${items.size}`;
+  items.set(key, { ...item });
+}
+
 function extractResponsesMetadata(
   data: any,
   fallbackStatus: 'completed' | 'incomplete',
@@ -212,7 +267,7 @@ export function parseOpenAIResponsesOneShot(
       if (outputItem.type === 'function_call') {
         blocks.push({
           type: 'tool_use',
-          id: outputItem.id,
+          id: outputItem.call_id ?? outputItem.id,
           name: outputItem.name,
           input: safeParseToolCallInput(
             outputItem.arguments,
@@ -230,5 +285,20 @@ export function parseOpenAIResponsesOneShot(
     response_status: data?.status,
     incomplete_details: data?.incomplete_details ?? null,
     usage: data?.usage,
+    ...(Array.isArray(data?.output) && data.output.length > 0
+      ? {
+          assistant_message: {
+            role: 'assistant',
+            content: blocks
+              .filter(
+                (block): block is Extract<ToolChatBlock, { type: 'text' }> =>
+                  block.type === 'text',
+              )
+              .map((block) => block.text)
+              .join(''),
+            provider_content: data.output,
+          },
+        }
+      : {}),
   };
 }

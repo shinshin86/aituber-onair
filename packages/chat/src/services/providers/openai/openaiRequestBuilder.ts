@@ -290,12 +290,25 @@ function validateMCPCompatibility(
 export function cleanMessagesForResponsesAPI(
   messages: (Message | MessageWithVision)[],
 ): any[] {
-  return messages.map((msg) => {
-    // Convert 'tool' role to 'user' for Responses API compatibility.
-    const role = msg.role === 'tool' ? 'user' : msg.role;
+  return messages.flatMap((msg) => {
+    if (msg.role === 'assistant' && msg.provider_content?.length) {
+      return msg.provider_content;
+    }
+
+    if (msg.role === 'tool' && msg.tool_call_id) {
+      return [
+        {
+          type: 'function_call_output',
+          call_id: msg.tool_call_id,
+          output: msg.content,
+        },
+      ];
+    }
+
+    const items: any[] = [];
 
     const cleanMsg: any = {
-      role: role,
+      role: msg.role === 'tool' ? 'user' : msg.role,
     };
 
     // Handle content (text or vision).
@@ -323,7 +336,22 @@ export function cleanMessagesForResponsesAPI(
       cleanMsg.content = msg.content;
     }
 
-    return cleanMsg;
+    const hasContent =
+      typeof cleanMsg.content !== 'string' || cleanMsg.content.length > 0;
+    if (hasContent) items.push(cleanMsg);
+
+    if (msg.role === 'assistant' && msg.tool_calls) {
+      items.push(
+        ...msg.tool_calls.map((call) => ({
+          type: 'function_call',
+          call_id: call.id,
+          name: call.function.name,
+          arguments: call.function.arguments,
+        })),
+      );
+    }
+
+    return items;
   });
 }
 
