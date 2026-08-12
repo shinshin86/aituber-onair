@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Minimal browser example for @aituber-onair/transcription"
+    />
+    <title>AITuber OnAir Transcription</title>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">@aituber-onair/transcription</p>
+        <h1>Browser transcription check</h1>
+        <p class="hero-copy">
+          Test Web Speech and OpenAI Realtime through the same session API.
+          Final transcripts remain on this page and are never auto-submitted.
+        </p>
+      </header>
+
+      <section class="card controls" aria-labelledby="settings-title">
+        <div class="section-heading">
+          <div>
+            <p class="step">01</p>
+            <h2 id="settings-title">Session settings</h2>
+          </div>
+          <span id="support-badge" class="badge">Checking support</span>
+        </div>
+
+        <label class="field">
+          <span>Provider</span>
+          <select id="provider">
+            <option value="web-speech">Web Speech</option>
+            <option value="openai-realtime">OpenAI Realtime</option>
+          </select>
+        </label>
+
+        <div id="web-speech-fields">
+          <label class="field">
+            <span>Recognition language</span>
+            <input id="web-speech-language" value="ja-JP" />
+          </label>
+          <p class="hint">
+            Availability and recognition behavior depend on the browser.
+          </p>
+        </div>
+
+        <div id="openai-fields" hidden>
+          <label class="field">
+            <span>Authentication</span>
+            <select id="openai-auth-mode">
+              <option value="server">Server client secret (recommended)</option>
+              <option value="browser-api-key">Browser BYOK (risk accepted)</option>
+            </select>
+          </label>
+
+          <div id="server-auth-fields">
+            <label class="field">
+              <span>Client-secret endpoint</span>
+              <input
+                id="client-secret-endpoint"
+                value="/api/openai/realtime/client-secret"
+              />
+            </label>
+            <p class="notice safe">
+              The local server reads OPENAI_API_KEY and returns only a
+              short-lived client secret.
+            </p>
+          </div>
+
+          <div id="browser-auth-fields" hidden>
+            <label class="field">
+              <span>End-user OpenAI API key</span>
+              <input
+                id="openai-api-key"
+                type="password"
+                autocomplete="off"
+                placeholder="Not stored by this example"
+              />
+            </label>
+            <p class="notice risk">
+              Browser BYOK exposes the standard key to the page runtime,
+              extensions, XSS, and local device access. Use only your own
+              restricted test key and revoke it after testing.
+            </p>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Expected languages</span>
+              <input id="openai-languages" value="ja,en" />
+              <small>Comma-separated language codes</small>
+            </label>
+            <label class="field">
+              <span>Delay</span>
+              <select id="openai-delay">
+                <option value="minimal">Minimal</option>
+                <option value="low" selected>Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="xhigh">Extra high</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Keywords</span>
+            <input id="openai-keywords" value="AITuber OnAir" />
+            <small>Comma-separated; &lt;, &gt;, and line breaks are rejected</small>
+          </label>
+          <label class="field">
+            <span>Context prompt</span>
+            <textarea id="openai-prompt" rows="2">
+An AITuber livestream in Japanese and English.</textarea
+            >
+          </label>
+          <p class="notice cost">
+            OpenAI usage may incur charges while the session is listening,
+            including silent periods.
+          </p>
+        </div>
+      </section>
+
+      <section class="card output" aria-labelledby="output-title">
+        <div class="section-heading">
+          <div>
+            <p class="step">02</p>
+            <h2 id="output-title">Live output</h2>
+          </div>
+          <span id="state-badge" class="badge state-idle">Idle</span>
+        </div>
+
+        <div class="actions">
+          <button id="start-button" class="primary" type="button">
+            Start microphone
+          </button>
+          <button id="stop-button" type="button" disabled>Stop</button>
+          <button id="clear-button" class="quiet" type="button">Clear</button>
+        </div>
+
+        <p id="error-message" class="error" role="alert" hidden></p>
+
+        <div class="transcript-block">
+          <h3>Interim</h3>
+          <p id="interim-transcript" class="transcript muted">
+            Waiting for audio…
+          </p>
+        </div>
+        <div class="transcript-block">
+          <h3>Final utterances</h3>
+          <ol id="final-transcripts" class="final-list">
+            <li class="empty">No final transcript yet.</li>
+          </ol>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
