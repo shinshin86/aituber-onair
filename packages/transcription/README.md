@@ -1,5 +1,7 @@
 # @aituber-onair/transcription
 
+![@aituber-onair/transcription logo](./images/aituber-onair-transcription.png)
+
 Provider-neutral realtime microphone transcription for AITuber OnAir.
 
 > This package is an unreleased spike. It is `private`, version `0.0.0`, and is
