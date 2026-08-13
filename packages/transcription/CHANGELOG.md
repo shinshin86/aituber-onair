@@ -18,6 +18,7 @@
   disposal behavior, and focused unit tests for both providers.
 - Added a framework-free browser sample for comparing both providers. The
   OpenAI flow reads an end-user API key from the page when starting a session
-  and does not persist it.
+  and does not persist it. The interface supports English and Japanese display
+  with automatic browser-language detection and an on-page language selector.
 - Added English and Japanese documentation, package artwork, and dual ESM/CJS
   build output with TypeScript declarations.

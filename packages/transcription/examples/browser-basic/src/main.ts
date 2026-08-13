@@ -5,9 +5,19 @@ import {
   type TranscriptUpdate,
   type TranscriptionDelay,
   type TranscriptionError,
+  type TranscriptionErrorCode,
   type TranscriptionProviderName,
   type TranscriptionState,
 } from '@aituber-onair/transcription';
+import {
+  detectDisplayLanguage,
+  isDisplayLanguage,
+  isTranslationKey,
+  translate,
+  translatedValues,
+  type DisplayLanguage,
+  type TranslationKey,
+} from './i18n';
 import './style.css';
 
 function element<T extends HTMLElement>(selector: string): T {
@@ -16,6 +26,7 @@ function element<T extends HTMLElement>(selector: string): T {
   return result;
 }
 
+const displayLanguageSelect = element<HTMLSelectElement>('#display-language');
 const providerSelect = element<HTMLSelectElement>('#provider');
 const supportBadge = element<HTMLSpanElement>('#support-badge');
 const webSpeechFields = element<HTMLDivElement>('#web-speech-fields');
@@ -35,7 +46,31 @@ const interimTranscript = element<HTMLParagraphElement>('#interim-transcript');
 const finalTranscripts = element<HTMLOListElement>('#final-transcripts');
 
 let session: RealtimeTranscriptionSession | null = null;
+let displayLanguage: DisplayLanguage = 'en';
+let activeError: TranscriptionError | Error | null = null;
 const interimByUtterance = new Map<string, string>();
+
+const stateTranslationKeys: Record<TranscriptionState, TranslationKey> = {
+  idle: 'stateIdle',
+  connecting: 'stateConnecting',
+  listening: 'stateListening',
+  stopping: 'stateStopping',
+  error: 'stateError',
+  disposed: 'stateDisposed',
+};
+
+const errorTranslationKeys: Record<TranscriptionErrorCode, TranslationKey> = {
+  'unsupported-provider': 'errorUnsupportedProvider',
+  'insecure-context': 'errorInsecureContext',
+  'permission-denied': 'errorPermissionDenied',
+  'no-speech': 'errorNoSpeech',
+  'authentication-failed': 'errorAuthenticationFailed',
+  'client-secret-failed': 'errorClientSecretFailed',
+  'connection-failed': 'errorConnectionFailed',
+  'provider-error': 'errorProvider',
+  'invalid-configuration': 'errorInvalidConfiguration',
+  'session-disposed': 'errorSessionDisposed',
+};
 
 function commaSeparated(value: string): string[] {
   return value
@@ -48,7 +83,53 @@ function selectedProvider(): TranscriptionProviderName {
   return providerSelect.value as TranscriptionProviderName;
 }
 
+function translationKey(
+  target: HTMLElement,
+  attribute: string
+): TranslationKey | null {
+  const value = target.getAttribute(attribute);
+  return value && isTranslationKey(value) ? value : null;
+}
+
+function localizeStaticContent(): void {
+  document.documentElement.lang = displayLanguage;
+  document.title = translate(displayLanguage, 'pageTitle');
+  document
+    .querySelector<HTMLMetaElement>('meta[name="description"]')
+    ?.setAttribute('content', translate(displayLanguage, 'metaDescription'));
+
+  for (const target of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
+    const key = translationKey(target, 'data-i18n');
+    if (key) target.textContent = translate(displayLanguage, key);
+  }
+
+  for (const target of document.querySelectorAll<HTMLInputElement>(
+    '[data-i18n-placeholder]'
+  )) {
+    const key = translationKey(target, 'data-i18n-placeholder');
+    if (key) target.placeholder = translate(displayLanguage, key);
+  }
+
+  for (const target of document.querySelectorAll<HTMLTextAreaElement>(
+    '[data-i18n-value]'
+  )) {
+    const key = translationKey(target, 'data-i18n-value');
+    if (!key) continue;
+    const knownValues = translatedValues(key);
+    if (knownValues.includes(target.value.trim())) {
+      target.value = translate(displayLanguage, key);
+    }
+  }
+}
+
+function translatedErrorMessage(error: TranscriptionError | Error): string {
+  if (displayLanguage !== 'ja' || !('code' in error)) return error.message;
+  const key = errorTranslationKeys[error.code as TranscriptionErrorCode];
+  return key ? translate(displayLanguage, key) : error.message;
+}
+
 function setError(error: TranscriptionError | Error | null): void {
+  activeError = error;
   if (!error) {
     errorMessage.hidden = true;
     errorMessage.textContent = '';
@@ -56,13 +137,15 @@ function setError(error: TranscriptionError | Error | null): void {
   }
 
   const code = 'code' in error ? `[${String(error.code)}] ` : '';
-  errorMessage.textContent = `${code}${error.message}`;
+  errorMessage.textContent = `${code}${translatedErrorMessage(error)}`;
   errorMessage.hidden = false;
 }
 
 function renderState(state: TranscriptionState): void {
-  const label = state.charAt(0).toUpperCase() + state.slice(1);
-  stateBadge.textContent = label;
+  stateBadge.textContent = translate(
+    displayLanguage,
+    stateTranslationKeys[state]
+  );
   stateBadge.className = `badge state-${state}`;
 
   const active = state === 'connecting' || state === 'listening';
@@ -74,7 +157,8 @@ function renderState(state: TranscriptionState): void {
 
 function renderInterim(): void {
   const value = [...interimByUtterance.values()].join(' ').trim();
-  interimTranscript.textContent = value || 'Waiting for audio…';
+  interimTranscript.textContent =
+    value || translate(displayLanguage, 'waitingForAudio');
   interimTranscript.classList.toggle('muted', !value);
 }
 
@@ -160,7 +244,7 @@ function clearTranscripts(): void {
   finalTranscripts.replaceChildren();
   const empty = document.createElement('li');
   empty.className = 'empty';
-  empty.textContent = 'No final transcript yet.';
+  empty.textContent = translate(displayLanguage, 'noFinalTranscript');
   finalTranscripts.append(empty);
   setError(null);
 }
@@ -173,9 +257,25 @@ function syncSettings(): void {
   openAIFields.hidden = !openAISelected;
 
   const supported = isTranscriptionProviderSupported(provider);
-  supportBadge.textContent = supported ? 'Browser supported' : 'Unsupported';
+  supportBadge.textContent = translate(
+    displayLanguage,
+    supported ? 'browserSupported' : 'unsupported'
+  );
   supportBadge.className = `badge ${supported ? 'supported' : 'unsupported'}`;
   renderState(session?.state ?? 'idle');
+}
+
+function applyDisplayLanguage(language: DisplayLanguage): void {
+  displayLanguage = language;
+  displayLanguageSelect.value = language;
+  localizeStaticContent();
+  renderInterim();
+  const emptyTranscript = finalTranscripts.querySelector('.empty');
+  if (emptyTranscript) {
+    emptyTranscript.textContent = translate(language, 'noFinalTranscript');
+  }
+  syncSettings();
+  if (activeError) setError(activeError);
 }
 
 async function resetSessionForSettings(): Promise<void> {
@@ -185,9 +285,14 @@ async function resetSessionForSettings(): Promise<void> {
 }
 
 providerSelect.addEventListener('change', () => void resetSessionForSettings());
+displayLanguageSelect.addEventListener('change', () => {
+  if (isDisplayLanguage(displayLanguageSelect.value)) {
+    applyDisplayLanguage(displayLanguageSelect.value);
+  }
+});
 startButton.addEventListener('click', () => void startSession());
 stopButton.addEventListener('click', () => void stopSession());
 clearButton.addEventListener('click', clearTranscripts);
 window.addEventListener('pagehide', () => void disposeSession());
 
-syncSettings();
+applyDisplayLanguage(detectDisplayLanguage(navigator.languages));

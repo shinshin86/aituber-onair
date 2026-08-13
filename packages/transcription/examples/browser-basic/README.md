@@ -1,7 +1,9 @@
 # Browser basic example
 
 This minimal browser example exercises `@aituber-onair/transcription` without
-AITuber OnAir Core or a UI framework.
+AITuber OnAir Core or a UI framework. The interface automatically starts in
+Japanese for Japanese browser preferences and otherwise starts in English. Use
+the language selector in the page to switch at any time.
 
 From the repository root:
 

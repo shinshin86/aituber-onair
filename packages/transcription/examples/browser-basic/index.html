@@ -12,9 +12,18 @@
   <body>
     <main class="page-shell">
       <header class="hero">
-        <p class="eyebrow">@aituber-onair/transcription</p>
-        <h1>Browser transcription check</h1>
-        <p class="hero-copy">
+        <div class="hero-top">
+          <p class="eyebrow">@aituber-onair/transcription</p>
+          <label class="language-control">
+            <span data-i18n="displayLanguage">Language</span>
+            <select id="display-language">
+              <option value="en">English</option>
+              <option value="ja">日本語</option>
+            </select>
+          </label>
+        </div>
+        <h1 data-i18n="heroTitle">Browser transcription check</h1>
+        <p class="hero-copy" data-i18n="heroCopy">
           Test Web Speech and OpenAI Realtime through the same session API.
           Final transcripts remain on this page and are never auto-submitted.
         </p>
@@ -24,13 +33,17 @@
         <div class="section-heading">
           <div>
             <p class="step">01</p>
-            <h2 id="settings-title">Session settings</h2>
+            <h2 id="settings-title" data-i18n="sessionSettings">
+              Session settings
+            </h2>
           </div>
-          <span id="support-badge" class="badge">Checking support</span>
+          <span id="support-badge" class="badge" data-i18n="checkingSupport">
+            Checking support
+          </span>
         </div>
 
         <label class="field">
-          <span>Provider</span>
+          <span data-i18n="provider">Provider</span>
           <select id="provider">
             <option value="web-speech">Web Speech</option>
             <option value="openai-realtime">OpenAI Realtime</option>
@@ -39,26 +52,29 @@
 
         <div id="web-speech-fields">
           <label class="field">
-            <span>Recognition language</span>
+            <span data-i18n="recognitionLanguage">Recognition language</span>
             <input id="web-speech-language" value="ja-JP" />
           </label>
-          <p class="hint">
+          <p class="hint" data-i18n="webSpeechHint">
             Availability and recognition behavior depend on the browser.
           </p>
         </div>
 
         <div id="openai-fields" hidden>
           <label class="field">
-            <span>End-user OpenAI API key</span>
+            <span data-i18n="openAIApiKey">End-user OpenAI API key</span>
             <input
               id="openai-api-key"
               type="password"
               autocomplete="off"
               placeholder="Not stored by this example"
+              data-i18n-placeholder="openAIApiKeyPlaceholder"
             />
-            <small>The key is read from this field when the session starts.</small>
+            <small data-i18n="openAIApiKeyHint">
+              The key is read from this field when the session starts.
+            </small>
           </label>
-          <p class="notice risk">
+          <p class="notice risk" data-i18n="browserByokRisk">
             Browser BYOK exposes the standard key to the page runtime,
             extensions, XSS, and local device access. Use only your own
             restricted test key and revoke it after testing.
@@ -66,34 +82,46 @@
 
           <div class="field-grid">
             <label class="field">
-              <span>Expected languages</span>
+              <span data-i18n="expectedLanguages">Expected languages</span>
               <input id="openai-languages" value="ja,en" />
-              <small>Comma-separated language codes</small>
+              <small data-i18n="commaSeparatedLanguages">
+                Comma-separated language codes
+              </small>
             </label>
             <label class="field">
-              <span>Delay</span>
+              <span data-i18n="delay">Delay</span>
               <select id="openai-delay">
-                <option value="minimal">Minimal</option>
-                <option value="low" selected>Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="xhigh">Extra high</option>
+                <option value="minimal" data-i18n="delayMinimal">
+                  Minimal
+                </option>
+                <option value="low" data-i18n="delayLow" selected>Low</option>
+                <option value="medium" data-i18n="delayMedium">Medium</option>
+                <option value="high" data-i18n="delayHigh">High</option>
+                <option value="xhigh" data-i18n="delayExtraHigh">
+                  Extra high
+                </option>
               </select>
             </label>
           </div>
 
           <label class="field">
-            <span>Keywords</span>
+            <span data-i18n="keywords">Keywords</span>
             <input id="openai-keywords" value="AITuber OnAir" />
-            <small>Comma-separated; &lt;, &gt;, and line breaks are rejected</small>
+            <small data-i18n="keywordsHint">
+              Comma-separated; &lt;, &gt;, and line breaks are rejected
+            </small>
           </label>
           <label class="field">
-            <span>Context prompt</span>
-            <textarea id="openai-prompt" rows="2">
+            <span data-i18n="contextPrompt">Context prompt</span>
+            <textarea
+              id="openai-prompt"
+              rows="2"
+              data-i18n-value="contextPromptValue"
+            >
 An AITuber livestream in Japanese and English.</textarea
             >
           </label>
-          <p class="notice cost">
+          <p class="notice cost" data-i18n="openAICost">
             OpenAI usage may incur charges while the session is listening,
             including silent periods.
           </p>
@@ -104,29 +132,38 @@ An AITuber livestream in Japanese and English.</textarea
         <div class="section-heading">
           <div>
             <p class="step">02</p>
-            <h2 id="output-title">Live output</h2>
+            <h2 id="output-title" data-i18n="liveOutput">Live output</h2>
           </div>
           <span id="state-badge" class="badge state-idle">Idle</span>
         </div>
 
         <div class="actions">
           <button id="start-button" class="primary" type="button">
-            Start microphone
+            <span data-i18n="startMicrophone">Start microphone</span>
           </button>
-          <button id="stop-button" type="button" disabled>Stop</button>
-          <button id="clear-button" class="quiet" type="button">Clear</button>
+          <button id="stop-button" type="button" data-i18n="stop" disabled>
+            Stop
+          </button>
+          <button
+            id="clear-button"
+            class="quiet"
+            type="button"
+            data-i18n="clear"
+          >
+            Clear
+          </button>
         </div>
 
         <p id="error-message" class="error" role="alert" hidden></p>
 
         <div class="transcript-block">
-          <h3>Interim</h3>
+          <h3 data-i18n="interim">Interim</h3>
           <p id="interim-transcript" class="transcript muted">
             Waiting for audio…
           </p>
         </div>
         <div class="transcript-block">
-          <h3>Final utterances</h3>
+          <h3 data-i18n="finalUtterances">Final utterances</h3>
           <ol id="final-transcripts" class="final-list">
             <li class="empty">No final transcript yet.</li>
           </ol>
