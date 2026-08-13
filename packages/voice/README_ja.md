@@ -259,6 +259,10 @@ model/voice を取得できます。この統合では `s2-pro` を安定版の�
 `s2.1-pro-free` は明示選択のみ可能です。SLA 付きの本番 tier としては扱わないで
 ください。
 
+話者一覧は、公開 model catalog 全体を走査しないよう既定で最大100件を返します。
+より多くの結果が必要な場合は `limit` と、必要に応じて `pageSize` を指定すると、
+その上限内でページングします。
+
 ### Cartesia
 
 Cartesia の同期 TTS は `POST /tts/bytes` を使用し、音声バイト列を直接返します。

@@ -119,6 +119,8 @@ describe('getVoiceEngineVoiceList', () => {
       getVoiceEngineVoiceList('fishAudio', {
         apiKey: 'fish-key',
         language: 'ja',
+        limit: 2,
+        pageSize: 1,
       }),
     ).resolves.toEqual([
       {
@@ -140,6 +142,50 @@ describe('getVoiceEngineVoiceList', () => {
     expect(fetchMock.mock.calls[0][1].headers).toEqual({
       Authorization: 'Bearer fish-key',
     });
+  });
+
+  it('bounds Fish Audio pagination and stops when a page repeats', async () => {
+    const repeatedPage = {
+      items: [{ _id: 'fish-voice-1', title: 'Repeated Voice' }],
+      total: 1000,
+      has_more: true,
+    };
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => repeatedPage,
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      getVoiceEngineVoiceList('fishAudio', {
+        apiKey: 'fish-key',
+        limit: 10,
+        pageSize: 1,
+      }),
+    ).resolves.toEqual([
+      { id: 'fish-voice-1', label: 'Repeated Voice', metadata: {} },
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('limits Fish Audio voice lookups to one hundred results by default', async () => {
+    const items = Array.from({ length: 100 }, (_, index) => ({
+      _id: `fish-voice-${index}`,
+      title: `Voice ${index}`,
+    }));
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items, total: 1000, has_more: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const voices = await getVoiceEngineVoiceList('fishAudio', {
+      apiKey: 'fish-key',
+    });
+
+    expect(voices).toHaveLength(100);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('fetches and prioritizes Japanese Cartesia voices across pages', async () => {

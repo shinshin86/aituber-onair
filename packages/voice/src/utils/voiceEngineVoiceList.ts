@@ -54,6 +54,7 @@ interface FishAudioVoiceResponse {
 }
 
 interface FishAudioVoiceListResponse {
+  total?: number;
   items?: FishAudioVoiceResponse[];
   has_more?: boolean;
 }
@@ -258,12 +259,19 @@ async function getFishAudioVoiceList(
   options: VoiceEngineVoiceListOptions,
 ): Promise<VoiceEngineVoice[]> {
   const apiKey = requireApiKey('Fish Audio', options.apiKey);
-  const pageSize = Math.min(100, Math.max(1, options.pageSize ?? 100));
+  const requestedLimit = options.limit ?? 100;
+  const maxResults = Number.isFinite(requestedLimit)
+    ? Math.max(1, Math.floor(requestedLimit))
+    : 100;
+  const requestedPageSize = options.pageSize ?? Math.min(100, maxResults);
+  const pageSize = Number.isFinite(requestedPageSize)
+    ? Math.min(100, Math.max(1, Math.floor(requestedPageSize)))
+    : Math.min(100, maxResults);
+  const maxPages = Math.ceil(maxResults / pageSize);
   const voices: FishAudioVoiceResponse[] = [];
-  let pageNumber = 1;
-  let hasMore = true;
+  const seenVoiceIds = new Set<string>();
 
-  while (hasMore) {
+  for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const url = new URL(
       options.voiceListApiUrl?.trim() || FISH_AUDIO_MODELS_API_URL,
     );
@@ -282,12 +290,32 @@ async function getFishAudioVoiceList(
       'speakers',
     );
 
-    voices.push(...(result.items ?? []));
-    hasMore = Boolean(result.has_more && (result.items?.length ?? 0) > 0);
-    pageNumber += 1;
+    const items = result.items ?? [];
+    let addedVoiceCount = 0;
+    for (const voice of items) {
+      if (seenVoiceIds.has(voice._id)) {
+        continue;
+      }
+
+      seenVoiceIds.add(voice._id);
+      voices.push(voice);
+      addedVoiceCount += 1;
+    }
+
+    const reachedReportedTotal =
+      typeof result.total === 'number' && voices.length >= result.total;
+    if (
+      !result.has_more ||
+      items.length === 0 ||
+      addedVoiceCount === 0 ||
+      reachedReportedTotal ||
+      voices.length >= maxResults
+    ) {
+      break;
+    }
   }
 
-  return voices.map((voice) => {
+  return voices.slice(0, maxResults).map((voice) => {
     const languages = voice.languages?.join(', ');
     const details = [languages, voice.author?.nickname]
       .filter(Boolean)

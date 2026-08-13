@@ -261,6 +261,10 @@ const voiceService = new VoiceService({
 this integration; `s2.1-pro-free` must be selected explicitly and should not be
 treated as an SLA-backed production tier.
 
+Voice-list lookups return at most 100 entries by default so they do not traverse
+the full public model catalog. Pass `limit` and optionally `pageSize` to request
+a larger bounded result set.
+
 ### Cartesia
 
 Cartesia synchronous TTS uses `POST /tts/bytes` and returns audio bytes
