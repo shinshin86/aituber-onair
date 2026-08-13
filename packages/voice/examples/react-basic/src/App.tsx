@@ -2,7 +2,12 @@ import {
   VoiceEngineAdapter,
   getVoiceEngineVoiceList,
   type AivisSpeechQueryParameterOverrides,
+  type CartesiaLanguage,
+  type CartesiaOutputContainer,
   type ElevenLabsApplyTextNormalization,
+  type FishAudioFormat,
+  type FishAudioLatency,
+  type FishAudioModel,
   type GeminiTtsModel,
   type GradiumOutputFormat,
   type InworldAudioEncoding,
@@ -179,6 +184,38 @@ function App() {
   ] = useState<DefaultBooleanOption>('default');
   const [elevenLabsEnableLogging, setElevenLabsEnableLogging] =
     useState<DefaultBooleanOption>('default');
+  const [fishAudioModel, setFishAudioModel] = useState<FishAudioModel>(
+    ENGINE_DEFAULTS.fishAudio.defaultModel,
+  );
+  const [fishAudioFormat, setFishAudioFormat] = useState<FishAudioFormat>(
+    ENGINE_DEFAULTS.fishAudio.defaultFormat,
+  );
+  const [fishAudioLatency, setFishAudioLatency] = useState<FishAudioLatency>(
+    ENGINE_DEFAULTS.fishAudio.defaultLatency,
+  );
+  const [fishAudioSampleRate, setFishAudioSampleRate] = useState<string>(
+    ENGINE_DEFAULTS.fishAudio.defaultSampleRate,
+  );
+  const [fishAudioMp3Bitrate, setFishAudioMp3Bitrate] = useState<string>(
+    ENGINE_DEFAULTS.fishAudio.defaultMp3Bitrate,
+  );
+  const [fishAudioSpeed, setFishAudioSpeed] = useState('');
+  const [cartesiaModel, setCartesiaModel] = useState<string>(
+    ENGINE_DEFAULTS.cartesia.defaultModel,
+  );
+  const [cartesiaLanguage, setCartesiaLanguage] = useState<CartesiaLanguage>(
+    ENGINE_DEFAULTS.cartesia.defaultLanguage,
+  );
+  const [cartesiaOutputContainer, setCartesiaOutputContainer] =
+    useState<CartesiaOutputContainer>(
+      ENGINE_DEFAULTS.cartesia.defaultOutputContainer,
+    );
+  const [cartesiaSampleRate, setCartesiaSampleRate] = useState<string>(
+    ENGINE_DEFAULTS.cartesia.defaultSampleRate,
+  );
+  const [cartesiaMp3Bitrate, setCartesiaMp3Bitrate] = useState<string>(
+    ENGINE_DEFAULTS.cartesia.defaultMp3Bitrate,
+  );
   const [inworldModel, setInworldModel] = useState<string>(
     ENGINE_DEFAULTS.inworld.defaultModel,
   );
@@ -398,6 +435,17 @@ function App() {
     setElevenLabsApplyTextNormalization('default');
     setElevenLabsApplyLanguageTextNormalization('default');
     setElevenLabsEnableLogging('default');
+    setFishAudioModel(ENGINE_DEFAULTS.fishAudio.defaultModel);
+    setFishAudioFormat(ENGINE_DEFAULTS.fishAudio.defaultFormat);
+    setFishAudioLatency(ENGINE_DEFAULTS.fishAudio.defaultLatency);
+    setFishAudioSampleRate(ENGINE_DEFAULTS.fishAudio.defaultSampleRate);
+    setFishAudioMp3Bitrate(ENGINE_DEFAULTS.fishAudio.defaultMp3Bitrate);
+    setFishAudioSpeed('');
+    setCartesiaModel(ENGINE_DEFAULTS.cartesia.defaultModel);
+    setCartesiaLanguage(ENGINE_DEFAULTS.cartesia.defaultLanguage);
+    setCartesiaOutputContainer(ENGINE_DEFAULTS.cartesia.defaultOutputContainer);
+    setCartesiaSampleRate(ENGINE_DEFAULTS.cartesia.defaultSampleRate);
+    setCartesiaMp3Bitrate(ENGINE_DEFAULTS.cartesia.defaultMp3Bitrate);
     setInworldModel(ENGINE_DEFAULTS.inworld.defaultModel);
     setInworldAudioEncoding(ENGINE_DEFAULTS.inworld.defaultAudioEncoding);
     setInworldSampleRateHertz(
@@ -469,6 +517,8 @@ function App() {
       engine !== 'aivisSpeech' &&
       engine !== 'xai' &&
       engine !== 'elevenLabs' &&
+      engine !== 'fishAudio' &&
+      engine !== 'cartesia' &&
       engine !== 'inworld' &&
       engine !== 'gradium' &&
       engine !== 'webSpeech'
@@ -483,7 +533,12 @@ function App() {
       const voices = await getVoiceEngineVoiceList(engine as VoiceEngineType, {
         apiKey,
         apiUrl,
-        language: inworldVoiceLanguage,
+        language:
+          engine === 'inworld'
+            ? inworldVoiceLanguage
+            : engine === 'cartesia'
+              ? cartesiaLanguage
+              : undefined,
       });
       const nextSpeakerOptions: SpeakerOption[] = voices.map((voice) => ({
         id: voice.id,
@@ -523,7 +578,7 @@ function App() {
     } finally {
       setIsFetchingSpeakers(false);
     }
-  }, [apiKey, apiUrl, engine, inworldVoiceLanguage]);
+  }, [apiKey, apiUrl, cartesiaLanguage, engine, inworldVoiceLanguage]);
 
   useEffect(() => {
     if (engine !== 'webSpeech') {
@@ -552,13 +607,7 @@ function App() {
     const apiKeyIsRequired =
       engine !== 'openaiCompatible' && defaults.needsApiKey;
 
-    if (engine === 'minimax') {
-      if (!apiKey || !minimaxGroupId) {
-        setStatus('Both API key and Group ID are required for MiniMax');
-        setStatusType('error');
-        return;
-      }
-    } else if (apiKeyIsRequired && !apiKey) {
+    if (apiKeyIsRequired && !apiKey) {
       setStatus(`API key is required for ${engine}`);
       setStatusType('error');
       return;
@@ -575,6 +624,8 @@ function App() {
         engine === 'aivisSpeech' ||
         engine === 'minimax' ||
         engine === 'elevenLabs' ||
+        engine === 'fishAudio' ||
+        engine === 'cartesia' ||
         engine === 'inworld') &&
       !speaker.trim()
     ) {
@@ -609,7 +660,9 @@ function App() {
       }
 
       if (engine === 'minimax') {
-        options.groupId = minimaxGroupId;
+        if (minimaxGroupId.trim()) {
+          options.groupId = minimaxGroupId.trim();
+        }
         options.minimaxModel = minimaxModel;
 
         if (minimaxLanguageBoost.trim()) {
@@ -679,6 +732,43 @@ function App() {
 
         if (Object.keys(audioSettings).length > 0) {
           options.minimaxAudioSettings = audioSettings;
+        }
+      } else if (engine === 'fishAudio') {
+        options.fishAudioModel = fishAudioModel;
+        options.fishAudioFormat = fishAudioFormat;
+        options.fishAudioLatency = fishAudioLatency;
+
+        const parsedSampleRate = Number.parseInt(fishAudioSampleRate, 10);
+        if (!Number.isNaN(parsedSampleRate)) {
+          options.fishAudioSampleRate = parsedSampleRate;
+        }
+
+        const parsedMp3Bitrate = Number.parseInt(fishAudioMp3Bitrate, 10);
+        if (
+          parsedMp3Bitrate === 64 ||
+          parsedMp3Bitrate === 128 ||
+          parsedMp3Bitrate === 192
+        ) {
+          options.fishAudioMp3Bitrate = parsedMp3Bitrate;
+        }
+
+        const parsedSpeed = Number.parseFloat(fishAudioSpeed);
+        if (!Number.isNaN(parsedSpeed)) {
+          options.fishAudioSpeed = parsedSpeed;
+        }
+      } else if (engine === 'cartesia') {
+        options.cartesiaModel = cartesiaModel;
+        options.cartesiaLanguage = cartesiaLanguage;
+        options.cartesiaOutputContainer = cartesiaOutputContainer;
+
+        const parsedSampleRate = Number.parseInt(cartesiaSampleRate, 10);
+        if (!Number.isNaN(parsedSampleRate)) {
+          options.cartesiaSampleRate = parsedSampleRate;
+        }
+
+        const parsedMp3Bitrate = Number.parseInt(cartesiaMp3Bitrate, 10);
+        if (!Number.isNaN(parsedMp3Bitrate)) {
+          options.cartesiaMp3Bitrate = parsedMp3Bitrate;
         }
       } else if (engine === 'aivisCloud') {
         if (aivisCloudModelUuid.trim()) {
@@ -1217,6 +1307,16 @@ function App() {
               options.elevenLabsApiUrl = apiUrl;
             }
             break;
+          case 'fishAudio':
+            if (apiUrl !== ENGINE_DEFAULTS.fishAudio.apiUrl) {
+              options.fishAudioApiUrl = apiUrl;
+            }
+            break;
+          case 'cartesia':
+            if (apiUrl !== ENGINE_DEFAULTS.cartesia.apiUrl) {
+              options.cartesiaApiUrl = apiUrl;
+            }
+            break;
           case 'inworld':
             if (apiUrl !== ENGINE_DEFAULTS.inworld.apiUrl) {
               options.inworldApiUrl = apiUrl;
@@ -1400,6 +1500,54 @@ function App() {
                   enableLogging: {
                     value: elevenLabsEnableLogging,
                     onChange: setElevenLabsEnableLogging,
+                  },
+                }}
+                fishAudio={{
+                  model: {
+                    value: fishAudioModel,
+                    onChange: setFishAudioModel,
+                  },
+                  format: {
+                    value: fishAudioFormat,
+                    onChange: setFishAudioFormat,
+                  },
+                  latency: {
+                    value: fishAudioLatency,
+                    onChange: setFishAudioLatency,
+                  },
+                  sampleRate: {
+                    value: fishAudioSampleRate,
+                    onChange: setFishAudioSampleRate,
+                  },
+                  mp3Bitrate: {
+                    value: fishAudioMp3Bitrate,
+                    onChange: setFishAudioMp3Bitrate,
+                  },
+                  speed: {
+                    value: fishAudioSpeed,
+                    onChange: setFishAudioSpeed,
+                  },
+                }}
+                cartesia={{
+                  model: {
+                    value: cartesiaModel,
+                    onChange: setCartesiaModel,
+                  },
+                  language: {
+                    value: cartesiaLanguage,
+                    onChange: setCartesiaLanguage,
+                  },
+                  outputContainer: {
+                    value: cartesiaOutputContainer,
+                    onChange: setCartesiaOutputContainer,
+                  },
+                  sampleRate: {
+                    value: cartesiaSampleRate,
+                    onChange: setCartesiaSampleRate,
+                  },
+                  mp3Bitrate: {
+                    value: cartesiaMp3Bitrate,
+                    onChange: setCartesiaMp3Bitrate,
                   },
                 }}
                 inworld={{

@@ -1,7 +1,9 @@
 import {
   AIVIS_CLOUD_AIVM_MODELS_SEARCH_API_URL,
   AIVIS_SPEECH_API_URL,
+  CARTESIA_VOICES_API_URL,
   ELEVENLABS_VOICES_API_URL,
+  FISH_AUDIO_MODELS_API_URL,
   GRADIUM_VOICES_API_URL,
   INWORLD_VOICES_API_URL,
   VOICE_VOX_API_URL,
@@ -42,6 +44,33 @@ interface ElevenLabsVoiceResponse {
 
 interface ElevenLabsVoiceListResponse {
   voices?: ElevenLabsVoiceResponse[];
+}
+
+interface FishAudioVoiceResponse {
+  _id: string;
+  title: string;
+  languages?: string[];
+  author?: { nickname?: string };
+}
+
+interface FishAudioVoiceListResponse {
+  items?: FishAudioVoiceResponse[];
+  has_more?: boolean;
+}
+
+interface CartesiaVoiceResponse {
+  id: string;
+  name: string;
+  tagline?: string;
+  gender?: string;
+  language?: string;
+  country?: string;
+}
+
+interface CartesiaVoiceListResponse {
+  data?: CartesiaVoiceResponse[];
+  has_more?: boolean;
+  next_page?: string | null;
 }
 
 interface InworldVoiceResponse {
@@ -223,6 +252,113 @@ async function getElevenLabsVoiceList(
     label: voice.category ? `${voice.name} (${voice.category})` : voice.name,
     metadata: voice.category ? { category: voice.category } : undefined,
   }));
+}
+
+async function getFishAudioVoiceList(
+  options: VoiceEngineVoiceListOptions,
+): Promise<VoiceEngineVoice[]> {
+  const apiKey = requireApiKey('Fish Audio', options.apiKey);
+  const pageSize = Math.min(100, Math.max(1, options.pageSize ?? 100));
+  const voices: FishAudioVoiceResponse[] = [];
+  let pageNumber = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const url = new URL(
+      options.voiceListApiUrl?.trim() || FISH_AUDIO_MODELS_API_URL,
+    );
+    url.searchParams.set('page_size', String(pageSize));
+    url.searchParams.set('page_number', String(pageNumber));
+    if (options.language && options.language !== 'all') {
+      url.searchParams.set('language', options.language);
+    }
+
+    const result = await fetchJson<FishAudioVoiceListResponse>(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${apiKey}` },
+      },
+      'speakers',
+    );
+
+    voices.push(...(result.items ?? []));
+    hasMore = Boolean(result.has_more && (result.items?.length ?? 0) > 0);
+    pageNumber += 1;
+  }
+
+  return voices.map((voice) => {
+    const languages = voice.languages?.join(', ');
+    const details = [languages, voice.author?.nickname]
+      .filter(Boolean)
+      .join(' / ');
+    return {
+      id: voice._id,
+      label: details ? `${voice.title} (${details})` : voice.title,
+      metadata: {
+        ...(languages ? { languages } : {}),
+        ...(voice.author?.nickname ? { author: voice.author.nickname } : {}),
+      },
+    };
+  });
+}
+
+async function getCartesiaVoiceList(
+  options: VoiceEngineVoiceListOptions,
+): Promise<VoiceEngineVoice[]> {
+  const apiKey = requireApiKey('Cartesia', options.apiKey);
+  const pageSize = Math.min(100, Math.max(1, options.pageSize ?? 100));
+  const voices: CartesiaVoiceResponse[] = [];
+  let startingAfter = '';
+
+  do {
+    const url = new URL(
+      options.voiceListApiUrl?.trim() || CARTESIA_VOICES_API_URL,
+    );
+    url.searchParams.set('limit', String(pageSize));
+    if (options.language && options.language !== 'all') {
+      url.searchParams.set('language', options.language);
+    }
+    if (startingAfter) {
+      url.searchParams.set('starting_after', startingAfter);
+    }
+
+    const result = await fetchJson<CartesiaVoiceListResponse>(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Cartesia-Version': '2026-03-01',
+        },
+      },
+      'speakers',
+    );
+
+    voices.push(...(result.data ?? []));
+    startingAfter = result.has_more ? (result.next_page ?? '') : '';
+  } while (startingAfter);
+
+  return voices
+    .sort((a, b) => {
+      const japanesePriority =
+        Number(b.language === 'ja') - Number(a.language === 'ja');
+      return japanesePriority || a.name.localeCompare(b.name);
+    })
+    .map((voice) => {
+      const details = [voice.tagline, voice.language, voice.country]
+        .filter(Boolean)
+        .join(' / ');
+      return {
+        id: voice.id,
+        label: details ? `${voice.name} (${details})` : voice.name,
+        metadata: {
+          ...(voice.language ? { language: voice.language } : {}),
+          ...(voice.gender ? { gender: voice.gender } : {}),
+          ...(voice.country ? { country: voice.country } : {}),
+        },
+      };
+    });
 }
 
 async function getInworldVoiceList(
@@ -428,6 +564,10 @@ export async function getVoiceEngineVoiceList(
       return getXaiVoiceList(options);
     case 'elevenLabs':
       return getElevenLabsVoiceList(options);
+    case 'fishAudio':
+      return getFishAudioVoiceList(options);
+    case 'cartesia':
+      return getCartesiaVoiceList(options);
     case 'inworld':
       return getInworldVoiceList(options);
     case 'gradium':

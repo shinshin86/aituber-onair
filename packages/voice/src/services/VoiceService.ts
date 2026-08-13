@@ -3,6 +3,15 @@ import type {
   ElevenLabsApplyTextNormalization,
   ElevenLabsVoiceSettingsOptions,
 } from '../engines/ElevenLabsEngine';
+import type {
+  FishAudioFormat,
+  FishAudioLatency,
+  FishAudioModel,
+} from '../engines/FishAudioEngine';
+import type {
+  CartesiaLanguage,
+  CartesiaOutputContainer,
+} from '../engines/CartesiaEngine';
 import type { GeminiTtsModel } from '../engines';
 import type { GradiumOutputFormat } from '../engines/GradiumEngine';
 import type {
@@ -198,6 +207,43 @@ export interface ElevenLabsVoiceServiceOptions
   elevenLabsEnableLogging?: boolean;
 }
 
+export interface FishAudioVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'fishAudio';
+  /** Custom Fish Audio TTS endpoint URL */
+  fishAudioApiUrl?: string;
+  /** Fish Audio synthesis model */
+  fishAudioModel?: FishAudioModel;
+  /** Fish Audio output format */
+  fishAudioFormat?: FishAudioFormat;
+  /** Fish Audio output sample rate */
+  fishAudioSampleRate?: number;
+  /** Fish Audio MP3 bitrate in kbps */
+  fishAudioMp3Bitrate?: 64 | 128 | 192;
+  /** Fish Audio latency-quality trade-off */
+  fishAudioLatency?: FishAudioLatency;
+  /** Fish Audio prosody speed */
+  fishAudioSpeed?: number;
+}
+
+export interface CartesiaVoiceServiceOptions extends VoiceServiceCommonOptions {
+  /** Engine type */
+  engineType: 'cartesia';
+  /** Custom Cartesia TTS endpoint URL */
+  cartesiaApiUrl?: string;
+  /** Cartesia TTS model ID */
+  cartesiaModel?: string;
+  /** Cartesia synthesis language */
+  cartesiaLanguage?: CartesiaLanguage;
+  /** Cartesia output container */
+  cartesiaOutputContainer?: CartesiaOutputContainer;
+  /** Cartesia output sample rate */
+  cartesiaSampleRate?: number;
+  /** Cartesia MP3 bitrate in bps */
+  cartesiaMp3Bitrate?: number;
+}
+
 export interface InworldVoiceServiceOptions extends VoiceServiceCommonOptions {
   /** Engine type */
   engineType: 'inworld';
@@ -301,7 +347,7 @@ export interface AivisSpeechVoiceServiceOptions
 export interface MinimaxVoiceServiceOptions extends VoiceServiceCommonOptions {
   /** Engine type */
   engineType: 'minimax';
-  /** MiniMax Group ID (required for MiniMax engine) */
+  /** Legacy MiniMax Group ID query parameter (optional) */
   groupId?: string;
   /** MiniMax endpoint ('global' or 'china') */
   endpoint?: 'global' | 'china';
@@ -430,6 +476,8 @@ export type VoiceServiceOptions =
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
+  | FishAudioVoiceServiceOptions
+  | CartesiaVoiceServiceOptions
   | InworldVoiceServiceOptions
   | GradiumVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
@@ -461,6 +509,12 @@ export type UnrealSpeechVoiceServiceOptionsUpdate = Partial<
 >;
 export type ElevenLabsVoiceServiceOptionsUpdate = Partial<
   Omit<ElevenLabsVoiceServiceOptions, 'engineType'>
+>;
+export type FishAudioVoiceServiceOptionsUpdate = Partial<
+  Omit<FishAudioVoiceServiceOptions, 'engineType'>
+>;
+export type CartesiaVoiceServiceOptionsUpdate = Partial<
+  Omit<CartesiaVoiceServiceOptions, 'engineType'>
 >;
 export type InworldVoiceServiceOptionsUpdate = Partial<
   Omit<InworldVoiceServiceOptions, 'engineType'>
@@ -500,6 +554,8 @@ export type VoiceServiceOptionsUpdate =
   | XaiVoiceServiceOptionsUpdate
   | UnrealSpeechVoiceServiceOptionsUpdate
   | ElevenLabsVoiceServiceOptionsUpdate
+  | FishAudioVoiceServiceOptionsUpdate
+  | CartesiaVoiceServiceOptionsUpdate
   | InworldVoiceServiceOptionsUpdate
   | GradiumVoiceServiceOptionsUpdate
   | GeminiTtsVoiceServiceOptionsUpdate

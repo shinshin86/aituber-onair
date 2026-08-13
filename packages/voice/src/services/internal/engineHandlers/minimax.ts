@@ -30,10 +30,6 @@ export const minimaxEngineHandler: EngineHandler<MinimaxVoiceServiceOptions> = {
     if (minimaxEngine.setGroupId) {
       if (options.groupId) {
         minimaxEngine.setGroupId(options.groupId);
-      } else {
-        console.warn(
-          'MiniMax engine requires GroupId, but it is not provided in options',
-        );
       }
     }
     if (options.endpoint && minimaxEngine.setEndpoint) {

@@ -32,6 +32,17 @@ export {
   type ElevenLabsVoiceSettingsOptions,
 } from './ElevenLabsEngine';
 export {
+  FishAudioEngine,
+  type FishAudioFormat,
+  type FishAudioLatency,
+  type FishAudioModel,
+} from './FishAudioEngine';
+export {
+  CartesiaEngine,
+  type CartesiaLanguage,
+  type CartesiaOutputContainer,
+} from './CartesiaEngine';
+export {
   InworldEngine,
   type InworldAudioEncoding,
   type InworldDeliveryMode,

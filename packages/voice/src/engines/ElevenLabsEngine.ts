@@ -18,7 +18,7 @@ export interface ElevenLabsVoiceSettingsOptions {
  */
 export class ElevenLabsEngine implements VoiceEngine {
   private apiEndpoint: string = ELEVENLABS_TTS_API_URL;
-  private model: string = 'eleven_multilingual_v2';
+  private model: string = 'eleven_flash_v2_5';
   private outputFormat: string = 'mp3_44100_128';
   private languageCode?: string;
   private voiceSettings: ElevenLabsVoiceSettingsOptions = {};
@@ -42,7 +42,7 @@ export class ElevenLabsEngine implements VoiceEngine {
    */
   setModel(model: string): void {
     const trimmed = model.trim();
-    this.model = trimmed || 'eleven_multilingual_v2';
+    this.model = trimmed || 'eleven_flash_v2_5';
   }
 
   /**

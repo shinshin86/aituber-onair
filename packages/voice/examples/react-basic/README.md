@@ -54,6 +54,8 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 - **OpenAI-Compatible TTS** - Self-hosted OpenAI-style endpoints such as Kokoro FastAPI
 - **Inworld TTS** - Non-streaming Inworld REST API with Basic authentication
 - **Gradium TTS** - One-shot Gradium REST API with flagship voice presets
+- **Fish Audio** - S2 Pro one-shot TTS with model/reference selection
+- **Cartesia** - Sonic 3.5 synchronous TTS with voice-list selection
 - **VOICEVOX** - Free Japanese voices (requires local server)
 - **AIVIS Speech** - Emotion-aware synthesis
 - **VoicePeak** - Professional voice synthesis with single-tag and weighted emotion UI (`vpeakserver v0.2.0+` required for weighted mode)
@@ -130,11 +132,26 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 
 #### MiniMax
 ```bash
-# API key format: "your-api-key:your-group-id"
+# Enter the API key. Group ID is optional and only needed by legacy accounts.
+# Speech 2.8 Turbo is the default; Speech 2.8 HD is also available.
 # MiniMax uses documented system voice IDs. This example shows representative
 # presets from https://platform.minimax.io/docs/faq/system-voice-id instead of
 # fetching a dynamic voice list, because the linked Get Voice API is currently
 # unavailable.
+```
+
+#### Fish Audio
+```bash
+# Default endpoint: https://api.fish.audio/v1/tts
+# Enter an API key, fetch the model/voice list, and select a reference ID.
+# S2 Pro is the sample default. The promotional free model is opt-in.
+```
+
+#### Cartesia
+```bash
+# Default endpoint: https://api.cartesia.ai/tts/bytes
+# Enter an API key, select a language, and fetch the matching voice list.
+# Sonic 3.5 with Japanese and WAV output is the sample default.
 ```
 
 #### OpenAI TTS

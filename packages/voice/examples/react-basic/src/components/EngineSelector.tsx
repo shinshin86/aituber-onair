@@ -72,6 +72,8 @@ export function EngineSelector({
     engine === 'xai' ||
     engine === 'unrealSpeech' ||
     engine === 'elevenLabs' ||
+    engine === 'fishAudio' ||
+    engine === 'cartesia' ||
     engine === 'inworld' ||
     engine === 'gradium' ||
     engine === 'geminiTts' ||
@@ -82,6 +84,8 @@ export function EngineSelector({
     engine === 'geminiTts' ||
     engine === 'unrealSpeech' ||
     engine === 'elevenLabs' ||
+    engine === 'fishAudio' ||
+    engine === 'cartesia' ||
     engine === 'gradium' ||
     engine === 'openaiCompatible' ||
     engine === 'voicevox' ||
@@ -320,8 +324,20 @@ export function EngineSelector({
       );
     }
 
-    if (engine === 'elevenLabs' || engine === 'inworld') {
-      const providerLabel = engine === 'inworld' ? 'Inworld' : 'ElevenLabs';
+    if (
+      engine === 'elevenLabs' ||
+      engine === 'fishAudio' ||
+      engine === 'cartesia' ||
+      engine === 'inworld'
+    ) {
+      const providerLabel =
+        engine === 'inworld'
+          ? 'Inworld'
+          : engine === 'fishAudio'
+            ? 'Fish Audio'
+            : engine === 'cartesia'
+              ? 'Cartesia'
+              : 'ElevenLabs';
 
       return (
         <div className="form-group">
@@ -585,6 +601,8 @@ export function EngineSelector({
           <option value="minimax">MiniMax</option>
           <option value="unrealSpeech">Unreal Speech</option>
           <option value="elevenLabs">ElevenLabs</option>
+          <option value="fishAudio">Fish Audio</option>
+          <option value="cartesia">Cartesia</option>
           <option value="inworld">Inworld</option>
           <option value="gradium">Gradium</option>
           <option value="openaiCompatible">OpenAI-Compatible TTS</option>
@@ -629,7 +647,9 @@ export function EngineSelector({
 
       {engine === 'minimax' && (
         <div className="form-group">
-          <label htmlFor="minimaxGroupId">MiniMax Group ID (required):</label>
+          <label htmlFor="minimaxGroupId">
+            MiniMax Group ID (legacy / optional):
+          </label>
           <input
             id="minimaxGroupId"
             type="password"

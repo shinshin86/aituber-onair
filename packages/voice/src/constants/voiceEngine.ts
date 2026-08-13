@@ -9,6 +9,10 @@ export const UNREAL_SPEECH_TTS_API_URL =
 export const ELEVENLABS_TTS_API_URL =
   'https://api.elevenlabs.io/v1/text-to-speech';
 export const ELEVENLABS_VOICES_API_URL = 'https://api.elevenlabs.io/v2/voices';
+export const FISH_AUDIO_TTS_API_URL = 'https://api.fish.audio/v1/tts';
+export const FISH_AUDIO_MODELS_API_URL = 'https://api.fish.audio/model';
+export const CARTESIA_TTS_API_URL = 'https://api.cartesia.ai/tts/bytes';
+export const CARTESIA_VOICES_API_URL = 'https://api.cartesia.ai/voices';
 export const INWORLD_TTS_API_URL = 'https://api.inworld.ai/tts/v1/voice';
 export const INWORLD_VOICES_API_URL = 'https://api.inworld.ai/voices/v1/voices';
 export const GRADIUM_TTS_API_URL = 'https://api.gradium.ai/api/post/speech/tts';

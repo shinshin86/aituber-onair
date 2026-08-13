@@ -60,8 +60,8 @@ pnpm install @aituber-onair/voice
 
 - **Multiple TTS Engine Support**  
   Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Unreal Speech,
-  ElevenLabs, Inworld, Gradium, Gemini TTS, MiniMax, AivisSpeech, Aivis Cloud,
-  Web Speech API, and more
+  ElevenLabs, Fish Audio, Cartesia, Inworld, Gradium, Gemini TTS, MiniMax,
+  AivisSpeech, Aivis Cloud, Web Speech API, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
 - **Emotion-Aware Synthesis**  
@@ -223,7 +223,7 @@ const voiceService = new VoiceService({
   engineType: 'elevenLabs',
   speaker: 'JBFqnCBsd6RMkjVDRZzb',
   apiKey: 'your-elevenlabs-api-key',
-  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsModel: 'eleven_flash_v2_5',
   elevenLabsOutputFormat: 'mp3_44100_128',
   elevenLabsStability: 0.5,
   elevenLabsSimilarityBoost: 0.75,
@@ -234,6 +234,52 @@ const voiceService = new VoiceService({
 Use `elevenLabsApiUrl` to override the default
 `https://api.elevenlabs.io/v1/text-to-speech` endpoint. The `speaker` value is
 sent as the ElevenLabs `voice_id`.
+
+The curated model choices are `eleven_v3` for maximum expressiveness,
+`eleven_multilingual_v2` for high-quality multilingual output, and
+`eleven_flash_v2_5` (the default) for low latency. The deprecated
+`eleven_turbo_v2_5` remains accepted as a custom string for backward
+compatibility, but is no longer presented as a recommended model.
+
+### Fish Audio
+
+Fish Audio one-shot TTS uses `POST /v1/tts` and returns audio bytes directly.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'fishAudio',
+  speaker: 'your-reference-id',
+  apiKey: 'your-fish-audio-api-key',
+  fishAudioModel: 's2-pro',
+  fishAudioFormat: 'mp3',
+  fishAudioLatency: 'normal',
+});
+```
+
+`speaker` is sent as `reference_id`. Use `getVoiceEngineVoiceList('fishAudio',
+{ apiKey })` to list usable models/voices. `s2-pro` is the stable default for
+this integration; `s2.1-pro-free` must be selected explicitly and should not be
+treated as an SLA-backed production tier.
+
+### Cartesia
+
+Cartesia synchronous TTS uses `POST /tts/bytes` and returns audio bytes
+directly.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'cartesia',
+  speaker: 'your-cartesia-voice-id',
+  apiKey: 'your-cartesia-api-key',
+  cartesiaModel: 'sonic-3.5',
+  cartesiaLanguage: 'ja',
+  cartesiaOutputContainer: 'wav',
+  cartesiaSampleRate: 44100,
+});
+```
+
+Use `getVoiceEngineVoiceList('cartesia', { apiKey, language: 'ja' })` to list
+voices. The engine uses the documented `Cartesia-Version: 2026-03-01` header.
 
 ### Inworld
 Inworld TTS non-streaming speech synthesis using direct `fetch` calls. This
@@ -312,12 +358,16 @@ const voiceService = new VoiceService({
   engineType: 'minimax',
   speaker: 'Japanese_IntellectualSenior',
   apiKey: 'your-minimax-api-key',
-  groupId: 'your-group-id', // Required for MiniMax
+  minimaxModel: 'speech-2.8-turbo',
+  groupId: 'legacy-group-id', // Optional for older accounts
   endpoint: 'global' // or 'china'
 });
 ```
 
-**Note**: MiniMax requires both API key and GroupId for authentication. The GroupId is used for user group management, usage tracking, and billing.
+**Note**: Current MiniMax T2A v2 endpoints require Bearer authentication but
+do not require `GroupId`. The optional `groupId` field is kept for older
+accounts or endpoints that still expect the query parameter. Speech 2.8 Turbo
+is the default; Speech 2.8 HD is available when output quality is preferred.
 
 Use MiniMax system voice IDs for `speaker`, such as
 `Japanese_IntellectualSenior`. MiniMax documents these IDs in its
@@ -546,7 +596,7 @@ const voiceService = new VoiceService({
   unrealSpeechBitrate: '192k',
   unrealSpeechSpeed: 0,
   unrealSpeechPitch: 1,
-  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsModel: 'eleven_flash_v2_5',
   elevenLabsStability: 0.5,
   elevenLabsSimilarityBoost: 0.75,
   inworldModel: 'inworld-tts-2',
@@ -597,6 +647,15 @@ const voiceService = new VoiceService({
   - Identity/output: `speaker`, `elevenLabsModel`, `elevenLabsOutputFormat`, `elevenLabsLanguageCode`
   - Voice settings: `elevenLabsVoiceSettings`, `elevenLabsStability`, `elevenLabsSimilarityBoost`, `elevenLabsStyle`, `elevenLabsUseSpeakerBoost`, `elevenLabsSpeed`
   - Context/normalization: `elevenLabsSeed`, `elevenLabsPreviousText`, `elevenLabsNextText`, `elevenLabsApplyTextNormalization`, `elevenLabsApplyLanguageTextNormalization`, `elevenLabsEnableLogging`
+
+- **Fish Audio**
+  - Endpoint: `fishAudioApiUrl`
+  - Identity/output: `speaker`, `fishAudioModel`, `fishAudioFormat`, `fishAudioSampleRate`, `fishAudioMp3Bitrate`
+  - Voice controls: `fishAudioLatency`, `fishAudioSpeed`
+
+- **Cartesia**
+  - Endpoint: `cartesiaApiUrl`
+  - Identity/output: `speaker`, `cartesiaModel`, `cartesiaLanguage`, `cartesiaOutputContainer`, `cartesiaSampleRate`, `cartesiaMp3Bitrate`
 
 - **Inworld**
   - Endpoint: `inworldApiUrl`
@@ -686,6 +745,18 @@ try {
 - Configurable model, output format, language code, and voice settings
 - Supports optional text context, seed, text normalization, and logging flags
 
+### Fish Audio Features
+
+- Bearer-authenticated one-shot TTS with direct audio-byte responses
+- Configurable S2/S1 model, format, sample rate, MP3 bitrate, latency, and speed
+- Paginated model/voice-list lookup through the normalized helper
+
+### Cartesia Features
+
+- Bearer-authenticated synchronous `/tts/bytes` requests
+- Sonic 3.5 with Japanese and other documented language codes
+- Paginated voice-list lookup and WAV/MP3 output controls
+
 ### Inworld Features
 - Cloud TTS endpoint with Basic authentication
 - Passes `speaker` through to `voiceId` as provided
@@ -752,6 +823,8 @@ type VoiceServiceOptions =
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
+  | FishAudioVoiceServiceOptions
+  | CartesiaVoiceServiceOptions
   | InworldVoiceServiceOptions
   | GradiumVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
@@ -801,9 +874,9 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 
 `getVoiceEngineVoiceList()` returns normalized `{ id, label }` items for
 engines that expose list APIs: VOICEVOX, AivisSpeech, Aivis Cloud, xAI,
-ElevenLabs, Inworld, Gradium, and Web Speech API. Pass local `apiUrl` for
-VOICEVOX-compatible servers, `apiKey` for cloud engines that require it, and
-`language` for Inworld filtering.
+ElevenLabs, Fish Audio, Cartesia, Inworld, Gradium, and Web Speech API. Pass
+local `apiUrl` for VOICEVOX-compatible servers, `apiKey` for cloud engines that
+require it, and `language` for Fish Audio, Cartesia, or Inworld filtering.
 
 For browser apps, cloud provider voice-list endpoints must allow CORS. If a
 provider blocks direct browser requests, call `getVoiceEngineVoiceList()` from

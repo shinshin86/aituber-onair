@@ -1,5 +1,10 @@
 import type {
+  CartesiaLanguage,
+  CartesiaOutputContainer,
   ElevenLabsApplyTextNormalization,
+  FishAudioFormat,
+  FishAudioLatency,
+  FishAudioModel,
   GeminiTtsModel,
   GradiumOutputFormat,
   InworldAudioEncoding,
@@ -46,8 +51,34 @@ export const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'Your ElevenLabs API key',
     speaker: '',
-    defaultModel: 'eleven_multilingual_v2',
+    defaultModel: 'eleven_flash_v2_5',
     defaultOutputFormat: 'mp3_44100_128',
+  },
+  fishAudio: {
+    apiUrl: 'https://api.fish.audio/v1/tts',
+    voicesApiUrl: 'https://api.fish.audio/model',
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'Your Fish Audio API key',
+    speaker: '',
+    defaultModel: 's2-pro' as FishAudioModel,
+    defaultFormat: 'mp3' as FishAudioFormat,
+    defaultLatency: 'normal' as FishAudioLatency,
+    defaultSampleRate: '44100',
+    defaultMp3Bitrate: '128',
+  },
+  cartesia: {
+    apiUrl: 'https://api.cartesia.ai/tts/bytes',
+    voicesApiUrl: 'https://api.cartesia.ai/voices',
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'Your Cartesia API key',
+    speaker: '',
+    defaultModel: 'sonic-3.5',
+    defaultLanguage: 'ja' as CartesiaLanguage,
+    defaultOutputContainer: 'wav' as CartesiaOutputContainer,
+    defaultSampleRate: '44100',
+    defaultMp3Bitrate: '128000',
   },
   inworld: {
     apiUrl: 'https://api.inworld.ai/tts/v1/voice',
@@ -121,7 +152,7 @@ export const ENGINE_DEFAULTS = {
     placeholder: 'Your MiniMax API key',
     groupIdPlaceholder: 'Your Group ID',
     speaker: 'Japanese_IntellectualSenior',
-    defaultModel: 'speech-2.6-hd' as MinimaxModel,
+    defaultModel: 'speech-2.8-turbo' as MinimaxModel,
   },
   piperPlus: {
     apiUrl: '',
@@ -142,6 +173,8 @@ export const ENGINE_DEFAULTS = {
 export type EngineType = keyof typeof ENGINE_DEFAULTS;
 
 export const MINIMAX_MODELS: Record<MinimaxModel, string> = {
+  'speech-2.8-hd': 'Speech 2.8 HD — highest-fidelity current model.',
+  'speech-2.8-turbo': 'Speech 2.8 Turbo — current low-latency default model.',
   'speech-2.6-hd':
     'Latest flagship HD model with ultra-high fidelity and natural prosody.',
   'speech-2.6-turbo':
@@ -237,9 +270,54 @@ export const UNREAL_SPEECH_CODECS: Record<UnrealSpeechCodec, string> = {
 };
 
 export const ELEVENLABS_MODELS: Record<string, string> = {
+  eleven_v3: 'v3 — most expressive model',
   eleven_multilingual_v2: 'Multilingual v2 — high quality',
   eleven_flash_v2_5: 'Flash v2.5 — low latency',
-  eleven_turbo_v2_5: 'Turbo v2.5 — balanced latency and quality',
+};
+
+export const FISH_AUDIO_MODELS: Record<FishAudioModel, string> = {
+  's2.1-pro': 'S2.1 Pro — newest production model',
+  's2.1-pro-free': 'S2.1 Pro Free — promotional tier without an SLA',
+  's2-pro': 'S2 Pro — production model',
+  s1: 'S1 — previous generation',
+};
+
+export const FISH_AUDIO_FORMATS: Record<FishAudioFormat, string> = {
+  mp3: 'MP3',
+  wav: 'WAV',
+  pcm: 'PCM',
+  opus: 'Opus',
+};
+
+export const FISH_AUDIO_LATENCIES: Record<FishAudioLatency, string> = {
+  normal: 'Normal',
+  balanced: 'Balanced',
+  low: 'Low',
+};
+
+export const CARTESIA_MODELS: Record<string, string> = {
+  'sonic-3.5': 'Sonic 3.5 — multilingual real-time TTS',
+};
+
+export const CARTESIA_LANGUAGES: Partial<Record<CartesiaLanguage, string>> = {
+  ja: 'Japanese',
+  en: 'English',
+  zh: 'Chinese',
+  ko: 'Korean',
+  fr: 'French',
+  de: 'German',
+  es: 'Spanish',
+  pt: 'Portuguese',
+  it: 'Italian',
+  hi: 'Hindi',
+};
+
+export const CARTESIA_OUTPUT_CONTAINERS: Record<
+  CartesiaOutputContainer,
+  string
+> = {
+  wav: 'WAV (PCM signed 16-bit)',
+  mp3: 'MP3',
 };
 
 export const ELEVENLABS_OUTPUT_FORMATS: Record<string, string> = {
