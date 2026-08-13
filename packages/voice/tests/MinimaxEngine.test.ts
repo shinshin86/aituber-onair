@@ -182,6 +182,26 @@ describe('MinimaxEngine', () => {
       });
     });
 
+    it('should send the Speech 2.8 HD model through the T2A v2 request', async () => {
+      const engine = new MinimaxEngine();
+      engine.setModel('speech-2.8-hd');
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          base_resp: { status_code: 0 },
+          data: { audio: '00' },
+        }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await engine.testVoice('hello', 'voice-id', 'api-key');
+
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+        model: 'speech-2.8-hd',
+        output_format: 'hex',
+      });
+    });
+
     it('should validate test voice inputs and invalid response structures', async () => {
       const engine = new MinimaxEngine();
       vi.spyOn(console, 'error').mockImplementation(() => {});

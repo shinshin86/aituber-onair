@@ -172,24 +172,20 @@ export const ENGINE_DEFAULTS = {
 
 export type EngineType = keyof typeof ENGINE_DEFAULTS;
 
-export const MINIMAX_MODELS: Record<MinimaxModel, string> = {
+export const MINIMAX_MODELS = {
   'speech-2.8-hd': 'Speech 2.8 HD — highest-fidelity current model.',
   'speech-2.8-turbo': 'Speech 2.8 Turbo — current low-latency default model.',
   'speech-2.6-hd':
-    'Latest flagship HD model with ultra-high fidelity and natural prosody.',
+    'Previous flagship HD model with high fidelity and natural prosody.',
   'speech-2.6-turbo':
-    'Latest Turbo model optimized for low latency and real-time responses.',
-  'speech-2.5-hd-preview':
-    'The brand new HD model. Ultimate Similarity, Ultra-High Quality',
-  'speech-2.5-turbo-preview':
-    'The brand new Turbo model. Ultimate Value, 40 Languages',
+    'Previous Turbo model optimized for low latency and real-time responses.',
   'speech-02-hd':
     'Superior rhythm and stability, with outstanding performance in replication similarity and sound quality.',
   'speech-02-turbo':
     'Superior rhythm and stability, with enhanced multilingual capabilities and excellent performance.',
   'speech-01-hd': 'Rich Voices, Expressive Emotions, Authentic Languages',
   'speech-01-turbo': 'Excellent performance and low latency',
-};
+} satisfies Partial<Record<MinimaxModel, string>>;
 
 export const MINIMAX_SYSTEM_VOICES: Record<string, string> = {
   Japanese_IntellectualSenior: 'Japanese - Intellectual Senior',
