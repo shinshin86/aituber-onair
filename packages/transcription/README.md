@@ -24,9 +24,9 @@ npm -w @aituber-onair/transcription run example:dev
 ```
 
 Open the displayed localhost URL and grant microphone permission when starting
-a session. Web Speech needs no key. OpenAI supports the recommended local-server
-client-secret mode and the explicitly risk-accepted browser BYOK mode. See the
-[example README](./examples/browser-basic/README.md) for setup details.
+a session. Web Speech needs no key. For OpenAI, enter an end-user-owned API key
+in the page. The sample reads it only when a session starts and does not persist
+it. See the [example README](./examples/browser-basic/README.md) for details.
 
 Build the example without starting a server:
 

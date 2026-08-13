@@ -21,12 +21,6 @@ const supportBadge = element<HTMLSpanElement>('#support-badge');
 const webSpeechFields = element<HTMLDivElement>('#web-speech-fields');
 const webSpeechLanguage = element<HTMLInputElement>('#web-speech-language');
 const openAIFields = element<HTMLDivElement>('#openai-fields');
-const openAIAuthMode = element<HTMLSelectElement>('#openai-auth-mode');
-const serverAuthFields = element<HTMLDivElement>('#server-auth-fields');
-const browserAuthFields = element<HTMLDivElement>('#browser-auth-fields');
-const clientSecretEndpoint = element<HTMLInputElement>(
-  '#client-secret-endpoint'
-);
 const openAIApiKey = element<HTMLInputElement>('#openai-api-key');
 const openAILanguages = element<HTMLInputElement>('#openai-languages');
 const openAIKeywords = element<HTMLInputElement>('#openai-keywords');
@@ -101,18 +95,6 @@ function handleTranscript(update: TranscriptUpdate): void {
   renderInterim();
 }
 
-async function requestClientSecret(endpoint: string): Promise<string> {
-  const response = await fetch(endpoint, { method: 'POST' });
-  if (!response.ok) {
-    throw new Error(`Client-secret endpoint returned HTTP ${response.status}.`);
-  }
-  const payload = (await response.json()) as { value?: unknown };
-  if (typeof payload.value !== 'string' || !payload.value.trim()) {
-    throw new Error('Client-secret endpoint returned an invalid response.');
-  }
-  return payload.value.trim();
-}
-
 function createSession(): RealtimeTranscriptionSession {
   if (selectedProvider() === 'web-speech') {
     return createRealtimeTranscriptionSession({
@@ -124,18 +106,11 @@ function createSession(): RealtimeTranscriptionSession {
 
   return createRealtimeTranscriptionSession({
     provider: 'openai-realtime',
-    auth:
-      openAIAuthMode.value === 'server'
-        ? {
-            type: 'client-secret',
-            getClientSecret: () =>
-              requestClientSecret(clientSecretEndpoint.value.trim()),
-          }
-        : {
-            type: 'browser-api-key',
-            getApiKey: async () => openAIApiKey.value,
-            acknowledgeBrowserKeyRisk: true,
-          },
+    auth: {
+      type: 'browser-api-key',
+      getApiKey: async () => openAIApiKey.value,
+      acknowledgeBrowserKeyRisk: true,
+    },
     languages: commaSeparated(openAILanguages.value),
     keywords: commaSeparated(openAIKeywords.value),
     prompt: openAIPrompt.value,
@@ -193,12 +168,9 @@ function clearTranscripts(): void {
 function syncSettings(): void {
   const provider = selectedProvider();
   const openAISelected = provider === 'openai-realtime';
-  const browserKeySelected = openAIAuthMode.value === 'browser-api-key';
 
   webSpeechFields.hidden = openAISelected;
   openAIFields.hidden = !openAISelected;
-  serverAuthFields.hidden = browserKeySelected;
-  browserAuthFields.hidden = !browserKeySelected;
 
   const supported = isTranscriptionProviderSupported(provider);
   supportBadge.textContent = supported ? 'Browser supported' : 'Unsupported';
@@ -213,7 +185,6 @@ async function resetSessionForSettings(): Promise<void> {
 }
 
 providerSelect.addEventListener('change', () => void resetSessionForSettings());
-openAIAuthMode.addEventListener('change', () => void resetSessionForSettings());
 startButton.addEventListener('click', () => void startSession());
 stopButton.addEventListener('click', () => void stopSession());
 clearButton.addEventListener('click', clearTranscripts);

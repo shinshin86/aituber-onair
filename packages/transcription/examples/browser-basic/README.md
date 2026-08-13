@@ -9,14 +9,10 @@ From the repository root:
 npm -w @aituber-onair/transcription run example:dev
 ```
 
-Web Speech requires no API key. For the recommended OpenAI server mode, copy
-`.env.example` to `.env.local` in this directory and set `OPENAI_API_KEY`. The
-key stays in the local Vite server and the browser receives only a short-lived
-client secret.
-
-Browser BYOK is also available for frontend-only testing. Enter an end-user
-owned key in the page after accepting the displayed risk. The example keeps it
-only in the input element and does not persist it.
+Web Speech requires no API key. To use OpenAI, select OpenAI Realtime and enter
+an end-user-owned API key in the page. The example reads the key from the input
+when a session starts and does not persist it. This browser BYOK flow is meant
+only for frontend-only testing; review the risk shown in the page before use.
 
 Use localhost or HTTPS and grant microphone access when prompted. OpenAI usage
 may incur charges while a session is listening.

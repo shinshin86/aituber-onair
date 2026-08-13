@@ -189,12 +189,6 @@ textarea:focus {
   line-height: 1.55;
 }
 
-.notice.safe {
-  border-color: #16a34a;
-  background: #f0fdf4;
-  color: #166534;
-}
-
 .notice.risk,
 .notice.cost {
   border-color: #e11d48;

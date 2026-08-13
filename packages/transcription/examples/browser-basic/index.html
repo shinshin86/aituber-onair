@@ -49,43 +49,20 @@
 
         <div id="openai-fields" hidden>
           <label class="field">
-            <span>Authentication</span>
-            <select id="openai-auth-mode">
-              <option value="server">Server client secret (recommended)</option>
-              <option value="browser-api-key">Browser BYOK (risk accepted)</option>
-            </select>
+            <span>End-user OpenAI API key</span>
+            <input
+              id="openai-api-key"
+              type="password"
+              autocomplete="off"
+              placeholder="Not stored by this example"
+            />
+            <small>The key is read from this field when the session starts.</small>
           </label>
-
-          <div id="server-auth-fields">
-            <label class="field">
-              <span>Client-secret endpoint</span>
-              <input
-                id="client-secret-endpoint"
-                value="/api/openai/realtime/client-secret"
-              />
-            </label>
-            <p class="notice safe">
-              The local server reads OPENAI_API_KEY and returns only a
-              short-lived client secret.
-            </p>
-          </div>
-
-          <div id="browser-auth-fields" hidden>
-            <label class="field">
-              <span>End-user OpenAI API key</span>
-              <input
-                id="openai-api-key"
-                type="password"
-                autocomplete="off"
-                placeholder="Not stored by this example"
-              />
-            </label>
-            <p class="notice risk">
-              Browser BYOK exposes the standard key to the page runtime,
-              extensions, XSS, and local device access. Use only your own
-              restricted test key and revoke it after testing.
-            </p>
-          </div>
+          <p class="notice risk">
+            Browser BYOK exposes the standard key to the page runtime,
+            extensions, XSS, and local device access. Use only your own
+            restricted test key and revoke it after testing.
+          </p>
 
           <div class="field-grid">
             <label class="field">
