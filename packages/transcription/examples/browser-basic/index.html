@@ -22,10 +22,10 @@
             </select>
           </label>
         </div>
-        <h1 data-i18n="heroTitle">Browser transcription check</h1>
+        <h1 data-i18n="heroTitle">Try realtime transcription</h1>
         <p class="hero-copy" data-i18n="heroCopy">
-          Test Web Speech and OpenAI Realtime through the same session API.
-          Final transcripts remain on this page and are never auto-submitted.
+          Transcribe microphone audio with Web Speech or OpenAI Realtime.
+          Results are not submitted as chat messages automatically.
         </p>
       </header>
 
@@ -34,16 +34,16 @@
           <div>
             <p class="step">01</p>
             <h2 id="settings-title" data-i18n="sessionSettings">
-              Session settings
+              Transcription settings
             </h2>
           </div>
           <span id="support-badge" class="badge" data-i18n="checkingSupport">
-            Checking support
+            Checking availability
           </span>
         </div>
 
         <label class="field">
-          <span data-i18n="provider">Provider</span>
+          <span data-i18n="provider">Transcription provider</span>
           <select id="provider">
             <option value="web-speech">Web Speech</option>
             <option value="openai-realtime">OpenAI Realtime</option>
@@ -56,40 +56,39 @@
             <input id="web-speech-language" value="ja-JP" />
           </label>
           <p class="hint" data-i18n="webSpeechHint">
-            Availability and recognition behavior depend on the browser.
+            Availability and recognition quality vary by browser.
           </p>
         </div>
 
         <div id="openai-fields" hidden>
           <label class="field">
-            <span data-i18n="openAIApiKey">End-user OpenAI API key</span>
+            <span data-i18n="openAIApiKey">OpenAI API key</span>
             <input
               id="openai-api-key"
               type="password"
               autocomplete="off"
-              placeholder="Not stored by this example"
+              placeholder="Enter your OpenAI API key"
               data-i18n-placeholder="openAIApiKeyPlaceholder"
             />
             <small data-i18n="openAIApiKeyHint">
-              The key is read from this field when the session starts.
+              Use a key from your own OpenAI account.
             </small>
           </label>
-          <p class="notice risk" data-i18n="browserByokRisk">
-            Browser BYOK exposes the standard key to the page runtime,
-            extensions, XSS, and local device access. Use only your own
-            restricted test key and revoke it after testing.
+          <p class="notice info" data-i18n="browserByokNotice">
+            This example connects to OpenAI directly from your browser. Avoid
+            using it on a shared device.
           </p>
 
           <div class="field-grid">
             <label class="field">
-              <span data-i18n="expectedLanguages">Expected languages</span>
+              <span data-i18n="expectedLanguages">Transcription languages</span>
               <input id="openai-languages" value="ja,en" />
               <small data-i18n="commaSeparatedLanguages">
-                Comma-separated language codes
+                Comma-separated language codes (for example: ja,en)
               </small>
             </label>
             <label class="field">
-              <span data-i18n="delay">Delay</span>
+              <span data-i18n="delay">Transcription delay</span>
               <select id="openai-delay">
                 <option value="minimal" data-i18n="delayMinimal">
                   Minimal
@@ -105,14 +104,15 @@
           </div>
 
           <label class="field">
-            <span data-i18n="keywords">Keywords</span>
+            <span data-i18n="keywords">Recognition keywords</span>
             <input id="openai-keywords" value="AITuber OnAir" />
             <small data-i18n="keywordsHint">
-              Comma-separated; &lt;, &gt;, and line breaks are rejected
+              Comma-separated. The characters &lt; and &gt; and line breaks are
+              not allowed.
             </small>
           </label>
           <label class="field">
-            <span data-i18n="contextPrompt">Context prompt</span>
+            <span data-i18n="contextPrompt">Conversation context</span>
             <textarea
               id="openai-prompt"
               rows="2"
@@ -122,8 +122,8 @@ An AITuber livestream in Japanese and English.</textarea
             >
           </label>
           <p class="notice cost" data-i18n="openAICost">
-            OpenAI usage may incur charges while the session is listening,
-            including silent periods.
+            OpenAI usage may be billed while transcription is running,
+            including during silence.
           </p>
         </div>
       </section>
@@ -132,14 +132,16 @@ An AITuber livestream in Japanese and English.</textarea
         <div class="section-heading">
           <div>
             <p class="step">02</p>
-            <h2 id="output-title" data-i18n="liveOutput">Live output</h2>
+            <h2 id="output-title" data-i18n="liveOutput">
+              Transcription results
+            </h2>
           </div>
           <span id="state-badge" class="badge state-idle">Idle</span>
         </div>
 
         <div class="actions">
           <button id="start-button" class="primary" type="button">
-            <span data-i18n="startMicrophone">Start microphone</span>
+            <span data-i18n="startMicrophone">Start transcription</span>
           </button>
           <button id="stop-button" type="button" data-i18n="stop" disabled>
             Stop
@@ -157,15 +159,15 @@ An AITuber livestream in Japanese and English.</textarea
         <p id="error-message" class="error" role="alert" hidden></p>
 
         <div class="transcript-block">
-          <h3 data-i18n="interim">Interim</h3>
+          <h3 data-i18n="interim">In progress</h3>
           <p id="interim-transcript" class="transcript muted">
             Waiting for audio…
           </p>
         </div>
         <div class="transcript-block">
-          <h3 data-i18n="finalUtterances">Final utterances</h3>
+          <h3 data-i18n="finalUtterances">Final results</h3>
           <ol id="final-transcripts" class="final-list">
-            <li class="empty">No final transcript yet.</li>
+            <li class="empty">No final results yet.</li>
           </ol>
         </div>
       </section>

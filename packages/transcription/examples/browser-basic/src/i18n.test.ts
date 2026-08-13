@@ -16,7 +16,7 @@ describe('browser example i18n', () => {
   it('provides matching English and Japanese messages', () => {
     expect(isDisplayLanguage('ja')).toBe(true);
     expect(isTranslationKey('startMicrophone')).toBe(true);
-    expect(translate('ja', 'startMicrophone')).toBe('マイクを開始');
+    expect(translate('ja', 'startMicrophone')).toBe('文字起こしを開始');
     expect(translatedValues('contextPromptValue')).toEqual([
       'An AITuber livestream in Japanese and English.',
       '日本語と英語のAITuber配信です。',
