@@ -13,21 +13,22 @@ import {
   getClaudeSupportedReasoningEfforts,
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
+  getXaiSupportedReasoningEfforts,
   getGeminiSupportedReasoningEfforts,
   getDeepSeekSupportedReasoningEfforts,
   getOpenRouterSupportedReasoningEfforts,
   isGPT5Model,
-  isXaiReasoningEffortModel,
-  isXaiReasoningEffortNoneModel,
   isResponsesOnlyGPT5Model,
   isOpenRouterFreeModel,
   refreshOpenRouterFreeModels,
   normalizeClaudeReasoningEffort,
   normalizeGeminiReasoningEffort,
+  normalizeXaiReasoningEffort,
   type ClaudeReasoningEffort,
   type GeminiReasoningEffort,
   type DeepSeekReasoningEffort,
   type OpenRouterReasoningEffort,
+  type XaiReasoningEffort,
   // OpenAI models
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
@@ -140,6 +141,7 @@ import {
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,
   // xAI models
+  MODEL_GROK_4_6,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
@@ -1130,6 +1132,12 @@ export const allModels: ProviderModel[] = [
 
   // xAI models
   {
+    id: MODEL_GROK_4_6,
+    name: 'Grok 4.6',
+    provider: 'xai',
+    default: false,
+  },
+  {
     id: MODEL_GROK_4_5,
     name: 'Grok 4.5',
     provider: 'xai',
@@ -1411,10 +1419,9 @@ export default function ProviderSelector({
   const allowsXHigh =
     provider === 'openai' && allowsReasoningXHigh(selectedModel);
   const allowsMax = provider === 'openai' && allowsReasoningMax(selectedModel);
-  const isXaiReasoningModel =
-    provider === 'xai' && isXaiReasoningEffortModel(selectedModel);
-  const isXaiReasoningNoneModelSelected =
-    provider === 'xai' && isXaiReasoningEffortNoneModel(selectedModel);
+  const xaiSupportedReasoningEfforts =
+    provider === 'xai' ? getXaiSupportedReasoningEfforts(selectedModel) : [];
+  const isXaiReasoningModel = xaiSupportedReasoningEfforts.length > 0;
   const isKimiReasoningModel =
     provider === 'kimi' && isKimiReasoningEffortModel(selectedModel);
   const claudeSupportedReasoningEfforts =
@@ -1460,12 +1467,18 @@ export default function ProviderSelector({
     provider === 'openrouter'
       ? getOpenRouterSupportedReasoningEfforts(selectedModel)
       : [];
-  const xaiReasoningEffort =
+  const requestedXaiReasoningEffort: XaiReasoningEffort | undefined =
+    reasoning_effort === 'none' ||
     reasoning_effort === 'low' ||
     reasoning_effort === 'medium' ||
-    reasoning_effort === 'high'
+    reasoning_effort === 'high' ||
+    reasoning_effort === 'xhigh'
       ? reasoning_effort
-      : (getDefaultXaiReasoningEffort(selectedModel) ?? 'none');
+      : undefined;
+  const xaiReasoningEffort =
+    normalizeXaiReasoningEffort(selectedModel, requestedXaiReasoningEffort) ??
+    getDefaultXaiReasoningEffort(selectedModel) ??
+    'none';
   const baseModelsForProvider = useMemo(
     () => allModels.filter((model) => model.provider === provider),
     [provider],
@@ -2058,23 +2071,26 @@ export default function ProviderSelector({
                 value={xaiReasoningEffort}
                 onChange={(e) =>
                   onReasoningEffortChange?.(
-                    e.target.value as 'none' | 'low' | 'medium' | 'high',
+                    e.target.value as XaiReasoningEffort,
                   )
                 }
                 disabled={disabled || !isXaiReasoningModel}
                 className="select-input"
               >
-                {isXaiReasoningNoneModelSelected && (
+                {xaiSupportedReasoningEfforts.includes('none') && (
                   <option value="none">None (fastest)</option>
                 )}
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
+                {xaiSupportedReasoningEfforts.includes('xhigh') && (
+                  <option value="xhigh">XHigh</option>
+                )}
               </select>
               {!isXaiReasoningModel && (
                 <span className="helper-text">
-                  Available only for Grok 4.5 and Grok 4.3; omitted for other
-                  xAI models.
+                  Available only for Grok 4.6, Grok 4.5, and Grok 4.3; omitted
+                  for other xAI models.
                 </span>
               )}
             </div>

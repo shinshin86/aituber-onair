@@ -33,6 +33,7 @@ import {
   type KimiReasoningEffort,
   type DeepSeekReasoningEffort,
   type OpenRouterReasoningEffort,
+  type XaiReasoningEffort,
   type ChatCompletionAssistantMessage,
 } from '@aituber-onair/chat';
 import './App.css';
@@ -76,8 +77,6 @@ type ReasoningEffortLevel =
   | 'high'
   | 'xhigh'
   | 'max';
-type XaiReasoningEffortLevel = 'none' | 'low' | 'medium' | 'high';
-
 const KIMI_OFFICIAL_BASE_URL = 'https://api.moonshot.ai/v1';
 const DEFAULT_OPENAI_COMPAT_ENDPOINT =
   'http://127.0.0.1:18080/v1/chat/completions';
@@ -208,12 +207,14 @@ function App() {
     selectedModel,
     requestedGeminiReasoningEffort,
   );
-  const xaiReasoningEffort: XaiReasoningEffortLevel =
+  const xaiReasoningEffort: XaiReasoningEffort =
     normalizeXaiReasoningEffort(
       selectedModel,
-      reasoning_effort === 'low' ||
+      reasoning_effort === 'none' ||
+        reasoning_effort === 'low' ||
         reasoning_effort === 'medium' ||
-        reasoning_effort === 'high'
+        reasoning_effort === 'high' ||
+        reasoning_effort === 'xhigh'
         ? reasoning_effort
         : 'none',
     ) ?? 'none';

@@ -1,5 +1,15 @@
 # @aituber-onair/chat
 
+## 0.51.0
+
+### Minor Changes
+
+- Added xAI Grok 4.6 (`grok-4.6`) as an explicit Chat Completions model with
+  streaming, vision, tool calling, and model-aware `reasoning_effort` support
+  for `low`, `medium`, `high`, and `xhigh`. The existing xAI default model
+  remains unchanged, while Grok 4.6 defaults to `low` for responsive character
+  chat.
+
 ## 0.50.0
 
 ### Minor Changes
