@@ -2,6 +2,7 @@ export const ENDPOINT_XAI_CHAT_COMPLETIONS_API =
   'https://api.x.ai/v1/chat/completions';
 
 // xAI Grok models
+export const MODEL_GROK_4_6 = 'grok-4.6';
 export const MODEL_GROK_4_5 = 'grok-4.5';
 export const MODEL_GROK_4_3 = 'grok-4.3';
 export const MODEL_GROK_4_20_REASONING = 'grok-4.20-0309-reasoning';
@@ -9,10 +10,11 @@ export const MODEL_GROK_4_20_NON_REASONING = 'grok-4.20-0309-non-reasoning';
 export const MODEL_GROK_4_1_FAST_REASONING = 'grok-4-1-fast-reasoning';
 export const MODEL_GROK_4_1_FAST_NON_REASONING = 'grok-4-1-fast-non-reasoning';
 
-export type XaiReasoningEffort = 'none' | 'low' | 'medium' | 'high';
+export type XaiReasoningEffort = 'none' | 'low' | 'medium' | 'high' | 'xhigh';
 
 // Vision support for models
 export const XAI_VISION_SUPPORTED_MODELS = [
+  MODEL_GROK_4_6,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
@@ -32,14 +34,35 @@ export function isXaiVisionModel(model: string): boolean {
  * Check if a model supports the xAI reasoning_effort parameter
  */
 export function isXaiReasoningEffortModel(model: string): boolean {
-  return model === MODEL_GROK_4_5 || model === MODEL_GROK_4_3;
+  return getXaiSupportedReasoningEfforts(model).length > 0;
+}
+
+/**
+ * Get documented reasoning_effort values for an xAI model
+ */
+export function getXaiSupportedReasoningEfforts(
+  model: string,
+): readonly XaiReasoningEffort[] {
+  if (model === MODEL_GROK_4_6) {
+    return ['low', 'medium', 'high', 'xhigh'];
+  }
+
+  if (model === MODEL_GROK_4_5) {
+    return ['low', 'medium', 'high'];
+  }
+
+  if (model === MODEL_GROK_4_3) {
+    return ['none', 'low', 'medium', 'high'];
+  }
+
+  return [];
 }
 
 /**
  * Check if a model supports disabling reasoning with reasoning_effort none
  */
 export function isXaiReasoningEffortNoneModel(model: string): boolean {
-  return model === MODEL_GROK_4_3;
+  return getXaiSupportedReasoningEfforts(model).includes('none');
 }
 
 /**
@@ -48,7 +71,7 @@ export function isXaiReasoningEffortNoneModel(model: string): boolean {
 export function getDefaultXaiReasoningEffort(
   model: string,
 ): XaiReasoningEffort | undefined {
-  if (model === MODEL_GROK_4_5) {
+  if (model === MODEL_GROK_4_6 || model === MODEL_GROK_4_5) {
     return 'low';
   }
 
@@ -66,9 +89,14 @@ export function normalizeXaiReasoningEffort(
     return undefined;
   }
 
-  if (reasoningEffort === 'none' && !isXaiReasoningEffortNoneModel(model)) {
-    return 'low';
+  if (reasoningEffort === undefined) {
+    return getDefaultXaiReasoningEffort(model);
   }
 
-  return reasoningEffort ?? getDefaultXaiReasoningEffort(model);
+  const supported = getXaiSupportedReasoningEfforts(model);
+  if (supported.includes(reasoningEffort)) {
+    return reasoningEffort;
+  }
+
+  return reasoningEffort === 'none' ? 'low' : 'high';
 }

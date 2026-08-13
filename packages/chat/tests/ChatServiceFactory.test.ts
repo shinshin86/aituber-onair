@@ -15,6 +15,9 @@ import {
   MODEL_DEEPSEEK_V4_PRO,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+  MODEL_GROK_4_6,
+  MODEL_GROK_4_5,
+  MODEL_GROK_4_3,
 } from '../src/constants';
 
 // Mock provider for testing
@@ -380,7 +383,21 @@ describe('ChatServiceFactory', () => {
         'low',
         'medium',
         'high',
+        'xhigh',
       ]);
+
+      expect(
+        ChatServiceFactory.getProviderCapabilities('xai', MODEL_GROK_4_6)
+          ?.reasoningEffort,
+      ).toEqual(['low', 'medium', 'high', 'xhigh']);
+      expect(
+        ChatServiceFactory.getProviderCapabilities('xai', MODEL_GROK_4_5)
+          ?.reasoningEffort,
+      ).toEqual(['low', 'medium', 'high']);
+      expect(
+        ChatServiceFactory.getProviderCapabilities('xai', MODEL_GROK_4_3)
+          ?.reasoningEffort,
+      ).toEqual(['none', 'low', 'medium', 'high']);
     });
 
     it('returns Gemini reasoning effort capabilities', () => {
