@@ -13,9 +13,12 @@ This example solves the local development problems with the HTML-based examples:
 - ✅ **Production ready** - Can be built and deployed
 - ✅ **Familiar workflow** - Standard React + Vite development
 
-Provider APIs can still enforce their own browser CORS policies. If a supported
-cloud voice-list endpoint rejects direct browser requests, use a backend
-relay/proxy for that lookup in production.
+Provider APIs can still enforce their own browser CORS policies. Fish Audio's
+official `POST /v1/tts` endpoint does not currently complete a browser
+preflight request, so this example relays both Fish Audio TTS and voice-list
+requests through the Vite development/preview proxy. Production deployments
+must provide equivalent backend routes and must not expose the Fish Audio API
+key in browser-delivered code.
 
 ## 🚀 Quick Start
 
@@ -142,9 +145,11 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 
 #### Fish Audio
 ```bash
-# Default endpoint: https://api.fish.audio/v1/tts
+# Local example endpoint: /api/fish-audio/v1/tts
+# Vite proxies it to https://api.fish.audio/v1/tts.
 # Enter an API key, fetch the model/voice list, and select a reference ID.
 # S2 Pro is the sample default. The promotional free model is opt-in.
+# Production hosting must implement equivalent /api/fish-audio routes.
 ```
 
 #### Cartesia

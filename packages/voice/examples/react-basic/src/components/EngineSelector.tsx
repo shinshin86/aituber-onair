@@ -401,6 +401,13 @@ export function EngineSelector({
               {speakerFetchError}
             </div>
           )}
+          {engine === 'fishAudio' && (
+            <div className="speaker-fetch-message">
+              このローカル例では音声生成と話者一覧を Vite proxy
+              経由で呼び出します。本番環境では同等の backend route
+              を用意し、Fish Audio API key をブラウザへ埋め込まないでください。
+            </div>
+          )}
         </div>
       );
     }

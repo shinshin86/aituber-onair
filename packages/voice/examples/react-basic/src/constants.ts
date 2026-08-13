@@ -55,8 +55,8 @@ export const ENGINE_DEFAULTS = {
     defaultOutputFormat: 'mp3_44100_128',
   },
   fishAudio: {
-    apiUrl: 'https://api.fish.audio/v1/tts',
-    voicesApiUrl: 'https://api.fish.audio/model',
+    apiUrl: '/api/fish-audio/v1/tts',
+    voicesApiUrl: '/api/fish-audio/model',
     needsApiKey: true,
     acceptsApiKey: true,
     placeholder: 'Your Fish Audio API key',

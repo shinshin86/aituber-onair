@@ -265,6 +265,12 @@ Voice-list lookups return at most 100 entries by default so they do not traverse
 the full public model catalog. Pass `limit` and optionally `pageSize` to request
 a larger bounded result set.
 
+The official `POST /v1/tts` endpoint does not currently complete browser CORS
+preflight requests. Call it directly from Node.js or a server, or set
+`fishAudioApiUrl` to a same-origin backend route in browser applications. Keep
+the Fish Audio API key on the server in production. The React example includes
+a Vite-only development/preview proxy for this purpose.
+
 ### Cartesia
 
 Cartesia synchronous TTS uses `POST /tts/bytes` and returns audio bytes

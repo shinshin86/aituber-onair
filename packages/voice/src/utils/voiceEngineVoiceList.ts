@@ -59,6 +59,14 @@ interface FishAudioVoiceListResponse {
   has_more?: boolean;
 }
 
+function createVoiceListUrl(endpoint: string): URL {
+  const browserBaseUrl =
+    typeof globalThis.location?.href === 'string'
+      ? globalThis.location.href
+      : undefined;
+  return new URL(endpoint, browserBaseUrl);
+}
+
 interface CartesiaVoiceResponse {
   id: string;
   name: string;
@@ -272,7 +280,7 @@ async function getFishAudioVoiceList(
   const seenVoiceIds = new Set<string>();
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
-    const url = new URL(
+    const url = createVoiceListUrl(
       options.voiceListApiUrl?.trim() || FISH_AUDIO_MODELS_API_URL,
     );
     url.searchParams.set('page_size', String(pageSize));
@@ -340,7 +348,7 @@ async function getCartesiaVoiceList(
   let startingAfter = '';
 
   do {
-    const url = new URL(
+    const url = createVoiceListUrl(
       options.voiceListApiUrl?.trim() || CARTESIA_VOICES_API_URL,
     );
     url.searchParams.set('limit', String(pageSize));
@@ -397,7 +405,7 @@ async function getInworldVoiceList(
   let pageToken = '';
 
   do {
-    const url = new URL(
+    const url = createVoiceListUrl(
       options.voiceListApiUrl?.trim() || INWORLD_VOICES_API_URL,
     );
     url.searchParams.set('orderBy', 'display_name asc');
@@ -460,7 +468,7 @@ async function getGradiumVoiceList(
   options: VoiceEngineVoiceListOptions,
 ): Promise<VoiceEngineVoice[]> {
   const apiKey = requireApiKey('Gradium', options.apiKey);
-  const url = new URL(
+  const url = createVoiceListUrl(
     options.voiceListApiUrl?.trim() || GRADIUM_VOICES_API_URL,
   );
   url.searchParams.set(
@@ -505,7 +513,7 @@ async function getGradiumVoiceList(
 async function getAivisCloudVoiceList(
   options: VoiceEngineVoiceListOptions,
 ): Promise<VoiceEngineVoice[]> {
-  const url = new URL(
+  const url = createVoiceListUrl(
     options.voiceListApiUrl?.trim() || AIVIS_CLOUD_AIVM_MODELS_SEARCH_API_URL,
   );
 

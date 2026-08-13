@@ -188,6 +188,23 @@ describe('getVoiceEngineVoiceList', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('resolves a relative Fish Audio voice-list proxy URL in browsers', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [], has_more: false }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await getVoiceEngineVoiceList('fishAudio', {
+      apiKey: 'fish-key',
+      voiceListApiUrl: '/api/fish-audio/model',
+    });
+
+    const requestUrl = new URL(fetchMock.mock.calls[0][0]);
+    expect(requestUrl.origin).toBe(globalThis.location.origin);
+    expect(requestUrl.pathname).toBe('/api/fish-audio/model');
+  });
+
   it('fetches and prioritizes Japanese Cartesia voices across pages', async () => {
     const fetchMock = vi
       .fn()

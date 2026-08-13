@@ -533,6 +533,10 @@ function App() {
       const voices = await getVoiceEngineVoiceList(engine as VoiceEngineType, {
         apiKey,
         apiUrl,
+        voiceListApiUrl:
+          engine === 'fishAudio'
+            ? ENGINE_DEFAULTS.fishAudio.voicesApiUrl
+            : undefined,
         language:
           engine === 'inworld'
             ? inworldVoiceLanguage
@@ -1308,9 +1312,7 @@ function App() {
             }
             break;
           case 'fishAudio':
-            if (apiUrl !== ENGINE_DEFAULTS.fishAudio.apiUrl) {
-              options.fishAudioApiUrl = apiUrl;
-            }
+            options.fishAudioApiUrl = apiUrl;
             break;
           case 'cartesia':
             if (apiUrl !== ENGINE_DEFAULTS.cartesia.apiUrl) {
