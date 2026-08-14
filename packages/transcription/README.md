@@ -56,9 +56,11 @@ await session.stop();
 await session.dispose();
 ```
 
-OpenAI Realtime uses `gpt-live-transcribe`, browser WebRTC, and server VAD. The
-recommended authentication mode obtains a short-lived client secret from an
-application backend:
+OpenAI Realtime uses `gpt-live-transcribe` and browser WebRTC. Because this
+transcription model does not accept server turn detection, the package detects
+sustained silence through the browser Web Audio API and explicitly commits each
+audio turn. The recommended authentication mode obtains a short-lived client
+secret from an application backend:
 
 ```ts
 const session = createRealtimeTranscriptionSession({
@@ -117,9 +119,10 @@ are returned as typed errors and never trigger an authentication fallback.
 | Multiple expected languages | No | Yes |
 | Keywords and context prompt | No | Yes |
 | Configurable delay | No | Yes |
-| Utterance boundary | Browser implementation | Server VAD |
+| Utterance boundary | Browser implementation | Browser audio-level detection |
 
 Both providers require a supported browser and microphone permission. OpenAI
-WebRTC also requires HTTPS or localhost. Web Speech availability and behavior
-vary by browser. Listening can incur OpenAI usage charges even during silence,
-so applications should expose state clearly and stop sessions when unused.
+WebRTC also requires the Web Audio API and HTTPS or localhost. Web Speech
+availability and behavior vary by browser. Listening can incur OpenAI usage
+charges even during silence, so applications should expose state clearly and
+stop sessions when unused.

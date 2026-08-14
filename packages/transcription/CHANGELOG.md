@@ -9,9 +9,9 @@
   capability metadata, and structured errors.
 - Added browser Web Speech support with continuous recognition and normalized
   interim and final transcript events.
-- Added OpenAI Realtime transcription over browser WebRTC with server VAD,
-  short-lived client-secret authentication, and explicitly acknowledged
-  browser BYOK authentication.
+- Added OpenAI Realtime transcription over browser WebRTC with browser-side
+  silence detection, explicit per-turn commits, short-lived client-secret
+  authentication, and explicitly acknowledged browser BYOK authentication.
 - Added OpenAI transcription context options for expected languages, keywords,
   prompts, and delay, plus validation for unsupported or unsafe input.
 - Added browser support detection, connection cancellation, graceful stop and

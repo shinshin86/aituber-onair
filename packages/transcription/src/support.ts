@@ -6,6 +6,8 @@ interface BrowserGlobal {
   webkitSpeechRecognition?: unknown;
   navigator?: Navigator;
   RTCPeerConnection?: unknown;
+  AudioContext?: unknown;
+  webkitAudioContext?: unknown;
 }
 
 function browserGlobal(): BrowserGlobal | undefined {
@@ -28,6 +30,7 @@ export function isTranscriptionProviderSupported(
   return Boolean(
     browser.isSecureContext !== false &&
       browser.RTCPeerConnection &&
-      browser.navigator?.mediaDevices?.getUserMedia
+      browser.navigator?.mediaDevices?.getUserMedia &&
+      (browser.AudioContext ?? browser.webkitAudioContext)
   );
 }

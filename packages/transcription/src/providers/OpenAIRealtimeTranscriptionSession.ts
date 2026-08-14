@@ -4,6 +4,10 @@ import type {
   OpenAIRealtimeTranscriptionOptions,
   TranscriptionError,
 } from '../types';
+import {
+  BrowserVoiceActivityDetector,
+  supportsBrowserVoiceActivityDetection,
+} from './BrowserVoiceActivityDetector';
 
 const CLIENT_SECRET_URL = 'https://api.openai.com/v1/realtime/client_secrets';
 const REALTIME_CALLS_URL = 'https://api.openai.com/v1/realtime/calls';
@@ -21,7 +25,6 @@ interface RealtimeEvent {
   item_id?: unknown;
   delta?: unknown;
   transcript?: unknown;
-  session?: unknown;
   error?: {
     message?: unknown;
     event_id?: unknown;
@@ -29,13 +32,6 @@ interface RealtimeEvent {
 }
 
 interface StopFinalization {
-  phase:
-    | 'waiting-for-vad-disabled'
-    | 'waiting-for-commit'
-    | 'waiting-for-transcripts';
-  vadUpdateEventId: string;
-  commitEventId: string;
-  dataChannel: RTCDataChannel;
   resolve: () => void;
   timer: ReturnType<typeof setTimeout>;
 }
@@ -47,15 +43,6 @@ function isPermissionDenied(cause: unknown): boolean {
     cause instanceof DOMException &&
     (cause.name === 'NotAllowedError' || cause.name === 'SecurityError')
   );
-}
-
-function hasDisabledTurnDetection(session: unknown): boolean {
-  if (!session || typeof session !== 'object') return false;
-  const audio = Reflect.get(session, 'audio');
-  if (!audio || typeof audio !== 'object') return false;
-  const input = Reflect.get(audio, 'input');
-  if (!input || typeof input !== 'object') return false;
-  return Reflect.get(input, 'turn_detection') === null;
 }
 
 function createSessionConfiguration(
@@ -78,9 +65,7 @@ function createSessionConfiguration(
     audio: {
       input: {
         transcription,
-        turn_detection: {
-          type: 'server_vad',
-        },
+        turn_detection: null,
       },
     },
   };
@@ -115,8 +100,12 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
   private peerConnection: RTCPeerConnection | null = null;
   private dataChannel: RTCDataChannel | null = null;
   private mediaStream: MediaStream | null = null;
+  private voiceActivityDetector: BrowserVoiceActivityDetector | null = null;
+  private commitSequence = 0;
+  private readonly pendingCommitEventIds: string[] = [];
   private readonly transcripts = new Map<string, string>();
   private readonly pendingTranscriptItemIds = new Set<string>();
+  private readonly committedTranscriptItemIds = new Set<string>();
   private stopFinalization: StopFinalization | null = null;
 
   constructor(options: OpenAIRealtimeTranscriptionOptions) {
@@ -220,6 +209,15 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
       this.assertOperation(operationId);
       this.attachConnectionListeners(localPeerConnection, localDataChannel);
 
+      const connectedDataChannel = localDataChannel;
+      const voiceActivityDetector = new BrowserVoiceActivityDetector(
+        localStream,
+        () => this.commitDetectedTurn(connectedDataChannel)
+      );
+      this.voiceActivityDetector = voiceActivityDetector;
+      await voiceActivityDetector.start();
+      this.assertOperation(operationId);
+
       localDataChannel.send(
         JSON.stringify({
           type: 'session.update',
@@ -272,12 +270,13 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
     }
     if (
       typeof RTCPeerConnection === 'undefined' ||
-      !navigator.mediaDevices?.getUserMedia
+      !navigator.mediaDevices?.getUserMedia ||
+      !supportsBrowserVoiceActivityDetection()
     ) {
       throw new TranscriptionSessionError(
         'unsupported-provider',
         this.provider,
-        'This browser does not support the required WebRTC microphone APIs.'
+        'This browser does not support the required WebRTC and Web Audio microphone APIs.'
       );
     }
   }
@@ -453,23 +452,13 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
     }
 
     if (
-      event.type === 'session.updated' &&
-      this.stopFinalization?.phase === 'waiting-for-vad-disabled' &&
-      hasDisabledTurnDetection(event.session)
-    ) {
-      this.sendStopCommit();
-      return;
-    }
-
-    if (
       event.type === 'input_audio_buffer.committed' &&
       typeof event.item_id === 'string'
     ) {
+      this.pendingCommitEventIds.shift();
       this.pendingTranscriptItemIds.add(event.item_id);
-      if (this.stopFinalization?.phase === 'waiting-for-commit') {
-        this.stopFinalization.phase = 'waiting-for-transcripts';
-        this.maybeCompleteStopFinalization();
-      }
+      this.committedTranscriptItemIds.add(event.item_id);
+      this.maybeCompleteStopFinalization();
       return;
     }
 
@@ -479,6 +468,7 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
     ) {
       this.transcripts.delete(event.item_id);
       this.pendingTranscriptItemIds.delete(event.item_id);
+      this.committedTranscriptItemIds.delete(event.item_id);
       if (typeof event.transcript === 'string') {
         this.emitTranscript({
           utteranceId: event.item_id,
@@ -494,6 +484,7 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
       if (typeof event.item_id === 'string') {
         this.transcripts.delete(event.item_id);
         this.pendingTranscriptItemIds.delete(event.item_id);
+        this.committedTranscriptItemIds.delete(event.item_id);
       }
       this.maybeCompleteStopFinalization();
       if (this.state === 'stopping') return;
@@ -509,22 +500,13 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
     }
 
     if (event.type === 'error') {
+      const sourceEventId = event.error?.event_id;
+      if (typeof sourceEventId === 'string') {
+        const commitIndex = this.pendingCommitEventIds.indexOf(sourceEventId);
+        if (commitIndex >= 0) this.pendingCommitEventIds.splice(commitIndex, 1);
+      }
       if (this.state === 'stopping') {
-        const finalization = this.stopFinalization;
-        const sourceEventId = event.error?.event_id;
-        if (
-          finalization?.phase === 'waiting-for-vad-disabled' &&
-          sourceEventId === finalization.vadUpdateEventId
-        ) {
-          // A commit cannot be correlated safely while server VAD may remain
-          // active. Keep the bounded finalization timer as the fallback.
-        } else if (
-          finalization?.phase === 'waiting-for-commit' &&
-          sourceEventId === finalization.commitEventId
-        ) {
-          finalization.phase = 'waiting-for-transcripts';
-          this.maybeCompleteStopFinalization();
-        }
+        this.maybeCompleteStopFinalization();
         return;
       }
 
@@ -647,11 +629,22 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
   }
 
   private async stopAndRelease(): Promise<void> {
+    const detectorFoundSpeech = this.stopVoiceActivityDetector();
+    const hasUncommittedTranscript = [...this.transcripts.keys()].some(
+      (itemId) => !this.committedTranscriptItemIds.has(itemId)
+    );
+    const shouldCommitPendingAudio =
+      detectorFoundSpeech ||
+      (this.pendingCommitEventIds.length === 0 && hasUncommittedTranscript);
     for (const track of this.mediaStream?.getTracks() ?? []) track.stop();
 
     if (this.dataChannel?.readyState === 'open') {
       try {
-        const finalization = this.beginStopFinalization(this.dataChannel);
+        const finalization = this.beginStopFinalization();
+        if (shouldCommitPendingAudio) {
+          this.sendAudioCommit(this.dataChannel, 'stop');
+        }
+        this.maybeCompleteStopFinalization();
         await finalization;
       } catch {
         // Cleanup remains safe if the channel closes before the final commit.
@@ -662,64 +655,60 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
     if (this.state !== 'disposed') this.changeState('idle');
   }
 
-  private beginStopFinalization(dataChannel: RTCDataChannel): Promise<void> {
+  private commitDetectedTurn(dataChannel: RTCDataChannel): void {
+    if (this.state !== 'listening' || dataChannel !== this.dataChannel) return;
+    if (this.sendAudioCommit(dataChannel, 'vad')) return;
+
+    this.handleConnectionFailure(
+      new TranscriptionSessionError(
+        'connection-failed',
+        this.provider,
+        'The OpenAI Realtime audio turn could not be committed.'
+      )
+    );
+  }
+
+  private sendAudioCommit(
+    dataChannel: RTCDataChannel,
+    reason: 'vad' | 'stop'
+  ): boolean {
+    if (dataChannel.readyState !== 'open') return false;
+
+    const eventId = `transcription-${reason}-commit-${this.operationId}-${++this.commitSequence}`;
+    this.pendingCommitEventIds.push(eventId);
+    try {
+      dataChannel.send(
+        JSON.stringify({
+          type: 'input_audio_buffer.commit',
+          event_id: eventId,
+        })
+      );
+      return true;
+    } catch {
+      const commitIndex = this.pendingCommitEventIds.indexOf(eventId);
+      if (commitIndex >= 0) this.pendingCommitEventIds.splice(commitIndex, 1);
+      return false;
+    }
+  }
+
+  private beginStopFinalization(): Promise<void> {
     this.completeStopFinalization();
 
     return new Promise<void>((resolve) => {
       const timer = setTimeout(() => {
         this.completeStopFinalization();
       }, STOP_FINALIZATION_TIMEOUT_MS);
-      const eventIdSuffix = String(this.operationId);
       this.stopFinalization = {
-        phase: 'waiting-for-vad-disabled',
-        vadUpdateEventId: `transcription-stop-vad-${eventIdSuffix}`,
-        commitEventId: `transcription-stop-commit-${eventIdSuffix}`,
-        dataChannel,
         resolve,
         timer,
       };
-      dataChannel.send(
-        JSON.stringify({
-          type: 'session.update',
-          event_id: this.stopFinalization.vadUpdateEventId,
-          session: {
-            type: 'transcription',
-            audio: {
-              input: {
-                turn_detection: null,
-              },
-            },
-          },
-        })
-      );
     });
-  }
-
-  private sendStopCommit(): void {
-    const finalization = this.stopFinalization;
-    if (!finalization) return;
-    if (finalization.dataChannel.readyState !== 'open') {
-      this.completeStopFinalization();
-      return;
-    }
-
-    finalization.phase = 'waiting-for-commit';
-    try {
-      finalization.dataChannel.send(
-        JSON.stringify({
-          type: 'input_audio_buffer.commit',
-          event_id: finalization.commitEventId,
-        })
-      );
-    } catch {
-      this.completeStopFinalization();
-    }
   }
 
   private maybeCompleteStopFinalization(): void {
     if (
       this.stopFinalization &&
-      this.stopFinalization.phase === 'waiting-for-transcripts' &&
+      this.pendingCommitEventIds.length === 0 &&
       this.pendingTranscriptItemIds.size === 0
     ) {
       this.completeStopFinalization();
@@ -780,8 +769,15 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
     }
   }
 
+  private stopVoiceActivityDetector(): boolean {
+    const detector = this.voiceActivityDetector;
+    this.voiceActivityDetector = null;
+    return detector?.stop() ?? false;
+  }
+
   private cleanupResources(): void {
     this.completeStopFinalization();
+    this.stopVoiceActivityDetector();
 
     const dataChannel = this.dataChannel;
     this.dataChannel = null;
@@ -801,7 +797,9 @@ export class OpenAIRealtimeTranscriptionSession extends BaseRealtimeTranscriptio
     const mediaStream = this.mediaStream;
     this.mediaStream = null;
     for (const track of mediaStream?.getTracks() ?? []) track.stop();
+    this.pendingCommitEventIds.length = 0;
     this.transcripts.clear();
     this.pendingTranscriptItemIds.clear();
+    this.committedTranscriptItemIds.clear();
   }
 }

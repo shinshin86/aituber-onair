@@ -17,9 +17,13 @@ describe('browser example i18n', () => {
     expect(isDisplayLanguage('ja')).toBe(true);
     expect(isTranslationKey('startMicrophone')).toBe(true);
     expect(translate('ja', 'startMicrophone')).toBe('文字起こしを開始');
+    expect(translatedValues('keywordsValue')).toEqual([
+      'OpenAI, realtime transcription',
+      'OpenAI, リアルタイム文字起こし',
+    ]);
     expect(translatedValues('contextPromptValue')).toEqual([
-      'An AITuber livestream in Japanese and English.',
-      '日本語と英語のAITuber配信です。',
+      'An English conversation recorded through a microphone.',
+      'マイクから入力された日本語の会話です。',
     ]);
   });
 });

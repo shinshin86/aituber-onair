@@ -1,5 +1,6 @@
 import {
   createRealtimeTranscriptionSession,
+  isTranscriptionProviderSupported,
   type RealtimeTranscriptionSession,
   type TranscriptUpdate,
 } from '../src';
@@ -17,6 +18,42 @@ class MockMediaStream {
 
   getTracks(): MediaStreamTrack[] {
     return [this.track as unknown as MediaStreamTrack];
+  }
+}
+
+class MockMediaStreamAudioSourceNode {
+  connect = vi.fn();
+  disconnect = vi.fn();
+}
+
+class MockAnalyserNode {
+  fftSize = 2048;
+  smoothingTimeConstant = 0;
+  disconnect = vi.fn();
+
+  getFloatTimeDomainData(samples: Float32Array): void {
+    samples.fill(MockAudioContext.inputLevel);
+  }
+}
+
+class MockAudioContext {
+  static inputLevel = 0;
+  static instances: MockAudioContext[] = [];
+
+  state: AudioContextState = 'running';
+  readonly sourceNode = new MockMediaStreamAudioSourceNode();
+  readonly analyserNode = new MockAnalyserNode();
+  createMediaStreamSource = vi.fn(() => this.sourceNode);
+  createAnalyser = vi.fn(() => this.analyserNode);
+  resume = vi.fn(async () => {
+    this.state = 'running';
+  });
+  close = vi.fn(async () => {
+    this.state = 'closed';
+  });
+
+  constructor() {
+    MockAudioContext.instances.push(this);
   }
 }
 
@@ -86,6 +123,15 @@ const sdpResponse = () =>
     headers: { 'Content-Type': 'application/sdp' },
   });
 
+let activeSessions: RealtimeTranscriptionSession[] = [];
+
+function trackSession(
+  session: RealtimeTranscriptionSession
+): RealtimeTranscriptionSession {
+  activeSessions.push(session);
+  return session;
+}
+
 function installBrowserMocks(): MockMediaStream {
   const stream = new MockMediaStream();
   Object.defineProperty(navigator, 'mediaDevices', {
@@ -98,34 +144,26 @@ function installBrowserMocks(): MockMediaStream {
     configurable: true,
     value: MockPeerConnection,
   });
+  Object.defineProperty(globalThis, 'AudioContext', {
+    configurable: true,
+    value: MockAudioContext,
+  });
   return stream;
 }
 
 function createServerSession(
   getClientSecret = vi.fn(async () => 'ek_test')
 ): RealtimeTranscriptionSession {
-  return createRealtimeTranscriptionSession({
-    provider: 'openai-realtime',
-    auth: { type: 'client-secret', getClientSecret },
-    languages: ['ja', 'en'],
-    keywords: ['AITuber OnAir'],
-    prompt: 'An AITuber livestream.',
-    delay: 'low',
-  });
-}
-
-function emitVadDisabled(peer: MockPeerConnection | undefined): void {
-  peer?.channel.emit({
-    type: 'session.updated',
-    session: {
-      type: 'transcription',
-      audio: {
-        input: {
-          turn_detection: null,
-        },
-      },
-    },
-  });
+  return trackSession(
+    createRealtimeTranscriptionSession({
+      provider: 'openai-realtime',
+      auth: { type: 'client-secret', getClientSecret },
+      languages: ['ja', 'en'],
+      keywords: ['AITuber OnAir'],
+      prompt: 'An AITuber livestream.',
+      delay: 'low',
+    })
+  );
 }
 
 function sentEvents(
@@ -140,8 +178,11 @@ function sentEvents(
 
 describe('OpenAIRealtimeTranscriptionSession', () => {
   beforeEach(() => {
+    activeSessions = [];
     MockPeerConnection.instances = [];
     MockPeerConnection.openDataChannelOnRemoteDescription = true;
+    MockAudioContext.instances = [];
+    MockAudioContext.inputLevel = 0;
     installBrowserMocks();
     vi.stubGlobal(
       'fetch',
@@ -149,9 +190,11 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
     );
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await Promise.all(activeSessions.map((session) => session.dispose()));
     vi.unstubAllGlobals();
     Reflect.deleteProperty(navigator, 'mediaDevices');
+    Reflect.deleteProperty(globalThis, 'AudioContext');
   });
 
   it('opens WebRTC and sends a constrained transcription session update', async () => {
@@ -174,12 +217,24 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
               prompt: 'An AITuber livestream.',
               delay: 'low',
             },
-            turn_detection: { type: 'server_vad' },
+            turn_detection: null,
           },
         },
       },
     });
     expect(session.state).toBe('listening');
+  });
+
+  it('reports OpenAI as unsupported without the Web Audio API', async () => {
+    Reflect.deleteProperty(globalThis, 'AudioContext');
+    const getClientSecret = vi.fn(async () => 'ek_test');
+    const session = createServerSession(getClientSecret);
+
+    expect(isTranscriptionProviderSupported('openai-realtime')).toBe(false);
+    await expect(session.start()).rejects.toMatchObject({
+      code: 'unsupported-provider',
+    });
+    expect(getClientSecret).not.toHaveBeenCalled();
   });
 
   it('accumulates deltas by item ID and lets finals replace snapshots', async () => {
@@ -254,15 +309,17 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
       )
       .mockResolvedValueOnce(sdpResponse());
     vi.stubGlobal('fetch', fetchMock);
-    const session = createRealtimeTranscriptionSession({
-      provider: 'openai-realtime',
-      auth: {
-        type: 'browser-api-key',
-        getApiKey,
-        acknowledgeBrowserKeyRisk: true,
-      },
-      languages: ['ja'],
-    });
+    const session = trackSession(
+      createRealtimeTranscriptionSession({
+        provider: 'openai-realtime',
+        auth: {
+          type: 'browser-api-key',
+          getApiKey,
+          acknowledgeBrowserKeyRisk: true,
+        },
+        languages: ['ja'],
+      })
+    );
 
     await session.start();
 
@@ -284,19 +341,28 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
       anchor: 'created_at',
       seconds: 600,
     });
+    expect(mintBody.session.audio.input).toMatchObject({
+      transcription: {
+        model: 'gpt-live-transcribe',
+        languages: ['ja'],
+      },
+      turn_detection: null,
+    });
   });
 
   it('returns a typed direct-mint error and never falls back', async () => {
     const fetchMock = vi.fn(async () => new Response('', { status: 401 }));
     vi.stubGlobal('fetch', fetchMock);
-    const session = createRealtimeTranscriptionSession({
-      provider: 'openai-realtime',
-      auth: {
-        type: 'browser-api-key',
-        getApiKey: async () => 'sk-rejected',
-        acknowledgeBrowserKeyRisk: true,
-      },
-    });
+    const session = trackSession(
+      createRealtimeTranscriptionSession({
+        provider: 'openai-realtime',
+        auth: {
+          type: 'browser-api-key',
+          getApiKey: async () => 'sk-rejected',
+          acknowledgeBrowserKeyRisk: true,
+        },
+      })
+    );
 
     await expect(session.start()).rejects.toMatchObject({
       code: 'authentication-failed',
@@ -312,26 +378,17 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
 
     await Promise.all([session.start(), session.start()]);
     const peer = MockPeerConnection.instances[0];
-    const stopPromise = session.stop();
-    emitVadDisabled(peer);
-    peer?.channel.emit({
-      type: 'input_audio_buffer.committed',
-      item_id: 'stop-item',
-    });
-    peer?.channel.emit({
-      type: 'conversation.item.input_audio_transcription.completed',
-      item_id: 'stop-item',
-      transcript: '',
-    });
-    await stopPromise;
+    await session.stop();
 
     expect(getClientSecret).toHaveBeenCalledOnce();
     expect(MockPeerConnection.instances).toHaveLength(1);
-    expect(sentEvents(peer)).toContainEqual({
-      type: 'input_audio_buffer.commit',
-      event_id: expect.stringMatching(/^transcription-stop-commit-/),
-    });
+    expect(
+      sentEvents(peer).filter(
+        (event) => event.type === 'input_audio_buffer.commit'
+      )
+    ).toHaveLength(0);
     expect(stream.track.stop).toHaveBeenCalled();
+    expect(MockAudioContext.instances[0]?.close).toHaveBeenCalled();
     expect(peer?.channel.close).toHaveBeenCalled();
     expect(peer?.close).toHaveBeenCalled();
     expect(session.state).toBe('idle');
@@ -342,20 +399,9 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
     const session = createServerSession(getClientSecret);
 
     await session.start();
-    const firstPeer = MockPeerConnection.instances[0];
     const firstStop = session.stop();
     const restart = session.start();
     expect(MockPeerConnection.instances).toHaveLength(1);
-    emitVadDisabled(firstPeer);
-    firstPeer?.channel.emit({
-      type: 'input_audio_buffer.committed',
-      item_id: 'restart-item',
-    });
-    firstPeer?.channel.emit({
-      type: 'conversation.item.input_audio_transcription.completed',
-      item_id: 'restart-item',
-      transcript: '',
-    });
     await Promise.all([firstStop, restart]);
 
     expect(getClientSecret).toHaveBeenCalledTimes(2);
@@ -370,9 +416,17 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
     session.onTranscript((update) => updates.push(update));
     await session.start();
     const peer = MockPeerConnection.instances[0];
+    peer?.channel.emit({
+      type: 'conversation.item.input_audio_transcription.delta',
+      item_id: 'final-item',
+      delta: '最後の',
+    });
 
     const stopPromise = session.stop();
-    emitVadDisabled(peer);
+    const commitEvent = sentEvents(peer).find(
+      (event) => event.type === 'input_audio_buffer.commit'
+    );
+    expect(commitEvent?.event_id).toMatch(/^transcription-stop-commit-/);
     peer?.channel.emit({
       type: 'input_audio_buffer.committed',
       item_id: 'final-item',
@@ -395,46 +449,64 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
     expect(peer?.close).toHaveBeenCalledOnce();
   });
 
-  it('does not confuse a server-VAD commit with the explicit stop commit', async () => {
-    const session = createServerSession();
-    await session.start();
-    const peer = MockPeerConnection.instances[0];
+  it('commits a confirmed speech turn after sustained silence', async () => {
+    vi.useFakeTimers();
+    try {
+      const session = createServerSession();
+      await session.start();
+      const peer = MockPeerConnection.instances[0];
 
-    const stopPromise = session.stop();
-    peer?.channel.emit({
-      type: 'input_audio_buffer.committed',
-      item_id: 'automatic-vad-item',
-    });
-    peer?.channel.emit({
-      type: 'conversation.item.input_audio_transcription.completed',
-      item_id: 'automatic-vad-item',
-      transcript: '自動確定',
-    });
-    await Promise.resolve();
+      MockAudioContext.inputLevel = 0.05;
+      await vi.advanceTimersByTimeAsync(100);
+      MockAudioContext.inputLevel = 0;
+      await vi.advanceTimersByTimeAsync(800);
+      expect(
+        sentEvents(peer).filter(
+          (event) => event.type === 'input_audio_buffer.commit'
+        )
+      ).toHaveLength(0);
 
-    expect(
-      sentEvents(peer).filter(
+      MockAudioContext.inputLevel = 0.05;
+      await vi.advanceTimersByTimeAsync(250);
+      MockAudioContext.inputLevel = 0;
+      await vi.advanceTimersByTimeAsync(800);
+
+      const commitEvents = sentEvents(peer).filter(
         (event) => event.type === 'input_audio_buffer.commit'
-      )
-    ).toHaveLength(0);
-    expect(peer?.close).not.toHaveBeenCalled();
+      );
+      expect(commitEvents).toEqual([
+        {
+          type: 'input_audio_buffer.commit',
+          event_id: expect.stringMatching(/^transcription-vad-commit-/),
+        },
+      ]);
 
-    emitVadDisabled(peer);
-    const commitEvent = sentEvents(peer).find(
-      (event) => event.type === 'input_audio_buffer.commit'
-    );
-    expect(commitEvent?.event_id).toEqual(expect.any(String));
-    peer?.channel.emit({
-      type: 'error',
-      error: {
-        message: 'Input audio buffer is empty.',
-        event_id: commitEvent?.event_id,
-      },
-    });
-    await stopPromise;
+      peer?.channel.emit({
+        type: 'conversation.item.input_audio_transcription.delta',
+        item_id: 'client-vad-item',
+        delta: '自動',
+      });
+      peer?.channel.emit({
+        type: 'input_audio_buffer.committed',
+        item_id: 'client-vad-item',
+      });
+      const stopPromise = session.stop();
+      expect(
+        sentEvents(peer).filter(
+          (event) => event.type === 'input_audio_buffer.commit'
+        )
+      ).toHaveLength(1);
+      expect(peer?.close).not.toHaveBeenCalled();
 
-    expect(peer?.close).toHaveBeenCalledOnce();
-    expect(session.state).toBe('idle');
+      peer?.channel.emit({
+        type: 'conversation.item.input_audio_transcription.completed',
+        item_id: 'client-vad-item',
+        transcript: '自動確定',
+      });
+      await stopPromise;
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('uses a bounded fallback when stop finalization events never arrive', async () => {
@@ -443,6 +515,11 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
       const session = createServerSession();
       await session.start();
       const peer = MockPeerConnection.instances[0];
+      peer?.channel.emit({
+        type: 'conversation.item.input_audio_transcription.delta',
+        item_id: 'pending-item',
+        delta: '未確定',
+      });
 
       const stopPromise = session.stop();
       await vi.advanceTimersByTimeAsync(10_000);
@@ -455,34 +532,27 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
     }
   });
 
-  it('does not commit if disabling server VAD fails', async () => {
+  it('finishes stopping when the final client commit is rejected', async () => {
     vi.useFakeTimers();
     try {
       const session = createServerSession();
       await session.start();
       const peer = MockPeerConnection.instances[0];
 
+      MockAudioContext.inputLevel = 0.05;
+      await vi.advanceTimersByTimeAsync(250);
+
       const stopPromise = session.stop();
-      const vadUpdateEvent = sentEvents(peer).find(
-        (event) =>
-          event.type === 'session.update' && typeof event.event_id === 'string'
+      const commitEvent = sentEvents(peer).find(
+        (event) => event.type === 'input_audio_buffer.commit'
       );
       peer?.channel.emit({
         type: 'error',
         error: {
-          message: 'Could not disable server VAD.',
-          event_id: vadUpdateEvent?.event_id,
+          message: 'Input audio buffer is empty.',
+          event_id: commitEvent?.event_id,
         },
       });
-
-      expect(
-        sentEvents(peer).filter(
-          (event) => event.type === 'input_audio_buffer.commit'
-        )
-      ).toHaveLength(0);
-      expect(peer?.close).not.toHaveBeenCalled();
-
-      await vi.advanceTimersByTimeAsync(10_000);
       await stopPromise;
 
       expect(peer?.close).toHaveBeenCalledOnce();
@@ -496,6 +566,11 @@ describe('OpenAIRealtimeTranscriptionSession', () => {
     const session = createServerSession();
     await session.start();
     const peer = MockPeerConnection.instances[0];
+    peer?.channel.emit({
+      type: 'conversation.item.input_audio_transcription.delta',
+      item_id: 'closing-item',
+      delta: '接続終了',
+    });
 
     const stopPromise = session.stop();
     peer?.channel.emitClose();

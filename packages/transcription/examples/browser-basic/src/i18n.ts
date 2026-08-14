@@ -31,10 +31,11 @@ const englishMessages = {
   delayHigh: 'High',
   delayExtraHigh: 'Extra high',
   keywords: 'Recognition keywords',
+  keywordsValue: 'OpenAI, realtime transcription',
   keywordsHint:
     'Comma-separated. The characters < and > and line breaks are not allowed.',
   contextPrompt: 'Conversation context',
-  contextPromptValue: 'An AITuber livestream in Japanese and English.',
+  contextPromptValue: 'An English conversation recorded through a microphone.',
   openAICost:
     'OpenAI usage may be billed while transcription is running, including during silence.',
   liveOutput: 'Transcription results',
@@ -99,9 +100,10 @@ const japaneseMessages: Messages = {
   delayHigh: '高',
   delayExtraHigh: '最大',
   keywords: '認識キーワード',
+  keywordsValue: 'OpenAI, リアルタイム文字起こし',
   keywordsHint: 'カンマ区切りで入力（<、>、改行は使用不可）',
   contextPrompt: '会話の背景',
-  contextPromptValue: '日本語と英語のAITuber配信です。',
+  contextPromptValue: 'マイクから入力された日本語の会話です。',
   openAICost:
     '文字起こし中は、無音の時間を含めてOpenAIの利用料金が発生する場合があります。',
   liveOutput: '文字起こし結果',

@@ -215,6 +215,15 @@ textarea:focus {
   gap: 14px;
 }
 
+.field-grid > .field {
+  align-content: start;
+}
+
+.field-grid input,
+.field-grid select {
+  height: 42px;
+}
+
 .notice {
   margin: -4px 0 18px;
   padding: 12px 14px;
@@ -224,11 +233,16 @@ textarea:focus {
   line-height: 1.55;
 }
 
-.notice.risk,
 .notice.cost {
   border-color: #e11d48;
   background: #fff1f2;
   color: #9f1239;
+}
+
+.notice.info {
+  border-color: #5269d8;
+  background: #eef2ff;
+  color: #3730a3;
 }
 
 .actions {

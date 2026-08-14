@@ -105,7 +105,11 @@
 
           <label class="field">
             <span data-i18n="keywords">Recognition keywords</span>
-            <input id="openai-keywords" value="AITuber OnAir" />
+            <input
+              id="openai-keywords"
+              value="OpenAI, realtime transcription"
+              data-i18n-value="keywordsValue"
+            />
             <small data-i18n="keywordsHint">
               Comma-separated. The characters &lt; and &gt; and line breaks are
               not allowed.
@@ -118,7 +122,7 @@
               rows="2"
               data-i18n-value="contextPromptValue"
             >
-An AITuber livestream in Japanese and English.</textarea
+An English conversation recorded through a microphone.</textarea
             >
           </label>
           <p class="notice cost" data-i18n="openAICost">

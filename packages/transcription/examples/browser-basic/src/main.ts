@@ -110,9 +110,9 @@ function localizeStaticContent(): void {
     if (key) target.placeholder = translate(displayLanguage, key);
   }
 
-  for (const target of document.querySelectorAll<HTMLTextAreaElement>(
-    '[data-i18n-value]'
-  )) {
+  for (const target of document.querySelectorAll<
+    HTMLInputElement | HTMLTextAreaElement
+  >('[data-i18n-value]')) {
     const key = translationKey(target, 'data-i18n-value');
     if (!key) continue;
     const knownValues = translatedValues(key);
