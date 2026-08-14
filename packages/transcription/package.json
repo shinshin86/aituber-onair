@@ -1,8 +1,7 @@
 {
   "name": "@aituber-onair/transcription",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Provider-neutral realtime transcription for AITuber OnAir",
-  "private": true,
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -28,7 +27,8 @@
     "test:coverage": "vitest run --coverage",
     "fmt": "biome format . --write",
     "fmt:check": "biome format .",
-    "lint": "biome lint ."
+    "lint": "biome lint .",
+    "prepublishOnly": "npm run build"
   },
   "keywords": ["aituber", "transcription", "speech-to-text", "webrtc"],
   "author": "shinshin86 (https://github.com/shinshin86)",
@@ -37,6 +37,9 @@
     "type": "git",
     "url": "https://github.com/shinshin86/aituber-onair.git",
     "directory": "packages/transcription"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

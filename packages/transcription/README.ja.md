@@ -1,13 +1,13 @@
 # @aituber-onair/transcription
 
-![@aituber-onair/transcription ロゴ](./images/aituber-onair-transcription.png)
+![@aituber-onair/transcription ロゴ](https://raw.githubusercontent.com/shinshin86/aituber-onair/main/packages/transcription/images/aituber-onair-transcription.png)
 
 [English](./README.md)
 
 AITuber OnAir 向けの、プロバイダーに依存しないリアルタイムマイク文字起こしパッケージです。
 
-> このパッケージは未リリースの検証版です。`private`、バージョン `0.0.0` で、
-> npm では公開されていません。
+> このパッケージはα版です。安定版になるまでに公開 API が変更される可能性が
+> あります。
 
 初期実装では Web Speech と、ブラウザ WebRTC を利用する OpenAI Realtime の
 文字起こしに対応しています。どちらのプロバイダーも、発話ごとに同じ形式の
@@ -29,7 +29,8 @@ npm -w @aituber-onair/transcription run example:dev
 自身が所有する API キーを画面に入力します。サンプルはブラウザから OpenAI へ直接
 接続するため、共有端末での利用は避けてください。画面は日本語・英語を切り替えられ、
 初期表示にはブラウザの言語設定が使われます。詳細は
-[サンプルの README](./examples/browser-basic/README.md) を参照してください。
+[サンプルの README](https://github.com/shinshin86/aituber-onair/blob/main/packages/transcription/examples/browser-basic/README.md)
+を参照してください。
 
 サーバーを起動せずにサンプルをビルドするには、次のコマンドを実行します。
 

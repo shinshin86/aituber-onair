@@ -1,10 +1,10 @@
 # @aituber-onair/transcription
 
-## Unreleased
+## 0.0.1
 
 ### Added
 
-- Added an unreleased, private realtime transcription spike with a
+- Added the initial alpha release of a realtime transcription package with a
   provider-neutral session API, typed lifecycle states, transcript snapshots,
   capability metadata, and structured errors.
 - Added browser Web Speech support with continuous recognition and normalized

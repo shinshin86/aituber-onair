@@ -1,13 +1,13 @@
 # @aituber-onair/transcription
 
-![@aituber-onair/transcription logo](./images/aituber-onair-transcription.png)
+![@aituber-onair/transcription logo](https://raw.githubusercontent.com/shinshin86/aituber-onair/main/packages/transcription/images/aituber-onair-transcription.png)
 
 [日本語版はこちら](./README.ja.md)
 
 Provider-neutral realtime microphone transcription for AITuber OnAir.
 
-> This package is an unreleased spike. It is `private`, version `0.0.0`, and is
-> not available from npm.
+> This package is an alpha release. Its public API may change before a stable
+> release.
 
 The initial implementation supports Web Speech and OpenAI Realtime
 transcription over browser WebRTC. Both providers emit the same per-utterance
@@ -28,7 +28,8 @@ a session. Web Speech needs no key. For OpenAI, enter an end-user-owned API key
 in the page. The sample connects to OpenAI directly from the browser, so avoid
 using it on a shared device. The interface supports English and Japanese and
 selects the initial display from the browser language. See the
-[example README](./examples/browser-basic/README.md) for details.
+[example README](https://github.com/shinshin86/aituber-onair/blob/main/packages/transcription/examples/browser-basic/README.md)
+for details.
 
 Build the example without starting a server:
 
