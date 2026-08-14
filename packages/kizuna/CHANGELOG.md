@@ -50,6 +50,10 @@ preserved.
   data.
 - A browser bond simulator with four people, five contact kinds, emotion
   selection, simulated time, achievements, event history, and context preview.
+- A one-on-one chat demo (`examples/chat-bond-sample`) that runs without any
+  LLM or TTS: scripted replies with emotions, an animated intimacy graph, and
+  a normalized, scored dictionary classifier (with false-positive guards) as a
+  stand-in for the LLM reaction emotion used in real applications.
 - Kizuna integrations in the Noise session sample and the Core
   `react-pngtuber-app` example.
 - Human-modeled relationship dynamics with `human`, `forgiving`, and `strict`
@@ -73,7 +77,10 @@ preserved.
   unsafe IDs, lifecycle races, and stale asynchronous writes.
 - Rewrote the English and Japanese READMEs around the bond lifecycle, added an
   API and migration guide, and moved storage implementation and security notes
-  to `docs/storage.md`.
+  to `docs/storage.md`. Added a top-level workflow section explaining the
+  message round-trip: the LLM acts as sensor (reaction emotion) and actuator
+  (bond-aware replies), while Kizuna updates bond state deterministically —
+  bond-change amounts are never decided by an LLM.
 
 ## 0.0.2
 
