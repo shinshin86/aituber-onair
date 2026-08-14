@@ -12,6 +12,48 @@ step, `getBondContext()` converts that state into a short prompt for an LLM.
 
 [日本語版 README](./README.ja.md)
 
+## How it fits together
+
+Kizuna sits between one LLM turn and the next. One message round-trip looks
+like this:
+
+```text
+Viewer comment
+      |
+      v
+chat package + LLM
+  - The system prompt already includes the previous getBondContext().
+  - The reply includes the character's reaction emotion.
+      |
+      | emotion
+      v
+Application
+  - Calls kizuna.processInteraction({ emotion, ... }).
+  - May override valence or severity with moderation results or app rules.
+      |
+      v
+Kizuna
+  - Deterministically updates bond score, warmth, and scars. No LLM runs here.
+      |
+      v
+Updated getBondContext() -> next turn's system prompt -> changed attitude
+```
+
+The LLM is the **sensor** that reports how the character felt and the
+**actuator** that changes behavior after reading the updated context. Kizuna is
+the deterministic state machine between those two jobs. An LLM never chooses
+the amount of a bond change. Keeping that calculation outside the LLM provides:
+
+- Prompt-injection resistance: viewers cannot talk their intimacy score up.
+- Reproducible, testable relationship changes.
+- Zero additional LLM cost or latency for the bond calculation.
+
+The classifier layer is pluggable. An app can provide `valence` and `severity`
+overrides from a moderation API or its own rules. The
+[`chat-bond-sample`](./examples/chat-bond-sample/) uses a small dictionary as a
+no-LLM stand-in for exactly this input layer. In a real chat flow, the
+character's reaction emotion is normally the valence signal.
+
 ## The bond story
 
 With the default configuration, representative English context looks like

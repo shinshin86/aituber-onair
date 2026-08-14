@@ -4,6 +4,12 @@ import {
   type BondSnapshot,
   type Interaction,
 } from '../../../src/index';
+import {
+  classifyInput,
+  formatPoints,
+  formatSignedPoints,
+  selectScriptedReply,
+} from './demoLogic';
 import './styles.css';
 
 interface ChatMessage {
@@ -11,11 +17,6 @@ interface ChatMessage {
   role: 'assistant' | 'user';
   text: string;
   emotion?: string;
-}
-
-interface ScriptedReply {
-  text: string;
-  emotion: string;
 }
 
 interface HistoryPoint {
@@ -32,40 +33,6 @@ const stageLabels: Record<string, string> = {
   regular: '常連',
   companion: '相棒',
 };
-const cannedReplies: Record<string, ScriptedReply[]> = {
-  rude: [
-    {
-      text: 'その言い方は受け止められないよ。落ち着いて話せるときに続けよう。',
-      emotion: 'angry',
-    },
-    {
-      text: '今の言葉には距離を置きたいな。穏やかに話し直してくれたら聞くよ。',
-      emotion: 'angry',
-    },
-  ],
-  curious: [
-    {
-      text: 'いい質問だね。もう少し一緒に考えてみたいな。',
-      emotion: 'curious',
-    },
-    { text: 'その続きが気になる。どうしてそう思ったの？', emotion: 'curious' },
-  ],
-  excited: [
-    {
-      text: 'わあ、うれしい！ その話を聞けて元気が出たよ。',
-      emotion: 'excited',
-    },
-    { text: 'すごく楽しそう！ 私も一緒にやってみたいな。', emotion: 'happy' },
-  ],
-  calm: [
-    { text: 'うん。急がず、ここでゆっくり話そう。', emotion: 'calm' },
-    {
-      text: '話してくれてありがとう。ちゃんと聞いているよ。',
-      emotion: 'relaxed',
-    },
-  ],
-};
-
 let manager = createManager();
 let messages: ChatMessage[] = [
   {
@@ -143,19 +110,22 @@ async function sendMessage(): Promise<void> {
   renderMessages();
 
   try {
-    const rude = isRudeInput(text);
+    const classification = classifyInput(text);
     await recordInteraction({
       userId: USER_ID,
       kind: 'message',
       message: text,
-      ...(rude && { valence: 'negative' as const }),
+      valence: classification.valence,
+      ...(classification.severity && {
+        severity: classification.severity,
+      }),
       isOwner: true,
       timestamp: Date.now(),
       metadata: { displayName: DISPLAY_NAME, source: 'one-to-one-chat' },
     });
 
     await delay(360);
-    const reply = selectReply(text);
+    const reply = selectScriptedReply(classification.tone, replySequence++);
     messages.push({
       id: messageSequence++,
       role: 'assistant',
@@ -188,23 +158,6 @@ async function sendMessage(): Promise<void> {
 
 async function recordInteraction(interaction: Interaction): Promise<void> {
   await manager.processInteraction(interaction);
-}
-
-function selectReply(text: string): ScriptedReply {
-  const group = isRudeInput(text)
-    ? cannedReplies.rude
-    : /\?|？|どう|なぜ/.test(text)
-      ? cannedReplies.curious
-      : /！|!|嬉|うれ|最高|楽し|好き/.test(text)
-        ? cannedReplies.excited
-        : cannedReplies.calm;
-  const fallback: ScriptedReply = {
-    text: '話してくれてありがとう。もう少し聞かせて。',
-    emotion: 'happy',
-  };
-  const reply = group?.[replySequence % group.length] ?? fallback;
-  replySequence++;
-  return reply;
 }
 
 function renderState(): void {
@@ -363,21 +316,6 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-function isRudeInput(text: string): boolean {
-  return /ばか|バカ|嫌い|うるさい|黙れ|最悪|idiot|stupid|hate|shut up/i.test(
-    text,
-  );
-}
-
-function formatPoints(points: number): string {
-  return Number.isInteger(points) ? String(points) : points.toFixed(1);
-}
-
-function formatSignedPoints(points: number): string {
-  const formatted = formatPoints(points);
-  return points > 0 ? `+${formatted}` : formatted;
-}
-
 function formatStage(stage: string): string {
   return stageLabels[stage] ?? stage;
 }
@@ -398,7 +336,8 @@ function renderShell(): string {
         <div>
           <p class="package-name">@aituber-onair/kizuna</p>
           <h1>Kizuna 1対1チャットデモ</h1>
-          <p>入力したメッセージとキャラクターの感情付き定型応答を、1人分の関係性として記録します。「今日も会えてうれしい」→「ばか」→穏やかな言葉を数回、の順で、不和による低下と修復を試せます。</p>
+          <p>入力したメッセージとキャラクターの感情付き定型応答を、1人分の関係性として記録します。「今日も会えてうれしい」→「ヤダ」→穏やかな言葉を数回、の順で、不和による低下と修復を試せます。</p>
+          <p class="classifier-note">このデモの感情判定は辞書による代用品です。実際のアプリでは、LLMが返したキャラクターの感情を絆の変化へ使います。</p>
         </div>
         <button id="reset-button" type="button">リセット</button>
       </header>

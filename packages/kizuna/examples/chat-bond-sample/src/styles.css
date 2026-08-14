@@ -63,9 +63,15 @@ h1 {
   letter-spacing: -0.035em;
 }
 
-.intro p:last-child {
+.intro p:not(.package-name) {
   margin: 0;
   color: #554f60;
+}
+
+.intro .classifier-note {
+  margin-top: 7px;
+  color: #716779;
+  font-size: 0.75rem;
 }
 
 #reset-button {

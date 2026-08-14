@@ -10,10 +10,18 @@ intimacy value. Its bar stretches from the previous value to the new value, and
 the SVG history graph records each exchange. The sample uses no LLM, TTS, API
 key, network service, or runtime dependency.
 
-Try `I'm happy to see you` → `stupid` → several kind messages. Rude input
+This demo uses a small scored dictionary as a stand-in for sentiment. It
+normalizes spelling variants and maps matched language to a scripted reaction
+emotion. A real app should normally use the emotion on the LLM's reaction as
+the valence signal, as the `react-pngtuber-app` integration does. Moderation
+APIs or application rules can still override `valence` and `severity` before
+calling Kizuna.
+
+Try `I'm happy to see you` → `shut up` → several kind messages. Negative input
 produces an `angry` scripted reply, so the message and reaction visibly lower
-the bar and graph before calm exchanges repair warmth and score. Absence is not
-punished, and the reply sets a boundary without guilt-tripping the user.
+the bar and graph before calm exchanges repair warmth and score. Grave terms
+also set `severity: 'grave'`. Absence is not punished, and the reply sets a
+boundary without guilt-tripping the user.
 
 From the repository root:
 
