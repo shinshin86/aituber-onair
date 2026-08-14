@@ -4,16 +4,24 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const [template, tarballArgument, coreTarballArgument] = process.argv.slice(2);
+const [template, tarballArgument, coreTarballArgument, kizunaTarballArgument] =
+  process.argv.slice(2);
 if (!template || !tarballArgument || !coreTarballArgument) {
   console.error(
-    'Usage: node scripts/smoke-generated-template.mjs <template> <tarball> <core-tarball>',
+    'Usage: node scripts/smoke-generated-template.mjs <template> <tarball> <core-tarball> [kizuna-tarball]',
   );
   process.exit(1);
 }
 
 const tarball = path.resolve(tarballArgument);
 const coreTarball = path.resolve(coreTarballArgument);
+const localTarballs = new Map([['@aituber-onair/core', coreTarball]]);
+if (kizunaTarballArgument) {
+  localTarballs.set(
+    '@aituber-onair/kizuna',
+    path.resolve(kizunaTarballArgument),
+  );
+}
 const smokeRoot = await mkdtemp(
   path.join(tmpdir(), `create-aituber-${template}-smoke-`),
 );
@@ -123,13 +131,18 @@ async function verifyDevServer() {
   }
 }
 
-async function useLocalCoreTarball() {
+async function useLocalTarballs() {
   const packageJsonPath = path.join(projectRoot, 'package.json');
   const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
-  packageJson.dependencies = {
-    ...packageJson.dependencies,
-    '@aituber-onair/core': pathToFileURL(coreTarball).href,
-  };
+  packageJson.dependencies = { ...packageJson.dependencies };
+  for (const [name, tarballPath] of localTarballs) {
+    // Core is always injected; other workspace packages only when the
+    // template actually depends on them (their bumped versions may not be
+    // published yet while the release PR is open).
+    if (name === '@aituber-onair/core' || packageJson.dependencies[name]) {
+      packageJson.dependencies[name] = pathToFileURL(tarballPath).href;
+    }
+  }
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 }
 
@@ -163,7 +176,7 @@ try {
     ],
     { cwd: smokeRoot },
   );
-  await useLocalCoreTarball();
+  await useLocalTarballs();
   await run('npm', ['install', '--no-audit', '--no-fund'], {
     cwd: projectRoot,
   });

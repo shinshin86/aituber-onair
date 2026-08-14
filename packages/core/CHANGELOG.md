@@ -1,5 +1,14 @@
 # @aituber-onair/core
 
+## Unreleased
+
+### Patch Changes
+
+- Added `AITuberOnAirCore.updateChatOptions()` to update chat processor
+  options (for example the system prompt) without recreating the core
+  instance. Used by the `react-pngtuber-app` example to inject Kizuna bond
+  context into the live system prompt.
+
 ## 0.26.10
 
 ### Patch Changes
