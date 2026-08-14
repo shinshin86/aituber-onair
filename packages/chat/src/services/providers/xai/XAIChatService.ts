@@ -3,7 +3,7 @@ import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
-  MODEL_GROK_4_1_FAST_NON_REASONING,
+  MODEL_GROK_4_3,
   isXaiReasoningEffortModel,
   isXaiVisionModel,
   normalizeXaiReasoningEffort,
@@ -45,12 +45,12 @@ export class XAIChatService implements ChatService {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_GROK_4_1_FAST_NON_REASONING,
-    visionModel: string = MODEL_GROK_4_1_FAST_NON_REASONING,
+    model: string = MODEL_GROK_4_3,
+    visionModel: string = MODEL_GROK_4_3,
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_XAI_CHAT_COMPLETIONS_API,
     responseLength?: ChatResponseLength,
-    reasoningEffort?: XaiReasoningEffort,
+    reasoningEffort: XaiReasoningEffort = 'none',
   ) {
     this.apiKey = apiKey;
     this.model = model;

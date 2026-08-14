@@ -11,12 +11,14 @@ import {
   getDefaultGeminiReasoningEffort,
   getDefaultKimiReasoningEffort,
   getDefaultDeepSeekReasoningEffort,
+  getDefaultZaiReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
   isClaudeReasoningEffortModel,
   isGPT5Model,
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isDeepSeekReasoningEffortModel,
+  isZaiReasoningEffortModel,
   isXaiReasoningEffortModel,
   normalizeGeminiReasoningEffort,
   normalizeClaudeReasoningEffort,
@@ -34,6 +36,7 @@ import {
   type DeepSeekReasoningEffort,
   type OpenRouterReasoningEffort,
   type XaiReasoningEffort,
+  type ZaiReasoningEffort,
   type ChatCompletionAssistantMessage,
 } from '@aituber-onair/chat';
 import './App.css';
@@ -240,6 +243,17 @@ function App() {
       selectedModel,
       requestedDeepSeekReasoningEffort,
     ) ?? 'none';
+  const zaiReasoningEffort: ZaiReasoningEffort =
+    isZaiReasoningEffortModel(selectedModel) &&
+    (reasoning_effort === 'none' ||
+      reasoning_effort === 'minimal' ||
+      reasoning_effort === 'low' ||
+      reasoning_effort === 'medium' ||
+      reasoning_effort === 'high' ||
+      reasoning_effort === 'xhigh' ||
+      reasoning_effort === 'max')
+      ? reasoning_effort
+      : (getDefaultZaiReasoningEffort(selectedModel) ?? 'none');
   const visionSupportLevel = getVisionSupportLevel(provider, selectedModel);
   const effectiveApiKey =
     provider === 'openai-compatible' ? apiKey.trim() : apiKey;
@@ -341,10 +355,18 @@ function App() {
         }
 
         if (provider === 'zai') {
-          options.thinking = {
-            type: zaiThinkingType,
-            clear_thinking: zaiClearThinking,
-          };
+          if (isZaiReasoningEffortModel(selectedModel)) {
+            options.reasoning_effort = zaiReasoningEffort;
+            options.thinking = {
+              type: 'enabled',
+              clear_thinking: zaiClearThinking,
+            };
+          } else {
+            options.thinking = {
+              type: zaiThinkingType,
+              clear_thinking: zaiClearThinking,
+            };
+          }
 
           if (zaiResponseFormatType !== 'text') {
             if (zaiResponseFormatType === 'json_schema') {
@@ -404,6 +426,7 @@ function App() {
     xaiReasoningEffort,
     kimiReasoningEffort,
     deepSeekReasoningEffort,
+    zaiReasoningEffort,
     verbosity,
     gpt5EndpointPreference,
     openaiCompatibleEndpoint,
@@ -595,6 +618,10 @@ function App() {
                 setReasoningEffort(
                   getDefaultDeepSeekReasoningEffort(defaultModel) ?? 'none',
                 );
+              } else if (newProvider === 'zai') {
+                setReasoningEffort(
+                  getDefaultZaiReasoningEffort(defaultModel) ?? 'none',
+                );
               } else {
                 setReasoningEffort('medium');
               }
@@ -661,6 +688,10 @@ function App() {
                     requestedDeepSeekReasoningEffort,
                   ) ?? 'none',
                 );
+              } else if (newProvider === 'zai') {
+                setReasoningEffort(
+                  getDefaultZaiReasoningEffort(modelId) ?? 'none',
+                );
               } else if (newProvider === 'openrouter') {
                 setOpenrouterReasoningEffort(
                   normalizeOpenRouterReasoningEffort(
@@ -683,7 +714,9 @@ function App() {
                       ? kimiReasoningEffort
                       : provider === 'deepseek'
                         ? deepSeekReasoningEffort
-                        : normalizedReasoningEffort
+                        : provider === 'zai'
+                          ? zaiReasoningEffort
+                          : normalizedReasoningEffort
             }
             onReasoningEffortChange={setReasoningEffort}
             verbosity={verbosity}

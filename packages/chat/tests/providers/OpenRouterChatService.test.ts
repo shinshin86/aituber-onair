@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
   ENDPOINT_OPENROUTER_API,
   MODEL_GPT_OSS_20B_FREE,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
+  MODEL_GOOGLE_GEMINI_3_7_FLASH,
   MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
   MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
   MODEL_MOONSHOTAI_KIMI_K3,
@@ -15,10 +17,12 @@ import {
   MODEL_OPENAI_GPT_5_6_TERRA,
   MODEL_OPENAI_GPT_4O,
   MODEL_XAI_GROK_4_5,
+  MODEL_XAI_GROK_4_6,
   MODEL_XAI_GROK_LATEST,
   MODEL_ZAI_GLM_5_2,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+  MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
 } from '../../src/constants/openrouter';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
@@ -38,12 +42,16 @@ const recentOpenRouterModels = [
   MODEL_OPENAI_GPT_5_6_TERRA,
   MODEL_OPENAI_GPT_5_6_LUNA,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5,
+  MODEL_GOOGLE_GEMINI_3_7_FLASH,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   MODEL_XAI_GROK_LATEST,
+  MODEL_XAI_GROK_4_6,
   MODEL_XAI_GROK_4_5,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+  MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
 ];
 
 const createJsonResponse = (data: unknown) =>
@@ -390,6 +398,7 @@ describe('OpenRouterChatService request body', () => {
   it.each([
     MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
     MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+    MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
   ])('defaults %s to actual reasoning effort none', async (model) => {
     const postSpy = vi
       .spyOn(ChatServiceHttpClient, 'post')

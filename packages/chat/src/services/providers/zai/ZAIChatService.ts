@@ -7,6 +7,7 @@ import {
   MODEL_GLM_4_6V_FLASH,
   isZaiToolStreamModel,
   isZaiVisionModel,
+  type ZaiReasoningEffort,
 } from '../../../constants/zai';
 import {
   ChatResponseLength,
@@ -42,6 +43,7 @@ export class ZAIChatService implements ChatService {
     type: 'enabled' | 'disabled';
     clear_thinking?: boolean;
   };
+  private reasoningEffort?: ZaiReasoningEffort;
 
   /**
    * Constructor
@@ -64,6 +66,7 @@ export class ZAIChatService implements ChatService {
       type: 'enabled' | 'disabled';
       clear_thinking?: boolean;
     },
+    reasoningEffort?: ZaiReasoningEffort,
   ) {
     this.apiKey = apiKey;
     this.model = model;
@@ -72,6 +75,7 @@ export class ZAIChatService implements ChatService {
     this.responseLength = responseLength;
     this.responseFormat = responseFormat;
     this.thinking = thinking ?? { type: 'disabled' };
+    this.reasoningEffort = reasoningEffort;
 
     this.visionModel = visionModel;
   }
@@ -232,6 +236,10 @@ export class ZAIChatService implements ChatService {
 
     if (this.thinking) {
       body.thinking = this.thinking;
+    }
+
+    if (model === MODEL_GLM_5_2 && this.reasoningEffort) {
+      body.reasoning_effort = this.reasoningEffort;
     }
 
     const tools = this.buildToolsDefinition();

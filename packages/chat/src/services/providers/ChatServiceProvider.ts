@@ -8,6 +8,7 @@ import type { XaiReasoningEffort } from '../../constants/xai';
 import type { KimiReasoningEffort } from '../../constants/kimi';
 import type { DeepSeekReasoningEffort } from '../../constants/deepseek';
 import type { OpenRouterReasoningEffort } from '../../constants/openrouter';
+import type { ZaiReasoningEffort } from '../../constants/zai';
 import { ToolDefinition, MCPServerConfig } from '../../types';
 
 /**
@@ -219,17 +220,22 @@ export type PlamoChatServiceOptions = Omit<
   reasoning_effort?: PlamoReasoningEffort;
 };
 
-export type ZAIChatServiceOptions = DisallowKeys<
-  BaseChatServiceOptions,
-  | 'verbosity'
-  | 'reasoning_effort'
-  | 'gpt5Preset'
-  | 'gpt5EndpointPreference'
-  | 'enableReasoningSummary'
-  | 'includeReasoning'
-  | 'reasoningMaxTokens'
-  | 'baseUrl'
->;
+export type ZAIChatServiceOptions = Omit<
+  DisallowKeys<
+    BaseChatServiceOptions,
+    | 'verbosity'
+    | 'gpt5Preset'
+    | 'gpt5EndpointPreference'
+    | 'enableReasoningSummary'
+    | 'includeReasoning'
+    | 'reasoningMaxTokens'
+    | 'baseUrl'
+  >,
+  'reasoning_effort'
+> & {
+  /** GLM-5.2 reasoning effort. Defaults to none for responsive chat. */
+  reasoning_effort?: ZaiReasoningEffort;
+};
 
 export type XAIChatServiceOptions = DisallowKeys<
   BaseChatServiceOptions,

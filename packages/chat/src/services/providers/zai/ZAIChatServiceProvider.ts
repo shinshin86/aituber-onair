@@ -12,7 +12,9 @@ import {
   MODEL_GLM_4_6V,
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,
+  getZaiSupportedReasoningEfforts,
   isZaiVisionModel,
+  normalizeZaiReasoningEffort,
 } from '../../../constants/zai';
 import { ChatService } from '../../ChatService';
 import { ZAIChatService } from './ZAIChatService';
@@ -46,7 +48,43 @@ export class ZAIChatServiceProvider
     });
 
     const tools: ToolDefinition[] | undefined = options.tools;
-    const thinking = options.thinking ?? { type: 'disabled' as const };
+    const supportedReasoningEfforts = getZaiSupportedReasoningEfforts(model);
+    if (
+      options.reasoning_effort !== undefined &&
+      !supportedReasoningEfforts.includes(options.reasoning_effort)
+    ) {
+      const supportedMessage =
+        supportedReasoningEfforts.length > 0
+          ? `Supported values: ${supportedReasoningEfforts.join(', ')}.`
+          : 'This model does not expose configurable effort.';
+      throw new Error(
+        `Model ${model} does not support Z.ai reasoning_effort: ` +
+          `${options.reasoning_effort}. ${supportedMessage}`,
+      );
+    }
+
+    const normalizedReasoningEffort = normalizeZaiReasoningEffort(
+      model,
+      options.reasoning_effort,
+    );
+    const usesExplicitThinking = options.thinking !== undefined;
+    const thinking =
+      usesExplicitThinking && options.reasoning_effort === undefined
+        ? options.thinking
+        : normalizedReasoningEffort === 'high' ||
+            normalizedReasoningEffort === 'max'
+          ? {
+              type: 'enabled' as const,
+              clear_thinking: options.thinking?.clear_thinking,
+            }
+          : {
+              type: 'disabled' as const,
+              clear_thinking: options.thinking?.clear_thinking,
+            };
+    const reasoningEffort =
+      thinking?.type === 'enabled' && options.reasoning_effort !== undefined
+        ? normalizedReasoningEffort
+        : undefined;
 
     return new ZAIChatService(
       options.apiKey,
@@ -57,6 +95,7 @@ export class ZAIChatServiceProvider
       options.responseLength,
       options.responseFormat,
       thinking,
+      reasoningEffort,
     );
   }
 

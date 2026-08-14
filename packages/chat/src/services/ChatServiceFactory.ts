@@ -13,6 +13,7 @@ import { getKimiSupportedReasoningEfforts } from '../constants/kimi';
 import { getDeepSeekSupportedReasoningEfforts } from '../constants/deepseek';
 import { getOpenRouterSupportedReasoningEfforts } from '../constants/openrouter';
 import { getXaiSupportedReasoningEfforts } from '../constants/xai';
+import { getZaiSupportedReasoningEfforts } from '../constants/zai';
 import { getChatBackendProviderCapabilities } from '../backend';
 
 const MCP_SUPPORTED_PROVIDERS = new Set<string>(['openai', 'gemini', 'claude']);
@@ -34,6 +35,7 @@ const REASONING_EFFORT_BY_PROVIDER: Record<string, string[]> = {
   plamo: ['none', 'medium'],
   xai: ['none', 'low', 'medium', 'high', 'xhigh'],
   deepseek: ['none', 'low', 'high', 'max'],
+  zai: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
 };
 
 /**
@@ -142,7 +144,9 @@ export class ChatServiceFactory {
                 ? [...getOpenRouterSupportedReasoningEfforts(model)]
                 : providerName === 'xai' && model
                   ? [...getXaiSupportedReasoningEfforts(model)]
-                  : (REASONING_EFFORT_BY_PROVIDER[providerName] ?? []),
+                  : providerName === 'zai' && model
+                    ? [...getZaiSupportedReasoningEfforts(model)]
+                    : (REASONING_EFFORT_BY_PROVIDER[providerName] ?? []),
     };
   }
 

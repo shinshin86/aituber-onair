@@ -5,8 +5,6 @@ import {
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_20_NON_REASONING,
-  MODEL_GROK_4_1_FAST_REASONING,
-  MODEL_GROK_4_1_FAST_NON_REASONING,
   getDefaultXaiReasoningEffort,
   isXaiVisionModel,
   normalizeXaiReasoningEffort,
@@ -75,8 +73,6 @@ export class XAIChatServiceProvider
       MODEL_GROK_4_3,
       MODEL_GROK_4_20_REASONING,
       MODEL_GROK_4_20_NON_REASONING,
-      MODEL_GROK_4_1_FAST_REASONING,
-      MODEL_GROK_4_1_FAST_NON_REASONING,
     ];
   }
 
@@ -84,14 +80,14 @@ export class XAIChatServiceProvider
    * Get the default model
    */
   getDefaultModel(): string {
-    return MODEL_GROK_4_1_FAST_NON_REASONING;
+    return MODEL_GROK_4_3;
   }
 
   /**
    * Get the default vision model
    */
   private getDefaultVisionModel(): string {
-    return MODEL_GROK_4_1_FAST_NON_REASONING;
+    return MODEL_GROK_4_3;
   }
 
   /**

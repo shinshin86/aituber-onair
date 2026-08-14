@@ -17,6 +17,7 @@ import {
   getGeminiSupportedReasoningEfforts,
   getDeepSeekSupportedReasoningEfforts,
   getOpenRouterSupportedReasoningEfforts,
+  getZaiSupportedReasoningEfforts,
   isGPT5Model,
   isResponsesOnlyGPT5Model,
   isOpenRouterFreeModel,
@@ -29,6 +30,7 @@ import {
   type DeepSeekReasoningEffort,
   type OpenRouterReasoningEffort,
   type XaiReasoningEffort,
+  type ZaiReasoningEffort,
   // OpenAI models
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
@@ -52,8 +54,6 @@ import {
   MODEL_O1_MINI,
   MODEL_O1,
   // Claude models
-  MODEL_CLAUDE_4_SONNET,
-  MODEL_CLAUDE_4_OPUS,
   MODEL_CLAUDE_4_5_SONNET,
   MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_4_5_OPUS,
@@ -61,9 +61,9 @@ import {
   MODEL_CLAUDE_4_6_OPUS,
   MODEL_CLAUDE_4_7_OPUS,
   MODEL_CLAUDE_4_8_OPUS,
+  MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_SONNET,
   MODEL_CLAUDE_5_OPUS,
-  MODEL_CLAUDE_3_HAIKU,
   // Gemini models
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
@@ -80,9 +80,11 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   // OpenRouter models
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
   MODEL_GPT_OSS_20B_FREE,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
+  MODEL_GOOGLE_GEMINI_3_7_FLASH,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
   MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
   MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
@@ -94,6 +96,7 @@ import {
   MODEL_OPENROUTER_FUSION,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+  MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
   MODEL_OPENAI_GPT_5_6_SOL,
@@ -101,7 +104,6 @@ import {
   MODEL_OPENAI_GPT_5_6_LUNA,
   MODEL_OPENAI_GPT_5_5_PRO,
   MODEL_OPENAI_GPT_5_5,
-  MODEL_OPENAI_GPT_5_1_CHAT,
   MODEL_OPENAI_GPT_5_1_CODEX,
   MODEL_OPENAI_GPT_5_MINI,
   MODEL_OPENAI_GPT_5_NANO,
@@ -112,8 +114,6 @@ import {
   MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
   MODEL_ANTHROPIC_CLAUDE_OPUS_4,
   MODEL_ANTHROPIC_CLAUDE_SONNET_4,
-  MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
-  MODEL_ANTHROPIC_CLAUDE_3_5_SONNET,
   MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
   MODEL_GOOGLE_GEMINI_PRO_LATEST,
   MODEL_GOOGLE_GEMINI_FLASH_LATEST,
@@ -123,9 +123,9 @@ import {
   MODEL_ZAI_GLM_5_2,
   MODEL_ZAI_GLM_4_7_FLASH,
   MODEL_ZAI_GLM_4_5_AIR,
-  MODEL_ZAI_GLM_4_5_AIR_FREE,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
   MODEL_XAI_GROK_4_5,
+  MODEL_XAI_GROK_4_6,
   MODEL_XAI_GROK_LATEST,
   // Z.ai models
   MODEL_GLM_5_2,
@@ -146,8 +146,6 @@ import {
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_20_NON_REASONING,
-  MODEL_GROK_4_1_FAST_REASONING,
-  MODEL_GROK_4_1_FAST_NON_REASONING,
   // Kimi models
   MODEL_KIMI_K3,
   MODEL_KIMI_K2_6,
@@ -166,14 +164,11 @@ import {
   MODEL_MISTRAL_LARGE_LATEST,
   MODEL_MISTRAL_LARGE_2512,
   MODEL_MISTRAL_SMALL_2603,
-  MODEL_MISTRAL_MEDIUM_2508,
   // Sakana models
   MODEL_FUGU,
-  MODEL_FUGU_ULTRA,
-  MODEL_FUGU_ULTRA_20260615,
+  MODEL_FUGU_ULTRA_V1_1,
   // PLaMo models
   MODEL_PLAMO_3_0_PRIME,
-  MODEL_PLAMO_2_2_PRIME,
   // Gemini Nano models
   MODEL_GEMINI_NANO,
   isKimiReasoningEffortModel,
@@ -614,6 +609,12 @@ export const allModels: ProviderModel[] = [
 
   // Claude models
   {
+    id: MODEL_CLAUDE_5_FABLE,
+    name: 'Claude Fable 5',
+    provider: 'claude',
+    default: false,
+  },
+  {
     id: MODEL_CLAUDE_5_OPUS,
     name: 'Claude Opus 5',
     provider: 'claude',
@@ -666,24 +667,6 @@ export const allModels: ProviderModel[] = [
     name: 'Claude 4.5 Haiku',
     provider: 'claude',
     default: true,
-  },
-  {
-    id: MODEL_CLAUDE_4_OPUS,
-    name: 'Claude 4 Opus (Deprecated)',
-    provider: 'claude',
-    default: false,
-  },
-  {
-    id: MODEL_CLAUDE_4_SONNET,
-    name: 'Claude 4 Sonnet (Deprecated)',
-    provider: 'claude',
-    default: false,
-  },
-  {
-    id: MODEL_CLAUDE_3_HAIKU,
-    name: 'Claude 3 Haiku (Deprecated)',
-    provider: 'claude',
-    default: false,
   },
 
   // Gemini models
@@ -804,6 +787,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+    name: 'DeepSeek V4 Pro 0813 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_GPT_OSS_20B_FREE,
     name: 'GPT OSS 20B (Free)',
     provider: 'openrouter',
@@ -848,12 +837,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_OPENAI_GPT_5_5,
     name: 'GPT-5.5 (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_OPENAI_GPT_5_1_CHAT,
-    name: 'GPT-5.1 Chat (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -906,6 +889,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_ANTHROPIC_CLAUDE_FABLE_5,
+    name: 'Claude Fable 5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_ANTHROPIC_CLAUDE_OPUS_5,
     name: 'Claude Opus 5 (OpenRouter)',
     provider: 'openrouter',
@@ -924,18 +913,6 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
-    name: 'Claude 3.7 Sonnet (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_ANTHROPIC_CLAUDE_3_5_SONNET,
-    name: 'Claude 3.5 Sonnet (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
     id: MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
     name: 'Claude 4.5 Haiku (OpenRouter)',
     provider: 'openrouter',
@@ -950,6 +927,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GOOGLE_GEMINI_FLASH_LATEST,
     name: 'Gemini Flash Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_3_7_FLASH,
+    name: 'Gemini 3.7 Flash (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -1002,14 +985,14 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_ZAI_GLM_4_5_AIR_FREE,
-    name: 'GLM-4.5 Air (Free, OpenRouter)',
+    id: MODEL_XAI_GROK_LATEST,
+    name: 'Grok Latest (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
   {
-    id: MODEL_XAI_GROK_LATEST,
-    name: 'Grok Latest (OpenRouter)',
+    id: MODEL_XAI_GROK_4_6,
+    name: 'Grok 4.6 (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -1147,7 +1130,7 @@ export const allModels: ProviderModel[] = [
     id: MODEL_GROK_4_3,
     name: 'Grok 4.3',
     provider: 'xai',
-    default: false,
+    default: true,
   },
   {
     id: MODEL_GROK_4_20_REASONING,
@@ -1160,18 +1143,6 @@ export const allModels: ProviderModel[] = [
     name: 'Grok 4.20',
     provider: 'xai',
     default: false,
-  },
-  {
-    id: MODEL_GROK_4_1_FAST_REASONING,
-    name: 'Grok 4-1 Fast Reasoning',
-    provider: 'xai',
-    default: false,
-  },
-  {
-    id: MODEL_GROK_4_1_FAST_NON_REASONING,
-    name: 'Grok 4-1 Fast',
-    provider: 'xai',
-    default: true,
   },
 
   // Kimi models
@@ -1269,12 +1240,6 @@ export const allModels: ProviderModel[] = [
     provider: 'mistral',
     default: false,
   },
-  {
-    id: MODEL_MISTRAL_MEDIUM_2508,
-    name: 'Mistral Medium 3.1',
-    provider: 'mistral',
-    default: false,
-  },
 
   // Sakana models (kept for source-level parity; provider is disabled in browser UI)
   {
@@ -1284,14 +1249,8 @@ export const allModels: ProviderModel[] = [
     default: true,
   },
   {
-    id: MODEL_FUGU_ULTRA,
-    name: 'Fugu Ultra',
-    provider: 'sakana',
-    default: false,
-  },
-  {
-    id: MODEL_FUGU_ULTRA_20260615,
-    name: 'Fugu Ultra 20260615',
+    id: MODEL_FUGU_ULTRA_V1_1,
+    name: 'Fugu Ultra v1.1',
     provider: 'sakana',
     default: false,
   },
@@ -1302,12 +1261,6 @@ export const allModels: ProviderModel[] = [
     name: 'PLaMo 3.0 Prime',
     provider: 'plamo',
     default: true,
-  },
-  {
-    id: MODEL_PLAMO_2_2_PRIME,
-    name: 'PLaMo 2.2 Prime',
-    provider: 'plamo',
-    default: false,
   },
 
   // Gemini Nano models (browser built-in AI)
@@ -1467,6 +1420,17 @@ export default function ProviderSelector({
     provider === 'openrouter'
       ? getOpenRouterSupportedReasoningEfforts(selectedModel)
       : [];
+  const zaiSupportedReasoningEfforts =
+    provider === 'zai' ? getZaiSupportedReasoningEfforts(selectedModel) : [];
+  const isZaiReasoningModel = zaiSupportedReasoningEfforts.length > 0;
+  const zaiReasoningEffort = zaiSupportedReasoningEfforts.includes(
+    reasoning_effort as ZaiReasoningEffort,
+  )
+    ? (reasoning_effort as ZaiReasoningEffort)
+    : 'none';
+  const isZaiThinkingEnabled = isZaiReasoningModel
+    ? zaiReasoningEffort !== 'none' && zaiReasoningEffort !== 'minimal'
+    : zaiThinkingType === 'enabled';
   const requestedXaiReasoningEffort: XaiReasoningEffort | undefined =
     reasoning_effort === 'none' ||
     reasoning_effort === 'low' ||
@@ -2290,23 +2254,54 @@ export default function ProviderSelector({
 
           {provider === 'zai' && (
             <>
-              <div className="config-group">
-                <label htmlFor="zai-thinking-type">Thinking</label>
-                <select
-                  id="zai-thinking-type"
-                  value={zaiThinkingType || 'disabled'}
-                  onChange={(e) =>
-                    onZaiThinkingTypeChange?.(
-                      e.target.value as 'enabled' | 'disabled',
-                    )
-                  }
-                  disabled={disabled}
-                  className="select-input"
-                >
-                  <option value="disabled">Disabled</option>
-                  <option value="enabled">Enabled</option>
-                </select>
-              </div>
+              {isZaiReasoningModel ? (
+                <div className="config-group">
+                  <label htmlFor="zai-reasoning-effort">
+                    GLM Reasoning Effort
+                  </label>
+                  <select
+                    id="zai-reasoning-effort"
+                    value={zaiReasoningEffort}
+                    onChange={(e) =>
+                      onReasoningEffortChange?.(
+                        e.target.value as ZaiReasoningEffort,
+                      )
+                    }
+                    disabled={disabled}
+                    className="select-input"
+                  >
+                    {zaiSupportedReasoningEfforts.map((effort) => (
+                      <option key={effort} value={effort}>
+                        {effort === 'none'
+                          ? 'None (fastest)'
+                          : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="helper-text">
+                    GLM-5.2 maps minimal to none, low/medium to high, and xhigh
+                    to max.
+                  </span>
+                </div>
+              ) : (
+                <div className="config-group">
+                  <label htmlFor="zai-thinking-type">Thinking</label>
+                  <select
+                    id="zai-thinking-type"
+                    value={zaiThinkingType || 'disabled'}
+                    onChange={(e) =>
+                      onZaiThinkingTypeChange?.(
+                        e.target.value as 'enabled' | 'disabled',
+                      )
+                    }
+                    disabled={disabled}
+                    className="select-input"
+                  >
+                    <option value="disabled">Disabled</option>
+                    <option value="enabled">Enabled</option>
+                  </select>
+                </div>
+              )}
 
               <div className="config-group">
                 <label htmlFor="zai-clear-thinking" className="checkbox-label">
@@ -2317,7 +2312,7 @@ export default function ProviderSelector({
                     onChange={(e) =>
                       onZaiClearThinkingChange?.(e.target.checked)
                     }
-                    disabled={disabled || zaiThinkingType !== 'enabled'}
+                    disabled={disabled || !isZaiThinkingEnabled}
                   />
                   Clear Thinking
                 </label>

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+  MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
   getDefaultOpenRouterReasoningEffort,
   getOpenRouterSupportedReasoningEfforts,
   isOpenRouterFreeModel,
@@ -64,5 +65,30 @@ describe('OpenRouter reasoning effort helpers', () => {
         'medium',
       ),
     ).toBe('low');
+  });
+
+  it('uses and normalizes the documented DeepSeek V4 Pro efforts', () => {
+    expect(
+      getOpenRouterSupportedReasoningEfforts(
+        MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+      ),
+    ).toEqual(['none', 'high', 'xhigh']);
+    expect(
+      getDefaultOpenRouterReasoningEffort(
+        MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+      ),
+    ).toBe('none');
+    expect(
+      normalizeOpenRouterReasoningEffort(
+        MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+        'medium',
+      ),
+    ).toBe('high');
+    expect(
+      normalizeOpenRouterReasoningEffort(
+        MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+        'max',
+      ),
+    ).toBe('xhigh');
   });
 });

@@ -44,6 +44,12 @@ export interface ToolChatCompletion<B = CoreToolChatBlock> {
   finish_reason?: string;
   response_status?: string;
   incomplete_details?: { reason?: string; [key: string]: any } | null;
+  stop_details?: {
+    type?: string;
+    category?: string | null;
+    explanation?: string | null;
+    [key: string]: any;
+  } | null;
   usage?: Record<string, any>;
   /** Complete assistant message for provider-compatible multi-turn history. */
   assistant_message?: ChatCompletionAssistantMessage;

@@ -38,17 +38,13 @@ describe('XAIChatServiceProvider', () => {
         MODEL_GROK_4_3,
         MODEL_GROK_4_20_REASONING,
         MODEL_GROK_4_20_NON_REASONING,
-        MODEL_GROK_4_1_FAST_REASONING,
-        MODEL_GROK_4_1_FAST_NON_REASONING,
       ]);
     });
   });
 
   describe('getDefaultModel', () => {
-    it('should return grok-4-1-fast-non-reasoning as default model', () => {
-      expect(provider.getDefaultModel()).toBe(
-        MODEL_GROK_4_1_FAST_NON_REASONING,
-      );
+    it('should return Grok 4.3 as the low-latency default model', () => {
+      expect(provider.getDefaultModel()).toBe(MODEL_GROK_4_3);
     });
   });
 
@@ -69,13 +65,16 @@ describe('XAIChatServiceProvider', () => {
       expect(
         provider.supportsVisionForModel(MODEL_GROK_4_20_NON_REASONING),
       ).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GROK_4_5)).toBe(true);
+    });
+
+    it('should not advertise retired Grok 4.1 slugs as vision models', () => {
       expect(
         provider.supportsVisionForModel(MODEL_GROK_4_1_FAST_REASONING),
-      ).toBe(true);
+      ).toBe(false);
       expect(
         provider.supportsVisionForModel(MODEL_GROK_4_1_FAST_NON_REASONING),
-      ).toBe(true);
-      expect(provider.supportsVisionForModel(MODEL_GROK_4_5)).toBe(true);
+      ).toBe(false);
     });
 
     it('should return false for unknown models', () => {
@@ -96,12 +95,12 @@ describe('XAIChatServiceProvider', () => {
 
       expect(XAIChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GROK_4_1_FAST_NON_REASONING,
-        MODEL_GROK_4_1_FAST_NON_REASONING,
+        MODEL_GROK_4_3,
+        MODEL_GROK_4_3,
         undefined,
         ENDPOINT_XAI_CHAT_COMPLETIONS_API,
         undefined,
-        undefined,
+        'none',
       );
     });
 

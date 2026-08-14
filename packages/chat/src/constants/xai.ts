@@ -10,6 +10,13 @@ export const MODEL_GROK_4_20_NON_REASONING = 'grok-4.20-0309-non-reasoning';
 export const MODEL_GROK_4_1_FAST_REASONING = 'grok-4-1-fast-reasoning';
 export const MODEL_GROK_4_1_FAST_NON_REASONING = 'grok-4-1-fast-non-reasoning';
 
+// Retired model ids remain exported for source compatibility. xAI redirects
+// these slugs to Grok 4.3, so new callers should select Grok 4.3 explicitly.
+export const XAI_DEPRECATED_MODELS = [
+  MODEL_GROK_4_1_FAST_REASONING,
+  MODEL_GROK_4_1_FAST_NON_REASONING,
+];
+
 export type XaiReasoningEffort = 'none' | 'low' | 'medium' | 'high' | 'xhigh';
 
 // Vision support for models
@@ -19,8 +26,6 @@ export const XAI_VISION_SUPPORTED_MODELS = [
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_GROK_4_20_NON_REASONING,
-  MODEL_GROK_4_1_FAST_REASONING,
-  MODEL_GROK_4_1_FAST_NON_REASONING,
 ];
 
 /**

@@ -3,6 +3,7 @@ import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_4_8_OPUS,
+  MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_SONNET,
 } from '../../src/constants';
@@ -12,12 +13,15 @@ import type { Message, ToolDefinition } from '../../src/types';
 
 const messages: Message[] = [{ role: 'user', content: 'hello' }];
 
-const createOkResponse = (content: Record<string, unknown>[] = []) =>
+const createOkResponse = (
+  content: Record<string, unknown>[] = [],
+  metadata: Record<string, unknown> = {},
+) =>
   ({
     ok: true,
     status: 200,
-    json: async () => ({ content }),
-    text: async () => JSON.stringify({ content }),
+    json: async () => ({ content, ...metadata }),
+    text: async () => JSON.stringify({ content, ...metadata }),
   }) as Response;
 
 const createStreamResponse = (chunks: string[]): Response => {
@@ -160,6 +164,92 @@ describe('ClaudeChatService', () => {
       'x-api-key': 'test-key',
       'anthropic-version': '2023-06-01',
     });
+  });
+
+  it('sends Claude Fable 5 through the same Messages API route', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new ClaudeChatService(
+      'test-key',
+      MODEL_CLAUDE_5_FABLE,
+      MODEL_CLAUDE_5_FABLE,
+    );
+
+    await (service as any).callClaude(messages, MODEL_CLAUDE_5_FABLE, false);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy.mock.calls[0][0]).toBe(ENDPOINT_CLAUDE_API);
+    expect(postSpy.mock.calls[0][1]).toMatchObject({
+      model: MODEL_CLAUDE_5_FABLE,
+      messages: [{ role: 'user', content: 'hello' }],
+      stream: false,
+    });
+  });
+
+  it('returns one-shot refusals as terminal completion metadata', async () => {
+    const stopDetails = {
+      type: 'refusal',
+      category: 'policy',
+      explanation: 'Request cannot be completed.',
+    };
+    vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+      createOkResponse([{ type: 'text', text: 'I cannot help with that.' }], {
+        stop_reason: 'refusal',
+        stop_details: stopDetails,
+      }),
+    );
+    const service = new ClaudeChatService(
+      'test-key',
+      MODEL_CLAUDE_5_FABLE,
+      MODEL_CLAUDE_5_FABLE,
+    );
+
+    const result = await service.chatOnce(messages, false);
+
+    expect(result.stop_reason).toBe('end');
+    expect(result.finish_reason).toBe('refusal');
+    expect(result.stop_details).toEqual(stopDetails);
+    expect(result.blocks).toEqual([
+      { type: 'text', text: 'I cannot help with that.' },
+    ]);
+  });
+
+  it('completes a tool-enabled streaming refusal without a tool error', async () => {
+    const stopDetails = {
+      type: 'refusal',
+      category: 'policy',
+      explanation: 'Request cannot be completed.',
+    };
+    vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+      createStreamResponse([
+        'data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}\n\n',
+        'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"I cannot help with that."}}\n\n',
+        `data: ${JSON.stringify({
+          type: 'message_delta',
+          delta: { stop_reason: 'refusal' },
+          stop_details: stopDetails,
+        })}\n\n`,
+      ]),
+    );
+    const service = new ClaudeChatService(
+      'test-key',
+      MODEL_CLAUDE_5_FABLE,
+      MODEL_CLAUDE_5_FABLE,
+      tools,
+    );
+    const onComplete = vi.fn(async () => {});
+
+    await service.processChat(messages, () => {}, onComplete);
+
+    expect(onComplete).toHaveBeenCalledWith(
+      'I cannot help with that.',
+      expect.objectContaining({
+        stop_reason: 'end',
+        finish_reason: 'refusal',
+        stop_details: stopDetails,
+      }),
+    );
   });
 
   it('preserves Opus 5 thinking blocks for a tool result continuation', async () => {

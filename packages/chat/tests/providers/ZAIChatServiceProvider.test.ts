@@ -120,6 +120,7 @@ describe('ZAIChatServiceProvider', () => {
         undefined,
         undefined,
         expect.objectContaining({ type: 'disabled' }),
+        undefined,
       );
     });
 
@@ -140,6 +141,7 @@ describe('ZAIChatServiceProvider', () => {
         undefined,
         undefined,
         expect.objectContaining({ type: 'disabled' }),
+        undefined,
       );
     });
 
@@ -161,7 +163,98 @@ describe('ZAIChatServiceProvider', () => {
         undefined,
         undefined,
         expect.objectContaining({ type: 'disabled' }),
+        undefined,
       );
+    });
+
+    it('normalizes minimal effort to disabled thinking for responsive chat', () => {
+      provider.createChatService({
+        apiKey: 'test-api-key',
+        model: MODEL_GLM_5_2,
+        reasoning_effort: 'minimal',
+      });
+
+      expect(ZAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GLM_5_2,
+        MODEL_GLM_4_6V_FLASH,
+        undefined,
+        ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+        undefined,
+        undefined,
+        expect.objectContaining({ type: 'disabled' }),
+        undefined,
+      );
+    });
+
+    it('normalizes low effort to the upstream high tier', () => {
+      provider.createChatService({
+        apiKey: 'test-api-key',
+        model: MODEL_GLM_5_2,
+        reasoning_effort: 'low',
+      });
+
+      expect(ZAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GLM_5_2,
+        MODEL_GLM_4_6V_FLASH,
+        undefined,
+        ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+        undefined,
+        undefined,
+        expect.objectContaining({ type: 'enabled' }),
+        'high',
+      );
+    });
+
+    it('normalizes xhigh effort to the upstream max tier', () => {
+      provider.createChatService({
+        apiKey: 'test-api-key',
+        model: MODEL_GLM_5_2,
+        reasoning_effort: 'xhigh',
+      });
+
+      expect(ZAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GLM_5_2,
+        MODEL_GLM_4_6V_FLASH,
+        undefined,
+        ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+        undefined,
+        undefined,
+        expect.objectContaining({ type: 'enabled' }),
+        'max',
+      );
+    });
+
+    it('preserves explicit thinking when reasoning effort is omitted', () => {
+      provider.createChatService({
+        apiKey: 'test-api-key',
+        model: MODEL_GLM_5_2,
+        thinking: { type: 'enabled', clear_thinking: false },
+      });
+
+      expect(ZAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GLM_5_2,
+        MODEL_GLM_4_6V_FLASH,
+        undefined,
+        ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+        undefined,
+        undefined,
+        { type: 'enabled', clear_thinking: false },
+        undefined,
+      );
+    });
+
+    it('rejects reasoning effort for models without the public option', () => {
+      expect(() =>
+        provider.createChatService({
+          apiKey: 'test-api-key',
+          model: MODEL_GLM_5_1,
+          reasoning_effort: 'low',
+        }),
+      ).toThrow('does not support Z.ai reasoning_effort');
     });
 
     it('should throw error when explicitly providing non-vision model', () => {

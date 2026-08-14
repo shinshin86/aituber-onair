@@ -44,6 +44,13 @@ type ClaudeInternalCompletion = {
   blocks: ClaudeToolChatBlock[];
   providerContent: Record<string, any>[];
   stop_reason: 'tool_use' | 'end';
+  finish_reason?: string;
+  stop_details?: {
+    type?: string;
+    category?: string | null;
+    explanation?: string | null;
+    [key: string]: any;
+  } | null;
 };
 
 /**
@@ -154,13 +161,18 @@ export class ClaudeChatService implements ChatService {
   async processChat(
     messages: Message[],
     onPartialResponse: (text: string) => void,
-    onCompleteResponse: (text: string) => Promise<void>,
+    onCompleteResponse: (
+      text: string,
+      completion?: ToolChatCompletion,
+    ) => Promise<void>,
   ): Promise<void> {
     await processChatWithOptionalTools({
       hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
       runWithoutTools: async () => {
         const res = await this.callClaude(messages, this.model, true);
-        return this.parsePureStream(res, onPartialResponse);
+        return this.convertToStandardCompletion(
+          await this.parseStream(res, onPartialResponse),
+        );
       },
       runWithTools: () => this.chatOnce(messages, true, onPartialResponse),
       onCompleteResponse,
@@ -178,13 +190,18 @@ export class ClaudeChatService implements ChatService {
   async processVisionChat(
     messages: MessageWithVision[],
     onPartialResponse: (text: string) => void,
-    onCompleteResponse: (text: string) => Promise<void>,
+    onCompleteResponse: (
+      text: string,
+      completion?: ToolChatCompletion,
+    ) => Promise<void>,
   ): Promise<void> {
     await processChatWithOptionalTools({
       hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
       runWithoutTools: async () => {
         const res = await this.callClaude(messages, this.visionModel, true);
-        return this.parsePureStream(res, onPartialResponse);
+        return this.convertToStandardCompletion(
+          await this.parseStream(res, onPartialResponse),
+        );
       },
       runWithTools: () => this.visionChatOnce(messages),
       onCompleteResponse,
@@ -292,6 +309,8 @@ export class ClaudeChatService implements ChatService {
       number,
       { id: string; name: string; args: string; server_name?: string }
     >();
+    let finishReason: string | undefined;
+    let stopDetails: ClaudeInternalCompletion['stop_details'];
 
     let buf = '';
     while (true) {
@@ -309,6 +328,18 @@ export class ClaudeChatService implements ChatService {
         if (payload === '[DONE]') break;
 
         const ev = JSON.parse(payload);
+
+        if (ev.type === 'message_delta') {
+          if (typeof ev.delta?.stop_reason === 'string') {
+            finishReason = ev.delta.stop_reason;
+          }
+          if (
+            ev.delta?.stop_details !== undefined ||
+            ev.stop_details !== undefined
+          ) {
+            stopDetails = ev.delta?.stop_details ?? ev.stop_details;
+          }
+        }
 
         if (
           ev.type === 'content_block_start' &&
@@ -438,28 +469,19 @@ export class ClaudeChatService implements ChatService {
       }
     }
 
+    const hasToolUse = textBlocks.some(
+      (b) => b.type === 'tool_use' || b.type === 'mcp_tool_use',
+    );
+
     return {
       blocks: textBlocks,
       providerContent: [...providerBlocks.entries()]
         .sort(([a], [b]) => a - b)
         .map(([, block]) => block),
-      stop_reason: textBlocks.some(
-        (b) => b.type === 'tool_use' || b.type === 'mcp_tool_use',
-      )
-        ? 'tool_use'
-        : 'end',
+      stop_reason: hasToolUse ? 'tool_use' : 'end',
+      finish_reason: finishReason,
+      stop_details: stopDetails,
     };
-  }
-
-  private async parsePureStream(
-    res: Response,
-    onPartial: (t: string) => void,
-  ): Promise<string> {
-    const { blocks } = await this.parseStream(res, onPartial);
-    return blocks
-      .filter((b) => b.type === 'text')
-      .map((b) => b.text)
-      .join('');
   }
 
   private parseOneShot(data: any): ClaudeInternalCompletion {
@@ -499,14 +521,16 @@ export class ClaudeChatService implements ChatService {
       }
     });
 
+    const hasToolUse = blocks.some(
+      (b) => b.type === 'tool_use' || b.type === 'mcp_tool_use',
+    );
+
     return {
       blocks,
       providerContent: (data.content ?? []).map((block: any) => ({ ...block })),
-      stop_reason: blocks.some(
-        (b) => b.type === 'tool_use' || b.type === 'mcp_tool_use',
-      )
-        ? 'tool_use'
-        : 'end',
+      stop_reason: hasToolUse ? 'tool_use' : 'end',
+      finish_reason: data.stop_reason,
+      stop_details: data.stop_details,
     };
   }
 
@@ -583,6 +607,8 @@ export class ClaudeChatService implements ChatService {
     return {
       blocks: standardBlocks,
       stop_reason: completion.stop_reason,
+      finish_reason: completion.finish_reason,
+      stop_details: completion.stop_details,
       assistant_message: {
         role: 'assistant',
         content: standardBlocks

@@ -581,7 +581,7 @@ const claudeService = ChatServiceFactory.createChatService('claude', {
 対応するClaudeモデルでは `reasoning_effort` を指定でき、Anthropic APIの
 `output_config.effort` に変換されます。省略時のClaude API既定値は `high` です。
 
-- Claude Opus 5、Sonnet 5、Opus 4.8、Opus 4.7:
+- Claude Fable 5、Opus 5、Sonnet 5、Opus 4.8、Opus 4.7:
   `low`、`medium`、`high`、`xhigh`、`max`
 - Claude Opus 4.6、Sonnet 4.6:
   `low`、`medium`、`high`、`max`
@@ -591,6 +591,9 @@ effortを下げるとレイテンシーとトークン効率を優先できま�
 短さは保証されません。短い回答が必要な場合は、回答長の指示も併用してください。
 複数ターンのツール呼び出しでは provider 固有の thinking / tool-use ブロックを
 保持するため、返された `completion.assistant_message` を会話履歴へ追加してください。
+Claudeのrefusalはtool errorではなく終端completionとして扱います。Anthropicから
+返された場合は、streamingの`processChat` callbackを含めて
+`finish_reason: 'refusal'`と`stop_details`を保持します。
 
 #### Google Gemini
 
@@ -645,9 +648,10 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 - `openrouter/fusion` は複数モデルのパネルとジャッジモデルを実行します。単一モデルの固定単価ではなく、内部で使われた各モデル呼び出しと web search/fetch 利用分の合算で課金されます。
 - `z-ai/glm-5.2` は OpenRouter reasoning も `none` にします。
 - OpenRouterのreasoning無効化には `reasoning.effort: 'none'` を送ります。`exclude: true` はreasoning内容を返すかどうかだけを制御し、reasoning自体は無効化しません。
-- DeepSeek V4 Flashのスナップショットは、再現可能なバージョンを選べるようOpenRouterのデフォルトではなく明示的なテキスト専用選択肢にしています。どちらも応答性重視で`none`がデフォルトです:
+- DeepSeek V4モデルは、再現可能なバージョンを選べるようOpenRouterのデフォルトではなく明示的なテキスト専用選択肢にしています。すべて応答性重視で`none`がデフォルトです:
   - `deepseek/deepseek-v4-flash-0731`: 現行の固定0731スナップショット。`none`, `low`, `high`, `max`に対応。
   - `deepseek/deepseek-v4-flash`: 旧無印0423スナップショット。`none`, `high`, `xhigh`に対応。
+  - `deepseek/deepseek-v4-pro-0813`: 固定Proスナップショット。`none`, `high`, `xhigh`に対応。
 - コーディング特化モデルはデフォルトではなく明示的な選択肢です。`kwaipilot/kat-coder-air-v2.5` と `kwaipilot/kat-coder-pro-v2.5` はテキスト専用です。
 - `moonshotai/kimi-k3` の可用性は上流キャパシティに依存し、混雑時はOpenRouterから429レスポンスが返る場合があります。
 - `x-ai/grok-4.5` には現在のEU制限を含む地域別の可用性制限があります。`~x-ai/grok-latest` がGrok 4.5へ解決される場合も同じ制限を受けます。
@@ -658,18 +662,18 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   - `~openai/gpt-latest`, `~openai/gpt-mini-latest`
   - `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`
   - `openai/gpt-5.5-pro`, `openai/gpt-5.5`
-  - `openai/gpt-5.1-chat`, `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
+  - `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
   - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
   - `~anthropic/claude-sonnet-latest`, `~anthropic/claude-haiku-latest`
-  - `anthropic/claude-opus-5`
+  - `anthropic/claude-fable-5`, `anthropic/claude-opus-5`
   - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
-  - `anthropic/claude-3.7-sonnet`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-haiku-4.5`
+  - `anthropic/claude-haiku-4.5`
   - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
-  - `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite`
+  - `google/gemini-3.7-flash`, `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite`
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
-  - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`, `z-ai/glm-4.5-air:free`
-  - `~x-ai/grok-latest`, `x-ai/grok-4.5`
-  - `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4-flash`
+  - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`
+  - `~x-ai/grok-latest`, `x-ai/grok-4.6`, `x-ai/grok-4.5`
+  - `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4-flash`, `deepseek/deepseek-v4-pro-0813`
   - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
   - `kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`
 
@@ -707,6 +711,8 @@ console.log(result.fetchedAt); // Date.now() のタイムスタンプ
 const zaiService = ChatServiceFactory.createChatService('zai', {
   apiKey: process.env.ZAI_API_KEY,
   model: 'glm-5.2',
+  reasoning_effort: 'none', // package既定値: thinkingを省略して低遅延化
+  responseLength: 'short',
   visionModel: 'glm-4.6V-Flash', // 任意: ビジョン対応モデル
   responseFormat: { type: 'json_object' } // 任意: JSONモード
 });
@@ -716,7 +722,10 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 - Z.aiはOpenAI互換のChat Completionsを利用します。
 - テキスト対応モデル: `glm-5.2`, `glm-5.1`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
 - ビジョン対応モデル: `glm-5v-turbo`, `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
-- `thinking` はデフォルトで無効化しています。
+- GLM-5.2では`reasoning_effort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'`を公開します。package既定値は低遅延チャット向けの`none`で、thinkingを無効化します。
+- Z.ai側の実効tierは3段階です。`none`/`minimal`は`none`、`low`/`medium`/`high`は`high`、`xhigh`/`max`は`max`へpackage側で正規化して送信します。
+- `reasoning_effort`を省略した場合は、従来の明示的な`thinking`設定も利用できます。両方を指定した場合は`reasoning_effort`を優先します。
+- GLM-5.3はZ.aiの一般APIが現在「coming soon」と案内されているため、まだ対応一覧に加えていません。Coding Plan限定の利用経路は、このproviderの設定経路とは異なります。
 
 #### xAI（Grok）
 
@@ -731,7 +740,8 @@ const xaiService = ChatServiceFactory.createChatService('xai', {
 
 注意:
 - xAIはOpenAI互換のChat Completionsを利用します。
-- 対応モデル: `grok-4.6`, `grok-4.5`, `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`
+- 対応モデル: `grok-4.6`, `grok-4.5`, `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`
+- packageのデフォルトは`reasoning_effort: 'none'`の`grok-4.3`です。廃止済みGrok 4.1 Fastの定数はソース互換のためexportを残しますが、対応一覧には表示しません。
 - `reasoning_effort` は対応モデルにのみ送信されます。`grok-4.6` は `low`, `medium`, `high`, `xhigh`、`grok-4.5` は `low`, `medium`, `high` に対応し、いずれもチャット用途向けにデフォルトは `low` です。`grok-4.3` は `none`, `low`, `medium`, `high` に対応し、デフォルトは `none` です。
 - 対応 xAI モデルではビジョンとツール・関数呼び出しを利用できます。Grok 4.6 も React basic サンプルで画像チャットを直接検証できるようにビジョン対応として有効化しています。
 
@@ -809,7 +819,8 @@ await mistralService.processChat(
 注意:
 - Mistralは`https://api.mistral.ai/v1/chat/completions`のChat Completionsを利用します。
 - デフォルトモデルは`mistral-small-latest`です。低コスト、汎用チャット品質、vision対応、adjustable reasoning対応のバランスがよいためサンプル向けの既定値にしています。
-- 対応モデル: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `mistral-medium-2508`
+- 対応モデル: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`
+- 廃止済みの`mistral-medium-2508`はソース互換用にのみexportを残します。
 - Ministral 3系は同じChat Completions endpointでtext、vision、streaming、function callingに対応します。
 - `reasoning_effort`は`'none' | 'high'`に対応し、Mistral公式docsに合わせて`mistral-small-latest`と`mistral-medium-3-5`にだけ送信します。それ以外のモデルでは省略します。
 
@@ -837,7 +848,7 @@ const sakanaService = ChatServiceFactory.createChatService('sakana', {
 
 注意:
 - Sakana AI Fuguは`https://api.sakana.ai/v1/chat/completions`のOpenAI互換Chat Completionsを利用します。
-- 対応モデル: `fugu`（デフォルト）, `fugu-ultra`, `fugu-ultra-20260615`
+- 対応モデル: `fugu`（デフォルト）と現行の正確なFugu Ultra ID `fugu-ultra-v1.1`。`fugu-ultra` aliasと旧日付IDは互換用にexportを残します。
 - Sakanaは新しいChat Completions連携では`max_completion_tokens`を推奨していますが、legacyな`max_tokens`も受け付けます。このproviderでは既存OpenAI互換providerの挙動に合わせて`max_tokens`を使います。
 - Sakanaは最高性能にはResponses APIを推奨していますが、このproviderはpackageのOpenAI互換chat経路に合わせてChat Completionsを利用します。
 - ブラウザから直接呼ぶ場合、Sakana側がoriginに対してCORSを許可していないと失敗します。ブラウザ単体ではなく、Node.js、backend/serverless proxy、または`examples/node-basic/sakana-example.js`を利用してください。
@@ -853,8 +864,8 @@ const plamoService = ChatServiceFactory.createChatService('plamo', {
 
 注意:
 - PLaMoは`https://api.platform.preferredai.jp/v1/chat/completions`のOpenAI互換Chat Completionsを利用します。
-- 対応モデル: `plamo-3.0-prime`（デフォルト）, `plamo-2.2-prime`
-- `plamo-2.2-prime` は明示的な互換用途として残していますが、PLaMo公式docsでは2026-09-30に提供終了し、`plamo-3.0-prime`へ統合予定とされています。
+- 対応モデル: `plamo-3.0-prime`（デフォルト）
+- `plamo-2.2-prime`はソース互換用にexportを残しますが、PLaMO公式docsで2026-09-30の提供終了と`plamo-3.0-prime`への移行が案内されているため、対応一覧には表示しません。
 - reasoning対応モデルでは`reasoning_effort`に`none`または`medium`を指定できます。
 - このproviderではvision対応はサポート対象として扱いません。
 - PLaMoは`openai-compatible`にendpointとmodelを直接指定して使うこともできます。
@@ -1269,15 +1280,15 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **OpenAI**: GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。チャット用途向けに Gemini 3 Flash は minimal thinking、Gemini 3 Pro は low thinking を既定値にします。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
-- **Claude**: Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 に加え、まだ利用可能だが非推奨の Claude 4 Opus, Claude 4 Sonnet, Claude 3 Haiku をサポート。調整可能な `reasoning_effort` は対応モデルに限り `output_config.effort` として送信します
+- **Claude**: Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 をサポート。調整可能な`reasoning_effort`は対応モデルに限り`output_config.effort`として送信し、refusal metadataは終端completionとして保持します
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Kwaipilot）をサポート。モデルIDはOpenRouter節を参照してください
-- **Z.ai**: GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-5V-Turbo/GLM-4.6V系（ビジョン）をサポート
-- **xAI**: Grok 4.6 と Grok 4.5 をチャット用途向けに `reasoning_effort: 'low'` デフォルトでサポート。加えて Grok 4.3、Grok 4.20 の Reasoning/Non-Reasoning、Grok 4-1 Fast の Reasoning/Non-Reasoning をサポートし、全モデルでビジョン対応
+- **Z.ai**: GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-5V-Turbo/GLM-4.6V系（ビジョン）をサポート。GLM-5.2はモデル別`reasoning_effort`を公開し、低遅延チャット向けに`none`を既定値にします
+- **xAI**: Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 Reasoning/Non-Reasoningをvision対応でサポート。低遅延のデフォルトは`reasoning_effort: 'none'`のGrok 4.3です
 - **Kimi**: Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、デフォルトは `max`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
 - **DeepSeek**: DeepSeek V4 Flash（`deepseek-v4-flash`）と DeepSeek V4 Pro（`deepseek-v4-pro`）をOpenAI互換Chat Completions経由でサポート。低遅延チャット向けにthinkingはデフォルト無効で、モデル別の`reasoning_effort`から有効化できます。legacy alias の`deepseek-chat`と`deepseek-reasoner`はDeepSeek側で非推奨です
 - **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します
-- **Sakana AI**: Fugu（`fugu`）と Fugu Ultra（`fugu-ultra`, `fugu-ultra-20260615`）をOpenAI互換Chat Completions経由でサポート
-- **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）と PLaMo 2.2 Prime（`plamo-2.2-prime`）をOpenAI互換Chat Completions経由でサポート
+- **Sakana AI**: Fugu（`fugu`）と Fugu Ultra（`fugu-ultra-v1.1`）をOpenAI互換Chat Completions経由でサポート
+- **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）をOpenAI互換Chat Completions経由でサポートし、廃止予定の2.2定数は互換用にexportを残します
 - **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Webページでは対応するデスクトップ端末上のChrome 148以降が必要で、Chromeフラグの設定は不要。非ストリーミング、ビジョン非対応
 
 ## ライセンス
