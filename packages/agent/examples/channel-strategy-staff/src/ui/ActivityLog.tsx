@@ -1,167 +1,131 @@
-import type { AgentEvent } from '@aituber-onair/agent';
-import type { ChannelToolBudget } from '../protocol';
+import type { AgentArtifact, AgentEvent } from '@aituber-onair/agent';
 
-interface ToolRow {
-  readonly toolCallId: string;
-  toolId: string;
-  args: string;
-  status: 'running' | 'done' | 'failed';
-  summary: string;
-  startedAt: number;
-  elapsedMs?: number;
-}
+const CODEX_ARTIFACT_TYPES = new Set([
+  'codex.plan',
+  'codex.command-execution',
+  'codex.file-change',
+]);
 
-const PHASE_LABELS: Partial<Record<AgentEvent['type'], string>> = {
-  'turn.started': 'Turn開始',
-  'message.completed': '構造化JSONを検証',
-  'artifact.created': 'Artifactを添付',
-  'turn.completed': 'Turn完了',
-  'turn.failed': 'Turn失敗',
-};
-
-/**
- * One row per Tool call with its arguments and result size. This is the part
- * an operator uses to confirm what the Agent actually looked at.
- */
 export function ActivityLog({
   events,
-  budget,
+  turnActive,
+  threadTurnCount,
+  lastTurnDurationMs,
 }: {
   readonly events: readonly AgentEvent[];
-  readonly budget: ChannelToolBudget;
+  readonly turnActive: boolean;
+  readonly threadTurnCount: number;
+  readonly lastTurnDurationMs?: number;
 }): React.JSX.Element {
-  const rows = buildToolRows(events);
-  const phases = events.filter((event) => PHASE_LABELS[event.type]);
-  const rounds = readToolRounds(events);
+  const artifacts = events
+    .filter((event) => event.type === 'artifact.created')
+    .map((event) => event.artifact)
+    .filter((artifact) => CODEX_ARTIFACT_TYPES.has(artifact.type));
 
   return (
     <div className="activity">
-      <div className="budget">
-        <span>
-          Tool呼び出し <strong>{rows.length}</strong> /{' '}
-          {budget.maxToolCallsPerTurn}
-        </span>
-        <span>
-          ラウンド <strong>{rounds ?? '—'}</strong> / {budget.maxToolRounds}
-        </span>
-        <span className="muted">上限超過はTurn全体の失敗になります</span>
-      </div>
+      <dl className="turn-stats">
+        <div>
+          <dt>Turn所要時間</dt>
+          <dd>{formatDuration(lastTurnDurationMs)}</dd>
+        </div>
+        <div>
+          <dt>現在のスレッド</dt>
+          <dd>{threadTurnCount} Turn</dd>
+        </div>
+      </dl>
 
-      {rows.length === 0 ? (
+      {turnActive ? (
+        <p className="activity-running">
+          <span className="staff-dot" /> Codexがワークスペースを調査中です
+        </p>
+      ) : null}
+
+      {artifacts.length === 0 ? (
         <p className="empty">
-          分析を実行すると、Agentが呼び出したToolと引数がここに並びます。
+          {turnActive
+            ? 'plan・command・file-changeはTurn完了後に一括表示されます。'
+            : '分析を実行すると、Codexが完了した調査内容がここに並びます。'}
         </p>
       ) : (
-        <div className="table-scroll">
-          <table className="data-table compact">
-            <thead>
-              <tr>
-                <th scope="col" className="numeric">
-                  #
-                </th>
-                <th scope="col">Tool</th>
-                <th scope="col">引数</th>
-                <th scope="col">結果</th>
-                <th scope="col" className="numeric">
-                  ms
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => (
-                <tr key={row.toolCallId} className={`tool-${row.status}`}>
-                  <td className="numeric muted">{index + 1}</td>
-                  <td>
-                    <code>{row.toolId}</code>
-                  </td>
-                  <td className="muted args">{row.args || '—'}</td>
-                  <td>{row.summary}</td>
-                  <td className="numeric muted">{row.elapsedMs ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {phases.length > 0 ? (
-        <ol className="phases">
-          {phases.map((event, index) => (
-            <li key={`${event.type}-${index}`} className={event.type}>
-              {PHASE_LABELS[event.type]}
-            </li>
+        <ol className="codex-artifacts">
+          {artifacts.map((artifact) => (
+            <CodexArtifactRow key={artifact.id} artifact={artifact} />
           ))}
         </ol>
-      ) : null}
+      )}
     </div>
   );
 }
 
-function buildToolRows(events: readonly AgentEvent[]): ToolRow[] {
-  const rows = new Map<string, ToolRow>();
-  for (const event of events) {
-    if (event.type === 'tool.requested') {
-      rows.set(event.toolCallId, {
-        toolCallId: event.toolCallId,
-        toolId: event.toolId,
-        args: formatArguments(event.arguments),
-        status: 'running',
-        summary: '実行中',
-        startedAt: Date.parse(event.timestamp),
-      });
-      continue;
-    }
-    if (event.type === 'tool.completed') {
-      const row = rows.get(event.toolCallId);
-      if (!row) continue;
-      row.status = 'done';
-      row.summary = summarizeOutput(event.output);
-      row.elapsedMs = Date.parse(event.timestamp) - row.startedAt;
-      continue;
-    }
-    if (event.type === 'tool.failed') {
-      const row = rows.get(event.toolCallId);
-      if (!row) continue;
-      row.status = 'failed';
-      row.summary = event.error.message;
-      row.elapsedMs = Date.parse(event.timestamp) - row.startedAt;
-    }
-  }
-  return [...rows.values()];
+function CodexArtifactRow({
+  artifact,
+}: {
+  readonly artifact: AgentArtifact;
+}): React.JSX.Element {
+  const data = asRecord(artifact.data);
+  const presentation = presentArtifact(artifact.type, data);
+  return (
+    <li>
+      <span className={`artifact-kind ${presentation.kind}`}>
+        {presentation.label}
+      </span>
+      <div>
+        <strong>{artifact.title ?? presentation.title}</strong>
+        <p>{presentation.detail}</p>
+      </div>
+    </li>
+  );
 }
 
-function formatArguments(value: unknown): string {
-  if (typeof value !== 'object' || value === null) return '';
-  return Object.entries(value as Record<string, unknown>)
-    .map(([key, entry]) =>
-      Array.isArray(entry)
-        ? `${key}=[${entry.length}]`
-        : `${key}=${String(entry)}`
-    )
-    .join(' ');
+function presentArtifact(
+  type: string,
+  data: Record<string, unknown>
+): {
+  readonly kind: string;
+  readonly label: string;
+  readonly title: string;
+  readonly detail: string;
+} {
+  if (type === 'codex.plan') {
+    return {
+      kind: 'plan',
+      label: 'PLAN',
+      title: '調査計画',
+      detail: readText(data.text) ?? '調査計画を完了しました。',
+    };
+  }
+  if (type === 'codex.command-execution') {
+    const duration =
+      typeof data.durationMs === 'number' ? ` · ${data.durationMs}ms` : '';
+    return {
+      kind: 'command',
+      label: 'COMMAND',
+      title: 'コマンド実行',
+      detail: `${readText(data.command) ?? 'command'} · ${readText(data.status) ?? 'completed'}${duration}`,
+    };
+  }
+  const changes = Array.isArray(data.changes) ? data.changes.length : 0;
+  return {
+    kind: 'file',
+    label: 'FILE',
+    title: 'ファイル変更',
+    detail: `${changes}件 · ${readText(data.status) ?? 'completed'}`,
+  };
 }
 
-function summarizeOutput(output: unknown): string {
-  if (typeof output !== 'object' || output === null) return '完了';
-  const record = output as Record<string, unknown>;
-  if (Array.isArray(record.streams)) return `配信 ${record.streams.length}件`;
-  if (Array.isArray(record.strategies)) {
-    return `仮説 ${record.strategies.length}件`;
-  }
-  if (Array.isArray(record.byPlatformAndGame)) {
-    return `ゲーム別 ${record.byPlatformAndGame.length}行`;
-  }
-  if (record.byPlatform && typeof record.byPlatform === 'object') {
-    return `プラットフォーム別 ${Object.keys(record.byPlatform).length}件`;
-  }
-  return '完了';
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
-function readToolRounds(events: readonly AgentEvent[]): number | undefined {
-  for (const event of events) {
-    if (event.type !== 'turn.completed') continue;
-    const rounds = event.result.backendMetadata?.toolRounds;
-    if (typeof rounds === 'number') return rounds;
-  }
-  return undefined;
+function readText(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+function formatDuration(value: number | undefined): string {
+  if (value === undefined) return '—';
+  if (value < 1_000) return `${value}ms`;
+  return `${(value / 1_000).toFixed(1)}秒`;
 }

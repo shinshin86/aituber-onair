@@ -17,6 +17,7 @@ interface EventSourceLike {
 export interface ChannelStrategyRuntime {
   initialize(): Promise<ChannelStrategyServerState>;
   requestStrategy(): Promise<void>;
+  interruptStrategy(): Promise<void>;
   subscribeState(
     listener: (state: ChannelStrategyServerState) => void
   ): () => void;
@@ -96,6 +97,15 @@ export function createChannelStrategyRuntime(
       if (closed) throw new Error('Agent client is closed.');
       ensureEvents();
       const response = await fetchRequest('/api/strategy', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      });
+      if (!response.ok) throw new Error(await readResponseError(response));
+    },
+    async interruptStrategy() {
+      if (closed) throw new Error('Agent client is closed.');
+      const response = await fetchRequest('/api/interrupt', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: '{}',

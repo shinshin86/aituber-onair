@@ -10,7 +10,6 @@ import type { AgentEvent } from '@aituber-onair/agent';
 import type {
   ChannelStrategyServerState,
   ChannelStrategySseEnvelope,
-  ChannelToolBudget,
 } from '../src/protocol.js';
 import type { ChannelStrategyController } from './controller.js';
 
@@ -29,11 +28,10 @@ const CONTENT_TYPES: Record<string, string> = {
 export interface ChannelStrategyServerOptions {
   readonly controller: ChannelStrategyController;
   readonly publicDir: string;
-  readonly mode: 'demo' | 'openai';
+  readonly mode: 'demo' | 'codex';
   readonly model: string;
-  readonly budget: ChannelToolBudget;
   /** Interval between host-scheduled Turns. 0 disables autonomous running. */
-  readonly autoRunIntervalMs: number;
+  readonly autoRunIntervalMs?: number;
   /** Delay before the first host-scheduled Turn after start-up. */
   readonly autoRunStartDelayMs?: number;
 }
@@ -53,6 +51,7 @@ export function createChannelStrategyServer(
   options: ChannelStrategyServerOptions
 ): Server {
   const { controller, publicDir } = options;
+  const autoRunIntervalMs = options.autoRunIntervalMs ?? 0;
   const sseClients = new Set<ServerResponse>();
   const eventHistory: StoredEnvelope[] = [];
   let nextEventId = 1;
@@ -61,14 +60,16 @@ export function createChannelStrategyServer(
   let autoRunTimer: ReturnType<typeof setTimeout> | undefined;
   let autoRunCount = 0;
   let manualRunCount = 0;
+  let lastTurnDurationMs: number | undefined;
 
   const stateSnapshot = (): ChannelStrategyServerState => ({
     turnActive,
     mode: options.mode,
     model: options.model,
-    budget: options.budget,
+    threadTurnCount: controller.threadTurnCount,
+    ...(lastTurnDurationMs === undefined ? {} : { lastTurnDurationMs }),
     schedule: {
-      intervalMs: options.autoRunIntervalMs,
+      intervalMs: autoRunIntervalMs,
       ...(nextRunAt ? { nextRunAt } : {}),
     },
     dashboard: controller.dashboard,
@@ -101,6 +102,7 @@ export function createChannelStrategyServer(
     autoRunTimer = undefined;
     nextRunAt = undefined;
     turnActive = true;
+    const startedAt = Date.now();
     broadcastState();
     void (async () => {
       try {
@@ -115,8 +117,9 @@ export function createChannelStrategyServer(
           message: formatError(error),
         });
       } finally {
+        lastTurnDurationMs = Date.now() - startedAt;
         turnActive = false;
-        scheduleAutoRun(options.autoRunIntervalMs);
+        scheduleAutoRun(autoRunIntervalMs);
         broadcastState();
       }
     })();
@@ -130,12 +133,12 @@ export function createChannelStrategyServer(
     if (autoRunTimer) clearTimeout(autoRunTimer);
     autoRunTimer = undefined;
     nextRunAt = undefined;
-    if (options.autoRunIntervalMs <= 0) return;
+    if (autoRunIntervalMs <= 0) return;
     nextRunAt = new Date(Date.now() + delayMs).toISOString();
     autoRunTimer = setTimeout(() => {
       autoRunTimer = undefined;
       if (turnActive) {
-        scheduleAutoRun(options.autoRunIntervalMs);
+        scheduleAutoRun(autoRunIntervalMs);
         broadcastState();
         return;
       }
@@ -214,6 +217,18 @@ export function createChannelStrategyServer(
       }
       runStrategy(operationId);
       sendJson(response, 202, { accepted: true, operationId });
+      return;
+    }
+
+    if (route === 'POST /api/interrupt') {
+      assertJsonContentType(request);
+      await readJsonBody(request);
+      if (!turnActive) {
+        sendJson(response, 409, { error: 'No Turn is running.' });
+        return;
+      }
+      await controller.interrupt();
+      sendJson(response, 202, { accepted: true });
       return;
     }
 

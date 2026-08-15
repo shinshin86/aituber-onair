@@ -21,6 +21,11 @@ function createStubController(): {
   const runs: string[] = [];
   const controller: ChannelStrategyController = {
     dashboard,
+    backendSessionId: 'stub-thread',
+    resumed: false,
+    get threadTurnCount() {
+      return runs.length;
+    },
     async runStrategy() {
       runs.push('run');
       return {
@@ -31,6 +36,9 @@ function createStubController(): {
     },
     async close() {
       // The stub owns no Agent.
+    },
+    async interrupt() {
+      // No Turn is long-running in this scheduler stub.
     },
   };
   return { controller, runs };
@@ -47,7 +55,6 @@ describe('host scheduler', () => {
       publicDir: '.',
       mode: 'demo',
       model: 'fixture-demo',
-      budget: { maxToolCallsPerTurn: 14, maxToolRounds: 8 },
       autoRunIntervalMs: 40,
       autoRunStartDelayMs: 10,
     });
@@ -60,15 +67,13 @@ describe('host scheduler', () => {
     }
   });
 
-  it('stays idle when the host disables the schedule', async () => {
+  it('stays manual-only when the host omits the schedule', async () => {
     const { controller, runs } = createStubController();
     const server = createChannelStrategyServer({
       controller,
       publicDir: '.',
       mode: 'demo',
       model: 'fixture-demo',
-      budget: { maxToolCallsPerTurn: 14, maxToolRounds: 8 },
-      autoRunIntervalMs: 0,
       autoRunStartDelayMs: 10,
     });
 

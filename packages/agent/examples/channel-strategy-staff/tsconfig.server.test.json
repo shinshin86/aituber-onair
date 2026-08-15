@@ -7,9 +7,9 @@
   "include": [
     "server",
     "src/data",
+    "src/evidence.ts",
     "src/proposal.ts",
     "src/protocol.ts",
-    "src/tools.ts",
     "tests"
   ]
 }

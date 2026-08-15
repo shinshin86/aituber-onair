@@ -25,7 +25,7 @@ export function MikoStaffCard({
   );
   const presentation = presentMikoActivity(activity);
   // Keyed on the activity kind only, so a long investigation does not
-  // retrigger the expression effect on every Tool call.
+  // retrigger the expression effect on every streamed Codex message.
   const reaction = useMemo(
     () => presentMikoActivity({ kind: activity.kind }).reaction,
     [activity.kind]

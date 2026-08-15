@@ -1,62 +1,81 @@
-import { createRequire } from 'node:module';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createChatServiceBackend } from '@aituber-onair/agent/chat';
+import { createCodexAppServerBackend } from '@aituber-onair/agent/codex-app-server';
 import { createChannelStrategyServer } from './app.js';
+import { createChannelStrategyController } from './controller.js';
+import { readStoredSession, writeStoredSession } from './sessionStore.js';
+import { createStubCodexBackend } from './stubCodexBackend.js';
 import {
-  CHANNEL_TOOL_BUDGET,
-  createChannelStrategyController,
-} from './controller.js';
-import { createDemoChatService } from './demoChatService.js';
+  ensureChannelStrategyWorkspace,
+  resolveChannelStrategyWorkspaceDir,
+} from './workspace.js';
 
 const exampleRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../../..'
 );
-const require = createRequire(import.meta.url);
-const { ChatServiceFactory } = require('@aituber-onair/chat') as typeof import(
-  '@aituber-onair/chat'
-);
-
-const DEFAULT_AUTO_RUN_INTERVAL_MS = 90_000;
+const SCRUBBED_ENVIRONMENT_KEYS = [
+  'OPENAI_API_KEY',
+  'YOUTUBE_API_KEY',
+  'YOUTUBE_CLIENT_SECRET',
+  'YOUTUBE_REFRESH_TOKEN',
+  'TWITCH_CLIENT_SECRET',
+  'TWITCH_ACCESS_TOKEN',
+  'TWITCH_REFRESH_TOKEN',
+] as const;
 
 async function main(): Promise<void> {
-  const mode = process.env.CHANNEL_STAFF_DEMO === '1' ? 'demo' : 'openai';
-  const configuredModel = process.env.OPENAI_MODEL;
-  const defaultModel =
-    ChatServiceFactory.getProviderCapabilities('openai')?.defaultModel ??
-    'provider-default';
-  const model =
-    mode === 'demo' ? 'fixture-demo' : (configuredModel ?? defaultModel);
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (mode === 'openai' && !apiKey) {
-    throw new Error(
-      'OPENAI_API_KEY is required. Set CHANNEL_STAFF_DEMO=1 for the deterministic fixture demo.'
-    );
-  }
+  const mode = process.env.CHANNEL_STAFF_DEMO === '1' ? 'demo' : 'codex';
+  const workspaceDir = resolveChannelStrategyWorkspaceDir(
+    process.env.AGENT_WORKSPACE_DIR,
+    exampleRoot
+  );
+  await ensureChannelStrategyWorkspace(workspaceDir);
 
-  const backend = createChatServiceBackend({
-    provider: 'openai',
-    maxToolRounds: CHANNEL_TOOL_BUDGET.maxToolRounds,
-    createChatService: ({ tools }) => {
-      if (mode === 'demo') return createDemoChatService(tools);
-      return ChatServiceFactory.createChatService('openai', {
-        apiKey: apiKey as string,
-        tools,
-        ...(configuredModel ? { model: configuredModel } : {}),
-      });
-    },
+  const codexPath = process.env.CODEX_PATH;
+  if (codexPath && !isAbsolute(codexPath)) {
+    throw new Error('CODEX_PATH must be an absolute path.');
+  }
+  const configuredModel = process.env.CODEX_MODEL;
+  const backend =
+    mode === 'demo'
+      ? createStubCodexBackend({ defaultDelayMs: 600 })
+      : createCodexAppServerBackend({
+          ...(codexPath ? { codexPath } : { allowPathLookup: true as const }),
+          workingDirectory: workspaceDir,
+          sandbox: 'read-only',
+          approvalPolicy: 'never',
+          environment: createScrubbedEnvironment(),
+          ...(configuredModel ? { model: configuredModel } : {}),
+          onDiagnostic: (message) => console.error(`[codex] ${message}`),
+        });
+
+  const sessionFile = join(
+    dirname(workspaceDir),
+    'channel-strategy-session.json'
+  );
+  const storedSession = await readStoredSession(sessionFile);
+  const controller = await createChannelStrategyController({
+    backend,
+    workspaceDir,
+    ...(storedSession ? { storedSession } : {}),
+    persistSession: (stored) => writeStoredSession(sessionFile, stored),
+    maxThreadTurns: readPositiveInteger(
+      process.env.CHANNEL_STAFF_THREAD_MAX_TURNS,
+      20,
+      'CHANNEL_STAFF_THREAD_MAX_TURNS'
+    ),
   });
-  const controller = await createChannelStrategyController({ backend });
   const autoRunIntervalMs = readAutoRunIntervalMs(
     process.env.CHANNEL_STAFF_AUTO_RUN_MS
   );
+  const model =
+    mode === 'demo' ? 'fixture-codex' : (configuredModel ?? 'Codex default');
   const server = createChannelStrategyServer({
     controller,
     publicDir: join(exampleRoot, 'dist/client'),
     mode,
     model,
-    budget: CHANNEL_TOOL_BUDGET,
     autoRunIntervalMs,
   });
   const port = readPort(process.env.PORT);
@@ -76,7 +95,9 @@ async function main(): Promise<void> {
   }
 
   console.log(`channel-strategy-staff: http://127.0.0.1:${port}/`);
-  console.log(`mode: ${mode}  model: ${model}`);
+  console.log(`mode: ${mode}  model: ${model}  resumed: ${controller.resumed}`);
+  console.log(`workspace: ${workspaceDir}`);
+  console.log('sandbox: read-only  approval policy: never');
   console.log(
     autoRunIntervalMs > 0
       ? `host scheduler: every ${Math.round(autoRunIntervalMs / 1000)}s`
@@ -107,14 +128,30 @@ async function main(): Promise<void> {
   process.once('SIGTERM', handleSignal);
 }
 
-/** The Agent package has no scheduler, so the host owns this interval. */
-function readAutoRunIntervalMs(value: string | undefined): number {
-  if (value === undefined) return DEFAULT_AUTO_RUN_INTERVAL_MS;
+export function createScrubbedEnvironment(): Record<string, string> {
+  return Object.fromEntries(SCRUBBED_ENVIRONMENT_KEYS.map((key) => [key, '']));
+}
+
+export function readAutoRunIntervalMs(value: string | undefined): number {
+  if (value === undefined) return 0;
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 0) {
     throw new Error(
       'CHANNEL_STAFF_AUTO_RUN_MS must be 0 or a positive integer.'
     );
+  }
+  return parsed;
+}
+
+function readPositiveInteger(
+  value: string | undefined,
+  fallback: number,
+  name: string
+): number {
+  if (value === undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error(`${name} must be a positive integer.`);
   }
   return parsed;
 }

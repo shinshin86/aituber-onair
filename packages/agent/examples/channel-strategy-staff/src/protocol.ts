@@ -4,7 +4,7 @@ import type { StrategyRecord, StreamRecord } from './data/types.js';
 
 /**
  * The deterministic view of the fixture data. The dashboard renders exactly
- * what the Agent Tools can return, so a human can check every cited ID.
+ * what the host writes into the Codex data workspace.
  */
 export interface ChannelDashboard {
   readonly referenceDate: string;
@@ -14,11 +14,6 @@ export interface ChannelDashboard {
   readonly streams: readonly StreamRecord[];
   readonly games: readonly GamePerformance[];
   readonly strategies: readonly StrategyRecord[];
-}
-
-export interface ChannelToolBudget {
-  readonly maxToolCallsPerTurn: number;
-  readonly maxToolRounds: number;
 }
 
 /**
@@ -32,9 +27,10 @@ export interface ChannelStrategyScheduleState {
 
 export interface ChannelStrategyServerState {
   readonly turnActive: boolean;
-  readonly mode: 'demo' | 'openai';
+  readonly mode: 'demo' | 'codex';
   readonly model: string;
-  readonly budget: ChannelToolBudget;
+  readonly threadTurnCount: number;
+  readonly lastTurnDurationMs?: number;
   readonly schedule: ChannelStrategyScheduleState;
   readonly dashboard: ChannelDashboard;
 }

@@ -14,7 +14,6 @@ export type MikoActivityKind =
 
 export interface MikoActivity {
   readonly kind: MikoActivityKind;
-  readonly toolId?: string;
 }
 
 export interface MikoPresentation {
@@ -33,9 +32,8 @@ const REACTION_IDS: Record<MikoActivityKind, number> = {
 };
 
 /**
- * Maps the Agent Event stream onto what the staff card should show. A failed
- * Tool call is reported back to the model, so it does not end the Turn and
- * does not change the activity by itself.
+ * Codex plan and command Artifacts arrive only when the Turn completes, so
+ * streamed messages keep Miko in the investigation state.
  */
 export function deriveMikoActivity(
   events: readonly AgentEvent[],
@@ -45,15 +43,9 @@ export function deriveMikoActivity(
   for (const event of events) {
     switch (event.type) {
       case 'turn.started':
-        activity = { kind: 'investigating' };
-        break;
-      case 'tool.requested':
-      case 'tool.started':
-      case 'tool.completed':
-        activity = { kind: 'investigating', toolId: event.toolId };
-        break;
+      case 'message.delta':
       case 'message.completed':
-        activity = { kind: 'validating' };
+        activity = { kind: 'investigating' };
         break;
       case 'artifact.created':
       case 'turn.completed':
@@ -78,7 +70,7 @@ export function presentMikoActivity(activity: MikoActivity): MikoPresentation {
     case 'investigating':
       return {
         label: '調査中',
-        detail: activity.toolId ?? 'Toolを選んでいます',
+        detail: 'ワークスペースのデータを確認しています',
         expression: '思考',
         reaction: reactionFor('thinking', activity.kind),
       };

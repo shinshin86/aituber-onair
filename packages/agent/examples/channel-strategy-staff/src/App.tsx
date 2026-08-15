@@ -81,6 +81,15 @@ export function App(): React.JSX.Element {
     }
   };
 
+  const handleInterrupt = async (): Promise<void> => {
+    setError(undefined);
+    try {
+      await runtime.interruptStrategy();
+    } catch (reason) {
+      setError(formatError(reason));
+    }
+  };
+
   const dashboard = state?.dashboard;
   const running = state?.turnActive ?? false;
   const proposal = getProposal(result);
@@ -110,21 +119,32 @@ export function App(): React.JSX.Element {
             <dd>
               {state
                 ? state.mode === 'demo'
-                  ? 'fixture demo'
-                  : 'OpenAI'
+                  ? 'fixture Codex'
+                  : 'Codex'
                 : '—'}
-              {state?.mode === 'openai' ? <small>{state.model}</small> : null}
+              {state ? <small>{state.model}</small> : null}
             </dd>
           </div>
         </dl>
-        <button
-          className="run"
-          type="button"
-          disabled={running || !state}
-          onClick={() => void handleRun()}
-        >
-          {running ? '分析中…' : '今すぐ再分析'}
-        </button>
+        <div className="turn-controls">
+          <button
+            className="run"
+            type="button"
+            disabled={running || !state}
+            onClick={() => void handleRun()}
+          >
+            {running ? '分析中…' : '今すぐ再分析'}
+          </button>
+          {running ? (
+            <button
+              className="interrupt"
+              type="button"
+              onClick={() => void handleInterrupt()}
+            >
+              中断
+            </button>
+          ) : null}
+        </div>
       </header>
 
       {error ? <p className="error">{error}</p> : null}
@@ -167,7 +187,7 @@ export function App(): React.JSX.Element {
           <section className="block">
             <div className="block-head">
               <h2>ゲーム × プラットフォーム</h2>
-              <p>Toolが返す集計と同じ計算結果です。</p>
+              <p>Codexへ渡すJSONと同じ決定的な集計結果です。</p>
             </div>
             <GameTable games={dashboard.games} />
           </section>
@@ -200,13 +220,13 @@ export function App(): React.JSX.Element {
             <section className="block">
               <div className="block-head">
                 <h2>実行ログ</h2>
-                <p>Agentが実際に呼び出したread-only Toolです。</p>
+                <p>Turn完了後に届くCodexの調査Artifactです。</p>
               </div>
               <ActivityLog
                 events={events}
-                budget={
-                  state?.budget ?? { maxToolCallsPerTurn: 0, maxToolRounds: 0 }
-                }
+                turnActive={running}
+                threadTurnCount={state?.threadTurnCount ?? 0}
+                lastTurnDurationMs={state?.lastTurnDurationMs}
               />
             </section>
           </div>
@@ -217,7 +237,7 @@ export function App(): React.JSX.Element {
               <p>
                 {proposal
                   ? '根拠IDをクリックすると該当レコードへ移動します。'
-                  : 'Tool結果に含まれるIDだけを根拠として受け付けます。'}
+                  : '現在のデータセットに存在するIDだけを根拠として受け付けます。'}
               </p>
             </div>
             {proposal ? (

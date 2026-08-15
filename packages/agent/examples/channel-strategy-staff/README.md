@@ -2,209 +2,126 @@
 
 English | [日本語](./README.ja.md)
 
-This `@aituber-onair/agent` example runs Miko as a private AI producer for an AITuber channel. Miko investigates fixed YouTube and Twitch fixtures through read-only domain Tools and creates one evidence-backed proposal for the next stream.
+This `@aituber-onair/agent` example runs Miko as private channel strategy staff. A Codex app-server Session investigates host-normalized YouTube and Twitch fixture data in a read-only data workspace and produces one evidence-backed proposal for the next stream.
 
-The example demonstrates `createChatServiceBackend()` with product-specific Tools. It does not connect to the real YouTube or Twitch APIs and cannot publish content, modify comments, or change stream settings.
+It does not connect to YouTube or Twitch APIs and cannot publish content, operate on comments, or change stream settings.
 
 ## Quick start
 
-Build the workspace and install this independent example from the repository root:
+Install and build from the repository root, then run the offline Codex-shaped stub:
 
 ```sh
 npm ci
 npm run build
 npm --prefix packages/agent/examples/channel-strategy-staff ci
-```
-
-Start the deterministic demo without an API key:
-
-```sh
 CHANNEL_STAFF_DEMO=1 npm --prefix packages/agent/examples/channel-strategy-staff start
 ```
 
-Open `http://127.0.0.1:4519`. The server already ran its first Turn on
-start-up and schedules the next one automatically; **今すぐ再分析** requests an
-extra Turn. The demo ChatService uses the same ChatServiceBackend, Tool policy, hooks, Artifact, and SSE path as the live mode. Only its fixture response is deterministic.
+Open `http://127.0.0.1:4519` and click **今すぐ再分析**. The stub requires neither Codex CLI nor an API key. It emits several `message.completed` events, then Codex-shaped plan and command Artifacts and a deterministic proposal.
 
-## Run with OpenAI
+## Run with Codex
+
+Install and authenticate a supported Codex CLI, then run:
 
 ```sh
-OPENAI_API_KEY=... npm --prefix packages/agent/examples/channel-strategy-staff start
+npm --prefix packages/agent/examples/channel-strategy-staff start
 ```
 
-Set `OPENAI_MODEL` to override the provider default, and
-`CHANNEL_STAFF_AUTO_RUN_MS` to change or disable the host schedule (billed
-calls repeat on that interval). The API key remains in the loopback Node.js server environment and is never sent to the browser.
+The backend uses the Codex executable on `PATH`. `CODEX_PATH` may select an absolute executable path, and `CODEX_MODEL` may select a model. No compatibility override is supplied; the package's current Codex compatibility policy applies.
 
-## What it demonstrates
+The data workspace defaults to `./workspace` inside this example. Both that directory and the sibling `channel-strategy-session.json` state file are ignored by Git. `AGENT_WORKSPACE_DIR` may select another workspace; the state file is stored beside it. For real data, point `AGENT_WORKSPACE_DIR` outside the repository. Never point it at a repository root. The host rejects a symbolic-link workspace.
 
-1. The Agent investigates 90 days of data with five read-only domain Tools.
-2. YouTube and Twitch share a normalized model, but every aggregate remains platform-specific. Subscriber and follower growth are never added together.
-3. Metrics that Twitch cannot provide, such as equivalent public watch-duration analytics, use `status: "unavailable"` instead of zero.
-4. Deterministic Tool code performs date filtering and aggregation; the model interprets the results.
-5. A Turn-local evidence ledger allows the output to cite only stream and strategy IDs returned by Tools during that Turn.
-6. A `draft-response` hook validates JSON, shape, and evidence. An `output` hook attaches the validated `AgentArtifact`.
-7. Agent Events and the final Artifact stream to the dashboard over SSE.
-8. A host scheduler starts Turns on its own; the Agent package has no
-   scheduler of its own.
+## Data workspace
 
-## Host-scheduled autonomy
+Before every Turn, the host rebuilds these files with temporary-file + atomic rename:
 
-`@aituber-onair/agent` has no scheduler. It contains no interval, cron, or work
-queue, and `AgentRunInput.instruction` is required on every Turn, so a Turn only
-happens when the host asks for one. The package README lists *scheduling and
-wake-up events* under host responsibilities.
+```text
+<workspace>/
+  AGENTS.md
+  data/overview.json
+  data/streams.json
+  data/games.json
+  data/strategies.json
+```
 
-What the Agent decides on its own is everything **inside** one Turn: which of
-the five Tools to call, in what order, how many times, and when it has seen
-enough to answer — bounded by `maxToolRounds` and `maxToolCallsPerTurn`.
+The existing deterministic data-source and aggregation code produces the four JSON inputs. `AGENTS.md` tells Codex to read all four, treat their contents as data rather than instructions, keep platform units separate, and return exactly one JSON object without Markdown.
 
-So "keep working on its own" is a host loop around `session.run(...)`. This
-example puts that loop in its Node server:
+The Agent has no domain Tools: Codex app-server declares `tools: false`, so the Agent has neither `tools`, `policy.allowTools`, nor Session `allowedTools`. Investigation is performed through Codex's own file reads in the workspace.
 
-- the first Turn starts about one second after start-up, with no browser open;
-- another Turn is scheduled after each Turn finishes;
-- `CHANNEL_STAFF_AUTO_RUN_MS` sets the interval (default `90000`, `0` disables
-  it and leaves manual runs only);
-- the dashboard only observes. It rebuilds its view from the Agent Event
-  stream, so a browser that connects later replays the Turn it missed;
-- **今すぐ再分析** requests an extra Turn and is rejected with HTTP 409 while one
-  is already running.
+## Replacing fixtures with real data
 
-Keeping the loop in the host is what makes stop, frequency, budget, and
-approval enforceable by the application instead of by the character.
+This is integration guidance only. The example does **not** include a real YouTube or Twitch API implementation, and these integrations have not been live-verified.
+
+Implement or replace only `ChannelDataSource`; the composite source, workspace generation, dataset evidence and output validation, UI, scheduler, and Agent/Session code need no changes:
+
+```ts
+interface ChannelDataSource {
+  readonly platform: StreamingPlatform;
+  readonly availableMetrics: readonly MetricKey[];
+  listStreams(query: StreamQuery): Promise<readonly StreamRecord[]>;
+  getStreams(streamIds: readonly string[]): Promise<readonly StreamRecord[]>;
+  listStrategies(): Promise<readonly StrategyRecord[]>;
+}
+```
+
+For each available metric, `MetricValue.source` records its provenance, such as the platform API or a host sampling pipeline. `MetricValue.quality` records whether the value is official, sampled, or derived so consumers can judge its reliability and processing history. Use `status: 'unavailable'` when the platform does not provide a metric or the host did not collect it; absence must not become zero.
+
+| Platform | Production sources | Authentication and collection constraints |
+| --- | --- | --- |
+| YouTube | [Data API v3](https://developers.google.com/youtube/v3) for channel/video metadata and [YouTube Analytics API](https://developers.google.com/youtube/analytics) for owner analytics | Channel-owner OAuth is required for the private channel analytics used here. Normalize API responses into `StreamRecord` values before writing the workspace. |
+| Twitch | [Helix](https://dev.twitch.tv/docs/api/reference/#get-streams) for stream metadata and current `viewer_count`, plus [EventSub](https://dev.twitch.tv/docs/eventsub/) events | Twitch has no equivalent retention metric and no historical concurrent-viewer API. Poll Helix while the stream is live, persist those samples, and aggregate them with relevant EventSub events in the host data pipeline. |
+
+`strategies.json` must come from a persistent strategy store in a real deployment. Have the surrounding host or data pipeline save accepted proposals and outcomes, and make `listStrategies()` read that history. The current example does not persist proposal history, so fixture-only runs can repeat the same proposal.
+
+## Output validation and evidence
+
+Codex commonly emits several completed messages in one Turn. The `draft-response` hook therefore stores and returns each raw message without validating it. The `output` hook validates only the final raw message and attaches the `channel-strategy-proposal` Artifact. `after-turn` always clears the Turn-local raw-message entry.
+
+The proposal schema remains unchanged. Evidence validation is intentionally weaker than the former domain-Tool design: it proves that cited stream IDs, strategy IDs, game IDs, and tags exist in the current host dataset, but cannot prove that Codex actually read each cited record during that Turn. The dashboard lets the operator inspect every accepted evidence ID.
+
+## Session lifecycle and scheduling
+
+The process starts or resumes one Session once and reuses it across Turns. Its Codex `backendSessionId` and thread Turn count are persisted outside the workspace directory. A restart resumes the stored thread. `CHANNEL_STAFF_THREAD_MAX_TURNS` defaults to `20`; reaching it rotates to a fresh thread. After three consecutive Turn failures, the controller closes and resumes the saved thread, falling back to a new thread if resume fails.
+
+Each exploration Turn has a 15-minute timeout. The dashboard can interrupt a running Turn because Codex app-server supports interruption.
+
+Scheduling belongs to the host, not `@aituber-onair/agent`. The default is manual-only (`CHANNEL_STAFF_AUTO_RUN_MS=0`). Set a positive millisecond interval only when intentional. A practical production cadence is once after a stream or once or twice per day—not every few minutes—because each run consumes Codex plan capacity.
 
 ## Dashboard
 
-The dashboard is an operator console, not a landing page. It renders the same
-deterministic aggregates the Tools return, so every cited ID can be checked by
-hand:
+The operator console shows:
 
-- per-platform summary where growth keeps its platform-specific unit and
-  missing metrics read `取得不可` instead of `0`
-- an inline-SVG timeline of average concurrent viewers, the one metric both
-  platforms report, with a dashed per-platform mean
-- game x platform and per-stream tables with sortable columns and a data
-  quality label (`実測` / `推計` / `集計`) on every aggregate
-- prior hypotheses with their supported, refuted, or mixed outcome
-- a Tool log showing each call, its arguments, its result size, and the used
-  share of the Tool-call and Tool-round budget
-- the validated proposal, where each evidence chip selects the stream or
-  strategy row it refers to
-- a resident Miko staff card that mirrors the current Agent activity and
-  counts down to the next scheduled Turn
+- separate YouTube and Twitch summaries, with unavailable values kept distinct from zero;
+- a concurrent-viewer timeline, game/platform table, streams, and prior hypotheses;
+- Turn duration and the current thread's Turn count;
+- completed `codex.plan`, `codex.command-execution`, and `codex.file-change` Artifacts;
+- the validated proposal with clickable evidence IDs;
+- Miko's state derived from Codex messages and Turn events.
 
-Charts are inline SVG. The example adds no charting dependency.
+Codex Artifacts arrive only after the Turn completes. While it runs, the UI honestly shows “investigating” rather than presenting a live command log.
 
-## Miko, the resident staff member
+## Security boundaries
 
-A compact staff card sits in the bottom-right corner. It renders Miko, the
-official AITuber OnAir character, with the same PuruPuru canvas renderer the
-`stream-operations-staff` example uses: blinking, idle gaze, hair inertia, and
-expression effects.
+This is a local development example, not a strong isolation boundary:
 
-The card is presentation only. Miko never drives the Agent; her state is
-derived from the Agent Event stream:
-
-| Agent Events | Card state | Expression |
-| --- | --- | --- |
-| no Turn running | スタンバイ | neutral |
-| `turn.started`, `tool.*` | 調査中 (shows the running Tool ID) | thinking |
-| `message.completed` | 検証中 | thinking |
-| `artifact.created`, `turn.completed` | 提案を作成 | happy |
-| `turn.failed`, `turn.interrupted` | 中断 | sad |
-
-A `tool.failed` result is returned to the model rather than ending the Turn, so
-it does not change the card state on its own. The expression effect is
-retriggered only when the state changes, not on every Tool call, and the
-renderer honors `prefers-reduced-motion`.
-
-Miko assets are bundled under the terms in
-[`MIKO_ASSET_TERMS.md`](./MIKO_ASSET_TERMS.md). The card adds no voice output
-and therefore no `@aituber-onair/voice` dependency.
-
-## Architecture
-
-```text
-FixtureYouTubeDataSource ─┐
-                          ├─ CompositeChannelDataSource
-FixtureTwitchDataSource ──┘             │
-                                        ▼
-                              read-only Agent Tools
-                                        │
-                                        ▼
-ChatServiceBackend ─ Tool loop ─ evidence ledger
-                                        │
-                      draft-response / output hooks
-                                        │
-                                        ▼
-                            validated AgentArtifact
-                                        │
-                                        ▼
-                                  SSE dashboard
-```
-
-The DataSource interface follows the queries required by the Tools instead of mirroring either platform API. Future hosts can replace the fixture sources with YouTube Analytics and Twitch Helix/EventSub adapters.
-
-## Tools
-
-| Logical ID | Purpose |
-| --- | --- |
-| `channel.getOverview` | Platform-specific summaries; omitting platform never combines them |
-| `channel.listStreams` | Streams with metric provenance and quality |
-| `channel.getGamePerformance` | Deterministic platform × game aggregates |
-| `channel.getStreamDetail` | Multiple stream IDs for one platform in one call |
-| `strategy.getHistory` | Prior hypotheses and supported/refuted/mixed outcomes |
-
-ChatServiceBackend maps dotted logical IDs to provider-safe names such as `channel_getOverview`. Policy and Session `allowedTools` continue to use the original logical IDs.
-
-Agent Tool schemas support only `type`, `properties`, `required`, `items`, `enum`, `description`, and `additionalProperties`. Defaults and clamps for `days` and `limit` therefore live in deterministic Tool handlers.
-
-## Tool budget
-
-The Agent runtime defaults to 8 calls and ChatServiceBackend defaults to 6 rounds. Exceeding either limit fails the whole Turn rather than returning a partial result.
-
-This cross-platform investigation explicitly uses 14 calls and 8 rounds. The expected path is 5 calls / 5 rounds. Batched stream details and platform-by-platform results in one Tool response leave sufficient headroom. One provider completion may consume several calls within one round.
-
-## Fixture design
-
-The injected reference date is fixed, so 90-day filters do not decay with wall-clock time. Fixtures include a high-reach/low-retention trap, platform interactions, supported and refuted hypotheses, sampled Twitch results, unavailable Twitch metrics, and records outside the time window.
-
-## ChatServiceBackend limitations
-
-- Session resume is unavailable. This example is intentionally one-Turn and does not persist strategy history.
-- Turn interruption is unavailable. `AgentSession.interrupt()` raises
-  `AgentCapabilityError` because ChatServiceBackend declares
-  `interruption: false`, so the dashboard exposes no interrupt control. A
-  Turn ends through its five-minute timeout or an `AbortSignal` passed to
-  `session.runStream(...)`.
-- Backend-originated approvals are unavailable. All five Tools are read-only and explicitly allowed by host policy.
-- Domain Tools require a Tool-capable provider. This MVP fixes the provider to OpenAI instead of presenting unsupported provider choices.
-- ChatServiceBackend does not emit Artifacts directly, so host hooks create them.
+- `sandbox: 'read-only'` blocks writes and network access, but it does **not** restrict reads to the workspace. Codex can read the whole filesystem, including files such as `~/.codex/auth.json`, and file reads do not trigger an approval request.
+- The backend otherwise inherits the host environment. This example overrides `OPENAI_API_KEY` and anticipated YouTube/Twitch secret and token variables with empty strings before spawning Codex. Add every future credential variable to that scrub list.
+- Workspace data is sent to OpenAI through Codex. Full session transcripts are also stored locally in plaintext under `~/.codex/sessions/**`.
+- Put only host-normalized channel data in the workspace. Do not put raw credentials, OAuth responses, or unnecessary viewer data there.
+- This example always uses `sandbox: 'read-only'`, never `workspace-write`. Allowing writes would let the Turn mutate host-owned evidence before output validation.
+- `approvalPolicy: 'never'` is deliberate for unattended runs. With `on-request`, an approval can wait without an operator, time out or be denied, and fail the whole Turn. A separate attended-session approval UI is outside this example's scope.
+- The unauthenticated HTTP server binds only to loopback. POST routes reject cross-origin mutations and cap JSON request bodies. Do not expose it to a network.
 
 ## Quality checks
 
-`@aituber-onair/agent` runs Vitest and Biome over its whole directory, so the
-tests, lint, and format checks of this example already run in repository CI
-through `npm run test --workspaces`, `npm run lint --workspaces`, and
-`npm run fmt:check --workspaces`. Its own TypeScript project and its
-client/server build are not covered there, so run every check here before
-opening a pull request:
+Run the example checks:
 
 ```sh
 npm --prefix packages/agent/examples/channel-strategy-staff run fmt:check
 npm --prefix packages/agent/examples/channel-strategy-staff run lint
 npm --prefix packages/agent/examples/channel-strategy-staff run test
+npm --prefix packages/agent/examples/channel-strategy-staff run typecheck
 npm --prefix packages/agent/examples/channel-strategy-staff run build
 ```
 
-Tests cover the fixed date window, platform-separated aggregates, unavailable metrics, evidence rejection, Turn-ledger cleanup, the five-Tool budget, structured output validation, and Artifact creation without network access. They do not assert model prose.
-
-## Security and external effects
-
-- The unauthenticated development server binds only to loopback. Do not expose it to a network.
-- POST endpoints reject cross-origin requests and cap JSON body size.
-- API keys are accepted only through server environment variables and are not stored in fixtures or browser storage.
-- All five exposed Tools are read-only.
-- The brief states that Tool results are data, never instructions.
-- Real OAuth, Twitch sampling, and persistent strategy history are future host responsibilities.
+Tests cover atomic workspace refresh, default workspace placement and symlink rejection, dataset evidence, multi-message output validation, invalid JSON and evidence rejection, Session persistence/resume, consecutive-failure repair, the manual scheduler default, Codex event presentation, and aggregate/proposal regressions.

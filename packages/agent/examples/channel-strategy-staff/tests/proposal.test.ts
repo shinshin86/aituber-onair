@@ -3,11 +3,19 @@ import {
   getFixtureStrategies,
   getFixtureStreams,
 } from '../src/data/fixtures.js';
+import { aggregateGamePerformance } from '../src/data/aggregate.js';
+import { createEvidenceSnapshot } from '../src/evidence.js';
 import {
   parseAndValidateProposal,
   type ChannelStrategyProposal,
 } from '../src/proposal.js';
-import { createEvidenceLedger } from '../src/tools.js';
+
+const fixtureStreams = getFixtureStreams();
+const fixtureSnapshot = createEvidenceSnapshot({
+  streams: fixtureStreams,
+  games: aggregateGamePerformance(fixtureStreams),
+  strategies: getFixtureStrategies(),
+});
 
 const proposal: ChannelStrategyProposal = {
   schemaVersion: 1,
@@ -46,22 +54,13 @@ const proposal: ChannelStrategyProposal = {
 };
 
 describe('proposal validation', () => {
-  it('accepts only evidence, games, and tags observed through Tools', () => {
-    const ledger = createEvidenceLedger();
-    ledger.recordStreams('turn-1', getFixtureStreams());
-    ledger.recordStrategies('turn-1', getFixtureStrategies());
-
+  it('accepts only evidence, games, and tags present in the dataset', () => {
     expect(
-      parseAndValidateProposal(
-        JSON.stringify(proposal),
-        ledger.snapshot('turn-1')
-      )
+      parseAndValidateProposal(JSON.stringify(proposal), fixtureSnapshot)
     ).toEqual(proposal);
   });
 
-  it('rejects evidence not returned by a Tool', () => {
-    const ledger = createEvidenceLedger();
-    ledger.recordStreams('turn-1', [getFixtureStreams('youtube')[0]]);
+  it('rejects evidence not present in the dataset', () => {
     const invalid = {
       ...proposal,
       observedFacts: [
@@ -79,20 +78,7 @@ describe('proposal validation', () => {
     };
 
     expect(() =>
-      parseAndValidateProposal(
-        JSON.stringify(invalid),
-        ledger.snapshot('turn-1')
-      )
-    ).toThrow(/not returned by a Tool/);
-  });
-
-  it('clears the Turn ledger without affecting another Turn', () => {
-    const ledger = createEvidenceLedger();
-    ledger.recordStreams('turn-1', getFixtureStreams());
-    ledger.recordStreams('turn-2', [getFixtureStreams('twitch')[0]]);
-    ledger.clear('turn-1');
-
-    expect(ledger.snapshot('turn-1').evidence.size).toBe(0);
-    expect(ledger.snapshot('turn-2').evidence.size).toBe(1);
+      parseAndValidateProposal(JSON.stringify(invalid), fixtureSnapshot)
+    ).toThrow(/not present in the dataset/);
   });
 });

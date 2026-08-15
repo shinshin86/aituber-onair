@@ -23,23 +23,23 @@ describe('Miko staff card activity', () => {
   it('follows the Agent Event stream through one Turn', () => {
     const events = [
       event({ type: 'turn.started' }),
-      event({ type: 'tool.requested', toolId: 'channel.getOverview' }),
-      event({ type: 'tool.completed', toolId: 'channel.getOverview' }),
+      event({ type: 'message.delta', text: 'Reading data/' }),
+      event({ type: 'message.completed', text: 'Inspection complete.' }),
     ];
 
-    expect(deriveMikoActivity(events, true)).toEqual({
-      kind: 'investigating',
-      toolId: 'channel.getOverview',
-    });
+    expect(deriveMikoActivity(events, true)).toEqual({ kind: 'investigating' });
     expect(
       deriveMikoActivity(
-        [...events, event({ type: 'message.completed' })],
-        true
-      )
-    ).toEqual({ kind: 'validating' });
-    expect(
-      deriveMikoActivity([...events, event({ type: 'turn.completed' })], false)
-        .kind
+        [
+          ...events,
+          event({
+            type: 'artifact.created',
+            artifact: { type: 'codex.plan' },
+          }),
+          event({ type: 'turn.completed' }),
+        ],
+        false
+      ).kind
     ).toBe('done');
     expect(
       deriveMikoActivity([...events, event({ type: 'turn.failed' })], false)
@@ -47,23 +47,10 @@ describe('Miko staff card activity', () => {
     ).toBe('failed');
   });
 
-  it('keeps a failed Tool call inside the investigation', () => {
-    const events = [
-      event({ type: 'turn.started' }),
-      event({ type: 'tool.requested', toolId: 'channel.listStreams' }),
-      event({ type: 'tool.failed', toolId: 'channel.listStreams' }),
-    ];
+  it('shows Codex investigation detail and reacts only to the activity kind', () => {
+    const investigating = presentMikoActivity({ kind: 'investigating' });
 
-    expect(deriveMikoActivity(events, true).kind).toBe('investigating');
-  });
-
-  it('shows the running Tool ID and reacts only to the activity kind', () => {
-    const investigating = presentMikoActivity({
-      kind: 'investigating',
-      toolId: 'strategy.getHistory',
-    });
-
-    expect(investigating.detail).toBe('strategy.getHistory');
+    expect(investigating.detail).toContain('ワークスペース');
     expect(investigating.reaction?.effect).toBe('thinking');
     expect(presentMikoActivity({ kind: 'idle' }).reaction).toBeNull();
     expect(presentMikoActivity({ kind: 'done' }).reaction?.effect).toBe(

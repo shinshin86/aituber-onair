@@ -3,7 +3,7 @@ import {
   evidenceKey,
   type EvidenceLedgerSnapshot,
   type EvidenceSourceType,
-} from './tools.js';
+} from './evidence.js';
 
 export interface ProposalEvidence {
   readonly platform: StreamingPlatform;
@@ -125,7 +125,7 @@ export function parseAndValidateProposal(
       const key = evidenceKey(evidencePlatform, sourceType, sourceId);
       if (!ledger.evidence.has(key)) {
         throw new Error(
-          `Proposal cites evidence not returned by a Tool: ${key}`
+          `Proposal cites evidence not present in the dataset: ${key}`
         );
       }
       return { platform: evidencePlatform, sourceType, sourceId };
