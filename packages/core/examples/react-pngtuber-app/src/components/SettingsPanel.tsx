@@ -351,6 +351,7 @@ export function SettingsPanel({
   updateManneriLookbackWindow,
   updateManneriInterventionCooldownMs,
   updateManneriMinMessageLength,
+  updateKizunaEnabled,
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
@@ -914,6 +915,25 @@ export function SettingsPanel({
                 入力欄からフォーカスが外れた時に反映されます。空欄の場合は
                 既定値を使用します。アバター固有の制御指示を削除すると、
                 感情表現エフェクトの連動に影響する場合があります。
+              </p>
+            </div>
+
+            <div className="settings-field settings-kizuna-field">
+              <label htmlFor="kizuna-enabled">
+                <input
+                  id="kizuna-enabled"
+                  type="checkbox"
+                  checked={settings.kizuna.enabled}
+                  onChange={(event) =>
+                    updateKizunaEnabled(event.target.checked)
+                  }
+                  disabled={disabled}
+                />
+                視聴者ごとの親密度を記録する（Kizuna）
+              </label>
+              <p className="settings-field-hint">
+                フォーム入力、YouTube、Twitchを別の人物として記録し、応答前に
+                その視聴者との関係性をSystem Promptへ追加します。
               </p>
             </div>
 

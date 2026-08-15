@@ -210,8 +210,8 @@ packages/
 │   └── examples/   # Conversation pattern detection examples
 ├── bushitsu-client/# WebSocket client, React hooks
 │   └── examples/   # WebSocket client usage examples
-├── kizuna/         # KizunaManager, storage providers, point system
-│   └── examples/   # Bond system implementation examples
+├── kizuna/         # Bond model, LLM context output, storage providers
+│   └── examples/   # Interactive bond lifecycle simulator
 └── noise/          # Contaminator pipeline, gates, gag ledger, reaction loop
     └── examples/   # Browser labs for noise rewrites and session simulation
 ```

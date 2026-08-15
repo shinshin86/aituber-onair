@@ -173,6 +173,10 @@ export interface ManneriSettings {
   minMessageLength: number;
 }
 
+export interface KizunaSettings {
+  enabled: boolean;
+}
+
 export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
@@ -197,4 +201,5 @@ export interface AppSettings {
   stream: StreamSettings;
   commentIntelligence: CommentIntelligenceSettings;
   manneri: ManneriSettings;
+  kizuna: KizunaSettings;
 }

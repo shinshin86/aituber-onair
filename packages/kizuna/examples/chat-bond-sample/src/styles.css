@@ -1,0 +1,462 @@
+:root {
+  color: #211e2b;
+  background: #f4f1f6;
+  font-family: Inter, "Hiragino Sans", "Hiragino Kaku Gothic ProN", system-ui,
+    sans-serif;
+  font-synthesis: none;
+  line-height: 1.55;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  background: radial-gradient(circle at 10% 0, #fde7ec 0, transparent 28%),
+    radial-gradient(circle at 92% 8%, #e5def7 0, transparent 26%), #f4f1f6;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.page-shell {
+  width: min(1180px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 32px clamp(14px, 4vw, 52px) 48px;
+}
+
+.intro {
+  display: flex;
+  gap: 24px;
+  align-items: start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.intro > div {
+  max-width: 760px;
+}
+
+.package-name {
+  margin: 0 0 5px;
+  color: #9e3655;
+  font: 700 0.76rem ui-monospace, monospace;
+}
+
+h1 {
+  margin: 0 0 9px;
+  font-size: clamp(1.75rem, 4vw, 2.8rem);
+  letter-spacing: -0.035em;
+}
+
+.intro p:not(.package-name) {
+  margin: 0;
+  color: #554f60;
+}
+
+.intro .classifier-note {
+  margin-top: 7px;
+  color: #716779;
+  font-size: 0.75rem;
+}
+
+#reset-button {
+  flex: 0 0 auto;
+  padding: 8px 13px;
+  border: 1px solid #d9d1df;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #554f60;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(340px, 0.88fr);
+  min-height: 650px;
+  overflow: hidden;
+  border: 1px solid #ddd5e2;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 28px 70px -48px rgba(53, 39, 68, 0.55);
+}
+
+.chat-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  border-right: 1px solid #e5dfe8;
+}
+
+.chat-card-heading,
+.relationship-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chat-card-heading {
+  padding: 18px 20px;
+  border-bottom: 1px solid #e5dfe8;
+}
+
+.chat-card-heading > div,
+.relationship-heading > div {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.chat-card-heading > div > div,
+.relationship-heading > div > div {
+  display: grid;
+}
+
+.chat-card-heading small,
+.relationship-heading small,
+.intimacy-block small,
+.graph-block small,
+.metrics small {
+  color: #6b6473;
+  font-size: 0.7rem;
+}
+
+.avatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 13px;
+  background: #eee8f7;
+  color: #735996;
+  font-size: 1.1rem;
+}
+
+.avatar.owner {
+  background: #fde8ed;
+  color: #a93451;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.local-badge {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #edf7f1;
+  color: #276b4a;
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.chat-log {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  min-height: 0;
+  padding: 20px;
+  overflow: auto;
+  background: rgba(250, 248, 251, 0.75);
+}
+
+.message {
+  width: fit-content;
+  max-width: 82%;
+  padding: 11px 13px;
+  border-radius: 15px;
+}
+
+.message.assistant {
+  border: 1px solid #e3dced;
+  border-bottom-left-radius: 5px;
+  background: #f5f0fb;
+}
+
+.message.user {
+  justify-self: end;
+  border-bottom-right-radius: 5px;
+  background: #b64664;
+  color: #fff;
+}
+
+.message-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 3px;
+  font-size: 0.69rem;
+}
+
+.message-meta span {
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(116, 90, 155, 0.12);
+  color: #674a8a;
+  font: 0.63rem ui-monospace, monospace;
+}
+
+.message p {
+  margin: 0;
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.chat-form {
+  padding: 16px 20px 20px;
+  border-top: 1px solid #e5dfe8;
+}
+
+.chat-form label {
+  display: block;
+  margin-bottom: 6px;
+  color: #5c5564;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.chat-form > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.chat-form input {
+  min-width: 0;
+  padding: 11px 13px;
+  border: 1px solid #d9d1df;
+  border-radius: 11px;
+  color: #211e2b;
+  background: #fff;
+}
+
+.chat-form input:focus {
+  border-color: #b64664;
+  outline: 3px solid rgba(182, 70, 100, 0.13);
+}
+
+.chat-form button {
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 11px;
+  background: #b64664;
+  color: #fff;
+  font-weight: 850;
+}
+
+.relationship-card {
+  min-width: 0;
+  padding: 22px;
+  background: linear-gradient(155deg, #fff, #faf7fc);
+}
+
+.relationship-heading {
+  margin-bottom: 22px;
+}
+
+.relationship-heading h2 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.relationship-heading > span {
+  color: #a93451;
+  font-size: 1.55rem;
+  font-weight: 900;
+}
+
+.intimacy-block,
+.graph-block,
+.relationship-card details {
+  padding: 14px;
+  border: 1px solid #e4dde8;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.intimacy-block > div:first-child,
+.graph-block > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.intimacy-track {
+  height: 15px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ece7ef;
+}
+
+#intimacy-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8263aa, #d75675);
+  box-shadow: 0 0 18px rgba(215, 86, 117, 0.32);
+  transition: width 760ms cubic-bezier(0.2, 0.9, 0.22, 1.18);
+}
+
+.change-note {
+  min-height: 20px;
+  margin-top: 8px;
+  color: #a93451;
+  font-size: 0.7rem;
+  font-weight: 800;
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.change-note.visible {
+  animation: note-in 260ms ease forwards;
+}
+
+.change-note.error {
+  color: #a22b2b;
+}
+
+.change-note.decrease {
+  color: #983f52;
+}
+
+.intimacy-track:has(+ .change-note.decrease) #intimacy-fill {
+  background: linear-gradient(90deg, #81495b, #c65e6c);
+}
+
+@keyframes note-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.metrics > div {
+  display: grid;
+  padding: 12px;
+  border: 1px solid #e4dde8;
+  border-radius: 13px;
+  background: #faf8fb;
+}
+
+.metrics dt {
+  color: #6b6473;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.metrics dd {
+  margin: 2px 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.graph-block svg {
+  display: block;
+  width: 100%;
+  height: 128px;
+  margin-top: 10px;
+}
+
+.graph-block line {
+  stroke: #ddd6e2;
+  stroke-width: 1;
+}
+
+.graph-block polyline {
+  fill: none;
+  stroke: #b64664;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.relationship-card details {
+  margin-top: 12px;
+}
+
+.relationship-card summary {
+  color: #5c5564;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.relationship-card pre {
+  max-height: 130px;
+  padding: 10px;
+  overflow: auto;
+  border-radius: 9px;
+  margin: 10px 0 0;
+  background: #f5f0f8;
+  color: #51435d;
+  font: 0.67rem / 1.6 ui-monospace, monospace;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 820px) {
+  .demo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-card {
+    min-height: 580px;
+    border-right: 0;
+    border-bottom: 1px solid #e5dfe8;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-shell {
+    padding-inline: 9px;
+  }
+
+  .intro {
+    display: grid;
+  }
+
+  .chat-card-heading,
+  .relationship-card {
+    padding-inline: 14px;
+  }
+
+  .local-badge {
+    max-width: 120px;
+    text-align: center;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #intimacy-fill {
+    transition-duration: 0.01ms;
+  }
+
+  .change-note.visible {
+    animation-duration: 0.01ms;
+  }
+}

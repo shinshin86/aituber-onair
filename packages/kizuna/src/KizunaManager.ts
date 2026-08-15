@@ -1,54 +1,61 @@
-/**
- * KizunaManager - Main class for the Kizuna system
- *
- * Manages relationships with users and controls the point system
- */
-
+import { BondEvaluator } from './BondEvaluator';
+import { BondDynamics } from './BondDynamics';
+import { BondContextBuilder } from './context/BondContextBuilder';
+import { PointCalculator, type PersistedLimitRecord } from './PointCalculator';
 import type {
+  Achievement,
+  BondContextOptions,
+  BondSnapshot,
+  Interaction,
   KizunaConfig,
+  KizunaEventData,
+  KizunaEventType,
+  KizunaManagerInterface,
   KizunaUser,
-  PointContext,
   PointResult,
   PointRule,
-  KizunaEventType,
-  KizunaEventData,
-  KizunaManagerInterface,
+  SessionInfo,
   StorageProvider,
+  Threshold,
+  ThresholdAction,
 } from './types';
-import { PointCalculator } from './PointCalculator';
+import { UserManager } from './UserManager';
 
-/**
- * Basic implementation of event emitter
- */
+interface TriggeredThreshold {
+  threshold: Threshold;
+  action: ThresholdAction;
+  achievement?: Achievement;
+}
+
+interface PersistenceEnvelope {
+  format: '@aituber-onair/kizuna';
+  version: 1;
+  users: Record<string, unknown>;
+  sessionCounter: number;
+  limitRecords: PersistedLimitRecord[];
+}
+
 class EventEmitter {
-  private listeners: Map<string, ((...args: unknown[]) => void)[]> = new Map();
+  private listeners = new Map<string, ((...arguments_: unknown[]) => void)[]>();
 
-  on(event: string, listener: (...args: unknown[]) => void): void {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, []);
-    }
-    this.listeners.get(event)?.push(listener);
+  on(event: string, listener: (...arguments_: unknown[]) => void): void {
+    const listeners = this.listeners.get(event) ?? [];
+    listeners.push(listener);
+    this.listeners.set(event, listeners);
   }
 
-  off(event: string, listener: (...args: unknown[]) => void): void {
-    const eventListeners = this.listeners.get(event);
-    if (eventListeners) {
-      const index = eventListeners.indexOf(listener);
-      if (index !== -1) {
-        eventListeners.splice(index, 1);
-      }
-    }
+  off(event: string, listener: (...arguments_: unknown[]) => void): void {
+    const listeners = this.listeners.get(event);
+    const index = listeners?.indexOf(listener) ?? -1;
+    if (index >= 0) listeners?.splice(index, 1);
   }
 
   emit(event: string, data?: unknown): void {
-    const eventListeners = this.listeners.get(event);
-    if (eventListeners) {
-      for (const listener of eventListeners) {
-        try {
-          listener(data);
-        } catch (error) {
-          console.error(`Error in event listener for ${event}:`, error);
-        }
+    for (const listener of this.listeners.get(event) ?? []) {
+      try {
+        listener(data);
+      } catch (error) {
+        console.error(`Error in event listener for ${event}:`, error);
       }
     }
   }
@@ -58,522 +65,567 @@ class EventEmitter {
   }
 }
 
-/**
- * Main manager class for the Kizuna system
- */
 export class KizunaManager
   extends EventEmitter
   implements KizunaManagerInterface
 {
-  private config: KizunaConfig;
-  private users: Map<string, KizunaUser> = new Map();
-  private storageProvider: StorageProvider | null = null;
+  private readonly userManager: UserManager;
+  private readonly pointCalculator: PointCalculator;
+  private readonly bondEvaluator: BondEvaluator;
+  private readonly bondDynamics: BondDynamics;
+  private readonly contextBuilder: BondContextBuilder;
+  private readonly now: () => number;
+  private readonly storageProvider: StorageProvider | null;
+  private readonly storageKey: string;
   private isInitialized = false;
-  private pointCalculator: PointCalculator;
-  private storageKey: string;
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null;
+  private initializationPromise: Promise<void> | null = null;
+  private lifecycleVersion = 0;
+  private activeSession: SessionInfo | undefined;
+  private sessionCounter = 0;
+  private storageWriteQueue: Promise<void> = Promise.resolve();
 
   constructor(
-    config: KizunaConfig,
+    private readonly config: KizunaConfig,
     storageProvider?: StorageProvider,
     storageKey?: string,
   ) {
     super();
-    this.config = { ...config };
-    this.storageProvider = storageProvider || null;
-    this.pointCalculator = new PointCalculator(this.config);
-
     if (!storageKey) {
       throw new Error(
-        'storageKey is required for KizunaManager. Please provide a complete localStorage key.',
+        'storageKey is required for KizunaManager. Please provide a complete storage key.',
       );
     }
     this.storageKey = storageKey;
-
-    if (this.config.dev.debugMode) {
-      console.log(
-        '[Kizuna] KizunaManager initialized with config:',
-        this.config,
-      );
-    }
+    this.storageProvider = storageProvider ?? null;
+    this.now = config.now ?? Date.now;
+    this.bondEvaluator = new BondEvaluator(config);
+    this.bondDynamics = new BondDynamics(config, this.bondEvaluator);
+    this.userManager = new UserManager(
+      config,
+      this.bondEvaluator,
+      this.bondDynamics,
+    );
+    this.pointCalculator = new PointCalculator(config, this.bondEvaluator);
+    this.contextBuilder = new BondContextBuilder(config.context);
   }
 
-  /**
-   * Initialization process
-   */
   async initialize(): Promise<void> {
-    if (this.isInitialized) {
-      return;
+    if (this.isInitialized) return;
+    if (!this.initializationPromise) {
+      const initialization = this.performInitialization(this.lifecycleVersion);
+      const sharedInitialization = initialization.finally(() => {
+        if (this.initializationPromise === sharedInitialization) {
+          this.initializationPromise = null;
+        }
+      });
+      this.initializationPromise = sharedInitialization;
     }
-
-    try {
-      // Load data from storage
-      if (this.storageProvider) {
-        await this.loadFromStorage();
-      }
-
-      // Set up automatic cleanup
-      this.setupAutoCleanup();
-
-      this.isInitialized = true;
-      this.log('info', 'KizunaManager initialized successfully');
-    } catch (error) {
-      this.log('error', 'Failed to initialize KizunaManager:', error);
-      throw error;
-    }
+    return this.initializationPromise;
   }
 
-  /**
-   * Interaction processing - Main point calculation logic
-   */
-  async processInteraction(context: PointContext): Promise<PointResult> {
-    if (!this.isInitialized) {
-      await this.initialize();
-    }
-
+  async processInteraction(interaction: Interaction): Promise<PointResult> {
+    assertValidTimestamp(interaction.timestamp, 'Interaction timestamp');
+    if (!this.isInitialized) await this.initialize();
     try {
-      if (this.config.dev.debugMode) {
-        this.log(
-          'debug',
-          `Processing interaction for ${context.userId} with emotion: ${context.emotion}`,
-        );
-      }
-
-      // Get or create user
-      const user = this.getOrCreateUser(context);
-
-      // Calculate points
-      const calculationResult = this.calculatePoints(context, user);
-
-      // Add points
-      const result = await this.addPoints(
-        context.userId,
-        calculationResult.points,
-        context,
-        calculationResult.appliedRules,
+      const previousUserCount = this.userManager.getUserCount();
+      const existingUser = this.userManager.getUser(interaction.userId);
+      const bucket = this.bondEvaluator.resolveBucket(
+        interaction,
+        this.activeSession,
       );
-
-      // Add interaction record
-      this.addInteractionRecord(user, context, result);
-
-      // Save to storage
-      if (this.storageProvider) {
-        await this.saveToStorage();
+      const previousContinuity = existingUser?.stats.continuity;
+      const isNewerBucket =
+        bucket.index === undefined ||
+        previousContinuity?.lastBucketIndex === undefined ||
+        bucket.index > previousContinuity.lastBucketIndex;
+      const isFirstContactInBucket =
+        !previousContinuity ||
+        (bucket.key !== previousContinuity.lastBucketKey && isNewerBucket);
+      const user = this.userManager.getOrCreateUser(
+        interaction,
+        this.activeSession,
+      );
+      if (this.userManager.getUserCount() > previousUserCount) {
+        this.emitEvent('user_created', { userId: user.id, user });
       }
 
-      if (this.config.dev.debugMode) {
-        this.log(
-          'debug',
-          `Interaction processed: ${result.pointsAdded} points added (${result.appliedRules.length} rules applied)`,
-        );
-        if (result.appliedRules.length > 0) {
-          this.log(
-            'debug',
-            `Applied rules: ${result.appliedRules.map((r) => r.name).join(', ')}`,
-          );
-        }
+      const calculation = this.pointCalculator.calculatePoints(
+        interaction,
+        user,
+        this.activeSession,
+        isFirstContactInBucket,
+      );
+      const dynamics = this.bondDynamics.applyInteraction(
+        user,
+        interaction,
+        calculation.points,
+        calculation.appliedRules,
+        bucket.key,
+      );
+      const result = await this.addPoints(
+        user.id,
+        dynamics.points,
+        interaction,
+        calculation.appliedRules,
+      );
+      this.userManager.addInteractionRecord(
+        user.id,
+        interaction,
+        result.pointsAdded,
+        result.appliedRules.map(({ id }) => id),
+        dynamics.valence,
+        dynamics.severity,
+      );
+      for (const scar of dynamics.createdScars) {
+        this.emitEvent('scar_created', { userId: user.id, scar, user });
       }
-
+      for (const scar of dynamics.healedScars) {
+        this.emitEvent('scar_healed', { userId: user.id, scar, user });
+      }
+      if (this.storageProvider) await this.saveToStorage();
       return result;
     } catch (error) {
-      this.log('error', 'Error processing interaction:', error);
-      this.emitEvent('error', { error, context });
+      this.emitEvent('error', { error, interaction });
       throw error;
     }
   }
 
-  /**
-   * Get user
-   */
   getUser(userId: string): KizunaUser | null {
-    return this.users.get(userId) || null;
+    return this.userManager.getUser(userId);
   }
 
-  /**
-   * Get all users
-   */
   getAllUsers(): KizunaUser[] {
-    return Array.from(this.users.values());
+    return this.userManager.getAllUsers();
   }
 
-  /**
-   * Add points
-   */
   async addPoints(
     userId: string,
     points: number,
-    context?: PointContext,
-    appliedRules?: PointRule[],
+    interaction?: Interaction,
+    appliedRules: PointRule[] = [],
   ): Promise<PointResult> {
-    const user = this.users.get(userId);
-    if (!user) {
-      throw new Error(`User not found: ${userId}`);
-    }
+    const occurredAt = interaction?.timestamp ?? this.now();
+    assertValidTimestamp(occurredAt, 'Point adjustment timestamp');
+    const user = this.userManager.getUser(userId);
+    if (!user) throw new Error(`User not found: ${userId}`);
 
     const oldPoints = user.points;
     const oldLevel = user.level;
-
-    user.points += points;
-    user.lastSeen = new Date();
-    user.stats.totalPointsEarned += Math.max(0, points); // Don't include negative points in statistics
-
-    // Calculate level
-    const newLevel = this.calculateLevel(user.points);
-    const leveledUp = newLevel > oldLevel;
-    if (leveledUp) {
-      user.level = newLevel;
+    const dynamics = this.bondDynamics.ensureState(user, interaction);
+    const oldStage = dynamics.currentStage;
+    const requestedPoints = Number.isFinite(points) ? points : 0;
+    const adjustedPoints = user.points + requestedPoints;
+    user.points = Number.isFinite(adjustedPoints)
+      ? Math.max(0, adjustedPoints)
+      : oldPoints;
+    const pointsAdded = user.points - oldPoints;
+    if (occurredAt > user.lastSeen.getTime()) {
+      user.lastSeen = new Date(occurredAt);
+    }
+    user.stats.totalPointsEarned += Math.max(0, pointsAdded);
+    if (
+      pointsAdded > 0 &&
+      (!user.stats.lastPointsEarned ||
+        occurredAt > user.stats.lastPointsEarned.getTime())
+    ) {
+      user.stats.lastPointsEarned = new Date(occurredAt);
     }
 
-    // Threshold check (temporary implementation)
-    const triggeredActions = this.checkThresholds(user, oldPoints);
-
+    const newStage = this.bondDynamics.resolveStage(user, user.points);
+    dynamics.currentStage = newStage;
+    const newLevel = this.bondEvaluator.calculateLevelForStage(
+      user.points,
+      newStage,
+    );
+    const leveledUp = newLevel > oldLevel;
+    const stagedDown =
+      this.bondEvaluator.getStageIndex(newStage) <
+      this.bondEvaluator.getStageIndex(oldStage);
+    user.level = newLevel;
+    const triggeredThresholds = this.checkThresholds(user, oldPoints);
     const result: PointResult = {
-      pointsAdded: points,
+      pointsAdded,
       totalPoints: user.points,
-      appliedRules: appliedRules || [],
-      triggeredActions,
+      appliedRules,
+      triggeredActions: triggeredThresholds.map(({ action }) => action),
       leveledUp,
       ...(leveledUp && { newLevel }),
     };
 
-    // Emit event
     this.emitEvent('points_updated', {
       userId,
       oldPoints,
       newPoints: user.points,
-      pointsAdded: points,
+      pointsAdded,
     });
-
     if (leveledUp) {
-      this.emitEvent('level_up', {
+      this.emitEvent('level_up', { userId, oldLevel, newLevel });
+    }
+    if (stagedDown) {
+      this.emitEvent('stage_down', {
         userId,
-        oldLevel,
-        newLevel,
+        oldStage,
+        newStage,
+        oldPoints,
+        newPoints: user.points,
       });
     }
-
+    for (const { threshold, achievement } of triggeredThresholds) {
+      this.emitEvent('threshold_reached', { userId, threshold, user });
+      if (achievement) {
+        this.emitEvent('achievement_earned', {
+          userId,
+          achievement,
+          user,
+        });
+      }
+    }
     return result;
   }
 
-  /**
-   * Calculate level
-   */
   calculateLevel(points: number): number {
-    // Simple level calculation (1 level per 100 points, max 10 levels)
-    return Math.min(Math.floor(points / 100) + 1, 10);
+    return this.bondEvaluator.calculateLevel(points);
   }
 
-  /**
-   * Get statistics
-   */
   getStats(): Record<string, unknown> {
     const users = this.getAllUsers();
+    const today = new Date(this.now()).toDateString();
     return {
       totalUsers: users.length,
       totalPoints: users.reduce((sum, user) => sum + user.points, 0),
       averageLevel:
         users.reduce((sum, user) => sum + user.level, 0) / users.length || 0,
-      ownerUsers: users.filter((user) => user.type === 'owner').length,
-      activeToday: users.filter((user) => {
-        const today = new Date();
-        const lastSeen = new Date(user.lastSeen);
-        return lastSeen.toDateString() === today.toDateString();
-      }).length,
+      ownerUsers: users.filter(({ role }) => role === 'owner').length,
+      activeToday: users.filter(
+        ({ lastSeen }) => lastSeen.toDateString() === today,
+      ).length,
     };
   }
 
-  // ============================================================================
-  // Private methods
-  // ============================================================================
-
-  /**
-   * Get or create user
-   */
-  private getOrCreateUser(context: PointContext): KizunaUser {
-    let user = this.users.get(context.userId);
-
-    if (!user) {
-      // Create new user
-      user = this.createUser(context);
-      this.users.set(context.userId, user);
-
-      this.emitEvent('user_created', { userId: context.userId, user });
-      this.log('info', `New user created: ${context.userId}`);
-    } else {
-      // Update existing user
-      user.lastSeen = new Date();
-      user.stats.totalMessages++;
-
-      // Count today's messages
-      const today = new Date().toDateString();
-      const lastSeenDate = new Date(user.lastSeen).toDateString();
-      if (today !== lastSeenDate) {
-        user.stats.todayMessages = 1;
-      } else {
-        user.stats.todayMessages++;
-      }
-    }
-
-    return user;
-  }
-
-  /**
-   * Create new user
-   */
-  private createUser(context: PointContext): KizunaUser {
-    const userType = this.determineUserType(context);
-    const displayName = this.extractDisplayName(context.userId);
-
-    const user: KizunaUser = {
-      id: context.userId,
-      displayName,
-      type: userType,
-      points: userType === 'owner' ? this.config.owner.initialPoints : 0,
-      level: 1,
-      achievements: [],
-      stats: {
-        totalMessages: 1,
-        totalPointsEarned: 0,
-        dailyStreak: 1,
-        favoriteEmotions: {},
-        todayMessages: 1,
-      },
-      firstSeen: new Date(),
-      lastSeen: new Date(),
-    };
-
-    return user;
-  }
-
-  /**
-   * Determine user type
-   */
-  private determineUserType(context: PointContext): import('./types').UserType {
-    if (context.isOwner || context.platform === 'chatForm') {
-      return 'owner';
-    }
-
-    switch (context.platform) {
-      case 'youtube':
-        return 'youtube';
-      case 'twitch':
-        return 'twitch';
-      case 'websocket':
-        return 'websocket';
-      default:
-        return 'websocket'; // Default
-    }
-  }
-
-  /**
-   * Extract display name from user ID
-   */
-  private extractDisplayName(userId: string): string {
-    const parts = userId.split(':');
-    return parts.length > 1 ? parts[1] || 'unknown' : userId;
-  }
-
-  /**
-   * Calculate points
-   */
-  private calculatePoints(
-    context: PointContext,
-    user: KizunaUser,
-  ): { points: number; appliedRules: PointRule[] } {
-    const calculationResult = this.pointCalculator.calculatePoints(
-      context,
-      user,
-    );
+  getBondSnapshot(userId: string): BondSnapshot | null {
+    const user = this.userManager.getUser(userId);
+    if (!user) return null;
+    const dynamics = this.bondDynamics.ensureState(user);
+    const warmth = this.bondDynamics.getWarmth(user, this.now());
     return {
-      points: calculationResult.points,
-      appliedRules: calculationResult.appliedRules,
+      userId: user.id,
+      displayName: user.displayName,
+      role: user.role,
+      stage: dynamics.currentStage,
+      level: user.level,
+      points: user.points,
+      warmth,
+      trend: dynamics.trend,
+      atmosphere: this.bondDynamics.getAtmosphere(warmth),
+      continuity: {
+        streak: user.stats.continuity.streak,
+        totalActiveBuckets: user.stats.continuity.totalActiveBuckets,
+        lastContactAt: new Date(user.stats.continuity.lastContactAt),
+      },
+      favoriteEmotions: Object.entries(user.stats.favoriteEmotions)
+        .map(([emotion, count]) => ({ emotion, count }))
+        .sort((left, right) => right.count - left.count),
+      firstSeen: new Date(user.firstSeen),
+      lastSeen: new Date(user.lastSeen),
+      achievements: user.achievements.map((achievement) => ({
+        ...achievement,
+        earnedAt: new Date(achievement.earnedAt),
+      })),
+      scars: (user.scars ?? []).map((scar) => ({
+        ...scar,
+        createdAt: new Date(scar.createdAt),
+        ...(scar.healedAt && { healedAt: new Date(scar.healedAt) }),
+      })),
     };
   }
 
-  /**
-   * Check thresholds (temporary implementation)
-   */
+  getBondContext(userId: string, options: BondContextOptions = {}): string {
+    const snapshot = this.getBondSnapshot(userId);
+    return snapshot ? this.contextBuilder.build(snapshot, options) : '';
+  }
+
+  toRelationshipCapital(userId: string): number {
+    const snapshot = this.getBondSnapshot(userId);
+    return snapshot
+      ? this.bondEvaluator.normalizePoints(snapshot.points) * snapshot.warmth
+      : 0;
+  }
+
+  async beginSession(id?: string): Promise<string | null> {
+    if (this.config.continuity?.unit !== 'session') return null;
+    if (!this.isInitialized) await this.initialize();
+    this.sessionCounter++;
+    const session: SessionInfo = {
+      id: id ?? `session_${this.sessionCounter}_${this.now()}`,
+      index: this.sessionCounter,
+    };
+    this.activeSession = session;
+    if (this.storageProvider) await this.saveToStorage();
+    return session.id;
+  }
+
+  endSession(): void {
+    if (this.config.continuity?.unit === 'session') {
+      this.activeSession = undefined;
+    }
+  }
+
+  destroy(): void {
+    this.lifecycleVersion++;
+    if (this.cleanupInterval !== null) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+    this.activeSession = undefined;
+    this.removeAllListeners();
+    this.isInitialized = false;
+  }
+
+  private async performInitialization(lifecycleVersion: number): Promise<void> {
+    if (this.storageProvider) await this.loadFromStorage();
+    if (lifecycleVersion !== this.lifecycleVersion) {
+      throw new Error('KizunaManager initialization was cancelled');
+    }
+    this.setupAutoCleanup();
+    this.isInitialized = true;
+  }
+
   private checkThresholds(
     user: KizunaUser,
     oldPoints: number,
-  ): import('./types').ThresholdAction[] {
-    const triggeredActions: import('./types').ThresholdAction[] = [];
-
+  ): TriggeredThreshold[] {
+    const triggeredThresholds: TriggeredThreshold[] = [];
     for (const threshold of this.config.thresholds) {
-      if (user.points >= threshold.points && oldPoints < threshold.points) {
-        triggeredActions.push({
-          ...threshold.action,
-          executedAt: new Date(),
-        });
-
-        this.emitEvent('threshold_reached', {
-          userId: user.id,
-          threshold,
-          user,
-        });
+      const thresholdId = threshold.id ?? this.createThresholdId(threshold);
+      const hasTriggered = user.triggeredThresholds.includes(thresholdId);
+      if (
+        oldPoints >= threshold.points ||
+        user.points < threshold.points ||
+        (!threshold.repeatable && hasTriggered)
+      ) {
+        continue;
       }
+
+      const action: ThresholdAction = {
+        ...threshold.action,
+        executedAt: new Date(this.now()),
+      };
+      const triggered: TriggeredThreshold = { threshold, action };
+      if (action.type === 'achievement') {
+        const achievement = this.createAchievement(action);
+        if (!achievement) continue;
+        if (this.userManager.grantAchievement(user.id, achievement)) {
+          triggered.achievement =
+            user.achievements.find(({ id }) => id === achievement.id) ??
+            achievement;
+        }
+      }
+      if (!hasTriggered) user.triggeredThresholds.push(thresholdId);
+      triggeredThresholds.push(triggered);
     }
-
-    return triggeredActions;
+    return triggeredThresholds;
   }
 
-  /**
-   * Add interaction record
-   */
-  private addInteractionRecord(
-    user: KizunaUser,
-    context: PointContext,
-    result: PointResult,
-  ): void {
-    // TODO: Implement interaction history
-    // Add record to user.stats.interactionHistory
+  private createThresholdId(threshold: Threshold): string {
+    const signature = this.stableSerialize({
+      points: threshold.points,
+      action: threshold.action,
+    });
+    let hash = 2166136261;
+    for (let index = 0; index < signature.length; index++) {
+      hash ^= signature.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return `threshold_${(hash >>> 0).toString(36)}`;
   }
 
-  /**
-   * Load data from storage
-   */
+  private stableSerialize(
+    value: unknown,
+    seen = new WeakSet<object>(),
+  ): string {
+    if (Array.isArray(value)) {
+      if (seen.has(value)) return '"[Circular]"';
+      seen.add(value);
+      const serialized = `[${value
+        .map((item) => this.stableSerialize(item, seen))
+        .join(',')}]`;
+      seen.delete(value);
+      return serialized;
+    }
+    if (value && typeof value === 'object') {
+      if (value instanceof Date) return JSON.stringify(value.toISOString());
+      if (seen.has(value)) return '"[Circular]"';
+      seen.add(value);
+      const serialized = `{${Object.entries(value)
+        .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+        .map(
+          ([key, item]) =>
+            `${JSON.stringify(key)}:${this.stableSerialize(item, seen)}`,
+        )
+        .join(',')}}`;
+      seen.delete(value);
+      return serialized;
+    }
+    if (typeof value === 'bigint') return JSON.stringify(`${value}n`);
+    return JSON.stringify(value) ?? String(value);
+  }
+
+  private createAchievement(action: ThresholdAction): Achievement | null {
+    const { id, title, description, icon } = action.data;
+    if (
+      typeof id !== 'string' ||
+      typeof title !== 'string' ||
+      typeof description !== 'string' ||
+      (icon !== undefined && typeof icon !== 'string')
+    ) {
+      return null;
+    }
+    return {
+      id,
+      title,
+      description,
+      earnedAt: new Date(this.now()),
+      ...(icon && { icon }),
+    };
+  }
+
   private async loadFromStorage(): Promise<void> {
     if (!this.storageProvider) return;
-
     try {
-      const userData = await this.storageProvider.load<
-        Record<string, KizunaUser>
-      >(this.storageKey);
-      if (userData) {
-        // Restore Date objects
-        for (const [userId, user] of Object.entries(userData)) {
-          user.firstSeen = new Date(user.firstSeen);
-          user.lastSeen = new Date(user.lastSeen);
-          this.users.set(userId, user);
-        }
-        this.log('info', `Loaded ${this.users.size} users from storage`);
+      const data = await this.storageProvider.load<unknown>(this.storageKey);
+      if (!data) return;
+      if (this.isPersistenceEnvelope(data)) {
+        this.userManager.importUsers(JSON.stringify(data.users));
+        this.sessionCounter = data.sessionCounter;
+        this.pointCalculator.importLimitRecords(data.limitRecords);
+      } else if (typeof data === 'object' && !Array.isArray(data)) {
+        this.userManager.importUsers(JSON.stringify(data));
       }
+      this.restoreSessionCounter();
     } catch (error) {
       this.log('error', 'Failed to load from storage:', error);
     }
   }
 
-  /**
-   * Save data to storage
-   */
+  private restoreSessionCounter(): void {
+    if (this.config.continuity?.unit !== 'session') return;
+    const lastStoredIndex = this.userManager
+      .getAllUsers()
+      .reduce(
+        (maximum, user) =>
+          Math.max(maximum, user.stats.continuity.lastBucketIndex ?? maximum),
+        0,
+      );
+    this.sessionCounter = Math.max(this.sessionCounter, lastStoredIndex);
+    const activeSession = this.activeSession;
+    if (activeSession && activeSession.index <= lastStoredIndex) {
+      this.sessionCounter++;
+      activeSession.index = this.sessionCounter;
+    }
+  }
+
   private async saveToStorage(): Promise<void> {
     if (!this.storageProvider) return;
-
+    let snapshot: PersistenceEnvelope;
     try {
-      const userData = Object.fromEntries(this.users);
-      await this.storageProvider.save(this.storageKey, userData);
-      this.log('debug', 'Data saved to storage');
+      snapshot = JSON.parse(
+        JSON.stringify({
+          format: '@aituber-onair/kizuna',
+          version: 1,
+          users: Object.fromEntries(this.userManager.getUsersAsMap()),
+          sessionCounter: this.sessionCounter,
+          limitRecords: this.pointCalculator.exportLimitRecords(),
+        } satisfies PersistenceEnvelope),
+      ) as PersistenceEnvelope;
     } catch (error) {
-      this.log('error', 'Failed to save to storage:', error);
+      this.log('error', 'Failed to prepare storage snapshot:', error);
+      return;
     }
+
+    const write = this.storageWriteQueue.then(async () => {
+      try {
+        await this.storageProvider?.save(this.storageKey, snapshot);
+      } catch (error) {
+        this.log('error', 'Failed to save to storage:', error);
+      }
+    });
+    this.storageWriteQueue = write;
+    await write;
   }
 
-  /**
-   * Set up automatic cleanup
-   */
+  private isPersistenceEnvelope(value: unknown): value is PersistenceEnvelope {
+    if (!value || typeof value !== 'object') return false;
+    const envelope = value as Record<string, unknown>;
+    return (
+      envelope.format === '@aituber-onair/kizuna' &&
+      envelope.version === 1 &&
+      Boolean(envelope.users) &&
+      typeof envelope.users === 'object' &&
+      !Array.isArray(envelope.users) &&
+      typeof envelope.sessionCounter === 'number' &&
+      Number.isFinite(envelope.sessionCounter) &&
+      envelope.sessionCounter >= 0 &&
+      Array.isArray(envelope.limitRecords)
+    );
+  }
+
   private setupAutoCleanup(): void {
     const intervalMs =
-      this.config.storage.cleanupIntervalHours * 60 * 60 * 1000;
-
-    setInterval(() => {
-      this.performCleanup();
-    }, intervalMs);
+      this.config.storage.cleanupIntervalHours * 60 * 60 * 1_000;
+    this.cleanupInterval = setInterval(() => this.performCleanup(), intervalMs);
   }
 
-  /**
-   * Perform data cleanup
-   */
   private performCleanup(): void {
-    const now = Date.now();
     const retentionMs =
-      this.config.storage.dataRetentionDays * 24 * 60 * 60 * 1000;
-    let cleanedCount = 0;
-
-    for (const [userId, user] of this.users) {
-      // Don't delete owners
-      if (user.type === 'owner') continue;
-
-      // Delete users who exceed retention period
-      if (now - new Date(user.lastSeen).getTime() > retentionMs) {
-        this.users.delete(userId);
-        cleanedCount++;
+      this.config.storage.dataRetentionDays * 24 * 60 * 60 * 1_000;
+    for (const user of this.userManager.getAllUsers()) {
+      if (
+        user.role !== 'owner' &&
+        this.now() - user.lastSeen.getTime() > retentionMs
+      ) {
+        this.userManager.deleteUser(user.id);
       }
     }
 
-    // If max users exceeded, delete oldest users first
-    if (this.users.size > this.config.storage.maxUsers) {
-      const sortedUsers = Array.from(this.users.entries())
-        .filter(([, user]) => user.type !== 'owner')
-        .sort(
-          ([, a], [, b]) =>
-            new Date(a.lastSeen).getTime() - new Date(b.lastSeen).getTime(),
-        );
-
-      const toDelete = sortedUsers.slice(
-        0,
-        this.users.size - this.config.storage.maxUsers,
-      );
-      for (const [userId] of toDelete) {
-        this.users.delete(userId);
-        cleanedCount++;
-      }
-    }
-
-    if (cleanedCount > 0) {
-      this.log('info', `Cleaned up ${cleanedCount} users`);
-    }
+    const users = this.userManager.getAllUsers();
+    const excess = users.length - this.config.storage.maxUsers;
+    if (excess <= 0) return;
+    const oldestGuests = users
+      .filter(({ role }) => role !== 'owner')
+      .sort((left, right) => left.lastSeen.getTime() - right.lastSeen.getTime())
+      .slice(0, excess);
+    for (const user of oldestGuests) this.userManager.deleteUser(user.id);
   }
 
-  /**
-   * Emit event
-   */
   private emitEvent(type: KizunaEventType, data: unknown): void {
-    const eventData: KizunaEventData = {
+    const event: KizunaEventData = {
       type,
-      userId: (data as { userId?: string })?.userId || '',
+      userId: (data as { userId?: string })?.userId ?? '',
       data,
-      timestamp: new Date(),
+      timestamp: new Date(this.now()),
     };
-
-    this.emit(type, eventData);
+    this.emit(type, event);
   }
 
-  /**
-   * Log output
-   */
   private log(
     level: import('./types').LogLevel,
     message: string,
-    ...args: unknown[]
+    ...arguments_: unknown[]
   ): void {
-    if (!this.shouldLog(level)) return;
-
-    const timestamp = new Date().toISOString();
-    const prefix = `[Kizuna ${timestamp}]`;
-
-    switch (level) {
-      case 'debug':
-        console.debug(prefix, message, ...args);
-        break;
-      case 'info':
-        console.info(prefix, message, ...args);
-        break;
-      case 'warn':
-        console.warn(prefix, message, ...args);
-        break;
-      case 'error':
-        console.error(prefix, message, ...args);
-        break;
-    }
-  }
-
-  /**
-   * Check log level
-   */
-  private shouldLog(level: import('./types').LogLevel): boolean {
     const levels = ['debug', 'info', 'warn', 'error'];
-    const currentLevel = levels.indexOf(this.config.dev.logLevel);
-    const messageLevel = levels.indexOf(level);
+    if (levels.indexOf(level) < levels.indexOf(this.config.dev.logLevel))
+      return;
+    const prefix = `[Kizuna ${new Date(this.now()).toISOString()}]`;
+    console[level](prefix, message, ...arguments_);
+  }
+}
 
-    return messageLevel >= currentLevel;
+function assertValidTimestamp(timestamp: number, label: string): void {
+  if (
+    !Number.isFinite(timestamp) ||
+    !Number.isFinite(new Date(timestamp).getTime())
+  ) {
+    throw new RangeError(`${label} must be a finite valid date value`);
   }
 }

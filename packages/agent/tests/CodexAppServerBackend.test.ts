@@ -668,16 +668,10 @@ describe('CodexAppServerBackend', () => {
   });
 
   it('rejects unsafe or malformed runtime options', () => {
-    const compatibility = {
-      expectedVersion: '0.145.0',
-      schemaVersion: 'v2@0.145.0',
-    };
-
     expect(() =>
       createCodexAppServerBackendRuntime({
         codexPath: '/path/to/codex',
         workingDirectory: workspace,
-        compatibility,
         sandbox: 'danger-full-access' as never,
       })
     ).toThrow(AgentConfigurationError);
@@ -686,14 +680,24 @@ describe('CodexAppServerBackend', () => {
         codexPath: '/path/to/codex',
         allowPathLookup: true,
         workingDirectory: workspace,
-        compatibility,
       } as never)
     ).toThrow(AgentConfigurationError);
     expect(() =>
       createCodexAppServerBackendRuntime({
         allowPathLookup: true,
         workingDirectory: workspace,
-        compatibility: undefined,
+        compatibility: { expectedVersion: '0.145.0' },
+      } as never)
+    ).toThrow(AgentConfigurationError);
+    expect(() =>
+      createCodexAppServerBackendRuntime({
+        allowPathLookup: true,
+        workingDirectory: workspace,
+        compatibility: {
+          minimumVersion: 136,
+          onMismatch: 'continue',
+          accept: true,
+        },
       } as never)
     ).toThrow(AgentConfigurationError);
   });
@@ -724,10 +728,6 @@ function createBackend(overrides: Record<string, unknown> = {}): {
     {
       codexPath: '/path/to/codex',
       workingDirectory: workspace,
-      compatibility: {
-        expectedVersion: '0.145.0',
-        schemaVersion: 'v2@0.145.0',
-      },
       shutdownTimeoutMs: 1,
       ...overrides,
     },

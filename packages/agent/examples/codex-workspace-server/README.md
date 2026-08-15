@@ -14,18 +14,19 @@ receives `AgentEvent` objects over Server-Sent Events, renders
 ## Requirements
 
 - Node.js 18 or later
-- Codex CLI `0.145.0`, installed locally
+- Codex CLI `0.136.0` or later, installed locally
 - A completed `codex login`
 
-Install the pinned CLI and sign in:
+Install Codex CLI and sign in. No exact version pin is required:
 
 ```sh
-npm install --global @openai/codex@0.145.0
+npm install --global @openai/codex
 codex login
 ```
 
-The backend deliberately rejects other Codex CLI versions because the
-app-server protocol is version-sensitive.
+The required app-server schema elements were confirmed in Codex CLI `0.136.0`;
+the integration was verified against `0.145.0`. The backend warns but continues
+with other versions at or above the minimum.
 
 ## Start
 
@@ -52,7 +53,7 @@ CODEX_PATH=/absolute/path/to/codex npm start
 | Variable | Default | Description |
 | --- | --- | --- |
 | `PORT` | `4517` | Local HTTP port. The server always binds to `127.0.0.1`. |
-| `CODEX_PATH` | `codex` on `PATH` | Absolute path to the pinned Codex executable. |
+| `CODEX_PATH` | `codex` on `PATH` | Absolute path to a specific Codex executable. |
 | `CODEX_SANDBOX` | `read-only` | Set exactly to `workspace-write` to let Codex modify the workspace. Other values remain read-only. |
 | `AGENT_WORKSPACE_DIR` | `./workspace` | Isolated workspace directory. Relative paths resolve from the process working directory. |
 
