@@ -365,31 +365,26 @@ installed Codex CLI over JSONL stdio and uses that CLI's existing
 authentication. After signing in with `codex login`, this can use the ChatGPT
 plan access supported by Codex without passing an OpenAI API key to Agent.
 
-The current integration is pinned to Codex CLI `0.145.0`. Install that exact
-version and sign in before starting the application. The backend rejects a different CLI
-version before starting app-server.
+Any Codex environment at or above the minimum version can be used; installing
+one exact CLI version is not required. The required app-server schema elements
+were confirmed in Codex CLI `0.136.0`, while this integration was verified
+against `0.145.0`. The minimum records a schema check, not a live connection
+test. The backend errors only below the minimum or when a method it needs is
+unavailable in the installed CLI.
 
 ```bash
-npm install --global @openai/codex@0.145.0
+npm install --global @openai/codex
 codex login
 ```
 
 ```ts
 import { createAgent } from '@aituber-onair/agent';
-import {
-  CODEX_APP_SERVER_SCHEMA_VERSION,
-  CODEX_APP_SERVER_SUPPORTED_VERSION,
-  createCodexAppServerBackend,
-} from '@aituber-onair/agent/codex-app-server';
+import { createCodexAppServerBackend } from '@aituber-onair/agent/codex-app-server';
 
 const backend = createCodexAppServerBackend({
   // PATH lookup is never implicit. Alternatively, provide an absolute codexPath.
   allowPathLookup: true,
   workingDirectory: '/absolute/path/to/character-workspace',
-  compatibility: {
-    expectedVersion: CODEX_APP_SERVER_SUPPORTED_VERSION,
-    schemaVersion: CODEX_APP_SERVER_SCHEMA_VERSION,
-  },
   sandbox: 'read-only',
   approvalPolicy: 'on-request',
 });
@@ -423,6 +418,11 @@ try {
 }
 ```
 
+Hosts that require the verified version can set
+`compatibility: { onMismatch: 'reject' }`. To use a specific CLI version
+without changing the global installation, pass its absolute path as
+`codexPath` instead of enabling PATH lookup.
+
 `read-only` and `on-request` are also the defaults. A host decision of
 `allow-once` maps to Codex `accept`; `deny` maps to `decline`; interruption,
 timeout, and shutdown map to `cancel`. The backend never grants Codex
@@ -436,7 +436,8 @@ in [openai/codex#19045](https://github.com/openai/codex/issues/19045). Persist
 `session.backendSessionId` in host-owned state and pass it to
 `agent.resumeSession(...)` when resuming.
 
-The entry point intentionally supports only the pinned stable protocol subset:
+The entry point intentionally supports only the verified stable protocol
+subset:
 
 - local stdio transport on Node.js; no remote WebSocket transport
 - Thread start/resume and Turn start/interrupt; Turn steering exists on the

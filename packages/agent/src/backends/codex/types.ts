@@ -26,13 +26,17 @@ export interface CodexAppServerBackendCapabilities
 }
 
 export interface CodexAppServerCompatibility {
-  readonly expectedVersion: string;
-  readonly schemaVersion: string;
+  /** Defaults to CODEX_APP_SERVER_MINIMUM_VERSION. */
+  readonly minimumVersion?: string;
+  /** Defaults to warning when the CLI differs from the verified version. */
+  readonly onMismatch?: 'reject' | 'warn' | 'allow';
+  /** Overrides minimumVersion and onMismatch when provided. */
+  readonly accept?: (actual: string, verified: string) => boolean;
 }
 
 export interface CodexAppServerCommonOptions {
   readonly workingDirectory: string;
-  readonly compatibility: CodexAppServerCompatibility;
+  readonly compatibility?: CodexAppServerCompatibility;
   readonly environment?: Readonly<Record<string, string>>;
   readonly requestTimeoutMs?: number;
   readonly shutdownTimeoutMs?: number;
