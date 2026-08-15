@@ -17,6 +17,8 @@ import {
   resolveChannelStrategyWorkspaceDir,
 } from '../server/workspace.js';
 import { createFixtureCompositeDataSource } from '../src/data/dataSource.js';
+import { withStrategyHistory } from '../src/data/dataSource.js';
+import type { StrategyRecord } from '../src/data/types.js';
 
 const temporaryDirectories: string[] = [];
 
@@ -64,6 +66,38 @@ describe('channel strategy data workspace', () => {
         '/path/to/example'
       )
     ).toBe(resolve('/path/to/external-workspace'));
+  });
+
+  it('writes Agent proposal history into strategies.json and AGENTS.md', async () => {
+    const root = await temporaryDirectory();
+    const workspace = join(root, 'workspace');
+    const agentProposal: StrategyRecord = {
+      id: 'agent-001',
+      platform: 'youtube',
+      hypothesis: 'Review a saved Agent hypothesis.',
+      targetStreamIds: [],
+      result: 'pending',
+      finding: 'The proposal has not been tested yet.',
+      source: 'agent',
+      proposedAt: '2026-08-15T00:00:00.000Z',
+    };
+    const dataSource = withStrategyHistory(
+      createFixtureCompositeDataSource(),
+      async () => [agentProposal]
+    );
+
+    await refreshChannelStrategyWorkspace(
+      workspace,
+      await buildDashboard(dataSource)
+    );
+
+    const strategiesFile = JSON.parse(
+      await readFile(join(workspace, 'data/strategies.json'), 'utf8')
+    ) as { readonly strategies: readonly StrategyRecord[] };
+    expect(strategiesFile.strategies.at(-1)).toEqual(agentProposal);
+    expect(await readFile(join(workspace, 'AGENTS.md'), 'utf8')).toContain(
+      'your own earlier proposals'
+    );
   });
 
   it('rejects a symbolic-link workspace', async () => {

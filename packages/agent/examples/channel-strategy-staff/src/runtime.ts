@@ -3,6 +3,7 @@ import type {
   ChannelStrategyServerState,
   ChannelStrategySseEnvelope,
 } from './protocol';
+import type { ResolvedStrategyOutcome } from './data/types';
 
 interface EventSourceLike {
   onmessage: ((event: MessageEvent<string>) => void) | null;
@@ -18,6 +19,11 @@ export interface ChannelStrategyRuntime {
   initialize(): Promise<ChannelStrategyServerState>;
   requestStrategy(): Promise<void>;
   interruptStrategy(): Promise<void>;
+  recordProposalOutcome(
+    id: string,
+    result: ResolvedStrategyOutcome,
+    finding: string
+  ): Promise<void>;
   subscribeState(
     listener: (state: ChannelStrategyServerState) => void
   ): () => void;
@@ -110,6 +116,18 @@ export function createChannelStrategyRuntime(
         headers: { 'content-type': 'application/json' },
         body: '{}',
       });
+      if (!response.ok) throw new Error(await readResponseError(response));
+    },
+    async recordProposalOutcome(id, result, finding) {
+      if (closed) throw new Error('Agent client is closed.');
+      const response = await fetchRequest(
+        `/api/proposals/${encodeURIComponent(id)}/outcome`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ result, finding }),
+        }
+      );
       if (!response.ok) throw new Error(await readResponseError(response));
     },
     subscribeState: (listener) => subscribe(stateListeners, listener),

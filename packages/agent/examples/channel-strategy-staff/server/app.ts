@@ -7,11 +7,13 @@ import {
 } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 import type { AgentEvent } from '@aituber-onair/agent';
+import type { ResolvedStrategyOutcome } from '../src/data/types.js';
 import type {
   ChannelStrategyServerState,
   ChannelStrategySseEnvelope,
 } from '../src/protocol.js';
 import type { ChannelStrategyController } from './controller.js';
+import { StrategyStoreError } from './strategyStore.js';
 
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_EVENT_HISTORY = 200;
@@ -232,6 +234,35 @@ export function createChannelStrategyServer(
       return;
     }
 
+    const proposalOutcomeMatch =
+      request.method === 'POST'
+        ? /^\/api\/proposals\/([^/]+)\/outcome$/.exec(url.pathname)
+        : null;
+    if (proposalOutcomeMatch) {
+      assertJsonContentType(request);
+      const body = await readJsonBody(request);
+      const id = decodePathSegment(proposalOutcomeMatch[1]);
+      const { result, finding } = readProposalOutcome(body);
+      try {
+        const proposal = await controller.recordProposalOutcome(
+          id,
+          result,
+          finding
+        );
+        broadcastState();
+        sendJson(response, 200, { proposal });
+      } catch (error) {
+        if (error instanceof StrategyStoreError) {
+          throw new HttpRequestError(
+            error.code === 'not-found' ? 404 : 400,
+            error.message
+          );
+        }
+        throw error;
+      }
+      return;
+    }
+
     if (request.method === 'GET') {
       await serveStatic(url.pathname, response);
       return;
@@ -346,6 +377,31 @@ function readOperationId(body: Record<string, unknown>): string | undefined {
     throw new HttpRequestError(400, 'operationId must be a non-empty string.');
   }
   return operationId;
+}
+
+function readProposalOutcome(body: Record<string, unknown>): {
+  readonly result: ResolvedStrategyOutcome;
+  readonly finding: string;
+} {
+  const { result, finding } = body;
+  if (result !== 'supported' && result !== 'refuted' && result !== 'mixed') {
+    throw new HttpRequestError(
+      400,
+      'result must be supported, refuted, or mixed.'
+    );
+  }
+  if (typeof finding !== 'string' || !finding.trim()) {
+    throw new HttpRequestError(400, 'finding must be a non-empty string.');
+  }
+  return { result, finding: finding.trim() };
+}
+
+function decodePathSegment(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    throw new HttpRequestError(400, 'Proposal ID is invalid.');
+  }
 }
 
 function readLastEventId(request: IncomingMessage): number {

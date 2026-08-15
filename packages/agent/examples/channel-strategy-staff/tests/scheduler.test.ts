@@ -34,6 +34,9 @@ function createStubController(): {
         artifacts: [],
       } satisfies AgentRunResult;
     },
+    async recordProposalOutcome() {
+      throw new Error('No proposals exist in this scheduler stub.');
+    },
     async close() {
       // The stub owns no Agent.
     },

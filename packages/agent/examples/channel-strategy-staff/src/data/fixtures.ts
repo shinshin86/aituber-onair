@@ -373,6 +373,7 @@ const strategies: readonly StrategyRecord[] = [
     result: 'supported',
     finding:
       'Both trials beat the YouTube channel median for view duration and subscribers gained.',
+    source: 'fixture',
   },
   {
     id: 'strategy-002',
@@ -383,6 +384,7 @@ const strategies: readonly StrategyRecord[] = [
     result: 'refuted',
     finding:
       'Views peaked, but retention and subscribers gained stayed below the channel median.',
+    source: 'fixture',
   },
   {
     id: 'strategy-003',
@@ -392,6 +394,7 @@ const strategies: readonly StrategyRecord[] = [
     result: 'mixed',
     finding:
       'Sampled concurrent viewers were strong, but no equivalent watch-duration metric is available.',
+    source: 'fixture',
   },
 ];
 

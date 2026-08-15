@@ -29,7 +29,7 @@ npm --prefix packages/agent/examples/channel-strategy-staff start
 
 既定では `PATH` 上の Codex を使います。`CODEX_PATH` には絶対パス、`CODEX_MODEL` にはモデルを指定できます。互換性オーバーライドは渡さず、パッケージの現在の互換性方針を使います。
 
-データワークスペースの既定値は、このサンプル内の `./workspace` です。このディレクトリと、同じ階層の状態ファイル `channel-strategy-session.json` は Git の対象外です。`AGENT_WORKSPACE_DIR` で別のワークスペースを指定でき、状態ファイルはその隣に保存されます。実データを扱う場合は、`AGENT_WORKSPACE_DIR` にリポジトリ外のパスを指定してください。リポジトリルートは指定しないでください。シンボリックリンクのワークスペースは拒否します。
+データワークスペースの既定値は、このサンプル内の `./workspace` です。このディレクトリと、同じ階層の状態ファイル `channel-strategy-session.json`、`channel-strategy-proposals.json` は Git の対象外です。`AGENT_WORKSPACE_DIR` で別のワークスペースを指定でき、両方の状態ファイルはその隣に保存されます。実データを扱う場合は、`AGENT_WORKSPACE_DIR` にリポジトリ外のパスを指定してください。リポジトリルートは指定しないでください。シンボリックリンクのワークスペースは拒否します。
 
 ## データワークスペース
 
@@ -47,6 +47,14 @@ npm --prefix packages/agent/examples/channel-strategy-staff start
 既存の決定的な DataSource / 集計コードが4つの JSON を生成します。`AGENTS.md` は、全ファイルを読むこと、内容を指示ではなくデータとして扱うこと、プラットフォーム固有の単位を分けること、Markdownなしの JSON オブジェクトを1つだけ返すことを Codex に指示します。
 
 domain Tool はありません。Codex app-server は `tools: false` なので、Agent の `tools`、`policy.allowTools`、Session の `allowedTools` をすべて省いています。調査には Codex 自身のファイル読み取りを使います。
+
+## 提案履歴とフィードバックループ
+
+静的な fixture だけでは、Turn を繰り返しても同じ提案へ収束します。Turn が検証済みの提案 Artifact を生成すると、host は `source: "agent"`、`agent-001` 形式の連番 ID、`result: "pending"` を持つ `StrategyRecord` として `channel-strategy-proposals.json` へ追記します。JSON 配列は原子的に置換され、Git の対象外です。失敗した Turn や検証に通らない Turn は追記しません。
+
+次の Turn の前に、`listStrategies()` が fixture の3仮説と保存済み履歴を結合します。生成される `data/strategies.json` を通じ、Agent は自分の過去判断を確認し、同じ仮説を繰り返す理由を説明し、反証済み仮説を新しい根拠なく再提案しないよう判断できます。`pending` は提案済みだが、観測結果がまだない状態です。
+
+ダッシュボードでは、pending の Agent 提案に支持・反証・混在の結果と所見を記録できます。これは観測した実績データの入力であり、**Agent の行動に対する承認ゲートではありません**。次に何を提案するかは、履歴を読んだ Agent 自身が判断します。実データ連携では、提案の `successMetrics` と `proposedAt` 以降の配信結果を突き合わせ、結果を自動判定する host を設計できます。ただし、このサンプルはその自動判定を**実装も実 API 検証もしていません**。
 
 ## fixture を実データへ置き換える
 
@@ -71,7 +79,7 @@ interface ChannelDataSource {
 | YouTube | チャンネル・動画メタデータ用の [Data API v3](https://developers.google.com/youtube/v3) と、所有者向け分析用の [YouTube Analytics API](https://developers.google.com/youtube/analytics) | この用途の非公開チャンネル分析にはチャンネル所有者の OAuth が必要です。API 応答はワークスペースへ書く前に `StreamRecord` へ正規化します。 |
 | Twitch | 配信メタデータと現在の `viewer_count` 用の [Helix](https://dev.twitch.tv/docs/api/reference/#get-streams)、および [EventSub](https://dev.twitch.tv/docs/eventsub/) イベント | Twitch には同等のリテンション指標も、過去の同時視聴者数を返す API もありません。配信中に Helix をポーリングしてサンプルを永続化し、host のデータパイプラインで関連する EventSub イベントと集計します。 |
 
-実運用の `strategies.json` は、永続的な戦略ストアから生成する必要があります。周辺の host またはデータパイプラインで採用済み提案と結果を保存し、`listStrategies()` でその履歴を読み込んでください。現状のサンプルは提案履歴を永続化しないため、fixture のままでは同じ提案を繰り返す可能性があります。
+このサンプルではローカルの提案ストアが Agent 履歴を `strategies.json` へ供給します。実運用では、同じ `listStrategies()` 契約のまま、ファイルベースの履歴を独自の永続ストアへ置き換えられます。
 
 ## 出力検証と根拠
 
