@@ -79,6 +79,11 @@ Node serverが固定コメントを `comment-intelligence` で前処理し、本
 観測だけをCodexへ渡します。Codex生成のカードとレポートを検証し、Agent Eventを
 既存React dashboardへstreamします。
 
+`channel-strategy-staff`サンプルは、`createChatServiceBackend()` と5つのread-only
+domain Toolを使い、固定のYouTube/Twitchチャンネル履歴を比較します。
+platform指標を分けたまま扱い、現在のTurnでToolから取得した根拠IDだけを許可し、
+host hookから構造化された戦略Artifactを追加します。
+
 ### プロダクトに常駐するAIキャラクター
 
 たとえば次の用途を想定しています。

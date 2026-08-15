@@ -82,6 +82,12 @@ Its Node server preprocesses fixed comments with `comment-intelligence`, sends
 only text-free structured observations to Codex, validates Codex-generated
 cards and reports, and streams Agent Events to the existing React dashboard.
 
+The `channel-strategy-staff` example uses `createChatServiceBackend()` and five
+read-only domain Tools to compare fixed YouTube and Twitch channel history. It
+keeps platform metrics separate, validates every cited evidence ID against
+Tool results from the current Turn, and attaches a structured strategy
+Artifact through host hooks.
+
 ### A resident character inside a product
 
 Examples include:
