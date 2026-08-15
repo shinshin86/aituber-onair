@@ -9,8 +9,8 @@ import type {
 } from './process.js';
 import { nodeCodexAppServerProcessFactory } from './process.js';
 import {
-  CODEX_APP_SERVER_SCHEMA_VERSION,
-  CODEX_APP_SERVER_SUPPORTED_VERSION,
+  CODEX_APP_SERVER_MINIMUM_VERSION,
+  CODEX_APP_SERVER_VERIFIED_VERSION,
 } from './protocol.js';
 import type {
   CodexAppServerAccountReadResult,
@@ -31,15 +31,16 @@ export type CodexAppServerSandboxMode = 'read-only' | 'workspace-write';
 export type CodexAppServerApprovalPolicy = 'untrusted' | 'on-request' | 'never';
 
 export interface CodexAppServerClientCompatibility {
-  readonly expectedVersion: string;
-  readonly schemaVersion: string;
+  readonly minimumVersion?: string;
+  readonly onMismatch?: 'reject' | 'warn' | 'allow';
+  readonly accept?: (actual: string, verified: string) => boolean;
 }
 
 export interface CodexAppServerClientOptions {
   readonly executable: string;
   readonly workingDirectory: string;
   readonly environment: NodeJS.ProcessEnv;
-  readonly compatibility: CodexAppServerClientCompatibility;
+  readonly compatibility?: CodexAppServerClientCompatibility;
   readonly requestTimeoutMs?: number;
   readonly shutdownTimeoutMs?: number;
   readonly maxLineBytes?: number;
@@ -69,6 +70,7 @@ export interface CodexAppServerClientDependencies {
 export class CodexAppServerClient {
   private readonly transport: CodexAppServerTransport;
   private readonly experimentalApi: boolean;
+  private readonly actualVersion: string;
   private readonly notificationListeners = new Set<
     (notification: CodexAppServerNotification) => void
   >();
@@ -80,17 +82,18 @@ export class CodexAppServerClient {
 
   private constructor(
     transport: CodexAppServerTransport,
-    experimentalApi: boolean
+    experimentalApi: boolean,
+    actualVersion: string
   ) {
     this.transport = transport;
     this.experimentalApi = experimentalApi;
+    this.actualVersion = actualVersion;
   }
 
   static async connect(
     options: CodexAppServerClientOptions,
     dependencies: CodexAppServerClientDependencies = {}
   ): Promise<CodexAppServerClient> {
-    assertCompatibility(options.compatibility);
     const processFactory =
       dependencies.processFactory ?? nodeCodexAppServerProcessFactory;
     let versionOutput: string;
@@ -106,17 +109,11 @@ export class CodexAppServerClient {
       );
     }
     const actualVersion = parseCodexVersion(versionOutput);
-    if (actualVersion !== options.compatibility.expectedVersion) {
-      throw new AgentBackendCompatibilityError(
-        `Codex CLI ${actualVersion} is not compatible with the pinned app-server version ${options.compatibility.expectedVersion}.`,
-        {
-          details: {
-            actualVersion,
-            expectedVersion: options.compatibility.expectedVersion,
-          },
-        }
-      );
-    }
+    checkCompatibility(
+      actualVersion,
+      options.compatibility,
+      options.onDiagnostic
+    );
 
     let client: CodexAppServerClient | undefined;
     let process: CodexAppServerProcess;
@@ -152,7 +149,8 @@ export class CodexAppServerClient {
     });
     client = new CodexAppServerClient(
       transport,
-      options.enableExperimentalApi ?? false
+      options.enableExperimentalApi ?? false,
+      actualVersion
     );
     try {
       await client.initialize();
@@ -185,7 +183,7 @@ export class CodexAppServerClient {
     refreshToken = false
   ): Promise<CodexAppServerAccountReadResult> {
     this.assertInitialized();
-    const result = await this.transport.request<unknown>('account/read', {
+    const result = await this.request<unknown>('account/read', {
       refreshToken,
     });
     assertAccountReadResult(result);
@@ -200,7 +198,7 @@ export class CodexAppServerClient {
     } = {}
   ): Promise<CodexAppServerModelListResult> {
     this.assertInitialized();
-    const result = await this.transport.request<unknown>('model/list', input);
+    const result = await this.request<unknown>('model/list', input);
     return normalizeModelListResult(result);
   }
 
@@ -208,10 +206,7 @@ export class CodexAppServerClient {
     configuration: CodexThreadConfiguration
   ): Promise<CodexAppServerThreadResult> {
     this.assertInitialized();
-    return this.transport.request(
-      'thread/start',
-      buildThreadParams(configuration, true)
-    );
+    return this.request('thread/start', buildThreadParams(configuration, true));
   }
 
   resumeThread(
@@ -219,7 +214,7 @@ export class CodexAppServerClient {
     configuration: CodexThreadConfiguration
   ): Promise<CodexAppServerThreadResult> {
     this.assertInitialized();
-    return this.transport.request('thread/resume', {
+    return this.request('thread/resume', {
       threadId,
       ...buildThreadParams(configuration, false),
     });
@@ -230,7 +225,7 @@ export class CodexAppServerClient {
     configuration: CodexThreadConfiguration
   ): Promise<CodexAppServerThreadResult> {
     this.assertInitialized();
-    return this.transport.request('thread/fork', {
+    return this.request('thread/fork', {
       threadId,
       ...buildThreadParams(configuration, true),
     });
@@ -241,7 +236,7 @@ export class CodexAppServerClient {
     input: readonly CodexTurnInput[]
   ): Promise<CodexAppServerTurnStartResult> {
     this.assertInitialized();
-    return this.transport.request('turn/start', { threadId, input });
+    return this.request('turn/start', { threadId, input });
   }
 
   async steerTurn(
@@ -250,7 +245,7 @@ export class CodexAppServerClient {
     input: readonly CodexTurnInput[]
   ): Promise<CodexAppServerTurnSteerResult> {
     this.assertInitialized();
-    const result = await this.transport.request<unknown>('turn/steer', {
+    const result = await this.request<unknown>('turn/steer', {
       threadId,
       expectedTurnId: turnId,
       input,
@@ -265,7 +260,7 @@ export class CodexAppServerClient {
 
   interruptTurn(threadId: string, turnId: string): Promise<void> {
     this.assertInitialized();
-    return this.transport.request('turn/interrupt', { threadId, turnId });
+    return this.request('turn/interrupt', { threadId, turnId });
   }
 
   close(): Promise<void> {
@@ -278,21 +273,20 @@ export class CodexAppServerClient {
         'Codex app-server client was initialized more than once.'
       );
     }
-    const response =
-      await this.transport.request<CodexAppServerInitializeResponse>(
-        'initialize',
-        {
-          clientInfo: {
-            name: 'aituber_onair_agent',
-            title: 'AITuber OnAir Agent',
-            version: '0.0.0',
-          },
-          capabilities: {
-            experimentalApi: this.experimentalApi,
-            requestAttestation: false,
-          },
-        }
-      );
+    const response = await this.request<CodexAppServerInitializeResponse>(
+      'initialize',
+      {
+        clientInfo: {
+          name: 'aituber_onair_agent',
+          title: 'AITuber OnAir Agent',
+          version: '0.0.0',
+        },
+        capabilities: {
+          experimentalApi: this.experimentalApi,
+          requestAttestation: false,
+        },
+      }
+    );
     assertInitializeResponse(response);
     this.transport.notify('initialized');
     this.initialized = true;
@@ -306,6 +300,33 @@ export class CodexAppServerClient {
     }
   }
 
+  private async request<Result>(
+    method: string,
+    params?: unknown
+  ): Promise<Result> {
+    try {
+      return await this.transport.request<Result>(method, params);
+    } catch (error) {
+      if (
+        error instanceof AgentBackendProtocolError &&
+        error.details?.code === -32601
+      ) {
+        throw new AgentBackendCompatibilityError(
+          `Codex app-server method "${method}" is unavailable in CLI ${this.actualVersion}; this package was verified against CLI ${CODEX_APP_SERVER_VERIFIED_VERSION}.`,
+          {
+            cause: error,
+            details: {
+              method,
+              actualVersion: this.actualVersion,
+              verifiedVersion: CODEX_APP_SERVER_VERIFIED_VERSION,
+            },
+          }
+        );
+      }
+      throw error;
+    }
+  }
+
   private dispatchNotification(notification: CodexAppServerNotification): void {
     for (const listener of this.notificationListeners) listener(notification);
   }
@@ -315,30 +336,74 @@ export class CodexAppServerClient {
   }
 }
 
-function assertCompatibility(
-  compatibility: CodexAppServerClientCompatibility
+function checkCompatibility(
+  actualVersion: string,
+  compatibility: CodexAppServerClientCompatibility | undefined,
+  onDiagnostic: ((message: string) => void) | undefined
 ): void {
-  const issues: string[] = [];
-  if (compatibility.expectedVersion !== CODEX_APP_SERVER_SUPPORTED_VERSION) {
-    issues.push(
-      `compatibility.expectedVersion must be "${CODEX_APP_SERVER_SUPPORTED_VERSION}"`
-    );
+  if (compatibility?.accept) {
+    if (
+      !compatibility.accept(actualVersion, CODEX_APP_SERVER_VERIFIED_VERSION)
+    ) {
+      throw new AgentBackendCompatibilityError(
+        `Codex CLI ${actualVersion} was rejected by the custom compatibility policy for verified version ${CODEX_APP_SERVER_VERIFIED_VERSION}.`,
+        {
+          details: {
+            actualVersion,
+            verifiedVersion: CODEX_APP_SERVER_VERIFIED_VERSION,
+          },
+        }
+      );
+    }
+    return;
   }
-  if (compatibility.schemaVersion !== CODEX_APP_SERVER_SCHEMA_VERSION) {
-    issues.push(
-      `compatibility.schemaVersion must be "${CODEX_APP_SERVER_SCHEMA_VERSION}"`
-    );
-  }
-  if (issues.length > 0) {
+
+  const minimumVersion =
+    compatibility?.minimumVersion ?? CODEX_APP_SERVER_MINIMUM_VERSION;
+  if (compareCodexVersions(actualVersion, minimumVersion) < 0) {
     throw new AgentBackendCompatibilityError(
-      'Codex app-server compatibility declaration is unsupported.',
-      { details: { issues } }
+      `Codex CLI ${actualVersion} is older than the minimum supported version ${minimumVersion}.`,
+      { details: { actualVersion, minimumVersion } }
+    );
+  }
+
+  if (actualVersion === CODEX_APP_SERVER_VERIFIED_VERSION) return;
+
+  const onMismatch = compatibility?.onMismatch ?? 'warn';
+  if (onMismatch === 'reject') {
+    throw new AgentBackendCompatibilityError(
+      `Codex CLI ${actualVersion} does not match the verified version ${CODEX_APP_SERVER_VERIFIED_VERSION}.`,
+      {
+        details: {
+          actualVersion,
+          verifiedVersion: CODEX_APP_SERVER_VERIFIED_VERSION,
+        },
+      }
+    );
+  }
+  if (onMismatch === 'warn') {
+    emitDiagnostic(
+      onDiagnostic,
+      `Codex CLI ${actualVersion} differs from the verified version ${CODEX_APP_SERVER_VERIFIED_VERSION}; continuing.`
     );
   }
 }
 
+function emitDiagnostic(
+  onDiagnostic: ((message: string) => void) | undefined,
+  message: string
+): void {
+  try {
+    onDiagnostic?.(message);
+  } catch {
+    // Diagnostics are observational and must not prevent a connection.
+  }
+}
+
 function parseCodexVersion(output: string): string {
-  const match = /^codex-cli\s+(\d+\.\d+\.\d+)$/.exec(output.trim());
+  const match = /^codex-cli\s+(\d+\.\d+\.\d+)(?:[-+][0-9A-Za-z.-]+)?$/.exec(
+    output.trim()
+  );
   if (!match) {
     throw new AgentBackendCompatibilityError(
       'Codex CLI returned an unrecognized version string.',
@@ -346,6 +411,27 @@ function parseCodexVersion(output: string): string {
     );
   }
   return match[1];
+}
+
+export function compareCodexVersions(left: string, right: string): number {
+  const leftParts = parseComparableVersion(left);
+  const rightParts = parseComparableVersion(right);
+  for (let index = 0; index < leftParts.length; index += 1) {
+    const difference = leftParts[index] - rightParts[index];
+    if (difference !== 0) return Math.sign(difference);
+  }
+  return 0;
+}
+
+function parseComparableVersion(version: string): readonly number[] {
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?$/.exec(version);
+  if (!match) {
+    throw new AgentBackendCompatibilityError(
+      `Codex CLI compatibility version "${version}" is invalid.`,
+      { details: { version } }
+    );
+  }
+  return match.slice(1, 4).map(Number);
 }
 
 function buildThreadParams(

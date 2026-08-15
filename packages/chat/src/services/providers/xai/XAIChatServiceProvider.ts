@@ -1,5 +1,6 @@
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
+  MODEL_GROK_4_6,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
@@ -69,6 +70,7 @@ export class XAIChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_GROK_4_6,
       MODEL_GROK_4_5,
       MODEL_GROK_4_3,
       MODEL_GROK_4_20_REASONING,

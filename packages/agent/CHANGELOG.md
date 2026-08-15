@@ -10,9 +10,9 @@
   isolated per Session.
 - Adds separate package entry points for the base runtime, Chat integration, and
   Codex app-server integration.
-- Adds a Node.js Codex app-server backend pinned to Codex CLI 0.145.0 with
-  streamed Turns, resume support, approvals, safe artifacts, and compatibility
-  checks.
+- Adds a Node.js Codex app-server backend for Codex CLI 0.136.0 or later,
+  verified against 0.145.0, with streamed Turns, resume support, approvals,
+  safe artifacts, and compatibility checks without an exact version pin.
 - Adds a live-stream operations staff example backed by a real Codex app-server,
   server-side comment preprocessing, validated generated artifacts, and an
   HTTP/SSE dashboard client.

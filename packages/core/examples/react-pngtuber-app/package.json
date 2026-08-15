@@ -13,6 +13,7 @@
   "dependencies": {
     "@aituber-onair/comment-intelligence": "../../../comment-intelligence",
     "@aituber-onair/core": "../..",
+    "@aituber-onair/kizuna": "../../../kizuna",
     "@aituber-onair/manneri": "../../../manneri",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

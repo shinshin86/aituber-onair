@@ -1,403 +1,233 @@
-/**
- * PointCalculator - Point calculation class
- *
- * Manages platform-specific point rules and performs point calculations
- */
-
+import { BondEvaluator } from './BondEvaluator';
 import type {
-  PointContext,
-  PointRule,
-  KizunaUser,
+  Interaction,
   KizunaConfig,
-  PlatformPointConfig,
+  KizunaUser,
+  PointRule,
+  SessionInfo,
 } from './types';
 
-/**
- * Point calculation result
- */
 interface CalculationResult {
-  /** Points to be awarded */
   points: number;
-  /** Applied rules */
   appliedRules: PointRule[];
-  /** Calculation details */
   breakdown: CalculationBreakdown[];
 }
 
-/**
- * Calculation details
- */
 interface CalculationBreakdown {
-  /** Rule name */
   ruleName: string;
-  /** Points */
   points: number;
-  /** Description */
   description: string;
 }
 
-/**
- * Cooldown management
- */
-interface CooldownRecord {
-  /** Last applied time */
+interface LimitRecord {
   lastApplied: number;
-  /** Today's application count */
-  todayCount: number;
-  /** Today's date (YYYY-MM-DD format) */
-  today: string;
+  bucketKey: string;
+  bucketCount: number;
 }
 
-/**
- * Point calculation class
- */
-export class PointCalculator {
-  private config: KizunaConfig;
-  private cooldowns: Map<string, CooldownRecord> = new Map();
+export interface PersistedLimitRecord extends LimitRecord {
+  userId: string;
+  ruleId: string;
+}
 
-  constructor(config: KizunaConfig) {
-    this.config = config;
+export class PointCalculator {
+  private readonly records = new Map<string, Map<string, LimitRecord>>();
+  private readonly now: () => number;
+
+  constructor(
+    private readonly config: KizunaConfig,
+    private readonly bondEvaluator = new BondEvaluator(config),
+  ) {
+    this.now = config.now ?? Date.now;
   }
 
-  /**
-   * Main method for point calculation
-   */
-  calculatePoints(context: PointContext, user: KizunaUser): CalculationResult {
+  calculatePoints(
+    interaction: Interaction,
+    user: KizunaUser,
+    session?: SessionInfo,
+    isFirstContactInBucket = false,
+  ): CalculationResult {
+    const basePoints = this.config.basePoints[interaction.kind] ?? 1;
     const result: CalculationResult = {
-      points: 0,
+      points: basePoints,
       appliedRules: [],
-      breakdown: [],
+      breakdown: [
+        {
+          ruleName: 'base_points',
+          points: basePoints,
+          description: `Base points (${interaction.kind})`,
+        },
+      ],
     };
 
-    // Calculate base points
-    const basePoints = this.calculateBasePoints(context, user);
-    if (basePoints > 0) {
-      result.points += basePoints;
+    for (const rule of this.config.rules) {
+      if (!this.canApplyRule(rule, interaction, user, session)) continue;
+      const points = this.resolveRulePoints(rule, interaction, user);
+      if (points === null) continue;
+      result.points += points;
+      result.appliedRules.push(rule);
       result.breakdown.push({
-        ruleName: 'base_points',
-        points: basePoints,
-        description: `Base points (${context.platform})`,
+        ruleName: rule.id,
+        points,
+        description: rule.description ?? rule.name,
       });
+      this.recordRuleApplication(rule, user.id, interaction, session);
     }
 
-    // Apply platform-specific rules
-    const platformRules = this.applyPlatformRules(context, user);
-    result.points += platformRules.points;
-    result.appliedRules.push(...platformRules.appliedRules);
-    result.breakdown.push(...platformRules.breakdown);
-
-    // Apply custom rules
-    const customRules = this.applyCustomRules(context, user);
-    result.points += customRules.points;
-    result.appliedRules.push(...customRules.appliedRules);
-    result.breakdown.push(...customRules.breakdown);
-
-    // Apply owner multiplier
-    if (user.type === 'owner') {
-      const multiplier = this.config.owner.pointMultiplier;
-      const bonusPoints = Math.floor(result.points * (multiplier - 1));
-      if (bonusPoints > 0) {
+    if (user.role === 'owner') {
+      const bonusPoints = Math.floor(
+        result.points * (this.config.owner.pointMultiplier - 1),
+      );
+      if (bonusPoints !== 0) {
         result.points += bonusPoints;
         result.breakdown.push({
           ruleName: 'owner_multiplier',
           points: bonusPoints,
-          description: `Owner multiplier bonus (×${multiplier})`,
+          description: `Owner multiplier bonus (×${this.config.owner.pointMultiplier})`,
+        });
+      }
+
+      const firstContactBonus = isFirstContactInBucket
+        ? this.config.owner.firstContactBonus
+        : 0;
+      if (firstContactBonus !== 0) {
+        result.points += firstContactBonus;
+        result.breakdown.push({
+          ruleName: 'first_contact_bonus',
+          points: firstContactBonus,
+          description: 'First contact bonus',
         });
       }
     }
 
-    // Check daily bonus
-    const dailyBonus = this.checkDailyBonus(context, user);
-    if (dailyBonus > 0) {
-      result.points += dailyBonus;
-      result.breakdown.push({
-        ruleName: 'daily_bonus',
-        points: dailyBonus,
-        description: 'Daily bonus',
-      });
-    }
-
-    this.log(
-      `Points calculated for ${user.id}: ${result.points} (${result.appliedRules.length} rules applied)`,
-    );
     return result;
   }
 
-  /**
-   * Check if a specific rule can be applied
-   */
   canApplyRule(
     rule: PointRule,
-    context: PointContext,
+    interaction: Interaction,
     user: KizunaUser,
+    session?: SessionInfo,
   ): boolean {
-    const cooldownKey = `${user.id}:${rule.id}`;
-
-    if (this.config.dev.debugMode) {
-      this.log(
-        `[canApplyRule] Checking rule: ${rule.id} for emotion: ${context.emotion}`,
-      );
+    const record = this.records.get(user.id)?.get(rule.id);
+    if (
+      rule.cooldown &&
+      record &&
+      this.now() - record.lastApplied < rule.cooldown
+    ) {
+      return false;
     }
 
-    // Cooldown check
-    if (rule.cooldown && rule.cooldown > 0) {
-      const record = this.cooldowns.get(cooldownKey);
-      if (record) {
-        const timePassed = Date.now() - record.lastApplied;
-        if (timePassed < rule.cooldown) {
-          if (this.config.dev.debugMode) {
-            this.log(
-              `[canApplyRule] Rule ${rule.id} blocked by cooldown (${timePassed}ms < ${rule.cooldown}ms)`,
-            );
-          }
-          return false;
-        }
-      }
-    }
-
-    // Daily limit check
-    if (rule.dailyLimit && rule.dailyLimit > 0) {
-      const record = this.getCooldownRecord(cooldownKey);
-      if (record.todayCount >= rule.dailyLimit) {
-        if (this.config.dev.debugMode) {
-          this.log(
-            `[canApplyRule] Rule ${rule.id} blocked by daily limit (${record.todayCount} >= ${rule.dailyLimit})`,
-          );
-        }
+    if (rule.bucketLimit && rule.bucketLimit > 0) {
+      const bucketKey = this.bondEvaluator.resolveBucket(
+        interaction,
+        session,
+      ).key;
+      if (
+        record?.bucketKey === bucketKey &&
+        record.bucketCount >= rule.bucketLimit
+      ) {
         return false;
       }
     }
 
-    // Condition check
     try {
-      const conditionResult = rule.condition(context, user);
-      if (this.config.dev.debugMode) {
-        this.log(
-          `[canApplyRule] Rule ${rule.id} condition result: ${conditionResult}`,
-        );
-      }
-      return conditionResult;
+      return rule.condition(interaction, user);
     } catch (error) {
       this.log(`Error evaluating rule condition for ${rule.id}: ${error}`);
       return false;
     }
   }
 
-  /**
-   * Record rule application (cooldown management)
-   */
-  recordRuleApplication(rule: PointRule, userId: string): void {
-    const cooldownKey = `${userId}:${rule.id}`;
-    const record = this.getCooldownRecord(cooldownKey);
-
-    record.lastApplied = Date.now();
-    record.todayCount++;
-
-    this.cooldowns.set(cooldownKey, record);
+  recordRuleApplication(
+    rule: PointRule,
+    userId: string,
+    interaction: Interaction,
+    session?: SessionInfo,
+  ): void {
+    const bucketKey = this.bondEvaluator.resolveBucket(
+      interaction,
+      session,
+    ).key;
+    const userRecords = this.records.get(userId) ?? new Map();
+    const existing = userRecords.get(rule.id);
+    userRecords.set(rule.id, {
+      lastApplied: this.now(),
+      bucketKey,
+      bucketCount:
+        existing?.bucketKey === bucketKey ? existing.bucketCount + 1 : 1,
+    });
+    this.records.set(userId, userRecords);
   }
 
-  /**
-   * Clear cooldown data
-   */
   clearCooldowns(): void {
-    this.cooldowns.clear();
+    this.records.clear();
   }
 
-  /**
-   * Reset cooldowns for specific user
-   */
   resetUserCooldowns(userId: string): void {
-    for (const [key] of this.cooldowns) {
-      if (key.startsWith(`${userId}:`)) {
-        this.cooldowns.delete(key);
+    this.records.delete(userId);
+  }
+
+  exportLimitRecords(): PersistedLimitRecord[] {
+    const records: PersistedLimitRecord[] = [];
+    for (const [userId, userRecords] of this.records) {
+      for (const [ruleId, record] of userRecords) {
+        records.push({ userId, ruleId, ...record });
       }
     }
+    return records;
   }
 
-  // ============================================================================
-  // Private methods
-  // ============================================================================
-
-  /**
-   * Calculate base points
-   */
-  private calculateBasePoints(context: PointContext, user: KizunaUser): number {
-    const platformConfig = this.getPlatformConfig(context.platform);
-    if (!platformConfig) {
-      return 1; // Default points
+  importLimitRecords(value: unknown): void {
+    if (!Array.isArray(value)) return;
+    this.records.clear();
+    for (const item of value) {
+      if (!this.isPersistedLimitRecord(item)) continue;
+      const userRecords = this.records.get(item.userId) ?? new Map();
+      userRecords.set(item.ruleId, {
+        lastApplied: item.lastApplied,
+        bucketKey: item.bucketKey,
+        bucketCount: item.bucketCount,
+      });
+      this.records.set(item.userId, userRecords);
     }
-
-    // Platform-specific base points
-    const actionType = this.getActionType(context);
-    return platformConfig.basePoints[actionType] || 1;
   }
 
-  /**
-   * Apply platform-specific rules
-   */
-  private applyPlatformRules(
-    context: PointContext,
+  private resolveRulePoints(
+    rule: PointRule,
+    interaction: Interaction,
     user: KizunaUser,
-  ): CalculationResult {
-    const result: CalculationResult = {
-      points: 0,
-      appliedRules: [],
-      breakdown: [],
-    };
-
-    const platformConfig = this.getPlatformConfig(context.platform);
-    if (!platformConfig?.customRules) {
-      return result;
-    }
-
-    for (const rule of platformConfig.customRules) {
-      if (this.canApplyRule(rule, context, user)) {
-        result.points += rule.points;
-        result.appliedRules.push(rule);
-        result.breakdown.push({
-          ruleName: rule.id,
-          points: rule.points,
-          description: rule.description || rule.name,
-        });
-
-        this.recordRuleApplication(rule, user.id);
-      }
-    }
-
-    // Platform-specific bonus calculation
-    if (platformConfig.bonusCalculator) {
-      try {
-        const bonus = platformConfig.bonusCalculator(context);
-        if (bonus > 0) {
-          result.points += bonus;
-          result.breakdown.push({
-            ruleName: 'platform_bonus',
-            points: bonus,
-            description: `${context.platform} platform bonus`,
-          });
-        }
-      } catch (error) {
-        this.log(`Error in platform bonus calculator: ${error}`);
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Apply custom rules
-   */
-  private applyCustomRules(
-    context: PointContext,
-    user: KizunaUser,
-  ): CalculationResult {
-    const result: CalculationResult = {
-      points: 0,
-      appliedRules: [],
-      breakdown: [],
-    };
-
-    const customRules = this.config.customRules || [];
-
-    for (const rule of customRules) {
-      if (this.canApplyRule(rule, context, user)) {
-        result.points += rule.points;
-        result.appliedRules.push(rule);
-        result.breakdown.push({
-          ruleName: rule.id,
-          points: rule.points,
-          description: rule.description || rule.name,
-        });
-
-        this.recordRuleApplication(rule, user.id);
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Check daily bonus
-   */
-  private checkDailyBonus(context: PointContext, user: KizunaUser): number {
-    // No daily bonus for non-owners
-    if (user.type !== 'owner') {
-      return 0;
-    }
-
-    const bonusKey = `${user.id}:daily_bonus`;
-    const record = this.getCooldownRecord(bonusKey);
-
-    // If bonus already received today
-    if (record.todayCount > 0) {
-      return 0;
-    }
-
-    // Award daily bonus
-    record.todayCount = 1;
-    record.lastApplied = Date.now();
-    this.cooldowns.set(bonusKey, record);
-
-    return this.config.owner.dailyBonus;
-  }
-
-  /**
-   * Get platform configuration
-   */
-  private getPlatformConfig(platform: string): PlatformPointConfig | null {
-    return this.config.platforms[platform] || null;
-  }
-
-  /**
-   * Get action type
-   */
-  private getActionType(context: PointContext): string {
-    // Get action type from metadata
-    if (context.metadata?.actionType) {
-      return context.metadata.actionType as string;
-    }
-
-    // Platform-specific default actions
-    switch (context.platform) {
-      case 'youtube':
-        return 'comment';
-      case 'twitch':
-        return 'chat';
-      case 'websocket':
-        return 'message';
-      default:
-        return 'message';
+  ): number | null {
+    try {
+      const points =
+        typeof rule.points === 'function'
+          ? rule.points(interaction, user)
+          : rule.points;
+      return Number.isFinite(points) ? points : null;
+    } catch (error) {
+      this.log(`Error calculating rule points for ${rule.id}: ${error}`);
+      return null;
     }
   }
 
-  /**
-   * Get or create cooldown record
-   */
-  private getCooldownRecord(key: string): CooldownRecord {
-    const today = new Date().toISOString().split('T')[0] || ''; // YYYY-MM-DD
-    const existing = this.cooldowns.get(key);
-
-    if (existing && existing.today === today) {
-      return existing;
-    }
-
-    // New day or first time
-    const newRecord: CooldownRecord = {
-      lastApplied: 0,
-      todayCount: 0,
-      today: today,
-    };
-
-    this.cooldowns.set(key, newRecord);
-    return newRecord;
-  }
-
-  /**
-   * Log output
-   */
   private log(message: string): void {
-    if (this.config.dev.debugMode) {
-      console.log(`[PointCalculator] ${message}`);
-    }
+    if (this.config.dev.debugMode) console.log(`[PointCalculator] ${message}`);
+  }
+
+  private isPersistedLimitRecord(
+    value: unknown,
+  ): value is PersistedLimitRecord {
+    if (!value || typeof value !== 'object') return false;
+    const record = value as Record<string, unknown>;
+    return (
+      typeof record.userId === 'string' &&
+      typeof record.ruleId === 'string' &&
+      typeof record.lastApplied === 'number' &&
+      Number.isFinite(record.lastApplied) &&
+      typeof record.bucketKey === 'string' &&
+      typeof record.bucketCount === 'number' &&
+      Number.isFinite(record.bucketCount) &&
+      record.bucketCount >= 0
+    );
   }
 }

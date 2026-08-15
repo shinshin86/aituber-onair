@@ -288,6 +288,19 @@ Standalone TTS library with VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, AIVIS Spee
 npm install @aituber-onair/voice
 ```
 
+### [@aituber-onair/transcription](./packages/transcription/README.md)
+
+<p align="center">
+  <img src="./packages/transcription/images/aituber-onair-transcription.png" alt="AITuber OnAir Transcription logo" width="360" />
+</p>
+
+Provider-neutral realtime microphone transcription with Web Speech and OpenAI
+Realtime support through a shared session API.
+
+```bash
+npm install @aituber-onair/transcription
+```
+
 ### [@aituber-onair/manneri](./packages/manneri/README.md)
 
 <p align="center">

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "outDir": "dist/server-test"
+  },
+  "include": [
+    "server",
+    "src/data",
+    "src/evidence.ts",
+    "src/proposal.ts",
+    "src/protocol.ts",
+    "tests"
+  ]
+}

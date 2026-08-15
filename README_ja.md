@@ -271,6 +271,19 @@ VOICEVOX、VoicePeak、OpenAI TTS、MiniMax、AIVIS Speech などをサポート
 npm install @aituber-onair/voice
 ```
 
+### [@aituber-onair/transcription](./packages/transcription/README.ja.md)
+
+<p align="center">
+  <img src="./packages/transcription/images/aituber-onair-transcription.png" alt="AITuber OnAir Transcription ロゴ" width="360" />
+</p>
+
+Web Speech と OpenAI Realtime に共通のセッション API で対応する、
+プロバイダー非依存のリアルタイムマイク文字起こしライブラリ。
+
+```bash
+npm install @aituber-onair/transcription
+```
+
 ### [@aituber-onair/manneri](./packages/manneri/README.ja.md)
 
 <p align="center">

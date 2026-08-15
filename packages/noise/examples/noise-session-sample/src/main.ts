@@ -1,6 +1,10 @@
 import { ChatServiceFactory, type ChatProviderName } from '@aituber-onair/chat';
 import type { Message } from '@aituber-onair/chat';
 import {
+  KizunaManager,
+  createDefaultKizunaConfig,
+} from '@aituber-onair/kizuna';
+import {
   InMemoryNoiseMemoryStore,
   createContaminator,
   resolveRelationshipTier,
@@ -48,6 +52,7 @@ interface AppState {
   sessionMode: SessionMode;
   mode: NoiseMode;
   relationshipCapital: number;
+  relationshipOverrideEnabled: boolean;
   apiKey: string;
   provider: UiProviderName;
   model: string;
@@ -66,18 +71,21 @@ interface AppState {
 }
 
 const SCOPE_ID = 'noise-session-sample';
+const BOND_USER_ID = 'noise-session-audience';
 const AUTO_PLAY_INTERVAL_MS = 1800;
 const DEFAULT_RELATIONSHIP_CAPITAL = 0.7;
 const memoryStore = new InMemoryNoiseMemoryStore();
 
 let activeScriptedTurn: ScenarioTurn | undefined;
 let contaminator: Contaminator;
+let bondManager = createNoiseBondManager();
 let autoPlayTimer: number | undefined;
 
 const state: AppState = {
   sessionMode: 'demo',
   mode: 'bold',
   relationshipCapital: DEFAULT_RELATIONSHIP_CAPITAL,
+  relationshipOverrideEnabled: false,
   apiKey: '',
   provider: 'openai',
   model: 'gpt-4o-mini',
@@ -167,7 +175,12 @@ document.addEventListener('input', (event) => {
       break;
     case 'relationshipCapital':
       state.relationshipCapital = Number(target.value);
-      break;
+      updateRelationshipControls();
+      return;
+    case 'relationshipOverrideEnabled':
+      state.relationshipOverrideEnabled = (target as HTMLInputElement).checked;
+      updateRelationshipControls();
+      return;
     case 'autoPlay':
       state.autoPlay = (target as HTMLInputElement).checked;
       // Auto-play needs audience reactions to drive the story beats
@@ -257,6 +270,8 @@ function render(): void {
 function renderActionBar(): string {
   const total = SESSION_SCENARIO.turns.length;
   const current = state.turns.length;
+  const relationshipCapital = getRelationshipCapital();
+  const snapshot = bondManager.getBondSnapshot(BOND_USER_ID);
 
   return `
     <section class="control-bar">
@@ -268,8 +283,12 @@ function renderActionBar(): string {
         <span>自動再生</span>
       </label>
       <label class="range-field">
-        <span>視聴者との距離: <strong>${formatTier(resolveRelationshipTier(state.relationshipCapital))}</strong></span>
-        <input data-field="relationshipCapital" type="range" min="0" max="1" step="0.05" value="${state.relationshipCapital}" />
+        <span>視聴者との距離: <strong id="relationship-tier">${formatTier(resolveRelationshipTier(relationshipCapital))}</strong> (<output id="relationship-capital-output">${Math.round(relationshipCapital * 100)}</output>%)</span>
+        <input data-field="relationshipCapital" type="range" min="0" max="1" step="0.05" value="${state.relationshipOverrideEnabled ? state.relationshipCapital : relationshipCapital}" ${state.relationshipOverrideEnabled ? '' : 'disabled'} />
+      </label>
+      <label class="check-field" title="通常はKizunaがコメントと反応から自動算出します">
+        <input data-field="relationshipOverrideEnabled" type="checkbox" ${state.relationshipOverrideEnabled ? 'checked' : ''} />
+        <span id="relationship-source">${state.relationshipOverrideEnabled ? '手動値を使用' : `Kizuna自動 (${escapeHtml(snapshot?.stage ?? 'stranger')})`}</span>
       </label>
       <span class="control-spacer"></span>
       <button data-action="reset-session" class="secondary" type="button">最初から</button>
@@ -486,20 +505,27 @@ function renderTimeline(): string {
 }
 
 function renderIntegrationCode(): string {
-  const code = `import { createContaminator } from '@aituber-onair/noise';
+  const code = `import { KizunaManager, createDefaultKizunaConfig } from '@aituber-onair/kizuna';
+import { createContaminator } from '@aituber-onair/noise';
 
+const kizuna = new KizunaManager(createDefaultKizunaConfig(), undefined, 'stream-bond');
 const noise = createContaminator({
   mode: 'bold',
   chat: { provider: 'openai', options: { apiKey, model: 'gpt-4o-mini' } },
   memory: { scopeId: 'stream-1', store },
 });
 
-// 毎ターン: LLMが作った返答(draft)を通すだけ
+await kizuna.processInteraction({
+  userId: 'audience', kind: 'message', message: comment,
+  isOwner: false, timestamp: Date.now(),
+});
+
+// Kizunaが育てた関係値で、毎ターンの崩し方を調整する
 const result = await noise.contaminate({
   systemPrompt,
   messages,
   draft,
-  relationshipCapital: 0.7, // 絆システムの値など(0-1)
+  relationshipCapital: kizuna.toRelationshipCapital('audience'),
 });
 say(result.text); // 崩す必要がなければ draft がそのまま返る
 
@@ -997,6 +1023,14 @@ async function runNextTurn(): Promise<void> {
 
     for (const comment of viewerComments) {
       state.messages.push({ role: 'user', content: comment });
+      await bondManager.processInteraction({
+        userId: BOND_USER_ID,
+        kind: 'message',
+        message: comment,
+        isOwner: false,
+        timestamp: Date.now(),
+        metadata: { displayName: '視聴者' },
+      });
     }
 
     const draft =
@@ -1011,7 +1045,7 @@ async function runNextTurn(): Promise<void> {
       systemPrompt: SESSION_SCENARIO.systemPrompt,
       messages: state.messages,
       draft,
-      relationshipCapital: state.relationshipCapital,
+      relationshipCapital: getRelationshipCapital(),
       streamContext: scripted.streamContext,
       intensity: 0.85,
     });
@@ -1158,6 +1192,15 @@ async function reactToTurn(
     turn.reaction = signal;
     turn.events.push(...reactionEvents);
     turn.events.push(formatReactionResult(signal, result.repairAdvised));
+    await bondManager.processInteraction({
+      userId: BOND_USER_ID,
+      kind: 'reaction',
+      message: signal,
+      emotion: signal,
+      isOwner: false,
+      timestamp: Date.now(),
+      metadata: { displayName: '視聴者' },
+    });
     state.memory = await loadMemory();
   } finally {
     state.isRunning = false;
@@ -1196,6 +1239,8 @@ async function resetSession(): Promise<void> {
   state.error = '';
   state.freeComment = '';
   state.pendingEvents = [];
+  bondManager.destroy();
+  bondManager = createNoiseBondManager();
   await memoryStore.clear?.(SCOPE_ID);
   recreateContaminator();
   await refreshMemory();
@@ -1204,6 +1249,55 @@ async function resetSession(): Promise<void> {
 
 function recreateContaminator(): void {
   contaminator = createSessionContaminator();
+}
+
+function createNoiseBondManager(): KizunaManager {
+  const config = createDefaultKizunaConfig();
+  config.basePoints = {
+    ...config.basePoints,
+    message: 65,
+    reaction: 30,
+  };
+  config.stages = [
+    { id: 'stranger', minPoints: 0 },
+    { id: 'acquaintance', minPoints: 100 },
+    { id: 'regular', minPoints: 250 },
+    { id: 'companion', minPoints: 500 },
+  ];
+  return new KizunaManager(config, undefined, 'noise-session-bond');
+}
+
+function getRelationshipCapital(): number {
+  return state.relationshipOverrideEnabled
+    ? state.relationshipCapital
+    : bondManager.toRelationshipCapital(BOND_USER_ID);
+}
+
+function updateRelationshipControls(): void {
+  const capital = getRelationshipCapital();
+  const snapshot = bondManager.getBondSnapshot(BOND_USER_ID);
+  const tier = document.querySelector<HTMLElement>('#relationship-tier');
+  const output = document.querySelector<HTMLOutputElement>(
+    '#relationship-capital-output'
+  );
+  const source = document.querySelector<HTMLElement>('#relationship-source');
+  const range = document.querySelector<HTMLInputElement>(
+    '[data-field="relationshipCapital"]'
+  );
+
+  if (tier) tier.textContent = formatTier(resolveRelationshipTier(capital));
+  if (output) output.value = String(Math.round(capital * 100));
+  if (source) {
+    source.textContent = state.relationshipOverrideEnabled
+      ? '手動値を使用'
+      : `Kizuna自動 (${snapshot?.stage ?? 'stranger'})`;
+  }
+  if (range) {
+    range.disabled = !state.relationshipOverrideEnabled;
+    range.value = String(
+      state.relationshipOverrideEnabled ? state.relationshipCapital : capital
+    );
+  }
 }
 
 function createSessionContaminator(): Contaminator {

@@ -79,6 +79,11 @@ Node serverが固定コメントを `comment-intelligence` で前処理し、本
 観測だけをCodexへ渡します。Codex生成のカードとレポートを検証し、Agent Eventを
 既存React dashboardへstreamします。
 
+`channel-strategy-staff`サンプルは、`createChatServiceBackend()` と5つのread-only
+domain Toolを使い、固定のYouTube/Twitchチャンネル履歴を比較します。
+platform指標を分けたまま扱い、現在のTurnでToolから取得した根拠IDだけを許可し、
+host hookから構造化された戦略Artifactを追加します。
+
 ### プロダクトに常駐するAIキャラクター
 
 たとえば次の用途を想定しています。
@@ -354,31 +359,25 @@ JSONL stdioで起動し、そのCLIの認証状態を利用します。`codex lo
 おけば、AgentへOpenAI API keyを渡さずに、Codexが対応するChatGPTプランの利用枠を
 使用できます。
 
-現在の統合はCodex CLI `0.145.0`に固定されています。アプリを起動する前に、
-同じバージョンをインストールしてログインしてください。異なるCLIバージョンは、
-app-serverを起動する前に拒否されます。
+下限以上のCodex環境であれば利用でき、特定のCLIバージョンをインストールする
+必要はありません。必要なapp-serverスキーマ要素はCodex CLI `0.136.0`で確認済み
+で、この統合の検証済みバージョンは `0.145.0` です。この下限はスキーマ上の確認で
+あり、実接続での検証ではありません。下限未満の場合、または必要なメソッドが
+インストール済みCLIに存在しない場合のみエラーになります。
 
 ```bash
-npm install --global @openai/codex@0.145.0
+npm install --global @openai/codex
 codex login
 ```
 
 ```ts
 import { createAgent } from '@aituber-onair/agent';
-import {
-  CODEX_APP_SERVER_SCHEMA_VERSION,
-  CODEX_APP_SERVER_SUPPORTED_VERSION,
-  createCodexAppServerBackend,
-} from '@aituber-onair/agent/codex-app-server';
+import { createCodexAppServerBackend } from '@aituber-onair/agent/codex-app-server';
 
 const backend = createCodexAppServerBackend({
   // PATH検索は暗黙に行いません。代わりに絶対パスのcodexPathも指定できます。
   allowPathLookup: true,
   workingDirectory: '/absolute/path/to/character-workspace',
-  compatibility: {
-    expectedVersion: CODEX_APP_SERVER_SUPPORTED_VERSION,
-    schemaVersion: CODEX_APP_SERVER_SCHEMA_VERSION,
-  },
   sandbox: 'read-only',
   approvalPolicy: 'on-request',
 });
@@ -412,6 +411,10 @@ try {
 }
 ```
 
+検証済みバージョンとの完全一致を必要とするホストは、
+`compatibility: { onMismatch: 'reject' }` を指定できます。global環境を変更せずに
+特定バージョンを使う場合は、PATH検索を有効にせず、`codexPath`へ絶対パスを渡します。
+
 `read-only`と`on-request`は省略時の既定値でもあります。ホストの`allow-once`は
 Codexの`accept`へ、`deny`は`decline`へ対応します。中断、timeout、終了時は
 `cancel`を返します。1回のホスト判断より権限を広げるため、
@@ -424,7 +427,7 @@ Agent briefは、新規Threadと再開ThreadのCodex developer instructionsと�
 再開する場合は、`session.backendSessionId`をホスト側で保存し、
 `agent.resumeSession(...)`へ渡してください。
 
-このentry pointが対応するのは、固定バージョンのstable protocol subsetだけです。
+このentry pointが対応するのは、検証済みのstable protocol subsetだけです。
 
 - Node.jsのローカルstdio transport。remote WebSocket transportには非対応
 - Threadのstart/resumeとTurnのstart/interrupt。Turn steerはCodexバックエンドの

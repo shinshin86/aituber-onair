@@ -2,24 +2,164 @@
 
 ![AITuber OnAir Kizuna - logo](./images/aituber-onair-kizuna.png)
 
-AITuber OnAirでユーザーとAIキャラクターの関係性を管理するための高度な絆システム（Kizuna）です。柔軟なポイントベースのエンゲージメントシステムを提供し、カスタマイズ可能なルール、実績、しきい値を設定できます。
+Kizuna は、AI キャラクターとの接触の積み重ねを、キャラクターが応答に
+使える「絆」へ変えるパッケージです。
 
-[English README is here](./README.md)
+最初のメッセージでは `stranger`。接触が続くと `acquaintance`、`regular`、
+そして `companion` へ育ちます。しばらく離れると、履歴を消さずに温かさだけが
+下がります。再び触れ合えば温かさが戻ります。`getBondContext()` は各時点の
+状態を LLM 向けの短いプロンプトへ変換します。
+
+[English README](./README.md)
+
+## 全体ワークフロー
+
+Kizuna は、ある LLM ターンと次のターンの間に入ります。1メッセージの往復は
+次のように流れます。
+
+```text
+視聴者コメント
+      |
+      v
+chat パッケージ + LLM
+  - system prompt には前回の getBondContext() がすでに入っている
+  - キャラクターの反応感情を付けて返信する
+      |
+      | emotion
+      v
+アプリケーション
+  - kizuna.processInteraction({ emotion, ... }) を呼ぶ
+  - moderation 結果やアプリ規則で valence / severity を上書きできる
+      |
+      v
+Kizuna
+  - 絆スコア、温かさ、傷を決定論的に更新する。ここで LLM は動かない
+      |
+      v
+更新後の getBondContext() -> 次ターンの system prompt -> 態度が変わる
+```
+
+LLM は、キャラクターがどう感じたかを伝える**センサー**であり、更新された
+文脈を読んで振る舞いを変える**アクチュエーター**です。Kizuna は、その間に
+置く決定論的な状態機械です。絆の増減量を LLM が決めることはありません。
+計算を LLM の外に置く理由は次の3つです。
+
+- プロンプトインジェクションに強い。視聴者が会話で親密度をつり上げられない。
+- 関係の変化を再現・テストできる。
+- 絆の計算に追加の LLM コストや待ち時間がかからない。
+
+分類器の層は差し替えられます。moderation API やアプリ独自規則の結果を
+`valence` / `severity` の上書きとして渡せます。
+[`chat-bond-sample`](./examples/chat-bond-sample/) の小さな辞書は、まさにこの
+入力層を LLM なしで代用するものです。実際のチャットフローでは通常、
+キャラクターの反応感情を valence の信号に使います。
+
+## 絆の物語
+
+デフォルト設定で得られる日本語コンテキストの例です。
+
+```text
+# 最初の接触
+Akiとの絆: stranger（レベル1、1ポイント）。関係の流れ: 育っている。現在の空気: 温かい（温かさ1.00）。継続: 1バケット。好みの感情: curious。この関係性の深さと現在の空気に合わせ、罪悪感を促さずに応答してください。
+
+# 接触を重ねる
+Akiとの絆: regular（レベル3、500ポイント）。関係の流れ: 育っている。現在の空気: 温かい（温かさ1.00）。継続: 12バケット。好みの感情: happy, curious。この関係性の深さと現在の空気に合わせ、罪悪感を促さずに応答してください。
+
+# しばらく離れる
+Akiとの絆: regular（レベル3、500ポイント）。関係の流れ: 育っている。現在の空気: 落ち着いている（温かさ0.50）。継続: 12バケット。好みの感情: happy, curious。この関係性の深さと現在の空気に合わせ、罪悪感を促さずに応答してください。
+
+# 再び触れ合う
+Akiとの絆: regular（レベル3、501ポイント）。関係の流れ: 育っている。現在の空気: 温かい（温かさ0.95）。継続: 1バケット。好みの感情: happy, curious。この関係性の深さと現在の空気に合わせ、罪悪感を促さずに応答してください。
+
+# 長く続く相棒になる
+Akiとの絆: companion（レベル4、1000ポイント）。関係の流れ: 安定している。現在の空気: 温かい（温かさ1.00）。継続: 20バケット。好みの感情: happy, curious。この関係性の深さと現在の空気に合わせ、罪悪感を促さずに応答してください。
+```
+
+符号付きの絆スコアはゆっくり動く履歴、温かさは現在の空気、継続は日・週・
+セッション・独自バケットをまたぐ接触を表します。これらを分けて持つため、
+深い絆が冷えたり、修復したり、重大な傷を覚えたりしても、すぐ初対面には
+戻りません。
+
+## 関係はどう動くか
+
+デフォルトの `human` プリセットは、成長と悪化をどちらも関係の一部として
+扱います。配信向けに傷つきにくく修復が速い `forgiving`、境界を厳しくする
+`strict` も選べます。
+
+| 接触 | 絆スコア | 温かさと記憶 |
+| --- | --- | --- |
+| 親切な接触 | ゆっくり増える。同じバケット内の反復ほど増加量が小さくなる。 | 温かさが戻り、バケットをまたぐ継続には小さなボーナスが付く。 |
+| 軽い不和 | 初回割引と深いステージの緩衝を受けて下がる。 | すぐ冷えるが、数回の穏やかな接触で修復する。 |
+| 重大な違反 | ステージ緩衝を無視して大きく下がる。 | ユーザー・バケットごとに1つの傷を作り、贈り物では消せない。 |
+| 温かさが低いときの贈り物 | 通常より増加量が小さくなる。 | お金や物で直後の許しを買えない。 |
+| 会わない時間 | **絆スコアもステージも下げない。** | 温かさだけが下限へ近づき、再会で戻る。 |
+| 継続的な仲直り | スコアと温かさを徐々に戻す。 | 複数バケットにまたがる肯定的な積み重ねだけが傷を癒す。 |
+| 遅れて届いた接触 | 元のバケットの不正防止規則でスコア効果を記録する。 | 現在の空気、不和履歴、傷のライフサイクルは巻き戻さない。 |
+
+`angry` などの否定的な感情、明示した `valence`、ルールが設定した valence で
+否定的接触を表せます。`severity: 'grave'` は、アプリケーションが重大な
+信頼違反と確認した場合だけ指定してください。
+
+```typescript
+config.dynamics = {
+  preset: 'human', // 'human' | 'forgiving' | 'strict'
+  negativityBias: 3,
+  maxTrackedBuckets: 128, // 永続化する不正防止履歴の上限
+};
+
+await kizuna.processInteraction({
+  userId: 'person-42',
+  kind: 'reaction',
+  emotion: 'angry',
+  valence: 'negative',
+  severity: 'light',
+  isOwner: false,
+  timestamp: Date.now(),
+});
+```
+
+### 設計ノートと倫理方針
+
+デフォルト値は関係性研究を参考にしたプロダクト上のヒューリスティックであり、
+ソフトウェアが人間関係を再現・診断できるという主張ではありません。
+
+- デフォルト3倍の否定性重みは Baumeister らの
+  [“Bad Is Stronger Than Good”](https://doi.org/10.1037/1089-2680.5.4.323)、
+  信頼の非対称性は Slovic の
+  [“Perceived Risk, Trust, and Democracy”](https://doi.org/10.1111/j.1539-6924.1993.tb01329.x)
+  を参考にしています。
+- 軽微・重大の区別と継続的な修復は、能力型と誠実性型の信頼違反を区別した
+  [Kim らの研究](https://doi.org/10.1037/0021-9010.89.1.104)を参考にしています。
+- バケット内の飽和は Zajonc の
+  [単純接触研究](https://doi.org/10.1037/h0025848)を参考にし、同一セッションの
+  強度を無制限に報酬せず、頻度と継続を重視します。
+- 温かさの下限と再会時の回復は Levin、Walter、Murnighan の
+  [休眠関係の研究](https://doi.org/10.1287/orsc.1100.0576)を参考にしています。
+- 視聴者別の追跡は、バーチャル配信者への疑似社会的つながりと感情的愛着が
+  参加・支援に関係する研究
+  ([VTuber寄付研究](https://doi.org/10.1108/JRIM-11-2024-0512)、
+  [AI VTuberファンダム研究](https://arxiv.org/abs/2509.10427))と整合します。
+- CHI 2025 の
+  [AIコンパニオンの有害行動分類](https://doi.org/10.1145/3706598.3713429)
+  を踏まえ、**不在は絆スコアを決して傷つけず、罪悪感を誘う仕組みを入れず、
+  温かさの低下は透明で説明可能にする**ことを強い倫理制約とします。
+
+一般に広まった「Gottman 5:1」はパラメーターや設計根拠に使いません。
+デフォルトは明記した `negativityBias: 3` であり、社会科学上の比率を普遍則と
+せず、アプリケーションごとのシーンテストで調整してください。
 
 ## 特徴
 
-- **ポイントシステム**: ユーザーのインタラクションに基づいてポイントを付与
-- **感情ベースボーナス**: AIの感情（happy、excited等）に基づく動的ポイント計算
-- **プラットフォーム対応**: YouTube、Twitch、WebSocketチャット用の異なるポイントルール
-- **カスタマイズ可能ルール**: 条件とクールダウンを持つ独自のポイント計算ルールを作成
-- **レベルシステム**: 10段階の進行システム（レベルごと100ポイント）
-- **実績システム**: 特定のポイントしきい値で実績をアンロック
-- **Owner特権**: AITuber運営者向けの特別ボーナスと倍率
-- **クールダウン管理**: 時間ベースと日次制限でスパムを防止
-- **永続ストレージ**: 設定可能な保持ポリシーでユーザーデータを保存
-- **デバッグモード**: 開発とトラブルシューティング用の詳細ログ
-- **ブラウザ互換**: Vite、Webpack、その他のモダンバンドラーで動作
-- **依存性注入**: Node.js環境向けの柔軟なファイルシステム統合
+- `message`、`reaction`、`gift`、`presence`、`touch`、または独自文字列による
+  汎用的な接触
+- `owner` と `guest` の安定した役割
+- ポイント、ルール、クールダウン、バケット内上限、しきい値の設定
+- 符号付き絆スコア、ステージのヒステリシス、温かさ、傷、継続ストリーク
+- 構造化スナップショットと、英語・日本語・独自テンプレートの LLM 文脈
+- 下流システムで使える `0..1` の関係値
+- ブラウザストレージまたは注入したアダプターによる任意の永続化
+- ランタイム依存ゼロ、接触元固有のユーザー ID 解析なし
+- テストやシミュレーション向けの差し替え可能な時計
 
 ## インストール
 
@@ -30,647 +170,374 @@ npm install @aituber-onair/kizuna
 ## クイックスタート
 
 ```typescript
-import { KizunaManager, LocalStorageProvider } from '@aituber-onair/kizuna';
+import {
+  KizunaManager,
+  createDefaultKizunaConfig,
+} from '@aituber-onair/kizuna';
 
-// ストレージプロバイダーを作成（ブラウザ環境）
-const storageProvider = new LocalStorageProvider({
-  enableCompression: false,
-  enableEncryption: false,
-  maxStorageSize: 10 * 1024 * 1024, // 10MB
-});
+const config = createDefaultKizunaConfig();
+const kizuna = new KizunaManager(config, undefined, 'my-character-bond');
 
-// 設定
-const config = {
-  enabled: true,
-  owner: {
-    initialPoints: 100,
-    pointMultiplier: 2,
-    dailyBonus: 10,
-    specialCommands: ['reset_points', 'grant_points'],
-    exclusiveAchievements: ['master_of_aituber'],
-  },
-  platforms: {
-    youtube: {
-      basePoints: {
-        comment: 1,
-        superChat: 20,
-        membership: 5,
-      },
-    },
-    twitch: {
-      basePoints: {
-        chat: 1,
-        subscription: 10,
-        bits: 5,
-      },
-    },
-  },
-  thresholds: [
-    {
-      points: 50,
-      action: {
-        type: 'special_response',
-        data: { message: '🎉 いつもありがとう！' },
-      },
-      repeatable: false,
-    },
-  ],
-  storage: {
-    maxUsers: 1000,
-    dataRetentionDays: 90,
-    cleanupIntervalHours: 24,
-  },
-  dev: {
-    debugMode: false,
-    logLevel: 'info',
-    showDebugPanel: false,
-  },
-  customRules: [
-    {
-      id: 'emotion_happy',
-      name: 'Happy emotion bonus',
-      condition: (context) => context.emotion === 'happy',
-      points: 1,
-      description: '楽しい感情表現ボーナス',
-    },
-  ],
-};
-
-// Kizunaシステムを初期化
-const kizuna = new KizunaManager(config, storageProvider, 'your_storage_key');
-await kizuna.initialize();
-
-// ユーザーインタラクションを処理
-const result = await kizuna.processInteraction({
-  userId: 'youtube:user123',
-  platform: 'youtube',
-  message: 'こんにちは！',
-  emotion: 'happy',
+await kizuna.processInteraction({
+  userId: 'person-42',
+  kind: 'message',
+  message: 'おはよう！',
+  emotion: 'curious',
   isOwner: false,
   timestamp: Date.now(),
-  metadata: {
-    userName: 'user123',
-    chatProvider: 'openai',
-    chatModel: 'gpt-4',
-  },
+  metadata: { displayName: 'Aki' },
 });
 
-console.log(`ユーザーが${result.pointsAdded}ポイント獲得しました！`);
+const snapshot = kizuna.getBondSnapshot('person-42');
+const context = kizuna.getBondContext('person-42', { language: 'ja' });
+
+console.log(snapshot?.stage); // stranger
+console.log(context); // Akiとの絆: stranger ...
+
+kizuna.destroy();
 ```
 
-## アーキテクチャとブラウザ互換性
+`processInteraction()` はマネージャーを遅延初期化します。永続ストレージを使う
+場合は、保存済みデータを先に読み込むため、状態を読む前に
+`await kizuna.initialize()` を呼んでください。インメモリで使う場合も、空でない
+ストレージキーが必要です。
 
-Kizuna v0.0.2では、ブラウザ互換性の問題を解決しつつ、Node.js環境での柔軟性を維持する**依存性注入アーキテクチャ**を導入しました。
+終了時またはアンマウント時には `destroy()` を呼び、自動クリーンアップ用タイマーと
+イベントリスナーを解放してください。
 
-### 主な利点
+## 絆を設定する
 
-- ✅ **Vite対応**: 「Module 'node:fs' has been externalized for browser compatibility」エラーが解消
-- ✅ **ゼロNode.js依存性**: パッケージにNode.js固有のモジュールが含まれない
-- ✅ **柔軟なストレージ**: Node.jsでファイルシステム実装をユーザーが制御可能
-- ✅ **ユニバーサルパッケージ**: ブラウザ、Node.js、Deno、Bun環境で動作
-
-### v0.0.1からの移行
-
-v0.0.1で`FileSystemStorageProvider`を使用していた場合、`ExternalStorageProvider`に移行してください：
+将来追加される任意項目にも安全なデフォルトを適用できるよう、
+`createDefaultKizunaConfig()` から始め、キャラクターに必要な箇所だけを
+上書きします。
 
 ```typescript
-// 旧（v0.0.1）- 利用不可
-import { FileSystemStorageProvider } from '@aituber-onair/kizuna';
-const storage = new FileSystemStorageProvider({ dataDir: './data' });
+const config = createDefaultKizunaConfig();
 
-// 新（v0.0.2+）- 依存性注入
-import { ExternalStorageProvider, type ExternalStorageAdapter } from '@aituber-onair/kizuna';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const adapter: ExternalStorageAdapter = {
-  // ファイルシステム操作を実装
-  async readFile(filePath) { return await fs.readFile(filePath, 'utf-8'); },
-  async writeFile(filePath, data) { await fs.writeFile(filePath, data, 'utf-8'); },
-  // ... その他のメソッド
+config.basePoints = {
+  message: 10,
+  reaction: 4,
+  gift: 80,
+  presence: 2,
+  touch: 6,
 };
 
-const storage = new ExternalStorageProvider({ dataDir: './kizuna-data' }, adapter);
+config.stages = [
+  { id: 'stranger', minPoints: 0 },
+  { id: 'acquaintance', minPoints: 100 },
+  { id: 'regular', minPoints: 500 },
+  { id: 'companion', minPoints: 1_000 },
+];
+
+config.warmth = {
+  halfLifeMs: 7 * 24 * 60 * 60 * 1_000,
+  floor: 0.2,
+};
+
+config.continuity = {
+  unit: 'day',
+  grace: 1,
+};
+
+config.dynamics = {
+  preset: 'human',
+};
 ```
 
-## 設定
+最上位ステージのしきい値は、`toRelationshipCapital()` の正規化基準にも
+使われます。返り値は、正規化したポイントに現在の温かさを掛けた値です。
 
 ### ポイントルール
 
-柔軟な条件でカスタムポイントルールを作成：
+ルールは接触種別の基本ポイントへ加算されます。`cooldown` は時間、
+`bucketLimit` は設定した継続バケット内での適用回数を制限します。
 
 ```typescript
-const customRules = [
+config.rules = [
   {
-    id: 'long_message',
-    name: 'Long message bonus',
-    condition: (context) => context.message.length > 100,
-    points: 2,
-    cooldown: 60000, // 1分間のクールダウン
-    description: '100文字以上のメッセージボーナス',
-  },
-  {
-    id: 'first_daily_interaction',
-    name: 'First daily interaction',
-    condition: (context, user) => {
-      if (!user) return true;
-      const today = new Date().toDateString();
-      const lastSeen = new Date(user.lastSeen).toDateString();
-      return today !== lastSeen;
-    },
+    id: 'thoughtful-message',
+    name: 'Thoughtful message',
+    condition: (interaction) =>
+      interaction.kind === 'message' &&
+      (interaction.message?.length ?? 0) >= 80,
     points: 5,
-    dailyLimit: 1,
-    description: 'デイリーログインボーナス',
+    cooldown: 60_000,
+    bucketLimit: 3,
+    description: 'Recognizes a longer message without rewarding spam.',
   },
 ];
 ```
 
-### プラットフォーム設定
+ルールのポイントは、接触と現在のユーザーを受け取る関数にもできます。
+`valence` と `severity` もルールで指定でき、接触側の明示値が優先されます。
+不正な数値は無視されます。絆スコアは増減しますが0未満にはならず、
+`stats.totalPointsEarned` は正の増加だけを数えます。
 
-プラットフォームごとに異なるポイント値を設定：
-
-```typescript
-const platforms = {
-  youtube: {
-    basePoints: {
-      comment: 1,
-      superChat: 20,
-      membership: 5,
-      firstComment: 3,
-    },
-    bonusCalculator: (context) => {
-      // カスタムボーナス計算
-      if (context.metadata?.superChatAmount) {
-        return Math.floor(context.metadata.superChatAmount * 0.1);
-      }
-      return 0;
-    },
-  },
-  twitch: {
-    basePoints: {
-      chat: 1,
-      subscription: 10,
-      bits: 5,
-      raid: 15,
-    },
-  },
-};
-```
-
-### しきい値とアクション
-
-ユーザーが特定のポイントしきい値に達したときにトリガーされるアクションを定義：
+### しきい値アクションと実績
 
 ```typescript
-const thresholds = [
+config.thresholds = [
   {
-    points: 100,
-    action: {
-      type: 'unlock_emotion',
-      data: {
-        emotion: 'special_happy',
-        message: '✨ 新しい感情表現が解放されました！',
-      },
-    },
+    id: 'trusted-companion',
+    points: 1_000,
     repeatable: false,
-  },
-  {
-    points: 200,
     action: {
       type: 'achievement',
       data: {
-        id: 'best_friend',
-        title: '親友',
-        description: 'AITuberと強い絆を築きました',
-        icon: '💖',
+        id: 'trusted-companion',
+        title: '信頼できる相棒',
+        description: '長く続く絆を築きました。',
+        icon: '✨',
       },
     },
-    repeatable: false,
   },
 ];
 ```
 
-## ストレージ機能
+可能な限り、しきい値には明示的な `id` を付けてください。表示文言を変えても、
+一度きりのしきい値判定を安定して保てます。
 
-`LocalStorageProvider`には、ストレージ使用量の最適化とユーザーデータ保護のための圧縮・暗号化機能が組み込まれています。
+### セッション単位の継続
 
-### 圧縮機能
-
-データ圧縮により、Base64エンコーディングを使用してストレージサイズを削減：
-
-```typescript
-const storageProvider = new LocalStorageProvider({
-  enableCompression: true,
-  enableEncryption: false,
-  maxStorageSize: 5 * 1024 * 1024,
-});
-```
-
-**データ変換例:**
-```json
-// 元データ (250バイト)
-{"userId":"youtube:user123","points":150,"level":2}
-
-// 圧縮後データ (Base64エンコード)
-eyJ1c2VySWQiOiJ5b3V0dWJlOnVzZXIxMjMiLCJwb2ludHMiOjE1MCwibGV2ZWwiOjJ9
-```
-
-**注意:** 現在の実装はBase64エンコーディングを使用しています。より高い圧縮率が必要な場合は、`lz-string`や`pako`などのライブラリの統合を検討してください。
-
-### 暗号化機能
-
-XOR暗号を使用してユーザープライバシーを保護：
+1回の訪問を自然な単位として扱う場合は、セッションバケットを使います。
 
 ```typescript
-const storageProvider = new LocalStorageProvider({
-  enableCompression: false,
-  enableEncryption: true,
-  encryptionKey: 'your-secret-key-here',
-  maxStorageSize: 5 * 1024 * 1024,
+config.continuity = { unit: 'session', grace: 0 };
+
+const kizuna = new KizunaManager(config, undefined, 'session-bond');
+
+await kizuna.beginSession('visit-1');
+await kizuna.processInteraction({
+  userId: 'person-42',
+  kind: 'presence',
+  isOwner: false,
+  timestamp: Date.now(),
 });
+kizuna.endSession();
 ```
 
-**暗号化データ例:**
-```
-// 元データ: {"points":150}
-// 暗号化後: "H4sKDQkLGRseFBIeGQ=="
-```
+`unit` には `day`、`week`、`session`、または安全な整数のバケット番号を返す
+関数を指定できます。
 
-**セキュリティに関する注意:** 現在の実装は基本的なプライバシー保護のためのXOR暗号を使用しています。強固なセキュリティが必要な本番アプリケーションでは、`Web Crypto API`や`crypto-js`でのAES暗号化の使用を検討してください。
+## 出力を使う
 
-### 組み合わせ使用
-
-最大の効率性とセキュリティのために：
+### 構造化された状態
 
 ```typescript
-const storageProvider = new LocalStorageProvider({
-  enableCompression: true,   // ストレージサイズを削減
-  enableEncryption: true,    // ユーザーデータを保護
-  encryptionKey: process.env.KIZUNA_ENCRYPTION_KEY || 'fallback-key',
-  maxStorageSize: 5 * 1024 * 1024, // 5MB制限
-});
-```
+const snapshot = kizuna.getBondSnapshot('person-42');
 
-**処理順序:**
-1. **保存**: 元データ → 圧縮 → 暗号化 → 保存
-2. **読み込み**: 取得 → 復号 → 展開 → 元データ
-
-### パフォーマンスに関する考慮事項
-
-- **圧縮**: 処理時間が約10-30%増加、ストレージ容量を15-40%節約
-- **暗号化**: 処理時間が約5-15%増加、基本的なプライバシー保護を提供
-- **組み合わせ**: 大規模なユーザーデータセットを持つ本番環境に最適
-
-### 環境別設定
-
-```typescript
-// 開発環境
-const devStorage = new LocalStorageProvider({
-  enableCompression: false,  // デバッグを容易に
-  enableEncryption: false,   // DevToolsで生データを確認可能
-  maxStorageSize: 10 * 1024 * 1024,
-});
-
-// 本番環境
-const prodStorage = new LocalStorageProvider({
-  enableCompression: true,   // ストレージを最適化
-  enableEncryption: true,    // ユーザープライバシーを保護
-  encryptionKey: process.env.ENCRYPTION_KEY,
-  maxStorageSize: 5 * 1024 * 1024,
-});
-```
-
-## デバッグモード
-
-開発用の詳細ログを有効化：
-
-```typescript
-const config = {
-  // ... その他の設定
-  dev: {
-    debugMode: true, // デバッグログを有効化
-    logLevel: 'debug',
-    showDebugPanel: true,
-  },
-};
-```
-
-デバッグモードが有効な場合、以下のような詳細ログが表示されます：
-
-```
-[Kizuna] Processing interaction for youtube:user123 with emotion: happy
-[PointCalculator] [canApplyRule] Checking rule: emotion_happy for emotion: happy
-[PointCalculator] [canApplyRule] Rule emotion_happy condition result: true
-[Kizuna] Interaction processed: 2 points added (1 rules applied)
-[Kizuna] Applied rules: Happy emotion bonus
-```
-
-## イベントシステム
-
-Kizunaイベントをリッスン：
-
-```typescript
-kizuna.on('points_updated', (eventData) => {
-  console.log(`ユーザー ${eventData.userId} が ${eventData.data.pointsAdded} ポイント獲得！`);
-});
-
-kizuna.on('level_up', (eventData) => {
-  console.log(`ユーザー ${eventData.userId} がレベル ${eventData.data.newLevel} にアップ！`);
-});
-
-kizuna.on('threshold_reached', (eventData) => {
-  console.log(`ユーザー ${eventData.userId} がしきい値 ${eventData.data.threshold.points} に到達！`);
-});
-```
-
-## API リファレンス
-
-### KizunaManager
-
-Kizunaシステムを管理するメインクラス。
-
-#### メソッド
-
-- `processInteraction(context: PointContext): Promise<PointResult>` - ユーザーインタラクションを処理してポイントを付与
-- `getUser(userId: string): KizunaUser | null` - ユーザーデータを取得
-- `getAllUsers(): KizunaUser[]` - 全ユーザーを取得
-- `addPoints(userId: string, points: number): Promise<PointResult>` - 手動でポイントを追加
-- `calculateLevel(points: number): number` - ポイントからレベルを計算
-- `getStats(): Record<string, any>` - システム統計を取得
-
-### LocalStorageProvider
-
-ブラウザのlocalStorageを使用するストレージプロバイダー。
-
-#### コンストラクターオプション
-
-- `enableCompression: boolean` - データ圧縮を有効化
-- `enableEncryption: boolean` - データ暗号化を有効化
-- `encryptionKey?: string` - 暗号化キー（暗号化有効時）
-- `maxStorageSize: number` - 最大ストレージサイズ（バイト）
-
-### ExternalStorageProvider
-
-依存性注入を使用してファイルシステム操作を行うストレージプロバイダー。
-
-#### コンストラクターオプション
-
-- `config: object` - dataDir、encoding、prettyJson、autoCreateDirを含む設定オブジェクト
-- `adapter: ExternalStorageAdapter` - ユーザー提供のファイルシステムアダプター
-
-#### ExternalStorageAdapterインターフェース
-
-```typescript
-interface ExternalStorageAdapter {
-  readFile(filePath: string): Promise<string>;
-  writeFile(filePath: string, data: string): Promise<void>;
-  deleteFile(filePath: string): Promise<void>;
-  listFiles(dirPath: string): Promise<string[]>;
-  ensureDir(dirPath: string): Promise<void>;
-  exists(path: string): Promise<boolean>;
-  getFileStats?(filePath: string): Promise<{ size: number }>;
-  joinPath(...components: string[]): string;
+if (snapshot) {
+  console.log(snapshot.stage);
+  console.log(snapshot.points);
+  console.log(snapshot.warmth);
+  console.log(snapshot.continuity.streak);
+  console.log(snapshot.favoriteEmotions);
+  console.log(snapshot.achievements);
 }
 ```
 
-## AITuber OnAirとの統合
+### LLM コンテキスト
 
-このパッケージはAITuber OnAir専用に設計されていますが、他のAIキャラクターシステムにも適応可能です。感情ベースのポイント計算は、AITuber OnAirの感情検出システムとシームレスに統合されます。
+```typescript
+const context = kizuna.getBondContext('person-42', {
+  language: 'ja',
+  maxFavoriteEmotions: 2,
+});
+```
+
+`config.context.templates` には独自テンプレートを設定できます。テンプレートは
+完全な `BondSnapshot` を受け取ります。
+
+### 関係値
+
+```typescript
+const relationshipCapital = kizuna.toRelationshipCapital('person-42');
+```
+
+Kizuna に豊かな状態を残したまま、別システムへ単一の範囲値を渡したい場合に
+使えます。
+
+## 統合パターン
+
+### Core のシステムプロンプトを更新する
+
+```typescript
+await kizuna.processInteraction(interaction);
+
+const bondContext = kizuna.getBondContext(interaction.userId, {
+  language: 'ja',
+});
+core.updateChatOptions({
+  systemPrompt: `${baseSystemPrompt}\n\n現在の絆コンテキスト:\n${bondContext}`,
+});
+
+await core.processChat(interaction.message ?? '');
+```
+
+Core の `react-pngtuber-app` サンプルにはこの統合があり、否定的な関係変化を
+含め、アシスタント応答イベントの感情も記録します。
+
+### Noise の関係性ゲートを制御する
+
+```typescript
+const result = await noise.contaminate({
+  systemPrompt,
+  messages,
+  draft,
+  relationshipCapital: kizuna.toRelationshipCapital(interaction.userId),
+});
+```
+
+Noise のセッションサンプルはこの橋渡しを使い、診断用の手動上書きも残して
+います。
+
+### アプリケーションのイベントを対応付ける
+
+接触元固有の情報は `metadata` に残し、汎用的な接触種別へ対応付けます。
+たとえば、会話文は `message`、絵文字は `reaction`、`gift` はアイテム購入や
+スーパーチャットを表せます。Kizuna 自身は接触元固有の ID を解析・生成しません。
+
+## 永続化
+
+ブラウザでは `LocalStorageProvider` を使えます。ほかのランタイムでは、
+`ExternalStorageAdapter` を `ExternalStorageProvider` へ注入できます。
+
+```typescript
+import {
+  KizunaManager,
+  LocalStorageProvider,
+  createDefaultKizunaConfig,
+} from '@aituber-onair/kizuna';
+
+const storage = new LocalStorageProvider();
+const kizuna = new KizunaManager(
+  createDefaultKizunaConfig(),
+  storage,
+  'character:bond:v1',
+);
+
+await kizuna.initialize();
+```
+
+圧縮、暗号化、アダプター例、永続化形式、セキュリティ上の制限は
+[ストレージ](./docs/storage.md)を参照してください。
+
+## イベント
+
+```typescript
+kizuna.on('points_updated', (event) => {
+  console.log(event);
+});
+
+kizuna.on('achievement_earned', (event) => {
+  console.log(event);
+});
+```
+
+マネージャーが現在送出するイベントは `user_created`、`points_updated`、
+`level_up`、`stage_down`、`scar_created`、`scar_healed`、
+`threshold_reached`、`achievement_earned`、`error` です。
+`KizunaEventType` は互換性のため `user_updated` と `action_executed` も保持して
+いますが、現在のマネージャーは送出しません。リスナーは `type`、`userId`、
+`data`、`timestamp` を持つ `KizunaEventData` を受け取ります。
+
+## API リファレンス
+
+### `KizunaManager`
+
+| メソッド | 用途 |
+| --- | --- |
+| `initialize()` | 保存状態を読み込み、クリーンアップを開始します。 |
+| `processInteraction(interaction)` | 接触を記録し、ポイントと絆を更新して保存します。 |
+| `getBondSnapshot(userId)` | 構造化された絆、または `null` を返します。 |
+| `getBondContext(userId, options?)` | プロンプト向け文脈、または空文字列を返します。 |
+| `toRelationshipCapital(userId)` | 温かさを反映した `0..1` の値を返します。 |
+| `beginSession(id?)` / `endSession()` | セッション継続バケットを管理します。 |
+| `getUser(userId)` / `getAllUsers()` | ユーザー情報を読みます。 |
+| `addPoints(userId, points)` | 既存ユーザーへ符号付きの増減を適用し、0を下限にします。 |
+| `calculateLevel(points)` | 現在の設定からレベルを求めます。 |
+| `getStats()` | 人数やポイント合計を返します。 |
+| `destroy()` | クリーンアップを止め、リスナーを解除します。 |
+
+### 主な型とヘルパー
+
+- `Interaction`、`InteractionKind`、`InteractionValence`、
+  `NegativeSeverity`、`UserRole`、`KizunaUser`、`PointRule`、
+  `PointResult`、`Threshold`、`Achievement`
+- `KizunaConfig`、`BondStage`、`WarmthConfig`、`ContinuityConfig`、
+  `BondDynamicsConfig`、`BondDynamicsPreset`
+- `BondSnapshot`、`BondContextOptions`、`BondContextTemplate`
+- `createDefaultKizunaConfig()`、`DEFAULT_BOND_STAGES`
+- `BondEvaluator`、`BondContextBuilder`、`PointCalculator`、`UserManager`
+- `LocalStorageProvider`、`ExternalStorageProvider`、
+  `createStorageProvider()`、`createDefaultStorageProvider()`
+- `detectEnvironment()`、`isBrowser()`、`isNode()`
+
+`PointContext` と `UserType` は非推奨の別名として残ります。新しいコードでは
+`Interaction` と `UserRole` を使ってください。
+
+## 0.0.3 への移行
+
+0.0.3 では、接触元固有の interaction と user の形を、汎用的な絆モデルへ
+置き換えます。
+
+```typescript
+// Before
+await kizuna.processInteraction({
+  userId: 'person-42',
+  platform: 'chat',
+  message: 'こんにちは',
+  isOwner: false,
+  timestamp: Date.now(),
+});
+
+// 0.0.3
+await kizuna.processInteraction({
+  userId: 'person-42',
+  kind: 'message',
+  message: 'こんにちは',
+  isOwner: false,
+  timestamp: Date.now(),
+  metadata: { source: 'chat' },
+});
+```
+
+設定は `platforms` と `customRules` ではなく `basePoints` と `rules` を使います。
+`KizunaUser.type` は `role` に変わり、メッセージ数は汎用的な接触・継続の統計へ
+変わります。`PointRule.dailyLimit` は `bucketLimit` に変わります。公開されていた
+`ChatType` と `PlatformPointConfig` は削除されたため、`InteractionKind` と
+`KizunaConfig.basePoints` を使ってください。`generateUserId()` と
+`parseUserId()` も削除され、アプリケーションが不透明なユーザー ID と接触元の
+対応を管理します。
+
+`UserManager` または `PointCalculator` を直接使っている場合は、コンストラクターと
+メソッドの変更も CHANGELOG で確認してください。統合には引き続き
+`KizunaManager` の利用を推奨します。
+
+破壊的変更の一覧は [CHANGELOG.md](./CHANGELOG.md) を参照してください。
+
+## ブラウザラボ
+
+リポジトリを checkout した環境では、成長、不和、仲直り、ステージ、温かさ、傷、
+コンテキスト出力、時間経過を試せる対話型サンプルを起動できます。
+
+```bash
+npm -w @aituber-onair/kizuna run example:kizuna-sample
+```
+
+## 開発
+
+```bash
+npm -w @aituber-onair/kizuna run fmt
+npm -w @aituber-onair/kizuna run lint
+npm -w @aituber-onair/kizuna run test
+npm -w @aituber-onair/kizuna run build
+```
+
+テストでは、絆評価、ポイント計算、永続化、環境判定、ストレージファクトリー、
+出力アダプター、マネージャーのライフサイクルを確認しています。すべての統合や
+独自設定を網羅する保証ではありません。
 
 ## ライセンス
 
 MIT
-
-## ブラウザ互換性とNode.js対応
-
-Kizunaは**ブラウザ互換**を重視して設計されており、依存性注入を通じてNode.js環境でも使用できます。パッケージにはNode.js固有の依存関係が含まれなくなったため、ViteやWebpackなどのモダンなブラウザバンドラーと互換性があります。
-
-### ブラウザでの使用（デフォルト）
-
-```typescript
-import { KizunaManager, LocalStorageProvider } from '@aituber-onair/kizuna';
-
-// ブラウザ環境 - localStorageを使用
-const browserStorage = new LocalStorageProvider({
-  enableCompression: false,
-  enableEncryption: false,
-  maxStorageSize: 5 * 1024 * 1024
-});
-
-const kizuna = new KizunaManager(config, browserStorage, 'my_users');
-```
-
-### Node.jsでの使用（依存性注入）
-
-Node.js環境では、独自のファイルシステムアダプターを提供してください：
-
-```typescript
-import { 
-  KizunaManager, 
-  ExternalStorageProvider,
-  type ExternalStorageAdapter 
-} from '@aituber-onair/kizuna';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-// 独自のファイルシステムアダプターを作成
-const nodeAdapter: ExternalStorageAdapter = {
-  async readFile(filePath: string): Promise<string> {
-    return await fs.readFile(filePath, 'utf-8');
-  },
-  async writeFile(filePath: string, data: string): Promise<void> {
-    await fs.writeFile(filePath, data, 'utf-8');
-  },
-  async deleteFile(filePath: string): Promise<void> {
-    await fs.unlink(filePath);
-  },
-  async listFiles(dirPath: string): Promise<string[]> {
-    const files = await fs.readdir(dirPath);
-    return files.filter(file => file.endsWith('.json'));
-  },
-  async ensureDir(dirPath: string): Promise<void> {
-    await fs.mkdir(dirPath, { recursive: true });
-  },
-  async exists(path: string): Promise<boolean> {
-    try {
-      await fs.access(path);
-      return true;
-    } catch {
-      return false;
-    }
-  },
-  joinPath: (...components: string[]) => path.join(...components)
-};
-
-// アダプターを使ってExternalStorageProviderを使用
-const nodeStorage = new ExternalStorageProvider({
-  dataDir: './kizuna-data',
-  prettyJson: true,
-  autoCreateDir: true
-}, nodeAdapter);
-
-const kizuna = new KizunaManager(config, nodeStorage, 'my_users');
-```
-
-### 自動環境検出
-
-```typescript
-import { KizunaManager, createDefaultStorageProvider } from '@aituber-onair/kizuna';
-
-// ブラウザ: LocalStorageProviderを自動使用
-// Node.js: LocalStorageProvider（フォールバック）をアダプター未提供時に使用
-const kizuna = new KizunaManager(config, createDefaultStorageProvider(), 'my_users');
-
-// アダプター付きNode.js
-const kizuna = new KizunaManager(config, createDefaultStorageProvider(nodeAdapter), 'my_users');
-```
-
-### 環境検出ユーティリティ
-
-```typescript
-import { detectEnvironment, isBrowser, isNode } from '@aituber-onair/kizuna';
-
-console.log(detectEnvironment()); // 'browser' または 'node'
-console.log(isBrowser()); // ブラウザでtrue
-console.log(isNode()); // Node.jsでtrue
-```
-
-## 将来のストレージプロバイダー（TODO）
-
-以下のストレージプロバイダーが将来のリリースで計画されています：
-
-### SQLiteStorageProvider
-- **用途**: SQLクエリが必要な中規模アプリケーション
-- **機能**: トランザクション、複雑なクエリ、高性能
-- **例**: Discordボット、CLIツール
-
-### MongoDBStorageProvider
-- **用途**: 大規模アプリケーション、クラウドデプロイ
-- **機能**: 柔軟なスキーマ、水平スケーリング、集約
-- **例**: Webサービス、マイクロサービス
-
-### RedisStorageProvider
-- **用途**: 高性能、リアルタイムアプリケーション
-- **機能**: インメモリストレージ、pub/sub、分散キャッシュ
-- **例**: 高トラフィックストリーミングプラットフォーム
-
-### CloudStorageProvider
-- **用途**: サーバーレスアプリケーション、無制限ストレージ
-- **機能**: AWS S3、Google Cloud Storage、Azure Blob
-- **例**: 本番Webアプリケーション
-
-**貢献**: これらのストレージプロバイダーが必要な場合は、issueを作成するかプルリクエストを提出してください！
-
-## 開発
-
-### テスト
-
-パッケージには主要機能の包括的なテストカバレッジが含まれています：
-
-```bash
-# 全テストを実行
-npm test
-
-# カバレッジ付きでテストを実行
-npm run test:coverage
-
-# ウォッチモードでテストを実行（開発用）
-npm run test:watch
-```
-
-### テスト構成
-
-- **`tests/performance.test.ts`** - LocalStorageProviderの圧縮・暗号化パフォーマンスベンチマーク
-- **`tests/environmentDetector.test.ts`** - 環境検出ユーティリティ
-- **`tests/storageFactory.test.ts`** - ストレージプロバイダーファクトリーと依存性注入
-
-### テストカバレッジ
-
-- ✅ 全ストレージプロバイダー（LocalStorage、ExternalStorage）
-- ✅ 環境検出と依存性注入
-- ✅ パフォーマンスベンチマークと測定
-- ✅ エラーハンドリングとエッジケース
-- ✅ 設定オプションとカスタマイズ
-- ✅ 実データシナリオでの統合テスト
-
-### ビルド
-
-```bash
-# 本番用ビルド
-npm run build
-
-# ウォッチモードでビルド（開発用）
-npm run dev
-
-# 型チェック
-npm run typecheck
-
-# リンティング
-npm run lint
-npm run lint:fix
-```
-
-## 貢献
-
-貢献を歓迎します！プルリクエストをお気軽に提出してください。
-
-### 開発環境の設定
-
-1. リポジトリをクローン
-2. 依存関係をインストール: `npm install`
-3. テストを実行: `npm test`
-4. ビルド: `npm run build`
-
-### 新しいストレージプロバイダーの追加
-
-新しいストレージプロバイダー（SQLite、MongoDB、Redisなど）を追加したい場合：
-
-1. `src/storage/` に新しいファイルを作成
-2. `StorageProvider` インターフェースを実装
-3. `src/tests/` に包括的なテストを追加
-4. 必要に応じてストレージファクトリーを更新
-5. ドキュメントを更新
-
-## 使用例
-
-### 基本的な使用方法
-
-```typescript
-// ユーザーがコメントした時
-const result = await kizuna.processInteraction({
-  userId: 'youtube:viewer123',
-  platform: 'youtube',
-  message: '楽しい配信をありがとう！',
-  emotion: 'happy', // AIが嬉しい感情で応答
-  isOwner: false,
-  timestamp: Date.now(),
-});
-
-// 結果: 基本1ポイント + happy感情ボーナス1ポイント = 2ポイント
-```
-
-### Owner（配信者）の場合
-
-```typescript
-const result = await kizuna.processInteraction({
-  userId: 'owner:default',
-  platform: 'chatForm',
-  message: 'こんにちは視聴者の皆さん！',
-  emotion: 'excited',
-  isOwner: true,
-  timestamp: Date.now(),
-});
-
-// 結果: (基本1ポイント + excited感情ボーナス2ポイント) × Owner倍率2 = 6ポイント
-```
-
-### 統計情報の取得
-
-```typescript
-const stats = kizuna.getStats();
-console.log(`総ユーザー数: ${stats.totalUsers}`);
-console.log(`総ポイント数: ${stats.totalPoints}`);
-console.log(`今日のアクティブユーザー: ${stats.activeToday}`);
-```
-
-このREADMEにより、Kizunaシステムの機能と使用方法を理解して、AITuber OnAirでより魅力的なユーザーエクスペリエンスを構築できます。

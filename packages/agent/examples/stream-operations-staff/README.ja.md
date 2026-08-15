@@ -14,18 +14,19 @@ Codexへ渡すのは構造化した観測だけです。中央のブリーフィ
 ## 前提条件
 
 - Node.js 18以上
-- ローカルにインストールしたCodex CLI `0.145.0`
+- ローカルにインストールしたCodex CLI `0.136.0`以上
 - `codex login` の完了
 
-固定バージョンのCLIをインストールしてログインします。
+Codex CLIをインストールしてログインします。完全一致のバージョン固定は不要です。
 
 ```sh
-npm install --global @openai/codex@0.145.0
+npm install --global @openai/codex
 codex login
 ```
 
-app-serverプロトコルはバージョン依存のため、backendは異なるCLIバージョンを
-拒否します。
+必要なapp-serverスキーマ要素はCodex CLI `0.136.0`で確認済みで、この統合の
+検証済みバージョンは `0.145.0` です。下限以上の別バージョンでは警告を出して
+続行します。
 
 ## 起動
 
@@ -114,7 +115,7 @@ HTTP server processが動いている間だけ保持します。Mikoのbriefで�
 | 変数 | 既定値 | 説明 |
 | --- | --- | --- |
 | `PORT` | `4518` | local HTTP port。必ず `127.0.0.1` にbindします。 |
-| `CODEX_PATH` | `PATH` 上の `codex` | 固定バージョンのCodex実行ファイルへの絶対パスです。 |
+| `CODEX_PATH` | `PATH` 上の `codex` | 特定のCodex実行ファイルへの絶対パスです。 |
 | `CODEX_SANDBOX` | `read-only` | `workspace-write` と完全一致する場合だけ、隔離workspace内の変更を許可します。 |
 | `AGENT_WORKSPACE_DIR` | `./workspace` | 隔離Codex working directoryとSession記録の保存場所です。 |
 

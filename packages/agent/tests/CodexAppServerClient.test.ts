@@ -3,7 +3,10 @@ import {
   AgentBackendProcessError,
   AgentBackendProtocolError,
 } from '../src/errors.js';
-import { CodexAppServerClient } from '../src/backends/codex/client.js';
+import {
+  CodexAppServerClient,
+  compareCodexVersions,
+} from '../src/backends/codex/client.js';
 import type { CodexAppServerClientOptions } from '../src/backends/codex/client.js';
 import { FakeCodexProcessFactory } from './helpers/fakeCodexProcess.js';
 
@@ -11,10 +14,6 @@ const options: CodexAppServerClientOptions = {
   executable: '/path/to/codex',
   workingDirectory: '/path/to/workspace',
   environment: {},
-  compatibility: {
-    expectedVersion: '0.145.0',
-    schemaVersion: 'v2@0.145.0',
-  },
 };
 
 describe('CodexAppServerClient', () => {
@@ -243,28 +242,159 @@ describe('CodexAppServerClient', () => {
     await process.finish(() => client.close());
   });
 
-  it('rejects unsupported declarations and installed versions before spawn', async () => {
-    const declarationFactory = new FakeCodexProcessFactory();
+  it.each([
+    ['0.147.0', 'newer'],
+    ['0.140.0', 'older but supported'],
+  ])('starts with %s and warns for a %s CLI', async (version) => {
+    const diagnostics: string[] = [];
+    const factory = new FakeCodexProcessFactory();
+    factory.version = `codex-cli ${version}`;
+    const { client, process } = await connectClient(factory, {
+      onDiagnostic: (message) => diagnostics.push(message),
+    });
+
+    expect(diagnostics).toEqual([
+      expect.stringContaining(`Codex CLI ${version}`),
+    ]);
+    await process.finish(() => client.close());
+  });
+
+  it('starts without diagnostics for the verified CLI', async () => {
+    const diagnostics: string[] = [];
+    const factory = new FakeCodexProcessFactory();
+    const { client, process } = await connectClient(factory, {
+      onDiagnostic: (message) => diagnostics.push(message),
+    });
+
+    expect(diagnostics).toEqual([]);
+    await process.finish(() => client.close());
+  });
+
+  it('does not let a mismatch diagnostic failure prevent startup', async () => {
+    const factory = new FakeCodexProcessFactory();
+    factory.version = 'codex-cli 0.147.0';
+    const { client, process } = await connectClient(factory, {
+      onDiagnostic: () => {
+        throw new Error('observer failed');
+      },
+    });
+
+    await process.finish(() => client.close());
+  });
+
+  it('rejects a CLI below the default minimum before spawn', async () => {
+    const factory = new FakeCodexProcessFactory();
+    factory.version = 'codex-cli 0.130.0';
+    const connecting = CodexAppServerClient.connect(options, {
+      processFactory: factory,
+    });
+
+    await expect(connecting).rejects.toMatchObject({
+      message: expect.stringMatching(/0\.130\.0.*0\.136\.0/),
+    });
+    await expect(connecting).rejects.toBeInstanceOf(
+      AgentBackendCompatibilityError
+    );
+    expect(factory.processes).toHaveLength(0);
+  });
+
+  it('supports reject and allow mismatch policies', async () => {
+    const rejectFactory = new FakeCodexProcessFactory();
+    rejectFactory.version = 'codex-cli 0.147.0';
     await expect(
       CodexAppServerClient.connect(
-        {
-          ...options,
-          compatibility: {
-            expectedVersion: '0.145.0',
-            schemaVersion: 'wrong-schema',
-          },
-        },
-        { processFactory: declarationFactory }
+        { ...options, compatibility: { onMismatch: 'reject' } },
+        { processFactory: rejectFactory }
       )
     ).rejects.toBeInstanceOf(AgentBackendCompatibilityError);
-    expect(declarationFactory.processes).toHaveLength(0);
+    expect(rejectFactory.processes).toHaveLength(0);
 
-    const versionFactory = new FakeCodexProcessFactory();
-    versionFactory.version = 'codex-cli 0.144.0';
+    const diagnostics: string[] = [];
+    const allowFactory = new FakeCodexProcessFactory();
+    allowFactory.version = 'codex-cli 0.147.0';
+    const { client, process } = await connectClient(allowFactory, {
+      compatibility: { onMismatch: 'allow' },
+      onDiagnostic: (message) => diagnostics.push(message),
+    });
+    expect(diagnostics).toEqual([]);
+    await process.finish(() => client.close());
+  });
+
+  it('gives a custom accept policy precedence over all default checks', async () => {
+    const allowFactory = new FakeCodexProcessFactory();
+    allowFactory.version = 'codex-cli 0.130.0';
+    const accept = vi.fn(() => true);
+    const { client, process } = await connectClient(allowFactory, {
+      compatibility: {
+        minimumVersion: '9.0.0',
+        onMismatch: 'reject',
+        accept,
+      },
+    });
+    expect(accept).toHaveBeenCalledWith('0.130.0', '0.145.0');
+    await process.finish(() => client.close());
+
+    const rejectFactory = new FakeCodexProcessFactory();
+    const reject = vi.fn(() => false);
     await expect(
-      CodexAppServerClient.connect(options, { processFactory: versionFactory })
+      CodexAppServerClient.connect(
+        { ...options, compatibility: { accept: reject } },
+        { processFactory: rejectFactory }
+      )
     ).rejects.toBeInstanceOf(AgentBackendCompatibilityError);
-    expect(versionFactory.processes).toHaveLength(0);
+    expect(reject).toHaveBeenCalledWith('0.145.0', '0.145.0');
+    expect(rejectFactory.processes).toHaveLength(0);
+  });
+
+  it('parses pre-release versions and compares their numeric core', async () => {
+    const diagnostics: string[] = [];
+    const factory = new FakeCodexProcessFactory();
+    factory.version = 'codex-cli 0.148.0-alpha.9';
+    const { client, process } = await connectClient(factory, {
+      onDiagnostic: (message) => diagnostics.push(message),
+    });
+
+    expect(diagnostics).toEqual([expect.stringContaining('0.148.0')]);
+    await process.finish(() => client.close());
+  });
+
+  it('rejects unrecognized version output before spawn', async () => {
+    const factory = new FakeCodexProcessFactory();
+    factory.version = 'codex 0.145.0';
+
+    await expect(
+      CodexAppServerClient.connect(options, { processFactory: factory })
+    ).rejects.toBeInstanceOf(AgentBackendCompatibilityError);
+    expect(factory.processes).toHaveLength(0);
+  });
+
+  it('maps method-not-found responses to compatibility errors', async () => {
+    const { client, process } = await connectClient();
+    const account = client.readAccount();
+    process.send({
+      id: 2,
+      error: { code: -32601, message: 'Method not found' },
+    });
+
+    await expect(account).rejects.toBeInstanceOf(
+      AgentBackendCompatibilityError
+    );
+    await expect(account).rejects.toMatchObject({
+      message: expect.stringMatching(/account\/read.*0\.145\.0.*0\.145\.0/),
+    });
+    await process.finish(() => client.close());
+  });
+
+  it('keeps other JSON-RPC failures as protocol errors', async () => {
+    const { client, process } = await connectClient();
+    const account = client.readAccount();
+    process.send({
+      id: 2,
+      error: { code: -32602, message: 'Invalid params' },
+    });
+
+    await expect(account).rejects.toBeInstanceOf(AgentBackendProtocolError);
+    await process.finish(() => client.close());
   });
 
   it('wraps executable lookup failures', async () => {
@@ -283,11 +413,32 @@ describe('CodexAppServerClient', () => {
   });
 });
 
-async function connectClient() {
-  const factory = new FakeCodexProcessFactory();
-  const connecting = CodexAppServerClient.connect(options, {
-    processFactory: factory,
+describe('compareCodexVersions', () => {
+  it('compares each numeric version component', () => {
+    expect(compareCodexVersions('0.136.0', '0.140.0')).toBeLessThan(0);
+    expect(compareCodexVersions('0.9.0', '0.10.0')).toBeLessThan(0);
+    expect(compareCodexVersions('1.0.0', '0.147.0')).toBeGreaterThan(0);
   });
+
+  it('returns zero for identical versions', () => {
+    expect(compareCodexVersions('0.145.0', '0.145.0')).toBe(0);
+  });
+
+  it('ignores pre-release suffixes', () => {
+    expect(compareCodexVersions('0.148.0-alpha.9', '0.148.0')).toBe(0);
+  });
+});
+
+async function connectClient(
+  factory = new FakeCodexProcessFactory(),
+  overrides: Partial<CodexAppServerClientOptions> = {}
+) {
+  const connecting = CodexAppServerClient.connect(
+    { ...options, ...overrides },
+    {
+      processFactory: factory,
+    }
+  );
   await waitUntil(() => factory.processes.length === 1);
   const process = factory.processes[0];
   process.send({
