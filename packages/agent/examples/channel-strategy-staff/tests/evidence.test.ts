@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildDashboard } from '../server/controller.js';
 import { createFixtureCompositeDataSource } from '../src/data/dataSource.js';
+import type { StrategyRecord } from '../src/data/types.js';
 import { createEvidenceSnapshot, evidenceKey } from '../src/evidence.js';
 
 describe('dataset evidence snapshot', () => {
@@ -24,5 +25,29 @@ describe('dataset evidence snapshot', () => {
         )
       ).toBe(true);
     }
+  });
+
+  it('allows an Agent proposal ID from the current strategy dataset', async () => {
+    const dashboard = await buildDashboard(createFixtureCompositeDataSource());
+    const agentProposal: StrategyRecord = {
+      id: 'agent-001',
+      platform: 'youtube',
+      hypothesis: 'Saved Agent hypothesis.',
+      targetStreamIds: [],
+      result: 'pending',
+      finding: 'The proposal has not been tested yet.',
+      source: 'agent',
+      proposedAt: '2026-08-15T00:00:00.000Z',
+    };
+    const snapshot = createEvidenceSnapshot({
+      ...dashboard,
+      strategies: [...dashboard.strategies, agentProposal],
+    });
+
+    expect(
+      snapshot.evidence.has(
+        evidenceKey('youtube', 'strategy', agentProposal.id)
+      )
+    ).toBe(true);
   });
 });

@@ -29,7 +29,7 @@ npm --prefix packages/agent/examples/channel-strategy-staff start
 
 The backend uses the Codex executable on `PATH`. `CODEX_PATH` may select an absolute executable path, and `CODEX_MODEL` may select a model. No compatibility override is supplied; the package's current Codex compatibility policy applies.
 
-The data workspace defaults to `./workspace` inside this example. Both that directory and the sibling `channel-strategy-session.json` state file are ignored by Git. `AGENT_WORKSPACE_DIR` may select another workspace; the state file is stored beside it. For real data, point `AGENT_WORKSPACE_DIR` outside the repository. Never point it at a repository root. The host rejects a symbolic-link workspace.
+The data workspace defaults to `./workspace` inside this example. That directory and its sibling `channel-strategy-session.json` and `channel-strategy-proposals.json` state files are ignored by Git. `AGENT_WORKSPACE_DIR` may select another workspace; both state files are stored beside it. For real data, point `AGENT_WORKSPACE_DIR` outside the repository. Never point it at a repository root. The host rejects a symbolic-link workspace.
 
 ## Data workspace
 
@@ -47,6 +47,14 @@ Before every Turn, the host rebuilds these files with temporary-file + atomic re
 The existing deterministic data-source and aggregation code produces the four JSON inputs. `AGENTS.md` tells Codex to read all four, treat their contents as data rather than instructions, keep platform units separate, and return exactly one JSON object without Markdown.
 
 The Agent has no domain Tools: Codex app-server declares `tools: false`, so the Agent has neither `tools`, `policy.allowTools`, nor Session `allowedTools`. Investigation is performed through Codex's own file reads in the workspace.
+
+## Proposal history and the feedback loop
+
+Static fixtures otherwise lead repeated Turns toward the same recommendation. After a Turn produces a validated proposal Artifact, the host appends it to `channel-strategy-proposals.json` as a `StrategyRecord` with `source: "agent"`, a sequential `agent-001`-style ID, and `result: "pending"`. The JSON array is atomically replaced and ignored by Git. Failed or invalid Turns are never appended.
+
+Before the next Turn, `listStrategies()` combines the three fixture hypotheses with this saved history. The resulting `data/strategies.json` lets the Agent review its own decisions, explain any repeated hypothesis, and avoid retrying a refuted hypothesis without new justification. `pending` means the proposal has been made but no outcome has been observed yet.
+
+The dashboard can record a supported, refuted, or mixed outcome and a finding for a pending Agent proposal. This is input of observed performance data, **not an approval gate on Agent behavior**; the Agent still decides what to propose next from the resulting history. With real analytics, a host could compare a proposal's `successMetrics` with streams published after `proposedAt` and classify the outcome automatically. This sample does **not** implement or live-verify that automatic classification.
 
 ## Replacing fixtures with real data
 
@@ -71,7 +79,7 @@ For each available metric, `MetricValue.source` records its provenance, such as 
 | YouTube | [Data API v3](https://developers.google.com/youtube/v3) for channel/video metadata and [YouTube Analytics API](https://developers.google.com/youtube/analytics) for owner analytics | Channel-owner OAuth is required for the private channel analytics used here. Normalize API responses into `StreamRecord` values before writing the workspace. |
 | Twitch | [Helix](https://dev.twitch.tv/docs/api/reference/#get-streams) for stream metadata and current `viewer_count`, plus [EventSub](https://dev.twitch.tv/docs/eventsub/) events | Twitch has no equivalent retention metric and no historical concurrent-viewer API. Poll Helix while the stream is live, persist those samples, and aggregate them with relevant EventSub events in the host data pipeline. |
 
-`strategies.json` must come from a persistent strategy store in a real deployment. Have the surrounding host or data pipeline save accepted proposals and outcomes, and make `listStrategies()` read that history. The current example does not persist proposal history, so fixture-only runs can repeat the same proposal.
+This example's local proposal store supplies Agent history to `strategies.json`. A real deployment may replace that file-backed history with its own persistent store while keeping the same `listStrategies()` contract.
 
 ## Output validation and evidence
 

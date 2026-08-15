@@ -1,5 +1,10 @@
+import { useState } from 'react';
 import type { GamePerformance, PlatformOverview } from '../data/aggregate';
-import type { MetricKey, StrategyRecord } from '../data/types';
+import type {
+  MetricKey,
+  ResolvedStrategyOutcome,
+  StrategyRecord,
+} from '../data/types';
 import {
   GROWTH_METRIC,
   PLATFORM_LABELS,
@@ -31,6 +36,7 @@ const STRATEGY_RESULTS = {
   supported: '支持',
   refuted: '反証',
   mixed: '混在',
+  pending: '未検証',
 } as const;
 
 /** Per-platform summary. Growth rows keep their platform-specific unit. */
@@ -162,10 +168,16 @@ export function StrategyList({
   strategies,
   selectedId,
   onSelectStream,
+  onRecordOutcome,
 }: {
   readonly strategies: readonly StrategyRecord[];
   readonly selectedId?: string;
   readonly onSelectStream: (streamId: string) => void;
+  readonly onRecordOutcome: (
+    id: string,
+    outcome: ResolvedStrategyOutcome,
+    finding: string
+  ) => Promise<void>;
 }): React.JSX.Element {
   return (
     <ul className="strategy-list">
@@ -182,8 +194,16 @@ export function StrategyList({
               {STRATEGY_RESULTS[strategy.result]}
             </span>
             <code>{strategy.id}</code>
+            {strategy.source === 'agent' ? (
+              <span className="strategy-source">Agent の提案</span>
+            ) : null}
             <span className="muted">{PLATFORM_LABELS[strategy.platform]}</span>
           </div>
+          {strategy.proposedAt ? (
+            <time className="proposed-at" dateTime={strategy.proposedAt}>
+              提案日時: {formatProposalTime(strategy.proposedAt)}
+            </time>
+          ) : null}
           <p className="hypothesis">{strategy.hypothesis}</p>
           <p className="finding">{strategy.finding}</p>
           <div className="chip-row">
@@ -198,8 +218,88 @@ export function StrategyList({
               </button>
             ))}
           </div>
+          {strategy.source === 'agent' && strategy.result === 'pending' ? (
+            <StrategyOutcomeForm
+              strategyId={strategy.id}
+              onRecordOutcome={onRecordOutcome}
+            />
+          ) : null}
         </li>
       ))}
     </ul>
   );
+}
+
+function StrategyOutcomeForm({
+  strategyId,
+  onRecordOutcome,
+}: {
+  readonly strategyId: string;
+  readonly onRecordOutcome: (
+    id: string,
+    outcome: ResolvedStrategyOutcome,
+    finding: string
+  ) => Promise<void>;
+}): React.JSX.Element {
+  const [outcome, setOutcome] = useState<ResolvedStrategyOutcome>('supported');
+  const [finding, setFinding] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const submit = async (event: React.FormEvent): Promise<void> => {
+    event.preventDefault();
+    if (!finding.trim() || saving) return;
+    setSaving(true);
+    setError(undefined);
+    try {
+      await onRecordOutcome(strategyId, outcome, finding.trim());
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form
+      className="outcome-form"
+      aria-label={`${strategyId} の結果を記録`}
+      onSubmit={(event) => void submit(event)}
+    >
+      <select
+        aria-label="結果"
+        value={outcome}
+        disabled={saving}
+        onChange={(event) =>
+          setOutcome(event.target.value as ResolvedStrategyOutcome)
+        }
+      >
+        <option value="supported">支持</option>
+        <option value="refuted">反証</option>
+        <option value="mixed">混在</option>
+      </select>
+      <input
+        aria-label="所見"
+        type="text"
+        value={finding}
+        disabled={saving}
+        placeholder="実績から分かったことを1行で入力"
+        onChange={(event) => setFinding(event.target.value)}
+      />
+      <button type="submit" disabled={saving || !finding.trim()}>
+        {saving ? '保存中…' : '結果を記録'}
+      </button>
+      {error ? <span className="outcome-error">{error}</span> : null}
+    </form>
+  );
+}
+
+function formatProposalTime(value: string): string {
+  return new Intl.DateTimeFormat('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
 }

@@ -1,6 +1,7 @@
 import type { AgentEvent, AgentRunResult } from '@aituber-onair/agent';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChannelStrategyProposal, ProposalEvidence } from './proposal';
+import type { ResolvedStrategyOutcome } from './data/types';
 import type { ChannelStrategyServerState } from './protocol';
 import {
   createChannelStrategyRuntime,
@@ -87,6 +88,20 @@ export function App(): React.JSX.Element {
       await runtime.interruptStrategy();
     } catch (reason) {
       setError(formatError(reason));
+    }
+  };
+
+  const handleRecordOutcome = async (
+    id: string,
+    outcome: ResolvedStrategyOutcome,
+    finding: string
+  ): Promise<void> => {
+    setError(undefined);
+    try {
+      await runtime.recordProposalOutcome(id, outcome, finding);
+    } catch (reason) {
+      setError(formatError(reason));
+      throw reason;
     }
   };
 
@@ -214,6 +229,7 @@ export function App(): React.JSX.Element {
                 strategies={dashboard.strategies}
                 selectedId={selectedStrategyId}
                 onSelectStream={selectStream}
+                onRecordOutcome={handleRecordOutcome}
               />
             </section>
 

@@ -7,13 +7,21 @@ import {
   type AgentSession,
   type JsonValue,
 } from '@aituber-onair/agent';
+import { dirname, join } from 'node:path';
 import {
   aggregateGamePerformance,
   aggregateOverview,
   createDateWindow,
 } from '../src/data/aggregate.js';
-import { createFixtureCompositeDataSource } from '../src/data/dataSource.js';
-import type { CompositeChannelDataSource } from '../src/data/types.js';
+import {
+  createFixtureCompositeDataSource,
+  withStrategyHistory,
+} from '../src/data/dataSource.js';
+import type {
+  CompositeChannelDataSource,
+  ResolvedStrategyOutcome,
+  StrategyRecord,
+} from '../src/data/types.js';
 import { createEvidenceSnapshot } from '../src/evidence.js';
 import {
   parseAndValidateProposal,
@@ -21,6 +29,12 @@ import {
 } from '../src/proposal.js';
 import type { ChannelDashboard } from '../src/protocol.js';
 import type { StoredSession } from './sessionStore.js';
+import {
+  StrategyStoreError,
+  appendProposal,
+  readProposalHistory,
+  recordOutcome,
+} from './strategyStore.js';
 import {
   CHANNEL_DATA_FILES,
   refreshChannelStrategyWorkspace,
@@ -64,7 +78,7 @@ Return exactly one JSON object and no Markdown, preface, or postscript. It must 
 A high view count alone is not enough. Clearly separate facts from inferences, include uncertainty caused by sampled or unavailable metrics, and cite every fact. Do not publish, edit channel settings, operate on comments, or invent data.`;
 
 const TURN_INSTRUCTION =
-  'Read AGENTS.md and all four data/*.json files. Analyze the last 90 days, compare platform-specific performance, inspect individual streams and prior hypotheses, then return one testable next-stream proposal using exactly the required JSON object.';
+  'Read AGENTS.md and all four data/*.json files. Analyze the last 90 days, compare platform-specific performance, inspect individual streams and prior hypotheses including your own earlier proposals, and explain in observedFacts or inferences why any hypothesis is repeated. Return one testable next-stream proposal using exactly the required JSON object.';
 const DASHBOARD_DAYS = 90;
 const DASHBOARD_STREAM_LIMIT = 50;
 const DEFAULT_MAX_THREAD_TURNS = 20;
@@ -77,6 +91,11 @@ export interface ChannelStrategyController {
   readonly resumed: boolean;
   readonly threadTurnCount: number;
   runStrategy(onEvent: (event: AgentEvent) => void): Promise<AgentRunResult>;
+  recordProposalOutcome(
+    id: string,
+    outcome: ResolvedStrategyOutcome,
+    finding: string
+  ): Promise<StrategyRecord>;
   interrupt(): Promise<void>;
   close(): Promise<void>;
 }
@@ -94,7 +113,14 @@ export interface CreateChannelStrategyControllerOptions {
 export async function createChannelStrategyController(
   options: CreateChannelStrategyControllerOptions
 ): Promise<ChannelStrategyController> {
-  const dataSource = options.dataSource ?? createFixtureCompositeDataSource();
+  const proposalHistoryFile = join(
+    dirname(options.workspaceDir),
+    'channel-strategy-proposals.json'
+  );
+  const dataSource = withStrategyHistory(
+    options.dataSource ?? createFixtureCompositeDataSource(),
+    () => readProposalHistory(proposalHistoryFile)
+  );
   const maxThreadTurns = readPositiveInteger(
     options.maxThreadTurns,
     DEFAULT_MAX_THREAD_TURNS,
@@ -272,11 +298,55 @@ export async function createChannelStrategyController(
       } finally {
         turnActive = false;
       }
-      // Successful Turns consume the same thread context as failures.
-      threadTurnCount += 1;
-      consecutiveFailures = 0;
-      await persistCurrentSession();
+      try {
+        const proposal = findProposalArtifact(result);
+        await appendProposal(proposalHistoryFile, {
+          platform: proposal.recommendation.platform,
+          hypothesis: proposal.experiment.hypothesis,
+          targetStreamIds: [],
+          result: 'pending',
+          finding: `Unverified proposal for ${proposal.recommendation.gameId} in ${proposal.recommendation.format} format.`,
+          source: 'agent',
+          proposedAt: new Date().toISOString(),
+        });
+        await refreshDashboardAndWorkspace();
+      } finally {
+        // Successful Turns consume the same thread context as failures, even
+        // if the host cannot persist their proposal afterward.
+        threadTurnCount += 1;
+        consecutiveFailures = 0;
+        await persistCurrentSession();
+      }
       return result;
+    },
+    async recordProposalOutcome(id, outcome, finding) {
+      const known = dashboard.strategies.find((strategy) => strategy.id === id);
+      if (!known) {
+        throw new StrategyStoreError(
+          'not-found',
+          `Proposal ${id} was not found.`
+        );
+      }
+      if (known.source === 'fixture') {
+        throw new StrategyStoreError(
+          'immutable',
+          'Fixture strategies cannot be updated.'
+        );
+      }
+      if (known.result !== 'pending') {
+        throw new StrategyStoreError(
+          'immutable',
+          'Only pending Agent proposals can receive an outcome.'
+        );
+      }
+      const updated = await recordOutcome(
+        proposalHistoryFile,
+        id,
+        outcome,
+        finding
+      );
+      await refreshDashboardAndWorkspace();
+      return updated;
     },
     interrupt() {
       return session.interrupt();
@@ -286,6 +356,12 @@ export async function createChannelStrategyController(
       await agent.close();
     },
   };
+
+  async function refreshDashboardAndWorkspace(): Promise<void> {
+    dashboard = await buildDashboard(dataSource);
+    evidenceSnapshot = createEvidenceSnapshot(dashboard);
+    await refreshChannelStrategyWorkspace(options.workspaceDir, dashboard);
+  }
 }
 
 async function startOrResumeSession(
@@ -344,6 +420,16 @@ function attachProposalArtifact(
       },
     ],
   };
+}
+
+function findProposalArtifact(result: AgentRunResult): ChannelStrategyProposal {
+  const artifact = result.artifacts.find(
+    (candidate) => candidate.type === 'channel-strategy-proposal'
+  );
+  if (!artifact) {
+    throw new Error('Validated channel strategy proposal is missing.');
+  }
+  return artifact.data as unknown as ChannelStrategyProposal;
 }
 
 export async function buildDashboard(

@@ -52,13 +52,19 @@ export interface StreamRecord {
   readonly metrics: Readonly<Record<MetricKey, MetricValue>>;
 }
 
+export type StrategyOutcome = 'supported' | 'refuted' | 'mixed' | 'pending';
+
+export type ResolvedStrategyOutcome = Exclude<StrategyOutcome, 'pending'>;
+
 export interface StrategyRecord {
   readonly id: string;
   readonly platform: StreamingPlatform;
   readonly hypothesis: string;
   readonly targetStreamIds: readonly string[];
-  readonly result: 'supported' | 'refuted' | 'mixed';
+  readonly result: StrategyOutcome;
   readonly finding: string;
+  readonly source: 'fixture' | 'agent';
+  readonly proposedAt?: string;
 }
 
 export interface StreamQuery {

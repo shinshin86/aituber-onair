@@ -66,6 +66,32 @@ export function createFixtureCompositeDataSource(
   });
 }
 
+/** Adds host-persisted Agent proposals to the same strategy history. */
+export function withStrategyHistory(
+  dataSource: CompositeChannelDataSource,
+  loadHistory: () => Promise<readonly StrategyRecord[]>
+): CompositeChannelDataSource {
+  return {
+    referenceDate: dataSource.referenceDate,
+    platforms: dataSource.platforms,
+    listStreams: (query) => dataSource.listStreams(query),
+    getStreams: (platform, streamIds) =>
+      dataSource.getStreams(platform, streamIds),
+    async listStrategies(platform) {
+      const [baseStrategies, proposalHistory] = await Promise.all([
+        dataSource.listStrategies(platform),
+        loadHistory(),
+      ]);
+      return [
+        ...baseStrategies,
+        ...proposalHistory.filter(
+          (strategy) => !platform || strategy.platform === platform
+        ),
+      ];
+    },
+  };
+}
+
 export function createCompositeChannelDataSource(input: {
   readonly referenceDate: string;
   readonly sources: readonly ChannelDataSource[];
