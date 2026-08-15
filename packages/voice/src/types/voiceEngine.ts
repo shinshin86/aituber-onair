@@ -5,6 +5,8 @@ export type VoiceEngineType =
   | 'xai'
   | 'unrealSpeech'
   | 'elevenLabs'
+  | 'fishAudio'
+  | 'cartesia'
   | 'inworld'
   | 'gradium'
   | 'geminiTts'

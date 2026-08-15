@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   AIVIS_CLOUD_AIVM_MODELS_SEARCH_API_URL,
+  CARTESIA_VOICES_API_URL,
   ELEVENLABS_VOICES_API_URL,
+  FISH_AUDIO_MODELS_API_URL,
   GRADIUM_VOICES_API_URL,
   INWORLD_VOICES_API_URL,
   XAI_VOICES_API_URL,
@@ -85,6 +87,178 @@ describe('getVoiceEngineVoiceList', () => {
         headers: { 'xi-api-key': 'eleven-key' },
       }),
     );
+  });
+
+  it('fetches Fish Audio voice models across pages', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              _id: 'fish-voice-1',
+              title: 'Japanese Heroine',
+              languages: ['ja'],
+              author: { nickname: 'Creator' },
+            },
+          ],
+          has_more: true,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [{ _id: 'fish-voice-2', title: 'Narrator' }],
+          has_more: false,
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      getVoiceEngineVoiceList('fishAudio', {
+        apiKey: 'fish-key',
+        language: 'ja',
+        limit: 2,
+        pageSize: 1,
+      }),
+    ).resolves.toEqual([
+      {
+        id: 'fish-voice-1',
+        label: 'Japanese Heroine (ja / Creator)',
+        metadata: { languages: 'ja', author: 'Creator' },
+      },
+      { id: 'fish-voice-2', label: 'Narrator', metadata: {} },
+    ]);
+
+    const firstUrl = new URL(fetchMock.mock.calls[0][0]);
+    const secondUrl = new URL(fetchMock.mock.calls[1][0]);
+    expect(`${firstUrl.origin}${firstUrl.pathname}`).toBe(
+      FISH_AUDIO_MODELS_API_URL,
+    );
+    expect(firstUrl.searchParams.get('language')).toBe('ja');
+    expect(firstUrl.searchParams.get('page_number')).toBe('1');
+    expect(secondUrl.searchParams.get('page_number')).toBe('2');
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({
+      Authorization: 'Bearer fish-key',
+    });
+  });
+
+  it('bounds Fish Audio pagination and stops when a page repeats', async () => {
+    const repeatedPage = {
+      items: [{ _id: 'fish-voice-1', title: 'Repeated Voice' }],
+      total: 1000,
+      has_more: true,
+    };
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => repeatedPage,
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      getVoiceEngineVoiceList('fishAudio', {
+        apiKey: 'fish-key',
+        limit: 10,
+        pageSize: 1,
+      }),
+    ).resolves.toEqual([
+      { id: 'fish-voice-1', label: 'Repeated Voice', metadata: {} },
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('limits Fish Audio voice lookups to one hundred results by default', async () => {
+    const items = Array.from({ length: 100 }, (_, index) => ({
+      _id: `fish-voice-${index}`,
+      title: `Voice ${index}`,
+    }));
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items, total: 1000, has_more: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const voices = await getVoiceEngineVoiceList('fishAudio', {
+      apiKey: 'fish-key',
+    });
+
+    expect(voices).toHaveLength(100);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolves a relative Fish Audio voice-list proxy URL in browsers', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [], has_more: false }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await getVoiceEngineVoiceList('fishAudio', {
+      apiKey: 'fish-key',
+      voiceListApiUrl: '/api/fish-audio/model',
+    });
+
+    const requestUrl = new URL(fetchMock.mock.calls[0][0]);
+    expect(requestUrl.origin).toBe(globalThis.location.origin);
+    expect(requestUrl.pathname).toBe('/api/fish-audio/model');
+  });
+
+  it('fetches and prioritizes Japanese Cartesia voices across pages', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [{ id: 'en-id', name: 'Skylar', language: 'en' }],
+          has_more: true,
+          next_page: 'en-id',
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 'ja-id',
+              name: 'Sakura',
+              tagline: 'Friendly Host',
+              language: 'ja',
+              country: 'JP',
+              gender: 'feminine',
+            },
+          ],
+          has_more: false,
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      getVoiceEngineVoiceList('cartesia', { apiKey: 'cartesia-key' }),
+    ).resolves.toEqual([
+      {
+        id: 'ja-id',
+        label: 'Sakura (Friendly Host / ja / JP)',
+        metadata: { language: 'ja', gender: 'feminine', country: 'JP' },
+      },
+      {
+        id: 'en-id',
+        label: 'Skylar (en)',
+        metadata: { language: 'en' },
+      },
+    ]);
+
+    const firstUrl = new URL(fetchMock.mock.calls[0][0]);
+    const secondUrl = new URL(fetchMock.mock.calls[1][0]);
+    expect(`${firstUrl.origin}${firstUrl.pathname}`).toBe(
+      CARTESIA_VOICES_API_URL,
+    );
+    expect(secondUrl.searchParams.get('starting_after')).toBe('en-id');
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({
+      Authorization: 'Bearer cartesia-key',
+      'Cartesia-Version': '2026-03-01',
+    });
   });
 
   it('fetches and filters Inworld voices across pages', async () => {

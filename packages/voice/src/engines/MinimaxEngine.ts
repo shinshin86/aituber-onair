@@ -15,6 +15,8 @@ export type MinimaxEndpoint = 'global' | 'china';
  * Available MiniMax TTS models
  */
 export type MinimaxModel =
+  | 'speech-2.8-hd'
+  | 'speech-2.8-turbo'
   | 'speech-2.6-hd'
   | 'speech-2.6-turbo'
   | 'speech-2.5-hd-preview'
@@ -64,7 +66,7 @@ export interface MinimaxAudioSettingsOptions {
  */
 export class MinimaxEngine implements VoiceEngine {
   private groupId?: string;
-  private model: MinimaxModel = 'speech-2.6-hd';
+  private model: MinimaxModel = 'speech-2.8-turbo';
   private defaultVoiceId: string = 'Japanese_IntellectualSenior';
   private language: string = 'Japanese';
   private endpoint: MinimaxEndpoint = 'global';
@@ -72,20 +74,10 @@ export class MinimaxEngine implements VoiceEngine {
   private audioOverrides: MinimaxAudioSettingsOptions = {};
 
   /**
-   * Set GroupId for MiniMax API
-   *
-   * GroupId is a unique identifier for the user group in MiniMax's system.
-   * Unlike other TTS engines that only require an API key, MiniMax requires both
-   * an API key and a GroupId for authentication and usage tracking.
-   *
-   * This GroupId is used by MiniMax for:
-   * - User group management
-   * - Usage statistics tracking
-   * - Billing and quota management
-   *
-   * You must obtain this pre-generated value from your MiniMax account dashboard.
-   *
-   * @param groupId GroupId for MiniMax API (required for production synthesis)
+   * Set the legacy GroupId query parameter when required by an older account.
+   * Current MiniMax global and China T2A v2 documentation only requires a
+   * bearer API key, so this value is optional and kept for compatibility.
+   * @param groupId Legacy MiniMax GroupId
    */
   setGroupId(groupId: string): void {
     this.groupId = groupId;
@@ -102,7 +94,9 @@ export class MinimaxEngine implements VoiceEngine {
   /**
    * Set model for MiniMax TTS
    * Available models:
-   * - speech-2.6-hd: Latest flagship HD model with highest fidelity
+   * - speech-2.8-hd: Latest HD model with ultra-realistic quality and sound tags
+   * - speech-2.8-turbo: Latest low-latency Turbo model
+   * - speech-2.6-hd: Previous flagship HD model with high fidelity
    * - speech-2.6-turbo: Low-latency Turbo model from 2.6 generation
    * - speech-2.5-hd-preview: Latest high-quality model (preview)
    * - speech-2.5-turbo-preview: Latest fast model (preview)
@@ -214,6 +208,18 @@ export class MinimaxEngine implements VoiceEngine {
       : MINIMAX_GLOBAL_API_URL;
   }
 
+  private getRequestUrl(): string {
+    const apiUrl = this.getTtsApiUrl();
+
+    if (!this.groupId) {
+      return apiUrl;
+    }
+
+    const url = new URL(apiUrl);
+    url.searchParams.set('GroupId', this.groupId);
+    return url.toString();
+  }
+
   /**
    * Get available voice speakers list
    *
@@ -271,7 +277,7 @@ export class MinimaxEngine implements VoiceEngine {
 
   /**
    * Test voice synthesis with minimal requirements
-   * Requires API key and voice ID, but not GroupId
+   * Requires API key and voice ID
    * @param text Text to synthesize (shorter text recommended for testing)
    * @param voiceId Voice ID to test
    * @param apiKey MiniMax API key
@@ -293,13 +299,11 @@ export class MinimaxEngine implements VoiceEngine {
     // Limit test text length to avoid quota waste
     const testText = text.length > 100 ? text.substring(0, 100) + '...' : text;
 
-    // Use a temporary GroupId for testing or make it optional
-    const tempGroupId = this.groupId || '1';
-
     const requestBody = {
       model: this.model,
       text: testText,
       stream: false,
+      output_format: 'hex',
       voice_setting: this.buildVoiceSetting(voiceId, {
         speed: 1.0,
         vol: 1.0,
@@ -309,17 +313,14 @@ export class MinimaxEngine implements VoiceEngine {
       language_boost: this.language,
     };
 
-    const response = await fetchWithTimeout(
-      `${this.getTtsApiUrl()}?GroupId=${tempGroupId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(requestBody),
+    const response = await fetchWithTimeout(this.getRequestUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
       },
-    );
+      body: JSON.stringify(requestBody),
+    });
 
     if (!response.ok) {
       let errorMessage = `HTTP error ${response.status}`;
@@ -369,7 +370,7 @@ export class MinimaxEngine implements VoiceEngine {
 
   /**
    * Full production audio synthesis
-   * Requires API key, voice ID, and GroupId
+   * Requires API key and voice ID
    * @param input Talk object
    * @param speaker Voice ID
    * @param apiKey MiniMax API key
@@ -380,7 +381,7 @@ export class MinimaxEngine implements VoiceEngine {
     speaker: string,
     apiKey?: string,
   ): Promise<ArrayBuffer> {
-    return this.fetchAudioWithOptions(input, speaker, apiKey, true);
+    return this.fetchAudioWithOptions(input, speaker, apiKey);
   }
 
   /**
@@ -388,14 +389,15 @@ export class MinimaxEngine implements VoiceEngine {
    * @param input Talk object
    * @param speaker Voice ID
    * @param apiKey MiniMax API key
-   * @param requireGroupId Whether to require GroupId (default: true)
+   * @param requireGroupId Legacy compatibility switch for callers that still
+   * require a configured GroupId (default: false)
    * @returns Promise<ArrayBuffer>
    */
   async fetchAudioWithOptions(
     input: Talk,
     speaker: string,
     apiKey?: string,
-    requireGroupId: boolean = true,
+    requireGroupId: boolean = false,
   ): Promise<ArrayBuffer> {
     if (!apiKey) {
       throw new Error('MiniMax API key is required');
@@ -410,9 +412,13 @@ export class MinimaxEngine implements VoiceEngine {
     const talk = input as Talk;
     const text = talk.message.trim();
 
-    // Validate text length (max 5000 characters)
-    if (text.length > 5000) {
-      throw new Error('Text exceeds maximum length of 5000 characters');
+    if (!text) {
+      throw new Error('Input text is empty');
+    }
+
+    // The synchronous T2A API accepts fewer than 10,000 characters.
+    if (text.length >= 10000) {
+      throw new Error('Text must be fewer than 10000 characters');
     }
 
     // Get emotion from talk.style and adjust voice settings
@@ -422,6 +428,7 @@ export class MinimaxEngine implements VoiceEngine {
       model: this.model,
       text: text,
       stream: false,
+      output_format: 'hex',
       voice_setting: this.buildVoiceSetting(
         speaker || this.defaultVoiceId,
         emotionVoiceSettings,
@@ -430,20 +437,14 @@ export class MinimaxEngine implements VoiceEngine {
       language_boost: this.language,
     };
 
-    // Use provided GroupId or temporary one for testing
-    const groupIdToUse = this.groupId || '1';
-
-    const response = await fetchWithTimeout(
-      `${this.getTtsApiUrl()}?GroupId=${groupIdToUse}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(requestBody),
+    const response = await fetchWithTimeout(this.getRequestUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
       },
-    );
+      body: JSON.stringify(requestBody),
+    });
 
     if (!response.ok) {
       let errorMessage = `HTTP error ${response.status}`;

@@ -40,6 +40,10 @@ describe('voice engine capabilities', () => {
     );
     expect(getVoiceEngineCapabilities('inworld').supportsVoiceList).toBe(true);
     expect(getVoiceEngineCapabilities('gradium').supportsVoiceList).toBe(true);
+    expect(getVoiceEngineCapabilities('fishAudio').supportsVoiceList).toBe(
+      true,
+    );
+    expect(getVoiceEngineCapabilities('cartesia').supportsVoiceList).toBe(true);
     expect(getVoiceEngineCapabilities('minimax').supportsVoiceList).toBe(false);
     expect(getVoiceEngineCapabilities('aivisCloud').supportsVoiceList).toBe(
       true,

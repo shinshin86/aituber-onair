@@ -3,6 +3,8 @@ import * as voicePackage from '../src';
 import type {
   GradiumOutputFormat,
   GradiumVoiceServiceOptions,
+  FishAudioVoiceServiceOptions,
+  CartesiaVoiceServiceOptions,
   InworldVoiceServiceOptions,
   PiperPlusAssets,
   PiperPlusVoiceServiceOptions,
@@ -36,6 +38,8 @@ describe('Voice Package Exports', () => {
     expect(voicePackage.XaiEngine).toBeDefined();
     expect(voicePackage.UnrealSpeechEngine).toBeDefined();
     expect(voicePackage.ElevenLabsEngine).toBeDefined();
+    expect(voicePackage.FishAudioEngine).toBeDefined();
+    expect(voicePackage.CartesiaEngine).toBeDefined();
     expect(voicePackage.InworldEngine).toBeDefined();
     expect(voicePackage.GradiumEngine).toBeDefined();
     expect(voicePackage.GeminiTtsEngine).toBeDefined();
@@ -102,6 +106,22 @@ describe('Voice Package Exports', () => {
     };
 
     expect(options.engineType).toBe('gradium');
+  });
+
+  it('should expose Fish Audio and Cartesia public types', () => {
+    const fishAudio: FishAudioVoiceServiceOptions = {
+      engineType: 'fishAudio',
+      speaker: 'reference-id',
+      fishAudioModel: 's2-pro',
+    };
+    const cartesia: CartesiaVoiceServiceOptions = {
+      engineType: 'cartesia',
+      speaker: 'voice-id',
+      cartesiaModel: 'sonic-3.5',
+    };
+
+    expect(fishAudio.engineType).toBe('fishAudio');
+    expect(cartesia.engineType).toBe('cartesia');
   });
 });
 

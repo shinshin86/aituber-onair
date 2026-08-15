@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloud、Web Speech APIなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Fish Audio、Cartesia、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloud、Web Speech APIなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -220,7 +220,7 @@ const voiceService = new VoiceService({
   engineType: 'elevenLabs',
   speaker: 'JBFqnCBsd6RMkjVDRZzb',
   apiKey: 'your-elevenlabs-api-key',
-  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsModel: 'eleven_flash_v2_5',
   elevenLabsOutputFormat: 'mp3_44100_128',
   elevenLabsStability: 0.5,
   elevenLabsSimilarityBoost: 0.75,
@@ -231,6 +231,57 @@ const voiceService = new VoiceService({
 既定の `https://api.elevenlabs.io/v1/text-to-speech` 以外を使う場合は
 `elevenLabsApiUrl` で上書きできます。`speaker` は ElevenLabs の
 `voice_id` として送信されます。
+
+推奨モデルは、表現力重視の `eleven_v3`、多言語の高品質出力向け
+`eleven_multilingual_v2`、低遅延向けで既定値の `eleven_flash_v2_5` です。
+非推奨の `eleven_turbo_v2_5` は後方互換のため任意文字列として指定できますが、
+推奨モデル一覧には表示しません。
+
+### Fish Audio
+
+Fish Audio の one-shot TTS は `POST /v1/tts` を使用し、音声バイト列を
+直接返します。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'fishAudio',
+  speaker: 'your-reference-id',
+  apiKey: 'your-fish-audio-api-key',
+  fishAudioModel: 's2-pro',
+  fishAudioFormat: 'mp3',
+  fishAudioLatency: 'normal',
+});
+```
+
+`speaker` は `reference_id` として送信されます。
+`getVoiceEngineVoiceList('fishAudio', { apiKey })` で利用可能な
+model/voice を取得できます。この統合では `s2-pro` を安定版の既定値とし、
+`s2.1-pro-free` は明示選択のみ可能です。SLA 付きの本番 tier としては扱わないで
+ください。
+
+話者一覧は、公開 model catalog 全体を走査しないよう既定で最大100件を返します。
+より多くの結果が必要な場合は `limit` と、必要に応じて `pageSize` を指定すると、
+その上限内でページングします。
+
+### Cartesia
+
+Cartesia の同期 TTS は `POST /tts/bytes` を使用し、音声バイト列を直接返します。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'cartesia',
+  speaker: 'your-cartesia-voice-id',
+  apiKey: 'your-cartesia-api-key',
+  cartesiaModel: 'sonic-3.5',
+  cartesiaLanguage: 'ja',
+  cartesiaOutputContainer: 'wav',
+  cartesiaSampleRate: 44100,
+});
+```
+
+`getVoiceEngineVoiceList('cartesia', { apiKey, language: 'ja' })` で
+voice 一覧を取得できます。エンジンは公式仕様の
+`Cartesia-Version: 2026-03-01` ヘッダーを使用します。
 
 ### Inworld
 Inworld TTS の非ストリーミング音声合成を、SDK なしの直接 `fetch` で
@@ -309,12 +360,16 @@ const voiceService = new VoiceService({
   engineType: 'minimax',
   speaker: 'Japanese_IntellectualSenior',
   apiKey: 'your-minimax-api-key',
-  groupId: 'your-group-id', // MiniMaxでは必須
+  minimaxModel: 'speech-2.8-turbo',
+  groupId: 'legacy-group-id', // 旧アカウント向けの任意項目
   endpoint: 'global' // または 'china'
 });
 ```
 
-**注意**：MiniMaxは認証にAPIキーとGroupIdの両方が必要です。GroupIdはユーザーグループ管理、使用状況追跡、課金に使用されます。
+**注意**：現在の MiniMax T2A v2 endpoint は Bearer 認証を必要としますが、
+`GroupId` は必須ではありません。`groupId` は query parameter を要求する旧アカウント
+または旧 endpoint との互換用に残しています。既定は Speech 2.8 Turbo で、
+品質優先時は Speech 2.8 HD を選択できます。
 
 `speaker` には `Japanese_IntellectualSenior` などの MiniMax system voice ID
 を指定してください。MiniMax は公式の
@@ -545,7 +600,7 @@ const voiceService = new VoiceService({
   unrealSpeechBitrate: '192k',
   unrealSpeechSpeed: 0,
   unrealSpeechPitch: 1,
-  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsModel: 'eleven_flash_v2_5',
   elevenLabsStability: 0.5,
   elevenLabsSimilarityBoost: 0.75,
   inworldModel: 'inworld-tts-2',
@@ -600,6 +655,15 @@ const voiceService = new VoiceService({
   - 識別子・出力: `speaker`, `elevenLabsModel`, `elevenLabsOutputFormat`, `elevenLabsLanguageCode`
   - 音声設定: `elevenLabsVoiceSettings`, `elevenLabsStability`, `elevenLabsSimilarityBoost`, `elevenLabsStyle`, `elevenLabsUseSpeakerBoost`, `elevenLabsSpeed`
   - 文脈・正規化: `elevenLabsSeed`, `elevenLabsPreviousText`, `elevenLabsNextText`, `elevenLabsApplyTextNormalization`, `elevenLabsApplyLanguageTextNormalization`, `elevenLabsEnableLogging`
+
+- **Fish Audio**
+  - エンドポイント: `fishAudioApiUrl`
+  - 識別子・出力: `speaker`, `fishAudioModel`, `fishAudioFormat`, `fishAudioSampleRate`, `fishAudioMp3Bitrate`
+  - 音声調整: `fishAudioLatency`, `fishAudioSpeed`
+
+- **Cartesia**
+  - エンドポイント: `cartesiaApiUrl`
+  - 識別子・出力: `speaker`, `cartesiaModel`, `cartesiaLanguage`, `cartesiaOutputContainer`, `cartesiaSampleRate`, `cartesiaMp3Bitrate`
 
 - **Inworld**
   - エンドポイント: `inworldApiUrl`
@@ -689,6 +753,18 @@ try {
 - model、output format、language code、voice settings の調整に対応
 - 任意の text context、seed、text normalization、logging flag に対応
 
+### Fish Audio の機能
+
+- Bearer 認証の one-shot TTS と音声バイト列の直接レスポンス
+- S2/S1 model、format、sample rate、MP3 bitrate、latency、speed を設定可能
+- 正規化 helper を通じたページング対応の model/voice 一覧取得
+
+### Cartesia の機能
+
+- Bearer 認証の同期 `/tts/bytes` request
+- Sonic 3.5 と、日本語を含む公式 language code に対応
+- ページング対応 voice 一覧取得と WAV/MP3 出力設定
+
 ### Inworld の機能
 - Basic 認証のクラウド TTS エンドポイント
 - 指定した `speaker` をそのまま `voiceId` として送信
@@ -755,6 +831,8 @@ type VoiceServiceOptions =
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
+  | FishAudioVoiceServiceOptions
+  | CartesiaVoiceServiceOptions
   | InworldVoiceServiceOptions
   | GradiumVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
@@ -804,9 +882,10 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 
 `getVoiceEngineVoiceList()` は、一覧 API を持つ engine について
 正規化済みの `{ id, label }` を返します。対象は VOICEVOX、AivisSpeech、
-Aivis Cloud、xAI、ElevenLabs、Inworld、Gradium、Web Speech API です。
+Aivis Cloud、xAI、ElevenLabs、Fish Audio、Cartesia、Inworld、Gradium、
+Web Speech API です。
 VOICEVOX 互換サーバーには local `apiUrl`、API key が必要な cloud engine には
-`apiKey`、Inworld の絞り込みには `language` を渡します。
+`apiKey`、Fish Audio、Cartesia、Inworld の絞り込みには `language` を渡します。
 
 browser app では、cloud provider の voice list endpoint が CORS を許可している
 必要があります。provider がブラウザからの直接リクエストをブロックする場合は、
