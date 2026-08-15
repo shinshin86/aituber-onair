@@ -1,11 +1,7 @@
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAgent } from '@aituber-onair/agent';
-import {
-  CODEX_APP_SERVER_SCHEMA_VERSION,
-  CODEX_APP_SERVER_SUPPORTED_VERSION,
-  createCodexAppServerBackend,
-} from '@aituber-onair/agent/codex-app-server';
+import { createCodexAppServerBackend } from '@aituber-onair/agent/codex-app-server';
 import type {
   Agent,
   AgentSession,
@@ -44,10 +40,6 @@ async function main(): Promise<void> {
   const backend = createCodexAppServerBackend({
     ...(codexPath ? { codexPath } : { allowPathLookup: true as const }),
     workingDirectory: workspaceDir,
-    compatibility: {
-      expectedVersion: CODEX_APP_SERVER_SUPPORTED_VERSION,
-      schemaVersion: CODEX_APP_SERVER_SCHEMA_VERSION,
-    },
     sandbox,
     approvalPolicy: 'on-request',
     onDiagnostic: (message) => console.error(`[codex] ${message}`),

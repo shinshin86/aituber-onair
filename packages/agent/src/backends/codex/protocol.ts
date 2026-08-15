@@ -1,9 +1,11 @@
-/**
- * Stable protocol subset generated and reconciled against codex-cli 0.145.0.
- * The complete generated schema is intentionally not exposed by this package.
- */
-export const CODEX_APP_SERVER_SUPPORTED_VERSION = '0.145.0';
-export const CODEX_APP_SERVER_SCHEMA_VERSION = 'v2@0.145.0';
+/** Codex CLI version against which this package was verified. */
+export const CODEX_APP_SERVER_VERIFIED_VERSION = '0.145.0';
+
+/** Oldest Codex CLI version whose schema contains all required elements. */
+export const CODEX_APP_SERVER_MINIMUM_VERSION = '0.136.0';
+
+/** app-server protocol generation used by this package. */
+export const CODEX_APP_SERVER_PROTOCOL_GENERATION = 'v2';
 
 export type CodexAppServerRequestId = string | number;
 

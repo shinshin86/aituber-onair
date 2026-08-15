@@ -123,8 +123,11 @@ assert.equal(typeof agent.createAgent, 'function');
 assert.equal(typeof agent.defineAgentTool, 'function');
 assert.equal(typeof chat.createChatServiceBackend, 'function');
 assert.equal(typeof codex.createCodexAppServerBackend, 'function');
-assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, '0.145.0');
-assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, 'v2@0.145.0');
+assert.equal(codex.CODEX_APP_SERVER_VERIFIED_VERSION, '0.145.0');
+assert.equal(codex.CODEX_APP_SERVER_MINIMUM_VERSION, '0.136.0');
+assert.equal(codex.CODEX_APP_SERVER_PROTOCOL_GENERATION, 'v2');
+assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, undefined);
+assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, undefined);
 `
   );
   await writeFile(
@@ -139,8 +142,11 @@ assert.equal(typeof agent.createAgent, 'function');
 assert.equal(typeof agent.defineAgentTool, 'function');
 assert.equal(typeof chat.createChatServiceBackend, 'function');
 assert.equal(typeof codex.createCodexAppServerBackend, 'function');
-assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, '0.145.0');
-assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, 'v2@0.145.0');
+assert.equal(codex.CODEX_APP_SERVER_VERIFIED_VERSION, '0.145.0');
+assert.equal(codex.CODEX_APP_SERVER_MINIMUM_VERSION, '0.136.0');
+assert.equal(codex.CODEX_APP_SERVER_PROTOCOL_GENERATION, 'v2');
+assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, undefined);
+assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, undefined);
 `
   );
 
@@ -160,11 +166,7 @@ import {
   type AgentWorkspaceMetadataStore,
 } from '@aituber-onair/agent';
 import { createChatServiceBackend } from '@aituber-onair/agent/chat';
-import {
-  CODEX_APP_SERVER_SCHEMA_VERSION,
-  CODEX_APP_SERVER_SUPPORTED_VERSION,
-  createCodexAppServerBackend,
-} from '@aituber-onair/agent/codex-app-server';
+import { createCodexAppServerBackend } from '@aituber-onair/agent/codex-app-server';
 
 const analyzeComments = defineAgentTool({
   id: 'comments.analyze',
@@ -289,10 +291,6 @@ const bootstrap = workspaceAgent.bootstrap({
 const codexBackend = createCodexAppServerBackend({
   allowPathLookup: true,
   workingDirectory: '/path/to/character-workspace',
-  compatibility: {
-    expectedVersion: CODEX_APP_SERVER_SUPPORTED_VERSION,
-    schemaVersion: CODEX_APP_SERVER_SCHEMA_VERSION,
-  },
   sandbox: 'read-only',
   approvalPolicy: 'on-request',
 });

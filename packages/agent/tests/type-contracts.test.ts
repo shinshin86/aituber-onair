@@ -43,8 +43,9 @@ import type {
   CodexAppServerCompatibility,
 } from '../src/codex-app-server.js';
 import {
-  CODEX_APP_SERVER_SCHEMA_VERSION,
-  CODEX_APP_SERVER_SUPPORTED_VERSION,
+  CODEX_APP_SERVER_MINIMUM_VERSION,
+  CODEX_APP_SERVER_PROTOCOL_GENERATION,
+  CODEX_APP_SERVER_VERIFIED_VERSION,
   createCodexAppServerBackend,
 } from '../src/codex-app-server.js';
 
@@ -153,8 +154,9 @@ describe('public type surface', () => {
 
   it('requires an explicit Codex executable path or PATH opt-in', () => {
     const compatibility: CodexAppServerCompatibility = {
-      expectedVersion: CODEX_APP_SERVER_SUPPORTED_VERSION,
-      schemaVersion: CODEX_APP_SERVER_SCHEMA_VERSION,
+      minimumVersion: CODEX_APP_SERVER_MINIMUM_VERSION,
+      onMismatch: 'warn',
+      accept: (actual, verified) => actual === verified,
     };
     const explicitPath: CodexAppServerBackendOptions = {
       codexPath: '/path/to/codex',
@@ -186,5 +188,25 @@ describe('public type surface', () => {
     expectTypeOf(createCodexAppServerBackend).toBeFunction();
     expectTypeOf<CodexAppServerBackend>().toBeObject();
     expectTypeOf<CodexAppServerBackendCapabilities>().toBeObject();
+    expectTypeOf<
+      CodexAppServerBackendCapabilities['sessionResume']
+    >().toEqualTypeOf<true>();
+    expectTypeOf<
+      CodexAppServerBackendCapabilities['approvals']
+    >().toEqualTypeOf<true>();
+    expect(CODEX_APP_SERVER_VERIFIED_VERSION).toBe('0.145.0');
+    expect(CODEX_APP_SERVER_PROTOCOL_GENERATION).toBe('v2');
+
+    const defaults: CodexAppServerBackendOptions = {
+      codexPath: '/path/to/codex',
+      workingDirectory: '/path/to/workspace',
+    };
+    expect(defaults.compatibility).toBeUndefined();
+
+    const legacy: CodexAppServerCompatibility = {
+      // @ts-expect-error expectedVersion was removed from the public contract.
+      expectedVersion: '0.145.0',
+    };
+    expect(legacy).toBeDefined();
   });
 });

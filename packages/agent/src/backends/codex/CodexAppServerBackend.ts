@@ -133,7 +133,9 @@ class CodexAppServerBackendRuntime implements CodexAppServerBackend {
     }
     this.options = Object.freeze({
       ...options,
-      compatibility: Object.freeze({ ...options.compatibility }),
+      ...(options.compatibility
+        ? { compatibility: Object.freeze({ ...options.compatibility }) }
+        : {}),
       ...(options.environment
         ? { environment: Object.freeze({ ...options.environment }) }
         : {}),
@@ -585,14 +587,43 @@ function validateOptions(options: CodexAppServerBackendOptions): string[] {
   } else if (options.allowPathLookup !== true) {
     issues.push('allowPathLookup must be true when codexPath is omitted');
   }
-  if (
-    !isRecord(options.compatibility) ||
-    typeof options.compatibility.expectedVersion !== 'string' ||
-    typeof options.compatibility.schemaVersion !== 'string'
-  ) {
-    issues.push(
-      'compatibility must contain expectedVersion and schemaVersion strings'
-    );
+  if (options.compatibility !== undefined) {
+    if (!isRecord(options.compatibility)) {
+      issues.push('compatibility must be an object');
+    } else {
+      const compatibilityKeys = new Set([
+        'accept',
+        'minimumVersion',
+        'onMismatch',
+      ]);
+      for (const key of Object.keys(options.compatibility)) {
+        if (!compatibilityKeys.has(key)) {
+          issues.push(`compatibility contains unsupported field "${key}"`);
+        }
+      }
+      if (
+        options.compatibility.minimumVersion !== undefined &&
+        typeof options.compatibility.minimumVersion !== 'string'
+      ) {
+        issues.push('compatibility.minimumVersion must be a string');
+      }
+      if (
+        options.compatibility.onMismatch !== undefined &&
+        !['reject', 'warn', 'allow'].includes(
+          options.compatibility.onMismatch as string
+        )
+      ) {
+        issues.push(
+          'compatibility.onMismatch must be "reject", "warn", or "allow"'
+        );
+      }
+      if (
+        options.compatibility.accept !== undefined &&
+        typeof options.compatibility.accept !== 'function'
+      ) {
+        issues.push('compatibility.accept must be a function');
+      }
+    }
   }
   for (const [name, value] of [
     ['requestTimeoutMs', options.requestTimeoutMs],
