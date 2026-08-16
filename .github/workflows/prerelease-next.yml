@@ -22,16 +22,24 @@ jobs:
     - name: Determine last stable tag
       id: tag
       run: |
-        last_tag=$(git describe --tags --abbrev=0 \
-                   $(git rev-list --tags --no-walk --exclude='next' --exclude='*-rc*' --max-count=1))
+        last_tag_ref=$(git rev-list --tags --no-walk --exclude='next' --exclude='*-rc*' --max-count=1)
+        if [ -n "$last_tag_ref" ]; then
+          last_tag=$(git describe --tags --abbrev=0 "$last_tag_ref")
+        else
+          last_tag=""
+        fi
         echo "last_tag=$last_tag" >>"$GITHUB_OUTPUT"
 
     # 3) Generate release notes between the last tag and HEAD
     - name: Generate release notes
       id: notes
       run: |
-        git log "${{ steps.tag.outputs.last_tag }}"..HEAD \
-                --pretty=format:'* %s (%h)' --reverse > RELEASE_NOTES.md
+        if [ -n "${{ steps.tag.outputs.last_tag }}" ]; then
+          git log "${{ steps.tag.outputs.last_tag }}"..HEAD \
+                  --pretty=format:'* %s (%h)' --reverse > RELEASE_NOTES.md
+        else
+          git log --pretty=format:'* %s (%h)' --reverse > RELEASE_NOTES.md
+        fi
         echo "notes_path=RELEASE_NOTES.md" >>"$GITHUB_OUTPUT"
 
     # 4) Create or update the 'next' prerelease
