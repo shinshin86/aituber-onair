@@ -16,6 +16,7 @@
   "dependencies": {
     "@aituber-onair/comment-intelligence": "../../../comment-intelligence",
     "@aituber-onair/core": "../..",
+    "@aituber-onair/kizuna": "../../../kizuna",
     "@aituber-onair/manneri": "../../../manneri",
     "@webtoon/psd": "^0.4.0",
     "ag-psd": "^31.0.2",

@@ -7,9 +7,9 @@ import {
 } from '@aituber-onair/kizuna';
 import { describe, expect, it, vi } from 'vitest';
 import {
-  attemptPngTuberKizunaStorageClear,
-  clearPngTuberKizunaStorage,
-  PNGTUBER_KIZUNA_STORAGE_KEY,
+  attemptKizunaStorageClear,
+  clearKizunaStorage,
+  KIZUNA_STORAGE_KEY,
   tryCreateKizunaStorageProvider,
 } from './kizunaStorage';
 
@@ -35,22 +35,22 @@ describe('tryCreateKizunaStorageProvider', () => {
   });
 });
 
-describe('clearPngTuberKizunaStorage', () => {
+describe('clearKizunaStorage', () => {
   it('removes only the PNGTuber Kizuna storage key', async () => {
     const remove = vi.fn().mockResolvedValue(undefined);
 
-    await clearPngTuberKizunaStorage({ remove });
+    await clearKizunaStorage({ remove });
 
     expect(remove).toHaveBeenCalledOnce();
-    expect(remove).toHaveBeenCalledWith(PNGTUBER_KIZUNA_STORAGE_KEY);
+    expect(remove).toHaveBeenCalledWith(KIZUNA_STORAGE_KEY);
   });
 
   it('does nothing when persistence is unavailable', async () => {
-    await expect(clearPngTuberKizunaStorage(null)).resolves.toBeUndefined();
+    await expect(clearKizunaStorage(null)).resolves.toBeUndefined();
   });
 });
 
-describe('attemptPngTuberKizunaStorageClear', () => {
+describe('attemptKizunaStorageClear', () => {
   it('retains a failed provider so the next reset retries removal', async () => {
     const error = new Error('remove failed');
     const remove = vi
@@ -59,10 +59,8 @@ describe('attemptPngTuberKizunaStorageClear', () => {
       .mockResolvedValueOnce(undefined);
     const storageProvider = { remove };
 
-    const firstAttempt = await attemptPngTuberKizunaStorageClear(
-      storageProvider,
-    );
-    const secondAttempt = await attemptPngTuberKizunaStorageClear(
+    const firstAttempt = await attemptKizunaStorageClear(storageProvider);
+    const secondAttempt = await attemptKizunaStorageClear(
       firstAttempt.storageProvider,
     );
 
@@ -78,11 +76,11 @@ describe('attemptPngTuberKizunaStorageClear', () => {
     expect(remove).toHaveBeenCalledTimes(2);
     expect(remove).toHaveBeenNthCalledWith(
       1,
-      PNGTUBER_KIZUNA_STORAGE_KEY,
+      KIZUNA_STORAGE_KEY,
     );
     expect(remove).toHaveBeenNthCalledWith(
       2,
-      PNGTUBER_KIZUNA_STORAGE_KEY,
+      KIZUNA_STORAGE_KEY,
     );
   });
 });
@@ -97,7 +95,7 @@ describe('Kizuna localStorage persistence', () => {
     const manager = new KizunaManager(
       config,
       storageProvider,
-      PNGTUBER_KIZUNA_STORAGE_KEY,
+      KIZUNA_STORAGE_KEY,
     );
 
     await manager.processInteraction({
@@ -113,7 +111,7 @@ describe('Kizuna localStorage persistence', () => {
     const restoredManager = new KizunaManager(
       config,
       new LocalStorageProvider(),
-      PNGTUBER_KIZUNA_STORAGE_KEY,
+      KIZUNA_STORAGE_KEY,
     );
     await restoredManager.initialize();
 

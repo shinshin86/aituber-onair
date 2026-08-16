@@ -5,6 +5,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
+import { BondToastStack } from './components/BondToastStack';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -16,6 +17,7 @@ import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
 import { getEmotionEffectAnchor } from './lib/emotionEffectAnchor';
+import { createBondIdentity } from './lib/kizunaBond';
 import {
   INOCHI2D_CUSTOM_MODEL_ID,
   buildCustomInochiModel,
@@ -182,6 +184,10 @@ export default function App() {
     partialResponse,
     processChat,
     processVisionChat,
+    bondToasts,
+    dismissBondToast,
+    recordBondMessage,
+    resetKizunaData,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
     onSpeechStart: handleSpeechStart,
@@ -200,7 +206,10 @@ export default function App() {
     (text: string) => {
       stop();
       setAvatarReaction(null);
-      processChat(text);
+      processChat(text, {
+        bondIdentity: createBondIdentity('form', 'あなた'),
+        bondMessage: text,
+      });
     },
     [processChat, stop],
   );
@@ -233,16 +242,30 @@ export default function App() {
 
   const handleYoutubeComment = useCallback(
     (comment: YouTubeChatMessage) => {
+      const timestamp = new Date(comment.publishedAt).getTime();
+      void recordBondMessage(
+        createBondIdentity('youtube', comment.userName),
+        comment.userComment,
+        Number.isFinite(timestamp) ? timestamp : Date.now(),
+      ).catch((error) => {
+        console.error('Failed to record YouTube Kizuna interaction:', error);
+      });
       enqueueYouTubeComments([comment]);
     },
-    [enqueueYouTubeComments],
+    [enqueueYouTubeComments, recordBondMessage],
   );
 
   const handleTwitchComment = useCallback(
     (comment: TwitchChatMessage) => {
+      void recordBondMessage(
+        createBondIdentity('twitch', comment.userName),
+        comment.userComment,
+      ).catch((error) => {
+        console.error('Failed to record Twitch Kizuna interaction:', error);
+      });
       enqueueTwitchComments([comment]);
     },
-    [enqueueTwitchComments],
+    [enqueueTwitchComments, recordBondMessage],
   );
 
   const handleBackgroundImageChange = useCallback((file: File | null) => {
@@ -468,6 +491,8 @@ export default function App() {
         }}
       />
 
+      <BondToastStack toasts={bondToasts} onDismiss={dismissBondToast} />
+
       {settingsOpen && (
         <div className="settings-dialog-overlay" onClick={closeSettingsDialog}>
           <div
@@ -574,6 +599,7 @@ export default function App() {
                 streamErrorMessage={streamErrorMessage}
                 screenVisionController={screenVisionController}
                 onBackgroundImageChange={handleBackgroundImageChange}
+                onResetKizunaData={resetKizunaData}
               />
             </div>
           </div>

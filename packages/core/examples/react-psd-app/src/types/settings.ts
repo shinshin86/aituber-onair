@@ -173,6 +173,10 @@ export interface ManneriSettings {
   minMessageLength: number;
 }
 
+export interface KizunaSettings {
+  enabled: boolean;
+}
+
 export interface AvatarViewTransform {
   x: number;
   y: number;
@@ -205,4 +209,5 @@ export interface AppSettings {
   stream: StreamSettings;
   commentIntelligence: CommentIntelligenceSettings;
   manneri: ManneriSettings;
+  kizuna: KizunaSettings;
 }

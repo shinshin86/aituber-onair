@@ -360,6 +360,9 @@ function getDefaultSettings(): AppSettings {
       interventionCooldownMs: 5 * 60 * 1000,
       minMessageLength: 10,
     },
+    kizuna: {
+      enabled: false,
+    },
   };
 }
 
@@ -387,6 +390,7 @@ function loadSettings(): AppSettings {
           ...saved.commentIntelligence,
         },
         manneri: { ...defaults.manneri, ...saved.manneri },
+        kizuna: { ...defaults.kizuna, ...saved.kizuna },
       };
     }
   } catch {
@@ -1354,6 +1358,13 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateKizunaEnabled = useCallback((enabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      kizuna: { ...prev.kizuna, enabled },
+    }));
+  }, []);
+
   const updateManneriSimilarityThreshold = useCallback(
     (similarityThreshold: number) => {
       setSettings((prev) => ({
@@ -1504,6 +1515,7 @@ export function useSettings() {
     updateManneriLookbackWindow,
     updateManneriInterventionCooldownMs,
     updateManneriMinMessageLength,
+    updateKizunaEnabled,
     getApiKeyForProvider,
   };
 }

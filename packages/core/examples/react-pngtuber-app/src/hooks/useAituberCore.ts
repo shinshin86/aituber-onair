@@ -38,8 +38,8 @@ import {
   type BondToast,
 } from '../lib/kizunaBond';
 import {
-  attemptPngTuberKizunaStorageClear,
-  PNGTUBER_KIZUNA_STORAGE_KEY,
+  attemptKizunaStorageClear,
+  KIZUNA_STORAGE_KEY,
   tryCreateKizunaStorageProvider,
 } from '../lib/kizunaStorage';
 import {
@@ -104,7 +104,7 @@ function createPngTuberKizunaManager(
     manager: new KizunaManager(
       config,
       storageProvider,
-      PNGTUBER_KIZUNA_STORAGE_KEY,
+      KIZUNA_STORAGE_KEY,
     ),
     storageProvider: storageProvider ?? null,
   };
@@ -392,18 +392,16 @@ export function useAituberCore({
   getApiKeyForProvider,
 }: UseAituberCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
-  const kizunaRef = useRef<KizunaManager | null>(null);
-  const kizunaStorageProviderRef = useRef<IStorageProvider | null>(null);
-  if (!kizunaRef.current) {
-    const setup = createPngTuberKizunaManager();
-    kizunaRef.current = setup.manager;
-    kizunaStorageProviderRef.current = setup.storageProvider;
-  }
-  const coreRequestQueueRef = useRef<SerialTaskQueue | null>(null);
-  if (!coreRequestQueueRef.current) {
-    coreRequestQueueRef.current = createSerialTaskQueue();
-  }
-  const enqueueCoreRequest = coreRequestQueueRef.current;
+  const [initialKizunaSetup] = useState(() =>
+    createPngTuberKizunaManager(),
+  );
+  const kizunaRef = useRef<KizunaManager | null>(initialKizunaSetup.manager);
+  const kizunaStorageProviderRef = useRef<IStorageProvider | null>(
+    initialKizunaSetup.storageProvider,
+  );
+  const [enqueueCoreRequest] = useState<SerialTaskQueue>(() =>
+    createSerialTaskQueue(),
+  );
   const activeBondIdentityRef = useRef<BondIdentity | null>(null);
   const bondQueueRef = useRef<Promise<void>>(Promise.resolve());
   const bondToastSequenceRef = useRef(0);
@@ -453,7 +451,7 @@ export function useAituberCore({
       kizunaRef.current?.destroy();
 
       const storageClearResult =
-        await attemptPngTuberKizunaStorageClear(
+        await attemptKizunaStorageClear(
           kizunaStorageProviderRef.current,
         );
       if (!storageClearResult.storageCleared) {

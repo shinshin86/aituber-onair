@@ -188,6 +188,200 @@ body {
   margin-bottom: 4px;
 }
 
+.settings-kizuna-field > label {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  cursor: pointer;
+  line-height: 1.45;
+}
+
+.settings-kizuna-field input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  accent-color: #e94560;
+}
+
+.settings-kizuna-reset {
+  margin-top: 10px;
+}
+
+.settings-kizuna-reset-confirmation {
+  padding: 9px;
+  border: 1px solid rgba(233, 69, 96, 0.55);
+  border-radius: 7px;
+  background: rgba(233, 69, 96, 0.08);
+}
+
+.settings-kizuna-reset-confirmation p {
+  margin: 0 0 8px;
+  color: #f2c4cc;
+  font-size: 0.75rem;
+}
+
+.settings-kizuna-reset-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.settings-kizuna-reset-button {
+  border-color: rgba(233, 69, 96, 0.75);
+  color: #ffd7de;
+}
+
+.settings-kizuna-reset-status {
+  margin: 7px 0 0;
+  font-size: 0.72rem;
+}
+
+.settings-kizuna-reset-status.is-success {
+  color: #8fd8ad;
+}
+
+.settings-kizuna-reset-status.is-error {
+  color: #ff9aab;
+}
+
+/* ── Kizuna bond notifications ── */
+
+.bond-toast-stack {
+  position: fixed;
+  z-index: 900;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  width: min(350px, calc(100vw - 28px));
+  gap: 10px;
+  pointer-events: none;
+}
+
+.bond-toast {
+  position: relative;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid #31567f;
+  border-radius: 13px;
+  background: rgba(20, 32, 60, 0.96);
+  box-shadow: 0 18px 44px -20px rgba(0, 0, 0, 0.72);
+  color: #f4f7fb;
+  pointer-events: auto;
+  animation: bond-toast-enter 280ms ease-out both;
+}
+
+.bond-toast-highlight {
+  border-color: #f0b84f;
+  box-shadow: 0 18px 44px -20px rgba(240, 184, 79, 0.6);
+}
+
+.bond-toast-decreased {
+  border-color: rgba(179, 71, 87, 0.55);
+  background: rgba(255, 246, 247, 0.97);
+}
+
+.bond-toast-decreased .bond-toast-heading span {
+  color: #9e3045;
+  background: rgba(179, 71, 87, 0.12);
+}
+
+.bond-toast-decreased .bond-toast-track i {
+  background: linear-gradient(90deg, #8c4054, #c85a68);
+}
+
+.bond-toast-dismiss {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  background: transparent;
+  color: #9cacbf;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.bond-toast-heading {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding-right: 24px;
+}
+
+.bond-toast-heading strong {
+  overflow: hidden;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bond-toast-heading span {
+  flex: 0 0 auto;
+  color: #ff8799;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.bond-toast p {
+  margin: 5px 0 8px;
+  color: #dce5ef;
+  font-size: 0.78rem;
+}
+
+.bond-toast-track {
+  height: 11px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #253957;
+}
+
+.bond-toast-track i {
+  display: block;
+  width: var(--bond-to);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7189ff, #e94560);
+  box-shadow: 0 0 16px rgba(233, 69, 96, 0.52);
+  animation: bond-toast-stretch 900ms cubic-bezier(0.2, 0.9, 0.22, 1.16)
+    both;
+}
+
+.bond-toast-highlight .bond-toast-track i {
+  background: linear-gradient(90deg, #e94560, #f0b84f);
+}
+
+.bond-toast small {
+  display: block;
+  margin-top: 7px;
+  color: #9cacbf;
+  font-size: 0.68rem;
+}
+
+@keyframes bond-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}
+
+@keyframes bond-toast-stretch {
+  from {
+    width: var(--bond-from);
+  }
+  to {
+    width: var(--bond-to);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bond-toast,
+  .bond-toast-track i {
+    animation-duration: 0.01ms;
+  }
+}
+
 .settings-field select,
 .settings-field textarea,
 .settings-field input[type="password"],

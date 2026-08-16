@@ -36,6 +36,7 @@ interface SettingsPanelProps extends SettingsHook {
   screenVisionController: ScreenVisionController;
   onBackgroundImageChange: (file: File | null) => void;
   onAvatarPackageChange: (file: File | null) => void;
+  onResetKizunaData: () => Promise<void>;
 }
 
 const PROVIDERS: {
@@ -348,6 +349,7 @@ export function SettingsPanel({
   updateManneriLookbackWindow,
   updateManneriInterventionCooldownMs,
   updateManneriMinMessageLength,
+  updateKizunaEnabled,
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
@@ -358,6 +360,7 @@ export function SettingsPanel({
   screenVisionController,
   onBackgroundImageChange,
   onAvatarPackageChange,
+  onResetKizunaData,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
   const [systemPromptDraft, setSystemPromptDraft] = useState(
@@ -366,6 +369,9 @@ export function SettingsPanel({
   const committedEndpoint = settings.llm.endpoint || '';
   const [endpointDraft, setEndpointDraft] = useState(committedEndpoint);
   const [endpointError, setEndpointError] = useState('');
+  const [kizunaResetState, setKizunaResetState] = useState<
+    'idle' | 'confirming' | 'resetting' | 'success' | 'error'
+  >('idle');
 
   const commitSystemPrompt = () => {
     if (systemPromptDraft !== settings.llm.systemPrompt) {
@@ -801,6 +807,16 @@ export function SettingsPanel({
     }));
   };
 
+  const handleConfirmKizunaReset = async () => {
+    setKizunaResetState('resetting');
+    try {
+      await onResetKizunaData();
+      setKizunaResetState('success');
+    } catch {
+      setKizunaResetState('error');
+    }
+  };
+
   return (
     <div className="settings-panel">
       {/* LLM Section */}
@@ -910,6 +926,86 @@ export function SettingsPanel({
                 既定値を使用します。アバター固有の制御指示を削除すると、
                 表情連動に影響する場合があります。
               </p>
+            </div>
+
+            <div className="settings-field settings-kizuna-field">
+              <label htmlFor="kizuna-enabled">
+                <input
+                  id="kizuna-enabled"
+                  type="checkbox"
+                  checked={settings.kizuna.enabled}
+                  onChange={(event) =>
+                    updateKizunaEnabled(event.target.checked)
+                  }
+                  disabled={disabled}
+                />
+                視聴者ごとの親密度を記録する（Kizuna）
+              </label>
+              <p className="settings-field-hint">
+                フォーム入力、YouTube、Twitchを別の人物として記録し、応答前に
+                その視聴者との関係性をSystem Promptへ追加します。
+              </p>
+              <p className="settings-field-hint">
+                Kizunaを無効にしても、保存済みの絆データは残ります。
+              </p>
+              <div className="settings-kizuna-reset">
+                {kizunaResetState === 'confirming' ? (
+                  <div
+                    className="settings-kizuna-reset-confirmation"
+                    role="group"
+                    aria-label="絆データのリセット確認"
+                  >
+                    <p>本当に絆データをリセットしますか？</p>
+                    <div className="settings-kizuna-reset-actions">
+                      <button
+                        type="button"
+                        className="settings-action-button settings-kizuna-reset-button"
+                        onClick={() => void handleConfirmKizunaReset()}
+                        disabled={disabled}
+                      >
+                        リセットを実行
+                      </button>
+                      <button
+                        type="button"
+                        className="settings-clear-button"
+                        onClick={() => setKizunaResetState('idle')}
+                        disabled={disabled}
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="settings-action-button settings-kizuna-reset-button"
+                    onClick={() => setKizunaResetState('confirming')}
+                    disabled={disabled || kizunaResetState === 'resetting'}
+                  >
+                    {kizunaResetState === 'resetting'
+                      ? 'リセット中...'
+                      : '絆データをリセット'}
+                  </button>
+                )}
+                {kizunaResetState === 'success' && (
+                  <p
+                    className="settings-kizuna-reset-status is-success"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    絆データをリセットしました。
+                  </p>
+                )}
+                {kizunaResetState === 'error' && (
+                  <p
+                    className="settings-kizuna-reset-status is-error"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    保存データを削除できませんでした。ブラウザの保存設定を確認してください。
+                  </p>
+                )}
+              </div>
             </div>
 
             {isOpenAIGPT5Model && (

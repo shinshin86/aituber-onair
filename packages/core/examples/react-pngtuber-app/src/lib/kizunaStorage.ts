@@ -1,4 +1,4 @@
-export const PNGTUBER_KIZUNA_STORAGE_KEY = 'react-pngtuber-bond';
+export const KIZUNA_STORAGE_KEY = 'react-pngtuber-bond';
 
 interface KizunaStorageRemover {
   remove: (key: string) => Promise<void>;
@@ -27,18 +27,18 @@ export function tryCreateKizunaStorageProvider<T>(
   }
 }
 
-export async function clearPngTuberKizunaStorage(
+export async function clearKizunaStorage(
   storageProvider: KizunaStorageRemover | null,
 ): Promise<void> {
   if (!storageProvider) return;
-  await storageProvider.remove(PNGTUBER_KIZUNA_STORAGE_KEY);
+  await storageProvider.remove(KIZUNA_STORAGE_KEY);
 }
 
-export async function attemptPngTuberKizunaStorageClear<
+export async function attemptKizunaStorageClear<
   T extends KizunaStorageRemover,
 >(storageProvider: T | null): Promise<KizunaStorageClearResult<T>> {
   try {
-    await clearPngTuberKizunaStorage(storageProvider);
+    await clearKizunaStorage(storageProvider);
     return { storageCleared: true, storageProvider };
   } catch (error) {
     return { storageCleared: false, storageProvider, error };
