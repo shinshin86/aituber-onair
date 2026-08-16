@@ -8,6 +8,9 @@ const packageEntry = fileURLToPath(
 
 export default defineConfig({
   root: exampleRoot,
+  worker: {
+    format: 'es',
+  },
   resolve: {
     alias: {
       '@aituber-onair/transcription': packageEntry,

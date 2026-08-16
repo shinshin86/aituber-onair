@@ -8,7 +8,7 @@ const englishMessages = {
   displayLanguage: 'Language',
   heroTitle: 'Try realtime transcription',
   heroCopy:
-    'Transcribe microphone audio with Web Speech or OpenAI Realtime. Results are not submitted as chat messages automatically.',
+    'Transcribe microphone audio with Web Speech, OpenAI Realtime, or Local Whisper. Results are not submitted as chat messages automatically.',
   sessionSettings: 'Transcription settings',
   checkingSupport: 'Checking availability',
   browserSupported: 'Available',
@@ -38,6 +38,21 @@ const englishMessages = {
   contextPromptValue: 'An English conversation recorded through a microphone.',
   openAICost:
     'OpenAI usage may be billed while transcription is running, including during silence.',
+  localWhisperLanguage: 'Language hint',
+  localWhisperLanguageHint:
+    'Optional BCP 47 language code. Leave blank for automatic detection.',
+  localWhisperSilence: 'End silence (ms)',
+  localWhisperSilenceHint:
+    'Minimum 150 ms. Lower values finalize speech sooner.',
+  localWhisperModel: 'Model',
+  localWhisperModelTinyHint:
+    'Lightweight, about 122 MB, with lower recognition quality.',
+  localWhisperModelBaseHint:
+    'About 209 MB, balancing recognition quality and speed.',
+  localWhisperModelSmallHint:
+    'About 589 MB, practical recognition quality; inference can be slow depending on the GPU.',
+  localWhisperNotice:
+    'WebGPU is required. Larger models download more data on first use and infer more slowly. Microphone audio stays in this browser.',
   liveOutput: 'Transcription results',
   startMicrophone: 'Start transcription',
   stop: 'Stop',
@@ -52,10 +67,11 @@ const englishMessages = {
   stateStopping: 'Stopping',
   stateError: 'Error',
   stateDisposed: 'Disposed',
+  progressDownloadModel: 'Downloading selected model (first use only)',
+  progressInitializeModel: 'Initializing model',
   errorUnsupportedProvider:
     'The selected transcription provider is unavailable in this browser.',
-  errorInsecureContext:
-    'OpenAI Realtime transcription requires HTTPS or localhost.',
+  errorInsecureContext: 'Microphone transcription requires HTTPS or localhost.',
   errorPermissionDenied: 'Microphone permission was denied.',
   errorNoSpeech: 'No speech was detected.',
   errorAuthenticationFailed:
@@ -78,7 +94,7 @@ const japaneseMessages: Messages = {
   displayLanguage: '表示言語',
   heroTitle: 'リアルタイム文字起こしを試す',
   heroCopy:
-    'Web SpeechまたはOpenAI Realtimeで、マイク音声をリアルタイムに文字起こしできます。結果がチャットへ自動送信されることはありません。',
+    'Web Speech、OpenAI Realtime、Local Whisperで、マイク音声をリアルタイムに文字起こしできます。結果がチャットへ自動送信されることはありません。',
   sessionSettings: '文字起こし設定',
   checkingSupport: '利用可否を確認中',
   browserSupported: '利用可能',
@@ -106,6 +122,18 @@ const japaneseMessages: Messages = {
   contextPromptValue: 'マイクから入力された日本語の会話です。',
   openAICost:
     '文字起こし中は、無音の時間を含めてOpenAIの利用料金が発生する場合があります。',
+  localWhisperLanguage: '言語ヒント',
+  localWhisperLanguageHint:
+    '任意のBCP 47言語コードです。空欄にすると自動判定します。',
+  localWhisperSilence: '発話終了の無音（ms）',
+  localWhisperSilenceHint: '最小150msです。小さくすると発話を早く確定します。',
+  localWhisperModel: 'モデル',
+  localWhisperModelTinyHint: '軽量・約122MB・認識品質は低めです。',
+  localWhisperModelBaseHint: '約209MB・認識品質と速度の中間です。',
+  localWhisperModelSmallHint:
+    '約589MB・実用品質ですが、GPUによっては推論が遅くなります。',
+  localWhisperNotice:
+    'WebGPUが必要です。大きいモデルほど初回ダウンロード量が増え、推論も遅くなります。マイク音声がブラウザ外へ送信されることはありません。',
   liveOutput: '文字起こし結果',
   startMicrophone: '文字起こしを開始',
   stop: '停止',
@@ -120,10 +148,12 @@ const japaneseMessages: Messages = {
   stateStopping: '停止中',
   stateError: 'エラー',
   stateDisposed: '終了済み',
+  progressDownloadModel: '選択したモデルをダウンロード中（初回のみ）',
+  progressInitializeModel: 'モデルを初期化中',
   errorUnsupportedProvider:
     '選択した文字起こし方式は、このブラウザでは利用できません。',
   errorInsecureContext:
-    'OpenAI Realtimeを使うには、HTTPSまたはlocalhostでこのページを開いてください。',
+    'マイク文字起こしを使うには、HTTPSまたはlocalhostでこのページを開いてください。',
   errorPermissionDenied:
     'マイクを使用できません。ブラウザの権限設定を確認してください。',
   errorNoSpeech: '音声を検出できませんでした。',

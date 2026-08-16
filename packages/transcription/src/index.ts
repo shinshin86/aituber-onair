@@ -2,6 +2,8 @@ export { createRealtimeTranscriptionSession } from './createRealtimeTranscriptio
 export { TranscriptionSessionError } from './errors';
 export { isTranscriptionProviderSupported } from './support';
 export type {
+  LocalWhisperModelSize,
+  LocalWhisperTranscriptionOptions,
   OpenAIRealtimeAuth,
   OpenAIRealtimeTranscriptionOptions,
   RealtimeTranscriptionOptions,
@@ -12,6 +14,7 @@ export type {
   TranscriptionError,
   TranscriptionErrorCode,
   TranscriptionProviderName,
+  TranscriptionProgress,
   TranscriptionState,
   WebSpeechTranscriptionOptions,
 } from './types';

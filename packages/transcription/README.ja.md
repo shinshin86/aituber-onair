@@ -9,15 +9,15 @@ AITuber OnAir 向けの、プロバイダーに依存しないリアルタイム
 > このパッケージはα版です。安定版になるまでに公開 API が変更される可能性が
 > あります。
 
-初期実装では Web Speech と、ブラウザ WebRTC を利用する OpenAI Realtime の
-文字起こしに対応しています。どちらのプロバイダーも、発話ごとに同じ形式の
-スナップショットイベントを発行します。ファイルの文字起こし、サーバー WebSocket
-入力、チャットへの自動送信、プロバイダーのフォールバックは、意図的に対象外と
-しています。
+Web Speech、ブラウザ WebRTC を利用する OpenAI Realtime、WebGPU でローカル推論する
+Whisper Tiny、Base、Small に対応しています。すべてのプロバイダーが、発話ごとに
+同じ形式のスナップショットイベントを発行します。ファイルの文字起こし、サーバー
+WebSocket入力、チャットへの自動送信、プロバイダーのフォールバックは、意図的に
+対象外です。
 
 ## ブラウザサンプル
 
-AITuber OnAir Core に依存せず、両方のプロバイダーを試せるフレームワーク非依存の
+AITuber OnAir Core に依存せず、3つのプロバイダーを試せるフレームワーク非依存の
 ブラウザサンプルが含まれています。
 
 ```sh
@@ -25,10 +25,12 @@ npm -w @aituber-onair/transcription run example:dev
 ```
 
 表示された localhost の URL を開き、セッション開始時にマイクの使用を許可して
-ください。Web Speech にキーは不要です。OpenAI を利用する場合は、エンドユーザー
-自身が所有する API キーを画面に入力します。サンプルはブラウザから OpenAI へ直接
-接続するため、共有端末での利用は避けてください。画面は日本語・英語を切り替えられ、
-初期表示にはブラウザの言語設定が使われます。詳細は
+ください。Web Speech と Local Whisper にキーは不要です。OpenAI を利用する場合は、
+エンドユーザー自身が所有する API キーを画面に入力します。サンプルはブラウザから
+OpenAI へ直接接続するため、共有端末での利用は避けてください。Local Whisper には
+WebGPU が必要で、初回開始時にモデルとランタイムをダウンロードしてブラウザに
+キャッシュします。画面は日本語・英語を切り替えられ、初期表示にはブラウザの言語
+設定が使われます。詳細は
 [サンプルの README](https://github.com/shinshin86/aituber-onair/blob/main/packages/transcription/examples/browser-basic/README.md)
 を参照してください。
 
@@ -57,6 +59,88 @@ await session.start();
 await session.stop();
 await session.dispose();
 ```
+
+進捗イベントを発行するのは、時間のかかる初期化を伴うプロバイダーだけです。現在は
+`local-whisper` のみが `onProgress` を発行し、Web Speech と OpenAI Realtime は
+発行しません。
+
+### Local Whisper
+
+Local Whisper は選択した Whisper モデルをモジュールWorker内で実行し、確定結果のみを
+発行します。
+
+```ts
+import { createRealtimeTranscriptionSession } from '@aituber-onair/transcription';
+
+const session = createRealtimeTranscriptionSession({
+  provider: 'local-whisper',
+  model: 'tiny',
+  language: 'ja-JP',
+  silenceDurationMs: 500,
+});
+
+session.onTranscript(({ text, isFinal }) => {
+  if (isFinal) {
+    console.log(text);
+  }
+});
+
+session.onProgress(({ phase, progress }) => {
+  updateLoadingIndicator(phase, progress);
+});
+
+session.onError((error) => {
+  console.error(error.code, error.message);
+});
+
+await session.start();
+
+// Later:
+await session.stop();
+await session.dispose();
+```
+
+Local Whisper の認識精度は Web Speech / OpenAI Realtime より劣ります。APIキーが
+不要で、マイク音声を外部サービスへ送信しないことを優先する用途向けです。認識品質が
+必要な場合は `small` を選択してください。
+
+| モデル | 進捗で報告された初回DL量 | 品質の目安 | 推論（日本語 / 英語） |
+| --- | ---: | --- | ---: |
+| `tiny`（既定） | 約122 MB | 低め | 237.3 ms / 203.0 ms |
+| `base` | 約209 MB | 中間 | 255.9 ms / 311.2 ms |
+| `small` | 約589 MB | 実用品質 | 574.7 ms / 551.6 ms |
+
+Chrome/WebGPUで、同じ短い日本語・英語マイククリップを使って計測しました。推論時間は
+音声取得/VADを含まず、GPUによって変わります。初回ダウンロード時間はネットワーク速度に
+依存し、数百MBでは数分かかる場合があります。キャッシュ後の初期化は、Tinyで約0.9秒、
+Baseで約1.2秒、Smallで約2.5秒でした。ダウンロード量はモデルファイルごとに最後に報告された
+`totalBytes` の合計で、進捗を報告しない資産は含みません。
+
+要件と動作は次のとおりです。
+
+- 安全なブラウザコンテキスト（HTTPS または localhost）、マイク権限、Web Audio、
+  AudioWorklet、モジュールWorker、WebGPU が必要です。
+- API キーは不要です。WebGPU の初期化に失敗しても、リモートプロバイダーや WASM
+  推論へ自動的にフォールバックしません。
+- 初回利用時に、選択したモデル資産を Hugging Face Hub から、ONNX Runtime
+  WebAssemblyファイルを jsDelivr からダウンロードし、ブラウザにキャッシュします。
+  初回のダウンロードと推論は、大きいモデルほど時間がかかります。
+- マイク音声はブラウザ内で処理され、ブラウザ外へ送信されません。このパッケージは
+  音声や文字起こし結果を永続化しません。
+- `language` には BCP 47 形式のヒントを任意指定できます。発話終了を判定する
+  `silenceDurationMs` の既定値は500msで、最小150msまで下げられます。
+- `model` には `tiny`、`base`、`small` を指定でき、既定値は `tiny` です。すべての
+  サイズで、モデルのdtypeはfp32 encoderとq4 merged decoderに固定されています。
+- ダウンロード進捗には、`file`、`loadedBytes`、`totalBytes` と、0〜1に正規化した
+  `progress` が含まれる場合があります。初期化・準備完了フェーズにバイト数は
+  必須ではありません。
+
+通常は ESM エントリからの相対URLで `dist/local-whisper.worker.js` を解決します。
+パッケージを事前バンドルする環境でこの資産を解決できない場合は、高度な設定である
+`workerUrl` に同じモジュールWorker資産または同等のビルドを指定してください。この
+ブラウザサンプルでは、そのために Vite の `?worker&url` import を使っています。
+
+### OpenAI Realtime
 
 OpenAI Realtime は `gpt-live-transcribe` とブラウザ WebRTC を使用します。この
 文字起こしモデルはサーバー側のターン検出を受け付けないため、ブラウザの Web Audio
@@ -118,16 +202,17 @@ OpenAI は、標準 API キーをサーバーに保管し、有効期間の短�
 
 ## プロバイダーの違い
 
-| 機能 | Web Speech | OpenAI Realtime |
-| --- | --- | --- |
-| 途中経過のスナップショット | 対応 | 対応 |
-| 複数の想定言語 | 非対応 | 対応 |
-| キーワードと文脈プロンプト | 非対応 | 対応 |
-| 遅延の設定 | 非対応 | 対応 |
-| 発話境界の判定 | ブラウザ実装 | ブラウザの音量検出 |
+| 機能 | Web Speech | OpenAI Realtime | Local Whisper |
+| --- | --- | --- | --- |
+| 途中経過のスナップショット | 対応 | 対応 | 非対応 |
+| 複数の想定言語 | 非対応 | 対応 | 非対応 |
+| キーワードと文脈プロンプト | 非対応 | 対応 | 非対応 |
+| 遅延の設定 | 非対応 | 対応 | 対応 |
+| 発話境界の判定 | ブラウザ実装 | ブラウザの音量検出 | ブラウザのPCM/VAD |
 
-どちらのプロバイダーにも、対応ブラウザとマイクの使用許可が必要です。OpenAI
-WebRTC では、Web Audio API と HTTPS または localhost も必要です。Web Speech の
-利用可否と動作はブラウザによって異なります。無音中でも待機によって OpenAI の
-利用料金が発生する可能性があるため、アプリケーションでは状態を明確に表示し、
-未使用時にはセッションを停止してください。
+すべてのプロバイダーに、対応ブラウザとマイクの使用許可が必要です。OpenAI WebRTC と
+Local Whisper では Web Audio API と HTTPS または localhost も必要で、Local
+Whisper はさらに WebGPU を必要とします。Web Speech の利用可否と動作はブラウザに
+よって異なります。無音中でも待機によって OpenAI の利用料金が発生する可能性がある
+ため、アプリケーションでは状態を明確に表示し、未使用時にはセッションを停止して
+ください。
