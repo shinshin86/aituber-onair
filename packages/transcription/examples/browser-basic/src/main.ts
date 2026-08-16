@@ -9,6 +9,7 @@ import {
   type TranscriptionProviderName,
   type TranscriptionState,
 } from '@aituber-onair/transcription';
+import localWhisperWorkerUrl from '../../../src/providers/local-whisper.worker.ts?worker&url';
 import {
   detectDisplayLanguage,
   isDisplayLanguage,
@@ -37,6 +38,11 @@ const openAILanguages = element<HTMLInputElement>('#openai-languages');
 const openAIKeywords = element<HTMLInputElement>('#openai-keywords');
 const openAIPrompt = element<HTMLTextAreaElement>('#openai-prompt');
 const openAIDelay = element<HTMLSelectElement>('#openai-delay');
+const localWhisperFields = element<HTMLDivElement>('#local-whisper-fields');
+const localWhisperLanguage = element<HTMLInputElement>(
+  '#local-whisper-language'
+);
+const localWhisperSilence = element<HTMLInputElement>('#local-whisper-silence');
 const stateBadge = element<HTMLSpanElement>('#state-badge');
 const startButton = element<HTMLButtonElement>('#start-button');
 const stopButton = element<HTMLButtonElement>('#stop-button');
@@ -180,26 +186,34 @@ function handleTranscript(update: TranscriptUpdate): void {
 }
 
 function createSession(): RealtimeTranscriptionSession {
-  if (selectedProvider() === 'web-speech') {
-    return createRealtimeTranscriptionSession({
-      provider: 'web-speech',
-      language: webSpeechLanguage.value.trim() || 'ja-JP',
-      continuous: true,
-    });
+  switch (selectedProvider()) {
+    case 'web-speech':
+      return createRealtimeTranscriptionSession({
+        provider: 'web-speech',
+        language: webSpeechLanguage.value.trim() || 'ja-JP',
+        continuous: true,
+      });
+    case 'openai-realtime':
+      return createRealtimeTranscriptionSession({
+        provider: 'openai-realtime',
+        auth: {
+          type: 'browser-api-key',
+          getApiKey: async () => openAIApiKey.value,
+          acknowledgeBrowserKeyRisk: true,
+        },
+        languages: commaSeparated(openAILanguages.value),
+        keywords: commaSeparated(openAIKeywords.value),
+        prompt: openAIPrompt.value,
+        delay: openAIDelay.value as TranscriptionDelay,
+      });
+    case 'local-whisper':
+      return createRealtimeTranscriptionSession({
+        provider: 'local-whisper',
+        language: localWhisperLanguage.value.trim() || undefined,
+        silenceDurationMs: Number(localWhisperSilence.value),
+        workerUrl: localWhisperWorkerUrl,
+      });
   }
-
-  return createRealtimeTranscriptionSession({
-    provider: 'openai-realtime',
-    auth: {
-      type: 'browser-api-key',
-      getApiKey: async () => openAIApiKey.value,
-      acknowledgeBrowserKeyRisk: true,
-    },
-    languages: commaSeparated(openAILanguages.value),
-    keywords: commaSeparated(openAIKeywords.value),
-    prompt: openAIPrompt.value,
-    delay: openAIDelay.value as TranscriptionDelay,
-  });
 }
 
 async function disposeSession(): Promise<void> {
@@ -252,9 +266,11 @@ function clearTranscripts(): void {
 function syncSettings(): void {
   const provider = selectedProvider();
   const openAISelected = provider === 'openai-realtime';
+  const localWhisperSelected = provider === 'local-whisper';
 
-  webSpeechFields.hidden = openAISelected;
+  webSpeechFields.hidden = openAISelected || localWhisperSelected;
   openAIFields.hidden = !openAISelected;
+  localWhisperFields.hidden = !localWhisperSelected;
 
   const supported = isTranscriptionProviderSupported(provider);
   supportBadge.textContent = translate(

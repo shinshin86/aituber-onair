@@ -1,3 +1,5 @@
+import { VoiceActivityTracker } from './VoiceActivityTracker';
+
 const SAMPLE_INTERVAL_MS = 50;
 const RMS_THRESHOLD = 0.015;
 const MIN_SPEECH_DURATION_MS = 150;
@@ -26,15 +28,26 @@ export class BrowserVoiceActivityDetector {
   private analyserNode: AnalyserNode | null = null;
   private samples: Float32Array<ArrayBuffer> | null = null;
   private sampleTimer: ReturnType<typeof setInterval> | null = null;
-  private speechStartedAt: number | null = null;
-  private speechConfirmed = false;
-  private silenceStartedAt: number | null = null;
+  private lastSampleAtMs: number | null = null;
+  private readonly tracker: VoiceActivityTracker;
   private stopped = false;
 
   constructor(
     private readonly stream: MediaStream,
     private readonly onSpeechEnd: () => void
-  ) {}
+  ) {
+    this.tracker = new VoiceActivityTracker(
+      {
+        rmsThreshold: RMS_THRESHOLD,
+        minSpeechDurationMs: MIN_SPEECH_DURATION_MS,
+        silenceDurationMs: SILENCE_DURATION_MS,
+      },
+      {
+        onSpeechStart: () => undefined,
+        onSpeechEnd: this.onSpeechEnd,
+      }
+    );
+  }
 
   async start(): Promise<void> {
     if (this.sampleTimer) return;
@@ -78,14 +91,14 @@ export class BrowserVoiceActivityDetector {
   }
 
   hasPendingSpeech(): boolean {
-    return this.speechStartedAt !== null || this.speechConfirmed;
+    return this.tracker.hasPendingSpeech();
   }
 
   stop(): boolean {
     const hasPendingSpeech = this.hasPendingSpeech();
     this.stopped = true;
     this.releaseAudioResources();
-    this.resetTurn();
+    this.tracker.reset();
     return hasPendingSpeech;
   }
 
@@ -93,38 +106,17 @@ export class BrowserVoiceActivityDetector {
     if (!this.analyserNode || !this.samples) return;
     this.analyserNode.getFloatTimeDomainData(this.samples);
 
+    const sampledAtMs = Date.now();
+    const durationMs =
+      this.lastSampleAtMs === null
+        ? SAMPLE_INTERVAL_MS
+        : sampledAtMs - this.lastSampleAtMs;
+    this.lastSampleAtMs = sampledAtMs;
+
     let sumOfSquares = 0;
     for (const sample of this.samples) sumOfSquares += sample * sample;
     const rms = Math.sqrt(sumOfSquares / this.samples.length);
-    const now = Date.now();
-
-    if (rms >= RMS_THRESHOLD) {
-      if (this.speechStartedAt === null) this.speechStartedAt = now;
-      if (now - this.speechStartedAt >= MIN_SPEECH_DURATION_MS) {
-        this.speechConfirmed = true;
-      }
-      this.silenceStartedAt = null;
-      return;
-    }
-
-    if (!this.speechConfirmed) {
-      this.speechStartedAt = null;
-      return;
-    }
-    if (this.silenceStartedAt === null) {
-      this.silenceStartedAt = now;
-      return;
-    }
-    if (now - this.silenceStartedAt < SILENCE_DURATION_MS) return;
-
-    this.resetTurn();
-    this.onSpeechEnd();
-  }
-
-  private resetTurn(): void {
-    this.speechStartedAt = null;
-    this.speechConfirmed = false;
-    this.silenceStartedAt = null;
+    this.tracker.pushFrame(rms, durationMs);
   }
 
   private releaseAudioResources(): void {
@@ -137,6 +129,7 @@ export class BrowserVoiceActivityDetector {
     this.sourceNode = null;
     this.analyserNode = null;
     this.samples = null;
+    this.lastSampleAtMs = null;
 
     const audioContext = this.audioContext;
     this.audioContext = null;

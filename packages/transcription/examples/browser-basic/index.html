@@ -7,6 +7,7 @@
       name="description"
       content="Minimal browser example for @aituber-onair/transcription"
     />
+    <link rel="icon" href="data:," />
     <title>AITuber OnAir Transcription</title>
   </head>
   <body>
@@ -24,8 +25,9 @@
         </div>
         <h1 data-i18n="heroTitle">Try realtime transcription</h1>
         <p class="hero-copy" data-i18n="heroCopy">
-          Transcribe microphone audio with Web Speech or OpenAI Realtime.
-          Results are not submitted as chat messages automatically.
+          Transcribe microphone audio with Web Speech, OpenAI Realtime, or
+          Local Whisper. Results are not submitted as chat messages
+          automatically.
         </p>
       </header>
 
@@ -47,6 +49,7 @@
           <select id="provider">
             <option value="web-speech">Web Speech</option>
             <option value="openai-realtime">OpenAI Realtime</option>
+            <option value="local-whisper">Local Whisper</option>
           </select>
         </label>
 
@@ -128,6 +131,36 @@ An English conversation recorded through a microphone.</textarea
           <p class="notice cost" data-i18n="openAICost">
             OpenAI usage may be billed while transcription is running,
             including during silence.
+          </p>
+        </div>
+
+        <div id="local-whisper-fields" hidden>
+          <div class="field-grid">
+            <label class="field">
+              <span data-i18n="localWhisperLanguage">Language hint</span>
+              <input id="local-whisper-language" value="ja-JP" />
+              <small data-i18n="localWhisperLanguageHint">
+                Optional BCP 47 language code. Leave blank for automatic
+                detection.
+              </small>
+            </label>
+            <label class="field">
+              <span data-i18n="localWhisperSilence">End silence (ms)</span>
+              <input
+                id="local-whisper-silence"
+                type="number"
+                min="150"
+                step="50"
+                value="500"
+              />
+              <small data-i18n="localWhisperSilenceHint">
+                Minimum 150 ms. Lower values finalize speech sooner.
+              </small>
+            </label>
+          </div>
+          <p class="notice info" data-i18n="localWhisperNotice">
+            WebGPU is required. The first start downloads about 120 MB and
+            caches it in the browser. Microphone audio stays in this browser.
           </p>
         </div>
       </section>

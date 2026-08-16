@@ -2,6 +2,7 @@ export { createRealtimeTranscriptionSession } from './createRealtimeTranscriptio
 export { TranscriptionSessionError } from './errors';
 export { isTranscriptionProviderSupported } from './support';
 export type {
+  LocalWhisperTranscriptionOptions,
   OpenAIRealtimeAuth,
   OpenAIRealtimeTranscriptionOptions,
   RealtimeTranscriptionOptions,

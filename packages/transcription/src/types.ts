@@ -1,4 +1,7 @@
-export type TranscriptionProviderName = 'web-speech' | 'openai-realtime';
+export type TranscriptionProviderName =
+  | 'web-speech'
+  | 'openai-realtime'
+  | 'local-whisper';
 
 export interface TranscriptUpdate {
   utteranceId: string;
@@ -71,9 +74,40 @@ export interface OpenAIRealtimeTranscriptionOptions {
   delay?: TranscriptionDelay;
 }
 
+export interface LocalWhisperTranscriptionOptions {
+  provider: 'local-whisper';
+
+  /**
+   * Optional language hint.
+   *
+   * Accepts BCP 47-style input such as "ja-JP" or "en-US". The
+   * implementation normalizes this before passing it to Whisper. When omitted,
+   * Whisper performs language detection.
+   */
+  language?: string;
+
+  /**
+   * Amount of silence used to detect the end of an utterance.
+   *
+   * Default: 500
+   * Minimum: 150
+   */
+  silenceDurationMs?: number;
+
+  /**
+   * Advanced: override the URL of the local Whisper worker asset.
+   * Use this when your bundler cannot resolve the worker file that ships with
+   * this package (for example when the package is pre-bundled by a dev server).
+   * The URL must point to the `local-whisper.worker.js` asset built by this
+   * package or an equivalent module worker.
+   */
+  workerUrl?: string | URL;
+}
+
 export type RealtimeTranscriptionOptions =
   | WebSpeechTranscriptionOptions
-  | OpenAIRealtimeTranscriptionOptions;
+  | OpenAIRealtimeTranscriptionOptions
+  | LocalWhisperTranscriptionOptions;
 
 export interface RealtimeTranscriptionSession {
   readonly provider: TranscriptionProviderName;

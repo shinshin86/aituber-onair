@@ -9,14 +9,15 @@ Provider-neutral realtime microphone transcription for AITuber OnAir.
 > This package is an alpha release. Its public API may change before a stable
 > release.
 
-The initial implementation supports Web Speech and OpenAI Realtime
-transcription over browser WebRTC. Both providers emit the same per-utterance
-snapshot events. File transcription, server WebSocket input, automatic chat
-submission, and provider fallback are intentionally out of scope.
+The package supports Web Speech, OpenAI Realtime transcription over browser
+WebRTC, and local Whisper Tiny inference through WebGPU. All providers emit the
+same per-utterance snapshot events. File transcription, server WebSocket input,
+automatic chat submission, and provider fallback are intentionally out of
+scope.
 
 ## Browser example
 
-The package includes a framework-free browser example that exercises both
+The package includes a framework-free browser example that exercises all three
 providers without depending on AITuber OnAir Core:
 
 ```sh
@@ -24,10 +25,12 @@ npm -w @aituber-onair/transcription run example:dev
 ```
 
 Open the displayed localhost URL and grant microphone permission when starting
-a session. Web Speech needs no key. For OpenAI, enter an end-user-owned API key
-in the page. The sample connects to OpenAI directly from the browser, so avoid
-using it on a shared device. The interface supports English and Japanese and
-selects the initial display from the browser language. See the
+a session. Web Speech and Local Whisper need no key. For OpenAI, enter an
+end-user-owned API key in the page. The sample connects to OpenAI directly from
+the browser, so avoid using it on a shared device. Local Whisper requires
+WebGPU; its first start downloads model/runtime assets and caches them in the
+browser. The interface supports English and Japanese and selects the initial
+display from the browser language. See the
 [example README](https://github.com/shinshin86/aituber-onair/blob/main/packages/transcription/examples/browser-basic/README.md)
 for details.
 
@@ -56,6 +59,60 @@ await session.start();
 await session.stop();
 await session.dispose();
 ```
+
+### Local Whisper
+
+Local Whisper runs Whisper Tiny in a module worker and emits final transcripts
+only:
+
+```ts
+import { createRealtimeTranscriptionSession } from '@aituber-onair/transcription';
+
+const session = createRealtimeTranscriptionSession({
+  provider: 'local-whisper',
+  language: 'ja-JP',
+  silenceDurationMs: 500,
+});
+
+session.onTranscript(({ text, isFinal }) => {
+  if (isFinal) {
+    console.log(text);
+  }
+});
+
+session.onError((error) => {
+  console.error(error.code, error.message);
+});
+
+await session.start();
+
+// Later:
+await session.stop();
+await session.dispose();
+```
+
+Requirements and behavior:
+
+- A secure browser context (HTTPS or localhost), microphone access, Web Audio,
+  AudioWorklet, module workers, and WebGPU are required.
+- No API key is required. There is no automatic fallback to a remote provider
+  or WASM inference when WebGPU initialization fails.
+- On first use, model assets are downloaded from the Hugging Face Hub and ONNX
+  Runtime WebAssembly files are downloaded from jsDelivr. These assets are
+  cached by the browser. The initial download is approximately 120 MB.
+- Microphone audio is processed in the browser and never leaves the browser.
+  The package does not persist audio or transcripts.
+- `language` accepts a BCP 47-style hint and is optional. The default 500 ms
+  `silenceDurationMs` can be reduced to a minimum of 150 ms for faster turn
+  completion.
+
+The package normally resolves `dist/local-whisper.worker.js` relative to its
+ESM entry. If a bundler pre-bundles the package and cannot resolve that asset,
+set the advanced `workerUrl` option to the same module worker asset or an
+equivalent build. This browser example uses Vite's `?worker&url` import for that
+reason.
+
+### OpenAI Realtime
 
 OpenAI Realtime uses `gpt-live-transcribe` and browser WebRTC. Because this
 transcription model does not accept server turn detection, the package detects
@@ -114,16 +171,17 @@ are returned as typed errors and never trigger an authentication fallback.
 
 ## Provider differences
 
-| Capability | Web Speech | OpenAI Realtime |
-| --- | --- | --- |
-| Interim snapshots | Yes | Yes |
-| Multiple expected languages | No | Yes |
-| Keywords and context prompt | No | Yes |
-| Configurable delay | No | Yes |
-| Utterance boundary | Browser implementation | Browser audio-level detection |
+| Capability | Web Speech | OpenAI Realtime | Local Whisper |
+| --- | --- | --- | --- |
+| Interim snapshots | Yes | Yes | No |
+| Multiple expected languages | No | Yes | No |
+| Keywords and context prompt | No | Yes | No |
+| Configurable delay | No | Yes | Yes |
+| Utterance boundary | Browser implementation | Browser audio-level detection | Browser PCM/VAD |
 
-Both providers require a supported browser and microphone permission. OpenAI
-WebRTC also requires the Web Audio API and HTTPS or localhost. Web Speech
-availability and behavior vary by browser. Listening can incur OpenAI usage
-charges even during silence, so applications should expose state clearly and
-stop sessions when unused.
+All providers require a supported browser and microphone permission. OpenAI
+WebRTC and Local Whisper also require the Web Audio API and HTTPS or localhost;
+Local Whisper additionally requires WebGPU. Web Speech availability and
+behavior vary by browser. Listening can incur OpenAI usage charges even during
+silence, so applications should expose state clearly and stop sessions when
+unused.

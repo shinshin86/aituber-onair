@@ -25,5 +25,9 @@ describe('browser example i18n', () => {
       'An English conversation recorded through a microphone.',
       'マイクから入力された日本語の会話です。',
     ]);
+    expect(translate('ja', 'localWhisperNotice')).toContain('約120MB');
+    expect(translate('en', 'localWhisperNotice')).toContain(
+      'Microphone audio stays in this browser.'
+    );
   });
 });
