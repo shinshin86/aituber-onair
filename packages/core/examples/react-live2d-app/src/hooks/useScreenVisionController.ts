@@ -51,7 +51,7 @@ export function useScreenVisionController({
 
   const refreshDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) {
-      setStatusMessage('このブラウザではカメラ入力を利用できません。');
+      setStatusMessage('Este navegador no soporta entrada de cámara.');
       return;
     }
 
@@ -78,7 +78,7 @@ export function useScreenVisionController({
 
   const startStream = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
-      setStatusMessage('このブラウザではカメラ入力を利用できません。');
+      setStatusMessage('Este navegador no soporta entrada de cámara.');
       onEnabledChange(false);
       return;
     }
@@ -96,13 +96,13 @@ export function useScreenVisionController({
       video.srcObject = nextStream;
       await video.play();
       setStream(nextStream);
-      setStatusMessage('プレビューを開始しました。');
+      setStatusMessage('Vista previa iniciada.');
       await refreshDevices();
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : 'カメラを開始できませんでした。';
+          : 'No se pudo iniciar la cámara.';
       setStatusMessage(message);
       onEnabledChange(false);
     }
@@ -121,21 +121,21 @@ export function useScreenVisionController({
 
     const video = captureVideoRef.current;
     if (!video || !stream) {
-      setStatusMessage('プレビューを開始してください。');
+      setStatusMessage('Inicia la vista previa primero.');
       return;
     }
 
     const imageDataUrl = captureVideoFrame(video);
     if (!imageDataUrl) {
-      setStatusMessage('映像フレームを取得できませんでした。');
+      setStatusMessage('No se pudo capturar el frame de video.');
       return;
     }
 
-    setStatusMessage('画面を送信しています...');
+    setStatusMessage('Enviando pantalla...');
     captureRunningRef.current = true;
     try {
       await onCapture(imageDataUrl, settings.prompt);
-      setStatusMessage('画面を送信しました。');
+      setStatusMessage('Pantalla enviada.');
     } finally {
       captureRunningRef.current = false;
     }

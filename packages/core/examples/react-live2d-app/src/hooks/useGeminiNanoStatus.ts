@@ -61,7 +61,7 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
         if (!cancelled) {
           setStatus('unavailable');
           setStatusText(
-            'Chrome 138+ で Built-in AI のフラグを有効にしてください。',
+            'Habilita el flag de IA integrada en Chrome 138+.',
           );
         }
         return;
@@ -75,25 +75,25 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
 
         if (result === 'available') {
           setStatus('available');
-          setStatusText('Gemini Nano は利用可能です。');
+          setStatusText('Gemini Nano está disponible.');
         } else if (result === 'downloading') {
           setStatus('downloading');
-          setStatusText('Gemini Nano モデルをダウンロード中です。');
+          setStatusText('Descargando modelo Gemini Nano...');
         } else if (result === 'downloadable') {
           setStatus('downloadable');
           setStatusText(
-            'Gemini Nano モデルの準備が必要です。「Prepare Model」を押してください。',
+            'Se requiere preparar el modelo Gemini Nano. Presiona «Prepare Model».',
           );
         } else {
           setStatus('unavailable');
           setStatusText(
-            'Chrome 138+ で Built-in AI のフラグを有効にしてください。',
+            'Habilita el flag de IA integrada en Chrome 138+.',
           );
         }
       } catch {
         if (!cancelled) {
           setStatus('error');
-          setStatusText('Built-in AI の状態確認に失敗しました。');
+          setStatusText('Error al verificar estado de IA integrada.');
         }
       }
     }
@@ -117,7 +117,7 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
     preparingRef.current = true;
     setIsPreparing(true);
     setStatus('downloading');
-    setStatusText('Gemini Nano モデルをダウンロード中です。');
+    setStatusText('Descargando modelo Gemini Nano...');
     setDownloadProgress(0);
 
     lm.create({
@@ -138,7 +138,7 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
             const progress = Math.round((event.loaded || 0) * 100);
             setDownloadProgress(progress);
             setStatusText(
-              `Gemini Nano モデルをダウンロード中です。${progress}%`,
+              `Descargando modelo Gemini Nano: ${progress}%`,
             );
           },
         );
@@ -154,7 +154,7 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
           return;
         }
         setStatus('available');
-        setStatusText('Gemini Nano は利用可能です。');
+        setStatusText('Gemini Nano está disponible.');
         setDownloadProgress(null);
       })
       .catch(() => {
@@ -162,7 +162,7 @@ export function useGeminiNanoStatus(enabled: boolean): GeminiNanoState {
           return;
         }
         setStatus('error');
-        setStatusText('Gemini Nano モデルの準備に失敗しました。');
+        setStatusText('Error preparando modelo Gemini Nano.');
         setDownloadProgress(null);
       })
       .finally(() => {

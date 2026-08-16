@@ -56,8 +56,8 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           onKeyDown={handleKeyDown}
           placeholder={
             speech.listening
-              ? '音声認識中...'
-              : 'メッセージを入力 (Enter で送信)'
+              ? 'Reconociendo voz...'
+              : 'Escribe mensaje (Enter para enviar)'
           }
           disabled={disabled}
           rows={2}
@@ -73,10 +73,10 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           disabled={!speech.supported}
           title={
             !speech.supported
-              ? 'お使いのブラウザは音声認識に対応していません（Chrome推奨）'
+              ? 'Tu navegador no soporta reconocimiento de voz (Chrome recomendado)'
               : speech.listening
-                ? '音声認識を停止'
-                : '音声認識を開始'
+                ? 'Detener reconocimiento'
+                : 'Iniciar reconocimiento'
           }
         >
           🎤
@@ -86,7 +86,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           className="send-button"
           disabled={disabled || !text.trim()}
         >
-          送信
+          Enviar
         </button>
       </div>
     </div>

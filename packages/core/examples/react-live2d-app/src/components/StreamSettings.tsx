@@ -15,16 +15,16 @@ const MANNERI_SIMILARITY_THRESHOLD_OPTIONS = [
 const MANNERI_LOOKBACK_WINDOW_OPTIONS = [4, 6, 8, 10, 15, 20] as const;
 const MANNERI_MIN_MESSAGE_LENGTH_OPTIONS = [4, 8, 10, 16, 24] as const;
 const VIEWER_BLOCK_DURATION_OPTIONS = [
-  { label: '1分', value: 60 * 1000 },
-  { label: '5分', value: 5 * 60 * 1000 },
-  { label: '10分', value: 10 * 60 * 1000 },
-  { label: '30分', value: 30 * 60 * 1000 },
+  { label: '1 minuto', value: 60 * 1000 },
+  { label: '5 minutos', value: 5 * 60 * 1000 },
+  { label: '10 minutos', value: 10 * 60 * 1000 },
+  { label: '30 minutos', value: 30 * 60 * 1000 },
 ] as const;
 const MANNERI_COOLDOWN_OPTIONS = [
-  { label: '1分', value: 60 * 1000 },
-  { label: '3分', value: 3 * 60 * 1000 },
-  { label: '5分', value: 5 * 60 * 1000 },
-  { label: '10分', value: 10 * 60 * 1000 },
+  { label: '1 minuto', value: 60 * 1000 },
+  { label: '3 minutos', value: 3 * 60 * 1000 },
+  { label: '5 minutos', value: 5 * 60 * 1000 },
+  { label: '10 minutos', value: 10 * 60 * 1000 },
 ] as const;
 
 interface StreamSettingsProps {
@@ -402,15 +402,15 @@ export function StreamSettings({
                   disabled={disabled}
                   style={{ marginRight: 8 }}
                 />
-                コメントインテリジェンス
+                Inteligencia de comentarios
               </label>
               <p className="settings-field-hint">
-                AIが処理中または発話中のライブコメントを一時的にためて、優先度付けと安全判定を行い、選ばれた1件だけを送信します。
+                AI procesando o hablando, guarda temporalmente comentarios en vivo para priorizar y seleccionar uno seguro.
               </p>
             </div>
 
             <div className="settings-field">
-              <label htmlFor="comment-intelligence-mode">解析モード</label>
+              <label htmlFor="comment-intelligence-mode">Modo análisis</label>
               <select
                 id="comment-intelligence-mode"
                 value={commentIntelligence.mode}
@@ -421,32 +421,32 @@ export function StreamSettings({
                 }
                 disabled={commentControlsDisabled}
               >
-                <option value="rules">ルール（APIキー不要）</option>
-                <option value="hybrid">ハイブリッド</option>
-                <option value="llm-assisted">LLMアシスト</option>
+                <option value="rules">Reglas (sin API key)</option>
+                <option value="hybrid">Híbrido</option>
+                <option value="llm-assisted">Asistido por LLM</option>
               </select>
               <p className="settings-field-hint">
-                ルールは追加のLLM呼び出しなしで動作します。ハイブリッドとLLMアシストはLLMタブのプロバイダーとモデルを使い、利用できない場合はルールに戻ります。
+                Reglas funciona sin llamada LLM adicional. Híbrido y Asistido usan el provider/modelo de la pestaña LLM, con fallback a reglas si no está disponible.
               </p>
               <div className="settings-mode-help">
                 <p>
-                  <strong>ルール:</strong>
-                  追加コストなしで固定ルールにより、安全判定、優先度付け、要約を行います。
+                  <strong>Reglas:</strong>
+                  Seguridad, prioridad y resumen mediante reglas fijas sin costo adicional.
                 </p>
                 <p>
-                  <strong>ハイブリッド:</strong>
-                  通常はルールで処理し、コメント数が設定値以上のときだけLLM解析を使います。
+                  <strong>Híbrido:</strong>
+                  Usa reglas normalmente, pero LLM cuando los comentarios superan el umbral configurado.
                 </p>
                 <p>
-                  <strong>LLMアシスト:</strong>
-                  毎回LLMでコメント群を分析します。文脈理解は強くなりますが、APIコストと遅延が増えます。
+                  <strong>Asistido por LLM:</strong>
+                  Analiza cada lote con LLM. Mejor comprensión contextual pero mayor costo y latencia.
                 </p>
               </div>
             </div>
 
             <div className="settings-field">
               <label htmlFor="comment-intelligence-stream-topic">
-                配信テーマ
+                Tema de transmisión
               </label>
               <input
                 id="comment-intelligence-stream-topic"
@@ -455,14 +455,14 @@ export function StreamSettings({
                 onChange={(event) =>
                   updateCommentIntelligenceStreamTopic(event.target.value)
                 }
-                placeholder="例: AIツール紹介"
+                placeholder="Ej: Herramientas IA"
                 disabled={commentControlsDisabled}
               />
             </div>
 
             <div className="settings-field">
               <label htmlFor="comment-intelligence-stream-title">
-                配信タイトル
+                Título de transmisión
               </label>
               <input
                 id="comment-intelligence-stream-title"
@@ -471,14 +471,14 @@ export function StreamSettings({
                 onChange={(event) =>
                   updateCommentIntelligenceStreamTitle(event.target.value)
                 }
-                placeholder="例: 今日の便利ツールを試す"
+                placeholder="Ej: Probando herramientas de hoy"
                 disabled={commentControlsDisabled}
               />
             </div>
 
             <div className="settings-field">
               <label htmlFor="comment-intelligence-topic-filter">
-                テーマ優先度
+                Prioridad de tema
               </label>
               <select
                 id="comment-intelligence-topic-filter"
@@ -491,14 +491,14 @@ export function StreamSettings({
                 }
                 disabled={commentControlsDisabled}
               >
-                <option value="off">通常</option>
-                <option value="prefer">テーマ重視</option>
-                <option value="require">テーマ外を拾わない</option>
+                <option value="off">Normal</option>
+                <option value="prefer">Priorizar tema</option>
+                <option value="require">Solo tema relacionado</option>
               </select>
             </div>
 
             <div className="settings-field">
-              <label htmlFor="comment-intelligence-interval">解析間隔</label>
+              <label htmlFor="comment-intelligence-interval">Intervalo de análisis</label>
               <select
                 id="comment-intelligence-interval"
                 value={commentIntelligence.analysisIntervalMs}
@@ -519,7 +519,7 @@ export function StreamSettings({
 
             <div className="settings-field">
               <label htmlFor="comment-intelligence-batch-size">
-                1回の解析で扱う最大コメント数
+                Máximo comentarios por análisis
               </label>
               <select
                 id="comment-intelligence-batch-size"
@@ -542,7 +542,7 @@ export function StreamSettings({
             {commentIntelligence.mode !== 'rules' && (
               <div className="settings-field">
                 <label htmlFor="comment-intelligence-llm-min-comments">
-                  LLM解析を使う最小コメント数
+                  Comentarios mínimos para usar LLM
                 </label>
                 <select
                   id="comment-intelligence-llm-min-comments"
@@ -577,16 +577,16 @@ export function StreamSettings({
                   disabled={commentControlsDisabled}
                   style={{ marginRight: 8 }}
                 />
-                危険な視聴者を一時的にスキップ
+                Saltar espectadores peligrosos temporalmente
               </label>
               <p className="settings-field-hint">
-                高リスクコメントを送った視聴者は、指定期間中の解析対象から外します。危険なコメントがそのままcoreへ渡らないようにします。
+                Los espectadores que envíen comentarios de alto riesgo serán excluidos del análisis durante el período configurado. Esto evita que comentarios peligrosos lleguen al core.
               </p>
             </div>
 
             <div className="settings-field">
               <label htmlFor="comment-intelligence-block-duration">
-                スキップ期間
+                Duración del salto
               </label>
               <select
                 id="comment-intelligence-block-duration"
@@ -644,13 +644,13 @@ export function StreamSettings({
                 Manneri
               </label>
               <p className="settings-field-hint">
-                会話が似た流れに偏ったとき、応答前に話題転換の指示を内部的に追加します。
+                Cuando la conversación se desvía hacia temas similares, agrega internamente instrucciones de cambio de tema antes de responder.
               </p>
             </div>
 
             <div className="settings-field">
               <label htmlFor="manneri-similarity-threshold">
-                類似度しきい値
+                Umbral de similitud
               </label>
               <select
                 id="manneri-similarity-threshold"
@@ -667,12 +667,12 @@ export function StreamSettings({
                 ))}
               </select>
               <p className="settings-field-hint">
-                低いほど介入しやすく、高いほど強い重複だけを検出します。
+                Menor = más fácil intervenir, mayor = solo detecta duplicados fuertes.
               </p>
             </div>
 
             <div className="settings-field">
-              <label htmlFor="manneri-lookback-window">直近メッセージ数</label>
+              <label htmlFor="manneri-lookback-window">Nº mensajes recientes</label>
               <select
                 id="manneri-lookback-window"
                 value={manneri.lookbackWindow}
@@ -690,7 +690,7 @@ export function StreamSettings({
             </div>
 
             <div className="settings-field">
-              <label htmlFor="manneri-cooldown">介入間隔</label>
+              <label htmlFor="manneri-cooldown">Intervalo intervención</label>
               <select
                 id="manneri-cooldown"
                 value={manneri.interventionCooldownMs}
@@ -711,7 +711,7 @@ export function StreamSettings({
 
             <div className="settings-field">
               <label htmlFor="manneri-min-message-length">
-                最小メッセージ長
+                Longitud mínima mensaje
               </label>
               <select
                 id="manneri-min-message-length"

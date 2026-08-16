@@ -14,11 +14,11 @@ interface ScreenVisionPanelProps {
 }
 
 const AUTO_CAPTURE_INTERVAL_OPTIONS = [
-  { value: 0, label: '手動のみ' },
-  { value: 30_000, label: '30秒ごと' },
-  { value: 60_000, label: '1分ごと' },
-  { value: 120_000, label: '2分ごと' },
-  { value: 300_000, label: '5分ごと' },
+  { value: 0, label: 'Solo manual' },
+  { value: 30_000, label: 'Cada 30 segundos' },
+  { value: 60_000, label: 'Cada 1 minuto' },
+  { value: 120_000, label: 'Cada 2 minutos' },
+  { value: 300_000, label: 'Cada 5 minutos' },
 ] as const;
 
 export function ScreenVisionPanel({
@@ -50,7 +50,7 @@ export function ScreenVisionPanel({
   return (
     <div className="screen-vision-panel">
       <div className="settings-field">
-        <label htmlFor="screen-vision-device">カメラ入力</label>
+        <label htmlFor="screen-vision-device">Entrada de cámara</label>
         <select
           id="screen-vision-device"
           value={settings.deviceId}
@@ -58,16 +58,16 @@ export function ScreenVisionPanel({
           disabled={disabled}
         >
           {controller.devices.length === 0 && (
-            <option value="">カメラを検出中...</option>
+            <option value="">Detectando cámaras...</option>
           )}
           {controller.devices.map((device, index) => (
             <option key={device.deviceId || index} value={device.deviceId}>
-              {device.label || `Camera ${index + 1}`}
+              {device.label || `Cámara ${index + 1}`}
             </option>
           ))}
         </select>
         <p className="settings-field-hint">
-          OBS Virtual Cameraを選択してプレビューを開始してください。
+          Selecciona OBS Virtual Camera para iniciar la vista previa.
         </p>
       </div>
 
@@ -79,7 +79,7 @@ export function ScreenVisionPanel({
       />
 
       <div className="settings-field">
-        <label htmlFor="screen-vision-prompt">画面認識時の追加指示</label>
+        <label htmlFor="screen-vision-prompt">Instrucciones adicionales al reconocer pantalla</label>
         <textarea
           id="screen-vision-prompt"
           rows={4}
@@ -88,12 +88,12 @@ export function ScreenVisionPanel({
           disabled={disabled}
         />
         <p className="settings-field-hint">
-          LLM設定の共通System Promptに加えて、画像と一緒に送信されます。
+          Además del System Prompt común de configuración LLM, se enviará junto con la imagen.
         </p>
       </div>
 
       <div className="settings-field">
-        <label htmlFor="screen-vision-interval">自動で見る間隔</label>
+        <label htmlFor="screen-vision-interval">Intervalo automático</label>
         <select
           id="screen-vision-interval"
           value={settings.autoIntervalMs}
@@ -109,7 +109,7 @@ export function ScreenVisionPanel({
           ))}
         </select>
         <p className="settings-field-hint">
-          プレビュー中だけ、選択した間隔で現在のフレームを送信します。設定画面を閉じても動作します。
+          Solo durante la vista previa, enviará el fotograma actual al intervalo seleccionado. Funciona incluso con la pantalla de configuración cerrada.
         </p>
       </div>
 
@@ -120,7 +120,7 @@ export function ScreenVisionPanel({
           onClick={controller.isPreviewing ? controller.stop : controller.start}
           disabled={disabled}
         >
-          {controller.isPreviewing ? 'プレビュー停止' : 'プレビュー開始'}
+          {controller.isPreviewing ? 'Detener vista previa' : 'Iniciar vista previa'}
         </button>
         <button
           type="button"
@@ -128,7 +128,7 @@ export function ScreenVisionPanel({
           onClick={() => void controller.captureAndSend()}
           disabled={disabled || !controller.isPreviewing}
         >
-          画面を見る
+          Ver pantalla
         </button>
       </div>
 

@@ -46,12 +46,12 @@ interface Live2DStageProps {
 }
 
 const AVATAR_EXPRESSION_OPTIONS = [
-  { emotion: 'happy', label: '喜び' },
-  { emotion: 'surprised', label: '驚き' },
-  { emotion: 'sad', label: '悲しみ' },
-  { emotion: 'angry', label: '怒り' },
-  { emotion: 'relaxed', label: '安らぎ' },
-  { emotion: 'thinking', label: '考え中' },
+  { emotion: 'happy', label: 'Alegría' },
+  { emotion: 'surprised', label: 'Sorpresa' },
+  { emotion: 'sad', label: 'Tristeza' },
+  { emotion: 'angry', label: 'Enojo' },
+  { emotion: 'relaxed', label: 'Relajación' },
+  { emotion: 'thinking', label: 'Pensando' },
 ] as const satisfies ReadonlyArray<{
   emotion: Live2DReactionEmotion;
   label: string;
@@ -60,9 +60,9 @@ const AVATAR_EXPRESSION_OPTIONS = [
 const MANUAL_EFFECT_DURATION_MS = 2600;
 type EffectAnchorTarget = 'face' | 'leftEye' | 'rightEye';
 const EFFECT_ANCHOR_TARGETS = [
-  { target: 'face', label: '顔' },
-  { target: 'leftEye', label: '左目' },
-  { target: 'rightEye', label: '右目' },
+  { target: 'face', label: 'Cara' },
+  { target: 'leftEye', label: 'Ojo izq.' },
+  { target: 'rightEye', label: 'Ojo der.' },
 ] as const satisfies ReadonlyArray<{
   target: EffectAnchorTarget;
   label: string;
@@ -315,7 +315,7 @@ export function Live2DStage({
         const message =
           error instanceof Error
             ? error.message
-            : '選択した Live2D モデルを表示できませんでした。';
+            : 'No se pudo mostrar el modelo Live2D seleccionado.';
         setStageError(message);
       } finally {
         if (!cancelled) {
@@ -342,7 +342,7 @@ export function Live2DStage({
   const overlayMessage =
     modelPickerError ||
     effectiveStageError ||
-    (modelSource ? '' : '設定を開いて Live2D モデルを選択してください。');
+    (modelSource ? '' : 'Abre Configuración para seleccionar un modelo Live2D.');
   const showLoading = modelSource ? isLoading : false;
 
   return (
@@ -359,7 +359,7 @@ export function Live2DStage({
         {(showLoading || overlayMessage) && (
           <div className="live2d-status">
             <strong>
-              {showLoading ? 'Live2D モデルを読み込み中...' : 'Live2D サンプル'}
+              {showLoading ? 'Cargando modelo Live2D...' : 'Live2D'}
             </strong>
             {!showLoading && <span>{overlayMessage}</span>}
             {modelSource && !showLoading && !overlayMessage && (
@@ -372,10 +372,10 @@ export function Live2DStage({
         <div
           className="avatar-expression-controls"
           role="group"
-          aria-label="Live2Dアバター感情表現エフェクト"
+          aria-label="Efectos emoción avatar Live2D"
         >
           <span className="avatar-expression-controls-label">
-            感情表現エフェクト
+            Efectos emoción
           </span>
           {AVATAR_EXPRESSION_OPTIONS.map((option) => {
             const effect = emotionEffectMap[option.emotion];
@@ -396,7 +396,7 @@ export function Live2DStage({
                   );
                 }}
                 title={
-                  effect ? undefined : 'エフェクトが割り当てられていません'
+                  effect ? undefined : 'No se asignó efecto a esta emoción'
                 }
               >
                 {option.label}
@@ -408,8 +408,8 @@ export function Live2DStage({
             className="avatar-expression-button is-reset"
             disabled={!modelSource || isLoading}
             onClick={() => setManualReaction(null)}
-          >
-            解除
+            >
+            Cancelar
           </button>
           <button
             type="button"
@@ -420,7 +420,7 @@ export function Live2DStage({
             aria-pressed={anchorEditorOpen}
             onClick={() => setAnchorEditorOpen((current) => !current)}
           >
-            アンカー調整
+            Ajustar anclaje
           </button>
         </div>
       )}
@@ -428,10 +428,10 @@ export function Live2DStage({
         <div
           className="avatar-anchor-editor"
           role="group"
-          aria-label="感情表現エフェクトアンカー調整"
+          aria-label="Ajustar anclaje efectos emoción"
         >
           <span className="avatar-anchor-editor-label">
-            配置先を選び、アバター上をクリック
+            Selecciona posición y haz clic en el avatar
           </span>
           <div className="avatar-anchor-targets">
             {EFFECT_ANCHOR_TARGETS.map((option) => (
@@ -449,7 +449,7 @@ export function Live2DStage({
             ))}
           </div>
           <label className="avatar-anchor-scale">
-            <span>エフェクトサイズ</span>
+            <span>Tamaño efecto</span>
             <input
               type="range"
               min={MIN_EMOTION_EFFECT_SCALE * 100}
@@ -479,14 +479,14 @@ export function Live2DStage({
                 updateEffectGeometry();
               }}
             >
-              初期値に戻す
+              Restaurar valores iniciales
             </button>
             <button
               type="button"
               className="avatar-expression-button"
               onClick={() => setAnchorEditorOpen(false)}
             >
-              完了
+              Finalizar
             </button>
           </div>
         </div>

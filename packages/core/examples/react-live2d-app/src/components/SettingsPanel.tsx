@@ -76,26 +76,26 @@ const LIVE2D_REACTION_EMOTION_OPTIONS: ReadonlyArray<{
   value: Live2DReactionEmotion;
   label: string;
 }> = [
-  { value: 'happy', label: '喜び（happy）' },
-  { value: 'surprised', label: '驚き（surprised）' },
-  { value: 'sad', label: '悲しみ（sad）' },
-  { value: 'angry', label: '怒り（angry）' },
-  { value: 'relaxed', label: '安らぎ（relaxed）' },
-  { value: 'thinking', label: '考え中（thinking）' },
-  { value: 'neutral', label: '通常（neutral）' },
+  { value: 'happy', label: 'Alegría (happy)' },
+  { value: 'surprised', label: 'Sorpresa (surprised)' },
+  { value: 'sad', label: 'Tristeza (sad)' },
+  { value: 'angry', label: 'Enfado (angry)' },
+  { value: 'relaxed', label: 'Relajación (relaxed)' },
+  { value: 'thinking', label: 'Pensando (thinking)' },
+  { value: 'neutral', label: 'Neutral' },
 ];
 
 const LIVE2D_EFFECT_OPTIONS: ReadonlyArray<{
   value: Live2DEmotionEffect | 'none';
   label: string;
 }> = [
-  { value: 'none', label: 'なし' },
-  { value: 'happy', label: '喜び（キラキラ）' },
-  { value: 'surprised', label: '驚き（放射線）' },
-  { value: 'sad', label: '悲しみ（涙）' },
-  { value: 'angry', label: '怒り（怒りマーク）' },
-  { value: 'relaxed', label: '安らぎ（泡）' },
-  { value: 'thinking', label: '考え中（思考バブル）' },
+  { value: 'none', label: 'Ninguno' },
+  { value: 'happy', label: 'Alegría (brillos)' },
+  { value: 'surprised', label: 'Sorpresa (rayos)' },
+  { value: 'sad', label: 'Tristeza (lágrimas)' },
+  { value: 'angry', label: 'Enfado (marcas de enfado)' },
+  { value: 'relaxed', label: 'Relajación (burbujas)' },
+  { value: 'thinking', label: 'Pensando (burbuja de pensamiento)' },
 ];
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
@@ -206,13 +206,13 @@ const GRADIUM_OUTPUT_FORMATS = [
 ] as const;
 
 const VOICEPEAK_SPEAKERS = [
-  { id: 'f1', name: '日本人女性 1' },
-  { id: 'f2', name: '日本人女性 2' },
-  { id: 'f3', name: '日本人女性 3' },
-  { id: 'm1', name: '日本人男性 1' },
-  { id: 'm2', name: '日本人男性 2' },
-  { id: 'm3', name: '日本人男性 3' },
-  { id: 'c', name: '女の子' },
+  { id: 'f1', name: 'Mujer japonesa 1' },
+  { id: 'f2', name: 'Mujer japonesa 2' },
+  { id: 'f3', name: 'Mujer japonesa 3' },
+  { id: 'm1', name: 'Hombre japonés 1' },
+  { id: 'm2', name: 'Hombre japonés 2' },
+  { id: 'm3', name: 'Hombre japonés 3' },
+  { id: 'c', name: 'Niña' },
 ];
 
 const AIVIS_CLOUD_PRESETS = [
@@ -278,6 +278,14 @@ export function SettingsPanel({
   isRefreshingOpenRouterFreeModels,
   openRouterRefreshError,
   updateOpenRouterMaxCandidates,
+  refreshOpenAiCompatibleModels,
+  openAiCompatibleModels,
+  refreshOpenAiCompatibleTtsModels,
+  openAiCompatibleTtsModels,
+  openAiCompatibleLlmDiscoveryError,
+  openAiCompatibleTtsDiscoveryError,
+  isRefreshingOpenAiCompatibleModels,
+  isRefreshingOpenAiCompatibleTtsModels,
   updateTTSEngine,
   updateTTSSpeaker,
   updateOpenAiCompatibleApiKey,
@@ -499,10 +507,10 @@ export function SettingsPanel({
         const message = error instanceof Error ? error.message : String(error);
         if (isVoicevox) {
           setVoicevoxSpeakers([]);
-          setFetchError(`VOICEVOX接続エラー: ${message}`);
+          setFetchError(`Error conexión VOICEVOX: ${message}`);
         } else {
           setAivisSpeakers([]);
-          setFetchError(`AivisSpeech接続エラー: ${message}`);
+          setFetchError(`Error conexión AivisSpeech: ${message}`);
         }
       }
     };
@@ -575,7 +583,7 @@ export function SettingsPanel({
         if (controller.signal.aborted) return;
         const message = error instanceof Error ? error.message : String(error);
         setMinimaxVoices([]);
-        setFetchError(`MiniMax接続エラー: ${message}`);
+        setFetchError(`Error conexión MiniMax: ${message}`);
       } finally {
         if (!controller.signal.aborted) {
           setIsFetchingMinimaxVoices(false);
@@ -643,7 +651,7 @@ export function SettingsPanel({
         if (controller.signal.aborted) return;
         const message = error instanceof Error ? error.message : String(error);
         setElevenLabsVoices([]);
-        setFetchError(`ElevenLabs接続エラー: ${message}`);
+        setFetchError(`Error conexión ElevenLabs: ${message}`);
       } finally {
         if (!controller.signal.aborted) {
           setIsFetchingElevenLabsVoices(false);
@@ -715,7 +723,7 @@ export function SettingsPanel({
         if (controller.signal.aborted) return;
         const message = error instanceof Error ? error.message : String(error);
         setInworldVoices([]);
-        setFetchError(`Inworld接続エラー: ${message}`);
+        setFetchError(`Error conexión Inworld: ${message}`);
       } finally {
         if (!controller.signal.aborted) {
           setIsFetchingInworldVoices(false);
@@ -758,7 +766,7 @@ export function SettingsPanel({
         if (!active) return;
         const message = error instanceof Error ? error.message : String(error);
         setWebSpeechVoices([]);
-        setFetchError(`Web Speech音声一覧エラー: ${message}`);
+        setFetchError(`Error lista voces Web Speech: ${message}`);
       } finally {
         if (active) {
           setIsFetchingWebSpeechVoices(false);
@@ -832,7 +840,7 @@ export function SettingsPanel({
                 <label htmlFor="llm-apikey">
                   API Key ({settings.llm.provider})
                   {settings.llm.provider === 'openai-compatible'
-                    ? ' (任意)'
+                    ? ' (opcional)'
                     : ''}
                 </label>
                 <input
@@ -844,7 +852,7 @@ export function SettingsPanel({
                   }
                   placeholder={
                     settings.llm.provider === 'openai-compatible'
-                      ? '必要な場合のみ入力'
+                      ? 'Ingresa solo si es necesario'
                       : 'XXX-...'
                   }
                   disabled={disabled}
@@ -853,17 +861,46 @@ export function SettingsPanel({
             )}
 
             {settings.llm.provider === 'openai-compatible' ? (
-              <div className="settings-field">
-                <label htmlFor="llm-model">Model</label>
-                <input
-                  id="llm-model"
-                  type="text"
-                  value={settings.llm.model}
-                  onChange={(e) => updateLLMModel(e.target.value)}
-                  placeholder="local-model"
-                  disabled={disabled}
-                />
-              </div>
+              <>
+                <div className="settings-field">
+                  <label htmlFor="llm-model-discovered">Model</label>
+                  <select
+                    id="llm-model-discovered"
+                    value={openAiCompatibleModels.includes(settings.llm.model) ? settings.llm.model : ''}
+                    onChange={(e) => updateLLMModel(e.target.value)}
+                    disabled={disabled || isRefreshingOpenAiCompatibleModels || openAiCompatibleModels.length === 0}
+                  >
+                    <option value="">Manual entry below</option>
+                    {openAiCompatibleModels.map((model) => <option key={model} value={model}>{model}</option>)}
+                  </select>
+                  <input
+                    id="llm-model"
+                    type="text"
+                    aria-label="Manual LLM model"
+                    value={settings.llm.model}
+                    onChange={(e) => updateLLMModel(e.target.value)}
+                    placeholder="ssfdre38/gemma4-turbo:latest"
+                    disabled={disabled}
+                  />
+                  <button
+                    type="button"
+                    className="settings-action-button"
+                    onClick={() => void refreshOpenAiCompatibleModels()}
+                    disabled={disabled || isRefreshingOpenAiCompatibleModels}
+                  >
+                    <span aria-live="polite">
+                      {isRefreshingOpenAiCompatibleModels
+                        ? 'Refreshing...'
+                        : 'Refresh models'}
+                    </span>
+                  </button>
+                  {openAiCompatibleLlmDiscoveryError && (
+                    <p className="settings-field-error" aria-live="polite">
+                      {openAiCompatibleLlmDiscoveryError}
+                    </p>
+                  )}
+                </div>
+              </>
             ) : (
               <div className="settings-field">
                 <label htmlFor="llm-model">Model</label>
@@ -894,9 +931,9 @@ export function SettingsPanel({
                 disabled={disabled}
               />
               <p className="settings-field-hint">
-                入力欄からフォーカスが外れた時に反映されます。空欄の場合は
-                既定値を使用します。アバター固有の制御指示を削除すると、
-                感情表現エフェクトの連動に影響する場合があります。
+                Se aplica cuando se quita el foco del campo. Si está vacío, usa valores por defecto.
+                Eliminar instrucciones específicas del avatar puede afectar,
+                Puede afectar la correlación con efectos de emoción.
               </p>
             </div>
 
@@ -1035,8 +1072,7 @@ export function SettingsPanel({
               <>
                 <div className="settings-field">
                   <small>
-                    Gemini Nano はブラウザ内蔵 AI を使うため API Key
-                    は不要です。
+                    Gemini Nano usa IA integrada del navegador, no requiere API Key.
                   </small>
                 </div>
                 <div className="settings-field">
@@ -1057,15 +1093,14 @@ export function SettingsPanel({
                     </button>
                   )}
                   <small>
-                    Chrome 138+ が必要です。`chrome://flags` を開き、
-                    `#optimization-guide-on-device-model` と
-                    `#prompt-api-for-gemini-nano` を `Enabled` に設定してから
-                    Chrome を再起動してください。
+                    Requiere Chrome 138+. Abre chrome://flags y habilita
+                    `#optimization-guide-on-device-model` y
+                    `#prompt-api-for-gemini-nano`; después reinicia Chrome.
                   </small>
                   <small>
-                    フラグ有効化後に上の `Prepare Model` を押すとモデルの
-                    ダウンロードが始まります。初回ダウンロードには数分かかる
-                    場合があります。
+                    Después de habilitar los flags, pulsa `Prepare Model` para
+                    iniciar la descarga del modelo. La primera descarga puede
+                    tardar varios minutos.
                   </small>
                 </div>
               </>
@@ -1206,7 +1241,7 @@ export function SettingsPanel({
                     type="text"
                     value={settings.tts.geminiTtsPrompt || ''}
                     onChange={(e) => updateGeminiTtsPrompt(e.target.value)}
-                    placeholder="明るく元気な声で話してください"
+                    placeholder="Ejemplo: Voz alegre y enérgica"
                     disabled={disabled}
                   />
                 </div>
@@ -1454,16 +1489,16 @@ export function SettingsPanel({
                     }
                   >
                     {!settings.tts.elevenLabsApiKey && (
-                      <option value="">API Keyを入力してください</option>
+                      <option value="">Ingresa API Key</option>
                     )}
                     {settings.tts.elevenLabsApiKey &&
                       isFetchingElevenLabsVoices && (
-                        <option value="">取得中...</option>
+                        <option value="">Cargando...</option>
                       )}
                     {settings.tts.elevenLabsApiKey &&
                       !isFetchingElevenLabsVoices &&
                       elevenLabsVoices.length === 0 && (
-                        <option value="">音声一覧を取得できませんでした</option>
+                        <option value="">No se pudo obtener lista de voces</option>
                       )}
                     {elevenLabsVoices.map((voice) => (
                       <option key={voice.voice_id} value={voice.voice_id}>
@@ -1693,15 +1728,15 @@ export function SettingsPanel({
                     }
                   >
                     {!settings.tts.inworldApiKey && (
-                      <option value="">API Keyを入力してください</option>
+                      <option value="">Ingresa API Key</option>
                     )}
                     {settings.tts.inworldApiKey && isFetchingInworldVoices && (
-                      <option value="">取得中...</option>
+                      <option value="">Cargando...</option>
                     )}
                     {settings.tts.inworldApiKey &&
                       !isFetchingInworldVoices &&
                       inworldVoices.length === 0 && (
-                        <option value="">音声一覧を取得できませんでした</option>
+                        <option value="">No se pudo obtener lista de voces</option>
                       )}
                     {inworldVoices.map((voice) => (
                       <option key={voice.voiceId} value={voice.voiceId}>
@@ -2056,10 +2091,9 @@ export function SettingsPanel({
                 </div>
                 <div className="settings-field">
                   <small>
-                    Runtime assets はサイズとサードパーティライセンスの都合で
-                    同梱していません。README の Piper Plus Setup を参照し、
-                    `public/piper/` 配下に `dist/`, `src/`, `assets/`, `models/`
-                    を配置してください。
+                    Los assets de runtime no se incluyen por tamaño y licencias de terceros.
+                    Consulta README Piper Plus Setup y coloca en `public/piper/`:
+                    `dist/`, `src/`, `assets/`, `models/`.
                   </small>
                 </div>
               </>
@@ -2150,9 +2184,7 @@ export function SettingsPanel({
                 </div>
                 <div className="settings-field">
                   <small>
-                    Web Speech API はブラウザが直接再生します。音声バッファを
-                    取得できないため、このサンプルのリップシンクには対応して
-                    いません。
+                    Web Speech API se reproduce directamente desde el navegador. No se puede obtener buffer de audio, por lo que no es compatible con lip-sync en este ejemplo.
                   </small>
                   {fetchError.startsWith('Web Speech') && (
                     <small className="settings-field-error">{fetchError}</small>
@@ -2174,7 +2206,7 @@ export function SettingsPanel({
                     onChange={(e) =>
                       updateOpenAiCompatibleApiKey(e.target.value)
                     }
-                    placeholder="未入力なら Authorization ヘッダーなし"
+                    placeholder="Sin Authorization si no se ingresa"
                     disabled={disabled}
                   />
                 </div>
@@ -2194,17 +2226,48 @@ export function SettingsPanel({
                   />
                 </div>
                 <div className="settings-field">
-                  <label htmlFor="tts-openai-compatible-model">Model</label>
+                  <label htmlFor="tts-openai-compatible-model-discovered">
+                    Model
+                  </label>
+                  <select
+                    id="tts-openai-compatible-model-discovered"
+                    value={openAiCompatibleTtsModels.includes(settings.tts.openAiCompatibleModel || '') ? settings.tts.openAiCompatibleModel : ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        updateOpenAiCompatibleModel(e.target.value);
+                      }
+                    }}
+                    disabled={disabled || isRefreshingOpenAiCompatibleTtsModels || openAiCompatibleTtsModels.length === 0}
+                  >
+                    <option value="">Manual entry below</option>
+                    {openAiCompatibleTtsModels.map((model) => <option key={model} value={model}>{model}</option>)}
+                  </select>
                   <input
                     id="tts-openai-compatible-model"
                     type="text"
+                    aria-label="Manual TTS model"
                     value={settings.tts.openAiCompatibleModel || ''}
-                    onChange={(e) =>
-                      updateOpenAiCompatibleModel(e.target.value)
-                    }
+                    onChange={(e) => updateOpenAiCompatibleModel(e.target.value)}
                     placeholder="local-model"
                     disabled={disabled}
                   />
+                  <button
+                    type="button"
+                    className="settings-action-button"
+                    onClick={() => void refreshOpenAiCompatibleTtsModels()}
+                    disabled={disabled || isRefreshingOpenAiCompatibleTtsModels}
+                  >
+                    <span aria-live="polite">
+                      {isRefreshingOpenAiCompatibleTtsModels
+                        ? 'Refreshing...'
+                        : 'Refresh TTS models'}
+                    </span>
+                  </button>
+                  {openAiCompatibleTtsDiscoveryError && (
+                    <p className="settings-field-error" aria-live="polite">
+                      {openAiCompatibleTtsDiscoveryError}
+                    </p>
+                  )}
                 </div>
                 <div className="settings-field">
                   <label htmlFor="tts-openai-compatible-speaker">
@@ -2215,7 +2278,7 @@ export function SettingsPanel({
                     type="text"
                     value={settings.tts.speaker}
                     onChange={(e) => updateTTSSpeaker(e.target.value)}
-                    placeholder="未入力なら voice フィールドを送信しません"
+                    placeholder="No se envía campo voice si está vacío"
                     disabled={disabled}
                   />
                 </div>
@@ -2262,7 +2325,7 @@ export function SettingsPanel({
                         )),
                       )
                     ) : (
-                      <option value="">サーバーから取得中...</option>
+                      <option value="">Cargando desde servidor...</option>
                     )}
                   </select>
                 </div>
@@ -2333,7 +2396,7 @@ export function SettingsPanel({
                         )),
                       )
                     ) : (
-                      <option value="">サーバーから取得中...</option>
+                      <option value="">Cargando desde servidor...</option>
                     )}
                   </select>
                 </div>
@@ -2377,7 +2440,7 @@ export function SettingsPanel({
                 </div>
                 <div className="settings-field">
                   <label htmlFor="tts-minimax-speaker">
-                    Speaker (Endpoint: global 固定)
+                    Voz (Endpoint: global fijo)
                   </label>
                   <select
                     id="tts-minimax-speaker"
@@ -2391,16 +2454,16 @@ export function SettingsPanel({
                   >
                     {!settings.tts.minimaxApiKey && (
                       <option value="">
-                        APIキーを入力すると一覧を取得します
+                        Ingresa API Key para obtener la lista
                       </option>
                     )}
                     {settings.tts.minimaxApiKey && isFetchingMinimaxVoices && (
-                      <option value="">スピーカー一覧を取得中...</option>
+                      <option value="">Cargando lista de voces...</option>
                     )}
                     {settings.tts.minimaxApiKey &&
                       !isFetchingMinimaxVoices &&
                       minimaxVoices.length === 0 && (
-                        <option value="">一覧を取得できませんでした</option>
+                        <option value="">No se pudo obtener la lista</option>
                       )}
                     {minimaxVoices.map((voice) => (
                       <option key={voice.voice_id} value={voice.voice_id}>
@@ -2481,7 +2544,7 @@ export function SettingsPanel({
         {expandedSections.visual && (
           <>
             <div className="settings-field">
-              <label htmlFor="visual-background-mode">背景モード</label>
+              <label htmlFor="visual-background-mode">Modo fondo</label>
               <select
                 id="visual-background-mode"
                 value={settings.visual.backgroundMode}
@@ -2492,13 +2555,13 @@ export function SettingsPanel({
                 }
                 disabled={disabled}
               >
-                <option value="default">通常背景</option>
+                <option value="default">Fondo normal</option>
                 <option value="green">グリーンバック</option>
               </select>
             </div>
 
             <div className="settings-field">
-              <label htmlFor="visual-layout-mode">表示モード</label>
+              <label htmlFor="visual-layout-mode">Modo visualización</label>
               <select
                 id="visual-layout-mode"
                 value={settings.visual.layoutMode}
@@ -2507,8 +2570,8 @@ export function SettingsPanel({
                 }
                 disabled={disabled}
               >
-                <option value="chat">通常チャット</option>
-                <option value="broadcast">ソロ配信</option>
+                <option value="chat">Chat normal</option>
+                <option value="broadcast">Transmisión solo</option>
               </select>
             </div>
 
@@ -2523,11 +2586,11 @@ export function SettingsPanel({
                   disabled || settings.visual.layoutMode !== 'broadcast'
                 }
               />
-              <span>ソロ配信で入力欄を表示</span>
+              <span>Mostrar campo de entrada en transmisión solo</span>
             </label>
 
             <div className="settings-field">
-              <label htmlFor="background-image">背景画像</label>
+              <label htmlFor="background-image">Imagen de fondo</label>
               <div className="settings-file-picker-row">
                 <input
                   id="background-image"
@@ -2544,13 +2607,13 @@ export function SettingsPanel({
                   htmlFor="background-image"
                   className={`settings-file-trigger${disabled ? ' is-disabled' : ''}`}
                 >
-                  画像を選択
+                  Seleccionar imagen
                 </label>
                 <span className="settings-file-hint">PNG / JPG</span>
               </div>
               <div className="settings-file-actions">
                 <span className="settings-file-status">
-                  {backgroundImageUrl ? '設定済み' : '未設定'}
+                  {backgroundImageUrl ? 'Configurado' : 'No configurado'}
                 </span>
                 {backgroundImageUrl && (
                   <button
@@ -2575,7 +2638,7 @@ export function SettingsPanel({
           onClick={() => toggleSection('emotionEffects')}
           aria-expanded={expandedSections.emotionEffects}
         >
-          <h3>感情表現エフェクト</h3>
+          <h3>Efectos emoción</h3>
           <span
             className={`settings-section-chevron${expandedSections.emotionEffects ? ' is-open' : ''}`}
           >
@@ -2586,7 +2649,7 @@ export function SettingsPanel({
         {expandedSections.emotionEffects && (
           <>
             <div className="settings-field">
-              <label htmlFor="live2d-reaction-control-mode">操作方法</label>
+              <label htmlFor="live2d-reaction-control-mode">Modo control</label>
               <select
                 id="live2d-reaction-control-mode"
                 value={settings.visual.live2dReactionControlMode}
@@ -2597,22 +2660,22 @@ export function SettingsPanel({
                 }
                 disabled={disabled}
               >
-                <option value="none">なし</option>
-                <option value="manual">手動ボタン</option>
-                <option value="linked">発話感情に連動のみ</option>
+                <option value="none">Sin efecto</option>
+                <option value="manual">Botón manual</option>
+                <option value="linked">Solo sincronizado con habla</option>
               </select>
               <p className="settings-field-hint">
                 {settings.visual.live2dReactionControlMode === 'none'
-                  ? '手動ボタンを表示せず、発話時のエフェクトも表示しません。'
+                  ? 'No muestra botones ni efectos al hablar.'
                   : settings.visual.live2dReactionControlMode === 'manual'
-                    ? 'アバター上のボタンから視覚エフェクトをプレビューします。'
-                    : '発話の emotion タグを受け取った時点で視覚エフェクトを表示します。'}
+                    ? 'Preview de efectos visuales desde botones en el avatar.'
+                    : 'Muestra efecto visual cuando recibe tag de emoción del habla.'}
               </p>
             </div>
 
             <div className="settings-field">
               <span className="settings-field-label">
-                感情とエフェクトの対応
+                Correlación emoción-efecto
               </span>
               <div className="settings-emotion-mapping-list">
                 {LIVE2D_REACTION_EMOTION_OPTIONS.map((emotionOption) => (
@@ -2657,7 +2720,7 @@ export function SettingsPanel({
                 onClick={resetVisualLive2DEmotionEffectMap}
                 disabled={disabled}
               >
-                感情の割り当てを初期値に戻す
+                Restaurar valores iniciales emoción-efecto
               </button>
             </div>
           </>

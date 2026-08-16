@@ -70,7 +70,7 @@ export function ChatPanel({
         type="button"
         className="settings-button chat-settings-button"
         onClick={onToggleSettings}
-        aria-label="設定"
+        aria-label="Configuración"
       >
         ⚙
       </button>

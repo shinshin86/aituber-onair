@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AITuberOnAirCore,
   getDefaultXaiReasoningEffort,
@@ -20,6 +20,15 @@ import {
   type Live2DReactionControlMode,
   type Live2DReactionEmotion,
 } from '../lib/live2dReactions';
+import {
+  chooseOpenAiCompatibleTtsModel,
+  createLatestRequestGuard,
+  DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL,
+  discoverOpenAiCompatibleModels,
+  getOpenAiModelsEndpoint,
+  LEGACY_LLM_TTS_MODEL,
+  parseOpenAiModelIds,
+} from '../lib/openAiCompatibleTtsModels';
 import type {
   AppSettings,
   ChatProviderOption,
@@ -33,11 +42,16 @@ const STORAGE_KEY = 'react-live2d-app-settings';
 const DEFAULT_AIVIS_CLOUD_MODEL_UUID = '22e8ed77-94fe-4ef2-871f-a86f94e9a579';
 const DEFAULT_GEMINI_TTS_MODEL = 'gemini-3.1-flash-tts-preview';
 const DEFAULT_GEMINI_TTS_LANGUAGE_CODE = 'ja-JP';
-const DEFAULT_OPENAI_COMPATIBLE_MODEL = 'local-model';
+const DEFAULT_OPENAI_COMPATIBLE_MODEL = 'ssfdre38/gemma4-turbo:latest';
 const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
-  'http://localhost:11434/v1/chat/completions';
+  'http://192.168.1.10:11434/v1/chat/completions';
 const DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT =
   'http://localhost:8880/v1/audio/speech';
+const LEGACY_OPENAI_COMPATIBLE_TTS_ENDPOINTS = new Set([
+  'http://localhost:8000/v1/audio/speech',
+  'http://localhost:8000/v1/audio/',
+  'http://localhost:8880/v1/audio/',
+]);
 const DEFAULT_UNREAL_SPEECH_TTS_ENDPOINT =
   'https://api.v8.unrealspeech.com/stream';
 const DEFAULT_ELEVENLABS_TTS_ENDPOINT =
@@ -59,7 +73,7 @@ const DEFAULT_PIPER_PLUS_VOICE_FILE = 'mei_normal.htsvoice';
 const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
 const DEFAULT_OPENROUTER_MAX_WORKING = 10;
 const DEFAULT_SCREEN_VISION_PROMPT =
-  'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
+  'Mira la pantalla de OBS Virtual Camera y comenta como streamer de forma corta y natural.';
 const EMPTY_MODEL_IDS: string[] = [];
 
 function getOrderedModels(provider: ChatProviderOption): string[] {
@@ -78,6 +92,14 @@ function normalizePositiveInteger(
     return fallback;
   }
   return Math.max(1, Math.floor(value));
+}
+
+function formatDiscoveryError(label: string, error: unknown): string {
+  const detail = error instanceof Error ? error.message : String(error);
+  if (detail === 'Failed to fetch' || detail.includes('NetworkError')) {
+    return `${label} no disponible: error de red/CORS del navegador. Verifica que el servidor permita el origen de esta página.`;
+  }
+  return `${label} no disponible: ${detail}`;
 }
 
 function normalizeModelIds(modelIds: string[]): string[] {
@@ -131,8 +153,8 @@ function normalizeOpenRouterDynamicFreeModels(
 function getDefaultSettings(): AppSettings {
   return {
     llm: {
-      provider: 'openai',
-      model: 'gpt-4.1-nano',
+      provider: 'openai-compatible',
+      model: DEFAULT_OPENAI_COMPATIBLE_MODEL,
       systemPrompt: DEFAULT_SYSTEM_PROMPT,
       endpoint: DEFAULT_OPENAI_COMPATIBLE_ENDPOINT,
       xaiReasoningEffort: 'none',
@@ -161,7 +183,7 @@ function getDefaultSettings(): AppSettings {
       speaker: 'alloy',
       openAiCompatibleApiKey: '',
       openAiCompatibleApiUrl: DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT,
-      openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_MODEL,
+      openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL,
       openAiCompatibleSpeed: '',
       geminiTtsModel: DEFAULT_GEMINI_TTS_MODEL,
       geminiTtsLanguageCode: DEFAULT_GEMINI_TTS_LANGUAGE_CODE,
@@ -287,7 +309,22 @@ function loadSettings(): AppSettings {
             saved.llm?.openRouterDynamicFreeModels,
           ),
         },
-        tts: { ...defaults.tts, ...saved.tts },
+        tts: {
+          ...defaults.tts,
+          ...saved.tts,
+          openAiCompatibleApiUrl:
+            LEGACY_OPENAI_COMPATIBLE_TTS_ENDPOINTS.has(
+              saved.tts?.openAiCompatibleApiUrl || '',
+            )
+              ? DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT
+              : saved.tts?.openAiCompatibleApiUrl ||
+                defaults.tts.openAiCompatibleApiUrl,
+          openAiCompatibleModel:
+            saved.tts?.openAiCompatibleModel === LEGACY_LLM_TTS_MODEL
+              ? DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL
+              : saved.tts?.openAiCompatibleModel ||
+                defaults.tts.openAiCompatibleModel,
+        },
         visual: {
           ...defaults.visual,
           ...saved.visual,
@@ -329,6 +366,15 @@ export function useSettings() {
     isRefreshingOpenRouterFreeModels,
     setIsRefreshingOpenRouterFreeModels,
   ] = useState(false);
+  const [openAiCompatibleModels, setOpenAiCompatibleModels] = useState<string[]>([]);
+  const [openAiCompatibleTtsModels, setOpenAiCompatibleTtsModels] = useState<string[]>([]);
+  const [openAiCompatibleLlmDiscoveryError, setOpenAiCompatibleLlmDiscoveryError] =
+    useState('');
+  const [openAiCompatibleTtsDiscoveryError, setOpenAiCompatibleTtsDiscoveryError] =
+    useState('');
+  const [isRefreshingOpenAiCompatibleModels, setIsRefreshingOpenAiCompatibleModels] = useState(false);
+  const [isRefreshingOpenAiCompatibleTtsModels, setIsRefreshingOpenAiCompatibleTtsModels] = useState(false);
+  const openAiCompatibleTtsRequestGuard = useRef(createLatestRequestGuard());
   const openRouterDynamicModels = useMemo(
     () => settings.llm.openRouterDynamicFreeModels?.models || EMPTY_MODEL_IDS,
     [settings.llm.openRouterDynamicFreeModels?.models],
@@ -441,6 +487,83 @@ export function useSettings() {
     }));
   }, []);
 
+  const refreshOpenAiCompatibleModels = useCallback(async () => {
+    setIsRefreshingOpenAiCompatibleModels(true);
+    setOpenAiCompatibleLlmDiscoveryError('');
+    try {
+      const endpoint = getOpenAiModelsEndpoint(
+        settings.llm.endpoint || DEFAULT_OPENAI_COMPATIBLE_ENDPOINT,
+      );
+      const response = await fetch(endpoint, {
+        headers: settings.llm.apiKeys['openai-compatible']?.trim()
+          ? { Authorization: `Bearer ${settings.llm.apiKeys['openai-compatible'].trim()}` }
+          : undefined,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const models = parseOpenAiModelIds(await response.json());
+      if (models.length === 0) throw new Error('La respuesta no contiene modelos en formato OpenAI (/v1/models).');
+      setOpenAiCompatibleModels(models);
+      return models;
+    } catch (error) {
+      setOpenAiCompatibleLlmDiscoveryError(
+        formatDiscoveryError('Modelos LLM', error),
+      );
+      return [];
+    } finally {
+      setIsRefreshingOpenAiCompatibleModels(false);
+    }
+  }, [settings.llm.apiKeys, settings.llm.endpoint]);
+
+  const refreshOpenAiCompatibleTtsModels = useCallback(async () => {
+    const request = openAiCompatibleTtsRequestGuard.current.begin();
+    setIsRefreshingOpenAiCompatibleTtsModels(true);
+    setOpenAiCompatibleTtsDiscoveryError('');
+    try {
+      const models = await discoverOpenAiCompatibleModels(
+        settings.tts.openAiCompatibleApiUrl ||
+          DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT,
+        settings.tts.openAiCompatibleApiKey,
+      );
+      if (!openAiCompatibleTtsRequestGuard.current.isLatest(request)) return [];
+      setOpenAiCompatibleTtsModels(models);
+      setSettings((prev) => ({
+        ...prev,
+        tts: {
+          ...prev.tts,
+          openAiCompatibleModel: chooseOpenAiCompatibleTtsModel(
+            models,
+            prev.tts.openAiCompatibleModel,
+          ),
+        },
+      }));
+      return models;
+    } catch (error) {
+      if (!openAiCompatibleTtsRequestGuard.current.isLatest(request)) return [];
+      setOpenAiCompatibleTtsDiscoveryError(
+        formatDiscoveryError('Modelos TTS', error),
+      );
+      return [];
+    } finally {
+      if (openAiCompatibleTtsRequestGuard.current.isLatest(request)) {
+        setIsRefreshingOpenAiCompatibleTtsModels(false);
+      }
+    }
+  }, [settings.tts.openAiCompatibleApiKey, settings.tts.openAiCompatibleApiUrl]);
+
+  useEffect(() => {
+    const requestGuard = openAiCompatibleTtsRequestGuard.current;
+    requestGuard.invalidate();
+    if (settings.tts.engine !== 'openaiCompatible') return;
+
+    const timeoutId = window.setTimeout(() => {
+      void refreshOpenAiCompatibleTtsModels();
+    }, 300);
+    return () => {
+      window.clearTimeout(timeoutId);
+      requestGuard.invalidate();
+    };
+  }, [refreshOpenAiCompatibleTtsModels, settings.tts.engine]);
+
   const refreshOpenRouterDynamicFreeModels = async () => {
     const apiKey = settings.llm.apiKeys.openrouter?.trim() || '';
     if (!apiKey) {
@@ -508,6 +631,8 @@ export function useSettings() {
   }, []);
 
   const updateTTSEngine = useCallback((engine: TTSEngineOption) => {
+    openAiCompatibleTtsRequestGuard.current.invalidate();
+    setIsRefreshingOpenAiCompatibleTtsModels(false);
     const defaultSpeaker: Record<string, string> = {
       openai: 'alloy',
       geminiTts: 'Zephyr',
@@ -539,7 +664,10 @@ export function useSettings() {
             : prev.tts.openAiCompatibleApiUrl,
         openAiCompatibleModel:
           engine === 'openaiCompatible'
-            ? prev.tts.openAiCompatibleModel || DEFAULT_OPENAI_COMPATIBLE_MODEL
+            ? chooseOpenAiCompatibleTtsModel(
+                [],
+                prev.tts.openAiCompatibleModel,
+              )
             : prev.tts.openAiCompatibleModel,
         openAiCompatibleSpeed:
           engine === 'openaiCompatible'
@@ -702,6 +830,8 @@ export function useSettings() {
   }, []);
 
   const updateOpenAiCompatibleApiKey = useCallback((key: string) => {
+    openAiCompatibleTtsRequestGuard.current.invalidate();
+    setIsRefreshingOpenAiCompatibleTtsModels(false);
     setSettings((prev) => ({
       ...prev,
       tts: { ...prev.tts, openAiCompatibleApiKey: key },
@@ -709,6 +839,8 @@ export function useSettings() {
   }, []);
 
   const updateOpenAiCompatibleApiUrl = useCallback((url: string) => {
+    openAiCompatibleTtsRequestGuard.current.invalidate();
+    setIsRefreshingOpenAiCompatibleTtsModels(false);
     setSettings((prev) => ({
       ...prev,
       tts: { ...prev.tts, openAiCompatibleApiUrl: url },
@@ -1317,6 +1449,14 @@ export function useSettings() {
     updateLLMSystemPrompt,
     updateLLMApiKey,
     updateLLMEndpoint,
+    refreshOpenAiCompatibleModels,
+    openAiCompatibleModels,
+    refreshOpenAiCompatibleTtsModels,
+    openAiCompatibleTtsModels,
+    openAiCompatibleLlmDiscoveryError,
+    openAiCompatibleTtsDiscoveryError,
+    isRefreshingOpenAiCompatibleModels,
+    isRefreshingOpenAiCompatibleTtsModels,
     updateXaiReasoningEffort,
     refreshOpenRouterDynamicFreeModels,
     isRefreshingOpenRouterFreeModels,

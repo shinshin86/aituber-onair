@@ -197,7 +197,7 @@ export function useLiveCommentIntelligence({
 
       const promptForCore = formatCommentIntelligencePrompt(result);
       const authorName = selected.author.displayName ?? selected.author.name;
-      const displayText = `「${authorName}」さんのコメント: ${selected.text}`;
+      const displayText = `Comentario de "${authorName}": ${selected.text}`;
 
       await processChat(promptForCore, { displayText });
     } finally {

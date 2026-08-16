@@ -16,7 +16,7 @@ export function ChatLog({ messages, partialResponse }: ChatLogProps) {
   return (
     <div className="chat-log">
       {messages.length === 0 && !partialResponse && (
-        <div className="chat-empty">メッセージを送信してください</div>
+        <div className="chat-empty">Envía un mensaje</div>
       )}
       {messages.map((msg) => (
         <div key={msg.id} className={`chat-message chat-message-${msg.role}`}>

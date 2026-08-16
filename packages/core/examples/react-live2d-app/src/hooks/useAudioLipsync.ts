@@ -129,7 +129,7 @@ export function useAudioLipsync() {
 
           clearPlayback(false);
           settlePlaybackRef.current = null;
-          reject(new Error('音声を再生できませんでした。'));
+          reject(new Error('No se pudo reproducir el audio.'));
         };
 
         void audio.play().catch((error: unknown) => {
@@ -143,7 +143,7 @@ export function useAudioLipsync() {
           reject(
             error instanceof Error
               ? error
-              : new Error('音声を再生できませんでした。'),
+              : new Error('No se pudo reproducir el audio.'),
           );
         });
       });

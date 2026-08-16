@@ -189,7 +189,7 @@ export function EmotionEffectOverlay({
         }`}
         aria-hidden={!anchorEditorOpen}
         aria-label={
-          anchorEditorOpen ? '感情表現エフェクトアンカー配置エリア' : undefined
+          anchorEditorOpen ? 'Área posición anclaje efectos emoción' : undefined
         }
         onPointerDown={(event) => {
           if (!anchorEditorOpen || !onAnchorPoint || event.button !== 0) return;
@@ -461,20 +461,20 @@ function drawEmotionEffectAnchorGuides(
   context: CanvasRenderingContext2D,
   geometry: EmotionEffectGeometry,
 ) {
-  drawAnchorMarker(context, geometry.faceX, geometry.faceY, '#ffcf5a', '顔');
+  drawAnchorMarker(context, geometry.faceX, geometry.faceY, '#ffcf5a', 'Cara');
   drawAnchorMarker(
     context,
     geometry.leftEyeX,
     geometry.leftEyeY,
     '#63c8ff',
-    '左目',
+    'Ojo izq.',
   );
   drawAnchorMarker(
     context,
     geometry.rightEyeX,
     geometry.rightEyeY,
     '#ff82b2',
-    '右目',
+    'Ojo der.',
   );
 }
 

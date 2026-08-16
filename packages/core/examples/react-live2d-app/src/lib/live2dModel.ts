@@ -167,7 +167,7 @@ async function rewriteModelJsonReferences(
 
   if (!references) {
     throw new Error(
-      '選択したモデル JSON に FileReferences が含まれていません。',
+      'El JSON del modelo seleccionado no contiene FileReferences.'
     );
   }
 
@@ -273,20 +273,20 @@ export async function createBundledLive2DModelSource(
   );
 
   if (!registryEntry) {
-    throw new Error(`指定した Live2D モデルが見つかりません: ${modelId}`);
+    throw new Error(`Modelo Live2D no encontrado: ${modelId}`);
   }
 
   const modelJsonUrl = registryEntry.assetUrls.get(registryEntry.modelFilePath);
   if (!modelJsonUrl) {
     throw new Error(
-      `モデル JSON が見つかりません: ${registryEntry.modelFilePath}`,
+      `JSON del modelo no encontrado: ${registryEntry.modelFilePath}`,
     );
   }
 
   const modelJson = (await fetch(modelJsonUrl).then((response) => {
     if (!response.ok) {
       throw new Error(
-        `モデル JSON を読み込めませんでした: ${registryEntry.modelFilePath}`,
+        `No se pudo leer el JSON del modelo: ${registryEntry.modelFilePath}`,
       );
     }
     return response.json();
@@ -304,7 +304,7 @@ export async function createBundledLive2DModelSource(
     );
     const assetUrl = registryEntry.assetUrls.get(resolvedPath);
     if (!assetUrl) {
-      throw new Error(`Live2D アセットが見つかりません: ${targetPath}`);
+      throw new Error(`Assets Live2D no encontrados: ${targetPath}`);
     }
     return toAbsoluteAssetUrl(assetUrl);
   });
@@ -367,7 +367,7 @@ export async function ensureCubismCoreLoaded() {
           () =>
             reject(
               new Error(
-                'public/scripts/live2dcubismcore.min.js から Cubism Core ランタイムを読み込めませんでした。',
+                'No se pudo cargar runtime Cubism Core desde public/scripts/live2dcubismcore.min.js.'
               ),
             ),
           { once: true },
@@ -384,8 +384,8 @@ export async function ensureCubismCoreLoaded() {
         reject(
           new Error(
             [
-              'Cubism Core ランタイムを読み込めませんでした。',
-              'public/scripts/live2dcubismcore.min.js に live2dcubismcore.min.js を配置してください。',
+              'Error cargando runtime Cubism Core.',
+              'Coloca live2dcubismcore.min.js en public/scripts/.'
             ].join(' '),
           ),
         );
@@ -403,8 +403,8 @@ export async function ensureCubismCoreLoaded() {
     cubismCoreLoadingPromise = null;
     throw new Error(
       [
-        'Cubism Core ランタイムが利用できません。',
-        'public/scripts/live2dcubismcore.min.js に live2dcubismcore.min.js を配置してください。',
+        'Runtime Cubism Core no disponible.',
+        'Coloca live2dcubismcore.min.js en public/scripts/.'
       ].join(' '),
     );
   }

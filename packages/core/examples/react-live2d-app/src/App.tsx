@@ -293,7 +293,7 @@ export default function App() {
       const message =
         error instanceof Error
           ? error.message
-          : '`models/` フォルダ内の Live2D モデルを読み込めませんでした。';
+          : '`models/` no se pudo cargar el modelo Live2D.';
       replaceModelSource(null);
       setModelPickerError(message);
     }
@@ -443,7 +443,7 @@ export default function App() {
               onPointerCancel={finishSettingsDialogDrag}
               onLostPointerCapture={finishSettingsDialogDrag}
             >
-              <h2>設定</h2>
+              <h2>Configuración</h2>
               <button
                 className="settings-dialog-close"
                 onClick={closeSettingsDialog}
@@ -456,7 +456,7 @@ export default function App() {
               <section className="live2d-model-panel">
                 <h3>Live2D</h3>
                 <div className="settings-field">
-                  <label>`models/` フォルダ内のモデル</label>
+                  <label>Modelos en carpeta `models/`</label>
                   <div className="settings-file-picker-row">
                     <select
                       value={selectedBundledModelId}
@@ -467,7 +467,7 @@ export default function App() {
                     >
                       {bundledModels.length === 0 ? (
                         <option value="">
-                          `models/` にモデルが見つかりません
+                          `models/` no tiene modelos disponibles
                         </option>
                       ) : (
                         bundledModels.map((model) => (
@@ -485,17 +485,15 @@ export default function App() {
                         bundledModels.length === 0 || !selectedBundledModelId
                       }
                     >
-                      読み込む
+                      Cargar
                     </button>
                   </div>
                   <p className="settings-field-hint">
-                    `packages/core/examples/react-live2d-app/models/`
-                    配下にあるモデルを表示します。新しいファイルを追加した場合は
-                    dev サーバーを再起動してください。
+                    Muestra los modelos dentro de `packages/core/examples/react-live2d-app/models/`. Reinicia el servidor dev si agregaste un nuevo archivo.
                   </p>
                   <div className="settings-file-actions">
                     <span className="settings-file-status">
-                      {modelSource?.modelFilePath || '未読み込み'}
+                      {modelSource?.modelFilePath || 'Sin cargar'}
                     </span>
                     <button
                       className="settings-clear-button"
@@ -503,11 +501,11 @@ export default function App() {
                       onClick={handleClearModel}
                       disabled={!modelSource}
                     >
-                      クリア
+                      Limpiar
                     </button>
                   </div>
                   <p className="settings-field-hint">
-                    このサンプルには Live2D アセットは同梱していません。
+                    Este ejemplo no incluye assets Live2D.
                   </p>
                   {modelPickerError && (
                     <p className="settings-field-error">{modelPickerError}</p>
