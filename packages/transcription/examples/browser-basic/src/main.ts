@@ -7,6 +7,7 @@ import {
   type TranscriptionError,
   type TranscriptionErrorCode,
   type TranscriptionProviderName,
+  type TranscriptionProgress,
   type TranscriptionState,
 } from '@aituber-onair/transcription';
 import localWhisperWorkerUrl from '../../../src/providers/local-whisper.worker.ts?worker&url';
@@ -44,6 +45,7 @@ const localWhisperLanguage = element<HTMLInputElement>(
 );
 const localWhisperSilence = element<HTMLInputElement>('#local-whisper-silence');
 const stateBadge = element<HTMLSpanElement>('#state-badge');
+const progressMessage = element<HTMLParagraphElement>('#progress-message');
 const startButton = element<HTMLButtonElement>('#start-button');
 const stopButton = element<HTMLButtonElement>('#stop-button');
 const clearButton = element<HTMLButtonElement>('#clear-button');
@@ -55,6 +57,11 @@ let session: RealtimeTranscriptionSession | null = null;
 let displayLanguage: DisplayLanguage = 'en';
 let activeError: TranscriptionError | Error | null = null;
 const interimByUtterance = new Map<string, string>();
+const downloadProgressByFile = new Map<
+  string,
+  Pick<TranscriptionProgress, 'loadedBytes' | 'totalBytes' | 'progress'>
+>();
+let activeProgress: TranscriptionProgress | null = null;
 
 const stateTranslationKeys: Record<TranscriptionState, TranslationKey> = {
   idle: 'stateIdle',
@@ -147,6 +154,69 @@ function setError(error: TranscriptionError | Error | null): void {
   errorMessage.hidden = false;
 }
 
+function aggregateDownloadPercentage(): number | null {
+  let loadedBytes = 0;
+  let totalBytes = 0;
+
+  for (const fileProgress of downloadProgressByFile.values()) {
+    const fileTotal = fileProgress.totalBytes;
+    if (fileTotal === undefined || fileTotal <= 0) continue;
+    const fileLoaded =
+      fileProgress.loadedBytes ??
+      (fileProgress.progress !== undefined
+        ? fileProgress.progress * fileTotal
+        : 0);
+    loadedBytes += Math.min(fileTotal, Math.max(0, fileLoaded));
+    totalBytes += fileTotal;
+  }
+
+  return totalBytes > 0 ? Math.round((loadedBytes / totalBytes) * 100) : null;
+}
+
+function renderProgress(): void {
+  if (!activeProgress || activeProgress.phase === 'ready') {
+    progressMessage.hidden = true;
+    progressMessage.textContent = '';
+    return;
+  }
+
+  if (activeProgress.phase === 'initialize') {
+    progressMessage.textContent = translate(
+      displayLanguage,
+      'progressInitializeModel'
+    );
+    progressMessage.hidden = false;
+    return;
+  }
+
+  const percentage = aggregateDownloadPercentage();
+  const suffix = percentage === null ? '' : ` ${percentage}%`;
+  progressMessage.textContent = `${translate(
+    displayLanguage,
+    'progressDownloadModel'
+  )}${suffix}`;
+  progressMessage.hidden = false;
+}
+
+function handleProgress(progress: TranscriptionProgress): void {
+  activeProgress = progress;
+  if (progress.phase === 'download' && progress.file) {
+    const current = downloadProgressByFile.get(progress.file);
+    downloadProgressByFile.set(progress.file, {
+      loadedBytes: progress.loadedBytes ?? current?.loadedBytes,
+      totalBytes: progress.totalBytes ?? current?.totalBytes,
+      progress: progress.progress ?? current?.progress,
+    });
+  }
+  renderProgress();
+}
+
+function resetProgress(): void {
+  activeProgress = null;
+  downloadProgressByFile.clear();
+  renderProgress();
+}
+
 function renderState(state: TranscriptionState): void {
   stateBadge.textContent = translate(
     displayLanguage,
@@ -159,6 +229,7 @@ function renderState(state: TranscriptionState): void {
   startButton.disabled =
     busy || !isTranscriptionProviderSupported(selectedProvider());
   stopButton.disabled = !active;
+  if (state !== 'connecting') resetProgress();
 }
 
 function renderInterim(): void {
@@ -220,6 +291,7 @@ async function disposeSession(): Promise<void> {
   const current = session;
   session = null;
   if (current) await current.dispose();
+  resetProgress();
 }
 
 async function startSession(): Promise<void> {
@@ -231,6 +303,7 @@ async function startSession(): Promise<void> {
     nextSession = createSession();
     session = nextSession;
     nextSession.onTranscript(handleTranscript);
+    nextSession.onProgress(handleProgress);
     nextSession.onStateChange(renderState);
     nextSession.onError(setError);
     await nextSession.start();
@@ -291,6 +364,7 @@ function applyDisplayLanguage(language: DisplayLanguage): void {
     emptyTranscript.textContent = translate(language, 'noFinalTranscript');
   }
   syncSettings();
+  renderProgress();
   if (activeError) setError(activeError);
 }
 

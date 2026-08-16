@@ -15,6 +15,9 @@
   noise and common Whisper hallucinations.
 - Added Local Whisper controls and English/Japanese guidance to the browser
   example.
+- Added provider-neutral initialization progress events, normalized Local
+  Whisper download/initialization phases, and aggregated loading progress in
+  the browser example.
 
 ## 0.0.1
 

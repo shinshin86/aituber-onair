@@ -9,6 +9,16 @@ export interface TranscriptUpdate {
   isFinal: boolean;
 }
 
+export interface TranscriptionProgress {
+  phase: 'download' | 'initialize' | 'ready';
+  file?: string;
+  loadedBytes?: number;
+  totalBytes?: number;
+  /** Normalized progress from 0 to 1, when the total size is known. */
+  progress?: number;
+  message?: string;
+}
+
 export interface TranscriptionCapabilities {
   interimResults: boolean;
   multipleLanguages: boolean;
@@ -117,6 +127,7 @@ export interface RealtimeTranscriptionSession {
   stop(): Promise<void>;
   dispose(): Promise<void>;
   onTranscript(listener: (update: TranscriptUpdate) => void): () => void;
+  onProgress(listener: (progress: TranscriptionProgress) => void): () => void;
   onStateChange(listener: (state: TranscriptionState) => void): () => void;
   onError(listener: (error: TranscriptionError) => void): () => void;
 }

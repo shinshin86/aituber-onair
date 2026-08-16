@@ -7,6 +7,7 @@ import type {
   LocalWhisperWorkerRequest,
   LocalWhisperWorkerResponse,
 } from './localWhisperProtocol';
+import { normalizeLocalWhisperDownloadProgress } from './localWhisperProgress';
 
 const LOCAL_WHISPER_MODEL_ID = 'onnx-community/whisper-tiny';
 const LOCAL_WHISPER_MODEL_OPTIONS = {
@@ -58,16 +59,19 @@ async function createTranscriber(
     {
       ...LOCAL_WHISPER_MODEL_OPTIONS,
       progress_callback: (data: unknown) => {
-        postResponse({ type: 'progress', data });
+        const progress = normalizeLocalWhisperDownloadProgress(data);
+        if (progress) postResponse({ type: 'progress', progress });
       },
     }
   );
   const modelLoadedAt = performance.now();
+  postResponse({ type: 'progress', progress: { phase: 'initialize' } });
   await transcriber(new Float32Array(WARM_UP_SAMPLE_COUNT), {
     language: 'en',
     task: 'transcribe',
   });
   const warmUpCompletedAt = performance.now();
+  postResponse({ type: 'progress', progress: { phase: 'ready' } });
   debugTiming(debug, 'Local Whisper initialization', {
     modelLoadMs: modelLoadedAt - modelLoadStartedAt,
     warmUpMs: warmUpCompletedAt - modelLoadedAt,

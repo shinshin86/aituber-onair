@@ -1,3 +1,5 @@
+import type { TranscriptionProgress } from '../types';
+
 export type LocalWhisperWorkerRequest =
   | {
       type: 'load';
@@ -17,7 +19,7 @@ export type LocalWhisperWorkerResponse =
     }
   | {
       type: 'progress';
-      data: unknown;
+      progress: TranscriptionProgress;
     }
   | {
       type: 'result';

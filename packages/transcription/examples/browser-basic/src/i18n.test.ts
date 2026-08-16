@@ -26,6 +26,13 @@ describe('browser example i18n', () => {
       'マイクから入力された日本語の会話です。',
     ]);
     expect(translate('ja', 'localWhisperNotice')).toContain('約120MB');
+    expect(translate('ja', 'progressDownloadModel')).toBe(
+      'モデルをダウンロード中(初回のみ・約120MB)'
+    );
+    expect(translate('ja', 'progressInitializeModel')).toBe('モデルを初期化中');
+    expect(translate('en', 'progressDownloadModel')).toContain(
+      'first use only'
+    );
     expect(translate('en', 'localWhisperNotice')).toContain(
       'Microphone audio stays in this browser.'
     );

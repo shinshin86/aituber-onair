@@ -17,8 +17,10 @@ to OpenAI directly from the browser, so avoid using it on a shared device.
 
 Use localhost or HTTPS and grant microphone access when prompted. Local Whisper
 requires WebGPU. Its first start downloads about 120 MB of model/runtime assets
-and caches them in the browser; microphone audio stays in the browser. OpenAI
-usage may incur charges while a session is listening.
+and caches them in the browser. The example aggregates known per-file totals to
+show overall download progress, then shows model initialization and hides the
+progress row when listening starts. Microphone audio stays in the browser.
+OpenAI usage may incur charges while a session is listening.
 
 ## Local Whisper worker URL
 

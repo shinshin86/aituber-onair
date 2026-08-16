@@ -16,6 +16,7 @@ import type {
   LocalWhisperTranscriptionOptions,
   TranscriptUpdate,
   TranscriptionError,
+  TranscriptionProgress,
 } from '../src/types';
 import type { Mock } from 'vitest';
 
@@ -33,11 +34,23 @@ class MockMediaStream {
 
 class MockWorkerClient {
   hasFailed = false;
+  private readonly progressListeners = new Set<
+    (progress: TranscriptionProgress) => void
+  >();
   load = vi.fn<[], Promise<void>>(async () => undefined);
   transcribe = vi.fn<[LocalWhisperTranscriptionInput], Promise<string>>(
     async () => 'transcribed'
   );
   dispose = vi.fn();
+
+  onProgress(listener: (progress: TranscriptionProgress) => void): () => void {
+    this.progressListeners.add(listener);
+    return () => this.progressListeners.delete(listener);
+  }
+
+  emitProgress(progress: TranscriptionProgress): void {
+    for (const listener of this.progressListeners) listener(progress);
+  }
 }
 
 class MockCapture {
@@ -173,6 +186,36 @@ describe('LocalWhisperTranscriptionSession', () => {
     );
     expect(workerClient.load).toHaveBeenCalledOnce();
     expect(capture?.start).toHaveBeenCalledOnce();
+  });
+
+  it('emits worker progress only while connecting', async () => {
+    const modelLoad = deferred<void>();
+    workerClient.load.mockImplementationOnce(() => modelLoad.promise);
+    const session = createSession();
+    const progressEvents: TranscriptionProgress[] = [];
+    session.onProgress((progress) => progressEvents.push(progress));
+
+    const startPromise = session.start();
+    await vi.waitFor(() => {
+      expect(workerClient.load).toHaveBeenCalledOnce();
+    });
+    const downloadProgress: TranscriptionProgress = {
+      phase: 'download',
+      file: 'model.onnx',
+      loadedBytes: 50,
+      totalBytes: 100,
+      progress: 0.5,
+    };
+    workerClient.emitProgress(downloadProgress);
+    modelLoad.resolve();
+    await startPromise;
+
+    workerClient.emitProgress({ phase: 'initialize' });
+    const stopPromise = session.stop();
+    workerClient.emitProgress({ phase: 'ready' });
+    await stopPromise;
+
+    expect(progressEvents).toEqual([downloadProgress]);
   });
 
   it('is created by the public factory when browser support is available', async () => {

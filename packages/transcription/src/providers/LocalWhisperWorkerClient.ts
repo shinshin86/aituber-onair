@@ -2,6 +2,7 @@ import type {
   LocalWhisperWorkerRequest,
   LocalWhisperWorkerResponse,
 } from './localWhisperProtocol';
+import type { TranscriptionProgress } from '../types';
 
 interface PendingRequest {
   resolve: (text: string) => void;
@@ -35,6 +36,9 @@ export class LocalWhisperWorkerClient {
   private rejectLoad: ((cause: Error) => void) | null = null;
   private inferenceQueue = Promise.resolve();
   private readonly pendingRequests = new Map<string, PendingRequest>();
+  private readonly progressListeners = new Set<
+    (progress: TranscriptionProgress) => void
+  >();
   private requestSequence = 0;
   private workerFailure: Error | null = null;
   private disposed = false;
@@ -53,6 +57,11 @@ export class LocalWhisperWorkerClient {
 
   get hasFailed(): boolean {
     return this.workerFailure !== null;
+  }
+
+  onProgress(listener: (progress: TranscriptionProgress) => void): () => void {
+    this.progressListeners.add(listener);
+    return () => this.progressListeners.delete(listener);
   }
 
   load(): Promise<void> {
@@ -96,6 +105,7 @@ export class LocalWhisperWorkerClient {
     this.worker.onerror = null;
     this.worker.terminate();
     this.rejectAll(new Error('The local Whisper worker was disposed.'));
+    this.progressListeners.clear();
   }
 
   private sendTranscriptionRequest(
@@ -136,7 +146,12 @@ export class LocalWhisperWorkerClient {
       this.rejectLoad = null;
       return;
     }
-    if (data.type === 'progress') return;
+    if (data.type === 'progress') {
+      for (const listener of this.progressListeners) {
+        listener(data.progress);
+      }
+      return;
+    }
 
     if (data.type === 'result') {
       const pending = this.pendingRequests.get(data.requestId);

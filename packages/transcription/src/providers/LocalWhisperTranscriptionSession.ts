@@ -1,6 +1,9 @@
 import { BaseRealtimeTranscriptionSession } from '../BaseRealtimeTranscriptionSession';
 import { TranscriptionSessionError } from '../errors';
-import type { LocalWhisperTranscriptionOptions } from '../types';
+import type {
+  LocalWhisperTranscriptionOptions,
+  TranscriptionProgress,
+} from '../types';
 import {
   BrowserPcmTurnCapture,
   type BrowserPcmTurnCaptureOptions,
@@ -28,6 +31,7 @@ const TRAILING_PUNCTUATION = /[。．.！!？?]+$/u;
 interface LocalWhisperWorker {
   readonly hasFailed: boolean;
   load(): Promise<void>;
+  onProgress(listener: (progress: TranscriptionProgress) => void): () => void;
   transcribe(input: {
     audio: Float32Array;
     language?: string;
@@ -129,6 +133,7 @@ export class LocalWhisperTranscriptionSession extends BaseRealtimeTranscriptionS
   private stopPromise: Promise<void> | null = null;
   private operationId = 0;
   private workerClient: LocalWhisperWorker | null = null;
+  private workerProgressUnsubscribe: (() => void) | null = null;
   private capture: LocalWhisperCapture | null = null;
   private transcriptionQueue = Promise.resolve();
   private utteranceSequence = 0;
@@ -211,10 +216,19 @@ export class LocalWhisperTranscriptionSession extends BaseRealtimeTranscriptionS
       }
       this.assertOperation(operationId);
 
-      localWorkerClient =
-        this.workerClient ??
-        this.dependencies.createWorkerClient(this.options.workerUrl);
-      this.workerClient = localWorkerClient;
+      if (this.workerClient) {
+        localWorkerClient = this.workerClient;
+      } else {
+        localWorkerClient = this.dependencies.createWorkerClient(
+          this.options.workerUrl
+        );
+        this.workerClient = localWorkerClient;
+        this.workerProgressUnsubscribe = localWorkerClient.onProgress(
+          (progress) => {
+            if (this.state === 'connecting') this.emitProgress(progress);
+          }
+        );
+      }
       localCapture = this.dependencies.createCapture(localStream, {
         silenceDurationMs: this.silenceDurationMs,
         onTurn: (turn) => this.queueTurn(turn),
@@ -264,8 +278,12 @@ export class LocalWhisperTranscriptionSession extends BaseRealtimeTranscriptionS
         return;
       }
 
+      if (this.workerClient === localWorkerClient) {
+        this.workerProgressUnsubscribe?.();
+        this.workerProgressUnsubscribe = null;
+        this.workerClient = null;
+      }
       localWorkerClient?.dispose();
-      if (this.workerClient === localWorkerClient) this.workerClient = null;
       const error =
         cause instanceof TranscriptionSessionError
           ? cause
@@ -325,6 +343,8 @@ export class LocalWhisperTranscriptionSession extends BaseRealtimeTranscriptionS
 
     const workerClient = this.workerClient;
     this.workerClient = null;
+    this.workerProgressUnsubscribe?.();
+    this.workerProgressUnsubscribe = null;
     workerClient?.dispose();
     await this.transcriptionQueue.catch(() => undefined);
     this.clearListeners();
@@ -384,6 +404,8 @@ export class LocalWhisperTranscriptionSession extends BaseRealtimeTranscriptionS
     if (workerClient.hasFailed && workerClient === this.workerClient) {
       this.operationId += 1;
       this.workerClient = null;
+      this.workerProgressUnsubscribe?.();
+      this.workerProgressUnsubscribe = null;
       workerClient.dispose();
       const capture = this.capture;
       this.capture = null;

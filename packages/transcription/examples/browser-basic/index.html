@@ -176,6 +176,15 @@ An English conversation recorded through a microphone.</textarea
           <span id="state-badge" class="badge state-idle">Idle</span>
         </div>
 
+        <p
+          id="progress-message"
+          class="initialization-progress"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          hidden
+        ></p>
+
         <div class="actions">
           <button id="start-button" class="primary" type="button">
             <span data-i18n="startMicrophone">Start transcription</span>

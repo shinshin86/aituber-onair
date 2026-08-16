@@ -60,6 +60,8 @@ const englishMessages = {
   stateStopping: 'Stopping',
   stateError: 'Error',
   stateDisposed: 'Disposed',
+  progressDownloadModel: 'Downloading model (first use only, about 120 MB)',
+  progressInitializeModel: 'Initializing model',
   errorUnsupportedProvider:
     'The selected transcription provider is unavailable in this browser.',
   errorInsecureContext: 'Microphone transcription requires HTTPS or localhost.',
@@ -134,6 +136,8 @@ const japaneseMessages: Messages = {
   stateStopping: '停止中',
   stateError: 'エラー',
   stateDisposed: '終了済み',
+  progressDownloadModel: 'モデルをダウンロード中(初回のみ・約120MB)',
+  progressInitializeModel: 'モデルを初期化中',
   errorUnsupportedProvider:
     '選択した文字起こし方式は、このブラウザでは利用できません。',
   errorInsecureContext:

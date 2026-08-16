@@ -60,6 +60,10 @@ await session.stop();
 await session.dispose();
 ```
 
+Only providers with potentially long initialization emit `onProgress` events.
+Currently, only `local-whisper` emits them; Web Speech and OpenAI Realtime do
+not.
+
 ### Local Whisper
 
 Local Whisper runs Whisper Tiny in a module worker and emits final transcripts
@@ -78,6 +82,10 @@ session.onTranscript(({ text, isFinal }) => {
   if (isFinal) {
     console.log(text);
   }
+});
+
+session.onProgress(({ phase, progress }) => {
+  updateLoadingIndicator(phase, progress);
 });
 
 session.onError((error) => {
@@ -105,6 +113,9 @@ Requirements and behavior:
 - `language` accepts a BCP 47-style hint and is optional. The default 500 ms
   `silenceDurationMs` can be reduced to a minimum of 150 ms for faster turn
   completion.
+- Download progress can include `file`, `loadedBytes`, `totalBytes`, and a
+  normalized `progress` value from 0 to 1. Initialization and ready phases do
+  not require byte totals.
 
 The package normally resolves `dist/local-whisper.worker.js` relative to its
 ESM entry. If a bundler pre-bundles the package and cannot resolve that asset,

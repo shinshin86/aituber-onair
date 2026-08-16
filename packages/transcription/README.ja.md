@@ -59,6 +59,10 @@ await session.stop();
 await session.dispose();
 ```
 
+進捗イベントを発行するのは、時間のかかる初期化を伴うプロバイダーだけです。現在は
+`local-whisper` のみが `onProgress` を発行し、Web Speech と OpenAI Realtime は
+発行しません。
+
 ### Local Whisper
 
 Local Whisper は Whisper Tiny をモジュールWorker内で実行し、確定結果のみを発行します。
@@ -76,6 +80,10 @@ session.onTranscript(({ text, isFinal }) => {
   if (isFinal) {
     console.log(text);
   }
+});
+
+session.onProgress(({ phase, progress }) => {
+  updateLoadingIndicator(phase, progress);
 });
 
 session.onError((error) => {
@@ -102,6 +110,9 @@ await session.dispose();
   音声や文字起こし結果を永続化しません。
 - `language` には BCP 47 形式のヒントを任意指定できます。発話終了を判定する
   `silenceDurationMs` の既定値は500msで、最小150msまで下げられます。
+- ダウンロード進捗には、`file`、`loadedBytes`、`totalBytes` と、0〜1に正規化した
+  `progress` が含まれる場合があります。初期化・準備完了フェーズにバイト数は
+  必須ではありません。
 
 通常は ESM エントリからの相対URLで `dist/local-whisper.worker.js` を解決します。
 パッケージを事前バンドルする環境でこの資産を解決できない場合は、高度な設定である

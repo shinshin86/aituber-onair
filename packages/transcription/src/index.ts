@@ -13,6 +13,7 @@ export type {
   TranscriptionError,
   TranscriptionErrorCode,
   TranscriptionProviderName,
+  TranscriptionProgress,
   TranscriptionState,
   WebSpeechTranscriptionOptions,
 } from './types';

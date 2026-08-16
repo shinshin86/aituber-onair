@@ -78,6 +78,29 @@ describe('LocalWhisperWorkerClient', () => {
     ]);
   });
 
+  it('forwards normalized progress messages and lets listeners unsubscribe', () => {
+    const client = new LocalWhisperWorkerClient('/worker.js');
+    const listener = vi.fn();
+    const unsubscribe = client.onProgress(listener);
+    const progress = {
+      phase: 'download' as const,
+      file: 'model.onnx',
+      loadedBytes: 25,
+      totalBytes: 100,
+      progress: 0.25,
+    };
+
+    currentWorker().emit({ type: 'progress', progress });
+    unsubscribe();
+    currentWorker().emit({
+      type: 'progress',
+      progress: { phase: 'initialize' },
+    });
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith(progress);
+  });
+
   it('resolves transcription by request ID and transfers audio ownership', async () => {
     const client = await createLoadedClient();
     const worker = currentWorker();
