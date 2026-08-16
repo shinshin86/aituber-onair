@@ -71,14 +71,14 @@ const MAX_BOND_TOASTS = 4;
 const BOND_TOAST_DURATION_MS = 4_500;
 const VISIBLE_BOND_CHANGE = 0.0005;
 
-interface VrmKizunaManagerSetup {
+interface KizunaManagerSetup {
   manager: KizunaManager;
   storageProvider: IStorageProvider | null;
 }
 
-function createVrmKizunaManager(
+function createKizunaManager(
   enablePersistence = true,
-): VrmKizunaManagerSetup {
+): KizunaManagerSetup {
   const config = createDefaultKizunaConfig();
   config.basePoints = {
     ...config.basePoints,
@@ -400,7 +400,7 @@ export function useAituberCore({
   getApiKeyForProvider,
 }: UseAituberCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
-  const [initialKizunaSetup] = useState(() => createVrmKizunaManager());
+  const [initialKizunaSetup] = useState(() => createKizunaManager());
   const kizunaRef = useRef<KizunaManager | null>(initialKizunaSetup.manager);
   const kizunaStorageProviderRef = useRef<IStorageProvider | null>(
     initialKizunaSetup.storageProvider,
@@ -466,7 +466,7 @@ export function useAituberCore({
         );
       }
 
-      const setup = createVrmKizunaManager(storageClearResult.storageCleared);
+      const setup = createKizunaManager(storageClearResult.storageCleared);
       kizunaRef.current = setup.manager;
       kizunaStorageProviderRef.current = storageClearResult.storageCleared
         ? setup.storageProvider

@@ -75,14 +75,14 @@ const MAX_BOND_TOASTS = 4;
 const BOND_TOAST_DURATION_MS = 4_500;
 const VISIBLE_BOND_CHANGE = 0.0005;
 
-interface PngTuberKizunaManagerSetup {
+interface KizunaManagerSetup {
   manager: KizunaManager;
   storageProvider: IStorageProvider | null;
 }
 
-function createPngTuberKizunaManager(
+function createKizunaManager(
   enablePersistence = true,
-): PngTuberKizunaManagerSetup {
+): KizunaManagerSetup {
   const config = createDefaultKizunaConfig();
   config.basePoints = {
     ...config.basePoints,
@@ -392,9 +392,7 @@ export function useAituberCore({
   getApiKeyForProvider,
 }: UseAituberCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
-  const [initialKizunaSetup] = useState(() =>
-    createPngTuberKizunaManager(),
-  );
+  const [initialKizunaSetup] = useState(() => createKizunaManager());
   const kizunaRef = useRef<KizunaManager | null>(initialKizunaSetup.manager);
   const kizunaStorageProviderRef = useRef<IStorageProvider | null>(
     initialKizunaSetup.storageProvider,
@@ -461,9 +459,7 @@ export function useAituberCore({
         );
       }
 
-      const setup = createPngTuberKizunaManager(
-        storageClearResult.storageCleared,
-      );
+      const setup = createKizunaManager(storageClearResult.storageCleared);
       kizunaRef.current = setup.manager;
       kizunaStorageProviderRef.current = storageClearResult.storageCleared
         ? setup.storageProvider
