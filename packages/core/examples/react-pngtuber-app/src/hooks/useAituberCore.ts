@@ -9,8 +9,10 @@ import {
 import { ManneriDetector } from '@aituber-onair/manneri';
 import {
   KizunaManager,
+  LocalStorageProvider,
   createDefaultKizunaConfig,
   type BondSnapshot,
+  type IStorageProvider,
   type InteractionKind,
 } from '@aituber-onair/kizuna';
 import type {
@@ -35,6 +37,11 @@ import {
   type BondIdentity,
   type BondToast,
 } from '../lib/kizunaBond';
+import {
+  attemptPngTuberKizunaStorageClear,
+  PNGTUBER_KIZUNA_STORAGE_KEY,
+  tryCreateKizunaStorageProvider,
+} from '../lib/kizunaStorage';
 import {
   createSerialTaskQueue,
   type SerialTaskQueue,
@@ -68,14 +75,39 @@ const MAX_BOND_TOASTS = 4;
 const BOND_TOAST_DURATION_MS = 4_500;
 const VISIBLE_BOND_CHANGE = 0.0005;
 
-function createPngTuberKizunaManager(): KizunaManager {
+interface PngTuberKizunaManagerSetup {
+  manager: KizunaManager;
+  storageProvider: IStorageProvider | null;
+}
+
+function createPngTuberKizunaManager(
+  enablePersistence = true,
+): PngTuberKizunaManagerSetup {
   const config = createDefaultKizunaConfig();
   config.basePoints = {
     ...config.basePoints,
     message: 20,
     reaction: 5,
   };
-  return new KizunaManager(config, undefined, 'react-pngtuber-bond');
+  const storageProvider = enablePersistence
+    ? tryCreateKizunaStorageProvider(
+        () => new LocalStorageProvider(),
+        (error) => {
+          console.warn(
+            'Kizuna persistence is unavailable; continuing with in-memory storage.',
+            error,
+          );
+        },
+      )
+    : undefined;
+  return {
+    manager: new KizunaManager(
+      config,
+      storageProvider,
+      PNGTUBER_KIZUNA_STORAGE_KEY,
+    ),
+    storageProvider: storageProvider ?? null,
+  };
 }
 
 function toManneriMessages(
@@ -361,8 +393,11 @@ export function useAituberCore({
 }: UseAituberCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
   const kizunaRef = useRef<KizunaManager | null>(null);
+  const kizunaStorageProviderRef = useRef<IStorageProvider | null>(null);
   if (!kizunaRef.current) {
-    kizunaRef.current = createPngTuberKizunaManager();
+    const setup = createPngTuberKizunaManager();
+    kizunaRef.current = setup.manager;
+    kizunaStorageProviderRef.current = setup.storageProvider;
   }
   const coreRequestQueueRef = useRef<SerialTaskQueue | null>(null);
   if (!coreRequestQueueRef.current) {
@@ -385,6 +420,14 @@ export function useAituberCore({
   const [partialResponse, setPartialResponse] = useState('');
   const [bondToasts, setBondToasts] = useState<BondToast[]>([]);
 
+  useEffect(() => {
+    const manager = kizunaRef.current;
+    if (!manager) return;
+    void manager.initialize().catch((error) => {
+      console.error('Failed to initialize Kizuna data:', error);
+    });
+  }, []);
+
   const dismissBondToast = useCallback((id: number) => {
     const timer = bondToastTimersRef.current.get(id);
     if (timer !== undefined) window.clearTimeout(timer);
@@ -394,6 +437,56 @@ export function useAituberCore({
     }
     setBondToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
+
+  const clearBondToasts = useCallback(() => {
+    for (const timer of bondToastTimersRef.current.values()) {
+      window.clearTimeout(timer);
+    }
+    bondToastTimersRef.current.clear();
+    bondToastByUserRef.current.clear();
+    setBondToasts([]);
+  }, []);
+
+  const resetKizunaData = useCallback((): Promise<void> => {
+    const reset = bondQueueRef.current.then(async () => {
+      activeBondIdentityRef.current = null;
+      kizunaRef.current?.destroy();
+
+      const storageClearResult =
+        await attemptPngTuberKizunaStorageClear(
+          kizunaStorageProviderRef.current,
+        );
+      if (!storageClearResult.storageCleared) {
+        console.error(
+          'Failed to clear persisted Kizuna data:',
+          storageClearResult.error,
+        );
+      }
+
+      const setup = createPngTuberKizunaManager(
+        storageClearResult.storageCleared,
+      );
+      kizunaRef.current = setup.manager;
+      kizunaStorageProviderRef.current = storageClearResult.storageCleared
+        ? setup.storageProvider
+        : storageClearResult.storageProvider;
+      try {
+        await setup.manager.initialize();
+      } catch (error) {
+        console.error('Failed to initialize reset Kizuna data:', error);
+      }
+      clearBondToasts();
+
+      if (!storageClearResult.storageCleared) {
+        throw storageClearResult.error;
+      }
+    });
+    bondQueueRef.current = reset.then(
+      () => undefined,
+      () => undefined,
+    );
+    return reset;
+  }, [clearBondToasts]);
 
   const recordBondInteraction = useCallback(
     async (
@@ -405,6 +498,7 @@ export function useAituberCore({
     ): Promise<BondSnapshot | null> => {
       if (!settings.kizuna.enabled || !kizunaRef.current) return null;
       const manager = kizunaRef.current;
+      await manager.initialize();
       const previousSnapshot = manager.getBondSnapshot(identity.userId);
       const previousIntimacy = manager.toRelationshipCapital(identity.userId);
       const result = await manager.processInteraction({
@@ -517,13 +611,8 @@ export function useAituberCore({
   useEffect(() => {
     if (settings.kizuna.enabled) return;
     activeBondIdentityRef.current = null;
-    setBondToasts([]);
-    for (const timer of bondToastTimersRef.current.values()) {
-      window.clearTimeout(timer);
-    }
-    bondToastTimersRef.current.clear();
-    bondToastByUserRef.current.clear();
-  }, [settings.kizuna.enabled]);
+    clearBondToasts();
+  }, [clearBondToasts, settings.kizuna.enabled]);
 
   useEffect(
     () => () => {
@@ -907,5 +996,6 @@ export function useAituberCore({
     bondToasts,
     dismissBondToast,
     recordBondMessage,
+    resetKizunaData,
   };
 }

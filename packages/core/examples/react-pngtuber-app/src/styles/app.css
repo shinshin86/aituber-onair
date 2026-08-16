@@ -204,6 +204,47 @@ body {
   accent-color: #e94560;
 }
 
+.settings-kizuna-reset {
+  margin-top: 10px;
+}
+
+.settings-kizuna-reset-confirmation {
+  padding: 9px;
+  border: 1px solid rgba(233, 69, 96, 0.55);
+  border-radius: 7px;
+  background: rgba(233, 69, 96, 0.08);
+}
+
+.settings-kizuna-reset-confirmation p {
+  margin: 0 0 8px;
+  color: #f2c4cc;
+  font-size: 0.75rem;
+}
+
+.settings-kizuna-reset-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.settings-kizuna-reset-button {
+  border-color: rgba(233, 69, 96, 0.75);
+  color: #ffd7de;
+}
+
+.settings-kizuna-reset-status {
+  margin: 7px 0 0;
+  font-size: 0.72rem;
+}
+
+.settings-kizuna-reset-status.is-success {
+  color: #8fd8ad;
+}
+
+.settings-kizuna-reset-status.is-error {
+  color: #ff9aab;
+}
+
 /* ── Kizuna bond notifications ── */
 
 .bond-toast-stack {
