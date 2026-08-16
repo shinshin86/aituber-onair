@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  normalizeTikTokChatComment,
+  normalizeTikTokGift,
   normalizeTwitchComment,
   normalizeWebComment,
   normalizeYouTubeComment,
@@ -66,6 +68,70 @@ describe('normalizers', () => {
 
     expect(comment.timestamp).toBe(Date.now());
     vi.useRealTimers();
+  });
+
+  it('normalizes a TikTok chat comment with handle and display name', () => {
+    const comment = normalizeTikTokChatComment({
+      id: 'tt-1',
+      handle: '@hana_live',
+      nickname: 'Hana',
+      realName: 'Hana Yamada',
+      avatarUrl: 'https://example.com/hana.png',
+      text: 'こんばんは',
+      publishedAt: '2026-05-23T12:30:00.000Z',
+    });
+
+    expect(comment).toMatchObject({
+      id: 'tt-1',
+      platform: 'tiktok',
+      text: 'こんばんは',
+      author: {
+        id: 'hana_live',
+        name: 'Hana',
+        displayName: 'Hana Yamada',
+        handle: '@hana_live',
+        nickname: 'Hana',
+        realName: 'Hana Yamada',
+      },
+      metadata: {
+        source: 'tiktok',
+        eventKind: 'chat',
+      },
+    });
+  });
+
+  it('normalizes a TikTok gift event into a memory-friendly comment payload', () => {
+    const gift = normalizeTikTokGift({
+      handle: '@hana_live',
+      nickname: 'Hana',
+      giftId: 'rose',
+      giftName: 'Rose',
+      repeatCount: 3,
+      diamondCount: 15,
+      text: 'ありがとうございました',
+      publishedAt: 123,
+    });
+
+    expect(gift).toMatchObject({
+      platform: 'tiktok',
+      text: 'ありがとうございました',
+      timestamp: 123,
+      author: {
+        id: 'hana_live',
+        handle: '@hana_live',
+        name: 'Hana',
+      },
+      metadata: {
+        source: 'tiktok',
+        eventKind: 'gift',
+        gift: {
+          id: 'rose',
+          name: 'Rose',
+          repeatCount: 3,
+          diamondCount: 15,
+        },
+      },
+    });
   });
 
   it('normalizes anonymous web comments as Guest', () => {

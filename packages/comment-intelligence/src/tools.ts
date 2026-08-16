@@ -34,7 +34,14 @@ export const ANALYZE_LIVE_COMMENTS_TOOL: AgentToolDefinition = {
             },
             platform: {
               type: 'string',
-              enum: ['youtube', 'twitch', 'web', 'discord', 'unknown'],
+              enum: [
+                'youtube',
+                'twitch',
+                'tiktok',
+                'web',
+                'discord',
+                'unknown',
+              ],
               description: 'Source platform.',
             },
             author: {

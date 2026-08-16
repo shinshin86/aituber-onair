@@ -8,13 +8,14 @@
 // ============================================================================
 
 /** Platform types */
-export type UserType = 'owner' | 'youtube' | 'twitch' | 'websocket';
+export type UserType = 'owner' | 'youtube' | 'twitch' | 'tiktok' | 'websocket';
 
 /** Chat types (inherited from AITuber OnAir) */
 export type ChatType =
   | 'chatForm'
   | 'youtube'
   | 'twitch'
+  | 'tiktok'
   | 'websocket'
   | 'vision'
   | 'textFile'
@@ -83,6 +84,12 @@ export interface KizunaUser {
   id: string;
   /** Display name */
   displayName: string;
+  /** TikTok/@ platform handle or other canonical platform identity */
+  handle?: string;
+  /** Visible nickname if distinct from the canonical handle */
+  nickname?: string;
+  /** Real name when known */
+  realName?: string;
   /** User type */
   type: UserType;
   /** Current points */

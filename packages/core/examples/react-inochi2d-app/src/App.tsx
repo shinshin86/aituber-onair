@@ -12,6 +12,7 @@ import { useAituberCore } from './hooks/useAituberCore';
 import { useLiveCommentIntelligence } from './hooks/useLiveCommentIntelligence';
 import { useScreenVisionController } from './hooks/useScreenVisionController';
 import { useSettings } from './hooks/useSettings';
+import { useTikTokComments } from './hooks/useTikTokComments';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
@@ -27,6 +28,10 @@ import {
   type Inochi2DReaction,
   type Inochi2DReactionDraft,
 } from './lib/inochi2dReactions';
+import type {
+  TikTokChatMessage,
+  TikTokGiftMessage,
+} from './services/tiktok/tiktokService';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import type { ResolvedInochiModelDefinition } from './types/inochi2d';
@@ -205,31 +210,35 @@ export default function App() {
     [processChat, stop],
   );
 
-  const { enqueueYouTubeComments, enqueueTwitchComments } =
-    useLiveCommentIntelligence({
-      messages,
-      isProcessing,
-      isSpeaking,
-      processChat,
-      streamPlatform: settingsHook.settings.stream.platform,
-      llmSettings: settingsHook.settings.llm,
-      getApiKeyForProvider: settingsHook.getApiKeyForProvider,
-      enabled: settingsHook.settings.commentIntelligence.enabled,
-      mode: settingsHook.settings.commentIntelligence.mode,
-      analysisIntervalMs:
-        settingsHook.settings.commentIntelligence.analysisIntervalMs,
-      maxCommentsPerBatch:
-        settingsHook.settings.commentIntelligence.maxCommentsPerBatch,
-      minCommentsForLLMAnalysis:
-        settingsHook.settings.commentIntelligence.minCommentsForLLMAnalysis,
-      blockHighRiskViewers:
-        settingsHook.settings.commentIntelligence.blockHighRiskViewers,
-      viewerBlockDurationMs:
-        settingsHook.settings.commentIntelligence.viewerBlockDurationMs,
-      streamTopic: settingsHook.settings.commentIntelligence.streamTopic,
-      streamTitle: settingsHook.settings.commentIntelligence.streamTitle,
-      topicFilter: settingsHook.settings.commentIntelligence.topicFilter,
-    });
+  const {
+    enqueueYouTubeComments,
+    enqueueTwitchComments,
+    enqueueTikTokComments,
+    enqueueTikTokGifts,
+  } = useLiveCommentIntelligence({
+    messages,
+    isProcessing,
+    isSpeaking,
+    processChat,
+    streamPlatform: settingsHook.settings.stream.platform,
+    llmSettings: settingsHook.settings.llm,
+    getApiKeyForProvider: settingsHook.getApiKeyForProvider,
+    enabled: settingsHook.settings.commentIntelligence.enabled,
+    mode: settingsHook.settings.commentIntelligence.mode,
+    analysisIntervalMs:
+      settingsHook.settings.commentIntelligence.analysisIntervalMs,
+    maxCommentsPerBatch:
+      settingsHook.settings.commentIntelligence.maxCommentsPerBatch,
+    minCommentsForLLMAnalysis:
+      settingsHook.settings.commentIntelligence.minCommentsForLLMAnalysis,
+    blockHighRiskViewers:
+      settingsHook.settings.commentIntelligence.blockHighRiskViewers,
+    viewerBlockDurationMs:
+      settingsHook.settings.commentIntelligence.viewerBlockDurationMs,
+    streamTopic: settingsHook.settings.commentIntelligence.streamTopic,
+    streamTitle: settingsHook.settings.commentIntelligence.streamTitle,
+    topicFilter: settingsHook.settings.commentIntelligence.topicFilter,
+  });
 
   const handleYoutubeComment = useCallback(
     (comment: YouTubeChatMessage) => {
@@ -243,6 +252,20 @@ export default function App() {
       enqueueTwitchComments([comment]);
     },
     [enqueueTwitchComments],
+  );
+
+  const handleTikTokComment = useCallback(
+    (comment: TikTokChatMessage) => {
+      enqueueTikTokComments([comment]);
+    },
+    [enqueueTikTokComments],
+  );
+
+  const handleTikTokGift = useCallback(
+    (gift: TikTokGiftMessage) => {
+      enqueueTikTokGifts([gift]);
+    },
+    [enqueueTikTokGifts],
   );
 
   const handleBackgroundImageChange = useCallback((file: File | null) => {
@@ -385,6 +408,22 @@ export default function App() {
       settingsHook.updateTwitchEnabled(false);
       setStreamErrorMessage('Twitch access token expired. Please reconnect.');
     },
+    onError: (message) => {
+      setStreamErrorMessage(message);
+      if (message) {
+        console.warn(message);
+      }
+    },
+  });
+
+  useTikTokComments({
+    tiktokUniqueId: settingsHook.settings.stream.tiktokUniqueId,
+    relayUrl: settingsHook.settings.stream.tiktokRelayUrl,
+    isEnabled:
+      settingsHook.settings.stream.platform === 'tiktok' &&
+      settingsHook.settings.stream.tiktokEnabled,
+    onComment: handleTikTokComment,
+    onGift: handleTikTokGift,
     onError: (message) => {
       setStreamErrorMessage(message);
       if (message) {

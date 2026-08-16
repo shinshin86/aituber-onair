@@ -248,6 +248,10 @@ function getDefaultSettings(): AppSettings {
       twitchChannel: '',
       twitchEnabled: false,
       twitchCommentIntervalMs: 20_000,
+      tiktokUniqueId: '',
+      tiktokRelayUrl: 'http://127.0.0.1:8787/tiktok/events',
+      tiktokEnabled: false,
+      tiktokCommentIntervalMs: 20_000,
     },
     commentIntelligence: {
       enabled: true,
@@ -1115,6 +1119,37 @@ export function useSettings() {
     [],
   );
 
+  const updateTikTokUniqueId = useCallback((tiktokUniqueId: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, tiktokUniqueId },
+    }));
+  }, []);
+
+  const updateTikTokRelayUrl = useCallback((tiktokRelayUrl: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, tiktokRelayUrl },
+    }));
+  }, []);
+
+  const updateTikTokEnabled = useCallback((tiktokEnabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, tiktokEnabled },
+    }));
+  }, []);
+
+  const updateTikTokCommentIntervalMs = useCallback(
+    (tiktokCommentIntervalMs: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        stream: { ...prev.stream, tiktokCommentIntervalMs },
+      }));
+    },
+    [],
+  );
+
   const updateCommentIntelligenceEnabled = useCallback((enabled: boolean) => {
     setSettings((prev) => ({
       ...prev,
@@ -1378,6 +1413,10 @@ export function useSettings() {
     updateTwitchChannel,
     updateTwitchEnabled,
     updateTwitchCommentIntervalMs,
+    updateTikTokUniqueId,
+    updateTikTokRelayUrl,
+    updateTikTokEnabled,
+    updateTikTokCommentIntervalMs,
     updateCommentIntelligenceEnabled,
     updateCommentIntelligenceMode,
     updateCommentIntelligenceStreamTopic,

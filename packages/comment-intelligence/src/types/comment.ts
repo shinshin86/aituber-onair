@@ -1,6 +1,7 @@
 export type CommentPlatform =
   | 'youtube'
   | 'twitch'
+  | 'tiktok'
   | 'web'
   | 'discord'
   | 'unknown';
@@ -16,6 +17,9 @@ export type CommentAuthor = {
   id: string;
   name: string;
   displayName?: string;
+  handle?: string;
+  nickname?: string;
+  realName?: string;
   avatarUrl?: string;
   roles?: CommentAuthorRole[];
 };

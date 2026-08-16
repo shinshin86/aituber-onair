@@ -12,6 +12,8 @@ import {
   createChatServiceCommentAnalysisProvider,
   createCommentIntelligence,
   formatCommentIntelligencePrompt,
+  normalizeTikTokChatComment,
+  normalizeTikTokGift,
   normalizeTwitchComment,
   normalizeYouTubeComment,
   type CommentAnalysisLLMProvider,
@@ -20,13 +22,17 @@ import {
   type CommentPlatform,
   type LiveComment,
 } from '@aituber-onair/comment-intelligence';
+import type {
+  TikTokChatMessage,
+  TikTokGiftMessage,
+} from '../services/tiktok/tiktokService';
 import type { TwitchChatMessage } from '../services/twitch/twitchService';
 import type { YouTubeChatMessage } from '../services/youtube/youtubeService';
 import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
 import { useInterval } from './useInterval';
 
-type StreamPlatform = 'youtube' | 'twitch' | 'none';
+type StreamPlatform = 'youtube' | 'twitch' | 'tiktok' | 'none';
 const GPT5_SAMPLE_PROVIDER_OPTIONS = { gpt5Preset: 'casual' as const };
 
 type ProcessChat = (
@@ -155,6 +161,62 @@ export function useLiveCommentIntelligence({
     [enqueue],
   );
 
+  const enqueueTikTokComments = useCallback(
+    (comments: TikTokChatMessage[]) => {
+      enqueue(
+        comments.map((comment) =>
+          normalizeTikTokChatComment({
+            id:
+              comment.uniqueId && comment.comment
+                ? `tiktok:${comment.uniqueId}:${comment.timestamp}:${comment.comment}`
+                : undefined,
+            handle: comment.uniqueId,
+            nickname: comment.nickname,
+            realName: undefined,
+            text: comment.comment,
+            publishedAt: comment.timestamp,
+            metadata: {
+              userId: comment.userId,
+              profilePictureUrl: comment.profilePictureUrl,
+            },
+          }),
+        ),
+      );
+    },
+    [enqueue],
+  );
+
+  const enqueueTikTokGifts = useCallback(
+    (gifts: TikTokGiftMessage[]) => {
+      enqueue(
+        gifts.map((gift) =>
+          normalizeTikTokGift({
+            id:
+              gift.uniqueId && gift.giftName
+                ? `tiktok:${gift.uniqueId}:${gift.timestamp}:${gift.giftId}:${gift.repeatCount}`
+                : undefined,
+            handle: gift.uniqueId,
+            nickname: gift.nickname,
+            realName: undefined,
+            giftId: gift.giftId,
+            giftName: gift.giftName,
+            repeatCount: gift.repeatCount,
+            repeatEnd: gift.repeatEnd,
+            diamondCount: gift.diamondCount,
+            publishedAt: gift.timestamp,
+            metadata: {
+              userId: gift.userId,
+              profilePictureUrl: gift.profilePictureUrl,
+              description: gift.description,
+              giftType: gift.giftType,
+            },
+          }),
+        ),
+      );
+    },
+    [enqueue],
+  );
+
   const flush = useCallback(async () => {
     if (!enabled || isProcessing || isSpeaking || isFlushingRef.current) {
       return;
@@ -226,6 +288,8 @@ export function useLiveCommentIntelligence({
   return {
     enqueueYouTubeComments,
     enqueueTwitchComments,
+    enqueueTikTokComments,
+    enqueueTikTokGifts,
     flush,
     lastAnalysis,
   };

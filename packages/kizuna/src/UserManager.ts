@@ -81,6 +81,7 @@ export class UserManager {
       owner: 0,
       youtube: 0,
       twitch: 0,
+      tiktok: 0,
       websocket: 0,
     };
 
@@ -293,9 +294,32 @@ export class UserManager {
    * Extract username from context
    */
   private extractUserNameFromContext(context: PointContext): string {
+    const metadata = context.metadata as Record<string, unknown> | undefined;
+
+    // TikTok uses a handle as the stable ID and may also carry a nickname.
+    const handle = metadata?.handle ?? metadata?.userHandle;
+    if (typeof handle === 'string' && handle.trim() !== '') {
+      return handle.replace(/^@+/, '');
+    }
+
+    const nickname = metadata?.nickname;
+    if (typeof nickname === 'string' && nickname.trim() !== '') {
+      return nickname;
+    }
+
+    const displayName = metadata?.displayName;
+    if (typeof displayName === 'string' && displayName.trim() !== '') {
+      return displayName;
+    }
+
+    const realName = metadata?.realName;
+    if (typeof realName === 'string' && realName.trim() !== '') {
+      return realName;
+    }
+
     // Get username from metadata
-    if (context.metadata?.userName) {
-      return context.metadata.userName as string;
+    if (metadata?.userName && typeof metadata.userName === 'string') {
+      return metadata.userName;
     }
 
     // Try to extract username from user ID
@@ -314,6 +338,7 @@ export class UserManager {
   private createUser(userId: string, context: PointContext): KizunaUser {
     const userType = this.determineUserType(context);
     const displayName = getDisplayName(userId);
+    const identity = this.extractIdentityFromContext(context, displayName);
 
     // Set initial points
     const initialPoints =
@@ -322,6 +347,9 @@ export class UserManager {
     const user: KizunaUser = {
       id: userId,
       displayName,
+      handle: identity.handle,
+      nickname: identity.nickname,
+      realName: identity.realName,
       type: userType,
       points: initialPoints,
       level: this.calculateLevel(initialPoints),
@@ -336,6 +364,8 @@ export class UserManager {
     if (userType === 'owner') {
       this.grantOwnerAchievements(user);
     }
+
+    this.applyIdentityToUser(user, context);
 
     return user;
   }
@@ -353,6 +383,8 @@ export class UserManager {
         return 'youtube';
       case 'twitch':
         return 'twitch';
+      case 'tiktok':
+        return 'tiktok';
       case 'websocket':
       case 'vision':
       case 'textFile':
@@ -406,6 +438,89 @@ export class UserManager {
       user.stats.favoriteEmotions[context.emotion] =
         (user.stats.favoriteEmotions[context.emotion] || 0) + 1;
     }
+
+    this.applyIdentityToUser(user, context);
+  }
+
+  /**
+   * Extract live identity metadata from the current context
+   */
+  private extractIdentityFromContext(
+    context: PointContext,
+    fallbackDisplayName: string,
+  ): {
+    handle?: string;
+    nickname?: string;
+    realName?: string;
+    displayName: string;
+  } {
+    const metadata = context.metadata as Record<string, unknown> | undefined;
+    const handle = this.extractStringMetadata(metadata, [
+      'handle',
+      'userHandle',
+      'tiktokHandle',
+    ]);
+    const nickname = this.extractStringMetadata(metadata, [
+      'nickname',
+      'userName',
+      'displayName',
+    ]);
+    const realName = this.extractStringMetadata(metadata, [
+      'realName',
+      'fullName',
+      'legalName',
+    ]);
+
+    return {
+      handle,
+      nickname,
+      realName,
+      displayName: realName ?? nickname ?? fallbackDisplayName,
+    };
+  }
+
+  /**
+   * Apply identity data to a user without overwriting known values with empties
+   */
+  private applyIdentityToUser(user: KizunaUser, context: PointContext): void {
+    const identity = this.extractIdentityFromContext(context, user.displayName);
+
+    if (identity.handle) {
+      user.handle = identity.handle;
+    }
+
+    if (identity.nickname) {
+      user.nickname = identity.nickname;
+    }
+
+    if (identity.realName) {
+      user.realName = identity.realName;
+    }
+
+    if (identity.displayName && identity.displayName !== user.displayName) {
+      user.displayName = identity.displayName;
+    }
+  }
+
+  /**
+   * Extract the first non-empty string value from the provided metadata keys
+   */
+  private extractStringMetadata(
+    metadata: Record<string, unknown> | undefined,
+    keys: string[],
+  ): string | undefined {
+    if (!metadata) {
+      return undefined;
+    }
+
+    for (const key of keys) {
+      const value = metadata[key];
+      if (typeof value === 'string' && value.trim() !== '') {
+        return value;
+      }
+    }
+
+    return undefined;
   }
 
   /**

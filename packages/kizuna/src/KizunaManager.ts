@@ -357,6 +357,8 @@ export class KizunaManager
         return 'youtube';
       case 'twitch':
         return 'twitch';
+      case 'tiktok':
+        return 'tiktok';
       case 'websocket':
         return 'websocket';
       default:

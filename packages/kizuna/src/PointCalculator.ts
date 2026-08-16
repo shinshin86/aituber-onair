@@ -363,6 +363,8 @@ export class PointCalculator {
         return 'comment';
       case 'twitch':
         return 'chat';
+      case 'tiktok':
+        return context.metadata?.eventKind === 'gift' ? 'gift' : 'comment';
       case 'websocket':
         return 'message';
       default:

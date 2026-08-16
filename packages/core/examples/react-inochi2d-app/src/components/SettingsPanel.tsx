@@ -326,6 +326,10 @@ export function SettingsPanel({
   updateTwitchChannel,
   updateTwitchEnabled,
   updateTwitchCommentIntervalMs,
+  updateTikTokUniqueId,
+  updateTikTokRelayUrl,
+  updateTikTokEnabled,
+  updateTikTokCommentIntervalMs,
   updateCommentIntelligenceEnabled,
   updateCommentIntelligenceMode,
   updateCommentIntelligenceStreamTopic,
@@ -2699,6 +2703,10 @@ export function SettingsPanel({
         updateTwitchChannel={updateTwitchChannel}
         updateTwitchEnabled={updateTwitchEnabled}
         updateTwitchCommentIntervalMs={updateTwitchCommentIntervalMs}
+        updateTikTokUniqueId={updateTikTokUniqueId}
+        updateTikTokRelayUrl={updateTikTokRelayUrl}
+        updateTikTokEnabled={updateTikTokEnabled}
+        updateTikTokCommentIntervalMs={updateTikTokCommentIntervalMs}
         updateCommentIntelligenceEnabled={updateCommentIntelligenceEnabled}
         updateCommentIntelligenceMode={updateCommentIntelligenceMode}
         updateCommentIntelligenceStreamTopic={

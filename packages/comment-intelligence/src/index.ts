@@ -11,6 +11,11 @@ export {
 export type { AgentToolDefinition } from './tools.js';
 export { createChatServiceCommentAnalysisProvider } from './llm/createChatServiceCommentAnalysisProvider.js';
 export { normalizeTwitchComment } from './normalizers/twitch.js';
+export {
+  normalizeTikTokChatComment,
+  normalizeTikTokGift,
+  normalizeTikTokLiveEvent,
+} from './normalizers/tiktok.js';
 export { normalizeWebComment } from './normalizers/web.js';
 export { normalizeYouTubeComment } from './normalizers/youtube.js';
 export type {
@@ -19,6 +24,12 @@ export type {
   CommentPlatform,
   LiveComment,
 } from './types/comment.js';
+export type {
+  NormalizableTikTokChatComment,
+  NormalizableTikTokGift,
+  NormalizableTikTokLiveEvent,
+  TikTokAuthorIdentity,
+} from './types/tiktok.js';
 export { DEFAULT_COMMENT_INTELLIGENCE_CONFIG } from './createCommentIntelligence.js';
 export type { AnsweredState } from './types/answered.js';
 export type { CommentIntelligenceConfig } from './types/config.js';

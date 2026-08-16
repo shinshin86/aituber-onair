@@ -26,7 +26,9 @@ export function generateUserId(
   const platformPrefix = getPlatformPrefix(platform);
 
   // Sanitize username
-  const sanitizedName = sanitizeUserName(userName);
+  const sanitizedName = sanitizeUserName(
+    platform === 'tiktok' ? userName.replace(/^@+/, '') : userName,
+  );
 
   return `${platformPrefix}:${sanitizedName}`;
 }
@@ -73,6 +75,8 @@ function getPlatformPrefix(platform: ChatType): string {
       return 'youtube';
     case 'twitch':
       return 'twitch';
+    case 'tiktok':
+      return 'tiktok';
     case 'websocket':
       return 'websocket';
     case 'vision':
@@ -97,6 +101,8 @@ function platformStrToUserType(platformStr: string): UserType {
       return 'youtube';
     case 'twitch':
       return 'twitch';
+    case 'tiktok':
+      return 'tiktok';
     case 'websocket':
     case 'vision':
     case 'file':
