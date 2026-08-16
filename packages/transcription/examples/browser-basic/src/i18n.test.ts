@@ -25,16 +25,25 @@ describe('browser example i18n', () => {
       'An English conversation recorded through a microphone.',
       'マイクから入力された日本語の会話です。',
     ]);
-    expect(translate('ja', 'localWhisperNotice')).toContain('約120MB');
-    expect(translate('ja', 'progressDownloadModel')).toBe(
-      'モデルをダウンロード中(初回のみ・約120MB)'
-    );
+    expect(translate('ja', 'localWhisperModelTinyHint')).toContain('約122MB');
+    expect(translate('ja', 'localWhisperModelBaseHint')).toContain('約209MB');
+    expect(translate('ja', 'localWhisperModelSmallHint')).toContain('約589MB');
+    expect(translate('ja', 'progressDownloadModel')).toContain('初回のみ');
     expect(translate('ja', 'progressInitializeModel')).toBe('モデルを初期化中');
     expect(translate('en', 'progressDownloadModel')).toContain(
       'first use only'
     );
     expect(translate('en', 'localWhisperNotice')).toContain(
       'Microphone audio stays in this browser.'
+    );
+    expect(translate('en', 'localWhisperModelTinyHint')).toContain(
+      'lower recognition quality'
+    );
+    expect(translate('en', 'localWhisperModelBaseHint')).toContain(
+      'balancing recognition quality and speed'
+    );
+    expect(translate('en', 'localWhisperModelSmallHint')).toContain(
+      'inference can be slow'
     );
   });
 });

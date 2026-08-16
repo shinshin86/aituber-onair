@@ -18,6 +18,9 @@
 - Added provider-neutral initialization progress events, normalized Local
   Whisper download/initialization phases, and aggregated loading progress in
   the browser example.
+- Added selectable Tiny, Base, and Small Local Whisper models with size-specific
+  worker caching, browser example guidance, and measured download and inference
+  comparisons.
 
 ## 0.0.1
 

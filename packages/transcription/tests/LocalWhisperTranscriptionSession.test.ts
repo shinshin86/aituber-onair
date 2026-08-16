@@ -12,6 +12,7 @@ import type { LocalWhisperTranscriptionInput } from '../src/providers/LocalWhisp
 import type { BrowserPcmTurnCaptureOptions } from '../src/providers/BrowserPcmTurnCapture';
 import type { CapturedAudioTurn } from '../src/providers/PcmTurnAssembler';
 import type {
+  LocalWhisperModelSize,
   RealtimeTranscriptionSession,
   LocalWhisperTranscriptionOptions,
   TranscriptUpdate,
@@ -37,7 +38,7 @@ class MockWorkerClient {
   private readonly progressListeners = new Set<
     (progress: TranscriptionProgress) => void
   >();
-  load = vi.fn<[], Promise<void>>(async () => undefined);
+  load = vi.fn<[LocalWhisperModelSize], Promise<void>>(async () => undefined);
   transcribe = vi.fn<[LocalWhisperTranscriptionInput], Promise<string>>(
     async () => 'transcribed'
   );
@@ -185,6 +186,7 @@ describe('LocalWhisperTranscriptionSession', () => {
       expect.objectContaining({ silenceDurationMs: 250 })
     );
     expect(workerClient.load).toHaveBeenCalledOnce();
+    expect(workerClient.load).toHaveBeenCalledWith('tiny');
     expect(capture?.start).toHaveBeenCalledOnce();
   });
 
@@ -237,10 +239,13 @@ describe('LocalWhisperTranscriptionSession', () => {
     workerClient.transcribe
       .mockImplementationOnce(() => firstResult.promise)
       .mockImplementationOnce(() => secondResult.promise);
-    const session = createSession({
+    const options: LocalWhisperTranscriptionOptions = {
       provider: 'local-whisper',
       language: 'JA_jP',
-    });
+      model: 'small',
+    };
+    const session = createSession(options);
+    options.model = 'tiny';
     const updates: TranscriptUpdate[] = [];
     session.onTranscript((update) => updates.push(update));
     await session.start();
@@ -260,6 +265,7 @@ describe('LocalWhisperTranscriptionSession', () => {
     });
 
     expect(workerClient.transcribe.mock.calls[0]?.[0].language).toBe('ja');
+    expect(workerClient.transcribe.mock.calls[0]?.[0].model).toBe('small');
     expect(updates).toEqual([
       {
         utteranceId: 'local-whisper:1',
@@ -455,6 +461,12 @@ describe('LocalWhisperTranscriptionSession', () => {
       createSession({
         provider: 'local-whisper',
         silenceDurationMs: 149,
+      })
+    ).toThrowError(expect.objectContaining({ code: 'invalid-configuration' }));
+    expect(() =>
+      createSession({
+        provider: 'local-whisper',
+        model: 'medium' as LocalWhisperModelSize,
       })
     ).toThrowError(expect.objectContaining({ code: 'invalid-configuration' }));
   });

@@ -2,10 +2,16 @@ import type {
   LocalWhisperWorkerRequest,
   LocalWhisperWorkerResponse,
 } from './localWhisperProtocol';
-import type { TranscriptionProgress } from '../types';
+import type { LocalWhisperModelSize, TranscriptionProgress } from '../types';
 
 interface PendingRequest {
   resolve: (text: string) => void;
+  reject: (cause: Error) => void;
+}
+
+interface PendingLoad {
+  promise: Promise<void>;
+  resolve: () => void;
   reject: (cause: Error) => void;
 }
 
@@ -26,14 +32,13 @@ function defaultWorkerUrl(): URL {
 
 export interface LocalWhisperTranscriptionInput {
   audio: Float32Array;
+  model: LocalWhisperModelSize;
   language?: string;
 }
 
 export class LocalWhisperWorkerClient {
   private readonly worker: Worker;
-  private loadPromise: Promise<void> | null = null;
-  private resolveLoad: (() => void) | null = null;
-  private rejectLoad: ((cause: Error) => void) | null = null;
+  private readonly pendingLoads = new Map<LocalWhisperModelSize, PendingLoad>();
   private inferenceQueue = Promise.resolve();
   private readonly pendingRequests = new Map<string, PendingRequest>();
   private readonly progressListeners = new Set<
@@ -64,17 +69,26 @@ export class LocalWhisperWorkerClient {
     return () => this.progressListeners.delete(listener);
   }
 
-  load(): Promise<void> {
+  load(model: LocalWhisperModelSize): Promise<void> {
     this.assertUsable();
-    if (this.loadPromise) return this.loadPromise;
+    const current = this.pendingLoads.get(model);
+    if (current) return current.promise;
 
-    this.loadPromise = new Promise<void>((resolve, reject) => {
-      this.resolveLoad = resolve;
-      this.rejectLoad = reject;
+    let resolveLoad!: () => void;
+    let rejectLoad!: (cause: Error) => void;
+    const promise = new Promise<void>((resolve, reject) => {
+      resolveLoad = resolve;
+      rejectLoad = reject;
+    });
+    this.pendingLoads.set(model, {
+      promise,
+      resolve: resolveLoad,
+      reject: rejectLoad,
     });
     try {
       this.postMessage({
         type: 'load',
+        model,
         ...(isDebugEnabled() ? { debug: true } : {}),
       });
     } catch (cause) {
@@ -82,12 +96,12 @@ export class LocalWhisperWorkerClient {
         cause instanceof Error ? cause : new Error(String(cause))
       );
     }
-    return this.loadPromise;
+    return promise;
   }
 
   transcribe(input: LocalWhisperTranscriptionInput): Promise<string> {
     const operation = this.inferenceQueue.then(async () => {
-      await this.load();
+      await this.load(input.model);
       this.assertUsable();
       return this.sendTranscriptionRequest(input);
     });
@@ -118,6 +132,7 @@ export class LocalWhisperWorkerClient {
         type: 'transcribe',
         requestId,
         audio: input.audio,
+        model: input.model,
         ...(input.language ? { language: input.language } : {}),
         ...(isDebugEnabled() ? { debug: true } : {}),
       };
@@ -141,9 +156,7 @@ export class LocalWhisperWorkerClient {
     if (!this.isWorkerResponse(data)) return;
 
     if (data.type === 'ready') {
-      this.resolveLoad?.();
-      this.resolveLoad = null;
-      this.rejectLoad = null;
+      this.pendingLoads.get(data.model)?.resolve();
       return;
     }
     if (data.type === 'progress') {
@@ -169,6 +182,10 @@ export class LocalWhisperWorkerClient {
       pending.reject(error);
       return;
     }
+    if (data.model) {
+      this.pendingLoads.get(data.model)?.reject(error);
+      return;
+    }
     this.failWorker(error);
   }
 
@@ -187,9 +204,7 @@ export class LocalWhisperWorkerClient {
   }
 
   private rejectAll(error: Error): void {
-    this.rejectLoad?.(error);
-    this.resolveLoad = null;
-    this.rejectLoad = null;
+    for (const pending of this.pendingLoads.values()) pending.reject(error);
     for (const pending of this.pendingRequests.values()) pending.reject(error);
     this.pendingRequests.clear();
   }

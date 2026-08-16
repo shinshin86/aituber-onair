@@ -10,9 +10,10 @@ AITuber OnAir 向けの、プロバイダーに依存しないリアルタイム
 > あります。
 
 Web Speech、ブラウザ WebRTC を利用する OpenAI Realtime、WebGPU でローカル推論する
-Whisper Tiny に対応しています。すべてのプロバイダーが、発話ごとに同じ形式の
-スナップショットイベントを発行します。ファイルの文字起こし、サーバー WebSocket
-入力、チャットへの自動送信、プロバイダーのフォールバックは、意図的に対象外です。
+Whisper Tiny、Base、Small に対応しています。すべてのプロバイダーが、発話ごとに
+同じ形式のスナップショットイベントを発行します。ファイルの文字起こし、サーバー
+WebSocket入力、チャットへの自動送信、プロバイダーのフォールバックは、意図的に
+対象外です。
 
 ## ブラウザサンプル
 
@@ -65,13 +66,15 @@ await session.dispose();
 
 ### Local Whisper
 
-Local Whisper は Whisper Tiny をモジュールWorker内で実行し、確定結果のみを発行します。
+Local Whisper は選択した Whisper モデルをモジュールWorker内で実行し、確定結果のみを
+発行します。
 
 ```ts
 import { createRealtimeTranscriptionSession } from '@aituber-onair/transcription';
 
 const session = createRealtimeTranscriptionSession({
   provider: 'local-whisper',
+  model: 'tiny',
   language: 'ja-JP',
   silenceDurationMs: 500,
 });
@@ -97,19 +100,37 @@ await session.stop();
 await session.dispose();
 ```
 
+Local Whisper の認識精度は Web Speech / OpenAI Realtime より劣ります。APIキーが
+不要で、マイク音声を外部サービスへ送信しないことを優先する用途向けです。認識品質が
+必要な場合は `small` を選択してください。
+
+| モデル | 進捗で報告された初回DL量 | 品質の目安 | 推論（日本語 / 英語） |
+| --- | ---: | --- | ---: |
+| `tiny`（既定） | 約122 MB | 低め | 237.3 ms / 203.0 ms |
+| `base` | 約209 MB | 中間 | 255.9 ms / 311.2 ms |
+| `small` | 約589 MB | 実用品質 | 574.7 ms / 551.6 ms |
+
+Chrome/WebGPUで、同じ短い日本語・英語マイククリップを使って計測しました。推論時間は
+音声取得/VADを含まず、GPUによって変わります。初回ダウンロード時間はネットワーク速度に
+依存し、数百MBでは数分かかる場合があります。キャッシュ後の初期化は、Tinyで約0.9秒、
+Baseで約1.2秒、Smallで約2.5秒でした。ダウンロード量はモデルファイルごとに最後に報告された
+`totalBytes` の合計で、進捗を報告しない資産は含みません。
+
 要件と動作は次のとおりです。
 
 - 安全なブラウザコンテキスト（HTTPS または localhost）、マイク権限、Web Audio、
   AudioWorklet、モジュールWorker、WebGPU が必要です。
 - API キーは不要です。WebGPU の初期化に失敗しても、リモートプロバイダーや WASM
   推論へ自動的にフォールバックしません。
-- 初回利用時に、モデル資産を Hugging Face Hub から、ONNX Runtime WebAssembly
-  ファイルを jsDelivr からダウンロードし、ブラウザにキャッシュします。初回の
-  ダウンロード量は約120MBです。
+- 初回利用時に、選択したモデル資産を Hugging Face Hub から、ONNX Runtime
+  WebAssemblyファイルを jsDelivr からダウンロードし、ブラウザにキャッシュします。
+  初回のダウンロードと推論は、大きいモデルほど時間がかかります。
 - マイク音声はブラウザ内で処理され、ブラウザ外へ送信されません。このパッケージは
   音声や文字起こし結果を永続化しません。
 - `language` には BCP 47 形式のヒントを任意指定できます。発話終了を判定する
   `silenceDurationMs` の既定値は500msで、最小150msまで下げられます。
+- `model` には `tiny`、`base`、`small` を指定でき、既定値は `tiny` です。すべての
+  サイズで、モデルのdtypeはfp32 encoderとq4 merged decoderに固定されています。
 - ダウンロード進捗には、`file`、`loadedBytes`、`totalBytes` と、0〜1に正規化した
   `progress` が含まれる場合があります。初期化・準備完了フェーズにバイト数は
   必須ではありません。

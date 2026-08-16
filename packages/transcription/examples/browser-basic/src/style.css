@@ -226,6 +226,10 @@ textarea:focus {
   gap: 14px;
 }
 
+.local-whisper-grid {
+  grid-template-columns: 0.85fr 1fr 0.8fr;
+}
+
 .field-grid > .field {
   align-content: start;
 }

@@ -69,6 +69,8 @@ export type TranscriptionDelay =
   | 'high'
   | 'xhigh';
 
+export type LocalWhisperModelSize = 'tiny' | 'base' | 'small';
+
 export interface WebSpeechTranscriptionOptions {
   provider: 'web-speech';
   language: string;
@@ -86,6 +88,14 @@ export interface OpenAIRealtimeTranscriptionOptions {
 
 export interface LocalWhisperTranscriptionOptions {
   provider: 'local-whisper';
+
+  /**
+   * Whisper model size.
+   *
+   * Default: "tiny". Larger models download more data on first use and infer
+   * more slowly, but can improve recognition quality.
+   */
+  model?: LocalWhisperModelSize;
 
   /**
    * Optional language hint.

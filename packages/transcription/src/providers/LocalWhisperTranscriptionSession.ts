@@ -1,6 +1,7 @@
 import { BaseRealtimeTranscriptionSession } from '../BaseRealtimeTranscriptionSession';
 import { TranscriptionSessionError } from '../errors';
 import type {
+  LocalWhisperModelSize,
   LocalWhisperTranscriptionOptions,
   TranscriptionProgress,
 } from '../types';
@@ -15,6 +16,12 @@ import { resampleTo16k } from './resampleTo16k';
 const DEFAULT_SILENCE_DURATION_MS = 500;
 const MIN_SILENCE_DURATION_MS = 150;
 const MIN_UTTERANCE_MS = 300;
+const DEFAULT_MODEL: LocalWhisperModelSize = 'tiny';
+const LOCAL_WHISPER_MODEL_SIZES: readonly LocalWhisperModelSize[] = [
+  'tiny',
+  'base',
+  'small',
+];
 
 const WHISPER_HALLUCINATIONS = [
   'ご視聴ありがとうございました',
@@ -30,10 +37,11 @@ const TRAILING_PUNCTUATION = /[。．.！!？?]+$/u;
 
 interface LocalWhisperWorker {
   readonly hasFailed: boolean;
-  load(): Promise<void>;
+  load(model: LocalWhisperModelSize): Promise<void>;
   onProgress(listener: (progress: TranscriptionProgress) => void): () => void;
   transcribe(input: {
     audio: Float32Array;
+    model: LocalWhisperModelSize;
     language?: string;
   }): Promise<string>;
   dispose(): void;
@@ -98,6 +106,17 @@ export function normalizeWhisperLanguage(
 }
 
 function validateOptions(options: LocalWhisperTranscriptionOptions): void {
+  if (
+    options.model !== undefined &&
+    !LOCAL_WHISPER_MODEL_SIZES.includes(options.model)
+  ) {
+    throw new TranscriptionSessionError(
+      'invalid-configuration',
+      'local-whisper',
+      'Local Whisper model must be tiny, base, or small.'
+    );
+  }
+
   if (options.language !== undefined && !options.language.trim()) {
     throw new TranscriptionSessionError(
       'invalid-configuration',
@@ -127,6 +146,7 @@ function isPermissionDenied(cause: unknown): boolean {
 }
 
 export class LocalWhisperTranscriptionSession extends BaseRealtimeTranscriptionSession {
+  private readonly model: LocalWhisperModelSize;
   private readonly language: string | undefined;
   private readonly silenceDurationMs: number;
   private startPromise: Promise<void> | null = null;
@@ -149,6 +169,7 @@ export class LocalWhisperTranscriptionSession extends BaseRealtimeTranscriptionS
       configurableDelay: true,
     });
     validateOptions(options);
+    this.model = options.model ?? DEFAULT_MODEL;
     this.language = normalizeWhisperLanguage(options.language);
     this.silenceDurationMs =
       options.silenceDurationMs ?? DEFAULT_SILENCE_DURATION_MS;
@@ -236,7 +257,7 @@ export class LocalWhisperTranscriptionSession extends BaseRealtimeTranscriptionS
       this.capture = localCapture;
 
       try {
-        await localWorkerClient.load();
+        await localWorkerClient.load(this.model);
       } catch (cause) {
         throw new TranscriptionSessionError(
           'provider-error',
@@ -365,6 +386,7 @@ export class LocalWhisperTranscriptionSession extends BaseRealtimeTranscriptionS
       try {
         text = await workerClient.transcribe({
           audio,
+          model: this.model,
           ...(this.language ? { language: this.language } : {}),
         });
       } catch (cause) {

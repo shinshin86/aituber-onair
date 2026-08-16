@@ -1,6 +1,7 @@
 import {
   createRealtimeTranscriptionSession,
   isTranscriptionProviderSupported,
+  type LocalWhisperModelSize,
   type RealtimeTranscriptionSession,
   type TranscriptUpdate,
   type TranscriptionDelay,
@@ -40,6 +41,8 @@ const openAIKeywords = element<HTMLInputElement>('#openai-keywords');
 const openAIPrompt = element<HTMLTextAreaElement>('#openai-prompt');
 const openAIDelay = element<HTMLSelectElement>('#openai-delay');
 const localWhisperFields = element<HTMLDivElement>('#local-whisper-fields');
+const localWhisperModel = element<HTMLSelectElement>('#local-whisper-model');
+const localWhisperModelHint = element<HTMLElement>('#local-whisper-model-hint');
 const localWhisperLanguage = element<HTMLInputElement>(
   '#local-whisper-language'
 );
@@ -85,6 +88,13 @@ const errorTranslationKeys: Record<TranscriptionErrorCode, TranslationKey> = {
   'session-disposed': 'errorSessionDisposed',
 };
 
+const localWhisperModelHintKeys: Record<LocalWhisperModelSize, TranslationKey> =
+  {
+    tiny: 'localWhisperModelTinyHint',
+    base: 'localWhisperModelBaseHint',
+    small: 'localWhisperModelSmallHint',
+  };
+
 function commaSeparated(value: string): string[] {
   return value
     .split(',')
@@ -94,6 +104,19 @@ function commaSeparated(value: string): string[] {
 
 function selectedProvider(): TranscriptionProviderName {
   return providerSelect.value as TranscriptionProviderName;
+}
+
+function selectedLocalWhisperModel(): LocalWhisperModelSize {
+  const model = localWhisperModel.value;
+  if (model === 'base' || model === 'small') return model;
+  return 'tiny';
+}
+
+function renderLocalWhisperModelHint(): void {
+  localWhisperModelHint.textContent = translate(
+    displayLanguage,
+    localWhisperModelHintKeys[selectedLocalWhisperModel()]
+  );
 }
 
 function translationKey(
@@ -229,6 +252,7 @@ function renderState(state: TranscriptionState): void {
   startButton.disabled =
     busy || !isTranscriptionProviderSupported(selectedProvider());
   stopButton.disabled = !active;
+  localWhisperModel.disabled = busy;
   if (state !== 'connecting') resetProgress();
 }
 
@@ -280,6 +304,7 @@ function createSession(): RealtimeTranscriptionSession {
     case 'local-whisper':
       return createRealtimeTranscriptionSession({
         provider: 'local-whisper',
+        model: selectedLocalWhisperModel(),
         language: localWhisperLanguage.value.trim() || undefined,
         silenceDurationMs: Number(localWhisperSilence.value),
         workerUrl: localWhisperWorkerUrl,
@@ -344,6 +369,7 @@ function syncSettings(): void {
   webSpeechFields.hidden = openAISelected || localWhisperSelected;
   openAIFields.hidden = !openAISelected;
   localWhisperFields.hidden = !localWhisperSelected;
+  renderLocalWhisperModelHint();
 
   const supported = isTranscriptionProviderSupported(provider);
   supportBadge.textContent = translate(
@@ -375,6 +401,7 @@ async function resetSessionForSettings(): Promise<void> {
 }
 
 providerSelect.addEventListener('change', () => void resetSessionForSettings());
+localWhisperModel.addEventListener('change', renderLocalWhisperModelHint);
 displayLanguageSelect.addEventListener('change', () => {
   if (isDisplayLanguage(displayLanguageSelect.value)) {
     applyDisplayLanguage(displayLanguageSelect.value);

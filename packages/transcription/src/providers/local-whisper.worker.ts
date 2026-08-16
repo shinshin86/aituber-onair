@@ -3,13 +3,18 @@ import {
   pipeline,
   type AutomaticSpeechRecognitionPipeline,
 } from '@huggingface/transformers';
+import type { LocalWhisperModelSize } from '../types';
 import type {
   LocalWhisperWorkerRequest,
   LocalWhisperWorkerResponse,
 } from './localWhisperProtocol';
 import { normalizeLocalWhisperDownloadProgress } from './localWhisperProgress';
 
-const LOCAL_WHISPER_MODEL_ID = 'onnx-community/whisper-tiny';
+const LOCAL_WHISPER_MODEL_IDS: Record<LocalWhisperModelSize, string> = {
+  tiny: 'onnx-community/whisper-tiny',
+  base: 'onnx-community/whisper-base',
+  small: 'onnx-community/whisper-small',
+};
 const LOCAL_WHISPER_MODEL_OPTIONS = {
   device: 'webgpu',
   dtype: { encoder_model: 'fp32', decoder_model_merged: 'q4' },
@@ -27,8 +32,10 @@ interface WorkerScope {
 const workerScope = globalThis as unknown as WorkerScope;
 env.allowLocalModels = false;
 
-let transcriberPromise: Promise<AutomaticSpeechRecognitionPipeline> | null =
-  null;
+const transcriberPromises = new Map<
+  LocalWhisperModelSize,
+  Promise<AutomaticSpeechRecognitionPipeline>
+>();
 let requestQueue = Promise.resolve();
 
 function errorMessage(cause: unknown): string {
@@ -42,7 +49,7 @@ function postResponse(response: LocalWhisperWorkerResponse): void {
 function debugTiming(
   enabled: boolean | undefined,
   label: string,
-  timings: Record<string, number>
+  timings: Record<string, string | number>
 ): void {
   if (enabled === true) {
     console.debug(`[aituber-onair/transcription] ${label}`, timings);
@@ -50,12 +57,13 @@ function debugTiming(
 }
 
 async function createTranscriber(
+  model: LocalWhisperModelSize,
   debug: boolean | undefined
 ): Promise<AutomaticSpeechRecognitionPipeline> {
   const modelLoadStartedAt = performance.now();
   const transcriber = await pipeline(
     'automatic-speech-recognition',
-    LOCAL_WHISPER_MODEL_ID,
+    LOCAL_WHISPER_MODEL_IDS[model],
     {
       ...LOCAL_WHISPER_MODEL_OPTIONS,
       progress_callback: (data: unknown) => {
@@ -73,6 +81,7 @@ async function createTranscriber(
   const warmUpCompletedAt = performance.now();
   postResponse({ type: 'progress', progress: { phase: 'ready' } });
   debugTiming(debug, 'Local Whisper initialization', {
+    model,
     modelLoadMs: modelLoadedAt - modelLoadStartedAt,
     warmUpMs: warmUpCompletedAt - modelLoadedAt,
     totalMs: warmUpCompletedAt - modelLoadStartedAt,
@@ -81,10 +90,15 @@ async function createTranscriber(
 }
 
 function getTranscriber(
+  model: LocalWhisperModelSize,
   debug: boolean | undefined
 ): Promise<AutomaticSpeechRecognitionPipeline> {
-  transcriberPromise ??= createTranscriber(debug);
-  return transcriberPromise;
+  const current = transcriberPromises.get(model);
+  if (current) return current;
+
+  const transcriber = createTranscriber(model, debug);
+  transcriberPromises.set(model, transcriber);
+  return transcriber;
 }
 
 async function handleRequest(
@@ -92,16 +106,20 @@ async function handleRequest(
 ): Promise<void> {
   if (request.type === 'load') {
     try {
-      await getTranscriber(request.debug);
-      postResponse({ type: 'ready' });
+      await getTranscriber(request.model, request.debug);
+      postResponse({ type: 'ready', model: request.model });
     } catch (cause) {
-      postResponse({ type: 'error', message: errorMessage(cause) });
+      postResponse({
+        type: 'error',
+        model: request.model,
+        message: errorMessage(cause),
+      });
     }
     return;
   }
 
   try {
-    const transcriber = await getTranscriber(request.debug);
+    const transcriber = await getTranscriber(request.model, request.debug);
     const inferenceStartedAt = performance.now();
     const result = await transcriber(request.audio, {
       ...(request.language ? { language: request.language } : {}),
@@ -110,6 +128,7 @@ async function handleRequest(
     const inferenceCompletedAt = performance.now();
     const text = result.text.trim();
     debugTiming(request.debug, 'Local Whisper inference', {
+      model: request.model,
       inferenceMs: inferenceCompletedAt - inferenceStartedAt,
     });
     postResponse({ type: 'result', requestId: request.requestId, text });

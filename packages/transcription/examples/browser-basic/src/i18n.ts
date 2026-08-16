@@ -44,8 +44,15 @@ const englishMessages = {
   localWhisperSilence: 'End silence (ms)',
   localWhisperSilenceHint:
     'Minimum 150 ms. Lower values finalize speech sooner.',
+  localWhisperModel: 'Model',
+  localWhisperModelTinyHint:
+    'Lightweight, about 122 MB, with lower recognition quality.',
+  localWhisperModelBaseHint:
+    'About 209 MB, balancing recognition quality and speed.',
+  localWhisperModelSmallHint:
+    'About 589 MB, practical recognition quality; inference can be slow depending on the GPU.',
   localWhisperNotice:
-    'WebGPU is required. The first start downloads about 120 MB and caches it in the browser. Microphone audio stays in this browser.',
+    'WebGPU is required. Larger models download more data on first use and infer more slowly. Microphone audio stays in this browser.',
   liveOutput: 'Transcription results',
   startMicrophone: 'Start transcription',
   stop: 'Stop',
@@ -60,7 +67,7 @@ const englishMessages = {
   stateStopping: 'Stopping',
   stateError: 'Error',
   stateDisposed: 'Disposed',
-  progressDownloadModel: 'Downloading model (first use only, about 120 MB)',
+  progressDownloadModel: 'Downloading selected model (first use only)',
   progressInitializeModel: 'Initializing model',
   errorUnsupportedProvider:
     'The selected transcription provider is unavailable in this browser.',
@@ -120,8 +127,13 @@ const japaneseMessages: Messages = {
     '任意のBCP 47言語コードです。空欄にすると自動判定します。',
   localWhisperSilence: '発話終了の無音（ms）',
   localWhisperSilenceHint: '最小150msです。小さくすると発話を早く確定します。',
+  localWhisperModel: 'モデル',
+  localWhisperModelTinyHint: '軽量・約122MB・認識品質は低めです。',
+  localWhisperModelBaseHint: '約209MB・認識品質と速度の中間です。',
+  localWhisperModelSmallHint:
+    '約589MB・実用品質ですが、GPUによっては推論が遅くなります。',
   localWhisperNotice:
-    'WebGPUが必要です。初回開始時に約120MBをダウンロードし、ブラウザにキャッシュします。マイク音声がブラウザ外へ送信されることはありません。',
+    'WebGPUが必要です。大きいモデルほど初回ダウンロード量が増え、推論も遅くなります。マイク音声がブラウザ外へ送信されることはありません。',
   liveOutput: '文字起こし結果',
   startMicrophone: '文字起こしを開始',
   stop: '停止',
@@ -136,7 +148,7 @@ const japaneseMessages: Messages = {
   stateStopping: '停止中',
   stateError: 'エラー',
   stateDisposed: '終了済み',
-  progressDownloadModel: 'モデルをダウンロード中(初回のみ・約120MB)',
+  progressDownloadModel: '選択したモデルをダウンロード中（初回のみ）',
   progressInitializeModel: 'モデルを初期化中',
   errorUnsupportedProvider:
     '選択した文字起こし方式は、このブラウザでは利用できません。',

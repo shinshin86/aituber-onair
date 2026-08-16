@@ -16,11 +16,12 @@ Realtime and enter an API key from your own OpenAI account. The example connects
 to OpenAI directly from the browser, so avoid using it on a shared device.
 
 Use localhost or HTTPS and grant microphone access when prompted. Local Whisper
-requires WebGPU. Its first start downloads about 120 MB of model/runtime assets
-and caches them in the browser. The example aggregates known per-file totals to
-show overall download progress, then shows model initialization and hides the
-progress row when listening starts. Microphone audio stays in the browser.
-OpenAI usage may incur charges while a session is listening.
+requires WebGPU. Select Tiny (about 122 MB), Base (about 209 MB), or Small
+(about 589 MB); larger models take longer to download and infer. The default is
+Tiny. Assets are cached in the browser. The example aggregates known per-file
+totals to show overall download progress, then shows model initialization and
+hides the progress row when listening starts. Microphone audio stays in the
+browser. OpenAI usage may incur charges while a session is listening.
 
 ## Local Whisper worker URL
 

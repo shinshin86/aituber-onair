@@ -10,10 +10,10 @@ Provider-neutral realtime microphone transcription for AITuber OnAir.
 > release.
 
 The package supports Web Speech, OpenAI Realtime transcription over browser
-WebRTC, and local Whisper Tiny inference through WebGPU. All providers emit the
-same per-utterance snapshot events. File transcription, server WebSocket input,
-automatic chat submission, and provider fallback are intentionally out of
-scope.
+WebRTC, and local Whisper Tiny, Base, and Small inference through WebGPU. All
+providers emit the same per-utterance snapshot events. File transcription,
+server WebSocket input, automatic chat submission, and provider fallback are
+intentionally out of scope.
 
 ## Browser example
 
@@ -66,14 +66,15 @@ not.
 
 ### Local Whisper
 
-Local Whisper runs Whisper Tiny in a module worker and emits final transcripts
-only:
+Local Whisper runs the selected Whisper model in a module worker and emits
+final transcripts only:
 
 ```ts
 import { createRealtimeTranscriptionSession } from '@aituber-onair/transcription';
 
 const session = createRealtimeTranscriptionSession({
   provider: 'local-whisper',
+  model: 'tiny',
   language: 'ja-JP',
   silenceDurationMs: 500,
 });
@@ -99,20 +100,42 @@ await session.stop();
 await session.dispose();
 ```
 
+Local Whisper is less accurate than Web Speech or OpenAI Realtime. It is
+intended for use cases that prioritize requiring no API key and not sending
+microphone audio to a remote service. Choose `small` when recognition quality
+is important.
+
+| Model | First download reported by progress | Quality guide | Inference (Japanese / English) |
+| --- | ---: | --- | ---: |
+| `tiny` (default) | About 122 MB | Lower | 237.3 ms / 203.0 ms |
+| `base` | About 209 MB | Middle | 255.9 ms / 311.2 ms |
+| `small` | About 589 MB | Practical | 574.7 ms / 551.6 ms |
+
+These measurements were taken in Chrome with WebGPU using the same short
+Japanese and English microphone clips. Inference excludes capture/VAD time and
+varies by GPU. First-use download time depends on network speed and can take
+several minutes for hundreds of MB. After caching, initialization measured
+about 0.9 s for Tiny, 1.2 s for Base, and 2.5 s for Small. Download sizes are
+the sum of the latest `totalBytes` reported for each model file and do not
+include assets that do not report progress.
+
 Requirements and behavior:
 
 - A secure browser context (HTTPS or localhost), microphone access, Web Audio,
   AudioWorklet, module workers, and WebGPU are required.
 - No API key is required. There is no automatic fallback to a remote provider
   or WASM inference when WebGPU initialization fails.
-- On first use, model assets are downloaded from the Hugging Face Hub and ONNX
-  Runtime WebAssembly files are downloaded from jsDelivr. These assets are
-  cached by the browser. The initial download is approximately 120 MB.
+- On first use, the selected model assets are downloaded from the Hugging Face
+  Hub and ONNX Runtime WebAssembly files are downloaded from jsDelivr. These
+  assets are cached by the browser. Larger models take longer to download and
+  infer.
 - Microphone audio is processed in the browser and never leaves the browser.
   The package does not persist audio or transcripts.
 - `language` accepts a BCP 47-style hint and is optional. The default 500 ms
   `silenceDurationMs` can be reduced to a minimum of 150 ms for faster turn
   completion.
+- `model` accepts `tiny`, `base`, or `small` and defaults to `tiny`. Model dtype
+  is fixed to an fp32 encoder and q4 merged decoder for every size.
 - Download progress can include `file`, `loadedBytes`, `totalBytes`, and a
   normalized `progress` value from 0 to 1. Initialization and ready phases do
   not require byte totals.

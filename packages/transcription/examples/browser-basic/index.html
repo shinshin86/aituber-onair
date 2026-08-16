@@ -135,7 +135,16 @@ An English conversation recorded through a microphone.</textarea
         </div>
 
         <div id="local-whisper-fields" hidden>
-          <div class="field-grid">
+          <div class="field-grid local-whisper-grid">
+            <label class="field">
+              <span data-i18n="localWhisperModel">Model</span>
+              <select id="local-whisper-model">
+                <option value="tiny" selected>Tiny</option>
+                <option value="base">Base</option>
+                <option value="small">Small</option>
+              </select>
+              <small id="local-whisper-model-hint"></small>
+            </label>
             <label class="field">
               <span data-i18n="localWhisperLanguage">Language hint</span>
               <input id="local-whisper-language" value="ja-JP" />
@@ -159,8 +168,8 @@ An English conversation recorded through a microphone.</textarea
             </label>
           </div>
           <p class="notice info" data-i18n="localWhisperNotice">
-            WebGPU is required. The first start downloads about 120 MB and
-            caches it in the browser. Microphone audio stays in this browser.
+            WebGPU is required. Larger models download more data on first use
+            and infer more slowly. Microphone audio stays in this browser.
           </p>
         </div>
       </section>

@@ -46,8 +46,8 @@ function currentWorker(): MockWorker {
 
 async function createLoadedClient(): Promise<LocalWhisperWorkerClient> {
   const client = new LocalWhisperWorkerClient('/local-whisper.worker.js');
-  const loadPromise = client.load();
-  currentWorker().emit({ type: 'ready' });
+  const loadPromise = client.load('tiny');
+  currentWorker().emit({ type: 'ready', model: 'tiny' });
   await loadPromise;
   return client;
 }
@@ -65,16 +65,33 @@ describe('LocalWhisperWorkerClient', () => {
   it('loads the model once and resolves on ready', async () => {
     const client = new LocalWhisperWorkerClient('/worker.js');
 
-    const firstLoad = client.load();
-    const secondLoad = client.load();
+    const firstLoad = client.load('tiny');
+    const secondLoad = client.load('tiny');
     const worker = currentWorker();
-    worker.emit({ type: 'ready' });
+    worker.emit({ type: 'ready', model: 'tiny' });
     await Promise.all([firstLoad, secondLoad]);
 
     expect(worker.url).toBe('/worker.js');
     expect(worker.options).toEqual({ type: 'module' });
     expect(worker.postedMessages.map(({ message }) => message)).toEqual([
-      { type: 'load' },
+      { type: 'load', model: 'tiny' },
+    ]);
+  });
+
+  it('loads and retains a separate transcriber for each model size', async () => {
+    const client = new LocalWhisperWorkerClient('/worker.js');
+    const worker = currentWorker();
+
+    const tinyLoad = client.load('tiny');
+    const baseLoad = client.load('base');
+    const repeatedTinyLoad = client.load('tiny');
+    worker.emit({ type: 'ready', model: 'tiny' });
+    worker.emit({ type: 'ready', model: 'base' });
+    await Promise.all([tinyLoad, baseLoad, repeatedTinyLoad]);
+
+    expect(worker.postedMessages.map(({ message }) => message)).toEqual([
+      { type: 'load', model: 'tiny' },
+      { type: 'load', model: 'base' },
     ]);
   });
 
@@ -106,7 +123,11 @@ describe('LocalWhisperWorkerClient', () => {
     const worker = currentWorker();
     const audio = new Float32Array([0.1, -0.1]);
 
-    const resultPromise = client.transcribe({ audio, language: 'ja' });
+    const resultPromise = client.transcribe({
+      audio,
+      model: 'tiny',
+      language: 'ja',
+    });
     await vi.waitFor(() => {
       expect(worker.postedMessages).toHaveLength(2);
     });
@@ -124,14 +145,21 @@ describe('LocalWhisperWorkerClient', () => {
     await expect(resultPromise).resolves.toBe('こんにちは');
     expect(posted.transfer).toHaveLength(1);
     expect(audio.byteLength).toBe(0);
+    expect(request.model).toBe('tiny');
   });
 
   it('posts multiple inference requests sequentially', async () => {
     const client = await createLoadedClient();
     const worker = currentWorker();
 
-    const first = client.transcribe({ audio: new Float32Array([0.1]) });
-    const second = client.transcribe({ audio: new Float32Array([0.2]) });
+    const first = client.transcribe({
+      audio: new Float32Array([0.1]),
+      model: 'tiny',
+    });
+    const second = client.transcribe({
+      audio: new Float32Array([0.2]),
+      model: 'tiny',
+    });
     await vi.waitFor(() => {
       expect(worker.postedMessages).toHaveLength(2);
     });
@@ -166,6 +194,7 @@ describe('LocalWhisperWorkerClient', () => {
     const client = await createLoadedClient();
     const resultPromise = client.transcribe({
       audio: new Float32Array([0.1]),
+      model: 'tiny',
     });
     await Promise.resolve();
 
@@ -173,15 +202,16 @@ describe('LocalWhisperWorkerClient', () => {
 
     await expect(resultPromise).rejects.toThrow('WebGPU device lost');
     await expect(
-      client.transcribe({ audio: new Float32Array([0.2]) })
+      client.transcribe({ audio: new Float32Array([0.2]), model: 'tiny' })
     ).rejects.toThrow('WebGPU device lost');
   });
 
   it('rejects loading and queued inference when disposed', async () => {
     const client = new LocalWhisperWorkerClient('/worker.js');
-    const loadPromise = client.load();
+    const loadPromise = client.load('small');
     const resultPromise = client.transcribe({
       audio: new Float32Array([0.1]),
+      model: 'small',
     });
 
     client.dispose();
