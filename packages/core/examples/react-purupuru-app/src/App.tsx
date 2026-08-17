@@ -48,6 +48,39 @@ interface SettingsDialogDragState {
   rect: DOMRect;
 }
 
+interface DefaultAvatarPackageLoadOptions {
+  isCurrent: () => boolean;
+  onLoaded: (loaded: PuruPuruAvatarPackage) => void;
+  onFailed: (error: unknown) => void;
+}
+
+async function loadDefaultAvatarPackage({
+  isCurrent,
+  onLoaded,
+  onFailed,
+}: DefaultAvatarPackageLoadOptions): Promise<void> {
+  try {
+    const response = await fetch(DEFAULT_AVATAR_URL);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${DEFAULT_AVATAR_URL}.`);
+    }
+
+    const blob = await response.blob();
+    const file = new File([blob], DEFAULT_AVATAR_FILE_NAME, {
+      type: blob.type || 'application/zip',
+    });
+    const loaded = await loadPuruPuruPackage(file);
+
+    if (!isCurrent()) {
+      loaded.dispose();
+      return;
+    }
+    onLoaded(loaded);
+  } catch (error) {
+    if (isCurrent()) onFailed(error);
+  }
+}
+
 export default function App() {
   const { play, stop, mouthLevel, isSpeaking, smoothedValue } =
     useAudioLipsync();
@@ -318,41 +351,28 @@ export default function App() {
     setAvatarPackageSource(null);
   }, []);
 
-  const loadDefaultAvatarPackage = useCallback(async () => {
+  const startDefaultAvatarPackageLoad = useCallback(() => {
     const requestId = avatarLoadRequestRef.current + 1;
     avatarLoadRequestRef.current = requestId;
 
-    try {
-      const response = await fetch(DEFAULT_AVATAR_URL);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${DEFAULT_AVATAR_URL}.`);
-      }
-
-      const blob = await response.blob();
-      const file = new File([blob], DEFAULT_AVATAR_FILE_NAME, {
-        type: blob.type || 'application/zip',
-      });
-      const loaded = await loadPuruPuruPackage(file);
-
-      if (requestId !== avatarLoadRequestRef.current) {
-        loaded.dispose();
-        return;
-      }
-
-      setAvatarLoadError(null);
-      installAvatarPackage(loaded, 'default');
-    } catch (error) {
-      if (requestId !== avatarLoadRequestRef.current) return;
-      console.warn('Failed to load the bundled default avatar.', error);
-      setAvatarLoadError(null);
-      clearAvatarPackage();
-    }
+    void loadDefaultAvatarPackage({
+      isCurrent: () => requestId === avatarLoadRequestRef.current,
+      onLoaded: (loaded) => {
+        setAvatarLoadError(null);
+        installAvatarPackage(loaded, 'default');
+      },
+      onFailed: (error) => {
+        console.warn('Failed to load the bundled default avatar.', error);
+        setAvatarLoadError(null);
+        clearAvatarPackage();
+      },
+    });
   }, [clearAvatarPackage, installAvatarPackage]);
 
   const handleAvatarPackageChange = useCallback(
     async (file: File | null) => {
       if (!file) {
-        void loadDefaultAvatarPackage();
+        startDefaultAvatarPackageLoad();
         return;
       }
 
@@ -378,12 +398,12 @@ export default function App() {
         );
       }
     },
-    [installAvatarPackage, loadDefaultAvatarPackage],
+    [installAvatarPackage, startDefaultAvatarPackageLoad],
   );
 
   useEffect(() => {
-    void loadDefaultAvatarPackage();
-  }, [loadDefaultAvatarPackage]);
+    startDefaultAvatarPackageLoad();
+  }, [startDefaultAvatarPackageLoad]);
 
   useEffect(() => {
     const hash = window.location.hash;

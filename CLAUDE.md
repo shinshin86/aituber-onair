@@ -107,8 +107,10 @@ Usage:
   `packages/core/examples/react-pngtuber-app`,
   `packages/core/examples/react-pet-app`,
   `packages/core/examples/react-vrm-app`,
-  `packages/core/examples/react-live2d-app`, and
-  `packages/core/examples/react-purupuru-app`. For every new TTS provider, check
+  `packages/core/examples/react-live2d-app`,
+  `packages/core/examples/react-purupuru-app`,
+  `packages/core/examples/react-inochi2d-app`, and
+  `packages/core/examples/react-psd-app`. For every new TTS provider, check
   the engine selector, persisted settings type/defaults, settings UI,
   `VoiceServiceOptions` wiring, README mention, lockfile metadata, and example
   build. If the provider has a voice-list API, surface it as a selectable list

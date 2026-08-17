@@ -522,8 +522,12 @@ export function useSettings() {
     }));
   }, []);
 
+  const openRouterApiKey = settings.llm.apiKeys.openrouter;
+  const openRouterMaxCandidates =
+    settings.llm.openRouterDynamicFreeModels?.maxCandidates;
+
   const refreshOpenRouterDynamicFreeModels = useCallback(async () => {
-    const apiKey = settings.llm.apiKeys.openrouter?.trim() || '';
+    const apiKey = openRouterApiKey?.trim() || '';
     if (!apiKey) {
       const message = 'OpenRouter API key is required.';
       setOpenRouterRefreshError(message);
@@ -535,7 +539,7 @@ export function useSettings() {
 
     try {
       const maxCandidates = normalizePositiveInteger(
-        settings.llm.openRouterDynamicFreeModels?.maxCandidates,
+        openRouterMaxCandidates,
         DEFAULT_OPENROUTER_MAX_CANDIDATES,
       );
       const result: RefreshOpenRouterFreeModelsResult =
@@ -567,10 +571,7 @@ export function useSettings() {
     } finally {
       setIsRefreshingOpenRouterFreeModels(false);
     }
-  }, [
-    settings.llm.apiKeys.openrouter,
-    settings.llm.openRouterDynamicFreeModels?.maxCandidates,
-  ]);
+  }, [openRouterApiKey, openRouterMaxCandidates]);
 
   const updateOpenRouterMaxCandidates = useCallback((maxCandidates: number) => {
     const normalized = normalizePositiveInteger(

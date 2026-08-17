@@ -461,6 +461,20 @@ export function SettingsPanel({
     speakerRef.current = settings.tts.speaker;
   }, [settings.tts.speaker]);
 
+  const handleTTSEngineChange = (engine: TTSEngineOption) => {
+    if (engine !== 'minimax') {
+      setMinimaxVoices([]);
+    }
+    updateTTSEngine(engine);
+  };
+
+  const handleMinimaxApiKeyChange = (apiKey: string) => {
+    if (!apiKey.trim()) {
+      setMinimaxVoices([]);
+    }
+    updateMinimaxApiKey(apiKey);
+  };
+
   const selectedAivisCloudPresetId = useMemo(() => {
     const matched = AIVIS_CLOUD_PRESETS.find(
       (preset) =>
@@ -544,7 +558,6 @@ export function SettingsPanel({
 
     const apiKey = settings.tts.minimaxApiKey?.trim();
     if (!apiKey) {
-      setMinimaxVoices([]);
       return;
     }
 
@@ -1206,7 +1219,7 @@ export function SettingsPanel({
                 id="tts-engine"
                 value={settings.tts.engine}
                 onChange={(e) =>
-                  updateTTSEngine(e.target.value as TTSEngineOption)
+                  handleTTSEngineChange(e.target.value as TTSEngineOption)
                 }
                 disabled={disabled}
               >
@@ -2467,7 +2480,7 @@ export function SettingsPanel({
                     id="tts-minimax-apikey"
                     type="password"
                     value={settings.tts.minimaxApiKey || ''}
-                    onChange={(e) => updateMinimaxApiKey(e.target.value)}
+                    onChange={(e) => handleMinimaxApiKeyChange(e.target.value)}
                     placeholder="MiniMax API Key"
                     disabled={disabled}
                   />
