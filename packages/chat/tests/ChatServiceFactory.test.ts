@@ -21,6 +21,7 @@ import {
   MODEL_GROK_4_6,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
+  MODEL_GEMINI_3_7_FLASH,
 } from '../src/constants';
 
 // Mock provider for testing
@@ -407,6 +408,12 @@ describe('ChatServiceFactory', () => {
         'medium',
         'high',
       ]);
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'gemini',
+          MODEL_GEMINI_3_7_FLASH,
+        )?.reasoningEffort,
+      ).toEqual(['low', 'medium', 'high']);
     });
 
     it('returns model-aware Kimi reasoning effort capabilities', () => {

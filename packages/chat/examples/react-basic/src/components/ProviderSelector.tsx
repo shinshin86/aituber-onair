@@ -79,6 +79,7 @@ import {
   MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_2_5_FLASH_LITE,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
+  MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
   MODEL_ANTHROPIC_CLAUDE_FABLE_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
@@ -670,6 +671,12 @@ export const allModels: ProviderModel[] = [
   },
 
   // Gemini models
+  {
+    id: MODEL_GEMINI_3_7_FLASH,
+    name: 'Gemini 3.7 Flash',
+    provider: 'gemini',
+    default: false,
+  },
   {
     id: MODEL_GEMINI_3_6_FLASH,
     name: 'Gemini 3.6 Flash',
@@ -1851,7 +1858,7 @@ export default function ProviderSelector({
                 {isGeminiReasoningModel
                   ? geminiSupportedReasoningEfforts.includes('minimal')
                     ? 'Mapped to Gemini thinkingLevel. Minimal is optimized for chat latency.'
-                    : 'Mapped to Gemini thinkingLevel. Low is the lowest level supported by Gemini 3 Pro.'
+                    : 'Mapped to Gemini thinkingLevel. Low is the lowest level supported by this model.'
                   : 'Gemini 2.5 uses thinkingBudget; other models may not expose configurable thinkingLevel.'}
               </span>
             </div>

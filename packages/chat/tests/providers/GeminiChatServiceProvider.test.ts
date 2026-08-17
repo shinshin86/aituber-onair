@@ -6,6 +6,7 @@ import type { MCPServerConfig } from '../../src/types/mcp';
 import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
+  MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_5_FLASH_LITE,
@@ -42,6 +43,7 @@ describe('GeminiChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GEMINI_3_7_FLASH,
         MODEL_GEMINI_3_6_FLASH,
         MODEL_GEMINI_3_5_FLASH,
         MODEL_GEMINI_3_5_FLASH_LITE,
@@ -87,6 +89,9 @@ describe('GeminiChatServiceProvider', () => {
         provider.supportsVisionForModel(MODEL_GEMINI_3_1_PRO_PREVIEW),
       ).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GEMINI_3_5_FLASH)).toBe(
+        true,
+      );
+      expect(provider.supportsVisionForModel(MODEL_GEMINI_3_7_FLASH)).toBe(
         true,
       );
       expect(provider.supportsVisionForModel(MODEL_GEMINI_3_6_FLASH)).toBe(
@@ -436,6 +441,24 @@ describe('GeminiChatServiceProvider', () => {
         'test-api-key',
         MODEL_GEMINI_3_1_PRO_PREVIEW,
         MODEL_GEMINI_3_1_PRO_PREVIEW,
+        [],
+        [],
+        undefined,
+        'low',
+      );
+    });
+
+    it('should normalize unsupported minimal reasoning to low for Gemini 3.7', () => {
+      provider.createChatService({
+        apiKey: 'test-api-key',
+        model: MODEL_GEMINI_3_7_FLASH,
+        reasoning_effort: 'minimal',
+      });
+
+      expect(GeminiChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GEMINI_3_7_FLASH,
+        MODEL_GEMINI_3_7_FLASH,
         [],
         [],
         undefined,

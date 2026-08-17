@@ -606,9 +606,10 @@ const geminiService = ChatServiceFactory.createChatService('gemini', {
 ```
 
 `gemini-3.1-flash-lite` は既定の Flash-Lite モデルとして維持します。
-最新の安定版・低遅延 Flash-Lite として `gemini-3.5-flash-lite`、
-より高度なエージェント・マルチモーダル用途向けに `gemini-3.6-flash`、
-安定版 Flash として `gemini-3.5-flash` も利用できます。
+最新の安定版・低遅延 Flash-Lite として `gemini-3.5-flash-lite` を利用できます。
+より高度なコーディング・エージェント・マルチモーダル用途向けの安定版として
+`gemini-3.7-flash` を明示的に選択でき、`gemini-3.6-flash` と
+`gemini-3.5-flash` も引き続き利用できます。
 `gemini-3.1-flash-lite-preview`、`gemini-3-pro-preview`、
 `gemini-2.5-flash-lite-preview-06-17` などの preview / deprecated
 モデルは後方互換のため明示的な model string では利用できますが、本番用途では
@@ -617,13 +618,14 @@ const geminiService = ChatServiceFactory.createChatService('gemini', {
 Gemini 3 モデルでは `reasoning_effort` を指定できます。この値は Gemini の
 `thinkingConfig.thinkingLevel` に変換され、`includeThoughts: false` を維持します。
 
-- Gemini 3 Flash / Flash-Lite: `minimal`, `low`, `medium`, `high`。
-  低遅延なチャット向けの既定値は `minimal` です。
-- Gemini 3 Pro: `low`, `medium`, `high`。Pro は `minimal` 非対応のため、
-  既定値は `low` です。
+- Gemini 3 モデルは、低遅延なチャット向けに利用可能な最小の effort を既定値にします。
+- `minimal` 対応の Flash / Flash-Lite は `minimal`, `low`, `medium`, `high`
+  を公開し、既定値は `minimal` です。
+- `minimal` 非対応モデルは `low`, `medium`, `high` を公開し、既定値は `low`
+  です。現在該当するのは Gemini 3.7 Flash と Gemini 3 Pro です。
 
-これにより Gemini 3.6/3.5 Flash の medium thinking 既定値を上書きし、短い
-出力上限を hidden thinking が使い切るリスクを抑えます。Gemini 2.5 は
+これにより各モデルで利用可能な最小の thinking level を使い、短い出力上限を
+hidden thinking が使い切るリスクを抑えます。Gemini 2.5 は
 `thinkingBudget` を使うため、`reasoning_effort` は送信しません。
 
 #### OpenRouter
@@ -1279,7 +1281,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 
 - **OpenAI**: GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
-- **Gemini**: Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。チャット用途向けに Gemini 3 Flash は minimal thinking、Gemini 3 Pro は low thinking を既定値にします。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
+- **Gemini**: Gemini 3.7 Flash、Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。`minimal` 非対応の Gemini 3.7 Flash と Gemini 3 Pro は low thinking、その他の Gemini 3 Flash は minimal thinking をチャット用途向けの既定値にします。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 をサポート。調整可能な`reasoning_effort`は対応モデルに限り`output_config.effort`として送信し、refusal metadataは終端completionとして保持します
 - **OpenRouter**: OpenRouterのキュレーション済みモデル一覧（OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Kwaipilot）をサポート。モデルIDはOpenRouter節を参照してください
 - **Z.ai**: GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo（テキスト）、GLM-4.7/4.6（テキスト）、GLM-5V-Turbo/GLM-4.6V系（ビジョン）をサポート。GLM-5.2はモデル別`reasoning_effort`を公開し、低遅延チャット向けに`none`を既定値にします

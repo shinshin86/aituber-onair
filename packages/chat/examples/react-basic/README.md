@@ -142,10 +142,10 @@ built-in model status is `available`.
 - Best for: Long context, tool use + advanced reasoning
 
 **Gemini**
-- Models: Gemini 3.6 Flash, Gemini 3.5 Flash/Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
+- Models: Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash/Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - Vision: Supported for all listed Gemini models. Deprecated lifecycle models remain selectable with a deprecated label for explicit compatibility.
-- Reasoning Effort: Gemini 3 Flash/Flash-Lite exposes Minimal/Low/Medium/High and defaults to Minimal; Gemini 3 Pro exposes Low/Medium/High and defaults to Low. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models.
-- Best for: Fast responses, cost-effective. Minimal thinking keeps chat latency and hidden-token usage low.
+- Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.7 Flash and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models.
+- Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
 
 **OpenRouter**
 - Models: Curated multi-provider model list (OpenRouter Auto/Auto Beta/Fusion, OpenAI GPT-5.6, Claude Fable/Opus 5, Gemini 3.7/3.6/3.5, Z.ai, Grok 4.6, Kimi K3, DeepSeek V4 Flash and V4 Pro 0813, KAT-Coder V2.5)
