@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Minor Changes
+
+- Added the Node.js-only `@aituber-onair/core/agent` entry for Codex SDK,
+  Claude Agent SDK, and Copilot SDK providers. Agent providers can now be used
+  through `createAgentChatService()` or `AITuberOnAirCore` without an API key,
+  while the main Core entry remains free of agent-provider registration side
+  effects.
+
 ### Patch Changes
 
 - Added `AITuberOnAirCore.updateChatOptions()` to update chat processor

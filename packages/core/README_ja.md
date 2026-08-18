@@ -26,6 +26,7 @@
 - [イベントシステム](#イベントシステム)
 - [音声エンジン対応](#音声エンジン対応)
 - [AIプロバイダーシステム](#AIプロバイダーシステム)
+- [Agent SDKプロバイダー（Codex / Claude Agent SDK / Copilot）](#agent-sdkプロバイダーcodex--claude-agent-sdk--copilot)
 - [メモリと永続化](#メモリと永続化)
 - [応用例](#応用例)
 - [既存アプリケーションとの統合](#既存アプリケーションとの統合)
@@ -1498,6 +1499,80 @@ const aituberCore = new AITuberOnAirCore({
   // その他のオプション...
 });
 ```
+
+## Agent SDKプロバイダー（Codex / Claude Agent SDK / Copilot）
+
+Agent SDKプロバイダーはAPIキーではなく、ローカルのサブスクリプション認証を
+使用します。Node.js専用の`@aituber-onair/core/agent`エントリから利用でき、
+ブラウザアプリが読み込み・登録しないようmainエントリからは分離されています。
+
+`./agent`サブパスはpackage `exports`を通して解決されます。TypeScript利用側では
+`moduleResolution: "node16"`、`"nodenext"`、`"bundler"`のいずれかが必要で、
+従来の`"node"`では解決できません。これは`@aituber-onair/chat/agent`と同じ要件です。
+
+アプリで使用するプロバイダーに対応するSDKパッケージだけをインストールしてください。
+
+```bash
+npm install @aituber-onair/core @openai/codex-sdk
+# または
+npm install @aituber-onair/core @anthropic-ai/claude-agent-sdk
+# または
+npm install @aituber-onair/core @github/copilot-sdk
+```
+
+現在の対応は、`codex-sdk`が`@openai/codex-sdk`、
+`claude-agent-sdk`が`@anthropic-ai/claude-agent-sdk`、
+`copilot-sdk`が`@github/copilot-sdk`です。これらのSDKは動的に読み込まれ、
+`@aituber-onair/core`の依存関係には含まれません。
+
+単独のチャットサービスだけが必要な場合は`createAgentChatService`を使います。
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/core/agent';
+
+const service = createAgentChatService('codex-sdk', {
+  workingDirectory: process.cwd(),
+  skipGitRepoCheck: true,
+});
+
+const result = await service.chatOnce(
+  [{ role: 'user', content: '短いニュース見出しを1つ作ってください。' }],
+  false,
+);
+```
+
+同じエントリが`AITuberOnAirCore`用のプロバイダーも登録するため、Core全体の
+フローでもAPIキーは不要です。
+
+```typescript
+import { AITuberOnAirCore } from '@aituber-onair/core/agent';
+
+const core = new AITuberOnAirCore({
+  chatProvider: 'codex-sdk',
+  chatOptions: {
+    systemPrompt: 'あなたは簡潔なニュースキャスターです。',
+  },
+  providerOptions: {
+    workingDirectory: process.cwd(),
+    skipGitRepoCheck: true,
+  },
+  voiceOptions: {
+    engineType: 'aivisSpeech',
+    speaker: '888753760',
+  },
+});
+
+await core.processChat('今日は何を取り上げますか？');
+```
+
+現在の制限はAgent SDKプロバイダー群に共通します。Node.js・テキストチャット専用で、
+Coreのtools、Vision chat、MCP serversには対応していません。ストリーミング可否は
+chat providerのcapability metadataに従い、現在Codex SDKは完了応答を返し、
+Claude Agent SDKとCopilot SDKは各SDKが出力する部分テキストを転送できます。
+Coreのメモリ要約はAgent SDKプロバイダーでは利用できず、
+`memoryOptions.enableSummarization`を有効にすると初期化時に明確なエラーを返します。
+SDKパッケージが未インストール、またはローカル認証が利用できない場合は、
+元のSDKエラー詳細を含む実行時エラーを返します。
 
 ## メモリと永続化
 

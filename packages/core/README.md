@@ -27,6 +27,7 @@ It specializes in generating response text and audio from text or image inputs, 
 - [Event System](#event-system)
 - [Supported Speech Engines](#supported-speech-engines)
 - [AI Provider System](#ai-provider-system)
+- [Agent SDK providers (Codex / Claude Agent SDK / Copilot)](#agent-sdk-providers-codex--claude-agent-sdk--copilot)
 - [Memory & Persistence](#memory--persistence)
 - [Examples](#examples)
 - [Integration with Existing Applications](#integration-with-existing-applications)
@@ -1506,6 +1507,84 @@ const aituberCore = new AITuberOnAirCore({
   // Other options...
 });
 ```
+
+## Agent SDK providers (Codex / Claude Agent SDK / Copilot)
+
+Agent SDK providers use local subscription authentication instead of API keys.
+They are available from the Node.js-only `@aituber-onair/core/agent` entry and
+are kept out of the main entry so browser applications do not load or register
+them.
+
+The `./agent` subpath is resolved through package `exports`. TypeScript
+consumers must use `moduleResolution: "node16"`, `"nodenext"`, or `"bundler"`;
+legacy `"node"` resolution cannot resolve it. This is the same requirement as
+`@aituber-onair/chat/agent`.
+
+Install only the SDK package that matches the provider your application uses:
+
+```bash
+npm install @aituber-onair/core @openai/codex-sdk
+# or
+npm install @aituber-onair/core @anthropic-ai/claude-agent-sdk
+# or
+npm install @aituber-onair/core @github/copilot-sdk
+```
+
+The current provider-to-package mappings are `codex-sdk` to
+`@openai/codex-sdk`, `claude-agent-sdk` to
+`@anthropic-ai/claude-agent-sdk`, and `copilot-sdk` to
+`@github/copilot-sdk`. These SDKs are loaded dynamically and are not
+dependencies of `@aituber-onair/core`.
+
+Use `createAgentChatService` when you only need a standalone chat service:
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/core/agent';
+
+const service = createAgentChatService('codex-sdk', {
+  workingDirectory: process.cwd(),
+  skipGitRepoCheck: true,
+});
+
+const result = await service.chatOnce(
+  [{ role: 'user', content: 'Give me one short news headline.' }],
+  false,
+);
+```
+
+The same entry registers the providers for `AITuberOnAirCore`, so the full
+Core flow does not need an API key:
+
+```typescript
+import { AITuberOnAirCore } from '@aituber-onair/core/agent';
+
+const core = new AITuberOnAirCore({
+  chatProvider: 'codex-sdk',
+  chatOptions: {
+    systemPrompt: 'You are a concise news presenter.',
+  },
+  providerOptions: {
+    workingDirectory: process.cwd(),
+    skipGitRepoCheck: true,
+  },
+  voiceOptions: {
+    engineType: 'aivisSpeech',
+    speaker: '888753760',
+  },
+});
+
+await core.processChat('What should we cover today?');
+```
+
+Current limitations apply to the Agent SDK provider group as a whole: it is
+Node.js-only and text-only, and Core tools, vision chat, and MCP servers are not
+supported. Streaming capability follows the underlying chat provider metadata;
+currently Codex SDK returns a completed response, while Claude Agent SDK and
+Copilot SDK can forward partial text when their SDKs emit it. Core memory
+summarization is not supported with Agent SDK providers; enabling
+`memoryOptions.enableSummarization` throws a clear initialization error.
+Missing SDK packages or unavailable local authentication are reported at
+runtime with the underlying SDK error details.
 
 ## Memory & Persistence
 
