@@ -172,6 +172,10 @@ export interface ManneriSettings {
   minMessageLength: number;
 }
 
+export interface KizunaSettings {
+  enabled: boolean;
+}
+
 export interface PuruPuruEffectAnchor {
   faceX: number;
   faceY: number;
@@ -216,4 +220,5 @@ export interface AppSettings {
   stream: StreamSettings;
   commentIntelligence: CommentIntelligenceSettings;
   manneri: ManneriSettings;
+  kizuna: KizunaSettings;
 }

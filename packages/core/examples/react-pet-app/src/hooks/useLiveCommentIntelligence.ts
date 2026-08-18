@@ -24,6 +24,7 @@ import type { TwitchChatMessage } from '../services/twitch/twitchService';
 import type { YouTubeChatMessage } from '../services/youtube/youtubeService';
 import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
+import { createBondIdentity, type BondIdentity } from '../lib/kizunaBond';
 import { useInterval } from './useInterval';
 
 type StreamPlatform = 'youtube' | 'twitch' | 'none';
@@ -33,6 +34,9 @@ type ProcessChat = (
   text: string,
   options?: {
     displayText?: string;
+    bondIdentity?: BondIdentity;
+    bondMessage?: string;
+    bondAlreadyRecorded?: boolean;
   },
 ) => Promise<void>;
 
@@ -198,8 +202,14 @@ export function useLiveCommentIntelligence({
       const promptForCore = formatCommentIntelligencePrompt(result);
       const authorName = selected.author.displayName ?? selected.author.name;
       const displayText = `「${authorName}」さんのコメント: ${selected.text}`;
+      const bondSource = selected.platform === 'twitch' ? 'twitch' : 'youtube';
 
-      await processChat(promptForCore, { displayText });
+      await processChat(promptForCore, {
+        displayText,
+        bondIdentity: createBondIdentity(bondSource, authorName),
+        bondMessage: selected.text,
+        bondAlreadyRecorded: true,
+      });
     } finally {
       isFlushingRef.current = false;
     }

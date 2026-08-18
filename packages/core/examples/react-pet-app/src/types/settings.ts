@@ -168,6 +168,10 @@ export interface ManneriSettings {
   minMessageLength: number;
 }
 
+export interface KizunaSettings {
+  enabled: boolean;
+}
+
 export interface PetManifest {
   id?: string;
   displayName?: string;
@@ -196,4 +200,5 @@ export interface AppSettings {
   stream: StreamSettings;
   commentIntelligence: CommentIntelligenceSettings;
   manneri: ManneriSettings;
+  kizuna: KizunaSettings;
 }

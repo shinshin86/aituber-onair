@@ -6,6 +6,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
+import { BondToastStack } from './components/BondToastStack';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -16,6 +17,7 @@ import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { getPuruPuruEffectAnchor } from './lib/purupuruEffectAnchor';
+import { createBondIdentity } from './lib/kizunaBond';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
 import type { PuruPuruAvatarPackage } from './lib/purupuruPackage';
 import { loadPuruPuruPackage } from './lib/purupuruPackage';
@@ -44,6 +46,39 @@ interface SettingsDialogDragState {
   pointerStart: DialogDragPoint;
   offsetStart: DialogDragPoint;
   rect: DOMRect;
+}
+
+interface DefaultAvatarPackageLoadOptions {
+  isCurrent: () => boolean;
+  onLoaded: (loaded: PuruPuruAvatarPackage) => void;
+  onFailed: (error: unknown) => void;
+}
+
+async function loadDefaultAvatarPackage({
+  isCurrent,
+  onLoaded,
+  onFailed,
+}: DefaultAvatarPackageLoadOptions): Promise<void> {
+  try {
+    const response = await fetch(DEFAULT_AVATAR_URL);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${DEFAULT_AVATAR_URL}.`);
+    }
+
+    const blob = await response.blob();
+    const file = new File([blob], DEFAULT_AVATAR_FILE_NAME, {
+      type: blob.type || 'application/zip',
+    });
+    const loaded = await loadPuruPuruPackage(file);
+
+    if (!isCurrent()) {
+      loaded.dispose();
+      return;
+    }
+    onLoaded(loaded);
+  } catch (error) {
+    if (isCurrent()) onFailed(error);
+  }
 }
 
 export default function App() {
@@ -194,6 +229,10 @@ export default function App() {
     partialResponse,
     processChat,
     processVisionChat,
+    bondToasts,
+    dismissBondToast,
+    recordBondMessage,
+    resetKizunaData,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
     onSpeechStart: handleSpeechStart,
@@ -213,7 +252,10 @@ export default function App() {
       // Stop previous audio if speech is currently playing
       stop();
       resetAvatarReaction();
-      processChat(text);
+      processChat(text, {
+        bondIdentity: createBondIdentity('form', 'あなた'),
+        bondMessage: text,
+      });
     },
     [stop, resetAvatarReaction, processChat],
   );
@@ -246,16 +288,30 @@ export default function App() {
 
   const handleYoutubeComment = useCallback(
     (comment: YouTubeChatMessage) => {
+      const timestamp = new Date(comment.publishedAt).getTime();
+      void recordBondMessage(
+        createBondIdentity('youtube', comment.userName),
+        comment.userComment,
+        Number.isFinite(timestamp) ? timestamp : Date.now(),
+      ).catch((error) => {
+        console.error('Failed to record YouTube Kizuna interaction:', error);
+      });
       enqueueYouTubeComments([comment]);
     },
-    [enqueueYouTubeComments],
+    [enqueueYouTubeComments, recordBondMessage],
   );
 
   const handleTwitchComment = useCallback(
     (comment: TwitchChatMessage) => {
+      void recordBondMessage(
+        createBondIdentity('twitch', comment.userName),
+        comment.userComment,
+      ).catch((error) => {
+        console.error('Failed to record Twitch Kizuna interaction:', error);
+      });
       enqueueTwitchComments([comment]);
     },
-    [enqueueTwitchComments],
+    [enqueueTwitchComments, recordBondMessage],
   );
 
   const handleBackgroundImageChange = useCallback((file: File | null) => {
@@ -295,41 +351,28 @@ export default function App() {
     setAvatarPackageSource(null);
   }, []);
 
-  const loadDefaultAvatarPackage = useCallback(async () => {
+  const startDefaultAvatarPackageLoad = useCallback(() => {
     const requestId = avatarLoadRequestRef.current + 1;
     avatarLoadRequestRef.current = requestId;
 
-    try {
-      const response = await fetch(DEFAULT_AVATAR_URL);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${DEFAULT_AVATAR_URL}.`);
-      }
-
-      const blob = await response.blob();
-      const file = new File([blob], DEFAULT_AVATAR_FILE_NAME, {
-        type: blob.type || 'application/zip',
-      });
-      const loaded = await loadPuruPuruPackage(file);
-
-      if (requestId !== avatarLoadRequestRef.current) {
-        loaded.dispose();
-        return;
-      }
-
-      setAvatarLoadError(null);
-      installAvatarPackage(loaded, 'default');
-    } catch (error) {
-      if (requestId !== avatarLoadRequestRef.current) return;
-      console.warn('Failed to load the bundled default avatar.', error);
-      setAvatarLoadError(null);
-      clearAvatarPackage();
-    }
+    void loadDefaultAvatarPackage({
+      isCurrent: () => requestId === avatarLoadRequestRef.current,
+      onLoaded: (loaded) => {
+        setAvatarLoadError(null);
+        installAvatarPackage(loaded, 'default');
+      },
+      onFailed: (error) => {
+        console.warn('Failed to load the bundled default avatar.', error);
+        setAvatarLoadError(null);
+        clearAvatarPackage();
+      },
+    });
   }, [clearAvatarPackage, installAvatarPackage]);
 
   const handleAvatarPackageChange = useCallback(
     async (file: File | null) => {
       if (!file) {
-        void loadDefaultAvatarPackage();
+        startDefaultAvatarPackageLoad();
         return;
       }
 
@@ -355,12 +398,12 @@ export default function App() {
         );
       }
     },
-    [installAvatarPackage, loadDefaultAvatarPackage],
+    [installAvatarPackage, startDefaultAvatarPackageLoad],
   );
 
   useEffect(() => {
-    void loadDefaultAvatarPackage();
-  }, [loadDefaultAvatarPackage]);
+    startDefaultAvatarPackageLoad();
+  }, [startDefaultAvatarPackageLoad]);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -520,6 +563,8 @@ export default function App() {
         onToggleSettings={toggleSettingsDialog}
       />
 
+      <BondToastStack toasts={bondToasts} onDismiss={dismissBondToast} />
+
       {settingsOpen && (
         <div className="settings-dialog-overlay" onClick={closeSettingsDialog}>
           <div
@@ -557,6 +602,7 @@ export default function App() {
               screenVisionController={screenVisionController}
               onBackgroundImageChange={handleBackgroundImageChange}
               onAvatarPackageChange={handleAvatarPackageChange}
+              onResetKizunaData={resetKizunaData}
             />
           </div>
         </div>

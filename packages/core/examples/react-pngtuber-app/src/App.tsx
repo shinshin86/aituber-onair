@@ -178,6 +178,7 @@ export default function App() {
     bondToasts,
     dismissBondToast,
     recordBondMessage,
+    resetKizunaData,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
     onSpeechStart: handleSpeechStart,
@@ -460,6 +461,7 @@ export default function App() {
               screenVisionController={screenVisionController}
               onBackgroundImageChange={handleBackgroundImageChange}
               onAvatarImageChange={handleAvatarImageChange}
+              onResetKizunaData={resetKizunaData}
             />
           </div>
         </div>
