@@ -193,6 +193,9 @@ npm run dev
   に対応した React チャット統合。
 - [`packages/core/examples/coding-agent`](../packages/core/examples/coding-agent):
   コーディングエージェント風ワークフローで AITuber OnAir Core を使う例。
+- [`packages/core/examples/node-purupuru-newsdesk`](../packages/core/examples/node-purupuru-newsdesk):
+  ソーステキストから Core のチャット・音声を通して、チャプター付き縦型
+  `.purupuru` アバターニュース動画を作る Node.js パイプライン。
 
 ## Chat サンプル
 

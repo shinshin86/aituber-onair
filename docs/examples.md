@@ -193,6 +193,9 @@ npm run dev
   calling, MCP, and image chat.
 - [`packages/core/examples/coding-agent`](../packages/core/examples/coding-agent):
   example of using AITuber OnAir Core with a coding-agent style workflow.
+- [`packages/core/examples/node-purupuru-newsdesk`](../packages/core/examples/node-purupuru-newsdesk):
+  Node.js pipeline from source text through Core chat and voice to a chaptered
+  vertical `.purupuru` avatar news video.
 
 ## Chat Examples
 
