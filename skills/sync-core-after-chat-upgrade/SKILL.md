@@ -42,6 +42,11 @@ Collect missing inputs before editing:
 3. Update core public exports:
    - Edit `packages/core/src/index.ts` to re-export newly relevant chat
      constants/types/providers that should be available from core.
+   - When Chat exposes an opt-in, side-effectful sub-entry, mirror it through a
+     dedicated Core sub-entry instead of importing it from Core's main entry.
+     For example, `@aituber-onair/core/agent` mirrors
+     `@aituber-onair/chat/agent` while keeping agent provider registration out
+     of `@aituber-onair/core`.
    - Keep ordering consistent with nearby export groups.
 4. Update core examples when `update_examples` is `true`:
    - `packages/core/examples/react-basic/src/constants/*.ts`:
@@ -121,6 +126,8 @@ npm --prefix packages/core/examples/coding-agent run build
 - The target Chat version is already published to npm before the Core release
   PR is prepared.
 - Required new chat constants/features are re-exported from core.
+- Opt-in Chat sub-entries are reachable through matching Core sub-entries
+  without adding their runtime side effects to Core's main entry.
 - Core examples can select/use newly propagated models as needed.
 - Core docs reflect the updated provider/model coverage.
 - Core version/changelog and all core example lockfiles that embed local core

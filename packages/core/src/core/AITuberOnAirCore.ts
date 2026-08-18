@@ -22,6 +22,10 @@ import {
   PlamoChatServiceOptions,
   VisionSupportLevel,
 } from '@aituber-onair/chat';
+import type {
+  AgentChatProviderName,
+  AgentChatServiceOptionsByProvider,
+} from '@aituber-onair/chat/agent';
 import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer';
 import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
 import { ClaudeSummarizer } from '../services/chat/providers/claude/ClaudeSummarizer';
@@ -84,9 +88,9 @@ export interface SpeechChunkingOptions {
 
 export interface AITuberOnAirCoreOptions {
   /** AI provider name */
-  chatProvider?: ChatProviderName;
-  /** AI API key */
-  apiKey: string;
+  chatProvider?: ChatProviderName | AgentChatProviderName;
+  /** AI API key (not used by Agent SDK providers) */
+  apiKey?: string;
   /** AI model name (default is provider's default model) */
   model?: string;
   /** ChatProcessor options */
@@ -102,10 +106,7 @@ export interface AITuberOnAirCoreOptions {
   /** Debug mode */
   debug?: boolean;
   /** ChatService provider-specific options (optional) */
-  providerOptions?: Omit<
-    ChatServiceOptionsByProvider[ChatProviderName],
-    'apiKey' | 'model' | 'tools'
-  >;
+  providerOptions?: CoreProviderOptions;
   /** Tools */
   tools?: {
     definition: ToolDefinition;
@@ -115,10 +116,37 @@ export interface AITuberOnAirCoreOptions {
   mcpServers?: MCPServerConfig[];
 }
 
-type ProviderOptionsByName<TProvider extends ChatProviderName> = Omit<
-  ChatServiceOptionsByProvider[TProvider],
+type CoreChatProviderName = ChatProviderName | AgentChatProviderName;
+
+type ChatServiceOptionsForProvider<TProvider extends CoreChatProviderName> =
+  TProvider extends ChatProviderName
+    ? ChatServiceOptionsByProvider[TProvider]
+    : TProvider extends AgentChatProviderName
+      ? AgentChatServiceOptionsByProvider[TProvider]
+      : never;
+
+type ProviderOptionsByName<TProvider extends CoreChatProviderName> = Omit<
+  ChatServiceOptionsForProvider<TProvider>,
   'apiKey' | 'model' | 'tools'
 >;
+
+type CoreProviderOptions = {
+  [TProvider in CoreChatProviderName]: ProviderOptionsByName<TProvider>;
+}[CoreChatProviderName];
+
+type CoreChatServiceOptions =
+  | ChatServiceOptionsByProvider[ChatProviderName]
+  | AgentChatServiceOptionsByProvider[AgentChatProviderName];
+
+function isAgentChatProviderName(
+  providerName: CoreChatProviderName,
+): providerName is AgentChatProviderName {
+  return (
+    providerName === 'codex-sdk' ||
+    providerName === 'claude-agent-sdk' ||
+    providerName === 'copilot-sdk'
+  );
+}
 
 /**
  * Event types for AITuberOnAirCore
@@ -192,7 +220,17 @@ export class AITuberOnAirCore extends EventEmitter {
     this.speechChunkSeparators = speechChunkingOptions.separators;
 
     // Determine provider name (default is 'openai')
-    const providerName: ChatProviderName = options.chatProvider || 'openai';
+    const providerName: CoreChatProviderName = options.chatProvider || 'openai';
+
+    if (
+      isAgentChatProviderName(providerName) &&
+      options.memoryOptions?.enableSummarization
+    ) {
+      throw new Error(
+        'Memory summarization is not supported with Agent SDK providers. ' +
+          'Disable memoryOptions.enableSummarization or use an API-based chat provider.',
+      );
+    }
 
     // Register tools
     options.tools?.forEach((t) =>
@@ -230,10 +268,13 @@ export class AITuberOnAirCore extends EventEmitter {
     }
 
     // Initialize ChatService
-    this.chatService = ChatServiceFactory.createChatService(
-      providerName,
-      chatServiceOptions,
-    );
+    const createChatService = ChatServiceFactory.createChatService.bind(
+      ChatServiceFactory,
+    ) as (
+      providerName: CoreChatProviderName,
+      options: CoreChatServiceOptions,
+    ) => ChatService;
+    this.chatService = createChatService(providerName, chatServiceOptions);
 
     // Initialize MemoryManager (optional)
     if (options.memoryOptions?.enableSummarization) {
@@ -241,19 +282,19 @@ export class AITuberOnAirCore extends EventEmitter {
 
       if (providerName === 'gemini') {
         summarizer = new GeminiSummarizer(
-          options.apiKey,
+          options.apiKey ?? '',
           options.model,
           options.memoryOptions.summaryPromptTemplate,
         );
       } else if (providerName === 'claude') {
         summarizer = new ClaudeSummarizer(
-          options.apiKey,
+          options.apiKey ?? '',
           options.model,
           options.memoryOptions.summaryPromptTemplate,
         );
       } else {
         summarizer = new OpenAISummarizer(
-          options.apiKey,
+          options.apiKey ?? '',
           options.model,
           options.memoryOptions.summaryPromptTemplate,
         );
@@ -289,14 +330,27 @@ export class AITuberOnAirCore extends EventEmitter {
   }
 
   private buildChatServiceOptions(
-    providerName: ChatProviderName,
+    providerName: CoreChatProviderName,
     baseOptions: {
-      apiKey: string;
+      apiKey?: string;
       model?: string;
       tools: ToolDefinition[];
     },
     providerOptions?: AITuberOnAirCoreOptions['providerOptions'],
-  ): ChatServiceOptionsByProvider[ChatProviderName] {
+  ): CoreChatServiceOptions {
+    if (isAgentChatProviderName(providerName)) {
+      return {
+        ...(baseOptions.apiKey !== undefined
+          ? { apiKey: baseOptions.apiKey }
+          : {}),
+        ...(baseOptions.model ? { model: baseOptions.model } : {}),
+        ...(baseOptions.tools.length > 0 ? { tools: baseOptions.tools } : {}),
+        ...(providerOptions as
+          | ProviderOptionsByName<AgentChatProviderName>
+          | undefined),
+      } as AgentChatServiceOptionsByProvider[AgentChatProviderName];
+    }
+
     switch (providerName) {
       case 'openai': {
         return {
