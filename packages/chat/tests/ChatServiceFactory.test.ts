@@ -15,9 +15,13 @@ import {
   MODEL_DEEPSEEK_V4_PRO,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+  MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+  MODEL_GLM_5_1,
+  MODEL_GLM_5_2,
   MODEL_GROK_4_6,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
+  MODEL_GEMINI_3_7_FLASH,
 } from '../src/constants';
 
 // Mock provider for testing
@@ -329,18 +333,13 @@ describe('ChatServiceFactory', () => {
         'mistral-large-latest',
         'mistral-large-2512',
         'mistral-small-2603',
-        'mistral-medium-2508',
       ]);
 
       const sakanaModels = ChatServiceFactory.getSupportedModels('sakana');
-      expect(sakanaModels).toEqual([
-        'fugu',
-        'fugu-ultra',
-        'fugu-ultra-20260615',
-      ]);
+      expect(sakanaModels).toEqual(['fugu', 'fugu-ultra-v1.1']);
 
       const plamoModels = ChatServiceFactory.getSupportedModels('plamo');
-      expect(plamoModels).toEqual(['plamo-3.0-prime', 'plamo-2.2-prime']);
+      expect(plamoModels).toEqual(['plamo-3.0-prime']);
     });
   });
 
@@ -409,6 +408,12 @@ describe('ChatServiceFactory', () => {
         'medium',
         'high',
       ]);
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'gemini',
+          MODEL_GEMINI_3_7_FLASH,
+        )?.reasoningEffort,
+      ).toEqual(['low', 'medium', 'high']);
     });
 
     it('returns model-aware Kimi reasoning effort capabilities', () => {
@@ -450,6 +455,23 @@ describe('ChatServiceFactory', () => {
           MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
         )?.reasoningEffort,
       ).toEqual(['none', 'low', 'high', 'max']);
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'openrouter',
+          MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+        )?.reasoningEffort,
+      ).toEqual(['none', 'high', 'xhigh']);
+    });
+
+    it('returns model-aware Z.ai reasoning effort capabilities', () => {
+      expect(
+        ChatServiceFactory.getProviderCapabilities('zai', MODEL_GLM_5_2)
+          ?.reasoningEffort,
+      ).toEqual(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']);
+      expect(
+        ChatServiceFactory.getProviderCapabilities('zai', MODEL_GLM_5_1)
+          ?.reasoningEffort,
+      ).toEqual([]);
     });
 
     it('returns Claude reasoning effort capabilities', () => {

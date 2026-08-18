@@ -71,6 +71,62 @@ describe('ZAIChatService request body', () => {
     );
   });
 
+  it('sends normalized reasoning effort only for glm-5.2 text requests', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new ZAIChatService(
+      'test-key',
+      MODEL_GLM_5_2,
+      MODEL_GLM_5V_TURBO,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { type: 'enabled' },
+      'high',
+    );
+
+    await service.chatOnce(messages, false);
+
+    const [, body] = postSpy.mock.calls[0];
+    expect(body).toEqual(
+      expect.objectContaining({
+        model: MODEL_GLM_5_2,
+        thinking: { type: 'enabled' },
+        reasoning_effort: 'high',
+      }),
+    );
+  });
+
+  it('does not send glm-5.2 reasoning effort to a vision fallback model', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new ZAIChatService(
+      'test-key',
+      MODEL_GLM_5_2,
+      MODEL_GLM_5V_TURBO,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { type: 'enabled' },
+      'high',
+    );
+    const visionMessages: MessageWithVision[] = [
+      {
+        role: 'user',
+        content: [{ type: 'text', text: 'Describe this image.' }],
+      },
+    ];
+
+    await service.visionChatOnce(visionMessages, false);
+
+    const [, body] = postSpy.mock.calls[0];
+    expect(body).not.toHaveProperty('reasoning_effort');
+  });
+
   it('sends glm-5.1 with OpenAI-compatible chat completions payload', async () => {
     const postSpy = vi
       .spyOn(ChatServiceHttpClient, 'post')

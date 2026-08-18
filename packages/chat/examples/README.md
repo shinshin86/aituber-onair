@@ -36,7 +36,7 @@ Simple JavaScript runtime examples demonstrating core functionality:
 - **Tool Calling** (`tool-calling-example.js`) - Function calling demonstration
 - **Streaming** (`streaming-example.js`) - Real-time streaming responses
 - **Sakana AI Fugu** (`sakana-example.js`) - Minimal Sakana AI Fugu smoke test
-  (`fugu`, `fugu-ultra`, `fugu-ultra-20260615`); run from Node.js to avoid
+  (`fugu`, `fugu-ultra-v1.1`); run from Node.js to avoid
   browser CORS issues
 
 **Quick Start:**

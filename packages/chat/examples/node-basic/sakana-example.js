@@ -3,15 +3,10 @@
 const {
   ChatServiceFactory,
   MODEL_FUGU,
-  MODEL_FUGU_ULTRA,
-  MODEL_FUGU_ULTRA_20260615,
+  MODEL_FUGU_ULTRA_V1_1,
 } = require('../../dist/cjs/index.js');
 
-const SUPPORTED_MODELS = [
-  MODEL_FUGU,
-  MODEL_FUGU_ULTRA,
-  MODEL_FUGU_ULTRA_20260615,
-];
+const SUPPORTED_MODELS = [MODEL_FUGU, MODEL_FUGU_ULTRA_V1_1];
 
 const args = new Set(process.argv.slice(2));
 const runAllModels = args.has('--all');

@@ -62,7 +62,8 @@ node gemini-example.js
 #### Sakana AI Fugu (`sakana-example.js`)
 Minimal smoke test for the first-class `sakana` provider:
 - Uses OpenAI-compatible Chat Completions
-- Defaults to `fugu`; also supports `fugu-ultra` and `fugu-ultra-20260615`
+- Defaults to `fugu`; also supports the current exact Fugu Ultra ID
+  `fugu-ultra-v1.1`
 - Uses the smallest working response length presets (`veryShort` for `fugu`,
   `medium` for Fugu Ultra models because smaller presets can leave no visible
   output after orchestration/reasoning)
@@ -71,7 +72,7 @@ export FUGU_API_KEY="xxx..."
 node sakana-example.js
 
 # Try another model
-FUGU_MODEL="fugu-ultra" node sakana-example.js
+FUGU_MODEL="fugu-ultra-v1.1" node sakana-example.js
 
 # Run all supported models with a tiny prompt
 node sakana-example.js --all

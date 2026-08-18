@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
-  MODEL_PLAMO_2_2_PRIME,
   MODEL_PLAMO_3_0_PRIME,
 } from '../../src/constants';
 import { PlamoChatService } from '../../src/services/providers/plamo/PlamoChatService';
@@ -15,10 +14,7 @@ describe('PlamoChatServiceProvider', () => {
   });
 
   it('returns supported PLaMo models', () => {
-    expect(provider.getSupportedModels()).toEqual([
-      MODEL_PLAMO_3_0_PRIME,
-      MODEL_PLAMO_2_2_PRIME,
-    ]);
+    expect(provider.getSupportedModels()).toEqual([MODEL_PLAMO_3_0_PRIME]);
   });
 
   it('returns PLaMo 3.0 Prime as the default model', () => {

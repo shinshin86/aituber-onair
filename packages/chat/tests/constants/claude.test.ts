@@ -4,6 +4,7 @@ import {
   MODEL_CLAUDE_4_5_OPUS,
   MODEL_CLAUDE_4_6_OPUS,
   MODEL_CLAUDE_4_7_OPUS,
+  MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_SONNET,
   getClaudeSupportedReasoningEfforts,
@@ -13,19 +14,21 @@ import {
 } from '../../src/constants';
 
 describe('Claude reasoning effort helpers', () => {
-  it.each([MODEL_CLAUDE_4_7_OPUS, MODEL_CLAUDE_5_SONNET, MODEL_CLAUDE_5_OPUS])(
-    'supports all five effort levels for %s',
-    (model) => {
-      expect(getClaudeSupportedReasoningEfforts(model)).toEqual([
-        'low',
-        'medium',
-        'high',
-        'xhigh',
-        'max',
-      ]);
-      expect(getDefaultClaudeReasoningEffort(model)).toBe('high');
-    },
-  );
+  it.each([
+    MODEL_CLAUDE_4_7_OPUS,
+    MODEL_CLAUDE_5_FABLE,
+    MODEL_CLAUDE_5_SONNET,
+    MODEL_CLAUDE_5_OPUS,
+  ])('supports all five effort levels for %s', (model) => {
+    expect(getClaudeSupportedReasoningEfforts(model)).toEqual([
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+      'max',
+    ]);
+    expect(getDefaultClaudeReasoningEffort(model)).toBe('high');
+  });
 
   it('excludes xhigh from Claude Opus 4.6', () => {
     expect(getClaudeSupportedReasoningEfforts(MODEL_CLAUDE_4_6_OPUS)).toEqual([

@@ -1,5 +1,34 @@
 # @aituber-onair/chat
 
+## 0.52.0
+
+### Minor Changes
+
+- Added native Gemini 3.7 Flash (`gemini-3.7-flash`) as an explicit stable,
+  vision-capable model with model-aware `reasoning_effort` support for `low`,
+  `medium`, and `high`. It defaults to `low` because the model does not support
+  `minimal`, while Gemini 3.1 Flash-Lite remains the default Gemini model.
+- Added model-aware `reasoning_effort` support for Z.ai GLM-5.2, including the
+  complete compatibility-level selector in the React basic example. Chat now
+  defaults to `none` for the shortest response path and normalizes aliases to
+  the effective GLM effort sent to the API.
+- Refreshed the native and OpenRouter catalogs with Claude Fable 5, OpenRouter
+  Gemini 3.7 Flash, Grok 4.6, and DeepSeek V4 Pro 0813. Retired or
+  catalog-absent models are no longer advertised while their constants remain
+  exported where source compatibility is required.
+- Updated xAI's default from the retired Grok 4.1 Fast alias to Grok 4.3 and
+  aligned the Mistral, Sakana AI, and PLaMo supported-model lists with current
+  provider lifecycles. Sakana AI now advertises the exact
+  `fugu-ultra-v1.1` model ID, with a Node.js sample for API smoke testing.
+
+### Patch Changes
+
+- Preserved Claude refusal metadata from streaming and one-shot responses as
+  terminal completion metadata, including responses that do not use tools.
+- Updated the React basic example, Node.js examples, focused provider tests,
+  and English/Japanese documentation for the refreshed catalogs and
+  model-aware reasoning controls.
+
 ## 0.51.0
 
 ### Minor Changes

@@ -135,21 +135,22 @@ built-in model status is `available`.
 - Best for: local LLMs (Ollama/LM Studio/vLLM-compatible endpoints)
 
 **Claude**
-- Models: Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude 4.5 (Opus, Sonnet, Haiku), plus deprecated-but-still-available Claude 4 (Sonnet, Opus) and Claude 3 Haiku
+- Models: Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, and Claude 4.5 (Opus, Sonnet, Haiku)
 - Vision: All listed Claude models
 - Effort: Supported models expose model-aware Low/Medium/High/XHigh/Max options. The control maps to `output_config.effort` and defaults to High.
+- Refusals: Streaming refusal metadata is preserved as a terminal completion rather than surfaced as a tool error.
 - Best for: Long context, tool use + advanced reasoning
 
 **Gemini**
-- Models: Gemini 3.6 Flash, Gemini 3.5 Flash/Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
+- Models: Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash/Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - Vision: Supported for all listed Gemini models. Deprecated lifecycle models remain selectable with a deprecated label for explicit compatibility.
-- Reasoning Effort: Gemini 3 Flash/Flash-Lite exposes Minimal/Low/Medium/High and defaults to Minimal; Gemini 3 Pro exposes Low/Medium/High and defaults to Low. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models.
-- Best for: Fast responses, cost-effective. Minimal thinking keeps chat latency and hidden-token usage low.
+- Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.7 Flash and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models.
+- Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
 
 **OpenRouter**
-- Models: Curated multi-provider model list (OpenRouter Auto/Auto Beta/Fusion, OpenAI GPT-5.6, Claude Opus 5, Gemini 3.6/3.5, Z.ai, xAI, Kimi K3, DeepSeek V4 Flash 0731/0423, KAT-Coder V2.5)
+- Models: Curated multi-provider model list (OpenRouter Auto/Auto Beta/Fusion, OpenAI GPT-5.6, Claude Fable/Opus 5, Gemini 3.7/3.6/3.5, Z.ai, Grok 4.6, Kimi K3, DeepSeek V4 Flash and V4 Pro 0813, KAT-Coder V2.5)
 - Vision: Depends on selected routed model
-- Reasoning Effort: Model-aware options. DeepSeek V4 Flash 0731 exposes None/Low/High/Max; the older unversioned 0423 snapshot exposes None/High/XHigh. None is the default and disables reasoning rather than only hiding it.
+- Reasoning Effort: Model-aware options. DeepSeek V4 Flash 0731 exposes None/Low/High/Max; the older unversioned Flash and V4 Pro 0813 expose None/High/XHigh. None is the default and disables reasoning rather than only hiding it.
 - Best for: Flexible model routing and unified API usage
 - Auto Beta: Selects a model per request and charges the selected model's rate
 - Coding models: KAT-Coder-Air/Pro V2.5 are explicit text-only options, not defaults
@@ -162,13 +163,15 @@ built-in model status is `available`.
 **Z.ai**
 - Models: GLM-5.2, GLM-5.1, GLM-5, GLM-5-Turbo, GLM-5V-Turbo, GLM-4.7/4.6, GLM-4.6V family
 - Vision: GLM-5V-Turbo and GLM-4.6V family (`glm-5.2`, `glm-5.1`, `glm-5`, and `glm-5-turbo` are text-only)
+- Reasoning Effort: GLM-5.2 exposes all protocol values and defaults to None for low latency. The UI shows their effective None/High/Max mapping.
 - Best for: OpenAI-compatible GLM integration
 
 **xAI**
-- Models: Grok 4.6, Grok 4.5, Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning, Grok 4-1 Fast Reasoning/Non-Reasoning
+- Models: Grok 4.6, Grok 4.5, Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning
 - Vision: Supported
 - Best for: Grok models with OpenAI-compatible API
 - Grok 4.6 exposes Low/Medium/High/XHigh `reasoning_effort`; Grok 4.6 and 4.5 default to `low` for chat-style responses, while Grok 4.3 defaults to `none` for lower latency
+- Grok 4.3 is the package and sample default.
 
 **Kimi**
 - Models: Kimi K3, Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6, Kimi K2.5
@@ -183,12 +186,12 @@ built-in model status is `available`.
 - Best for: DeepSeek's OpenAI-compatible API without manually configuring an endpoint
 
 **Mistral**
-- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Medium 3.5, Mistral Large Latest, Mistral Large 3, Mistral Small 4, Mistral Medium 3.1
+- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Medium 3.5, Mistral Large Latest/2512, Mistral Small 2603
 - Vision: Supported
 - Best for: Mistral Chat Completions with streaming and optional adjustable reasoning
 
 **PLaMo**
-- Models: PLaMo 3.0 Prime, PLaMo 2.2 Prime
+- Models: PLaMo 3.0 Prime. The retiring 2.2 constant remains exported for source compatibility but is not shown in the selector.
 - Vision: Not supported by this provider
 - Best for: Japanese-focused chat through PLaMo's OpenAI-compatible API
 

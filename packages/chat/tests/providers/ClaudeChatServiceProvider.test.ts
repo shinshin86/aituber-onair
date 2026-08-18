@@ -13,6 +13,7 @@ import {
   MODEL_CLAUDE_4_6_OPUS,
   MODEL_CLAUDE_4_7_OPUS,
   MODEL_CLAUDE_4_8_OPUS,
+  MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_SONNET,
   MODEL_CLAUDE_5_OPUS,
 } from '../../src/constants';
@@ -39,8 +40,6 @@ describe('ClaudeChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
-        MODEL_CLAUDE_4_SONNET,
-        MODEL_CLAUDE_4_OPUS,
         MODEL_CLAUDE_4_5_SONNET,
         MODEL_CLAUDE_4_5_HAIKU,
         MODEL_CLAUDE_4_5_OPUS,
@@ -48,9 +47,9 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_4_6_OPUS,
         MODEL_CLAUDE_4_7_OPUS,
         MODEL_CLAUDE_4_8_OPUS,
+        MODEL_CLAUDE_5_FABLE,
         MODEL_CLAUDE_5_SONNET,
         MODEL_CLAUDE_5_OPUS,
-        MODEL_CLAUDE_3_HAIKU,
       ]);
     });
   });
@@ -70,9 +69,6 @@ describe('ClaudeChatServiceProvider', () => {
 
   describe('supportsVisionForModel', () => {
     it('should return true for vision-supported models', () => {
-      expect(provider.supportsVisionForModel(MODEL_CLAUDE_3_HAIKU)).toBe(true);
-      expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_SONNET)).toBe(true);
-      expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_OPUS)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_5_SONNET)).toBe(
         true,
       );
@@ -86,11 +82,17 @@ describe('ClaudeChatServiceProvider', () => {
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_6_OPUS)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_7_OPUS)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_8_OPUS)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_CLAUDE_5_FABLE)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_5_SONNET)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_CLAUDE_5_OPUS)).toBe(true);
     });
 
     it('should return false for non-vision models', () => {
+      expect(provider.supportsVisionForModel(MODEL_CLAUDE_3_HAIKU)).toBe(false);
+      expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_SONNET)).toBe(
+        false,
+      );
+      expect(provider.supportsVisionForModel(MODEL_CLAUDE_4_OPUS)).toBe(false);
       expect(provider.supportsVisionForModel('claude-2')).toBe(false);
       expect(provider.supportsVisionForModel('claude-instant')).toBe(false);
       expect(provider.getVisionSupportLevelForModel('claude-2')).toBe(

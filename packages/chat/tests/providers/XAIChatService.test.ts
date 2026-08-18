@@ -64,6 +64,13 @@ describe('XAIChatService', () => {
     vi.restoreAllMocks();
   });
 
+  it('defaults direct construction to low-latency Grok 4.3', () => {
+    const service = new XAIChatService('test-key');
+
+    expect(service.getModel()).toBe(MODEL_GROK_4_3);
+    expect(service.getVisionModel()).toBe(MODEL_GROK_4_3);
+  });
+
   it('builds an OpenAI-compatible request body for xAI chat completions', () => {
     const tools: ToolDefinition[] = [
       {
@@ -387,9 +394,9 @@ describe('XAIChatService', () => {
   });
 
   it('returns parsed one-shot output from chatOnce', async () => {
-    vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
-      createOkResponse(),
-    );
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
     const service = new XAIChatService('test-key');
 
     const result = await service.chatOnce(messages, false);
@@ -401,5 +408,11 @@ describe('XAIChatService', () => {
       finish_reason: undefined,
       usage: undefined,
     });
+    expect(postSpy.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        model: MODEL_GROK_4_3,
+        reasoning_effort: 'none',
+      }),
+    );
   });
 });

@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
   MODEL_FUGU,
-  MODEL_FUGU_ULTRA,
-  MODEL_FUGU_ULTRA_20260615,
+  MODEL_FUGU_ULTRA_V1_1,
 } from '../../src/constants';
 import { SakanaChatService } from '../../src/services/providers/sakana/SakanaChatService';
 import { SakanaChatServiceProvider } from '../../src/services/providers/sakana/SakanaChatServiceProvider';
@@ -18,8 +17,7 @@ describe('SakanaChatServiceProvider', () => {
   it('returns supported Fugu models', () => {
     expect(provider.getSupportedModels()).toEqual([
       MODEL_FUGU,
-      MODEL_FUGU_ULTRA,
-      MODEL_FUGU_ULTRA_20260615,
+      MODEL_FUGU_ULTRA_V1_1,
     ]);
   });
 

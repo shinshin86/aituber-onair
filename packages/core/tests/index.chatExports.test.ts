@@ -83,6 +83,7 @@ import {
   isMistralReasoningEffortModel,
   MODEL_FUGU,
   MODEL_FUGU_ULTRA,
+  MODEL_FUGU_ULTRA_V1_1,
   MODEL_FUGU_ULTRA_20260615,
   SAKANA_SUPPORTED_MODELS,
   ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
@@ -319,11 +320,11 @@ describe('Core index chat re-exports', () => {
     expect(typeof SakanaChatService).toBe('function');
     expect(MODEL_FUGU).toBe('fugu');
     expect(MODEL_FUGU_ULTRA).toBe('fugu-ultra');
+    expect(MODEL_FUGU_ULTRA_V1_1).toBe('fugu-ultra-v1.1');
     expect(MODEL_FUGU_ULTRA_20260615).toBe('fugu-ultra-20260615');
     expect(SAKANA_SUPPORTED_MODELS).toEqual([
       MODEL_FUGU,
-      MODEL_FUGU_ULTRA,
-      MODEL_FUGU_ULTRA_20260615,
+      MODEL_FUGU_ULTRA_V1_1,
     ]);
     expect(ENDPOINT_SAKANA_CHAT_COMPLETIONS_API).toBe(
       'https://api.sakana.ai/v1/chat/completions',
@@ -334,10 +335,7 @@ describe('Core index chat re-exports', () => {
     expect(typeof PlamoChatService).toBe('function');
     expect(MODEL_PLAMO_3_0_PRIME).toBe('plamo-3.0-prime');
     expect(MODEL_PLAMO_2_2_PRIME).toBe('plamo-2.2-prime');
-    expect(PLAMO_SUPPORTED_MODELS).toEqual([
-      MODEL_PLAMO_3_0_PRIME,
-      MODEL_PLAMO_2_2_PRIME,
-    ]);
+    expect(PLAMO_SUPPORTED_MODELS).toEqual([MODEL_PLAMO_3_0_PRIME]);
     expect(ENDPOINT_PLAMO_CHAT_COMPLETIONS_API).toBe(
       'https://api.platform.preferredai.jp/v1/chat/completions',
     );
