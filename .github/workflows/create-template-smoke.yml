@@ -47,6 +47,15 @@ jobs:
           npm pack --pack-destination "$RUNNER_TEMP/core-package"
           echo "tarball=$(find "$RUNNER_TEMP/core-package" -name '*.tgz' -print -quit)" >> "$GITHUB_OUTPUT"
 
+      - name: Pack Kizuna
+        id: pack-kizuna
+        working-directory: packages/kizuna
+        run: |
+          npm run build
+          mkdir -p "$RUNNER_TEMP/kizuna-package"
+          npm pack --pack-destination "$RUNNER_TEMP/kizuna-package"
+          echo "tarball=$(find "$RUNNER_TEMP/kizuna-package" -name '*.tgz' -print -quit)" >> "$GITHUB_OUTPUT"
+
       - name: Pack create-aituber-onair
         id: pack
         working-directory: packages/create-aituber-onair
@@ -61,3 +70,4 @@ jobs:
           "${{ matrix.template }}"
           "${{ steps.pack.outputs.tarball }}"
           "${{ steps.pack-core.outputs.tarball }}"
+          "${{ steps.pack-kizuna.outputs.tarball }}"

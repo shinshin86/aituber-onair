@@ -11,9 +11,26 @@ From the repository root:
 npm -w @aituber-onair/transcription run example:dev
 ```
 
-Web Speech requires no API key. To use OpenAI, select OpenAI Realtime and enter
-an API key from your own OpenAI account. The example connects to OpenAI directly
-from the browser, so avoid using it on a shared device.
+Web Speech and Local Whisper require no API key. To use OpenAI, select OpenAI
+Realtime and enter an API key from your own OpenAI account. The example connects
+to OpenAI directly from the browser, so avoid using it on a shared device.
 
-Use localhost or HTTPS and grant microphone access when prompted. OpenAI usage
-may incur charges while a session is listening.
+Use localhost or HTTPS and grant microphone access when prompted. Local Whisper
+requires WebGPU. Select Tiny (about 122 MB), Base (about 209 MB), or Small
+(about 589 MB); larger models take longer to download and infer. The default is
+Tiny. Assets are cached in the browser. The example aggregates known per-file
+totals to show overall download progress, then shows model initialization and
+hides the progress row when listening starts. Microphone audio stays in the
+browser. OpenAI usage may incur charges while a session is listening.
+
+## Local Whisper worker URL
+
+This example aliases the package entry to `src/index.ts`, so the published
+`dist/local-whisper.worker.js` asset is not available during local development.
+It therefore imports the source worker with Vite's `?worker&url` query and
+passes that URL to the Local Whisper session through `workerUrl`. The session
+creates the module worker only when Local Whisper is started; loading the page
+or selecting another provider does not initialize Transformers.js. Vite handles
+the same import during development and emits a dedicated worker chunk in
+production builds. The Vite worker output format is set to `es`; no dependency
+optimization exclusion is required.

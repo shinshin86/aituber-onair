@@ -5,6 +5,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
+import { BondToastStack } from './components/BondToastStack';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -16,6 +17,9 @@ import { useSettings } from './hooks/useSettings';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
+import { createBondIdentity } from './lib/kizunaBond';
+import type { TwitchChatMessage } from './services/twitch/twitchService';
+import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/app.css';
 
 const DEFAULT_SETTINGS_DIALOG_OFFSET: DialogDragPoint = { x: 0, y: 0 };
@@ -125,6 +129,10 @@ export default function App() {
     partialResponse,
     processChat,
     processVisionChat,
+    bondToasts,
+    dismissBondToast,
+    recordBondMessage,
+    resetKizunaData,
   } = useAituberCore({
     onAudioPlay: handleAudioPlay,
     settings: settingsHook.settings,
@@ -142,7 +150,10 @@ export default function App() {
     (text: string) => {
       // Stop previous audio if speech is currently playing
       stop();
-      processChat(text);
+      processChat(text, {
+        bondIdentity: createBondIdentity('form', 'あなた'),
+        bondMessage: text,
+      });
     },
     [stop, processChat],
   );
@@ -172,6 +183,40 @@ export default function App() {
       streamTitle: settingsHook.settings.commentIntelligence.streamTitle,
       topicFilter: settingsHook.settings.commentIntelligence.topicFilter,
     });
+
+  const handleYouTubeComments = useCallback(
+    (comments: YouTubeChatMessage[]) => {
+      for (const comment of comments) {
+        const timestamp = new Date(comment.publishedAt).getTime();
+        void recordBondMessage(
+          createBondIdentity('youtube', comment.userName),
+          comment.userComment,
+          Number.isFinite(timestamp) ? timestamp : Date.now(),
+        ).catch((error) => {
+          console.error('Failed to record YouTube Kizuna interaction:', error);
+        });
+      }
+      enqueueYouTubeComments(comments);
+    },
+    [enqueueYouTubeComments, recordBondMessage],
+  );
+
+  const handleTwitchComments = useCallback(
+    (comments: TwitchChatMessage[]) => {
+      for (const comment of comments) {
+        const timestamp = new Date(comment.publishedAt).getTime();
+        void recordBondMessage(
+          createBondIdentity('twitch', comment.userName),
+          comment.userComment,
+          Number.isFinite(timestamp) ? timestamp : Date.now(),
+        ).catch((error) => {
+          console.error('Failed to record Twitch Kizuna interaction:', error);
+        });
+      }
+      enqueueTwitchComments(comments);
+    },
+    [enqueueTwitchComments, recordBondMessage],
+  );
 
   const handleBackgroundImageChange = useCallback((file: File | null) => {
     if (backgroundObjectUrlRef.current) {
@@ -218,7 +263,7 @@ export default function App() {
       settingsHook.settings.stream.platform === 'youtube' &&
       settingsHook.settings.stream.youtubeEnabled,
     intervalMs: settingsHook.settings.stream.youtubeCommentIntervalMs,
-    onComments: enqueueYouTubeComments,
+    onComments: handleYouTubeComments,
   });
 
   useTwitchComments({
@@ -229,7 +274,7 @@ export default function App() {
       settingsHook.settings.stream.platform === 'twitch' &&
       settingsHook.settings.stream.twitchEnabled,
     intervalMs: settingsHook.settings.stream.twitchCommentIntervalMs,
-    onComments: enqueueTwitchComments,
+    onComments: handleTwitchComments,
     onTokenExpired: () => {
       settingsHook.updateTwitchAccessToken('');
       settingsHook.updateTwitchEnabled(false);
@@ -287,6 +332,8 @@ export default function App() {
         onToggleSettings={toggleSettingsDialog}
       />
 
+      <BondToastStack toasts={bondToasts} onDismiss={dismissBondToast} />
+
       {settingsOpen && (
         <div className="settings-dialog-overlay" onClick={closeSettingsDialog}>
           <div
@@ -316,6 +363,7 @@ export default function App() {
             <SettingsPanel
               {...settingsHook}
               isProcessing={isProcessing}
+              onResetKizunaData={resetKizunaData}
               backgroundImageUrl={backgroundImageUrl}
               streamErrorMessage={streamErrorMessage}
               screenVisionController={screenVisionController}

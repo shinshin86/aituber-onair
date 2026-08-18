@@ -2,6 +2,50 @@
 
 ## Unreleased
 
+## 0.20.0
+
+### Minor Changes
+
+- Add Fish Audio TTS support via `engineType: 'fishAudio'`.
+  - Introduce `FishAudioEngine` using the one-shot `POST /v1/tts` endpoint
+    with Bearer authentication and direct audio-byte responses.
+  - Support `fishAudioApiUrl`, `fishAudioModel`, `fishAudioFormat`,
+    `fishAudioSampleRate`, `fishAudioMp3Bitrate`, `fishAudioLatency`, and
+    `fishAudioSpeed`. `s2-pro` is the default model; `s2.1-pro-free` must be
+    selected explicitly.
+  - Add Fish Audio model/voice-list support through
+    `getVoiceEngineVoiceList()`, with pagination bounded by `limit`
+    (default 100) and `pageSize`.
+- Add Cartesia TTS support via `engineType: 'cartesia'`.
+  - Introduce `CartesiaEngine` using the synchronous `POST /tts/bytes`
+    endpoint with the `Cartesia-Version: 2026-03-01` header.
+  - Support `cartesiaApiUrl`, `cartesiaModel`, `cartesiaLanguage`,
+    `cartesiaOutputContainer`, `cartesiaSampleRate`, and `cartesiaMp3Bitrate`.
+    `sonic-3.5`, Japanese, and WAV output are the defaults.
+  - Add Cartesia voice-list support through `getVoiceEngineVoiceList()`,
+    including `language` filtering and cursor pagination.
+- Register both engines in the voice engine factory, public exports, engine
+  capabilities, internal option handlers, README, and tests.
+- Refresh MiniMax defaults for the current T2A v2 API.
+  - Add `speech-2.8-hd` and `speech-2.8-turbo` to `MinimaxModel` and make
+    `speech-2.8-turbo` the default model.
+  - Treat `groupId` as an optional legacy query parameter: it is no longer
+    required, no placeholder `GroupId=1` is appended, and the missing-GroupId
+    warning is removed.
+  - Send `output_format: 'hex'` explicitly and align the text length limit
+    with the synchronous API (fewer than 10,000 characters).
+- Change the ElevenLabs default model from `eleven_multilingual_v2` to
+  `eleven_flash_v2_5`. `eleven_v3`, `eleven_multilingual_v2`, and
+  `eleven_flash_v2_5` are the curated choices; `eleven_turbo_v2_5` remains
+  accepted as a custom string.
+- Resolve voice-list endpoints relative to the page URL in browsers so
+  same-origin proxy paths (for example `/api/fish-audio/model`) work with
+  `voiceListApiUrl`.
+- Update the React voice example with Fish Audio and Cartesia settings,
+  voice-list selectors, a Vite development/preview proxy for Fish Audio
+  (whose official endpoint does not complete browser CORS preflight), and
+  refreshed MiniMax/ElevenLabs model choices.
+
 ## 0.19.0
 
 ### Minor Changes

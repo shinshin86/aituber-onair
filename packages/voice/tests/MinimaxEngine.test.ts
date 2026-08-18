@@ -14,6 +14,8 @@ describe('MinimaxEngine', () => {
     it('should set and use different models', () => {
       const engine = new MinimaxEngine();
       const models: MinimaxModel[] = [
+        'speech-2.8-hd',
+        'speech-2.8-turbo',
         'speech-2.6-hd',
         'speech-2.6-turbo',
         'speech-2.5-hd-preview',
@@ -90,7 +92,7 @@ describe('MinimaxEngine', () => {
 
         expect(fetchMock).toHaveBeenCalled();
         const call = fetchMock.mock.calls[0];
-        expect(call[0]).toContain('GroupId=');
+        expect(call[0]).toBe(MINIMAX_GLOBAL_API_URL);
         const body = JSON.parse(call[1].body);
         expect(body.voice_setting.speed).toBe(1.5);
         expect(body.voice_setting.vol).toBe(0.9);
@@ -158,13 +160,12 @@ describe('MinimaxEngine', () => {
       const result = await engine.testVoice('hello', 'voice-id', 'api-key');
 
       expect(new Uint8Array(result)).toEqual(new Uint8Array([0, 1, 2, 255]));
-      expect(fetchMock.mock.calls[0][0]).toBe(
-        `${MINIMAX_GLOBAL_API_URL}?GroupId=1`,
-      );
+      expect(fetchMock.mock.calls[0][0]).toBe(MINIMAX_GLOBAL_API_URL);
       expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
-        model: 'speech-2.6-hd',
+        model: 'speech-2.8-turbo',
         text: 'hello',
         stream: false,
+        output_format: 'hex',
         voice_setting: {
           voice_id: 'voice-id',
           speed: 1,
@@ -178,6 +179,26 @@ describe('MinimaxEngine', () => {
           channel: 1,
         },
         language_boost: 'Japanese',
+      });
+    });
+
+    it('should send the Speech 2.8 HD model through the T2A v2 request', async () => {
+      const engine = new MinimaxEngine();
+      engine.setModel('speech-2.8-hd');
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          base_resp: { status_code: 0 },
+          data: { audio: '00' },
+        }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await engine.testVoice('hello', 'voice-id', 'api-key');
+
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+        model: 'speech-2.8-hd',
+        output_format: 'hex',
       });
     });
 
@@ -256,7 +277,7 @@ describe('MinimaxEngine', () => {
   });
 
   describe('fetchAudio', () => {
-    it('should synthesize production audio with GroupId', async () => {
+    it('should keep legacy GroupId support when configured', async () => {
       const engine = new MinimaxEngine();
       engine.setGroupId('group-id');
       engine.setEndpoint('china');
@@ -303,19 +324,18 @@ describe('MinimaxEngine', () => {
       ).rejects.toThrow('MiniMax API key is required');
       await expect(
         engine.fetchAudio(
-          { style: 'talk', message: 'hello' },
+          { style: 'talk', message: '' },
           'voice-id',
           'api-key',
         ),
-      ).rejects.toThrow('MiniMax GroupId is required');
-      engine.setGroupId('group-id');
+      ).rejects.toThrow('Input text is empty');
       await expect(
         engine.fetchAudio(
-          { style: 'talk', message: 'x'.repeat(5001) },
+          { style: 'talk', message: 'x'.repeat(10000) },
           'voice-id',
           'api-key',
         ),
-      ).rejects.toThrow('Text exceeds maximum length of 5000 characters');
+      ).rejects.toThrow('Text must be fewer than 10000 characters');
     });
   });
 

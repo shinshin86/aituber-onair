@@ -1,4 +1,9 @@
 import type {
+  CartesiaLanguage,
+  CartesiaOutputContainer,
+  FishAudioFormat,
+  FishAudioLatency,
+  FishAudioModel,
   GradiumOutputFormat,
   InworldAudioEncoding,
   MinimaxAudioFormat,
@@ -9,8 +14,14 @@ import type {
   XaiSampleRate,
 } from '@aituber-onair/voice';
 import {
+  CARTESIA_LANGUAGES,
+  CARTESIA_MODELS,
+  CARTESIA_OUTPUT_CONTAINERS,
   ELEVENLABS_MODELS,
   ELEVENLABS_OUTPUT_FORMATS,
+  FISH_AUDIO_FORMATS,
+  FISH_AUDIO_LATENCIES,
+  FISH_AUDIO_MODELS,
   GRADIUM_OUTPUT_FORMATS,
   INWORLD_AUDIO_ENCODINGS,
   INWORLD_DELIVERY_MODES,
@@ -80,6 +91,21 @@ interface EngineParametersProps {
     applyTextNormalization: SelectField<ElevenLabsApplyTextNormalizationOption>;
     applyLanguageTextNormalization: SelectField<DefaultBooleanOption>;
     enableLogging: SelectField<DefaultBooleanOption>;
+  };
+  fishAudio: {
+    model: SelectField<FishAudioModel>;
+    format: SelectField<FishAudioFormat>;
+    latency: SelectField<FishAudioLatency>;
+    sampleRate: StringField;
+    mp3Bitrate: StringField;
+    speed: StringField;
+  };
+  cartesia: {
+    model: SelectField<string>;
+    language: SelectField<CartesiaLanguage>;
+    outputContainer: SelectField<CartesiaOutputContainer>;
+    sampleRate: StringField;
+    mp3Bitrate: StringField;
   };
   inworld: {
     model: SelectField<string>;
@@ -198,6 +224,8 @@ export function EngineParameters({
   xai,
   unrealSpeech,
   elevenLabs,
+  fishAudio,
+  cartesia,
   inworld,
   gradium,
   geminiTts,
@@ -393,6 +421,194 @@ export function EngineParameters({
                 placeholder="空欄で API 既定値"
               />
             </div>
+          </div>
+        </CollapsibleCard>
+      )}
+
+      {engine === 'fishAudio' && (
+        <CollapsibleCard
+          className="parameter-card openai-card"
+          title="Fish Audio パラメータ"
+          description="Fish Audio の同期 TTS API 向け設定です。Reference ID は上部の Speaker 一覧から選択します。"
+        >
+          <div className="parameter-grid parameter-grid--two">
+            <div className="form-group">
+              <label htmlFor="fishAudioModel">Model</label>
+              <select
+                id="fishAudioModel"
+                value={fishAudio.model.value}
+                onChange={(e) =>
+                  fishAudio.model.onChange(e.target.value as FishAudioModel)
+                }
+              >
+                {Object.entries(FISH_AUDIO_MODELS).map(
+                  ([model, description]) => (
+                    <option key={model} value={model}>
+                      {model} - {description}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="fishAudioFormat">Format</label>
+              <select
+                id="fishAudioFormat"
+                value={fishAudio.format.value}
+                onChange={(e) =>
+                  fishAudio.format.onChange(e.target.value as FishAudioFormat)
+                }
+              >
+                {Object.entries(FISH_AUDIO_FORMATS).map(([format, label]) => (
+                  <option key={format} value={format}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="fishAudioLatency">Latency</label>
+              <select
+                id="fishAudioLatency"
+                value={fishAudio.latency.value}
+                onChange={(e) =>
+                  fishAudio.latency.onChange(e.target.value as FishAudioLatency)
+                }
+              >
+                {Object.entries(FISH_AUDIO_LATENCIES).map(
+                  ([latency, label]) => (
+                    <option key={latency} value={latency}>
+                      {label}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="fishAudioSampleRate">Sample Rate (Hz)</label>
+              <input
+                id="fishAudioSampleRate"
+                type="number"
+                min="8000"
+                step="1"
+                value={fishAudio.sampleRate.value}
+                onChange={(e) => fishAudio.sampleRate.onChange(e.target.value)}
+              />
+            </div>
+            {fishAudio.format.value === 'mp3' && (
+              <div className="form-group">
+                <label htmlFor="fishAudioMp3Bitrate">MP3 Bitrate (kbps)</label>
+                <select
+                  id="fishAudioMp3Bitrate"
+                  value={fishAudio.mp3Bitrate.value}
+                  onChange={(e) =>
+                    fishAudio.mp3Bitrate.onChange(e.target.value)
+                  }
+                >
+                  <option value="64">64</option>
+                  <option value="128">128</option>
+                  <option value="192">192</option>
+                </select>
+              </div>
+            )}
+            <div className="form-group">
+              <label htmlFor="fishAudioSpeed">Speed (0.5 - 2.0)</label>
+              <input
+                id="fishAudioSpeed"
+                type="number"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={fishAudio.speed.value}
+                onChange={(e) => fishAudio.speed.onChange(e.target.value)}
+                placeholder="空欄で API 既定値"
+              />
+            </div>
+          </div>
+        </CollapsibleCard>
+      )}
+
+      {engine === 'cartesia' && (
+        <CollapsibleCard
+          className="parameter-card openai-card"
+          title="Cartesia パラメータ"
+          description="Cartesia の同期 byte-response TTS API 向け設定です。Voice ID は上部の Speaker 一覧から選択します。"
+        >
+          <div className="parameter-grid parameter-grid--two">
+            <div className="form-group">
+              <label htmlFor="cartesiaModel">Model</label>
+              <select
+                id="cartesiaModel"
+                value={cartesia.model.value}
+                onChange={(e) => cartesia.model.onChange(e.target.value)}
+              >
+                {Object.entries(CARTESIA_MODELS).map(([model, description]) => (
+                  <option key={model} value={model}>
+                    {model} - {description}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="cartesiaLanguage">Language</label>
+              <select
+                id="cartesiaLanguage"
+                value={cartesia.language.value}
+                onChange={(e) =>
+                  cartesia.language.onChange(e.target.value as CartesiaLanguage)
+                }
+              >
+                {Object.entries(CARTESIA_LANGUAGES).map(([language, label]) => (
+                  <option key={language} value={language}>
+                    {language} - {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="cartesiaOutputContainer">Output</label>
+              <select
+                id="cartesiaOutputContainer"
+                value={cartesia.outputContainer.value}
+                onChange={(e) =>
+                  cartesia.outputContainer.onChange(
+                    e.target.value as CartesiaOutputContainer,
+                  )
+                }
+              >
+                {Object.entries(CARTESIA_OUTPUT_CONTAINERS).map(
+                  ([container, label]) => (
+                    <option key={container} value={container}>
+                      {label}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="cartesiaSampleRate">Sample Rate (Hz)</label>
+              <input
+                id="cartesiaSampleRate"
+                type="number"
+                min="8000"
+                step="1"
+                value={cartesia.sampleRate.value}
+                onChange={(e) => cartesia.sampleRate.onChange(e.target.value)}
+              />
+            </div>
+            {cartesia.outputContainer.value === 'mp3' && (
+              <div className="form-group">
+                <label htmlFor="cartesiaMp3Bitrate">MP3 Bitrate (bps)</label>
+                <input
+                  id="cartesiaMp3Bitrate"
+                  type="number"
+                  min="16000"
+                  step="1000"
+                  value={cartesia.mp3Bitrate.value}
+                  onChange={(e) => cartesia.mp3Bitrate.onChange(e.target.value)}
+                />
+              </div>
+            )}
           </div>
         </CollapsibleCard>
       )}

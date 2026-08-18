@@ -89,6 +89,10 @@ describe('VoiceEngineAdapter', () => {
       setNoiseScale: vi.fn(),
       setSilenceDurations: vi.fn(),
       setOutputFormat: vi.fn(),
+      setFormat: vi.fn(),
+      setMp3Bitrate: vi.fn(),
+      setLatency: vi.fn(),
+      setOutputContainer: vi.fn(),
       setOutputBitrate: vi.fn(),
       setOutputSamplingRate: vi.fn(),
       setOutputChannels: vi.fn(),
@@ -427,6 +431,68 @@ describe('VoiceEngineAdapter', () => {
     });
   });
 
+  describe('Fish Audio Integration', () => {
+    it('should configure Fish Audio with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'fishAudio',
+        speaker: 'fish-reference-id',
+        apiKey: 'fish-key',
+        fishAudioApiUrl: 'https://example.com/v1/tts',
+        fishAudioModel: 's2.1-pro',
+        fishAudioFormat: 'mp3',
+        fishAudioSampleRate: 44100,
+        fishAudioMp3Bitrate: 192,
+        fishAudioLatency: 'balanced',
+        fishAudioSpeed: 1.1,
+        onPlay: vi.fn(),
+      };
+      mockEngine.fetchAudio.mockResolvedValue(new ArrayBuffer(8));
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'Fish Audio test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/v1/tts',
+      );
+      expect(mockEngine.setModel).toHaveBeenCalledWith('s2.1-pro');
+      expect(mockEngine.setFormat).toHaveBeenCalledWith('mp3');
+      expect(mockEngine.setSampleRate).toHaveBeenCalledWith(44100);
+      expect(mockEngine.setMp3Bitrate).toHaveBeenCalledWith(192);
+      expect(mockEngine.setLatency).toHaveBeenCalledWith('balanced');
+      expect(mockEngine.setSpeed).toHaveBeenCalledWith(1.1);
+    });
+  });
+
+  describe('Cartesia Integration', () => {
+    it('should configure Cartesia with provided overrides', async () => {
+      const options: VoiceServiceOptions = {
+        engineType: 'cartesia',
+        speaker: 'cartesia-voice-id',
+        apiKey: 'cartesia-key',
+        cartesiaApiUrl: 'https://example.com/tts/bytes',
+        cartesiaModel: 'sonic-3.5',
+        cartesiaLanguage: 'ja',
+        cartesiaOutputContainer: 'wav',
+        cartesiaSampleRate: 44100,
+        cartesiaMp3Bitrate: 128000,
+        onPlay: vi.fn(),
+      };
+      mockEngine.fetchAudio.mockResolvedValue(new ArrayBuffer(8));
+
+      const adapter = new VoiceEngineAdapter(options);
+      await adapter.speak({ text: 'Cartesia test' });
+
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://example.com/tts/bytes',
+      );
+      expect(mockEngine.setModel).toHaveBeenCalledWith('sonic-3.5');
+      expect(mockEngine.setLanguage).toHaveBeenCalledWith('ja');
+      expect(mockEngine.setOutputContainer).toHaveBeenCalledWith('wav');
+      expect(mockEngine.setSampleRate).toHaveBeenCalledWith(44100);
+      expect(mockEngine.setMp3Bitrate).toHaveBeenCalledWith(128000);
+    });
+  });
+
   describe('Gradium Integration', () => {
     it('should configure Gradium engine with provided overrides', async () => {
       const options: VoiceServiceOptions = {
@@ -679,6 +745,8 @@ describe('VoiceEngineAdapter', () => {
 
     it('should handle all available MiniMax models', async () => {
       const models: MinimaxModel[] = [
+        'speech-2.8-hd',
+        'speech-2.8-turbo',
         'speech-2.6-hd',
         'speech-2.6-turbo',
         'speech-2.5-hd-preview',
@@ -709,7 +777,7 @@ describe('VoiceEngineAdapter', () => {
       }
     });
 
-    it('should warn when GroupId is not provided', async () => {
+    it('should allow MiniMax without the legacy GroupId', async () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const options: VoiceServiceOptions = {
@@ -726,9 +794,8 @@ describe('VoiceEngineAdapter', () => {
       const adapter = new VoiceEngineAdapter(options);
       await adapter.speak({ text: 'Test without GroupId' });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'MiniMax engine requires GroupId, but it is not provided in options',
-      );
+      expect(mockEngine.setGroupId).not.toHaveBeenCalled();
+      expect(consoleSpy).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
     });
@@ -1435,6 +1502,44 @@ describe('VoiceEngineAdapter', () => {
         true,
       );
       expect(mockEngine.setEnableLogging).toHaveBeenCalledWith(false);
+    });
+
+    it('should apply updated Fish Audio options for the current engine', async () => {
+      const adapter = new VoiceEngineAdapter({
+        engineType: 'fishAudio',
+        speaker: 'fish-reference-id',
+        apiKey: 'fish-key',
+        onPlay: vi.fn(),
+      });
+      mockEngine.fetchAudio.mockResolvedValue(new ArrayBuffer(8));
+
+      adapter.updateOptions({
+        fishAudioModel: 's2.1-pro-free',
+        fishAudioLatency: 'low',
+      });
+      await adapter.speak({ text: 'Updated Fish Audio options' });
+
+      expect(mockEngine.setModel).toHaveBeenCalledWith('s2.1-pro-free');
+      expect(mockEngine.setLatency).toHaveBeenCalledWith('low');
+    });
+
+    it('should apply updated Cartesia options for the current engine', async () => {
+      const adapter = new VoiceEngineAdapter({
+        engineType: 'cartesia',
+        speaker: 'cartesia-voice-id',
+        apiKey: 'cartesia-key',
+        onPlay: vi.fn(),
+      });
+      mockEngine.fetchAudio.mockResolvedValue(new ArrayBuffer(8));
+
+      adapter.updateOptions({
+        cartesiaLanguage: 'en',
+        cartesiaOutputContainer: 'mp3',
+      });
+      await adapter.speak({ text: 'Updated Cartesia options' });
+
+      expect(mockEngine.setLanguage).toHaveBeenCalledWith('en');
+      expect(mockEngine.setOutputContainer).toHaveBeenCalledWith('mp3');
     });
 
     it('should apply updated Inworld options for the current engine', async () => {

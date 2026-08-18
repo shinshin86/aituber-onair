@@ -441,6 +441,9 @@ When TTS settings are involved, check these core React examples as needed:
 - `packages/core/examples/react-pet-app`
 - `packages/core/examples/react-vrm-app`
 - `packages/core/examples/react-live2d-app`
+- `packages/core/examples/react-purupuru-app`
+- `packages/core/examples/react-inochi2d-app`
+- `packages/core/examples/react-psd-app`
 
 Do not bump versions unless the user asks for release work.
 

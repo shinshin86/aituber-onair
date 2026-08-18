@@ -1,0 +1,35 @@
+{
+  "name": "@aituber-onair/example-channel-strategy-staff",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "dev": "npm run build && node dist/server/server/server.js",
+    "start": "npm run build && node dist/server/server/server.js",
+    "build": "npm run clean && npm run typecheck && npm run build:client && npm run build:server",
+    "build:client": "vite build",
+    "build:server": "tsc --project tsconfig.server.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit --project tsconfig.server.test.json",
+    "test": "vitest run",
+    "fmt": "biome format . --write",
+    "fmt:check": "biome format .",
+    "lint": "biome lint ."
+  },
+  "dependencies": {
+    "@aituber-onair/agent": "file:../..",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^20.11.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^22.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.0.5",
+    "vitest": "^1.3.1"
+  }
+}

@@ -71,7 +71,7 @@ describe('ElevenLabsEngine', () => {
     expect((engine as any).apiEndpoint).toBe(
       'https://api.elevenlabs.io/v1/text-to-speech',
     );
-    expect((engine as any).model).toBe('eleven_multilingual_v2');
+    expect((engine as any).model).toBe('eleven_flash_v2_5');
     expect((engine as any).outputFormat).toBe('mp3_44100_128');
     expect((engine as any).languageCode).toBeUndefined();
     expect((engine as any).voiceSettings).toEqual({

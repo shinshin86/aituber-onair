@@ -124,8 +124,10 @@
   `packages/core/examples/react-pngtuber-app`,
   `packages/core/examples/react-pet-app`,
   `packages/core/examples/react-vrm-app`,
-  `packages/core/examples/react-live2d-app`, and
-  `packages/core/examples/react-purupuru-app`. For each provider, verify the
+  `packages/core/examples/react-live2d-app`,
+  `packages/core/examples/react-purupuru-app`,
+  `packages/core/examples/react-inochi2d-app`, and
+  `packages/core/examples/react-psd-app`. For each provider, verify the
   engine selector, persisted settings type/defaults, settings UI,
   `VoiceServiceOptions` wiring, README mention, lockfile metadata, and example
   build. Cloud voice providers that expose voice-list APIs should provide a

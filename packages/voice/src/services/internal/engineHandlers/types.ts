@@ -3,7 +3,9 @@ import type { PiperPlusAssets } from '../../../engines/PiperPlusEngine';
 import type {
   AivisCloudVoiceServiceOptions,
   AivisSpeechVoiceServiceOptions,
+  CartesiaVoiceServiceOptions,
   ElevenLabsVoiceServiceOptions,
+  FishAudioVoiceServiceOptions,
   GeminiTtsVoiceServiceOptions,
   GradiumVoiceServiceOptions,
   InworldVoiceServiceOptions,
@@ -116,6 +118,29 @@ export interface ElevenLabsConfigurableEngine extends VoiceEngine {
   ): void;
   setApplyLanguageTextNormalization?(value?: boolean): void;
   setEnableLogging?(value?: boolean): void;
+}
+
+export interface FishAudioConfigurableEngine extends VoiceEngine {
+  setApiEndpoint?(value: string): void;
+  setModel?(value?: FishAudioVoiceServiceOptions['fishAudioModel']): void;
+  setFormat?(value?: FishAudioVoiceServiceOptions['fishAudioFormat']): void;
+  setSampleRate?(value?: number): void;
+  setMp3Bitrate?(
+    value?: FishAudioVoiceServiceOptions['fishAudioMp3Bitrate'],
+  ): void;
+  setLatency?(value?: FishAudioVoiceServiceOptions['fishAudioLatency']): void;
+  setSpeed?(value?: number): void;
+}
+
+export interface CartesiaConfigurableEngine extends VoiceEngine {
+  setApiEndpoint?(value: string): void;
+  setModel?(value?: string): void;
+  setLanguage?(value?: CartesiaVoiceServiceOptions['cartesiaLanguage']): void;
+  setOutputContainer?(
+    value?: CartesiaVoiceServiceOptions['cartesiaOutputContainer'],
+  ): void;
+  setSampleRate?(value?: number): void;
+  setMp3Bitrate?(value?: number): void;
 }
 
 export interface InworldConfigurableEngine extends VoiceEngine {

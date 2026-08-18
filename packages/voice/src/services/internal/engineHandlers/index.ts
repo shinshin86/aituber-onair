@@ -2,7 +2,9 @@ import type { VoiceEngine } from '../../../engines/VoiceEngine';
 import type { VoiceServiceOptions } from '../../VoiceService';
 import { aivisCloudEngineHandler } from './aivisCloud';
 import { aivisSpeechEngineHandler } from './aivisSpeech';
+import { cartesiaEngineHandler } from './cartesia';
 import { elevenLabsEngineHandler } from './elevenLabs';
+import { fishAudioEngineHandler } from './fishAudio';
 import { geminiTtsEngineHandler } from './geminiTts';
 import { gradiumEngineHandler } from './gradium';
 import { inworldEngineHandler } from './inworld';
@@ -34,6 +36,8 @@ const engineHandlers = {
   xai: xaiEngineHandler,
   unrealSpeech: unrealSpeechEngineHandler,
   elevenLabs: elevenLabsEngineHandler,
+  fishAudio: fishAudioEngineHandler,
+  cartesia: cartesiaEngineHandler,
   inworld: inworldEngineHandler,
   gradium: gradiumEngineHandler,
   geminiTts: geminiTtsEngineHandler,

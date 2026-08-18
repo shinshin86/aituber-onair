@@ -3,6 +3,7 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreOptions,
 } from '../../src/core/AITuberOnAirCore';
+import { ChatProcessor } from '../../src/core/ChatProcessor';
 import { ChatServiceFactory } from '@aituber-onair/chat';
 import { VoiceEngineAdapter } from '@aituber-onair/voice';
 
@@ -225,5 +226,17 @@ describe('AITuberOnAirCore buildChatServiceOptions', () => {
 
     expect(instance.switchEngine).toHaveBeenCalledWith(nextOptions);
     expect(instance.updateOptions).not.toHaveBeenCalled();
+  });
+
+  it('updates chat options without recreating the core instance', () => {
+    const updateOptions = vi.spyOn(ChatProcessor.prototype, 'updateOptions');
+    const core = new AITuberOnAirCore(createOptions());
+
+    core.updateChatOptions({ systemPrompt: 'bond-aware system prompt' });
+
+    expect(updateOptions).toHaveBeenCalledWith({
+      systemPrompt: 'bond-aware system prompt',
+    });
+    updateOptions.mockRestore();
   });
 });

@@ -360,6 +360,9 @@ function getDefaultSettings(): AppSettings {
       interventionCooldownMs: 5 * 60 * 1000,
       minMessageLength: 10,
     },
+    kizuna: {
+      enabled: false,
+    },
   };
 }
 
@@ -387,6 +390,7 @@ function loadSettings(): AppSettings {
           ...saved.commentIntelligence,
         },
         manneri: { ...defaults.manneri, ...saved.manneri },
+        kizuna: { ...defaults.kizuna, ...saved.kizuna },
       };
     }
   } catch {
@@ -518,8 +522,12 @@ export function useSettings() {
     }));
   }, []);
 
+  const openRouterApiKey = settings.llm.apiKeys.openrouter;
+  const openRouterMaxCandidates =
+    settings.llm.openRouterDynamicFreeModels?.maxCandidates;
+
   const refreshOpenRouterDynamicFreeModels = useCallback(async () => {
-    const apiKey = settings.llm.apiKeys.openrouter?.trim() || '';
+    const apiKey = openRouterApiKey?.trim() || '';
     if (!apiKey) {
       const message = 'OpenRouter API key is required.';
       setOpenRouterRefreshError(message);
@@ -531,7 +539,7 @@ export function useSettings() {
 
     try {
       const maxCandidates = normalizePositiveInteger(
-        settings.llm.openRouterDynamicFreeModels?.maxCandidates,
+        openRouterMaxCandidates,
         DEFAULT_OPENROUTER_MAX_CANDIDATES,
       );
       const result: RefreshOpenRouterFreeModelsResult =
@@ -563,10 +571,7 @@ export function useSettings() {
     } finally {
       setIsRefreshingOpenRouterFreeModels(false);
     }
-  }, [
-    settings.llm.apiKeys.openrouter,
-    settings.llm.openRouterDynamicFreeModels?.maxCandidates,
-  ]);
+  }, [openRouterApiKey, openRouterMaxCandidates]);
 
   const updateOpenRouterMaxCandidates = useCallback((maxCandidates: number) => {
     const normalized = normalizePositiveInteger(
@@ -1354,6 +1359,13 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateKizunaEnabled = useCallback((enabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      kizuna: { ...prev.kizuna, enabled },
+    }));
+  }, []);
+
   const updateManneriSimilarityThreshold = useCallback(
     (similarityThreshold: number) => {
       setSettings((prev) => ({
@@ -1504,6 +1516,7 @@ export function useSettings() {
     updateManneriLookbackWindow,
     updateManneriInterventionCooldownMs,
     updateManneriMinMessageLength,
+    updateKizunaEnabled,
     getApiKeyForProvider,
   };
 }

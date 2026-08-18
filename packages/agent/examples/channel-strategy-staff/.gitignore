@@ -1,0 +1,5 @@
+dist/
+node_modules/
+workspace/
+channel-strategy-session.json
+channel-strategy-proposals.json

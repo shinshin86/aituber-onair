@@ -7,6 +7,14 @@ import {
   isXaiReasoningEffortModel,
 } from '@aituber-onair/core';
 import { ManneriDetector } from '@aituber-onair/manneri';
+import {
+  KizunaManager,
+  LocalStorageProvider,
+  createDefaultKizunaConfig,
+  type BondSnapshot,
+  type IStorageProvider,
+  type InteractionKind,
+} from '@aituber-onair/kizuna';
 import type {
   VoiceServiceOptions,
   ElevenLabsApplyTextNormalization,
@@ -19,14 +27,29 @@ import type {
   XaiSampleRate,
 } from '@aituber-onair/core';
 import type { Message as ManneriMessage } from '@aituber-onair/manneri';
-import type { ChatMessage } from '../types/chat';
-import type { AppSettings, ChatProviderOption } from '../types/settings';
-import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
-
 interface ScreenplayLike {
   emotion?: string;
   text?: string;
 }
+import type { ChatMessage } from '../types/chat';
+import type { AppSettings, ChatProviderOption } from '../types/settings';
+import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
+import {
+  buildBondAwareSystemPrompt,
+  formatBondStage,
+  getBondContextDisplayName,
+  type BondIdentity,
+  type BondToast,
+} from '../lib/kizunaBond';
+import {
+  attemptKizunaStorageClear,
+  KIZUNA_STORAGE_KEY,
+  tryCreateKizunaStorageProvider,
+} from '../lib/kizunaStorage';
+import {
+  createSerialTaskQueue,
+  type SerialTaskQueue,
+} from '../lib/serialTaskQueue';
 
 interface UseAituberCoreOptions {
   onAudioPlay: (arrayBuffer: ArrayBuffer) => Promise<void>;
@@ -35,15 +58,49 @@ interface UseAituberCoreOptions {
   settings: AppSettings;
   getApiKeyForProvider: (provider: ChatProviderOption) => string;
 }
-
 type ProcessChatOptions = {
   displayText?: string;
+  bondIdentity?: BondIdentity;
+  bondMessage?: string;
+  bondAlreadyRecorded?: boolean;
 };
 
 const DEFAULT_VISION_PROMPT =
   'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
 const GPT5_SAMPLE_PROVIDER_OPTIONS = { gpt5Preset: 'casual' as const };
 const GPT5_SAMPLE_CHAT_OPTIONS = { responseLength: 'veryShort' as const };
+const MAX_BOND_TOASTS = 4;
+const BOND_TOAST_DURATION_MS = 4_500;
+const VISIBLE_BOND_CHANGE = 0.0005;
+
+interface KizunaManagerSetup {
+  manager: KizunaManager;
+  storageProvider: IStorageProvider | null;
+}
+
+function createKizunaManager(enablePersistence = true): KizunaManagerSetup {
+  const config = createDefaultKizunaConfig();
+  config.basePoints = {
+    ...config.basePoints,
+    message: 20,
+    reaction: 5,
+  };
+  const storageProvider = enablePersistence
+    ? tryCreateKizunaStorageProvider(
+        () => new LocalStorageProvider(),
+        (error) => {
+          console.warn(
+            'Kizuna persistence is unavailable; continuing with in-memory storage.',
+            error,
+          );
+        },
+      )
+    : undefined;
+  return {
+    manager: new KizunaManager(config, storageProvider, KIZUNA_STORAGE_KEY),
+    storageProvider: storageProvider ?? null,
+  };
+}
 
 function toManneriMessages(
   messages: ChatMessage[],
@@ -308,16 +365,27 @@ function buildVoiceOptions(
 }
 
 function extractScreenplay(data: unknown): ScreenplayLike | null {
-  if (!data || typeof data !== 'object') return null;
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+
   const maybeWrapped = data as { screenplay?: unknown };
   const source = maybeWrapped.screenplay ?? data;
-  if (!source || typeof source !== 'object') return null;
+  if (!source || typeof source !== 'object') {
+    return null;
+  }
+
   const screenplay = source as { emotion?: unknown; text?: unknown };
   const emotion =
     typeof screenplay.emotion === 'string' ? screenplay.emotion : undefined;
   const text =
     typeof screenplay.text === 'string' ? screenplay.text : undefined;
-  return emotion || text ? { emotion, text } : null;
+
+  if (!emotion && !text) {
+    return null;
+  }
+
+  return { emotion, text };
 }
 
 export function useAituberCore({
@@ -328,6 +396,19 @@ export function useAituberCore({
   getApiKeyForProvider,
 }: UseAituberCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
+  const [initialKizunaSetup] = useState(() => createKizunaManager());
+  const kizunaRef = useRef<KizunaManager | null>(initialKizunaSetup.manager);
+  const kizunaStorageProviderRef = useRef<IStorageProvider | null>(
+    initialKizunaSetup.storageProvider,
+  );
+  const [enqueueCoreRequest] = useState<SerialTaskQueue>(() =>
+    createSerialTaskQueue(),
+  );
+  const activeBondIdentityRef = useRef<BondIdentity | null>(null);
+  const bondQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const bondToastSequenceRef = useRef(0);
+  const bondToastTimersRef = useRef(new Map<number, number>());
+  const bondToastByUserRef = useRef(new Map<string, number>());
   const chatHistoryRef = useRef<ReturnType<AITuberOnAirCore['getChatHistory']>>(
     [],
   );
@@ -337,6 +418,178 @@ export function useAituberCore({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [partialResponse, setPartialResponse] = useState('');
+  const [bondToasts, setBondToasts] = useState<BondToast[]>([]);
+
+  useEffect(() => {
+    const manager = kizunaRef.current;
+    if (!manager) return;
+    void manager.initialize().catch((error) => {
+      console.error('Failed to initialize Kizuna data:', error);
+    });
+  }, []);
+
+  const dismissBondToast = useCallback((id: number) => {
+    const timer = bondToastTimersRef.current.get(id);
+    if (timer !== undefined) window.clearTimeout(timer);
+    bondToastTimersRef.current.delete(id);
+    for (const [userId, toastId] of bondToastByUserRef.current) {
+      if (toastId === id) bondToastByUserRef.current.delete(userId);
+    }
+    setBondToasts((current) => current.filter((toast) => toast.id !== id));
+  }, []);
+
+  const clearBondToasts = useCallback(() => {
+    for (const timer of bondToastTimersRef.current.values()) {
+      window.clearTimeout(timer);
+    }
+    bondToastTimersRef.current.clear();
+    bondToastByUserRef.current.clear();
+    setBondToasts([]);
+  }, []);
+
+  const resetKizunaData = useCallback((): Promise<void> => {
+    const reset = bondQueueRef.current.then(async () => {
+      activeBondIdentityRef.current = null;
+      kizunaRef.current?.destroy();
+
+      const storageClearResult = await attemptKizunaStorageClear(
+        kizunaStorageProviderRef.current,
+      );
+      if (!storageClearResult.storageCleared) {
+        console.error(
+          'Failed to clear persisted Kizuna data:',
+          storageClearResult.error,
+        );
+      }
+
+      const setup = createKizunaManager(storageClearResult.storageCleared);
+      kizunaRef.current = setup.manager;
+      kizunaStorageProviderRef.current = storageClearResult.storageCleared
+        ? setup.storageProvider
+        : storageClearResult.storageProvider;
+      try {
+        await setup.manager.initialize();
+      } catch (error) {
+        console.error('Failed to initialize reset Kizuna data:', error);
+      }
+      clearBondToasts();
+
+      if (!storageClearResult.storageCleared) {
+        throw storageClearResult.error;
+      }
+    });
+    bondQueueRef.current = reset.then(
+      () => undefined,
+      () => undefined,
+    );
+    return reset;
+  }, [clearBondToasts]);
+
+  const recordBondInteraction = useCallback(
+    async (
+      identity: BondIdentity,
+      kind: InteractionKind,
+      message: string,
+      emotion?: string,
+      timestamp = Date.now(),
+    ): Promise<BondSnapshot | null> => {
+      if (!settings.kizuna.enabled || !kizunaRef.current) return null;
+      const manager = kizunaRef.current;
+      await manager.initialize();
+      const previousSnapshot = manager.getBondSnapshot(identity.userId);
+      const previousIntimacy = manager.toRelationshipCapital(identity.userId);
+      const result = await manager.processInteraction({
+        userId: identity.userId,
+        kind,
+        message,
+        emotion,
+        isOwner: identity.isOwner,
+        timestamp,
+        metadata: {
+          displayName: getBondContextDisplayName(identity.source),
+          source: identity.source,
+        },
+      });
+      const nextSnapshot = manager.getBondSnapshot(identity.userId);
+      if (!nextSnapshot) return null;
+
+      const nextIntimacy = manager.toRelationshipCapital(identity.userId);
+      if (Math.abs(nextIntimacy - previousIntimacy) > VISIBLE_BOND_CHANGE) {
+        bondToastSequenceRef.current += 1;
+        const id = bondToastSequenceRef.current;
+        const toast: BondToast = {
+          id,
+          userId: identity.userId,
+          displayName: identity.displayName,
+          pointsAdded: result.pointsAdded,
+          previousIntimacy,
+          nextIntimacy,
+          previousStage: previousSnapshot
+            ? formatBondStage(previousSnapshot.stage)
+            : '未接触',
+          nextStage: formatBondStage(nextSnapshot.stage),
+          leveledUp: result.leveledUp,
+          ...(result.newLevel !== undefined && {
+            newLevel: result.newLevel,
+          }),
+        };
+        const previousToastId = bondToastByUserRef.current.get(identity.userId);
+        if (previousToastId !== undefined) {
+          const previousTimer = bondToastTimersRef.current.get(previousToastId);
+          if (previousTimer !== undefined) window.clearTimeout(previousTimer);
+          bondToastTimersRef.current.delete(previousToastId);
+        }
+        bondToastByUserRef.current.set(identity.userId, id);
+        setBondToasts((current) =>
+          [
+            ...current.filter(({ id: toastId }) =>
+              previousToastId === undefined
+                ? true
+                : toastId !== previousToastId,
+            ),
+            toast,
+          ].slice(-MAX_BOND_TOASTS),
+        );
+        const timer = window.setTimeout(
+          () => dismissBondToast(id),
+          BOND_TOAST_DURATION_MS,
+        );
+        bondToastTimersRef.current.set(id, timer);
+      }
+      return nextSnapshot;
+    },
+    [dismissBondToast, settings.kizuna.enabled],
+  );
+
+  const queueBondInteraction = useCallback(
+    (
+      identity: BondIdentity,
+      kind: InteractionKind,
+      message: string,
+      emotion?: string,
+      timestamp?: number,
+    ): Promise<BondSnapshot | null> => {
+      const result = bondQueueRef.current.then(() =>
+        recordBondInteraction(identity, kind, message, emotion, timestamp),
+      );
+      bondQueueRef.current = result.then(
+        () => undefined,
+        () => undefined,
+      );
+      return result;
+    },
+    [recordBondInteraction],
+  );
+
+  const recordBondMessage = useCallback(
+    (
+      identity: BondIdentity,
+      message: string,
+      timestamp = Date.now(),
+    ): Promise<BondSnapshot | null> =>
+      queueBondInteraction(identity, 'message', message, undefined, timestamp),
+    [queueBondInteraction],
+  );
 
   // Keep the latest onAudioPlay callback in a ref
   const onAudioPlayRef = useRef(onAudioPlay);
@@ -352,6 +605,25 @@ export function useAituberCore({
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  useEffect(() => {
+    if (settings.kizuna.enabled) return;
+    activeBondIdentityRef.current = null;
+    const timer = window.setTimeout(clearBondToasts, 0);
+    return () => window.clearTimeout(timer);
+  }, [clearBondToasts, settings.kizuna.enabled]);
+
+  useEffect(
+    () => () => {
+      kizunaRef.current?.destroy();
+      for (const timer of bondToastTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+      bondToastTimersRef.current.clear();
+      bondToastByUserRef.current.clear();
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!settings.manneri.enabled) {
@@ -470,13 +742,14 @@ export function useAituberCore({
 
     core.on(AITuberOnAirCoreEvent.ASSISTANT_RESPONSE, (data: unknown) => {
       let content: string;
+      let responseEmotion: string | undefined;
       if (typeof data === 'string') {
         content = data;
       } else {
         const d = data as {
           message?: { content?: string } | string;
-          screenplay?: { text?: string };
           rawText?: string;
+          screenplay?: { emotion?: string; text?: string };
         };
         const msg = d?.message;
         const cleanText = d?.screenplay?.text?.trim();
@@ -485,6 +758,7 @@ export function useAituberCore({
           ((typeof msg === 'string' ? msg : msg?.content) ??
             d?.rawText ??
             String(data));
+        responseEmotion = d?.screenplay?.emotion;
       }
       setMessages((prev) => [
         ...prev,
@@ -496,11 +770,26 @@ export function useAituberCore({
         },
       ]);
       setPartialResponse('');
+
+      const bondIdentity = activeBondIdentityRef.current;
+      activeBondIdentityRef.current = null;
+      if (bondIdentity && responseEmotion) {
+        void queueBondInteraction(
+          bondIdentity,
+          'reaction',
+          content,
+          responseEmotion,
+        ).catch((error) => {
+          console.error('Failed to record Kizuna response emotion:', error);
+        });
+      }
     });
 
     core.on(AITuberOnAirCoreEvent.SPEECH_START, (data: unknown) => {
       const screenplay = extractScreenplay(data);
-      if (screenplay) onSpeechStartRef.current?.(screenplay);
+      if (screenplay) {
+        onSpeechStartRef.current?.(screenplay);
+      }
     });
 
     core.on(AITuberOnAirCoreEvent.SPEECH_END, () => {
@@ -509,6 +798,7 @@ export function useAituberCore({
 
     core.on(AITuberOnAirCoreEvent.ERROR, (error: unknown) => {
       console.error('AITuberOnAirCore error:', error);
+      activeBondIdentityRef.current = null;
       setIsProcessing(false);
       onSpeechEndRef.current?.();
     });
@@ -529,9 +819,11 @@ export function useAituberCore({
     settings.llm.systemPrompt,
     settings.llm.endpoint,
     settings.llm.xaiReasoningEffort,
+    settings.kizuna.enabled,
     llmApiKey,
     isApiKeyOptionalProvider,
     createMessageId,
+    queueBondInteraction,
   ]);
 
   // Effect 2: Update voice service when TTS settings change (no core recreation)
@@ -572,73 +864,130 @@ export function useAituberCore({
   ]);
 
   const processChat = useCallback(
-    async (text: string, options?: ProcessChatOptions) => {
-      if (!coreRef.current || !text.trim()) return;
+    (text: string, options?: ProcessChatOptions) =>
+      enqueueCoreRequest(async () => {
+        const core = coreRef.current;
+        if (!core || !text.trim()) return;
 
-      let coreInput = text.trim();
-      const displayText = (options?.displayText ?? text).trim();
-      const manneriDetector = manneriDetectorRef.current;
+        let coreInput = text.trim();
+        const displayText = (options?.displayText ?? text).trim();
+        const bondIdentity = options?.bondIdentity;
+        const shouldTrackBond =
+          settings.kizuna.enabled && Boolean(bondIdentity);
+        const manneriDetector = manneriDetectorRef.current;
 
-      if (manneriDetector) {
-        try {
-          const manneriMessages = toManneriMessages(
-            messagesRef.current,
-            coreInput,
-          );
-          if (manneriDetector.shouldIntervene(manneriMessages)) {
-            const prompt =
-              manneriDetector.generateDiversificationPrompt(manneriMessages);
-            coreInput = buildManneriAugmentedInput(coreInput, prompt.content);
+        if (shouldTrackBond && bondIdentity && kizunaRef.current) {
+          try {
+            if (options?.bondAlreadyRecorded) {
+              await bondQueueRef.current;
+            } else {
+              await recordBondMessage(
+                bondIdentity,
+                options?.bondMessage ?? displayText,
+              );
+            }
+            const bondContext = kizunaRef.current.getBondContext(
+              bondIdentity.userId,
+              { language: 'ja' },
+            );
+            core.updateChatOptions({
+              systemPrompt: buildBondAwareSystemPrompt(
+                settings.llm.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+                bondContext,
+              ),
+            });
+          } catch (error) {
+            console.error('Failed to update Kizuna bond context:', error);
+            core.updateChatOptions({
+              systemPrompt:
+                settings.llm.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+            });
           }
-        } catch (err) {
-          console.warn('Manneri detection failed:', err);
+        } else {
+          core.updateChatOptions({
+            systemPrompt:
+              settings.llm.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+          });
         }
-      }
 
-      // Append the user message to the chat log
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: createMessageId(),
-          role: 'user',
-          content: displayText,
-          timestamp: Date.now(),
-        },
-      ]);
+        if (manneriDetector) {
+          try {
+            const manneriMessages = toManneriMessages(
+              messagesRef.current,
+              coreInput,
+            );
+            if (manneriDetector.shouldIntervene(manneriMessages)) {
+              const prompt =
+                manneriDetector.generateDiversificationPrompt(manneriMessages);
+              coreInput = buildManneriAugmentedInput(coreInput, prompt.content);
+            }
+          } catch (err) {
+            console.warn('Manneri detection failed:', err);
+          }
+        }
 
-      try {
-        await coreRef.current.processChat(coreInput);
-      } catch (err) {
-        console.error('processChat error:', err);
-        setIsProcessing(false);
-      }
-    },
-    [createMessageId],
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: createMessageId(),
+            role: 'user',
+            content: displayText,
+            timestamp: Date.now(),
+          },
+        ]);
+
+        activeBondIdentityRef.current =
+          shouldTrackBond && bondIdentity ? bondIdentity : null;
+        try {
+          await core.processChat(coreInput);
+        } catch (err) {
+          console.error('processChat error:', err);
+          setIsProcessing(false);
+        } finally {
+          activeBondIdentityRef.current = null;
+        }
+      }),
+    [
+      createMessageId,
+      enqueueCoreRequest,
+      recordBondMessage,
+      settings.kizuna.enabled,
+      settings.llm.systemPrompt,
+    ],
   );
 
   const processVisionChat = useCallback(
-    async (imageDataUrl: string, prompt = DEFAULT_VISION_PROMPT) => {
-      if (!coreRef.current || !imageDataUrl) return;
+    (imageDataUrl: string, prompt = DEFAULT_VISION_PROMPT) =>
+      enqueueCoreRequest(async () => {
+        const core = coreRef.current;
+        if (!core || !imageDataUrl) return;
 
-      const trimmedPrompt = prompt.trim() || DEFAULT_VISION_PROMPT;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: createMessageId(),
-          role: 'user',
-          content: '画面を見てコメント',
-          timestamp: Date.now(),
-        },
-      ]);
+        const trimmedPrompt = prompt.trim() || DEFAULT_VISION_PROMPT;
+        activeBondIdentityRef.current = null;
+        core.updateChatOptions({
+          systemPrompt:
+            settings.llm.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+        });
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: createMessageId(),
+            role: 'user',
+            content: '画面を見てコメント',
+            timestamp: Date.now(),
+          },
+        ]);
 
-      try {
-        await coreRef.current.processVisionChat(imageDataUrl, trimmedPrompt);
-      } catch (err) {
-        console.error('processVisionChat error:', err);
-        setIsProcessing(false);
-      }
-    },
-    [createMessageId],
+        try {
+          await core.processVisionChat(imageDataUrl, trimmedPrompt);
+        } catch (err) {
+          console.error('processVisionChat error:', err);
+          setIsProcessing(false);
+        } finally {
+          activeBondIdentityRef.current = null;
+        }
+      }),
+    [createMessageId, enqueueCoreRequest, settings.llm.systemPrompt],
   );
 
   return {
@@ -647,5 +996,9 @@ export function useAituberCore({
     partialResponse,
     processChat,
     processVisionChat,
+    bondToasts,
+    dismissBondToast,
+    recordBondMessage,
+    resetKizunaData,
   };
 }

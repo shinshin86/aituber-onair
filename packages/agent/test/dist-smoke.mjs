@@ -19,8 +19,13 @@ assert.equal(typeof esmChat.createChatServiceBackend, 'function');
 assert.equal(typeof cjsChat.createChatServiceBackend, 'function');
 assert.equal(typeof esmCodex.createCodexAppServerBackend, 'function');
 assert.equal(typeof cjsCodex.createCodexAppServerBackend, 'function');
-assert.equal(esmCodex.CODEX_APP_SERVER_SUPPORTED_VERSION, '0.145.0');
-assert.equal(cjsCodex.CODEX_APP_SERVER_SCHEMA_VERSION, 'v2@0.145.0');
+for (const codex of [esmCodex, cjsCodex]) {
+  assert.equal(codex.CODEX_APP_SERVER_VERIFIED_VERSION, '0.145.0');
+  assert.equal(codex.CODEX_APP_SERVER_MINIMUM_VERSION, '0.136.0');
+  assert.equal(codex.CODEX_APP_SERVER_PROTOCOL_GENERATION, 'v2');
+  assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, undefined);
+  assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, undefined);
+}
 
 const browserOutputFiles = [
   '../dist/esm/index.js',

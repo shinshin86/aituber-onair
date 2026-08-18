@@ -7,6 +7,7 @@
       name="description"
       content="Minimal browser example for @aituber-onair/transcription"
     />
+    <link rel="icon" href="data:," />
     <title>AITuber OnAir Transcription</title>
   </head>
   <body>
@@ -24,8 +25,9 @@
         </div>
         <h1 data-i18n="heroTitle">Try realtime transcription</h1>
         <p class="hero-copy" data-i18n="heroCopy">
-          Transcribe microphone audio with Web Speech or OpenAI Realtime.
-          Results are not submitted as chat messages automatically.
+          Transcribe microphone audio with Web Speech, OpenAI Realtime, or
+          Local Whisper. Results are not submitted as chat messages
+          automatically.
         </p>
       </header>
 
@@ -47,6 +49,7 @@
           <select id="provider">
             <option value="web-speech">Web Speech</option>
             <option value="openai-realtime">OpenAI Realtime</option>
+            <option value="local-whisper">Local Whisper</option>
           </select>
         </label>
 
@@ -130,6 +133,45 @@ An English conversation recorded through a microphone.</textarea
             including during silence.
           </p>
         </div>
+
+        <div id="local-whisper-fields" hidden>
+          <div class="field-grid local-whisper-grid">
+            <label class="field">
+              <span data-i18n="localWhisperModel">Model</span>
+              <select id="local-whisper-model">
+                <option value="tiny" selected>Tiny</option>
+                <option value="base">Base</option>
+                <option value="small">Small</option>
+              </select>
+              <small id="local-whisper-model-hint"></small>
+            </label>
+            <label class="field">
+              <span data-i18n="localWhisperLanguage">Language hint</span>
+              <input id="local-whisper-language" value="ja-JP" />
+              <small data-i18n="localWhisperLanguageHint">
+                Optional BCP 47 language code. Leave blank for automatic
+                detection.
+              </small>
+            </label>
+            <label class="field">
+              <span data-i18n="localWhisperSilence">End silence (ms)</span>
+              <input
+                id="local-whisper-silence"
+                type="number"
+                min="150"
+                step="50"
+                value="500"
+              />
+              <small data-i18n="localWhisperSilenceHint">
+                Minimum 150 ms. Lower values finalize speech sooner.
+              </small>
+            </label>
+          </div>
+          <p class="notice info" data-i18n="localWhisperNotice">
+            WebGPU is required. Larger models download more data on first use
+            and infer more slowly. Microphone audio stays in this browser.
+          </p>
+        </div>
       </section>
 
       <section class="card output" aria-labelledby="output-title">
@@ -142,6 +184,15 @@ An English conversation recorded through a microphone.</textarea
           </div>
           <span id="state-badge" class="badge state-idle">Idle</span>
         </div>
+
+        <p
+          id="progress-message"
+          class="initialization-progress"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          hidden
+        ></p>
 
         <div class="actions">
           <button id="start-button" class="primary" type="button">

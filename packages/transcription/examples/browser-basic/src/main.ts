@@ -1,14 +1,17 @@
 import {
   createRealtimeTranscriptionSession,
   isTranscriptionProviderSupported,
+  type LocalWhisperModelSize,
   type RealtimeTranscriptionSession,
   type TranscriptUpdate,
   type TranscriptionDelay,
   type TranscriptionError,
   type TranscriptionErrorCode,
   type TranscriptionProviderName,
+  type TranscriptionProgress,
   type TranscriptionState,
 } from '@aituber-onair/transcription';
+import localWhisperWorkerUrl from '../../../src/providers/local-whisper.worker.ts?worker&url';
 import {
   detectDisplayLanguage,
   isDisplayLanguage,
@@ -37,7 +40,15 @@ const openAILanguages = element<HTMLInputElement>('#openai-languages');
 const openAIKeywords = element<HTMLInputElement>('#openai-keywords');
 const openAIPrompt = element<HTMLTextAreaElement>('#openai-prompt');
 const openAIDelay = element<HTMLSelectElement>('#openai-delay');
+const localWhisperFields = element<HTMLDivElement>('#local-whisper-fields');
+const localWhisperModel = element<HTMLSelectElement>('#local-whisper-model');
+const localWhisperModelHint = element<HTMLElement>('#local-whisper-model-hint');
+const localWhisperLanguage = element<HTMLInputElement>(
+  '#local-whisper-language'
+);
+const localWhisperSilence = element<HTMLInputElement>('#local-whisper-silence');
 const stateBadge = element<HTMLSpanElement>('#state-badge');
+const progressMessage = element<HTMLParagraphElement>('#progress-message');
 const startButton = element<HTMLButtonElement>('#start-button');
 const stopButton = element<HTMLButtonElement>('#stop-button');
 const clearButton = element<HTMLButtonElement>('#clear-button');
@@ -49,6 +60,11 @@ let session: RealtimeTranscriptionSession | null = null;
 let displayLanguage: DisplayLanguage = 'en';
 let activeError: TranscriptionError | Error | null = null;
 const interimByUtterance = new Map<string, string>();
+const downloadProgressByFile = new Map<
+  string,
+  Pick<TranscriptionProgress, 'loadedBytes' | 'totalBytes' | 'progress'>
+>();
+let activeProgress: TranscriptionProgress | null = null;
 
 const stateTranslationKeys: Record<TranscriptionState, TranslationKey> = {
   idle: 'stateIdle',
@@ -72,6 +88,13 @@ const errorTranslationKeys: Record<TranscriptionErrorCode, TranslationKey> = {
   'session-disposed': 'errorSessionDisposed',
 };
 
+const localWhisperModelHintKeys: Record<LocalWhisperModelSize, TranslationKey> =
+  {
+    tiny: 'localWhisperModelTinyHint',
+    base: 'localWhisperModelBaseHint',
+    small: 'localWhisperModelSmallHint',
+  };
+
 function commaSeparated(value: string): string[] {
   return value
     .split(',')
@@ -81,6 +104,19 @@ function commaSeparated(value: string): string[] {
 
 function selectedProvider(): TranscriptionProviderName {
   return providerSelect.value as TranscriptionProviderName;
+}
+
+function selectedLocalWhisperModel(): LocalWhisperModelSize {
+  const model = localWhisperModel.value;
+  if (model === 'base' || model === 'small') return model;
+  return 'tiny';
+}
+
+function renderLocalWhisperModelHint(): void {
+  localWhisperModelHint.textContent = translate(
+    displayLanguage,
+    localWhisperModelHintKeys[selectedLocalWhisperModel()]
+  );
 }
 
 function translationKey(
@@ -141,6 +177,69 @@ function setError(error: TranscriptionError | Error | null): void {
   errorMessage.hidden = false;
 }
 
+function aggregateDownloadPercentage(): number | null {
+  let loadedBytes = 0;
+  let totalBytes = 0;
+
+  for (const fileProgress of downloadProgressByFile.values()) {
+    const fileTotal = fileProgress.totalBytes;
+    if (fileTotal === undefined || fileTotal <= 0) continue;
+    const fileLoaded =
+      fileProgress.loadedBytes ??
+      (fileProgress.progress !== undefined
+        ? fileProgress.progress * fileTotal
+        : 0);
+    loadedBytes += Math.min(fileTotal, Math.max(0, fileLoaded));
+    totalBytes += fileTotal;
+  }
+
+  return totalBytes > 0 ? Math.round((loadedBytes / totalBytes) * 100) : null;
+}
+
+function renderProgress(): void {
+  if (!activeProgress || activeProgress.phase === 'ready') {
+    progressMessage.hidden = true;
+    progressMessage.textContent = '';
+    return;
+  }
+
+  if (activeProgress.phase === 'initialize') {
+    progressMessage.textContent = translate(
+      displayLanguage,
+      'progressInitializeModel'
+    );
+    progressMessage.hidden = false;
+    return;
+  }
+
+  const percentage = aggregateDownloadPercentage();
+  const suffix = percentage === null ? '' : ` ${percentage}%`;
+  progressMessage.textContent = `${translate(
+    displayLanguage,
+    'progressDownloadModel'
+  )}${suffix}`;
+  progressMessage.hidden = false;
+}
+
+function handleProgress(progress: TranscriptionProgress): void {
+  activeProgress = progress;
+  if (progress.phase === 'download' && progress.file) {
+    const current = downloadProgressByFile.get(progress.file);
+    downloadProgressByFile.set(progress.file, {
+      loadedBytes: progress.loadedBytes ?? current?.loadedBytes,
+      totalBytes: progress.totalBytes ?? current?.totalBytes,
+      progress: progress.progress ?? current?.progress,
+    });
+  }
+  renderProgress();
+}
+
+function resetProgress(): void {
+  activeProgress = null;
+  downloadProgressByFile.clear();
+  renderProgress();
+}
+
 function renderState(state: TranscriptionState): void {
   stateBadge.textContent = translate(
     displayLanguage,
@@ -153,6 +252,8 @@ function renderState(state: TranscriptionState): void {
   startButton.disabled =
     busy || !isTranscriptionProviderSupported(selectedProvider());
   stopButton.disabled = !active;
+  localWhisperModel.disabled = busy;
+  if (state !== 'connecting') resetProgress();
 }
 
 function renderInterim(): void {
@@ -180,32 +281,42 @@ function handleTranscript(update: TranscriptUpdate): void {
 }
 
 function createSession(): RealtimeTranscriptionSession {
-  if (selectedProvider() === 'web-speech') {
-    return createRealtimeTranscriptionSession({
-      provider: 'web-speech',
-      language: webSpeechLanguage.value.trim() || 'ja-JP',
-      continuous: true,
-    });
+  switch (selectedProvider()) {
+    case 'web-speech':
+      return createRealtimeTranscriptionSession({
+        provider: 'web-speech',
+        language: webSpeechLanguage.value.trim() || 'ja-JP',
+        continuous: true,
+      });
+    case 'openai-realtime':
+      return createRealtimeTranscriptionSession({
+        provider: 'openai-realtime',
+        auth: {
+          type: 'browser-api-key',
+          getApiKey: async () => openAIApiKey.value,
+          acknowledgeBrowserKeyRisk: true,
+        },
+        languages: commaSeparated(openAILanguages.value),
+        keywords: commaSeparated(openAIKeywords.value),
+        prompt: openAIPrompt.value,
+        delay: openAIDelay.value as TranscriptionDelay,
+      });
+    case 'local-whisper':
+      return createRealtimeTranscriptionSession({
+        provider: 'local-whisper',
+        model: selectedLocalWhisperModel(),
+        language: localWhisperLanguage.value.trim() || undefined,
+        silenceDurationMs: Number(localWhisperSilence.value),
+        workerUrl: localWhisperWorkerUrl,
+      });
   }
-
-  return createRealtimeTranscriptionSession({
-    provider: 'openai-realtime',
-    auth: {
-      type: 'browser-api-key',
-      getApiKey: async () => openAIApiKey.value,
-      acknowledgeBrowserKeyRisk: true,
-    },
-    languages: commaSeparated(openAILanguages.value),
-    keywords: commaSeparated(openAIKeywords.value),
-    prompt: openAIPrompt.value,
-    delay: openAIDelay.value as TranscriptionDelay,
-  });
 }
 
 async function disposeSession(): Promise<void> {
   const current = session;
   session = null;
   if (current) await current.dispose();
+  resetProgress();
 }
 
 async function startSession(): Promise<void> {
@@ -217,6 +328,7 @@ async function startSession(): Promise<void> {
     nextSession = createSession();
     session = nextSession;
     nextSession.onTranscript(handleTranscript);
+    nextSession.onProgress(handleProgress);
     nextSession.onStateChange(renderState);
     nextSession.onError(setError);
     await nextSession.start();
@@ -252,9 +364,12 @@ function clearTranscripts(): void {
 function syncSettings(): void {
   const provider = selectedProvider();
   const openAISelected = provider === 'openai-realtime';
+  const localWhisperSelected = provider === 'local-whisper';
 
-  webSpeechFields.hidden = openAISelected;
+  webSpeechFields.hidden = openAISelected || localWhisperSelected;
   openAIFields.hidden = !openAISelected;
+  localWhisperFields.hidden = !localWhisperSelected;
+  renderLocalWhisperModelHint();
 
   const supported = isTranscriptionProviderSupported(provider);
   supportBadge.textContent = translate(
@@ -275,6 +390,7 @@ function applyDisplayLanguage(language: DisplayLanguage): void {
     emptyTranscript.textContent = translate(language, 'noFinalTranscript');
   }
   syncSettings();
+  renderProgress();
   if (activeError) setError(activeError);
 }
 
@@ -285,6 +401,7 @@ async function resetSessionForSettings(): Promise<void> {
 }
 
 providerSelect.addEventListener('change', () => void resetSessionForSettings());
+localWhisperModel.addEventListener('change', renderLocalWhisperModelHint);
 displayLanguageSelect.addEventListener('change', () => {
   if (isDisplayLanguage(displayLanguageSelect.value)) {
     applyDisplayLanguage(displayLanguageSelect.value);

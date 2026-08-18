@@ -4,6 +4,7 @@ import type {
   TranscriptUpdate,
   TranscriptionCapabilities,
   TranscriptionError,
+  TranscriptionProgress,
   TranscriptionProviderName,
   TranscriptionState,
 } from './types';
@@ -17,6 +18,9 @@ export abstract class BaseRealtimeTranscriptionSession
   private currentState: TranscriptionState = 'idle';
   private readonly transcriptListeners = new Set<
     (update: TranscriptUpdate) => void
+  >();
+  private readonly progressListeners = new Set<
+    (progress: TranscriptionProgress) => void
   >();
   private readonly stateListeners = new Set<
     (state: TranscriptionState) => void
@@ -46,6 +50,11 @@ export abstract class BaseRealtimeTranscriptionSession
     return () => this.transcriptListeners.delete(listener);
   }
 
+  onProgress(listener: (progress: TranscriptionProgress) => void): () => void {
+    this.progressListeners.add(listener);
+    return () => this.progressListeners.delete(listener);
+  }
+
   onStateChange(listener: (state: TranscriptionState) => void): () => void {
     this.stateListeners.add(listener);
     return () => this.stateListeners.delete(listener);
@@ -67,6 +76,10 @@ export abstract class BaseRealtimeTranscriptionSession
     for (const listener of this.transcriptListeners) listener(update);
   }
 
+  protected emitProgress(progress: TranscriptionProgress): void {
+    for (const listener of this.progressListeners) listener(progress);
+  }
+
   protected emitError(error: TranscriptionError): void {
     for (const listener of this.errorListeners) listener(error);
   }
@@ -83,6 +96,7 @@ export abstract class BaseRealtimeTranscriptionSession
 
   protected clearListeners(): void {
     this.transcriptListeners.clear();
+    this.progressListeners.clear();
     this.stateListeners.clear();
     this.errorListeners.clear();
   }

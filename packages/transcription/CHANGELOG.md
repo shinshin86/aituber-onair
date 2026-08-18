@@ -1,5 +1,27 @@
 # @aituber-onair/transcription
 
+## 0.0.2
+
+### Added
+
+- Added browser-local Whisper Tiny transcription through a bundled module
+  worker, Transformers.js, and WebGPU, with no API key or microphone audio
+  upload.
+- Added browser PCM capture with AudioWorklet batching, voice activity
+  detection, pre-roll, 16 kHz resampling, 30-second turn splitting, and
+  configurable end-of-utterance silence.
+- Added typed Local Whisper options, browser capability detection, language
+  normalization, sequential inference, lifecycle cleanup, and guards for short
+  noise and common Whisper hallucinations.
+- Added Local Whisper controls and English/Japanese guidance to the browser
+  example.
+- Added provider-neutral initialization progress events, normalized Local
+  Whisper download/initialization phases, and aggregated loading progress in
+  the browser example.
+- Added selectable Tiny, Base, and Small Local Whisper models with size-specific
+  worker caching, browser example guidance, and measured download and inference
+  comparisons.
+
 ## 0.0.1
 
 ### Added

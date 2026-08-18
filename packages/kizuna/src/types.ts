@@ -1,167 +1,137 @@
-/**
- * Type definitions for Kizuna system
- * Defines all types for managing bonds with users
- */
+/** Interaction kinds understood by the default bond configuration. */
+export type InteractionKind =
+  | 'message'
+  | 'reaction'
+  | 'gift'
+  | 'presence'
+  | 'touch'
+  | (string & {});
 
-// ============================================================================
-// Basic type definitions
-// ============================================================================
+export type InteractionValence = 'positive' | 'neutral' | 'negative';
 
-/** Platform types */
-export type UserType = 'owner' | 'youtube' | 'twitch' | 'websocket';
+export type NegativeSeverity = 'light' | 'grave';
 
-/** Chat types (inherited from AITuber OnAir) */
-export type ChatType =
-  | 'chatForm'
-  | 'youtube'
-  | 'twitch'
-  | 'websocket'
-  | 'vision'
-  | 'textFile'
-  | 'configAdvice';
-
-/** Log levels */
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
-// ============================================================================
-// User-related types
-// ============================================================================
-
-/** User statistics */
-export interface UserStats {
-  /** Total messages */
-  totalMessages: number;
-  /** Total points earned */
-  totalPointsEarned: number;
-  /** Consecutive login days */
-  dailyStreak: number;
-  /** Favorite emotions (emotion name -> usage count) */
-  favoriteEmotions: Record<string, number>;
-  /** Last time points were earned */
-  lastPointsEarned?: Date;
-  /** Today's message count */
-  todayMessages: number;
-  /** Interaction history */
-  interactionHistory?: InteractionRecord[];
-}
-
-/** Achievement */
-export interface Achievement {
-  /** Achievement ID */
-  id: string;
-  /** Achievement name */
-  title: string;
-  /** Description */
-  description: string;
-  /** Date earned */
-  earnedAt: Date;
-  /** Icon (emoji, etc.) */
-  icon?: string;
-}
-
-/** Interaction record */
-export interface InteractionRecord {
-  /** Record ID */
-  id: string;
-  /** Occurrence time */
-  timestamp: Date;
-  /** Points earned */
-  points: number;
-  /** Message content */
-  message: string;
-  /** Emotion */
-  emotion?: string;
-  /** Platform */
-  platform: UserType;
-  /** Applied rules */
-  appliedRules: string[];
-}
-
-/** Kizuna user */
-export interface KizunaUser {
-  /** User ID (platform:username) */
-  id: string;
-  /** Display name */
-  displayName: string;
-  /** User type */
-  type: UserType;
-  /** Current points */
-  points: number;
-  /** Bond level (1-10) */
-  level: number;
-  /** Earned achievements */
-  achievements: Achievement[];
-  /** Statistics */
-  stats: UserStats;
-  /** First contact time */
-  firstSeen: Date;
-  /** Last contact time */
-  lastSeen: Date;
-  /** Custom data (for extension) */
-  customData?: Record<string, unknown>;
-}
-
-// ============================================================================
-// Point system related types
-// ============================================================================
-
-/** Point calculation context */
-export interface PointContext {
-  /** User ID */
+/** A contact between an application user and an AI character. */
+export interface Interaction {
   userId: string;
-  /** Platform */
-  platform: ChatType;
-  /** Message content */
-  message: string;
-  /** Emotion (optional) */
+  kind: InteractionKind;
+  message?: string;
   emotion?: string;
-  /** Whether owner */
+  valence?: InteractionValence;
+  severity?: NegativeSeverity;
   isOwner: boolean;
-  /** Occurrence time */
   timestamp: number;
-  /** Additional metadata */
   metadata?: Record<string, unknown>;
 }
 
-/** Point rule */
-export interface PointRule {
-  /** Rule ID */
+/** @deprecated Use Interaction. */
+export type PointContext = Interaction;
+
+export type UserRole = 'owner' | 'guest';
+
+/** @deprecated Use UserRole. */
+export type UserType = UserRole;
+
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+export interface ContinuityStats {
+  streak: number;
+  totalActiveBuckets: number;
+  lastContactAt: Date;
+  lastBucketKey: string;
+  lastBucketIndex?: number;
+}
+
+export interface UserStats {
+  totalInteractions: number;
+  totalPointsEarned: number;
+  continuity: ContinuityStats;
+  favoriteEmotions: Record<string, number>;
+  lastPointsEarned?: Date;
+  interactionHistory?: InteractionRecord[];
+  dynamics?: BondDynamicsState;
+}
+
+export type BondTrend = 'rising' | 'steady' | 'falling' | 'repairing';
+
+export type BondAtmosphere = 'warm' | 'neutral' | 'cool' | 'cold';
+
+export interface BondScar {
   id: string;
-  /** Rule name */
-  name: string;
-  /** Condition evaluation function */
-  condition: (context: PointContext, user?: KizunaUser) => boolean;
-  /** Points to award */
+  summary: string;
+  createdAt: Date;
+  healedAt?: Date;
+}
+
+export interface BondDynamicsState {
+  warmth: number;
+  warmthUpdatedAt: Date;
+  conflictChilled: boolean;
+  trend: BondTrend;
+  currentStage: string;
+  offenseTimestamps: Date[];
+  positiveBucketCounts: Record<string, number>;
+  graveBucketKeys: string[];
+  positiveInteractionsSinceScar: number;
+  positiveBucketKeysSinceScar: string[];
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  earnedAt: Date;
+  icon?: string;
+}
+
+export interface InteractionRecord {
+  id: string;
+  timestamp: Date;
   points: number;
-  /** Cooldown time (milliseconds, optional) */
+  message?: string;
+  emotion?: string;
+  kind: InteractionKind;
+  appliedRules: string[];
+  valence?: InteractionValence;
+  severity?: NegativeSeverity;
+}
+
+export interface KizunaUser {
+  id: string;
+  displayName: string;
+  role: UserRole;
+  points: number;
+  level: number;
+  achievements: Achievement[];
+  scars?: BondScar[];
+  triggeredThresholds: string[];
+  stats: UserStats;
+  firstSeen: Date;
+  lastSeen: Date;
+  customData?: Record<string, unknown>;
+}
+
+export interface PointRule {
+  id: string;
+  name: string;
+  condition: (interaction: Interaction, user?: KizunaUser) => boolean;
+  points: number | ((interaction: Interaction, user?: KizunaUser) => number);
   cooldown?: number;
-  /** Maximum applications per day (optional) */
-  dailyLimit?: number;
-  /** Description */
+  bucketLimit?: number;
+  valence?: InteractionValence;
+  severity?: NegativeSeverity;
   description?: string;
 }
 
-/** Point calculation result */
 export interface PointResult {
-  /** Points awarded */
   pointsAdded: number;
-  /** Total points */
   totalPoints: number;
-  /** Applied rules */
   appliedRules: PointRule[];
-  /** Triggered actions */
   triggeredActions: ThresholdAction[];
-  /** Whether leveled up */
   leveledUp: boolean;
-  /** New level */
   newLevel?: number;
 }
 
-// ============================================================================
-// Threshold and action related types
-// ============================================================================
-
-/** Action types */
 export type ActionType =
   | 'special_response'
   | 'unlock_emotion'
@@ -169,102 +139,164 @@ export type ActionType =
   | 'level_up'
   | 'custom';
 
-/** Threshold action */
 export interface ThresholdAction {
-  /** Action type */
   type: ActionType;
-  /** Action data */
   data: Record<string, unknown>;
-  /** Execution time */
   executedAt?: Date;
 }
 
-/** Threshold definition */
 export interface Threshold {
-  /** Required points */
+  id?: string;
   points: number;
-  /** Action to execute */
   action: ThresholdAction;
-  /** Whether repeatable */
   repeatable: boolean;
-  /** Description */
   description?: string;
 }
 
-// ============================================================================
-// Configuration related types
-// ============================================================================
-
-/** Platform-specific point configuration */
-export interface PlatformPointConfig {
-  /** Base points */
-  basePoints: Record<string, number>;
-  /** Special bonus calculation function */
-  bonusCalculator?: (context: PointContext) => number;
-  /** Platform-specific rules */
-  customRules?: PointRule[];
+export interface BondStage {
+  id: string;
+  minPoints: number;
+  label?: string;
 }
 
-/** Owner configuration */
+export interface LevelConfig {
+  pointsPerLevel: number;
+  maxLevel: number;
+}
+
+export interface WarmthConfig {
+  halfLifeMs: number;
+  floor: number;
+}
+
+export type BondDynamicsPreset = 'human' | 'forgiving' | 'strict';
+
+export interface BondDynamicsConfig {
+  preset?: BondDynamicsPreset;
+  negativityBias?: number;
+  offenseWindowMs?: number;
+  firstOffenseMultiplier?: number;
+  secondOffenseMultiplier?: number;
+  repeatedOffenseMultiplier?: number;
+  maxEscalationMultiplier?: number;
+  stageBuffers?: Record<string, number>;
+  graveBaseDamage?: number;
+  positiveRepeatMultiplier?: number;
+  consistencyBonusPerBucket?: number;
+  maxConsistencyBonus?: number;
+  giftWarmthThreshold?: number;
+  lowWarmthGiftMultiplier?: number;
+  lightWarmthPenalty?: number;
+  graveWarmthPenalty?: number;
+  conflictRecoveryRate?: number;
+  reunionRecoveryByStage?: Record<string, number>;
+  demotionHysteresis?: number;
+  scarHealingPositiveInteractions?: number;
+  scarHealingPositiveBuckets?: number;
+  maxTrackedBuckets?: number;
+}
+
+export interface SessionInfo {
+  id: string;
+  index: number;
+}
+
+export type ContinuityUnit =
+  | 'day'
+  | 'week'
+  | 'session'
+  | ((interaction: Interaction, session?: SessionInfo) => number);
+
+export interface ContinuityConfig {
+  unit: ContinuityUnit;
+  grace?: number;
+}
+
 export interface OwnerConfig {
-  /** Initial points */
   initialPoints: number;
-  /** Point earning multiplier */
   pointMultiplier: number;
-  /** Available special commands */
-  specialCommands: string[];
-  /** Owner-exclusive achievements */
   exclusiveAchievements: string[];
-  /** Daily bonus */
-  dailyBonus: number;
+  firstContactBonus: number;
 }
 
-/** Storage configuration */
 export interface StorageConfig {
-  /** Maximum users */
   maxUsers: number;
-  /** Data retention period (days) */
   dataRetentionDays: number;
-  /** Cleanup interval (hours) */
   cleanupIntervalHours: number;
 }
 
-/** Developer configuration */
 export interface DevConfig {
-  /** Debug mode */
   debugMode: boolean;
-  /** Log level */
   logLevel: LogLevel;
-  /** Show debug panel */
   showDebugPanel: boolean;
 }
 
-/** Overall Kizuna system configuration */
-export interface KizunaConfig {
-  /** System enabled flag */
-  enabled: boolean;
-  /** Owner configuration */
-  owner: OwnerConfig;
-  /** Platform-specific configuration */
-  platforms: Record<string, PlatformPointConfig>;
-  /** Threshold configuration */
-  thresholds: Threshold[];
-  /** Storage configuration */
-  storage: StorageConfig;
-  /** Developer configuration */
-  dev: DevConfig;
-  /** Custom point rules */
-  customRules?: PointRule[];
+export type BondContextLanguage = 'en' | 'ja';
+
+export interface BondContextOptions {
+  language?: BondContextLanguage;
+  maxFavoriteEmotions?: number;
 }
 
-// ============================================================================
-// Event related types
-// ============================================================================
+export type BondContextTemplate = (snapshot: BondSnapshot) => string;
 
-/** Kizuna event types */
+export interface BondContextConfig {
+  defaultLanguage?: BondContextLanguage;
+  templates?: Partial<Record<BondContextLanguage, BondContextTemplate>>;
+}
+
+export interface KizunaConfig {
+  enabled: boolean;
+  owner: OwnerConfig;
+  basePoints: Record<string, number>;
+  rules: PointRule[];
+  thresholds: Threshold[];
+  storage: StorageConfig;
+  dev: DevConfig;
+  warmth?: WarmthConfig;
+  continuity?: ContinuityConfig;
+  stages?: BondStage[];
+  levels?: LevelConfig;
+  context?: BondContextConfig;
+  dynamics?: BondDynamicsConfig;
+  now?: () => number;
+}
+
+export interface BondContinuitySnapshot {
+  streak: number;
+  totalActiveBuckets: number;
+  lastContactAt: Date;
+}
+
+export interface FavoriteEmotion {
+  emotion: string;
+  count: number;
+}
+
+export interface BondSnapshot {
+  userId: string;
+  displayName: string;
+  role: UserRole;
+  stage: string;
+  level: number;
+  points: number;
+  warmth: number;
+  trend: BondTrend;
+  atmosphere: BondAtmosphere;
+  continuity: BondContinuitySnapshot;
+  favoriteEmotions: FavoriteEmotion[];
+  firstSeen: Date;
+  lastSeen: Date;
+  achievements: Achievement[];
+  scars: BondScar[];
+}
+
 export type KizunaEventType =
   | 'points_updated'
   | 'level_up'
+  | 'stage_down'
+  | 'scar_created'
+  | 'scar_healed'
   | 'threshold_reached'
   | 'achievement_earned'
   | 'user_created'
@@ -272,52 +304,32 @@ export type KizunaEventType =
   | 'action_executed'
   | 'error';
 
-/** Kizuna event data */
 export interface KizunaEventData {
-  /** Event type */
   type: KizunaEventType;
-  /** User ID */
   userId: string;
-  /** Event-specific data */
   data: unknown;
-  /** Occurrence time */
   timestamp: Date;
 }
 
-// ============================================================================
-// Storage provider related types
-// ============================================================================
-
-/** Storage provider interface */
 export interface StorageProvider {
-  /** Save data */
   save(key: string, data: unknown): Promise<void>;
-  /** Load data */
   load<T>(key: string): Promise<T | null>;
-  /** Remove data */
   remove(key: string): Promise<void>;
-  /** Get all keys */
   getAllKeys(): Promise<string[]>;
-  /** Clear storage */
   clear(): Promise<void>;
 }
 
-// ============================================================================
-// Convenient types for export
-// ============================================================================
-
-/** Types for main methods provided by Kizuna manager */
 export interface KizunaManagerInterface {
-  /** Process interaction */
-  processInteraction(context: PointContext): Promise<PointResult>;
-  /** Get user */
+  processInteraction(interaction: Interaction): Promise<PointResult>;
   getUser(userId: string): KizunaUser | null;
-  /** Get all users */
   getAllUsers(): KizunaUser[];
-  /** Add points */
   addPoints(userId: string, points: number): Promise<PointResult>;
-  /** Calculate level */
   calculateLevel(points: number): number;
-  /** Get statistics */
   getStats(): Record<string, unknown>;
+  getBondSnapshot(userId: string): BondSnapshot | null;
+  getBondContext(userId: string, options?: BondContextOptions): string;
+  toRelationshipCapital(userId: string): number;
+  beginSession(id?: string): Promise<string | null>;
+  endSession(): void;
+  destroy(): void;
 }
