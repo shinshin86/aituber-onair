@@ -1,0 +1,38 @@
+{
+  "name": "@aituber-onair/core-example-node-psd-newsdesk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "generate:sample-psd": "node scripts/generate-sample-psd.mjs",
+    "typecheck": "tsc --project tsconfig.dev.json",
+    "test": "npm run typecheck && vitest run",
+    "test:e2e": "npm run build && vitest run --config vitest.e2e.config.ts",
+    "test:watch": "vitest",
+    "fmt": "biome format . --write",
+    "fmt:check": "biome format .",
+    "lint": "biome lint .",
+    "script-gen": "node dist/script-gen.cjs",
+    "gen": "node dist/gen.cjs"
+  },
+  "dependencies": {
+    "@aituber-onair/core": "file:../..",
+    "@mozilla/readability": "^0.6.0",
+    "@napi-rs/canvas": "^1.0.3",
+    "@openai/codex-sdk": "^0.146.0",
+    "@webtoon/psd": "^0.4.0",
+    "linkedom": "^0.18.13"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^22.15.0",
+    "ag-psd": "^31.0.2",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.3",
+    "vitest": "^1.6.1"
+  }
+}

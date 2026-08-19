@@ -1,0 +1,10 @@
+node_modules/
+dist/
+work/
+*.mp4
+*.wav
+*.aiff
+*.timings.json
+*.psd-gen.config.json
+.env
+.env.*

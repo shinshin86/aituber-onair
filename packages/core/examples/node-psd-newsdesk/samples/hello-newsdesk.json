@@ -1,0 +1,41 @@
+{
+  "avatar": "../assets/sample-static.psd",
+  "voice": {
+    "engine": "aituber-voice",
+    "options": {
+      "engineType": "aivisSpeech",
+      "speaker": "888753760"
+    }
+  },
+  "leadIn": 0.05,
+  "leadOut": 0.08,
+  "defaultPauseAfter": 0.03,
+  "background": {
+    "color": "#20242c"
+  },
+  "avatarLayout": {
+    "scale": 1,
+    "x": 0.5,
+    "y": 0.51
+  },
+  "motion": {
+    "intensity": 1
+  },
+  "blinkSeed": 42,
+  "lines": [
+    {
+      "text": "ミコです。",
+      "chapter": "ごあいさつ",
+      "pauseAfter": 0.03
+    },
+    {
+      "text": "ここは AITuber OnAir のニュースデスク。",
+      "chapter": "ニュースデスクとは",
+      "pauseAfter": 0.03
+    },
+    {
+      "text": "新しいリリースを私がお知らせします。",
+      "pauseAfter": 0.03
+    }
+  ]
+}

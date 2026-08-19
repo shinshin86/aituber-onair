@@ -199,6 +199,9 @@ npm run dev
 - [`packages/core/examples/node-pngtuber-newsdesk`](../packages/core/examples/node-pngtuber-newsdesk):
   Node.js pipeline from source text through Core chat and voice to a chaptered
   vertical four-state PNGTuber news video.
+- [`packages/core/examples/node-psd-newsdesk`](../packages/core/examples/node-psd-newsdesk):
+  Node.js pipeline from source text through Core chat and voice to a chaptered
+  vertical static PSDTool avatar news video.
 
 ## Chat Examples
 
