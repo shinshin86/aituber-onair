@@ -199,6 +199,9 @@ npm run dev
 - [`packages/core/examples/node-pngtuber-newsdesk`](../packages/core/examples/node-pngtuber-newsdesk):
   ソーステキストから Core のチャット・音声を通して、チャプター付き縦型
   4状態 PNGTuber ニュース動画を作る Node.js パイプライン。
+- [`packages/core/examples/node-psd-newsdesk`](../packages/core/examples/node-psd-newsdesk):
+  ソーステキストから Core のチャット・音声を通して、チャプター付き縦型
+  静的 PSDTool アバターニュース動画を作る Node.js パイプライン。
 
 ## Chat サンプル
 
