@@ -196,6 +196,9 @@ npm run dev
 - [`packages/core/examples/node-purupuru-newsdesk`](../packages/core/examples/node-purupuru-newsdesk):
   Node.js pipeline from source text through Core chat and voice to a chaptered
   vertical `.purupuru` avatar news video.
+- [`packages/core/examples/node-pngtuber-newsdesk`](../packages/core/examples/node-pngtuber-newsdesk):
+  Node.js pipeline from source text through Core chat and voice to a chaptered
+  vertical four-state PNGTuber news video.
 
 ## Chat Examples
 
