@@ -130,6 +130,12 @@ VRMA の再生速度を `0`〜`3` で調整し、`0` では口パクとまばた
 既定値はそれぞれ `0.39` と `0.845` です。これらのカメラ設定の後に、従来どおり
 `avatarLayout` の拡大率と比率アンカーが適用されます。
 
+レンダラーは three.js r182 の物理ベース光量単位に合わせた、柔らかい環境光と
+指向性キーライトを使います。モデルごとに
+`avatarLighting.ambientIntensity` と
+`avatarLighting.directionalIntensity` で調整でき、既定値はそれぞれ `1.4` と
+`2.35` です。
+
 ## 描画の仕組み
 
 Node は TTS、WAV/RMS 解析、まばたき時刻、背景、チャプター、字幕、ffmpeg を
@@ -140,6 +146,10 @@ Node は TTS、WAV/RMS 解析、まばたき時刻、背景、チャプター、
 PNG として取得し、`@napi-rs/canvas` でオーバーレイと合成して RGBA を ffmpeg へ
 送ります。
 
+光量単位と VRM ランタイムを再現可能にするため、描画スタックは three.js
+`0.182.0`、`@pixiv/three-vrm` `3.4.5`、
+`@pixiv/three-vrm-animation` `3.4.5` の組み合わせへ固定しています。
+
 縦型キャンバスのカメラ距離はモデルの表示高を基準にします。横方向の超過を
 検出した場合は小さな上限付き安全補正だけを加え、幅広いバインド姿勢によって
 ニュース映像が全身構図へ戻ることを防ぎます。
@@ -147,7 +157,7 @@ PNG として取得し、`@napi-rs/canvas` でオーバーレイと合成して 
 Chromium はまず SwiftShader 指定で起動し、WebGL 初期化に失敗した場合だけ既定 GL
 で再試行します。最終 JSON には使用した GL モードとブラウザフレームの平均時間を
 出力します。このサンプルの基準レンダリングでは、初回フレームのウォームアップを
-含めて `240.8` ms/frame でした。Linux CI では Playwright Chromium とシステム依存が
+含めて `249.2` ms/frame でした。Linux CI では Playwright Chromium とシステム依存が
 必要です。権限のある
 コンテナでは通常 `npx playwright install --with-deps chromium` を使います。
 

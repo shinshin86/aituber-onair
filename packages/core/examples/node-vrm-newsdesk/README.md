@@ -132,6 +132,11 @@ Portrait renders default to a bust-up camera. Optional
 the model upward). The defaults are `0.39` and `0.845`. These camera controls
 run before the existing `avatarLayout` scale and fractional anchors.
 
+The renderer uses a soft ambient fill plus a directional key tuned for
+three.js r182's physically based light units. Per-model overrides are
+available as `avatarLighting.ambientIntensity` and
+`avatarLighting.directionalIntensity`; the defaults are `1.4` and `2.35`.
+
 ## How rendering works
 
 Node remains responsible for TTS, WAV/RMS analysis, blink timing, backgrounds,
@@ -142,6 +147,10 @@ animation by a fixed time step, applies the `aa` and `blink` expressions, and
 renders a transparent 1080x1920 frame. Node captures the frame as PNG and
 composites it with `@napi-rs/canvas` before streaming RGBA to ffmpeg.
 
+The rendering stack is pinned together at three.js `0.182.0`,
+`@pixiv/three-vrm` `3.4.5`, and `@pixiv/three-vrm-animation` `3.4.5` so its
+lighting units and VRM runtime remain reproducible.
+
 On portrait canvases the camera distance is driven by visible model height.
 A detected horizontal overflow can add a small bounded safety pullback, but a
 wide bind pose cannot force the news shot back to a full-body composition.
@@ -150,7 +159,7 @@ Chromium starts with SwiftShader flags for a predictable headless WebGL path
 and retries with default GL if WebGL initialization fails. The final JSON
 summary reports the selected GL mode and average browser-frame time. On the
 reference render used to validate this example, the measured result was
-`240.8` ms/frame (including the first-frame warm-up). Linux CI needs the
+`249.2` ms/frame (including the first-frame warm-up). Linux CI needs the
 Playwright Chromium binary
 and its system dependencies; `npx playwright install --with-deps chromium` is
 the usual container setup when elevated package installation is available.

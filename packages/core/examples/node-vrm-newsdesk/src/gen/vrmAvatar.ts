@@ -28,6 +28,10 @@ export interface VrmAvatarDiagnostics {
     lookAtHeightRatio: number;
     portraitWidthAdjusted: boolean;
   };
+  avatarLighting: {
+    ambientIntensity: number;
+    directionalIntensity: number;
+  };
   launchMode: 'swiftshader' | 'default-gl';
   captureMode: 'playwright-png-screenshot';
 }
@@ -78,6 +82,10 @@ interface BrowserLoadDiagnostics {
     visibleHeightRatio: number;
     lookAtHeightRatio: number;
     portraitWidthAdjusted: boolean;
+  };
+  avatarLighting: {
+    ambientIntensity: number;
+    directionalIntensity: number;
   };
 }
 
@@ -184,7 +192,13 @@ async function launchSession(
         typeof (window as unknown as { load?: unknown }).load === 'function',
     );
     const loaded = await page.evaluate(
-      async ({ width, height, hasAnimation, avatarFraming }) => {
+      async ({
+        width,
+        height,
+        hasAnimation,
+        avatarFraming,
+        avatarLighting,
+      }) => {
         const harnessWindow = window as unknown as {
           load(options: {
             vrmUrl: string;
@@ -195,6 +209,10 @@ async function launchSession(
               visibleHeightRatio: number;
               lookAtHeightRatio: number;
             };
+            avatarLighting: {
+              ambientIntensity: number;
+              directionalIntensity: number;
+            };
           }): Promise<BrowserLoadDiagnostics>;
         };
         return harnessWindow.load({
@@ -203,6 +221,7 @@ async function launchSession(
           width,
           height,
           avatarFraming,
+          avatarLighting,
         });
       },
       {
@@ -210,6 +229,7 @@ async function launchSession(
         height: config.height,
         hasAnimation: Boolean(config.avatarAnimation),
         avatarFraming: config.avatarFraming,
+        avatarLighting: config.avatarLighting,
       },
     );
     return {

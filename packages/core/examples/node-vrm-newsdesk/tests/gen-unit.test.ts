@@ -27,6 +27,10 @@ const diagnostics: VrmAvatarDiagnostics = {
     lookAtHeightRatio: 0.845,
     portraitWidthAdjusted: true,
   },
+  avatarLighting: {
+    ambientIntensity: 1.4,
+    directionalIntensity: 2.35,
+  },
   launchMode: 'swiftshader',
   captureMode: 'playwright-png-screenshot',
 };
@@ -143,6 +147,10 @@ function createConfig(): RenderConfig {
     avatarFraming: {
       visibleHeightRatio: 0.39,
       lookAtHeightRatio: 0.845,
+    },
+    avatarLighting: {
+      ambientIntensity: 1.4,
+      directionalIntensity: 2.35,
     },
     motion: { intensity: 2 },
     blinkSeed: 42,

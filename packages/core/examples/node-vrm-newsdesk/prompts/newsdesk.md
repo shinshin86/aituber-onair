@@ -24,6 +24,7 @@ Analyze the document before writing. Return this exact outer structure:
     "background": { "color": "..." },
     "avatarLayout": { "scale": 1, "x": 0, "y": 0 },
     "avatarFraming": { "visibleHeightRatio": 0.39, "lookAtHeightRatio": 0.845 },
+    "avatarLighting": { "ambientIntensity": 1.4, "directionalIntensity": 2.35 },
     "motion": { "intensity": 1 },
     "blinkSeed": 1,
     "lines": []
@@ -91,6 +92,10 @@ The `script` object must follow this schema example:
   "avatarFraming": {
     "visibleHeightRatio": 0.39,
     "lookAtHeightRatio": 0.845
+  },
+  "avatarLighting": {
+    "ambientIntensity": 1.4,
+    "directionalIntensity": 2.35
   },
   "motion": {
     "intensity": 1

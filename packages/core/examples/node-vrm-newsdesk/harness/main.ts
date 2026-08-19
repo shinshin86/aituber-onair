@@ -23,7 +23,10 @@ import {
   createVRMAnimationClip,
   type VRMAnimation,
 } from '@pixiv/three-vrm-animation';
-import { DEFAULT_AVATAR_FRAMING } from '../src/types.js';
+import {
+  DEFAULT_AVATAR_FRAMING,
+  DEFAULT_AVATAR_LIGHTING,
+} from '../src/types.js';
 
 const DEFAULT_VISIBLE_WIDTH_RATIO = 0.72;
 const PORTRAIT_MAX_WIDTH_DISTANCE_RATIO = 1.12;
@@ -39,6 +42,10 @@ interface HarnessLoadOptions {
   avatarFraming?: {
     visibleHeightRatio?: number;
     lookAtHeightRatio?: number;
+  };
+  avatarLighting?: {
+    ambientIntensity?: number;
+    directionalIntensity?: number;
   };
 }
 
@@ -62,6 +69,10 @@ export interface HarnessDiagnostics {
     visibleHeightRatio: number;
     lookAtHeightRatio: number;
     portraitWidthAdjusted: boolean;
+  };
+  avatarLighting: {
+    ambientIntensity: number;
+    directionalIntensity: number;
   };
 }
 
@@ -156,8 +167,14 @@ async function load(options: HarnessLoadOptions): Promise<HarnessDiagnostics> {
     0.1,
     30,
   );
-  const ambientLight = new AmbientLight(0xffffff, 1.0);
-  const directionalLight = new DirectionalLight(0xffffff, 0.9);
+  const ambientIntensity =
+    options.avatarLighting?.ambientIntensity ??
+    DEFAULT_AVATAR_LIGHTING.ambientIntensity;
+  const directionalIntensity =
+    options.avatarLighting?.directionalIntensity ??
+    DEFAULT_AVATAR_LIGHTING.directionalIntensity;
+  const ambientLight = new AmbientLight(0xffffff, ambientIntensity);
+  const directionalLight = new DirectionalLight(0xffffff, directionalIntensity);
   directionalLight.position.set(1.0, 1.8, 1.2);
   scene.add(ambientLight, directionalLight);
 
@@ -254,6 +271,10 @@ async function load(options: HarnessLoadOptions): Promise<HarnessDiagnostics> {
       visibleHeightRatio,
       lookAtHeightRatio,
       portraitWidthAdjusted,
+    },
+    avatarLighting: {
+      ambientIntensity,
+      directionalIntensity,
     },
   };
 }
