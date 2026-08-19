@@ -38,6 +38,18 @@ export const DEFAULT_AVATAR_FRAMING = {
   lookAtHeightRatio: 0.845,
 } as const;
 
+export interface ScriptAvatarLighting {
+  /** Strength of the shadow-filling ambient light. */
+  ambientIntensity?: number;
+  /** Strength of the directional key light. */
+  directionalIntensity?: number;
+}
+
+export const DEFAULT_AVATAR_LIGHTING = {
+  ambientIntensity: 1.4,
+  directionalIntensity: 2.35,
+} as const;
+
 export interface ScriptMotion {
   /** VRMA playback-rate multiplier clamped to 0..3. */
   intensity?: number;
@@ -74,6 +86,7 @@ export interface NewsdeskScript {
   telop?: string;
   avatarLayout?: ScriptAvatarLayout;
   avatarFraming?: ScriptAvatarFraming;
+  avatarLighting?: ScriptAvatarLighting;
   motion?: ScriptMotion;
   blinkSeed?: number;
   lines: ScriptLine[];
@@ -98,6 +111,10 @@ export interface RenderConfig {
   avatarFraming: {
     visibleHeightRatio: number;
     lookAtHeightRatio: number;
+  };
+  avatarLighting: {
+    ambientIntensity: number;
+    directionalIntensity: number;
   };
   motion: { intensity: number };
   blinkSeed: number;

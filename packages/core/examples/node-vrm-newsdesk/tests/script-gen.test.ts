@@ -45,6 +45,10 @@ const validScript: NewsdeskScript = {
     visibleHeightRatio: 0.39,
     lookAtHeightRatio: 0.845,
   },
+  avatarLighting: {
+    ambientIntensity: 1.4,
+    directionalIntensity: 2.35,
+  },
   motion: { intensity: 1 },
   blinkSeed: 42,
   lines: [
@@ -187,6 +191,24 @@ describe('strict schema and provenance', () => {
       }).join('\n'),
     ).toMatch(
       /visibleHeightRatio must be at least 0.1|lookAtHeightRatio must be at most 1.5|extra is not allowed/,
+    );
+  });
+
+  it('validates optional avatar lighting overrides', () => {
+    expect(
+      validateScript({ ...validScript, avatarLighting: undefined }),
+    ).toEqual([]);
+    expect(
+      validateScript({
+        ...validScript,
+        avatarLighting: {
+          ambientIntensity: -0.1,
+          directionalIntensity: 10.1,
+          extra: true,
+        },
+      }).join('\n'),
+    ).toMatch(
+      /ambientIntensity must be at least 0|directionalIntensity must be at most 10|extra is not allowed/,
     );
   });
 

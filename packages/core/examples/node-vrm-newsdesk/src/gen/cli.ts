@@ -10,7 +10,7 @@ import type {
   ScriptVoice,
   TimedText,
 } from '../types.js';
-import { DEFAULT_AVATAR_FRAMING } from '../types.js';
+import { DEFAULT_AVATAR_FRAMING, DEFAULT_AVATAR_LIGHTING } from '../types.js';
 import {
   concatWavs,
   createMouthValues,
@@ -491,6 +491,10 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       avatarFraming: {
         ...DEFAULT_AVATAR_FRAMING,
         ...script.avatarFraming,
+      },
+      avatarLighting: {
+        ...DEFAULT_AVATAR_LIGHTING,
+        ...script.avatarLighting,
       },
       motion: {
         intensity: normalizeMotionIntensity(script.motion?.intensity),

@@ -24,6 +24,10 @@ are resolved relative to the script file.
     "visibleHeightRatio": 0.39,
     "lookAtHeightRatio": 0.845
   },
+  "avatarLighting": {
+    "ambientIntensity": 1.4,
+    "directionalIntensity": 2.35
+  },
   "motion": { "intensity": 1 },
   "blinkSeed": 42,
   "lines": [
@@ -56,6 +60,11 @@ are resolved relative to the script file.
   `lookAtHeightRatio` moves the model upward. Valid ranges are `0.1`–`2` and
   `0`–`1.5`, respectively. `avatarLayout` is applied afterward and keeps its
   existing scale/anchor semantics.
+- `avatarLighting` (optional): model-light overrides for the soft ambient fill
+  and directional key. The defaults are `ambientIntensity: 1.4` and
+  `directionalIntensity: 2.35`; each accepts `0`–`10`. Lighting units follow
+  three.js r182's physically based defaults, so values copied from pre-r155
+  legacy-light projects will usually be too dim.
 - `motion.intensity`: VRMA playback-rate multiplier clamped from 0 through 3;
   `0` freezes the animation while lip-sync and blinking continue.
 - `blinkSeed`: deterministic blink schedule seed.

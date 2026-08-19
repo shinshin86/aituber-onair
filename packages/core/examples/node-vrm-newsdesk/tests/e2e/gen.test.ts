@@ -125,6 +125,10 @@ it('renders changing VRM frames into a vertical H.264/AAC video', async () => {
         lookAtHeightRatio: number;
         portraitWidthAdjusted: boolean;
       };
+      avatarLighting: {
+        ambientIntensity: number;
+        directionalIntensity: number;
+      };
     };
   };
 
@@ -142,6 +146,10 @@ it('renders changing VRM frames into a vertical H.264/AAC video', async () => {
     visibleHeightRatio: 0.39,
     lookAtHeightRatio: 0.845,
     portraitWidthAdjusted: true,
+  });
+  expect(summary.avatarDiagnostics.avatarLighting).toEqual({
+    ambientIntensity: 1.4,
+    directionalIntensity: 2.35,
   });
 
   const firstTimings = await readFile(timingsPath, 'utf8');

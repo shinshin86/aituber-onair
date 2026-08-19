@@ -12,6 +12,7 @@ const TOP_LEVEL_FIELDS = new Set([
   'telop',
   'avatarLayout',
   'avatarFraming',
+  'avatarLighting',
   'motion',
   'blinkSeed',
   'lines',
@@ -183,6 +184,31 @@ function validateAvatarFraming(framing: unknown, errors: string[]): void {
   );
 }
 
+function validateAvatarLighting(lighting: unknown, errors: string[]): void {
+  if (!isObject(lighting)) {
+    errors.push('script.avatarLighting must be an object.');
+    return;
+  }
+  addUnknownFieldErrors(
+    lighting,
+    new Set(['ambientIntensity', 'directionalIntensity']),
+    'script.avatarLighting',
+    errors,
+  );
+  validateOptionalNumber(
+    lighting.ambientIntensity,
+    'script.avatarLighting.ambientIntensity',
+    errors,
+    { min: 0, max: 10 },
+  );
+  validateOptionalNumber(
+    lighting.directionalIntensity,
+    'script.avatarLighting.directionalIntensity',
+    errors,
+    { min: 0, max: 10 },
+  );
+}
+
 function validateMotion(motion: unknown, errors: string[]): void {
   if (!isObject(motion)) {
     errors.push('script.motion must be an object.');
@@ -263,6 +289,8 @@ export function validateScript(script: unknown): string[] {
   validateAvatarLayout(script.avatarLayout, errors);
   if (script.avatarFraming !== undefined)
     validateAvatarFraming(script.avatarFraming, errors);
+  if (script.avatarLighting !== undefined)
+    validateAvatarLighting(script.avatarLighting, errors);
   requireFiniteNumber(script.blinkSeed, 'script.blinkSeed', errors);
   validateMotion(script.motion, errors);
   validateLines(script.lines, errors);
