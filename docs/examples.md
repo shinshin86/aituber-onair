@@ -202,6 +202,9 @@ npm run dev
 - [`packages/core/examples/node-psd-newsdesk`](../packages/core/examples/node-psd-newsdesk):
   Node.js pipeline from source text through Core chat and voice to a chaptered
   vertical static PSDTool avatar news video.
+- [`packages/core/examples/node-vrm-newsdesk`](../packages/core/examples/node-vrm-newsdesk):
+  Node.js pipeline that drives a headless-Chromium VRM renderer and produces a
+  chaptered vertical avatar news video with Core chat and voice.
 
 ## Chat Examples
 
