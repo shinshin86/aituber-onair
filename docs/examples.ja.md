@@ -202,6 +202,9 @@ npm run dev
 - [`packages/core/examples/node-psd-newsdesk`](../packages/core/examples/node-psd-newsdesk):
   ソーステキストから Core のチャット・音声を通して、チャプター付き縦型
   静的 PSDTool アバターニュース動画を作る Node.js パイプライン。
+- [`packages/core/examples/node-vrm-newsdesk`](../packages/core/examples/node-vrm-newsdesk):
+  ヘッドレス Chromium で VRM を描画し、Core のチャット・音声を通して
+  チャプター付き縦型アバターニュース動画を作る Node.js パイプライン。
 
 ## Chat サンプル
 
