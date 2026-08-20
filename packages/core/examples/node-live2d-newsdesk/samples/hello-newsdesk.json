@@ -1,0 +1,45 @@
+{
+  "avatar": "/path/to/live2d_models/model/runtime/model.model3.json",
+  "cubismCore": "/path/to/CubismSdkForWeb/Core/live2dcubismcore.min.js",
+  "voice": {
+    "engine": "aituber-voice",
+    "options": {
+      "engineType": "aivisSpeech",
+      "speaker": "888753760"
+    }
+  },
+  "leadIn": 0.05,
+  "leadOut": 0.08,
+  "defaultPauseAfter": 0.03,
+  "background": {
+    "color": "#20242c"
+  },
+  "avatarLayout": {
+    "scale": 1,
+    "x": 0.5,
+    "y": 0.5
+  },
+  "avatarMotion": {
+    "idle": "Idle"
+  },
+  "motion": {
+    "intensity": 1
+  },
+  "blinkSeed": 42,
+  "lines": [
+    {
+      "text": "こんにちは。",
+      "chapter": "ごあいさつ",
+      "pauseAfter": 0.03
+    },
+    {
+      "text": "ここは AITuber OnAir のニュースデスク。",
+      "chapter": "ニュースデスクとは",
+      "pauseAfter": 0.03
+    },
+    {
+      "text": "新しいリリースを私がお知らせします。",
+      "pauseAfter": 0.03
+    }
+  ]
+}

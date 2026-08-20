@@ -1,0 +1,38 @@
+{
+  "name": "@aituber-onair/core-example-node-live2d-newsdesk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --project tsconfig.dev.json",
+    "test": "npm run typecheck && vitest run",
+    "test:e2e": "npm run build && vitest run --config vitest.e2e.config.ts",
+    "test:watch": "vitest",
+    "fmt": "biome format . --write",
+    "fmt:check": "biome format .",
+    "lint": "biome lint .",
+    "script-gen": "node dist/script-gen.cjs",
+    "gen": "node dist/gen.cjs"
+  },
+  "dependencies": {
+    "@aituber-onair/core": "file:../..",
+    "@mozilla/readability": "^0.6.0",
+    "@napi-rs/canvas": "^1.0.3",
+    "@openai/codex-sdk": "^0.146.0",
+    "linkedom": "^0.18.13",
+    "pixi-live2d-display-lipsyncpatch": "github:shinshin86/pixi-live2d-display-lipsyncpatch#release/v0.5.0-ls-7-noMaskFix",
+    "pixi.js": "^7.4.3",
+    "playwright": "^1.55.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^22.15.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.3",
+    "vitest": "^1.6.1"
+  }
+}

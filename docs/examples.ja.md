@@ -205,6 +205,9 @@ npm run dev
 - [`packages/core/examples/node-vrm-newsdesk`](../packages/core/examples/node-vrm-newsdesk):
   ヘッドレス Chromium で VRM を描画し、Core のチャット・音声を通して
   チャプター付き縦型アバターニュース動画を作る Node.js パイプライン。
+- [`packages/core/examples/node-live2d-newsdesk`](../packages/core/examples/node-live2d-newsdesk):
+  ヘッドレス Chromium で Cubism 4 Live2D を描画し、Core のチャット・音声を
+  通してチャプター付き縦型アバターニュース動画を作る Node.js パイプライン。
 
 ## Chat サンプル
 
