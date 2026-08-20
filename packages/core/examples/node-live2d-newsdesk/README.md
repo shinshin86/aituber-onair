@@ -45,8 +45,8 @@ local drop inside this example, `models/` and
 `public/scripts/live2dcubismcore.min.js` is also gitignored and can be used by
 an explicit path.
 
-Hiyori is a Live2D sample character. Publishing a video made with Hiyori must
-follow both the
+If you use one of Live2D's official sample models, publishing a video made
+with it must follow both the
 [Free Material License Agreement](https://www.live2d.com/eula/live2d-free-material-license-agreement_en.html)
 and the
 [Terms of Use for Live2D Cubism Sample Data](https://www.live2d.com/eula/live2d-sample-model-terms_en.html),
@@ -151,7 +151,7 @@ npm run test:e2e
 ```
 
 The unit suite uses a fake frame source and requires no proprietary files. The
-E2E suite reads `LIVE2D_CORE_PATH` and `LIVE2D_MODEL_PATH`. Its local defaults
-target the sibling React example's Core drop and a Hiyori model in the current
-user's Documents directory. If either file is absent, the E2E test skips with
-a clear reason instead of downloading or bundling the asset.
+E2E suite reads `LIVE2D_CORE_PATH` and `LIVE2D_MODEL_PATH`. The Core path
+defaults to the sibling React example's gitignored drop; the model path has no
+default. If `LIVE2D_MODEL_PATH` is unset or either file is absent, the E2E
+test skips with a clear reason instead of downloading or bundling the asset.

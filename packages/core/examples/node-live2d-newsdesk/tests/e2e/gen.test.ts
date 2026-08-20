@@ -2,7 +2,6 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 
@@ -27,19 +26,12 @@ const cubismCorePath =
     projectRoot,
     '../react-live2d-app/public/scripts/live2dcubismcore.min.js',
   );
-const live2DModelPath =
-  process.env.LIVE2D_MODEL_PATH ||
-  path.join(
-    os.homedir(),
-    'Documents',
-    'live2d_models',
-    'hiyori_pro_jp',
-    'runtime',
-    'hiyori_pro_t11.model3.json',
-  );
+const live2DModelPath = process.env.LIVE2D_MODEL_PATH || '';
 const missingAssets = [
   !existsSync(cubismCorePath) ? 'LIVE2D_CORE_PATH' : null,
-  !existsSync(live2DModelPath) ? 'LIVE2D_MODEL_PATH' : null,
+  live2DModelPath === '' || !existsSync(live2DModelPath)
+    ? 'LIVE2D_MODEL_PATH'
+    : null,
 ].filter((value): value is string => value !== null);
 
 interface CommandResult {
