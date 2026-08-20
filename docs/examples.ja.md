@@ -208,6 +208,9 @@ npm run dev
 - [`packages/core/examples/node-live2d-newsdesk`](../packages/core/examples/node-live2d-newsdesk):
   ヘッドレス Chromium で Cubism 4 Live2D を描画し、Core のチャット・音声を
   通してチャプター付き縦型アバターニュース動画を作る Node.js パイプライン。
+- [`packages/core/examples/node-inochi2d-newsdesk`](../packages/core/examples/node-inochi2d-newsdesk):
+  決定的な仮想時計の下で Inochi2D WASM bridge を駆動し、チャプター付き
+  縦型ニュース動画を作る Node.js パイプライン。
 
 ## Chat サンプル
 
