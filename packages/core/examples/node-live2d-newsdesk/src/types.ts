@@ -41,6 +41,9 @@ export const DEFAULT_AVATAR_FRAMING = {
   y: 0.4,
 } as const;
 
+export const DEFAULT_AVATAR_WARMUP_SECONDS = 3;
+export const MAX_AVATAR_WARMUP_SECONDS = 30;
+
 export interface ScriptAvatarMotion {
   /** Live2D motion group whose first entry is used as deterministic idle. */
   idle?: string;
@@ -83,6 +86,8 @@ export interface NewsdeskScript {
   avatarLayout?: ScriptAvatarLayout;
   avatarFraming?: ScriptAvatarFraming;
   avatarMotion?: ScriptAvatarMotion;
+  /** Uncaptured fixed-step settle time before video frame zero. */
+  avatarWarmupSeconds?: number;
   motion?: ScriptMotion;
   blinkSeed?: number;
   lines: ScriptLine[];
@@ -110,6 +115,7 @@ export interface RenderConfig {
     y: number;
   };
   avatarMotion: { idle: string | null };
+  avatarWarmupSeconds: number;
   motion: { intensity: number };
   blinkSeed: number;
   /** Absolute Cubism 4 model3.json file. */

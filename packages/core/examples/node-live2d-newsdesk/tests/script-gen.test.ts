@@ -43,6 +43,7 @@ const validScript: NewsdeskScript = {
   avatarLayout: { scale: 1, x: 0.5, y: 0.5 },
   avatarFraming: { scale: 2.5, x: 0.5, y: 0.4 },
   avatarMotion: { idle: 'Idle' },
+  avatarWarmupSeconds: 3,
   motion: { intensity: 1 },
   blinkSeed: 42,
   lines: [
@@ -202,6 +203,27 @@ describe('strict schema and provenance', () => {
     ).toMatch(
       /avatar must point to a .model3.json|cubismCore must be a non-empty string|idle must be a non-empty string|extra is not allowed/,
     );
+  });
+
+  it('validates the optional avatar warm-up duration strictly', () => {
+    expect(
+      validateScript({ ...validScript, avatarWarmupSeconds: undefined }),
+    ).toEqual([]);
+    expect(validateScript({ ...validScript, avatarWarmupSeconds: 0 })).toEqual(
+      [],
+    );
+    expect(validateScript({ ...validScript, avatarWarmupSeconds: 30 })).toEqual(
+      [],
+    );
+    expect(
+      validateScript({ ...validScript, avatarWarmupSeconds: -0.01 }).join('\n'),
+    ).toMatch(/avatarWarmupSeconds must be at least 0/);
+    expect(
+      validateScript({ ...validScript, avatarWarmupSeconds: 30.01 }).join('\n'),
+    ).toMatch(/avatarWarmupSeconds must be at most 30/);
+    expect(
+      validateScript({ ...validScript, avatarWarmupSeconds: '3' }).join('\n'),
+    ).toMatch(/avatarWarmupSeconds must be a finite number/);
   });
 
   it('checks displayed numeric tokens against source plus focus', () => {

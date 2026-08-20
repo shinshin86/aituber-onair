@@ -9,8 +9,10 @@ import {
 import {
   resolveModelAssetPath,
   type Live2DAvatarDiagnostics,
+  type Live2DFrameDriver,
   type Live2DFrameInput,
   type Live2DFrameSource,
+  warmUpLive2DAvatar,
 } from '../src/gen/live2dAvatar.js';
 import { expandHomePath, resolveFrom } from '../src/paths.js';
 import type { RenderConfig } from '../src/types.js';
@@ -27,6 +29,13 @@ const diagnostics: Live2DAvatarDiagnostics = {
     x: 0.5,
     y: 0.4,
     renderedScale: 0.5,
+  },
+  avatarWarmup: {
+    configuredSeconds: 3,
+    settledSeconds: 3,
+    frames: 30,
+    fixedDeltaSeconds: 0.1,
+    capturedFrames: 0,
   },
   launchMode: 'swiftshader',
   captureMode: 'playwright-png-screenshot',
@@ -90,6 +99,39 @@ describe('local Live2D paths', () => {
 });
 
 describe('Live2D frame-source contract', () => {
+  it('advances fixed warm-up steps without capturing video frames', async () => {
+    const updates: Array<Omit<Live2DFrameInput, 'frameNumber'>> = [];
+    let captures = 0;
+    const driver: Live2DFrameDriver = {
+      async update(input) {
+        updates.push(input);
+      },
+      async capture() {
+        captures += 1;
+        return Buffer.alloc(0);
+      },
+    };
+
+    const warmup = await warmUpLive2DAvatar(driver, {
+      seconds: 0.25,
+      fps: 10,
+    });
+
+    expect(warmup).toEqual({
+      configuredSeconds: 0.25,
+      settledSeconds: 0.3,
+      frames: 3,
+      fixedDeltaSeconds: 0.1,
+      capturedFrames: 0,
+    });
+    expect(updates).toEqual([
+      { time: 0.1, deltaSeconds: 0.1, mouth: 0, eyesClosed: false },
+      { time: 0.2, deltaSeconds: 0.1, mouth: 0, eyesClosed: false },
+      { time: 0.3, deltaSeconds: 0.1, mouth: 0, eyesClosed: false },
+    ]);
+    expect(captures).toBe(0);
+  });
+
   it('passes mouth, blink, and fixed-step animation values sequentially', async () => {
     const inputs: Live2DFrameInput[] = [];
     const source = await createFakeFrameSource(inputs);
@@ -174,6 +216,7 @@ function createConfig(): RenderConfig {
       y: 0.4,
     },
     avatarMotion: { idle: 'Idle' },
+    avatarWarmupSeconds: 3,
     motion: { intensity: 2 },
     blinkSeed: 42,
     avatar: '/model/avatar.model3.json',

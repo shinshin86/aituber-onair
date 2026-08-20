@@ -1,4 +1,8 @@
-import type { NewsdeskScript, ScriptLine } from '../types.js';
+import {
+  MAX_AVATAR_WARMUP_SECONDS,
+  type NewsdeskScript,
+  type ScriptLine,
+} from '../types.js';
 
 const TOP_LEVEL_FIELDS = new Set([
   'avatar',
@@ -13,6 +17,7 @@ const TOP_LEVEL_FIELDS = new Set([
   'avatarLayout',
   'avatarFraming',
   'avatarMotion',
+  'avatarWarmupSeconds',
   'motion',
   'blinkSeed',
   'lines',
@@ -293,6 +298,12 @@ export function validateScript(script: unknown): string[] {
     validateAvatarFraming(script.avatarFraming, errors);
   if (script.avatarMotion !== undefined)
     validateAvatarMotion(script.avatarMotion, errors);
+  validateOptionalNumber(
+    script.avatarWarmupSeconds,
+    'script.avatarWarmupSeconds',
+    errors,
+    { min: 0, max: MAX_AVATAR_WARMUP_SECONDS },
+  );
   requireFiniteNumber(script.blinkSeed, 'script.blinkSeed', errors);
   validateMotion(script.motion, errors);
   validateLines(script.lines, errors);
