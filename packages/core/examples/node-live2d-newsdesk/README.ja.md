@@ -43,7 +43,7 @@ Cubism Core とモデルにはそれぞれのライセンスがあるため、�
 隣接する React 例の `public/scripts/live2dcubismcore.min.js` も gitignore 済みで、
 明示的なパスを指定すれば利用できます。
 
-Hiyori は Live2D のサンプルキャラクターです。Hiyori を使った動画を公開する場合は
+Live2D 公式のサンプルモデルを利用する場合、そのモデルで作った動画の公開時は
 [無償提供マテリアルの使用許諾契約書](https://www.live2d.com/eula/live2d-free-material-license-agreement.html)
 と
 [Live2D Cubism サンプルデータ利用条件](https://www.live2d.com/eula/live2d-sample-model-terms.html)
@@ -141,6 +141,7 @@ npm run test:e2e
 ```
 
 単体テストは偽フレームソースを使うため、プロプライエタリファイルは不要です。E2E は
-`LIVE2D_CORE_PATH` と `LIVE2D_MODEL_PATH` を読みます。既定では隣接 React 例の
-Core と、現在ユーザーの Documents 内の Hiyori を探し、どちらかがなければ理由を
-表示して skip します。ファイルをダウンロードしたり同梱したりはしません。
+`LIVE2D_CORE_PATH` と `LIVE2D_MODEL_PATH` を読みます。Core の既定は隣接 React 例の
+gitignore 済みドロップで、モデルパスに既定はありません。`LIVE2D_MODEL_PATH` が
+未設定、またはどちらかのファイルがなければ、理由を表示して skip します。
+ファイルをダウンロードしたり同梱したりはしません。
