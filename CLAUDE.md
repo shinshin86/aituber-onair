@@ -114,7 +114,11 @@ Usage:
   the engine selector, persisted settings type/defaults, settings UI,
   `VoiceServiceOptions` wiring, README mention, lockfile metadata, and example
   build. If the provider has a voice-list API, surface it as a selectable list
-  so users do not have to type opaque voice IDs.
+  so users do not have to type opaque voice IDs. The Node newsdesk examples
+  (`packages/core/examples/node-*-newsdesk`) pass `VoiceServiceOptions`
+  through unchanged and have no engine selector or persisted settings, so for
+  them a voice upgrade only needs the embedded-core lockfile refresh, plus a
+  README touch-up when a sample or doc names a specific engine.
 - Invoke explicitly with `$wrap-tts-as-openai-compatible`, or use prompts like
   "wrap a TTS engine as OpenAI-compatible", "build an OpenAI-compatible speech
   server", or "set up a Colab TTS compatibility server".

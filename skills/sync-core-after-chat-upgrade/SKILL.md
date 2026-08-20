@@ -59,6 +59,13 @@ Collect missing inputs before editing:
      requires defaults, model selectors, settings UI, or docs updates. These
      apps usually use free-form model input rather than fixed chat model lists,
      so code changes are only needed when behavior or defaults must change.
+   - The Node newsdesk examples (`packages/core/examples/node-purupuru-newsdesk`,
+     `node-pngtuber-newsdesk`, `node-psd-newsdesk`, `node-vrm-newsdesk`,
+     `node-live2d-newsdesk`, `node-inochi2d-newsdesk`) pass provider names and
+     options straight through to Core, so chat changes rarely need code edits.
+     Check `src/script-gen/chat.ts` provider handling and the README provider
+     notes only when providers are added, removed, or renamed, or when the
+     Core Agent SDK entry (`@aituber-onair/core/agent`) changes behavior.
 5. Update docs when `update_docs` is `true`:
    - `packages/core/README.md`
    - `packages/core/README_ja.md`
@@ -83,6 +90,12 @@ Collect missing inputs before editing:
      - `packages/core/examples/react-vrm-app/package-lock.json`
      - `packages/core/examples/react-live2d-app/package-lock.json`
      - `packages/core/examples/coding-agent/package-lock.json`
+     - `packages/core/examples/node-purupuru-newsdesk/package-lock.json`
+     - `packages/core/examples/node-pngtuber-newsdesk/package-lock.json`
+     - `packages/core/examples/node-psd-newsdesk/package-lock.json`
+     - `packages/core/examples/node-vrm-newsdesk/package-lock.json`
+     - `packages/core/examples/node-live2d-newsdesk/package-lock.json`
+     - `packages/core/examples/node-inochi2d-newsdesk/package-lock.json`
    - After updating, search all `packages/core/examples/*/package-lock.json`
      files for stale `@aituber-onair/core` versions or stale
      `@aituber-onair/chat` dependency ranges.
@@ -96,6 +109,9 @@ Collect missing inputs before editing:
      - `npm --prefix packages/core/examples/react-vrm-app run build`
      - `npm --prefix packages/core/examples/react-live2d-app run build`
      - `npm --prefix packages/core/examples/coding-agent run build`
+   - If any Node newsdesk example or its lockfile changed, run
+     `npm --prefix packages/core/examples/<example> run build` for each
+     changed one (all six share the same structure).
    - Starter/template smoke tests must install the published Chat dependency
      from npm while using the local Core release-candidate tarball. Do not
      inject a local Chat tarball: doing so can hide an unpublished or incorrect
@@ -118,6 +134,8 @@ npm --prefix packages/core/examples/react-pet-app run build
 npm --prefix packages/core/examples/react-vrm-app run build
 npm --prefix packages/core/examples/react-live2d-app run build
 npm --prefix packages/core/examples/coding-agent run build
+# For each changed Node newsdesk example (node-*-newsdesk):
+npm --prefix packages/core/examples/node-purupuru-newsdesk run build
 ```
 
 ## Acceptance Criteria

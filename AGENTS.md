@@ -131,7 +131,12 @@
   engine selector, persisted settings type/defaults, settings UI,
   `VoiceServiceOptions` wiring, README mention, lockfile metadata, and example
   build. Cloud voice providers that expose voice-list APIs should provide a
-  selectable voice list instead of requiring users to type opaque voice IDs.
+  selectable voice list instead of requiring users to type opaque voice IDs. The
+  Node newsdesk examples (`packages/core/examples/node-*-newsdesk`) pass
+  `VoiceServiceOptions` through unchanged and have no engine selector or
+  persisted settings, so for them a voice upgrade only needs the embedded-core
+  lockfile refresh, plus a README touch-up when a sample or doc names a
+  specific engine.
 - When requests match "wrap a TTS engine as OpenAI-compatible", "build an OpenAI-compatible speech server", "expose <provider> as `/v1/audio/speech`", or "set up a Colab TTS compatibility server", follow `skills/wrap-tts-as-openai-compatible/SKILL.md`.
 - For `wrap-tts-as-openai-compatible`, first classify the upstream TTS as direct Python API, CLI/file-output, or internal runtime plus save helper, then validate the wrapper from `@aituber-onair/voice` when applicable.
 - Prefer this skill for practical local TTS engines that cleanly support one-shot WAV generation. Do not force research-first or streaming-first systems into this workflow.
