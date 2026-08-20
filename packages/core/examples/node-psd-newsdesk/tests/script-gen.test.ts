@@ -31,6 +31,7 @@ const projectRoot = path.resolve(testDirectory, '..');
 
 const validScript: NewsdeskScript = {
   avatar: '../../assets/sample-static.psd',
+  avatarMode: 'static',
   voice: {
     engine: 'sine',
     options: { frequency: 440, secondsPerChar: 0.01, minDuration: 0.2 },
@@ -183,6 +184,16 @@ describe('strict schema and provenance', () => {
         avatarRoles: { mouthOpen: '', unexpected: 'Layer' },
       }).join('\n'),
     ).toMatch(/mouthOpen must be a non-empty string|unexpected is not allowed/);
+  });
+
+  it('accepts only auto, static, or motion avatar modes', () => {
+    expect(validateScript({ ...validScript, avatarMode: 'auto' })).toEqual([]);
+    expect(validateScript({ ...validScript, avatarMode: 'motion' })).toEqual(
+      [],
+    );
+    expect(
+      validateScript({ ...validScript, avatarMode: 'animated' }).join('\n'),
+    ).toMatch(/avatarMode must be "auto", "static", or "motion"/);
   });
 
   it('checks displayed numeric tokens against source plus focus', () => {

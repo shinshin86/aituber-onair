@@ -6,6 +6,8 @@
  */
 
 export type VoiceEngineName = 'sine' | 'say' | 'aituber-voice';
+export type AvatarMode = 'auto' | 'static' | 'motion';
+export type ResolvedAvatarMode = Exclude<AvatarMode, 'auto'>;
 
 export interface ScriptVoice {
   engine: VoiceEngineName;
@@ -60,6 +62,8 @@ export interface ScriptLine {
 export interface NewsdeskScript {
   /** PSD avatar path, relative to the script file. */
   avatar?: string;
+  /** Select Anime2.5DRig motion detection or the static PSDTool path. */
+  avatarMode?: AvatarMode;
   /** Optional exact layer paths that override automatic role detection. */
   avatarRoles?: ScriptAvatarRoles;
   /** MP4 path, relative to the script file. `--output` takes precedence. */
@@ -97,6 +101,7 @@ export interface RenderConfig {
   blinkSeed: number;
   /** Absolute PSD avatar path. */
   avatar: string;
+  avatarMode: AvatarMode;
   avatarRoles?: ScriptAvatarRoles;
   /** Absolute path of the combined narration WAV. */
   audio: string;

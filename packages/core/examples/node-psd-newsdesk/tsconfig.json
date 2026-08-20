@@ -12,7 +12,11 @@
     "declaration": false,
     "sourceMap": true,
     "noEmit": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "ag-psd": ["node_modules/ag-psd"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "tests"]

@@ -5,15 +5,16 @@
 この AITuber OnAir Core サンプルは、ソーステキストをチャプター付きの日本語
 ニュース動画へ変換します。Core のチャットプロバイダーでレビュー可能な JSON
 台本を生成し、Core の `VoiceEngineAdapter` またはローカルテスト音源で音声を
-作り、音声 RMS と決定論的なまばたきに合わせて静的 PSDTool 形式の `.psd`
-レイヤーを合成し、チャプターラベルと字幕入りの縦型 H.264/AAC MP4 を出力します。
+作り、静的 PSDTool 合成または Anime2.5DRig WebGL motion を選択して、
+チャプターラベルと字幕入りの縦型 H.264/AAC MP4 を出力します。
 
 ```text
 ファイル、標準入力、URL
   -> Core chat / Core Agent SDK
   -> script.json + analysis.json（確認）
   -> Core voice / sine / macOS say
-  -> 静的 PSDTool レイヤー + 2値 RMS 口パク + 決定論的なまばたき
+  -> 自動判定 -> Anime2.5DRig motion または静的 PSDTool fallback
+  -> 音声口パク + 決定論的な motion / まばたき
   -> ffmpeg -> 1080x1920 MP4（確認）
 ```
 
@@ -24,6 +25,7 @@
 
 - Node.js 22 以降と npm
 - `PATH` 上の `ffmpeg` と `ffprobe`
+- `auto` 判定と motion mode 用に Playwright からインストールした Chromium
 - 既定の `codex-sdk` 用の ChatGPT サインイン、または API プロバイダー用の
   API キー
 - 任意: 同梱の「まお」サンプルを使う場合は
@@ -36,6 +38,7 @@
 
 ```sh
 npm install
+npx playwright install chromium
 npm run build
 ```
 
@@ -96,6 +99,19 @@ npm run gen -- \
   --output work/hello-newsdesk.mp4
 ```
 
+motion sample は、隣接する React example の procedural な motion 対応 PSD を
+コピーせずに参照します。
+
+```sh
+npm run gen -- \
+  --script samples/hello-sine-motion.json \
+  --output work/hello-sine-motion.mp4
+
+npm run gen -- \
+  --script samples/hello-newsdesk-motion.json \
+  --output work/hello-newsdesk-motion.mp4
+```
+
 追加モード:
 
 ```sh
@@ -114,6 +130,15 @@ npm run gen -- --script samples/hello-sine.json --frame 45 --png work/frame45.pn
 配置、固定のまばたき seed、3〜12行のナレーションを指定します。各行には字幕、
 発音調整用の `reading`、チャプターラベル、後続 pause を設定できます。完全な
 定義は [`script.json` フォーマット](./docs/script-format.md)を参照してください。
+
+## PSD モード
+
+描画モードは2つとも第一級です。既定の `avatarMode: "auto"` は最初に
+Anime2.5DRig rigger を実行し、正規化された `face` part があれば motion mode、
+対象外なら静的 PSDTool mode に fallback します。`avatarMode: "static"` は
+Chromium を起動せず、既存の pure Node Canvas 2D renderer を使います。
+`avatarMode: "motion"` は利用可能な rig を必須とし、対象外 PSD では rigger の
+診断文をそのまま表示して停止します。
 
 ## 静的 PSDTool モード
 
@@ -154,10 +179,8 @@ Node レンダラーは `react-psd-app` の静的 PSDTool 経路を再現しま�
 停止します。正規化 RMS が `0.45` 以上なら `mouthOpen`、未満なら
 `mouthClosed` を表示します。
 
-モーションモードは明示的な非目標です。Anime2.5DRig モーションモードには WebGL
-メッシュレンダラーが必要なため移植していません。このサンプルではモーションモード用
-PSD も静的モードで描画され、口・目ロールだけを切り替えます。小さな呼吸上下動と
-ロールは動画フレーム専用の変換で、`motion.intensity` の `0` で無効化できます。
+小さな呼吸上下動とロールは動画フレーム専用の変換で、
+`motion.intensity` の `0` で無効化できます。
 
 静的モードの制限は `react-psd-app` と同じです。PSB は非対応、既知の正常入力は
 通常ピクセルレイヤーを持つ8-bit RGB PSD です。通常以外のブレンドモードは通常の
@@ -172,10 +195,37 @@ React PNGTuber サンプルから決定的に再生成するには `npm run gene
 部分だけを持ちます。この切り抜きにより、キャンバス全体を覆う一方のロールが他方を
 隠すことなく、口と目のグループを独立して切り替えられます。
 
+## Anime2.5DRig motion mode
+
+motion mode は headless Chromium を使い、次の sibling source を read-only で
+bundle します。
+
+- `react-psd-app/src/vendor/anime25drig/rigger.js`
+- `react-psd-app/src/lib/rig/anime25Rig.ts`
+- `react-psd-app/src/lib/rig/anime25Renderer.ts`
+
+harness は renderer bundle より先に seeded virtual clock を導入し、
+`requestAnimationFrame`、`cancelAnimationFrame`、`performance.now`、
+`Date.now`、`Math.random` を置き換えます。各出力フレームでは renderer が公開する
+audio `mouthOpen` 入力を設定し、仮想時刻を進め、現在の rAF callback を正確に1回
+flush し、次の callback が1件だけ queue されたことを確認します。idle sway、呼吸、
+random motion、mesh physics は有効なまま再現可能になります。
+`motion.intensity` は renderer へ渡され、motion 側では `0` から `2` です。
+
+sibling renderer は目の開閉を直接設定する API を公開していません。そのため
+motion mode では Node の `eyesClosed` schedule を使わず、内蔵 blink automation を
+維持します。時刻と乱数を `blinkSeed` から固定するため、まばたきも決定論的です。
+static mode は従来どおり Node schedule で目を直接切り替えます。
+
+motion sample は `../../react-psd-app/public/avatar/sample.psd` を参照します。
+この PSD は React example が procedural に生成した配布可能な素材で、この package
+にはコピーしません。
+
 ## 検証
 
 ```sh
 npm install
+npx playwright install chromium
 npm run fmt
 npm run lint
 npm run typecheck
@@ -184,11 +234,23 @@ npm run build
 npm run test:e2e
 ```
 
-E2E テストは `dist/gen.cjs` から実際に動画を生成し、ffprobe で H.264/AAC、
-1080x1920 PNG を確認します。同じ sine 音声を `--render-only` で再生成した
-MP4 の MD5 が一致することも検証します。
+常時 E2E は `dist/gen.cjs` から static / motion の両方を描画し、ffprobe で
+H.264/AAC、1080x1920 PNG、motion の口・idle pixel 差分を確認します。motion は
+同じ入力を連続2回描画して timings JSON と MP4 MD5 も比較します。
 
 ## 素材利用条件とクレジット
+
+Anime2.5DRig 互換 auto-rigging と renderer のクレジットは次のとおりです。
+
+- Project: [Anime2.5DRig](https://github.com/852wa/Anime2.5DRig)
+- Author: 852wa (hakoniwa)
+- Copyright: Copyright (c) 2026 hakoniwa
+- License: MIT License
+- Upstream commit: `d48825867acd081de22b0e7b5585bb562288796d`
+
+この example は vendored sibling rigger と renderer を read-only で import し、
+コピーしません。sibling の `public/avatar/sample.psd` は procedural に生成された
+license-clean な素材です。
 
 同梱のミコ由来 PSD アバターの著作権表記は © Yuki Shindo (AITuber OnAir) です。
 このアバターはリポジトリの MIT License 対象外です。作品・コンテンツの一部

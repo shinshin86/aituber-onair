@@ -201,7 +201,8 @@ npm run dev
   4状態 PNGTuber ニュース動画を作る Node.js パイプライン。
 - [`packages/core/examples/node-psd-newsdesk`](../packages/core/examples/node-psd-newsdesk):
   ソーステキストから Core のチャット・音声を通して、チャプター付き縦型
-  静的 PSDTool アバターニュース動画を作る Node.js パイプライン。
+  PSD アバターニュース動画を作る Node.js パイプライン。静的 PSDTool と
+  ヘッドレス Chromium の Anime2.5DRig motion の両モードに対応。
 - [`packages/core/examples/node-vrm-newsdesk`](../packages/core/examples/node-vrm-newsdesk):
   ヘッドレス Chromium で VRM を描画し、Core のチャット・音声を通して
   チャプター付き縦型アバターニュース動画を作る Node.js パイプライン。

@@ -25,7 +25,8 @@
     "@napi-rs/canvas": "^1.0.3",
     "@openai/codex-sdk": "^0.146.0",
     "@webtoon/psd": "^0.4.0",
-    "linkedom": "^0.18.13"
+    "linkedom": "^0.18.13",
+    "playwright": "^1.55.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

@@ -2,6 +2,7 @@ import type { NewsdeskScript, ScriptLine } from '../types.js';
 
 const TOP_LEVEL_FIELDS = new Set([
   'avatar',
+  'avatarMode',
   'avatarRoles',
   'output',
   'voice',
@@ -236,6 +237,12 @@ export function validateScript(script: unknown): string[] {
 
   addUnknownFieldErrors(script, TOP_LEVEL_FIELDS, 'script', errors);
   requireString(script.avatar, 'script.avatar', errors);
+  if (
+    script.avatarMode !== undefined &&
+    !['auto', 'static', 'motion'].includes(String(script.avatarMode))
+  ) {
+    errors.push('script.avatarMode must be "auto", "static", or "motion".');
+  }
   if (script.avatarRoles !== undefined) {
     validateAvatarRoles(script.avatarRoles, errors);
   }

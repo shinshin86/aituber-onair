@@ -6,6 +6,7 @@ are resolved relative to the script file.
 ```json
 {
   "avatar": "../assets/sample-static.psd",
+  "avatarMode": "static",
   "voice": {
     "engine": "sine",
     "options": {
@@ -34,6 +35,9 @@ are resolved relative to the script file.
 ## Top-level fields
 
 - `avatar`: `.psd` path.
+- `avatarMode` (optional): `auto` (default), `static`, or `motion`. `auto`
+  selects motion only when the Anime2.5DRig rigger produces a normalized
+  `face` part, then falls back to static PSDTool compositing.
 - `avatarRoles` (optional): exact pixel-layer paths overriding automatic
   `mouthOpen`, `mouthClosed`, `eyesOpen`, and `eyesClosed` detection.
 - `output` (optional): MP4 path. The CLI `--output` takes precedence.
@@ -45,9 +49,10 @@ are resolved relative to the script file.
 - `background.color` and optional `background.image`: canvas background.
 - `telop` (optional): title shown only while no line chapter is active.
 - `avatarLayout`: avatar `scale` and fractional `x`/`y` anchors.
-- `motion.intensity`: multiplier clamped from 0 through 3 for the subtle,
-  deterministic breath bob and roll. This idle motion is a video-only addition;
-  `0` disables it.
+- `motion.intensity`: motion multiplier. Static mode clamps it from 0 through 3
+  for the video-only breath bob and roll. Motion mode passes it to the sibling
+  renderer, which clamps it from 0 through 2 for idle sway, breathing, random
+  motion, and physics.
 - `blinkSeed`: deterministic blink schedule seed.
 - `lines`: ordered narration and subtitle entries.
 
@@ -69,19 +74,38 @@ Normalized audio RMS values at or above `0.45` select the open-mouth role;
 lower values select the closed-mouth role. The threshold gives the bundled sine
 fixture clear open/closed alternation while remaining a simple binary lip-sync.
 
-## Static PSD behavior
+## PSD modes
+
+The general rule is motion detection first, static fallback second. With the
+default `auto`, the vendored Anime2.5DRig rigger must produce a normalized
+`face` part for motion mode. `static` skips Chromium and keeps the pure-Node
+Canvas 2D path. `motion` requires a usable rig and fails with the rigger's
+diagnostic when the PSD is ineligible.
+
+### Static PSDTool behavior
 
 Leading `!` forces a node visible. Leading `*` creates a sibling radio item;
 initial visibility keeps only the first visible radio item. The suffixes
 `:flipx`, `:flipy`, and `:flipxy` are parsed and removed from display paths, but
 the pixels are not flipped.
 
-This Node example always uses static Canvas 2D compositing. Anime2.5DRig motion
-mode is a WebGL feature and is not ported; motion-mode PSDs still render
-statically with only resolved mouth and eye role layers switching. PSB,
-non-normal blend rendering, masks, clipping masks, adjustment/effect rendering,
-PSDTool metadata, and visual flip variants are unsupported. Use an 8-bit RGB
-PSD with normal pixel layers.
+PSB, non-normal blend rendering, masks, clipping masks, adjustment/effect
+rendering, PSDTool metadata, and visual flip variants are unsupported. Use an
+8-bit RGB PSD with normal pixel layers.
+
+### Anime2.5DRig motion behavior
+
+Motion mode bundles the sibling rigger and WebGL mesh renderer read-only into a
+headless-Chromium harness. Before those modules load, the harness replaces
+`requestAnimationFrame`, `cancelAnimationFrame`, `performance.now`, `Date.now`,
+and `Math.random` with a virtual clock seeded by `blinkSeed`. Each video frame
+sets audio-derived `mouthOpen`, advances time, flushes exactly one current rAF
+callback, and requires the renderer to queue exactly one next callback.
+
+The renderer has no direct eye-open input, so the external `eyesClosed`
+schedule is intentionally unused in motion mode. Its built-in blink automation
+stays enabled and becomes deterministic through the seeded virtual clock. Idle
+sway, breathing, random motion, and physics also remain enabled.
 
 ## Line fields
 
