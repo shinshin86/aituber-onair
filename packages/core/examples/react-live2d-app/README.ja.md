@@ -4,6 +4,11 @@ Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、
 を設定できます。ブラウザが直接再生して音声バッファを取得できないため、
 このエンジン選択時はリップシンク非対応です。
 
+Fish Audio と Cartesia は API キー入力後に音声一覧から選択できます。
+Fish Audio は公式 API がブラウザの直接 CORS リクエストに対応していないため、
+Vite の development / preview proxy を使います。本番環境では API キーを
+サーバー側に置き、独自バックエンド経由でリクエストしてください。
+
 `@aituber-onair/core` を使った React 製のサンプルです。`models/`
 フォルダ配下の Live2D モデルを読み込み、`@aituber-onair/core` が
 生成した音声を再生して口パクを動かします。
@@ -12,10 +17,12 @@ Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、
 
 - LLM / TTS の設定 UI を内蔵
 - LLM プロバイダは既存の OpenAI / Gemini / Claude / Z.ai / Kimi / xAI / OpenRouter / Gemini Nano / OpenAI-compatible に加えて `deepseek`, `mistral`, disabled 表示の `sakana`, `plamo` に対応
-- xAI Grok 4.5 の `reasoning_effort` は `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです
+- xAI Grok 4.6 の `reasoning_effort` は `low`、`medium`、`high`、`xhigh`
+  に対応し、既定は `low` です。Grok 4.3 は低レイテンシ向けに `none` が
+  デフォルトです
 - `models/` フォルダ配下の Live2D モデルを読み込み
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
-  Gemini 3.6 Flash、Kimi K3、Ministral 3、GLM-5V-Turbo、GPT-5.6 など
+  Gemini 3.7 Flash、Kimi K3、Ministral 3、GLM-5V-Turbo、GPT-5.6 など
   chat 由来の新規モデルも Settings に
   自動反映されます
 - Gemini 3 Flash 系はチャット用途向けに minimal thinking、Gemini 3 Pro

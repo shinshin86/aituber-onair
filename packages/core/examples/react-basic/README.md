@@ -14,13 +14,13 @@ This example application serves as a practical implementation guide for integrat
   - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.6 Sol/Terra/Luna, GPT-5.5, and GPT-5.4 variants)
   - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
-  - Google Gemini (Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
-  - Anthropic Claude (Opus 5, Sonnet 5, 4.8 Opus, 4.7 Opus, 4.6 Sonnet/Opus, 4.5 Opus/Sonnet/Haiku, 4.x, 3.x families)
+  - Google Gemini (Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
+  - Anthropic Claude (Fable 5, Opus 5, Sonnet 5, 4.8 Opus, 4.7 Opus, 4.6 Sonnet/Opus, and 4.5 Opus/Sonnet/Haiku)
   - DeepSeek, Mistral, Sakana AI (disabled in browser UI), and PLaMo first-class providers
   - Seamless provider switching
 
 - **🎙️ Comprehensive Voice Synthesis**
-  - 15 different TTS engines with unique capabilities
+  - 17 different TTS engines with unique capabilities
   - Real-time voice streaming
   - Speaker selection for each engine
   - Emotion-aware synthesis support
@@ -117,11 +117,12 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **Gemini:**
 - Gemma 4 series (31B IT, 26B A4B IT)
-- Gemini 3.6 Flash and Gemini 3.5 Flash / Flash-Lite
+- Gemini 3.7 Flash, Gemini 3.6 Flash, and Gemini 3.5 Flash / Flash-Lite
 - Gemini 3 series (3.1 Flash-Lite, 3.1 Pro Preview, 3 Flash Preview, plus deprecated preview aliases)
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)
-- Gemini 3 Flash-family models expose `reasoning_effort`; Flash defaults to `minimal`, while Pro defaults to `low`
+- Gemini 3 Flash-family models expose `reasoning_effort`; 3.7 Flash defaults
+  to `low`, earlier Flash models default to `minimal`, and Pro defaults to `low`
 - Gemini 2.5 keeps using `thinkingBudget` and does not expose this control
 
 **Gemini Nano:**
@@ -130,14 +131,14 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Requires Chrome 138+ with `#optimization-guide-on-device-model` and `#prompt-api-for-gemini-nano` enabled
 
 **Claude:**
-- Claude Opus 5 and Claude Sonnet 5
+- Claude Fable 5, Claude Opus 5, and Claude Sonnet 5
 - Claude Opus 4.8
 - Claude Opus 4.7
 - Claude 4.6 Opus
 - Claude 4.6 Sonnet
 - Claude 4.5 series (Opus, Sonnet, Haiku)
-- Claude 4 series (Sonnet, Opus, deprecated but still available)
-- Claude 3 Haiku (deprecated but still available)
+- Retired Claude 4 Sonnet/Opus and Claude 3 Haiku IDs remain compatibility
+  exports but are not offered by this selector
 - Supported models expose `reasoning_effort`, mapped to Claude
   `output_config.effort`; the API default is `high`
 
@@ -148,6 +149,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - GLM-5 and GLM-5-Turbo (text-only)
 - GLM-4.7 series
 - GLM-4.6 and GLM-4.6V series
+- GLM-5.2 exposes model-aware `reasoning_effort`; its default is `none`
 
 **Kimi:**
 - Kimi K3 with vision and configurable `reasoning_effort` (`low`, `high`, or `max`; defaults to `max` and cannot be disabled)
@@ -157,10 +159,13 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Kimi K2.5
 
 **xAI:**
-- Grok 4.5 and Grok 4.3
+- Grok 4.6, Grok 4.5, and Grok 4.3
 - Grok 4.20 series
-- Grok 4.1 Fast series
-- Grok 4.5 exposes `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for lower latency
+- Grok 4.6 supports `low`, `medium`, `high`, and `xhigh`
+  `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for
+  lower latency
+- Retired Grok 4.1 Fast IDs remain compatibility exports but are not offered
+  by this selector
 
 **DeepSeek:**
 - DeepSeek V4 Flash and DeepSeek V4 Pro with model-aware reasoning controls
@@ -175,17 +180,18 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **Sakana AI:**
 - Fugu
-- Fugu Ultra / Fugu Ultra 20260615
+- Fugu Ultra v1.1
+- Older Fugu Ultra aliases remain compatibility exports
 - Shown as disabled in this browser example because direct browser requests can fail with CORS
 
 **PLaMo:**
 - PLaMo 3.0 Prime
-- PLaMo 2.2 Prime
+- Retired PLaMo 2.2 Prime remains a compatibility export
 
 **OpenRouter:**
 - Curated multi-provider models, including Auto Router Beta, OpenAI GPT-5.6,
-  Claude Opus 5, Gemini 3.6/3.5, Grok 4.5, Kimi K3, KAT-Coder V2.5, and
-  DeepSeek V4 Flash
+  Claude Fable 5 / Opus 5, Gemini 3.7/3.6/3.5, Grok 4.6, Kimi K3,
+  KAT-Coder V2.5, DeepSeek V4 Pro 0813, and DeepSeek V4 Flash
 - DeepSeek V4 Flash offers the fixed current `deepseek/deepseek-v4-flash-0731`
   model and the separate `deepseek/deepseek-v4-flash` preview snapshot
 - Reasoning effort options follow the selected model and default to explicit
@@ -233,7 +239,7 @@ while this example uses the standard streaming chat flow.
 
 ### Supported TTS Engines
 
-The application supports 15 different Text-to-Speech engines:
+The application supports 17 different Text-to-Speech engines:
 
 #### 1. **OpenAI TTS**
 - Requires OpenAI API key
@@ -278,9 +284,10 @@ The application supports 15 different Text-to-Speech engines:
 
 #### 8. **MiniMax**
 - Chinese TTS service
-- Requires API key and Group ID
-- Multiple voice options
-- Global endpoint support
+- Requires an API key; Group ID is a legacy optional query parameter
+- Defaults to the current low-latency `speech-2.8-turbo` model
+- Uses documented system voice presets
+- Global and mainland China endpoint support
 - Supports speed/volume/pitch tuning and audio settings  
   (sample rate: 8k/16k/22.05k/24k/32k/44.1k Hz, bitrate: 32/64/128/256 kbps)
 
@@ -297,25 +304,42 @@ The application supports 15 different Text-to-Speech engines:
 #### 11. **ElevenLabs**
 - Requires ElevenLabs API key
 - Fetches voices from the ElevenLabs Voices API and lets users select by name
+- Defaults to the low-latency `eleven_flash_v2_5` model and offers the current
+  curated model choices
 - Supports model, output format, language code, voice settings, seed, and text normalization options
 
-#### 12. **Inworld**
+#### 12. **Fish Audio**
+- Requires a Fish Audio API key
+- Defaults to S2 Pro and supports format, sample rate, MP3 bitrate, latency,
+  and speed controls
+- Fetches reference voices through the Vite development/preview proxy
+- Production apps should keep the API key server-side and proxy requests
+  through their own backend because the official API does not support direct
+  browser CORS
+
+#### 13. **Cartesia**
+- Requires a Cartesia API key
+- Defaults to Sonic 3.5 with language, output container, sample rate, and MP3
+  bitrate controls
+- Fetches and filters voices from the Cartesia Voices API
+
+#### 14. **Inworld**
 - Requires Inworld Basic Base64 credentials
 - Fetches voices from the Inworld Voices API and lets users select by name
 - Supports model, audio encoding, sample rate, bitrate, language, delivery mode, and temperature options
 
-#### 13. **Gradium**
+#### 15. **Gradium**
 - Requires Gradium API key
 - Lets users select flagship Gradium voices by readable names
 - Supports output format, temperature, voice similarity, padding bonus, and rewrite rules
 
-#### 14. **Piper Plus**
+#### 16. **Piper Plus**
 - Browser-side WASM TTS
 - No API key required
 - Requires `public/piper/` assets
 - Supports speed and noise scale
 
-#### 15. **Web Speech API**
+#### 17. **Web Speech API**
 - Browser-native speech synthesis with no API key
 - Loads the browser's available voices and supports language, rate, pitch, and volume
 - Plays directly through the browser, so audio-buffer-based lip sync is not supported

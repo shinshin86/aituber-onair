@@ -4,6 +4,11 @@ Web Speech API TTS is available with browser voice selection and rate, pitch,
 volume, and language controls. Because the browser plays it directly without
 exposing audio bytes, lip sync is not supported when this engine is selected.
 
+Fish Audio and Cartesia are available with API-key-backed voice selectors.
+Fish Audio uses the Vite development/preview proxy because its official API
+does not support direct browser CORS; production apps should keep the API key
+server-side and route requests through their own backend.
+
 ![react-pngtuber-app image](./images/react-pngtuber-app.png)
 
 A PNGTuber-style chat app built with `@aituber-onair/core`.  
@@ -12,9 +17,11 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
 ## What this app can do
 
 - Chat with LLM providers: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`, `sakana` (disabled in browser UI), `plamo`
-- xAI Grok 4.5 exposes `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for lower latency
+- xAI Grok 4.6 supports `low`, `medium`, `high`, and `xhigh`
+  `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for
+  lower latency
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
-  chat models such as Gemini 3.6 Flash, Kimi K3, Ministral 3, GLM-5V-Turbo,
+  chat models such as Gemini 3.7 Flash, Kimi K3, Ministral 3, GLM-5V-Turbo,
   and GPT-5.6 are available automatically
   in Settings
 - Gemini 3 Flash-family models use minimal thinking by default for chat-style
@@ -25,11 +32,12 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   - `Fetch free models` probes candidates and appends working models to the model list
   - `Max candidates` is the maximum number of `:free` candidates to probe
     (not a target number of working models)
-- Use TTS engines: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`, `elevenLabs`, `inworld`, `gradium`, `piperPlus`, `webSpeech`, `none`
+- Use TTS engines: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`, `elevenLabs`, `fishAudio`, `cartesia`, `inworld`, `gradium`, `piperPlus`, `webSpeech`, `none`
 - `geminiTts` defaults to `gemini-3.1-flash-tts-preview` and exposes 30 prebuilt voices plus style/audio-tag prompt input
 - Fetch and select speaker lists dynamically:
   - `voicevox` / `aivisSpeech`: from `/speakers`
-  - `minimax`: from `query/tts_speakers` after API key input
+  - `fishAudio`: from `/model` through the local Vite proxy after API key input
+  - `cartesia`: from `/voices` after API key input, filtered by language
   - `elevenLabs`: from `/v2/voices` after API key input
   - `inworld`: from `/voices/v1/voices` after API key input
 - Use fixed Gradium flagship voice presets with readable labels

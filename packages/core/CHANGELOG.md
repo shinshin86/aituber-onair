@@ -4,6 +4,19 @@
 
 ### Minor Changes
 
+- Synced Chat updates through `@aituber-onair/chat@0.52.0` into Core:
+  - re-exported Gemini 3.7 Flash, Grok 4.6, Claude Fable 5, refreshed
+    OpenRouter models, provider lifecycle metadata, and Z.ai/xAI reasoning
+    helpers
+  - refreshed the React basic model selectors and model-aware reasoning
+    controls while removing retired models from new-user selectors
+- Synced Voice updates through `@aituber-onair/voice@0.20.0` into Core:
+  - re-exported Fish Audio and Cartesia engines, option types, endpoints, and
+    voice-list support
+  - added Fish Audio and Cartesia settings with selectable voice lists to all
+    Core React examples, including a Fish Audio development/preview proxy
+  - refreshed MiniMax system voice presets and current ElevenLabs defaults
+
 - Added the Node.js-only `@aituber-onair/core/agent` entry for Codex SDK,
   Claude Agent SDK, and Copilot SDK providers. Agent providers can now be used
   through `createAgentChatService()` or `AITuberOnAirCore` without an API key,

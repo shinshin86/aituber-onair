@@ -1223,10 +1223,12 @@ Possible use cases for `chatLogUpdated` include:
 - **xAI TTS**: xAI text-to-speech with selectable codec, sample rate, and bit rate options.
 - **Unreal Speech**: Unreal Speech v8 `/stream` endpoint with bitrate, speed, pitch, codec, and temperature options.
 - **ElevenLabs**: ElevenLabs Text to Speech API with model, output format, language code, voice settings, and text normalization options.
+- **Fish Audio**: Fish Audio one-shot TTS with S2 Pro by default, configurable output/latency options, and reference-voice list discovery.
+- **Cartesia**: Cartesia synchronous TTS with Sonic 3.5, language/output controls, and voice-list discovery.
 - **Inworld**: Inworld TTS REST API with selectable model, audio encoding, sample rate, bitrate, language, delivery mode, and temperature options.
 - **Gradium**: Gradium REST TTS API with selectable preset voices, output format, temperature, similarity, padding, and rewrite-rule options.
 - **OpenAI-Compatible TTS**: Self-hosted or third-party `/v1/audio/speech` compatible endpoints.
-- **MiniMax**: Multi-language TTS with 24 language support and HD quality (requires both API key and GroupId - see usage example below).
+- **MiniMax**: Multi-language TTS using the current T2A v2 models and documented system voice presets. An API key is required; GroupId is a legacy optional query parameter.
 - **Piper Plus**: Browser WASM TTS using ONNX Runtime Web and OpenJTalk assets for on-device synthesis.
 - **Web Speech API**: Browser-native speech synthesis with runtime voice-list
   discovery and configurable rate, pitch, volume, and language. It plays audio
@@ -1340,9 +1342,9 @@ aituber.updateVoiceService({
 // Example for MiniMax (simplified configuration)
 aituber.updateVoiceService({
   engineType: 'minimax',
-  speaker: 'male-qn-qingse', // or any supported voice ID
+  speaker: 'Japanese_IntellectualSenior', // or another system voice preset
   apiKey: 'YOUR_MINIMAX_API_KEY',
-  groupId: 'YOUR_GROUP_ID',  // Required for MiniMax
+  groupId: 'YOUR_GROUP_ID',  // Legacy optional query parameter
   endpoint: 'global'         // Optional: 'global' (default) or 'china'
 });
 
@@ -1361,19 +1363,12 @@ aituber.updateVoiceService({
   engineType: 'elevenLabs',
   speaker: 'YOUR_ELEVENLABS_VOICE_ID',
   apiKey: 'YOUR_ELEVENLABS_API_KEY',
-  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsModel: 'eleven_flash_v2_5',
   elevenLabsOutputFormat: 'mp3_44100_128',
   elevenLabsLanguageCode: 'ja',
 });
 
-// IMPORTANT: MiniMax requires a GroupId in addition to the API key
-// GroupId is a unique identifier for your user group in MiniMax's system
-// Unlike other TTS engines, MiniMax uses both API key and GroupId for:
-// - User authentication and group management
-// - Usage tracking and statistics
-// - Billing and quota management
-// You can obtain your GroupId from your MiniMax account dashboard
-//
+// MiniMax GroupId is a legacy optional query parameter.
 // MiniMax also supports region-specific endpoints:
 // - 'global': For international users (default)
 // - 'china': For users in mainland China
@@ -1394,17 +1389,17 @@ would like to use any other API, please submit a PR or send us a message.
 Currently, the following AI provider is built-in:
 
 - **OpenAI**: Supports models like GPT-5 family (Nano/Mini/Standard/5.1/5.4/5.5/5.6 Sol/Terra/Luna/5.4 Mini/5.4 Nano/5.4 Pro), GPT-4.1 (including Mini/Nano), GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini. GPT-5.6 models also support `max` reasoning effort.
-- **Gemini**: Supports models like Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 Flash-family models support configurable `reasoning_effort`; Flash models default to `minimal` and Pro models default to `low` for chat-style responses. Gemini 2.5 continues to use `thinkingBudget` instead.
+- **Gemini**: Supports models like Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 Flash-family models support configurable `reasoning_effort`; Gemini 3.7 Flash starts at `low`, while earlier Flash models start at `minimal` and Pro models at `low`. Gemini 2.5 continues to use `thinkingBudget` instead.
 - **Gemini Nano**: Supports the built-in Chrome `gemini-nano` model without an API key (Chrome 138+ with Prompt API flags enabled)
-- **Claude**: Supports current Claude API model IDs including Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5, plus deprecated-but-still-available Claude 4 Opus, Claude 4 Sonnet, and Claude 3 Haiku. Supported models accept `reasoning_effort`, which maps to Anthropic's `output_config.effort`; the API default is `high`.
-- **xAI**: Supports Grok 4.5, Grok 4.3, Grok 4.20, and Grok 4.1 Fast model families. Grok 4.5 supports configurable `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for lower latency.
+- **Claude**: Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Retired IDs remain exported for source compatibility but are not advertised in selectors. Supported models accept `reasoning_effort`, which maps to Anthropic's `output_config.effort`; the API default is `high`.
+- **xAI**: Supports Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 model families. Grok 4.6 supports `low`, `medium`, `high`, and `xhigh` reasoning effort and defaults to `low`; Grok 4.5 also defaults to `low`, while Grok 4.3 defaults to `none` for lower latency. Retired Grok 4.1 Fast IDs remain compatibility exports only.
 - **DeepSeek**: Supports DeepSeek V4 Flash and DeepSeek V4 Pro through the first-class `deepseek` provider. Both expose model-aware `reasoning_effort`; Core keeps Chat's low-latency `none` default, while higher supported efforts remain selectable. Thinking and tool calling cannot currently be combined in one request.
 - **Mistral**: Supports the vision-capable Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including adjustable reasoning for supported models.
-- **Sakana AI**: Supports Fugu (`fugu`) and Fugu Ultra (`fugu-ultra`, `fugu-ultra-20260615`) through the first-class `sakana` provider. Browser examples show this provider as disabled because direct browser requests can fail with CORS; use Node.js or a backend proxy.
-- **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`) and PLaMo 2.2 Prime (`plamo-2.2-prime`) through the first-class `plamo` provider.
-- **Z.ai**: Supports GLM-5.2, GLM-5.1, GLM-5/GLM-5-Turbo (text-only), GLM-5V-Turbo (vision), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, and GLM-4.6V Flash/FlashX.
+- **Sakana AI**: Supports Fugu (`fugu`) and the exact Fugu Ultra v1.1 ID (`fugu-ultra-v1.1`) through the first-class `sakana` provider. Older aliases remain compatibility exports. Browser examples show this provider as disabled because direct browser requests can fail with CORS; use Node.js or a backend proxy.
+- **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`) through the first-class `plamo` provider. PLaMo 2.2 Prime remains a deprecated compatibility export ahead of its scheduled retirement.
+- **Z.ai**: Supports GLM-5.2, GLM-5.1, GLM-5/GLM-5-Turbo (text-only), GLM-5V-Turbo (vision), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, and GLM-4.6V Flash/FlashX. GLM-5.2 exposes model-aware reasoning effort and defaults to `none` for responsive chat.
 - **Kimi**: Supports Kimi K3 (`kimi-k3`), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`), and Kimi K2.5 (`kimi-k2.5`) with vision support. Models that expose `reasoning_effort` use their documented supported values and defaults: Kimi K3 accepts `low`, `high`, and `max`, defaults to `max`, and cannot disable reasoning. Kimi K2.7 Code models require thinking mode.
-- **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router and Auto Router Beta, Fusion, latest-family aliases, OpenAI GPT-5.6, Claude Opus 5, Gemini 3.6/3.5, Z.ai GLM-5.2, xAI Grok 4.5, Kimi K3, KAT-Coder V2.5, and DeepSeek V4 Flash. For DeepSeek, use the fixed `deepseek/deepseek-v4-flash-0731` model for reproducible current behavior; `deepseek/deepseek-v4-flash` remains the separate preview snapshot. Both expose model-aware reasoning efforts and default to an explicit `none` for responsive chat. Dynamic routers omit `responseLength`-derived token limits because a routed reasoning model can consume the output budget before emitting visible text; explicitly supplied `maxTokens` values remain effective. Models with stricter upstream constraints remain explicit options: Kimi K3 can return 429 when upstream capacity is constrained, and Grok 4.5 has region-specific availability limits. Fusion usage is billed as the sum of its underlying model calls and any enabled web search/fetch usage. OpenRouter GLM-5.2 inherits chat's default `reasoning.effort: 'none'` and omits automatic `max_tokens`.
+- **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router and Auto Router Beta, Fusion, latest-family aliases, OpenAI GPT-5.6, Claude Fable 5 / Opus 5, Gemini 3.7/3.6/3.5, Z.ai GLM-5.2, xAI Grok 4.6/4.5, Kimi K3, KAT-Coder V2.5, and DeepSeek V4 Flash / V4 Pro 0813. Model-aware reasoning controls use Chat's current per-model values and low-latency defaults; catalog-absent IDs remain compatibility exports but are not advertised.
 - **OpenAI-Compatible**: Supports arbitrary OpenAI-compatible Chat Completions endpoints; vision capability is treated as unknown until the target endpoint/model responds
 
 For OpenRouter free-tier discovery, you can also use

@@ -4,6 +4,11 @@ Web Speech API TTS is available with browser voice selection and rate, pitch,
 volume, and language controls. Because the browser plays it directly without
 exposing audio bytes, lip sync is not supported when this engine is selected.
 
+Fish Audio and Cartesia are available with API-key-backed voice selectors.
+Fish Audio uses the Vite development/preview proxy because its official API
+does not support direct browser CORS; production apps should keep the API key
+server-side and route requests through their own backend.
+
 ![react-psd-app image](./images/react-psd-app.webp)
 
 A PSD-based tachie chat app built with `@aituber-onair/core`.

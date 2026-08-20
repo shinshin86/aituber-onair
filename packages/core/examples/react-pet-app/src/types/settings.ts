@@ -26,6 +26,8 @@ export type TTSEngineOption =
   | 'xai'
   | 'unrealSpeech'
   | 'elevenLabs'
+  | 'fishAudio'
+  | 'cartesia'
   | 'inworld'
   | 'gradium'
   | 'piperPlus'
@@ -104,6 +106,23 @@ export interface TTSSettings {
   elevenLabsSpeed?: string;
   elevenLabsSeed?: string;
   elevenLabsApplyTextNormalization?: 'default' | 'auto' | 'on' | 'off';
+  fishAudioApiKey?: string;
+  fishAudioApiUrl?: string;
+  fishAudioVoiceListApiUrl?: string;
+  fishAudioModel?: string;
+  fishAudioFormat?: string;
+  fishAudioSampleRate?: string;
+  fishAudioMp3Bitrate?: string;
+  fishAudioLatency?: string;
+  fishAudioSpeed?: string;
+  cartesiaApiKey?: string;
+  cartesiaApiUrl?: string;
+  cartesiaVoiceListApiUrl?: string;
+  cartesiaModel?: string;
+  cartesiaLanguage?: string;
+  cartesiaOutputContainer?: string;
+  cartesiaSampleRate?: string;
+  cartesiaMp3Bitrate?: string;
   inworldApiKey?: string;
   inworldApiUrl?: string;
   inworldModel?: string;

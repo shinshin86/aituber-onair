@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   AIVIS_CLOUD_API_URL,
+  CARTESIA_TTS_API_URL,
+  CARTESIA_VOICES_API_URL,
   ELEVENLABS_TTS_API_URL,
+  FISH_AUDIO_MODELS_API_URL,
+  FISH_AUDIO_TTS_API_URL,
   GEMINI_TTS_API_URL,
   GRADIUM_TTS_API_URL,
   GRADIUM_VOICES_API_URL,
@@ -10,7 +14,9 @@ import {
   UNREAL_SPEECH_TTS_API_URL,
   XAI_TTS_API_URL,
   AivisCloudEngine,
+  CartesiaEngine,
   ElevenLabsEngine,
+  FishAudioEngine,
   GeminiTtsEngine,
   GradiumEngine,
   InworldEngine,
@@ -25,6 +31,11 @@ import {
   waitForWebSpeechVoices,
   type ElevenLabsApplyTextNormalization,
   type ElevenLabsVoiceSettingsOptions,
+  type CartesiaLanguage,
+  type CartesiaOutputContainer,
+  type FishAudioFormat,
+  type FishAudioLatency,
+  type FishAudioModel,
   type GradiumOutputFormat,
   type GradiumVoiceServiceOptions,
   type InworldAudioEncoding,
@@ -34,6 +45,7 @@ import {
   type VoiceEngineCapabilities,
   type VoiceEngineVoice,
   type VoiceEngineVoiceListOptions,
+  type VoiceServiceOptions,
   type VoicepeakEmotionInput,
   type VoicepeakEmotionWeights,
   type WebSpeechEngineDependencies,
@@ -44,7 +56,9 @@ import {
 describe('Core index voice re-exports', () => {
   it('re-exports voice engine classes', () => {
     expect(typeof AivisCloudEngine).toBe('function');
+    expect(typeof CartesiaEngine).toBe('function');
     expect(typeof ElevenLabsEngine).toBe('function');
+    expect(typeof FishAudioEngine).toBe('function');
     expect(typeof GeminiTtsEngine).toBe('function');
     expect(typeof GradiumEngine).toBe('function');
     expect(typeof InworldEngine).toBe('function');
@@ -90,6 +104,10 @@ describe('Core index voice re-exports', () => {
     expect(ELEVENLABS_TTS_API_URL).toBe(
       'https://api.elevenlabs.io/v1/text-to-speech',
     );
+    expect(FISH_AUDIO_TTS_API_URL).toBe('https://api.fish.audio/v1/tts');
+    expect(FISH_AUDIO_MODELS_API_URL).toBe('https://api.fish.audio/model');
+    expect(CARTESIA_TTS_API_URL).toBe('https://api.cartesia.ai/tts/bytes');
+    expect(CARTESIA_VOICES_API_URL).toBe('https://api.cartesia.ai/voices');
     expect(INWORLD_TTS_API_URL).toBe('https://api.inworld.ai/tts/v1/voice');
     expect(GRADIUM_TTS_API_URL).toBe(
       'https://api.gradium.ai/api/post/speech/tts',
@@ -150,6 +168,38 @@ describe('Core index voice re-exports', () => {
 
     expect(options.gradiumOutputFormat).toBe('wav');
     expect(options.gradiumVoiceSimilarity).toBe(2);
+  });
+
+  it('re-exports Fish Audio and Cartesia option types', () => {
+    const fishModel: FishAudioModel = 's2-pro';
+    const fishFormat: FishAudioFormat = 'mp3';
+    const fishLatency: FishAudioLatency = 'normal';
+    const fishOptions: Extract<
+      VoiceServiceOptions,
+      { engineType: 'fishAudio' }
+    > = {
+      engineType: 'fishAudio',
+      speaker: 'reference-id',
+      apiKey: 'fish-key',
+      fishAudioModel: fishModel,
+      fishAudioFormat: fishFormat,
+      fishAudioLatency: fishLatency,
+    };
+    const cartesiaLanguage: CartesiaLanguage = 'ja';
+    const cartesiaContainer: CartesiaOutputContainer = 'wav';
+    const cartesiaOptions: Extract<
+      VoiceServiceOptions,
+      { engineType: 'cartesia' }
+    > = {
+      engineType: 'cartesia',
+      speaker: 'voice-id',
+      apiKey: 'cartesia-key',
+      cartesiaLanguage,
+      cartesiaOutputContainer: cartesiaContainer,
+    };
+
+    expect(fishOptions.fishAudioModel).toBe('s2-pro');
+    expect(cartesiaOptions.cartesiaLanguage).toBe('ja');
   });
 
   it('re-exports voice engine capability helpers', () => {

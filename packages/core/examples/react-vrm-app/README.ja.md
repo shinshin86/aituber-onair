@@ -4,6 +4,11 @@ Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、
 を設定できます。ブラウザが直接再生して音声バッファを取得できないため、
 このエンジン選択時はリップシンク非対応です。
 
+Fish Audio と Cartesia は API キー入力後に音声一覧から選択できます。
+Fish Audio は公式 API がブラウザの直接 CORS リクエストに対応していないため、
+Vite の development / preview proxy を使います。本番環境では API キーを
+サーバー側に置き、独自バックエンド経由でリクエストしてください。
+
 ![react-vrm-app image](./images/react-vrm-app.png)
 
 `@aituber-onair/core` を使った VRM アバターチャットアプリです。  
@@ -16,9 +21,11 @@ Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、
   `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`,
   `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`,
   `sakana`（ブラウザ UI では disabled 表示）, `plamo`
-- xAI Grok 4.5 の `reasoning_effort` は `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです
+- xAI Grok 4.6 の `reasoning_effort` は `low`、`medium`、`high`、`xhigh`
+  に対応し、既定は `low` です。Grok 4.3 は低レイテンシ向けに `none` が
+  デフォルトです
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
-  Gemini 3.6 Flash、Kimi K3、Ministral 3、GLM-5V-Turbo、GPT-5.6 など
+  Gemini 3.7 Flash、Kimi K3、Ministral 3、GLM-5V-Turbo、GPT-5.6 など
   chat 由来の新規モデルも Settings に
   自動反映されます
 - Gemini 3 Flash 系はチャット用途向けに minimal thinking、Gemini 3 Pro
@@ -32,12 +39,14 @@ Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、
 - TTS エンジン切り替え:
   `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`,
   `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`,
-  `elevenLabs`, `inworld`, `piperPlus`, `webSpeech`, `none`
+  `elevenLabs`, `fishAudio`, `cartesia`, `inworld`, `gradium`, `piperPlus`,
+  `webSpeech`, `none`
 - `geminiTts` は `gemini-3.1-flash-tts-preview` を既定利用し、30 種類の
   プリセットボイスとスタイル / audio-tag プロンプト入力に対応
 - スピーカー一覧の動的取得と選択:
   - `voicevox` / `aivisSpeech`: `/speakers` から取得
-  - `minimax`: API キー入力後に `query/tts_speakers` から取得
+  - `fishAudio`: API キー入力後にローカル Vite proxy 経由で `/model` から取得
+  - `cartesia`: API キー入力後に `/voices` から取得し、言語で絞り込み
   - `elevenLabs`: API キー入力後に `/v2/voices` から取得
   - `inworld`: API キー入力後に `/voices/v1/voices` から取得
 - Aivis Cloud は CORS 回避のため固定プリセット選択:

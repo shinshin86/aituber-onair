@@ -4,13 +4,20 @@ Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、
 を設定できます。ブラウザが直接再生して音声バッファを取得できないため、
 このエンジン選択時はリップシンク非対応です。
 
+Fish Audio と Cartesia は API キー入力後に音声一覧から選択できます。
+Fish Audio は公式 API がブラウザの直接 CORS リクエストに対応していないため、
+Vite の development / preview proxy を使います。本番環境では API キーを
+サーバー側に置き、独自バックエンド経由でリクエストしてください。
+
 静止画の PNGTuber ではなく、Codex Pet 互換のスプライトシートを動かす
 AITuber チャットサンプルです。
 
 基本構造は既存の React core サンプルと同じです。
 
 - `@aituber-onair/core` による LLM チャット
-- xAI Grok 4.5 の `reasoning_effort` は `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです
+- xAI Grok 4.6 の `reasoning_effort` は `low`、`medium`、`high`、`xhigh`
+  に対応し、既定は `low` です。Grok 4.3 は低レイテンシ向けに `none` が
+  デフォルトです
 - TTS 再生と音声レベル解析
 - Web Speech API による音声入力
 - YouTube Live / Twitch コメント取り込み

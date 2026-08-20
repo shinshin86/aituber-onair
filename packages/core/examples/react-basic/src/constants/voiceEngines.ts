@@ -14,6 +14,8 @@ export type VoiceEngineType =
   | 'xai'
   | 'unrealSpeech'
   | 'elevenLabs'
+  | 'fishAudio'
+  | 'cartesia'
   | 'inworld'
   | 'gradium'
   | 'piperPlus'
@@ -121,8 +123,36 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       needsApiKey: true,
       placeholder: 'ElevenLabs API key',
       defaultParams: {
-        model: 'eleven_multilingual_v2',
+        model: 'eleven_flash_v2_5',
         outputFormat: 'mp3_44100_128',
+      },
+    },
+    fishAudio: {
+      name: 'Fish Audio',
+      apiUrl: '/api/fish-audio/v1/tts',
+      needsApiKey: true,
+      placeholder: 'Fish Audio API key',
+      defaultParams: {
+        voiceListApiUrl: '/api/fish-audio/model',
+        model: 's2-pro',
+        format: 'mp3',
+        sampleRate: 44100,
+        mp3Bitrate: 128,
+        latency: 'normal',
+      },
+    },
+    cartesia: {
+      name: 'Cartesia',
+      apiUrl: 'https://api.cartesia.ai/tts/bytes',
+      needsApiKey: true,
+      placeholder: 'Cartesia API key',
+      defaultParams: {
+        voiceListApiUrl: 'https://api.cartesia.ai/voices',
+        model: 'sonic-3.5',
+        language: 'ja',
+        outputContainer: 'wav',
+        sampleRate: 44100,
+        mp3Bitrate: 128000,
       },
     },
     inworld: {

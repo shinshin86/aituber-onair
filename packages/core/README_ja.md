@@ -1224,10 +1224,12 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 - **xAI TTS**: codec、sample rate、bit rate を切り替え可能な xAI の音声合成
 - **Unreal Speech**: Unreal Speech v8 `/stream` エンドポイントを使う音声合成。bitrate、speed、pitch、codec、temperature を指定可能
 - **ElevenLabs**: ElevenLabs Text to Speech API。model、output format、language code、voice settings、text normalization を指定可能
+- **Fish Audio**: S2 Pro を既定とする Fish Audio one-shot TTS。出力形式、latency、speed と参照音声一覧の取得に対応
+- **Cartesia**: Sonic 3.5 を既定とする Cartesia synchronous TTS。language、output、音声一覧の取得に対応
 - **Inworld**: Inworld TTS REST API。model、audio encoding、sample rate、bitrate、language、delivery mode、temperature を指定可能
 - **Gradium**: Gradium REST TTS API。プリセット voice、output format、temperature、similarity、padding、rewrite rules を指定可能
 - **OpenAI-Compatible TTS**: 自己ホストやサードパーティーの `/v1/audio/speech` 互換エンドポイント
-- **MiniMax**: 24言語対応の多言語TTS、HD品質対応（APIキーとGroupIdの両方が必要 - 使用例を参照）
+- **MiniMax**: 現行 T2A v2 model と公式 system voice preset を使う多言語 TTS。API key は必須で、GroupId は legacy の任意 query parameter
 - **Piper Plus**: ONNX Runtime Web と OpenJTalk assets を使うブラウザ内完結の WASM TTS
 - **Web Speech API**: ブラウザ内蔵の音声合成。ブラウザの音声一覧取得と
   rate、pitch、volume、language の指定に対応します。ブラウザが直接再生し、
@@ -1334,9 +1336,9 @@ aituber.updateVoiceService({
 // MiniMaxの例（基本設定）
 aituber.updateVoiceService({
   engineType: 'minimax',
-  speaker: 'male-qn-qingse', // またはサポートされている音声ID
+  speaker: 'Japanese_IntellectualSenior', // または公式 system voice preset
   apiKey: 'YOUR_MINIMAX_API_KEY',
-  groupId: 'YOUR_GROUP_ID', // 本番環境では必須
+  groupId: 'YOUR_GROUP_ID', // legacy の任意 query parameter
   endpoint: 'global' // 'global' または 'china'を選択
 });
 
@@ -1355,19 +1357,12 @@ aituber.updateVoiceService({
   engineType: 'elevenLabs',
   speaker: 'YOUR_ELEVENLABS_VOICE_ID',
   apiKey: 'YOUR_ELEVENLABS_API_KEY',
-  elevenLabsModel: 'eleven_multilingual_v2',
+  elevenLabsModel: 'eleven_flash_v2_5',
   elevenLabsOutputFormat: 'mp3_44100_128',
   elevenLabsLanguageCode: 'ja',
 });
 
-// GroupIdについて：
-// MiniMaxはAPIキーに加えてGroupIdが必要です
-// GroupIdはMiniMaxシステム内でのユーザーグループの一意の識別子で、
-// 以下の目的で使用されます：
-// - ユーザー認証とグループ管理
-// - 使用状況の追跡と統計  
-// - 課金とクォータ管理
-// GroupIdはMiniMaxアカウントダッシュボードから取得できます
+// GroupId は legacy の任意 query parameter です。
 
 // エンドポイントについて：
 // - 'global': グローバル向けAPI（デフォルト）
@@ -1389,17 +1384,17 @@ OpenRouter API、DeepSeek API、Mistral API、Sakana AI、PLaMo が利用可能�
 現在、以下のAIプロバイダーが組み込まれています：
 
 - **OpenAI**: GPT-5系（Nano/Mini/Standard/5.1/5.4/5.5/5.6 Sol/Terra/Luna/5.4 Mini/5.4 Nano/5.4 Pro）、GPT-4.1（Mini/Nano含む）、GPT-4o、GPT-4o-mini、O3-mini、o1、o1-miniのモデルをサポート。GPT-5.6 系では `max` reasoning effort も利用可能
-- **Gemini**: Gemini 3.6 Flash、Gemini 3.5 Flash / Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などをサポート。Gemini 3 Flash 系では `reasoning_effort` を設定でき、Flash 系は `minimal`、Pro 系は `low` をチャット向けのデフォルトにします。Gemini 2.5 は引き続き `thinkingBudget` を使用します
+- **Gemini**: Gemini 3.7 Flash、Gemini 3.6 Flash、Gemini 3.5 Flash / Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などをサポート。Gemini 3.7 Flash の `reasoning_effort` は `low`、従来の Flash 系は `minimal`、Pro 系は `low` をチャット向けのデフォルトにします。Gemini 2.5 は引き続き `thinkingBudget` を使用します
 - **Gemini Nano**: Chrome内蔵の `gemini-nano` モデルを API キー不要でサポート（Chrome 138+ かつ Prompt API のフラグ有効化が必要）
-- **Claude**: 現行の Claude API モデル ID として Claude Opus 5、Claude Sonnet 5、Claude Opus 4.8、Claude Opus 4.7、Claude Opus 4.6、Claude Opus 4.5、Claude Sonnet 4.6、Claude Sonnet 4.5、Claude Haiku 4.5 をサポートし、非推奨ながら引き続き利用可能な Claude 4 Opus、Claude 4 Sonnet、Claude 3 Haiku にも対応しています。対応モデルでは `reasoning_effort` を Anthropic の `output_config.effort` として送信でき、API のデフォルトは `high` です
-- **xAI**: Grok 4.5、Grok 4.3、Grok 4.20 系、Grok 4.1 Fast 系モデルをサポート。Grok 4.5 の `reasoning_effort` は `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです
+- **Claude**: Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Opus 4.8、Claude Opus 4.7、Claude Opus 4.6、Claude Opus 4.5、Claude Sonnet 4.6、Claude Sonnet 4.5、Claude Haiku 4.5 をサポートします。retired ID は source compatibility export として残しますが selector では案内しません。対応モデルでは `reasoning_effort` を Anthropic の `output_config.effort` として送信でき、API のデフォルトは `high` です
+- **xAI**: Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 系をサポート。Grok 4.6 は `low`、`medium`、`high`、`xhigh` を利用でき、既定は `low` です。Grok 4.5 も `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです。Grok 4.1 Fast は compatibility export のみです
 - **DeepSeek**: first-class `deepseek` provider として DeepSeek V4 Flash / V4 Pro をサポート。どちらもモデル別の `reasoning_effort` を利用でき、Core でも Chat の低レイテンシ向けデフォルト `none` を維持しつつ、対応する高い effort へ切り替えられます。現時点では thinking と tool calling を同一リクエストで併用できません
 - **Mistral**: Vision 対応の Ministral 3 系（`ministral-3b-2512`、`ministral-8b-2512`、`ministral-14b-2512`）と、`mistral-small-latest`、`mistral-medium-3-5`、`mistral-large-latest` などの現行 generalist model をサポート。対応モデルでは adjustable reasoning も利用可能
-- **Sakana AI**: first-class `sakana` provider として Fugu（`fugu`）と Fugu Ultra（`fugu-ultra`, `fugu-ultra-20260615`）をサポート。ブラウザ例では CORS により直接呼び出しが失敗する場合があるため disabled 表示にしています。Node.js または backend proxy 経由で利用してください
-- **PLaMo**: first-class `plamo` provider として PLaMo 3.0 Prime（`plamo-3.0-prime`）と PLaMo 2.2 Prime（`plamo-2.2-prime`）をサポート
-- **Z.ai**: GLM-5.2、GLM-5.1、GLM-5/GLM-5-Turbo（テキスト専用）、GLM-5V-Turbo（Vision 対応）、GLM-4.7、GLM-4.7 Flash/FlashX、GLM-4.6、GLM-4.6V、GLM-4.6V Flash/FlashX をサポート
+- **Sakana AI**: first-class `sakana` provider として Fugu（`fugu`）と正確な Fugu Ultra v1.1 ID（`fugu-ultra-v1.1`）をサポート。旧 alias は compatibility export として残します。ブラウザ例では CORS により disabled 表示にしています
+- **PLaMo**: first-class `plamo` provider として PLaMo 3.0 Prime（`plamo-3.0-prime`）をサポート。PLaMo 2.2 Prime は retirement 予定の deprecated compatibility export です
+- **Z.ai**: GLM-5.2、GLM-5.1、GLM-5/GLM-5-Turbo（テキスト専用）、GLM-5V-Turbo（Vision 対応）、GLM-4.7、GLM-4.7 Flash/FlashX、GLM-4.6、GLM-4.6V、GLM-4.6V Flash/FlashX をサポート。GLM-5.2 は model-aware reasoning effort を利用でき、低レイテンシ向け既定は `none` です
 - **Kimi**: Kimi K3（`kimi-k3`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`）、Kimi K2.5（`kimi-k2.5`）を Vision 対応でサポート。`reasoning_effort` を公開するモデルでは公式の対応値とデフォルトを使用します。Kimi K3 は `low`、`high`、`max` を指定でき、デフォルトは `max` です。推論自体は無効化できません。Kimi K2.7 Code 系は thinking mode が必須です
-- **OpenRouter**: Auto Router / Auto Router Beta、Fusion、latest 系 alias、OpenAI GPT-5.6、Claude Opus 5、Gemini 3.6 / 3.5、Z.ai GLM-5.2、xAI Grok 4.5、Kimi K3、KAT-Coder V2.5、DeepSeek V4 Flash を含むキュレーション済みモデル一覧をサポート。DeepSeek は、現在の挙動を固定して再現する場合は `deepseek/deepseek-v4-flash-0731` を使い、`deepseek/deepseek-v4-flash` は別の Preview snapshot として扱います。どちらもモデル別の reasoning effort に対応し、応答性を優先する明示的な `none` がデフォルトです。動的ルーターでは、ルーティング先の reasoning model が可視テキストを出す前に出力枠を使い切ることがあるため、`responseLength` 由来の token 上限を省略します。明示指定した `maxTokens` は有効です。上流制約が強いモデルは明示的な選択肢として扱い、Kimi K3 は混雑時に 429 を返す場合があり、Grok 4.5 には地域別の利用制限があります。Fusion は内部で使われた各モデル呼び出しと web search/fetch 利用分の合算で課金されます。OpenRouter GLM-5.2 では chat 側の `reasoning.effort: 'none'` default と automatic `max_tokens` 省略をそのまま利用します
+- **OpenRouter**: Auto Router / Auto Router Beta、Fusion、latest 系 alias、OpenAI GPT-5.6、Claude Fable 5 / Opus 5、Gemini 3.7 / 3.6 / 3.5、Z.ai GLM-5.2、xAI Grok 4.6 / 4.5、Kimi K3、KAT-Coder V2.5、DeepSeek V4 Flash / V4 Pro 0813 を含むキュレーション済みモデル一覧をサポート。モデル別の reasoning control と低レイテンシ既定を引き継ぎ、catalog に存在しない ID は compatibility export のみとします
 - **OpenAI-Compatible**: 任意の OpenAI 互換 Chat Completions endpoint をサポートし、Vision 対応は endpoint / model の応答まで `unknown` として扱います
 
 OpenRouterのfree-tierモデル検出には、
