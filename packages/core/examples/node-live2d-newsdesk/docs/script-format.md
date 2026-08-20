@@ -28,6 +28,7 @@ are resolved relative to the script file.
   "avatarMotion": {
     "idle": "Idle"
   },
+  "avatarWarmupSeconds": 3,
   "motion": { "intensity": 1 },
   "blinkSeed": 42,
   "lines": [
@@ -61,6 +62,9 @@ are resolved relative to the script file.
   afterward and keeps its Node-side composite semantics.
 - `avatarMotion.idle` (optional): deterministic idle motion group. Its index
   zero is pinned. Without this field the `Idle` group is used when present.
+- `avatarWarmupSeconds` (optional): uncaptured model-settle time before video
+  frame zero. It accepts `0` through `30` seconds and defaults to `3`. The
+  duration is rounded up to a whole fixed step at the video frame rate.
 - `motion.intensity`: Live2D update-rate multiplier clamped from 0 through 3;
   `0` freezes idle motion while RMS lip-sync and deterministic blinking remain.
 - `blinkSeed`: deterministic blink schedule seed.
@@ -70,7 +74,10 @@ Headless Chromium renders the Cubism 4 model to a transparent frame. After each
 fixed-step model update, normalized audio RMS is written directly to the first
 available mouth-open parameter and the deterministic blink schedule writes
 `ParamEyeLOpen`/`ParamEyeROpen`. Node composites that browser frame with the
-background, chapter label, and subtitle.
+background, chapter label, and subtitle. After model and idle-motion loading,
+the harness first advances the configured warm-up using the same fixed step
+without taking screenshots. Video frame zero and its audio/subtitle timeline
+still begin at time zero.
 
 ## Line fields
 

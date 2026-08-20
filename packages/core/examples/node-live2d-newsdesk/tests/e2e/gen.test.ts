@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -17,6 +18,7 @@ const fixtureScriptPath = path.join(
 const scriptPath = path.join(workDirectory, 'hello-sine.local.json');
 const outputPath = path.join(workDirectory, 'hello.mp4');
 const timingsPath = path.join(workDirectory, 'hello.timings.json');
+const configPath = path.join(workDirectory, 'hello.live2d-gen.config.json');
 const closedPngPath = path.join(workDirectory, 'mouth-closed.png');
 const openPngPath = path.join(workDirectory, 'mouth-open.png');
 const cubismCorePath =
@@ -69,6 +71,12 @@ function run(command: string, args: string[]): Promise<CommandResult> {
       }
     });
   });
+}
+
+async function md5(filePath: string): Promise<string> {
+  return createHash('md5')
+    .update(await readFile(filePath))
+    .digest('hex');
 }
 
 async function readPixels(filePath: string): Promise<Uint8ClampedArray> {
@@ -160,6 +168,13 @@ live2dIt(
           y: number;
           renderedScale: number;
         };
+        avatarWarmup: {
+          configuredSeconds: number;
+          settledSeconds: number;
+          frames: number;
+          fixedDeltaSeconds: number;
+          capturedFrames: number;
+        };
       };
     };
 
@@ -190,8 +205,21 @@ live2dIt(
     expect(
       summary.avatarDiagnostics.avatarFraming.renderedScale,
     ).toBeGreaterThan(0);
+    expect(summary.avatarDiagnostics.avatarWarmup).toEqual({
+      configuredSeconds: 3,
+      settledSeconds: 3,
+      frames: 90,
+      fixedDeltaSeconds: 1 / 30,
+      capturedFrames: 0,
+    });
+
+    const resolvedConfig = JSON.parse(await readFile(configPath, 'utf8')) as {
+      avatarWarmupSeconds: number;
+    };
+    expect(resolvedConfig.avatarWarmupSeconds).toBe(3);
 
     const firstTimings = await readFile(timingsPath, 'utf8');
+    const firstMp4Md5 = await md5(outputPath);
     await run(process.execPath, [
       'dist/gen.cjs',
       '--script',
@@ -201,6 +229,7 @@ live2dIt(
       '--render-only',
     ]);
     expect(await readFile(timingsPath, 'utf8')).toBe(firstTimings);
+    expect(await md5(outputPath)).toBe(firstMp4Md5);
 
     const probe = await run('ffprobe', [
       '-v',

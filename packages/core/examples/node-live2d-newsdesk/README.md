@@ -107,6 +107,9 @@ See [docs/script-format.md](docs/script-format.md) for the strict JSON format.
   capture. Defaults are `2.5`, `0.5`, and `0.4` for a bust-up portrait shot.
 - `avatarMotion.idle` selects a Live2D motion group. The first motion is pinned
   for deterministic playback. `Idle` is used automatically when present.
+- `avatarWarmupSeconds` sets the uncaptured model-settle period before frame
+  zero. It accepts `0` through `30` seconds and defaults to `3`, preventing pose
+  part fades and idle-motion crossfades from appearing at the start of a video.
 - `motion.intensity` changes the fixed-step Live2D update rate from `0` to `3`.
   At `0`, idle motion freezes while lip-sync and scheduled blinking remain.
 
@@ -123,6 +126,12 @@ available mouth parameter (`ParamMouthOpenY` and compatible fallbacks) and
 writes `ParamEyeLOpen`/`ParamEyeROpen` from the seeded blink schedule. The
 library's automatic eye blink is disabled. Idle restart uses the normal motion
 manager with index zero pinned instead of random selection.
+
+After the model and pinned idle motion load, the harness advances three seconds
+of fixed-step model updates by default without taking screenshots. This settles
+pose fades, physics, and the initial motion crossfade before the first captured
+frame; it does not add frames or time to the MP4. The resolved duration and the
+warm-up diagnostics are written to the config sidecar and render summary.
 
 Chromium returns a transparent PNG. Node composites it with the background,
 chapter label, and subtitle, then streams RGBA frames to ffmpeg for H.264/AAC

@@ -29,6 +29,13 @@ export interface Live2DAvatarDiagnostics {
     y: number;
     renderedScale: number;
   };
+  avatarWarmup: {
+    configuredSeconds: number;
+    settledSeconds: number;
+    frames: number;
+    fixedDeltaSeconds: number;
+    capturedFrames: 0;
+  };
   launchMode: 'swiftshader' | 'default-gl';
   captureMode: 'playwright-png-screenshot';
 }
@@ -54,6 +61,46 @@ export interface Live2DFrameSource {
   close(): Promise<void>;
 }
 
+type Live2DUpdateInput = Omit<Live2DFrameInput, 'frameNumber'>;
+
+export interface Live2DFrameDriver {
+  update(input: Live2DUpdateInput): Promise<void>;
+  capture(): Promise<Buffer>;
+}
+
+export type Live2DAvatarWarmupDiagnostics =
+  Live2DAvatarDiagnostics['avatarWarmup'];
+
+/** Advance model state before capture without consuming any video frames. */
+export async function warmUpLive2DAvatar(
+  driver: Live2DFrameDriver,
+  options: { seconds: number; fps: number },
+): Promise<Live2DAvatarWarmupDiagnostics> {
+  if (!Number.isFinite(options.seconds) || options.seconds < 0) {
+    throw new Error('Live2D warm-up seconds must be non-negative.');
+  }
+  if (!Number.isFinite(options.fps) || options.fps <= 0) {
+    throw new Error('Live2D warm-up fps must be positive.');
+  }
+  const frames = Math.ceil(options.seconds * options.fps);
+  const fixedDeltaSeconds = 1 / options.fps;
+  for (let frame = 0; frame < frames; frame += 1) {
+    await driver.update({
+      time: (frame + 1) / options.fps,
+      deltaSeconds: fixedDeltaSeconds,
+      mouth: 0,
+      eyesClosed: false,
+    });
+  }
+  return {
+    configuredSeconds: options.seconds,
+    settledSeconds: frames / options.fps,
+    frames,
+    fixedDeltaSeconds,
+    capturedFrames: 0,
+  };
+}
+
 interface HarnessServer {
   server: Server;
   origin: string;
@@ -62,13 +109,13 @@ interface HarnessServer {
 interface BrowserSession {
   browser: Browser;
   context: BrowserContext;
-  page: Page;
+  driver: Live2DFrameDriver;
   diagnostics: Live2DAvatarDiagnostics;
 }
 
 type BrowserLoadDiagnostics = Omit<
   Live2DAvatarDiagnostics,
-  'launchMode' | 'captureMode'
+  'avatarWarmup' | 'launchMode' | 'captureMode'
 >;
 
 const SWIFTSHADER_ARGS = [
@@ -277,12 +324,18 @@ async function launchSession(
         idleMotionGroup: config.avatarMotion.idle ?? undefined,
       },
     );
+    const driver = createBrowserFrameDriver(page);
+    const avatarWarmup = await warmUpLive2DAvatar(driver, {
+      seconds: config.avatarWarmupSeconds,
+      fps: config.fps,
+    });
     return {
       browser,
       context,
-      page,
+      driver,
       diagnostics: {
         ...(loaded as BrowserLoadDiagnostics),
+        avatarWarmup,
         launchMode,
         captureMode: 'playwright-png-screenshot',
       },
@@ -291,6 +344,35 @@ async function launchSession(
     await browser.close();
     throw error;
   }
+}
+
+function createBrowserFrameDriver(page: Page): Live2DFrameDriver {
+  return {
+    async update(input) {
+      await page.evaluate(({ time, deltaSeconds, mouth, eyesClosed }) => {
+        const harnessWindow = window as unknown as {
+          renderFrame(options: {
+            time: number;
+            deltaSeconds: number;
+            mouth: number;
+            eyesClosed: boolean;
+          }): void;
+        };
+        harnessWindow.renderFrame({
+          time,
+          deltaSeconds,
+          mouth,
+          eyesClosed,
+        });
+      }, input);
+    },
+    async capture() {
+      return page.screenshot({
+        type: 'png',
+        omitBackground: true,
+      });
+    },
+  };
 }
 
 function isMissingBrowser(error: unknown): boolean {
@@ -370,29 +452,8 @@ export async function createLive2DAvatar(
         );
       }
       const startedAt = performance.now();
-      await session.page.evaluate(
-        ({ time, deltaSeconds, mouth, eyesClosed }) => {
-          const harnessWindow = window as unknown as {
-            renderFrame(options: {
-              time: number;
-              deltaSeconds: number;
-              mouth: number;
-              eyesClosed: boolean;
-            }): void;
-          };
-          harnessWindow.renderFrame({
-            time,
-            deltaSeconds,
-            mouth,
-            eyesClosed,
-          });
-        },
-        input,
-      );
-      const png = await session.page.screenshot({
-        type: 'png',
-        omitBackground: true,
-      });
+      await session.driver.update(input);
+      const png = await session.driver.capture();
       const image = await loadImage(png);
       nextFrame += 1;
       return { image, elapsedMs: performance.now() - startedAt };

@@ -10,7 +10,11 @@ import type {
   ScriptVoice,
   TimedText,
 } from '../types.js';
-import { DEFAULT_AVATAR_FRAMING } from '../types.js';
+import {
+  DEFAULT_AVATAR_FRAMING,
+  DEFAULT_AVATAR_WARMUP_SECONDS,
+  MAX_AVATAR_WARMUP_SECONDS,
+} from '../types.js';
 import {
   concatWavs,
   createMouthValues,
@@ -167,6 +171,22 @@ function validateArgs(args: GenArgs): asserts args is GenArgs & {
 function normalizeMotionIntensity(value: unknown): number {
   const intensity = Number(value ?? 1);
   return Number.isFinite(intensity) ? Math.max(0, Math.min(3, intensity)) : 1;
+}
+
+/** Resolve and strictly validate the pre-capture Live2D settle duration. */
+export function resolveAvatarWarmupSeconds(value: unknown): number {
+  if (value === undefined) return DEFAULT_AVATAR_WARMUP_SECONDS;
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value) ||
+    value < 0 ||
+    value > MAX_AVATAR_WARMUP_SECONDS
+  ) {
+    throw new Error(
+      `avatarWarmupSeconds must be a finite number from 0 through ${MAX_AVATAR_WARMUP_SECONDS}.`,
+    );
+  }
+  return value;
 }
 
 function createPaths(
@@ -462,9 +482,15 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
   await assertFfmpeg();
 
   if (args.renderOnly) {
-    const config = JSON.parse(
+    const storedConfig = JSON.parse(
       await readFile(paths.configPath, 'utf8'),
     ) as RenderConfig;
+    const config: RenderConfig = {
+      ...storedConfig,
+      avatarWarmupSeconds: resolveAvatarWarmupSeconds(
+        storedConfig.avatarWarmupSeconds,
+      ),
+    };
     const result = await render(config, args);
     console.log(
       JSON.stringify(
@@ -508,6 +534,9 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       avatarMotion: {
         idle: script.avatarMotion?.idle ?? null,
       },
+      avatarWarmupSeconds: resolveAvatarWarmupSeconds(
+        script.avatarWarmupSeconds,
+      ),
       motion: {
         intensity: normalizeMotionIntensity(script.motion?.intensity),
       },
