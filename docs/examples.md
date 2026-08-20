@@ -208,6 +208,9 @@ npm run dev
 - [`packages/core/examples/node-live2d-newsdesk`](../packages/core/examples/node-live2d-newsdesk):
   Node.js pipeline that drives a headless-Chromium Cubism 4 Live2D renderer and
   produces a chaptered vertical avatar news video with Core chat and voice.
+- [`packages/core/examples/node-inochi2d-newsdesk`](../packages/core/examples/node-inochi2d-newsdesk):
+  Node.js pipeline that drives the Inochi2D WASM bridge under a deterministic
+  virtual clock and produces a chaptered vertical news video.
 
 ## Chat Examples
 
