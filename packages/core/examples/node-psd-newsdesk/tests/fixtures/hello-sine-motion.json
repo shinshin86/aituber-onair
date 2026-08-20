@@ -1,11 +1,12 @@
 {
-  "avatar": "../assets/sample-static.psd",
-  "avatarMode": "static",
+  "avatar": "../../../react-psd-app/public/avatar/sample.psd",
+  "avatarMode": "auto",
   "voice": {
-    "engine": "aituber-voice",
+    "engine": "sine",
     "options": {
-      "engineType": "aivisSpeech",
-      "speaker": "888753760"
+      "frequency": 440,
+      "secondsPerChar": 0.02,
+      "minDuration": 0.18
     }
   },
   "leadIn": 0.05,
@@ -15,9 +16,9 @@
     "color": "#20242c"
   },
   "avatarLayout": {
-    "scale": 1,
+    "scale": 1.18,
     "x": 0.5,
-    "y": 0.51
+    "y": 0.52
   },
   "motion": {
     "intensity": 1
@@ -30,12 +31,12 @@
       "pauseAfter": 0.03
     },
     {
-      "text": "ここは AITuber OnAir のニュースデスク。",
-      "chapter": "ニュースデスクとは",
+      "text": "メッシュで動きます。",
+      "chapter": "モーション",
       "pauseAfter": 0.03
     },
     {
-      "text": "新しいリリースを私がお知らせします。",
+      "text": "口パクも確認します。",
       "pauseAfter": 0.03
     }
   ]

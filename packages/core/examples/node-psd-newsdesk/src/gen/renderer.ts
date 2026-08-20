@@ -8,6 +8,10 @@ import {
 import type { RenderConfig, ScriptAvatarLayout } from '../types.js';
 import type { PsdAvatar } from './psdBinding.js';
 import type { PsdModel } from './psdModel.js';
+import type {
+  PsdMotionAvatarDiagnostics,
+  PsdMotionFrameSource,
+} from './psdMotionAvatar.js';
 import { getVisibleLayerIds } from './psdVisibility.js';
 
 /** A normalized RMS value at or above this level uses an open-mouth image. */
@@ -32,16 +36,20 @@ export interface MotionDiagnostics {
   pose: Pose;
   stateKey: AvatarStateKey;
   mouthState: MouthState;
+  frameElapsedMs?: number;
 }
 
 export interface NewsdeskRenderer {
   canvas: Canvas;
+  avatarMode: 'static' | 'motion';
+  avatarDiagnostics?: PsdMotionAvatarDiagnostics;
   render(
     frameNumber: number,
     mouthValue: number,
     eyesClosed: boolean,
-  ): MotionDiagnostics;
+  ): MotionDiagnostics | Promise<MotionDiagnostics>;
   rgba(): Buffer;
+  close(): Promise<void>;
 }
 
 interface TextBoxOptions {
@@ -75,6 +83,7 @@ export async function createRenderer(
 
   return {
     canvas,
+    avatarMode: 'static',
     render(frameNumber, mouthValue, eyesClosed) {
       if (frameNumber !== nextFrame) {
         throw new Error(
@@ -111,6 +120,72 @@ export async function createRenderer(
         imageData.data.byteOffset,
         imageData.data.byteLength,
       );
+    },
+    async close() {},
+  };
+}
+
+/** Create a compositor backed by the sibling Anime2.5DRig WebGL renderer. */
+export async function createMotionRenderer(
+  config: RenderConfig,
+  frameSource: PsdMotionFrameSource,
+): Promise<NewsdeskRenderer> {
+  const canvas = createCanvas(config.width, config.height);
+  const context = canvas.getContext('2d');
+  const backgroundImage = config.background.image
+    ? await loadImage(config.background.image)
+    : null;
+  const modelSize = { width: frameSource.width, height: frameSource.height };
+  const zeroPose: Pose = { x: 0, y: 0, rotation: 0, scale: 1 };
+  let nextFrame = 0;
+
+  return {
+    canvas,
+    avatarMode: 'motion',
+    avatarDiagnostics: frameSource.diagnostics,
+    async render(frameNumber, mouthValue, eyesClosed) {
+      if (frameNumber !== nextFrame) {
+        throw new Error(
+          `Frames must be rendered sequentially (expected ${nextFrame}, ` +
+            `got ${frameNumber}).`,
+        );
+      }
+      const frame = await frameSource.renderFrame({
+        frameNumber,
+        time: frameNumber / config.fps,
+        deltaSeconds: frameNumber === 0 ? 0 : 1 / config.fps,
+        mouth: mouthValue,
+        eyesClosed,
+      });
+      drawBackground(context, canvas, config.background, backgroundImage);
+      drawAvatar(
+        context,
+        canvas,
+        modelSize,
+        frame.image,
+        config.avatarLayout,
+        zeroPose,
+      );
+      drawTextOverlays(context, canvas, config, frameNumber / config.fps);
+      nextFrame += 1;
+      const mouthState = resolveMouthState(mouthValue);
+      return {
+        pose: zeroPose,
+        stateKey: resolveAvatarStateKey(mouthState, false),
+        mouthState,
+        frameElapsedMs: frame.elapsedMs,
+      };
+    },
+    rgba() {
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      return Buffer.from(
+        imageData.data.buffer,
+        imageData.data.byteOffset,
+        imageData.data.byteLength,
+      );
+    },
+    async close() {
+      await frameSource.close();
     },
   };
 }
@@ -184,8 +259,8 @@ function drawBackground(
 function drawAvatar(
   context: SKRSContext2D,
   canvas: Canvas,
-  model: PsdModel,
-  avatarCanvas: Canvas,
+  model: Pick<PsdModel, 'width' | 'height'>,
+  avatarCanvas: Canvas | Image,
   layout: ScriptAvatarLayout,
   pose: Pose,
 ): void {
@@ -205,7 +280,10 @@ function drawAvatar(
   context.restore();
 }
 
-function calculateBaseScale(canvas: Canvas, model: PsdModel): number {
+function calculateBaseScale(
+  canvas: Canvas,
+  model: Pick<PsdModel, 'width' | 'height'>,
+): number {
   return Math.min(
     (canvas.width * 0.96) / model.width,
     (canvas.height * 0.9) / model.height,

@@ -1,5 +1,6 @@
 {
   "avatar": "../../assets/sample-static.psd",
+  "avatarMode": "static",
   "voice": {
     "engine": "sine",
     "options": {

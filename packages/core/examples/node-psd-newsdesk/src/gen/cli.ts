@@ -6,6 +6,7 @@ import { defaultAvatarPath, resolveFrom } from '../paths.js';
 import type {
   NewsdeskScript,
   RenderConfig,
+  ResolvedAvatarMode,
   ScriptLine,
   ScriptVoice,
   TimedText,
@@ -17,6 +18,7 @@ import {
   writeSilenceWav,
 } from './audio.js';
 import { createBlinkSchedule } from './blink.js';
+import { selectAvatarMode } from './avatarMode.js';
 import * as aituberVoiceEngine from './engines/aituberVoice.js';
 import * as sayEngine from './engines/say.js';
 import * as sineEngine from './engines/sine.js';
@@ -24,10 +26,16 @@ import type { SynthesisResult, VoiceEngine } from './engines/types.js';
 import { assertFfmpeg, encodeMp4, writeFrame } from './ffmpeg.js';
 import { loadPsdAvatar } from './psdBinding.js';
 import {
+  createPsdMotionCandidate,
+  type PsdMotionAvatarDiagnostics,
+} from './psdMotionAvatar.js';
+import {
   type AvatarStateKey,
+  createMotionRenderer,
   createRenderer,
   type MouthState,
   type MotionDiagnostics,
+  type NewsdeskRenderer,
   resolveMouthState,
 } from './renderer.js';
 
@@ -87,6 +95,14 @@ interface RenderSummary {
   frames?: number;
   totalFrames?: number;
   duration?: number;
+  avatarMode: ResolvedAvatarMode;
+  blinkControl: 'node-schedule' | 'internal-seeded-automation';
+  avatarDiagnostics?: PsdMotionAvatarDiagnostics;
+  renderPerformance?: {
+    measuredFrames: number;
+    totalMs: number;
+    averageMsPerFrame: number;
+  };
   mouthFrames: Record<MouthState, number>;
   stateFrames: Record<AvatarStateKey, number>;
   blinkFrames?: number;
@@ -313,14 +329,35 @@ async function render(
   config: RenderConfig,
   args: GenArgs,
 ): Promise<RenderSummary> {
-  const [audio, avatar] = await Promise.all([
-    decodeWav(config.audio),
-    loadPsdAvatar(config.avatar, config.avatarRoles),
-  ]);
+  const audio = await decodeWav(config.audio);
+  const requestedMode = config.avatarMode ?? 'auto';
+  let resolvedMode: ResolvedAvatarMode;
+  let renderer: NewsdeskRenderer;
+  if (requestedMode === 'static') {
+    resolvedMode = 'static';
+    const avatar = await loadPsdAvatar(config.avatar, config.avatarRoles);
+    renderer = await createRenderer(config, avatar);
+  } else {
+    const candidate = await createPsdMotionCandidate(config);
+    resolvedMode = selectAvatarMode(requestedMode, candidate.detection);
+    if (resolvedMode === 'motion') {
+      if (!candidate.source) {
+        throw new Error(candidate.detection.reason);
+      }
+      try {
+        renderer = await createMotionRenderer(config, candidate.source);
+      } catch (error) {
+        await candidate.source.close();
+        throw error;
+      }
+    } else {
+      const avatar = await loadPsdAvatar(config.avatar, config.avatarRoles);
+      renderer = await createRenderer(config, avatar);
+    }
+  }
   const totalFrames = Math.max(1, Math.ceil(config.duration * config.fps));
   const mouthValues = createMouthValues(audio, config.fps, totalFrames);
   const blink = createBlinkSchedule(totalFrames, config.fps, config.blinkSeed);
-  const renderer = await createRenderer(config, avatar);
   const targetFrame =
     args.png && args.frame !== null
       ? Math.max(0, Math.min(totalFrames - 1, Math.floor(args.frame)))
@@ -336,6 +373,8 @@ async function render(
     mouth_open_eyes_closed: 0,
   };
   const samples: RenderSummary['motionSamples'] = [];
+  let measuredFrames = 0;
+  let totalRenderMs = 0;
   const poseBounds: Record<'x' | 'y' | 'rotation', PoseRange> = {
     x: { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY },
     y: { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY },
@@ -351,14 +390,16 @@ async function render(
     totalFrames - 1,
   ]);
 
-  const renderOne = (frame: number): void => {
+  const renderOne = async (frame: number): Promise<void> => {
     const mouthState = resolveMouthState(mouthValues[frame]);
     mouthFrames[mouthState] += 1;
-    const diagnostics = renderer.render(
-      frame,
-      mouthValues[frame],
-      Boolean(blink[frame]),
+    const diagnostics = await Promise.resolve(
+      renderer.render(frame, mouthValues[frame], Boolean(blink[frame])),
     );
+    if (diagnostics.frameElapsedMs !== undefined) {
+      measuredFrames += 1;
+      totalRenderMs += diagnostics.frameElapsedMs;
+    }
     stateFrames[diagnostics.stateKey] += 1;
     for (const key of ['x', 'y', 'rotation'] as const) {
       poseBounds[key].min = Math.min(
@@ -374,7 +415,7 @@ async function render(
       samples.push({
         frame,
         time: frame / config.fps,
-        eyesClosed: Boolean(blink[frame]),
+        eyesClosed: resolvedMode === 'static' ? Boolean(blink[frame]) : false,
         ...diagnostics,
       });
     }
@@ -388,38 +429,74 @@ async function render(
       ]),
     );
 
+  const renderPerformance = (): RenderSummary['renderPerformance'] =>
+    measuredFrames > 0
+      ? {
+          measuredFrames,
+          totalMs: totalRenderMs,
+          averageMsPerFrame: totalRenderMs / measuredFrames,
+        }
+      : undefined;
+
   if (args.png && targetFrame !== null) {
-    for (let frame = 0; frame <= targetFrame; frame += 1) renderOne(frame);
-    const pngPath = path.resolve(args.png);
-    await mkdir(path.dirname(pngPath), { recursive: true });
-    await writeFile(pngPath, renderer.canvas.toBuffer('image/png'));
-    return {
-      png: pngPath,
-      frame: targetFrame,
-      totalFrames,
-      mouthFrames,
-      stateFrames,
-      poseAmplitude: poseAmplitude(),
-      motionSamples: samples,
-    };
+    try {
+      for (let frame = 0; frame <= targetFrame; frame += 1) {
+        await renderOne(frame);
+      }
+      const pngPath = path.resolve(args.png);
+      await mkdir(path.dirname(pngPath), { recursive: true });
+      await writeFile(pngPath, renderer.canvas.toBuffer('image/png'));
+      return {
+        png: pngPath,
+        frame: targetFrame,
+        totalFrames,
+        avatarMode: resolvedMode,
+        blinkControl:
+          resolvedMode === 'motion'
+            ? 'internal-seeded-automation'
+            : 'node-schedule',
+        avatarDiagnostics: renderer.avatarDiagnostics,
+        renderPerformance: renderPerformance(),
+        mouthFrames,
+        stateFrames,
+        poseAmplitude: poseAmplitude(),
+        motionSamples: samples,
+      };
+    } finally {
+      await renderer.close();
+    }
   }
 
-  await encodeMp4({
-    config,
-    writeFrames: async (stdin: Writable) => {
-      for (let frame = 0; frame < totalFrames; frame += 1) {
-        renderOne(frame);
-        await writeFrame(stdin, renderer.rgba());
-      }
-    },
-  });
+  try {
+    await encodeMp4({
+      config,
+      writeFrames: async (stdin: Writable) => {
+        for (let frame = 0; frame < totalFrames; frame += 1) {
+          await renderOne(frame);
+          await writeFrame(stdin, renderer.rgba());
+        }
+      },
+    });
+  } finally {
+    await renderer.close();
+  }
   return {
     output: config.output,
     frames: totalFrames,
     duration: totalFrames / config.fps,
+    avatarMode: resolvedMode,
+    blinkControl:
+      resolvedMode === 'motion'
+        ? 'internal-seeded-automation'
+        : 'node-schedule',
+    avatarDiagnostics: renderer.avatarDiagnostics,
+    renderPerformance: renderPerformance(),
     mouthFrames,
     stateFrames,
-    blinkFrames: blink.reduce((sum, value) => sum + value, 0),
+    blinkFrames:
+      resolvedMode === 'static'
+        ? blink.reduce((sum, value) => sum + value, 0)
+        : undefined,
     poseAmplitude: poseAmplitude(),
     motionSamples: samples,
   };
@@ -494,6 +571,7 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       avatar: script.avatar
         ? resolveFrom(scriptPath, script.avatar)
         : defaultAvatarPath(),
+      avatarMode: script.avatarMode ?? 'auto',
       avatarRoles: script.avatarRoles,
       audio: paths.wavPath,
       output: paths.outputPath,

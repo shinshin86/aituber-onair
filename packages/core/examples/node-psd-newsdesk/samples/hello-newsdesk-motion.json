@@ -1,6 +1,6 @@
 {
-  "avatar": "../assets/sample-static.psd",
-  "avatarMode": "static",
+  "avatar": "../../react-psd-app/public/avatar/sample.psd",
+  "avatarMode": "auto",
   "voice": {
     "engine": "aituber-voice",
     "options": {
@@ -15,9 +15,9 @@
     "color": "#20242c"
   },
   "avatarLayout": {
-    "scale": 1,
+    "scale": 1.18,
     "x": 0.5,
-    "y": 0.51
+    "y": 0.52
   },
   "motion": {
     "intensity": 1
@@ -35,7 +35,7 @@
       "pauseAfter": 0.03
     },
     {
-      "text": "新しいリリースを私がお知らせします。",
+      "text": "メッシュの動きと口パクを確認します。",
       "pauseAfter": 0.03
     }
   ]

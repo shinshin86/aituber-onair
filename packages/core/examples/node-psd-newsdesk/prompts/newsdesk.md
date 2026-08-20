@@ -19,6 +19,7 @@ Analyze the document before writing. Return this exact outer structure:
   },
   "script": {
     "avatar": "...",
+    "avatarMode": "static",
     "voice": { "engine": "...", "options": {} },
     "background": { "color": "..." },
     "avatarLayout": { "scale": 1, "x": 0, "y": 0 },
@@ -68,6 +69,7 @@ The `script` object must follow this schema example:
 ```json
 {
   "avatar": "../assets/sample-static.psd",
+  "avatarMode": "static",
   "voice": {
     "engine": "sine",
     "options": {

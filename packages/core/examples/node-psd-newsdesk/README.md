@@ -5,16 +5,16 @@
 This AITuber OnAir Core example turns source text into a chaptered Japanese
 news video. It generates a reviewed JSON script with a Core chat provider,
 synthesizes narration through Core's `VoiceEngineAdapter` or a local test
-engine, composites a static PSDTool-style `.psd` layer tree while switching
-mouth and eye roles from audio RMS and deterministic blinks, and writes a
-vertical H.264/AAC MP4 with chapter labels and subtitles.
+engine, selects either static PSDTool compositing or Anime2.5DRig WebGL motion,
+and writes a vertical H.264/AAC MP4 with chapter labels and subtitles.
 
 ```text
 file, stdin, or URL
   -> Core chat / Core Agent SDK
   -> script.json + analysis.json (review)
   -> Core voice / sine / macOS say
-  -> static PSDTool layers + binary RMS lip sync + deterministic blink
+  -> auto detection -> Anime2.5DRig motion or static PSDTool fallback
+  -> audio lip sync + deterministic motion/blink
   -> ffmpeg -> 1080x1920 MP4 (review)
 ```
 
@@ -26,6 +26,7 @@ X, YouTube, or another service.
 
 - Node.js 22 or later and npm
 - `ffmpeg` and `ffprobe` on `PATH`
+- Chromium installed through Playwright for `auto` detection and motion mode
 - A ChatGPT sign-in for the default `codex-sdk` provider, or an API key for an
   API provider
 - Optional: AivisSpeech at `http://127.0.0.1:10101` for the bundled Mao sample
@@ -37,6 +38,7 @@ macOS-only smoke-test option and is not intended for published narration.
 
 ```sh
 npm install
+npx playwright install chromium
 npm run build
 ```
 
@@ -97,6 +99,19 @@ npm run gen -- \
   --output work/hello-newsdesk.mp4
 ```
 
+Motion samples reference the procedural, motion-capable PSD from the sibling
+React example without copying it:
+
+```sh
+npm run gen -- \
+  --script samples/hello-sine-motion.json \
+  --output work/hello-sine-motion.mp4
+
+npm run gen -- \
+  --script samples/hello-newsdesk-motion.json \
+  --output work/hello-newsdesk-motion.mp4
+```
+
 Additional generation modes:
 
 ```sh
@@ -116,6 +131,15 @@ overrides, voice engine/options, background, avatar layout, deterministic blink
 seed, and 3–12 narration lines. Each line may set subtitle text, a
 pronunciation-only `reading`, a chapter label, and its following pause. See the
 complete [`script.json` format](./docs/script-format.md).
+
+## PSD modes
+
+There are two first-class render modes. `avatarMode: "auto"` is the default:
+the Anime2.5DRig rigger runs first, and a normalized `face` part selects motion
+mode. Ineligible PSDs fall back to static PSDTool mode. `avatarMode: "static"`
+skips Chromium and keeps the existing pure-Node Canvas 2D renderer.
+`avatarMode: "motion"` requires a usable rig and stops with the rigger's exact
+diagnostic when the PSD is ineligible.
 
 ## Static PSDTool mode
 
@@ -156,11 +180,8 @@ If detection and overrides cannot resolve every role, generation stops and
 prints the layer tree. Normalized RMS at or above `0.45` shows `mouthOpen`;
 lower values show `mouthClosed`.
 
-Motion mode is an explicit non-goal. Anime2.5DRig motion mode requires a WebGL
-mesh renderer and is not ported here. Motion-mode PSDs render in static mode in
-this example; only mouth/eye role layers switch. The small deterministic breath
-bob and roll are video-frame transforms controlled by `motion.intensity`, and
-`0` disables them.
+The small deterministic breath bob and roll are video-frame transforms
+controlled by `motion.intensity`, and `0` disables them.
 
 Static-mode limitations match `react-psd-app`: PSB is unsupported; the
 known-good input is an 8-bit RGB PSD with normal pixel layers; non-normal blend
@@ -176,10 +197,39 @@ the mouth and eye role layers contain only padded feature-difference regions.
 Those cropped roles let the mouth and eye groups switch independently instead
 of one full-canvas role covering the other.
 
+## Anime2.5DRig motion mode
+
+Motion mode uses headless Chromium and bundles these sibling sources read-only:
+
+- `react-psd-app/src/vendor/anime25drig/rigger.js`
+- `react-psd-app/src/lib/rig/anime25Rig.ts`
+- `react-psd-app/src/lib/rig/anime25Renderer.ts`
+
+The harness installs its seeded virtual clock before the renderer bundle loads.
+It replaces `requestAnimationFrame`, `cancelAnimationFrame`,
+`performance.now`, `Date.now`, and `Math.random`. For each output frame it
+sets the renderer's documented audio `mouthOpen` input, advances virtual time,
+flushes exactly one current rAF callback, and requires one next callback to be
+queued. Idle sway, breathing, random motion, and mesh physics therefore remain
+active but reproducible. `motion.intensity` is passed to the renderer, whose
+motion range is `0` through `2`.
+
+The sibling renderer exposes no direct eye-open input. Motion mode therefore
+keeps its built-in blink automation instead of using the Node `eyesClosed`
+schedule; blink timing is deterministic because both time and randomness are
+patched from `blinkSeed`. Static mode continues to use the Node schedule
+directly.
+
+The motion samples reference
+`../../react-psd-app/public/avatar/sample.psd`. That PSD is procedurally
+generated by the React example and is safe to ship; this package does not copy
+it.
+
 ## Verification
 
 ```sh
 npm install
+npx playwright install chromium
 npm run fmt
 npm run lint
 npm run typecheck
@@ -188,11 +238,24 @@ npm run build
 npm run test:e2e
 ```
 
-The end-to-end test renders through the bundled `dist/gen.cjs`, checks the
-H.264/AAC streams with ffprobe, verifies a 1080x1920 PNG, and confirms that a
-`--render-only` pass has the same MD5 as the initial deterministic sine render.
+The always-on end-to-end suite renders both modes through `dist/gen.cjs`, checks
+H.264/AAC streams with ffprobe, verifies 1080x1920 PNG frames, and checks motion
+mouth/idle pixel differences. Two consecutive motion renders compare timings
+JSON and MP4 MD5.
 
 ## Asset terms and attribution
+
+Anime2.5DRig-compatible auto-rigging and rendering carry this attribution:
+
+- Project: [Anime2.5DRig](https://github.com/852wa/Anime2.5DRig)
+- Author: 852wa (hakoniwa)
+- Copyright: Copyright (c) 2026 hakoniwa
+- License: MIT License
+- Upstream commit: `d48825867acd081de22b0e7b5585bb562288796d`
+
+This example imports the vendored sibling rigger and renderer read-only and
+does not copy them. The sibling `public/avatar/sample.psd` is procedurally
+generated and license-clean.
 
 The bundled Miko-derived PSD avatar is © Yuki Shindo (AITuber OnAir) and is not covered by
 the repository's MIT License. It may be redistributed as an integral part of a

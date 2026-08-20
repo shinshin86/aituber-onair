@@ -1,7 +1,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createMouthValues } from '../src/gen/audio.js';
+import { selectAvatarMode } from '../src/gen/avatarMode.js';
 import { createBlinkSchedule } from '../src/gen/blink.js';
+import {
+  assertSequentialMotionFrame,
+  resolveLocalAssetPath,
+} from '../src/gen/psdMotionAvatar.js';
 import {
   autoDetectRoleBindings,
   loadPsdAvatar,
@@ -23,6 +28,7 @@ import {
   resolveIdlePose,
   resolveMouthState,
 } from '../src/gen/renderer.js';
+import { createSeededRandom, VirtualClock } from '../harness/virtualClock.js';
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const samplePsd = path.resolve(testDirectory, '../assets/sample-static.psd');
@@ -65,6 +71,65 @@ describe('deterministic animation helpers', () => {
       scale: 1,
     });
     expect(resolveIdlePose(75, 30, 1).y).not.toBe(0);
+  });
+
+  it('reuses deterministic browser clock and RNG semantics', () => {
+    const firstRandom = createSeededRandom(42);
+    const secondRandom = createSeededRandom(42);
+    expect([firstRandom(), firstRandom(), firstRandom()]).toEqual([
+      secondRandom(),
+      secondRandom(),
+      secondRandom(),
+    ]);
+
+    const clock = new VirtualClock();
+    clock.reset(42);
+    const order: string[] = [];
+    clock.requestAnimationFrame(() => {
+      order.push('first');
+      clock.requestAnimationFrame(() => order.push('nested'));
+    });
+    clock.requestAnimationFrame(() => order.push('second'));
+    clock.advance(1 / 30);
+    expect(clock.flushAnimationFrame()).toBe(2);
+    expect(order).toEqual(['first', 'second']);
+    expect(clock.pendingAnimationFrames()).toBe(1);
+    expect(clock.flushAnimationFrame()).toBe(1);
+    expect(order).toEqual(['first', 'second', 'nested']);
+  });
+});
+
+describe('PSD avatar mode selection', () => {
+  const usable = { usable: true, reason: 'Anime2.5DRig parts detected.' };
+  const ineligible = { usable: false, reason: 'missing part: face' };
+
+  it('selects motion first for auto and falls back to static', () => {
+    expect(selectAvatarMode('auto', usable)).toBe('motion');
+    expect(selectAvatarMode('auto', ineligible)).toBe('static');
+  });
+
+  it('honors forced modes and preserves the rigger diagnostic', () => {
+    expect(selectAvatarMode('static', usable)).toBe('static');
+    expect(selectAvatarMode('motion', usable)).toBe('motion');
+    expect(() => selectAvatarMode('motion', ineligible)).toThrow(
+      'missing part: face',
+    );
+  });
+
+  it('enforces sequential motion frames and read-only route boundaries', () => {
+    expect(() => assertSequentialMotionFrame(4, 4)).not.toThrow();
+    expect(() => assertSequentialMotionFrame(4, 5)).toThrow(
+      /expected 4, got 5/,
+    );
+    expect(resolveLocalAssetPath('/models', '/avatar/', '/avatar/a.psd')).toBe(
+      path.resolve('/models/a.psd'),
+    );
+    expect(
+      resolveLocalAssetPath('/models', '/avatar/', '/avatar/../secret.psd'),
+    ).toBeNull();
+    expect(
+      resolveLocalAssetPath('/models', '/avatar/', '/avatar/%2e%2e/secret.psd'),
+    ).toBeNull();
   });
 });
 
