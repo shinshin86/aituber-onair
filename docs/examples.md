@@ -205,6 +205,9 @@ npm run dev
 - [`packages/core/examples/node-vrm-newsdesk`](../packages/core/examples/node-vrm-newsdesk):
   Node.js pipeline that drives a headless-Chromium VRM renderer and produces a
   chaptered vertical avatar news video with Core chat and voice.
+- [`packages/core/examples/node-live2d-newsdesk`](../packages/core/examples/node-live2d-newsdesk):
+  Node.js pipeline that drives a headless-Chromium Cubism 4 Live2D renderer and
+  produces a chaptered vertical avatar news video with Core chat and voice.
 
 ## Chat Examples
 
