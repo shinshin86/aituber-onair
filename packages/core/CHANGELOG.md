@@ -1,6 +1,6 @@
 # @aituber-onair/core
 
-## Unreleased
+## 0.26.11
 
 ### Minor Changes
 
