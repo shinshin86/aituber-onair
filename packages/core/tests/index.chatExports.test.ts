@@ -10,7 +10,10 @@ import {
   MODEL_CLAUDE_4_SONNET,
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_SONNET,
+  MODEL_CLAUDE_5_FABLE,
+  CLAUDE_DEPRECATED_MODELS,
   MODEL_GEMINI_NANO,
+  MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_5_FLASH_LITE,
@@ -32,6 +35,7 @@ import {
   MODEL_GLM_5_TURBO,
   MODEL_GLM_5V_TURBO,
   MODEL_GROK_4_5,
+  MODEL_GROK_4_6,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
   MODEL_KIMI_K3,
@@ -43,6 +47,7 @@ import {
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+  MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
   MODEL_OPENROUTER_FUSION,
   MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
@@ -57,15 +62,18 @@ import {
   MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5,
   MODEL_GOOGLE_GEMINI_PRO_LATEST,
   MODEL_GOOGLE_GEMINI_FLASH_LATEST,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
+  MODEL_GOOGLE_GEMINI_3_7_FLASH,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   MODEL_ZAI_GLM_5_2,
   MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
   MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
   MODEL_XAI_GROK_LATEST,
   MODEL_XAI_GROK_4_5,
+  MODEL_XAI_GROK_4_6,
   KIMI_VISION_SUPPORTED_MODELS,
   KIMI_THINKING_REQUIRED_MODELS,
   MODEL_DEEPSEEK_V4_FLASH,
@@ -103,6 +111,7 @@ import {
   getDefaultClaudeReasoningEffort,
   getDefaultDeepSeekReasoningEffort,
   getDefaultXaiReasoningEffort,
+  getXaiSupportedReasoningEfforts,
   getDefaultGeminiReasoningEffort,
   getDefaultKimiReasoningEffort,
   getDefaultOpenRouterReasoningEffort,
@@ -133,6 +142,11 @@ import {
   type GeminiNanoInitialPrompt,
   type KimiReasoningEffort,
   type OpenRouterReasoningEffort,
+  type ZaiReasoningEffort,
+  getDefaultZaiReasoningEffort,
+  getZaiSupportedReasoningEfforts,
+  isZaiReasoningEffortModel,
+  normalizeZaiReasoningEffort,
   type RefreshOpenRouterFreeModelsResult,
   type VisionSupportLevel,
 } from '../src/index';
@@ -221,10 +235,25 @@ describe('Core index chat re-exports', () => {
   });
 
   it('re-exports current GLM model constants', () => {
+    const reasoningEffort: ZaiReasoningEffort = 'none';
+
     expect(MODEL_GLM_5_2).toBe('glm-5.2');
     expect(MODEL_GLM_5_1).toBe('glm-5.1');
     expect(MODEL_GLM_5_TURBO).toBe('glm-5-turbo');
     expect(MODEL_GLM_5V_TURBO).toBe('glm-5v-turbo');
+    expect(reasoningEffort).toBe('none');
+    expect(getZaiSupportedReasoningEfforts(MODEL_GLM_5_2)).toEqual([
+      'none',
+      'minimal',
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+      'max',
+    ]);
+    expect(isZaiReasoningEffortModel(MODEL_GLM_5_2)).toBe(true);
+    expect(getDefaultZaiReasoningEffort(MODEL_GLM_5_2)).toBe('none');
+    expect(normalizeZaiReasoningEffort(MODEL_GLM_5_2, 'minimal')).toBe('none');
   });
 
   it('re-exports current Kimi model constants', () => {
@@ -355,6 +384,9 @@ describe('Core index chat re-exports', () => {
     expect(MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731).toBe(
       'deepseek/deepseek-v4-flash-0731',
     );
+    expect(MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813).toBe(
+      'deepseek/deepseek-v4-pro-0813',
+    );
     expect(reasoningEffort).toBe('none');
     expect(
       getOpenRouterSupportedReasoningEfforts(
@@ -389,16 +421,19 @@ describe('Core index chat re-exports', () => {
       '~anthropic/claude-haiku-latest',
     );
     expect(MODEL_ANTHROPIC_CLAUDE_OPUS_5).toBe('anthropic/claude-opus-5');
+    expect(MODEL_ANTHROPIC_CLAUDE_FABLE_5).toBe('anthropic/claude-fable-5');
     expect(MODEL_GOOGLE_GEMINI_PRO_LATEST).toBe('~google/gemini-pro-latest');
     expect(MODEL_GOOGLE_GEMINI_FLASH_LATEST).toBe(
       '~google/gemini-flash-latest',
     );
     expect(MODEL_GOOGLE_GEMINI_3_6_FLASH).toBe('google/gemini-3.6-flash');
+    expect(MODEL_GOOGLE_GEMINI_3_7_FLASH).toBe('google/gemini-3.7-flash');
     expect(MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE).toBe(
       'google/gemini-3.5-flash-lite',
     );
     expect(MODEL_XAI_GROK_LATEST).toBe('~x-ai/grok-latest');
     expect(MODEL_XAI_GROK_4_5).toBe('x-ai/grok-4.5');
+    expect(MODEL_XAI_GROK_4_6).toBe('x-ai/grok-4.6');
     expect(MODEL_MOONSHOTAI_KIMI_LATEST).toBe('~moonshotai/kimi-latest');
     expect(MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5).toBe(
       'kwaipilot/kat-coder-air-v2.5',
@@ -470,5 +505,26 @@ describe('Core index chat re-exports', () => {
         MODEL_CLAUDE_5_OPUS,
       ),
     ).toBe('supported');
+  });
+
+  it('re-exports the latest provider models and reasoning helpers', () => {
+    expect(MODEL_GEMINI_3_7_FLASH).toBe('gemini-3.7-flash');
+    expect(getGeminiSupportedReasoningEfforts(MODEL_GEMINI_3_7_FLASH)).toEqual([
+      'low',
+      'medium',
+      'high',
+    ]);
+    expect(getDefaultGeminiReasoningEffort(MODEL_GEMINI_3_7_FLASH)).toBe('low');
+    expect(MODEL_CLAUDE_5_FABLE).toBe('claude-fable-5');
+    expect(CLAUDE_DEPRECATED_MODELS).toContain(MODEL_CLAUDE_4_OPUS);
+    expect(MODEL_GROK_4_6).toBe('grok-4.6');
+    expect(isXaiVisionModel(MODEL_GROK_4_6)).toBe(true);
+    expect(getXaiSupportedReasoningEfforts(MODEL_GROK_4_6)).toEqual([
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+    ]);
+    expect(getDefaultXaiReasoningEffort(MODEL_GROK_4_6)).toBe('low');
   });
 });

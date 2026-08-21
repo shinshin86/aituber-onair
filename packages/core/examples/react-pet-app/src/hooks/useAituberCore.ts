@@ -16,7 +16,12 @@ import {
 } from '@aituber-onair/kizuna';
 import type {
   VoiceServiceOptions,
+  CartesiaLanguage,
+  CartesiaOutputContainer,
   ElevenLabsApplyTextNormalization,
+  FishAudioFormat,
+  FishAudioLatency,
+  FishAudioModel,
   GradiumOutputFormat,
   InworldAudioEncoding,
   InworldDeliveryMode,
@@ -149,6 +154,12 @@ function getTtsApiKey(
   if (settings.tts.engine === 'elevenLabs') {
     return settings.tts.elevenLabsApiKey || '';
   }
+  if (settings.tts.engine === 'fishAudio') {
+    return settings.tts.fishAudioApiKey || '';
+  }
+  if (settings.tts.engine === 'cartesia') {
+    return settings.tts.cartesiaApiKey || '';
+  }
   if (settings.tts.engine === 'inworld') {
     return settings.tts.inworldApiKey || '';
   }
@@ -193,6 +204,23 @@ function buildVoiceOptions(
   const parsedElevenLabsStyle = Number.parseFloat(tts.elevenLabsStyle || '');
   const parsedElevenLabsSpeed = Number.parseFloat(tts.elevenLabsSpeed || '');
   const parsedElevenLabsSeed = Number.parseInt(tts.elevenLabsSeed || '', 10);
+  const parsedFishAudioSampleRate = Number.parseInt(
+    tts.fishAudioSampleRate || '',
+    10,
+  );
+  const parsedFishAudioMp3Bitrate = Number.parseInt(
+    tts.fishAudioMp3Bitrate || '',
+    10,
+  );
+  const parsedFishAudioSpeed = Number.parseFloat(tts.fishAudioSpeed || '');
+  const parsedCartesiaSampleRate = Number.parseInt(
+    tts.cartesiaSampleRate || '',
+    10,
+  );
+  const parsedCartesiaMp3Bitrate = Number.parseInt(
+    tts.cartesiaMp3Bitrate || '',
+    10,
+  );
   const parsedInworldSampleRateHertz = Number.parseInt(
     tts.inworldSampleRateHertz || '',
     10,
@@ -298,6 +326,35 @@ function buildVoiceOptions(
       tts.elevenLabsApplyTextNormalization !== 'default'
         ? (tts.elevenLabsApplyTextNormalization as ElevenLabsApplyTextNormalization)
         : undefined,
+    fishAudioApiUrl: tts.fishAudioApiUrl?.trim() || undefined,
+    fishAudioModel:
+      (tts.fishAudioModel as FishAudioModel | undefined) || undefined,
+    fishAudioFormat:
+      (tts.fishAudioFormat as FishAudioFormat | undefined) || undefined,
+    fishAudioSampleRate: Number.isNaN(parsedFishAudioSampleRate)
+      ? undefined
+      : parsedFishAudioSampleRate,
+    fishAudioMp3Bitrate: Number.isNaN(parsedFishAudioMp3Bitrate)
+      ? undefined
+      : (parsedFishAudioMp3Bitrate as 64 | 128 | 192),
+    fishAudioLatency:
+      (tts.fishAudioLatency as FishAudioLatency | undefined) || undefined,
+    fishAudioSpeed: Number.isNaN(parsedFishAudioSpeed)
+      ? undefined
+      : parsedFishAudioSpeed,
+    cartesiaApiUrl: tts.cartesiaApiUrl?.trim() || undefined,
+    cartesiaModel: tts.cartesiaModel?.trim() || undefined,
+    cartesiaLanguage:
+      (tts.cartesiaLanguage as CartesiaLanguage | undefined) || undefined,
+    cartesiaOutputContainer:
+      (tts.cartesiaOutputContainer as CartesiaOutputContainer | undefined) ||
+      undefined,
+    cartesiaSampleRate: Number.isNaN(parsedCartesiaSampleRate)
+      ? undefined
+      : parsedCartesiaSampleRate,
+    cartesiaMp3Bitrate: Number.isNaN(parsedCartesiaMp3Bitrate)
+      ? undefined
+      : parsedCartesiaMp3Bitrate,
     inworldApiUrl: tts.inworldApiUrl?.trim() || undefined,
     inworldModel: tts.inworldModel?.trim() || undefined,
     inworldAudioEncoding:
@@ -375,9 +432,9 @@ export function useAituberCore({
   const bondToastSequenceRef = useRef(0);
   const bondToastTimersRef = useRef(new Map<number, number>());
   const bondToastByUserRef = useRef(new Map<string, number>());
-  const chatHistoryRef = useRef<
-    ReturnType<AITuberOnAirCore['getChatHistory']>
-  >([]);
+  const chatHistoryRef = useRef<ReturnType<AITuberOnAirCore['getChatHistory']>>(
+    [],
+  );
   const manneriDetectorRef = useRef<ManneriDetector | null>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
   const messageIdSequenceRef = useRef(0);
@@ -594,8 +651,7 @@ export function useAituberCore({
   const isOpenAIGPT5Model =
     settings.llm.provider === 'openai' && isGPT5Model(resolvedModel);
   const xaiProviderOptions =
-    settings.llm.provider === 'xai' &&
-    isXaiReasoningEffortModel(resolvedModel)
+    settings.llm.provider === 'xai' && isXaiReasoningEffortModel(resolvedModel)
       ? {
           reasoning_effort:
             settings.llm.xaiReasoningEffort ||
@@ -637,8 +693,7 @@ export function useAituberCore({
       model: resolvedModel,
       providerOptions,
       chatOptions: {
-        systemPrompt:
-          settings.llm.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
+        systemPrompt: settings.llm.systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
         ...(isOpenAIGPT5Model ? GPT5_SAMPLE_CHAT_OPTIONS : {}),
       },
       voiceOptions: buildVoiceOptions(
@@ -755,6 +810,19 @@ export function useAituberCore({
     settings.tts.aivisCloudSpeakerUuid,
     settings.tts.aivisCloudStyleId,
     settings.tts.minimaxGroupId,
+    settings.tts.fishAudioApiUrl,
+    settings.tts.fishAudioModel,
+    settings.tts.fishAudioFormat,
+    settings.tts.fishAudioSampleRate,
+    settings.tts.fishAudioMp3Bitrate,
+    settings.tts.fishAudioLatency,
+    settings.tts.fishAudioSpeed,
+    settings.tts.cartesiaApiUrl,
+    settings.tts.cartesiaModel,
+    settings.tts.cartesiaLanguage,
+    settings.tts.cartesiaOutputContainer,
+    settings.tts.cartesiaSampleRate,
+    settings.tts.cartesiaMp3Bitrate,
     settings.tts.xaiLanguage,
     settings.tts.xaiCodec,
     settings.tts.xaiSampleRate,
@@ -821,9 +889,7 @@ export function useAituberCore({
             );
             if (manneriDetector.shouldIntervene(manneriMessages)) {
               const prompt =
-                manneriDetector.generateDiversificationPrompt(
-                  manneriMessages,
-                );
+                manneriDetector.generateDiversificationPrompt(manneriMessages);
               coreInput = buildManneriAugmentedInput(coreInput, prompt.content);
             }
           } catch (err) {

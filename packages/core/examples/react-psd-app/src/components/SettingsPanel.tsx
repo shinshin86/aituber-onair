@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   getDefaultXaiReasoningEffort,
+  getXaiSupportedReasoningEfforts,
   getVoiceEngineVoiceList,
   isGPT5Model,
   isXaiReasoningEffortModel,
-  isXaiReasoningEffortNoneModel,
   normalizeXaiReasoningEffort,
   type VoiceEngineVoice,
   type XaiReasoningEffort,
@@ -77,6 +77,8 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'xai', label: 'xAI TTS' },
   { value: 'unrealSpeech', label: 'Unreal Speech' },
   { value: 'elevenLabs', label: 'ElevenLabs' },
+  { value: 'fishAudio', label: 'Fish Audio' },
+  { value: 'cartesia', label: 'Cartesia' },
   { value: 'inworld', label: 'Inworld' },
   { value: 'gradium', label: 'Gradium' },
   { value: 'piperPlus', label: 'Piper Plus' },
@@ -160,9 +162,9 @@ const UNREAL_SPEECH_SPEAKERS = [
 ] as const;
 const UNREAL_SPEECH_CODECS = ['libmp3lame', 'pcm_mulaw', 'pcm_s16le'] as const;
 const ELEVENLABS_MODELS = [
-  'eleven_multilingual_v2',
+  'eleven_v3',
   'eleven_flash_v2_5',
-  'eleven_turbo_v2_5',
+  'eleven_multilingual_v2',
 ] as const;
 const ELEVENLABS_OUTPUT_FORMATS = [
   'mp3_44100_128',
@@ -170,6 +172,28 @@ const ELEVENLABS_OUTPUT_FORMATS = [
   'pcm_16000',
   'ulaw_8000',
 ] as const;
+const FISH_AUDIO_MODELS = [
+  's2-pro',
+  's2.1-pro-free',
+  's2.1-pro',
+  's1',
+] as const;
+const FISH_AUDIO_FORMATS = ['mp3', 'wav', 'pcm', 'opus'] as const;
+const FISH_AUDIO_LATENCIES = ['normal', 'balanced', 'low'] as const;
+const CARTESIA_MODELS = ['sonic-3.5'] as const;
+const CARTESIA_LANGUAGES = [
+  'ja',
+  'en',
+  'zh',
+  'ko',
+  'fr',
+  'de',
+  'es',
+  'pt',
+  'it',
+  'hi',
+] as const;
+const CARTESIA_OUTPUT_CONTAINERS = ['wav', 'mp3'] as const;
 const INWORLD_MODELS = [
   'inworld-tts-2',
   'inworld-tts-1.5-mini',
@@ -254,6 +278,49 @@ interface MinimaxVoice {
   voice_id: string;
   voice_name: string;
 }
+
+const MINIMAX_VOICES: MinimaxVoice[] = [
+  {
+    voice_id: 'Japanese_IntellectualSenior',
+    voice_name: 'Japanese - Intellectual Senior',
+  },
+  {
+    voice_id: 'Japanese_DecisivePrincess',
+    voice_name: 'Japanese - Decisive Princess',
+  },
+  {
+    voice_id: 'Japanese_LoyalKnight',
+    voice_name: 'Japanese - Loyal Knight',
+  },
+  {
+    voice_id: 'Japanese_DominantMan',
+    voice_name: 'Japanese - Dominant Man',
+  },
+  {
+    voice_id: 'Japanese_DependableWoman',
+    voice_name: 'Japanese - Dependable Woman',
+  },
+  {
+    voice_id: 'Japanese_GentleButler',
+    voice_name: 'Japanese - Gentle Butler',
+  },
+  {
+    voice_id: 'Japanese_KindLady',
+    voice_name: 'Japanese - Kind Lady',
+  },
+  {
+    voice_id: 'Japanese_CalmLady',
+    voice_name: 'Japanese - Calm Lady',
+  },
+  {
+    voice_id: 'Japanese_OptimisticYouth',
+    voice_name: 'Japanese - Optimistic Youth',
+  },
+  {
+    voice_id: 'Japanese_SportyStudent',
+    voice_name: 'Japanese - Sporty Student',
+  },
+];
 
 interface ElevenLabsVoice {
   voice_id: string;
@@ -851,9 +918,10 @@ export function SettingsPanel({
             getDefaultXaiReasoningEffort(settings.llm.model),
         ) || 'none'
       : 'none';
-  const allowsXaiNoneReasoningEffort =
-    settings.llm.provider === 'xai' &&
-    isXaiReasoningEffortNoneModel(settings.llm.model);
+  const xaiSupportedReasoningEfforts =
+    settings.llm.provider === 'xai'
+      ? getXaiSupportedReasoningEfforts(settings.llm.model)
+      : [];
   const openRouterApiKey = getApiKeyForProvider('openrouter').trim();
   const openRouterDynamicFreeModels =
     settings.llm.openRouterDynamicFreeModels?.models || [];
@@ -872,21 +940,22 @@ export function SettingsPanel({
 
   const [voicevoxSpeakers, setVoicevoxSpeakers] = useState<VoiceSpeaker[]>([]);
   const [aivisSpeakers, setAivisSpeakers] = useState<VoiceSpeaker[]>([]);
-  const [minimaxVoices, setMinimaxVoices] = useState<MinimaxVoice[]>([]);
+  const minimaxVoices = MINIMAX_VOICES;
   const [elevenLabsVoices, setElevenLabsVoices] = useState<ElevenLabsVoice[]>(
     [],
   );
   const [inworldVoices, setInworldVoices] = useState<InworldVoice[]>([]);
+  const [catalogVoices, setCatalogVoices] = useState<VoiceEngineVoice[]>([]);
   const [webSpeechVoices, setWebSpeechVoices] = useState<VoiceEngineVoice[]>(
     [],
   );
   const [isFetchingWebSpeechVoices, setIsFetchingWebSpeechVoices] =
     useState(false);
   const [fetchError, setFetchError] = useState('');
-  const [isFetchingMinimaxVoices, setIsFetchingMinimaxVoices] = useState(false);
   const [isFetchingElevenLabsVoices, setIsFetchingElevenLabsVoices] =
     useState(false);
   const [isFetchingInworldVoices, setIsFetchingInworldVoices] = useState(false);
+  const [isFetchingCatalogVoices, setIsFetchingCatalogVoices] = useState(false);
   const [expandedSections, setExpandedSections] = useState<
     Record<SectionKey, boolean>
   >({
@@ -971,83 +1040,6 @@ export function SettingsPanel({
     settings.tts.engine,
     settings.tts.voicevoxApiUrl,
     settings.tts.aivisSpeechApiUrl,
-    settings.tts.speaker,
-    updateTTSSpeaker,
-  ]);
-
-  // Fetch MiniMax speaker list after API key is entered
-  useEffect(() => {
-    if (settings.tts.engine !== 'minimax') {
-      return;
-    }
-
-    const apiKey = settings.tts.minimaxApiKey?.trim();
-    if (!apiKey) {
-      queueMicrotask(() => setMinimaxVoices([]));
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const fetchMinimaxVoices = async () => {
-      setIsFetchingMinimaxVoices(true);
-      try {
-        const response = await fetch(
-          'https://api.minimax.io/v1/query/tts_speakers',
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              'Content-Type': 'application/json',
-            },
-            signal: controller.signal,
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const payload = (await response.json()) as {
-          base_resp?: { status_code?: number; status_msg?: string };
-          data?: { speakers?: MinimaxVoice[] };
-        };
-        if (controller.signal.aborted) return;
-
-        if (payload.base_resp && payload.base_resp.status_code !== 0) {
-          throw new Error(payload.base_resp.status_msg || 'MiniMax API error');
-        }
-
-        const voices = payload.data?.speakers || [];
-        setMinimaxVoices(voices);
-        setFetchError('');
-
-        if (
-          voices.length > 0 &&
-          !voices.some((voice) => voice.voice_id === settings.tts.speaker)
-        ) {
-          updateTTSSpeaker(voices[0].voice_id);
-        }
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        const message = error instanceof Error ? error.message : String(error);
-        setMinimaxVoices([]);
-        setFetchError(`MiniMax接続エラー: ${message}`);
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsFetchingMinimaxVoices(false);
-        }
-      }
-    };
-
-    void fetchMinimaxVoices();
-
-    return () => {
-      controller.abort();
-    };
-  }, [
-    settings.tts.engine,
-    settings.tts.minimaxApiKey,
     settings.tts.speaker,
     updateTTSSpeaker,
   ]);
@@ -1199,6 +1191,75 @@ export function SettingsPanel({
     settings.tts.engine,
     settings.tts.inworldApiKey,
     settings.tts.inworldLanguage,
+    settings.tts.speaker,
+    updateTTSSpeaker,
+  ]);
+
+  useEffect(() => {
+    const engine = settings.tts.engine;
+    if (engine !== 'fishAudio' && engine !== 'cartesia') {
+      return;
+    }
+
+    const apiKey =
+      engine === 'fishAudio'
+        ? settings.tts.fishAudioApiKey?.trim()
+        : settings.tts.cartesiaApiKey?.trim();
+    if (!apiKey) {
+      queueMicrotask(() => setCatalogVoices([]));
+      return;
+    }
+
+    let active = true;
+    const fetchCatalogVoices = async () => {
+      setIsFetchingCatalogVoices(true);
+      try {
+        const voices = await getVoiceEngineVoiceList(engine, {
+          apiKey,
+          voiceListApiUrl:
+            engine === 'fishAudio'
+              ? settings.tts.fishAudioVoiceListApiUrl
+              : settings.tts.cartesiaVoiceListApiUrl,
+          language:
+            engine === 'cartesia' ? settings.tts.cartesiaLanguage : undefined,
+          limit: engine === 'fishAudio' ? 100 : undefined,
+          pageSize: 100,
+        });
+        if (!active) return;
+
+        setCatalogVoices(voices);
+        setFetchError('');
+        if (
+          voices.length > 0 &&
+          !voices.some((voice) => voice.id === settings.tts.speaker)
+        ) {
+          updateTTSSpeaker(voices[0].id);
+        }
+      } catch (error) {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : String(error);
+        setCatalogVoices([]);
+        setFetchError(
+          `${engine === 'fishAudio' ? 'Fish Audio' : 'Cartesia'}音声一覧エラー: ${message}`,
+        );
+      } finally {
+        if (active) {
+          setIsFetchingCatalogVoices(false);
+        }
+      }
+    };
+
+    void fetchCatalogVoices();
+    return () => {
+      active = false;
+    };
+  }, [
+    settings.tts.engine,
+    settings.tts.fishAudioApiKey,
+    settings.tts.fishAudioVoiceListApiUrl,
+    settings.tts.cartesiaApiKey,
+    settings.tts.cartesiaVoiceListApiUrl,
+    settings.tts.cartesiaLanguage,
     settings.tts.speaker,
     updateTTSSpeaker,
   ]);
@@ -1477,18 +1538,23 @@ export function SettingsPanel({
                   }
                   disabled={disabled || !isXaiReasoningEffortModelSelected}
                 >
-                  {allowsXaiNoneReasoningEffort && (
-                    <option value="none">None</option>
-                  )}
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  {xaiSupportedReasoningEfforts.map((effort) => (
+                    <option key={effort} value={effort}>
+                      {effort === 'none'
+                        ? 'None'
+                        : effort === 'xhigh'
+                          ? 'XHigh'
+                          : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                    </option>
+                  ))}
                 </select>
                 <p className="settings-field-hint">
                   {isXaiReasoningEffortModelSelected
-                    ? settings.llm.model === 'grok-4.5'
-                      ? 'Grok 4.5 uses low by default; none is not supported.'
-                      : 'Grok 4.3 uses none by default for lower latency.'
+                    ? settings.llm.model === 'grok-4.6'
+                      ? 'Grok 4.6 uses low by default and also supports xhigh.'
+                      : settings.llm.model === 'grok-4.5'
+                        ? 'Grok 4.5 uses low by default; none is not supported.'
+                        : 'Grok 4.3 uses none by default for lower latency.'
                     : 'This xAI model does not support reasoning_effort.'}
                 </p>
               </div>
@@ -2219,6 +2285,351 @@ export function SettingsPanel({
               </>
             )}
 
+            {settings.tts.engine === 'fishAudio' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-apikey">API Key</label>
+                  <input
+                    id="tts-fish-audio-apikey"
+                    type="password"
+                    value={settings.tts.fishAudioApiKey || ''}
+                    onChange={(e) =>
+                      updateTtsField('fishAudioApiKey', e.target.value)
+                    }
+                    placeholder="Fish Audio API key"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-speaker">
+                    Reference Voice
+                  </label>
+                  <select
+                    id="tts-fish-audio-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={
+                      disabled ||
+                      !settings.tts.fishAudioApiKey ||
+                      isFetchingCatalogVoices ||
+                      catalogVoices.length === 0
+                    }
+                  >
+                    {!settings.tts.fishAudioApiKey && (
+                      <option value="">API Keyを入力してください</option>
+                    )}
+                    {settings.tts.fishAudioApiKey &&
+                      isFetchingCatalogVoices && (
+                        <option value="">音声一覧を取得中...</option>
+                      )}
+                    {settings.tts.fishAudioApiKey &&
+                      !isFetchingCatalogVoices &&
+                      catalogVoices.length === 0 && (
+                        <option value="">音声一覧を取得できませんでした</option>
+                      )}
+                    {catalogVoices.map((voice) => (
+                      <option key={voice.id} value={voice.id}>
+                        {voice.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-url">TTS API URL</label>
+                  <input
+                    id="tts-fish-audio-url"
+                    type="text"
+                    value={settings.tts.fishAudioApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('fishAudioApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-voices-url">
+                    Voice List API URL
+                  </label>
+                  <input
+                    id="tts-fish-audio-voices-url"
+                    type="text"
+                    value={settings.tts.fishAudioVoiceListApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('fishAudioVoiceListApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-model">Model</label>
+                  <select
+                    id="tts-fish-audio-model"
+                    value={settings.tts.fishAudioModel || 's2-pro'}
+                    onChange={(e) =>
+                      updateTtsField('fishAudioModel', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {FISH_AUDIO_MODELS.map((model) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-format">Format</label>
+                  <select
+                    id="tts-fish-audio-format"
+                    value={settings.tts.fishAudioFormat || 'mp3'}
+                    onChange={(e) =>
+                      updateTtsField('fishAudioFormat', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {FISH_AUDIO_FORMATS.map((format) => (
+                      <option key={format} value={format}>
+                        {format}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-latency">Latency</label>
+                  <select
+                    id="tts-fish-audio-latency"
+                    value={settings.tts.fishAudioLatency || 'normal'}
+                    onChange={(e) =>
+                      updateTtsField('fishAudioLatency', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {FISH_AUDIO_LATENCIES.map((latency) => (
+                      <option key={latency} value={latency}>
+                        {latency}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-sample-rate">
+                    Sample Rate
+                  </label>
+                  <input
+                    id="tts-fish-audio-sample-rate"
+                    type="number"
+                    value={settings.tts.fishAudioSampleRate || ''}
+                    onChange={(e) =>
+                      updateTtsField('fishAudioSampleRate', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-bitrate">
+                    MP3 Bitrate (kbps)
+                  </label>
+                  <select
+                    id="tts-fish-audio-bitrate"
+                    value={settings.tts.fishAudioMp3Bitrate || '128'}
+                    onChange={(e) =>
+                      updateTtsField('fishAudioMp3Bitrate', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {[64, 128, 192].map((bitrate) => (
+                      <option key={bitrate} value={bitrate}>
+                        {bitrate}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-fish-audio-speed">Speed</label>
+                  <input
+                    id="tts-fish-audio-speed"
+                    type="number"
+                    min="0.5"
+                    max="2"
+                    step="0.05"
+                    value={settings.tts.fishAudioSpeed || ''}
+                    onChange={(e) =>
+                      updateTtsField('fishAudioSpeed', e.target.value)
+                    }
+                    placeholder="default"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <small>
+                    Fish Audio はブラウザ CORS 制約のため、開発・preview では
+                    Vite proxy を使用します。本番では同等の backend route
+                    を用意し、API key をブラウザへ公開しないでください。
+                  </small>
+                  {fetchError.startsWith('Fish Audio') && (
+                    <small className="settings-field-error">{fetchError}</small>
+                  )}
+                </div>
+              </>
+            )}
+
+            {settings.tts.engine === 'cartesia' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-cartesia-apikey">API Key</label>
+                  <input
+                    id="tts-cartesia-apikey"
+                    type="password"
+                    value={settings.tts.cartesiaApiKey || ''}
+                    onChange={(e) =>
+                      updateTtsField('cartesiaApiKey', e.target.value)
+                    }
+                    placeholder="Cartesia API key"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-cartesia-speaker">Voice</label>
+                  <select
+                    id="tts-cartesia-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={
+                      disabled ||
+                      !settings.tts.cartesiaApiKey ||
+                      isFetchingCatalogVoices ||
+                      catalogVoices.length === 0
+                    }
+                  >
+                    {!settings.tts.cartesiaApiKey && (
+                      <option value="">API Keyを入力してください</option>
+                    )}
+                    {settings.tts.cartesiaApiKey && isFetchingCatalogVoices && (
+                      <option value="">音声一覧を取得中...</option>
+                    )}
+                    {settings.tts.cartesiaApiKey &&
+                      !isFetchingCatalogVoices &&
+                      catalogVoices.length === 0 && (
+                        <option value="">音声一覧を取得できませんでした</option>
+                      )}
+                    {catalogVoices.map((voice) => (
+                      <option key={voice.id} value={voice.id}>
+                        {voice.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-cartesia-url">TTS API URL</label>
+                  <input
+                    id="tts-cartesia-url"
+                    type="text"
+                    value={settings.tts.cartesiaApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('cartesiaApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-cartesia-voices-url">
+                    Voice List API URL
+                  </label>
+                  <input
+                    id="tts-cartesia-voices-url"
+                    type="text"
+                    value={settings.tts.cartesiaVoiceListApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('cartesiaVoiceListApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-cartesia-model">Model</label>
+                  <select
+                    id="tts-cartesia-model"
+                    value={settings.tts.cartesiaModel || 'sonic-3.5'}
+                    onChange={(e) =>
+                      updateTtsField('cartesiaModel', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {CARTESIA_MODELS.map((model) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-cartesia-language">Language</label>
+                  <select
+                    id="tts-cartesia-language"
+                    value={settings.tts.cartesiaLanguage || 'ja'}
+                    onChange={(e) =>
+                      updateTtsField('cartesiaLanguage', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {CARTESIA_LANGUAGES.map((language) => (
+                      <option key={language} value={language}>
+                        {language}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-cartesia-container">
+                    Output Container
+                  </label>
+                  <select
+                    id="tts-cartesia-container"
+                    value={settings.tts.cartesiaOutputContainer || 'wav'}
+                    onChange={(e) =>
+                      updateTtsField('cartesiaOutputContainer', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {CARTESIA_OUTPUT_CONTAINERS.map((container) => (
+                      <option key={container} value={container}>
+                        {container}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-cartesia-sample-rate">Sample Rate</label>
+                  <input
+                    id="tts-cartesia-sample-rate"
+                    type="number"
+                    value={settings.tts.cartesiaSampleRate || ''}
+                    onChange={(e) =>
+                      updateTtsField('cartesiaSampleRate', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-cartesia-bitrate">
+                    MP3 Bitrate (bps)
+                  </label>
+                  <input
+                    id="tts-cartesia-bitrate"
+                    type="number"
+                    value={settings.tts.cartesiaMp3Bitrate || ''}
+                    onChange={(e) =>
+                      updateTtsField('cartesiaMp3Bitrate', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                {fetchError.startsWith('Cartesia') && (
+                  <small className="settings-field-error">{fetchError}</small>
+                )}
+              </>
+            )}
+
             {settings.tts.engine === 'inworld' && (
               <>
                 <div className="settings-field">
@@ -2920,7 +3331,9 @@ export function SettingsPanel({
                   />
                 </div>
                 <div className="settings-field">
-                  <label htmlFor="tts-minimax-groupid">Group ID</label>
+                  <label htmlFor="tts-minimax-groupid">
+                    Group ID (legacy / optional)
+                  </label>
                   <input
                     id="tts-minimax-groupid"
                     type="text"
@@ -2938,25 +3351,8 @@ export function SettingsPanel({
                     id="tts-minimax-speaker"
                     value={settings.tts.speaker}
                     onChange={(e) => updateTTSSpeaker(e.target.value)}
-                    disabled={
-                      disabled ||
-                      !settings.tts.minimaxApiKey ||
-                      minimaxVoices.length === 0
-                    }
+                    disabled={disabled}
                   >
-                    {!settings.tts.minimaxApiKey && (
-                      <option value="">
-                        APIキーを入力すると一覧を取得します
-                      </option>
-                    )}
-                    {settings.tts.minimaxApiKey && isFetchingMinimaxVoices && (
-                      <option value="">スピーカー一覧を取得中...</option>
-                    )}
-                    {settings.tts.minimaxApiKey &&
-                      !isFetchingMinimaxVoices &&
-                      minimaxVoices.length === 0 && (
-                        <option value="">一覧を取得できませんでした</option>
-                      )}
                     {minimaxVoices.map((voice) => (
                       <option key={voice.voice_id} value={voice.voice_id}>
                         {voice.voice_name}
@@ -3002,8 +3398,7 @@ export function SettingsPanel({
 
             {fetchError &&
               (settings.tts.engine === 'voicevox' ||
-                settings.tts.engine === 'aivisSpeech' ||
-                settings.tts.engine === 'minimax') && (
+                settings.tts.engine === 'aivisSpeech') && (
                 <div
                   style={{
                     color: '#e94560',

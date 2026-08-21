@@ -29,8 +29,14 @@ const DEFAULT_UNREAL_SPEECH_TTS_ENDPOINT =
   'https://api.v8.unrealspeech.com/stream';
 const DEFAULT_ELEVENLABS_TTS_ENDPOINT =
   'https://api.elevenlabs.io/v1/text-to-speech';
-const DEFAULT_ELEVENLABS_MODEL = 'eleven_multilingual_v2';
+const DEFAULT_ELEVENLABS_MODEL = 'eleven_flash_v2_5';
 const DEFAULT_ELEVENLABS_OUTPUT_FORMAT = 'mp3_44100_128';
+const DEFAULT_FISH_AUDIO_TTS_ENDPOINT = '/api/fish-audio/v1/tts';
+const DEFAULT_FISH_AUDIO_VOICE_LIST_ENDPOINT = '/api/fish-audio/model';
+const DEFAULT_FISH_AUDIO_MODEL = 's2-pro';
+const DEFAULT_CARTESIA_TTS_ENDPOINT = 'https://api.cartesia.ai/tts/bytes';
+const DEFAULT_CARTESIA_VOICE_LIST_ENDPOINT = 'https://api.cartesia.ai/voices';
+const DEFAULT_CARTESIA_MODEL = 'sonic-3.5';
 const DEFAULT_INWORLD_TTS_ENDPOINT = 'https://api.inworld.ai/tts/v1/voice';
 const DEFAULT_INWORLD_MODEL = 'inworld-tts-2';
 const DEFAULT_INWORLD_AUDIO_ENCODING = 'MP3';
@@ -171,6 +177,23 @@ function getDefaultSettings(): AppSettings {
       elevenLabsSpeed: '',
       elevenLabsSeed: '',
       elevenLabsApplyTextNormalization: 'default',
+      fishAudioApiKey: '',
+      fishAudioApiUrl: DEFAULT_FISH_AUDIO_TTS_ENDPOINT,
+      fishAudioVoiceListApiUrl: DEFAULT_FISH_AUDIO_VOICE_LIST_ENDPOINT,
+      fishAudioModel: DEFAULT_FISH_AUDIO_MODEL,
+      fishAudioFormat: 'mp3',
+      fishAudioSampleRate: '44100',
+      fishAudioMp3Bitrate: '128',
+      fishAudioLatency: 'normal',
+      fishAudioSpeed: '',
+      cartesiaApiKey: '',
+      cartesiaApiUrl: DEFAULT_CARTESIA_TTS_ENDPOINT,
+      cartesiaVoiceListApiUrl: DEFAULT_CARTESIA_VOICE_LIST_ENDPOINT,
+      cartesiaModel: DEFAULT_CARTESIA_MODEL,
+      cartesiaLanguage: 'ja',
+      cartesiaOutputContainer: 'wav',
+      cartesiaSampleRate: '44100',
+      cartesiaMp3Bitrate: '128000',
       inworldApiKey: '',
       inworldApiUrl: DEFAULT_INWORLD_TTS_ENDPOINT,
       inworldModel: DEFAULT_INWORLD_MODEL,
@@ -482,10 +505,12 @@ export function useSettings() {
       voicevox: '',
       aivisSpeech: '',
       aivisCloud: DEFAULT_AIVIS_CLOUD_MODEL_UUID,
-      minimax: 'male-qn-qingse',
+      minimax: 'Japanese_IntellectualSenior',
       xai: 'eve',
       unrealSpeech: 'af_bella',
       elevenLabs: '',
+      fishAudio: '',
+      cartesia: '',
       inworld: '',
       gradium: 'YTpq7expH9539ERJ',
       piperPlus: 'default',
@@ -582,6 +607,64 @@ export function useSettings() {
           engine === 'elevenLabs'
             ? prev.tts.elevenLabsApplyTextNormalization || 'default'
             : prev.tts.elevenLabsApplyTextNormalization,
+        fishAudioApiUrl:
+          engine === 'fishAudio'
+            ? prev.tts.fishAudioApiUrl || DEFAULT_FISH_AUDIO_TTS_ENDPOINT
+            : prev.tts.fishAudioApiUrl,
+        fishAudioVoiceListApiUrl:
+          engine === 'fishAudio'
+            ? prev.tts.fishAudioVoiceListApiUrl ||
+              DEFAULT_FISH_AUDIO_VOICE_LIST_ENDPOINT
+            : prev.tts.fishAudioVoiceListApiUrl,
+        fishAudioModel:
+          engine === 'fishAudio'
+            ? prev.tts.fishAudioModel || DEFAULT_FISH_AUDIO_MODEL
+            : prev.tts.fishAudioModel,
+        fishAudioFormat:
+          engine === 'fishAudio'
+            ? prev.tts.fishAudioFormat || 'mp3'
+            : prev.tts.fishAudioFormat,
+        fishAudioSampleRate:
+          engine === 'fishAudio'
+            ? prev.tts.fishAudioSampleRate || '44100'
+            : prev.tts.fishAudioSampleRate,
+        fishAudioMp3Bitrate:
+          engine === 'fishAudio'
+            ? prev.tts.fishAudioMp3Bitrate || '128'
+            : prev.tts.fishAudioMp3Bitrate,
+        fishAudioLatency:
+          engine === 'fishAudio'
+            ? prev.tts.fishAudioLatency || 'normal'
+            : prev.tts.fishAudioLatency,
+        cartesiaApiUrl:
+          engine === 'cartesia'
+            ? prev.tts.cartesiaApiUrl || DEFAULT_CARTESIA_TTS_ENDPOINT
+            : prev.tts.cartesiaApiUrl,
+        cartesiaVoiceListApiUrl:
+          engine === 'cartesia'
+            ? prev.tts.cartesiaVoiceListApiUrl ||
+              DEFAULT_CARTESIA_VOICE_LIST_ENDPOINT
+            : prev.tts.cartesiaVoiceListApiUrl,
+        cartesiaModel:
+          engine === 'cartesia'
+            ? prev.tts.cartesiaModel || DEFAULT_CARTESIA_MODEL
+            : prev.tts.cartesiaModel,
+        cartesiaLanguage:
+          engine === 'cartesia'
+            ? prev.tts.cartesiaLanguage || 'ja'
+            : prev.tts.cartesiaLanguage,
+        cartesiaOutputContainer:
+          engine === 'cartesia'
+            ? prev.tts.cartesiaOutputContainer || 'wav'
+            : prev.tts.cartesiaOutputContainer,
+        cartesiaSampleRate:
+          engine === 'cartesia'
+            ? prev.tts.cartesiaSampleRate || '44100'
+            : prev.tts.cartesiaSampleRate,
+        cartesiaMp3Bitrate:
+          engine === 'cartesia'
+            ? prev.tts.cartesiaMp3Bitrate || '128000'
+            : prev.tts.cartesiaMp3Bitrate,
         inworldApiUrl:
           engine === 'inworld'
             ? prev.tts.inworldApiUrl || DEFAULT_INWORLD_TTS_ENDPOINT
@@ -1149,10 +1232,7 @@ export function useSettings() {
         ...prev,
         manneri: {
           ...prev.manneri,
-          similarityThreshold: Math.min(
-            1,
-            Math.max(0.1, similarityThreshold),
-          ),
+          similarityThreshold: Math.min(1, Math.max(0.1, similarityThreshold)),
         },
       }));
     },

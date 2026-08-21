@@ -31,10 +31,13 @@ import {
   getDefaultOpenRouterReasoningEffort,
   getDefaultReasoningEffortForGPT5Model,
   getDefaultXaiReasoningEffort,
+  getDefaultZaiReasoningEffort,
   getDeepSeekSupportedReasoningEfforts,
   getGeminiSupportedReasoningEfforts,
   getKimiSupportedReasoningEfforts,
   getOpenRouterSupportedReasoningEfforts,
+  getXaiSupportedReasoningEfforts,
+  getZaiSupportedReasoningEfforts,
   getVoiceEngineVoiceList,
   isClaudeReasoningEffortModel,
   isDeepSeekReasoningEffortModel,
@@ -43,12 +46,12 @@ import {
   isKimiReasoningEffortModel,
   isResponsesOnlyGPT5Model,
   isXaiReasoningEffortModel,
-  isXaiReasoningEffortNoneModel,
   normalizeClaudeReasoningEffort,
   normalizeDeepSeekReasoningEffort,
   normalizeGeminiReasoningEffort,
   normalizeOpenRouterReasoningEffort,
   normalizeXaiReasoningEffort,
+  normalizeZaiReasoningEffort,
   refreshOpenRouterFreeModels,
   type ClaudeReasoningEffort,
   type DeepSeekReasoningEffort,
@@ -56,12 +59,18 @@ import {
   type KimiReasoningEffort,
   type OpenRouterReasoningEffort,
   type XaiReasoningEffort,
+  type ZaiReasoningEffort,
   type MinimaxModel,
   type MinimaxAudioFormat,
   type UnrealSpeechCodec,
   type InworldAudioEncoding,
   type InworldDeliveryMode,
   type GradiumOutputFormat,
+  type FishAudioModel,
+  type FishAudioFormat,
+  type FishAudioLatency,
+  type CartesiaLanguage,
+  type CartesiaOutputContainer,
   type EmotionTypeForVoicepeak,
   type VoicepeakEmotionWeights,
   type VoiceVoxQueryParameterOverrides,
@@ -117,15 +126,13 @@ import { usePiperPlusStatus } from './hooks/usePiperPlusStatus';
 // import { createMcpToolHandler } from './mcpClient';
 
 // MiniMax model options with descriptions
-const MINIMAX_MODELS: Record<MinimaxModel, string> = {
+const MINIMAX_MODELS: Partial<Record<MinimaxModel, string>> = {
+  'speech-2.8-hd': 'Current high-fidelity model.',
+  'speech-2.8-turbo': 'Current low-latency default model.',
   'speech-2.6-hd':
-    'Latest flagship HD model with ultra-high fidelity and natural prosody.',
+    'Previous flagship HD model with high fidelity and natural prosody.',
   'speech-2.6-turbo':
-    'Latest Turbo model optimized for low latency and real-time responses.',
-  'speech-2.5-hd-preview':
-    'The brand new HD model. Ultimate Similarity, Ultra-High Quality',
-  'speech-2.5-turbo-preview':
-    'The brand new Turbo model. Ultimate Value, 40 Languages',
+    'Previous Turbo model optimized for low latency and real-time responses.',
   'speech-02-hd':
     'Superior rhythm and stability, with outstanding performance in replication similarity and sound quality.',
   'speech-02-turbo':
@@ -218,26 +225,32 @@ const normalizeReasoningEffortForOpenRouterModel = (
   );
 };
 
+const normalizeReasoningEffortForZaiModel = (
+  targetModel: string | undefined,
+  effort?: ReasoningEffortLevel,
+): ZaiReasoningEffort | undefined => {
+  if (!targetModel) {
+    return undefined;
+  }
+
+  return normalizeZaiReasoningEffort(
+    targetModel,
+    effort as ZaiReasoningEffort | undefined,
+  );
+};
+
 // MiniMax Voice IDs with descriptions
 const MINIMAX_VOICES: Record<string, string> = {
-  'male-qn-qingse': 'Male - Qingse (Default)',
-  Wise_Woman: 'Wise Woman',
-  Friendly_Person: 'Friendly Person',
-  Inspirational_girl: 'Inspirational Girl',
-  Deep_Voice_Man: 'Deep Voice Man',
-  Calm_Woman: 'Calm Woman',
-  Casual_Guy: 'Casual Guy',
-  Lively_Girl: 'Lively Girl',
-  Patient_Man: 'Patient Man',
-  Young_Knight: 'Young Knight',
-  Determined_Man: 'Determined Man',
-  Lovely_Girl: 'Lovely Girl',
-  Decent_Boy: 'Decent Boy',
-  Imposing_Manner: 'Imposing Manner',
-  Elegant_Man: 'Elegant Man',
-  Abbess: 'Abbess',
-  Sweet_Girl_2: 'Sweet Girl 2',
-  Exuberant_Girl: 'Exuberant Girl',
+  Japanese_IntellectualSenior: 'Japanese - Intellectual Senior',
+  Japanese_DecisivePrincess: 'Japanese - Decisive Princess',
+  Japanese_LoyalKnight: 'Japanese - Loyal Knight',
+  Japanese_DominantMan: 'Japanese - Dominant Man',
+  Japanese_DependableWoman: 'Japanese - Dependable Woman',
+  Japanese_GentleButler: 'Japanese - Gentle Butler',
+  Japanese_KindLady: 'Japanese - Kind Lady',
+  Japanese_CalmLady: 'Japanese - Calm Lady',
+  Japanese_OptimisticYouth: 'Japanese - Optimistic Youth',
+  Japanese_SportyStudent: 'Japanese - Sporty Student',
 };
 
 const XAI_TTS_SPEAKERS = ['ara', 'eve', 'leo', 'rex', 'sal'] as const;
@@ -248,9 +261,9 @@ const UNREAL_SPEECH_SPEAKERS = [
   'am_michael',
 ] as const;
 const ELEVENLABS_MODELS = [
-  'eleven_multilingual_v2',
+  'eleven_v3',
   'eleven_flash_v2_5',
-  'eleven_turbo_v2_5',
+  'eleven_multilingual_v2',
 ] as const;
 const ELEVENLABS_OUTPUT_FORMATS = [
   'mp3_44100_128',
@@ -258,6 +271,26 @@ const ELEVENLABS_OUTPUT_FORMATS = [
   'pcm_16000',
   'ulaw_8000',
 ] as const;
+const FISH_AUDIO_MODELS: FishAudioModel[] = [
+  's2-pro',
+  's2.1-pro-free',
+  's2.1-pro',
+  's1',
+];
+const FISH_AUDIO_FORMATS: FishAudioFormat[] = ['mp3', 'wav', 'pcm', 'opus'];
+const FISH_AUDIO_LATENCIES: FishAudioLatency[] = ['normal', 'balanced', 'low'];
+const CARTESIA_LANGUAGES: CartesiaLanguage[] = [
+  'ja',
+  'en',
+  'zh',
+  'ko',
+  'fr',
+  'de',
+  'es',
+  'pt',
+  'it',
+  'hi',
+];
 const INWORLD_MODELS = [
   'inworld-tts-2',
   'inworld-tts-1.5-mini',
@@ -692,7 +725,7 @@ const App: React.FC = () => {
   const [voiceApiKeys, setVoiceApiKeys] = useState<Record<string, string>>({});
   const [minimaxGroupId, setMinimaxGroupId] = useState<string>('');
   const [minimaxModel, setMinimaxModel] =
-    useState<MinimaxModel>('speech-2.6-hd');
+    useState<MinimaxModel>('speech-2.8-turbo');
   const [minimaxLanguageBoost, setMinimaxLanguageBoost] =
     useState<string>('Japanese');
   const [minimaxSpeed, setMinimaxSpeed] = useState<string>('');
@@ -744,6 +777,24 @@ const App: React.FC = () => {
     elevenLabsApplyTextNormalization,
     setElevenLabsApplyTextNormalization,
   ] = useState<'default' | ElevenLabsApplyTextNormalization>('default');
+  const [fishAudioModel, setFishAudioModel] =
+    useState<FishAudioModel>('s2-pro');
+  const [fishAudioFormat, setFishAudioFormat] =
+    useState<FishAudioFormat>('mp3');
+  const [fishAudioSampleRate, setFishAudioSampleRate] =
+    useState<string>('44100');
+  const [fishAudioMp3Bitrate, setFishAudioMp3Bitrate] = useState<string>('128');
+  const [fishAudioLatency, setFishAudioLatency] =
+    useState<FishAudioLatency>('normal');
+  const [fishAudioSpeed, setFishAudioSpeed] = useState<string>('');
+  const [cartesiaModel, setCartesiaModel] = useState<string>('sonic-3.5');
+  const [cartesiaLanguage, setCartesiaLanguage] =
+    useState<CartesiaLanguage>('ja');
+  const [cartesiaOutputContainer, setCartesiaOutputContainer] =
+    useState<CartesiaOutputContainer>('wav');
+  const [cartesiaSampleRate, setCartesiaSampleRate] = useState<string>('44100');
+  const [cartesiaMp3Bitrate, setCartesiaMp3Bitrate] =
+    useState<string>('128000');
   const [inworldModel, setInworldModel] = useState<string>(
     String(
       VOICE_ENGINE_CONFIGS.inworld.defaultParams?.model || INWORLD_MODELS[0],
@@ -898,10 +949,12 @@ const App: React.FC = () => {
     aivisSpeech: '',
     aivisCloud: 'a59cb814-0083-4369-8542-f51a29e72af7',
     voicepeak: 'f1',
-    minimax: 'male-qn-qingse',
+    minimax: 'Japanese_IntellectualSenior',
     xai: 'eve',
     unrealSpeech: 'af_bella',
     elevenLabs: '',
+    fishAudio: '',
+    cartesia: '',
     inworld: '',
     gradium: 'YTpq7expH9539ERJ',
     piperPlus: 'default',
@@ -920,6 +973,17 @@ const App: React.FC = () => {
   const [inworldVoices, setInworldVoices] = useState<InworldVoice[]>([]);
   const [isFetchingInworldVoices, setIsFetchingInworldVoices] = useState(false);
   const [inworldVoiceFetchError, setInworldVoiceFetchError] = useState('');
+  const [catalogVoices, setCatalogVoices] = useState<VoiceEngineVoice[]>([]);
+  const [isFetchingCatalogVoices, setIsFetchingCatalogVoices] = useState(false);
+  const [catalogVoiceFetchError, setCatalogVoiceFetchError] = useState('');
+  const catalogApiKey =
+    selectedVoiceEngine === 'fishAudio' || selectedVoiceEngine === 'cartesia'
+      ? voiceApiKeys[selectedVoiceEngine]
+      : '';
+  const catalogSelectedSpeaker =
+    selectedVoiceEngine === 'fishAudio' || selectedVoiceEngine === 'cartesia'
+      ? selectedSpeakers[selectedVoiceEngine]
+      : '';
 
   // Voice playback state
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -1138,6 +1202,23 @@ const App: React.FC = () => {
       setElevenLabsApplyTextNormalization('default');
     }
 
+    if (selectedVoiceEngine === 'fishAudio') {
+      setFishAudioModel('s2-pro');
+      setFishAudioFormat('mp3');
+      setFishAudioSampleRate('44100');
+      setFishAudioMp3Bitrate('128');
+      setFishAudioLatency('normal');
+      setFishAudioSpeed('');
+    }
+
+    if (selectedVoiceEngine === 'cartesia') {
+      setCartesiaModel('sonic-3.5');
+      setCartesiaLanguage('ja');
+      setCartesiaOutputContainer('wav');
+      setCartesiaSampleRate('44100');
+      setCartesiaMp3Bitrate('128000');
+    }
+
     if (selectedVoiceEngine === 'inworld') {
       setInworldModel(
         String(
@@ -1260,6 +1341,72 @@ const App: React.FC = () => {
   ]);
 
   useEffect(() => {
+    const engine = selectedVoiceEngine;
+    if (engine !== 'fishAudio' && engine !== 'cartesia') {
+      return;
+    }
+
+    const apiKey = catalogApiKey?.trim();
+    if (!apiKey) {
+      queueMicrotask(() => {
+        setCatalogVoices([]);
+        setCatalogVoiceFetchError('');
+      });
+      return;
+    }
+
+    let active = true;
+    const fetchCatalogVoices = async () => {
+      setIsFetchingCatalogVoices(true);
+      try {
+        const voices = await getVoiceEngineVoiceList(engine, {
+          apiKey,
+          voiceListApiUrl: String(
+            VOICE_ENGINE_CONFIGS[engine].defaultParams?.voiceListApiUrl || '',
+          ),
+          language: engine === 'cartesia' ? cartesiaLanguage : undefined,
+          limit: engine === 'fishAudio' ? 100 : undefined,
+          pageSize: 100,
+        });
+        if (!active) return;
+
+        setCatalogVoices(voices);
+        setCatalogVoiceFetchError('');
+        if (
+          voices.length > 0 &&
+          !voices.some((voice) => voice.id === catalogSelectedSpeaker)
+        ) {
+          setSelectedSpeakers((prev) => ({
+            ...prev,
+            [engine]: voices[0].id,
+          }));
+        }
+      } catch (error) {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : String(error);
+        setCatalogVoices([]);
+        setCatalogVoiceFetchError(
+          `${engine === 'fishAudio' ? 'Fish Audio' : 'Cartesia'}音声一覧エラー: ${message}`,
+        );
+      } finally {
+        if (active) {
+          setIsFetchingCatalogVoices(false);
+        }
+      }
+    };
+
+    void fetchCatalogVoices();
+    return () => {
+      active = false;
+    };
+  }, [
+    selectedVoiceEngine,
+    catalogApiKey,
+    cartesiaLanguage,
+    catalogSelectedSpeaker,
+  ]);
+
+  useEffect(() => {
     if (selectedVoiceEngine !== 'inworld') {
       return;
     }
@@ -1374,6 +1521,9 @@ const App: React.FC = () => {
         break;
       case 'zai':
         setModel(zaiModels[0]);
+        setReasoningEffort(
+          getDefaultZaiReasoningEffort(zaiModels[0]) ?? 'none',
+        );
         break;
       case 'kimi':
         setModel(kimiModels[0]);
@@ -1483,6 +1633,19 @@ const App: React.FC = () => {
         ? reasoning_effort
         : undefined;
     const normalized = normalizeGeminiReasoningEffort(model, requestedEffort);
+    if (normalized && normalized !== reasoning_effort) {
+      setReasoningEffort(normalized);
+    }
+  }, [chatProvider, model, reasoning_effort]);
+
+  useEffect(() => {
+    if (chatProvider !== 'zai' || !model) {
+      return;
+    }
+    const normalized = normalizeReasoningEffortForZaiModel(
+      model,
+      reasoning_effort,
+    );
     if (normalized && normalized !== reasoning_effort) {
       setReasoningEffort(normalized);
     }
@@ -1735,6 +1898,12 @@ const App: React.FC = () => {
         requestedEffort,
       );
     }
+    if (chatProvider === 'zai') {
+      providerOptions.reasoning_effort = normalizeReasoningEffortForZaiModel(
+        model,
+        reasoning_effort,
+      );
+    }
     if (chatProvider === 'kimi') {
       if (model && isKimiReasoningEffortModel(model)) {
         providerOptions.reasoning_effort = normalizeReasoningEffortForKimiModel(
@@ -1828,6 +1997,12 @@ const App: React.FC = () => {
             break;
           case 'elevenLabs':
             options.elevenLabsApiUrl = config.apiUrl;
+            break;
+          case 'fishAudio':
+            options.fishAudioApiUrl = config.apiUrl;
+            break;
+          case 'cartesia':
+            options.cartesiaApiUrl = config.apiUrl;
             break;
           case 'inworld':
             options.inworldApiUrl = config.apiUrl;
@@ -2394,6 +2569,43 @@ const App: React.FC = () => {
 
           break;
         }
+        case 'fishAudio': {
+          options.fishAudioModel = fishAudioModel;
+          options.fishAudioFormat = fishAudioFormat;
+          options.fishAudioLatency = fishAudioLatency;
+
+          const parsedSampleRate = Number.parseInt(fishAudioSampleRate, 10);
+          if (!Number.isNaN(parsedSampleRate)) {
+            options.fishAudioSampleRate = parsedSampleRate;
+          }
+
+          const parsedMp3Bitrate = Number.parseInt(fishAudioMp3Bitrate, 10);
+          if (!Number.isNaN(parsedMp3Bitrate)) {
+            options.fishAudioMp3Bitrate = parsedMp3Bitrate;
+          }
+
+          const parsedSpeed = Number.parseFloat(fishAudioSpeed);
+          if (!Number.isNaN(parsedSpeed)) {
+            options.fishAudioSpeed = parsedSpeed;
+          }
+          break;
+        }
+        case 'cartesia': {
+          options.cartesiaModel = cartesiaModel.trim() || 'sonic-3.5';
+          options.cartesiaLanguage = cartesiaLanguage;
+          options.cartesiaOutputContainer = cartesiaOutputContainer;
+
+          const parsedSampleRate = Number.parseInt(cartesiaSampleRate, 10);
+          if (!Number.isNaN(parsedSampleRate)) {
+            options.cartesiaSampleRate = parsedSampleRate;
+          }
+
+          const parsedMp3Bitrate = Number.parseInt(cartesiaMp3Bitrate, 10);
+          if (!Number.isNaN(parsedMp3Bitrate)) {
+            options.cartesiaMp3Bitrate = parsedMp3Bitrate;
+          }
+          break;
+        }
         case 'inworld': {
           if (inworldModel.trim()) {
             options.inworldModel = inworldModel.trim();
@@ -2850,9 +3062,10 @@ const App: React.FC = () => {
   const allowsMaxReasoningEffort = Boolean(
     chatProvider === 'openai' && model && allowsReasoningMax(model),
   );
-  const allowsXaiNoneReasoningEffort = Boolean(
-    chatProvider === 'xai' && model && isXaiReasoningEffortNoneModel(model),
-  );
+  const xaiSupportedReasoningEfforts =
+    chatProvider === 'xai' && model
+      ? getXaiSupportedReasoningEfforts(model)
+      : [];
   const isXaiReasoningEffortModelSelected = Boolean(
     chatProvider === 'xai' && model && isXaiReasoningEffortModel(model),
   );
@@ -2899,8 +3112,7 @@ const App: React.FC = () => {
       ? getDeepSeekSupportedReasoningEfforts(model)
       : [];
   const deepSeekReasoningEffortValue: DeepSeekReasoningEffort =
-    normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort) ??
-    'none';
+    normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort) ?? 'none';
   const openRouterSupportedReasoningEfforts =
     chatProvider === 'openrouter' && model
       ? getOpenRouterSupportedReasoningEfforts(model)
@@ -2908,6 +3120,14 @@ const App: React.FC = () => {
   const openRouterReasoningEffortValue: OpenRouterReasoningEffort =
     normalizeReasoningEffortForOpenRouterModel(model, reasoning_effort) ??
     'none';
+  const zaiSupportedReasoningEfforts =
+    chatProvider === 'zai' && model
+      ? getZaiSupportedReasoningEfforts(model)
+      : [];
+  const isZaiReasoningEffortModelSelected =
+    zaiSupportedReasoningEfforts.length > 0;
+  const zaiReasoningEffortValue: ZaiReasoningEffort =
+    normalizeReasoningEffortForZaiModel(model, reasoning_effort) ?? 'none';
   const getResponseLengthOptionLabel = (length: ChatResponseLength): string => {
     const label = RESPONSE_LENGTH_LABELS[length];
     const baseTokens = RESPONSE_LENGTH_BASE_TOKENS[length];
@@ -3375,6 +3595,48 @@ const App: React.FC = () => {
                     </>
                   )}
 
+                  {chatProvider === 'zai' && (
+                    <div style={{ marginTop: '16px' }}>
+                      <label htmlFor="zaiReasoningEffort">
+                        Z.ai Reasoning Effort:
+                      </label>
+                      <select
+                        id="zaiReasoningEffort"
+                        value={zaiReasoningEffortValue}
+                        disabled={!isZaiReasoningEffortModelSelected}
+                        onChange={(e) =>
+                          setReasoningEffort(
+                            e.target.value as ZaiReasoningEffort,
+                          )
+                        }
+                      >
+                        {!isZaiReasoningEffortModelSelected && (
+                          <option value="none">Not available</option>
+                        )}
+                        {zaiSupportedReasoningEfforts.map((effort) => (
+                          <option key={effort} value={effort}>
+                            {effort === 'none'
+                              ? 'None (fastest)'
+                              : effort === 'xhigh'
+                                ? 'XHigh'
+                                : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                          </option>
+                        ))}
+                      </select>
+                      <div
+                        style={{
+                          marginTop: '6px',
+                          marginBottom: '12px',
+                          color: '#666',
+                          fontSize: '12px',
+                        }}
+                      >
+                        GLM-5.2 defaults to None for responsive chat. Aliases
+                        are normalized to the effective API effort.
+                      </div>
+                    </div>
+                  )}
+
                   {chatProvider === 'kimi' && (
                     <>
                       {isKimiReasoningEffortModelSelected && (
@@ -3643,12 +3905,15 @@ const App: React.FC = () => {
                           )
                         }
                       >
-                        {allowsXaiNoneReasoningEffort && (
-                          <option value="none">None</option>
-                        )}
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
+                        {xaiSupportedReasoningEfforts.map((effort) => (
+                          <option key={effort} value={effort}>
+                            {effort === 'none'
+                              ? 'None'
+                              : effort === 'xhigh'
+                                ? 'XHigh'
+                                : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                          </option>
+                        ))}
                       </select>
                       <div
                         style={{
@@ -3658,9 +3923,11 @@ const App: React.FC = () => {
                         }}
                       >
                         {isXaiReasoningEffortModelSelected
-                          ? model === 'grok-4.5'
-                            ? 'Grok 4.5 uses low by default; none is not supported.'
-                            : 'Grok 4.3 uses none by default for lower latency.'
+                          ? model === 'grok-4.6'
+                            ? 'Grok 4.6 uses low by default and also supports xhigh.'
+                            : model === 'grok-4.5'
+                              ? 'Grok 4.5 uses low by default; none is not supported.'
+                              : 'Grok 4.3 uses none by default for lower latency.'
                           : 'This xAI model does not support reasoning_effort.'}
                       </div>
                     </div>
@@ -4748,6 +5015,251 @@ const App: React.FC = () => {
                         <option value="on">on</option>
                         <option value="off">off</option>
                       </select>
+                    </div>
+                  )}
+
+                  {selectedVoiceEngine === 'fishAudio' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        border: '1px solid #ddd',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                        Fish Audio Parameters
+                      </div>
+                      <label htmlFor="fishAudioSpeaker">Reference Voice:</label>
+                      <select
+                        id="fishAudioSpeaker"
+                        value={String(selectedSpeakers.fishAudio || '')}
+                        onChange={(e) =>
+                          setSelectedSpeakers((prev) => ({
+                            ...prev,
+                            fishAudio: e.target.value,
+                          }))
+                        }
+                        disabled={
+                          !voiceApiKeys.fishAudio ||
+                          isFetchingCatalogVoices ||
+                          catalogVoices.length === 0
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        {!voiceApiKeys.fishAudio && (
+                          <option value="">API Keyを入力してください</option>
+                        )}
+                        {voiceApiKeys.fishAudio && isFetchingCatalogVoices && (
+                          <option value="">取得中...</option>
+                        )}
+                        {voiceApiKeys.fishAudio &&
+                          !isFetchingCatalogVoices &&
+                          catalogVoices.length === 0 && (
+                            <option value="">
+                              音声一覧を取得できませんでした
+                            </option>
+                          )}
+                        {catalogVoices.map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.label}
+                          </option>
+                        ))}
+                      </select>
+                      {catalogVoiceFetchError && (
+                        <div style={{ color: '#d9534f', marginBottom: '8px' }}>
+                          {catalogVoiceFetchError}
+                        </div>
+                      )}
+                      <label htmlFor="fishAudioModel">Model:</label>
+                      <select
+                        id="fishAudioModel"
+                        value={fishAudioModel}
+                        onChange={(e) =>
+                          setFishAudioModel(e.target.value as FishAudioModel)
+                        }
+                      >
+                        {FISH_AUDIO_MODELS.map((model) => (
+                          <option key={model} value={model}>
+                            {model}
+                          </option>
+                        ))}
+                      </select>
+                      <label htmlFor="fishAudioFormat">Format:</label>
+                      <select
+                        id="fishAudioFormat"
+                        value={fishAudioFormat}
+                        onChange={(e) =>
+                          setFishAudioFormat(e.target.value as FishAudioFormat)
+                        }
+                      >
+                        {FISH_AUDIO_FORMATS.map((format) => (
+                          <option key={format} value={format}>
+                            {format}
+                          </option>
+                        ))}
+                      </select>
+                      <label htmlFor="fishAudioLatency">Latency:</label>
+                      <select
+                        id="fishAudioLatency"
+                        value={fishAudioLatency}
+                        onChange={(e) =>
+                          setFishAudioLatency(
+                            e.target.value as FishAudioLatency,
+                          )
+                        }
+                      >
+                        {FISH_AUDIO_LATENCIES.map((latency) => (
+                          <option key={latency} value={latency}>
+                            {latency}
+                          </option>
+                        ))}
+                      </select>
+                      <label htmlFor="fishAudioSampleRate">Sample Rate:</label>
+                      <input
+                        id="fishAudioSampleRate"
+                        type="number"
+                        value={fishAudioSampleRate}
+                        onChange={(e) => setFishAudioSampleRate(e.target.value)}
+                      />
+                      <label htmlFor="fishAudioMp3Bitrate">
+                        MP3 Bitrate (kbps):
+                      </label>
+                      <select
+                        id="fishAudioMp3Bitrate"
+                        value={fishAudioMp3Bitrate}
+                        onChange={(e) => setFishAudioMp3Bitrate(e.target.value)}
+                      >
+                        <option value="64">64</option>
+                        <option value="128">128</option>
+                        <option value="192">192</option>
+                      </select>
+                      <label htmlFor="fishAudioSpeed">Speed:</label>
+                      <input
+                        id="fishAudioSpeed"
+                        type="number"
+                        min="0.5"
+                        max="2"
+                        step="0.05"
+                        value={fishAudioSpeed}
+                        onChange={(e) => setFishAudioSpeed(e.target.value)}
+                        placeholder="default"
+                      />
+                      <p style={{ color: '#666', fontSize: '12px' }}>
+                        Development and preview use the Vite Fish Audio proxy.
+                        Production must provide equivalent backend routes and
+                        keep the API key server-side.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedVoiceEngine === 'cartesia' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        border: '1px solid #ddd',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                        Cartesia Parameters
+                      </div>
+                      <label htmlFor="cartesiaSpeaker">Voice:</label>
+                      <select
+                        id="cartesiaSpeaker"
+                        value={String(selectedSpeakers.cartesia || '')}
+                        onChange={(e) =>
+                          setSelectedSpeakers((prev) => ({
+                            ...prev,
+                            cartesia: e.target.value,
+                          }))
+                        }
+                        disabled={
+                          !voiceApiKeys.cartesia ||
+                          isFetchingCatalogVoices ||
+                          catalogVoices.length === 0
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        {!voiceApiKeys.cartesia && (
+                          <option value="">API Keyを入力してください</option>
+                        )}
+                        {voiceApiKeys.cartesia && isFetchingCatalogVoices && (
+                          <option value="">取得中...</option>
+                        )}
+                        {voiceApiKeys.cartesia &&
+                          !isFetchingCatalogVoices &&
+                          catalogVoices.length === 0 && (
+                            <option value="">
+                              音声一覧を取得できませんでした
+                            </option>
+                          )}
+                        {catalogVoices.map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.label}
+                          </option>
+                        ))}
+                      </select>
+                      {catalogVoiceFetchError && (
+                        <div style={{ color: '#d9534f', marginBottom: '8px' }}>
+                          {catalogVoiceFetchError}
+                        </div>
+                      )}
+                      <label htmlFor="cartesiaModel">Model:</label>
+                      <input
+                        id="cartesiaModel"
+                        type="text"
+                        value={cartesiaModel}
+                        onChange={(e) => setCartesiaModel(e.target.value)}
+                      />
+                      <label htmlFor="cartesiaLanguage">Language:</label>
+                      <select
+                        id="cartesiaLanguage"
+                        value={cartesiaLanguage}
+                        onChange={(e) =>
+                          setCartesiaLanguage(
+                            e.target.value as CartesiaLanguage,
+                          )
+                        }
+                      >
+                        {CARTESIA_LANGUAGES.map((language) => (
+                          <option key={language} value={language}>
+                            {language}
+                          </option>
+                        ))}
+                      </select>
+                      <label htmlFor="cartesiaOutputContainer">
+                        Output Container:
+                      </label>
+                      <select
+                        id="cartesiaOutputContainer"
+                        value={cartesiaOutputContainer}
+                        onChange={(e) =>
+                          setCartesiaOutputContainer(
+                            e.target.value as CartesiaOutputContainer,
+                          )
+                        }
+                      >
+                        <option value="wav">wav</option>
+                        <option value="mp3">mp3</option>
+                      </select>
+                      <label htmlFor="cartesiaSampleRate">Sample Rate:</label>
+                      <input
+                        id="cartesiaSampleRate"
+                        type="number"
+                        value={cartesiaSampleRate}
+                        onChange={(e) => setCartesiaSampleRate(e.target.value)}
+                      />
+                      <label htmlFor="cartesiaMp3Bitrate">
+                        MP3 Bitrate (bps):
+                      </label>
+                      <input
+                        id="cartesiaMp3Bitrate"
+                        type="number"
+                        value={cartesiaMp3Bitrate}
+                        onChange={(e) => setCartesiaMp3Bitrate(e.target.value)}
+                      />
                     </div>
                   )}
 
@@ -6687,6 +7199,8 @@ const App: React.FC = () => {
                   {selectedVoiceEngine !== 'none' &&
                     selectedVoiceEngine !== 'openaiCompatible' &&
                     selectedVoiceEngine !== 'elevenLabs' &&
+                    selectedVoiceEngine !== 'fishAudio' &&
+                    selectedVoiceEngine !== 'cartesia' &&
                     selectedVoiceEngine !== 'inworld' && (
                       <>
                         <label
@@ -6858,29 +7372,34 @@ const App: React.FC = () => {
                               ? 'Unreal Speechでは v8 /stream endpoint の bitrate / codec / speed / pitch / temperature を設定できます'
                               : selectedVoiceEngine === 'elevenLabs'
                                 ? 'ElevenLabsでは voice ID / model / output format / voice settings を設定できます'
-                                : selectedVoiceEngine === 'inworld'
-                                  ? 'Inworldでは voice / model / audio config / delivery mode を設定できます'
-                                  : selectedVoiceEngine === 'gradium'
-                                    ? 'Gradiumではプリセット音声と output format / temperature / similarity を設定できます'
-                                    : selectedVoiceEngine === 'voicevox'
-                                      ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
-                                      : selectedVoiceEngine === 'openai'
-                                        ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
-                                        : selectedVoiceEngine ===
-                                            'openaiCompatible'
-                                          ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
-                                          : selectedVoiceEngine === 'piperPlus'
-                                            ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
+                                : selectedVoiceEngine === 'fishAudio'
+                                  ? 'Fish Audioでは reference voice / model / format / latency / speed を設定できます'
+                                  : selectedVoiceEngine === 'cartesia'
+                                    ? 'Cartesiaでは voice / model / language / output format を設定できます'
+                                    : selectedVoiceEngine === 'inworld'
+                                      ? 'Inworldでは voice / model / audio config / delivery mode を設定できます'
+                                      : selectedVoiceEngine === 'gradium'
+                                        ? 'Gradiumではプリセット音声と output format / temperature / similarity を設定できます'
+                                        : selectedVoiceEngine === 'voicevox'
+                                          ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
+                                          : selectedVoiceEngine === 'openai'
+                                            ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
                                             : selectedVoiceEngine ===
-                                                'webSpeech'
-                                              ? 'Web Speech APIはブラウザが直接再生します。音声バッファを取得できないためリップシンク非対応です'
+                                                'openaiCompatible'
+                                              ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
                                               : selectedVoiceEngine ===
-                                                  'aivisCloud'
-                                                ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                                  'piperPlus'
+                                                ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
                                                 : selectedVoiceEngine ===
-                                                    'aivisSpeech'
-                                                  ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
-                                                  : '※ 音声パラメータは最適な値に固定されています'}
+                                                    'webSpeech'
+                                                  ? 'Web Speech APIはブラウザが直接再生します。音声バッファを取得できないためリップシンク非対応です'
+                                                  : selectedVoiceEngine ===
+                                                      'aivisCloud'
+                                                    ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                                    : selectedVoiceEngine ===
+                                                        'aivisSpeech'
+                                                      ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
+                                                      : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

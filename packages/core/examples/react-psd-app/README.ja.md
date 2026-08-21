@@ -4,6 +4,11 @@ Web Speech API TTS ではブラウザ音声の選択と rate、pitch、volume、
 を設定できます。ブラウザが直接再生して音声バッファを取得できないため、
 このエンジン選択時はリップシンク非対応です。
 
+Fish Audio と Cartesia は API キー入力後に音声一覧から選択できます。
+Fish Audio は公式 API がブラウザの直接 CORS リクエストに対応していないため、
+Vite の development / preview proxy を使います。本番環境では API キーを
+サーバー側に置き、独自バックエンド経由でリクエストしてください。
+
 ![react-psd-app image](./images/react-psd-app.webp)
 
 `@aituber-onair/core` を使った PSD 立ち絵チャットアプリです。
