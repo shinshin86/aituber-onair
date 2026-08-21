@@ -2,7 +2,7 @@
 
 ## 0.26.11
 
-### Minor Changes
+### Patch Changes
 
 - Synced Chat updates through `@aituber-onair/chat@0.52.0` into Core:
   - re-exported Gemini 3.7 Flash, Grok 4.6, Claude Fable 5, refreshed
@@ -22,8 +22,6 @@
   through `createAgentChatService()` or `AITuberOnAirCore` without an API key,
   while the main Core entry remains free of agent-provider registration side
   effects.
-
-### Patch Changes
 
 - Added `AITuberOnAirCore.updateChatOptions()` to update chat processor
   options (for example the system prompt) without recreating the core
