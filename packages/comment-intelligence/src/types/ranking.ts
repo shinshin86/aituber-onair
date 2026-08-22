@@ -13,6 +13,8 @@ export type RankingReason =
   | 'ignored_recently'
   | 'super_chat'
   | 'moderator'
+  | 'gift'
+  | 'big_gift'
   | 'duplicate'
   | 'spam_like'
   | 'unsafe'

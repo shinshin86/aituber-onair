@@ -36,7 +36,7 @@ export type TTSEngineOption =
   | 'piperPlus'
   | 'webSpeech'
   | 'none';
-export type StreamingPlatformOption = 'none' | 'youtube' | 'twitch';
+export type StreamingPlatformOption = 'none' | 'youtube' | 'twitch' | 'tiktok';
 
 export interface ProviderApiKeys {
   openai?: string;
@@ -74,6 +74,8 @@ export interface TTSSettings {
   openAiCompatibleApiUrl?: string;
   openAiCompatibleModel?: string;
   openAiCompatibleSpeed?: string;
+  openAiCompatibleKeepAliveMinutes?: number;
+  openAiCompatibleSentencePipeline?: boolean;
   geminiTtsModel?: string;
   geminiTtsLanguageCode?: string;
   geminiTtsPrompt?: string;
@@ -149,6 +151,10 @@ export interface StreamSettings {
   twitchChannel: string;
   twitchEnabled: boolean;
   twitchCommentIntervalMs: number;
+  tiktokUniqueId: string;
+  tiktokRelayUrl: string;
+  tiktokEnabled: boolean;
+  tiktokCommentIntervalMs: number;
 }
 
 export interface CommentIntelligenceSettings {

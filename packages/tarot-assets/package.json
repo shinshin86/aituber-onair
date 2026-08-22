@@ -1,0 +1,10 @@
+{
+  "name": "@pitonisa/tarot-assets",
+  "version": "0.1.0",
+  "description": "Tarot card assets and spread definitions",
+  "type": "module",
+  "files": [
+    "cards",
+    "spreads"
+  ]
+}

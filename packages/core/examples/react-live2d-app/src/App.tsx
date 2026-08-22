@@ -12,7 +12,9 @@ import { useAituberCore } from './hooks/useAituberCore';
 import { useLiveCommentIntelligence } from './hooks/useLiveCommentIntelligence';
 import { useScreenVisionController } from './hooks/useScreenVisionController';
 import { useSettings } from './hooks/useSettings';
+import { useTikTokComments } from './hooks/useTikTokComments';
 import { useTwitchComments } from './hooks/useTwitchComments';
+import { useViewerMemory } from './hooks/useViewerMemory';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
 import { getEmotionEffectAnchor } from './lib/emotionEffectAnchor';
@@ -28,6 +30,10 @@ import {
   type Live2DReaction,
   type Live2DReactionDraft,
 } from './lib/live2dReactions';
+import type {
+  TikTokChatMessage,
+  TikTokGiftMessage,
+} from './services/tiktok/tiktokService';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/base.css';
@@ -208,6 +214,15 @@ export default function App() {
     onDeviceIdChange: settingsHook.updateScreenVisionDeviceId,
   });
 
+  const {
+    getViewerProfiles,
+    getViewContext,
+    recordViewerMessage,
+    recordViewerGift,
+    startStream,
+    endStream,
+  } = useViewerMemory();
+
   const handleSend = useCallback(
     (text: string) => {
       stop();
@@ -217,8 +232,12 @@ export default function App() {
     [processChat, stop],
   );
 
-  const { enqueueYouTubeComments, enqueueTwitchComments } =
-    useLiveCommentIntelligence({
+  const {
+    enqueueYouTubeComments,
+    enqueueTwitchComments,
+    enqueueTikTokComments,
+    enqueueTikTokGifts,
+  } = useLiveCommentIntelligence({
       messages,
       isProcessing,
       isSpeaking,
@@ -241,7 +260,44 @@ export default function App() {
       streamTopic: settingsHook.settings.commentIntelligence.streamTopic,
       streamTitle: settingsHook.settings.commentIntelligence.streamTitle,
       topicFilter: settingsHook.settings.commentIntelligence.topicFilter,
+      getViewerProfiles,
+      getViewContext,
+      onViewerEvent: (event) => {
+        if (event.kind === 'gift') {
+          recordViewerGift({
+            handle: event.handle,
+            nickname: event.nickname,
+            giftName: event.giftName ?? 'regalo',
+            diamonds: event.diamonds,
+            platform: event.platform,
+          });
+        } else {
+          recordViewerMessage({
+            handle: event.handle,
+            nickname: event.nickname,
+            text: event.text ?? '',
+            platform: event.platform,
+          });
+        }
+      },
     });
+
+  // Abre la sesión de stream cuando la plataforma activa cambia y la
+  // cierra cuando vuelve a 'none', guardando el resumen por espectador.
+  const activePlatform =
+    settingsHook.settings.stream.platform !== 'none'
+      ? settingsHook.settings.stream.platform
+      : null;
+  const prevPlatformRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevPlatformRef.current;
+    if (activePlatform && activePlatform !== prev) {
+      startStream(activePlatform);
+    } else if (!activePlatform && prev) {
+      endStream(prev);
+    }
+    prevPlatformRef.current = activePlatform;
+  }, [activePlatform, startStream, endStream]);
 
   const handleYoutubeComment = useCallback(
     (comment: YouTubeChatMessage) => {
@@ -255,6 +311,20 @@ export default function App() {
       enqueueTwitchComments([comment]);
     },
     [enqueueTwitchComments],
+  );
+
+  const handleTikTokComment = useCallback(
+    (comment: TikTokChatMessage) => {
+      enqueueTikTokComments([comment]);
+    },
+    [enqueueTikTokComments],
+  );
+
+  const handleTikTokGift = useCallback(
+    (gift: TikTokGiftMessage) => {
+      enqueueTikTokGifts([gift]);
+    },
+    [enqueueTikTokGifts],
   );
 
   const handleBackgroundImageChange = useCallback((file: File | null) => {
@@ -345,6 +415,22 @@ export default function App() {
       settingsHook.updateTwitchEnabled(false);
       setStreamErrorMessage('Twitch access token expired. Please reconnect.');
     },
+    onError: (message) => {
+      setStreamErrorMessage(message);
+      if (message) {
+        console.warn(message);
+      }
+    },
+  });
+
+  useTikTokComments({
+    tiktokUniqueId: settingsHook.settings.stream.tiktokUniqueId,
+    relayUrl: settingsHook.settings.stream.tiktokRelayUrl,
+    isEnabled:
+      settingsHook.settings.stream.platform === 'tiktok' &&
+      settingsHook.settings.stream.tiktokEnabled,
+    onComment: handleTikTokComment,
+    onGift: handleTikTokGift,
     onError: (message) => {
       setStreamErrorMessage(message);
       if (message) {

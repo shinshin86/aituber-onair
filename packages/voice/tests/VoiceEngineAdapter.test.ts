@@ -102,6 +102,47 @@ describe('VoiceEngineAdapter', () => {
     mockGetEngine.mockReturnValue(mockEngine);
   });
 
+  describe('Speech prefetch queue', () => {
+    it('prefetches the next sentence while preserving playback order', async () => {
+      const firstAudio = new ArrayBuffer(8);
+      const secondAudio = new ArrayBuffer(16);
+      mockEngine.fetchAudio.mockImplementation(({ message }: { message: string }) =>
+        Promise.resolve(message === 'Primera.' ? firstAudio : secondAudio),
+      );
+
+      let finishFirstPlayback: (() => void) | undefined;
+      const onPlay = vi.fn(
+        (audio: ArrayBuffer) =>
+          new Promise<void>((resolve) => {
+            if (audio === firstAudio) {
+              finishFirstPlayback = resolve;
+            } else {
+              resolve();
+            }
+          }),
+      );
+      const adapter = new VoiceEngineAdapter({
+        engineType: 'openaiCompatible',
+        speaker: 'Elara',
+        onPlay,
+      });
+
+      const first = adapter.speak({ text: 'Primera.' });
+      const second = adapter.speak({ text: 'Segunda.' });
+
+      await vi.waitFor(() => {
+        expect(mockEngine.fetchAudio).toHaveBeenCalledTimes(2);
+        expect(onPlay).toHaveBeenCalledTimes(1);
+      });
+      expect(onPlay).toHaveBeenNthCalledWith(1, firstAudio, undefined);
+
+      finishFirstPlayback?.();
+      await Promise.all([first, second]);
+
+      expect(onPlay).toHaveBeenNthCalledWith(2, secondAudio, undefined);
+    });
+  });
+
   describe('VOICEVOX Integration', () => {
     it('should configure VOICEVOX engine with provided overrides', async () => {
       const options: VoiceServiceOptions = {

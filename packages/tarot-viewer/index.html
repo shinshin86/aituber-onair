@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tarot 3D Viewer - Pitonisa</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #050508; }
+    #scene { width: 100vw; height: 100vh; display: block; }
+    #hud {
+      position: fixed; top: 12px; left: 12px; color: #c9a227;
+      font: 14px/1.5 monospace; pointer-events: none; user-select: none;
+    }
+    #hud .ok { color: #4caf50; }
+    #hud .err { color: #e53935; }
+    #spread-name {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #f0e6c8; font: italic 28px Georgia, serif; opacity: 0;
+      transition: opacity 0.6s; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="hud">TAROT MCP · <span id="ws-state" class="err">WS desconectado</span></div>
+  <div id="spread-name"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -49,6 +49,10 @@ interface StreamSettingsProps {
   updateTwitchChannel: (value: string) => void;
   updateTwitchEnabled: (value: boolean) => void;
   updateTwitchCommentIntervalMs: (value: number) => void;
+  updateTikTokUniqueId: (value: string) => void;
+  updateTikTokRelayUrl: (value: string) => void;
+  updateTikTokEnabled: (value: boolean) => void;
+  updateTikTokCommentIntervalMs: (value: number) => void;
   updateCommentIntelligenceEnabled: (value: boolean) => void;
   updateCommentIntelligenceMode: (
     value: CommentIntelligenceSettings['mode'],
@@ -100,6 +104,10 @@ export function StreamSettings({
   updateTwitchChannel,
   updateTwitchEnabled,
   updateTwitchCommentIntervalMs,
+  updateTikTokUniqueId,
+  updateTikTokRelayUrl,
+  updateTikTokEnabled,
+  updateTikTokCommentIntervalMs,
   updateCommentIntelligenceEnabled,
   updateCommentIntelligenceMode,
   updateCommentIntelligenceStreamTopic,
@@ -119,6 +127,7 @@ export function StreamSettings({
   const twitchRedirectUri = getTwitchRedirectUri();
   const isYoutubeSelected = stream.platform === 'youtube';
   const isTwitchSelected = stream.platform === 'twitch';
+  const isTikTokSelected = stream.platform === 'tiktok';
   const isTwitchReady =
     !!stream.twitchAccessToken &&
     !!stream.twitchChannel.trim() &&
@@ -181,6 +190,7 @@ export function StreamSettings({
                 <option value="none">None</option>
                 <option value="youtube">YouTube</option>
                 <option value="twitch">Twitch</option>
+                <option value="tiktok">TikTok</option>
               </select>
             </div>
 
@@ -358,6 +368,90 @@ export function StreamSettings({
                         updateTwitchEnabled(event.target.checked)
                       }
                       disabled={disabled || !isTwitchReady}
+                      style={{ marginRight: 8 }}
+                    />
+                    Enable
+                  </label>
+                </div>
+              </>
+            )}
+
+            {isTikTokSelected && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="stream-tiktok-unique-id">
+                    TikTok Unique ID
+                  </label>
+                  <input
+                    id="stream-tiktok-unique-id"
+                    type="text"
+                    value={stream.tiktokUniqueId}
+                    onChange={(event) =>
+                      updateTikTokUniqueId(event.target.value)
+                    }
+                    placeholder="official_account"
+                    disabled={disabled}
+                  />
+                  <p className="settings-field-hint">
+                    Use the @unique_id from the TikTok LIVE URL. You can paste
+                    it with or without the @ prefix.
+                  </p>
+                </div>
+
+                <div className="settings-field">
+                  <label htmlFor="stream-tiktok-relay-url">
+                    TikTok Relay URL
+                  </label>
+                  <input
+                    id="stream-tiktok-relay-url"
+                    type="text"
+                    value={stream.tiktokRelayUrl}
+                    onChange={(event) =>
+                      updateTikTokRelayUrl(event.target.value)
+                    }
+                    placeholder="http://127.0.0.1:8787/tiktok/events"
+                    disabled={disabled}
+                  />
+                  <p className="settings-field-hint">
+                    This browser app connects to a local SSE relay. Run the
+                    relay script separately before enabling TikTok.
+                  </p>
+                </div>
+
+                <div className="settings-field">
+                  <label htmlFor="stream-tiktok-interval">
+                    Comment/Gift Interval
+                  </label>
+                  <select
+                    id="stream-tiktok-interval"
+                    value={stream.tiktokCommentIntervalMs}
+                    onChange={(event) =>
+                      updateTikTokCommentIntervalMs(Number(event.target.value))
+                    }
+                    disabled={disabled}
+                  >
+                    {STREAM_INTERVAL_OPTIONS.map((intervalMs) => (
+                      <option key={intervalMs} value={intervalMs}>
+                        {intervalMs.toLocaleString()} ms
+                      </option>
+                    ))}
+                  </select>
+                  <p className="settings-field-hint">
+                    TikTok chat and gift events are queued and analyzed in the
+                    same live comment stream.
+                  </p>
+                </div>
+
+                <div className="settings-field">
+                  <label htmlFor="stream-tiktok-enabled">
+                    <input
+                      id="stream-tiktok-enabled"
+                      type="checkbox"
+                      checked={stream.tiktokEnabled}
+                      onChange={(event) =>
+                        updateTikTokEnabled(event.target.checked)
+                      }
+                      disabled={disabled || !stream.tiktokUniqueId.trim()}
                       style={{ marginRight: 8 }}
                     />
                     Enable

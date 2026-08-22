@@ -62,6 +62,9 @@ export class VoiceEngineAdapter implements VoiceService {
   private activeSelfPlayingEngine?: SelfPlayingVoiceEngine;
   private requestIdCounter = 0;
   private cachedPiperPlusEngine?: VoiceEngine;
+  private voiceEngineFactoryPromise?: Promise<
+    (typeof import('../engines/VoiceEngineFactory'))['VoiceEngineFactory']
+  >;
 
   /**
    * Constructor
@@ -217,9 +220,10 @@ export class VoiceEngineAdapter implements VoiceService {
   }
 
   private async getEngine(): Promise<VoiceEngine> {
-    const { VoiceEngineFactory } = await import(
+    this.voiceEngineFactoryPromise ??= import(
       '../engines/VoiceEngineFactory'
-    );
+    ).then((module) => module.VoiceEngineFactory);
+    const VoiceEngineFactory = await this.voiceEngineFactoryPromise;
 
     if (this.options.engineType === 'piperPlus') {
       if (!this.cachedPiperPlusEngine) {

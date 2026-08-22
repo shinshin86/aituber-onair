@@ -12,6 +12,8 @@ import {
   createChatServiceCommentAnalysisProvider,
   createCommentIntelligence,
   formatCommentIntelligencePrompt,
+  normalizeTikTokChatComment,
+  normalizeTikTokGift,
   normalizeTwitchComment,
   normalizeYouTubeComment,
   type CommentAnalysisLLMProvider,
@@ -20,21 +22,40 @@ import {
   type CommentPlatform,
   type LiveComment,
 } from '@aituber-onair/comment-intelligence';
+import type {
+  TikTokChatMessage,
+  TikTokGiftMessage,
+} from '../services/tiktok/tiktokService';
 import type { TwitchChatMessage } from '../services/twitch/twitchService';
 import type { YouTubeChatMessage } from '../services/youtube/youtubeService';
 import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
 import { useInterval } from './useInterval';
 
-type StreamPlatform = 'youtube' | 'twitch' | 'none';
+type StreamPlatform = 'youtube' | 'twitch' | 'tiktok' | 'none';
 const GPT5_SAMPLE_PROVIDER_OPTIONS = { gpt5Preset: 'casual' as const };
 
 type ProcessChat = (
   text: string,
   options?: {
     displayText?: string;
+    viewerContext?: string;
   },
 ) => Promise<void>;
+
+/**
+ * Callback para registrar la actividad de un espectador en la memoria
+ * persistente (nombre, nick, texto o regalo).
+ */
+export type ViewerMemoryEvent = {
+  kind: 'message' | 'gift';
+  handle: string;
+  nickname: string;
+  text?: string;
+  giftName?: string;
+  diamonds?: number;
+  platform: string;
+};
 
 type UseLiveCommentIntelligenceParams = {
   messages: ChatMessage[];
@@ -54,6 +75,14 @@ type UseLiveCommentIntelligenceParams = {
   streamTopic?: string;
   streamTitle?: string;
   topicFilter?: AppSettings['commentIntelligence']['topicFilter'];
+  /** Perfiles de viewers para el scoring (nivel de relación, mensajes). */
+  getViewerProfiles?: () => Array<
+    import('@aituber-onair/comment-intelligence').ViewerProfile
+  >;
+  /** Contexto de memoria para inyectar en el prompt del turno. */
+  getViewContext?: (handle: string, nickname: string) => string;
+  /** Registro de eventos de viewers para la memoria persistente. */
+  onViewerEvent?: (event: ViewerMemoryEvent) => void;
 };
 
 export function useLiveCommentIntelligence({
@@ -74,11 +103,46 @@ export function useLiveCommentIntelligence({
   streamTopic = '',
   streamTitle = '',
   topicFilter = 'prefer',
+  getViewerProfiles,
+  getViewContext,
+  onViewerEvent,
 }: UseLiveCommentIntelligenceParams) {
   const pendingCommentsRef = useRef<LiveComment[]>([]);
   const isFlushingRef = useRef(false);
   const [lastAnalysis, setLastAnalysis] =
     useState<CommentIntelligenceResult | null>(null);
+
+  /** Emite los eventos de memoria para una lista de comentarios normalizados. */
+  const emitViewerEvents = useCallback(
+    (comments: LiveComment[]) => {
+      if (!onViewerEvent || comments.length === 0) {
+        return;
+      }
+      for (const comment of comments) {
+        const handle =
+          comment.author.handle ?? comment.author.id;
+        const nickname =
+          comment.author.nickname ??
+          comment.author.displayName ??
+          comment.author.name ??
+          handle;
+        const eventKind = comment.metadata?.eventKind;
+        const gift = comment.metadata?.gift as
+          | { name?: string; diamondCount?: number }
+          | undefined;
+        onViewerEvent({
+          kind: eventKind === 'gift' ? 'gift' : 'message',
+          handle: handle || 'unknown',
+          nickname,
+          text: eventKind === 'gift' ? undefined : comment.text,
+          giftName: eventKind === 'gift' ? (gift?.name ?? comment.text) : undefined,
+          diamonds: eventKind === 'gift' ? gift?.diamondCount : undefined,
+          platform: (comment.platform ?? 'web') as string,
+        });
+      }
+    },
+    [onViewerEvent],
+  );
 
   const llmProvider = useMemo(
     () =>
@@ -137,9 +201,13 @@ export function useLiveCommentIntelligence({
     ],
   );
 
-  const enqueue = useCallback((comments: LiveComment[]) => {
-    pendingCommentsRef.current.push(...comments);
-  }, []);
+  const enqueue = useCallback(
+    (comments: LiveComment[]) => {
+      pendingCommentsRef.current.push(...comments);
+      emitViewerEvents(comments);
+    },
+    [emitViewerEvents],
+  );
 
   const enqueueYouTubeComments = useCallback(
     (comments: YouTubeChatMessage[]) => {
@@ -151,6 +219,62 @@ export function useLiveCommentIntelligence({
   const enqueueTwitchComments = useCallback(
     (comments: TwitchChatMessage[]) => {
       enqueue(comments.map(normalizeTwitchComment));
+    },
+    [enqueue],
+  );
+
+  const enqueueTikTokComments = useCallback(
+    (comments: TikTokChatMessage[]) => {
+      enqueue(
+        comments.map((comment) =>
+          normalizeTikTokChatComment({
+            id:
+              comment.uniqueId && comment.comment
+                ? `tiktok:${comment.uniqueId}:${comment.timestamp}:${comment.comment}`
+                : undefined,
+            handle: comment.uniqueId,
+            nickname: comment.nickname,
+            realName: undefined,
+            avatarUrl: comment.profilePictureUrl,
+            text: comment.comment,
+            publishedAt: comment.timestamp,
+            metadata: {
+              userId: comment.userId,
+            },
+          }),
+        ),
+      );
+    },
+    [enqueue],
+  );
+
+  const enqueueTikTokGifts = useCallback(
+    (gifts: TikTokGiftMessage[]) => {
+      enqueue(
+        gifts.map((gift) =>
+          normalizeTikTokGift({
+            id:
+              gift.uniqueId && gift.giftName
+                ? `tiktok-gift:${gift.uniqueId}:${gift.timestamp}:${gift.giftId}:${gift.repeatCount}`
+                : undefined,
+            handle: gift.uniqueId,
+            nickname: gift.nickname,
+            realName: undefined,
+            avatarUrl: gift.profilePictureUrl,
+            giftId: gift.giftId,
+            giftName: gift.giftName,
+            repeatCount: gift.repeatCount,
+            repeatEnd: gift.repeatEnd,
+            diamondCount: gift.diamondCount,
+            text: gift.description,
+            publishedAt: gift.timestamp,
+            metadata: {
+              userId: gift.userId,
+              giftType: gift.giftType,
+            },
+          }),
+        ),
+      );
     },
     [enqueue],
   );
@@ -171,6 +295,7 @@ export function useLiveCommentIntelligence({
       );
       const result = await intelligence.analyze({
         comments,
+        viewerProfiles: getViewerProfiles?.(),
         recentMessages: messages.slice(-12).map((message) => ({
           role: message.role,
           content: message.content,
@@ -199,12 +324,24 @@ export function useLiveCommentIntelligence({
       const authorName = selected.author.displayName ?? selected.author.name;
       const displayText = `Comentario de "${authorName}": ${selected.text}`;
 
-      await processChat(promptForCore, { displayText });
+      const viewerHandle = selected.author.handle ?? selected.author.id;
+      const viewerNickname =
+        selected.author.nickname ?? selected.author.displayName ?? authorName;
+      const viewerContext = viewerHandle
+        ? getViewContext?.(viewerHandle, viewerNickname)
+        : undefined;
+
+      await processChat(promptForCore, {
+        displayText,
+        ...(viewerContext ? { viewerContext } : {}),
+      });
     } finally {
       isFlushingRef.current = false;
     }
   }, [
     enabled,
+    getViewContext,
+    getViewerProfiles,
     intelligence,
     isProcessing,
     isSpeaking,
@@ -226,6 +363,8 @@ export function useLiveCommentIntelligence({
   return {
     enqueueYouTubeComments,
     enqueueTwitchComments,
+    enqueueTikTokComments,
+    enqueueTikTokGifts,
     flush,
     lastAnalysis,
   };

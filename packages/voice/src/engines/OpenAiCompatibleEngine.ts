@@ -1,7 +1,7 @@
 import { OPENAI_COMPATIBLE_TTS_API_URL } from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { clampNumberWithFallback, fetchWithTimeout } from './internal/utils';
+import type { Talk } from '../types/voice';
 import { VoiceEngine } from './VoiceEngine';
+import { clampNumberWithFallback, fetchWithTimeout } from './internal/utils';
 
 /**
  * OpenAI-compatible TTS engine for self-hosted endpoints such as Kokoro FastAPI
@@ -66,11 +66,18 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
       requestBody.voice = trimmedSpeaker;
     }
 
-    const response = await fetchWithTimeout(this.apiUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody),
-    });
+    // Local/self-hosted endpoints (e.g. Qwen3-TTS on a shared GPU) can exceed
+    // the default 30s on their first inference (CUDA kernel JIT). Keep the
+    // request until the backend's own 600s backend cap.
+    const response = await fetchWithTimeout(
+      this.apiUrl,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody),
+      },
+      120_000,
+    );
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
@@ -79,7 +86,12 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
         response.status,
         errorText,
       );
-      throw new Error('Failed to fetch TTS from OpenAI-compatible TTS.');
+      const detail = errorText
+        ? errorText.replace(/\s+/g, ' ').slice(0, 200)
+        : response.statusText || 'unknown error';
+      throw new Error(
+        `Failed to fetch TTS from OpenAI-compatible TTS (HTTP ${response.status}): ${detail}`,
+      );
     }
 
     const blob = await response.blob();

@@ -29,6 +29,11 @@ import {
   LEGACY_LLM_TTS_MODEL,
   parseOpenAiModelIds,
 } from '../lib/openAiCompatibleTtsModels';
+import {
+  DEFAULT_TTS_KEEP_ALIVE_MINUTES,
+  normalizeTtsKeepAliveMinutes,
+  syncTtsKeepAlive,
+} from '../lib/ttsKeepAlive';
 import type {
   AppSettings,
   ChatProviderOption,
@@ -46,11 +51,11 @@ const DEFAULT_OPENAI_COMPATIBLE_MODEL = 'ssfdre38/gemma4-turbo:latest';
 const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
   'http://192.168.1.10:11434/v1/chat/completions';
 const DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT =
-  'http://localhost:8880/v1/audio/speech';
+  'http://localhost:8000/v1/audio/speech';
 const LEGACY_OPENAI_COMPATIBLE_TTS_ENDPOINTS = new Set([
-  'http://localhost:8000/v1/audio/speech',
   'http://localhost:8000/v1/audio/',
   'http://localhost:8880/v1/audio/',
+  'http://localhost:8880/v1/audio/speech',
 ]);
 const DEFAULT_UNREAL_SPEECH_TTS_ENDPOINT =
   'https://api.v8.unrealspeech.com/stream';
@@ -179,12 +184,14 @@ function getDefaultSettings(): AppSettings {
       },
     },
     tts: {
-      engine: 'openai' as TTSEngineOption,
-      speaker: 'alloy',
+      engine: 'openaiCompatible' as TTSEngineOption,
+      speaker: 'Elara',
       openAiCompatibleApiKey: '',
       openAiCompatibleApiUrl: DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT,
       openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL,
       openAiCompatibleSpeed: '',
+      openAiCompatibleKeepAliveMinutes: DEFAULT_TTS_KEEP_ALIVE_MINUTES,
+      openAiCompatibleSentencePipeline: true,
       geminiTtsModel: DEFAULT_GEMINI_TTS_MODEL,
       geminiTtsLanguageCode: DEFAULT_GEMINI_TTS_LANGUAGE_CODE,
       geminiTtsPrompt: '',
@@ -270,6 +277,10 @@ function getDefaultSettings(): AppSettings {
       twitchChannel: '',
       twitchEnabled: false,
       twitchCommentIntervalMs: 20_000,
+      tiktokUniqueId: '',
+      tiktokRelayUrl: 'http://127.0.0.1:8787/tiktok/events',
+      tiktokEnabled: false,
+      tiktokCommentIntervalMs: 20_000,
     },
     commentIntelligence: {
       enabled: true,
@@ -324,6 +335,9 @@ function loadSettings(): AppSettings {
               ? DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL
               : saved.tts?.openAiCompatibleModel ||
                 defaults.tts.openAiCompatibleModel,
+          openAiCompatibleKeepAliveMinutes: normalizeTtsKeepAliveMinutes(
+            saved.tts?.openAiCompatibleKeepAliveMinutes,
+          ),
         },
         visual: {
           ...defaults.visual,
@@ -372,6 +386,7 @@ export function useSettings() {
     useState('');
   const [openAiCompatibleTtsDiscoveryError, setOpenAiCompatibleTtsDiscoveryError] =
     useState('');
+  const [ttsKeepAliveSyncError, setTtsKeepAliveSyncError] = useState('');
   const [isRefreshingOpenAiCompatibleModels, setIsRefreshingOpenAiCompatibleModels] = useState(false);
   const [isRefreshingOpenAiCompatibleTtsModels, setIsRefreshingOpenAiCompatibleTtsModels] = useState(false);
   const openAiCompatibleTtsRequestGuard = useRef(createLatestRequestGuard());
@@ -398,6 +413,45 @@ export function useSettings() {
   useEffect(() => {
     saveSettings(settings);
   }, [settings]);
+
+  useEffect(() => {
+    if (settings.tts.engine !== 'openaiCompatible') {
+      setTtsKeepAliveSyncError('');
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void syncTtsKeepAlive(
+        settings.tts.openAiCompatibleApiUrl ||
+          DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT,
+        normalizeTtsKeepAliveMinutes(
+          settings.tts.openAiCompatibleKeepAliveMinutes,
+        ),
+        settings.tts.openAiCompatibleApiKey || '',
+      )
+        .then(() => {
+          if (!cancelled) setTtsKeepAliveSyncError('');
+        })
+        .catch((error: unknown) => {
+          if (!cancelled) {
+            setTtsKeepAliveSyncError(
+              formatDiscoveryError('Retención TTS', error),
+            );
+          }
+        });
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [
+    settings.tts.engine,
+    settings.tts.openAiCompatibleApiKey,
+    settings.tts.openAiCompatibleApiUrl,
+    settings.tts.openAiCompatibleKeepAliveMinutes,
+  ]);
 
   const updateLLMProvider = useCallback(
     (provider: ChatProviderOption) => {
@@ -861,6 +915,30 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateOpenAiCompatibleKeepAliveMinutes = useCallback(
+    (minutes: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        tts: {
+          ...prev.tts,
+          openAiCompatibleKeepAliveMinutes:
+            normalizeTtsKeepAliveMinutes(minutes),
+        },
+      }));
+    },
+    [],
+  );
+
+  const updateOpenAiCompatibleSentencePipeline = useCallback(
+    (enabled: boolean) => {
+      setSettings((prev) => ({
+        ...prev,
+        tts: { ...prev.tts, openAiCompatibleSentencePipeline: enabled },
+      }));
+    },
+    [],
+  );
+
   const updateGeminiTtsModel = useCallback((model: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1242,6 +1320,37 @@ export function useSettings() {
     [],
   );
 
+  const updateTikTokUniqueId = useCallback((tiktokUniqueId: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, tiktokUniqueId },
+    }));
+  }, []);
+
+  const updateTikTokRelayUrl = useCallback((tiktokRelayUrl: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, tiktokRelayUrl },
+    }));
+  }, []);
+
+  const updateTikTokEnabled = useCallback((tiktokEnabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      stream: { ...prev.stream, tiktokEnabled },
+    }));
+  }, []);
+
+  const updateTikTokCommentIntervalMs = useCallback(
+    (tiktokCommentIntervalMs: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        stream: { ...prev.stream, tiktokCommentIntervalMs },
+      }));
+    },
+    [],
+  );
+
   const updateCommentIntelligenceEnabled = useCallback((enabled: boolean) => {
     setSettings((prev) => ({
       ...prev,
@@ -1455,6 +1564,7 @@ export function useSettings() {
     openAiCompatibleTtsModels,
     openAiCompatibleLlmDiscoveryError,
     openAiCompatibleTtsDiscoveryError,
+    ttsKeepAliveSyncError,
     isRefreshingOpenAiCompatibleModels,
     isRefreshingOpenAiCompatibleTtsModels,
     updateXaiReasoningEffort,
@@ -1468,6 +1578,8 @@ export function useSettings() {
     updateOpenAiCompatibleApiUrl,
     updateOpenAiCompatibleModel,
     updateOpenAiCompatibleSpeed,
+    updateOpenAiCompatibleKeepAliveMinutes,
+    updateOpenAiCompatibleSentencePipeline,
     updateGeminiTtsModel,
     updateGeminiTtsLanguageCode,
     updateGeminiTtsPrompt,
@@ -1513,6 +1625,10 @@ export function useSettings() {
     updateTwitchChannel,
     updateTwitchEnabled,
     updateTwitchCommentIntervalMs,
+    updateTikTokUniqueId,
+    updateTikTokRelayUrl,
+    updateTikTokEnabled,
+    updateTikTokCommentIntervalMs,
     updateCommentIntelligenceEnabled,
     updateCommentIntelligenceMode,
     updateCommentIntelligenceStreamTopic,
