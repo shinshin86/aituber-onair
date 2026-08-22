@@ -107,13 +107,28 @@ describe('OpenAI-compatible TTS model discovery', () => {
     ).toBe('fish-speech');
   });
 
-  it('preserves a manual model that is not in the discovered list', () => {
+  it('replaces an obsolete saved model with the first discovered TTS model', () => {
     expect(
       chooseOpenAiCompatibleTtsModel(
         ['fish-speech', 'kokoro'],
-        'my-manual-tts-model',
+        'my-removed-tts-model',
       ),
-    ).toBe('my-manual-tts-model');
+    ).toBe('fish-speech');
+  });
+
+  it('keeps the saved model when it is still in the discovered list', () => {
+    expect(
+      chooseOpenAiCompatibleTtsModel(
+        ['fish-speech', 'kokoro'],
+        'kokoro',
+      ),
+    ).toBe('kokoro');
+  });
+
+  it('keeps an empty saved model and falls back to the first discovered', () => {
+    expect(
+      chooseOpenAiCompatibleTtsModel(['audiocpp-qwen3-tts-0.6b', 'edge'], ''),
+    ).toBe('audiocpp-qwen3-tts-0.6b');
   });
 
   it('accepts state updates only from the latest request', () => {

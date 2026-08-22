@@ -1,0 +1,20 @@
+{
+  "name": "@pitonisa/tarot-viewer",
+  "version": "0.1.0",
+  "description": "Three.js 3D Tarot viewer for OBS capture",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "three": "0.160.1"
+  },
+  "devDependencies": {
+    "@types/three": "0.160.0",
+    "typescript": "^5.4.0",
+    "vite": "^5.0.0"
+  }
+}

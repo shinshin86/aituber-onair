@@ -1,4 +1,5 @@
-export const DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL = 'fish-speech';
+export const DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL =
+  'audiocpp-qwen3-tts-0.6b';
 export const LEGACY_LLM_TTS_MODEL = 'ssfdre38/gemma4-turbo:latest';
 
 export function createLatestRequestGuard() {
@@ -68,11 +69,23 @@ export function chooseOpenAiCompatibleTtsModel(
   currentModel: string | undefined,
 ): string {
   const normalizedCurrent = currentModel?.trim() || '';
+  if (discoveredModels.length > 0 && normalizedCurrent === LEGACY_LLM_TTS_MODEL) {
+    return discoveredModels[0] || DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL;
+  }
+
+  // Si el modelo salvo no está en el catálogo real del servidor (modelo que se
+  // retiró del backend, p. ej. 'kokoro' o 'gpt-4o-mini-tts'), cada síntesis
+  // fallaría con 400 al instante. Sanar al primer modelo descubierto evita
+  // que un valor obsoleto en localStorage rompa el TTS.
   if (
     normalizedCurrent &&
-    normalizedCurrent !== LEGACY_LLM_TTS_MODEL
+    discoveredModels.some((id) => id === normalizedCurrent)
   ) {
     return normalizedCurrent;
   }
-  return discoveredModels[0] || DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL;
+
+  return (
+    discoveredModels[0] ||
+    (normalizedCurrent || DEFAULT_OPENAI_COMPATIBLE_TTS_MODEL)
+  );
 }

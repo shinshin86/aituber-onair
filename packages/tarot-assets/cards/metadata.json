@@ -1,0 +1,1228 @@
+[
+  {
+    "id": "el_loco",
+    "name": "El Loco",
+    "arcanum": "major",
+    "number": 0,
+    "upright_meaning": "Inocencia, inicio, aventura",
+    "reversed_meaning": "Cuidado, imprudencia, inestabilidad",
+    "keywords": [
+      "inocencia",
+      "inicio",
+      "aventura"
+    ],
+    "texture_front": "/cards/front/el_loco.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_suma_sacerdotisa",
+    "name": "La Suma Sacerdotisa",
+    "arcanum": "major",
+    "number": 1,
+    "upright_meaning": "Misterio, intuicion, subconsciente",
+    "reversed_meaning": "Secretos revelados, desconexion",
+    "keywords": [
+      "misterio",
+      "intuicion",
+      "subconsciente"
+    ],
+    "texture_front": "/cards/front/la_suma_sacerdotisa.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_suma_sacerdotiza",
+    "name": "La Suma Sacerdotiza",
+    "arcanum": "major",
+    "number": 2,
+    "upright_meaning": "Autoridad, maternidad, espiritualidad",
+    "reversed_meaning": "Manipulacion, rigidez",
+    "keywords": [
+      "autoridad",
+      "maternidad",
+      "espiritualidad"
+    ],
+    "texture_front": "/cards/front/la_suma_sacerdotiza.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_emperatriz",
+    "name": "La Emperatriz",
+    "arcanum": "major",
+    "number": 3,
+    "upright_meaning": "Abundancia, fertilidad, creatividad",
+    "reversed_meaning": "Dependencia, creatividad bloqueada",
+    "keywords": [
+      "abundancia",
+      "fertilidad",
+      "creatividad"
+    ],
+    "texture_front": "/cards/front/la_emperatriz.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "el_emperador",
+    "name": "El Emperador",
+    "arcanum": "major",
+    "number": 4,
+    "upright_meaning": "Estructura, poder, estabilidad",
+    "reversed_meaning": "Rigidez, tirania",
+    "keywords": [
+      "estructura",
+      "poder",
+      "estabilidad"
+    ],
+    "texture_front": "/cards/front/el_emperador.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "el_sacerdote",
+    "name": "El Sacerdote",
+    "arcanum": "major",
+    "number": 5,
+    "upright_meaning": "Tradiciones, guia, valores",
+    "reversed_meaning": "Dogma, rebeldia contra normas",
+    "keywords": [
+      "tradiciones",
+      "guia",
+      "valores"
+    ],
+    "texture_front": "/cards/front/el_sacerdote.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "los_enamorados",
+    "name": "Los Enamorados",
+    "arcanum": "major",
+    "number": 6,
+    "upright_meaning": "Eleccion, union, armonia",
+    "reversed_meaning": "Desequilibrio, eleccion dificil",
+    "keywords": [
+      "eleccion",
+      "union",
+      "armonia"
+    ],
+    "texture_front": "/cards/front/los_enamorados.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "el_carro",
+    "name": "El Carro",
+    "arcanum": "major",
+    "number": 7,
+    "upright_meaning": "Voluntad, victoria, control",
+    "reversed_meaning": "Falta de direccion, agresion",
+    "keywords": [
+      "voluntad",
+      "victoria",
+      "control"
+    ],
+    "texture_front": "/cards/front/el_carro.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_fortaleza",
+    "name": "La Fortaleza",
+    "arcanum": "major",
+    "number": 8,
+    "upright_meaning": "Coraje, compasion, fuerza interior",
+    "reversed_meaning": "Miedo, impulsividad",
+    "keywords": [
+      "coraje",
+      "compasion",
+      "fuerza interior"
+    ],
+    "texture_front": "/cards/front/la_fortaleza.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "el_ermitano",
+    "name": "El Ermitano",
+    "arcanum": "major",
+    "number": 9,
+    "upright_meaning": "Introspeccion, sabiduria, soledad",
+    "reversed_meaning": "Aislamiento, amargura",
+    "keywords": [
+      "introspeccion",
+      "sabiduria",
+      "soledad"
+    ],
+    "texture_front": "/cards/front/el_ermitano.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_rueda_de_la_fortuna",
+    "name": "La Rueda de la Fortuna",
+    "arcanum": "major",
+    "number": 10,
+    "upright_meaning": "Cambio, destino, ciclo",
+    "reversed_meaning": "Pérdida de control, mala racha",
+    "keywords": [
+      "cambio",
+      "destino",
+      "ciclo"
+    ],
+    "texture_front": "/cards/front/la_rueda_de_la_fortuna.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_justicia",
+    "name": "La Justicia",
+    "arcanum": "major",
+    "number": 11,
+    "upright_meaning": "Equilibrio, verdad, causa-efecto",
+    "reversed_meaning": "Injusticia, desequilibrio",
+    "keywords": [
+      "equilibrio",
+      "verdad",
+      "causa-efecto"
+    ],
+    "texture_front": "/cards/front/la_justicia.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "el_ahorcado",
+    "name": "El Ahorcado",
+    "arcanum": "major",
+    "number": 12,
+    "upright_meaning": "Perspectiva, sacrificio, pausa",
+    "reversed_meaning": "Sacrificio vacuo, estancamiento",
+    "keywords": [
+      "perspectiva",
+      "sacrificio",
+      "pausa"
+    ],
+    "texture_front": "/cards/front/el_ahorcado.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_muerte",
+    "name": "La Muerte",
+    "arcanum": "major",
+    "number": 13,
+    "upright_meaning": "Transformacion, fin, renacimiento",
+    "reversed_meaning": "Resistencia al cambio",
+    "keywords": [
+      "transformacion",
+      "fin",
+      "renacimiento"
+    ],
+    "texture_front": "/cards/front/la_muerte.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_templanza",
+    "name": "La Templanza",
+    "arcanum": "major",
+    "number": 14,
+    "upright_meaning": "Paciencia, moderacion, fe",
+    "reversed_meaning": "Exceso, falta de equilibrio",
+    "keywords": [
+      "paciencia",
+      "moderacion",
+      "fe"
+    ],
+    "texture_front": "/cards/front/la_templanza.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "el_diablo",
+    "name": "El Diablo",
+    "arcanum": "major",
+    "number": 15,
+    "upright_meaning": "Deseo, tentacion, sombras",
+    "reversed_meaning": "Liberacion, romper cadenas",
+    "keywords": [
+      "deseo",
+      "tentacion",
+      "sombras"
+    ],
+    "texture_front": "/cards/front/el_diablo.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_torre",
+    "name": "La Torre",
+    "arcanum": "major",
+    "number": 16,
+    "upright_meaning": "Caos, revelacion, cambio subito",
+    "reversed_meaning": "Evitar el colapso, miedo",
+    "keywords": [
+      "caos",
+      "revelacion",
+      "cambio subito"
+    ],
+    "texture_front": "/cards/front/la_torre.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_estrella",
+    "name": "La Estrella",
+    "arcanum": "major",
+    "number": 17,
+    "upright_meaning": "Esperanza, renovacion, inspiracion",
+    "reversed_meaning": "Desaliento, falta de fe",
+    "keywords": [
+      "esperanza",
+      "renovacion",
+      "inspiracion"
+    ],
+    "texture_front": "/cards/front/la_estrella.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "la_luna",
+    "name": "La Luna",
+    "arcanum": "major",
+    "number": 18,
+    "upright_meaning": "Ilusion, suenos, inconsciente",
+    "reversed_meaning": "Claridad, salir de la confusion",
+    "keywords": [
+      "ilusion",
+      "suenos",
+      "inconsciente"
+    ],
+    "texture_front": "/cards/front/la_luna.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "el_sol",
+    "name": "El Sol",
+    "arcanum": "major",
+    "number": 19,
+    "upright_meaning": "Exito, alegria, vitalidad",
+    "reversed_meaning": "Optimismo nublado",
+    "keywords": [
+      "exito",
+      "alegria",
+      "vitalidad"
+    ],
+    "texture_front": "/cards/front/el_sol.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "el_juzgamiento",
+    "name": "El Juicio",
+    "arcanum": "major",
+    "number": 20,
+    "upright_meaning": "Despertar, llamada, renacimiento",
+    "reversed_meaning": "Duda, autocritica excesiva",
+    "keywords": [
+      "despertar",
+      "llamada",
+      "renacimiento"
+    ],
+    "texture_front": "/cards/front/el_juzgamiento.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "el_mundo",
+    "name": "El Mundo",
+    "arcanum": "major",
+    "number": 21,
+    "upright_meaning": "Completude, logro, integracion",
+    "reversed_meaning": "Falta de cierre, limitacion",
+    "keywords": [
+      "completude",
+      "logro",
+      "integracion"
+    ],
+    "texture_front": "/cards/front/el_mundo.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "as_de_bastos",
+    "name": "As de Bastos",
+    "arcanum": "minor",
+    "number": 1,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 1",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 1",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "1"
+    ],
+    "texture_front": "/cards/front/as_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "dos_de_bastos",
+    "name": "Dos de Bastos",
+    "arcanum": "minor",
+    "number": 2,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 2",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 2",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "2"
+    ],
+    "texture_front": "/cards/front/dos_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "tres_de_bastos",
+    "name": "Tres de Bastos",
+    "arcanum": "minor",
+    "number": 3,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 3",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 3",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "3"
+    ],
+    "texture_front": "/cards/front/tres_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "cuatro_de_bastos",
+    "name": "Cuatro de Bastos",
+    "arcanum": "minor",
+    "number": 4,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 4",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 4",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "4"
+    ],
+    "texture_front": "/cards/front/cuatro_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "cinco_de_bastos",
+    "name": "Cinco de Bastos",
+    "arcanum": "minor",
+    "number": 5,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 5",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 5",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "5"
+    ],
+    "texture_front": "/cards/front/cinco_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "seis_de_bastos",
+    "name": "Seis de Bastos",
+    "arcanum": "minor",
+    "number": 6,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 6",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 6",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "6"
+    ],
+    "texture_front": "/cards/front/seis_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "siete_de_bastos",
+    "name": "Siete de Bastos",
+    "arcanum": "minor",
+    "number": 7,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 7",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 7",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "7"
+    ],
+    "texture_front": "/cards/front/siete_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "ocho_de_bastos",
+    "name": "Ocho de Bastos",
+    "arcanum": "minor",
+    "number": 8,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 8",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 8",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "8"
+    ],
+    "texture_front": "/cards/front/ocho_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "nueve_de_bastos",
+    "name": "Nueve de Bastos",
+    "arcanum": "minor",
+    "number": 9,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 9",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 9",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "9"
+    ],
+    "texture_front": "/cards/front/nueve_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "diez_de_bastos",
+    "name": "Diez de Bastos",
+    "arcanum": "minor",
+    "number": 10,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 10",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 10",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "10"
+    ],
+    "texture_front": "/cards/front/diez_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "caballo_de_bastos",
+    "name": "Caballo de Bastos",
+    "arcanum": "minor",
+    "number": 11,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 11",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 11",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "11"
+    ],
+    "texture_front": "/cards/front/caballo_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "rey_de_bastos",
+    "name": "Rey de Bastos",
+    "arcanum": "minor",
+    "number": 12,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 12",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 12",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "12"
+    ],
+    "texture_front": "/cards/front/rey_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "reina_de_bastos",
+    "name": "Reina de Bastos",
+    "arcanum": "minor",
+    "number": 13,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 13",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 13",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "13"
+    ],
+    "texture_front": "/cards/front/reina_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "jota_de_bastos",
+    "name": "Jota de Bastos",
+    "arcanum": "minor",
+    "number": 14,
+    "suit": "wands",
+    "upright_meaning": "Energia de Bastos (fuego), posicion 14",
+    "reversed_meaning": "Sombra de Bastos (fuego), posicion 14",
+    "keywords": [
+      "bastos",
+      "fuego",
+      "14"
+    ],
+    "texture_front": "/cards/front/jota_de_bastos.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "as_de_copas",
+    "name": "As de Copas",
+    "arcanum": "minor",
+    "number": 1,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 1",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 1",
+    "keywords": [
+      "copas",
+      "agua",
+      "1"
+    ],
+    "texture_front": "/cards/front/as_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "dos_de_copas",
+    "name": "Dos de Copas",
+    "arcanum": "minor",
+    "number": 2,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 2",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 2",
+    "keywords": [
+      "copas",
+      "agua",
+      "2"
+    ],
+    "texture_front": "/cards/front/dos_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "tres_de_copas",
+    "name": "Tres de Copas",
+    "arcanum": "minor",
+    "number": 3,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 3",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 3",
+    "keywords": [
+      "copas",
+      "agua",
+      "3"
+    ],
+    "texture_front": "/cards/front/tres_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "cuatro_de_copas",
+    "name": "Cuatro de Copas",
+    "arcanum": "minor",
+    "number": 4,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 4",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 4",
+    "keywords": [
+      "copas",
+      "agua",
+      "4"
+    ],
+    "texture_front": "/cards/front/cuatro_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "cinco_de_copas",
+    "name": "Cinco de Copas",
+    "arcanum": "minor",
+    "number": 5,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 5",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 5",
+    "keywords": [
+      "copas",
+      "agua",
+      "5"
+    ],
+    "texture_front": "/cards/front/cinco_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "seis_de_copas",
+    "name": "Seis de Copas",
+    "arcanum": "minor",
+    "number": 6,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 6",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 6",
+    "keywords": [
+      "copas",
+      "agua",
+      "6"
+    ],
+    "texture_front": "/cards/front/seis_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "siete_de_copas",
+    "name": "Siete de Copas",
+    "arcanum": "minor",
+    "number": 7,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 7",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 7",
+    "keywords": [
+      "copas",
+      "agua",
+      "7"
+    ],
+    "texture_front": "/cards/front/siete_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "ocho_de_copas",
+    "name": "Ocho de Copas",
+    "arcanum": "minor",
+    "number": 8,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 8",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 8",
+    "keywords": [
+      "copas",
+      "agua",
+      "8"
+    ],
+    "texture_front": "/cards/front/ocho_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "nueve_de_copas",
+    "name": "Nueve de Copas",
+    "arcanum": "minor",
+    "number": 9,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 9",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 9",
+    "keywords": [
+      "copas",
+      "agua",
+      "9"
+    ],
+    "texture_front": "/cards/front/nueve_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "diez_de_copas",
+    "name": "Diez de Copas",
+    "arcanum": "minor",
+    "number": 10,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 10",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 10",
+    "keywords": [
+      "copas",
+      "agua",
+      "10"
+    ],
+    "texture_front": "/cards/front/diez_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "caballo_de_copas",
+    "name": "Caballo de Copas",
+    "arcanum": "minor",
+    "number": 11,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 11",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 11",
+    "keywords": [
+      "copas",
+      "agua",
+      "11"
+    ],
+    "texture_front": "/cards/front/caballo_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "rey_de_copas",
+    "name": "Rey de Copas",
+    "arcanum": "minor",
+    "number": 12,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 12",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 12",
+    "keywords": [
+      "copas",
+      "agua",
+      "12"
+    ],
+    "texture_front": "/cards/front/rey_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "reina_de_copas",
+    "name": "Reina de Copas",
+    "arcanum": "minor",
+    "number": 13,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 13",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 13",
+    "keywords": [
+      "copas",
+      "agua",
+      "13"
+    ],
+    "texture_front": "/cards/front/reina_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "jota_de_copas",
+    "name": "Jota de Copas",
+    "arcanum": "minor",
+    "number": 14,
+    "suit": "cups",
+    "upright_meaning": "Energia de Copas (agua), posicion 14",
+    "reversed_meaning": "Sombra de Copas (agua), posicion 14",
+    "keywords": [
+      "copas",
+      "agua",
+      "14"
+    ],
+    "texture_front": "/cards/front/jota_de_copas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "as_de_espadas",
+    "name": "As de Espadas",
+    "arcanum": "minor",
+    "number": 1,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 1",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 1",
+    "keywords": [
+      "espadas",
+      "aire",
+      "1"
+    ],
+    "texture_front": "/cards/front/as_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "dos_de_espadas",
+    "name": "Dos de Espadas",
+    "arcanum": "minor",
+    "number": 2,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 2",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 2",
+    "keywords": [
+      "espadas",
+      "aire",
+      "2"
+    ],
+    "texture_front": "/cards/front/dos_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "tres_de_espadas",
+    "name": "Tres de Espadas",
+    "arcanum": "minor",
+    "number": 3,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 3",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 3",
+    "keywords": [
+      "espadas",
+      "aire",
+      "3"
+    ],
+    "texture_front": "/cards/front/tres_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "cuatro_de_espadas",
+    "name": "Cuatro de Espadas",
+    "arcanum": "minor",
+    "number": 4,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 4",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 4",
+    "keywords": [
+      "espadas",
+      "aire",
+      "4"
+    ],
+    "texture_front": "/cards/front/cuatro_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "cinco_de_espadas",
+    "name": "Cinco de Espadas",
+    "arcanum": "minor",
+    "number": 5,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 5",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 5",
+    "keywords": [
+      "espadas",
+      "aire",
+      "5"
+    ],
+    "texture_front": "/cards/front/cinco_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "seis_de_espadas",
+    "name": "Seis de Espadas",
+    "arcanum": "minor",
+    "number": 6,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 6",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 6",
+    "keywords": [
+      "espadas",
+      "aire",
+      "6"
+    ],
+    "texture_front": "/cards/front/seis_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "siete_de_espadas",
+    "name": "Siete de Espadas",
+    "arcanum": "minor",
+    "number": 7,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 7",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 7",
+    "keywords": [
+      "espadas",
+      "aire",
+      "7"
+    ],
+    "texture_front": "/cards/front/siete_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "ocho_de_espadas",
+    "name": "Ocho de Espadas",
+    "arcanum": "minor",
+    "number": 8,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 8",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 8",
+    "keywords": [
+      "espadas",
+      "aire",
+      "8"
+    ],
+    "texture_front": "/cards/front/ocho_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "nueve_de_espadas",
+    "name": "Nueve de Espadas",
+    "arcanum": "minor",
+    "number": 9,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 9",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 9",
+    "keywords": [
+      "espadas",
+      "aire",
+      "9"
+    ],
+    "texture_front": "/cards/front/nueve_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "diez_de_espadas",
+    "name": "Diez de Espadas",
+    "arcanum": "minor",
+    "number": 10,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 10",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 10",
+    "keywords": [
+      "espadas",
+      "aire",
+      "10"
+    ],
+    "texture_front": "/cards/front/diez_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "caballo_de_espadas",
+    "name": "Caballo de Espadas",
+    "arcanum": "minor",
+    "number": 11,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 11",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 11",
+    "keywords": [
+      "espadas",
+      "aire",
+      "11"
+    ],
+    "texture_front": "/cards/front/caballo_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "rey_de_espadas",
+    "name": "Rey de Espadas",
+    "arcanum": "minor",
+    "number": 12,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 12",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 12",
+    "keywords": [
+      "espadas",
+      "aire",
+      "12"
+    ],
+    "texture_front": "/cards/front/rey_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "reina_de_espadas",
+    "name": "Reina de Espadas",
+    "arcanum": "minor",
+    "number": 13,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 13",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 13",
+    "keywords": [
+      "espadas",
+      "aire",
+      "13"
+    ],
+    "texture_front": "/cards/front/reina_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "jota_de_espadas",
+    "name": "Jota de Espadas",
+    "arcanum": "minor",
+    "number": 14,
+    "suit": "swords",
+    "upright_meaning": "Energia de Espadas (aire), posicion 14",
+    "reversed_meaning": "Sombra de Espadas (aire), posicion 14",
+    "keywords": [
+      "espadas",
+      "aire",
+      "14"
+    ],
+    "texture_front": "/cards/front/jota_de_espadas.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "as_de_oros",
+    "name": "As de Oros",
+    "arcanum": "minor",
+    "number": 1,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 1",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 1",
+    "keywords": [
+      "oros",
+      "tierra",
+      "1"
+    ],
+    "texture_front": "/cards/front/as_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "dos_de_oros",
+    "name": "Dos de Oros",
+    "arcanum": "minor",
+    "number": 2,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 2",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 2",
+    "keywords": [
+      "oros",
+      "tierra",
+      "2"
+    ],
+    "texture_front": "/cards/front/dos_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "tres_de_oros",
+    "name": "Tres de Oros",
+    "arcanum": "minor",
+    "number": 3,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 3",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 3",
+    "keywords": [
+      "oros",
+      "tierra",
+      "3"
+    ],
+    "texture_front": "/cards/front/tres_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "cuatro_de_oros",
+    "name": "Cuatro de Oros",
+    "arcanum": "minor",
+    "number": 4,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 4",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 4",
+    "keywords": [
+      "oros",
+      "tierra",
+      "4"
+    ],
+    "texture_front": "/cards/front/cuatro_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "cinco_de_oros",
+    "name": "Cinco de Oros",
+    "arcanum": "minor",
+    "number": 5,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 5",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 5",
+    "keywords": [
+      "oros",
+      "tierra",
+      "5"
+    ],
+    "texture_front": "/cards/front/cinco_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "seis_de_oros",
+    "name": "Seis de Oros",
+    "arcanum": "minor",
+    "number": 6,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 6",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 6",
+    "keywords": [
+      "oros",
+      "tierra",
+      "6"
+    ],
+    "texture_front": "/cards/front/seis_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "siete_de_oros",
+    "name": "Siete de Oros",
+    "arcanum": "minor",
+    "number": 7,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 7",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 7",
+    "keywords": [
+      "oros",
+      "tierra",
+      "7"
+    ],
+    "texture_front": "/cards/front/siete_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "ocho_de_oros",
+    "name": "Ocho de Oros",
+    "arcanum": "minor",
+    "number": 8,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 8",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 8",
+    "keywords": [
+      "oros",
+      "tierra",
+      "8"
+    ],
+    "texture_front": "/cards/front/ocho_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "nueve_de_oros",
+    "name": "Nueve de Oros",
+    "arcanum": "minor",
+    "number": 9,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 9",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 9",
+    "keywords": [
+      "oros",
+      "tierra",
+      "9"
+    ],
+    "texture_front": "/cards/front/nueve_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "diez_de_oros",
+    "name": "Diez de Oros",
+    "arcanum": "minor",
+    "number": 10,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 10",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 10",
+    "keywords": [
+      "oros",
+      "tierra",
+      "10"
+    ],
+    "texture_front": "/cards/front/diez_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "caballo_de_oros",
+    "name": "Caballo de Oros",
+    "arcanum": "minor",
+    "number": 11,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 11",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 11",
+    "keywords": [
+      "oros",
+      "tierra",
+      "11"
+    ],
+    "texture_front": "/cards/front/caballo_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "rey_de_oros",
+    "name": "Rey de Oros",
+    "arcanum": "minor",
+    "number": 12,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 12",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 12",
+    "keywords": [
+      "oros",
+      "tierra",
+      "12"
+    ],
+    "texture_front": "/cards/front/rey_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "reina_de_oros",
+    "name": "Reina de Oros",
+    "arcanum": "minor",
+    "number": 13,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 13",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 13",
+    "keywords": [
+      "oros",
+      "tierra",
+      "13"
+    ],
+    "texture_front": "/cards/front/reina_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  },
+  {
+    "id": "jota_de_oros",
+    "name": "Jota de Oros",
+    "arcanum": "minor",
+    "number": 14,
+    "suit": "pentacles",
+    "upright_meaning": "Energia de Oros (tierra), posicion 14",
+    "reversed_meaning": "Sombra de Oros (tierra), posicion 14",
+    "keywords": [
+      "oros",
+      "tierra",
+      "14"
+    ],
+    "texture_front": "/cards/front/jota_de_oros.webp",
+    "texture_back": "/cards/back.webp"
+  }
+]

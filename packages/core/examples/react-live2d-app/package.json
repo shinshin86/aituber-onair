@@ -14,10 +14,12 @@
 		"@aituber-onair/comment-intelligence": "../../../comment-intelligence",
 		"@aituber-onair/core": "../..",
 		"@aituber-onair/manneri": "../../../manneri",
+		"@aituber-onair/viewer-memory": "../../../viewer-memory",
 		"pixi-live2d-display-lipsyncpatch": "github:shinshin86/pixi-live2d-display-lipsyncpatch#release/v0.5.0-ls-7-noMaskFix",
 		"pixi.js": "^7.4.3",
 		"react": "^19.2.0",
-		"react-dom": "^19.2.0"
+		"react-dom": "^19.2.0",
+		"tiktok-live-connector": "^2.4.3"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.1",

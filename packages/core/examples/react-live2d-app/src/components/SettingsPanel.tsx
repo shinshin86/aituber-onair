@@ -284,6 +284,7 @@ export function SettingsPanel({
   openAiCompatibleTtsModels,
   openAiCompatibleLlmDiscoveryError,
   openAiCompatibleTtsDiscoveryError,
+  ttsKeepAliveSyncError,
   isRefreshingOpenAiCompatibleModels,
   isRefreshingOpenAiCompatibleTtsModels,
   updateTTSEngine,
@@ -292,6 +293,8 @@ export function SettingsPanel({
   updateOpenAiCompatibleApiUrl,
   updateOpenAiCompatibleModel,
   updateOpenAiCompatibleSpeed,
+  updateOpenAiCompatibleKeepAliveMinutes,
+  updateOpenAiCompatibleSentencePipeline,
   updateGeminiTtsModel,
   updateGeminiTtsLanguageCode,
   updateGeminiTtsPrompt,
@@ -334,6 +337,10 @@ export function SettingsPanel({
   updateTwitchChannel,
   updateTwitchEnabled,
   updateTwitchCommentIntervalMs,
+  updateTikTokUniqueId,
+  updateTikTokRelayUrl,
+  updateTikTokEnabled,
+  updateTikTokCommentIntervalMs,
   updateCommentIntelligenceEnabled,
   updateCommentIntelligenceMode,
   updateCommentIntelligenceStreamTopic,
@@ -2300,6 +2307,54 @@ export function SettingsPanel({
                     disabled={disabled}
                   />
                 </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-openai-compatible-keep-alive">
+                    Retención del modelo en GPU (minutos)
+                  </label>
+                  <input
+                    id="tts-openai-compatible-keep-alive"
+                    type="number"
+                    min="5"
+                    max="1440"
+                    step="1"
+                    value={
+                      settings.tts.openAiCompatibleKeepAliveMinutes || 5
+                    }
+                    onChange={(e) =>
+                      updateOpenAiCompatibleKeepAliveMinutes(
+                        Number(e.target.value),
+                      )
+                    }
+                    disabled={disabled}
+                  />
+                  <small>
+                    Mínimo 5 minutos. El contador se reinicia después de cada frase.
+                  </small>
+                  {ttsKeepAliveSyncError && (
+                    <p className="settings-field-error" aria-live="polite">
+                      {ttsKeepAliveSyncError}
+                    </p>
+                  )}
+                </div>
+                <div className="settings-field settings-field-inline">
+                  <label htmlFor="tts-openai-compatible-sentence-pipeline">
+                    <input
+                      id="tts-openai-compatible-sentence-pipeline"
+                      type="checkbox"
+                      checked={
+                        settings.tts.openAiCompatibleSentencePipeline !== false
+                      }
+                      onChange={(e) =>
+                        updateOpenAiCompatibleSentencePipeline(e.target.checked)
+                      }
+                      disabled={disabled}
+                    />
+                    Pipeline TTS por frases
+                  </label>
+                  <small>
+                    Reproduce la primera frase mientras Qwen3 sintetiza las siguientes, manteniendo el orden.
+                  </small>
+                </div>
               </>
             )}
 
@@ -2761,6 +2816,10 @@ export function SettingsPanel({
         updateTwitchChannel={updateTwitchChannel}
         updateTwitchEnabled={updateTwitchEnabled}
         updateTwitchCommentIntervalMs={updateTwitchCommentIntervalMs}
+        updateTikTokUniqueId={updateTikTokUniqueId}
+        updateTikTokRelayUrl={updateTikTokRelayUrl}
+        updateTikTokEnabled={updateTikTokEnabled}
+        updateTikTokCommentIntervalMs={updateTikTokCommentIntervalMs}
         updateCommentIntelligenceEnabled={updateCommentIntelligenceEnabled}
         updateCommentIntelligenceMode={updateCommentIntelligenceMode}
         updateCommentIntelligenceStreamTopic={

@@ -146,6 +146,28 @@ export function scoreComment(input: {
     reasons.push('super_chat');
   }
 
+  // Regalos: el evento de regalo mismo y el tamaño en diamantes.
+  // Un regalo grande empuja fuerte; uno pequeño, en menor medida.
+  const giftMeta = comment.metadata?.gift as
+    | { diamondCount?: number; repeatCount?: number }
+    | undefined;
+  const eventKind = comment.metadata?.eventKind;
+  if (eventKind === 'gift') {
+    const diamonds = (giftMeta?.diamondCount ?? 0) as number;
+    if (diamonds >= 100) {
+      priorityBoost += 0.35;
+      reasons.push('big_gift');
+    } else if (diamonds > 0) {
+      priorityBoost += 0.2;
+      reasons.push('gift');
+    } else {
+      // Sin diamantes (solo repeticiones o metadatos incompletos):
+      // priorizar igual, aunque menos, para agradecer el gesto.
+      priorityBoost += 0.12;
+      reasons.push('gift');
+    }
+  }
+
   let penalty = 0;
   if (duplicate) {
     penalty += 0.25;

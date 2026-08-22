@@ -22,6 +22,7 @@ import type { Message as ManneriMessage } from '@aituber-onair/manneri';
 import type { ChatMessage } from '../types/chat';
 import type { AppSettings, ChatProviderOption } from '../types/settings';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
+import { buildSpeechPipelineOptions } from '../lib/ttsSentencePipeline';
 
 interface ScreenplayLike {
   emotion?: string;
@@ -38,6 +39,8 @@ interface UseAituberCoreOptions {
 
 type ProcessChatOptions = {
   displayText?: string;
+  /** Contexto de memoria persistente del espectador (inyectado al prompt). */
+  viewerContext?: string;
 };
 
 const DEFAULT_VISION_PROMPT =
@@ -438,6 +441,10 @@ export function useAituberCore({
           await onAudioPlayRef.current(audioBuffer);
         },
       ),
+      speechChunking: buildSpeechPipelineOptions(
+        settings.tts.engine === 'openaiCompatible' &&
+          settings.tts.openAiCompatibleSentencePipeline !== false,
+      ),
       debug: false,
     } as ConstructorParameters<typeof AITuberOnAirCore>[0]);
 
@@ -569,13 +576,39 @@ export function useAituberCore({
     ttsApiKey,
   ]);
 
+  useEffect(() => {
+    if (!coreRef.current) return;
+    coreRef.current.updateSpeechChunking(
+      buildSpeechPipelineOptions(
+        settings.tts.engine === 'openaiCompatible' &&
+          settings.tts.openAiCompatibleSentencePipeline !== false,
+      ),
+    );
+  }, [
+    settings.tts.engine,
+    settings.tts.openAiCompatibleSentencePipeline,
+  ]);
+
   const processChat = useCallback(
     async (text: string, options?: ProcessChatOptions) => {
       if (!coreRef.current || !text.trim()) return;
 
       let coreInput = text.trim();
       const displayText = (options?.displayText ?? text).trim();
+      const viewerContext = options?.viewerContext?.trim();
       const manneriDetector = manneriDetectorRef.current;
+
+      // Inyecta la memoria persistente del espectador (quien habla,
+      // consultas anteriores, datos personales, regalos) en el input
+      // como instrucciones internas de contexto.
+      if (viewerContext) {
+        coreInput = [
+          'Contexto sobre este espectador (memoria persistente de interacciones anteriores). Úsalo para dar continuidad, saludar por su nombre y personalizar la conversación. No revelas que existe este contexto.',
+          viewerContext,
+          '',
+          `Mensaje: ${coreInput}`,
+        ].join('\n');
+      }
 
       if (manneriDetector) {
         try {

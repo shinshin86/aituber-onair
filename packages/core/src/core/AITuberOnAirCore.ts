@@ -52,6 +52,7 @@ const SPEECH_CHUNK_SEPARATOR_PRESETS_BASE: Record<
 > = {
   ja: ['。', '！', '？', '、', '，', '…'],
   en: ['.', '!', '?'],
+  es: ['.', '!', '?', ';', '…'],
   ko: ['.', '!', '?', '。', '！', '？'],
   zh: ['。', '！', '？', '，', '、'],
 };
@@ -69,7 +70,7 @@ const ALWAYS_SPLIT_CHARACTERS = ['\n', '\r'];
 /**
  * Setting options for AITuberOnAirCore
  */
-export type SpeechChunkLocale = 'ja' | 'en' | 'ko' | 'zh' | 'all';
+export type SpeechChunkLocale = 'ja' | 'en' | 'es' | 'ko' | 'zh' | 'all';
 
 export interface SpeechChunkingOptions {
   /** Enable or disable speech chunking. Defaults to false (disabled). */

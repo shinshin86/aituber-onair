@@ -1,0 +1,1018 @@
+{
+  "una_carta": {
+    "id": "una_carta",
+    "name": "Una Carta (Respuesta Directa)",
+    "cards": 1,
+    "scale": 1.15,
+    "positions": [
+      {
+        "id": 1,
+        "name": "mensaje",
+        "label": "Mensaje",
+        "x": 0,
+        "y": 0,
+        "rot": 0
+      }
+    ]
+  },
+  "tres_cartas_pasado_presente_futuro": {
+    "id": "tres_cartas_pasado_presente_futuro",
+    "name": "Pasado · Presente · Futuro",
+    "cards": 3,
+    "scale": 1,
+    "positions": [
+      {
+        "id": 1,
+        "name": "pasado",
+        "label": "Pasado",
+        "x": -3,
+        "y": 0,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "presente",
+        "label": "Presente",
+        "x": 0,
+        "y": 0.25,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "futuro",
+        "label": "Futuro",
+        "x": 3,
+        "y": 0,
+        "rot": 0
+      }
+    ]
+  },
+  "tres_cartas_situacion_obstaculo_consejo": {
+    "id": "tres_cartas_situacion_obstaculo_consejo",
+    "name": "Situación · Obstáculo · Consejo",
+    "cards": 3,
+    "scale": 1,
+    "positions": [
+      {
+        "id": 1,
+        "name": "situacion",
+        "label": "Situación",
+        "x": -3,
+        "y": 0,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "obstaculo",
+        "label": "Obstáculo",
+        "x": 0,
+        "y": 0.25,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "consejo",
+        "label": "Consejo",
+        "x": 3,
+        "y": 0,
+        "rot": 0
+      }
+    ]
+  },
+  "herradura": {
+    "id": "herradura",
+    "name": "Herradura (7 cartas)",
+    "cards": 7,
+    "scale": 0.8,
+    "positions": [
+      {
+        "id": 1,
+        "name": "inicio",
+        "label": "Inicio",
+        "x": -4.2,
+        "y": 2.1,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "viaje",
+        "label": "Viaje",
+        "x": -5,
+        "y": 0,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "prueba",
+        "label": "Prueba",
+        "x": -4.2,
+        "y": -2.1,
+        "rot": 0
+      },
+      {
+        "id": 4,
+        "name": "bajada",
+        "label": "Bajada",
+        "x": -2,
+        "y": -3.4,
+        "rot": 0
+      },
+      {
+        "id": 5,
+        "name": "centro",
+        "label": "Centro",
+        "x": 0,
+        "y": -3.9,
+        "rot": 0
+      },
+      {
+        "id": 6,
+        "name": "retorno",
+        "label": "Retorno",
+        "x": 2,
+        "y": -3.4,
+        "rot": 0
+      },
+      {
+        "id": 7,
+        "name": "salida",
+        "label": "Salida",
+        "x": 4.2,
+        "y": -2.1,
+        "rot": 0
+      }
+    ]
+  },
+  "triangulo_9": {
+    "id": "triangulo_9",
+    "name": "Triángulo (9 cartas)",
+    "cards": 9,
+    "scale": 0.72,
+    "positions": [
+      {
+        "id": 1,
+        "name": "yo",
+        "label": "Yo",
+        "x": 0,
+        "y": 2.6,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "el_otros",
+        "label": "El otro",
+        "x": -4.3,
+        "y": -0.6,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "nosotros",
+        "label": "Nosotros",
+        "x": 0,
+        "y": -0.6,
+        "rot": 0
+      },
+      {
+        "id": 4,
+        "name": "comunicacion",
+        "label": "Comunicación",
+        "x": 4.3,
+        "y": -0.6,
+        "rot": 0
+      },
+      {
+        "id": 5,
+        "name": "emociones",
+        "label": "Emociones",
+        "x": -4.3,
+        "y": -3.2,
+        "rot": 0
+      },
+      {
+        "id": 6,
+        "name": "acciones",
+        "label": "Acciones",
+        "x": -2.1,
+        "y": -3.2,
+        "rot": 0
+      },
+      {
+        "id": 7,
+        "name": "decisiones",
+        "label": "Decisiones",
+        "x": 0,
+        "y": -3.2,
+        "rot": 0
+      },
+      {
+        "id": 8,
+        "name": "futuro_corto",
+        "label": "Futuro corto",
+        "x": 2.1,
+        "y": -3.2,
+        "rot": 0
+      },
+      {
+        "id": 9,
+        "name": "consejo",
+        "label": "Consejo",
+        "x": 4.3,
+        "y": -3.2,
+        "rot": 0
+      }
+    ]
+  },
+  "estrella_6": {
+    "id": "estrella_6",
+    "name": "Estrella de 6",
+    "cards": 6,
+    "scale": 0.8,
+    "positions": [
+      {
+        "id": 1,
+        "name": "cenit",
+        "label": "Cenit",
+        "x": 1.8982025386783975e-16,
+        "y": -3.1,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "este",
+        "label": "Este / Mañana",
+        "x": 2.68467875173176,
+        "y": -1.55,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "nadir",
+        "label": "Nadir",
+        "x": 2.68467875173176,
+        "y": 1.5499999999999996,
+        "rot": 0
+      },
+      {
+        "id": 4,
+        "name": "oeste",
+        "label": "Oeste / Tarde",
+        "x": 1.8982025386783975e-16,
+        "y": 3.1,
+        "rot": 0
+      },
+      {
+        "id": 5,
+        "name": "sur",
+        "label": "Sur",
+        "x": -2.6846787517317594,
+        "y": 1.5500000000000012,
+        "rot": 0
+      },
+      {
+        "id": 6,
+        "name": "norte",
+        "label": "Norte",
+        "x": -2.68467875173176,
+        "y": -1.5500000000000005,
+        "rot": 0
+      }
+    ]
+  },
+  "cruz_celta": {
+    "id": "cruz_celta",
+    "name": "Cruz Celta (10 cartas)",
+    "cards": 10,
+    "scale": 0.75,
+    "positions": [
+      {
+        "id": 1,
+        "name": "situacion",
+        "label": "Situación",
+        "x": 0,
+        "y": 0,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "cruz",
+        "label": "Cruz",
+        "x": 0.08,
+        "y": 0.08,
+        "rot": 0.12
+      },
+      {
+        "id": 3,
+        "name": "base",
+        "label": "Base",
+        "x": 0,
+        "y": -2.3,
+        "rot": 0
+      },
+      {
+        "id": 4,
+        "name": "pasado",
+        "label": "Pasado",
+        "x": -3.4,
+        "y": 0,
+        "rot": 0
+      },
+      {
+        "id": 5,
+        "name": "coronario",
+        "label": "Coronario",
+        "x": 0,
+        "y": 1.9,
+        "rot": 0
+      },
+      {
+        "id": 6,
+        "name": "futuro_cercano",
+        "label": "Futuro cercano",
+        "x": 3.4,
+        "y": 0,
+        "rot": 0
+      },
+      {
+        "id": 7,
+        "name": "yo",
+        "label": "Yo",
+        "x": 5.9,
+        "y": 1.7,
+        "rot": 0
+      },
+      {
+        "id": 8,
+        "name": "entorno",
+        "label": "Entorno",
+        "x": 5.9,
+        "y": 0.6,
+        "rot": 0
+      },
+      {
+        "id": 9,
+        "name": "esperanzas_medos",
+        "label": "Esperanzas y miedos",
+        "x": 5.9,
+        "y": -0.5,
+        "rot": 0
+      },
+      {
+        "id": 10,
+        "name": "resultado",
+        "label": "Resultado",
+        "x": 5.9,
+        "y": -1.6,
+        "rot": 0
+      }
+    ]
+  },
+  "tirada_egipcia": {
+    "id": "tirada_egipcia",
+    "name": "Pirámide Egipcia (10 cartas)",
+    "cards": 10,
+    "scale": 0.75,
+    "positions": [
+      {
+        "id": 1,
+        "name": "fundacion_1",
+        "label": "Fundación I",
+        "x": -4.3,
+        "y": -2.4,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "fundacion_2",
+        "label": "Fundación II",
+        "x": -1.45,
+        "y": -2.4,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "fundacion_3",
+        "label": "Fundación III",
+        "x": 1.45,
+        "y": -2.4,
+        "rot": 0
+      },
+      {
+        "id": 4,
+        "name": "fundacion_4",
+        "label": "Fundación IV",
+        "x": 4.3,
+        "y": -2.4,
+        "rot": 0
+      },
+      {
+        "id": 5,
+        "name": "cuerpo_1",
+        "label": "Cuerpo I",
+        "x": -2.9,
+        "y": -0.8,
+        "rot": 0
+      },
+      {
+        "id": 6,
+        "name": "cuerpo_2",
+        "label": "Cuerpo II",
+        "x": 0,
+        "y": -0.8,
+        "rot": 0
+      },
+      {
+        "id": 7,
+        "name": "cuerpo_3",
+        "label": "Cuerpo III",
+        "x": 2.9,
+        "y": -0.8,
+        "rot": 0
+      },
+      {
+        "id": 8,
+        "name": "cima_1",
+        "label": "Cima I",
+        "x": -1.45,
+        "y": 0.8,
+        "rot": 0
+      },
+      {
+        "id": 9,
+        "name": "cima_2",
+        "label": "Cima II",
+        "x": 1.45,
+        "y": 0.8,
+        "rot": 0
+      },
+      {
+        "id": 10,
+        "name": "apex",
+        "label": "Ápice",
+        "x": 0,
+        "y": 2.4,
+        "rot": 0
+      }
+    ]
+  },
+  "arbol_vida": {
+    "id": "arbol_vida",
+    "name": "Árbol de la Vida (10 sefirot)",
+    "cards": 10,
+    "scale": 0.72,
+    "positions": [
+      {
+        "id": 1,
+        "name": "keter",
+        "label": "Kéter",
+        "x": 0,
+        "y": 3,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "binah",
+        "label": "Biná",
+        "x": -1.9,
+        "y": 2,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "jokmah",
+        "label": "Jojmá",
+        "x": 1.9,
+        "y": 2,
+        "rot": 0
+      },
+      {
+        "id": 4,
+        "name": "jesed",
+        "label": "Jesed",
+        "x": -1.9,
+        "y": 0.9,
+        "rot": 0
+      },
+      {
+        "id": 5,
+        "name": "tifaret",
+        "label": "Tiferet",
+        "x": 0,
+        "y": 0.9,
+        "rot": 0
+      },
+      {
+        "id": 6,
+        "name": "gevurah",
+        "label": "Guevurá",
+        "x": 1.9,
+        "y": 0.9,
+        "rot": 0
+      },
+      {
+        "id": 7,
+        "name": "hod",
+        "label": "Jod",
+        "x": -0.95,
+        "y": -0.1,
+        "rot": 0
+      },
+      {
+        "id": 8,
+        "name": "nesaj",
+        "label": "Netsaj",
+        "x": 0.95,
+        "y": -0.1,
+        "rot": 0
+      },
+      {
+        "id": 9,
+        "name": "iesod",
+        "label": "Yesod",
+        "x": 0,
+        "y": -1.1,
+        "rot": 0
+      },
+      {
+        "id": 10,
+        "name": "maljut",
+        "label": "Maljut",
+        "x": 0,
+        "y": -2.6,
+        "rot": 0
+      }
+    ]
+  },
+  "circulo_celta": {
+    "id": "circulo_celta",
+    "name": "Círculo Celta (12 casas)",
+    "cards": 12,
+    "scale": 0.62,
+    "positions": [
+      {
+        "id": 1,
+        "name": "casa1",
+        "label": "Casa 1 · Mes 1",
+        "x": 2.0818995585505003e-16,
+        "y": -3.4,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "casa2",
+        "label": "Casa 2 · Mes 2",
+        "x": 1.6999999999999995,
+        "y": -2.9444863728670914,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "casa3",
+        "label": "Casa 3 · Mes 3",
+        "x": 2.9444863728670914,
+        "y": -1.7,
+        "rot": 0
+      },
+      {
+        "id": 4,
+        "name": "casa4",
+        "label": "Casa 4 · Mes 4",
+        "x": 3.4,
+        "y": 0,
+        "rot": 0
+      },
+      {
+        "id": 5,
+        "name": "casa5",
+        "label": "Casa 5 · Mes 5",
+        "x": 2.9444863728670914,
+        "y": 1.6999999999999993,
+        "rot": 0
+      },
+      {
+        "id": 6,
+        "name": "casa6",
+        "label": "Casa 6 · Mes 6",
+        "x": 1.6999999999999995,
+        "y": 2.9444863728670914,
+        "rot": 0
+      },
+      {
+        "id": 7,
+        "name": "casa7",
+        "label": "Casa 7 · Mes 7",
+        "x": 2.0818995585505003e-16,
+        "y": 3.4,
+        "rot": 0
+      },
+      {
+        "id": 8,
+        "name": "casa8",
+        "label": "Casa 8 · Mes 8",
+        "x": -1.7000000000000006,
+        "y": 2.9444863728670914,
+        "rot": 0
+      },
+      {
+        "id": 9,
+        "name": "casa9",
+        "label": "Casa 9 · Mes 9",
+        "x": -2.944486372867091,
+        "y": 1.700000000000001,
+        "rot": 0
+      },
+      {
+        "id": 10,
+        "name": "casa10",
+        "label": "Casa 10 · Mes 10",
+        "x": -3.4,
+        "y": 4.1637991171010006e-16,
+        "rot": 0
+      },
+      {
+        "id": 11,
+        "name": "casa11",
+        "label": "Casa 11 · Mes 11",
+        "x": -2.9444863728670914,
+        "y": -1.7000000000000004,
+        "rot": 0
+      },
+      {
+        "id": 12,
+        "name": "casa12",
+        "label": "Casa 12 · Mes 12",
+        "x": -1.7000000000000015,
+        "y": -2.944486372867091,
+        "rot": 0
+      }
+    ]
+  },
+  "mandala_8": {
+    "id": "mandala_8",
+    "name": "Mandala de 8 Pétalos",
+    "cards": 8,
+    "scale": 0.72,
+    "positions": [
+      {
+        "id": 1,
+        "name": "pos_1",
+        "label": "Posición 1",
+        "x": 1.7145055188062944e-16,
+        "y": -2.8,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "pos_2",
+        "label": "Posición 2",
+        "x": 1.9798989873223332,
+        "y": -1.9798989873223327,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "pos_3",
+        "label": "Posición 3",
+        "x": 2.8,
+        "y": 0,
+        "rot": 0
+      },
+      {
+        "id": 4,
+        "name": "pos_4",
+        "label": "Posición 4",
+        "x": 1.9798989873223332,
+        "y": 1.9798989873223327,
+        "rot": 0
+      },
+      {
+        "id": 5,
+        "name": "pos_5",
+        "label": "Posición 5",
+        "x": 1.7145055188062944e-16,
+        "y": 2.8,
+        "rot": 0
+      },
+      {
+        "id": 6,
+        "name": "pos_6",
+        "label": "Posición 6",
+        "x": -1.9798989873223327,
+        "y": 1.9798989873223332,
+        "rot": 0
+      },
+      {
+        "id": 7,
+        "name": "pos_7",
+        "label": "Posición 7",
+        "x": -2.8,
+        "y": 3.429011037612589e-16,
+        "rot": 0
+      },
+      {
+        "id": 8,
+        "name": "pos_8",
+        "label": "Posición 8",
+        "x": -1.9798989873223334,
+        "y": -1.9798989873223327,
+        "rot": 0
+      }
+    ]
+  },
+  "red_36": {
+    "id": "red_36",
+    "name": "Red 6×6 (36 cartas)",
+    "cards": 36,
+    "scale": 0.42,
+    "positions": [
+      {
+        "id": 1,
+        "name": "celda_1",
+        "label": "1",
+        "x": -2.625,
+        "y": -2.625,
+        "rot": 0
+      },
+      {
+        "id": 2,
+        "name": "celda_2",
+        "label": "2",
+        "x": -1.575,
+        "y": -2.625,
+        "rot": 0
+      },
+      {
+        "id": 3,
+        "name": "celda_3",
+        "label": "3",
+        "x": -0.5249999999999999,
+        "y": -2.625,
+        "rot": 0
+      },
+      {
+        "id": 4,
+        "name": "celda_4",
+        "label": "4",
+        "x": 0.5250000000000004,
+        "y": -2.625,
+        "rot": 0
+      },
+      {
+        "id": 5,
+        "name": "celda_5",
+        "label": "5",
+        "x": 1.5750000000000002,
+        "y": -2.625,
+        "rot": 0
+      },
+      {
+        "id": 6,
+        "name": "celda_6",
+        "label": "6",
+        "x": 2.625,
+        "y": -2.625,
+        "rot": 0
+      },
+      {
+        "id": 7,
+        "name": "celda_7",
+        "label": "7",
+        "x": -2.625,
+        "y": -1.575,
+        "rot": 0
+      },
+      {
+        "id": 8,
+        "name": "celda_8",
+        "label": "8",
+        "x": -1.575,
+        "y": -1.575,
+        "rot": 0
+      },
+      {
+        "id": 9,
+        "name": "celda_9",
+        "label": "9",
+        "x": -0.5249999999999999,
+        "y": -1.575,
+        "rot": 0
+      },
+      {
+        "id": 10,
+        "name": "celda_10",
+        "label": "10",
+        "x": 0.5250000000000004,
+        "y": -1.575,
+        "rot": 0
+      },
+      {
+        "id": 11,
+        "name": "celda_11",
+        "label": "11",
+        "x": 1.5750000000000002,
+        "y": -1.575,
+        "rot": 0
+      },
+      {
+        "id": 12,
+        "name": "celda_12",
+        "label": "12",
+        "x": 2.625,
+        "y": -1.575,
+        "rot": 0
+      },
+      {
+        "id": 13,
+        "name": "celda_13",
+        "label": "13",
+        "x": -2.625,
+        "y": -0.5249999999999999,
+        "rot": 0
+      },
+      {
+        "id": 14,
+        "name": "celda_14",
+        "label": "14",
+        "x": -1.575,
+        "y": -0.5249999999999999,
+        "rot": 0
+      },
+      {
+        "id": 15,
+        "name": "celda_15",
+        "label": "15",
+        "x": -0.5249999999999999,
+        "y": -0.5249999999999999,
+        "rot": 0
+      },
+      {
+        "id": 16,
+        "name": "celda_16",
+        "label": "16",
+        "x": 0.5250000000000004,
+        "y": -0.5249999999999999,
+        "rot": 0
+      },
+      {
+        "id": 17,
+        "name": "celda_17",
+        "label": "17",
+        "x": 1.5750000000000002,
+        "y": -0.5249999999999999,
+        "rot": 0
+      },
+      {
+        "id": 18,
+        "name": "celda_18",
+        "label": "18",
+        "x": 2.625,
+        "y": -0.5249999999999999,
+        "rot": 0
+      },
+      {
+        "id": 19,
+        "name": "celda_19",
+        "label": "19",
+        "x": -2.625,
+        "y": 0.5250000000000004,
+        "rot": 0
+      },
+      {
+        "id": 20,
+        "name": "celda_20",
+        "label": "20",
+        "x": -1.575,
+        "y": 0.5250000000000004,
+        "rot": 0
+      },
+      {
+        "id": 21,
+        "name": "celda_21",
+        "label": "21",
+        "x": -0.5249999999999999,
+        "y": 0.5250000000000004,
+        "rot": 0
+      },
+      {
+        "id": 22,
+        "name": "celda_22",
+        "label": "22",
+        "x": 0.5250000000000004,
+        "y": 0.5250000000000004,
+        "rot": 0
+      },
+      {
+        "id": 23,
+        "name": "celda_23",
+        "label": "23",
+        "x": 1.5750000000000002,
+        "y": 0.5250000000000004,
+        "rot": 0
+      },
+      {
+        "id": 24,
+        "name": "celda_24",
+        "label": "24",
+        "x": 2.625,
+        "y": 0.5250000000000004,
+        "rot": 0
+      },
+      {
+        "id": 25,
+        "name": "celda_25",
+        "label": "25",
+        "x": -2.625,
+        "y": 1.5750000000000002,
+        "rot": 0
+      },
+      {
+        "id": 26,
+        "name": "celda_26",
+        "label": "26",
+        "x": -1.575,
+        "y": 1.5750000000000002,
+        "rot": 0
+      },
+      {
+        "id": 27,
+        "name": "celda_27",
+        "label": "27",
+        "x": -0.5249999999999999,
+        "y": 1.5750000000000002,
+        "rot": 0
+      },
+      {
+        "id": 28,
+        "name": "celda_28",
+        "label": "28",
+        "x": 0.5250000000000004,
+        "y": 1.5750000000000002,
+        "rot": 0
+      },
+      {
+        "id": 29,
+        "name": "celda_29",
+        "label": "29",
+        "x": 1.5750000000000002,
+        "y": 1.5750000000000002,
+        "rot": 0
+      },
+      {
+        "id": 30,
+        "name": "celda_30",
+        "label": "30",
+        "x": 2.625,
+        "y": 1.5750000000000002,
+        "rot": 0
+      },
+      {
+        "id": 31,
+        "name": "celda_31",
+        "label": "31",
+        "x": -2.625,
+        "y": 2.625,
+        "rot": 0
+      },
+      {
+        "id": 32,
+        "name": "celda_32",
+        "label": "32",
+        "x": -1.575,
+        "y": 2.625,
+        "rot": 0
+      },
+      {
+        "id": 33,
+        "name": "celda_33",
+        "label": "33",
+        "x": -0.5249999999999999,
+        "y": 2.625,
+        "rot": 0
+      },
+      {
+        "id": 34,
+        "name": "celda_34",
+        "label": "34",
+        "x": 0.5250000000000004,
+        "y": 2.625,
+        "rot": 0
+      },
+      {
+        "id": 35,
+        "name": "celda_35",
+        "label": "35",
+        "x": 1.5750000000000002,
+        "y": 2.625,
+        "rot": 0
+      },
+      {
+        "id": 36,
+        "name": "celda_36",
+        "label": "36",
+        "x": 2.625,
+        "y": 2.625,
+        "rot": 0
+      }
+    ]
+  }
+}
