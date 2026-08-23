@@ -149,15 +149,16 @@ export const SPREADS: Record<string, SpreadLayout> = {
     complexity: 'advanced',
     positions: [
       P(1, 'situacion', 'Situación', 'Qué ocurre ahora', 0, 0),
-      P(2, 'cruz', 'Cruz', 'El desafío que cruza la situación', 0.08, 0.08, 0.12),
-      P(3, 'base', 'Base', 'La raíz inconsciente del asunto', 0, -2.3),
-      P(4, 'pasado', 'Pasado', 'Lo que acaba de pasar y aún influye', -3.4, 0),
-      P(5, 'coronario', 'Coronario', 'El objetivo consciente', 0, 1.9),
-      P(6, 'futuro_cercano', 'Futuro cercano', 'Hacia dónde va en las próximas semanas', 3.4, 0),
-      P(7, 'yo', 'Yo', 'Cómo se percibe uno mismo', 5.9, 1.7),
-      P(8, 'entorno', 'Entorno', 'Influencias de personas y entorno', 5.9, 0.6),
-      P(9, 'esperanzas_medos', 'Esperanzas y miedos', 'Lo que flota subconsciente', 5.9, -0.5),
-      P(10, 'resultado', 'Resultado', 'El desenlace probable', 5.9, -1.6)
+      // Cruzada a 90° sobre la situación (Cruz Celta tradicional): el desafío la cruza
+      P(2, 'cruz', 'Cruz', 'El desafío que cruza la situación', 0, -0.12, Math.PI / 2),
+      P(3, 'base', 'Base', 'La raíz inconsciente del asunto', 0, -2.5),
+      P(4, 'pasado', 'Pasado', 'Lo que acaba de pasar y aún influye', -2.6, 0),
+      P(5, 'coronario', 'Coronario', 'El objetivo consciente', 0, 2.1),
+      P(6, 'futuro_cercano', 'Futuro cercano', 'Hacia dónde va en las próximas semanas', 2.6, 0),
+      P(7, 'yo', 'Yo', 'Cómo se percibe uno mismo', 4.7, 2.0),
+      P(8, 'entorno', 'Entorno', 'Influencias de personas y entorno', 4.7, 0.55),
+      P(9, 'esperanzas_medos', 'Esperanzas y miedos', 'Lo que flota subconsciente', 4.7, -0.9),
+      P(10, 'resultado', 'Resultado', 'El desenlace probable', 4.7, -2.35)
     ]
   },
 
@@ -195,11 +196,11 @@ export const SPREADS: Record<string, SpreadLayout> = {
     complexity: 'advanced',
     positions: [
       P(1, 'keter', 'Kéter', 'La corona: la esencia más alta', 0, 3.0),
-      P(2, 'binah', 'Biná', 'Entendimiento: reflexión e intuición', -1.9, 2.0),
-      P(3, 'jokmah', 'Jojmá', 'Sabiduría: el chispa original', 1.9, 2.0),
-      P(4, 'jesed', 'Jesed', 'Misericordia: expansión', -1.9, 0.9),
+      P(2, 'binah', 'Biná', 'Entendimiento: reflexión e intuición', -1.9, 1.95),
+      P(3, 'jokmah', 'Jojmá', 'Sabiduría: el chispa original', 1.9, 1.95),
+      P(4, 'jesed', 'Jesed', 'Misericordia: expansión', -1.9, 0.55),
       P(5, 'tifaret', 'Tiferet', 'Belleza: el corazón del árbol', 0, 0.9),
-      P(6, 'gevurah', 'Guevurá', 'Rigor: límites y fuerza', 1.9, 0.9),
+      P(6, 'gevurah', 'Guevurá', 'Rigor: límites y fuerza', 1.9, 0.55),
       P(7, 'hod', 'Jod', 'Esplendor: mente y expresión', -0.95, -0.1),
       P(8, 'nesaj', 'Netsaj', 'Victorioso: empuje y deseo', 0.95, -0.1),
       P(9, 'iesod', 'Yesod', 'Fundamento: lo que sostiene', 0, -1.1),

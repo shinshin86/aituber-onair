@@ -15,8 +15,8 @@
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "la_suma_sacerdotisa",
-    "name": "La Suma Sacerdotisa",
+    "id": "el_mago",
+    "name": "El Mago",
     "arcanum": "major",
     "number": 1,
     "upright_meaning": "Misterio, intuicion, subconsciente",
@@ -26,12 +26,12 @@
       "intuicion",
       "subconsciente"
     ],
-    "texture_front": "/cards/front/la_suma_sacerdotisa.webp",
+    "texture_front": "/cards/front/el_mago.webp",
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "la_suma_sacerdotiza",
-    "name": "La Suma Sacerdotiza",
+    "id": "la_suma_sacerdotisa",
+    "name": "La Suma Sacerdotisa",
     "arcanum": "major",
     "number": 2,
     "upright_meaning": "Autoridad, maternidad, espiritualidad",
@@ -41,7 +41,7 @@
       "maternidad",
       "espiritualidad"
     ],
-    "texture_front": "/cards/front/la_suma_sacerdotiza.webp",
+    "texture_front": "/cards/front/la_suma_sacerdotisa.webp",
     "texture_back": "/cards/back.webp"
   },
   {
@@ -136,7 +136,7 @@
   },
   {
     "id": "el_ermitano",
-    "name": "El Ermitano",
+    "name": "El Ermitaño",
     "arcanum": "major",
     "number": 9,
     "upright_meaning": "Introspeccion, sabiduria, soledad",
@@ -490,8 +490,8 @@
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "caballo_de_bastos",
-    "name": "Caballo de Bastos",
+    "id": "sota_de_bastos",
+    "name": "Sota de Bastos",
     "arcanum": "minor",
     "number": 11,
     "suit": "wands",
@@ -502,12 +502,12 @@
       "fuego",
       "11"
     ],
-    "texture_front": "/cards/front/caballo_de_bastos.webp",
+    "texture_front": "/cards/front/sota_de_bastos.webp",
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "rey_de_bastos",
-    "name": "Rey de Bastos",
+    "id": "caballo_de_bastos",
+    "name": "Caballo de Bastos",
     "arcanum": "minor",
     "number": 12,
     "suit": "wands",
@@ -518,7 +518,7 @@
       "fuego",
       "12"
     ],
-    "texture_front": "/cards/front/rey_de_bastos.webp",
+    "texture_front": "/cards/front/caballo_de_bastos.webp",
     "texture_back": "/cards/back.webp"
   },
   {
@@ -538,8 +538,8 @@
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "jota_de_bastos",
-    "name": "Jota de Bastos",
+    "id": "rey_de_bastos",
+    "name": "Rey de Bastos",
     "arcanum": "minor",
     "number": 14,
     "suit": "wands",
@@ -550,7 +550,7 @@
       "fuego",
       "14"
     ],
-    "texture_front": "/cards/front/jota_de_bastos.webp",
+    "texture_front": "/cards/front/rey_de_bastos.webp",
     "texture_back": "/cards/back.webp"
   },
   {
@@ -714,8 +714,8 @@
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "caballo_de_copas",
-    "name": "Caballo de Copas",
+    "id": "sota_de_copas",
+    "name": "Sota de Copas",
     "arcanum": "minor",
     "number": 11,
     "suit": "cups",
@@ -726,12 +726,12 @@
       "agua",
       "11"
     ],
-    "texture_front": "/cards/front/caballo_de_copas.webp",
+    "texture_front": "/cards/front/sota_de_copas.webp",
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "rey_de_copas",
-    "name": "Rey de Copas",
+    "id": "caballo_de_copas",
+    "name": "Caballo de Copas",
     "arcanum": "minor",
     "number": 12,
     "suit": "cups",
@@ -742,7 +742,7 @@
       "agua",
       "12"
     ],
-    "texture_front": "/cards/front/rey_de_copas.webp",
+    "texture_front": "/cards/front/caballo_de_copas.webp",
     "texture_back": "/cards/back.webp"
   },
   {
@@ -762,8 +762,8 @@
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "jota_de_copas",
-    "name": "Jota de Copas",
+    "id": "rey_de_copas",
+    "name": "Rey de Copas",
     "arcanum": "minor",
     "number": 14,
     "suit": "cups",
@@ -774,7 +774,7 @@
       "agua",
       "14"
     ],
-    "texture_front": "/cards/front/jota_de_copas.webp",
+    "texture_front": "/cards/front/rey_de_copas.webp",
     "texture_back": "/cards/back.webp"
   },
   {
@@ -938,8 +938,8 @@
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "caballo_de_espadas",
-    "name": "Caballo de Espadas",
+    "id": "sota_de_espadas",
+    "name": "Sota de Espadas",
     "arcanum": "minor",
     "number": 11,
     "suit": "swords",
@@ -950,12 +950,12 @@
       "aire",
       "11"
     ],
-    "texture_front": "/cards/front/caballo_de_espadas.webp",
+    "texture_front": "/cards/front/sota_de_espadas.webp",
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "rey_de_espadas",
-    "name": "Rey de Espadas",
+    "id": "caballo_de_espadas",
+    "name": "Caballo de Espadas",
     "arcanum": "minor",
     "number": 12,
     "suit": "swords",
@@ -966,7 +966,7 @@
       "aire",
       "12"
     ],
-    "texture_front": "/cards/front/rey_de_espadas.webp",
+    "texture_front": "/cards/front/caballo_de_espadas.webp",
     "texture_back": "/cards/back.webp"
   },
   {
@@ -986,8 +986,8 @@
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "jota_de_espadas",
-    "name": "Jota de Espadas",
+    "id": "rey_de_espadas",
+    "name": "Rey de Espadas",
     "arcanum": "minor",
     "number": 14,
     "suit": "swords",
@@ -998,7 +998,7 @@
       "aire",
       "14"
     ],
-    "texture_front": "/cards/front/jota_de_espadas.webp",
+    "texture_front": "/cards/front/rey_de_espadas.webp",
     "texture_back": "/cards/back.webp"
   },
   {
@@ -1162,8 +1162,8 @@
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "caballo_de_oros",
-    "name": "Caballo de Oros",
+    "id": "sota_de_oros",
+    "name": "Sota de Oros",
     "arcanum": "minor",
     "number": 11,
     "suit": "pentacles",
@@ -1174,12 +1174,12 @@
       "tierra",
       "11"
     ],
-    "texture_front": "/cards/front/caballo_de_oros.webp",
+    "texture_front": "/cards/front/sota_de_oros.webp",
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "rey_de_oros",
-    "name": "Rey de Oros",
+    "id": "caballo_de_oros",
+    "name": "Caballo de Oros",
     "arcanum": "minor",
     "number": 12,
     "suit": "pentacles",
@@ -1190,7 +1190,7 @@
       "tierra",
       "12"
     ],
-    "texture_front": "/cards/front/rey_de_oros.webp",
+    "texture_front": "/cards/front/caballo_de_oros.webp",
     "texture_back": "/cards/back.webp"
   },
   {
@@ -1210,8 +1210,8 @@
     "texture_back": "/cards/back.webp"
   },
   {
-    "id": "jota_de_oros",
-    "name": "Jota de Oros",
+    "id": "rey_de_oros",
+    "name": "Rey de Oros",
     "arcanum": "minor",
     "number": 14,
     "suit": "pentacles",
@@ -1222,7 +1222,7 @@
       "tierra",
       "14"
     ],
-    "texture_front": "/cards/front/jota_de_oros.webp",
+    "texture_front": "/cards/front/rey_de_oros.webp",
     "texture_back": "/cards/back.webp"
   }
 ]

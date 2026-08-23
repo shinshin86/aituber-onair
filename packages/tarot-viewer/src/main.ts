@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { TarotScene } from './engine/ThreeSetup.js';
 import { TarotClient } from './engine/ws.js';
 import type { WsMessage } from './types.js';
@@ -7,6 +8,9 @@ const wsState = document.getElementById('ws-state')!;
 const spreadName = document.getElementById('spread-name')!;
 
 const scene = new TarotScene(canvas);
+// Exponer para depuración/QA por CDP (inofensivo en producción)
+(window as any).__tarotScene = scene;
+(window as any).__THREE = THREE;
 
 function showSpreadTitle(name: string) {
   spreadName.textContent = name;

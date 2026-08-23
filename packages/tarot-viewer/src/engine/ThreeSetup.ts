@@ -154,7 +154,8 @@ export class TarotScene {
     for (const p of planes) this.spreadGroup.add(p.group);
     this.cards = planes;
 
-    // Center the spread at the origin for a stable camera
+    // Center the spread at the origin for a stable camera.
+    // Los bounds incluyen ~0.9 u extra por debajo para las etiquetas de nombre.
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const c of reading.cards) {
       minX = Math.min(minX, c.x * scale);
@@ -162,12 +163,14 @@ export class TarotScene {
       minY = Math.min(minY, c.y * scale);
       maxY = Math.max(maxY, c.y * scale);
     }
-    const center = new THREE.Vector3((minX + maxX) / 2, (minY + maxY) / 2, 0);
+    const labelPad = 0.9; // etiquetas bajo cada carta
+    const center = new THREE.Vector3((minX + maxX) / 2, (minY - labelPad + maxY) / 2, 0);
     this.spreadGroup.position.set(-center.x, -center.y, 0);
 
     const fovY = (this.camera.fov * Math.PI) / 180;
-    const spanX = maxX - minX + 3.4;
-    const spanY = maxY - minY + 3.0;
+    // Márgenes holgados para que ninguna carta ni etiqueta quede cortada en OBS
+    const spanX = maxX - minX + 4.0;
+    const spanY = maxY - (minY - labelPad) + 3.2;
     const distX = spanX / (2 * Math.tan(fovY / 2) * this.camera.aspect);
     const distY = spanY / (2 * Math.tan(fovY / 2));
     this.baseCamDist = Math.max(6, Math.min(20, Math.max(distX, distY)) * 1.06);

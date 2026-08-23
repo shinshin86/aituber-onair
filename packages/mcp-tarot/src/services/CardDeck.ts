@@ -26,6 +26,8 @@ export interface DrawnCard {
  */
 export class CardDeck {
   private deck: Card[] = [];
+  /** Copia inmutable de los 78 originales: shuffle() siempre repone el mazo completo. */
+  private all: Card[];
 
   static load(): CardDeck {
     const raw = readFileSync(META_PATH, 'utf-8');
@@ -35,6 +37,7 @@ export class CardDeck {
   }
 
   constructor(cards: Card[]) {
+    this.all = [...cards];
     this.deck = [...cards];
   }
 
@@ -46,8 +49,9 @@ export class CardDeck {
     return this.deck.find((c) => c.id === id);
   }
 
-  /** Fisher-Yates. Optional seed for deterministic tests (mulberry32). */
+  /** Fisher-Yates. Optional seed for deterministic tests (mulberry32). Repone el mazo completo antes de barajar. */
   shuffle(seed?: number): void {
+    this.deck = [...this.all];
     const rand = seed === undefined ? Math.random : mulberry32(seed);
     for (let i = this.deck.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));

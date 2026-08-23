@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
-    "test": "vitest run",
+    "test": "node test-runtime.mjs",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
