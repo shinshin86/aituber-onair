@@ -8,6 +8,26 @@ import {
   type ChatServiceOptionsByProvider,
   type Message,
 } from '@aituber-onair/core';
+
+import {
+  formatReadingForLLM,
+  type TarotReading,
+} from '../services/tarot/tarotClient';
+
+/** Detecta si un comentario pide una tirada de tarot. */
+function isTarotQuery(text: string): boolean {
+  const lower = text.toLowerCase();
+  const isQuery =
+    lower.includes('tirada') ||
+    lower.includes('tarot') ||
+    lower.includes('cartas') ||
+    lower.includes('lectura');
+  if (!isQuery) return false;
+  return (
+    /amor|trabajo|dinero|salud|viaje|suerte|futuro|decisi/.test(lower) ||
+    lower.includes('?')
+  );
+}
 import {
   createChatServiceCommentAnalysisProvider,
   createCommentIntelligence,
@@ -83,6 +103,11 @@ type UseLiveCommentIntelligenceParams = {
   getViewContext?: (handle: string, nickname: string) => string;
   /** Registro de eventos de viewers para la memoria persistente. */
   onViewerEvent?: (event: ViewerMemoryEvent) => void;
+  /**
+   * Orquestador de tiradas: llamado cuando un comentario es una consulta de
+   * tarot. Debe disparar la tirada (anima el visor) y devolver la lectura.
+   */
+  onTarotQuery?: (text: string) => Promise<TarotReading>;
 };
 
 export function useLiveCommentIntelligence({
@@ -106,6 +131,7 @@ export function useLiveCommentIntelligence({
   getViewerProfiles,
   getViewContext,
   onViewerEvent,
+  onTarotQuery,
 }: UseLiveCommentIntelligenceParams) {
   const pendingCommentsRef = useRef<LiveComment[]>([]);
   const isFlushingRef = useRef(false);
@@ -331,9 +357,26 @@ export function useLiveCommentIntelligence({
         ? getViewContext?.(viewerHandle, viewerNickname)
         : undefined;
 
+      // Orquestador de tiradas: si el comentario es una consulta de tarot,
+      // dispara la tirada real (anima el visor 3D vía WS) e inyecta la
+      // lectura en el contexto del LLM para que la narice.
+      let tarotContext: string | undefined;
+      if (onTarotQuery && isTarotQuery(selected.text)) {
+        try {
+          const reading = await onTarotQuery(selected.text);
+          tarotContext = formatReadingForLLM(reading);
+        } catch (err) {
+          console.warn('[tarot] la tirada falló:', err);
+        }
+      }
+
+      const combinedContext = [viewerContext, tarotContext]
+        .filter(Boolean)
+        .join('\n\n');
+
       await processChat(promptForCore, {
         displayText,
-        ...(viewerContext ? { viewerContext } : {}),
+        ...(combinedContext ? { viewerContext: combinedContext } : {}),
       });
     } finally {
       isFlushingRef.current = false;
@@ -341,6 +384,7 @@ export function useLiveCommentIntelligence({
   }, [
     enabled,
     getViewContext,
+    onTarotQuery,
     getViewerProfiles,
     intelligence,
     isProcessing,

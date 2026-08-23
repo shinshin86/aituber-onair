@@ -15,6 +15,7 @@ import { useSettings } from './hooks/useSettings';
 import { useTikTokComments } from './hooks/useTikTokComments';
 import { useTwitchComments } from './hooks/useTwitchComments';
 import { useViewerMemory } from './hooks/useViewerMemory';
+import { drawReading } from './services/tarot/tarotClient';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
 import { getEmotionEffectAnchor } from './lib/emotionEffectAnchor';
@@ -262,6 +263,11 @@ export default function App() {
       topicFilter: settingsHook.settings.commentIntelligence.topicFilter,
       getViewerProfiles,
       getViewContext,
+      onTarotQuery: async (text) => {
+        // Orquestador: extrae tema/sujeto y dispara la tirada real.
+        const topicMatch = text.toLowerCase().match(/amor|trabajo|dinero|salud|viaje|suerte|futuro/);
+        return drawReading({ topic: topicMatch?.[0] ?? 'general' });
+      },
       onViewerEvent: (event) => {
         if (event.kind === 'gift') {
           recordViewerGift({
