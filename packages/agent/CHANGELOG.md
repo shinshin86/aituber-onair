@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- Ignores late Codex app-server responses for timed-out requests without
+  terminating an otherwise healthy transport.
+
 ### Added
 
 - Adds an embeddable Agent and Session runtime with host-controlled Tools,

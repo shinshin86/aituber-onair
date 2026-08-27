@@ -192,7 +192,7 @@ describe('CodexAppServerTransport', () => {
     await process.finish(() => transport.close());
   });
 
-  it('times out one request without closing the transport', async () => {
+  it('ignores a late response after timeout and keeps the transport alive', async () => {
     vi.useFakeTimers();
     try {
       const process = new FakeCodexProcess();
@@ -204,6 +204,9 @@ describe('CodexAppServerTransport', () => {
         expect(timedOut).rejects.toBeInstanceOf(AgentTimeoutError);
       await vi.advanceTimersByTimeAsync(20);
       await rejected;
+
+      process.send({ id: 1, result: { late: true } });
+      expect(process.kill).not.toHaveBeenCalled();
 
       const next = transport.request('fast', {});
       process.send({ id: 2, result: { ok: true } });
