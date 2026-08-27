@@ -8,7 +8,7 @@ const englishMessages = {
   displayLanguage: 'Language',
   heroTitle: 'Try realtime transcription',
   heroCopy:
-    'Transcribe microphone audio with Web Speech, OpenAI Realtime, or Local Whisper. Results are not submitted as chat messages automatically.',
+    'Transcribe microphone audio with Web Speech, OpenAI Realtime, Gemini Live, or Local Whisper. Results are not submitted as chat messages automatically.',
   sessionSettings: 'Transcription settings',
   checkingSupport: 'Checking availability',
   browserSupported: 'Available',
@@ -38,6 +38,25 @@ const englishMessages = {
   contextPromptValue: 'An English conversation recorded through a microphone.',
   openAICost:
     'OpenAI usage may be billed while transcription is running, including during silence.',
+  geminiApiKey: 'Gemini API key',
+  geminiApiKeyPlaceholder: 'Enter your Gemini API key',
+  geminiApiKeyHint: 'Use a key from your own Google AI Studio account.',
+  geminiBrowserByokNotice:
+    'This example connects to Gemini directly from your browser. Avoid using it on a shared device. Production apps should use a backend-issued ephemeral token.',
+  geminiLanguages: 'Language hints',
+  geminiLanguagesHint:
+    'Optional comma-separated BCP 47 codes (for example: ja-JP,en-US). Leave blank for automatic detection.',
+  geminiKeywords: 'Custom vocabulary',
+  geminiKeywordsValue: 'AITuber OnAir, Gemini',
+  geminiKeywordsHint:
+    'Comma-separated names or technical terms. Up to 1,000 terms are accepted; 100 or fewer is recommended.',
+  geminiMode: 'Transcription mode',
+  geminiModeVerbatim: 'Verbatim',
+  geminiModeSmart: 'Smart',
+  geminiModeHint:
+    'Smart mode removes fillers and formats the result for readability.',
+  geminiCost:
+    'Gemini usage may be billed while transcription is running. A Live Transcribe connection is limited to 10 minutes.',
   localWhisperLanguage: 'Language hint',
   localWhisperLanguageHint:
     'Optional BCP 47 language code. Leave blank for automatic detection.',
@@ -75,9 +94,11 @@ const englishMessages = {
   errorPermissionDenied: 'Microphone permission was denied.',
   errorNoSpeech: 'No speech was detected.',
   errorAuthenticationFailed:
-    'OpenAI authentication failed. Check the API key and try again.',
+    'Provider authentication failed. Check the API key and try again.',
   errorClientSecretFailed:
     'OpenAI connection setup failed. Wait a moment and try again.',
+  errorEphemeralTokenFailed:
+    'Gemini token setup failed. Wait a moment and try again.',
   errorConnectionFailed:
     'The transcription service could not be reached. Wait a moment and try again.',
   errorProvider: 'Transcription failed. Please try again.',
@@ -94,7 +115,7 @@ const japaneseMessages: Messages = {
   displayLanguage: '表示言語',
   heroTitle: 'リアルタイム文字起こしを試す',
   heroCopy:
-    'Web Speech、OpenAI Realtime、Local Whisperで、マイク音声をリアルタイムに文字起こしできます。結果がチャットへ自動送信されることはありません。',
+    'Web Speech、OpenAI Realtime、Gemini Live、Local Whisperで、マイク音声をリアルタイムに文字起こしできます。結果がチャットへ自動送信されることはありません。',
   sessionSettings: '文字起こし設定',
   checkingSupport: '利用可否を確認中',
   browserSupported: '利用可能',
@@ -122,6 +143,26 @@ const japaneseMessages: Messages = {
   contextPromptValue: 'マイクから入力された日本語の会話です。',
   openAICost:
     '文字起こし中は、無音の時間を含めてOpenAIの利用料金が発生する場合があります。',
+  geminiApiKey: 'Gemini APIキー',
+  geminiApiKeyPlaceholder: 'Gemini APIキーを入力',
+  geminiApiKeyHint:
+    'ご自身のGoogle AI StudioアカウントのAPIキーを入力してください。',
+  geminiBrowserByokNotice:
+    'このサンプルはブラウザからGeminiへ直接接続します。共有端末での利用は避けてください。本番環境ではバックエンド発行の短期トークンを使用してください。',
+  geminiLanguages: '言語ヒント',
+  geminiLanguagesHint:
+    '任意のBCP 47言語コードをカンマ区切りで入力（例：ja-JP,en-US）。空欄にすると自動判定します。',
+  geminiKeywords: 'カスタム語彙',
+  geminiKeywordsValue: 'AITuber OnAir, Gemini',
+  geminiKeywordsHint:
+    '固有名詞や専門用語をカンマ区切りで入力します。最大1,000語、推奨は100語以下です。',
+  geminiMode: '文字起こしモード',
+  geminiModeVerbatim: '逐語',
+  geminiModeSmart: 'スマート',
+  geminiModeHint:
+    'スマートモードでは、フィラーを除去して読みやすく整形します。',
+  geminiCost:
+    '文字起こし中はGeminiの利用料金が発生する場合があります。Live Transcribeの1接続は最大10分です。',
   localWhisperLanguage: '言語ヒント',
   localWhisperLanguageHint:
     '任意のBCP 47言語コードです。空欄にすると自動判定します。',
@@ -158,9 +199,11 @@ const japaneseMessages: Messages = {
     'マイクを使用できません。ブラウザの権限設定を確認してください。',
   errorNoSpeech: '音声を検出できませんでした。',
   errorAuthenticationFailed:
-    'OpenAIの認証に失敗しました。APIキーを確認してください。',
+    'プロバイダーの認証に失敗しました。APIキーを確認してください。',
   errorClientSecretFailed:
     'OpenAIへの接続準備に失敗しました。しばらく待ってからもう一度お試しください。',
+  errorEphemeralTokenFailed:
+    'Geminiへの接続トークンを取得できませんでした。しばらく待ってからもう一度お試しください。',
   errorConnectionFailed:
     '文字起こしサービスへ接続できませんでした。しばらく待ってからもう一度お試しください。',
   errorProvider: '文字起こし中にエラーが発生しました。もう一度お試しください。',

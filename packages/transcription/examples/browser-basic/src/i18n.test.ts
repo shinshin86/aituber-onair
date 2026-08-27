@@ -25,6 +25,14 @@ describe('browser example i18n', () => {
       'An English conversation recorded through a microphone.',
       'マイクから入力された日本語の会話です。',
     ]);
+    expect(translatedValues('geminiKeywordsValue')).toEqual([
+      'AITuber OnAir, Gemini',
+      'AITuber OnAir, Gemini',
+    ]);
+    expect(translate('ja', 'geminiCost')).toContain('最大10分');
+    expect(translate('en', 'geminiBrowserByokNotice')).toContain(
+      'ephemeral token'
+    );
     expect(translate('ja', 'localWhisperModelTinyHint')).toContain('約122MB');
     expect(translate('ja', 'localWhisperModelBaseHint')).toContain('約209MB');
     expect(translate('ja', 'localWhisperModelSmallHint')).toContain('約589MB');

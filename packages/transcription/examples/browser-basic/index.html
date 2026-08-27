@@ -25,8 +25,8 @@
         </div>
         <h1 data-i18n="heroTitle">Try realtime transcription</h1>
         <p class="hero-copy" data-i18n="heroCopy">
-          Transcribe microphone audio with Web Speech, OpenAI Realtime, or
-          Local Whisper. Results are not submitted as chat messages
+          Transcribe microphone audio with Web Speech, OpenAI Realtime, Gemini
+          Live, or Local Whisper. Results are not submitted as chat messages
           automatically.
         </p>
       </header>
@@ -49,6 +49,7 @@
           <select id="provider">
             <option value="web-speech">Web Speech</option>
             <option value="openai-realtime">OpenAI Realtime</option>
+            <option value="gemini-live">Gemini Live</option>
             <option value="local-whisper">Local Whisper</option>
           </select>
         </label>
@@ -131,6 +132,70 @@ An English conversation recorded through a microphone.</textarea
           <p class="notice cost" data-i18n="openAICost">
             OpenAI usage may be billed while transcription is running,
             including during silence.
+          </p>
+        </div>
+
+        <div id="gemini-fields" hidden>
+          <label class="field">
+            <span data-i18n="geminiApiKey">Gemini API key</span>
+            <input
+              id="gemini-api-key"
+              type="password"
+              autocomplete="off"
+              placeholder="Enter your Gemini API key"
+              data-i18n-placeholder="geminiApiKeyPlaceholder"
+            />
+            <small data-i18n="geminiApiKeyHint">
+              Use a key from your own Google AI Studio account.
+            </small>
+          </label>
+          <p class="notice info" data-i18n="geminiBrowserByokNotice">
+            This example connects to Gemini directly from your browser. Avoid
+            using it on a shared device. Production apps should use a
+            backend-issued ephemeral token.
+          </p>
+
+          <div class="field-grid">
+            <label class="field">
+              <span data-i18n="geminiLanguages">Language hints</span>
+              <input id="gemini-languages" value="ja-JP,en-US" />
+              <small data-i18n="geminiLanguagesHint">
+                Optional comma-separated BCP 47 codes (for example:
+                ja-JP,en-US). Leave blank for automatic detection.
+              </small>
+            </label>
+            <label class="field">
+              <span data-i18n="geminiMode">Transcription mode</span>
+              <select id="gemini-mode">
+                <option value="verbatim" data-i18n="geminiModeVerbatim">
+                  Verbatim
+                </option>
+                <option value="smart" data-i18n="geminiModeSmart">
+                  Smart
+                </option>
+              </select>
+              <small data-i18n="geminiModeHint">
+                Smart mode removes fillers and formats the result for
+                readability.
+              </small>
+            </label>
+          </div>
+
+          <label class="field">
+            <span data-i18n="geminiKeywords">Custom vocabulary</span>
+            <input
+              id="gemini-keywords"
+              value="AITuber OnAir, Gemini"
+              data-i18n-value="geminiKeywordsValue"
+            />
+            <small data-i18n="geminiKeywordsHint">
+              Comma-separated names or technical terms. Up to 1,000 terms are
+              accepted; 100 or fewer is recommended.
+            </small>
+          </label>
+          <p class="notice cost" data-i18n="geminiCost">
+            Gemini usage may be billed while transcription is running. A Live
+            Transcribe connection is limited to 10 minutes.
           </p>
         </div>
 

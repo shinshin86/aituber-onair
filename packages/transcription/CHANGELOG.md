@@ -1,5 +1,16 @@
 # @aituber-onair/transcription
 
+## Unreleased
+
+### Added
+
+- Added Gemini 3.5 Transcribe Live support over browser WebSocket with
+  ephemeral-token and explicitly acknowledged browser BYOK authentication.
+- Added 16 kHz PCM16 microphone streaming, interim and final transcript
+  snapshots, language hints, custom vocabulary, and verbatim or smart modes.
+- Added Gemini controls, English/Japanese guidance, capability detection, and
+  connection-limit guidance to the browser example and package documentation.
+
 ## 0.0.2
 
 ### Added

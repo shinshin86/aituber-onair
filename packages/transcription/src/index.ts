@@ -2,6 +2,9 @@ export { createRealtimeTranscriptionSession } from './createRealtimeTranscriptio
 export { TranscriptionSessionError } from './errors';
 export { isTranscriptionProviderSupported } from './support';
 export type {
+  GeminiLiveAuth,
+  GeminiLiveTranscriptionOptions,
+  GeminiTranscriptionMode,
   LocalWhisperModelSize,
   LocalWhisperTranscriptionOptions,
   OpenAIRealtimeAuth,

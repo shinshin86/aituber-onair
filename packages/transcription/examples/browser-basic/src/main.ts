@@ -1,6 +1,7 @@
 import {
   createRealtimeTranscriptionSession,
   isTranscriptionProviderSupported,
+  type GeminiTranscriptionMode,
   type LocalWhisperModelSize,
   type RealtimeTranscriptionSession,
   type TranscriptUpdate,
@@ -40,6 +41,11 @@ const openAILanguages = element<HTMLInputElement>('#openai-languages');
 const openAIKeywords = element<HTMLInputElement>('#openai-keywords');
 const openAIPrompt = element<HTMLTextAreaElement>('#openai-prompt');
 const openAIDelay = element<HTMLSelectElement>('#openai-delay');
+const geminiFields = element<HTMLDivElement>('#gemini-fields');
+const geminiApiKey = element<HTMLInputElement>('#gemini-api-key');
+const geminiLanguages = element<HTMLInputElement>('#gemini-languages');
+const geminiKeywords = element<HTMLInputElement>('#gemini-keywords');
+const geminiMode = element<HTMLSelectElement>('#gemini-mode');
 const localWhisperFields = element<HTMLDivElement>('#local-whisper-fields');
 const localWhisperModel = element<HTMLSelectElement>('#local-whisper-model');
 const localWhisperModelHint = element<HTMLElement>('#local-whisper-model-hint');
@@ -82,6 +88,7 @@ const errorTranslationKeys: Record<TranscriptionErrorCode, TranslationKey> = {
   'no-speech': 'errorNoSpeech',
   'authentication-failed': 'errorAuthenticationFailed',
   'client-secret-failed': 'errorClientSecretFailed',
+  'ephemeral-token-failed': 'errorEphemeralTokenFailed',
   'connection-failed': 'errorConnectionFailed',
   'provider-error': 'errorProvider',
   'invalid-configuration': 'errorInvalidConfiguration',
@@ -301,6 +308,18 @@ function createSession(): RealtimeTranscriptionSession {
         prompt: openAIPrompt.value,
         delay: openAIDelay.value as TranscriptionDelay,
       });
+    case 'gemini-live':
+      return createRealtimeTranscriptionSession({
+        provider: 'gemini-live',
+        auth: {
+          type: 'browser-api-key',
+          getApiKey: async () => geminiApiKey.value,
+          acknowledgeBrowserKeyRisk: true,
+        },
+        languages: commaSeparated(geminiLanguages.value),
+        keywords: commaSeparated(geminiKeywords.value),
+        mode: geminiMode.value as GeminiTranscriptionMode,
+      });
     case 'local-whisper':
       return createRealtimeTranscriptionSession({
         provider: 'local-whisper',
@@ -363,11 +382,14 @@ function clearTranscripts(): void {
 
 function syncSettings(): void {
   const provider = selectedProvider();
+  const webSpeechSelected = provider === 'web-speech';
   const openAISelected = provider === 'openai-realtime';
+  const geminiSelected = provider === 'gemini-live';
   const localWhisperSelected = provider === 'local-whisper';
 
-  webSpeechFields.hidden = openAISelected || localWhisperSelected;
+  webSpeechFields.hidden = !webSpeechSelected;
   openAIFields.hidden = !openAISelected;
+  geminiFields.hidden = !geminiSelected;
   localWhisperFields.hidden = !localWhisperSelected;
   renderLocalWhisperModelHint();
 

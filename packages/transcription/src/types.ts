@@ -1,6 +1,7 @@
 export type TranscriptionProviderName =
   | 'web-speech'
   | 'openai-realtime'
+  | 'gemini-live'
   | 'local-whisper';
 
 export interface TranscriptUpdate {
@@ -41,6 +42,7 @@ export type TranscriptionErrorCode =
   | 'no-speech'
   | 'authentication-failed'
   | 'client-secret-failed'
+  | 'ephemeral-token-failed'
   | 'connection-failed'
   | 'provider-error'
   | 'invalid-configuration'
@@ -61,6 +63,19 @@ export type OpenAIRealtimeAuth =
       getApiKey: () => Promise<string>;
       acknowledgeBrowserKeyRisk: true;
     };
+
+export type GeminiLiveAuth =
+  | {
+      type: 'ephemeral-token';
+      getEphemeralToken: () => Promise<string>;
+    }
+  | {
+      type: 'browser-api-key';
+      getApiKey: () => Promise<string>;
+      acknowledgeBrowserKeyRisk: true;
+    };
+
+export type GeminiTranscriptionMode = 'verbatim' | 'smart';
 
 export type TranscriptionDelay =
   | 'minimal'
@@ -84,6 +99,32 @@ export interface OpenAIRealtimeTranscriptionOptions {
   keywords?: string[];
   prompt?: string;
   delay?: TranscriptionDelay;
+}
+
+export interface GeminiLiveTranscriptionOptions {
+  provider: 'gemini-live';
+  auth: GeminiLiveAuth;
+
+  /**
+   * Optional BCP 47 language hints. An empty or omitted list enables automatic
+   * language detection, including code-switching within a session.
+   */
+  languages?: string[];
+
+  /**
+   * Terms used to bias recognition toward names, jargon, and other uncommon
+   * vocabulary. Gemini accepts up to 1,000 terms; Google recommends using no
+   * more than 100 for best results.
+   */
+  keywords?: string[];
+
+  /**
+   * "verbatim" preserves fillers and false starts. "smart" cleans and formats
+   * the transcript for readability.
+   *
+   * Default: "verbatim"
+   */
+  mode?: GeminiTranscriptionMode;
 }
 
 export interface LocalWhisperTranscriptionOptions {
@@ -127,6 +168,7 @@ export interface LocalWhisperTranscriptionOptions {
 export type RealtimeTranscriptionOptions =
   | WebSpeechTranscriptionOptions
   | OpenAIRealtimeTranscriptionOptions
+  | GeminiLiveTranscriptionOptions
   | LocalWhisperTranscriptionOptions;
 
 export interface RealtimeTranscriptionSession {
