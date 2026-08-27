@@ -115,7 +115,7 @@ export function createCodexAppServerBackendRuntime(
 class CodexAppServerBackendRuntime implements CodexAppServerBackend {
   readonly kind = 'codex-app-server' as const;
   readonly name = 'codex-app-server';
-  readonly capabilities = CODEX_BACKEND_CAPABILITIES;
+  readonly backendCapabilities = CODEX_BACKEND_CAPABILITIES;
 
   private readonly options: CodexAppServerBackendOptions;
   private readonly dependencies: CodexAppServerClientDependencies;

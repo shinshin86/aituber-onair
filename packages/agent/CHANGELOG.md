@@ -23,3 +23,9 @@
 - Adds a live-stream operations staff example backed by a real Codex app-server,
   server-side comment preprocessing, validated generated artifacts, and an
   HTTP/SSE dashboard client.
+
+### Changed
+
+- Renames backend feature-flag fields and Chat backend options from
+  `capabilities` to `backendCapabilities` to distinguish them from
+  host-granted capability descriptors.

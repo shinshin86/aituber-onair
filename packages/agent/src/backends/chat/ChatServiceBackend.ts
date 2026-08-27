@@ -78,7 +78,7 @@ interface ActiveChatTurn {
 class ChatServiceBackendRuntime implements ChatServiceBackend {
   readonly kind = 'chat' as const;
   readonly name: string;
-  readonly capabilities: Readonly<ChatServiceBackendCapabilities>;
+  readonly backendCapabilities: Readonly<ChatServiceBackendCapabilities>;
 
   private readonly provider?: string;
   private readonly createChatService: ChatServiceBackendOptions['createChatService'];
@@ -95,9 +95,9 @@ class ChatServiceBackendRuntime implements ChatServiceBackend {
     this.provider = options.provider;
     this.createChatService = options.createChatService;
     this.maxToolRounds = options.maxToolRounds ?? DEFAULT_MAX_TOOL_ROUNDS;
-    this.capabilities = Object.freeze(
-      options.capabilities
-        ? { ...options.capabilities }
+    this.backendCapabilities = Object.freeze(
+      options.backendCapabilities
+        ? { ...options.backendCapabilities }
         : resolveProviderCapabilities(options.provider as string)
     );
     this.name = this.provider
@@ -113,7 +113,7 @@ class ChatServiceBackendRuntime implements ChatServiceBackend {
         'ChatService backend does not support Session resume.'
       );
     }
-    if (!this.capabilities.tools && input.tools.length > 0) {
+    if (!this.backendCapabilities.tools && input.tools.length > 0) {
       throw new AgentBackendProtocolError(
         'ChatService backend received Tools while Tool support is disabled.'
       );
@@ -121,7 +121,7 @@ class ChatServiceBackendRuntime implements ChatServiceBackend {
 
     const toolRegistry = createProviderToolRegistry(input.tools);
     const factoryInput: ChatServiceFactoryInput = {
-      tools: this.capabilities.tools ? toolRegistry.definitions : [],
+      tools: this.backendCapabilities.tools ? toolRegistry.definitions : [],
       session: Object.freeze({
         agentId: input.agentId,
         sessionId: input.sessionId,
@@ -150,7 +150,7 @@ class ChatServiceBackendRuntime implements ChatServiceBackend {
     return new ChatServiceBackendSession({
       input,
       chatService,
-      capabilities: this.capabilities,
+      backendCapabilities: this.backendCapabilities,
       toolRegistry,
       maxToolRounds: this.maxToolRounds,
     });
@@ -160,7 +160,7 @@ class ChatServiceBackendRuntime implements ChatServiceBackend {
 interface ChatServiceBackendSessionOptions {
   readonly input: AgentBackendSessionInput;
   readonly chatService: ChatService;
-  readonly capabilities: Readonly<ChatServiceBackendCapabilities>;
+  readonly backendCapabilities: Readonly<ChatServiceBackendCapabilities>;
   readonly toolRegistry: ProviderToolRegistry;
   readonly maxToolRounds: number;
 }
@@ -170,7 +170,7 @@ class ChatServiceBackendSession implements AgentBackendSession {
 
   private readonly inputTrust: AgentBackendSessionInput['inputTrust'];
   private readonly chatService: ChatService;
-  private readonly capabilities: Readonly<ChatServiceBackendCapabilities>;
+  private readonly backendCapabilities: Readonly<ChatServiceBackendCapabilities>;
   private readonly toolRegistry: ProviderToolRegistry;
   private readonly maxToolRounds: number;
   private history: Message[];
@@ -182,7 +182,7 @@ class ChatServiceBackendSession implements AgentBackendSession {
     this.id = options.input.sessionId;
     this.inputTrust = options.input.inputTrust;
     this.chatService = options.chatService;
-    this.capabilities = options.capabilities;
+    this.backendCapabilities = options.backendCapabilities;
     this.toolRegistry = options.toolRegistry;
     this.maxToolRounds = options.maxToolRounds;
     this.history = buildChatSessionMessages(options.input);
@@ -310,7 +310,7 @@ class ChatServiceBackendSession implements AgentBackendSession {
         return;
       }
 
-      if (!this.capabilities.tools) {
+      if (!this.backendCapabilities.tools) {
         throw new AgentBackendProtocolError(
           'ChatService requested a Tool while Tool support is disabled.'
         );
@@ -358,7 +358,7 @@ class ChatServiceBackendSession implements AgentBackendSession {
     }
     let callbackError: AgentBackendProtocolError | undefined;
     let acceptDeltas = true;
-    const onPartialResponse = this.capabilities.streaming
+    const onPartialResponse = this.backendCapabilities.streaming
       ? (text: string) => {
           if (!acceptDeltas || turn.controller.signal.aborted) return;
           if (typeof text !== 'string') {
@@ -375,7 +375,7 @@ class ChatServiceBackendSession implements AgentBackendSession {
       const completion = await raceWithAbort(
         this.chatService.chatOnce(
           messages,
-          this.capabilities.streaming,
+          this.backendCapabilities.streaming,
           onPartialResponse
         ),
         turn.controller.signal
@@ -499,30 +499,30 @@ function validateOptions(options: ChatServiceBackendOptions): string[] {
   ) {
     issues.push('provider must be a non-empty string');
   }
-  if (!options.capabilities && !options.provider) {
-    issues.push('capabilities or provider must be supplied');
+  if (!options.backendCapabilities && !options.provider) {
+    issues.push('backendCapabilities or provider must be supplied');
   }
-  if (options.capabilities) {
-    validateCapabilities(options.capabilities, issues);
+  if (options.backendCapabilities) {
+    validateCapabilities(options.backendCapabilities, issues);
     const providerCapabilities = options.provider
       ? getChatBackendProviderCapabilities(options.provider)
       : undefined;
     if (
       providerCapabilities &&
-      options.capabilities.tools &&
+      options.backendCapabilities.tools &&
       !providerCapabilities.tools
     ) {
       issues.push(
-        `capabilities.tools cannot enable Tools for provider "${options.provider}"`
+        `backendCapabilities.tools cannot enable Tools for provider "${options.provider}"`
       );
     }
     if (
       providerCapabilities &&
-      options.capabilities.streaming &&
+      options.backendCapabilities.streaming &&
       !providerCapabilities.streaming
     ) {
       issues.push(
-        `capabilities.streaming cannot enable streaming for provider "${options.provider}"`
+        `backendCapabilities.streaming cannot enable streaming for provider "${options.provider}"`
       );
     }
   }
@@ -536,61 +536,62 @@ function validateOptions(options: ChatServiceBackendOptions): string[] {
 }
 
 function validateCapabilities(
-  capabilities: ChatServiceBackendCapabilities,
+  backendCapabilities: ChatServiceBackendCapabilities,
   issues: string[]
 ): void {
   if (
-    typeof capabilities !== 'object' ||
-    capabilities === null ||
-    Array.isArray(capabilities)
+    typeof backendCapabilities !== 'object' ||
+    backendCapabilities === null ||
+    Array.isArray(backendCapabilities)
   ) {
-    issues.push('capabilities must be an object');
+    issues.push('backendCapabilities must be an object');
     return;
   }
-  for (const key of Object.keys(capabilities)) {
+  for (const key of Object.keys(backendCapabilities)) {
     if (!CAPABILITY_KEYS.has(key)) {
-      issues.push(`capabilities contains unsupported option "${key}"`);
+      issues.push(`backendCapabilities contains unsupported option "${key}"`);
     }
   }
   for (const key of CAPABILITY_KEYS) {
     if (
-      typeof capabilities[key as keyof ChatServiceBackendCapabilities] !==
-      'boolean'
+      typeof backendCapabilities[
+        key as keyof ChatServiceBackendCapabilities
+      ] !== 'boolean'
     ) {
-      issues.push(`capabilities.${key} must be a boolean`);
+      issues.push(`backendCapabilities.${key} must be a boolean`);
     }
   }
-  if (capabilities.text !== true) {
-    issues.push('capabilities.text must be true');
+  if (backendCapabilities.text !== true) {
+    issues.push('backendCapabilities.text must be true');
   }
-  if (capabilities.sessionResume !== false) {
-    issues.push('capabilities.sessionResume must be false');
+  if (backendCapabilities.sessionResume !== false) {
+    issues.push('backendCapabilities.sessionResume must be false');
   }
-  if (capabilities.approvals !== false) {
-    issues.push('capabilities.approvals must be false');
+  if (backendCapabilities.approvals !== false) {
+    issues.push('backendCapabilities.approvals must be false');
   }
 }
 
 function resolveProviderCapabilities(
   provider: string
 ): ChatServiceBackendCapabilities {
-  const capabilities = getChatBackendProviderCapabilities(provider);
-  if (!capabilities) {
+  const providerCapabilities = getChatBackendProviderCapabilities(provider);
+  if (!providerCapabilities) {
     throw new AgentConfigurationError(
       'ChatService backend provider capabilities were not found.',
       [
-        `Provider "${provider}" is not registered; supply explicit capabilities for custom providers`,
+        `Provider "${provider}" is not registered; supply explicit backendCapabilities for custom providers`,
       ]
     );
   }
   return {
     text: true,
-    streaming: capabilities.streaming,
-    tools: capabilities.tools,
+    streaming: providerCapabilities.streaming,
+    tools: providerCapabilities.tools,
     interruption: false,
     sessionResume: false,
     approvals: false,
-    detailedEvents: capabilities.tools,
+    detailedEvents: providerCapabilities.tools,
   };
 }
 

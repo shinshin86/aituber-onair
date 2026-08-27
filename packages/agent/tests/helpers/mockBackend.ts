@@ -72,17 +72,17 @@ export class MockBackendSession implements AgentBackendSession {
 
 export class MockBackend implements AgentBackend {
   readonly name = 'mock-backend';
-  readonly capabilities: Readonly<AgentBackendCapabilities>;
+  readonly backendCapabilities: Readonly<AgentBackendCapabilities>;
   readonly startInputs: AgentBackendSessionInput[] = [];
   readonly sessions: MockBackendSession[] = [];
 
   constructor(
     private readonly streamFactory: MockStreamFactory,
-    capabilities: Partial<AgentBackendCapabilities> = {}
+    backendCapabilities: Partial<AgentBackendCapabilities> = {}
   ) {
-    this.capabilities = {
+    this.backendCapabilities = {
       ...DEFAULT_BACKEND_CAPABILITIES,
-      ...capabilities,
+      ...backendCapabilities,
     };
   }
 

@@ -199,17 +199,17 @@ const result = await publicSession.run(
 ```
 
 組み込みChat provider名を指定した場合は、`ChatServiceFactory`のcapability metadataを
-fallbackとして使います。独自providerでは`capabilities`を明示してください。Tool非対応の
-providerへは空のTool一覧を渡します。現在の`codex-sdk` Chat providerはtext-onlyで、
-streaming deltaではなく完了後の全文を返します。
+fallbackとして使います。独自providerでは`backendCapabilities`を明示してください。
+Tool非対応のproviderへは空のTool一覧を渡します。現在の`codex-sdk` Chat providerは
+text-onlyで、streaming deltaではなく完了後の全文を返します。
 
 会話履歴とTool履歴はSessionごとに保持します。1 Turnで利用できるprovider Tool roundは
 既定で6回です。必要に応じて`maxToolRounds`へ別の正の整数を指定できます。
 `AbortSignal`とAgentのtimeoutはAgent Turnを停止し、遅れて届いた結果を無視します。
 汎用の`ChatService` interfaceは、すでに実行中のprovider requestがnetwork transport層でも
 cancelされることまでは保証しません。同じ理由で、組み込みprovider metadataから導出した
-capabilityは`interruption: false`と`sessionResume: false`を宣言します。ChatService
-バックエンドのTurnは`AbortSignal`またはtimeoutで停止してください。
+`backendCapabilities`は`interruption: false`と`sessionResume: false`を宣言します。
+ChatServiceバックエンドのTurnは`AbortSignal`またはtimeoutで停止してください。
 `agent.resumeSession(...)`が必要な場合は、Codex app-serverバックエンドのように
 `sessionResume`を宣言するバックエンドを使用します。
 

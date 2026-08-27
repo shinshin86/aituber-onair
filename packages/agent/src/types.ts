@@ -327,7 +327,7 @@ export type AgentBackendToolResult =
 
 export interface AgentBackend {
   readonly name: string;
-  readonly capabilities: Readonly<AgentBackendCapabilities>;
+  readonly backendCapabilities: Readonly<AgentBackendCapabilities>;
   startSession(input: AgentBackendSessionInput): Promise<AgentBackendSession>;
 }
 
@@ -463,7 +463,7 @@ export interface AgentOptions {
 export interface Agent {
   readonly id: string;
   readonly brief: string;
-  readonly capabilities: Readonly<AgentBackendCapabilities>;
+  readonly backendCapabilities: Readonly<AgentBackendCapabilities>;
   bootstrap(options: AgentBootstrapOptions): Promise<AgentBootstrapResult>;
   startSession(options: AgentSessionOptions): Promise<AgentSession>;
   resumeSession(options: AgentResumeSessionOptions): Promise<AgentSession>;

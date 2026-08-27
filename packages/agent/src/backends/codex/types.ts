@@ -74,7 +74,7 @@ export interface CodexAppServerBackendSession extends AgentBackendSession {
 
 export interface CodexAppServerBackend extends AgentBackend {
   readonly kind: 'codex-app-server';
-  readonly capabilities: Readonly<CodexAppServerBackendCapabilities>;
+  readonly backendCapabilities: Readonly<CodexAppServerBackendCapabilities>;
   startSession(
     input: AgentBackendSessionInput
   ): Promise<CodexAppServerBackendSession>;

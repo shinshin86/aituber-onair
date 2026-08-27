@@ -31,15 +31,15 @@ export type ChatServiceBackendOptions = ChatServiceBackendBaseOptions &
     | {
         /** Used to verify the factory result and resolve fallback capabilities. */
         readonly provider: string;
-        readonly capabilities?: ChatServiceBackendCapabilities;
+        readonly backendCapabilities?: ChatServiceBackendCapabilities;
       }
     | {
         readonly provider?: string;
-        readonly capabilities: ChatServiceBackendCapabilities;
+        readonly backendCapabilities: ChatServiceBackendCapabilities;
       }
   );
 
 export interface ChatServiceBackend extends AgentBackend {
   readonly kind: 'chat';
-  readonly capabilities: Readonly<ChatServiceBackendCapabilities>;
+  readonly backendCapabilities: Readonly<ChatServiceBackendCapabilities>;
 }

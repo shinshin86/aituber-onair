@@ -208,21 +208,21 @@ const result = await publicSession.run(
 ```
 
 Built-in Chat provider names use `ChatServiceFactory` capability metadata as a
-fallback. Supply `capabilities` explicitly for a custom provider. Providers
-without Tool support receive an empty Tool list; for example, the current
-`codex-sdk` Chat provider is text-only and returns completed text rather than
-streaming deltas.
+fallback. Supply `backendCapabilities` explicitly for a custom provider.
+Providers without Tool support receive an empty Tool list; for example, the
+current `codex-sdk` Chat provider is text-only and returns completed text rather
+than streaming deltas.
 
 The backend keeps conversation and Tool history inside each Session and limits
 one Turn to six provider Tool rounds by default. Set `maxToolRounds` to another
 positive integer when needed. `AbortSignal` and Agent timeouts stop the Agent
 Turn and ignore late results. The generic `ChatService` interface does not
 guarantee that an already-running provider request is cancelled at the network
-transport layer. For the same reason, capabilities derived from built-in
-provider metadata declare `interruption: false` and `sessionResume: false`:
-cancel ChatService backend Turns with `AbortSignal` or timeouts, and use a
-backend that declares `sessionResume`, such as the Codex app-server backend,
-when `agent.resumeSession(...)` is required.
+transport layer. For the same reason, `backendCapabilities` derived from
+built-in provider metadata declare `interruption: false` and
+`sessionResume: false`: cancel ChatService backend Turns with `AbortSignal` or
+timeouts, and use a backend that declares `sessionResume`, such as the Codex
+app-server backend, when `agent.resumeSession(...)` is required.
 
 ## Tool execution rules
 

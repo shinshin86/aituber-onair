@@ -128,6 +128,11 @@ assert.equal(codex.CODEX_APP_SERVER_MINIMUM_VERSION, '0.136.0');
 assert.equal(codex.CODEX_APP_SERVER_PROTOCOL_GENERATION, 'v2');
 assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, undefined);
 assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, undefined);
+const codexBackend = codex.createCodexAppServerBackend({
+  allowPathLookup: true,
+  workingDirectory: '/path/to/character-workspace',
+});
+assert.equal(codexBackend.backendCapabilities.approvals, true);
 `
   );
   await writeFile(
@@ -147,6 +152,11 @@ assert.equal(codex.CODEX_APP_SERVER_MINIMUM_VERSION, '0.136.0');
 assert.equal(codex.CODEX_APP_SERVER_PROTOCOL_GENERATION, 'v2');
 assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, undefined);
 assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, undefined);
+const codexBackend = codex.createCodexAppServerBackend({
+  allowPathLookup: true,
+  workingDirectory: '/path/to/character-workspace',
+});
+assert.equal(codexBackend.backendCapabilities.approvals, true);
 `
   );
 
@@ -257,6 +267,7 @@ const workspaceWrite = defineAgentTool({
   execute: () => ({ saved: true }),
 });
 declare const backend: AgentBackend;
+void backend.backendCapabilities.text;
 const policy: AgentPolicyConfig = {
   defaultDecision: 'deny',
   allowTools: ['workspace.read', 'workspace.write'],

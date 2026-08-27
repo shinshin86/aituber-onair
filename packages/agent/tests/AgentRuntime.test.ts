@@ -72,8 +72,8 @@ describe('AgentRuntime', () => {
 
     expect(agent.id).toBe(agentDefinition.id);
     expect(agent.brief).toBe(agentDefinition.brief);
-    expect(agent.capabilities).toEqual(backend.capabilities);
-    expect(Object.isFrozen(agent.capabilities)).toBe(true);
+    expect(agent.backendCapabilities).toEqual(backend.backendCapabilities);
+    expect(Object.isFrozen(agent.backendCapabilities)).toBe(true);
     expect(performer.allowedTools).toEqual([]);
     expect(operator.allowedTools).toEqual(['comments.analyze']);
     expect(backend.startInputs[0].brief).toBe(agentDefinition.brief);
