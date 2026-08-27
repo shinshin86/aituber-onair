@@ -31,3 +31,5 @@
 - Renames backend feature-flag fields and Chat backend options from
   `capabilities` to `backendCapabilities` to distinguish them from
   host-granted capability descriptors.
+- Adds phase-specific hook value typing and comprehensive JSDoc for the public
+  API surface.

@@ -476,6 +476,7 @@ class ChatServiceBackendSession implements AgentBackendSession {
   }
 }
 
+/** Creates a backend that owns one ChatService instance and history per Session. */
 export function createChatServiceBackend(
   options: ChatServiceBackendOptions
 ): ChatServiceBackend {

@@ -92,6 +92,7 @@ interface ResolvedSessionRequest {
   readonly limits: Required<AgentRuntimeLimits>;
 }
 
+/** Creates a managed Agent from a validated host definition and backend. */
 export function createAgent(options: AgentOptions): Agent {
   return new AgentRuntime(options);
 }

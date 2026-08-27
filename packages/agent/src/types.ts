@@ -1,12 +1,20 @@
+/** A scalar value accepted by JSON without custom serialization. */
 export type JsonPrimitive = boolean | null | number | string;
 
+/** Recursively JSON-serializable data used by persisted and emitted contracts. */
 export type JsonValue =
   | JsonPrimitive
   | { readonly [key: string]: JsonValue }
   | readonly JsonValue[];
 
+/** Host classification of whether conversational input may contain adversarial data. */
 export type AgentInputTrust = 'trusted' | 'untrusted';
 
+/**
+ * Intended recipients of a Session: `operator` is operations staff, `owner` is
+ * the product owner, `private` is another non-public audience, and `public` is
+ * end-user facing. Only `public` is treated as public-facing.
+ */
 export type AgentAudience = 'operator' | 'owner' | 'private' | 'public';
 
 /**
@@ -19,6 +27,7 @@ export interface AgentConversationInput<TData = unknown> {
   readonly metadata?: Readonly<Record<string, JsonValue>>;
 }
 
+/** Host instruction plus separately labeled conversation data and context for one Turn. */
 export interface AgentRunInput<
   TInput extends AgentConversationInput = AgentConversationInput,
   TContext = unknown,
@@ -31,6 +40,7 @@ export interface AgentRunInput<
   readonly context?: TContext;
 }
 
+/** Cancellation, timeout, and automatic approval handling for one Turn. */
 export interface AgentRunOptions {
   readonly signal?: AbortSignal;
   readonly timeoutMs?: number;
@@ -48,12 +58,14 @@ export interface AgentRunOptions {
   ) => AgentApprovalDecision | Promise<AgentApprovalDecision>;
 }
 
+/** Stable provenance linking an Artifact to the Agent, Session, and Turn that created it. */
 export interface AgentArtifactSource {
   readonly agentId: string;
   readonly sessionId: string;
   readonly turnId: string;
 }
 
+/** Versioned JSON output emitted independently from the Agent's text response. */
 export interface AgentArtifact<TData extends JsonValue = JsonValue> {
   readonly id: string;
   readonly type: string;
@@ -64,12 +76,14 @@ export interface AgentArtifact<TData extends JsonValue = JsonValue> {
   readonly source: AgentArtifactSource;
 }
 
+/** Optional token accounting reported by a backend for one Turn. */
 export interface AgentUsage {
   readonly inputTokens?: number;
   readonly outputTokens?: number;
   readonly totalTokens?: number;
 }
 
+/** Validated terminal output returned by `AgentSession.run()`. */
 export interface AgentRunResult {
   readonly turnId: string;
   readonly message: string;
@@ -78,6 +92,10 @@ export interface AgentRunResult {
   readonly backendMetadata?: Readonly<Record<string, JsonValue>>;
 }
 
+/**
+ * Ordered Tool risk levels: `read < draft < write < external < destructive`.
+ * `AgentApprovalRule.riskAtLeast` compares risks using this order.
+ */
 export type AgentToolRisk =
   | 'read'
   | 'draft'
@@ -104,6 +122,7 @@ export interface AgentBackendTool {
   readonly definition: AgentToolDefinition;
 }
 
+/** Runtime identity and cancellation state supplied to a host Tool handler. */
 export interface AgentToolExecutionContext {
   readonly agentId: string;
   readonly sessionId: string;
@@ -112,6 +131,7 @@ export interface AgentToolExecutionContext {
   readonly signal: AbortSignal;
 }
 
+/** Synchronous or asynchronous host implementation of an Agent Tool. */
 export type AgentToolHandler<TInput = unknown, TOutput = unknown> = {
   bivarianceHack(
     input: TInput,
@@ -119,6 +139,7 @@ export type AgentToolHandler<TInput = unknown, TOutput = unknown> = {
   ): Promise<TOutput> | TOutput;
 }['bivarianceHack'];
 
+/** Complete Tool registration combining model metadata, policy risk, and host execution. */
 export interface AgentToolSpec<TInput = unknown, TOutput = unknown> {
   /** Stable logical ID used by policy and audit events. */
   readonly id: string;
@@ -130,11 +151,13 @@ export interface AgentToolSpec<TInput = unknown, TOutput = unknown> {
   readonly sensitiveFields?: readonly string[];
 }
 
+/** Policy outcome that allows, denies, or pauses a Tool call for host approval. */
 export type AgentPolicyDecision =
   | { readonly decision: 'allow'; readonly reason?: string }
   | { readonly decision: 'deny'; readonly reason: string }
   | { readonly decision: 'require-approval'; readonly reason: string };
 
+/** Sanitized facts available while a policy evaluates one requested Tool call. */
 export interface AgentPolicyContext {
   readonly agentId: string;
   readonly sessionId: string;
@@ -146,17 +169,20 @@ export interface AgentPolicyContext {
   readonly arguments: unknown;
 }
 
+/** Host policy contract evaluated before every runtime-managed Tool execution. */
 export interface AgentPolicy {
   evaluate(
     context: AgentPolicyContext
   ): AgentPolicyDecision | Promise<AgentPolicyDecision>;
 }
 
+/** Declarative matcher for Tools that require approval by risk threshold or ID. */
 export interface AgentApprovalRule {
   readonly riskAtLeast?: AgentToolRisk;
   readonly tools?: readonly string[];
 }
 
+/** Declarative allow, deny, and approval rules used by the default policy. */
 export interface AgentPolicyConfig {
   readonly defaultDecision: 'allow' | 'deny';
   readonly allowTools?: readonly string[];
@@ -164,6 +190,7 @@ export interface AgentPolicyConfig {
   readonly requireApproval?: AgentApprovalRule;
 }
 
+/** Sanitized Tool or backend operation presented to the host for a decision. */
 export interface AgentApprovalRequest {
   readonly id: string;
   readonly agentId: string;
@@ -177,8 +204,15 @@ export interface AgentApprovalRequest {
   readonly reason: string;
 }
 
+/** One-request approval outcome; it never grants permission for later requests. */
 export type AgentApprovalDecision = 'allow-once' | 'deny';
 
+/**
+ * Hook timing and values: `input` and `context` transform Turn inputs;
+ * `before-tool` and `after-tool` wrap Tool arguments and results;
+ * `draft-response` transforms text; `output` transforms the final result; and
+ * `after-turn` observes the terminal outcome. See `AgentHookValueMap`.
+ */
 export type AgentHookPhase =
   | 'input'
   | 'context'
@@ -198,6 +232,7 @@ type AgentAfterTurnHookValue =
       readonly error: AgentEventError;
     };
 
+/** Input and output value types passed through each `AgentHookPhase`. */
 export interface AgentHookValueMap {
   readonly input: {
     readonly input: AgentRunInput['input'];
@@ -223,6 +258,7 @@ export interface AgentHookValueMap {
   };
 }
 
+/** Shared identity, phase value, and cancellation signal supplied to a hook. */
 export interface AgentHookContext<TValue = unknown> {
   readonly agentId: string;
   readonly sessionId: string;
@@ -241,6 +277,10 @@ type AgentHookDefinition<TPhase extends AgentHookPhase, TInput, TOutput> = {
   run(context: AgentHookContext<TInput>): Promise<TOutput> | TOutput;
 };
 
+/**
+ * Phase-discriminated host extension that may transform a pipeline value.
+ * Explicit generic arguments preserve compatibility with legacy unknown hooks.
+ */
 export type AgentHook<TInput = AgentHookInferredValue, TOutput = TInput> = {
   [TPhase in AgentHookPhase]: AgentHookDefinition<
     TPhase,
@@ -251,6 +291,7 @@ export type AgentHook<TInput = AgentHookInferredValue, TOutput = TInput> = {
   >;
 }[AgentHookPhase];
 
+/** Feature flags declared by a backend and enforced by the Agent runtime. */
 export interface AgentBackendCapabilities {
   readonly text: boolean;
   readonly streaming: boolean;
@@ -261,6 +302,7 @@ export interface AgentBackendCapabilities {
   readonly detailedEvents: boolean;
 }
 
+/** Named numeric boundary advertised with a host-granted capability. */
 export interface AgentCapabilityLimit {
   readonly name: string;
   readonly value: number;
@@ -288,19 +330,23 @@ export interface AgentBackendCapability {
   readonly limits?: readonly AgentCapabilityLimit[];
 }
 
+/** JSON Artifact emitted by a backend before runtime provenance is attached. */
 export interface AgentBackendArtifact {
   readonly type: string;
   readonly title?: string;
   readonly data: JsonValue;
 }
 
+/** Backend approval outcome, including cancellation caused by Turn termination. */
 export type AgentBackendApprovalDecision = AgentApprovalDecision | 'cancel';
 
+/** Decision returned to a backend-owned approval request. */
 export interface AgentBackendApprovalResult {
   readonly approvalId: string;
   readonly decision: AgentBackendApprovalDecision;
 }
 
+/** Session identity and trust metadata provided when a backend Session starts. */
 export interface AgentBackendSessionDescriptor {
   readonly agentId: string;
   readonly sessionId: string;
@@ -309,6 +355,7 @@ export interface AgentBackendSessionDescriptor {
   readonly inputTrust: AgentInputTrust;
 }
 
+/** Full backend Session-start contract after Tools and capabilities are filtered. */
 export interface AgentBackendSessionInput
   extends AgentBackendSessionDescriptor {
   /** Natural-language identity, role, goals, and operating context. */
@@ -318,6 +365,7 @@ export interface AgentBackendSessionInput
   readonly backendSessionId?: string;
 }
 
+/** Stream protocol emitted by a backend and normalized into public `AgentEvent`s. */
 export type AgentBackendEvent =
   | { readonly type: 'message.delta'; readonly text: string }
   | { readonly type: 'message.completed'; readonly text: string }
@@ -344,6 +392,7 @@ export type AgentBackendEvent =
       readonly metadata?: Readonly<Record<string, JsonValue>>;
     };
 
+/** Backend-owned execution context for one Agent Session. */
 export interface AgentBackendSession {
   readonly id?: string;
   runStream(
@@ -361,6 +410,7 @@ export interface AgentBackendSession {
   close(): Promise<void>;
 }
 
+/** Success or structured failure returned to a backend-requested host Tool. */
 export type AgentBackendToolResult =
   | {
       readonly type: 'success';
@@ -373,12 +423,14 @@ export type AgentBackendToolResult =
       readonly error: AgentEventError;
     };
 
+/** Provider adapter that declares features and creates isolated backend Sessions. */
 export interface AgentBackend {
   readonly name: string;
   readonly backendCapabilities: Readonly<AgentBackendCapabilities>;
   startSession(input: AgentBackendSessionInput): Promise<AgentBackendSession>;
 }
 
+/** Host-selected identity, audience, permissions, and narrowed limits for a Session. */
 export interface AgentSessionOptions {
   readonly id?: string;
   readonly purpose: string;
@@ -390,10 +442,12 @@ export interface AgentSessionOptions {
   readonly limits?: AgentRuntimeLimits;
 }
 
+/** Session options plus the backend identifier that must be resumed. */
 export interface AgentResumeSessionOptions extends AgentSessionOptions {
   readonly backendSessionId: string;
 }
 
+/** Agent-wide or Session-narrowed safety limits enforced by the runtime. */
 export interface AgentRuntimeLimits {
   /** Maximum number of Tool calls accepted during one Turn. */
   readonly maxToolCallsPerTurn?: number;
@@ -401,6 +455,7 @@ export interface AgentRuntimeLimits {
   readonly approvalTimeoutMs?: number;
 }
 
+/** Persisted lifecycle state for preparing an Agent's workspace. */
 export type AgentWorkspaceStatus =
   | 'fresh'
   | 'bootstrapping'
@@ -437,6 +492,7 @@ export interface AgentWorkspaceMetadataStore {
   ): Promise<void>;
 }
 
+/** Retry, Tool-call, and elapsed-time bounds for workspace bootstrap. */
 export interface AgentBootstrapLimits {
   /** Attempts allowed for one bootstrap version. Defaults to 3. */
   readonly maxAttempts?: number;
@@ -452,6 +508,7 @@ export interface AgentBootstrapContext {
   readonly data: JsonValue;
 }
 
+/** Workspace store, version, permissions, context, and limits for bootstrap. */
 export interface AgentBootstrapOptions {
   readonly workspace: AgentWorkspaceMetadataStore;
   /** Bump when the host wants the Agent to revise its operating state. */
@@ -463,6 +520,7 @@ export interface AgentBootstrapOptions {
   readonly limits?: AgentBootstrapLimits;
 }
 
+/** Bootstrap action taken and the resulting persisted workspace metadata. */
 export interface AgentBootstrapResult {
   readonly action: 'bootstrapped' | 'resumed';
   readonly metadata: AgentWorkspaceMetadata;
@@ -470,6 +528,10 @@ export interface AgentBootstrapResult {
   readonly run?: AgentRunResult;
 }
 
+/**
+ * Host-facing conversation or task context. It runs one Turn at a time,
+ * resolves approvals, supports interruption when declared, and owns cleanup.
+ */
 export interface AgentSession {
   readonly id: string;
   readonly purpose: string;
@@ -491,6 +553,7 @@ export interface AgentSession {
   close(): Promise<void>;
 }
 
+/** Immutable definition and host-owned integrations used to create an Agent. */
 export interface AgentOptions {
   /** Stable application-owned identity used for events and persisted state. */
   readonly id: string;
@@ -508,6 +571,10 @@ export interface AgentOptions {
   readonly limits?: AgentRuntimeLimits;
 }
 
+/**
+ * Managed character runtime created by `createAgent`. It exposes backend
+ * feature flags and owns bootstrap, Session creation/resume, and cleanup.
+ */
 export interface Agent {
   readonly id: string;
   readonly brief: string;
@@ -518,6 +585,7 @@ export interface Agent {
   close(): Promise<void>;
 }
 
+/** JSON-safe error snapshot embedded in events and workspace metadata. */
 export interface AgentEventError {
   readonly name: string;
   readonly code: string;
@@ -525,6 +593,7 @@ export interface AgentEventError {
   readonly details?: Readonly<Record<string, JsonValue>>;
 }
 
+/** Correlation, time, and Agent/Session identity shared by every public event. */
 export interface AgentEventBase<TType extends string> {
   readonly id: string;
   readonly type: TType;
@@ -534,32 +603,38 @@ export interface AgentEventBase<TType extends string> {
   readonly turnId?: string;
 }
 
+/** Emitted before the first Turn of a newly started Session. */
 export interface AgentSessionStartedEvent
   extends AgentEventBase<'session.started'> {
   readonly purpose: string;
 }
 
+/** Emitted before the first Turn of a resumed backend Session. */
 export interface AgentSessionResumedEvent
   extends AgentEventBase<'session.resumed'> {
   readonly backendSessionId: string;
 }
 
+/** Marks the beginning of a Turn after any pending Session lifecycle event. */
 export interface AgentTurnStartedEvent extends AgentEventBase<'turn.started'> {
   readonly turnId: string;
 }
 
+/** Incremental assistant text from a streaming backend. */
 export interface AgentMessageDeltaEvent
   extends AgentEventBase<'message.delta'> {
   readonly turnId: string;
   readonly text: string;
 }
 
+/** Final transformed assistant text for the Turn. */
 export interface AgentMessageCompletedEvent
   extends AgentEventBase<'message.completed'> {
   readonly turnId: string;
   readonly text: string;
 }
 
+/** Sanitized arguments for a host Tool requested by the backend. */
 export interface AgentToolRequestedEvent
   extends AgentEventBase<'tool.requested'> {
   readonly turnId: string;
@@ -568,12 +643,14 @@ export interface AgentToolRequestedEvent
   readonly arguments: unknown;
 }
 
+/** Indicates that policy and approval passed and the host Tool handler is starting. */
 export interface AgentToolStartedEvent extends AgentEventBase<'tool.started'> {
   readonly turnId: string;
   readonly toolCallId: string;
   readonly toolId: string;
 }
 
+/** Records a host Tool handler's successfully transformed output. */
 export interface AgentToolCompletedEvent
   extends AgentEventBase<'tool.completed'> {
   readonly turnId: string;
@@ -582,6 +659,7 @@ export interface AgentToolCompletedEvent
   readonly output: unknown;
 }
 
+/** Records a structured host Tool failure before it is returned or ends the Turn. */
 export interface AgentToolFailedEvent extends AgentEventBase<'tool.failed'> {
   readonly turnId: string;
   readonly toolCallId: string;
@@ -589,12 +667,14 @@ export interface AgentToolFailedEvent extends AgentEventBase<'tool.failed'> {
   readonly error: AgentEventError;
 }
 
+/** Approval prompt emitted when a Tool or backend operation needs host authority. */
 export interface AgentApprovalRequestedEvent
   extends AgentEventBase<'approval.requested'> {
   readonly turnId: string;
   readonly request: AgentApprovalRequest;
 }
 
+/** Approval decision, optionally including an automatic handler error that caused denial. */
 export interface AgentApprovalResolvedEvent
   extends AgentEventBase<'approval.resolved'> {
   readonly turnId: string;
@@ -604,34 +684,46 @@ export interface AgentApprovalResolvedEvent
   readonly error?: AgentEventError;
 }
 
+/** Announces a validated structured Artifact before Turn completion. */
 export interface AgentArtifactCreatedEvent
   extends AgentEventBase<'artifact.created'> {
   readonly turnId: string;
   readonly artifact: AgentArtifact;
 }
 
+/** Successful terminal event containing the same result returned by `run()`. */
 export interface AgentTurnCompletedEvent
   extends AgentEventBase<'turn.completed'> {
   readonly turnId: string;
   readonly result: AgentRunResult;
 }
 
+/** Terminal event used when caller, host, or backend interruption ends a Turn. */
 export interface AgentTurnInterruptedEvent
   extends AgentEventBase<'turn.interrupted'> {
   readonly turnId: string;
   readonly error: AgentEventError;
 }
 
+/** Terminal event used when a non-interruption error ends a Turn. */
 export interface AgentTurnFailedEvent extends AgentEventBase<'turn.failed'> {
   readonly turnId: string;
   readonly error: AgentEventError;
 }
 
+/** Emitted only when host closure interrupts an active Turn. */
 export interface AgentSessionClosedEvent
   extends AgentEventBase<'session.closed'> {
   readonly reason?: string;
 }
 
+/**
+ * Public event stream for Session, Turn, message, Tool, approval, and Artifact
+ * activity. Every begun Turn produces exactly one of `turn.completed`,
+ * `turn.interrupted`, or `turn.failed`; `session.started` or `session.resumed`
+ * appears only before the Session's first Turn, while `session.closed` appears
+ * only when host closure interrupts an active Turn.
+ */
 export type AgentEvent =
   | AgentSessionStartedEvent
   | AgentSessionResumedEvent

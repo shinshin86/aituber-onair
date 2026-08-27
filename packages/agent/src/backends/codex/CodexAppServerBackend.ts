@@ -99,12 +99,14 @@ interface PendingCodexApproval {
   readonly resolve: (result: unknown) => void;
 }
 
+/** Creates a Codex app-server backend using the default process dependencies. */
 export function createCodexAppServerBackend(
   options: CodexAppServerBackendOptions
 ): CodexAppServerBackend {
   return createCodexAppServerBackendRuntime(options);
 }
 
+/** Internal dependency-injection variant used to test process integration. */
 export function createCodexAppServerBackendRuntime(
   options: CodexAppServerBackendOptions,
   dependencies: CodexAppServerClientDependencies = {}

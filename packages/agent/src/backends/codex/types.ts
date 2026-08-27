@@ -14,6 +14,7 @@ import type {
   CodexAppServerSandboxMode,
 } from './client.js';
 
+/** Fixed feature flags implemented by the Codex app-server backend. */
 export interface CodexAppServerBackendCapabilities
   extends AgentBackendCapabilities {
   readonly text: true;
@@ -25,6 +26,7 @@ export interface CodexAppServerBackendCapabilities
   readonly detailedEvents: true;
 }
 
+/** Minimum-version policy and optional custom acceptance rule for the Codex CLI. */
 export interface CodexAppServerCompatibility {
   /** Defaults to CODEX_APP_SERVER_MINIMUM_VERSION. */
   readonly minimumVersion?: string;
@@ -34,6 +36,7 @@ export interface CodexAppServerCompatibility {
   readonly accept?: (actual: string, verified: string) => boolean;
 }
 
+/** Working directory, protocol timeouts, Thread policy, model, and diagnostics. */
 export interface CodexAppServerCommonOptions {
   readonly workingDirectory: string;
   readonly compatibility?: CodexAppServerCompatibility;
@@ -48,6 +51,7 @@ export interface CodexAppServerCommonOptions {
   readonly onDiagnostic?: (message: string) => void;
 }
 
+/** Requires either an explicit executable path or deliberate PATH lookup opt-in. */
 export type CodexAppServerExecutableOptions =
   | {
       readonly codexPath: string;
@@ -58,20 +62,24 @@ export type CodexAppServerExecutableOptions =
       readonly allowPathLookup: true;
     };
 
+/** Complete configuration accepted by `createCodexAppServerBackend`. */
 export type CodexAppServerBackendOptions = CodexAppServerCommonOptions &
   CodexAppServerExecutableOptions;
 
+/** Pagination and visibility filters for Codex model discovery. */
 export interface CodexAppServerModelListOptions {
   readonly cursor?: string | null;
   readonly limit?: number | null;
   readonly includeHidden?: boolean | null;
 }
 
+/** Resumable Codex Thread Session with backend-specific Turn steering. */
 export interface CodexAppServerBackendSession extends AgentBackendSession {
   readonly id: string;
   steer(input: AgentRunInput): Promise<void>;
 }
 
+/** Node.js backend that manages Codex Threads, account reads, and model discovery. */
 export interface CodexAppServerBackend extends AgentBackend {
   readonly kind: 'codex-app-server';
   readonly backendCapabilities: Readonly<CodexAppServerBackendCapabilities>;
