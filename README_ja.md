@@ -317,6 +317,19 @@ npm install @aituber-onair/noise
 npm install @aituber-onair/comment-intelligence
 ```
 
+### [@aituber-onair/agent](./packages/agent/README.ja.md)
+
+<p align="center">
+  <img src="./packages/agent/images/aituber-onair-agent.png" alt="AITuber OnAir Agent ロゴ" width="360" />
+</p>
+
+プロダクトの中でAIキャラクターに仕事を与える組み込み型ランタイム。
+ホスト管理のTool、policy、approval、hook、eventと、Chat／Codex app-serverバックエンドを提供します。
+
+```bash
+npm install @aituber-onair/agent
+```
+
 ### [@aituber-onair/bushitsu-client](./packages/bushitsu-client/README_ja.md)
 
 <p align="center">
@@ -359,6 +372,7 @@ aituber-onair/
     ├── manneri/          # 会話パターン検出
     ├── noise/            # 生成後の返答書き換え
     ├── comment-intelligence/ # ライブコメントのフィルタリングと文脈生成
+    ├── agent/            # 組み込み型AIキャラクターAgentランタイム
     ├── bushitsu-client/  # WebSocket チャットクライアント + React hooks
     └── kizuna/           # 視聴者との関係性 / 絆システム
 ```

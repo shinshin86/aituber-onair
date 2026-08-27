@@ -7,10 +7,17 @@
 An embeddable runtime for giving an AI character a job inside a JavaScript or
 TypeScript product.
 
-> **Status: unreleased development version.** This package is implemented and
-> tested inside the AITuber OnAir monorepo but is not published to npm yet
-> (`version 0.0.0`, `private`). The documented API describes the current
-> implementation.
+> This package is an alpha release. Its public API may change before a stable
+> release.
+
+```bash
+npm install @aituber-onair/agent @aituber-onair/chat
+```
+
+`@aituber-onair/chat` is an optional peer dependency needed only for the
+`@aituber-onair/agent/chat` entry point. The Codex app-server entry point needs
+a locally installed Codex CLI; see
+[Codex app-server integration](#codex-app-server-integration).
 
 ## What this package is
 

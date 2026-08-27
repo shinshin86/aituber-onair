@@ -7,9 +7,17 @@
 JavaScript／TypeScriptプロダクトの中で、AIキャラクターに仕事を与えるための
 組み込み型ランタイムです。
 
-> **Status: 未リリースの開発版。** 本パッケージはAITuber OnAirモノレポ内で
-> 実装・テスト済みですが、npmへはまだ公開されていません（`version 0.0.0`、
-> `private`）。このREADMEは現在の実装を説明しています。
+> このパッケージはα版です。安定版になるまでに公開APIが変更される可能性が
+> あります。
+
+```bash
+npm install @aituber-onair/agent @aituber-onair/chat
+```
+
+`@aituber-onair/chat`は、`@aituber-onair/agent/chat` entry pointを使う場合のみ
+必要なoptional peer dependencyです。Codex app-server entry pointにはローカルに
+インストールされたCodex CLIが必要です。詳しくは
+[Codex app-serverとの統合](#codex-app-serverとの統合)を参照してください。
 
 ## このパッケージについて
 

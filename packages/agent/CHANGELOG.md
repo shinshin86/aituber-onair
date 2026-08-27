@@ -1,15 +1,9 @@
 # @aituber-onair/agent
 
-## Unreleased
+## 0.0.1
 
-### Fixed
-
-- Ignores late Codex app-server responses for timed-out requests without
-  terminating an otherwise healthy transport.
-- Lets `run()` and `runStream()` answer approval requests through a guarded
-  host callback, with actionable timeout guidance for unattended `run()` calls.
-- Guarantees that error details embedded in Agent events contain only JSON
-  values, converting or dropping unsupported runtime values.
+This package is an alpha release. Its public API may change before a stable
+release.
 
 ### Added
 
@@ -22,14 +16,17 @@
 - Adds a Node.js Codex app-server backend for Codex CLI 0.136.0 or later,
   verified against 0.145.0, with streamed Turns, resume support, approvals,
   safe artifacts, and compatibility checks without an exact version pin.
-- Adds a live-stream operations staff example backed by a real Codex app-server,
-  server-side comment preprocessing, validated generated artifacts, and an
-  HTTP/SSE dashboard client.
-
-### Changed
-
-- Renames backend feature-flag fields and Chat backend options from
-  `capabilities` to `backendCapabilities` to distinguish them from
+- Adds guarded `onApprovalRequest` handling for `run()` and `runStream()`, with
+  actionable timeout guidance for unattended `run()` calls.
+- Defines backend feature-flag fields and Chat backend options under
+  `backendCapabilities` rather than `capabilities` to distinguish them from
   host-granted capability descriptors.
-- Adds phase-specific hook value typing and comprehensive JSDoc for the public
-  API surface.
+- Adds phase-specific hook value typing and comprehensive public API JSDoc.
+- Adds JSON-safe error details in Agent events, converting or dropping
+  unsupported runtime values.
+- Adds timeout-safe Codex transport behavior that ignores late responses for
+  timed-out requests without terminating an otherwise healthy transport.
+- Adds `codex-workspace-server`, `stream-operations-staff`, and
+  `channel-strategy-staff` examples covering restricted workspaces, live-stream
+  operations, Chat-backed strategy work, validated artifacts, and HTTP/SSE
+  dashboard integration.
