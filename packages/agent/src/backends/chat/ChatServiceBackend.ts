@@ -32,6 +32,7 @@ import type {
   JsonValue,
 } from '../../types.js';
 import { AsyncEventQueue } from '../../core/AsyncEventQueue.js';
+import { sanitizeJsonRecord } from '../../internal/eventError.js';
 import {
   buildChatSessionMessages,
   buildChatTurnMessages,
@@ -750,16 +751,13 @@ function toToolResultBlock(result: AgentBackendToolResult): ToolResultBlock {
 }
 
 function toSerializableEventError(error: AgentEventError): JsonValue {
+  const details = sanitizeJsonRecord(error.details);
   return {
     name: error.name,
     code: error.code,
     message: error.message,
-    ...(error.details ? { details: sanitizeJsonValue(error.details) } : {}),
+    ...(details ? { details } : {}),
   };
-}
-
-function sanitizeJsonValue(value: unknown): JsonValue {
-  return JSON.parse(serializeChatData(value, 'Agent Tool error details'));
 }
 
 function toAgentUsage(

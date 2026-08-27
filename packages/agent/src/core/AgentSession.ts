@@ -21,6 +21,7 @@ import {
   sanitizeToolArguments,
   snapshotToolArguments,
 } from '../tools/sanitize.js';
+import { createAgentEventError } from '../internal/eventError.js';
 import { validateToolInput } from '../tools/schemaValidation.js';
 import type {
   AgentApprovalDecision,
@@ -1134,12 +1135,7 @@ export class AgentSessionRuntime implements AgentSession {
 }
 
 function toEventError(error: AgentError): AgentEventError {
-  return {
-    name: error.name,
-    code: error.code,
-    message: error.message,
-    details: error.details,
-  };
+  return createAgentEventError(error);
 }
 
 function describeError(error: unknown): string {

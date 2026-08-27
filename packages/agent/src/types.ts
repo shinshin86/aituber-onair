@@ -522,7 +522,7 @@ export interface AgentEventError {
   readonly name: string;
   readonly code: string;
   readonly message: string;
-  readonly details?: Readonly<Record<string, unknown>>;
+  readonly details?: Readonly<Record<string, JsonValue>>;
 }
 
 export interface AgentEventBase<TType extends string> {

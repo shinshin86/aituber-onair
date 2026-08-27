@@ -8,6 +8,8 @@
   terminating an otherwise healthy transport.
 - Lets `run()` and `runStream()` answer approval requests through a guarded
   host callback, with actionable timeout guidance for unattended `run()` calls.
+- Guarantees that error details embedded in Agent events contain only JSON
+  values, converting or dropping unsupported runtime values.
 
 ### Added
 

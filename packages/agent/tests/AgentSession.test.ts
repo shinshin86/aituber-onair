@@ -1,5 +1,6 @@
 import { createAgent } from '../src/index.js';
 import {
+  AgentBackendError,
   AgentBackendProtocolError,
   AgentHookError,
   AgentInterruptedError,
@@ -289,6 +290,40 @@ describe('AgentSession', () => {
     expect(events.at(-1)).toMatchObject({
       type: 'turn.failed',
       error: { code: 'AGENT_BACKEND_ERROR' },
+    });
+  });
+
+  it('emits JSON-safe details for errors carrying non-JSON values', async () => {
+    const details: Record<string, unknown> = {
+      callback: () => undefined,
+      missing: undefined,
+      count: 42n,
+      finite: 7,
+      nested: [undefined, () => undefined, 1],
+    };
+    details.circular = details;
+    const backend = new MockBackend(async function* () {
+      yield { type: 'message.delta', text: 'partial' };
+      throw new AgentBackendError('provider details failed', { details });
+    });
+    const agent = createAgent({ ...agentDefinition, backend });
+    const session = await startSession(agent);
+    const events: AgentEvent[] = [];
+
+    await expect(
+      consume(session.runStream({ instruction: 'Fail safely' }), events)
+    ).rejects.toBeInstanceOf(AgentBackendError);
+
+    const terminal = events.at(-1);
+    expect(terminal?.type).toBe('turn.failed');
+    if (terminal?.type !== 'turn.failed') return;
+    const roundTripped = JSON.parse(
+      JSON.stringify(terminal.error.details)
+    ) as unknown;
+    expect(roundTripped).toEqual({
+      count: '42',
+      finite: 7,
+      nested: [null, null, 1],
     });
   });
 
