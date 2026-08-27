@@ -34,6 +34,18 @@ export interface AgentRunInput<
 export interface AgentRunOptions {
   readonly signal?: AbortSignal;
   readonly timeoutMs?: number;
+  /**
+   * Answers approval requests for both `run()` and `runStream()`. Throwing or
+   * returning an invalid decision denies the request and records the error.
+   */
+  readonly onApprovalRequest?: (
+    request: AgentApprovalRequest,
+    context: {
+      readonly sessionId: string;
+      readonly turnId: string;
+      readonly signal: AbortSignal;
+    }
+  ) => AgentApprovalDecision | Promise<AgentApprovalDecision>;
 }
 
 export interface AgentArtifactSource {
@@ -540,6 +552,8 @@ export interface AgentApprovalResolvedEvent
   readonly turnId: string;
   readonly requestId: string;
   readonly decision: AgentApprovalDecision;
+  /** Present when an automatic approval handler failed or returned invalid data. */
+  readonly error?: AgentEventError;
 }
 
 export interface AgentArtifactCreatedEvent

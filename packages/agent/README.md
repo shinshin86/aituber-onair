@@ -173,7 +173,7 @@ export function createStreamStaff(apiKey: string) {
     tools: [analyzeComments],
     policy: {
       defaultDecision: 'deny',
-      allowTools: ['comments.analyze'],
+      requireApproval: { tools: ['comments.analyze'] },
     },
   });
 }
@@ -192,13 +192,19 @@ const publicSession = await agent.startSession({
   allowedTools: ['comments.analyze'],
 });
 
-const result = await publicSession.run({
-  instruction: 'Respond only when a reply is useful.',
-  input: {
-    kind: 'viewer-comment',
-    data: { text: viewerComment },
+const result = await publicSession.run(
+  {
+    instruction: 'Respond only when a reply is useful.',
+    input: {
+      kind: 'viewer-comment',
+      data: { text: viewerComment },
+    },
   },
-});
+  {
+    onApprovalRequest: async (request, { signal }) =>
+      (await showApprovalDialog(request, { signal })) ? 'allow-once' : 'deny',
+  }
+);
 ```
 
 Built-in Chat provider names use `ChatServiceFactory` capability metadata as a
@@ -226,11 +232,18 @@ when `agent.resumeSession(...)` is required.
 - Tool input schemas support `type`, `properties`, `required`, `items`, `enum`,
   `description`, and boolean `additionalProperties`. Unsupported keywords are
   rejected when the Agent is created instead of being silently ignored.
-- Approval requests wait for `session.resolveApproval(requestId, decision)`
-  up to `limits.approvalTimeoutMs` (default 30 seconds) and are denied on
-  timeout, abort, or Session close. Raise the limit in `createAgent` when a
-  human operator answers approvals. `limits.maxToolCallsPerTurn` (default 8)
-  bounds runtime Tool executions per Turn.
+- With `session.run(...)`, answer approvals through
+  `options.onApprovalRequest`. With `session.runStream(...)`, either use the
+  same callback or call `session.resolveApproval(requestId, decision)` while
+  consuming events. The approval timer starts when `approval.requested` is
+  emitted, not when a stream consumer reads it, and waits up to
+  `limits.approvalTimeoutMs` (default 30 seconds). Timeout, abort, and Session
+  close deny the request. A callback that throws or returns an invalid decision
+  also denies the request and records its error on `approval.resolved` without
+  turning the callback bug into the Turn's failure reason. Raise the limit in
+  `createAgent` when a human operator answers approvals.
+- `limits.maxToolCallsPerTurn` (default 8) bounds runtime Tool executions per
+  Turn.
 - `sensitiveFields` accepts dot-separated object paths. Matching input values
   are redacted in Tool and approval events, while the original validated values
   are copied into the immutable snapshot passed to the host handler. Approval

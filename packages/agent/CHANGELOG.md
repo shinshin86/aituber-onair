@@ -6,6 +6,8 @@
 
 - Ignores late Codex app-server responses for timed-out requests without
   terminating an otherwise healthy transport.
+- Lets `run()` and `runStream()` answer approval requests through a guarded
+  host callback, with actionable timeout guidance for unattended `run()` calls.
 
 ### Added
 

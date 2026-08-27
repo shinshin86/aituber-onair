@@ -165,7 +165,7 @@ export function createStreamStaff(apiKey: string) {
     tools: [analyzeComments],
     policy: {
       defaultDecision: 'deny',
-      allowTools: ['comments.analyze'],
+      requireApproval: { tools: ['comments.analyze'] },
     },
   });
 }
@@ -183,13 +183,19 @@ const publicSession = await agent.startSession({
   allowedTools: ['comments.analyze'],
 });
 
-const result = await publicSession.run({
-  instruction: '返信する価値がある場合だけ応答してください。',
-  input: {
-    kind: 'viewer-comment',
-    data: { text: viewerComment },
+const result = await publicSession.run(
+  {
+    instruction: '返信する価値がある場合だけ応答してください。',
+    input: {
+      kind: 'viewer-comment',
+      data: { text: viewerComment },
+    },
   },
-});
+  {
+    onApprovalRequest: async (request, { signal }) =>
+      (await showApprovalDialog(request, { signal })) ? 'allow-once' : 'deny',
+  }
+);
 ```
 
 組み込みChat provider名を指定した場合は、`ChatServiceFactory`のcapability metadataを
@@ -215,11 +221,16 @@ capabilityは`interruption: false`と`sessionResume: false`を宣言します。
 - Tool入力schemaは、`type`、`properties`、`required`、`items`、`enum`、
   `description`、boolean値の`additionalProperties`に対応します。未対応のkeywordは
   無視せず、Agent作成時に拒否します。
-- 承認要求は`session.resolveApproval(requestId, decision)`の応答を
-  `limits.approvalTimeoutMs`（既定30秒）まで待ち、timeout、abort、Session終了時は
-  拒否として扱います。人間の運営者が承認へ応答する場合は、`createAgent`で上限を
-  引き上げてください。`limits.maxToolCallsPerTurn`（既定8回）は1 Turnあたりの
-  ランタイムTool実行数を制限します。
+- `session.run(...)`では、`options.onApprovalRequest`から承認へ応答します。
+  `session.runStream(...)`では、同じcallbackを使うか、eventを読みながら
+  `session.resolveApproval(requestId, decision)`を呼び出します。承認timerはstreamの
+  consumerがeventを読む時点ではなく、`approval.requested`が発行された時点で開始し、
+  `limits.approvalTimeoutMs`（既定30秒）まで待ちます。timeout、abort、Session終了時は
+  拒否として扱います。callbackがthrowするか不正なdecisionを返した場合も拒否し、
+  callbackのbugをTurnの失敗理由へ変えず、errorを`approval.resolved`へ記録します。
+  人間の運営者が承認へ応答する場合は、`createAgent`で上限を引き上げてください。
+- `limits.maxToolCallsPerTurn`（既定8回）は1 TurnあたりのランタイムTool実行数を
+  制限します。
 - `sensitiveFields`には、ドット区切りのobject pathを指定できます。一致する入力値は
   Tool eventと承認eventでは秘匿化します。ホストのhandlerには、承認時と同じ入力値を
   固定した変更不可のsnapshotを渡します。
