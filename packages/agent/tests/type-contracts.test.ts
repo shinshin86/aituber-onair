@@ -137,7 +137,7 @@ describe('public type surface', () => {
     expect(capability.id).toBe('workspace.local');
   });
 
-  it('types hook values by phase and accepts legacy unknown hooks', () => {
+  it('types hook values by phase and constrains explicit unknown hooks', () => {
     const backend = {
       name: 'type-contract-backend',
       backendCapabilities: {
@@ -153,18 +153,31 @@ describe('public type surface', () => {
         throw new Error('Type contract only');
       },
     } satisfies AgentBackend;
-    const explicitLegacyHook: AgentHook<unknown> = {
-      id: 'explicit-legacy',
+    const contextUnknownHook: AgentHook<unknown> = {
+      id: 'context-unknown',
       phase: 'context',
       onError: 'skip',
       run: ({ value }) => value,
     };
-    const defaultLegacyHook: AgentHook = {
-      id: 'default-legacy',
+    const beforeToolUnknownHook: AgentHook<unknown> = {
+      id: 'before-tool-unknown',
       phase: 'before-tool',
       onError: 'skip',
       run: ({ value }: AgentHookContext<unknown>) => value,
     };
+    const outputUnknownHook: AgentHook<unknown> = {
+      id: 'output-unknown',
+      phase: 'output',
+      onError: 'skip',
+      run: ({ value }) => value,
+    };
+    const preserveUnknownHookType = (
+      hook: AgentHook<unknown>
+    ): AgentHook<unknown> => hook;
+    const nonNarrowedUnknownHook = preserveUnknownHookType({
+      ...contextUnknownHook,
+      id: 'non-narrowed-unknown',
+    });
 
     createAgent({
       id: 'hook-contract-agent',
@@ -210,8 +223,12 @@ describe('public type surface', () => {
           onError: 'skip',
           run: () => 'invalid',
         },
-        explicitLegacyHook,
-        defaultLegacyHook,
+        contextUnknownHook,
+        beforeToolUnknownHook,
+        // @ts-expect-error Typed output phases cannot return unknown values.
+        outputUnknownHook,
+        // @ts-expect-error A non-narrowed unknown hook may be a typed phase.
+        nonNarrowedUnknownHook,
       ],
     });
   });

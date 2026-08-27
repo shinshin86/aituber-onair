@@ -279,7 +279,10 @@ type AgentHookDefinition<TPhase extends AgentHookPhase, TInput, TOutput> = {
 
 /**
  * Phase-discriminated host extension that may transform a pipeline value.
- * Explicit generic arguments preserve compatibility with legacy unknown hooks.
+ * By default, each phase uses its input and output types from
+ * `AgentHookValueMap`. An explicit `AgentHook<unknown>` is assignable after
+ * narrowing to `context`, `before-tool`, or `after-tool`, whose phase values are
+ * unknown. Hooks for other phases must use their phase-specific value types.
  */
 export type AgentHook<TInput = AgentHookInferredValue, TOutput = TInput> = {
   [TPhase in AgentHookPhase]: AgentHookDefinition<
