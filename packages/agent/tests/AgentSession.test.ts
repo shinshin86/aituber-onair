@@ -73,10 +73,13 @@ describe('AgentSession', () => {
         id: 'normalize-input',
         phase: 'input',
         onError: 'fail-turn',
-        run: ({ value }) => ({
-          ...(value as Record<string, unknown>),
-          data: { text: 'normalized' },
-        }),
+        run: ({ value }) =>
+          value
+            ? {
+                ...value,
+                data: { text: 'normalized' },
+              }
+            : value,
       },
       {
         id: 'enrich-context',

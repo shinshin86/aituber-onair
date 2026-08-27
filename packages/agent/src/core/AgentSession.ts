@@ -33,6 +33,8 @@ import type {
   AgentEvent,
   AgentEventError,
   AgentHook,
+  AgentHookPhase,
+  AgentHookValueMap,
   AgentInputTrust,
   AgentPolicy,
   AgentRunInput,
@@ -432,11 +434,7 @@ export class AgentSessionRuntime implements AgentSession {
               usage: event.usage,
               backendMetadata: event.metadata,
             };
-            runResult = (await this.runHookPhase(
-              turn,
-              'output',
-              candidate
-            )) as AgentRunResult;
+            runResult = await this.runHookPhase(turn, 'output', candidate);
             assertRunResult(runResult, {
               agentId: this.agentId,
               sessionId: this.id,
@@ -990,11 +988,11 @@ export class AgentSessionRuntime implements AgentSession {
     pending.signal.removeEventListener('abort', pending.onAbort);
   }
 
-  private runHookPhase(
+  private runHookPhase<TPhase extends AgentHookPhase>(
     turn: ActiveTurn,
-    phase: Parameters<typeof runHooks>[1],
-    value: unknown
-  ): Promise<unknown> {
+    phase: TPhase,
+    value: AgentHookValueMap[TPhase]['input']
+  ): Promise<AgentHookValueMap[TPhase]['output']> {
     if (turn.controller.signal.aborted) {
       return Promise.reject(turn.controller.signal.reason);
     }

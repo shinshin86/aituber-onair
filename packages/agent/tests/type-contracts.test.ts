@@ -14,6 +14,8 @@ import type {
   AgentConversationInput,
   AgentEvent,
   AgentHook,
+  AgentHookContext,
+  AgentHookValueMap,
   AgentOptions,
   AgentPolicy,
   AgentPolicyConfig,
@@ -133,6 +135,71 @@ describe('public type surface', () => {
     };
 
     expect(capability.id).toBe('workspace.local');
+  });
+
+  it('types hook values by phase and accepts legacy unknown hooks', () => {
+    const backend = {
+      name: 'type-contract-backend',
+      backendCapabilities: {
+        text: true,
+        streaming: false,
+        tools: false,
+        interruption: false,
+        sessionResume: false,
+        approvals: false,
+        detailedEvents: false,
+      },
+      async startSession() {
+        throw new Error('Type contract only');
+      },
+    } satisfies AgentBackend;
+    const explicitLegacyHook: AgentHook<unknown> = {
+      id: 'explicit-legacy',
+      phase: 'context',
+      onError: 'skip',
+      run: ({ value }) => value,
+    };
+    const defaultLegacyHook: AgentHook = {
+      id: 'default-legacy',
+      phase: 'before-tool',
+      onError: 'skip',
+      run: ({ value }: AgentHookContext<unknown>) => value,
+    };
+
+    createAgent({
+      id: 'hook-contract-agent',
+      brief: 'Exercise hook type contracts.',
+      backend,
+      hooks: [
+        {
+          id: 'typed-draft',
+          phase: 'draft-response',
+          onError: 'fail-turn',
+          run: ({ value }) => {
+            expectTypeOf(value).toEqualTypeOf<string>();
+            return value;
+          },
+        },
+        {
+          id: 'typed-after-turn',
+          phase: 'after-turn',
+          onError: 'skip',
+          run: ({ value }) => {
+            expectTypeOf(value).toEqualTypeOf<
+              AgentHookValueMap['after-turn']['input']
+            >();
+            if (value.status === 'completed') {
+              expectTypeOf(value.result).toEqualTypeOf<AgentRunResult>();
+            } else {
+              expectTypeOf(value.error.code).toEqualTypeOf<string>();
+            }
+            return value;
+          },
+        },
+        explicitLegacyHook,
+        defaultLegacyHook,
+      ],
+    });
   });
 
   it('exports Chat backend contracts without constructing a service', () => {

@@ -146,7 +146,7 @@ export async function createChannelStrategyController(
         phase: 'draft-response',
         onError: 'fail-turn',
         run: ({ value, turnId }) => {
-          if (typeof value === 'string') rawByTurn.set(turnId, value);
+          rawByTurn.set(turnId, value);
           return value;
         },
       },
@@ -160,9 +160,8 @@ export async function createChannelStrategyController(
             throw new Error('Codex completed without a text response.');
           }
           const proposal = parseAndValidateProposal(raw, evidenceSnapshot);
-          const result = value as AgentRunResult;
           return attachProposalArtifact(
-            result,
+            value,
             proposal,
             agentId,
             sessionId,

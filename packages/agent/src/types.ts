@@ -188,6 +188,41 @@ export type AgentHookPhase =
   | 'output'
   | 'after-turn';
 
+type AgentAfterTurnHookValue =
+  | {
+      readonly status: 'completed';
+      readonly result: AgentRunResult;
+    }
+  | {
+      readonly status: 'interrupted' | 'failed';
+      readonly error: AgentEventError;
+    };
+
+export interface AgentHookValueMap {
+  readonly input: {
+    readonly input: AgentRunInput['input'];
+    readonly output: AgentRunInput['input'];
+  };
+  readonly context: {
+    readonly input: AgentRunInput['context'];
+    readonly output: AgentRunInput['context'];
+  };
+  readonly 'before-tool': { readonly input: unknown; readonly output: unknown };
+  readonly 'after-tool': { readonly input: unknown; readonly output: unknown };
+  readonly 'draft-response': {
+    readonly input: string;
+    readonly output: string;
+  };
+  readonly output: {
+    readonly input: AgentRunResult;
+    readonly output: AgentRunResult;
+  };
+  readonly 'after-turn': {
+    readonly input: AgentAfterTurnHookValue;
+    readonly output: AgentAfterTurnHookValue;
+  };
+}
+
 export interface AgentHookContext<TValue = unknown> {
   readonly agentId: string;
   readonly sessionId: string;
@@ -196,12 +231,25 @@ export interface AgentHookContext<TValue = unknown> {
   readonly signal: AbortSignal;
 }
 
-export interface AgentHook<TInput = unknown, TOutput = TInput> {
+declare const agentHookInferredValue: unique symbol;
+type AgentHookInferredValue = typeof agentHookInferredValue;
+
+type AgentHookDefinition<TPhase extends AgentHookPhase, TInput, TOutput> = {
   readonly id: string;
-  readonly phase: AgentHookPhase;
+  readonly phase: TPhase;
   readonly onError: 'fail-turn' | 'skip';
   run(context: AgentHookContext<TInput>): Promise<TOutput> | TOutput;
-}
+};
+
+export type AgentHook<TInput = AgentHookInferredValue, TOutput = TInput> = {
+  [TPhase in AgentHookPhase]: AgentHookDefinition<
+    TPhase,
+    [TInput] extends [AgentHookInferredValue]
+      ? AgentHookValueMap[TPhase]['input']
+      : TInput,
+    [TInput] extends [AgentHookInferredValue] ? unknown : TOutput
+  >;
+}[AgentHookPhase];
 
 export interface AgentBackendCapabilities {
   readonly text: boolean;
