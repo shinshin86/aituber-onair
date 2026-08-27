@@ -287,7 +287,9 @@ export type AgentHook<TInput = AgentHookInferredValue, TOutput = TInput> = {
     [TInput] extends [AgentHookInferredValue]
       ? AgentHookValueMap[TPhase]['input']
       : TInput,
-    [TInput] extends [AgentHookInferredValue] ? unknown : TOutput
+    [TInput] extends [AgentHookInferredValue]
+      ? AgentHookValueMap[TPhase]['output']
+      : TOutput
   >;
 }[AgentHookPhase];
 

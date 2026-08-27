@@ -196,6 +196,20 @@ describe('public type surface', () => {
             return value;
           },
         },
+        // @ts-expect-error Draft response hooks must return a string.
+        {
+          id: 'invalid-draft-output',
+          phase: 'draft-response',
+          onError: 'fail-turn',
+          run: () => 42,
+        },
+        // @ts-expect-error After-turn hooks must return their phase value.
+        {
+          id: 'invalid-after-turn-output',
+          phase: 'after-turn',
+          onError: 'skip',
+          run: () => 'invalid',
+        },
         explicitLegacyHook,
         defaultLegacyHook,
       ],

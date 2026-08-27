@@ -198,10 +198,11 @@ describe('AgentSession', () => {
           id: 'invalid-artifact',
           phase: 'output',
           onError: 'fail-turn',
-          run: ({ value }) => ({
-            ...(value as AgentRunResult),
-            artifacts: [{ id: 'missing-fields' }],
-          }),
+          run: ({ value }) =>
+            ({
+              ...value,
+              artifacts: [{ id: 'missing-fields' }],
+            }) as unknown as AgentRunResult,
         },
       ],
     });
@@ -222,19 +223,20 @@ describe('AgentSession', () => {
           id: 'non-json-artifact',
           phase: 'output',
           onError: 'fail-turn',
-          run: ({ value, agentId, sessionId, turnId }) => ({
-            ...(value as AgentRunResult),
-            artifacts: [
-              {
-                id: 'invalid-data',
-                type: 'stream-alert',
-                version: 1,
-                data: { callback: () => undefined },
-                createdAt: '2026-08-02T00:00:00.000Z',
-                source: { agentId, sessionId, turnId },
-              },
-            ],
-          }),
+          run: ({ value, agentId, sessionId, turnId }) =>
+            ({
+              ...value,
+              artifacts: [
+                {
+                  id: 'invalid-data',
+                  type: 'stream-alert',
+                  version: 1,
+                  data: { callback: () => undefined },
+                  createdAt: '2026-08-02T00:00:00.000Z',
+                  source: { agentId, sessionId, turnId },
+                },
+              ],
+            }) as unknown as AgentRunResult,
         },
       ],
     });
