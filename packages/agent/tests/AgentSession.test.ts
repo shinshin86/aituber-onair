@@ -1,5 +1,6 @@
 import { createAgent } from '../src/index.js';
 import {
+  AgentBackendError,
   AgentBackendProtocolError,
   AgentHookError,
   AgentInterruptedError,
@@ -73,10 +74,13 @@ describe('AgentSession', () => {
         id: 'normalize-input',
         phase: 'input',
         onError: 'fail-turn',
-        run: ({ value }) => ({
-          ...(value as Record<string, unknown>),
-          data: { text: 'normalized' },
-        }),
+        run: ({ value }) =>
+          value
+            ? {
+                ...value,
+                data: { text: 'normalized' },
+              }
+            : value,
       },
       {
         id: 'enrich-context',
@@ -194,10 +198,11 @@ describe('AgentSession', () => {
           id: 'invalid-artifact',
           phase: 'output',
           onError: 'fail-turn',
-          run: ({ value }) => ({
-            ...(value as AgentRunResult),
-            artifacts: [{ id: 'missing-fields' }],
-          }),
+          run: ({ value }) =>
+            ({
+              ...value,
+              artifacts: [{ id: 'missing-fields' }],
+            }) as unknown as AgentRunResult,
         },
       ],
     });
@@ -218,19 +223,20 @@ describe('AgentSession', () => {
           id: 'non-json-artifact',
           phase: 'output',
           onError: 'fail-turn',
-          run: ({ value, agentId, sessionId, turnId }) => ({
-            ...(value as AgentRunResult),
-            artifacts: [
-              {
-                id: 'invalid-data',
-                type: 'stream-alert',
-                version: 1,
-                data: { callback: () => undefined },
-                createdAt: '2026-08-02T00:00:00.000Z',
-                source: { agentId, sessionId, turnId },
-              },
-            ],
-          }),
+          run: ({ value, agentId, sessionId, turnId }) =>
+            ({
+              ...value,
+              artifacts: [
+                {
+                  id: 'invalid-data',
+                  type: 'stream-alert',
+                  version: 1,
+                  data: { callback: () => undefined },
+                  createdAt: '2026-08-02T00:00:00.000Z',
+                  source: { agentId, sessionId, turnId },
+                },
+              ],
+            }) as unknown as AgentRunResult,
         },
       ],
     });
@@ -286,6 +292,40 @@ describe('AgentSession', () => {
     expect(events.at(-1)).toMatchObject({
       type: 'turn.failed',
       error: { code: 'AGENT_BACKEND_ERROR' },
+    });
+  });
+
+  it('emits JSON-safe details for errors carrying non-JSON values', async () => {
+    const details: Record<string, unknown> = {
+      callback: () => undefined,
+      missing: undefined,
+      count: 42n,
+      finite: 7,
+      nested: [undefined, () => undefined, 1],
+    };
+    details.circular = details;
+    const backend = new MockBackend(async function* () {
+      yield { type: 'message.delta', text: 'partial' };
+      throw new AgentBackendError('provider details failed', { details });
+    });
+    const agent = createAgent({ ...agentDefinition, backend });
+    const session = await startSession(agent);
+    const events: AgentEvent[] = [];
+
+    await expect(
+      consume(session.runStream({ instruction: 'Fail safely' }), events)
+    ).rejects.toBeInstanceOf(AgentBackendError);
+
+    const terminal = events.at(-1);
+    expect(terminal?.type).toBe('turn.failed');
+    if (terminal?.type !== 'turn.failed') return;
+    const roundTripped = JSON.parse(
+      JSON.stringify(terminal.error.details)
+    ) as unknown;
+    expect(roundTripped).toEqual({
+      count: '42',
+      finite: 7,
+      nested: [null, null, 1],
     });
   });
 

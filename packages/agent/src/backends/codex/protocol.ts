@@ -52,6 +52,7 @@ export interface CodexAppServerInitializeResponse {
   readonly platformOs: string;
 }
 
+/** Authentication mode and non-secret account metadata reported by Codex. */
 export type CodexAppServerAccount =
   | { readonly type: 'apiKey' }
   | {
@@ -64,11 +65,13 @@ export type CodexAppServerAccount =
       readonly usesCodexManagedCredentials: boolean;
     };
 
+/** Account discovery result, including whether Codex still requires sign-in. */
 export interface CodexAppServerAccountReadResult {
   readonly account: CodexAppServerAccount | null;
   readonly requiresOpenaiAuth: boolean;
 }
 
+/** Model metadata returned by the stable Codex model-list protocol. */
 export interface CodexAppServerModel {
   readonly id: string;
   readonly model: string;
@@ -82,6 +85,7 @@ export interface CodexAppServerModel {
   readonly [key: string]: unknown;
 }
 
+/** One cursor-paginated page of Codex models. */
 export interface CodexAppServerModelListResult {
   readonly data: readonly CodexAppServerModel[];
   readonly nextCursor: string | null;

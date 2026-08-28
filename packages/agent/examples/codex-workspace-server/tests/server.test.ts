@@ -73,7 +73,7 @@ function createMockBackend(
 ): AgentBackend {
   return {
     name: 'mock-backend',
-    capabilities: {
+    backendCapabilities: {
       text: true,
       streaming: true,
       tools: false,

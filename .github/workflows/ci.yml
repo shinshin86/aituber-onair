@@ -27,6 +27,7 @@ jobs:
           npm -w @aituber-onair/voice run build
           npm -w @aituber-onair/core run build
           npm -w @aituber-onair/comment-intelligence run build
+          npm -w @aituber-onair/agent run build
 
       - name: Run tests
         run: npm run test --workspaces

@@ -86,6 +86,40 @@ describe('Agent approval flow', () => {
     expect(approvalTool.execute).not.toHaveBeenCalled();
   });
 
+  it('allows run() to answer an approval request', async () => {
+    const { session } = await createApprovalSession();
+
+    const result = await session.run(
+      { instruction: 'Publish the report.' },
+      {
+        onApprovalRequest: (request, context) => {
+          expect(request.toolId).toBe('report.publish');
+          expect(context).toMatchObject({
+            sessionId: request.sessionId,
+            turnId: request.turnId,
+          });
+          expect(context.signal.aborted).toBe(false);
+          return 'allow-once';
+        },
+      }
+    );
+
+    expect(result.message).toBe('Published');
+    expect(approvalTool.execute).toHaveBeenCalledOnce();
+  });
+
+  it('never executes a Tool when the run() approval handler denies it', async () => {
+    const { session } = await createApprovalSession();
+
+    const running = session.run(
+      { instruction: 'Publish the report.' },
+      { onApprovalRequest: () => 'deny' }
+    );
+
+    await expect(running).rejects.toThrow(AgentApprovalDeniedError);
+    expect(approvalTool.execute).not.toHaveBeenCalled();
+  });
+
   it('times out approval without executing the Tool', async () => {
     vi.useFakeTimers();
     try {
@@ -95,6 +129,26 @@ describe('Agent approval flow', () => {
       const running = session.run({ instruction: 'Publish the report.' });
       const rejected = expect(running).rejects.toThrow(
         AgentApprovalTimeoutError
+      );
+
+      await vi.advanceTimersByTimeAsync(40);
+
+      await rejected;
+      expect(approvalTool.execute).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('explains how run() must answer an approval request', async () => {
+    vi.useFakeTimers();
+    try {
+      const { session } = await createApprovalSession({
+        approvalTimeoutMs: 40,
+      });
+      const running = session.run({ instruction: 'Publish the report.' });
+      const rejected = expect(running).rejects.toThrow(
+        /onApprovalRequest.*runStream/
       );
 
       await vi.advanceTimersByTimeAsync(40);
@@ -211,6 +265,60 @@ describe('Agent approval flow', () => {
         { approvalId: 'codex-approval-1', decision: backendDecision },
       ]);
       expect(events.at(-1)?.type).toBe('turn.completed');
+    }
+  );
+
+  it.each([
+    [
+      'throws',
+      (): Promise<never> => Promise.reject(new Error('approval UI failed')),
+    ],
+    ['returns an invalid decision', (): string => 'always-allow'],
+  ] as const)(
+    'denies a backend approval when the run() handler %s and records the error',
+    async (_label, onApprovalRequest) => {
+      const backend = new MockBackend(backendApprovalStream, {
+        approvals: true,
+      });
+      const agent = createAgent({
+        id: 'miko',
+        brief: 'You are Miko, AI operations staff.',
+        backend,
+      });
+      const session = await agent.startSession({
+        purpose: 'workspace operations',
+        audience: 'operator',
+        inputTrust: 'trusted',
+      });
+      const events: AgentEvent[] = [];
+      const handler = onApprovalRequest as NonNullable<
+        NonNullable<Parameters<typeof session.run>[1]>['onApprovalRequest']
+      >;
+
+      const result = await session.run(
+        { instruction: 'Inspect the workspace.' },
+        { onApprovalRequest: handler }
+      );
+
+      expect(result.message).toBe('Workspace inspected.');
+      expect(backend.sessions[0].approvalResults).toEqual([
+        { approvalId: 'codex-approval-1', decision: 'deny' },
+      ]);
+      backend.sessions[0].approvalResults.length = 0;
+      for await (const event of session.runStream(
+        { instruction: 'Inspect the workspace again.' },
+        { onApprovalRequest: handler }
+      )) {
+        events.push(event);
+      }
+      expect(
+        events.find((event) => event.type === 'approval.resolved')
+      ).toMatchObject({
+        decision: 'deny',
+        error: {
+          code: 'AGENT_CONFIGURATION_ERROR',
+        },
+      });
     }
   );
 

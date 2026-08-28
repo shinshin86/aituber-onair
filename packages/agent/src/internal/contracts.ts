@@ -48,6 +48,6 @@ export function assertAgentDefinition(value: unknown): asserts value is {
  */
 export function snapshotBackendCapabilities<
   TCapabilities extends AgentBackendCapabilities,
->(capabilities: TCapabilities): Readonly<TCapabilities> {
-  return Object.freeze({ ...capabilities });
+>(backendCapabilities: TCapabilities): Readonly<TCapabilities> {
+  return Object.freeze({ ...backendCapabilities });
 }

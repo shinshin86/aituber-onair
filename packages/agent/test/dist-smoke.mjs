@@ -19,12 +19,26 @@ assert.equal(typeof esmChat.createChatServiceBackend, 'function');
 assert.equal(typeof cjsChat.createChatServiceBackend, 'function');
 assert.equal(typeof esmCodex.createCodexAppServerBackend, 'function');
 assert.equal(typeof cjsCodex.createCodexAppServerBackend, 'function');
+for (const chat of [esmChat, cjsChat]) {
+  const backend = chat.createChatServiceBackend({
+    provider: 'openai',
+    createChatService: () => {
+      throw new Error('The smoke test does not start a Session.');
+    },
+  });
+  assert.equal(backend.backendCapabilities.text, true);
+}
 for (const codex of [esmCodex, cjsCodex]) {
   assert.equal(codex.CODEX_APP_SERVER_VERIFIED_VERSION, '0.145.0');
   assert.equal(codex.CODEX_APP_SERVER_MINIMUM_VERSION, '0.136.0');
   assert.equal(codex.CODEX_APP_SERVER_PROTOCOL_GENERATION, 'v2');
   assert.equal(codex.CODEX_APP_SERVER_SUPPORTED_VERSION, undefined);
   assert.equal(codex.CODEX_APP_SERVER_SCHEMA_VERSION, undefined);
+  const backend = codex.createCodexAppServerBackend({
+    allowPathLookup: true,
+    workingDirectory: '/path/to/character-workspace',
+  });
+  assert.equal(backend.backendCapabilities.approvals, true);
 }
 
 const browserOutputFiles = [

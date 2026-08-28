@@ -14,6 +14,8 @@ import type {
   AgentConversationInput,
   AgentEvent,
   AgentHook,
+  AgentHookContext,
+  AgentHookValueMap,
   AgentOptions,
   AgentPolicy,
   AgentPolicyConfig,
@@ -133,6 +135,102 @@ describe('public type surface', () => {
     };
 
     expect(capability.id).toBe('workspace.local');
+  });
+
+  it('types hook values by phase and constrains explicit unknown hooks', () => {
+    const backend = {
+      name: 'type-contract-backend',
+      backendCapabilities: {
+        text: true,
+        streaming: false,
+        tools: false,
+        interruption: false,
+        sessionResume: false,
+        approvals: false,
+        detailedEvents: false,
+      },
+      async startSession() {
+        throw new Error('Type contract only');
+      },
+    } satisfies AgentBackend;
+    const contextUnknownHook: AgentHook<unknown> = {
+      id: 'context-unknown',
+      phase: 'context',
+      onError: 'skip',
+      run: ({ value }) => value,
+    };
+    const beforeToolUnknownHook: AgentHook<unknown> = {
+      id: 'before-tool-unknown',
+      phase: 'before-tool',
+      onError: 'skip',
+      run: ({ value }: AgentHookContext<unknown>) => value,
+    };
+    const outputUnknownHook: AgentHook<unknown> = {
+      id: 'output-unknown',
+      phase: 'output',
+      onError: 'skip',
+      run: ({ value }) => value,
+    };
+    const preserveUnknownHookType = (
+      hook: AgentHook<unknown>
+    ): AgentHook<unknown> => hook;
+    const nonNarrowedUnknownHook = preserveUnknownHookType({
+      ...contextUnknownHook,
+      id: 'non-narrowed-unknown',
+    });
+
+    createAgent({
+      id: 'hook-contract-agent',
+      brief: 'Exercise hook type contracts.',
+      backend,
+      hooks: [
+        {
+          id: 'typed-draft',
+          phase: 'draft-response',
+          onError: 'fail-turn',
+          run: ({ value }) => {
+            expectTypeOf(value).toEqualTypeOf<string>();
+            return value;
+          },
+        },
+        {
+          id: 'typed-after-turn',
+          phase: 'after-turn',
+          onError: 'skip',
+          run: ({ value }) => {
+            expectTypeOf(value).toEqualTypeOf<
+              AgentHookValueMap['after-turn']['input']
+            >();
+            if (value.status === 'completed') {
+              expectTypeOf(value.result).toEqualTypeOf<AgentRunResult>();
+            } else {
+              expectTypeOf(value.error.code).toEqualTypeOf<string>();
+            }
+            return value;
+          },
+        },
+        // @ts-expect-error Draft response hooks must return a string.
+        {
+          id: 'invalid-draft-output',
+          phase: 'draft-response',
+          onError: 'fail-turn',
+          run: () => 42,
+        },
+        // @ts-expect-error After-turn hooks must return their phase value.
+        {
+          id: 'invalid-after-turn-output',
+          phase: 'after-turn',
+          onError: 'skip',
+          run: () => 'invalid',
+        },
+        contextUnknownHook,
+        beforeToolUnknownHook,
+        // @ts-expect-error Typed output phases cannot return unknown values.
+        outputUnknownHook,
+        // @ts-expect-error A non-narrowed unknown hook may be a typed phase.
+        nonNarrowedUnknownHook,
+      ],
+    });
   });
 
   it('exports Chat backend contracts without constructing a service', () => {

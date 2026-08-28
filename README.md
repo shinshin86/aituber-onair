@@ -334,6 +334,19 @@ Filters live comments before they reach an AI character: selects one comment to 
 npm install @aituber-onair/comment-intelligence
 ```
 
+### [@aituber-onair/agent](./packages/agent/README.md)
+
+<p align="center">
+  <img src="./packages/agent/images/aituber-onair-agent.png" alt="AITuber OnAir Agent logo" width="360" />
+</p>
+
+Embeddable runtime for giving an AI character a job inside your product:
+host-controlled tools, policies, approvals, hooks, and events, with Chat and Codex app-server backends.
+
+```bash
+npm install @aituber-onair/agent
+```
+
 ### [@aituber-onair/bushitsu-client](./packages/bushitsu-client/README.md)
 
 <p align="center">
@@ -376,6 +389,7 @@ aituber-onair/
     ├── manneri/          # Conversation pattern detection
     ├── noise/            # Post-generation response rewriting
     ├── comment-intelligence/ # Live comment filtering and context building
+    ├── agent/            # Embeddable AI-character agent runtime
     ├── bushitsu-client/  # WebSocket chat client + React hooks
     └── kizuna/           # Viewer relationship / bond system
 ```

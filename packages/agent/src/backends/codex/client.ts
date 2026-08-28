@@ -27,7 +27,9 @@ import {
   CodexAppServerTransport,
 } from './transport.js';
 
+/** Filesystem authority applied by Codex while executing a Thread. */
 export type CodexAppServerSandboxMode = 'read-only' | 'workspace-write';
+/** Codex-side policy controlling when command and file operations request approval. */
 export type CodexAppServerApprovalPolicy = 'untrusted' | 'on-request' | 'never';
 
 export interface CodexAppServerClientCompatibility {
