@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/transcription",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Provider-neutral realtime transcription for AITuber OnAir",
   "type": "module",
   "main": "dist/index.cjs",
