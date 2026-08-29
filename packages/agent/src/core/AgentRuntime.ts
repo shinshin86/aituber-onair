@@ -92,6 +92,7 @@ interface ResolvedSessionRequest {
   readonly limits: Required<AgentRuntimeLimits>;
 }
 
+/** Creates a managed Agent from a validated host definition and backend. */
 export function createAgent(options: AgentOptions): Agent {
   return new AgentRuntime(options);
 }
@@ -99,7 +100,7 @@ export function createAgent(options: AgentOptions): Agent {
 class AgentRuntime implements Agent {
   readonly id: string;
   readonly brief: string;
-  readonly capabilities: Agent['capabilities'];
+  readonly backendCapabilities: Agent['backendCapabilities'];
 
   private readonly backend: AgentOptions['backend'];
   private readonly toolsById: ReadonlyMap<string, AgentToolSpec>;
@@ -127,15 +128,15 @@ class AgentRuntime implements Agent {
         'backend.startSession must be a function',
       ]);
     }
-    if (!options.backend.capabilities?.text) {
+    if (!options.backend.backendCapabilities?.text) {
       throw new AgentCapabilityError('text', options.backend.name);
     }
 
     this.id = options.id;
     this.brief = options.brief;
     this.backend = options.backend;
-    this.capabilities = snapshotBackendCapabilities(
-      options.backend.capabilities
+    this.backendCapabilities = snapshotBackendCapabilities(
+      options.backend.backendCapabilities
     );
     if (options.tools !== undefined && !Array.isArray(options.tools)) {
       throw new AgentConfigurationError('Agent Tool registration failed.', [
@@ -165,7 +166,7 @@ class AgentRuntime implements Agent {
     const operation = runAgentBootstrap(
       {
         agentId: this.id,
-        canResumeSession: this.capabilities.sessionResume,
+        canResumeSession: this.backendCapabilities.sessionResume,
         maxToolCallsPerTurn: this.limits.maxToolCallsPerTurn,
         validateSession: (sessionOptions) => {
           this.resolveSessionRequest(sessionOptions);
@@ -186,7 +187,7 @@ class AgentRuntime implements Agent {
   }
 
   resumeSession(options: AgentResumeSessionOptions): Promise<AgentSession> {
-    if (!this.capabilities.sessionResume) {
+    if (!this.backendCapabilities.sessionResume) {
       return Promise.reject(
         new AgentCapabilityError('sessionResume', this.backend.name)
       );
@@ -287,7 +288,7 @@ class AgentRuntime implements Agent {
         issues
       );
     }
-    if (visibleTools.length > 0 && !this.capabilities.tools) {
+    if (visibleTools.length > 0 && !this.backendCapabilities.tools) {
       throw new AgentCapabilityError('tools', this.backend.name);
     }
     return {
@@ -396,7 +397,7 @@ class AgentRuntime implements Agent {
         hooks: this.hooks,
         limits: sessionLimits,
         backendName: this.backend.name,
-        backendCapabilities: this.capabilities,
+        backendCapabilities: this.backendCapabilities,
         backendSession,
         lifecycle: backendSessionId
           ? { type: 'resumed', backendSessionId }

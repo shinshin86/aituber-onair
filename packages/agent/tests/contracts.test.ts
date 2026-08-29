@@ -17,7 +17,7 @@ const validAgentDefinition = {
   `,
 };
 
-const capabilities: AgentBackendCapabilities = {
+const backendCapabilities: AgentBackendCapabilities = {
   text: true,
   streaming: true,
   tools: true,
@@ -57,7 +57,7 @@ describe('Phase 1 contracts', () => {
   });
 
   it('takes an immutable copy of backend capabilities', () => {
-    const mutableCapabilities = { ...capabilities };
+    const mutableCapabilities = { ...backendCapabilities };
     const snapshot = snapshotBackendCapabilities(mutableCapabilities);
 
     mutableCapabilities.tools = false;

@@ -68,7 +68,7 @@ describe('ChatServiceBackend', () => {
     const factoryInputs: ChatServiceFactoryInput[] = [];
     const backend = createChatServiceBackend({
       provider: 'openai',
-      capabilities: TEXT_CAPABILITIES,
+      backendCapabilities: TEXT_CAPABILITIES,
       createChatService: (input) => {
         factoryInputs.push(input);
         return createMockChatService('openai', async (messages) => {
@@ -147,7 +147,7 @@ describe('ChatServiceBackend', () => {
   it('converts streaming callbacks without duplicating final text', async () => {
     const backend = createChatServiceBackend({
       provider: 'openai',
-      capabilities: TEXT_CAPABILITIES,
+      backendCapabilities: TEXT_CAPABILITIES,
       createChatService: () =>
         createMockChatService(
           'openai',
@@ -236,7 +236,7 @@ describe('ChatServiceBackend', () => {
     });
     const backend = createChatServiceBackend({
       provider: 'openai',
-      capabilities: TOOL_CAPABILITIES,
+      backendCapabilities: TOOL_CAPABILITIES,
       createChatService: (input) => {
         factoryInputs.push(input);
         return createMockChatService('openai', async (messages) => {
@@ -338,7 +338,7 @@ describe('ChatServiceBackend', () => {
     });
     const backend = createChatServiceBackend({
       provider: 'claude',
-      capabilities: TOOL_CAPABILITIES,
+      backendCapabilities: TOOL_CAPABILITIES,
       createChatService: () =>
         createMockChatService('claude', async (messages) => {
           calls.push(messages);
@@ -402,7 +402,7 @@ describe('ChatServiceBackend', () => {
     const cause = new Error('provider unavailable');
     const backend = createChatServiceBackend({
       provider: 'openai',
-      capabilities: TEXT_CAPABILITIES,
+      backendCapabilities: TEXT_CAPABILITIES,
       createChatService: () =>
         createMockChatService('openai', async () => {
           throw cause;
@@ -441,7 +441,7 @@ describe('ChatServiceBackend', () => {
     });
     const backend = createChatServiceBackend({
       provider: 'openai',
-      capabilities: TOOL_CAPABILITIES,
+      backendCapabilities: TOOL_CAPABILITIES,
       createChatService: () =>
         createMockChatService('openai', async (messages) => {
           calls.push(messages);
@@ -491,7 +491,7 @@ describe('ChatServiceBackend', () => {
   it('rejects malformed completions and bounded Tool loops', async () => {
     const malformedBackend = createChatServiceBackend({
       provider: 'openai',
-      capabilities: TEXT_CAPABILITIES,
+      backendCapabilities: TEXT_CAPABILITIES,
       createChatService: () =>
         createMockChatService('openai', async () => ({
           blocks: [],
@@ -527,7 +527,7 @@ describe('ChatServiceBackend', () => {
     });
     const boundedBackend = createChatServiceBackend({
       provider: 'openai',
-      capabilities: TOOL_CAPABILITIES,
+      backendCapabilities: TOOL_CAPABILITIES,
       maxToolRounds: 1,
       createChatService: () =>
         createMockChatService('openai', async () => {
@@ -576,7 +576,7 @@ describe('ChatServiceBackend', () => {
     });
     const backend = createChatServiceBackend({
       provider: 'openai',
-      capabilities: TEXT_CAPABILITIES,
+      backendCapabilities: TEXT_CAPABILITIES,
       createChatService: () =>
         createMockChatService('openai', async () => {
           providerStarted();
@@ -629,7 +629,7 @@ describe('ChatServiceBackend', () => {
     });
     const backend = createChatServiceBackend({
       provider: 'openai',
-      capabilities: TOOL_CAPABILITIES,
+      backendCapabilities: TOOL_CAPABILITIES,
       createChatService: () =>
         createMockChatService('openai', async () => {
           providerCalls += 1;
@@ -673,7 +673,7 @@ describe('ChatServiceBackend', () => {
     await agent.close();
   });
 
-  it('uses registered provider capabilities as an optional fallback', async () => {
+  it('uses registered provider backend capabilities as an optional fallback', async () => {
     let streamArgument: boolean | undefined;
     let factoryInput: ChatServiceFactoryInput | undefined;
     const backend = createChatServiceBackend({
@@ -686,7 +686,7 @@ describe('ChatServiceBackend', () => {
         });
       },
     });
-    expect(backend.capabilities).toMatchObject({
+    expect(backend.backendCapabilities).toMatchObject({
       text: true,
       streaming: false,
       tools: false,
@@ -719,7 +719,7 @@ describe('ChatServiceBackend', () => {
 
     try {
       createChatServiceBackend({
-        capabilities: {
+        backendCapabilities: {
           ...TEXT_CAPABILITIES,
           sessionResume: true,
         } as unknown as ChatServiceBackendCapabilities,
@@ -728,18 +728,18 @@ describe('ChatServiceBackend', () => {
             finalCompletion('response')
           ),
       });
-      throw new Error('Expected invalid capabilities to be rejected.');
+      throw new Error('Expected invalid backendCapabilities to be rejected.');
     } catch (error) {
       expect(error).toBeInstanceOf(AgentConfigurationError);
       expect((error as AgentConfigurationError).issues).toContain(
-        'capabilities.sessionResume must be false'
+        'backendCapabilities.sessionResume must be false'
       );
     }
 
     try {
       createChatServiceBackend({
         provider: 'codex-sdk',
-        capabilities: {
+        backendCapabilities: {
           ...TOOL_CAPABILITIES,
           streaming: false,
         },
@@ -752,14 +752,14 @@ describe('ChatServiceBackend', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(AgentConfigurationError);
       expect((error as AgentConfigurationError).issues).toContain(
-        'capabilities.tools cannot enable Tools for provider "codex-sdk"'
+        'backendCapabilities.tools cannot enable Tools for provider "codex-sdk"'
       );
     }
 
     try {
       createChatServiceBackend({
         provider: 'codex-sdk',
-        capabilities: {
+        backendCapabilities: {
           ...TEXT_CAPABILITIES,
           streaming: true,
         },
@@ -772,7 +772,7 @@ describe('ChatServiceBackend', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(AgentConfigurationError);
       expect((error as AgentConfigurationError).issues).toContain(
-        'capabilities.streaming cannot enable streaming for provider "codex-sdk"'
+        'backendCapabilities.streaming cannot enable streaming for provider "codex-sdk"'
       );
     }
   });

@@ -18,6 +18,7 @@ const DEFAULT_MAX_LINE_BYTES = 1024 * 1024;
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_SHUTDOWN_TIMEOUT_MS = 2_000;
 const MAX_DIAGNOSTIC_LENGTH = 8_192;
+const MAX_TIMED_OUT_REQUEST_IDS = 256;
 
 interface PendingRequest {
   readonly method: string;
@@ -64,6 +65,7 @@ export class CodexAppServerTransport {
   private readonly onDiagnostic?: (message: string) => void;
   private readonly onError?: (error: Error) => void;
   private readonly pendingRequests = new Map<number, PendingRequest>();
+  private readonly timedOutRequestIds = new Set<number>();
   private stdoutParts: Buffer[] = [];
   private stdoutBytes = 0;
   private stderrBuffer = '';
@@ -132,6 +134,7 @@ export class CodexAppServerTransport {
         const pending = this.pendingRequests.get(id);
         if (!pending) return;
         this.pendingRequests.delete(id);
+        this.recordTimedOutRequestId(id);
         pending.reject(
           new AgentTimeoutError(
             `Codex app-server request "${method}" timed out.`
@@ -370,6 +373,7 @@ export class CodexAppServerTransport {
     }
     const pending = this.pendingRequests.get(response.id);
     if (!pending) {
+      if (this.timedOutRequestIds.delete(response.id)) return;
       this.fail(
         new AgentBackendProtocolError(
           `Codex app-server returned unknown or duplicate response ID ${response.id}.`
@@ -518,6 +522,13 @@ export class CodexAppServerTransport {
       pending.reject(error);
     }
     this.pendingRequests.clear();
+  }
+
+  private recordTimedOutRequestId(id: number): void {
+    this.timedOutRequestIds.add(id);
+    if (this.timedOutRequestIds.size <= MAX_TIMED_OUT_REQUEST_IDS) return;
+    const oldestId = this.timedOutRequestIds.values().next().value;
+    if (oldestId !== undefined) this.timedOutRequestIds.delete(oldestId);
   }
 
   private createExitError(): AgentBackendProcessError {

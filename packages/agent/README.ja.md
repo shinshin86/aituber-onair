@@ -7,9 +7,17 @@
 JavaScript／TypeScriptプロダクトの中で、AIキャラクターに仕事を与えるための
 組み込み型ランタイムです。
 
-> **Status: 未リリースの開発版。** 本パッケージはAITuber OnAirモノレポ内で
-> 実装・テスト済みですが、npmへはまだ公開されていません（`version 0.0.0`、
-> `private`）。このREADMEは現在の実装を説明しています。
+> このパッケージはα版です。安定版になるまでに公開APIが変更される可能性が
+> あります。
+
+```bash
+npm install @aituber-onair/agent @aituber-onair/chat
+```
+
+`@aituber-onair/chat`は、`@aituber-onair/agent/chat` entry pointを使う場合のみ
+必要なoptional peer dependencyです。Codex app-server entry pointにはローカルに
+インストールされたCodex CLIが必要です。詳しくは
+[Codex app-serverとの統合](#codex-app-serverとの統合)を参照してください。
 
 ## このパッケージについて
 
@@ -165,7 +173,7 @@ export function createStreamStaff(apiKey: string) {
     tools: [analyzeComments],
     policy: {
       defaultDecision: 'deny',
-      allowTools: ['comments.analyze'],
+      requireApproval: { tools: ['comments.analyze'] },
     },
   });
 }
@@ -183,27 +191,33 @@ const publicSession = await agent.startSession({
   allowedTools: ['comments.analyze'],
 });
 
-const result = await publicSession.run({
-  instruction: '返信する価値がある場合だけ応答してください。',
-  input: {
-    kind: 'viewer-comment',
-    data: { text: viewerComment },
+const result = await publicSession.run(
+  {
+    instruction: '返信する価値がある場合だけ応答してください。',
+    input: {
+      kind: 'viewer-comment',
+      data: { text: viewerComment },
+    },
   },
-});
+  {
+    onApprovalRequest: async (request, { signal }) =>
+      (await showApprovalDialog(request, { signal })) ? 'allow-once' : 'deny',
+  }
+);
 ```
 
 組み込みChat provider名を指定した場合は、`ChatServiceFactory`のcapability metadataを
-fallbackとして使います。独自providerでは`capabilities`を明示してください。Tool非対応の
-providerへは空のTool一覧を渡します。現在の`codex-sdk` Chat providerはtext-onlyで、
-streaming deltaではなく完了後の全文を返します。
+fallbackとして使います。独自providerでは`backendCapabilities`を明示してください。
+Tool非対応のproviderへは空のTool一覧を渡します。現在の`codex-sdk` Chat providerは
+text-onlyで、streaming deltaではなく完了後の全文を返します。
 
 会話履歴とTool履歴はSessionごとに保持します。1 Turnで利用できるprovider Tool roundは
 既定で6回です。必要に応じて`maxToolRounds`へ別の正の整数を指定できます。
 `AbortSignal`とAgentのtimeoutはAgent Turnを停止し、遅れて届いた結果を無視します。
 汎用の`ChatService` interfaceは、すでに実行中のprovider requestがnetwork transport層でも
 cancelされることまでは保証しません。同じ理由で、組み込みprovider metadataから導出した
-capabilityは`interruption: false`と`sessionResume: false`を宣言します。ChatService
-バックエンドのTurnは`AbortSignal`またはtimeoutで停止してください。
+`backendCapabilities`は`interruption: false`と`sessionResume: false`を宣言します。
+ChatServiceバックエンドのTurnは`AbortSignal`またはtimeoutで停止してください。
 `agent.resumeSession(...)`が必要な場合は、Codex app-serverバックエンドのように
 `sessionResume`を宣言するバックエンドを使用します。
 
@@ -215,11 +229,16 @@ capabilityは`interruption: false`と`sessionResume: false`を宣言します。
 - Tool入力schemaは、`type`、`properties`、`required`、`items`、`enum`、
   `description`、boolean値の`additionalProperties`に対応します。未対応のkeywordは
   無視せず、Agent作成時に拒否します。
-- 承認要求は`session.resolveApproval(requestId, decision)`の応答を
-  `limits.approvalTimeoutMs`（既定30秒）まで待ち、timeout、abort、Session終了時は
-  拒否として扱います。人間の運営者が承認へ応答する場合は、`createAgent`で上限を
-  引き上げてください。`limits.maxToolCallsPerTurn`（既定8回）は1 Turnあたりの
-  ランタイムTool実行数を制限します。
+- `session.run(...)`では、`options.onApprovalRequest`から承認へ応答します。
+  `session.runStream(...)`では、同じcallbackを使うか、eventを読みながら
+  `session.resolveApproval(requestId, decision)`を呼び出します。承認timerはstreamの
+  consumerがeventを読む時点ではなく、`approval.requested`が発行された時点で開始し、
+  `limits.approvalTimeoutMs`（既定30秒）まで待ちます。timeout、abort、Session終了時は
+  拒否として扱います。callbackがthrowするか不正なdecisionを返した場合も拒否し、
+  callbackのbugをTurnの失敗理由へ変えず、errorを`approval.resolved`へ記録します。
+  人間の運営者が承認へ応答する場合は、`createAgent`で上限を引き上げてください。
+- `limits.maxToolCallsPerTurn`（既定8回）は1 TurnあたりのランタイムTool実行数を
+  制限します。
 - `sensitiveFields`には、ドット区切りのobject pathを指定できます。一致する入力値は
   Tool eventと承認eventでは秘匿化します。ホストのhandlerには、承認時と同じ入力値を
   固定した変更不可のsnapshotを渡します。

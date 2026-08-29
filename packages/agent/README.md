@@ -7,10 +7,17 @@
 An embeddable runtime for giving an AI character a job inside a JavaScript or
 TypeScript product.
 
-> **Status: unreleased development version.** This package is implemented and
-> tested inside the AITuber OnAir monorepo but is not published to npm yet
-> (`version 0.0.0`, `private`). The documented API describes the current
-> implementation.
+> This package is an alpha release. Its public API may change before a stable
+> release.
+
+```bash
+npm install @aituber-onair/agent @aituber-onair/chat
+```
+
+`@aituber-onair/chat` is an optional peer dependency needed only for the
+`@aituber-onair/agent/chat` entry point. The Codex app-server entry point needs
+a locally installed Codex CLI; see
+[Codex app-server integration](#codex-app-server-integration).
 
 ## What this package is
 
@@ -173,7 +180,7 @@ export function createStreamStaff(apiKey: string) {
     tools: [analyzeComments],
     policy: {
       defaultDecision: 'deny',
-      allowTools: ['comments.analyze'],
+      requireApproval: { tools: ['comments.analyze'] },
     },
   });
 }
@@ -192,31 +199,37 @@ const publicSession = await agent.startSession({
   allowedTools: ['comments.analyze'],
 });
 
-const result = await publicSession.run({
-  instruction: 'Respond only when a reply is useful.',
-  input: {
-    kind: 'viewer-comment',
-    data: { text: viewerComment },
+const result = await publicSession.run(
+  {
+    instruction: 'Respond only when a reply is useful.',
+    input: {
+      kind: 'viewer-comment',
+      data: { text: viewerComment },
+    },
   },
-});
+  {
+    onApprovalRequest: async (request, { signal }) =>
+      (await showApprovalDialog(request, { signal })) ? 'allow-once' : 'deny',
+  }
+);
 ```
 
 Built-in Chat provider names use `ChatServiceFactory` capability metadata as a
-fallback. Supply `capabilities` explicitly for a custom provider. Providers
-without Tool support receive an empty Tool list; for example, the current
-`codex-sdk` Chat provider is text-only and returns completed text rather than
-streaming deltas.
+fallback. Supply `backendCapabilities` explicitly for a custom provider.
+Providers without Tool support receive an empty Tool list; for example, the
+current `codex-sdk` Chat provider is text-only and returns completed text rather
+than streaming deltas.
 
 The backend keeps conversation and Tool history inside each Session and limits
 one Turn to six provider Tool rounds by default. Set `maxToolRounds` to another
 positive integer when needed. `AbortSignal` and Agent timeouts stop the Agent
 Turn and ignore late results. The generic `ChatService` interface does not
 guarantee that an already-running provider request is cancelled at the network
-transport layer. For the same reason, capabilities derived from built-in
-provider metadata declare `interruption: false` and `sessionResume: false`:
-cancel ChatService backend Turns with `AbortSignal` or timeouts, and use a
-backend that declares `sessionResume`, such as the Codex app-server backend,
-when `agent.resumeSession(...)` is required.
+transport layer. For the same reason, `backendCapabilities` derived from
+built-in provider metadata declare `interruption: false` and
+`sessionResume: false`: cancel ChatService backend Turns with `AbortSignal` or
+timeouts, and use a backend that declares `sessionResume`, such as the Codex
+app-server backend, when `agent.resumeSession(...)` is required.
 
 ## Tool execution rules
 
@@ -226,11 +239,18 @@ when `agent.resumeSession(...)` is required.
 - Tool input schemas support `type`, `properties`, `required`, `items`, `enum`,
   `description`, and boolean `additionalProperties`. Unsupported keywords are
   rejected when the Agent is created instead of being silently ignored.
-- Approval requests wait for `session.resolveApproval(requestId, decision)`
-  up to `limits.approvalTimeoutMs` (default 30 seconds) and are denied on
-  timeout, abort, or Session close. Raise the limit in `createAgent` when a
-  human operator answers approvals. `limits.maxToolCallsPerTurn` (default 8)
-  bounds runtime Tool executions per Turn.
+- With `session.run(...)`, answer approvals through
+  `options.onApprovalRequest`. With `session.runStream(...)`, either use the
+  same callback or call `session.resolveApproval(requestId, decision)` while
+  consuming events. The approval timer starts when `approval.requested` is
+  emitted, not when a stream consumer reads it, and waits up to
+  `limits.approvalTimeoutMs` (default 30 seconds). Timeout, abort, and Session
+  close deny the request. A callback that throws or returns an invalid decision
+  also denies the request and records its error on `approval.resolved` without
+  turning the callback bug into the Turn's failure reason. Raise the limit in
+  `createAgent` when a human operator answers approvals.
+- `limits.maxToolCallsPerTurn` (default 8) bounds runtime Tool executions per
+  Turn.
 - `sensitiveFields` accepts dot-separated object paths. Matching input values
   are redacted in Tool and approval events, while the original validated values
   are copied into the immutable snapshot passed to the host handler. Approval

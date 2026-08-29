@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of seven main packages:
+AITuber OnAir is a TypeScript monorepo that provides a comprehensive toolkit for creating AI-powered virtual streamers (AITubers). The project consists of eight main packages:
 
 - **`@aituber-onair/core`** - Core library for AI-driven virtual streaming applications with memory management and event-driven architecture
 - **`@aituber-onair/chat`** - Chat and LLM API integration library supporting multiple AI providers (OpenAI, Claude, Gemini) with unified interface
+- **`@aituber-onair/agent`** - Embeddable AI-character agent runtime with host-controlled tools, policies, approvals, hooks, events, and Chat/Codex backends
 - **`@aituber-onair/voice`** - Independent voice synthesis library supporting multiple TTS engines (VOICEVOX, VoicePeak, OpenAI TTS, MiniMax, etc.)
 - **`@aituber-onair/manneri`** - Conversation pattern detection library that identifies repetitive dialogue and provides topic diversification prompts
 - **`@aituber-onair/bushitsu-client`** - WebSocket client library for chat functionality with React hooks support, auto-reconnection, rate limiting, and mention support
@@ -210,6 +211,8 @@ packages/
 │   └── examples/   # Usage examples for core functionality
 ├── chat/           # ChatService interface, provider implementations, MCP support
 │   └── examples/   # Chat service usage examples
+├── agent/          # Embeddable AI-character Agent runtime and backends
+│   └── examples/   # Product-integrated Agent usage examples
 ├── voice/          # VoiceService, TTS engines, emotion parsing, audio playback
 │   └── examples/   # Voice synthesis examples
 ├── manneri/        # ManneriDetector, analyzers, prompt generation

@@ -35,7 +35,7 @@ class MockBackendSession implements AgentBackendSession {
 
 class MockBackend implements AgentBackend {
   readonly name = 'mock-codex';
-  readonly capabilities = Object.freeze({
+  readonly backendCapabilities = Object.freeze({
     text: true,
     streaming: true,
     tools: false,

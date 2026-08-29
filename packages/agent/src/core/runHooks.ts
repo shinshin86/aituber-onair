@@ -1,29 +1,42 @@
 import { AgentHookError } from '../errors.js';
-import type { AgentHook, AgentHookPhase } from '../types.js';
+import type {
+  AgentHook,
+  AgentHookContext,
+  AgentHookPhase,
+  AgentHookValueMap,
+} from '../types.js';
 
-export async function runHooks(
+interface RuntimeAgentHook {
+  readonly id: string;
+  readonly phase: AgentHookPhase;
+  readonly onError: 'fail-turn' | 'skip';
+  run(context: AgentHookContext<unknown>): Promise<unknown> | unknown;
+}
+
+export async function runHooks<TPhase extends AgentHookPhase>(
   hooks: readonly AgentHook[],
-  phase: AgentHookPhase,
-  value: unknown,
+  phase: TPhase,
+  value: AgentHookValueMap[TPhase]['input'],
   context: {
     readonly agentId: string;
     readonly sessionId: string;
     readonly turnId: string;
     readonly signal: AbortSignal;
   }
-): Promise<unknown> {
-  let current = value;
+): Promise<AgentHookValueMap[TPhase]['output']> {
+  let current: unknown = value;
   for (const hook of hooks) {
     if (hook.phase !== phase) continue;
+    const runtimeHook = hook as RuntimeAgentHook;
     try {
-      current = await hook.run({ ...context, value: current });
+      current = await runtimeHook.run({ ...context, value: current });
     } catch (error) {
-      if (hook.onError === 'skip') continue;
+      if (runtimeHook.onError === 'skip') continue;
       throw new AgentHookError(
-        `Agent hook "${hook.id}" failed during "${phase}".`,
-        { cause: error, details: { hookId: hook.id, phase } }
+        `Agent hook "${runtimeHook.id}" failed during "${phase}".`,
+        { cause: error, details: { hookId: runtimeHook.id, phase } }
       );
     }
   }
-  return current;
+  return current as AgentHookValueMap[TPhase]['output'];
 }

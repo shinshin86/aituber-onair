@@ -17,6 +17,7 @@ import type {
   AgentWorkspaceMetadata,
   JsonValue,
 } from '../types.js';
+import { createAgentEventError } from '../internal/eventError.js';
 
 const DEFAULT_BOOTSTRAP_VERSION = '1';
 
@@ -497,6 +498,27 @@ function validateWorkspaceMetadata(
   ) {
     issues.push('workspace metadata lastError is invalid');
   }
+  if (
+    value.lastError !== undefined &&
+    typeof value.lastError === 'object' &&
+    value.lastError !== null &&
+    value.lastError.details !== undefined
+  ) {
+    try {
+      const details = snapshotJsonValue(value.lastError.details);
+      if (
+        details === null ||
+        typeof details !== 'object' ||
+        Array.isArray(details)
+      ) {
+        throw new Error('must be a JSON object');
+      }
+    } catch {
+      issues.push(
+        'workspace metadata lastError.details must contain only JSON object values'
+      );
+    }
+  }
   if (issues.length > 0) {
     throw new AgentWorkspaceStateError(
       'The host returned invalid Agent workspace metadata.',
@@ -514,7 +536,9 @@ function createWorkspaceMetadata(
       ? Object.freeze({
           ...value.lastError,
           details: value.lastError.details
-            ? Object.freeze({ ...value.lastError.details })
+            ? (snapshotJsonValue(value.lastError.details) as Readonly<
+                Record<string, JsonValue>
+              >)
             : undefined,
         })
       : undefined,
@@ -574,12 +598,7 @@ function isIsoTimestamp(value: unknown): value is string {
 
 function toEventError(error: unknown): AgentEventError {
   if (error instanceof AgentError) {
-    return Object.freeze({
-      name: error.name,
-      code: error.code,
-      message: error.message,
-      details: error.details,
-    });
+    return Object.freeze(createAgentEventError(error));
   }
   return Object.freeze({
     name: error instanceof Error ? error.name : 'Error',

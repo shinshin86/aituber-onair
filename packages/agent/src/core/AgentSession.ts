@@ -21,6 +21,7 @@ import {
   sanitizeToolArguments,
   snapshotToolArguments,
 } from '../tools/sanitize.js';
+import { createAgentEventError } from '../internal/eventError.js';
 import { validateToolInput } from '../tools/schemaValidation.js';
 import type {
   AgentApprovalDecision,
@@ -33,6 +34,8 @@ import type {
   AgentEvent,
   AgentEventError,
   AgentHook,
+  AgentHookPhase,
+  AgentHookValueMap,
   AgentInputTrust,
   AgentPolicy,
   AgentRunInput,
@@ -61,6 +64,10 @@ interface ActiveTurn {
   readonly id: string;
   readonly queue: AsyncEventQueue<AgentEvent>;
   readonly controller: AbortController;
+  readonly invocation: 'run' | 'runStream';
+  readonly onApprovalRequest?: NonNullable<
+    AgentRunOptions['onApprovalRequest']
+  >;
   completion: Promise<void>;
   externalSignal?: AbortSignal;
   externalAbortListener?: () => void;
@@ -152,7 +159,7 @@ export class AgentSessionRuntime implements AgentSession {
     options?: AgentRunOptions
   ): Promise<AgentRunResult> {
     let result: AgentRunResult | undefined;
-    for await (const event of this.runStream(input, options)) {
+    for await (const event of this.startTurnStream(input, options, 'run')) {
       if (event.type === 'turn.completed') result = event.result;
     }
     if (!result) {
@@ -166,6 +173,14 @@ export class AgentSessionRuntime implements AgentSession {
   runStream(
     input: AgentRunInput,
     options?: AgentRunOptions
+  ): AsyncIterable<AgentEvent> {
+    return this.startTurnStream(input, options, 'runStream');
+  }
+
+  private startTurnStream(
+    input: AgentRunInput,
+    options: AgentRunOptions | undefined,
+    invocation: ActiveTurn['invocation']
   ): AsyncIterable<AgentEvent> {
     this.assertCanRun(input, options);
 
@@ -186,6 +201,8 @@ export class AgentSessionRuntime implements AgentSession {
       id: turnId,
       queue,
       controller,
+      invocation,
+      onApprovalRequest: options?.onApprovalRequest,
       completion: Promise.resolve(),
       toolCallCount: 0,
       toolCallIds: new Set(),
@@ -300,6 +317,12 @@ export class AgentSessionRuntime implements AgentSession {
     ) {
       issues.push('options.timeoutMs must be a positive finite number');
     }
+    if (
+      options?.onApprovalRequest !== undefined &&
+      typeof options.onApprovalRequest !== 'function'
+    ) {
+      issues.push('options.onApprovalRequest must be a function');
+    }
     if (issues.length > 0) {
       throw new AgentConfigurationError('Agent Run input is invalid.', issues);
     }
@@ -330,8 +353,10 @@ export class AgentSessionRuntime implements AgentSession {
 
       const preparedInput = await this.prepareRunInput(turn, input);
       const backendStream = this.backendSession.runStream(preparedInput, {
-        ...options,
         signal: turn.controller.signal,
+        ...(options?.timeoutMs !== undefined
+          ? { timeoutMs: options.timeoutMs }
+          : {}),
       });
       iterator = backendStream[Symbol.asyncIterator]();
 
@@ -410,11 +435,7 @@ export class AgentSessionRuntime implements AgentSession {
               usage: event.usage,
               backendMetadata: event.metadata,
             };
-            runResult = (await this.runHookPhase(
-              turn,
-              'output',
-              candidate
-            )) as AgentRunResult;
+            runResult = await this.runHookPhase(turn, 'output', candidate);
             assertRunResult(runResult, {
               agentId: this.agentId,
               sessionId: this.id,
@@ -856,7 +877,13 @@ export class AgentSessionRuntime implements AgentSession {
         rejectOnDeny,
       };
       pending.timeoutId = setTimeout(() => {
-        this.settleApproval(pending, 'deny', new AgentApprovalTimeoutError());
+        const error =
+          turn.invocation === 'run' && !turn.onApprovalRequest
+            ? new AgentApprovalTimeoutError(
+                'The approval request timed out. session.run() requires options.onApprovalRequest to answer approvals; otherwise use session.runStream() and call session.resolveApproval().'
+              )
+            : new AgentApprovalTimeoutError();
+        this.settleApproval(pending, 'deny', error);
       }, this.limits.approvalTimeoutMs);
       this.pendingApprovals.set(request.id, pending);
       turn.controller.signal.addEventListener('abort', onAbort, { once: true });
@@ -866,14 +893,55 @@ export class AgentSessionRuntime implements AgentSession {
         turnId: turn.id,
         request,
       });
+      if (turn.onApprovalRequest) {
+        void this.resolveApprovalFromHandler(
+          turn,
+          pending,
+          turn.onApprovalRequest
+        );
+      }
       if (turn.controller.signal.aborted) onAbort();
     });
+  }
+
+  private async resolveApprovalFromHandler(
+    turn: ActiveTurn,
+    pending: PendingApproval,
+    handler: NonNullable<AgentRunOptions['onApprovalRequest']>
+  ): Promise<void> {
+    let decision: AgentApprovalDecision = 'deny';
+    let handlerError: AgentConfigurationError | undefined;
+    try {
+      const candidate = await handler(pending.request, {
+        sessionId: this.id,
+        turnId: turn.id,
+        signal: turn.controller.signal,
+      });
+      if (candidate === 'allow-once' || candidate === 'deny') {
+        decision = candidate;
+      } else {
+        handlerError = new AgentConfigurationError(
+          'The approval request handler returned an invalid decision; the request was denied.',
+          ['onApprovalRequest must return "allow-once" or "deny"']
+        );
+      }
+    } catch (cause) {
+      handlerError = new AgentConfigurationError(
+        'The approval request handler failed; the request was denied.',
+        [`onApprovalRequest failed: ${describeError(cause)}`],
+        { cause }
+      );
+    }
+
+    if (!this.pendingApprovals.has(pending.request.id)) return;
+    this.settleApproval(pending, decision, undefined, handlerError);
   }
 
   private settleApproval(
     pending: PendingApproval,
     decision: AgentApprovalDecision,
-    error?: AgentError
+    error?: AgentError,
+    recordedError?: AgentError
   ): void {
     if (!this.pendingApprovals.has(pending.request.id)) return;
     this.removePendingApproval(pending);
@@ -883,6 +951,7 @@ export class AgentSessionRuntime implements AgentSession {
       turnId: pending.request.turnId,
       requestId: pending.request.id,
       decision,
+      ...(recordedError ? { error: toEventError(recordedError) } : {}),
     });
     if (error) pending.reject(error);
     else if (decision === 'deny' && pending.rejectOnDeny)
@@ -920,11 +989,11 @@ export class AgentSessionRuntime implements AgentSession {
     pending.signal.removeEventListener('abort', pending.onAbort);
   }
 
-  private runHookPhase(
+  private runHookPhase<TPhase extends AgentHookPhase>(
     turn: ActiveTurn,
-    phase: Parameters<typeof runHooks>[1],
-    value: unknown
-  ): Promise<unknown> {
+    phase: TPhase,
+    value: AgentHookValueMap[TPhase]['input']
+  ): Promise<AgentHookValueMap[TPhase]['output']> {
     if (turn.controller.signal.aborted) {
       return Promise.reject(turn.controller.signal.reason);
     }
@@ -1066,12 +1135,11 @@ export class AgentSessionRuntime implements AgentSession {
 }
 
 function toEventError(error: AgentError): AgentEventError {
-  return {
-    name: error.name,
-    code: error.code,
-    message: error.message,
-    details: error.details,
-  };
+  return createAgentEventError(error);
+}
+
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function nextWithAbort<T>(

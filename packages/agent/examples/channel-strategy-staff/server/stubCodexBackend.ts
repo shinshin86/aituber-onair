@@ -118,7 +118,7 @@ export function createStubCodexBackend(
 
   return {
     name: 'stub-codex-app-server',
-    capabilities: STUB_CODEX_CAPABILITIES,
+    backendCapabilities: STUB_CODEX_CAPABILITIES,
     startedSessionIds,
     resumedSessionIds,
     receivedInputs,
