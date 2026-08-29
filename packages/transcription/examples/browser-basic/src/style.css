@@ -307,6 +307,8 @@ button:disabled {
   color: #991b1b;
   font-size: 0.82rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 .transcript-block {

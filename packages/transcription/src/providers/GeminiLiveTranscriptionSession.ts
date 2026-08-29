@@ -14,6 +14,8 @@ const EPHEMERAL_TOKEN_WEBSOCKET_URL =
   'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained';
 const CONNECTION_TIMEOUT_MS = 10_000;
 const STOP_FINALIZATION_TIMEOUT_MS = 5_000;
+const WEBSOCKET_CLOSE_GRACE_MS = 500;
+const MAX_CLOSE_REASON_LENGTH = 300;
 
 interface GeminiLiveCredential {
   type: GeminiLiveAuth['type'];
@@ -39,6 +41,34 @@ interface StopFinalization {
 }
 
 class SessionOperationCancelled extends Error {}
+
+function normalizedCloseReason(reason: string): string {
+  return reason.trim().replace(/\s+/g, ' ').slice(0, MAX_CLOSE_REASON_LENGTH);
+}
+
+function isAuthenticationCloseReason(reason: string): boolean {
+  return /api.?key|authenticat|unauthenticated|credential|permission.?denied/i.test(
+    reason
+  );
+}
+
+function errorFromCloseEvent(
+  event: CloseEvent,
+  phase: 'setup' | 'runtime'
+): TranscriptionSessionError {
+  const reason = normalizedCloseReason(event.reason);
+  const detail = `code ${event.code}${reason ? `: ${reason}` : ''}`;
+  const code = isAuthenticationCloseReason(reason)
+    ? 'authentication-failed'
+    : event.code === 1006 || event.code >= 1011
+      ? 'connection-failed'
+      : 'provider-error';
+  const message =
+    phase === 'setup'
+      ? `Gemini Live closed before setup completed (${detail}).`
+      : `The Gemini Live connection closed unexpectedly (${detail}).`;
+  return new TranscriptionSessionError(code, 'gemini-live', message);
+}
 
 function isPermissionDenied(cause: unknown): boolean {
   return (
@@ -125,6 +155,7 @@ export class GeminiLiveTranscriptionSession extends BaseRealtimeTranscriptionSes
   private activeUtteranceId: string | null = null;
   private stopFinalization: StopFinalization | null = null;
   private connectionCancel: (() => void) | null = null;
+  private socketErrorFallbackTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly options: GeminiLiveTranscriptionOptions) {
     super('gemini-live', {
@@ -375,27 +406,37 @@ export class GeminiLiveTranscriptionSession extends BaseRealtimeTranscriptionSes
     return new Promise((resolve, reject) => {
       let setupSent = false;
       let settled = false;
+      let closeGraceTimer: ReturnType<typeof setTimeout> | null = null;
+      let timer: ReturnType<typeof setTimeout> | null = null;
       const complete = (operation: () => void) => {
         if (settled) return;
         settled = true;
-        clearTimeout(timer);
+        if (timer) clearTimeout(timer);
+        if (closeGraceTimer) clearTimeout(closeGraceTimer);
         if (this.connectionCancel === cancel) this.connectionCancel = null;
         operation();
       };
       const cancel = () =>
         complete(() => reject(new SessionOperationCancelled()));
       this.connectionCancel = cancel;
-      const timer = setTimeout(() => {
-        complete(() =>
-          reject(
-            new TranscriptionSessionError(
-              'connection-failed',
-              this.provider,
-              'Timed out while connecting to Gemini Live.'
-            )
-          )
-        );
-      }, CONNECTION_TIMEOUT_MS);
+      const scheduleTimeout = () => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          const error = setupSent
+            ? new TranscriptionSessionError(
+                'provider-error',
+                this.provider,
+                'The Gemini Live WebSocket opened, but the setup response did not arrive within 10 seconds.'
+              )
+            : new TranscriptionSessionError(
+                'connection-failed',
+                this.provider,
+                'The Gemini Live WebSocket did not open within 10 seconds.'
+              );
+          complete(() => reject(error));
+        }, CONNECTION_TIMEOUT_MS);
+      };
+      scheduleTimeout();
 
       socket.onopen = () => {
         if (operationId !== this.operationId) {
@@ -403,78 +444,79 @@ export class GeminiLiveTranscriptionSession extends BaseRealtimeTranscriptionSes
           return;
         }
         setupSent = true;
+        scheduleTimeout();
         socket.send(JSON.stringify(createSetupMessage(this.options)));
       };
       socket.onmessage = (event) => {
-        const message = this.parseServerMessage(event.data);
-        if (!message) return;
-        const providerError = this.providerErrorFromMessage(message);
-        if (providerError) {
-          complete(() => reject(providerError));
-          return;
-        }
-        if (setupSent && message.setupComplete !== undefined) {
-          complete(resolve);
-        }
+        void this.parseServerMessage(event.data).then((message) => {
+          if (settled || !message) return;
+          const providerError = this.providerErrorFromMessage(message);
+          if (providerError) {
+            complete(() => reject(providerError));
+            return;
+          }
+          if (setupSent && message.setupComplete !== undefined) {
+            complete(resolve);
+          }
+        });
       };
       socket.onerror = () => {
-        complete(() =>
-          reject(
-            new TranscriptionSessionError(
-              'connection-failed',
-              this.provider,
-              'The Gemini Live WebSocket connection failed.'
+        if (settled || closeGraceTimer) return;
+        closeGraceTimer = setTimeout(() => {
+          complete(() =>
+            reject(
+              new TranscriptionSessionError(
+                'connection-failed',
+                this.provider,
+                'The Gemini Live WebSocket connection failed before the browser received close details.'
+              )
             )
-          )
-        );
+          );
+        }, WEBSOCKET_CLOSE_GRACE_MS);
       };
       socket.onclose = (event) => {
-        const code =
-          event.code === 1008 ? 'authentication-failed' : 'connection-failed';
-        complete(() =>
-          reject(
-            new TranscriptionSessionError(
-              code,
-              this.provider,
-              `Gemini Live closed before setup completed (code ${event.code}).`
-            )
-          )
-        );
+        complete(() => reject(errorFromCloseEvent(event, 'setup')));
       };
     });
   }
 
   private attachRuntimeListeners(socket: WebSocket): void {
     socket.onopen = null;
-    socket.onmessage = (event) => this.handleServerMessage(event.data);
-    socket.onerror = () => {
-      if (this.state === 'listening') {
-        this.handleConnectionFailure(
-          new TranscriptionSessionError(
-            'connection-failed',
-            this.provider,
-            'The Gemini Live WebSocket connection failed.'
-          )
-        );
-      }
+    socket.onmessage = (event) => {
+      void this.handleServerMessage(event.data);
     };
+    socket.onerror = () => this.scheduleSocketErrorFallback(socket);
     socket.onclose = (event) => {
+      this.clearSocketErrorFallback();
       if (this.state === 'stopping') {
         this.completeStopFinalization();
         return;
       }
       if (this.state === 'listening') {
-        const code =
-          event.code === 1008 ? 'authentication-failed' : 'connection-failed';
-        this.handleConnectionFailure(
-          new TranscriptionSessionError(
-            code,
-            this.provider,
-            `The Gemini Live connection closed unexpectedly (code ${event.code}).`
-          )
-        );
+        this.handleConnectionFailure(errorFromCloseEvent(event, 'runtime'));
       }
     };
+  }
+
+  private scheduleSocketErrorFallback(socket: WebSocket): void {
+    if (this.socketErrorFallbackTimer) return;
+    this.socketErrorFallbackTimer = setTimeout(() => {
+      this.socketErrorFallbackTimer = null;
+      if (this.socket !== socket || this.state !== 'listening') return;
+      this.handleConnectionFailure(
+        new TranscriptionSessionError(
+          'connection-failed',
+          this.provider,
+          'The Gemini Live WebSocket connection failed before the browser received close details.'
+        )
+      );
+    }, WEBSOCKET_CLOSE_GRACE_MS);
+  }
+
+  private clearSocketErrorFallback(): void {
+    if (!this.socketErrorFallbackTimer) return;
+    clearTimeout(this.socketErrorFallbackTimer);
+    this.socketErrorFallbackTimer = null;
   }
 
   private sendAudioChunk(socket: WebSocket, pcm16: Uint8Array): void {
@@ -497,8 +539,8 @@ export class GeminiLiveTranscriptionSession extends BaseRealtimeTranscriptionSes
     );
   }
 
-  private handleServerMessage(raw: unknown): void {
-    const message = this.parseServerMessage(raw);
+  private async handleServerMessage(raw: unknown): Promise<void> {
+    const message = await this.parseServerMessage(raw);
     if (!message) return;
 
     const providerError = this.providerErrorFromMessage(message);
@@ -526,10 +568,19 @@ export class GeminiLiveTranscriptionSession extends BaseRealtimeTranscriptionSes
     }
   }
 
-  private parseServerMessage(raw: unknown): GeminiLiveServerMessage | null {
-    if (typeof raw !== 'string') return null;
+  private async parseServerMessage(
+    raw: unknown
+  ): Promise<GeminiLiveServerMessage | null> {
     try {
-      return JSON.parse(raw) as GeminiLiveServerMessage;
+      const json =
+        typeof raw === 'string'
+          ? raw
+          : typeof Blob !== 'undefined' && raw instanceof Blob
+            ? await raw.text()
+            : Object.prototype.toString.call(raw) === '[object ArrayBuffer]'
+              ? new TextDecoder().decode(raw as ArrayBuffer)
+              : null;
+      return json ? (JSON.parse(json) as GeminiLiveServerMessage) : null;
     } catch {
       return null;
     }
@@ -604,6 +655,7 @@ export class GeminiLiveTranscriptionSession extends BaseRealtimeTranscriptionSes
   private cleanupResources(): void {
     this.connectionCancel?.();
     this.connectionCancel = null;
+    this.clearSocketErrorFallback();
     this.completeStopFinalization();
     this.activeUtteranceId = null;
     const socket = this.socket;

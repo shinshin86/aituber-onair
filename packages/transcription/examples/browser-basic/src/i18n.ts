@@ -102,6 +102,7 @@ const englishMessages = {
   errorConnectionFailed:
     'The transcription service could not be reached. Wait a moment and try again.',
   errorProvider: 'Transcription failed. Please try again.',
+  errorTechnicalDetails: 'Details',
   errorInvalidConfiguration: 'Check the transcription settings and try again.',
   errorSessionDisposed: 'The transcription session has already been disposed.',
 } as const;
@@ -207,6 +208,7 @@ const japaneseMessages: Messages = {
   errorConnectionFailed:
     '文字起こしサービスへ接続できませんでした。しばらく待ってからもう一度お試しください。',
   errorProvider: '文字起こし中にエラーが発生しました。もう一度お試しください。',
+  errorTechnicalDetails: '詳細',
   errorInvalidConfiguration: '入力内容を確認してください。',
   errorSessionDisposed: '文字起こしセッションはすでに終了しています。',
 };

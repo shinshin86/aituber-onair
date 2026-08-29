@@ -38,6 +38,7 @@ describe('browser example i18n', () => {
     expect(translate('ja', 'localWhisperModelSmallHint')).toContain('約589MB');
     expect(translate('ja', 'progressDownloadModel')).toContain('初回のみ');
     expect(translate('ja', 'progressInitializeModel')).toBe('モデルを初期化中');
+    expect(translate('ja', 'errorTechnicalDetails')).toBe('詳細');
     expect(translate('en', 'progressDownloadModel')).toContain(
       'first use only'
     );

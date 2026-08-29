@@ -69,6 +69,12 @@ class MockAudioContext {
 
 class MockBlob {
   constructor(readonly parts: BlobPart[]) {}
+
+  async text(): Promise<string> {
+    return this.parts
+      .map((part) => (typeof part === 'string' ? part : ''))
+      .join('');
+  }
 }
 
 class MockWebSocket {
@@ -103,9 +109,20 @@ class MockWebSocket {
   }
 
   emit(message: Record<string, unknown>): void {
-    this.onmessage?.(
-      new MessageEvent('message', { data: JSON.stringify(message) })
-    );
+    this.emitRaw(JSON.stringify(message));
+  }
+
+  emitRaw(data: unknown): void {
+    this.onmessage?.(new MessageEvent('message', { data }));
+  }
+
+  fail(): void {
+    this.onerror?.(new Event('error'));
+  }
+
+  emitClose(code: number, reason: string): void {
+    this.readyState = MockWebSocket.CLOSED;
+    this.onclose?.(new CloseEvent('close', { code, reason, wasClean: false }));
   }
 }
 
@@ -236,18 +253,63 @@ describe('GeminiLiveTranscriptionSession', () => {
       serverContent: { inputTranscription: { text: 'こんにちは。' } },
     });
 
-    expect(updates).toEqual([
-      {
-        utteranceId: 'gemini-live:1',
-        text: 'こんにちは',
-        isFinal: false,
-      },
-      {
-        utteranceId: 'gemini-live:1',
-        text: 'こんにちは。',
-        isFinal: true,
-      },
-    ]);
+    await vi.waitFor(() =>
+      expect(updates).toEqual([
+        {
+          utteranceId: 'gemini-live:1',
+          text: 'こんにちは',
+          isFinal: false,
+        },
+        {
+          utteranceId: 'gemini-live:1',
+          text: 'こんにちは。',
+          isFinal: true,
+        },
+      ])
+    );
+  });
+
+  it('accepts Blob setup messages and ArrayBuffer transcript messages', async () => {
+    const updates: TranscriptUpdate[] = [];
+    const session = trackSession(
+      createRealtimeTranscriptionSession({
+        provider: 'gemini-live',
+        auth: {
+          type: 'browser-api-key',
+          getApiKey: async () => 'test-key',
+          acknowledgeBrowserKeyRisk: true,
+        },
+      })
+    );
+    session.onTranscript((update) => updates.push(update));
+
+    const startPromise = session.start();
+    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    const socket = MockWebSocket.instances[0];
+    if (!socket) throw new Error('Expected a Gemini Live WebSocket.');
+    socket.open();
+    socket.emitRaw(
+      new Blob([JSON.stringify({ setupComplete: {} })]) as unknown as Blob
+    );
+    await startPromise;
+
+    socket.emitRaw(
+      new TextEncoder().encode(
+        JSON.stringify({
+          serverContent: { inputTranscription: { text: 'binary response' } },
+        })
+      ).buffer
+    );
+
+    await vi.waitFor(() =>
+      expect(updates).toEqual([
+        {
+          utteranceId: 'gemini-live:1',
+          text: 'binary response',
+          isFinal: true,
+        },
+      ])
+    );
   });
 
   it('streams captured audio as base64 PCM16 and finalizes on stop', async () => {
@@ -373,6 +435,103 @@ describe('GeminiLiveTranscriptionSession', () => {
     );
     await openSession(socket);
     await startPromise;
+  });
+
+  it('preserves a policy close reason without assuming authentication failed', async () => {
+    const errors: Array<{ code: string; message: string }> = [];
+    const session = trackSession(
+      createRealtimeTranscriptionSession({
+        provider: 'gemini-live',
+        auth: {
+          type: 'browser-api-key',
+          getApiKey: async () => 'test-key',
+          acknowledgeBrowserKeyRisk: true,
+        },
+      })
+    );
+    session.onError((error) => errors.push(error));
+
+    const startPromise = session.start();
+    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    const socket = MockWebSocket.instances[0];
+    if (!socket) throw new Error('Expected a Gemini Live WebSocket.');
+    socket.open();
+    socket.fail();
+    socket.emitClose(
+      1008,
+      'Operation is not implemented, or supported, or enabled.'
+    );
+
+    await expect(startPromise).rejects.toMatchObject({
+      code: 'provider-error',
+      message: expect.stringContaining(
+        'code 1008: Operation is not implemented, or supported, or enabled.'
+      ),
+    });
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
+      code: 'provider-error',
+      message:
+        'Gemini Live closed before setup completed (code 1008: Operation is not implemented, or supported, or enabled.).',
+    });
+  });
+
+  it('classifies a close reason that explicitly identifies an invalid API key', async () => {
+    const session = trackSession(
+      createRealtimeTranscriptionSession({
+        provider: 'gemini-live',
+        auth: {
+          type: 'browser-api-key',
+          getApiKey: async () => 'test-key',
+          acknowledgeBrowserKeyRisk: true,
+        },
+      })
+    );
+
+    const startPromise = session.start();
+    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    const socket = MockWebSocket.instances[0];
+    if (!socket) throw new Error('Expected a Gemini Live WebSocket.');
+    socket.open();
+    socket.emitClose(1008, 'API key not valid. Please pass a valid API key.');
+
+    await expect(startPromise).rejects.toMatchObject({
+      code: 'authentication-failed',
+      message: expect.stringContaining('API key not valid'),
+    });
+  });
+
+  it('preserves close details after a session starts listening', async () => {
+    const errors: Array<{ code: string; message: string }> = [];
+    const session = trackSession(
+      createRealtimeTranscriptionSession({
+        provider: 'gemini-live',
+        auth: {
+          type: 'browser-api-key',
+          getApiKey: async () => 'test-key',
+          acknowledgeBrowserKeyRisk: true,
+        },
+      })
+    );
+    session.onError((error) => errors.push(error));
+
+    const startPromise = session.start();
+    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    const socket = MockWebSocket.instances[0];
+    if (!socket) throw new Error('Expected a Gemini Live WebSocket.');
+    await openSession(socket);
+    await startPromise;
+
+    socket.fail();
+    socket.emitClose(1011, 'Temporary server failure.');
+
+    expect(session.state).toBe('error');
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
+      code: 'connection-failed',
+      message:
+        'The Gemini Live connection closed unexpectedly (code 1011: Temporary server failure.).',
+    });
   });
 
   it('reports support only when WebSocket and AudioWorklet are available', () => {

@@ -10,6 +10,10 @@
   snapshots, language hints, custom vocabulary, and verbatim or smart modes.
 - Added Gemini controls, English/Japanese guidance, capability detection, and
   connection-limit guidance to the browser example and package documentation.
+- Preserved Gemini WebSocket close codes and reasons so authentication,
+  provider-policy, and transport failures can be diagnosed separately.
+- Accepted Gemini WebSocket responses delivered as text, `Blob`, or
+  `ArrayBuffer`, and distinguished socket-open from setup-response timeouts.
 
 ## 0.0.2
 

@@ -168,7 +168,17 @@ function localizeStaticContent(): void {
 function translatedErrorMessage(error: TranscriptionError | Error): string {
   if (displayLanguage !== 'ja' || !('code' in error)) return error.message;
   const key = errorTranslationKeys[error.code as TranscriptionErrorCode];
-  return key ? translate(displayLanguage, key) : error.message;
+  if (!key) return error.message;
+  const summary = translate(displayLanguage, key);
+  if (
+    error.provider !== 'gemini-live' ||
+    !['authentication-failed', 'connection-failed', 'provider-error'].includes(
+      error.code as TranscriptionErrorCode
+    )
+  ) {
+    return summary;
+  }
+  return `${summary}\n${translate(displayLanguage, 'errorTechnicalDetails')}: ${error.message}`;
 }
 
 function setError(error: TranscriptionError | Error | null): void {
