@@ -3,6 +3,7 @@ import type {
   RealtimeTranscriptionSession,
 } from './types';
 import { LocalWhisperTranscriptionSession } from './providers/LocalWhisperTranscriptionSession';
+import { GeminiLiveTranscriptionSession } from './providers/GeminiLiveTranscriptionSession';
 import { OpenAIRealtimeTranscriptionSession } from './providers/OpenAIRealtimeTranscriptionSession';
 import { WebSpeechTranscriptionSession } from './providers/WebSpeechTranscriptionSession';
 
@@ -14,6 +15,8 @@ export function createRealtimeTranscriptionSession(
       return new WebSpeechTranscriptionSession(options);
     case 'openai-realtime':
       return new OpenAIRealtimeTranscriptionSession(options);
+    case 'gemini-live':
+      return new GeminiLiveTranscriptionSession(options);
     case 'local-whisper':
       return new LocalWhisperTranscriptionSession(options);
     default: {

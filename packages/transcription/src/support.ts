@@ -10,6 +10,7 @@ interface BrowserGlobal {
   webkitSpeechRecognition?: unknown;
   navigator?: TranscriptionNavigator;
   RTCPeerConnection?: unknown;
+  WebSocket?: unknown;
   AudioContext?: unknown;
   webkitAudioContext?: unknown;
   AudioWorkletNode?: unknown;
@@ -41,6 +42,16 @@ export function isTranscriptionProviderSupported(
         browser.AudioWorkletNode &&
         browser.Worker &&
         browser.navigator?.gpu
+    );
+  }
+
+  if (provider === 'gemini-live') {
+    return Boolean(
+      browser.isSecureContext !== false &&
+        browser.WebSocket &&
+        browser.navigator?.mediaDevices?.getUserMedia &&
+        (browser.AudioContext ?? browser.webkitAudioContext) &&
+        browser.AudioWorkletNode
     );
   }
 

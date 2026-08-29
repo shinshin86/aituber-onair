@@ -1,0 +1,9 @@
+{
+  "name": "@aituber-onair/transcription-browser-basic-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config vite.config.ts",
+    "build": "tsc --project tsconfig.json --noEmit && vite build --config vite.config.ts"
+  }
+}
