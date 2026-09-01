@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MODEL_GLM_5_3,
+  MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5_1,
   MODEL_GLM_5_2,
   getDefaultZaiReasoningEffort,
@@ -27,6 +29,21 @@ describe('Z.ai reasoning effort helpers', () => {
     expect(getZaiSupportedReasoningEfforts(MODEL_GLM_5_1)).toEqual([]);
     expect(isZaiReasoningEffortModel(MODEL_GLM_5_1)).toBe(false);
     expect(getDefaultZaiReasoningEffort(MODEL_GLM_5_1)).toBeUndefined();
+  });
+
+  it('uses low as the minimum chat-oriented effort for GLM-5.3', () => {
+    for (const model of [MODEL_GLM_5_3, MODEL_GLM_5_3_FLASH]) {
+      expect(getZaiSupportedReasoningEfforts(model)).toEqual([
+        'low',
+        'high',
+        'max',
+      ]);
+      expect(isZaiReasoningEffortModel(model)).toBe(true);
+      expect(getDefaultZaiReasoningEffort(model)).toBe('low');
+      expect(normalizeZaiReasoningEffort(model)).toBe('low');
+      expect(normalizeZaiReasoningEffort(model, 'none')).toBe('low');
+      expect(normalizeZaiReasoningEffort(model, 'xhigh')).toBe('max');
+    }
   });
 
   it('normalizes protocol values to the effective GLM-5.2 tiers', () => {

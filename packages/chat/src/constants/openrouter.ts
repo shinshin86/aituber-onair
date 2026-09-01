@@ -8,6 +8,7 @@ export const MODEL_OPENROUTER_FUSION = 'openrouter/fusion';
 export const MODEL_GPT_OSS_20B_FREE = 'openai/gpt-oss-20b:free';
 export const MODEL_MOONSHOTAI_KIMI_K3 = 'moonshotai/kimi-k3';
 export const MODEL_MOONSHOTAI_KIMI_K2_7_CODE = 'moonshotai/kimi-k2.7-code';
+export const MODEL_MOONSHOTAI_KIMI_K2_6 = 'moonshotai/kimi-k2.6';
 export const MODEL_MOONSHOTAI_KIMI_K2_5 = 'moonshotai/kimi-k2.5';
 export const MODEL_MOONSHOTAI_KIMI_LATEST = '~moonshotai/kimi-latest';
 export const MODEL_OPENAI_GPT_LATEST = '~openai/gpt-latest';
@@ -29,7 +30,9 @@ export const MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST =
 export const MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST =
   '~anthropic/claude-haiku-latest';
 export const MODEL_ANTHROPIC_CLAUDE_FABLE_5 = 'anthropic/claude-fable-5';
+export const MODEL_ANTHROPIC_CLAUDE_SONNET_5 = 'anthropic/claude-sonnet-5';
 export const MODEL_ANTHROPIC_CLAUDE_OPUS_5 = 'anthropic/claude-opus-5';
+export const MODEL_ANTHROPIC_CLAUDE_OPUS_4_8 = 'anthropic/claude-opus-4.8';
 export const MODEL_ANTHROPIC_CLAUDE_OPUS_4 = 'anthropic/claude-opus-4';
 export const MODEL_ANTHROPIC_CLAUDE_SONNET_4 = 'anthropic/claude-sonnet-4';
 export const MODEL_ANTHROPIC_CLAUDE_3_7_SONNET = 'anthropic/claude-3.7-sonnet';
@@ -46,6 +49,8 @@ export const MODEL_GOOGLE_GEMINI_2_5_FLASH = 'google/gemini-2.5-flash';
 export const MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025 =
   'google/gemini-2.5-flash-lite-preview-09-2025';
 export const MODEL_ZAI_GLM_5_2 = 'z-ai/glm-5.2';
+export const MODEL_ZAI_GLM_5_3 = 'z-ai/glm-5.3';
+export const MODEL_ZAI_GLM_5_3_FLASH = 'z-ai/glm-5.3-flash';
 export const MODEL_ZAI_GLM_4_7_FLASH = 'z-ai/glm-4.7-flash';
 export const MODEL_ZAI_GLM_4_5_AIR = 'z-ai/glm-4.5-air';
 export const MODEL_ZAI_GLM_4_5_AIR_FREE = 'z-ai/glm-4.5-air:free';
@@ -61,6 +66,9 @@ export const MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731 =
   'deepseek/deepseek-v4-flash-0731';
 export const MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813 =
   'deepseek/deepseek-v4-pro-0813';
+export const MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP =
+  'deepseek/deepseek-v4-flash-vision-exp';
+export const MODEL_QWEN_QWEN_3_8_FLASH = 'qwen/qwen3.8-flash';
 
 // These ids remain exported for compatibility but are absent from the current
 // OpenRouter public model catalog.
@@ -107,6 +115,28 @@ const OPENROUTER_DEEPSEEK_V4_PRO_REASONING_EFFORTS = [
   'xhigh',
 ] as const satisfies readonly OpenRouterReasoningEffort[];
 
+const OPENROUTER_ALWAYS_THINKING_REASONING_EFFORTS = [
+  'low',
+  'high',
+  'max',
+] as const satisfies readonly OpenRouterReasoningEffort[];
+
+const OPENROUTER_OPTIONAL_LOW_REASONING_EFFORTS = [
+  'none',
+  'low',
+  'high',
+  'max',
+] as const satisfies readonly OpenRouterReasoningEffort[];
+
+const OPENROUTER_CLAUDE_REASONING_EFFORTS = [
+  'none',
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+  'max',
+] as const satisfies readonly OpenRouterReasoningEffort[];
+
 // Free tier models
 export const OPENROUTER_FREE_MODELS = [MODEL_GPT_OSS_20B_FREE];
 
@@ -114,6 +144,7 @@ export const OPENROUTER_FREE_MODELS = [MODEL_GPT_OSS_20B_FREE];
 export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_MOONSHOTAI_KIMI_K3,
+  MODEL_MOONSHOTAI_KIMI_K2_6,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
@@ -131,7 +162,9 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_4_8,
   MODEL_ANTHROPIC_CLAUDE_OPUS_4,
   MODEL_ANTHROPIC_CLAUDE_SONNET_4,
   MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
@@ -143,6 +176,9 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_GOOGLE_GEMINI_2_5_PRO,
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
   MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+  MODEL_ZAI_GLM_5_3_FLASH,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
+  MODEL_QWEN_QWEN_3_8_FLASH,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
   MODEL_MOONSHOTAI_KIMI_K2_5,
   MODEL_XAI_GROK_LATEST,
@@ -180,6 +216,24 @@ export function getOpenRouterSupportedReasoningEfforts(
   model: string,
 ): readonly OpenRouterReasoningEffort[] {
   const normalizedModel = model.trim();
+  if (
+    normalizedModel === MODEL_ZAI_GLM_5_3 ||
+    normalizedModel === MODEL_ZAI_GLM_5_3_FLASH
+  ) {
+    return OPENROUTER_ALWAYS_THINKING_REASONING_EFFORTS;
+  }
+
+  if (normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP) {
+    return OPENROUTER_OPTIONAL_LOW_REASONING_EFFORTS;
+  }
+
+  if (
+    normalizedModel === MODEL_ANTHROPIC_CLAUDE_SONNET_5 ||
+    normalizedModel === MODEL_ANTHROPIC_CLAUDE_OPUS_4_8
+  ) {
+    return OPENROUTER_CLAUDE_REASONING_EFFORTS;
+  }
+
   if (normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH) {
     return OPENROUTER_DEEPSEEK_V4_FLASH_REASONING_EFFORTS;
   }
@@ -199,7 +253,18 @@ export function getDefaultOpenRouterReasoningEffort(
   model: string,
 ): OpenRouterReasoningEffort | undefined {
   const normalizedModel = model.trim();
+  if (
+    normalizedModel === MODEL_ZAI_GLM_5_3 ||
+    normalizedModel === MODEL_ZAI_GLM_5_3_FLASH
+  ) {
+    return 'low';
+  }
+
   return normalizedModel === MODEL_ZAI_GLM_5_2 ||
+    normalizedModel === MODEL_QWEN_QWEN_3_8_FLASH ||
+    normalizedModel === MODEL_MOONSHOTAI_KIMI_K2_6 ||
+    normalizedModel === MODEL_ANTHROPIC_CLAUDE_SONNET_5 ||
+    normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP ||
     normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH ||
     normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731 ||
     normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813
@@ -215,6 +280,19 @@ export function normalizeOpenRouterReasoningEffort(
   const requested = effort ?? getDefaultOpenRouterReasoningEffort(model);
   if (!requested) {
     return undefined;
+  }
+
+  if (
+    normalizedModel === MODEL_ZAI_GLM_5_3 ||
+    normalizedModel === MODEL_ZAI_GLM_5_3_FLASH
+  ) {
+    if (requested === 'high') {
+      return 'high';
+    }
+    if (requested === 'max' || requested === 'xhigh') {
+      return 'max';
+    }
+    return 'low';
   }
 
   const supported = getOpenRouterSupportedReasoningEfforts(model);
@@ -244,6 +322,15 @@ export function normalizeOpenRouterReasoningEffort(
     }
     if (requested === 'max') {
       return 'xhigh';
+    }
+  }
+
+  if (normalizedModel === MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP) {
+    if (requested === 'minimal' || requested === 'medium') {
+      return 'low';
+    }
+    if (requested === 'xhigh') {
+      return 'high';
     }
   }
 

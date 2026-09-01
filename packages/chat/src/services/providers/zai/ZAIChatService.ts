@@ -5,6 +5,7 @@ import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   MODEL_GLM_5_2,
   MODEL_GLM_4_6V_FLASH,
+  isZaiReasoningEffortModel,
   isZaiToolStreamModel,
   isZaiVisionModel,
   type ZaiReasoningEffort,
@@ -238,7 +239,7 @@ export class ZAIChatService implements ChatService {
       body.thinking = this.thinking;
     }
 
-    if (model === MODEL_GLM_5_2 && this.reasoningEffort) {
+    if (isZaiReasoningEffortModel(model) && this.reasoningEffort) {
       body.reasoning_effort = this.reasoningEffort;
     }
 

@@ -3,6 +3,8 @@ import { ZAIChatServiceProvider } from '../../src/services/providers/zai/ZAIChat
 import type { ZAIChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+  MODEL_GLM_5_3,
+  MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
   MODEL_GLM_5,
@@ -38,6 +40,8 @@ describe('ZAIChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GLM_5_3,
+        MODEL_GLM_5_3_FLASH,
         MODEL_GLM_5_2,
         MODEL_GLM_5_1,
         MODEL_GLM_5,
@@ -93,6 +97,11 @@ describe('ZAIChatServiceProvider', () => {
       expect(provider.getVisionSupportLevelForModel(MODEL_GLM_5_2)).toBe(
         'unsupported',
       );
+    });
+
+    it('should expose GLM-5.3 Flash as vision-capable', () => {
+      expect(provider.supportsVisionForModel(MODEL_GLM_5_3)).toBe(false);
+      expect(provider.supportsVisionForModel(MODEL_GLM_5_3_FLASH)).toBe(true);
     });
 
     it('should return false for glm-5-turbo', () => {
@@ -225,6 +234,60 @@ describe('ZAIChatServiceProvider', () => {
         expect.objectContaining({ type: 'enabled' }),
         'max',
       );
+    });
+
+    it.each([MODEL_GLM_5_3, MODEL_GLM_5_3_FLASH])(
+      'defaults %s to always-on low thinking for responsive chat',
+      (model) => {
+        provider.createChatService({
+          apiKey: 'test-api-key',
+          model,
+        });
+
+        expect(ZAIChatService).toHaveBeenCalledWith(
+          'test-api-key',
+          model,
+          model === MODEL_GLM_5_3_FLASH
+            ? MODEL_GLM_5_3_FLASH
+            : MODEL_GLM_4_6V_FLASH,
+          undefined,
+          ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+          undefined,
+          undefined,
+          { type: 'enabled', clear_thinking: true },
+          'low',
+        );
+      },
+    );
+
+    it('keeps GLM-5.3 thinking enabled when disabled is requested', () => {
+      provider.createChatService({
+        apiKey: 'test-api-key',
+        model: MODEL_GLM_5_3,
+        thinking: { type: 'disabled' },
+      });
+
+      expect(ZAIChatService).toHaveBeenCalledWith(
+        'test-api-key',
+        MODEL_GLM_5_3,
+        MODEL_GLM_4_6V_FLASH,
+        undefined,
+        ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+        undefined,
+        undefined,
+        { type: 'enabled', clear_thinking: true },
+        'low',
+      );
+    });
+
+    it('rejects unsupported none effort for GLM-5.3', () => {
+      expect(() =>
+        provider.createChatService({
+          apiKey: 'test-api-key',
+          model: MODEL_GLM_5_3,
+          reasoning_effort: 'none',
+        }),
+      ).toThrow('Supported values: low, high, max');
     });
 
     it('preserves explicit thinking when reasoning effort is omitted', () => {

@@ -2,6 +2,8 @@ import {
   DEEPSEEK_SUPPORTED_MODELS,
   ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
   MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+  isDeepSeekVisionModel,
 } from '../../../constants/deepseek';
 import { ChatService } from '../../ChatService';
 import {
@@ -11,6 +13,7 @@ import {
 } from '../ChatServiceProvider';
 import { DeepSeekChatService } from './DeepSeekChatService';
 import { ToolDefinition } from '../../../types/toolChat';
+import { resolveVisionModel } from '../../../utils';
 
 export class DeepSeekChatServiceProvider
   implements ChatServiceProvider<DeepSeekChatServiceOptions>
@@ -19,12 +22,21 @@ export class DeepSeekChatServiceProvider
     this.validateRequiredOptions(options);
 
     const model = options.model || this.getDefaultModel();
+    const visionModel = resolveVisionModel({
+      model,
+      visionModel: options.visionModel,
+      defaultModel: this.getDefaultModel(),
+      defaultVisionModel: MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+      supportsVisionForModel: (visionModel) =>
+        this.supportsVisionForModel(visionModel),
+      validate: 'explicit',
+    });
     const tools: ToolDefinition[] | undefined = options.tools;
 
     return new DeepSeekChatService(
       options.apiKey,
       model,
-      options.visionModel ?? model,
+      visionModel,
       tools,
       this.resolveEndpoint(options),
       options.responseLength,
@@ -45,19 +57,19 @@ export class DeepSeekChatServiceProvider
   }
 
   supportsVision(): boolean {
-    return false;
+    return true;
   }
 
   getVisionSupportLevel(): VisionSupportLevel {
-    return 'unsupported';
+    return 'supported';
   }
 
-  supportsVisionForModel(_model: string): boolean {
-    return false;
+  supportsVisionForModel(model: string): boolean {
+    return isDeepSeekVisionModel(model);
   }
 
-  getVisionSupportLevelForModel(_model: string): VisionSupportLevel {
-    return 'unsupported';
+  getVisionSupportLevelForModel(model: string): VisionSupportLevel {
+    return this.supportsVisionForModel(model) ? 'supported' : 'unsupported';
   }
 
   private validateRequiredOptions(options: DeepSeekChatServiceOptions): void {

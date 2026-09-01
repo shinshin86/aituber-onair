@@ -1,7 +1,9 @@
 import {
   ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
   MODEL_FUGU,
+  MODEL_SAKANA_NAMAZU,
   SAKANA_SUPPORTED_MODELS,
+  isSakanaVisionModel,
 } from '../../../constants/sakana';
 import { ChatService } from '../../ChatService';
 import {
@@ -11,6 +13,7 @@ import {
 } from '../ChatServiceProvider';
 import { SakanaChatService } from './SakanaChatService';
 import { ToolDefinition } from '../../../types/toolChat';
+import { resolveVisionModel } from '../../../utils';
 
 export class SakanaChatServiceProvider
   implements ChatServiceProvider<SakanaChatServiceOptions>
@@ -19,15 +22,34 @@ export class SakanaChatServiceProvider
     this.validateRequiredOptions(options);
 
     const model = options.model || this.getDefaultModel();
+    const visionModel = resolveVisionModel({
+      model,
+      visionModel: options.visionModel,
+      defaultModel: this.getDefaultModel(),
+      defaultVisionModel: MODEL_SAKANA_NAMAZU,
+      supportsVisionForModel: (visionModel) =>
+        this.supportsVisionForModel(visionModel),
+      validate: 'explicit',
+    });
     const tools: ToolDefinition[] | undefined = options.tools;
+    if (options.thinking !== undefined && model !== MODEL_SAKANA_NAMAZU) {
+      throw new Error(
+        'Sakana thinking control is only supported for sakana-namazu.',
+      );
+    }
+    const thinking =
+      model === MODEL_SAKANA_NAMAZU
+        ? (options.thinking ?? { type: 'disabled' as const })
+        : undefined;
 
     return new SakanaChatService(
       options.apiKey,
       model,
-      options.visionModel ?? model,
+      visionModel,
       tools,
       this.resolveEndpoint(options),
       options.responseLength,
+      thinking,
     );
   }
 
@@ -44,19 +66,19 @@ export class SakanaChatServiceProvider
   }
 
   supportsVision(): boolean {
-    return false;
+    return true;
   }
 
   getVisionSupportLevel(): VisionSupportLevel {
-    return 'unsupported';
+    return 'supported';
   }
 
-  supportsVisionForModel(_model: string): boolean {
-    return false;
+  supportsVisionForModel(model: string): boolean {
+    return isSakanaVisionModel(model);
   }
 
-  getVisionSupportLevelForModel(_model: string): VisionSupportLevel {
-    return 'unsupported';
+  getVisionSupportLevelForModel(model: string): VisionSupportLevel {
+    return this.supportsVisionForModel(model) ? 'supported' : 'unsupported';
   }
 
   private validateRequiredOptions(options: SakanaChatServiceOptions): void {

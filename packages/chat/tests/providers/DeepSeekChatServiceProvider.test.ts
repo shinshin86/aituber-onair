@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
   MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_DEEPSEEK_V4_PRO,
 } from '../../src/constants';
 import { DeepSeekChatService } from '../../src/services/providers/deepseek/DeepSeekChatService';
@@ -18,6 +19,7 @@ describe('DeepSeekChatServiceProvider', () => {
     expect(provider.getSupportedModels()).toEqual([
       MODEL_DEEPSEEK_V4_FLASH,
       MODEL_DEEPSEEK_V4_PRO,
+      MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
     ]);
   });
 
@@ -25,15 +27,23 @@ describe('DeepSeekChatServiceProvider', () => {
     expect(provider.getDefaultModel()).toBe(MODEL_DEEPSEEK_V4_FLASH);
   });
 
-  it('reports vision as unsupported', () => {
-    expect(provider.supportsVision()).toBe(false);
+  it('reports vision support only for the experimental vision model', () => {
+    expect(provider.supportsVision()).toBe(true);
     expect(provider.supportsVisionForModel(MODEL_DEEPSEEK_V4_FLASH)).toBe(
       false,
     );
-    expect(provider.getVisionSupportLevel()).toBe('unsupported');
+    expect(
+      provider.supportsVisionForModel(MODEL_DEEPSEEK_V4_FLASH_VISION_EXP),
+    ).toBe(true);
+    expect(provider.getVisionSupportLevel()).toBe('supported');
     expect(
       provider.getVisionSupportLevelForModel(MODEL_DEEPSEEK_V4_FLASH),
     ).toBe('unsupported');
+    expect(
+      provider.getVisionSupportLevelForModel(
+        MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+      ),
+    ).toBe('supported');
   });
 
   it('requires an apiKey', () => {
@@ -47,7 +57,7 @@ describe('DeepSeekChatServiceProvider', () => {
 
     expect(service).toBeInstanceOf(DeepSeekChatService);
     expect(service.getModel()).toBe(MODEL_DEEPSEEK_V4_FLASH);
-    expect(service.getVisionModel()).toBe(MODEL_DEEPSEEK_V4_FLASH);
+    expect(service.getVisionModel()).toBe(MODEL_DEEPSEEK_V4_FLASH_VISION_EXP);
     expect((service as any).endpoint).toBe(
       ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
     );

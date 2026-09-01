@@ -321,7 +321,11 @@ describe('ChatServiceFactory', () => {
       expect(geminiNanoModels).toEqual(['gemini-nano']);
 
       const deepSeekModels = ChatServiceFactory.getSupportedModels('deepseek');
-      expect(deepSeekModels).toEqual(['deepseek-v4-flash', 'deepseek-v4-pro']);
+      expect(deepSeekModels).toEqual([
+        'deepseek-v4-flash',
+        'deepseek-v4-pro',
+        'deepseek-v4-flash-vision-exp',
+      ]);
 
       const mistralModels = ChatServiceFactory.getSupportedModels('mistral');
       expect(mistralModels).toEqual([
@@ -336,7 +340,11 @@ describe('ChatServiceFactory', () => {
       ]);
 
       const sakanaModels = ChatServiceFactory.getSupportedModels('sakana');
-      expect(sakanaModels).toEqual(['fugu', 'fugu-ultra-v1.1']);
+      expect(sakanaModels).toEqual([
+        'fugu',
+        'fugu-ultra-v1.1',
+        'sakana-namazu',
+      ]);
 
       const plamoModels = ChatServiceFactory.getSupportedModels('plamo');
       expect(plamoModels).toEqual(['plamo-3.0-prime']);

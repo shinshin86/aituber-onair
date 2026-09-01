@@ -6,6 +6,8 @@ import {
   MODEL_GPT_OSS_20B_FREE,
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_AUTO_BETA,
+  MODEL_ZAI_GLM_5_3,
+  MODEL_ZAI_GLM_5_3_FLASH,
   MODEL_ZAI_GLM_5_2,
   type OpenRouterReasoningEffort,
   getDefaultOpenRouterReasoningEffort,
@@ -31,7 +33,12 @@ const isOpenRouterAutoModel = (model: string): boolean =>
   [MODEL_OPENROUTER_AUTO, MODEL_OPENROUTER_AUTO_BETA].includes(model.trim());
 
 const isTokenLimitUnsupportedModel = (model: string): boolean =>
-  [MODEL_GPT_OSS_20B_FREE, MODEL_ZAI_GLM_5_2].includes(model.trim());
+  [
+    MODEL_GPT_OSS_20B_FREE,
+    MODEL_ZAI_GLM_5_3,
+    MODEL_ZAI_GLM_5_3_FLASH,
+    MODEL_ZAI_GLM_5_2,
+  ].includes(model.trim());
 
 const ensureAutoRouterOutput = (
   model: string,
