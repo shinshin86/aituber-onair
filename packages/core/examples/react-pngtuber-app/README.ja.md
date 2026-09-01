@@ -21,9 +21,11 @@ Vite の development / preview proxy を使います。本番環境では API �
   に対応し、既定は `low` です。Grok 4.3 は低レイテンシ向けに `none` が
   デフォルトです
 - モデル一覧は `@aituber-onair/core` の対応モデルから動的取得するため、
-  Gemini 3.7 Flash、Kimi K3、Ministral 3、GLM-5V-Turbo、GPT-5.6 など
-  chat 由来の新規モデルも Settings に
+  GLM-5.3 / GLM-5.3 Flash、DeepSeek V4 Flash Vision Exp、Sakana Namazu、
+  Qwen3.8 Flash、Claude Sonnet 5 / Opus 4.8、Kimi K2.6 も Settings に
   自動反映されます
+- GLM-5.3 系は thinking 常時有効で既定値を `low` とし、DeepSeek Vision
+  と Sakana Namazu は応答性重視で任意の thinking をデフォルト無効にします
 - Gemini 3 Flash 系はチャット用途向けに minimal thinking、Gemini 3 Pro
   は low をデフォルトで適用します
 - `gpt-5.5-pro` は OpenAI のドキュメント上でストリーミング非対応のため、

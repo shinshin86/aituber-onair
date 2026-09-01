@@ -3631,7 +3631,8 @@ const App: React.FC = () => {
                           fontSize: '12px',
                         }}
                       >
-                        GLM-5.2 defaults to None for responsive chat. Aliases
+                        GLM-5.3 models always use thinking and default to Low
+                        for responsive chat. GLM-5.2 defaults to None. Aliases
                         are normalized to the effective API effort.
                       </div>
                     </div>

@@ -30,6 +30,8 @@ import {
   MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
+  MODEL_GLM_5_3,
+  MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
   MODEL_GLM_5_TURBO,
@@ -47,10 +49,12 @@ import {
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
   MODEL_OPENROUTER_FUSION,
   MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
+  MODEL_MOONSHOTAI_KIMI_K2_6,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
@@ -62,13 +66,17 @@ import {
   MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_4_8,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_GOOGLE_GEMINI_PRO_LATEST,
   MODEL_GOOGLE_GEMINI_FLASH_LATEST,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
   MODEL_GOOGLE_GEMINI_3_7_FLASH,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   MODEL_ZAI_GLM_5_2,
+  MODEL_ZAI_GLM_5_3,
+  MODEL_ZAI_GLM_5_3_FLASH,
   MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
   MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
   MODEL_XAI_GROK_LATEST,
@@ -77,8 +85,10 @@ import {
   KIMI_VISION_SUPPORTED_MODELS,
   KIMI_THINKING_REQUIRED_MODELS,
   MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_DEEPSEEK_V4_PRO,
   DEEPSEEK_SUPPORTED_MODELS,
+  DEEPSEEK_VISION_SUPPORTED_MODELS,
   DeepSeekChatService,
   MODEL_MINISTRAL_3B_2512,
   MODEL_MINISTRAL_8B_2512,
@@ -93,7 +103,9 @@ import {
   MODEL_FUGU_ULTRA,
   MODEL_FUGU_ULTRA_V1_1,
   MODEL_FUGU_ULTRA_20260615,
+  MODEL_SAKANA_NAMAZU,
   SAKANA_SUPPORTED_MODELS,
+  SAKANA_VISION_SUPPORTED_MODELS,
   ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
   SakanaChatService,
   MODEL_PLAMO_3_0_PRIME,
@@ -122,10 +134,12 @@ import {
   isResponsesOnlyGPT5Model,
   isClaudeReasoningEffortModel,
   isDeepSeekReasoningEffortModel,
+  isDeepSeekVisionModel,
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
   isKimiVisionModel,
+  isSakanaVisionModel,
   isXaiReasoningEffortModel,
   isXaiReasoningEffortNoneModel,
   isXaiVisionModel,
@@ -145,10 +159,12 @@ import {
   type ZaiReasoningEffort,
   getDefaultZaiReasoningEffort,
   getZaiSupportedReasoningEfforts,
+  isZaiAlwaysThinkingModel,
   isZaiReasoningEffortModel,
   normalizeZaiReasoningEffort,
   type RefreshOpenRouterFreeModelsResult,
   type VisionSupportLevel,
+  MODEL_QWEN_QWEN_3_8_FLASH,
 } from '../src/index';
 
 describe('Core index chat re-exports', () => {
@@ -237,6 +253,8 @@ describe('Core index chat re-exports', () => {
   it('re-exports current GLM model constants', () => {
     const reasoningEffort: ZaiReasoningEffort = 'none';
 
+    expect(MODEL_GLM_5_3).toBe('glm-5.3');
+    expect(MODEL_GLM_5_3_FLASH).toBe('glm-5.3-flash');
     expect(MODEL_GLM_5_2).toBe('glm-5.2');
     expect(MODEL_GLM_5_1).toBe('glm-5.1');
     expect(MODEL_GLM_5_TURBO).toBe('glm-5-turbo');
@@ -254,6 +272,14 @@ describe('Core index chat re-exports', () => {
     expect(isZaiReasoningEffortModel(MODEL_GLM_5_2)).toBe(true);
     expect(getDefaultZaiReasoningEffort(MODEL_GLM_5_2)).toBe('none');
     expect(normalizeZaiReasoningEffort(MODEL_GLM_5_2, 'minimal')).toBe('none');
+    expect(getZaiSupportedReasoningEfforts(MODEL_GLM_5_3)).toEqual([
+      'low',
+      'high',
+      'max',
+    ]);
+    expect(isZaiAlwaysThinkingModel(MODEL_GLM_5_3)).toBe(true);
+    expect(getDefaultZaiReasoningEffort(MODEL_GLM_5_3)).toBe('low');
+    expect(normalizeZaiReasoningEffort(MODEL_GLM_5_3, 'none')).toBe('low');
   });
 
   it('re-exports current Kimi model constants', () => {
@@ -313,11 +339,20 @@ describe('Core index chat re-exports', () => {
     expect(typeof DeepSeekChatService).toBe('function');
     expect(MODEL_DEEPSEEK_V4_FLASH).toBe('deepseek-v4-flash');
     expect(MODEL_DEEPSEEK_V4_PRO).toBe('deepseek-v4-pro');
+    expect(MODEL_DEEPSEEK_V4_FLASH_VISION_EXP).toBe(
+      'deepseek-v4-flash-vision-exp',
+    );
     expect(DEEPSEEK_SUPPORTED_MODELS).toEqual([
       MODEL_DEEPSEEK_V4_FLASH,
       MODEL_DEEPSEEK_V4_PRO,
-      'deepseek-v4-flash-vision-exp',
+      MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
     ]);
+    expect(DEEPSEEK_VISION_SUPPORTED_MODELS).toEqual([
+      MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+    ]);
+    expect(isDeepSeekVisionModel(MODEL_DEEPSEEK_V4_FLASH_VISION_EXP)).toBe(
+      true,
+    );
     expect(reasoningEffort).toBe('none');
     expect(
       getDeepSeekSupportedReasoningEfforts(MODEL_DEEPSEEK_V4_FLASH),
@@ -352,11 +387,14 @@ describe('Core index chat re-exports', () => {
     expect(MODEL_FUGU_ULTRA).toBe('fugu-ultra');
     expect(MODEL_FUGU_ULTRA_V1_1).toBe('fugu-ultra-v1.1');
     expect(MODEL_FUGU_ULTRA_20260615).toBe('fugu-ultra-20260615');
+    expect(MODEL_SAKANA_NAMAZU).toBe('sakana-namazu');
     expect(SAKANA_SUPPORTED_MODELS).toEqual([
       MODEL_FUGU,
       MODEL_FUGU_ULTRA_V1_1,
-      'sakana-namazu',
+      MODEL_SAKANA_NAMAZU,
     ]);
+    expect(SAKANA_VISION_SUPPORTED_MODELS).toEqual([MODEL_SAKANA_NAMAZU]);
+    expect(isSakanaVisionModel(MODEL_SAKANA_NAMAZU)).toBe(true);
     expect(ENDPOINT_SAKANA_CHAT_COMPLETIONS_API).toBe(
       'https://api.sakana.ai/v1/chat/completions',
     );
@@ -389,6 +427,9 @@ describe('Core index chat re-exports', () => {
     expect(MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813).toBe(
       'deepseek/deepseek-v4-pro-0813',
     );
+    expect(MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP).toBe(
+      'deepseek/deepseek-v4-flash-vision-exp',
+    );
     expect(reasoningEffort).toBe('none');
     expect(
       getOpenRouterSupportedReasoningEfforts(
@@ -407,8 +448,11 @@ describe('Core index chat re-exports', () => {
       ),
     ).toBe('low');
     expect(MODEL_ZAI_GLM_5_2).toBe('z-ai/glm-5.2');
+    expect(MODEL_ZAI_GLM_5_3).toBe('z-ai/glm-5.3');
+    expect(MODEL_ZAI_GLM_5_3_FLASH).toBe('z-ai/glm-5.3-flash');
     expect(MODEL_MOONSHOTAI_KIMI_K3).toBe('moonshotai/kimi-k3');
     expect(MODEL_MOONSHOTAI_KIMI_K2_7_CODE).toBe('moonshotai/kimi-k2.7-code');
+    expect(MODEL_MOONSHOTAI_KIMI_K2_6).toBe('moonshotai/kimi-k2.6');
     expect(MODEL_OPENAI_GPT_LATEST).toBe('~openai/gpt-latest');
     expect(MODEL_OPENAI_GPT_MINI_LATEST).toBe('~openai/gpt-mini-latest');
     expect(MODEL_OPENAI_GPT_5_6_SOL).toBe('openai/gpt-5.6-sol');
@@ -423,7 +467,10 @@ describe('Core index chat re-exports', () => {
       '~anthropic/claude-haiku-latest',
     );
     expect(MODEL_ANTHROPIC_CLAUDE_OPUS_5).toBe('anthropic/claude-opus-5');
+    expect(MODEL_ANTHROPIC_CLAUDE_OPUS_4_8).toBe('anthropic/claude-opus-4.8');
     expect(MODEL_ANTHROPIC_CLAUDE_FABLE_5).toBe('anthropic/claude-fable-5');
+    expect(MODEL_ANTHROPIC_CLAUDE_SONNET_5).toBe('anthropic/claude-sonnet-5');
+    expect(MODEL_QWEN_QWEN_3_8_FLASH).toBe('qwen/qwen3.8-flash');
     expect(MODEL_GOOGLE_GEMINI_PRO_LATEST).toBe('~google/gemini-pro-latest');
     expect(MODEL_GOOGLE_GEMINI_FLASH_LATEST).toBe(
       '~google/gemini-flash-latest',
@@ -493,8 +540,12 @@ describe('Core index chat re-exports', () => {
         MODEL_OPENROUTER_AUTO_BETA,
         MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
         MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
         MODEL_MOONSHOTAI_KIMI_K3,
+        MODEL_MOONSHOTAI_KIMI_K2_6,
         MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+        MODEL_ANTHROPIC_CLAUDE_SONNET_5,
+        MODEL_QWEN_QWEN_3_8_FLASH,
         MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
       ]),
     );
@@ -505,6 +556,24 @@ describe('Core index chat re-exports', () => {
       AITuberOnAirCore.getVisionSupportLevelForModel(
         'claude',
         MODEL_CLAUDE_5_OPUS,
+      ),
+    ).toBe('supported');
+    expect(
+      AITuberOnAirCore.getVisionSupportLevelForModel(
+        'zai',
+        MODEL_GLM_5_3_FLASH,
+      ),
+    ).toBe('supported');
+    expect(
+      AITuberOnAirCore.getVisionSupportLevelForModel(
+        'deepseek',
+        MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+      ),
+    ).toBe('supported');
+    expect(
+      AITuberOnAirCore.getVisionSupportLevelForModel(
+        'sakana',
+        MODEL_SAKANA_NAMAZU,
       ),
     ).toBe('supported');
   });

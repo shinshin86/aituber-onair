@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.26.12
+
+### Patch Changes
+
+- Synced Chat updates through `@aituber-onair/chat@0.53.0` into Core:
+  - re-exported Z.ai GLM-5.3 / GLM-5.3 Flash, DeepSeek V4 Flash Vision Exp,
+    Sakana Namazu, and the expanded OpenRouter model constants
+  - re-exported the new model-aware Vision helpers and Z.ai always-thinking
+    capability helper
+  - refreshed the React basic selectors and reasoning guidance; all other Core
+    React examples receive the new models from Core's dynamic provider lists
+  - documented GLM-5.3's required low/high/max thinking levels and the
+    low-latency defaults for DeepSeek Vision and Sakana Namazu
+
 ## 0.26.11
 
 ### Patch Changes

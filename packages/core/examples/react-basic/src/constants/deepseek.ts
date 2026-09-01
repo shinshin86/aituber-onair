@@ -1,6 +1,11 @@
 import {
   MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_DEEPSEEK_V4_PRO,
 } from '@aituber-onair/core';
 
-export const deepseekModels = [MODEL_DEEPSEEK_V4_FLASH, MODEL_DEEPSEEK_V4_PRO];
+export const deepseekModels = [
+  MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_PRO,
+  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+];
