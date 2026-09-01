@@ -74,7 +74,7 @@
     "directory": "packages/noise"
   },
   "dependencies": {
-    "@aituber-onair/chat": "^0.52.0"
+    "@aituber-onair/chat": "^0.53.0"
   },
   "devDependencies": {
     "@aituber-onair/kizuna": "^0.0.3",

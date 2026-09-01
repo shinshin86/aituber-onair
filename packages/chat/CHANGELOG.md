@@ -1,5 +1,25 @@
 # @aituber-onair/chat
 
+## 0.53.0
+
+### Minor Changes
+
+- Added Z.ai GLM-5.3 and GLM-5.3 Flash through the native Z.ai provider and
+  OpenRouter. Both always use thinking, default to the minimum supported `low`
+  effort for responsive chat, and expose only `low`, `high`, and `max`.
+- Added native vision support for DeepSeek V4 Flash Vision Exp and Sakana
+  Namazu. Their optional thinking is disabled by default for responsive chat,
+  while Sakana Namazu can enable it explicitly through chat template options.
+- Expanded the curated OpenRouter catalog with DeepSeek V4 Flash Vision Exp,
+  Qwen3.8 Flash, Claude Sonnet 5, Claude Opus 4.8, and Kimi K2.6, including
+  model-aware vision and reasoning metadata.
+
+### Patch Changes
+
+- Updated the React basic example and English/Japanese documentation for the
+  new models and reasoning defaults, and preserved readable contrast when a
+  selected provider or model button is hovered.
+
 ## 0.52.0
 
 ### Minor Changes
