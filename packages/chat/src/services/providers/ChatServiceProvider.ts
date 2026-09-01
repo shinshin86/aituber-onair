@@ -53,7 +53,7 @@ export interface BaseChatServiceOptions {
     type: 'text' | 'json_object' | 'json_schema';
     json_schema?: any;
   };
-  /** Thinking mode options (Z.ai/Kimi only) */
+  /** Thinking mode options (Z.ai/Kimi/Sakana Namazu only) */
   thinking?: {
     type: 'enabled' | 'disabled';
     clear_thinking?: boolean;
@@ -198,7 +198,6 @@ export type SakanaChatServiceOptions = DisallowKeys<
   | 'enableReasoningSummary'
   | 'includeReasoning'
   | 'reasoningMaxTokens'
-  | 'thinking'
   | 'responseFormat'
 >;
 
@@ -233,7 +232,7 @@ export type ZAIChatServiceOptions = Omit<
   >,
   'reasoning_effort'
 > & {
-  /** GLM-5.2 reasoning effort. Defaults to none for responsive chat. */
+  /** Model-aware GLM effort. GLM-5.3 defaults to low; GLM-5.2 to none. */
   reasoning_effort?: ZaiReasoningEffort;
 };
 

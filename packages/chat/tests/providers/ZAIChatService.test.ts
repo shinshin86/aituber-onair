@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   MODEL_GLM_4_6,
+  MODEL_GLM_5_3,
+  MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5_1,
   MODEL_GLM_5_2,
   MODEL_GLM_5_TURBO,
@@ -66,6 +68,79 @@ describe('ZAIChatService request body', () => {
         model: MODEL_GLM_5_2,
         stream: false,
         messages,
+      }),
+      { Authorization: 'Bearer test-key' },
+    );
+  });
+
+  it('sends always-on low thinking for glm-5.3 chat requests', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new ZAIChatService(
+      'test-key',
+      MODEL_GLM_5_3,
+      MODEL_GLM_5_3_FLASH,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { type: 'enabled', clear_thinking: true },
+      'low',
+    );
+
+    await service.chatOnce(messages, false);
+
+    expect(postSpy).toHaveBeenCalledWith(
+      ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+      expect.objectContaining({
+        model: MODEL_GLM_5_3,
+        stream: false,
+        messages,
+        thinking: { type: 'enabled', clear_thinking: true },
+        reasoning_effort: 'low',
+      }),
+      { Authorization: 'Bearer test-key' },
+    );
+  });
+
+  it('sends low thinking and image messages to glm-5.3-flash', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const visionMessages: MessageWithVision[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Describe this image.' },
+          {
+            type: 'image_url',
+            image_url: { url: 'https://example.com/image.png' },
+          },
+        ],
+      },
+    ];
+    const service = new ZAIChatService(
+      'test-key',
+      MODEL_GLM_5_3,
+      MODEL_GLM_5_3_FLASH,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { type: 'enabled', clear_thinking: true },
+      'low',
+    );
+
+    await service.visionChatOnce(visionMessages, false);
+
+    expect(postSpy).toHaveBeenCalledWith(
+      ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+      expect.objectContaining({
+        model: MODEL_GLM_5_3_FLASH,
+        messages: visionMessages,
+        thinking: { type: 'enabled', clear_thinking: true },
+        reasoning_effort: 'low',
       }),
       { Authorization: 'Bearer test-key' },
     );

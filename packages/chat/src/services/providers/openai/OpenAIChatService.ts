@@ -51,6 +51,7 @@ export class OpenAIChatService implements ChatService {
   private reasoning_effort?: OpenAIReasoningEffort;
   private enableReasoningSummary?: boolean;
   private responseFormat?: OpenAIResponseFormat;
+  private chatTemplateThinking?: boolean;
 
   /**
    * Constructor
@@ -72,6 +73,7 @@ export class OpenAIChatService implements ChatService {
     provider: string = 'openai',
     validateVisionModel: boolean = true,
     responseFormat?: OpenAIResponseFormat,
+    chatTemplateThinking?: boolean,
   ) {
     this.provider = provider;
     this.apiKey = apiKey;
@@ -85,6 +87,7 @@ export class OpenAIChatService implements ChatService {
     this.reasoning_effort = reasoning_effort;
     this.enableReasoningSummary = enableReasoningSummary;
     this.responseFormat = responseFormat;
+    this.chatTemplateThinking = chatTemplateThinking;
 
     // Official OpenAI validates vision model names strictly.
     // Compatible providers can skip this to support arbitrary local IDs.
@@ -283,6 +286,7 @@ export class OpenAIChatService implements ChatService {
       reasoning_effort: this.reasoning_effort,
       enableReasoningSummary: this.enableReasoningSummary,
       responseFormat: this.responseFormat,
+      chatTemplateThinking: this.chatTemplateThinking,
       maxTokens,
     });
     const headers: Record<string, string> = {};

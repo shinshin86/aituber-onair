@@ -1,5 +1,7 @@
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
+  MODEL_GLM_5_3,
+  MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
   MODEL_GLM_5,
@@ -13,6 +15,7 @@ import {
   MODEL_GLM_4_6V_FLASHX,
   MODEL_GLM_4_6V_FLASH,
   getZaiSupportedReasoningEfforts,
+  isZaiAlwaysThinkingModel,
   isZaiVisionModel,
   normalizeZaiReasoningEffort,
 } from '../../../constants/zai';
@@ -67,9 +70,14 @@ export class ZAIChatServiceProvider
       model,
       options.reasoning_effort,
     );
+    const alwaysThinking = isZaiAlwaysThinkingModel(model);
     const usesExplicitThinking = options.thinking !== undefined;
-    const thinking =
-      usesExplicitThinking && options.reasoning_effort === undefined
+    const thinking = alwaysThinking
+      ? {
+          type: 'enabled' as const,
+          clear_thinking: options.thinking?.clear_thinking ?? true,
+        }
+      : usesExplicitThinking && options.reasoning_effort === undefined
         ? options.thinking
         : normalizedReasoningEffort === 'high' ||
             normalizedReasoningEffort === 'max'
@@ -81,8 +89,9 @@ export class ZAIChatServiceProvider
               type: 'disabled' as const,
               clear_thinking: options.thinking?.clear_thinking,
             };
-    const reasoningEffort =
-      thinking?.type === 'enabled' && options.reasoning_effort !== undefined
+    const reasoningEffort = alwaysThinking
+      ? normalizedReasoningEffort
+      : thinking?.type === 'enabled' && options.reasoning_effort !== undefined
         ? normalizedReasoningEffort
         : undefined;
 
@@ -111,6 +120,8 @@ export class ZAIChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_GLM_5_3,
+      MODEL_GLM_5_3_FLASH,
       MODEL_GLM_5_2,
       MODEL_GLM_5_1,
       MODEL_GLM_5,

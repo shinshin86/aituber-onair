@@ -65,6 +65,7 @@ type BuildOpenAIRequestBodyOptions = {
   reasoning_effort?: OpenAIReasoningEffort;
   enableReasoningSummary?: boolean;
   responseFormat?: OpenAIResponseFormat;
+  chatTemplateThinking?: boolean;
   maxTokens?: number;
 };
 
@@ -95,6 +96,7 @@ export function buildOpenAIRequestBody({
   reasoning_effort,
   enableReasoningSummary,
   responseFormat,
+  chatTemplateThinking,
   maxTokens,
 }: BuildOpenAIRequestBodyOptions): any {
   const isResponsesAPI = endpoint === ENDPOINT_OPENAI_RESPONSES_API;
@@ -208,6 +210,10 @@ export function buildOpenAIRequestBody({
     if (reasoning_effort !== 'none') {
       body.reasoning_effort = reasoning_effort;
     }
+  }
+
+  if (provider === 'sakana' && chatTemplateThinking !== undefined) {
+    body.chat_template_kwargs = { thinking: chatTemplateThinking };
   }
 
   const toolDefinitions = buildOpenAIToolsDefinition({

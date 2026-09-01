@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   MODEL_ANTHROPIC_CLAUDE_FABLE_5,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_4_8,
   ENDPOINT_OPENROUTER_API,
   MODEL_GPT_OSS_20B_FREE,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
@@ -10,6 +12,7 @@ import {
   MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
   MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
   MODEL_MOONSHOTAI_KIMI_K3,
+  MODEL_MOONSHOTAI_KIMI_K2_6,
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_OPENAI_GPT_5_6_LUNA,
@@ -20,9 +23,13 @@ import {
   MODEL_XAI_GROK_4_6,
   MODEL_XAI_GROK_LATEST,
   MODEL_ZAI_GLM_5_2,
+  MODEL_ZAI_GLM_5_3,
+  MODEL_ZAI_GLM_5_3_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
   MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
+  MODEL_QWEN_QWEN_3_8_FLASH,
 } from '../../src/constants/openrouter';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
@@ -42,6 +49,8 @@ const recentOpenRouterModels = [
   MODEL_OPENAI_GPT_5_6_TERRA,
   MODEL_OPENAI_GPT_5_6_LUNA,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_4_8,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5,
   MODEL_GOOGLE_GEMINI_3_7_FLASH,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
@@ -49,6 +58,11 @@ const recentOpenRouterModels = [
   MODEL_XAI_GROK_LATEST,
   MODEL_XAI_GROK_4_6,
   MODEL_XAI_GROK_4_5,
+  MODEL_ZAI_GLM_5_3,
+  MODEL_ZAI_GLM_5_3_FLASH,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
+  MODEL_QWEN_QWEN_3_8_FLASH,
+  MODEL_MOONSHOTAI_KIMI_K2_6,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
   MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
@@ -340,7 +354,11 @@ describe('OpenRouterChatService request body', () => {
         usage: undefined,
       });
       expect(warnSpy).toHaveBeenCalledTimes(
-        model === MODEL_OPENROUTER_AUTO_BETA ? 1 : 0,
+        model === MODEL_OPENROUTER_AUTO_BETA ||
+          model === MODEL_ZAI_GLM_5_3 ||
+          model === MODEL_ZAI_GLM_5_3_FLASH
+          ? 1
+          : 0,
       );
     },
   );
@@ -393,6 +411,53 @@ describe('OpenRouterChatService request body', () => {
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining(MODEL_ZAI_GLM_5_2),
     );
+  });
+
+  it.each([MODEL_ZAI_GLM_5_3, MODEL_ZAI_GLM_5_3_FLASH])(
+    'omits max_tokens and defaults %s to mandatory low reasoning',
+    async (model) => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const postSpy = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(createOkResponse());
+      const service = new OpenRouterChatService(
+        'test-key',
+        model,
+        model,
+        undefined,
+        undefined,
+        'short',
+      );
+
+      await service.chatOnce(messages, false);
+
+      const [, body] = postSpy.mock.calls[0];
+      expect(body).toEqual(
+        expect.objectContaining({
+          model,
+          reasoning: { effort: 'low', exclude: true },
+        }),
+      );
+      expect(body).not.toHaveProperty('max_tokens');
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining(model));
+    },
+  );
+
+  it.each([
+    MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
+    MODEL_QWEN_QWEN_3_8_FLASH,
+    MODEL_MOONSHOTAI_KIMI_K2_6,
+    MODEL_ANTHROPIC_CLAUDE_SONNET_5,
+  ])('defaults optional recent reasoning model %s to none', async (model) => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOkResponse());
+    const service = new OpenRouterChatService('test-key', model);
+
+    await service.chatOnce(messages, false);
+
+    const [, body] = postSpy.mock.calls[0];
+    expect(body.reasoning).toEqual({ effort: 'none', exclude: true });
   });
 
   it.each([

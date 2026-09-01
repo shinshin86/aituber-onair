@@ -2,6 +2,8 @@ export const ENDPOINT_ZAI_CHAT_COMPLETIONS_API =
   'https://api.z.ai/api/paas/v4/chat/completions';
 
 // Z.ai GLM models
+export const MODEL_GLM_5_3 = 'glm-5.3';
+export const MODEL_GLM_5_3_FLASH = 'glm-5.3-flash';
 export const MODEL_GLM_5_2 = 'glm-5.2';
 export const MODEL_GLM_5_1 = 'glm-5.1';
 export const MODEL_GLM_5 = 'glm-5';
@@ -34,10 +36,24 @@ const ZAI_GLM_5_2_REASONING_EFFORTS = [
   'max',
 ] as const satisfies readonly ZaiReasoningEffort[];
 
+const ZAI_GLM_5_3_REASONING_EFFORTS = [
+  'low',
+  'high',
+  'max',
+] as const satisfies readonly ZaiReasoningEffort[];
+
+export function isZaiAlwaysThinkingModel(model: string): boolean {
+  return model === MODEL_GLM_5_3 || model === MODEL_GLM_5_3_FLASH;
+}
+
 /** Return the protocol-compatible effort values accepted by a Z.ai model. */
 export function getZaiSupportedReasoningEfforts(
   model: string,
 ): readonly ZaiReasoningEffort[] {
+  if (isZaiAlwaysThinkingModel(model)) {
+    return ZAI_GLM_5_3_REASONING_EFFORTS;
+  }
+
   return model === MODEL_GLM_5_2 ? ZAI_GLM_5_2_REASONING_EFFORTS : [];
 }
 
@@ -49,7 +65,11 @@ export function isZaiReasoningEffortModel(model: string): boolean {
 export function getDefaultZaiReasoningEffort(
   model: string,
 ): ZaiReasoningEffort | undefined {
-  return isZaiReasoningEffortModel(model) ? 'none' : undefined;
+  if (isZaiAlwaysThinkingModel(model)) {
+    return 'low';
+  }
+
+  return model === MODEL_GLM_5_2 ? 'none' : undefined;
 }
 
 /** Normalize compatibility aliases to the effective GLM-5.2 effort. */
@@ -62,6 +82,16 @@ export function normalizeZaiReasoningEffort(
   }
 
   const requested = effort ?? getDefaultZaiReasoningEffort(model);
+  if (isZaiAlwaysThinkingModel(model)) {
+    if (requested === 'high') {
+      return 'high';
+    }
+    if (requested === 'max' || requested === 'xhigh') {
+      return 'max';
+    }
+    return 'low';
+  }
+
   if (requested === 'none' || requested === 'minimal') {
     return 'none';
   }
@@ -73,6 +103,7 @@ export function normalizeZaiReasoningEffort(
 
 // Vision support for models
 export const ZAI_VISION_SUPPORTED_MODELS = [
+  MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5V_TURBO,
   MODEL_GLM_4_6V,
   MODEL_GLM_4_6V_FLASHX,
@@ -90,5 +121,9 @@ export function isZaiVisionModel(model: string): boolean {
  * Tool streaming support (GLM-4.6 family)
  */
 export function isZaiToolStreamModel(model: string): boolean {
-  return model.toLowerCase().startsWith('glm-4.6');
+  const normalizedModel = model.toLowerCase();
+  return (
+    normalizedModel.startsWith('glm-5.3') ||
+    normalizedModel.startsWith('glm-4.6')
+  );
 }

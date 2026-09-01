@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
   MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+  MODEL_QWEN_QWEN_3_8_FLASH,
+  MODEL_ZAI_GLM_5_3,
+  MODEL_ZAI_GLM_5_3_FLASH,
   getDefaultOpenRouterReasoningEffort,
   getOpenRouterSupportedReasoningEfforts,
   isOpenRouterFreeModel,
@@ -90,5 +95,32 @@ describe('OpenRouter reasoning effort helpers', () => {
         'max',
       ),
     ).toBe('xhigh');
+  });
+
+  it('defaults optional recent reasoning models to none', () => {
+    expect(
+      getDefaultOpenRouterReasoningEffort(
+        MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
+      ),
+    ).toBe('none');
+    expect(getDefaultOpenRouterReasoningEffort(MODEL_QWEN_QWEN_3_8_FLASH)).toBe(
+      'none',
+    );
+    expect(
+      getDefaultOpenRouterReasoningEffort(MODEL_ANTHROPIC_CLAUDE_SONNET_5),
+    ).toBe('none');
+  });
+
+  it('uses low as the minimum effort for mandatory GLM-5.3 reasoning', () => {
+    for (const model of [MODEL_ZAI_GLM_5_3, MODEL_ZAI_GLM_5_3_FLASH]) {
+      expect(getOpenRouterSupportedReasoningEfforts(model)).toEqual([
+        'low',
+        'high',
+        'max',
+      ]);
+      expect(getDefaultOpenRouterReasoningEffort(model)).toBe('low');
+      expect(normalizeOpenRouterReasoningEffort(model, 'none')).toBe('low');
+      expect(normalizeOpenRouterReasoningEffort(model, 'xhigh')).toBe('max');
+    }
   });
 });

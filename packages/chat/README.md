@@ -661,17 +661,20 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
 
 **Important Notes for OpenRouter:**
 - Automatic token limits from `responseLength` are disabled for `openrouter/auto` and `openrouter/auto-beta` because a routed reasoning model can spend the entire output budget before emitting visible content. An explicitly supplied `maxTokens` is still honored.
-- All token limits remain disabled for `gpt-oss-20b:free` and `z-ai/glm-5.2`. For these models and the dynamic routers, control response length with prompt instructions (e.g., "Please respond in 40 characters or less").
+- All token limits remain disabled for `gpt-oss-20b:free`, `z-ai/glm-5.2`, `z-ai/glm-5.3`, and `z-ai/glm-5.3-flash`. For these models and the dynamic routers, control response length with prompt instructions (e.g., "Please respond in 40 characters or less").
 - Free tier has rate limits (20 requests/minute)
 - Free tier detection is based on the model ID suffix `:free` (dynamic `:free` IDs are also rate-limited)
 - `openrouter/auto-beta` is a Beta task-aware router. It chooses a model for each request and charges that routed model's rate; inspect the response `model` field or OpenRouter Activity to see the selection.
 - `openrouter/fusion` runs a multi-model panel plus a judge model; OpenRouter bills the sum of the underlying model calls and any enabled web search/fetch usage, not a single fixed model rate.
 - For `z-ai/glm-5.2`, OpenRouter reasoning also defaults to `none`.
+- `z-ai/glm-5.3` and `z-ai/glm-5.3-flash` require reasoning. The package selects the minimum supported `low` effort and excludes reasoning text for responsive chat.
+- Optional reasoning defaults to `none` for the newly curated `qwen/qwen3.8-flash`, `moonshotai/kimi-k2.6`, `anthropic/claude-sonnet-5`, and `deepseek/deepseek-v4-flash-vision-exp` models.
 - OpenRouter reasoning uses `reasoning.effort: 'none'` to disable reasoning. `exclude: true` only controls whether reasoning content is returned; it does not disable reasoning by itself.
-- DeepSeek V4 models are explicit text-only options rather than the OpenRouter default so applications can choose a reproducible version. All default to `none` for responsive chat:
+- DeepSeek V4 models are explicit options rather than the OpenRouter default so applications can choose a reproducible version. All default to `none` for responsive chat:
   - `deepseek/deepseek-v4-flash-0731`: current fixed 0731 snapshot; supports `none`, `low`, `high`, and `max`.
   - `deepseek/deepseek-v4-flash`: older unversioned 0423 snapshot; supports `none`, `high`, and `xhigh`.
   - `deepseek/deepseek-v4-pro-0813`: fixed Pro snapshot; supports `none`, `high`, and `xhigh`.
+  - `deepseek/deepseek-v4-flash-vision-exp`: experimental image-capable model; supports `none`, `low`, `high`, and `max`.
 - Specialized coding models are explicit options rather than defaults. This includes `kwaipilot/kat-coder-air-v2.5` and `kwaipilot/kat-coder-pro-v2.5`, which are text-only.
 - `moonshotai/kimi-k3` availability depends on upstream capacity; OpenRouter may return 429 responses when capacity is constrained.
 - `x-ai/grok-4.5` has region-specific availability, including a current EU limitation. `~x-ai/grok-latest` inherits those limits when it resolves to Grok 4.5.
@@ -685,16 +688,17 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   - `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
   - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
   - `~anthropic/claude-sonnet-latest`, `~anthropic/claude-haiku-latest`
-  - `anthropic/claude-fable-5`, `anthropic/claude-opus-5`
+  - `anthropic/claude-fable-5`, `anthropic/claude-sonnet-5`, `anthropic/claude-opus-5`, `anthropic/claude-opus-4.8`
   - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
   - `anthropic/claude-haiku-4.5`
   - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
   - `google/gemini-3.7-flash`, `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite`
   - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
-  - `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`
+  - `z-ai/glm-5.3`, `z-ai/glm-5.3-flash`, `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`
   - `~x-ai/grok-latest`, `x-ai/grok-4.6`, `x-ai/grok-4.5`
-  - `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4-flash`, `deepseek/deepseek-v4-pro-0813`
-  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.5`
+  - `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4-flash`, `deepseek/deepseek-v4-pro-0813`, `deepseek/deepseek-v4-flash-vision-exp`
+  - `qwen/qwen3.8-flash`
+  - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.6`, `moonshotai/kimi-k2.5`
   - `kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`
 
 **Dynamic OpenRouter free model refresh**
@@ -729,22 +733,22 @@ Notes:
 ```typescript
 const zaiService = ChatServiceFactory.createChatService('zai', {
   apiKey: process.env.ZAI_API_KEY,
-  model: 'glm-5.2',
-  reasoning_effort: 'none', // Package default: skip thinking for low latency
+  model: 'glm-5.3',
+  reasoning_effort: 'low', // Package default: minimum supported thinking
   responseLength: 'short',
-  visionModel: 'glm-4.6V-Flash', // Optional: vision-capable model
+  visionModel: 'glm-5.3-flash', // Optional: vision-capable model
   responseFormat: { type: 'json_object' } // Optional JSON mode
 });
 ```
 
 Notes:
 - Z.ai uses OpenAI-compatible Chat Completions.
-- Supported text models: `glm-5.2`, `glm-5.1`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, `glm-4.6`
-- Supported vision models: `glm-5v-turbo`, `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`
+- Supported text models include `glm-5.3`, `glm-5.2`, `glm-5.1`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, and `glm-4.6`.
+- Supported vision models: `glm-5.3-flash`, `glm-5v-turbo`, `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`.
+- GLM-5.3 and GLM-5.3 Flash always use thinking and accept only `low`, `high`, or `max`. The package defaults to `low`, keeps thinking enabled even if `thinking.type: 'disabled'` is requested, and clears prior-turn thinking by default for chat latency and cost.
 - GLM-5.2 exposes `reasoning_effort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'`. The package defaults to `none` and disables thinking for low-latency chat.
 - Z.ai currently applies only three effective tiers: `none`/`minimal` become `none`, `low`/`medium`/`high` become `high`, and `xhigh`/`max` become `max`. The package normalizes these values before sending them.
 - Explicit legacy `thinking` remains available when `reasoning_effort` is omitted. `reasoning_effort` takes precedence when both are supplied.
-- GLM-5.3 is not advertised yet because Z.ai currently documents its general API as coming soon; Coding Plan-only availability is not the same configuration path as this provider.
 
 #### xAI (Grok)
 
@@ -813,11 +817,12 @@ const deepSeekService = ChatServiceFactory.createChatService('deepseek', {
 
 Notes:
 - DeepSeek uses OpenAI-compatible Chat Completions at `https://api.deepseek.com/chat/completions`.
-- Recommended models: `deepseek-v4-flash` (default) and `deepseek-v4-pro`.
+- Recommended text models: `deepseek-v4-flash` (default) and `deepseek-v4-pro`. The experimental `deepseek-v4-flash-vision-exp` model is available explicitly for image input.
 - Legacy aliases `deepseek-chat` and `deepseek-reasoner` remain exported for explicit compatibility, but DeepSeek marks them deprecated and scheduled for removal on 2026-07-24.
 - You can still use DeepSeek through `openai-compatible` by providing the full endpoint and model manually, but the first-class `deepseek` provider supplies the endpoint and default model for you.
 - `deepseek-v4-flash` accepts `reasoning_effort: 'none' | 'low' | 'high' | 'max'`. The package defaults to `none`, mapped to `thinking: { type: 'disabled' }`, for responsive chat. Other levels enable thinking and are sent as DeepSeek `reasoning_effort`.
 - `deepseek-v4-pro` exposes `none`, `high`, and `max`. DeepSeek currently maps a requested `low` to `high`, so the package normalizes it explicitly.
+- `deepseek-v4-flash-vision-exp` uses the same Chat Completions image format and defaults to `none` thinking for responsive vision chat.
 - Thinking with tool calling is intentionally rejected for now because DeepSeek requires `reasoning_content` replay across tool turns and does not accept the normal `tool_choice` request shape in thinking mode. Tool calling works with the default `none` setting.
 
 #### Mistral
@@ -860,14 +865,16 @@ const mistralReasoningService = ChatServiceFactory.createChatService(
 
 ```typescript
 const sakanaService = ChatServiceFactory.createChatService('sakana', {
-  apiKey: process.env.FUGU_API_KEY,
-  model: 'fugu',
+  apiKey: process.env.SAKANA_API_KEY,
+  model: 'sakana-namazu',
+  thinking: { type: 'disabled' }, // Package default for Namazu
 });
 ```
 
 Notes:
 - Sakana AI Fugu uses OpenAI-compatible Chat Completions at `https://api.sakana.ai/v1/chat/completions`.
-- Supported models: `fugu` (default) and the exact current Fugu Ultra ID `fugu-ultra-v1.1`. The `fugu-ultra` alias and former dated ID remain exported for compatibility.
+- Supported models: `fugu` (default), `fugu-ultra-v1.1`, and the Japanese-focused `sakana-namazu`. The `fugu-ultra` alias and former dated ID remain exported for compatibility.
+- Sakana Namazu supports image input through the same Chat Completions endpoint. Its thinking is disabled by default through `chat_template_kwargs` for responsive chat and can be enabled with `thinking: { type: 'enabled' }`.
 - Sakana recommends `max_completion_tokens` for new Chat Completions integrations, but also accepts legacy `max_tokens`. This provider keeps `max_tokens` to match existing OpenAI-compatible provider behavior.
 - Sakana recommends the Responses API for best performance, but this provider uses Chat Completions because it matches the package's OpenAI-compatible chat path.
 - Direct browser usage may fail with CORS unless Sakana enables CORS for your origin. Use Node.js, a backend/serverless proxy, or `examples/node-basic/sakana-example.js` instead of calling Sakana directly from browser-only apps.
@@ -1306,13 +1313,13 @@ Currently, the following AI providers are built-in:
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3.7 Flash and Gemini 3 Pro default to low thinking because they do not support minimal; other Gemini 3 Flash models default to minimal for chat-style responses. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.
-- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Kwaipilot). See the OpenRouter section for model IDs.
-- **Z.ai**: Supports GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo (text), GLM-4.7/4.6 (text), and GLM-5V-Turbo/GLM-4.6V family (vision). GLM-5.2 exposes model-aware `reasoning_effort` and defaults to `none` for low-latency chat.
+- **OpenRouter**: Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilot), including GLM-5.3, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs.
+- **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
 - **xAI**: Supports Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 Reasoning/Non-Reasoning with vision. Grok 4.3 is the low-latency default with `reasoning_effort: 'none'`.
 - **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
-- **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`) and DeepSeek V4 Pro (`deepseek-v4-pro`) via OpenAI-compatible Chat Completions. Thinking defaults to disabled for low-latency chat and can be enabled with model-aware `reasoning_effort`. Legacy aliases `deepseek-chat` and `deepseek-reasoner` are deprecated by DeepSeek.
+- **DeepSeek**: Supports DeepSeek V4 Flash (`deepseek-v4-flash`), V4 Pro (`deepseek-v4-pro`), and the explicit experimental vision model (`deepseek-v4-flash-vision-exp`) via OpenAI-compatible Chat Completions. Thinking defaults to disabled for low-latency chat.
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
-- **Sakana AI**: Supports Fugu (`fugu`) and Fugu Ultra (`fugu-ultra-v1.1`) via OpenAI-compatible Chat Completions.
+- **Sakana AI**: Supports Fugu (`fugu`), Fugu Ultra (`fugu-ultra-v1.1`), and vision-capable Sakana Namazu (`sakana-namazu`) via OpenAI-compatible Chat Completions. Namazu thinking defaults to disabled for responsive chat.
 - **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) via OpenAI-compatible Chat Completions; the retiring 2.2 constant remains exported for compatibility.
 - **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Web pages require Chrome 148+ on a supported desktop device; no Chrome flags are required. Non-streaming, no vision support.
 

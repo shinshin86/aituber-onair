@@ -3,10 +3,11 @@ import {
   ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
   MODEL_FUGU,
   MODEL_FUGU_ULTRA,
+  MODEL_SAKANA_NAMAZU,
 } from '../../src/constants';
 import { SakanaChatService } from '../../src/services/providers/sakana/SakanaChatService';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
-import type { Message } from '../../src/types';
+import type { Message, MessageWithVision } from '../../src/types';
 
 const messages: Message[] = [{ role: 'user', content: 'hello' }];
 
@@ -84,6 +85,67 @@ describe('SakanaChatService', () => {
     expect(body.model).toBe(MODEL_FUGU);
     expect(body.reasoning).toBeUndefined();
     expect(body.reasoning_effort).toBeUndefined();
+  });
+
+  it('disables Sakana Namazu thinking for responsive chat', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOneShotResponse('ok'));
+    const service = new SakanaChatService(
+      'test-key',
+      MODEL_SAKANA_NAMAZU,
+      MODEL_SAKANA_NAMAZU,
+      undefined,
+      ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
+      undefined,
+      { type: 'disabled' },
+    );
+
+    await service.chatOnce(messages, false);
+
+    const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
+    expect(body.model).toBe(MODEL_SAKANA_NAMAZU);
+    expect(body.chat_template_kwargs).toEqual({ thinking: false });
+  });
+
+  it('sends Namazu image messages through chat completions', async () => {
+    const postSpy = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(createOneShotResponse('image'));
+    const visionMessages: MessageWithVision[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Describe this image.' },
+          {
+            type: 'image_url',
+            image_url: { url: 'https://example.com/image.png' },
+          },
+        ],
+      },
+    ];
+    const service = new SakanaChatService(
+      'test-key',
+      MODEL_SAKANA_NAMAZU,
+      MODEL_SAKANA_NAMAZU,
+      undefined,
+      ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
+      undefined,
+      { type: 'disabled' },
+    );
+
+    await service.visionChatOnce(visionMessages, false);
+
+    expect(postSpy).toHaveBeenCalledWith(
+      ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
+      expect.objectContaining({
+        model: MODEL_SAKANA_NAMAZU,
+        messages: visionMessages,
+        stream: false,
+        chat_template_kwargs: { thinking: false },
+      }),
+      { Authorization: 'Bearer test-key' },
+    );
   });
 
   it('uses max_tokens for configured response length', async () => {

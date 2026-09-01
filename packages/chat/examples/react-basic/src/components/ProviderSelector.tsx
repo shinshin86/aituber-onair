@@ -16,7 +16,9 @@ import {
   getXaiSupportedReasoningEfforts,
   getGeminiSupportedReasoningEfforts,
   getDeepSeekSupportedReasoningEfforts,
+  getDefaultOpenRouterReasoningEffort,
   getOpenRouterSupportedReasoningEfforts,
+  getDefaultZaiReasoningEffort,
   getZaiSupportedReasoningEfforts,
   isGPT5Model,
   isResponsesOnlyGPT5Model,
@@ -24,6 +26,7 @@ import {
   refreshOpenRouterFreeModels,
   normalizeClaudeReasoningEffort,
   normalizeGeminiReasoningEffort,
+  normalizeOpenRouterReasoningEffort,
   normalizeXaiReasoningEffort,
   type ClaudeReasoningEffort,
   type GeminiReasoningEffort,
@@ -82,7 +85,9 @@ import {
   MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
   MODEL_ANTHROPIC_CLAUDE_FABLE_5,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_4_8,
   MODEL_GPT_OSS_20B_FREE,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   MODEL_GOOGLE_GEMINI_3_7_FLASH,
@@ -90,6 +95,7 @@ import {
   MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
   MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
   MODEL_MOONSHOTAI_KIMI_K3,
+  MODEL_MOONSHOTAI_KIMI_K2_6,
   MODEL_MOONSHOTAI_KIMI_K2_5,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENROUTER_AUTO,
@@ -98,6 +104,8 @@ import {
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
   MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
+  MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
+  MODEL_QWEN_QWEN_3_8_FLASH,
   MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
   MODEL_OPENAI_GPT_5_6_SOL,
@@ -122,6 +130,8 @@ import {
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
   MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
   MODEL_ZAI_GLM_5_2,
+  MODEL_ZAI_GLM_5_3,
+  MODEL_ZAI_GLM_5_3_FLASH,
   MODEL_ZAI_GLM_4_7_FLASH,
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
@@ -129,6 +139,8 @@ import {
   MODEL_XAI_GROK_4_6,
   MODEL_XAI_GROK_LATEST,
   // Z.ai models
+  MODEL_GLM_5_3,
+  MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
   MODEL_GLM_5,
@@ -155,6 +167,7 @@ import {
   MODEL_KIMI_K2_5,
   // DeepSeek models
   MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_DEEPSEEK_V4_PRO,
   // Mistral models
   MODEL_MINISTRAL_3B_2512,
@@ -168,6 +181,7 @@ import {
   // Sakana models
   MODEL_FUGU,
   MODEL_FUGU_ULTRA_V1_1,
+  MODEL_SAKANA_NAMAZU,
   // PLaMo models
   MODEL_PLAMO_3_0_PRIME,
   // Gemini Nano models
@@ -800,6 +814,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
+    name: 'DeepSeek V4 Flash Vision Exp (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_GPT_OSS_20B_FREE,
     name: 'GPT OSS 20B (Free)',
     provider: 'openrouter',
@@ -902,8 +922,20 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_ANTHROPIC_CLAUDE_SONNET_5,
+    name: 'Claude Sonnet 5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_ANTHROPIC_CLAUDE_OPUS_5,
     name: 'Claude Opus 5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_OPUS_4_8,
+    name: 'Claude Opus 4.8 (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -974,6 +1006,18 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_ZAI_GLM_5_3,
+    name: 'GLM-5.3 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ZAI_GLM_5_3_FLASH,
+    name: 'GLM-5.3 Flash (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_ZAI_GLM_5_2,
     name: 'GLM-5.2 (OpenRouter)',
     provider: 'openrouter',
@@ -1010,6 +1054,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_QWEN_QWEN_3_8_FLASH,
+    name: 'Qwen3.8 Flash (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_MOONSHOTAI_KIMI_LATEST,
     name: 'Kimi Latest (OpenRouter)',
     provider: 'openrouter',
@@ -1024,6 +1074,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
     name: 'Kimi K2.7 Code (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_MOONSHOTAI_KIMI_K2_6,
+    name: 'Kimi K2.6 (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -1047,6 +1103,18 @@ export const allModels: ProviderModel[] = [
   },
 
   // Z.ai models
+  {
+    id: MODEL_GLM_5_3,
+    name: 'GLM-5.3',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_5_3_FLASH,
+    name: 'GLM-5.3 Flash',
+    provider: 'zai',
+    default: false,
+  },
   {
     id: MODEL_GLM_5_2,
     name: 'GLM-5.2',
@@ -1197,6 +1265,12 @@ export const allModels: ProviderModel[] = [
     provider: 'deepseek',
     default: false,
   },
+  {
+    id: MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+    name: 'DeepSeek V4 Flash Vision Exp',
+    provider: 'deepseek',
+    default: false,
+  },
 
   // Mistral models
   {
@@ -1258,6 +1332,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_FUGU_ULTRA_V1_1,
     name: 'Fugu Ultra v1.1',
+    provider: 'sakana',
+    default: false,
+  },
+  {
+    id: MODEL_SAKANA_NAMAZU,
+    name: 'Sakana Namazu',
     provider: 'sakana',
     default: false,
   },
@@ -1427,6 +1507,11 @@ export default function ProviderSelector({
     provider === 'openrouter'
       ? getOpenRouterSupportedReasoningEfforts(selectedModel)
       : [];
+  const effectiveOpenRouterReasoningEffort =
+    normalizeOpenRouterReasoningEffort(
+      selectedModel,
+      openrouterReasoningEffort,
+    ) ?? getDefaultOpenRouterReasoningEffort(selectedModel);
   const zaiSupportedReasoningEfforts =
     provider === 'zai' ? getZaiSupportedReasoningEfforts(selectedModel) : [];
   const isZaiReasoningModel = zaiSupportedReasoningEfforts.length > 0;
@@ -1434,7 +1519,7 @@ export default function ProviderSelector({
     reasoning_effort as ZaiReasoningEffort,
   )
     ? (reasoning_effort as ZaiReasoningEffort)
-    : 'none';
+    : (getDefaultZaiReasoningEffort(selectedModel) ?? 'none');
   const isZaiThinkingEnabled = isZaiReasoningModel
     ? zaiReasoningEffort !== 'none' && zaiReasoningEffort !== 'minimal'
     : zaiThinkingType === 'enabled';
@@ -2166,7 +2251,7 @@ export default function ProviderSelector({
                 </label>
                 <select
                   id="openrouter-reasoning-effort"
-                  value={openrouterReasoningEffort || 'none'}
+                  value={effectiveOpenRouterReasoningEffort || 'none'}
                   onChange={(e) =>
                     onOpenrouterReasoningEffortChange?.(
                       e.target.value as OpenRouterReasoningEffort,
@@ -2186,8 +2271,10 @@ export default function ProviderSelector({
                   ))}
                 </select>
                 <span className="helper-text">
-                  Options are filtered for the selected model. None disables
-                  reasoning instead of only hiding it.
+                  {selectedModel === MODEL_ZAI_GLM_5_3 ||
+                  selectedModel === MODEL_ZAI_GLM_5_3_FLASH
+                    ? 'GLM-5.3 always reasons; Low is the chat-oriented default.'
+                    : 'Options are filtered for the selected model. None disables reasoning instead of only hiding it.'}
                 </span>
               </div>
 
@@ -2286,8 +2373,10 @@ export default function ProviderSelector({
                     ))}
                   </select>
                   <span className="helper-text">
-                    GLM-5.2 maps minimal to none, low/medium to high, and xhigh
-                    to max.
+                    {selectedModel === MODEL_GLM_5_3 ||
+                    selectedModel === MODEL_GLM_5_3_FLASH
+                      ? 'GLM-5.3 always uses thinking. Low is the chat-oriented default.'
+                      : 'GLM-5.2 maps minimal to none, low/medium to high, and xhigh to max.'}
                   </span>
                 </div>
               ) : (
@@ -2515,6 +2604,11 @@ export default function ProviderSelector({
           border-color: var(--brand-strong);
           background: var(--brand-strong);
           color: white;
+        }
+
+        .provider-item.active:hover:not(:disabled),
+        .model-item.active:hover:not(:disabled) {
+          background: var(--brand-strong);
         }
 
         .provider-item:disabled,

@@ -4,6 +4,8 @@ export const ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API = `${DEEPSEEK_API_BASE_URL}/
 // DeepSeek V4 models
 export const MODEL_DEEPSEEK_V4_FLASH = 'deepseek-v4-flash';
 export const MODEL_DEEPSEEK_V4_PRO = 'deepseek-v4-pro';
+export const MODEL_DEEPSEEK_V4_FLASH_VISION_EXP =
+  'deepseek-v4-flash-vision-exp';
 
 export type DeepSeekReasoningEffort = 'none' | 'low' | 'high' | 'max';
 
@@ -29,6 +31,11 @@ export const MODEL_DEEPSEEK_REASONER = 'deepseek-reasoner';
 export const DEEPSEEK_SUPPORTED_MODELS = [
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_PRO,
+  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+];
+
+export const DEEPSEEK_VISION_SUPPORTED_MODELS = [
+  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
 ];
 
 export const DEEPSEEK_DEPRECATED_MODELS = [
@@ -43,11 +50,19 @@ export function getDeepSeekSupportedReasoningEfforts(
     return DEEPSEEK_V4_FLASH_REASONING_EFFORTS;
   }
 
+  if (model === MODEL_DEEPSEEK_V4_FLASH_VISION_EXP) {
+    return DEEPSEEK_V4_FLASH_REASONING_EFFORTS;
+  }
+
   if (model === MODEL_DEEPSEEK_V4_PRO) {
     return DEEPSEEK_V4_PRO_REASONING_EFFORTS;
   }
 
   return [];
+}
+
+export function isDeepSeekVisionModel(model: string): boolean {
+  return DEEPSEEK_VISION_SUPPORTED_MODELS.includes(model);
 }
 
 export function isDeepSeekReasoningEffortModel(model: string): boolean {

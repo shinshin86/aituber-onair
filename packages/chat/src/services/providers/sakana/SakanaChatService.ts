@@ -14,6 +14,7 @@ export class SakanaChatService extends OpenAIChatService {
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
     responseLength?: ChatResponseLength,
+    thinking?: { type: 'enabled' | 'disabled' },
   ) {
     super(
       apiKey,
@@ -28,6 +29,8 @@ export class SakanaChatService extends OpenAIChatService {
       false,
       'sakana',
       false,
+      undefined,
+      thinking?.type === 'enabled',
     );
   }
 }

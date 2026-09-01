@@ -170,7 +170,7 @@ function App() {
   const [zaiThinkingType, setZaiThinkingType] = useState<
     'enabled' | 'disabled'
   >('disabled');
-  const [zaiClearThinking, setZaiClearThinking] = useState(false);
+  const [zaiClearThinking, setZaiClearThinking] = useState(true);
   const [zaiResponseFormatType, setZaiResponseFormatType] = useState<
     'text' | 'json_object' | 'json_schema'
   >('text');
