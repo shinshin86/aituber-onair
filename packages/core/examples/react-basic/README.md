@@ -143,13 +143,16 @@ Click the "設定" (Settings) button to configure your AI provider:
   `output_config.effort`; the API default is `high`
 
 **Z.ai:**
+- GLM-5.3 and GLM-5.3 Flash (vision)
 - GLM-5.2
 - GLM-5.1
 - GLM-5V-Turbo (vision)
 - GLM-5 and GLM-5-Turbo (text-only)
 - GLM-4.7 series
 - GLM-4.6 and GLM-4.6V series
-- GLM-5.2 exposes model-aware `reasoning_effort`; its default is `none`
+- GLM-5.3 models always use thinking, expose `low`, `high`, and `max`, and
+  default to `low` for responsive chat
+- GLM-5.2 exposes model-aware `reasoning_effort`; its default remains `none`
 
 **Kimi:**
 - Kimi K3 with vision and configurable `reasoning_effort` (`low`, `high`, or `max`; defaults to `max` and cannot be disabled)
@@ -169,6 +172,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **DeepSeek:**
 - DeepSeek V4 Flash and DeepSeek V4 Pro with model-aware reasoning controls
+- DeepSeek V4 Flash Vision Exp with image input support
 - Defaults to `none` for responsive chat; higher supported efforts remain selectable
 - Thinking and tool calling cannot currently be combined in one request
 
@@ -181,6 +185,8 @@ Click the "設定" (Settings) button to configure your AI provider:
 **Sakana AI:**
 - Fugu
 - Fugu Ultra v1.1
+- Sakana Namazu with Japanese-focused vision support and optional thinking
+  disabled by default
 - Older Fugu Ultra aliases remain compatibility exports
 - Shown as disabled in this browser example because direct browser requests can fail with CORS
 
@@ -190,8 +196,10 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **OpenRouter:**
 - Curated multi-provider models, including Auto Router Beta, OpenAI GPT-5.6,
-  Claude Fable 5 / Opus 5, Gemini 3.7/3.6/3.5, Grok 4.6, Kimi K3,
-  KAT-Coder V2.5, DeepSeek V4 Pro 0813, and DeepSeek V4 Flash
+  Claude Fable 5 / Sonnet 5 / Opus 5 / Opus 4.8, Gemini 3.7/3.6/3.5,
+  Z.ai GLM-5.3 / GLM-5.3 Flash, Grok 4.6, Kimi K3 / Kimi K2.6,
+  Qwen3.8 Flash, KAT-Coder V2.5, DeepSeek V4 Pro 0813, DeepSeek V4 Flash,
+  and DeepSeek V4 Flash Vision Exp
 - DeepSeek V4 Flash offers the fixed current `deepseek/deepseek-v4-flash-0731`
   model and the separate `deepseek/deepseek-v4-flash` preview snapshot
 - Reasoning effort options follow the selected model and default to explicit

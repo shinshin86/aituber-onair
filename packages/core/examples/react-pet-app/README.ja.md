@@ -18,6 +18,11 @@ AITuber チャットサンプルです。
 - xAI Grok 4.6 の `reasoning_effort` は `low`、`medium`、`high`、`xhigh`
   に対応し、既定は `low` です。Grok 4.3 は低レイテンシ向けに `none` が
   デフォルトです
+- モデル一覧は `@aituber-onair/core` から動的取得するため、GLM-5.3 /
+  GLM-5.3 Flash、DeepSeek V4 Flash Vision Exp、Sakana Namazu、Qwen3.8
+  Flash、Claude Sonnet 5 / Opus 4.8、Kimi K2.6 も自動反映されます
+- GLM-5.3 系は thinking 常時有効で既定値を `low` とし、DeepSeek Vision
+  と Sakana Namazu は応答性重視で任意の thinking をデフォルト無効にします
 - TTS 再生と音声レベル解析
 - Web Speech API による音声入力
 - YouTube Live / Twitch コメント取り込み

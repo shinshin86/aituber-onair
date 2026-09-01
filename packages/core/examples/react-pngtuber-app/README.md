@@ -21,9 +21,11 @@ Speech input uses Web Speech API, and lip-sync is driven in real time from actua
   `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for
   lower latency
 - Provider model lists are sourced from `@aituber-onair/core`, so newly synced
-  chat models such as Gemini 3.7 Flash, Kimi K3, Ministral 3, GLM-5V-Turbo,
-  and GPT-5.6 are available automatically
-  in Settings
+  chat models such as GLM-5.3 / GLM-5.3 Flash, DeepSeek V4 Flash Vision Exp,
+  Sakana Namazu, Qwen3.8 Flash, Claude Sonnet 5 / Opus 4.8, and Kimi K2.6 are
+  available automatically in Settings
+- GLM-5.3 models always use thinking and default to `low`; DeepSeek Vision and
+  Sakana Namazu keep optional thinking disabled by default for responsive chat
 - Gemini 3 Flash-family models use minimal thinking by default for chat-style
   responses; Gemini 3 Pro uses low
 - `gpt-5.5-pro` is intentionally omitted because OpenAI documents it as

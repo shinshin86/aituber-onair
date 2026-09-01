@@ -20,6 +20,11 @@ The app keeps the same basic structure as the other React core samples:
 - xAI Grok 4.6 supports `low`, `medium`, `high`, and `xhigh`
   `reasoning_effort` and defaults to `low`; Grok 4.3 defaults to `none` for
   lower latency
+- Provider model lists are sourced from `@aituber-onair/core`, so GLM-5.3 /
+  GLM-5.3 Flash, DeepSeek V4 Flash Vision Exp, Sakana Namazu, Qwen3.8 Flash,
+  Claude Sonnet 5 / Opus 4.8, and Kimi K2.6 are available automatically
+- GLM-5.3 models always use thinking and default to `low`; DeepSeek Vision and
+  Sakana Namazu keep optional thinking disabled by default for responsive chat
 - TTS playback and real-time audio analysis
 - Speech input through Web Speech API
 - YouTube Live / Twitch comment ingestion
