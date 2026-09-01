@@ -316,6 +316,7 @@ describe('Core index chat re-exports', () => {
     expect(DEEPSEEK_SUPPORTED_MODELS).toEqual([
       MODEL_DEEPSEEK_V4_FLASH,
       MODEL_DEEPSEEK_V4_PRO,
+      'deepseek-v4-flash-vision-exp',
     ]);
     expect(reasoningEffort).toBe('none');
     expect(
@@ -354,6 +355,7 @@ describe('Core index chat re-exports', () => {
     expect(SAKANA_SUPPORTED_MODELS).toEqual([
       MODEL_FUGU,
       MODEL_FUGU_ULTRA_V1_1,
+      'sakana-namazu',
     ]);
     expect(ENDPOINT_SAKANA_CHAT_COMPLETIONS_API).toBe(
       'https://api.sakana.ai/v1/chat/completions',
