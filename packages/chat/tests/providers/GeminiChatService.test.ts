@@ -9,6 +9,7 @@ import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMINI_2_5_FLASH,
+  MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
@@ -65,54 +66,56 @@ describe('GeminiChatService API version selection', () => {
     });
   });
 
-  it('streams Gemini 3.7 through v1beta with low thinking and parses its response', async () => {
-    const streamPayload = {
-      candidates: [
-        {
-          content: {
-            parts: [{ text: 'Fast response' }],
+  it.each([
+    [MODEL_GEMINI_3_8_FLASH, 'gemini-3.8-flash'],
+    [MODEL_GEMINI_3_7_FLASH, 'gemini-3.7-flash'],
+  ])(
+    'streams %s through v1beta with low thinking and parses its response',
+    async (model, modelId) => {
+      const streamPayload = {
+        candidates: [
+          {
+            content: {
+              parts: [{ text: 'Fast response' }],
+            },
+          },
+        ],
+      };
+      const postSpy = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(
+          new Response(`data: ${JSON.stringify(streamPayload)}\n\n`),
+        );
+      const service = new GeminiChatService('test-key', model, model);
+
+      const completion = await service.chatOnce(messages, true);
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy.mock.calls[0][0]).toContain(
+        `/v1beta/models/${modelId}:streamGenerateContent?alt=sse&key=test-key`,
+      );
+      expect(postSpy.mock.calls[0][1]).toMatchObject({
+        generationConfig: {
+          thinkingConfig: {
+            includeThoughts: false,
+            thinkingLevel: 'LOW',
           },
         },
-      ],
-    };
-    const postSpy = vi
-      .spyOn(ChatServiceHttpClient, 'post')
-      .mockResolvedValue(
-        new Response(`data: ${JSON.stringify(streamPayload)}\n\n`),
+      });
+      expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
+        'generationConfig.temperature',
       );
-    const service = new GeminiChatService(
-      'test-key',
-      MODEL_GEMINI_3_7_FLASH,
-      MODEL_GEMINI_3_7_FLASH,
-    );
-
-    const completion = await service.chatOnce(messages, true);
-
-    expect(postSpy).toHaveBeenCalledTimes(1);
-    expect(postSpy.mock.calls[0][0]).toContain(
-      '/v1beta/models/gemini-3.7-flash:streamGenerateContent?alt=sse&key=test-key',
-    );
-    expect(postSpy.mock.calls[0][1]).toMatchObject({
-      generationConfig: {
-        thinkingConfig: {
-          includeThoughts: false,
-          thinkingLevel: 'LOW',
-        },
-      },
-    });
-    expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
-      'generationConfig.temperature',
-    );
-    expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
-      'generationConfig.topP',
-    );
-    expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
-      'generationConfig.topK',
-    );
-    expect(completion.blocks).toEqual([
-      { type: 'text', text: 'Fast response' },
-    ]);
-  });
+      expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
+        'generationConfig.topP',
+      );
+      expect(postSpy.mock.calls[0][1]).not.toHaveProperty(
+        'generationConfig.topK',
+      );
+      expect(completion.blocks).toEqual([
+        { type: 'text', text: 'Fast response' },
+      ]);
+    },
+  );
 
   it.each([
     [MODEL_GEMINI_3_6_FLASH, 'gemini-3.6-flash'],

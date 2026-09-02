@@ -70,6 +70,7 @@ import {
   // Gemini models
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
+  MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_5_FLASH_LITE,
@@ -685,6 +686,12 @@ export const allModels: ProviderModel[] = [
   },
 
   // Gemini models
+  {
+    id: MODEL_GEMINI_3_8_FLASH,
+    name: 'Gemini 3.8 Flash',
+    provider: 'gemini',
+    default: false,
+  },
   {
     id: MODEL_GEMINI_3_7_FLASH,
     name: 'Gemini 3.7 Flash',
