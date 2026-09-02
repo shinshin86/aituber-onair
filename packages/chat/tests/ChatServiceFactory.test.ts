@@ -21,6 +21,7 @@ import {
   MODEL_GROK_4_6,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
+  MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_3_7_FLASH,
 } from '../src/constants';
 
@@ -410,12 +411,26 @@ describe('ChatServiceFactory', () => {
     it('returns Gemini reasoning effort capabilities', () => {
       const capabilities = ChatServiceFactory.getProviderCapabilities('gemini');
 
+      expect(capabilities?.models).toContain(MODEL_GEMINI_3_8_FLASH);
+      expect(capabilities?.tools).toBe(true);
       expect(capabilities?.reasoningEffort).toEqual([
         'minimal',
         'low',
         'medium',
         'high',
       ]);
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'gemini',
+          MODEL_GEMINI_3_8_FLASH,
+        )?.reasoningEffort,
+      ).toEqual(['low', 'medium', 'high']);
+      expect(
+        ChatServiceFactory.getProviderCapabilities(
+          'gemini',
+          MODEL_GEMINI_3_8_FLASH,
+        )?.vision,
+      ).toBe('supported');
       expect(
         ChatServiceFactory.getProviderCapabilities(
           'gemini',

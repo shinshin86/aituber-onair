@@ -4,6 +4,7 @@ export const ENDPOINT_GEMINI_API = 'https://generativelanguage.googleapis.com';
 // Gemini / Gemma models
 export const MODEL_GEMMA_4_31B_IT = 'gemma-4-31b-it';
 export const MODEL_GEMMA_4_26B_A4B_IT = 'gemma-4-26b-a4b-it';
+export const MODEL_GEMINI_3_8_FLASH = 'gemini-3.8-flash';
 export const MODEL_GEMINI_3_7_FLASH = 'gemini-3.7-flash';
 export const MODEL_GEMINI_3_6_FLASH = 'gemini-3.6-flash';
 export const MODEL_GEMINI_3_5_FLASH = 'gemini-3.5-flash';
@@ -24,6 +25,7 @@ export const MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17 =
   'gemini-2.5-flash-lite-preview-06-17';
 
 export const GEMINI_RECOMMENDED_MODELS = [
+  MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
@@ -60,13 +62,7 @@ const GEMINI_FLASH_REASONING_EFFORTS: readonly GeminiReasoningEffort[] = [
   'high',
 ];
 
-const GEMINI_PRO_REASONING_EFFORTS: readonly GeminiReasoningEffort[] = [
-  'low',
-  'medium',
-  'high',
-];
-
-const GEMINI_3_7_FLASH_REASONING_EFFORTS: readonly GeminiReasoningEffort[] = [
+const GEMINI_LOW_MINIMUM_REASONING_EFFORTS: readonly GeminiReasoningEffort[] = [
   'low',
   'medium',
   'high',
@@ -81,7 +77,9 @@ const GEMINI_FLASH_REASONING_EFFORT_MODELS = [
   MODEL_GEMINI_3_FLASH_PREVIEW,
 ];
 
-const GEMINI_PRO_REASONING_EFFORT_MODELS = [
+const GEMINI_LOW_MINIMUM_REASONING_EFFORT_MODELS = [
+  MODEL_GEMINI_3_8_FLASH,
+  MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
 ];
@@ -93,16 +91,12 @@ const GEMINI_PRO_REASONING_EFFORT_MODELS = [
 export function getGeminiSupportedReasoningEfforts(
   model: string,
 ): readonly GeminiReasoningEffort[] {
-  if (model === MODEL_GEMINI_3_7_FLASH) {
-    return GEMINI_3_7_FLASH_REASONING_EFFORTS;
-  }
-
   if (GEMINI_FLASH_REASONING_EFFORT_MODELS.includes(model)) {
     return GEMINI_FLASH_REASONING_EFFORTS;
   }
 
-  if (GEMINI_PRO_REASONING_EFFORT_MODELS.includes(model)) {
-    return GEMINI_PRO_REASONING_EFFORTS;
+  if (GEMINI_LOW_MINIMUM_REASONING_EFFORT_MODELS.includes(model)) {
+    return GEMINI_LOW_MINIMUM_REASONING_EFFORTS;
   }
 
   return [];
@@ -113,7 +107,7 @@ export function isGeminiReasoningEffortModel(model: string): boolean {
 }
 
 /**
- * Chat-oriented default: minimal for Flash families, low for Pro families.
+ * Chat-oriented default: the lowest thinking level supported by each model.
  */
 export function getDefaultGeminiReasoningEffort(
   model: string,

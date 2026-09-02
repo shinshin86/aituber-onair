@@ -1,5 +1,20 @@
 # @aituber-onair/chat
 
+## 0.54.0
+
+### Minor Changes
+
+- Added native Gemini 3.8 Flash (`gemini-3.8-flash`) as an explicit stable,
+  vision-capable model with streaming and tool/function-calling support. It
+  exposes `low`, `medium`, and `high` reasoning efforts and defaults to `low`
+  for responsive chat because the model does not support `minimal`. Gemini 3.1
+  Flash-Lite remains the default Gemini model.
+
+### Patch Changes
+
+- Updated the React basic model selector, capability metadata tests, transport
+  tests, and English/Japanese documentation for Gemini 3.8 Flash.
+
 ## 0.53.0
 
 ### Minor Changes
