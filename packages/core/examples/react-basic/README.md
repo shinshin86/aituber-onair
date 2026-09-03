@@ -14,7 +14,7 @@ This example application serves as a practical implementation guide for integrat
   - OpenAI (GPT-4.1, GPT-4o, GPT-5 series including GPT-5.6 Sol/Terra/Luna, GPT-5.5, and GPT-5.4 variants)
   - Gemini Nano (Chrome Built-in AI, no API key)
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
-  - Google Gemini (Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
+  - Google Gemini (Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
   - Anthropic Claude (Fable 5, Opus 5, Sonnet 5, 4.8 Opus, 4.7 Opus, 4.6 Sonnet/Opus, and 4.5 Opus/Sonnet/Haiku)
   - DeepSeek, Mistral, Sakana AI (disabled in browser UI), and PLaMo first-class providers
   - Seamless provider switching
@@ -117,12 +117,15 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **Gemini:**
 - Gemma 4 series (31B IT, 26B A4B IT)
-- Gemini 3.7 Flash, Gemini 3.6 Flash, and Gemini 3.5 Flash / Flash-Lite
+- Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, and Gemini 3.5 Flash / Flash-Lite
 - Gemini 3 series (3.1 Flash-Lite, 3.1 Pro Preview, 3 Flash Preview, plus deprecated preview aliases)
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
 - Gemini 2.5 Flash Lite Preview (06-17)
-- Gemini 3 Flash-family models expose `reasoning_effort`; 3.7 Flash defaults
-  to `low`, earlier Flash models default to `minimal`, and Pro defaults to `low`
+- Gemini 3 Flash-family models expose `reasoning_effort`; 3.8 Flash and 3.7
+  Flash default to `low`, earlier Flash models default to `minimal`, and Pro
+  defaults to `low`
+- Gemini 3.8 Flash supports image input and tool calling through the native
+  Gemini provider
 - Gemini 2.5 keeps using `thinkingBudget` and does not expose this control
 
 **Gemini Nano:**

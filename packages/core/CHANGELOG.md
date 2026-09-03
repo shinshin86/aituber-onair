@@ -1,5 +1,17 @@
 # @aituber-onair/core
 
+## 0.26.13
+
+### Patch Changes
+
+- Synced Gemini 3.8 Flash support from `@aituber-onair/chat@0.54.0` into Core:
+  - re-exported `MODEL_GEMINI_3_8_FLASH`
+  - added Gemini 3.8 Flash to the React basic model selector while keeping
+    Gemini 3.1 Flash-Lite as the default
+  - documented its Vision and tool-calling support and its `low`, `medium`, and
+    `high` reasoning efforts, with `low` as the responsive-chat default
+  - refreshed every Core example lockfile for Chat 0.54.0
+
 ## 0.26.12
 
 ### Patch Changes
