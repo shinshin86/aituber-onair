@@ -4014,7 +4014,7 @@ const App: React.FC = () => {
                         {isGeminiReasoningEffortModelSelected
                           ? geminiSupportedReasoningEfforts.includes('minimal')
                             ? 'Mapped to Gemini thinkingLevel. Minimal is optimized for chat latency.'
-                            : 'Mapped to Gemini thinkingLevel. Low is the lowest level supported by Gemini 3 Pro.'
+                            : 'Mapped to Gemini thinkingLevel. Low is the minimum supported level for this model.'
                           : 'Gemini 2.5 uses thinkingBudget; other models may not expose configurable thinkingLevel.'}
                       </div>
                     </div>

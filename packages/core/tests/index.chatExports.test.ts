@@ -13,6 +13,7 @@ import {
   MODEL_CLAUDE_5_FABLE,
   CLAUDE_DEPRECATED_MODELS,
   MODEL_GEMINI_NANO,
+  MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
@@ -579,6 +580,16 @@ describe('Core index chat re-exports', () => {
   });
 
   it('re-exports the latest provider models and reasoning helpers', () => {
+    expect(MODEL_GEMINI_3_8_FLASH).toBe('gemini-3.8-flash');
+    expect(getGeminiSupportedReasoningEfforts(MODEL_GEMINI_3_8_FLASH)).toEqual([
+      'low',
+      'medium',
+      'high',
+    ]);
+    expect(getDefaultGeminiReasoningEffort(MODEL_GEMINI_3_8_FLASH)).toBe('low');
+    expect(
+      normalizeGeminiReasoningEffort(MODEL_GEMINI_3_8_FLASH, 'minimal'),
+    ).toBe('low');
     expect(MODEL_GEMINI_3_7_FLASH).toBe('gemini-3.7-flash');
     expect(getGeminiSupportedReasoningEfforts(MODEL_GEMINI_3_7_FLASH)).toEqual([
       'low',
