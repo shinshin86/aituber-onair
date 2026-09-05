@@ -90,6 +90,9 @@ PSD では、PSDTool 風の静的レイヤー切り替え、または Anime2.5DR
 [`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app)
 を参照してください。
 
+静止画 1 枚から自分でレイヤー付き PSD を作ってみたい場合は、後述する
+Still2Rig PSD のワークフローも利用できます。
+
 ### Pet
 
 人型アバターではなく、小さな相棒キャラクターを使いたい場合に向いています。
@@ -185,6 +188,37 @@ Codex や Claude Code などの AI エージェント向け作業ガイドも含
 [`packages/core/examples/react-live2d-app/models/`](../packages/core/examples/react-live2d-app/models/)
 配下へ配置してください。モデルデータや参照素材を移動、改変、公開、再配布する
 前に、それぞれの利用条件も確認してください。
+
+## 関連ツール: Still2Rig PSD
+
+[Still2Rig PSD](https://github.com/shinshin86/still2rig-psd)
+は、アニメキャラクターの静止画 1 枚から、PSD サンプルで使えるレイヤー付き
+PSD アバターを作るための関連リポジトリです。レイヤーを 1 枚ずつ手で切り分ける
+必要はありません。
+
+画像を添付して AI エージェントに変換を依頼すると、エージェントが See-through で
+画像をパーツに分解し、固定した前後順で PSD を組み立て、構造品質を確認します。
+生成される PSD は `face`, `front hair`, `mouth_open`, `eye_close` などの
+Anime2.5DRig 互換レイヤー名を使うため、PSD サンプルで待機モーションや
+髪揺れ付きのモーションモードとして読み込めます。
+
+組み込み WebUI では、配信で使う前に、まばたき、口の切り替え、髪や全身の動き、
+ドラッグ、拡大縮小まで一通り動作チェックできます。レイヤーの調整もここで行え、
+腕や前髪を手前・奥へ動かして重なりを直し、変更前と比較したうえで、元の PSD を
+上書きせずに修正版を保存できます。元画像がニュートラルな表情だけの場合は、
+位置を合わせた `mouth_open` と `eye_close` の画像を追加すると、実際の
+リップシンクとまばたきが有効になります。足りない素材はツールが隠さずに
+報告します。
+
+同梱のワークフローは Codex とユーザーが承認した Google Colab GPU を前提に
+していますが、どちらも必須ではありません。処理は CLI コマンドに分かれているため、
+利用する AI エージェントに指示すれば Colab の代わりにローカル GPU で
+See-through を実行でき、Codex 以外の Claude Code や Hermes Agent などの
+エージェントでも同じ手順を進められます。
+
+PSD を生成したら、PSD サンプルを起動し、Settings の Visual セクションにある
+PSD avatar からファイルを選択してください。元画像や生成した素材の権利は、
+ツールのライセンスとは別に確認してください。
 
 ## 関連リソースと利用条件の確認
 

@@ -82,6 +82,9 @@ and hair physics. A bundled motion sample works without additional setup.
 Start from
 [`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app).
 
+To create your own layered PSD from a single still image, you can use the
+Still2Rig PSD workflow described below.
+
 ### Pet
 
 Use the pet example when you want a compact animated companion instead of a
@@ -181,6 +184,37 @@ folder—including the updated `.model3.json` and all referenced assets—under
 [`packages/core/examples/react-live2d-app/models/`](../packages/core/examples/react-live2d-app/models/).
 Check the terms for the model and its source assets before moving, modifying,
 publishing, or redistributing them.
+
+## Related Tool: Still2Rig PSD
+
+[Still2Rig PSD](https://github.com/shinshin86/still2rig-psd) is a companion
+repository for turning one still image of an anime character into a layered
+PSD avatar for the PSD example, without cutting every layer by hand.
+
+Attach the image and ask your AI agent to convert it. The agent decomposes the
+image into parts with See-through, assembles the PSD in a fixed back-to-front
+layer order, and runs structural QA. The generated PSD uses
+Anime2.5DRig-compatible layer names such as `face`, `front hair`, `mouth_open`,
+and `eye_close`, so the PSD example can load it in motion mode with idle motion
+and hair physics.
+
+The built-in WebUI lets you check the result end to end before streaming with
+it: blinking, mouth states, hair and full-body motion, drag, and zoom. You can
+also adjust layers there, for example moving arms or front hair forward or
+backward to fix overlaps, compare the edit with the original, and export the
+fixed copy without overwriting the source PSD. If the source image has only a
+neutral expression, supply aligned `mouth_open` and `eye_close` artwork to
+enable real lip-sync and blinking; the tool reports what is still missing
+instead of hiding it.
+
+The bundled workflow targets Codex and a user-approved Google Colab GPU, but
+neither is required. The pipeline is exposed as CLI steps, so you can instruct
+your agent to run See-through on a local GPU instead, and agents other than
+Codex, such as Claude Code or Hermes Agent, can follow the same steps.
+
+After generating the PSD, start the PSD example and choose the file from
+**PSD avatar** in **Settings → Visual**. Check the rights for source images and
+generated assets separately from the tool licenses.
 
 ## Related Resources and License Checks
 
