@@ -60,7 +60,7 @@ body {
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .settings-dialog-header {
@@ -272,6 +272,7 @@ body {
 }
 
 .settings-file-picker-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -463,6 +464,7 @@ body {
 }
 
 .settings-motion-profile-actions {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr;
   gap: 7px;
