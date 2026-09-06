@@ -42,9 +42,10 @@
 - For UI, animation, image, video, or audio changes, verify the result in the
   rendered or played output and report the observed evidence.
 - For avatar motion or physics changes, reload the app without touching its
-  settings and observe at least 10 seconds of motion across at least three
-  reloads. Capture consecutive frames that include the first three seconds and
-  confirm there are no startup-only motion spikes before reporting completion.
+  settings at least three times and observe at least 10 seconds of motion after
+  each reload. Capture consecutive frames that include the first three seconds
+  and confirm there are no startup-only motion spikes before reporting
+  completion.
 
 ## Starter / CLI Smoke Testing
 - When smoke testing generated starter projects, create the project outside the
