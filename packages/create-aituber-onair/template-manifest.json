@@ -79,13 +79,14 @@
     {
       "id": "psd",
       "name": "PSD Tachie",
-      "description": "PSD avatar app with motion and static sample files",
+      "description": "PSD avatar app with Miko motion and static sample files",
       "sourcePath": "packages/core/examples/react-psd-app",
       "requiredFiles": [
         "_gitignore",
+        "MIKO_ASSET_TERMS.md",
         "package.json",
         "src/main.tsx",
-        "public/avatar/sample.psd",
+        "public/avatar/miko-anime25drig-cheer.psd",
         "public/avatar/sample-static.psd",
         "PSD-FORMATS.md",
         "PSD-FORMATS.ja.md"

@@ -12,6 +12,8 @@ import {
 
 const packageRoot = path.resolve('.');
 const templateRoot = path.join(packageRoot, 'templates');
+const maximumPackedBytes = 32 * 1024 * 1024;
+const maximumUnpackedBytes = 60 * 1024 * 1024;
 
 test('manifest defines the seven generated templates', async () => {
   const manifest = await readTemplateManifest();
@@ -73,9 +75,16 @@ test('npm pack includes generated templates without ignored assets', async () =>
   const packedFiles = packResult.files.map((file) => file.path);
 
   assert.equal(
+    packedFiles.includes(
+      'templates/psd/public/avatar/miko-anime25drig-cheer.psd',
+    ),
+    true,
+  );
+  assert.equal(
     packedFiles.includes('templates/psd/public/avatar/sample-static.psd'),
     true,
   );
+  assert.equal(packedFiles.includes('templates/psd/MIKO_ASSET_TERMS.md'), true);
   assert.equal(
     packedFiles.includes(
       'templates/inochi2d/scripts/download-inochi2d-sample-model.mjs',
@@ -94,8 +103,8 @@ test('npm pack includes generated templates without ignored assets', async () =>
     packedFiles.some((file) => file.endsWith('Aka.original-rig.inx')),
     false,
   );
-  assert.ok(packResult.size <= 25 * 1024 * 1024);
-  assert.ok(packResult.unpackedSize <= 45 * 1024 * 1024);
+  assert.ok(packResult.size <= maximumPackedBytes);
+  assert.ok(packResult.unpackedSize <= maximumUnpackedBytes);
 });
 
 test('generated Live2D and Inochi2D asset directories are safe', async () => {

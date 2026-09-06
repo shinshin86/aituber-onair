@@ -266,25 +266,34 @@ If a PSD fails with color mode or bit depth errors, export it again as an
 
 ## Bundled Samples
 
-`public/avatar/sample.psd` is a procedurally drawn motion-mode demo. It is
-generated from 10 transparent PNG parts drawn by
-`scripts/draw_doodle_parts.py` and assembled by `scripts/build-doodle-sample.mjs`.
-The PSD uses a fixed 1024x1536 canvas and these bottom-to-top flat layer names:
+`public/avatar/miko-anime25drig-cheer.psd` is the bundled motion-mode sample.
+It features Miko, the official AITuber OnAir character, and uses a 1280x1280
+canvas with these bottom-to-top flat layer names:
 
 ```text
 back hair
+bottomwear
+handwear
 topwear
+neck
+ears
 face
-mouth_open
 eyewhite
-eyelash
 irides
-front hair
+eyelash
+eyebrow
+nose
 mouth_close
-eye_close
+mouth_open
+front hair
 ```
 
-Regenerate it with:
+The asset is available from the
+[official Miko download page](https://miko.aituberonair.com/downloads/) and is
+governed by [separate usage terms](./MIKO_ASSET_TERMS.md).
+
+For an additional procedural motion fixture, generate 10 transparent PNG parts
+and assemble the untracked `local-assets/sample.psd` with:
 
 ```bash
 uv run --with pillow python scripts/draw_doodle_parts.py local-assets/doodle-parts

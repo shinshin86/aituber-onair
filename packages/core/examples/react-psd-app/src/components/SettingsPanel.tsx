@@ -14,7 +14,10 @@ import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { LayerTreePanel } from './LayerTreePanel';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
-import type { PsdAvatarController } from '../hooks/usePsdAvatar';
+import {
+  DEFAULT_PSD_FILE_NAME,
+  type PsdAvatarController,
+} from '../hooks/usePsdAvatar';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import type { useSettings } from '../hooks/useSettings';
@@ -491,7 +494,7 @@ function PsdAvatarSection({
             PSDを選択
           </label>
           <span className="settings-file-hint">
-            {psdAvatar.source?.name || 'sample.psd'}
+            {psdAvatar.source?.name || DEFAULT_PSD_FILE_NAME}
           </span>
         </div>
         <div className="settings-file-actions">

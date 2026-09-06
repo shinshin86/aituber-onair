@@ -40,7 +40,8 @@ import {
 } from '../lib/psdVisibility';
 
 const PSD_STORAGE_KEY = 'react-psd-app-psd-avatar-settings';
-const SAMPLE_PSD_URL = '/avatar/sample.psd';
+export const DEFAULT_PSD_FILE_NAME = 'miko-anime25drig-cheer.psd';
+const DEFAULT_PSD_URL = `/avatar/${DEFAULT_PSD_FILE_NAME}`;
 
 interface StoredPsdSettings {
   visibility: PsdVisibilityOverrides;
@@ -554,18 +555,18 @@ export function usePsdAvatar(): PsdAvatarController {
 
     const loadSample = async () => {
       try {
-        const response = await fetch(SAMPLE_PSD_URL);
+        const response = await fetch(DEFAULT_PSD_URL);
         if (!response.ok) return;
         const buffer = await response.arrayBuffer();
         if (cancelled) return;
         await loadArrayBuffer(buffer, {
-          name: 'sample.psd',
+          name: DEFAULT_PSD_FILE_NAME,
           size: buffer.byteLength,
-          key: sourceKey('sample.psd', buffer.byteLength),
+          key: sourceKey(DEFAULT_PSD_FILE_NAME, buffer.byteLength),
           bundled: true,
         });
       } catch (sampleError) {
-        console.warn('Bundled sample PSD could not be loaded.', sampleError);
+        console.warn('Bundled Miko PSD could not be loaded.', sampleError);
       }
     };
 

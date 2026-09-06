@@ -264,25 +264,33 @@ color mode や bit depth のエラーが出る場合は、8-bit RGB の `.psd` �
 
 ## 同梱 samples
 
-`public/avatar/sample.psd` は procedural に描画した motion-mode demo です。
-`scripts/draw_doodle_parts.py` が描画した 10 個の透明 PNG part を、
-`scripts/build-doodle-sample.mjs` が組み立てています。PSD は固定の 1024x1536
-canvas を使い、bottom-to-top で次の flat layer 名を持ちます。
+`public/avatar/miko-anime25drig-cheer.psd` は、AITuber OnAir 公式キャラクター
+「ミコ」の同梱 motion-mode sample です。1280x1280 canvas を使い、
+bottom-to-top で次の flat layer 名を持ちます。
 
 ```text
 back hair
+bottomwear
+handwear
 topwear
+neck
+ears
 face
-mouth_open
 eyewhite
-eyelash
 irides
-front hair
+eyelash
+eyebrow
+nose
 mouth_close
-eye_close
+mouth_open
+front hair
 ```
 
-再生成コマンドは次の通りです。
+素材は[ミコ公式ダウンロードページ](https://miko.aituberonair.com/downloads/)
+から配布され、[専用の利用条件](./MIKO_ASSET_TERMS.md)が適用されます。
+
+追加の procedural motion fixture は、10個の透明PNG partからgit管理外の
+`local-assets/sample.psd` として生成できます。
 
 ```bash
 uv run --with pillow python scripts/draw_doodle_parts.py local-assets/doodle-parts

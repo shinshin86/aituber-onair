@@ -185,10 +185,13 @@ test('createProject copies PuruPuru and PSD template assets', async () => {
     install: false,
     templateRoot: fixtureTemplateRoot,
   });
-  await access(path.join(psd.projectDir, 'public', 'avatar', 'sample.psd'));
+  await access(
+    path.join(psd.projectDir, 'public', 'avatar', 'miko-anime25drig-cheer.psd'),
+  );
   await access(
     path.join(psd.projectDir, 'public', 'avatar', 'sample-static.psd'),
   );
+  await access(path.join(psd.projectDir, 'MIKO_ASSET_TERMS.md'));
 });
 
 test('createProject keeps the Inochi2D sample model optional', async () => {

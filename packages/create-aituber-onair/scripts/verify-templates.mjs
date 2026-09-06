@@ -10,7 +10,8 @@ const templatesRoot = path.join(packageRoot, 'templates');
 const manifest = JSON.parse(
   await readFile(path.join(packageRoot, 'template-manifest.json'), 'utf8'),
 );
-const maximumUnpackedBytes = 45 * 1024 * 1024;
+const maximumUnpackedMiB = 60;
+const maximumUnpackedBytes = maximumUnpackedMiB * 1024 * 1024;
 
 async function walkFiles(directory, relativeRoot = '') {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -127,7 +128,7 @@ for (const forbiddenModel of [
 
 if (totalBytes > maximumUnpackedBytes) {
   throw new Error(
-    `Generated templates are ${(totalBytes / 1024 / 1024).toFixed(2)} MiB; the limit is 45 MiB.`,
+    `Generated templates are ${(totalBytes / 1024 / 1024).toFixed(2)} MiB; the limit is ${maximumUnpackedMiB} MiB.`,
   );
 }
 

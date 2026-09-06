@@ -178,7 +178,7 @@ npm run dev
 1つの PSD ファイルから PSDTool 風または Anime2.5DRig 互換の 2D 立ち絵
 アバターを読み込みたい場合に向いています。PSD レイヤーを canvas に合成し、
 口・目レイヤーをリップシンクやまばたきで動かします。追加設定なしで動く
-motion sample も同梱しています。
+ミコの motion sample も同梱しています。
 
 ```bash
 cd packages/core/examples/react-psd-app

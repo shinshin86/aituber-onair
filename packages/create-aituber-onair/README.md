@@ -26,7 +26,7 @@ npm run dev
 - `live2d`: Live2D avatar app without bundled Live2D model assets
 - `pet`: Animated pet app with bundled Miko pet assets
 - `purupuru`: Physics-driven PuruPuru PNGTuber app with a bundled avatar
-- `psd`: PSD Tachie app with motion and static sample PSD files
+- `psd`: PSD Tachie app with a Miko motion sample and a static sample PSD
 - `inochi2d`: Inochi2D app with an optional Aka sample-model download
 
 ## Usage

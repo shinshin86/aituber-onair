@@ -29,7 +29,7 @@ Choose the template that matches the kind of avatar you want to build first.
   model assets.
 - `pet`: Animated Codex Pet-compatible spritesheet app.
 - `purupuru`: Physics-driven PuruPuru PNGTuber app with bundled assets.
-- `psd`: PSD Tachie app with motion and static sample files.
+- `psd`: PSD Tachie app with a Miko motion sample and a static sample file.
 - `inochi2d`: Inochi2D app with an optional Aka sample-model download.
 
 If this is your first time, start with `pngtuber`. It has the smallest asset
