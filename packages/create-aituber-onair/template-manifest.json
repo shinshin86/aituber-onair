@@ -79,7 +79,7 @@
     {
       "id": "psd",
       "name": "PSD Tachie",
-      "description": "PSD avatar app with Miko motion and static sample files",
+      "description": "PSD avatar app with a bundled Miko motion avatar",
       "sourcePath": "packages/core/examples/react-psd-app",
       "requiredFiles": [
         "_gitignore",
@@ -87,9 +87,12 @@
         "package.json",
         "src/main.tsx",
         "public/avatar/miko-anime25drig-cheer.psd",
-        "public/avatar/sample-static.psd",
         "PSD-FORMATS.md",
         "PSD-FORMATS.ja.md"
+      ],
+      "excludeTracked": [
+        "tests/fixtures/generate-sample-static-psd.mjs",
+        "tests/fixtures/sample-static.psd"
       ],
       "dependencyOverrides": {}
     },

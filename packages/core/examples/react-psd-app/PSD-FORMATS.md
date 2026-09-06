@@ -299,30 +299,3 @@ and assemble the untracked `local-assets/sample.psd` with:
 uv run --with pillow python scripts/draw_doodle_parts.py local-assets/doodle-parts
 npm run build:doodle-sample
 ```
-
-The static PSDTool notation demo is `public/avatar/sample-static.psd`. Load it
-from **Settings -> Visual -> PSD avatar** when you want to inspect layer-tree,
-radio, forced visibility, and role-assignment behavior. Its verified layer tree
-is:
-
-```text
-ROOT
-  口
-    *開き
-    *閉じ
-  目
-    *閉じ
-    *開き
-  !body
-```
-
-The `口` and `目` groups demonstrate radio items. `!body` demonstrates forced
-visibility. Regenerate it with:
-
-```bash
-npm run generate:static-sample
-```
-
-The motion detector rejects `sample-static.psd` because it has no flat `face`
-motion part. A rig smoke check reports `!body` as an unknown layer and reports
-incomplete eye and mouth anchors, so the app correctly uses static mode.

@@ -296,32 +296,3 @@ front hair
 uv run --with pillow python scripts/draw_doodle_parts.py local-assets/doodle-parts
 npm run build:doodle-sample
 ```
-
-static PSDTool 記法の demo は `public/avatar/sample-static.psd` です。
-レイヤーツリー、radio、forced visibility、role assignment の挙動を確認したい場合は、
-**Settings -> Visual -> PSD avatar** からこのファイルを読み込んでください。
-確認済みのレイヤーツリーは次の通りです。
-
-```text
-ROOT
-  口
-    *開き
-    *閉じ
-  目
-    *閉じ
-    *開き
-  !body
-```
-
-`口` と `目` の group は radio item を示します。`!body` は forced visibility を
-示します。再生成コマンドは次の通りです。
-
-```bash
-npm run generate:static-sample
-```
-
-`sample-static.psd` は `face`, `eyewhite`, `irides`, `eyelash`, `mouth_open`,
-hair layer などの flat な Anime2.5DRig part を持たないため、motion detector では
-不採用になります。rig smoke check では `!body` が未知の layer として報告され、
-eye と mouth anchor も不完全になるため、アプリが static mode を使うのは正しい
-挙動です。

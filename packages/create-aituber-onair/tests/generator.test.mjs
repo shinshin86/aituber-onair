@@ -12,8 +12,8 @@ import {
 
 const packageRoot = path.resolve('.');
 const templateRoot = path.join(packageRoot, 'templates');
-const maximumPackedBytes = 32 * 1024 * 1024;
-const maximumUnpackedBytes = 60 * 1024 * 1024;
+const maximumPackedBytes = 30 * 1024 * 1024;
+const maximumUnpackedBytes = 56 * 1024 * 1024;
 
 test('manifest defines the seven generated templates', async () => {
   const manifest = await readTemplateManifest();
@@ -82,7 +82,17 @@ test('npm pack includes generated templates without ignored assets', async () =>
   );
   assert.equal(
     packedFiles.includes('templates/psd/public/avatar/sample-static.psd'),
-    true,
+    false,
+  );
+  assert.equal(
+    packedFiles.includes('templates/psd/tests/fixtures/sample-static.psd'),
+    false,
+  );
+  assert.equal(
+    packedFiles.includes(
+      'templates/psd/tests/fixtures/generate-sample-static-psd.mjs',
+    ),
+    false,
   );
   assert.equal(packedFiles.includes('templates/psd/MIKO_ASSET_TERMS.md'), true);
   assert.equal(

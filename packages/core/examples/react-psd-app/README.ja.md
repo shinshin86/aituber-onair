@@ -76,15 +76,6 @@ Python script は supersampled antialiasing 付きで 10 個の透明 part PNG �
 git 管理外の `local-assets/sample.psd` に組み立てます。同梱のミコアバターは
 置き換えません。
 
-static PSDTool 記法の sample は次のコマンドで再生成できます。
-
-```bash
-npm run generate:static-sample
-```
-
-これは `public/avatar/sample-static.psd` を出力します。実行時の static PSD 読み込みは
-`@webtoon/psd` を使います。
-
 ## PSD modes
 
 アプリはまず vendored Anime2.5DRig 互換 rigger で motion auto-rig 判定を行います。
@@ -92,9 +83,8 @@ npm run generate:static-sample
 それ以外の PSD は static PSDTool mode に fallback します。
 
 static mode は PSDTool 風の `!` 強制表示、`*` radio item、口と目の role
-自動検出に対応しています。これらの control を確認するには、
-**Settings -> Visual -> PSD avatar** から `public/avatar/sample-static.psd` を
-読み込んでください。
+自動検出に対応しています。実行時の static PSD 読み込みには `@webtoon/psd` を
+使います。
 
 motion 関連の設定は **Settings -> Visual** にあります。
 
@@ -160,8 +150,6 @@ Anime2.5DRig motion avatar の両方で共通利用できます。感情タグ�
   License は MIT です。vendored file は `src/vendor/anime25drig/` にあります。
 - 同梱のミコPSDは © Yuki Shindo (AITuber OnAir) で、リポジトリのMIT License
   対象外です。詳細は [Miko Asset Terms](./MIKO_ASSET_TERMS.md)を参照してください。
-- 同梱の `public/avatar/sample-static.psd` は、ミコのPNGTuber画像からこの example
-  内で生成しており、同じミコ素材の利用条件が適用されます。
 
 ## ライブコメントと Screen Vision
 

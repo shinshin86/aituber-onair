@@ -10,7 +10,7 @@ const templatesRoot = path.join(packageRoot, 'templates');
 const manifest = JSON.parse(
   await readFile(path.join(packageRoot, 'template-manifest.json'), 'utf8'),
 );
-const maximumUnpackedMiB = 60;
+const maximumUnpackedMiB = 56;
 const maximumUnpackedBytes = maximumUnpackedMiB * 1024 * 1024;
 
 async function walkFiles(directory, relativeRoot = '') {
