@@ -164,7 +164,7 @@ test('createProject copies pet template with bundled Miko assets', async () => {
   assert.equal(petFiles.includes('spritesheet.webp'), true);
 });
 
-test('createProject copies PuruPuru and PSD template assets', async () => {
+test('createProject copies each template default avatar', async () => {
   const cwd = await mkdtemp(path.join(tmpdir(), 'create-aituber-onair-'));
 
   const purupuru = await createProject({
@@ -185,10 +185,16 @@ test('createProject copies PuruPuru and PSD template assets', async () => {
     install: false,
     templateRoot: fixtureTemplateRoot,
   });
-  await access(path.join(psd.projectDir, 'public', 'avatar', 'sample.psd'));
   await access(
-    path.join(psd.projectDir, 'public', 'avatar', 'sample-static.psd'),
+    path.join(psd.projectDir, 'public', 'avatar', 'miko-anime25drig-cheer.psd'),
   );
+  await assert.rejects(
+    access(path.join(psd.projectDir, 'public', 'avatar', 'sample-static.psd')),
+  );
+  await assert.rejects(
+    access(path.join(psd.projectDir, 'tests', 'fixtures', 'sample-static.psd')),
+  );
+  await access(path.join(psd.projectDir, 'MIKO_ASSET_TERMS.md'));
 });
 
 test('createProject keeps the Inochi2D sample model optional', async () => {

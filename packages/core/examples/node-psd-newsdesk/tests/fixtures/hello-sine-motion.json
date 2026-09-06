@@ -1,5 +1,5 @@
 {
-  "avatar": "../../../react-psd-app/public/avatar/sample.psd",
+  "avatar": "../../../react-psd-app/public/avatar/miko-anime25drig-cheer.psd",
   "avatarMode": "auto",
   "voice": {
     "engine": "sine",
@@ -21,7 +21,7 @@
     "y": 0.52
   },
   "motion": {
-    "intensity": 1
+    "intensity": 0.6
   },
   "blinkSeed": 42,
   "lines": [

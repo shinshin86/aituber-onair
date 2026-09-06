@@ -190,8 +190,8 @@ npm run dev
 Load a single PSD file at runtime, composite PSD layers on canvas, and drive
 mouth/eye layers with real-time lip-sync and blinking. Supports both
 PSDTool-style leading `!` forced-visible / leading `*` radio layers and
-Anime2.5DRig-compatible layer names for motion mode. A bundled `sample.psd`
-animates with zero setup. See
+Anime2.5DRig-compatible layer names for motion mode. The bundled
+`miko-anime25drig-cheer.psd` featuring Miko animates with zero setup. See
 [`packages/core/examples/react-psd-app`](./packages/core/examples/react-psd-app).
 
 ```bash

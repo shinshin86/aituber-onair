@@ -30,7 +30,7 @@ CLI がプロジェクト名、スターターテンプレート、セットア�
   Live2D アバターアプリ。
 - `pet`: Codex Pet 互換スプライトシートを使うアニメーションアプリ。
 - `purupuru`: アセット同梱の物理演算対応ぷるぷる PNGTuber アプリ。
-- `psd`: motion / static サンプル同梱の PSD 立ち絵アプリ。
+- `psd`: ミコの motion avatar 同梱の PSD 立ち絵アプリ。
 - `inochi2d`: Aka サンプルモデルを任意取得できる Inochi2D アプリ。
 
 初めて使う場合は `pngtuber` から始めるのがおすすめです。扱うアセットが

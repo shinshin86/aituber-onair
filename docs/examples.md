@@ -177,8 +177,8 @@ Path:
 
 Best when you want to load a PSDTool-style or Anime2.5DRig-compatible 2D tachie
 avatar from one PSD file. It composites PSD layers on canvas, drives mouth and
-eye layers with lip-sync and blinking, and includes a bundled motion sample
-that works with zero setup.
+eye layers with lip-sync and blinking, and includes a bundled Miko motion
+sample that works with zero setup.
 
 ```bash
 cd packages/core/examples/react-psd-app

@@ -77,7 +77,8 @@ Use PSD when you want to load a layered 2D character from a single `.psd`
 file. The PSD example composites layers on a canvas and binds mouth and eye
 layers to audio lip-sync and blinking. Compatible files can use either
 PSDTool-style static layer switching or Anime2.5DRig-compatible idle motion
-and hair physics. A bundled motion sample works without additional setup.
+and hair physics. The bundled Miko motion sample works without additional
+setup.
 
 Start from
 [`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app).

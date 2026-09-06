@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   assessPsdMotionProfileCompatibility,
   createDefaultPsdMotionProfile,
@@ -22,8 +22,12 @@ import {
   type StorageLike,
 } from '../src/lib/psdMotionProfile';
 import {
+  advancePsdSpringAxis,
+  applyAnime25RigAvatarState,
   composePsdMotionMouthOpen,
+  interpolatePsdMotionValue,
   resolveBasePsdMotionParameters,
+  type Anime25RigAvatar,
 } from '../src/lib/rig/anime25Renderer';
 import type { Anime25RigResult } from '../src/lib/rig/anime25Rig';
 
@@ -97,6 +101,50 @@ describe('PSD motion profile defaults and normalization', () => {
       blink: true,
       physics: true,
     });
+  });
+
+  it('applies the current intensity when a renderer is recreated', () => {
+    const calls: string[] = [];
+    const avatar: Anime25RigAvatar = {
+      setMotionProfile: vi.fn(() => calls.push('profile')),
+      setMotionEnabled: vi.fn(() => calls.push('enabled')),
+      setIntensity: vi.fn(() => calls.push('intensity')),
+      setMouthOpen: vi.fn(() => calls.push('mouth')),
+      getAverageFps: vi.fn(() => 60),
+      dispose: vi.fn(),
+    };
+    const motionProfile = createDefaultPsdMotionProfile();
+
+    applyAnime25RigAvatarState(avatar, {
+      mouthOpen: 0.4,
+      motionEnabled: true,
+      intensity: 0.6,
+      motionProfile,
+    });
+
+    expect(avatar.setMotionProfile).toHaveBeenCalledWith(motionProfile);
+    expect(avatar.setMotionEnabled).toHaveBeenCalledWith(true);
+    expect(avatar.setIntensity).toHaveBeenCalledWith(0.6);
+    expect(avatar.setMouthOpen).toHaveBeenCalledWith(0.4);
+    expect(calls).toEqual(['profile', 'enabled', 'intensity', 'mouth']);
+  });
+
+  it('warm-starts hair physics without an initial displacement spike', () => {
+    const axis = { x: 0, v: 0, dx: 0 };
+
+    advancePsdSpringAxis(axis, 120, 1 / 60, 16, 1.3, 3, true);
+
+    expect(axis).toEqual({ x: 120, v: 0, dx: 0 });
+
+    advancePsdSpringAxis(axis, 121, 1 / 60, 16, 1.3, 3);
+
+    expect(axis.dx).toBeGreaterThan(0);
+    expect(axis.dx).toBeLessThan(3);
+  });
+
+  it('warm-starts the primary motion at its first target', () => {
+    expect(interpolatePsdMotionValue(0, 0.8, 1 / 60, true)).toBe(0.8);
+    expect(interpolatePsdMotionValue(0.8, 1, 1 / 60)).toBeCloseTo(0.8467, 3);
   });
 
   it('clamps finite numbers and rejects strings, NaN, and Infinity', () => {

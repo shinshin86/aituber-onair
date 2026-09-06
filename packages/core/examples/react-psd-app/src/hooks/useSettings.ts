@@ -60,6 +60,7 @@ const DEFAULT_PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
 const DEFAULT_PIPER_PLUS_VOICE_FILE = 'mei_normal.htsvoice';
 const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
 const DEFAULT_OPENROUTER_MAX_WORKING = 10;
+const DEFAULT_VISUAL_MOTION_INTENSITY = 0.6;
 const MAX_PSD_EMOTION_EFFECT_ANCHORS = 32;
 const DEFAULT_SCREEN_VISION_PROMPT =
   'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
@@ -257,7 +258,7 @@ function getDefaultSettings(): AppSettings {
       layoutMode: 'chat',
       showInputInBroadcast: false,
       motionEnabled: true,
-      motionIntensity: 1,
+      motionIntensity: DEFAULT_VISUAL_MOTION_INTENSITY,
       psdEmotionEffectControlMode: 'none',
       psdEmotionEffectMap: { ...DEFAULT_PSD_EMOTION_EFFECT_MAP },
       psdEmotionEffectAnchors: {},
@@ -1048,7 +1049,7 @@ export function useSettings() {
     const normalized =
       typeof motionIntensity === 'number' && Number.isFinite(motionIntensity)
         ? Math.max(0, Math.min(2, motionIntensity))
-        : 1;
+        : DEFAULT_VISUAL_MOTION_INTENSITY;
     setSettings((prev) => ({
       ...prev,
       visual: { ...prev.visual, motionIntensity: normalized },

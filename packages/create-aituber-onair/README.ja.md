@@ -26,7 +26,7 @@ npm run dev
 - `live2d`: Live2D モデルアセットを同梱しない Live2D アプリ
 - `pet`: Miko ペットアセット同梱のアニメーション Pet アプリ
 - `purupuru`: アバター同梱の物理演算対応ぷるぷる PNGTuber アプリ
-- `psd`: motion / static サンプル PSD 同梱の PSD 立ち絵アプリ
+- `psd`: ミコの motion avatar 同梱の PSD 立ち絵アプリ
 - `inochi2d`: Aka サンプルモデルを任意取得できる Inochi2D アプリ
 
 ## 使い方

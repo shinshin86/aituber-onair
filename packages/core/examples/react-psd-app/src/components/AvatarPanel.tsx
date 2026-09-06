@@ -23,8 +23,10 @@ import {
 } from '../lib/psdEmotionEffects';
 import { renderPsdToCanvas } from '../lib/psdRenderer';
 import {
+  applyAnime25RigAvatarState,
   createAnime25RigAvatar,
   type Anime25RigAvatar,
+  type Anime25RigAvatarState,
 } from '../lib/rig/anime25Renderer';
 import {
   AVATAR_VIEW_WHEEL_STEP,
@@ -287,12 +289,29 @@ function MotionRigCanvasAvatar({
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const avatarRef = useRef<Anime25RigAvatar | null>(null);
+  const avatarStateRef = useRef<Anime25RigAvatarState>({
+    mouthOpen: mouthOpenValue,
+    motionEnabled,
+    intensity: motionIntensity,
+    motionProfile: psdAvatar.motionProfile,
+  });
   const rig = psdAvatar.rig?.rig;
+
+  useEffect(() => {
+    avatarStateRef.current = {
+      mouthOpen: mouthOpenValue,
+      motionEnabled,
+      intensity: motionIntensity,
+      motionProfile: psdAvatar.motionProfile,
+    };
+  }, [motionEnabled, motionIntensity, mouthOpenValue, psdAvatar.motionProfile]);
 
   useEffect(() => {
     if (!rig || !canvasRef.current) return;
     avatarRef.current?.dispose();
-    avatarRef.current = createAnime25RigAvatar(canvasRef.current, rig);
+    const avatar = createAnime25RigAvatar(canvasRef.current, rig);
+    avatarRef.current = avatar;
+    applyAnime25RigAvatarState(avatar, avatarStateRef.current);
     return () => {
       avatarRef.current?.dispose();
       avatarRef.current = null;

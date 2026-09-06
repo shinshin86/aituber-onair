@@ -16,8 +16,9 @@ It keeps the same LLM, TTS, stream-comment, screen-vision, lip-sync, blink,
 green-screen, and broadcast UI flow as `react-pngtuber-app`, but renders the
 avatar from one runtime-loaded PSD file on a canvas.
 
-The bundled `public/avatar/sample.psd` is a license-clean procedural motion
-sample, so the app animates with zero setup.
+The bundled `public/avatar/miko-anime25drig-cheer.psd` features Miko, the
+official AITuber OnAir character, so the app animates with zero setup. The Miko
+asset is governed by [separate usage terms](./MIKO_ASSET_TERMS.md).
 
 ## What this app can do
 
@@ -25,7 +26,7 @@ sample, so the app animates with zero setup.
 - Use the same TTS engines and audio-driven lip-sync as the PNGTuber example
 - Load a PSD avatar at runtime with `@webtoon/psd`
 - Composite visible PSD pixel layers to a canvas only when avatar state changes
-- Auto-load `public/avatar/sample.psd` on first run
+- Auto-load `public/avatar/miko-anime25drig-cheer.psd` on first run
 - Toggle PSD layers in Settings with PSDTool-style forced/radio behavior
 - Bind PSD layers to `mouthOpen`, `mouthClosed`, `eyesOpen`, and `eyesClosed`
 - Auto-detect mouth and eye role bindings from Japanese/English layer names
@@ -65,7 +66,7 @@ For supported PSD formats, motion/static mode selection, Anime2.5DRig layer
 names, PSDTool notation, limitations, and troubleshooting, see
 **[PSD-FORMATS.md](./PSD-FORMATS.md)**.
 
-The bundled motion sample can be regenerated with:
+An additional procedural motion fixture can be generated locally with:
 
 ```bash
 uv run --with pillow python scripts/draw_doodle_parts.py local-assets/doodle-parts
@@ -73,17 +74,9 @@ npm run build:doodle-sample
 ```
 
 The Python script draws 10 transparent part PNGs with supersampled
-antialiasing. `build:doodle-sample` assembles those parts into
-`public/avatar/sample.psd` with `ag-psd`.
-
-The static PSDTool notation sample can be regenerated with:
-
-```bash
-npm run generate:static-sample
-```
-
-This writes `public/avatar/sample-static.psd`. Runtime static PSD parsing uses
-`@webtoon/psd`.
+antialiasing. `build:doodle-sample` assembles those parts into the untracked
+`local-assets/sample.psd` with `ag-psd`. It does not replace the bundled Miko
+avatar.
 
 ## PSD modes
 
@@ -94,15 +87,15 @@ warnings and only disable the corresponding motion capability. PSDs without a
 `face` motion part fall back to static PSDTool mode.
 
 Static mode supports PSDTool-style `!` forced visibility, `*` radio items, and
-role auto-detection for mouth and eye layers. To inspect those controls, load
-`public/avatar/sample-static.psd` from **Settings -> Visual -> PSD avatar**.
+role auto-detection for mouth and eye layers. Runtime static PSD parsing uses
+`@webtoon/psd`.
 
 Motion settings are in **Settings -> Visual**:
 
 | Control | Behavior |
 |---|---|
 | `PSD motion` | Enables or disables idle motion, blink, and physics for motion-mode PSDs. |
-| `Motion intensity` | Scales idle sway, breathing, and hair motion from `0.0` to `2.0`. |
+| `Motion intensity` | Scales idle sway, breathing, and hair motion from `0.0` to `2.0`; the default is `0.6`. |
 | `Avatar view reset` | Restores avatar position and scale to `{ x: 0, y: 0, scale: 1 }`. |
 
 Wheel zoom scales around the avatar's own center. Dragging is the only operation
@@ -161,8 +154,9 @@ file itself are never copied into this setting.
 - Anime2.5DRig-compatible auto-rigging is based on
   [Anime2.5DRig](https://github.com/852wa/Anime2.5DRig) by 852wa (hakoniwa),
   MIT License. The vendored files live in `src/vendor/anime25drig/`.
-- The bundled `public/avatar/sample.psd` and `sample-static.psd` are
-  procedurally generated in this example and are safe to ship.
+- The bundled Miko PSD is © Yuki Shindo (AITuber OnAir) and is not covered by
+  the repository's MIT License. See
+  [Miko Asset Terms](./MIKO_ASSET_TERMS.md).
 
 ## Stream comments and Screen Vision
 

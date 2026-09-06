@@ -5,7 +5,7 @@ import { writePsdBuffer } from 'ag-psd';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const DEFAULT_INPUT_DIR = resolve(ROOT, 'local-assets/doodle-parts');
-const DEFAULT_OUTPUT = resolve(ROOT, 'public/avatar/sample.psd');
+const DEFAULT_OUTPUT = resolve(ROOT, 'local-assets/sample.psd');
 const CANVAS = { width: 1024, height: 1536 };
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 

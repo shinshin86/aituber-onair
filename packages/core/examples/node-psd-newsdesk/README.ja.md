@@ -99,7 +99,7 @@ npm run gen -- \
   --output work/hello-newsdesk.mp4
 ```
 
-motion sample は、隣接する React example の procedural な motion 対応 PSD を
+motion sample は、隣接する React example の公式ミコ motion 対応 PSD を
 コピーせずに参照します。
 
 ```sh
@@ -217,9 +217,9 @@ motion mode では Node の `eyesClosed` schedule を使わず、内蔵 blink au
 維持します。時刻と乱数を `blinkSeed` から固定するため、まばたきも決定論的です。
 static mode は従来どおり Node schedule で目を直接切り替えます。
 
-motion sample は `../../react-psd-app/public/avatar/sample.psd` を参照します。
-この PSD は React example が procedural に生成した配布可能な素材で、この package
-にはコピーしません。
+motion sample は公式ミコPSDの
+`../../react-psd-app/public/avatar/miko-anime25drig-cheer.psd` を参照します。
+この package にはコピーせず、素材には下記のミコ利用条件が適用されます。
 
 ## 検証
 
@@ -249,8 +249,7 @@ Anime2.5DRig 互換 auto-rigging と renderer のクレジットは次のとお�
 - Upstream commit: `d48825867acd081de22b0e7b5585bb562288796d`
 
 この example は vendored sibling rigger と renderer を read-only で import し、
-コピーしません。sibling の `public/avatar/sample.psd` は procedural に生成された
-license-clean な素材です。
+コピーしません。sibling のミコPSDには、下記の素材利用条件が適用されます。
 
 同梱のミコ由来 PSD アバターの著作権表記は © Yuki Shindo (AITuber OnAir) です。
 このアバターはリポジトリの MIT License 対象外です。作品・コンテンツの一部

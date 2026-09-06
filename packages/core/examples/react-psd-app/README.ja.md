@@ -16,8 +16,9 @@ Vite の development / preview proxy を使います。本番環境では API �
 口パク、まばたき、グリーンバック、配信用表示を保ちつつ、アバターだけを
 1つの PSD ファイルから canvas 合成して表示します。
 
-同梱の `public/avatar/sample.psd` は、ライセンス上安全な procedural motion
-sample です。追加設定なしで motion animation を確認できます。
+同梱の `public/avatar/miko-anime25drig-cheer.psd` は、AITuber OnAir 公式
+キャラクター「ミコ」の motion sample です。追加設定なしで motion animation を
+確認できます。ミコ素材には[専用の利用条件](./MIKO_ASSET_TERMS.md)が適用されます。
 
 ## このアプリでできること
 
@@ -25,7 +26,7 @@ sample です。追加設定なしで motion animation を確認できます。
 - PNGTuber example と同じ TTS エンジンと音声出力ベースの口パク
 - `@webtoon/psd` で PSD アバターを実行時に読み込み
 - 表示状態が変わった時だけ PSD pixel layer を canvas に再合成
-- 初回起動時に `public/avatar/sample.psd` を自動読み込み
+- 初回起動時に `public/avatar/miko-anime25drig-cheer.psd` を自動読み込み
 - Settings から PSDTool 風の forced/radio レイヤー操作
 - `mouthOpen`, `mouthClosed`, `eyesOpen`, `eyesClosed` へのレイヤー割り当て
 - 日本語/英語のレイヤー名から口・目レイヤーを自動検出
@@ -63,7 +64,7 @@ LLM セクションではシステムプロンプトも編集できます。入�
 PSDTool 記法、制限、troubleshooting は
 **[PSD-FORMATS.ja.md](./PSD-FORMATS.ja.md)** を参照してください。
 
-同梱 motion sample は次のコマンドで再生成できます。
+追加の procedural motion fixture は、次のコマンドでローカル生成できます。
 
 ```bash
 uv run --with pillow python scripts/draw_doodle_parts.py local-assets/doodle-parts
@@ -72,16 +73,8 @@ npm run build:doodle-sample
 
 Python script は supersampled antialiasing 付きで 10 個の透明 part PNG を描画します。
 `build:doodle-sample` は dev dependency の `ag-psd` でそれらを
-`public/avatar/sample.psd` に組み立てます。
-
-static PSDTool 記法の sample は次のコマンドで再生成できます。
-
-```bash
-npm run generate:static-sample
-```
-
-これは `public/avatar/sample-static.psd` を出力します。実行時の static PSD 読み込みは
-`@webtoon/psd` を使います。
+git 管理外の `local-assets/sample.psd` に組み立てます。同梱のミコアバターは
+置き換えません。
 
 ## PSD modes
 
@@ -90,16 +83,15 @@ npm run generate:static-sample
 それ以外の PSD は static PSDTool mode に fallback します。
 
 static mode は PSDTool 風の `!` 強制表示、`*` radio item、口と目の role
-自動検出に対応しています。これらの control を確認するには、
-**Settings -> Visual -> PSD avatar** から `public/avatar/sample-static.psd` を
-読み込んでください。
+自動検出に対応しています。実行時の static PSD 読み込みには `@webtoon/psd` を
+使います。
 
 motion 関連の設定は **Settings -> Visual** にあります。
 
 | 設定 | 挙動 |
 |---|---|
 | `PSD motion` | motion-mode PSD の idle motion、まばたき、physics を有効/無効化します。 |
-| `Motion intensity` | idle sway、呼吸、髪揺れの強さを `0.0` から `2.0` で調整します。 |
+| `Motion intensity` | idle sway、呼吸、髪揺れの強さを `0.0` から `2.0` で調整します。初期値は `0.6` です。 |
 | `Avatar view reset` | アバターの表示位置と拡大率を `{ x: 0, y: 0, scale: 1 }` に戻します。 |
 
 ホイールズームはアバター自身の中心を基準に拡大縮小します。位置を変える操作は
@@ -156,8 +148,8 @@ Anime2.5DRig motion avatar の両方で共通利用できます。感情タグ�
 - Anime2.5DRig 互換の auto-rigging は、852wa (hakoniwa) さんの
   [Anime2.5DRig](https://github.com/852wa/Anime2.5DRig) を元にしています。
   License は MIT です。vendored file は `src/vendor/anime25drig/` にあります。
-- 同梱の `public/avatar/sample.psd` と `sample-static.psd` は、この example 内で
-  procedural に生成しており、この example に含めて配布できます。
+- 同梱のミコPSDは © Yuki Shindo (AITuber OnAir) で、リポジトリのMIT License
+  対象外です。詳細は [Miko Asset Terms](./MIKO_ASSET_TERMS.md)を参照してください。
 
 ## ライブコメントと Screen Vision
 

@@ -44,15 +44,15 @@ interface RigAnchors {
   faceScale: number;
 }
 
-interface SpringAxis {
+export interface PsdSpringAxis {
   x: number;
   v: number;
   dx: number;
 }
 
 interface StrandSpring {
-  stiff: SpringAxis;
-  soft: SpringAxis;
+  stiff: PsdSpringAxis;
+  soft: PsdSpringAxis;
   phase: number;
 }
 
@@ -97,6 +97,23 @@ export interface Anime25RigAvatar {
   dispose: () => void;
 }
 
+export interface Anime25RigAvatarState {
+  mouthOpen: number;
+  motionEnabled: boolean;
+  intensity: number;
+  motionProfile: PsdMotionProfile;
+}
+
+export function applyAnime25RigAvatarState(
+  avatar: Anime25RigAvatar,
+  state: Anime25RigAvatarState,
+): void {
+  avatar.setMotionProfile(state.motionProfile);
+  avatar.setMotionEnabled(state.motionEnabled);
+  avatar.setIntensity(state.intensity);
+  avatar.setMouthOpen(state.motionEnabled ? state.mouthOpen : 0);
+}
+
 const DEFAULT_PARAMS: MotionParams = {
   ...DEFAULT_PSD_MOTION_PARAMETERS,
   breath: 0,
@@ -123,6 +140,39 @@ function clamp(value: number, min: number, max: number): number {
 function smooth(value: number): number {
   const t = clamp(value, 0, 1);
   return t * t * (3 - 2 * t);
+}
+
+export function advancePsdSpringAxis(
+  axis: PsdSpringAxis,
+  targetX: number,
+  dt: number,
+  stiffness: number,
+  damping: number,
+  displacementScale: number,
+  warmStart = false,
+): void {
+  if (warmStart) {
+    axis.x = targetX;
+    axis.v = 0;
+    axis.dx = 0;
+    return;
+  }
+
+  const acceleration =
+    -stiffness * (axis.x - targetX) - damping * axis.v;
+  axis.v += acceleration * dt;
+  axis.x += axis.v * dt;
+  axis.dx = -(axis.x - targetX) * displacementScale;
+}
+
+export function interpolatePsdMotionValue(
+  current: number,
+  target: number,
+  dt: number,
+  warmStart = false,
+): number {
+  if (warmStart) return target;
+  return current + (target - current) * Math.min(1, dt * 14);
 }
 
 export function composePsdMotionMouthOpen(
@@ -472,6 +522,8 @@ export function createAnime25RigAvatar(
   let intensity = 1;
   let motionEnabled = true;
   let mouthInput = 0;
+  let motionInitialized = false;
+  let physicsWasActive = false;
   let averageFps = 0;
   let fpsFrames = 0;
   let fpsStart = last;
@@ -734,6 +786,8 @@ export function createAnime25RigAvatar(
       ? activeIntensity
       : 0;
     const physicsIntensity = profile.automation.physics ? activeIntensity : 0;
+    const physicsIsActive = physicsIntensity > 0;
+    const warmStartPhysics = physicsIsActive && !physicsWasActive;
 
     target.angleX +=
       idleIntensity *
@@ -798,9 +852,16 @@ export function createAnime25RigAvatar(
       blinkT = -1;
     }
 
+    const warmStartMotion = !motionInitialized;
     for (const key of Object.keys(current) as (keyof MotionParams)[]) {
-      current[key] += (target[key] - current[key]) * Math.min(1, dt * 14);
+      current[key] = interpolatePsdMotionValue(
+        current[key],
+        target[key],
+        dt,
+        warmStartMotion,
+      );
     }
+    motionInitialized = true;
 
     const params = { ...current };
     params.physAmp *= physicsIntensity;
@@ -825,30 +886,42 @@ export function createAnime25RigAvatar(
           (1.8 * Math.sin(time * 0.8 + spring.phase) +
             Math.sin(time * 1.9 + spring.phase * 2.3));
         const targetX = headDX + wind * faceScale;
-        let kk = 70;
-        let damping = 9;
-        let acceleration =
-          -kk * (spring.stiff.x - targetX) - damping * spring.stiff.v;
-        spring.stiff.v += acceleration * dt;
-        spring.stiff.x += spring.stiff.v * dt;
-        spring.stiff.dx = -(spring.stiff.x - targetX) * 2.2;
-        kk = 16;
-        damping = 1.3;
-        acceleration =
-          -kk * (spring.soft.x - targetX) - damping * spring.soft.v;
-        spring.soft.v += acceleration * dt;
-        spring.soft.x += spring.soft.v * dt;
-        spring.soft.dx = -(spring.soft.x - targetX) * 3;
+        advancePsdSpringAxis(
+          spring.stiff,
+          targetX,
+          dt,
+          70,
+          9,
+          2.2,
+          warmStartPhysics,
+        );
+        advancePsdSpringAxis(
+          spring.soft,
+          targetX,
+          dt,
+          16,
+          1.3,
+          3,
+          warmStartPhysics,
+        );
       }
     }
 
     const bustTarget = physicsIntensity
       ? (params.breath * 3 - params.angleY * 6 + params.body * 4) * faceScale
       : 0;
-    const bounceAcceleration = -140 * (bounce.x - bustTarget) - 4.2 * bounce.v;
-    bounce.v += bounceAcceleration * dt;
-    bounce.x += bounce.v * dt;
-    bounce.dy = physicsIntensity ? -(bounce.x - bustTarget) * 3 : 0;
+    if (warmStartPhysics) {
+      bounce.x = bustTarget;
+      bounce.v = 0;
+      bounce.dy = 0;
+    } else {
+      const bounceAcceleration =
+        -140 * (bounce.x - bustTarget) - 4.2 * bounce.v;
+      bounce.v += bounceAcceleration * dt;
+      bounce.x += bounce.v * dt;
+      bounce.dy = physicsIntensity ? -(bounce.x - bustTarget) * 3 : 0;
+    }
+    physicsWasActive = physicsIsActive;
 
     gl.viewport(0, 0, canvasWidth, canvasHeight);
     gl.clearColor(0, 0, 0, 0);

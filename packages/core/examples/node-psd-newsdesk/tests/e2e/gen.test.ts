@@ -177,7 +177,10 @@ it('creates deterministic vertical H.264/AAC video and a PNG frame', async () =>
 it('auto-selects deterministic Anime2.5DRig motion with lip sync and idle movement', async () => {
   expect(
     existsSync(
-      path.resolve(projectRoot, '../react-psd-app/public/avatar/sample.psd'),
+      path.resolve(
+        projectRoot,
+        '../react-psd-app/public/avatar/miko-anime25drig-cheer.psd',
+      ),
     ),
   ).toBe(true);
   await rm(motionWorkDirectory, { recursive: true, force: true });
@@ -229,7 +232,7 @@ it('auto-selects deterministic Anime2.5DRig motion with lip sync and idle moveme
   expect(firstSummary.avatarDiagnostics).toMatchObject({
     runtime: 'anime25drig-webgl',
     eyeInput: 'internal-seeded-automation',
-    canvasSize: { width: 1024, height: 1536 },
+    canvasSize: { width: 1280, height: 1280 },
     detection: { usable: true },
     virtualClock: {
       seed: 42,

@@ -3,9 +3,11 @@ import { dirname, resolve } from 'node:path';
 import { inflateSync } from 'node:zlib';
 import { writePsdBuffer } from 'ag-psd';
 
-const ROOT = resolve(import.meta.dirname, '..');
+// Repository-only fixture generator. The generated PSD is not served by Vite
+// or copied into create-aituber-onair starter projects.
+const ROOT = resolve(import.meta.dirname, '../..');
 const SOURCE_DIR = resolve(ROOT, '../react-pngtuber-app/public/avatar');
-const OUTPUT = resolve(ROOT, 'public/avatar/sample-static.psd');
+const OUTPUT = resolve(import.meta.dirname, 'sample-static.psd');
 const SAMPLE_SIZE = 512;
 
 const SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
