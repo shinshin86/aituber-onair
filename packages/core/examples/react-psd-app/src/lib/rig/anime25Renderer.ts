@@ -97,6 +97,23 @@ export interface Anime25RigAvatar {
   dispose: () => void;
 }
 
+export interface Anime25RigAvatarState {
+  mouthOpen: number;
+  motionEnabled: boolean;
+  intensity: number;
+  motionProfile: PsdMotionProfile;
+}
+
+export function applyAnime25RigAvatarState(
+  avatar: Anime25RigAvatar,
+  state: Anime25RigAvatarState,
+): void {
+  avatar.setMotionProfile(state.motionProfile);
+  avatar.setMotionEnabled(state.motionEnabled);
+  avatar.setIntensity(state.intensity);
+  avatar.setMouthOpen(state.motionEnabled ? state.mouthOpen : 0);
+}
+
 const DEFAULT_PARAMS: MotionParams = {
   ...DEFAULT_PSD_MOTION_PARAMETERS,
   breath: 0,

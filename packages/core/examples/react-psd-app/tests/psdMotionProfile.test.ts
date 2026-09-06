@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   assessPsdMotionProfileCompatibility,
   createDefaultPsdMotionProfile,
@@ -22,8 +22,10 @@ import {
   type StorageLike,
 } from '../src/lib/psdMotionProfile';
 import {
+  applyAnime25RigAvatarState,
   composePsdMotionMouthOpen,
   resolveBasePsdMotionParameters,
+  type Anime25RigAvatar,
 } from '../src/lib/rig/anime25Renderer';
 import type { Anime25RigResult } from '../src/lib/rig/anime25Rig';
 
@@ -97,6 +99,32 @@ describe('PSD motion profile defaults and normalization', () => {
       blink: true,
       physics: true,
     });
+  });
+
+  it('applies the current intensity when a renderer is recreated', () => {
+    const calls: string[] = [];
+    const avatar: Anime25RigAvatar = {
+      setMotionProfile: vi.fn(() => calls.push('profile')),
+      setMotionEnabled: vi.fn(() => calls.push('enabled')),
+      setIntensity: vi.fn(() => calls.push('intensity')),
+      setMouthOpen: vi.fn(() => calls.push('mouth')),
+      getAverageFps: vi.fn(() => 60),
+      dispose: vi.fn(),
+    };
+    const motionProfile = createDefaultPsdMotionProfile();
+
+    applyAnime25RigAvatarState(avatar, {
+      mouthOpen: 0.4,
+      motionEnabled: true,
+      intensity: 0.6,
+      motionProfile,
+    });
+
+    expect(avatar.setMotionProfile).toHaveBeenCalledWith(motionProfile);
+    expect(avatar.setMotionEnabled).toHaveBeenCalledWith(true);
+    expect(avatar.setIntensity).toHaveBeenCalledWith(0.6);
+    expect(avatar.setMouthOpen).toHaveBeenCalledWith(0.4);
+    expect(calls).toEqual(['profile', 'enabled', 'intensity', 'mouth']);
   });
 
   it('clamps finite numbers and rejects strings, NaN, and Infinity', () => {
