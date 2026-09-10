@@ -116,3 +116,73 @@ describe('OpenAiCompatibleEngine', () => {
     expect(engine.getTestMessage()).toBe('OpenAI互換TTSを使用します');
   });
 });
+
+describe('OpenAI-compatible request timeout', () => {
+  it('waits beyond the default deadline when configured', async () => {
+    vi.useFakeTimers();
+    const originalFetch = globalThis.fetch;
+    let signal: AbortSignal | undefined;
+    globalThis.fetch = vi.fn((_url, init) => {
+      signal = init?.signal as AbortSignal;
+      return new Promise((_resolve, reject) => {
+        signal?.addEventListener('abort', () => reject(new Error('aborted')));
+      });
+    }) as typeof fetch;
+    try {
+      const engine = new OpenAiCompatibleEngine();
+      engine.setModel('sample-model');
+      engine.setTimeout(90_000);
+      const request = engine.fetchAudio(
+        { message: 'Hello', style: 'neutral' },
+        'sample-speaker',
+      );
+      const rejected = expect(request).rejects.toThrow('Network error');
+      await vi.advanceTimersByTimeAsync(30_001);
+      expect(signal?.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(60_000);
+      await rejected;
+      expect(signal?.aborted).toBe(true);
+    } finally {
+      globalThis.fetch = originalFetch;
+      vi.useRealTimers();
+    }
+  });
+
+  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY, 2_147_483_648])(
+    'rejects invalid timeout %s',
+    (value) => {
+      expect(() => new OpenAiCompatibleEngine().setTimeout(value)).toThrow(
+        RangeError,
+      );
+    },
+  );
+});
+
+it('disables the deadline when timeout is zero', async () => {
+  vi.useFakeTimers();
+  const original = globalThis.fetch;
+  let finish!: (response: Response) => void;
+  const mock = vi.fn(
+    () =>
+      new Promise<Response>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  globalThis.fetch = mock;
+  try {
+    const engine = new OpenAiCompatibleEngine();
+    engine.setModel('sample-model');
+    engine.setTimeout(0);
+    const audio = engine.fetchAudio(
+      { message: 'Hello', style: 'neutral' },
+      'sample-speaker',
+    );
+    await vi.advanceTimersByTimeAsync(600_000);
+    expect(vi.getTimerCount()).toBe(0);
+    finish(new Response(new Uint8Array([1, 2, 3])));
+    expect((await audio).byteLength).toBe(3);
+  } finally {
+    globalThis.fetch = original;
+    vi.useRealTimers();
+  }
+});

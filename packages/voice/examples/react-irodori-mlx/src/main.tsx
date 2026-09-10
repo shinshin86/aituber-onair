@@ -116,6 +116,7 @@ function App() {
         openAiCompatibleApiUrl: `${API}/v1/audio/speech`,
         openAiCompatibleModel: MODEL,
         openAiCompatibleSpeed: speed,
+        openAiCompatibleTimeoutMs: 0,
         speaker,
         onPlay: async (buffer) => {
           const decoded = await player.decodeAudioData(buffer.slice(0));
@@ -141,7 +142,7 @@ function App() {
     } catch (cause) {
       setPhase('エラー');
       setError(
-        `${cause instanceof Error ? cause.message : String(cause)} 文章を短くするか、話速を上げて再試行してください。APIの詳細は .local/api.log を確認してください。`,
+        `${cause instanceof Error ? cause.message : String(cause)} APIの詳細は .local/api.log を確認してください。`,
       );
     } finally {
       setActive(false);
@@ -153,7 +154,7 @@ function App() {
       <p className="eyebrow">AITUBER ONAIR / VOICE EXAMPLE</p>
       <h1>Irodori Local Voice</h1>
       <p className="intro">
-        自分で用意した参照音声を使い、Mac上で短い文章を読み上げます。
+        自分で用意した参照音声を使い、Mac上で文章を読み上げます。
       </p>
       <output className="status" aria-live="polite">
         <span className={ready ? 'dot ready' : 'dot'} />
@@ -249,21 +250,20 @@ function App() {
         <span>2.0</span>
       </div>
       <p className="hint">
-        遅くすると音声が長くなります。6秒の上限に達した場合は、文章を短くするか話速を上げてください。
+        遅くすると音声が長くなります。生成にかかる時間は文章とPCによって変わります。
       </p>
       <label htmlFor="text">
-        読み上げテキスト <span>{Array.from(text).length} / 40</span>
+        読み上げテキスト <span>{Array.from(text).length} 文字</span>
       </label>
       <textarea
         id="text"
         rows={4}
-        maxLength={40}
         value={text}
         onChange={(event) => setText(event.target.value)}
         disabled={active}
       />
       <p className="hint">
-        まずは「こんにちは。」から。短い1文・生成音声6秒未満。
+        生成が完了するまでお待ちください。失敗した場合はエラーを表示します。
       </p>
       <button
         type="button"

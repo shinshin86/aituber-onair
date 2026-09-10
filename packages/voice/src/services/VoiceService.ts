@@ -310,6 +310,8 @@ export interface OpenAiCompatibleVoiceServiceOptions
   openAiCompatibleModel?: string;
   /** OpenAI-compatible speaking speed (0.25-4.0, default: 1.0) */
   openAiCompatibleSpeed?: number;
+  /** Request timeout in milliseconds (default: 30000; 0 disables). */
+  openAiCompatibleTimeoutMs?: number;
 }
 
 export interface AivisSpeechVoiceServiceOptions

@@ -10,6 +10,7 @@ const allowedUpdateKeys = [
   'openAiCompatibleApiUrl',
   'openAiCompatibleModel',
   'openAiCompatibleSpeed',
+  'openAiCompatibleTimeoutMs',
 ] as const;
 
 export const openAiCompatibleEngineHandler: EngineHandler<OpenAiCompatibleVoiceServiceOptions> =
@@ -21,6 +22,12 @@ export const openAiCompatibleEngineHandler: EngineHandler<OpenAiCompatibleVoiceS
     ) {
       const compatibleEngine = engine as OpenAiCompatibleConfigurableEngine;
 
+      if (
+        options.openAiCompatibleTimeoutMs !== undefined &&
+        compatibleEngine.setTimeout
+      ) {
+        compatibleEngine.setTimeout(options.openAiCompatibleTimeoutMs);
+      }
       if (options.openAiCompatibleApiUrl && compatibleEngine.setApiEndpoint) {
         compatibleEngine.setApiEndpoint(options.openAiCompatibleApiUrl);
       }

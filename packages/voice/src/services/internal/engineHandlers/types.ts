@@ -179,6 +179,7 @@ export interface GeminiTtsConfigurableEngine extends VoiceEngine {
 }
 
 export interface OpenAiCompatibleConfigurableEngine extends VoiceEngine {
+  setTimeout?(value: number): void;
   setApiEndpoint?(value: string): void;
   setModel?(value: string): void;
   setSpeed?(value?: number): void;

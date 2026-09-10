@@ -603,6 +603,7 @@ const voiceService = new VoiceService({
   openAiSpeed: 1.15,
   openAiCompatibleModel: 'your-model-id',
   openAiCompatibleSpeed: 1.1,
+  openAiCompatibleTimeoutMs: 300_000, // Optional; default: 30_000 ms; 0 disables the timeout
   unrealSpeechBitrate: '192k',
   unrealSpeechSpeed: 0,
   unrealSpeechPitch: 1,
@@ -640,6 +641,7 @@ const voiceService = new VoiceService({
   - Optional voice: `speaker`
   - `openAiCompatibleModel`
   - `openAiCompatibleSpeed`
+  - `openAiCompatibleTimeoutMs`
 
 - **xAI TTS**
   - `xaiLanguage`

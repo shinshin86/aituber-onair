@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from server.app import create_app
 from server.audio import load_voices, read_reference, validate_audio, wav_bytes
-from server.runtime import DurationLimitError, guard_duration
+from server.runtime import validate_text_tokens
 from server.settings import MODEL_ID, ALLOWED_ORIGINS
 
 BODY = {"model": MODEL_ID, "input": "こんにちは。", "voice": "sample-speaker", "speed": 1.0}
@@ -49,13 +49,12 @@ def test_contract(local, origin):
         assert response.headers["content-type"] == "audio/wav"
         assert response.headers["access-control-allow-origin"] == origin
         assert client.get("/voices").json() == {"voices": ["sample-speaker"]}
-        for change in ({"input": " "}, {"input": "!"}, {"input": "a" * 41},
+        for change in ({"input": " "}, {"input": "!"},
                        {"model": "other"}, {"speed": 0.49}, {"speed": 2.01}, {"speed": "1"},
                        {"response_format": "mp3"}, {"ref_audio": "/tmp/other.wav"}):
             assert client.post("/v1/audio/speech", json={**BODY, **change}).status_code == 422
         assert client.post("/v1/audio/speech", json={**BODY, "voice": "../other"}).status_code == 404
         assert client.post("/v1/audio/speech", json=BODY, headers={"Origin": "https://example.com"}).status_code == 403
-        assert client.post("/v1/audio/speech", content=b"x" * 4097).status_code == 413
         preflight = client.options("/v1/audio/speech", headers={"Origin": origin,
                                    "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type"})
         assert preflight.status_code == 200
@@ -125,25 +124,6 @@ def test_reference_boundaries(local):
         read_reference(local / "references/short.wav")
 
 
-def test_wav_normalization():
-    audio = np.sin(np.arange(48000) * 0.03).astype(np.float32) * 2
-    payload, metrics = wav_bytes(audio, 48000)
-    assert payload[:4] == b"RIFF" and payload[8:12] == b"WAVE"
-    decoded, rate = sf.read(io.BytesIO(payload))
-    assert rate == 48000 and len(decoded) == 48000
-    assert 0.97 < max(abs(decoded)) < 0.981
-    assert metrics["gain"] < 1
-
-
-def test_cap_detected_before_silence_trimming():
-    safe = guard_duration(lambda: ("latent", 149), 150)
-    assert safe() == ("latent", 149)
-    for frames in (150, 151):
-        guarded = guard_duration(lambda: ("latent", frames), 150)
-        with pytest.raises(DurationLimitError):
-            guarded()
-
-
 @pytest.mark.parametrize("speed", [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, None])
 def test_speed_reaches_runtime(local, speed):
     received = []
@@ -184,11 +164,13 @@ def test_runtime_maps_speed_to_generation(monkeypatch, speed, scale):
         recorded.update(kwargs)
         yield SimpleNamespace(audio=reference, sample_rate=48000, peak_memory_usage=0)
     runtime = module.Runtime.__new__(module.Runtime)
-    runtime.model = SimpleNamespace(sample_rate=48000, generate=generate)
+    runtime.model = SimpleNamespace(sample_rate=48000, generate=generate, config=SimpleNamespace(max_text_length=512, dit=SimpleNamespace(text_add_bos=True)))
+    runtime.tokenizer = SimpleNamespace(encode=lambda *a, **kw: [1])
+    runtime.normalize_text = lambda text: text
     assert runtime.synthesize("hello", "sample-speaker", "unused", speed) == b"wav"
     assert recorded["duration_scale"] == scale
     assert recorded["ref_audio"] is reference
-    assert recorded["max_seconds"] == 6.0
+    assert recorded["max_seconds"] == sys.maxsize / 48000
     assert recorded["stream"] is False
 
 
@@ -265,3 +247,30 @@ def test_upload_registration_is_serialized(local, monkeypatch):
         assert client.post('/voices/second', content=payload).status_code == 201
     mapping = load_voices(local)
     assert 'first' in mapping and 'second' in mapping
+
+
+
+def test_wav_normalization():
+    audio = np.sin(np.arange(48000) * 0.03).astype(np.float32) * 2
+    payload, metrics = wav_bytes(audio, 48000)
+    assert payload[:4] == b"RIFF" and payload[8:12] == b"WAVE"
+    decoded, rate = sf.read(io.BytesIO(payload))
+    assert rate == 48000 and len(decoded) == 48000
+    assert 0.97 < max(abs(decoded)) < 0.981
+    assert metrics["gain"] < 1
+
+
+
+def test_no_sample_text_limit(local):
+    with TestClient(create_app(FakeRuntime, local)) as client:
+        ready(client)
+        assert client.post('/v1/audio/speech', json={**BODY, 'input': 'あ' * 10000}).status_code == 200
+
+
+def test_model_token_overflow_is_rejected():
+    from types import SimpleNamespace
+    tokenizer = SimpleNamespace(encode=lambda text, **kwargs: list(text))
+    config = SimpleNamespace(max_text_length=4, dit=SimpleNamespace(text_add_bos=True))
+    validate_text_tokens(tokenizer, 'abc', config)
+    with pytest.raises(ValueError, match='token capacity'):
+        validate_text_tokens(tokenizer, 'abcd', config)
