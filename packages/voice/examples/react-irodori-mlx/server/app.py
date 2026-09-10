@@ -12,14 +12,14 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from server.audio import load_voices, register_reference
-from server.runtime import DurationLimitError, Runtime
-from server.settings import MODEL_ID, MAX_CHARACTERS, ALLOWED_ORIGINS, REQUEST_SECONDS, ROOT, DEFAULT_REFERENCE, MAX_UPLOAD_BYTES
+from server.runtime import Runtime
+from server.settings import MODEL_ID, ALLOWED_ORIGINS, ROOT, DEFAULT_REFERENCE, MAX_UPLOAD_BYTES
 
 
 class Speech(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     model: Literal[MODEL_ID]
-    input: str = Field(min_length=1, max_length=MAX_CHARACTERS)
+    input: str = Field(min_length=1)
     voice: str = Field(min_length=1, max_length=64)
     speed: float = Field(default=1.0, ge=0.5, le=2.0, allow_inf_nan=False)
     response_format: Literal["wav"] = "wav"
@@ -33,7 +33,7 @@ class Speech(BaseModel):
         return value
 
 
-def create_app(runtime_factory=Runtime, local=ROOT / ".local", timeout=REQUEST_SECONDS):
+def create_app(runtime_factory=Runtime, local=ROOT / ".local", timeout=None):
     state = {"runtime": None, "error": None, "busy": False, "uploading": False, "voices": {}}
     pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="irodori-gpu")
 
@@ -123,8 +123,8 @@ def create_app(runtime_factory=Runtime, local=ROOT / ".local", timeout=REQUEST_S
             audio = await asyncio.wait_for(asyncio.shield(future), timeout=timeout)
             return Response(audio, media_type="audio/wav")
         except TimeoutError:
-            raise HTTPException(504, "Generation exceeded 25 seconds. GPU remains busy until work finishes.")
-        except (DurationLimitError, ValueError) as exc:
+            raise HTTPException(504, "Generation timed out. GPU remains busy until work finishes.")
+        except ValueError as exc:
             logging.warning("Speech rejected: %s", exc)
             raise HTTPException(422, str(exc))
         except Exception:
@@ -150,11 +150,9 @@ def create_app(runtime_factory=Runtime, local=ROOT / ".local", timeout=REQUEST_S
                 if event["type"] == "http.disconnect":
                     return
                 total += len(event.get("body", b""))
-                limit = MAX_UPLOAD_BYTES if scope["path"].startswith("/voices/") else 4096
-                if total > limit:
-                    detail = ("Audio file exceeds 10 MiB. Automatic trimming happens after upload."
-                              if limit == MAX_UPLOAD_BYTES else "Speech JSON exceeds 4 KiB.")
-                    return await JSONResponse({"detail": detail}, 413)(scope, receive, send)
+                limit = MAX_UPLOAD_BYTES if scope["path"].startswith("/voices/") else None
+                if limit is not None and total > limit:
+                    return await JSONResponse({"detail": "Audio file exceeds 10 MiB. Automatic trimming happens after upload."}, 413)(scope, receive, send)
                 chunks.append(event.get("body", b""))
                 if not event.get("more_body", False):
                     break

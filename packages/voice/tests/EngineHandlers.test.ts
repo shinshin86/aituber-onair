@@ -294,16 +294,19 @@ const cases: HandlerCase[] = [
       openAiCompatibleApiUrl: 'http://localhost:8000/v1/audio/speech',
       openAiCompatibleModel: 'local-tts',
       openAiCompatibleSpeed: 1.1,
+      openAiCompatibleTimeoutMs: 90_000,
     },
     allowedUpdateKeys: [
       'openAiCompatibleApiUrl',
       'openAiCompatibleModel',
       'openAiCompatibleSpeed',
+      'openAiCompatibleTimeoutMs',
     ],
     expectedCalls: {
       setApiEndpoint: ['http://localhost:8000/v1/audio/speech'],
       setModel: ['local-tts'],
       setSpeed: [1.1],
+      setTimeout: [90_000],
     },
   },
   {

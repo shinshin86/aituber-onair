@@ -1,7 +1,7 @@
 # Irodori Local Voice (Apple Silicon / MLX)
 
 A standalone React + TypeScript sample using `@aituber-onair/voice` to generate
-and play short speech using the bundled `sample-speaker` reference or an audio
+and play speech using the bundled `sample-speaker` reference or an audio
 file uploaded by the user.
 
 Browser → `VoiceEngineAdapter` → loopback OpenAI-compatible API → persistent
@@ -126,33 +126,37 @@ not stop. Occupied ports cause a clear failure; existing services are never kill
 API initialization is allowed up to 180 seconds. Logs are replaced on each launch
 in `.local/api.log` and `.local/frontend.log`.
 
-## Limits and error handling
+## Generation and error handling
 
-- One short sentence, at most 40 Unicode code points. This is a conservative input
-  limit, not a guarantee of sub-30-second generation on every Mac.
-- `cfg_guidance_mode="alternating"`, six Sway steps (`sway_coeff=-1`),
-  `max_seconds=6`, `max_ref_seconds=5`, non-streaming generation.
-- v3 dynamically predicts sequence length; setting `sequence_length` alone
-  does not constrain it. The sample wraps the model's public `generate_latents`
-  method to inspect its returned frame count **before silence trimming**.
-  Reaching the six-second frame cap produces HTTP 422 rather than playing a
-  possibly truncated sentence. This conservative check may reject an exact fit.
-  It cannot prove correct pronunciation or semantic completion below the cap.
+- The sample imposes no character-count, audio-duration or generation-wait limit.
+  There is no generation configuration JSON. Longer speech requires more time
+  and memory; successful generation depends on the model and Mac.
+- Irodori's duration predictor determines the output length. MLX-Audio requires
+  a finite numeric duration bound (infinity fails during integer conversion),
+  so the sample uses the platform sample-index range instead of its default
+  30-second clamp. This is a numeric representation ceiling, not a practical
+  speech-duration restriction.
+- Inputs beyond the model's own token capacity return 422 before inference,
+  because upstream would otherwise silently truncate them. This is checked with
+  the pinned tokenizer and model configuration, not an arbitrary character count.
+- Non-streaming generation uses alternating guidance, six Sway steps and the
+  first five seconds of reference audio.
 - The API accepts finite `speed` values from 0.5 to 2.0 (default 1.0), and maps
   them to Irodori `duration_scale=1/speed`. Values below 1 make speech slower;
   values above 1 make it faster. The UI slider moves in steps of 0.5. Unsupported values
   are rejected with 422, never silently clamped. This adjusts predicted generation
   duration rather than resampling playback, so it is not an exact audio-speed
   multiplier and pronunciation/naturalness can vary. Very short speech can hit
-  Irodori's 0.5-second minimum (rounded to audio frames). Slower speech is still
-  subject to the six-second cap; shorten the sentence or increase speed if rejected.
+  Irodori's 0.5-second minimum (rounded to audio frames).
 - Only one GPU request is admitted; no waiting inference queue. Concurrent
   requests get 429. The HTTP server also limits concurrent connections to 16
-  and speech JSON to 4 KiB (audio uploads to 10 MiB).
-- The API responds with 504 after 25 seconds, leaving margin before the voice
-  package's 30-second fetch timeout. Native GPU work cannot be safely cancelled
-  mid-call; the busy lock remains held until it finishes. This is a response
-  deadline, not a hard wall-clock GPU limit. Shorten input and wait before retrying.
+  (audio uploads remain limited to 10 MiB).
+- The API waits for generation to finish. The browser sets
+  `openAiCompatibleTimeoutMs: 0` to disable the voice package's timeout;
+  other consumers retain the 30-second default unless they opt out.
+  Failed generation returns an error. If native code or the OS terminates the
+  process (for example under memory pressure), the browser sees a connection
+  failure instead of a structured API response. Restart the sample in that case.
 - Empty/invalid input, unsupported model/speed/format and invalid audio: 422;
   unknown voice: 404; unavailable model: 503; generation failure: 500.
 - WAV validation rejects empty, non-finite or near-silent data (RMS < 0.0001).
@@ -244,13 +248,13 @@ npm test
 ```
 
 Tests cover HTTP validation/CORS, bounded requests, serialization, reference
-containment, duration caps and busy admission after timeouts. They use a fake
+containment, model token overflow and busy admission after disconnects/timeouts. They use a fake
 runtime for API tests; those tests do **not** establish audible MLX compatibility.
 Live validation must separately use a provided reference, generate through the
 browser, observe playback, inspect PCM duration/RMS/peak and retain screenshots
 and logs under `.local`. Voice similarity and pronunciation require listening.
 
-The library's public API is unchanged. This example uses the repository-local
+The library adds optional `openAiCompatibleTimeoutMs`; existing defaults are unchanged. This example uses the repository-local
 voice package just like `react-basic`; no version bump or new provider is needed.
 
 ## Implementation sources

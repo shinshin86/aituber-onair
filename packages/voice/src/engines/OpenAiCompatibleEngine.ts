@@ -10,6 +10,21 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
   private apiUrl: string = OPENAI_COMPATIBLE_TTS_API_URL;
   private speed: number = 1.0;
   private model: string = '';
+  private timeoutMs = 30_000;
+
+  /** Set a request timeout (0 disables the timeout) in milliseconds (default: 30000). */
+  setTimeout(timeoutMs: number): void {
+    if (
+      !Number.isFinite(timeoutMs) ||
+      timeoutMs < 0 ||
+      timeoutMs > 2_147_483_647
+    ) {
+      throw new RangeError(
+        'OpenAI-compatible timeout must be between 0 and 2147483647 milliseconds',
+      );
+    }
+    this.timeoutMs = timeoutMs;
+  }
 
   /**
    * Set custom OpenAI-compatible speech endpoint
@@ -66,11 +81,16 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
       requestBody.voice = trimmedSpeaker;
     }
 
-    const response = await fetchWithTimeout(this.apiUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody),
-    });
+    const fetchAudio = this.timeoutMs === 0 ? fetch : fetchWithTimeout;
+    const response = await fetchAudio(
+      this.apiUrl,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody),
+      },
+      this.timeoutMs,
+    );
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
