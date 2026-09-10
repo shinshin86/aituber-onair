@@ -2,6 +2,13 @@
 
 This directory contains examples demonstrating how to use the @aituber-onair/voice package in web applications.
 
+## Local Irodori on Apple Silicon
+
+[Irodori MLX Example](./react-irodori-mlx/) uses a user-provided reference clip
+with MLX-Audio / Irodori-TTS v3 and plays speech through the voice package in a
+React browser UI. Python and model caches are isolated with uv; `npm run setup`
+prepares the environment and `npm run dev` starts both local services.
+
 ## 🚀 React + Vite Example
 
 ### [React Basic Example](./react-basic/)

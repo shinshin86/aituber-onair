@@ -1,0 +1,30 @@
+{
+  "name": "aituber-voice-irodori-mlx-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/run.mjs setup",
+    "dev": "node scripts/run.mjs dev",
+    "prebuild": "npm --prefix ../.. run build",
+    "build": "tsc && vite build",
+    "fmt": "biome format src scripts tests *.json vite.config.ts --write",
+    "test": "node --test tests/*.node.mjs && node scripts/run.mjs test"
+  },
+  "dependencies": {
+    "@aituber-onair/voice": "file:../..",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.2.2",
+    "vite": "^6.4.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

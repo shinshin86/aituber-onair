@@ -41,6 +41,12 @@
     }
   },
   "files": {
-    "ignore": ["**/dist/**"]
+    "ignore": [
+      "**/dist/**",
+      "**/.cache/**",
+      "**/.python/**",
+      "**/.venv/**",
+      "**/.local/**"
+    ]
   }
 }
