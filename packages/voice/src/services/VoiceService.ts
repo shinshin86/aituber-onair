@@ -16,6 +16,7 @@ import type { GeminiTtsModel } from '../engines';
 import type { GradiumOutputFormat } from '../engines/GradiumEngine';
 import type {
   InworldAudioEncoding,
+  InworldModel,
   InworldDeliveryMode,
 } from '../engines/InworldEngine';
 import type { UnrealSpeechCodec } from '../engines/UnrealSpeechEngine';
@@ -250,7 +251,7 @@ export interface InworldVoiceServiceOptions extends VoiceServiceCommonOptions {
   /** Custom Inworld TTS endpoint URL */
   inworldApiUrl?: string;
   /** Inworld TTS model ID */
-  inworldModel?: string;
+  inworldModel?: InworldModel;
   /** Inworld output audio encoding (default: MP3) */
   inworldAudioEncoding?: InworldAudioEncoding;
   /** Inworld output sample rate in hertz (default: 48000) */

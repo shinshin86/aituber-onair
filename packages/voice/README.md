@@ -313,9 +313,19 @@ the Inworld Basic Base64 authorization value. Do not expose Basic credentials
 in browser-side code; use a backend proxy or Inworld JWT authentication for
 browser apps.
 
-Inworld On-Demand starts free and is suitable for development. For cost
-savings, use TTS 1.5 Mini when minimizing cost; use TTS-2 or 1.5 Max when
-prioritizing quality.
+The current TTS-2 models are `inworld-tts-2` (the default, for quality)
+and `inworld-tts-2-flash` (an explicit option for lower latency and cost).
+Set `inworldModel: 'inworld-tts-2-flash'` to use Flash, or switch at runtime
+with `voiceService.updateOptions({ inworldModel: 'inworld-tts-2-flash' })`.
+Both use the same REST endpoint and voice-list configuration. This engine
+waits for the complete audio response, so provider streaming latency figures
+do not describe its playback latency.
+
+`inworldDeliveryMode` is supported only by TTS-2 and is omitted for Flash.
+Earlier model IDs remain accepted as strings for compatibility, but deprecated
+TTS 1.5 models are no longer offered in the React model selector.
+See the [model catalog](https://docs.inworld.ai/tts/tts-models) and
+[speech API reference](https://docs.inworld.ai/api-reference/ttsAPI/texttospeech/synthesize-speech).
 
 ### Gradium
 Gradium one-shot REST TTS support using direct `fetch` calls. This engine uses

@@ -305,9 +305,18 @@ Base64 認証値を指定します。Basic 認証情報をブラウザ側コー�
 ください。ブラウザアプリではバックエンドプロキシまたは Inworld の JWT 認証を
 使用してください。
 
-Inworld の On-Demand は無料で開始でき、開発用途に適しています。コストを
-抑える場合は TTS 1.5 Mini、品質を優先する場合は TTS-2 または 1.5 Max の
-利用が推奨されます。
+現行の TTS-2 系では、品質重視の `inworld-tts-2` が既定値で、低遅延・低コスト向けの
+`inworld-tts-2-flash` を明示的に選択できます。
+`inworldModel: 'inworld-tts-2-flash'` を指定するか、実行中に
+`voiceService.updateOptions({ inworldModel: 'inworld-tts-2-flash' })` で切り替えます。
+両モデルとも同じ REST エンドポイントと話者一覧を利用します。このエンジンは音声全体の
+受信後に再生するため、プロバイダーのストリーミング遅延値は再生開始までの時間とは異なります。
+
+`inworldDeliveryMode` は通常の TTS-2 専用で、Flash には送信しません。
+従来のモデルIDは互換性のため文字列として指定できますが、非推奨の TTS 1.5 系は
+React サンプルの選択肢から外しています。
+[モデル一覧](https://docs.inworld.ai/tts/tts-models)と
+[音声API仕様](https://docs.inworld.ai/api-reference/ttsAPI/texttospeech/synthesize-speech)を参照してください。
 
 ### Gradium
 Gradium の one-shot REST TTS を SDK なしの直接 `fetch` で利用する

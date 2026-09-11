@@ -3,6 +3,11 @@ import { Talk } from '../types/voice';
 import { decodeBase64ToArrayBuffer, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
+export type InworldModel =
+  | 'inworld-tts-2'
+  | 'inworld-tts-2-flash'
+  | (string & {});
+
 export type InworldAudioEncoding =
   | 'MP3'
   | 'OGG_OPUS'
@@ -24,7 +29,7 @@ interface InworldSynthesizeSpeechResponse {
  */
 export class InworldEngine implements VoiceEngine {
   private apiEndpoint: string = INWORLD_TTS_API_URL;
-  private model: string = 'inworld-tts-2';
+  private model: InworldModel = 'inworld-tts-2';
   private audioEncoding: InworldAudioEncoding = 'MP3';
   private sampleRateHertz: number = 48000;
   private bitRate?: number;
@@ -44,7 +49,7 @@ export class InworldEngine implements VoiceEngine {
   /**
    * Set Inworld TTS model ID.
    */
-  setModel(model?: string): void {
+  setModel(model?: InworldModel): void {
     const trimmed = model?.trim();
     this.model = trimmed || 'inworld-tts-2';
   }
@@ -196,7 +201,10 @@ export class InworldEngine implements VoiceEngine {
     if (this.language !== undefined) {
       body.language = this.language;
     }
-    if (this.deliveryMode !== undefined) {
+    if (
+      this.deliveryMode !== undefined &&
+      this.model !== 'inworld-tts-2-flash'
+    ) {
       body.deliveryMode = this.deliveryMode;
     }
     if (this.temperature !== undefined) {

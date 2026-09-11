@@ -329,8 +329,7 @@ export const ELEVENLABS_OUTPUT_FORMATS: Record<string, string> = {
 
 export const INWORLD_MODELS: Record<string, string> = {
   'inworld-tts-2': 'TTS-2 — highest quality for expressive speech',
-  'inworld-tts-1.5-mini': 'TTS 1.5 Mini — cost-efficient',
-  'inworld-tts-1.5-max': 'TTS 1.5 Max — high quality',
+  'inworld-tts-2-flash': 'TTS-2 Flash — lower latency and cost',
 };
 
 export const INWORLD_AUDIO_ENCODINGS: Record<InworldAudioEncoding, string> = {
