@@ -45,6 +45,7 @@ export {
 export {
   InworldEngine,
   type InworldAudioEncoding,
+  type InworldModel,
   type InworldDeliveryMode,
 } from './InworldEngine';
 export {

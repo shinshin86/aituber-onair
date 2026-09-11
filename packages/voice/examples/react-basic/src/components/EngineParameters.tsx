@@ -826,7 +826,7 @@ export function EngineParameters({
         <CollapsibleCard
           className="parameter-card openai-card"
           title="Inworld パラメータ"
-          description="Inworld TTS の非ストリーミング REST API 向け設定です。voiceId は上部の Speaker に入力します。"
+          description="Inworld TTS の非ストリーミング REST API 向け設定です。話者は上部の Speaker で選択します。"
         >
           <div className="parameter-section">
             <div className="parameter-section__title">モデル・出力</div>
@@ -931,6 +931,7 @@ export function EngineParameters({
                 <label htmlFor="inworldDeliveryMode">Delivery Mode</label>
                 <select
                   id="inworldDeliveryMode"
+                  disabled={inworld.model.value !== 'inworld-tts-2'}
                   value={inworld.deliveryMode.value}
                   onChange={(e) =>
                     inworld.deliveryMode.onChange(
@@ -947,6 +948,9 @@ export function EngineParameters({
                     ),
                   )}
                 </select>
+                <small>
+                  Delivery Mode は TTS-2 専用です。Flash では使用しません。
+                </small>
               </div>
             </div>
           </div>

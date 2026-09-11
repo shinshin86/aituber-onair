@@ -114,6 +114,52 @@ describe('InworldEngine', () => {
     }
   });
 
+  it('should switch to Flash through the REST endpoint and decode audio', async () => {
+    const engine = new InworldEngine();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ audioContent: btoa('audio') }),
+    });
+    globalThis.fetch = fetchMock as any;
+
+    try {
+      engine.setDeliveryMode('CREATIVE');
+      engine.setModel('inworld-tts-2-flash');
+      engine.setLanguage('ja-JP');
+      const audio = await engine.fetchAudio(
+        { message: 'こんにちは', style: 'neutral' },
+        'Ashley',
+        'test-key',
+      );
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe('https://api.inworld.ai/tts/v1/voice');
+      expect(init.method).toBe('POST');
+      expect(init.headers.Authorization).toBe('Basic test-key');
+      expect(JSON.parse(init.body)).toEqual({
+        text: 'こんにちは',
+        voiceId: 'Ashley',
+        modelId: 'inworld-tts-2-flash',
+        audioConfig: { audioEncoding: 'MP3', sampleRateHertz: 48000 },
+        language: 'ja-JP',
+      });
+      expect(Array.from(new Uint8Array(audio))).toEqual([
+        97, 117, 100, 105, 111,
+      ]);
+
+      engine.setModel('inworld-tts-2');
+      await engine.fetchAudio(
+        { message: 'hello', style: 'neutral' },
+        'Ashley',
+        'test-key',
+      );
+      expect(JSON.parse(fetchMock.mock.calls[1][1].body).deliveryMode).toBe(
+        'CREATIVE',
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('should apply defaults in the request body', async () => {
     const engine = new InworldEngine();
     const fetchMock = vi.fn().mockResolvedValue({

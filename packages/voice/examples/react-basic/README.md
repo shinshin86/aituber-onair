@@ -171,6 +171,10 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 ```
 
 #### Inworld TTS
+Select `inworld-tts-2` (default) for quality or `inworld-tts-2-flash` for lower
+latency and cost. Delivery Mode is available only for TTS-2. Both models use
+the same non-streaming REST endpoint and selectable voice list.
+
 ```bash
 # Default endpoint: https://api.inworld.ai/tts/v1/voice
 # Use the Basic Base64 authorization value from Inworld as the API key.

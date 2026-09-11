@@ -1556,7 +1556,7 @@ describe('VoiceEngineAdapter', () => {
       const adapter = new VoiceEngineAdapter(options);
       adapter.updateOptions({
         inworldApiUrl: 'https://example.com/tts/v1/voice',
-        inworldModel: 'inworld-tts-1.5-mini',
+        inworldModel: 'inworld-tts-2-flash',
         inworldAudioEncoding: 'LINEAR16',
         inworldSampleRateHertz: 24000,
         inworldBitRate: 96000,
@@ -1571,7 +1571,7 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
         'https://example.com/tts/v1/voice',
       );
-      expect(mockEngine.setModel).toHaveBeenCalledWith('inworld-tts-1.5-mini');
+      expect(mockEngine.setModel).toHaveBeenCalledWith('inworld-tts-2-flash');
       expect(mockEngine.setAudioEncoding).toHaveBeenCalledWith('LINEAR16');
       expect(mockEngine.setSampleRateHertz).toHaveBeenCalledWith(24000);
       expect(mockEngine.setBitRate).toHaveBeenCalledWith(96000);

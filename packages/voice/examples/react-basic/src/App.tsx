@@ -1021,7 +1021,10 @@ function App() {
           options.inworldLanguage = inworldLanguage.trim();
         }
 
-        if (inworldDeliveryMode !== 'default') {
+        if (
+          inworldModel === 'inworld-tts-2' &&
+          inworldDeliveryMode !== 'default'
+        ) {
           options.inworldDeliveryMode =
             inworldDeliveryMode as InworldDeliveryMode;
         }

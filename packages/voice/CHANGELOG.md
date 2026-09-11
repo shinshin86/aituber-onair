@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.21.0
+
+### Minor Changes
+
+- Add `inworld-tts-2-flash` as an explicit model option using the existing
+  non-streaming Inworld REST speech endpoint. Keep `inworld-tts-2` as the default.
+- Export `InworldModel` with TTS-2 model suggestions while preserving custom
+  model strings and runtime model switching.
+- Omit delivery mode for Flash and disable its control in the React example.
+- Replace deprecated TTS 1.5 example choices with TTS-2 Flash and update the
+  English and Japanese usage documentation.
+
 ## 0.20.0
 
 ### Minor Changes
