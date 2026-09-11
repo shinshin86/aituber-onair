@@ -4,6 +4,7 @@ import {
   MODEL_CLAUDE_4_5_OPUS,
   MODEL_CLAUDE_4_6_OPUS,
   MODEL_CLAUDE_4_7_OPUS,
+  MODEL_CLAUDE_5_1_FABLE,
   MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_SONNET,
@@ -16,6 +17,7 @@ import {
 describe('Claude reasoning effort helpers', () => {
   it.each([
     MODEL_CLAUDE_4_7_OPUS,
+    MODEL_CLAUDE_5_1_FABLE,
     MODEL_CLAUDE_5_FABLE,
     MODEL_CLAUDE_5_SONNET,
     MODEL_CLAUDE_5_OPUS,

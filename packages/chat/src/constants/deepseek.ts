@@ -1,6 +1,8 @@
 export const DEEPSEEK_API_BASE_URL = 'https://api.deepseek.com';
 export const ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API = `${DEEPSEEK_API_BASE_URL}/chat/completions`;
 
+export const MODEL_DEEPSEEK_FLASH = 'deepseek-flash';
+
 // DeepSeek V4 models
 export const MODEL_DEEPSEEK_V4_FLASH = 'deepseek-v4-flash';
 export const MODEL_DEEPSEEK_V4_PRO = 'deepseek-v4-pro';
@@ -29,12 +31,14 @@ export const MODEL_DEEPSEEK_CHAT = 'deepseek-chat';
 export const MODEL_DEEPSEEK_REASONER = 'deepseek-reasoner';
 
 export const DEEPSEEK_SUPPORTED_MODELS = [
+  MODEL_DEEPSEEK_FLASH,
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_PRO,
   MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
 ];
 
 export const DEEPSEEK_VISION_SUPPORTED_MODELS = [
+  MODEL_DEEPSEEK_FLASH,
   MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
 ];
 
@@ -46,7 +50,7 @@ export const DEEPSEEK_DEPRECATED_MODELS = [
 export function getDeepSeekSupportedReasoningEfforts(
   model: string,
 ): readonly DeepSeekReasoningEffort[] {
-  if (model === MODEL_DEEPSEEK_V4_FLASH) {
+  if (model === MODEL_DEEPSEEK_FLASH || model === MODEL_DEEPSEEK_V4_FLASH) {
     return DEEPSEEK_V4_FLASH_REASONING_EFFORTS;
   }
 

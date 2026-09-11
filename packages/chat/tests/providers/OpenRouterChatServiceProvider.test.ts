@@ -2,6 +2,17 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
+  MODEL_OPENAI_GPT_6_ASTRA,
+  MODEL_OPENAI_GPT_6_ASTRA_PRO,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
+  MODEL_GOOGLE_GEMINI_3_8_FLASH,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
+  MODEL_INCEPTION_MERCURY_2_5,
+  MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
+  MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+  MODEL_QWEN_QWEN_3_8_MAX_0902,
+  MODEL_META_MUSE_SPARK_1_3,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5,
   MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
@@ -113,6 +124,17 @@ describe('OpenRouterChatServiceProvider', () => {
       const models = provider.getSupportedModels();
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
+        MODEL_OPENAI_GPT_6_ASTRA,
+        MODEL_OPENAI_GPT_6_ASTRA_PRO,
+        MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+        MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
+        MODEL_GOOGLE_GEMINI_3_8_FLASH,
+        MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
+        MODEL_INCEPTION_MERCURY_2_5,
+        MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
+        MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+        MODEL_QWEN_QWEN_3_8_MAX_0902,
+        MODEL_META_MUSE_SPARK_1_3,
         MODEL_OPENROUTER_AUTO,
         MODEL_OPENROUTER_AUTO_BETA,
         MODEL_OPENROUTER_FUSION,
@@ -229,7 +251,12 @@ describe('OpenRouterChatServiceProvider', () => {
     it('should return list containing free tier models', () => {
       const freeModels = provider.getFreeModels();
       expect(Array.isArray(freeModels)).toBe(true);
-      expect(freeModels).toEqual([MODEL_GPT_OSS_20B_FREE]);
+      expect(freeModels).toEqual([
+        MODEL_GPT_OSS_20B_FREE,
+        MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
+        MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
+        MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+      ]);
     });
   });
 
