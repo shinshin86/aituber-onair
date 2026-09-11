@@ -344,11 +344,13 @@ describe('Core index chat re-exports', () => {
       'deepseek-v4-flash-vision-exp',
     );
     expect(DEEPSEEK_SUPPORTED_MODELS).toEqual([
+      'deepseek-flash',
       MODEL_DEEPSEEK_V4_FLASH,
       MODEL_DEEPSEEK_V4_PRO,
       MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
     ]);
     expect(DEEPSEEK_VISION_SUPPORTED_MODELS).toEqual([
+      'deepseek-flash',
       MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
     ]);
     expect(isDeepSeekVisionModel(MODEL_DEEPSEEK_V4_FLASH_VISION_EXP)).toBe(

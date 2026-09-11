@@ -1,5 +1,30 @@
 # @aituber-onair/chat
 
+## 0.55.0
+
+### Minor Changes
+
+- Added native GPT-6 Astra, Claude Fable 5.1, and DeepSeek V4.1 Flash
+  (`deepseek-flash`) with model-specific vision and reasoning capabilities.
+- Added eleven OpenRouter models: GPT-6 Astra, GPT-6 Astra Pro, Claude Fable
+  5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL (free),
+  Mercury 2.5, Nex N2.5 Mini (free), Nex N2.5 Pro (free), Qwen3.8 Max 0902,
+  and Muse Spark 1.3.
+- Added `isOpenAIReasoningModel` and
+  `getDefaultReasoningEffortForOpenAIModel` while preserving the existing
+  GPT-5 helpers and their public return types.
+
+### Patch Changes
+
+- Route native Astra through the Responses API for streaming tool support,
+  normalize its reasoning effort to supported values, and preserve existing
+  provider defaults.
+- Apply model-specific OpenRouter reasoning defaults and supported efforts.
+  Use automatic tool selection for Claude Fable 5.1.
+- Updated the React basic example, English/Japanese documentation, and
+  transport regression coverage. Native DeepSeek thinking with tools remains
+  unsupported; use non-thinking mode for tool calling.
+
 ## 0.54.0
 
 ### Minor Changes
