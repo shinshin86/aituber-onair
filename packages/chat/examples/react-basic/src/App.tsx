@@ -12,9 +12,9 @@ import {
   getDefaultKimiReasoningEffort,
   getDefaultDeepSeekReasoningEffort,
   getDefaultZaiReasoningEffort,
-  getDefaultReasoningEffortForGPT5Model,
+  getDefaultReasoningEffortForOpenAIModel,
   isClaudeReasoningEffortModel,
-  isGPT5Model,
+  isOpenAIReasoningModel,
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isDeepSeekReasoningEffortModel,
@@ -94,7 +94,7 @@ const normalizeReasoningEffortForModel = (
   modelId?: string,
   effort?: ReasoningEffortLevel,
 ): ReasoningEffortLevel => {
-  if (!modelId || !isGPT5Model(modelId)) {
+  if (!modelId || !isOpenAIReasoningModel(modelId)) {
     if (!effort || effort === 'none') {
       return 'medium';
     }
@@ -102,7 +102,7 @@ const normalizeReasoningEffortForModel = (
   }
 
   if (!effort) {
-    return getDefaultReasoningEffortForGPT5Model(modelId);
+    return getDefaultReasoningEffortForOpenAIModel(modelId);
   }
 
   // Round unsupported values to the nearest supported level, matching the
@@ -590,8 +590,8 @@ function App() {
               setGpt5Preset(undefined);
               if (newProvider === 'openai') {
                 setReasoningEffort(
-                  isGPT5Model(defaultModel)
-                    ? getDefaultReasoningEffortForGPT5Model(defaultModel)
+                  isOpenAIReasoningModel(defaultModel)
+                    ? getDefaultReasoningEffortForOpenAIModel(defaultModel)
                     : 'medium',
                 );
               } else if (newProvider === 'claude') {
@@ -640,8 +640,8 @@ function App() {
               setSelectedModel(modelId);
               if (newProvider === 'openai' && !gpt5Preset) {
                 setReasoningEffort(
-                  isGPT5Model(modelId)
-                    ? getDefaultReasoningEffortForGPT5Model(modelId)
+                  isOpenAIReasoningModel(modelId)
+                    ? getDefaultReasoningEffortForOpenAIModel(modelId)
                     : 'medium',
                 );
               } else if (newProvider === 'claude') {

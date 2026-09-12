@@ -8,6 +8,7 @@ import {
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
+  MODEL_GPT_6_ASTRA,
   MODEL_GPT_5_6_SOL,
   MODEL_GPT_5_6_TERRA,
   MODEL_GPT_5_6_LUNA,
@@ -23,14 +24,14 @@ import {
   MODEL_O1_MINI,
   MODEL_O1,
   VISION_SUPPORTED_MODELS,
-  isGPT5Model,
+  isOpenAIReasoningModel,
   isResponsesOnlyGPT5Model,
   allowsReasoningXHigh,
   allowsReasoningMax,
   allowsReasoningNone,
   allowsReasoningMinimal,
   allowsReasoningLow,
-  getDefaultReasoningEffortForGPT5Model,
+  getDefaultReasoningEffortForOpenAIModel,
   OpenAIReasoningEffort,
 } from '../../../constants';
 import { GPT5_PRESETS } from '../../../constants/chat';
@@ -79,12 +80,16 @@ export class OpenAIChatServiceProvider
     let shouldUseResponsesAPI = false;
 
     // MCP requires Responses API regardless of model
-    if (mcpServers.length > 0) {
+    if (
+      mcpServers.length > 0 ||
+      modelName === MODEL_GPT_6_ASTRA ||
+      visionModel === MODEL_GPT_6_ASTRA
+    ) {
       shouldUseResponsesAPI = true;
     } else if (isResponsesOnlyGPT5Model(modelName)) {
       // GPT-5.4 Pro is Responses API only
       shouldUseResponsesAPI = true;
-    } else if (isGPT5Model(modelName)) {
+    } else if (isOpenAIReasoningModel(modelName)) {
       // For GPT-5 models without MCP, respect user endpoint preference
       const preference = optimizedOptions.gpt5EndpointPreference || 'chat'; // Default to chat API for GPT-5
       shouldUseResponsesAPI = preference === 'responses';
@@ -138,6 +143,7 @@ export class OpenAIChatServiceProvider
       MODEL_GPT_5_4,
       MODEL_GPT_5_5,
       MODEL_GPT_5_6,
+      MODEL_GPT_6_ASTRA,
       MODEL_GPT_5_6_SOL,
       MODEL_GPT_5_6_TERRA,
       MODEL_GPT_5_6_LUNA,
@@ -199,7 +205,7 @@ export class OpenAIChatServiceProvider
     const modelName = options.model || this.getDefaultModel();
 
     // Skip optimization for non-GPT-5 models
-    if (!isGPT5Model(modelName)) {
+    if (!isOpenAIReasoningModel(modelName)) {
       return options;
     }
 
@@ -214,7 +220,7 @@ export class OpenAIChatServiceProvider
       // Set default reasoning_effort if not specified
       if (!options.reasoning_effort) {
         optimized.reasoning_effort =
-          getDefaultReasoningEffortForGPT5Model(modelName);
+          getDefaultReasoningEffortForOpenAIModel(modelName);
       }
     }
 

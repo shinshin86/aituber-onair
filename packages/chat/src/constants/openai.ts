@@ -3,6 +3,8 @@ export const ENDPOINT_OPENAI_CHAT_COMPLETIONS_API =
 export const ENDPOINT_OPENAI_RESPONSES_API =
   'https://api.openai.com/v1/responses';
 
+export const MODEL_GPT_6_ASTRA = 'gpt-6-astra';
+
 // gpt model
 export const MODEL_GPT_5_NANO = 'gpt-5-nano';
 export const MODEL_GPT_5_MINI = 'gpt-5-mini';
@@ -33,6 +35,7 @@ export const MODEL_O1 = 'o1';
 
 // Vision support for models
 export const VISION_SUPPORTED_MODELS = [
+  MODEL_GPT_6_ASTRA,
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
@@ -90,6 +93,11 @@ export function isGPT5Model(model: string): boolean {
   return GPT_5_MODELS.includes(model);
 }
 
+/** OpenAI models using the reasoning and verbosity request options. */
+export function isOpenAIReasoningModel(model: string): boolean {
+  return model === MODEL_GPT_6_ASTRA || isGPT5Model(model);
+}
+
 /**
  * GPT-5.4 Pro currently requires the Responses API endpoint
  */
@@ -102,6 +110,7 @@ export function isResponsesOnlyGPT5Model(model: string): boolean {
  */
 export function allowsReasoningXHigh(model: string): boolean {
   return (
+    model === MODEL_GPT_6_ASTRA ||
     model === MODEL_GPT_5_6 ||
     model === MODEL_GPT_5_6_SOL ||
     model === MODEL_GPT_5_6_TERRA ||
@@ -119,6 +128,7 @@ export function allowsReasoningXHigh(model: string): boolean {
  */
 export function allowsReasoningMax(model: string): boolean {
   return (
+    model === MODEL_GPT_6_ASTRA ||
     model === MODEL_GPT_5_6 ||
     model === MODEL_GPT_5_6_SOL ||
     model === MODEL_GPT_5_6_TERRA ||
@@ -182,4 +192,13 @@ export function getDefaultReasoningEffortForGPT5Model(
     return 'minimal';
   }
   return 'medium';
+}
+
+/** Get the default reasoning effort for supported OpenAI reasoning models. */
+export function getDefaultReasoningEffortForOpenAIModel(
+  model: string,
+): 'none' | 'minimal' | 'low' | 'medium' {
+  return model === MODEL_GPT_6_ASTRA
+    ? 'low'
+    : getDefaultReasoningEffortForGPT5Model(model);
 }

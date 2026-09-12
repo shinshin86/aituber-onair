@@ -285,3 +285,15 @@ Common extensions:
 - [React Documentation](https://react.dev/)
 - [TypeScript Documentation](https://www.typescriptlang.org/)
 - [Chat Package Documentation](../../README.md)
+
+### Additional model options
+
+The model selector includes GPT-6 Astra (native OpenAI), Claude Fable 5.1,
+and DeepSeek V4.1 Flash (`deepseek-flash`). Astra uses Responses and starts at
+low reasoning; Fable 5.1 always thinks and uses automatic tool selection.
+DeepSeek tools require reasoning to be set to none.
+
+OpenRouter also offers Astra/Pro, Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8
+Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini/Pro (free),
+Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
+capabilities. Mercury 2.5 is text-only. Provider defaults are unchanged.

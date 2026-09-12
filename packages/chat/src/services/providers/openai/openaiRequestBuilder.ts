@@ -2,8 +2,9 @@ import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
   OpenAIReasoningEffort,
-  getDefaultReasoningEffortForGPT5Model,
-  isGPT5Model,
+  MODEL_GPT_6_ASTRA,
+  getDefaultReasoningEffortForOpenAIModel,
+  isOpenAIReasoningModel,
   isMistralReasoningEffort,
   isMistralReasoningEffortModel,
 } from '../../../constants';
@@ -99,6 +100,14 @@ export function buildOpenAIRequestBody({
   chatTemplateThinking,
   maxTokens,
 }: BuildOpenAIRequestBodyOptions): any {
+  if (
+    model === MODEL_GPT_6_ASTRA &&
+    (!reasoning_effort ||
+      reasoning_effort === 'none' ||
+      reasoning_effort === 'minimal')
+  ) {
+    reasoning_effort = 'low';
+  }
   const isResponsesAPI = endpoint === ENDPOINT_OPENAI_RESPONSES_API;
 
   validateMCPCompatibility(endpoint, mcpServers);
@@ -148,7 +157,7 @@ export function buildOpenAIRequestBody({
   }
 
   // Add GPT-5 specific parameters.
-  if (isGPT5Model(model)) {
+  if (isOpenAIReasoningModel(model)) {
     // For Responses API, use nested structure.
     if (isResponsesAPI) {
       if (reasoning_effort) {
@@ -260,14 +269,14 @@ export function resolveOpenAITokenLimit({
 
   if (
     provider !== 'openai' ||
-    !isGPT5Model(model) ||
+    !isOpenAIReasoningModel(model) ||
     responseLength === undefined
   ) {
     return baseTokenLimit;
   }
 
   const effectiveReasoningEffort =
-    reasoning_effort ?? getDefaultReasoningEffortForGPT5Model(model);
+    reasoning_effort ?? getDefaultReasoningEffortForOpenAIModel(model);
 
   return Math.max(
     baseTokenLimit ?? 0,

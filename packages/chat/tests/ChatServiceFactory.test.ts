@@ -11,6 +11,7 @@ import {
   MODEL_CLAUDE_5_OPUS,
   MODEL_KIMI_K3,
   MODEL_KIMI_K2_6,
+  MODEL_DEEPSEEK_FLASH,
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_PRO,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
@@ -323,6 +324,7 @@ describe('ChatServiceFactory', () => {
 
       const deepSeekModels = ChatServiceFactory.getSupportedModels('deepseek');
       expect(deepSeekModels).toEqual([
+        MODEL_DEEPSEEK_FLASH,
         'deepseek-v4-flash',
         'deepseek-v4-pro',
         'deepseek-v4-flash-vision-exp',

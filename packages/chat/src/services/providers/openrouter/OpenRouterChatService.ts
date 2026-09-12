@@ -2,6 +2,7 @@ import { ChatService } from '../../ChatService';
 import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   ENDPOINT_OPENROUTER_API,
   MODEL_GPT_OSS_20B_FREE,
   MODEL_OPENROUTER_AUTO,
@@ -10,6 +11,8 @@ import {
   MODEL_ZAI_GLM_5_3_FLASH,
   MODEL_ZAI_GLM_5_2,
   type OpenRouterReasoningEffort,
+  MODEL_QWEN_QWEN_3_8_MAX_0902,
+  MODEL_META_MUSE_SPARK_1_3,
   getDefaultOpenRouterReasoningEffort,
   normalizeOpenRouterReasoningEffort,
   isOpenRouterVisionModel,
@@ -381,7 +384,12 @@ export class OpenRouterChatService implements ChatService {
 
       if (reasoningEffort) {
         // OpenRouter uses 'low' as the minimum effort level, map 'minimal' to 'low'
-        const effort = reasoningEffort === 'minimal' ? 'low' : reasoningEffort;
+        const effort =
+          reasoningEffort === 'minimal' &&
+          model !== MODEL_QWEN_QWEN_3_8_MAX_0902 &&
+          model !== MODEL_META_MUSE_SPARK_1_3
+            ? 'low'
+            : reasoningEffort;
         body.reasoning.effort = effort;
       } else if (defaultReasoningEffort) {
         body.reasoning.effort = defaultReasoningEffort;
@@ -403,7 +411,9 @@ export class OpenRouterChatService implements ChatService {
     // Add tools if available
     if (this.tools.length > 0) {
       body.tools = buildOpenAICompatibleTools(this.tools, 'chat-completions');
-      body.tool_choice = 'auto';
+      if (model !== MODEL_ANTHROPIC_CLAUDE_FABLE_5_1) {
+        body.tool_choice = 'auto';
+      }
     }
 
     return body;

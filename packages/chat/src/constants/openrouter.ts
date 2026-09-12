@@ -1,6 +1,20 @@
 export const ENDPOINT_OPENROUTER_API =
   'https://openrouter.ai/api/v1/chat/completions';
 
+export const MODEL_OPENAI_GPT_6_ASTRA = 'openai/gpt-6-astra';
+export const MODEL_OPENAI_GPT_6_ASTRA_PRO = 'openai/gpt-6-astra-pro';
+export const MODEL_ANTHROPIC_CLAUDE_FABLE_5_1 = 'anthropic/claude-fable-5.1';
+export const MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH =
+  'deepseek/deepseek-v4.1-flash';
+export const MODEL_GOOGLE_GEMINI_3_8_FLASH = 'google/gemini-3.8-flash';
+export const MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE =
+  'inclusionai/ling-3.0-flash-vl:free';
+export const MODEL_INCEPTION_MERCURY_2_5 = 'inception/mercury-2.5';
+export const MODEL_NEX_AGI_NEX_N2_5_MINI_FREE = 'nex-agi/nex-n2.5-mini:free';
+export const MODEL_NEX_AGI_NEX_N2_5_PRO_FREE = 'nex-agi/nex-n2.5-pro:free';
+export const MODEL_QWEN_QWEN_3_8_MAX_0902 = 'qwen/qwen3.8-max-0902';
+export const MODEL_META_MUSE_SPARK_1_3 = 'meta/muse-spark-1.3';
+
 // OpenRouter models
 export const MODEL_OPENROUTER_AUTO = 'openrouter/auto';
 export const MODEL_OPENROUTER_AUTO_BETA = 'openrouter/auto-beta';
@@ -137,11 +151,79 @@ const OPENROUTER_CLAUDE_REASONING_EFFORTS = [
   'max',
 ] as const satisfies readonly OpenRouterReasoningEffort[];
 
+const OPENROUTER_MODEL_REASONING: Record<
+  string,
+  {
+    efforts: readonly OpenRouterReasoningEffort[];
+    defaultEffort?: OpenRouterReasoningEffort;
+  }
+> = {
+  [MODEL_OPENAI_GPT_6_ASTRA]: {
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
+    defaultEffort: 'medium',
+  },
+  [MODEL_OPENAI_GPT_6_ASTRA_PRO]: {
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
+    defaultEffort: 'medium',
+  },
+  [MODEL_ANTHROPIC_CLAUDE_FABLE_5_1]: {
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
+    defaultEffort: 'high',
+  },
+  [MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH]: {
+    efforts: ['max', 'high', 'low', 'none'],
+    defaultEffort: 'none',
+  },
+  [MODEL_GOOGLE_GEMINI_3_8_FLASH]: {
+    efforts: ['high', 'medium', 'low'],
+    defaultEffort: 'medium',
+  },
+  [MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE]: {
+    efforts: [],
+    defaultEffort: undefined,
+  },
+  [MODEL_INCEPTION_MERCURY_2_5]: {
+    efforts: ['high', 'medium', 'low', 'none'],
+    defaultEffort: 'none',
+  },
+  [MODEL_NEX_AGI_NEX_N2_5_MINI_FREE]: {
+    efforts: ['high', 'medium', 'none'],
+    defaultEffort: 'none',
+  },
+  [MODEL_NEX_AGI_NEX_N2_5_PRO_FREE]: {
+    efforts: ['high', 'medium', 'none'],
+    defaultEffort: 'none',
+  },
+  [MODEL_QWEN_QWEN_3_8_MAX_0902]: {
+    efforts: ['xhigh', 'high', 'medium', 'low', 'minimal'],
+    defaultEffort: 'xhigh',
+  },
+  [MODEL_META_MUSE_SPARK_1_3]: {
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low', 'minimal'],
+    defaultEffort: 'medium',
+  },
+};
+
 // Free tier models
-export const OPENROUTER_FREE_MODELS = [MODEL_GPT_OSS_20B_FREE];
+export const OPENROUTER_FREE_MODELS = [
+  MODEL_GPT_OSS_20B_FREE,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
+  MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
+  MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+];
 
 // Vision supported models on OpenRouter
 export const OPENROUTER_VISION_SUPPORTED_MODELS = [
+  MODEL_OPENAI_GPT_6_ASTRA,
+  MODEL_OPENAI_GPT_6_ASTRA_PRO,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
+  MODEL_GOOGLE_GEMINI_3_8_FLASH,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
+  MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
+  MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+  MODEL_QWEN_QWEN_3_8_MAX_0902,
+  MODEL_META_MUSE_SPARK_1_3,
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_K2_6,
@@ -216,6 +298,13 @@ export function getOpenRouterSupportedReasoningEfforts(
   model: string,
 ): readonly OpenRouterReasoningEffort[] {
   const normalizedModel = model.trim();
+  const profile = Object.prototype.hasOwnProperty.call(
+    OPENROUTER_MODEL_REASONING,
+    normalizedModel,
+  )
+    ? OPENROUTER_MODEL_REASONING[normalizedModel]
+    : undefined;
+  if (profile) return profile.efforts;
   if (
     normalizedModel === MODEL_ZAI_GLM_5_3 ||
     normalizedModel === MODEL_ZAI_GLM_5_3_FLASH
@@ -253,6 +342,13 @@ export function getDefaultOpenRouterReasoningEffort(
   model: string,
 ): OpenRouterReasoningEffort | undefined {
   const normalizedModel = model.trim();
+  const profile = Object.prototype.hasOwnProperty.call(
+    OPENROUTER_MODEL_REASONING,
+    normalizedModel,
+  )
+    ? OPENROUTER_MODEL_REASONING[normalizedModel]
+    : undefined;
+  if (profile) return profile.defaultEffort;
   if (
     normalizedModel === MODEL_ZAI_GLM_5_3 ||
     normalizedModel === MODEL_ZAI_GLM_5_3_FLASH
@@ -277,7 +373,17 @@ export function normalizeOpenRouterReasoningEffort(
   effort?: OpenRouterReasoningEffort,
 ): OpenRouterReasoningEffort | undefined {
   const normalizedModel = model.trim();
+  const profile = Object.prototype.hasOwnProperty.call(
+    OPENROUTER_MODEL_REASONING,
+    normalizedModel,
+  )
+    ? OPENROUTER_MODEL_REASONING[normalizedModel]
+    : undefined;
   const requested = effort ?? getDefaultOpenRouterReasoningEffort(model);
+  if (profile) {
+    if (requested && profile.efforts.includes(requested)) return requested;
+    return profile.defaultEffort;
+  }
   if (!requested) {
     return undefined;
   }

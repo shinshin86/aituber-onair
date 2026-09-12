@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
+  MODEL_DEEPSEEK_FLASH,
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_DEEPSEEK_V4_PRO,
@@ -17,6 +18,7 @@ describe('DeepSeekChatServiceProvider', () => {
 
   it('returns current DeepSeek V4 supported models', () => {
     expect(provider.getSupportedModels()).toEqual([
+      MODEL_DEEPSEEK_FLASH,
       MODEL_DEEPSEEK_V4_FLASH,
       MODEL_DEEPSEEK_V4_PRO,
       MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,

@@ -11,7 +11,7 @@ import {
   allowsReasoningNone,
   allowsReasoningXHigh,
   getClaudeSupportedReasoningEfforts,
-  getDefaultReasoningEffortForGPT5Model,
+  getDefaultReasoningEffortForOpenAIModel,
   getDefaultXaiReasoningEffort,
   getXaiSupportedReasoningEfforts,
   getGeminiSupportedReasoningEfforts,
@@ -20,7 +20,7 @@ import {
   getOpenRouterSupportedReasoningEfforts,
   getDefaultZaiReasoningEffort,
   getZaiSupportedReasoningEfforts,
-  isGPT5Model,
+  isOpenAIReasoningModel,
   isResponsesOnlyGPT5Model,
   isOpenRouterFreeModel,
   refreshOpenRouterFreeModels,
@@ -42,6 +42,20 @@ import {
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
+  MODEL_OPENAI_GPT_6_ASTRA,
+  MODEL_OPENAI_GPT_6_ASTRA_PRO,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
+  MODEL_GOOGLE_GEMINI_3_8_FLASH,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
+  MODEL_INCEPTION_MERCURY_2_5,
+  MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
+  MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+  MODEL_QWEN_QWEN_3_8_MAX_0902,
+  MODEL_META_MUSE_SPARK_1_3,
+  MODEL_GPT_6_ASTRA,
+  MODEL_CLAUDE_5_1_FABLE,
+  MODEL_DEEPSEEK_FLASH,
   MODEL_GPT_5_6_SOL,
   MODEL_GPT_5_6_TERRA,
   MODEL_GPT_5_6_LUNA,
@@ -530,6 +544,90 @@ export const allModels: ProviderModel[] = [
     id: MODEL_GPT_5_5,
     name: 'GPT-5.5',
     provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_6_ASTRA,
+    name: 'GPT-6 Astra',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_CLAUDE_5_1_FABLE,
+    name: 'Claude Fable 5.1',
+    provider: 'claude',
+    default: false,
+  },
+  {
+    id: MODEL_DEEPSEEK_FLASH,
+    name: 'DeepSeek V4.1 Flash',
+    provider: 'deepseek',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_ASTRA,
+    name: 'GPT-6 Astra',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_ASTRA_PRO,
+    name: 'GPT-6 Astra Pro',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+    name: 'Claude Fable 5.1',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
+    name: 'DeepSeek V4.1 Flash',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_3_8_FLASH,
+    name: 'Gemini 3.8 Flash',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
+    name: 'Ling 3.0 Flash VL (Free)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_INCEPTION_MERCURY_2_5,
+    name: 'Mercury 2.5',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
+    name: 'Nex N2.5 Mini (Free)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+    name: 'Nex N2.5 Pro (Free)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_QWEN_QWEN_3_8_MAX_0902,
+    name: 'Qwen3.8 Max (0902)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_META_MUSE_SPARK_1_3,
+    name: 'Muse Spark 1.3',
+    provider: 'openrouter',
     default: false,
   },
   {
@@ -1455,9 +1553,11 @@ export default function ProviderSelector({
     useState('1');
 
   const info = providerInfo[provider];
-  const isGPT5 = provider === 'openai' && isGPT5Model(selectedModel);
+  const isGPT5 = provider === 'openai' && isOpenAIReasoningModel(selectedModel);
   const isResponsesOnlyModel =
-    provider === 'openai' && isResponsesOnlyGPT5Model(selectedModel);
+    provider === 'openai' &&
+    (isResponsesOnlyGPT5Model(selectedModel) ||
+      selectedModel === MODEL_GPT_6_ASTRA);
   const allowsNone =
     provider === 'openai' && allowsReasoningNone(selectedModel);
   const allowsMinimal =
@@ -1651,7 +1751,7 @@ export default function ProviderSelector({
     }
 
     if (!reasoning_effort) {
-      return getDefaultReasoningEffortForGPT5Model(selectedModel);
+      return getDefaultReasoningEffortForOpenAIModel(selectedModel);
     }
     // Round unsupported values to the nearest supported level, matching the
     // normalization performed by the chat package.
@@ -1996,7 +2096,7 @@ export default function ProviderSelector({
           {isGPT5 && (
             <>
               <div className="config-group">
-                <label htmlFor="gpt5-endpoint">GPT-5 API Endpoint</label>
+                <label htmlFor="gpt5-endpoint">OpenAI API Endpoint</label>
                 <select
                   id="gpt5-endpoint"
                   value={
@@ -2020,7 +2120,7 @@ export default function ProviderSelector({
                 </select>
                 {isResponsesOnlyModel && (
                   <span className="helper-text">
-                    GPT-5.4 Pro is Responses API only.
+                    This model uses Responses API for full tool support.
                   </span>
                 )}
               </div>
@@ -2264,9 +2364,14 @@ export default function ProviderSelector({
                       e.target.value as OpenRouterReasoningEffort,
                     )
                   }
-                  disabled={disabled}
+                  disabled={
+                    disabled || openRouterSupportedReasoningEfforts.length === 0
+                  }
                   className="select-input"
                 >
+                  {openRouterSupportedReasoningEfforts.length === 0 && (
+                    <option value="none">Not available</option>
+                  )}
                   {openRouterSupportedReasoningEfforts.map((effort) => (
                     <option key={effort} value={effort}>
                       {effort === 'none'
@@ -2278,10 +2383,14 @@ export default function ProviderSelector({
                   ))}
                 </select>
                 <span className="helper-text">
-                  {selectedModel === MODEL_ZAI_GLM_5_3 ||
-                  selectedModel === MODEL_ZAI_GLM_5_3_FLASH
-                    ? 'GLM-5.3 always reasons; Low is the chat-oriented default.'
-                    : 'Options are filtered for the selected model. None disables reasoning instead of only hiding it.'}
+                  {openRouterSupportedReasoningEfforts.length === 0
+                    ? 'This model does not expose configurable reasoning effort.'
+                    : !openRouterSupportedReasoningEfforts.includes('none')
+                      ? 'This model always reasons; choose a supported effort level.'
+                      : selectedModel === MODEL_ZAI_GLM_5_3 ||
+                          selectedModel === MODEL_ZAI_GLM_5_3_FLASH
+                        ? 'GLM-5.3 always reasons; Low is the chat-oriented default.'
+                        : 'Options are filtered for the selected model. None disables reasoning instead of only hiding it.'}
                 </span>
               </div>
 
