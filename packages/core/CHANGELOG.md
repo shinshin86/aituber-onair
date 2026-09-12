@@ -1,5 +1,20 @@
 # @aituber-onair/core
 
+## 0.26.14
+
+### Patch Changes
+
+- Propagate Chat 0.55.0 and Voice 0.21.0 to Core and all examples while
+  preserving existing provider defaults.
+- Re-export the new native and OpenRouter model constants, OpenAI reasoning
+  helpers, and Inworld model type. Extend the React basic model selector and
+  apply the OpenAI reasoning preset to Astra in avatar chat and comment
+  analysis flows.
+- Add Inworld TTS-2 Flash to all eight React examples. Disable Delivery Mode
+  and omit saved delivery-mode values from Flash speech options.
+- Refresh all example lockfiles, update English/Japanese documentation, and
+  cover the new public exports with regression tests.
+
 ## 0.26.13
 
 ### Patch Changes
