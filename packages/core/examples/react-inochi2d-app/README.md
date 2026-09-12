@@ -16,6 +16,20 @@ avatar on a full-screen stage, plays synthesized speech with lip sync, and keeps
 the chat / streaming settings format aligned with the other `packages/core`
 React examples.
 
+## Chat and Voice model updates
+
+This example uses Chat 0.55.0 and Voice 0.21.0 through Core. Select a supported
+model such as `gpt-6-astra`, `claude-fable-5-1`, or `deepseek-flash` in
+the model selector; the new OpenRouter models are also listed. OpenAI reasoning
+models use the Casual preset, with Astra routed through Responses and its
+reasoning effort normalized to `low`.
+
+The Inworld model selector includes `inworld-tts-2-flash`. Models that do not
+support Delivery Mode, currently Flash, disable that control and omit it from
+speech options, including when a previous value is stored. The default remains
+`inworld-tts-2`, and voice-list selection is unchanged. Native DeepSeek tool
+calling requires non-thinking mode.
+
 ## Features
 
 - Inochi2D WebGL stage driven by a prebuilt Inochi2D runtime bridge

@@ -29,7 +29,7 @@ import {
   getDefaultGeminiReasoningEffort,
   getDefaultKimiReasoningEffort,
   getDefaultOpenRouterReasoningEffort,
-  getDefaultReasoningEffortForGPT5Model,
+  getDefaultReasoningEffortForOpenAIModel,
   getDefaultXaiReasoningEffort,
   getDefaultZaiReasoningEffort,
   getDeepSeekSupportedReasoningEfforts,
@@ -41,10 +41,11 @@ import {
   getVoiceEngineVoiceList,
   isClaudeReasoningEffortModel,
   isDeepSeekReasoningEffortModel,
-  isGPT5Model,
+  isOpenAIReasoningModel,
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isResponsesOnlyGPT5Model,
+  MODEL_GPT_6_ASTRA,
   isXaiReasoningEffortModel,
   normalizeClaudeReasoningEffort,
   normalizeDeepSeekReasoningEffort,
@@ -291,11 +292,7 @@ const CARTESIA_LANGUAGES: CartesiaLanguage[] = [
   'it',
   'hi',
 ];
-const INWORLD_MODELS = [
-  'inworld-tts-2',
-  'inworld-tts-1.5-mini',
-  'inworld-tts-1.5-max',
-] as const;
+const INWORLD_MODELS = ['inworld-tts-2', 'inworld-tts-2-flash'] as const;
 const INWORLD_AUDIO_ENCODINGS = [
   'MP3',
   'OGG_OPUS',
@@ -625,7 +622,7 @@ const App: React.FC = () => {
     targetModel: string | undefined,
     effort?: ReasoningEffortLevel,
   ): ReasoningEffortLevel => {
-    if (!targetModel || !isGPT5Model(targetModel)) {
+    if (!targetModel || !isOpenAIReasoningModel(targetModel)) {
       if (!effort || effort === 'none') {
         return 'medium';
       }
@@ -633,7 +630,7 @@ const App: React.FC = () => {
     }
 
     if (!effort) {
-      return getDefaultReasoningEffortForGPT5Model(targetModel);
+      return getDefaultReasoningEffortForOpenAIModel(targetModel);
     }
 
     // Round unsupported values to the nearest supported level, matching the
@@ -1583,7 +1580,7 @@ const App: React.FC = () => {
     if (chatProvider !== 'openai') {
       return;
     }
-    if (model && isGPT5Model(model)) {
+    if (model && isOpenAIReasoningModel(model)) {
       if (gpt5Preset !== GPT5_SAMPLE_PRESET) {
         setGpt5Preset(GPT5_SAMPLE_PRESET);
       }
@@ -1716,7 +1713,7 @@ const App: React.FC = () => {
       return;
     }
     if (
-      isResponsesOnlyGPT5Model(model) &&
+      (model === MODEL_GPT_6_ASTRA || isResponsesOnlyGPT5Model(model)) &&
       gpt5EndpointPreference !== 'responses'
     ) {
       setGpt5EndpointPreference('responses');
@@ -1851,7 +1848,8 @@ const App: React.FC = () => {
     }
 
     const isOpenAIGPT5Request =
-      chatProvider === 'openai' && Boolean(model && isGPT5Model(model));
+      chatProvider === 'openai' &&
+      Boolean(model && isOpenAIReasoningModel(model));
     const effectiveResponseLength = isOpenAIGPT5Request
       ? GPT5_SAMPLE_RESPONSE_LENGTH
       : responseLength;
@@ -1861,9 +1859,10 @@ const App: React.FC = () => {
     if (isOpenAIGPT5Request) {
       // Add GPT-5 specific options
       providerOptions.gpt5Preset = GPT5_SAMPLE_PRESET;
-      providerOptions.gpt5EndpointPreference = isResponsesOnlyGPT5Model(model)
-        ? 'responses'
-        : gpt5EndpointPreference;
+      providerOptions.gpt5EndpointPreference =
+        model === MODEL_GPT_6_ASTRA || isResponsesOnlyGPT5Model(model)
+          ? 'responses'
+          : gpt5EndpointPreference;
     }
     if (chatProvider === 'xai' && model && isXaiReasoningEffortModel(model)) {
       providerOptions.reasoning_effort = normalizeReasoningEffortForXaiModel(
@@ -2631,7 +2630,10 @@ const App: React.FC = () => {
             options.inworldLanguage = inworldLanguage.trim();
           }
 
-          if (inworldDeliveryMode !== 'default') {
+          if (
+            inworldModel !== 'inworld-tts-2-flash' &&
+            inworldDeliveryMode !== 'default'
+          ) {
             options.inworldDeliveryMode = inworldDeliveryMode;
           }
 
@@ -3042,10 +3044,12 @@ const App: React.FC = () => {
   };
 
   const isOpenAIGPT5ModelSelected = Boolean(
-    chatProvider === 'openai' && model && isGPT5Model(model),
+    chatProvider === 'openai' && model && isOpenAIReasoningModel(model),
   );
   const isResponsesOnlyOpenAIGPT5ModelSelected = Boolean(
-    chatProvider === 'openai' && model && isResponsesOnlyGPT5Model(model),
+    chatProvider === 'openai' &&
+      model &&
+      (model === MODEL_GPT_6_ASTRA || isResponsesOnlyGPT5Model(model)),
   );
   const allowsNoneReasoningEffort = Boolean(
     chatProvider === 'openai' && model && allowsReasoningNone(model),
@@ -3136,7 +3140,7 @@ const App: React.FC = () => {
       return `${label} (${baseTokens} tokens)`;
     }
 
-    return `${label} (GPT-5 auto, starts at ${baseTokens})`;
+    return `${label} (OpenAI reasoning auto, starts at ${baseTokens})`;
   };
 
   return (
@@ -3741,12 +3745,18 @@ const App: React.FC = () => {
                       <select
                         id="openRouterReasoningEffort"
                         value={openRouterReasoningEffortValue}
+                        disabled={
+                          openRouterSupportedReasoningEfforts.length === 0
+                        }
                         onChange={(e) =>
                           setReasoningEffort(
                             e.target.value as OpenRouterReasoningEffort,
                           )
                         }
                       >
+                        {openRouterSupportedReasoningEfforts.length === 0 && (
+                          <option value="none">Not available</option>
+                        )}
                         {openRouterSupportedReasoningEfforts.map((effort) => (
                           <option key={effort} value={effort}>
                             {effort === 'none'
@@ -3886,7 +3896,7 @@ const App: React.FC = () => {
                         fontSize: '12px',
                       }}
                     >
-                      GPT-5系ではこのサンプルは Very Short と Casual
+                      OpenAI推論モデルではこのサンプルは Very Short と Casual
                       に固定し、最小 reasoning で一言に近い応答を優先します。
                     </div>
                   )}
@@ -4025,7 +4035,9 @@ const App: React.FC = () => {
                     <div style={{ marginTop: '16px' }}>
                       <hr />
                       <div style={{ marginTop: '16px', marginBottom: '16px' }}>
-                        <h3 style={{ marginTop: 0 }}>GPT-5 Settings</h3>
+                        <h3 style={{ marginTop: 0 }}>
+                          OpenAI Reasoning Settings
+                        </h3>
 
                         <label htmlFor="gpt5Preset">Preset:</label>
                         <select
@@ -4129,7 +4141,7 @@ const App: React.FC = () => {
                               fontSize: '12px',
                             }}
                           >
-                            GPT-5.4 ProはResponses API専用です。
+                            このモデルではResponses APIを使用します。
                           </div>
                         )}
                       </div>
@@ -5442,6 +5454,8 @@ const App: React.FC = () => {
                         />
                         <select
                           value={inworldDeliveryMode}
+                          disabled={inworldModel === 'inworld-tts-2-flash'}
+                          aria-label="Delivery Mode"
                           onChange={(e) =>
                             setInworldDeliveryMode(
                               e.target.value as 'default' | InworldDeliveryMode,

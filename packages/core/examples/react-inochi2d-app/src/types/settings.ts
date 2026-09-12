@@ -1,3 +1,4 @@
+import type { InworldModel } from '@aituber-onair/core';
 import type { XaiReasoningEffort } from '@aituber-onair/core';
 import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
 import type {
@@ -130,7 +131,7 @@ export interface TTSSettings {
   cartesiaMp3Bitrate?: string;
   inworldApiKey?: string;
   inworldApiUrl?: string;
-  inworldModel?: string;
+  inworldModel?: InworldModel;
   inworldAudioEncoding?: string;
   inworldSampleRateHertz?: string;
   inworldBitRate?: string;
