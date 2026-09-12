@@ -10,6 +10,18 @@
 
 テキスト入力や画像入力から応答テキストと音声を生成する機能に特化し、アプリケーションの他の部分（ストレージ、YouTube連携、アバター制御など）と簡単に統合できるように設計されています。
 
+## Chat・Voiceモデルの更新
+
+Chat 0.55.0のモデル・能力判定ヘルパーと、Voice 0.21.0のInworldモデル型をCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
+
+- ネイティブモデル: GPT-6 Astra（`gpt-6-astra`）、Claude Fable 5.1（`claude-fable-5-1`）、DeepSeek V4.1 Flash（`deepseek-flash`）。
+- OpenRouter: GPT-6 Astra / Astra Pro、Claude Fable 5.1、DeepSeek V4.1 Flash、Gemini 3.8 Flash、Ling 3.0 Flash VL（free）、Mercury 2.5、Nex N2.5 Mini / Pro（free）、Qwen3.8 Max 0902、Muse Spark 1.3。
+- 推論が必須のモデルでは対応する推論強度を使います。ネイティブのAstraはResponses APIを使用し、最小値は`low`です。`isOpenAIReasoningModel`と`getDefaultReasoningEffortForOpenAIModel`で新しいOpenAIモデルも判定できます。既存のGPT-5ヘルパーは維持しています。
+- ネイティブDeepSeekでツールを使う場合は非推論モード（`reasoning_effort: 'none'`）を指定してください。OpenRouterの推論・画像対応は、選択モデルのChat能力情報に従います。
+- Inworldでは既定の`inworld-tts-2`に加えて`inworld-tts-2-flash`を選択できます。Delivery Mode非対応モデル（現在はFlash）ではその設定を送信せず、全Reactサンプルで入力欄を無効にします。ボイス一覧、設定保存、その他の音声設定は維持しています。
+
+React basicには新モデルを一覧表示します。アバターサンプルもCoreの対応モデル一覧を参照して選択肢に反映し、対応するOpenAI推論モデルにCasualプリセットを適用します。Nodeサンプルはモデルとプロバイダー設定をCoreへ渡します。
+
 ## 目次
 
 - [概要](#概要)

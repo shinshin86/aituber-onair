@@ -1,3 +1,4 @@
+import type { InworldModel } from '@aituber-onair/core';
 import type { XaiReasoningEffort } from '@aituber-onair/core';
 
 export type ChatProviderOption =
@@ -125,7 +126,7 @@ export interface TTSSettings {
   cartesiaMp3Bitrate?: string;
   inworldApiKey?: string;
   inworldApiUrl?: string;
-  inworldModel?: string;
+  inworldModel?: InworldModel;
   inworldAudioEncoding?: string;
   inworldSampleRateHertz?: string;
   inworldBitRate?: string;

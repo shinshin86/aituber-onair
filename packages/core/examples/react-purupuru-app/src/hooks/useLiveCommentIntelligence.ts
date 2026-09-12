@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ChatServiceFactory,
   getDefaultXaiReasoningEffort,
-  isGPT5Model,
+  isOpenAIReasoningModel,
   isXaiReasoningEffortModel,
   type ChatService,
   type ChatServiceOptionsByProvider,
@@ -278,24 +278,21 @@ function createAnalysisProviderFromLLMSettings(
     }
 
     const provider = llmSettings.provider;
-    const chatService = ChatServiceFactory.createChatService(
-      provider,
-      {
-        apiKey,
-        model: llmSettings.model,
-        ...(provider === 'openai' && isGPT5Model(llmSettings.model)
-          ? GPT5_SAMPLE_PROVIDER_OPTIONS
-          : {}),
-        ...(provider === 'xai' && isXaiReasoningEffortModel(llmSettings.model)
-          ? {
-              reasoning_effort:
-                llmSettings.xaiReasoningEffort ||
-                getDefaultXaiReasoningEffort(llmSettings.model) ||
-                'none',
-            }
-          : {}),
-      } as ChatServiceOptionsByProvider[typeof provider],
-    );
+    const chatService = ChatServiceFactory.createChatService(provider, {
+      apiKey,
+      model: llmSettings.model,
+      ...(provider === 'openai' && isOpenAIReasoningModel(llmSettings.model)
+        ? GPT5_SAMPLE_PROVIDER_OPTIONS
+        : {}),
+      ...(provider === 'xai' && isXaiReasoningEffortModel(llmSettings.model)
+        ? {
+            reasoning_effort:
+              llmSettings.xaiReasoningEffort ||
+              getDefaultXaiReasoningEffort(llmSettings.model) ||
+              'none',
+          }
+        : {}),
+    } as ChatServiceOptionsByProvider[typeof provider]);
     return createChatServiceCommentAnalysisProvider(
       toCommentAnalysisChatService(chatService),
     );

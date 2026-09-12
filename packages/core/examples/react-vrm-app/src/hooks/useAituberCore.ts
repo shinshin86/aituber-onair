@@ -3,7 +3,7 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
   getDefaultXaiReasoningEffort,
-  isGPT5Model,
+  isOpenAIReasoningModel,
   isXaiReasoningEffortModel,
 } from '@aituber-onair/core';
 import { ManneriDetector } from '@aituber-onair/manneri';
@@ -376,7 +376,9 @@ function buildVoiceOptions(
       : parsedInworldSpeakingRate,
     inworldLanguage: tts.inworldLanguage?.trim() || undefined,
     inworldDeliveryMode:
-      tts.inworldDeliveryMode && tts.inworldDeliveryMode !== 'default'
+      tts.inworldModel !== 'inworld-tts-2-flash' &&
+      tts.inworldDeliveryMode &&
+      tts.inworldDeliveryMode !== 'default'
         ? (tts.inworldDeliveryMode as InworldDeliveryMode)
         : undefined,
     inworldTemperature: Number.isNaN(parsedInworldTemperature)
@@ -709,7 +711,7 @@ export function useAituberCore({
       ? settings.llm.model.trim() || 'local-model'
       : settings.llm.model;
   const isOpenAIGPT5Model =
-    settings.llm.provider === 'openai' && isGPT5Model(resolvedModel);
+    settings.llm.provider === 'openai' && isOpenAIReasoningModel(resolvedModel);
   const xaiProviderOptions =
     settings.llm.provider === 'xai' && isXaiReasoningEffortModel(resolvedModel)
       ? {

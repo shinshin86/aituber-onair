@@ -3,7 +3,7 @@ import {
   getDefaultXaiReasoningEffort,
   getXaiSupportedReasoningEfforts,
   getVoiceEngineVoiceList,
-  isGPT5Model,
+  isOpenAIReasoningModel,
   isXaiReasoningEffortModel,
   normalizeXaiReasoningEffort,
   type VoiceEngineVoice,
@@ -197,11 +197,7 @@ const CARTESIA_LANGUAGES = [
   'hi',
 ] as const;
 const CARTESIA_OUTPUT_CONTAINERS = ['wav', 'mp3'] as const;
-const INWORLD_MODELS = [
-  'inworld-tts-2',
-  'inworld-tts-1.5-mini',
-  'inworld-tts-1.5-max',
-] as const;
+const INWORLD_MODELS = ['inworld-tts-2', 'inworld-tts-2-flash'] as const;
 const INWORLD_AUDIO_ENCODINGS = [
   'MP3',
   'OGG_OPUS',
@@ -909,7 +905,8 @@ export function SettingsPanel({
     [psdAvatar.model],
   );
   const isOpenAIGPT5Model =
-    settings.llm.provider === 'openai' && isGPT5Model(settings.llm.model);
+    settings.llm.provider === 'openai' &&
+    isOpenAIReasoningModel(settings.llm.model);
   const isXaiReasoningEffortModelSelected =
     settings.llm.provider === 'xai' &&
     isXaiReasoningEffortModel(settings.llm.model);
@@ -1521,8 +1518,8 @@ export function SettingsPanel({
 
             {isOpenAIGPT5Model && (
               <p className="settings-field-hint">
-                GPT-5 models use the Casual preset and Very Short replies in
-                this sample.
+                OpenAI reasoning models use the Casual preset and Very Short
+                replies in this sample.
               </p>
             )}
 
@@ -2799,7 +2796,10 @@ export function SettingsPanel({
                           | 'CREATIVE',
                       )
                     }
-                    disabled={disabled}
+                    disabled={
+                      disabled ||
+                      settings.tts.inworldModel === 'inworld-tts-2-flash'
+                    }
                   >
                     <option value="default">Default</option>
                     {INWORLD_DELIVERY_MODES.map((mode) => (

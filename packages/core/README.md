@@ -10,6 +10,33 @@ While it is primarily intended to provide functionality for [AITuber OnAir](http
 
 It specializes in generating response text and audio from text or image inputs, and is designed to easily integrate with other parts of an application (storage, YouTube integration, avatar control, etc.).
 
+## Chat and Voice model updates
+
+Core exposes the models and capability helpers from Chat 0.55.0 and the
+Inworld model type from Voice 0.21.0. Existing provider defaults are unchanged.
+
+- Native models: GPT-6 Astra (`gpt-6-astra`), Claude Fable 5.1
+  (`claude-fable-5-1`), and DeepSeek V4.1 Flash (`deepseek-flash`).
+- OpenRouter: GPT-6 Astra / Astra Pro, Claude Fable 5.1, DeepSeek V4.1 Flash,
+  Gemini 3.8 Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini / Pro
+  (free), Qwen3.8 Max 0902, and Muse Spark 1.3.
+- Models with required reasoning use their supported effort values. Native
+  Astra uses the Responses API and starts at `low`; use
+  `isOpenAIReasoningModel` and `getDefaultReasoningEffortForOpenAIModel`
+  for the expanded OpenAI family. Existing GPT-5 helpers remain available.
+- Native DeepSeek tool calling requires non-thinking mode
+  (`reasoning_effort: 'none'`). OpenRouter reasoning and vision support follow
+  the selected model's Chat capability metadata.
+- Inworld supports `inworld-tts-2-flash` in addition to the default
+  `inworld-tts-2`. Models without delivery-mode support, currently Flash, omit
+  that option and disable its control in all React examples. Voice-list
+  selection, persisted settings, and other audio options remain available.
+
+The React basic example lists the new models explicitly. Avatar examples
+load the supported model list from Core and apply the Casual preset to
+supported OpenAI reasoning models. Node examples pass the model and provider
+options through to Core.
+
 ## Table of Contents
 
 - [Overview](#overview)

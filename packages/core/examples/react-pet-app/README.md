@@ -34,6 +34,20 @@ The app keeps the same basic structure as the other React core samples:
   captions from **Settings → Visual**
 - Comment intelligence and manneri detection
 
+## Chat and Voice model updates
+
+This example uses Chat 0.55.0 and Voice 0.21.0 through Core. Select a supported
+model such as `gpt-6-astra`, `claude-fable-5-1`, or `deepseek-flash` in
+the model selector; the new OpenRouter models are also listed. OpenAI reasoning
+models use the Casual preset, with Astra routed through Responses and its
+reasoning effort normalized to `low`.
+
+The Inworld model selector includes `inworld-tts-2-flash`. Models that do not
+support Delivery Mode, currently Flash, disable that control and omit it from
+speech options, including when a previous value is stored. The default remains
+`inworld-tts-2`, and voice-list selection is unchanged. Native DeepSeek tool
+calling requires non-thinking mode.
+
 ## Screen Vision
 
 Start OBS Virtual Camera, choose it from **Settings → Screen Vision**, then press
