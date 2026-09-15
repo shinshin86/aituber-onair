@@ -1,6 +1,7 @@
 import type { InochiRuntimeController } from '../types/inochi2d';
 
 type InochiRuntimeSession = {
+  playEmotionAnimation?: (emotion: string) => Promise<void>;
   getController: () => InochiRuntimeController | null;
   getRegisteredParameterIds: () => string[];
   getBaseParameterValue: (parameterId: string) => number;

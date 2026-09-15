@@ -106,6 +106,7 @@ if (
 }
 
 for (const forbiddenModel of [
+  'Aka.inx',
   'Aka.original-rig.inx',
   'Aka.original.motion.json',
 ]) {

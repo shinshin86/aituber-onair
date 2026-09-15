@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+import { InochiMotionPanel } from './InochiMotionPanel';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type React from 'react';
 import { useInochi2D } from '../hooks/useInochi2D';
@@ -30,6 +32,7 @@ import {
 } from './EmotionEffectOverlay';
 
 interface Inochi2DStageProps {
+  motionSettingsContainer?: HTMLDivElement | null;
   selectedModelId?: string;
   customModel?: ResolvedInochiModelDefinition | null;
   modelPickerError: string;
@@ -66,6 +69,7 @@ const EFFECT_ANCHOR_TARGETS = [
 }>;
 
 export function Inochi2DStage({
+  motionSettingsContainer,
   selectedModelId,
   customModel,
   modelPickerError,
@@ -88,11 +92,28 @@ export function Inochi2DStage({
     resetCameraTransform,
     applyInteractionImpulse,
     playReactionAnimation,
+    playEmotionAnimation,
+    motionNames,
+    motionProfile,
+    motionNotice,
+    updateMotionProfile,
+    previewMotion,
+    resumeIdleMotion,
   } = useInochi2D({
     selectedModelId,
     customModel,
     onModelResolved,
   });
+  const loopPreviewRef = useRef(false);
+  // Playback belongs to the mounted stage, independently of the dialog portal.
+  useEffect(() => {
+    if (!motionSettingsContainer && loopPreviewRef.current) {
+      loopPreviewRef.current = false;
+      void resumeIdleMotion().catch((error: unknown) =>
+        console.error('Failed to restore idle motion', error),
+      );
+    }
+  }, [motionSettingsContainer, resumeIdleMotion]);
   const [isDraggingCamera, setIsDraggingCamera] = useState(false);
   const [manualReaction, setManualReaction] = useState<Inochi2DReaction | null>(
     null,
@@ -420,6 +441,44 @@ export function Inochi2DStage({
           </>
         )}
       </div>
+      {motionSettingsContainer &&
+        createPortal(
+          status === 'ready' && activeModel ? (
+            <InochiMotionPanel
+              key={activeModel.modelUrl}
+              names={motionNames}
+              profile={motionProfile}
+              notice={motionNotice}
+              defaultIdle={
+                activeModel.idleAnimations?.length
+                  ? activeModel.idleAnimations
+                  : activeModel.autoAnimation
+                    ? [activeModel.autoAnimation]
+                    : []
+              }
+              defaultEmotions={activeModel.emotionAnimations ?? {}}
+              onChange={async (profile) => {
+                if (profile.idle !== motionProfile.idle)
+                  loopPreviewRef.current = false;
+                await updateMotionProfile(profile);
+              }}
+              onPreview={async (name, loop) => {
+                loopPreviewRef.current = loop;
+                await previewMotion(name, loop);
+              }}
+              onResume={async () => {
+                loopPreviewRef.current = false;
+                await resumeIdleMotion();
+              }}
+              onEmotion={playEmotionAnimation}
+            />
+          ) : (
+            <p className="inochi-motion-loading" role="status">
+              {error || 'モデルを読み込むとモーションを設定できます。'}
+            </p>
+          ),
+          motionSettingsContainer,
+        )}
       {showManualControls && (
         <div
           className="avatar-expression-controls"

@@ -58,8 +58,7 @@ Rust 製で、Inochi2D 公式の Rust 実装である
 ```txt
 packages/core/examples/react-inochi2d-app/public/inochi2d/models/
 ├── Aka.ATTRIBUTION.md
-├── Aka.original-rig.inx
-└── Aka.original.motion.json
+└── Aka.inx
 ```
 
 別の manifest モデルを使う場合は `public/inochi2d/models/` にモデルを配置し、
@@ -78,16 +77,21 @@ packages/core/examples/react-inochi2d-app/public/inochi2d/models/
     {
       "id": "aka",
       "name": "Aka",
-      "model": "./models/Aka.original-rig.inx",
-      "motion": "./models/Aka.original.motion.json",
+      "model": "./models/Aka.inx",
       "attribution": {
         "title": "Aka",
         "author": "seagetch",
         "license": "Creative Commons Attribution 4.0 International",
         "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
         "sourceUrl": "https://github.com/Inochi2D/example-models",
-        "changes": "Rig and idle motion adapted for the AITuber OnAir Inochi2D example."
-      }
+        "changes": "Extended rig and embedded animations, including expressions, body motion, ears, tail tip, and head leaf."
+      },
+      "idleAnimations": ["Energetic Sway"],
+      "emotionAnimations": {
+        "happy": ["Yatta Celebration"],
+        "surprised": ["Surprise then Shy"]
+      },
+      "parameters": []
     }
   ]
 }
