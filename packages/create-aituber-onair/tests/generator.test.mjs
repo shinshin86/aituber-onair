@@ -109,10 +109,16 @@ test('npm pack includes generated templates without ignored assets', async () =>
     packedFiles.some((file) => file.includes('hiyori_pro_jp')),
     false,
   );
-  assert.equal(
-    packedFiles.some((file) => file.endsWith('Aka.original-rig.inx')),
-    false,
-  );
+  for (const model of [
+    'Aka.original-rig.inx',
+    'Aka.original.motion.json',
+    'Aka.animal-details.inx',
+  ]) {
+    assert.equal(
+      packedFiles.some((file) => file.endsWith(model)),
+      false,
+    );
+  }
   assert.ok(packResult.size <= maximumPackedBytes);
   assert.ok(packResult.unpackedSize <= maximumUnpackedBytes);
 });

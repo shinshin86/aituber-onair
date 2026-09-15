@@ -112,6 +112,7 @@
         "scripts/download-inochi2d-sample-model.mjs"
       ],
       "excludeTracked": [
+        "public/inochi2d/models/Aka.animal-details.inx",
         "public/inochi2d/models/Aka.original-rig.inx",
         "public/inochi2d/models/Aka.original.motion.json"
       ],
