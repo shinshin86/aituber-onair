@@ -28,6 +28,17 @@ import { registerInochiRuntimeSession } from '../lib/inochi2dRuntimeSession';
 import { resetInochi2DMouthToIdle } from '../lib/inochi2dLipSync';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import {
+  applyIdleMotionProfile,
+  emptyMotionProfile,
+  getMotionProfileKey,
+  playProfileEmotion,
+  playMotionClip,
+  readMotionProfile,
+  writeMotionProfile,
+  type MotionProfile,
+} from '../lib/inochi2dMotionProfiles';
+
 type HookStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 type ResizeSubscription = {
@@ -183,6 +194,16 @@ export const useInochi2D = ({
   const [cameraTransform, setCameraTransformState] =
     useState<InochiCameraTransform>(DEFAULT_CAMERA_TRANSFORM);
 
+  const [motionNames, setMotionNames] = useState<string[]>([]);
+  const [motionProfile, setMotionProfile] =
+    useState<MotionProfile>(emptyMotionProfile);
+  const [motionNotice, setMotionNotice] = useState('');
+  const motionStateRef = useRef({
+    key: '',
+    names: [] as string[],
+    profile: emptyMotionProfile(),
+  });
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const controllerRef = useRef<InochiRuntimeController | null>(null);
   const activeModelRef = useRef<ResolvedInochiModelDefinition | null>(null);
@@ -272,6 +293,18 @@ export const useInochi2D = ({
   const syncRuntimeSession = useCallback(() => {
     registerInochiRuntimeSession({
       getController: () => controllerRef.current,
+      playEmotionAnimation: async (emotion) => {
+        const controller = controllerRef.current;
+        if (!controller || !activeModelRef.current) return;
+        const { profile, names } = motionStateRef.current;
+        await playProfileEmotion(
+          controller,
+          profile,
+          names,
+          emotion,
+          activeModelRef.current.emotionAnimations,
+        );
+      },
       getRegisteredParameterIds: () =>
         activeModelRef.current?.parameters.map((parameter) => parameter.id) ??
         [],
@@ -357,11 +390,15 @@ export const useInochi2D = ({
 
   const playEmotionAnimation = useCallback(async (emotionName: string) => {
     const controller = controllerRef.current;
-    if (!controller || typeof controller.playEmotionAnimation !== 'function') {
-      return;
-    }
-
-    await Promise.resolve(controller.playEmotionAnimation(emotionName));
+    if (!controller) return;
+    const { profile, names } = motionStateRef.current;
+    await playProfileEmotion(
+      controller,
+      profile,
+      names,
+      emotionName,
+      activeModelRef.current?.emotionAnimations,
+    );
   }, []);
 
   const loadModelIntoController = useCallback(
@@ -381,6 +418,7 @@ export const useInochi2D = ({
       if (activeModelRef.current?.id !== model.id) {
         const modelRunId = ++modelRunIdRef.current;
         setStatus('loading');
+        activeModelRef.current = null;
         setError(null);
         await Promise.resolve(
           controller.loadModel(model.modelUrl, model.motionUrl),
@@ -388,42 +426,24 @@ export const useInochi2D = ({
         if (modelRunId !== modelRunIdRef.current) {
           return;
         }
-        const idleAnimations =
-          model.idleAnimations && model.idleAnimations.length > 0
-            ? model.idleAnimations
-            : model.autoAnimation
-              ? [model.autoAnimation]
-              : [];
-        if (typeof controller.configureAnimationGroups === 'function') {
-          await Promise.resolve(
-            controller.configureAnimationGroups({
-              idleAnimations,
-              idleAnimationProfiles: model.idleAnimationProfiles,
-              reactionAnimations: model.reactionAnimations,
-              emotionAnimations: model.emotionAnimations,
-            }),
-          );
+        const names = (await controller.getAnimationNames?.()) ?? [];
+        let key = '';
+        let profile = emptyMotionProfile();
+        let notice = '';
+        try {
+          key = await getMotionProfileKey(model);
+          profile = readMotionProfile(key);
+        } catch {
+          notice =
+            '保存済み設定を読み込めませんでした。今回の画面内では設定できます。';
         }
-        if (
-          idleAnimations.length > 0 &&
-          typeof controller.playIdleAnimations === 'function'
-        ) {
-          await Promise.resolve(
-            controller.playIdleAnimations(idleAnimations, {
-              shuffle: true,
-            }),
-          );
-        } else if (
-          model.autoAnimation &&
-          typeof controller.playAnimation === 'function'
-        ) {
-          await Promise.resolve(
-            controller.playAnimation(model.autoAnimation, {
-              loop: true,
-              restart: true,
-            }),
-          );
-        }
+        if (modelRunId !== modelRunIdRef.current) return;
+        motionStateRef.current = { key, names, profile };
+        setMotionNames(names);
+        setMotionProfile(profile);
+        setMotionNotice(notice);
+        await applyIdleMotionProfile(controller, model, profile, names);
+        if (modelRunId !== modelRunIdRef.current) return;
         activeModelRef.current = model;
         setActiveModel(model);
         syncRuntimeSession();
@@ -612,6 +632,47 @@ export const useInochi2D = ({
     void applyCameraTransform();
   }, [applyCameraTransform, status]);
 
+  const updateMotionProfile = useCallback(async (profile: MotionProfile) => {
+    const controller = controllerRef.current;
+    const model = activeModelRef.current;
+    if (!controller || !model) return;
+    const previous = motionStateRef.current;
+    motionStateRef.current = { ...previous, profile };
+    setMotionProfile(profile);
+    try {
+      if (!previous.key) throw new Error('Missing model identity');
+      writeMotionProfile(previous.key, profile);
+      setMotionNotice('このモデルの設定をブラウザに保存しました。');
+    } catch {
+      setMotionNotice(
+        'ブラウザに保存できませんでした。今回の画面内だけに適用します。',
+      );
+    }
+    if (previous.profile.idle !== profile.idle) {
+      await applyIdleMotionProfile(
+        controller,
+        model,
+        profile,
+        previous.names,
+        true,
+      );
+    }
+  }, []);
+
+  const previewMotion = useCallback(async (name: string, loop: boolean) => {
+    if (!motionStateRef.current.names.includes(name)) return;
+    const controller = controllerRef.current;
+    if (controller) await playMotionClip(controller, name, loop);
+  }, []);
+
+  const resumeIdleMotion = useCallback(async () => {
+    const controller = controllerRef.current;
+    const model = activeModelRef.current;
+    if (!controller || !model) return;
+    const { profile, names } = motionStateRef.current;
+    await applyIdleMotionProfile(controller, model, profile, names, true);
+  }, []);
+
   const setCanvasRef = useCallback((node: HTMLCanvasElement | null) => {
     setCanvasElement(node);
   }, []);
@@ -629,5 +690,11 @@ export const useInochi2D = ({
     applyInteractionImpulse,
     playReactionAnimation,
     playEmotionAnimation,
+    motionNames,
+    motionProfile,
+    motionNotice,
+    updateMotionProfile,
+    previewMotion,
+    resumeIdleMotion,
   };
 };

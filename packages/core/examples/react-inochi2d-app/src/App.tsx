@@ -1,3 +1,4 @@
+import { getInochiRuntimeSession } from './lib/inochi2dRuntimeSession';
 import {
   useCallback,
   useEffect,
@@ -49,6 +50,11 @@ export default function App() {
   const { play, stop, isSpeaking } = useAudioLipsync();
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsCategory, setSettingsCategory] = useState<
+    'avatar' | 'conversation'
+  >('avatar');
+  const [motionSettingsContainer, setMotionSettingsContainer] =
+    useState<HTMLDivElement | null>(null);
   const [settingsDialogOffset, setSettingsDialogOffset] =
     useState<DialogDragPoint>(DEFAULT_SETTINGS_DIALOG_OFFSET);
   const [settingsDialogDragging, setSettingsDialogDragging] = useState(false);
@@ -156,6 +162,13 @@ export default function App() {
 
   const handleSpeechStart = useCallback(
     (screenplay: { emotion?: string; text?: string }) => {
+      if (screenplay.emotion) {
+        void getInochiRuntimeSession()
+          ?.playEmotionAnimation?.(screenplay.emotion)
+          .catch((error: unknown) =>
+            console.error('Emotion motion failed', error),
+          );
+      }
       const reaction = createLinkedInochi2DReaction(
         settingsHook.settings.visual.inochi2dReactionControlMode,
         screenplay,
@@ -458,6 +471,7 @@ export default function App() {
   return (
     <div className="app">
       <ChatPanel
+        motionSettingsContainer={motionSettingsContainer}
         messages={messages}
         partialResponse={partialResponse}
         isProcessing={isProcessing}
@@ -513,6 +527,7 @@ export default function App() {
             >
               <h2>設定</h2>
               <button
+                aria-label="設定を閉じる"
                 className="settings-dialog-close"
                 onClick={closeSettingsDialog}
                 type="button"
@@ -520,87 +535,116 @@ export default function App() {
                 &times;
               </button>
             </div>
+            <nav className="settings-category-nav" aria-label="設定カテゴリ">
+              <button
+                type="button"
+                aria-pressed={settingsCategory === 'avatar'}
+                onClick={() => setSettingsCategory('avatar')}
+              >
+                アバター・モーション
+              </button>
+              <button
+                type="button"
+                aria-pressed={settingsCategory === 'conversation'}
+                onClick={() => setSettingsCategory('conversation')}
+              >
+                AI・音声・配信
+              </button>
+            </nav>
             <div className="settings-dialog-body">
-              <section className="inochi2d-model-panel">
-                <h3>Inochi2D</h3>
-                <div className="settings-field">
-                  <label>`public/inochi2d/manifest.json` のモデル</label>
-                  <select
-                    value={
-                      selectedModelId === INOCHI2D_CUSTOM_MODEL_ID
-                        ? ''
-                        : selectedModelId
-                    }
-                    onChange={(event) => {
-                      setSelectedModelId(event.target.value);
-                      setModelPickerError('');
-                    }}
-                    disabled={manifestLoading || manifestModels.length === 0}
-                  >
-                    {manifestLoading ? (
-                      <option value="">manifest を読み込み中...</option>
-                    ) : manifestModels.length === 0 ? (
-                      <option value="">manifest にモデルがありません</option>
-                    ) : (
-                      manifestModels.map((model) => (
-                        <option key={model.id} value={model.id}>
-                          {model.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                  <p className="settings-field-hint">
-                    ランタイムと manifest は
-                    `packages/core/examples/react-inochi2d-app/public/inochi2d/`
-                    配下から読み込みます。manifest にモデルを追加した場合は dev
-                    サーバーを再起動してください。
-                  </p>
-                </div>
+              {settingsCategory === 'avatar' && (
+                <>
+                  <section className="inochi2d-model-panel">
+                    <h3>アバター</h3>
+                    <div className="settings-field">
+                      <label htmlFor="inochi-model-select">モデル</label>
+                      <select
+                        id="inochi-model-select"
+                        value={selectedModelId}
+                        onChange={(event) => {
+                          setSelectedModelId(event.target.value);
+                          setModelPickerError('');
+                        }}
+                        disabled={
+                          manifestLoading || manifestModels.length === 0
+                        }
+                      >
+                        {customModel && (
+                          <option value={INOCHI2D_CUSTOM_MODEL_ID}>
+                            {customModel.name}（ローカル）
+                          </option>
+                        )}
+                        {manifestLoading ? (
+                          <option value="">manifest を読み込み中...</option>
+                        ) : manifestModels.length === 0 ? (
+                          <option value="">
+                            manifest にモデルがありません
+                          </option>
+                        ) : (
+                          manifestModels.map((model) => (
+                            <option key={model.id} value={model.id}>
+                              {model.name}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
 
-                <div className="settings-field">
-                  <label>ローカル Inochi2D モデル</label>
-                  <input
-                    type="file"
-                    accept=".inx,.inp"
-                    onChange={(event) => {
-                      handleCustomModelFileChange(
-                        event.currentTarget.files?.[0] ?? null,
-                      );
-                      event.currentTarget.value = '';
-                    }}
-                  />
-                  <p className="settings-field-hint">
-                    `.inx` または `.inp` ファイルを一時的に読み込みます。motion
-                    JSON が必要なモデルは manifest に登録してください。
-                  </p>
-                  <div className="settings-file-actions">
-                    <span className="settings-file-status">
-                      {activeModelLabel}
-                    </span>
-                    <button
-                      className="settings-clear-button"
-                      type="button"
-                      onClick={handleClearCustomModel}
-                      disabled={!customModel}
-                    >
-                      カスタムをクリア
-                    </button>
-                  </div>
-                  {modelPickerError && (
-                    <p className="settings-field-error">{modelPickerError}</p>
-                  )}
-                </div>
-              </section>
+                    <details className="inochi-local-model">
+                      <summary>モデルファイルを読み込む</summary>
+                      <div className="settings-field">
+                        <label>ローカル Inochi2D モデル</label>
+                        <input
+                          type="file"
+                          accept=".inx,.inp"
+                          onChange={(event) => {
+                            handleCustomModelFileChange(
+                              event.currentTarget.files?.[0] ?? null,
+                            );
+                            event.currentTarget.value = '';
+                          }}
+                        />
+                        <p className="settings-field-hint">
+                          `.inx` または `.inp` ファイルを一時的に読み込みます。
+                          読み込み後、下のモーション設定から動きを選べます。
+                          割り当ては同じファイルを選び直すと復元されます。
+                        </p>
+                        <div className="settings-file-actions">
+                          <span className="settings-file-status">
+                            {activeModelLabel}
+                          </span>
+                          <button
+                            className="settings-clear-button"
+                            type="button"
+                            onClick={handleClearCustomModel}
+                            disabled={!customModel}
+                          >
+                            カスタムをクリア
+                          </button>
+                        </div>
+                        {modelPickerError && (
+                          <p className="settings-field-error">
+                            {modelPickerError}
+                          </p>
+                        )}
+                      </div>
+                    </details>
+                  </section>
+                  <div ref={setMotionSettingsContainer} />
+                </>
+              )}
 
-              <SettingsPanel
-                {...settingsHook}
-                isProcessing={isProcessing}
-                backgroundImageUrl={backgroundImageUrl}
-                streamErrorMessage={streamErrorMessage}
-                screenVisionController={screenVisionController}
-                onBackgroundImageChange={handleBackgroundImageChange}
-                onResetKizunaData={resetKizunaData}
-              />
+              {settingsCategory === 'conversation' && (
+                <SettingsPanel
+                  {...settingsHook}
+                  isProcessing={isProcessing}
+                  backgroundImageUrl={backgroundImageUrl}
+                  streamErrorMessage={streamErrorMessage}
+                  screenVisionController={screenVisionController}
+                  onBackgroundImageChange={handleBackgroundImageChange}
+                  onResetKizunaData={resetKizunaData}
+                />
+              )}
             </div>
           </div>
         </div>

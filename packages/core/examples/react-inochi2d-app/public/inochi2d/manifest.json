@@ -5,8 +5,27 @@
     "wasm": "./runtime/inochi2d_bg.wasm",
     "maxDevicePixelRatio": 1.25
   },
-  "defaultModelId": "aka",
+  "defaultModelId": "aka-animal-details",
   "models": [
+    {
+      "id": "aka-animal-details",
+      "name": "Aka（改修済み・8モーション）",
+      "model": "./models/Aka.animal-details.inx",
+      "attribution": {
+        "title": "Aka",
+        "author": "seagetch",
+        "license": "Creative Commons Attribution 4.0 International",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "sourceUrl": "https://github.com/Inochi2D/example-models",
+        "changes": "Extended rig and embedded animations, including expressions, body motion, ears, tail tip, and head leaf."
+      },
+      "idleAnimations": ["Energetic Sway"],
+      "emotionAnimations": {
+        "happy": ["Yatta Celebration"],
+        "surprised": ["Surprise then Shy"]
+      },
+      "parameters": []
+    },
     {
       "id": "aka",
       "name": "Aka",

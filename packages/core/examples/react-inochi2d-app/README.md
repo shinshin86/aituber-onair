@@ -48,6 +48,34 @@ calling requires non-thinking mode.
   follow camera dragging and zoom and are saved per model
 - Shared settings UI for LLM, TTS, screen vision, and live-comment handling
 
+## Model motion assignments
+
+Open **設定 → アバター・モーション** to configure the selected model.
+The motion section lists animations loaded by the runtime. Choose an idle animation and assign a clip to each
+emotion. Expand **すべてのモーションを試す** for one-shot or loop previews;
+**待機に戻す** returns to
+the selected idle behavior. Closing the motion settings also ends a looping
+preview and resumes idle. Emotion clips play once when speech starts and then
+return to idle. These assignments work independently of visual effect settings.
+
+**モデルの既定設定** preserves the manifest configuration, including multiple
+idle clips. **再生しない** disables animation selection for that slot; it does
+not disable breathing, blinking, physics, or other runtime behavior. An emotion
+set to this option leaves the current animation running. Missing saved clips
+are shown in the selector and are not played.
+
+Assignments are stored in this browser's local storage per model. Local files
+are identified by a SHA-256 content digest, so selecting the same file again
+restores its assignments even after a reload. Model files themselves are not
+stored: reselect a local file after reloading. A modified file has a new profile.
+For manifest entries, identity includes the model ID, model URL, and motion URL.
+The reset button restores assignments to the manifest defaults.
+
+Models must contain animation clips, or have a separate motion JSON configured
+in the manifest. The current bridge uses external motion JSON instead of the
+embedded animations when both are supplied. This UI lists the clips actually
+loaded by the bridge; it does not create keyframes or edit the model file.
+
 ## Runtime and assets
 
 The Inochi2D runtime files are placed under:

@@ -1,0 +1,228 @@
+.inochi-motion-panel {
+  padding: 20px;
+  color: #edf2f8;
+  text-align: left;
+  font-size: 0.8rem;
+}
+.inochi-motion-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.inochi-motion-heading h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.inochi-motion-heading span {
+  padding: 4px 8px;
+  background: #263e58;
+  color: #c4e0ff;
+  border-radius: 16px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.inochi-motion-panel p {
+  color: #aebfd2;
+  font-size: 0.75rem;
+  line-height: 1.65;
+  margin: 8px 0 12px;
+}
+.inochi-motion-panel .inochi-motion-intro {
+  margin-bottom: 20px;
+}
+.inochi-motion-panel fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  margin: 0 0 20px;
+}
+.inochi-motion-panel legend {
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0;
+}
+.inochi-motion-panel .inochi-motion-idle {
+  padding: 14px;
+  border: 1px solid #577aa2;
+  border-radius: 10px;
+  background: #1b2f49;
+}
+.inochi-motion-idle legend {
+  padding: 0 6px;
+  color: #d9eaff;
+}
+.inochi-motion-panel select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 8px;
+  background: #101e2e;
+  color: #fff;
+  border: 1px solid #526b87;
+  border-radius: 6px;
+  font: inherit;
+}
+.inochi-motion-panel button {
+  background: #263d55;
+  color: #fff;
+  border: 1px solid #62778c;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+}
+.inochi-motion-panel button:hover:not(:disabled) {
+  background: #365371;
+}
+.inochi-motion-panel button:focus-visible,
+.inochi-motion-panel select:focus-visible,
+.inochi-motion-panel summary:focus-visible {
+  outline: 2px solid #a5d1ff;
+  outline-offset: 2px;
+}
+.inochi-motion-panel button:disabled,
+.inochi-motion-panel fieldset:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.inochi-motion-selection {
+  display: flex;
+  gap: 8px;
+}
+.inochi-motion-columns,
+.inochi-motion-emotion {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 10px;
+}
+.inochi-motion-columns {
+  color: #98abc2;
+  font-size: 0.7rem;
+  margin-bottom: 8px;
+}
+.inochi-motion-emotion {
+  margin-bottom: 8px;
+}
+.inochi-motion-emotion button {
+  padding: 8px 5px;
+}
+.inochi-motion-panel .inochi-motion-note {
+  margin: 12px 0 0;
+}
+.inochi-motion-preview {
+  border: 1px solid #3d5571;
+  border-radius: 8px;
+  padding: 12px;
+}
+.inochi-motion-preview summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+.inochi-motion-preview summary span {
+  float: right;
+  color: #aebfd2;
+}
+.inochi-motion-preview fieldset {
+  margin: 16px 0 0;
+}
+.inochi-motion-preview select {
+  margin: 8px 0 12px;
+}
+.inochi-motion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.inochi-motion-actions label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+}
+.inochi-motion-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 18px;
+  border-top: 1px solid #364c67;
+  padding-top: 12px;
+}
+.inochi-motion-footer p {
+  margin: 0;
+  font-size: 0.7rem;
+}
+.inochi-motion-panel [role="alert"] {
+  color: #ffb7b7;
+}
+.inochi-motion-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.inochi-motion-loading {
+  padding: 20px;
+  color: #b4c6dc;
+  font-size: 0.85rem;
+}
+.settings-category-nav {
+  display: flex;
+  padding: 0 20px;
+  border-bottom: 1px solid #3d506c;
+  flex-shrink: 0;
+}
+.settings-category-nav button {
+  flex: 1;
+  padding: 13px 6px;
+  background: none;
+  color: #aebfd2;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.settings-category-nav button[aria-pressed="true"] {
+  color: #fff;
+  border-bottom-color: #e94560;
+}
+.settings-category-nav button:focus-visible {
+  outline: 2px solid #a5d1ff;
+  outline-offset: -3px;
+}
+.inochi-local-model {
+  margin: 12px 0 16px;
+}
+.inochi-local-model summary {
+  cursor: pointer;
+  color: #b7c9de;
+  font-size: 0.75rem;
+}
+.inochi-local-model .settings-field {
+  margin-top: 12px;
+}
+@media (max-width: 480px) {
+  .inochi-motion-panel {
+    padding: 16px;
+  }
+  .inochi-motion-columns,
+  .inochi-motion-emotion {
+    grid-template-columns: 44px minmax(0, 1fr) 42px;
+    gap: 6px;
+  }
+  .inochi-motion-selection {
+    flex-wrap: wrap;
+  }
+  .inochi-motion-selection select {
+    flex-basis: 100%;
+  }
+  .inochi-motion-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

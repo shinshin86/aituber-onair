@@ -8,6 +8,7 @@ import { ChatLog } from './ChatLog';
 import { Inochi2DStage } from './Inochi2DStage';
 
 interface ChatPanelProps {
+  motionSettingsContainer?: HTMLDivElement | null;
   messages: ChatMessage[];
   partialResponse: string;
   isProcessing: boolean;
@@ -26,6 +27,7 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({
+  motionSettingsContainer,
   messages,
   partialResponse,
   isProcessing,
@@ -76,6 +78,7 @@ export function ChatPanel({
         ⚙
       </button>
       <Inochi2DStage
+        motionSettingsContainer={motionSettingsContainer}
         selectedModelId={selectedModelId}
         customModel={customModel}
         modelPickerError={modelPickerError}
