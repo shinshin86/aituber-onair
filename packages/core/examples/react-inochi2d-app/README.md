@@ -108,8 +108,7 @@ model files are placed under:
 ```txt
 packages/core/examples/react-inochi2d-app/public/inochi2d/models/
 ├── Aka.ATTRIBUTION.md
-├── Aka.original-rig.inx
-└── Aka.original.motion.json
+└── Aka.inx
 ```
 
 To use another manifest model, place assets under `public/inochi2d/models/` and
@@ -128,16 +127,21 @@ add entries to `public/inochi2d/manifest.json`:
     {
       "id": "aka",
       "name": "Aka",
-      "model": "./models/Aka.original-rig.inx",
-      "motion": "./models/Aka.original.motion.json",
+      "model": "./models/Aka.inx",
       "attribution": {
         "title": "Aka",
         "author": "seagetch",
         "license": "Creative Commons Attribution 4.0 International",
         "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
         "sourceUrl": "https://github.com/Inochi2D/example-models",
-        "changes": "Rig and idle motion adapted for the AITuber OnAir Inochi2D example."
-      }
+        "changes": "Extended rig and embedded animations, including expressions, body motion, ears, tail tip, and head leaf."
+      },
+      "idleAnimations": ["Energetic Sway"],
+      "emotionAnimations": {
+        "happy": ["Yatta Celebration"],
+        "surprised": ["Surprise then Shy"]
+      },
+      "parameters": []
     }
   ]
 }

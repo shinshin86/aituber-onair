@@ -112,7 +112,7 @@ test('npm pack includes generated templates without ignored assets', async () =>
   for (const model of [
     'Aka.original-rig.inx',
     'Aka.original.motion.json',
-    'Aka.animal-details.inx',
+    'Aka.inx',
   ]) {
     assert.equal(
       packedFiles.some((file) => file.endsWith(model)),

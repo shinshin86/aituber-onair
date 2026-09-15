@@ -5,12 +5,12 @@
     "wasm": "./runtime/inochi2d_bg.wasm",
     "maxDevicePixelRatio": 1.25
   },
-  "defaultModelId": "aka-animal-details",
+  "defaultModelId": "aka",
   "models": [
     {
-      "id": "aka-animal-details",
+      "id": "aka",
       "name": "Aka",
-      "model": "./models/Aka.animal-details.inx",
+      "model": "./models/Aka.inx",
       "attribution": {
         "title": "Aka",
         "author": "seagetch",

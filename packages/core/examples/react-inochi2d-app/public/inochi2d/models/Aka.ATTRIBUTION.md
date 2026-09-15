@@ -10,7 +10,7 @@ This example bundles a derived version of the Aka Inochi2D model.
 
 ## Bundled files
 
-- `Aka.animal-details.inx`
+- `Aka.inx`
 - `Aka.original-rig.inx`
 - `Aka.original.motion.json`
 
@@ -20,7 +20,7 @@ This bundled version was adapted for the AITuber OnAir Inochi2D example.
 
 Changes include:
 
-- Extended rig and embedded animation clips in `Aka.animal-details.inx`, including expressions, body motion, ears, tail tip, and head leaf.
+- Extended rig and embedded animation clips in `Aka.inx`, including expressions, body motion, ears, tail tip, and head leaf.
 - Rig adjustments for browser-based Inochi2D rendering.
 - Additional helper rig controls for avatar motion.
 - Idle motion data adapted for the sample app.

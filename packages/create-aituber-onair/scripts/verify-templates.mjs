@@ -106,7 +106,7 @@ if (
 }
 
 for (const forbiddenModel of [
-  'Aka.animal-details.inx',
+  'Aka.inx',
   'Aka.original-rig.inx',
   'Aka.original.motion.json',
 ]) {
