@@ -6,6 +6,9 @@ AITuber OnAir Noise は、AIの返答が無難すぎるときに検出し、意�
 キャラクターを保ったまま、配信で使いやすい言葉に書き換えるための
 LLM書き換えエンジンです。
 
+任意で組み込む神経連携アダプターでは、原文の意味も変えられます。
+キャラクターらしさと会話のつながりを保ちながら、返す内容を揺らがせます。
+
 AIの返答を、予定調和で終わらせない。
 
 Noise は単なる書き換えエンジンではなく、「逸脱の演出エンジン」です。
@@ -464,3 +467,234 @@ const store = new JsonFileNoiseMemoryStore({
 このパッケージは ESM(`dist/esm`)と CommonJS(`dist/cjs`)のデュアル
 ビルドを同梱しているため、Node.js では `import` と `require` の両方が
 使えます。
+
+## 実験的な神経回路による補正
+
+脳機能を使う場合は、外部データが不要な `createVirtualNoiseBrain()` を
+標準の選択肢にできます。`modulator` を指定しなければ、従来のNoiseと
+同じ動作です。インストール時や通常の起動時にデータを自動取得しません。
+
+```ts
+import { createContaminator, createVirtualNoiseBrain } from '@aituber-onair/noise';
+
+const brain = createVirtualNoiseBrain({ seed: 42 });
+const contaminator = createContaminator({
+  model, // 既存のRewriteModel
+  modulator: brain,
+  fallbackToDraftOnQualityFail: true,
+});
+```
+
+仮想回路は1,024ニューロン、各ニューロンから16接続、24ステップを初期値と
+しています。同じseedから同じ配線を生成し、毎ターン状態をリセットします。
+配線の配列は143,380バイトで、計算状態には別途メモリが必要です。
+`neurons`、`connectionsPerNeuron`、`steps`、`dtMs` で規模や計算時間を
+調整できます。仮想回路は独自に設計したもので、ハエの実配線の再現ではありません。
+
+入力には、Noiseが計算した勢い、緊張、反復度、予測しやすさ、人格の変動度、
+視聴者の意図を使います。追加のLLM呼び出しはありません。
+興奮性・抑制性の接続を通して刺激を伝え、活動量と4つの決定的な射影から、
+介入の強さや人格パラメータへの補正を作ります。
+会話から刺激への変換も、活動から文体への変換も人工的な対応づけです。
+ハエが言葉や褒め言葉、侮辱を理解することを意味しません。
+
+計算は近似的な発火モデルです。初期値では時間刻み1ms、減衰の時定数20ms、
+発火閾値1、不応期2ms、伝播遅延1ステップ、伝播ゲイン4とし、4ステップごとに
+刺激します。仮想回路では接続元の80%を興奮性、20%を抑制性とする確率で生成します。
+学習や可塑性はありません。
+
+補正はsincerity・rhythmの判定を通過し、relationshipで許可された介入が
+存在する場合だけ実行します。強度の倍率は0.75〜1.25、介入への加算は±0.25、
+人格パラメータへの加算は±0.20に制限し、最終値も0〜1に収めます。
+不正な値や実行エラーでは補正を使わず、元の計画を続行します。
+保護対象の文字列や品質判定の既存処理は維持します。
+品質不合格時に原文へ戻すには、従来どおり `fallbackToDraftOnQualityFail: true`
+を指定してください。
+
+`output.modulation` には、適用した補正と小さな活動サマリーが入ります。
+非同期の補正処理は初期値1,000msで打ち切ります (`modulatorTimeoutMs`)。
+タイマーで同期的なCPU処理は中断できないため、フロントではWorkerの利用を
+推奨します。
+
+### 任意のMaleCNS v1.0実配線バックエンド
+
+MaleCNS版は、実際の配線を使う実験的なリザバーです。
+生きたハエを正確に再現するものではなく、配線上の近似的な点ニューロン計算です。
+元データと変換済みグラフはnpmに同梱しません。
+
+このリポジトリで `npm ci` を実行した後、開発者が明示的に準備します。
+
+```sh
+npm -w @aituber-onair/noise run malecns:prepare -- \
+  --source data/malecns-source --out data/malecns-v1 --download
+```
+
+このコマンドの相対パスは `packages/noise` を基準に解釈します。
+公式ファイルを取得済みなら `--download` を省略できます。
+出力先は新しいディレクトリを指定してください。途中で失敗した場合も、再実行では
+別の出力先を使います。完了した場合だけ最後にmanifestを書き出します。
+Node.js 20以上、Apache Arrow 21.2、LZ4デコーダーを使い、接続表をバッチ単位で
+2回走査します。接続ごとのJavaScriptオブジェクトは生成しません。
+
+保持対象は `superclass` が空でない神経細胞で、明示的なグリアを除外します。
+保持対象同士の接続は自己接続を含めて残し、重みの閾値は設けません。
+このリリースでは166,700ニューロン・25,582,938接続との一致を要求し、
+異なれば変換を停止します。
+
+伝達物質には `consensus_nt` を使い、アセチルコリンを正、GABA・グルタミン酸・
+ヒスタミンを負、それ以外や不明なものを0とする近似を採用しています。
+符号付き重みを、接続先への入力重みの絶対値合計で正規化します。
+生物学的な作用を普遍的に表す規則ではありません。
+`--signs signs.json` で符号表を置き換えられます。値は-1・0・1で、未定義の名前は
+0です。実効重みが0になった接続もグラフには残します。
+
+注釈でLC4・LPLC2・LPLC1・LC10aとされた集団を、6つの中立的な入力チャンネルへ
+決定的に分割します。読み出しには `superclass` が `descending_neuron` の集団を
+含めます。これらの細胞が会話の意味や感情を担当するという主張ではありません。
+
+```ts
+import { loadMaleCnsNoiseBrain } from '@aituber-onair/noise/node';
+
+const brain = await loadMaleCnsNoiseBrain({
+  dataDir: './data/malecns-v1',
+  seed: 42,
+});
+// createContaminator({ model, modulator: brain }) に渡す
+```
+
+実行時はmanifestのバージョン・件数とグラフのSHA-256を確認します。
+manifestには元ファイルのハッシュ、変換条件、生成日時も記録します。
+ハッシュは破損検出用で、配布元の認証ではないため、信頼できるmanifestを使ってください。
+
+### フロントでの配置とWorker
+
+開発者が変換済みファイルを準備し、アプリから参照できる明示的なURLに
+`manifest.json` と `graph.bin` を配置します。
+GitHub Releasesは開発者向けの配布元にできますが、この試作はReleaseの公開や
+自動取得を行いません。アプリと同じ配信先に置いても、ブラウザで読み込む際の
+転送は必要です。通常は仮想回路を使い、実配線版の読み込みはアプリ側で明示的に
+選択する構成にしてください。
+
+```ts
+// brain.worker.ts: 読み込み中の要求も受け取れるよう、Promiseのまま渡す
+import { exposeNoiseBrainWorker, loadMaleCnsNoiseBrain } from '@aituber-onair/noise/web';
+exposeNoiseBrainWorker(self, loadMaleCnsNoiseBrain({
+  manifestUrl: '/data/malecns-v1/manifest.json',
+}));
+// 仮想回路の場合はcreateVirtualNoiseBrain()を渡す
+```
+
+```ts
+// アプリ側。大きなグラフの初回読み込みを考慮した待ち時間の例
+import { createWorkerNoiseModulator } from '@aituber-onair/noise/web';
+const worker = new Worker(new URL('./brain.worker.ts', import.meta.url), {
+  type: 'module',
+});
+const modulator = createWorkerNoiseModulator(worker, 30_000);
+const contaminator = createContaminator({
+  model, modulator, modulatorTimeoutMs: 31_000,
+  fallbackToDraftOnQualityFail: true,
+});
+// 不要になったらmodulator.dispose()を呼ぶ
+```
+
+Workerの異常時は待機中の要求を失敗として扱い、タイムアウト時はWorkerを終了します。
+その後もNoiseは補正なしで応答できます。再試行する場合はWorkerを作り直します。
+同梱の通信処理が返すのは小さな補正サマリーだけです。
+ニューロン単位のスナップショットを画面へ送る場合は、アプリ側で通信処理を追加します。
+ハッシュ検証にはHTTPSまたはlocalhostが必要です。
+SharedArrayBufferやcross-origin isolation用のヘッダーは使いません。
+
+### 活動の取得とデータ形式
+
+`brain.getActivitySnapshot()` は直近のターンの発火回数をコピーして返します。
+`brain.getBodyIds()` の同じ位置が対応するIDです。仮想回路のIDは人工的なものです。
+発火回数はシミュレーション上の活動であり、その細胞が出力を引き起こしたことの
+証明ではありません。
+
+変換時には、任意の可視化用に `metadata.json` と `soma-positions.f32` も保存します。
+後者は1ニューロンにつきXYZのFloat32で、追加容量は2,000,400バイトです。
+座標はMaleCNS EMの8nmボクセル単位で、欠損はNaNです。シミュレータはこの2ファイルを
+読み込みません。IDと座標を使えば活動を点で表示できますが、神経の枝、脳のメッシュ、
+ハエの身体や動作には別の形状データと描画処理が必要です。
+今回のパッケージには描画UIやNeuroMechFlyを含めていません。
+
+`graph.bin` はリトルエンディアン形式です。32ビットのヘッダー4値
+(magic `0x3142524e`、形式バージョン1、ニューロン数N、接続数E)の後に、
+offsets (N+1)、body IDs (N)、flags (N)、targets (E)、Float32 weights (E)が続きます。
+flagsはbit 0が下降ニューロン、bit 1が左、bit 2が右、bit 8〜15が入力チャンネル
+(255は入力なし)です。今回の実配線グラフは206,663,924バイトです。
+
+```sh
+npm -w @aituber-onair/noise run example:brain
+# ビルド後、実データを読み込んで検証する場合
+MALECNS_DATA_DIR=./packages/noise/data/malecns-v1 \
+  node packages/noise/scripts/brain-example.mjs
+```
+
+サンプルは補正の有無による計画の違い、読み込み時間、計算時間、活動、メモリを表示します。
+オフラインの書き換えモデルは原文を返すスタブです。接続処理の確認用であり、
+文章の品質が改善したことを示す比較ではありません。
+CIでは小さな人工グラフを使い、実データを必要としません。
+計算部分はTypeScriptで、Wasmやネイティブコードのコンパイルは不要です。
+
+データの出典は[MaleCNSプロジェクト](https://male-cns.janelia.org/)です。
+FlyEM (HHMI Janelia)、University of Cambridge、MRC Laboratory of Molecular Biology、
+Google Researchによるデータで、[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+が適用されます。変換結果には帰属表示と変換内容を添付します。
+シミュレータは独自に実装し、他のハエシミュレータからコードをコピーしていません。
+
+### チャットと神経活動のサンプル
+
+```sh
+npm -w @aituber-onair/noise run example:brain-chat
+```
+
+`@aituber-onair/chat` のプロバイダーとモデルを選択し、AIとのチャット、
+Noise前後の返答比較、ニューロンの活動再生を試せます。
+仮想回路とMaleCNSを切り替え、点や活動リストからID・注釈・発火回数を確認できます。
+記録には `captureActivity: true` と `brain.getActivityTrace()` を使います。
+通常の利用では記録を有効にする必要はありません。
+接続設定・データ配置・表示の意味は
+[サンプルのREADME](./examples/noise-brain-chat/README.ja.md)を参照してください。
+
+神経反応に沿った文章構成をCodex SDKで反復評価する場合は、
+[CLIサンプル](./examples/neural-rewrite-cli/README.ja.md)を参照してください。
+
+### 神経状態から返答を作る
+
+```ts
+import { createContaminator, createVirtualNoiseBrain,
+  createNeuralReactionModel, createChatRewriteModel } from '@aituber-onair/noise';
+
+const brain = createVirtualNoiseBrain({
+  seed: 42, steps: 32, captureReadout: true, retainState: true,
+});
+const noise = createContaminator({
+  model: createNeuralReactionModel({
+    brain,
+    model: createChatRewriteModel({ service: chatService }),
+    onTrace: (trace) => console.log(trace.state),
+  }),
+  mode: 'chaotic',
+  intensity: 0.9,
+  relationshipCapital: 0.8,
+  quality: { minLengthRatio: 0.8, maxLengthRatio: 1.1 },
+  fallbackToDraftOnQualityFail: true,
+});
+```
+
+`chatService` は設定済みのAITuber OnAir Chatサービスです。
+コメントを6種類の刺激値へ変換して回路を動かします。原文を節ごとに区切り、各節を固定ハッシュで読み出し集団へ対応づけます。その集団の発火を初期・後半に分けて集計し、内容への注意の重みを作ります。区切りと対応先はコードで決まります。ただし、この対応は人工的なものです。語句が変われば対応先も変わり、意味を学習した回路やハエの言語機能を再現するものではありません。
+
+発話を作るLLMには原文、キャラクター、内容ごとの注意の重みを渡します。原文は返答の下案として扱い、受け取り方、意見、その場の気持ちや判断、返す内容を変えられます。原文の全情報を残す必要はありません。キャラクターらしさと会話のつながりを保ち、過去の出来事や外部の事実は作りません。数字・URL・コードなどの保護は維持します。通常の介入計画に代えて `shift_attention` を使い、誠実度・関係性・リズムの判定は維持します。
+
+文字数は原文の0.8〜1.1倍です。通常は刺激分類、発話、話のつながり・キャラクター・注意の監査で3回のLLM呼び出しを行います。2候補を順に検査し、全候補が落ちた場合は1回だけ再生成します。最大7回で通らなければ原文を返します。注意の偏りが小さい場合も `neural_unfocused` として原文を返します。モデル検査の通過は、複数出力の多様性や神経状態の寄与を証明しません。
+
+`captureReadout: true` が必要です。独自のmodulatorでは `readoutKeys` を受け取り、同じ順序の `contentKeys` と各フレームの `contentAxes` を返してください。対応する読み出しがない場合は原文へ戻ります。
+
+`retainState: true` は膜電位と伝達中の信号を次のターンへ残します。ターン間にはシミュレーション上の8msの無刺激期間を置きます。実時間の経過には対応しません。会話ごとに別のインスタンスを使い、新しい会話では `brain.reset()` してください。既定値の `false` は従来どおり各回リセットします。
+
+`onTrace` は刺激、原文の節（`facts` / `anchors`）、注意の重み（`attention`）、発火集計、候補と不採用理由を返します。従来の `state` は診断用に残していますが、発話生成には使いません。採用結果は `output.text` と `output.rewriteTrace` で確認します。回路そのものをLLMへ送ることはありません。
+
+`captureReadout` は小さな時系列集計だけを保存します。実配線を使う場合はローダーにも同じオプションを渡してください。新しい方式は明示的に指定したときだけ働き、通常のNoiseの動作は変わりません。CLIの実行方法と評価項目は[CLIサンプル](examples/neural-rewrite-cli/README.ja.md)を参照してください。

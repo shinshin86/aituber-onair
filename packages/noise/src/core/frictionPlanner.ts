@@ -1,3 +1,5 @@
+import { bounded } from '../brain/modulation.js';
+import type { NoiseModulation } from '../brain/modulation.js';
 import { clamp01 } from './random.js';
 import {
   getRecentlyOverusedStains,
@@ -59,6 +61,8 @@ export function buildInterventionPlan(input: {
   allowedInterventions?: ReadonlySet<InterventionKind>;
   /** A gag-ledger moment to resurface as a callback this turn. */
   callbackMaterial?: string;
+  interventionBias?: NoiseModulation['interventionBias'];
+  rewriteTarget?: 'attention';
 }): InterventionPlan {
   const intensity = clamp01(input.intensity);
   const maxCount = getMaxInterventionCount(input.mode);
@@ -125,14 +129,28 @@ export function buildInterventionPlan(input: {
     maxCount,
     memory: input.memory,
     allowedInterventions: input.allowedInterventions,
+    interventionBias: input.interventionBias,
   });
 
   return {
     intensity,
     targetIssues: input.diagnosis.issues.map((issue) => issue.kind),
-    interventions: selected,
+    interventions:
+      input.rewriteTarget === 'attention'
+        ? !input.allowedInterventions ||
+          input.allowedInterventions.has('shift_attention')
+          ? [
+              {
+                kind: 'shift_attention',
+                reason:
+                  'Neural attention may change the response meaning while keeping a coherent, recognizable character.',
+                strength: intensity,
+              },
+            ]
+          : []
+        : selected,
     preserve: {
-      meaning: true,
+      meaning: input.rewriteTarget !== 'attention',
       persona: true,
       facts: true,
       safety: true,
@@ -222,6 +240,7 @@ export function buildFrictionParameters(input: {
   context: ContextFingerprint;
   plan: InterventionPlan;
   constraints?: ContaminateConstraints;
+  personaDelta?: NoiseModulation['personaDelta'];
 }): FrictionParameters {
   const predictability = createIssueRecord();
 
@@ -242,11 +261,26 @@ export function buildFrictionParameters(input: {
         input.context.commonGroundHints.length > 0 ? 0.65 : 0.2,
     },
     persona: {
-      warmth: inferPersonaWarmth(input.context),
-      bluntness: inferPersonaBluntness(input.context),
-      volatility: input.context.personaVolatility,
-      humor: input.context.userEnergy >= 0.55 ? 0.55 : 0.25,
-      politeness: inferPersonaPoliteness(input.context),
+      warmth: clamp01(
+        inferPersonaWarmth(input.context) +
+          bounded(input.personaDelta?.warmth, -0.2, 0.2)
+      ),
+      bluntness: clamp01(
+        inferPersonaBluntness(input.context) +
+          bounded(input.personaDelta?.bluntness, -0.2, 0.2)
+      ),
+      volatility: clamp01(
+        input.context.personaVolatility +
+          bounded(input.personaDelta?.volatility, -0.2, 0.2)
+      ),
+      humor: clamp01(
+        (input.context.userEnergy >= 0.55 ? 0.55 : 0.25) +
+          bounded(input.personaDelta?.humor, -0.2, 0.2)
+      ),
+      politeness: clamp01(
+        inferPersonaPoliteness(input.context) +
+          bounded(input.personaDelta?.politeness, -0.2, 0.2)
+      ),
     },
     interventions: input.plan.interventions,
     constraints: {
@@ -265,15 +299,25 @@ function selectInterventions(input: {
   maxCount: number;
   memory?: NoiseMemory;
   allowedInterventions?: ReadonlySet<InterventionKind>;
+  interventionBias?: NoiseModulation['interventionBias'];
 }): PlannedIntervention[] {
   const overused = new Set(
     input.memory ? getRecentlyOverusedStains(input.memory) : []
   );
-  const licensed = input.allowedInterventions
+  const allowed = input.allowedInterventions
     ? input.interventions.filter((intervention) =>
         input.allowedInterventions?.has(intervention.kind)
       )
     : input.interventions;
+  const licensed = input.interventionBias
+    ? allowed.map((item) => ({
+        ...item,
+        strength: clamp01(
+          item.strength +
+            bounded(input.interventionBias?.[item.kind], -0.25, 0.25)
+        ),
+      }))
+    : allowed;
   const byKind = new Map<InterventionKind, PlannedIntervention>();
 
   for (const intervention of licensed) {
