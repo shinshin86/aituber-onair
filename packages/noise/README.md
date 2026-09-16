@@ -823,3 +823,16 @@ visualization frames. Custom modulators must accept `readoutKeys` and return ali
 Pass the same options to the real-wiring loader when using prepared data. Wiring is
 never sent to the LLM. This is opt-in; ordinary Noise behavior is unchanged.
 See the [CLI sample](examples/neural-rewrite-cli/README.md) for execution and evaluation.
+
+### Experimental neural working memory
+
+`createNeuralWorkingMemory` recalls source conversation episodes through a small
+stateful spiking circuit. The caller provides embeddings and passes the recalled
+messages to any language model. This path generates a response from recalled
+context without rewriting a draft or sending style controls. It changes model
+input, not hidden activations; conversation quality and an advantage over ordinary
+retrieval are not established. It is a separate opt-in virtual circuit, with no
+automatic model or wiring downloads.
+
+See the [working-memory CLI](examples/neural-memory-cli/README.md) for the input
+format, state lifecycle, provider integration and limitations.

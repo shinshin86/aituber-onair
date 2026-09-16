@@ -20,10 +20,35 @@ import './styles.css';
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Missing app');
 app.innerHTML = `
-<header><a class="brand" href="#"><span class="brandmark">n.</span> AITuber OnAir <span class="slash">/</span> Noise Lab</a></header>
+<header>
+  <a class="brand" href="#"><span class="brandmark">n.</span> Noise <span class="brand-subtitle">AITuber OnAir</span></a>
+  <div class="header-actions"><div class="app-status"><span class="status-dot"></span><span id="status" role="status">回路を準備中</span></div><button id="open-settings" class="secondary" aria-haspopup="dialog">設定</button></div>
+</header>
 <main>
-<div class="app-status"><span class="status-dot"></span><span id="status" role="status">仮想回路を準備しています</span></div>
-<details id="settings" class="settings"><summary>使うAIと脳を選ぶ <span>APIキーは保存しません</span></summary><div class="settings-grid">
+<div class="workspace">
+<section class="chat-panel" aria-labelledby="chat-title">
+  <div class="panel-heading"><h1 id="chat-title">チャット</h1></div>
+  <div id="chat-log" class="chat-log" role="log" aria-label="会話"><div class="empty"><p>「設定」でAIを選ぶと会話できます。</p><p>まずは「動きを試す」で脳の表示を確認できます。</p></div></div>
+  <form id="chat-form"><label class="sr-only" for="message">メッセージ</label><textarea id="message" rows="2" placeholder="メッセージを入力…" maxlength="4000"></textarea><div class="composer-actions"><button id="demo" type="button" class="text-button" title="AIと通信せず、固定の例文で脳の動きを確認します">動きを試す</button><button id="send" type="submit" class="primary">送信</button></div></form>
+  <p id="error" role="alert"></p>
+</section>
+<section class="brain-panel" aria-labelledby="brain-title">
+  <div class="panel-heading"><h2 id="brain-title">仮想の脳</h2><span id="layout-label" class="muted">説明用の配置</span></div>
+  <div class="canvas-wrap"><canvas id="brain" aria-label="ニューロンの活動表示。詳細は活動の詳細から確認できます"></canvas><div class="canvas-top"><span id="view-state">待機中</span><button id="reset-view" class="text-button">向きを戻す ↺</button></div><span class="canvas-hint">ドラッグで回転</span><div class="legend"><span><i class="quiet"></i>反応なし</span><span><i class="active"></i>反応あり</span><span><i class="readout"></i>読み出し</span></div></div>
+  <div class="timeline"><button id="play" class="text-button" disabled>▶ 記録を再生</button><input id="frame" type="range" min="0" max="23" value="0" aria-label="活動フレーム" disabled/><span id="frame-label">記録なし</span><button id="total" class="text-button" disabled>合計</button></div>
+  <details class="calculation-details"><summary>活動の詳細</summary>
+    <p class="caption" id="trace-note">会話ごとの神経活動をゆっくり再生します。ピンクは返答の調整に使う神経です。</p>
+    <div class="metrics"><div><span>神経細胞の数</span><strong id="neurons">—</strong></div><div><span>今回反応した細胞数</span><strong id="active-count">—</strong></div><div><span>計算にかかった時間</span><strong id="elapsed">—</strong></div><div><span>今回の発火率</span><strong id="scale">—</strong></div></div>
+
+    <div id="active-list" class="active-list"><p class="muted">会話を送ると計算結果が記録されます。</p></div>
+    <p class="caption" id="geometry-note">仮想の脳は、このサンプル用に作った回路です。</p>
+  </details>
+</section>
+</div>
+</main>
+<dialog id="settings" aria-labelledby="settings-title">
+  <div class="dialog-heading"><h2 id="settings-title">設定</h2><button id="close-settings" class="text-button" autofocus>閉じる</button></div>
+  <div class="settings-grid">
 <label>使う脳の種類<select id="backend"><option value="virtual">仮想の脳（すぐに試せます）</option><option value="malecns">ハエの脳の実データ（MaleCNS）</option></select></label>
 <label id="manifest-field" hidden>ハエの脳データのURL<input id="manifest" value="/brain-data/manifest.json" /></label><button id="load" class="secondary">選んだ脳で会話を始め直す</button>
 <label>AIサービス<select id="provider"></select></label>
@@ -34,28 +59,22 @@ app.innerHTML = `
 <p id="key-help" class="settings-note">APIキーはAIサービスを利用するための認証情報です。この画面には保存されず、ページを再読み込みすると消えます。</p>
 <p id="provider-note" class="settings-note"></p>
 <label class="wide">キャラクター設定<textarea id="system" rows="2">あなたは少し気まぐれなAITuberです。日本語で短く返答します。話のつながりを大切にし、視聴者に親しみを持って接してください。</textarea></label>
-<p class="settings-note">会話の内容と、返答の書き換え指示は選んだAIサービスに送信します。</p><p id="data-help" class="settings-note" hidden>データを用意した人から案内された manifest.json のURLを入力してください。読み込み時に約207MBの配線データと、位置などの追加データを取得します。</p>
-</div></details>
-<div class="workspace">
-<section class="brain-panel"><div class="panel-heading"><div><p id="brain-title" class="eyebrow">仮想の脳</p><h2>この返答を作るときの神経の反応</h2></div><span id="layout-label" class="pill">点の配置は説明用です</span></div>
-<div class="canvas-wrap"><canvas id="brain" aria-label="ニューロンの活動表示。詳細は下の活動リストでも確認できます"></canvas><div class="canvas-top"><span id="view-state">待機中</span><button id="reset-view" class="text-button">向きを戻す ↺</button></div><span class="canvas-hint">計算結果の記録です · ドラッグで表示を回転</span><div class="legend"><span><i class="quiet"></i>反応なし</span><span><i class="active"></i>反応あり</span><span><i class="readout"></i>返答の調整に使う神経の反応</span></div></div>
-<div class="timeline"><button id="play" class="secondary" disabled>▶ 記録を再生</button><input id="frame" type="range" min="0" max="23" value="0" aria-label="活動フレーム" disabled/><span id="frame-label">記録なし</span><button id="total" class="text-button" disabled>合計</button></div><p class="caption" id="trace-note">点は神経細胞です。細胞が信号を出すことを、ここでは「反応」と表示します。メッセージごとに動きを計算して、ゆっくり再生します。</p>
-<div class="metrics"><div><span>神経細胞の数</span><strong id="neurons">—</strong></div><div><span>今回反応した細胞数</span><strong id="active-count">—</strong></div><div><span>計算にかかった時間</span><strong id="elapsed">—</strong></div><div><span>今回の発火率</span><strong id="scale">—</strong></div></div>
-<details class="calculation-details"><summary>詳しい計算結果</summary><p class="caption">反応が多かった神経細胞を8個まで表示します。番号や位置は記録の確認用です。</p><div id="active-list" class="active-list"><p class="muted">会話を送ると計算結果が記録されます。</p></div></details>
-<p class="caption" id="geometry-note">仮想の脳では、神経細胞の番号と位置をこのサンプル用に作っています。</p>
-</section>
-<section class="chat-panel"><div class="panel-heading"><div><p class="eyebrow">AIの返答に変化を加える</p><h2>話しかけてみる</h2></div><span class="pill">脳の反応を返答に使う</span></div>
-<div class="chat-options"><label>返答を変える強さ <input id="intensity" type="range" min="0" max="1" step="0.05" value="0.9"/><output id="intensity-value">0.90</output></label><label class="checkbox"><input id="force" type="checkbox" checked/>毎回、返答の変化を試す</label></div>
-<div id="chat-log" class="chat-log" aria-live="polite"><div class="empty"><p>「使うAIと脳を選ぶ」でAIを設定すると会話できます。<br/>まずは「設定なしで試す」で、脳の動きを見てみましょう。</p><div class="suggestions"><button data-prompt="今日も無難なコメントだね。もう少し本音を聞きたいな。">少し本音を聞きたいな</button><button data-prompt="今日も配信楽しみにしてたwww">配信楽しみにしてたwww</button></div></div></div>
-<form id="chat-form"><label class="sr-only" for="message">メッセージ</label><textarea id="message" rows="3" placeholder="今日も無難なコメントだね。" maxlength="4000"></textarea><div class="composer-actions"><button id="demo" type="button" class="secondary">設定なしで試す</button><button id="send" type="submit" class="primary">AIに送信 ↗</button></div></form><p id="error" role="alert"></p><p class="caption chat-foot">コメントを刺激に変え、神経の反応からAIが返答を作り直します。キャラクターらしさを保ちながら、原文とは違う受け取り方や返す内容も試します。通常、元の返答の生成後に3回、再試行時は最大7回AIを呼び出します。深刻な相談などでは、返答を変えない場合があります。「設定なしで試す」では、AIと通信せず用意済みの例文を使います。</p>
-</section></div>
-<footer><span>AITuber OnAir / Noise</span><span>図は神経の動きを簡略化して計算した結果です。ハエが言葉を理解したり、感情を持ったりしたことを示すものではありません。</span></footer></main>`;
+<p id="data-help" class="settings-note" hidden>データを用意した人から案内された manifest.json のURLを入力してください。読み込み時に約207MBの配線データと、位置などの追加データを取得します。</p>
+</div>
+  <details class="advanced-settings"><summary>返答の調整</summary><div class="chat-options"><label>返答を変える強さ <input id="intensity" type="range" min="0" max="1" step="0.05" value="0.9"/><output id="intensity-value">0.90</output></label><label class="checkbox"><input id="force" type="checkbox" checked/>毎回、返答の変化を試す</label></div>
+</details>
+  <details class="advanced-settings"><summary>このサンプルについて</summary><p class="caption">コメントを刺激に変え、神経の反応からAIが返答を作り直します。元の返答の生成後に通常3回、再試行時は最大7回AIを呼び出します。「動きを試す」ではAIと通信せず、固定の例文を表示します。</p><p class="caption">会話と返答の生成指示は選んだAIサービスに送信します。APIキーは保存しません。脳の表示は簡略化したシミュレーションで、ハエが言葉を理解したことを示すものではありません。</p></details>
+  <p id="settings-error" role="alert"></p>
+</dialog>`;
 
 function el<T extends HTMLElement>(id: string): T {
   const value = document.getElementById(id);
   if (!value) throw new Error(id);
   return value as T;
 }
+const settings = el<HTMLDialogElement>('settings');
+el('open-settings').onclick = () => settings.showModal();
+el('close-settings').onclick = () => settings.close();
 const view = new BrainView(el('brain'));
 el('backend').addEventListener('change', () => {
   const usesData = el<HTMLSelectElement>('backend').value === 'malecns';
@@ -88,6 +107,7 @@ const setStatus = (text: string) => {
 };
 const setError = (text: string) => {
   el('error').textContent = text;
+  el('settings-error').textContent = text;
 };
 function setBusy(value: boolean) {
   busy = value;
@@ -192,11 +212,11 @@ function initialize() {
       el('geometry-note').textContent =
         geometry.provider === 'virtual'
           ? '仮想の脳では、神経細胞の番号と位置をこのサンプル用に作っています。実際のハエの脳の形ではありません。'
-          : `全${geometry.neuronCount.toLocaleString()}個のうち、位置が分かる${view.positionedCount.toLocaleString()}個が表示対象です。位置が分かる細胞のうち、反応したものはすべて表示します。反応していない細胞は一部を省略します。位置が不明でも、反応が多い順に8個まで「詳しい計算結果」に表示します。出典: MaleCNS / CC BY 4.0。`;
+          : `全${geometry.neuronCount.toLocaleString()}個のうち、位置が分かる${view.positionedCount.toLocaleString()}個が表示対象です。位置が分かる細胞のうち、反応したものはすべて表示します。反応していない細胞は一部を省略します。位置が不明でも、反応が多い順に8個まで「活動の詳細」に表示します。出典: MaleCNS / CC BY 4.0。`;
       clearActivity('待機中 · 会話を送ってください');
       contaminator = makeContaminator();
       setBusy(false);
-      setStatus('準備完了 · 設定なしでも試せます');
+      setStatus('準備完了');
     } else if (data.type === 'result' && pending?.id === data.id) {
       clearTimeout(pending.deadline);
       const resolve = pending.resolve;
@@ -362,9 +382,7 @@ async function withDeadline<T>(request: Promise<T>): Promise<T> {
 }
 async function completion(history: ChatMessage[]): Promise<string> {
   if (!chatService)
-    throw new Error(
-      'AIがまだ設定されていません。「使うAIと脳を選ぶ」を確認してください。'
-    );
+    throw new Error('AIがまだ設定されていません。「設定」を確認してください。');
   const result = await withDeadline(
     chatService.chatOnce(history, false, () => undefined)
   );
@@ -468,7 +486,7 @@ async function send(demo: boolean) {
     try {
       chatService = connectChat();
     } catch (error) {
-      el<HTMLDetailsElement>('settings').open = true;
+      settings.showModal();
       setError(
         error instanceof Error ? error.message : 'AIの設定を確認してください。'
       );
@@ -562,11 +580,15 @@ async function send(demo: boolean) {
         'record-heading'
       )
     );
-    turn.append(metrics);
     const detail = document.createElement('details');
     const summary = document.createElement('summary');
-    summary.textContent = '書き換える前の返答を見る';
-    detail.append(summary, bubble(draft, 'draft'));
+    summary.textContent = '返答の詳細';
+    detail.append(
+      summary,
+      bubble('元の返答', 'record-heading'),
+      bubble(draft, 'draft'),
+      metrics
+    );
     turn.append(detail);
     const note = output.skipped
       ? `書き換えなし: ${skipLabel(output.skipped.reason)}`
@@ -575,8 +597,8 @@ async function send(demo: boolean) {
         : demo
           ? '固定の例文で接続を確認しました。文章品質の評価ではありません。'
           : '神経の反応から返答を作りました';
-    turn.append(bubble(note, 'response-meta'));
-    turn.append(
+    detail.append(bubble(note, 'response-meta'));
+    detail.append(
       bubble(
         current
           ? output.skipped
@@ -594,7 +616,7 @@ async function send(demo: boolean) {
       replay.className = 'secondary replay-turn';
       replay.dataset.record = String(current.id);
       replay.textContent = 'この返答の活動を見る';
-      turn.append(replay);
+      detail.append(replay);
       if (recordings.size > 6) {
         const oldest = recordings.keys().next().value;
         if (oldest !== undefined) {
@@ -761,7 +783,10 @@ function startPlayback() {
     else showFrame(frame);
   }, 140);
 }
-el('load').onclick = initialize;
+el('load').onclick = () => {
+  initialize();
+  settings.close();
+};
 el('reset-view').onclick = () => view.resetView();
 el('demo').onclick = () => {
   void send(true);
@@ -793,14 +818,12 @@ el('chat-log').onclick = (event) => {
     if (record) {
       current = record;
       renderActivity();
-      el('brain-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el('brain-title').scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
     }
   }
-  const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
-    '[data-prompt]'
-  );
-  if (button)
-    el<HTMLTextAreaElement>('message').value = button.dataset.prompt ?? '';
 };
 window.addEventListener('beforeunload', () => {
   worker?.terminate();

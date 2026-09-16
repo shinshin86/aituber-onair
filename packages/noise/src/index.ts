@@ -161,3 +161,10 @@ export type {
   NeuralAttention,
   NeuralAttentionPhase,
 } from './brain/neuralAttention.js';
+
+export { createNeuralWorkingMemory } from './brain/neuralWorkingMemory.js';
+export type {
+  NeuralWorkingMemory,
+  NeuralMemoryEpisode,
+  NeuralMemoryRecall,
+} from './brain/neuralWorkingMemory.js';

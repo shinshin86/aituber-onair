@@ -12,11 +12,11 @@ From the repository root:
 npm -w @aituber-onair/noise run example:brain-chat
 ```
 
-Open `http://127.0.0.1:5183`. Use **設定なしで試す** to inspect the UI
+Open `http://127.0.0.1:5183`. Use **動きを試す** to inspect the UI
 without an API: both draft and rewrite are fixed strings, but the brain and
 Noise pipeline actually run. This is not an LLM or a language-quality test.
 
-For real chat, open **使うAIと脳を選ぶ**, select a provider and model, and enter
+For real chat, open **設定**, select a provider and model, and enter
 its API key. The lists come from `@aituber-onair/chat`. For OpenAI-compatible
 or local servers, enter a model ID and the full URL including `/chat/completions`;
 the API key is optional. Gemini Nano requires a compatible browser with its
@@ -30,7 +30,7 @@ are sent only to the configured endpoint. Demo and real-chat histories are
 separated when switching modes. Recent conversation context is limited to 20
 messages. Failed rewrites retain the draft.
 
-**毎ターン試す** bypasses the rhythm wait so activity is easier to inspect, but
+Under **設定 → 返答の調整**, **毎回、返答の変化を試す** bypasses the rhythm wait so activity is easier to inspect, but
 does not bypass sincerity or relationship gates. Turn it off to use the normal
 rhythm controller. A skipped turn clears the previous visualization.
 
@@ -82,7 +82,7 @@ into the production output. They remain outside the npm package and Git history.
 - Play or scrub the timeline to inspect recorded intervals. Playback is slowed
   down for display; it does not represent conversational time. **合計** shows
   cumulative spike counts for the turn.
-- Expand **詳しい計算結果** to see the eight most active neurons with body ID,
+- Expand **活動の詳細** to see the eight most active neurons with body ID,
   type, group, coordinates, and spike count. Missing soma locations are marked
   and excluded from the plot, but their activity still counts in the metrics.
 - Drag to rotate the coordinate projection. The virtual layout is synthetic.
