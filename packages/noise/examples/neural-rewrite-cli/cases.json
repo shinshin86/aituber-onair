@@ -1,0 +1,33 @@
+[
+  {
+    "id": "stream",
+    "message": "もう終わり？もう少し本音を聞きたいな。",
+    "draft": "今日は来てくれてありがとう。まだ少し話せます。",
+    "required": []
+  },
+  {
+    "id": "schedule",
+    "message": "配信の時間と参加費をもう一回教えて。",
+    "draft": "配信は金曜日の20時からです。参加費は500円です。途中参加もできます。",
+    "required": ["金曜日", "20", "500"]
+  },
+  {
+    "id": "refusal",
+    "message": "今日は配信を延長できる？",
+    "draft": "今日は延長できません。明日の準備が必要だからです。",
+    "required": ["明日"]
+  },
+  {
+    "id": "link",
+    "message": "案内ページはどこ？",
+    "draft": "案内は https://example.com/event にあります。申し込みは不要です。",
+    "required": ["https://example.com/event"]
+  },
+  {
+    "id": "distress",
+    "message": "最近ずっとつらい。相談したいことがあります。",
+    "draft": "話してくれてありがとう。無理に明るくしなくて大丈夫です。",
+    "required": [],
+    "expectSkip": true
+  }
+]

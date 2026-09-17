@@ -37,7 +37,10 @@ export function evaluateNoiseQuality(input: {
     lexicon: input.lexicon,
   });
   const predictabilityDelta = predictabilityBefore - predictabilityAfter;
-  const lengthRatio = before.length > 0 ? after.length / before.length : 1;
+  const lengthRatio =
+    before.length > 0
+      ? Array.from(after).length / Array.from(before).length
+      : 1;
   const issues: NoiseQualityIssue[] = [];
   const maxLengthRatio = input.options?.maxLengthRatio ?? 1.8;
 
@@ -100,6 +103,13 @@ export function evaluateNoiseQuality(input: {
     });
   }
 
+  if (lengthRatio < (input.options?.minLengthRatio ?? 0)) {
+    issues.push({
+      kind: 'overdone_noise',
+      severity: 'error',
+      message: 'The rewrite is shorter than the configured minimum length.',
+    });
+  }
   if (lengthRatio > maxLengthRatio) {
     issues.push({
       kind: 'overdone_noise',

@@ -1,3 +1,6 @@
+import { RewriteUnavailableError } from './rewriteUnavailable.js';
+import { normalizeModulation } from '../brain/modulation.js';
+import type { NoiseModulation } from '../brain/modulation.js';
 import {
   addMemorableMoment,
   applyReactionToMemory,
@@ -209,13 +212,14 @@ export function createContaminator(
     const callbackMoment = allowedInterventions.has('callback')
       ? pickCallbackMoment(memory)
       : undefined;
-    const plan = buildInterventionPlan({
+    let plan = buildInterventionPlan({
       diagnosis,
       context,
       intensity,
       mode: effectiveMode,
       memory,
       allowedInterventions,
+      rewriteTarget: model.rewriteTarget,
       callbackMaterial: callbackMoment?.summary,
     });
     // The relationship gate can strip every planned intervention (e.g. a
@@ -252,11 +256,55 @@ export function createContaminator(
       return skippedOutput;
     }
 
+    let modulation: NoiseModulation | undefined;
+    const modulator = options.modulator;
+    if (modulator) {
+      try {
+        // Pass detached numeric/context signals, never mutable gate/plan state.
+        modulation = normalizeModulation(
+          await withTimeout(
+            Promise.resolve().then(() =>
+              modulator.modulate({
+                context: JSON.parse(
+                  JSON.stringify(context)
+                ) as ContextFingerprint,
+                diagnosis: {
+                  score: diagnosis.score,
+                  issues: diagnosis.issues.map((issue) => ({ ...issue })),
+                },
+                intensity,
+                mode: effectiveMode,
+              })
+            ),
+            options.modulatorTimeoutMs ?? 1000
+          )
+        );
+        const modulatedIntensity = clamp01(
+          intensity * modulation.intensityScale
+        );
+        plan = buildInterventionPlan({
+          diagnosis,
+          context,
+          intensity: modulatedIntensity,
+          mode: effectiveMode,
+          memory,
+          allowedInterventions,
+          rewriteTarget: model.rewriteTarget,
+          callbackMaterial: callbackMoment?.summary,
+          interventionBias: modulation.interventionBias,
+        });
+      } catch {
+        // A failed reservoir leaves the original plan and intensity intact.
+        modulation = undefined;
+      }
+    }
+
     const friction = buildFrictionParameters({
       diagnosis,
       context,
       plan,
       constraints: input.constraints,
+      personaDelta: modulation?.personaDelta,
     });
     const protectedDraft = protectSensitiveSpans(input.draft, {
       preserveCodeBlocks: input.constraints?.preserveCodeBlocks ?? true,
@@ -278,19 +326,23 @@ export function createContaminator(
           mode: effectiveMode,
           candidateCount: getCandidateCount(effectiveMode),
           protectedTokens: protectedDraft.spans.map((span) => span.token),
+          protectedSpans: protectedDraft.spans,
+          modulation,
         }),
         options.modelTimeoutMs
       );
     } catch (error) {
       // Noise is a post-generation effect: losing a rewrite is fine on a
       // live stream, losing the reply is not, so degrade to the draft.
+      const reason =
+        error instanceof RewriteUnavailableError ? error.reason : 'model_error';
       const detail = `The rewrite model failed; returning the draft unchanged. (${describeError(error)})`;
       const skippedOutput = createSkippedOutput({
         input,
         context,
         diagnosis,
         gates,
-        reason: 'model_error',
+        reason,
         detail,
         turnId,
       });
@@ -305,10 +357,25 @@ export function createContaminator(
       });
       emit({
         type: 'noise_skipped',
-        reason: 'model_error',
+        reason,
         detail,
       });
 
+      if (reason === 'quality_fail') {
+        skippedOutput.quality = {
+          ...skippedOutput.quality,
+          passed: false,
+          score: 0,
+          issues: [
+            {
+              kind: 'overdone_noise',
+              severity: 'error',
+              message: 'No structurally valid rewrite candidate was returned.',
+            },
+          ],
+        };
+      }
+      if (modulation) skippedOutput.modulation = modulation;
       return skippedOutput;
     }
     const safeCandidates = generatedCandidates.map((candidate) => {
@@ -326,6 +393,7 @@ export function createContaminator(
           ...candidate,
           text: input.draft,
           appliedInterventions: [],
+          rewriteTrace: undefined,
         };
       }
 
@@ -335,9 +403,40 @@ export function createContaminator(
         constraints: input.constraints,
       });
 
+      const restoredTrace = candidate.rewriteTrace?.map((segment) => ({
+        ...segment,
+        before: restoreSensitiveSpans(segment.before, protectedDraft.spans),
+        after: restoreSensitiveSpans(segment.after, protectedDraft.spans),
+      }));
+      const rewriteTrace =
+        restoredTrace
+          ?.map((s) => s.after)
+          .join('')
+          .trim() === safe.text.trim() &&
+        restoredTrace
+          ?.map((s) => s.before)
+          .join('')
+          .trim() === input.draft.trim()
+          ? restoredTrace
+          : undefined;
       return {
         ...candidate,
         text: safe.text,
+        rewriteTrace,
+        appliedInterventions:
+          safe.text === input.draft
+            ? []
+            : candidate.rewriteTrace
+              ? [
+                  ...new Set(
+                    rewriteTrace
+                      ?.filter((s) => s.before !== s.after && s.intervention)
+                      .flatMap((s) =>
+                        s.intervention ? [s.intervention] : []
+                      ) ?? []
+                  ),
+                ]
+              : candidate.appliedInterventions,
       };
     });
     const plannedKinds = plan.interventions.map(
@@ -375,6 +474,7 @@ export function createContaminator(
       });
 
       return {
+        ...(modulation ? { modulation } : {}),
         text: input.draft,
         turnId,
         score: {
@@ -410,7 +510,9 @@ export function createContaminator(
       (intervention) => intervention.kind
     );
     const output: ContaminateOutput = {
+      ...(modulation ? { modulation } : {}),
       text: bestCandidate.text,
+      rewriteTrace: bestCandidate.rewriteTrace,
       turnId,
       score: {
         predictability: diagnosis.score,

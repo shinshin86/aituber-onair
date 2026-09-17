@@ -1,0 +1,6 @@
+{
+  "name": "@aituber-onair/noise-brain-chat",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "vite", "build": "tsc --noEmit && vite build" }
+}

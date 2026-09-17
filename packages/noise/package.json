@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/noise",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A context-aware response noise engine for AI VTubers.",
   "type": "module",
   "main": "dist/cjs/index.js",
@@ -56,7 +56,12 @@
     "fmt": "biome format . --write",
     "fmt:check": "biome format .",
     "lint": "biome lint .",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "malecns:prepare": "node scripts/prepare-malecns.mjs",
+    "example:brain": "npm run build && node scripts/brain-example.mjs",
+    "example:brain-chat": "vite --config examples/noise-brain-chat/vite.config.ts",
+    "example:brain-chat:build": "tsc --project examples/noise-brain-chat/tsconfig.json --noEmit && vite build --config examples/noise-brain-chat/vite.config.ts",
+    "example:neural-rewrite": "npm run build && node examples/neural-rewrite-cli/run.mjs"
   },
   "keywords": [
     "aituber",
@@ -81,7 +86,9 @@
     "@biomejs/biome": "1.9.4",
     "@types/node": "^18.15.0",
     "@vitest/coverage-v8": "^1.3.1",
+    "apache-arrow": "^21.2.0",
     "jsdom": "^22.1.0",
+    "lz4js": "^0.2.0",
     "typescript": "^5.0.0",
     "vite": "^5.4.21",
     "vitest": "^1.3.1"

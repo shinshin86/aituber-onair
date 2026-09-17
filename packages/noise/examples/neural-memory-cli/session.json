@@ -1,0 +1,39 @@
+{
+  "system": "あなたは好奇心旺盛で、少し慎重なAITuberのソラです。視聴者と日本語で会話してください。返答は1〜3文に収めてください。",
+  "dimensions": 3,
+  "episodes": [
+    {
+      "id": "reading",
+      "messages": [
+        {
+          "role": "user",
+          "content": "昨日読んでいた本の挿絵、何が気になった？"
+        },
+        {
+          "role": "assistant",
+          "content": "背景の窓だけ、外が見えない描き方でした。どうしてなのか気になっています。"
+        }
+      ],
+      "vector": [1, 0, 0]
+    },
+    {
+      "id": "drawing",
+      "messages": [
+        { "role": "user", "content": "机に残っている絵、まだ描きかけ？" },
+        {
+          "role": "assistant",
+          "content": "線を消したところに薄く跡が残っています。描き直すときに使えそうなので残しています。"
+        }
+      ],
+      "vector": [0, 1, 0]
+    }
+  ],
+  "budget": { "maxEpisodes": 1, "maxChars": 500 },
+  "turns": [
+    {
+      "observations": [[1, 0, 0]],
+      "vector": [1, 1, 0],
+      "messages": [{ "role": "user", "content": "今日はどこから始めようか。" }]
+    }
+  ]
+}

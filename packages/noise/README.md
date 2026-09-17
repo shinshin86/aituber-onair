@@ -5,6 +5,10 @@
 AITuber OnAir Noise is a context-aware response rewrite engine for disturbing
 predictable LLM phrasing without changing the meaning of the reply.
 
+The optional neural response adapter also permits changes in meaning, while
+keeping a recognizable character and a coherent conversation.
+For real wiring, follow the [dataset setup guide](#malecns-setup).
+
 Do not let AI responses end in predictable harmony.
 
 It is designed for AI VTubers and AI character streams where a response can feel
@@ -559,3 +563,374 @@ both `import` and `require` work in Node.js.
 `createContaminationStream()` uses the Web-standard `TransformStream` API. The
 current MVP buffers the full text and contaminates it on flush so the engine can
 rewrite with enough context.
+
+## Experimental neural modulation
+
+`createVirtualNoiseBrain()` generates a small deterministic reservoir locally.
+It is the default backend when opting into the brain feature; omitting
+`modulator` keeps existing Noise behavior. There is no dataset download during
+installation or normal startup.
+
+```ts
+import { createContaminator, createVirtualNoiseBrain } from '@aituber-onair/noise';
+
+const brain = createVirtualNoiseBrain({ seed: 42 });
+const contaminator = createContaminator({
+  model, // Your existing RewriteModel
+  modulator: brain,
+  fallbackToDraftOnQualityFail: true,
+});
+```
+
+The virtual backend defaults to 1,024 neurons, 16 outgoing connections per
+neuron, and 24 simulation steps of 1 ms. It uses a seeded random graph with
+80% excitatory / 20% inhibitory source neurons. These are artificial design
+choices, not a reconstruction of a fly. Its graph arrays occupy 143,380 bytes;
+state arrays require additional memory. Optional `neurons`,
+`connectionsPerNeuron`, `steps`, and `dtMs` configure the experiment.
+
+Both backends reset every turn. Six neutral stimulus channels encode existing
+energy, tension, repetition, predictability, volatility, and viewer-intent
+signals without another LLM call. A discrete leaky integrate-and-fire model
+uses a 20 ms leak constant, threshold 1, 2 ms refractory period, one-step
+synaptic delay, gain 4, and pulses every four steps. Only spiking neurons visit
+outgoing edges; neuron state is scanned every step. There is no learning.
+
+Readout includes global activity, descending-population activity (an artificial
+readout quarter in the virtual backend), side balance, dispersion, and four
+seeded signed projections of readout spike counts. Hand-designed mappings
+bias contrarian reframing, self-repair/unfinished margins, playful interventions,
+and persona volatility. Neither input nor output semantics are biological
+claims. The fly does not understand language, praise, or insults.
+
+Modulation runs only after sincerity/rhythm gates and an initial licensed plan.
+The relationship allowlist still applies before biased selection. Intensity
+multipliers are limited to 0.75–1.25, intervention biases to ±0.25, and persona
+deltas to ±0.20; final values remain within 0–1. Non-finite controls become
+neutral, and rejected or malformed modulation falls back to the original plan.
+Existing protected-span and quality behavior remains intact. Set
+`fallbackToDraftOnQualityFail: true` to reject failed rewrites; modulation does
+not override this existing application setting. `output.modulation` exposes
+bounded controls and a small activity summary, including on later model/quality
+failures. The default asynchronous modulator deadline is 1,000 ms
+(`modulatorTimeoutMs`); a timer cannot interrupt synchronous CPU work.
+
+### Optional MaleCNS v1.0 backend
+
+The MaleCNS connectome driven experimental reservoir uses the actual retained
+wiring graph. It is an approximate point-neuron simulation, not an accurate
+digital reconstruction of a living fly. The graph is **not bundled in npm**.
+
+<a id="malecns-setup"></a>
+
+#### Set up real wiring
+
+Skip this setup for the virtual circuit. For real wiring, download the official
+source files and convert them with the repository's preparation script. The
+script and CLI/WebUI examples are not included in the npm package; use a checkout
+of this GitHub repository.
+
+**1. Prepare the repository**
+
+Requires Node.js 20+, npm and Git. For a new checkout, run the following commands.
+For an existing checkout, start at `npm ci` from its root directory.
+
+```sh
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair
+npm ci
+npm -w @aituber-onair/chat run build
+npm -w @aituber-onair/noise run build
+```
+
+**2. Download and convert**
+
+Continue from the repository root:
+
+```sh
+npm -w @aituber-onair/noise run malecns:prepare -- \
+  --source data/malecns-source --out data/malecns-v1 --download
+```
+
+`--download` fetches missing source files from the official MaleCNS Google Cloud
+Storage bucket, then converts them. Dataset files are not downloaded from this
+repository, during npm installation, or when starting the virtual circuit.
+
+Workspace command paths resolve from `packages/noise`. Sources are stored in
+`packages/noise/data/malecns-source`; converted data goes to
+`packages/noise/data/malecns-v1`. Wiring alone occupies approximately 207 MB;
+source files, positions and annotations require additional disk space.
+
+If the official source files are already in the `--source` directory, omit
+`--download`. The output directory must not exist. After a failed attempt, retry
+with a different output such as `--out data/malecns-v1-retry`.
+
+Successful preparation prints a JSON summary and writes `manifest.json` last.
+The output directory contains:
+
+| File | Purpose |
+| --- | --- |
+| `manifest.json` | Version, counts, hashes and conversion settings |
+| `graph.bin` | Wiring loaded by Noise |
+| `metadata.json` | Neuron annotations for the WebUI |
+| `soma-positions.f32` | Soma positions for the WebUI |
+| `ATTRIBUTION.txt` | Source credits, license name and modification notice |
+
+**3. Check loading**
+
+This command loads the real graph and runs the circuit without an LLM call.
+Its text output is a plumbing check, not a language-quality comparison.
+
+```sh
+MALECNS_DATA_DIR=./packages/noise/data/malecns-v1 \
+  node packages/noise/scripts/brain-example.mjs
+```
+
+For this direct `node` command, paths resolve from the repository root. Without
+`MALECNS_DATA_DIR`, the script uses the virtual circuit.
+
+**4. Use the WebUI or CLI**
+
+```sh
+npm -w @aituber-onair/noise run example:brain-chat
+```
+
+Open `http://127.0.0.1:5183`, open **設定**, and select
+**ハエの脳の実データ（MaleCNS）**. Keep `/brain-data/manifest.json` as the data URL,
+then click **選んだ脳で会話を始め直す**. Use **動きを試す** to inspect activity without
+an API key. For real chat, select a provider/model and enter any required API key
+in the same settings dialog.
+
+To use data prepared elsewhere, set the directory at startup. With this npm
+workspace command, relative paths resolve from `packages/noise`:
+
+```sh
+MALECNS_DATA_DIR=./data/malecns-v1-retry \
+  npm -w @aituber-onair/noise run example:brain-chat
+```
+
+For real responses through the Codex SDK, follow the
+[CLI connection instructions](examples/neural-rewrite-cli/README.md#run-with-codex-sdk).
+Install the SDK separately and select real wiring with `MALECNS_DATA_DIR`.
+See the [WebUI README](examples/noise-brain-chat/README.md) for hosting and controls.
+
+In your own Node.js application, place the converted directory where the app can
+read it and pass that path to `loadMaleCnsNoiseBrain({ dataDir })` as shown below.
+The original Feather files are not needed at runtime.
+
+**Hosting and redistribution**
+
+The data is provided by [MaleCNS](https://male-cns.janelia.org/) under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Include `ATTRIBUTION.txt`
+when distributing converted data, and retain source credits, a license link and
+an explanation of the modifications. A hosted app should make these available
+in its data information or credits. The local development server serves the four
+data files above, not `ATTRIBUTION.txt`.
+
+#### Conversion and loading details
+
+Preparation uses Apache Arrow 21.2 and an LZ4 decoder, installed by `npm ci` above.
+It scans Feather connectivity batches twice without creating a JavaScript object
+per edge. Optional `--signs signs.json` replaces the transmitter-sign table;
+unknown names always have sign zero.
+
+Retained entries have non-empty `superclass`, excluding glia. All connections
+between retained entries remain, including self-connections and zero-effective
+weights, without a synapse threshold. Preparation requires exactly 166,700
+neurons and 25,582,938 directed edges for this release. Changes fail validation.
+`consensus_nt` supplies the transmitter: acetylcholine is positive; GABA,
+glutamate, and histamine are negative; modulators and unknown transmitters
+have no fast effect. Signed weights are divided by the target's incoming
+absolute signed strength. This is a configurable simulation assumption,
+not a universal description of neurotransmitter effects.
+
+The six input channels deterministically partition annotated LC4, LPLC2,
+LPLC1, and LC10a populations. These channel assignments have no claimed
+conversational or sensory equivalence. Descending neurons are identified by
+`superclass === 'descending_neuron'`.
+
+```ts
+import { loadMaleCnsNoiseBrain } from '@aituber-onair/noise/node';
+
+const brain = await loadMaleCnsNoiseBrain({
+  dataDir: './packages/noise/data/malecns-v1',
+  seed: 42,
+});
+// Pass brain as createContaminator({ model, modulator: brain }).
+```
+
+Runtime verifies the manifest's version/counts and the graph SHA-256 before
+validating the graph layout. The manifest records source hashes, preprocessing
+options, and generation date. Use a trusted manifest: a hash is an integrity
+check, not authentication of its publisher.
+
+### Browser deployment and workers
+
+Developers prepare/download the files in advance and host `manifest.json` and
+`graph.bin` at an explicitly configured application URL. A GitHub Release can
+distribute prepared files to developers; this prototype does not publish a
+Release or silently fetch one. Serving a file near the application still
+requires the browser to transfer it when loaded. Keep the virtual backend as
+the normal experience and make the large backend an explicit application choice.
+
+For CPU isolation, create a module Worker using your application's bundler.
+The package ships no preconfigured worker URL or automatic dataset URL.
+
+```ts
+// brain.worker.ts: bind immediately so requests can wait for initialization.
+import { exposeNoiseBrainWorker, loadMaleCnsNoiseBrain } from '@aituber-onair/noise/web';
+exposeNoiseBrainWorker(self, loadMaleCnsNoiseBrain({
+  manifestUrl: '/data/malecns-v1/manifest.json',
+}));
+// For the small backend use createVirtualNoiseBrain() instead.
+```
+
+```ts
+// Application: a larger initial deadline accommodates loading the large graph.
+import { createWorkerNoiseModulator } from '@aituber-onair/noise/web';
+const worker = new Worker(new URL('./brain.worker.ts', import.meta.url), {
+  type: 'module',
+});
+const modulator = createWorkerNoiseModulator(worker, 30_000);
+const contaminator = createContaminator({
+  model, modulator, modulatorTimeoutMs: 31_000,
+  fallbackToDraftOnQualityFail: true,
+});
+// Call modulator.dispose() when the application no longer needs the worker.
+```
+
+Worker failures/timeouts reject pending requests and timeouts terminate the
+worker. Later calls fail immediately so Noise can continue without modulation.
+Recreate the worker to retry. The built-in protocol returns small modulation
+summaries only; per-neuron visualization snapshots need an application-specific
+message in the worker. HTTPS or localhost is needed for Web Crypto verification.
+No SharedArrayBuffer or cross-origin-isolation headers are required.
+
+### Activity inspection, data layout, and validation
+
+`brain.getActivitySnapshot()` returns a detached `Uint32Array` of last-turn spike
+counts; `brain.getBodyIds()` returns corresponding IDs. Snapshots are created
+only on request. These are simulated activity counts, not proof of a neuron's
+causal role. The virtual backend's IDs are synthetic.
+
+Prepared files include optional `metadata.json` and `soma-positions.f32` for
+future visualization. The latter stores XYZ Float32 soma locations in MaleCNS
+EM voxel coordinates (8 nm), with NaN for absent positions. It adds 2,000,400
+bytes; neither file is loaded by the simulation. A point view can join IDs to
+these positions, but detailed neuron branches, brain meshes, a fly body,
+and animated movement require additional geometry and rendering. This package
+does not include a renderer or NeuroMechFly.
+
+`graph.bin` uses little-endian 32-bit values: magic `0x3142524e`, format version
+1, neuron count, edge count; then offsets (N+1), body IDs (N), flags (N), targets
+(E), Float32 weights (E). Flags contain descending membership (bit 0), left
+(bit 1), right (bit 2), and neutral input channel (bits 8–15; 255 means none).
+The complete retained graph is 206,663,924 bytes, before optional metadata.
+
+```sh
+npm -w @aituber-onair/noise run example:brain
+# After building, optionally validate/load and exercise the actual dataset:
+MALECNS_DATA_DIR=./packages/noise/data/malecns-v1 \
+  node packages/noise/scripts/brain-example.mjs
+```
+
+The example compares plans with and without a brain and reports loading time,
+simulation time, activity, and process memory. Its offline rewrite stub returns
+the draft; this verifies plumbing, not improved language quality. Real data is
+never required by CI. Tests use a synthetic graph with the same binary layout.
+TypeScript is the initial numerical backend; no Wasm artifact or native build
+is required. Backend interfaces keep a future kernel replacement possible.
+
+Data attribution: [MaleCNS project](https://male-cns.janelia.org/), FlyEM
+(HHMI Janelia), University of Cambridge, MRC Laboratory of Molecular Biology,
+and Google Research. The dataset is [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Prepared output includes attribution and describes the transformation.
+This simulator is independently implemented; no code from other fly simulators
+is copied.
+
+### Chat and neural activity sample
+
+```sh
+npm -w @aituber-onair/noise run example:brain-chat
+```
+
+Select a provider and model through `@aituber-onair/chat`, compare the draft and Noise response,
+and replay recorded neural activity. Switch between virtual and prepared
+MaleCNS backends, then inspect IDs, annotations, and spike counts.
+The sample opts into `captureActivity: true` and `brain.getActivityTrace()`;
+normal consumers do not need temporal recording. See the
+[sample README](./examples/noise-brain-chat/README.md) for connection settings,
+data hosting, visualization semantics, and the offline demonstration mode.
+
+See the [neural rewrite CLI](./examples/neural-rewrite-cli/README.md) for repeated
+Codex SDK evaluations of the same composition pipeline.
+
+### State-driven neural responses
+
+```ts
+import { createContaminator, createVirtualNoiseBrain,
+  createNeuralReactionModel, createChatRewriteModel } from '@aituber-onair/noise';
+
+const brain = createVirtualNoiseBrain({
+  seed: 42, steps: 32, captureReadout: true, retainState: true,
+});
+const noise = createContaminator({
+  model: createNeuralReactionModel({
+    brain,
+    model: createChatRewriteModel({ service: chatService }),
+    onTrace: (trace) => console.log(trace.state),
+  }),
+  mode: 'chaotic',
+  intensity: 0.9,
+  relationshipCapital: 0.8,
+  quality: { minLengthRatio: 0.8, maxLengthRatio: 1.1 },
+  fallbackToDraftOnQualityFail: true,
+});
+```
+
+`chatService` is a configured AITuber OnAir Chat service. An encoder classifies six
+stimulus channels from the incoming conversation. Code splits the original into
+lossless clauses and binds each clause to a balanced readout-population projection
+using a fixed hash. Actual spikes produce separate early/late attention weights
+over those clauses. The writer receives the original, persona and these weights.
+The binding is artificial, not learned semantics or fly language. Different
+wording can bind different cells; no random writing-style selector is used.
+
+The original is a starting point: meaning, conclusion, momentary feelings and
+immediate intentions may change, and source details may be omitted. Preserve a
+recognizable character and a coherent connection to the conversation. Do not invent
+past events or external facts. Protected numbers, URLs and code remain intact. The adapter opts
+into `shift_attention` planning while sincerity, relationship and rhythm gates
+remain. Restored length is limited to 0.8–1.1 times the original. The successful
+path uses three model calls: classification, speech, coherence/character/attention audit.
+Two candidates are audited in order, with one speech retry at most (seven calls),
+then fallback. Weak attention also returns the original as `neural_unfocused`.
+Model checks cannot establish corpus diversity or neural causality.
+
+`retainState: true` preserves membrane and pending synaptic state across turns, with
+an 8 ms simulated quiet interval; it does not track wall-clock time. Use a separate
+instance per conversation and call `brain.reset()` to start over. The default false
+retains the original per-turn reset behavior. `onTrace` reports stimuli, source
+clauses (`facts`/`anchors`), `attention`, spike summaries, proposed texts and rejection
+reasons. Legacy `state` is diagnostic and no longer controls speech. Final acceptance belongs to `output.text`
+and `output.rewriteTrace`; core quality checks may still reject a generated response.
+
+`captureReadout: true` is required and stores small temporal summaries without full
+visualization frames. Custom modulators must accept `readoutKeys` and return aligned
+`contentKeys` and per-frame `contentAxes`; missing readouts fall back to the draft.
+Pass the same options to the real-wiring loader when using prepared data. Wiring is
+never sent to the LLM. This is opt-in; ordinary Noise behavior is unchanged.
+See the [CLI sample](examples/neural-rewrite-cli/README.md) for execution and evaluation.
+
+### Experimental neural working memory
+
+`createNeuralWorkingMemory` recalls source conversation episodes through a small
+stateful spiking circuit. The caller provides embeddings and passes the recalled
+messages to any language model. This path generates a response from recalled
+context without rewriting a draft or sending style controls. It changes model
+input, not hidden activations; conversation quality and an advantage over ordinary
+retrieval are not established. It is a separate opt-in virtual circuit, with no
+automatic model or wiring downloads.
+
+See the [working-memory CLI](examples/neural-memory-cli/README.md) for the input
+format, state lifecycle, provider integration and limitations.

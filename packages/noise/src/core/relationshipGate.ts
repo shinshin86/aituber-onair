@@ -17,6 +17,7 @@ const MODE_ORDER: NoiseMode[] = [
  */
 const TIER_INTERVENTIONS: Record<RelationshipTier, InterventionKind[]> = {
   stranger: [
+    'shift_attention',
     'break_clean_closing',
     'increase_specificity',
     'ground_in_recent_comment',

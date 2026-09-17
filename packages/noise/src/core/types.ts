@@ -1,3 +1,4 @@
+import type { NoiseModulation, NoiseModulator } from '../brain/modulation.js';
 import type {
   ChatProviderName,
   ChatService,
@@ -30,9 +31,17 @@ export type NoiseMode =
   | 'chaotic';
 
 export interface RewriteModel {
+  /** Opt-in attention-driven responses; meaning may change within the persona. */
+  readonly rewriteTarget?: 'attention';
   generate(input: {
     system: string;
     prompt: string;
+    /** Runtime-only context; ordinary model adapters need not forward it to an LLM. */
+    rewriteContext?: {
+      intensity?: number;
+      modulation?: NoiseModulation;
+      protectedSpans?: ProtectedSpan[];
+    };
   }): Promise<string>;
 }
 
@@ -99,6 +108,10 @@ export type NoiseSkipReason =
   | 'platform'
   | 'low_predictability'
   | 'model_error'
+  | 'neural_unavailable'
+  | 'neural_inactive'
+  | 'neural_unfocused'
+  | 'unsplittable'
   | 'quality_fail'
   | 'no_licensed_intervention';
 
@@ -151,6 +164,8 @@ export interface ContaminateGates {
 }
 
 export interface ContaminateOutput {
+  rewriteTrace?: RewriteSegment[];
+  modulation?: NoiseModulation;
   text: string;
   /**
    * Identifier of this turn (the rhythm turn counter before this turn was
@@ -348,6 +363,10 @@ export interface NoiseLexicon {
 }
 
 export interface CreateContaminatorOptions {
+  /** Optional bounded style modulation; omitted preserves existing behavior. */
+  modulator?: NoiseModulator;
+  /** Asynchronous modulator deadline. Default 1000 ms. CPU work needs a worker. */
+  modulatorTimeoutMs?: number;
   intensity?: number;
   mode?: NoiseMode;
   model?: RewriteModel;
@@ -442,7 +461,8 @@ export type InterventionKind =
   | 'tsukkomi'
   | 'withheld_uptake'
   | 'status_seesaw'
-  | 'response_length_violation';
+  | 'response_length_violation'
+  | 'shift_attention';
 
 /**
  * @deprecated Use InterventionKind. Kept for compatibility with the first MVP.
@@ -462,7 +482,8 @@ export interface InterventionPlan {
   targetIssues: PredictabilityIssueKind[];
   interventions: PlannedIntervention[];
   preserve: {
-    meaning: true;
+    /** Neural attention may change the draft meaning. */
+    meaning: boolean;
     persona: true;
     facts: true;
     safety: true;
@@ -500,7 +521,18 @@ export interface FrictionParameters {
   };
 }
 
+/** Observed text edits and the requested operation; not proof of semantic success. */
+export interface RewriteSegment {
+  index: number;
+  before: string;
+  after: string;
+  operation: string;
+  intervention?: InterventionKind;
+  strength: number;
+}
+
 export interface RewriteCandidate {
+  rewriteTrace?: RewriteSegment[];
   text: string;
   appliedInterventions: InterventionKind[];
   /**
@@ -562,6 +594,7 @@ export interface NoiseQualityReport {
 export interface NoiseQualityOptions {
   minScore?: number;
   maxLengthRatio?: number;
+  minLengthRatio?: number;
 }
 
 export interface ProtectedSpan {

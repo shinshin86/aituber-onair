@@ -105,6 +105,7 @@ export type {
   RecordMomentInput,
   RelationshipTier,
   RewriteModel,
+  RewriteSegment,
   RewriteCandidate,
   RhythmDecision,
   RhythmMemoryState,
@@ -118,3 +119,52 @@ export type {
   UsedStainRecord,
 } from './core/types.js';
 export type { NoiseRuntime } from './core/runtime.js';
+export { createVirtualNoiseBrain } from './brain/createNoiseBrain.js';
+export type {
+  NoiseBrain,
+  NoiseBrainOptions,
+  BrainActivityTrace,
+  VirtualNoiseBrainOptions,
+} from './brain/createNoiseBrain.js';
+export type {
+  NoiseModulator,
+  NoiseModulatorInput,
+  NoiseModulation,
+  BrainActivity,
+  BrainReadoutFrame,
+} from './brain/modulation.js';
+export {
+  createNeuralCompositionModel,
+  splitNeuralText,
+  planNeuralSegments,
+  validateNeuralCandidate,
+} from './brain/neuralComposition.js';
+export type {
+  NeuralMove,
+  NeuralSegmentPlan,
+  NeuralCompositionTrace,
+} from './brain/neuralComposition.js';
+export {
+  createNeuralReactionModel,
+  decodeNeuralReaction,
+} from './brain/neuralReaction.js';
+export type {
+  NeuralReactionState,
+  NeuralReactionTrace,
+} from './brain/neuralReaction.js';
+
+export {
+  decodeNeuralAttention,
+  bindNeuralContent,
+} from './brain/neuralAttention.js';
+export type {
+  NeuralAttention,
+  NeuralAttentionPhase,
+} from './brain/neuralAttention.js';
+
+export { createNeuralWorkingMemory } from './brain/neuralWorkingMemory.js';
+export type {
+  NeuralWorkingMemory,
+  NeuralMemoryEpisode,
+  NeuralMemoryRecall,
+} from './brain/neuralWorkingMemory.js';

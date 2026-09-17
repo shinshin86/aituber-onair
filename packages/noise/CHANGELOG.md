@@ -1,5 +1,37 @@
 # @aituber-onair/noise
 
+## 0.0.4
+
+### Added
+
+- Opt-in neural modulation with a lightweight virtual circuit and an optional
+  MaleCNS v1.0 backend using prepared fly wiring data. Includes Node/browser
+  loaders, graph integrity checks, a Worker bridge, and activity recording.
+- Neural response adapters that use simulated activity to shift attention to
+  source content during generation. Draft meaning may change while the adapters
+  check character consistency, conversational coherence, and protected content.
+  Optional state retention carries neural activity between turns.
+- Experimental `createNeuralWorkingMemory()` for selecting earlier conversation
+  exchanges using caller-supplied vectors and a stateful virtual circuit. The
+  selected text can be passed to any chat provider. This API is separate from
+  response rewriting and does not use MaleCNS wiring.
+- Repository examples: Codex SDK CLIs for neural responses and working memory,
+  plus a browser chat demo with neural activity playback and a settings dialog.
+  The SDK is installed separately by the consuming application.
+- English and Japanese setup guides covering official dataset download,
+  conversion, explicit loading, attribution, and experimental limitations.
+
+### Compatibility and distribution
+
+- Existing Noise behavior remains the default; neural integration is opt-in.
+  Applications retain their choice of LLM.
+- The virtual circuit requires no data download. Real wiring must be prepared
+  and selected explicitly. Wiring data, CLI/WebUI examples, and preparation
+  scripts are not included in the npm package.
+- The simulation and language mappings are experimental. They do not reproduce
+  fly cognition or access LLM hidden activations, and do not guarantee improved
+  response quality.
+
 ## 0.0.3
 
 ### Added

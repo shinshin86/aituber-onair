@@ -1,3 +1,4 @@
+import type { NoiseModulation } from '../brain/modulation.js';
 import type {
   ChatMessage,
   ContextFingerprint,
@@ -7,11 +8,14 @@ import type {
   NoiseMode,
   RewriteCandidate,
   RewriteModel,
+  RewriteSegment,
+  ProtectedSpan,
 } from './types.js';
 
 interface CandidateJson {
   candidates?: Array<{
     text?: string;
+    rewriteTrace?: RewriteSegment[];
     applied?: string[];
     appliedInterventions?: string[];
     typicality?: number;
@@ -24,6 +28,8 @@ interface CandidateJson {
  * structure; the LLM needs the recipe, not just the label.
  */
 const INTERVENTION_GUIDE: Record<InterventionKind, string> = {
+  shift_attention:
+    'Let attention to the source content shape a coherent response; draft meaning may change while voice and personality remain recognizable.',
   ground_in_recent_comment:
     'Reference something specific a viewer or the stream context actually said.',
   add_streamer_judgment:
@@ -73,6 +79,8 @@ export async function generateRewriteCandidates(input: {
    * numbers) in the draft. They must survive the rewrite verbatim.
    */
   protectedTokens?: string[];
+  modulation?: NoiseModulation;
+  protectedSpans?: ProtectedSpan[];
 }): Promise<RewriteCandidate[]> {
   if (input.plan.interventions.length === 0) {
     return [
@@ -86,6 +94,11 @@ export async function generateRewriteCandidates(input: {
   const raw = await input.model.generate({
     system: buildCandidateSystemPrompt(),
     prompt: buildCandidatePrompt(input),
+    rewriteContext: {
+      intensity: input.plan.intensity,
+      modulation: input.modulation,
+      protectedSpans: input.protectedSpans,
+    },
   });
 
   return parseCandidates(raw, input);
@@ -243,6 +256,10 @@ function parseCandidates(
               candidate.appliedInterventions ?? candidate.applied ?? []
             ),
             typicality: normalizeTypicality(candidate.typicality),
+            rewriteTrace: parseTrace(
+              candidate.rewriteTrace,
+              candidate.text ?? ''
+            ),
           }))
           .filter((candidate) => candidate.text.length > 0) ?? [];
 
@@ -325,10 +342,50 @@ function normalizeAppliedInterventions(
     'withheld_uptake',
     'status_seesaw',
     'response_length_violation',
+    'shift_attention',
   ]);
 
   return values.filter(
     (value): value is RewriteCandidate['appliedInterventions'][number] =>
       allowed.has(value as RewriteCandidate['appliedInterventions'][number])
   );
+}
+
+function parseTrace(
+  value: unknown,
+  text: string
+): RewriteSegment[] | undefined {
+  if (
+    !Array.isArray(value) ||
+    value.length > 128 ||
+    !value.every(
+      (s, i) =>
+        s &&
+        s.index === i &&
+        typeof s.before === 'string' &&
+        typeof s.after === 'string' &&
+        typeof s.operation === 'string' &&
+        Number.isFinite(s.strength) &&
+        s.strength >= 0 &&
+        s.strength <= 1 &&
+        (s.intervention === undefined ||
+          normalizeAppliedInterventions([s.intervention]).length === 1)
+    )
+  )
+    return undefined;
+  if (
+    value
+      .map((s) => s.after)
+      .join('')
+      .trim() !== text.trim()
+  )
+    return undefined;
+  return value.map((s) => ({
+    index: s.index,
+    before: s.before,
+    after: s.after,
+    operation: s.operation,
+    intervention: s.intervention,
+    strength: s.strength,
+  }));
 }
