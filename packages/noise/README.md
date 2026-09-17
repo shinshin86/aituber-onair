@@ -7,6 +7,7 @@ predictable LLM phrasing without changing the meaning of the reply.
 
 The optional neural response adapter also permits changes in meaning, while
 keeping a recognizable character and a coherent conversation.
+For real wiring, follow the [dataset setup guide](#malecns-setup).
 
 Do not let AI responses end in predictable harmony.
 
@@ -620,21 +621,118 @@ The MaleCNS connectome driven experimental reservoir uses the actual retained
 wiring graph. It is an approximate point-neuron simulation, not an accurate
 digital reconstruction of a living fly. The graph is **not bundled in npm**.
 
-From this repository, install development dependencies with `npm ci`, then:
+<a id="malecns-setup"></a>
+
+#### Set up real wiring
+
+Skip this setup for the virtual circuit. For real wiring, download the official
+source files and convert them with the repository's preparation script. The
+script and CLI/WebUI examples are not included in the npm package; use a checkout
+of this GitHub repository.
+
+**1. Prepare the repository**
+
+Requires Node.js 20+, npm and Git. For a new checkout, run the following commands.
+For an existing checkout, start at `npm ci` from its root directory.
+
+```sh
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair
+npm ci
+npm -w @aituber-onair/chat run build
+npm -w @aituber-onair/noise run build
+```
+
+**2. Download and convert**
+
+Continue from the repository root:
 
 ```sh
 npm -w @aituber-onair/noise run malecns:prepare -- \
   --source data/malecns-source --out data/malecns-v1 --download
 ```
 
-Paths are relative to `packages/noise` when using the workspace command. Omit
-`--download` to use locally obtained official files. Output must be a new
-directory. The script uses Node.js 20+, Apache Arrow 21.2 and an LZ4 decoder,
-reads Feather record batches, and scans connectivity twice without creating
-one JavaScript object per edge. A failed preparation leaves an incomplete
-output directory; retry with a new output directory. The manifest is written
-last. Optional `--signs signs.json` replaces the transmitter-sign table.
-Unknown names always have sign zero.
+`--download` fetches missing source files from the official MaleCNS Google Cloud
+Storage bucket, then converts them. Dataset files are not downloaded from this
+repository, during npm installation, or when starting the virtual circuit.
+
+Workspace command paths resolve from `packages/noise`. Sources are stored in
+`packages/noise/data/malecns-source`; converted data goes to
+`packages/noise/data/malecns-v1`. Wiring alone occupies approximately 207 MB;
+source files, positions and annotations require additional disk space.
+
+If the official source files are already in the `--source` directory, omit
+`--download`. The output directory must not exist. After a failed attempt, retry
+with a different output such as `--out data/malecns-v1-retry`.
+
+Successful preparation prints a JSON summary and writes `manifest.json` last.
+The output directory contains:
+
+| File | Purpose |
+| --- | --- |
+| `manifest.json` | Version, counts, hashes and conversion settings |
+| `graph.bin` | Wiring loaded by Noise |
+| `metadata.json` | Neuron annotations for the WebUI |
+| `soma-positions.f32` | Soma positions for the WebUI |
+| `ATTRIBUTION.txt` | Source credits, license name and modification notice |
+
+**3. Check loading**
+
+This command loads the real graph and runs the circuit without an LLM call.
+Its text output is a plumbing check, not a language-quality comparison.
+
+```sh
+MALECNS_DATA_DIR=./packages/noise/data/malecns-v1 \
+  node packages/noise/scripts/brain-example.mjs
+```
+
+For this direct `node` command, paths resolve from the repository root. Without
+`MALECNS_DATA_DIR`, the script uses the virtual circuit.
+
+**4. Use the WebUI or CLI**
+
+```sh
+npm -w @aituber-onair/noise run example:brain-chat
+```
+
+Open `http://127.0.0.1:5183`, open **設定**, and select
+**ハエの脳の実データ（MaleCNS）**. Keep `/brain-data/manifest.json` as the data URL,
+then click **選んだ脳で会話を始め直す**. Use **動きを試す** to inspect activity without
+an API key. For real chat, select a provider/model and enter any required API key
+in the same settings dialog.
+
+To use data prepared elsewhere, set the directory at startup. With this npm
+workspace command, relative paths resolve from `packages/noise`:
+
+```sh
+MALECNS_DATA_DIR=./data/malecns-v1-retry \
+  npm -w @aituber-onair/noise run example:brain-chat
+```
+
+For real responses through the Codex SDK, follow the
+[CLI connection instructions](examples/neural-rewrite-cli/README.md#run-with-codex-sdk).
+Install the SDK separately and select real wiring with `MALECNS_DATA_DIR`.
+See the [WebUI README](examples/noise-brain-chat/README.md) for hosting and controls.
+
+In your own Node.js application, place the converted directory where the app can
+read it and pass that path to `loadMaleCnsNoiseBrain({ dataDir })` as shown below.
+The original Feather files are not needed at runtime.
+
+**Hosting and redistribution**
+
+The data is provided by [MaleCNS](https://male-cns.janelia.org/) under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Include `ATTRIBUTION.txt`
+when distributing converted data, and retain source credits, a license link and
+an explanation of the modifications. A hosted app should make these available
+in its data information or credits. The local development server serves the four
+data files above, not `ATTRIBUTION.txt`.
+
+#### Conversion and loading details
+
+Preparation uses Apache Arrow 21.2 and an LZ4 decoder, installed by `npm ci` above.
+It scans Feather connectivity batches twice without creating a JavaScript object
+per edge. Optional `--signs signs.json` replaces the transmitter-sign table;
+unknown names always have sign zero.
 
 Retained entries have non-empty `superclass`, excluding glia. All connections
 between retained entries remain, including self-connections and zero-effective
@@ -655,7 +753,7 @@ conversational or sensory equivalence. Descending neurons are identified by
 import { loadMaleCnsNoiseBrain } from '@aituber-onair/noise/node';
 
 const brain = await loadMaleCnsNoiseBrain({
-  dataDir: './data/malecns-v1',
+  dataDir: './packages/noise/data/malecns-v1',
   seed: 42,
 });
 // Pass brain as createContaminator({ model, modulator: brain }).

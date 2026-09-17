@@ -6,7 +6,10 @@ backend uses prepared wiring and actual soma positions in a dedicated Worker.
 
 ## Start
 
-From the repository root:
+Requires Node.js 20+. The sample is not included in the npm package. Follow the
+[repository setup](../../README.md#malecns-setup), then run `npm ci` and
+`npm -w @aituber-onair/chat run build` from the repository root on first use.
+No dataset download is needed for the virtual circuit. Start the sample with:
 
 ```sh
 npm -w @aituber-onair/noise run example:brain-chat
@@ -61,7 +64,8 @@ The offline demo uses fixed text for UI inspection. Use the
 
 ## MaleCNS
 
-Prepare the data using the command in the package README. The development
+Follow the [real-wiring setup](../../README.md#malecns-setup) to download, convert
+and check the official data. The development
 server serves four explicitly allowed files from `packages/noise/data/malecns-v1`
 at `/brain-data/`. To use another directory, set `MALECNS_DATA_DIR` (relative
 paths resolve from the npm workspace's working directory). Select MaleCNS and
@@ -74,6 +78,8 @@ For static hosting, place `manifest.json`, `graph.bin`, `metadata.json`, and
 development middleware is not part of the production build. You can put files
 in this sample's ignored `public/brain-data/` directory, but Vite will copy them
 into the production output. They remain outside the npm package and Git history.
+For hosting or redistribution, follow the credits, license-link and modification
+notice instructions in the setup guide.
 
 ## Reading the display
 

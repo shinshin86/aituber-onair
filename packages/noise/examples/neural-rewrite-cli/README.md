@@ -46,7 +46,9 @@ File-backed authentication is copied into a private temporary directory and remo
 with SDK session data on normal exit. Original settings/login remain unchanged.
 Keychain-only login is unsupported. Forced termination may leave temporary data.
 
-For explicitly prepared real wiring:
+For real wiring, first follow the [data setup](../../README.md#malecns-setup).
+Run the following from the repository root for the default output directory;
+change `MALECNS_DATA_DIR` if you prepared the data elsewhere:
 
 ```sh
 MALECNS_DATA_DIR=./packages/noise/data/malecns-v1 \
