@@ -1,6 +1,8 @@
 # @aituber-onair/comment-intelligence
 
-## Unreleased
+## 0.0.6
+
+### Patch Changes
 
 - Adds optional `createJevCommentAnalysisProvider()` with topic relevance,
   answer requests, and recently answered content assessments. Currently connects
@@ -12,6 +14,8 @@
   English/Japanese setup and evaluation guidance.
 - Adds Jev to the browser sample with an OpenRouter key field, optional recent
   reply context, a semantic comparison preset, and visible fallback notices.
+- Shows analysis progress and per-candidate selection, ranking scores, Jev
+  judgments, confidence, and retained rule signals in the browser sample.
 
 ## 0.0.5
 
