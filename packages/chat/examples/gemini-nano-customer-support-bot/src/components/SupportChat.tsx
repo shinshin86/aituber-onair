@@ -115,7 +115,7 @@ export default function SupportChat({
           setMessages((current) =>
             current.map((message) =>
               message.id === assistantId
-                ? { ...message, content: response }
+                ? { ...message, content: `${message.content}${response}` }
                 : message,
             ),
           );

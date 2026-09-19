@@ -40,6 +40,7 @@ interface LanguageModelAPI {
 
 interface LanguageModelSession {
   prompt(text: string): Promise<string>;
+  promptStreaming?(text: string): ReadableStream<string>;
   destroy(): void;
 }
 
@@ -89,16 +90,19 @@ export class GeminiNanoChatService implements ChatService {
 
   /**
    * Process chat messages using Gemini Nano.
-   * Non-streaming: calls onPartialResponse once with the full response,
-   * then calls onCompleteResponse.
+   * Streams response deltas when Chrome exposes promptStreaming(), then calls
+   * onCompleteResponse with the complete response.
    */
   async processChat(
     messages: Message[],
     onPartialResponse: (text: string) => void,
     onCompleteResponse: (text: string) => Promise<void>,
   ): Promise<void> {
-    const response = await this.generateResponse(messages);
-    onPartialResponse(response);
+    const response = await this.generateResponse(
+      messages,
+      true,
+      onPartialResponse,
+    );
     await onCompleteResponse(response);
   }
 
@@ -112,12 +116,15 @@ export class GeminiNanoChatService implements ChatService {
 
   async chatOnce(
     messages: Message[],
-    _stream: boolean = false,
+    stream: boolean = false,
     onPartialResponse: (text: string) => void = () => {},
     _maxTokens?: number,
   ): Promise<ToolChatCompletion> {
-    const response = await this.generateResponse(messages);
-    onPartialResponse(response);
+    const response = await this.generateResponse(
+      messages,
+      stream,
+      onPartialResponse,
+    );
 
     return {
       blocks: [{ type: 'text', text: response }],
@@ -137,7 +144,11 @@ export class GeminiNanoChatService implements ChatService {
   /**
    * Core logic: extract system prompt, manage session, call prompt().
    */
-  private async generateResponse(messages: Message[]): Promise<string> {
+  private async generateResponse(
+    messages: Message[],
+    stream: boolean,
+    onPartialResponse: (text: string) => void,
+  ): Promise<string> {
     const api = getLanguageModelAPI();
     if (!api) {
       throw new Error(
@@ -182,7 +193,12 @@ export class GeminiNanoChatService implements ChatService {
     );
 
     try {
-      return await session.prompt(lastUserMessage.content);
+      return await this.promptSession(
+        session,
+        lastUserMessage.content,
+        stream,
+        onPartialResponse,
+      );
     } finally {
       try {
         session.destroy();
@@ -190,6 +206,40 @@ export class GeminiNanoChatService implements ChatService {
         // ignore
       }
     }
+  }
+
+  private async promptSession(
+    session: LanguageModelSession,
+    prompt: string,
+    stream: boolean,
+    onPartialResponse: (text: string) => void,
+  ): Promise<string> {
+    if (stream && typeof session.promptStreaming === 'function') {
+      const reader = session.promptStreaming(prompt).getReader();
+      let response = '';
+      let streamMode: 'unknown' | 'cumulative' | 'delta' = 'unknown';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = String(value ?? '');
+        if (streamMode === 'unknown' && response !== '') {
+          streamMode = chunk.startsWith(response) ? 'cumulative' : 'delta';
+        }
+
+        const isCumulative = streamMode === 'cumulative';
+        const delta = isCumulative ? chunk.slice(response.length) : chunk;
+        response = isCumulative ? chunk : response + chunk;
+        if (delta) onPartialResponse(delta);
+      }
+
+      return response;
+    }
+
+    const response = await session.prompt(prompt);
+    onPartialResponse(response);
+    return response;
   }
 
   /**

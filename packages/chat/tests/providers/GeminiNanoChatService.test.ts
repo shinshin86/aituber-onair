@@ -17,6 +17,14 @@ const mockLanguageModel = {
   create: mockCreate,
 };
 
+const createReadableStream = (chunks: string[]) =>
+  new ReadableStream<string>({
+    start(controller) {
+      for (const chunk of chunks) controller.enqueue(chunk);
+      controller.close();
+    },
+  });
+
 describe('GeminiNanoChatService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -91,6 +99,110 @@ describe('GeminiNanoChatService', () => {
 
       expect(mockCreate).toHaveBeenCalledTimes(2);
       expect(mockDestroy).toHaveBeenCalledTimes(2);
+    });
+
+    it('should stream delta chunks and complete with the full response', async () => {
+      const promptStreaming = vi.fn(() => createReadableStream(['Hel', 'lo']));
+      mockCreate.mockResolvedValueOnce({
+        prompt: mockPrompt,
+        promptStreaming,
+        destroy: mockDestroy,
+      });
+
+      const service = new GeminiNanoChatService();
+      const onPartial = vi.fn();
+      const onComplete = vi.fn().mockResolvedValue(undefined);
+
+      await service.processChat(
+        [{ role: 'user', content: 'Hi' }],
+        onPartial,
+        onComplete,
+      );
+
+      expect(promptStreaming).toHaveBeenCalledWith('Hi');
+      expect(onPartial).toHaveBeenNthCalledWith(1, 'Hel');
+      expect(onPartial).toHaveBeenNthCalledWith(2, 'lo');
+      expect(onComplete).toHaveBeenCalledWith('Hello');
+      expect(mockDestroy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should normalize cumulative stream chunks into deltas', async () => {
+      const promptStreaming = vi.fn(() =>
+        createReadableStream(['Hel', 'Hello']),
+      );
+      mockCreate.mockResolvedValueOnce({
+        prompt: mockPrompt,
+        promptStreaming,
+        destroy: mockDestroy,
+      });
+
+      const service = new GeminiNanoChatService();
+      const onPartial = vi.fn();
+      const onComplete = vi.fn().mockResolvedValue(undefined);
+
+      await service.processChat(
+        [{ role: 'user', content: 'Hi' }],
+        onPartial,
+        onComplete,
+      );
+
+      expect(onPartial).toHaveBeenNthCalledWith(1, 'Hel');
+      expect(onPartial).toHaveBeenNthCalledWith(2, 'lo');
+      expect(onComplete).toHaveBeenCalledWith('Hello');
+    });
+
+    it('should lock delta mode after a non-cumulative chunk', async () => {
+      const promptStreaming = vi.fn(() =>
+        createReadableStream(['a', 'b', 'ab']),
+      );
+      mockCreate.mockResolvedValueOnce({
+        prompt: mockPrompt,
+        promptStreaming,
+        destroy: mockDestroy,
+      });
+
+      const service = new GeminiNanoChatService();
+      const onPartial = vi.fn();
+      const onComplete = vi.fn().mockResolvedValue(undefined);
+
+      await service.processChat(
+        [{ role: 'user', content: 'Hi' }],
+        onPartial,
+        onComplete,
+      );
+
+      expect(onPartial).toHaveBeenNthCalledWith(1, 'a');
+      expect(onPartial).toHaveBeenNthCalledWith(2, 'b');
+      expect(onPartial).toHaveBeenNthCalledWith(3, 'ab');
+      expect(onComplete).toHaveBeenCalledWith('abab');
+    });
+
+    it('should destroy the session and propagate stream errors', async () => {
+      const promptStreaming = vi.fn(
+        () =>
+          new ReadableStream<string>({
+            start(controller) {
+              controller.enqueue('Hello');
+              controller.error(new Error('stream failed'));
+            },
+          }),
+      );
+      mockCreate.mockResolvedValueOnce({
+        prompt: mockPrompt,
+        promptStreaming,
+        destroy: mockDestroy,
+      });
+
+      const service = new GeminiNanoChatService();
+      await expect(
+        service.processChat(
+          [{ role: 'user', content: 'Hi' }],
+          vi.fn(),
+          vi.fn().mockResolvedValue(undefined),
+        ),
+      ).rejects.toThrow('stream failed');
+
+      expect(mockDestroy).toHaveBeenCalledTimes(1);
     });
 
     it('should preserve conversation history roles in initial prompts', async () => {
@@ -178,6 +290,28 @@ describe('GeminiNanoChatService', () => {
         blocks: [{ type: 'text', text: 'Answer' }],
         stop_reason: 'end',
       });
+    });
+
+    it('should use promptStreaming when stream is enabled', async () => {
+      const promptStreaming = vi.fn(() => createReadableStream(['Hel', 'lo']));
+      mockCreate.mockResolvedValueOnce({
+        prompt: mockPrompt,
+        promptStreaming,
+        destroy: mockDestroy,
+      });
+
+      const service = new GeminiNanoChatService();
+      const onPartial = vi.fn();
+      const result = await service.chatOnce(
+        [{ role: 'user', content: 'Question' }],
+        true,
+        onPartial,
+      );
+
+      expect(promptStreaming).toHaveBeenCalledWith('Question');
+      expect(onPartial).toHaveBeenNthCalledWith(1, 'Hel');
+      expect(onPartial).toHaveBeenNthCalledWith(2, 'lo');
+      expect(result.blocks).toEqual([{ type: 'text', text: 'Hello' }]);
     });
   });
 
