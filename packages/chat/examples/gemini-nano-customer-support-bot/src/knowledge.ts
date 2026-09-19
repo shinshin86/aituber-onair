@@ -112,7 +112,20 @@ export const SECTION_META: Record<string, SectionMeta> = {
       'reasoning',
       'kimi',
     ],
-    keywords: ['openrouter', 'zai', 'xai', 'deepseek', 'mistral', 'provider'],
+    keywords: [
+      'openrouter',
+      'zai',
+      'xai',
+      'grok',
+      'deepseek',
+      'mistral',
+      'ministral',
+      'sakana',
+      'fugu',
+      'glm',
+      'moonshot',
+      'provider',
+    ],
   },
   'openai-compatible-endpoints': {
     keywords: [

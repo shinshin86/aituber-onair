@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import * as chat from '@aituber-onair/chat';
 import canonicalKnowledge from '../../customer-support-bot/server/chat-package-knowledge.md?raw';
 import {
   buildSupportSystemPrompt,
@@ -212,6 +213,12 @@ describe('knowledge retrieval', () => {
       excludes: [],
     },
     {
+      question: 'Grokは使える?',
+      first: 'other-provider-examples',
+      includes: ['other-provider-examples'],
+      excludes: [],
+    },
+    {
       question: 'どのモデルが使えますか',
       first: 'openai-models',
       includes: ['openai-models', 'claude-models', 'gemini-models'],
@@ -316,6 +323,40 @@ describe('knowledge retrieval', () => {
         previous,
       )[0]?.id,
     ).toBe('browser-cors-notes');
+  });
+});
+
+describe('knowledge freshness', () => {
+  it('keeps documented model constants aligned with package exports', () => {
+    const packageExports = chat as unknown as Record<string, unknown>;
+    const documentedModels = Array.from(
+      PACKAGE_KNOWLEDGE.matchAll(/^- `(MODEL_[A-Z0-9_]+)` = `([^`]+)`$/gm),
+    );
+
+    expect(documentedModels.length).toBeGreaterThan(0);
+    for (const [, name, value] of documentedModels) {
+      expect(packageExports[name], `${name} is not exported`).toBeDefined();
+      expect(packageExports[name], `${name} has drifted`).toBe(value);
+    }
+  });
+
+  it('keeps documented provider names accepted by the factory', () => {
+    const providerSection = PACKAGE_KNOWLEDGE.match(
+      /## Built-in providers\n([\s\S]*?)(?=\n## )/,
+    )?.[1];
+    const documentedProviders = providerSection
+      ? Array.from(
+          providerSection.matchAll(/^- `([^`]+)`$/gm),
+          (match) => match[1],
+        )
+      : [];
+
+    expect(documentedProviders.length).toBeGreaterThan(0);
+    for (const provider of documentedProviders) {
+      expect(chat.ChatServiceFactory.getAvailableProviders()).toContain(
+        provider,
+      );
+    }
   });
 });
 
