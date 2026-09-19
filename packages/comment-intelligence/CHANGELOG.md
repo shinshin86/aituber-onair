@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Adds optional `createJevCommentAnalysisProvider()` with topic relevance,
+  answer requests, and recently answered content assessments. Currently connects
+  through OpenRouter's alpha Decisions API. Rules remain the default.
+- Re-ranks semantic assessments using existing ranking weights and exclusions,
+  with a non-persistent penalty for answered paraphrases and rule fallback for
+  uncertain results or provider failures.
+- Adds request cancellation, bounded inputs, response validation, and
+  English/Japanese setup and evaluation guidance.
+- Adds Jev to the browser sample with an OpenRouter key field, optional recent
+  reply context, a semantic comparison preset, and visible fallback notices.
+
 ## 0.0.5
 
 ### Patch Changes

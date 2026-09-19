@@ -3,7 +3,10 @@ import type {
   CommentIntelligenceConfig,
 } from './types/config.js';
 import type { AnsweredState } from './types/answered.js';
-import type { LLMCommentAnalysisResult } from './types/llm.js';
+import type {
+  CommentSemanticAssessment,
+  LLMCommentAnalysisResult,
+} from './types/llm.js';
 import type {
   AnalyzeCommentsInput,
   CommentIntelligenceResult,
@@ -16,6 +19,7 @@ import { rankComments } from './ranking/rankComments.js';
 import { ruleBasedSafetyProvider } from './safety/ruleBasedSafetyProvider.js';
 import { summarizeIgnoredComments } from './summarization/summarizeIgnoredComments.js';
 import type { RankedComment } from './types/ranking.js';
+import { applySemanticAssessments } from './ranking/applySemanticAssessments.js';
 
 export const DEFAULT_COMMENT_INTELLIGENCE_CONFIG: CommentIntelligenceConfig = {
   analysis: {
@@ -187,8 +191,23 @@ async function analyzeWithConfig(
     return rulesResult;
   }
 
+  const controller = new AbortController();
   try {
-    const llmComments = input.comments.slice(
+    const eligibleIds = new Set(
+      rulesResult.rankedComments
+        .filter((comment) => !comment.safetyReport?.shouldIgnore)
+        .filter(
+          (comment) =>
+            config.ranking?.answeredMemory?.mode !== 'exclude' ||
+            !comment.reasons.includes('ignored_recently')
+        )
+        .map((comment) => comment.id)
+    );
+    const candidates =
+      llmProvider.inputScope === 'eligible-comments'
+        ? input.comments.filter((comment) => eligibleIds.has(comment.id))
+        : input.comments;
+    const llmComments = candidates.slice(
       0,
       config.analysis?.llmPolicy?.maxComments ?? input.comments.length
     );
@@ -198,9 +217,19 @@ async function analyzeWithConfig(
         streamState: input.streamState,
         recentMessages: input.recentMessages ?? input.recentAiMessages,
         recentAiMessages: input.recentAiMessages ?? input.recentMessages,
+        signal: controller.signal,
       }),
       config.analysis?.llmPolicy?.timeoutMs
     );
+    if (llmResult.semanticAssessments) {
+      return buildSemanticResult(
+        rulesResult,
+        llmResult.semanticAssessments,
+        new Set(llmComments.map((comment) => comment.id)),
+        config,
+        input
+      );
+    }
     return applyLLMResult(
       rulesResult,
       llmResult,
@@ -214,7 +243,80 @@ async function analyzeWithConfig(
       throw error;
     }
     return rulesResult;
+  } finally {
+    controller.abort();
   }
+}
+
+function buildSemanticResult(
+  baseline: CommentIntelligenceResult,
+  assessments: CommentSemanticAssessment[],
+  sentIds: Set<string>,
+  config: CommentIntelligenceConfig,
+  input: AnalyzeCommentsInput
+): CommentIntelligenceResult {
+  const accepted = assessments.filter((a) => sentIds.has(a.commentId));
+  const rankedComments = applySemanticAssessments(
+    baseline.rankedComments,
+    accepted,
+    config.ranking,
+    input.streamState
+  );
+  const topicFilter = config.ranking?.topicFilter ?? 'prefer';
+  const selectedComments = rankedComments
+    .filter((c) => !c.safetyReport?.shouldIgnore)
+    .filter(
+      (c) =>
+        config.ranking?.answeredMemory?.mode !== 'exclude' ||
+        !c.reasons.includes('ignored_recently')
+    )
+    .filter((c) => c.score >= (config.ranking?.minScore ?? 0.3))
+    .filter(
+      (c) =>
+        topicFilter !== 'require' ||
+        !input.streamState?.topic?.trim() ||
+        c.reasons.includes('topic_related')
+    )
+    .slice(0, config.ranking?.maxSelectedComments ?? 1);
+  const selectedIds = new Set(selectedComments.map((c) => c.id));
+  const ignoredComments = rankedComments.filter((c) => !selectedIds.has(c.id));
+  const language = input.streamState?.language ?? config.context?.language;
+  const ignoredSummary =
+    config.summary?.enabled === false
+      ? { totalCount: ignoredComments.length, summary: '', clusters: [] }
+      : summarizeIgnoredComments({
+          comments: ignoredComments,
+          language,
+          maxExamplesPerCluster: config.summary?.maxExamplesPerCluster,
+        });
+  if (config.summary?.includeIgnoredSummary === false)
+    ignoredSummary.summary = '';
+  const result: CommentIntelligenceResult = {
+    ...baseline,
+    rankedComments,
+    selectedComments,
+    ignoredComments,
+    ignoredSummary,
+    contextForLLM: [],
+    debug: {
+      mode: config.analysis?.mode ?? 'rules',
+      usedLLM: true,
+      analyzedCommentCount: input.comments.length,
+      selectedCommentIds: [...selectedIds],
+      blockedViewerIds: baseline.debug?.blockedViewerIds ?? [],
+      llmUnmatchedIds: [
+        ...new Set(
+          assessments
+            .filter((a) => !sentIds.has(a.commentId))
+            .map((a) => a.commentId)
+        ),
+      ],
+      semanticAssessments: accepted,
+    },
+  };
+  result.contextForLLM = buildLLMContext(result, language);
+  result.instructionForLLM = buildDefaultInstruction(result, language);
+  return result;
 }
 
 function buildRulesResult(
@@ -756,13 +858,18 @@ async function withOptionalTimeout<T>(
     return promise;
   }
 
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(
-        () => reject(new Error('Comment analysis timed out')),
-        timeoutMs
-      );
-    }),
-  ]);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('Comment analysis timed out')),
+          timeoutMs
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 }

@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import {
   createCommentIntelligence,
+  createJevCommentAnalysisProvider,
   normalizeWebComment,
 } from '../dist/index.js';
 
 assert.equal(typeof createCommentIntelligence, 'function');
+assert.equal(typeof createJevCommentAnalysisProvider, 'function');
 assert.equal(typeof normalizeWebComment, 'function');
 
 const intelligence = createCommentIntelligence({

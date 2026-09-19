@@ -10,6 +10,16 @@ export {
 } from './tools.js';
 export type { AgentToolDefinition } from './tools.js';
 export { createChatServiceCommentAnalysisProvider } from './llm/createChatServiceCommentAnalysisProvider.js';
+export { createJevCommentAnalysisProvider } from './llm/createJevCommentAnalysisProvider.js';
+export type {
+  JevCommentAnalysisOptions,
+  JevCommentAnalysisProvider,
+  JevCommentAnalysisResult,
+} from './llm/createJevCommentAnalysisProvider.js';
+export type {
+  JevChoiceAnswer,
+  JevCommentDecision,
+} from './jev/commentDecisions.js';
 export { normalizeTwitchComment } from './normalizers/twitch.js';
 export { normalizeWebComment } from './normalizers/web.js';
 export { normalizeYouTubeComment } from './normalizers/youtube.js';
@@ -26,6 +36,7 @@ export type { CommentAnalysisMode } from './types/config.js';
 export type { RecentAiMessage, StreamState } from './types/context.js';
 export type {
   CommentAnalysisLLMProvider,
+  CommentSemanticAssessment,
   LLMCommentAnalysisResult,
 } from './types/llm.js';
 export type {

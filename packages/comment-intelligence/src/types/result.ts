@@ -5,6 +5,7 @@ import type { RankedComment } from './ranking.js';
 import type { SafetyReport } from './safety.js';
 import type { IgnoredCommentsSummary } from './summary.js';
 import type { ViewerProfile } from './viewer.js';
+import type { CommentSemanticAssessment } from './llm.js';
 
 export type CommentIntelligenceDebugInfo = {
   mode: CommentAnalysisMode;
@@ -13,6 +14,7 @@ export type CommentIntelligenceDebugInfo = {
   selectedCommentIds: string[];
   blockedViewerIds?: string[];
   llmUnmatchedIds: string[];
+  semanticAssessments?: CommentSemanticAssessment[];
 };
 
 export type CommentIntelligenceResult = {

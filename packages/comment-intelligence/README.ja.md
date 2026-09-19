@@ -219,7 +219,7 @@ answered memory 全体を消せます。`getAnsweredState(commentId)` と
 
 ## hybrid / llm-assisted mode
 
-LLM補助は optional です。APIキーはこのパッケージに渡さず、アプリ側で provider を作って注入します。
+LLM補助は optional です。APIキーは分析設定に直接渡さず、アプリ側で provider を作って注入します。Jev用アダプターにはOpenRouter APIキーを渡せます。
 
 ```ts
 import { createChatServiceCommentAnalysisProvider } from '@aituber-onair/comment-intelligence';
@@ -234,6 +234,157 @@ const intelligence = createCommentIntelligence({
 ```
 
 provider が失敗しても、`fallbackToRules` が `false` でなければ rules mode の結果に戻ります。
+
+## Jevを使う
+
+`createJevCommentAnalysisProvider()` は、Jevでコメントの意味を評価し、
+既存の優先順位付けを補う任意のプロバイダーです。
+このパッケージでは現在、OpenRouter経由の接続にのみ対応しており、
+OpenRouter APIキーで有効にできます。TypeSafe公式APIが一般公開されたら、
+仕様と動作を確認したうえで直接接続にも対応する予定です。
+初期設定は従来どおり、通信しない `rules` モードです。
+
+### 何が変わるか
+
+ルール分析は高速でAPI料金もかかりませんが、質問や配信テーマとの関連を主に
+語句で判定します。例えばテーマが「音声合成」なら、「声をもっと自然にできる？」
+はテーマの語句を含まず、「ローカル実行の手順を知りたい」は疑問符を含みません。
+Jevは、こうした言い換えや文脈上の質問を分類するために使います。
+
+| 評価 | コメント選択への反映 |
+| --- | --- |
+| 現在の話題に関連するか | `topicRelevance` を補正する |
+| 回答・説明・手順を求めているか | `question` を補正する |
+| 直近の回答ですでに扱った質問か | 今回の順位を下げる |
+
+最後の項目は、同じ話題というだけでは該当せず、追加質問や再説明の依頼も
+区別するよう指示しています。`markAnswered()` の永続的な代わりにはならず、
+渡した履歴内だけの推定です。履歴を渡さなければ、この評価は行いません。
+
+通常のLLMを使う既存の分析プロバイダーも、意味に基づく選択に対応しています。
+Jev版は選択肢を定めた判断APIを使い、複数コメントの評価を1回の通信で求めます。
+自由文のJSON生成や解析を必要とせず、候補ごとの確信度を扱えるのが違いです。
+料金・処理時間・日本語の判定精度が既存LLMより優れるかは、利用する会話で
+比較してください。精度向上や発話の高速化を保証する機能ではありません。
+
+### 設定例（現在はOpenRouter）
+
+```ts
+import {
+  createCommentIntelligence,
+  createJevCommentAnalysisProvider,
+} from '@aituber-onair/comment-intelligence';
+
+// サーバー側の例。公開ブラウザアプリではキーをサーバーに置いてください。
+const intelligence = createCommentIntelligence({
+  analysis: {
+    mode: 'hybrid',
+    llmProvider: createJevCommentAnalysisProvider({
+      transport: 'openrouter',
+      apiKey: process.env.OPENROUTER_API_KEY!,
+      model: '~typesafe/jev-latest',
+      minConfidence: 0.7,
+      maxComments: 20,
+      timeoutMs: 2500,
+    }),
+    llmPolicy: { minComments: 8, timeoutMs: 3000, fallbackToRules: true },
+  },
+  ranking: { topicFilter: 'prefer', maxSelectedComments: 1 },
+});
+
+const result = await intelligence.analyze({
+  comments, // LiveComment[]
+  streamState: { topic: '音声合成', language: 'ja' },
+  recentMessages: [
+    { role: 'assistant', content: 'この音声合成は自分のPCで動かせます。' },
+  ],
+});
+
+console.log(result.selectedComments);
+console.log(result.debug?.semanticAssessments);
+```
+
+`hybrid` は入力コメント数が `minComments` 以上のときに外部分析を使います。
+少数コメントでも評価したい場合は `llm-assisted` を選びます。`rules` なら、
+プロバイダーを設定していても通信しません。アプリ側でコメントをまとめて
+`analyze()` に渡してください。このパッケージは収集タイマーを持ちません。
+
+### オプションと結果
+
+| オプション | 初期値・意味 |
+| --- | --- |
+| `transport` | 必須。現在は `openrouter` のみ |
+| `apiKey` | 必須。OpenRouter APIキー |
+| `model` | `~typesafe/jev-latest`。別のOpenRouter Jev IDも指定可能 |
+| `minConfidence` | `0.7`。0〜1。検証済みの最適値ではなく、調整の開始値 |
+| `maxComments` | `20`。1〜50。対象コメントを入力順に最大何件評価するか |
+| `timeoutMs` | `2500`。HTTPリクエストを中断するまでの時間 |
+| `fetch` | 実行環境の `fetch`。テストなどで差し替え可能 |
+
+話題・質問の判定は、確信度が閾値以上なら肯定・否定の両方を反映します。
+曖昧な回答、低確信、確信度が欠けた回答では、その項目のルール判定を残します。
+確信度は正答率ではありません。元の選択結果・確信度・確率分布が必要な場合は、
+プロバイダーの `analyze()` が返す `decisions` を参照できます。
+
+鮮度、視聴者属性、回答済み記録などは既存処理を使います。話題・質問の補正は
+`ranking.strategy` と `ranking.weights` に従います。`topicFilter: 'off'` は
+話題による補正を使わず、`require` は補正後もテーマ関連を必須にします。
+回答済みの推定は `answered_in_context` と0.75点の減点を追加します。
+既存の回答済み減点とは重複させず、視聴者状態や回答済み記録も更新しません。
+
+`semanticAssessments` を返すプロバイダーでは、決定論的に再ランキングし、
+`minScore` と `maxSelectedComments` を適用します。同じ結果に含まれる
+`selectedCommentIds`、安全性フラグ、自由文の指示・要約は使用しません。
+未選択コメントの要約と下流向け文脈は、最終選択に合わせてローカルで作ります。
+
+### 入力範囲と失敗時の扱い
+
+- `createCommentIntelligence()` 経由では、既存ルールが除外したコメントや
+  `answeredMemory.mode: 'exclude'` の対象をAPIに送りません。Jevで除外を解除しません。
+- プロバイダーを直接呼ぶ場合は、呼び出し側が事前の除外を担当します。
+- コメントは1,000文字を超えると評価対象から外し、ルールの順位を維持します。
+  対象の先頭 `maxComments` 件だけを1回で評価し、自動で追加バッチを送りません。
+  `llmPolicy.maxComments` を設定した場合は、その上限も先に適用されます。
+- 話題は先頭500文字、履歴は最後のユーザー・assistant発言6件の各先頭1,000文字を
+  送ります。`system` メッセージ、著者情報、任意のmetadataは送信しません。
+  古い履歴や省略された部分を踏まえた評価はできません。
+- APIキー・コメント・結果をプロバイダー自身が保存することはありません。
+  送信対象の本文・会話履歴はOpenRouterと推論先へ渡ります。
+- 通信失敗、不正な応答、タイムアウトでは、初期設定でルール分析へ戻ります。
+  このとき `debug.usedLLM` は `false` です。正常な分析経路では `true` ですが、
+  全件が低確信だった場合も含むため、評価が反映された証拠にはなりません。
+- `llmPolicy.timeoutMs` が先に切れた場合もHTTP通信を中断します。
+  `fallbackToRules: false` ならエラーを呼び出し側へ返します。
+
+Jevは安全性判定、BAN、関係値更新、返答生成には使いません。視聴者の発言は
+評価対象のデータとして渡し、その内容を指示として扱わないよう質問を固定しています。
+それでも誘導的な入力や文脈の読み違いは起こり得るため、既存の除外条件を維持します。
+
+### 比較サンプルと検証
+
+ブラウザで試す場合は、[Live Comment Filterサンプル](./examples/live-comment-filter-sample/README.ja.md)
+を起動し、解析エンジンに「Jev」を選んでOpenRouter APIキーを入力してください。
+「文脈と回答済みの質問」パターンで、話題・コメント・直近の回答をまとめて
+設定できます。「ルールのみ」に切り替えて再実行すると、選択結果を比較できます。
+
+通信モックによるテストはJevの精度や速度を示すものではありません。実際の会話で、
+ルール版・既存LLM版・Jev版が選ぶコメントを比較してください。話題に合う未回答の
+質問を拾えた割合、回答済み質問の再選択、処理時間と費用を確認します。
+プロンプトや閾値の調整用とは別の会話データでも確認してください。
+
+接続先はOpenRouterのalpha Decisions API
+`POST https://openrouter.ai/api/alpha/decisions` です。
+通常のChat Completions APIには送りません。TypeSafe直結は未実装です。
+判断基準・結果の検証と接続処理を分離しており、公式APIの一般公開後に
+仕様と動作を確認し、別transportとして直接接続を追加する予定です。
+現時点で `transport: 'typesafe'` は指定できません。
+
+2026-09-19時点で、[OpenRouter公式OpenAPI](https://openrouter.ai/openapi.json)の
+リクエスト・応答仕様と[モデル掲載](https://openrouter.ai/typesafe/jev-1.13)を確認し、
+通信モックによるテストを実施しています。この変更で有料実APIを使った動作確認や
+日本語精度の測定は行っていません。最新エイリアスはモデル更新で挙動が変わり得ます。
+[TypeSafeのChoice仕様](https://docs.typesafe.ai/primitives/choice)と
+[既知の制約](https://docs.typesafe.ai/model-jaggedness/jev-1.13)も参照してください。
 
 ## Normalizer
 
@@ -285,7 +436,7 @@ console.log(debugDecision.rankedComments);
 
 ## API
 
-関数・定数: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`。
+関数・定数: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `createJevCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`。
 
 `createCommentIntelligence()` が返す object には、`analyze()`,
 `markAnswered()`, `getAnsweredState()`, `listAnsweredStates()`,
