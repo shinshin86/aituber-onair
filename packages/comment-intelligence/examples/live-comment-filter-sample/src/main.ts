@@ -1,20 +1,23 @@
 import {
   createCommentIntelligence,
+  createJevCommentAnalysisProvider,
   formatCommentIntelligencePrompt,
   type CommentAnalysisLLMProvider,
   type CommentIntelligenceConfig,
   type CommentIntelligenceResult,
   type LLMCommentAnalysisResult,
   type LiveComment,
+  type JevCommentDecision,
   type RankingStrategy,
 } from '../../../src/index';
 import { parseComments } from './parseComments';
+import { renderComparison } from './renderComparison';
 import './styles.css';
 
 type Intelligence = ReturnType<typeof createCommentIntelligence>;
 type UiLanguage = 'en' | 'ja';
-type PresetKey = 'live' | 'blockedViewer' | 'noisy';
-type AnalysisEngine = 'rules' | 'openai';
+type PresetKey = 'live' | 'blockedViewer' | 'noisy' | 'jev';
+type AnalysisEngine = 'rules' | 'openai' | 'jev';
 type OpenAIModel = 'gpt-5.4-nano' | 'gpt-5.4-mini' | 'gpt-5.4' | 'gpt-5.5';
 
 const OPENAI_MODELS: Array<{
@@ -100,6 +103,9 @@ const OPENAI_ANALYSIS_RESPONSE_FORMAT = {
 
 const PRESETS: Record<UiLanguage, Record<PresetKey, string>> = {
   en: {
+    jev: `Viewer A: Speech synthesis is useful
+Viewer B: I would like the local setup steps
+Viewer C: Can that voice run on my own computer?`,
     live: `Viewer A: First time here!
 Viewer B: New here, excited to watch
 Viewer C: Is the screen layout easy to read?
@@ -126,6 +132,9 @@ Viewer G: love this stream
 Viewer H: How do you choose which comment to answer?`,
   },
   ja: {
+    jev: `視聴者A: 音声合成って便利だね
+視聴者B: ローカル実行の手順を知りたい
+視聴者C: その声は自分のPCで動く？`,
     live: `視聴者A: 初見です！
 視聴者B: 初めて配信に来ました
 視聴者C: 画面レイアウトは見やすいですか？
@@ -161,6 +170,10 @@ const COPY = {
     title: 'Live Comment Filter',
     lead: 'Choose a comment pattern. See what the AI answers, blocks, and keeps as context.',
     usecases: {
+      jev: {
+        title: 'Meaning and prior answers',
+        text: 'Try Jev with paraphrases and an already answered question.',
+      },
       live: {
         title: 'Normal chat',
         text: 'Questions, greetings, and first-time viewers.',
@@ -191,8 +204,36 @@ const COPY = {
     engine: 'Analysis engine',
     rulesEngine: 'Rules only',
     openaiEngine: 'OpenAI LLM assist',
+    jevEngine: 'Jev',
+    jevHint:
+      'Jev assesses topic relevance, requests for answers, and previously answered questions. Currently available through OpenRouter.',
+    jevKey: 'OpenRouter API key',
+    jevKeyHint:
+      'Sent directly to OpenRouter for this local demo; not saved to browser storage. Use a temporary key. Keep application keys on a server in production.',
+    recentReply: 'Recent AI reply (optional, Jev)',
+    recentReplyHint:
+      'Paste an actual recent reply to check whether a comment has already been answered. Leave blank to skip this assessment.',
+    jevTopic: 'speech synthesis',
+    jevReply: 'This speech synthesis can run on your own computer.',
+    missingKey: 'Enter the API key for the selected engine before running.',
+    running: 'Analyzing…',
+    runningWith: (engine: string) => `Analyzing with ${engine}…`,
+    completeWith: (engine: string, count: number) =>
+      `Completed with ${engine} · ${count} selected`,
+    fallbackWith: (engine: string) =>
+      `${engine} failed · showing rules results`,
+    skippedJev: 'No comments eligible for Jev · no API request sent',
+    jevApplied: (count: number) =>
+      `Jev assessments applied to ${count} comments`,
+    failedRun: 'Analysis failed. Check the settings and try again.',
+    keyRequired: (provider: string) =>
+      `Not started: enter your ${provider} API key.`,
+
+    jevTimingHint:
+      'Jev requests time out after 2.5 seconds. Network or API errors also fall back to rules.',
+
     engineHint:
-      'Choose OpenAI LLM assist to pass safe comment analysis through an llmProvider.',
+      'Choose rules, OpenAI, or Jev to compare comment selection. External analysis runs only when you click the filter button.',
     openaiModel: 'OpenAI model',
     openaiModelHint:
       'Default uses the cost-efficient nano model. Choose a larger model when you want higher analysis quality.',
@@ -211,7 +252,7 @@ const COPY = {
     topicValue: 'screen layout',
     topicPanelTitle: 'Stream topic',
     topicPanelDesc:
-      'Set the topic and choose how strictly comments must match it (off / prefer / require) to see topic-aware selection in action. Rule-based matching is literal keyword matching; switch the engine to OpenAI for flexible, meaning-based topic matching.',
+      'Set the topic and choose how strictly comments must match it (off / prefer / require) to see topic-aware selection in action. Rule-based matching is literal keyword matching; switch the engine to OpenAI or Jev for meaning-based topic matching.',
     topicFilter: 'Topic filter',
     topicFilterOff: 'Off',
     topicFilterPrefer: 'Prefer topic matches',
@@ -232,6 +273,7 @@ const COPY = {
     ignoredTitle: 'Kept as context',
     incomingKicker: 'Incoming',
     incomingTitle: 'All received comments',
+    comparisonTitle: 'Which candidate was selected?',
     incomingLead: (
       totalCount: number,
       selectedCount: number,
@@ -300,6 +342,10 @@ const COPY = {
     title: 'ライブコメントを選別する',
     lead: 'コメントパターンを選ぶだけ。AIが拾うコメント、止めるコメント、残す文脈が見えます。',
     usecases: {
+      jev: {
+        title: '文脈と回答済みの質問',
+        text: '言い換えや回答済みの質問をJevで評価。',
+      },
       live: {
         title: '通常の配信',
         text: '質問、挨拶、初見コメントが混ざる。',
@@ -330,8 +376,35 @@ const COPY = {
     engine: '解析エンジン',
     rulesEngine: 'ルールのみ',
     openaiEngine: 'OpenAI LLMアシスト',
+    jevEngine: 'Jev',
+    jevHint:
+      '話題との関連、回答を求めるコメント、回答済みの質問を評価します。現在はOpenRouter経由で利用できます。',
+    jevKey: 'OpenRouter APIキー',
+    jevKeyHint:
+      'ローカル検証用の一時キーを使用してください。キーはOpenRouterへ直接送信し、ブラウザには保存しません。公開アプリではサーバー側で管理してください。',
+    recentReply: '直近のAIの回答（任意・Jev用）',
+    recentReplyHint:
+      '実際に返した回答を入力すると、回答済みかどうかを評価できます。空欄ならこの評価は行いません。',
+    jevTopic: '音声合成',
+    jevReply: 'この音声合成は自分のPCで動かせます。',
+    missingKey: '選択したエンジンのAPIキーを入力してから実行してください。',
+    running: '分析中…',
+    runningWith: (engine: string) => `${engine}で分析中…`,
+    completeWith: (engine: string, count: number) =>
+      `${engine}で完了 · ${count}件を選択`,
+    fallbackWith: (engine: string) =>
+      `${engine}の分析に失敗 · ルールで処理しました`,
+    skippedJev: 'Jevの評価対象がないため、APIを呼ばずに完了しました',
+    jevApplied: (count: number) => `${count}件にJevの評価を反映`,
+    failedRun: '分析に失敗しました。設定を確認して再実行してください。',
+    keyRequired: (provider: string) =>
+      `未実行：${provider}のAPIキーを入力してください。`,
+
+    jevTimingHint:
+      'Jevは2.5秒でタイムアウトします。通信やAPIのエラー時もルール分析へ戻ります。',
+
     engineHint:
-      'OpenAI LLMアシストを選ぶと、llmProvider経由で安全なコメント分析をOpenAIへ渡します。',
+      'ルール・OpenAI・Jevを切り替えてコメントの選び方を比較できます。外部APIはフィルタリングボタンを押したときだけ呼びます。',
     openaiModel: 'OpenAIモデル',
     openaiModelHint:
       'デフォルトはコスパ重視のnanoモデルです。分析品質を上げたい場合は大きいモデルを選んでください。',
@@ -350,7 +423,7 @@ const COPY = {
     topicValue: '画面レイアウト',
     topicPanelTitle: '配信トピック',
     topicPanelDesc:
-      '配信テーマを設定し、コメントの一致度合い(使わない/優先/対象のみ)を選ぶと、トピックに沿ったコメント選別の動きを確認できます。ルールベースは文字列(キーワード)一致です。意味の近いコメントまで柔軟に拾いたい場合はエンジンをOpenAIに切り替えてください。',
+      '配信テーマを設定し、コメントの一致度合い(使わない/優先/対象のみ)を選ぶと、トピックに沿ったコメント選別の動きを確認できます。ルールベースは文字列(キーワード)一致です。意味の近いコメントまで柔軟に拾いたい場合はエンジンをOpenAIまたはJevに切り替えてください。',
     topicFilter: 'トピック絞り込み',
     topicFilterOff: '使わない',
     topicFilterPrefer: '優先（加点）',
@@ -371,6 +444,7 @@ const COPY = {
     ignoredTitle: '残す文脈',
     incomingKicker: '受信',
     incomingTitle: '実際に来たコメント',
+    comparisonTitle: '候補の比較と選択結果',
     incomingLead: (
       totalCount: number,
       selectedCount: number,
@@ -432,11 +506,7 @@ const COPY = {
   },
 } as const;
 
-const app = document.querySelector<HTMLDivElement>('#app');
-
-if (!app) {
-  throw new Error('App root was not found.');
-}
+const app = getElement<HTMLDivElement>('app');
 
 let uiLanguage: UiLanguage = 'en';
 let activePreset: PresetKey | undefined = 'live';
@@ -445,6 +515,14 @@ let analysisEngine: AnalysisEngine = 'rules';
 let selectedOpenAIModel: OpenAIModel = 'gpt-5.4-nano';
 let openaiApiKey = '';
 let openaiApiKeyRevision = 0;
+let jevApiKey = '';
+let jevApiKeyRevision = 0;
+let recentReply = '';
+let analysisRevision = 0;
+let isAnalyzing = false;
+let progressTimer: ReturnType<typeof setInterval> | undefined;
+let jevDecisionCount = 0;
+let jevDecisions: JevCommentDecision[] = [];
 let intelligence: Intelligence | null = null;
 let configSignature = '';
 let lastLLMError: string | undefined;
@@ -454,6 +532,7 @@ renderApp();
 function renderApp() {
   const copy = COPY[uiLanguage];
   const openAIControlsDisabled = analysisEngine === 'openai' ? '' : ' disabled';
+  const jevControlsDisabled = analysisEngine === 'jev' ? '' : ' disabled';
   document.documentElement.lang = copy.htmlLang;
 
   app.innerHTML = `
@@ -492,6 +571,7 @@ function renderApp() {
           ${renderUsecaseButton('live')}
           ${renderUsecaseButton('blockedViewer')}
           ${renderUsecaseButton('noisy')}
+          ${renderUsecaseButton('jev')}
         </div>
 
         <details class="editor-details" open>
@@ -505,6 +585,7 @@ function renderApp() {
 
           <div class="action-row editor-action-row">
             <button type="button" class="primary" id="filter-from-editor">${copy.analyze}</button>
+            ${renderAnalysisStatus()}
           </div>
         </details>
 
@@ -513,8 +594,10 @@ function renderApp() {
           <select id="analysis-engine">
             <option value="rules"${analysisEngine === 'rules' ? ' selected' : ''}>${copy.rulesEngine}</option>
             <option value="openai"${analysisEngine === 'openai' ? ' selected' : ''}>${copy.openaiEngine}</option>
+            <option value="jev"${analysisEngine === 'jev' ? ' selected' : ''}>${copy.jevEngine}</option>
           </select>
           <p class="hint">${copy.engineHint}</p>
+          <div id="openai-settings" class="provider-settings"${analysisEngine === 'openai' ? '' : ' hidden'}>
           <label for="openai-model">${copy.openaiModel}</label>
           <select id="openai-model"${openAIControlsDisabled}>
             ${renderOpenAIModelOptions()}
@@ -523,7 +606,18 @@ function renderApp() {
           <label for="openai-api-key">${copy.openaiKey}</label>
           <input id="openai-api-key" type="password" value="${escapeHtml(openaiApiKey)}" placeholder="${copy.openaiKeyPlaceholder}" autocomplete="off"${openAIControlsDisabled} />
           <p class="hint">${copy.openaiKeyHint}</p>
+          </div>
+          <div id="jev-settings" class="provider-settings"${analysisEngine === 'jev' ? '' : ' hidden'}>
+            <p class="hint">${copy.jevHint}</p>
+            <label for="jev-api-key">${copy.jevKey}</label>
+            <input id="jev-api-key" type="password" autocomplete="off" value="${escapeHtml(jevApiKey)}"${jevControlsDisabled} />
+            <p class="hint">${copy.jevKeyHint}</p>
+            <label for="recent-reply">${copy.recentReply}</label>
+            <textarea id="recent-reply" rows="3"${jevControlsDisabled}>${escapeHtml(recentReply)}</textarea>
+            <p class="hint">${copy.recentReplyHint}</p>
+          </div>
         </div>
+        <p id="analysis-error" class="fallback-alert" role="alert" hidden></p>
 
         <section class="panel topic-panel">
           <div class="panel-heading">
@@ -593,6 +687,7 @@ function renderApp() {
 
         <div class="action-row">
           <button type="submit" class="primary">${copy.analyze}</button>
+          ${renderAnalysisStatus()}
         </div>
       </form>
 
@@ -600,6 +695,7 @@ function renderApp() {
         <div class="section-heading compact" id="analysis-results">
           <p class="kicker">${copy.step2}</p>
           <h2>${copy.decisionTitle}</h2>
+          ${renderAnalysisStatus()}
         </div>
         <div id="llm-fallback" class="fallback-alert" hidden></div>
 
@@ -613,6 +709,11 @@ function renderApp() {
           </div>
           <p class="value-lead" id="incoming-lead"></p>
           <div class="incoming-list" id="incoming-comments"></div>
+        </article>
+
+        <article class="panel comparison-panel">
+          <h3>${copy.comparisonTitle}</h3>
+          <div id="candidate-comparison"></div>
         </article>
 
         <div class="value-grid">
@@ -665,6 +766,7 @@ function renderApp() {
   `;
 
   bindEvents();
+  if (activePreset === 'jev') applyJevPresetContext();
   resetIntelligence();
   renderPendingResult();
 }
@@ -707,6 +809,7 @@ function bindEvents() {
       currentCommentsText = PRESETS[uiLanguage][activePreset];
       getElement<HTMLTextAreaElement>('comments').value = currentCommentsText;
       setActivePreset(button);
+      if (activePreset === 'jev') applyJevPresetContext();
       resetIntelligence();
       renderPendingResult();
     });
@@ -725,7 +828,9 @@ function bindEvents() {
     (event) => {
       analysisEngine = (event.currentTarget as HTMLSelectElement)
         .value as AnalysisEngine;
-      renderApp();
+      updateEngineControls();
+      resetIntelligence();
+      renderPendingResult();
     }
   );
 
@@ -744,6 +849,24 @@ function bindEvents() {
     (event) => {
       openaiApiKey = (event.currentTarget as HTMLInputElement).value;
       openaiApiKeyRevision += 1;
+      resetIntelligence();
+      renderPendingResult();
+    }
+  );
+
+  getElement<HTMLInputElement>('jev-api-key').addEventListener(
+    'input',
+    (event) => {
+      jevApiKey = (event.currentTarget as HTMLInputElement).value;
+      jevApiKeyRevision += 1;
+      resetIntelligence();
+      renderPendingResult();
+    }
+  );
+  getElement<HTMLTextAreaElement>('recent-reply').addEventListener(
+    'input',
+    (event) => {
+      recentReply = (event.currentTarget as HTMLTextAreaElement).value;
       resetIntelligence();
       renderPendingResult();
     }
@@ -794,7 +917,28 @@ function bindEvents() {
   );
 }
 
+function updateEngineControls() {
+  for (const engine of ['openai', 'jev'] as const) {
+    const settings = getElement<HTMLDivElement>(`${engine}-settings`);
+    settings.hidden = analysisEngine !== engine;
+    for (const control of settings.querySelectorAll<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >('input, select, textarea')) {
+      control.disabled = settings.hidden;
+    }
+  }
+}
+
+function applyJevPresetContext() {
+  const copy = COPY[uiLanguage];
+  recentReply = copy.jevReply;
+  getElement<HTMLInputElement>('topic').value = copy.jevTopic;
+  getElement<HTMLTextAreaElement>('recent-reply').value = recentReply;
+}
+
 function resetIntelligence() {
+  analysisRevision += 1;
+  setAnalysisBusy(false);
   intelligence = createCommentIntelligence(buildConfig());
   configSignature = buildConfigSignature();
 }
@@ -814,19 +958,21 @@ function buildConfig(): CommentIntelligenceConfig {
 
   return {
     analysis: {
-      mode: analysisEngine === 'openai' ? 'llm-assisted' : 'rules',
+      mode: analysisEngine !== 'rules' ? 'llm-assisted' : 'rules',
       llmProvider: hasOpenAIKey
         ? createOpenAICommentAnalysisProvider(
             apiKey,
             language,
             selectedOpenAIModel
           )
-        : undefined,
+        : analysisEngine === 'jev' && jevApiKey.trim()
+          ? createBrowserJevProvider(jevApiKey.trim())
+          : undefined,
       llmPolicy: {
         fallbackToRules: true,
         minComments: 8,
         maxComments: 12,
-        timeoutMs: 30000,
+        timeoutMs: analysisEngine === 'jev' ? 3000 : 30000,
       },
     },
     safety: {
@@ -869,7 +1015,33 @@ function buildConfigSignature(): string {
     selectedOpenAIModel,
     hasOpenAIKey: openaiApiKey.trim().length > 0,
     openaiApiKeyRevision,
+    jevApiKeyRevision,
   });
+}
+
+function createBrowserJevProvider(apiKey: string): CommentAnalysisLLMProvider {
+  const provider = createJevCommentAnalysisProvider({
+    transport: 'openrouter',
+    apiKey,
+  });
+  return {
+    inputScope: provider.inputScope,
+    async analyze(input) {
+      try {
+        const revision = analysisRevision;
+        const result = await provider.analyze(input);
+        if (revision === analysisRevision) {
+          jevDecisionCount = result.decisions.length;
+          jevDecisions = result.decisions;
+        }
+        return result;
+      } catch (error) {
+        lastLLMError =
+          error instanceof Error ? error.message : 'Jev analysis failed';
+        throw error;
+      }
+    },
+  };
 }
 
 function createOpenAICommentAnalysisProvider(
@@ -1101,7 +1273,73 @@ function normalizeLLMResult(
   };
 }
 
+function renderAnalysisStatus(): string {
+  return '<div class="analysis-status" data-analysis-status hidden><span class="analysis-spinner" aria-hidden="true"></span><span data-status-message role="status" aria-live="polite"></span><span data-status-time aria-hidden="true"></span></div>';
+}
+
+function setAnalysisStatus(
+  state: 'idle' | 'running' | 'success' | 'warning' | 'error',
+  message = '',
+  elapsedMs?: number
+) {
+  for (const status of document.querySelectorAll<HTMLElement>(
+    '[data-analysis-status]'
+  )) {
+    status.hidden = state === 'idle';
+    status.dataset.state = state;
+    const messageElement = status.querySelector<HTMLElement>(
+      '[data-status-message]'
+    );
+    const timeElement = status.querySelector<HTMLElement>('[data-status-time]');
+    if (messageElement) messageElement.textContent = message;
+    if (timeElement)
+      timeElement.textContent =
+        elapsedMs === undefined ? '' : `${(elapsedMs / 1000).toFixed(1)}s`;
+  }
+}
+
+function engineLabel(): string {
+  return analysisEngine === 'jev'
+    ? 'Jev (OpenRouter)'
+    : analysisEngine === 'openai'
+      ? `OpenAI / ${selectedOpenAIModel}`
+      : COPY[uiLanguage].rulesEngine;
+}
+
+function setAnalysisBusy(busy: boolean) {
+  isAnalyzing = busy;
+  if (!busy) {
+    clearInterval(progressTimer);
+    progressTimer = undefined;
+  }
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    '#controls button.primary'
+  )) {
+    button.disabled = busy;
+    button.classList.toggle('is-loading', busy);
+    button.textContent = busy
+      ? COPY[uiLanguage].running
+      : COPY[uiLanguage].analyze;
+    button.setAttribute('aria-busy', String(busy));
+  }
+}
+
 async function analyze(options: { focusResults?: boolean } = {}) {
+  if (isAnalyzing) return;
+  if (
+    (analysisEngine === 'jev' && !jevApiKey.trim()) ||
+    (analysisEngine === 'openai' && !openaiApiKey.trim())
+  ) {
+    const error = getElement<HTMLParagraphElement>('analysis-error');
+    error.textContent = COPY[uiLanguage].keyRequired(
+      analysisEngine === 'jev' ? 'OpenRouter' : 'OpenAI'
+    );
+    error.hidden = false;
+    setAnalysisStatus('error', error.textContent);
+    return;
+  }
+  getElement<HTMLParagraphElement>('analysis-error').hidden = true;
+  const revision = ++analysisRevision;
   const config = buildConfig();
   const nextSignature = buildConfigSignature();
   if (!intelligence || nextSignature !== configSignature) {
@@ -1114,20 +1352,75 @@ async function analyze(options: { focusResults?: boolean } = {}) {
     uiLanguage
   );
   lastLLMError = undefined;
-  const result = await intelligence.analyze({
-    comments,
-    streamState: {
-      platform: 'web',
-      mode: 'test',
-      topic: getInputValue('topic'),
-      language: getSelectValue('language') as 'ja' | 'en' | 'auto',
-    },
-  });
+  jevDecisionCount = 0;
+  jevDecisions = [];
+  const startedAt = performance.now();
+  const label = engineLabel();
+  const updateProgress = () =>
+    setAnalysisStatus(
+      'running',
+      COPY[uiLanguage].runningWith(label),
+      performance.now() - startedAt
+    );
+  setAnalysisBusy(true);
+  updateProgress();
+  progressTimer = setInterval(updateProgress, 100);
+  try {
+    const result = await intelligence.analyze({
+      comments,
+      recentMessages:
+        analysisEngine === 'jev' && recentReply.trim()
+          ? [{ role: 'assistant', content: recentReply.trim() }]
+          : undefined,
+      streamState: {
+        platform: 'web',
+        mode: 'test',
+        topic: getInputValue('topic'),
+        language: getSelectValue('language') as 'ja' | 'en' | 'auto',
+      },
+    });
 
-  renderResult(result, comments, options);
+    if (revision === analysisRevision) {
+      renderResult(result, comments, options);
+      const copy = COPY[uiLanguage];
+      const fallback = analysisEngine !== 'rules' && !result.debug?.usedLLM;
+      let message = fallback
+        ? copy.fallbackWith(label)
+        : copy.completeWith(label, result.selectedComments.length);
+      if (!fallback && analysisEngine === 'jev') {
+        const applied =
+          result.debug?.semanticAssessments?.filter(
+            (a) =>
+              typeof a.question === 'boolean' ||
+              typeof a.topicRelated === 'boolean' ||
+              a.alreadyAnswered === true
+          ).length ?? 0;
+        message =
+          jevDecisionCount === 0
+            ? copy.skippedJev
+            : `${message} · ${copy.jevApplied(applied)}`;
+      }
+      setAnalysisStatus(
+        fallback ? 'warning' : 'success',
+        message,
+        performance.now() - startedAt
+      );
+    }
+  } catch {
+    if (revision === analysisRevision)
+      setAnalysisStatus(
+        'error',
+        COPY[uiLanguage].failedRun,
+        performance.now() - startedAt
+      );
+  } finally {
+    if (revision === analysisRevision) setAnalysisBusy(false);
+  }
 }
 
 function renderPendingResult() {
+  setAnalysisStatus('idle');
+  getElement<HTMLParagraphElement>('analysis-error').hidden = true;
   const copy = COPY[uiLanguage];
   const comments = parseComments(
     getElement<HTMLTextAreaElement>('comments').value,
@@ -1160,6 +1453,8 @@ function renderPendingResult() {
       <p>${copy.noResult}</p>
     </div>
   `;
+  getElement<HTMLDivElement>('candidate-comparison').textContent =
+    copy.noResult;
   getElement<HTMLDivElement>('ranking').innerHTML =
     `<p class="empty">${copy.noDeveloperOutput}</p>`;
   getElement<HTMLDivElement>('llm-fallback').hidden = true;
@@ -1203,12 +1498,18 @@ function renderResult(
       renderIncomingComment(comment, selectedCommentIds, unsafeCommentIds)
     )
     .join('');
+  getElement<HTMLDivElement>('candidate-comparison').innerHTML =
+    renderComparison(result, {
+      language: uiLanguage,
+      engine: analysisEngine,
+      decisions: jevDecisions,
+    });
   const fallbackAlert = getElement<HTMLDivElement>('llm-fallback');
   const showLLMFallbackNotice =
-    analysisEngine === 'openai' && result.debug?.usedLLM === false;
+    analysisEngine !== 'rules' && result.debug?.usedLLM === false;
   const llmUnmatchedIds = result.debug?.llmUnmatchedIds ?? [];
   const showLLMUnknownIdsNotice =
-    analysisEngine === 'openai' &&
+    analysisEngine !== 'rules' &&
     result.debug?.usedLLM === true &&
     llmUnmatchedIds.length > 0;
   fallbackAlert.hidden = !showLLMFallbackNotice && !showLLMUnknownIdsNotice;
@@ -1216,7 +1517,11 @@ function renderResult(
     ? [
         copy.llmFallbackNotice,
         lastLLMError ? copy.llmFailureReason(lastLLMError) : undefined,
-        lastLLMError ? undefined : copy.llmFallbackTimingHint,
+        analysisEngine === 'jev'
+          ? copy.jevTimingHint
+          : lastLLMError
+            ? undefined
+            : copy.llmFallbackTimingHint,
       ]
         .filter((line): line is string => Boolean(line))
         .join(' ')

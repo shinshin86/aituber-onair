@@ -248,7 +248,164 @@ const intelligence = createCommentIntelligence({
 });
 ```
 
-The package does not read or store API keys. If the provider fails and `fallbackToRules` is not `false`, rules mode results are returned.
+The analysis configuration does not read API keys from the environment or persist them. The optional Jev adapter accepts a key explicitly. If the provider fails and `fallbackToRules` is not `false`, rules mode results are returned.
+
+## Using Jev
+
+`createJevCommentAnalysisProvider()` optionally uses Jev to assess the meaning of
+comments before deterministic ranking. Rules remain the default and make no API
+calls. This package currently supports only the OpenRouter connection, which
+requires an OpenRouter API key. Direct TypeSafe API support is planned after its
+general release, subject to contract and integration verification. The adapter
+does not depend on the chat package or a provider SDK.
+
+### Why use it?
+
+Rule analysis recognizes questions and topic relevance mainly through words and
+punctuation. With the topic "speech synthesis", a comment such as "Can that voice
+run on my own computer?" may be relevant without repeating the topic's words.
+"I would like the setup steps" requests an answer without a question mark.
+
+Jev asks three focused questions per comment, where context is available:
+
+| Assessment | Effect |
+| --- | --- |
+| Relevant to the current topic? | Corrects the `topicRelevance` ranking signal |
+| Requests an answer, explanation, or guidance? | Corrects the `question` signal |
+| Already answered in recent assistant messages? | Deprioritizes the comment for this analysis |
+
+The last question distinguishes an actual prior answer from merely discussing the
+same topic, and instructs the model to allow clarification, repetition requests,
+and new details. Supply recent conversation to use it. It does not replace
+`markAnswered()` or maintain a semantic memory across calls.
+
+The existing ChatService analysis provider also supports semantic analysis. Jev
+uses bounded choices and confidence through a dedicated Decisions API, evaluating
+a batch in one request without generating free-form JSON text. Compare quality,
+latency and cost on your own comments before choosing between them. This adapter
+does not guarantee better Japanese understanding or faster spoken responses.
+
+### Setup (currently OpenRouter)
+
+```ts
+import {
+  createCommentIntelligence,
+  createJevCommentAnalysisProvider,
+} from '@aituber-onair/comment-intelligence';
+
+// Server-side example. Keep application-owned keys on the server in public apps.
+const intelligence = createCommentIntelligence({
+  analysis: {
+    mode: 'hybrid',
+    llmProvider: createJevCommentAnalysisProvider({
+      transport: 'openrouter',
+      apiKey: process.env.OPENROUTER_API_KEY!,
+      model: '~typesafe/jev-latest',
+      minConfidence: 0.7,
+      maxComments: 20,
+      timeoutMs: 2500,
+    }),
+    llmPolicy: { minComments: 8, timeoutMs: 3000, fallbackToRules: true },
+  },
+  ranking: { topicFilter: 'prefer', maxSelectedComments: 1 },
+});
+
+const result = await intelligence.analyze({
+  comments, // LiveComment[]
+  streamState: { topic: 'speech synthesis', language: 'en' },
+  recentMessages: [
+    { role: 'assistant', content: 'This voice can run on your own computer.' },
+  ],
+});
+
+console.log(result.selectedComments);
+console.log(result.debug?.semanticAssessments);
+```
+
+`hybrid` calls the provider when the input count reaches `minComments`.
+Use `llm-assisted` to analyze smaller batches. `rules` never invokes the provider,
+even when one is configured. The host collects comments into batches; this package
+does not schedule collection windows.
+
+### Options and ranking
+
+| Option | Default / meaning |
+| --- | --- |
+| `transport` | Required; currently only `openrouter` |
+| `apiKey` | Required OpenRouter API key |
+| `model` | `~typesafe/jev-latest`; another OpenRouter Jev ID may be supplied |
+| `minConfidence` | `0.7`, range 0–1; a starting threshold, not an empirically calibrated optimum |
+| `maxComments` | `20`, integer 1–50; first N eligible comments in caller order |
+| `timeoutMs` | `2500`; aborts the HTTP request |
+| `fetch` | Runtime fetch; can be injected for testing |
+
+Confident yes and no answers can replace topic/question rule signals. Uncertain,
+low-confidence, or missing-confidence answers leave that signal unchanged.
+Confidence is not a probability of being correct. Calling the provider directly
+also returns `decisions`, containing raw choices, confidence and probabilities.
+
+Freshness, viewer attributes and answered memory retain their existing rules.
+Corrections use `ranking.strategy` and `ranking.weights`. `topicFilter: 'off'`
+disables topic corrections; `require` still requires topic relevance after
+correction. An answered paraphrase receives `answered_in_context` and a 0.75
+penalty, without duplicating an existing answered-memory penalty. No viewer state
+or answered-memory record is changed by this inference.
+
+Providers returning `semanticAssessments` use deterministic re-ranking with
+`minScore` and `maxSelectedComments`. Provider-selected IDs, safety flags and
+free-text instructions/summaries in the same result are not used. Local summary
+and context builders run against the final selection. Legacy ChatService provider
+results retain their existing path.
+
+### Input bounds and failure behavior
+
+- Through `createCommentIntelligence()`, comments excluded by existing safety
+  rules or `answeredMemory.mode: 'exclude'` are not sent. Jev cannot clear exclusions.
+  When calling the provider directly, the caller performs eligibility filtering.
+- Comments longer than 1,000 characters are skipped, keeping rule scores. Only
+  the first `maxComments` remaining comments are evaluated in one request; no
+  automatic extra batches are sent. `llmPolicy.maxComments`, if set, applies first.
+- The request includes up to 500 topic characters and the last six user/assistant
+  messages, up to 1,000 characters each. System messages, author metadata and
+  arbitrary comment metadata are omitted. Older/truncated context cannot be evaluated.
+- The provider stores no API keys, comments or results. Selected input text and
+  conversation history are sent to OpenRouter and the inference provider.
+- HTTP errors, invalid responses and timeouts fall back to rules by default, with
+  `debug.usedLLM: false`. A completed provider path sets it to true even when every
+  answer abstained; inspect `semanticAssessments` to see which signals were used.
+- The outer `llmPolicy.timeoutMs` also cancels the HTTP request when it expires
+  first. Set `fallbackToRules: false` to propagate failures instead.
+
+Jev does not perform moderation, bans, relationship updates, or reply generation.
+Fixed questions treat comment text as untrusted data. Adversarial content and
+context mistakes can still influence answers, so existing exclusions remain enforced.
+
+### Comparison sample and verification
+
+To try Jev in the browser, start the [Live Comment Filter sample](./examples/live-comment-filter-sample/README.md),
+choose **Jev**, and enter an OpenRouter API key. The **Meaning and prior answers**
+pattern fills a topic, comments, and a recent reply. Switch to **Rules only** and
+run again to compare the selection on the same input.
+
+Mocked tests are not evidence of Jev quality or latency. Compare rules, an existing
+LLM, and Jev on the same comments: measure selection of relevant unanswered
+questions, repeated answered questions, latency, and cost. Evaluate separately on
+held-out conversations after tuning the questions or confidence threshold.
+
+The transport uses OpenRouter's **alpha** Decisions API:
+`POST https://openrouter.ai/api/alpha/decisions`, not Chat Completions.
+TypeSafe direct access is not implemented. Question construction and response
+validation are separate from transport. After the official API's general release,
+we plan to verify its contract and integration and add a direct transport without
+changing the analysis pipeline. `transport: 'typesafe'` is not currently accepted.
+
+As of 2026-09-19, the request/response contract was checked against the
+[official OpenRouter OpenAPI](https://openrouter.ai/openapi.json) and
+[Jev model listing](https://openrouter.ai/typesafe/jev-1.13), with mocked transport
+and integration tests. This change has not been verified with paid live inference
+or a Japanese quality benchmark. Latest aliases can change model behavior.
+See also [TypeSafe Choice](https://docs.typesafe.ai/primitives/choice) and
+[known limitations](https://docs.typesafe.ai/model-jaggedness/jev-1.13).
 
 ## Normalizers
 
@@ -315,7 +472,7 @@ your stream.
 
 ## API
 
-Functions and constants: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`.
+Functions and constants: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `createJevCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`.
 
 The object returned by `createCommentIntelligence()` exposes `analyze()`,
 `markAnswered()`, `getAnsweredState()`, `listAnsweredStates()`,

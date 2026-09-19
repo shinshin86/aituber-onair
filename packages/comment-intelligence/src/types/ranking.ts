@@ -11,6 +11,7 @@ export type RankingReason =
   | 'high_engagement'
   | 'easy_to_answer'
   | 'ignored_recently'
+  | 'answered_in_context'
   | 'super_chat'
   | 'moderator'
   | 'duplicate'

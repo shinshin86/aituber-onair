@@ -56,6 +56,15 @@ jobs:
           npm pack --pack-destination "$RUNNER_TEMP/kizuna-package"
           echo "tarball=$(find "$RUNNER_TEMP/kizuna-package" -name '*.tgz' -print -quit)" >> "$GITHUB_OUTPUT"
 
+      - name: Pack Comment Intelligence
+        id: pack-comment-intelligence
+        working-directory: packages/comment-intelligence
+        run: |
+          npm run build
+          mkdir -p "$RUNNER_TEMP/comment-intelligence-package"
+          npm pack --pack-destination "$RUNNER_TEMP/comment-intelligence-package"
+          echo "tarball=$(find "$RUNNER_TEMP/comment-intelligence-package" -name '*.tgz' -print -quit)" >> "$GITHUB_OUTPUT"
+
       - name: Pack create-aituber-onair
         id: pack
         working-directory: packages/create-aituber-onair
@@ -71,3 +80,4 @@ jobs:
           "${{ steps.pack.outputs.tarball }}"
           "${{ steps.pack-core.outputs.tarball }}"
           "${{ steps.pack-kizuna.outputs.tarball }}"
+          "${{ steps.pack-comment-intelligence.outputs.tarball }}"
