@@ -9,6 +9,9 @@ export interface ChatService {
   /** Provider name for provider-specific orchestration decisions */
   readonly provider: string;
 
+  /** Release provider-owned resources when supported. */
+  dispose?(): void;
+
   /**
    * Get the model name
    * @returns Model name

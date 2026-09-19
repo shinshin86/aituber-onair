@@ -273,6 +273,8 @@ export type GeminiNanoChatServiceOptions = {
   expectedInputLanguages?: string[];
   /** Expected output languages for the Prompt API (default: ['ja']) */
   expectedOutputLanguages?: string[];
+  /** Session reuse mode (default: 'stateless') */
+  sessionMode?: 'stateless' | 'persistent';
 };
 
 export type ChatServiceOptions<

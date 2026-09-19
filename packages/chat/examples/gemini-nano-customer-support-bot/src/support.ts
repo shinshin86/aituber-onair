@@ -74,5 +74,6 @@ export const getSupportSourceLinks = (
 export const createSupportService = (language: Language): ChatService =>
   ChatServiceFactory.createChatService('gemini-nano', {
     responseLength: SUPPORT_RESPONSE_LENGTH,
+    sessionMode: 'persistent',
     ...getGeminiNanoLanguageOptions(language),
   });

@@ -62,6 +62,10 @@ export default function SupportChat({
   const service = useMemo(() => createSupportService(language), [language]);
   const isReady = status === 'available';
 
+  const disposeService = () => {
+    service.dispose?.();
+  };
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: The selected language is intentionally the reset trigger.
   useEffect(() => {
     setMessages([]);
@@ -69,9 +73,11 @@ export default function SupportChat({
     setLastSelectedSections([]);
     setDraft('');
     setIsLoading(false);
-  }, [language]);
+    return disposeService;
+  }, [language, service]);
 
   const resetConversation = () => {
+    disposeService();
     setMessages([]);
     setModelTranscript([]);
     setLastSelectedSections([]);

@@ -20,6 +20,7 @@ export class GeminiNanoChatServiceProvider
       expectedOutputLanguages: options.expectedOutputLanguages,
       initialPrompts: options.initialPrompts,
       responseLength: options.responseLength,
+      sessionMode: options.sessionMode,
     });
   }
 

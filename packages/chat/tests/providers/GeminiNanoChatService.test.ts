@@ -263,6 +263,512 @@ describe('GeminiNanoChatService', () => {
     });
   });
 
+  describe('persistent session mode', () => {
+    const turn = async (
+      service: GeminiNanoChatService,
+      messages: Message[],
+    ) => {
+      const onComplete = vi.fn().mockResolvedValue(undefined);
+      await service.processChat(messages, vi.fn(), onComplete);
+      return onComplete;
+    };
+
+    it('reuses one cloned session and sends only new user text', async () => {
+      const liveSession = {
+        prompt: vi
+          .fn()
+          .mockResolvedValueOnce('A1')
+          .mockResolvedValueOnce('A2')
+          .mockResolvedValueOnce('A3'),
+        destroy: vi.fn(),
+      };
+      const baseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn().mockResolvedValue(liveSession),
+        destroy: vi.fn(),
+      };
+      mockCreate.mockResolvedValueOnce(baseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [{ role: 'user', content: 'Q1' }]);
+      await turn(service, [
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+      await turn(service, [
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+        { role: 'assistant', content: 'A2' },
+        { role: 'user', content: 'Q3' },
+      ]);
+
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(baseSession.clone).toHaveBeenCalledTimes(1);
+      expect(liveSession.prompt).toHaveBeenNthCalledWith(1, 'Q1');
+      expect(liveSession.prompt).toHaveBeenNthCalledWith(2, 'Q2');
+      expect(liveSession.prompt).toHaveBeenNthCalledWith(3, 'Q3');
+      expect(mockAvailability).toHaveBeenCalledTimes(1);
+    });
+
+    it('reuses the live session when callers pass only a history suffix', async () => {
+      const liveSession = {
+        prompt: vi.fn(),
+        destroy: vi.fn(),
+      };
+      liveSession.prompt
+        .mockResolvedValueOnce('A1')
+        .mockResolvedValueOnce('A2')
+        .mockResolvedValueOnce('A3')
+        .mockResolvedValueOnce('A4')
+        .mockResolvedValueOnce('A5');
+      const baseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn().mockResolvedValue(liveSession),
+        destroy: vi.fn(),
+      };
+      mockCreate.mockResolvedValueOnce(baseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      const histories: Message[][] = [
+        [{ role: 'user', content: 'Q1' }],
+        [
+          { role: 'user', content: 'Q1' },
+          { role: 'assistant', content: 'A1' },
+          { role: 'user', content: 'Q2' },
+        ],
+        [
+          { role: 'user', content: 'Q2' },
+          { role: 'assistant', content: 'A2' },
+          { role: 'user', content: 'Q3' },
+        ],
+        [
+          { role: 'user', content: 'Q3' },
+          { role: 'assistant', content: 'A3' },
+          { role: 'user', content: 'Q4' },
+        ],
+        [
+          { role: 'user', content: 'Q4' },
+          { role: 'assistant', content: 'A4' },
+          { role: 'user', content: 'Q5' },
+        ],
+      ];
+      for (const messages of histories) await turn(service, messages);
+
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(baseSession.clone).toHaveBeenCalledTimes(1);
+      expect(liveSession.prompt).toHaveBeenNthCalledWith(1, 'Q1');
+      expect(liveSession.prompt).toHaveBeenNthCalledWith(2, 'Q2');
+      expect(liveSession.prompt).toHaveBeenNthCalledWith(3, 'Q3');
+      expect(liveSession.prompt).toHaveBeenNthCalledWith(4, 'Q4');
+      expect(liveSession.prompt).toHaveBeenNthCalledWith(5, 'Q5');
+    });
+
+    it('starts a fresh clone when non-empty consumed history is cleared', async () => {
+      const firstLiveSession = {
+        prompt: vi.fn().mockResolvedValue('A1'),
+        destroy: vi.fn(),
+      };
+      const secondLiveSession = {
+        prompt: vi.fn().mockResolvedValue('A2'),
+        destroy: vi.fn(),
+      };
+      const baseSession = {
+        prompt: mockPrompt,
+        clone: vi
+          .fn()
+          .mockResolvedValueOnce(firstLiveSession)
+          .mockResolvedValueOnce(secondLiveSession),
+        destroy: vi.fn(),
+      };
+      mockCreate.mockResolvedValueOnce(baseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [{ role: 'user', content: 'Q1' }]);
+      await turn(service, [{ role: 'user', content: 'Q2' }]);
+
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(baseSession.clone).toHaveBeenCalledTimes(2);
+      expect(firstLiveSession.destroy).toHaveBeenCalledTimes(1);
+      expect(secondLiveSession.prompt).toHaveBeenCalledWith('Q2');
+    });
+
+    it('continues reusing after the service-level history cap', async () => {
+      const liveSession = {
+        prompt: vi.fn(),
+        destroy: vi.fn(),
+      };
+      for (let turnNumber = 1; turnNumber <= 12; turnNumber += 1) {
+        liveSession.prompt.mockResolvedValueOnce(`A${turnNumber}`);
+      }
+      const baseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn().mockResolvedValue(liveSession),
+        destroy: vi.fn(),
+      };
+      mockCreate.mockResolvedValueOnce(baseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      const transcript: Message[] = [];
+      for (let turnNumber = 1; turnNumber <= 12; turnNumber += 1) {
+        const history = transcript.slice();
+        history.push({ role: 'user', content: `Q${turnNumber}` });
+        await turn(service, history);
+        transcript.push(
+          { role: 'user', content: `Q${turnNumber}` },
+          { role: 'assistant', content: `A${turnNumber}` },
+        );
+      }
+
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(baseSession.clone).toHaveBeenCalledTimes(1);
+      expect(liveSession.prompt).toHaveBeenCalledTimes(12);
+      expect(liveSession.prompt).toHaveBeenLastCalledWith('Q12');
+    });
+
+    it('falls back to the base session when clone is unavailable', async () => {
+      const baseSession = {
+        prompt: vi.fn().mockResolvedValueOnce('A1').mockResolvedValueOnce('A2'),
+        destroy: vi.fn(),
+      };
+      mockCreate.mockResolvedValueOnce(baseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [{ role: 'user', content: 'Q1' }]);
+      await turn(service, [
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(baseSession.prompt).toHaveBeenNthCalledWith(1, 'Q1');
+      expect(baseSession.prompt).toHaveBeenNthCalledWith(2, 'Q2');
+    });
+
+    it('keeps the rebuilt no-clone session key for following turns', async () => {
+      const firstBaseSession = {
+        prompt: vi.fn().mockResolvedValue('A1'),
+        destroy: vi.fn(),
+      };
+      const rebuiltBaseSession = {
+        prompt: vi.fn().mockResolvedValueOnce('A2').mockResolvedValueOnce('A3'),
+        destroy: vi.fn(),
+      };
+      mockCreate
+        .mockResolvedValueOnce(firstBaseSession)
+        .mockResolvedValueOnce(rebuiltBaseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [{ role: 'user', content: 'Q1' }]);
+      await turn(service, [
+        { role: 'user', content: 'Edited Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+      await turn(service, [
+        { role: 'user', content: 'Edited Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+        { role: 'assistant', content: 'A2' },
+        { role: 'user', content: 'Q3' },
+      ]);
+
+      expect(mockCreate).toHaveBeenCalledTimes(2);
+      expect(rebuiltBaseSession.prompt).toHaveBeenNthCalledWith(1, 'Q2');
+      expect(rebuiltBaseSession.prompt).toHaveBeenNthCalledWith(2, 'Q3');
+    });
+
+    it('starts a fresh no-clone session for a new conversation', async () => {
+      const firstBaseSession = {
+        prompt: vi.fn().mockResolvedValue('A1'),
+        destroy: vi.fn(),
+      };
+      const secondBaseSession = {
+        prompt: vi.fn().mockResolvedValue('B1'),
+        destroy: vi.fn(),
+      };
+      mockCreate
+        .mockResolvedValueOnce(firstBaseSession)
+        .mockResolvedValueOnce(secondBaseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [{ role: 'user', content: 'Conversation A' }]);
+      await turn(service, [{ role: 'user', content: 'Conversation B' }]);
+
+      expect(mockCreate).toHaveBeenCalledTimes(2);
+      expect(firstBaseSession.destroy).toHaveBeenCalledTimes(1);
+      expect(mockCreate.mock.calls[1][0].initialPrompts).toBeUndefined();
+      expect(secondBaseSession.prompt).toHaveBeenCalledWith('Conversation B');
+    });
+
+    it('destroys a failed live turn before the caller retries', async () => {
+      const firstLiveSession = {
+        prompt: vi
+          .fn()
+          .mockResolvedValueOnce('A1')
+          .mockRejectedValueOnce(new Error('aborted')),
+        destroy: vi.fn(),
+      };
+      const retryLiveSession = {
+        prompt: vi.fn().mockResolvedValue('A2'),
+        destroy: vi.fn(),
+      };
+      const baseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn().mockResolvedValue(firstLiveSession),
+        destroy: vi.fn(),
+      };
+      mockCreate
+        .mockResolvedValueOnce(baseSession)
+        .mockResolvedValueOnce(retryLiveSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [{ role: 'user', content: 'Q1' }]);
+      await expect(
+        service.processChat(
+          [
+            { role: 'user', content: 'Q1' },
+            { role: 'assistant', content: 'A1' },
+            { role: 'user', content: 'Q2' },
+          ],
+          vi.fn(),
+          vi.fn().mockResolvedValue(undefined),
+        ),
+      ).rejects.toThrow('aborted');
+      await turn(service, [
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+
+      expect(mockCreate).toHaveBeenCalledTimes(2);
+      expect(baseSession.clone).toHaveBeenCalledTimes(1);
+      expect(firstLiveSession.destroy).toHaveBeenCalledTimes(1);
+      expect(baseSession.destroy).not.toHaveBeenCalled();
+      expect(retryLiveSession.prompt).toHaveBeenCalledTimes(1);
+      expect(retryLiveSession.prompt).toHaveBeenCalledWith('Q2');
+      expect(mockCreate.mock.calls[1][0].initialPrompts).toEqual([
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'A1' },
+      ]);
+    });
+
+    it('rebuilds the live session when history diverges but reuses the base', async () => {
+      const liveSession = {
+        prompt: vi.fn().mockResolvedValue('A1'),
+        destroy: vi.fn(),
+      };
+      const rebuiltSession = {
+        prompt: vi.fn().mockResolvedValue('A2'),
+        destroy: vi.fn(),
+      };
+      const baseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn().mockResolvedValue(liveSession),
+        destroy: vi.fn(),
+      };
+      mockCreate
+        .mockResolvedValueOnce(baseSession)
+        .mockResolvedValueOnce(rebuiltSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [{ role: 'user', content: 'Q1' }]);
+      await turn(service, [
+        { role: 'user', content: 'Edited Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+
+      expect(mockCreate).toHaveBeenCalledTimes(2);
+      expect(liveSession.destroy).toHaveBeenCalledTimes(1);
+      expect(baseSession.destroy).not.toHaveBeenCalled();
+      expect(rebuiltSession.prompt).toHaveBeenCalledWith('Q2');
+      expect(mockCreate.mock.calls[1][0].initialPrompts).toEqual([
+        { role: 'user', content: 'Edited Q1' },
+        { role: 'assistant', content: 'A1' },
+      ]);
+    });
+
+    it('rebuilds the base session when the system prompt changes', async () => {
+      const firstLiveSession = {
+        prompt: vi.fn().mockResolvedValue('A1'),
+        destroy: vi.fn(),
+      };
+      const rebuiltSession = {
+        prompt: vi.fn().mockResolvedValue('A2'),
+        destroy: vi.fn(),
+      };
+      const firstBaseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn().mockResolvedValue(firstLiveSession),
+        destroy: vi.fn(),
+      };
+      const secondBaseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn(),
+        destroy: vi.fn(),
+      };
+      mockCreate
+        .mockResolvedValueOnce(firstBaseSession)
+        .mockResolvedValueOnce(secondBaseSession)
+        .mockResolvedValueOnce(rebuiltSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [
+        { role: 'system', content: 'System A' },
+        { role: 'user', content: 'Q1' },
+      ]);
+      await turn(service, [
+        { role: 'system', content: 'System B' },
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+
+      expect(mockCreate).toHaveBeenCalledTimes(3);
+      expect(firstLiveSession.destroy).toHaveBeenCalledTimes(1);
+      expect(firstBaseSession.destroy).toHaveBeenCalledTimes(1);
+      expect(mockCreate.mock.calls[1][0].initialPrompts).toEqual([
+        { role: 'system', content: 'System B' },
+      ]);
+      expect(secondBaseSession.clone).not.toHaveBeenCalled();
+      expect(rebuiltSession.prompt).toHaveBeenCalledWith('Q2');
+    });
+
+    it('retries quota errors with a fresh session and records only consumed turns', async () => {
+      const firstLiveSession = {
+        prompt: vi
+          .fn()
+          .mockResolvedValueOnce('A1')
+          .mockRejectedValueOnce({ name: 'QuotaExceededError' }),
+        destroy: vi.fn(),
+      };
+      const retryLiveSession = {
+        prompt: vi.fn().mockResolvedValue('A2'),
+        destroy: vi.fn(),
+      };
+      const baseSession = {
+        prompt: mockPrompt,
+        clone: vi
+          .fn()
+          .mockResolvedValueOnce(firstLiveSession)
+          .mockResolvedValueOnce(retryLiveSession),
+        destroy: vi.fn(),
+      };
+      mockCreate.mockResolvedValueOnce(baseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [{ role: 'user', content: 'Q1' }]);
+      await turn(service, [
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+      await turn(service, [
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'A1' },
+        { role: 'user', content: 'Q2' },
+        { role: 'assistant', content: 'A2' },
+        { role: 'user', content: 'Q3' },
+      ]);
+
+      expect(firstLiveSession.destroy).toHaveBeenCalledTimes(1);
+      expect(retryLiveSession.prompt).toHaveBeenCalledWith('Q2');
+      expect(retryLiveSession.prompt).toHaveBeenCalledWith('Q3');
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(baseSession.clone).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps a persistent streaming session alive until dispose', async () => {
+      const liveSession = {
+        prompt: mockPrompt,
+        promptStreaming: vi.fn(() => createReadableStream(['A', '1'])),
+        destroy: vi.fn(),
+      };
+      const baseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn().mockResolvedValue(liveSession),
+        destroy: vi.fn(),
+      };
+      mockCreate.mockResolvedValueOnce(baseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await service.processChat(
+        [{ role: 'user', content: 'Q1' }],
+        vi.fn(),
+        vi.fn().mockResolvedValue(undefined),
+      );
+
+      expect(liveSession.destroy).not.toHaveBeenCalled();
+      service.dispose();
+      expect(liveSession.destroy).toHaveBeenCalledTimes(1);
+      expect(baseSession.destroy).toHaveBeenCalledTimes(1);
+    });
+
+    it('makes dispose idempotent and allows the next call to create sessions', async () => {
+      const firstLiveSession = {
+        prompt: vi.fn().mockResolvedValue('A1'),
+        destroy: vi.fn(),
+      };
+      const secondLiveSession = {
+        prompt: vi.fn().mockResolvedValue('A2'),
+        destroy: vi.fn(),
+      };
+      const firstBaseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn().mockResolvedValue(firstLiveSession),
+        destroy: vi.fn(),
+      };
+      const secondBaseSession = {
+        prompt: mockPrompt,
+        clone: vi.fn().mockResolvedValue(secondLiveSession),
+        destroy: vi.fn(),
+      };
+      mockCreate
+        .mockResolvedValueOnce(firstBaseSession)
+        .mockResolvedValueOnce(secondBaseSession);
+
+      const service = new GeminiNanoChatService({
+        sessionMode: 'persistent',
+      });
+      await turn(service, [{ role: 'user', content: 'Q1' }]);
+      service.dispose();
+      service.dispose();
+      await turn(service, [{ role: 'user', content: 'Q2' }]);
+
+      expect(firstLiveSession.destroy).toHaveBeenCalledTimes(1);
+      expect(firstBaseSession.destroy).toHaveBeenCalledTimes(1);
+      expect(mockCreate).toHaveBeenCalledTimes(2);
+      expect(secondLiveSession.prompt).toHaveBeenCalledWith('Q2');
+    });
+  });
+
   describe('processVisionChat', () => {
     it('should throw error', async () => {
       const service = new GeminiNanoChatService();

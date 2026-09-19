@@ -909,6 +909,7 @@ const plamoService = ChatServiceFactory.createChatService('plamo', {
 ```typescript
 const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
   responseLength: 'short',
+  sessionMode: 'persistent',
   initialPrompts: [
     {
       role: 'system',
@@ -941,6 +942,11 @@ const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
 - モデルはすべてデバイス上で実行され、推論時にネットワーク通信は発生しません。
 - Chromeの `promptStreaming()` が利用できる場合はストリーミングし、利用できない場合は
   `prompt()` にフォールバックします。完了時には常に完全なレスポンスを返します。
+- `sessionMode`のデフォルトは`'stateless'`です。`'persistent'`にするとターン間で
+  オンデバイスセッションを再利用できます。永続セッションは生存中メモリを保持するため、
+  不要になったら`dispose()`を呼び出してください。
+- persistentモードでは、古い履歴を末尾の連続した範囲に絞っても再利用できます。
+  履歴を編集または空にするとliveセッションを再構築します。
 - ビジョン（画像入力）は非対応です。
 - EN／JAの言語選択とフロントエンドだけでのモデル準備は、
   [ブラウザ完結Gemini Nanoカスタマーサポート例](./examples/gemini-nano-customer-support-bot/)

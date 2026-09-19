@@ -927,6 +927,7 @@ Notes:
 ```typescript
 const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
   responseLength: 'short',
+  sessionMode: 'persistent',
   initialPrompts: [
     {
       role: 'system',
@@ -960,6 +961,11 @@ Notes:
 - The model runs entirely on-device; no network requests are made for inference.
 - Streaming uses Chrome's `promptStreaming()` when available and falls back to
   `prompt()`; the service always completes with the full response.
+- `sessionMode` defaults to `'stateless'`. Use `'persistent'` to reuse an
+  on-device session across turns; call `dispose()` when the service is no
+  longer needed because the persistent session retains memory while alive.
+- In persistent mode, trimming old history to a suffix preserves reuse; editing
+  or clearing the history rebuilds the live session.
 - Vision is not supported.
 - See the
   [browser-only Gemini Nano customer-support example](./examples/gemini-nano-customer-support-bot/)

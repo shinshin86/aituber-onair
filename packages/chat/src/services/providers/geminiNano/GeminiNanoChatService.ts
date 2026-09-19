@@ -41,6 +41,7 @@ interface LanguageModelAPI {
 interface LanguageModelSession {
   prompt(text: string): Promise<string>;
   promptStreaming?(text: string): ReadableStream<string>;
+  clone?(): Promise<LanguageModelSession>;
   destroy(): void;
 }
 
@@ -67,6 +68,11 @@ export class GeminiNanoChatService implements ChatService {
   private expectedOutputLanguages: string[];
   private initialPrompts: GeminiNanoInitialPrompt[];
   private _responseLength?: ChatResponseLength;
+  private sessionMode: 'stateless' | 'persistent';
+  private baseSession?: LanguageModelSession;
+  private liveSession?: LanguageModelSession;
+  private persistentSessionKey?: string;
+  private consumedTranscript: Message[] = [];
 
   constructor(options: GeminiNanoChatServiceOptions = {}) {
     this.expectedInputLanguages = options.expectedInputLanguages ?? [
@@ -78,6 +84,7 @@ export class GeminiNanoChatService implements ChatService {
       ...prompt,
     }));
     this._responseLength = options.responseLength;
+    this.sessionMode = options.sessionMode ?? 'stateless';
   }
 
   getModel(): string {
@@ -86,6 +93,11 @@ export class GeminiNanoChatService implements ChatService {
 
   getVisionModel(): string {
     return MODEL_GEMINI_NANO;
+  }
+
+  /** Destroy any persistent Prompt API sessions held by this service. */
+  dispose(): void {
+    this.destroyPersistentSessions();
   }
 
   /**
@@ -158,13 +170,8 @@ export class GeminiNanoChatService implements ChatService {
     }
 
     const modelOptions = this.getModelOptions();
-    const availability = await api.availability(modelOptions);
-    if (availability !== 'available' && availability !== 'downloadable') {
-      throw new Error(
-        'Gemini Nano Prompt API is not ready in this environment. ' +
-          `LanguageModel.availability() returned "${availability}". ` +
-          'Expected "available" or "downloadable".',
-      );
+    if (this.sessionMode === 'stateless') {
+      await this.ensureAvailability(api, modelOptions);
     }
 
     // Extract system prompt
@@ -185,10 +192,24 @@ export class GeminiNanoChatService implements ChatService {
     }
 
     const lastUserMessage = conversationMessages[lastUserMessageIndex];
+    const contextHistory = conversationMessages.slice(0, lastUserMessageIndex);
+
+    if (this.sessionMode === 'persistent') {
+      return this.generatePersistentResponse(
+        api,
+        systemPrompt,
+        contextHistory,
+        lastUserMessage.content,
+        modelOptions,
+        stream,
+        onPartialResponse,
+      );
+    }
+
     const session = await this.createSession(
       api,
       systemPrompt,
-      conversationMessages.slice(0, lastUserMessageIndex),
+      contextHistory,
       modelOptions,
     );
 
@@ -205,6 +226,293 @@ export class GeminiNanoChatService implements ChatService {
       } catch {
         // ignore
       }
+    }
+  }
+
+  private async generatePersistentResponse(
+    api: LanguageModelAPI,
+    systemPrompt: string,
+    contextHistory: Message[],
+    userPrompt: string,
+    modelOptions: LanguageModelOptions,
+    stream: boolean,
+    onPartialResponse: (text: string) => void,
+  ): Promise<string> {
+    const sessionKey = this.getPersistentSessionKey(systemPrompt, modelOptions);
+
+    if (this.persistentSessionKey !== sessionKey) {
+      this.destroyPersistentSessions();
+    }
+
+    if (!this.baseSession && !this.liveSession) {
+      await this.ensureAvailability(api, modelOptions);
+      await this.createPersistentBaseSession(
+        api,
+        systemPrompt,
+        contextHistory,
+        modelOptions,
+      );
+      this.persistentSessionKey = sessionKey;
+    }
+
+    let session = await this.getPersistentLiveSession(
+      api,
+      systemPrompt,
+      contextHistory,
+      modelOptions,
+    );
+    const reusedLiveSession =
+      session === this.liveSession &&
+      this.isHistoryCompatible(contextHistory, this.consumedTranscript);
+    this.persistentSessionKey = sessionKey;
+
+    try {
+      const response = await this.promptSession(
+        session,
+        userPrompt,
+        stream,
+        onPartialResponse,
+      );
+      this.recordConsumedTranscript(
+        contextHistory,
+        userPrompt,
+        response,
+        reusedLiveSession,
+      );
+      return response;
+    } catch (error) {
+      if (!this.isQuotaExceededError(error)) {
+        this.destroyPersistentLiveSession();
+        throw error;
+      }
+
+      this.destroyPersistentLiveSession();
+      session = await this.getPersistentLiveSession(
+        api,
+        systemPrompt,
+        [],
+        modelOptions,
+      );
+      this.persistentSessionKey = sessionKey;
+
+      try {
+        const response = await this.promptSession(
+          session,
+          userPrompt,
+          stream,
+          onPartialResponse,
+        );
+        this.recordConsumedTranscript([], userPrompt, response, false);
+        return response;
+      } catch (retryError) {
+        this.destroyPersistentLiveSession();
+        throw retryError;
+      }
+    }
+  }
+
+  private async ensureAvailability(
+    api: LanguageModelAPI,
+    modelOptions: LanguageModelOptions,
+  ): Promise<void> {
+    const availability = await api.availability(modelOptions);
+    if (availability !== 'available' && availability !== 'downloadable') {
+      throw new Error(
+        'Gemini Nano Prompt API is not ready in this environment. ' +
+          `LanguageModel.availability() returned "${availability}". ` +
+          'Expected "available" or "downloadable".',
+      );
+    }
+  }
+
+  private async createPersistentBaseSession(
+    api: LanguageModelAPI,
+    systemPrompt: string,
+    contextHistory: Message[],
+    modelOptions: LanguageModelOptions,
+  ): Promise<void> {
+    this.baseSession = await this.createSession(
+      api,
+      systemPrompt,
+      [],
+      modelOptions,
+    );
+    if (contextHistory.length > 0) {
+      this.liveSession = await this.createSession(
+        api,
+        systemPrompt,
+        contextHistory,
+        modelOptions,
+      );
+      this.consumedTranscript = contextHistory.map((message) => ({
+        ...message,
+      }));
+    } else if (typeof this.baseSession.clone === 'function') {
+      this.liveSession = await this.baseSession.clone();
+    } else {
+      this.liveSession = this.baseSession;
+    }
+  }
+
+  private async getPersistentLiveSession(
+    api: LanguageModelAPI,
+    systemPrompt: string,
+    contextHistory: Message[],
+    modelOptions: LanguageModelOptions,
+  ): Promise<LanguageModelSession> {
+    if (
+      this.liveSession &&
+      this.isHistoryCompatible(contextHistory, this.consumedTranscript)
+    ) {
+      return this.liveSession;
+    }
+
+    if (this.liveSession && this.liveSession !== this.baseSession) {
+      this.destroyPersistentLiveSession();
+    }
+
+    if (contextHistory.length === 0 && this.baseSession) {
+      if (typeof this.baseSession.clone === 'function') {
+        this.liveSession = await this.baseSession.clone();
+      } else {
+        if (this.consumedTranscript.length > 0) {
+          this.destroyPersistentSessions();
+          await this.createPersistentBaseSession(
+            api,
+            systemPrompt,
+            [],
+            modelOptions,
+          );
+          return this.liveSession as LanguageModelSession;
+        }
+        this.liveSession = this.baseSession;
+      }
+      return this.liveSession;
+    }
+
+    if (this.baseSession && typeof this.baseSession.clone === 'function') {
+      this.liveSession = await this.createSession(
+        api,
+        systemPrompt,
+        contextHistory,
+        modelOptions,
+      );
+      return this.liveSession;
+    }
+
+    this.destroyPersistentSessions();
+    await this.ensureAvailability(api, modelOptions);
+    await this.createPersistentBaseSessionWithHistory(
+      api,
+      systemPrompt,
+      contextHistory,
+      modelOptions,
+    );
+    return this.liveSession as LanguageModelSession;
+  }
+
+  private async createPersistentBaseSessionWithHistory(
+    api: LanguageModelAPI,
+    systemPrompt: string,
+    contextHistory: Message[],
+    modelOptions: LanguageModelOptions,
+  ): Promise<void> {
+    this.baseSession = await this.createSession(
+      api,
+      systemPrompt,
+      contextHistory,
+      modelOptions,
+    );
+    this.liveSession = this.baseSession;
+    this.consumedTranscript = contextHistory.map((message) => ({
+      ...message,
+    }));
+  }
+
+  private recordConsumedTranscript(
+    contextHistory: Message[],
+    userPrompt: string,
+    response: string,
+    reusedLiveSession: boolean,
+  ): void {
+    const priorTranscript = reusedLiveSession
+      ? this.consumedTranscript
+      : contextHistory;
+    this.consumedTranscript = [
+      ...priorTranscript,
+      { role: 'user', content: userPrompt },
+      { role: 'assistant', content: response },
+    ];
+  }
+
+  private getPersistentSessionKey(
+    systemPrompt: string,
+    modelOptions: LanguageModelOptions,
+  ): string {
+    return JSON.stringify({
+      systemPrompt,
+      modelOptions,
+      initialPrompts: this.initialPrompts,
+      responseLength: this._responseLength,
+    });
+  }
+
+  private isHistoryCompatible(left: Message[], right: Message[]): boolean {
+    if (left.length === 0 || right.length === 0) {
+      return left.length === 0 && right.length === 0;
+    }
+
+    return this.isSuffix(left, right) || this.isSuffix(right, left);
+  }
+
+  private isSuffix(candidate: Message[], full: Message[]): boolean {
+    if (candidate.length > full.length) return false;
+    const offset = full.length - candidate.length;
+    return candidate.every(
+      (message, index) =>
+        message.role === full[offset + index].role &&
+        message.content === full[offset + index].content,
+    );
+  }
+
+  private isQuotaExceededError(error: unknown): boolean {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'name' in error &&
+      error.name === 'QuotaExceededError'
+    );
+  }
+
+  private destroyPersistentLiveSession(): void {
+    if (this.liveSession) {
+      this.destroySession(this.liveSession);
+      if (this.liveSession === this.baseSession) {
+        this.baseSession = undefined;
+      }
+    }
+    this.liveSession = undefined;
+    this.consumedTranscript = [];
+  }
+
+  private destroyPersistentSessions(): void {
+    if (this.liveSession && this.liveSession !== this.baseSession) {
+      this.destroySession(this.liveSession);
+    }
+    if (this.baseSession) {
+      this.destroySession(this.baseSession);
+    }
+    this.baseSession = undefined;
+    this.liveSession = undefined;
+    this.persistentSessionKey = undefined;
+    this.consumedTranscript = [];
+  }
+
+  private destroySession(session: LanguageModelSession): void {
+    try {
+      session.destroy();
+    } catch {
+      // ignore
     }
   }
 
