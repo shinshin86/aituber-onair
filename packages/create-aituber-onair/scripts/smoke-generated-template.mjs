@@ -4,11 +4,16 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const [template, tarballArgument, coreTarballArgument, kizunaTarballArgument] =
-  process.argv.slice(2);
+const [
+  template,
+  tarballArgument,
+  coreTarballArgument,
+  kizunaTarballArgument,
+  commentIntelligenceTarballArgument,
+] = process.argv.slice(2);
 if (!template || !tarballArgument || !coreTarballArgument) {
   console.error(
-    'Usage: node scripts/smoke-generated-template.mjs <template> <tarball> <core-tarball> [kizuna-tarball]',
+    'Usage: node scripts/smoke-generated-template.mjs <template> <tarball> <core-tarball> [kizuna-tarball] [comment-intelligence-tarball]',
   );
   process.exit(1);
 }
@@ -20,6 +25,12 @@ if (kizunaTarballArgument) {
   localTarballs.set(
     '@aituber-onair/kizuna',
     path.resolve(kizunaTarballArgument),
+  );
+}
+if (commentIntelligenceTarballArgument) {
+  localTarballs.set(
+    '@aituber-onair/comment-intelligence',
+    path.resolve(commentIntelligenceTarballArgument),
   );
 }
 const smokeRoot = await mkdtemp(
