@@ -184,7 +184,7 @@ describe('Jev OpenRouter provider', () => {
   });
 
   it.each([
-    { transport: 'typesafe' },
+    { transport: 'unsupported' },
     { apiKey: '' },
     { minConfidence: Number.NaN },
     { minConfidence: 2 },
@@ -512,5 +512,120 @@ describe('Jev semantic ranking integration', () => {
     }).analyze({ comments: [comment('a')] });
     expect(result.debug?.llmUnmatchedIds).toEqual(['unknown']);
     expect(result.rankedComments.map((c) => c.id)).toEqual(['a']);
+  });
+});
+
+describe('Jev TypeSafe AI provider', () => {
+  it.each(['jev-latest', 'jev-1.13.0'])(
+    'sends the official System One contract with model %s and applies ranking',
+    async (model) => {
+      const fetchFn = transport((key) =>
+        choice(key.endsWith('alreadyAnswered') ? 'no' : 'yes')
+      );
+      const direct = provider(fetchFn, {
+        transport: 'typesafe',
+        ...(model === 'jev-latest' ? {} : { model }),
+      });
+      const result = await createCommentIntelligence({
+        analysis: { mode: 'llm-assisted', llmProvider: direct },
+      }).analyze({ comments: [comment('a')], ...context });
+      const [url, init] = fetchFn.mock.calls[0];
+      expect(url).toBe('https://api.typesafe.ai/v1/systemone');
+      expect(init?.headers).toEqual({
+        Authorization: 'Bearer test-key',
+        'Content-Type': 'application/json',
+      });
+      const body = JSON.parse(init?.body as string);
+      expect(body.model).toBe(model);
+      expect(body.state.comments).toEqual([{ text: comment('a').text }]);
+      expect(Object.keys(body.questions)).toHaveLength(3);
+      expect(result.debug?.usedLLM).toBe(true);
+      expect(result.selectedComments[0].reasons).toContain('topic_related');
+      expect(result.debug?.semanticAssessments?.[0].alreadyAnswered).toBe(
+        false
+      );
+    }
+  );
+
+  it.each([401, 422, 429, 529])(
+    'sanitizes HTTP %s and falls back without retrying',
+    async (status) => {
+      const fetchFn = transport();
+      fetchFn.mockResolvedValue(
+        response({ message: 'private upstream content' }, status)
+      );
+      const direct = provider(fetchFn, { transport: 'typesafe' });
+      await expect(
+        direct.analyze({ comments: [comment('a')] })
+      ).rejects.toThrow(`Jev TypeSafe AI request failed (HTTP ${status})`);
+      fetchFn.mockClear();
+      const result = await createCommentIntelligence({
+        analysis: { mode: 'llm-assisted', llmProvider: direct },
+      }).analyze({ comments: [comment('a')] });
+      expect(result.debug?.usedLLM).toBe(false);
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('sanitizes network and invalid JSON errors', async () => {
+    const fetchFn = transport();
+    const direct = provider(fetchFn, { transport: 'typesafe' });
+    fetchFn.mockRejectedValue(new Error('Bearer test-key'));
+    await expect(direct.analyze({ comments: [comment('a')] })).rejects.toThrow(
+      'Jev TypeSafe AI request failed or was aborted'
+    );
+    fetchFn.mockResolvedValue({
+      ok: true,
+      json: async () => {
+        throw new Error('private content');
+      },
+    } as unknown as Response);
+    await expect(direct.analyze({ comments: [comment('a')] })).rejects.toThrow(
+      'Jev TypeSafe AI returned invalid JSON'
+    );
+  });
+
+  it('retains rules for uncertain official responses and rejects invalid choices', async () => {
+    const fetchFn = transport(() => choice('uncertain'));
+    const direct = provider(fetchFn, { transport: 'typesafe' });
+    expect(
+      (await direct.analyze({ comments: [comment('a')] })).semanticAssessments
+    ).toEqual([{ commentId: 'a' }]);
+    fetchFn.mockResolvedValue(
+      response({
+        answers: { c0_question: { type: 'choice', choice: 'unknown' } },
+      })
+    );
+    await expect(direct.analyze({ comments: [comment('a')] })).rejects.toThrow(
+      'invalid choice'
+    );
+    expect(() =>
+      provider(fetchFn, { transport: 'typesafe', apiKey: '' })
+    ).toThrow('TypeSafe AI API key');
+  });
+
+  it('cancels the official request when the outer timeout expires', async () => {
+    vi.useFakeTimers();
+    let signal: AbortSignal | undefined;
+    const fetchFn = transport();
+    fetchFn.mockImplementation(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          signal = init?.signal as AbortSignal;
+          signal.addEventListener('abort', () => reject(new Error('aborted')));
+        })
+    );
+    const instance = createCommentIntelligence({
+      analysis: {
+        mode: 'llm-assisted',
+        llmProvider: provider(fetchFn, { transport: 'typesafe' }),
+        llmPolicy: { timeoutMs: 10 },
+      },
+    });
+    const task = instance.analyze({ comments: [comment('a')] });
+    await vi.advanceTimersByTimeAsync(10);
+    expect((await task).debug?.usedLLM).toBe(false);
+    expect(signal?.aborted).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

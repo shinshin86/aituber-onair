@@ -219,7 +219,7 @@ answered memory 全体を消せます。`getAnsweredState(commentId)` と
 
 ## hybrid / llm-assisted mode
 
-LLM補助は optional です。APIキーは分析設定に直接渡さず、アプリ側で provider を作って注入します。Jev用アダプターにはOpenRouter APIキーを渡せます。
+LLM補助は optional です。APIキーは分析設定に直接渡さず、アプリ側で provider を作って注入します。Jev用アダプターには、選んだ接続先のAPIキーを渡します。
 
 ```ts
 import { createChatServiceCommentAnalysisProvider } from '@aituber-onair/comment-intelligence';
@@ -239,9 +239,9 @@ provider が失敗しても、`fallbackToRules` が `false` でなければ rule
 
 `createJevCommentAnalysisProvider()` は、Jevでコメントの意味を評価し、
 既存の優先順位付けを補う任意のプロバイダーです。
-このパッケージでは現在、OpenRouter経由の接続にのみ対応しており、
-OpenRouter APIキーで有効にできます。TypeSafe公式APIが一般公開されたら、
-仕様と動作を確認したうえで直接接続にも対応する予定です。
+接続先はOpenRouterとTypeSafe AI公式APIから選べます。
+`transport` と、そのサービスで発行したAPIキーを指定してください。
+どちらも同じ評価項目・ランキング処理を使います。
 初期設定は従来どおり、通信しない `rules` モードです。
 
 ### 何が変わるか
@@ -267,7 +267,15 @@ Jev版は選択肢を定めた判断APIを使い、複数コメントの評価�
 料金・処理時間・日本語の判定精度が既存LLMより優れるかは、利用する会話で
 比較してください。精度向上や発話の高速化を保証する機能ではありません。
 
-### 設定例（現在はOpenRouter）
+### 接続先を選ぶ
+
+| `transport` | 必要なAPIキー | 既定モデル | 接続先 |
+| --- | --- | --- | --- |
+| `openrouter` | OpenRouter | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` |
+| `typesafe` | TypeSafe AI | `jev-latest` | `https://api.typesafe.ai/v1/systemone` |
+
+既存のOpenRouter設定はそのまま使えます。モデルIDは接続先ごとに異なります。
+`model` を省略すると、それぞれの既定モデルを使います。
 
 ```ts
 import {
@@ -280,9 +288,8 @@ const intelligence = createCommentIntelligence({
   analysis: {
     mode: 'hybrid',
     llmProvider: createJevCommentAnalysisProvider({
-      transport: 'openrouter',
-      apiKey: process.env.OPENROUTER_API_KEY!,
-      model: '~typesafe/jev-latest',
+      transport: 'typesafe',
+      apiKey: process.env.TYPESAFE_API_KEY!,
       minConfidence: 0.7,
       maxComments: 20,
       timeoutMs: 2500,
@@ -313,9 +320,9 @@ console.log(result.debug?.semanticAssessments);
 
 | オプション | 初期値・意味 |
 | --- | --- |
-| `transport` | 必須。現在は `openrouter` のみ |
-| `apiKey` | 必須。OpenRouter APIキー |
-| `model` | `~typesafe/jev-latest`。別のOpenRouter Jev IDも指定可能 |
+| `transport` | 必須。`openrouter` または `typesafe` |
+| `apiKey` | 必須。選んだ接続先のAPIキー |
+| `model` | 上表の接続先別の既定値。各サービスのJevモデルIDも指定可能 |
 | `minConfidence` | `0.7`。0〜1。検証済みの最適値ではなく、調整の開始値 |
 | `maxComments` | `20`。1〜50。対象コメントを入力順に最大何件評価するか |
 | `timeoutMs` | `2500`。HTTPリクエストを中断するまでの時間 |
@@ -349,12 +356,13 @@ console.log(result.debug?.semanticAssessments);
   送ります。`system` メッセージ、著者情報、任意のmetadataは送信しません。
   古い履歴や省略された部分を踏まえた評価はできません。
 - APIキー・コメント・結果をプロバイダー自身が保存することはありません。
-  送信対象の本文・会話履歴はOpenRouterと推論先へ渡ります。
+  送信対象の本文・会話履歴は、TypeSafe AIへ直接、またはOpenRouterとその推論先へ渡ります。
 - 通信失敗、不正な応答、タイムアウトでは、初期設定でルール分析へ戻ります。
   このとき `debug.usedLLM` は `false` です。正常な分析経路では `true` ですが、
   全件が低確信だった場合も含むため、評価が反映された証拠にはなりません。
 - `llmPolicy.timeoutMs` が先に切れた場合もHTTP通信を中断します。
   `fallbackToRules: false` ならエラーを呼び出し側へ返します。
+  レート制限や混雑時も自動再試行せず、別サービスへ自動で切り替えることもありません。
 
 Jevは安全性判定、BAN、関係値更新、返答生成には使いません。視聴者の発言は
 評価対象のデータとして渡し、その内容を指示として扱わないよう質問を固定しています。
@@ -363,7 +371,8 @@ Jevは安全性判定、BAN、関係値更新、返答生成には使いませ�
 ### 比較サンプルと検証
 
 ブラウザで試す場合は、[Live Comment Filterサンプル](./examples/live-comment-filter-sample/README.ja.md)
-を起動し、解析エンジンに「Jev」を選んでOpenRouter APIキーを入力してください。
+を起動し、解析エンジンに「Jev」を選びます。接続先をOpenRouterまたはTypeSafe AIに
+切り替えて、そのサービスのAPIキーを入力してください。
 「文脈と回答済みの質問」パターンで、話題・コメント・直近の回答をまとめて
 設定できます。「ルールのみ」に切り替えて再実行すると、選択結果を比較できます。
 
@@ -372,17 +381,22 @@ Jevは安全性判定、BAN、関係値更新、返答生成には使いませ�
 質問を拾えた割合、回答済み質問の再選択、処理時間と費用を確認します。
 プロンプトや閾値の調整用とは別の会話データでも確認してください。
 
-接続先はOpenRouterのalpha Decisions API
-`POST https://openrouter.ai/api/alpha/decisions` です。
-通常のChat Completions APIには送りません。TypeSafe直結は未実装です。
-判断基準・結果の検証と接続処理を分離しており、公式APIの一般公開後に
-仕様と動作を確認し、別transportとして直接接続を追加する予定です。
-現時点で `transport: 'typesafe'` は指定できません。
+両接続先ともBearer認証で `state`・`questions`・`model` を送り、Choice形式の
+判断結果を受け取ります。通常のChat Completions APIは使いません。
+TypeSafe公式APIは2026-09-20に[クイックスタート](https://docs.typesafe.ai/introduction/quickstart)、
+[APIリファレンス](https://docs.typesafe.ai/api)、[モデル一覧](https://docs.typesafe.ai/models)
+で仕様を確認しています。OpenRouter側はalpha Decisions APIを使い、
+[公式OpenAPI](https://openrouter.ai/openapi.json)で仕様を確認しています。
 
-2026-09-19時点で、[OpenRouter公式OpenAPI](https://openrouter.ai/openapi.json)の
-リクエスト・応答仕様と[モデル掲載](https://openrouter.ai/typesafe/jev-1.13)を確認し、
-通信モックによるテストを実施しています。この変更で有料実APIを使った動作確認や
-日本語精度の測定は行っていません。最新エイリアスはモデル更新で挙動が変わり得ます。
+2026-09-20時点の確認では、localhostからTypeSafe AIの公式APIへ直接接続するためのCORS事前リクエストに、`400 Disallowed CORS origin` が返りました。そのため、ブラウザサンプルではローカル開発サーバー（Vite）を経由してAPIを呼び出しています。これは確認時点での挙動であり、今後のAPI側の対応によって変わる可能性があります。
+
+TypeSafe AIへの接続はサーバー側で実行してください。サンプルの転送処理は
+静的ビルドには含まれません。公開アプリでは独自のバックエンドを用意し、
+アプリ所有のキーをサーバー側で管理してください。ライブラリ自身はプロキシを起動しません。
+
+両接続先の送信・応答検証・フォールバック・中断は通信モックでテストしています。
+今回、認証付きTypeSafe実推論や日本語精度の測定は行っていません。
+最新エイリアスはモデル更新で挙動が変わり得ます。
 [TypeSafeのChoice仕様](https://docs.typesafe.ai/primitives/choice)と
 [既知の制約](https://docs.typesafe.ai/model-jaggedness/jev-1.13)も参照してください。
 

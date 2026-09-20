@@ -254,10 +254,9 @@ The analysis configuration does not read API keys from the environment or persis
 
 `createJevCommentAnalysisProvider()` optionally uses Jev to assess the meaning of
 comments before deterministic ranking. Rules remain the default and make no API
-calls. This package currently supports only the OpenRouter connection, which
-requires an OpenRouter API key. Direct TypeSafe API support is planned after its
-general release, subject to contract and integration verification. The adapter
-does not depend on the chat package or a provider SDK.
+calls. Choose `transport: 'openrouter'` or `transport: 'typesafe'` and provide
+that service's API key. Both connections use the same assessments and ranking
+behavior. The adapter does not depend on the chat package or a provider SDK.
 
 ### Why use it?
 
@@ -285,7 +284,15 @@ a batch in one request without generating free-form JSON text. Compare quality,
 latency and cost on your own comments before choosing between them. This adapter
 does not guarantee better Japanese understanding or faster spoken responses.
 
-### Setup (currently OpenRouter)
+### Choose a connection
+
+| Transport | API key | Default model | Endpoint |
+| --- | --- | --- | --- |
+| `openrouter` | OpenRouter | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` |
+| `typesafe` | TypeSafe AI | `jev-latest` | `https://api.typesafe.ai/v1/systemone` |
+
+Existing OpenRouter configurations continue to work. Model IDs are specific to
+each service; leave `model` unset to use the correct default for the connection.
 
 ```ts
 import {
@@ -298,9 +305,8 @@ const intelligence = createCommentIntelligence({
   analysis: {
     mode: 'hybrid',
     llmProvider: createJevCommentAnalysisProvider({
-      transport: 'openrouter',
-      apiKey: process.env.OPENROUTER_API_KEY!,
-      model: '~typesafe/jev-latest',
+      transport: 'typesafe',
+      apiKey: process.env.TYPESAFE_API_KEY!,
       minConfidence: 0.7,
       maxComments: 20,
       timeoutMs: 2500,
@@ -331,9 +337,9 @@ does not schedule collection windows.
 
 | Option | Default / meaning |
 | --- | --- |
-| `transport` | Required; currently only `openrouter` |
-| `apiKey` | Required OpenRouter API key |
-| `model` | `~typesafe/jev-latest`; another OpenRouter Jev ID may be supplied |
+| `transport` | Required: `openrouter` or `typesafe` |
+| `apiKey` | Required key for the selected service |
+| `model` | Connection-specific default above; accepts a Jev ID from that service |
 | `minConfidence` | `0.7`, range 0–1; a starting threshold, not an empirically calibrated optimum |
 | `maxComments` | `20`, integer 1–50; first N eligible comments in caller order |
 | `timeoutMs` | `2500`; aborts the HTTP request |
@@ -369,12 +375,14 @@ results retain their existing path.
   messages, up to 1,000 characters each. System messages, author metadata and
   arbitrary comment metadata are omitted. Older/truncated context cannot be evaluated.
 - The provider stores no API keys, comments or results. Selected input text and
-  conversation history are sent to OpenRouter and the inference provider.
-- HTTP errors, invalid responses and timeouts fall back to rules by default, with
+  conversation history are sent to the selected service: TypeSafe AI directly, or
+  OpenRouter and its inference provider.
+- HTTP errors (including rate limits/overload), invalid responses and timeouts fall back to rules by default, with
   `debug.usedLLM: false`. A completed provider path sets it to true even when every
   answer abstained; inspect `semanticAssessments` to see which signals were used.
 - The outer `llmPolicy.timeoutMs` also cancels the HTTP request when it expires
-  first. Set `fallbackToRules: false` to propagate failures instead.
+  first. Set `fallbackToRules: false` to propagate failures instead. No automatic
+  retries or switching to another service are performed.
 
 Jev does not perform moderation, bans, relationship updates, or reply generation.
 Fixed questions treat comment text as untrusted data. Adversarial content and
@@ -383,7 +391,7 @@ context mistakes can still influence answers, so existing exclusions remain enfo
 ### Comparison sample and verification
 
 To try Jev in the browser, start the [Live Comment Filter sample](./examples/live-comment-filter-sample/README.md),
-choose **Jev**, and enter an OpenRouter API key. The **Meaning and prior answers**
+choose **Jev**, select **OpenRouter** or **TypeSafe AI**, and enter that service’s API key. The **Meaning and prior answers**
 pattern fills a topic, comments, and a recent reply. Switch to **Rules only** and
 run again to compare the selection on the same input.
 
@@ -392,18 +400,27 @@ LLM, and Jev on the same comments: measure selection of relevant unanswered
 questions, repeated answered questions, latency, and cost. Evaluate separately on
 held-out conversations after tuning the questions or confidence threshold.
 
-The transport uses OpenRouter's **alpha** Decisions API:
-`POST https://openrouter.ai/api/alpha/decisions`, not Chat Completions.
-TypeSafe direct access is not implemented. Question construction and response
-validation are separate from transport. After the official API's general release,
-we plan to verify its contract and integration and add a direct transport without
-changing the analysis pipeline. `transport: 'typesafe'` is not currently accepted.
+Both transports send `state`, `questions`, and `model` with Bearer authentication.
+They use typed Choice answers, not Chat Completions. The TypeSafe API contract
+was checked on 2026-09-20 against its [quick start](https://docs.typesafe.ai/introduction/quickstart),
+[API reference](https://docs.typesafe.ai/api), and [model list](https://docs.typesafe.ai/models).
+OpenRouter uses its **alpha** Decisions API, checked against its
+[OpenAPI](https://openrouter.ai/openapi.json).
 
-As of 2026-09-19, the request/response contract was checked against the
-[official OpenRouter OpenAPI](https://openrouter.ai/openapi.json) and
-[Jev model listing](https://openrouter.ai/typesafe/jev-1.13), with mocked transport
-and integration tests. This change has not been verified with paid live inference
-or a Japanese quality benchmark. Latest aliases can change model behavior.
+As of 2026-09-20, a CORS preflight for a direct request from localhost to the
+TypeSafe AI official API returned `400 Disallowed CORS origin`. The browser
+sample therefore calls the API through its local development server (Vite).
+This reflects the behavior observed on that date and may change as the API's
+CORS support evolves.
+
+Use a server runtime for TypeSafe AI requests. The sample's forwarding route
+is not included in a static build. Public apps need their own backend and
+should keep application-owned keys there. The library does not install a proxy
+or override the endpoint.
+
+Both transports have mocked request, validation, fallback, and cancellation tests.
+No authenticated TypeSafe inference or Japanese quality benchmark was run as part
+of this change. Latest aliases can change model behavior.
 See also [TypeSafe Choice](https://docs.typesafe.ai/primitives/choice) and
 [known limitations](https://docs.typesafe.ai/model-jaggedness/jev-1.13).
 

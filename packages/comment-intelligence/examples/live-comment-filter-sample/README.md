@@ -40,9 +40,10 @@ or Jev and provide the corresponding API key.
 
 1. Select the **Meaning and prior answers** comment pattern. It fills the topic,
    three comments, and a recent AI reply.
-2. Choose **Jev** as the analysis engine and enter an **OpenRouter API key**.
-   This package currently supports only OpenRouter; direct TypeSafe support is
-   planned after the official API's general release and verification.
+2. Choose **Jev** as the analysis engine, then choose **OpenRouter** or
+   **TypeSafe AI** under **Jev connection**. Enter the API key for that service.
+   Keys are held separately, so switching connections never reuses the other key.
+   The defaults are `~typesafe/jev-latest` for OpenRouter and `jev-latest` for TypeSafe AI.
 3. Click **Run comment filter**. **Which candidate was selected?** compares every
    candidate's selection status, ranking score, and the three Jev judgments with
    confidence. Retained rule signals and unevaluated fields are labeled separately.
@@ -58,17 +59,27 @@ The example evaluates at most 12 eligible comments per run. Jev times out after
 2.5 seconds; failures display a notice and fall back to rules. Low-confidence
 assessments keep the rule signals.
 
-Keys stay in page memory and are not saved to browser storage. The browser sends
-the key directly to the selected provider, so use a temporary key for local
-testing. Keep application-owned keys on a server in public deployments. Jev sends
-eligible comment text, the topic, and the supplied recent reply to OpenRouter.
+Keys stay in page memory and are not saved to browser storage. OpenRouter requests go directly from the browser to OpenRouter.
+TypeSafe requests go through `/api/typesafe/systemone` on the local Vite server,
+which forwards them only to `https://api.typesafe.ai/v1/systemone`.
+Use a temporary key for local testing.
+The included dev/preview proxy is not part of the static build: public deployments
+need their own authenticated backend and server-managed application keys.
+Jev sends eligible comment text, the topic, and the supplied recent reply to the
+selected service. API failures do not switch to the other service.
 No request runs merely from changing settings; click the filter button to run.
 While running, the buttons show a spinner and an analyzing label, with the engine
 and elapsed time alongside. Completion shows the engine and selected count;
 failures explicitly identify the rules fallback. Missing-key notices appear next
 to the buttons before any request is sent.
 
-Automated integration tests use mocked responses. Live Jev inference and browser
-CORS behavior have not been verified with an API key.
+Automated integration tests use mocked responses. Authenticated Jev inference has not been verified in these checks.
+
+As of 2026-09-20, a CORS preflight for a direct request from localhost to the
+TypeSafe AI official API returned `400 Disallowed CORS origin`. This sample
+therefore calls the API through its local development server (Vite).
+This reflects the behavior observed on that date and may change as the API's
+CORS support evolves. See the [official API reference](https://docs.typesafe.ai/api).
+Restart an already running Vite server after adding the proxy configuration.
 
 The UI can be switched between English and Japanese.

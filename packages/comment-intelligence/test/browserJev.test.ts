@@ -34,6 +34,7 @@ describe('browser Jev integration', () => {
     change('topic', 'Custom topic', 'input');
     change('analysis-engine', 'jev');
     expect(field('topic').value).toBe('Custom topic');
+    expect(field('jev-transport').value).toBe('typesafe');
     expect(field('jev-settings').hidden).toBe(false);
     expect(field('openai-settings').hidden).toBe(true);
     change('recent-reply', 'An actual prior reply', 'input');
@@ -42,7 +43,7 @@ describe('browser Jev integration', () => {
     change('analysis-engine', 'jev');
     expect(field('recent-reply').value).toBe('An actual prior reply');
     change('ui-language', 'ja');
-    expect(document.body.textContent).toContain('OpenRouter APIキー');
+    expect(document.body.textContent).toContain('TypeSafe AI APIキー');
     expect(document.body.textContent).toContain('直近のAIの回答');
   });
 
@@ -52,7 +53,7 @@ describe('browser Jev integration', () => {
     expect(field('analysis-error').hidden).toBe(false);
     expect(
       document.querySelector('[data-status-message]')?.textContent
-    ).toContain('OpenRouter');
+    ).toContain('TypeSafe AI');
     expect(fetch).not.toHaveBeenCalled();
     change('analysis-engine', 'rules');
     run();
@@ -62,12 +63,12 @@ describe('browser Jev integration', () => {
 
   it('sends Jev decisions with topic and history and shows semantic results', async () => {
     vi.mocked(fetch).mockImplementation(async (url, init) => {
-      expect(url).toBe('https://openrouter.ai/api/alpha/decisions');
+      expect(url).toBe('/api/typesafe/systemone');
       expect((init?.headers as Record<string, string>).Authorization).toBe(
         'Bearer test-key'
       );
       const body = JSON.parse(init?.body as string);
-      expect(body.model).toBe('~typesafe/jev-latest');
+      expect(body.model).toBe('jev-latest');
       expect(JSON.stringify(body.state)).toContain('speech synthesis');
       expect(JSON.stringify(body.state)).toContain(
         'This speech synthesis can run on your own computer.'
@@ -111,7 +112,7 @@ describe('browser Jev integration', () => {
     );
     expect(
       document.querySelector('[data-status-message]')?.textContent
-    ).toContain('Completed with Jev (OpenRouter)');
+    ).toContain('Completed with Jev (TypeSafe AI)');
     expect(field('filter-from-editor').textContent).toBe('Run comment filter');
     expect(field('llm-fallback').hidden).toBe(true);
     expect(field('filter-from-editor').disabled).toBe(false);
@@ -138,7 +139,7 @@ describe('browser Jev integration', () => {
     ).not.toContain('Confidence');
     expect(
       document.querySelector('[data-status-message]')?.textContent
-    ).toContain('Jev (OpenRouter) failed · showing rules results');
+    ).toContain('Jev (TypeSafe AI) failed · showing rules results');
     expect(
       document
         .querySelector('[data-analysis-status]')
@@ -244,6 +245,67 @@ describe('browser Jev integration', () => {
     expect(
       document.querySelector('[data-status-message]')?.textContent
     ).toContain('no API request sent');
+  });
+
+  it('keeps connection keys separate and uses the local proxy only for TypeSafe AI', async () => {
+    vi.mocked(fetch).mockImplementation(async (_url, init) => {
+      const body = JSON.parse(init?.body as string);
+      return new Response(
+        JSON.stringify({
+          answers: Object.fromEntries(
+            Object.keys(body.questions).map((key) => [
+              key,
+              {
+                type: 'choice',
+                choice: 'yes',
+                confidence: 0.9,
+                probabilities: { yes: 0.9, no: 0.05, uncertain: 0.05 },
+              },
+            ])
+          ),
+        })
+      );
+    });
+    change('analysis-engine', 'jev');
+    change('jev-transport', 'openrouter');
+    change('jev-api-key', 'openrouter-test-key', 'input');
+    change('jev-transport', 'typesafe');
+    expect(field('jev-api-key').value).toBe('');
+    run();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(field('analysis-error').textContent).toContain('TypeSafe AI');
+    change('jev-api-key', 'typesafe-test-key', 'input');
+    run();
+    await vi.waitFor(() =>
+      expect(field('filter-from-editor').disabled).toBe(false)
+    );
+    const [url, init] = vi.mocked(fetch).mock.calls[0];
+    expect(url).toBe('/api/typesafe/systemone');
+    expect(JSON.parse(init?.body as string).model).toBe('jev-latest');
+    expect((init?.headers as Record<string, string>).Authorization).toBe(
+      'Bearer typesafe-test-key'
+    );
+    expect(
+      document.querySelector('[data-status-message]')?.textContent
+    ).toContain('Completed with Jev (TypeSafe AI)');
+    change('jev-transport', 'openrouter');
+    expect(field('jev-api-key').value).toBe('openrouter-test-key');
+    run();
+    await vi.waitFor(() =>
+      expect(field('filter-from-editor').disabled).toBe(false)
+    );
+    const [routerUrl, routerInit] = vi.mocked(fetch).mock.calls[1];
+    expect(routerUrl).toBe('https://openrouter.ai/api/alpha/decisions');
+    expect((routerInit?.headers as Record<string, string>).Authorization).toBe(
+      'Bearer openrouter-test-key'
+    );
+    change('jev-transport', 'typesafe');
+    expect(field('jev-api-key').value).toBe('typesafe-test-key');
+    change('ui-language', 'ja');
+    expect(document.body.textContent).toContain('Jevの接続先');
+    expect(document.body.textContent).toContain('TypeSafe AI APIキー');
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
   });
 
   it('does not replace pending input with results from an earlier request', async () => {
