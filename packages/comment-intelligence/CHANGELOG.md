@@ -1,12 +1,16 @@
 # @aituber-onair/comment-intelligence
 
-## Unreleased
+## 0.0.7
+
+### Patch Changes
 
 - Adds `transport: 'typesafe'` to the optional Jev provider for the official
   TypeSafe AI System One API, with `jev-latest` as its default model.
 - Keeps existing OpenRouter settings and shared semantic ranking behavior.
 - Adds an OpenRouter/TypeSafe AI selector with separate in-memory keys to the
-  browser sample and a local Vite proxy for TypeSafe's browser CORS restrictions.
+  browser sample, defaulting to TypeSafe AI, and a local Vite proxy for its
+  browser CORS restrictions. Documents the observed CORS behavior and that it
+  may change as the API evolves.
 - Updates English/Japanese setup guides and transport/browser regression tests.
 
 ## 0.0.6
