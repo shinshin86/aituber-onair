@@ -18,6 +18,7 @@ type Intelligence = ReturnType<typeof createCommentIntelligence>;
 type UiLanguage = 'en' | 'ja';
 type PresetKey = 'live' | 'blockedViewer' | 'noisy' | 'jev';
 type AnalysisEngine = 'rules' | 'openai' | 'jev';
+type JevTransport = 'openrouter' | 'typesafe';
 type OpenAIModel = 'gpt-5.4-nano' | 'gpt-5.4-mini' | 'gpt-5.4' | 'gpt-5.5';
 
 const OPENAI_MODELS: Array<{
@@ -206,8 +207,11 @@ const COPY = {
     openaiEngine: 'OpenAI LLM assist',
     jevEngine: 'Jev',
     jevHint:
-      'Jev assesses topic relevance, requests for answers, and previously answered questions. Currently available through OpenRouter.',
-    jevKey: 'OpenRouter API key',
+      'Jev assesses topic relevance, requests for answers, and previously answered questions. Choose OpenRouter or TypeSafe AI.',
+    jevTransport: 'Jev connection',
+    jevKey: (provider: string) => `${provider} API key`,
+    typesafeKeyHint:
+      'Sent through the local development server to TypeSafe AI. Not saved to browser storage. Use a temporary key; keep application keys on a server in production.',
     jevKeyHint:
       'Sent directly to OpenRouter for this local demo; not saved to browser storage. Use a temporary key. Keep application keys on a server in production.',
     recentReply: 'Recent AI reply (optional, Jev)',
@@ -378,8 +382,11 @@ const COPY = {
     openaiEngine: 'OpenAI LLMアシスト',
     jevEngine: 'Jev',
     jevHint:
-      '話題との関連、回答を求めるコメント、回答済みの質問を評価します。現在はOpenRouter経由で利用できます。',
-    jevKey: 'OpenRouter APIキー',
+      '話題との関連、回答を求めるコメント、回答済みの質問を評価します。OpenRouterまたはTypeSafe AIを選べます。',
+    jevTransport: 'Jevの接続先',
+    jevKey: (provider: string) => `${provider} APIキー`,
+    typesafeKeyHint:
+      'キーはローカル開発サーバー経由でTypeSafe AIへ送信し、ブラウザストレージには保存しません。検証用の一時キーを使い、公開アプリのキーはサーバー側で管理してください。',
     jevKeyHint:
       'ローカル検証用の一時キーを使用してください。キーはOpenRouterへ直接送信し、ブラウザには保存しません。公開アプリではサーバー側で管理してください。',
     recentReply: '直近のAIの回答（任意・Jev用）',
@@ -515,7 +522,11 @@ let analysisEngine: AnalysisEngine = 'rules';
 let selectedOpenAIModel: OpenAIModel = 'gpt-5.4-nano';
 let openaiApiKey = '';
 let openaiApiKeyRevision = 0;
-let jevApiKey = '';
+let jevTransport: JevTransport = 'typesafe';
+const jevApiKeys: Record<JevTransport, string> = {
+  openrouter: '',
+  typesafe: '',
+};
 let jevApiKeyRevision = 0;
 let recentReply = '';
 let analysisRevision = 0;
@@ -609,9 +620,14 @@ function renderApp() {
           </div>
           <div id="jev-settings" class="provider-settings"${analysisEngine === 'jev' ? '' : ' hidden'}>
             <p class="hint">${copy.jevHint}</p>
-            <label for="jev-api-key">${copy.jevKey}</label>
-            <input id="jev-api-key" type="password" autocomplete="off" value="${escapeHtml(jevApiKey)}"${jevControlsDisabled} />
-            <p class="hint">${copy.jevKeyHint}</p>
+            <label for="jev-transport">${copy.jevTransport}</label>
+            <select id="jev-transport"${jevControlsDisabled}>
+              <option value="typesafe"${jevTransport === 'typesafe' ? ' selected' : ''}>TypeSafe AI</option>
+              <option value="openrouter"${jevTransport === 'openrouter' ? ' selected' : ''}>OpenRouter</option>
+            </select>
+            <label for="jev-api-key">${copy.jevKey(jevProviderLabel())}</label>
+            <input id="jev-api-key" type="password" autocomplete="off" value="${escapeHtml(jevApiKeys[jevTransport])}"${jevControlsDisabled} />
+            <p class="hint" id="jev-key-hint">${jevTransport === 'typesafe' ? copy.typesafeKeyHint : copy.jevKeyHint}</p>
             <label for="recent-reply">${copy.recentReply}</label>
             <textarea id="recent-reply" rows="3"${jevControlsDisabled}>${escapeHtml(recentReply)}</textarea>
             <p class="hint">${copy.recentReplyHint}</p>
@@ -854,10 +870,31 @@ function bindEvents() {
     }
   );
 
+  getElement<HTMLSelectElement>('jev-transport').addEventListener(
+    'change',
+    (event) => {
+      jevTransport = (event.currentTarget as HTMLSelectElement)
+        .value as JevTransport;
+      getElement<HTMLInputElement>('jev-api-key').value =
+        jevApiKeys[jevTransport];
+      const label = document.querySelector('label[for="jev-api-key"]');
+      if (label)
+        label.textContent = COPY[uiLanguage].jevKey(jevProviderLabel());
+      getElement<HTMLParagraphElement>('jev-key-hint').textContent =
+        jevTransport === 'typesafe'
+          ? COPY[uiLanguage].typesafeKeyHint
+          : COPY[uiLanguage].jevKeyHint;
+      resetIntelligence();
+      renderPendingResult();
+    }
+  );
+
   getElement<HTMLInputElement>('jev-api-key').addEventListener(
     'input',
     (event) => {
-      jevApiKey = (event.currentTarget as HTMLInputElement).value;
+      jevApiKeys[jevTransport] = (
+        event.currentTarget as HTMLInputElement
+      ).value;
       jevApiKeyRevision += 1;
       resetIntelligence();
       renderPendingResult();
@@ -965,8 +1002,8 @@ function buildConfig(): CommentIntelligenceConfig {
             language,
             selectedOpenAIModel
           )
-        : analysisEngine === 'jev' && jevApiKey.trim()
-          ? createBrowserJevProvider(jevApiKey.trim())
+        : analysisEngine === 'jev' && jevApiKeys[jevTransport].trim()
+          ? createBrowserJevProvider(jevApiKeys[jevTransport].trim())
           : undefined,
       llmPolicy: {
         fallbackToRules: true,
@@ -1015,14 +1052,26 @@ function buildConfigSignature(): string {
     selectedOpenAIModel,
     hasOpenAIKey: openaiApiKey.trim().length > 0,
     openaiApiKeyRevision,
+    jevTransport,
     jevApiKeyRevision,
   });
 }
 
+function jevProviderLabel(): string {
+  return jevTransport === 'typesafe' ? 'TypeSafe AI' : 'OpenRouter';
+}
+
 function createBrowserJevProvider(apiKey: string): CommentAnalysisLLMProvider {
+  const transport = jevTransport;
   const provider = createJevCommentAnalysisProvider({
-    transport: 'openrouter',
+    transport,
     apiKey,
+    // TypeSafe does not allow arbitrary browser origins; the local Vite server
+    // forwards this fixed endpoint. Production apps need their own backend.
+    fetch:
+      transport === 'typesafe'
+        ? (_url, init) => fetch('/api/typesafe/systemone', init)
+        : undefined,
   });
   return {
     inputScope: provider.inputScope,
@@ -1300,7 +1349,7 @@ function setAnalysisStatus(
 
 function engineLabel(): string {
   return analysisEngine === 'jev'
-    ? 'Jev (OpenRouter)'
+    ? `Jev (${jevProviderLabel()})`
     : analysisEngine === 'openai'
       ? `OpenAI / ${selectedOpenAIModel}`
       : COPY[uiLanguage].rulesEngine;
@@ -1327,12 +1376,12 @@ function setAnalysisBusy(busy: boolean) {
 async function analyze(options: { focusResults?: boolean } = {}) {
   if (isAnalyzing) return;
   if (
-    (analysisEngine === 'jev' && !jevApiKey.trim()) ||
+    (analysisEngine === 'jev' && !jevApiKeys[jevTransport].trim()) ||
     (analysisEngine === 'openai' && !openaiApiKey.trim())
   ) {
     const error = getElement<HTMLParagraphElement>('analysis-error');
     error.textContent = COPY[uiLanguage].keyRequired(
-      analysisEngine === 'jev' ? 'OpenRouter' : 'OpenAI'
+      analysisEngine === 'jev' ? jevProviderLabel() : 'OpenAI'
     );
     error.hidden = false;
     setAnalysisStatus('error', error.textContent);

@@ -8,9 +8,10 @@ import {
 } from '../jev/commentDecisions.js';
 import type { JevCommentDecision } from '../jev/commentDecisions.js';
 import { createOpenRouterDecisionTransport } from '../jev/openRouterTransport.js';
+import { createTypeSafeDecisionTransport } from '../jev/typeSafeTransport.js';
 
 export type JevCommentAnalysisOptions = {
-  transport: 'openrouter';
+  transport: 'openrouter' | 'typesafe';
   apiKey: string;
   model?: string;
   /** Uncalibrated starting threshold; tune against your own comment data. */
@@ -38,10 +39,12 @@ export type JevCommentAnalysisProvider = Omit<
 export function createJevCommentAnalysisProvider(
   options: JevCommentAnalysisOptions
 ): JevCommentAnalysisProvider {
-  if (options.transport !== 'openrouter')
+  if (options.transport !== 'openrouter' && options.transport !== 'typesafe')
     throw new Error('Unsupported Jev transport');
   if (!options.apiKey?.trim())
-    throw new Error('Jev requires an OpenRouter API key');
+    throw new Error(
+      `Jev requires a ${options.transport === 'typesafe' ? 'TypeSafe AI' : 'OpenRouter'} API key`
+    );
   const minConfidence = options.minConfidence ?? 0.7;
   const maxComments = options.maxComments ?? 20;
   const timeoutMs = options.timeoutMs ?? 2500;
@@ -51,9 +54,15 @@ export function createJevCommentAnalysisProvider(
     throw new Error('Jev maxComments must be an integer between 1 and 50');
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
     throw new Error('Jev timeoutMs must be positive');
-  const model = options.model ?? '~typesafe/jev-latest';
+  const model =
+    options.model ??
+    (options.transport === 'typesafe' ? 'jev-latest' : '~typesafe/jev-latest');
   if (!model.trim()) throw new Error('Jev model must not be empty');
-  const request = createOpenRouterDecisionTransport({
+  const createTransport =
+    options.transport === 'typesafe'
+      ? createTypeSafeDecisionTransport
+      : createOpenRouterDecisionTransport;
+  const request = createTransport({
     apiKey: options.apiKey.trim(),
     model,
     fetch: options.fetch,
