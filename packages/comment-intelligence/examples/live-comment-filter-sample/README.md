@@ -40,10 +40,10 @@ or Jev and provide the corresponding API key.
 
 1. Select the **Meaning and prior answers** comment pattern. It fills the topic,
    three comments, and a recent AI reply.
-2. Choose **Jev** as the analysis engine, then choose **OpenRouter** or
-   **TypeSafe AI** under **Jev connection**. Enter the API key for that service.
+2. Choose **Jev** as the analysis engine, then choose **TypeSafe AI** or
+   **OpenRouter** under **Jev connection**. Enter the API key for that service.
    Keys are held separately, so switching connections never reuses the other key.
-   The defaults are `~typesafe/jev-latest` for OpenRouter and `jev-latest` for TypeSafe AI.
+   The defaults are `jev-latest` for TypeSafe AI and `~typesafe/jev-latest` for OpenRouter.
 3. Click **Run comment filter**. **Which candidate was selected?** compares every
    candidate's selection status, ranking score, and the three Jev judgments with
    confidence. Retained rule signals and unevaluated fields are labeled separately.

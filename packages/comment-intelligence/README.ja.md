@@ -239,7 +239,7 @@ provider が失敗しても、`fallbackToRules` が `false` でなければ rule
 
 `createJevCommentAnalysisProvider()` は、Jevでコメントの意味を評価し、
 既存の優先順位付けを補う任意のプロバイダーです。
-接続先はOpenRouterとTypeSafe AI公式APIから選べます。
+接続先はTypeSafe AI公式APIとOpenRouterから選べます。
 `transport` と、そのサービスで発行したAPIキーを指定してください。
 どちらも同じ評価項目・ランキング処理を使います。
 初期設定は従来どおり、通信しない `rules` モードです。
@@ -271,8 +271,8 @@ Jev版は選択肢を定めた判断APIを使い、複数コメントの評価�
 
 | `transport` | 必要なAPIキー | 既定モデル | 接続先 |
 | --- | --- | --- | --- |
-| `openrouter` | OpenRouter | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` |
 | `typesafe` | TypeSafe AI | `jev-latest` | `https://api.typesafe.ai/v1/systemone` |
+| `openrouter` | OpenRouter | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` |
 
 既存のOpenRouter設定はそのまま使えます。モデルIDは接続先ごとに異なります。
 `model` を省略すると、それぞれの既定モデルを使います。
@@ -320,7 +320,7 @@ console.log(result.debug?.semanticAssessments);
 
 | オプション | 初期値・意味 |
 | --- | --- |
-| `transport` | 必須。`openrouter` または `typesafe` |
+| `transport` | 必須。`typesafe` または `openrouter` |
 | `apiKey` | 必須。選んだ接続先のAPIキー |
 | `model` | 上表の接続先別の既定値。各サービスのJevモデルIDも指定可能 |
 | `minConfidence` | `0.7`。0〜1。検証済みの最適値ではなく、調整の開始値 |
@@ -371,7 +371,7 @@ Jevは安全性判定、BAN、関係値更新、返答生成には使いませ�
 ### 比較サンプルと検証
 
 ブラウザで試す場合は、[Live Comment Filterサンプル](./examples/live-comment-filter-sample/README.ja.md)
-を起動し、解析エンジンに「Jev」を選びます。接続先をOpenRouterまたはTypeSafe AIに
+を起動し、解析エンジンに「Jev」を選びます。接続先をTypeSafe AIまたはOpenRouterに
 切り替えて、そのサービスのAPIキーを入力してください。
 「文脈と回答済みの質問」パターンで、話題・コメント・直近の回答をまとめて
 設定できます。「ルールのみ」に切り替えて再実行すると、選択結果を比較できます。

@@ -17,9 +17,9 @@ APIキーで分析します。返答の生成・音声再生・配信サービ�
 
 1. コメントパターンで「文脈と回答済みの質問」を選びます。音声合成についての
    3件のコメント、配信トピック、直近のAIの回答が入ります。
-2. 解析エンジンを「Jev」に切り替え、「Jevの接続先」でOpenRouterまたはTypeSafe AIを
+2. 解析エンジンを「Jev」に切り替え、「Jevの接続先」でTypeSafe AIまたはOpenRouterを
    選び、そのサービスのAPIキーを入力します。キーは接続先ごとに分けて保持します。
-   既定モデルはOpenRouterが `~typesafe/jev-latest`、TypeSafe AIが `jev-latest` です。
+   既定モデルはTypeSafe AIが `jev-latest`、OpenRouterが `~typesafe/jev-latest` です。
 3. 「コメントをフィルタリングする」を押します。「候補の比較と選択結果」で、
    全候補の選択・未選択・除外、スコア、Jevの3項目の判定と確信度を見比べられます。
    低確信でルールを維持した項目や未評価の項目も区別します。

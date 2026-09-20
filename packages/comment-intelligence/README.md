@@ -254,7 +254,7 @@ The analysis configuration does not read API keys from the environment or persis
 
 `createJevCommentAnalysisProvider()` optionally uses Jev to assess the meaning of
 comments before deterministic ranking. Rules remain the default and make no API
-calls. Choose `transport: 'openrouter'` or `transport: 'typesafe'` and provide
+calls. Choose `transport: 'typesafe'` or `transport: 'openrouter'` and provide
 that service's API key. Both connections use the same assessments and ranking
 behavior. The adapter does not depend on the chat package or a provider SDK.
 
@@ -288,8 +288,8 @@ does not guarantee better Japanese understanding or faster spoken responses.
 
 | Transport | API key | Default model | Endpoint |
 | --- | --- | --- | --- |
-| `openrouter` | OpenRouter | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` |
 | `typesafe` | TypeSafe AI | `jev-latest` | `https://api.typesafe.ai/v1/systemone` |
+| `openrouter` | OpenRouter | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` |
 
 Existing OpenRouter configurations continue to work. Model IDs are specific to
 each service; leave `model` unset to use the correct default for the connection.
@@ -337,7 +337,7 @@ does not schedule collection windows.
 
 | Option | Default / meaning |
 | --- | --- |
-| `transport` | Required: `openrouter` or `typesafe` |
+| `transport` | Required: `typesafe` or `openrouter` |
 | `apiKey` | Required key for the selected service |
 | `model` | Connection-specific default above; accepts a Jev ID from that service |
 | `minConfidence` | `0.7`, range 0–1; a starting threshold, not an empirically calibrated optimum |
@@ -391,7 +391,7 @@ context mistakes can still influence answers, so existing exclusions remain enfo
 ### Comparison sample and verification
 
 To try Jev in the browser, start the [Live Comment Filter sample](./examples/live-comment-filter-sample/README.md),
-choose **Jev**, select **OpenRouter** or **TypeSafe AI**, and enter that service’s API key. The **Meaning and prior answers**
+choose **Jev**, select **TypeSafe AI** or **OpenRouter**, and enter that service’s API key. The **Meaning and prior answers**
 pattern fills a topic, comments, and a recent reply. Switch to **Rules only** and
 run again to compare the selection on the same input.
 
