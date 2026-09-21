@@ -15,6 +15,9 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 - 初めての AITuber OnAir プロジェクトなら
   [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app)
   から始めてください。
+- 1枚の画像をTTS音声に合わせて跳ねさせたい場合は
+  [`packages/core/examples/react-bouncy-avatar-app`](../packages/core/examples/react-bouncy-avatar-app)
+  を使います。
 - 3D アバターを使いたい場合は
   [`packages/core/examples/react-vrm-app`](../packages/core/examples/react-vrm-app)
   を使います。
@@ -53,6 +56,25 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 
 ```bash
 cd packages/core/examples/react-pngtuber-app
+npm install
+npm run dev
+```
+
+### Bouncy Avatar App
+
+<p align="center">
+  <img src="../packages/core/examples/react-bouncy-avatar-app/images/react-bouncy-avatar-app.png" alt="Bouncy Avatar サンプルアプリ" width="720" />
+</p>
+
+パス:
+[`packages/core/examples/react-bouncy-avatar-app`](../packages/core/examples/react-bouncy-avatar-app)
+
+PNGまたはJPGを1枚だけ使い、TTSの実音声に合わせて小さくジャンプし、左右に
+傾きます。着地時には画像が少し潰れます。APIキーやTTS設定がなくても、設定画面の
+「動きをプレビュー」から動作を確認できます。
+
+```bash
+cd packages/core/examples/react-bouncy-avatar-app
 npm install
 npm run dev
 ```

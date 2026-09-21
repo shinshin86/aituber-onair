@@ -26,6 +26,15 @@ The PNGTuber example uses four image states:
 Start from
 [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app).
 
+### Bouncy Avatar
+
+Use the Bouncy Avatar example when you have one character image and want the
+whole character to react to speech without drawing mouth or eye states. It
+turns TTS output volume into jumps, alternating tilts, and landing squash.
+
+Start from
+[`packages/core/examples/react-bouncy-avatar-app`](../packages/core/examples/react-bouncy-avatar-app).
+
 ### PuruPuru PNGTuber
 
 Use PuruPuru PNGTuber when you want a livelier 2D avatar without preparing

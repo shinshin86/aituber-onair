@@ -16,6 +16,10 @@ to the package examples when you need lower-level integration.
   [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app)
   if this is your first AITuber OnAir project.
 - Use
+  [`packages/core/examples/react-bouncy-avatar-app`](../packages/core/examples/react-bouncy-avatar-app)
+  if you want one image to bounce and tilt with TTS audio instead of swapping
+  mouth states.
+- Use
   [`packages/core/examples/react-vrm-app`](../packages/core/examples/react-vrm-app)
   if you want a 3D avatar with VRM assets.
 - Use
@@ -53,6 +57,25 @@ from actual audio output volume.
 
 ```bash
 cd packages/core/examples/react-pngtuber-app
+npm install
+npm run dev
+```
+
+### Bouncy Avatar App
+
+<p align="center">
+  <img src="../packages/core/examples/react-bouncy-avatar-app/images/react-bouncy-avatar-app.png" alt="Bouncy Avatar example app" width="720" />
+</p>
+
+Path:
+[`packages/core/examples/react-bouncy-avatar-app`](../packages/core/examples/react-bouncy-avatar-app)
+
+Uses one PNG or JPG and maps real TTS output volume to small jumps,
+alternating tilts, and landing squash. A built-in motion preview works without
+an API key or configured TTS engine.
+
+```bash
+cd packages/core/examples/react-bouncy-avatar-app
 npm install
 npm run dev
 ```

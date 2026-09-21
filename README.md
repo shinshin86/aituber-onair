@@ -93,6 +93,22 @@ npm install
 npm run dev
 ```
 
+#### Bouncy Avatar Chat — single-image audio motion
+
+![Bouncy Avatar example app](./packages/core/examples/react-bouncy-avatar-app/images/react-bouncy-avatar-app.png)
+
+Use one PNG or JPG and turn TTS output volume into small jumps, alternating
+tilts, and landing squash instead of mouth-image swaps. The Settings screen
+also includes a motion preview that works without an API key. See
+[`packages/core/examples/react-bouncy-avatar-app`](./packages/core/examples/react-bouncy-avatar-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-bouncy-avatar-app
+npm install
+npm run dev
+```
+
 #### PuruPuru PNGTuber Chat — 2D avatar with hair physics
 
 ![PuruPuru PNGTuber example app](./packages/core/examples/react-purupuru-app/images/react-purupuru-app.png)
