@@ -1,4 +1,4 @@
-export const KIZUNA_STORAGE_KEY = 'react-bouncy-avatar-bond';
+export const KIZUNA_STORAGE_KEY = 'react-single-image-avatar-bond';
 
 interface KizunaStorageRemover {
   remove: (key: string) => Promise<void>;

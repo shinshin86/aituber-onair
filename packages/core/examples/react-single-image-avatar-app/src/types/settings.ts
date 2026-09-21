@@ -197,10 +197,13 @@ export interface KizunaSettings {
   enabled: boolean;
 }
 
+export type AvatarMotionStyle = 'bounce' | 'puppet';
+
 export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
+  motionStyle: AvatarMotionStyle;
   pngtuberEmotionEffectAnchors: Record<string, EmotionEffectAnchor>;
   pngtuberReactionControlMode: PngTuberReactionControlMode;
   pngtuberEmotionEffectMap: PngTuberEmotionEffectMap;

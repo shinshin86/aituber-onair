@@ -79,6 +79,7 @@ export function ChatPanel({
         isSpeaking={isSpeaking}
         avatarImageUrl={avatarImageUrl}
         motionPreviewToken={motionPreviewToken}
+        motionStyle={visual.motionStyle}
         avatarReaction={avatarReaction}
         reactionControlMode={visual.pngtuberReactionControlMode}
         emotionEffectMap={visual.pngtuberEmotionEffectMap}

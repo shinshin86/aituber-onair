@@ -93,18 +93,18 @@ npm install
 npm run dev
 ```
 
-#### Bouncy Avatar Chat — single-image audio motion
+#### Single Image Avatar Chat — audio-reactive motion
 
-![Bouncy Avatar example app](./packages/core/examples/react-bouncy-avatar-app/images/react-bouncy-avatar-app.png)
+![Single Image Avatar example app](./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png)
 
-Use one PNG or JPG and turn TTS output volume into small jumps, alternating
-tilts, and landing squash instead of mouth-image swaps. The Settings screen
-also includes a motion preview that works without an API key. See
-[`packages/core/examples/react-bouncy-avatar-app`](./packages/core/examples/react-bouncy-avatar-app).
+Use one PNG or JPG and choose between jumping Bounce motion and gentler Puppet
+Wobble motion driven by TTS output volume. The Settings screen also includes a
+motion preview that works without an API key. See
+[`packages/core/examples/react-single-image-avatar-app`](./packages/core/examples/react-single-image-avatar-app).
 
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
-cd aituber-onair/packages/core/examples/react-bouncy-avatar-app
+cd aituber-onair/packages/core/examples/react-single-image-avatar-app
 npm install
 npm run dev
 ```

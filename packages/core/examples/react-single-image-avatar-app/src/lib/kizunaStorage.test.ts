@@ -36,7 +36,7 @@ describe('tryCreateKizunaStorageProvider', () => {
 });
 
 describe('clearKizunaStorage', () => {
-  it('removes only the bouncy avatar Kizuna storage key', async () => {
+  it('removes only the single image avatar Kizuna storage key', async () => {
     const remove = vi.fn().mockResolvedValue(undefined);
 
     await clearKizunaStorage({ remove });

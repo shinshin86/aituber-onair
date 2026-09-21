@@ -29,7 +29,7 @@ import type {
 
 type ApiKeyProvider = Exclude<ChatProviderOption, 'gemini-nano'>;
 
-const STORAGE_KEY = 'react-bouncy-avatar-app-settings';
+const STORAGE_KEY = 'react-single-image-avatar-app-settings';
 const DEFAULT_AIVIS_CLOUD_MODEL_UUID = '22e8ed77-94fe-4ef2-871f-a86f94e9a579';
 const DEFAULT_GEMINI_TTS_MODEL = 'gemini-3.1-flash-tts-preview';
 const DEFAULT_GEMINI_TTS_LANGUAGE_CODE = 'ja-JP';
@@ -239,6 +239,7 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
+      motionStyle: 'bounce',
       pngtuberEmotionEffectAnchors: {},
       pngtuberReactionControlMode: 'none',
       pngtuberEmotionEffectMap: { ...DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP },
@@ -306,6 +307,8 @@ function loadSettings(): AppSettings {
         visual: {
           ...defaults.visual,
           ...saved.visual,
+          motionStyle:
+            saved.visual?.motionStyle === 'puppet' ? 'puppet' : 'bounce',
           pngtuberEmotionEffectAnchors: normalizeEmotionEffectAnchors(
             saved.visual?.pngtuberEmotionEffectAnchors,
           ),
@@ -1008,6 +1011,16 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualMotionStyle = useCallback(
+    (motionStyle: AppSettings['visual']['motionStyle']) => {
+      setSettings((prev) => ({
+        ...prev,
+        visual: { ...prev.visual, motionStyle },
+      }));
+    },
+    [],
+  );
+
   const updateVisualPngTuberReactionControlMode = useCallback(
     (pngtuberReactionControlMode: PngTuberReactionControlMode) => {
       setSettings((prev) => ({
@@ -1445,6 +1458,7 @@ export function useSettings() {
     updateVisualBackgroundMode,
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
+    updateVisualMotionStyle,
     updateVisualPngTuberReactionControlMode,
     updateVisualPngTuberEmotionEffect,
     resetVisualPngTuberEmotionEffectMap,

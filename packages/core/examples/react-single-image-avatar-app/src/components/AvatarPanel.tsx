@@ -1,5 +1,5 @@
 import { type MutableRefObject, useEffect, useRef, useState } from 'react';
-import { useBouncyAvatarMotion } from '../hooks/useBouncyAvatarMotion';
+import { useSingleImageAvatarMotion } from '../hooks/useSingleImageAvatarMotion';
 import {
   DEFAULT_EMOTION_EFFECT_ANCHOR,
   type EmotionEffectAnchor,
@@ -17,15 +17,17 @@ import {
   drawPngTuberEmotionEffectFront,
   withPngTuberEmotionReactionId,
 } from '../lib/pngtuberEmotionEffects';
+import type { AvatarMotionStyle } from '../types/settings';
 
 interface AvatarPanelProps {
   voiceLevel: number;
   isSpeaking: boolean;
   avatarImageUrl?: string | null;
   motionPreviewToken?: number;
+  motionStyle?: AvatarMotionStyle;
 }
 
-const DEFAULT_AVATAR_IMAGE = '/avatar/bouncy-avatar.png';
+const DEFAULT_AVATAR_IMAGE = '/avatar/miko-avatar.png';
 
 interface AvatarBackgroundProps extends AvatarPanelProps {
   avatarReaction?: PngTuberEmotionReaction | null;
@@ -224,11 +226,13 @@ export function AvatarPanel({
   isSpeaking,
   avatarImageUrl,
   motionPreviewToken,
+  motionStyle = 'bounce',
 }: AvatarPanelProps) {
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
-  const motionRef = useBouncyAvatarMotion(
+  const motionRef = useSingleImageAvatarMotion(
     voiceLevel,
     isSpeaking,
+    motionStyle,
     motionPreviewToken,
   );
   const imageSrc = avatarImageUrl || DEFAULT_AVATAR_IMAGE;
@@ -274,6 +278,7 @@ export function AvatarBackground({
   avatarImageUrl,
   motionPreviewToken,
   avatarReaction,
+  motionStyle = 'bounce',
   reactionControlMode,
   emotionEffectMap,
   effectAnchor,
@@ -281,9 +286,10 @@ export function AvatarBackground({
   onEffectAnchorReset,
 }: AvatarBackgroundProps) {
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
-  const motionRef = useBouncyAvatarMotion(
+  const motionRef = useSingleImageAvatarMotion(
     voiceLevel,
     isSpeaking,
+    motionStyle,
     motionPreviewToken,
   );
   const [manualReaction, setManualReaction] =
@@ -357,7 +363,7 @@ export function AvatarBackground({
         <div
           className="avatar-expression-controls"
           role="group"
-          aria-label="バウンスアバター感情表現エフェクト"
+          aria-label="1枚画像アバター感情表現エフェクト"
         >
           <span className="avatar-expression-controls-label">
             感情表現エフェクト

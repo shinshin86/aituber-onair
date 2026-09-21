@@ -4,23 +4,31 @@ import {
   createBouncyAvatarMotionState,
   getMotionPreviewLevel,
 } from '../lib/bouncyAvatarMotion';
+import {
+  advancePuppetWobbleMotion,
+  createPuppetWobbleMotionState,
+} from '../lib/puppetWobbleMotion';
+import type { AvatarMotionStyle } from '../types/settings';
 
 const PREVIEW_DURATION_MS = 3200;
 
-export function useBouncyAvatarMotion(
+export function useSingleImageAvatarMotion(
   voiceLevel: number,
   isSpeaking: boolean,
+  motionStyle: AvatarMotionStyle,
   previewToken = 0,
 ): RefObject<HTMLDivElement | null> {
   const elementRef = useRef<HTMLDivElement | null>(null);
   const voiceLevelRef = useRef(voiceLevel);
   const isSpeakingRef = useRef(isSpeaking);
+  const motionStyleRef = useRef(motionStyle);
   const previewStartRef = useRef<number | null>(null);
 
   useEffect(() => {
     voiceLevelRef.current = voiceLevel;
     isSpeakingRef.current = isSpeaking;
-  }, [isSpeaking, voiceLevel]);
+    motionStyleRef.current = motionStyle;
+  }, [isSpeaking, motionStyle, voiceLevel]);
 
   useEffect(() => {
     if (previewToken > 0) {
@@ -29,7 +37,9 @@ export function useBouncyAvatarMotion(
   }, [previewToken]);
 
   useEffect(() => {
-    const state = createBouncyAvatarMotionState();
+    let bounceState = createBouncyAvatarMotionState();
+    let puppetState = createPuppetWobbleMotionState();
+    let activeStyle = motionStyleRef.current;
     let frameId = 0;
     let previousTime = performance.now();
 
@@ -52,13 +62,27 @@ export function useBouncyAvatarMotion(
         }
       }
 
-      const motion = advanceBouncyAvatarMotion(
-        state,
-        effectiveVoiceLevel,
-        effectiveIsSpeaking,
-        now,
-        deltaSeconds,
-      );
+      const currentStyle = motionStyleRef.current;
+      if (currentStyle !== activeStyle) {
+        bounceState = createBouncyAvatarMotionState();
+        puppetState = createPuppetWobbleMotionState();
+        activeStyle = currentStyle;
+      }
+      const motion =
+        currentStyle === 'puppet'
+          ? advancePuppetWobbleMotion(
+              puppetState,
+              effectiveVoiceLevel,
+              effectiveIsSpeaking,
+              deltaSeconds,
+            )
+          : advanceBouncyAvatarMotion(
+              bounceState,
+              effectiveVoiceLevel,
+              effectiveIsSpeaking,
+              now,
+              deltaSeconds,
+            );
       const element = elementRef.current;
       if (element) {
         element.style.transform =
@@ -69,6 +93,7 @@ export function useBouncyAvatarMotion(
         element.dataset.motionRotation = motion.rotation.toFixed(4);
         element.dataset.voiceLevel = effectiveVoiceLevel.toFixed(3);
         element.dataset.speaking = String(effectiveIsSpeaking);
+        element.dataset.motionStyle = currentStyle;
       }
 
       frameId = requestAnimationFrame(tick);

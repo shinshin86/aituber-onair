@@ -377,6 +377,7 @@ export function SettingsPanel({
   updateVisualBackgroundMode,
   updateVisualLayoutMode,
   updateVisualShowInputInBroadcast,
+  updateVisualMotionStyle,
   updateVisualPngTuberReactionControlMode,
   updateVisualPngTuberEmotionEffect,
   resetVisualPngTuberEmotionEffectMap,
@@ -3065,6 +3066,26 @@ export function SettingsPanel({
                   </button>
                 )}
               </div>
+            </div>
+
+            <div className="settings-field">
+              <label htmlFor="avatar-motion-style">モーション</label>
+              <select
+                id="avatar-motion-style"
+                value={settings.visual.motionStyle}
+                onChange={(event) =>
+                  updateVisualMotionStyle(
+                    event.target.value as 'bounce' | 'puppet',
+                  )
+                }
+                disabled={disabled}
+              >
+                <option value="bounce">Bounce</option>
+                <option value="puppet">Puppet Wobble</option>
+              </select>
+              <small>
+                Bounceは弾む動き、Puppet Wobbleは小さく左右へ揺れる動きです。
+              </small>
             </div>
 
             <div className="settings-field">

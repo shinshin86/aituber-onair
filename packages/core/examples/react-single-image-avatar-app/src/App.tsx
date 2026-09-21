@@ -29,7 +29,7 @@ import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 
 const DEFAULT_SETTINGS_DIALOG_OFFSET: DialogDragPoint = { x: 0, y: 0 };
-const AVATAR_EFFECT_ANCHOR_PROFILE_ID = 'bouncy-avatar';
+const AVATAR_EFFECT_ANCHOR_PROFILE_ID = 'single-image-avatar';
 
 interface SettingsDialogDragState {
   pointerId: number;

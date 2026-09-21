@@ -27,14 +27,14 @@ PNGTuber サンプルでは、次の4状態画像を使います。
 [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app)
 を参照してください。
 
-### Bouncy Avatar
+### Single Image Avatar
 
 キャラクター画像を1枚だけ用意し、口や目の差分画像を作らずに発話へ反応させたい
-場合に向いています。TTSの実音声に合わせてアバター全体が跳ね、左右に傾き、
-着地時に少し潰れます。
+場合に向いています。TTSの実音声に合わせて、跳ねる「Bounce」と小さく左右へ
+揺れる「Puppet Wobble」を切り替えられます。
 
 まずは
-[`packages/core/examples/react-bouncy-avatar-app`](../packages/core/examples/react-bouncy-avatar-app)
+[`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
 を参照してください。
 
 ### ぷるぷるPNGTuber

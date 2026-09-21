@@ -1,41 +1,41 @@
-# Bouncy Avatar Chat
+# Single Image Avatar Chat
 
-![Bouncy Avatar Chat](./images/react-bouncy-avatar-app.png)
+![Single Image Avatar Chat](./images/react-single-image-avatar-app.png)
 
-`@aituber-onair/core` を使った、1枚画像のバウンスアバター付きReactチャット
-サンプルです。口の差分画像は使わず、TTSの実音声から取得した音量に合わせて
-アバター全体が跳ね、左右に傾き、着地時に少し潰れます。
+`@aituber-onair/core` を使った、1枚画像のアバター付きReactチャットサンプルです。
+口の差分画像は使わず、TTSの実音声から取得した音量に合わせて画像全体を動かします。
 
 ## 特徴
 
 - 透過PNGまたはJPGを1枚だけ使用
-- TTS音声のRMSを0〜1へ正規化し、音の山をジャンプへ変換
-- ジャンプごとに左右の傾きを交互に変更
-- 着地時のスクワッシュと、無音時の自然な静止
+- TTS音声のRMSを0〜1へ正規化してモーションへ反映
+- 跳ねて着地する「Bounce」モーション
+- 小さく上下しながら左右へ揺れる「Puppet Wobble」モーション
+- 発話終了後は元の位置で静止
 - Settingsから画像の差し替えと「動きをプレビュー」が可能
 - PNGTuberサンプルと同じLLM、TTS、配信、感情エフェクト設定を利用可能
 
 ## セットアップ
 
 ```bash
-cd packages/core/examples/react-bouncy-avatar-app
+cd packages/core/examples/react-single-image-avatar-app
 npm install
 npm run dev
 ```
 
 起動後に **Settings** を開き、LLMとTTSを設定してください。見た目の設定では
-アバター画像を1枚だけ選択できます。「動きをプレビュー」はAPIキーやTTS設定なしで
-バウンス動作を確認できます。
+アバター画像を1枚だけ選択できます。モーションは「Bounce」と「Puppet Wobble」から
+選択でき、「動きをプレビュー」はAPIキーやTTS設定なしで確認できます。
 
-設定値は `localStorage` の `react-bouncy-avatar-app-settings` に保存されます。
+設定値は `localStorage` の `react-single-image-avatar-app-settings` に保存されます。
 アップロードした画像はメモリ上だけに保持され、リロードすると同梱画像へ戻ります。
 
 ## 音声連動
 
 `src/hooks/useAudioMotion.ts` がTTS音声をWeb Audio APIで再生し、RMS音量を
-毎フレーム計測します。`src/hooks/useBouncyAvatarMotion.ts` はその音量から
-一定間隔のインパルスを生成し、`src/lib/bouncyAvatarMotion.ts` の物理計算で
-上下移動、回転、スクワッシュを求めます。
+毎フレーム計測します。`src/hooks/useSingleImageAvatarMotion.ts` は選択中の
+モーションに応じて `src/lib/bouncyAvatarMotion.ts` または
+`src/lib/puppetWobbleMotion.ts` の計算結果を画像全体へ反映します。
 
 ブラウザ内蔵のWeb Speech APIは音声バッファを公開しないため、実音声に同期した
 動きには対応しません。このエンジンを選んだ場合でも、Settingsのプレビュー機能は
@@ -43,7 +43,7 @@ npm run dev
 
 ## 同梱画像
 
-デフォルト画像は `public/avatar/bouncy-avatar.png` です。元画像をPNGとして
+デフォルト画像は `public/avatar/miko-avatar.png` です。元画像をPNGとして
 再エンコードし、埋め込みメタデータを除去しています。この画像はミコの画像を元に、
 Serio_ai（[@Multi_Serio_Ai](https://x.com/Multi_Serio_Ai) / APG）さんが
 [公開したプロンプト](https://x.com/Multi_Serio_Ai/status/2100800237619347535)
