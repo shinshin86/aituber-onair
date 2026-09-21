@@ -71,7 +71,8 @@ npm run dev
 
 PNGまたはJPGを1枚だけ使い、TTSの実音声に合わせて画像全体を動かします。
 跳ねて着地する「Bounce」と、小さく左右へ揺れる「Puppet Wobble」を設定画面で
-切り替えられます。APIキーやTTS設定がなくても「動きをプレビュー」から確認できます。
+切り替えられます。イラスト版とフェルト製パペット風のMiko画像を同梱しています。
+APIキーやTTS設定がなくても「動きをプレビュー」から確認できます。
 
 ```bash
 cd packages/core/examples/react-single-image-avatar-app

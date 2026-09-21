@@ -198,11 +198,13 @@ export interface KizunaSettings {
 }
 
 export type AvatarMotionStyle = 'bounce' | 'puppet';
+export type BundledAvatarId = 'miko' | 'miko-puppet';
 
 export interface VisualSettings {
   backgroundMode: 'default' | 'green';
   layoutMode: 'chat' | 'broadcast';
   showInputInBroadcast: boolean;
+  bundledAvatar: BundledAvatarId;
   motionStyle: AvatarMotionStyle;
   pngtuberEmotionEffectAnchors: Record<string, EmotionEffectAnchor>;
   pngtuberReactionControlMode: PngTuberReactionControlMode;

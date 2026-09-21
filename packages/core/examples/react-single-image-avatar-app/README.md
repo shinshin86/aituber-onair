@@ -9,6 +9,7 @@ applied to the whole image.
 ## Features
 
 - Uses one transparent PNG or JPG
+- Includes illustration and felt-puppet Miko variants
 - Normalizes the TTS audio RMS level and maps it to motion
 - Includes Bounce motion with jumps, alternating tilts, and landing squash
 - Includes Puppet Wobble motion with smaller vertical and side-to-side movement
@@ -26,7 +27,8 @@ npm run dev
 ```
 
 Open **Settings** to configure the LLM and TTS engines. The visual section
-accepts a single avatar image and lets you choose Bounce or Puppet Wobble.
+lets you choose a bundled avatar or upload one image, then select Bounce or
+Puppet Wobble independently.
 **Preview motion** works without an API key or a configured TTS engine.
 
 Settings are stored in `localStorage` under
@@ -46,8 +48,10 @@ preview remains available with that engine.
 
 ## Bundled image
 
-The default image is `public/avatar/miko-avatar.png`. It was losslessly
-re-encoded as PNG with embedded metadata removed. It was generated with
-ChatGPT from a Miko image using a
+The bundled images are `public/avatar/miko-avatar.png` and
+`public/avatar/miko-puppet-avatar.png`. Both have transparent backgrounds. The
+puppet version converts the same Miko design into a felt-doll style without
+adding a mouth. The original illustration was generated with ChatGPT from a
+Miko image using a
 [prompt shared by Serio_ai (@Multi_Serio_Ai / APG)](https://x.com/Multi_Serio_Ai/status/2100800237619347535).
 Thank you to the author for sharing the prompt.

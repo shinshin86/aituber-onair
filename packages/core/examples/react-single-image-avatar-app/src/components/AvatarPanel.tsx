@@ -17,7 +17,7 @@ import {
   drawPngTuberEmotionEffectFront,
   withPngTuberEmotionReactionId,
 } from '../lib/pngtuberEmotionEffects';
-import type { AvatarMotionStyle } from '../types/settings';
+import type { AvatarMotionStyle, BundledAvatarId } from '../types/settings';
 
 interface AvatarPanelProps {
   voiceLevel: number;
@@ -25,9 +25,13 @@ interface AvatarPanelProps {
   avatarImageUrl?: string | null;
   motionPreviewToken?: number;
   motionStyle?: AvatarMotionStyle;
+  bundledAvatar?: BundledAvatarId;
 }
 
-const DEFAULT_AVATAR_IMAGE = '/avatar/miko-avatar.png';
+const BUNDLED_AVATAR_IMAGES: Record<BundledAvatarId, string> = {
+  miko: '/avatar/miko-avatar.png',
+  'miko-puppet': '/avatar/miko-puppet-avatar.png',
+};
 
 interface AvatarBackgroundProps extends AvatarPanelProps {
   avatarReaction?: PngTuberEmotionReaction | null;
@@ -227,6 +231,7 @@ export function AvatarPanel({
   avatarImageUrl,
   motionPreviewToken,
   motionStyle = 'bounce',
+  bundledAvatar = 'miko',
 }: AvatarPanelProps) {
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
   const motionRef = useSingleImageAvatarMotion(
@@ -235,7 +240,7 @@ export function AvatarPanel({
     motionStyle,
     motionPreviewToken,
   );
-  const imageSrc = avatarImageUrl || DEFAULT_AVATAR_IMAGE;
+  const imageSrc = avatarImageUrl || BUNDLED_AVATAR_IMAGES[bundledAvatar];
   const showImage = Boolean(imageSrc) && failedImageSrc !== imageSrc;
   const barWidth = Math.min(voiceLevel * 100, 100);
 
@@ -279,6 +284,7 @@ export function AvatarBackground({
   motionPreviewToken,
   avatarReaction,
   motionStyle = 'bounce',
+  bundledAvatar = 'miko',
   reactionControlMode,
   emotionEffectMap,
   effectAnchor,
@@ -325,7 +331,7 @@ export function AvatarBackground({
     onEffectAnchorChange(next);
   };
 
-  const imageSrc = avatarImageUrl || DEFAULT_AVATAR_IMAGE;
+  const imageSrc = avatarImageUrl || BUNDLED_AVATAR_IMAGES[bundledAvatar];
   const showImage = Boolean(imageSrc) && failedImageSrc !== imageSrc;
 
   return (

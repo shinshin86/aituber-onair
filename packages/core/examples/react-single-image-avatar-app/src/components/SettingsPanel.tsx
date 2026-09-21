@@ -377,6 +377,7 @@ export function SettingsPanel({
   updateVisualBackgroundMode,
   updateVisualLayoutMode,
   updateVisualShowInputInBroadcast,
+  updateVisualBundledAvatar,
   updateVisualMotionStyle,
   updateVisualPngTuberReactionControlMode,
   updateVisualPngTuberEmotionEffect,
@@ -3069,6 +3070,26 @@ export function SettingsPanel({
             </div>
 
             <div className="settings-field">
+              <label htmlFor="bundled-avatar">付属アバター</label>
+              <select
+                id="bundled-avatar"
+                value={settings.visual.bundledAvatar}
+                onChange={(event) =>
+                  updateVisualBundledAvatar(
+                    event.target.value as 'miko' | 'miko-puppet',
+                  )
+                }
+                disabled={disabled || Boolean(avatarImageUrl)}
+              >
+                <option value="miko">Miko（イラスト）</option>
+                <option value="miko-puppet">Miko（パペット）</option>
+              </select>
+              <small>
+                アップロード画像を使っている間は、そちらが優先されます。
+              </small>
+            </div>
+
+            <div className="settings-field">
               <label htmlFor="avatar-motion-style">モーション</label>
               <select
                 id="avatar-motion-style"
@@ -3112,7 +3133,7 @@ export function SettingsPanel({
               </div>
               <div className="settings-file-actions">
                 <span className="settings-file-status">
-                  {avatarImageUrl ? '差し替え済み' : 'デフォルト画像'}
+                  {avatarImageUrl ? 'アップロード画像' : '付属画像'}
                 </span>
                 {avatarImageUrl && (
                   <button

@@ -8,6 +8,7 @@
 ## 特徴
 
 - 透過PNGまたはJPGを1枚だけ使用
+- イラスト版とフェルト製パペット風のMiko画像を同梱
 - TTS音声のRMSを0〜1へ正規化してモーションへ反映
 - 跳ねて着地する「Bounce」モーション
 - 小さく上下しながら左右へ揺れる「Puppet Wobble」モーション
@@ -24,8 +25,9 @@ npm run dev
 ```
 
 起動後に **Settings** を開き、LLMとTTSを設定してください。見た目の設定では
-アバター画像を1枚だけ選択できます。モーションは「Bounce」と「Puppet Wobble」から
-選択でき、「動きをプレビュー」はAPIキーやTTS設定なしで確認できます。
+付属のMiko画像を2種類から選ぶか、手元の画像を1枚アップロードできます。
+モーションは画像とは別に「Bounce」と「Puppet Wobble」から選択できます。
+「動きをプレビュー」はAPIキーやTTS設定なしで確認できます。
 
 設定値は `localStorage` の `react-single-image-avatar-app-settings` に保存されます。
 アップロードした画像はメモリ上だけに保持され、リロードすると同梱画像へ戻ります。
@@ -43,8 +45,10 @@ npm run dev
 
 ## 同梱画像
 
-デフォルト画像は `public/avatar/miko-avatar.png` です。元画像をPNGとして
-再エンコードし、埋め込みメタデータを除去しています。この画像はミコの画像を元に、
+`public/avatar/miko-avatar.png` と
+`public/avatar/miko-puppet-avatar.png` を同梱しています。どちらも透過PNGです。
+パペット版は同じMikoのデザインを、口のないフェルト人形風に仕上げています。
+元のイラスト版はミコの画像を元に、
 Serio_ai（[@Multi_Serio_Ai](https://x.com/Multi_Serio_Ai) / APG）さんが
 [公開したプロンプト](https://x.com/Multi_Serio_Ai/status/2100800237619347535)
 を参考にChatGPTで生成しました。プロンプトを公開してくださったことに感謝します。

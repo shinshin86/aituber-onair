@@ -98,8 +98,9 @@ npm run dev
 ![Single Image Avatar example app](./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png)
 
 Use one PNG or JPG and choose between jumping Bounce motion and gentler Puppet
-Wobble motion driven by TTS output volume. The Settings screen also includes a
-motion preview that works without an API key. See
+Wobble motion driven by TTS output volume. The example includes illustration
+and felt-puppet Miko images, plus a motion preview that works without an API
+key. See
 [`packages/core/examples/react-single-image-avatar-app`](./packages/core/examples/react-single-image-avatar-app).
 
 ```bash

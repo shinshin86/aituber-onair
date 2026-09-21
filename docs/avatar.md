@@ -31,7 +31,8 @@ Start from
 Use the Single Image Avatar example when you have one character image and want the
 whole character to react to speech without drawing mouth or eye states. It
 offers jumping Bounce motion and gentler Puppet Wobble motion driven by TTS
-output volume.
+output volume. Illustration and felt-puppet Miko images are included, and you
+can replace them with your own image.
 
 Start from
 [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app).

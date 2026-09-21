@@ -72,8 +72,9 @@ Path:
 
 Uses one PNG or JPG and maps real TTS output volume to whole-image motion.
 Choose Bounce for jumps and landing squash, or Puppet Wobble for a gentler
-side-to-side spring motion. A built-in preview works without an API key or
-configured TTS engine.
+side-to-side spring motion. The example includes illustration and felt-puppet
+Miko images. A built-in preview works without an API key or configured TTS
+engine.
 
 ```bash
 cd packages/core/examples/react-single-image-avatar-app

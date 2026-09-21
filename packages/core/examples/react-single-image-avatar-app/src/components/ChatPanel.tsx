@@ -80,6 +80,7 @@ export function ChatPanel({
         avatarImageUrl={avatarImageUrl}
         motionPreviewToken={motionPreviewToken}
         motionStyle={visual.motionStyle}
+        bundledAvatar={visual.bundledAvatar}
         avatarReaction={avatarReaction}
         reactionControlMode={visual.pngtuberReactionControlMode}
         emotionEffectMap={visual.pngtuberEmotionEffectMap}
