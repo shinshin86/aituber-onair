@@ -13,12 +13,12 @@ export interface PuppetWobbleMotionFrame {
   scaleY: number;
 }
 
-const VERTICAL_STIFFNESS = 95;
-const VERTICAL_DAMPING = 13;
-const ROTATION_STIFFNESS = 80;
-const ROTATION_DAMPING = 11;
-const MAX_OFFSET_Y = 11;
-const MAX_ROTATION = 0.075;
+const VERTICAL_STIFFNESS = 120;
+const VERTICAL_DAMPING = 12;
+const ROTATION_STIFFNESS = 125;
+const ROTATION_DAMPING = 10;
+const MAX_OFFSET_Y = 15;
+const MAX_ROTATION = 0.12;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -45,11 +45,11 @@ export function advancePuppetWobbleMotion(
   const energy = isSpeaking ? 0.2 + voiceLevel * 0.8 : 0;
 
   if (isSpeaking) {
-    state.phase += deltaSeconds * (5.2 + voiceLevel * 4.2);
+    state.phase += deltaSeconds * (8.5 + voiceLevel * 5.5);
   }
 
   const targetY = isSpeaking
-    ? -energy * 5.5 + Math.sin(state.phase * 1.8) * energy * 2.2
+    ? -energy * 6.6 + Math.sin(state.phase * 1.6) * energy * 3.5
     : 0;
   const targetRotation = isSpeaking
     ? Math.sin(state.phase) * energy * MAX_ROTATION
@@ -69,7 +69,7 @@ export function advancePuppetWobbleMotion(
   const pulse = isSpeaking
     ? (Math.sin(state.phase * 2 + Math.PI / 2) + 1) / 2
     : 0;
-  const squash = energy * pulse * 0.018;
+  const squash = energy * pulse * 0.024;
 
   return {
     y: state.y,

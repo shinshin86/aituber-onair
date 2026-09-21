@@ -18,7 +18,7 @@ describe('puppetWobbleMotion', () => {
     });
   });
 
-  it('adds a small wobble while speaking', () => {
+  it('adds a quick, visible wobble while speaking', () => {
     const state = createPuppetWobbleMotionState();
     let minY = 0;
     let minRotation = 0;
@@ -31,10 +31,10 @@ describe('puppetWobbleMotion', () => {
       maxRotation = Math.max(maxRotation, frame.rotation);
     }
 
-    expect(minY).toBeLessThan(-1);
-    expect(minY).toBeGreaterThanOrEqual(-11);
-    expect(minRotation).toBeLessThan(0);
-    expect(maxRotation).toBeGreaterThan(0);
+    expect(minY).toBeLessThan(-4);
+    expect(minY).toBeGreaterThanOrEqual(-15);
+    expect(minRotation).toBeLessThan(-0.04);
+    expect(maxRotation).toBeGreaterThan(0.04);
   });
 
   it('returns close to rest after speech stops', () => {
