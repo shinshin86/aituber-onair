@@ -100,6 +100,7 @@
   shape, capabilities, and user configuration path are documented or
   live-verified.
 - Skills:
+  - `research-chat-models`
   - `add-chat-model`
   - `add-tts-provider`
   - `sync-core-after-chat-upgrade`
@@ -108,6 +109,7 @@
   - `connect-colab-local-llm`
   - `create-pngtuber-avatar-states`
 - Canonical skill sources:
+  - `skills/research-chat-models/SKILL.md`
   - `skills/add-chat-model/SKILL.md`
   - `skills/add-tts-provider/SKILL.md`
   - `skills/sync-core-after-chat-upgrade/SKILL.md`
@@ -116,6 +118,7 @@
   - `skills/connect-colab-local-llm/SKILL.md`
   - `skills/create-pngtuber-avatar-states/SKILL.md`
 - Claude Code mirror paths:
+  - `.claude/skills/research-chat-models/SKILL.md`
   - `.claude/skills/add-chat-model/SKILL.md`
   - `.claude/skills/add-tts-provider/SKILL.md`
   - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
@@ -123,7 +126,8 @@
   - `.claude/skills/connect-colab-local-tts/SKILL.md`
   - `.claude/skills/connect-colab-local-llm/SKILL.md`
   - `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
-- When requests match "add a new model", "support model <model_id>", "add <provider> model", or "update supported models", follow `skills/add-chat-model/SKILL.md` and the hard gates in `docs/agent-model-provider-guidelines.md`.
+- When asked to find recently released or newly API-available models for existing providers, first follow `skills/research-chat-models/SKILL.md`, then use `skills/add-chat-model/SKILL.md` for any selected models the user wants implemented.
+- When a model ID is already specified and the request is to add/support that model, follow `skills/add-chat-model/SKILL.md` and the hard gates in `docs/agent-model-provider-guidelines.md`; do not run a broad provider discovery sweep.
 - When requests match "add a TTS provider", "support <provider> TTS", "add voice provider", or "update supported voice providers", follow `skills/add-tts-provider/SKILL.md` and the hard gates in `docs/agent-model-provider-guidelines.md`.
 - When requests ask to apply chat upgrades to core/examples, follow `skills/sync-core-after-chat-upgrade/SKILL.md`.
 - When propagating `@aituber-onair/voice` upgrades into `@aituber-onair/core`,

@@ -26,6 +26,10 @@ minimal (`name`, `description`) and keep the body procedural.
 
 ## Current Skills
 
+- `research-chat-models`
+  - Canonical: `skills/research-chat-models/SKILL.md`
+  - Claude Code: `.claude/skills/research-chat-models/SKILL.md`
+  - Codex metadata: `skills/research-chat-models/agents/openai.yaml`
 - `add-chat-model`
   - Canonical: `skills/add-chat-model/SKILL.md`
   - Claude Code: `.claude/skills/add-chat-model/SKILL.md`
@@ -55,9 +59,13 @@ minimal (`name`, `description`) and keep the body procedural.
   - Claude Code: `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
   - Codex metadata: `skills/create-pngtuber-avatar-states/agents/openai.yaml`
 
-Use `add-chat-model` when adding a new model id to `@aituber-onair/chat`,
-including constants, provider support, tests, examples, docs, and versioning
-updates.
+Use `research-chat-models` when asked to find recent or newly API-available
+models for existing providers. It performs internet research and reports
+candidates; it does not edit code. Then use `add-chat-model` to implement
+selected model IDs, including constants, provider support, tests, examples,
+docs, and optional versioning updates. When the user already specifies the
+model ID and asks for implementation, use `add-chat-model` directly without a
+broad provider discovery sweep.
 Before adding or reorganizing LLM/TTS models, read
 `docs/agent-model-provider-guidelines.md` to classify the model or API as
 recommended/default, supported/explicit, deprecated compatibility, or
@@ -131,7 +139,8 @@ For generic GGUF, vLLM, automatic backend selection, and cleanup prompts, see
 
 Codex prompt examples:
 
-- "add a new model"
+- "Use $research-chat-models to find models released for existing providers in the last 90 days."
+- "Use $research-chat-models to find the latest API models from OpenAI, Anthropic, and xAI, then add the eligible ones to chat and samples."
 - "support model <provider-model-id>"
 - "add claude model"
 - "update supported models"
@@ -157,6 +166,8 @@ Codex prompt examples:
 
 Claude Code prompt examples:
 
+- "Use $research-chat-models to find newly API-available models for existing providers."
+- "Use $research-chat-models to research new models, then $add-chat-model to implement the selected IDs."
 - "Use $add-chat-model to add <provider-model-id> for <provider>."
 - "Use $add-chat-model and wire the model through tests/docs/versioning."
 - "Use $sync-core-after-chat-upgrade for chat 0.15.0."
@@ -216,6 +227,7 @@ Recommended sync check:
 
 ```bash
 diff -u skills/add-chat-model/SKILL.md .claude/skills/add-chat-model/SKILL.md
+diff -u skills/research-chat-models/SKILL.md .claude/skills/research-chat-models/SKILL.md
 diff -u skills/add-tts-provider/SKILL.md .claude/skills/add-tts-provider/SKILL.md
 diff -u skills/sync-core-after-chat-upgrade/SKILL.md .claude/skills/sync-core-after-chat-upgrade/SKILL.md
 diff -u skills/wrap-tts-as-openai-compatible/SKILL.md .claude/skills/wrap-tts-as-openai-compatible/SKILL.md
