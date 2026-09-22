@@ -24,9 +24,10 @@ npm install
 npm run dev
 ```
 
-起動後に **Settings** を開き、LLMとTTSを設定してください。見た目の設定では
+起動後に **Settings** を開いてください。「アバター・モーション」タブでは、
 付属のMiko画像を2種類から選ぶか、手元の画像を1枚アップロードできます。
-モーションは画像とは別に「Bounce」と「Puppet Wobble」から選択できます。
+モーションは画像とは別に「Bounce」と「Puppet Wobble」から選択できます。LLM、
+TTS、配信の設定は「AI・音声・配信」タブにあります。
 「動きをプレビュー」はAPIキーやTTS設定なしで確認できます。
 
 設定値は `localStorage` の `react-single-image-avatar-app-settings` に保存されます。

@@ -98,6 +98,43 @@ body {
   color: #e0e0e0;
 }
 
+.settings-category-nav {
+  display: flex;
+  flex-shrink: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid #0f3460;
+}
+
+.settings-category-nav button {
+  flex: 1;
+  padding: 13px 6px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: #aebfd2;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.settings-category-nav button[aria-pressed="true"] {
+  border-bottom-color: #e94560;
+  color: #fff;
+}
+
+.settings-category-nav button:focus-visible {
+  outline: 2px solid #a5d1ff;
+  outline-offset: -3px;
+}
+
+.settings-dialog-body {
+  overflow-y: auto;
+}
+
+.settings-dialog-body > .settings-panel {
+  overflow: visible;
+}
+
 .settings-panel {
   background: #16213e;
   padding: 16px;
@@ -106,6 +143,10 @@ body {
 
 .settings-section {
   margin-bottom: 20px;
+}
+
+.avatar-settings-panel .settings-section:last-child {
+  margin-bottom: 0;
 }
 
 .settings-section-toggle {

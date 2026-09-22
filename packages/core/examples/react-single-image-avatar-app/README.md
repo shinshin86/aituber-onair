@@ -26,9 +26,9 @@ npm install
 npm run dev
 ```
 
-Open **Settings** to configure the LLM and TTS engines. The visual section
-lets you choose a bundled avatar or upload one image, then select Bounce or
-Puppet Wobble independently.
+Open **Settings** and use the **Avatar & Motion** tab to choose a bundled avatar
+or upload one image, then select Bounce or Puppet Wobble independently. LLM,
+TTS, and streaming settings are under **AI, Voice & Streaming**.
 **Preview motion** works without an API key or a configured TTS engine.
 
 Settings are stored in `localStorage` under

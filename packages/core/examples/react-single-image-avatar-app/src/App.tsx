@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react';
 import { BondToastStack } from './components/BondToastStack';
+import { AvatarSettingsPanel } from './components/AvatarSettingsPanel';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAituberCore } from './hooks/useAituberCore';
@@ -42,6 +43,9 @@ export default function App() {
   const { play, stop, voiceLevel, isSpeaking } = useAudioMotion();
   const settingsHook = useSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsCategory, setSettingsCategory] = useState<
+    'avatar' | 'conversation'
+  >('avatar');
   const [settingsDialogOffset, setSettingsDialogOffset] =
     useState<DialogDragPoint>(DEFAULT_SETTINGS_DIALOG_OFFSET);
   const [settingsDialogDragging, setSettingsDialogDragging] = useState(false);
@@ -439,26 +443,58 @@ export default function App() {
             >
               <h2>Settings</h2>
               <button
+                type="button"
+                aria-label="設定を閉じる"
                 className="settings-dialog-close"
                 onClick={closeSettingsDialog}
               >
                 &times;
               </button>
             </div>
-            <SettingsPanel
-              {...settingsHook}
-              isProcessing={isProcessing}
-              backgroundImageUrl={backgroundImageUrl}
-              avatarImageUrl={avatarImageUrl}
-              streamErrorMessage={streamErrorMessage}
-              screenVisionController={screenVisionController}
-              onBackgroundImageChange={handleBackgroundImageChange}
-              onAvatarImageChange={handleAvatarImageChange}
-              onAvatarMotionPreview={() =>
-                setMotionPreviewToken((current) => current + 1)
-              }
-              onResetKizunaData={resetKizunaData}
-            />
+            <nav className="settings-category-nav" aria-label="設定カテゴリ">
+              <button
+                type="button"
+                aria-pressed={settingsCategory === 'avatar'}
+                onClick={() => setSettingsCategory('avatar')}
+              >
+                アバター・モーション
+              </button>
+              <button
+                type="button"
+                aria-pressed={settingsCategory === 'conversation'}
+                onClick={() => setSettingsCategory('conversation')}
+              >
+                AI・音声・配信
+              </button>
+            </nav>
+            <div className="settings-dialog-body">
+              {settingsCategory === 'avatar' && (
+                <AvatarSettingsPanel
+                  settings={settingsHook.settings}
+                  updateVisualBundledAvatar={
+                    settingsHook.updateVisualBundledAvatar
+                  }
+                  updateVisualMotionStyle={settingsHook.updateVisualMotionStyle}
+                  isProcessing={isProcessing}
+                  avatarImageUrl={avatarImageUrl}
+                  onAvatarImageChange={handleAvatarImageChange}
+                  onAvatarMotionPreview={() =>
+                    setMotionPreviewToken((current) => current + 1)
+                  }
+                />
+              )}
+              {settingsCategory === 'conversation' && (
+                <SettingsPanel
+                  {...settingsHook}
+                  isProcessing={isProcessing}
+                  backgroundImageUrl={backgroundImageUrl}
+                  streamErrorMessage={streamErrorMessage}
+                  screenVisionController={screenVisionController}
+                  onBackgroundImageChange={handleBackgroundImageChange}
+                  onResetKizunaData={resetKizunaData}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

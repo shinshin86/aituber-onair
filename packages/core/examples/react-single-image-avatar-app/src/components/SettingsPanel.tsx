@@ -28,12 +28,9 @@ type ScreenVisionController = ReturnType<typeof useScreenVisionController>;
 interface SettingsPanelProps extends SettingsHook {
   isProcessing: boolean;
   backgroundImageUrl: string | null;
-  avatarImageUrl: string | null;
   streamErrorMessage?: string;
   screenVisionController: ScreenVisionController;
   onBackgroundImageChange: (file: File | null) => void;
-  onAvatarImageChange: (file: File | null) => void;
-  onAvatarMotionPreview: () => void;
   onResetKizunaData: () => Promise<void>;
 }
 
@@ -377,8 +374,6 @@ export function SettingsPanel({
   updateVisualBackgroundMode,
   updateVisualLayoutMode,
   updateVisualShowInputInBroadcast,
-  updateVisualBundledAvatar,
-  updateVisualMotionStyle,
   updateVisualPngTuberReactionControlMode,
   updateVisualPngTuberEmotionEffect,
   resetVisualPngTuberEmotionEffectMap,
@@ -414,12 +409,9 @@ export function SettingsPanel({
   getApiKeyForProvider,
   isProcessing,
   backgroundImageUrl,
-  avatarImageUrl,
   streamErrorMessage,
   screenVisionController,
   onBackgroundImageChange,
-  onAvatarImageChange,
-  onAvatarMotionPreview,
   onResetKizunaData,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
@@ -3066,93 +3058,6 @@ export function SettingsPanel({
                     クリア
                   </button>
                 )}
-              </div>
-            </div>
-
-            <div className="settings-field">
-              <label htmlFor="bundled-avatar">付属アバター</label>
-              <select
-                id="bundled-avatar"
-                value={settings.visual.bundledAvatar}
-                onChange={(event) =>
-                  updateVisualBundledAvatar(
-                    event.target.value as 'miko' | 'miko-puppet',
-                  )
-                }
-                disabled={disabled || Boolean(avatarImageUrl)}
-              >
-                <option value="miko">Miko（イラスト）</option>
-                <option value="miko-puppet">Miko（パペット）</option>
-              </select>
-              <small>
-                アップロード画像を使っている間は、そちらが優先されます。
-              </small>
-            </div>
-
-            <div className="settings-field">
-              <label htmlFor="avatar-motion-style">モーション</label>
-              <select
-                id="avatar-motion-style"
-                value={settings.visual.motionStyle}
-                onChange={(event) =>
-                  updateVisualMotionStyle(
-                    event.target.value as 'bounce' | 'puppet',
-                  )
-                }
-                disabled={disabled}
-              >
-                <option value="bounce">Bounce</option>
-                <option value="puppet">Puppet Wobble</option>
-              </select>
-              <small>
-                Bounceは弾む動き、Puppet Wobbleは小さく左右へ揺れる動きです。
-              </small>
-            </div>
-
-            <div className="settings-field">
-              <label htmlFor="avatar-image">アバター画像（1枚）</label>
-              <div className="settings-file-picker-row">
-                <input
-                  id="avatar-image"
-                  className="settings-file-input-hidden"
-                  type="file"
-                  accept="image/*"
-                  disabled={disabled}
-                  onChange={(e) => {
-                    onAvatarImageChange(e.target.files?.[0] ?? null);
-                    e.currentTarget.value = '';
-                  }}
-                />
-                <label
-                  htmlFor="avatar-image"
-                  className={`settings-file-trigger${disabled ? ' is-disabled' : ''}`}
-                >
-                  画像を選択
-                </label>
-                <span className="settings-file-hint">透過PNG推奨</span>
-              </div>
-              <div className="settings-file-actions">
-                <span className="settings-file-status">
-                  {avatarImageUrl ? 'アップロード画像' : '付属画像'}
-                </span>
-                {avatarImageUrl && (
-                  <button
-                    type="button"
-                    className="settings-clear-button"
-                    onClick={() => onAvatarImageChange(null)}
-                    disabled={disabled}
-                  >
-                    デフォルトに戻す
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="settings-clear-button"
-                  onClick={onAvatarMotionPreview}
-                  disabled={disabled}
-                >
-                  動きをプレビュー
-                </button>
               </div>
             </div>
           </>
