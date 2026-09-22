@@ -218,9 +218,12 @@ const slugify = (title: string): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
+const isAsciiTerm = (term: string): boolean =>
+  Array.from(term).every((character) => character.charCodeAt(0) < 128);
+
 const containsTerm = (text: string, term: string): boolean => {
   const normalizedTerm = term.toLowerCase();
-  if (/^[\x00-\x7f]+$/.test(normalizedTerm)) {
+  if (isAsciiTerm(normalizedTerm)) {
     if (normalizedTerm.includes(' ') && text.includes(normalizedTerm)) {
       return true;
     }
