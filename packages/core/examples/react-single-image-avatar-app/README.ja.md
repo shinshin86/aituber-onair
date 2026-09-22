@@ -1,6 +1,17 @@
 # Single Image Avatar Chat
 
-![Single Image Avatar Chat](./images/react-single-image-avatar-app.png)
+<p align="center">
+  <img
+    src="./images/react-single-image-avatar-app.png"
+    alt="イラスト版Mikoを使ったSingle Image Avatar Chat"
+    width="49%"
+  />
+  <img
+    src="./images/react-single-image-avatar-app-puppet.png"
+    alt="パペット版Mikoを使ったSingle Image Avatar Chat"
+    width="49%"
+  />
+</p>
 
 `@aituber-onair/core` を使った、1枚画像のアバター付きReactチャットサンプルです。
 口の差分画像は使わず、TTSの実音声から取得した音量に合わせて画像全体を動かします。

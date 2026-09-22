@@ -1,6 +1,17 @@
 # Single Image Avatar Chat
 
-![Single Image Avatar Chat](./images/react-single-image-avatar-app.png)
+<p align="center">
+  <img
+    src="./images/react-single-image-avatar-app.png"
+    alt="Single Image Avatar Chat with illustrated Miko"
+    width="49%"
+  />
+  <img
+    src="./images/react-single-image-avatar-app-puppet.png"
+    alt="Single Image Avatar Chat with felt-puppet Miko"
+    width="49%"
+  />
+</p>
 
 A React chat example built with `@aituber-onair/core` and one avatar image.
 Instead of swapping mouth images, it maps real TTS output volume to motion

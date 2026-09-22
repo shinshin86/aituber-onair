@@ -95,7 +95,18 @@ npm run dev
 
 #### Single Image Avatar Chat — audio-reactive motion
 
-![Single Image Avatar example app](./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png)
+<p align="center">
+  <img
+    src="./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png"
+    alt="Single Image Avatar example with illustrated Miko"
+    width="49%"
+  />
+  <img
+    src="./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app-puppet.png"
+    alt="Single Image Avatar example with felt-puppet Miko"
+    width="49%"
+  />
+</p>
 
 Use one PNG or JPG and choose between jumping Bounce motion and gentler Puppet
 Wobble motion driven by TTS output volume. The example includes illustration
