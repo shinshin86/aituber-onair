@@ -26,17 +26,6 @@ The PNGTuber example uses four image states:
 Start from
 [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app).
 
-### Single Image Avatar
-
-Use the Single Image Avatar example when you have one character image and want the
-whole character to react to speech without drawing mouth or eye states. It
-offers jumping Bounce motion and gentler Puppet Wobble motion driven by TTS
-output volume. Illustration and felt-puppet Miko images are included, and you
-can replace them with your own image.
-
-Start from
-[`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app).
-
 ### PuruPuru PNGTuber
 
 Use PuruPuru PNGTuber when you want a livelier 2D avatar without preparing
@@ -105,6 +94,17 @@ animation from chat state, reply mood, and audio volume.
 
 Start from
 [`packages/core/examples/react-pet-app`](../packages/core/examples/react-pet-app).
+
+### Single Image Avatar
+
+Use the Single Image Avatar example when you have one character image and want the
+whole character to react to speech without drawing mouth or eye states. It
+offers jumping Bounce motion and gentler Puppet Wobble motion driven by TTS
+output volume. Illustration and felt-puppet Miko images are included, and you
+can replace them with your own image.
+
+Start from
+[`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app).
 
 ## Extending Avatar Expressions
 

@@ -93,34 +93,6 @@ npm install
 npm run dev
 ```
 
-#### Single Image Avatar Chat — audio-reactive motion
-
-<p align="center">
-  <img
-    src="./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png"
-    alt="Single Image Avatar example with illustrated Miko"
-    width="49%"
-  />
-  <img
-    src="./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app-puppet.png"
-    alt="Single Image Avatar example with felt-puppet Miko"
-    width="49%"
-  />
-</p>
-
-Use one PNG or JPG and choose between jumping Bounce motion and gentler Puppet
-Wobble motion driven by TTS output volume. The example includes illustration
-and felt-puppet Miko images, plus a motion preview that works without an API
-key. See
-[`packages/core/examples/react-single-image-avatar-app`](./packages/core/examples/react-single-image-avatar-app).
-
-```bash
-git clone https://github.com/shinshin86/aituber-onair.git
-cd aituber-onair/packages/core/examples/react-single-image-avatar-app
-npm install
-npm run dev
-```
-
 #### PuruPuru PNGTuber Chat — 2D avatar with hair physics
 
 ![PuruPuru PNGTuber example app](./packages/core/examples/react-purupuru-app/images/react-purupuru-app.png)
@@ -225,6 +197,34 @@ Anime2.5DRig-compatible layer names for motion mode. The bundled
 ```bash
 git clone https://github.com/shinshin86/aituber-onair.git
 cd aituber-onair/packages/core/examples/react-psd-app
+npm install
+npm run dev
+```
+
+#### Single Image Avatar Chat — audio-reactive motion
+
+<p align="center">
+  <img
+    src="./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png"
+    alt="Single Image Avatar example with illustrated Miko"
+    width="49%"
+  />
+  <img
+    src="./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app-puppet.png"
+    alt="Single Image Avatar example with felt-puppet Miko"
+    width="49%"
+  />
+</p>
+
+Use one PNG or JPG and choose between jumping Bounce motion and gentler Puppet
+Wobble motion driven by TTS output volume. The example includes illustration
+and felt-puppet Miko images, plus a motion preview that works without an API
+key. See
+[`packages/core/examples/react-single-image-avatar-app`](./packages/core/examples/react-single-image-avatar-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-single-image-avatar-app
 npm install
 npm run dev
 ```

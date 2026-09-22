@@ -27,17 +27,6 @@ PNGTuber サンプルでは、次の4状態画像を使います。
 [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app)
 を参照してください。
 
-### Single Image Avatar
-
-キャラクター画像を1枚だけ用意し、口や目の差分画像を作らずに発話へ反応させたい
-場合に向いています。TTSの実音声に合わせて、跳ねる「Bounce」と小さく左右へ
-揺れる「Puppet Wobble」を切り替えられます。イラスト版とフェルト製パペット風の
-Miko画像を同梱しており、手元の画像にも差し替えられます。
-
-まずは
-[`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
-を参照してください。
-
 ### ぷるぷるPNGTuber
 
 トラッキングや 3D アセットを用意せずに、よく動く 2D アバターを使いたい場合に
@@ -112,6 +101,17 @@ Codex Pet 互換のスプライトシートを使い、チャット状態、応�
 
 まずは
 [`packages/core/examples/react-pet-app`](../packages/core/examples/react-pet-app)
+を参照してください。
+
+### Single Image Avatar
+
+キャラクター画像を1枚だけ用意し、口や目の差分画像を作らずに発話へ反応させたい
+場合に向いています。TTSの実音声に合わせて、跳ねる「Bounce」と小さく左右へ
+揺れる「Puppet Wobble」を切り替えられます。イラスト版とフェルト製パペット風の
+Miko画像を同梱しており、手元の画像にも差し替えられます。
+
+まずは
+[`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
 を参照してください。
 
 ## アバター表現の拡張
