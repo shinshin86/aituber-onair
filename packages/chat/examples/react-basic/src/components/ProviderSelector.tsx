@@ -54,6 +54,7 @@ import {
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
   MODEL_GPT_6_ASTRA,
+  MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
   MODEL_CLAUDE_5_1_FABLE,
   MODEL_DEEPSEEK_FLASH,
@@ -558,6 +559,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GPT_6_SOL,
     name: 'GPT-6 Sol',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_6_LUNA,
+    name: 'GPT-6 Luna',
     provider: 'openai',
     default: false,
   },
@@ -1580,7 +1587,9 @@ export default function ProviderSelector({
     (isResponsesOnlyGPT5Model(selectedModel) ||
       selectedModel === MODEL_GPT_6_ASTRA);
   const isResponsesPreferredModel =
-    isResponsesOnlyModel || selectedModel === MODEL_GPT_6_SOL;
+    isResponsesOnlyModel ||
+    selectedModel === MODEL_GPT_6_SOL ||
+    selectedModel === MODEL_GPT_6_LUNA;
   const allowsNone =
     provider === 'openai' && allowsReasoningNone(selectedModel);
   const allowsMinimal =
@@ -2148,10 +2157,11 @@ export default function ProviderSelector({
                     This model uses Responses API for full tool support.
                   </span>
                 )}
-                {selectedModel === MODEL_GPT_6_SOL && (
+                {(selectedModel === MODEL_GPT_6_SOL ||
+                  selectedModel === MODEL_GPT_6_LUNA) && (
                   <span className="helper-text">
-                    Responses API is the default. Chat Completions requires
-                    reasoning effort set to None.
+                    Responses API is the default. Chat Completions function
+                    calling requires reasoning effort set to None.
                   </span>
                 )}
               </div>

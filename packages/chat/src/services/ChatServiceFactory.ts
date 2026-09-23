@@ -8,7 +8,11 @@ import {
 } from './providers/ChatServiceProvider';
 import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 import type { ChatProviderCapabilities } from '../types/capabilities';
-import { MODEL_GPT_6_ASTRA, MODEL_GPT_6_SOL } from '../constants/openai';
+import {
+  MODEL_GPT_6_ASTRA,
+  MODEL_GPT_6_LUNA,
+  MODEL_GPT_6_SOL,
+} from '../constants/openai';
 import { getClaudeSupportedReasoningEfforts } from '../constants/claude';
 import { getGeminiSupportedReasoningEfforts } from '../constants/gemini';
 import { getKimiSupportedReasoningEfforts } from '../constants/kimi';
@@ -140,21 +144,24 @@ export class ChatServiceFactory {
           ? ['low', 'medium', 'high', 'xhigh', 'max']
           : providerName === 'openai' && model === MODEL_GPT_6_SOL
             ? ['none', 'low', 'medium', 'high', 'xhigh', 'max']
-            : providerName === 'claude' && model
-              ? [...getClaudeSupportedReasoningEfforts(model)]
-              : providerName === 'gemini' && model
-                ? [...getGeminiSupportedReasoningEfforts(model)]
-                : providerName === 'kimi' && model
-                  ? [...getKimiSupportedReasoningEfforts(model)]
-                  : providerName === 'deepseek' && model
-                    ? [...getDeepSeekSupportedReasoningEfforts(model)]
-                    : providerName === 'openrouter' && model
-                      ? [...getOpenRouterSupportedReasoningEfforts(model)]
-                      : providerName === 'xai' && model
-                        ? [...getXaiSupportedReasoningEfforts(model)]
-                        : providerName === 'zai' && model
-                          ? [...getZaiSupportedReasoningEfforts(model)]
-                          : (REASONING_EFFORT_BY_PROVIDER[providerName] ?? []),
+            : providerName === 'openai' && model === MODEL_GPT_6_LUNA
+              ? ['none', 'low', 'medium', 'high', 'xhigh', 'max']
+              : providerName === 'claude' && model
+                ? [...getClaudeSupportedReasoningEfforts(model)]
+                : providerName === 'gemini' && model
+                  ? [...getGeminiSupportedReasoningEfforts(model)]
+                  : providerName === 'kimi' && model
+                    ? [...getKimiSupportedReasoningEfforts(model)]
+                    : providerName === 'deepseek' && model
+                      ? [...getDeepSeekSupportedReasoningEfforts(model)]
+                      : providerName === 'openrouter' && model
+                        ? [...getOpenRouterSupportedReasoningEfforts(model)]
+                        : providerName === 'xai' && model
+                          ? [...getXaiSupportedReasoningEfforts(model)]
+                          : providerName === 'zai' && model
+                            ? [...getZaiSupportedReasoningEfforts(model)]
+                            : (REASONING_EFFORT_BY_PROVIDER[providerName] ??
+                              []),
     };
   }
 

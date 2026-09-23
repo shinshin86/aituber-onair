@@ -269,6 +269,12 @@ streaming. It uses Responses by default and supports `none`, `low`, `medium`,
 `high`, `xhigh`, and `max` reasoning effort. The package default is `medium`;
 Chat Completions can be selected explicitly when `reasoning_effort` is `none`.
 
+`gpt-6-luna` (`MODEL_GPT_6_LUNA`) supports image input, streaming, and
+function calling. It uses Responses by default and supports `none`, `low`,
+`medium`, `high`, `xhigh`, and `max`; the package defaults to `low` for
+responsive chat. Chat Completions function calling requires
+`reasoning_effort: 'none'`. [Model API reference](https://developers.openai.com/api/docs/models/gpt-6-luna).
+
 ```typescript
 const openaiService = ChatServiceFactory.createChatService('openai', {
   apiKey: process.env.OPENAI_API_KEY,
@@ -1343,7 +1349,7 @@ without hard-coding provider-specific rules.
 
 Currently, the following AI providers are built-in:
 
-- **OpenAI**: GPT-6 Astra (`gpt-6-astra`) and GPT-6 Sol (`gpt-6-sol`, Responses API by default); Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
+- **OpenAI**: GPT-6 Astra (`gpt-6-astra`), GPT-6 Sol (`gpt-6-sol`), and GPT-6 Luna (`gpt-6-luna`, Responses API by default); Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Claude Opus 5.5 (`claude-opus-5-5`) and Claude Fable 5.1 (`claude-fable-5-1`); Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.

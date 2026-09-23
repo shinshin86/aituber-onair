@@ -123,7 +123,7 @@ built-in model status is `available`.
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-6 Sol, GPT-6 Astra, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
+- Models: GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
 - Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), GPT-5.1 supports None/Low/Medium/High, and GPT-5.0 models support Minimal/Low/Medium/High
@@ -288,10 +288,11 @@ Common extensions:
 
 ### Additional model options
 
-The model selector includes GPT-6 Astra (native OpenAI), Claude Fable 5.1,
-and DeepSeek V4.1 Flash (`deepseek-flash`). Astra uses Responses and starts at
-low reasoning; Fable 5.1 always thinks and uses automatic tool selection.
-DeepSeek tools require reasoning to be set to none.
+The model selector includes GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
+OpenAI), Claude Fable 5.1, and DeepSeek V4.1 Flash (`deepseek-flash`). Astra
+uses Responses and starts at low reasoning; Luna uses Responses and defaults to
+low reasoning for responsive chat. Fable 5.1 always thinks and uses automatic
+tool selection. DeepSeek tools require reasoning to be set to none.
 
 OpenRouter also offers Astra/Pro, Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8
 Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini/Pro (free),

@@ -9,6 +9,7 @@ import {
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
   MODEL_GPT_6_ASTRA,
+  MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
   MODEL_GPT_5_6_SOL,
   MODEL_GPT_5_6_TERRA,
@@ -89,7 +90,9 @@ export class OpenAIChatServiceProvider
       shouldUseResponsesAPI = true;
     } else if (
       modelName === MODEL_GPT_6_SOL ||
-      visionModel === MODEL_GPT_6_SOL
+      visionModel === MODEL_GPT_6_SOL ||
+      modelName === MODEL_GPT_6_LUNA ||
+      visionModel === MODEL_GPT_6_LUNA
     ) {
       const preference = optimizedOptions.gpt5EndpointPreference || 'responses';
       shouldUseResponsesAPI =
@@ -153,6 +156,7 @@ export class OpenAIChatServiceProvider
       MODEL_GPT_5_6,
       MODEL_GPT_6_ASTRA,
       MODEL_GPT_6_SOL,
+      MODEL_GPT_6_LUNA,
       MODEL_GPT_5_6_SOL,
       MODEL_GPT_5_6_TERRA,
       MODEL_GPT_5_6_LUNA,

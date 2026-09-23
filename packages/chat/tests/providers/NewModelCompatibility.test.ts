@@ -213,6 +213,83 @@ describe('New model endpoint compatibility', () => {
     });
   });
 
+  it('routes GPT-6 Luna through Responses with tools, low reasoning, and vision', async () => {
+    const post = vi.spyOn(ChatServiceHttpClient, 'post');
+    const lunaResponse = () =>
+      createSseResponse([
+        'event: response.output_text.delta\n' +
+          dataEvent({ delta: 'Luna response' }),
+      ]);
+    post
+      .mockResolvedValueOnce(lunaResponse())
+      .mockResolvedValueOnce(lunaResponse());
+    const provider = new OpenAIChatServiceProvider();
+    const service = provider.createChatService({
+      apiKey: 'test-key',
+      model: models.MODEL_GPT_6_LUNA,
+      tools,
+      gpt5EndpointPreference: 'chat',
+    });
+    const response = await service.chatOnce!(messages, true);
+    const visionResponse = await service.visionChatOnce!(images, true);
+
+    expect(provider.getSupportedModels()).toContain(models.MODEL_GPT_6_LUNA);
+    expect(provider.supportsVisionForModel(models.MODEL_GPT_6_LUNA)).toBe(true);
+    expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
+    expect(post.mock.calls[0][1]).toMatchObject({
+      model: models.MODEL_GPT_6_LUNA,
+      reasoning: { effort: 'low' },
+      tools: [expect.objectContaining({ type: 'function' })],
+    });
+    expect(post.mock.calls[1][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
+    expect(post.mock.calls[1][1].input[0].content).toContainEqual(
+      expect.objectContaining({ type: 'input_image' }),
+    );
+    expect(response.blocks).toContainEqual({
+      type: 'text',
+      text: 'Luna response',
+    });
+    expect(visionResponse.blocks).toContainEqual({
+      type: 'text',
+      text: 'Luna response',
+    });
+    expect(
+      ChatServiceFactory.getProviderCapabilities(
+        'openai',
+        models.MODEL_GPT_6_LUNA,
+      )?.reasoningEffort,
+    ).toEqual(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
+  });
+
+  it('allows GPT-6 Luna Chat Completions only when reasoning is disabled', async () => {
+    const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+      jsonResponse({
+        choices: [{ message: { role: 'assistant', content: 'Luna response' } }],
+      }),
+    );
+    const service = new OpenAIChatServiceProvider().createChatService({
+      apiKey: 'test-key',
+      model: models.MODEL_GPT_6_LUNA,
+      tools,
+      gpt5EndpointPreference: 'chat',
+      reasoning_effort: 'none',
+    });
+    const response = await service.chatOnce!(messages, false);
+
+    expect(post.mock.calls[0][0]).toBe(
+      models.ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+    );
+    expect(post.mock.calls[0][1]).toMatchObject({
+      model: models.MODEL_GPT_6_LUNA,
+      reasoning_effort: 'none',
+      tools: [expect.objectContaining({ type: 'function' })],
+    });
+    expect(response.blocks).toContainEqual({
+      type: 'text',
+      text: 'Luna response',
+    });
+  });
+
   it('sends Claude Opus 5.5 image requests through the Messages API', async () => {
     const post = vi
       .spyOn(ChatServiceHttpClient, 'post')

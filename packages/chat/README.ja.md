@@ -261,6 +261,12 @@ await chatService.processChat(
 指定できます。パッケージ既定は`medium`です。Chat Completionsを選ぶ場合は
 `reasoning_effort: 'none'`を指定してください。
 
+`gpt-6-luna`（`MODEL_GPT_6_LUNA`）は画像入力、ストリーミング、関数呼び出しに
+対応します。既定ではResponses APIを使い、`none`、`low`、`medium`、`high`、
+`xhigh`、`max`を指定できます。応答速度を優先し、パッケージ既定は`low`です。
+Chat Completionsで関数呼び出しを使う場合は`reasoning_effort: 'none'`を
+指定してください。[Model API reference](https://developers.openai.com/api/docs/models/gpt-6-luna).
+
 ```typescript
 const openaiService = ChatServiceFactory.createChatService('openai', {
   apiKey: process.env.OPENAI_API_KEY,
@@ -1318,7 +1324,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-6 Astra (`gpt-6-astra`) と GPT-6 Sol (`gpt-6-sol`, 既定でResponses API); GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
+- **OpenAI**: GPT-6 Astra (`gpt-6-astra`)、GPT-6 Sol (`gpt-6-sol`)、GPT-6 Luna (`gpt-6-luna`, 既定でResponses API); GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3 はチャット用途向けに利用可能な最小の thinking を既定値にします。`minimal` 非対応の Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3 Pro は `low`、その他の Gemini 3 Flash は `minimal` を使います。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Opus 5.5 (`claude-opus-5-5`) と Claude Fable 5.1 (`claude-fable-5-1`); Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 をサポート。調整可能な`reasoning_effort`は対応モデルに限り`output_config.effort`として送信し、refusal metadataは終端completionとして保持します

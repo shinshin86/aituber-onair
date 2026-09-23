@@ -4,8 +4,8 @@
 
 ### Minor Changes
 
-- Added native GPT-6 Sol (`gpt-6-sol`), Claude Opus 5.5
-  (`claude-opus-5-5`), and Grok 4.7 (`grok-4.7`) support with
+- Added native GPT-6 Sol (`gpt-6-sol`), GPT-6 Luna (`gpt-6-luna`), Claude Opus
+  5.5 (`claude-opus-5-5`), and Grok 4.7 (`grok-4.7`) support with
   model-specific request handling and capabilities.
 
 ### Patch Changes
