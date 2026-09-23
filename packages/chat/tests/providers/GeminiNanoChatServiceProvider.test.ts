@@ -47,6 +47,7 @@ describe('GeminiNanoChatServiceProvider', () => {
         expectedOutputLanguages: undefined,
         initialPrompts: undefined,
         responseLength: undefined,
+        sessionMode: undefined,
       });
     });
 
@@ -59,6 +60,7 @@ describe('GeminiNanoChatServiceProvider', () => {
           { role: 'assistant', content: 'Short answer.' },
         ],
         responseLength: 'short',
+        sessionMode: 'persistent',
       });
       expect(GeminiNanoChatService).toHaveBeenCalledWith({
         expectedInputLanguages: ['en'],
@@ -68,6 +70,7 @@ describe('GeminiNanoChatServiceProvider', () => {
           { role: 'assistant', content: 'Short answer.' },
         ],
         responseLength: 'short',
+        sessionMode: 'persistent',
       });
     });
   });

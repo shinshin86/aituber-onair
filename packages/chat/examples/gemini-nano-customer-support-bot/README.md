@@ -30,8 +30,8 @@ Static React page
 
 No Chrome flags are required for normal web pages. Chrome may need to download
 the built-in model after the user presses the preparation button. Preparation
-creates a temporary session with the complete support prompt, so a context-size
-failure is reported before chat input is enabled.
+creates a temporary session with the small, stable support prompt, so a
+context-size failure is reported before chat input is enabled.
 
 ## Run
 
@@ -74,15 +74,17 @@ require Chrome to download additional model resources.
 - Enter sends the message.
 - Shift+Enter inserts a newline.
 - Enter used to confirm Japanese IME composition does not send the message.
-- The `veryShort` response-length preset and support prompt request one concise
-  sentence without a preamble or follow-up suggestion to reduce generation
-  time.
+- Each question retrieves up to three relevant knowledge sections at runtime;
+  the reply includes links to the matching package documentation.
+- The `short` response-length preset keeps replies concise without asking the
+  model to reproduce URLs.
 
 ## Knowledge and privacy
 
 `src/chat-package-knowledge.md` is a full copy of the curated public knowledge
 used by the server-side `customer-support-bot` example. It is bundled with the
-frontend and becomes part of the Gemini Nano system prompt.
+frontend. The stable system prompt contains only the scope section, while
+matching sections are selected at runtime for each question.
 
 Because this example is frontend-only, the knowledge and prompt are visible to
 the browser user. Use only public information. Private support policies,
@@ -95,7 +97,7 @@ provider returns one complete text response and does not support image input.
 
 ## Context limit
 
-Built-in language-model context capacity can vary. This example keeps the full
-knowledge file to demonstrate the upper-bound case and limits conversation
-history through the package's Gemini Nano provider. If the initial prompt is too
-large on a supported device, Chrome reports a `QuotaExceededError`.
+Built-in language-model context capacity can vary. Retrieval keeps each turn
+focused and limits the model-facing conversation history to the latest three
+exchanges. If the initial prompt is too large on a supported device, Chrome
+reports a `QuotaExceededError`.

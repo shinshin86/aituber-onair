@@ -181,7 +181,8 @@ may fail because of CORS.
 PLaMo uses provider name `plamo` with PLaMo 3.0 Prime as its package default.
 Gemini Nano uses provider name `gemini-nano`, needs no API key, and depends on
 Chrome's built-in LanguageModel API.
-Gemini Nano is non-streaming and does not support vision.
+Gemini Nano supports streaming when Chrome exposes `promptStreaming()` and
+does not support vision.
 ## OpenAI-compatible endpoints
 Use `openai-compatible` for local or self-hosted servers that implement the
 OpenAI Chat Completions contract.

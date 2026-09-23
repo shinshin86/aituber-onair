@@ -6,7 +6,14 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { translations, type Language } from '../i18n';
-import { buildSupportSystemPrompt, createSupportService } from '../support';
+import {
+  buildSupportSystemPrompt,
+  buildSupportUserPrompt,
+  createSupportService,
+  getSupportSections,
+  getSupportSourceLinks,
+} from '../support';
+import type { KnowledgeSection } from '../knowledge';
 import type { GeminiNanoStatus } from '../useGeminiNanoStatus';
 import { shouldSubmitMessageOnKeyDown } from './messageInputKeydown';
 
@@ -15,6 +22,12 @@ interface SupportMessage {
   role: 'user' | 'assistant';
   content: string;
   state?: 'pending' | 'error';
+  sources?: { title: string; url: string }[];
+}
+
+interface ModelMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 interface SupportChatProps {
@@ -40,20 +53,34 @@ export default function SupportChat({
   const t = translations[language];
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
+  const [modelTranscript, setModelTranscript] = useState<ModelMessage[]>([]);
+  const [lastSelectedSections, setLastSelectedSections] = useState<
+    KnowledgeSection[]
+  >([]);
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const service = useMemo(() => createSupportService(language), [language]);
   const isReady = status === 'available';
 
+  const disposeService = () => {
+    service.dispose?.();
+  };
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: The selected language is intentionally the reset trigger.
   useEffect(() => {
     setMessages([]);
+    setModelTranscript([]);
+    setLastSelectedSections([]);
     setDraft('');
     setIsLoading(false);
-  }, [language]);
+    return disposeService;
+  }, [language, service]);
 
   const resetConversation = () => {
+    disposeService();
     setMessages([]);
+    setModelTranscript([]);
+    setLastSelectedSections([]);
     setDraft('');
   };
 
@@ -74,34 +101,33 @@ export default function SupportChat({
       content: '',
       state: 'pending',
     };
-    const conversation = messages
-      .filter((message) => message.state !== 'error')
-      .map(({ role, content: messageContent }) => ({
-        role,
-        content: messageContent,
-      }));
+    const sections = getSupportSections(content, lastSelectedSections);
+    const modelUserContent = buildSupportUserPrompt(content, sections);
+    const conversation = modelTranscript.slice(-6);
 
     setDraft('');
     setIsLoading(true);
     setMessages((current) => [...current, userMessage, pendingMessage]);
 
+    let completedResponse = '';
     try {
       await service.processChat(
         [
           { role: 'system', content: buildSupportSystemPrompt(language) },
           ...conversation,
-          { role: 'user', content },
+          { role: 'user', content: modelUserContent },
         ],
         (response) => {
           setMessages((current) =>
             current.map((message) =>
               message.id === assistantId
-                ? { ...message, content: response }
+                ? { ...message, content: `${message.content}${response}` }
                 : message,
             ),
           );
         },
         async (response) => {
+          completedResponse = response;
           setMessages((current) =>
             current.map((message) =>
               message.id === assistantId
@@ -110,6 +136,22 @@ export default function SupportChat({
             ),
           );
         },
+      );
+      setModelTranscript((current) => [
+        ...current,
+        { role: 'user', content: modelUserContent },
+        { role: 'assistant', content: completedResponse },
+      ]);
+      setLastSelectedSections(sections);
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantId
+            ? {
+                ...message,
+                sources: getSupportSourceLinks(sections, t.chat.packageReadme),
+              }
+            : message,
+        ),
       );
     } catch (error) {
       const detail =
@@ -214,13 +256,32 @@ export default function SupportChat({
                     <span />
                   </div>
                 ) : (
-                  <p
-                    className={
-                      message.state === 'error' ? 'message-error' : undefined
-                    }
-                  >
-                    {message.content}
-                  </p>
+                  <div className="message-content">
+                    <p
+                      className={
+                        message.state === 'error' ? 'message-error' : undefined
+                      }
+                    >
+                      {message.content}
+                    </p>
+                    {message.role === 'assistant' &&
+                      message.state !== 'error' &&
+                      message.sources && (
+                        <div className="message-sources">
+                          <span>{t.chat.sourcesLabel}</span>
+                          {message.sources.map((source) => (
+                            <a
+                              href={source.url}
+                              key={source.url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {source.title}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                  </div>
                 )}
               </div>
             ))}

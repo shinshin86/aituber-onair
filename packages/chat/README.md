@@ -927,6 +927,7 @@ Notes:
 ```typescript
 const geminiNanoService = ChatServiceFactory.createChatService('gemini-nano', {
   responseLength: 'short',
+  sessionMode: 'persistent',
   initialPrompts: [
     {
       role: 'system',
@@ -958,7 +959,13 @@ Notes:
   API is enabled by default, so no Chrome flags are required. Chrome extensions
   have supported the Prompt API since Chrome 138.
 - The model runs entirely on-device; no network requests are made for inference.
-- Non-streaming only — responses are returned as a single complete text.
+- Streaming uses Chrome's `promptStreaming()` when available and falls back to
+  `prompt()`; the service always completes with the full response.
+- `sessionMode` defaults to `'stateless'`. Use `'persistent'` to reuse an
+  on-device session across turns; call `dispose()` when the service is no
+  longer needed because the persistent session retains memory while alive.
+- In persistent mode, trimming old history to a suffix preserves reuse; editing
+  or clearing the history rebuilds the live session.
 - Vision is not supported.
 - See the
   [browser-only Gemini Nano customer-support example](./examples/gemini-nano-customer-support-bot/)
@@ -1347,7 +1354,7 @@ Currently, the following AI providers are built-in:
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models.
 - **Sakana AI**: Supports Fugu (`fugu`), Fugu Ultra (`fugu-ultra-v1.1`), and vision-capable Sakana Namazu (`sakana-namazu`) via OpenAI-compatible Chat Completions. Namazu thinking defaults to disabled for responsive chat.
 - **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) via OpenAI-compatible Chat Completions; the retiring 2.2 constant remains exported for compatibility.
-- **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Web pages require Chrome 148+ on a supported desktop device; no Chrome flags are required. Non-streaming, no vision support.
+- **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Web pages require Chrome 148+ on a supported desktop device; no Chrome flags are required. Streams when Chrome exposes `promptStreaming()`; no vision support.
 
 ## License
 
