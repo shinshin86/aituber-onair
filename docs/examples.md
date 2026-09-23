@@ -34,6 +34,10 @@ to the package examples when you need lower-level integration.
   [`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app)
   if you want a PSDTool-style or Anime2.5DRig-compatible 2D tachie avatar from
   a single PSD file.
+- Use
+  [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
+  if you want one image to move with TTS audio instead of swapping mouth
+  states.
 - Use package examples when you want to embed chat, voice, memory, or streaming
   behavior into an existing application.
 
@@ -182,6 +186,27 @@ sample that works with zero setup.
 
 ```bash
 cd packages/core/examples/react-psd-app
+npm install
+npm run dev
+```
+
+### Single Image Avatar App
+
+<p align="center">
+  <img src="../packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png" alt="Single Image Avatar example app" width="720" />
+</p>
+
+Path:
+[`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
+
+Uses one PNG or JPG and maps real TTS output volume to whole-image motion.
+Choose Bounce for jumps and landing squash, or Puppet Wobble for a gentler
+side-to-side spring motion. The example includes illustration and felt-puppet
+Miko images. A built-in preview works without an API key or configured TTS
+engine.
+
+```bash
+cd packages/core/examples/react-single-image-avatar-app
 npm install
 npm run dev
 ```

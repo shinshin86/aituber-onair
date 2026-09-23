@@ -103,6 +103,17 @@ Codex Pet 互換のスプライトシートを使い、チャット状態、応�
 [`packages/core/examples/react-pet-app`](../packages/core/examples/react-pet-app)
 を参照してください。
 
+### Single Image Avatar
+
+キャラクター画像を1枚だけ用意し、口や目の差分画像を作らずに発話へ反応させたい
+場合に向いています。TTSの実音声に合わせて、跳ねる「Bounce」と小さく左右へ
+揺れる「Puppet Wobble」を切り替えられます。イラスト版とフェルト製パペット風の
+Miko画像を同梱しており、手元の画像にも差し替えられます。
+
+まずは
+[`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
+を参照してください。
+
 ## アバター表現の拡張
 
 AITuber OnAir のサンプルは、チャットや音声のパイプラインを大きく変えずに、

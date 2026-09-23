@@ -34,6 +34,9 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
   アバターを使いたい場合は
   [`packages/core/examples/react-psd-app`](../packages/core/examples/react-psd-app)
   を使います。
+- 1枚の画像をTTS音声に合わせて動かしたい場合は
+  [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
+  を使います。
 - 既存アプリにチャット、音声、メモリ、配信連携を組み込みたい場合は、
   パッケージ別サンプルを参照してください。
 
@@ -182,6 +185,26 @@ npm run dev
 
 ```bash
 cd packages/core/examples/react-psd-app
+npm install
+npm run dev
+```
+
+### Single Image Avatar App
+
+<p align="center">
+  <img src="../packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png" alt="Single Image Avatar サンプルアプリ" width="720" />
+</p>
+
+パス:
+[`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
+
+PNGまたはJPGを1枚だけ使い、TTSの実音声に合わせて画像全体を動かします。
+跳ねて着地する「Bounce」と、小さく左右へ揺れる「Puppet Wobble」を設定画面で
+切り替えられます。イラスト版とフェルト製パペット風のMiko画像を同梱しています。
+APIキーやTTS設定がなくても「動きをプレビュー」から確認できます。
+
+```bash
+cd packages/core/examples/react-single-image-avatar-app
 npm install
 npm run dev
 ```
