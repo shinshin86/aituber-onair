@@ -445,25 +445,32 @@ keeps manual model UUID input instead of calling the model search endpoint from
 the browser.
 
 ### Gemini TTS
-Gemini API text-to-speech with Gemini preview TTS models, including
-`gemini-3.1-flash-tts-preview`, and simple API key authentication.
+Gemini API text-to-speech supports `gemini-3.8-flash-lite-tts` for fast,
+cost-efficient speech and `gemini-3.8-flash-tts` for more expressive speech.
+Earlier preview models remain available. Both 3.8 models use the Interactions
+API and return WAV audio; preview models continue to use `generateContent`.
 
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'geminiTts',
   speaker: 'Zephyr',
   apiKey: 'your-google-api-key',
-  geminiTtsModel: 'gemini-3.1-flash-tts-preview',
-  geminiTtsLanguageCode: 'ja-JP',
-  geminiTtsPrompt: 'Speak in a cheerful tone', // Optional style or audio-tag instruction
+  geminiTtsModel: 'gemini-3.8-flash-lite-tts',
+  geminiTtsPrompt: 'cheerful and friendly', // Optional speech_metadata.style for 3.8
   geminiTtsApiUrl:
     'https://generativelanguage.googleapis.com/v1beta', // Optional Gemini API base URL
 });
 ```
 
 **Note**: Use a standard Google API key. `apiKey` is sent as
-`x-goog-api-key` to the Gemini API. Available voices include Zephyr, Aoede,
-Kore, Puck, Charon, and 25+ more prebuilt voices.
+`x-goog-api-key` to the Gemini API. `speaker` accepts a prebuilt voice name
+such as Zephyr or Kore; for 3.8 it also accepts a `voice_...` ID created in
+Google AI Studio. Gemini 3.8 detects the input language automatically, so
+`geminiTtsLanguageCode` applies only to the preview models. For 3.8,
+`geminiTtsPrompt` is sent as a style annotation instead of being spoken as
+part of the transcript. This engine returns complete audio rather than
+streaming chunks. Voice creation and replication are handled in Google AI
+Studio or the Gemini Voices API.
 
 ### Web Speech API
 Browser-native speech synthesis through `window.speechSynthesis`. This engine

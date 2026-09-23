@@ -226,6 +226,9 @@ export const MINIMAX_SYSTEM_VOICE_OPTIONS = Object.entries(
 }));
 
 export const GEMINI_TTS_MODELS: Record<string, string> = {
+  'gemini-3.8-flash-lite-tts':
+    '3.8 Flash-Lite TTS — Fast, cost-efficient speech',
+  'gemini-3.8-flash-tts': '3.8 Flash TTS — Expressive, high-fidelity speech',
   'gemini-3.1-flash-tts-preview':
     '3.1 Flash TTS Preview — Expressive speech with audio-tag control',
   'gemini-2.5-flash-preview-tts': 'Flash Preview TTS — Optimized for latency',

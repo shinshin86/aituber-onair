@@ -1054,13 +1054,16 @@ export function EngineParameters({
             </select>
           </div>
           <div className="form-group">
-            <label htmlFor="geminiTtsLanguageCode">Language Code:</label>
+            <label htmlFor="geminiTtsLanguageCode">
+              Language Code (preview models only):
+            </label>
             <input
               id="geminiTtsLanguageCode"
               type="text"
               value={geminiTts.languageCode.value}
               onChange={(e) => geminiTts.languageCode.onChange(e.target.value)}
               placeholder="ja-JP"
+              disabled={geminiTts.model.value.startsWith('gemini-3.8-')}
             />
           </div>
           <div className="form-group">
