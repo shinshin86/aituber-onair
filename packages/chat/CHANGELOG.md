@@ -1,5 +1,18 @@
 # @aituber-onair/chat
 
+## 0.56.0
+
+### Minor Changes
+
+- Added native GPT-6 Sol (`gpt-6-sol`), Claude Opus 5.5
+  (`claude-opus-5-5`), and Grok 4.7 (`grok-4.7`) support with
+  model-specific request handling and capabilities.
+
+### Patch Changes
+
+- Updated the React basic example, English/Japanese documentation, and
+  provider compatibility coverage for the new models.
+
 ## 0.55.0
 
 ### Minor Changes
