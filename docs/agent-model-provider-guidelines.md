@@ -79,6 +79,17 @@ Preferred sources:
 - Endpoint-specific examples for the exact API family the package uses
 - Existing provider implementations and tests in this repository
 
+Choose sources for the provider being updated and the endpoint its
+implementation actually calls. When adding a model to the direct OpenAI
+provider, start with OpenAI's own API documentation and release notes. A cloud
+partner's model card or an OpenRouter listing may be a lead, but neither
+verifies availability or request behavior through the direct OpenAI endpoint.
+When adding a model to the OpenRouter provider, verify OpenRouter's official
+API documentation or its live endpoint; the underlying model vendor's
+documentation is supplementary for that route. Record what each source proves,
+and do not change the package endpoint merely to match a research source
+unless the user requested that integration.
+
 Avoid:
 
 - Adding model ids based only on blogs, social posts, or unofficial lists
@@ -118,8 +129,8 @@ decision:
 
 - Provider and model/provider id
 - Intended package and provider path
-- Official source URL and date checked
-- Exact endpoint family expected to be used
+- Official source URL, date checked, and platform covered
+- Actual package endpoint and evidence for that endpoint family
 - Capability claims: streaming, tools, vision, emotion, voice list, formats
 - Availability status: public, beta, limited access, deprecated, unknown
 - Proposed support level and reason
@@ -200,12 +211,16 @@ Provider:
 Model/provider id:
 Package:
 Support level:
-Default: yes/no
+Provider default model: yes/no
 Official source:
+Source platform and what it proves:
 Endpoint family used by package:
+Actual endpoint in provider code:
 Endpoint compatibility evidence:
 Capabilities enabled:
 Capabilities intentionally not enabled:
+Reasoning options and vendor default (if relevant):
+Chosen package reasoning default and brief rationale (if relevant):
 Live API smoke test: run/not run, reason
 Example/UI impact:
 Version bump: yes/no, reason
@@ -318,6 +333,25 @@ public API while respecting provider differences.
 - Keep deprecated models as compatibility exports instead of selector options.
 - Add routing tests when a model requires a different endpoint or API version.
 - Keep public exports and README model lists consistent.
+
+### Chat-Oriented Reasoning Defaults
+
+Choose each model's package default to favor quick responses in real-time AI
+chat. Consider its supported effort values, conversational quality, tool and
+vision behavior, endpoint constraints, and comparable models in the same
+provider. `none`, `minimal`, and `low` are common starting candidates for low
+latency, not a fixed ranking; some models work better with a higher value or
+with the field omitted. The vendor default is useful evidence, not an
+automatic package setting. Record a brief rationale when the choice is not
+obvious, preserve explicit user options, and do not send an undocumented
+effort value. This concerns reasoning options independently of which model is
+the provider's default.
+
+Provider helpers may derive a default from supported effort values. Reuse that
+value when it fits the new model's chat behavior and API constraints; note the
+check in the decision record. Add a model-specific branch only when the
+inherited value is unsuitable. If omitting the effort field is the right
+choice, verify that the request builder actually omits it for that model.
 
 ### Default Model Criteria
 
@@ -476,6 +510,8 @@ bug. A reviewer should block or request changes when any of the following are
 true:
 
 - A model is added to a supported list based only on a global model page.
+- A source for one platform is used as evidence for a different package
+  endpoint without endpoint-specific documentation or a live check.
 - The provider docs now recommend a different API family than the package uses,
   and no compatibility evidence is shown.
 - A model appears in an example selector before it is proven usable through the
@@ -484,6 +520,8 @@ true:
   output format support is inferred rather than documented or tested.
 - A coding-only, agent-only, preview, high-latency, or high-cost model becomes a
   default without a user-facing justification.
+- A reasoning default is chosen from the vendor default or a generic helper
+  without checking that it fits the model's chat behavior and API constraints.
 - Tests only assert arrays/constants and do not cover the request path or
   parser/decoder behavior needed for the support claim.
 - README or example docs tell users to use something that cannot be configured

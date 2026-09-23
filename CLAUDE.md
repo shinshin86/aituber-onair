@@ -107,8 +107,14 @@ Usage:
   "add a TTS provider", "support <provider> TTS", or
   "update supported voice providers". Apply the hard gates in
   `docs/agent-model-provider-guidelines.md` before adding first-class support.
-- Invoke `$sync-core-after-chat-upgrade` after chat upgrades when the same
-  changes must be propagated into core and core examples.
+- When Core propagation is requested, verify that the target
+  `@aituber-onair/chat` version is published to npm first. If the Chat change
+  is still in progress, complete its separate release before handling Core
+  exports/examples in another PR. A chat-model request alone includes chat's
+  own examples, not Core examples. This order also applies when both packages
+  were requested together.
+- Invoke `$sync-core-after-chat-upgrade` when asked to propagate a published
+  Chat version into Core and core examples.
 - When propagating `@aituber-onair/voice` upgrades into `@aituber-onair/core`,
   update all core React examples that expose TTS settings, not only
   `react-basic`: `packages/core/examples/react-basic`,
@@ -165,11 +171,13 @@ Usage:
   `option_fields`, and optional `default_api_url`, `examples_scope`,
   `bump_version` (default `false`; set `true` only when release/version work is
   explicitly requested).
-- Follow the skill procedure end-to-end, including tests/docs/versioning
-  updates and final verification commands.
-- After `add-chat-model` completes, ask whether to run
-  `$sync-core-after-chat-upgrade` unless end-to-end chat+core propagation was
-  already requested.
+- Follow the applicable skill procedure, including tests/docs and final
+  verification. Versioning applies only when release work was requested. The
+  `add-chat-model` handoff wording is stale; use the Chat -> Core release order
+  above unless the user's explicit prompt says otherwise.
+- After `add-chat-model` completes, report the Chat result. If relevant,
+  mention that Core propagation is separate work after the Chat release; do
+  not offer to start `$sync-core-after-chat-upgrade` immediately.
 
 Maintenance:
 

@@ -28,13 +28,27 @@ discovery and recommendation; it does not change code.
    Confirm each candidate using official sources. When official sources
    conflict or a catalog appears stale, seek a second official source such as an
    API changelog, help center, API reference, or cloud/API partner document.
-   Record release/availability dates and link sources directly.
+   Record release/availability dates and link sources directly. Match sources
+   to the provider being updated: use the model vendor's own API documentation
+   for a direct provider such as OpenAI, and OpenRouter's API documentation
+   when adding a model to the OpenRouter provider. An OpenRouter listing or a
+   cloud partner's model card is only a lead for direct-provider support, not
+   proof that the native API accepts the model. State which platform each
+   source covers.
 4. For each candidate, check:
    - Exact public API model ID and whether users can access it generally or only
      through invite, waitlist, private preview, or a specific platform/account.
    - API family, endpoint, request/response shape, streaming behavior, tool
      calling, vision, and other capabilities relevant to the package's current
      implementation.
+   - The endpoint currently used by the package's provider code, and official
+     endpoint-specific evidence or a live API check for that same route. Do not
+     infer compatibility from documentation for a different platform.
+   - Supported reasoning settings and the vendor default when documented.
+     Compare chat-oriented defaults for nearby package models and note any
+     model-specific tradeoffs. Leave the package default to an implementation
+     decision that favors quick, useful chat responses, not a fixed effort
+     ranking.
    - Whether `packages/chat` already has the model in constants, supported
      lists, provider routing, tests, docs, or selectors. Search the source, not
      just package release notes.
@@ -44,8 +58,9 @@ discovery and recommendation; it does not change code.
    Do not call a model "newly available" unless official evidence supports API
    availability. Do not classify restricted models as generally available.
 6. Return a concise table with provider, model ID, release/availability date,
-   official sources, endpoint family, current repository status, decision, and
-   any access limitation. Include recent candidates that were excluded and the
+   official sources and their platforms, package endpoint, compatibility
+   evidence for that endpoint, current repository status, decision, and any
+   access limitation. Include recent candidates that were excluded and the
    reason. If no additions are warranted, say which official sources and
    provider families were checked; do not infer completeness from the local
    repository alone.

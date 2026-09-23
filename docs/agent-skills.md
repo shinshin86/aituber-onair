@@ -75,8 +75,8 @@ Use `add-tts-provider` when adding a new voice/TTS provider to
 internal handler wiring, tests, docs, examples, and release prep. This also fits
 OpenAI-compatible TTS endpoints such as `<openai-compatible-tts-endpoint>` when
 they should be added as a dedicated provider.
-Use `sync-core-after-chat-upgrade` after chat upgrades to propagate changes
-into `@aituber-onair/core` and core examples.
+Use `sync-core-after-chat-upgrade` in separate follow-up work when asked to
+propagate a published Chat version into `@aituber-onair/core` and core examples.
 Use `wrap-tts-as-openai-compatible` when exposing a local or self-hosted TTS
 runtime through an OpenAI-compatible `POST /v1/audio/speech` server, including
 JSON request handling, browser CORS, Colab-friendly setup, upstream TTS pattern
@@ -200,12 +200,20 @@ If the request does not include all required inputs, collect:
 `supports_vision`, and optional `bump_version` (default `false`; set `true`
 only when release/version work is explicitly requested).
 
-Handoff rule:
+Chat -> Core release order:
 
-- After finishing `$add-chat-model`, ask whether to run
-  `$sync-core-after-chat-upgrade`.
-- If the user already requested chat + core propagation in one task, continue
-  directly without asking again.
+- Core propagation requires a version of `@aituber-onair/chat` published to
+  npm. If the Chat change is still in progress, complete its separate release
+  first. Chat model additions cover chat's own examples; Core exports and
+  examples are separate follow-up work.
+- Do not offer immediate Core sync after `$add-chat-model`. When Core
+  propagation is requested, use `$sync-core-after-chat-upgrade` only after the
+  Chat version is published. Keep the Core change in a separate PR. A completion
+  report may mention this sequence without offering to start Core work.
+- The current `add-chat-model` skill and its Codex UI metadata still ask about
+  an immediate Core handoff. They are unchanged on this branch and need a
+  separate update; a Codex UI default prompt is a user prompt, so the guidance
+  above cannot override it when that prompt is submitted.
 - When `$add-tts-provider` performs voice release prep, keep version/changelog
   changes scoped to `@aituber-onair/voice`. Do not bump `@aituber-onair/core`
   or `create-aituber-onair` for dependency alignment unless the user explicitly
