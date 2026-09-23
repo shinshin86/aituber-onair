@@ -4,6 +4,7 @@ import type { XAIChatServiceOptions } from '../../src/services/providers/ChatSer
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
   MODEL_GROK_4_6,
+  MODEL_GROK_4_7,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
@@ -34,6 +35,7 @@ describe('XAIChatServiceProvider', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
         MODEL_GROK_4_6,
+        MODEL_GROK_4_7,
         MODEL_GROK_4_5,
         MODEL_GROK_4_3,
         MODEL_GROK_4_20_REASONING,
@@ -58,6 +60,7 @@ describe('XAIChatServiceProvider', () => {
   describe('supportsVisionForModel', () => {
     it('should return true for supported vision models', () => {
       expect(provider.supportsVisionForModel(MODEL_GROK_4_6)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GROK_4_7)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GROK_4_3)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GROK_4_20_REASONING)).toBe(
         true,

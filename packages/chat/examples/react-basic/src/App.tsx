@@ -153,8 +153,8 @@ function App() {
     'medium',
   );
   const [gpt5EndpointPreference, setGpt5EndpointPreference] = useState<
-    'chat' | 'responses' | 'auto'
-  >('chat');
+    'chat' | 'responses' | 'auto' | undefined
+  >();
   const [openaiCompatibleEndpoint, setOpenaiCompatibleEndpoint] = useState(
     DEFAULT_OPENAI_COMPAT_ENDPOINT,
   );

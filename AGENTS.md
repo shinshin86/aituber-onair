@@ -100,6 +100,7 @@
   shape, capabilities, and user configuration path are documented or
   live-verified.
 - Skills:
+  - `research-chat-models`
   - `add-chat-model`
   - `add-tts-provider`
   - `sync-core-after-chat-upgrade`
@@ -108,6 +109,7 @@
   - `connect-colab-local-llm`
   - `create-pngtuber-avatar-states`
 - Canonical skill sources:
+  - `skills/research-chat-models/SKILL.md`
   - `skills/add-chat-model/SKILL.md`
   - `skills/add-tts-provider/SKILL.md`
   - `skills/sync-core-after-chat-upgrade/SKILL.md`
@@ -116,6 +118,7 @@
   - `skills/connect-colab-local-llm/SKILL.md`
   - `skills/create-pngtuber-avatar-states/SKILL.md`
 - Claude Code mirror paths:
+  - `.claude/skills/research-chat-models/SKILL.md`
   - `.claude/skills/add-chat-model/SKILL.md`
   - `.claude/skills/add-tts-provider/SKILL.md`
   - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
@@ -123,9 +126,17 @@
   - `.claude/skills/connect-colab-local-tts/SKILL.md`
   - `.claude/skills/connect-colab-local-llm/SKILL.md`
   - `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
-- When requests match "add a new model", "support model <model_id>", "add <provider> model", or "update supported models", follow `skills/add-chat-model/SKILL.md` and the hard gates in `docs/agent-model-provider-guidelines.md`.
+- When asked to find recently released or newly API-available models for existing providers, first follow `skills/research-chat-models/SKILL.md`, then use `skills/add-chat-model/SKILL.md` for any selected models the user wants implemented.
+- When a model ID is already specified and the request is to add/support that model, follow `skills/add-chat-model/SKILL.md` and the hard gates in `docs/agent-model-provider-guidelines.md`; do not run a broad provider discovery sweep.
 - When requests match "add a TTS provider", "support <provider> TTS", "add voice provider", or "update supported voice providers", follow `skills/add-tts-provider/SKILL.md` and the hard gates in `docs/agent-model-provider-guidelines.md`.
-- When requests ask to apply chat upgrades to core/examples, follow `skills/sync-core-after-chat-upgrade/SKILL.md`.
+- When Core propagation is requested, verify that the target
+  `@aituber-onair/chat` version is published to npm first. If the Chat change
+  is still in progress, complete its separate release before handling Core
+  exports/examples in another PR. A chat-model request alone includes chat's
+  own examples, not Core examples. This order also applies when both packages
+  were requested together.
+- When requests ask to apply a published chat upgrade to core/examples, follow
+  `skills/sync-core-after-chat-upgrade/SKILL.md`.
 - When propagating `@aituber-onair/voice` upgrades into `@aituber-onair/core`,
   do not stop at core exports or the React basic example. Check and update all
   core React examples that expose TTS settings:
@@ -167,5 +178,7 @@
 - When requests ask to create PNGTuber avatar state images, generate mouth/eye open-close variants, split a 2x2 avatar sheet, remove avatar backgrounds, or align avatar state images, follow `skills/create-pngtuber-avatar-states/SKILL.md`.
 - If required inputs are missing, collect: `provider`, `model_id`, `model_const_name`, `display_name`, `supports_vision`, and optional `bump_version` (default `false`; set `true` only when release/version work is explicitly requested).
 - For `add-tts-provider`, collect missing inputs: `engine_type`, `engine_class_name`, `display_name`, `provider_kind`, `default_speaker`, `requires_api_key`, `supports_emotion`, and `option_fields`, plus optional `default_api_url`, `examples_scope`, and `bump_version` (default `false`; set `true` only when release/version work is explicitly requested).
-- After finishing `add-chat-model`, ask whether to run `sync-core-after-chat-upgrade` unless the user already asked for end-to-end chat+core propagation.
+- After finishing `add-chat-model`, report the Chat result. If relevant,
+  mention that Core propagation is separate work after the Chat release; do
+  not offer to start `sync-core-after-chat-upgrade` immediately.
 - Keep skill copies synchronized when updating procedures.

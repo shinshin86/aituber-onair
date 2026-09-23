@@ -10,6 +10,7 @@ import {
   MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_SONNET,
   MODEL_CLAUDE_5_OPUS,
+  MODEL_CLAUDE_5_5_OPUS,
   CLAUDE_VISION_SUPPORTED_MODELS,
   getClaudeSupportedReasoningEfforts,
 } from '../../../constants';
@@ -97,6 +98,7 @@ export class ClaudeChatServiceProvider
       MODEL_CLAUDE_5_FABLE,
       MODEL_CLAUDE_5_SONNET,
       MODEL_CLAUDE_5_OPUS,
+      MODEL_CLAUDE_5_5_OPUS,
     ];
   }
 

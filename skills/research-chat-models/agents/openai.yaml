@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Chat Models"
+  short_description: "Find recent API models for existing chat providers"
+  default_prompt: "Use $research-chat-models to find recently released models for the existing chat providers and verify their API availability from official sources."

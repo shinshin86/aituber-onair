@@ -69,6 +69,7 @@ skill definitions aligned.
   shape, capabilities, and user configuration path are documented or
   live-verified.
 - Skills:
+  - `research-chat-models`
   - `add-chat-model`
   - `add-tts-provider`
   - `sync-core-after-chat-upgrade`
@@ -76,6 +77,7 @@ skill definitions aligned.
   - `connect-colab-local-tts`
   - `connect-colab-local-llm`
 - Canonical sources:
+  - `skills/research-chat-models/SKILL.md`
   - `skills/add-chat-model/SKILL.md`
   - `skills/add-tts-provider/SKILL.md`
   - `skills/sync-core-after-chat-upgrade/SKILL.md`
@@ -83,6 +85,7 @@ skill definitions aligned.
   - `skills/connect-colab-local-tts/SKILL.md`
   - `skills/connect-colab-local-llm/SKILL.md`
 - Claude Code runtime paths:
+  - `.claude/skills/research-chat-models/SKILL.md`
   - `.claude/skills/add-chat-model/SKILL.md`
   - `.claude/skills/add-tts-provider/SKILL.md`
   - `.claude/skills/sync-core-after-chat-upgrade/SKILL.md`
@@ -92,16 +95,26 @@ skill definitions aligned.
 
 Usage:
 
+- Use `$research-chat-models` when asked to find recently released or newly
+  API-available models for existing providers. Follow with `$add-chat-model`
+  only for models selected for implementation.
 - Invoke explicitly with `$add-chat-model`, or use prompts like
-  "add a new model", "support model <model_id>", or
-  "update supported models". Apply the hard gates in
+  "support model <model_id>" or "add <provider> model" when the candidate is
+  already known. Do not perform a broad discovery sweep for a specified model.
+  Apply the hard gates in
   `docs/agent-model-provider-guidelines.md` before editing supported lists.
 - Invoke explicitly with `$add-tts-provider`, or use prompts like
   "add a TTS provider", "support <provider> TTS", or
   "update supported voice providers". Apply the hard gates in
   `docs/agent-model-provider-guidelines.md` before adding first-class support.
-- Invoke `$sync-core-after-chat-upgrade` after chat upgrades when the same
-  changes must be propagated into core and core examples.
+- When Core propagation is requested, verify that the target
+  `@aituber-onair/chat` version is published to npm first. If the Chat change
+  is still in progress, complete its separate release before handling Core
+  exports/examples in another PR. A chat-model request alone includes chat's
+  own examples, not Core examples. This order also applies when both packages
+  were requested together.
+- Invoke `$sync-core-after-chat-upgrade` when asked to propagate a published
+  Chat version into Core and core examples.
 - When propagating `@aituber-onair/voice` upgrades into `@aituber-onair/core`,
   update all core React examples that expose TTS settings, not only
   `react-basic`: `packages/core/examples/react-basic`,
@@ -158,17 +171,23 @@ Usage:
   `option_fields`, and optional `default_api_url`, `examples_scope`,
   `bump_version` (default `false`; set `true` only when release/version work is
   explicitly requested).
-- Follow the skill procedure end-to-end, including tests/docs/versioning
-  updates and final verification commands.
-- After `add-chat-model` completes, ask whether to run
-  `$sync-core-after-chat-upgrade` unless end-to-end chat+core propagation was
-  already requested.
+- Follow the applicable skill procedure, including tests/docs and final
+  verification. Versioning applies only when release work was requested. The
+  `add-chat-model` handoff wording is stale; use the Chat -> Core release order
+  above unless the user's explicit prompt says otherwise.
+- After `add-chat-model` completes, report the Chat result. If relevant,
+  mention that Core propagation is separate work after the Chat release; do
+  not offer to start `$sync-core-after-chat-upgrade` immediately.
 
 Maintenance:
 
 - Edit `skills/add-chat-model/SKILL.md` first.
 - Sync the same content to `.claude/skills/add-chat-model/SKILL.md`.
 - Keep `skills/add-chat-model/agents/openai.yaml` aligned for Codex UI.
+- Edit `skills/research-chat-models/SKILL.md` first for provider-model research
+  workflow changes, then sync to
+  `.claude/skills/research-chat-models/SKILL.md` and keep its Codex metadata
+  aligned.
 - For TTS provider workflow updates, edit
   `skills/add-tts-provider/SKILL.md`, sync to
   `.claude/skills/add-tts-provider/SKILL.md`, and keep

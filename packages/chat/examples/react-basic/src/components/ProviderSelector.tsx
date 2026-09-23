@@ -54,6 +54,8 @@ import {
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
   MODEL_GPT_6_ASTRA,
+  MODEL_GPT_6_LUNA,
+  MODEL_GPT_6_SOL,
   MODEL_CLAUDE_5_1_FABLE,
   MODEL_DEEPSEEK_FLASH,
   MODEL_GPT_5_6_SOL,
@@ -81,6 +83,7 @@ import {
   MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_SONNET,
   MODEL_CLAUDE_5_OPUS,
+  MODEL_CLAUDE_5_5_OPUS,
   // Gemini models
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
@@ -170,6 +173,7 @@ import {
   MODEL_GLM_4_6V_FLASH,
   // xAI models
   MODEL_GROK_4_6,
+  MODEL_GROK_4_7,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
@@ -553,6 +557,18 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_GPT_6_SOL,
+    name: 'GPT-6 Sol',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_6_LUNA,
+    name: 'GPT-6 Luna',
+    provider: 'openai',
+    default: false,
+  },
+  {
     id: MODEL_CLAUDE_5_1_FABLE,
     name: 'Claude Fable 5.1',
     provider: 'claude',
@@ -731,6 +747,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_CLAUDE_5_OPUS,
     name: 'Claude Opus 5',
+    provider: 'claude',
+    default: false,
+  },
+  {
+    id: MODEL_CLAUDE_5_5_OPUS,
+    name: 'Claude Opus 5.5',
     provider: 'claude',
     default: false,
   },
@@ -1301,6 +1323,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_GROK_4_7,
+    name: 'Grok 4.7',
+    provider: 'xai',
+    default: false,
+  },
+  {
     id: MODEL_GROK_4_5,
     name: 'Grok 4.5',
     provider: 'xai',
@@ -1558,6 +1586,10 @@ export default function ProviderSelector({
     provider === 'openai' &&
     (isResponsesOnlyGPT5Model(selectedModel) ||
       selectedModel === MODEL_GPT_6_ASTRA);
+  const isResponsesPreferredModel =
+    isResponsesOnlyModel ||
+    selectedModel === MODEL_GPT_6_SOL ||
+    selectedModel === MODEL_GPT_6_LUNA;
   const allowsNone =
     provider === 'openai' && allowsReasoningNone(selectedModel);
   const allowsMinimal =
@@ -2102,7 +2134,9 @@ export default function ProviderSelector({
                   value={
                     isResponsesOnlyModel
                       ? 'responses'
-                      : gpt5EndpointPreference || 'chat'
+                      : isResponsesPreferredModel && !gpt5EndpointPreference
+                        ? 'responses'
+                        : gpt5EndpointPreference || 'chat'
                   }
                   onChange={(e) =>
                     onGpt5EndpointPreferenceChange?.(
@@ -2121,6 +2155,13 @@ export default function ProviderSelector({
                 {isResponsesOnlyModel && (
                   <span className="helper-text">
                     This model uses Responses API for full tool support.
+                  </span>
+                )}
+                {(selectedModel === MODEL_GPT_6_SOL ||
+                  selectedModel === MODEL_GPT_6_LUNA) && (
+                  <span className="helper-text">
+                    Responses API is the default. Chat Completions function
+                    calling requires reasoning effort set to None.
                   </span>
                 )}
               </div>

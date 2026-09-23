@@ -26,6 +26,10 @@ minimal (`name`, `description`) and keep the body procedural.
 
 ## Current Skills
 
+- `research-chat-models`
+  - Canonical: `skills/research-chat-models/SKILL.md`
+  - Claude Code: `.claude/skills/research-chat-models/SKILL.md`
+  - Codex metadata: `skills/research-chat-models/agents/openai.yaml`
 - `add-chat-model`
   - Canonical: `skills/add-chat-model/SKILL.md`
   - Claude Code: `.claude/skills/add-chat-model/SKILL.md`
@@ -55,9 +59,13 @@ minimal (`name`, `description`) and keep the body procedural.
   - Claude Code: `.claude/skills/create-pngtuber-avatar-states/SKILL.md`
   - Codex metadata: `skills/create-pngtuber-avatar-states/agents/openai.yaml`
 
-Use `add-chat-model` when adding a new model id to `@aituber-onair/chat`,
-including constants, provider support, tests, examples, docs, and versioning
-updates.
+Use `research-chat-models` when asked to find recent or newly API-available
+models for existing providers. It performs internet research and reports
+candidates; it does not edit code. Then use `add-chat-model` to implement
+selected model IDs, including constants, provider support, tests, examples,
+docs, and optional versioning updates. When the user already specifies the
+model ID and asks for implementation, use `add-chat-model` directly without a
+broad provider discovery sweep.
 Before adding or reorganizing LLM/TTS models, read
 `docs/agent-model-provider-guidelines.md` to classify the model or API as
 recommended/default, supported/explicit, deprecated compatibility, or
@@ -67,8 +75,8 @@ Use `add-tts-provider` when adding a new voice/TTS provider to
 internal handler wiring, tests, docs, examples, and release prep. This also fits
 OpenAI-compatible TTS endpoints such as `<openai-compatible-tts-endpoint>` when
 they should be added as a dedicated provider.
-Use `sync-core-after-chat-upgrade` after chat upgrades to propagate changes
-into `@aituber-onair/core` and core examples.
+Use `sync-core-after-chat-upgrade` in separate follow-up work when asked to
+propagate a published Chat version into `@aituber-onair/core` and core examples.
 Use `wrap-tts-as-openai-compatible` when exposing a local or self-hosted TTS
 runtime through an OpenAI-compatible `POST /v1/audio/speech` server, including
 JSON request handling, browser CORS, Colab-friendly setup, upstream TTS pattern
@@ -131,7 +139,8 @@ For generic GGUF, vLLM, automatic backend selection, and cleanup prompts, see
 
 Codex prompt examples:
 
-- "add a new model"
+- "Use $research-chat-models to find models released for existing providers in the last 90 days."
+- "Use $research-chat-models to find the latest API models from OpenAI, Anthropic, and xAI, then add the eligible ones to chat and samples."
 - "support model <provider-model-id>"
 - "add claude model"
 - "update supported models"
@@ -157,6 +166,8 @@ Codex prompt examples:
 
 Claude Code prompt examples:
 
+- "Use $research-chat-models to find newly API-available models for existing providers."
+- "Use $research-chat-models to research new models, then $add-chat-model to implement the selected IDs."
 - "Use $add-chat-model to add <provider-model-id> for <provider>."
 - "Use $add-chat-model and wire the model through tests/docs/versioning."
 - "Use $sync-core-after-chat-upgrade for chat 0.15.0."
@@ -189,12 +200,20 @@ If the request does not include all required inputs, collect:
 `supports_vision`, and optional `bump_version` (default `false`; set `true`
 only when release/version work is explicitly requested).
 
-Handoff rule:
+Chat -> Core release order:
 
-- After finishing `$add-chat-model`, ask whether to run
-  `$sync-core-after-chat-upgrade`.
-- If the user already requested chat + core propagation in one task, continue
-  directly without asking again.
+- Core propagation requires a version of `@aituber-onair/chat` published to
+  npm. If the Chat change is still in progress, complete its separate release
+  first. Chat model additions cover chat's own examples; Core exports and
+  examples are separate follow-up work.
+- Do not offer immediate Core sync after `$add-chat-model`. When Core
+  propagation is requested, use `$sync-core-after-chat-upgrade` only after the
+  Chat version is published. Keep the Core change in a separate PR. A completion
+  report may mention this sequence without offering to start Core work.
+- The current `add-chat-model` skill and its Codex UI metadata still ask about
+  an immediate Core handoff. They are unchanged on this branch and need a
+  separate update; a Codex UI default prompt is a user prompt, so the guidance
+  above cannot override it when that prompt is submitted.
 - When `$add-tts-provider` performs voice release prep, keep version/changelog
   changes scoped to `@aituber-onair/voice`. Do not bump `@aituber-onair/core`
   or `create-aituber-onair` for dependency alignment unless the user explicitly
@@ -216,6 +235,7 @@ Recommended sync check:
 
 ```bash
 diff -u skills/add-chat-model/SKILL.md .claude/skills/add-chat-model/SKILL.md
+diff -u skills/research-chat-models/SKILL.md .claude/skills/research-chat-models/SKILL.md
 diff -u skills/add-tts-provider/SKILL.md .claude/skills/add-tts-provider/SKILL.md
 diff -u skills/sync-core-after-chat-upgrade/SKILL.md .claude/skills/sync-core-after-chat-upgrade/SKILL.md
 diff -u skills/wrap-tts-as-openai-compatible/SKILL.md .claude/skills/wrap-tts-as-openai-compatible/SKILL.md

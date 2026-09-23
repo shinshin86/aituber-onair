@@ -68,8 +68,8 @@ supported/explicit, deprecated compatibility, candidate-only のどれに該当
 するかを判断します。
 `@aituber-onair/voice` に新しい TTS provider を追加する場合は
 `add-tts-provider` を使います。
-chat 更新後に `@aituber-onair/core` と core examples へ反映する場合は
-`sync-core-after-chat-upgrade` を使います。
+chat のリリース後、公開済みバージョンを別作業で `@aituber-onair/core` と
+core examples へ反映する依頼には `sync-core-after-chat-upgrade` を使います。
 ローカルまたはセルフホスト TTS を OpenAI 互換 `/v1/audio/speech` として
 包む場合は `wrap-tts-as-openai-compatible` を使います。
 `shinshin86/local-tts-on-google-colab` を Colab MCP Go で起動し、
@@ -183,12 +183,19 @@ $create-pngtuber-avatar-states を使って、添付画像のキャラクター�
 `display_name`, `supports_vision`, `bump_version`（省略時 `false`、release/version
 作業を明示された場合のみ `true`）を確認します。
 
-連携ルール:
+chat から core への反映順序:
 
-- `$add-chat-model` 完了後は、
-  `$sync-core-after-chat-upgrade` を続けて実行するか確認します。
-- ユーザーが最初から chat + core の一括反映を明示している場合は、
-  確認を省略して続行します。
+- core 反映には npm に公開済みの `@aituber-onair/chat` バージョンが必要です。
+  chat の変更が作業中なら、先に chat を別途リリースします。chat のモデル
+  追加には chat 自身のサンプルを含め、core の export やサンプルは別作業で
+  対応します。
+- `$add-chat-model` の完了直後に core 同期を提案しません。core 反映の依頼が
+  あれば、chat のバージョン公開後に `$sync-core-after-chat-upgrade` を
+  別 PR で行います。完了報告でこの順序に触れることはできます。
+- 現在の `add-chat-model` skill と Codex UI メタデータには、直後の core
+  連携を尋ねる旧文言が残っています。このブランチでは変更せず、別途更新が
+  必要です。Codex UI の既定文は送信されるとユーザー指示になるため、上記の
+  案内だけでは上書きできません。
 - `$add-tts-provider` で voice の release prep を行う場合、version /
   changelog の変更は `@aituber-onair/voice` に限定します。依存範囲の
   整合だけを理由に `@aituber-onair/core` や `create-aituber-onair` を

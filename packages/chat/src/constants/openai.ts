@@ -4,6 +4,8 @@ export const ENDPOINT_OPENAI_RESPONSES_API =
   'https://api.openai.com/v1/responses';
 
 export const MODEL_GPT_6_ASTRA = 'gpt-6-astra';
+export const MODEL_GPT_6_SOL = 'gpt-6-sol';
+export const MODEL_GPT_6_LUNA = 'gpt-6-luna';
 
 // gpt model
 export const MODEL_GPT_5_NANO = 'gpt-5-nano';
@@ -36,6 +38,8 @@ export const MODEL_O1 = 'o1';
 // Vision support for models
 export const VISION_SUPPORTED_MODELS = [
   MODEL_GPT_6_ASTRA,
+  MODEL_GPT_6_SOL,
+  MODEL_GPT_6_LUNA,
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
@@ -95,7 +99,12 @@ export function isGPT5Model(model: string): boolean {
 
 /** OpenAI models using the reasoning and verbosity request options. */
 export function isOpenAIReasoningModel(model: string): boolean {
-  return model === MODEL_GPT_6_ASTRA || isGPT5Model(model);
+  return (
+    model === MODEL_GPT_6_ASTRA ||
+    model === MODEL_GPT_6_SOL ||
+    model === MODEL_GPT_6_LUNA ||
+    isGPT5Model(model)
+  );
 }
 
 /**
@@ -111,6 +120,8 @@ export function isResponsesOnlyGPT5Model(model: string): boolean {
 export function allowsReasoningXHigh(model: string): boolean {
   return (
     model === MODEL_GPT_6_ASTRA ||
+    model === MODEL_GPT_6_SOL ||
+    model === MODEL_GPT_6_LUNA ||
     model === MODEL_GPT_5_6 ||
     model === MODEL_GPT_5_6_SOL ||
     model === MODEL_GPT_5_6_TERRA ||
@@ -129,6 +140,8 @@ export function allowsReasoningXHigh(model: string): boolean {
 export function allowsReasoningMax(model: string): boolean {
   return (
     model === MODEL_GPT_6_ASTRA ||
+    model === MODEL_GPT_6_SOL ||
+    model === MODEL_GPT_6_LUNA ||
     model === MODEL_GPT_5_6 ||
     model === MODEL_GPT_5_6_SOL ||
     model === MODEL_GPT_5_6_TERRA ||
@@ -137,12 +150,14 @@ export function allowsReasoningMax(model: string): boolean {
 }
 
 /**
- * Check if the provided model allows the reasoning_effort 'none' shortcut
- * Supported by GPT-5.1, GPT-5.4, GPT-5.5, and GPT-5.6 family models,
- * except Pro
+ * Check if the provided model allows the reasoning_effort 'none' shortcut.
+ * Supported by GPT-6 Sol/Luna and GPT-5.1, GPT-5.4, GPT-5.5, and GPT-5.6
+ * family models, except Pro.
  */
 export function allowsReasoningNone(model: string): boolean {
   return (
+    model === MODEL_GPT_6_SOL ||
+    model === MODEL_GPT_6_LUNA ||
     model === MODEL_GPT_5_6 ||
     model === MODEL_GPT_5_6_SOL ||
     model === MODEL_GPT_5_6_TERRA ||
@@ -200,5 +215,9 @@ export function getDefaultReasoningEffortForOpenAIModel(
 ): 'none' | 'minimal' | 'low' | 'medium' {
   return model === MODEL_GPT_6_ASTRA
     ? 'low'
-    : getDefaultReasoningEffortForGPT5Model(model);
+    : model === MODEL_GPT_6_SOL
+      ? 'medium'
+      : model === MODEL_GPT_6_LUNA
+        ? 'low'
+        : getDefaultReasoningEffortForGPT5Model(model);
 }

@@ -13,7 +13,11 @@ import {
   MODEL_GPT_5_6_TERRA,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5_NANO,
+  MODEL_GPT_6_LUNA,
+  allowsReasoningNone,
+  allowsReasoningXHigh,
   allowsReasoningMax,
+  getDefaultReasoningEffortForOpenAIModel,
   getDefaultReasoningEffortForGPT5Model,
 } from '../../src/constants/openai';
 
@@ -61,6 +65,17 @@ describe('getDefaultReasoningEffortForGPT5Model', () => {
   it('returns medium for models whose lowest supported reasoning effort is medium', () => {
     expect(getDefaultReasoningEffortForGPT5Model(MODEL_GPT_5_4_PRO)).toBe(
       'medium',
+    );
+  });
+});
+
+describe('getDefaultReasoningEffortForOpenAIModel', () => {
+  it('supports documented GPT-6 Luna effort levels and defaults to low', () => {
+    expect(allowsReasoningNone(MODEL_GPT_6_LUNA)).toBe(true);
+    expect(allowsReasoningXHigh(MODEL_GPT_6_LUNA)).toBe(true);
+    expect(allowsReasoningMax(MODEL_GPT_6_LUNA)).toBe(true);
+    expect(getDefaultReasoningEffortForOpenAIModel(MODEL_GPT_6_LUNA)).toBe(
+      'low',
     );
   });
 });
