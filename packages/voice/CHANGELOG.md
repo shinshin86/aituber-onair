@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.22.0
+
+### Minor Changes
+
+- Add Gemini 3.8 Flash TTS and Flash-Lite TTS as selectable models in the
+  existing Gemini TTS engine and React example.
+- Use the Interactions API for Gemini 3.8 speech generation, return its WAV
+  audio directly, and send style prompts as speech metadata. Keep the existing
+  `generateContent` path and default model for earlier Gemini TTS models.
+
 ## 0.21.0
 
 ### Minor Changes
