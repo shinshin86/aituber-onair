@@ -3,6 +3,7 @@ export const ENDPOINT_XAI_CHAT_COMPLETIONS_API =
 
 // xAI Grok models
 export const MODEL_GROK_4_6 = 'grok-4.6';
+export const MODEL_GROK_4_7 = 'grok-4.7';
 export const MODEL_GROK_4_5 = 'grok-4.5';
 export const MODEL_GROK_4_3 = 'grok-4.3';
 export const MODEL_GROK_4_20_REASONING = 'grok-4.20-0309-reasoning';
@@ -22,6 +23,7 @@ export type XaiReasoningEffort = 'none' | 'low' | 'medium' | 'high' | 'xhigh';
 // Vision support for models
 export const XAI_VISION_SUPPORTED_MODELS = [
   MODEL_GROK_4_6,
+  MODEL_GROK_4_7,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
@@ -48,7 +50,7 @@ export function isXaiReasoningEffortModel(model: string): boolean {
 export function getXaiSupportedReasoningEfforts(
   model: string,
 ): readonly XaiReasoningEffort[] {
-  if (model === MODEL_GROK_4_6) {
+  if (model === MODEL_GROK_4_6 || model === MODEL_GROK_4_7) {
     return ['low', 'medium', 'high', 'xhigh'];
   }
 
@@ -76,6 +78,10 @@ export function isXaiReasoningEffortNoneModel(model: string): boolean {
 export function getDefaultXaiReasoningEffort(
   model: string,
 ): XaiReasoningEffort | undefined {
+  if (model === MODEL_GROK_4_7) {
+    return 'low';
+  }
+
   if (model === MODEL_GROK_4_6 || model === MODEL_GROK_4_5) {
     return 'low';
   }

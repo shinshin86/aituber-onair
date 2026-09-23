@@ -123,7 +123,7 @@ built-in model status is `available`.
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
+- Models: GPT-6 Sol, GPT-6 Astra, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
 - Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), GPT-5.1 supports None/Low/Medium/High, and GPT-5.0 models support Minimal/Low/Medium/High
@@ -135,7 +135,7 @@ built-in model status is `available`.
 - Best for: local LLMs (Ollama/LM Studio/vLLM-compatible endpoints)
 
 **Claude**
-- Models: Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, and Claude 4.5 (Opus, Sonnet, Haiku)
+- Models: Claude Opus 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, and Claude 4.5 (Opus, Sonnet, Haiku)
 - Vision: All listed Claude models
 - Effort: Supported models expose model-aware Low/Medium/High/XHigh/Max options. The control maps to `output_config.effort` and defaults to High.
 - Refusals: Streaming refusal metadata is preserved as a terminal completion rather than surfaced as a tool error.
@@ -167,10 +167,10 @@ built-in model status is `available`.
 - Best for: OpenAI-compatible GLM integration
 
 **xAI**
-- Models: Grok 4.6, Grok 4.5, Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning
+- Models: Grok 4.7, Grok 4.6, Grok 4.5, Grok 4.3, Grok 4.20 Reasoning/Non-Reasoning
 - Vision: Supported
 - Best for: Grok models with OpenAI-compatible API
-- Grok 4.6 exposes Low/Medium/High/XHigh `reasoning_effort`; Grok 4.6 and 4.5 default to `low` for chat-style responses, while Grok 4.3 defaults to `none` for lower latency
+- Grok 4.7 and 4.6 expose Low/Medium/High/XHigh `reasoning_effort`; Grok 4.7, 4.6, and 4.5 default to `low` for faster chat responses, while Grok 4.3 defaults to `none`
 - Grok 4.3 is the package and sample default.
 
 **Kimi**

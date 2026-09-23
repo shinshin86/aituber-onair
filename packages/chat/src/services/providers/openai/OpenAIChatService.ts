@@ -80,7 +80,7 @@ export class OpenAIChatService implements ChatService {
     this.apiKey = apiKey;
     this.model = model;
     this.tools = tools || [];
-    // Astra needs Responses for tools, including when used as the vision model.
+    // Astra always needs Responses API support.
     this.endpoint =
       (model === MODEL_GPT_6_ASTRA || visionModel === MODEL_GPT_6_ASTRA) &&
       endpoint === ENDPOINT_OPENAI_CHAT_COMPLETIONS_API

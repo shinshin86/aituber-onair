@@ -19,6 +19,7 @@ export const MODEL_CLAUDE_4_8_OPUS = 'claude-opus-4-8';
 export const MODEL_CLAUDE_5_FABLE = 'claude-fable-5';
 export const MODEL_CLAUDE_5_SONNET = 'claude-sonnet-5';
 export const MODEL_CLAUDE_5_OPUS = 'claude-opus-5';
+export const MODEL_CLAUDE_5_5_OPUS = 'claude-opus-5-5';
 
 // Retired model ids remain exported so existing imports continue to compile.
 export const CLAUDE_DEPRECATED_MODELS = [
@@ -76,6 +77,7 @@ export const CLAUDE_VISION_SUPPORTED_MODELS = [
   MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_SONNET,
   MODEL_CLAUDE_5_OPUS,
+  MODEL_CLAUDE_5_5_OPUS,
 ];
 
 /**

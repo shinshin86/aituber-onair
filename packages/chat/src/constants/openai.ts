@@ -4,6 +4,7 @@ export const ENDPOINT_OPENAI_RESPONSES_API =
   'https://api.openai.com/v1/responses';
 
 export const MODEL_GPT_6_ASTRA = 'gpt-6-astra';
+export const MODEL_GPT_6_SOL = 'gpt-6-sol';
 
 // gpt model
 export const MODEL_GPT_5_NANO = 'gpt-5-nano';
@@ -36,6 +37,7 @@ export const MODEL_O1 = 'o1';
 // Vision support for models
 export const VISION_SUPPORTED_MODELS = [
   MODEL_GPT_6_ASTRA,
+  MODEL_GPT_6_SOL,
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
@@ -95,7 +97,11 @@ export function isGPT5Model(model: string): boolean {
 
 /** OpenAI models using the reasoning and verbosity request options. */
 export function isOpenAIReasoningModel(model: string): boolean {
-  return model === MODEL_GPT_6_ASTRA || isGPT5Model(model);
+  return (
+    model === MODEL_GPT_6_ASTRA ||
+    model === MODEL_GPT_6_SOL ||
+    isGPT5Model(model)
+  );
 }
 
 /**
@@ -111,6 +117,7 @@ export function isResponsesOnlyGPT5Model(model: string): boolean {
 export function allowsReasoningXHigh(model: string): boolean {
   return (
     model === MODEL_GPT_6_ASTRA ||
+    model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_5_6 ||
     model === MODEL_GPT_5_6_SOL ||
     model === MODEL_GPT_5_6_TERRA ||
@@ -129,6 +136,7 @@ export function allowsReasoningXHigh(model: string): boolean {
 export function allowsReasoningMax(model: string): boolean {
   return (
     model === MODEL_GPT_6_ASTRA ||
+    model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_5_6 ||
     model === MODEL_GPT_5_6_SOL ||
     model === MODEL_GPT_5_6_TERRA ||
@@ -143,6 +151,7 @@ export function allowsReasoningMax(model: string): boolean {
  */
 export function allowsReasoningNone(model: string): boolean {
   return (
+    model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_5_6 ||
     model === MODEL_GPT_5_6_SOL ||
     model === MODEL_GPT_5_6_TERRA ||
@@ -200,5 +209,7 @@ export function getDefaultReasoningEffortForOpenAIModel(
 ): 'none' | 'minimal' | 'low' | 'medium' {
   return model === MODEL_GPT_6_ASTRA
     ? 'low'
-    : getDefaultReasoningEffortForGPT5Model(model);
+    : model === MODEL_GPT_6_SOL
+      ? 'medium'
+      : getDefaultReasoningEffortForGPT5Model(model);
 }
