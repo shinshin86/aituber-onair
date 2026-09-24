@@ -22,6 +22,27 @@ function createAudioResponse(audioText = 'fake-audio') {
   };
 }
 
+function createInteractionAudioResponse(audioBytes: Uint8Array) {
+  return {
+    ok: true,
+    json: async () => ({
+      steps: [
+        { type: 'user_input', content: [{ type: 'text', text: 'hello' }] },
+        {
+          type: 'model_output',
+          content: [
+            {
+              type: 'audio',
+              mime_type: 'audio/wav',
+              data: btoa(String.fromCharCode(...audioBytes)),
+            },
+          ],
+        },
+      ],
+    }),
+  };
+}
+
 describe('GeminiTtsEngine', () => {
   const originalFetch = globalThis.fetch;
 
@@ -163,6 +184,101 @@ describe('GeminiTtsEngine', () => {
     } finally {
       globalThis.fetch = originalFetch;
     }
+  });
+
+  it.each(['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts'] as const)(
+    'should use the Interactions API and return WAV bytes for %s',
+    async (model) => {
+      const engine = new GeminiTtsEngine();
+      const wavBytes = Uint8Array.from([
+        0x52, 0x49, 0x46, 0x46, 0x04, 0x00, 0x00, 0x00,
+      ]);
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(createInteractionAudioResponse(wavBytes));
+      globalThis.fetch = fetchMock as typeof fetch;
+
+      engine.setModel(model);
+      engine.setPrompt('cheerful and friendly');
+      engine.setLanguageCode('ja-JP');
+
+      const audio = await engine.fetchAudio(
+        { message: 'こんにちは', style: 'neutral' },
+        'Kore',
+        'test-api-key',
+      );
+
+      expect(Array.from(new Uint8Array(audio))).toEqual(Array.from(wavBytes));
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe(
+        'https://generativelanguage.googleapis.com/v1beta/interactions',
+      );
+      expect(init.headers['x-goog-api-key']).toBe('test-api-key');
+      expect(JSON.parse(init.body)).toEqual({
+        model,
+        input: [
+          {
+            type: 'user_input',
+            content: [
+              {
+                type: 'text',
+                text: 'こんにちは',
+                annotations: [
+                  { type: 'speech_metadata', style: 'cheerful and friendly' },
+                ],
+              },
+            ],
+          },
+        ],
+        response_format: { type: 'audio', mime_type: 'audio/wav' },
+        generation_config: { speech_config: [{ voice: 'Kore' }] },
+      });
+    },
+  );
+
+  it('should omit speech metadata when no style is configured', async () => {
+    const engine = new GeminiTtsEngine();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(createInteractionAudioResponse(Uint8Array.of(1)));
+    globalThis.fetch = fetchMock as typeof fetch;
+    engine.setModel('gemini-3.8-flash-lite-tts');
+
+    await engine.fetchAudio(
+      { message: 'Hello', style: 'neutral' },
+      'voice_custom',
+      'test-api-key',
+    );
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(JSON.parse(init.body).input[0].content[0]).toEqual({
+      type: 'text',
+      text: 'Hello',
+    });
+    expect(JSON.parse(init.body).generation_config.speech_config).toEqual([
+      { voice: 'voice_custom' },
+    ]);
+  });
+
+  it('should reject an Interactions response without audio', async () => {
+    const engine = new GeminiTtsEngine();
+    engine.setModel('gemini-3.8-flash-tts');
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        steps: [
+          { type: 'model_output', content: [{ type: 'text', text: '' }] },
+        ],
+      }),
+    }) as typeof fetch;
+
+    await expect(
+      engine.fetchAudio(
+        { message: 'Hello', style: 'neutral' },
+        'Kore',
+        'test-api-key',
+      ),
+    ).rejects.toThrow('No audio content in Gemini TTS response.');
   });
 
   it('should prepend prompt text to the request content', async () => {

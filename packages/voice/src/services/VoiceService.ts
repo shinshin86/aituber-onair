@@ -293,9 +293,9 @@ export interface GeminiTtsVoiceServiceOptions
   geminiTtsApiUrl?: string;
   /** Gemini TTS model name */
   geminiTtsModel?: GeminiTtsModel;
-  /** Gemini TTS language code (default: ja-JP) */
+  /** Gemini preview TTS language code (default: ja-JP; 3.8 auto-detects) */
   geminiTtsLanguageCode?: string;
-  /** Gemini TTS optional prompt */
+  /** Gemini TTS optional style prompt (3.8 uses speech_metadata.style) */
   geminiTtsPrompt?: string;
 }
 

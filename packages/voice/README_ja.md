@@ -437,25 +437,30 @@ React example は、ブラウザから model search endpoint を直接呼ばず�
 model UUID を使う形を維持しています。
 
 ### Gemini TTS
-`gemini-3.1-flash-tts-preview` を含む Gemini preview TTS モデルを
-Gemini API 経由で利用する音声合成です。認証は API キーのみです。
+`gemini-3.8-flash-lite-tts` と `gemini-3.8-flash-tts` に対応しています。
+3.8 の2モデルは Interactions API で音声を生成し、WAV を返します。
+従来の preview モデルも引き続き `generateContent` 経由で利用できます。
 
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'geminiTts',
   speaker: 'Zephyr',
   apiKey: 'your-google-api-key',
-  geminiTtsModel: 'gemini-3.1-flash-tts-preview',
-  geminiTtsLanguageCode: 'ja-JP',
-  geminiTtsPrompt: '明るく元気な声で話してください', // オプション：スタイル指示や audio-tag 指示
+  geminiTtsModel: 'gemini-3.8-flash-lite-tts',
+  geminiTtsPrompt: '明るく親しみやすい話し方', // オプション：3.8 では speech_metadata.style に設定
   geminiTtsApiUrl:
     'https://generativelanguage.googleapis.com/v1beta', // オプション：Gemini API のベース URL
 });
 ```
 
 **注意**：通常の Google API キーを利用します。`apiKey` は Gemini
-API に `x-goog-api-key` として送信されます。利用可能なボイスには
-Zephyr、Aoede、Kore、Puck、Charon など 30 種類のプリセットボイスがあります。
+API に `x-goog-api-key` として送信されます。`speaker` には Zephyr や Kore
+などのプリセット音声を指定できます。3.8 では Google AI Studio で作成した
+`voice_...` ID も指定できます。3.8 は入力言語を自動判定するため、
+`geminiTtsLanguageCode` が適用されるのは preview モデルだけです。
+`geminiTtsPrompt` は 3.8 では読み上げ本文に含めず、スタイル指定として送信します。
+このエンジンは音声全体を返し、分割配信には対応していません。
+音声の作成や複製は Google AI Studio または Gemini Voices API で行います。
 
 ### Web Speech API
 `window.speechSynthesis` を使うブラウザ標準の音声合成です。この engine は

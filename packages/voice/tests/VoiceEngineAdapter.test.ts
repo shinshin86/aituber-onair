@@ -1074,7 +1074,7 @@ describe('VoiceEngineAdapter', () => {
       mockEngine.fetchAudio.mockResolvedValue(mockAudioBuffer);
 
       adapter.updateOptions({
-        geminiTtsModel: 'gemini-2.5-pro-preview-tts',
+        geminiTtsModel: 'gemini-3.8-flash-lite-tts',
         geminiTtsLanguageCode: 'en-US',
         geminiTtsPrompt: 'Speak cheerfully',
         geminiTtsApiUrl: 'https://generativelanguage.googleapis.com/v1beta',
@@ -1083,7 +1083,7 @@ describe('VoiceEngineAdapter', () => {
       await adapter.speak({ text: 'After update' });
 
       expect(mockEngine.setModel).toHaveBeenCalledWith(
-        'gemini-2.5-pro-preview-tts',
+        'gemini-3.8-flash-lite-tts',
       );
       expect(mockEngine.setLanguageCode).toHaveBeenCalledWith('en-US');
       expect(mockEngine.setPrompt).toHaveBeenCalledWith('Speak cheerfully');
