@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import * as core from '../src';
 import * as chat from '@aituber-onair/chat';
-import type { InworldModel, VoiceServiceOptions } from '../src';
+import type { GeminiTtsModel, InworldModel, VoiceServiceOptions } from '../src';
 
 describe('Released Chat and Voice model exports', () => {
   it.each([
     'MODEL_GPT_6_ASTRA',
+    'MODEL_GPT_6_SOL',
+    'MODEL_GPT_6_LUNA',
     'MODEL_CLAUDE_5_1_FABLE',
+    'MODEL_CLAUDE_5_5_OPUS',
+    'MODEL_GROK_4_7',
     'MODEL_DEEPSEEK_FLASH',
     'MODEL_OPENAI_GPT_6_ASTRA',
     'MODEL_OPENAI_GPT_6_ASTRA_PRO',
@@ -34,5 +38,16 @@ describe('Released Chat and Voice model exports', () => {
     };
     expect(options.inworldModel).toBe(flash);
     expect(custom).toBe('custom-model');
+  });
+
+  it('accepts both Gemini 3.8 TTS models through Core options', () => {
+    const flash: GeminiTtsModel = 'gemini-3.8-flash-tts';
+    const flashLite: GeminiTtsModel = 'gemini-3.8-flash-lite-tts';
+    const options: VoiceServiceOptions = {
+      engineType: 'geminiTts',
+      geminiTtsModel: flashLite,
+    };
+    expect(options.geminiTtsModel).toBe(flashLite);
+    expect(flash).toBe('gemini-3.8-flash-tts');
   });
 });

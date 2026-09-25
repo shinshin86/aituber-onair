@@ -3,7 +3,9 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   AIVIS_SPEECH_API_URL,
+  CARTESIA_TTS_API_URL,
   ELEVENLABS_TTS_API_URL,
+  FISH_AUDIO_TTS_API_URL,
   GEMINI_TTS_API_URL,
   GRADIUM_TTS_API_URL,
   INWORLD_TTS_API_URL,
@@ -40,6 +42,8 @@ const INWORLD_MODELS = [
   'inworld-tts-1.5-max',
 ];
 const GEMINI_MODELS = [
+  'gemini-3.8-flash-lite-tts',
+  'gemini-3.8-flash-tts',
   'gemini-3.1-flash-tts-preview',
   'gemini-2.5-flash-preview-tts',
   'gemini-2.5-pro-preview-tts',
@@ -127,6 +131,29 @@ const PROVIDER_METADATA = {
     voiceRequired: true,
     acceptsApiKey: true,
     speed: { min: 0.7, max: 1.2, step: 0.05 },
+  },
+  fishAudio: {
+    label: 'Fish Audio',
+    defaultEndpoint: FISH_AUDIO_TTS_API_URL,
+    defaultModel: 's2-pro',
+    defaultVoice: '',
+    models: ['s2-pro', 's2.1-pro', 's2.1-pro-free', 's1'],
+    voices: [],
+    modelRequired: true,
+    voiceRequired: true,
+    acceptsApiKey: true,
+    speed: { min: 0.5, max: 2, step: 0.05 },
+  },
+  cartesia: {
+    label: 'Cartesia',
+    defaultEndpoint: CARTESIA_TTS_API_URL,
+    defaultModel: 'sonic-3.5',
+    defaultVoice: '',
+    models: ['sonic-3.5'],
+    voices: [],
+    modelRequired: true,
+    voiceRequired: true,
+    acceptsApiKey: true,
   },
   inworld: {
     label: 'Inworld',
@@ -532,6 +559,19 @@ export const createVoiceServiceOptions = (currentSettings, onPlay) => {
         elevenLabsApiUrl: currentSettings.endpoint,
         elevenLabsModel: currentSettings.model,
         elevenLabsSpeed: currentSettings.speed,
+      };
+    case 'fishAudio':
+      return {
+        ...common,
+        fishAudioApiUrl: currentSettings.endpoint,
+        fishAudioModel: currentSettings.model,
+        fishAudioSpeed: currentSettings.speed,
+      };
+    case 'cartesia':
+      return {
+        ...common,
+        cartesiaApiUrl: currentSettings.endpoint,
+        cartesiaModel: currentSettings.model,
       };
     case 'inworld':
       return {

@@ -74,7 +74,9 @@ export async function generateAvatarImage(
   }
 
   // Create request parts array
-  const requestParts: any[] = [];
+  const requestParts: Array<
+    { inlineData: { mimeType: string; data: string } } | { text: string }
+  > = [];
 
   // Add base image if provided
   if (baseImageUrl && !baseImageUrl.includes('default-avatar.svg')) {

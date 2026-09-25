@@ -103,6 +103,8 @@ const PNGTUBER_EFFECT_OPTIONS: ReadonlyArray<{
 
 const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 const GEMINI_TTS_MODELS = [
+  'gemini-3.8-flash-lite-tts',
+  'gemini-3.8-flash-tts',
   'gemini-3.1-flash-tts-preview',
   'gemini-2.5-flash-preview-tts',
   'gemini-2.5-pro-preview-tts',
@@ -1358,7 +1360,12 @@ export function SettingsPanel({
                       updateGeminiTtsLanguageCode(e.target.value)
                     }
                     placeholder="ja-JP"
-                    disabled={disabled}
+                    disabled={
+                      disabled ||
+                      (settings.tts.geminiTtsModel || GEMINI_TTS_MODELS[0]).startsWith(
+                        'gemini-3.8-',
+                      )
+                    }
                   />
                 </div>
                 <div className="settings-field">

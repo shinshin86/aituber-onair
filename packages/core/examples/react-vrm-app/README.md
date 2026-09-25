@@ -17,11 +17,16 @@ from actual audio output volume.
 
 ## Chat and Voice model updates
 
-This example uses Chat 0.55.0 and Voice 0.21.0 through Core. Select a supported
-model such as `gpt-6-astra`, `claude-fable-5-1`, or `deepseek-flash` in
+This example uses Chat 0.56.0 and Voice 0.22.0 through Core. Select a
+supported model such as `gpt-6-sol`, `gpt-6-luna`, `claude-opus-5-5`,
+`grok-4.7`, or `deepseek-flash` in
 the model selector; the new OpenRouter models are also listed. OpenAI reasoning
 models use the Casual preset, with Astra routed through Responses and its
 reasoning effort normalized to `low`.
+
+Gemini 3.8 Flash TTS and Flash-Lite TTS are selectable; the preview TTS
+model remains the default. Gemini 3.8 uses the style prompt and ignores
+language code.
 
 The Inworld model selector includes `inworld-tts-2-flash`. Models that do not
 support Delivery Mode, currently Flash, disable that control and omit it from

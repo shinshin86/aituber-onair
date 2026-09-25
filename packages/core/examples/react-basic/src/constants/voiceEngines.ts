@@ -28,7 +28,7 @@ export interface VoiceEngineConfig {
   needsApiKey: boolean;
   placeholder: string;
   // Engine-specific parameters
-  defaultParams?: Record<string, any>;
+  defaultParams?: Record<string, unknown>;
 }
 
 export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =

@@ -29,6 +29,10 @@ applied to the whole image.
 - Retains the LLM, TTS, streaming, and emotion-effect controls from the
   PNGTuber example
 
+Gemini 3.8 Flash TTS and Flash-Lite TTS are selectable in Voice settings.
+The existing preview model remains the default; Gemini 3.8 uses the style
+prompt and ignores language code.
+
 ## Setup
 
 ```bash

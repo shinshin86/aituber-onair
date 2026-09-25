@@ -142,7 +142,7 @@ run in a Node/server runtime and return audio bytes to the same-origin speech
 route.
 
 The current server-capable engines are VOICEVOX, VOICEPEAK, OpenAI, xAI,
-Unreal Speech, ElevenLabs, Inworld, Gradium, Gemini TTS, OpenAI-compatible,
+Unreal Speech, ElevenLabs, Fish Audio, Cartesia, Inworld, Gradium, Gemini TTS, OpenAI-compatible,
 AivisSpeech, Aivis Cloud API, and MiniMax. The built-in mock remains available
 for local playback and lip-sync checks.
 
