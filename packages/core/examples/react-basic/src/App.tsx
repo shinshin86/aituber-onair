@@ -359,6 +359,8 @@ interface InworldVoiceListResponse {
 }
 
 const GEMINI_TTS_MODELS = [
+  'gemini-3.8-flash-lite-tts',
+  'gemini-3.8-flash-tts',
   'gemini-3.1-flash-tts-preview',
   'gemini-2.5-flash-preview-tts',
   'gemini-2.5-pro-preview-tts',
@@ -3934,8 +3936,8 @@ const App: React.FC = () => {
                         }}
                       >
                         {isXaiReasoningEffortModelSelected
-                          ? model === 'grok-4.6'
-                            ? 'Grok 4.6 uses low by default and also supports xhigh.'
+                          ? model === 'grok-4.6' || model === 'grok-4.7'
+                            ? 'Grok 4.6 and 4.7 use low by default and also support xhigh.'
                             : model === 'grok-4.5'
                               ? 'Grok 4.5 uses low by default; none is not supported.'
                               : 'Grok 4.3 uses none by default for lower latency.'
@@ -5675,6 +5677,7 @@ const App: React.FC = () => {
                       <input
                         id="geminiTtsLanguageCode"
                         type="text"
+                        disabled={geminiTtsModel.startsWith('gemini-3.8-')}
                         value={geminiTtsLanguageCode}
                         onChange={(e) =>
                           setGeminiTtsLanguageCode(e.target.value)

@@ -1,5 +1,18 @@
 # @aituber-onair/core
 
+## 0.26.15
+
+### Patch Changes
+
+- Propagate published Chat 0.56.0 and Voice 0.22.0 to Core and its examples.
+- Re-export GPT-6 Sol, GPT-6 Luna, Claude Opus 5.5, and Grok 4.7 model
+  constants. Add the models to the React basic selector; avatar examples use
+  Core's provider model lists.
+- Add Gemini 3.8 Flash TTS and Flash-Lite TTS choices to the Core React
+  examples. Preserve the existing preview default and disable the language
+  code control for 3.8 models, which use speech metadata for style prompts.
+- Refresh Core documentation and example lockfile metadata.
+
 ## 0.26.14
 
 ### Patch Changes

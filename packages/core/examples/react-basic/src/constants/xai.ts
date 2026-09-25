@@ -1,5 +1,6 @@
 import {
   MODEL_GROK_4_6,
+  MODEL_GROK_4_7,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_REASONING,
@@ -8,6 +9,7 @@ import {
 
 export const xaiModels = [
   MODEL_GROK_4_6,
+  MODEL_GROK_4_7,
   MODEL_GROK_4_5,
   MODEL_GROK_4_3,
   MODEL_GROK_4_20_NON_REASONING,

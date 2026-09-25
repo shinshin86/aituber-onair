@@ -6,11 +6,11 @@ A comprehensive React-based AI chat application demonstrating the full capabilit
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.55.0 and the
-Inworld model type from Voice 0.21.0. Existing provider defaults are unchanged.
+Core exposes the models and capability helpers from Chat 0.56.0 and the
+Gemini TTS model type from Voice 0.22.0. Existing provider defaults are unchanged.
 
-- Native models: GPT-6 Astra (`gpt-6-astra`), Claude Fable 5.1
-  (`claude-fable-5-1`), and DeepSeek V4.1 Flash (`deepseek-flash`).
+- Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1 and Opus 5.5;
+  DeepSeek V4.1 Flash; and Grok 4.7.
 - OpenRouter: GPT-6 Astra / Astra Pro, Claude Fable 5.1, DeepSeek V4.1 Flash,
   Gemini 3.8 Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini / Pro
   (free), Qwen3.8 Max 0902, and Muse Spark 1.3.
@@ -21,6 +21,10 @@ Inworld model type from Voice 0.21.0. Existing provider defaults are unchanged.
 - Native DeepSeek tool calling requires non-thinking mode
   (`reasoning_effort: 'none'`). OpenRouter reasoning and vision support follow
   the selected model's Chat capability metadata.
+- Gemini TTS adds `gemini-3.8-flash-lite-tts` and
+  `gemini-3.8-flash-tts` to every React example. Existing TTS defaults remain
+  unchanged. On 3.8 models, the style prompt is sent as speech metadata and
+  language code is unavailable.
 - Inworld supports `inworld-tts-2-flash` in addition to the default
   `inworld-tts-2`. Models without delivery-mode support, currently Flash, omit
   that option and disable its control in all React examples. Voice-list
@@ -286,7 +290,7 @@ The application supports 17 different Text-to-Speech engines:
 
 #### 2. **Gemini TTS**
 - Requires Google API key
-- Default model: `gemini-3.1-flash-tts-preview`
+- Default model: `gemini-3.1-flash-tts-preview`; selectable Gemini 3.8 Flash TTS and Flash-Lite TTS
 - Voices: 30 prebuilt options including Zephyr, Aoede, Kore, Leda, Puck, Charon, Fenrir, and Orus
 - Supports model selection, language code, and style/audio-tag prompt
 
