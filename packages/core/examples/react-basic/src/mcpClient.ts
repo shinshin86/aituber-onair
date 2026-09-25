@@ -1,7 +1,7 @@
 // when use MCP, install @modelcontextprotocol/sdk
-// @ts-ignore
+// @ts-expect-error The optional MCP SDK is installed only when MCP is enabled.
 import { Client as MCPClient } from '@modelcontextprotocol/sdk/client/index.js';
-// @ts-ignore
+// @ts-expect-error The optional MCP SDK is installed only when MCP is enabled.
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
 let clientPromise: Promise<MCPClient> | null = null;
@@ -22,7 +22,7 @@ async function getMcpClient(): Promise<MCPClient> {
 }
 
 export function createMcpToolHandler<
-  T extends { [key: string]: unknown } = any,
+  T extends Record<string, unknown> = Record<string, unknown>,
 >(toolName: string) {
   return async (args: T): Promise<string> => {
     const client = await getMcpClient();

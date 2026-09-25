@@ -18,6 +18,8 @@ const EXPECTED_SERVER_ENGINES = [
   'xai',
   'unrealSpeech',
   'elevenLabs',
+  'fishAudio',
+  'cartesia',
   'inworld',
   'gradium',
   'geminiTts',
@@ -71,6 +73,16 @@ describe('character support TTS providers', () => {
       supportsVoiceList: true,
     });
     expect(getTtsProvider('elevenLabs')).toMatchObject({
+      requiresApiKey: true,
+      supportsCustomEndpoint: true,
+      supportsVoiceList: true,
+    });
+    expect(getTtsProvider('fishAudio')).toMatchObject({
+      requiresApiKey: true,
+      supportsCustomEndpoint: true,
+      supportsVoiceList: true,
+    });
+    expect(getTtsProvider('cartesia')).toMatchObject({
       requiresApiKey: true,
       supportsCustomEndpoint: true,
       supportsVoiceList: true,
@@ -174,6 +186,39 @@ describe('character support TTS providers', () => {
       speaker: '3',
       voicevoxApiUrl: 'http://127.0.0.1:50021',
       voicevoxSpeedScale: 1.1,
+    });
+    expect(
+      createVoiceServiceOptions(
+        {
+          provider: 'fishAudio',
+          model: 's2-pro',
+          voice: 'reference-id',
+          apiKey: 'test-key',
+          endpoint: 'https://api.fish.audio/v1/tts',
+          speed: 1.1,
+        },
+        async () => {},
+      ),
+    ).toMatchObject({
+      engineType: 'fishAudio',
+      fishAudioModel: 's2-pro',
+      fishAudioSpeed: 1.1,
+    });
+    expect(
+      createVoiceServiceOptions(
+        {
+          provider: 'cartesia',
+          model: 'sonic-3.5',
+          voice: 'voice-id',
+          apiKey: 'test-key',
+          endpoint: 'https://api.cartesia.ai/tts/bytes',
+          speed: 1,
+        },
+        async () => {},
+      ),
+    ).toMatchObject({
+      engineType: 'cartesia',
+      cartesiaModel: 'sonic-3.5',
     });
     expect(
       createVoiceServiceOptions(

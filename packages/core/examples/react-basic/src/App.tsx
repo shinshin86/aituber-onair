@@ -1,5 +1,6 @@
 import React, {
   ChangeEvent,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -9,6 +10,9 @@ import {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
   AITuberOnAirCoreOptions,
+  type Message as ChatMessage,
+  type VisionBlock,
+  type VoiceServiceOptions,
   ChatServiceFactory,
   GPT5_PRESETS,
   GPT5PresetKey,
@@ -406,6 +410,14 @@ type BaseMessage = { id: string; role: 'user' | 'assistant' };
 type TextMessage = BaseMessage & { kind: 'text'; content: string };
 type ImageMessage = BaseMessage & { kind: 'image'; dataUrl: string };
 type Message = TextMessage | ImageMessage;
+type HistoryMessage = Omit<ChatMessage, 'content'> & {
+  content: string | VisionBlock[];
+};
+type LocalSpeaker = {
+  name: string;
+  speaker_uuid?: string;
+  styles?: Array<{ id: string | number; name: string }>;
+};
 
 type AivisCloudBooleanOption = 'default' | 'true' | 'false';
 type AivisCloudOutputFormatOption =
@@ -959,9 +971,11 @@ const App: React.FC = () => {
     piperPlus: 'default',
     webSpeech: '',
   });
-  const [availableSpeakers, setAvailableSpeakers] = useState<
-    Record<string, any[]>
-  >({});
+  const [availableSpeakers, setAvailableSpeakers] = useState<{
+    voicevox?: LocalSpeaker[];
+    aivisSpeech?: LocalSpeaker[];
+    webSpeech?: VoiceEngineVoice[];
+  }>({});
   const [elevenLabsVoices, setElevenLabsVoices] = useState<ElevenLabsVoice[]>(
     [],
   );
@@ -1004,20 +1018,24 @@ const App: React.FC = () => {
   /**
    * Fetch speakers for dynamic voice engines
    */
-  const fetchSpeakers = async (engine: VoiceEngineType) => {
+  const fetchSpeakers = useCallback(async (engine: VoiceEngineType) => {
     try {
       switch (engine) {
         case 'voicevox': {
           const response = await fetch(`${VOICEVOX_API_ENDPOINT}/speakers`);
           if (response.ok) {
-            const speakers = await response.json();
+            const speakers: LocalSpeaker[] = await response.json();
             setAvailableSpeakers((prev) => ({ ...prev, voicevox: speakers }));
             // Auto-select first speaker if none selected
-            if (!selectedSpeakers.voicevox && speakers.length > 0) {
+            if (speakers.length > 0) {
               const firstSpeaker = speakers[0];
               const speakerId =
-                firstSpeaker.styles?.[0]?.id || firstSpeaker.speaker_uuid;
-              setSelectedSpeakers((prev) => ({ ...prev, voicevox: speakerId }));
+                firstSpeaker.styles?.[0]?.id ?? firstSpeaker.speaker_uuid;
+              if (speakerId !== undefined) {
+                setSelectedSpeakers((prev) =>
+                  prev.voicevox ? prev : { ...prev, voicevox: speakerId },
+                );
+              }
             }
           }
           break;
@@ -1025,19 +1043,20 @@ const App: React.FC = () => {
         case 'aivisSpeech': {
           const response = await fetch(`${AIVIS_SPEECH_API_ENDPOINT}/speakers`);
           if (response.ok) {
-            const speakers = await response.json();
+            const speakers: LocalSpeaker[] = await response.json();
             setAvailableSpeakers((prev) => ({
               ...prev,
               aivisSpeech: speakers,
             }));
             // Auto-select first speaker if none selected
-            if (!selectedSpeakers.aivisSpeech && speakers.length > 0) {
+            if (speakers.length > 0) {
               const firstStyle = speakers[0]?.styles?.[0];
               if (firstStyle) {
-                setSelectedSpeakers((prev) => ({
-                  ...prev,
-                  aivisSpeech: firstStyle.id,
-                }));
+                setSelectedSpeakers((prev) =>
+                  prev.aivisSpeech
+                    ? prev
+                    : { ...prev, aivisSpeech: firstStyle.id },
+                );
               }
             }
           }
@@ -1046,11 +1065,10 @@ const App: React.FC = () => {
         case 'webSpeech': {
           const voices = await getVoiceEngineVoiceList('webSpeech');
           setAvailableSpeakers((prev) => ({ ...prev, webSpeech: voices }));
-          if (!selectedSpeakers.webSpeech && voices.length > 0) {
-            setSelectedSpeakers((prev) => ({
-              ...prev,
-              webSpeech: voices[0].id,
-            }));
+          if (voices.length > 0) {
+            setSelectedSpeakers((prev) =>
+              prev.webSpeech ? prev : { ...prev, webSpeech: voices[0].id },
+            );
           }
           break;
         }
@@ -1058,7 +1076,7 @@ const App: React.FC = () => {
     } catch (error) {
       console.error(`Failed to fetch speakers for ${engine}:`, error);
     }
-  };
+  }, []);
 
   /**
    * when voice engine changes, fetch speakers if needed
@@ -1258,7 +1276,7 @@ const App: React.FC = () => {
       setPiperPlusSpeed('');
       setPiperPlusNoiseScale('');
     }
-  }, [selectedVoiceEngine]);
+  }, [selectedVoiceEngine, fetchSpeakers]);
 
   useEffect(() => {
     if (selectedVoiceEngine !== 'elevenLabs') {
@@ -1763,7 +1781,7 @@ const App: React.FC = () => {
    * convert messages to API format
    */
   const convertMessagesToApiFormat = (msgs: Message[]) => {
-    const apiMessages: any[] = [];
+    const apiMessages: HistoryMessage[] = [];
     let currentImageUrl: string | null = null;
 
     for (const msg of msgs) {
@@ -1824,7 +1842,7 @@ const App: React.FC = () => {
       });
     }
 
-    return apiMessages;
+    return apiMessages as ChatMessage[];
   };
 
   /**
@@ -1857,7 +1875,7 @@ const App: React.FC = () => {
       : responseLength;
 
     // prepare provider options for GPT-5 models
-    const providerOptions: Record<string, any> = {};
+    const providerOptions: Record<string, unknown> = {};
     if (isOpenAIGPT5Request) {
       // Add GPT-5 specific options
       providerOptions.gpt5Preset = GPT5_SAMPLE_PRESET;
@@ -1951,7 +1969,7 @@ const App: React.FC = () => {
 
       const config = VOICE_ENGINE_CONFIGS[selectedVoiceEngine];
       const selectedSpeaker = selectedSpeakers[selectedVoiceEngine];
-      const options: any = {
+      const options: Record<string, unknown> = {
         engineType: selectedVoiceEngine,
         onComplete: () => {
           console.log('Voice playback completed');
@@ -2397,7 +2415,7 @@ const App: React.FC = () => {
 
           break;
         }
-        case 'minimax':
+        case 'minimax': {
           if (config.defaultParams?.endpoint) {
             options.endpoint = config.defaultParams.endpoint;
           }
@@ -2473,6 +2491,7 @@ const App: React.FC = () => {
           }
 
           break;
+        }
         case 'xai': {
           if (xaiLanguage.trim()) {
             options.xaiLanguage = xaiLanguage.trim();
@@ -2708,7 +2727,8 @@ const App: React.FC = () => {
         }
       }
 
-      return options;
+      // The selected engine determines the option shape built by the switch.
+      return options as unknown as VoiceServiceOptions;
     };
 
     const voiceOptions = createVoiceOptions();
@@ -2724,7 +2744,9 @@ const App: React.FC = () => {
         systemPrompt: systemPrompt.trim() || DEFAULT_SYSTEM_PROMPT,
         responseLength: effectiveResponseLength,
       },
-      providerOptions,
+      providerOptions: providerOptions as NonNullable<
+        AITuberOnAirCoreOptions['providerOptions']
+      >,
       tools: shouldEnableTools
         ? [{ definition: randomIntTool, handler: randomIntHandler }]
         : undefined,
@@ -2765,7 +2787,7 @@ const App: React.FC = () => {
    * register event listeners
    */
   const setupEventListeners = (instance: AITuberOnAirCore) => {
-    instance.on(AITuberOnAirCoreEvent.PROCESSING_START, (data: any) => {
+    instance.on(AITuberOnAirCoreEvent.PROCESSING_START, (data: unknown) => {
       console.log('Processing started:', data);
     });
 
@@ -2787,59 +2809,62 @@ const App: React.FC = () => {
       },
     );
 
-    instance.on(AITuberOnAirCoreEvent.ASSISTANT_RESPONSE, async (data: any) => {
-      const { message } = data;
-      console.log('Assistant response completed:', message.content);
-      removeAssistantPartial();
+    instance.on(
+      AITuberOnAirCoreEvent.ASSISTANT_RESPONSE,
+      async (data: { message: { content: string } }) => {
+        const { message } = data;
+        console.log('Assistant response completed:', message.content);
+        removeAssistantPartial();
 
-      addMessageToUI({
-        id: nextId(),
-        role: 'assistant',
-        kind: 'text',
-        content: message.content,
-      });
+        addMessageToUI({
+          id: nextId(),
+          role: 'assistant',
+          kind: 'text',
+          content: message.content,
+        });
 
-      // Generate avatar image if enabled
-      if (enableAvatarGeneration && geminiImageApiKey.trim()) {
-        try {
-          setIsGeneratingAvatar(true);
-          const prompt = createAvatarPrompt(message.content);
-          const imageUrl = await generateAvatarImage({
-            apiKey: geminiImageApiKey,
-            prompt,
-            baseImageUrl: avatarImageUrl, // Pass the current avatar image as the base
-          });
+        // Generate avatar image if enabled
+        if (enableAvatarGeneration && geminiImageApiKey.trim()) {
+          try {
+            setIsGeneratingAvatar(true);
+            const prompt = createAvatarPrompt(message.content);
+            const imageUrl = await generateAvatarImage({
+              apiKey: geminiImageApiKey,
+              prompt,
+              baseImageUrl: avatarImageUrl, // Pass the current avatar image as the base
+            });
 
-          // Clean up previous generated image
-          if (generatedAvatarImage) {
-            revokeObjectUrl(generatedAvatarImage);
+            // Clean up previous generated image
+            if (generatedAvatarImage) {
+              revokeObjectUrl(generatedAvatarImage);
+            }
+
+            setGeneratedAvatarImage(imageUrl);
+            setAvatarImageUrl(imageUrl); // Automatically update the avatar image
+            console.log('Avatar image generated and updated successfully');
+          } catch (error) {
+            console.error('Failed to generate avatar image:', error);
+          } finally {
+            setIsGeneratingAvatar(false);
           }
-
-          setGeneratedAvatarImage(imageUrl);
-          setAvatarImageUrl(imageUrl); // Automatically update the avatar image
-          console.log('Avatar image generated and updated successfully');
-        } catch (error) {
-          console.error('Failed to generate avatar image:', error);
-        } finally {
-          setIsGeneratingAvatar(false);
         }
-      }
-    });
+      },
+    );
 
-    instance.on(AITuberOnAirCoreEvent.ERROR, (error: any) => {
+    instance.on(AITuberOnAirCoreEvent.ERROR, (error: unknown) => {
       console.error('An error occurred:', error);
       alert(`An error occurred:: ${error}`);
     });
 
-    instance.on(AITuberOnAirCoreEvent.TOOL_USE, (data: any) => {
+    instance.on(AITuberOnAirCoreEvent.TOOL_USE, (data: unknown) => {
       console.log('Tool use:', data);
     });
 
-    instance.on(AITuberOnAirCoreEvent.TOOL_RESULT, (data: any) => {
+    instance.on(AITuberOnAirCoreEvent.TOOL_RESULT, (data: unknown) => {
       console.log('Tool result:', data);
     });
 
-    instance.on(AITuberOnAirCoreEvent.SPEECH_START, (data: any) => {
+    instance.on(AITuberOnAirCoreEvent.SPEECH_START, (data: unknown) => {
       console.log('Speech started:', data);
       setIsSpeaking(true);
     });
@@ -7266,8 +7291,8 @@ const App: React.FC = () => {
                           {selectedVoiceEngine === 'voicevox' &&
                           availableSpeakers.voicevox
                             ? availableSpeakers.voicevox.flatMap(
-                                (speaker: any) =>
-                                  speaker.styles?.map((style: any) => (
+                                (speaker) =>
+                                  speaker.styles?.map((style) => (
                                     <option
                                       key={`${speaker.speaker_uuid}-${style.id}`}
                                       value={style.id}
@@ -7286,8 +7311,8 @@ const App: React.FC = () => {
                           {selectedVoiceEngine === 'aivisSpeech' &&
                           availableSpeakers.aivisSpeech
                             ? availableSpeakers.aivisSpeech.flatMap(
-                                (speaker: any) =>
-                                  speaker.styles?.map((style: any) => (
+                                (speaker) =>
+                                  speaker.styles?.map((style) => (
                                     <option
                                       key={`${speaker.speaker_uuid}-${style.id}`}
                                       value={style.id}
