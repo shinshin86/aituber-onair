@@ -161,7 +161,11 @@ Open `http://localhost:5173`, open `設定`, then:
 In `アバター・モーション`, assign motions from the loaded model's `.model3.json`
 to response emotions such as `happy` and `sad`. Assignments are saved per model
 in the browser. Unassigned emotions do not start a motion. Idle motion remains
-controlled by the model's standard configuration, and visual effect settings
+controlled by the model's standard configuration outside speech. An assigned
+motion repeats a configurable section during speech alongside lip-sync. Adjust
+the section if the motion returns to a neutral face at its beginning or end.
+The model resumes its configured idle behavior after the motion finishes.
+Visual effect settings
 do not control model motions.
 
 The LLM section also lets you edit the system prompt. It is applied when the

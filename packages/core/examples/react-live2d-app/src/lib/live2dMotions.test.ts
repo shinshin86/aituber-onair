@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getSpeechLoopRange,
   getAssignedLive2DMotion,
   listLive2DMotions,
   normalizeLive2DModelMotionMaps,
@@ -37,5 +38,36 @@ describe('Live2D emotion motions', () => {
       getAssignedLive2DMotion(maps, 'other.model3.json', 'happy', motions),
     ).toBeNull();
     expect(maps['model.model3.json'].angry).toBeUndefined();
+  });
+
+  it('keeps valid speech loop ranges and rejects invalid saved ranges', () => {
+    const maps = normalizeLive2DModelMotionMaps({
+      'model.model3.json': {
+        sad: {
+          group: 'Tap',
+          index: 0,
+          speechLoopStartPercent: 25,
+          speechLoopEndPercent: 80,
+        },
+        happy: {
+          group: 'Tap',
+          index: 1,
+          speechLoopStartPercent: 90,
+          speechLoopEndPercent: 20,
+        },
+      },
+    });
+    expect(getSpeechLoopRange(maps['model.model3.json'].sad!)).toEqual({
+      startPercent: 25,
+      endPercent: 80,
+    });
+    expect(maps['model.model3.json'].happy).toEqual({
+      group: 'Tap',
+      index: 1,
+    });
+    expect(getSpeechLoopRange(maps['model.model3.json'].happy!)).toEqual({
+      startPercent: 40,
+      endPercent: 70,
+    });
   });
 });

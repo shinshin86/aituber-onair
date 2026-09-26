@@ -94,6 +94,29 @@
   overflow-wrap: anywhere;
 }
 
+.settings-motion-loop-range {
+  grid-column: 2 / -1;
+  display: grid;
+  gap: 4px;
+}
+
+.settings-motion-loop-range label {
+  display: grid;
+  grid-template-columns: minmax(108px, 1fr) minmax(90px, 1.6fr) 38px;
+  align-items: center;
+  gap: 8px;
+  color: #8899aa;
+  font-size: 0.72rem;
+}
+
+.settings-motion-loop-range input {
+  width: 100%;
+}
+
+.settings-motion-loop-range output {
+  text-align: right;
+}
+
 @media (max-width: 520px) {
   .settings-motion-mapping-row {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -104,6 +127,10 @@
   }
 
   .settings-motion-source {
+    grid-column: 1 / -1;
+  }
+
+  .settings-motion-loop-range {
     grid-column: 1 / -1;
   }
 }

@@ -4,6 +4,7 @@ import type {
   Live2DModelSource,
 } from '../lib/live2dModel';
 import {
+  getSpeechLoopRange,
   getAssignedLive2DMotion,
   type Live2DMotionSelection,
 } from '../lib/live2dMotions';
@@ -156,6 +157,9 @@ export function AvatarSettingsPanel({
           選択肢にはモデル設定のグループ名と File の値をそのまま表示します。
           動きは「再生」で確認してください。
         </p>
+        <p className="settings-field-hint">
+          発話中は選んだモーションの指定区間を繰り返します。通常表情へ戻る区間がある場合は、開始・終了位置を調整してください。
+        </p>
         {modelSource && motions.length === 0 && (
           <p className="settings-field-hint">
             このモデルにモーションがありません。
@@ -173,6 +177,7 @@ export function AvatarSettingsPanel({
               (motion) =>
                 selected && motionValue(motion) === motionValue(selected),
             );
+            const loopRange = selected ? getSpeechLoopRange(selected) : null;
             return (
               <div
                 className="settings-field settings-motion-mapping-row"
@@ -223,6 +228,48 @@ export function AvatarSettingsPanel({
                   <small className="settings-motion-source">
                     {selectedMotion.group} / {selectedMotion.file}
                   </small>
+                )}
+                {selected && loopRange && modelPath && (
+                  <div className="settings-motion-loop-range">
+                    <label>
+                      <span>発話中の開始位置</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max={loopRange.endPercent - 10}
+                        step="5"
+                        value={loopRange.startPercent}
+                        disabled={isProcessing}
+                        onChange={(event) =>
+                          updateVisualLive2DEmotionMotion(modelPath, value, {
+                            ...selected,
+                            speechLoopStartPercent: Number(event.target.value),
+                            speechLoopEndPercent: loopRange.endPercent,
+                          })
+                        }
+                      />
+                      <output>{loopRange.startPercent}%</output>
+                    </label>
+                    <label>
+                      <span>発話中の終了位置</span>
+                      <input
+                        type="range"
+                        min={loopRange.startPercent + 10}
+                        max="100"
+                        step="5"
+                        value={loopRange.endPercent}
+                        disabled={isProcessing}
+                        onChange={(event) =>
+                          updateVisualLive2DEmotionMotion(modelPath, value, {
+                            ...selected,
+                            speechLoopStartPercent: loopRange.startPercent,
+                            speechLoopEndPercent: Number(event.target.value),
+                          })
+                        }
+                      />
+                      <output>{loopRange.endPercent}%</output>
+                    </label>
+                  </div>
                 )}
               </div>
             );

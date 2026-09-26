@@ -85,6 +85,8 @@ export default function App() {
     modelPath: string;
     motion: Live2DMotionSelection;
   } | null>(null);
+  const [activeSpeechMotionRequestId, setActiveSpeechMotionRequestId] =
+    useState<number | null>(null);
   const [avatarReaction, setAvatarReaction] = useState<Live2DReaction | null>(
     null,
   );
@@ -96,13 +98,14 @@ export default function App() {
 
   const requestMotion = useCallback(
     (motion: Live2DMotionSelection) => {
-      if (!modelSource) return;
+      if (!modelSource) return null;
       motionIdRef.current += 1;
       setMotionRequest({
         id: motionIdRef.current,
         modelPath: modelSource.modelFilePath,
         motion,
       });
+      return motionIdRef.current;
     },
     [modelSource],
   );
@@ -201,7 +204,7 @@ export default function App() {
         screenplay.emotion,
         modelSource?.motions || [],
       );
-      if (motion) requestMotion(motion);
+      setActiveSpeechMotionRequestId(motion ? requestMotion(motion) : null);
       const reaction = createLinkedLive2DReaction(
         settingsHook.settings.visual.live2dReactionControlMode,
         screenplay,
@@ -224,6 +227,7 @@ export default function App() {
   );
 
   const handleSpeechEnd = useCallback(() => {
+    setActiveSpeechMotionRequestId(null);
     setAvatarReaction(null);
   }, []);
 
@@ -461,6 +465,7 @@ export default function App() {
         backgroundImageUrl={backgroundImageUrl}
         modelSource={modelSource}
         motionRequest={motionRequest}
+        activeSpeechMotionRequestId={activeSpeechMotionRequestId}
         modelPickerError={modelPickerError}
         avatarReaction={avatarReaction}
         audioBinding={audioBinding}

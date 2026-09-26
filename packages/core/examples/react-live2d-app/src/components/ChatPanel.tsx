@@ -22,6 +22,7 @@ interface ChatPanelProps {
     modelPath: string;
     motion: Live2DMotionSelection;
   } | null;
+  activeSpeechMotionRequestId: number | null;
   modelPickerError: string;
   audioBinding: Live2DAudioBinding;
   avatarReaction?: Live2DReaction | null;
@@ -40,6 +41,7 @@ export function ChatPanel({
   backgroundImageUrl,
   modelSource,
   motionRequest,
+  activeSpeechMotionRequestId,
   modelPickerError,
   audioBinding,
   avatarReaction,
@@ -84,6 +86,7 @@ export function ChatPanel({
       <Live2DStage
         modelSource={modelSource}
         motionRequest={motionRequest}
+        activeSpeechMotionRequestId={activeSpeechMotionRequestId}
         modelPickerError={modelPickerError}
         audioBinding={audioBinding}
         reaction={avatarReaction}
