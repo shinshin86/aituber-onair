@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import type { Live2DModelSource } from '../lib/live2dModel';
+import type { Live2DMotionSelection } from '../lib/live2dMotions';
+import { holdIdleMotion, loopSpeechMotion } from '../lib/speechMotionHold';
 import {
   withLive2DReactionId,
   type Live2DEmotionEffectMap,
@@ -37,6 +39,12 @@ interface Live2DStageProps {
   modelSource: Live2DModelSource | null;
   modelPickerError: string;
   audioBinding: Live2DAudioBinding;
+  motionRequest: {
+    id: number;
+    modelPath: string;
+    motion: Live2DMotionSelection;
+  } | null;
+  activeSpeechMotionRequestId: number | null;
   reaction?: Live2DReaction | null;
   reactionControlMode: Live2DReactionControlMode;
   emotionEffectMap: Live2DEmotionEffectMap;
@@ -58,6 +66,11 @@ const AVATAR_EXPRESSION_OPTIONS = [
 }>;
 
 const MANUAL_EFFECT_DURATION_MS = 2600;
+const EMPTY_AUDIO_BINDING: Live2DAudioBinding = {
+  audioElement: null,
+  analyserNode: null,
+  audioContext: null,
+};
 type EffectAnchorTarget = 'face' | 'leftEye' | 'rightEye';
 const EFFECT_ANCHOR_TARGETS = [
   { target: 'face', label: '顔' },
@@ -72,6 +85,8 @@ export function Live2DStage({
   modelSource,
   modelPickerError,
   audioBinding,
+  motionRequest,
+  activeSpeechMotionRequestId,
   reaction,
   reactionControlMode,
   emotionEffectMap,
@@ -83,6 +98,14 @@ export function Live2DStage({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const appRef = useRef<PIXI.Application | null>(null);
   const modelRef = useRef<Live2DModelInstance | null>(null);
+  const loadedModelPathRef = useRef<string | null>(null);
+  const lastPlayedMotionRequestIdRef = useRef(0);
+  const pendingMotionRequestIdRef = useRef<number | null>(null);
+  const speechMotionHoldRef = useRef<{
+    id: number;
+    restoreIdle: () => void;
+    restoreLoop: (() => void) | null;
+  } | null>(null);
   const zoomCleanupRef = useRef<(() => void) | null>(null);
   const audioBindingRef = useRef(audioBinding);
   const effectAnchorRef = useRef(effectAnchor);
@@ -96,6 +119,14 @@ export function Live2DStage({
   const [anchorEditorOpen, setAnchorEditorOpen] = useState(false);
   const [anchorTarget, setAnchorTarget] = useState<EffectAnchorTarget>('face');
   const showManualControls = reactionControlMode === 'manual';
+
+  const releaseSpeechMotionHold = useCallback(() => {
+    const hold = speechMotionHoldRef.current;
+    if (!hold) return;
+    speechMotionHoldRef.current = null;
+    hold.restoreLoop?.();
+    hold.restoreIdle();
+  }, []);
   const effectiveReaction =
     reactionControlMode === 'linked'
       ? reaction || null
@@ -236,12 +267,14 @@ export function Live2DStage({
 
     return () => {
       observer.disconnect();
+      releaseSpeechMotionHold();
       zoomCleanupRef.current?.();
       zoomCleanupRef.current = null;
       if (modelRef.current && appRef.current) {
         appRef.current.stage.removeChild(modelRef.current);
         destroyLive2DModel(modelRef.current);
         modelRef.current = null;
+        loadedModelPathRef.current = null;
       }
       app.destroy(false, {
         children: true,
@@ -250,7 +283,7 @@ export function Live2DStage({
       });
       appRef.current = null;
     };
-  }, []);
+  }, [releaseSpeechMotionHold]);
 
   useEffect(() => {
     const app = appRef.current;
@@ -262,12 +295,15 @@ export function Live2DStage({
     let cancelled = false;
 
     const clearCurrentModel = () => {
+      releaseSpeechMotionHold();
+      pendingMotionRequestIdRef.current = null;
       zoomCleanupRef.current?.();
       zoomCleanupRef.current = null;
       if (modelRef.current) {
         app.stage.removeChild(modelRef.current);
         destroyLive2DModel(modelRef.current);
         modelRef.current = null;
+        loadedModelPathRef.current = null;
       }
     };
 
@@ -311,6 +347,7 @@ export function Live2DStage({
         makeDraggable(model);
         zoomCleanupRef.current = makeZoomable(model, canvas);
         modelRef.current = model;
+        loadedModelPathRef.current = modelSource.modelFilePath;
       } catch (error) {
         const message =
           error instanceof Error
@@ -329,13 +366,87 @@ export function Live2DStage({
     return () => {
       cancelled = true;
     };
-  }, [modelSource]);
+  }, [modelSource, releaseSpeechMotionHold]);
+
+  useEffect(() => {
+    if (speechMotionHoldRef.current?.id !== activeSpeechMotionRequestId) {
+      releaseSpeechMotionHold();
+    }
+  }, [activeSpeechMotionRequestId, releaseSpeechMotionHold]);
+
+  useEffect(() => {
+    const model = modelRef.current;
+    if (
+      !model ||
+      !motionRequest ||
+      motionRequest.id === lastPlayedMotionRequestIdRef.current ||
+      loadedModelPathRef.current !== motionRequest.modelPath ||
+      !modelSource?.motions.some(
+        (motion) =>
+          motion.group === motionRequest.motion.group &&
+          motion.index === motionRequest.motion.index,
+      )
+    ) {
+      return;
+    }
+    releaseSpeechMotionHold();
+    const motionManager = model.internalModel?.motionManager;
+    if (motionManager && activeSpeechMotionRequestId === motionRequest.id) {
+      speechMotionHoldRef.current = {
+        id: motionRequest.id,
+        restoreIdle: holdIdleMotion(motionManager),
+        restoreLoop: null,
+      };
+    }
+    lastPlayedMotionRequestIdRef.current = motionRequest.id;
+    pendingMotionRequestIdRef.current = motionRequest.id;
+    setLive2DAudioForLipSync(model, EMPTY_AUDIO_BINDING);
+    void model
+      .motion(motionRequest.motion.group, motionRequest.motion.index, 3)
+      .then((started) => {
+        const hold = speechMotionHoldRef.current;
+        if (!hold || hold.id !== motionRequest.id) return;
+        if (!started || !motionManager) {
+          releaseSpeechMotionHold();
+          return;
+        }
+        hold.restoreLoop = loopSpeechMotion(
+          motionManager,
+          model,
+          motionRequest.motion.group,
+          motionRequest.motion.index,
+        );
+        if (!hold.restoreLoop) releaseSpeechMotionHold();
+      })
+      .catch((error: unknown) => {
+        if (speechMotionHoldRef.current?.id === motionRequest.id) {
+          releaseSpeechMotionHold();
+        }
+        console.warn('Live2D motion failed:', error);
+      })
+      .finally(() => {
+        if (pendingMotionRequestIdRef.current === motionRequest.id) {
+          pendingMotionRequestIdRef.current = null;
+          if (modelRef.current === model) {
+            setLive2DAudioForLipSync(model, audioBindingRef.current);
+          }
+        }
+      });
+  }, [
+    activeSpeechMotionRequestId,
+    isLoading,
+    modelSource,
+    motionRequest,
+    releaseSpeechMotionHold,
+  ]);
 
   useEffect(() => {
     if (!modelRef.current) {
       return;
     }
-    setLive2DAudioForLipSync(modelRef.current, audioBinding);
+    if (pendingMotionRequestIdRef.current === null) {
+      setLive2DAudioForLipSync(modelRef.current, audioBinding);
+    }
   }, [audioBinding]);
 
   const effectiveStageError = modelSource ? stageError : '';

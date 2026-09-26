@@ -1,3 +1,32 @@
+.settings-category-nav {
+  display: flex;
+  flex-shrink: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid #0f3460;
+}
+
+.settings-category-nav button {
+  flex: 1;
+  padding: 13px 6px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: #aebfd2;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.settings-category-nav button[aria-pressed="true"] {
+  border-bottom-color: #e94560;
+  color: #fff;
+}
+
+.settings-category-nav button:focus-visible {
+  outline: 2px solid #a5d1ff;
+  outline-offset: -3px;
+}
+
 .settings-dialog-body {
   overflow-y: auto;
 }
@@ -39,17 +68,44 @@
   margin-top: 2px;
 }
 
-.live2d-model-panel {
-  padding: 16px 16px 0;
-  border-bottom: 1px solid #0f3460;
+.settings-motion-mapping-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
 }
 
-.live2d-model-panel h3 {
-  font-size: 0.85rem;
-  color: #e94560;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.settings-motion-mapping-row label {
+  color: #b8c4d0;
+  font-size: 0.8rem;
+  margin-bottom: 0;
+}
+
+.settings-motion-mapping-row select {
+  min-width: 0;
+}
+
+.settings-motion-source {
+  grid-column: 2 / -1;
+  min-width: 0;
+  color: #8899aa;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 520px) {
+  .settings-motion-mapping-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .settings-motion-mapping-row label {
+    grid-column: 1 / -1;
+  }
+
+  .settings-motion-source {
+    grid-column: 1 / -1;
+  }
 }
 
 .live2d-stage {

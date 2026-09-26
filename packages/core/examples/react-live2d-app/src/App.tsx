@@ -8,6 +8,7 @@ import {
 import { BondToastStack } from './components/BondToastStack';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
+import { AvatarSettingsPanel } from './components/AvatarSettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
 import { useAituberCore } from './hooks/useAituberCore';
 import { useLiveCommentIntelligence } from './hooks/useLiveCommentIntelligence';
@@ -17,6 +18,10 @@ import { useTwitchComments } from './hooks/useTwitchComments';
 import { useYoutubeComments } from './hooks/useYoutubeComments';
 import { clampDialogDragDelta, type DialogDragPoint } from './lib/dialogDrag';
 import { getEmotionEffectAnchor } from './lib/emotionEffectAnchor';
+import {
+  getAssignedLive2DMotion,
+  type Live2DMotionSelection,
+} from './lib/live2dMotions';
 import { createBondIdentity } from './lib/kizunaBond';
 import {
   createBundledLive2DModelSource,
@@ -49,6 +54,9 @@ export default function App() {
   const settingsHook = useSettings();
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsCategory, setSettingsCategory] = useState<
+    'avatar' | 'conversation'
+  >('avatar');
   const [settingsDialogOffset, setSettingsDialogOffset] =
     useState<DialogDragPoint>(DEFAULT_SETTINGS_DIALOG_OFFSET);
   const [settingsDialogDragging, setSettingsDialogDragging] = useState(false);
@@ -71,6 +79,14 @@ export default function App() {
   const settingsDialogRef = useRef<HTMLDivElement | null>(null);
   const settingsDialogDragRef = useRef<SettingsDialogDragState | null>(null);
   const reactionIdRef = useRef(0);
+  const motionIdRef = useRef(0);
+  const [motionRequest, setMotionRequest] = useState<{
+    id: number;
+    modelPath: string;
+    motion: Live2DMotionSelection;
+  } | null>(null);
+  const [activeSpeechMotionRequestId, setActiveSpeechMotionRequestId] =
+    useState<number | null>(null);
   const [avatarReaction, setAvatarReaction] = useState<Live2DReaction | null>(
     null,
   );
@@ -79,6 +95,20 @@ export default function App() {
     reactionIdRef.current += 1;
     setAvatarReaction(withLive2DReactionId(draft, reactionIdRef.current));
   }, []);
+
+  const requestMotion = useCallback(
+    (motion: Live2DMotionSelection) => {
+      if (!modelSource) return null;
+      motionIdRef.current += 1;
+      setMotionRequest({
+        id: motionIdRef.current,
+        modelPath: modelSource.modelFilePath,
+        motion,
+      });
+      return motionIdRef.current;
+    },
+    [modelSource],
+  );
 
   const handleSettingsDialogPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -168,6 +198,13 @@ export default function App() {
 
   const handleSpeechStart = useCallback(
     (screenplay: { emotion?: string; text?: string }) => {
+      const motion = getAssignedLive2DMotion(
+        settingsHook.settings.visual.live2dEmotionMotionMaps,
+        modelSource?.modelFilePath,
+        screenplay.emotion,
+        modelSource?.motions || [],
+      );
+      setActiveSpeechMotionRequestId(motion ? requestMotion(motion) : null);
       const reaction = createLinkedLive2DReaction(
         settingsHook.settings.visual.live2dReactionControlMode,
         screenplay,
@@ -181,12 +218,16 @@ export default function App() {
     },
     [
       emitAvatarReaction,
+      modelSource,
+      requestMotion,
+      settingsHook.settings.visual.live2dEmotionMotionMaps,
       settingsHook.settings.visual.live2dEmotionEffectMap,
       settingsHook.settings.visual.live2dReactionControlMode,
     ],
   );
 
   const handleSpeechEnd = useCallback(() => {
+    setActiveSpeechMotionRequestId(null);
     setAvatarReaction(null);
   }, []);
 
@@ -423,6 +464,8 @@ export default function App() {
         onToggleSettings={toggleSettingsDialog}
         backgroundImageUrl={backgroundImageUrl}
         modelSource={modelSource}
+        motionRequest={motionRequest}
+        activeSpeechMotionRequestId={activeSpeechMotionRequestId}
         modelPickerError={modelPickerError}
         avatarReaction={avatarReaction}
         audioBinding={audioBinding}
@@ -477,78 +520,60 @@ export default function App() {
                 &times;
               </button>
             </div>
+            <nav className="settings-category-nav" aria-label="設定カテゴリ">
+              <button
+                type="button"
+                aria-pressed={settingsCategory === 'avatar'}
+                onClick={() => setSettingsCategory('avatar')}
+              >
+                アバター・モーション
+              </button>
+              <button
+                type="button"
+                aria-pressed={settingsCategory === 'conversation'}
+                onClick={() => setSettingsCategory('conversation')}
+              >
+                AI・音声・配信
+              </button>
+            </nav>
             <div className="settings-dialog-body">
-              <section className="live2d-model-panel">
-                <h3>Live2D</h3>
-                <div className="settings-field">
-                  <label>`models/` フォルダ内のモデル</label>
-                  <div className="settings-file-picker-row">
-                    <select
-                      value={selectedBundledModelId}
-                      onChange={(event) =>
-                        setSelectedBundledModelId(event.target.value)
-                      }
-                      disabled={bundledModels.length === 0}
-                    >
-                      {bundledModels.length === 0 ? (
-                        <option value="">
-                          `models/` にモデルが見つかりません
-                        </option>
-                      ) : (
-                        bundledModels.map((model) => (
-                          <option key={model.id} value={model.id}>
-                            {model.label}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                    <button
-                      className="settings-file-trigger"
-                      type="button"
-                      onClick={() => void handleBundledModelLoad()}
-                      disabled={
-                        bundledModels.length === 0 || !selectedBundledModelId
-                      }
-                    >
-                      読み込む
-                    </button>
-                  </div>
-                  <p className="settings-field-hint">
-                    `packages/core/examples/react-live2d-app/models/`
-                    配下にあるモデルを表示します。新しいファイルを追加した場合は
-                    dev サーバーを再起動してください。
-                  </p>
-                  <div className="settings-file-actions">
-                    <span className="settings-file-status">
-                      {modelSource?.modelFilePath || '未読み込み'}
-                    </span>
-                    <button
-                      className="settings-clear-button"
-                      type="button"
-                      onClick={handleClearModel}
-                      disabled={!modelSource}
-                    >
-                      クリア
-                    </button>
-                  </div>
-                  <p className="settings-field-hint">
-                    このサンプルには Live2D アセットは同梱していません。
-                  </p>
-                  {modelPickerError && (
-                    <p className="settings-field-error">{modelPickerError}</p>
-                  )}
-                </div>
-              </section>
-
-              <SettingsPanel
-                {...settingsHook}
-                isProcessing={isProcessing}
-                backgroundImageUrl={backgroundImageUrl}
-                streamErrorMessage={streamErrorMessage}
-                screenVisionController={screenVisionController}
-                onBackgroundImageChange={handleBackgroundImageChange}
-                onResetKizunaData={resetKizunaData}
-              />
+              {settingsCategory === 'avatar' && (
+                <AvatarSettingsPanel
+                  settings={settingsHook.settings}
+                  bundledModels={bundledModels}
+                  selectedBundledModelId={selectedBundledModelId}
+                  onSelectedBundledModelIdChange={setSelectedBundledModelId}
+                  onBundledModelLoad={() => void handleBundledModelLoad()}
+                  onClearModel={handleClearModel}
+                  modelSource={modelSource}
+                  modelPickerError={modelPickerError}
+                  isProcessing={isProcessing}
+                  onMotionPreview={requestMotion}
+                  updateVisualLive2DEmotionMotion={
+                    settingsHook.updateVisualLive2DEmotionMotion
+                  }
+                  updateVisualLive2DReactionControlMode={
+                    settingsHook.updateVisualLive2DReactionControlMode
+                  }
+                  updateVisualLive2DEmotionEffect={
+                    settingsHook.updateVisualLive2DEmotionEffect
+                  }
+                  resetVisualLive2DEmotionEffectMap={
+                    settingsHook.resetVisualLive2DEmotionEffectMap
+                  }
+                />
+              )}
+              {settingsCategory === 'conversation' && (
+                <SettingsPanel
+                  {...settingsHook}
+                  isProcessing={isProcessing}
+                  backgroundImageUrl={backgroundImageUrl}
+                  streamErrorMessage={streamErrorMessage}
+                  screenVisionController={screenVisionController}
+                  onBackgroundImageChange={handleBackgroundImageChange}
+                  onResetKizunaData={resetKizunaData}
+                />
+              )}
             </div>
           </div>
         </div>

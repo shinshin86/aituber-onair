@@ -4,6 +4,7 @@ import { ChatInput } from './ChatInput';
 import { ChatLog } from './ChatLog';
 import { Live2DStage } from './Live2DStage';
 import type { Live2DModelSource } from '../lib/live2dModel';
+import type { Live2DMotionSelection } from '../lib/live2dMotions';
 import type { Live2DAudioBinding } from '../hooks/useAudioLipsync';
 import type { Live2DReaction } from '../lib/live2dReactions';
 import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
@@ -16,6 +17,12 @@ interface ChatPanelProps {
   onToggleSettings: () => void;
   backgroundImageUrl?: string | null;
   modelSource: Live2DModelSource | null;
+  motionRequest: {
+    id: number;
+    modelPath: string;
+    motion: Live2DMotionSelection;
+  } | null;
+  activeSpeechMotionRequestId: number | null;
   modelPickerError: string;
   audioBinding: Live2DAudioBinding;
   avatarReaction?: Live2DReaction | null;
@@ -33,6 +40,8 @@ export function ChatPanel({
   onToggleSettings,
   backgroundImageUrl,
   modelSource,
+  motionRequest,
+  activeSpeechMotionRequestId,
   modelPickerError,
   audioBinding,
   avatarReaction,
@@ -76,6 +85,8 @@ export function ChatPanel({
       </button>
       <Live2DStage
         modelSource={modelSource}
+        motionRequest={motionRequest}
+        activeSpeechMotionRequestId={activeSpeechMotionRequestId}
         modelPickerError={modelPickerError}
         audioBinding={audioBinding}
         reaction={avatarReaction}
