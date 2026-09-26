@@ -24,6 +24,43 @@ export interface SpeechMotionManager {
   queueManager: { _motions: SpeechMotionQueueEntry[] };
 }
 
+export interface SpeechMotionPoseModel {
+  getParameterCount(): number;
+  getParameterValueByIndex(index: number): number;
+  setParameterValueByIndex(index: number, value: number): void;
+  getPartCount?(): number;
+  getPartOpacityByIndex?(index: number): number;
+  setPartOpacityByIndex?(index: number, opacity: number): void;
+}
+
+export function captureSpeechMotionPose(
+  model: SpeechMotionPoseModel | undefined,
+): () => void {
+  if (!model) return () => {};
+
+  const parameters = Array.from(
+    { length: model.getParameterCount() },
+    (_, index) => model.getParameterValueByIndex(index),
+  );
+  const parts =
+    model.getPartCount &&
+    model.getPartOpacityByIndex &&
+    model.setPartOpacityByIndex
+      ? Array.from({ length: model.getPartCount() }, (_, index) =>
+          model.getPartOpacityByIndex!(index),
+        )
+      : null;
+
+  return () => {
+    parameters.forEach((value, index) => {
+      model.setParameterValueByIndex(index, value);
+    });
+    parts?.forEach((opacity, index) => {
+      model.setPartOpacityByIndex?.(index, opacity);
+    });
+  };
+}
+
 const SPEECH_IDLE_GROUP = '__aituber_onair_speech_hold__';
 
 export function holdIdleMotion(manager: SpeechMotionManager): () => void {

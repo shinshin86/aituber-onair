@@ -80,6 +80,10 @@ export default function App() {
   const settingsDialogDragRef = useRef<SettingsDialogDragState | null>(null);
   const reactionIdRef = useRef(0);
   const motionIdRef = useRef(0);
+  const pendingSpeechMotionRef = useRef<{
+    modelPath: string;
+    motion: Live2DMotionSelection;
+  } | null>(null);
   const [motionRequest, setMotionRequest] = useState<{
     id: number;
     modelPath: string;
@@ -191,9 +195,26 @@ export default function App() {
 
   const handleAudioPlay = useCallback(
     async (arrayBuffer: ArrayBuffer) => {
-      await play(arrayBuffer);
+      const pendingMotion = pendingSpeechMotionRef.current;
+      let requestId: number | null = null;
+      await play(arrayBuffer, {
+        onStart: () => {
+          if (
+            pendingMotion &&
+            pendingMotion.modelPath === modelSource?.modelFilePath
+          ) {
+            requestId = requestMotion(pendingMotion.motion);
+          }
+          setActiveSpeechMotionRequestId(requestId);
+        },
+        onEnd: () => {
+          setActiveSpeechMotionRequestId((current) =>
+            current === requestId ? null : current,
+          );
+        },
+      });
     },
-    [play],
+    [modelSource?.modelFilePath, play, requestMotion],
   );
 
   const handleSpeechStart = useCallback(
@@ -204,7 +225,10 @@ export default function App() {
         screenplay.emotion,
         modelSource?.motions || [],
       );
-      setActiveSpeechMotionRequestId(motion ? requestMotion(motion) : null);
+      pendingSpeechMotionRef.current =
+        motion && modelSource
+          ? { modelPath: modelSource.modelFilePath, motion }
+          : null;
       const reaction = createLinkedLive2DReaction(
         settingsHook.settings.visual.live2dReactionControlMode,
         screenplay,
@@ -219,7 +243,6 @@ export default function App() {
     [
       emitAvatarReaction,
       modelSource,
-      requestMotion,
       settingsHook.settings.visual.live2dEmotionMotionMaps,
       settingsHook.settings.visual.live2dEmotionEffectMap,
       settingsHook.settings.visual.live2dReactionControlMode,
@@ -227,6 +250,7 @@ export default function App() {
   );
 
   const handleSpeechEnd = useCallback(() => {
+    pendingSpeechMotionRef.current = null;
     setActiveSpeechMotionRequestId(null);
     setAvatarReaction(null);
   }, []);
@@ -257,6 +281,8 @@ export default function App() {
 
   const handleSend = useCallback(
     (text: string) => {
+      pendingSpeechMotionRef.current = null;
+      setActiveSpeechMotionRequestId(null);
       stop();
       setAvatarReaction(null);
       processChat(text, {

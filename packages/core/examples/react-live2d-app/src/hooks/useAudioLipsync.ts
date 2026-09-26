@@ -6,6 +6,11 @@ export interface Live2DAudioBinding {
   audioContext: AudioContext | null;
 }
 
+interface AudioPlaybackCallbacks {
+  onStart?: () => void;
+  onEnd?: () => void;
+}
+
 const EMPTY_AUDIO_BINDING: Live2DAudioBinding = {
   audioElement: null,
   analyserNode: null,
@@ -24,6 +29,7 @@ export function useAudioLipsync() {
   const objectUrlRef = useRef<string | null>(null);
   const playbackGenerationRef = useRef(0);
   const settlePlaybackRef = useRef<(() => void) | null>(null);
+  const playbackEndRef = useRef<(() => void) | null>(null);
 
   const getAudioContext = useCallback(() => {
     if (!ctxRef.current || ctxRef.current.state === 'closed') {
@@ -43,6 +49,7 @@ export function useAudioLipsync() {
       if (audio) {
         audio.onended = null;
         audio.onerror = null;
+        audio.onplaying = null;
         audio.pause();
         audio.removeAttribute('src');
         audio.load();
@@ -61,6 +68,8 @@ export function useAudioLipsync() {
       sourceNodeRef.current = null;
       setAudioBinding(EMPTY_AUDIO_BINDING);
       setIsSpeaking(false);
+      playbackEndRef.current?.();
+      playbackEndRef.current = null;
 
       if (shouldResolve) {
         finalizePlayback();
@@ -75,7 +84,10 @@ export function useAudioLipsync() {
   }, [clearPlayback]);
 
   const play = useCallback(
-    async (arrayBuffer: ArrayBuffer): Promise<void> => {
+    async (
+      arrayBuffer: ArrayBuffer,
+      callbacks?: AudioPlaybackCallbacks,
+    ): Promise<void> => {
       const generation = playbackGenerationRef.current + 1;
       playbackGenerationRef.current = generation;
       clearPlayback(true);
@@ -108,10 +120,22 @@ export function useAudioLipsync() {
         analyserNode: analyser,
         audioContext: ctx,
       });
-      setIsSpeaking(true);
 
       return new Promise<void>((resolve, reject) => {
         settlePlaybackRef.current = resolve;
+
+        const markPlaybackStarted = () => {
+          if (
+            generation !== playbackGenerationRef.current ||
+            audioRef.current !== audio ||
+            playbackEndRef.current
+          )
+            return;
+          playbackEndRef.current = callbacks?.onEnd ?? (() => {});
+          setIsSpeaking(true);
+          callbacks?.onStart?.();
+        };
+        audio.onplaying = markPlaybackStarted;
 
         audio.onended = () => {
           if (generation !== playbackGenerationRef.current) {
@@ -132,20 +156,23 @@ export function useAudioLipsync() {
           reject(new Error('音声を再生できませんでした。'));
         };
 
-        void audio.play().catch((error: unknown) => {
-          if (generation !== playbackGenerationRef.current) {
-            resolve();
-            return;
-          }
+        void audio
+          .play()
+          .then(markPlaybackStarted)
+          .catch((error: unknown) => {
+            if (generation !== playbackGenerationRef.current) {
+              resolve();
+              return;
+            }
 
-          clearPlayback(false);
-          settlePlaybackRef.current = null;
-          reject(
-            error instanceof Error
-              ? error
-              : new Error('音声を再生できませんでした。'),
-          );
-        });
+            clearPlayback(false);
+            settlePlaybackRef.current = null;
+            reject(
+              error instanceof Error
+                ? error
+                : new Error('音声を再生できませんでした。'),
+            );
+          });
       });
     },
     [clearPlayback, getAudioContext],

@@ -1,11 +1,38 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  captureSpeechMotionPose,
   holdIdleMotion,
   loopSpeechMotion,
   type SpeechMotionManager,
 } from './speechMotionHold';
 
 describe('speech motion hold', () => {
+  it('restores the pose that was visible before speech', () => {
+    const parameters = [0, 1, -0.5];
+    const parts = [1, 0.4];
+    const model = {
+      getParameterCount: () => parameters.length,
+      getParameterValueByIndex: (index: number) => parameters[index],
+      setParameterValueByIndex: (index: number, value: number) => {
+        parameters[index] = value;
+      },
+      getPartCount: () => parts.length,
+      getPartOpacityByIndex: (index: number) => parts[index],
+      setPartOpacityByIndex: (index: number, value: number) => {
+        parts[index] = value;
+      },
+    };
+    const restore = captureSpeechMotionPose(model);
+
+    parameters[0] = -1;
+    parameters[1] = 0;
+    parts[1] = 0;
+    restore();
+
+    expect(parameters).toEqual([0, 1, -0.5]);
+    expect(parts).toEqual([1, 0.4]);
+  });
+
   it('pauses the model idle group and restores it after speech', () => {
     const manager = {
       groups: { idle: 'CustomIdle' },

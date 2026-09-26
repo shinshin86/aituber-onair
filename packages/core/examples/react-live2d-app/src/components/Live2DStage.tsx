@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import type { Live2DModelSource } from '../lib/live2dModel';
 import type { Live2DMotionSelection } from '../lib/live2dMotions';
-import { holdIdleMotion, loopSpeechMotion } from '../lib/speechMotionHold';
+import {
+  captureSpeechMotionPose,
+  holdIdleMotion,
+  loopSpeechMotion,
+} from '../lib/speechMotionHold';
 import {
   withLive2DReactionId,
   type Live2DEmotionEffectMap,
@@ -105,6 +109,7 @@ export function Live2DStage({
     id: number;
     restoreIdle: () => void;
     restoreLoop: (() => void) | null;
+    restorePose: () => void;
   } | null>(null);
   const zoomCleanupRef = useRef<(() => void) | null>(null);
   const audioBindingRef = useRef(audioBinding);
@@ -369,10 +374,17 @@ export function Live2DStage({
   }, [modelSource, releaseSpeechMotionHold]);
 
   useEffect(() => {
-    if (speechMotionHoldRef.current?.id !== activeSpeechMotionRequestId) {
+    const hold = speechMotionHoldRef.current;
+    if (hold && hold.id !== activeSpeechMotionRequestId) {
       releaseSpeechMotionHold();
+      modelRef.current?.stopMotions();
+      const idleGroup =
+        modelRef.current?.internalModel?.motionManager?.groups.idle;
+      if (!modelSource?.motions.some((motion) => motion.group === idleGroup)) {
+        hold.restorePose();
+      }
     }
-  }, [activeSpeechMotionRequestId, releaseSpeechMotionHold]);
+  }, [activeSpeechMotionRequestId, modelSource, releaseSpeechMotionHold]);
 
   useEffect(() => {
     const model = modelRef.current;
@@ -396,6 +408,7 @@ export function Live2DStage({
         id: motionRequest.id,
         restoreIdle: holdIdleMotion(motionManager),
         restoreLoop: null,
+        restorePose: captureSpeechMotionPose(model.internalModel?.coreModel),
       };
     }
     lastPlayedMotionRequestIdRef.current = motionRequest.id;
