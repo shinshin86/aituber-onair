@@ -19,9 +19,8 @@ describe('speech motion hold', () => {
     expect(manager.groups.idle).toBe('CustomIdle');
   });
 
-  it('repeats the selected middle section without restarting playback or audio', () => {
+  it('loops the entire selected motion without restarting playback or audio', () => {
     let isLoop = false;
-    let isLoopFadeIn = true;
     let startTime = 0;
     let endTime = 5;
     let beforeUpdate: (() => void) | undefined;
@@ -29,10 +28,6 @@ describe('speech motion hold', () => {
       isLoop: () => isLoop,
       setIsLoop: vi.fn((value: boolean) => {
         isLoop = value;
-      }),
-      isLoopFadeIn: () => isLoopFadeIn,
-      setIsLoopFadeIn: vi.fn((value: boolean) => {
-        isLoopFadeIn = value;
       }),
       getLoopDuration: () => 5,
     };
@@ -53,7 +48,6 @@ describe('speech motion hold', () => {
       queueManager: { _motions: [entry] },
     };
     const model = {
-      elapsedTime: 0,
       internalModel: {
         on: vi.fn((_event: string, listener: () => void) => {
           beforeUpdate = listener;
@@ -64,27 +58,21 @@ describe('speech motion hold', () => {
       },
     };
 
-    const restore = loopSpeechMotion(manager, model, {
-      group: 'Sad',
-      index: 0,
-      speechLoopStartPercent: 40,
-      speechLoopEndPercent: 70,
-    });
+    const restore = loopSpeechMotion(manager, model, 'Sad', 0);
     expect(isLoop).toBe(true);
-    expect(isLoopFadeIn).toBe(false);
-    model.elapsedTime = 3500;
     beforeUpdate?.();
-    expect(startTime).toBe(1.5);
     expect(endTime).toBe(-1);
-    expect(entry.setStartTime).toHaveBeenCalledTimes(1);
+    expect(entry.setStartTime).not.toHaveBeenCalled();
+
+    // The SDK advances its own start time at the end of the full motion.
+    startTime = 5;
+    beforeUpdate?.();
+    expect(entry.setStartTime).not.toHaveBeenCalled();
 
     restore?.();
     expect(isLoop).toBe(false);
-    expect(isLoopFadeIn).toBe(true);
-    expect(endTime).toBe(6.5);
+    expect(endTime).toBe(10);
     expect(beforeUpdate).toBeUndefined();
-    expect(
-      loopSpeechMotion(manager, model, { group: 'Missing', index: 0 }),
-    ).toBeNull();
+    expect(loopSpeechMotion(manager, model, 'Missing', 0)).toBeNull();
   });
 });

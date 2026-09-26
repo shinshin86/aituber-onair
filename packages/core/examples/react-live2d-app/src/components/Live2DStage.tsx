@@ -413,7 +413,8 @@ export function Live2DStage({
         hold.restoreLoop = loopSpeechMotion(
           motionManager,
           model,
-          motionRequest.motion,
+          motionRequest.motion.group,
+          motionRequest.motion.index,
         );
         if (!hold.restoreLoop) releaseSpeechMotionHold();
       })

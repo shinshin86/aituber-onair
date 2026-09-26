@@ -12,7 +12,6 @@ export interface Live2DMotionManagerLike extends SpeechMotionManager {
 }
 
 export interface Live2DModelInstance extends PIXI.Container {
-  elapsedTime: number;
   motion(group: string, index: number, priority: number): Promise<boolean>;
   buttonMode: boolean;
   dragging?: boolean;

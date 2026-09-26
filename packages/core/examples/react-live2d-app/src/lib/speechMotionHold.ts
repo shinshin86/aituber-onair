@@ -1,13 +1,6 @@
-import {
-  getSpeechLoopRange,
-  type Live2DMotionSelection,
-} from './live2dMotions';
-
 export interface LoopableLive2DMotion {
   isLoop(): boolean;
   setIsLoop(loop: boolean): void;
-  isLoopFadeIn(): boolean;
-  setIsLoopFadeIn(loopFadeIn: boolean): void;
   getLoopDuration(): number;
 }
 
@@ -15,12 +8,10 @@ interface SpeechMotionQueueEntry {
   _motion: LoopableLive2DMotion;
   isStarted(): boolean;
   getStartTime(): number;
-  setStartTime(time: number): void;
   setEndTime(time: number): void;
 }
 
 export interface SpeechMotionModel {
-  elapsedTime: number;
   internalModel?: {
     on(event: 'beforeMotionUpdate', listener: () => void): void;
     off(event: 'beforeMotionUpdate', listener: () => void): void;
@@ -48,9 +39,10 @@ export function holdIdleMotion(manager: SpeechMotionManager): () => void {
 export function loopSpeechMotion(
   manager: SpeechMotionManager,
   model: SpeechMotionModel,
-  selection: Live2DMotionSelection,
+  group: string,
+  index: number,
 ): (() => void) | null {
-  const motion = manager.motionGroups[selection.group]?.[selection.index];
+  const motion = manager.motionGroups[group]?.[index];
   const duration = motion?.getLoopDuration();
   if (
     !motion ||
@@ -62,10 +54,6 @@ export function loopSpeechMotion(
     return null;
 
   const originalLoop = motion.isLoop();
-  const originalLoopFadeIn = motion.isLoopFadeIn();
-  const { startPercent, endPercent } = getSpeechLoopRange(selection);
-  const startSeconds = (duration * startPercent) / 100;
-  const endSeconds = (duration * endPercent) / 100;
   let activeEntry: SpeechMotionQueueEntry | undefined;
 
   const onBeforeMotionUpdate = () => {
@@ -75,22 +63,14 @@ export function loopSpeechMotion(
     if (!entry || !entry.isStarted()) return;
     activeEntry = entry;
     entry.setEndTime(-1);
-    const now = model.elapsedTime / 1000;
-    const offset = now - entry.getStartTime();
-    if (offset < endSeconds) return;
-    const length = endSeconds - startSeconds;
-    const nextOffset = startSeconds + ((offset - endSeconds) % length);
-    entry.setStartTime(now - nextOffset);
   };
 
   motion.setIsLoop(true);
-  motion.setIsLoopFadeIn(false);
   model.internalModel.on('beforeMotionUpdate', onBeforeMotionUpdate);
 
   return () => {
     model.internalModel?.off('beforeMotionUpdate', onBeforeMotionUpdate);
     motion.setIsLoop(originalLoop);
-    motion.setIsLoopFadeIn(originalLoopFadeIn);
     if (activeEntry && !originalLoop) {
       activeEntry.setEndTime(activeEntry.getStartTime() + duration);
     }

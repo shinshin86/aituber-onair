@@ -9,38 +9,7 @@ export interface Live2DMotion {
   file: string;
 }
 
-export interface Live2DMotionSelection
-  extends Pick<Live2DMotion, 'group' | 'index'> {
-  speechLoopStartPercent?: number;
-  speechLoopEndPercent?: number;
-}
-
-export const DEFAULT_SPEECH_LOOP_START_PERCENT = 40;
-export const DEFAULT_SPEECH_LOOP_END_PERCENT = 70;
-
-export function getSpeechLoopRange(motion: Live2DMotionSelection): {
-  startPercent: number;
-  endPercent: number;
-} {
-  const start = motion.speechLoopStartPercent;
-  const end = motion.speechLoopEndPercent;
-  if (
-    typeof start === 'number' &&
-    Number.isInteger(start) &&
-    start >= 0 &&
-    start <= 90 &&
-    typeof end === 'number' &&
-    Number.isInteger(end) &&
-    end >= start + 10 &&
-    end <= 100
-  ) {
-    return { startPercent: start, endPercent: end };
-  }
-  return {
-    startPercent: DEFAULT_SPEECH_LOOP_START_PERCENT,
-    endPercent: DEFAULT_SPEECH_LOOP_END_PERCENT,
-  };
-}
+export type Live2DMotionSelection = Pick<Live2DMotion, 'group' | 'index'>;
 export type Live2DEmotionMotionMap = Partial<
   Record<Live2DReactionEmotion, Live2DMotionSelection>
 >;
@@ -87,19 +56,7 @@ export function normalizeLive2DModelMotionMaps(
         Number.isSafeInteger(index) &&
         index >= 0
       ) {
-        const range = getSpeechLoopRange(selection as Live2DMotionSelection);
-        const savedRange = selection as Live2DMotionSelection;
-        map[emotion] = {
-          group,
-          index,
-          ...(savedRange.speechLoopStartPercent === range.startPercent &&
-          savedRange.speechLoopEndPercent === range.endPercent
-            ? {
-                speechLoopStartPercent: range.startPercent,
-                speechLoopEndPercent: range.endPercent,
-              }
-            : {}),
-        };
+        map[emotion] = { group, index };
       }
     }
     if (Object.keys(map).length > 0) maps[modelPath] = map;
