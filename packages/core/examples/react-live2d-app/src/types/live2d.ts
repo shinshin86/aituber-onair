@@ -11,6 +11,7 @@ export interface Live2DMotionManagerLike {
 }
 
 export interface Live2DModelInstance extends PIXI.Container {
+  motion(group: string, index: number, priority: number): Promise<boolean>;
   buttonMode: boolean;
   dragging?: boolean;
   _pointerX?: number;

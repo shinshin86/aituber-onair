@@ -6,6 +6,7 @@ import type {
   Live2DMotionManagerLike,
 } from '../types/live2d';
 import type { Live2DAudioBinding } from '../hooks/useAudioLipsync';
+import { listLive2DMotions, type Live2DMotion } from './live2dMotions';
 
 const MOUTH_PARAMETER_IDS = [
   'ParamMouthOpenY',
@@ -39,6 +40,7 @@ export interface Live2DModelSource {
   folderName: string;
   modelFilePath: string;
   modelJsonUrl: string;
+  motions: Live2DMotion[];
   revoke: () => void;
 }
 
@@ -291,6 +293,7 @@ export async function createBundledLive2DModelSource(
     }
     return response.json();
   })) as Live2DModelJson;
+  const motions = listLive2DMotions(modelJson.FileReferences?.Motions);
   const revokers: string[] = [];
 
   await rewriteModelJsonReferences(modelJson, async (targetPath) => {
@@ -313,6 +316,7 @@ export async function createBundledLive2DModelSource(
     folderName: registryEntry.folderName,
     modelFilePath: registryEntry.modelFilePath,
     modelJsonUrl: createModelJsonBlobUrl(modelJson, revokers),
+    motions,
     revoke: () => {
       for (const url of revokers) {
         URL.revokeObjectURL(url);

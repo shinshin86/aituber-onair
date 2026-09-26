@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import type { Live2DModelSource } from '../lib/live2dModel';
+import type { Live2DMotionSelection } from '../lib/live2dMotions';
 import {
   withLive2DReactionId,
   type Live2DEmotionEffectMap,
@@ -37,6 +38,11 @@ interface Live2DStageProps {
   modelSource: Live2DModelSource | null;
   modelPickerError: string;
   audioBinding: Live2DAudioBinding;
+  motionRequest: {
+    id: number;
+    modelPath: string;
+    motion: Live2DMotionSelection;
+  } | null;
   reaction?: Live2DReaction | null;
   reactionControlMode: Live2DReactionControlMode;
   emotionEffectMap: Live2DEmotionEffectMap;
@@ -72,6 +78,7 @@ export function Live2DStage({
   modelSource,
   modelPickerError,
   audioBinding,
+  motionRequest,
   reaction,
   reactionControlMode,
   emotionEffectMap,
@@ -83,6 +90,8 @@ export function Live2DStage({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const appRef = useRef<PIXI.Application | null>(null);
   const modelRef = useRef<Live2DModelInstance | null>(null);
+  const loadedModelPathRef = useRef<string | null>(null);
+  const lastPlayedMotionRequestIdRef = useRef(0);
   const zoomCleanupRef = useRef<(() => void) | null>(null);
   const audioBindingRef = useRef(audioBinding);
   const effectAnchorRef = useRef(effectAnchor);
@@ -242,6 +251,7 @@ export function Live2DStage({
         appRef.current.stage.removeChild(modelRef.current);
         destroyLive2DModel(modelRef.current);
         modelRef.current = null;
+        loadedModelPathRef.current = null;
       }
       app.destroy(false, {
         children: true,
@@ -268,6 +278,7 @@ export function Live2DStage({
         app.stage.removeChild(modelRef.current);
         destroyLive2DModel(modelRef.current);
         modelRef.current = null;
+        loadedModelPathRef.current = null;
       }
     };
 
@@ -311,6 +322,7 @@ export function Live2DStage({
         makeDraggable(model);
         zoomCleanupRef.current = makeZoomable(model, canvas);
         modelRef.current = model;
+        loadedModelPathRef.current = modelSource.modelFilePath;
       } catch (error) {
         const message =
           error instanceof Error
@@ -330,6 +342,27 @@ export function Live2DStage({
       cancelled = true;
     };
   }, [modelSource]);
+
+  useEffect(() => {
+    const model = modelRef.current;
+    if (
+      !model ||
+      !motionRequest ||
+      motionRequest.id === lastPlayedMotionRequestIdRef.current ||
+      loadedModelPathRef.current !== motionRequest.modelPath ||
+      !modelSource?.motions.some(
+        (motion) =>
+          motion.group === motionRequest.motion.group &&
+          motion.index === motionRequest.motion.index,
+      )
+    ) {
+      return;
+    }
+    lastPlayedMotionRequestIdRef.current = motionRequest.id;
+    void model
+      .motion(motionRequest.motion.group, motionRequest.motion.index, 3)
+      .catch((error: unknown) => console.warn('Live2D motion failed:', error));
+  }, [isLoading, modelSource, motionRequest]);
 
   useEffect(() => {
     if (!modelRef.current) {
