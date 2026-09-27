@@ -1,16 +1,22 @@
 import type * as PIXI from 'pixi.js';
+import type {
+  SpeechMotionManager,
+  SpeechMotionPoseModel,
+} from '../lib/speechMotionHold';
 
-export interface Live2DCoreModelLike {
+export interface Live2DCoreModelLike extends SpeechMotionPoseModel {
   setParameterValueById(id: string, value: number): void;
 }
 
-export interface Live2DMotionManagerLike {
+export interface Live2DMotionManagerLike extends SpeechMotionManager {
   currentAudio?: HTMLAudioElement;
   currentAnalyzer?: AnalyserNode;
   currentContext?: AudioContext;
 }
 
 export interface Live2DModelInstance extends PIXI.Container {
+  motion(group: string, index: number, priority: number): Promise<boolean>;
+  stopMotions(): void;
   buttonMode: boolean;
   dragging?: boolean;
   _pointerX?: number;
@@ -22,6 +28,8 @@ export interface Live2DModelInstance extends PIXI.Container {
     enabled: boolean;
   };
   internalModel?: {
+    on(event: 'beforeMotionUpdate', listener: () => void): void;
+    off(event: 'beforeMotionUpdate', listener: () => void): void;
     width?: number;
     height?: number;
     coreModel?: Live2DCoreModelLike;

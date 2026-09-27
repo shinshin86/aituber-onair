@@ -6,6 +6,9 @@ import type {
   Live2DMotionManagerLike,
 } from '../types/live2d';
 import type { Live2DAudioBinding } from '../hooks/useAudioLipsync';
+import { matchesModelIdleMotions } from './live2dIdleMotions';
+import { listLive2DMotions, type Live2DMotion } from './live2dMotions';
+import type { Live2DMotionSelection } from './live2dMotions';
 
 const MOUTH_PARAMETER_IDS = [
   'ParamMouthOpenY',
@@ -22,7 +25,7 @@ let cubism4ModulePromise: Promise<{ Live2DModel: Live2DModelCtor }> | null =
 let cubismCoreLoadingPromise: Promise<void> | null = null;
 let blobUrlFixInstalled = false;
 
-type Live2DModelJson = {
+export type Live2DModelJson = {
   FileReferences?: {
     Moc?: string;
     Physics?: string;
@@ -39,7 +42,77 @@ export interface Live2DModelSource {
   folderName: string;
   modelFilePath: string;
   modelJsonUrl: string;
+  motions: Live2DMotion[];
   revoke: () => void;
+}
+
+export interface Live2DPlaybackModelJsonUrl {
+  url: string;
+  idleMotionGroup: string;
+  revoke: () => void;
+}
+
+export function configureLive2DIdleMotions(
+  modelJson: Live2DModelJson,
+  selections: Live2DMotionSelection[],
+): { modelJson: Live2DModelJson; idleMotionGroup: string } {
+  const references = modelJson.FileReferences;
+  if (!references) {
+    throw new Error('モデル JSON に FileReferences が含まれていません。');
+  }
+
+  const motions = references.Motions || {};
+  let idleMotionGroup = '__aituber_onair_selected_idle__';
+  while (Object.prototype.hasOwnProperty.call(motions, idleMotionGroup)) {
+    idleMotionGroup += '_';
+  }
+  const selectedDefinitions = selections.flatMap(({ group, index }) => {
+    const definition = motions[group]?.[index];
+    return definition?.File ? [{ ...definition }] : [];
+  });
+
+  return {
+    modelJson: {
+      ...modelJson,
+      FileReferences: {
+        ...references,
+        Motions: { ...motions, [idleMotionGroup]: selectedDefinitions },
+      },
+    },
+    idleMotionGroup,
+  };
+}
+
+export async function createLive2DPlaybackModelJsonUrl(
+  source: Live2DModelSource,
+  selections: Live2DMotionSelection[],
+): Promise<Live2DPlaybackModelJsonUrl> {
+  if (matchesModelIdleMotions(selections, source.motions)) {
+    return {
+      url: source.modelJsonUrl,
+      idleMotionGroup: 'Idle',
+      revoke: () => {},
+    };
+  }
+
+  const response = await fetch(source.modelJsonUrl);
+  if (!response.ok) {
+    throw new Error('Live2D モデル設定を読み込めませんでした。');
+  }
+  const configured = configureLive2DIdleMotions(
+    (await response.json()) as Live2DModelJson,
+    selections,
+  );
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(configured.modelJson)], {
+      type: 'application/json',
+    }),
+  );
+  return {
+    url,
+    idleMotionGroup: configured.idleMotionGroup,
+    revoke: () => URL.revokeObjectURL(url),
+  };
 }
 
 export interface BundledLive2DModelEntry {
@@ -291,6 +364,7 @@ export async function createBundledLive2DModelSource(
     }
     return response.json();
   })) as Live2DModelJson;
+  const motions = listLive2DMotions(modelJson.FileReferences?.Motions);
   const revokers: string[] = [];
 
   await rewriteModelJsonReferences(modelJson, async (targetPath) => {
@@ -313,6 +387,7 @@ export async function createBundledLive2DModelSource(
     folderName: registryEntry.folderName,
     modelFilePath: registryEntry.modelFilePath,
     modelJsonUrl: createModelJsonBlobUrl(modelJson, revokers),
+    motions,
     revoke: () => {
       for (const url of revokers) {
         URL.revokeObjectURL(url);

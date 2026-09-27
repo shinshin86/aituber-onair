@@ -1,6 +1,8 @@
 import type { InworldModel } from '@aituber-onair/core';
 import type { XaiReasoningEffort } from '@aituber-onair/core';
 import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
+import type { Live2DModelIdleMotionMaps } from '../lib/live2dIdleMotions';
+import type { Live2DModelMotionMaps } from '../lib/live2dMotions';
 import type {
   Live2DEmotionEffectMap,
   Live2DReactionControlMode,
@@ -204,6 +206,8 @@ export interface VisualSettings {
   live2dEmotionEffectAnchors: Record<string, EmotionEffectAnchor>;
   live2dReactionControlMode: Live2DReactionControlMode;
   live2dEmotionEffectMap: Live2DEmotionEffectMap;
+  live2dEmotionMotionMaps: Live2DModelMotionMaps;
+  live2dIdleMotionMaps: Live2DModelIdleMotionMaps;
 }
 
 export interface ScreenVisionSettings {

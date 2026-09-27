@@ -1,12 +1,15 @@
+import { useMemo } from 'react';
 import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
 import { ChatInput } from './ChatInput';
 import { ChatLog } from './ChatLog';
 import { Live2DStage } from './Live2DStage';
 import type { Live2DModelSource } from '../lib/live2dModel';
+import type { Live2DMotionSelection } from '../lib/live2dMotions';
 import type { Live2DAudioBinding } from '../hooks/useAudioLipsync';
 import type { Live2DReaction } from '../lib/live2dReactions';
 import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
+import { getSelectedLive2DIdleMotions } from '../lib/live2dIdleMotions';
 
 interface ChatPanelProps {
   messages: ChatMessage[];
@@ -16,6 +19,12 @@ interface ChatPanelProps {
   onToggleSettings: () => void;
   backgroundImageUrl?: string | null;
   modelSource: Live2DModelSource | null;
+  motionRequest: {
+    id: number;
+    modelPath: string;
+    motion: Live2DMotionSelection;
+  } | null;
+  activeSpeechMotionRequestId: number | null;
   modelPickerError: string;
   audioBinding: Live2DAudioBinding;
   avatarReaction?: Live2DReaction | null;
@@ -33,6 +42,8 @@ export function ChatPanel({
   onToggleSettings,
   backgroundImageUrl,
   modelSource,
+  motionRequest,
+  activeSpeechMotionRequestId,
   modelPickerError,
   audioBinding,
   avatarReaction,
@@ -58,6 +69,15 @@ export function ChatPanel({
             backgroundPosition: 'center',
           }
         : undefined;
+  const idleMotions = useMemo(
+    () =>
+      getSelectedLive2DIdleMotions(
+        visual.live2dIdleMotionMaps,
+        modelSource?.modelFilePath,
+        modelSource?.motions || [],
+      ),
+    [modelSource, visual.live2dIdleMotionMaps],
+  );
 
   return (
     <div
@@ -76,6 +96,9 @@ export function ChatPanel({
       </button>
       <Live2DStage
         modelSource={modelSource}
+        idleMotions={idleMotions}
+        motionRequest={motionRequest}
+        activeSpeechMotionRequestId={activeSpeechMotionRequestId}
         modelPickerError={modelPickerError}
         audioBinding={audioBinding}
         reaction={avatarReaction}
