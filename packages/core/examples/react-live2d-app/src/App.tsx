@@ -574,9 +574,16 @@ export default function App() {
                   modelSource={modelSource}
                   modelPickerError={modelPickerError}
                   isProcessing={isProcessing}
+                  isSpeaking={isSpeaking}
                   onMotionPreview={requestMotion}
                   updateVisualLive2DEmotionMotion={
                     settingsHook.updateVisualLive2DEmotionMotion
+                  }
+                  updateVisualLive2DIdleMotions={
+                    settingsHook.updateVisualLive2DIdleMotions
+                  }
+                  resetVisualLive2DIdleMotions={
+                    settingsHook.resetVisualLive2DIdleMotions
                   }
                   updateVisualLive2DReactionControlMode={
                     settingsHook.updateVisualLive2DReactionControlMode

@@ -29,6 +29,7 @@ import {
 } from './EmotionEffectOverlay';
 import {
   ensureCubismCoreLoaded,
+  createLive2DPlaybackModelJsonUrl,
   destroyLive2DModel,
   disableAutoFocus,
   importCubism4Module,
@@ -41,6 +42,7 @@ import {
 
 interface Live2DStageProps {
   modelSource: Live2DModelSource | null;
+  idleMotions: Live2DMotionSelection[];
   modelPickerError: string;
   audioBinding: Live2DAudioBinding;
   motionRequest: {
@@ -87,6 +89,7 @@ const EFFECT_ANCHOR_TARGETS = [
 
 export function Live2DStage({
   modelSource,
+  idleMotions,
   modelPickerError,
   audioBinding,
   motionRequest,
@@ -326,12 +329,30 @@ export function Live2DStage({
         const { Live2DModel } = (await importCubism4Module()) as {
           Live2DModel: Live2DModelCtor;
         };
-        const model = await Live2DModel.from(modelSource.modelJsonUrl, {
-          ticker: PIXI.Ticker.shared,
-          autoUpdate: true,
-          autoFocus: false,
-          autoHitTest: true,
-        });
+        const playbackSource = await createLive2DPlaybackModelJsonUrl(
+          modelSource,
+          idleMotions,
+        );
+        if (cancelled) {
+          playbackSource.revoke();
+          return;
+        }
+        if (loadedModelPathRef.current === modelSource.modelFilePath) {
+          // The next instance can reuse cached textures from the current model.
+          clearCurrentModel();
+        }
+        let model: Live2DModelInstance;
+        try {
+          model = await Live2DModel.from(playbackSource.url, {
+            ticker: PIXI.Ticker.shared,
+            autoUpdate: true,
+            autoFocus: false,
+            autoHitTest: true,
+            idleMotionGroup: playbackSource.idleMotionGroup,
+          });
+        } finally {
+          playbackSource.revoke();
+        }
 
         if (cancelled) {
           destroyLive2DModel(model);
@@ -371,20 +392,18 @@ export function Live2DStage({
     return () => {
       cancelled = true;
     };
-  }, [modelSource, releaseSpeechMotionHold]);
+  }, [idleMotions, modelSource, releaseSpeechMotionHold]);
 
   useEffect(() => {
     const hold = speechMotionHoldRef.current;
     if (hold && hold.id !== activeSpeechMotionRequestId) {
       releaseSpeechMotionHold();
       modelRef.current?.stopMotions();
-      const idleGroup =
-        modelRef.current?.internalModel?.motionManager?.groups.idle;
-      if (!modelSource?.motions.some((motion) => motion.group === idleGroup)) {
+      if (idleMotions.length === 0) {
         hold.restorePose();
       }
     }
-  }, [activeSpeechMotionRequestId, modelSource, releaseSpeechMotionHold]);
+  }, [activeSpeechMotionRequestId, idleMotions, releaseSpeechMotionHold]);
 
   useEffect(() => {
     const model = modelRef.current;

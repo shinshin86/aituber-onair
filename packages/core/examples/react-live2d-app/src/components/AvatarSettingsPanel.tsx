@@ -3,8 +3,10 @@ import type {
   BundledLive2DModelEntry,
   Live2DModelSource,
 } from '../lib/live2dModel';
+import { getSelectedLive2DIdleMotions } from '../lib/live2dIdleMotions';
 import {
   getAssignedLive2DMotion,
+  type Live2DMotion,
   type Live2DMotionSelection,
 } from '../lib/live2dMotions';
 import type {
@@ -20,6 +22,8 @@ interface AvatarSettingsPanelProps
     SettingsHook,
     | 'settings'
     | 'updateVisualLive2DEmotionMotion'
+    | 'updateVisualLive2DIdleMotions'
+    | 'resetVisualLive2DIdleMotions'
     | 'updateVisualLive2DReactionControlMode'
     | 'updateVisualLive2DEmotionEffect'
     | 'resetVisualLive2DEmotionEffectMap'
@@ -32,6 +36,7 @@ interface AvatarSettingsPanelProps
   modelSource: Live2DModelSource | null;
   modelPickerError: string;
   isProcessing: boolean;
+  isSpeaking: boolean;
   onMotionPreview: (motion: Live2DMotionSelection) => void;
 }
 
@@ -65,6 +70,10 @@ function motionValue(motion: Live2DMotionSelection): string {
   return JSON.stringify([motion.group, motion.index]);
 }
 
+function motionLabel(motion: Live2DMotion): string {
+  return motion.group ? `${motion.group} / ${motion.file}` : motion.file;
+}
+
 export function AvatarSettingsPanel({
   settings,
   bundledModels,
@@ -75,14 +84,32 @@ export function AvatarSettingsPanel({
   modelSource,
   modelPickerError,
   isProcessing,
+  isSpeaking,
   onMotionPreview,
   updateVisualLive2DEmotionMotion,
+  updateVisualLive2DIdleMotions,
+  resetVisualLive2DIdleMotions,
   updateVisualLive2DReactionControlMode,
   updateVisualLive2DEmotionEffect,
   resetVisualLive2DEmotionEffectMap,
 }: AvatarSettingsPanelProps) {
   const modelPath = modelSource?.modelFilePath;
   const motions = modelSource?.motions || [];
+  const idleMotions = getSelectedLive2DIdleMotions(
+    settings.visual.live2dIdleMotionMaps,
+    modelPath,
+    motions,
+  );
+  const hasIdleOverride = Boolean(
+    modelPath &&
+      Object.prototype.hasOwnProperty.call(
+        settings.visual.live2dIdleMotionMaps,
+        modelPath,
+      ),
+  );
+  const modelIdleCount = motions.filter(
+    (motion) => motion.group === 'Idle',
+  ).length;
 
   return (
     <div className="settings-panel avatar-settings-panel">
@@ -147,13 +174,85 @@ export function AvatarSettingsPanel({
       </section>
 
       <section className="settings-section">
+        <h3>待機モーション</h3>
+        <p className="settings-field-hint">
+          選んだモーションを、待機中にランダムで再生します。モデルの `Idle`
+          グループにある {modelIdleCount} 件を初期選択にしています。
+        </p>
+        {modelSource && motions.length === 0 && (
+          <p className="settings-field-hint">
+            このモデルにモーションがありません。
+          </p>
+        )}
+        <div className="settings-idle-motion-list">
+          {motions.map((motion) => {
+            const checked = idleMotions.some(
+              (selection) => motionValue(selection) === motionValue(motion),
+            );
+            return (
+              <div
+                className="settings-idle-motion-row"
+                key={motionValue(motion)}
+              >
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={isProcessing || isSpeaking}
+                    onChange={(event) => {
+                      if (!modelPath) return;
+                      const next = event.target.checked
+                        ? [
+                            ...idleMotions,
+                            { group: motion.group, index: motion.index },
+                          ]
+                        : idleMotions.filter(
+                            (selection) =>
+                              motionValue(selection) !== motionValue(motion),
+                          );
+                      updateVisualLive2DIdleMotions(modelPath, next);
+                    }}
+                  />
+                  <span>{motionLabel(motion)}</span>
+                </label>
+                <button
+                  type="button"
+                  className="settings-clear-button"
+                  disabled={isProcessing || isSpeaking}
+                  onClick={() => onMotionPreview(motion)}
+                  aria-label={`${motion.file}をプレビュー`}
+                >
+                  再生
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        {modelSource && (
+          <div className="settings-idle-motion-footer">
+            <span>{idleMotions.length} 件を選択中</span>
+            <button
+              type="button"
+              className="settings-clear-button"
+              disabled={!hasIdleOverride || isProcessing || isSpeaking}
+              onClick={() => {
+                if (modelPath) resetVisualLive2DIdleMotions(modelPath);
+              }}
+            >
+              モデルの初期設定に戻す
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section className="settings-section">
         <h3>感情とモデルモーション</h3>
         <p className="settings-field-hint">
           発話の emotion タグに応じて、モデルに含まれるモーションを再生します。
-          アイドルモーションはモデルの標準設定を使います。
         </p>
         <p className="settings-field-hint">
-          選択肢にはモデル設定のグループ名と File の値をそのまま表示します。
+          選択肢にはモデル設定の File
+          の値を表示します。グループ名がある場合は併記します。
           動きは「再生」で確認してください。
         </p>
         <p className="settings-field-hint">
@@ -207,7 +306,7 @@ export function AvatarSettingsPanel({
                       key={motionValue(motion)}
                       value={motionValue(motion)}
                     >
-                      {motion.group} / {motion.file}
+                      {motionLabel(motion)}
                     </option>
                   ))}
                 </select>
@@ -224,7 +323,7 @@ export function AvatarSettingsPanel({
                 </button>
                 {selectedMotion && (
                   <small className="settings-motion-source">
-                    {selectedMotion.group} / {selectedMotion.file}
+                    {motionLabel(selectedMotion)}
                   </small>
                 )}
               </div>

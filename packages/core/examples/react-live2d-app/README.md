@@ -54,6 +54,8 @@ calling requires non-thinking mode.
 - Loads a Live2D model from the local `models/` folder
 - Assigns motions in the loaded model to response emotions per model, with a
   preview button for each assignment in the Avatar & Motion settings category
+- Selects one or more idle motions per model; the model's `Idle` group is
+  selected by default, and selected motions play randomly while waiting
 - Keeps model files in memory only, so no app-specific persistent storage is
   required
 - Supports drag to move and mouse wheel to zoom on the avatar stage
@@ -158,14 +160,17 @@ Open `http://localhost:5173`, open `設定`, then:
 2. If you placed models under `models/`, choose one from the list and click
    `読み込む`
 
-In `アバター・モーション`, assign motions from the loaded model's `.model3.json`
-to response emotions such as `happy` and `sad`. Assignments are saved per model
-in the browser. Unassigned emotions do not start a motion. Idle motion remains
-controlled by the model's standard configuration outside speech. An assigned
-motion repeats in full during speech alongside lip-sync.
-The model resumes its configured idle behavior after the motion finishes.
-Visual effect settings
-do not control model motions.
+In `アバター・モーション`, select the motions to play while idle. Motions in the
+model's `Idle` group are selected by default. You can select any combination
+from the loaded model; the app saves your choice per model in the browser and
+uses an in-memory motion group without editing the model files or Live2D
+library. The idle motions are picked randomly between plays.
+
+Assign motions from the loaded model's `.model3.json` to response emotions such
+as `happy` and `sad`. Unassigned emotions do not start a motion. An assigned
+motion repeats in full only during audio playback alongside lip-sync. After
+playback, the selected idle motions resume. Visual effect settings do not
+control model motions.
 
 The LLM section also lets you edit the system prompt. It is applied when the
 field loses focus and is saved with the other settings.

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
 import { ChatInput } from './ChatInput';
@@ -8,6 +9,7 @@ import type { Live2DMotionSelection } from '../lib/live2dMotions';
 import type { Live2DAudioBinding } from '../hooks/useAudioLipsync';
 import type { Live2DReaction } from '../lib/live2dReactions';
 import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
+import { getSelectedLive2DIdleMotions } from '../lib/live2dIdleMotions';
 
 interface ChatPanelProps {
   messages: ChatMessage[];
@@ -67,6 +69,15 @@ export function ChatPanel({
             backgroundPosition: 'center',
           }
         : undefined;
+  const idleMotions = useMemo(
+    () =>
+      getSelectedLive2DIdleMotions(
+        visual.live2dIdleMotionMaps,
+        modelSource?.modelFilePath,
+        modelSource?.motions || [],
+      ),
+    [modelSource, visual.live2dIdleMotionMaps],
+  );
 
   return (
     <div
@@ -85,6 +96,7 @@ export function ChatPanel({
       </button>
       <Live2DStage
         modelSource={modelSource}
+        idleMotions={idleMotions}
         motionRequest={motionRequest}
         activeSpeechMotionRequestId={activeSpeechMotionRequestId}
         modelPickerError={modelPickerError}

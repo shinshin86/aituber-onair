@@ -94,6 +94,58 @@
   overflow-wrap: anywhere;
 }
 
+.settings-idle-motion-list {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 8px;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  background: #1a1a2e;
+}
+
+.settings-idle-motion-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+}
+
+.settings-idle-motion-row + .settings-idle-motion-row {
+  border-top: 1px solid #263b57;
+}
+
+.settings-idle-motion-row label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.settings-idle-motion-row input {
+  flex-shrink: 0;
+  margin-top: 2px;
+  accent-color: #e94560;
+}
+
+.settings-idle-motion-row span {
+  min-width: 0;
+  color: #b8c4d0;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.settings-idle-motion-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  color: #8899aa;
+  font-size: 0.72rem;
+}
+
 @media (max-width: 520px) {
   .settings-motion-mapping-row {
     grid-template-columns: minmax(0, 1fr) auto;

@@ -24,6 +24,7 @@ import {
   normalizeLive2DModelMotionMaps,
   type Live2DMotionSelection,
 } from '../lib/live2dMotions';
+import { normalizeLive2DModelIdleMotionMaps } from '../lib/live2dIdleMotions';
 import type {
   AppSettings,
   ChatProviderOption,
@@ -258,6 +259,7 @@ function getDefaultSettings(): AppSettings {
       live2dReactionControlMode: 'none',
       live2dEmotionEffectMap: { ...DEFAULT_LIVE2D_EMOTION_EFFECT_MAP },
       live2dEmotionMotionMaps: {},
+      live2dIdleMotionMaps: {},
     },
     screenVision: {
       deviceId: '',
@@ -335,6 +337,9 @@ function loadSettings(): AppSettings {
           ),
           live2dEmotionMotionMaps: normalizeLive2DModelMotionMaps(
             saved.visual?.live2dEmotionMotionMaps,
+          ),
+          live2dIdleMotionMaps: normalizeLive2DModelIdleMotionMaps(
+            saved.visual?.live2dIdleMotionMaps,
           ),
         },
         screenVision: { ...defaults.screenVision, ...saved.screenVision },
@@ -1088,6 +1093,37 @@ export function useSettings() {
     [],
   );
 
+  const updateVisualLive2DIdleMotions = useCallback(
+    (modelPath: string, motions: Live2DMotionSelection[]) => {
+      if (!modelPath) return;
+      setSettings((prev) => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          live2dIdleMotionMaps: Object.fromEntries(
+            Object.entries({
+              ...prev.visual.live2dIdleMotionMaps,
+              [modelPath]: motions,
+            }).slice(-24),
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const resetVisualLive2DIdleMotions = useCallback((modelPath: string) => {
+    if (!modelPath) return;
+    setSettings((prev) => {
+      const maps = { ...prev.visual.live2dIdleMotionMaps };
+      delete maps[modelPath];
+      return {
+        ...prev,
+        visual: { ...prev.visual, live2dIdleMotionMaps: maps },
+      };
+    });
+  }, []);
+
   const updateVisualLive2DEmotionEffectAnchor = useCallback(
     (profileId: string, anchor: EmotionEffectAnchor) => {
       if (!profileId) return;
@@ -1488,6 +1524,8 @@ export function useSettings() {
     updateVisualLive2DEmotionEffect,
     resetVisualLive2DEmotionEffectMap,
     updateVisualLive2DEmotionMotion,
+    updateVisualLive2DIdleMotions,
+    resetVisualLive2DIdleMotions,
     updateVisualLive2DEmotionEffectAnchor,
     resetVisualLive2DEmotionEffectAnchor,
     updateScreenVisionDeviceId,
