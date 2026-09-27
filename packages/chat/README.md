@@ -478,6 +478,30 @@ Notes:
   at runtime.
 - Existing `openai` provider behavior is unchanged.
 
+The endpoint helpers accept a server origin, API base URL, or full Chat
+Completions URL. They reject URLs with queries or fragments. The provider
+itself still requires the full endpoint URL.
+
+```typescript
+import {
+  listOpenAICompatibleModels,
+  resolveOpenAICompatibleEndpoint,
+  testOpenAICompatibleConnection,
+} from '@aituber-onair/chat';
+
+const endpoint = resolveOpenAICompatibleEndpoint('http://localhost:11434/v1');
+const models = await listOpenAICompatibleModels({ endpoint: endpoint.baseUrl });
+const connection = await testOpenAICompatibleConnection({
+  endpoint: endpoint.baseUrl,
+  model: models[0],
+});
+// Pass endpoint.chatCompletionsUrl to the openai-compatible provider.
+```
+
+`OPENAI_COMPATIBLE_LOCAL_PRESETS` contains default URLs for Ollama, LM Studio,
+llama.cpp, and vLLM. Model discovery uses `GET /models` without generating
+tokens. See the [local LLM guide](../../docs/local-llm.md) for setup and CORS.
+
 `reasoning_effort` options differ per model:
 - `gpt-5.6` / `gpt-5.6-sol` / `gpt-5.6-terra` / `gpt-5.6-luna`:
   `'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'`

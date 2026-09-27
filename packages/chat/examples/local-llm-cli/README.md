@@ -5,6 +5,7 @@ A minimal interactive CLI for **local/self-hosted LLMs**.
 This example is for local LLM servers such as:
 - Ollama
 - LM Studio (OpenAI-compatible mode)
+- llama.cpp server
 - vLLM (OpenAI-compatible server mode)
 
 It uses the OpenAI-compatible Chat Completions format as the transport
@@ -37,6 +38,18 @@ node packages/chat/examples/local-llm-cli/index.js \
   --model="your-model"
 ```
 
+You can use a base URL or an origin in `--endpoint` too. The CLI resolves
+`http://127.0.0.1:11434/v1` and `http://127.0.0.1:11434` to the full Chat
+Completions URL. To list exact model IDs without starting a chat:
+
+```bash
+node packages/chat/examples/local-llm-cli/index.js \
+  --endpoint="http://127.0.0.1:11434/v1" --list-models
+```
+
+`--list-models` uses `/v1/models` and does not require `--model`. If the
+server requires authentication, add `--apiKey="your-key"`.
+
 Optional:
 - `--systemPrompt="You are a concise assistant."` (default: no system prompt)
 - `--apiKey="your-key"` (only if your endpoint requires auth)
@@ -48,12 +61,17 @@ Environment variable compatibility:
 
 ## Which Endpoint Should I Set?
 
-Set `LOCAL_LLM_ENDPOINT` to your local LLM server's chat completions endpoint.
+Set `LOCAL_LLM_ENDPOINT` to your local LLM server's base URL or full chat
+completions endpoint. Query strings and URL fragments are not accepted.
 
 Examples:
 - Ollama: `http://127.0.0.1:11434/v1/chat/completions`
 - LM Studio: `http://127.0.0.1:1234/v1/chat/completions` (default setup)
+- llama.cpp server: `http://127.0.0.1:8080/v1/chat/completions`
 - vLLM: `http://127.0.0.1:8000/v1/chat/completions` (typical setup)
+
+See the [local LLM guide](../../../../docs/local-llm.md) for browser CORS
+settings and the current React example URL requirements.
 
 ## Practical Example (Ollama)
 

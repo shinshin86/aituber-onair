@@ -252,6 +252,7 @@ npm run dev
   own backend proxy instead.
 - [`packages/chat/examples/local-llm-cli`](../packages/chat/examples/local-llm-cli):
   interactive CLI for local or self-hosted OpenAI-compatible LLM servers.
+  See the [local LLM guide](local-llm.md) for server and browser setup.
 - [`packages/chat/examples/agent-providers`](../packages/chat/examples/agent-providers):
   examples for Agent SDK backed providers such as Codex, Claude, and Copilot,
   including an experimental Codex character chat CLI.

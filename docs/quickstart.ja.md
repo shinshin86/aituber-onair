@@ -58,10 +58,12 @@ npm create aituber-onair@latest my-inochi2d-aituber -- --template inochi2d
 
 最低限、次の項目を設定します。
 
-- OpenAI、Claude、Gemini、OpenRouter などの LLM プロバイダーと API キー。
+- OpenAI、Claude、Gemini、OpenRouter などの LLM プロバイダーと、必要な場合は認証情報。
 - VOICEVOX、AIVIS Speech、OpenAI TTS、MiniMax などの TTS プロバイダーと
   音声設定。
 - キャラクタープロンプトとアバター設定。
+
+ローカル LLM を使う場合は OpenAI-Compatible を選び、[ローカル LLM ガイド](local-llm.ja.md)で完全なエンドポイント URL とモデル ID を確認してください。
 
 スターターアプリはサンプル認証情報をブラウザの `localStorage` に保存します。
 共有端末や公開オリジンでは、本番用の権限を持つ API キーを使わないでください。

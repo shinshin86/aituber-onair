@@ -460,6 +460,26 @@ const compatibleService = ChatServiceFactory.createChatService(
   場合は実行時エラーになります。
 - 既存の `openai` プロバイダーの挙動は変更されません。
 
+エンドポイント用ヘルパーは、サーバーの Origin、API のベース URL、完全な Chat Completions URL を受け付けます。クエリとフラグメントを含む URL は受け付けません。プロバイダー本体には引き続き完全な URL を渡してください。
+
+```typescript
+import {
+  listOpenAICompatibleModels,
+  resolveOpenAICompatibleEndpoint,
+  testOpenAICompatibleConnection,
+} from '@aituber-onair/chat';
+
+const endpoint = resolveOpenAICompatibleEndpoint('http://localhost:11434/v1');
+const models = await listOpenAICompatibleModels({ endpoint: endpoint.baseUrl });
+const connection = await testOpenAICompatibleConnection({
+  endpoint: endpoint.baseUrl,
+  model: models[0],
+});
+// Pass endpoint.chatCompletionsUrl to the openai-compatible provider.
+```
+
+`OPENAI_COMPATIBLE_LOCAL_PRESETS` には Ollama、LM Studio、llama.cpp、vLLM の標準 URL が入っています。モデル一覧は文章を生成せず `GET /models` で取得します。起動方法と CORS 設定は[ローカル LLM ガイド](../../docs/local-llm.ja.md)を参照してください。
+
 `reasoning_effort` の選択肢はモデルによって異なります。
 - `gpt-5.6` / `gpt-5.6-sol` / `gpt-5.6-terra` / `gpt-5.6-luna`:
   `'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'`
