@@ -15,10 +15,13 @@ export type {
   JevCommentAnalysisOptions,
   JevCommentAnalysisProvider,
   JevCommentAnalysisResult,
+  JevResponsePlanOptions,
 } from './llm/createJevCommentAnalysisProvider.js';
 export type {
   JevChoiceAnswer,
   JevCommentDecision,
+  JevNoulAnswer,
+  JevScoreAnswer,
 } from './jev/commentDecisions.js';
 export { normalizeTwitchComment } from './normalizers/twitch.js';
 export { normalizeWebComment } from './normalizers/web.js';
@@ -36,6 +39,9 @@ export type { CommentAnalysisMode } from './types/config.js';
 export type { RecentAiMessage, StreamState } from './types/context.js';
 export type {
   CommentAnalysisLLMProvider,
+  CommentReasoningEffort,
+  CommentResponseDepth,
+  CommentResponsePlan,
   CommentSemanticAssessment,
   LLMCommentAnalysisResult,
 } from './types/llm.js';

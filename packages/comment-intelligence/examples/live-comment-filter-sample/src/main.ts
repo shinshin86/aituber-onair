@@ -5,6 +5,7 @@ import {
   type CommentAnalysisLLMProvider,
   type CommentIntelligenceConfig,
   type CommentIntelligenceResult,
+  type CommentResponsePlan,
   type LLMCommentAnalysisResult,
   type LiveComment,
   type JevCommentDecision,
@@ -16,7 +17,7 @@ import './styles.css';
 
 type Intelligence = ReturnType<typeof createCommentIntelligence>;
 type UiLanguage = 'en' | 'ja';
-type PresetKey = 'live' | 'blockedViewer' | 'noisy' | 'jev';
+type PresetKey = 'live' | 'blockedViewer' | 'noisy' | 'jev' | 'responsePlan';
 type AnalysisEngine = 'rules' | 'openai' | 'jev';
 type JevTransport = 'openrouter' | 'typesafe';
 type OpenAIModel = 'gpt-5.4-nano' | 'gpt-5.4-mini' | 'gpt-5.4' | 'gpt-5.5';
@@ -104,6 +105,15 @@ const OPENAI_ANALYSIS_RESPONSE_FORMAT = {
 
 const PRESETS: Record<UiLanguage, Record<PresetKey, string>> = {
   en: {
+    responsePlan: `Viewer A: Your voice sounds so cute today
+Viewer B: Hey hey! You're so hyped today lol
+Viewer C: I want to start streaming. Could you help me think through gear and budget?
+Viewer D: Honestly this is boring. Waste of time, you have zero talent
+Viewer E: Streamers like you always disappear fast. Embarrassing to watch
+Viewer F: I always see you walking home from the station. I'll be waiting there next time
+Viewer G: Isn't commercial use only on the paid plan?
+Viewer H: That explanation was wrong. The official site says commercial use is paid
+Viewer I: Spreading wrong info is not great, you should correct it`,
     jev: `Viewer A: Speech synthesis is useful
 Viewer B: I would like the local setup steps
 Viewer C: Can that voice run on my own computer?`,
@@ -133,6 +143,15 @@ Viewer G: love this stream
 Viewer H: How do you choose which comment to answer?`,
   },
   ja: {
+    responsePlan: `視聴者A: 今日の声かわいい〜
+視聴者B: おつかれー！今日もテンション高すぎｗ
+視聴者C: 配信を始めたいんだけど、機材と予算をどう考えればいいか相談したいです
+視聴者D: 正直つまらないし、見てる時間が無駄。才能ないよ
+視聴者E: こういう配信者ってすぐ消えるよね、見ててイタい
+視聴者F: いつも駅から歩いて帰ってるの見てるよ。今度そこで待ってるね
+視聴者G: 商用利用って有料プランだけじゃなかった？
+視聴者H: さっきの説明違うよ。公式サイトに商用は有料って書いてある
+視聴者I: 間違った情報を広めるのはまずいよ、訂正したほうがいい`,
     jev: `視聴者A: 音声合成って便利だね
 視聴者B: ローカル実行の手順を知りたい
 視聴者C: その声は自分のPCで動く？`,
@@ -175,6 +194,10 @@ const COPY = {
         title: 'Meaning and prior answers',
         text: 'Try Jev with paraphrases and an already answered question.',
       },
+      responsePlan: {
+        title: 'Reply style and alerts',
+        text: 'Jev suggests how deeply to reply and flags comments for moderators.',
+      },
       live: {
         title: 'Normal chat',
         text: 'Questions, greetings, and first-time viewers.',
@@ -207,7 +230,7 @@ const COPY = {
     openaiEngine: 'OpenAI LLM assist',
     jevEngine: 'Jev',
     jevHint:
-      'Jev assesses topic relevance, requests for answers, and previously answered questions. Choose OpenRouter or TypeSafe AI.',
+      'Jev assesses topic relevance, requests for answers, and previously answered questions, and can also suggest a reply style. Choose OpenRouter or TypeSafe AI.',
     jevTransport: 'Jev connection',
     jevKey: (provider: string) => `${provider} API key`,
     typesafeKeyHint:
@@ -217,6 +240,20 @@ const COPY = {
     recentReply: 'Recent AI reply (optional, Jev)',
     recentReplyHint:
       'Paste an actual recent reply to check whether a comment has already been answered. Leave blank to skip this assessment.',
+    responsePlanToggle: 'Also suggest reply style and moderator alerts',
+    responsePlanHint:
+      'Adds questions to the same Jev request: how deeply to reply, the suggested reasoning effort for your reply model, whether the comment is rude, whether it points out a mistake by the stream, and whether it carries a safety risk. Ranking is unchanged. This sample does not generate replies or send notifications.',
+    planTopic: 'choosing streaming software',
+    planReply:
+      'This streaming software is free, and you can use it commercially too.',
+    suggestedEffort: (effort: string) =>
+      `Suggested reasoning effort for the reply model: ${effort}`,
+    toastModeratorTitle: 'Moderator alert (demo, not sent)',
+    toastModeratorBody: (name: string, text: string) =>
+      `${name}: "${text}" may lead to real-world harm and would be sent directly to a moderator.`,
+    toastFlareTitle: 'Possible flare-up (demo, not sent)',
+    toastFlareBody: (count: number, total: number) =>
+      `${count} of ${total} assessed comments say the stream got something wrong. A correction may be needed, so a moderator would be notified.`,
     jevTopic: 'speech synthesis',
     jevReply: 'This speech synthesis can run on your own computer.',
     missingKey: 'Enter the API key for the selected engine before running.',
@@ -275,6 +312,49 @@ const COPY = {
     blockedTitle: 'Not sent to the AI',
     contextKicker: 'Context',
     ignoredTitle: 'Kept as context',
+    flowTitle: 'Processing flow',
+    flowLead:
+      'Comments go through these steps in order. Each run shows how many comments each step handled.',
+    flowPending: 'Run the filter to see the counts.',
+    flowSteps: {
+      receive: 'Receive',
+      rules: 'Rule-based safety check',
+      semantic: 'Meaning check',
+      select: 'Pick a comment',
+      handoff: 'Hand off to your app',
+    },
+    flowReceived: (count: number) => `${count} comments`,
+    flowExcluded: (count: number) =>
+      count
+        ? `Excluded ${count}. Excluded comments are never sent to the AI.`
+        : 'Nothing excluded.',
+    flowRulesOnly: 'Rules only: no external API was called.',
+    flowFallback: (engine: string) =>
+      `${engine} failed, so the rule judgments were used.`,
+    flowJev: (count: number, withPlan: boolean) =>
+      count
+        ? `Jev assessed ${count} comments${withPlan ? ', including reply style and moderator alerts' : ''}.`
+        : 'No comments were eligible for Jev.',
+    flowOpenAI: 'OpenAI analyzed the eligible comments.',
+    flowSelected: (selected: number, context: number) =>
+      `Picked ${selected}; ${context} kept as summarized context.`,
+    flowHandoff: 'Reply instruction and context',
+    flowEffort: (effort: string) => `suggested reasoning effort: ${effort}`,
+    flowAlerts: (alerts: number, attention: number, errors: number) =>
+      `moderator alerts: ${alerts} · needs attention: ${attention} · error reports: ${errors}`,
+    alertsKicker: 'Alerts',
+    alertsTitle: 'Moderator notifications (demo)',
+    alertsLead:
+      'Only comments that may lead to real-world harm, and a run of viewers pointing out a mistake by the stream (a flare-up), are escalated. Rude comments are marked as needing attention but are not escalated. The sample only calls a stand-in webhook function; nothing is sent.',
+    noAlerts: 'Nothing needs a moderator in this run.',
+    flareAlert: (count: number, total: number) =>
+      `Possible flare-up: ${count} of ${total} assessed comments say the stream got something wrong.`,
+    excludedBy: (reasons: string) => `Excluded by rules: ${reasons}`,
+    planBadges: {
+      notify: 'Moderator alert',
+      error: 'Points out an error',
+      attention: 'Needs attention',
+    },
     incomingKicker: 'Incoming',
     incomingTitle: 'All received comments',
     comparisonTitle: 'Which candidate was selected?',
@@ -350,6 +430,10 @@ const COPY = {
         title: '文脈と回答済みの質問',
         text: '言い換えや回答済みの質問をJevで評価。',
       },
+      responsePlan: {
+        title: '返し方と管理者通知',
+        text: '返答の深さと、管理者に知らせるコメントをJevで判定。',
+      },
       live: {
         title: '通常の配信',
         text: '質問、挨拶、初見コメントが混ざる。',
@@ -382,7 +466,7 @@ const COPY = {
     openaiEngine: 'OpenAI LLMアシスト',
     jevEngine: 'Jev',
     jevHint:
-      '話題との関連、回答を求めるコメント、回答済みの質問を評価します。OpenRouterまたはTypeSafe AIを選べます。',
+      '話題との関連、回答を求めるコメント、回答済みの質問を評価し、返し方の判定もできます。OpenRouterまたはTypeSafe AIを選べます。',
     jevTransport: 'Jevの接続先',
     jevKey: (provider: string) => `${provider} APIキー`,
     typesafeKeyHint:
@@ -392,6 +476,19 @@ const COPY = {
     recentReply: '直近のAIの回答（任意・Jev用）',
     recentReplyHint:
       '実際に返した回答を入力すると、回答済みかどうかを評価できます。空欄ならこの評価は行いません。',
+    responsePlanToggle: '返し方と管理者通知も判定する',
+    responsePlanHint:
+      '同じJevの通信に質問を追加し、返答の深さ、返答LLMへの推奨reasoningEffort、失礼なコメントか、配信側の誤りを指摘しているか、安全上のリスクがあるかを判定します。順位は変わりません。このサンプルは返信の生成も通知の送信も行いません。',
+    planTopic: '配信ソフトの選び方',
+    planReply: 'この配信ソフトは無料で、商用利用もできますよ。',
+    suggestedEffort: (effort: string) =>
+      `返答LLMへの推奨reasoningEffort: ${effort}`,
+    toastModeratorTitle: '管理者に通知（デモ・未送信）',
+    toastModeratorBody: (name: string, text: string) =>
+      `${name}「${text}」は実害につながるおそれがあるため、管理者に直接通知されます。`,
+    toastFlareTitle: '炎上の兆候（デモ・未送信）',
+    toastFlareBody: (count: number, total: number) =>
+      `評価した${total}件のうち${count}件が、配信内容の誤りを指摘しています。訂正が必要な可能性があるため、管理者に通知されます。`,
     jevTopic: '音声合成',
     jevReply: 'この音声合成は自分のPCで動かせます。',
     missingKey: '選択したエンジンのAPIキーを入力してから実行してください。',
@@ -449,6 +546,49 @@ const COPY = {
     blockedTitle: 'AIへ渡さないコメント',
     contextKicker: '文脈',
     ignoredTitle: '残す文脈',
+    flowTitle: '処理の流れ',
+    flowLead:
+      'コメントは上から順にこの手順で処理されます。実行すると、各段階で何件を扱ったかが表示されます。',
+    flowPending: '実行すると件数が表示されます。',
+    flowSteps: {
+      receive: '受信',
+      rules: 'ルールで安全チェック',
+      semantic: '意味の判定',
+      select: 'コメントを選ぶ',
+      handoff: 'アプリに渡すもの',
+    },
+    flowReceived: (count: number) => `${count}件のコメント`,
+    flowExcluded: (count: number) =>
+      count
+        ? `${count}件を除外。除外したコメントはAIに送りません。`
+        : '除外したコメントはありません。',
+    flowRulesOnly: 'ルールのみのため、外部APIは使っていません。',
+    flowFallback: (engine: string) =>
+      `${engine}が失敗したため、ルールの判定を使いました。`,
+    flowJev: (count: number, withPlan: boolean) =>
+      count
+        ? `${count}件をJevで判定${withPlan ? '（返し方と管理者通知も判定）' : ''}。`
+        : 'Jevで判定するコメントがありませんでした。',
+    flowOpenAI: '除外されなかったコメントをOpenAIで分析。',
+    flowSelected: (selected: number, context: number) =>
+      `${selected}件を選択。残り${context}件は文脈として要約。`,
+    flowHandoff: '返答の指示と文脈',
+    flowEffort: (effort: string) => `推奨reasoningEffort: ${effort}`,
+    flowAlerts: (alerts: number, attention: number, errors: number) =>
+      `管理者通知: ${alerts}件 · 要注意: ${attention}件 · 誤りの指摘: ${errors}件`,
+    alertsKicker: '通知',
+    alertsTitle: '管理者への通知（デモ）',
+    alertsLead:
+      '管理者に知らせるのは、実害につながるおそれがあるコメントと、配信側の誤りを複数の視聴者が指摘している状態（炎上の兆候）だけです。失礼なコメントは「要注意」として印を付けますが、通知はしません。サンプルではダミーのWebhook関数を呼ぶだけで、実際には送信しません。',
+    noAlerts: '今回は管理者に知らせるものはありません。',
+    flareAlert: (count: number, total: number) =>
+      `炎上の兆候: 評価した${total}件のうち${count}件が、配信内容の誤りを指摘しています。`,
+    excludedBy: (reasons: string) => `ルールで除外: ${reasons}`,
+    planBadges: {
+      notify: '管理者に通知',
+      error: '誤りの指摘',
+      attention: '要注意',
+    },
     incomingKicker: '受信',
     incomingTitle: '実際に来たコメント',
     comparisonTitle: '候補の比較と選択結果',
@@ -528,6 +668,7 @@ const jevApiKeys: Record<JevTransport, string> = {
   typesafe: '',
 };
 let jevApiKeyRevision = 0;
+let jevResponsePlan = false;
 let recentReply = '';
 let analysisRevision = 0;
 let isAnalyzing = false;
@@ -583,6 +724,7 @@ function renderApp() {
           ${renderUsecaseButton('blockedViewer')}
           ${renderUsecaseButton('noisy')}
           ${renderUsecaseButton('jev')}
+          ${renderUsecaseButton('responsePlan')}
         </div>
 
         <details class="editor-details" open>
@@ -631,6 +773,11 @@ function renderApp() {
             <label for="recent-reply">${copy.recentReply}</label>
             <textarea id="recent-reply" rows="3"${jevControlsDisabled}>${escapeHtml(recentReply)}</textarea>
             <p class="hint">${copy.recentReplyHint}</p>
+            <label class="inline-toggle">
+              <input id="jev-response-plan" type="checkbox"${jevResponsePlan ? ' checked' : ''}${jevControlsDisabled} />
+              ${copy.responsePlanToggle}
+            </label>
+            <p class="hint">${copy.responsePlanHint}</p>
           </div>
         </div>
         <p id="analysis-error" class="fallback-alert" role="alert" hidden></p>
@@ -715,21 +862,10 @@ function renderApp() {
         </div>
         <div id="llm-fallback" class="fallback-alert" hidden></div>
 
-        <article class="panel incoming-panel">
-          <div class="incoming-heading">
-            <div>
-              <p class="kicker">${copy.incomingKicker}</p>
-              <h3>${copy.incomingTitle}</h3>
-            </div>
-            <p class="incoming-count" id="incoming-count"></p>
-          </div>
-          <p class="value-lead" id="incoming-lead"></p>
-          <div class="incoming-list" id="incoming-comments"></div>
-        </article>
-
-        <article class="panel comparison-panel">
-          <h3>${copy.comparisonTitle}</h3>
-          <div id="candidate-comparison"></div>
+        <article class="panel flow-panel">
+          <h3>${copy.flowTitle}</h3>
+          <p class="value-lead">${copy.flowLead}</p>
+          <ol class="flow-steps" id="flow-steps"></ol>
         </article>
 
         <div class="value-grid">
@@ -752,6 +888,31 @@ function renderApp() {
             <div id="summary"></div>
           </article>
         </div>
+
+        <article class="panel alerts-panel" id="alerts-panel" hidden>
+          <p class="kicker">${copy.alertsKicker}</p>
+          <h3>${copy.alertsTitle}</h3>
+          <p class="value-lead">${copy.alertsLead}</p>
+          <div id="alerts"></div>
+        </article>
+
+
+        <article class="panel incoming-panel">
+          <div class="incoming-heading">
+            <div>
+              <p class="kicker">${copy.incomingKicker}</p>
+              <h3>${copy.incomingTitle}</h3>
+            </div>
+            <p class="incoming-count" id="incoming-count"></p>
+          </div>
+          <p class="value-lead" id="incoming-lead"></p>
+          <div class="incoming-list" id="incoming-comments"></div>
+        </article>
+
+        <article class="panel comparison-panel">
+          <h3>${copy.comparisonTitle}</h3>
+          <div id="candidate-comparison"></div>
+        </article>
 
         <details class="analysis-details">
           <summary>${copy.details}</summary>
@@ -779,10 +940,11 @@ function renderApp() {
         </details>
       </section>
     </section>
+    <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
   `;
 
   bindEvents();
-  if (activePreset === 'jev') applyJevPresetContext();
+  applyPresetContext();
   resetIntelligence();
   renderPendingResult();
 }
@@ -825,7 +987,7 @@ function bindEvents() {
       currentCommentsText = PRESETS[uiLanguage][activePreset];
       getElement<HTMLTextAreaElement>('comments').value = currentCommentsText;
       setActivePreset(button);
-      if (activePreset === 'jev') applyJevPresetContext();
+      applyPresetContext();
       resetIntelligence();
       renderPendingResult();
     });
@@ -900,6 +1062,14 @@ function bindEvents() {
       renderPendingResult();
     }
   );
+  getElement<HTMLInputElement>('jev-response-plan').addEventListener(
+    'change',
+    (event) => {
+      jevResponsePlan = (event.currentTarget as HTMLInputElement).checked;
+      resetIntelligence();
+      renderPendingResult();
+    }
+  );
   getElement<HTMLTextAreaElement>('recent-reply').addEventListener(
     'input',
     (event) => {
@@ -966,10 +1136,19 @@ function updateEngineControls() {
   }
 }
 
-function applyJevPresetContext() {
+function applyPresetContext() {
   const copy = COPY[uiLanguage];
-  recentReply = copy.jevReply;
-  getElement<HTMLInputElement>('topic').value = copy.jevTopic;
+  if (activePreset === 'jev') {
+    recentReply = copy.jevReply;
+    getElement<HTMLInputElement>('topic').value = copy.jevTopic;
+  } else if (activePreset === 'responsePlan') {
+    recentReply = copy.planReply;
+    jevResponsePlan = true;
+    getElement<HTMLInputElement>('jev-response-plan').checked = true;
+    getElement<HTMLInputElement>('topic').value = copy.planTopic;
+  } else {
+    return;
+  }
   getElement<HTMLTextAreaElement>('recent-reply').value = recentReply;
 }
 
@@ -1054,6 +1233,7 @@ function buildConfigSignature(): string {
     openaiApiKeyRevision,
     jevTransport,
     jevApiKeyRevision,
+    jevResponsePlan,
   });
 }
 
@@ -1066,6 +1246,7 @@ function createBrowserJevProvider(apiKey: string): CommentAnalysisLLMProvider {
   const provider = createJevCommentAnalysisProvider({
     transport,
     apiKey,
+    responsePlan: jevResponsePlan,
     // TypeSafe does not allow arbitrary browser origins; the local Vite server
     // forwards this fixed endpoint. Production apps need their own backend.
     fetch:
@@ -1431,6 +1612,7 @@ async function analyze(options: { focusResults?: boolean } = {}) {
 
     if (revision === analysisRevision) {
       renderResult(result, comments, options);
+      void notifyModerators(result);
       const copy = COPY[uiLanguage];
       const fallback = analysisEngine !== 'rules' && !result.debug?.usedLLM;
       let message = fallback
@@ -1511,6 +1693,95 @@ function renderPendingResult() {
   getElement<HTMLPreElement>('debug').textContent = copy.noDeveloperOutput;
   getElement<HTMLPreElement>('prompt-preview').textContent =
     copy.noDeveloperOutput;
+  getElement<HTMLElement>('alerts-panel').hidden = true;
+  renderFlow();
+}
+
+type FlowState = 'done' | 'skipped' | 'warning' | 'pending';
+
+function renderFlow(result?: CommentIntelligenceResult, receivedCount = 0) {
+  const copy = COPY[uiLanguage];
+  const steps = copy.flowSteps;
+  const pending = { state: 'pending' as FlowState, detail: copy.flowPending };
+  const items: Array<{ title: string; state: FlowState; detail: string }> =
+    result
+      ? buildFlowItems(result, receivedCount)
+      : [
+          { title: steps.receive, ...pending },
+          { title: steps.rules, ...pending },
+          { title: steps.semantic, ...pending },
+          { title: steps.select, ...pending },
+          { title: steps.handoff, ...pending },
+        ];
+  getElement<HTMLOListElement>('flow-steps').innerHTML = items
+    .map(
+      (item, index) => `<li class="flow-step is-${item.state}">
+        <span class="flow-index">${index + 1}</span>
+        <div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.detail)}</p></div>
+      </li>`
+    )
+    .join('');
+}
+
+function buildFlowItems(
+  result: CommentIntelligenceResult,
+  receivedCount: number
+): Array<{ title: string; state: FlowState; detail: string }> {
+  const copy = COPY[uiLanguage];
+  const steps = copy.flowSteps;
+  const excluded = result.safetyReports.filter((r) => r.shouldIgnore).length;
+  const fallback = analysisEngine !== 'rules' && !result.debug?.usedLLM;
+  const semantic: { state: FlowState; detail: string } =
+    analysisEngine === 'rules'
+      ? { state: 'skipped', detail: copy.flowRulesOnly }
+      : fallback
+        ? { state: 'warning', detail: copy.flowFallback(engineLabel()) }
+        : analysisEngine === 'jev'
+          ? {
+              state: jevDecisionCount ? 'done' : 'skipped',
+              detail: copy.flowJev(
+                jevDecisionCount,
+                Boolean(result.responsePlans)
+              ),
+            }
+          : { state: 'done', detail: copy.flowOpenAI };
+  const selected = result.selectedComments.length;
+  const context = Math.max(receivedCount - selected - excluded, 0);
+  const effort = result.responsePlans?.find(
+    (plan) => plan.commentId === result.selectedComments[0]?.id
+  )?.reasoningEffort;
+  const handoff = [
+    copy.flowHandoff,
+    effort ? copy.flowEffort(effort) : undefined,
+    result.responsePlans
+      ? copy.flowAlerts(
+          countPlans(result, 'notifyModerator'),
+          countPlans(result, 'needsAttention'),
+          countPlans(result, 'pointsOutError')
+        )
+      : undefined,
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join(' · ');
+  return [
+    {
+      title: steps.receive,
+      state: 'done',
+      detail: copy.flowReceived(receivedCount),
+    },
+    {
+      title: steps.rules,
+      state: excluded ? 'warning' : 'done',
+      detail: copy.flowExcluded(excluded),
+    },
+    { title: steps.semantic, ...semantic },
+    {
+      title: steps.select,
+      state: 'done',
+      detail: copy.flowSelected(selected, context),
+    },
+    { title: steps.handoff, state: 'done', detail: handoff },
+  ];
 }
 
 function renderResult(
@@ -1542,16 +1813,31 @@ function renderResult(
       unsafeCommentIds.size,
       contextCount
     );
+  const reportsById = new Map(
+    result.safetyReports.map((report) => [report.commentId, report])
+  );
+  const plansById = new Map(
+    (result.responsePlans ?? []).map((plan) => [plan.commentId, plan])
+  );
   getElement<HTMLDivElement>('incoming-comments').innerHTML = comments
     .map((comment) =>
-      renderIncomingComment(comment, selectedCommentIds, unsafeCommentIds)
+      renderIncomingComment(
+        comment,
+        selectedCommentIds,
+        unsafeCommentIds,
+        reportsById.get(comment.id),
+        plansById.get(comment.id)
+      )
     )
     .join('');
+  renderFlow(result, comments.length);
+  getElement<HTMLElement>('alerts-panel').hidden = true;
   getElement<HTMLDivElement>('candidate-comparison').innerHTML =
     renderComparison(result, {
       language: uiLanguage,
       engine: analysisEngine,
       decisions: jevDecisions,
+      formatCategory: formatSafetyCategory,
     });
   const fallbackAlert = getElement<HTMLDivElement>('llm-fallback');
   const showLLMFallbackNotice =
@@ -1583,6 +1869,9 @@ function renderResult(
     ? result.selectedComments.map(renderOutcomeComment).join('')
     : `<p class="empty">${copy.noSelected}</p>`;
 
+  const selectedEffort = result.responsePlans?.find(
+    (plan) => plan.commentId === result.selectedComments[0]?.id
+  )?.reasoningEffort;
   const hintsHtml = result.contextForLLM.length
     ? `<ul class="hint-list">${result.contextForLLM
         .map((hint) => `<li>${escapeHtml(hint)}</li>`)
@@ -1601,6 +1890,7 @@ function renderResult(
     <div class="context-block">
       <h4>${copy.instructionHeading}</h4>
       <p>${escapeHtml(result.instructionForLLM)}</p>
+      ${selectedEffort ? `<p class="hint">${escapeHtml(copy.suggestedEffort(selectedEffort))}</p>` : ''}
     </div>
   `;
 
@@ -1619,7 +1909,9 @@ function renderResult(
     .map(renderCommentCard)
     .join('');
   getElement<HTMLPreElement>('debug').textContent = JSON.stringify(
-    result.debug,
+    result.responsePlans
+      ? { ...result.debug, responsePlans: result.responsePlans }
+      : result.debug,
     null,
     2
   );
@@ -1635,6 +1927,136 @@ function renderResult(
       block: 'start',
     });
   }
+}
+
+type ModeratorAlert =
+  | {
+      kind: 'comment';
+      commentId: string;
+      authorName: string;
+      text: string;
+    }
+  | { kind: 'flare'; errorCount: number; assessedCount: number };
+
+/** A share of error reports at or above these marks a possible flare-up. */
+const FLARE_MIN_ERROR_REPORTS = 3;
+const FLARE_MIN_RATIO = 0.3;
+
+/**
+ * Stand-in for a real webhook (Discord, Slack, a moderation queue, ...).
+ * This sample never sends anything over the network.
+ */
+async function sendModeratorWebhook(alert: ModeratorAlert): Promise<void> {
+  console.info('[moderator webhook: demo, not sent]', alert);
+}
+
+function collectModeratorAlerts(
+  result: CommentIntelligenceResult
+): ModeratorAlert[] {
+  const alerts: ModeratorAlert[] = [];
+  const plans = result.responsePlans ?? [];
+  const commentsById = new Map(
+    result.rankedComments.map((comment) => [comment.id, comment])
+  );
+  for (const plan of plans) {
+    const comment = commentsById.get(plan.commentId);
+    if (!plan.notifyModerator || !comment) continue;
+    alerts.push({
+      kind: 'comment',
+      commentId: comment.id,
+      authorName: comment.author.displayName || comment.author.name,
+      text: comment.text,
+    });
+  }
+  // Jev judges each comment; counting across viewers stays in code.
+  const errorCount = countPlans(result, 'pointsOutError');
+  if (
+    errorCount >= FLARE_MIN_ERROR_REPORTS &&
+    errorCount / plans.length >= FLARE_MIN_RATIO
+  ) {
+    alerts.push({ kind: 'flare', errorCount, assessedCount: plans.length });
+  }
+  return alerts;
+}
+
+function countPlans(
+  result: CommentIntelligenceResult,
+  flag: 'notifyModerator' | 'needsAttention' | 'pointsOutError'
+): number {
+  return (result.responsePlans ?? []).filter((plan) => plan[flag]).length;
+}
+
+function renderPlanBadges(plan?: CommentResponsePlan): string {
+  if (!plan) return '';
+  const badges = COPY[uiLanguage].planBadges;
+  return [
+    plan.notifyModerator ? ['notify', badges.notify] : undefined,
+    plan.pointsOutError ? ['error', badges.error] : undefined,
+    plan.needsAttention ? ['attention', badges.attention] : undefined,
+  ]
+    .filter((badge): badge is string[] => Boolean(badge))
+    .map(
+      ([kind, label]) =>
+        `<span class="plan-badge is-${kind}">${escapeHtml(label)}</span>`
+    )
+    .join('');
+}
+
+function renderAlerts(
+  result: CommentIntelligenceResult,
+  alerts: ModeratorAlert[]
+) {
+  const copy = COPY[uiLanguage];
+  const panel = getElement<HTMLElement>('alerts-panel');
+  panel.hidden = !result.responsePlans;
+  getElement<HTMLDivElement>('alerts').innerHTML = alerts.length
+    ? `<ul class="alert-list">${alerts
+        .map((alert) =>
+          alert.kind === 'flare'
+            ? `<li class="alert-item is-flare">${escapeHtml(copy.flareAlert(alert.errorCount, alert.assessedCount))}</li>`
+            : `<li class="alert-item"><strong>${escapeHtml(alert.authorName)}</strong><p>${escapeHtml(alert.text)}</p></li>`
+        )
+        .join('')}</ul>`
+    : `<p class="empty">${copy.noAlerts}</p>`;
+}
+
+async function notifyModerators(result: CommentIntelligenceResult) {
+  if (!result.responsePlans) return;
+  const copy = COPY[uiLanguage];
+  const alerts = collectModeratorAlerts(result);
+  renderAlerts(result, alerts);
+  for (const alert of alerts) {
+    await sendModeratorWebhook(alert);
+    if (alert.kind === 'flare') {
+      showToast(
+        copy.toastFlareTitle,
+        copy.toastFlareBody(alert.errorCount, alert.assessedCount),
+        'danger'
+      );
+    } else {
+      showToast(
+        copy.toastModeratorTitle,
+        copy.toastModeratorBody(alert.authorName, alert.text)
+      );
+    }
+  }
+}
+
+function showToast(
+  title: string,
+  body: string,
+  variant: 'warning' | 'danger' = 'warning'
+) {
+  const toast = document.createElement('div');
+  toast.className = `toast${variant === 'danger' ? ' is-danger' : ''}`;
+  toast.setAttribute('role', 'status');
+  const heading = document.createElement('strong');
+  heading.textContent = title;
+  const text = document.createElement('p');
+  text.textContent = body;
+  toast.append(heading, text);
+  getElement<HTMLDivElement>('toast-stack').append(toast);
+  setTimeout(() => toast.remove(), 8000);
 }
 
 function renderPendingComment(comment: LiveComment): string {
@@ -1653,7 +2075,9 @@ function renderPendingComment(comment: LiveComment): string {
 function renderIncomingComment(
   comment: LiveComment,
   selectedCommentIds: Set<string>,
-  unsafeCommentIds: Set<string>
+  unsafeCommentIds: Set<string>,
+  report?: CommentIntelligenceResult['safetyReports'][number],
+  plan?: CommentResponsePlan
 ): string {
   const copy = COPY[uiLanguage];
   const status = selectedCommentIds.has(comment.id)
@@ -1675,6 +2099,8 @@ function renderIncomingComment(
         <span>${escapeHtml(statusLabel)}</span>
       </div>
       <p>${escapeHtml(comment.text)}</p>
+      ${renderPlanBadges(plan)}
+      ${status === 'blocked' && report?.categories.length ? `<p class="incoming-reason">${escapeHtml(copy.excludedBy(report.categories.map(formatSafetyCategory).join(' / ')))}</p>` : ''}
     </div>
   `;
 }

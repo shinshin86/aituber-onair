@@ -5,6 +5,7 @@ import type {
 import type { AnsweredState } from './types/answered.js';
 import type {
   CommentSemanticAssessment,
+  CommentResponseDepth,
   LLMCommentAnalysisResult,
 } from './types/llm.js';
 import type {
@@ -221,22 +222,28 @@ async function analyzeWithConfig(
       }),
       config.analysis?.llmPolicy?.timeoutMs
     );
-    if (llmResult.semanticAssessments) {
-      return buildSemanticResult(
-        rulesResult,
-        llmResult.semanticAssessments,
-        new Set(llmComments.map((comment) => comment.id)),
-        config,
-        input
-      );
-    }
-    return applyLLMResult(
-      rulesResult,
+    const sentIds = new Set(llmComments.map((comment) => comment.id));
+    const result = llmResult.semanticAssessments
+      ? buildSemanticResult(
+          rulesResult,
+          llmResult.semanticAssessments,
+          sentIds,
+          config,
+          input
+        )
+      : applyLLMResult(
+          rulesResult,
+          llmResult,
+          mode,
+          sentIds,
+          config.ranking,
+          input.streamState
+        );
+    return attachResponsePlans(
+      result,
       llmResult,
-      mode,
-      new Set(llmComments.map((comment) => comment.id)),
-      config.ranking,
-      input.streamState
+      sentIds,
+      input.streamState?.language ?? config.context?.language
     );
   } catch (error) {
     if (config.analysis?.llmPolicy?.fallbackToRules === false) {
@@ -246,6 +253,26 @@ async function analyzeWithConfig(
   } finally {
     controller.abort();
   }
+}
+
+function attachResponsePlans(
+  result: CommentIntelligenceResult,
+  llmResult: LLMCommentAnalysisResult,
+  sentIds: Set<string>,
+  language?: 'ja' | 'en' | 'auto'
+): CommentIntelligenceResult {
+  if (!llmResult.responsePlans) return result;
+  const seen = new Set<string>();
+  const responsePlans = llmResult.responsePlans.filter((plan) => {
+    if (!sentIds.has(plan.commentId) || seen.has(plan.commentId)) return false;
+    seen.add(plan.commentId);
+    return true;
+  });
+  const withPlans = { ...result, responsePlans };
+  if (!llmResult.instructionForLLM) {
+    withPlans.instructionForLLM = buildDefaultInstruction(withPlans, language);
+  }
+  return withPlans;
 }
 
 function buildSemanticResult(
@@ -826,6 +853,42 @@ function isViewerBlocked(state?: ViewerSafetyState): boolean {
   );
 }
 
+const DEPTH_INSTRUCTIONS: Record<
+  CommentResponseDepth,
+  Record<'ja' | 'en', string>
+> = {
+  one_liner: {
+    ja: '選ばれたコメントは感想やリアクションなので、一言で軽く受け止めてください。',
+    en: 'The selected comment is a reaction or impression. Acknowledge it in one short line.',
+  },
+  quick: {
+    ja: '選ばれたコメントにノリよく短く返答し、配信のテンポを保ってください。',
+    en: 'Reply to the selected comment briefly and playfully, and keep the stream moving.',
+  },
+  thoughtful: {
+    ja: '選ばれたコメントは丁寧な回答が必要な内容です。要点を考えてから、分かりやすく答えてください。',
+    en: 'The selected comment needs a careful answer. Think through the key points, then answer clearly.',
+  },
+};
+
+const PLAN_INSTRUCTIONS: Record<
+  'safety' | 'correction' | 'attention',
+  Record<'ja' | 'en', string>
+> = {
+  safety: {
+    ja: '選ばれたコメントには安全上の懸念があります。内容には触れず、反応せずに配信を続けてください。',
+    en: 'The selected comment raises a safety concern. Do not engage with its content; carry on with the stream.',
+  },
+  correction: {
+    ja: '選ばれたコメントは、直前の発言の誤りを指摘しています。内容を確認し、誤りがあれば認めて訂正してください。',
+    en: 'The selected comment says something you said was wrong. Check it, and if it is wrong, acknowledge and correct it.',
+  },
+  attention: {
+    ja: '選ばれたコメントは攻撃的な内容を含みます。挑発に乗らず、落ち着いて短く受け流してください。',
+    en: 'The selected comment is hostile. Do not take the bait; respond calmly and briefly, or move on.',
+  },
+};
+
 function buildDefaultInstruction(
   result: CommentIntelligenceResult,
   language?: 'ja' | 'en' | 'auto'
@@ -836,6 +899,22 @@ function buildDefaultInstruction(
   }
 
   const resolvedLanguage = language === 'en' ? 'en' : 'ja';
+  const plan = result.responsePlans?.find(
+    (candidate) => candidate.commentId === selected.id
+  );
+  // Safety first, then corrections, then tone, then reply depth.
+  if (plan?.notifyModerator) {
+    return PLAN_INSTRUCTIONS.safety[resolvedLanguage];
+  }
+  if (plan?.pointsOutError) {
+    return PLAN_INSTRUCTIONS.correction[resolvedLanguage];
+  }
+  if (plan?.needsAttention) {
+    return PLAN_INSTRUCTIONS.attention[resolvedLanguage];
+  }
+  if (plan?.depth) {
+    return DEPTH_INSTRUCTIONS[plan.depth][resolvedLanguage];
+  }
   const hasFirstTimeViewer = result.ignoredSummary.clusters.some(
     (cluster) => cluster.label === 'first_time_viewer'
   );

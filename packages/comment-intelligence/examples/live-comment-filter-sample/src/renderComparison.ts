@@ -1,5 +1,7 @@
 import type {
   CommentIntelligenceResult,
+  CommentResponsePlan,
+  SafetyCategory,
   JevChoiceAnswer,
   JevCommentDecision,
 } from '../../../src/index';
@@ -8,6 +10,7 @@ type Options = {
   language: 'en' | 'ja';
   engine: 'rules' | 'openai' | 'jev';
   decisions: JevCommentDecision[];
+  formatCategory: (category: SafetyCategory) => string;
 };
 
 const COPY = {
@@ -31,6 +34,27 @@ const COPY = {
     openai:
       'OpenAI selects comment IDs directly, so its choice may differ from score order. It does not return the three Jev judgments.',
     rules: 'This run used rules. No Jev judgments were used.',
+    plan: 'Response plan (does not affect ranking)',
+    excluded:
+      'Excluded by the rule-based safety check before any AI analysis. This comment was not sent to the AI.',
+    judgments: 'AI judgments',
+    responseDepth: 'Reply style',
+    depths: {
+      one_liner: 'One line',
+      quick: 'Short and casual',
+      thoughtful: 'Think it through',
+    },
+    noDepth: 'No suggestion (low confidence)',
+    reasoningEffort: 'Suggested reasoning effort',
+    hostile: 'Rude (needs attention)',
+    pointsOutError: 'Points out an error',
+    needsModerator: 'Safety risk',
+    probability: 'Probability',
+    badges: {
+      notify: 'Moderator alert',
+      error: 'Points out an error',
+      attention: 'Needs attention',
+    },
     reasons: 'Ranking signals',
     signals: {
       direct_question: 'Question',
@@ -72,6 +96,27 @@ const COPY = {
     openai:
       'OpenAIは対象のコメントIDを直接選ぶため、スコア順と選択結果が異なることがあります。Jevの3項目の判定は返しません。',
     rules: '今回はルールで処理しました。Jevの判定は使っていません。',
+    plan: '対応方針（順位には影響しません）',
+    excluded:
+      'AIで分析する前に、ルールの安全チェックで除外しました。このコメントはAIに送っていません。',
+    judgments: 'AIの判定',
+    responseDepth: '返し方',
+    depths: {
+      one_liner: '一言で',
+      quick: 'ノリで短く',
+      thoughtful: 'じっくり考えて',
+    },
+    noDepth: '指定なし（低確信）',
+    reasoningEffort: '推奨reasoningEffort',
+    hostile: '失礼・攻撃的（要注意）',
+    pointsOutError: '誤りの指摘',
+    needsModerator: '安全上のリスク',
+    probability: '確率',
+    badges: {
+      notify: '管理者に通知',
+      error: '誤りの指摘',
+      attention: '要注意',
+    },
     reasons: 'ランキングの要素',
     signals: {
       direct_question: '質問',
@@ -111,8 +156,10 @@ export function renderComparison(
 ): string {
   const copy = COPY[options.language];
   const selected = new Set(result.selectedComments.map((c) => c.id));
-  const excluded = new Set(
-    result.safetyReports.filter((r) => r.shouldIgnore).map((r) => r.commentId)
+  const excludedReports = new Map(
+    result.safetyReports
+      .filter((r) => r.shouldIgnore)
+      .map((r) => [r.commentId, r])
   );
   const decisions = new Map(
     (result.debug?.usedLLM ? options.decisions : []).map((d) => [
@@ -123,6 +170,9 @@ export function renderComparison(
   const assessments = new Map(
     result.debug?.semanticAssessments?.map((a) => [a.commentId, a])
   );
+  const plans = new Map(
+    (result.responsePlans ?? []).map((p) => [p.commentId, p])
+  );
   const showJev = options.engine === 'jev';
   const note = showJev
     ? copy.jev
@@ -132,7 +182,8 @@ export function renderComparison(
   const rows = result.rankedComments
     .map((comment) => {
       const picked = selected.has(comment.id);
-      const blocked = excluded.has(comment.id);
+      const report = excludedReports.get(comment.id);
+      const blocked = Boolean(report);
       const status = blocked
         ? copy.blocked
         : picked
@@ -150,14 +201,60 @@ export function renderComparison(
             })
             .join('')
         : '';
-      return `<li class="comparison-card${picked ? ' is-selected' : ''}${blocked ? ' is-blocked' : ''}">
+      const notify = plans.get(comment.id)?.notifyModerator;
+      return `<li class="comparison-card${picked ? ' is-selected' : ''}${blocked ? ' is-blocked' : ''}${notify ? ' is-alert' : ''}">
       <div class="comparison-heading"><strong>${escapeHtml(comment.author.displayName || comment.author.name)}</strong><span class="comparison-outcome">${status}</span></div>
       <p class="comparison-comment">${escapeHtml(comment.text)}</p>
       <p class="comparison-score">${copy.score}: <strong>${comment.score.toFixed(2)}</strong></p>
-      ${showJev ? `<dl class="comparison-judgments">${judgments}</dl>` : ''}
+      ${
+        report
+          ? `<div class="comparison-excluded"><p>${copy.excluded}</p>${report.categories.length ? `<div class="chips">${report.categories.map((c) => `<span>${escapeHtml(options.formatCategory(c))}</span>`).join('')}</div>` : ''}</div>`
+          : showJev
+            ? `<p class="comparison-plan-title">${copy.judgments}</p><dl class="comparison-judgments">${judgments}</dl>${renderPlan(decision, plans.get(comment.id), copy)}`
+            : ''
+      }
       <p class="hint">${copy.reasons}: ${comment.reasons.map((r) => escapeHtml(copy.signals[r])).join(' / ') || '—'}</p>
     </li>`;
     })
     .join('');
   return `<p class="value-lead">${copy.lead}</p><p class="hint comparison-note">${note}</p>${rows ? `<ul class="comparison-list">${rows}</ul>` : `<p class="empty">${copy.empty}</p>`}`;
+}
+
+function renderPlan(
+  decision: JevCommentDecision | undefined,
+  plan: CommentResponsePlan | undefined,
+  copy: (typeof COPY)['en' | 'ja']
+): string {
+  if (!decision?.responseDepth || !plan) return '';
+  const depthConfidence = decision.responseDepth.confidence;
+  const item = (label: string, value: string, note?: string) =>
+    `<div class="comparison-judgment"><dt>${label}</dt><dd>${value}${note ? `<small>${note}</small>` : ''}</dd></div>`;
+  const badges = [
+    plan.notifyModerator ? ['notify', copy.badges.notify] : undefined,
+    plan.pointsOutError ? ['error', copy.badges.error] : undefined,
+    plan.needsAttention ? ['attention', copy.badges.attention] : undefined,
+  ]
+    .filter((badge): badge is string[] => Boolean(badge))
+    .map(
+      ([kind, label]) => `<span class="plan-badge is-${kind}">${label}</span>`
+    )
+    .join('');
+  const percent = (value: number | undefined) =>
+    value === undefined ? '—' : `${(value * 100).toFixed(0)}%`;
+  return `<div class="comparison-plan">
+    <p class="comparison-plan-title">${copy.plan}${badges}</p>
+    <dl class="comparison-judgments comparison-plan-grid">
+      ${item(
+        copy.responseDepth,
+        plan.depth ? copy.depths[plan.depth] : copy.noDepth,
+        typeof depthConfidence === 'number'
+          ? `${copy.confidence} ${percent(depthConfidence)}`
+          : undefined
+      )}
+      ${item(copy.reasoningEffort, plan.reasoningEffort ?? '—')}
+      ${item(copy.hostile, percent(decision.hostile?.probability), copy.probability)}
+      ${item(copy.pointsOutError, percent(decision.pointsOutError?.probability), copy.probability)}
+      ${item(copy.needsModerator, percent(decision.needsModerator?.probability), copy.probability)}
+    </dl>
+  </div>`;
 }

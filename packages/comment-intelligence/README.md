@@ -343,6 +343,7 @@ does not schedule collection windows.
 | `minConfidence` | `0.7`, range 0–1; a starting threshold, not an empirically calibrated optimum |
 | `maxComments` | `20`, integer 1–50; first N eligible comments in caller order |
 | `timeoutMs` | `2500`; aborts the HTTP request |
+| `responsePlan` | `false`; `true` or `{ moderatorThreshold, signalThreshold }` also suggests a reply style and flags rude comments, error reports, and safety risks (see below) |
 | `fetch` | Runtime fetch; can be injected for testing |
 
 Confident yes and no answers can replace topic/question rule signals. Uncertain,
@@ -384,9 +385,87 @@ results retain their existing path.
   first. Set `fallbackToRules: false` to propagate failures instead. No automatic
   retries or switching to another service are performed.
 
-Jev does not perform moderation, bans, relationship updates, or reply generation.
+Jev does not exclude or ban comments, update relationships, or generate replies.
+Moderator alerts (below) are suggestions only; your app sends any notification.
 Fixed questions treat comment text as untrusted data. Adversarial content and
 context mistakes can still influence answers, so existing exclusions remain enforced.
+
+### Reply style and moderator alerts (`responsePlan`)
+
+With `responsePlan: true`, the same single request carries extra questions, and
+`result.responsePlans` returns a handling suggestion for every assessed comment.
+The default is `false`, which leaves the request and the result unchanged.
+Ranking and selection never change.
+
+| Question | Type | Result field |
+| --- | --- | --- |
+| How much thought does a reply need? | Score (3 levels) | `depth`, `reasoningEffort` |
+| Is it rude to the streamer or viewers? | Noul | `needsAttention` |
+| Does it say the streamer or AI got something wrong? | Noul | `pointsOutError` |
+| Could it lead to real-world harm or a safety risk? | Noul | `notifyModerator` |
+
+| `depth` | Typical comment | `reasoningEffort` |
+| --- | --- | --- |
+| `one_liner` | Impression, reaction, cheer | `low` |
+| `quick` | Banter, greeting, joke, simple question | `low` |
+| `thoughtful` | Advice, explanation request, nuanced opinion, sensitive topic | `high` |
+
+Rude comments and comments that need a moderator right away are kept apart:
+
+- `needsAttention`: rude or hostile. Use it to avoid taking the bait. It never
+  notifies a moderator.
+- `notifyModerator`: may lead to real-world harm, such as threats, stalking or
+  revealing where someone is, exposing personal information, or signs of
+  self-harm. Rudeness or harsh criticism alone does not set it.
+- `pointsOutError`: says the streamer or AI stated something wrong, judged
+  against `recentMessages`. One report is not a flare-up; treat a run of reports
+  from several viewers as a sign that a correction is needed.
+
+```ts
+const intelligence = createCommentIntelligence({
+  analysis: {
+    mode: 'llm-assisted',
+    llmProvider: createJevCommentAnalysisProvider({
+      transport: 'typesafe',
+      apiKey: process.env.TYPESAFE_API_KEY!,
+      responsePlan: { moderatorThreshold: 0.8, signalThreshold: 0.5 },
+    }),
+  },
+});
+
+const result = await intelligence.analyze({ comments, recentMessages });
+const decision = toAgentCommentDecision(result);
+
+// Match the reply model's reasoning effort to the selected comment.
+const effort = decision.selectedComment?.responsePlan?.reasoningEffort;
+
+// Your app sends safety alerts to a moderator (webhook, queue, ...).
+for (const id of decision.moderatorAlertCommentIds ?? []) {
+  await notifyModerator(id);
+}
+
+// Count error reports over time; a run of them signals a flare-up.
+errorReports.push(...(decision.errorReportCommentIds ?? []));
+```
+
+- `depth` is set only when confidence is at least `minConfidence`; otherwise
+  it is omitted.
+- `reasoningEffort` follows `depth`, except that `pointsOutError` comments
+  always get `high`, because checking whether the stream was wrong needs reasoning.
+- `instructionForLLM` follows the selected comment's plan, in this order:
+  safety risk (do not engage), error report (check and correct), rude comment
+  (do not take the bait), then the reply style for its `depth`. An instruction
+  returned by the provider still wins.
+- `notifyModerator` is set when the safety-risk probability reaches
+  `moderatorThreshold` (default `0.8`); `needsAttention` and `pointsOutError`
+  when their probability reaches `signalThreshold` (default `0.5`). Both are
+  uncalibrated starting points.
+- Comments excluded by existing rules are never sent to Jev, so they get no plan.
+  Rules exclude blatant abuse; Jev assesses only the comments the rules kept.
+- Aggregate judgments such as detecting a flare-up belong in your app. TypeSafe
+  lists counting as a known Jev weakness, so ask Jev per comment and count in code.
+- Each comment adds four questions, so a large `maxComments` may take longer.
+  Measure real latency and adjust `timeoutMs` if needed.
 
 ### Comparison sample and verification
 
@@ -401,11 +480,14 @@ questions, repeated answered questions, latency, and cost. Evaluate separately o
 held-out conversations after tuning the questions or confidence threshold.
 
 Both transports send `state`, `questions`, and `model` with Bearer authentication.
-They use typed Choice answers, not Chat Completions. The TypeSafe API contract
+They use typed Choice answers, not Chat Completions; `responsePlan` adds Score
+and Noul questions to the same request. The TypeSafe API contract
 was checked on 2026-09-20 against its [quick start](https://docs.typesafe.ai/introduction/quickstart),
 [API reference](https://docs.typesafe.ai/api), and [model list](https://docs.typesafe.ai/models).
 OpenRouter uses its **alpha** Decisions API, checked against its
-[OpenAPI](https://openrouter.ai/openapi.json).
+[OpenAPI](https://openrouter.ai/openapi.json). See also the TypeSafe
+[Score](https://docs.typesafe.ai/primitives/score) and
+[Noul](https://docs.typesafe.ai/primitives/noul) primitives.
 
 As of 2026-09-20, a CORS preflight for a direct request from localhost to the
 TypeSafe AI official API returned `400 Disallowed CORS origin`. The browser
@@ -459,6 +541,9 @@ instruction, context bullets, ignored-comment summary, selected comment IDs,
 blocked viewer IDs, whether LLM analysis was used, and aggregate safety counts.
 It does not include the full ranked comment list, which helps reduce token use
 and avoids exposing every viewer comment to the agent.
+When the provider returned response plans, the selected comment also carries its
+`responsePlan`. `moderatorAlertCommentIds` lists assessed comments with a safety
+risk, and `errorReportCommentIds` lists comments saying the stream got something wrong.
 
 Use full detail only for debugging, operator dashboards, or other trusted
 surfaces that intentionally need ranked comment summaries:

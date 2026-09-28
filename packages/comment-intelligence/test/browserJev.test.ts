@@ -59,6 +59,8 @@ describe('browser Jev integration', () => {
     run();
     await vi.waitFor(() => expect(debug().usedLLM).toBe(false));
     expect(fetch).not.toHaveBeenCalled();
+    expect(field('flow-steps').textContent).toContain('Rules only');
+    expect(field('alerts-panel').hidden).toBe(true);
   });
 
   it('sends Jev decisions with topic and history and shows semantic results', async () => {
@@ -119,6 +121,104 @@ describe('browser Jev integration', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(localStorage.length).toBe(0);
     expect(sessionStorage.length).toBe(0);
+  });
+
+  it('separates rude comments, safety alerts and error-report flare-ups', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.mocked(fetch).mockImplementation(async (_url, init) => {
+      const body = JSON.parse(init?.body as string);
+      const yes = (key: string, index: number) =>
+        (key.endsWith('hostile') && index === 3) ||
+        (key.endsWith('needsModerator') && index === 4) ||
+        (key.endsWith('pointsOutError') && index >= 5);
+      const answers = Object.fromEntries(
+        Object.entries(body.questions as Record<string, { type: string }>).map(
+          ([key, question]) => {
+            const index = Number(key.match(/^c(\d+)_/)?.[1]);
+            if (question.type === 'score')
+              return [
+                key,
+                {
+                  type: 'score',
+                  score: index === 2 ? 2 : 0,
+                  confidence: 0.9,
+                },
+              ];
+            if (question.type === 'noul')
+              return [
+                key,
+                { type: 'noul', noul: yes(key, index) ? 0.95 : 0.02 },
+              ];
+            return [
+              key,
+              {
+                type: 'choice',
+                choice: index === 2 ? 'yes' : 'no',
+                confidence: 0.95,
+              },
+            ];
+          }
+        )
+      );
+      return new Response(JSON.stringify({ answers }), { status: 200 });
+    });
+    (
+      document.querySelector(
+        '[data-preset="responsePlan"]'
+      ) as HTMLButtonElement
+    ).click();
+    expect(field('jev-response-plan').checked).toBe(true);
+    expect(field('recent-reply').value).toContain('commercially');
+    change('analysis-engine', 'jev');
+    change('jev-api-key', 'test-key', 'input');
+    run();
+    await vi.waitFor(() => expect(debug().usedLLM).toBe(true));
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
+    expect(body.questions.c0_responseDepth.type).toBe('score');
+    expect(body.questions.c0_pointsOutError.type).toBe('noul');
+    expect(debug().responsePlans).toHaveLength(8);
+    expect(field('candidate-comparison').textContent).toContain(
+      'Think it through'
+    );
+    // Only the safety risk is an alert; the rude comment is just marked.
+    expect(document.querySelectorAll('.comparison-card.is-alert')).toHaveLength(
+      1
+    );
+    expect(
+      document.querySelectorAll('.incoming-comment .plan-badge.is-attention')
+    ).toHaveLength(1);
+    expect(
+      document.querySelectorAll('.incoming-comment .plan-badge.is-error')
+    ).toHaveLength(3);
+    // The rules pick viewer I, an error report: correct it with high effort.
+    expect(field('summary').textContent).toContain('said was wrong');
+    expect(field('summary').textContent).toContain(
+      'Suggested reasoning effort for the reply model: high'
+    );
+    const toasts = document.querySelectorAll('.toast');
+    expect(toasts).toHaveLength(2);
+    expect(toasts[0].textContent).toContain('real-world harm');
+    expect(document.querySelector('.toast.is-danger')?.textContent).toContain(
+      '3 of 8 assessed comments say the stream got something wrong'
+    );
+    expect(info).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const flow = field('flow-steps').textContent;
+    expect(flow).toContain('Excluded 1');
+    expect(flow).toContain('Jev assessed 8 comments');
+    expect(flow).toContain(
+      'moderator alerts: 1 · needs attention: 1 · error reports: 3'
+    );
+    expect(field('alerts-panel').hidden).toBe(false);
+    expect(document.querySelectorAll('.alert-item')).toHaveLength(2);
+    expect(document.querySelector('.alert-item.is-flare')).not.toBeNull();
+    expect(
+      document.querySelector('.comparison-card.is-blocked')?.textContent
+    ).toContain('was not sent to the AI');
+    expect(document.querySelector('.incoming-reason')?.textContent).toContain(
+      'Excluded by rules'
+    );
+    info.mockRestore();
   });
 
   it('shows HTTP failures as rule fallback without leaking response content', async () => {

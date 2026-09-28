@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createCommentIntelligence,
   createJevCommentAnalysisProvider,
+  toAgentCommentDecision,
   type LiveComment,
   type JevCommentAnalysisOptions,
 } from '../src/index.js';
@@ -35,7 +36,7 @@ function choice(value = 'yes', confidence: number | undefined = 0.9) {
   };
 }
 
-function transport(answer = (_key: string) => choice()) {
+function transport(answer: (key: string) => unknown = () => choice()) {
   return vi
     .fn<[RequestInfo | URL, RequestInit?], Promise<Response>>()
     .mockImplementation(async (_url, init) => {
@@ -512,6 +513,260 @@ describe('Jev semantic ranking integration', () => {
     }).analyze({ comments: [comment('a')] });
     expect(result.debug?.llmUnmatchedIds).toEqual(['unknown']);
     expect(result.rankedComments.map((c) => c.id)).toEqual(['a']);
+  });
+});
+
+function score(level: number, confidence = 0.9) {
+  const probabilities = { '0': 0.05, '1': 0.05, '2': 0.05 } as Record<
+    string,
+    number
+  >;
+  probabilities[String(level)] = 0.9;
+  return {
+    type: 'score',
+    score: level,
+    confidence,
+    probabilities,
+    legend: { '0': 'one', '1': 'two', '2': 'three' },
+  };
+}
+
+function planAnswers(
+  plan: Record<
+    string,
+    { depth?: number; hostile?: number; error?: number; mod?: number }
+  >
+) {
+  return (key: string) => {
+    const [, index, dimension] = key.match(/^c(\d+)_(\w+)$/) ?? [];
+    const entry = plan[index] ?? {};
+    if (dimension === 'responseDepth') return score(entry.depth ?? 1);
+    if (dimension === 'hostile')
+      return { type: 'noul', noul: entry.hostile ?? 0.02 };
+    if (dimension === 'pointsOutError')
+      return { type: 'noul', noul: entry.error ?? 0.02 };
+    if (dimension === 'needsModerator')
+      return { type: 'noul', noul: entry.mod ?? 0.02 };
+    return choice(dimension === 'alreadyAnswered' ? 'no' : 'yes');
+  };
+}
+
+function planIntelligence(answer: (key: string) => unknown) {
+  return createCommentIntelligence({
+    analysis: {
+      mode: 'llm-assisted',
+      llmProvider: provider(transport(answer), { responsePlan: true }),
+    },
+  });
+}
+
+describe('Jev response plans', () => {
+  it('does not ask plan questions unless opted in', async () => {
+    const fetchFn = transport();
+    const result = await provider(fetchFn).analyze({
+      comments: [comment('a')],
+      ...context,
+    });
+    const request = JSON.parse(fetchFn.mock.calls[0][1]?.body as string);
+    expect(Object.keys(request.questions)).toEqual([
+      'c0_question',
+      'c0_topicRelated',
+      'c0_alreadyAnswered',
+    ]);
+    expect(result).not.toHaveProperty('responsePlans');
+  });
+
+  it('adds typed plan questions to the same request', async () => {
+    const fetchFn = transport(planAnswers({}));
+    await provider(fetchFn, { responsePlan: true }).analyze({
+      comments: [comment('a'), comment('b')],
+      ...context,
+    });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const request = JSON.parse(fetchFn.mock.calls[0][1]?.body as string);
+    expect(Object.keys(request.questions)).toHaveLength(14);
+    expect(request.questions.c1_responseDepth.type).toBe('score');
+    expect(request.questions.c1_responseDepth.criteria).toHaveLength(3);
+    expect(request.questions.c1_responseDepth.instructions).toContain(
+      'state.comments[1]'
+    );
+    expect(request.questions.c0_hostile.type).toBe('noul');
+    expect(request.questions.c0_pointsOutError.instructions).toContain(
+      'recentMessages'
+    );
+    // Rudeness alone must not escalate to a moderator.
+    expect(request.questions.c0_needsModerator.instructions).toContain(
+      'Rudeness, insults or harsh criticism alone do not count'
+    );
+  });
+
+  it('separates rudeness, error reports and safety risks', async () => {
+    const fetchFn = transport(
+      planAnswers({
+        '0': { depth: 0 },
+        '1': { depth: 1, hostile: 0.95 },
+        '2': { depth: 0, error: 0.9 },
+        '3': { depth: 1, hostile: 0.9, mod: 0.95 },
+      })
+    );
+    const result = await provider(fetchFn, { responsePlan: true }).analyze({
+      comments: [comment('a'), comment('b'), comment('c'), comment('d')],
+      ...context,
+    });
+    const flags = { needsAttention: false, pointsOutError: false };
+    expect(result.responsePlans).toEqual([
+      {
+        commentId: 'a',
+        depth: 'one_liner',
+        reasoningEffort: 'low',
+        ...flags,
+        notifyModerator: false,
+      },
+      {
+        commentId: 'b',
+        depth: 'quick',
+        reasoningEffort: 'low',
+        ...flags,
+        needsAttention: true,
+        notifyModerator: false,
+      },
+      {
+        // Error reports need fact checking even when the reply is short.
+        commentId: 'c',
+        depth: 'one_liner',
+        reasoningEffort: 'high',
+        ...flags,
+        pointsOutError: true,
+        notifyModerator: false,
+      },
+      {
+        commentId: 'd',
+        depth: 'quick',
+        reasoningEffort: 'low',
+        ...flags,
+        needsAttention: true,
+        notifyModerator: true,
+      },
+    ]);
+    expect(result.decisions[3].needsModerator?.probability).toBe(0.95);
+    expect(result.decisions[2].responseDepth?.level).toBe(0);
+  });
+
+  it('omits depth below minConfidence or without confidence and honors thresholds', async () => {
+    const fetchFn = transport((key) => {
+      if (key === 'c0_responseDepth') return score(2, 0.4);
+      if (key === 'c1_responseDepth') {
+        const { confidence: _omitted, ...answer } = score(2);
+        return answer;
+      }
+      if (key.endsWith('needsModerator')) return { type: 'noul', noul: 0.85 };
+      if (key.endsWith('hostile')) return { type: 'noul', noul: 0.6 };
+      return planAnswers({})(key);
+    });
+    const result = await provider(fetchFn, {
+      responsePlan: { moderatorThreshold: 0.9, signalThreshold: 0.7 },
+    }).analyze({ comments: [comment('a'), comment('b')], ...context });
+    const plan = {
+      needsAttention: false,
+      pointsOutError: false,
+      notifyModerator: false,
+    };
+    expect(result.responsePlans).toEqual([
+      { commentId: 'a', ...plan },
+      { commentId: 'b', ...plan },
+    ]);
+  });
+
+  it('rejects invalid plan answers and thresholds', async () => {
+    const invalid = transport((key) =>
+      key.endsWith('responseDepth')
+        ? { type: 'score', score: 5 }
+        : planAnswers({})(key)
+    );
+    await expect(
+      provider(invalid, { responsePlan: true }).analyze({
+        comments: [comment('a')],
+      })
+    ).rejects.toThrow('invalid score');
+    const badNoul = transport((key) =>
+      key.endsWith('pointsOutError')
+        ? { type: 'noul', noul: 2 }
+        : planAnswers({})(key)
+    );
+    await expect(
+      provider(badNoul, { responsePlan: true }).analyze({
+        comments: [comment('a')],
+      })
+    ).rejects.toThrow('invalid noul');
+    expect(() =>
+      provider(transport(), { responsePlan: { moderatorThreshold: 1.5 } })
+    ).toThrow('moderatorThreshold');
+    expect(() =>
+      provider(transport(), { responsePlan: { signalThreshold: -1 } })
+    ).toThrow('signalThreshold');
+  });
+
+  it('keeps ranking unchanged and adapts the instruction to the selected comment', async () => {
+    const input = { comments: [comment('a'), comment('b')], ...context };
+    const withoutPlan = await createCommentIntelligence({
+      analysis: {
+        mode: 'llm-assisted',
+        llmProvider: provider(transport(planAnswers({}))),
+      },
+    }).analyze(input);
+    const result = await planIntelligence(
+      planAnswers({
+        '0': { depth: 2 },
+        '1': { depth: 2, error: 0.9, mod: 0.9 },
+      })
+    ).analyze(input);
+    expect(result.rankedComments).toEqual(withoutPlan.rankedComments);
+    expect(result.selectedComments).toEqual(withoutPlan.selectedComments);
+    expect(result.selectedComments.map((c) => c.id)).toEqual(['a']);
+    expect(result.responsePlans).toHaveLength(2);
+    expect(result.instructionForLLM).not.toBe(withoutPlan.instructionForLLM);
+    expect(result.instructionForLLM).toContain('丁寧な回答');
+
+    const decision = toAgentCommentDecision(result);
+    expect(decision.selectedComment?.responsePlan?.reasoningEffort).toBe(
+      'high'
+    );
+    expect(decision.moderatorAlertCommentIds).toEqual(['b']);
+    expect(decision.errorReportCommentIds).toEqual(['b']);
+    expect(toAgentCommentDecision(withoutPlan)).not.toHaveProperty(
+      'moderatorAlertCommentIds'
+    );
+  });
+
+  it('prioritizes safety, then corrections, then tone in the instruction', async () => {
+    const input = { comments: [comment('a')], ...context };
+    const instruction = async (entry: Record<string, number>) =>
+      (await planIntelligence(planAnswers({ '0': entry })).analyze(input))
+        .instructionForLLM;
+    expect(await instruction({ depth: 2, hostile: 0.9, mod: 0.9 })).toContain(
+      '安全上の懸念'
+    );
+    expect(await instruction({ depth: 2, hostile: 0.9, error: 0.9 })).toContain(
+      '誤りを指摘'
+    );
+    expect(await instruction({ depth: 2, hostile: 0.9 })).toContain(
+      '挑発に乗らず'
+    );
+  });
+
+  it('keeps the default instruction when the selected depth is unknown', async () => {
+    const input = { comments: [comment('a')], ...context };
+    const baseline = await createCommentIntelligence({
+      analysis: {
+        mode: 'llm-assisted',
+        llmProvider: provider(transport(planAnswers({}))),
+      },
+    }).analyze(input);
+    const result = await planIntelligence((key) =>
+      key.endsWith('responseDepth') ? score(2, 0.1) : planAnswers({})(key)
+    ).analyze(input);
+    expect(result.responsePlans?.[0].depth).toBeUndefined();
+    expect(result.instructionForLLM).toBe(baseline.instructionForLLM);
   });
 });
 
