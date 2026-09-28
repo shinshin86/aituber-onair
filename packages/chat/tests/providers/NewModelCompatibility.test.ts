@@ -327,6 +327,65 @@ describe('New model endpoint compatibility', () => {
     });
   });
 
+  it('sends Claude Sonnet 5.5 image requests with effort through the Messages API', async () => {
+    const post = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(
+        jsonResponse({ content: [{ type: 'text', text: 'Claude response' }] }),
+      );
+    const provider = new ClaudeChatServiceProvider();
+    const service = provider.createChatService({
+      apiKey: 'test-key',
+      model: models.MODEL_CLAUDE_5_5_SONNET,
+      reasoning_effort: 'medium',
+    });
+    const response = await service.visionChatOnce!(images, false);
+
+    expect(provider.getSupportedModels()).toContain(
+      models.MODEL_CLAUDE_5_5_SONNET,
+    );
+    expect(
+      provider.supportsVisionForModel(models.MODEL_CLAUDE_5_5_SONNET),
+    ).toBe(true);
+    expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_CLAUDE_API);
+    expect(post.mock.calls[0][1]).toMatchObject({
+      model: models.MODEL_CLAUDE_5_5_SONNET,
+      output_config: { effort: 'medium' },
+      messages: [
+        {
+          content: expect.arrayContaining([
+            expect.objectContaining({ type: 'image' }),
+          ]),
+        },
+      ],
+    });
+    expect(post.mock.calls[0][1].thinking).toBeUndefined();
+    expect(response.blocks).toContainEqual({
+      type: 'text',
+      text: 'Claude response',
+    });
+  });
+
+  it('keeps Claude Sonnet 5.5 tool selection automatic', async () => {
+    const post = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(
+        jsonResponse({ content: [{ type: 'text', text: 'Claude response' }] }),
+      );
+    const service = new ClaudeChatServiceProvider().createChatService({
+      apiKey: 'test-key',
+      model: models.MODEL_CLAUDE_5_5_SONNET,
+      tools,
+    });
+    await service.chatOnce!(messages, false);
+
+    expect(post.mock.calls[0][1]).toMatchObject({
+      model: models.MODEL_CLAUDE_5_5_SONNET,
+      tools: [expect.objectContaining({ name: 'lookup' })],
+      tool_choice: { type: 'auto' },
+    });
+  });
+
   it('sends Grok 4.7 through xAI Chat Completions with vision and default effort', async () => {
     const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
       jsonResponse({

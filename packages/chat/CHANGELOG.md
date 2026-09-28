@@ -1,5 +1,17 @@
 # @aituber-onair/chat
 
+## 0.58.0
+
+### Minor Changes
+
+- Added Claude Sonnet 5.5 (`claude-sonnet-5-5`) support through the Messages
+  API with image input, all five effort levels, and automatic tool selection.
+
+### Patch Changes
+
+- Updated the React basic example, English/Japanese documentation, and Claude
+  compatibility tests for Claude Sonnet 5.5.
+
 ## 0.57.0
 
 ### Minor Changes

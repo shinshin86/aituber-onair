@@ -20,6 +20,7 @@ export const MODEL_CLAUDE_5_FABLE = 'claude-fable-5';
 export const MODEL_CLAUDE_5_SONNET = 'claude-sonnet-5';
 export const MODEL_CLAUDE_5_OPUS = 'claude-opus-5';
 export const MODEL_CLAUDE_5_5_OPUS = 'claude-opus-5-5';
+export const MODEL_CLAUDE_5_5_SONNET = 'claude-sonnet-5-5';
 
 // Retired model ids remain exported so existing imports continue to compile.
 export const CLAUDE_DEPRECATED_MODELS = [
@@ -63,6 +64,7 @@ const CLAUDE_REASONING_EFFORTS_BY_MODEL: Record<
   [MODEL_CLAUDE_5_FABLE]: CLAUDE_XHIGH_REASONING_EFFORTS,
   [MODEL_CLAUDE_5_SONNET]: CLAUDE_XHIGH_REASONING_EFFORTS,
   [MODEL_CLAUDE_5_OPUS]: CLAUDE_XHIGH_REASONING_EFFORTS,
+  [MODEL_CLAUDE_5_5_SONNET]: CLAUDE_XHIGH_REASONING_EFFORTS,
 };
 
 export const CLAUDE_VISION_SUPPORTED_MODELS = [
@@ -78,6 +80,7 @@ export const CLAUDE_VISION_SUPPORTED_MODELS = [
   MODEL_CLAUDE_5_SONNET,
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_5_OPUS,
+  MODEL_CLAUDE_5_5_SONNET,
 ];
 
 /**
