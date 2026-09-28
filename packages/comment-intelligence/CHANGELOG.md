@@ -1,5 +1,27 @@
 # @aituber-onair/comment-intelligence
 
+## 0.0.8
+
+### Patch Changes
+
+- Adds an opt-in `responsePlan` option to the Jev provider. The same request
+  also suggests a reply depth (`one_liner`, `quick`, `thoughtful`) with a
+  reasoning effort for the host's reply model, and flags rude comments
+  (`needsAttention`), reports that the stream got something wrong
+  (`pointsOutError`), and real-world safety risks (`notifyModerator`).
+  Ranking and selection are unchanged, and nothing changes unless the option
+  is set.
+- Only safety risks set `notifyModerator`; rudeness alone never escalates.
+  Error reports always suggest high reasoning effort so the reply can check
+  and correct the claim.
+- Switches `instructionForLLM` to match the selected comment's plan, and adds
+  the plan, `moderatorAlertCommentIds`, and `errorReportCommentIds` to
+  `toAgentCommentDecision()` output.
+- Adds a reply-style and moderator-alert preset to the browser sample, with a
+  processing-flow summary, rule-exclusion reasons, per-comment plan badges,
+  and a moderator notification panel backed by a stand-in webhook.
+- Updates English/Japanese guides and regression tests.
+
 ## 0.0.7
 
 ### Patch Changes
