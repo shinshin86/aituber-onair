@@ -7,6 +7,7 @@ subset of the OpenAI-compatible Chat Completions contract required by
 ## Endpoints
 
 - `GET /health`
+- `GET /v1/models` (returns `mock-chat-model`; uses the configured API key)
 - `POST /v1/chat/completions`
   - non-stream response (`stream: false`)
   - SSE stream response (`stream: true`)

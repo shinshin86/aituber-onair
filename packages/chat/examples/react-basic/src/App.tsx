@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   ChatServiceFactory,
   ChatService,
@@ -25,6 +25,7 @@ import {
   normalizeXaiReasoningEffort,
   normalizeDeepSeekReasoningEffort,
   normalizeOpenRouterReasoningEffort,
+  resolveOpenAICompatibleEndpoint,
   type Message,
   type MessageWithVision,
   type ChatResponseLength,
@@ -257,6 +258,13 @@ function App() {
   const visionSupportLevel = getVisionSupportLevel(provider, selectedModel);
   const effectiveApiKey =
     provider === 'openai-compatible' ? apiKey.trim() : apiKey;
+  const resolvedOpenAICompatibleEndpoint = useMemo(() => {
+    try {
+      return resolveOpenAICompatibleEndpoint(openaiCompatibleEndpoint);
+    } catch {
+      return null;
+    }
+  }, [openaiCompatibleEndpoint]);
   const isGeminiNanoReady =
     provider !== 'gemini-nano' || geminiNano.status === 'available';
 
@@ -273,7 +281,7 @@ function App() {
         ? true
         : provider === 'openai-compatible'
           ? Boolean(selectedModel.trim()) &&
-            Boolean(openaiCompatibleEndpoint.trim())
+            Boolean(resolvedOpenAICompatibleEndpoint)
           : Boolean(apiKey);
 
     if (shouldInitialize) {
@@ -297,11 +305,8 @@ function App() {
         }
 
         if (provider === 'openai-compatible') {
-          const endpoint = openaiCompatibleEndpoint.trim();
-          if (!endpoint) {
-            throw new Error('OpenAI-compatible endpoint is required.');
-          }
-          options.endpoint = endpoint;
+          options.endpoint =
+            resolvedOpenAICompatibleEndpoint?.chatCompletionsUrl;
         }
 
         if (
@@ -429,7 +434,7 @@ function App() {
     zaiReasoningEffort,
     verbosity,
     gpt5EndpointPreference,
-    openaiCompatibleEndpoint,
+    resolvedOpenAICompatibleEndpoint,
     enableReasoningSummary,
     openrouterReasoningEffort,
     openrouterIncludeReasoning,

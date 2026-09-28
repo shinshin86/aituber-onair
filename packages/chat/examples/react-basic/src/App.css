@@ -131,6 +131,84 @@
   border: 1px solid #f1c4c4;
 }
 
+.local-llm-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.local-llm-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.local-llm-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.local-llm-presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.local-llm-presets .action-button {
+  padding: 0.6rem 0.4rem;
+  font-size: 0.78rem;
+}
+
+.local-llm-presets .local-llm-preset-active {
+  border-color: var(--brand-strong);
+  background: var(--brand-strong);
+  color: white;
+}
+
+.local-llm-presets
+  .action-button.local-llm-preset-active:is(:hover, :focus-visible) {
+  border-color: var(--brand-strong);
+  background: var(--brand-strong);
+  color: white;
+}
+
+.local-llm-preview {
+  overflow-wrap: break-word;
+}
+
+.local-llm-preview code {
+  font-family: "JetBrains Mono", monospace;
+}
+
+.local-llm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.local-llm-status {
+  display: block;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.local-llm-status-ok {
+  color: #176b4b;
+}
+
+.local-llm-error-help {
+  margin: 0.35rem 0 0;
+}
+
+.local-llm-error-help a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .app-footer {
   padding: 0 2.5rem 1rem;
   font-size: 0.85rem;

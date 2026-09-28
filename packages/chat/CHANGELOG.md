@@ -11,6 +11,9 @@
 
 - Updated the local LLM CLI to accept base URLs and list models with
   `--list-models`, and added English/Japanese local LLM setup guides.
+- Added local server presets, model listing, and a connection test to the
+  React basic example's OpenAI-compatible settings, and added
+  `GET /v1/models` to the mock OpenAI server example.
 
 ## 0.56.0
 
