@@ -54,7 +54,7 @@ test('generated templates use published dependency ranges', async () => {
     assert.equal(packageJson.dependencies['@aituber-onair/core'], '^0.26.15');
     assert.equal(
       packageJson.dependencies['@aituber-onair/comment-intelligence'],
-      '^0.0.7',
+      '^0.0.8',
     );
     assert.equal(packageJson.dependencies['@aituber-onair/manneri'], '^0.4.0');
   }

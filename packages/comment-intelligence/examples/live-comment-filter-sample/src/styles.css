@@ -1191,3 +1191,219 @@ button.is-loading::before {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Response plan & moderator alerts ---------- */
+
+.inline-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.inline-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  min-height: auto;
+  accent-color: var(--c-brand);
+}
+
+.comparison-card.is-alert {
+  border-left-color: var(--c-danger);
+}
+.comparison-plan {
+  margin: 0 0 12px;
+}
+.comparison-plan-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 6px;
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+.plan-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  font-size: .72rem;
+  font-weight: 700;
+}
+.plan-badge.is-notify {
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
+}
+.plan-badge.is-error {
+  background: #e6eefb;
+  color: #1f4e9a;
+}
+.plan-badge.is-attention {
+  background: var(--c-warning-soft);
+  color: #7a4d08;
+}
+.comparison-plan-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .comparison-plan-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.toast-stack {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 50;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  max-width: 420px;
+  padding: 12px 14px;
+  border: 1px solid #e7b056;
+  border-left: 4px solid var(--c-warning);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-md);
+  font-size: .86rem;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+}
+.toast.is-danger {
+  border-color: var(--c-danger-border);
+  border-left-color: var(--c-danger);
+}
+.toast strong {
+  display: block;
+  margin-bottom: 2px;
+}
+.toast p {
+  margin: 0;
+  color: var(--c-ink-soft);
+}
+
+/* ---------- Processing flow ---------- */
+
+.flow-panel,
+.alerts-panel {
+  margin-bottom: 14px;
+}
+.flow-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.flow-step {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--c-border);
+  border-top: 3px solid var(--c-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-soft);
+  overflow-wrap: anywhere;
+}
+.flow-step strong {
+  display: block;
+  font-size: .82rem;
+}
+.flow-step p {
+  margin: 2px 0 0;
+  color: var(--c-ink-soft);
+  font-size: .78rem;
+  line-height: 1.4;
+}
+.flow-index {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-pill);
+  background: var(--c-border);
+  color: var(--c-ink-soft);
+  font-size: .72rem;
+  font-weight: 700;
+}
+.flow-step.is-done {
+  border-top-color: var(--c-brand);
+}
+.flow-step.is-done .flow-index {
+  background: var(--c-brand-soft);
+  color: var(--c-brand-ink);
+}
+.flow-step.is-warning {
+  border-top-color: var(--c-warning);
+}
+.flow-step.is-warning .flow-index {
+  background: var(--c-warning-soft);
+  color: #7a4d08;
+}
+.flow-step.is-skipped {
+  border-top-style: dashed;
+}
+@media (max-width: 900px) {
+  .flow-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Exclusion reasons & alert list ---------- */
+
+.incoming-comment .incoming-reason {
+  margin-top: 6px;
+  color: var(--c-danger);
+  font-size: .76rem;
+  font-weight: 600;
+}
+.incoming-comment .plan-badge {
+  margin: 6px 4px 0 0;
+}
+.comparison-excluded {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  border: 1px dashed var(--c-danger-border);
+  font-size: .85rem;
+}
+.comparison-excluded p {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.alerts-panel .kicker {
+  background: var(--c-warning-soft);
+  color: #7a4d08;
+}
+.alert-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.alert-item {
+  padding: 10px 12px;
+  border: 1px solid var(--c-danger-border);
+  border-left: 4px solid var(--c-danger);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  overflow-wrap: anywhere;
+}
+.alert-item p {
+  margin: 2px 0 4px;
+}
+.alert-item.is-flare {
+  border-color: var(--c-danger-border);
+  border-left-color: var(--c-danger);
+  background: var(--c-danger-soft);
+  font-weight: 600;
+}

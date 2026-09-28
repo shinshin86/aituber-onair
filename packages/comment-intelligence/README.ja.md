@@ -326,6 +326,7 @@ console.log(result.debug?.semanticAssessments);
 | `minConfidence` | `0.7`。0〜1。検証済みの最適値ではなく、調整の開始値 |
 | `maxComments` | `20`。1〜50。対象コメントを入力順に最大何件評価するか |
 | `timeoutMs` | `2500`。HTTPリクエストを中断するまでの時間 |
+| `responsePlan` | `false`。`true` または `{ moderatorThreshold, signalThreshold }` で返し方・要注意・誤りの指摘・管理者通知も判定する（後述） |
 | `fetch` | 実行環境の `fetch`。テストなどで差し替え可能 |
 
 話題・質問の判定は、確信度が閾値以上なら肯定・否定の両方を反映します。
@@ -364,9 +365,89 @@ console.log(result.debug?.semanticAssessments);
   `fallbackToRules: false` ならエラーを呼び出し側へ返します。
   レート制限や混雑時も自動再試行せず、別サービスへ自動で切り替えることもありません。
 
-Jevは安全性判定、BAN、関係値更新、返答生成には使いません。視聴者の発言は
-評価対象のデータとして渡し、その内容を指示として扱わないよう質問を固定しています。
-それでも誘導的な入力や文脈の読み違いは起こり得るため、既存の除外条件を維持します。
+Jevの判定でコメントを除外・BANしたり、関係値を更新したり、返答を生成したりは
+しません。管理者通知の判定（後述）も提案を返すだけで、通知の送信はアプリ側で行います。
+視聴者の発言は評価対象のデータとして渡し、その内容を指示として扱わないよう
+質問を固定しています。それでも誘導的な入力や文脈の読み違いは起こり得るため、
+既存の除外条件を維持します。
+
+### 返し方と管理者通知（responsePlan）
+
+`responsePlan: true` を指定すると、同じ1回の通信に質問を追加し、評価した
+コメントごとの対応方針を `result.responsePlans` に返します。初期値は `false` で、
+指定しなければ送る質問も結果も従来と同じです。順位と選択結果は変わりません。
+
+| 質問 | 形式 | 結果への反映 |
+| --- | --- | --- |
+| 返答にどれだけ考える必要があるか | Score（3段階） | `depth` と `reasoningEffort` |
+| 配信者や視聴者に失礼・攻撃的か | Noul | `needsAttention` |
+| 配信者やAIの発言の誤りを指摘しているか | Noul | `pointsOutError` |
+| 実害や安全上のリスクにつながるか | Noul | `notifyModerator` |
+
+| `depth` | 想定するコメント | `reasoningEffort` |
+| --- | --- | --- |
+| `one_liner` | 感想・リアクション・応援 | `low` |
+| `quick` | 雑談・挨拶・ノリ・簡単な質問 | `low` |
+| `thoughtful` | 相談・説明の依頼・込み入った意見・繊細な話題 | `high` |
+
+失礼なコメントと、管理者がすぐ動くべきコメントは分けて扱います。
+
+- `needsAttention`：失礼・攻撃的なコメントです。真面目に取り合わない、
+  受け流すといった扱いに使います。管理者への通知には使いません。
+- `notifyModerator`：脅迫、つきまといや居場所を明かす発言、個人情報の暴露、
+  自傷のほのめかしなど、実害につながるおそれがあるコメントです。失礼な言葉や
+  厳しい批判だけでは `true` になりません。
+- `pointsOutError`：配信者やAIが間違ったことを言った、と指摘するコメントです。
+  直近の会話（`recentMessages`）を文脈として判定します。1件だけでは炎上では
+  ありません。複数の視聴者から続いたときに、訂正などの対応が必要な炎上の兆候として
+  扱ってください。
+
+```ts
+const intelligence = createCommentIntelligence({
+  analysis: {
+    mode: 'llm-assisted',
+    llmProvider: createJevCommentAnalysisProvider({
+      transport: 'typesafe',
+      apiKey: process.env.TYPESAFE_API_KEY!,
+      responsePlan: { moderatorThreshold: 0.8, signalThreshold: 0.5 },
+    }),
+  },
+});
+
+const result = await intelligence.analyze({ comments, recentMessages });
+const decision = toAgentCommentDecision(result);
+
+// 返答LLMの推論の深さを、選ばれたコメントの方針に合わせる
+const effort = decision.selectedComment?.responsePlan?.reasoningEffort;
+
+// 実害のおそれがあるコメントは、アプリ側で管理者に送る（Webhookなど）
+for (const id of decision.moderatorAlertCommentIds ?? []) {
+  await notifyModerator(id);
+}
+
+// 誤りの指摘は件数を数え、続いていれば炎上の兆候として扱う
+errorReports.push(...(decision.errorReportCommentIds ?? []));
+```
+
+- `depth` は確信度が `minConfidence` 以上のときだけ設定します。低確信や確信度が
+  欠けた回答では `depth` を省略します。
+- `reasoningEffort` は `depth` から決めます。ただし `pointsOutError` のコメントは、
+  本当に誤りかを確認する必要があるため、`depth` に関係なく `high` にします。
+- 選ばれたコメントの方針に合わせて、`instructionForLLM` を切り替えます。
+  優先順は、安全上のリスク（内容に触れない）、誤りの指摘（確認して訂正する）、
+  失礼なコメント（挑発に乗らない）、`depth` に応じた返し方、の順です。
+  プロバイダーが独自の指示を返した場合はそちらを優先します。
+- `notifyModerator` は安全上のリスクの確率が `moderatorThreshold`（初期値 `0.8`）
+  以上のとき、`needsAttention` と `pointsOutError` はそれぞれの確率が
+  `signalThreshold`（初期値 `0.5`）以上のとき `true` です。どちらの値も
+  検証済みの最適値ではありません。
+- 既存ルールが除外したコメントはJevに送らないため、方針も付きません。露骨な
+  暴言はルールで除外され、Jevが判定するのはルールで除外されなかったコメントです。
+- 炎上の検知のように複数コメントを集計する判断は、アプリ側で行ってください。
+  Jevは個数を数える処理が苦手とされているため、Jevには1件ずつの判定だけを任せ、
+  件数はコードで数えます。
+- 質問が1件あたり4問増えるため、`maxComments` が大きいと処理時間が延びる
+  可能性があります。実際の処理時間を確認し、必要なら `timeoutMs` を調整してください。
 
 ### 比較サンプルと検証
 
@@ -382,7 +463,8 @@ Jevは安全性判定、BAN、関係値更新、返答生成には使いませ�
 プロンプトや閾値の調整用とは別の会話データでも確認してください。
 
 両接続先ともBearer認証で `state`・`questions`・`model` を送り、Choice形式の
-判断結果を受け取ります。通常のChat Completions APIは使いません。
+判断結果を受け取ります。`responsePlan` を有効にした場合は、Score形式とNoul形式の
+質問も同じ通信で送ります。通常のChat Completions APIは使いません。
 TypeSafe公式APIは2026-09-20に[クイックスタート](https://docs.typesafe.ai/introduction/quickstart)、
 [APIリファレンス](https://docs.typesafe.ai/api)、[モデル一覧](https://docs.typesafe.ai/models)
 で仕様を確認しています。OpenRouter側はalpha Decisions APIを使い、
@@ -397,7 +479,9 @@ TypeSafe AIへの接続はサーバー側で実行してください。サンプ
 両接続先の送信・応答検証・フォールバック・中断は通信モックでテストしています。
 今回、認証付きTypeSafe実推論や日本語精度の測定は行っていません。
 最新エイリアスはモデル更新で挙動が変わり得ます。
-[TypeSafeのChoice仕様](https://docs.typesafe.ai/primitives/choice)と
+[TypeSafeのChoice仕様](https://docs.typesafe.ai/primitives/choice)、
+[Score仕様](https://docs.typesafe.ai/primitives/score)、
+[Noul仕様](https://docs.typesafe.ai/primitives/noul)と
 [既知の制約](https://docs.typesafe.ai/model-jaggedness/jev-1.13)も参照してください。
 
 ## Normalizer
@@ -430,6 +514,7 @@ const decision = toAgentCommentDecision(result);
 ```
 
 初期値の `compact` detail では、選ばれたコメント、返答指示、context bullet、未選択コメントの要約、選択コメントID、ブロック中の視聴者ID、LLM分析を使ったかどうか、安全性の集計だけを返します。全 ranked comment list は含めません。これにより token 使用量を抑え、すべての視聴者コメントを agent に露出しないようにできます。
+プロバイダーが対応方針（`responsePlans`）を返した場合は、選ばれたコメントに `responsePlan` が付きます。`moderatorAlertCommentIds` には実害のおそれがあるコメント、`errorReportCommentIds` には配信側の誤りを指摘したコメントのIDが入ります。
 
 ranked comment summaries が必要な場合は、debug 用 UI や operator dashboard など信頼できる用途に限って `detail: 'full'` を指定してください。
 

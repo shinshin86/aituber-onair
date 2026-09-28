@@ -1,3 +1,4 @@
+import type { CommentResponsePlan } from './types/llm.js';
 import type { RankedComment, RankingReason } from './types/ranking.js';
 import type { CommentIntelligenceResult } from './types/result.js';
 import type { SafetyCategory } from './types/safety.js';
@@ -10,6 +11,8 @@ export type AgentSelectedComment = {
   authorName: string;
   score: number;
   reasons: RankingReason[];
+  /** Present when the analysis provider returned a plan for this comment. */
+  responsePlan?: CommentResponsePlan;
 };
 
 export type AgentSafetySummary = {
@@ -28,6 +31,13 @@ export type AgentCommentDecision = {
   selectedCommentIds: string[];
   blockedViewerIds: string[];
   llmUsed: boolean;
+  /** Assessed comments with a safety risk; present with response plans. */
+  moderatorAlertCommentIds?: string[];
+  /**
+   * Assessed comments saying the stream got something wrong. Count them over
+   * time to detect a flare-up; present with response plans.
+   */
+  errorReportCommentIds?: string[];
   rankedComments?: AgentSelectedComment[];
 };
 
@@ -43,8 +53,11 @@ export function toAgentCommentDecision(
   result: CommentIntelligenceResult,
   options: AgentCommentDecisionOptions = {}
 ): AgentCommentDecision {
+  const plans = new Map(
+    (result.responsePlans ?? []).map((plan) => [plan.commentId, plan])
+  );
   const selectedComment = result.selectedComments[0]
-    ? toAgentSelectedComment(result.selectedComments[0])
+    ? toAgentSelectedComment(result.selectedComments[0], plans)
     : undefined;
   const detail = options.detail ?? 'compact';
 
@@ -59,21 +72,38 @@ export function toAgentCommentDecision(
       result.selectedComments.map((comment) => comment.id),
     blockedViewerIds: result.debug?.blockedViewerIds ?? [],
     llmUsed: result.debug?.usedLLM ?? false,
+    ...(result.responsePlans
+      ? {
+          moderatorAlertCommentIds: result.responsePlans
+            .filter((plan) => plan.notifyModerator)
+            .map((plan) => plan.commentId),
+          errorReportCommentIds: result.responsePlans
+            .filter((plan) => plan.pointsOutError)
+            .map((plan) => plan.commentId),
+        }
+      : {}),
     ...(detail === 'full'
       ? {
-          rankedComments: result.rankedComments.map(toAgentSelectedComment),
+          rankedComments: result.rankedComments.map((comment) =>
+            toAgentSelectedComment(comment, plans)
+          ),
         }
       : {}),
   };
 }
 
-function toAgentSelectedComment(comment: RankedComment): AgentSelectedComment {
+function toAgentSelectedComment(
+  comment: RankedComment,
+  plans: Map<string, CommentResponsePlan>
+): AgentSelectedComment {
+  const plan = plans.get(comment.id);
   return {
     id: comment.id,
     text: comment.text,
     authorName: comment.author.displayName ?? comment.author.name,
     score: comment.score,
     reasons: [...comment.reasons],
+    ...(plan ? { responsePlan: { ...plan } } : {}),
   };
 }
 

@@ -5,7 +5,7 @@ import type { RankedComment } from './ranking.js';
 import type { SafetyReport } from './safety.js';
 import type { IgnoredCommentsSummary } from './summary.js';
 import type { ViewerProfile } from './viewer.js';
-import type { CommentSemanticAssessment } from './llm.js';
+import type { CommentResponsePlan, CommentSemanticAssessment } from './llm.js';
 
 export type CommentIntelligenceDebugInfo = {
   mode: CommentAnalysisMode;
@@ -26,6 +26,8 @@ export type CommentIntelligenceResult = {
   contextForLLM: string[];
   instructionForLLM: string;
   answeredCommentIds?: string[];
+  /** Present only when the LLM provider returned response plans. */
+  responsePlans?: CommentResponsePlan[];
   debug?: CommentIntelligenceDebugInfo;
 };
 

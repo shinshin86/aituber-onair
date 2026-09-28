@@ -25,6 +25,12 @@ memory. Rules mode makes no API calls. Optional OpenAI and Jev modes call the
 selected analysis provider. This sample does not connect to `@aituber-onair/core`
 or generate spoken replies.
 
+The result starts with **Processing flow**, which shows how many comments each
+step handled: receive, rule-based safety check, meaning check (Jev or OpenAI;
+skipped in rules mode), pick a comment, and what is handed to your app. Comments
+excluded by the safety check are never sent to the AI; the incoming list and the
+candidate comparison show the rule that excluded them.
+
 Use the topic filter control with a stream topic to compare the three topic
 selection modes:
 
@@ -83,3 +89,33 @@ CORS support evolves. See the [official API reference](https://docs.typesafe.ai/
 Restart an already running Vite server after adding the proxy configuration.
 
 The UI can be switched between English and Japanese.
+
+## Try reply style and moderator alerts
+
+1. Select the **Reply style and alerts** comment pattern. It sets the topic to
+   choosing streaming software, fills the recent AI reply with a deliberately
+   wrong claim (free, including commercial use), and turns on
+   **Also suggest reply style and moderator alerts**.
+2. Choose **Jev**, pick a connection, enter its API key, and run the filter.
+3. Each assessed candidate shows a response plan: reply style (one line, short
+   and casual, or think it through), the suggested reasoning effort for your
+   reply model, and the probabilities that the comment is rude, points out a
+   mistake, or carries a safety risk. Badges mark **Needs attention**,
+   **Points out an error**, and **Moderator alert**. The **Instruction** block
+   shows the instruction and suggested effort for the selected comment.
+   Developer output includes `responsePlans`.
+4. Only two things reach a moderator. The sample only calls a stand-in webhook
+   function that logs to the console; nothing is sent.
+   - A comment that may lead to real-world harm (here, Viewer F, who says they
+     watch the streamer walk home).
+   - A run of error reports: when three or more assessed comments, and at least
+     30% of them, say the stream got something wrong, it counts as a flare-up.
+
+   A comment that is only rude (Viewer E) gets a **Needs attention** badge and
+   no notification. Toasts disappear after a few seconds; the
+   **Moderator notifications (demo)** panel keeps the same list.
+
+The plan does not change ranking. Obviously hostile comments (Viewer D) are
+excluded by the rules first and are not sent to Jev; Jev assesses only the
+comments the rules kept. The extra questions go in the same request as the three
+existing judgments.

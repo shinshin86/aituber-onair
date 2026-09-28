@@ -20,7 +20,25 @@ export type JevCommentAnalysisOptions = {
   maxComments?: number;
   /** Cancels the HTTP request; default 2500 ms. */
   timeoutMs?: number;
+  /**
+   * Also asks how much thought each reply needs and whether a moderator
+   * should look at the comment, in the same request. Default false.
+   */
+  responsePlan?: boolean | JevResponsePlanOptions;
   fetch?: typeof globalThis.fetch;
+};
+
+export type JevResponsePlanOptions = {
+  /**
+   * Uncalibrated safety-risk probability that sets `notifyModerator`;
+   * default 0.8.
+   */
+  moderatorThreshold?: number;
+  /**
+   * Uncalibrated probability that sets `needsAttention` and
+   * `pointsOutError`; default 0.5.
+   */
+  signalThreshold?: number;
 };
 
 export type JevCommentAnalysisResult = LLMCommentAnalysisResult & {
@@ -54,6 +72,18 @@ export function createJevCommentAnalysisProvider(
     throw new Error('Jev maxComments must be an integer between 1 and 50');
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
     throw new Error('Jev timeoutMs must be positive');
+  const responsePlan = Boolean(options.responsePlan);
+  const planOptions =
+    typeof options.responsePlan === 'object' ? options.responsePlan : {};
+  const moderatorThreshold = planOptions.moderatorThreshold ?? 0.8;
+  const signalThreshold = planOptions.signalThreshold ?? 0.5;
+  for (const [name, value] of [
+    ['moderatorThreshold', moderatorThreshold],
+    ['signalThreshold', signalThreshold],
+  ] as const) {
+    if (!Number.isFinite(value) || value < 0 || value > 1)
+      throw new Error(`Jev ${name} must be between 0 and 1`);
+  }
   const model =
     options.model ??
     (options.transport === 'typesafe' ? 'jev-latest' : '~typesafe/jev-latest');
@@ -71,8 +101,15 @@ export function createJevCommentAnalysisProvider(
   return {
     inputScope: 'eligible-comments',
     async analyze(input) {
-      const batch = buildCommentDecisions(input, maxComments);
-      if (!batch.keys.length) return { semanticAssessments: [], decisions: [] };
+      const batch = buildCommentDecisions(input, maxComments, {
+        responsePlan,
+      });
+      if (!batch.keys.length)
+        return {
+          semanticAssessments: [],
+          decisions: [],
+          ...(responsePlan ? { responsePlans: [] } : {}),
+        };
       const controller = new AbortController();
       const abort = () => controller.abort();
       input.signal?.addEventListener('abort', abort, { once: true });
@@ -82,7 +119,11 @@ export function createJevCommentAnalysisProvider(
         if (controller.signal.aborted) throw new Error('Jev request aborted');
         const response = await request(batch.request, controller.signal);
         if (controller.signal.aborted) throw new Error('Jev request aborted');
-        return parseCommentDecisions(response, batch.keys, minConfidence);
+        return parseCommentDecisions(response, batch.keys, minConfidence, {
+          responsePlan,
+          moderatorThreshold,
+          signalThreshold,
+        });
       } finally {
         clearTimeout(timer);
         input.signal?.removeEventListener('abort', abort);
