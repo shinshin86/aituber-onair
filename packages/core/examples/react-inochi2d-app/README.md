@@ -18,8 +18,9 @@ React examples.
 
 ## Chat and Voice model updates
 
-This example uses Chat 0.56.0 and Voice 0.22.0 through Core. Select a
+This example uses Chat 0.58.0 and Voice 0.22.0 through Core. Select a
 supported model such as `gpt-6-sol`, `gpt-6-luna`, `claude-opus-5-5`,
+`claude-sonnet-5-5`,
 `grok-4.7`, or `deepseek-flash` in
 the model selector; the new OpenRouter models are also listed. OpenAI reasoning
 models use the Casual preset, with Astra routed through Responses and its
