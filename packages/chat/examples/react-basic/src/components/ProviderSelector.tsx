@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Provider } from '../App';
+import LocalLlmSetup from './LocalLlmSetup';
 import {
   ChatServiceFactory,
   type ChatResponseLength,
@@ -2012,43 +2013,16 @@ export default function ProviderSelector({
           )}
 
           {provider === 'openai-compatible' && (
-            <>
-              <div className="config-group config-full">
-                <label htmlFor="openai-compatible-endpoint">Endpoint URL</label>
-                <input
-                  id="openai-compatible-endpoint"
-                  type="url"
-                  value={openaiCompatibleEndpoint || ''}
-                  onChange={(e) =>
-                    onOpenaiCompatibleEndpointChange?.(e.target.value)
-                  }
-                  disabled={disabled}
-                  className="text-input"
-                  placeholder="http://127.0.0.1:18080/v1/chat/completions"
-                />
-                <span className="helper-text">
-                  Full URL for your OpenAI-compatible `/v1/chat/completions`
-                  endpoint.
-                </span>
-              </div>
-
-              <div className="config-group config-full">
-                <label htmlFor="openai-compatible-model">Model ID</label>
-                <input
-                  id="openai-compatible-model"
-                  type="text"
-                  value={selectedModel}
-                  onChange={(e) => onModelChange(e.target.value)}
-                  disabled={disabled}
-                  className="text-input"
-                  placeholder="your-local-model"
-                />
-                <span className="helper-text">
-                  Set the exact model ID exposed by your local/self-hosted
-                  server.
-                </span>
-              </div>
-            </>
+            <LocalLlmSetup
+              endpoint={openaiCompatibleEndpoint || ''}
+              onEndpointChange={(value) =>
+                onOpenaiCompatibleEndpointChange?.(value)
+              }
+              model={selectedModel}
+              onModelChange={onModelChange}
+              apiKey={apiKey}
+              disabled={disabled}
+            />
           )}
 
           {provider === 'gemini' && (

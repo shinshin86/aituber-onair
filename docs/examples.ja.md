@@ -249,6 +249,7 @@ npm run dev
   該当プロバイダーは node-basic か自前の backend proxy から試せる。
 - [`packages/chat/examples/local-llm-cli`](../packages/chat/examples/local-llm-cli):
   ローカルまたはセルフホストの OpenAI 互換 LLM 向け対話 CLI。
+  サーバーとブラウザの設定は[ローカル LLM ガイド](local-llm.ja.md)を参照。
 - [`packages/chat/examples/agent-providers`](../packages/chat/examples/agent-providers):
   Codex、Claude、Copilot など Agent SDK ベースの provider 利用例。
   実験的な Codex キャラクターチャット CLI を含む。

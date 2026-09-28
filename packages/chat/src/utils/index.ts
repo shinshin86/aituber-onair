@@ -7,6 +7,7 @@ export * from './screenplay';
 export * from './emotionParser';
 export * from './runOnce';
 export * from './openaiCompatibleSse';
+export * from './openaiCompatibleEndpoint';
 export * from './openaiCompatibleTools';
 export * from './processChatFlow';
 export * from './visionModelResolver';

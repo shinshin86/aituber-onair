@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
 const readline = require('node:readline');
-const { ChatServiceFactory } = require('../../dist/cjs/index.js');
+const {
+  ChatServiceFactory,
+  listOpenAICompatibleModels,
+  resolveOpenAICompatibleEndpoint,
+} = require('../../dist/cjs/index.js');
 
 function parseArgs(argv) {
   const parsed = {};
@@ -25,6 +29,8 @@ function usage() {
   console.log('  node packages/chat/examples/local-llm-cli/index.js \\');
   console.log('    --endpoint="http://127.0.0.1:11434/v1/chat/completions" \\');
   console.log('    --model="your-model" [--apiKey="optional-key"]');
+  console.log('  node packages/chat/examples/local-llm-cli/index.js \\');
+  console.log('    --endpoint="http://127.0.0.1:11434/v1" --list-models');
   console.log('    [--systemPrompt="..."] [--stream=false]');
   console.log('');
   console.log('Recommended environment variables:');
@@ -51,11 +57,11 @@ function buildConfig() {
     args.model ||
     process.env.LOCAL_LLM_MODEL ||
     process.env.OPENAI_COMPAT_MODEL;
-  const apiKey =
+  const providedApiKey =
     args.apiKey ||
     process.env.LOCAL_LLM_API_KEY ||
     process.env.OPENAI_COMPAT_API_KEY ||
-    'dummy-key';
+    '';
   const hasSystemPromptArg = Object.prototype.hasOwnProperty.call(
     args,
     'systemPrompt',
@@ -74,7 +80,9 @@ function buildConfig() {
   return {
     endpoint,
     model,
-    apiKey,
+    apiKey: providedApiKey || 'dummy-key',
+    providedApiKey,
+    listModels: parseBoolean(args['list-models'], false),
     systemPrompt,
     stream,
   };
@@ -90,14 +98,24 @@ function parseBoolean(value, fallback) {
 
 async function run() {
   const config = buildConfig();
-  if (!config.endpoint || !config.model) {
+  if (!config.endpoint || (!config.listModels && !config.model)) {
     usage();
     process.exit(1);
   }
 
+  const resolved = resolveOpenAICompatibleEndpoint(config.endpoint);
+  if (config.listModels) {
+    const models = await listOpenAICompatibleModels({
+      endpoint: resolved.baseUrl,
+      apiKey: config.providedApiKey,
+    });
+    for (const model of models) console.log(model);
+    return;
+  }
+
   const service = ChatServiceFactory.createChatService('openai-compatible', {
     apiKey: config.apiKey,
-    endpoint: config.endpoint,
+    endpoint: resolved.chatCompletionsUrl,
     model: config.model,
   });
 
@@ -113,7 +131,7 @@ async function run() {
   });
 
   console.log('Connected');
-  console.log(`endpoint: ${config.endpoint}`);
+  console.log(`endpoint: ${resolved.chatCompletionsUrl}`);
   console.log(`model: ${config.model}`);
   console.log('Type /exit to quit.');
   console.log('');

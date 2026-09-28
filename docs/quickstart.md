@@ -59,10 +59,13 @@ to use.
 
 At minimum, set:
 
-- LLM provider and API key, such as OpenAI, Claude, Gemini, or OpenRouter.
+- LLM provider and its credentials if required, such as OpenAI, Claude, Gemini,
+  or OpenRouter.
 - TTS provider and voice settings, such as VOICEVOX, AIVIS Speech, OpenAI TTS,
   or MiniMax.
 - Character prompt and avatar settings.
+
+For a local LLM, select OpenAI-Compatible and follow the [local LLM guide](local-llm.md) for the full endpoint URL and model ID.
 
 The starter app stores sample credentials in browser `localStorage`. Do not use
 production-scope keys on a shared or public origin.

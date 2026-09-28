@@ -85,10 +85,12 @@ react-basic/
 ### Local LLM (OpenAI-Compatible)
 
 1. Select `OpenAI-Compatible`
-2. Set `Endpoint URL` (example: `http://127.0.0.1:18080/v1/chat/completions`)
-3. Set `Model ID` to the exact model name exposed by your server
-4. API key is optional (if empty, Authorization header is omitted)
-5. Send a message and verify streaming/non-stream behavior
+2. Choose an Ollama, LM Studio, llama.cpp, or vLLM preset, or enter a custom endpoint. An origin, `/v1` base URL, or full Chat Completions URL works; the resolved request URL appears below the field.
+3. Click `Fetch models` and choose an ID, or type the exact model ID yourself.
+4. Enter an API key if your server requires one, then click `Test connection`. The test uses `/v1/models` and does not generate text.
+5. Send a message to check chat streaming. For local server setup and browser CORS, see the [local LLM guide](../../../../docs/local-llm.md).
+
+To try the bundled mock server, run `node packages/chat/examples/mock-openai-server/server.js --port=18080` from the repository root. Use the default endpoint, API key `test-key`, and model `mock-chat-model` in this example.
 
 ### Image Analysis (Vision)
 
@@ -129,7 +131,7 @@ built-in model status is `available`.
 - Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), GPT-5.1 supports None/Low/Medium/High, and GPT-5.0 models support Minimal/Low/Medium/High
 
 **OpenAI-Compatible (Local/Self-Hosted)**
-- Endpoint: user-configurable full URL (`/v1/chat/completions`)
+- Endpoint: server origin, API base URL, or full Chat Completions URL
 - Model: user-configurable model ID
 - Vision: depends on your server/model implementation
 - Best for: local LLMs (Ollama/LM Studio/vLLM-compatible endpoints)

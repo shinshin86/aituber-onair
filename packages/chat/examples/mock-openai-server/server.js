@@ -5,6 +5,7 @@ const http = require('node:http');
 const DEFAULT_PORT = 18080;
 const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_API_KEY = 'test-key';
+const DEFAULT_MODEL = 'mock-chat-model';
 const DEFAULT_ERROR_MODEL = 'mock-400';
 
 function parseArgs(argv) {
@@ -224,6 +225,26 @@ async function createServer() {
 
     if (req.url === '/health' && req.method === 'GET') {
       sendJson(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.url === '/v1/models' && req.method === 'GET') {
+      if (
+        requireAuth !== 'false' &&
+        !validateAuthorization(req.headers, apiKey)
+      ) {
+        sendJson(res, 401, {
+          error: {
+            type: 'authentication_error',
+            message: 'Invalid API key',
+          },
+        });
+        return;
+      }
+      sendJson(res, 200, {
+        object: 'list',
+        data: [{ id: DEFAULT_MODEL, object: 'model' }],
+      });
       return;
     }
 
