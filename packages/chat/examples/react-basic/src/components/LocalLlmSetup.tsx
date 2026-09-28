@@ -8,6 +8,8 @@ import {
   type OpenAICompatibleConnectionResult,
 } from '@aituber-onair/chat';
 
+const MANUAL_MODEL_OPTION = '__manual__';
+
 const guideUrl =
   'https://github.com/shinshin86/aituber-onair/blob/main/docs/local-llm.md';
 
@@ -39,6 +41,7 @@ export default function LocalLlmSetup({
   disabled,
 }: LocalLlmSetupProps) {
   const [models, setModels] = useState<string[]>([]);
+  const [manualModel, setManualModel] = useState(false);
   const [requestState, setRequestState] = useState<RequestState>({
     kind: 'idle',
   });
@@ -63,6 +66,7 @@ export default function LocalLlmSetup({
   // biome-ignore lint/correctness/useExhaustiveDependencies: Changing endpoint must clear results and abort the previous request.
   useEffect(() => {
     setModels([]);
+    setManualModel(false);
     setRequestState({ kind: 'idle' });
     return () => {
       requestRef.current?.abort();
@@ -88,7 +92,12 @@ export default function LocalLlmSetup({
         signal: controller.signal,
       });
       if (!controller.signal.aborted) {
+        const currentModel = model.trim();
         setModels(found);
+        // Keep a typed ID that the server does not list editable; otherwise
+        // switch to the list and preselect the first model when none is set.
+        setManualModel(Boolean(currentModel) && !found.includes(currentModel));
+        if (!currentModel && found.length > 0) onModelChange(found[0]);
         setRequestState({ kind: 'models-loaded', count: found.length });
       }
     } catch (error) {
@@ -129,6 +138,9 @@ export default function LocalLlmSetup({
 
   const busy =
     requestState.kind === 'loading-models' || requestState.kind === 'testing';
+  const hasModelList = models.length > 0;
+  const modelListed = models.includes(model.trim());
+  const showModelInput = !hasModelList || manualModel;
 
   return (
     <div className="local-llm-setup config-full">
@@ -206,33 +218,63 @@ export default function LocalLlmSetup({
 
       <div className="config-group">
         <label htmlFor="openai-compatible-model">Model ID</label>
-        <input
-          id="openai-compatible-model"
-          type="text"
-          value={model}
-          onChange={(event) => onModelChange(event.target.value)}
-          disabled={disabled}
-          className="text-input"
-          placeholder="your-local-model"
-        />
-        {models.length > 0 && (
+        {hasModelList && (
           <select
+            id="openai-compatible-model"
             className="select-input"
-            aria-label="Available model IDs"
-            value={models.includes(model) ? model : ''}
-            onChange={(event) => onModelChange(event.target.value)}
+            value={
+              manualModel
+                ? MANUAL_MODEL_OPTION
+                : models.includes(model)
+                  ? model
+                  : ''
+            }
+            onChange={(event) => {
+              if (event.target.value === MANUAL_MODEL_OPTION) {
+                setManualModel(true);
+                return;
+              }
+              setManualModel(false);
+              onModelChange(event.target.value);
+            }}
             disabled={disabled}
           >
-            <option value="">Choose a listed model</option>
+            {!manualModel && !models.includes(model) && (
+              <option value="">Choose a model</option>
+            )}
             {models.map((id) => (
               <option key={id} value={id}>
                 {id}
               </option>
             ))}
+            <option value={MANUAL_MODEL_OPTION}>Other (type manually)</option>
           </select>
         )}
+        {showModelInput && (
+          <input
+            id={
+              hasModelList
+                ? 'openai-compatible-model-manual'
+                : 'openai-compatible-model'
+            }
+            type="text"
+            value={model}
+            onChange={(event) => onModelChange(event.target.value)}
+            disabled={disabled}
+            className="text-input"
+            placeholder="your-local-model"
+            aria-label={hasModelList ? 'Model ID (manual)' : undefined}
+          />
+        )}
+        {hasModelList && manualModel && model.trim() && !modelListed && (
+          <span className="helper-text">
+            This model ID is not in the list returned by the server.
+          </span>
+        )}
         <span className="helper-text">
-          Choose a listed ID or type the exact ID from your server.
+          {hasModelList
+            ? 'Pick a model from your server, or choose Other to type an ID.'
+            : 'Type the exact model ID, or fetch the list from your server.'}
         </span>
       </div>
 
