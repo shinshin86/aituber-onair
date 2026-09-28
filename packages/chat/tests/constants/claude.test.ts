@@ -8,6 +8,7 @@ import {
   MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_SONNET,
+  MODEL_CLAUDE_5_5_SONNET,
   getClaudeSupportedReasoningEfforts,
   getDefaultClaudeReasoningEffort,
   isClaudeReasoningEffortModel,
@@ -21,6 +22,7 @@ describe('Claude reasoning effort helpers', () => {
     MODEL_CLAUDE_5_FABLE,
     MODEL_CLAUDE_5_SONNET,
     MODEL_CLAUDE_5_OPUS,
+    MODEL_CLAUDE_5_5_SONNET,
   ])('supports all five effort levels for %s', (model) => {
     expect(getClaudeSupportedReasoningEfforts(model)).toEqual([
       'low',
