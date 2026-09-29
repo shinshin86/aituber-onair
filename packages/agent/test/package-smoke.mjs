@@ -62,7 +62,7 @@ function pack(directory, expectedName) {
   };
 }
 
-function assertCodexEntryExcluded(metafile, label) {
+function assertNodeEntriesExcluded(metafile, label) {
   const inputs = Object.keys(metafile.inputs);
   assert.ok(
     inputs.some((input) => input.includes('@aituber-onair/agent')),
@@ -71,6 +71,10 @@ function assertCodexEntryExcluded(metafile, label) {
   assert.ok(
     inputs.every((input) => !input.includes('codex-app-server')),
     `${label} must not include the Codex app-server entry point`
+  );
+  assert.ok(
+    inputs.every((input) => !input.includes('cursor-acp')),
+    `${label} must not include the Cursor ACP entry point`
   );
 }
 
@@ -118,6 +122,7 @@ import assert from 'node:assert/strict';
 import * as agent from '@aituber-onair/agent';
 import * as chat from '@aituber-onair/agent/chat';
 import * as codex from '@aituber-onair/agent/codex-app-server';
+import * as cursor from '@aituber-onair/agent/cursor-acp';
 
 assert.equal(typeof agent.createAgent, 'function');
 assert.equal(typeof agent.defineAgentTool, 'function');
@@ -133,6 +138,13 @@ const codexBackend = codex.createCodexAppServerBackend({
   workingDirectory: '/path/to/character-workspace',
 });
 assert.equal(codexBackend.backendCapabilities.approvals, true);
+assert.equal(typeof cursor.createCursorAcpBackend, 'function');
+assert.equal(cursor.CURSOR_ACP_PROTOCOL_VERSION, 1);
+const cursorBackend = cursor.createCursorAcpBackend({
+  allowPathLookup: true,
+  workingDirectory: '/path/to/character-workspace',
+});
+assert.equal(cursorBackend.backendCapabilities.detailedEvents, false);
 `
   );
   await writeFile(
@@ -142,6 +154,7 @@ const assert = require('node:assert/strict');
 const agent = require('@aituber-onair/agent');
 const chat = require('@aituber-onair/agent/chat');
 const codex = require('@aituber-onair/agent/codex-app-server');
+const cursor = require('@aituber-onair/agent/cursor-acp');
 
 assert.equal(typeof agent.createAgent, 'function');
 assert.equal(typeof agent.defineAgentTool, 'function');
@@ -157,6 +170,13 @@ const codexBackend = codex.createCodexAppServerBackend({
   workingDirectory: '/path/to/character-workspace',
 });
 assert.equal(codexBackend.backendCapabilities.approvals, true);
+assert.equal(typeof cursor.createCursorAcpBackend, 'function');
+assert.equal(cursor.CURSOR_ACP_PROTOCOL_VERSION, 1);
+const cursorBackend = cursor.createCursorAcpBackend({
+  allowPathLookup: true,
+  workingDirectory: '/path/to/character-workspace',
+});
+assert.equal(cursorBackend.backendCapabilities.detailedEvents, false);
 `
   );
 
@@ -177,6 +197,7 @@ import {
 } from '@aituber-onair/agent';
 import { createChatServiceBackend } from '@aituber-onair/agent/chat';
 import { createCodexAppServerBackend } from '@aituber-onair/agent/codex-app-server';
+import { createCursorAcpBackend } from '@aituber-onair/agent/cursor-acp';
 
 const analyzeComments = defineAgentTool({
   id: 'comments.analyze',
@@ -310,6 +331,10 @@ const codexAgent = createAgent({
   brief: 'You are AI staff responsible for monitoring stream operations.',
   backend: codexBackend,
 });
+const cursorBackend = createCursorAcpBackend({
+  allowPathLookup: true,
+  workingDirectory: '/path/to/character-workspace',
+});
 async function runCodexStaff() {
   const session = await codexAgent.startSession({
     purpose: 'Review the latest stream report',
@@ -352,6 +377,7 @@ void runPublicSession;
 void bootstrap;
 void askOperator;
 void codexBackend;
+void cursorBackend;
 void runCodexStaff;
 `
   );
@@ -412,8 +438,8 @@ globalThis.__agentExports = { createAgent, createChatServiceBackend };
     write: false,
   });
 
-  assertCodexEntryExcluded(baseBundle.metafile, 'base browser bundle');
-  assertCodexEntryExcluded(chatBundle.metafile, 'Chat browser bundle');
+  assertNodeEntriesExcluded(baseBundle.metafile, 'base browser bundle');
+  assertNodeEntriesExcluded(chatBundle.metafile, 'Chat browser bundle');
   assert.ok(
     Object.keys(baseBundle.metafile.inputs).every(
       (input) => !input.includes('@aituber-onair/chat')

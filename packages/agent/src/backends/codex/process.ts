@@ -1,25 +1,12 @@
 import { execFile, spawn } from 'node:child_process';
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
-import type { Readable, Writable } from 'node:stream';
+import type {
+  JsonLineRpcProcess,
+  JsonLineRpcSpawnOptions,
+} from '../shared/process.js';
 
-export interface CodexAppServerProcess {
-  readonly stdin: Writable;
-  readonly stdout: Readable;
-  readonly stderr: Readable;
-  readonly exitCode: number | null;
-  readonly signalCode: NodeJS.Signals | null;
-  once(
-    event: 'exit',
-    listener: (code: number | null, signal: NodeJS.Signals | null) => void
-  ): this;
-  once(event: 'error', listener: (error: Error) => void): this;
-  kill(signal?: NodeJS.Signals): boolean;
-}
-
-export interface CodexAppServerSpawnOptions {
-  readonly cwd: string;
-  readonly environment: NodeJS.ProcessEnv;
-}
+export type CodexAppServerProcess = JsonLineRpcProcess;
+export type CodexAppServerSpawnOptions = JsonLineRpcSpawnOptions;
 
 export interface CodexAppServerProcessFactory {
   readVersion(

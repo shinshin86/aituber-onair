@@ -22,6 +22,11 @@
       "import": "./dist/esm/codex-app-server.js",
       "require": "./dist/cjs/codex-app-server.js"
     },
+    "./cursor-acp": {
+      "types": "./dist/cjs/cursor-acp.d.ts",
+      "import": "./dist/esm/cursor-acp.js",
+      "require": "./dist/cjs/cursor-acp.js"
+    },
     "./package.json": "./package.json"
   },
   "files": ["dist", "CHANGELOG.md", "README.md", "README.ja.md"],

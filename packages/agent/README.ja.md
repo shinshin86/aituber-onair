@@ -15,8 +15,9 @@ npm install @aituber-onair/agent @aituber-onair/chat
 ```
 
 `@aituber-onair/chat`は、`@aituber-onair/agent/chat` entry pointを使う場合のみ
-必要なoptional peer dependencyです。Codex app-server entry pointにはローカルに
-インストールされたCodex CLIが必要です。詳しくは
+必要なoptional peer dependencyです。Node.js専用のworkspaceバックエンドには、
+対応するローカルCLIが必要です。詳しくは
+[Cursor CLI ACPとの統合](#cursor-cli-acpとの統合)と
 [Codex app-serverとの統合](#codex-app-serverとの統合)を参照してください。
 
 ## このパッケージについて
@@ -369,6 +370,77 @@ flowchart LR
 既存のAITuber OnAirパッケージは、これまでどおり単独でも利用できます。Agentは、
 各パッケージのドメインロジックを取り込むのではなく、Tool、context、hook、eventを
 通じて組み合わせます。
+
+## Cursor CLI ACPとの統合
+
+`@aituber-onair/agent/cursor-acp`は、ローカルにインストールされたCursor CLIを
+使ってAgent Sessionを実行します。バックエンドは `agent acp` をJSONL stdioで起動し、
+`agent login`で保存された認証情報を使います。利用分は、ログイン先のCursorプランへ
+計上されます。Agentの設定にAPI keyを渡す必要はありません。
+
+`@aituber-onair/chat`の`cursor-sdk` providerは別の統合です。こちらはCursor Agent
+SDKとSDK側の認証を使います。`agent login`で設定されるのは、この節で説明する
+CLIバックエンドの認証であり、SDK providerの認証ではありません。
+
+アプリを起動する前にCursor CLIをインストールし、ログインしてください。
+
+```bash
+agent login
+```
+
+```ts
+import { createAgent } from '@aituber-onair/agent';
+import { createCursorAcpBackend } from '@aituber-onair/agent/cursor-acp';
+
+const backend = createCursorAcpBackend({
+  // PATH検索は暗黙に行いません。代わりに絶対パスのagentPathも指定できます。
+  allowPathLookup: true,
+  workingDirectory: '/absolute/path/to/character-workspace',
+  mode: 'ask',
+  model: 'default[]',
+});
+
+const agent = createAgent({
+  id: 'stream-operations-staff',
+  brief: 'あなたはライブ配信の運用状況を確認するAIスタッフです。',
+  backend,
+});
+
+const session = await agent.startSession({
+  purpose: '最新の配信レポートを確認する',
+  audience: 'owner',
+  inputTrust: 'trusted',
+});
+
+try {
+  for await (const event of session.runStream({
+    instruction: 'workspaceを確認し、問題を要約してください。',
+  })) {
+    if (event.type === 'approval.requested') {
+      await session.resolveApproval(event.request.id, 'deny');
+    }
+    if (event.type === 'message.completed') console.log(event.text);
+  }
+} finally {
+  await session.close();
+  await agent.close();
+}
+```
+
+省略時のmodeは`ask`で、ファイル編集とコマンド実行を行いません。`plan`も
+read-onlyです。`agent`を指定すると、Cursorは`workingDirectory`内のファイルを
+変更できます。確認済みのCursor CLIでは、このmodeのファイル編集に承認要求は
+発生しませんでした。ホストの承認フローへ届くのは、Cursor CLIのallowlistにない
+shell commandです。すべてのファイル編集をホスト側で承認できるわけではありません。
+`allow-once`は1回限りの許可へ、`deny`はその要求の拒否へ対応します。
+バックエンドが`allow_always`を選ぶことはありません。
+
+`model`には、インストール済みCLIがACPで返したmodel IDをそのまま指定します。
+たとえば`default[]`です。省略するとCLIの現在のmodelを使います。Sessionを再開する
+場合は、`session.backendSessionId`をホスト側で保存し、
+`agent.resumeSession(...)`へ渡してください。`session/load`が返す過去の履歴は、
+新しいTurnのeventとして配信しません。Cursor ACP SessionではAgentのdomain Toolを
+利用できません。
 
 ## Codex app-serverとの統合
 
