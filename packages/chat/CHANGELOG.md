@@ -1,5 +1,22 @@
 # @aituber-onair/chat
 
+## 0.59.0
+
+### Minor Changes
+
+- Added a text-only `cursor-sdk` provider to `@aituber-onair/chat/agent`. It
+  runs a local Cursor agent through `@cursor/sdk`, which is loaded at runtime
+  and is not a package dependency (requires Node.js 22.13+).
+- The provider streams text deltas, accepts an optional `apiKey` (otherwise
+  `CURSOR_API_KEY` or the key stored by `Cursor.auth.login()`), redacts it
+  from errors, and defaults to the `default` model (Cursor's Auto). Tools,
+  vision, and MCP are not supported.
+
+### Patch Changes
+
+- Updated the English/Japanese documentation and the agent-providers example
+  for the Cursor SDK provider.
+
 ## 0.58.0
 
 ### Minor Changes
