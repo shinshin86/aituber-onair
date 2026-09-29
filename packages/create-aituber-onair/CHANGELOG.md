@@ -1,5 +1,17 @@
 # create-aituber-onair
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated generated starter templates to depend on
+  `@aituber-onair/core@^0.26.16`,
+  `@aituber-onair/comment-intelligence@^0.0.8`, and
+  `@aituber-onair/kizuna@^0.0.3`.
+- Starters now include the current Core example features, including Kizuna
+  bond tracking, the local LLM setup helpers, and the optional Jev comment
+  analysis engine with per-comment response plans and mock moderator alerts.
+
 ## 0.2.3
 
 ### Patch Changes
