@@ -11,6 +11,11 @@
   (`resolveOpenAICompatibleEndpoint`, `listOpenAICompatibleModels`,
   `testOpenAICompatibleConnection`, and `OPENAI_COMPATIBLE_LOCAL_PRESETS`) for
   local LLM setups such as Ollama, LM Studio, llama.cpp, and vLLM.
+- Add a local LLM setup UI to the OpenAI-compatible settings of the React
+  basic example and the eight avatar examples: local server presets, base URL
+  resolution with a request preview, model listing with an Other/manual
+  option, and a connection test with CORS guidance. Saved full endpoint URLs
+  keep working.
 - Refresh Core documentation and example lockfile metadata.
 
 ## 0.26.15
