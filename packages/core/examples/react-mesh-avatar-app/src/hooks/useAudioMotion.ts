@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-/** Smoothing factor (higher means smoother) */
-const SMOOTH_FACTOR = 0.5;
-/** RMS normalization ceiling (this value maps to 1.0) */
-const RMS_CEILING = 0.12;
+/** Smoothing factor (higher means smoother); kept low so the dip between morae survives */
+const SMOOTH_FACTOR = 0.3;
+/**
+ * The level that maps to 1.0 follows the voice's own recent peak (decaying over a few
+ * seconds) instead of a fixed RMS ceiling: loud TTS voices sat at a fixed ceiling for
+ * whole phrases, which kept the mouth open. MIN_CEILING stops silence from being boosted.
+ */
+const PEAK_DECAY_PER_FRAME = 0.995;
+const MIN_CEILING = 0.04;
 
 export function useAudioMotion() {
   const [voiceLevel, setVoiceLevel] = useState(0);
@@ -14,6 +19,7 @@ export function useAudioMotion() {
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const rafRef = useRef<number>(0);
   const smoothedRef = useRef(0);
+  const peakRef = useRef(0);
 
   const getAudioContext = useCallback(() => {
     if (!ctxRef.current || ctxRef.current.state === 'closed') {
@@ -39,6 +45,7 @@ export function useAudioMotion() {
       rafRef.current = 0;
     }
     smoothedRef.current = 0;
+    peakRef.current = 0;
     setVoiceLevel(0);
     setIsSpeaking(false);
   }, []);
@@ -64,7 +71,8 @@ export function useAudioMotion() {
       gain.gain.value = 1.0;
 
       const analyser = ctx.createAnalyser();
-      analyser.fftSize = 2048;
+      // ~21 ms window at 48 kHz: short enough to see each mora
+      analyser.fftSize = 1024;
 
       source.connect(gain);
       gain.connect(analyser);
@@ -92,8 +100,13 @@ export function useAudioMotion() {
         smoothedRef.current =
           smoothedRef.current * SMOOTH_FACTOR + rms * (1 - SMOOTH_FACTOR);
 
-        // Normalize (0-1)
-        const normalized = Math.min(smoothedRef.current / RMS_CEILING, 1);
+        // Normalize (0-1) against the recent peak
+        peakRef.current = Math.max(
+          smoothedRef.current,
+          peakRef.current * PEAK_DECAY_PER_FRAME,
+        );
+        const ceiling = Math.max(MIN_CEILING, peakRef.current * 0.85);
+        const normalized = Math.min(smoothedRef.current / ceiling, 1);
 
         setVoiceLevel(normalized);
 

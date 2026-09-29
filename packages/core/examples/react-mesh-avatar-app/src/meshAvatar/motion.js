@@ -81,6 +81,8 @@ export class Motion {
     this.vowel = 'a';
     this.vowelForm = 0;
     this.syllableArmed = true;
+    this.voicePeak = 0;
+    this.voiceTrough = 0;
     this.kana = null;
     this.emotionUntil = 0;         // when the emotion face goes back to normal
     this.talkGain = 1;             // how much the head moves along with the voice
@@ -126,6 +128,9 @@ export class Motion {
   // Mouth from the TTS loudness. A volume signal has no vowel information, so each syllable
   // (the voice dipping and rising again) gets one vowel at random, weighted towards あ, and
   // keeps it until the next syllable: the drawn mouths must not change shape mid-syllable.
+  // Syllables are found relative to the recent peak (not an absolute level), and the mouth
+  // is scaled by where the voice sits between the recent trough and peak, so it closes in
+  // the dip before each mora even when a loud voice never gets quiet.
   speechMouth(dt) {
     if (this.kana) {
       this.kana.t += dt;
@@ -137,15 +142,24 @@ export class Motion {
       return [this.mouth, this.vowelForm];
     }
     const v = this.speaking ? this.voice : 0;
-    if (v < 0.12) this.syllableArmed = true;
-    else if (this.syllableArmed && v > 0.22) {
+    // recent peak / trough: follow at once, then relax over ~0.2 s
+    const relax = 1 - Math.exp(-dt * 5);
+    this.voicePeak = v > this.voicePeak ? v : this.voicePeak + (v - this.voicePeak) * relax;
+    this.voiceTrough = v < this.voiceTrough ? v : this.voiceTrough + (v - this.voiceTrough) * relax;
+    const peak = Math.max(this.voicePeak, 0.05);
+    if (v < peak * 0.6) this.syllableArmed = true;
+    else if (this.syllableArmed && v > peak * 0.8 && v > 0.1) {
       this.syllableArmed = false;
       const r = Math.random();
       this.vowel = r < 0.4 ? 'a' : r < 0.58 ? 'o' : r < 0.74 ? 'e' : r < 0.88 ? 'i' : 'u';
     }
+    const range = this.voicePeak - this.voiceTrough;
+    const rise = range < peak * 0.3 ? 1 : Math.max(0, (v - this.voiceTrough) / range);
     const shape = VOWELS[this.vowel ?? 'a'];
-    const target = this.speaking ? Math.min(0.9, Math.pow(v, 0.75) * 1.1) * (0.45 + 0.55 * shape.open / 0.9) : 0;
-    const k = target > this.mouth ? 1 - Math.exp(-dt * 28) : 1 - Math.exp(-dt * 12);
+    const level = Math.min(1, Math.pow(v, 0.7) * 1.15) * Math.pow(rise, 0.3);
+    const target = this.speaking ? Math.min(0.95, level) * (0.45 + 0.55 * shape.open / 0.9) : 0;
+    // quick attack, quick release: the mouth has to shut between morae (~7 per second)
+    const k = target > this.mouth ? 1 - Math.exp(-dt * 40) : 1 - Math.exp(-dt * 32);
     this.mouth += (target - this.mouth) * k;
     if (this.speaking) this.vowelForm = shape.form;   // after the line: close in the last shape
     return this.speaking || this.mouth > 0.01 ? [this.mouth, this.vowelForm] : null;
