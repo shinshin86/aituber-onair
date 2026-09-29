@@ -26,6 +26,7 @@ import {
   type PngTuberEmotionReactionDraft,
 } from './lib/pngtuberEmotionEffects';
 import './styles/app.css';
+import './styles/localLlmSetup.css';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 

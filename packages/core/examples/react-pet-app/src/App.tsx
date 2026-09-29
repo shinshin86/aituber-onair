@@ -21,6 +21,7 @@ import { createBondIdentity } from './lib/kizunaBond';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/app.css';
+import './styles/localLlmSetup.css';
 
 const DEFAULT_SETTINGS_DIALOG_OFFSET: DialogDragPoint = { x: 0, y: 0 };
 

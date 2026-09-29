@@ -45,6 +45,7 @@ label {
 }
 
 input[type="text"],
+input[type="url"],
 input[type="password"],
 input[type="number"],
 select,
@@ -201,6 +202,8 @@ button:hover {
   max-width: 500px;
   border-radius: 8px;
   position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-content label {
@@ -220,6 +223,97 @@ button:hover {
 
 .modal-content button:hover {
   opacity: 0.9;
+}
+
+.local-llm-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.local-llm-fieldset {
+  min-width: 0;
+  border: 0;
+}
+
+.local-llm-label {
+  margin-bottom: 6px;
+  color: #495057;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.local-llm-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.local-llm-presets button {
+  padding: 7px 6px;
+  font-size: 0.78rem;
+}
+
+.local-llm-presets .local-llm-preset-active {
+  background: #198754;
+}
+
+.local-llm-field label {
+  display: block;
+  margin-top: 0;
+}
+
+.local-llm-field input,
+.local-llm-field select {
+  max-width: none;
+  margin-bottom: 4px;
+}
+
+.local-llm-field small,
+.local-llm-status {
+  display: block;
+  color: #6c757d;
+  font-size: 0.78rem;
+}
+
+.local-llm-preview {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.local-llm-preview code {
+  font-family: monospace;
+}
+
+.local-llm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.local-llm-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.local-llm-status-ok {
+  color: #198754;
+}
+
+.local-llm-error {
+  display: block;
+  color: #b02a37;
+  font-size: 0.78rem;
+}
+
+.local-llm-error-help {
+  margin-top: 4px;
+}
+
+.local-llm-error-help a {
+  color: inherit;
+  text-decoration: underline;
 }
 
 /* Responsive styles */

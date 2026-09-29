@@ -31,6 +31,7 @@ import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import type { AvatarViewTransform } from './types/settings';
 import './styles/app.css';
+import './styles/localLlmSetup.css';
 
 const DEFAULT_AVATAR_VIEW_TRANSFORM: AvatarViewTransform = {
   x: 0,

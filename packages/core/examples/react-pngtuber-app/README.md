@@ -104,6 +104,12 @@ calling requires non-thinking mode.
 
 ## Setup
 
+For `openai-compatible`, choose a local-server preset or enter an origin, a
+`/v1` base URL, or a full `/chat/completions` URL. Fetch the model list, select
+a model, and run **Test connection** before chatting. See the
+[Local LLM setup guide](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-llm.md).
+
+
 ```bash
 cd packages/core/examples/react-pngtuber-app
 npm install

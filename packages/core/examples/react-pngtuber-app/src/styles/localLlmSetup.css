@@ -1,0 +1,65 @@
+.local-llm-setup {
+  margin-bottom: 10px;
+}
+
+.local-llm-fieldset {
+  min-width: 0;
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+}
+
+.local-llm-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.local-llm-presets .settings-action-button {
+  padding: 6px 4px;
+  font-size: 0.72rem;
+}
+
+.local-llm-presets .local-llm-preset-active {
+  border-color: #e94560;
+  background: rgba(233, 69, 96, 0.18);
+}
+
+.local-llm-field {
+  min-width: 0;
+}
+
+.local-llm-preview {
+  overflow-wrap: anywhere;
+}
+
+.local-llm-preview code {
+  font-family: monospace;
+}
+
+.local-llm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.local-llm-status {
+  display: block;
+  margin: 6px 0 0;
+  color: #8899aa;
+  font-size: 0.72rem;
+}
+
+.local-llm-status-ok {
+  color: #79d9ad;
+}
+
+.local-llm-error-help {
+  margin: 5px 0 0;
+}
+
+.local-llm-error-help a {
+  color: inherit;
+  text-decoration: underline;
+}
