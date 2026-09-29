@@ -3,7 +3,7 @@ import { ChatService } from '../../ChatService';
 import { Message, MessageWithVision, ToolChatCompletion } from '../../../types';
 
 export type AgentBaseChatServiceOptions = {
-  /** Subscription agent providers use local/CLI auth, not API keys. */
+  /** Base agent providers use local/CLI auth unless a provider overrides it. */
   apiKey?: never;
   /** Model name passed to the underlying SDK when supported. */
   model?: string;
@@ -95,9 +95,18 @@ export class AgentTextChatService implements ChatService {
 export function rejectUnsupportedAgentOptions(
   providerName: string,
   options: { apiKey?: unknown; tools?: unknown; mcpServers?: unknown },
+  validationOptions: { allowApiKey?: boolean } = {},
 ): void {
-  if (options.apiKey !== undefined) {
+  if (!validationOptions.allowApiKey && options.apiKey !== undefined) {
     throw new Error(`${providerName} provider does not accept apiKey.`);
+  }
+
+  if (
+    validationOptions.allowApiKey &&
+    options.apiKey !== undefined &&
+    typeof options.apiKey !== 'string'
+  ) {
+    throw new Error(`${providerName} provider apiKey must be a string.`);
   }
 
   if (options.tools !== undefined) {

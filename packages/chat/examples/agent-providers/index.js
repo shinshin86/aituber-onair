@@ -16,6 +16,8 @@ const providerAliases = {
   'claude-agent-sdk': 'claude-agent-sdk',
   copilot: 'copilot-sdk',
   'copilot-sdk': 'copilot-sdk',
+  cursor: 'cursor-sdk',
+  'cursor-sdk': 'cursor-sdk',
 };
 
 const providerInput = process.argv[2];
@@ -29,6 +31,7 @@ if (!provider) {
   console.log('  node index.js codex "Say hello"');
   console.log('  node index.js claude "Say hello"');
   console.log('  node index.js copilot "Say hello"');
+  console.log('  node index.js cursor "Say hello"');
   process.exit(1);
 }
 
@@ -55,6 +58,15 @@ function buildOptions(providerName) {
     }
 
     return options;
+  }
+
+  if (providerName === 'cursor-sdk') {
+    return {
+      apiKey: process.env.CURSOR_API_KEY || undefined,
+      model: process.env.CURSOR_SDK_MODEL || undefined,
+      responseLength: 'short',
+      workingDirectory: process.cwd(),
+    };
   }
 
   return {

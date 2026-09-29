@@ -91,8 +91,8 @@ Notes:
 
 ## Agent SDK Providers
 
-For agent SDKs such as Codex SDK, Claude Agent SDK, and Copilot SDK, use the
-separate `@aituber-onair/chat/agent` entry point:
+For agent SDKs such as Codex SDK, Claude Agent SDK, Copilot SDK, and Cursor SDK,
+use the separate `@aituber-onair/chat/agent` entry point:
 
 ```typescript
 import { createAgentChatService } from '@aituber-onair/chat/agent';
@@ -107,6 +107,8 @@ npm install @aituber-onair/chat @openai/codex-sdk
 npm install @aituber-onair/chat @anthropic-ai/claude-agent-sdk
 # or
 npm install @aituber-onair/chat @github/copilot-sdk
+# or (requires Node.js 22.13+)
+npm install @aituber-onair/chat @cursor/sdk
 ```
 
 Minimal Codex SDK example:
@@ -220,6 +222,32 @@ const chatService = createAgentChatService('copilot-sdk', {
 });
 ```
 
+For Cursor SDK (Node.js 22.13+):
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const chatService = createAgentChatService('cursor-sdk', {
+  apiKey: process.env.CURSOR_API_KEY,
+  workingDirectory: process.cwd(),
+});
+
+const response = await chatService.chatOnce(
+  [{ role: 'user', content: 'Say hello in one sentence.' }],
+  false,
+);
+
+console.log(response);
+```
+
+Authenticate once during setup with `Cursor.auth.login()`, set
+`CURSOR_API_KEY`, or pass `apiKey` as shown above. Cursor CLI `agent login` does
+not populate the SDK authentication store. Cursor SDK usage is billed to the
+Cursor plan. This provider passes `tools: []` and `settingSources: []`, and does
+not support tools, vision, or MCP. The default model id is `default`, which
+`Cursor.models.list()` returns as Cursor's Auto option. To use another model,
+set `model` to an id returned by `Cursor.models.list()`.
+
 Authenticate the corresponding SDK locally before using these providers. If the
 SDK package is missing or authentication is not ready, the provider throws an
 error at runtime with the original SDK error details.
@@ -314,8 +342,9 @@ Notes:
 #### Agent SDK Providers
 
 `@aituber-onair/chat/agent` exposes experimental providers for agent SDKs such
-as Codex SDK, Claude Agent SDK, and Copilot SDK. These providers are not
-included in the browser/GAS UMD entry point and do not use API keys.
+as Codex SDK, Claude Agent SDK, Copilot SDK, and Cursor SDK. These providers are
+not included in the browser/GAS UMD entry point. Cursor SDK accepts an optional
+API key; the other agent providers use their local authentication flows.
 
 Install only the agent SDK package you actually use in your JavaScript runtime application:
 
@@ -325,12 +354,14 @@ npm install @aituber-onair/chat @openai/codex-sdk
 npm install @aituber-onair/chat @anthropic-ai/claude-agent-sdk
 # or
 npm install @aituber-onair/chat @github/copilot-sdk
+# or (requires Node.js 22.13+)
+npm install @aituber-onair/chat @cursor/sdk
 ```
 
-`@openai/codex-sdk`, `@anthropic-ai/claude-agent-sdk`, and
-`@github/copilot-sdk` are not dependencies of `@aituber-onair/chat`. They are
-loaded dynamically, so users who only use the normal API providers do not
-install these agent SDK packages.
+The packages `@openai/codex-sdk`, `@anthropic-ai/claude-agent-sdk`,
+`@github/copilot-sdk`, and `@cursor/sdk` are not dependencies of
+`@aituber-onair/chat`. They are loaded dynamically, so users who only use the
+normal API providers do not install these agent SDK packages.
 
 ```typescript
 import { createAgentChatService } from '@aituber-onair/chat/agent';
@@ -442,10 +473,34 @@ const copilotService = createAgentChatService('copilot-sdk', {
 });
 ```
 
+For Cursor SDK, use `cursor-sdk` on Node.js 22.13 or later.
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const cursorService = createAgentChatService('cursor-sdk', {
+  apiKey: process.env.CURSOR_API_KEY,
+  workingDirectory: process.cwd(),
+});
+
+const result = await cursorService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
+);
+```
+
+Authenticate once during setup with `Cursor.auth.login()`, set
+`CURSOR_API_KEY`, or pass `apiKey`. Cursor CLI `agent login` does not populate
+the SDK authentication store. Usage is billed to the Cursor plan. This provider
+uses a local agent with `tools: []` and `settingSources: []`; tools, vision, and
+MCP are unavailable. `DEFAULT_CURSOR_SDK_MODEL` is `default`, which
+`Cursor.models.list()` returns as Cursor's Auto option. To use another model,
+set `model` to an id returned by `Cursor.models.list()`.
+
 Available providers:
 - `codex-sdk`: requires `@openai/codex-sdk` and Codex authentication.
 - `claude-agent-sdk`: requires `@anthropic-ai/claude-agent-sdk` and Claude Agent SDK authentication.
 - `copilot-sdk`: requires `@github/copilot-sdk` and GitHub Copilot authentication.
+- `cursor-sdk`: requires `@cursor/sdk`, Node.js 22.13+, and Cursor SDK authentication or an API key.
 
 Current limitations:
 - Text chat only.

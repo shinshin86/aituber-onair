@@ -12,9 +12,13 @@ describe('Agent chat entry', () => {
       'claude-agent-sdk',
     );
     expect(ChatServiceFactory.getAvailableProviders()).toContain('copilot-sdk');
+    expect(ChatServiceFactory.getAvailableProviders()).toContain('cursor-sdk');
     expect(
       ChatServiceFactory.getProviderCapabilities('codex-sdk'),
     ).toMatchObject({ streaming: false, tools: false });
+    expect(
+      ChatServiceFactory.getProviderCapabilities('cursor-sdk'),
+    ).toMatchObject({ streaming: true, tools: false });
   });
 
   it('creates agent services with typed helper', async () => {
@@ -40,5 +44,35 @@ describe('Agent chat entry', () => {
     );
 
     expect(result.blocks).toEqual([{ type: 'text', text: 'created' }]);
+  });
+
+  it('registers and creates Cursor SDK services with an injected loader', async () => {
+    registerAgentChatProviders({
+      cursorSDKLoader: async () => ({
+        Agent: {
+          async create() {
+            return {
+              async send() {
+                return {
+                  async wait() {
+                    return { status: 'finished', result: 'from cursor' };
+                  },
+                };
+              },
+              close() {},
+            };
+          },
+        },
+      }),
+    });
+
+    const service = createAgentChatService('cursor-sdk', {});
+    const result = await service.chatOnce(
+      [{ role: 'user', content: 'hello' }],
+      false,
+      () => {},
+    );
+
+    expect(result.blocks).toEqual([{ type: 'text', text: 'from cursor' }]);
   });
 });
