@@ -239,8 +239,6 @@ function getDefaultSettings(): AppSettings {
       backgroundMode: 'default',
       layoutMode: 'chat',
       showInputInBroadcast: false,
-      bundledAvatar: 'miko',
-      motionStyle: 'bounce',
       pngtuberEmotionEffectAnchors: {},
       pngtuberReactionControlMode: 'none',
       pngtuberEmotionEffectMap: { ...DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP },
@@ -308,12 +306,6 @@ function loadSettings(): AppSettings {
         visual: {
           ...defaults.visual,
           ...saved.visual,
-          bundledAvatar:
-            saved.visual?.bundledAvatar === 'miko-puppet'
-              ? 'miko-puppet'
-              : 'miko',
-          motionStyle:
-            saved.visual?.motionStyle === 'puppet' ? 'puppet' : 'bounce',
           pngtuberEmotionEffectAnchors: normalizeEmotionEffectAnchors(
             saved.visual?.pngtuberEmotionEffectAnchors,
           ),
@@ -1016,26 +1008,6 @@ export function useSettings() {
     [],
   );
 
-  const updateVisualMotionStyle = useCallback(
-    (motionStyle: AppSettings['visual']['motionStyle']) => {
-      setSettings((prev) => ({
-        ...prev,
-        visual: { ...prev.visual, motionStyle },
-      }));
-    },
-    [],
-  );
-
-  const updateVisualBundledAvatar = useCallback(
-    (bundledAvatar: AppSettings['visual']['bundledAvatar']) => {
-      setSettings((prev) => ({
-        ...prev,
-        visual: { ...prev.visual, bundledAvatar },
-      }));
-    },
-    [],
-  );
-
   const updateVisualPngTuberReactionControlMode = useCallback(
     (pngtuberReactionControlMode: PngTuberReactionControlMode) => {
       setSettings((prev) => ({
@@ -1473,8 +1445,6 @@ export function useSettings() {
     updateVisualBackgroundMode,
     updateVisualLayoutMode,
     updateVisualShowInputInBroadcast,
-    updateVisualBundledAvatar,
-    updateVisualMotionStyle,
     updateVisualPngTuberReactionControlMode,
     updateVisualPngTuberEmotionEffect,
     resetVisualPngTuberEmotionEffectMap,
