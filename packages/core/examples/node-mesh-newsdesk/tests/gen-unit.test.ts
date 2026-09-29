@@ -1,3 +1,4 @@
+import { createMouthValues } from '../src/gen/audio.js';
 import { extractKeywords } from '../src/shared/keywords.js';
 import { buildTimeline, POOLS } from '../src/shared/schedule.js';
 import { normalizeEmotion, parseArgs } from '../src/gen/cli.js';
@@ -114,5 +115,72 @@ describe('CLI helpers', () => {
     expect(
       resolveLocalAssetPath('/a/avatar', '/avatar/', '/avatar/../secret'),
     ).toBeNull();
+  });
+});
+
+describe('mouth values', () => {
+  const sampleRate = 48000;
+  // 2 s of a loud voice whose loudness dips 7 times per second (like morae)
+  function syllables(amplitude: number, dips = true): Float32Array {
+    const samples = new Float32Array(sampleRate * 2);
+    for (let i = 0; i < samples.length; i += 1) {
+      const t = i / sampleRate;
+      const envelope = dips ? 0.5 + 0.5 * Math.cos(2 * Math.PI * 7 * t) : 1;
+      samples[i] = amplitude * envelope * Math.sin(2 * Math.PI * 220 * t);
+    }
+    return samples;
+  }
+  const crossings = (values: Float32Array) => {
+    let count = 0;
+    for (let i = 1; i < values.length; i += 1)
+      if (values[i - 1] < 0.2 && values[i] >= 0.2) count += 1;
+    return count;
+  };
+
+  it('opens and closes on every mora even for a loud voice', () => {
+    const values = createMouthValues(
+      { samples: syllables(0.8), sampleRate },
+      30,
+      60,
+    );
+    // a fixed RMS ceiling kept this pinned at 1.0; now it follows each dip
+    expect(crossings(values)).toBeGreaterThanOrEqual(10);
+    expect(Math.max(...values)).toBeGreaterThan(0.8);
+    expect(Math.min(...values.slice(5))).toBeLessThan(0.2);
+  });
+
+  it('does not depend on the absolute loudness', () => {
+    const loud = createMouthValues(
+      { samples: syllables(0.8), sampleRate },
+      30,
+      60,
+    );
+    const quiet = createMouthValues(
+      { samples: syllables(0.1), sampleRate },
+      30,
+      60,
+    );
+    expect(crossings(quiet)).toBe(crossings(loud));
+  });
+
+  it('keeps the mouth open on a held sound and shut in silence', () => {
+    const held = createMouthValues(
+      { samples: syllables(0.5, false), sampleRate },
+      30,
+      60,
+    );
+    expect(Math.min(...held.slice(2, 58))).toBeGreaterThan(0.8);
+    const silent = createMouthValues(
+      { samples: new Float32Array(sampleRate), sampleRate },
+      30,
+      30,
+    );
+    expect(Math.max(...silent)).toBe(0);
+    // speech with fully silent gaps stays finite and shut in the gaps
+    const gaps = syllables(0.5);
+    gaps.fill(0, sampleRate * 0.5, sampleRate);
+    const values = createMouthValues({ samples: gaps, sampleRate }, 30, 60);
+    expect(values.every((v) => Number.isFinite(v))).toBe(true);
+    expect(Math.max(...values.slice(18, 28))).toBe(0);
   });
 });
