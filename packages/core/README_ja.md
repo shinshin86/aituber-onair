@@ -12,9 +12,10 @@
 
 ## Chat・Voiceモデルの更新
 
-Chat 0.56.0のモデル・能力判定ヘルパーと、Voice 0.22.0のGemini TTSモデル型をCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
+Chat 0.58.0のモデル・能力判定ヘルパーと、Voice 0.22.0のGemini TTSモデル型をCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
 
-- ネイティブモデル: GPT-6 Astra / Sol / Luna、Claude Fable 5.1 / Opus 5.5、DeepSeek V4.1 Flash、Grok 4.7。
+- ネイティブモデル: GPT-6 Astra / Sol / Luna、Claude Fable 5.1 / Opus 5.5 / Sonnet 5.5、DeepSeek V4.1 Flash、Grok 4.7。
+- OpenAI 互換エンドポイント用ヘルパー: `resolveOpenAICompatibleEndpoint`、`listOpenAICompatibleModels`、`testOpenAICompatibleConnection`、`OPENAI_COMPATIBLE_LOCAL_PRESETS`（Ollama、LM Studio、llama.cpp、vLLM）。[ローカル LLM ガイド](../../docs/local-llm.ja.md)も参照してください。
 - OpenRouter: GPT-6 Astra / Astra Pro、Claude Fable 5.1、DeepSeek V4.1 Flash、Gemini 3.8 Flash、Ling 3.0 Flash VL（free）、Mercury 2.5、Nex N2.5 Mini / Pro（free）、Qwen3.8 Max 0902、Muse Spark 1.3。
 - 推論が必須のモデルでは対応する推論強度を使います。ネイティブのAstraはResponses APIを使用し、最小値は`low`です。`isOpenAIReasoningModel`と`getDefaultReasoningEffortForOpenAIModel`で新しいOpenAIモデルも判定できます。既存のGPT-5ヘルパーは維持しています。
 - ネイティブDeepSeekでツールを使う場合は非推論モード（`reasoning_effort: 'none'`）を指定してください。OpenRouterの推論・画像対応は、選択モデルのChat能力情報に従います。

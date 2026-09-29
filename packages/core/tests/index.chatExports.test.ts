@@ -150,6 +150,11 @@ import {
   normalizeGeminiReasoningEffort,
   normalizeOpenRouterReasoningEffort,
   refreshOpenRouterFreeModels,
+  OPENAI_COMPATIBLE_LOCAL_PRESETS,
+  OpenAICompatibleEndpointError,
+  resolveOpenAICompatibleEndpoint,
+  listOpenAICompatibleModels,
+  testOpenAICompatibleConnection,
   type ChatProviderCapabilities,
   type ClaudeReasoningEffort,
   type DeepSeekReasoningEffort,
@@ -171,6 +176,27 @@ import {
 describe('Core index chat re-exports', () => {
   it('re-exports refreshOpenRouterFreeModels', () => {
     expect(typeof refreshOpenRouterFreeModels).toBe('function');
+  });
+
+  it('re-exports OpenAI-compatible endpoint helpers', () => {
+    expect(
+      resolveOpenAICompatibleEndpoint('http://localhost:11434/v1'),
+    ).toEqual({
+      baseUrl: 'http://localhost:11434/v1',
+      chatCompletionsUrl: 'http://localhost:11434/v1/chat/completions',
+      modelsUrl: 'http://localhost:11434/v1/models',
+    });
+    expect(OPENAI_COMPATIBLE_LOCAL_PRESETS.map((preset) => preset.id)).toEqual([
+      'ollama',
+      'lmStudio',
+      'llamaCpp',
+      'vllm',
+    ]);
+    expect(() =>
+      resolveOpenAICompatibleEndpoint('http://localhost:11434/api/chat'),
+    ).toThrow(OpenAICompatibleEndpointError);
+    expect(typeof listOpenAICompatibleModels).toBe('function');
+    expect(typeof testOpenAICompatibleConnection).toBe('function');
   });
 
   it('re-exports current Gemini models and reasoning helpers', () => {

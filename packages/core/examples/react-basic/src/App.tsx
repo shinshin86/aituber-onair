@@ -58,6 +58,7 @@ import {
   normalizeXaiReasoningEffort,
   normalizeZaiReasoningEffort,
   refreshOpenRouterFreeModels,
+  resolveOpenAICompatibleEndpoint,
   type ClaudeReasoningEffort,
   type DeepSeekReasoningEffort,
   type GeminiReasoningEffort,
@@ -81,6 +82,7 @@ import {
   type VoiceVoxQueryParameterOverrides,
   type AivisSpeechQueryParameterOverrides,
 } from '@aituber-onair/core';
+import { LocalLlmSetup } from './components/LocalLlmSetup';
 
 // Constants imports
 import {
@@ -1958,7 +1960,17 @@ const App: React.FC = () => {
         alert(OPENAI_COMPATIBLE_ENDPOINT_REQUIRED_MESSAGE);
         return;
       }
-      providerOptions.endpoint = trimmedEndpoint;
+      try {
+        providerOptions.endpoint =
+          resolveOpenAICompatibleEndpoint(trimmedEndpoint).chatCompletionsUrl;
+      } catch (error) {
+        alert(
+          error instanceof Error
+            ? error.message
+            : OPENAI_COMPATIBLE_ENDPOINT_REQUIRED_MESSAGE,
+        );
+        return;
+      }
     }
 
     // prepare voice options if enabled
@@ -3470,21 +3482,22 @@ const App: React.FC = () => {
                     <option value="openai-compatible">OpenAI-Compatible</option>
                   </select>
 
-                  <label htmlFor="model">Model:</label>
                   {chatProvider === 'openai-compatible' ? (
-                    <input
-                      id="model"
-                      type="text"
-                      placeholder={OPENAI_COMPATIBLE_DEFAULT_MODEL}
-                      value={model}
-                      onChange={(e) => setModel(e.target.value)}
+                    <LocalLlmSetup
+                      endpoint={openAICompatibleEndpoint}
+                      onEndpointChange={setOpenAICompatibleEndpoint}
+                      model={model}
+                      onModelChange={setModel}
+                      apiKey={apiKey}
                     />
                   ) : (
-                    <select
-                      id="model"
-                      value={model}
-                      onChange={(e) => setModel(e.target.value)}
-                    >
+                    <>
+                      <label htmlFor="model">Model:</label>
+                      <select
+                        id="model"
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
+                      >
                       {chatProvider === 'openai' &&
                         openaiModels.map((m) => (
                           <option key={m} value={m}>
@@ -3557,7 +3570,8 @@ const App: React.FC = () => {
                             {m}
                           </option>
                         ))}
-                    </select>
+                      </select>
+                    </>
                   )}
 
                   {chatProvider === 'gemini-nano' && (
@@ -3607,23 +3621,6 @@ const App: React.FC = () => {
                         場合があります。
                       </div>
                     </div>
-                  )}
-
-                  {chatProvider === 'openai-compatible' && (
-                    <>
-                      <label htmlFor="openAICompatibleEndpoint">
-                        Endpoint URL:
-                      </label>
-                      <input
-                        id="openAICompatibleEndpoint"
-                        type="text"
-                        placeholder={OPENAI_COMPATIBLE_DEFAULT_ENDPOINT}
-                        value={openAICompatibleEndpoint}
-                        onChange={(e) =>
-                          setOpenAICompatibleEndpoint(e.target.value)
-                        }
-                      />
-                    </>
                   )}
 
                   {chatProvider === 'zai' && (

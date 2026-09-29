@@ -18,6 +18,7 @@ import {
   getDefaultXaiReasoningEffort,
   isOpenAIReasoningModel,
   isXaiReasoningEffortModel,
+  resolveOpenAICompatibleEndpoint,
 } from '@aituber-onair/core';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { type BondIdentity, createBondIdentity } from '../lib/kizunaBond';
@@ -258,9 +259,16 @@ function createAnalysisProviderFromLLMSettings(
     const apiKey = getApiKeyForProvider(llmSettings.provider).trim();
 
     if (llmSettings.provider === 'openai-compatible') {
-      const endpoint = llmSettings.endpoint?.trim();
+      const endpointInput = llmSettings.endpoint?.trim();
       const model = llmSettings.model.trim() || 'local-model';
-      if (!endpoint) {
+      if (!endpointInput) {
+        return undefined;
+      }
+      let endpoint: string;
+      try {
+        endpoint =
+          resolveOpenAICompatibleEndpoint(endpointInput).chatCompletionsUrl;
+      } catch {
         return undefined;
       }
 

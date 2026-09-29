@@ -1,5 +1,23 @@
 # @aituber-onair/core
 
+## 0.26.16
+
+### Patch Changes
+
+- Propagate published Chat 0.58.0 to Core and its examples.
+- Re-export the Claude Sonnet 5.5 model constant and add it to the React basic
+  selector; avatar examples pick it up from Core's provider model lists.
+- Re-export the OpenAI-compatible endpoint helpers from Chat 0.57.0
+  (`resolveOpenAICompatibleEndpoint`, `listOpenAICompatibleModels`,
+  `testOpenAICompatibleConnection`, and `OPENAI_COMPATIBLE_LOCAL_PRESETS`) for
+  local LLM setups such as Ollama, LM Studio, llama.cpp, and vLLM.
+- Add a local LLM setup UI to the OpenAI-compatible settings of the React
+  basic example and the eight avatar examples: local server presets, base URL
+  resolution with a request preview, model listing with an Other/manual
+  option, and a connection test with CORS guidance. Saved full endpoint URLs
+  keep working.
+- Refresh Core documentation and example lockfile metadata.
+
 ## 0.26.15
 
 ### Patch Changes

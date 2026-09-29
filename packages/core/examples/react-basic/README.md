@@ -6,10 +6,11 @@ A comprehensive React-based AI chat application demonstrating the full capabilit
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.56.0 and the
+Core exposes the models and capability helpers from Chat 0.58.0 and the
 Gemini TTS model type from Voice 0.22.0. Existing provider defaults are unchanged.
 
-- Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1 and Opus 5.5;
+- Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
+  Sonnet 5.5;
   DeepSeek V4.1 Flash; and Grok 4.7.
 - OpenRouter: GPT-6 Astra / Astra Pro, Claude Fable 5.1, DeepSeek V4.1 Flash,
   Gemini 3.8 Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini / Pro
@@ -120,6 +121,12 @@ npm run fmt      # Format code with Biome
 ```
 
 ## 🛠️ Configuration
+
+For `openai-compatible`, choose a local-server preset or enter an origin, a
+`/v1` base URL, or a full `/chat/completions` URL. Fetch the model list, select
+a model, and run **Test connection** before chatting. See the
+[Local LLM setup guide](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-llm.md).
+
 
 ### LLM Provider Setup
 

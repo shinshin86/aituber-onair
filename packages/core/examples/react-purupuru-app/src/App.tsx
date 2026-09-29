@@ -34,6 +34,7 @@ import type { PuruPuruEffectAnchor } from './types/settings';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/app.css';
+import './styles/localLlmSetup.css';
 
 type AvatarPackageSource = 'default' | 'user';
 

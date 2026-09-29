@@ -10,6 +10,7 @@ describe('Released Chat and Voice model exports', () => {
     'MODEL_GPT_6_LUNA',
     'MODEL_CLAUDE_5_1_FABLE',
     'MODEL_CLAUDE_5_5_OPUS',
+    'MODEL_CLAUDE_5_5_SONNET',
     'MODEL_GROK_4_7',
     'MODEL_DEEPSEEK_FLASH',
     'MODEL_OPENAI_GPT_6_ASTRA',
