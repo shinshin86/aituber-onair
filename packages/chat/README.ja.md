@@ -91,8 +91,9 @@ async function testChat() {
 
 ## Agent SDKプロバイダー
 
-Codex SDK、Claude Agent SDK、Copilot SDK のようなエージェントSDKを使う場合は、
-専用の `@aituber-onair/chat/agent` エントリを使用します。
+Codex SDK、Claude Agent SDK、Copilot SDK、Cursor SDK のような
+エージェントSDKを使う場合は、専用の `@aituber-onair/chat/agent` エントリを
+使用します。
 
 ```typescript
 import { createAgentChatService } from '@aituber-onair/chat/agent';
@@ -107,6 +108,8 @@ npm install @aituber-onair/chat @openai/codex-sdk
 npm install @aituber-onair/chat @anthropic-ai/claude-agent-sdk
 # または
 npm install @aituber-onair/chat @github/copilot-sdk
+# または（Node.js 22.13以上が必要）
+npm install @aituber-onair/chat @cursor/sdk
 ```
 
 Codex SDK を使う最短例:
@@ -212,6 +215,32 @@ const chatService = createAgentChatService('copilot-sdk', {
 });
 ```
 
+Cursor SDK を使う場合は、Node.js 22.13以上が必要です。
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const chatService = createAgentChatService('cursor-sdk', {
+  apiKey: process.env.CURSOR_API_KEY,
+  workingDirectory: process.cwd(),
+});
+
+const response = await chatService.chatOnce(
+  [{ role: 'user', content: '一文で挨拶して。' }],
+  false,
+);
+
+console.log(response);
+```
+
+認証には、セットアップ時に `Cursor.auth.login()` を一度実行する方法、
+`CURSOR_API_KEY` を設定する方法、`apiKey` を渡す方法があります。Cursor CLI の
+`agent login` では SDK の認証情報は作成されません。利用分は Cursor プランに
+請求されます。このプロバイダーは `tools: []` と `settingSources: []` を指定し、
+tools、vision、MCP は使用しません。既定のモデルIDは、
+`Cursor.models.list()` で Cursor の Auto として返される `default` です。
+別のモデルを使う場合は、`Cursor.models.list()` が返すIDを `model` に指定します。
+
 利用前に、各 SDK のローカル認証を済ませておく必要があります。SDK パッケージが
 未インストール、または認証が未完了の場合は、実行時に元の SDK エラー詳細を含む
 エラーを投げます。
@@ -305,9 +334,10 @@ const localCompatibleService = ChatServiceFactory.createChatService(
 
 #### Agent SDKプロバイダー
 
-`@aituber-onair/chat/agent` は、Codex SDK、Claude Agent SDK、Copilot SDK のような
-エージェントSDK向けの実験的なプロバイダーを公開します。ブラウザ/GAS向けUMDエントリには
-含まれず、APIキーも使用しません。
+`@aituber-onair/chat/agent` は、Codex SDK、Claude Agent SDK、Copilot SDK、
+Cursor SDK のようなエージェントSDK向けの実験的なプロバイダーを公開します。
+ブラウザ/GAS向けUMDエントリには含まれません。Cursor SDK では任意で APIキーを
+指定でき、ほかの Agent SDK プロバイダーは各 SDK のローカル認証を使用します。
 
 利用するエージェントSDKパッケージだけを、利用側の JavaScript ランタイムアプリに追加してください。
 
@@ -317,12 +347,14 @@ npm install @aituber-onair/chat @openai/codex-sdk
 npm install @aituber-onair/chat @anthropic-ai/claude-agent-sdk
 # または
 npm install @aituber-onair/chat @github/copilot-sdk
+# または（Node.js 22.13以上が必要）
+npm install @aituber-onair/chat @cursor/sdk
 ```
 
-`@openai/codex-sdk`、`@anthropic-ai/claude-agent-sdk`、`@github/copilot-sdk` は
-`@aituber-onair/chat` の依存関係には含めていません。SDK は動的に読み込むため、通常の API
-プロバイダーだけを使うユーザーはこれらのエージェントSDKパッケージをインストールする
-必要がありません。
+`@openai/codex-sdk`、`@anthropic-ai/claude-agent-sdk`、
+`@github/copilot-sdk`、`@cursor/sdk` は `@aituber-onair/chat` の依存関係には
+含めていません。SDK は動的に読み込むため、通常の API プロバイダーだけを使う
+ユーザーはこれらのエージェントSDKパッケージをインストールする必要がありません。
 
 ```typescript
 import { createAgentChatService } from '@aituber-onair/chat/agent';
@@ -424,10 +456,35 @@ const copilotService = createAgentChatService('copilot-sdk', {
 });
 ```
 
+Cursor SDK を使う場合は `cursor-sdk` を指定します。Node.js 22.13以上が必要です。
+
+```typescript
+import { createAgentChatService } from '@aituber-onair/chat/agent';
+
+const cursorService = createAgentChatService('cursor-sdk', {
+  apiKey: process.env.CURSOR_API_KEY,
+  workingDirectory: process.cwd(),
+});
+
+const result = await cursorService.chatOnce(messages, false, (text) =>
+  process.stdout.write(text),
+);
+```
+
+認証には、セットアップ時に `Cursor.auth.login()` を一度実行する方法、
+`CURSOR_API_KEY` を設定する方法、`apiKey` を渡す方法があります。Cursor CLI の
+`agent login` では SDK の認証情報は作成されません。利用分は Cursor プランに
+請求されます。このプロバイダーはローカルエージェントに `tools: []` と
+`settingSources: []` を渡すため、tools、vision、MCP は使用できません。
+`DEFAULT_CURSOR_SDK_MODEL` は `default` です。`Cursor.models.list()` では
+Cursor の Auto として返されます。別のモデルを使う場合は、
+`Cursor.models.list()` が返すIDを `model` に指定します。
+
 利用可能なプロバイダー:
 - `codex-sdk`: `@openai/codex-sdk` と Codex 認証が必要です。
 - `claude-agent-sdk`: `@anthropic-ai/claude-agent-sdk` と Claude Agent SDK 認証が必要です。
 - `copilot-sdk`: `@github/copilot-sdk` と GitHub Copilot 認証が必要です。
+- `cursor-sdk`: `@cursor/sdk`、Node.js 22.13以上、Cursor SDK の認証またはAPIキーが必要です。
 
 現時点の制限:
 - テキストチャットのみ対応します。

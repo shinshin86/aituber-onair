@@ -3,6 +3,7 @@ import { ChatServiceFactory } from '../../ChatServiceFactory';
 import { ClaudeAgentSDKChatServiceProvider } from './ClaudeAgentSDKChatServiceProvider';
 import { CodexSDKChatServiceProvider } from './CodexSDKChatServiceProvider';
 import { CopilotSDKChatServiceProvider } from './CopilotSDKChatServiceProvider';
+import { CursorSDKChatServiceProvider } from './CursorSDKChatServiceProvider';
 import {
   ClaudeAgentSDKChatServiceOptions,
   ClaudeAgentSDKLoader,
@@ -15,6 +16,10 @@ import {
   CopilotSDKChatServiceOptions,
   CopilotSDKLoader,
 } from './CopilotSDKChatService';
+import {
+  CursorSDKChatServiceOptions,
+  CursorSDKLoader,
+} from './CursorSDKChatService';
 
 export {
   ClaudeAgentSDKChatService,
@@ -37,22 +42,32 @@ export {
   type CopilotSDKLoader,
 } from './CopilotSDKChatService';
 export { CopilotSDKChatServiceProvider } from './CopilotSDKChatServiceProvider';
+export {
+  CursorSDKChatService,
+  DEFAULT_CURSOR_SDK_MODEL,
+  type CursorSDKChatServiceOptions,
+  type CursorSDKLoader,
+} from './CursorSDKChatService';
+export { CursorSDKChatServiceProvider } from './CursorSDKChatServiceProvider';
 
 export type AgentChatProviderName =
   | 'codex-sdk'
   | 'claude-agent-sdk'
-  | 'copilot-sdk';
+  | 'copilot-sdk'
+  | 'cursor-sdk';
 
 export type AgentChatServiceOptionsByProvider = {
   'codex-sdk': CodexSDKChatServiceOptions;
   'claude-agent-sdk': ClaudeAgentSDKChatServiceOptions;
   'copilot-sdk': CopilotSDKChatServiceOptions;
+  'cursor-sdk': CursorSDKChatServiceOptions;
 };
 
 export type RegisterAgentChatProvidersOptions = {
   codexSDKLoader?: CodexSDKLoader;
   claudeAgentSDKLoader?: ClaudeAgentSDKLoader;
   copilotSDKLoader?: CopilotSDKLoader;
+  cursorSDKLoader?: CursorSDKLoader;
 };
 
 export function registerAgentChatProviders(
@@ -66,6 +81,9 @@ export function registerAgentChatProviders(
   );
   ChatServiceFactory.registerProvider(
     new CopilotSDKChatServiceProvider(options.copilotSDKLoader),
+  );
+  ChatServiceFactory.registerProvider(
+    new CursorSDKChatServiceProvider(options.cursorSDKLoader),
   );
 }
 

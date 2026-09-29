@@ -10,6 +10,7 @@ const KNOWN_CHAT_PROVIDERS = new Set([
   'claude-agent-sdk',
   'codex-sdk',
   'copilot-sdk',
+  'cursor-sdk',
   'deepseek',
   'gemini',
   'gemini-nano',

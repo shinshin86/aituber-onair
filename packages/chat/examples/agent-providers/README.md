@@ -25,6 +25,8 @@ npm install @aituber-onair/chat @openai/codex-sdk
 npm install @aituber-onair/chat @anthropic-ai/claude-agent-sdk
 # or
 npm install @aituber-onair/chat @github/copilot-sdk
+# or (requires Node.js 22.13+)
+npm install @aituber-onair/chat @cursor/sdk
 ```
 
 When trying this example inside the repository, install only the SDK you want
@@ -36,6 +38,8 @@ npm install --no-save @openai/codex-sdk
 npm install --no-save @anthropic-ai/claude-agent-sdk
 # or
 npm install --no-save @github/copilot-sdk
+# or (requires Node.js 22.13+)
+npm install --no-save @cursor/sdk
 ```
 
 The agent SDK package is installed into `node_modules` for local testing, but it is
@@ -57,6 +61,14 @@ Authenticate the SDK provider before running the example:
   experiments that may execute SDK-managed tools, set
   `COPILOT_SDK_APPROVE_ALL_PERMISSIONS=1` only when you trust the prompt and
   working directory.
+- Cursor SDK requires Node.js 22.13+. Authenticate once during setup with
+  `Cursor.auth.login()`, set `CURSOR_API_KEY`, or pass `apiKey` to the provider.
+  Cursor CLI `agent login` does not populate the SDK authentication store.
+- Cursor SDK usage is billed to the Cursor plan. The provider disables tools,
+  vision, MCP, and Cursor setting sources. The default model id is `default`,
+  which `Cursor.models.list()` returns as Cursor's Auto option. Set
+  `CURSOR_SDK_MODEL` to another id returned by `Cursor.models.list()` when
+  needed.
 
 ## Run
 
@@ -72,6 +84,11 @@ node packages/chat/examples/agent-providers/index.js claude \
 
 ```bash
 node packages/chat/examples/agent-providers/index.js copilot \
+  "Say hello in one sentence."
+```
+
+```bash
+node packages/chat/examples/agent-providers/index.js cursor \
   "Say hello in one sentence."
 ```
 
@@ -95,6 +112,9 @@ node packages/chat/examples/agent-providers/index.js copilot
 
 COPILOT_SDK_APPROVE_ALL_PERMISSIONS=1 \
 node packages/chat/examples/agent-providers/index.js copilot
+
+CURSOR_SDK_MODEL="<model id returned by Cursor.models.list()>" \
+node packages/chat/examples/agent-providers/index.js cursor
 ```
 
 ## Character Chat (Codex SDK)
