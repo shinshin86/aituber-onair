@@ -305,6 +305,12 @@ export default function App() {
       getApiKeyForProvider: settingsHook.getApiKeyForProvider,
       enabled: settingsHook.settings.commentIntelligence.enabled,
       mode: settingsHook.settings.commentIntelligence.mode,
+      analysisEngine: settingsHook.settings.commentIntelligence.analysisEngine,
+      jevTransport: settingsHook.settings.commentIntelligence.jevTransport,
+      jevApiKey:
+        settingsHook.settings.commentIntelligence.jevTransport === 'typesafe'
+          ? settingsHook.settings.commentIntelligence.typesafeApiKey
+          : (settingsHook.settings.llm.apiKeys.openrouter ?? ''),
       analysisIntervalMs:
         settingsHook.settings.commentIntelligence.analysisIntervalMs,
       maxCommentsPerBatch:

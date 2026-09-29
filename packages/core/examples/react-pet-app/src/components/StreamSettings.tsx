@@ -53,6 +53,14 @@ interface StreamSettingsProps {
   updateCommentIntelligenceMode: (
     value: CommentIntelligenceSettings['mode'],
   ) => void;
+  updateCommentIntelligenceJev: (
+    value: Partial<
+      Pick<
+        CommentIntelligenceSettings,
+        'analysisEngine' | 'jevTransport' | 'typesafeApiKey'
+      >
+    >,
+  ) => void;
   updateCommentIntelligenceStreamTopic: (value: string) => void;
   updateCommentIntelligenceStreamTitle: (value: string) => void;
   updateCommentIntelligenceTopicFilter: (
@@ -102,6 +110,7 @@ export function StreamSettings({
   updateTwitchCommentIntervalMs,
   updateCommentIntelligenceEnabled,
   updateCommentIntelligenceMode,
+  updateCommentIntelligenceJev,
   updateCommentIntelligenceStreamTopic,
   updateCommentIntelligenceStreamTitle,
   updateCommentIntelligenceTopicFilter,
@@ -427,7 +436,7 @@ export function StreamSettings({
                 <option value="llm-assisted">LLMアシスト</option>
               </select>
               <p className="settings-field-hint">
-                ルールは追加のLLM呼び出しなしで動作します。ハイブリッドとLLMアシストはLLMタブのプロバイダーとモデルを使い、利用できない場合はルールに戻ります。
+                ルールは追加のLLM呼び出しなしで動作します。ハイブリッドとLLMアシストは、下の「解析エンジン」で選んだLLMタブのモデルまたはJevを使い、利用できない場合はルールに戻ります。
               </p>
               <div className="settings-mode-help">
                 <p>
@@ -444,6 +453,87 @@ export function StreamSettings({
                 </p>
               </div>
             </div>
+
+            <div className="settings-field">
+              <label htmlFor="comment-intelligence-engine">解析エンジン</label>
+              <select
+                id="comment-intelligence-engine"
+                value={commentIntelligence.analysisEngine}
+                onChange={(event) =>
+                  updateCommentIntelligenceJev({
+                    analysisEngine: event.target
+                      .value as CommentIntelligenceSettings['analysisEngine'],
+                  })
+                }
+                disabled={
+                  commentControlsDisabled ||
+                  commentIntelligence.mode === 'rules'
+                }
+              >
+                <option value="llm">LLMタブのLLM</option>
+                <option value="jev">Jev（判断専用モデル）</option>
+              </select>
+              <p className="settings-field-hint">
+                ハイブリッドとLLMアシストで使う解析エンジンです。Jevを選ぶと、話題との関連や質問かどうかに加えて、返し方、失礼なコメント、配信内容の誤りの指摘、安全上のリスクを1回の通信で判定し、アバターへの指示に反映します。安全上のリスクがあるコメントは読み上げず、管理者通知に回します（このサンプルの通知はコンソールに出すだけのモックです）。
+              </p>
+            </div>
+
+            {commentIntelligence.analysisEngine === 'jev' && (
+              <div className="settings-field">
+                <label htmlFor="comment-intelligence-jev-transport">
+                  Jevの接続先
+                </label>
+                <select
+                  id="comment-intelligence-jev-transport"
+                  value={commentIntelligence.jevTransport}
+                  onChange={(event) =>
+                    updateCommentIntelligenceJev({
+                      jevTransport: event.target
+                        .value as CommentIntelligenceSettings['jevTransport'],
+                    })
+                  }
+                  disabled={
+                    commentControlsDisabled ||
+                    commentIntelligence.mode === 'rules'
+                  }
+                >
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="typesafe">TypeSafe AI</option>
+                </select>
+                <p className="settings-field-hint">
+                  OpenRouterはLLMタブのOpenRouter APIキーを使います。TypeSafe
+                  AIはブラウザから直接接続できないため、開発サーバー（npm run
+                  dev / preview）経由で送信します。
+                </p>
+              </div>
+            )}
+
+            {commentIntelligence.analysisEngine === 'jev' &&
+              commentIntelligence.jevTransport === 'typesafe' && (
+                <div className="settings-field">
+                  <label htmlFor="comment-intelligence-typesafe-api-key">
+                    TypeSafe AI APIキー
+                  </label>
+                  <input
+                    id="comment-intelligence-typesafe-api-key"
+                    type="password"
+                    autoComplete="off"
+                    value={commentIntelligence.typesafeApiKey}
+                    onChange={(event) =>
+                      updateCommentIntelligenceJev({
+                        typesafeApiKey: event.target.value,
+                      })
+                    }
+                    disabled={
+                      commentControlsDisabled ||
+                      commentIntelligence.mode === 'rules'
+                    }
+                  />
+                  <p className="settings-field-hint">
+                    ほかのAPIキーと同じくブラウザに保存されます。ローカル検証用の一時キーを使ってください。
+                  </p>
+                </div>
+              )}
 
             <div className="settings-field">
               <label htmlFor="comment-intelligence-stream-topic">

@@ -273,6 +273,9 @@ function getDefaultSettings(): AppSettings {
       minCommentsForLLMAnalysis: 8,
       blockHighRiskViewers: true,
       viewerBlockDurationMs: 10 * 60 * 1000,
+      analysisEngine: 'llm',
+      jevTransport: 'openrouter',
+      typesafeApiKey: '',
     },
     manneri: {
       enabled: true,
@@ -1211,6 +1214,23 @@ export function useSettings() {
     [],
   );
 
+  const updateCommentIntelligenceJev = useCallback(
+    (
+      patch: Partial<
+        Pick<
+          AppSettings['commentIntelligence'],
+          'analysisEngine' | 'jevTransport' | 'typesafeApiKey'
+        >
+      >,
+    ) => {
+      setSettings((prev) => ({
+        ...prev,
+        commentIntelligence: { ...prev.commentIntelligence, ...patch },
+      }));
+    },
+    [],
+  );
+
   const updateCommentIntelligenceStreamTopic = useCallback(
     (streamTopic: string) => {
       setSettings((prev) => ({
@@ -1466,6 +1486,7 @@ export function useSettings() {
     updateTwitchCommentIntervalMs,
     updateCommentIntelligenceEnabled,
     updateCommentIntelligenceMode,
+    updateCommentIntelligenceJev,
     updateCommentIntelligenceStreamTopic,
     updateCommentIntelligenceStreamTitle,
     updateCommentIntelligenceTopicFilter,

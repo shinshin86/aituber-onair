@@ -11,6 +11,7 @@ import {
 } from '@aituber-onair/core';
 import {
   createCommentIntelligence,
+  createJevCommentAnalysisProvider,
   createChatServiceCommentAnalysisProvider,
   formatCommentIntelligencePrompt,
   normalizeTwitchComment,
@@ -59,6 +60,10 @@ type UseLiveCommentIntelligenceParams = {
   streamTopic?: string;
   streamTitle?: string;
   topicFilter?: AppSettings['commentIntelligence']['topicFilter'];
+  /** Analyze with the LLM tab's model (default) or with Jev. */
+  analysisEngine?: AppSettings['commentIntelligence']['analysisEngine'];
+  jevTransport?: AppSettings['commentIntelligence']['jevTransport'];
+  jevApiKey?: string;
 };
 
 export function useLiveCommentIntelligence({
@@ -79,9 +84,13 @@ export function useLiveCommentIntelligence({
   streamTopic = '',
   streamTitle = '',
   topicFilter = 'prefer',
+  analysisEngine = 'llm',
+  jevTransport = 'openrouter',
+  jevApiKey = '',
 }: UseLiveCommentIntelligenceParams) {
   const pendingCommentsRef = useRef<LiveComment[]>([]);
   const isFlushingRef = useRef(false);
+  const flareRef = useRef<FlareState>({ reports: [], lastAlertAt: 0 });
   const [lastAnalysis, setLastAnalysis] =
     useState<CommentIntelligenceResult | null>(null);
 
@@ -89,11 +98,20 @@ export function useLiveCommentIntelligence({
     () =>
       mode === 'rules'
         ? undefined
-        : createAnalysisProviderFromLLMSettings(
-            llmSettings,
-            getApiKeyForProvider,
-          ),
-    [getApiKeyForProvider, llmSettings, mode],
+        : analysisEngine === 'jev'
+          ? createJevAnalysisProvider(jevTransport, jevApiKey)
+          : createAnalysisProviderFromLLMSettings(
+              llmSettings,
+              getApiKeyForProvider,
+            ),
+    [
+      analysisEngine,
+      getApiKeyForProvider,
+      jevApiKey,
+      jevTransport,
+      llmSettings,
+      mode,
+    ],
   );
 
   const intelligence = useMemo(
@@ -194,9 +212,18 @@ export function useLiveCommentIntelligence({
       });
 
       setLastAnalysis(result);
+      reportModeratorAlerts(result, flareRef.current);
 
       const selected = result.selectedComments[0];
       if (!selected) {
+        return;
+      }
+      // A moderator handles safety risks; the avatar does not read them out.
+      if (
+        result.responsePlans?.some(
+          (plan) => plan.commentId === selected.id && plan.notifyModerator,
+        )
+      ) {
         return;
       }
 
@@ -240,6 +267,124 @@ export function useLiveCommentIntelligence({
     flush,
     lastAnalysis,
   };
+}
+
+type ModeratorAlert =
+  | {
+      kind: 'safety-risk';
+      commentId: string;
+      authorName: string;
+      text: string;
+    }
+  | {
+      kind: 'flare-up';
+      errorReports: number;
+      viewers: number;
+      windowMs: number;
+    };
+
+type FlareState = {
+  reports: Array<{ viewerId: string; at: number }>;
+  lastAlertAt: number;
+};
+
+/** Error reports from this many viewers within the window mean a flare-up. */
+const FLARE_WINDOW_MS = 2 * 60 * 1000;
+const FLARE_MIN_VIEWERS = 3;
+const FLARE_ALERT_COOLDOWN_MS = 5 * 60 * 1000;
+
+/**
+ * Mock moderator notification: this sample only logs the alert.
+ *
+ * To notify for real, send the alert from here to your own backend, which
+ * forwards it to Discord, Slack, or a moderation queue. Keep webhook URLs and
+ * tokens on that server, never in this browser app. For example:
+ *
+ *   await fetch('/api/moderator-alerts', {
+ *     method: 'POST',
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: JSON.stringify(alert),
+ *   });
+ */
+async function notifyModerator(alert: ModeratorAlert): Promise<void> {
+  console.info('[moderator alert: mock, not sent]', alert);
+}
+
+function reportModeratorAlerts(
+  result: CommentIntelligenceResult,
+  flare: FlareState,
+  now = Date.now(),
+) {
+  const plans = result.responsePlans;
+  if (!plans) {
+    return;
+  }
+  const commentsById = new Map(
+    result.rankedComments.map((comment) => [comment.id, comment]),
+  );
+  for (const plan of plans) {
+    const comment = commentsById.get(plan.commentId);
+    if (!comment) {
+      continue;
+    }
+    // Only real-world safety risks escalate; rude comments do not.
+    if (plan.notifyModerator) {
+      void notifyModerator({
+        kind: 'safety-risk',
+        commentId: comment.id,
+        authorName: comment.author.displayName ?? comment.author.name,
+        text: comment.text,
+      });
+    }
+    if (plan.pointsOutError) {
+      flare.reports.push({ viewerId: comment.author.id, at: now });
+    }
+  }
+  // Jev judges each comment; counting reports over time stays in code.
+  flare.reports = flare.reports.filter(
+    (report) => now - report.at <= FLARE_WINDOW_MS,
+  );
+  const viewers = new Set(flare.reports.map((report) => report.viewerId)).size;
+  if (
+    viewers >= FLARE_MIN_VIEWERS &&
+    now - flare.lastAlertAt >= FLARE_ALERT_COOLDOWN_MS
+  ) {
+    flare.lastAlertAt = now;
+    void notifyModerator({
+      kind: 'flare-up',
+      errorReports: flare.reports.length,
+      viewers,
+      windowMs: FLARE_WINDOW_MS,
+    });
+  }
+}
+
+function createJevAnalysisProvider(
+  transport: AppSettings['commentIntelligence']['jevTransport'],
+  apiKey: string,
+): CommentAnalysisLLMProvider | undefined {
+  const key = apiKey.trim();
+  if (!key) {
+    return undefined;
+  }
+  try {
+    return createJevCommentAnalysisProvider({
+      transport,
+      apiKey: key,
+      responsePlan: true,
+      // TypeSafe AI rejects browser origins, so the Vite dev server forwards
+      // this path. Production apps should call Jev from their own backend.
+      ...(transport === 'typesafe'
+        ? {
+            fetch: (_url: RequestInfo | URL, init?: RequestInit) =>
+              fetch('/api/typesafe/systemone', init),
+          }
+        : {}),
+    });
+  } catch {
+    console.warn('Failed to create Jev comment analysis provider.');
+    return undefined;
+  }
 }
 
 function createAnalysisProviderFromLLMSettings(

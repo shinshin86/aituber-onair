@@ -164,6 +164,19 @@ context to the AITuber. Rules mode runs without an additional LLM call. Hybrid
 and LLM-assisted modes reuse the provider, model, API key, and endpoint from the
 LLM settings tab for comment analysis and fall back to rules when unavailable.
 
+Choose **Jev** as the analysis engine to use Jev for comment analysis in Hybrid
+and LLM-assisted modes. In one request it also judges the reply style (one
+line, light, or careful), rude comments, reports that the stream got something
+wrong, and safety risks, and passes a matching instruction for the selected
+comment to the avatar's LLM. Comments with a safety risk are not read out and
+go to a moderator alert, and error reports from three or more viewers within
+two minutes raise a flare-up alert. Alerts in this sample are a console-only
+mock; to send them for real, post them from `notifyModerator()` in
+`useLiveCommentIntelligence.ts` to your own backend. Jev connects through
+OpenRouter (using the OpenRouter API key from the LLM settings tab) or TypeSafe
+AI. TypeSafe AI rejects browser origins, so requests go through the
+`npm run dev` / `npm run preview` server.
+
 Manneri is enabled by default. It watches recent user and assistant messages,
 and when conversation patterns become repetitive, it injects a hidden
 topic-diversification instruction into the next LLM request. You can adjust the
