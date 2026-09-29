@@ -1,5 +1,25 @@
 # @aituber-onair/agent
 
+## 0.0.2
+
+This package is still an alpha release. Its public API may change before a
+stable release.
+
+### Added
+
+- Adds a Node.js Cursor CLI ACP backend at `@aituber-onair/agent/cursor-acp`
+  (`createCursorAcpBackend`). It runs `agent acp` per Session with the
+  `agent login` credentials and supports streamed Turns, Session resume
+  through `session/load` without replaying history as events, interruption,
+  and host approvals for Cursor permission requests (`allow_always` is never
+  chosen). The default mode is read-only `ask`.
+
+### Changed
+
+- The Codex app-server and Cursor ACP backends now share one protocol-agnostic
+  JSON line transport. Codex behavior and public API are unchanged.
+- The optional `@aituber-onair/chat` peer range is now `^0.59.0`.
+
 ## 0.0.1
 
 This package is an alpha release. Its public API may change before a stable

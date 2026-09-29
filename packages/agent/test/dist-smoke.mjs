@@ -7,9 +7,11 @@ const require = createRequire(import.meta.url);
 const esmBase = await import('@aituber-onair/agent');
 const esmChat = await import('@aituber-onair/agent/chat');
 const esmCodex = await import('@aituber-onair/agent/codex-app-server');
+const esmCursor = await import('@aituber-onair/agent/cursor-acp');
 const cjsBase = require('@aituber-onair/agent');
 const cjsChat = require('@aituber-onair/agent/chat');
 const cjsCodex = require('@aituber-onair/agent/codex-app-server');
+const cjsCursor = require('@aituber-onair/agent/cursor-acp');
 
 assert.equal(typeof esmBase.AgentError, 'function');
 assert.equal(typeof cjsBase.AgentError, 'function');
@@ -39,6 +41,15 @@ for (const codex of [esmCodex, cjsCodex]) {
     workingDirectory: '/path/to/character-workspace',
   });
   assert.equal(backend.backendCapabilities.approvals, true);
+}
+for (const cursor of [esmCursor, cjsCursor]) {
+  assert.equal(cursor.CURSOR_ACP_PROTOCOL_VERSION, 1);
+  const backend = cursor.createCursorAcpBackend({
+    allowPathLookup: true,
+    workingDirectory: '/path/to/character-workspace',
+  });
+  assert.equal(backend.backendCapabilities.approvals, true);
+  assert.equal(backend.backendCapabilities.detailedEvents, false);
 }
 
 const browserOutputFiles = [

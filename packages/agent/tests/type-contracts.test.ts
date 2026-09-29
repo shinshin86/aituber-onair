@@ -50,6 +50,15 @@ import {
   CODEX_APP_SERVER_VERIFIED_VERSION,
   createCodexAppServerBackend,
 } from '../src/codex-app-server.js';
+import type {
+  CursorAcpBackend,
+  CursorAcpBackendCapabilities,
+  CursorAcpBackendOptions,
+} from '../src/cursor-acp.js';
+import {
+  CURSOR_ACP_PROTOCOL_VERSION,
+  createCursorAcpBackend,
+} from '../src/cursor-acp.js';
 
 describe('public type surface', () => {
   it('keeps host instructions separate from conversational input', () => {
@@ -306,5 +315,36 @@ describe('public type surface', () => {
       expectedVersion: '0.145.0',
     };
     expect(legacy).toBeDefined();
+  });
+
+  it('requires an explicit Cursor executable path or PATH opt-in', () => {
+    const explicitPath: CursorAcpBackendOptions = {
+      agentPath: '/path/to/agent',
+      workingDirectory: '/path/to/workspace',
+    };
+    const pathLookup: CursorAcpBackendOptions = {
+      allowPathLookup: true,
+      workingDirectory: '/path/to/workspace',
+    };
+
+    // @ts-expect-error Cursor discovery must never happen without explicit opt-in.
+    const implicitPathLookup: CursorAcpBackendOptions = {
+      workingDirectory: '/path/to/workspace',
+    };
+
+    expect(explicitPath.agentPath).toBe('/path/to/agent');
+    expect(pathLookup.allowPathLookup).toBe(true);
+    expect(implicitPathLookup.workingDirectory).toBe('/path/to/workspace');
+    expect(createCursorAcpBackend(explicitPath).kind).toBe('cursor-acp');
+    expect(CURSOR_ACP_PROTOCOL_VERSION).toBe(1);
+    expectTypeOf(createCursorAcpBackend).toBeFunction();
+    expectTypeOf<CursorAcpBackend>().toBeObject();
+    expectTypeOf<CursorAcpBackendCapabilities>().toBeObject();
+    expectTypeOf<
+      CursorAcpBackendCapabilities['sessionResume']
+    >().toEqualTypeOf<true>();
+    expectTypeOf<
+      CursorAcpBackendCapabilities['detailedEvents']
+    >().toEqualTypeOf<false>();
   });
 });

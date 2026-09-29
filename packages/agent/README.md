@@ -15,8 +15,9 @@ npm install @aituber-onair/agent @aituber-onair/chat
 ```
 
 `@aituber-onair/chat` is an optional peer dependency needed only for the
-`@aituber-onair/agent/chat` entry point. The Codex app-server entry point needs
-a locally installed Codex CLI; see
+`@aituber-onair/agent/chat` entry point. The Node.js-only workspace backends
+need their corresponding local CLIs; see
+[Cursor CLI ACP integration](#cursor-cli-acp-integration) and
 [Codex app-server integration](#codex-app-server-integration).
 
 ## What this package is
@@ -382,6 +383,78 @@ flowchart LR
 The existing AITuber OnAir packages remain independently usable. Agent combines
 them through tools, context, hooks, and events rather than moving their
 domain logic into one large package.
+
+## Cursor CLI ACP integration
+
+Use `@aituber-onair/agent/cursor-acp` to run an Agent Session through the
+locally installed Cursor CLI. The backend starts `agent acp` over JSONL stdio,
+uses the credentials created by `agent login`, and charges usage to the Cursor
+plan associated with that login. It does not require an API key in the Agent
+configuration.
+
+The `cursor-sdk` provider in `@aituber-onair/chat` is a separate integration.
+It uses the Cursor Agent SDK and its own authentication path; signing in with
+`agent login` configures the CLI backend described here, not the SDK provider.
+
+Install the Cursor CLI and sign in before starting the application:
+
+```bash
+agent login
+```
+
+```ts
+import { createAgent } from '@aituber-onair/agent';
+import { createCursorAcpBackend } from '@aituber-onair/agent/cursor-acp';
+
+const backend = createCursorAcpBackend({
+  // PATH lookup is never implicit. Alternatively, provide an absolute agentPath.
+  allowPathLookup: true,
+  workingDirectory: '/absolute/path/to/character-workspace',
+  mode: 'ask',
+  model: 'default[]',
+});
+
+const agent = createAgent({
+  id: 'stream-operations-staff',
+  brief: 'You are AI staff responsible for reviewing stream operations.',
+  backend,
+});
+
+const session = await agent.startSession({
+  purpose: 'Review the latest stream report',
+  audience: 'owner',
+  inputTrust: 'trusted',
+});
+
+try {
+  for await (const event of session.runStream({
+    instruction: 'Inspect the workspace and summarize issues.',
+  })) {
+    if (event.type === 'approval.requested') {
+      await session.resolveApproval(event.request.id, 'deny');
+    }
+    if (event.type === 'message.completed') console.log(event.text);
+  }
+} finally {
+  await session.close();
+  await agent.close();
+}
+```
+
+`ask` is the default mode and does not edit files or execute commands. `plan`
+is also read-only. Choose `agent` only when Cursor may change files in
+`workingDirectory`: observed Cursor CLI behavior applies file edits without a
+permission request in this mode. The host approval flow receives non-allowlisted
+shell commands, but it does not intercept every file edit. An `allow-once`
+decision selects Cursor's one-request option, while `deny` rejects that request.
+The backend never selects Cursor's `allow_always` option.
+
+`model` must be an exact ACP model ID advertised by the installed CLI, such as
+`default[]`. Omit it to use the CLI's current model. Persist
+`session.backendSessionId` in host-owned state and pass it to
+`agent.resumeSession(...)` to resume; replayed history from `session/load` is
+not emitted as events for the new Turn. Cursor ACP Sessions do not expose Agent
+domain Tools.
 
 ## Codex app-server integration
 
