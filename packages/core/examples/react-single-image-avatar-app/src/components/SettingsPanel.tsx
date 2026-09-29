@@ -395,6 +395,7 @@ export function SettingsPanel({
   updateTwitchCommentIntervalMs,
   updateCommentIntelligenceEnabled,
   updateCommentIntelligenceMode,
+  updateCommentIntelligenceJev,
   updateCommentIntelligenceStreamTopic,
   updateCommentIntelligenceStreamTitle,
   updateCommentIntelligenceTopicFilter,
@@ -3157,6 +3158,7 @@ export function SettingsPanel({
         updateTwitchCommentIntervalMs={updateTwitchCommentIntervalMs}
         updateCommentIntelligenceEnabled={updateCommentIntelligenceEnabled}
         updateCommentIntelligenceMode={updateCommentIntelligenceMode}
+        updateCommentIntelligenceJev={updateCommentIntelligenceJev}
         updateCommentIntelligenceStreamTopic={
           updateCommentIntelligenceStreamTopic
         }

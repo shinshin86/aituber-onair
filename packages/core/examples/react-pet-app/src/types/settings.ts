@@ -178,6 +178,11 @@ export interface CommentIntelligenceSettings {
   minCommentsForLLMAnalysis: number;
   blockHighRiskViewers: boolean;
   viewerBlockDurationMs: number;
+  /** Engine for hybrid / LLM-assisted analysis: the LLM tab's model or Jev. */
+  analysisEngine: 'llm' | 'jev';
+  jevTransport: 'openrouter' | 'typesafe';
+  /** Used only for the TypeSafe AI transport; OpenRouter reuses the LLM key. */
+  typesafeApiKey: string;
 }
 
 export interface ManneriSettings {
