@@ -4,6 +4,7 @@ import {
   getDefaultXaiReasoningEffort,
   isOpenAIReasoningModel,
   isXaiReasoningEffortModel,
+  resolveOpenAICompatibleEndpoint,
   resolveOpenAICompatibleSpeechEndpoint,
 } from '@aituber-onair/core';
 import type {
@@ -711,7 +712,16 @@ export function useAituberCore({
     settings.llm.provider === 'openai-compatible';
   const isApiKeyOptionalProvider =
     isOpenAICompatibleProvider || settings.llm.provider === 'gemini-nano';
-  const openAICompatibleEndpoint = settings.llm.endpoint?.trim() || '';
+  const openAICompatibleEndpointInput = settings.llm.endpoint?.trim() || '';
+  let openAICompatibleEndpoint = '';
+  try {
+    openAICompatibleEndpoint = openAICompatibleEndpointInput
+      ? resolveOpenAICompatibleEndpoint(openAICompatibleEndpointInput)
+          .chatCompletionsUrl
+      : '';
+  } catch {
+    openAICompatibleEndpoint = '';
+  }
   const resolvedModel =
     settings.llm.provider === 'openai-compatible'
       ? settings.llm.model.trim() || 'local-model'
