@@ -248,8 +248,12 @@ Boost values are retained for other models but omitted for v4. SSML is not
 supported by v4; use plain text or its documented audio tags. This engine uses
 one-shot [Create speech](https://elevenlabs.io/docs/api-reference/text-to-speech/convert)
 and waits for the complete audio response. The [official TTS guide](https://elevenlabs.io/docs/eleven-creative/playground/text-to-speech)
-confirms v4 support for that endpoint. `eleven_v4_turbo` is not a supported
-choice for this HTTP integration.
+confirms v4 support for that endpoint. Models outside the verified integration
+scope are not offered as supported choices: `eleven_v4_turbo` is documented
+for the [Text to Dialogue WebSocket](https://elevenlabs.io/docs/eleven-api/guides/how-to/websockets/realtime-tdd),
+which this package does not implement. Turbo has not been verified through
+this package's HTTP speech path; this is not a claim that the provider cannot
+support it over HTTP.
 
 ### Fish Audio
 
@@ -328,8 +332,10 @@ The example defaults to `flux-haley-en`. `deepgramSpeed` is optional (0.5–1.5,
 in 0.05 steps).
 Use `getVoiceEngineVoiceList('deepgram')` to fetch the public model catalog;
 the helper filters any Flux English entries, without an API key. The catalog
-may not yet include Flux entries, in which case the helper returns an empty
-list and the React example retains the documented Haley preset. See the
+may not include Flux entries, in which case the helper returns an empty list.
+The React example always offers the documented Haley preset independently of
+the catalog. Its optional catalog refresh preserves the selected voice, and
+empty results or errors also preserve the existing list. See the
 [voice catalog](https://developers.deepgram.com/docs/flux-tts/voices).
 
 Call from Node.js/backend, or use `deepgramApiUrl` for a same-origin speech
@@ -901,7 +907,7 @@ try {
 ### Deepgram Flux Features
 
 - Token-authenticated one-shot `/v2/speak` requests with binary MP3 output
-- English-only Flux voices from the public model catalog
+- English-only Flux voices; optional public catalog lookup may return no Flux entries
 - Optional speech speed and custom endpoint; no emotion/style mapping
 
 ### Inworld Features

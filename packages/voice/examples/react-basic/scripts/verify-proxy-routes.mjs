@@ -13,6 +13,7 @@ import { createServer, loadConfigFromFile, preview } from 'vite';
 
 const exampleRoot = fileURLToPath(new URL('..', import.meta.url));
 const configFile = join(exampleRoot, 'vite.config.ts');
+const defaultDevPort = 5173;
 const targets = {
   '/api/deepgram': 'https://api.deepgram.com',
   '/api/fish-audio': 'https://api.fish.audio',
@@ -189,9 +190,15 @@ function sendRequest(port, scenario) {
   });
 }
 
-for (const mode of ['development', 'preview']) {
-  test(`React sample ${mode} proxies use local mock upstreams`, async (t) => {
+for (const { mode, occupyDevPort } of [
+  { mode: 'development', occupyDevPort: false },
+  { mode: 'development', occupyDevPort: true },
+  { mode: 'preview', occupyDevPort: false },
+]) {
+  const portCondition = occupyDevPort ? ' with the default port occupied' : '';
+  test(`React sample ${mode}${portCondition} proxies use local mock upstreams`, async (t) => {
     const temporaryRoot = await mkdtemp(join(tmpdir(), 'voice-proxy-test-'));
+    const occupiedPort = createHttpServer();
     let activeScenario;
     const received = [];
     const upstream = createHttpServer(async (req, res) => {
@@ -218,6 +225,16 @@ for (const mode of ['development', 'preview']) {
     const agent = new Agent({ keepAlive: false });
     let viteServer;
     try {
+      if (occupyDevPort) {
+        await new Promise((resolve, reject) => {
+          occupiedPort.once('error', (error) => {
+            // An existing local server already provides the occupied-port case.
+            if (error.code === 'EADDRINUSE') resolve();
+            else reject(error);
+          });
+          occupiedPort.listen(defaultDevPort, '127.0.0.1', resolve);
+        });
+      }
       await listen(upstream);
       const upstreamPort = portOf(upstream);
       agent.createConnection = (options, callback) => {
@@ -249,8 +266,9 @@ for (const mode of ['development', 'preview']) {
         server: {
           ...loaded.config.server,
           host: '127.0.0.1',
-          port: 0,
-          strictPort: true,
+          // Vite 5's dev server treats port 0 as its default, not an OS-assigned port.
+          port: defaultDevPort,
+          strictPort: false,
           proxy: localProxies(loaded.config.server.proxy, upstreamPort, agent),
         },
         preview: {
@@ -268,6 +286,7 @@ for (const mode of ['development', 'preview']) {
         await viteServer.listen();
       }
       const port = portOf(viteServer.httpServer);
+      if (occupyDevPort) assert.notEqual(port, defaultDevPort);
       for (const scenario of cases) {
         await t.test(scenario.name, async () => {
           activeScenario = scenario;
@@ -304,6 +323,7 @@ for (const mode of ['development', 'preview']) {
       }
       agent.destroy();
       await closeHttpServer(upstream);
+      await closeHttpServer(occupiedPort);
       await rm(temporaryRoot, { recursive: true, force: true });
     }
   });

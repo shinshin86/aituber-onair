@@ -576,10 +576,8 @@ function App() {
 
       if (nextSpeakerOptions.length === 0) {
         if (engine === 'deepgram') {
-          setSpeakerOptions([]);
-          setSpeaker(ENGINE_DEFAULTS.deepgram.speaker);
           setStatus(
-            'No Flux voices in the model catalog. Using the documented Haley preset.',
+            'No Flux voices in the public model catalog. Keeping the current selection and available voices; the Haley preset remains available.',
           );
           setStatusType('info');
           return;
@@ -597,6 +595,13 @@ function App() {
       }
 
       setSpeakerOptions(nextSpeakerOptions);
+      if (engine === 'deepgram') {
+        setStatus(
+          `Loaded ${nextSpeakerOptions.length} Flux voices from the public model catalog. Current selection kept.`,
+        );
+        setStatusType('success');
+        return;
+      }
       setSpeaker((currentSpeaker) =>
         nextSpeakerOptions.some((option) => option.id === currentSpeaker)
           ? currentSpeaker
@@ -616,6 +621,12 @@ function App() {
         );
       }
       setSpeakerFetchError(formatSpeakerFetchError(error));
+      if (engine === 'deepgram') {
+        setStatus(
+          'Could not refresh the public model catalog. Current selection and available voices kept.',
+        );
+        setStatusType('error');
+      }
     } finally {
       if (requestId === speakerFetchRequestId.current) {
         setIsFetchingSpeakers(false);

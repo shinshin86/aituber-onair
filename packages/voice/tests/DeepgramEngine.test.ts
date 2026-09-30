@@ -3,6 +3,7 @@ import {
   DEEPGRAM_DEFAULT_VOICE,
   DEEPGRAM_TTS_API_URL,
   DeepgramEngine,
+  VoiceEngineError,
 } from '../src';
 
 const talk = { message: ' Hello there! ', style: 'happy' as const };
@@ -77,6 +78,42 @@ describe('DeepgramEngine', () => {
     expect(url.origin).toBe(globalThis.location.origin);
     expect(url.pathname).toBe('/api/deepgram/v2/speak');
   });
+
+  it.each(['/api/deepgram/v2/speak', 'https://[invalid'])(
+    'reports invalid Node endpoint %s as a configuration error',
+    async (endpoint) => {
+      const { fetchMock } = mockAudioResponse();
+      vi.stubGlobal('location', undefined);
+      const engine = new DeepgramEngine();
+      engine.setApiEndpoint(endpoint);
+
+      const result = engine.fetchAudio(talk, DEEPGRAM_DEFAULT_VOICE, 'key');
+      await expect(result).rejects.toBeInstanceOf(VoiceEngineError);
+      await expect(result).rejects.toMatchObject({
+        kind: 'configuration',
+        message: expect.stringContaining('absolute URL'),
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['file:///tmp/speech', 'data:audio/mpeg;base64,AAAA'])(
+    'rejects unsupported endpoint protocol %s before requesting',
+    async (endpoint) => {
+      const { fetchMock } = mockAudioResponse();
+      const engine = new DeepgramEngine();
+      engine.setApiEndpoint(endpoint);
+
+      await expect(
+        engine.fetchAudio(talk, DEEPGRAM_DEFAULT_VOICE, 'key'),
+      ).rejects.toMatchObject({
+        name: 'VoiceEngineError',
+        kind: 'configuration',
+        message: 'Deepgram API URL must use HTTP or HTTPS',
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([
     [0, '0.5'],

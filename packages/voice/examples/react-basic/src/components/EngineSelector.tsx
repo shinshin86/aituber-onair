@@ -100,9 +100,17 @@ export function EngineSelector({
     }
 
     if (engine === 'deepgram') {
-      const voices = hasSpeakerOptions
-        ? speakerOptions
-        : [{ id: ENGINE_DEFAULTS.deepgram.speaker, label: 'Haley (English)' }];
+      const preset = {
+        id: ENGINE_DEFAULTS.deepgram.speaker,
+        label: 'Haley (English, preset)',
+      };
+      const voices = [
+        preset,
+        ...speakerOptions.filter((voice) => voice.id !== preset.id),
+      ];
+      if (speaker && !voices.some((voice) => voice.id === speaker)) {
+        voices.push({ id: speaker, label: `${speaker} (current selection)` });
+      }
       return (
         <div className="form-group">
           <label htmlFor="speaker">Speaker (English only):</label>
@@ -123,9 +131,9 @@ export function EngineSelector({
               className="secondary-action-button"
               onClick={onFetchSpeakers}
               disabled={isFetchingSpeakers}
-              aria-label="Deepgram の話者一覧を取得"
+              aria-label="Deepgram の公開カタログを確認"
             >
-              {isFetchingSpeakers ? '取得中...' : '話者一覧を取得'}
+              {isFetchingSpeakers ? '確認中...' : '公開カタログを確認（任意）'}
             </button>
           </div>
           {speakerFetchError && (
@@ -134,8 +142,10 @@ export function EngineSelector({
             </div>
           )}
           <div className="speaker-fetch-message">
-            公開カタログに Flux がない場合も Haley プリセットを利用できます。
-            話者一覧は API key 不要です。音声生成には API key
+            Haley はカタログに依存しない固定プリセットです。 公開カタログには
+            Flux が含まれない場合があります。 確認は任意で API key
+            不要です。更新時も現在の選択を維持し、
+            空の結果や取得エラーでは既存の一覧も保持します。音声生成には API key
             と英語のテキストが必要です。 この例は Vite proxy
             を使用します。本番では backend route を用意し、 API key
             をサーバーで管理してください。

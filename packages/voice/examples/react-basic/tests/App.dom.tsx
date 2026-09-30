@@ -138,7 +138,9 @@ async function click(selector: string) {
 
 const speakButton = '.button-group button:first-child';
 const listButton = (provider: string) =>
-  `button[aria-label="${provider} の話者一覧を取得"]`;
+  provider === 'Deepgram'
+    ? 'button[aria-label="Deepgram の公開カタログを確認"]'
+    : `button[aria-label="${provider} の話者一覧を取得"]`;
 
 async function configureElevenLabs() {
   await change('engine', 'elevenLabs');
@@ -329,7 +331,7 @@ describe('Voice sample DOM flow with fake network and audio', () => {
     expect(field('apiKey').value).toBe('');
   });
 
-  it('preserves the Deepgram fallback across catalog errors and empty catalogs, then recovers on retry', async () => {
+  it('keeps the Deepgram preset across catalog errors and empty catalogs, then adds voices on retry', async () => {
     await change('engine', 'deepgram');
     routes.set('GET /api/deepgram/v1/models', () =>
       jsonResponse({ message: 'unavailable' }, 503),
@@ -348,13 +350,89 @@ describe('Voice sample DOM flow with fake network and audio', () => {
     expect(container.querySelector('.status')?.textContent).toContain(
       'Haley preset',
     );
+    expect(container.querySelector('.status')?.className).toContain('info');
 
     routes.set('GET /api/deepgram/v1/models', () =>
       jsonResponse({ tts: [{ canonical_name: 'flux-kit-en', name: 'Kit' }] }),
     );
     await click(listButton('Deepgram'));
+    expect(field('speaker').value).toBe('flux-haley-en');
+    expect(container.querySelector('.status')?.textContent).toContain(
+      'Loaded 1 Flux voices',
+    );
+    await change('speaker', 'flux-kit-en');
     expect(field('speaker').value).toBe('flux-kit-en');
     expect(button(listButton('Deepgram')).disabled).toBe(false);
+  });
+
+  it('preserves a selected Deepgram voice and inputs across empty, failed, and changed catalog refreshes', async () => {
+    await change('engine', 'deepgram');
+    routes.set('GET /api/deepgram/v1/models', () =>
+      jsonResponse({
+        tts: [
+          { canonical_name: 'flux-kit-en', name: 'Kit' },
+          { canonical_name: 'flux-fixture-en', name: 'Additional fixture' },
+        ],
+      }),
+    );
+    await click(listButton('Deepgram'));
+    await change('speaker', 'flux-kit-en');
+    await change('apiKey', 'fake-deepgram-key');
+    await change('deepgramSpeed', '0.8');
+    await change('text', 'Keep this English sample');
+    await change('apiUrl', 'https://tts.example.test/flux');
+
+    for (const response of [
+      jsonResponse({ tts: [] }),
+      jsonResponse({
+        tts: [{ canonical_name: 'aura-2-thalia-en', name: 'Aura' }],
+      }),
+      jsonResponse({ message: 'unavailable' }, 503),
+    ]) {
+      routes.set('GET /api/deepgram/v1/models', () => response);
+      await click(listButton('Deepgram'));
+      expect(field('speaker').value).toBe('flux-kit-en');
+      expect(field('apiKey').value).toBe('fake-deepgram-key');
+      expect(field('deepgramSpeed').value).toBe('0.8');
+      expect(field('text').value).toBe('Keep this English sample');
+      expect(field('apiUrl').value).toBe('https://tts.example.test/flux');
+      expect(button(listButton('Deepgram')).disabled).toBe(false);
+      expect(
+        Array.from((field('speaker') as HTMLSelectElement).options).map(
+          (option) => option.value,
+        ),
+      ).toEqual(['flux-haley-en', 'flux-kit-en', 'flux-fixture-en']);
+      if (response.status === 503) {
+        expect(
+          container.querySelector('.speaker-fetch-message--error')?.textContent,
+        ).toContain('503');
+        expect(container.querySelector('.status')?.className).toContain(
+          'error',
+        );
+      } else {
+        expect(
+          container.querySelector('.speaker-fetch-message--error'),
+        ).toBeNull();
+      }
+    }
+
+    routes.set('GET /api/deepgram/v1/models', () =>
+      jsonResponse({
+        tts: [{ canonical_name: 'flux-haley-en', name: 'Haley' }],
+      }),
+    );
+    await click(listButton('Deepgram'));
+    expect(field('speaker').value).toBe('flux-kit-en');
+    expect(
+      Array.from((field('speaker') as HTMLSelectElement).options).map(
+        (option) => option.value,
+      ),
+    ).toEqual(['flux-haley-en', 'flux-kit-en']);
+    expect(container.querySelector('.speaker-fetch-message--error')).toBeNull();
+    expect(container.querySelector('.status')?.textContent).toContain(
+      'Loaded 1 Flux voices',
+    );
+    expect(audio.played).not.toHaveBeenCalled();
   });
 
   it('requires a Deepgram key and recovers from a generation error without losing custom input', async () => {
@@ -443,7 +521,10 @@ describe('Voice sample DOM flow with fake network and audio', () => {
         jsonResponse({ tts: [{ canonical_name: 'flux-kit-en', name: 'Kit' }] }),
       ),
     );
-    expect(field('speaker').value).toBe('flux-kit-en');
+    expect(field('speaker').value).toBe('flux-haley-en');
+    expect(
+      container.querySelector('option[value="flux-kit-en"]'),
+    ).not.toBeNull();
     expect(button(listButton('Deepgram')).disabled).toBe(false);
   });
 

@@ -50,7 +50,17 @@ export class DeepgramEngine implements VoiceEngine {
       typeof globalThis.location?.href === 'string'
         ? globalThis.location.href
         : undefined;
-    const url = new URL(this.apiEndpoint, browserBaseUrl);
+    let url: URL;
+    try {
+      url = new URL(this.apiEndpoint, browserBaseUrl);
+    } catch {
+      throw createConfigurationError(
+        'Deepgram API URL must be a valid absolute URL outside the browser, or a same-origin browser URL',
+      );
+    }
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      throw createConfigurationError('Deepgram API URL must use HTTP or HTTPS');
+    }
     if (url.searchParams.has('callback')) {
       throw createConfigurationError(
         'Deepgram callback requests cannot be used for audio playback',

@@ -244,8 +244,12 @@ Stability と Similarity のみ送信し、設定済みの Style・Speed・Speak
 通常のテキストまたは公式 audio tag を使用してください。このエンジンは
 one-shot の [Create speech](https://elevenlabs.io/docs/api-reference/text-to-speech/convert)
 を使い、音声全体の取得後に再生します。[公式 TTS ガイド](https://elevenlabs.io/docs/eleven-creative/playground/text-to-speech)
-で同エンドポイントの v4 対応を確認できます。`eleven_v4_turbo` はこの HTTP
-実装の対応モデルには含めません。
+で同エンドポイントの v4 対応を確認できます。実装経路で確認できていないモデルは
+対応一覧に含めません。`eleven_v4_turbo` は
+[Text to Dialogue WebSocket](https://elevenlabs.io/docs/eleven-api/guides/how-to/websockets/realtime-tdd)
+向けに案内されていますが、このパッケージでは同経路を実装していません。
+Turbo はこのパッケージの HTTP 音声経路でも未検証です。プロバイダー側での
+HTTP 利用が不可能という意味ではありません。
 
 ### Fish Audio
 
@@ -318,8 +322,10 @@ const voiceService = new VoiceService({
 `speaker` は必須で、完全な voice ID を `model` クエリとして送信します。
 サンプルの既定値は `flux-haley-en` です。`deepgramSpeed` は任意指定で 0.5〜1.5
 （0.05 刻み）です。`getVoiceEngineVoiceList('deepgram')` は API key 不要の
-公開カタログの英語の Flux voice のみを抽出します。カタログに Flux がまだ
-含まれない場合は空配列を返し、React 例では公式の Haley プリセットを維持します。
+公開カタログの英語の Flux voice のみを抽出します。カタログに Flux が
+含まれない場合は空配列を返します。React 例ではカタログに依存しない公式の
+Haley 固定プリセットを常に選べます。任意のカタログ更新でも現在の選択を維持し、
+空の結果や取得エラーでは既存の一覧も保持します。
 [公式 voice 一覧](https://developers.deepgram.com/docs/flux-tts/voices) も参照してください。
 
 Node.js/backend から呼び出すか、ブラウザでは `deepgramApiUrl` を同一 origin の
@@ -896,7 +902,7 @@ try {
 ### Deepgram Flux の機能
 
 - Token 認証の one-shot `/v2/speak` とバイナリ MP3 出力
-- 公開 model カタログから英語の Flux voice を取得
+- 英語の Flux voice に対応。任意の公開カタログ取得では Flux が含まれない場合あり
 - 任意の話速と endpoint 設定。emotion/style の自動変換は非対応
 
 ### Inworld の機能
