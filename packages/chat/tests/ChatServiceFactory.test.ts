@@ -332,6 +332,7 @@ describe('ChatServiceFactory', () => {
 
       const mistralModels = ChatServiceFactory.getSupportedModels('mistral');
       expect(mistralModels).toEqual([
+        'zai-glm-5-3',
         'mistral-small-latest',
         'ministral-3b-2512',
         'ministral-8b-2512',

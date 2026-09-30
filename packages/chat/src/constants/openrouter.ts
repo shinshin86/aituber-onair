@@ -15,6 +15,18 @@ export const MODEL_NEX_AGI_NEX_N2_5_PRO_FREE = 'nex-agi/nex-n2.5-pro:free';
 export const MODEL_QWEN_QWEN_3_8_MAX_0902 = 'qwen/qwen3.8-max-0902';
 export const MODEL_META_MUSE_SPARK_1_3 = 'meta/muse-spark-1.3';
 
+export const MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING =
+  'nvidia/nemotron-3.5-lightning';
+export const MODEL_QWEN_QWEN_3_8_27B = 'qwen/qwen3.8-27b';
+export const MODEL_QWEN_QWEN_3_8_OMNI_FLASH = 'qwen/qwen3.8-omni-flash';
+
+// These catalog entries do not document a reasoning token-budget control.
+export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
+  MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
+  MODEL_QWEN_QWEN_3_8_27B,
+  MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
+];
+
 // OpenRouter models
 export const MODEL_OPENROUTER_AUTO = 'openrouter/auto';
 export const MODEL_OPENROUTER_AUTO_BETA = 'openrouter/auto-beta';
@@ -158,6 +170,13 @@ const OPENROUTER_MODEL_REASONING: Record<
     defaultEffort?: OpenRouterReasoningEffort;
   }
 > = {
+  [MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING]: {
+    efforts: [],
+    defaultEffort: undefined,
+  },
+  [MODEL_QWEN_QWEN_3_8_27B]: { efforts: [], defaultEffort: undefined },
+  [MODEL_QWEN_QWEN_3_8_OMNI_FLASH]: { efforts: [], defaultEffort: undefined },
+
   [MODEL_OPENAI_GPT_6_ASTRA]: {
     efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
     defaultEffort: 'medium',
@@ -214,6 +233,8 @@ export const OPENROUTER_FREE_MODELS = [
 
 // Vision supported models on OpenRouter
 export const OPENROUTER_VISION_SUPPORTED_MODELS = [
+  MODEL_QWEN_QWEN_3_8_27B,
+  MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
   MODEL_OPENAI_GPT_6_ASTRA,
   MODEL_OPENAI_GPT_6_ASTRA_PRO,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,

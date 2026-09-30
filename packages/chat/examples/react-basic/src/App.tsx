@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   ChatServiceFactory,
+  OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   ChatService,
   allowsReasoningLow,
   allowsReasoningMax,
@@ -337,7 +338,10 @@ function App() {
             openrouterReasoningMaxTokens.trim() === ''
               ? undefined
               : Number(openrouterReasoningMaxTokens);
-          if (!Number.isNaN(maxTokens)) {
+          if (
+            !Number.isNaN(maxTokens) &&
+            !OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(selectedModel)
+          ) {
             options.reasoningMaxTokens = maxTokens;
           }
           if (openrouterAppName.trim()) {
