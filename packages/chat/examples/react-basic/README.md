@@ -125,7 +125,7 @@ built-in model status is `available`.
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
+- Models: GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
 - Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), GPT-5.1 supports None/Low/Medium/High, and GPT-5.0 models support Minimal/Low/Medium/High
@@ -290,13 +290,25 @@ Common extensions:
 
 ### Additional model options
 
-The model selector includes GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
+The model selector includes GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
 OpenAI), Claude Fable 5.1, and DeepSeek V4.1 Flash (`deepseek-flash`). Astra
 uses Responses and starts at low reasoning; Luna uses Responses and defaults to
 low reasoning for responsive chat. Fable 5.1 always thinks and uses automatic
 tool selection. DeepSeek tools require reasoning to be set to none.
 
-OpenRouter also offers Astra/Pro, Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8
-Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini/Pro (free),
+GPT-6.1 Sol defaults to low reasoning and Responses. Its tools require Responses;
+Chat Completions is available only without tools. Unsupported none/minimal
+reasoning settings normalize to low.
+
+GLM-5.3 FlashX is an explicit Z.ai vision/streaming/tool option using the public
+Model API key and endpoint, not the Coding Plan endpoint. Like other GLM-5.3
+models, it always thinks and defaults to low reasoning.
+
+OpenRouter also offers GPT-6.1 Sol, GPT-6 Sol/Luna, Claude Sonnet/Opus 5.5,
+Grok 4.7, and GLM-5.3 FlashX, alongside Astra/Pro, Fable 5.1, DeepSeek V4.1
+Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini/Pro (free),
 Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
-capabilities. Mercury 2.5 is text-only. Provider defaults are unchanged.
+capabilities. The new OpenRouter models default to low reasoning, except Sol/Luna
+which default to none; tools use OpenRouter Chat Completions. Claude 5.5 tool
+selection stays automatic. Mercury 2.5 is text-only. Provider defaults are
+unchanged.

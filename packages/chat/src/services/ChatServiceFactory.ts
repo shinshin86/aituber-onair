@@ -9,6 +9,7 @@ import {
 import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 import type { ChatProviderCapabilities } from '../types/capabilities';
 import {
+  MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
@@ -140,7 +141,8 @@ export class ChatServiceFactory {
       jsonMode: JSON_MODE_SUPPORTED_PROVIDERS.has(providerName),
       responseLength: true,
       reasoningEffort:
-        providerName === 'openai' && model === MODEL_GPT_6_ASTRA
+        providerName === 'openai' &&
+        (model === MODEL_GPT_6_1_SOL || model === MODEL_GPT_6_ASTRA)
           ? ['low', 'medium', 'high', 'xhigh', 'max']
           : providerName === 'openai' && model === MODEL_GPT_6_SOL
             ? ['none', 'low', 'medium', 'high', 'xhigh', 'max']

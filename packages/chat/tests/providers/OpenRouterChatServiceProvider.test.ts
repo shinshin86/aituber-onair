@@ -2,6 +2,12 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
+  MODEL_OPENAI_GPT_6_1_SOL,
+  MODEL_OPENAI_GPT_6_SOL,
+  MODEL_OPENAI_GPT_6_LUNA,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5_5,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_5_5,
+  MODEL_XAI_GROK_4_7,
   MODEL_OPENAI_GPT_6_ASTRA,
   MODEL_OPENAI_GPT_6_ASTRA_PRO,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
@@ -57,6 +63,7 @@ import {
   MODEL_ZAI_GLM_5_2,
   MODEL_ZAI_GLM_5_3,
   MODEL_ZAI_GLM_5_3_FLASH,
+  MODEL_ZAI_GLM_5_3_FLASHX,
   MODEL_ZAI_GLM_4_7_FLASH,
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_XAI_GROK_4_6,
@@ -86,6 +93,7 @@ const recentOpenRouterVisionModels = [
   MODEL_XAI_GROK_4_6,
   MODEL_XAI_GROK_4_5,
   MODEL_ZAI_GLM_5_3_FLASH,
+  MODEL_ZAI_GLM_5_3_FLASHX,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_QWEN_QWEN_3_8_FLASH,
   MODEL_MOONSHOTAI_KIMI_K2_6,
@@ -124,6 +132,13 @@ describe('OpenRouterChatServiceProvider', () => {
       const models = provider.getSupportedModels();
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
+        MODEL_OPENAI_GPT_6_1_SOL,
+        MODEL_OPENAI_GPT_6_SOL,
+        MODEL_OPENAI_GPT_6_LUNA,
+        MODEL_ANTHROPIC_CLAUDE_SONNET_5_5,
+        MODEL_ANTHROPIC_CLAUDE_OPUS_5_5,
+        MODEL_XAI_GROK_4_7,
+
         MODEL_OPENAI_GPT_6_ASTRA,
         MODEL_OPENAI_GPT_6_ASTRA_PRO,
         MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
@@ -171,6 +186,7 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
         MODEL_ZAI_GLM_5_3,
         MODEL_ZAI_GLM_5_3_FLASH,
+        MODEL_ZAI_GLM_5_3_FLASHX,
         MODEL_ZAI_GLM_5_2,
         MODEL_ZAI_GLM_4_7_FLASH,
         MODEL_ZAI_GLM_4_5_AIR,

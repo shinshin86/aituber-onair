@@ -1,5 +1,6 @@
 import { ChatService } from '../../ChatService';
 import {
+  MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
@@ -80,9 +81,16 @@ export class OpenAIChatService implements ChatService {
     this.apiKey = apiKey;
     this.model = model;
     this.tools = tools || [];
-    // Astra always needs Responses API support.
+    // Models with Responses-only tools must be safe for direct service use too.
+    // Never rewrite a custom endpoint to avoid redirecting credentials.
+    const solToolsRequireResponses =
+      provider === 'openai' &&
+      (model === MODEL_GPT_6_1_SOL || visionModel === MODEL_GPT_6_1_SOL) &&
+      (this.tools.length > 0 || mcpServers.length > 0);
     this.endpoint =
-      (model === MODEL_GPT_6_ASTRA || visionModel === MODEL_GPT_6_ASTRA) &&
+      (model === MODEL_GPT_6_ASTRA ||
+        visionModel === MODEL_GPT_6_ASTRA ||
+        solToolsRequireResponses) &&
       endpoint === ENDPOINT_OPENAI_CHAT_COMPLETIONS_API
         ? ENDPOINT_OPENAI_RESPONSES_API
         : endpoint;

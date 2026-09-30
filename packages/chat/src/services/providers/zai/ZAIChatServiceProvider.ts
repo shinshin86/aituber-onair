@@ -2,6 +2,7 @@ import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   MODEL_GLM_5_3,
   MODEL_GLM_5_3_FLASH,
+  MODEL_GLM_5_3_FLASHX,
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
   MODEL_GLM_5,
@@ -122,6 +123,7 @@ export class ZAIChatServiceProvider
     return [
       MODEL_GLM_5_3,
       MODEL_GLM_5_3_FLASH,
+      MODEL_GLM_5_3_FLASHX,
       MODEL_GLM_5_2,
       MODEL_GLM_5_1,
       MODEL_GLM_5,

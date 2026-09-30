@@ -54,6 +54,7 @@ import {
   MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
+  MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
@@ -104,6 +105,12 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
+  MODEL_OPENAI_GPT_6_1_SOL,
+  MODEL_OPENAI_GPT_6_SOL,
+  MODEL_OPENAI_GPT_6_LUNA,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5_5,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_5_5,
+  MODEL_XAI_GROK_4_7,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5,
   MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
@@ -152,6 +159,7 @@ import {
   MODEL_ZAI_GLM_5_2,
   MODEL_ZAI_GLM_5_3,
   MODEL_ZAI_GLM_5_3_FLASH,
+  MODEL_ZAI_GLM_5_3_FLASHX,
   MODEL_ZAI_GLM_4_7_FLASH,
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
@@ -161,6 +169,7 @@ import {
   // Z.ai models
   MODEL_GLM_5_3,
   MODEL_GLM_5_3_FLASH,
+  MODEL_GLM_5_3_FLASHX,
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
   MODEL_GLM_5,
@@ -553,6 +562,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_GPT_6_1_SOL,
+    name: 'GPT-6.1 Sol',
+    provider: 'openai',
+    default: false,
+  },
+  {
     id: MODEL_GPT_6_ASTRA,
     name: 'GPT-6 Astra',
     provider: 'openai',
@@ -580,6 +595,42 @@ export const allModels: ProviderModel[] = [
     id: MODEL_DEEPSEEK_FLASH,
     name: 'DeepSeek V4.1 Flash',
     provider: 'deepseek',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_1_SOL,
+    name: 'GPT-6.1 Sol',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_SOL,
+    name: 'GPT-6 Sol',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_LUNA,
+    name: 'GPT-6 Luna',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_SONNET_5_5,
+    name: 'Claude Sonnet 5.5',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_OPUS_5_5,
+    name: 'Claude Opus 5.5',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_XAI_GROK_4_7,
+    name: 'Grok 4.7',
+    provider: 'openrouter',
     default: false,
   },
   {
@@ -1147,6 +1198,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_ZAI_GLM_5_3_FLASHX,
+    name: 'GLM-5.3 FlashX (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_ZAI_GLM_5_3_FLASH,
     name: 'GLM-5.3 Flash (OpenRouter)',
     provider: 'openrouter',
@@ -1241,6 +1298,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GLM_5_3,
     name: 'GLM-5.3',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_5_3_FLASHX,
+    name: 'GLM-5.3 FlashX',
     provider: 'zai',
     default: false,
   },
@@ -1596,6 +1659,7 @@ export default function ProviderSelector({
       selectedModel === MODEL_GPT_6_ASTRA);
   const isResponsesPreferredModel =
     isResponsesOnlyModel ||
+    selectedModel === MODEL_GPT_6_1_SOL ||
     selectedModel === MODEL_GPT_6_SOL ||
     selectedModel === MODEL_GPT_6_LUNA;
   const allowsNone =
@@ -2138,6 +2202,12 @@ export default function ProviderSelector({
                     This model uses Responses API for full tool support.
                   </span>
                 )}
+                {selectedModel === MODEL_GPT_6_1_SOL && (
+                  <span className="helper-text">
+                    Responses API is the default and is required for tools.
+                    Tool-free Chat Completions supports all reasoning levels.
+                  </span>
+                )}
                 {(selectedModel === MODEL_GPT_6_SOL ||
                   selectedModel === MODEL_GPT_6_LUNA) && (
                   <span className="helper-text">
@@ -2512,7 +2582,8 @@ export default function ProviderSelector({
                   </select>
                   <span className="helper-text">
                     {selectedModel === MODEL_GLM_5_3 ||
-                    selectedModel === MODEL_GLM_5_3_FLASH
+                    selectedModel === MODEL_GLM_5_3_FLASH ||
+                    selectedModel === MODEL_GLM_5_3_FLASHX
                       ? 'GLM-5.3 always uses thinking. Low is the chat-oriented default.'
                       : 'GLM-5.2 maps minimal to none, low/medium to high, and xhigh to max.'}
                   </span>
