@@ -107,6 +107,11 @@ For `openai-compatible`, choose a local-server preset or enter an origin, a
 a model, and run **Test connection** before chatting. See the
 [Local LLM setup guide](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-llm.md).
 
+For `OpenAI-Compatible TTS`, enter an origin, a `/v1` base URL, or a full
+`/audio/speech` URL. **Detect server** fills in the model and voice lists when
+the server provides them, and **Test speech** plays a short sample. See the
+[Local TTS setup guide](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-tts.md).
+
 
 ```bash
 cd packages/core/examples/react-pet-app

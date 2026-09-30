@@ -76,6 +76,7 @@ export interface TTSSettings {
   openAiCompatibleApiUrl?: string;
   openAiCompatibleModel?: string;
   openAiCompatibleSpeed?: string;
+  openAiCompatibleInstructions?: string;
   geminiTtsModel?: string;
   geminiTtsLanguageCode?: string;
   geminiTtsPrompt?: string;

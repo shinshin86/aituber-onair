@@ -137,6 +137,11 @@ motion が必要なモデルは manifest に登録してください。
 取得してモデルを選び、チャット前に **Test connection** を実行してください。
 詳しくは [ローカル LLM セットアップガイド](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-llm.ja.md) を参照してください。
 
+`OpenAI-Compatible TTS` では、origin、`/v1` ベース URL、`/audio/speech` の
+完全 URL を入力できます。**Detect server** でサーバーが提供するモデルと voice の
+一覧を取得し、**Test speech** で短い音声を再生して確認できます。
+詳しくは [ローカル TTS セットアップガイド](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-tts.ja.md) を参照してください。
+
 ```bash
 cd packages/core/examples/react-inochi2d-app
 npm install

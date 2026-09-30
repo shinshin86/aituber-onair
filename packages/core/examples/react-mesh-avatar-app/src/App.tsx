@@ -35,6 +35,7 @@ import type {
 } from './meshAvatar/createMeshAvatar.js';
 import { MOTION_LIST } from './meshAvatar/motionList';
 import './styles/app.css';
+import './styles/localTtsSetup.css';
 import type { TwitchChatMessage } from './services/twitch/twitchService';
 import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 

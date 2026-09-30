@@ -1,5 +1,26 @@
 # @aituber-onair/core
 
+## 0.26.17
+
+### Patch Changes
+
+- Propagate published Voice 0.23.0 to Core and its React examples.
+- Re-export the OpenAI-compatible speech endpoint helpers from Voice 0.23.0
+  (`resolveOpenAICompatibleSpeechEndpoint`,
+  `listOpenAICompatibleSpeechModels`, `listOpenAICompatibleSpeechVoices`,
+  `getOpenAICompatibleSpeechServerInfo`, `testOpenAICompatibleSpeech`, and
+  `OpenAICompatibleSpeechEndpointError`) for local TTS servers.
+- Add a local TTS setup UI to the OpenAI-Compatible TTS settings of the React
+  basic example and the nine avatar examples: endpoint resolution from an
+  origin, `/v1` base URL, or full `/audio/speech` URL with a request preview;
+  server detection that fills model and voice selects (with an Other/manual
+  option) when the server provides them; engine-specific hints when the server
+  reports a known engine name; an optional instructions field; and a speech
+  test that plays a short sample and shows server error details. Saved full
+  endpoint URLs keep working.
+- Add a local TTS guide (`docs/local-tts.md`, `docs/local-tts.ja.md`) and link
+  it from the Core and example READMEs.
+
 ## 0.26.16
 
 ### Patch Changes

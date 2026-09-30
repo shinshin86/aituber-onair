@@ -33,7 +33,7 @@ The repository's [connect-colab-local-llm skill](../skills/connect-colab-local-l
 
 ## Voice output
 
-The React examples also support local voice options such as VOICEVOX and AivisSpeech, and OpenAI-compatible TTS. Set up the LLM and TTS independently in the example's settings.
+The React examples also support local voice options such as VOICEVOX and AivisSpeech, and OpenAI-compatible TTS. Set up the LLM and TTS independently in the example's settings. For a local TTS server, see the [local TTS guide](local-tts.md).
 
 ## Troubleshooting
 

@@ -24,6 +24,11 @@ npm install
 npm run dev
 ```
 
+`OpenAI-Compatible TTS` では、origin、`/v1` ベース URL、`/audio/speech` の
+完全 URL を入力できます。**Detect server** でサーバーが提供するモデルと voice の
+一覧を取得し、**Test speech** で短い音声を再生して確認できます。
+詳しくは [ローカル TTS セットアップガイド](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-tts.ja.md) を参照してください。
+
 ## アバターの API
 
 `src/meshAvatar/createMeshAvatar.js` は React に依存しない単体のエンジンです。

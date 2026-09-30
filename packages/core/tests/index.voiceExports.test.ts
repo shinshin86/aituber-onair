@@ -27,6 +27,13 @@ import {
   getAllVoiceEngineCapabilities,
   getVoiceEngineCapabilities,
   getVoiceEngineVoiceList,
+  OpenAICompatibleSpeechEndpointError,
+  resolveOpenAICompatibleSpeechEndpoint,
+  listOpenAICompatibleSpeechModels,
+  listOpenAICompatibleSpeechVoices,
+  getOpenAICompatibleSpeechServerInfo,
+  testOpenAICompatibleSpeech,
+  type OpenAICompatibleSpeechTestResult,
   getWebSpeechVoiceList,
   waitForWebSpeechVoices,
   type ElevenLabsApplyTextNormalization,
@@ -200,6 +207,25 @@ describe('Core index voice re-exports', () => {
 
     expect(fishOptions.fishAudioModel).toBe('s2-pro');
     expect(cartesiaOptions.cartesiaLanguage).toBe('ja');
+  });
+
+  it('re-exports OpenAI-compatible speech endpoint helpers', () => {
+    // Arrange / Act
+    const resolved = resolveOpenAICompatibleSpeechEndpoint(
+      'http://localhost:8880/v1',
+    );
+    const failed: OpenAICompatibleSpeechTestResult = {
+      ok: false,
+      error: new OpenAICompatibleSpeechEndpointError('network', 'offline'),
+    };
+
+    // Assert
+    expect(resolved.speechUrl).toBe('http://localhost:8880/v1/audio/speech');
+    expect(typeof listOpenAICompatibleSpeechModels).toBe('function');
+    expect(typeof listOpenAICompatibleSpeechVoices).toBe('function');
+    expect(typeof getOpenAICompatibleSpeechServerInfo).toBe('function');
+    expect(typeof testOpenAICompatibleSpeech).toBe('function');
+    expect(failed.ok).toBe(false);
   });
 
   it('re-exports voice engine capability helpers', () => {

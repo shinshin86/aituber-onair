@@ -66,6 +66,7 @@ At minimum, set:
 - Character prompt and avatar settings.
 
 For a local LLM, select OpenAI-Compatible and follow the [local LLM guide](local-llm.md) for the full endpoint URL and model ID.
+For a local TTS server, select OpenAI-Compatible TTS and follow the [local TTS guide](local-tts.md).
 
 The starter app stores sample credentials in browser `localStorage`. Do not use
 production-scope keys on a shared or public origin.

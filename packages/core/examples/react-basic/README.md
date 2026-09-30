@@ -127,6 +127,11 @@ For `openai-compatible`, choose a local-server preset or enter an origin, a
 a model, and run **Test connection** before chatting. See the
 [Local LLM setup guide](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-llm.md).
 
+For `OpenAI-Compatible TTS`, enter an origin, a `/v1` base URL, or a full
+`/audio/speech` URL. **Detect server** fills in the model and voice lists when
+the server provides them, and **Test speech** plays a short sample. See the
+[Local TTS setup guide](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-tts.md).
+
 
 ### LLM Provider Setup
 
@@ -304,7 +309,8 @@ The application supports 17 different Text-to-Speech engines:
 #### 3. **OpenAI-Compatible TTS**
 - Optional API key
 - Custom `/v1/audio/speech` endpoints
-- Configurable endpoint, model, voice, and speed
+- Configurable endpoint, model, voice, instructions, and speed
+- Server detection for model and voice lists, plus a speech test
 
 #### 4. **VOICEVOX**
 - Free, open-source Japanese TTS
