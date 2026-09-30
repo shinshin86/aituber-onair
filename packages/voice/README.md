@@ -369,6 +369,63 @@ const voiceService = new VoiceService({
 does not include a `voice` field.
 `openAiCompatibleModel` should be set explicitly to a model name accepted by
 your endpoint.
+`openAiCompatibleApiUrl` is used as-is, so pass the full `/audio/speech` URL.
+`openAiCompatibleInstructions` and `openAiCompatibleResponseFormat` are
+optional and sent as `instructions` / `response_format` only when non-empty.
+Servers that support `instructions` typically use it as a voice style prompt.
+Failed requests throw a `VoiceEngineError` with `kind: 'api'`, the HTTP
+status in `statusCode`, and the response body in the message.
+
+#### Endpoint setup helpers
+
+These helpers make settings UIs easier to build. They accept an origin, an API
+base URL, or a full `/audio/speech` URL.
+
+```typescript
+import {
+  resolveOpenAICompatibleSpeechEndpoint,
+  listOpenAICompatibleSpeechModels,
+  listOpenAICompatibleSpeechVoices,
+  getOpenAICompatibleSpeechServerInfo,
+  testOpenAICompatibleSpeech,
+} from '@aituber-onair/voice';
+
+const endpoint = 'http://localhost:8880/v1';
+const { speechUrl } = resolveOpenAICompatibleSpeechEndpoint(endpoint);
+// -> http://localhost:8880/v1/audio/speech
+
+const models = await listOpenAICompatibleSpeechModels({ endpoint });
+const voices = await listOpenAICompatibleSpeechVoices({ endpoint }); // or null
+const info = await getOpenAICompatibleSpeechServerInfo({ endpoint }); // or null
+
+const result = await testOpenAICompatibleSpeech({
+  endpoint,
+  model: models[0],
+  voice: voices?.defaultVoice,
+});
+if (result.ok) {
+  // result.audio is an ArrayBuffer you can play back
+} else {
+  console.error(result.error.code, result.error.status, result.error.detail);
+}
+```
+
+- `listOpenAICompatibleSpeechModels` uses the standard `GET /models`.
+- OpenAI's API has no voice listing endpoint, so
+  `listOpenAICompatibleSpeechVoices` is best-effort. It tries
+  `GET /audio/voices` (for example Kokoro-FastAPI) and then `GET /voices`,
+  and returns `null` when neither answers with a recognizable list.
+- `getOpenAICompatibleSpeechServerInfo` is also best-effort. It reads the
+  server root and returns `{ engine, model?, defaultVoice? }` only when the
+  root answers with JSON that has an `engine` field. Otherwise it returns
+  `null`.
+- `testOpenAICompatibleSpeech` synthesizes one short sentence and returns a
+  result object instead of throwing. Errors carry a `code`
+  (`invalid-url`, `network`, `aborted`, `timeout`, `http`,
+  `invalid-response`), plus `status` and `detail` for HTTP errors.
+- Browser requests also need CORS permission from the server. A `network`
+  error in the browser usually means CORS blocked the request or the server
+  is not running.
 
 ### MiniMax
 Multi-language TTS supporting 24 languages with HD quality.
@@ -659,6 +716,8 @@ const voiceService = new VoiceService({
   - `openAiCompatibleModel`
   - `openAiCompatibleSpeed`
   - `openAiCompatibleTimeoutMs`
+  - `openAiCompatibleInstructions`
+  - `openAiCompatibleResponseFormat`
 
 - **xAI TTS**
   - `xaiLanguage`

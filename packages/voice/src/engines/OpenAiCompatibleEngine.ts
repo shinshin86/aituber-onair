@@ -1,6 +1,10 @@
 import { OPENAI_COMPATIBLE_TTS_API_URL } from '../constants/voiceEngine';
 import { Talk } from '../types/voice';
-import { clampNumberWithFallback, fetchWithTimeout } from './internal/utils';
+import {
+  clampNumberWithFallback,
+  fetchWithTimeout,
+  throwApiError,
+} from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
@@ -10,6 +14,8 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
   private apiUrl: string = OPENAI_COMPATIBLE_TTS_API_URL;
   private speed: number = 1.0;
   private model: string = '';
+  private instructions = '';
+  private responseFormat = '';
   private timeoutMs = 30_000;
 
   /** Set a request timeout (0 disables the timeout) in milliseconds (default: 30000). */
@@ -48,6 +54,22 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
     this.model = model.trim();
   }
 
+  /**
+   * Set optional instructions (sent as `instructions` when non-empty).
+   * Servers that support it typically use it as a voice style prompt.
+   */
+  setInstructions(instructions: string): void {
+    this.instructions = instructions.trim();
+  }
+
+  /**
+   * Set optional audio format (sent as `response_format` when non-empty).
+   * Use a format the playback environment can decode, such as wav or mp3.
+   */
+  setResponseFormat(responseFormat: string): void {
+    this.responseFormat = responseFormat.trim();
+  }
+
   async fetchAudio(
     input: Talk,
     speaker: string,
@@ -80,6 +102,12 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
     if (trimmedSpeaker) {
       requestBody.voice = trimmedSpeaker;
     }
+    if (this.instructions) {
+      requestBody.instructions = this.instructions;
+    }
+    if (this.responseFormat) {
+      requestBody.response_format = this.responseFormat;
+    }
 
     const fetchAudio = this.timeoutMs === 0 ? fetch : fetchWithTimeout;
     const response = await fetchAudio(
@@ -93,13 +121,7 @@ export class OpenAiCompatibleEngine implements VoiceEngine {
     );
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      console.error(
-        'Failed to fetch TTS from OpenAI-compatible TTS:',
-        response.status,
-        errorText,
-      );
-      throw new Error('Failed to fetch TTS from OpenAI-compatible TTS.');
+      await throwApiError('OpenAI-compatible TTS', response);
     }
 
     const blob = await response.blob();

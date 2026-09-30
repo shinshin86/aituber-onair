@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## 0.23.0
+
+### Minor Changes
+
+- Add OpenAI-compatible speech endpoint helpers for settings UIs:
+  `resolveOpenAICompatibleSpeechEndpoint` (accepts an origin, API base URL, or
+  full `/audio/speech` URL), `listOpenAICompatibleSpeechModels`
+  (`GET /models`), best-effort `listOpenAICompatibleSpeechVoices`
+  (`GET /audio/voices`, then `GET /voices`), best-effort
+  `getOpenAICompatibleSpeechServerInfo` (server root JSON with an `engine`
+  field), `testOpenAICompatibleSpeech` (one short synthesis with a typed
+  result), and `OpenAICompatibleSpeechEndpointError`.
+- Add optional `openAiCompatibleInstructions` and
+  `openAiCompatibleResponseFormat` options to the OpenAI-compatible engine.
+  They are sent as `instructions` / `response_format` only when non-empty.
+- OpenAI-compatible request failures now throw `VoiceEngineError` with
+  `kind: 'api'`, the HTTP status in `statusCode`, and the response body in the
+  message, instead of a generic `Error`.
+
 ## 0.22.0
 
 ### Minor Changes

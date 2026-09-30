@@ -183,6 +183,8 @@ export interface OpenAiCompatibleConfigurableEngine extends VoiceEngine {
   setApiEndpoint?(value: string): void;
   setModel?(value: string): void;
   setSpeed?(value?: number): void;
+  setInstructions?(value: string): void;
+  setResponseFormat?(value: string): void;
 }
 
 export interface MinimaxConfigurableEngine extends VoiceEngine {
