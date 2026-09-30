@@ -4,6 +4,8 @@ import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   MODEL_GLM_5_2,
+  MODEL_GLM_5_3_FLASHX,
+  normalizeZaiReasoningEffort,
   MODEL_GLM_4_6V_FLASH,
   isZaiReasoningEffortModel,
   isZaiToolStreamModel,
@@ -235,11 +237,24 @@ export class ZAIChatService implements ChatService {
       body.response_format = this.responseFormat;
     }
 
-    if (this.thinking) {
+    if (model === MODEL_GLM_5_3_FLASHX) {
+      body.thinking = {
+        type: 'enabled',
+        clear_thinking: this.thinking?.clear_thinking ?? true,
+      };
+      body.reasoning_effort = normalizeZaiReasoningEffort(
+        model,
+        this.reasoningEffort,
+      );
+    } else if (this.thinking) {
       body.thinking = this.thinking;
     }
 
-    if (isZaiReasoningEffortModel(model) && this.reasoningEffort) {
+    if (
+      model !== MODEL_GLM_5_3_FLASHX &&
+      isZaiReasoningEffortModel(model) &&
+      this.reasoningEffort
+    ) {
       body.reasoning_effort = this.reasoningEffort;
     }
 
@@ -261,6 +276,7 @@ export class ZAIChatService implements ChatService {
 
   private async handleStream(res: Response, onPartial: (t: string) => void) {
     return parseOpenAICompatibleTextStream(res, onPartial, {
+      throwOnApiError: true,
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
     });
@@ -274,6 +290,7 @@ export class ZAIChatService implements ChatService {
     onPartial: (t: string) => void,
   ): Promise<ToolChatCompletion> {
     return parseOpenAICompatibleToolStream(res, onPartial, {
+      throwOnApiError: true,
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
     });
@@ -283,6 +300,6 @@ export class ZAIChatService implements ChatService {
    * Parse non-streaming response
    */
   private parseOneShot(data: any): ToolChatCompletion {
-    return parseOpenAICompatibleOneShot(data);
+    return parseOpenAICompatibleOneShot(data, { throwOnApiError: true });
   }
 }
