@@ -21,6 +21,7 @@ import type {
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
 import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { StreamSettings } from './StreamSettings';
+import { LocalLlmSetup } from './LocalLlmSetup';
 
 type SettingsHook = ReturnType<typeof useSettings>;
 type ScreenVisionController = ReturnType<typeof useScreenVisionController>;
@@ -423,7 +424,6 @@ export function SettingsPanel({
   );
   const committedEndpoint = settings.llm.endpoint || '';
   const [endpointDraft, setEndpointDraft] = useState(committedEndpoint);
-  const [endpointError, setEndpointError] = useState('');
   const [kizunaResetState, setKizunaResetState] = useState<
     'idle' | 'confirming' | 'resetting' | 'success' | 'error'
   >('idle');
@@ -433,23 +433,7 @@ export function SettingsPanel({
       updateLLMSystemPrompt(systemPromptDraft);
     }
   };
-  const commitEndpoint = () => {
-    const endpoint = endpointDraft.trim();
-    let endpointUrl: URL;
-
-    try {
-      endpointUrl = new URL(endpoint);
-    } catch {
-      setEndpointError('Enter a full http:// or https:// URL.');
-      return;
-    }
-
-    if (endpointUrl.protocol !== 'http:' && endpointUrl.protocol !== 'https:') {
-      setEndpointError('Enter a full http:// or https:// URL.');
-      return;
-    }
-
-    setEndpointError('');
+  const commitEndpoint = (endpoint: string) => {
     setEndpointDraft(endpoint);
     if (endpoint !== committedEndpoint) {
       updateLLMEndpoint(endpoint);
@@ -937,18 +921,19 @@ export function SettingsPanel({
               </div>
             )}
 
-            <div className="settings-field">
-              <label htmlFor="llm-model">Model</label>
-              {settings.llm.provider === 'openai-compatible' ? (
-                <input
-                  id="llm-model"
-                  type="text"
-                  value={settings.llm.model}
-                  onChange={(e) => updateLLMModel(e.target.value)}
-                  placeholder="local-model"
-                  disabled={disabled}
-                />
-              ) : (
+            {settings.llm.provider === 'openai-compatible' ? (
+              <LocalLlmSetup
+                endpoint={endpointDraft}
+                onEndpointChange={setEndpointDraft}
+                onEndpointCommit={commitEndpoint}
+                model={settings.llm.model}
+                onModelChange={updateLLMModel}
+                apiKey={getApiKeyForProvider(settings.llm.provider)}
+                disabled={disabled}
+              />
+            ) : (
+              <div className="settings-field">
+                <label htmlFor="llm-model">Model</label>
                 <select
                   id="llm-model"
                   value={settings.llm.model}
@@ -961,8 +946,8 @@ export function SettingsPanel({
                     </option>
                   ))}
                 </select>
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="settings-field">
               <label htmlFor="llm-system-prompt">System Prompt</label>
@@ -1164,38 +1149,6 @@ export function SettingsPanel({
                   )}
                 </div>
               </>
-            )}
-
-            {settings.llm.provider === 'openai-compatible' && (
-              <div className="settings-field">
-                <label htmlFor="llm-endpoint">Endpoint URL</label>
-                <input
-                  id="llm-endpoint"
-                  type="text"
-                  value={endpointDraft}
-                  onChange={(event) => {
-                    setEndpointDraft(event.target.value);
-                    setEndpointError('');
-                  }}
-                  onBlur={commitEndpoint}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.currentTarget.blur();
-                    }
-                  }}
-                  aria-invalid={endpointError ? true : undefined}
-                  aria-describedby={
-                    endpointError ? 'llm-endpoint-error' : undefined
-                  }
-                  placeholder="http://localhost:11434/v1/chat/completions"
-                  disabled={disabled}
-                />
-                {endpointError && (
-                  <p id="llm-endpoint-error" className="settings-field-error">
-                    {endpointError}
-                  </p>
-                )}
-              </div>
             )}
 
             {settings.llm.provider === 'gemini-nano' && (

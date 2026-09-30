@@ -14,6 +14,11 @@
 
 ## セットアップ
 
+`openai-compatible` では、ローカルサーバーのプリセットを選ぶか、origin、
+`/v1` ベース URL、`/chat/completions` の完全 URL を入力できます。モデル一覧を
+取得してモデルを選び、チャット前に **Test connection** を実行してください。
+詳しくは [ローカル LLM セットアップガイド](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-llm.ja.md) を参照してください。
+
 ```bash
 # リポジトリのルートで、ローカルパッケージを先にビルド
 npm install
