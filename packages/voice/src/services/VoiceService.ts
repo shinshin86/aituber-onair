@@ -13,7 +13,10 @@ import type {
   CartesiaOutputContainer,
 } from '../engines/CartesiaEngine';
 import type { GeminiTtsModel } from '../engines';
-import type { GradiumOutputFormat } from '../engines/GradiumEngine';
+import type {
+  GradiumModel,
+  GradiumOutputFormat,
+} from '../engines/GradiumEngine';
 import type {
   InworldAudioEncoding,
   InworldModel,
@@ -273,6 +276,8 @@ export interface GradiumVoiceServiceOptions extends VoiceServiceCommonOptions {
   engineType: 'gradium';
   /** Custom Gradium one-shot TTS endpoint URL */
   gradiumApiUrl?: string;
+  /** Model selection: omitted/default uses production; beta is opt-in */
+  gradiumModel?: GradiumModel;
   /** Gradium output audio format (default: wav) */
   gradiumOutputFormat?: GradiumOutputFormat;
   /** Gradium sampling temperature (0.0-1.4, default: 0.7) */

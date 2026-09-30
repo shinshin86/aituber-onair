@@ -160,6 +160,7 @@ export interface InworldConfigurableEngine extends VoiceEngine {
 }
 
 export interface GradiumConfigurableEngine extends VoiceEngine {
+  setModel?(value?: GradiumVoiceServiceOptions['gradiumModel']): void;
   setApiEndpoint?(value: string): void;
   setOutputFormat?(
     value?: GradiumVoiceServiceOptions['gradiumOutputFormat'],

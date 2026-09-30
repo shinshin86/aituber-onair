@@ -6,6 +6,9 @@ import { Talk } from '../types/voice';
 import { clampNumber, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
+/** Production model or explicitly selected public beta. */
+export type GradiumModel = 'default' | 'gradium-tts-beta';
+
 export type GradiumOutputFormat =
   | 'wav'
   | 'pcm'
@@ -44,6 +47,7 @@ interface GradiumJsonConfig {
  */
 export class GradiumEngine implements VoiceEngine {
   private apiEndpoint: string = GRADIUM_TTS_API_URL;
+  private model?: GradiumModel;
   private outputFormat: GradiumOutputFormat = 'wav';
   private temperature?: number;
   private voiceSimilarity?: number;
@@ -56,6 +60,14 @@ export class GradiumEngine implements VoiceEngine {
   setApiEndpoint(apiUrl: string): void {
     const trimmed = apiUrl.trim();
     this.apiEndpoint = trimmed || GRADIUM_TTS_API_URL;
+  }
+
+  /**
+   * Select a model. Omit to use production; beta requires explicit opt-in.
+   */
+  setModel(model?: GradiumModel): void {
+    this.model =
+      model === 'default' || model === 'gradium-tts-beta' ? model : undefined;
   }
 
   /**
@@ -166,6 +178,7 @@ export class GradiumEngine implements VoiceEngine {
         voice_id: speaker,
         output_format: this.outputFormat,
         only_audio: true,
+        model_name: this.model,
       }),
     });
 

@@ -6,6 +6,7 @@ import type {
   FishAudioLatency,
   FishAudioModel,
   GeminiTtsModel,
+  GradiumModel,
   GradiumOutputFormat,
   InworldAudioEncoding,
   InworldDeliveryMode,
@@ -99,6 +100,7 @@ export const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'Your Gradium API key',
     speaker: 'YTpq7expH9539ERJ',
+    defaultModel: 'default' as GradiumModel,
     defaultOutputFormat: 'wav' as GradiumOutputFormat,
   },
   geminiTts: {
@@ -375,6 +377,11 @@ export const GRADIUM_VOICE_OPTIONS = Object.entries(GRADIUM_VOICES).map(
     label,
   }),
 );
+
+export const GRADIUM_MODELS: Record<GradiumModel, string> = {
+  default: 'default — Production (default)',
+  'gradium-tts-beta': 'gradium-tts-beta — Beta (opt-in)',
+};
 
 export const GRADIUM_OUTPUT_FORMATS: Record<GradiumOutputFormat, string> = {
   wav: 'WAV',

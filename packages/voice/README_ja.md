@@ -323,6 +323,21 @@ Gradium の one-shot REST TTS を SDK なしの直接 `fetch` で利用する
 クラウド TTS です。raw audio response mode（`only_audio: true`）を
 使用します。
 
+本番モデルが引き続き既定です。実験的なモデルは明示的に選択した場合のみ
+利用されます。公開ベータを試すには `gradiumModel: 'gradium-tts-beta'` を
+指定してください。`gradiumModel: 'default'` または省略時は本番モデルです。
+ベータは明示的な選択肢として対応しており、推奨の既定モデルではありません。
+React デモでも両方を選択できます。既存のアダプターは
+`updateOptions({ gradiumModel: 'default' })` で本番モデルに戻せます。
+`undefined` を指定するとモデル指定を解除します。
+
+`gradiumModel` は REST JSON 本文のトップレベルの `model_name` に送信され、
+`json_config` とは別の項目です。公式の
+[REST ガイド](https://docs.gradium.ai/guides/text-to-speech-rest) と
+[モデル選択ガイド](https://docs.gradium.ai/guides/text-to-speech#model-selection)
+に基づきます。既存の one-shot 生音声レスポンスと出力形式の処理は変わりません。
+ストリーミング音声合成や新しい感情制御を追加するものではありません。
+
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'gradium',
@@ -749,7 +764,7 @@ const voiceService = new VoiceService({
 
 - **Gradium**
   - エンドポイント: `gradiumApiUrl`
-  - 識別子・出力: `speaker`, `gradiumOutputFormat`
+  - 識別子・出力: `speaker`, `gradiumModel`, `gradiumOutputFormat`
   - 音声調整: `gradiumTemperature`, `gradiumVoiceSimilarity`, `gradiumPaddingBonus`, `gradiumRewriteRules`
 
 - **VOICEVOX**

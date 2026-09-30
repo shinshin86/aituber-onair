@@ -190,6 +190,15 @@ the same non-streaming REST endpoint and selectable voice list.
 # dynamic voice selection in production.
 ```
 
+Open **Gradium TTS パラメータ** to choose **Gradium Model**. Production
+(`default`) remains selected initially. Pre-release models require an explicit
+opt-in: choose `gradium-tts-beta — Beta (opt-in)` to try Gradium's public beta.
+The selection is passed as `gradiumModel` on the next **Speak** request; select
+`default` to return to production. Changing engines resets this choice to
+production. Beta behavior may change.
+See Gradium's [model selection guide](https://docs.gradium.ai/guides/text-to-speech#model-selection)
+and [REST request documentation](https://docs.gradium.ai/guides/text-to-speech-rest).
+
 #### Aivis Cloud
 ```bash
 # Default endpoint: https://api.aivis-project.com/v1/tts/synthesize

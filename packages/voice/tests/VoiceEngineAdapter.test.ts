@@ -500,6 +500,7 @@ describe('VoiceEngineAdapter', () => {
         speaker: 'YTpq7expH9539ERJ',
         apiKey: 'gradium-api-key',
         gradiumApiUrl: 'https://example.com/api/post/speech/tts',
+        gradiumModel: 'gradium-tts-beta',
         gradiumOutputFormat: 'opus',
         gradiumTemperature: 0.3,
         gradiumVoiceSimilarity: 2.5,
@@ -517,6 +518,7 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
         'https://example.com/api/post/speech/tts',
       );
+      expect(mockEngine.setModel).toHaveBeenCalledWith('gradium-tts-beta');
       expect(mockEngine.setOutputFormat).toHaveBeenCalledWith('opus');
       expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.3);
       expect(mockEngine.setVoiceSimilarity).toHaveBeenCalledWith(2.5);
@@ -1595,6 +1597,7 @@ describe('VoiceEngineAdapter', () => {
       const adapter = new VoiceEngineAdapter(options);
       adapter.updateOptions({
         gradiumApiUrl: 'https://example.com/api/post/speech/tts',
+        gradiumModel: 'gradium-tts-beta',
         gradiumOutputFormat: 'pcm_24000',
         gradiumTemperature: 0.2,
         gradiumVoiceSimilarity: 3,
@@ -1607,6 +1610,13 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
         'https://example.com/api/post/speech/tts',
       );
+      expect(mockEngine.setModel).toHaveBeenLastCalledWith('gradium-tts-beta');
+      adapter.updateOptions({ gradiumModel: 'default' });
+      await adapter.speak({ text: 'Production model' });
+      expect(mockEngine.setModel).toHaveBeenLastCalledWith('default');
+      adapter.updateOptions({ gradiumModel: undefined });
+      await adapter.speak({ text: 'Implicit production model' });
+      expect(mockEngine.setModel).toHaveBeenLastCalledWith(undefined);
       expect(mockEngine.setOutputFormat).toHaveBeenCalledWith('pcm_24000');
       expect(mockEngine.setTemperature).toHaveBeenCalledWith(0.2);
       expect(mockEngine.setVoiceSimilarity).toHaveBeenCalledWith(3);

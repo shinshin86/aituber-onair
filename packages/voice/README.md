@@ -332,6 +332,20 @@ Gradium one-shot REST TTS support using direct `fetch` calls. This engine uses
 the raw-audio response mode (`only_audio: true`) and does not add the Gradium
 SDK.
 
+Production remains the default. Experimental models require explicit opt-in:
+set `gradiumModel: 'gradium-tts-beta'` to try the public beta, or use
+`gradiumModel: 'default'` (or omit it) for the production model. The beta is a
+supported explicit option, not the recommended default. The React example
+exposes both choices. `updateOptions({ gradiumModel: 'default' })` switches
+an existing adapter back to production; `undefined` clears the selection.
+
+`gradiumModel` is sent as top-level `model_name` in the REST JSON body,
+separately from `json_config`. This follows the official
+[REST guide](https://docs.gradium.ai/guides/text-to-speech-rest) and
+[model selection guide](https://docs.gradium.ai/guides/text-to-speech#model-selection).
+The existing one-shot raw-audio response and output format handling are unchanged;
+this does not add streaming synthesis or new emotion controls.
+
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'gradium',
@@ -752,7 +766,7 @@ const voiceService = new VoiceService({
 
 - **Gradium**
   - Endpoint: `gradiumApiUrl`
-  - Identity/output: `speaker`, `gradiumOutputFormat`
+  - Identity/output: `speaker`, `gradiumModel`, `gradiumOutputFormat`
   - Voice controls: `gradiumTemperature`, `gradiumVoiceSimilarity`, `gradiumPaddingBonus`, `gradiumRewriteRules`
 
 - **VOICEVOX**
