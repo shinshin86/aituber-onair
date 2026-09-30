@@ -13,7 +13,8 @@ It specializes in generating response text and audio from text or image inputs, 
 ## Chat and Voice model updates
 
 Core exposes the models and capability helpers from Chat 0.58.0 and the
-Gemini TTS model type from Voice 0.22.0. Existing provider defaults are unchanged.
+Gemini TTS model type and OpenAI-compatible speech helpers from Voice 0.23.0.
+Existing provider defaults are unchanged.
 
 - Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
   Sonnet 5.5;
@@ -22,6 +23,10 @@ Gemini TTS model type from Voice 0.22.0. Existing provider defaults are unchange
   `listOpenAICompatibleModels`, `testOpenAICompatibleConnection`, and
   `OPENAI_COMPATIBLE_LOCAL_PRESETS` (Ollama, LM Studio, llama.cpp, vLLM). See
   the [local LLM guide](../../docs/local-llm.md).
+- OpenAI-compatible speech helpers: `resolveOpenAICompatibleSpeechEndpoint`,
+  `listOpenAICompatibleSpeechModels`, `listOpenAICompatibleSpeechVoices`,
+  `getOpenAICompatibleSpeechServerInfo`, and `testOpenAICompatibleSpeech` for
+  local TTS servers. See the [local TTS guide](../../docs/local-tts.md).
 - OpenRouter: GPT-6 Astra / Astra Pro, Claude Fable 5.1, DeepSeek V4.1 Flash,
   Gemini 3.8 Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini / Pro
   (free), Qwen3.8 Max 0902, and Muse Spark 1.3.

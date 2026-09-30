@@ -6,6 +6,7 @@ import {
   isOpenAIReasoningModel,
   isXaiReasoningEffortModel,
   resolveOpenAICompatibleEndpoint,
+  resolveOpenAICompatibleSpeechEndpoint,
 } from '@aituber-onair/core';
 import { ManneriDetector } from '@aituber-onair/manneri';
 import {
@@ -179,6 +180,16 @@ function getTtsApiKey(
   return getApiKeyForProvider(settings.llm.provider);
 }
 
+/** Accepts an origin, API base URL, or full speech URL; keeps invalid input as-is. */
+function resolveSpeechUrl(input: string | undefined): string | undefined {
+  if (!input?.trim()) return input;
+  try {
+    return resolveOpenAICompatibleSpeechEndpoint(input).speechUrl;
+  } catch {
+    return input;
+  }
+}
+
 function buildVoiceOptions(
   tts: AppSettings['tts'],
   apiKey: string,
@@ -267,8 +278,9 @@ function buildVoiceOptions(
         ? undefined
         : tts.speaker,
     apiKey,
-    openAiCompatibleApiUrl: tts.openAiCompatibleApiUrl,
+    openAiCompatibleApiUrl: resolveSpeechUrl(tts.openAiCompatibleApiUrl),
     openAiCompatibleModel: tts.openAiCompatibleModel,
+    openAiCompatibleInstructions: tts.openAiCompatibleInstructions?.trim(),
     openAiCompatibleSpeed: Number.isNaN(parsedOpenAiCompatibleSpeed)
       ? undefined
       : parsedOpenAiCompatibleSpeed,
@@ -900,6 +912,7 @@ export function useAituberCore({
     settings.tts.openAiCompatibleApiUrl,
     settings.tts.openAiCompatibleModel,
     settings.tts.openAiCompatibleSpeed,
+    settings.tts.openAiCompatibleInstructions,
     settings.tts.voicevoxApiUrl,
     settings.tts.voicepeakApiUrl,
     settings.tts.aivisSpeechApiUrl,

@@ -64,6 +64,7 @@ npm create aituber-onair@latest my-inochi2d-aituber -- --template inochi2d
 - キャラクタープロンプトとアバター設定。
 
 ローカル LLM を使う場合は OpenAI-Compatible を選び、[ローカル LLM ガイド](local-llm.ja.md)で完全なエンドポイント URL とモデル ID を確認してください。
+ローカル TTS サーバーを使う場合は OpenAI-Compatible TTS を選び、[ローカル TTS ガイド](local-tts.ja.md)を参照してください。
 
 スターターアプリはサンプル認証情報をブラウザの `localStorage` に保存します。
 共有端末や公開オリジンでは、本番用の権限を持つ API キーを使わないでください。

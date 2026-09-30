@@ -32,6 +32,11 @@ npm install
 npm run dev
 ```
 
+For `OpenAI-Compatible TTS`, enter an origin, a `/v1` base URL, or a full
+`/audio/speech` URL. **Detect server** fills in the model and voice lists when
+the server provides them, and **Test speech** plays a short sample. See the
+[Local TTS setup guide](https://github.com/shinshin86/aituber-onair/blob/main/docs/local-tts.md).
+
 ## Avatar API
 
 `src/meshAvatar/createMeshAvatar.js` is a framework-free engine:

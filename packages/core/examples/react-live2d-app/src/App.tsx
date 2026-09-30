@@ -40,6 +40,7 @@ import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import './styles/base.css';
 import './styles/app.css';
 import './styles/localLlmSetup.css';
+import './styles/localTtsSetup.css';
 
 const DEFAULT_SETTINGS_DIALOG_OFFSET: DialogDragPoint = { x: 0, y: 0 };
 

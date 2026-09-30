@@ -12,6 +12,7 @@ import {
 import { ScreenVisionPanel } from './ScreenVisionPanel';
 import { StreamSettings } from './StreamSettings';
 import { LocalLlmSetup } from './LocalLlmSetup';
+import { LocalTtsSetup } from './LocalTtsSetup';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
@@ -356,6 +357,7 @@ export function SettingsPanel({
   updateOpenAiCompatibleApiUrl,
   updateOpenAiCompatibleModel,
   updateOpenAiCompatibleSpeed,
+  updateOpenAiCompatibleInstructions,
   updateGeminiTtsModel,
   updateGeminiTtsLanguageCode,
   updateGeminiTtsPrompt,
@@ -2668,47 +2670,19 @@ export function SettingsPanel({
                     disabled={disabled}
                   />
                 </div>
-                <div className="settings-field">
-                  <label htmlFor="tts-openai-compatible-url">
-                    Endpoint URL
-                  </label>
-                  <input
-                    id="tts-openai-compatible-url"
-                    type="text"
-                    value={settings.tts.openAiCompatibleApiUrl || ''}
-                    onChange={(e) =>
-                      updateOpenAiCompatibleApiUrl(e.target.value)
-                    }
-                    placeholder="http://localhost:8880/v1/audio/speech"
-                    disabled={disabled}
-                  />
-                </div>
-                <div className="settings-field">
-                  <label htmlFor="tts-openai-compatible-model">Model</label>
-                  <input
-                    id="tts-openai-compatible-model"
-                    type="text"
-                    value={settings.tts.openAiCompatibleModel || ''}
-                    onChange={(e) =>
-                      updateOpenAiCompatibleModel(e.target.value)
-                    }
-                    placeholder="local-model"
-                    disabled={disabled}
-                  />
-                </div>
-                <div className="settings-field">
-                  <label htmlFor="tts-openai-compatible-speaker">
-                    Voice (optional)
-                  </label>
-                  <input
-                    id="tts-openai-compatible-speaker"
-                    type="text"
-                    value={settings.tts.speaker}
-                    onChange={(e) => updateTTSSpeaker(e.target.value)}
-                    placeholder="未入力なら voice フィールドを送信しません"
-                    disabled={disabled}
-                  />
-                </div>
+                <LocalTtsSetup
+                  endpoint={settings.tts.openAiCompatibleApiUrl || ''}
+                  onEndpointChange={updateOpenAiCompatibleApiUrl}
+                  model={settings.tts.openAiCompatibleModel || ''}
+                  onModelChange={updateOpenAiCompatibleModel}
+                  voice={settings.tts.speaker}
+                  onVoiceChange={updateTTSSpeaker}
+                  instructions={settings.tts.openAiCompatibleInstructions || ''}
+                  onInstructionsChange={updateOpenAiCompatibleInstructions}
+                  speed={settings.tts.openAiCompatibleSpeed || ''}
+                  apiKey={settings.tts.openAiCompatibleApiKey || ''}
+                  disabled={disabled}
+                />
                 <div className="settings-field">
                   <label htmlFor="tts-openai-compatible-speed">
                     Speed (0.25 - 4.0)

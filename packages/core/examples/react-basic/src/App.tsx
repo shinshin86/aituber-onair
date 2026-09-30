@@ -59,6 +59,7 @@ import {
   normalizeZaiReasoningEffort,
   refreshOpenRouterFreeModels,
   resolveOpenAICompatibleEndpoint,
+  resolveOpenAICompatibleSpeechEndpoint,
   type ClaudeReasoningEffort,
   type DeepSeekReasoningEffort,
   type GeminiReasoningEffort,
@@ -83,6 +84,7 @@ import {
   type AivisSpeechQueryParameterOverrides,
 } from '@aituber-onair/core';
 import { LocalLlmSetup } from './components/LocalLlmSetup';
+import { LocalTtsSetup } from './components/LocalTtsSetup';
 
 // Constants imports
 import {
@@ -882,6 +884,8 @@ const App: React.FC = () => {
   );
   const [openaiCompatibleSpeed, setOpenaiCompatibleSpeed] =
     useState<string>('');
+  const [openaiCompatibleInstructions, setOpenaiCompatibleInstructions] =
+    useState<string>('');
   const [geminiTtsModel, setGeminiTtsModel] = useState<string>(
     String(
       VOICE_ENGINE_CONFIGS.geminiTts.defaultParams?.model ||
@@ -1122,6 +1126,7 @@ const App: React.FC = () => {
       setOpenaiCompatibleApiUrl(OPENAI_COMPATIBLE_TTS_DEFAULT_ENDPOINT);
       setOpenaiCompatibleModel(OPENAI_COMPATIBLE_DEFAULT_MODEL);
       setOpenaiCompatibleSpeed('');
+      setOpenaiCompatibleInstructions('');
     }
 
     if (selectedVoiceEngine === 'geminiTts') {
@@ -2059,9 +2064,18 @@ const App: React.FC = () => {
           const trimmedApiKey = voiceApiKeys.openaiCompatible?.trim() || '';
           const trimmedSpeaker = String(selectedSpeaker || '').trim();
           const parsedSpeed = Number.parseFloat(openaiCompatibleSpeed);
+          const trimmedInstructions = openaiCompatibleInstructions.trim();
 
           if (trimmedApiUrl) {
-            options.openAiCompatibleApiUrl = trimmedApiUrl;
+            try {
+              options.openAiCompatibleApiUrl =
+                resolveOpenAICompatibleSpeechEndpoint(trimmedApiUrl).speechUrl;
+            } catch {
+              options.openAiCompatibleApiUrl = trimmedApiUrl;
+            }
+          }
+          if (trimmedInstructions) {
+            options.openAiCompatibleInstructions = trimmedInstructions;
           }
           if (trimmedModel) {
             options.openAiCompatibleModel = trimmedModel;
@@ -5770,58 +5784,26 @@ const App: React.FC = () => {
                         style={{ width: '100%', marginBottom: '8px' }}
                       />
 
-                      <label
-                        htmlFor="openaiCompatibleApiUrl"
-                        style={{ display: 'block', marginBottom: '6px' }}
-                      >
-                        Endpoint URL:
-                      </label>
-                      <input
-                        id="openaiCompatibleApiUrl"
-                        type="text"
-                        value={openaiCompatibleApiUrl}
-                        onChange={(e) =>
-                          setOpenaiCompatibleApiUrl(e.target.value)
-                        }
-                        placeholder={OPENAI_COMPATIBLE_TTS_DEFAULT_ENDPOINT}
-                        style={{ width: '100%', marginBottom: '8px' }}
-                      />
-
-                      <label
-                        htmlFor="openaiCompatibleModel"
-                        style={{ display: 'block', marginBottom: '6px' }}
-                      >
-                        Model:
-                      </label>
-                      <input
-                        id="openaiCompatibleModel"
-                        type="text"
-                        value={openaiCompatibleModel}
-                        onChange={(e) =>
-                          setOpenaiCompatibleModel(e.target.value)
-                        }
-                        placeholder={OPENAI_COMPATIBLE_DEFAULT_MODEL}
-                        style={{ width: '100%', marginBottom: '8px' }}
-                      />
-
-                      <label
-                        htmlFor="openaiCompatibleSpeaker"
-                        style={{ display: 'block', marginBottom: '6px' }}
-                      >
-                        Voice (optional):
-                      </label>
-                      <input
-                        id="openaiCompatibleSpeaker"
-                        type="text"
-                        value={String(selectedSpeakers.openaiCompatible || '')}
-                        onChange={(e) =>
+                      <LocalTtsSetup
+                        endpoint={openaiCompatibleApiUrl}
+                        onEndpointChange={setOpenaiCompatibleApiUrl}
+                        model={openaiCompatibleModel}
+                        onModelChange={setOpenaiCompatibleModel}
+                        voice={String(
+                          selectedSpeakers.openaiCompatible || '',
+                        )}
+                        onVoiceChange={(voice) =>
                           setSelectedSpeakers((prev) => ({
                             ...prev,
-                            openaiCompatible: e.target.value,
+                            openaiCompatible: voice,
                           }))
                         }
-                        placeholder="未入力なら voice フィールドを送信しません"
-                        style={{ width: '100%', marginBottom: '8px' }}
+                        instructions={openaiCompatibleInstructions}
+                        onInstructionsChange={
+                          setOpenaiCompatibleInstructions
+                        }
+                        speed={openaiCompatibleSpeed}
+                        apiKey={voiceApiKeys.openaiCompatible || ''}
                       />
 
                       <label
@@ -7426,7 +7408,7 @@ const App: React.FC = () => {
                                             ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
                                             : selectedVoiceEngine ===
                                                 'openaiCompatible'
-                                              ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / speed を設定できます'
+                                              ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / 任意instructions / speed を設定できます'
                                               : selectedVoiceEngine ===
                                                   'piperPlus'
                                                 ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'

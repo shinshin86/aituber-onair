@@ -32,6 +32,7 @@ import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 import type { AvatarViewTransform } from './types/settings';
 import './styles/app.css';
 import './styles/localLlmSetup.css';
+import './styles/localTtsSetup.css';
 
 const DEFAULT_AVATAR_VIEW_TRANSFORM: AvatarViewTransform = {
   x: 0,

@@ -316,6 +316,77 @@ button:hover {
   text-decoration: underline;
 }
 
+.local-tts-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.local-tts-field label {
+  display: block;
+  margin-top: 0;
+}
+
+.local-tts-field input,
+.local-tts-field select,
+.local-tts-field textarea {
+  max-width: none;
+  margin-bottom: 4px;
+}
+
+.local-tts-field small,
+.local-tts-status {
+  display: block;
+  color: #6c757d;
+  font-size: 0.78rem;
+}
+
+.local-tts-preview {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.local-tts-preview code {
+  font-family: monospace;
+}
+
+.local-tts-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.local-tts-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.local-tts-status-ok {
+  color: #198754;
+}
+
+.local-tts-error {
+  display: block;
+  color: #b02a37;
+  font-size: 0.78rem;
+}
+
+.local-tts-error-help {
+  margin-top: 4px;
+}
+
+.local-tts-error-help a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.local-tts-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  resize: vertical;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .message {

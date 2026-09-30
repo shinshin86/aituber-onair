@@ -35,7 +35,7 @@ React サンプルでは **Fetch models** で同じ一覧を取得でき、取�
 
 ## 音声出力
 
-React サンプルでは、VOICEVOX、AivisSpeech、OpenAI 互換 TTS も利用できます。LLM と TTS はそれぞれの設定項目で指定してください。
+React サンプルでは、VOICEVOX、AivisSpeech、OpenAI 互換 TTS も利用できます。LLM と TTS はそれぞれの設定項目で指定してください。ローカル TTS サーバーについては[ローカル TTS ガイド](local-tts.ja.md)を参照してください。
 
 ## 困ったときは
 

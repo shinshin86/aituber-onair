@@ -169,6 +169,7 @@ function getDefaultSettings(): AppSettings {
       openAiCompatibleApiUrl: DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT,
       openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_MODEL,
       openAiCompatibleSpeed: '',
+      openAiCompatibleInstructions: '',
       geminiTtsModel: DEFAULT_GEMINI_TTS_MODEL,
       geminiTtsLanguageCode: DEFAULT_GEMINI_TTS_LANGUAGE_CODE,
       geminiTtsPrompt: '',
@@ -822,6 +823,16 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateOpenAiCompatibleInstructions = useCallback(
+    (instructions: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        tts: { ...prev.tts, openAiCompatibleInstructions: instructions },
+      }));
+    },
+    [],
+  );
+
   const updateGeminiTtsModel = useCallback((model: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -1442,6 +1453,7 @@ export function useSettings() {
     updateOpenAiCompatibleApiUrl,
     updateOpenAiCompatibleModel,
     updateOpenAiCompatibleSpeed,
+    updateOpenAiCompatibleInstructions,
     updateGeminiTtsModel,
     updateGeminiTtsLanguageCode,
     updateGeminiTtsPrompt,
