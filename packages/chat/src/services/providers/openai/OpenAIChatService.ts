@@ -315,7 +315,9 @@ export class OpenAIChatService implements ChatService {
     return res;
   }
   private async handleStream(res: Response, onPartial: (t: string) => void) {
-    return parseOpenAICompatibleTextStream(res, onPartial);
+    return parseOpenAICompatibleTextStream(res, onPartial, {
+      throwOnApiError: true,
+    });
   }
 
   private async parseStream(
@@ -324,10 +326,11 @@ export class OpenAIChatService implements ChatService {
   ): Promise<ToolChatCompletion> {
     return parseOpenAICompatibleToolStream(res, onPartial, {
       appendTextBlock: StreamTextAccumulator.addTextBlock,
+      throwOnApiError: true,
     });
   }
 
   private parseOneShot(data: any): ToolChatCompletion {
-    return parseOpenAICompatibleOneShot(data);
+    return parseOpenAICompatibleOneShot(data, { throwOnApiError: true });
   }
 }

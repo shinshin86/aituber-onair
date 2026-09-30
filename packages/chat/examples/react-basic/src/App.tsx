@@ -181,6 +181,7 @@ function App() {
   >('enabled');
   const [kimiBaseUrl, setKimiBaseUrl] = useState(KIMI_OFFICIAL_BASE_URL);
   const [chatService, setChatService] = useState<ChatService | null>(null);
+  const nextMessageIdRef = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const geminiNano = useGeminiNanoStatus(provider === 'gemini-nano');
 
@@ -468,7 +469,7 @@ function App() {
           : content;
 
       const userMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: String(nextMessageIdRef.current++),
         role: 'user',
         content: userContent,
         timestamp: new Date(),
@@ -495,7 +496,7 @@ function App() {
           };
 
       const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: String(nextMessageIdRef.current++),
         role: 'assistant',
         content: '',
         timestamp: new Date(),

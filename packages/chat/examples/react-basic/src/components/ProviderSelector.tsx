@@ -1662,6 +1662,10 @@ export default function ProviderSelector({
     selectedModel === MODEL_GPT_6_1_SOL ||
     selectedModel === MODEL_GPT_6_SOL ||
     selectedModel === MODEL_GPT_6_LUNA;
+  const effectiveOpenAIEndpoint = isResponsesOnlyModel
+    ? 'responses'
+    : (gpt5EndpointPreference ??
+      (isResponsesPreferredModel ? 'responses' : 'chat'));
   const allowsNone =
     provider === 'openai' && allowsReasoningNone(selectedModel);
   const allowsMinimal =
@@ -1882,6 +1886,15 @@ export default function ProviderSelector({
     }
     return reasoning_effort;
   })();
+  const usesOpenAIResponses =
+    isResponsesOnlyModel ||
+    effectiveOpenAIEndpoint === 'responses' ||
+    (isResponsesPreferredModel && effectiveOpenAIEndpoint === 'auto') ||
+    ((selectedModel === MODEL_GPT_6_SOL ||
+      selectedModel === MODEL_GPT_6_LUNA) &&
+      (gpt5Preset
+        ? gpt5Preset !== 'casual'
+        : effectiveReasoningEffort !== 'none'));
 
   return (
     <div className="provider-selector">
@@ -2176,13 +2189,7 @@ export default function ProviderSelector({
                 <label htmlFor="gpt5-endpoint">OpenAI API Endpoint</label>
                 <select
                   id="gpt5-endpoint"
-                  value={
-                    isResponsesOnlyModel
-                      ? 'responses'
-                      : isResponsesPreferredModel && !gpt5EndpointPreference
-                        ? 'responses'
-                        : gpt5EndpointPreference || 'chat'
-                  }
+                  value={effectiveOpenAIEndpoint}
                   onChange={(e) =>
                     onGpt5EndpointPreferenceChange?.(
                       e.target.value as 'chat' | 'responses' | 'auto',
@@ -2226,12 +2233,7 @@ export default function ProviderSelector({
                     onChange={(e) =>
                       onEnableReasoningSummaryChange?.(e.target.checked)
                     }
-                    disabled={
-                      disabled ||
-                      (isResponsesOnlyModel
-                        ? false
-                        : gpt5EndpointPreference !== 'responses')
-                    }
+                    disabled={disabled || !usesOpenAIResponses}
                   />
                   Enable Reasoning Summary
                 </label>

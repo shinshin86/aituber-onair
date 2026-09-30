@@ -226,8 +226,15 @@ npm install
 
 ### CORS Issues
 
-The Vite dev server proxies some API requests to avoid CORS issues. Sakana AI
-is shown as a disabled provider in this browser example because direct browser
+Named providers in this sample send requests directly to their configured
+upstream endpoints. The `/api/openai`, `/api/anthropic`, and `/api/google`
+rules in `vite.config.ts` only proxy requests made to those local paths;
+selecting a provider does not automatically use those rules. In particular,
+native OpenAI, Z.ai, and OpenRouter requests remain direct browser requests.
+Their success depends on the upstream service permitting your origin and
+request headers. Mock transport tests do not verify live CORS behavior.
+
+Sakana AI is shown as a disabled provider in this browser example because direct browser
 requests can fail with CORS unless Sakana enables the required CORS headers for
 your origin. Use `../node-basic/sakana-example.js` from Node.js, or call Sakana through your own
 backend/serverless proxy in a web app.
@@ -235,7 +242,30 @@ backend/serverless proxy in a web app.
 For production, you'll need to:
 1. Use a backend proxy
 2. Configure CORS on your server
-3. Use provider SDKs that handle CORS
+3. Keep provider credentials on that backend; browser SDKs cannot bypass CORS
+
+### Offline React integration tests
+
+From the repository root after `npm ci`, run:
+
+```bash
+npm -w @aituber-onair/chat run test:example:react
+```
+
+The same tests are discovered by the normal Chat `npm test` command and the
+repository test workflow. They mount the real React app in JSDOM, change the
+rendered provider/model/settings controls, submit messages, and use the real
+Chat services with fail-closed mocked fetch responses and fake credentials.
+No provider inference or live API calls are made, and no new test dependencies
+are required beyond the existing monorepo installation.
+
+Coverage includes all nine GPT-6.1 Sol / GLM-5.3 FlashX native and new OpenRouter
+options, every offered reasoning effort, endpoint selection, image requests,
+fragmented streaming text, conversation history, repeated sends, clearing an
+in-flight conversation, schema validation, provider/model switching, and
+recovery from HTTP, network, and in-stream provider errors. These tests verify
+DOM behavior and request/response wiring, not browser layout, live provider
+availability, account permissions, actual model output, or CORS/preflight.
 
 ## Customization
 

@@ -276,6 +276,7 @@ export class ZAIChatService implements ChatService {
 
   private async handleStream(res: Response, onPartial: (t: string) => void) {
     return parseOpenAICompatibleTextStream(res, onPartial, {
+      throwOnApiError: true,
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
     });
@@ -289,6 +290,7 @@ export class ZAIChatService implements ChatService {
     onPartial: (t: string) => void,
   ): Promise<ToolChatCompletion> {
     return parseOpenAICompatibleToolStream(res, onPartial, {
+      throwOnApiError: true,
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
     });
@@ -298,6 +300,6 @@ export class ZAIChatService implements ChatService {
    * Parse non-streaming response
    */
   private parseOneShot(data: any): ToolChatCompletion {
-    return parseOpenAICompatibleOneShot(data);
+    return parseOpenAICompatibleOneShot(data, { throwOnApiError: true });
   }
 }
