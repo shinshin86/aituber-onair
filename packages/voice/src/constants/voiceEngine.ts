@@ -13,6 +13,10 @@ export const FISH_AUDIO_TTS_API_URL = 'https://api.fish.audio/v1/tts';
 export const FISH_AUDIO_MODELS_API_URL = 'https://api.fish.audio/model';
 export const CARTESIA_TTS_API_URL = 'https://api.cartesia.ai/tts/bytes';
 export const CARTESIA_VOICES_API_URL = 'https://api.cartesia.ai/voices';
+export const DEEPGRAM_TTS_API_URL = 'https://api.deepgram.com/v2/speak';
+export const DEEPGRAM_VOICES_API_URL = 'https://api.deepgram.com/v1/models';
+/** Featured English voice used by Deepgram's Flux batch getting-started guide. */
+export const DEEPGRAM_DEFAULT_VOICE = 'flux-haley-en';
 export const INWORLD_TTS_API_URL = 'https://api.inworld.ai/tts/v1/voice';
 export const INWORLD_VOICES_API_URL = 'https://api.inworld.ai/voices/v1/voices';
 export const GRADIUM_TTS_API_URL = 'https://api.gradium.ai/api/post/speech/tts';

@@ -74,6 +74,7 @@ export function EngineSelector({
     engine === 'elevenLabs' ||
     engine === 'fishAudio' ||
     engine === 'cartesia' ||
+    engine === 'deepgram' ||
     engine === 'inworld' ||
     engine === 'gradium' ||
     engine === 'geminiTts' ||
@@ -86,6 +87,7 @@ export function EngineSelector({
     engine === 'elevenLabs' ||
     engine === 'fishAudio' ||
     engine === 'cartesia' ||
+    engine === 'deepgram' ||
     engine === 'gradium' ||
     engine === 'openaiCompatible' ||
     engine === 'voicevox' ||
@@ -95,6 +97,51 @@ export function EngineSelector({
   const renderSpeakerField = () => {
     if (engine === 'piperPlus') {
       return null;
+    }
+
+    if (engine === 'deepgram') {
+      const voices = hasSpeakerOptions
+        ? speakerOptions
+        : [{ id: ENGINE_DEFAULTS.deepgram.speaker, label: 'Haley (English)' }];
+      return (
+        <div className="form-group">
+          <label htmlFor="speaker">Speaker (English only):</label>
+          <select
+            id="speaker"
+            value={speaker}
+            onChange={(e) => onSpeakerChange(e.target.value)}
+          >
+            {voices.map((voice) => (
+              <option key={voice.id} value={voice.id}>
+                {voice.label}
+              </option>
+            ))}
+          </select>
+          <div className="speaker-fetch-row">
+            <button
+              type="button"
+              className="secondary-action-button"
+              onClick={onFetchSpeakers}
+              disabled={isFetchingSpeakers}
+              aria-label="Deepgram の話者一覧を取得"
+            >
+              {isFetchingSpeakers ? '取得中...' : '話者一覧を取得'}
+            </button>
+          </div>
+          {speakerFetchError && (
+            <div className="speaker-fetch-message speaker-fetch-message--error">
+              {speakerFetchError}
+            </div>
+          )}
+          <div className="speaker-fetch-message">
+            公開カタログに Flux がない場合も Haley プリセットを利用できます。
+            話者一覧は API key 不要です。音声生成には API key
+            と英語のテキストが必要です。 この例は Vite proxy
+            を使用します。本番では backend route を用意し、 API key
+            をサーバーで管理してください。
+          </div>
+        </div>
+      );
     }
 
     if (engine === 'webSpeech') {
@@ -610,6 +657,7 @@ export function EngineSelector({
           <option value="elevenLabs">ElevenLabs</option>
           <option value="fishAudio">Fish Audio</option>
           <option value="cartesia">Cartesia</option>
+          <option value="deepgram">Deepgram Flux (English only)</option>
           <option value="inworld">Inworld</option>
           <option value="gradium">Gradium</option>
           <option value="openaiCompatible">OpenAI-Compatible TTS</option>

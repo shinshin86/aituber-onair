@@ -58,7 +58,9 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 - **Inworld TTS** - Non-streaming Inworld REST API with Basic authentication
 - **Gradium TTS** - One-shot Gradium REST API with flagship voice presets
 - **Fish Audio** - S2 Pro one-shot TTS with model/reference selection
-- **Cartesia** - Sonic 3.5 synchronous TTS with voice-list selection
+- **Cartesia** - Sonic 3.6 alias/snapshot options with voice-list selection; Sonic 3.5 remains the default
+- **ElevenLabs** - Explicit Eleven v4 option with model-aware voice settings; Flash v2.5 remains the default
+- **Deepgram Flux** - English-only one-shot MP3 output with a selectable public voice catalog
 - **VOICEVOX** - Free Japanese voices (requires local server)
 - **AIVIS Speech** - Emotion-aware synthesis
 - **VoicePeak** - Professional voice synthesis with single-tag and weighted emotion UI (`vpeakserver v0.2.0+` required for weighted mode)
@@ -152,11 +154,31 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 # Production hosting must implement equivalent /api/fish-audio routes.
 ```
 
+#### ElevenLabs
+Select `eleven_v4` for quality-focused speech. Only Stability and Similarity
+controls are shown for v4; Style, Speed, and Speaker Boost are omitted from
+requests. SSML is unsupported. Flash v2.5 remains the low-latency default.
+The HTTP example does not offer Eleven v4 Turbo.
+
+#### Deepgram Flux
+The example uses `/api/deepgram/v2/speak` and `/api/deepgram/v1/models`, proxied
+to Deepgram by Vite during development and preview. Enter your API key for
+speech, select a Flux voice (Haley is the default), and enter English text.
+The public model catalog can be queried without an API key; if it has no Flux
+entries, the documented Haley preset stays selectable. Optional speed is
+0.5–1.5 in 0.05 increments. Output is MP3; Aura, WebSockets, and beta
+expressivity are outside this integration.
+
+Production hosting must supply equivalent backend routes and keep Deepgram
+credentials on the server. Direct browser CORS has not been live-verified.
+Do not embed production API keys in browser-delivered code.
+
 #### Cartesia
 ```bash
 # Default endpoint: https://api.cartesia.ai/tts/bytes
 # Enter an API key, select a language, and fetch the matching voice list.
 # Sonic 3.5 with Japanese and WAV output is the sample default.
+# Select sonic-3.6 or sonic-3.6-2026-08-27 explicitly for the newer model.
 ```
 
 #### OpenAI TTS

@@ -221,6 +221,10 @@ export class ElevenLabsEngine implements VoiceEngine {
     if (this.voiceSettings.similarityBoost !== undefined) {
       settings.similarity_boost = this.voiceSettings.similarityBoost;
     }
+    if (this.model === 'eleven_v4') {
+      return settings;
+    }
+
     if (this.voiceSettings.style !== undefined) {
       settings.style = this.voiceSettings.style;
     }

@@ -60,7 +60,7 @@ pnpm install @aituber-onair/voice
 
 - **Multiple TTS Engine Support**  
   Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Unreal Speech,
-  ElevenLabs, Fish Audio, Cartesia, Inworld, Gradium, Gemini TTS, MiniMax,
+  ElevenLabs, Fish Audio, Cartesia, Deepgram Flux, Inworld, Gradium, Gemini TTS, MiniMax,
   AivisSpeech, Aivis Cloud, Web Speech API, and more
 - **Unified Interface**  
   Single API for all supported TTS engines
@@ -235,11 +235,21 @@ Use `elevenLabsApiUrl` to override the default
 `https://api.elevenlabs.io/v1/text-to-speech` endpoint. The `speaker` value is
 sent as the ElevenLabs `voice_id`.
 
-The curated model choices are `eleven_v3` for maximum expressiveness,
+The curated model choices include `eleven_v4` for highest-quality speech,
+`eleven_v3` for previous-generation expressiveness,
 `eleven_multilingual_v2` for high-quality multilingual output, and
 `eleven_flash_v2_5` (the default) for low latency. The deprecated
 `eleven_turbo_v2_5` remains accepted as a custom string for backward
 compatibility, but is no longer presented as a recommended model.
+
+Model-specific settings are filtered when building requests. For `eleven_v4`,
+only Stability and Similarity are sent; configured Style, Speed, and Speaker
+Boost values are retained for other models but omitted for v4. SSML is not
+supported by v4; use plain text or its documented audio tags. This engine uses
+one-shot [Create speech](https://elevenlabs.io/docs/api-reference/text-to-speech/convert)
+and waits for the complete audio response. The [official TTS guide](https://elevenlabs.io/docs/eleven-creative/playground/text-to-speech)
+confirms v4 support for that endpoint. `eleven_v4_turbo` is not a supported
+choice for this HTTP integration.
 
 ### Fish Audio
 
@@ -289,7 +299,44 @@ const voiceService = new VoiceService({
 ```
 
 Use `getVoiceEngineVoiceList('cartesia', { apiKey, language: 'ja' })` to list
-voices. The engine uses the documented `Cartesia-Version: 2026-03-01` header.
+voices. The engine retains the `Cartesia-Version: 2026-03-01` header and
+`voice: { id }` request shape. Set `cartesiaModel: 'sonic-3.6'` explicitly for
+the newer model, or `'sonic-3.6-2026-08-27'` to pin its stable snapshot. The
+existing `sonic-3.5` default is unchanged. Cartesia documents Sonic 3.6 on
+[`POST /tts/bytes`](https://docs.cartesia.ai/api-reference/tts/bytes) and
+[backward compatibility for pinned integrations](https://docs.cartesia.ai/changelog/2026).
+WAV/MP3 output and existing voice IDs continue through the same path.
+
+### Deepgram Flux
+
+Deepgram Flux uses the [one-shot `POST /v2/speak` endpoint](https://developers.deepgram.com/docs/flux-tts/batch)
+with `Authorization: Token ...` and returns MP3 audio bytes. This integration
+supports English Flux voices only. It does not implement Aura (`/v1/speak`),
+WebSocket streaming, interruption handling, callbacks, or beta expressivity.
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'deepgram',
+  speaker: 'flux-haley-en',
+  apiKey: process.env.DEEPGRAM_API_KEY,
+  deepgramSpeed: 1.0,
+});
+```
+
+The required full voice ID in `speaker` is sent as the `model` query parameter.
+The example defaults to `flux-haley-en`. `deepgramSpeed` is optional (0.5–1.5,
+in 0.05 steps).
+Use `getVoiceEngineVoiceList('deepgram')` to fetch the public model catalog;
+the helper filters any Flux English entries, without an API key. The catalog
+may not yet include Flux entries, in which case the helper returns an empty
+list and the React example retains the documented Haley preset. See the
+[voice catalog](https://developers.deepgram.com/docs/flux-tts/voices).
+
+Call from Node.js/backend, or use `deepgramApiUrl` for a same-origin speech
+proxy and `voiceListApiUrl` for the catalog proxy. Keep the API key on the server
+in production. Direct browser CORS behavior has not been live-verified; the
+React example supplies Vite development/preview proxies under `/api/deepgram`.
+Production deployments must provide equivalent backend routes.
 
 ### Inworld
 Inworld TTS non-streaming speech synthesis using direct `fetch` calls. This
@@ -741,6 +788,11 @@ const voiceService = new VoiceService({
   - Identity/output: `speaker`, `fishAudioModel`, `fishAudioFormat`, `fishAudioSampleRate`, `fishAudioMp3Bitrate`
   - Voice controls: `fishAudioLatency`, `fishAudioSpeed`
 
+- **Deepgram Flux**
+  - Endpoint: `deepgramApiUrl`
+  - Voice/model: `speaker` (Flux English ID), optional `deepgramSpeed`
+  - Output: MP3
+
 - **Cartesia**
   - Endpoint: `cartesiaApiUrl`
   - Identity/output: `speaker`, `cartesiaModel`, `cartesiaLanguage`, `cartesiaOutputContainer`, `cartesiaSampleRate`, `cartesiaMp3Bitrate`
@@ -842,8 +894,15 @@ try {
 ### Cartesia Features
 
 - Bearer-authenticated synchronous `/tts/bytes` requests
-- Sonic 3.5 with Japanese and other documented language codes
+- Sonic 3.6 alias/snapshot as explicit options; Sonic 3.5 remains the default
+- Japanese and other documented language codes
 - Paginated voice-list lookup and WAV/MP3 output controls
+
+### Deepgram Flux Features
+
+- Token-authenticated one-shot `/v2/speak` requests with binary MP3 output
+- English-only Flux voices from the public model catalog
+- Optional speech speed and custom endpoint; no emotion/style mapping
 
 ### Inworld Features
 - Cloud TTS endpoint with Basic authentication
@@ -912,6 +971,7 @@ type VoiceServiceOptions =
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
   | FishAudioVoiceServiceOptions
+  | DeepgramVoiceServiceOptions
   | CartesiaVoiceServiceOptions
   | InworldVoiceServiceOptions
   | GradiumVoiceServiceOptions
@@ -962,7 +1022,7 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 
 `getVoiceEngineVoiceList()` returns normalized `{ id, label }` items for
 engines that expose list APIs: VOICEVOX, AivisSpeech, Aivis Cloud, xAI,
-ElevenLabs, Fish Audio, Cartesia, Inworld, Gradium, and Web Speech API. Pass
+ElevenLabs, Fish Audio, Cartesia, Deepgram Flux, Inworld, Gradium, and Web Speech API. Pass
 local `apiUrl` for VOICEVOX-compatible servers, `apiKey` for cloud engines that
 require it, and `language` for Fish Audio, Cartesia, or Inworld filtering.
 

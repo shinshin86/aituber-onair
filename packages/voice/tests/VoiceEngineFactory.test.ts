@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { AivisCloudEngine } from '../src/engines/AivisCloudEngine';
 import { AivisSpeechEngine } from '../src/engines/AivisSpeechEngine';
 import { CartesiaEngine } from '../src/engines/CartesiaEngine';
+import { DeepgramEngine } from '../src/engines/DeepgramEngine';
 import { ElevenLabsEngine } from '../src/engines/ElevenLabsEngine';
 import { FishAudioEngine } from '../src/engines/FishAudioEngine';
 import { GeminiTtsEngine } from '../src/engines/GeminiTtsEngine';
@@ -29,6 +30,7 @@ const expectedEngineConstructors = {
   elevenLabs: ElevenLabsEngine,
   fishAudio: FishAudioEngine,
   cartesia: CartesiaEngine,
+  deepgram: DeepgramEngine,
   inworld: InworldEngine,
   gradium: GradiumEngine,
   geminiTts: GeminiTtsEngine,
