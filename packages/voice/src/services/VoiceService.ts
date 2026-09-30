@@ -313,6 +313,16 @@ export interface OpenAiCompatibleVoiceServiceOptions
   openAiCompatibleSpeed?: number;
   /** Request timeout in milliseconds (default: 30000; 0 disables). */
   openAiCompatibleTimeoutMs?: number;
+  /**
+   * Optional `instructions` field. Servers that support it typically use it
+   * as a voice style prompt; empty values are not sent.
+   */
+  openAiCompatibleInstructions?: string;
+  /**
+   * Optional `response_format` field (e.g. wav, mp3). Empty values are not
+   * sent, so the server default is used.
+   */
+  openAiCompatibleResponseFormat?: string;
 }
 
 export interface AivisSpeechVoiceServiceOptions

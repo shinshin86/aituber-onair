@@ -360,6 +360,65 @@ const voiceService = new VoiceService({
 フィールドは含まれません。
 `openAiCompatibleModel` は、接続先エンドポイントが受け付けるモデル名を
 明示的に指定してください。
+`openAiCompatibleApiUrl` は加工せずにそのまま使うため、`/audio/speech` まで
+含む完全な URL を指定してください。
+`openAiCompatibleInstructions` と `openAiCompatibleResponseFormat` は任意です。
+空でない場合だけ、`instructions` / `response_format` として送信します。
+`instructions` に対応したサーバーでは、声のスタイル指示として使われるのが
+一般的です。
+リクエストが失敗すると `VoiceEngineError` が throw されます。`kind` は
+`'api'` で、`statusCode` に HTTP ステータス、メッセージにレスポンス本文が
+入ります。
+
+#### エンドポイント設定用ヘルパー
+
+設定 UI を作りやすくするためのヘルパーです。オリジン、API ベース URL、
+`/audio/speech` までの完全な URL のどれでも受け付けます。
+
+```typescript
+import {
+  resolveOpenAICompatibleSpeechEndpoint,
+  listOpenAICompatibleSpeechModels,
+  listOpenAICompatibleSpeechVoices,
+  getOpenAICompatibleSpeechServerInfo,
+  testOpenAICompatibleSpeech,
+} from '@aituber-onair/voice';
+
+const endpoint = 'http://localhost:8880/v1';
+const { speechUrl } = resolveOpenAICompatibleSpeechEndpoint(endpoint);
+// -> http://localhost:8880/v1/audio/speech
+
+const models = await listOpenAICompatibleSpeechModels({ endpoint });
+const voices = await listOpenAICompatibleSpeechVoices({ endpoint }); // または null
+const info = await getOpenAICompatibleSpeechServerInfo({ endpoint }); // または null
+
+const result = await testOpenAICompatibleSpeech({
+  endpoint,
+  model: models[0],
+  voice: voices?.defaultVoice,
+});
+if (result.ok) {
+  // result.audio は再生できる ArrayBuffer
+} else {
+  console.error(result.error.code, result.error.status, result.error.detail);
+}
+```
+
+- `listOpenAICompatibleSpeechModels` は標準の `GET /models` を使います。
+- OpenAI の API には voice 一覧のエンドポイントがありません。そのため
+  `listOpenAICompatibleSpeechVoices` は取得できた場合だけ使う扱いです。
+  `GET /audio/voices`（Kokoro-FastAPI など）、`GET /voices` の順に試し、
+  どちらからも一覧を読み取れなければ `null` を返します。
+- `getOpenAICompatibleSpeechServerInfo` も取得できた場合だけ使う扱いです。
+  サーバーのルートが `engine` フィールドを含む JSON を返した場合に限り、
+  `{ engine, model?, defaultVoice? }` を返します。それ以外は `null` です。
+- `testOpenAICompatibleSpeech` は短い文を 1 回合成します。例外は投げずに、
+  結果をオブジェクトで返します。エラーには `code`（`invalid-url`、
+  `network`、`aborted`、`timeout`、`http`、`invalid-response`）が入り、
+  HTTP エラーの場合は `status` と `detail` も入ります。
+- ブラウザから呼び出す場合は、サーバー側で CORS が許可されている必要が
+  あります。ブラウザで `network` エラーになる場合は、CORS で拒否されているか、
+  サーバーが起動していないことがほとんどです。
 
 ### MiniMax
 HD品質で24言語をサポートする多言語TTS。
@@ -654,6 +713,8 @@ const voiceService = new VoiceService({
   - `openAiCompatibleModel`
   - `openAiCompatibleSpeed`
   - `openAiCompatibleTimeoutMs`
+  - `openAiCompatibleInstructions`
+  - `openAiCompatibleResponseFormat`
 
 - **xAI TTS**
   - `xaiLanguage`

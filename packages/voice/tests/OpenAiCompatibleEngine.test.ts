@@ -111,6 +111,66 @@ describe('OpenAiCompatibleEngine', () => {
     }
   });
 
+  it('should send instructions and response_format when configured', async () => {
+    const engine = new OpenAiCompatibleEngine();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => ({
+        arrayBuffer: async () => new ArrayBuffer(8),
+      }),
+    });
+    globalThis.fetch = fetchMock as any;
+
+    try {
+      engine.setModel('example-model');
+      engine.setInstructions('  calm, low voice  ');
+      engine.setResponseFormat('wav');
+
+      await engine.fetchAudio(
+        { message: 'Styled request', style: 'neutral' } as any,
+        'default',
+      );
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init.body)).toEqual({
+        model: 'example-model',
+        voice: 'default',
+        input: 'Styled request',
+        speed: 1,
+        instructions: 'calm, low voice',
+        response_format: 'wav',
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('should include HTTP status and body in request errors', async () => {
+    const engine = new OpenAiCompatibleEngine();
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response('{"detail":"voice must be \'default\' or \'clone\'."}', {
+        status: 400,
+      }),
+    ) as any;
+
+    try {
+      engine.setModel('example-model');
+
+      await expect(
+        engine.fetchAudio(
+          { message: 'Bad voice', style: 'neutral' } as any,
+          'unknown',
+        ),
+      ).rejects.toMatchObject({
+        kind: 'api',
+        statusCode: 400,
+        message: expect.stringContaining("voice must be 'default'"),
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('should return a provider-specific test message', () => {
     const engine = new OpenAiCompatibleEngine();
     expect(engine.getTestMessage()).toBe('OpenAI互換TTSを使用します');

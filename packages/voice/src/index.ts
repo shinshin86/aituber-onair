@@ -54,6 +54,21 @@ export {
   getVoiceEngineCapabilities,
 } from './utils/voiceEngineCapabilities';
 export { getVoiceEngineVoiceList } from './utils/voiceEngineVoiceList';
+export {
+  OpenAICompatibleSpeechEndpointError,
+  resolveOpenAICompatibleSpeechEndpoint,
+  listOpenAICompatibleSpeechModels,
+  listOpenAICompatibleSpeechVoices,
+  getOpenAICompatibleSpeechServerInfo,
+  testOpenAICompatibleSpeech,
+  type OpenAICompatibleSpeechEndpointErrorCode,
+  type ResolvedOpenAICompatibleSpeechEndpoint,
+  type OpenAICompatibleSpeechRequestOptions,
+  type OpenAICompatibleSpeechVoiceList,
+  type OpenAICompatibleSpeechServerInfo,
+  type TestOpenAICompatibleSpeechOptions,
+  type OpenAICompatibleSpeechTestResult,
+} from './utils/openaiCompatibleSpeech';
 
 // Voice-specific messages utility
 export {

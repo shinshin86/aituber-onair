@@ -11,6 +11,8 @@ const allowedUpdateKeys = [
   'openAiCompatibleModel',
   'openAiCompatibleSpeed',
   'openAiCompatibleTimeoutMs',
+  'openAiCompatibleInstructions',
+  'openAiCompatibleResponseFormat',
 ] as const;
 
 export const openAiCompatibleEngineHandler: EngineHandler<OpenAiCompatibleVoiceServiceOptions> =
@@ -39,6 +41,20 @@ export const openAiCompatibleEngineHandler: EngineHandler<OpenAiCompatibleVoiceS
         compatibleEngine.setSpeed
       ) {
         compatibleEngine.setSpeed(options.openAiCompatibleSpeed);
+      }
+      if (
+        options.openAiCompatibleInstructions !== undefined &&
+        compatibleEngine.setInstructions
+      ) {
+        compatibleEngine.setInstructions(options.openAiCompatibleInstructions);
+      }
+      if (
+        options.openAiCompatibleResponseFormat !== undefined &&
+        compatibleEngine.setResponseFormat
+      ) {
+        compatibleEngine.setResponseFormat(
+          options.openAiCompatibleResponseFormat,
+        );
       }
     },
     mergeOptions(current, update) {
