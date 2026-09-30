@@ -9,6 +9,9 @@
     "prebuild": "npm --prefix ../.. run build",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "test": "npm run test:dom && npm run test:proxy",
+    "test:dom": "vitest run --config vitest.config.ts",
+    "test:proxy": "node --test scripts/verify-proxy-routes.mjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {

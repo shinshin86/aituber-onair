@@ -24,7 +24,7 @@ import {
   type XaiCodec,
   type XaiSampleRate,
 } from '@aituber-onair/voice';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 import { EngineParameters } from './components/EngineParameters';
 import { EngineSelector } from './components/EngineSelector';
@@ -90,6 +90,7 @@ const ENGLISH_DEMO_TEXT =
   'Hello! Welcome to the AITuber OnAir Voice React demo.';
 
 function App() {
+  const speakerFetchRequestId = useRef(0);
   const [engine, setEngine] = useState<EngineType>('openai');
   const [apiKey, setApiKey] = useState('');
   const [minimaxGroupId, setMinimaxGroupId] = useState('');
@@ -378,6 +379,8 @@ function App() {
   };
 
   useEffect(() => {
+    // A catalog fetched for an old provider must never replace the new voice.
+    speakerFetchRequestId.current += 1;
     const defaults = ENGINE_DEFAULTS[engine];
     const minimaxDefaults = ENGINE_DEFAULTS.minimax;
     setText((current) => {
@@ -541,6 +544,7 @@ function App() {
       return;
     }
 
+    const requestId = ++speakerFetchRequestId.current;
     setIsFetchingSpeakers(true);
     setSpeakerFetchError(null);
 
@@ -561,6 +565,9 @@ function App() {
               ? cartesiaLanguage
               : undefined,
       });
+      if (requestId !== speakerFetchRequestId.current) {
+        return;
+      }
       const nextSpeakerOptions: SpeakerOption[] = voices.map((voice) => ({
         id: voice.id,
         label: voice.label,
@@ -596,6 +603,9 @@ function App() {
           : nextSpeakerOptions[0].id,
       );
     } catch (error) {
+      if (requestId !== speakerFetchRequestId.current) {
+        return;
+      }
       console.error('Failed to fetch speaker list:', error);
       if (engine === 'xai') {
         setSpeakerOptions([]);
@@ -607,7 +617,9 @@ function App() {
       }
       setSpeakerFetchError(formatSpeakerFetchError(error));
     } finally {
-      setIsFetchingSpeakers(false);
+      if (requestId === speakerFetchRequestId.current) {
+        setIsFetchingSpeakers(false);
+      }
     }
   }, [apiKey, apiUrl, cartesiaLanguage, engine, inworldVoiceLanguage]);
 

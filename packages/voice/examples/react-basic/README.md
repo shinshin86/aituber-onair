@@ -289,6 +289,31 @@ The Piper Plus engine uses the following third-party components. By downloading 
 
 ## 🚨 Troubleshooting
 
+### Offline integration checks
+
+After installing the repository and this example's dependencies, run these
+command from `packages/voice/examples/react-basic` (Node.js 20 or later):
+
+```bash
+npm test
+
+# Or run each suite separately:
+npm run test:dom
+npm run test:proxy
+```
+
+The DOM suite mounts the actual React app and exercises Eleven v4, Cartesia
+3.6, and Deepgram through the real option wiring and engines, with fake network
+responses and an audio callback. It covers model/provider changes, retained
+custom text, voice-list fallback, stale catalog replies, errors, retries, and
+repeated clicks. The proxy suite loads the actual Vite configuration and tests
+both dev and preview routes against loopback-only mock upstreams, including
+headers, query strings, JSON bodies, binary audio, and error forwarding.
+
+These checks need no API keys and make no provider requests. They do not verify
+live provider access, browser CORS, decoded audio playback, or static-hosting
+backend routes. A production static build still needs its own backend proxy.
+
 ### Common Issues
 
 1. **Import errors** - `npm run dev` and `npm run build` rebuild `@aituber-onair/voice` automatically. If you still see stale behavior, restart the dev server once.
