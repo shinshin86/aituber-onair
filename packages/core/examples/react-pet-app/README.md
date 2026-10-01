@@ -54,6 +54,25 @@ speech options, including when a previous value is stored. The default remains
 `inworld-tts-2`, and voice-list selection is unchanged. Native DeepSeek tool
 calling requires non-thinking mode.
 
+## Voice input
+
+Press the microphone button on the left of the chat form to start voice input,
+and press it again to stop. The `⌃` button next to it opens the listening mode
+and service options. The choices are saved in the browser.
+
+- Listening mode: **一回だけ** (once) sends one utterance and stops.
+  **継続して会話** (continuous) listens again after the reply has been generated
+  and spoken
+- Service: **ブラウザ** (Web Speech API), **OpenAI**, or **Gemini**. The example
+  uses `@aituber-onair/transcription` and sends each confirmed utterance as a
+  chat message
+- OpenAI and Gemini use the same API keys as the LLM settings, and the keys can
+  also be entered from the menu. Keys are sent from the browser directly to each
+  service, so avoid shared devices. Listening is billed by each service
+- OpenAI and Gemini do not accept audio until the connection is ready. Right
+  after pressing the microphone the form shows a connecting status, and the
+  button changes once you can speak
+
 ## Screen Vision
 
 Start OBS Virtual Camera, choose it from **Settings → Screen Vision**, then press

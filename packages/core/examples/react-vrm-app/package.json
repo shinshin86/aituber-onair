@@ -15,6 +15,7 @@
     "@aituber-onair/core": "../..",
     "@aituber-onair/kizuna": "../../../kizuna",
     "@aituber-onair/manneri": "../../../manneri",
+    "@aituber-onair/transcription": "../../../transcription",
     "@pixiv/three-vrm-animation": "^3.4.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

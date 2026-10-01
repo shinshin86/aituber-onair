@@ -1,10 +1,11 @@
 import type { ChatMessage } from '../types/chat';
 import type { PetManifest, VisualSettings } from '../types/settings';
 import { ChatLog } from './ChatLog';
-import { ChatInput } from './ChatInput';
+import { ChatInput, type ChatVoiceInputProps } from './ChatInput';
 import { PetStage } from './PetStage';
 
 interface ChatPanelProps {
+  voiceInput: ChatVoiceInputProps;
   messages: ChatMessage[];
   partialResponse: string;
   isProcessing: boolean;
@@ -30,6 +31,7 @@ export function ChatPanel({
   petSpritesheetUrl,
   visual,
   onToggleSettings,
+  voiceInput,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -80,7 +82,9 @@ export function ChatPanel({
       ) : (
         <ChatLog messages={messages} partialResponse={partialResponse} />
       )}
-      {shouldShowInput && <ChatInput onSend={onSend} disabled={isProcessing} />}
+      {shouldShowInput && (
+        <ChatInput onSend={onSend} disabled={isProcessing} voice={voiceInput} />
+      )}
     </div>
   );
 }

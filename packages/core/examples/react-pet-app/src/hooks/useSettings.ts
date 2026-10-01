@@ -13,6 +13,12 @@ import type {
   StreamingPlatformOption,
   TTSEngineOption,
 } from '../types/settings';
+import {
+  isVoiceInputMode,
+  isVoiceInputService,
+  type VoiceInputMode,
+  type VoiceInputService,
+} from '../lib/voiceInput';
 
 type ApiKeyProvider = Exclude<ChatProviderOption, 'gemini-nano'>;
 
@@ -277,6 +283,10 @@ function getDefaultSettings(): AppSettings {
     kizuna: {
       enabled: false,
     },
+    voiceInput: {
+      mode: 'once',
+      service: 'browser',
+    },
   };
 }
 
@@ -305,6 +315,14 @@ function loadSettings(): AppSettings {
         },
         manneri: { ...defaults.manneri, ...saved.manneri },
         kizuna: { ...defaults.kizuna, ...saved.kizuna },
+        voiceInput: {
+          mode: isVoiceInputMode(saved.voiceInput?.mode)
+            ? saved.voiceInput.mode
+            : defaults.voiceInput.mode,
+          service: isVoiceInputService(saved.voiceInput?.service)
+            ? saved.voiceInput.service
+            : defaults.voiceInput.service,
+        },
       };
     }
   } catch {
@@ -1326,6 +1344,20 @@ export function useSettings() {
     [],
   );
 
+  const updateVoiceInputMode = useCallback((mode: VoiceInputMode) => {
+    setSettings((prev) => ({
+      ...prev,
+      voiceInput: { ...prev.voiceInput, mode },
+    }));
+  }, []);
+
+  const updateVoiceInputService = useCallback((service: VoiceInputService) => {
+    setSettings((prev) => ({
+      ...prev,
+      voiceInput: { ...prev.voiceInput, service },
+    }));
+  }, []);
+
   const getApiKeyForProvider = useCallback(
     (provider: ChatProviderOption): string => {
       if (provider === 'gemini-nano') {
@@ -1339,6 +1371,8 @@ export function useSettings() {
   return {
     settings,
     availableModels,
+    updateVoiceInputMode,
+    updateVoiceInputService,
     updateLLMProvider,
     updateLLMModel,
     updateLLMSystemPrompt,

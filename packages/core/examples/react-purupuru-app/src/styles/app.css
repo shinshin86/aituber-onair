@@ -731,10 +731,14 @@ body {
 
 .input-row {
   position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
 }
 
 .input-row textarea {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 10px 14px;
   background: #1a1a2e;
   border: 1px solid #0f3460;
@@ -750,24 +754,7 @@ body {
   border-color: #e94560;
 }
 
-.interim-transcript {
-  position: absolute;
-  bottom: -20px;
-  left: 14px;
-  font-size: 0.75rem;
-  color: #8899aa;
-  font-style: italic;
-}
-
-.input-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.send-button,
-.mic-button {
+.send-button {
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
@@ -775,9 +762,6 @@ body {
   font-size: 0.85rem;
   font-weight: 600;
   transition: background 0.15s, opacity 0.15s;
-}
-
-.send-button {
   background: #e94560;
   color: #fff;
 }
@@ -791,34 +775,340 @@ body {
   cursor: not-allowed;
 }
 
-.mic-button {
+/* ── Voice input ── */
+
+.voice-input-control {
+  position: relative;
+  display: flex;
+}
+
+.voice-split-button {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: 8px;
   background: #0f3460;
   color: #e0e0e0;
-  font-size: 1.1rem;
-  padding: 8px 12px;
+  transition: background 0.2s;
 }
 
-.mic-button:hover:not(:disabled) {
-  background: #1a4a7a;
+.voice-split-button[data-phase="listening"] {
+  background: #e94560;
+  color: #fff;
+  animation: voice-listening-halo 1.4s ease-out infinite;
 }
 
-.mic-button.mic-active {
-  background: #c62828;
-  animation: pulse 1.2s infinite;
+.voice-split-button button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
-.mic-button:disabled {
-  opacity: 0.3;
+.voice-split-button button:hover:not(:disabled),
+.voice-split-button button:focus-visible,
+.voice-split-options.is-open {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.voice-split-button button:focus-visible {
+  outline: 2px solid #e94560;
+  outline-offset: -2px;
+}
+
+.voice-split-button button:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-@keyframes pulse {
+.voice-split-mic {
+  width: 48px;
+  font-size: 1.1rem;
+}
+
+.voice-split-divider {
+  width: 1px;
+  margin: 10px 0;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.voice-split-options {
+  width: 28px;
+}
+
+/* Chevron points up because the menu opens above the form. */
+.voice-split-chevron {
+  width: 7px;
+  height: 7px;
+  margin-top: 4px;
+  border-top: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s, margin 0.2s;
+}
+
+.voice-split-options.is-open .voice-split-chevron {
+  margin-top: -4px;
+  transform: rotate(225deg);
+}
+
+.voice-mic-connecting {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+}
+
+.voice-mic-connecting .voice-mic-emoji {
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
+
+.voice-mic-connecting .voice-spinner {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+}
+
+.voice-spinner {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: voice-spin 0.9s linear infinite;
+}
+
+.voice-level-bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 16px;
+}
+
+.voice-level-bars span {
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  background: currentColor;
+  animation: voice-level 0.9s ease-in-out infinite;
+}
+
+.voice-level-bars span:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.voice-level-bars span:nth-child(3) {
+  animation-delay: -0.6s;
+}
+
+.voice-input-status,
+.voice-input-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.voice-input-status {
+  background: #1a1a2e;
+  color: #b8c2d6;
+}
+
+.voice-input-status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  color: #e94560;
+}
+
+.voice-input-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.voice-input-notice {
+  background: rgba(233, 69, 96, 0.15);
+  color: #ffb3c0;
+}
+
+.voice-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  width: 288px;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  background: #1a1a2e;
+  border: 1px solid #0f3460;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  color: #e0e0e0;
+  animation: voice-menu-in 0.15s ease-out;
+}
+
+.voice-menu-section-label {
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8899aa;
+}
+
+.voice-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.voice-menu-item:hover,
+.voice-menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+
+.voice-menu-item.is-selected {
+  background: rgba(233, 69, 96, 0.16);
+}
+
+.voice-menu-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.voice-menu-item-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.voice-menu-item-description {
+  font-size: 0.72rem;
+  color: #8899aa;
+}
+
+.voice-menu-item-check {
+  width: 16px;
+  flex-shrink: 0;
+  color: #e94560;
+  font-weight: 700;
+}
+
+.voice-menu-divider {
+  height: 1px;
+  margin: 8px;
+  background: #0f3460;
+}
+
+.voice-menu-key {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px 8px;
+}
+
+.voice-menu-key-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #b8c2d6;
+}
+
+.voice-menu-key-saved {
+  font-weight: 400;
+  color: #8899aa;
+}
+
+.voice-menu-key input {
+  padding: 8px 10px;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  color: #e0e0e0;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.voice-menu-key input:focus {
+  border-color: #e94560;
+}
+
+.voice-menu-note {
+  margin: 4px 8px;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: #8899aa;
+}
+
+@keyframes voice-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes voice-level {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.4);
+    transform: scaleY(0.35);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(198, 40, 40, 0);
+    transform: scaleY(1);
+  }
+}
+
+@keyframes voice-listening-halo {
+  0% {
+    box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(233, 69, 96, 0);
+  }
+}
+
+@keyframes voice-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-split-button[data-phase="listening"],
+  .voice-level-bars span,
+  .voice-menu {
+    animation: none;
   }
 }
 

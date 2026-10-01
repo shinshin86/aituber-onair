@@ -7,9 +7,10 @@ import type {
 } from '../lib/psdEmotionEffects';
 import { AvatarBackground } from './AvatarPanel';
 import { ChatLog } from './ChatLog';
-import { ChatInput } from './ChatInput';
+import { ChatInput, type ChatVoiceInputProps } from './ChatInput';
 
 interface ChatPanelProps {
+  voiceInput: ChatVoiceInputProps;
   messages: ChatMessage[];
   partialResponse: string;
   isProcessing: boolean;
@@ -47,6 +48,7 @@ export function ChatPanel({
   onEffectAnchorChange,
   onEffectAnchorReset,
   onToggleSettings,
+  voiceInput,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -112,7 +114,9 @@ export function ChatPanel({
           hideEmptyState={hasPsdAvatar}
         />
       )}
-      {shouldShowInput && <ChatInput onSend={onSend} disabled={isProcessing} />}
+      {shouldShowInput && (
+        <ChatInput onSend={onSend} disabled={isProcessing} voice={voiceInput} />
+      )}
     </div>
   );
 }

@@ -3,11 +3,12 @@ import type { VisualSettings } from '../types/settings';
 import type { ResolvedInochiModelDefinition } from '../types/inochi2d';
 import type { Inochi2DReaction } from '../lib/inochi2dReactions';
 import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
-import { ChatInput } from './ChatInput';
+import { ChatInput, type ChatVoiceInputProps } from './ChatInput';
 import { ChatLog } from './ChatLog';
 import { Inochi2DStage } from './Inochi2DStage';
 
 interface ChatPanelProps {
+  voiceInput: ChatVoiceInputProps;
   motionSettingsContainer?: HTMLDivElement | null;
   messages: ChatMessage[];
   partialResponse: string;
@@ -43,6 +44,7 @@ export function ChatPanel({
   effectAnchor,
   onEffectAnchorChange,
   onEffectAnchorReset,
+  voiceInput,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -97,7 +99,9 @@ export function ChatPanel({
       ) : (
         <ChatLog messages={messages} partialResponse={partialResponse} />
       )}
-      {shouldShowInput && <ChatInput onSend={onSend} disabled={isProcessing} />}
+      {shouldShowInput && (
+        <ChatInput onSend={onSend} disabled={isProcessing} voice={voiceInput} />
+      )}
     </div>
   );
 }

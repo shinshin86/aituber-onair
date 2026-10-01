@@ -8,9 +8,10 @@ import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
 import type { PuruPuruReaction } from '../lib/purupuruReactions';
 import { AvatarBackground } from './AvatarPanel';
 import { ChatLog } from './ChatLog';
-import { ChatInput } from './ChatInput';
+import { ChatInput, type ChatVoiceInputProps } from './ChatInput';
 
 interface ChatPanelProps {
+  voiceInput: ChatVoiceInputProps;
   messages: ChatMessage[];
   partialResponse: string;
   isProcessing: boolean;
@@ -48,6 +49,7 @@ export function ChatPanel({
   effectAnchor,
   onEffectAnchorChange,
   onEffectAnchorReset,
+  voiceInput,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -105,7 +107,9 @@ export function ChatPanel({
       ) : (
         <ChatLog messages={messages} partialResponse={partialResponse} />
       )}
-      {shouldShowInput && <ChatInput onSend={onSend} disabled={isProcessing} />}
+      {shouldShowInput && (
+        <ChatInput onSend={onSend} disabled={isProcessing} voice={voiceInput} />
+      )}
     </div>
   );
 }
