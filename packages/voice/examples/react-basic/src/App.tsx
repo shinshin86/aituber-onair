@@ -9,6 +9,7 @@ import {
   type FishAudioLatency,
   type FishAudioModel,
   type GeminiTtsModel,
+  type GradiumModel,
   type GradiumOutputFormat,
   type InworldAudioEncoding,
   type InworldDeliveryMode,
@@ -34,6 +35,7 @@ import {
   ELEVENLABS_OUTPUT_FORMATS,
   ENGINE_DEFAULTS,
   GEMINI_TTS_MODELS,
+  GRADIUM_MODELS,
   GRADIUM_OUTPUT_FORMATS,
   INWORLD_AUDIO_ENCODINGS,
   INWORLD_DELIVERY_MODES,
@@ -247,6 +249,9 @@ function App() {
   const [inworldDeliveryMode, setInworldDeliveryMode] =
     useState<InworldDeliveryModeOption>('default');
   const [inworldTemperature, setInworldTemperature] = useState('');
+  const [gradiumModel, setGradiumModel] = useState<GradiumModel>(
+    ENGINE_DEFAULTS.gradium.defaultModel,
+  );
   const [gradiumOutputFormat, setGradiumOutputFormat] =
     useState<GradiumOutputFormat>(ENGINE_DEFAULTS.gradium.defaultOutputFormat);
   const [gradiumTemperature, setGradiumTemperature] = useState('');
@@ -475,6 +480,7 @@ function App() {
     setWebSpeechVoiceLanguage('all');
     setInworldDeliveryMode('default');
     setInworldTemperature('');
+    setGradiumModel(ENGINE_DEFAULTS.gradium.defaultModel);
     setGradiumOutputFormat(ENGINE_DEFAULTS.gradium.defaultOutputFormat);
     setGradiumTemperature('');
     setGradiumVoiceSimilarity('');
@@ -1091,6 +1097,7 @@ function App() {
           options.inworldTemperature = parsedTemperature;
         }
       } else if (engine === 'gradium') {
+        options.gradiumModel = gradiumModel;
         options.gradiumOutputFormat = gradiumOutputFormat;
 
         const parsedTemperature = Number.parseFloat(gradiumTemperature);
@@ -1656,6 +1663,11 @@ function App() {
                   },
                 }}
                 gradium={{
+                  model: {
+                    value: gradiumModel,
+                    onChange: setGradiumModel,
+                  },
+                  models: GRADIUM_MODELS,
                   outputFormat: {
                     value: gradiumOutputFormat,
                     onChange: setGradiumOutputFormat,

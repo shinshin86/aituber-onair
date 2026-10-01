@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## 0.25.0
+
+### Minor Changes
+
+- Add explicit opt-in selection of Gradium's public beta model
+  (`gradium-tts-beta`) through `gradiumModel` and `GradiumEngine.setModel()`.
+  The model is sent as the top-level `model_name` of the existing one-shot
+  REST request. When the option is omitted, `model_name` is not sent and
+  Gradium uses its production model; `default` selects production explicitly.
+- Support changing or clearing `gradiumModel` at runtime through
+  `updateOptions()`.
+- Export the `GradiumModel` type.
+
+### Patch Changes
+
+- Add a Gradium model selector to the React voice example. Production stays
+  selected by default, and switching engines resets the choice to production.
+- Document the Gradium model option in the English and Japanese READMEs.
+
 ## 0.24.0
 
 ### Minor Changes

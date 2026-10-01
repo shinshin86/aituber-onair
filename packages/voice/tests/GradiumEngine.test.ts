@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { GradiumEngine } from '../src/engines/GradiumEngine';
+import { GradiumEngine, type GradiumModel } from '../src/engines/GradiumEngine';
 
 describe('GradiumEngine', () => {
   const originalFetch = globalThis.fetch;
@@ -111,6 +111,74 @@ describe('GradiumEngine', () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it.each(['wav', 'pcm', 'opus'] as const)(
+    'should send the opt-in beta at the top level and preserve %s audio bytes',
+    async (format) => {
+      const engine = new GradiumEngine();
+      const bytes = new Uint8Array([82, 73, 70, 70]).buffer;
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        blob: async () => ({ arrayBuffer: async () => bytes }),
+      });
+      globalThis.fetch = fetchMock as any;
+
+      try {
+        engine.setModel('gradium-tts-beta');
+        engine.setOutputFormat(format);
+        engine.setTemperature(0.3);
+        const audio = await engine.fetchAudio(
+          { message: 'Beta test', style: 'neutral' },
+          'YTpq7expH9539ERJ',
+          'test-api-key',
+        );
+        expect(audio).toBe(bytes);
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(init.method).toBe('POST');
+        expect(JSON.parse(init.body)).toEqual({
+          text: 'Beta test',
+          voice_id: 'YTpq7expH9539ERJ',
+          output_format: format,
+          only_audio: true,
+          model_name: 'gradium-tts-beta',
+        });
+        expect(
+          JSON.parse(new URL(url).searchParams.get('json_config')!),
+        ).toEqual({ temp: 0.3 });
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    },
+  );
+
+  it.each(['default', undefined, 'unsupported'])(
+    'should switch from beta back to production with %s',
+    async (model) => {
+      const engine = new GradiumEngine();
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        blob: async () => ({ arrayBuffer: async () => new ArrayBuffer(8) }),
+      });
+      globalThis.fetch = fetchMock as any;
+      try {
+        engine.setModel('gradium-tts-beta');
+        engine.setModel(model as GradiumModel | undefined);
+        await engine.fetchAudio(
+          { message: 'Production test', style: 'neutral' },
+          'YTpq7expH9539ERJ',
+          'test-api-key',
+        );
+        const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+        if (model === 'default') {
+          expect(body.model_name).toBe('default');
+        } else {
+          expect(body).not.toHaveProperty('model_name');
+        }
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    },
+  );
 
   it('should fetch Gradium voices with readable names', async () => {
     const engine = new GradiumEngine();

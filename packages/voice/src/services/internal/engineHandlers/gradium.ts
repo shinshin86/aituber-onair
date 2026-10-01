@@ -8,6 +8,7 @@ import {
 
 const allowedUpdateKeys = [
   'gradiumApiUrl',
+  'gradiumModel',
   'gradiumOutputFormat',
   'gradiumTemperature',
   'gradiumVoiceSimilarity',
@@ -20,6 +21,12 @@ export const gradiumEngineHandler: EngineHandler<GradiumVoiceServiceOptions> = {
   applyOptions(engine: VoiceEngine, options: GradiumVoiceServiceOptions) {
     const gradiumEngine = engine as GradiumConfigurableEngine;
 
+    if (
+      Object.prototype.hasOwnProperty.call(options, 'gradiumModel') &&
+      gradiumEngine.setModel
+    ) {
+      gradiumEngine.setModel(options.gradiumModel);
+    }
     if (options.gradiumApiUrl && gradiumEngine.setApiEndpoint) {
       gradiumEngine.setApiEndpoint(options.gradiumApiUrl);
     }

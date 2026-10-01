@@ -51,6 +51,7 @@ export {
 } from './InworldEngine';
 export {
   GradiumEngine,
+  type GradiumModel,
   type GradiumOutputFormat,
   type GradiumVoice,
 } from './GradiumEngine';

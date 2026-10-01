@@ -4,6 +4,7 @@ import type {
   FishAudioFormat,
   FishAudioLatency,
   FishAudioModel,
+  GradiumModel,
   GradiumOutputFormat,
   InworldAudioEncoding,
   MinimaxAudioFormat,
@@ -22,6 +23,7 @@ import {
   FISH_AUDIO_FORMATS,
   FISH_AUDIO_LATENCIES,
   FISH_AUDIO_MODELS,
+  GRADIUM_MODELS,
   GRADIUM_OUTPUT_FORMATS,
   INWORLD_AUDIO_ENCODINGS,
   INWORLD_DELIVERY_MODES,
@@ -122,6 +124,8 @@ interface EngineParametersProps {
     temperature: StringField;
   };
   gradium: {
+    model: SelectField<GradiumModel>;
+    models: typeof GRADIUM_MODELS;
     outputFormat: SelectField<GradiumOutputFormat>;
     outputFormats: typeof GRADIUM_OUTPUT_FORMATS;
     temperature: StringField;
@@ -990,8 +994,31 @@ export function EngineParameters({
         <CollapsibleCard
           className="parameter-card openai-card"
           title="Gradium TTS パラメータ"
-          description="Gradium の REST TTS エンドポイント向け設定です。voice は上部の Speaker で選択し、ここでは出力形式と json_config を調整できます。"
+          description="Gradium の REST TTS エンドポイント向け設定です。voice は上部の Speaker で選択し、ここではモデル、出力形式と json_config を調整できます。"
         >
+          <div className="parameter-section">
+            <div className="form-group">
+              <label htmlFor="gradiumModel">Gradium Model</label>
+              <select
+                id="gradiumModel"
+                value={gradium.model.value}
+                onChange={(e) =>
+                  gradium.model.onChange(e.target.value as GradiumModel)
+                }
+                aria-describedby="gradiumModelNote"
+              >
+                {Object.entries(gradium.models).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <small id="gradiumModelNote">
+                Production is the default. Beta is an explicit opt-in and may
+                change.
+              </small>
+            </div>
+          </div>
           <div className="parameter-section">
             <div className="parameter-section__title">出力フォーマット</div>
             <div className="parameter-grid parameter-grid--two">

@@ -238,6 +238,7 @@ const cases: HandlerCase[] = [
       engineType: 'gradium',
       speaker: 'voice',
       gradiumApiUrl: 'https://api.example.com',
+      gradiumModel: 'gradium-tts-beta',
       gradiumOutputFormat: 'mp3',
       gradiumTemperature: 0.5,
       gradiumVoiceSimilarity: 0.7,
@@ -246,6 +247,7 @@ const cases: HandlerCase[] = [
     },
     allowedUpdateKeys: [
       'gradiumApiUrl',
+      'gradiumModel',
       'gradiumOutputFormat',
       'gradiumTemperature',
       'gradiumVoiceSimilarity',
@@ -254,6 +256,7 @@ const cases: HandlerCase[] = [
     ],
     expectedCalls: {
       setApiEndpoint: ['https://api.example.com'],
+      setModel: ['gradium-tts-beta'],
       setOutputFormat: ['mp3'],
       setTemperature: [0.5],
       setVoiceSimilarity: [0.7],
