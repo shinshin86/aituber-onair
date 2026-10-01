@@ -7,6 +7,7 @@ export type VoiceEngineType =
   | 'elevenLabs'
   | 'fishAudio'
   | 'cartesia'
+  | 'deepgram'
   | 'inworld'
   | 'gradium'
   | 'geminiTts'

@@ -150,6 +150,78 @@ describe('ElevenLabsEngine', () => {
     }
   });
 
+  it('sends Eleven v4 through Create speech with only its supported voice settings', async () => {
+    const audio = new Uint8Array([73, 68, 51]).buffer;
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      blob: async () => ({ arrayBuffer: async () => audio }),
+    } as Response);
+    const engine = new ElevenLabsEngine();
+    engine.setModel('eleven_v4');
+    engine.setVoiceSettings({
+      stability: 0.4,
+      similarityBoost: 0.8,
+      style: 0.7,
+      speed: 1.1,
+      useSpeakerBoost: true,
+    });
+
+    const result = await engine.fetchAudio(
+      { message: 'こんにちは', style: 'neutral' },
+      'voice-id',
+      'eleven-api-key',
+    );
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://api.elevenlabs.io/v1/text-to-speech/voice-id?output_format=mp3_44100_128',
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({
+      text: 'こんにちは',
+      model_id: 'eleven_v4',
+      voice_settings: { stability: 0.4, similarity_boost: 0.8 },
+    });
+    expect(result).toBe(audio);
+
+    engine.setModel('eleven_flash_v2_5');
+    await engine.fetchAudio(
+      { message: 'hello', style: 'neutral' },
+      'voice-id',
+      'eleven-api-key',
+    );
+    expect(
+      JSON.parse(fetchMock.mock.calls[1][1]?.body as string).voice_settings,
+    ).toEqual({
+      stability: 0.4,
+      similarity_boost: 0.8,
+      style: 0.7,
+      speed: 1.1,
+      use_speaker_boost: true,
+    });
+  });
+
+  it('omits empty voice settings for Eleven v4 when only unsupported overrides are set', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      blob: async () => ({ arrayBuffer: async () => new ArrayBuffer(8) }),
+    } as Response);
+    const engine = new ElevenLabsEngine();
+    engine.setModel('eleven_v4');
+    engine.setStyle(0.8);
+    engine.setSpeed(1.1);
+    engine.setUseSpeakerBoost(true);
+
+    await engine.fetchAudio(
+      { message: 'hello', style: 'neutral' },
+      'voice-id',
+      'eleven-api-key',
+    );
+
+    expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({
+      text: 'hello',
+      model_id: 'eleven_v4',
+    });
+  });
+
   it('should require an API key', async () => {
     const engine = new ElevenLabsEngine();
 

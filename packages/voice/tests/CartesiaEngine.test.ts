@@ -45,6 +45,46 @@ describe('CartesiaEngine', () => {
     expect(result).toBe(audio);
   });
 
+  it.each(['sonic-3.6', 'sonic-3.6-2026-08-27'])(
+    'sends %s through the pinned byte-response API',
+    async (model) => {
+      const audio = new Uint8Array([82, 73, 70, 70]).buffer;
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => audio,
+      } as Response);
+      const engine = new CartesiaEngine();
+      engine.setModel(model);
+
+      const result = await engine.fetchAudio(
+        { message: 'こんにちは', style: 'neutral' },
+        'cartesia-voice-id',
+        'cartesia-key',
+      );
+
+      expect(fetchMock.mock.calls[0][0]).toBe(
+        'https://api.cartesia.ai/tts/bytes',
+      );
+      expect(fetchMock.mock.calls[0][1]?.headers).toEqual({
+        Authorization: 'Bearer cartesia-key',
+        'Cartesia-Version': '2026-03-01',
+        'Content-Type': 'application/json',
+      });
+      expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({
+        model_id: model,
+        transcript: 'こんにちは',
+        voice: { id: 'cartesia-voice-id' },
+        output_format: {
+          container: 'wav',
+          encoding: 'pcm_s16le',
+          sample_rate: 44100,
+        },
+        language: 'ja',
+      });
+      expect(result).toBe(audio);
+    },
+  );
+
   it('supports MP3 output and custom synthesis options', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,

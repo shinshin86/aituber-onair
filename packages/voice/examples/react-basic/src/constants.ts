@@ -67,6 +67,14 @@ export const ENGINE_DEFAULTS = {
     defaultSampleRate: '44100',
     defaultMp3Bitrate: '128',
   },
+  deepgram: {
+    apiUrl: '/api/deepgram/v2/speak',
+    voicesApiUrl: '/api/deepgram/v2/models',
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'Your Deepgram API key',
+    speaker: 'flux-haley-en',
+  },
   cartesia: {
     apiUrl: 'https://api.cartesia.ai/tts/bytes',
     voicesApiUrl: 'https://api.cartesia.ai/voices',
@@ -269,7 +277,8 @@ export const UNREAL_SPEECH_CODECS: Record<UnrealSpeechCodec, string> = {
 };
 
 export const ELEVENLABS_MODELS: Record<string, string> = {
-  eleven_v3: 'v3 — most expressive model',
+  eleven_v4: 'v4 — highest quality, Stability and Similarity only',
+  eleven_v3: 'v3 — expressive previous generation',
   eleven_multilingual_v2: 'Multilingual v2 — high quality',
   eleven_flash_v2_5: 'Flash v2.5 — low latency',
 };
@@ -295,7 +304,10 @@ export const FISH_AUDIO_LATENCIES: Record<FishAudioLatency, string> = {
 };
 
 export const CARTESIA_MODELS: Record<string, string> = {
-  'sonic-3.5': 'Sonic 3.5 — multilingual real-time TTS',
+  'sonic-3.6':
+    'Sonic 3.6 — multilingual quality and pronunciation improvements',
+  'sonic-3.6-2026-08-27': 'Sonic 3.6 — pinned August 27, 2026 snapshot',
+  'sonic-3.5': 'Sonic 3.5 — existing default',
 };
 
 export const CARTESIA_LANGUAGES: Partial<Record<CartesiaLanguage, string>> = {
@@ -473,6 +485,12 @@ export interface SliderConfig {
 }
 
 export const SLIDER_CONFIG: Record<string, SliderConfig> = {
+  deepgramSpeed: {
+    min: 0.5,
+    max: 1.5,
+    step: 0.05,
+    defaultValue: 1,
+  },
   openaiSpeed: {
     min: 0.25,
     max: 1.75,

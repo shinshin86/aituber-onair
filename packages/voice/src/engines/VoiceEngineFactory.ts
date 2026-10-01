@@ -2,6 +2,7 @@ import { VoiceEngineType } from '../types/voiceEngine';
 import { AivisCloudEngine } from './AivisCloudEngine';
 import { AivisSpeechEngine } from './AivisSpeechEngine';
 import { CartesiaEngine } from './CartesiaEngine';
+import { DeepgramEngine } from './DeepgramEngine';
 import { ElevenLabsEngine } from './ElevenLabsEngine';
 import { FishAudioEngine } from './FishAudioEngine';
 import { GeminiTtsEngine } from './GeminiTtsEngine';
@@ -30,6 +31,7 @@ const ENGINE_CONSTRUCTORS = {
   elevenLabs: ElevenLabsEngine,
   fishAudio: FishAudioEngine,
   cartesia: CartesiaEngine,
+  deepgram: DeepgramEngine,
   inworld: InworldEngine,
   gradium: GradiumEngine,
   geminiTts: GeminiTtsEngine,

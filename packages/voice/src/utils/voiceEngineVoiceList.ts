@@ -2,6 +2,7 @@ import {
   AIVIS_CLOUD_AIVM_MODELS_SEARCH_API_URL,
   AIVIS_SPEECH_API_URL,
   CARTESIA_VOICES_API_URL,
+  DEEPGRAM_VOICES_API_URL,
   ELEVENLABS_VOICES_API_URL,
   FISH_AUDIO_MODELS_API_URL,
   GRADIUM_VOICES_API_URL,
@@ -88,6 +89,22 @@ interface InworldVoiceResponse {
   langCode?: string;
   promptLanguages?: string[];
   gender?: string;
+}
+
+interface DeepgramVoiceResponse {
+  canonical_name: string;
+  name: string;
+  languages?: string[];
+  metadata?: {
+    accent?: string;
+    display_name?: string;
+    sample?: string;
+    tags?: string[];
+  };
+}
+
+interface DeepgramModelListResponse {
+  tts?: DeepgramVoiceResponse[];
 }
 
 interface InworldVoiceListResponse {
@@ -397,6 +414,48 @@ async function getCartesiaVoiceList(
     });
 }
 
+async function getDeepgramVoiceList(
+  options: VoiceEngineVoiceListOptions,
+): Promise<VoiceEngineVoice[]> {
+  // Flux voices are listed by the public v2 model catalog, which does not require a key. Keep credentials out of this request.
+  const url = options.voiceListApiUrl?.trim() || DEEPGRAM_VOICES_API_URL;
+  const result = await fetchJson<DeepgramModelListResponse>(
+    url,
+    { method: 'GET' },
+    'Deepgram voices',
+  );
+  const requestedLanguage = options.language?.toLowerCase();
+
+  return (result.tts ?? [])
+    .filter(
+      (voice) =>
+        /^flux-[a-z0-9-]+-en$/.test(voice.canonical_name) &&
+        (!requestedLanguage ||
+          requestedLanguage === 'all' ||
+          requestedLanguage === 'en' ||
+          voice.languages?.some(
+            (language) => language.toLowerCase() === requestedLanguage,
+          )),
+    )
+    .map((voice) => {
+      const name = voice.metadata?.display_name || voice.name;
+      return {
+        id: voice.canonical_name,
+        label: voice.metadata?.accent
+          ? `${name} (${voice.metadata.accent})`
+          : name,
+        metadata: {
+          languages: voice.languages?.join(', ') || 'en',
+          ...(voice.metadata?.accent ? { accent: voice.metadata.accent } : {}),
+          ...(voice.metadata?.sample ? { sample: voice.metadata.sample } : {}),
+          ...(voice.metadata?.tags?.length
+            ? { tags: voice.metadata.tags.join(', ') }
+            : {}),
+        },
+      };
+    });
+}
+
 async function getInworldVoiceList(
   options: VoiceEngineVoiceListOptions,
 ): Promise<VoiceEngineVoice[]> {
@@ -604,6 +663,8 @@ export async function getVoiceEngineVoiceList(
       return getFishAudioVoiceList(options);
     case 'cartesia':
       return getCartesiaVoiceList(options);
+    case 'deepgram':
+      return getDeepgramVoiceList(options);
     case 'inworld':
       return getInworldVoiceList(options);
     case 'gradium':

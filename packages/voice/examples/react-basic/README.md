@@ -58,7 +58,9 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 - **Inworld TTS** - Non-streaming Inworld REST API with Basic authentication
 - **Gradium TTS** - One-shot Gradium REST API with flagship voice presets
 - **Fish Audio** - S2 Pro one-shot TTS with model/reference selection
-- **Cartesia** - Sonic 3.5 synchronous TTS with voice-list selection
+- **Cartesia** - Sonic 3.6 alias/snapshot options with voice-list selection; Sonic 3.5 remains the default
+- **ElevenLabs** - Explicit Eleven v4 option with model-aware voice settings; Flash v2.5 remains the default
+- **Deepgram Flux** - English-only one-shot MP3 output with a fixed Haley preset and optional public catalog lookup
 - **VOICEVOX** - Free Japanese voices (requires local server)
 - **AIVIS Speech** - Emotion-aware synthesis
 - **VoicePeak** - Professional voice synthesis with single-tag and weighted emotion UI (`vpeakserver v0.2.0+` required for weighted mode)
@@ -152,11 +154,37 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 # Production hosting must implement equivalent /api/fish-audio routes.
 ```
 
+#### ElevenLabs
+Select `eleven_v4` for quality-focused speech. Only Stability and Similarity
+controls are shown for v4; Style, Speed, and Speaker Boost are omitted from
+requests. SSML is unsupported. Flash v2.5 remains the low-latency default.
+Models outside the package's verified integration scope are not offered by
+this example. Eleven v4 Turbo is documented for the
+[Text to Dialogue WebSocket](https://elevenlabs.io/docs/eleven-api/guides/how-to/websockets/realtime-tdd),
+which this example does not implement; Turbo has not been verified through
+the package's HTTP speech path.
+
+#### Deepgram Flux
+The example uses `/api/deepgram/v2/speak` and `/api/deepgram/v2/models`, proxied
+to Deepgram by Vite during development and preview. Enter your API key for
+speech, select a Flux voice (Haley is the default), and enter English text.
+The documented Haley preset is always selectable independently of the public
+v2 model catalog. Catalog lookup is optional, needs no API key, and adds the
+other Flux voices to the selector. Refresh keeps the current selection; empty results or errors
+also keep the existing voice list. Optional speed is
+0.5–1.5 in 0.05 increments. Output is MP3; Aura, WebSockets, and beta
+expressivity are outside this integration.
+
+Production hosting must supply equivalent backend routes and keep Deepgram
+credentials on the server. Direct browser CORS has not been live-verified.
+Do not embed production API keys in browser-delivered code.
+
 #### Cartesia
 ```bash
 # Default endpoint: https://api.cartesia.ai/tts/bytes
 # Enter an API key, select a language, and fetch the matching voice list.
 # Sonic 3.5 with Japanese and WAV output is the sample default.
+# Select sonic-3.6 or sonic-3.6-2026-08-27 explicitly for the newer model.
 ```
 
 #### OpenAI TTS
@@ -266,6 +294,31 @@ The Piper Plus engine uses the following third-party components. By downloading 
 **Important:** The Tsukuyomi-chan voice model is not governed solely by common OSS licenses. If you redistribute or create derivative works, review the [terms of use](https://tyc.rei-yumesaki.net/about/terms/) and [credit guide](https://tyc.rei-yumesaki.net/about/terms/credit/) on the official Tsukuyomi-chan website.
 
 ## 🚨 Troubleshooting
+
+### Offline integration checks
+
+After installing the repository and this example's dependencies, run these
+command from `packages/voice/examples/react-basic` (Node.js 20 or later):
+
+```bash
+npm test
+
+# Or run each suite separately:
+npm run test:dom
+npm run test:proxy
+```
+
+The DOM suite mounts the actual React app and exercises Eleven v4, Cartesia
+3.6, and Deepgram through the real option wiring and engines, with fake network
+responses and an audio callback. It covers model/provider changes, retained
+custom text, voice-list fallback, stale catalog replies, errors, retries, and
+repeated clicks. The proxy suite loads the actual Vite configuration and tests
+both dev and preview routes against loopback-only mock upstreams, including
+headers, query strings, JSON bodies, binary audio, and error forwarding.
+
+These checks need no API keys and make no provider requests. They do not verify
+live provider access, browser CORS, decoded audio playback, or static-hosting
+backend routes. A production static build still needs its own backend proxy.
 
 ### Common Issues
 
