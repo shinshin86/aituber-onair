@@ -25,7 +25,7 @@ import {
   type XaiCodec,
   type XaiSampleRate,
 } from '@aituber-onair/voice';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 import { EngineParameters } from './components/EngineParameters';
 import { EngineSelector } from './components/EngineSelector';
@@ -86,7 +86,13 @@ function formatSpeakerFetchError(error: unknown): string {
   return message;
 }
 
+const DEFAULT_DEMO_TEXT =
+  'こんにちは！AITuber OnAir Voice のReactデモへようこそ。';
+const ENGLISH_DEMO_TEXT =
+  'Hello! Welcome to the AITuber OnAir Voice React demo.';
+
 function App() {
+  const speakerFetchRequestId = useRef(0);
   const [engine, setEngine] = useState<EngineType>('openai');
   const [apiKey, setApiKey] = useState('');
   const [minimaxGroupId, setMinimaxGroupId] = useState('');
@@ -202,6 +208,7 @@ function App() {
     ENGINE_DEFAULTS.fishAudio.defaultMp3Bitrate,
   );
   const [fishAudioSpeed, setFishAudioSpeed] = useState('');
+  const [deepgramSpeed, setDeepgramSpeed] = useState('');
   const [cartesiaModel, setCartesiaModel] = useState<string>(
     ENGINE_DEFAULTS.cartesia.defaultModel,
   );
@@ -303,9 +310,7 @@ function App() {
     useState<OutputStereoOption>('default');
   const [piperPlusSpeed, setPiperPlusSpeed] = useState('');
   const [piperPlusNoiseScale, setPiperPlusNoiseScale] = useState('');
-  const [text, setText] = useState(
-    'こんにちは！AITuber OnAir Voice のReactデモへようこそ。',
-  );
+  const [text, setText] = useState(DEFAULT_DEMO_TEXT);
   const [status, setStatus] = useState(
     'Ready! Select an engine and enter text.',
   );
@@ -379,8 +384,19 @@ function App() {
   };
 
   useEffect(() => {
+    // A catalog fetched for an old provider must never replace the new voice.
+    speakerFetchRequestId.current += 1;
     const defaults = ENGINE_DEFAULTS[engine];
     const minimaxDefaults = ENGINE_DEFAULTS.minimax;
+    setText((current) => {
+      if (engine === 'deepgram' && current === DEFAULT_DEMO_TEXT) {
+        return ENGLISH_DEMO_TEXT;
+      }
+      if (engine !== 'deepgram' && current === ENGLISH_DEMO_TEXT) {
+        return DEFAULT_DEMO_TEXT;
+      }
+      return current;
+    });
     setApiUrl(defaults.apiUrl);
     setSpeaker(String(defaults.speaker));
     setApiKey('');
@@ -446,6 +462,7 @@ function App() {
     setFishAudioSampleRate(ENGINE_DEFAULTS.fishAudio.defaultSampleRate);
     setFishAudioMp3Bitrate(ENGINE_DEFAULTS.fishAudio.defaultMp3Bitrate);
     setFishAudioSpeed('');
+    setDeepgramSpeed('');
     setCartesiaModel(ENGINE_DEFAULTS.cartesia.defaultModel);
     setCartesiaLanguage(ENGINE_DEFAULTS.cartesia.defaultLanguage);
     setCartesiaOutputContainer(ENGINE_DEFAULTS.cartesia.defaultOutputContainer);
@@ -525,6 +542,7 @@ function App() {
       engine !== 'elevenLabs' &&
       engine !== 'fishAudio' &&
       engine !== 'cartesia' &&
+      engine !== 'deepgram' &&
       engine !== 'inworld' &&
       engine !== 'gradium' &&
       engine !== 'webSpeech'
@@ -532,6 +550,7 @@ function App() {
       return;
     }
 
+    const requestId = ++speakerFetchRequestId.current;
     setIsFetchingSpeakers(true);
     setSpeakerFetchError(null);
 
@@ -542,7 +561,9 @@ function App() {
         voiceListApiUrl:
           engine === 'fishAudio'
             ? ENGINE_DEFAULTS.fishAudio.voicesApiUrl
-            : undefined,
+            : engine === 'deepgram'
+              ? ENGINE_DEFAULTS.deepgram.voicesApiUrl
+              : undefined,
         language:
           engine === 'inworld'
             ? inworldVoiceLanguage
@@ -550,6 +571,9 @@ function App() {
               ? cartesiaLanguage
               : undefined,
       });
+      if (requestId !== speakerFetchRequestId.current) {
+        return;
+      }
       const nextSpeakerOptions: SpeakerOption[] = voices.map((voice) => ({
         id: voice.id,
         label: voice.label,
@@ -557,6 +581,14 @@ function App() {
       }));
 
       if (nextSpeakerOptions.length === 0) {
+        if (engine === 'deepgram') {
+          setStatus(
+            'No Flux voices in the public model catalog. Keeping the current selection and available voices; the Haley preset remains available.',
+          );
+          setStatusType('info');
+          return;
+        }
+
         if (engine === 'webSpeech') {
           setSpeakerOptions([]);
           setSpeaker('');
@@ -569,12 +601,22 @@ function App() {
       }
 
       setSpeakerOptions(nextSpeakerOptions);
+      if (engine === 'deepgram') {
+        setStatus(
+          `Loaded ${nextSpeakerOptions.length} Flux voices from the public model catalog. Current selection kept.`,
+        );
+        setStatusType('success');
+        return;
+      }
       setSpeaker((currentSpeaker) =>
         nextSpeakerOptions.some((option) => option.id === currentSpeaker)
           ? currentSpeaker
           : nextSpeakerOptions[0].id,
       );
     } catch (error) {
+      if (requestId !== speakerFetchRequestId.current) {
+        return;
+      }
       console.error('Failed to fetch speaker list:', error);
       if (engine === 'xai') {
         setSpeakerOptions([]);
@@ -585,8 +627,16 @@ function App() {
         );
       }
       setSpeakerFetchError(formatSpeakerFetchError(error));
+      if (engine === 'deepgram') {
+        setStatus(
+          'Could not refresh the public model catalog. Current selection and available voices kept.',
+        );
+        setStatusType('error');
+      }
     } finally {
-      setIsFetchingSpeakers(false);
+      if (requestId === speakerFetchRequestId.current) {
+        setIsFetchingSpeakers(false);
+      }
     }
   }, [apiKey, apiUrl, cartesiaLanguage, engine, inworldVoiceLanguage]);
 
@@ -765,6 +815,11 @@ function App() {
         const parsedSpeed = Number.parseFloat(fishAudioSpeed);
         if (!Number.isNaN(parsedSpeed)) {
           options.fishAudioSpeed = parsedSpeed;
+        }
+      } else if (engine === 'deepgram') {
+        const parsedSpeed = Number.parseFloat(deepgramSpeed);
+        if (!Number.isNaN(parsedSpeed)) {
+          options.deepgramSpeed = parsedSpeed;
         }
       } else if (engine === 'cartesia') {
         options.cartesiaModel = cartesiaModel;
@@ -953,22 +1008,24 @@ function App() {
           voiceSettings.similarityBoost = parsedSimilarityBoost;
         }
 
-        const parsedStyle = Number.parseFloat(elevenLabsStyle);
-        if (!Number.isNaN(parsedStyle)) {
-          options.elevenLabsStyle = parsedStyle;
-          voiceSettings.style = parsedStyle;
-        }
+        if (elevenLabsModel !== 'eleven_v4') {
+          const parsedStyle = Number.parseFloat(elevenLabsStyle);
+          if (!Number.isNaN(parsedStyle)) {
+            options.elevenLabsStyle = parsedStyle;
+            voiceSettings.style = parsedStyle;
+          }
 
-        if (elevenLabsUseSpeakerBoost !== 'default') {
-          const useSpeakerBoost = elevenLabsUseSpeakerBoost === 'true';
-          options.elevenLabsUseSpeakerBoost = useSpeakerBoost;
-          voiceSettings.useSpeakerBoost = useSpeakerBoost;
-        }
+          if (elevenLabsUseSpeakerBoost !== 'default') {
+            const useSpeakerBoost = elevenLabsUseSpeakerBoost === 'true';
+            options.elevenLabsUseSpeakerBoost = useSpeakerBoost;
+            voiceSettings.useSpeakerBoost = useSpeakerBoost;
+          }
 
-        const parsedSpeed = Number.parseFloat(elevenLabsSpeed);
-        if (!Number.isNaN(parsedSpeed)) {
-          options.elevenLabsSpeed = parsedSpeed;
-          voiceSettings.speed = parsedSpeed;
+          const parsedSpeed = Number.parseFloat(elevenLabsSpeed);
+          if (!Number.isNaN(parsedSpeed)) {
+            options.elevenLabsSpeed = parsedSpeed;
+            voiceSettings.speed = parsedSpeed;
+          }
         }
 
         if (Object.keys(voiceSettings).length > 0) {
@@ -1324,6 +1381,9 @@ function App() {
           case 'fishAudio':
             options.fishAudioApiUrl = apiUrl;
             break;
+          case 'deepgram':
+            options.deepgramApiUrl = apiUrl;
+            break;
           case 'cartesia':
             if (apiUrl !== ENGINE_DEFAULTS.cartesia.apiUrl) {
               options.cartesiaApiUrl = apiUrl;
@@ -1539,6 +1599,9 @@ function App() {
                     value: fishAudioSpeed,
                     onChange: setFishAudioSpeed,
                   },
+                }}
+                deepgram={{
+                  speed: { value: deepgramSpeed, onChange: setDeepgramSpeed },
                 }}
                 cartesia={{
                   model: {

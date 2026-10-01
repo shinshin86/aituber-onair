@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+## 0.24.0
+
+### Minor Changes
+
+- Add ElevenLabs `eleven_v4` as an explicit model option through the existing
+  HTTP speech endpoint. Retain Stability and Similarity settings while omitting
+  Style, Speed, and Speaker Boost for v4.
+- Add Cartesia `sonic-3.6` and `sonic-3.6-2026-08-27` as explicit model options.
+  Keep `sonic-3.5` as the default and preserve the existing API version and
+  request format.
+- Add Deepgram Flux TTS via `engineType: 'deepgram'` using one-shot
+  `POST /v2/speak` requests with Token authentication and binary MP3 output.
+  - Support explicit English Flux voice IDs, `deepgramApiUrl`, and
+    `deepgramSpeed` (0.5–1.5 in 0.05 steps).
+  - Add typed configuration errors, factory registration, public exports,
+    capabilities, and runtime `updateOptions()` integration.
+  - Add `getVoiceEngineVoiceList('deepgram')` using the unauthenticated public
+    `/v2/models` catalog, with English Flux filtering and display-name labels.
+- Update the React voice example with the new model choices, Deepgram voice
+  selection and settings, and development/preview proxy routes. Preserve the
+  selected voice across catalog refreshes, keep the existing list on empty or
+  failed responses, and always offer the Haley preset.
+- Add regression coverage for model requests, provider integration, DOM flows,
+  and loopback proxy behavior, and run the React example tests and build in CI.
+
 ## 0.23.0
 
 ### Minor Changes

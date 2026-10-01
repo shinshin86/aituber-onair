@@ -248,6 +248,15 @@ export interface CartesiaVoiceServiceOptions extends VoiceServiceCommonOptions {
   cartesiaMp3Bitrate?: number;
 }
 
+export interface DeepgramVoiceServiceOptions extends VoiceServiceCommonOptions {
+  /** Deepgram Flux batch synthesis; speaker is a full flux-{voice}-en model ID. */
+  engineType: 'deepgram';
+  /** Custom /v2/speak endpoint or browser proxy URL. Output is MP3. */
+  deepgramApiUrl?: string;
+  /** Speaking speed, clamped to 0.5–1.5 and rounded to 0.05 increments. */
+  deepgramSpeed?: number;
+}
+
 export interface InworldVoiceServiceOptions extends VoiceServiceCommonOptions {
   /** Engine type */
   engineType: 'inworld';
@@ -496,6 +505,7 @@ export type VoiceServiceOptions =
   | ElevenLabsVoiceServiceOptions
   | FishAudioVoiceServiceOptions
   | CartesiaVoiceServiceOptions
+  | DeepgramVoiceServiceOptions
   | InworldVoiceServiceOptions
   | GradiumVoiceServiceOptions
   | GeminiTtsVoiceServiceOptions
@@ -533,6 +543,9 @@ export type FishAudioVoiceServiceOptionsUpdate = Partial<
 >;
 export type CartesiaVoiceServiceOptionsUpdate = Partial<
   Omit<CartesiaVoiceServiceOptions, 'engineType'>
+>;
+export type DeepgramVoiceServiceOptionsUpdate = Partial<
+  Omit<DeepgramVoiceServiceOptions, 'engineType'>
 >;
 export type InworldVoiceServiceOptionsUpdate = Partial<
   Omit<InworldVoiceServiceOptions, 'engineType'>
@@ -574,6 +587,7 @@ export type VoiceServiceOptionsUpdate =
   | ElevenLabsVoiceServiceOptionsUpdate
   | FishAudioVoiceServiceOptionsUpdate
   | CartesiaVoiceServiceOptionsUpdate
+  | DeepgramVoiceServiceOptionsUpdate
   | InworldVoiceServiceOptionsUpdate
   | GradiumVoiceServiceOptionsUpdate
   | GeminiTtsVoiceServiceOptionsUpdate

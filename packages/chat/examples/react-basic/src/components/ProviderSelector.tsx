@@ -6,6 +6,7 @@ import {
   type ChatResponseLength,
   type GPT5PresetKey,
   type VisionSupportLevel,
+  OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   allowsReasoningLow,
   allowsReasoningMax,
   allowsReasoningMinimal,
@@ -54,6 +55,11 @@ import {
   MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
+  MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
+  MODEL_QWEN_QWEN_3_8_27B,
+  MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
+  MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
@@ -104,6 +110,12 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
+  MODEL_OPENAI_GPT_6_1_SOL,
+  MODEL_OPENAI_GPT_6_SOL,
+  MODEL_OPENAI_GPT_6_LUNA,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5_5,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_5_5,
+  MODEL_XAI_GROK_4_7,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5,
   MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
@@ -152,6 +164,7 @@ import {
   MODEL_ZAI_GLM_5_2,
   MODEL_ZAI_GLM_5_3,
   MODEL_ZAI_GLM_5_3_FLASH,
+  MODEL_ZAI_GLM_5_3_FLASHX,
   MODEL_ZAI_GLM_4_7_FLASH,
   MODEL_ZAI_GLM_4_5_AIR,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
@@ -161,6 +174,7 @@ import {
   // Z.ai models
   MODEL_GLM_5_3,
   MODEL_GLM_5_3_FLASH,
+  MODEL_GLM_5_3_FLASHX,
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
   MODEL_GLM_5,
@@ -553,6 +567,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_GPT_6_1_SOL,
+    name: 'GPT-6.1 Sol',
+    provider: 'openai',
+    default: false,
+  },
+  {
     id: MODEL_GPT_6_ASTRA,
     name: 'GPT-6 Astra',
     provider: 'openai',
@@ -580,6 +600,42 @@ export const allModels: ProviderModel[] = [
     id: MODEL_DEEPSEEK_FLASH,
     name: 'DeepSeek V4.1 Flash',
     provider: 'deepseek',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_1_SOL,
+    name: 'GPT-6.1 Sol',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_SOL,
+    name: 'GPT-6 Sol',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_LUNA,
+    name: 'GPT-6 Luna',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_SONNET_5_5,
+    name: 'Claude Sonnet 5.5',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_OPUS_5_5,
+    name: 'Claude Opus 5.5',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_XAI_GROK_4_7,
+    name: 'Grok 4.7',
+    provider: 'openrouter',
     default: false,
   },
   {
@@ -639,6 +695,24 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_QWEN_QWEN_3_8_MAX_0902,
     name: 'Qwen3.8 Max (0902)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
+    name: 'Nemotron 3.5 Lightning',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_QWEN_QWEN_3_8_27B,
+    name: 'Qwen3.8 27B',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
+    name: 'Qwen3.8 Omni Flash',
     provider: 'openrouter',
     default: false,
   },
@@ -1147,6 +1221,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_ZAI_GLM_5_3_FLASHX,
+    name: 'GLM-5.3 FlashX (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_ZAI_GLM_5_3_FLASH,
     name: 'GLM-5.3 Flash (OpenRouter)',
     provider: 'openrouter',
@@ -1241,6 +1321,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GLM_5_3,
     name: 'GLM-5.3',
+    provider: 'zai',
+    default: false,
+  },
+  {
+    id: MODEL_GLM_5_3_FLASHX,
+    name: 'GLM-5.3 FlashX',
     provider: 'zai',
     default: false,
   },
@@ -1463,6 +1549,13 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
 
+  {
+    id: MODEL_MISTRAL_ZAI_GLM_5_3,
+    name: 'GLM-5.3 (Mistral)',
+    provider: 'mistral',
+    default: false,
+  },
+
   // Sakana models (kept for source-level parity; provider is disabled in browser UI)
   {
     id: MODEL_FUGU,
@@ -1596,8 +1689,13 @@ export default function ProviderSelector({
       selectedModel === MODEL_GPT_6_ASTRA);
   const isResponsesPreferredModel =
     isResponsesOnlyModel ||
+    selectedModel === MODEL_GPT_6_1_SOL ||
     selectedModel === MODEL_GPT_6_SOL ||
     selectedModel === MODEL_GPT_6_LUNA;
+  const effectiveOpenAIEndpoint = isResponsesOnlyModel
+    ? 'responses'
+    : (gpt5EndpointPreference ??
+      (isResponsesPreferredModel ? 'responses' : 'chat'));
   const allowsNone =
     provider === 'openai' && allowsReasoningNone(selectedModel);
   const allowsMinimal =
@@ -1654,6 +1752,8 @@ export default function ProviderSelector({
     provider === 'openrouter'
       ? getOpenRouterSupportedReasoningEfforts(selectedModel)
       : [];
+  const hasOpenRouterReasoningBudget =
+    !OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(selectedModel);
   const effectiveOpenRouterReasoningEffort =
     normalizeOpenRouterReasoningEffort(
       selectedModel,
@@ -1818,6 +1918,15 @@ export default function ProviderSelector({
     }
     return reasoning_effort;
   })();
+  const usesOpenAIResponses =
+    isResponsesOnlyModel ||
+    effectiveOpenAIEndpoint === 'responses' ||
+    (isResponsesPreferredModel && effectiveOpenAIEndpoint === 'auto') ||
+    ((selectedModel === MODEL_GPT_6_SOL ||
+      selectedModel === MODEL_GPT_6_LUNA) &&
+      (gpt5Preset
+        ? gpt5Preset !== 'casual'
+        : effectiveReasoningEffort !== 'none'));
 
   return (
     <div className="provider-selector">
@@ -2112,13 +2221,7 @@ export default function ProviderSelector({
                 <label htmlFor="gpt5-endpoint">OpenAI API Endpoint</label>
                 <select
                   id="gpt5-endpoint"
-                  value={
-                    isResponsesOnlyModel
-                      ? 'responses'
-                      : isResponsesPreferredModel && !gpt5EndpointPreference
-                        ? 'responses'
-                        : gpt5EndpointPreference || 'chat'
-                  }
+                  value={effectiveOpenAIEndpoint}
                   onChange={(e) =>
                     onGpt5EndpointPreferenceChange?.(
                       e.target.value as 'chat' | 'responses' | 'auto',
@@ -2136,6 +2239,12 @@ export default function ProviderSelector({
                 {isResponsesOnlyModel && (
                   <span className="helper-text">
                     This model uses Responses API for full tool support.
+                  </span>
+                )}
+                {selectedModel === MODEL_GPT_6_1_SOL && (
+                  <span className="helper-text">
+                    Responses API is the default and is required for tools.
+                    Tool-free Chat Completions supports all reasoning levels.
                   </span>
                 )}
                 {(selectedModel === MODEL_GPT_6_SOL ||
@@ -2156,12 +2265,7 @@ export default function ProviderSelector({
                     onChange={(e) =>
                       onEnableReasoningSummaryChange?.(e.target.checked)
                     }
-                    disabled={
-                      disabled ||
-                      (isResponsesOnlyModel
-                        ? false
-                        : gpt5EndpointPreference !== 'responses')
-                    }
+                    disabled={disabled || !usesOpenAIResponses}
                   />
                   Enable Reasoning Summary
                 </label>
@@ -2374,47 +2478,50 @@ export default function ProviderSelector({
                 )}
               </div>
 
-              <div className="config-group">
-                <label htmlFor="openrouter-reasoning-effort">
-                  Reasoning Effort
-                </label>
-                <select
-                  id="openrouter-reasoning-effort"
-                  value={effectiveOpenRouterReasoningEffort || 'none'}
-                  onChange={(e) =>
-                    onOpenrouterReasoningEffortChange?.(
-                      e.target.value as OpenRouterReasoningEffort,
-                    )
-                  }
-                  disabled={
-                    disabled || openRouterSupportedReasoningEfforts.length === 0
-                  }
-                  className="select-input"
-                >
-                  {openRouterSupportedReasoningEfforts.length === 0 && (
-                    <option value="none">Not available</option>
-                  )}
-                  {openRouterSupportedReasoningEfforts.map((effort) => (
-                    <option key={effort} value={effort}>
-                      {effort === 'none'
-                        ? 'None (fastest)'
-                        : effort === 'xhigh'
-                          ? 'XHigh'
-                          : `${effort[0].toUpperCase()}${effort.slice(1)}`}
-                    </option>
-                  ))}
-                </select>
-                <span className="helper-text">
-                  {openRouterSupportedReasoningEfforts.length === 0
-                    ? 'This model does not expose configurable reasoning effort.'
-                    : !openRouterSupportedReasoningEfforts.includes('none')
-                      ? 'This model always reasons; choose a supported effort level.'
-                      : selectedModel === MODEL_ZAI_GLM_5_3 ||
-                          selectedModel === MODEL_ZAI_GLM_5_3_FLASH
-                        ? 'GLM-5.3 always reasons; Low is the chat-oriented default.'
-                        : 'Options are filtered for the selected model. None disables reasoning instead of only hiding it.'}
-                </span>
-              </div>
+              {hasOpenRouterReasoningBudget && (
+                <div className="config-group">
+                  <label htmlFor="openrouter-reasoning-effort">
+                    Reasoning Effort
+                  </label>
+                  <select
+                    id="openrouter-reasoning-effort"
+                    value={effectiveOpenRouterReasoningEffort || 'none'}
+                    onChange={(e) =>
+                      onOpenrouterReasoningEffortChange?.(
+                        e.target.value as OpenRouterReasoningEffort,
+                      )
+                    }
+                    disabled={
+                      disabled ||
+                      openRouterSupportedReasoningEfforts.length === 0
+                    }
+                    className="select-input"
+                  >
+                    {openRouterSupportedReasoningEfforts.length === 0 && (
+                      <option value="none">Not available</option>
+                    )}
+                    {openRouterSupportedReasoningEfforts.map((effort) => (
+                      <option key={effort} value={effort}>
+                        {effort === 'none'
+                          ? 'None (fastest)'
+                          : effort === 'xhigh'
+                            ? 'XHigh'
+                            : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="helper-text">
+                    {openRouterSupportedReasoningEfforts.length === 0
+                      ? 'This model does not expose configurable reasoning effort.'
+                      : !openRouterSupportedReasoningEfforts.includes('none')
+                        ? 'This model always reasons; choose a supported effort level.'
+                        : selectedModel === MODEL_ZAI_GLM_5_3 ||
+                            selectedModel === MODEL_ZAI_GLM_5_3_FLASH
+                          ? 'GLM-5.3 always reasons; Low is the chat-oriented default.'
+                          : 'Options are filtered for the selected model. None disables reasoning instead of only hiding it.'}
+                  </span>
+                </div>
+              )}
 
               <div className="config-group">
                 <label
@@ -2437,24 +2544,26 @@ export default function ProviderSelector({
                 </span>
               </div>
 
-              <div className="config-group">
-                <label htmlFor="openrouter-reasoning-max-tokens">
-                  Reasoning Max Tokens
-                </label>
-                <input
-                  id="openrouter-reasoning-max-tokens"
-                  type="number"
-                  min={0}
-                  inputMode="numeric"
-                  value={openrouterReasoningMaxTokens || ''}
-                  onChange={(e) =>
-                    onOpenrouterReasoningMaxTokensChange?.(e.target.value)
-                  }
-                  disabled={disabled}
-                  className="text-input"
-                  placeholder="Auto"
-                />
-              </div>
+              {hasOpenRouterReasoningBudget && (
+                <div className="config-group">
+                  <label htmlFor="openrouter-reasoning-max-tokens">
+                    Reasoning Max Tokens
+                  </label>
+                  <input
+                    id="openrouter-reasoning-max-tokens"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={openrouterReasoningMaxTokens || ''}
+                    onChange={(e) =>
+                      onOpenrouterReasoningMaxTokensChange?.(e.target.value)
+                    }
+                    disabled={disabled}
+                    className="text-input"
+                    placeholder="Auto"
+                  />
+                </div>
+              )}
 
               <div className="config-group">
                 <label htmlFor="openrouter-app-name">App Name</label>
@@ -2512,7 +2621,8 @@ export default function ProviderSelector({
                   </select>
                   <span className="helper-text">
                     {selectedModel === MODEL_GLM_5_3 ||
-                    selectedModel === MODEL_GLM_5_3_FLASH
+                    selectedModel === MODEL_GLM_5_3_FLASH ||
+                    selectedModel === MODEL_GLM_5_3_FLASHX
                       ? 'GLM-5.3 always uses thinking. Low is the chat-oriented default.'
                       : 'GLM-5.2 maps minimal to none, low/medium to high, and xhigh to max.'}
                   </span>

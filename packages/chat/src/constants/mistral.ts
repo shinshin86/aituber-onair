@@ -15,6 +15,9 @@ export const MODEL_MISTRAL_MEDIUM_2508 = 'mistral-medium-2508';
 export const MODEL_MISTRAL_LARGE_LATEST = 'mistral-large-latest';
 export const MODEL_MISTRAL_LARGE_2512 = 'mistral-large-2512';
 
+// Text-only model hosted by Mistral.
+export const MODEL_MISTRAL_ZAI_GLM_5_3 = 'zai-glm-5-3';
+
 export type MistralReasoningEffort = 'none' | 'high';
 
 export const MISTRAL_SUPPORTED_MODELS = [
@@ -26,6 +29,7 @@ export const MISTRAL_SUPPORTED_MODELS = [
   MODEL_MISTRAL_LARGE_LATEST,
   MODEL_MISTRAL_LARGE_2512,
   MODEL_MISTRAL_SMALL_2603,
+  MODEL_MISTRAL_ZAI_GLM_5_3,
 ];
 
 export const MISTRAL_DEPRECATED_MODELS = [MODEL_MISTRAL_MEDIUM_2508];

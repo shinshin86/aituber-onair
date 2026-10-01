@@ -1,5 +1,54 @@
 # @aituber-onair/chat
 
+## 0.61.0
+
+### Minor Changes
+
+- Added Mistral-hosted Z.ai GLM-5.3 (`zai-glm-5-3`) as an explicit text-only
+  model with streaming and function calling. Vision and adjustable
+  `reasoning_effort` are not enabled for this model.
+- Added OpenRouter support for `nvidia/nemotron-3.5-lightning` (text-only),
+  `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input).
+- Added `OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET`. OpenRouter requests for
+  these models omit `reasoning.max_tokens` because the models do not document
+  a reasoning token-budget control.
+
+### Patch Changes
+
+- Updated the React basic example and English/Japanese documentation for the
+  new models. The OpenRouter reasoning effort and reasoning max tokens fields
+  are hidden for models without a documented reasoning budget.
+
+### Known Limitations
+
+- Mistral GLM-5.3 availability depends on the Mistral subscription tier.
+  Accounts without access receive HTTP 403 with `tier_not_allowed`.
+
+## 0.60.0
+
+### Minor Changes
+
+- Added native OpenAI GPT-6.1 Sol (`gpt-6.1-sol`) and Z.ai GLM-5.3
+  FlashX (`glm-5.3-flashx`) support with model-specific reasoning controls.
+- Added OpenRouter support for `openai/gpt-6.1-sol`, `openai/gpt-6-sol`,
+  `openai/gpt-6-luna`, `anthropic/claude-sonnet-5.5`,
+  `anthropic/claude-opus-5.5`, `x-ai/grok-4.7`, and `z-ai/glm-5.3-flashx`.
+
+### Patch Changes
+
+- Updated the React basic example and English/Japanese documentation for the
+  new models, including model-specific reasoning and reasoning-summary controls.
+- Fixed fragmented OpenAI Responses streaming event handling and propagation
+  of provider errors received during successful HTTP streams.
+- Kept React example message IDs monotonic and added regression coverage for
+  model selection, reasoning settings, repeated messages, and streaming failures.
+
+### Known Limitations
+
+- As of 2026-09-30, direct browser requests to the native Z.ai API encountered
+  CORS preflight responses missing `Access-Control-Allow-Origin`. Browser use
+  may fail; the cause and recovery time are unconfirmed.
+
 ## 0.59.0
 
 ### Minor Changes

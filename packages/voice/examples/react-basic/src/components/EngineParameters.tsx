@@ -102,6 +102,7 @@ interface EngineParametersProps {
     mp3Bitrate: StringField;
     speed: StringField;
   };
+  deepgram: { speed: StringField };
   cartesia: {
     model: SelectField<string>;
     language: SelectField<CartesiaLanguage>;
@@ -229,6 +230,7 @@ export function EngineParameters({
   unrealSpeech,
   elevenLabs,
   fishAudio,
+  deepgram,
   cartesia,
   inworld,
   gradium,
@@ -532,6 +534,23 @@ export function EngineParameters({
         </CollapsibleCard>
       )}
 
+      {engine === 'deepgram' && (
+        <CollapsibleCard
+          className="parameter-card openai-card"
+          title="Deepgram Flux パラメータ"
+          description="英語のみ対応。Flux の one-shot REST API から MP3 音声を取得します。日本語・Aura・WebSocket には対応していません。"
+        >
+          <NumberSliderField
+            id="deepgramSpeed"
+            label="Speed (0.5 - 1.5)"
+            value={deepgram.speed.value}
+            onChange={deepgram.speed.onChange}
+            config={SLIDER_CONFIG.deepgramSpeed}
+            placeholder="空欄で標準速度 1.0"
+          />
+        </CollapsibleCard>
+      )}
+
       {engine === 'cartesia' && (
         <CollapsibleCard
           className="parameter-card openai-card"
@@ -706,40 +725,50 @@ export function EngineParameters({
                 config={SLIDER_CONFIG.elevenLabsSimilarityBoost}
                 placeholder="空欄で voice 既定値"
               />
-              <NumberSliderField
-                id="elevenLabsStyle"
-                label="Style"
-                value={elevenLabs.style.value}
-                onChange={elevenLabs.style.onChange}
-                config={SLIDER_CONFIG.elevenLabsStyle}
-                placeholder="空欄で voice 既定値"
-              />
-              <NumberSliderField
-                id="elevenLabsSpeed"
-                label="Speed"
-                value={elevenLabs.speed.value}
-                onChange={elevenLabs.speed.onChange}
-                config={SLIDER_CONFIG.elevenLabsSpeed}
-                placeholder="空欄で voice 既定値"
-              />
-              <div className="form-group">
-                <label htmlFor="elevenLabsUseSpeakerBoost">
-                  Use Speaker Boost
-                </label>
-                <select
-                  id="elevenLabsUseSpeakerBoost"
-                  value={elevenLabs.useSpeakerBoost.value}
-                  onChange={(e) =>
-                    elevenLabs.useSpeakerBoost.onChange(
-                      e.target.value as DefaultBooleanOption,
-                    )
-                  }
-                >
-                  <option value="default">Voice 既定値</option>
-                  <option value="true">有効</option>
-                  <option value="false">無効</option>
-                </select>
-              </div>
+              {elevenLabs.model.value === 'eleven_v4' ? (
+                <p className="speaker-fetch-message">
+                  Eleven v4 は Stability と Similarity のみ対応しています。
+                  Style・Speed・Speaker Boost は送信しません。SSML
+                  は非対応です。
+                </p>
+              ) : (
+                <>
+                  <NumberSliderField
+                    id="elevenLabsStyle"
+                    label="Style"
+                    value={elevenLabs.style.value}
+                    onChange={elevenLabs.style.onChange}
+                    config={SLIDER_CONFIG.elevenLabsStyle}
+                    placeholder="空欄で voice 既定値"
+                  />
+                  <NumberSliderField
+                    id="elevenLabsSpeed"
+                    label="Speed"
+                    value={elevenLabs.speed.value}
+                    onChange={elevenLabs.speed.onChange}
+                    config={SLIDER_CONFIG.elevenLabsSpeed}
+                    placeholder="空欄で voice 既定値"
+                  />
+                  <div className="form-group">
+                    <label htmlFor="elevenLabsUseSpeakerBoost">
+                      Use Speaker Boost
+                    </label>
+                    <select
+                      id="elevenLabsUseSpeakerBoost"
+                      value={elevenLabs.useSpeakerBoost.value}
+                      onChange={(e) =>
+                        elevenLabs.useSpeakerBoost.onChange(
+                          e.target.value as DefaultBooleanOption,
+                        )
+                      }
+                    >
+                      <option value="default">Voice 既定値</option>
+                      <option value="true">有効</option>
+                      <option value="false">無効</option>
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

@@ -4,6 +4,7 @@ import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   ENDPOINT_OPENROUTER_API,
+  OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   MODEL_GPT_OSS_20B_FREE,
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_AUTO_BETA,
@@ -368,6 +369,11 @@ export class OpenRouterChatService implements ChatService {
       body.max_tokens = tokenLimit;
     }
 
+    const reasoningMaxTokens =
+      OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(model.trim())
+        ? undefined
+        : this.reasoningMaxTokens;
+
     // Add OpenRouter reasoning control
     const defaultReasoningEffort = getDefaultOpenRouterReasoningEffort(model);
     const reasoningEffort = normalizeOpenRouterReasoningEffort(
@@ -377,7 +383,7 @@ export class OpenRouterChatService implements ChatService {
     if (
       reasoningEffort !== undefined ||
       this.includeReasoning !== undefined ||
-      this.reasoningMaxTokens ||
+      reasoningMaxTokens ||
       defaultReasoningEffort
     ) {
       body.reasoning = {};
@@ -400,8 +406,8 @@ export class OpenRouterChatService implements ChatService {
         body.reasoning.exclude = true;
       }
 
-      if (this.reasoningMaxTokens) {
-        body.reasoning.max_tokens = this.reasoningMaxTokens;
+      if (reasoningMaxTokens) {
+        body.reasoning.max_tokens = reasoningMaxTokens;
       }
     } else {
       // Default behavior: exclude reasoning to avoid empty responses
@@ -431,7 +437,7 @@ export class OpenRouterChatService implements ChatService {
     const text = await parseOpenAICompatibleTextStream(res, onPartial, {
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
-      throwOnApiError: isOpenRouterAutoModel(model),
+      throwOnApiError: true,
     });
     ensureAutoRouterOutput(model, text.trim().length > 0);
     return text;
@@ -448,7 +454,7 @@ export class OpenRouterChatService implements ChatService {
     const completion = await parseOpenAICompatibleToolStream(res, onPartial, {
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
-      throwOnApiError: isOpenRouterAutoModel(model),
+      throwOnApiError: true,
     });
     ensureAutoRouterOutput(model, hasUsableCompletionOutput(completion));
     return completion;
@@ -459,7 +465,7 @@ export class OpenRouterChatService implements ChatService {
    */
   private parseOneShot(data: any, model: string): ToolChatCompletion {
     const completion = parseOpenAICompatibleOneShot(data, {
-      throwOnApiError: isOpenRouterAutoModel(model),
+      throwOnApiError: true,
     });
     ensureAutoRouterOutput(model, hasUsableCompletionOutput(completion));
     return completion;

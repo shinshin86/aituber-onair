@@ -32,6 +32,14 @@ jobs:
       - name: Run tests
         run: npm run test --workspaces
 
+      - name: Install Voice React example dependencies
+        run: npm --prefix packages/voice/examples/react-basic ci
+
+      - name: Test and build Voice React example
+        run: |
+          npm --prefix packages/voice/examples/react-basic test
+          npm --prefix packages/voice/examples/react-basic run build
+
       - name: Run lint
         run: npm run lint --workspaces
 

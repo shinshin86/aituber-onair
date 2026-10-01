@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   ChatServiceFactory,
+  OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   ChatService,
   allowsReasoningLow,
   allowsReasoningMax,
@@ -181,6 +182,7 @@ function App() {
   >('enabled');
   const [kimiBaseUrl, setKimiBaseUrl] = useState(KIMI_OFFICIAL_BASE_URL);
   const [chatService, setChatService] = useState<ChatService | null>(null);
+  const nextMessageIdRef = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const geminiNano = useGeminiNanoStatus(provider === 'gemini-nano');
 
@@ -337,7 +339,10 @@ function App() {
             openrouterReasoningMaxTokens.trim() === ''
               ? undefined
               : Number(openrouterReasoningMaxTokens);
-          if (!Number.isNaN(maxTokens)) {
+          if (
+            !Number.isNaN(maxTokens) &&
+            !OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(selectedModel)
+          ) {
             options.reasoningMaxTokens = maxTokens;
           }
           if (openrouterAppName.trim()) {
@@ -468,7 +473,7 @@ function App() {
           : content;
 
       const userMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: String(nextMessageIdRef.current++),
         role: 'user',
         content: userContent,
         timestamp: new Date(),
@@ -495,7 +500,7 @@ function App() {
           };
 
       const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: String(nextMessageIdRef.current++),
         role: 'assistant',
         content: '',
         timestamp: new Date(),

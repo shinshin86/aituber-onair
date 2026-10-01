@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Fish Audio、Cartesia、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloud、Web Speech APIなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Fish Audio、Cartesia、Deepgram Flux、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloud、Web Speech APIなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -232,10 +232,24 @@ const voiceService = new VoiceService({
 `elevenLabsApiUrl` で上書きできます。`speaker` は ElevenLabs の
 `voice_id` として送信されます。
 
-推奨モデルは、表現力重視の `eleven_v3`、多言語の高品質出力向け
+選択可能なモデルは、最高品質重視の `eleven_v4`、旧世代の表現力重視モデル
+`eleven_v3`、多言語の高品質出力向け
 `eleven_multilingual_v2`、低遅延向けで既定値の `eleven_flash_v2_5` です。
 非推奨の `eleven_turbo_v2_5` は後方互換のため任意文字列として指定できますが、
 推奨モデル一覧には表示しません。
+
+モデル固有の設定制約はリクエスト構築時に適用します。`eleven_v4` では
+Stability と Similarity のみ送信し、設定済みの Style・Speed・Speaker Boost
+は他モデル用に保持しつつ v4 には送信しません。v4 は SSML 非対応なので、
+通常のテキストまたは公式 audio tag を使用してください。このエンジンは
+one-shot の [Create speech](https://elevenlabs.io/docs/api-reference/text-to-speech/convert)
+を使い、音声全体の取得後に再生します。[公式 TTS ガイド](https://elevenlabs.io/docs/eleven-creative/playground/text-to-speech)
+で同エンドポイントの v4 対応を確認できます。実装経路で確認できていないモデルは
+対応一覧に含めません。`eleven_v4_turbo` は
+[Text to Dialogue WebSocket](https://elevenlabs.io/docs/eleven-api/guides/how-to/websockets/realtime-tdd)
+向けに案内されていますが、このパッケージでは同経路を実装していません。
+Turbo はこのパッケージの HTTP 音声経路でも未検証です。プロバイダー側での
+HTTP 利用が不可能という意味ではありません。
 
 ### Fish Audio
 
@@ -281,7 +295,44 @@ const voiceService = new VoiceService({
 
 `getVoiceEngineVoiceList('cartesia', { apiKey, language: 'ja' })` で
 voice 一覧を取得できます。エンジンは公式仕様の
-`Cartesia-Version: 2026-03-01` ヘッダーを使用します。
+`Cartesia-Version: 2026-03-01` ヘッダーと `voice: { id }` の形式を維持します。
+新モデルは `cartesiaModel: 'sonic-3.6'`、固定スナップショットは
+`'sonic-3.6-2026-08-27'` を明示指定できます。既定値は `sonic-3.5` のままです。
+公式の [`POST /tts/bytes`](https://docs.cartesia.ai/api-reference/tts/bytes) と
+[変更履歴](https://docs.cartesia.ai/changelog/2026) で Sonic 3.6 対応と固定 API
+バージョンの後方互換性が説明されています。既存 voice ID と WAV/MP3 出力を
+同じ経路で利用できます。
+
+### Deepgram Flux
+
+Deepgram Flux は [one-shot `POST /v2/speak`](https://developers.deepgram.com/docs/flux-tts/batch)
+を使用し、`Authorization: Token ...` で認証して MP3 音声バイト列を返します。
+この実装は英語の Flux voice のみ対応します。Aura (`/v1/speak`)、WebSocket
+ストリーミング、割り込み、callback、ベータ版 expressivity は未実装です。
+
+```typescript
+const voiceService = new VoiceService({
+  engineType: 'deepgram',
+  speaker: 'flux-haley-en',
+  apiKey: process.env.DEEPGRAM_API_KEY,
+  deepgramSpeed: 1.0,
+});
+```
+
+`speaker` は必須で、完全な voice ID を `model` クエリとして送信します。
+サンプルの既定値は `flux-haley-en` です。`deepgramSpeed` は任意指定で 0.5〜1.5
+（0.05 刻み）です。`getVoiceEngineVoiceList('deepgram')` は API key 不要の
+公開 v2 カタログ（`GET /v2/models`）から英語の Flux voice のみを抽出します。
+v1 カタログ（`/v1/models`）には Aura の voice しか含まれません。React 例では
+カタログに依存しない公式の Haley 固定プリセットを常に選べます。任意のカタログ更新でも現在の選択を維持し、
+空の結果や取得エラーでは既存の一覧も保持します。
+[公式 voice 一覧](https://developers.deepgram.com/docs/flux-tts/voices) も参照してください。
+
+Node.js/backend から呼び出すか、ブラウザでは `deepgramApiUrl` を同一 origin の
+音声 proxy に、`voiceListApiUrl` を一覧 proxy に設定してください。本番の API key
+はサーバーで管理します。ブラウザからの直接 CORS 通信は実 API では未検証です。
+React 例には `/api/deepgram` の Vite 開発/preview proxy があり、本番では同等の
+backend route が必要です。
 
 ### Inworld
 Inworld TTS の非ストリーミング音声合成を、SDK なしの直接 `fetch` で
@@ -753,6 +804,11 @@ const voiceService = new VoiceService({
   - 識別子・出力: `speaker`, `fishAudioModel`, `fishAudioFormat`, `fishAudioSampleRate`, `fishAudioMp3Bitrate`
   - 音声調整: `fishAudioLatency`, `fishAudioSpeed`
 
+- **Deepgram Flux**
+  - エンドポイント: `deepgramApiUrl`
+  - voice/model: `speaker`（英語の Flux ID）、任意の `deepgramSpeed`
+  - 出力: MP3
+
 - **Cartesia**
   - エンドポイント: `cartesiaApiUrl`
   - 識別子・出力: `speaker`, `cartesiaModel`, `cartesiaLanguage`, `cartesiaOutputContainer`, `cartesiaSampleRate`, `cartesiaMp3Bitrate`
@@ -854,8 +910,15 @@ try {
 ### Cartesia の機能
 
 - Bearer 認証の同期 `/tts/bytes` request
-- Sonic 3.5 と、日本語を含む公式 language code に対応
+- Sonic 3.6 の alias/固定 snapshot を明示選択可能、既定値は Sonic 3.5
+- 日本語を含む公式 language code に対応
 - ページング対応 voice 一覧取得と WAV/MP3 出力設定
+
+### Deepgram Flux の機能
+
+- Token 認証の one-shot `/v2/speak` とバイナリ MP3 出力
+- 公開 v2 model カタログから英語の Flux voice を取得
+- 任意の話速と endpoint 設定。emotion/style の自動変換は非対応
 
 ### Inworld の機能
 - Basic 認証のクラウド TTS エンドポイント
@@ -924,6 +987,7 @@ type VoiceServiceOptions =
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
   | FishAudioVoiceServiceOptions
+  | DeepgramVoiceServiceOptions
   | CartesiaVoiceServiceOptions
   | InworldVoiceServiceOptions
   | GradiumVoiceServiceOptions
@@ -974,7 +1038,7 @@ const voices = await getVoiceEngineVoiceList('elevenLabs', {
 
 `getVoiceEngineVoiceList()` は、一覧 API を持つ engine について
 正規化済みの `{ id, label }` を返します。対象は VOICEVOX、AivisSpeech、
-Aivis Cloud、xAI、ElevenLabs、Fish Audio、Cartesia、Inworld、Gradium、
+Aivis Cloud、xAI、ElevenLabs、Fish Audio、Cartesia、Deepgram Flux、Inworld、Gradium、
 Web Speech API です。
 VOICEVOX 互換サーバーには local `apiUrl`、API key が必要な cloud engine には
 `apiKey`、Fish Audio、Cartesia、Inworld の絞り込みには `language` を渡します。

@@ -143,6 +143,11 @@ export interface CartesiaConfigurableEngine extends VoiceEngine {
   setMp3Bitrate?(value?: number): void;
 }
 
+export interface DeepgramConfigurableEngine extends VoiceEngine {
+  setApiEndpoint?(value: string): void;
+  setSpeed?(value?: number): void;
+}
+
 export interface InworldConfigurableEngine extends VoiceEngine {
   setApiEndpoint?(value: string): void;
   setModel?(value?: string): void;

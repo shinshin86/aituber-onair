@@ -16,6 +16,8 @@ export type {
   WebSpeechVoiceServiceOptions,
   UnrealSpeechVoiceServiceOptions,
   ElevenLabsVoiceServiceOptions,
+  DeepgramVoiceServiceOptions,
+  DeepgramVoiceServiceOptionsUpdate,
   InworldVoiceServiceOptions,
   GradiumVoiceServiceOptions,
   VoiceVoxQueryParameterOverrides,

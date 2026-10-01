@@ -1467,7 +1467,7 @@ describe('VoiceEngineAdapter', () => {
       const adapter = new VoiceEngineAdapter(options);
       adapter.updateOptions({
         elevenLabsApiUrl: 'https://example.com/v1/text-to-speech',
-        elevenLabsModel: 'eleven_flash_v2_5',
+        elevenLabsModel: 'eleven_v4',
         elevenLabsOutputFormat: 'mp3_22050_32',
         elevenLabsLanguageCode: 'ja',
         elevenLabsStability: 0.4,
@@ -1488,7 +1488,7 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
         'https://example.com/v1/text-to-speech',
       );
-      expect(mockEngine.setModel).toHaveBeenCalledWith('eleven_flash_v2_5');
+      expect(mockEngine.setModel).toHaveBeenCalledWith('eleven_v4');
       expect(mockEngine.setOutputFormat).toHaveBeenCalledWith('mp3_22050_32');
       expect(mockEngine.setLanguageCode).toHaveBeenCalledWith('ja');
       expect(mockEngine.setStability).toHaveBeenCalledWith(0.4);
@@ -1535,11 +1535,13 @@ describe('VoiceEngineAdapter', () => {
       mockEngine.fetchAudio.mockResolvedValue(new ArrayBuffer(8));
 
       adapter.updateOptions({
+        cartesiaModel: 'sonic-3.6',
         cartesiaLanguage: 'en',
         cartesiaOutputContainer: 'mp3',
       });
       await adapter.speak({ text: 'Updated Cartesia options' });
 
+      expect(mockEngine.setModel).toHaveBeenCalledWith('sonic-3.6');
       expect(mockEngine.setLanguage).toHaveBeenCalledWith('en');
       expect(mockEngine.setOutputContainer).toHaveBeenCalledWith('mp3');
     });
