@@ -125,7 +125,7 @@ built-in model status is `available`.
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
+- Models: GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
 - Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), GPT-5.1 supports None/Low/Medium/High, and GPT-5.0 models support Minimal/Low/Medium/High
@@ -226,8 +226,15 @@ npm install
 
 ### CORS Issues
 
-The Vite dev server proxies some API requests to avoid CORS issues. Sakana AI
-is shown as a disabled provider in this browser example because direct browser
+Named providers in this sample send requests directly to their configured
+upstream endpoints. The `/api/openai`, `/api/anthropic`, and `/api/google`
+rules in `vite.config.ts` only proxy requests made to those local paths;
+selecting a provider does not automatically use those rules. In particular,
+native OpenAI, Z.ai, and OpenRouter requests remain direct browser requests.
+Their success depends on the upstream service permitting your origin and
+request headers. Mock transport tests do not verify live CORS behavior.
+
+Sakana AI is shown as a disabled provider in this browser example because direct browser
 requests can fail with CORS unless Sakana enables the required CORS headers for
 your origin. Use `../node-basic/sakana-example.js` from Node.js, or call Sakana through your own
 backend/serverless proxy in a web app.
@@ -235,7 +242,30 @@ backend/serverless proxy in a web app.
 For production, you'll need to:
 1. Use a backend proxy
 2. Configure CORS on your server
-3. Use provider SDKs that handle CORS
+3. Keep provider credentials on that backend; browser SDKs cannot bypass CORS
+
+### Offline React integration tests
+
+From the repository root after `npm ci`, run:
+
+```bash
+npm -w @aituber-onair/chat run test:example:react
+```
+
+The same tests are discovered by the normal Chat `npm test` command and the
+repository test workflow. They mount the real React app in JSDOM, change the
+rendered provider/model/settings controls, submit messages, and use the real
+Chat services with fail-closed mocked fetch responses and fake credentials.
+No provider inference or live API calls are made, and no new test dependencies
+are required beyond the existing monorepo installation.
+
+Coverage includes all nine GPT-6.1 Sol / GLM-5.3 FlashX native and new OpenRouter
+options, every offered reasoning effort, endpoint selection, image requests,
+fragmented streaming text, conversation history, repeated sends, clearing an
+in-flight conversation, schema validation, provider/model switching, and
+recovery from HTTP, network, and in-stream provider errors. These tests verify
+DOM behavior and request/response wiring, not browser layout, live provider
+availability, account permissions, actual model output, or CORS/preflight.
 
 ## Customization
 
@@ -290,16 +320,28 @@ Common extensions:
 
 ### Additional model options
 
-The model selector includes GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
+The model selector includes GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
 OpenAI), Claude Fable 5.1, and DeepSeek V4.1 Flash (`deepseek-flash`). Astra
 uses Responses and starts at low reasoning; Luna uses Responses and defaults to
 low reasoning for responsive chat. Fable 5.1 always thinks and uses automatic
 tool selection. DeepSeek tools require reasoning to be set to none.
 
-OpenRouter also offers Astra/Pro, Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8
-Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini/Pro (free),
+GPT-6.1 Sol defaults to low reasoning and Responses. Its tools require Responses;
+Chat Completions is available only without tools. Unsupported none/minimal
+reasoning settings normalize to low.
+
+GLM-5.3 FlashX is an explicit Z.ai vision/streaming/tool option using the public
+Model API key and endpoint, not the Coding Plan endpoint. Like other GLM-5.3
+models, it always thinks and defaults to low reasoning.
+
+OpenRouter also offers GPT-6.1 Sol, GPT-6 Sol/Luna, Claude Sonnet/Opus 5.5,
+Grok 4.7, and GLM-5.3 FlashX, alongside Astra/Pro, Fable 5.1, DeepSeek V4.1
+Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini/Pro (free),
 Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
-capabilities. Mercury 2.5 is text-only. Provider defaults are unchanged.
+capabilities. The new OpenRouter models default to low reasoning, except Sol/Luna
+which default to none; tools use OpenRouter Chat Completions. Claude 5.5 tool
+selection stays automatic. Mercury 2.5 is text-only. Provider defaults are
+unchanged.
 
 ### Additional explicit Chat Completions models
 

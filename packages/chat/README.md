@@ -290,6 +290,19 @@ await chatService.processChat(
 
 #### OpenAI
 
+Models that require Responses for tool calling use that endpoint when tools are
+configured. `gpt-6.1-sol` (`MODEL_GPT_6_1_SOL`) is an explicit option with
+image input and streaming. The factory defaults to Responses; select
+`gpt5EndpointPreference: 'chat'` for tool-free Chat Completions. Function tools
+and MCP always use Responses at the standard OpenAI endpoint, including direct
+`OpenAIChatService` use. Custom endpoints retain the Chat Completions contract
+and reject tool requests for this model instead of redirecting credentials.
+Supported reasoning levels are `low`, `medium`, `high`, `xhigh`, and `max`;
+`none`/`minimal` normalize to `low`. The package uses `low` for responsive chat
+rather than the API's `medium` default. The provider's default model is unchanged.
+[Model API reference](https://developers.openai.com/api/docs/models/gpt-6.1-sol),
+[API guide](https://developers.openai.com/api/docs/guides/latest-model).
+
 `gpt-6-astra` (`MODEL_GPT_6_ASTRA`) is an explicit option with image input and streaming. The package routes it to Responses, which is required for tool calling. Reasoning supports `low` (package default), `medium`, `high`, `xhigh`, and `max`; `none`/`minimal` normalize to `low`. Existing `gpt5Preset` and `gpt5EndpointPreference` option names remain for compatibility, but Astra uses Responses at the standard endpoint. [API guide](https://developers.openai.com/api/docs/guides/latest-model).
 
 `gpt-6-sol` (`MODEL_GPT_6_SOL`) is also available with image input and
@@ -756,6 +769,13 @@ The following explicit options use OpenRouter Chat Completions without changing 
 
 | Model ID | Reasoning efforts (package default) |
 | --- | --- |
+| `openai/gpt-6.1-sol` | max, xhigh, high, medium, low (low) |
+| `openai/gpt-6-sol` | max, xhigh, high, medium, low, none (none) |
+| `openai/gpt-6-luna` | max, xhigh, high, medium, low, none (none) |
+| `anthropic/claude-sonnet-5.5` | max, xhigh, high, medium, low (low) |
+| `anthropic/claude-opus-5.5` | max, xhigh, high, medium, low (low) |
+| `x-ai/grok-4.7` | xhigh, high, medium, low (low) |
+| `z-ai/glm-5.3-flashx` | max, high, low (low) |
 | `openai/gpt-6-astra` | max, xhigh, high, medium, low (medium) |
 | `openai/gpt-6-astra-pro` | max, xhigh, high, medium, low (medium) |
 | `anthropic/claude-fable-5.1` | max, xhigh, high, medium, low (high) |
@@ -772,6 +792,15 @@ The following explicit options use OpenRouter Chat Completions without changing 
 | `qwen/qwen3.8-omni-flash` | No effort selector (provider default) |
 
 For models without documented effort levels or reasoning token budgets, those controls are omitted. Current explicit options in this group are `nvidia/nemotron-3.5-lightning`, `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash`. Existing `reasoning_effort` and `reasoningMaxTokens` settings are not sent for these models; `includeReasoning` still controls whether reasoning output is included. See the [reasoning configuration documentation](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens).
+
+The package favors the lowest supported reasoning level for responsive chat
+with GPT-6.1 Sol, GPT-6 Sol/Luna, Claude 5.5, Grok 4.7, and GLM-5.3 FlashX.
+The OpenRouter catalog defaults to `medium` for those GPT models, `high` for
+Claude 5.5/Grok 4.7, and `max` for GLM-5.3 FlashX; explicit supported efforts
+are preserved. These OpenRouter IDs use `/api/v1/chat/completions`, including tools,
+and do not inherit direct OpenAI endpoint restrictions. Claude 5.5 routes
+support automatic or disabled tool selection, not forced tool calls; this
+package uses automatic tool selection.
 
 Always-thinking models never receive `none`; invalid settings normalize to the defaults above. `openai/gpt-6-astra-pro` is an OpenRouter ID that selects Pro mode, not a native OpenAI model ID. Fable 5.1 omits `tool_choice`. Models ending in `:free` are subject to free-tier rate limits. [Catalog](https://openrouter.ai/api/v1/models), [API schema](https://openrouter.ai/docs/api_reference/overview).
 
@@ -871,8 +900,9 @@ const zaiService = ChatServiceFactory.createChatService('zai', {
 Notes:
 - Z.ai uses OpenAI-compatible Chat Completions.
 - Supported text models include `glm-5.3`, `glm-5.2`, `glm-5.1`, `glm-5`, `glm-5-turbo`, `glm-4.7`, `glm-4.7-FlashX`, `glm-4.7-Flash`, and `glm-4.6`.
-- Supported vision models: `glm-5.3-flash`, `glm-5v-turbo`, `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`.
-- GLM-5.3 and GLM-5.3 Flash always use thinking and accept only `low`, `high`, or `max`. The package defaults to `low`, keeps thinking enabled even if `thinking.type: 'disabled'` is requested, and clears prior-turn thinking by default for chat latency and cost.
+- `glm-5.3-flashx` (`MODEL_GLM_5_3_FLASHX`) is an explicit vision/streaming/tool option on the public Model API (`https://api.z.ai/api/paas/v4/chat/completions`), not the Coding Plan endpoint. Use a Model API key. [Model guide](https://docs.z.ai/guides/vlm/glm-5.3-flash).
+- Supported vision models: `glm-5.3-flashx`, `glm-5.3-flash`, `glm-5v-turbo`, `glm-4.6V`, `glm-4.6V-FlashX`, `glm-4.6V-Flash`.
+- Models in the GLM-5.3 family (GLM-5.3, GLM-5.3 Flash, and GLM-5.3 FlashX) always use thinking and accept only `low`, `high`, or `max`. The package defaults to `low`, keeps thinking enabled even if `thinking.type: 'disabled'` is requested, and clears prior-turn thinking by default for chat latency and cost.
 - GLM-5.2 exposes `reasoning_effort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'`. The package defaults to `none` and disables thinking for low-latency chat.
 - Z.ai currently applies only three effective tiers: `none`/`minimal` become `none`, `low`/`medium`/`high` become `high`, and `xhigh`/`max` become `max`. The package normalizes these values before sending them.
 - Explicit legacy `thinking` remains available when `reasoning_effort` is omitted. `reasoning_effort` takes precedence when both are supplied.
@@ -1446,12 +1476,12 @@ without hard-coding provider-specific rules.
 
 Currently, the following AI providers are built-in:
 
-- **OpenAI**: GPT-6 Astra (`gpt-6-astra`), GPT-6 Sol (`gpt-6-sol`), and GPT-6 Luna (`gpt-6-luna`, Responses API by default); Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
+- **OpenAI**: GPT-6.1 Sol (`gpt-6.1-sol`, tools via Responses), GPT-6 Astra (`gpt-6-astra`), GPT-6 Sol (`gpt-6-sol`), and GPT-6 Luna (`gpt-6-luna`, Responses API by default); Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Claude Opus 5.5 (`claude-opus-5-5`), Claude Sonnet 5.5 (`claude-sonnet-5-5`), and Claude Fable 5.1 (`claude-fable-5-1`); Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.
-- **OpenRouter**: GPT-6 Astra/Pro, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilot), including GLM-5.3, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input).
-- **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
+- **OpenRouter**: GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilot), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input).
+- **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
 - **xAI**: Supports Grok 4.7, Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 Reasoning/Non-Reasoning with vision. Grok 4.7/4.6/4.5 use package-default `reasoning_effort: 'low'`; Grok 4.3 defaults to `none`.
 - **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
 - **DeepSeek**: DeepSeek V4.1 Flash (`deepseek-flash`); Supports DeepSeek V4 Flash (`deepseek-v4-flash`), V4 Pro (`deepseek-v4-pro`), and the explicit experimental vision model (`deepseek-v4-flash-vision-exp`) via OpenAI-compatible Chat Completions. Thinking defaults to disabled for low-latency chat.

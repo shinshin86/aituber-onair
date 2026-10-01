@@ -1,6 +1,13 @@
 export const ENDPOINT_OPENROUTER_API =
   'https://openrouter.ai/api/v1/chat/completions';
 
+export const MODEL_OPENAI_GPT_6_1_SOL = 'openai/gpt-6.1-sol';
+export const MODEL_OPENAI_GPT_6_SOL = 'openai/gpt-6-sol';
+export const MODEL_OPENAI_GPT_6_LUNA = 'openai/gpt-6-luna';
+export const MODEL_ANTHROPIC_CLAUDE_SONNET_5_5 = 'anthropic/claude-sonnet-5.5';
+export const MODEL_ANTHROPIC_CLAUDE_OPUS_5_5 = 'anthropic/claude-opus-5.5';
+export const MODEL_XAI_GROK_4_7 = 'x-ai/grok-4.7';
+
 export const MODEL_OPENAI_GPT_6_ASTRA = 'openai/gpt-6-astra';
 export const MODEL_OPENAI_GPT_6_ASTRA_PRO = 'openai/gpt-6-astra-pro';
 export const MODEL_ANTHROPIC_CLAUDE_FABLE_5_1 = 'anthropic/claude-fable-5.1';
@@ -77,6 +84,7 @@ export const MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025 =
 export const MODEL_ZAI_GLM_5_2 = 'z-ai/glm-5.2';
 export const MODEL_ZAI_GLM_5_3 = 'z-ai/glm-5.3';
 export const MODEL_ZAI_GLM_5_3_FLASH = 'z-ai/glm-5.3-flash';
+export const MODEL_ZAI_GLM_5_3_FLASHX = 'z-ai/glm-5.3-flashx';
 export const MODEL_ZAI_GLM_4_7_FLASH = 'z-ai/glm-4.7-flash';
 export const MODEL_ZAI_GLM_4_5_AIR = 'z-ai/glm-4.5-air';
 export const MODEL_ZAI_GLM_4_5_AIR_FREE = 'z-ai/glm-4.5-air:free';
@@ -177,6 +185,31 @@ const OPENROUTER_MODEL_REASONING: Record<
   [MODEL_QWEN_QWEN_3_8_27B]: { efforts: [], defaultEffort: undefined },
   [MODEL_QWEN_QWEN_3_8_OMNI_FLASH]: { efforts: [], defaultEffort: undefined },
 
+  // Chat-oriented defaults avoid disabling mandatory reasoning and favor latency.
+  [MODEL_OPENAI_GPT_6_1_SOL]: {
+    efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'low',
+  },
+  [MODEL_OPENAI_GPT_6_SOL]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_OPENAI_GPT_6_LUNA]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_ANTHROPIC_CLAUDE_SONNET_5_5]: {
+    efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'low',
+  },
+  [MODEL_ANTHROPIC_CLAUDE_OPUS_5_5]: {
+    efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'low',
+  },
+  [MODEL_XAI_GROK_4_7]: {
+    efforts: ['low', 'medium', 'high', 'xhigh'],
+    defaultEffort: 'low',
+  },
   [MODEL_OPENAI_GPT_6_ASTRA]: {
     efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
     defaultEffort: 'medium',
@@ -235,6 +268,13 @@ export const OPENROUTER_FREE_MODELS = [
 export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
+  MODEL_OPENAI_GPT_6_1_SOL,
+  MODEL_OPENAI_GPT_6_SOL,
+  MODEL_OPENAI_GPT_6_LUNA,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_5_5,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_5_5,
+  MODEL_XAI_GROK_4_7,
+
   MODEL_OPENAI_GPT_6_ASTRA,
   MODEL_OPENAI_GPT_6_ASTRA_PRO,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
@@ -280,6 +320,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
   MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
   MODEL_ZAI_GLM_5_3_FLASH,
+  MODEL_ZAI_GLM_5_3_FLASHX,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_QWEN_QWEN_3_8_FLASH,
   MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
@@ -328,7 +369,8 @@ export function getOpenRouterSupportedReasoningEfforts(
   if (profile) return profile.efforts;
   if (
     normalizedModel === MODEL_ZAI_GLM_5_3 ||
-    normalizedModel === MODEL_ZAI_GLM_5_3_FLASH
+    normalizedModel === MODEL_ZAI_GLM_5_3_FLASH ||
+    normalizedModel === MODEL_ZAI_GLM_5_3_FLASHX
   ) {
     return OPENROUTER_ALWAYS_THINKING_REASONING_EFFORTS;
   }
@@ -372,7 +414,8 @@ export function getDefaultOpenRouterReasoningEffort(
   if (profile) return profile.defaultEffort;
   if (
     normalizedModel === MODEL_ZAI_GLM_5_3 ||
-    normalizedModel === MODEL_ZAI_GLM_5_3_FLASH
+    normalizedModel === MODEL_ZAI_GLM_5_3_FLASH ||
+    normalizedModel === MODEL_ZAI_GLM_5_3_FLASHX
   ) {
     return 'low';
   }
@@ -411,7 +454,8 @@ export function normalizeOpenRouterReasoningEffort(
 
   if (
     normalizedModel === MODEL_ZAI_GLM_5_3 ||
-    normalizedModel === MODEL_ZAI_GLM_5_3_FLASH
+    normalizedModel === MODEL_ZAI_GLM_5_3_FLASH ||
+    normalizedModel === MODEL_ZAI_GLM_5_3_FLASHX
   ) {
     if (requested === 'high') {
       return 'high';

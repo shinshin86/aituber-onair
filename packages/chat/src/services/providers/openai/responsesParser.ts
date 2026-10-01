@@ -13,6 +13,24 @@ type ResponsesParseOptions = {
   onJsonError?: JsonParseErrorHandler;
 };
 
+function throwIfResponsesError(data: any, eventType?: string): void {
+  const response = data?.response ?? data;
+  const error = response?.error;
+  if (
+    !error &&
+    response?.status !== 'failed' &&
+    eventType !== 'error' &&
+    eventType !== 'response.failed'
+  ) {
+    return;
+  }
+  const message =
+    typeof error === 'string'
+      ? error
+      : (error?.message ?? data?.message ?? 'The provider response failed.');
+  throw new Error(`Provider response error: ${message}`);
+}
+
 /**
  * Parse streaming Responses API output (SSE format).
  */
@@ -32,6 +50,9 @@ export async function parseOpenAIResponsesStream(
   let usage: Record<string, any> | undefined;
 
   let buf = '';
+  // An SSE event can span any number of transport chunks.
+  let eventType = '';
+  let eventData = '';
 
   while (true) {
     const { done, value } = await reader.read();
@@ -39,9 +60,6 @@ export async function parseOpenAIResponsesStream(
     buf += dec.decode(value, { stream: true });
 
     // Parse SSE format: process event: and data: combinations
-    let eventType = '';
-    let eventData = '';
-
     const lines = buf.split('\n');
     buf = lines.pop() || ''; // Keep the last incomplete line
 
@@ -53,31 +71,37 @@ export async function parseOpenAIResponsesStream(
       } else if (line.startsWith('data:')) {
         eventData = line.slice(5).trim();
       } else if (line === '' && eventType && eventData) {
+        let json: any;
         try {
-          const json = JSON.parse(eventData);
-          handleResponsesSSEEvent(
-            eventType,
-            json,
-            onPartial,
-            textBlocks,
-            toolCallsMap,
-            providerItems,
-            (metadata) => {
-              if (metadata.responseStatus !== undefined) {
-                responseStatus = metadata.responseStatus;
-              }
-              if (metadata.incompleteDetails !== undefined) {
-                incompleteDetails = metadata.incompleteDetails;
-              }
-              if (metadata.usage !== undefined) {
-                usage = metadata.usage;
-              }
-            },
-          );
+          json = JSON.parse(eventData);
         } catch (error) {
           options.onJsonError?.(eventData, error);
           console.warn('Failed to parse SSE data:', eventData);
+          eventType = '';
+          eventData = '';
+          continue;
         }
+        // Provider failures and callback errors are not malformed JSON.
+        throwIfResponsesError(json, eventType);
+        handleResponsesSSEEvent(
+          eventType,
+          json,
+          onPartial,
+          textBlocks,
+          toolCallsMap,
+          providerItems,
+          (metadata) => {
+            if (metadata.responseStatus !== undefined) {
+              responseStatus = metadata.responseStatus;
+            }
+            if (metadata.incompleteDetails !== undefined) {
+              incompleteDetails = metadata.incompleteDetails;
+            }
+            if (metadata.usage !== undefined) {
+              usage = metadata.usage;
+            }
+          },
+        );
         eventType = '';
         eventData = '';
       }
@@ -252,6 +276,7 @@ export function parseOpenAIResponsesOneShot(
   data: any,
   options: ResponsesParseOptions = {},
 ): ToolChatCompletion {
+  throwIfResponsesError(data);
   const blocks: ToolChatBlock[] = [];
 
   if (data.output && Array.isArray(data.output)) {

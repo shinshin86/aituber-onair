@@ -437,7 +437,7 @@ export class OpenRouterChatService implements ChatService {
     const text = await parseOpenAICompatibleTextStream(res, onPartial, {
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
-      throwOnApiError: isOpenRouterAutoModel(model),
+      throwOnApiError: true,
     });
     ensureAutoRouterOutput(model, text.trim().length > 0);
     return text;
@@ -454,7 +454,7 @@ export class OpenRouterChatService implements ChatService {
     const completion = await parseOpenAICompatibleToolStream(res, onPartial, {
       onJsonError: (payload) =>
         console.debug('Failed to parse SSE data:', payload),
-      throwOnApiError: isOpenRouterAutoModel(model),
+      throwOnApiError: true,
     });
     ensureAutoRouterOutput(model, hasUsableCompletionOutput(completion));
     return completion;
@@ -465,7 +465,7 @@ export class OpenRouterChatService implements ChatService {
    */
   private parseOneShot(data: any, model: string): ToolChatCompletion {
     const completion = parseOpenAICompatibleOneShot(data, {
-      throwOnApiError: isOpenRouterAutoModel(model),
+      throwOnApiError: true,
     });
     ensureAutoRouterOutput(model, hasUsableCompletionOutput(completion));
     return completion;

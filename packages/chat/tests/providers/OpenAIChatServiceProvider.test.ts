@@ -10,6 +10,7 @@ import {
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
+  MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
@@ -60,6 +61,7 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_GPT_5_4,
         MODEL_GPT_5_5,
         MODEL_GPT_5_6,
+        MODEL_GPT_6_1_SOL,
         MODEL_GPT_6_ASTRA,
         MODEL_GPT_6_SOL,
         MODEL_GPT_6_LUNA,
@@ -97,6 +99,7 @@ describe('OpenAIChatServiceProvider', () => {
   describe('supportsVisionForModel', () => {
     it('should return true for vision-supported models', () => {
       expect(provider.supportsVisionForModel(MODEL_GPT_5_NANO)).toBe(true);
+      expect(provider.supportsVisionForModel(MODEL_GPT_6_1_SOL)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_6_SOL)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_6_LUNA)).toBe(true);
       expect(provider.supportsVisionForModel(MODEL_GPT_5_MINI)).toBe(true);

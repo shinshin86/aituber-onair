@@ -4,6 +4,7 @@ export const ENDPOINT_ZAI_CHAT_COMPLETIONS_API =
 // Z.ai GLM models
 export const MODEL_GLM_5_3 = 'glm-5.3';
 export const MODEL_GLM_5_3_FLASH = 'glm-5.3-flash';
+export const MODEL_GLM_5_3_FLASHX = 'glm-5.3-flashx';
 export const MODEL_GLM_5_2 = 'glm-5.2';
 export const MODEL_GLM_5_1 = 'glm-5.1';
 export const MODEL_GLM_5 = 'glm-5';
@@ -43,7 +44,11 @@ const ZAI_GLM_5_3_REASONING_EFFORTS = [
 ] as const satisfies readonly ZaiReasoningEffort[];
 
 export function isZaiAlwaysThinkingModel(model: string): boolean {
-  return model === MODEL_GLM_5_3 || model === MODEL_GLM_5_3_FLASH;
+  return (
+    model === MODEL_GLM_5_3 ||
+    model === MODEL_GLM_5_3_FLASH ||
+    model === MODEL_GLM_5_3_FLASHX
+  );
 }
 
 /** Return the protocol-compatible effort values accepted by a Z.ai model. */
@@ -103,6 +108,7 @@ export function normalizeZaiReasoningEffort(
 
 // Vision support for models
 export const ZAI_VISION_SUPPORTED_MODELS = [
+  MODEL_GLM_5_3_FLASHX,
   MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5V_TURBO,
   MODEL_GLM_4_6V,
