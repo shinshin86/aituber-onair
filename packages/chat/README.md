@@ -1003,7 +1003,7 @@ Notes:
 - Mistral uses Chat Completions at `https://api.mistral.ai/v1/chat/completions`.
 - Default model: `mistral-small-latest`, chosen for the sample-friendly balance of low cost, strong general chat quality, vision support, and adjustable reasoning support.
 - Supported models: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `zai-glm-5-3`.
-- Text-only explicit options include `zai-glm-5-3` (GLM-5.3), with streaming and function calling. Vision and adjustable reasoning are not enabled for this model.
+- Text-only explicit options include `zai-glm-5-3` (GLM-5.3), with streaming and function calling. Vision and adjustable reasoning are not enabled for this model. Availability depends on your Mistral subscription tier; accounts without access receive HTTP 403 with `tier_not_allowed`.
 - Retired `mistral-medium-2508` remains exported only for source compatibility.
 - Ministral 3 models support text, vision, streaming, and function calling through the same Chat Completions endpoint.
 - `reasoning_effort` is supported as `'none' | 'high'` and is only sent for `mistral-small-latest` and `mistral-medium-3-5`, matching Mistral's adjustable reasoning docs. It is omitted for other models.

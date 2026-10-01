@@ -986,7 +986,7 @@ await mistralService.processChat(
 - 対応モデル: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `zai-glm-5-3`
 - 廃止済みの`mistral-medium-2508`はソース互換用にのみexportを残します。
 - Ministral 3系は同じChat Completions endpointでtext、vision、streaming、function callingに対応します。
-- テキスト専用の明示選択モデルとして`zai-glm-5-3`（GLM-5.3）を利用できます。streamingとfunction callingに対応し、visionや推論レベル指定は有効にしません。
+- テキスト専用の明示選択モデルとして`zai-glm-5-3`（GLM-5.3）を利用できます。streamingとfunction callingに対応し、visionや推論レベル指定は有効にしません。利用可否はMistralのサブスクリプションtierによって異なり、利用できないアカウントではHTTP 403（`tier_not_allowed`）が返ります。
 - `reasoning_effort`は`'none' | 'high'`に対応し、Mistral公式docsに合わせて`mistral-small-latest`と`mistral-medium-3-5`にだけ送信します。それ以外のモデルでは省略します。
 
 reasoning例:
@@ -1460,7 +1460,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **xAI**: Grok 4.7、Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 Reasoning/Non-Reasoningをvision対応でサポート。Grok 4.7/4.6/4.5のpackage既定は低遅延向けの`reasoning_effort: 'low'`、Grok 4.3は`none`です
 - **Kimi**: Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、デフォルトは `max`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
 - **DeepSeek**: DeepSeek V4.1 Flash (`deepseek-flash`); DeepSeek V4 Flash、V4 Pro、明示選択用の実験ビジョンモデル`deepseek-v4-flash-vision-exp`をOpenAI互換Chat Completions経由でサポート。低遅延チャット向けにthinkingはデフォルト無効です
-- **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します GLM-5.3 (`zai-glm-5-3`) はテキスト専用の明示選択モデルです。
+- **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します。GLM-5.3 (`zai-glm-5-3`) はテキスト専用の明示選択モデルです。
 - **Sakana AI**: Fugu、Fugu Ultra、日本語特化・ビジョン対応のSakana Namazu（`sakana-namazu`）をOpenAI互換Chat Completions経由でサポート。Namazuのthinkingはデフォルト無効です
 - **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）をOpenAI互換Chat Completions経由でサポートし、廃止予定の2.2定数は互換用にexportを残します
 - **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Webページでは対応するデスクトップ端末上のChrome 148以降が必要で、Chromeフラグの設定は不要。`promptStreaming()` が利用できる場合はストリーミングし、ビジョン非対応

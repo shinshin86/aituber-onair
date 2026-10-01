@@ -23,7 +23,6 @@ describe('MistralChatServiceProvider', () => {
 
   it('returns current Mistral supported models', () => {
     expect(provider.getSupportedModels()).toEqual([
-      MODEL_MISTRAL_ZAI_GLM_5_3,
       MODEL_MISTRAL_SMALL_LATEST,
       MODEL_MINISTRAL_3B_2512,
       MODEL_MINISTRAL_8B_2512,
@@ -32,6 +31,7 @@ describe('MistralChatServiceProvider', () => {
       MODEL_MISTRAL_LARGE_LATEST,
       MODEL_MISTRAL_LARGE_2512,
       MODEL_MISTRAL_SMALL_2603,
+      MODEL_MISTRAL_ZAI_GLM_5_3,
     ]);
   });
 
