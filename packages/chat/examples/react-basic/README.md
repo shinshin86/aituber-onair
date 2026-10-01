@@ -188,8 +188,8 @@ built-in model status is `available`.
 - Best for: DeepSeek's OpenAI-compatible API without manually configuring an endpoint
 
 **Mistral**
-- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Medium 3.5, Mistral Large Latest/2512, Mistral Small 2603
-- Vision: Supported
+- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Medium 3.5, Mistral Large Latest/2512, Mistral Small 2603, GLM-5.3 (Mistral)
+- Vision: Supported except text-only GLM-5.3
 - Best for: Mistral Chat Completions with streaming and optional adjustable reasoning
 
 **PLaMo**
@@ -342,3 +342,7 @@ capabilities. The new OpenRouter models default to low reasoning, except Sol/Lun
 which default to none; tools use OpenRouter Chat Completions. Claude 5.5 tool
 selection stays automatic. Mercury 2.5 is text-only. Provider defaults are
 unchanged.
+
+### Additional explicit Chat Completions models
+
+OpenRouter includes Nemotron 3.5 Lightning (`nvidia/nemotron-3.5-lightning`, text-only), Qwen3.8 27B (`qwen/qwen3.8-27b`), and Qwen3.8 Omni Flash (`qwen/qwen3.8-omni-flash`). The Qwen models accept images; audio and video are not supported by this example. These models and Mistral GLM-5.3 do not expose an effort selector because model-specific effort values are not documented. Select the provider, enter its API key, and choose the model. Requests go directly to the existing provider endpoint; defaults are unchanged.

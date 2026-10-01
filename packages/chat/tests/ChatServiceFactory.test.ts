@@ -340,6 +340,7 @@ describe('ChatServiceFactory', () => {
         'mistral-large-latest',
         'mistral-large-2512',
         'mistral-small-2603',
+        'zai-glm-5-3',
       ]);
 
       const sakanaModels = ChatServiceFactory.getSupportedModels('sakana');
