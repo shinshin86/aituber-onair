@@ -1,5 +1,29 @@
 # @aituber-onair/chat
 
+## 0.61.0
+
+### Minor Changes
+
+- Added Mistral-hosted Z.ai GLM-5.3 (`zai-glm-5-3`) as an explicit text-only
+  model with streaming and function calling. Vision and adjustable
+  `reasoning_effort` are not enabled for this model.
+- Added OpenRouter support for `nvidia/nemotron-3.5-lightning` (text-only),
+  `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input).
+- Added `OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET`. OpenRouter requests for
+  these models omit `reasoning.max_tokens` because the models do not document
+  a reasoning token-budget control.
+
+### Patch Changes
+
+- Updated the React basic example and English/Japanese documentation for the
+  new models. The OpenRouter reasoning effort and reasoning max tokens fields
+  are hidden for models without a documented reasoning budget.
+
+### Known Limitations
+
+- Mistral GLM-5.3 availability depends on the Mistral subscription tier.
+  Accounts without access receive HTTP 403 with `tier_not_allowed`.
+
 ## 0.60.0
 
 ### Minor Changes
