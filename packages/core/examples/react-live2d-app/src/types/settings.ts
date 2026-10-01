@@ -37,6 +37,7 @@ export type TTSEngineOption =
   | 'fishAudio'
   | 'cartesia'
   | 'inworld'
+  | 'deepgram'
   | 'gradium'
   | 'piperPlus'
   | 'webSpeech'
@@ -142,6 +143,11 @@ export interface TTSSettings {
   inworldLanguage?: string;
   inworldDeliveryMode?: 'default' | 'STABLE' | 'BALANCED' | 'CREATIVE';
   inworldTemperature?: string;
+  deepgramApiKey?: string;
+  deepgramApiUrl?: string;
+  deepgramVoiceListApiUrl?: string;
+  deepgramSpeed?: string;
+  gradiumModel?: 'default' | 'gradium-tts-beta';
   gradiumApiKey?: string;
   gradiumApiUrl?: string;
   gradiumOutputFormat?: string;

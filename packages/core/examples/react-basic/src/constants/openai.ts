@@ -1,4 +1,5 @@
 import {
+  MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_SOL,
   MODEL_GPT_6_LUNA,
@@ -26,6 +27,7 @@ import {
 // OpenAI models list
 export const openaiModels = [
   MODEL_GPT_4_1_NANO,
+  MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_SOL,
   MODEL_GPT_6_LUNA,

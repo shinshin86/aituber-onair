@@ -1,5 +1,25 @@
 # @aituber-onair/core
 
+## 0.26.18
+
+### Patch Changes
+
+- Propagate published Chat 0.60.0 / 0.61.0 and Voice 0.24.0 / 0.25.0.
+- Re-export new native and OpenRouter model constants, the OpenRouter
+  reasoning-budget capability list, Deepgram's engine and configuration
+  types/constants, and the Gradium model type.
+- Add the new models to React basic; avatar selectors use Core's provider
+  lists. Preserve avatar reasoning controls and Chat's model-specific defaults.
+  React basic omits OpenRouter effort controls for models without documented
+  reasoning budgets and defaults GPT-6.1 Sol to Responses for tool support.
+- Update all ten React TTS settings examples with Deepgram Flux voice lists,
+  API key/endpoint/speed settings, and dev/preview proxies. Preserve voice
+  selections across catalog refreshes, retain lists on empty/failed results,
+  and keep the Haley preset available.
+- Add ElevenLabs v4 with compatible settings, Cartesia Sonic 3.6 options,
+  and explicit Gradium beta selection while preserving production defaults.
+- Refresh Core and example documentation and all embedded Core lockfiles.
+
 ## 0.26.17
 
 ### Patch Changes

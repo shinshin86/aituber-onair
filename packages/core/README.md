@@ -12,8 +12,8 @@ It specializes in generating response text and audio from text or image inputs, 
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.58.0 and the
-Gemini TTS model type and OpenAI-compatible speech helpers from Voice 0.23.0.
+Core exposes the models and capability helpers from Chat 0.61.0 and the
+speech engines, option types, and endpoint helpers from Voice 0.25.0.
 Existing provider defaults are unchanged.
 
 - Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
@@ -50,6 +50,47 @@ The React basic example lists the new models explicitly. Avatar examples
 load the supported model list from Core and apply the Casual preset to
 supported OpenAI reasoning models. Node examples pass the model and provider
 options through to Core.
+
+- New explicit Chat options include native GPT-6.1 Sol and Z.ai GLM-5.3
+  FlashX, Mistral-hosted `zai-glm-5-3`, and OpenRouter GPT-6.1 Sol / GPT-6
+  Sol / Luna, Claude Sonnet / Opus 5.5, Grok 4.7, GLM-5.3 FlashX,
+  `nvidia/nemotron-3.5-lightning`, `qwen/qwen3.8-27b`, and
+  `qwen/qwen3.8-omni-flash`.
+- Models without documented reasoning effort or token-budget controls omit
+  those fields. `OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET` identifies the
+  three new Nemotron/Qwen options; the two Qwen models support images, while
+  Nemotron and Mistral GLM-5.3 are text-only. Mistral GLM-5.3 requires an
+  eligible subscription tier and has no adjustable reasoning effort.
+- GPT-6.1 Sol uses `low` reasoning for the casual preset. Responses is the
+  default and is required for tools; tool-free Chat Completions supports
+  `low`, `medium`, `high`, `xhigh`, and `max`. Z.ai GLM-5.3 FlashX always
+  reasons, supports images, and requires a Model API key. Native Z.ai
+  browser calls may fail because of provider CORS restrictions.
+- Voice options include ElevenLabs `eleven_v4` (Stability and Similarity;
+  no Style, Speed, or Speaker Boost), Cartesia `sonic-3.6` and
+  `sonic-3.6-2026-08-27` (default remains `sonic-3.5`), Deepgram Flux, and
+  the opt-in Gradium `gradium-tts-beta` model through `gradiumModel`.
+
+For endpoint details and limitations, see the
+[Chat README](../chat/README.md) and [Voice README](../voice/README.md).
+
+### Deepgram Flux setup
+
+Use `engineType: 'deepgram'`, an API key, and an English Flux voice ID
+such as `flux-haley-en`. Core re-exports `DeepgramEngine`, its option types,
+and the speech/catalog URL constants. `getVoiceEngineVoiceList('deepgram')`
+lists English voices from the public v2 catalog without an API key.
+`deepgramSpeed` accepts 0.5–1.5 in 0.05 steps. This integration returns a
+complete MP3 from `POST /v2/speak`; it does not use Aura or WebSocket speech.
+See the [Deepgram batch guide](https://developers.deepgram.com/docs/flux-tts/batch).
+
+All ten React TTS examples use `/api/deepgram/v2/speak` and
+`/api/deepgram/v2/models` via Vite dev/preview proxies. Production apps need
+equivalent authenticated backend routes with API keys kept server-side.
+Avatar settings allow custom TTS/catalog URLs. Voice-list refreshes preserve
+the selected voice and the previous list on empty or failed responses;
+Haley remains selectable. Gradium settings default to production and reset
+to production when switching back to Gradium.
 
 ## Table of Contents
 
@@ -1265,7 +1306,8 @@ Possible use cases for `chatLogUpdated` include:
 - **Unreal Speech**: Unreal Speech v8 `/stream` endpoint with bitrate, speed, pitch, codec, and temperature options.
 - **ElevenLabs**: ElevenLabs Text to Speech API with model, output format, language code, voice settings, and text normalization options.
 - **Fish Audio**: Fish Audio one-shot TTS with S2 Pro by default, configurable output/latency options, and reference-voice list discovery.
-- **Cartesia**: Cartesia synchronous TTS with Sonic 3.5, language/output controls, and voice-list discovery.
+- **Cartesia**: Cartesia synchronous TTS with Sonic 3.5 / 3.6, language/output controls, and voice-list discovery.
+- **Deepgram Flux**: English-only, one-shot MP3 speech with a public voice catalog and optional speed control.
 - **Inworld**: Inworld TTS REST API with selectable model, audio encoding, sample rate, bitrate, language, delivery mode, and temperature options.
 - **Gradium**: Gradium REST TTS API with selectable preset voices, output format, temperature, similarity, padding, and rewrite-rule options.
 - **OpenAI-Compatible TTS**: Self-hosted or third-party `/v1/audio/speech` compatible endpoints.

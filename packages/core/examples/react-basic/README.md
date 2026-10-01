@@ -6,8 +6,8 @@ A comprehensive React-based AI chat application demonstrating the full capabilit
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.58.0 and the
-Gemini TTS model type from Voice 0.22.0. Existing provider defaults are unchanged.
+Core exposes the models and capability helpers from Chat 0.61.0 and the
+Gemini TTS model type from Voice 0.25.0. Existing provider defaults are unchanged.
 
 - Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
   Sonnet 5.5;
@@ -668,3 +668,30 @@ This example is part of the AITuber OnAir project and follows the same license t
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to submit issues or pull requests to improve this example.
+
+## Updated Chat and Voice options
+
+This example uses published Chat 0.61.0 and Voice 0.25.0 through Core.
+New Chat models are available in the model selector, including GPT-6.1 Sol,
+GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
+Chat's capability checks and model-specific reasoning defaults. The avatar
+examples keep their existing reasoning UI; OpenAI's casual preset selects
+`low` for GPT-6.1 Sol. Mistral GLM-5.3 and OpenRouter Nemotron are text-only;
+the new OpenRouter Qwen models support images. Mistral GLM-5.3 requires an
+eligible subscription tier, and native Z.ai browser calls may fail on CORS.
+
+Select **Deepgram Flux** for English-only, one-shot MP3 speech. Enter a
+Deepgram API key and select a named voice from the public v2 catalog.
+Haley is always available; refreshes preserve the selected voice and keep
+the previous list on empty or failed responses. Optional Speed is 0.5–1.5
+in 0.05 steps. Vite development and preview proxy `/api/deepgram/v2/speak`
+and `/api/deepgram/v2/models` to Deepgram. Production needs equivalent
+authenticated backend routes with API keys kept server-side.
+
+ElevenLabs `eleven_v4` retains Stability and Similarity but disables Style,
+Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
+`sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
+model selector defaults to production; `gradium-tts-beta` is an explicit
+opt-in, and switching back to Gradium resets the model to production.
+See the [Core model update notes](../../README.md#chat-and-voice-model-updates)
+for endpoint details and limitations.

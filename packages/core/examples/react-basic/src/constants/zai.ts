@@ -1,5 +1,6 @@
 import {
   MODEL_GLM_5_3,
+  MODEL_GLM_5_3_FLASHX,
   MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
@@ -17,6 +18,7 @@ import {
 
 export const zaiModels = [
   MODEL_GLM_5_3,
+  MODEL_GLM_5_3_FLASHX,
   MODEL_GLM_5_3_FLASH,
   MODEL_GLM_5_2,
   MODEL_GLM_5_1,
