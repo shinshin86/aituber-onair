@@ -328,5 +328,6 @@ npm run dev
 npm create aituber-onair@latest my-aituber
 ```
 
-CLI には PNGTuber、VRM、Live2D テンプレートが含まれています。
+CLI には PNGTuber、VRM、Live2D、Pet、PuruPuru、PSD、Inochi2D の
+7 種類のテンプレートが含まれています。
 最初の実行手順は [クイックスタート](./quickstart.ja.md) を参照してください。
