@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
+  MODEL_UPSTAGE_SOLAR_MINI4,
+  MODEL_XIAOMI_MIMO_V2_6_FLASH,
+  MODEL_APODEX_1_1_MINI_FREE,
   MODEL_OPENAI_GPT_6_1_SOL,
   MODEL_OPENAI_GPT_6_SOL,
   MODEL_OPENAI_GPT_6_LUNA,
@@ -135,6 +138,9 @@ describe('OpenRouterChatServiceProvider', () => {
       const models = provider.getSupportedModels();
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
+        MODEL_UPSTAGE_SOLAR_MINI4,
+        MODEL_XIAOMI_MIMO_V2_6_FLASH,
+        MODEL_APODEX_1_1_MINI_FREE,
         MODEL_OPENAI_GPT_6_1_SOL,
         MODEL_OPENAI_GPT_6_SOL,
         MODEL_OPENAI_GPT_6_LUNA,
@@ -275,6 +281,7 @@ describe('OpenRouterChatServiceProvider', () => {
       const freeModels = provider.getFreeModels();
       expect(Array.isArray(freeModels)).toBe(true);
       expect(freeModels).toEqual([
+        MODEL_APODEX_1_1_MINI_FREE,
         MODEL_GPT_OSS_20B_FREE,
         MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
         MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,

@@ -3,6 +3,9 @@ import {
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENROUTER_API,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_UPSTAGE_SOLAR_MINI4,
+  MODEL_XIAOMI_MIMO_V2_6_FLASH,
+  MODEL_APODEX_1_1_MINI_FREE,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
@@ -12,6 +15,12 @@ import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
 import type { Message, MessageWithVision } from '../../src/types';
 
 const candidates = [
+  {
+    provider: 'openrouter',
+    model: MODEL_UPSTAGE_SOLAR_MINI4,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: false,
+  },
   {
     provider: 'mistral',
     model: MODEL_MISTRAL_ZAI_GLM_5_3,
@@ -35,6 +44,18 @@ const candidates = [
     model: MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
     endpoint: ENDPOINT_OPENROUTER_API,
     vision: true,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_XIAOMI_MIMO_V2_6_FLASH,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_APODEX_1_1_MINI_FREE,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: false,
   },
 ] as const;
 const messages: Message[] = [{ role: 'user', content: 'Hello' }];
@@ -114,8 +135,11 @@ describe.each(candidates)(
         stream: false,
         tools: [{ type: 'function', function: { name: 'lookup' } }],
       });
+      if (provider === 'openrouter') expect(body.tool_choice).toBe('auto');
       expect(body.reasoning_effort).toBeUndefined();
-      expect(body.reasoning?.effort).toBeUndefined();
+      expect(body.reasoning?.effort).toBe(
+        model === MODEL_UPSTAGE_SOLAR_MINI4 ? 'high' : undefined,
+      );
       expect(result.blocks).toContainEqual({
         type: 'tool_use',
         id: 'call-1',
@@ -211,7 +235,7 @@ describe.each(candidates)(
     );
 
     it.each([undefined, true, false])(
-      'omits unverified reasoning fields and preserves includeReasoning=%s',
+      'sends only documented reasoning fields and preserves includeReasoning=%s',
       async (includeReasoning) => {
         const transport = vi
           .fn()
@@ -232,7 +256,9 @@ describe.each(candidates)(
         await configured.chatOnce!(messages, false);
         const body = JSON.parse(transport.mock.calls[0][1].body);
         expect(body.reasoning_effort).toBeUndefined();
-        expect(body.reasoning?.effort).toBeUndefined();
+        expect(body.reasoning?.effort).toBe(
+          model === MODEL_UPSTAGE_SOLAR_MINI4 ? 'high' : undefined,
+        );
         expect(body.reasoning?.max_tokens).toBeUndefined();
         if (provider === 'openrouter') {
           expect(body.reasoning?.exclude).toBe(
@@ -248,7 +274,17 @@ describe.each(candidates)(
       expect(
         ChatServiceFactory.getProviderCapabilities(provider, model)?.vision,
       ).toBe(vision ? 'supported' : 'unsupported');
-      if (!vision) return;
+      if (!vision) {
+        if (provider === 'openrouter') {
+          const transport = vi.fn();
+          ChatServiceHttpClient.setFetch(transport);
+          await expect(
+            service().visionChatOnce!(images, false),
+          ).rejects.toThrow('does not support vision');
+          expect(transport).not.toHaveBeenCalled();
+        }
+        return;
+      }
       const transport = vi.fn().mockResolvedValue(
         new Response(
           JSON.stringify({

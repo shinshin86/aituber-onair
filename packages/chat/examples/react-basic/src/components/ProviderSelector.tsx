@@ -110,6 +110,9 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
+  MODEL_UPSTAGE_SOLAR_MINI4,
+  MODEL_XIAOMI_MIMO_V2_6_FLASH,
+  MODEL_APODEX_1_1_MINI_FREE,
   MODEL_OPENAI_GPT_6_1_SOL,
   MODEL_OPENAI_GPT_6_SOL,
   MODEL_OPENAI_GPT_6_LUNA,
@@ -695,6 +698,24 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_QWEN_QWEN_3_8_MAX_0902,
     name: 'Qwen3.8 Max (0902)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_UPSTAGE_SOLAR_MINI4,
+    name: 'Solar Mini4',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_XIAOMI_MIMO_V2_6_FLASH,
+    name: 'MiMo V2.6 Flash',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_APODEX_1_1_MINI_FREE,
+    name: 'Apodex 1.1 Mini (Free)',
     provider: 'openrouter',
     default: false,
   },
@@ -2478,7 +2499,8 @@ export default function ProviderSelector({
                 )}
               </div>
 
-              {hasOpenRouterReasoningBudget && (
+              {(hasOpenRouterReasoningBudget ||
+                openRouterSupportedReasoningEfforts.length > 0) && (
                 <div className="config-group">
                   <label htmlFor="openrouter-reasoning-effort">
                     Reasoning Effort

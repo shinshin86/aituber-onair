@@ -14,6 +14,7 @@ import {
   type OpenRouterReasoningEffort,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
+  MODEL_UPSTAGE_SOLAR_MINI4,
   getDefaultOpenRouterReasoningEffort,
   normalizeOpenRouterReasoningEffort,
   isOpenRouterVisionModel,
@@ -389,11 +390,12 @@ export class OpenRouterChatService implements ChatService {
       body.reasoning = {};
 
       if (reasoningEffort) {
-        // OpenRouter uses 'low' as the minimum effort level, map 'minimal' to 'low'
+        // Preserve documented minimal effort; older profiles normalize it to low.
         const effort =
           reasoningEffort === 'minimal' &&
           model !== MODEL_QWEN_QWEN_3_8_MAX_0902 &&
-          model !== MODEL_META_MUSE_SPARK_1_3
+          model !== MODEL_META_MUSE_SPARK_1_3 &&
+          model !== MODEL_UPSTAGE_SOLAR_MINI4
             ? 'low'
             : reasoningEffort;
         body.reasoning.effort = effort;

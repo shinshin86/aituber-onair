@@ -1,4 +1,7 @@
 import {
+  MODEL_UPSTAGE_SOLAR_MINI4,
+  MODEL_XIAOMI_MIMO_V2_6_FLASH,
+  MODEL_APODEX_1_1_MINI_FREE,
   MODEL_OPENAI_GPT_6_1_SOL,
   MODEL_OPENAI_GPT_6_SOL,
   MODEL_OPENAI_GPT_6_LUNA,
@@ -150,6 +153,9 @@ export class OpenRouterChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_UPSTAGE_SOLAR_MINI4,
+      MODEL_XIAOMI_MIMO_V2_6_FLASH,
+      MODEL_APODEX_1_1_MINI_FREE,
       MODEL_OPENAI_GPT_6_1_SOL,
       MODEL_OPENAI_GPT_6_SOL,
       MODEL_OPENAI_GPT_6_LUNA,

@@ -48,6 +48,12 @@ const modelCases = [
       ['low', 'high', 'max'],
       'low',
     ],
+    [
+      'Solar Mini4',
+      'upstage/solar-mini4',
+      ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
+      'none',
+    ],
   ].map(([label, model, efforts, initialEffort]) => ({
     provider: 'OpenRouter',
     label: label as string,
@@ -244,7 +250,9 @@ describe('React sample model-to-transport flows (mock network only)', () => {
       expect(effort.value).toBe(model.initialEffort);
       expect(element<HTMLInputElement>('.chat-input').disabled).toBe(true);
       await change('#api-key', FAKE_KEY);
-      expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
+      expect(element<HTMLInputElement>('#image-upload').disabled).toBe(
+        model.model === 'upstage/solar-mini4',
+      );
       await change(model.control, 'high');
       await change('#response-length', 'long');
       const stream = streamResponse(model.endpoint);
@@ -348,6 +356,23 @@ describe('React sample model-to-transport flows (mock network only)', () => {
       ]);
     },
   );
+
+  it('keeps Solar effort selectable without inheriting a reasoning budget', async () => {
+    await selectModel(modelCases[2]);
+    await change('#api-key', FAKE_KEY);
+    await change('#openrouter-reasoning-max-tokens', '1024');
+    await chooseButton('.model-item', 'Solar Mini4');
+    expect(
+      container.querySelector('#openrouter-reasoning-max-tokens'),
+    ).toBeNull();
+    await change('#openrouter-reasoning-effort', 'minimal');
+    await completeReply(OPENROUTER);
+    expect(requests[0].body.reasoning).toEqual({
+      effort: 'minimal',
+      exclude: true,
+    });
+    expect(element<HTMLInputElement>('#image-upload').disabled).toBe(true);
+  });
 
   it('enables summary for the displayed default Responses endpoint and switches to Chat Completions', async () => {
     await selectModel(modelCases[0]);
@@ -523,7 +548,7 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     ).toEqual(['First reply', 'Second reply']);
   });
 
-  it.each(modelCases)(
+  it.each(modelCases.filter((model) => model.model !== 'upstage/solar-mini4'))(
     '$provider / $label sends the selected image through its vision path',
     async (model) => {
       await selectModel(model);
