@@ -165,12 +165,12 @@ which this example does not implement; Turbo has not been verified through
 the package's HTTP speech path.
 
 #### Deepgram Flux
-The example uses `/api/deepgram/v2/speak` and `/api/deepgram/v1/models`, proxied
+The example uses `/api/deepgram/v2/speak` and `/api/deepgram/v2/models`, proxied
 to Deepgram by Vite during development and preview. Enter your API key for
 speech, select a Flux voice (Haley is the default), and enter English text.
 The documented Haley preset is always selectable independently of the public
-model catalog. Catalog lookup is optional, needs no API key, and may return
-no Flux entries. Refresh keeps the current selection; empty results or errors
+v2 model catalog. Catalog lookup is optional, needs no API key, and adds the
+other Flux voices to the selector. Refresh keeps the current selection; empty results or errors
 also keep the existing voice list. Optional speed is
 0.5–1.5 in 0.05 increments. Output is MP3; Aura, WebSockets, and beta
 expressivity are outside this integration.

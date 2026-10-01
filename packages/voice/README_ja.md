@@ -322,9 +322,9 @@ const voiceService = new VoiceService({
 `speaker` は必須で、完全な voice ID を `model` クエリとして送信します。
 サンプルの既定値は `flux-haley-en` です。`deepgramSpeed` は任意指定で 0.5〜1.5
 （0.05 刻み）です。`getVoiceEngineVoiceList('deepgram')` は API key 不要の
-公開カタログの英語の Flux voice のみを抽出します。カタログに Flux が
-含まれない場合は空配列を返します。React 例ではカタログに依存しない公式の
-Haley 固定プリセットを常に選べます。任意のカタログ更新でも現在の選択を維持し、
+公開 v2 カタログ（`GET /v2/models`）から英語の Flux voice のみを抽出します。
+v1 カタログ（`/v1/models`）には Aura の voice しか含まれません。React 例では
+カタログに依存しない公式の Haley 固定プリセットを常に選べます。任意のカタログ更新でも現在の選択を維持し、
 空の結果や取得エラーでは既存の一覧も保持します。
 [公式 voice 一覧](https://developers.deepgram.com/docs/flux-tts/voices) も参照してください。
 
@@ -902,7 +902,7 @@ try {
 ### Deepgram Flux の機能
 
 - Token 認証の one-shot `/v2/speak` とバイナリ MP3 出力
-- 英語の Flux voice に対応。任意の公開カタログ取得では Flux が含まれない場合あり
+- 公開 v2 model カタログから英語の Flux voice を取得
 - 任意の話速と endpoint 設定。emotion/style の自動変換は非対応
 
 ### Inworld の機能

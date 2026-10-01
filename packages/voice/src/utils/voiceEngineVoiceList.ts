@@ -97,6 +97,7 @@ interface DeepgramVoiceResponse {
   languages?: string[];
   metadata?: {
     accent?: string;
+    display_name?: string;
     sample?: string;
     tags?: string[];
   };
@@ -416,7 +417,7 @@ async function getCartesiaVoiceList(
 async function getDeepgramVoiceList(
   options: VoiceEngineVoiceListOptions,
 ): Promise<VoiceEngineVoice[]> {
-  // Public model metadata does not require a key. Keep credentials out of this request.
+  // Flux voices are listed by the public v2 model catalog, which does not require a key. Keep credentials out of this request.
   const url = options.voiceListApiUrl?.trim() || DEEPGRAM_VOICES_API_URL;
   const result = await fetchJson<DeepgramModelListResponse>(
     url,
@@ -436,20 +437,23 @@ async function getDeepgramVoiceList(
             (language) => language.toLowerCase() === requestedLanguage,
           )),
     )
-    .map((voice) => ({
-      id: voice.canonical_name,
-      label: voice.metadata?.accent
-        ? `${voice.name} (${voice.metadata.accent})`
-        : voice.name,
-      metadata: {
-        languages: voice.languages?.join(', ') || 'en',
-        ...(voice.metadata?.accent ? { accent: voice.metadata.accent } : {}),
-        ...(voice.metadata?.sample ? { sample: voice.metadata.sample } : {}),
-        ...(voice.metadata?.tags?.length
-          ? { tags: voice.metadata.tags.join(', ') }
-          : {}),
-      },
-    }));
+    .map((voice) => {
+      const name = voice.metadata?.display_name || voice.name;
+      return {
+        id: voice.canonical_name,
+        label: voice.metadata?.accent
+          ? `${name} (${voice.metadata.accent})`
+          : name,
+        metadata: {
+          languages: voice.languages?.join(', ') || 'en',
+          ...(voice.metadata?.accent ? { accent: voice.metadata.accent } : {}),
+          ...(voice.metadata?.sample ? { sample: voice.metadata.sample } : {}),
+          ...(voice.metadata?.tags?.length
+            ? { tags: voice.metadata.tags.join(', ') }
+            : {}),
+        },
+      };
+    });
 }
 
 async function getInworldVoiceList(

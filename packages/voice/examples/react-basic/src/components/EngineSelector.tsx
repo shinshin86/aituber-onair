@@ -142,9 +142,9 @@ export function EngineSelector({
             </div>
           )}
           <div className="speaker-fetch-message">
-            Haley はカタログに依存しない固定プリセットです。 公開カタログには
-            Flux が含まれない場合があります。 確認は任意で API key
-            不要です。更新時も現在の選択を維持し、
+            Haley はカタログに依存しない固定プリセットです。
+            公開カタログを確認すると、ほかの Flux voice を選択肢に追加します。
+            確認は任意で API key 不要です。更新時も現在の選択を維持し、
             空の結果や取得エラーでは既存の一覧も保持します。音声生成には API key
             と英語のテキストが必要です。 この例は Vite proxy
             を使用します。本番では backend route を用意し、 API key

@@ -283,7 +283,7 @@ describe('Voice sample DOM flow with fake network and audio', () => {
     expect(field('speaker').value).toBe('flux-haley-en');
     expect(field('apiUrl').value).toBe('/api/deepgram/v2/speak');
     expect(button(listButton('Deepgram')).disabled).toBe(false);
-    routes.set('GET /api/deepgram/v1/models', (init) => {
+    routes.set('GET /api/deepgram/v2/models', (init) => {
       expect(init.headers).toBeUndefined();
       return jsonResponse({
         tts: [
@@ -333,7 +333,7 @@ describe('Voice sample DOM flow with fake network and audio', () => {
 
   it('keeps the Deepgram preset across catalog errors and empty catalogs, then adds voices on retry', async () => {
     await change('engine', 'deepgram');
-    routes.set('GET /api/deepgram/v1/models', () =>
+    routes.set('GET /api/deepgram/v2/models', () =>
       jsonResponse({ message: 'unavailable' }, 503),
     );
     await click(listButton('Deepgram'));
@@ -343,7 +343,7 @@ describe('Voice sample DOM flow with fake network and audio', () => {
     expect(field('speaker').value).toBe('flux-haley-en');
     expect(button(listButton('Deepgram')).disabled).toBe(false);
 
-    routes.set('GET /api/deepgram/v1/models', () => jsonResponse({ tts: [] }));
+    routes.set('GET /api/deepgram/v2/models', () => jsonResponse({ tts: [] }));
     await click(listButton('Deepgram'));
     expect(field('speaker').value).toBe('flux-haley-en');
     expect(container.querySelector('.speaker-fetch-message--error')).toBeNull();
@@ -352,7 +352,7 @@ describe('Voice sample DOM flow with fake network and audio', () => {
     );
     expect(container.querySelector('.status')?.className).toContain('info');
 
-    routes.set('GET /api/deepgram/v1/models', () =>
+    routes.set('GET /api/deepgram/v2/models', () =>
       jsonResponse({ tts: [{ canonical_name: 'flux-kit-en', name: 'Kit' }] }),
     );
     await click(listButton('Deepgram'));
@@ -367,7 +367,7 @@ describe('Voice sample DOM flow with fake network and audio', () => {
 
   it('preserves a selected Deepgram voice and inputs across empty, failed, and changed catalog refreshes', async () => {
     await change('engine', 'deepgram');
-    routes.set('GET /api/deepgram/v1/models', () =>
+    routes.set('GET /api/deepgram/v2/models', () =>
       jsonResponse({
         tts: [
           { canonical_name: 'flux-kit-en', name: 'Kit' },
@@ -389,7 +389,7 @@ describe('Voice sample DOM flow with fake network and audio', () => {
       }),
       jsonResponse({ message: 'unavailable' }, 503),
     ]) {
-      routes.set('GET /api/deepgram/v1/models', () => response);
+      routes.set('GET /api/deepgram/v2/models', () => response);
       await click(listButton('Deepgram'));
       expect(field('speaker').value).toBe('flux-kit-en');
       expect(field('apiKey').value).toBe('fake-deepgram-key');
@@ -416,7 +416,7 @@ describe('Voice sample DOM flow with fake network and audio', () => {
       }
     }
 
-    routes.set('GET /api/deepgram/v1/models', () =>
+    routes.set('GET /api/deepgram/v2/models', () =>
       jsonResponse({
         tts: [{ canonical_name: 'flux-haley-en', name: 'Haley' }],
       }),
@@ -506,7 +506,7 @@ describe('Voice sample DOM flow with fake network and audio', () => {
     await change('engine', 'deepgram');
     let completeNew: (value: Response) => void = () => {};
     routes.set(
-      'GET /api/deepgram/v1/models',
+      'GET /api/deepgram/v2/models',
       () =>
         new Promise((resolve) => {
           completeNew = resolve;

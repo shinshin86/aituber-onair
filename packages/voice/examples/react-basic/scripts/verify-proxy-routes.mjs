@@ -46,8 +46,8 @@ const cases = [
   },
   {
     name: 'Deepgram public voice list stays unauthenticated',
-    path: '/api/deepgram/v1/models?include=tts&tag=a%2Bb%20c',
-    upstreamPath: '/v1/models?include=tts&tag=a%2Bb%20c',
+    path: '/api/deepgram/v2/models?include=tts&tag=a%2Bb%20c',
+    upstreamPath: '/v2/models?include=tts&tag=a%2Bb%20c',
     method: 'GET',
     headers: {},
     body: '',

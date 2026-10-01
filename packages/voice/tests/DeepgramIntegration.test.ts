@@ -33,7 +33,7 @@ describe('Deepgram public integration', () => {
     );
     expect(update.deepgramSpeed).toBe(0.9);
     expect(DEEPGRAM_TTS_API_URL).toBe('https://api.deepgram.com/v2/speak');
-    expect(DEEPGRAM_VOICES_API_URL).toBe('https://api.deepgram.com/v1/models');
+    expect(DEEPGRAM_VOICES_API_URL).toBe('https://api.deepgram.com/v2/models');
     expect(DEEPGRAM_DEFAULT_VOICE).toBe('flux-haley-en');
   });
 
@@ -114,10 +114,11 @@ describe('Deepgram voice catalog', () => {
     tts: [
       {
         canonical_name: 'flux-haley-en',
-        name: 'Haley',
+        name: 'haley',
         languages: ['en', 'en-US'],
         metadata: {
           accent: 'American',
+          display_name: 'Haley',
           sample: 'https://example.test/haley.wav',
           tags: ['feminine'],
         },
@@ -169,12 +170,12 @@ describe('Deepgram voice catalog', () => {
     } as Response);
 
     const voices = await getVoiceEngineVoiceList('deepgram', {
-      voiceListApiUrl: '/api/deepgram/v1/models',
+      voiceListApiUrl: '/api/deepgram/v2/models',
       language: 'en-GB',
     });
 
     expect(voices.map((voice) => voice.id)).toEqual(['flux-kit-en']);
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/deepgram/v1/models');
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/deepgram/v2/models');
     await expect(
       getVoiceEngineVoiceList('deepgram', { language: 'ja' }),
     ).resolves.toEqual([]);

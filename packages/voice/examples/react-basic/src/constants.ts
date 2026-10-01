@@ -69,7 +69,7 @@ export const ENGINE_DEFAULTS = {
   },
   deepgram: {
     apiUrl: '/api/deepgram/v2/speak',
-    voicesApiUrl: '/api/deepgram/v1/models',
+    voicesApiUrl: '/api/deepgram/v2/models',
     needsApiKey: true,
     acceptsApiKey: true,
     placeholder: 'Your Deepgram API key',

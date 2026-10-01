@@ -330,10 +330,9 @@ const voiceService = new VoiceService({
 The required full voice ID in `speaker` is sent as the `model` query parameter.
 The example defaults to `flux-haley-en`. `deepgramSpeed` is optional (0.5–1.5,
 in 0.05 steps).
-Use `getVoiceEngineVoiceList('deepgram')` to fetch the public model catalog;
-the helper filters any Flux English entries, without an API key. The catalog
-may not include Flux entries, in which case the helper returns an empty list.
-The React example always offers the documented Haley preset independently of
+Use `getVoiceEngineVoiceList('deepgram')` to fetch the public v2 model catalog
+(`GET /v2/models`, no API key) and keep its English Flux entries. The v1
+catalog (`/v1/models`) lists Aura voices only. The React example always offers the documented Haley preset independently of
 the catalog. Its optional catalog refresh preserves the selected voice, and
 empty results or errors also preserve the existing list. See the
 [voice catalog](https://developers.deepgram.com/docs/flux-tts/voices).
@@ -907,7 +906,7 @@ try {
 ### Deepgram Flux Features
 
 - Token-authenticated one-shot `/v2/speak` requests with binary MP3 output
-- English-only Flux voices; optional public catalog lookup may return no Flux entries
+- English-only Flux voices from the public v2 model catalog
 - Optional speech speed and custom endpoint; no emotion/style mapping
 
 ### Inworld Features
