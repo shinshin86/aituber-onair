@@ -7,6 +7,7 @@ import type { VoiceEngineType } from '../types/voiceEngine';
 const CLOUD_ENGINES = new Set<VoiceEngineType>([
   'openai',
   'xai',
+  'openRouter',
   'unrealSpeech',
   'elevenLabs',
   'fishAudio',
@@ -24,6 +25,7 @@ const CUSTOM_ENDPOINT_ENGINES = new Set<VoiceEngineType>([
   'voicepeak',
   'aivisSpeech',
   'openaiCompatible',
+  'openRouter',
   'unrealSpeech',
   'elevenLabs',
   'fishAudio',
@@ -37,6 +39,7 @@ const CUSTOM_ENDPOINT_ENGINES = new Set<VoiceEngineType>([
 const VOICE_LIST_ENGINES = new Set<VoiceEngineType>([
   'voicevox',
   'xai',
+  'openRouter',
   'elevenLabs',
   'fishAudio',
   'cartesia',
@@ -61,6 +64,7 @@ const RUNTIME_BY_ENGINE: Record<VoiceEngineType, VoiceRuntime[]> = {
   voicevox: ['browser', 'node', 'server'],
   voicepeak: ['browser', 'node', 'server'],
   openai: ['browser', 'node', 'server'],
+  openRouter: ['browser', 'node', 'server'],
   xai: ['browser', 'node', 'server'],
   unrealSpeech: ['browser', 'node', 'server'],
   elevenLabs: ['browser', 'node', 'server'],

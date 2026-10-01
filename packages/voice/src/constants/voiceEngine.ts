@@ -2,6 +2,9 @@ export const VOICE_VOX_API_URL = 'http://localhost:50021';
 export const VOICEPEAK_API_URL = 'http://localhost:20202';
 export const AIVIS_SPEECH_API_URL = 'http://localhost:10101';
 export const OPENAI_TTS_API_URL = 'https://api.openai.com/v1/audio/speech';
+export const OPENROUTER_TTS_API_URL =
+  'https://openrouter.ai/api/v1/audio/speech';
+export const OPENROUTER_MODELS_API_URL = 'https://openrouter.ai/api/v1/models';
 export const XAI_TTS_API_URL = 'https://api.x.ai/v1/tts';
 export const XAI_VOICES_API_URL = 'https://api.x.ai/v1/tts/voices';
 export const UNREAL_SPEECH_TTS_API_URL =

@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、xAI TTS、Unreal Speech、ElevenLabs、Fish Audio、Cartesia、Deepgram Flux、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloud、Web Speech APIなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、OpenRouter TTS（プレビュー・明示選択）、xAI TTS、Unreal Speech、ElevenLabs、Fish Audio、Cartesia、Deepgram Flux、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloud、Web Speech APIなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -174,6 +174,77 @@ const voiceService = new VoiceService({
   apiKey: 'your-openai-api-key'
 });
 ```
+
+### OpenRouter TTS（パブリックプレビュー・明示選択）
+
+プレビューモデルは明示的に選択する必要があり、既定値にはしません。この専用
+エンジンは `microsoft/mai-voice-2.1` と
+`microsoft/mai-voice-2.1-flash` を OpenRouter の
+[`POST /api/v1/audio/speech`](https://openrouter.ai/docs/api/api-reference/tts/create-speech)
+経由で利用します。[OpenRouter TTS ガイド](https://openrouter.ai/docs/guides/overview/multimodal/tts)
+には両モデルの ID、モデルごとの完全な音声 ID、24 kHz モノラル PCM 応答が記載されています。
+Microsoft は両モデルを [SLA のないパブリックプレビューとし、本番利用を推奨していません](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/mai-voices)。
+2026 年 10 月 1 日に確認したカタログでは各モデルに 28 ロケール・97 音声があり、
+日本語音声はありません。音声の提供状況は変わるため、選択したモデルの一覧を取得してください。
+
+```typescript
+import {
+  VoiceEngineAdapter,
+  getVoiceEngineVoiceList,
+  type OpenRouterTtsModel,
+} from '@aituber-onair/voice';
+
+// Preview opt-in: no model is selected if this field is omitted.
+const model: OpenRouterTtsModel = 'microsoft/mai-voice-2.1';
+const voices = await getVoiceEngineVoiceList('openRouter', {
+  openRouterModel: model,
+  // Optional for the public catalog; required for synthesis.
+  apiKey: 'your-openrouter-api-key',
+});
+const speaker = voices.find((voice) =>
+  voice.id === 'en-US-Harper:MAI-Voice-2.1',
+)?.id;
+if (!speaker) throw new Error('Select an available voice for this model');
+
+const voiceService = new VoiceEngineAdapter({
+  engineType: 'openRouter',
+  openRouterModel: model,
+  speaker,
+  apiKey: 'your-openrouter-api-key',
+  // Optional full endpoint, not a base URL:
+  // openRouterApiUrl: 'https://openrouter.ai/api/v1/audio/speech',
+});
+await voiceService.speakText('Hello! Welcome to the show.');
+```
+
+Bearer 認証と JSON `{ model, input, voice, response_format: 'pcm' }` を送ります。
+音声 API の `audio/pcm` は 16-bit little-endian、MAI ルートは 24 kHz モノラルです。
+既存の PCM ヘルパーで WAV ヘッダーを付け、ブラウザ / Node 音声プレイヤーと
+`onPlay` コールバックに完全な WAV バッファーを渡します。MP3 やヘッダーなし PCM を
+そのままプレイヤーには渡しません。Node での再生には後述の任意の再生依存パッケージが必要です。
+PCM 以外、空、16-bit サンプルが途中で切れた応答は再生前に拒否します。
+一括生成であり、リアルタイム音声ストリーミングではありません。感情タグは
+音声スタイルに変換せず、速度・スタイル・音声クローンのパラメーターも送りません。
+合成言語は音声 ID のロケールで決まります。
+
+音声一覧は `GET https://openrouter.ai/api/v1/models?output_modalities=speech`
+から取得し、`openRouterModel` と完全一致するモデルの `supported_voices` だけを
+返します。一覧取得オプションの `openRouterModelsApiUrl`（または `voiceListApiUrl`）
+で別の一覧エンドポイントを設定できます。音声生成側の `openRouterApiUrl` を変更しても
+一覧の送信先は変わりません。ブラウザでは相対 URL、Node では絶対 HTTP(S) URL を使います。
+API キーを指定すると設定した送信先に送られるため、信頼できる URL のみを設定してください。
+
+実行中にモデルを変える場合は、新モデルの一覧から音声を選び、`openRouterModel` と
+`speaker` を同時に更新してください。モデルだけの更新では以前の音声をクリアします。
+音声 ID の末尾は `:MAI-Voice-2.1` または `:MAI-Voice-2.1-Flash` です。
+モデルに合わない末尾は自動変換せず拒否します。React サンプルも初期状態では
+プレビューモデル・音声を選択せず、モデル別音声一覧、API キー、生成 / 一覧 URL を指定できます。
+
+サンプルは OpenRouter に直接リクエストします。ブラウザのキーはページから
+見えるため、共有アプリでは共通の秘密をクライアントに埋め込まず、キーを保護する
+バックエンドを使用してください。直接アクセスの可否はプロバイダーの CORS 設定と
+デプロイ環境に依存します。カスタム URL はアプリのオリジンを許可するか、
+同一オリジンのバックエンドルートとして構成してください。
 
 ### xAI TTS
 音声 ID、言語、出力形式を指定できる xAI のクラウド TTS API。
@@ -781,6 +852,12 @@ const voiceService = new VoiceService({
   - `openAiCompatibleTimeoutMs`
   - `openAiCompatibleInstructions`
   - `openAiCompatibleResponseFormat`
+
+- **OpenRouter TTS（パブリックプレビュー）**
+  - 必須モデル: `openRouterModel`（既定値なし）
+  - 音声: 対応するモデルの末尾を含む `speaker`
+  - 生成先: `openRouterApiUrl`、PCM 応答を 24 kHz モノラル WAV に変換
+  - 一覧取得オプション: `openRouterModel`、任意の `openRouterModelsApiUrl`
 
 - **xAI TTS**
   - `xaiLanguage`

@@ -11,6 +11,7 @@ import type {
   InworldVoiceServiceOptions,
   MinimaxVoiceServiceOptions,
   OpenAiVoiceServiceOptions,
+  OpenRouterVoiceServiceOptions,
   PiperPlusVoiceServiceOptions,
   UnrealSpeechVoiceServiceOptions,
   VoicePeakVoiceServiceOptions,
@@ -73,6 +74,11 @@ export interface AivisSpeechConfigurableEngine extends VoiceEngine {
 export interface OpenAiConfigurableEngine extends VoiceEngine {
   setModel?(value: string): void;
   setSpeed?(value?: number): void;
+}
+
+export interface OpenRouterConfigurableEngine extends VoiceEngine {
+  setApiEndpoint?(value: string): void;
+  setModel?(value?: OpenRouterVoiceServiceOptions['openRouterModel']): void;
 }
 
 export interface XaiConfigurableEngine extends VoiceEngine {

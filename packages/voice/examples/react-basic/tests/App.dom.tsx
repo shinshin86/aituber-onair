@@ -584,3 +584,414 @@ describe('Voice sample DOM flow with fake network and audio', () => {
     );
   });
 });
+
+const openRouterListButton =
+  'button[aria-label="Fetch OpenRouter model voices"]';
+const maiModel = 'microsoft/mai-voice-2.1';
+const flashModel = 'microsoft/mai-voice-2.1-flash';
+const maiVoice = 'en-US-Harper:MAI-Voice-2.1';
+const maiCzechVoice = 'cs-CZ-Grant:MAI-Voice-2.1';
+const maiSecondVoice = 'en-US-Ava:MAI-Voice-2.1';
+const flashVoice = 'en-US-Harper:MAI-Voice-2.1-Flash';
+const modelsRoute =
+  'GET https://openrouter.ai/api/v1/models?output_modalities=speech';
+
+const openRouterPcmBytes = new Uint8Array([0, 0, 255, 127, 0, 128, 1, 0])
+  .buffer;
+
+function expectOpenRouterWav(buffer: ArrayBuffer) {
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+  const chunkName = (offset: number) =>
+    String.fromCharCode(...bytes.subarray(offset, offset + 4));
+  expect(buffer.byteLength).toBe(44 + openRouterPcmBytes.byteLength);
+  expect(chunkName(0)).toBe('RIFF');
+  expect(view.getUint32(4, true)).toBe(36 + openRouterPcmBytes.byteLength);
+  expect(chunkName(8)).toBe('WAVE');
+  expect(chunkName(12)).toBe('fmt ');
+  expect(view.getUint32(16, true)).toBe(16);
+  expect(view.getUint16(20, true)).toBe(1); // PCM
+  expect(view.getUint16(22, true)).toBe(1); // Mono
+  expect(view.getUint32(24, true)).toBe(24000);
+  expect(view.getUint32(28, true)).toBe(48000);
+  expect(view.getUint16(32, true)).toBe(2);
+  expect(view.getUint16(34, true)).toBe(16);
+  expect(chunkName(36)).toBe('data');
+  expect(view.getUint32(40, true)).toBe(openRouterPcmBytes.byteLength);
+  expect(bytes.subarray(44)).toEqual(new Uint8Array(openRouterPcmBytes));
+}
+
+function openRouterCatalog() {
+  return jsonResponse({
+    data: [
+      {
+        id: maiModel,
+        supported_voices: [maiCzechVoice, maiVoice, maiSecondVoice],
+      },
+      { id: flashModel, supported_voices: [flashVoice] },
+      { id: 'other/model', supported_voices: ['unrelated-voice'] },
+    ],
+  });
+}
+
+async function configureOpenRouter() {
+  await change('engine', 'openRouter');
+  await change('apiKey', 'fake-openrouter-key');
+  await change('openRouterModel', maiModel);
+  routes.set(modelsRoute, (init) => {
+    expect(init.headers).toEqual({
+      Authorization: 'Bearer fake-openrouter-key',
+    });
+    return openRouterCatalog();
+  });
+  await click(openRouterListButton);
+  await change('speaker', maiVoice);
+}
+
+describe('OpenRouter public-preview model flow with offline fixtures', () => {
+  it('keeps OpenAI as default and requires explicit preview model and catalog voice selection', async () => {
+    expect(field('engine').value).toBe('openai');
+    await change('engine', 'openRouter');
+    expect(field('openRouterModel').value).toBe('');
+    expect(field('speaker').value).toBe('');
+    expect(field('speaker').disabled).toBe(true);
+    expect(button(speakButton).disabled).toBe(true);
+    expect(button(openRouterListButton).disabled).toBe(true);
+    expect(field('text').value).toBe(
+      'Hello! Welcome to the AITuber OnAir Voice React demo.',
+    );
+    expect(field('apiUrl').value).toBe(
+      'https://openrouter.ai/api/v1/audio/speech',
+    );
+    expect(field('openRouterModelsApiUrl').value).toBe(
+      'https://openrouter.ai/api/v1/models',
+    );
+    expect(container.textContent).toContain('no service-level agreement (SLA)');
+    expect(container.textContent).toContain('not recommended for production');
+    expect(
+      container.querySelector(
+        'input[id*="Speed"], select[id*="Emotion"], input[id*="Style"]',
+      ),
+    ).toBeNull();
+    expect(
+      Array.from((field('openRouterModel') as HTMLSelectElement).options).map(
+        (option) => option.value,
+      ),
+    ).toEqual(['', maiModel, flashModel]);
+
+    await change('apiKey', 'fake-openrouter-key');
+    expect(button(openRouterListButton).disabled).toBe(true);
+    await change('openRouterModel', maiModel);
+    expect(button(openRouterListButton).disabled).toBe(false);
+    expect(button(speakButton).disabled).toBe(true);
+    routes.set(modelsRoute, () => openRouterCatalog());
+    await click(openRouterListButton);
+    expect(
+      Array.from((field('speaker') as HTMLSelectElement).options).map(
+        (option) => option.value,
+      ),
+    ).toEqual(['', maiCzechVoice, maiVoice, maiSecondVoice]);
+    expect(field('speaker').value).toBe('');
+    expect(button(speakButton).disabled).toBe(true);
+    await change('speaker', maiVoice);
+    expect(button(speakButton).disabled).toBe(false);
+    await change('speaker', '');
+    expect(button(speakButton).disabled).toBe(true);
+    expect(audio.played).not.toHaveBeenCalled();
+  });
+
+  it('preserves an explicitly selected catalog voice on refresh only while it remains available', async () => {
+    await configureOpenRouter();
+    await change('speaker', maiSecondVoice);
+    await click(openRouterListButton);
+    expect(field('speaker').value).toBe(maiSecondVoice);
+    expect(button(speakButton).disabled).toBe(false);
+    routes.set(modelsRoute, () =>
+      jsonResponse({
+        data: [{ id: maiModel, supported_voices: [maiCzechVoice, maiVoice] }],
+      }),
+    );
+    await click(openRouterListButton);
+    expect(field('speaker').value).toBe('');
+    expect(button(speakButton).disabled).toBe(true);
+    await change('speaker', maiVoice);
+    expect(button(speakButton).disabled).toBe(false);
+  });
+
+  it('clears an existing OpenRouter voice when a successful catalog refresh returns no voices', async () => {
+    await configureOpenRouter();
+    expect(field('speaker').value).toBe(maiVoice);
+    expect(button(speakButton).disabled).toBe(false);
+    routes.set(modelsRoute, () =>
+      jsonResponse({
+        data: [{ id: maiModel, supported_voices: [] }],
+      }),
+    );
+    await click(openRouterListButton);
+    expect(field('speaker').value).toBe('');
+    expect(field('speaker').disabled).toBe(true);
+    expect(button(speakButton).disabled).toBe(true);
+    expect(container.querySelector(`option[value="${maiVoice}"]`)).toBeNull();
+    expect(
+      container.querySelector('.speaker-fetch-message--error')?.textContent,
+    ).toContain('No speakers found');
+  });
+
+  it.each([
+    ['missing model', () => jsonResponse({ data: [] })],
+    [
+      'null supported voices',
+      () => jsonResponse({ data: [{ id: maiModel, supported_voices: null }] }),
+    ],
+    ['invalid response shape', () => jsonResponse({ data: 'invalid' })],
+    [
+      'HTTP failure',
+      () => jsonResponse({ error: { message: 'unavailable' } }, 503),
+    ],
+    [
+      'transport failure',
+      () => {
+        throw new TypeError('Failed to fetch');
+      },
+    ],
+  ] as const)(
+    'clears a selected OpenRouter voice after %s and requires explicit reselection on retry',
+    async (_name, response) => {
+      await configureOpenRouter();
+      expect(field('speaker').value).toBe(maiVoice);
+      expect(button(speakButton).disabled).toBe(false);
+      routes.set(modelsRoute, response);
+      await click(openRouterListButton);
+      expect(field('speaker').value).toBe('');
+      expect(field('speaker').disabled).toBe(true);
+      expect(button(speakButton).disabled).toBe(true);
+      expect(
+        Array.from((field('speaker') as HTMLSelectElement).options).map(
+          (option) => option.value,
+        ),
+      ).toEqual(['']);
+      expect(
+        container.querySelector('.speaker-fetch-message--error'),
+      ).not.toBeNull();
+
+      routes.set(modelsRoute, () => openRouterCatalog());
+      await click(openRouterListButton);
+      expect(
+        container.querySelector('.speaker-fetch-message--error'),
+      ).toBeNull();
+      expect(field('speaker').disabled).toBe(false);
+      expect(field('speaker').value).toBe('');
+      expect(button(speakButton).disabled).toBe(true);
+      await change('speaker', maiVoice);
+      expect(button(speakButton).disabled).toBe(false);
+      expect(audio.played).not.toHaveBeenCalled();
+    },
+  );
+
+  it('sends selected model and voice to the speech URL, with independent catalog URL and runtime changes', async () => {
+    await change('engine', 'openRouter');
+    await change('apiKey', 'fake-openrouter-key');
+    await change('openRouterModel', maiModel);
+    await change('apiUrl', 'https://tts.example.test/speech');
+    await change(
+      'openRouterModelsApiUrl',
+      'https://catalog.example.test/models?scope=demo',
+    );
+    await change('text', 'A custom English sample');
+    routes.set(
+      'GET https://catalog.example.test/models?scope=demo&output_modalities=speech',
+      (init) => {
+        expect(init.headers).toEqual({
+          Authorization: 'Bearer fake-openrouter-key',
+        });
+        return openRouterCatalog();
+      },
+    );
+    await click(openRouterListButton);
+    await change('speaker', maiVoice);
+    const bodies: Record<string, unknown>[] = [];
+    routes.set('POST https://tts.example.test/speech', (init) => {
+      expect(init.headers).toEqual({
+        Authorization: 'Bearer fake-openrouter-key',
+        'Content-Type': 'application/json',
+      });
+      bodies.push(JSON.parse(init.body as string));
+      return audioResponse(openRouterPcmBytes, 'audio/pcm');
+    });
+    await click(speakButton);
+    await change('speaker', maiSecondVoice);
+    await click(speakButton);
+    await change('openRouterModel', flashModel);
+    expect(field('speaker').value).toBe('');
+    expect(button(speakButton).disabled).toBe(true);
+    expect(container.querySelector(`option[value="${maiVoice}"]`)).toBeNull();
+    await click(openRouterListButton);
+    expect(field('speaker').value).toBe('');
+    expect(button(speakButton).disabled).toBe(true);
+    await change('speaker', flashVoice);
+    expect(field('speaker').value).toBe(flashVoice);
+    await click(speakButton);
+    expect(bodies).toEqual([
+      {
+        model: maiModel,
+        input: 'A custom English sample',
+        voice: maiVoice,
+        response_format: 'pcm',
+      },
+      {
+        model: maiModel,
+        input: 'A custom English sample',
+        voice: maiSecondVoice,
+        response_format: 'pcm',
+      },
+      {
+        model: flashModel,
+        input: 'A custom English sample',
+        voice: flashVoice,
+        response_format: 'pcm',
+      },
+    ]);
+    expect(audio.played).toHaveBeenCalledTimes(3);
+    for (const [buffer] of audio.played.mock.calls) {
+      expectOpenRouterWav(buffer);
+    }
+    expect(field('apiUrl').value).toBe('https://tts.example.test/speech');
+    expect(field('openRouterModelsApiUrl').value).toBe(
+      'https://catalog.example.test/models?scope=demo',
+    );
+    expect(field('apiKey').value).toBe('fake-openrouter-key');
+    expect(field('text').value).toBe('A custom English sample');
+  });
+
+  it('ignores old successes and failures after rapid A-to-B-to-A model changes without clearing the newest loading state', async () => {
+    await change('engine', 'openRouter');
+    await change('apiKey', 'fake-openrouter-key');
+    await change('openRouterModel', maiModel);
+    const pending: {
+      resolve: (value: Response) => void;
+      reject: (error: Error) => void;
+    }[] = [];
+    routes.set(
+      modelsRoute,
+      () =>
+        new Promise<Response>((resolve, reject) =>
+          pending.push({ resolve, reject }),
+        ),
+    );
+    await click(openRouterListButton);
+    await change('openRouterModel', flashModel);
+    expect(button(openRouterListButton).disabled).toBe(false);
+    await click(openRouterListButton);
+    await change('openRouterModel', maiModel);
+    await click(openRouterListButton);
+    expect(pending).toHaveLength(3);
+    await act(async () => pending[0].resolve(openRouterCatalog()));
+    expect(field('speaker').value).toBe('');
+    expect(button(openRouterListButton).disabled).toBe(true);
+    await act(async () =>
+      pending[1].reject(new Error('Stale model request failed')),
+    );
+    expect(container.querySelector('.speaker-fetch-message--error')).toBeNull();
+    expect(button(openRouterListButton).disabled).toBe(true);
+    await act(async () => pending[2].resolve(openRouterCatalog()));
+    expect(field('speaker').value).toBe('');
+    expect(button(openRouterListButton).disabled).toBe(false);
+    expect(button(speakButton).disabled).toBe(true);
+    await change('speaker', maiVoice);
+    expect(button(speakButton).disabled).toBe(false);
+  });
+
+  it.each(['apiKey', 'openRouterModelsApiUrl'])(
+    'invalidates catalog selection and in-flight replies when %s changes',
+    async (setting) => {
+      await configureOpenRouter();
+      let completeOld: (value: Response) => void = () => {};
+      routes.set(
+        modelsRoute,
+        () =>
+          new Promise<Response>((resolve) => {
+            completeOld = resolve;
+          }),
+      );
+      await click(openRouterListButton);
+      await change(
+        setting,
+        setting === 'apiKey'
+          ? 'replacement-fake-key'
+          : 'https://catalog.example.test/replacement',
+      );
+      expect(field('speaker').value).toBe('');
+      expect(button(speakButton).disabled).toBe(true);
+      await act(async () => completeOld(openRouterCatalog()));
+      expect(field('speaker').value).toBe('');
+      expect(field('speaker').disabled).toBe(true);
+      expect(button(openRouterListButton).disabled).toBe(false);
+      expect(
+        container.querySelector('.speaker-fetch-message--error'),
+      ).toBeNull();
+    },
+  );
+
+  it('resets preview opt-in after switching engines and ignores the old provider catalog', async () => {
+    await configureOpenRouter();
+    await change('text', 'Keep my custom text');
+    let completeOld: (value: Response) => void = () => {};
+    routes.set(
+      modelsRoute,
+      () =>
+        new Promise<Response>((resolve) => {
+          completeOld = resolve;
+        }),
+    );
+    await click(openRouterListButton);
+    await change('engine', 'openai');
+    await change('engine', 'openRouter');
+    await act(async () => completeOld(openRouterCatalog()));
+    expect(field('openRouterModel').value).toBe('');
+    expect(field('apiKey').value).toBe('');
+    expect(field('speaker').value).toBe('');
+    expect(field('text').value).toBe('Keep my custom text');
+    expect(button(speakButton).disabled).toBe(true);
+  });
+
+  it('recovers from empty catalogs, catalog errors, and speech errors without a hidden fallback voice', async () => {
+    await change('engine', 'openRouter');
+    await change('apiKey', 'fake-openrouter-key');
+    await change('openRouterModel', maiModel);
+    for (const response of [
+      jsonResponse({ data: [] }),
+      jsonResponse({ error: { message: 'fixture rejection' } }, 503),
+    ]) {
+      routes.set(modelsRoute, () => response);
+      await click(openRouterListButton);
+      expect(field('speaker').value).toBe('');
+      expect(button(speakButton).disabled).toBe(true);
+      expect(button(openRouterListButton).disabled).toBe(false);
+      expect(
+        container.querySelector('.speaker-fetch-message--error'),
+      ).not.toBeNull();
+    }
+    routes.set(modelsRoute, () => openRouterCatalog());
+    await click(openRouterListButton);
+    await change('speaker', maiVoice);
+    await change('text', 'Keep the retry input');
+    const speechRoute = 'POST https://openrouter.ai/api/v1/audio/speech';
+    routes.set(speechRoute, () =>
+      jsonResponse({ error: { message: 'fixture rejection' } }, 401),
+    );
+    await click(speakButton);
+    expect(container.querySelector('.status')?.textContent).toContain('401');
+    expect(field('speaker').value).toBe(maiVoice);
+    expect(field('text').value).toBe('Keep the retry input');
+    expect(button(speakButton).disabled).toBe(false);
+    routes.set(speechRoute, () =>
+      audioResponse(openRouterPcmBytes, 'audio/pcm'),
+    );
+    await click(speakButton);
+    expect(audio.played).toHaveBeenCalledTimes(1);
+    expectOpenRouterWav(audio.played.mock.calls[0][0]);
+    expect(container.querySelector('.status')?.textContent).toBe(
+      'Playback completed',
+    );
+  });
+});

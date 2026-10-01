@@ -1,3 +1,4 @@
+import type { OpenRouterTtsModel } from '../engines/OpenRouterEngine';
 import type { VoiceEngineType } from './voiceEngine';
 
 export type VoiceRuntime = 'browser' | 'node' | 'server' | 'unknown';
@@ -19,6 +20,10 @@ export interface VoiceEngineVoice {
 
 export interface VoiceEngineVoiceListOptions {
   apiKey?: string;
+  /** Required for OpenRouter: voices are scoped to this exact preview model. */
+  openRouterModel?: OpenRouterTtsModel;
+  /** Full models endpoint, separate from the speech endpoint. */
+  openRouterModelsApiUrl?: string;
   apiUrl?: string;
   voiceListApiUrl?: string;
   language?: string;
