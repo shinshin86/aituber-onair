@@ -17,6 +17,7 @@ export type VoiceEngineType =
   | 'fishAudio'
   | 'cartesia'
   | 'inworld'
+  | 'deepgram'
   | 'gradium'
   | 'piperPlus'
   | 'webSpeech'
@@ -166,6 +167,13 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
         sampleRateHertz: 48000,
         language: 'ja-JP',
       },
+    },
+    deepgram: {
+      name: 'Deepgram Flux',
+      apiUrl: '/api/deepgram/v2/speak',
+      needsApiKey: true,
+      placeholder: 'Deepgram API key',
+      defaultParams: { voiceListApiUrl: '/api/deepgram/v2/models' },
     },
     gradium: {
       name: 'Gradium',

@@ -174,6 +174,9 @@ function getTtsApiKey(
   if (settings.tts.engine === 'inworld') {
     return settings.tts.inworldApiKey || '';
   }
+  if (settings.tts.engine === 'deepgram') {
+    return settings.tts.deepgramApiKey || '';
+  }
   if (settings.tts.engine === 'gradium') {
     return settings.tts.gradiumApiKey || '';
   }
@@ -329,17 +332,20 @@ function buildVoiceOptions(
     elevenLabsSimilarityBoost: Number.isNaN(parsedElevenLabsSimilarityBoost)
       ? undefined
       : parsedElevenLabsSimilarityBoost,
-    elevenLabsStyle: Number.isNaN(parsedElevenLabsStyle)
-      ? undefined
-      : parsedElevenLabsStyle,
+    elevenLabsStyle:
+      tts.elevenLabsModel === 'eleven_v4' || Number.isNaN(parsedElevenLabsStyle)
+        ? undefined
+        : parsedElevenLabsStyle,
     elevenLabsUseSpeakerBoost:
+      tts.elevenLabsModel !== 'eleven_v4' &&
       tts.elevenLabsUseSpeakerBoost &&
       tts.elevenLabsUseSpeakerBoost !== 'default'
         ? tts.elevenLabsUseSpeakerBoost === 'true'
         : undefined,
-    elevenLabsSpeed: Number.isNaN(parsedElevenLabsSpeed)
-      ? undefined
-      : parsedElevenLabsSpeed,
+    elevenLabsSpeed:
+      tts.elevenLabsModel === 'eleven_v4' || Number.isNaN(parsedElevenLabsSpeed)
+        ? undefined
+        : parsedElevenLabsSpeed,
     elevenLabsSeed: Number.isNaN(parsedElevenLabsSeed)
       ? undefined
       : parsedElevenLabsSeed,
@@ -401,6 +407,12 @@ function buildVoiceOptions(
     inworldTemperature: Number.isNaN(parsedInworldTemperature)
       ? undefined
       : parsedInworldTemperature,
+    deepgramApiUrl: tts.deepgramApiUrl?.trim() || undefined,
+    deepgramSpeed:
+      tts.deepgramSpeed?.trim() && Number.isFinite(Number(tts.deepgramSpeed))
+        ? Number(tts.deepgramSpeed)
+        : undefined,
+    gradiumModel: tts.gradiumModel,
     gradiumApiUrl: tts.gradiumApiUrl?.trim() || undefined,
     gradiumOutputFormat:
       (tts.gradiumOutputFormat as GradiumOutputFormat | undefined) || undefined,

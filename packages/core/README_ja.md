@@ -12,7 +12,7 @@
 
 ## Chat・Voiceモデルの更新
 
-Chat 0.58.0のモデル・能力判定ヘルパーと、Voice 0.23.0のGemini TTSモデル型とOpenAI互換音声合成用ヘルパーをCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
+Chat 0.61.0のモデル・能力判定ヘルパーと、Voice 0.25.0の音声エンジン・設定型・エンドポイント用ヘルパーをCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
 
 - ネイティブモデル: GPT-6 Astra / Sol / Luna、Claude Fable 5.1 / Opus 5.5 / Sonnet 5.5、DeepSeek V4.1 Flash、Grok 4.7。
 - OpenAI 互換エンドポイント用ヘルパー: `resolveOpenAICompatibleEndpoint`、`listOpenAICompatibleModels`、`testOpenAICompatibleConnection`、`OPENAI_COMPATIBLE_LOCAL_PRESETS`（Ollama、LM Studio、llama.cpp、vLLM）。[ローカル LLM ガイド](../../docs/local-llm.ja.md)も参照してください。
@@ -24,6 +24,19 @@ Chat 0.58.0のモデル・能力判定ヘルパーと、Voice 0.23.0のGemini TT
 - Inworldでは既定の`inworld-tts-2`に加えて`inworld-tts-2-flash`を選択できます。Delivery Mode非対応モデル（現在はFlash）ではその設定を送信せず、全Reactサンプルで入力欄を無効にします。ボイス一覧、設定保存、その他の音声設定は維持しています。
 
 React basicには新モデルを一覧表示します。アバターサンプルもCoreの対応モデル一覧を参照して選択肢に反映し、対応するOpenAI推論モデルにCasualプリセットを適用します。Nodeサンプルはモデルとプロバイダー設定をCoreへ渡します。
+
+- 新しい選択肢は、ネイティブの GPT-6.1 Sol、Z.ai GLM-5.3 FlashX、Mistral の `zai-glm-5-3` と、OpenRouter の GPT-6.1 Sol / GPT-6 Sol / Luna、Claude Sonnet / Opus 5.5、Grok 4.7、GLM-5.3 FlashX、`nvidia/nemotron-3.5-lightning`、`qwen/qwen3.8-27b`、`qwen/qwen3.8-omni-flash` です。
+- 推論強度やトークン予算が公開されていないモデルには、その設定を送信しません。`OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET` は今回追加した Nemotron / Qwen の3モデルを示します。Qwen の2モデルは画像入力に対応し、Nemotron と Mistral GLM-5.3 はテキスト専用です。Mistral GLM-5.3 は利用可能な契約プランが必要で、推論強度は変更できません。
+- GPT-6.1 Sol の Casual プリセットは推論強度 `low` を使います。既定の Responses API はツール利用に必須です。ツールなしの Chat Completions では `low`、`medium`、`high`、`xhigh`、`max` を使えます。Z.ai GLM-5.3 FlashX は推論が必須で、画像入力に対応します。Model API キーが必要です。ネイティブ Z.ai へのブラウザ接続は、プロバイダーの CORS 制約で失敗する場合があります。
+- Voice では ElevenLabs `eleven_v4`、Cartesia `sonic-3.6` / `sonic-3.6-2026-08-27`、Deepgram Flux、Gradium の `gradium-tts-beta` を選択できます。ElevenLabs v4 では Stability と Similarity を使い、非対応の Style、Speed、Speaker Boost は送信しません。Cartesia の既定は `sonic-3.5`、Gradium の既定は production のままです。Gradium beta は `gradiumModel` で明示的に選択します。
+
+API と制約の詳細は [Chat README](../chat/README.ja.md) と [Voice README](../voice/README_ja.md) を参照してください。
+
+### Deepgram Flux の設定
+
+`engineType: 'deepgram'`、API キー、`flux-haley-en` などの英語 Flux 音声 ID を指定します。Core は `DeepgramEngine`、設定型、音声合成・カタログ URL 定数を再エクスポートします。`getVoiceEngineVoiceList('deepgram')` は API キーなしで v2 公開カタログの英語音声を取得します。`deepgramSpeed` は 0.5〜1.5 を 0.05 刻みで指定できます。`POST /v2/speak` から完成した MP3 を取得する方式で、Aura や WebSocket 音声合成は使いません。[Deepgram batch ガイド](https://developers.deepgram.com/docs/flux-tts/batch)を参照してください。
+
+TTS 設定を持つ全10 React サンプルでは、Vite の dev / preview proxy 経由で `/api/deepgram/v2/speak` と `/api/deepgram/v2/models` を使います。本番環境では認証付き backend route を用意し、API キーをサーバー側に保持してください。アバターサンプルでは音声合成・カタログ URL を変更できます。音声一覧の更新は選択中の音声を保持し、空の結果や取得失敗でも既存の一覧を残します。Haley は常に選択できます。Gradium は production が既定で、エンジンを切り替えて Gradium に戻すと production に戻ります。
 
 ## 目次
 

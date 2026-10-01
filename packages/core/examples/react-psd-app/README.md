@@ -22,7 +22,7 @@ asset is governed by [separate usage terms](./MIKO_ASSET_TERMS.md).
 
 ## Chat and Voice model updates
 
-This example uses Chat 0.58.0 and Voice 0.22.0 through Core. Select a
+This example uses Chat 0.61.0 and Voice 0.25.0 through Core. Select a
 supported model such as `gpt-6-sol`, `gpt-6-luna`, `claude-opus-5-5`,
 `claude-sonnet-5-5`,
 `grok-4.7`, or `deepseek-flash` in
@@ -210,3 +210,30 @@ You can tune constants in `src/hooks/useAudioLipsync.ts`:
 - Firefox and Safari are not supported
 - Mic button is disabled on unsupported browsers
 - Requires HTTPS or localhost
+
+## Updated Chat and Voice options
+
+This example uses published Chat 0.61.0 and Voice 0.25.0 through Core.
+New Chat models are available in the model selector, including GPT-6.1 Sol,
+GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
+Chat's capability checks and model-specific reasoning defaults. The avatar
+examples keep their existing reasoning UI; OpenAI's casual preset selects
+`low` for GPT-6.1 Sol. Mistral GLM-5.3 and OpenRouter Nemotron are text-only;
+the new OpenRouter Qwen models support images. Mistral GLM-5.3 requires an
+eligible subscription tier, and native Z.ai browser calls may fail on CORS.
+
+Select **Deepgram Flux** for English-only, one-shot MP3 speech. Enter a
+Deepgram API key and select a named voice from the public v2 catalog.
+Haley is always available; refreshes preserve the selected voice and keep
+the previous list on empty or failed responses. Optional Speed is 0.5–1.5
+in 0.05 steps. Vite development and preview proxy `/api/deepgram/v2/speak`
+and `/api/deepgram/v2/models` to Deepgram. Production needs equivalent
+authenticated backend routes with API keys kept server-side.
+
+ElevenLabs `eleven_v4` retains Stability and Similarity but disables Style,
+Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
+`sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
+model selector defaults to production; `gradium-tts-beta` is an explicit
+opt-in, and switching back to Gradium resets the model to production.
+See the [Core model update notes](../../README.md#chat-and-voice-model-updates)
+for endpoint details and limitations.

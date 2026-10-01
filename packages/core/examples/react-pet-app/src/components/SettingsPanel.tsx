@@ -10,6 +10,7 @@ import {
   type XaiReasoningEffort,
 } from '@aituber-onair/core';
 import { ScreenVisionPanel } from './ScreenVisionPanel';
+import { useDeepgramVoices } from '../hooks/useDeepgramVoices';
 import { StreamSettings } from './StreamSettings';
 import { LocalLlmSetup } from './LocalLlmSetup';
 import { LocalTtsSetup } from './LocalTtsSetup';
@@ -75,6 +76,7 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'fishAudio', label: 'Fish Audio' },
   { value: 'cartesia', label: 'Cartesia' },
   { value: 'inworld', label: 'Inworld' },
+  { value: 'deepgram', label: 'Deepgram Flux' },
   { value: 'gradium', label: 'Gradium' },
   { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'webSpeech', label: 'Web Speech API' },
@@ -133,6 +135,7 @@ const UNREAL_SPEECH_SPEAKERS = [
 ] as const;
 const UNREAL_SPEECH_CODECS = ['libmp3lame', 'pcm_mulaw', 'pcm_s16le'] as const;
 const ELEVENLABS_MODELS = [
+  'eleven_v4',
   'eleven_v3',
   'eleven_flash_v2_5',
   'eleven_multilingual_v2',
@@ -151,7 +154,11 @@ const FISH_AUDIO_MODELS = [
 ] as const;
 const FISH_AUDIO_FORMATS = ['mp3', 'wav', 'pcm', 'opus'] as const;
 const FISH_AUDIO_LATENCIES = ['normal', 'balanced', 'low'] as const;
-const CARTESIA_MODELS = ['sonic-3.5'] as const;
+const CARTESIA_MODELS = [
+  'sonic-3.5',
+  'sonic-3.6',
+  'sonic-3.6-2026-08-27',
+] as const;
 const CARTESIA_LANGUAGES = [
   'ja',
   'en',
@@ -401,6 +408,10 @@ export function SettingsPanel({
   onPetAssetClear,
 }: SettingsPanelProps) {
   const disabled = isProcessing;
+  const deepgram = useDeepgramVoices(
+    settings.tts.engine === 'deepgram',
+    settings.tts.deepgramVoiceListApiUrl || '/api/deepgram/v2/models',
+  );
   const [systemPromptDraft, setSystemPromptDraft] = useState(
     settings.llm.systemPrompt,
   );
@@ -1343,9 +1354,9 @@ export function SettingsPanel({
                     placeholder="ja-JP"
                     disabled={
                       disabled ||
-                      (settings.tts.geminiTtsModel || GEMINI_TTS_MODELS[0]).startsWith(
-                        'gemini-3.8-',
-                      )
+                      (
+                        settings.tts.geminiTtsModel || GEMINI_TTS_MODELS[0]
+                      ).startsWith('gemini-3.8-')
                     }
                   />
                 </div>
@@ -1738,7 +1749,9 @@ export function SettingsPanel({
                       updateTtsField('elevenLabsStyle', e.target.value)
                     }
                     placeholder="0"
-                    disabled={disabled}
+                    disabled={
+                      disabled || settings.tts.elevenLabsModel === 'eleven_v4'
+                    }
                   />
                 </div>
                 <div className="settings-field">
@@ -1754,7 +1767,9 @@ export function SettingsPanel({
                       updateTtsField('elevenLabsSpeed', e.target.value)
                     }
                     placeholder="1.0"
-                    disabled={disabled}
+                    disabled={
+                      disabled || settings.tts.elevenLabsModel === 'eleven_v4'
+                    }
                   />
                 </div>
                 <div className="settings-field">
@@ -1783,7 +1798,9 @@ export function SettingsPanel({
                         e.target.value as 'default' | 'true' | 'false',
                       )
                     }
-                    disabled={disabled}
+                    disabled={
+                      disabled || settings.tts.elevenLabsModel === 'eleven_v4'
+                    }
                   >
                     <option value="default">Default</option>
                     <option value="true">On</option>
@@ -2357,6 +2374,109 @@ export function SettingsPanel({
               </>
             )}
 
+            {settings.tts.engine === 'deepgram' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-deepgram-apikey">API Key</label>
+                  <input
+                    id="tts-deepgram-apikey"
+                    type="password"
+                    value={settings.tts.deepgramApiKey || ''}
+                    onChange={(e) =>
+                      updateTtsField('deepgramApiKey', e.target.value)
+                    }
+                    placeholder="Deepgram API key"
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-deepgram-speaker">
+                    Voice (English Flux)
+                  </label>
+                  <select
+                    id="tts-deepgram-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={disabled}
+                  >
+                    <option value="flux-haley-en">Haley (English)</option>
+                    {settings.tts.speaker !== 'flux-haley-en' &&
+                      !deepgram.voices.some(
+                        (voice) => voice.id === settings.tts.speaker,
+                      ) && (
+                        <option value={settings.tts.speaker}>
+                          {settings.tts.speaker} (saved voice)
+                        </option>
+                      )}
+                    {deepgram.voices
+                      .filter((voice) => voice.id !== 'flux-haley-en')
+                      .map((voice) => (
+                        <option key={voice.id} value={voice.id}>
+                          {voice.label}
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="settings-action-button"
+                    onClick={deepgram.refresh}
+                    disabled={disabled || deepgram.loading}
+                  >
+                    {deepgram.loading ? 'Loading voices...' : 'Refresh voices'}
+                  </button>
+                  {deepgram.error && (
+                    <p className="settings-field-error">{deepgram.error}</p>
+                  )}
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-deepgram-url">TTS API URL</label>
+                  <input
+                    id="tts-deepgram-url"
+                    type="text"
+                    value={settings.tts.deepgramApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('deepgramApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-deepgram-voices-url">
+                    Voice List API URL
+                  </label>
+                  <input
+                    id="tts-deepgram-voices-url"
+                    type="text"
+                    value={settings.tts.deepgramVoiceListApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('deepgramVoiceListApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-deepgram-speed">Speed</label>
+                  <input
+                    id="tts-deepgram-speed"
+                    type="number"
+                    min="0.5"
+                    max="1.5"
+                    step="0.05"
+                    value={settings.tts.deepgramSpeed || ''}
+                    onChange={(e) =>
+                      updateTtsField('deepgramSpeed', e.target.value)
+                    }
+                    placeholder="1.0"
+                    disabled={disabled}
+                  />
+                  <small>
+                    English-only one-shot Flux TTS (MP3). Dev/preview uses a
+                    Vite proxy; production needs an authenticated backend route.
+                  </small>
+                </div>
+              </>
+            )}
+
             {settings.tts.engine === 'gradium' && (
               <>
                 <div className="settings-field">
@@ -2398,6 +2518,29 @@ export function SettingsPanel({
                     }
                     disabled={disabled}
                   />
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-gradium-model">Gradium Model</label>
+                  <select
+                    id="tts-gradium-model"
+                    value={settings.tts.gradiumModel || 'default'}
+                    onChange={(e) =>
+                      updateTtsField(
+                        'gradiumModel',
+                        e.target.value as 'default' | 'gradium-tts-beta',
+                      )
+                    }
+                    disabled={disabled}
+                  >
+                    <option value="default">Production (default)</option>
+                    <option value="gradium-tts-beta">
+                      Public beta (opt-in)
+                    </option>
+                  </select>
+                  <small>
+                    Production stays selected unless you explicitly choose the
+                    beta.
+                  </small>
                 </div>
                 <div className="settings-field">
                   <label htmlFor="tts-gradium-output">Output Format</label>

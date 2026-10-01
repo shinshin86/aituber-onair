@@ -5,6 +5,20 @@ import type { GeminiTtsModel, InworldModel, VoiceServiceOptions } from '../src';
 
 describe('Released Chat and Voice model exports', () => {
   it.each([
+    'MODEL_GPT_6_1_SOL',
+    'MODEL_GLM_5_3_FLASHX',
+    'MODEL_MISTRAL_ZAI_GLM_5_3',
+    'MODEL_OPENAI_GPT_6_1_SOL',
+    'MODEL_OPENAI_GPT_6_SOL',
+    'MODEL_OPENAI_GPT_6_LUNA',
+    'MODEL_ANTHROPIC_CLAUDE_SONNET_5_5',
+    'MODEL_ANTHROPIC_CLAUDE_OPUS_5_5',
+    'MODEL_XAI_GROK_4_7',
+    'MODEL_ZAI_GLM_5_3_FLASHX',
+    'MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING',
+    'MODEL_QWEN_QWEN_3_8_27B',
+    'MODEL_QWEN_QWEN_3_8_OMNI_FLASH',
+    'OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET',
     'MODEL_GPT_6_ASTRA',
     'MODEL_GPT_6_SOL',
     'MODEL_GPT_6_LUNA',

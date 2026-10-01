@@ -29,17 +29,25 @@ const typesafeProxy: ProxyOptions = {
   },
 };
 
+const deepgramProxy = {
+  target: 'https://api.deepgram.com',
+  changeOrigin: true,
+  rewrite: (path: string) => path.replace(/^\/api\/deepgram/, ''),
+};
+
 export default defineConfig({
   server: {
     proxy: {
       '^/api/typesafe/systemone$': typesafeProxy,
       '/api/fish-audio': fishAudioProxy,
+      '/api/deepgram': deepgramProxy,
     },
   },
   preview: {
     proxy: {
       '^/api/typesafe/systemone$': typesafeProxy,
       '/api/fish-audio': fishAudioProxy,
+      '/api/deepgram': deepgramProxy,
     },
   },
   resolve: {

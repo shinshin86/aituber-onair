@@ -49,6 +49,8 @@ import {
   isGeminiReasoningEffortModel,
   isKimiReasoningEffortModel,
   isResponsesOnlyGPT5Model,
+  MODEL_GPT_6_1_SOL,
+  OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   MODEL_GPT_6_ASTRA,
   isXaiReasoningEffortModel,
   normalizeClaudeReasoningEffort,
@@ -72,6 +74,7 @@ import {
   type UnrealSpeechCodec,
   type InworldAudioEncoding,
   type InworldDeliveryMode,
+  type GradiumModel,
   type GradiumOutputFormat,
   type FishAudioModel,
   type FishAudioFormat,
@@ -129,6 +132,7 @@ import {
   revokeObjectUrl,
 } from './utils/geminiImageGeneration';
 import { useGeminiNanoStatus } from './hooks/useGeminiNanoStatus';
+import { useDeepgramVoices } from './hooks/useDeepgramVoices';
 import { usePiperPlusStatus } from './hooks/usePiperPlusStatus';
 
 // when use MCP, uncomment the following line
@@ -270,6 +274,7 @@ const UNREAL_SPEECH_SPEAKERS = [
   'am_michael',
 ] as const;
 const ELEVENLABS_MODELS = [
+  'eleven_v4',
   'eleven_v3',
   'eleven_flash_v2_5',
   'eleven_multilingual_v2',
@@ -834,6 +839,12 @@ const App: React.FC = () => {
     'default' | InworldDeliveryMode
   >('default');
   const [inworldTemperature, setInworldTemperature] = useState<string>('');
+  const [deepgramSpeed, setDeepgramSpeed] = useState('');
+  const deepgram = useDeepgramVoices(
+    selectedVoiceEngine === 'deepgram',
+    '/api/deepgram/v2/models',
+  );
+  const [gradiumModel, setGradiumModel] = useState<GradiumModel>('default');
   const [gradiumOutputFormat, setGradiumOutputFormat] =
     useState<GradiumOutputFormat>('wav');
   const [gradiumTemperature, setGradiumTemperature] = useState<string>('');
@@ -973,6 +984,7 @@ const App: React.FC = () => {
     fishAudio: '',
     cartesia: '',
     inworld: '',
+    deepgram: 'flux-haley-en',
     gradium: 'YTpq7expH9539ERJ',
     piperPlus: 'default',
     webSpeech: '',
@@ -1268,7 +1280,9 @@ const App: React.FC = () => {
       setInworldTemperature('');
     }
 
+    if (selectedVoiceEngine === 'deepgram') setDeepgramSpeed('');
     if (selectedVoiceEngine === 'gradium') {
+      setGradiumModel('default');
       setGradiumOutputFormat(
         (VOICE_ENGINE_CONFIGS.gradium.defaultParams
           ?.outputFormat as GradiumOutputFormat) || 'wav',
@@ -1736,6 +1750,12 @@ const App: React.FC = () => {
   }, [chatProvider, model, reasoning_effort]);
 
   useEffect(() => {
+    if (chatProvider === 'openai' && model === MODEL_GPT_6_1_SOL) {
+      setGpt5EndpointPreference('responses');
+    }
+  }, [chatProvider, model]);
+
+  useEffect(() => {
     if (chatProvider !== 'openai' || !model) {
       return;
     }
@@ -1951,9 +1971,10 @@ const App: React.FC = () => {
         normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort);
     }
     if (chatProvider === 'openrouter') {
-      providerOptions.reasoning_effort =
-        normalizeReasoningEffortForOpenRouterModel(model, reasoning_effort) ??
-        'none';
+      if (!OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(model)) {
+        providerOptions.reasoning_effort =
+          normalizeReasoningEffortForOpenRouterModel(model, reasoning_effort);
+      }
       const trimmedBaseUrl = openRouterBaseUrl.trim();
       if (trimmedBaseUrl) {
         providerOptions.baseUrl = trimmedBaseUrl;
@@ -2042,6 +2063,9 @@ const App: React.FC = () => {
             break;
           case 'inworld':
             options.inworldApiUrl = config.apiUrl;
+            break;
+          case 'deepgram':
+            options.deepgramApiUrl = config.apiUrl;
             break;
           case 'gradium':
             options.gradiumApiUrl = config.apiUrl;
@@ -2589,17 +2613,20 @@ const App: React.FC = () => {
           }
 
           const parsedStyle = Number.parseFloat(elevenLabsStyle);
-          if (!Number.isNaN(parsedStyle)) {
+          if (elevenLabsModel !== 'eleven_v4' && !Number.isNaN(parsedStyle)) {
             options.elevenLabsStyle = parsedStyle;
           }
 
-          if (elevenLabsUseSpeakerBoost !== 'default') {
+          if (
+            elevenLabsModel !== 'eleven_v4' &&
+            elevenLabsUseSpeakerBoost !== 'default'
+          ) {
             options.elevenLabsUseSpeakerBoost =
               elevenLabsUseSpeakerBoost === 'true';
           }
 
           const parsedSpeed = Number.parseFloat(elevenLabsSpeed);
-          if (!Number.isNaN(parsedSpeed)) {
+          if (elevenLabsModel !== 'eleven_v4' && !Number.isNaN(parsedSpeed)) {
             options.elevenLabsSpeed = parsedSpeed;
           }
 
@@ -2691,7 +2718,13 @@ const App: React.FC = () => {
 
           break;
         }
+        case 'deepgram': {
+          const speed = Number.parseFloat(deepgramSpeed);
+          if (Number.isFinite(speed)) options.deepgramSpeed = speed;
+          break;
+        }
         case 'gradium': {
+          options.gradiumModel = gradiumModel;
           options.gradiumOutputFormat = gradiumOutputFormat;
 
           const parsedTemperature = Number.parseFloat(gradiumTemperature);
@@ -3512,78 +3545,78 @@ const App: React.FC = () => {
                         value={model}
                         onChange={(e) => setModel(e.target.value)}
                       >
-                      {chatProvider === 'openai' &&
-                        openaiModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'gemini' &&
-                        geminiModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'gemini-nano' &&
-                        geminiNanoModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'claude' &&
-                        claudeModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'zai' &&
-                        zaiModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'kimi' &&
-                        kimiModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'xai' &&
-                        xaiModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'deepseek' &&
-                        deepseekModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'mistral' &&
-                        mistralModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'sakana' &&
-                        sakanaModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'plamo' &&
-                        plamoModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      {chatProvider === 'openrouter' &&
-                        openRouterAvailableModels.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
+                        {chatProvider === 'openai' &&
+                          openaiModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'gemini' &&
+                          geminiModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'gemini-nano' &&
+                          geminiNanoModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'claude' &&
+                          claudeModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'zai' &&
+                          zaiModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'kimi' &&
+                          kimiModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'xai' &&
+                          xaiModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'deepseek' &&
+                          deepseekModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'mistral' &&
+                          mistralModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'sakana' &&
+                          sakanaModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'plamo' &&
+                          plamoModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        {chatProvider === 'openrouter' &&
+                          openRouterAvailableModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
                       </select>
                     </>
                   )}
@@ -3777,45 +3810,52 @@ const App: React.FC = () => {
                         value={openRouterBaseUrl}
                         onChange={(e) => setOpenRouterBaseUrl(e.target.value)}
                       />
-                      <label htmlFor="openRouterReasoningEffort">
-                        Reasoning Effort:
-                      </label>
-                      <select
-                        id="openRouterReasoningEffort"
-                        value={openRouterReasoningEffortValue}
-                        disabled={
-                          openRouterSupportedReasoningEfforts.length === 0
-                        }
-                        onChange={(e) =>
-                          setReasoningEffort(
-                            e.target.value as OpenRouterReasoningEffort,
-                          )
-                        }
-                      >
-                        {openRouterSupportedReasoningEfforts.length === 0 && (
-                          <option value="none">Not available</option>
-                        )}
-                        {openRouterSupportedReasoningEfforts.map((effort) => (
-                          <option key={effort} value={effort}>
-                            {effort === 'none'
-                              ? 'None (fastest)'
-                              : effort === 'xhigh'
-                                ? 'XHigh'
-                                : `${effort[0].toUpperCase()}${effort.slice(1)}`}
-                          </option>
-                        ))}
-                      </select>
-                      <div
-                        style={{
-                          marginTop: '6px',
-                          marginBottom: '12px',
-                          color: '#666',
-                          fontSize: '12px',
-                        }}
-                      >
-                        Options follow the selected model. None explicitly
-                        disables reasoning for faster responses.
-                      </div>
+                      {!OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(
+                        model,
+                      ) && (
+                        <>
+                          <label htmlFor="openRouterReasoningEffort">
+                            Reasoning Effort:
+                          </label>
+                          <select
+                            id="openRouterReasoningEffort"
+                            value={openRouterReasoningEffortValue}
+                            disabled={
+                              openRouterSupportedReasoningEfforts.length === 0
+                            }
+                            onChange={(e) =>
+                              setReasoningEffort(
+                                e.target.value as OpenRouterReasoningEffort,
+                              )
+                            }
+                          >
+                            {openRouterSupportedReasoningEfforts.length ===
+                              0 && <option value="none">Not available</option>}
+                            {openRouterSupportedReasoningEfforts.map(
+                              (effort) => (
+                                <option key={effort} value={effort}>
+                                  {effort === 'none'
+                                    ? 'None (fastest)'
+                                    : effort === 'xhigh'
+                                      ? 'XHigh'
+                                      : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                          <div
+                            style={{
+                              marginTop: '6px',
+                              marginBottom: '12px',
+                              color: '#666',
+                              fontSize: '12px',
+                            }}
+                          >
+                            Options follow the selected model. None explicitly
+                            disables reasoning for faster responses.
+                          </div>
+                        </>
+                      )}
                       <label htmlFor="openRouterMaxCandidates">
                         Max candidates:
                       </label>
@@ -4171,6 +4211,13 @@ const App: React.FC = () => {
                           <option value="chat">Chat Completions API</option>
                           <option value="responses">Responses API</option>
                         </select>
+                        {model === MODEL_GPT_6_1_SOL && (
+                          <p>
+                            Responses API is the default and is required for
+                            tools. Tool-free Chat Completions supports low,
+                            medium, high, xhigh, and max reasoning.
+                          </p>
+                        )}
                         {isResponsesOnlyOpenAIGPT5ModelSelected && (
                           <div
                             style={{
@@ -5002,6 +5049,7 @@ const App: React.FC = () => {
                           min="0"
                           max="1"
                           step="0.05"
+                          disabled={elevenLabsModel === 'eleven_v4'}
                           value={elevenLabsStyle}
                           onChange={(e) => setElevenLabsStyle(e.target.value)}
                           placeholder="Style"
@@ -5021,6 +5069,7 @@ const App: React.FC = () => {
                           min="0.7"
                           max="1.2"
                           step="0.01"
+                          disabled={elevenLabsModel === 'eleven_v4'}
                           value={elevenLabsSpeed}
                           onChange={(e) => setElevenLabsSpeed(e.target.value)}
                           placeholder="Speed"
@@ -5034,6 +5083,7 @@ const App: React.FC = () => {
                           style={{ width: '100%', marginBottom: '8px' }}
                         />
                         <select
+                          disabled={elevenLabsModel === 'eleven_v4'}
                           value={elevenLabsUseSpeakerBoost}
                           onChange={(e) =>
                             setElevenLabsUseSpeakerBoost(
@@ -5260,10 +5310,16 @@ const App: React.FC = () => {
                       <label htmlFor="cartesiaModel">Model:</label>
                       <input
                         id="cartesiaModel"
+                        list="cartesia-models"
                         type="text"
                         value={cartesiaModel}
                         onChange={(e) => setCartesiaModel(e.target.value)}
                       />
+                      <datalist id="cartesia-models">
+                        <option value="sonic-3.5" />
+                        <option value="sonic-3.6" />
+                        <option value="sonic-3.6-2026-08-27" />
+                      </datalist>
                       <label htmlFor="cartesiaLanguage">Language:</label>
                       <select
                         id="cartesiaLanguage"
@@ -5522,6 +5578,36 @@ const App: React.FC = () => {
                     </div>
                   )}
 
+                  {selectedVoiceEngine === 'deepgram' && (
+                    <div>
+                      <label htmlFor="deepgramSpeed">Speed (0.5–1.5):</label>
+                      <input
+                        id="deepgramSpeed"
+                        type="number"
+                        min="0.5"
+                        max="1.5"
+                        step="0.05"
+                        value={deepgramSpeed}
+                        onChange={(e) => setDeepgramSpeed(e.target.value)}
+                        placeholder="1.0"
+                      />
+                      <button
+                        type="button"
+                        onClick={deepgram.refresh}
+                        disabled={deepgram.loading}
+                      >
+                        {deepgram.loading
+                          ? 'Loading voices...'
+                          : 'Refresh voices'}
+                      </button>
+                      <p>
+                        English-only one-shot Flux TTS (MP3). Dev/preview uses a
+                        Vite proxy; production needs an authenticated backend
+                        route.
+                      </p>
+                      {deepgram.error && <p role="alert">{deepgram.error}</p>}
+                    </div>
+                  )}
                   {selectedVoiceEngine === 'gradium' && (
                     <div
                       style={{
@@ -5542,6 +5628,19 @@ const App: React.FC = () => {
                         Gradium パラメータ
                       </div>
 
+                      <label htmlFor="gradiumModel">Gradium Model:</label>
+                      <select
+                        id="gradiumModel"
+                        value={gradiumModel}
+                        onChange={(e) =>
+                          setGradiumModel(e.target.value as GradiumModel)
+                        }
+                      >
+                        <option value="default">Production (default)</option>
+                        <option value="gradium-tts-beta">
+                          Public beta (opt-in)
+                        </option>
+                      </select>
                       <label
                         htmlFor="gradiumOutputFormat"
                         style={{ display: 'block', marginBottom: '6px' }}
@@ -5789,9 +5888,7 @@ const App: React.FC = () => {
                         onEndpointChange={setOpenaiCompatibleApiUrl}
                         model={openaiCompatibleModel}
                         onModelChange={setOpenaiCompatibleModel}
-                        voice={String(
-                          selectedSpeakers.openaiCompatible || '',
-                        )}
+                        voice={String(selectedSpeakers.openaiCompatible || '')}
                         onVoiceChange={(voice) =>
                           setSelectedSpeakers((prev) => ({
                             ...prev,
@@ -5799,9 +5896,7 @@ const App: React.FC = () => {
                           }))
                         }
                         instructions={openaiCompatibleInstructions}
-                        onInstructionsChange={
-                          setOpenaiCompatibleInstructions
-                        }
+                        onInstructionsChange={setOpenaiCompatibleInstructions}
                         speed={openaiCompatibleSpeed}
                         apiKey={voiceApiKeys.openaiCompatible || ''}
                       />
@@ -7349,6 +7444,29 @@ const App: React.FC = () => {
                               </option>
                             ))}
 
+                          {selectedVoiceEngine === 'deepgram' && (
+                            <>
+                              <option value="flux-haley-en">
+                                Haley (English)
+                              </option>
+                              {selectedSpeakers.deepgram !== 'flux-haley-en' &&
+                                !deepgram.voices.some(
+                                  (voice) =>
+                                    voice.id === selectedSpeakers.deepgram,
+                                ) && (
+                                  <option value={selectedSpeakers.deepgram}>
+                                    {selectedSpeakers.deepgram} (saved voice)
+                                  </option>
+                                )}
+                              {deepgram.voices
+                                .filter((voice) => voice.id !== 'flux-haley-en')
+                                .map((voice) => (
+                                  <option key={voice.id} value={voice.id}>
+                                    {voice.label}
+                                  </option>
+                                ))}
+                            </>
+                          )}
                           {selectedVoiceEngine === 'gradium' &&
                             Object.entries(GRADIUM_VOICES).map(
                               ([voiceId, label]) => (

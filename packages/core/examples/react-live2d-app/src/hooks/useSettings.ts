@@ -234,6 +234,11 @@ function getDefaultSettings(): AppSettings {
       inworldLanguage: DEFAULT_INWORLD_LANGUAGE,
       inworldDeliveryMode: 'default',
       inworldTemperature: '',
+      deepgramApiKey: '',
+      deepgramApiUrl: '/api/deepgram/v2/speak',
+      deepgramVoiceListApiUrl: '/api/deepgram/v2/models',
+      deepgramSpeed: '',
+      gradiumModel: 'default',
       gradiumApiKey: '',
       gradiumApiUrl: DEFAULT_GRADIUM_TTS_ENDPOINT,
       gradiumOutputFormat: DEFAULT_GRADIUM_OUTPUT_FORMAT,
@@ -567,6 +572,7 @@ export function useSettings() {
       fishAudio: '',
       cartesia: '',
       inworld: '',
+      deepgram: 'flux-haley-en',
       gradium: 'YTpq7expH9539ERJ',
       piperPlus: 'default',
       webSpeech: '',
@@ -745,6 +751,11 @@ export function useSettings() {
           engine === 'inworld'
             ? prev.tts.inworldDeliveryMode || 'default'
             : prev.tts.inworldDeliveryMode,
+        deepgramApiUrl: prev.tts.deepgramApiUrl || '/api/deepgram/v2/speak',
+        deepgramVoiceListApiUrl:
+          prev.tts.deepgramVoiceListApiUrl || '/api/deepgram/v2/models',
+        deepgramSpeed: prev.tts.deepgramSpeed || '',
+        gradiumModel: engine === 'gradium' ? 'default' : prev.tts.gradiumModel,
         gradiumApiUrl:
           engine === 'gradium'
             ? prev.tts.gradiumApiUrl || DEFAULT_GRADIUM_TTS_ENDPOINT
