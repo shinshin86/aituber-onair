@@ -15,6 +15,7 @@
 		"@aituber-onair/core": "../..",
 		"@aituber-onair/kizuna": "../../../kizuna",
 		"@aituber-onair/manneri": "../../../manneri",
+		"@aituber-onair/transcription": "../../../transcription",
 		"pixi-live2d-display-lipsyncpatch": "github:shinshin86/pixi-live2d-display-lipsyncpatch#release/v0.5.0-ls-7-noMaskFix",
 		"pixi.js": "^7.4.3",
 		"react": "^19.2.0",

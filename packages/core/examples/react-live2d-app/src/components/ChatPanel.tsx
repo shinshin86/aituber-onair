@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
-import { ChatInput } from './ChatInput';
+import { ChatInput, type ChatVoiceInputProps } from './ChatInput';
 import { ChatLog } from './ChatLog';
 import { Live2DStage } from './Live2DStage';
 import type { Live2DModelSource } from '../lib/live2dModel';
@@ -32,6 +32,7 @@ interface ChatPanelProps {
   effectAnchor: EmotionEffectAnchor;
   onEffectAnchorChange: (anchor: EmotionEffectAnchor) => void;
   onEffectAnchorReset: () => void;
+  voiceInput: ChatVoiceInputProps;
 }
 
 export function ChatPanel({
@@ -51,6 +52,7 @@ export function ChatPanel({
   effectAnchor,
   onEffectAnchorChange,
   onEffectAnchorReset,
+  voiceInput,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -115,7 +117,9 @@ export function ChatPanel({
       ) : (
         <ChatLog messages={messages} partialResponse={partialResponse} />
       )}
-      {shouldShowInput && <ChatInput onSend={onSend} disabled={isProcessing} />}
+      {shouldShowInput && (
+        <ChatInput onSend={onSend} disabled={isProcessing} voice={voiceInput} />
+      )}
     </div>
   );
 }
