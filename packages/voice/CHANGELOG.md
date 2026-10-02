@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+### Minor Changes
+
+- Add a dedicated `openRouter` TTS engine with explicit opt-in selection of
+  `microsoft/mai-voice-2.1` and `microsoft/mai-voice-2.1-flash`. Both models
+  are public previews without an SLA and are not recommended for production.
+  No preview model or voice is selected automatically.
+- Send one-shot speech requests to OpenRouter's `/api/v1/audio/speech`
+  endpoint and wrap its 24 kHz mono, 16-bit little-endian PCM output as WAV
+  for the existing playback and `onPlay` paths.
+- Add flat OpenRouter options, runtime updates, factory registration, public
+  exports, capabilities, and model-scoped voice discovery. Support separate
+  custom speech and model-catalog endpoints.
+
+### Patch Changes
+
+- Add OpenRouter model and voice selectors to the React voice example,
+  preserve only valid selections across catalog refreshes, and clear stale
+  model-specific voices when switching models.
+- Add English/Japanese documentation and request, audio-format, adapter,
+  voice-list, and example DOM regression coverage.
+
+### Known Limitations
+
+- Model catalogs checked on October 1, 2026 did not list Japanese voices.
+  Speed, style, voice cloning, and realtime streaming are not exposed.
+
 ## 0.25.0
 
 ### Minor Changes
