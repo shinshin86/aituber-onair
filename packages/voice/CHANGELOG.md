@@ -19,7 +19,9 @@
 
 - Add OpenRouter model and voice selectors to the React voice example,
   preserve only valid selections across catalog refreshes, and clear stale
-  model-specific voices when switching models.
+  model-specific voices when switching models. Display the provider as
+  `OpenRouter` in the engine selector, keeping model names and preview
+  warnings in their dedicated controls.
 - Add English/Japanese documentation and request, audio-format, adapter,
   voice-list, and example DOM regression coverage.
 

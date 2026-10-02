@@ -651,7 +651,12 @@ async function configureOpenRouter() {
 describe('OpenRouter public-preview model flow with offline fixtures', () => {
   it('keeps OpenAI as default and requires explicit preview model and catalog voice selection', async () => {
     expect(field('engine').value).toBe('openai');
+    expect(
+      container.querySelector('#engine option[value="openRouter"]')
+        ?.textContent,
+    ).toBe('OpenRouter');
     await change('engine', 'openRouter');
+    expect(field('engine').value).toBe('openRouter');
     expect(field('openRouterModel').value).toBe('');
     expect(field('speaker').value).toBe('');
     expect(field('speaker').disabled).toBe(true);

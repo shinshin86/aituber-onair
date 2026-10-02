@@ -714,9 +714,7 @@ export function EngineSelector({
           onChange={(e) => onEngineChange(e.target.value as EngineType)}
         >
           <option value="openai">OpenAI TTS</option>
-          <option value="openRouter">
-            OpenRouter MAI Voice (Public preview)
-          </option>
+          <option value="openRouter">OpenRouter</option>
           <option value="xai">xAI TTS</option>
           <option value="geminiTts">Gemini TTS</option>
           <option value="voicevox">VOICEVOX</option>
