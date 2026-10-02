@@ -334,5 +334,6 @@ Use `create-aituber-onair` when you want a clean project outside this monorepo:
 npm create aituber-onair@latest my-aituber
 ```
 
-The CLI currently includes PNGTuber, VRM, and Live2D templates. See
+The CLI currently includes seven templates: PNGTuber, VRM, Live2D, Pet, PuruPuru,
+PSD, and Inochi2D. See
 [Quickstart](./quickstart.md) for the recommended first run.
