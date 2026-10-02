@@ -346,3 +346,15 @@ unchanged.
 ### Additional explicit Chat Completions models
 
 OpenRouter includes Nemotron 3.5 Lightning (`nvidia/nemotron-3.5-lightning`, text-only), Qwen3.8 27B (`qwen/qwen3.8-27b`), and Qwen3.8 Omni Flash (`qwen/qwen3.8-omni-flash`). The Qwen models accept images; audio and video are not supported by this example. These models and Mistral GLM-5.3 do not expose an effort selector because model-specific effort values are not documented. Select the provider, enter its API key, and choose the model. Requests go directly to the existing provider endpoint; defaults are unchanged.
+
+### Additional OpenRouter chat options
+
+Select OpenRouter, enter your API key, and choose Solar Mini4
+(`upstage/solar-mini4`), MiMo V2.6 Flash (`xiaomi/mimo-v2.6-flash`), or
+Apodex 1.1 Mini (Free) (`apodex/apodex-1.1-mini:free`). Existing defaults stay
+unchanged. Only MiMo in this group accepts image input. Solar provides effort
+levels from `none` through `max`, including `minimal`, and starts at `none`.
+All three omit reasoning token budgets; MiMo and Apodex also omit effort fields
+and use the provider's reasoning defaults. Apodex uses OpenRouter's free-tier
+limits. These choices use the direct `https://openrouter.ai/api/v1/chat/completions`
+endpoint without a provider proxy.

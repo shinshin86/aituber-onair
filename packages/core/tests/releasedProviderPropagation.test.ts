@@ -8,13 +8,22 @@ import {
   MODEL_GPT_6_1_SOL,
   MODEL_GLM_5_3_FLASHX,
   MODEL_MISTRAL_ZAI_GLM_5_3,
-  OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
+  MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
+  MODEL_QWEN_QWEN_3_8_27B,
+  MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
   VoiceEngineAdapter,
   VoiceEngineFactory,
   type DeepgramVoiceServiceOptions,
   type DeepgramVoiceServiceOptionsUpdate,
   type GradiumModel,
 } from '../src';
+
+// Keep this release regression scoped to the models propagated in that release.
+const releasedOpenRouterModelsWithoutReasoningControls = [
+  MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
+  MODEL_QWEN_QWEN_3_8_27B,
+  MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
+];
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -70,7 +79,7 @@ describe('Published providers available through Core', () => {
     expect(body.reasoning_effort).toBe('low');
   });
 
-  it.each(OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET)(
+  it.each(releasedOpenRouterModelsWithoutReasoningControls)(
     'omits unsupported effort and token budgets for %s, even with old settings',
     async (model) => {
       const fetch = vi.fn().mockImplementation(async () => chatResponse());
@@ -97,7 +106,7 @@ describe('Published providers available through Core', () => {
     expect(AITuberOnAirCore.getSupportedModels('mistral')).toContain(
       MODEL_MISTRAL_ZAI_GLM_5_3,
     );
-    for (const model of OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET) {
+    for (const model of releasedOpenRouterModelsWithoutReasoningControls) {
       expect(AITuberOnAirCore.getSupportedModels('openrouter')).toContain(
         model,
       );
