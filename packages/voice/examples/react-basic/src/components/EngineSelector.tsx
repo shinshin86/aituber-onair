@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { OpenRouterTtsModel } from '@aituber-onair/voice';
 import {
   ENGINE_DEFAULTS,
   GEMINI_TTS_VOICES,
@@ -27,6 +28,10 @@ interface EngineSelectorProps {
   onApiKeyChange: (nextValue: string) => void;
   apiUrl: string;
   onApiUrlChange: (nextValue: string) => void;
+  openRouterModel: OpenRouterTtsModel | '';
+  onOpenRouterModelChange: (nextValue: OpenRouterTtsModel | '') => void;
+  openRouterModelsApiUrl: string;
+  onOpenRouterModelsApiUrlChange: (nextValue: string) => void;
   minimaxGroupId: string;
   onMinimaxGroupIdChange: (nextValue: string) => void;
   inworldVoiceLanguage: InworldVoiceLanguageOption;
@@ -54,6 +59,10 @@ export function EngineSelector({
   onApiKeyChange,
   apiUrl,
   onApiUrlChange,
+  openRouterModel,
+  onOpenRouterModelChange,
+  openRouterModelsApiUrl,
+  onOpenRouterModelsApiUrlChange,
   minimaxGroupId,
   onMinimaxGroupIdChange,
   inworldVoiceLanguage,
@@ -69,6 +78,7 @@ export function EngineSelector({
   const hasSpeakerOptions = speakerOptions.length > 0;
   const showApiKey =
     engine === 'openai' ||
+    engine === 'openRouter' ||
     engine === 'xai' ||
     engine === 'unrealSpeech' ||
     engine === 'elevenLabs' ||
@@ -83,6 +93,7 @@ export function EngineSelector({
     engine === 'minimax';
   const showApiUrl =
     engine === 'geminiTts' ||
+    engine === 'openRouter' ||
     engine === 'unrealSpeech' ||
     engine === 'elevenLabs' ||
     engine === 'fishAudio' ||
@@ -97,6 +108,53 @@ export function EngineSelector({
   const renderSpeakerField = () => {
     if (engine === 'piperPlus') {
       return null;
+    }
+
+    if (engine === 'openRouter') {
+      return (
+        <div className="form-group">
+          <label htmlFor="speaker">Speaker (selected model only):</label>
+          <select
+            id="speaker"
+            value={hasSpeakerOptions ? speaker : ''}
+            onChange={(e) => onSpeakerChange(e.target.value)}
+            disabled={!hasSpeakerOptions || isFetchingSpeakers}
+          >
+            <option value="">
+              -- Select a voice from this model's catalog --
+            </option>
+            {speakerOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="speaker-fetch-row">
+            <button
+              type="button"
+              className="secondary-action-button"
+              onClick={onFetchSpeakers}
+              disabled={
+                isFetchingSpeakers || !apiKey.trim() || !openRouterModel
+              }
+              aria-label="Fetch OpenRouter model voices"
+            >
+              {isFetchingSpeakers ? 'Loading voices...' : 'Fetch model voices'}
+            </button>
+          </div>
+          {speakerFetchError && (
+            <div className="speaker-fetch-message speaker-fetch-message--error">
+              {speakerFetchError}
+            </div>
+          )}
+          <p className="helper-text">
+            Choose a model and enter an OpenRouter API key, then fetch its
+            supported voices. Changing the model, key, or models URL clears the
+            voice selection. Match your text to the voice locale; Japanese is
+            not currently listed in the MAI voice catalog.
+          </p>
+        </div>
+      );
     }
 
     if (engine === 'deepgram') {
@@ -656,6 +714,7 @@ export function EngineSelector({
           onChange={(e) => onEngineChange(e.target.value as EngineType)}
         >
           <option value="openai">OpenAI TTS</option>
+          <option value="openRouter">OpenRouter</option>
           <option value="xai">xAI TTS</option>
           <option value="geminiTts">Gemini TTS</option>
           <option value="voicevox">VOICEVOX</option>
@@ -675,6 +734,36 @@ export function EngineSelector({
           <option value="webSpeech">Web Speech API (Browser)</option>
         </select>
       </div>
+
+      {engine === 'openRouter' && (
+        <div className="form-group">
+          <label htmlFor="openRouterModel">
+            OpenRouter Model (explicit opt-in):
+          </label>
+          <select
+            id="openRouterModel"
+            value={openRouterModel}
+            onChange={(e) =>
+              onOpenRouterModelChange(e.target.value as OpenRouterTtsModel | '')
+            }
+          >
+            <option value="">-- Choose a public-preview model --</option>
+            <option value="microsoft/mai-voice-2.1">
+              MAI-Voice-2.1 (Public preview, opt-in)
+            </option>
+            <option value="microsoft/mai-voice-2.1-flash">
+              MAI-Voice-2.1-Flash (Public preview, opt-in)
+            </option>
+          </select>
+          <p className="helper-text">
+            Public preview: no service-level agreement (SLA), and not
+            recommended for production workloads. This integration supports
+            plain-text speech as 24 kHz mono PCM, wrapped as WAV for playback;
+            speed, style, emotion, SSML, and voice cloning controls are not
+            exposed.
+          </p>
+        </div>
+      )}
 
       {renderSpeakerField()}
 
@@ -699,7 +788,11 @@ export function EngineSelector({
 
       {showApiUrl && (
         <div className="form-group">
-          <label htmlFor="apiUrl">API URL (customizable):</label>
+          <label htmlFor="apiUrl">
+            {engine === 'openRouter'
+              ? 'Speech API URL (customizable):'
+              : 'API URL (customizable):'}
+          </label>
           <input
             id="apiUrl"
             type="text"
@@ -707,6 +800,26 @@ export function EngineSelector({
             onChange={(e) => onApiUrlChange(e.target.value)}
             placeholder={defaults.apiUrl}
           />
+        </div>
+      )}
+
+      {engine === 'openRouter' && (
+        <div className="form-group">
+          <label htmlFor="openRouterModelsApiUrl">
+            Models API URL (customizable):
+          </label>
+          <input
+            id="openRouterModelsApiUrl"
+            type="text"
+            value={openRouterModelsApiUrl}
+            onChange={(e) => onOpenRouterModelsApiUrlChange(e.target.value)}
+            placeholder={ENGINE_DEFAULTS.openRouter.modelsApiUrl}
+          />
+          <p className="helper-text">
+            Speech and catalog endpoints are configured separately. Use trusted
+            endpoints: your key is sent to both. Keep production credentials on
+            your backend rather than in browser-delivered code.
+          </p>
         </div>
       )}
 

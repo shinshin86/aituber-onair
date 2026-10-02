@@ -10,6 +10,7 @@ import { GradiumEngine } from './GradiumEngine';
 import { InworldEngine } from './InworldEngine';
 import { MinimaxEngine } from './MinimaxEngine';
 import { NoneEngine } from './NoneEngine';
+import { OpenRouterEngine } from './OpenRouterEngine';
 import { OpenAiEngine } from './OpenAiEngine';
 import { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
 import { PiperPlusEngine } from './PiperPlusEngine';
@@ -26,6 +27,7 @@ const ENGINE_CONSTRUCTORS = {
   aivisSpeech: AivisSpeechEngine,
   aivisCloud: AivisCloudEngine,
   openai: OpenAiEngine,
+  openRouter: OpenRouterEngine,
   xai: XaiEngine,
   unrealSpeech: UnrealSpeechEngine,
   elevenLabs: ElevenLabsEngine,

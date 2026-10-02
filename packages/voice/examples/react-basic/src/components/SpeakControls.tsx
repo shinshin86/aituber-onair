@@ -57,7 +57,13 @@ export function SpeakControls({
       </div>
 
       <div className={`status ${statusType}`}>{status}</div>
-      {engine === 'minimax' ? (
+      {engine === 'openRouter' ? (
+        <p className="helper-text">
+          OpenRouter MAI Voice is an explicit public-preview option. Select a
+          model and its catalog voice before speaking; no preview model is
+          selected automatically.
+        </p>
+      ) : engine === 'minimax' ? (
         <p className="helper-text">
           ※ MiniMax では速度・音量・ピッチ・音質パラメータを自由に調整できます
         </p>
