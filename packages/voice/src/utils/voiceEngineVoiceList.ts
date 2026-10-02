@@ -7,6 +7,7 @@ import {
   FISH_AUDIO_MODELS_API_URL,
   GRADIUM_VOICES_API_URL,
   INWORLD_VOICES_API_URL,
+  OPENROUTER_MODELS_API_URL,
   VOICE_VOX_API_URL,
   XAI_VOICES_API_URL,
 } from '../constants/voiceEngine';
@@ -16,6 +17,11 @@ import type {
 } from '../types/capabilities';
 import type { VoiceEngineType } from '../types/voiceEngine';
 import { fetchWithTimeout } from '../engines/internal/utils';
+import {
+  isOpenRouterVoice,
+  requireOpenRouterModel,
+  resolveOpenRouterUrl,
+} from '../engines/internal/openRouter';
 import { getWebSpeechVoiceList } from '../engines/WebSpeechEngine';
 
 interface LocalSpeakerStyleResponse {
@@ -233,6 +239,53 @@ async function getLocalSpeakerList(
       label: `${voice.name} - ${style.name}`,
     })),
   );
+}
+
+async function getOpenRouterVoiceList(
+  options: VoiceEngineVoiceListOptions,
+): Promise<VoiceEngineVoice[]> {
+  const model = requireOpenRouterModel(options.openRouterModel);
+  const url = resolveOpenRouterUrl(
+    options.openRouterModelsApiUrl?.trim() ||
+      options.voiceListApiUrl?.trim() ||
+      OPENROUTER_MODELS_API_URL,
+  );
+  url.searchParams.set('output_modalities', 'speech');
+  const apiKey = options.apiKey?.trim();
+  const result = await fetchJson<{ data?: unknown }>(
+    url.toString(),
+    {
+      method: 'GET',
+      headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+    },
+    'OpenRouter voices',
+  );
+  if (!Array.isArray(result?.data)) {
+    throw new Error(
+      'Invalid OpenRouter models response: data must be an array',
+    );
+  }
+  const selected = result.data.find(
+    (entry) => entry && typeof entry === 'object' && entry.id === model,
+  );
+  if (!selected || !Array.isArray(selected.supported_voices)) {
+    throw new Error(`OpenRouter voice list is unavailable for model: ${model}`);
+  }
+  const voices = Array.from(
+    new Set<string>(
+      selected.supported_voices.filter((voice: unknown) =>
+        isOpenRouterVoice(voice, model),
+      ),
+    ),
+  );
+  return voices.map((id) => ({
+    id,
+    label: id,
+    metadata: {
+      model,
+      language: id.split(':')[0].split('-').slice(0, 2).join('-'),
+    },
+  }));
 }
 
 async function getXaiVoiceList(
@@ -655,6 +708,8 @@ export async function getVoiceEngineVoiceList(
     case 'voicevox':
     case 'aivisSpeech':
       return getLocalSpeakerList(engineType, options);
+    case 'openRouter':
+      return getOpenRouterVoiceList(options);
     case 'xai':
       return getXaiVoiceList(options);
     case 'elevenLabs':

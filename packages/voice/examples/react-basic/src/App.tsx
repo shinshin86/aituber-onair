@@ -15,6 +15,7 @@ import {
   type InworldDeliveryMode,
   type MinimaxAudioFormat,
   type MinimaxModel,
+  type OpenRouterTtsModel,
   type UnrealSpeechCodec,
   type VoiceServiceOptions,
   type VoicepeakEmotionInput,
@@ -100,6 +101,12 @@ function App() {
     String(ENGINE_DEFAULTS.openai.speaker),
   );
   const [apiUrl, setApiUrl] = useState('');
+  const [openRouterModel, setOpenRouterModel] = useState<
+    OpenRouterTtsModel | ''
+  >('');
+  const [openRouterModelsApiUrl, setOpenRouterModelsApiUrl] = useState<string>(
+    ENGINE_DEFAULTS.openRouter.modelsApiUrl,
+  );
   const [minimaxModel, setMinimaxModel] = useState<MinimaxModel>(
     ENGINE_DEFAULTS.minimax.defaultModel,
   );
@@ -338,6 +345,45 @@ function App() {
     engine === 'voicepeak' &&
     voicepeakEmotionMode === 'weighted' &&
     voicepeakWeightSum > 100;
+  const isOpenRouterSelectionInvalid =
+    engine === 'openRouter' &&
+    (!openRouterModel ||
+      !speakerOptions.some((option) => option.id === speaker) ||
+      !speaker.endsWith(
+        openRouterModel === 'microsoft/mai-voice-2.1-flash'
+          ? ':MAI-Voice-2.1-Flash'
+          : ':MAI-Voice-2.1',
+      ));
+
+  const invalidateOpenRouterVoices = () => {
+    // Invalidate synchronously, including an A -> B -> A model change, before
+    // a queued catalog reply can update the next render's voice selection.
+    speakerFetchRequestId.current += 1;
+    setSpeaker('');
+    setSpeakerOptions([]);
+    setIsFetchingSpeakers(false);
+    setSpeakerFetchError(null);
+  };
+
+  const changeOpenRouterModel = (nextModel: OpenRouterTtsModel | '') => {
+    invalidateOpenRouterVoices();
+    setOpenRouterModel(nextModel);
+  };
+
+  const changeOpenRouterModelsApiUrl = (nextUrl: string) => {
+    invalidateOpenRouterVoices();
+    setOpenRouterModelsApiUrl(nextUrl);
+  };
+
+  const changeApiKey = (nextKey: string) => {
+    if (engine === 'openRouter') invalidateOpenRouterVoices();
+    setApiKey(nextKey);
+  };
+
+  const changeEngine = (nextEngine: EngineType) => {
+    speakerFetchRequestId.current += 1;
+    setEngine(nextEngine);
+  };
 
   const setVoicepeakEmotionWeight = (
     key: (typeof VOICEPEAK_WEIGHT_KEYS)[number],
@@ -389,10 +435,11 @@ function App() {
     const defaults = ENGINE_DEFAULTS[engine];
     const minimaxDefaults = ENGINE_DEFAULTS.minimax;
     setText((current) => {
-      if (engine === 'deepgram' && current === DEFAULT_DEMO_TEXT) {
+      const usesEnglishDemo = engine === 'deepgram' || engine === 'openRouter';
+      if (usesEnglishDemo && current === DEFAULT_DEMO_TEXT) {
         return ENGLISH_DEMO_TEXT;
       }
-      if (engine !== 'deepgram' && current === ENGLISH_DEMO_TEXT) {
+      if (!usesEnglishDemo && current === ENGLISH_DEMO_TEXT) {
         return DEFAULT_DEMO_TEXT;
       }
       return current;
@@ -400,6 +447,8 @@ function App() {
     setApiUrl(defaults.apiUrl);
     setSpeaker(String(defaults.speaker));
     setApiKey('');
+    setOpenRouterModel('');
+    setOpenRouterModelsApiUrl(ENGINE_DEFAULTS.openRouter.modelsApiUrl);
     setMinimaxGroupId('');
     setMinimaxModel(minimaxDefaults.defaultModel);
     setMinimaxLanguageBoost('Japanese');
@@ -543,10 +592,15 @@ function App() {
       engine !== 'fishAudio' &&
       engine !== 'cartesia' &&
       engine !== 'deepgram' &&
+      engine !== 'openRouter' &&
       engine !== 'inworld' &&
       engine !== 'gradium' &&
       engine !== 'webSpeech'
     ) {
+      return;
+    }
+
+    if (engine === 'openRouter' && (!openRouterModel || !apiKey.trim())) {
       return;
     }
 
@@ -558,6 +612,11 @@ function App() {
       const voices = await getVoiceEngineVoiceList(engine as VoiceEngineType, {
         apiKey,
         apiUrl,
+        openRouterModel: openRouterModel || undefined,
+        openRouterModelsApiUrl:
+          engine === 'openRouter'
+            ? openRouterModelsApiUrl.trim() || undefined
+            : undefined,
         voiceListApiUrl:
           engine === 'fishAudio'
             ? ENGINE_DEFAULTS.fishAudio.voicesApiUrl
@@ -581,6 +640,10 @@ function App() {
       }));
 
       if (nextSpeakerOptions.length === 0) {
+        if (engine === 'openRouter') {
+          setSpeakerOptions([]);
+          setSpeaker('');
+        }
         if (engine === 'deepgram') {
           setStatus(
             'No Flux voices in the public model catalog. Keeping the current selection and available voices; the Haley preset remains available.',
@@ -611,13 +674,19 @@ function App() {
       setSpeaker((currentSpeaker) =>
         nextSpeakerOptions.some((option) => option.id === currentSpeaker)
           ? currentSpeaker
-          : nextSpeakerOptions[0].id,
+          : engine === 'openRouter'
+            ? ''
+            : nextSpeakerOptions[0].id,
       );
     } catch (error) {
       if (requestId !== speakerFetchRequestId.current) {
         return;
       }
       console.error('Failed to fetch speaker list:', error);
+      if (engine === 'openRouter') {
+        setSpeakerOptions([]);
+        setSpeaker('');
+      }
       if (engine === 'xai') {
         setSpeakerOptions([]);
         setSpeaker((currentSpeaker) =>
@@ -638,7 +707,15 @@ function App() {
         setIsFetchingSpeakers(false);
       }
     }
-  }, [apiKey, apiUrl, cartesiaLanguage, engine, inworldVoiceLanguage]);
+  }, [
+    apiKey,
+    apiUrl,
+    cartesiaLanguage,
+    engine,
+    inworldVoiceLanguage,
+    openRouterModel,
+    openRouterModelsApiUrl,
+  ]);
 
   useEffect(() => {
     if (engine !== 'webSpeech') {
@@ -658,6 +735,14 @@ function App() {
     if (isVoicepeakWeightedInvalid) {
       setStatus(
         '合計が 100 を超えています。weight は合計 100 以下に抑えてください。',
+      );
+      setStatusType('error');
+      return;
+    }
+
+    if (isOpenRouterSelectionInvalid) {
+      setStatus(
+        'Select an OpenRouter preview model, fetch its voices, and select a voice.',
       );
       setStatusType('error');
       return;
@@ -941,6 +1026,8 @@ function App() {
           options.aivisCloudEnableBillingLogs =
             aivisCloudEnableBillingLogs === 'true';
         }
+      } else if (engine === 'openRouter') {
+        options.openRouterModel = openRouterModel;
       } else if (engine === 'openai') {
         const parsedSpeed = Number.parseFloat(openaiSpeed);
         if (!Number.isNaN(parsedSpeed)) {
@@ -1357,6 +1444,9 @@ function App() {
 
       if (apiUrl) {
         switch (engine) {
+          case 'openRouter':
+            options.openRouterApiUrl = apiUrl.trim();
+            break;
           case 'voicevox':
             options.voicevoxApiUrl = apiUrl;
             break;
@@ -1454,7 +1544,7 @@ function App() {
           <div className="card">
             <EngineSelector
               engine={engine}
-              onEngineChange={setEngine}
+              onEngineChange={changeEngine}
               speaker={speaker}
               onSpeakerChange={setSpeaker}
               speakerOptions={speakerOptions}
@@ -1462,9 +1552,13 @@ function App() {
               speakerFetchError={speakerFetchError}
               onFetchSpeakers={fetchSpeakers}
               apiKey={apiKey}
-              onApiKeyChange={setApiKey}
+              onApiKeyChange={changeApiKey}
               apiUrl={apiUrl}
               onApiUrlChange={setApiUrl}
+              openRouterModel={openRouterModel}
+              onOpenRouterModelChange={changeOpenRouterModel}
+              openRouterModelsApiUrl={openRouterModelsApiUrl}
+              onOpenRouterModelsApiUrlChange={changeOpenRouterModelsApiUrl}
               minimaxGroupId={minimaxGroupId}
               onMinimaxGroupIdChange={setMinimaxGroupId}
               inworldVoiceLanguage={inworldVoiceLanguage}
@@ -1950,7 +2044,9 @@ function App() {
               text={text}
               onTextChange={setText}
               isPlaying={isPlaying}
-              isSpeakDisabled={isVoicepeakWeightedInvalid}
+              isSpeakDisabled={
+                isVoicepeakWeightedInvalid || isOpenRouterSelectionInvalid
+              }
               onSpeak={speak}
               onStop={stopSpeaking}
               status={status}

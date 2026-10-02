@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import * as voicePackage from '../src';
 import type {
+  OpenRouterTtsModel,
+  OpenRouterVoiceServiceOptions,
+  OpenRouterVoiceServiceOptionsUpdate,
   GradiumOutputFormat,
   GradiumVoiceServiceOptions,
   FishAudioVoiceServiceOptions,
@@ -13,6 +16,21 @@ import type {
 import { EmotionParser, VoiceEngineAdapter, textToScreenplay } from '../src';
 
 describe('Voice Package Exports', () => {
+  it('exports flat, model-required OpenRouter option types', () => {
+    const model: OpenRouterTtsModel = 'microsoft/mai-voice-2.1';
+    const options: OpenRouterVoiceServiceOptions = {
+      engineType: 'openRouter',
+      openRouterModel: model,
+      speaker: 'en-US-Harper:MAI-Voice-2.1',
+      apiKey: 'test-key',
+    };
+    const update: OpenRouterVoiceServiceOptionsUpdate = {
+      openRouterApiUrl: '/speech',
+    };
+    expect(options.openRouterModel).toBe(model);
+    expect(update.openRouterApiUrl).toBe('/speech');
+  });
+
   it('should export VoiceEngineAdapter', () => {
     expect(VoiceEngineAdapter).toBeDefined();
     expect(typeof VoiceEngineAdapter).toBe('function');
@@ -35,6 +53,13 @@ describe('Voice Package Exports', () => {
     expect(voicePackage.AivisSpeechEngine).toBeDefined();
     expect(voicePackage.AivisCloudEngine).toBeDefined();
     expect(voicePackage.OpenAiEngine).toBeDefined();
+    expect(voicePackage.OpenRouterEngine).toBeDefined();
+    expect(voicePackage.OPENROUTER_TTS_API_URL).toBe(
+      'https://openrouter.ai/api/v1/audio/speech',
+    );
+    expect(voicePackage.OPENROUTER_MODELS_API_URL).toBe(
+      'https://openrouter.ai/api/v1/models',
+    );
     expect(voicePackage.XaiEngine).toBeDefined();
     expect(voicePackage.UnrealSpeechEngine).toBeDefined();
     expect(voicePackage.ElevenLabsEngine).toBeDefined();

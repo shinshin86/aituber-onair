@@ -106,6 +106,47 @@ describe('VoiceEngineAdapter', () => {
     mockGetEngine.mockReturnValue(mockEngine);
   });
 
+  describe('OpenRouter Integration', () => {
+    it('applies flat options, updates them, and clears stale model-scoped speakers', async () => {
+      const audio = new ArrayBuffer(4);
+      mockEngine.fetchAudio.mockResolvedValue(audio);
+      const onPlay = vi.fn().mockResolvedValue(undefined);
+      const adapter = new VoiceEngineAdapter({
+        engineType: 'openRouter',
+        apiKey: 'key',
+        speaker: 'en-US-Harper:MAI-Voice-2.1',
+        openRouterModel: 'microsoft/mai-voice-2.1',
+        openRouterApiUrl: 'https://proxy.example.test/speech',
+        onPlay,
+      });
+      await adapter.speakText('First');
+      expect(mockGetEngine).toHaveBeenCalledWith('openRouter');
+      expect(mockEngine.setModel).toHaveBeenCalledWith(
+        'microsoft/mai-voice-2.1',
+      );
+      expect(mockEngine.setApiEndpoint).toHaveBeenCalledWith(
+        'https://proxy.example.test/speech',
+      );
+      adapter.updateOptions({
+        openRouterModel: 'microsoft/mai-voice-2.1-flash',
+        openRouterApiUrl: undefined,
+      });
+      expect(adapter.getOptions().speaker).toBe('');
+      adapter.updateOptions({ speaker: 'en-US-Harper:MAI-Voice-2.1-Flash' });
+      await adapter.speakText('Second');
+      expect(mockEngine.setModel).toHaveBeenLastCalledWith(
+        'microsoft/mai-voice-2.1-flash',
+      );
+      expect(mockEngine.setApiEndpoint).toHaveBeenLastCalledWith('');
+      expect(mockEngine.fetchAudio).toHaveBeenLastCalledWith(
+        expect.objectContaining({ message: 'Second' }),
+        'en-US-Harper:MAI-Voice-2.1-Flash',
+        'key',
+      );
+      expect(onPlay).toHaveBeenCalledWith(audio, undefined);
+    });
+  });
+
   describe('VOICEVOX Integration', () => {
     it('should configure VOICEVOX engine with provided overrides', async () => {
       const options: VoiceServiceOptions = {

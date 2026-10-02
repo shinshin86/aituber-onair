@@ -11,6 +11,7 @@ import { gradiumEngineHandler } from './gradium';
 import { inworldEngineHandler } from './inworld';
 import { minimaxEngineHandler } from './minimax';
 import { noneEngineHandler } from './none';
+import { openRouterEngineHandler } from './openRouter';
 import { openAiEngineHandler } from './openai';
 import { openAiCompatibleEngineHandler } from './openaiCompatible';
 import { piperPlusEngineHandler } from './piperPlus';
@@ -34,6 +35,7 @@ const engineHandlers = {
   voicevox: voiceVoxEngineHandler,
   voicepeak: voicePeakEngineHandler,
   openai: openAiEngineHandler,
+  openRouter: openRouterEngineHandler,
   xai: xaiEngineHandler,
   unrealSpeech: unrealSpeechEngineHandler,
   elevenLabs: elevenLabsEngineHandler,

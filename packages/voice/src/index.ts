@@ -16,6 +16,8 @@ export type {
   WebSpeechVoiceServiceOptions,
   UnrealSpeechVoiceServiceOptions,
   ElevenLabsVoiceServiceOptions,
+  OpenRouterVoiceServiceOptions,
+  OpenRouterVoiceServiceOptionsUpdate,
   DeepgramVoiceServiceOptions,
   DeepgramVoiceServiceOptionsUpdate,
   InworldVoiceServiceOptions,

@@ -14,6 +14,7 @@ export {
   type AivisSpeechQueryParameterOverrides,
 } from './AivisSpeechEngine';
 export { AivisCloudEngine } from './AivisCloudEngine';
+export { OpenRouterEngine, type OpenRouterTtsModel } from './OpenRouterEngine';
 export { OpenAiEngine } from './OpenAiEngine';
 export { DeepgramEngine } from './DeepgramEngine';
 export { GeminiTtsEngine, type GeminiTtsModel } from './GeminiTtsEngine';

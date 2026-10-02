@@ -1,3 +1,7 @@
+import {
+  OPENROUTER_MODELS_API_URL,
+  OPENROUTER_TTS_API_URL,
+} from '@aituber-onair/voice';
 import type {
   CartesiaLanguage,
   CartesiaOutputContainer,
@@ -24,6 +28,14 @@ export const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'sk-...',
     speaker: 'alloy',
+  },
+  openRouter: {
+    apiUrl: OPENROUTER_TTS_API_URL,
+    modelsApiUrl: OPENROUTER_MODELS_API_URL,
+    needsApiKey: true,
+    acceptsApiKey: true,
+    placeholder: 'Your OpenRouter API key',
+    speaker: '',
   },
   xai: {
     apiUrl: 'https://api.x.ai/v1/tts',

@@ -12,6 +12,7 @@ import type {
   CartesiaLanguage,
   CartesiaOutputContainer,
 } from '../engines/CartesiaEngine';
+import type { OpenRouterTtsModel } from '../engines/OpenRouterEngine';
 import type { GeminiTtsModel } from '../engines';
 import type {
   GradiumModel,
@@ -140,6 +141,16 @@ export interface OpenAiVoiceServiceOptions extends VoiceServiceCommonOptions {
   openAiModel?: string;
   /** OpenAI TTS speaking speed (0.25-4.0, default: 1.0) */
   openAiSpeed?: number;
+}
+
+export interface OpenRouterVoiceServiceOptions
+  extends VoiceServiceCommonOptions {
+  /** Both MAI models are public-preview, explicit opt-ins. */
+  engineType: 'openRouter';
+  /** Required model selection; there is no preview-model fallback. */
+  openRouterModel: OpenRouterTtsModel;
+  /** Full speech endpoint or same-origin browser proxy URL. PCM is wrapped as WAV. */
+  openRouterApiUrl?: string;
 }
 
 export interface XaiVoiceServiceOptions extends VoiceServiceCommonOptions {
@@ -500,6 +511,7 @@ export type VoiceServiceOptions =
   | VoiceVoxVoiceServiceOptions
   | VoicePeakVoiceServiceOptions
   | OpenAiVoiceServiceOptions
+  | OpenRouterVoiceServiceOptions
   | XaiVoiceServiceOptions
   | UnrealSpeechVoiceServiceOptions
   | ElevenLabsVoiceServiceOptions
@@ -528,6 +540,9 @@ export type VoicePeakVoiceServiceOptionsUpdate = Partial<
 >;
 export type OpenAiVoiceServiceOptionsUpdate = Partial<
   Omit<OpenAiVoiceServiceOptions, 'engineType'>
+>;
+export type OpenRouterVoiceServiceOptionsUpdate = Partial<
+  Omit<OpenRouterVoiceServiceOptions, 'engineType'>
 >;
 export type XaiVoiceServiceOptionsUpdate = Partial<
   Omit<XaiVoiceServiceOptions, 'engineType'>
@@ -582,6 +597,7 @@ export type VoiceServiceOptionsUpdate =
   | VoiceVoxVoiceServiceOptionsUpdate
   | VoicePeakVoiceServiceOptionsUpdate
   | OpenAiVoiceServiceOptionsUpdate
+  | OpenRouterVoiceServiceOptionsUpdate
   | XaiVoiceServiceOptionsUpdate
   | UnrealSpeechVoiceServiceOptionsUpdate
   | ElevenLabsVoiceServiceOptionsUpdate

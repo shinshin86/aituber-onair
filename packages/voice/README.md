@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## Main Features
 
 - **Multiple TTS Engine Support**  
-  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, xAI TTS, Unreal Speech,
+  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, OpenRouter TTS (preview opt-in), xAI TTS, Unreal Speech,
   ElevenLabs, Fish Audio, Cartesia, Deepgram Flux, Inworld, Gradium, Gemini TTS, MiniMax,
   AivisSpeech, Aivis Cloud, Web Speech API, and more
 - **Unified Interface**  
@@ -176,6 +176,83 @@ const voiceService = new VoiceService({
   apiKey: 'your-openai-api-key'
 });
 ```
+
+### OpenRouter TTS (public-preview opt-in)
+
+Preview models require an explicit choice and are not defaults. This dedicated
+engine supports `microsoft/mai-voice-2.1` and
+`microsoft/mai-voice-2.1-flash` through OpenRouter's
+[`POST /api/v1/audio/speech`](https://openrouter.ai/docs/api/api-reference/tts/create-speech).
+The [OpenRouter TTS guide](https://openrouter.ai/docs/guides/overview/multimodal/tts)
+documents both exact model IDs, full model-specific voice IDs, and 24 kHz mono PCM output.
+Microsoft classifies both as [public preview, without an SLA and not recommended
+for production](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/mai-voices).
+The model catalogs checked on October 1, 2026 contained 97 voices across 28 locales
+for each model, with no Japanese voices. Voice availability may change; fetch the
+selected model's catalog instead of assuming a fixed list.
+
+```typescript
+import {
+  VoiceEngineAdapter,
+  getVoiceEngineVoiceList,
+  type OpenRouterTtsModel,
+} from '@aituber-onair/voice';
+
+// Deliberate preview opt-in; no model is chosen when this option is omitted.
+const model: OpenRouterTtsModel = 'microsoft/mai-voice-2.1';
+const voices = await getVoiceEngineVoiceList('openRouter', {
+  openRouterModel: model,
+  // Optional for the public models catalog; synthesis requires your key.
+  apiKey: 'your-openrouter-api-key',
+});
+const speaker = voices.find((voice) =>
+  voice.id === 'en-US-Harper:MAI-Voice-2.1',
+)?.id;
+if (!speaker) throw new Error('Select an available voice for this model');
+
+const voiceService = new VoiceEngineAdapter({
+  engineType: 'openRouter',
+  openRouterModel: model,
+  speaker,
+  apiKey: 'your-openrouter-api-key',
+  // Optional full speech endpoint (not a base URL):
+  // openRouterApiUrl: 'https://openrouter.ai/api/v1/audio/speech',
+});
+await voiceService.speakText('Hello! Welcome to the show.');
+```
+
+The engine sends Bearer authentication and JSON
+`{ model, input, voice, response_format: 'pcm' }`. The speech API defines
+`audio/pcm` as 16-bit little-endian; the MAI route specifies 24 kHz mono. The
+engine wraps these bytes in a WAV header using the existing PCM helper, so the
+browser/Node audio player and `onPlay` callback receive a complete WAV buffer,
+not compressed MP3 or headerless PCM. Node playback still needs an optional
+playback dependency as described below. Non-PCM, empty, or incomplete 16-bit
+sample responses are rejected before playback. This is
+one-shot synthesis, not realtime audio streaming. Emotion tags do not add voice
+style, speed, or cloning parameters; these controls are intentionally omitted.
+The voice locale determines the synthesis language.
+
+`getVoiceEngineVoiceList('openRouter', { openRouterModel })` reads
+`GET https://openrouter.ai/api/v1/models?output_modalities=speech` and returns
+only that exact model's `supported_voices`. Use `openRouterModelsApiUrl` (or
+`voiceListApiUrl`) on the lookup options for a separate models endpoint; a custom
+`openRouterApiUrl` does not redirect catalog requests. Relative endpoint URLs work
+in browsers; Node requires absolute HTTP(S) URLs. Configure only trusted endpoints
+because requests with an API key send it to the configured destination.
+
+When changing models at runtime, choose a voice from the new model's list and
+update `openRouterModel` and `speaker` together. Updating only the model clears
+the prior speaker. Full IDs end with `:MAI-Voice-2.1` or
+`:MAI-Voice-2.1-Flash`; a stale suffix is rejected, never rewritten automatically.
+The React example starts with no preview model or voice selected and provides
+model-scoped voice selection, API key and separate endpoint controls.
+
+The example uses the direct OpenRouter route. Browser-side keys are visible to
+the page, so deploy shared apps with your own credential-protecting backend
+rather than embedding a shared secret in client code. Direct access depends on
+the provider's CORS policy and your deployment; custom endpoints must permit
+your application's origin or run as same-origin backend routes.
 
 ### xAI TTS
 xAI's cloud TTS API with selectable voice IDs, language control, and output
@@ -784,6 +861,12 @@ const voiceService = new VoiceService({
   - `openAiCompatibleTimeoutMs`
   - `openAiCompatibleInstructions`
   - `openAiCompatibleResponseFormat`
+
+- **OpenRouter TTS (public preview)**
+  - Required model: `openRouterModel` (no default)
+  - Voice: `speaker`, including the matching model suffix
+  - Speech endpoint: `openRouterApiUrl`; PCM response wrapped as 24 kHz mono WAV
+  - Voice-list options: `openRouterModel`, optional `openRouterModelsApiUrl`
 
 - **xAI TTS**
   - `xaiLanguage`

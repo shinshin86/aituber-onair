@@ -54,6 +54,7 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 ### Supported Voice Engines
 
 - **OpenAI TTS** - High-quality voices with API key
+- **OpenRouter MAI Voice** - Explicit opt-in MAI-Voice-2.1 and MAI-Voice-2.1-Flash public-preview models with model-scoped voice lists; no preview model is selected by default
 - **OpenAI-Compatible TTS** - Self-hosted OpenAI-style endpoints such as Kokoro FastAPI
 - **Inworld TTS** - Non-streaming Inworld REST API with Basic authentication
 - **Gradium TTS** - One-shot Gradium REST API with flagship voice presets
@@ -192,6 +193,51 @@ Do not embed production API keys in browser-delivered code.
 # Standard OpenAI API key: "sk-..."
 ```
 
+#### OpenRouter MAI Voice (public preview, explicit opt-in)
+
+Preview models require an explicit choice and are unsuitable as production
+defaults. This example offers `microsoft/mai-voice-2.1` and
+`microsoft/mai-voice-2.1-flash` through the dedicated `openRouter` engine.
+Microsoft describes both as public preview, without a service-level agreement
+(SLA), and not recommended for production workloads. OpenAI remains the
+example's default engine; switching to OpenRouter leaves the model unselected.
+
+1. Choose **OpenRouter MAI Voice (Public preview)**.
+2. Select a preview model explicitly and enter your OpenRouter API key.
+3. Click **Fetch model voices** and select a voice from that model's catalog.
+4. Enter text matching the selected voice's locale, then click **Speak**.
+   The built-in demo switches to English; custom text is preserved. Japanese
+   is not currently listed in the MAI voice catalog.
+
+The voice selector uses `supported_voices` for the exact selected model from
+`GET https://openrouter.ai/api/v1/models?output_modalities=speech`. Voice IDs
+include their model suffix, such as `en-US-Harper:MAI-Voice-2.1` or
+`en-US-Harper:MAI-Voice-2.1-Flash`. Changing models clears the old voice and
+requires a new catalog lookup. Changing the key or models endpoint also clears
+the catalog, and late replies cannot overwrite the new settings.
+Fresh catalogs leave the voice unselected until you choose one explicitly;
+refreshing preserves an existing selection only if that voice is still listed.
+
+Speech uses `POST https://openrouter.ai/api/v1/audio/speech` with the selected
+`model`, plain-text `input`, `voice`, and `response_format: 'pcm'`. The provider
+returns raw 16-bit little-endian PCM at 24 kHz mono (`audio/pcm`). The engine
+wraps those unchanged PCM bytes in a WAV header for the existing playback path.
+This integration does not expose speed, style, emotion, SSML,
+or voice-cloning controls. Changes to model, voice, key, and speech URL apply
+to the next Speak request.
+
+**Speech API URL** and **Models API URL** are independently customizable for
+trusted backend relays; the catalog URL is never inferred from the speech URL.
+Both requests send the key to the configured destination. Keep production
+credentials on your backend, not in browser-delivered code. If your browser or
+deployment blocks direct cross-origin requests, supply equivalent backend
+routes and configure both URLs. Offline tests do not establish authenticated
+provider access, synthesis quality, latency, or real audio playback.
+
+Official references: [OpenRouter TTS guide](https://openrouter.ai/docs/guides/overview/multimodal/tts),
+[speech API](https://openrouter.ai/docs/api/api-reference/tts/create-speech),
+and [Microsoft's preview and language documentation](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/mai-voices).
+
 #### OpenAI-Compatible TTS
 ```bash
 # Kokoro FastAPI default endpoint: http://localhost:8880/v1/audio/speech
@@ -318,12 +364,23 @@ npm run test:proxy
 ```
 
 The DOM suite mounts the actual React app and exercises Eleven v4, Cartesia
-3.6, and Deepgram through the real option wiring and engines, with fake network
+3.6, Deepgram, and both OpenRouter MAI preview models through the real option wiring and engines, with fake network
 responses and an audio callback. It covers model/provider changes, retained
 custom text, voice-list fallback, stale catalog replies, errors, retries, and
 repeated clicks. The proxy suite loads the actual Vite configuration and tests
 both dev and preview routes against loopback-only mock upstreams, including
 headers, query strings, JSON bodies, binary audio, and error forwarding.
+
+OpenRouter coverage also checks explicit model selection, independent custom
+speech/catalog URLs, model-scoped voices, clearing invalid selections, runtime
+model/voice changes, and stale catalog successes/failures after rapid model,
+key, endpoint, and provider changes. The tests verify the WAV header fields and
+unchanged PCM payload passed to the mocked audio player. To run just those
+offline DOM checks:
+
+```bash
+npm run test:dom -- -t 'OpenRouter public-preview'
+```
 
 These checks need no API keys and make no provider requests. They do not verify
 live provider access, browser CORS, decoded audio playback, or static-hosting

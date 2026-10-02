@@ -10,6 +10,21 @@
 - Omit undocumented reasoning effort and token-budget settings for this model,
   including inherited settings; preserve the existing `includeReasoning` option.
 
+- Add explicit OpenRouter Chat Completions options for Solar Mini4
+  (`upstage/solar-mini4`), MiMo V2.6 Flash (`xiaomi/mimo-v2.6-flash`), and
+  Apodex 1.1 Mini Free (`apodex/apodex-1.1-mini:free`). All three support
+  text and tools; MiMo also accepts images. Existing defaults are unchanged.
+- Default Solar Mini4 reasoning to `none` and preserve all supported effort
+  levels, including `minimal`. Omit reasoning token budgets for all three
+  models; MiMo and Apodex also omit effort fields and use provider defaults.
+  Apodex remains subject to OpenRouter's free-tier limits.
+
+### Patch Changes
+
+- Update the React basic example's model selector and reasoning settings,
+  English/Japanese documentation, and request/parser/DOM regression coverage
+  for the new OpenRouter models.
+
 ### Known Limitations
 
 - Ling 3.1 Flash uses the direct OpenRouter Chat Completions endpoint. Live
