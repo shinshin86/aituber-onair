@@ -110,6 +110,7 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
+  MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -698,6 +699,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_QWEN_QWEN_3_8_MAX_0902,
     name: 'Qwen3.8 Max (0902)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_INCLUSIONAI_LING_3_1_FLASH,
+    name: 'Ling 3.1 Flash',
     provider: 'openrouter',
     default: false,
   },

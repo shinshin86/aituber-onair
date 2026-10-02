@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MODEL_INCLUSIONAI_LING_3_1_FLASH,
+  OPENROUTER_FREE_MODELS,
+  OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
@@ -121,6 +124,37 @@ describe('OpenRouter reasoning effort helpers', () => {
       expect(getDefaultOpenRouterReasoningEffort(model)).toBe('low');
       expect(normalizeOpenRouterReasoningEffort(model, 'none')).toBe('low');
       expect(normalizeOpenRouterReasoningEffort(model, 'xhigh')).toBe('max');
+    }
+  });
+});
+
+describe('Ling 3.1 Flash explicit profile', () => {
+  it('exports the exact unsuffixed ID without promising free-tier treatment', () => {
+    expect(MODEL_INCLUSIONAI_LING_3_1_FLASH).toBe('inclusionai/ling-3.1-flash');
+    expect(isOpenRouterFreeModel(MODEL_INCLUSIONAI_LING_3_1_FLASH)).toBe(false);
+    expect(OPENROUTER_FREE_MODELS).not.toContain(
+      MODEL_INCLUSIONAI_LING_3_1_FLASH,
+    );
+  });
+
+  it('omits undocumented effort levels and token budgets', () => {
+    const model = MODEL_INCLUSIONAI_LING_3_1_FLASH;
+    expect(getOpenRouterSupportedReasoningEfforts(model)).toEqual([]);
+    expect(getDefaultOpenRouterReasoningEffort(model)).toBeUndefined();
+    expect(OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET).toContain(model);
+    for (const effort of [
+      'none',
+      'minimal',
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+      'max',
+    ] as const) {
+      expect(normalizeOpenRouterReasoningEffort(model, effort)).toBeUndefined();
+      expect(
+        normalizeOpenRouterReasoningEffort(`  ${model}  `, effort),
+      ).toBeUndefined();
     }
   });
 });

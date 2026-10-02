@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
+  MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -106,6 +107,7 @@ const recentOpenRouterVisionModels = [
 ];
 
 const recentOpenRouterTextOnlyModels = [
+  MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_0731,
   MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
@@ -138,6 +140,7 @@ describe('OpenRouterChatServiceProvider', () => {
       const models = provider.getSupportedModels();
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
+        MODEL_INCLUSIONAI_LING_3_1_FLASH,
         MODEL_UPSTAGE_SOLAR_MINI4,
         MODEL_XIAOMI_MIMO_V2_6_FLASH,
         MODEL_APODEX_1_1_MINI_FREE,

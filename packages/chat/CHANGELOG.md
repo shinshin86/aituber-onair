@@ -1,5 +1,22 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+### Minor Changes
+
+- Added OpenRouter Ling 3.1 Flash (`inclusionai/ling-3.1-flash`) as an explicit,
+  non-default text-only option, including the public constant, React selector,
+  English/Japanese documentation, and mocked transport/rendered-DOM coverage.
+- Omit undocumented reasoning effort and token-budget settings for this model,
+  including inherited settings; preserve the existing `includeReasoning` option.
+
+### Known Limitations
+
+- Ling 3.1 Flash uses the direct OpenRouter Chat Completions endpoint. Live
+  inference and browser CORS have not been verified. The parser does not retain
+  `reasoning_details` for reasoning-state-preserving multi-turn tool continuations.
+  The unsuffixed model ID is not classified as a free-tier model.
+
 ## 0.61.0
 
 ### Minor Changes

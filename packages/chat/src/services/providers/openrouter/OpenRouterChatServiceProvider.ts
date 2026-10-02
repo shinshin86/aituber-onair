@@ -1,4 +1,5 @@
 import {
+  MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -153,6 +154,7 @@ export class OpenRouterChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
+      MODEL_INCLUSIONAI_LING_3_1_FLASH,
       MODEL_UPSTAGE_SOLAR_MINI4,
       MODEL_XIAOMI_MIMO_V2_6_FLASH,
       MODEL_APODEX_1_1_MINI_FREE,

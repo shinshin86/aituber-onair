@@ -358,3 +358,22 @@ All three omit reasoning token budgets; MiMo and Apodex also omit effort fields
 and use the provider's reasoning defaults. Apodex uses OpenRouter's free-tier
 limits. These choices use the direct `https://openrouter.ai/api/v1/chat/completions`
 endpoint without a provider proxy.
+
+### Ling 3.1 Flash on OpenRouter
+
+Select **OpenRouter → Ling 3.1 Flash** and enter your OpenRouter API key.
+The explicit, non-default model ID is `inclusionai/ling-3.1-flash`, without a
+`:free` suffix. It supports text input; image upload is disabled. The effort
+and reasoning-token-budget controls are hidden, and stale values from another
+model are omitted. Provider-default reasoning remains enabled; **Include
+Reasoning** controls upstream output, not computation, and does not display
+reasoning in this example.
+
+The sample sends authenticated JSON directly to
+`https://openrouter.ai/api/v1/chat/completions` and parses SSE text deltas.
+There is no additional proxy setup. Selection, settings, streaming, and error
+recovery are covered by mocked rendered-DOM tests; these do not prove live
+inference or browser CORS. The provider can parse tool calls, but does not retain
+`reasoning_details` for reasoning-state-preserving multi-turn tool continuations.
+See the [model API example](https://openrouter.ai/inclusionai/ling-3.1-flash?view=api)
+and the [package limitations](../../README.md#openrouter).
