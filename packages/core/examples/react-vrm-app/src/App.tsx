@@ -1,11 +1,13 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { BondToastStack } from './components/BondToastStack';
+import type { ChatVoiceInputProps } from './components/ChatInput';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -51,6 +53,13 @@ interface SettingsDialogDragState {
 export default function App() {
   const { play, stop, mouthLevel, isSpeaking } = useAudioLipsync();
   const settingsHook = useSettings();
+  const { openai: openAiKey = '', gemini: geminiKey = '' } =
+    settingsHook.settings.llm.apiKeys;
+  // Voice input shares the API keys entered in the LLM settings.
+  const voiceInputApiKeys = useMemo(
+    () => ({ openai: openAiKey, gemini: geminiKey }),
+    [openAiKey, geminiKey],
+  );
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsDialogOffset, setSettingsDialogOffset] =
@@ -393,6 +402,16 @@ export default function App() {
     };
   }, []);
 
+  const voiceInput: ChatVoiceInputProps = {
+    mode: settingsHook.settings.voiceInput.mode,
+    service: settingsHook.settings.voiceInput.service,
+    onModeChange: settingsHook.updateVoiceInputMode,
+    onServiceChange: settingsHook.updateVoiceInputService,
+    apiKeys: voiceInputApiKeys,
+    onApiKeyChange: settingsHook.updateLLMApiKey,
+    isSpeaking,
+  };
+
   return (
     <div className="app">
       <ChatPanel
@@ -425,6 +444,7 @@ export default function App() {
         }
         backgroundImageUrl={backgroundImageUrl}
         visual={settingsHook.settings.visual}
+        voiceInput={voiceInput}
         onToggleSettings={toggleSettingsDialog}
       />
 

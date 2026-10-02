@@ -4,6 +4,7 @@ import type {
   PuruPuruEmotionEffectMap,
   PuruPuruReactionControlMode,
 } from '../lib/purupuruReactions';
+import type { VoiceInputMode, VoiceInputService } from '../lib/voiceInput';
 
 export type ChatProviderOption =
   | 'openai'
@@ -244,6 +245,11 @@ export interface ScreenVisionSettings {
   enabled: boolean;
 }
 
+export interface VoiceInputSettings {
+  mode: VoiceInputMode;
+  service: VoiceInputService;
+}
+
 export interface AppSettings {
   llm: LLMSettings;
   tts: TTSSettings;
@@ -253,4 +259,5 @@ export interface AppSettings {
   commentIntelligence: CommentIntelligenceSettings;
   manneri: ManneriSettings;
   kizuna: KizunaSettings;
+  voiceInput: VoiceInputSettings;
 }

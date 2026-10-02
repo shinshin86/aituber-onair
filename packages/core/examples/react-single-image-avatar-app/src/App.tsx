@@ -2,11 +2,13 @@ import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
 import { BondToastStack } from './components/BondToastStack';
 import { AvatarSettingsPanel } from './components/AvatarSettingsPanel';
+import type { ChatVoiceInputProps } from './components/ChatInput';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAituberCore } from './hooks/useAituberCore';
@@ -44,6 +46,13 @@ interface SettingsDialogDragState {
 export default function App() {
   const { play, stop, voiceLevel, isSpeaking } = useAudioMotion();
   const settingsHook = useSettings();
+  const { openai: openAiKey = '', gemini: geminiKey = '' } =
+    settingsHook.settings.llm.apiKeys;
+  // Voice input shares the API keys entered in the LLM settings.
+  const voiceInputApiKeys = useMemo(
+    () => ({ openai: openAiKey, gemini: geminiKey }),
+    [openAiKey, geminiKey],
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsCategory, setSettingsCategory] = useState<
     'avatar' | 'conversation'
@@ -397,6 +406,16 @@ export default function App() {
     };
   }, []);
 
+  const voiceInput: ChatVoiceInputProps = {
+    mode: settingsHook.settings.voiceInput.mode,
+    service: settingsHook.settings.voiceInput.service,
+    onModeChange: settingsHook.updateVoiceInputMode,
+    onServiceChange: settingsHook.updateVoiceInputService,
+    apiKeys: voiceInputApiKeys,
+    onApiKeyChange: settingsHook.updateLLMApiKey,
+    isSpeaking,
+  };
+
   return (
     <div className="app">
       <ChatPanel
@@ -411,6 +430,7 @@ export default function App() {
         motionPreviewToken={motionPreviewToken}
         avatarReaction={avatarReaction}
         visual={settingsHook.settings.visual}
+        voiceInput={voiceInput}
         effectAnchor={getEmotionEffectAnchor(
           settingsHook.settings.visual.pngtuberEmotionEffectAnchors,
           AVATAR_EFFECT_ANCHOR_PROFILE_ID,

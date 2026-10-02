@@ -2,11 +2,13 @@ import { getInochiRuntimeSession } from './lib/inochi2dRuntimeSession';
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { BondToastStack } from './components/BondToastStack';
+import type { ChatVoiceInputProps } from './components/ChatInput';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAudioLipsync } from './hooks/useAudioLipsync';
@@ -49,6 +51,13 @@ interface SettingsDialogDragState {
 
 export default function App() {
   const settingsHook = useSettings();
+  const { openai: openAiKey = '', gemini: geminiKey = '' } =
+    settingsHook.settings.llm.apiKeys;
+  // Voice input shares the API keys entered in the LLM settings.
+  const voiceInputApiKeys = useMemo(
+    () => ({ openai: openAiKey, gemini: geminiKey }),
+    [openAiKey, geminiKey],
+  );
   const { play, stop, isSpeaking } = useAudioLipsync();
   const updateTwitchAccessToken = settingsHook.updateTwitchAccessToken;
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -476,6 +485,16 @@ export default function App() {
       : manifestModels.find((model) => model.id === selectedModelId)?.name ||
         '未読み込み';
 
+  const voiceInput: ChatVoiceInputProps = {
+    mode: settingsHook.settings.voiceInput.mode,
+    service: settingsHook.settings.voiceInput.service,
+    onModeChange: settingsHook.updateVoiceInputMode,
+    onServiceChange: settingsHook.updateVoiceInputService,
+    apiKeys: voiceInputApiKeys,
+    onApiKeyChange: settingsHook.updateLLMApiKey,
+    isSpeaking,
+  };
+
   return (
     <div className="app">
       <ChatPanel
@@ -492,6 +511,7 @@ export default function App() {
         onModelResolved={setSelectedModelId}
         avatarReaction={avatarReaction}
         visual={settingsHook.settings.visual}
+        voiceInput={voiceInput}
         effectAnchor={getEmotionEffectAnchor(
           settingsHook.settings.visual.inochi2dEmotionEffectAnchors,
           selectedModelId || customModel?.id,

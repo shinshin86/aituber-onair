@@ -17,6 +17,7 @@
     "@aituber-onair/core": "../..",
     "@aituber-onair/kizuna": "../../../kizuna",
     "@aituber-onair/manneri": "../../../manneri",
+    "@aituber-onair/transcription": "../../../transcription",
     "@webtoon/psd": "^0.4.0",
     "ag-psd": "^31.0.2",
     "react": "^19.2.0",

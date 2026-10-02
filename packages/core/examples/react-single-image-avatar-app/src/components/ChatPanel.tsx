@@ -3,10 +3,11 @@ import type { PngTuberEmotionReaction } from '../lib/pngtuberEmotionEffects';
 import type { ChatMessage } from '../types/chat';
 import type { VisualSettings } from '../types/settings';
 import { AvatarBackground } from './AvatarPanel';
-import { ChatInput } from './ChatInput';
+import { ChatInput, type ChatVoiceInputProps } from './ChatInput';
 import { ChatLog } from './ChatLog';
 
 interface ChatPanelProps {
+  voiceInput: ChatVoiceInputProps;
   messages: ChatMessage[];
   partialResponse: string;
   isProcessing: boolean;
@@ -40,6 +41,7 @@ export function ChatPanel({
   onEffectAnchorChange,
   onEffectAnchorReset,
   onToggleSettings,
+  voiceInput,
 }: ChatPanelProps) {
   const isBroadcast = visual.layoutMode === 'broadcast';
   const shouldShowInput = !isBroadcast || visual.showInputInBroadcast;
@@ -95,7 +97,9 @@ export function ChatPanel({
       ) : (
         <ChatLog messages={messages} partialResponse={partialResponse} />
       )}
-      {shouldShowInput && <ChatInput onSend={onSend} disabled={isProcessing} />}
+      {shouldShowInput && (
+        <ChatInput onSend={onSend} disabled={isProcessing} voice={voiceInput} />
+      )}
     </div>
   );
 }

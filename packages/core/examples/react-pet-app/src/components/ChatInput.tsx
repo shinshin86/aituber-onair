@@ -1,19 +1,59 @@
-import { useState, useCallback, useRef } from 'react';
-import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { useCallback, useRef, useState } from 'react';
+import { useVoiceInput } from '../hooks/useVoiceInput';
+import {
+  type CloudVoiceInputService,
+  type VoiceInputMode,
+  type VoiceInputService,
+  voiceInputNoticeText,
+} from '../lib/voiceInput';
+import {
+  VoiceInputControl,
+  VoiceLevelBars,
+  VoiceSpinner,
+} from './VoiceInputControl';
+
+export interface ChatVoiceInputProps {
+  mode: VoiceInputMode;
+  service: VoiceInputService;
+  onModeChange: (mode: VoiceInputMode) => void;
+  onServiceChange: (service: VoiceInputService) => void;
+  apiKeys: Record<CloudVoiceInputService, string>;
+  onApiKeyChange: (service: CloudVoiceInputService, key: string) => void;
+  /** True while the avatar is speaking the reply. */
+  isSpeaking: boolean;
+}
 
 interface ChatInputProps {
   onSend: (text: string) => void;
   disabled: boolean;
+  voice: ChatVoiceInputProps;
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, voice }: ChatInputProps) {
   const [text, setText] = useState('');
   const composingRef = useRef(false);
-  const appendRecognizedText = useCallback((recognizedText: string) => {
-    setText((prev) => prev + recognizedText);
-  }, []);
-  const speech = useSpeechRecognition({
-    onFinalTranscript: appendRecognizedText,
+  const { apiKeys } = voice;
+
+  const handleFinalTranscript = useCallback(
+    (recognizedText: string) => {
+      setText('');
+      onSend(recognizedText);
+    },
+    [onSend],
+  );
+  const getApiKey = useCallback(
+    (service: VoiceInputService) =>
+      service === 'browser' ? '' : apiKeys[service],
+    [apiKeys],
+  );
+
+  const speech = useVoiceInput({
+    mode: voice.mode,
+    service: voice.service,
+    getApiKey,
+    busy: disabled || voice.isSpeaking,
+    onInterimTranscript: setText,
+    onFinalTranscript: handleFinalTranscript,
   });
 
   const handleSend = useCallback(() => {
@@ -21,9 +61,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     if (!trimmed || disabled) return;
     onSend(trimmed);
     setText('');
-    if (speech.listening) {
-      speech.stop();
-    }
+    speech.stop();
   }, [text, disabled, onSend, speech]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -33,17 +71,61 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   };
 
-  const toggleMic = () => {
-    if (speech.listening) {
-      speech.stop();
-    } else {
-      speech.start();
-    }
-  };
+  const statusText =
+    speech.phase === 'connecting'
+      ? '接続しています。少し待ってから話してください'
+      : speech.phase === 'listening'
+        ? '聞き取り中です。どうぞ話してください'
+        : speech.continuousActive
+          ? '返答が終わったら、また聞き取ります'
+          : null;
 
   return (
     <div className="chat-input">
+      {speech.notice && (
+        <div className="voice-input-notice" role="alert">
+          {voiceInputNoticeText(speech.notice)}
+        </div>
+      )}
+      {statusText && (
+        <output
+          className="voice-input-status"
+          data-phase={speech.phase}
+          aria-live="polite"
+        >
+          <span className="voice-input-status-icon">
+            {speech.phase === 'connecting' ? (
+              <VoiceSpinner />
+            ) : speech.phase === 'listening' ? (
+              <VoiceLevelBars />
+            ) : (
+              <span className="voice-input-status-dot" aria-hidden="true" />
+            )}
+          </span>
+          <span>{statusText}</span>
+        </output>
+      )}
       <div className="input-row">
+        <VoiceInputControl
+          phase={speech.phase}
+          standby={speech.continuousActive && speech.phase === 'idle'}
+          micDisabled={disabled && !speech.continuousActive}
+          onMicClick={speech.toggle}
+          mode={voice.mode}
+          onModeChange={(mode) => {
+            if (mode === voice.mode) return;
+            speech.reset();
+            voice.onModeChange(mode);
+          }}
+          service={voice.service}
+          onServiceChange={(service) => {
+            if (service === voice.service) return;
+            speech.reset();
+            voice.onServiceChange(service);
+          }}
+          apiKeys={apiKeys}
+          onApiKeyChange={voice.onApiKeyChange}
+        />
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -55,33 +137,15 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           }}
           onKeyDown={handleKeyDown}
           placeholder={
-            speech.listening
-              ? '音声認識中...'
+            speech.phase === 'listening'
+              ? '話した内容がここに表示されます'
               : 'メッセージを入力 (Enter で送信)'
           }
           disabled={disabled}
           rows={2}
         />
-        {speech.interimTranscript && (
-          <div className="interim-transcript">{speech.interimTranscript}</div>
-        )}
-      </div>
-      <div className="input-actions">
         <button
-          onClick={toggleMic}
-          className={`mic-button ${speech.listening ? 'mic-active' : ''}`}
-          disabled={!speech.supported}
-          title={
-            !speech.supported
-              ? 'お使いのブラウザは音声認識に対応していません（Chrome推奨）'
-              : speech.listening
-                ? '音声認識を停止'
-                : '音声認識を開始'
-          }
-        >
-          🎤
-        </button>
-        <button
+          type="button"
           onClick={handleSend}
           className="send-button"
           disabled={disabled || !text.trim()}
