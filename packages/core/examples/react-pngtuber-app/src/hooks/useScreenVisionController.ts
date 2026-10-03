@@ -136,6 +136,10 @@ export function useScreenVisionController({
     try {
       await onCapture(imageDataUrl, settings.prompt);
       setStatusMessage('画面を送信しました。');
+    } catch (error) {
+      setStatusMessage(
+        error instanceof Error ? error.message : '画面を送信できませんでした。',
+      );
     } finally {
       captureRunningRef.current = false;
     }
@@ -176,11 +180,7 @@ export function useScreenVisionController({
     }, settings.autoIntervalMs);
 
     return () => window.clearInterval(intervalId);
-  }, [
-    captureAndSend,
-    settings.autoIntervalMs,
-    settings.enabled,
-  ]);
+  }, [captureAndSend, settings.autoIntervalMs, settings.enabled]);
 
   return {
     devices,

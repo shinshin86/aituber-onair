@@ -9,6 +9,7 @@ import {
   allowsReasoningNone,
   allowsReasoningXHigh,
   getDefaultClaudeReasoningEffort,
+  getOpenRouterSupportedReasoningEfforts,
   getDefaultGeminiReasoningEffort,
   getDefaultKimiReasoningEffort,
   getDefaultDeepSeekReasoningEffort,
@@ -42,6 +43,12 @@ import {
   type ChatCompletionAssistantMessage,
 } from '@aituber-onair/chat';
 import './App.css';
+import {
+  useOpenRouterCatalog,
+  getOpenRouterRequestBlockReason,
+  catalogSupportsReasoning,
+  catalogSupportedReasoningEfforts,
+} from './openrouterCatalog';
 import ChatInterface from './components/ChatInterface';
 import ProviderSelector, {
   getProviderForModel,
@@ -148,6 +155,7 @@ function App() {
   const [selectedModel, setSelectedModel] = useState(() =>
     getDefaultModelForProvider('openai'),
   );
+  const lastOpenRouterModel = useRef(getDefaultModelForProvider('openrouter'));
   const [gpt5Preset, setGpt5Preset] = useState<GPT5PresetKey | undefined>();
   const [reasoning_effort, setReasoningEffort] =
     useState<ReasoningEffortLevel>('none');
@@ -257,6 +265,15 @@ function App() {
       reasoning_effort === 'max')
       ? reasoning_effort
       : (getDefaultZaiReasoningEffort(selectedModel) ?? 'none');
+  const openRouterCatalog = useOpenRouterCatalog(provider === 'openrouter');
+  const openRouterAllowsReasoning =
+    provider === 'openrouter' &&
+    catalogSupportsReasoning(
+      selectedModel,
+      ChatServiceFactory.getSupportedModels('openrouter').includes(
+        selectedModel,
+      ),
+    );
   const visionSupportLevel = getVisionSupportLevel(provider, selectedModel);
   const effectiveApiKey =
     provider === 'openai-compatible' ? apiKey.trim() : apiKey;
@@ -277,6 +294,7 @@ function App() {
   }, [messages]);
 
   // Initialize chat service when provider, API key, or model changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Catalog effort values can change even when the reasoning support boolean stays true.
   useEffect(() => {
     const shouldInitialize =
       provider === 'gemini-nano'
@@ -333,17 +351,27 @@ function App() {
         }
 
         if (provider === 'openrouter') {
-          options.reasoning_effort = openrouterReasoningEffort;
-          options.includeReasoning = openrouterIncludeReasoning;
-          const maxTokens =
-            openrouterReasoningMaxTokens.trim() === ''
-              ? undefined
-              : Number(openrouterReasoningMaxTokens);
-          if (
-            !Number.isNaN(maxTokens) &&
-            !OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(selectedModel)
-          ) {
-            options.reasoningMaxTokens = maxTokens;
+          if (openRouterAllowsReasoning) {
+            const efforts = catalogSupportedReasoningEfforts(
+              selectedModel,
+              getOpenRouterSupportedReasoningEfforts(selectedModel),
+            );
+            if (efforts.includes(openrouterReasoningEffort)) {
+              options.reasoning_effort = openrouterReasoningEffort;
+            }
+            options.includeReasoning = openrouterIncludeReasoning;
+            const maxTokens =
+              openrouterReasoningMaxTokens.trim() === ''
+                ? undefined
+                : Number(openrouterReasoningMaxTokens);
+            if (
+              !Number.isNaN(maxTokens) &&
+              !OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(
+                selectedModel,
+              )
+            ) {
+              options.reasoningMaxTokens = maxTokens;
+            }
           }
           if (openrouterAppName.trim()) {
             options.appName = openrouterAppName.trim();
@@ -442,6 +470,8 @@ function App() {
     resolvedOpenAICompatibleEndpoint,
     enableReasoningSummary,
     openrouterReasoningEffort,
+    openRouterAllowsReasoning,
+    openRouterCatalog.models,
     openrouterIncludeReasoning,
     openrouterReasoningMaxTokens,
     openrouterAppName,
@@ -457,6 +487,20 @@ function App() {
   const sendMessage = useCallback(
     async (content: string, imageData?: string) => {
       if (!chatService || !content.trim()) return;
+      if (provider === 'openrouter') {
+        const blockReason = getOpenRouterRequestBlockReason(selectedModel);
+        if (blockReason) {
+          setError(blockReason);
+          return;
+        }
+        if (
+          imageData &&
+          getVisionSupportLevel(provider, selectedModel) !== 'supported'
+        ) {
+          setError('This model is not enabled for image input in this sample.');
+          return;
+        }
+      }
 
       const userContent: Message['content'] | MessageWithVision['content'] =
         imageData
@@ -564,7 +608,7 @@ function App() {
         setIsLoading(false);
       }
     },
-    [chatService, messages],
+    [chatService, messages, provider, selectedModel],
   );
 
   const clearChat = () => {
@@ -589,12 +633,17 @@ function App() {
           <ProviderSelector
             provider={provider}
             onProviderChange={(newProvider) => {
+              if (provider === 'openrouter') {
+                lastOpenRouterModel.current = selectedModel;
+              }
               setProvider(newProvider);
               // プロバイダー変更時にそのプロバイダーのデフォルトモデルを自動選択
               const defaultModel =
                 newProvider === 'openai-compatible'
                   ? ''
-                  : getDefaultModelForProvider(newProvider);
+                  : newProvider === 'openrouter'
+                    ? lastOpenRouterModel.current
+                    : getDefaultModelForProvider(newProvider);
               setSelectedModel(defaultModel);
               // Reset GPT-5 settings when changing provider
               setGpt5Preset(undefined);
@@ -643,7 +692,10 @@ function App() {
             onResponseLengthChange={setResponseLength}
             selectedModel={selectedModel}
             onModelChange={(modelId) => {
-              const newProvider = getProviderForModel(modelId, provider);
+              const newProvider =
+                provider === 'openrouter'
+                  ? 'openrouter'
+                  : getProviderForModel(modelId, provider);
               if (newProvider !== provider) {
                 setProvider(newProvider);
               }

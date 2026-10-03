@@ -248,20 +248,18 @@ Click the "設定" (Settings) button to configure your AI provider:
   and DeepSeek V4 Flash Vision Exp
 - DeepSeek V4 Flash offers the fixed current `deepseek/deepseek-v4-flash-0731`
   model and the separate `deepseek/deepseek-v4-flash` preview snapshot
-- Reasoning effort options follow the selected model and default to explicit
-  `none` for responsive chat
+- Reasoning effort controls require catalog-advertised and SDK-supported
+  values; unavailable metadata disables these controls
 - `responseLength`-derived token limits are omitted for Auto Router and Auto
   Router Beta; explicitly supplied `maxTokens` values remain effective
 - Fusion bills the combined underlying model calls and any enabled web search/fetch usage
 - GLM-5.2 defaults reasoning effort to `none` and omits automatic `max_tokens`
 - Kimi K3 can return 429 when upstream capacity is constrained; Grok 4.5 has
   region-specific availability limits
-- `Fetch free models` button to probe currently available `:free` models
-- Dynamic free models are added to the model select list
-- `Max candidates` means "maximum number of `:free` candidates to probe"
-  (not "keep probing until N working models are found")
-- Dynamic free model cache is stored in `localStorage`
-  (`AITuberOnAirCore_example_react-basic`)
+- Automatic anonymous catalog discovery, with search and published-price filters
+- Refresh updates metadata without inference or API-key transmission
+- A separate versioned `localStorage` catalog cache retains the last-good snapshot;
+  legacy IDs are unverified fallback choices
 
 ### GPT-5 Configuration
 
@@ -695,3 +693,23 @@ model selector defaults to production; `gradium-tts-beta` is an explicit
 opt-in, and switching back to Gradium resets the model to production.
 See the [Core model update notes](../../README.md#chat-and-voice-model-updates)
 for endpoint details and limitations.
+
+## OpenRouter catalog discovery
+
+Choosing OpenRouter automatically fetches the official public model catalog
+without an API key or inference probe. Search by name/ID and filter by published
+zero, paid, or unknown pricing. Model metadata is not a guarantee of availability,
+free usage, quotas, or SDK support. Only text-chat output candidates are listed.
+
+A successful snapshot replaces old choices. Your selected ID stays visible if
+missing; choose an available model deliberately before sending. Pricing changes
+require acknowledgment. Failures preserve a timestamped last-good cache; without
+a cache, curated and legacy IDs are explicitly unverified. No paid fallback is
+chosen automatically. Vision, reasoning, and tools are conservatively restricted
+to the intersection of metadata and existing SDK support. The public SDK's
+request defaults are unchanged. No inference is sent merely by browsing or
+refreshing this list.
+
+See [catalog behavior and SDK boundaries](../../../../docs/sample-openrouter-catalog.md)
+for cache, pricing, capability, and request limitations. Run `npm test` in this
+example directory for its offline regression suite.
