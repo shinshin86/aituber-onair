@@ -110,6 +110,7 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
+  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
@@ -699,6 +700,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_QWEN_QWEN_3_8_MAX_0902,
     name: 'Qwen3.8 Max (0902)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+    name: 'Pareto 26.10 Preview',
     provider: 'openrouter',
     default: false,
   },

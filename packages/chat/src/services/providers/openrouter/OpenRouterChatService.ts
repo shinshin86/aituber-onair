@@ -2,6 +2,7 @@ import { ChatService } from '../../ChatService';
 import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
+  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   ENDPOINT_OPENROUTER_API,
   OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
@@ -375,45 +376,48 @@ export class OpenRouterChatService implements ChatService {
         ? undefined
         : this.reasoningMaxTokens;
 
-    // Add OpenRouter reasoning control
-    const defaultReasoningEffort = getDefaultOpenRouterReasoningEffort(model);
-    const reasoningEffort = normalizeOpenRouterReasoningEffort(
-      model,
-      this.reasoning_effort,
-    );
-    if (
-      reasoningEffort !== undefined ||
-      this.includeReasoning !== undefined ||
-      reasoningMaxTokens ||
-      defaultReasoningEffort
-    ) {
-      body.reasoning = {};
+    // Models without documented reasoning controls must not inherit them.
+    if (model.trim() !== MODEL_UNBIASED_PARETO_26_10_PREVIEW) {
+      // Add OpenRouter reasoning control
+      const defaultReasoningEffort = getDefaultOpenRouterReasoningEffort(model);
+      const reasoningEffort = normalizeOpenRouterReasoningEffort(
+        model,
+        this.reasoning_effort,
+      );
+      if (
+        reasoningEffort !== undefined ||
+        this.includeReasoning !== undefined ||
+        reasoningMaxTokens ||
+        defaultReasoningEffort
+      ) {
+        body.reasoning = {};
 
-      if (reasoningEffort) {
-        // Preserve documented minimal effort; older profiles normalize it to low.
-        const effort =
-          reasoningEffort === 'minimal' &&
-          model !== MODEL_QWEN_QWEN_3_8_MAX_0902 &&
-          model !== MODEL_META_MUSE_SPARK_1_3 &&
-          model !== MODEL_UPSTAGE_SOLAR_MINI4
-            ? 'low'
-            : reasoningEffort;
-        body.reasoning.effort = effort;
-      } else if (defaultReasoningEffort) {
-        body.reasoning.effort = defaultReasoningEffort;
-      }
+        if (reasoningEffort) {
+          // Preserve documented minimal effort; older profiles normalize it to low.
+          const effort =
+            reasoningEffort === 'minimal' &&
+            model !== MODEL_QWEN_QWEN_3_8_MAX_0902 &&
+            model !== MODEL_META_MUSE_SPARK_1_3 &&
+            model !== MODEL_UPSTAGE_SOLAR_MINI4
+              ? 'low'
+              : reasoningEffort;
+          body.reasoning.effort = effort;
+        } else if (defaultReasoningEffort) {
+          body.reasoning.effort = defaultReasoningEffort;
+        }
 
-      // Default to exclude reasoning to avoid empty responses unless explicitly requested
-      if (reasoningEffort === 'none' || this.includeReasoning !== true) {
-        body.reasoning.exclude = true;
-      }
+        // Default to exclude reasoning to avoid empty responses unless explicitly requested
+        if (reasoningEffort === 'none' || this.includeReasoning !== true) {
+          body.reasoning.exclude = true;
+        }
 
-      if (reasoningMaxTokens) {
-        body.reasoning.max_tokens = reasoningMaxTokens;
+        if (reasoningMaxTokens) {
+          body.reasoning.max_tokens = reasoningMaxTokens;
+        }
+      } else {
+        // Default behavior: exclude reasoning to avoid empty responses
+        body.reasoning = { exclude: true };
       }
-    } else {
-      // Default behavior: exclude reasoning to avoid empty responses
-      body.reasoning = { exclude: true };
     }
 
     // Add tools if available

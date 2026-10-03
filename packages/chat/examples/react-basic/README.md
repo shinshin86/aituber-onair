@@ -377,3 +377,18 @@ inference or browser CORS. The provider can parse tool calls, but does not retai
 `reasoning_details` for reasoning-state-preserving multi-turn tool continuations.
 See the [model API example](https://openrouter.ai/inclusionai/ling-3.1-flash?view=api)
 and the [package limitations](../../README.md#openrouter).
+
+### Pareto 26.10 Preview on OpenRouter
+
+Select **OpenRouter → Pareto 26.10 Preview** and enter your OpenRouter API key.
+This explicit preview accepts text and images and may change without notice;
+existing defaults stay unchanged. Requests go directly to
+`https://openrouter.ai/api/v1/chat/completions` with Bearer authentication.
+The sample parses SSE text deltas. Effort and reasoning-token-budget controls
+are hidden, and inherited values are omitted. No proxy configuration is needed.
+The package supports automatic tool selection, but the sample chat UI does not
+configure tools. File/audio/video input and enforced structured output are not
+supported. Mocked rendered-DOM tests cover requests, repeated streaming replies,
+image input, and HTTP recovery; these do not prove live inference or authenticated
+browser CORS. See the [model API example](https://openrouter.ai/unbiased/pareto-26.10-preview?view=api)
+and [package usage](../../README.md#openrouter).
