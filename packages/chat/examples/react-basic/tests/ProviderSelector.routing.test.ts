@@ -12,6 +12,7 @@ import {
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_ZAI_GLM_5_3,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
+  MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
   MODEL_QWEN_QWEN_3_8_27B,
@@ -26,6 +27,16 @@ import ProviderSelector from '../src/components/ProviderSelector';
 vi.mock('@aituber-onair/chat', () => import('../../../src'));
 
 const additions = [
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: MODEL_INCLUSIONAI_LING_3_1_FLASH,
+    label: 'Ling 3.1 Flash',
+    defaultModel: MODEL_GPT_OSS_20B_FREE,
+    defaultLabel: 'GPT OSS 20B (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: false,
+  },
   {
     provider: 'mistral',
     providerLabel: 'Mistral',

@@ -3,6 +3,7 @@ import {
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENROUTER_API,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -15,6 +16,12 @@ import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
 import type { Message, MessageWithVision } from '../../src/types';
 
 const candidates = [
+  {
+    provider: 'openrouter',
+    model: MODEL_INCLUSIONAI_LING_3_1_FLASH,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: false,
+  },
   {
     provider: 'openrouter',
     model: MODEL_UPSTAGE_SOLAR_MINI4,
@@ -307,3 +314,54 @@ describe.each(candidates)(
     });
   },
 );
+
+describe('Ling 3.1 Flash response constraints', () => {
+  const createService = () =>
+    ChatServiceFactory.createChatService('openrouter', {
+      apiKey: 'EXAMPLE_API_KEY',
+      model: MODEL_INCLUSIONAI_LING_3_1_FLASH,
+    });
+
+  it('preserves a documented output-token limit without inventing reasoning controls', async () => {
+    const transport = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ choices: [{ message: { content: 'OK' } }] }),
+        ),
+      );
+    ChatServiceHttpClient.setFetch(transport);
+    await createService().chatOnce!(messages, false, undefined, 32768);
+    expect(transport.mock.calls[0][0]).toBe(ENDPOINT_OPENROUTER_API);
+    expect(JSON.parse(transport.mock.calls[0][1].body)).toEqual({
+      model: 'inclusionai/ling-3.1-flash',
+      messages,
+      stream: false,
+      max_tokens: 32768,
+      reasoning: { exclude: true },
+    });
+  });
+
+  it('propagates an API error received inside an HTTP-success stream', async () => {
+    const transport = vi.fn().mockResolvedValue(
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.enqueue(
+              new TextEncoder().encode(
+                data({
+                  error: { message: 'Mock upstream failure', code: 503 },
+                }) + 'data: [DONE]\n\n',
+              ),
+            );
+            controller.close();
+          },
+        }),
+      ),
+    );
+    ChatServiceHttpClient.setFetch(transport);
+    await expect(createService().chatOnce!(messages, true)).rejects.toThrow(
+      'Mock upstream failure',
+    );
+  });
+});

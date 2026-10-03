@@ -4,6 +4,12 @@
 
 ### Minor Changes
 
+- Added OpenRouter Ling 3.1 Flash (`inclusionai/ling-3.1-flash`) as an explicit,
+  non-default text-only option, including the public constant, React selector,
+  English/Japanese documentation, and mocked transport/rendered-DOM coverage.
+- Omit undocumented reasoning effort and token-budget settings for this model,
+  including inherited settings; preserve the existing `includeReasoning` option.
+
 - Add explicit OpenRouter Chat Completions options for Solar Mini4
   (`upstage/solar-mini4`), MiMo V2.6 Flash (`xiaomi/mimo-v2.6-flash`), and
   Apodex 1.1 Mini Free (`apodex/apodex-1.1-mini:free`). All three support
@@ -18,6 +24,13 @@
 - Update the React basic example's model selector and reasoning settings,
   English/Japanese documentation, and request/parser/DOM regression coverage
   for the new OpenRouter models.
+
+### Known Limitations
+
+- Ling 3.1 Flash uses the direct OpenRouter Chat Completions endpoint. Live
+  inference and browser CORS have not been verified. The parser does not retain
+  `reasoning_details` for reasoning-state-preserving multi-turn tool continuations.
+  The unsuffixed model ID is not classified as a free-tier model.
 
 ## 0.61.0
 
