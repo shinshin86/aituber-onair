@@ -1,3 +1,4 @@
+import { catalogFixture } from './catalogFixture';
 // @vitest-environment jsdom
 
 import { TextDecoder, TextEncoder } from 'node:util';
@@ -187,7 +188,16 @@ beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   vi.stubGlobal('TextDecoder', TextDecoder);
   vi.stubGlobal('TextEncoder', TextEncoder);
-  vi.stubGlobal('fetch', fetchMock);
+  vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+    if (url === 'https://openrouter.ai/api/v1/models') {
+      expect(init.method).toBe('GET');
+      expect(new Headers(init.headers).has('Authorization')).toBe(false);
+      return Promise.resolve(
+        new Response(JSON.stringify(catalogFixture), { status: 200 }),
+      );
+    }
+    return fetchMock(url, init);
+  });
   fetchMock.mockReset().mockImplementation(async () => ({
     ...createSseResponse([
       'data: {"choices":[{"delta":{"content":"Hello from "}}]}\n\n',
@@ -243,12 +253,19 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       );
 
       const modelButton = button(addition.label, 'model');
-      expect(
-        modelButton.querySelector('.model-meta')?.textContent?.trim(),
-      ).toBe('');
-      expect(button(addition.defaultLabel, 'model').textContent).toContain(
-        'Default',
-      );
+      if (addition.provider === 'openrouter') {
+        expect(modelButton.textContent).toContain('Zero published price');
+        expect(
+          button(addition.defaultLabel, 'model').getAttribute('aria-pressed'),
+        ).toBe('true');
+      } else {
+        expect(
+          modelButton.querySelector('.model-meta')?.textContent?.trim(),
+        ).toBe('');
+        expect(button(addition.defaultLabel, 'model').textContent).toContain(
+          'Default',
+        );
+      }
       await click(modelButton);
       expect(props.onModelChange).toHaveBeenCalledTimes(1);
       expect(props.onModelChange).toHaveBeenCalledWith(addition.model);
@@ -326,10 +343,20 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       await click(button(addition.providerLabel, 'provider'));
       expect(factorySpy).toHaveBeenLastCalledWith(
         addition.provider,
-        expect.objectContaining({ model: addition.defaultModel }),
+        expect.objectContaining({
+          model:
+            addition.provider === 'openrouter'
+              ? addition.model
+              : addition.defaultModel,
+        }),
       );
       expect(
-        button(addition.defaultLabel, 'model').getAttribute('aria-pressed'),
+        button(
+          addition.provider === 'openrouter'
+            ? addition.label
+            : addition.defaultLabel,
+          'model',
+        ).getAttribute('aria-pressed'),
       ).toBe('true');
     },
   );

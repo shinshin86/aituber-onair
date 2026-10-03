@@ -1,3 +1,4 @@
+import { catalogFixture } from './catalogFixture';
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -195,6 +196,11 @@ beforeEach(async () => {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init: RequestInit) => {
+      if (url === 'https://openrouter.ai/api/v1/models') {
+        expect(init.method).toBe('GET');
+        expect(new Headers(init.headers).has('Authorization')).toBe(false);
+        return new Response(JSON.stringify(catalogFixture), { status: 200 });
+      }
       const next = pending.shift();
       if (!next || next.endpoint !== url) {
         unexpectedRequests.push(String(url));

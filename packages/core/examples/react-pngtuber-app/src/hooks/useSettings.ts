@@ -1,37 +1,36 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AITuberOnAirCore,
-  getDefaultXaiReasoningEffort,
-  refreshOpenRouterFreeModels,
-  type RefreshOpenRouterFreeModelsResult,
   type XaiReasoningEffort,
+  getDefaultXaiReasoningEffort,
 } from '@aituber-onair/core';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import {
+  type EmotionEffectAnchor,
   normalizeEmotionEffectAnchor,
   normalizeEmotionEffectAnchors,
-  type EmotionEffectAnchor,
 } from '../lib/emotionEffectAnchor';
 import {
   DEFAULT_PNGTUBER_EMOTION_EFFECT_MAP,
-  isPngTuberReactionControlMode,
-  normalizePngTuberEmotionEffectMap,
   type PngTuberEmotionEffect,
   type PngTuberReactionControlMode,
   type PngTuberReactionEmotion,
+  isPngTuberReactionControlMode,
+  normalizePngTuberEmotionEffectMap,
 } from '../lib/pngtuberEmotionEffects';
+import {
+  type VoiceInputMode,
+  type VoiceInputService,
+  isVoiceInputMode,
+  isVoiceInputService,
+} from '../lib/voiceInput';
+import { useOpenRouterCatalog } from '../openrouterCatalog';
 import type {
   AppSettings,
   ChatProviderOption,
   StreamingPlatformOption,
   TTSEngineOption,
 } from '../types/settings';
-import {
-  isVoiceInputMode,
-  isVoiceInputService,
-  type VoiceInputMode,
-  type VoiceInputService,
-} from '../lib/voiceInput';
 
 type ApiKeyProvider = Exclude<ChatProviderOption, 'gemini-nano'>;
 
@@ -69,10 +68,8 @@ const DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE = 'tsukuyomi-config.json';
 const DEFAULT_PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
 const DEFAULT_PIPER_PLUS_VOICE_FILE = 'mei_normal.htsvoice';
 const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
-const DEFAULT_OPENROUTER_MAX_WORKING = 10;
 const DEFAULT_SCREEN_VISION_PROMPT =
   'OBS仮想カメラの画面を見て、配信者として短く自然にコメントしてください。';
-const EMPTY_MODEL_IDS: string[] = [];
 
 function normalizePositiveInteger(
   value: number | undefined,
@@ -100,27 +97,16 @@ function normalizeModelIds(modelIds: string[]): string[] {
   return normalized;
 }
 
-function mergeModelIds(base: string[], extras: string[]): string[] {
-  const merged = [...base];
-  const seen = new Set(base);
-
-  for (const modelId of extras) {
-    const trimmed = modelId.trim();
-    if (!trimmed || seen.has(trimmed)) {
-      continue;
-    }
-    seen.add(trimmed);
-    merged.push(trimmed);
-  }
-
-  return merged;
-}
-
 function normalizeOpenRouterDynamicFreeModels(
   value: AppSettings['llm']['openRouterDynamicFreeModels'] | undefined,
 ): NonNullable<AppSettings['llm']['openRouterDynamicFreeModels']> {
   return {
-    models: normalizeModelIds(value?.models || []),
+    // Legacy probe results are IDs only, never current availability or pricing.
+    models: normalizeModelIds(
+      Array.isArray(value?.models)
+        ? value.models.filter((id): id is string => typeof id === 'string')
+        : [],
+    ),
     fetchedAt:
       typeof value?.fetchedAt === 'number' && Number.isFinite(value.fetchedAt)
         ? value.fetchedAt
@@ -367,65 +353,44 @@ function saveSettings(settings: AppSettings) {
 
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
-  const [openRouterRefreshError, setOpenRouterRefreshError] = useState('');
-  const [
-    isRefreshingOpenRouterFreeModels,
-    setIsRefreshingOpenRouterFreeModels,
-  ] = useState(false);
-  const openRouterDynamicModels = useMemo(
-    () => settings.llm.openRouterDynamicFreeModels?.models || EMPTY_MODEL_IDS,
-    [settings.llm.openRouterDynamicFreeModels?.models],
-  );
-
+  const catalog = useOpenRouterCatalog(settings.llm.provider === 'openrouter');
   const availableModels = useMemo(() => {
-    const models = AITuberOnAirCore.getSupportedModels(settings.llm.provider);
     if (settings.llm.provider === 'openrouter') {
-      return mergeModelIds(models, openRouterDynamicModels);
+      return catalog.models.map((model) => model.id);
     }
-    if (settings.llm.provider !== 'openai-compatible') {
-      return models;
-    }
-    if (settings.llm.model) {
-      return [settings.llm.model];
-    }
-    return [DEFAULT_OPENAI_COMPATIBLE_MODEL];
-  }, [settings.llm.provider, settings.llm.model, openRouterDynamicModels]);
+    const models = AITuberOnAirCore.getSupportedModels(settings.llm.provider);
+    if (settings.llm.provider !== 'openai-compatible') return models;
+    return [settings.llm.model || DEFAULT_OPENAI_COMPATIBLE_MODEL];
+  }, [settings.llm.provider, settings.llm.model, catalog.models]);
 
   // Persist settings on change
   useEffect(() => {
     saveSettings(settings);
   }, [settings]);
 
-  const updateLLMProvider = useCallback(
-    (provider: ChatProviderOption) => {
-      const baseModels = AITuberOnAirCore.getSupportedModels(provider);
-      const models =
-        provider === 'openrouter'
-          ? mergeModelIds(baseModels, openRouterDynamicModels)
-          : baseModels;
-      const nextModel =
-        provider === 'openai-compatible'
-          ? DEFAULT_OPENAI_COMPATIBLE_MODEL
-          : models[0] || '';
-      setSettings((prev) => ({
-        ...prev,
-        llm: {
-          ...prev.llm,
-          provider,
-          model: nextModel,
-          xaiReasoningEffort:
-            provider === 'xai'
-              ? getDefaultXaiReasoningEffort(nextModel) || 'none'
-              : prev.llm.xaiReasoningEffort,
-          endpoint:
-            provider === 'openai-compatible'
-              ? prev.llm.endpoint || DEFAULT_OPENAI_COMPATIBLE_ENDPOINT
-              : prev.llm.endpoint,
-        },
-      }));
-    },
-    [openRouterDynamicModels],
-  );
+  const updateLLMProvider = useCallback((provider: ChatProviderOption) => {
+    const models = AITuberOnAirCore.getSupportedModels(provider);
+    const nextModel =
+      provider === 'openai-compatible'
+        ? DEFAULT_OPENAI_COMPATIBLE_MODEL
+        : models[0] || '';
+    setSettings((prev) => ({
+      ...prev,
+      llm: {
+        ...prev.llm,
+        provider,
+        model: nextModel,
+        xaiReasoningEffort:
+          provider === 'xai'
+            ? getDefaultXaiReasoningEffort(nextModel) || 'none'
+            : prev.llm.xaiReasoningEffort,
+        endpoint:
+          provider === 'openai-compatible'
+            ? prev.llm.endpoint || DEFAULT_OPENAI_COMPATIBLE_ENDPOINT
+            : prev.llm.endpoint,
+      },
+    }));
+  }, []);
 
   const updateLLMModel = useCallback((model: string) => {
     setSettings((prev) => ({
@@ -481,75 +446,6 @@ export function useSettings() {
     setSettings((prev) => ({
       ...prev,
       llm: { ...prev.llm, endpoint },
-    }));
-  }, []);
-
-  const refreshOpenRouterDynamicFreeModels = useCallback(async () => {
-    const apiKey = settings.llm.apiKeys.openrouter?.trim() || '';
-    if (!apiKey) {
-      const message = 'OpenRouter API key is required.';
-      setOpenRouterRefreshError(message);
-      return null;
-    }
-
-    setIsRefreshingOpenRouterFreeModels(true);
-    setOpenRouterRefreshError('');
-
-    try {
-      const maxCandidates = normalizePositiveInteger(
-        settings.llm.openRouterDynamicFreeModels?.maxCandidates,
-        DEFAULT_OPENROUTER_MAX_CANDIDATES,
-      );
-      const result: RefreshOpenRouterFreeModelsResult =
-        await refreshOpenRouterFreeModels({
-          apiKey,
-          maxCandidates,
-          maxWorking: DEFAULT_OPENROUTER_MAX_WORKING,
-        });
-
-      setSettings((prev) => ({
-        ...prev,
-        llm: {
-          ...prev.llm,
-          openRouterDynamicFreeModels: {
-            ...normalizeOpenRouterDynamicFreeModels(
-              prev.llm.openRouterDynamicFreeModels,
-            ),
-            models: normalizeModelIds(result.working),
-            fetchedAt: result.fetchedAt,
-          },
-        },
-      }));
-
-      return result;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setOpenRouterRefreshError(message);
-      return null;
-    } finally {
-      setIsRefreshingOpenRouterFreeModels(false);
-    }
-  }, [
-    settings.llm.apiKeys.openrouter,
-    settings.llm.openRouterDynamicFreeModels?.maxCandidates,
-  ]);
-
-  const updateOpenRouterMaxCandidates = useCallback((maxCandidates: number) => {
-    const normalized = normalizePositiveInteger(
-      maxCandidates,
-      DEFAULT_OPENROUTER_MAX_CANDIDATES,
-    );
-    setSettings((prev) => ({
-      ...prev,
-      llm: {
-        ...prev.llm,
-        openRouterDynamicFreeModels: {
-          ...normalizeOpenRouterDynamicFreeModels(
-            prev.llm.openRouterDynamicFreeModels,
-          ),
-          maxCandidates: normalized,
-        },
-      },
     }));
   }, []);
 
@@ -1477,6 +1373,7 @@ export function useSettings() {
   return {
     settings,
     availableModels,
+    catalog,
     updateVoiceInputMode,
     updateVoiceInputService,
     updateLLMProvider,
@@ -1485,10 +1382,6 @@ export function useSettings() {
     updateLLMApiKey,
     updateLLMEndpoint,
     updateXaiReasoningEffort,
-    refreshOpenRouterDynamicFreeModels,
-    isRefreshingOpenRouterFreeModels,
-    openRouterRefreshError,
-    updateOpenRouterMaxCandidates,
     updateTTSEngine,
     updateTTSSpeaker,
     updateOpenAiCompatibleApiKey,

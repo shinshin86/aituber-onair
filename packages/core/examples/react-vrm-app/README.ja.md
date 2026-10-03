@@ -34,10 +34,9 @@ Vite の development / preview proxy を使います。本番環境では API �
   は low をデフォルトで適用します
 - `gpt-5.5-pro` は OpenAI のドキュメント上でストリーミング非対応のため、
   ストリーミング前提の通常チャットフローを使うこの例では含めていません
-- `openrouter` では Settings から現在使える `:free` モデルを取得可能:
-  - `Fetch free models` で候補を疎通確認し、通ったモデルを一覧に追加
-  - `Max candidates` は「疎通確認する `:free` 候補の最大件数」
-    （「N件見つかるまで試行」ではありません）
+- `openrouter` は公開カタログを API キーなしで取得し、モデル ID / 名前の検索と
+  公開価格（ゼロ / 有料 / 不明）の絞り込みに対応します。推論による疎通確認は
+  行いません。価格表示は無料利用・利用可能性・実際の請求額を保証しません。
 - TTS エンジン切り替え:
   `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`,
   `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`,
@@ -258,8 +257,9 @@ public/piper/
 ## 設定の保存仕様
 
 - LLM/TTS/API キー設定は `localStorage` に保存されます
-- OpenRouter の動的 free モデルキャッシュ
-  （`models` / `fetchedAt` / `maxCandidates`）も同じキーに保存されます
+- OpenRouter のカタログ情報と価格変更の確認記録は、バージョン付きの別の
+  `localStorage` キーに保存されます。以前の疎通確認結果はモデル ID のみを
+  引き継ぎ、現在の価格や利用可能性の根拠にはしません
 - Visual の背景画像はメモリ保持のみで、リロード時に初期化されます
 
 ## アバターアセット（`public/avatar`）

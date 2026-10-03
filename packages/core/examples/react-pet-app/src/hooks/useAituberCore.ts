@@ -1,3 +1,7 @@
+import {
+  getOpenRouterRuntimeBlockReason,
+  installOpenRouterRuntimeGuard,
+} from '../lib/openRouterRuntime';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AITuberOnAirCore,
@@ -447,6 +451,7 @@ export function useAituberCore({
   getApiKeyForProvider,
 }: UseAituberCoreOptions) {
   const coreRef = useRef<AITuberOnAirCore | null>(null);
+  const generationErrorRef = useRef('');
   const [initialKizunaSetup] = useState(() => createKizunaManager());
   const kizunaRef = useRef<KizunaManager | null>(initialKizunaSetup.manager);
   const kizunaStorageProviderRef = useRef<IStorageProvider | null>(
@@ -723,6 +728,7 @@ export function useAituberCore({
       return;
     }
 
+    installOpenRouterRuntimeGuard();
     const core = new AITuberOnAirCore({
       apiKey: llmApiKey.trim(),
       chatProvider: settings.llm.provider,
@@ -748,13 +754,14 @@ export function useAituberCore({
 
     // Subscribe to core events
     core.on(AITuberOnAirCoreEvent.PROCESSING_START, () => {
+      generationErrorRef.current = '';
       setIsProcessing(true);
       setPartialResponse('');
     });
 
     core.on(AITuberOnAirCoreEvent.PROCESSING_END, () => {
       setIsProcessing(false);
-      setPartialResponse('');
+      setPartialResponse(generationErrorRef.current);
     });
 
     core.on(AITuberOnAirCoreEvent.ASSISTANT_PARTIAL, (data: unknown) => {
@@ -796,6 +803,9 @@ export function useAituberCore({
 
     core.on(AITuberOnAirCoreEvent.ERROR, (error: unknown) => {
       console.error('AITuberOnAirCore error:', error);
+      generationErrorRef.current =
+        error instanceof Error ? error.message : 'Chat generation failed.';
+      setPartialResponse(generationErrorRef.current);
       setIsProcessing(false);
     });
 
@@ -876,6 +886,15 @@ export function useAituberCore({
       enqueueCoreRequest(async () => {
         const core = coreRef.current;
         if (!core || !text.trim()) return;
+        const provider = core.getProviderInfo();
+        const blockReason = getOpenRouterRuntimeBlockReason(
+          provider.name,
+          provider.model || '',
+        );
+        if (blockReason) {
+          setPartialResponse(blockReason);
+          return;
+        }
 
         let coreInput = text.trim();
         const displayText = (options?.displayText ?? text).trim();
@@ -964,7 +983,23 @@ export function useAituberCore({
     (imageDataUrl: string, prompt = DEFAULT_VISION_PROMPT) =>
       enqueueCoreRequest(async () => {
         const core = coreRef.current;
-        if (!core || !imageDataUrl) return;
+        if (!core) {
+          const message =
+            'Configure the chat provider and API key before sending a screen capture.';
+          setPartialResponse(message);
+          throw new Error(message);
+        }
+        if (!imageDataUrl) throw new Error('A screen capture is required.');
+        const provider = core.getProviderInfo();
+        const blockReason = getOpenRouterRuntimeBlockReason(
+          provider.name,
+          provider.model || '',
+          true,
+        );
+        if (blockReason) {
+          setPartialResponse(blockReason);
+          throw new Error(blockReason);
+        }
 
         const trimmedPrompt = prompt.trim() || DEFAULT_VISION_PROMPT;
         core.updateChatOptions({
@@ -982,10 +1017,19 @@ export function useAituberCore({
         ]);
 
         try {
-          await core.processVisionChat(imageDataUrl, trimmedPrompt);
+          const succeeded = await core.processVisionChat(
+            imageDataUrl,
+            trimmedPrompt,
+          );
+          if (!succeeded || generationErrorRef.current) {
+            throw new Error(
+              generationErrorRef.current || 'Screen vision generation failed.',
+            );
+          }
         } catch (err) {
           console.error('processVisionChat error:', err);
           setIsProcessing(false);
+          throw err;
         }
       }),
     [createMessageId, enqueueCoreRequest, settings.llm.systemPrompt],

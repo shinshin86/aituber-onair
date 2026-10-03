@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Patch Changes
+
+- React samples: discover OpenRouter text-chat candidates from the anonymous
+  public catalog, with searchable pricing filters, cached/stale metadata,
+  deliberate pricing-change acknowledgment, and conservative SDK capability
+  gates. Preserve public SDK behavior, defaults, and dependency versions.
+
 ### Minor Changes
 
 - Added OpenRouter Ling 3.1 Flash (`inclusionai/ling-3.1-flash`) as an explicit,
