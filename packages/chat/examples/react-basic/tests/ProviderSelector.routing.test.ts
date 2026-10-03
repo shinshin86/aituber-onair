@@ -12,6 +12,7 @@ import {
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_ZAI_GLM_5_3,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
+  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
@@ -27,6 +28,16 @@ import ProviderSelector from '../src/components/ProviderSelector';
 vi.mock('@aituber-onair/chat', () => import('../../../src'));
 
 const additions = [
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+    label: 'Pareto 26.10 Preview',
+    defaultModel: MODEL_GPT_OSS_20B_FREE,
+    defaultLabel: 'GPT OSS 20B (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
   {
     provider: 'openrouter',
     providerLabel: 'OpenRouter',
@@ -416,9 +427,13 @@ describe('ProviderSelector rendered configuration for recent models', () => {
         element<HTMLInputElement>('#openrouter-include-reasoning').checked,
       ).toBe(true);
       await sendMessage();
-      expect(requestBody().reasoning).not.toHaveProperty('effort');
-      expect(requestBody().reasoning).not.toHaveProperty('max_tokens');
-      expect(requestBody().reasoning).not.toHaveProperty('exclude');
+      if (addition.model === MODEL_UNBIASED_PARETO_26_10_PREVIEW) {
+        expect(requestBody().reasoning).toBeUndefined();
+      } else {
+        expect(requestBody().reasoning).not.toHaveProperty('effort');
+        expect(requestBody().reasoning).not.toHaveProperty('max_tokens');
+        expect(requestBody().reasoning).not.toHaveProperty('exclude');
+      }
     },
   );
 });
