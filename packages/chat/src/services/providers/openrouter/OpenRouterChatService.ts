@@ -14,6 +14,7 @@ import {
   type OpenRouterReasoningEffort,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
+  MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
   getDefaultOpenRouterReasoningEffort,
   normalizeOpenRouterReasoningEffort,
@@ -395,6 +396,7 @@ export class OpenRouterChatService implements ChatService {
           reasoningEffort === 'minimal' &&
           model !== MODEL_QWEN_QWEN_3_8_MAX_0902 &&
           model !== MODEL_META_MUSE_SPARK_1_3 &&
+          model !== MODEL_UPSTAGE_SOLAR_PRO4 &&
           model !== MODEL_UPSTAGE_SOLAR_MINI4
             ? 'low'
             : reasoningEffort;

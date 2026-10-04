@@ -4,6 +4,7 @@ import {
   ENDPOINT_OPENROUTER_API,
   MODEL_MISTRAL_ZAI_GLM_5_3,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
+  MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -16,6 +17,12 @@ import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
 import type { Message, MessageWithVision } from '../../src/types';
 
 const candidates = [
+  {
+    provider: 'openrouter',
+    model: MODEL_UPSTAGE_SOLAR_PRO4,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: false,
+  },
   {
     provider: 'openrouter',
     model: MODEL_INCLUSIONAI_LING_3_1_FLASH,
@@ -100,7 +107,7 @@ describe.each(candidates)(
         apiKey: 'EXAMPLE_API_KEY',
         model,
         tools,
-        reasoning_effort: 'high',
+        reasoning_effort: model === MODEL_UPSTAGE_SOLAR_PRO4 ? 'none' : 'high',
       });
 
     it('sends a direct authenticated JSON request and parses tools without unsupported effort', async () => {
@@ -145,7 +152,11 @@ describe.each(candidates)(
       if (provider === 'openrouter') expect(body.tool_choice).toBe('auto');
       expect(body.reasoning_effort).toBeUndefined();
       expect(body.reasoning?.effort).toBe(
-        model === MODEL_UPSTAGE_SOLAR_MINI4 ? 'high' : undefined,
+        model === MODEL_UPSTAGE_SOLAR_PRO4
+          ? 'none'
+          : model === MODEL_UPSTAGE_SOLAR_MINI4
+            ? 'high'
+            : undefined,
       );
       expect(result.blocks).toContainEqual({
         type: 'tool_use',
@@ -264,7 +275,9 @@ describe.each(candidates)(
         const body = JSON.parse(transport.mock.calls[0][1].body);
         expect(body.reasoning_effort).toBeUndefined();
         expect(body.reasoning?.effort).toBe(
-          model === MODEL_UPSTAGE_SOLAR_MINI4 ? 'high' : undefined,
+          [MODEL_UPSTAGE_SOLAR_MINI4, MODEL_UPSTAGE_SOLAR_PRO4].includes(model)
+            ? 'high'
+            : undefined,
         );
         expect(body.reasoning?.max_tokens).toBeUndefined();
         if (provider === 'openrouter') {

@@ -49,6 +49,12 @@ const modelCases = [
       'low',
     ],
     [
+      'Solar Pro 4',
+      'upstage/solar-pro4',
+      ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
+      'none',
+    ],
+    [
       'Solar Mini4',
       'upstage/solar-mini4',
       ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
@@ -251,7 +257,7 @@ describe('React sample model-to-transport flows (mock network only)', () => {
       expect(element<HTMLInputElement>('.chat-input').disabled).toBe(true);
       await change('#api-key', FAKE_KEY);
       expect(element<HTMLInputElement>('#image-upload').disabled).toBe(
-        model.model === 'upstage/solar-mini4',
+        ['upstage/solar-mini4', 'upstage/solar-pro4'].includes(model.model),
       );
       await change(model.control, 'high');
       await change('#response-length', 'long');
@@ -407,22 +413,25 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     expect(container.querySelectorAll('.message.assistant')).toHaveLength(2);
   });
 
-  it('keeps Solar effort selectable without inheriting a reasoning budget', async () => {
-    await selectModel(modelCases[2]);
-    await change('#api-key', FAKE_KEY);
-    await change('#openrouter-reasoning-max-tokens', '1024');
-    await chooseButton('.model-item', 'Solar Mini4');
-    expect(
-      container.querySelector('#openrouter-reasoning-max-tokens'),
-    ).toBeNull();
-    await change('#openrouter-reasoning-effort', 'minimal');
-    await completeReply(OPENROUTER);
-    expect(requests[0].body.reasoning).toEqual({
-      effort: 'minimal',
-      exclude: true,
-    });
-    expect(element<HTMLInputElement>('#image-upload').disabled).toBe(true);
-  });
+  it.each(['Solar Mini4', 'Solar Pro 4'])(
+    'keeps %s effort selectable without inheriting a reasoning budget',
+    async (label) => {
+      await selectModel(modelCases[2]);
+      await change('#api-key', FAKE_KEY);
+      await change('#openrouter-reasoning-max-tokens', '1024');
+      await chooseButton('.model-item', label);
+      expect(
+        container.querySelector('#openrouter-reasoning-max-tokens'),
+      ).toBeNull();
+      await change('#openrouter-reasoning-effort', 'minimal');
+      await completeReply(OPENROUTER);
+      expect(requests[0].body.reasoning).toEqual({
+        effort: 'minimal',
+        exclude: true,
+      });
+      expect(element<HTMLInputElement>('#image-upload').disabled).toBe(true);
+    },
+  );
 
   it('enables summary for the displayed default Responses endpoint and switches to Chat Completions', async () => {
     await selectModel(modelCases[0]);
@@ -598,7 +607,12 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     ).toEqual(['First reply', 'Second reply']);
   });
 
-  it.each(modelCases.filter((model) => model.model !== 'upstage/solar-mini4'))(
+  it.each(
+    modelCases.filter(
+      (model) =>
+        !['upstage/solar-mini4', 'upstage/solar-pro4'].includes(model.model),
+    ),
+  )(
     '$provider / $label sends the selected image through its vision path',
     async (model) => {
       await selectModel(model);

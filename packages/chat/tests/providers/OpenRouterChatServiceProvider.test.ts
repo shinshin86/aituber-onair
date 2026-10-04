@@ -3,6 +3,7 @@ import { OpenRouterChatServiceProvider } from '../../src/services/providers/open
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
+  MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -141,6 +142,7 @@ describe('OpenRouterChatServiceProvider', () => {
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
         MODEL_INCLUSIONAI_LING_3_1_FLASH,
+        MODEL_UPSTAGE_SOLAR_PRO4,
         MODEL_UPSTAGE_SOLAR_MINI4,
         MODEL_XIAOMI_MIMO_V2_6_FLASH,
         MODEL_APODEX_1_1_MINI_FREE,
