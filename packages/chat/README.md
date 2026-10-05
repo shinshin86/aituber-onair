@@ -769,6 +769,7 @@ The following explicit options use OpenRouter Chat Completions without changing 
 
 | Model ID | Reasoning efforts (package default) |
 | --- | --- |
+| `unbiased/pareto-26.10-preview` | No effort selector (provider default) |
 | `openai/gpt-6.1-sol` | max, xhigh, high, medium, low (low) |
 | `openai/gpt-6-sol` | max, xhigh, high, medium, low, none (none) |
 | `openai/gpt-6-luna` | max, xhigh, high, medium, low, none (none) |
@@ -808,6 +809,25 @@ does not disable reasoning computation or add reasoning display to this package.
 See [Solar Mini4](https://openrouter.ai/upstage/solar-mini4),
 [MiMo V2.6 Flash](https://openrouter.ai/xiaomi/mimo-v2.6-flash), and
 [Apodex 1.1 Mini](https://openrouter.ai/apodex/apodex-1.1-mini%3Afree).
+
+Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`) is an explicit preview
+option for text, images, streaming, and automatic tool selection. It may change
+without notice and is not a default or a stable-model recommendation. Select
+**OpenRouter → Pareto 26.10 Preview** and enter your OpenRouter API key, or set
+`provider: 'openrouter'` and this model ID through `ChatServiceFactory`.
+The sample sends Bearer-authenticated JSON directly to
+`https://openrouter.ai/api/v1/chat/completions`; responses use
+`choices[].message` or SSE `choices[].delta` and OpenAI-compatible tool calls.
+Effort and reasoning-token-budget controls are hidden and inherited values are
+omitted because neither control is documented for this model. `includeReasoning` is also ignored because no reasoning controls are documented;
+no reasoning object is sent.
+Structured-output enforcement and file/audio/video input are not enabled.
+Mocked transport and rendered-DOM tests exercise the direct request path,
+streaming, image input, tools, and error recovery; live inference and authenticated
+browser CORS have not been verified. See the
+[model API example](https://openrouter.ai/unbiased/pareto-26.10-preview?view=api),
+[endpoint metadata](https://openrouter.ai/api/v1/models/unbiased/pareto-26.10-preview/endpoints),
+and [Chat Completions reference](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion).
 
 Ling 3.1 Flash (`inclusionai/ling-3.1-flash`) is an explicit text-only option.
 Choose the `openrouter` provider and this model ID with your OpenRouter API key, or
@@ -1516,7 +1536,7 @@ Currently, the following AI providers are built-in:
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Claude Opus 5.5 (`claude-opus-5-5`), Claude Sonnet 5.5 (`claude-sonnet-5-5`), and Claude Fable 5.1 (`claude-fable-5-1`); Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.
-- **OpenRouter**: Ling 3.1 Flash (text-only, explicit), Solar Mini4, MiMo V2.6 Flash, Apodex 1.1 Mini (Free), GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilot), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input).
+- **OpenRouter**: Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`, explicit preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, MiMo V2.6 Flash, Apodex 1.1 Mini (Free), GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilot), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input).
 - **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
 - **xAI**: Supports Grok 4.7, Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 Reasoning/Non-Reasoning with vision. Grok 4.7/4.6/4.5 use package-default `reasoning_effort: 'low'`; Grok 4.3 defaults to `none`.
 - **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support

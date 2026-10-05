@@ -4,6 +4,16 @@
 
 ### Minor Changes
 
+- Add OpenRouter Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`) as an
+  explicit, non-default preview with text/image input, streaming, and automatic
+  tool selection. The preview may change without notice.
+- Omit undocumented reasoning effort and token-budget settings for Pareto,
+  including inherited values and `includeReasoning`; send no reasoning object.
+- Add React selector, bilingual usage documentation, and mocked direct-request,
+  parser, image, tool, and rendered-DOM error-recovery coverage.
+- Append Pareto to existing model lists so selector order and first-model
+  selections remain unchanged, including Core example provider switches.
+
 - Added OpenRouter Ling 3.1 Flash (`inclusionai/ling-3.1-flash`) as an explicit,
   non-default text-only option, including the public constant, React selector,
   English/Japanese documentation, and mocked transport/rendered-DOM coverage.

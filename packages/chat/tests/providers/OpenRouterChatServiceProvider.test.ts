@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
+  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
@@ -84,6 +85,7 @@ import {
 } from '../../src/constants/openrouter';
 
 const recentOpenRouterVisionModels = [
+  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_OPENAI_GPT_5_6_SOL,
@@ -136,7 +138,7 @@ describe('OpenRouterChatServiceProvider', () => {
   });
 
   describe('getSupportedModels', () => {
-    it('should return array containing supported models', () => {
+    it('preserves existing model order and appends Pareto last', () => {
       const models = provider.getSupportedModels();
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
@@ -221,6 +223,7 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_MOONSHOTAI_KIMI_K2_5,
         MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
         MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
+        MODEL_UNBIASED_PARETO_26_10_PREVIEW,
       ]);
     });
   });

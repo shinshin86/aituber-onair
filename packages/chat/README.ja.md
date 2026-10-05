@@ -748,6 +748,7 @@ hidden thinking が使い切るリスクを抑えます。Gemini 2.5 は
 
 | Model ID | 推論レベル（package既定） |
 | --- | --- |
+| `unbiased/pareto-26.10-preview` | 推論レベル選択なし（プロバイダー既定） |
 | `openai/gpt-6.1-sol` | max, xhigh, high, medium, low (low) |
 | `openai/gpt-6-sol` | max, xhigh, high, medium, low, none (none) |
 | `openai/gpt-6-luna` | max, xhigh, high, medium, low, none (none) |
@@ -787,6 +788,22 @@ MiMo V2.6 Flashはテキスト・画像入力に対応し、音声・動画入�
 [Solar Mini4](https://openrouter.ai/upstage/solar-mini4)、
 [MiMo V2.6 Flash](https://openrouter.ai/xiaomi/mimo-v2.6-flash)、
 [Apodex 1.1 Mini](https://openrouter.ai/apodex/apodex-1.1-mini%3Afree)を参照してください。
+
+Pareto 26.10 Preview（`unbiased/pareto-26.10-preview`）はテキスト・画像入力、
+ストリーミング、自動ツール選択に対応する明示選択のプレビューです。予告なく変更される
+可能性があり、既定モデルや安定版としての推奨ではありません。Reactサンプルで
+**OpenRouter → Pareto 26.10 Preview** を選びOpenRouterのAPIキーを入力するか、
+`ChatServiceFactory`で`openrouter`プロバイダーとこのモデルIDを指定します。
+Bearer認証付きJSONを`https://openrouter.ai/api/v1/chat/completions`へ直接送信し、
+`choices[].message`またはSSEの`choices[].delta`とOpenAI互換ツール呼び出しを扱います。
+推論レベルと推論トークン予算は公開されていないため、UIに表示せず引き継いだ値も
+送信しません。推論制御が公開されていないため`includeReasoning`も無視し、推論オブジェクト
+全体を省略します。構造化出力の強制とファイル・音声・動画入力は対応範囲外です。
+モック通信と描画済みDOMテストで直接送信経路、ストリーミング、画像、ツール、
+エラー復旧を確認します。実APIでの生成と認証付きブラウザ通信のCORSは未検証です。
+[モデルのAPI使用例](https://openrouter.ai/unbiased/pareto-26.10-preview?view=api)、
+[エンドポイント情報](https://openrouter.ai/api/v1/models/unbiased/pareto-26.10-preview/endpoints)、
+[Chat Completions仕様](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion)を参照してください。
 
 Ling 3.1 Flash（`inclusionai/ling-3.1-flash`）はテキスト専用の明示選択肢です。
 OpenRouterのAPIキーとともに`openrouter`プロバイダーおよびこのモデルIDを指定するか、
@@ -1490,7 +1507,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3 はチャット用途向けに利用可能な最小の thinking を既定値にします。`minimal` 非対応の Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3 Pro は `low`、その他の Gemini 3 Flash は `minimal` を使います。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Opus 5.5 (`claude-opus-5-5`)、Claude Sonnet 5.5 (`claude-sonnet-5-5`)、Claude Fable 5.1 (`claude-fable-5-1`); Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 をサポート。調整可能な`reasoning_effort`は対応モデルに限り`output_config.effort`として送信し、refusal metadataは終端completionとして保持します
-- **OpenRouter**: Ling 3.1 Flash（テキスト専用・明示選択）、Solar Mini4、MiMo V2.6 Flash、Apodex 1.1 Mini (Free)、GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilotのキュレーション済み一覧をサポート。GLM-5.3/FlashX、Qwen3.8 Flash、DeepSeek V4 Flash Vision Exp、Claude Sonnet 5/Opus 4.8、Kimi K2.6も含みます。 明示選択として`nvidia/nemotron-3.5-lightning`（テキスト専用）、`qwen/qwen3.8-27b`と`qwen/qwen3.8-omni-flash`（画像入力対応）も利用できます。
+- **OpenRouter**: Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`, 明示選択のプレビュー), Ling 3.1 Flash（テキスト専用・明示選択）、Solar Mini4、MiMo V2.6 Flash、Apodex 1.1 Mini (Free)、GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilotのキュレーション済み一覧をサポート。GLM-5.3/FlashX、Qwen3.8 Flash、DeepSeek V4 Flash Vision Exp、Claude Sonnet 5/Opus 4.8、Kimi K2.6も含みます。 明示選択として`nvidia/nemotron-3.5-lightning`（テキスト専用）、`qwen/qwen3.8-27b`と`qwen/qwen3.8-omni-flash`（画像入力対応）も利用できます。
 - **Z.ai**: GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-TurboとGLM-4.7/4.6のテキストモデル、GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V系のビジョンモデルをサポート。GLM-5.3はthinking必須で`low`、GLM-5.2は`none`を既定値にします
 - **xAI**: Grok 4.7、Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 Reasoning/Non-Reasoningをvision対応でサポート。Grok 4.7/4.6/4.5のpackage既定は低遅延向けの`reasoning_effort: 'low'`、Grok 4.3は`none`です
 - **Kimi**: Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、デフォルトは `max`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト）、Kimi K2.5（`kimi-k2.5`、いずれもビジョン対応）をサポート
