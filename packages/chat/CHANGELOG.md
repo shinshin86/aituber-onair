@@ -11,6 +11,8 @@
   including inherited values and `includeReasoning`; send no reasoning object.
 - Add React selector, bilingual usage documentation, and mocked direct-request,
   parser, image, tool, and rendered-DOM error-recovery coverage.
+- Append Pareto to existing model lists so selector order and first-model
+  selections remain unchanged, including Core example provider switches.
 
 - Added OpenRouter Ling 3.1 Flash (`inclusionai/ling-3.1-flash`) as an explicit,
   non-default text-only option, including the public constant, React selector,

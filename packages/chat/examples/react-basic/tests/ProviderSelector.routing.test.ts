@@ -236,6 +236,34 @@ afterEach(async () => {
 });
 
 describe('ProviderSelector rendered configuration for recent models', () => {
+  it('appends Pareto after the existing OpenRouter choices without changing selection', async () => {
+    await renderApp();
+    await click(button('OpenRouter', 'provider'));
+
+    const labels = Array.from(
+      container.querySelectorAll('.model-item .model-name'),
+      (element) => element.textContent?.trim(),
+    );
+    expect(labels.slice(-2)).toEqual([
+      'KAT-Coder-Pro V2.5 (OpenRouter)',
+      'Pareto 26.10 Preview',
+    ]);
+    expect(
+      labels.filter((label) => label === 'Pareto 26.10 Preview'),
+    ).toHaveLength(1);
+    expect(
+      button('GPT OSS 20B (Free)', 'model').getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(
+      button('Pareto 26.10 Preview', 'model').getAttribute('aria-pressed'),
+    ).toBe('false');
+
+    await click(button('Pareto 26.10 Preview', 'model'));
+    expect(
+      button('Pareto 26.10 Preview', 'model').getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
+
   it.each(additions)(
     '$label emits actual click and change callbacks without becoming a default',
     async (addition) => {

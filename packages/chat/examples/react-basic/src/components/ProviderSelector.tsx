@@ -704,12 +704,6 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
-    name: 'Pareto 26.10 Preview',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
     id: MODEL_INCLUSIONAI_LING_3_1_FLASH,
     name: 'Ling 3.1 Flash',
     provider: 'openrouter',
@@ -1348,6 +1342,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
     name: 'KAT-Coder-Pro V2.5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+    name: 'Pareto 26.10 Preview',
     provider: 'openrouter',
     default: false,
   },

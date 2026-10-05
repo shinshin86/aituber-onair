@@ -138,11 +138,10 @@ describe('OpenRouterChatServiceProvider', () => {
   });
 
   describe('getSupportedModels', () => {
-    it('should return array containing supported models', () => {
+    it('preserves existing model order and appends Pareto last', () => {
       const models = provider.getSupportedModels();
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
-        MODEL_UNBIASED_PARETO_26_10_PREVIEW,
         MODEL_INCLUSIONAI_LING_3_1_FLASH,
         MODEL_UPSTAGE_SOLAR_MINI4,
         MODEL_XIAOMI_MIMO_V2_6_FLASH,
@@ -224,6 +223,7 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_MOONSHOTAI_KIMI_K2_5,
         MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
         MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
+        MODEL_UNBIASED_PARETO_26_10_PREVIEW,
       ]);
     });
   });
