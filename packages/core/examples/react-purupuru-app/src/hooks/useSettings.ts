@@ -323,7 +323,6 @@ function getDefaultSettings(): AppSettings {
       gradiumVoiceSimilarity: '',
       gradiumPaddingBonus: '',
       gradiumRewriteRules: '',
-      openRouterApiKey: '',
       openRouterModel: '',
       openRouterApiUrl: DEFAULT_OPENROUTER_TTS_ENDPOINT,
       piperPlusBasePath: DEFAULT_PIPER_PLUS_BASE_PATH,

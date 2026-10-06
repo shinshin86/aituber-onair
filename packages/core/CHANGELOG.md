@@ -16,6 +16,8 @@
 - Add an OpenRouter TTS engine to all ten React TTS examples for the
   public-preview MAI Voice 2.1 models. No model or voice is preselected;
   voices load for the chosen model, and changing the model clears the voice.
+  Speech reuses the OpenRouter API key from the LLM settings, and the TTS key
+  field is hidden when the LLM provider is OpenRouter.
 - React samples: discover OpenRouter text-chat candidates from the anonymous
   public catalog, with searchable pricing filters, cached/stale metadata,
   deliberate pricing-change acknowledgment, and conservative SDK capability

@@ -993,6 +993,11 @@ const App: React.FC = () => {
     useState(false);
   const [openRouterVoiceFetchError, setOpenRouterVoiceFetchError] =
     useState('');
+  // OpenRouter uses one account key for both chat and speech.
+  const sharesOpenRouterLlmKey = chatProvider === 'openrouter';
+  const openRouterTtsApiKey = sharesOpenRouterLlmKey
+    ? apiKey
+    : voiceApiKeys.openRouter || '';
   const catalogApiKey =
     selectedVoiceEngine === 'fishAudio' || selectedVoiceEngine === 'cartesia'
       ? voiceApiKeys[selectedVoiceEngine]
@@ -1447,7 +1452,7 @@ const App: React.FC = () => {
   // Nothing is auto-selected; a chosen voice survives only if still listed.
   useEffect(() => {
     if (selectedVoiceEngine !== 'openRouter') return;
-    const apiKey = voiceApiKeys.openRouter?.trim();
+    const apiKey = openRouterTtsApiKey.trim();
     if (!apiKey || !openRouterTtsModel) {
       queueMicrotask(() => {
         setOpenRouterVoices([]);
@@ -1486,7 +1491,7 @@ const App: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [selectedVoiceEngine, voiceApiKeys.openRouter, openRouterTtsModel]);
+  }, [selectedVoiceEngine, openRouterTtsApiKey, openRouterTtsModel]);
 
   useEffect(() => {
     if (selectedVoiceEngine !== 'inworld') {
@@ -2076,7 +2081,10 @@ const App: React.FC = () => {
 
       // Add API key if needed
       if (config.needsApiKey) {
-        const apiKey = voiceApiKeys[selectedVoiceEngine];
+        const apiKey =
+          selectedVoiceEngine === 'openRouter'
+            ? openRouterTtsApiKey
+            : voiceApiKeys[selectedVoiceEngine];
         if (apiKey) {
           if (selectedVoiceEngine === 'minimax') {
             options.apiKey = apiKey.trim();
@@ -4292,7 +4300,11 @@ const App: React.FC = () => {
                   </select>
 
                   {selectedVoiceEngine !== 'none' &&
-                    VOICE_ENGINE_CONFIGS[selectedVoiceEngine].needsApiKey && (
+                    VOICE_ENGINE_CONFIGS[selectedVoiceEngine].needsApiKey &&
+                    !(
+                      selectedVoiceEngine === 'openRouter' &&
+                      sharesOpenRouterLlmKey
+                    ) && (
                       <>
                         <label
                           htmlFor="voiceApiKey"
@@ -5274,6 +5286,17 @@ const App: React.FC = () => {
                       <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
                         OpenRouter Parameters
                       </div>
+                      {sharesOpenRouterLlmKey && (
+                        <div
+                          style={{
+                            fontSize: '0.85em',
+                            color: '#666',
+                            marginBottom: '8px',
+                          }}
+                        >
+                          LLM設定のOpenRouter API Keyを使います。
+                        </div>
+                      )}
                       <label htmlFor="openRouterTtsModel">Model:</label>
                       <select
                         id="openRouterTtsModel"
@@ -5318,14 +5341,14 @@ const App: React.FC = () => {
                           }))
                         }
                         disabled={
-                          !voiceApiKeys.openRouter ||
+                          !openRouterTtsApiKey ||
                           !openRouterTtsModel ||
                           isFetchingOpenRouterVoices ||
                           openRouterVoices.length === 0
                         }
                         style={{ width: '100%', marginBottom: '8px' }}
                       >
-                        {!voiceApiKeys.openRouter ? (
+                        {!openRouterTtsApiKey ? (
                           <option value="">API Keyを入力してください</option>
                         ) : !openRouterTtsModel ? (
                           <option value="">モデルを選択してください</option>

@@ -1270,9 +1270,10 @@ export function SettingsPanel({
 
   // OpenRouter voices are scoped to the explicitly selected preview model.
   // Nothing is auto-selected; a saved voice survives only if still listed.
+  const openRouterApiKey = getApiKeyForProvider('openrouter').trim();
   useEffect(() => {
     if (settings.tts.engine !== 'openRouter') return;
-    const apiKey = settings.tts.openRouterApiKey?.trim();
+    const apiKey = openRouterApiKey;
     const model = settings.tts.openRouterModel;
     if (!apiKey || !model) {
       queueMicrotask(() => setOpenRouterVoices([]));
@@ -1312,7 +1313,7 @@ export function SettingsPanel({
     };
   }, [
     settings.tts.engine,
-    settings.tts.openRouterApiKey,
+    openRouterApiKey,
     settings.tts.openRouterModel,
     updateTTSSpeaker,
   ]);
@@ -2463,19 +2464,26 @@ export function SettingsPanel({
 
             {settings.tts.engine === 'openRouter' && (
               <>
-                <div className="settings-field">
-                  <label htmlFor="tts-openrouter-apikey">API Key</label>
-                  <input
-                    id="tts-openrouter-apikey"
-                    type="password"
-                    value={settings.tts.openRouterApiKey || ''}
-                    onChange={(e) =>
-                      updateTtsField('openRouterApiKey', e.target.value)
-                    }
-                    placeholder="OpenRouter API key"
-                    disabled={disabled}
-                  />
-                </div>
+                {settings.llm.provider !== 'openrouter' && (
+                  <div className="settings-field">
+                    <label htmlFor="tts-openrouter-apikey">
+                      API Key (OpenRouter)
+                    </label>
+                    <input
+                      id="tts-openrouter-apikey"
+                      type="password"
+                      value={getApiKeyForProvider('openrouter')}
+                      onChange={(e) =>
+                        updateLLMApiKey('openrouter', e.target.value)
+                      }
+                      placeholder="sk-or-..."
+                      disabled={disabled}
+                    />
+                    <p className="settings-field-hint">
+                      LLMのOpenRouterと同じAPIキーを使います。
+                    </p>
+                  </div>
+                )}
                 <div className="settings-field">
                   <label htmlFor="tts-openrouter-model">Model</label>
                   <select
@@ -2508,13 +2516,13 @@ export function SettingsPanel({
                     onChange={(e) => updateTTSSpeaker(e.target.value)}
                     disabled={
                       disabled ||
-                      !settings.tts.openRouterApiKey ||
+                      !openRouterApiKey ||
                       !settings.tts.openRouterModel ||
                       isFetchingOpenRouterVoices ||
                       openRouterVoices.length === 0
                     }
                   >
-                    {!settings.tts.openRouterApiKey ? (
+                    {!openRouterApiKey ? (
                       <option value="">API Keyを入力してください</option>
                     ) : !settings.tts.openRouterModel ? (
                       <option value="">モデルを選択してください</option>

@@ -120,8 +120,9 @@ and are not recommended for production. Catalogs checked on October 1, 2026
 had no Japanese voices.
 
 All ten React TTS examples add an OpenRouter engine. No preview model or voice
-is selected automatically: choose a model, enter an API key to load that
-model's voices, and then choose a voice. Changing the model clears the voice.
+is selected automatically: choose a model to load its voices, and then choose a
+voice. Changing the model clears the voice. Speech reuses the OpenRouter API
+key from the LLM settings, so users enter it only once.
 The examples call OpenRouter directly from the browser, so the API key is
 visible to the page; deploy shared apps behind your own backend. Direct access
 depends on the provider's CORS policy.

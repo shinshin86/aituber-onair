@@ -184,8 +184,9 @@ function getTtsApiKey(
   if (settings.tts.engine === 'gradium') {
     return settings.tts.gradiumApiKey || '';
   }
+  // OpenRouter uses one account key for both chat and speech.
   if (settings.tts.engine === 'openRouter') {
-    return settings.tts.openRouterApiKey || '';
+    return getApiKeyForProvider('openrouter');
   }
   return getApiKeyForProvider(settings.llm.provider);
 }

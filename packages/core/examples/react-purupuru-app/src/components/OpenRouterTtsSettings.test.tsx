@@ -61,9 +61,9 @@ describe('OpenRouter TTS settings', () => {
     localStorage.setItem(
       storageKey,
       JSON.stringify({
+        llm: { provider: 'openai', apiKeys: { openrouter: 'test-only-key' } },
         tts: {
           engine: 'openRouter',
-          openRouterApiKey: 'test-only-key',
           speaker: 'en-US-Stale:MAI-Voice-2.1',
         },
       }),
@@ -129,5 +129,38 @@ describe('OpenRouter TTS settings', () => {
       'en-US-Jenny:MAI-Voice-2.1-Flash',
     ]);
     expect(select('tts-openrouter-speaker').value).toBe('');
+  });
+
+  it('shares the LLM OpenRouter API key instead of storing a TTS copy', async () => {
+    await act(async () => root.render(<Harness />));
+    const keyInput = container.querySelector<HTMLInputElement>(
+      '#tts-openrouter-apikey',
+    ) as HTMLInputElement;
+    expect(keyInput.value).toBe('test-only-key');
+
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+      )?.set?.call(keyInput, 'updated-test-key');
+      keyInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    expect(stored.llm.apiKeys.openrouter).toBe('updated-test-key');
+    expect(stored.tts).not.toHaveProperty('openRouterApiKey');
+  });
+
+  it('hides the TTS key field when the LLM already uses OpenRouter', async () => {
+    const stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    stored.llm.provider = 'openrouter';
+    localStorage.setItem(storageKey, JSON.stringify(stored));
+    await act(async () => root.render(<Harness />));
+
+    expect(container.querySelector('#tts-openrouter-apikey')).toBeNull();
+    await choose('tts-openrouter-model', PRO);
+    expect(speechCatalogCalls()).toHaveLength(1);
+    expect(optionValues('tts-openrouter-speaker')).toContain(
+      'en-US-Jenny:MAI-Voice-2.1',
+    );
   });
 });

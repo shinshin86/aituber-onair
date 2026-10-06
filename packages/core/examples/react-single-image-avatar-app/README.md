@@ -132,9 +132,10 @@ Flash first, so switching the provider to OpenRouter selects it.
 
 Select **OpenRouter** as the TTS engine for the public-preview
 `microsoft/mai-voice-2.1` and `microsoft/mai-voice-2.1-flash` models. No model
-or voice is preselected: choose a model, enter an OpenRouter API key to load
-that model's voices, and then choose a voice. Changing the model clears the
-voice. Both models are previews without an SLA and are not recommended for
+or voice is preselected: choose a model to load its voices, and then choose a
+voice. Changing the model clears the voice. Speech uses the same OpenRouter API
+key as the LLM settings; when the LLM provider is OpenRouter, the TTS settings
+do not ask for the key again. Both models are previews without an SLA and are not recommended for
 production; catalogs checked on October 1, 2026 had no Japanese voices. The
 sample calls OpenRouter directly from the browser, so the API key is visible to
 the page; deploy shared apps behind your own backend.
