@@ -13,6 +13,7 @@ import {
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_ZAI_GLM_5_3,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
+  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
@@ -21,13 +22,25 @@ import {
 } from '../../../src';
 import { createSseResponse } from '../../../tests/helpers/sse';
 import App from '../src/App';
-import ProviderSelector from '../src/components/ProviderSelector';
+import ProviderSelector, {
+  allModels,
+} from '../src/components/ProviderSelector';
 
 // Resolve the example's package import to the real source, not stale dist.
 // Factory, providers, request builders, and stream parsers remain unmocked.
 vi.mock('@aituber-onair/chat', () => import('../../../src'));
 
 const additions = [
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+    label: 'Pareto 26.10 Preview',
+    defaultModel: MODEL_GPT_OSS_20B_FREE,
+    defaultLabel: 'GPT OSS 20B (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
   {
     provider: 'openrouter',
     providerLabel: 'OpenRouter',
@@ -235,6 +248,40 @@ afterEach(async () => {
 });
 
 describe('ProviderSelector rendered configuration for recent models', () => {
+  it('appends Pareto after the existing OpenRouter choices without changing selection', async () => {
+    // The curated list (shown as the unverified fallback) keeps Pareto last.
+    // A fetched catalog is listed by model ID, so only its presence is checked.
+    const curatedLabels = allModels
+      .filter((model) => model.provider === 'openrouter')
+      .map((model) => model.name);
+    expect(curatedLabels.slice(-2)).toEqual([
+      'KAT-Coder-Pro V2.5 (OpenRouter)',
+      'Pareto 26.10 Preview',
+    ]);
+
+    await renderApp();
+    await click(button('OpenRouter', 'provider'));
+
+    const labels = Array.from(
+      container.querySelectorAll('.model-item .model-name'),
+      (element) => element.textContent?.trim(),
+    );
+    expect(
+      labels.filter((label) => label === 'Pareto 26.10 Preview'),
+    ).toHaveLength(1);
+    expect(
+      button('GPT OSS 20B (Free)', 'model').getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(
+      button('Pareto 26.10 Preview', 'model').getAttribute('aria-pressed'),
+    ).toBe('false');
+
+    await click(button('Pareto 26.10 Preview', 'model'));
+    expect(
+      button('Pareto 26.10 Preview', 'model').getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
+
   it.each(additions)(
     '$label emits actual click and change callbacks without becoming a default',
     async (addition) => {
@@ -443,9 +490,13 @@ describe('ProviderSelector rendered configuration for recent models', () => {
         element<HTMLInputElement>('#openrouter-include-reasoning').checked,
       ).toBe(true);
       await sendMessage();
-      expect(requestBody().reasoning).not.toHaveProperty('effort');
-      expect(requestBody().reasoning).not.toHaveProperty('max_tokens');
-      expect(requestBody().reasoning).not.toHaveProperty('exclude');
+      if (addition.model === MODEL_UNBIASED_PARETO_26_10_PREVIEW) {
+        expect(requestBody().reasoning).toBeUndefined();
+      } else {
+        expect(requestBody().reasoning).not.toHaveProperty('effort');
+        expect(requestBody().reasoning).not.toHaveProperty('max_tokens');
+        expect(requestBody().reasoning).not.toHaveProperty('exclude');
+      }
     },
   );
 });
