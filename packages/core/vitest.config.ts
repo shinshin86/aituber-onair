@@ -21,6 +21,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@aituber-onair/transcription': resolve(
+        __dirname,
+        '../transcription/src',
+      ),
       '@core': resolve(__dirname, './core'),
       '@services': resolve(__dirname, './services'),
       '@utils': resolve(__dirname, './utils'),

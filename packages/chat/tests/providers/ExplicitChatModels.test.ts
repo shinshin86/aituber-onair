@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  getDefaultOpenRouterReasoningEffort,
+  getOpenRouterSupportedReasoningEfforts,
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENROUTER_API,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
@@ -12,11 +15,18 @@ import {
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
 } from '../../src/constants';
+import { buildToolContinuationMessages } from '../../src/backend';
 import { ChatServiceFactory } from '../../src/services/ChatServiceFactory';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
 import type { Message, MessageWithVision } from '../../src/types';
 
 const candidates = [
+  {
+    provider: 'openrouter',
+    model: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
   {
     provider: 'openrouter',
     model: MODEL_UPSTAGE_SOLAR_PRO4,
@@ -280,7 +290,9 @@ describe.each(candidates)(
             : undefined,
         );
         expect(body.reasoning?.max_tokens).toBeUndefined();
-        if (provider === 'openrouter') {
+        if (model === MODEL_UNBIASED_PARETO_26_10_PREVIEW) {
+          expect(body.reasoning).toBeUndefined();
+        } else if (provider === 'openrouter') {
           expect(body.reasoning?.exclude).toBe(
             includeReasoning === true ? undefined : true,
           );
@@ -378,3 +390,114 @@ describe('Ling 3.1 Flash response constraints', () => {
     );
   });
 });
+
+it('keeps Pareto preview explicit with vision and no reasoning controls', () => {
+  const model = MODEL_UNBIASED_PARETO_26_10_PREVIEW;
+  expect(model).toBe('unbiased/pareto-26.10-preview');
+  expect(ChatServiceFactory.getSupportedModels('openrouter')).toContain(model);
+  expect(
+    ChatServiceFactory.getProviderCapabilities('openrouter')?.defaultModel,
+  ).not.toBe(model);
+  expect(getOpenRouterSupportedReasoningEfforts(model)).toEqual([]);
+  expect(getDefaultOpenRouterReasoningEffort(model)).toBeUndefined();
+});
+
+it.each([
+  { stream: false, vision: false },
+  { stream: true, vision: false },
+  { stream: false, vision: true },
+  { stream: true, vision: true },
+])(
+  'continues Pareto tool results after stream=$stream vision=$vision',
+  async ({ stream, vision }) => {
+    const first = {
+      choices: [
+        {
+          message: {
+            content: '',
+            tool_calls: [
+              {
+                id: 'call-1',
+                type: 'function',
+                function: { name: 'lookup', arguments: '{}' },
+              },
+            ],
+          },
+          finish_reason: 'tool_calls',
+        },
+      ],
+    };
+    const transport = vi
+      .fn()
+      .mockResolvedValueOnce(
+        stream
+          ? new Response(
+              data({
+                choices: [
+                  {
+                    delta: {
+                      tool_calls: [
+                        { index: 0, ...first.choices[0].message.tool_calls[0] },
+                      ],
+                    },
+                    finish_reason: 'tool_calls',
+                  },
+                ],
+              }) + 'data: [DONE]\n\n',
+            )
+          : new Response(JSON.stringify(first)),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: { content: 'Lookup complete' },
+                finish_reason: 'stop',
+              },
+            ],
+          }),
+        ),
+      );
+    ChatServiceHttpClient.setFetch(transport);
+    const service = ChatServiceFactory.createChatService('openrouter', {
+      apiKey: 'EXAMPLE_API_KEY',
+      model: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+      tools,
+    });
+    const input = vision ? images : messages;
+    const completion = vision
+      ? await service.visionChatOnce!(input, stream)
+      : await service.chatOnce!(input, stream);
+    const continuation = buildToolContinuationMessages({
+      provider: 'openrouter',
+      messages: input,
+      completion,
+      toolResults: [
+        { type: 'tool_result', tool_use_id: 'call-1', content: '{"value":42}' },
+      ],
+    });
+    const result = vision
+      ? await service.visionChatOnce!(continuation, false)
+      : await service.chatOnce!(continuation, false);
+    expect(transport.mock.calls[1][0]).toBe(ENDPOINT_OPENROUTER_API);
+    const body = JSON.parse(transport.mock.calls[1][1].body);
+    expect(body.model).toBe(MODEL_UNBIASED_PARETO_26_10_PREVIEW);
+    expect(body.messages).toEqual(continuation);
+    expect(body.messages[0]).toEqual(input[0]);
+    expect(body.messages[1].tool_calls[0]).toEqual(
+      first.choices[0].message.tool_calls[0],
+    );
+    expect(body.messages[2]).toEqual({
+      role: 'tool',
+      tool_call_id: 'call-1',
+      content: '{"value":42}',
+    });
+    expect(body.reasoning).toBeUndefined();
+    expect(body.tool_choice).toBe('auto');
+    expect(result.blocks).toContainEqual({
+      type: 'text',
+      text: 'Lookup complete',
+    });
+  },
+);

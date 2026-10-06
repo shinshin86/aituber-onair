@@ -1,4 +1,5 @@
 import {
+  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
@@ -154,6 +155,7 @@ export class OpenRouterChatServiceProvider
    * @returns Array of supported model names
    */
   getSupportedModels(): string[] {
+    // Append new entries so first-model consumers keep their existing selection.
     return [
       MODEL_INCLUSIONAI_LING_3_1_FLASH,
       MODEL_UPSTAGE_SOLAR_PRO4,
@@ -246,6 +248,7 @@ export class OpenRouterChatServiceProvider
       MODEL_MOONSHOTAI_KIMI_K2_5,
       MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
       MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
+      MODEL_UNBIASED_PARETO_26_10_PREVIEW,
     ];
   }
 

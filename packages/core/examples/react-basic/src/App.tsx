@@ -2,7 +2,6 @@ import React, {
   ChangeEvent,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -59,7 +58,6 @@ import {
   normalizeOpenRouterReasoningEffort,
   normalizeXaiReasoningEffort,
   normalizeZaiReasoningEffort,
-  refreshOpenRouterFreeModels,
   resolveOpenAICompatibleEndpoint,
   resolveOpenAICompatibleSpeechEndpoint,
   type ClaudeReasoningEffort,
@@ -86,6 +84,7 @@ import {
   type VoiceVoxQueryParameterOverrides,
   type AivisSpeechQueryParameterOverrides,
 } from '@aituber-onair/core';
+import { installOpenRouterRuntimeGuard } from './lib/openRouterRuntime';
 import { LocalLlmSetup } from './components/LocalLlmSetup';
 import { LocalTtsSetup } from './components/LocalTtsSetup';
 
@@ -106,6 +105,15 @@ import { mistralModels } from './constants/mistral';
 import { sakanaModels } from './constants/sakana';
 import { plamoModels } from './constants/plamo';
 import { openrouterModels } from './constants/openrouter';
+import {
+  OpenRouterModelPicker,
+  useOpenRouterCatalog,
+  getOpenRouterRequestBlockReason,
+  catalogSupportsVision,
+  catalogSupportsReasoning,
+  catalogSupportedReasoningEfforts,
+  catalogSupportsTools,
+} from './openrouterCatalog';
 import {
   type VoiceEngineType,
   VOICE_ENGINE_CONFIGS,
@@ -486,7 +494,6 @@ const OPENAI_COMPATIBLE_ENDPOINT_REQUIRED_MESSAGE =
   'OpenAI-CompatibleのEndpoint URLを入力してください。';
 const REACT_BASIC_STORAGE_KEY = 'AITuberOnAirCore_example_react-basic';
 const DEFAULT_OPENROUTER_MAX_CANDIDATES = 1;
-const DEFAULT_OPENROUTER_MAX_WORKING = 10;
 const RESPONSE_LENGTH_LABELS: Record<ChatResponseLength, string> = {
   [CHAT_RESPONSE_LENGTH.VERY_SHORT]: 'Very Short',
   [CHAT_RESPONSE_LENGTH.SHORT]: 'Short',
@@ -565,31 +572,6 @@ function loadOpenRouterDynamicState(): OpenRouterDynamicFreeModelsState {
   }
 }
 
-function saveOpenRouterDynamicState(
-  value: OpenRouterDynamicFreeModelsState,
-): void {
-  try {
-    const raw = localStorage.getItem(REACT_BASIC_STORAGE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as ReactBasicStorageShape) : {};
-    const next: ReactBasicStorageShape = {
-      ...parsed,
-      openRouterDynamicFreeModels: {
-        models: normalizeOpenRouterModelIds(value.models),
-        fetchedAt: value.fetchedAt,
-        maxCandidates: normalizeMaxCandidates(value.maxCandidates),
-      },
-    };
-    localStorage.setItem(REACT_BASIC_STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // ignore storage errors
-  }
-}
-
-function buildOpenRouterEndpoint(baseUrl: string, path: string): string {
-  const trimmed = baseUrl.trim().replace(/\/+$/, '');
-  return `${trimmed}${path}`;
-}
-
 const App: React.FC = () => {
   const idCounter = useRef(0);
   const nextId = () => (++idCounter.current).toString();
@@ -613,12 +595,11 @@ const App: React.FC = () => {
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
   const [kimiBaseUrl, setKimiBaseUrl] = useState<string>('');
   const [openRouterBaseUrl, setOpenRouterBaseUrl] = useState<string>('');
-  const [openRouterDynamicState, setOpenRouterDynamicState] =
-    useState<OpenRouterDynamicFreeModelsState>(loadOpenRouterDynamicState);
-  const [isFetchingOpenRouterFreeModels, setIsFetchingOpenRouterFreeModels] =
-    useState<boolean>(false);
-  const [openRouterRefreshError, setOpenRouterRefreshError] =
-    useState<string>('');
+  const [openRouterDynamicState] = useState<OpenRouterDynamicFreeModelsState>(
+    loadOpenRouterDynamicState,
+  );
+  useOpenRouterCatalog(chatProvider === 'openrouter');
+  const lastOpenRouterModel = useRef(openrouterModels[0]);
   const [openAICompatibleEndpoint, setOpenAICompatibleEndpoint] =
     useState<string>(OPENAI_COMPATIBLE_DEFAULT_ENDPOINT);
 
@@ -716,7 +697,12 @@ const App: React.FC = () => {
   const visionSupportLevel: VisionSupportLevel = model
     ? ChatServiceFactory.getVisionSupportLevelForModel(chatProvider, model)
     : 'unsupported';
-  const supportsVision = visionSupportLevel !== 'unsupported';
+  const knownOpenRouterModel =
+    ChatServiceFactory.getSupportedModels('openrouter').includes(model);
+  const supportsVision =
+    visionSupportLevel !== 'unsupported' &&
+    (chatProvider !== 'openrouter' ||
+      catalogSupportsVision(model, knownOpenRouterModel));
 
   const isMcpSupportedProvider =
     chatProvider === 'openai' ||
@@ -726,19 +712,6 @@ const App: React.FC = () => {
   const piperPlus = usePiperPlusStatus();
   const requiresApiKey =
     chatProvider !== 'openai-compatible' && chatProvider !== 'gemini-nano';
-  const openRouterAvailableModels = useMemo(() => {
-    const seen = new Set(openrouterModels);
-    const dynamic = openRouterDynamicState.models.filter((modelId) => {
-      const trimmed = modelId.trim();
-      if (!trimmed || seen.has(trimmed)) {
-        return false;
-      }
-      seen.add(trimmed);
-      return true;
-    });
-    return [...openrouterModels, ...dynamic];
-  }, [openRouterDynamicState.models]);
-
   // Voice settings state
   const [selectedVoiceEngine, setSelectedVoiceEngine] =
     useState<VoiceEngineType>(DEFAULT_VOICE_ENGINE);
@@ -1032,6 +1005,13 @@ const App: React.FC = () => {
 
   // AITuberOnAirCore instance reference
   const aituberRef = useRef<AITuberOnAirCore | null>(null);
+  const appliedChatRef = useRef<{
+    provider: ChatProvider;
+    model: string;
+    tools: boolean;
+    vision: boolean;
+    reasoning: boolean;
+  } | null>(null);
 
   /**
    * Fetch speakers for dynamic voice engines
@@ -1591,9 +1571,10 @@ const App: React.FC = () => {
         setModel(plamoModels[0]);
         break;
       case 'openrouter':
-        setModel(openrouterModels[0]);
+        setModel(lastOpenRouterModel.current);
         setReasoningEffort(
-          getDefaultOpenRouterReasoningEffort(openrouterModels[0]) ?? 'none',
+          getDefaultOpenRouterReasoningEffort(lastOpenRouterModel.current) ??
+            'none',
         );
         break;
       case 'openai-compatible':
@@ -1785,20 +1766,8 @@ const App: React.FC = () => {
   }, [chatProvider, gpt5Preset, model]);
 
   useEffect(() => {
-    saveOpenRouterDynamicState(openRouterDynamicState);
-  }, [openRouterDynamicState]);
-
-  useEffect(() => {
-    if (chatProvider !== 'openrouter') {
-      return;
-    }
-    if (openRouterAvailableModels.length === 0) {
-      return;
-    }
-    if (!openRouterAvailableModels.includes(model)) {
-      setModel(openRouterAvailableModels[0]);
-    }
-  }, [chatProvider, model, openRouterAvailableModels]);
+    if (chatProvider === 'openrouter') lastOpenRouterModel.current = model;
+  }, [chatProvider, model]);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -1882,6 +1851,14 @@ const App: React.FC = () => {
     if (requiresApiKey && !trimmedApiKey) {
       alert(DO_NOT_SET_API_KEY_MESSAGE);
       return;
+    }
+
+    if (chatProvider === 'openrouter') {
+      const blockReason = getOpenRouterRequestBlockReason(trimmedModel, 'ja');
+      if (blockReason) {
+        alert(blockReason);
+        return;
+      }
     }
 
     if (chatProvider === 'openai-compatible' && !trimmedModel) {
@@ -1971,9 +1948,20 @@ const App: React.FC = () => {
         normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort);
     }
     if (chatProvider === 'openrouter') {
-      if (!OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(model)) {
-        providerOptions.reasoning_effort =
-          normalizeReasoningEffortForOpenRouterModel(model, reasoning_effort);
+      if (
+        catalogSupportsReasoning(model, openrouterModels.includes(model)) &&
+        !OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(model)
+      ) {
+        const normalized = normalizeReasoningEffortForOpenRouterModel(
+          model,
+          reasoning_effort,
+        );
+        const efforts = catalogSupportedReasoningEfforts(
+          model,
+          getOpenRouterSupportedReasoningEfforts(model),
+        );
+        if (normalized && efforts.includes(normalized))
+          providerOptions.reasoning_effort = normalized;
       }
       const trimmedBaseUrl = openRouterBaseUrl.trim();
       if (trimmedBaseUrl) {
@@ -2794,7 +2782,10 @@ const App: React.FC = () => {
 
     // create options
     const shouldEnableTools =
-      chatProvider !== 'openai-compatible' && chatProvider !== 'gemini-nano';
+      chatProvider !== 'openai-compatible' &&
+      chatProvider !== 'gemini-nano' &&
+      (chatProvider !== 'openrouter' ||
+        catalogSupportsTools(model, knownOpenRouterModel));
     const aituberOptions: AITuberOnAirCoreOptions = {
       chatProvider,
       apiKey: trimmedApiKey,
@@ -2820,6 +2811,7 @@ const App: React.FC = () => {
     };
 
     // create new instance
+    if (chatProvider === 'openrouter') installOpenRouterRuntimeGuard();
     const newAITuber = new AITuberOnAirCore(aituberOptions);
 
     // register event listeners
@@ -2827,6 +2819,13 @@ const App: React.FC = () => {
 
     // store the instance
     aituberRef.current = newAITuber;
+    appliedChatRef.current = {
+      provider: chatProvider,
+      model: trimmedModel,
+      tools: shouldEnableTools,
+      vision: supportsVision,
+      reasoning: Boolean(providerOptions.reasoning_effort),
+    };
 
     // if there is existing chat history, set it
     if (messagesRef.current.length > 0) {
@@ -2934,56 +2933,6 @@ const App: React.FC = () => {
     });
   };
 
-  const handleOpenRouterMaxCandidatesChange = (value: string) => {
-    const parsed = Number.parseInt(value, 10);
-    setOpenRouterDynamicState((prev) => ({
-      ...prev,
-      maxCandidates: normalizeMaxCandidates(
-        Number.isFinite(parsed) ? parsed : undefined,
-      ),
-    }));
-  };
-
-  const handleRefreshOpenRouterFreeModels = async () => {
-    const trimmedApiKey = apiKey.trim();
-    if (!trimmedApiKey) {
-      setOpenRouterRefreshError('OpenRouter API key is required.');
-      return;
-    }
-
-    setIsFetchingOpenRouterFreeModels(true);
-    setOpenRouterRefreshError('');
-
-    try {
-      const trimmedBaseUrl = openRouterBaseUrl.trim();
-      const endpoint = trimmedBaseUrl
-        ? buildOpenRouterEndpoint(trimmedBaseUrl, '/chat/completions')
-        : undefined;
-      const modelsEndpoint = trimmedBaseUrl
-        ? buildOpenRouterEndpoint(trimmedBaseUrl, '/models')
-        : undefined;
-
-      const result = await refreshOpenRouterFreeModels({
-        apiKey: trimmedApiKey,
-        endpoint,
-        modelsEndpoint,
-        maxCandidates: openRouterDynamicState.maxCandidates,
-        maxWorking: DEFAULT_OPENROUTER_MAX_WORKING,
-      });
-
-      setOpenRouterDynamicState((prev) => ({
-        ...prev,
-        models: normalizeOpenRouterModelIds(result.working),
-        fetchedAt: result.fetchedAt,
-      }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setOpenRouterRefreshError(message);
-    } finally {
-      setIsFetchingOpenRouterFreeModels(false);
-    }
-  };
-
   /**
    * send message
    */
@@ -2998,6 +2947,36 @@ const App: React.FC = () => {
       return;
     }
 
+    const applied = appliedChatRef.current;
+    if (applied?.provider === 'openrouter') {
+      const blockReason = getOpenRouterRequestBlockReason(applied.model, 'ja');
+      if (blockReason) {
+        alert(blockReason);
+        return;
+      }
+      if (
+        (applied.tools && !catalogSupportsTools(applied.model, true)) ||
+        (applied.vision && !catalogSupportsVision(applied.model, true)) ||
+        (applied.reasoning &&
+          !catalogSupportsReasoning(
+            applied.model,
+            openrouterModels.includes(applied.model),
+          ))
+      ) {
+        alert(
+          'OpenRouter capabilities changed. Apply the settings again before sending.',
+        );
+        return;
+      }
+    }
+    if (
+      applied &&
+      (applied.provider !== chatProvider || applied.model !== model)
+    ) {
+      alert('選択したモデル設定を反映してから送信してください。');
+      return;
+    }
+
     // get user input and image data URL
     const userMessage = userInput.trim();
     const attachedImageUrl = imageDataUrl;
@@ -3005,7 +2984,7 @@ const App: React.FC = () => {
     if (!userMessage && !attachedImageUrl) return;
 
     const canUseVision = Boolean(attachedImageUrl && supportsVision);
-    if (attachedImageUrl && visionSupportLevel === 'unsupported') {
+    if (attachedImageUrl && !supportsVision) {
       alert('選択中のモデルは画像入力に対応していません。');
       setImageDataUrl(null);
       if (!userMessage) {
@@ -3204,8 +3183,13 @@ const App: React.FC = () => {
   const deepSeekReasoningEffortValue: DeepSeekReasoningEffort =
     normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort) ?? 'none';
   const openRouterSupportedReasoningEfforts =
-    chatProvider === 'openrouter' && model
-      ? getOpenRouterSupportedReasoningEfforts(model)
+    chatProvider === 'openrouter' &&
+    model &&
+    catalogSupportsReasoning(model, openrouterModels.includes(model))
+      ? catalogSupportedReasoningEfforts(
+          model,
+          getOpenRouterSupportedReasoningEfforts(model),
+        )
       : [];
   const openRouterReasoningEffortValue: OpenRouterReasoningEffort =
     normalizeReasoningEffortForOpenRouterModel(model, reasoning_effort) ??
@@ -3364,7 +3348,7 @@ const App: React.FC = () => {
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              disabled={!isConfigured || visionSupportLevel === 'unsupported'}
+              disabled={!isConfigured || !supportsVision}
               style={{ width: '180px' }}
             />
 
@@ -3537,6 +3521,18 @@ const App: React.FC = () => {
                       onModelChange={setModel}
                       apiKey={apiKey}
                     />
+                  ) : chatProvider === 'openrouter' ? (
+                    <OpenRouterModelPicker
+                      value={model}
+                      onChange={setModel}
+                      curatedModels={[
+                        ...new Set([
+                          ...openrouterModels,
+                          ...openRouterDynamicState.models,
+                        ]),
+                      ].map((id) => ({ id }))}
+                      locale="ja"
+                    />
                   ) : (
                     <>
                       <label htmlFor="model">Model:</label>
@@ -3607,12 +3603,6 @@ const App: React.FC = () => {
                           ))}
                         {chatProvider === 'plamo' &&
                           plamoModels.map((m) => (
-                            <option key={m} value={m}>
-                              {m}
-                            </option>
-                          ))}
-                        {chatProvider === 'openrouter' &&
-                          openRouterAvailableModels.map((m) => (
                             <option key={m} value={m}>
                               {m}
                             </option>
@@ -3810,123 +3800,68 @@ const App: React.FC = () => {
                         value={openRouterBaseUrl}
                         onChange={(e) => setOpenRouterBaseUrl(e.target.value)}
                       />
-                      {!OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(
+                      {catalogSupportsReasoning(
                         model,
-                      ) && (
-                        <>
-                          <label htmlFor="openRouterReasoningEffort">
-                            Reasoning Effort:
-                          </label>
-                          <select
-                            id="openRouterReasoningEffort"
-                            value={openRouterReasoningEffortValue}
-                            disabled={
-                              openRouterSupportedReasoningEfforts.length === 0
-                            }
-                            onChange={(e) =>
-                              setReasoningEffort(
-                                e.target.value as OpenRouterReasoningEffort,
-                              )
-                            }
-                          >
-                            {openRouterSupportedReasoningEfforts.length ===
-                              0 && <option value="none">Not available</option>}
-                            {openRouterSupportedReasoningEfforts.map(
-                              (effort) => (
-                                <option key={effort} value={effort}>
-                                  {effort === 'none'
-                                    ? 'None (fastest)'
-                                    : effort === 'xhigh'
-                                      ? 'XHigh'
-                                      : `${effort[0].toUpperCase()}${effort.slice(1)}`}
-                                </option>
-                              ),
-                            )}
-                          </select>
-                          <div
-                            style={{
-                              marginTop: '6px',
-                              marginBottom: '12px',
-                              color: '#666',
-                              fontSize: '12px',
-                            }}
-                          >
-                            Options follow the selected model. None explicitly
-                            disables reasoning for faster responses.
-                          </div>
-                        </>
-                      )}
-                      <label htmlFor="openRouterMaxCandidates">
-                        Max candidates:
-                      </label>
-                      <input
-                        id="openRouterMaxCandidates"
-                        type="number"
-                        min={1}
-                        value={openRouterDynamicState.maxCandidates}
-                        onChange={(e) =>
-                          handleOpenRouterMaxCandidatesChange(e.target.value)
-                        }
-                        disabled={isFetchingOpenRouterFreeModels}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void handleRefreshOpenRouterFreeModels();
-                        }}
-                        disabled={
-                          isFetchingOpenRouterFreeModels || !apiKey.trim()
-                        }
-                        style={{ marginTop: '8px' }}
-                      >
-                        {isFetchingOpenRouterFreeModels
-                          ? 'Fetching...'
-                          : 'Fetch free models'}
-                      </button>
-                      {!apiKey.trim() && (
-                        <p
-                          style={{
-                            marginTop: '6px',
-                            color: '#666',
-                            fontSize: '12px',
-                          }}
-                        >
-                          Set OpenRouter API key to fetch free models.
-                        </p>
-                      )}
-                      {openRouterRefreshError && (
-                        <p
-                          style={{
-                            marginTop: '6px',
-                            color: '#d9534f',
-                            fontSize: '12px',
-                          }}
-                        >
-                          {openRouterRefreshError}
-                        </p>
-                      )}
-                      <p
-                        style={{
-                          marginTop: '6px',
-                          color: '#666',
-                          fontSize: '12px',
-                        }}
-                      >
-                        Dynamic free models:{' '}
-                        {openRouterDynamicState.models.length}
+                        openrouterModels.includes(model),
+                      ) &&
+                        !OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(
+                          model,
+                        ) && (
+                          <>
+                            <label htmlFor="openRouterReasoningEffort">
+                              Reasoning Effort:
+                            </label>
+                            <select
+                              id="openRouterReasoningEffort"
+                              value={openRouterReasoningEffortValue}
+                              disabled={
+                                openRouterSupportedReasoningEfforts.length === 0
+                              }
+                              onChange={(e) =>
+                                setReasoningEffort(
+                                  e.target.value as OpenRouterReasoningEffort,
+                                )
+                              }
+                            >
+                              {openRouterSupportedReasoningEfforts.length ===
+                                0 && (
+                                <option value="none">Not available</option>
+                              )}
+                              {openRouterSupportedReasoningEfforts.map(
+                                (effort) => (
+                                  <option key={effort} value={effort}>
+                                    {effort === 'none'
+                                      ? 'None (fastest)'
+                                      : effort === 'xhigh'
+                                        ? 'XHigh'
+                                        : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                            <div
+                              style={{
+                                marginTop: '6px',
+                                marginBottom: '12px',
+                                color: '#666',
+                                fontSize: '12px',
+                              }}
+                            >
+                              Options follow the selected model. None explicitly
+                              disables reasoning for faster responses.
+                            </div>
+                          </>
+                        )}
+                      <p>
+                        モデル一覧はOpenRouter公式のカタログから取得しています。カスタムのBase
+                        URL経由で利用できるかどうかは確認していません。
                       </p>
-                      {openRouterDynamicState.fetchedAt > 0 && (
-                        <p
-                          style={{
-                            marginTop: '6px',
-                            color: '#666',
-                            fontSize: '12px',
-                          }}
-                        >
-                          Last fetched:{' '}
-                          {new Date(
-                            openRouterDynamicState.fetchedAt,
-                          ).toLocaleString()}
+                      {!catalogSupportsReasoning(
+                        model,
+                        openrouterModels.includes(model),
+                      ) && (
+                        <p>
+                          カタログとSDKの両方で対応を確認できないモデルでは、推論の設定を使えません。
                         </p>
                       )}
                     </>

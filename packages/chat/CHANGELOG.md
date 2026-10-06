@@ -2,8 +2,24 @@
 
 ## Unreleased
 
+### Patch Changes
+
+- React samples: discover OpenRouter text-chat candidates from the anonymous
+  public catalog, with searchable pricing filters, cached/stale metadata,
+  deliberate pricing-change acknowledgment, and conservative SDK capability
+  gates. Preserve public SDK behavior, defaults, and dependency versions.
+
 ### Minor Changes
 
+- Add OpenRouter Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`) as an
+  explicit, non-default preview with text/image input, streaming, and automatic
+  tool selection. The preview may change without notice.
+- Omit undocumented reasoning effort and token-budget settings for Pareto,
+  including inherited values and `includeReasoning`; send no reasoning object.
+- Add React selector, bilingual usage documentation, and mocked direct-request,
+  parser, image, tool, and rendered-DOM error-recovery coverage.
+- Append Pareto to existing model lists so selector order and first-model
+  selections remain unchanged, including Core example provider switches.
 - Add Solar Pro 4 (`upstage/solar-pro4`) as a non-default, text-only OpenRouter
   option with documented reasoning efforts, a `none` reasoning default, and
   omitted undocumented reasoning token budgets. Include React selection,

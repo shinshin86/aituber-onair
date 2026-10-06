@@ -1,30 +1,32 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AITuberOnAirCore,
+  type VoiceEngineVoice,
+  type XaiReasoningEffort,
   getDefaultXaiReasoningEffort,
-  getXaiSupportedReasoningEfforts,
   getVoiceEngineVoiceList,
+  getXaiSupportedReasoningEfforts,
   isOpenAIReasoningModel,
   isXaiReasoningEffortModel,
   normalizeXaiReasoningEffort,
-  type VoiceEngineVoice,
-  type XaiReasoningEffort,
 } from '@aituber-onair/core';
-import { ScreenVisionPanel } from './ScreenVisionPanel';
-import { useDeepgramVoices } from '../hooks/useDeepgramVoices';
-import { StreamSettings } from './StreamSettings';
-import { LocalLlmSetup } from './LocalLlmSetup';
-import { LocalTtsSetup } from './LocalTtsSetup';
-import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
+import { useDeepgramVoices } from '../hooks/useDeepgramVoices';
+import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
+import type { useSettings } from '../hooks/useSettings';
 import type { PuruPuruAvatarPackage } from '../lib/purupuruPackage';
 import type {
   PuruPuruEmotionEffect,
   PuruPuruReactionControlMode,
   PuruPuruReactionEmotion,
 } from '../lib/purupuruReactions';
+import { OpenRouterModelPicker } from '../openrouterCatalog';
 import type { ChatProviderOption, TTSEngineOption } from '../types/settings';
-import type { useSettings } from '../hooks/useSettings';
+import { LocalLlmSetup } from './LocalLlmSetup';
+import { LocalTtsSetup } from './LocalTtsSetup';
+import { ScreenVisionPanel } from './ScreenVisionPanel';
+import { StreamSettings } from './StreamSettings';
 
 type SettingsHook = ReturnType<typeof useSettings>;
 type ScreenVisionController = ReturnType<typeof useScreenVisionController>;
@@ -354,10 +356,6 @@ export function SettingsPanel({
   updateLLMApiKey,
   updateLLMEndpoint,
   updateXaiReasoningEffort,
-  refreshOpenRouterDynamicFreeModels,
-  isRefreshingOpenRouterFreeModels,
-  openRouterRefreshError,
-  updateOpenRouterMaxCandidates,
   updateTTSEngine,
   updateTTSSpeaker,
   updateOpenAiCompatibleApiKey,
@@ -481,13 +479,6 @@ export function SettingsPanel({
     settings.llm.provider === 'xai'
       ? getXaiSupportedReasoningEfforts(settings.llm.model)
       : [];
-  const openRouterApiKey = getApiKeyForProvider('openrouter').trim();
-  const openRouterDynamicFreeModels =
-    settings.llm.openRouterDynamicFreeModels?.models || [];
-  const openRouterFetchedAt =
-    settings.llm.openRouterDynamicFreeModels?.fetchedAt || 0;
-  const openRouterMaxCandidates =
-    settings.llm.openRouterDynamicFreeModels?.maxCandidates || 1;
   const geminiNano = useGeminiNanoStatus(
     settings.llm.provider === 'gemini-nano',
   );
@@ -961,6 +952,21 @@ export function SettingsPanel({
                 apiKey={getApiKeyForProvider(settings.llm.provider)}
                 disabled={disabled}
               />
+            ) : settings.llm.provider === 'openrouter' ? (
+              <div className="settings-field">
+                <OpenRouterModelPicker
+                  value={settings.llm.model}
+                  legacyModels={
+                    settings.llm.openRouterDynamicFreeModels?.models
+                  }
+                  onChange={updateLLMModel}
+                  curatedModels={AITuberOnAirCore.getSupportedModels(
+                    'openrouter',
+                  ).map((id) => ({ id }))}
+                  disabled={disabled}
+                  locale="ja"
+                />
+              </div>
             ) : (
               <div className="settings-field">
                 <label htmlFor="llm-model">Model</label>
@@ -1119,66 +1125,6 @@ export function SettingsPanel({
                     : 'This xAI model does not support reasoning_effort.'}
                 </p>
               </div>
-            )}
-
-            {settings.llm.provider === 'openrouter' && (
-              <>
-                <div className="settings-field">
-                  <label htmlFor="openrouter-max-candidates">
-                    Max candidates
-                  </label>
-                  <input
-                    id="openrouter-max-candidates"
-                    type="number"
-                    min={1}
-                    value={openRouterMaxCandidates}
-                    onChange={(e) => {
-                      const parsed = Number.parseInt(e.target.value, 10);
-                      updateOpenRouterMaxCandidates(
-                        Number.isFinite(parsed) ? parsed : 1,
-                      );
-                    }}
-                    disabled={disabled || isRefreshingOpenRouterFreeModels}
-                  />
-                </div>
-                <div className="settings-field">
-                  <button
-                    type="button"
-                    className="settings-action-button"
-                    onClick={() => {
-                      void refreshOpenRouterDynamicFreeModels();
-                    }}
-                    disabled={
-                      disabled ||
-                      isRefreshingOpenRouterFreeModels ||
-                      !openRouterApiKey
-                    }
-                  >
-                    {isRefreshingOpenRouterFreeModels
-                      ? 'Fetching...'
-                      : 'Fetch free models'}
-                  </button>
-                  {!openRouterApiKey && (
-                    <p className="settings-field-hint">
-                      Set OpenRouter API key to fetch free models.
-                    </p>
-                  )}
-                  {openRouterRefreshError && (
-                    <p className="settings-field-error">
-                      {openRouterRefreshError}
-                    </p>
-                  )}
-                  <p className="settings-field-hint">
-                    Dynamic free models: {openRouterDynamicFreeModels.length}
-                  </p>
-                  {openRouterFetchedAt > 0 && (
-                    <p className="settings-field-hint">
-                      Last fetched:{' '}
-                      {new Date(openRouterFetchedAt).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-              </>
             )}
 
             {settings.llm.provider === 'gemini-nano' && (
