@@ -1,57 +1,44 @@
 # @aituber-onair/chat
 
-## Unreleased
-
-### Patch Changes
-
-- React samples: discover OpenRouter text-chat candidates from the anonymous
-  public catalog, with searchable pricing filters, cached/stale metadata,
-  deliberate pricing-change acknowledgment, and conservative SDK capability
-  gates. Preserve public SDK behavior, defaults, and dependency versions.
+## 0.62.0
 
 ### Minor Changes
 
-- Add OpenRouter Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`) as an
-  explicit, non-default preview with text/image input, streaming, and automatic
-  tool selection. The preview may change without notice.
-- Omit undocumented reasoning effort and token-budget settings for Pareto,
-  including inherited values and `includeReasoning`; send no reasoning object.
-- Add React selector, bilingual usage documentation, and mocked direct-request,
-  parser, image, tool, and rendered-DOM error-recovery coverage.
-- Append Pareto to existing model lists so selector order and first-model
-  selections remain unchanged, including Core example provider switches.
-- Add Solar Pro 4 (`upstage/solar-pro4`) as a non-default, text-only OpenRouter
-  option with documented reasoning efforts, a `none` reasoning default, and
-  omitted undocumented reasoning token budgets. Include React selection,
-  transport/DOM regression tests, and English/Japanese usage documentation.
-
-- Added OpenRouter Ling 3.1 Flash (`inclusionai/ling-3.1-flash`) as an explicit,
-  non-default text-only option, including the public constant, React selector,
-  English/Japanese documentation, and mocked transport/rendered-DOM coverage.
-- Omit undocumented reasoning effort and token-budget settings for this model,
-  including inherited settings; preserve the existing `includeReasoning` option.
-
-- Add explicit OpenRouter Chat Completions options for Solar Mini4
-  (`upstage/solar-mini4`), MiMo V2.6 Flash (`xiaomi/mimo-v2.6-flash`), and
-  Apodex 1.1 Mini Free (`apodex/apodex-1.1-mini:free`). All three support
-  text and tools; MiMo also accepts images. Existing defaults are unchanged.
-- Default Solar Mini4 reasoning to `none` and preserve all supported effort
-  levels, including `minimal`. Omit reasoning token budgets for all three
-  models; MiMo and Apodex also omit effort fields and use provider defaults.
-  Apodex remains subject to OpenRouter's free-tier limits.
+- Added explicit OpenRouter options for Solar Mini4 (`upstage/solar-mini4`),
+  MiMo V2.6 Flash (`xiaomi/mimo-v2.6-flash`), Apodex 1.1 Mini Free
+  (`apodex/apodex-1.1-mini:free`), Ling 3.1 Flash
+  (`inclusionai/ling-3.1-flash`), Solar Pro 4 (`upstage/solar-pro4`), and
+  Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`).
+- Solar Mini4 and Solar Pro 4 default reasoning to `none` and keep all
+  documented effort levels, including `minimal`. MiMo, Apodex, Ling, and
+  Pareto omit effort fields and use provider defaults.
+- Reasoning token budgets are omitted for all of these models, including
+  inherited settings. Pareto sends no reasoning object, including when
+  `includeReasoning` is set; Ling keeps the existing `includeReasoning` option.
+- MiMo and Pareto accept image input; the other new models are text-only.
+  Solar Mini4, MiMo, Apodex, Solar Pro 4, and Pareto support tool calls.
 
 ### Patch Changes
 
-- Update the React basic example's model selector and reasoning settings,
-  English/Japanese documentation, and request/parser/DOM regression coverage
-  for the new OpenRouter models.
+- The OpenRouter default model is unchanged (`openai/gpt-oss-20b:free`).
+  `getSupportedModels('openrouter')` now lists Ling 3.1 Flash first instead of
+  GPT-6.1 Sol, so apps that select the first listed model pick Ling 3.1 Flash.
+  Pareto is appended at the end.
+- Updated the React basic example, English/Japanese documentation, and
+  request/parser/DOM regression coverage for the new models.
+- The React basic example now discovers OpenRouter text-chat candidates from
+  the anonymous public catalog, with search, pricing filters, cached metadata,
+  and acknowledgment of pricing changes. Public SDK behavior and defaults are
+  unchanged.
 
 ### Known Limitations
 
-- Ling 3.1 Flash uses the direct OpenRouter Chat Completions endpoint. Live
-  inference and browser CORS have not been verified. The parser does not retain
-  `reasoning_details` for reasoning-state-preserving multi-turn tool continuations.
-  The unsuffixed model ID is not classified as a free-tier model.
+- Live inference and authenticated browser CORS have not been verified for
+  Ling 3.1 Flash, Solar Pro 4, or Pareto 26.10 Preview. Pareto is a preview and
+  may change without notice.
+- Apodex 1.1 Mini Free is subject to OpenRouter's free-tier rate limits.
+- The OpenRouter parser does not retain `reasoning_details` for
+  reasoning-state-preserving multi-turn tool continuations.
 
 ## 0.61.0
 
