@@ -88,7 +88,7 @@ describe('OpenRouter settings integration', () => {
     await act(async () => {
       await refreshCatalog(true);
     });
-    expect(container.textContent).toContain('Missing from catalog');
+    expect(container.textContent).toContain('カタログにありません');
     expect(container.textContent).not.toContain('Fetch free models');
     expect(container.querySelector('#llm-model')).toBeNull();
     // The picker must sit inside the panel's form field so it inherits the

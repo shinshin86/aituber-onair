@@ -972,6 +972,7 @@ export function SettingsPanel({
                     'openrouter',
                   ).map((id) => ({ id }))}
                   disabled={disabled}
+                  locale="ja"
                 />
               </div>
             ) : (

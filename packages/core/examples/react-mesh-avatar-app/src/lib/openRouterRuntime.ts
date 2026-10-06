@@ -29,10 +29,10 @@ export function getOpenRouterRuntimeBlockReason(
   vision = false,
 ): string | null {
   if (provider !== 'openrouter') return null;
-  const reason = getOpenRouterRequestBlockReason(model);
+  const reason = getOpenRouterRequestBlockReason(model, 'ja');
   if (reason) return reason;
   if (vision && !catalogSupportsVision(model, sdkSupportsVision(model))) {
-    return 'Screen vision requires support from both the OpenRouter catalog and the installed SDK.';
+    return '画面認識を使うには、OpenRouterのカタログとインストール済みのSDKの両方が画像入力に対応している必要があります。';
   }
   return null;
 }

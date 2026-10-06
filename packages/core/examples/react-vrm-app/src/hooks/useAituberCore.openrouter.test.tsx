@@ -108,7 +108,7 @@ describe('avatar OpenRouter hooks', () => {
     await act(async () => current.processChat('Should be blocked'));
     expect(sent).toHaveLength(0);
     expect(current.messages).toHaveLength(0);
-    expect(container.textContent).toContain('absent');
+    expect(container.textContent).toContain('カタログにありません');
   });
 
   it('rechecks a queued send after the preceding request finishes', async () => {
@@ -135,7 +135,7 @@ describe('avatar OpenRouter hooks', () => {
     expect(
       current.messages.filter((message) => message.role === 'user'),
     ).toHaveLength(1);
-    expect(container.textContent).toContain('absent');
+    expect(container.textContent).toContain('カタログにありません');
   });
 
   it('rejects a screen capture when missing credentials leave Core unavailable', async () => {
@@ -143,19 +143,19 @@ describe('avatar OpenRouter hooks', () => {
     await act(async () => {
       await expect(
         current.processVisionChat('data:image/png;base64,mock'),
-      ).rejects.toThrow('Configure the chat provider');
+      ).rejects.toThrow('チャットのプロバイダーとAPIキーを設定');
     });
     expect(sent).toHaveLength(0);
-    expect(container.textContent).toContain('Configure the chat provider');
+    expect(container.textContent).toContain('チャットのプロバイダーとAPIキーを設定');
   });
 
   it('rejects unsupported screen vision and leaves a visible warning', async () => {
     await act(async () => {
       await expect(
         current.processVisionChat('data:image/png;base64,mock'),
-      ).rejects.toThrow('Screen vision');
+      ).rejects.toThrow('画面認識');
     });
     expect(sent).toHaveLength(0);
-    expect(container.textContent).toContain('Screen vision');
+    expect(container.textContent).toContain('画面認識');
   });
 });

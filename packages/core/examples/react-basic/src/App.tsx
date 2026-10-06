@@ -1854,7 +1854,7 @@ const App: React.FC = () => {
     }
 
     if (chatProvider === 'openrouter') {
-      const blockReason = getOpenRouterRequestBlockReason(trimmedModel);
+      const blockReason = getOpenRouterRequestBlockReason(trimmedModel, 'ja');
       if (blockReason) {
         alert(blockReason);
         return;
@@ -2949,7 +2949,7 @@ const App: React.FC = () => {
 
     const applied = appliedChatRef.current;
     if (applied?.provider === 'openrouter') {
-      const blockReason = getOpenRouterRequestBlockReason(applied.model);
+      const blockReason = getOpenRouterRequestBlockReason(applied.model, 'ja');
       if (blockReason) {
         alert(blockReason);
         return;
@@ -2973,7 +2973,7 @@ const App: React.FC = () => {
       applied &&
       (applied.provider !== chatProvider || applied.model !== model)
     ) {
-      alert('Apply the selected model settings before sending.');
+      alert('選択したモデル設定を反映してから送信してください。');
       return;
     }
 
@@ -3531,6 +3531,7 @@ const App: React.FC = () => {
                           ...openRouterDynamicState.models,
                         ]),
                       ].map((id) => ({ id }))}
+                      locale="ja"
                     />
                   ) : (
                     <>
@@ -3852,17 +3853,15 @@ const App: React.FC = () => {
                           </>
                         )}
                       <p>
-                        Catalog metadata comes from the official OpenRouter
-                        service. It does not verify access through a custom Base
-                        URL.
+                        モデル一覧はOpenRouter公式のカタログから取得しています。カスタムのBase
+                        URL経由で利用できるかどうかは確認していません。
                       </p>
                       {!catalogSupportsReasoning(
                         model,
                         openrouterModels.includes(model),
                       ) && (
                         <p>
-                          Reasoning controls are disabled for models without
-                          confirmed catalog and SDK support.
+                          カタログとSDKの両方で対応を確認できないモデルでは、推論の設定を使えません。
                         </p>
                       )}
                     </>

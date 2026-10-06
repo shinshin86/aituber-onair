@@ -153,13 +153,13 @@ it('selects a fetched model in the actual basic DOM and guards real SDK requests
   );
   expect(sent).toHaveLength(1);
   expect(vi.mocked(alert).mock.calls.at(-1)?.[0]).toMatch(
-    /Pricing metadata changed/,
+    /価格情報が変わりました/,
   );
   await button('設定');
   expect(container.querySelector<HTMLInputElement>('#apiKey')!.value).toBe(
     'mock-only-example-key',
   );
-  await button(`Acknowledge current pricing for ${model}`);
+  await button(`${model} の現在の価格を確認して承認`);
   await button('設定を反映');
   await act(async () =>
     container.querySelector<HTMLButtonElement>('#send-btn')!.click(),
@@ -168,17 +168,17 @@ it('selects a fetched model in the actual basic DOM and guards real SDK requests
   offline = true;
   await act(async () => refreshCatalog(true));
   await button('設定');
-  expect(container.textContent).toContain('stale last-good');
+  expect(container.textContent).toContain('前回取得した情報');
   expect(container.textContent).toContain(model);
   offline = false;
   present = false;
   await act(async () => refreshCatalog(true));
-  expect(container.textContent).toContain('Missing from catalog');
+  expect(container.textContent).toContain('カタログにありません');
   await button('キャンセル');
   await change('#user-input', 'Missing model must not send');
   await act(async () =>
     container.querySelector<HTMLButtonElement>('#send-btn')!.click(),
   );
   expect(sent).toHaveLength(2);
-  expect(vi.mocked(alert).mock.calls.at(-1)?.[0]).toMatch(/absent/);
+  expect(vi.mocked(alert).mock.calls.at(-1)?.[0]).toMatch(/カタログにありません/);
 });

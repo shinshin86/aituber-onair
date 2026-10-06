@@ -804,7 +804,7 @@ export function useAituberCore({
     core.on(AITuberOnAirCoreEvent.ERROR, (error: unknown) => {
       console.error('AITuberOnAirCore error:', error);
       generationErrorRef.current =
-        error instanceof Error ? error.message : 'Chat generation failed.';
+        error instanceof Error ? error.message : '応答の生成に失敗しました。';
       setPartialResponse(generationErrorRef.current);
       setIsProcessing(false);
     });
@@ -985,11 +985,11 @@ export function useAituberCore({
         const core = coreRef.current;
         if (!core) {
           const message =
-            'Configure the chat provider and API key before sending a screen capture.';
+            '画面キャプチャを送る前に、チャットのプロバイダーとAPIキーを設定してください。';
           setPartialResponse(message);
           throw new Error(message);
         }
-        if (!imageDataUrl) throw new Error('A screen capture is required.');
+        if (!imageDataUrl) throw new Error('画面キャプチャが必要です。');
         const provider = core.getProviderInfo();
         const blockReason = getOpenRouterRuntimeBlockReason(
           provider.name,
@@ -1023,7 +1023,8 @@ export function useAituberCore({
           );
           if (!succeeded || generationErrorRef.current) {
             throw new Error(
-              generationErrorRef.current || 'Screen vision generation failed.',
+              generationErrorRef.current ||
+                '画面認識の応答生成に失敗しました。',
             );
           }
         } catch (err) {

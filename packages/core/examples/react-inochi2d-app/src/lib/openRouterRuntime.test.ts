@@ -173,7 +173,7 @@ describe('OpenRouter avatar generation-time guard', () => {
       const chat = service();
       entries = [];
       await catalog.refreshCatalog(true);
-      await expect(call(chat)).rejects.toThrow('absent');
+      await expect(call(chat)).rejects.toThrow('カタログにありません');
       expect(generationBodies).toHaveLength(0);
     },
   );
@@ -185,7 +185,7 @@ describe('OpenRouter avatar generation-time guard', () => {
       entry(dynamic, { pricing: { prompt: '0.01', completion: '0.02' } }),
     ];
     await catalog.refreshCatalog(true);
-    await expect(calls.chatOnce(chat)).rejects.toThrow('Pricing');
+    await expect(calls.chatOnce(chat)).rejects.toThrow('価格情報が変わりました');
     expect(generationBodies).toHaveLength(1);
     catalog.acknowledgeOpenRouterModel(dynamic);
     await calls.chatOnce(chat);
@@ -202,7 +202,7 @@ describe('OpenRouter avatar generation-time guard', () => {
     entries = [];
     await catalog.refreshCatalog(true);
     release();
-    await expect(request).rejects.toThrow('absent');
+    await expect(request).rejects.toThrow('カタログにありません');
     expect(generationBodies).toHaveLength(0);
   });
 
@@ -211,7 +211,7 @@ describe('OpenRouter avatar generation-time guard', () => {
     await calls.processChat(chat);
     entries = [];
     await catalog.refreshCatalog(true);
-    await expect(calls.chatOnce(chat)).rejects.toThrow('absent');
+    await expect(calls.chatOnce(chat)).rejects.toThrow('カタログにありません');
     expect(generationBodies).toHaveLength(1);
   });
 
@@ -235,10 +235,10 @@ describe('OpenRouter avatar generation-time guard', () => {
     await calls.visionChatOnce(chat);
     await expect(
       calls.visionChatOnce(service({ model: `new/${knownVision}-lookalike` })),
-    ).rejects.toThrow('Screen vision');
+    ).rejects.toThrow('画面認識');
     entries = [entry(knownVision)];
     await catalog.refreshCatalog(true);
-    await expect(calls.visionChatOnce(chat)).rejects.toThrow('Screen vision');
+    await expect(calls.visionChatOnce(chat)).rejects.toThrow('画面認識');
     expect(generationBodies).toHaveLength(1);
   });
 
@@ -346,7 +346,7 @@ describe('OpenRouter avatar generation-time guard', () => {
     await catalog.refreshCatalog(true);
     await core.processChat('Still there?');
     expect(generationBodies).toHaveLength(1);
-    expect(String(errors.at(-1))).toContain('absent');
+    expect(String(errors.at(-1))).toContain('カタログにありません');
     core.offAll();
   });
 
