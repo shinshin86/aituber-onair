@@ -6,6 +6,7 @@ export const MODEL_UNBIASED_PARETO_26_10_PREVIEW =
 
 export const MODEL_INCLUSIONAI_LING_3_1_FLASH = 'inclusionai/ling-3.1-flash';
 
+export const MODEL_UPSTAGE_SOLAR_PRO4 = 'upstage/solar-pro4';
 export const MODEL_UPSTAGE_SOLAR_MINI4 = 'upstage/solar-mini4';
 export const MODEL_XIAOMI_MIMO_V2_6_FLASH = 'xiaomi/mimo-v2.6-flash';
 export const MODEL_APODEX_1_1_MINI_FREE = 'apodex/apodex-1.1-mini:free';
@@ -39,6 +40,7 @@ export const MODEL_QWEN_QWEN_3_8_OMNI_FLASH = 'qwen/qwen3.8-omni-flash';
 // These catalog entries do not document a reasoning token-budget control.
 export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
+  MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -197,6 +199,10 @@ const OPENROUTER_MODEL_REASONING: Record<
     defaultEffort: undefined,
   },
   [MODEL_INCLUSIONAI_LING_3_1_FLASH]: { efforts: [], defaultEffort: undefined },
+  [MODEL_UPSTAGE_SOLAR_PRO4]: {
+    efforts: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
   [MODEL_UPSTAGE_SOLAR_MINI4]: {
     efforts: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
     defaultEffort: 'none',

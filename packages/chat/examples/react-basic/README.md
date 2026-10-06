@@ -395,6 +395,19 @@ image input, and HTTP recovery; these do not prove live inference or authenticat
 browser CORS. See the [model API example](https://openrouter.ai/unbiased/pareto-26.10-preview?view=api)
 and [package usage](../../README.md#openrouter).
 
+### Solar Pro 4 on OpenRouter
+
+Select **OpenRouter → Solar Pro 4** with your OpenRouter API key. This text-only,
+non-default option uses `upstage/solar-pro4`. Reasoning starts at `none`; select
+any documented effort through `max`, including `minimal`. Reasoning token budgets
+and image upload are unavailable. Ordinary tool calls with reasoning disabled
+are supported; reasoning-state preservation across tool calls is not provided.
+Development, preview, and deployed builds call
+`https://openrouter.ai/api/v1/chat/completions` directly, without a proxy.
+Mocked request/DOM checks do not establish authenticated browser CORS support.
+Use an application backend to protect production credentials; this sample does
+not include one. No live inference was used to validate this option.
+
 ## OpenRouter catalog discovery
 
 Choosing OpenRouter automatically fetches the official public model catalog

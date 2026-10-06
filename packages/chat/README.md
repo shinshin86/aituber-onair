@@ -765,7 +765,7 @@ those models.
 
 #### OpenRouter
 
-The following explicit options use OpenRouter Chat Completions without changing the provider default. Text-only options include Mercury 2.5, Nemotron 3.5 Lightning, Solar Mini4, Apodex 1.1 Mini, and Ling 3.1 Flash; the others support image input. This does not add file, audio, or video input support.
+The following explicit options use OpenRouter Chat Completions without changing the provider default. Text-only options include Mercury 2.5, Nemotron 3.5 Lightning, Solar Mini4, Solar Pro 4, Apodex 1.1 Mini, and Ling 3.1 Flash; the others support image input. This does not add file, audio, or video input support.
 
 | Model ID | Reasoning efforts (package default) |
 | --- | --- |
@@ -789,6 +789,7 @@ The following explicit options use OpenRouter Chat Completions without changing 
 | `qwen/qwen3.8-max-0902` | xhigh, high, medium, low, minimal (xhigh) |
 | `meta/muse-spark-1.3` | max, xhigh, high, medium, low, minimal (medium) |
 | `inclusionai/ling-3.1-flash` | No effort selector (provider default) |
+| `upstage/solar-pro4` | none, minimal, low, medium, high, xhigh, max (none) |
 | `upstage/solar-mini4` | none, minimal, low, medium, high, xhigh, max (none) |
 | `xiaomi/mimo-v2.6-flash` | No effort selector (provider default) |
 | `apodex/apodex-1.1-mini:free` | No effort selector (provider default) |
@@ -797,6 +798,19 @@ The following explicit options use OpenRouter Chat Completions without changing 
 | `qwen/qwen3.8-omni-flash` | No effort selector (provider default) |
 
 For models without documented effort levels or reasoning token budgets, those controls are omitted. Current explicit options in this group are `nvidia/nemotron-3.5-lightning`, `qwen/qwen3.8-27b`, `qwen/qwen3.8-omni-flash`, `xiaomi/mimo-v2.6-flash`, `apodex/apodex-1.1-mini:free`, and `inclusionai/ling-3.1-flash`. Existing `reasoning_effort` and `reasoningMaxTokens` settings are not sent for these models; `includeReasoning` still controls whether reasoning output is included. See the [reasoning configuration documentation](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens).
+
+Solar Pro 4 (`upstage/solar-pro4`) is an explicit text-only option via
+`POST https://openrouter.ai/api/v1/chat/completions`. Select **OpenRouter → Solar Pro 4**
+and enter your OpenRouter API key. Reasoning defaults to `none` for responsive
+conversation; all documented efforts, including `minimal`, are preserved.
+Undocumented reasoning token budgets are omitted. Text streaming and ordinary
+(non-reasoning) tool calls use the existing parser; reasoning-state preservation
+across tool calls is not provided. The React sample calls OpenRouter directly in
+development, preview, and deployed builds. Authenticated browser CORS has not been
+live-verified; mocked transport/DOM tests do not establish upstream CORS support.
+Production apps should protect API keys in an application backend; the sample
+does not supply one. See the [model endpoint metadata](https://openrouter.ai/api/v1/models/upstage/solar-pro4/endpoints)
+and [OpenRouter API reference](https://openrouter.ai/docs/api_reference/overview).
 
 Solar Mini4 is an explicit text-chat option. Reasoning defaults to `none` for
 responsive replies; supported efforts, including `minimal`, are sent unchanged.
@@ -1536,7 +1550,7 @@ Currently, the following AI providers are built-in:
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Supports recommended models like Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Claude Opus 5.5 (`claude-opus-5-5`), Claude Sonnet 5.5 (`claude-sonnet-5-5`), and Claude Fable 5.1 (`claude-fable-5-1`); Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.
-- **OpenRouter**: Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`, explicit preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, MiMo V2.6 Flash, Apodex 1.1 Mini (Free), GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilot), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input).
+- **OpenRouter**: Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`, explicit preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, Solar Pro 4, MiMo V2.6 Flash, Apodex 1.1 Mini (Free), GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilot), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input).
 - **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
 - **xAI**: Supports Grok 4.7, Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 Reasoning/Non-Reasoning with vision. Grok 4.7/4.6/4.5 use package-default `reasoning_effort: 'low'`; Grok 4.3 defaults to `none`.
 - **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support

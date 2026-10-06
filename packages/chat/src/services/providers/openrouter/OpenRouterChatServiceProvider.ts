@@ -1,6 +1,7 @@
 import {
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
+  MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -157,6 +158,7 @@ export class OpenRouterChatServiceProvider
     // Append new entries so first-model consumers keep their existing selection.
     return [
       MODEL_INCLUSIONAI_LING_3_1_FLASH,
+      MODEL_UPSTAGE_SOLAR_PRO4,
       MODEL_UPSTAGE_SOLAR_MINI4,
       MODEL_XIAOMI_MIMO_V2_6_FLASH,
       MODEL_APODEX_1_1_MINI_FREE,

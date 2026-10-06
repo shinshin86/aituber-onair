@@ -116,6 +116,7 @@ import {
   // OpenRouter models
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
+  MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -545,6 +546,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_INCLUSIONAI_LING_3_1_FLASH,
     name: 'Ling 3.1 Flash',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_UPSTAGE_SOLAR_PRO4,
+    name: 'Solar Pro 4',
     provider: 'openrouter',
     default: false,
   },

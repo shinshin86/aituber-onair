@@ -20,6 +20,10 @@
   parser, image, tool, and rendered-DOM error-recovery coverage.
 - Append Pareto to existing model lists so selector order and first-model
   selections remain unchanged, including Core example provider switches.
+- Add Solar Pro 4 (`upstage/solar-pro4`) as a non-default, text-only OpenRouter
+  option with documented reasoning efforts, a `none` reasoning default, and
+  omitted undocumented reasoning token budgets. Include React selection,
+  transport/DOM regression tests, and English/Japanese usage documentation.
 
 - Added OpenRouter Ling 3.1 Flash (`inclusionai/ling-3.1-flash`) as an explicit,
   non-default text-only option, including the public constant, React selector,
