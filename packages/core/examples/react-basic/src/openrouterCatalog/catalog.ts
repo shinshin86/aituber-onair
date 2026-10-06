@@ -68,7 +68,7 @@ export const catalogMessages = {
     search: 'OpenRouterのモデルを検索',
     priceFilter: '公開価格',
     allPrices: 'すべての価格',
-    zero: '公開価格ゼロ',
+    zero: '無料',
     paid: '有料',
     unknown: '価格不明',
     unverified: '未検証の候補',
@@ -85,7 +85,7 @@ export const catalogMessages = {
     acknowledge: (id: string) => `${id} の現在の価格を確認して承認`,
     empty: '条件に一致するモデルがありません。選択中のIDは変わりません。',
     footnote:
-      '公開価格が0でも、無料で推論できるとは限りません。応答の長さを指定しないときのmaxTokens 5000やreasoning.exclude=trueなど、SDKの既定値はそのまま適用されます。モデルごとの制限でリクエストが拒否されることがあります。',
+      '「無料」は、OpenRouterが公開している価格が0のモデルです。1分・1日あたりの回数制限があり、超えるとHTTP 429で一時的に使えなくなります。混雑時は提供元の制限で429になることもあり、価格が変わる場合もあります。応答の長さを指定しないときのmaxTokens 5000やreasoning.exclude=trueなど、SDKの既定値はそのまま適用されます。モデルごとの制限でリクエストが拒否されることがあります。',
     blockMissing:
       '選択中のモデルが最新のカタログにありません。一覧にあるモデルを選んでから送信してください。',
     blockPriceChanged:
