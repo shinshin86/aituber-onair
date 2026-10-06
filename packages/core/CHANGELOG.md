@@ -1,13 +1,34 @@
 # @aituber-onair/core
 
-## Unreleased
+## 0.26.19
 
 ### Patch Changes
 
+- Propagate published Chat 0.62.0 and Voice 0.26.0.
+- Re-export the new OpenRouter model constants (Ling 3.1 Flash, Solar Pro 4,
+  Solar Mini4, MiMo V2.6 Flash, Apodex 1.1 Mini Free, and Pareto 26.10
+  Preview), and Voice's `OpenRouterEngine`, `OpenRouterTtsModel`, OpenRouter
+  option types, and speech/model catalog URL constants.
+- `getSupportedModels('openrouter')` now lists Ling 3.1 Flash first, so the
+  avatar examples select it when switching to OpenRouter. The OpenRouter
+  default model is unchanged. React basic lists the new models and keeps
+  `openrouter/auto` first.
+- Add an OpenRouter TTS engine to all ten React TTS examples for the
+  public-preview MAI Voice 2.1 models. No model or voice is preselected;
+  voices load for the chosen model, and changing the model clears the voice.
 - React samples: discover OpenRouter text-chat candidates from the anonymous
   public catalog, with searchable pricing filters, cached/stale metadata,
   deliberate pricing-change acknowledgment, and conservative SDK capability
-  gates. Preserve public SDK behavior, defaults, and dependency versions.
+  gates. The picker and catalog messages are shown in Japanese. Public SDK
+  behavior and defaults are unchanged.
+- Refresh Core and example documentation and all embedded Core lockfiles.
+
+### Known Limitations
+
+- The OpenRouter MAI Voice models are public previews without an SLA, and
+  catalogs checked on October 1, 2026 had no Japanese voices. The examples
+  call OpenRouter directly from the browser, so API keys are visible to the
+  page.
 
 ## 0.26.18
 

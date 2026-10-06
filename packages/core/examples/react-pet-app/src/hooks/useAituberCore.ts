@@ -175,6 +175,9 @@ function getTtsApiKey(
   if (settings.tts.engine === 'gradium') {
     return settings.tts.gradiumApiKey || '';
   }
+  if (settings.tts.engine === 'openRouter') {
+    return settings.tts.openRouterApiKey || '';
+  }
   return getApiKeyForProvider(settings.llm.provider);
 }
 
@@ -421,6 +424,8 @@ function buildVoiceOptions(
       ? undefined
       : parsedGradiumPaddingBonus,
     gradiumRewriteRules: tts.gradiumRewriteRules?.trim() || undefined,
+    openRouterModel: tts.openRouterModel || undefined,
+    openRouterApiUrl: tts.openRouterApiUrl?.trim() || undefined,
     piperPlusBasePath: tts.piperPlusBasePath?.trim() || undefined,
     piperPlusModelConfigFile: tts.piperPlusModelConfigFile?.trim() || undefined,
     piperPlusModelFile: tts.piperPlusModelFile?.trim() || undefined,

@@ -73,6 +73,7 @@ import {
   type InworldAudioEncoding,
   type InworldDeliveryMode,
   type GradiumModel,
+  type OpenRouterTtsModel,
   type GradiumOutputFormat,
   type FishAudioModel,
   type FishAudioFormat,
@@ -959,6 +960,8 @@ const App: React.FC = () => {
     inworld: '',
     deepgram: 'flux-haley-en',
     gradium: 'YTpq7expH9539ERJ',
+    // Preview voices are model-specific and must be chosen explicitly.
+    openRouter: '',
     piperPlus: 'default',
     webSpeech: '',
   });
@@ -980,6 +983,16 @@ const App: React.FC = () => {
   const [catalogVoices, setCatalogVoices] = useState<VoiceEngineVoice[]>([]);
   const [isFetchingCatalogVoices, setIsFetchingCatalogVoices] = useState(false);
   const [catalogVoiceFetchError, setCatalogVoiceFetchError] = useState('');
+  const [openRouterTtsModel, setOpenRouterTtsModel] = useState<
+    '' | OpenRouterTtsModel
+  >('');
+  const [openRouterVoices, setOpenRouterVoices] = useState<VoiceEngineVoice[]>(
+    [],
+  );
+  const [isFetchingOpenRouterVoices, setIsFetchingOpenRouterVoices] =
+    useState(false);
+  const [openRouterVoiceFetchError, setOpenRouterVoiceFetchError] =
+    useState('');
   const catalogApiKey =
     selectedVoiceEngine === 'fishAudio' || selectedVoiceEngine === 'cartesia'
       ? voiceApiKeys[selectedVoiceEngine]
@@ -1273,6 +1286,12 @@ const App: React.FC = () => {
       setGradiumRewriteRules('');
     }
 
+    if (selectedVoiceEngine === 'openRouter') {
+      // Preview models are opt-in; never carry a model or voice over.
+      setOpenRouterTtsModel('');
+      setSelectedSpeakers((prev) => ({ ...prev, openRouter: '' }));
+    }
+
     if (selectedVoiceEngine === 'piperPlus') {
       setPiperPlusSpeed('');
       setPiperPlusNoiseScale('');
@@ -1423,6 +1442,51 @@ const App: React.FC = () => {
     cartesiaLanguage,
     catalogSelectedSpeaker,
   ]);
+
+  // OpenRouter voices are scoped to the explicitly selected preview model.
+  // Nothing is auto-selected; a chosen voice survives only if still listed.
+  useEffect(() => {
+    if (selectedVoiceEngine !== 'openRouter') return;
+    const apiKey = voiceApiKeys.openRouter?.trim();
+    if (!apiKey || !openRouterTtsModel) {
+      queueMicrotask(() => {
+        setOpenRouterVoices([]);
+        setOpenRouterVoiceFetchError('');
+      });
+      return;
+    }
+
+    let active = true;
+    const fetchOpenRouterVoices = async () => {
+      setIsFetchingOpenRouterVoices(true);
+      try {
+        const voices = await getVoiceEngineVoiceList('openRouter', {
+          apiKey,
+          openRouterModel: openRouterTtsModel,
+        });
+        if (!active) return;
+        setOpenRouterVoices(voices);
+        setOpenRouterVoiceFetchError('');
+        setSelectedSpeakers((prev) =>
+          voices.some((voice) => voice.id === prev.openRouter)
+            ? prev
+            : { ...prev, openRouter: '' },
+        );
+      } catch (error) {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : String(error);
+        setOpenRouterVoices([]);
+        setOpenRouterVoiceFetchError(`OpenRouter音声一覧エラー: ${message}`);
+      } finally {
+        if (active) setIsFetchingOpenRouterVoices(false);
+      }
+    };
+
+    void fetchOpenRouterVoices();
+    return () => {
+      active = false;
+    };
+  }, [selectedVoiceEngine, voiceApiKeys.openRouter, openRouterTtsModel]);
 
   useEffect(() => {
     if (selectedVoiceEngine !== 'inworld') {
@@ -2057,6 +2121,9 @@ const App: React.FC = () => {
             break;
           case 'gradium':
             options.gradiumApiUrl = config.apiUrl;
+            break;
+          case 'openRouter':
+            options.openRouterApiUrl = config.apiUrl;
             break;
         }
       }
@@ -2736,6 +2803,12 @@ const App: React.FC = () => {
             options.gradiumRewriteRules = gradiumRewriteRules.trim();
           }
 
+          break;
+        }
+        case 'openRouter': {
+          if (openRouterTtsModel) {
+            options.openRouterModel = openRouterTtsModel;
+          }
           break;
         }
         case 'piperPlus': {
@@ -5189,6 +5262,96 @@ const App: React.FC = () => {
                     </div>
                   )}
 
+                  {selectedVoiceEngine === 'openRouter' && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        border: '1px solid #ddd',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                        OpenRouter Parameters
+                      </div>
+                      <label htmlFor="openRouterTtsModel">Model:</label>
+                      <select
+                        id="openRouterTtsModel"
+                        value={openRouterTtsModel}
+                        onChange={(e) => {
+                          setOpenRouterTtsModel(
+                            e.target.value as '' | OpenRouterTtsModel,
+                          );
+                          // A voice belongs to one preview model.
+                          setSelectedSpeakers((prev) => ({
+                            ...prev,
+                            openRouter: '',
+                          }));
+                        }}
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        <option value="">モデルを選択してください</option>
+                        <option value="microsoft/mai-voice-2.1">
+                          MAI Voice 2.1（プレビュー）
+                        </option>
+                        <option value="microsoft/mai-voice-2.1-flash">
+                          MAI Voice 2.1 Flash（プレビュー）
+                        </option>
+                      </select>
+                      <div
+                        style={{
+                          fontSize: '0.85em',
+                          color: '#666',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        どちらも公開プレビュー版で、SLAはなく本番利用は推奨されていません。現時点では日本語の音声がありません。
+                      </div>
+                      <label htmlFor="openRouterSpeaker">Voice:</label>
+                      <select
+                        id="openRouterSpeaker"
+                        value={String(selectedSpeakers.openRouter || '')}
+                        onChange={(e) =>
+                          setSelectedSpeakers((prev) => ({
+                            ...prev,
+                            openRouter: e.target.value,
+                          }))
+                        }
+                        disabled={
+                          !voiceApiKeys.openRouter ||
+                          !openRouterTtsModel ||
+                          isFetchingOpenRouterVoices ||
+                          openRouterVoices.length === 0
+                        }
+                        style={{ width: '100%', marginBottom: '8px' }}
+                      >
+                        {!voiceApiKeys.openRouter ? (
+                          <option value="">API Keyを入力してください</option>
+                        ) : !openRouterTtsModel ? (
+                          <option value="">モデルを選択してください</option>
+                        ) : isFetchingOpenRouterVoices ? (
+                          <option value="">取得中...</option>
+                        ) : openRouterVoices.length === 0 ? (
+                          <option value="">
+                            音声一覧を取得できませんでした
+                          </option>
+                        ) : (
+                          <option value="">音声を選択してください</option>
+                        )}
+                        {openRouterVoices.map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.label}
+                          </option>
+                        ))}
+                      </select>
+                      {openRouterVoiceFetchError && (
+                        <div style={{ color: '#d9534f', marginBottom: '8px' }}>
+                          {openRouterVoiceFetchError}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {selectedVoiceEngine === 'cartesia' && (
                     <div
                       style={{
@@ -7253,7 +7416,8 @@ const App: React.FC = () => {
                     selectedVoiceEngine !== 'elevenLabs' &&
                     selectedVoiceEngine !== 'fishAudio' &&
                     selectedVoiceEngine !== 'cartesia' &&
-                    selectedVoiceEngine !== 'inworld' && (
+                    selectedVoiceEngine !== 'inworld' &&
+                    selectedVoiceEngine !== 'openRouter' && (
                       <>
                         <label
                           htmlFor="voiceSpeaker"
@@ -7453,28 +7617,30 @@ const App: React.FC = () => {
                                     ? 'Cartesiaでは voice / model / language / output format を設定できます'
                                     : selectedVoiceEngine === 'inworld'
                                       ? 'Inworldでは voice / model / audio config / delivery mode を設定できます'
-                                      : selectedVoiceEngine === 'gradium'
-                                        ? 'Gradiumではプリセット音声と output format / temperature / similarity を設定できます'
-                                        : selectedVoiceEngine === 'voicevox'
-                                          ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
-                                          : selectedVoiceEngine === 'openai'
-                                            ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
-                                            : selectedVoiceEngine ===
-                                                'openaiCompatible'
-                                              ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / 任意instructions / speed を設定できます'
+                                      : selectedVoiceEngine === 'openRouter'
+                                        ? 'OpenRouterではプレビュー版のMAI Voiceモデルと、そのモデルの音声を選んで使います'
+                                        : selectedVoiceEngine === 'gradium'
+                                          ? 'Gradiumではプリセット音声と output format / temperature / similarity を設定できます'
+                                          : selectedVoiceEngine === 'voicevox'
+                                            ? 'VOICEVOXでは話速や抑揚・無音長などを細かく調整できます'
+                                            : selectedVoiceEngine === 'openai'
+                                              ? 'OpenAI TTSでは speed（0.25〜4.0）のみ数値指定が可能です'
                                               : selectedVoiceEngine ===
-                                                  'piperPlus'
-                                                ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
+                                                  'openaiCompatible'
+                                                ? 'OpenAI-Compatible TTSでは endpoint / model / 任意voice / 任意instructions / speed を設定できます'
                                                 : selectedVoiceEngine ===
-                                                    'webSpeech'
-                                                  ? 'Web Speech APIはブラウザが直接再生します。音声バッファを取得できないためリップシンク非対応です'
+                                                    'piperPlus'
+                                                  ? 'Piper Plusでは public/piper/ 配下のWASM assetsを使ってブラウザ内で音声合成します'
                                                   : selectedVoiceEngine ===
-                                                      'aivisCloud'
-                                                    ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                                      'webSpeech'
+                                                    ? 'Web Speech APIはブラウザが直接再生します。音声バッファを取得できないためリップシンク非対応です'
                                                     : selectedVoiceEngine ===
-                                                        'aivisSpeech'
-                                                      ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
-                                                      : '※ 音声パラメータは最適な値に固定されています'}
+                                                        'aivisCloud'
+                                                      ? 'Aivis CloudではモデルUUIDや各種出力パラメータを任意に指定できます'
+                                                      : selectedVoiceEngine ===
+                                                          'aivisSpeech'
+                                                        ? 'AivisSpeechでは抑揚やテンポ緩急など独自パラメータを設定できます'
+                                                        : '※ 音声パラメータは最適な値に固定されています'}
                     </div>
                   )}
                 </div>

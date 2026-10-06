@@ -1,4 +1,4 @@
-import type { InworldModel } from '@aituber-onair/core';
+import type { InworldModel, OpenRouterTtsModel } from '@aituber-onair/core';
 import type { XaiReasoningEffort } from '@aituber-onair/core';
 import type {
   PuruPuruEmotionEffectMap,
@@ -37,6 +37,7 @@ export type TTSEngineOption =
   | 'inworld'
   | 'deepgram'
   | 'gradium'
+  | 'openRouter'
   | 'piperPlus'
   | 'webSpeech'
   | 'none';
@@ -153,6 +154,10 @@ export interface TTSSettings {
   gradiumVoiceSimilarity?: string;
   gradiumPaddingBonus?: string;
   gradiumRewriteRules?: string;
+  openRouterApiKey?: string;
+  /** Empty until a public-preview model is chosen explicitly. */
+  openRouterModel?: '' | OpenRouterTtsModel;
+  openRouterApiUrl?: string;
   piperPlusBasePath?: string;
   piperPlusModelConfigFile?: string;
   piperPlusModelFile?: string;

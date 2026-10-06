@@ -95,7 +95,7 @@ which links to the authoritative Japanese guidelines.
 
 ## Updated Chat and Voice options
 
-This example uses published Chat 0.61.0 and Voice 0.25.0 through Core.
+This example uses published Chat 0.62.0 and Voice 0.26.0 through Core.
 New Chat models are available in the model selector, including GPT-6.1 Sol,
 GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
 Chat's capability checks and model-specific reasoning defaults. The avatar
@@ -117,6 +117,20 @@ Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
 `sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
 model selector defaults to production; `gradium-tts-beta` is an explicit
 opt-in, and switching back to Gradium resets the model to production.
+Chat 0.62.0 adds the OpenRouter options Ling 3.1 Flash, Solar Pro 4, Solar
+Mini4, MiMo V2.6 Flash, Apodex 1.1 Mini Free, and Pareto 26.10 Preview. MiMo
+and Pareto accept images; the others are text-only. Core now lists Ling 3.1
+Flash first, so switching the provider to OpenRouter selects it.
+
+Select **OpenRouter** as the TTS engine for the public-preview
+`microsoft/mai-voice-2.1` and `microsoft/mai-voice-2.1-flash` models. No model
+or voice is preselected: choose a model, enter an OpenRouter API key to load
+that model's voices, and then choose a voice. Changing the model clears the
+voice. Both models are previews without an SLA and are not recommended for
+production; catalogs checked on October 1, 2026 had no Japanese voices. The
+sample calls OpenRouter directly from the browser, so the API key is visible to
+the page; deploy shared apps behind your own backend.
+
 See the [Core model update notes](../../README.md#chat-and-voice-model-updates)
 for endpoint details and limitations.
 
