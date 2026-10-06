@@ -1,6 +1,6 @@
 # @aituber-onair/voice
 
-## Unreleased
+## 0.26.0
 
 ### Minor Changes
 
