@@ -61,6 +61,12 @@ const modelCases = [
       ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
       'none',
     ],
+    [
+      'Mistral Large 4',
+      'mistralai/mistral-large-4-0',
+      ['none', 'high'],
+      'none',
+    ],
   ].map(([label, model, efforts, initialEffort]) => ({
     provider: 'OpenRouter',
     label: label as string,
@@ -488,6 +494,32 @@ describe('React sample model-to-transport flows (mock network only)', () => {
       expect(element<HTMLInputElement>('#image-upload').disabled).toBe(true);
     },
   );
+
+  it('Mistral Large 4 keeps only None/High and drops inherited reasoning budgets', async () => {
+    await selectModel(modelCases[2]);
+    await change('#api-key', FAKE_KEY);
+    await change('#openrouter-reasoning-effort', 'max');
+    await change('#openrouter-reasoning-max-tokens', '1024');
+    await chooseButton('.model-item', 'Mistral Large 4');
+    expect(container.textContent).toContain('public preview');
+    expect(container.textContent).toContain('vendor default is High');
+    expect(
+      container.querySelector('#openrouter-reasoning-max-tokens'),
+    ).toBeNull();
+    expect(
+      element<HTMLSelectElement>('#openrouter-reasoning-effort').value,
+    ).toBe('none');
+    for (const effort of ['none', 'high']) {
+      await change('#openrouter-reasoning-effort', effort);
+      await completeReply(OPENROUTER);
+      const { url, body } = requests.at(-1)!;
+      expect(url).toBe(OPENROUTER);
+      expect(body.model).toBe('mistralai/mistral-large-4-0');
+      expect(body.reasoning).toEqual({ effort, exclude: true });
+      expect(body.reasoning_effort).toBeUndefined();
+      expect(body.reasoning.max_tokens).toBeUndefined();
+    }
+  });
 
   it('enables summary for the displayed default Responses endpoint and switches to Chat Completions', async () => {
     await selectModel(modelCases[0]);

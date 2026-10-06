@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+  MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
 } from '../../chat/src';
 import { useSettings as usePetSettings } from '../examples/react-pet-app/src/hooks/useSettings';
 import { OpenRouterModelPicker as PetOpenRouterModelPicker } from '../examples/react-pet-app/src/openrouterCatalog';
@@ -94,7 +95,7 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     vi.unstubAllGlobals();
   });
 
-  it('keeps Ling first when switching providers, with Pareto appended last', async () => {
+  it('keeps Ling first and preserves Pareto before the appended Mistral option', async () => {
     await renderSettings();
     expect(current.settings.llm.provider).toBe('openai');
 
@@ -102,9 +103,10 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     const models = AITuberOnAirCore.getSupportedModels('openrouter');
     expect(listedModels()).toEqual(models);
     expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(listedModels()[models.length - 1]).toBe(
+    expect(listedModels().slice(models.length - 2, models.length)).toEqual([
       MODEL_UNBIASED_PARETO_26_10_PREVIEW,
-    );
+      MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+    ]);
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
 
     await act(async () =>
@@ -167,8 +169,9 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     expect(listedModels()).toEqual([...models, dynamicModel]);
     expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(listedModels()[models.length - 1]).toBe(
+    expect(listedModels().slice(models.length - 2, models.length)).toEqual([
       MODEL_UNBIASED_PARETO_26_10_PREVIEW,
-    );
+      MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+    ]);
   });
 });

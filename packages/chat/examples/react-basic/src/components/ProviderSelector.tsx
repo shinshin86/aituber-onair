@@ -115,6 +115,7 @@ import {
   MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+  MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
@@ -1198,6 +1199,13 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
 
+  {
+    id: MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+    name: 'Mistral Large 4',
+    provider: 'openrouter',
+    default: false,
+  },
+
   // Z.ai models
   {
     id: MODEL_GLM_5_3,
@@ -2236,6 +2244,13 @@ export default function ProviderSelector({
 
           {provider === 'openrouter' && (
             <>
+              {selectedModel === MODEL_OPENROUTER_MISTRAL_LARGE_4_0 && (
+                <p className="helper-text">
+                  Mistral Large 4 is a public preview and may change. The sample
+                  starts at None for responsive chat; the vendor default is
+                  High. Reasoning token budgets are not supported.
+                </p>
+              )}
               {(hasOpenRouterReasoningBudget ||
                 openRouterSupportedReasoningEfforts.length > 0) && (
                 <div className="config-group">
