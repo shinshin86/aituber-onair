@@ -1547,24 +1547,27 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setEnableLogging).toHaveBeenCalledWith(false);
     });
 
-    it('should apply updated Fish Audio options for the current engine', async () => {
-      const adapter = new VoiceEngineAdapter({
-        engineType: 'fishAudio',
-        speaker: 'fish-reference-id',
-        apiKey: 'fish-key',
-        onPlay: vi.fn(),
-      });
-      mockEngine.fetchAudio.mockResolvedValue(new ArrayBuffer(8));
+    it.each(['s2.1-pro-free', 'drama-3-preview'] as const)(
+      'should apply updated Fish Audio model %s for the current engine',
+      async (model) => {
+        const adapter = new VoiceEngineAdapter({
+          engineType: 'fishAudio',
+          speaker: 'fish-reference-id',
+          apiKey: 'fish-key',
+          onPlay: vi.fn(),
+        });
+        mockEngine.fetchAudio.mockResolvedValue(new ArrayBuffer(8));
 
-      adapter.updateOptions({
-        fishAudioModel: 's2.1-pro-free',
-        fishAudioLatency: 'low',
-      });
-      await adapter.speak({ text: 'Updated Fish Audio options' });
+        adapter.updateOptions({
+          fishAudioModel: model,
+          fishAudioLatency: 'low',
+        });
+        await adapter.speak({ text: 'Updated Fish Audio options' });
 
-      expect(mockEngine.setModel).toHaveBeenCalledWith('s2.1-pro-free');
-      expect(mockEngine.setLatency).toHaveBeenCalledWith('low');
-    });
+        expect(mockEngine.setModel).toHaveBeenCalledWith(model);
+        expect(mockEngine.setLatency).toHaveBeenCalledWith('low');
+      },
+    );
 
     it('should apply updated Cartesia options for the current engine', async () => {
       const adapter = new VoiceEngineAdapter({

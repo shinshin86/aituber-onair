@@ -228,7 +228,7 @@ export interface FishAudioVoiceServiceOptions
   engineType: 'fishAudio';
   /** Custom Fish Audio TTS endpoint URL */
   fishAudioApiUrl?: string;
-  /** Fish Audio synthesis model */
+  /** Fish Audio synthesis model; drama-3-preview is opt-in and may change. */
   fishAudioModel?: FishAudioModel;
   /** Fish Audio output format */
   fishAudioFormat?: FishAudioFormat;

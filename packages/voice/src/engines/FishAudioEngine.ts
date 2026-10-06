@@ -3,7 +3,12 @@ import { Talk } from '../types/voice';
 import { clampNumber, fetchWithTimeout, throwApiError } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
-export type FishAudioModel = 's2.1-pro' | 's2.1-pro-free' | 's2-pro' | 's1';
+export type FishAudioModel =
+  | 's2.1-pro'
+  | 's2.1-pro-free'
+  | 's2-pro'
+  | 's1'
+  | 'drama-3-preview';
 export type FishAudioFormat = 'mp3' | 'wav' | 'pcm' | 'opus';
 export type FishAudioLatency = 'normal' | 'balanced' | 'low';
 

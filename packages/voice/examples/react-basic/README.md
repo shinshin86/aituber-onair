@@ -152,8 +152,14 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 # Vite proxies it to https://api.fish.audio/v1/tts.
 # Enter an API key, fetch the model/voice list, and select a reference ID.
 # S2 Pro is the sample default. The promotional free model is opt-in.
+# Drama 3 Preview is opt-in; behavior and availability may change.
+# Select Drama 3 Preview in the model selector for single-speaker speech.
 # Production hosting must implement equivalent /api/fish-audio routes.
 ```
+
+The Fish Audio sample sends one reference ID and does not map `Talk.style` to
+model-specific direction or configure multi-speaker dialogue. The static build
+does not include a proxy server; keep API keys server-side in production.
 
 #### ElevenLabs
 Select `eleven_v4` for quality-focused speech. Only Stability and Similarity
