@@ -54,10 +54,7 @@ calling requires non-thinking mode.
   responses; Gemini 3 Pro uses low
 - `gpt-5.5-pro` is intentionally omitted because OpenAI documents it as
   non-streaming, while this example uses the standard streaming chat flow
-- For `openrouter`, fetch currently working `:free` models from Settings:
-  - `Fetch free models` probes candidates and appends working models to the model list
-  - `Max candidates` is the maximum number of `:free` candidates to probe
-    (not a target number of working models)
+- For `openrouter`, search the live model catalog in Settings and review published pricing before selecting a model.
 - Use TTS engines:
   `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`,
   `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`,
@@ -318,8 +315,9 @@ For the original setup script, detailed asset sources, and license notes, see
 ## Settings persistence
 
 - LLM/TTS/API key settings are persisted in `localStorage`
-- OpenRouter dynamic free model cache
-  (`models`, `fetchedAt`, `maxCandidates`) is also persisted in the same key
+- OpenRouter catalog metadata and pricing acknowledgements use separate,
+  versioned `localStorage` entries; old probe results in the settings key are
+  retained only as legacy IDs, never as current pricing or availability
 - Visual background image is memory-only and reset on page reload
 
 ## Avatar assets (`public/avatar`)
@@ -405,3 +403,22 @@ model selector defaults to production; `gradium-tts-beta` is an explicit
 opt-in, and switching back to Gradium resets the model to production.
 See the [Core model update notes](../../README.md#chat-and-voice-model-updates)
 for endpoint details and limitations.
+
+## OpenRouter model catalog
+
+The sample reads `GET https://openrouter.ai/api/v1/models` without an API key or
+generation probes. Search covers model IDs and names; filters distinguish zero
+published price, paid, and unknown pricing. These labels do not guarantee
+availability, account access, quotas, routing, or actual charges.
+
+A fresh catalog replaces curated choices. Failed refreshes retain last-good
+metadata with a warning; without metadata, curated and legacy IDs are clearly
+unverified fallback choices. Refresh never changes the selected model or API
+keys. Saved legacy probe results are treated only as IDs. Removed selections
+block new generation invocations, and changed pricing requires explicit
+acknowledgement. An invocation already inside an SDK retry or rate-limit wait
+cannot be cancelled by a later catalog refresh.
+Vision and advanced options require both catalog metadata and SDK support.
+Unknown dynamic models keep advanced features off. SDK request defaults,
+including the 5000-token limit and `reasoning.exclude=true`, still apply and can
+exceed a model's limits; this sample does not modify the public SDK registry.

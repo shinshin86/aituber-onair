@@ -150,17 +150,15 @@ built-in model status is `available`.
 - Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
 
 **OpenRouter**
-- Models: Curated multi-provider model list (OpenRouter Auto/Auto Beta/Fusion, OpenAI GPT-5.6, Claude Fable/Opus 5, Gemini 3.7/3.6/3.5, Z.ai, Grok 4.6, Kimi K3, DeepSeek V4 Flash and V4 Pro 0813, KAT-Coder V2.5)
-- Vision: Depends on selected routed model
-- Reasoning Effort: Model-aware options. DeepSeek V4 Flash 0731 exposes None/Low/High/Max; the older unversioned Flash and V4 Pro 0813 expose None/High/XHigh. None is the default and disables reasoning rather than only hiding it.
+- Models: Current text-chat candidates from the public catalog, with unverified curated fallback IDs when discovery is unavailable
+- Vision: Requires both catalog image-input metadata and exact SDK model support
+- Reasoning Effort: The intersection of catalog-advertised and SDK-supported values. Controls stay disabled when the catalog does not publish the required metadata.
 - Best for: Flexible model routing and unified API usage
 - Auto Beta: Selects a model per request and charges the selected model's rate
 - Coding models: KAT-Coder-Air/Pro V2.5 are explicit text-only options, not defaults
 - Fusion Cost: `openrouter/fusion` bills the combined underlying model calls and any enabled web search/fetch usage
-- Dynamic Free Models: Click `Fetch free models` to probe currently available `:free` models and append working IDs to the model list
-- Max candidates: Adjustable in UI (default `1`) to control probe request volume
-- `Max candidates = 10` means probing up to 10 `:free` candidates (it does not continue until 10 working models are found)
-- Persistence: Fetched dynamic free model IDs are saved under localStorage root key `AITuberOnAirChat_example_react-basic`
+- Catalog discovery: Automatic anonymous GET, with search and published-price filters; refreshing never generates a completion
+- Persistence: A separate versioned catalog cache retains last-good metadata. Legacy dynamic-model IDs remain unverified fallback choices. API keys are not stored in the catalog cache.
 
 **Z.ai**
 - Models: GLM-5.2, GLM-5.1, GLM-5, GLM-5-Turbo, GLM-5V-Turbo, GLM-4.7/4.6, GLM-4.6V family
@@ -197,14 +195,18 @@ built-in model status is `available`.
 - Vision: Not supported by this provider
 - Best for: Japanese-focused chat through PLaMo's OpenAI-compatible API
 
-### OpenRouter Dynamic Free Models (Manual Check)
+### OpenRouter Catalog (Manual Check)
 
-1. Select `OpenRouter` as provider
-2. Enter a valid OpenRouter API key
-3. Click `Fetch free models` in the model settings panel
-4. Confirm fetched `:free` models are added to the `Models` list
-5. Select one dynamic model and send a chat message
-6. Reload the page and confirm the dynamic list is restored from localStorage
+1. Select `OpenRouter` without entering an API key and confirm the catalog loads
+2. Search by name or ID and change the published-price filter
+3. Confirm filtering does not change the selected model
+4. Click `Refresh catalog`; verify the update timestamp and pricing labels
+5. Reload and confirm cached catalog choices remain available
+6. If a saved model is missing, confirm the warning remains until a listed model
+   is deliberately selected
+
+Discovery does not test generation. Sending chat requires an API key and may
+incur the selected model's current charges.
 
 ## Troubleshooting
 
@@ -392,3 +394,23 @@ supported. Mocked rendered-DOM tests cover requests, repeated streaming replies,
 image input, and HTTP recovery; these do not prove live inference or authenticated
 browser CORS. See the [model API example](https://openrouter.ai/unbiased/pareto-26.10-preview?view=api)
 and [package usage](../../README.md#openrouter).
+
+## OpenRouter catalog discovery
+
+Choosing OpenRouter automatically fetches the official public model catalog
+without an API key or inference probe. Search by name/ID and filter by published
+zero, paid, or unknown pricing. Model metadata is not a guarantee of availability,
+free usage, quotas, or SDK support. Only text-chat output candidates are listed.
+
+A successful snapshot replaces old choices. Your selected ID stays visible if
+missing; choose an available model deliberately before sending. Pricing changes
+require acknowledgment. Failures preserve a timestamped last-good cache; without
+a cache, curated and legacy IDs are explicitly unverified. No paid fallback is
+chosen automatically. Vision, reasoning, and tools are conservatively restricted
+to the intersection of metadata and existing SDK support. The public SDK's
+request defaults are unchanged. No inference is sent merely by browsing or
+refreshing this list.
+
+See [catalog behavior and SDK boundaries](../../../../docs/sample-openrouter-catalog.md)
+for cache, pricing, capability, and request limitations. Run `npm test` in this
+example directory for its offline regression suite.

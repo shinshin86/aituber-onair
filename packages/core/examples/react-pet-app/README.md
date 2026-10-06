@@ -203,3 +203,22 @@ model selector defaults to production; `gradium-tts-beta` is an explicit
 opt-in, and switching back to Gradium resets the model to production.
 See the [Core model update notes](../../README.md#chat-and-voice-model-updates)
 for endpoint details and limitations.
+
+## OpenRouter model catalog
+
+The sample reads `GET https://openrouter.ai/api/v1/models` without an API key or
+generation probes. Search covers model IDs and names; filters distinguish zero
+published price, paid, and unknown pricing. These labels do not guarantee
+availability, account access, quotas, routing, or actual charges.
+
+A fresh catalog replaces curated choices. Failed refreshes retain last-good
+metadata with a warning; without metadata, curated and legacy IDs are clearly
+unverified fallback choices. Refresh never changes the selected model or API
+keys. Saved legacy probe results are treated only as IDs. Removed selections
+block new generation invocations, and changed pricing requires explicit
+acknowledgement. An invocation already inside an SDK retry or rate-limit wait
+cannot be cancelled by a later catalog refresh.
+Vision and advanced options require both catalog metadata and SDK support.
+Unknown dynamic models keep advanced features off. SDK request defaults,
+including the 5000-token limit and `reasoning.exclude=true`, still apply and can
+exceed a model's limits; this sample does not modify the public SDK registry.

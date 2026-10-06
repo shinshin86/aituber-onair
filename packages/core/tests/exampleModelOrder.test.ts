@@ -8,7 +8,9 @@ import {
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
 } from '../../chat/src';
 import { useSettings as usePetSettings } from '../examples/react-pet-app/src/hooks/useSettings';
+import { OpenRouterModelPicker as PetOpenRouterModelPicker } from '../examples/react-pet-app/src/openrouterCatalog';
 import { useSettings as useVrmSettings } from '../examples/react-vrm-app/src/hooks/useSettings';
+import { OpenRouterModelPicker as VrmOpenRouterModelPicker } from '../examples/react-vrm-app/src/openrouterCatalog';
 import { AITuberOnAirCore } from '../src';
 
 // Resolve package imports to the real source so the hooks and Core factory
@@ -21,17 +23,19 @@ const examples = [
     name: 'react-pet-app',
     storageKey: 'react-pet-app-settings',
     useSettings: usePetSettings,
+    Picker: PetOpenRouterModelPicker,
   },
   {
     name: 'react-vrm-app',
     storageKey: 'react-vrm-app-settings',
     useSettings: useVrmSettings,
+    Picker: VrmOpenRouterModelPicker,
   },
 ] as const;
 
 type SettingsResult = Pick<
   ReturnType<typeof usePetSettings>,
-  'settings' | 'availableModels' | 'updateLLMProvider' | 'updateLLMModel'
+  'settings' | 'updateLLMProvider' | 'updateLLMModel'
 >;
 
 describe.each(examples)('$name OpenRouter model ordering', (example) => {
@@ -39,9 +43,26 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
   let root: Root;
   let current: SettingsResult;
 
+  // Mirrors the SettingsPanel wiring. The catalog request is stubbed to fail,
+  // so the picker shows the SDK order as its unverified fallback list.
   function SettingsHarness() {
     current = example.useSettings();
-    return null;
+    if (current.settings.llm.provider !== 'openrouter') return null;
+    return createElement(example.Picker, {
+      value: current.settings.llm.model,
+      legacyModels: current.settings.llm.openRouterDynamicFreeModels?.models,
+      onChange: current.updateLLMModel,
+      curatedModels: AITuberOnAirCore.getSupportedModels('openrouter').map(
+        (id) => ({ id }),
+      ),
+    });
+  }
+
+  function listedModels(): string[] {
+    return Array.from(
+      container.querySelectorAll('.model-item .model-id'),
+      (node) => node.textContent ?? '',
+    );
   }
 
   async function renderSettings() {
@@ -54,6 +75,12 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
 
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('offline');
+      }),
+    );
     localStorage.clear();
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -73,9 +100,9 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
 
     await switchToOpenRouter();
     const models = AITuberOnAirCore.getSupportedModels('openrouter');
-    expect(current.availableModels).toEqual(models);
-    expect(current.availableModels[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(current.availableModels[models.length - 1]).toBe(
+    expect(listedModels()).toEqual(models);
+    expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
+    expect(listedModels()[models.length - 1]).toBe(
       MODEL_UNBIASED_PARETO_26_10_PREVIEW,
     );
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
@@ -86,7 +113,7 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     await act(async () => current.updateLLMProvider('openai'));
     await switchToOpenRouter();
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(current.availableModels).toEqual(models);
+    expect(listedModels()).toEqual(models);
   });
 
   it('preserves an explicitly selected Pareto model after saving and remounting', async () => {
@@ -109,12 +136,12 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     expect(current.settings.llm.model).toBe(
       MODEL_UNBIASED_PARETO_26_10_PREVIEW,
     );
-    expect(current.availableModels).toEqual(
+    expect(listedModels()).toEqual(
       AITuberOnAirCore.getSupportedModels('openrouter'),
     );
   });
 
-  it('appends persisted dynamic models without changing the first model', async () => {
+  it('appends persisted legacy model IDs without changing the first model', async () => {
     const dynamicModel = 'example/dynamic-model:free';
     localStorage.setItem(
       example.storageKey,
@@ -137,10 +164,10 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     await renderSettings();
     await switchToOpenRouter();
     const models = AITuberOnAirCore.getSupportedModels('openrouter');
-    expect(current.availableModels).toEqual([...models, dynamicModel]);
-    expect(current.availableModels[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
+    expect(listedModels()).toEqual([...models, dynamicModel]);
+    expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(current.availableModels[models.length - 1]).toBe(
+    expect(listedModels()[models.length - 1]).toBe(
       MODEL_UNBIASED_PARETO_26_10_PREVIEW,
     );
   });

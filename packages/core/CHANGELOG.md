@@ -1,5 +1,14 @@
 # @aituber-onair/core
 
+## Unreleased
+
+### Patch Changes
+
+- React samples: discover OpenRouter text-chat candidates from the anonymous
+  public catalog, with searchable pricing filters, cached/stale metadata,
+  deliberate pricing-change acknowledgment, and conservative SDK capability
+  gates. Preserve public SDK behavior, defaults, and dependency versions.
+
 ## 0.26.18
 
 ### Patch Changes

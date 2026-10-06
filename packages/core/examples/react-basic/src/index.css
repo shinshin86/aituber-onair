@@ -413,3 +413,215 @@ button:hover {
     padding: 16px;
   }
 }
+
+.openrouter-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+  min-width: 0;
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+.openrouter-catalog p,
+.openrouter-catalog output,
+.openrouter-catalog small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.openrouter-catalog-note,
+.openrouter-catalog-footnote,
+.openrouter-catalog-empty {
+  display: block;
+  color: #6c757d;
+  font-size: 0.78rem;
+}
+
+.openrouter-catalog-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.openrouter-catalog-status {
+  flex: 1;
+  color: #495057;
+  font-size: 0.78rem;
+}
+
+.openrouter-catalog-status[data-status="error"] {
+  color: #b02a37;
+}
+
+.modal-content .openrouter-catalog-refresh,
+.modal-content .openrouter-catalog-acknowledge {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+
+.openrouter-catalog-refresh:disabled,
+.openrouter-catalog-acknowledge:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.openrouter-catalog-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 9.5rem);
+  gap: 8px;
+}
+
+.modal-content .openrouter-catalog-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  color: #495057;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.openrouter-catalog-filters input,
+.openrouter-catalog-filters select {
+  max-width: none;
+  margin-bottom: 0;
+  font-weight: normal;
+}
+
+.openrouter-catalog-selected {
+  padding: 8px 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+}
+
+.openrouter-catalog-selected-model {
+  font-size: 0.85rem;
+}
+
+.openrouter-catalog-selected-model code {
+  font-family: monospace;
+}
+
+.openrouter-catalog-metadata {
+  margin-top: 4px;
+  max-height: 5.6em;
+  overflow-y: auto;
+  color: #6c757d;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.openrouter-catalog-alert {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #f1aeb5;
+  border-radius: 6px;
+  background-color: #f8d7da;
+  color: #842029;
+  font-size: 0.8rem;
+}
+
+.openrouter-catalog-acknowledge {
+  max-width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.openrouter-catalog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: min(320px, 45vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.openrouter-catalog-list:empty {
+  display: none;
+}
+
+.modal-content .openrouter-catalog-list .model-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: transparent;
+  color: #212529;
+  text-align: left;
+}
+
+.modal-content .openrouter-catalog-list .model-item:hover:not(:disabled) {
+  opacity: 1;
+  background-color: #f3eef3;
+}
+
+.modal-content .openrouter-catalog-list .model-item.selected,
+.modal-content .openrouter-catalog-list .model-item.selected:hover:not(:disabled) {
+  border-color: #4a154b;
+  background-color: #f3eef3;
+}
+
+.openrouter-catalog-list .model-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.openrouter-catalog-list .model-name {
+  grid-column: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.openrouter-catalog-list .model-id {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  color: #6c757d;
+  font-family: monospace;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.openrouter-catalog-list .model-price {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: #6c757d;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .openrouter-catalog-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .modal-content .openrouter-catalog-list .model-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .openrouter-catalog-list .model-price {
+    grid-column: 1;
+    grid-row: auto;
+    align-self: start;
+  }
+}

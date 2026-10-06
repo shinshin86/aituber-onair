@@ -1,3 +1,4 @@
+import { installOpenRouterRuntimeGuard } from '../lib/openRouterRuntime';
 import {
   type CommentAnalysisLLMProvider,
   type CommentAnalysisMode,
@@ -431,6 +432,7 @@ function createAnalysisProviderFromLLMSettings(
     }
 
     const provider = llmSettings.provider;
+    if (provider === 'openrouter') installOpenRouterRuntimeGuard();
     const chatService = ChatServiceFactory.createChatService(provider, {
       apiKey,
       model: llmSettings.model,

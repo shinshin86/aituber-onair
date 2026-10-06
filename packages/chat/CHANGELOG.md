@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Patch Changes
+
+- React samples: discover OpenRouter text-chat candidates from the anonymous
+  public catalog, with searchable pricing filters, cached/stale metadata,
+  deliberate pricing-change acknowledgment, and conservative SDK capability
+  gates. Preserve public SDK behavior, defaults, and dependency versions.
+
 ### Minor Changes
 
 - Add OpenRouter Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`) as an

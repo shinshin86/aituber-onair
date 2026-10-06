@@ -1,3 +1,4 @@
+import { catalogFixture } from './catalogFixture';
 // @vitest-environment jsdom
 
 import { TextDecoder, TextEncoder } from 'node:util';
@@ -21,7 +22,9 @@ import {
 } from '../../../src';
 import { createSseResponse } from '../../../tests/helpers/sse';
 import App from '../src/App';
-import ProviderSelector from '../src/components/ProviderSelector';
+import ProviderSelector, {
+  allModels,
+} from '../src/components/ProviderSelector';
 
 // Resolve the example's package import to the real source, not stale dist.
 // Factory, providers, request builders, and stream parsers remain unmocked.
@@ -198,7 +201,16 @@ beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   vi.stubGlobal('TextDecoder', TextDecoder);
   vi.stubGlobal('TextEncoder', TextEncoder);
-  vi.stubGlobal('fetch', fetchMock);
+  vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+    if (url === 'https://openrouter.ai/api/v1/models') {
+      expect(init.method).toBe('GET');
+      expect(new Headers(init.headers).has('Authorization')).toBe(false);
+      return Promise.resolve(
+        new Response(JSON.stringify(catalogFixture), { status: 200 }),
+      );
+    }
+    return fetchMock(url, init);
+  });
   fetchMock.mockReset().mockImplementation(async () => ({
     ...createSseResponse([
       'data: {"choices":[{"delta":{"content":"Hello from "}}]}\n\n',
@@ -237,6 +249,16 @@ afterEach(async () => {
 
 describe('ProviderSelector rendered configuration for recent models', () => {
   it('appends Pareto after the existing OpenRouter choices without changing selection', async () => {
+    // The curated list (shown as the unverified fallback) keeps Pareto last.
+    // A fetched catalog is listed by model ID, so only its presence is checked.
+    const curatedLabels = allModels
+      .filter((model) => model.provider === 'openrouter')
+      .map((model) => model.name);
+    expect(curatedLabels.slice(-2)).toEqual([
+      'KAT-Coder-Pro V2.5 (OpenRouter)',
+      'Pareto 26.10 Preview',
+    ]);
+
     await renderApp();
     await click(button('OpenRouter', 'provider'));
 
@@ -244,10 +266,6 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       container.querySelectorAll('.model-item .model-name'),
       (element) => element.textContent?.trim(),
     );
-    expect(labels.slice(-2)).toEqual([
-      'KAT-Coder-Pro V2.5 (OpenRouter)',
-      'Pareto 26.10 Preview',
-    ]);
     expect(
       labels.filter((label) => label === 'Pareto 26.10 Preview'),
     ).toHaveLength(1);
@@ -282,12 +300,19 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       );
 
       const modelButton = button(addition.label, 'model');
-      expect(
-        modelButton.querySelector('.model-meta')?.textContent?.trim(),
-      ).toBe('');
-      expect(button(addition.defaultLabel, 'model').textContent).toContain(
-        'Default',
-      );
+      if (addition.provider === 'openrouter') {
+        expect(modelButton.textContent).toContain('Zero published price');
+        expect(
+          button(addition.defaultLabel, 'model').getAttribute('aria-pressed'),
+        ).toBe('true');
+      } else {
+        expect(
+          modelButton.querySelector('.model-meta')?.textContent?.trim(),
+        ).toBe('');
+        expect(button(addition.defaultLabel, 'model').textContent).toContain(
+          'Default',
+        );
+      }
       await click(modelButton);
       expect(props.onModelChange).toHaveBeenCalledTimes(1);
       expect(props.onModelChange).toHaveBeenCalledWith(addition.model);
@@ -365,10 +390,20 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       await click(button(addition.providerLabel, 'provider'));
       expect(factorySpy).toHaveBeenLastCalledWith(
         addition.provider,
-        expect.objectContaining({ model: addition.defaultModel }),
+        expect.objectContaining({
+          model:
+            addition.provider === 'openrouter'
+              ? addition.model
+              : addition.defaultModel,
+        }),
       );
       expect(
-        button(addition.defaultLabel, 'model').getAttribute('aria-pressed'),
+        button(
+          addition.provider === 'openrouter'
+            ? addition.label
+            : addition.defaultLabel,
+          'model',
+        ).getAttribute('aria-pressed'),
       ).toBe('true');
     },
   );
