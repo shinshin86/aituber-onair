@@ -60,7 +60,7 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
 
   function listedModels(): string[] {
     return Array.from(
-      container.querySelectorAll('.model-item span:nth-child(2)'),
+      container.querySelectorAll('.model-item .model-id'),
       (node) => node.textContent ?? '',
     );
   }

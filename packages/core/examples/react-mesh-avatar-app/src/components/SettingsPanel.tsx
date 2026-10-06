@@ -936,15 +936,19 @@ export function SettingsPanel({
                 disabled={disabled}
               />
             ) : settings.llm.provider === 'openrouter' ? (
-              <OpenRouterModelPicker
-                value={settings.llm.model}
-                legacyModels={settings.llm.openRouterDynamicFreeModels?.models}
-                onChange={updateLLMModel}
-                curatedModels={AITuberOnAirCore.getSupportedModels(
-                  'openrouter',
-                ).map((id) => ({ id }))}
-                disabled={disabled}
-              />
+              <div className="settings-field">
+                <OpenRouterModelPicker
+                  value={settings.llm.model}
+                  legacyModels={
+                    settings.llm.openRouterDynamicFreeModels?.models
+                  }
+                  onChange={updateLLMModel}
+                  curatedModels={AITuberOnAirCore.getSupportedModels(
+                    'openrouter',
+                  ).map((id) => ({ id }))}
+                  disabled={disabled}
+                />
+              </div>
             ) : (
               <div className="settings-field">
                 <label htmlFor="llm-model">Model</label>

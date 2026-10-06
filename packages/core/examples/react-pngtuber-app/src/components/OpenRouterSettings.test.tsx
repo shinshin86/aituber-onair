@@ -83,6 +83,15 @@ describe('OpenRouter settings integration', () => {
     expect(container.textContent).toContain('Missing from catalog');
     expect(container.textContent).not.toContain('Fetch free models');
     expect(container.querySelector('#llm-model')).toBeNull();
+    // The picker must sit inside the panel's form field so it inherits the
+    // sample's input styles instead of browser defaults.
+    expect(
+      container.querySelector('.settings-field > .openrouter-catalog'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector<HTMLInputElement>('.openrouter-catalog input')
+        ?.type,
+    ).toBe('text');
     const buttons = Array.from(
       container.querySelectorAll<HTMLButtonElement>('.model-list button'),
     );

@@ -66,71 +66,84 @@ export function OpenRouterModelPicker({
           : 'Price unknown';
   return (
     <div className="openrouter-catalog">
-      <p>
+      <p className="openrouter-catalog-note">
         OpenRouter catalog metadata only. Availability, account access, quotas,
         routing and actual charges can vary. Advanced features remain limited by
         the SDK.
       </p>
-      <output aria-live="polite">
-        {catalog.status === 'loading' && 'Loading catalog… '}
-        {catalog.error && `${catalog.error}. `}
-        {catalog.stale && 'Showing stale last-good metadata. '}
-        {!authoritative && 'Using unverified curated fallback IDs. '}
-        {catalog.updatedAt !== null &&
-          `Last updated: ${new Date(catalog.updatedAt).toLocaleString()}`}
-      </output>
-      <button
-        type="button"
-        disabled={disabled || catalog.status === 'loading'}
-        onClick={() => void catalog.refresh()}
-      >
-        Refresh catalog
-      </button>
-      <label>
-        Search OpenRouter models{' '}
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          disabled={disabled}
-        />
-      </label>
-      <label>
-        Published price{' '}
-        <select
-          value={group}
-          onChange={(event) => setGroup(event.target.value)}
-          disabled={disabled}
+      <div className="openrouter-catalog-status-row">
+        <output
+          className="openrouter-catalog-status"
+          data-status={catalog.status}
+          aria-live="polite"
         >
-          <option value="all">All prices</option>
-          <option value="zero">Zero published price</option>
-          <option value="paid">Paid</option>
-          <option value="unknown">Price unknown</option>
-        </select>
-      </label>
-      <p>
-        Selected: {value}
-        {selected
-          ? ` — ${label(selected.priceClass)}`
-          : authoritative
-            ? ' — Missing from catalog'
-            : ' — Unverified saved ID'}
-      </p>
-      {selectedMetadata && (
-        <p>
-          {formatCatalogPricing(selectedMetadata)}. Context:{' '}
-          {selectedMetadata.contextLength ?? 'unknown'}. Input:{' '}
-          {selectedMetadata.inputModalities.join(', ')}; output: text.
-          Parameters:{' '}
-          {selectedMetadata.supportedParameters.join(', ') || 'unknown'}. These
-          are published metadata, not tested capability claims.
+          {catalog.status === 'loading' && 'Loading catalog… '}
+          {catalog.error && `${catalog.error}. `}
+          {catalog.stale && 'Showing stale last-good metadata. '}
+          {!authoritative && 'Using unverified curated fallback IDs. '}
+          {catalog.updatedAt !== null &&
+            `Last updated: ${new Date(catalog.updatedAt).toLocaleString()}`}
+        </output>
+        <button
+          type="button"
+          className="openrouter-catalog-refresh"
+          disabled={disabled || catalog.status === 'loading'}
+          onClick={() => void catalog.refresh()}
+        >
+          Refresh catalog
+        </button>
+      </div>
+      <div className="openrouter-catalog-filters">
+        <label>
+          Search OpenRouter models{' '}
+          <input
+            type="text"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            disabled={disabled}
+          />
+        </label>
+        <label>
+          Published price{' '}
+          <select
+            value={group}
+            onChange={(event) => setGroup(event.target.value)}
+            disabled={disabled}
+          >
+            <option value="all">All prices</option>
+            <option value="zero">Zero published price</option>
+            <option value="paid">Paid</option>
+            <option value="unknown">Price unknown</option>
+          </select>
+        </label>
+      </div>
+      <div className="openrouter-catalog-selected">
+        <p className="openrouter-catalog-selected-model">
+          Selected: <code>{value}</code>
+          {selected
+            ? ` — ${label(selected.priceClass)}`
+            : authoritative
+              ? ' — Missing from catalog'
+              : ' — Unverified saved ID'}
         </p>
-      )}
+        {selectedMetadata && (
+          <p className="openrouter-catalog-metadata">
+            {formatCatalogPricing(selectedMetadata)}. Context:{' '}
+            {selectedMetadata.contextLength ?? 'unknown'}. Input:{' '}
+            {selectedMetadata.inputModalities.join(', ')}; output: text.
+            Parameters:{' '}
+            {selectedMetadata.supportedParameters.join(', ') || 'unknown'}.
+            These are published metadata, not tested capability claims.
+          </p>
+        )}
+      </div>
       {blockReason && (
-        <div role="alert">
+        <div className="openrouter-catalog-alert" role="alert">
           <p>{blockReason}</p>
           {selected && (
             <button
               type="button"
+              className="openrouter-catalog-acknowledge"
               disabled={disabled}
               onClick={() => select(value)}
             >
@@ -139,25 +152,28 @@ export function OpenRouterModelPicker({
           )}
         </div>
       )}
-      <div className="model-list" style={{ maxHeight: 320, overflowY: 'auto' }}>
+      <div className="model-list openrouter-catalog-list">
         {visible.map((model) => (
           <button
             type="button"
             key={model.id}
-            className={`model-item ${value === model.id ? 'selected' : ''}`}
+            className={`model-item ${value === model.id ? 'selected active' : ''}`}
             aria-pressed={value === model.id}
             disabled={disabled}
             onClick={() => select(model.id)}
           >
             <span className="model-name">{model.name}</span>{' '}
-            <span>{model.id}</span> <span>{label(model.priceClass)}</span>
+            <span className="model-id">{model.id}</span>{' '}
+            <span className="model-price">{label(model.priceClass)}</span>
           </button>
         ))}
       </div>
       {!visible.length && (
-        <p>No models match these filters. Your selected ID is unchanged.</p>
+        <p className="openrouter-catalog-empty">
+          No models match these filters. Your selected ID is unchanged.
+        </p>
       )}
-      <small>
+      <small className="openrouter-catalog-footnote">
         Zero published price is not a promise of free inference. SDK defaults,
         including maxTokens 5000 when response length is omitted and
         reasoning.exclude=true, still apply; per-model limits can reject

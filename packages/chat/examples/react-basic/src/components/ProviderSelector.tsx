@@ -2658,6 +2658,196 @@ export default function ProviderSelector({
           color: rgba(255, 255, 255, 0.7);
         }
 
+        .openrouter-catalog {
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+          min-width: 0;
+          font-size: 0.78rem;
+        }
+
+        .openrouter-catalog p,
+        .openrouter-catalog output,
+        .openrouter-catalog small,
+        .openrouter-catalog button {
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+
+        .openrouter-catalog-note,
+        .openrouter-catalog-footnote,
+        .openrouter-catalog-empty {
+          display: block;
+          margin: 0;
+          font-size: 0.72rem;
+          line-height: 1.4;
+          color: var(--muted);
+        }
+
+        .openrouter-catalog-status-row {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.4rem;
+        }
+
+        .openrouter-catalog-status {
+          font-size: 0.72rem;
+          line-height: 1.4;
+          color: var(--text-soft);
+        }
+
+        .openrouter-catalog-status[data-status='error'] {
+          color: #b42318;
+        }
+
+        .openrouter-catalog-refresh,
+        .openrouter-catalog-acknowledge {
+          border-radius: 10px;
+          border: 1px solid var(--input-border);
+          background: var(--input-bg);
+          color: var(--text);
+          padding: 0.45rem 0.6rem;
+          font-size: 0.78rem;
+          font-weight: 600;
+          line-height: 1.2;
+        }
+
+        .openrouter-catalog-refresh:hover:not(:disabled),
+        .openrouter-catalog-acknowledge:hover:not(:disabled) {
+          background: var(--brand-tint);
+          border-color: var(--input-focus);
+        }
+
+        .openrouter-catalog-refresh:disabled,
+        .openrouter-catalog-acknowledge:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+
+        .openrouter-catalog-filters {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .openrouter-catalog-filters label {
+          display: flex;
+          flex-direction: column;
+          gap: 0.3rem;
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: var(--muted);
+        }
+
+        .openrouter-catalog-filters input,
+        .openrouter-catalog-filters select {
+          width: 100%;
+          min-width: 0;
+          padding: 0.45rem 0.55rem;
+          border: 1px solid var(--input-border);
+          border-radius: 10px;
+          font-size: 0.8rem;
+          font-weight: 400;
+          background: var(--input-bg);
+          color: var(--text);
+        }
+
+        .openrouter-catalog-filters input:focus,
+        .openrouter-catalog-filters select:focus {
+          border-color: var(--input-focus);
+          background: #fff;
+        }
+
+        .openrouter-catalog-filters input:disabled,
+        .openrouter-catalog-filters select:disabled {
+          background: var(--brand-soft);
+          color: #9a9a9a;
+          cursor: not-allowed;
+        }
+
+        .openrouter-catalog-selected {
+          padding: 0.5rem 0.6rem;
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          background: var(--surface-soft);
+        }
+
+        .openrouter-catalog-selected p {
+          margin: 0;
+        }
+
+        .openrouter-catalog-selected-model {
+          font-size: 0.75rem;
+          line-height: 1.4;
+          color: var(--text);
+        }
+
+        .openrouter-catalog-selected-model code {
+          font-size: 0.72rem;
+        }
+
+        .openrouter-catalog-selected .openrouter-catalog-metadata {
+          margin-top: 0.35rem;
+          max-height: 5.6em;
+          overflow-y: auto;
+          font-size: 0.68rem;
+          line-height: 1.4;
+          color: var(--muted);
+        }
+
+        .openrouter-catalog-alert {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+          padding: 0.5rem 0.6rem;
+          border: 1px solid #f3b8b2;
+          border-radius: 10px;
+          background: #fff4f2;
+          font-size: 0.72rem;
+          color: #b42318;
+        }
+
+        .openrouter-catalog-alert p {
+          margin: 0;
+        }
+
+        .openrouter-catalog-acknowledge {
+          text-align: left;
+        }
+
+        .openrouter-catalog-list:empty {
+          display: none;
+        }
+
+        .openrouter-catalog-list .model-item {
+          gap: 0.15rem;
+          padding: 0.5rem 0.6rem;
+          border-radius: 10px;
+        }
+
+        .openrouter-catalog-list .model-name {
+          font-size: 0.8rem;
+          line-height: 1.3;
+          overflow-wrap: anywhere;
+        }
+
+        .openrouter-catalog-list .model-id,
+        .openrouter-catalog-list .model-price {
+          font-size: 0.7rem;
+          color: var(--muted);
+          overflow-wrap: anywhere;
+        }
+
+        .openrouter-catalog-list .model-id {
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .openrouter-catalog-list .model-item.active .model-id,
+        .openrouter-catalog-list .model-item.active .model-price {
+          color: rgba(255, 255, 255, 0.75);
+        }
+
         .settings-panel {
           border-top: 1px solid var(--border);
           padding-top: 1rem;
