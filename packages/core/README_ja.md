@@ -12,7 +12,11 @@
 
 ## Chat・Voiceモデルの更新
 
-Chat 0.61.0のモデル・能力判定ヘルパーと、Voice 0.25.0の音声エンジン・設定型・エンドポイント用ヘルパーをCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
+Chat 0.62.0のモデル・能力判定ヘルパーと、Voice 0.26.0の音声エンジン・設定型・エンドポイント用ヘルパーをCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
+
+- Chat 0.62.0 では、OpenRouter の明示選択モデルとして Ling 3.1 Flash（`inclusionai/ling-3.1-flash`）、Solar Pro 4（`upstage/solar-pro4`）、Solar Mini4（`upstage/solar-mini4`）、MiMo V2.6 Flash（`xiaomi/mimo-v2.6-flash`）、Apodex 1.1 Mini Free（`apodex/apodex-1.1-mini:free`）、Pareto 26.10 Preview（`unbiased/pareto-26.10-preview`）が加わりました。画像入力に対応するのは MiMo と Pareto で、ほかはテキスト専用です。
+- OpenRouter の既定モデルは変わりません。ただし `AITuberOnAirCore.getSupportedModels('openrouter')` の先頭が Ling 3.1 Flash になりました。アバターサンプルは OpenRouter に切り替えたときに先頭のモデルを選ぶため、Ling 3.1 Flash が選ばれます。
+- Voice 0.26.0 では、公開プレビュー版の `microsoft/mai-voice-2.1` と `microsoft/mai-voice-2.1-flash` を使う `openRouter` エンジンが加わりました。[OpenRouter TTS の設定](#openrouter-tts-の設定)を参照してください。
 
 - ネイティブモデル: GPT-6 Astra / Sol / Luna、Claude Fable 5.1 / Opus 5.5 / Sonnet 5.5、DeepSeek V4.1 Flash、Grok 4.7。
 - OpenAI 互換エンドポイント用ヘルパー: `resolveOpenAICompatibleEndpoint`、`listOpenAICompatibleModels`、`testOpenAICompatibleConnection`、`OPENAI_COMPATIBLE_LOCAL_PRESETS`（Ollama、LM Studio、llama.cpp、vLLM）。[ローカル LLM ガイド](../../docs/local-llm.ja.md)も参照してください。
@@ -37,6 +41,12 @@ API と制約の詳細は [Chat README](../chat/README.ja.md) と [Voice README]
 `engineType: 'deepgram'`、API キー、`flux-haley-en` などの英語 Flux 音声 ID を指定します。Core は `DeepgramEngine`、設定型、音声合成・カタログ URL 定数を再エクスポートします。`getVoiceEngineVoiceList('deepgram')` は API キーなしで v2 公開カタログの英語音声を取得します。`deepgramSpeed` は 0.5〜1.5 を 0.05 刻みで指定できます。`POST /v2/speak` から完成した MP3 を取得する方式で、Aura や WebSocket 音声合成は使いません。[Deepgram batch ガイド](https://developers.deepgram.com/docs/flux-tts/batch)を参照してください。
 
 TTS 設定を持つ全10 React サンプルでは、Vite の dev / preview proxy 経由で `/api/deepgram/v2/speak` と `/api/deepgram/v2/models` を使います。本番環境では認証付き backend route を用意し、API キーをサーバー側に保持してください。アバターサンプルでは音声合成・カタログ URL を変更できます。音声一覧の更新は選択中の音声を保持し、空の結果や取得失敗でも既存の一覧を残します。Haley は常に選択できます。Gradium は production が既定で、エンジンを切り替えて Gradium に戻すと production に戻ります。
+
+### OpenRouter TTS の設定
+
+`engineType: 'openRouter'`、OpenRouter の API キー、`openRouterModel`（`microsoft/mai-voice-2.1` または `microsoft/mai-voice-2.1-flash`）、そのモデルの一覧にある音声 ID（例: `en-US-Harper:MAI-Voice-2.1`）を指定します。モデルは必ず明示的に選びます。Core は `OpenRouterEngine`、`OpenRouterTtsModel`、設定型、`OPENROUTER_TTS_API_URL` / `OPENROUTER_MODELS_API_URL` を再エクスポートします。`getVoiceEngineVoiceList('openRouter', { openRouterModel })` は、指定したモデルの音声だけを返します。どちらのモデルも SLA のない公開プレビュー版で、本番利用は推奨されていません。2026年10月1日時点の一覧に日本語の音声はありませんでした。
+
+TTS 設定を持つ全10 React サンプルに OpenRouter エンジンを追加しました。プレビュー版のモデルは自動では選ばれません。モデルを選ぶとそのモデルの音声一覧を取得し、英語の音声が選ばれます。別の音声にも変更できます。モデルを変えると、新しいモデルの音声から選び直します。TTS 側の API キー欄は LLM 設定の OpenRouter 用キーを共有するため、入力は1回で済みます。サンプルはブラウザから OpenRouter を直接呼び出すため、API キーはページから見える状態になります。共有するアプリでは自前のバックエンドを用意してください。直接呼び出せるかどうかは提供元の CORS ポリシーによります。
 
 ## 目次
 

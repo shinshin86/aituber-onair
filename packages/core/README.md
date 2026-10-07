@@ -12,9 +12,23 @@ It specializes in generating response text and audio from text or image inputs, 
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.61.0 and the
-speech engines, option types, and endpoint helpers from Voice 0.25.0.
+Core exposes the models and capability helpers from Chat 0.62.0 and the
+speech engines, option types, and endpoint helpers from Voice 0.26.0.
 Existing provider defaults are unchanged.
+
+- Chat 0.62.0 adds explicit OpenRouter options: Ling 3.1 Flash
+  (`inclusionai/ling-3.1-flash`), Solar Pro 4 (`upstage/solar-pro4`), Solar
+  Mini4 (`upstage/solar-mini4`), MiMo V2.6 Flash (`xiaomi/mimo-v2.6-flash`),
+  Apodex 1.1 Mini Free (`apodex/apodex-1.1-mini:free`), and Pareto 26.10
+  Preview (`unbiased/pareto-26.10-preview`). MiMo and Pareto accept images;
+  the others are text-only.
+- The OpenRouter default model is unchanged, but
+  `AITuberOnAirCore.getSupportedModels('openrouter')` now lists Ling 3.1 Flash
+  first. Avatar examples select the first listed model when switching to
+  OpenRouter, so they now pick Ling 3.1 Flash.
+- Voice 0.26.0 adds an `openRouter` TTS engine for the public-preview
+  `microsoft/mai-voice-2.1` and `microsoft/mai-voice-2.1-flash` models. See
+  [OpenRouter TTS setup](#openrouter-tts-setup).
 
 - Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
   Sonnet 5.5;
@@ -91,6 +105,27 @@ Avatar settings allow custom TTS/catalog URLs. Voice-list refreshes preserve
 the selected voice and the previous list on empty or failed responses;
 Haley remains selectable. Gradium settings default to production and reset
 to production when switching back to Gradium.
+
+### OpenRouter TTS setup
+
+Use `engineType: 'openRouter'`, an OpenRouter API key, an explicit
+`openRouterModel` (`microsoft/mai-voice-2.1` or
+`microsoft/mai-voice-2.1-flash`), and a full voice ID from that model's
+catalog, such as `en-US-Harper:MAI-Voice-2.1`. Core re-exports
+`OpenRouterEngine`, `OpenRouterTtsModel`, the option types, and
+`OPENROUTER_TTS_API_URL` / `OPENROUTER_MODELS_API_URL`.
+`getVoiceEngineVoiceList('openRouter', { openRouterModel })` returns only
+the selected model's voices. Both models are public previews without an SLA
+and are not recommended for production. Catalogs checked on October 1, 2026
+had no Japanese voices.
+
+All ten React TTS examples add an OpenRouter engine. No preview model is
+selected automatically. After a model is chosen, its voices load and an English
+voice is selected; users can pick another. The TTS API key field shares the
+OpenRouter key from the LLM settings, so users enter it only once.
+The examples call OpenRouter directly from the browser, so the API key is
+visible to the page; deploy shared apps behind your own backend. Direct access
+depends on the provider's CORS policy.
 
 ## Table of Contents
 

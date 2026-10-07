@@ -1,5 +1,6 @@
 import {
   AITuberOnAirCore,
+  type OpenRouterTtsModel,
   type VoiceEngineVoice,
   type XaiReasoningEffort,
   getDefaultXaiReasoningEffort,
@@ -9,7 +10,7 @@ import {
   isXaiReasoningEffortModel,
   normalizeXaiReasoningEffort,
 } from '@aituber-onair/core';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
 import { useDeepgramVoices } from '../hooks/useDeepgramVoices';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
@@ -90,6 +91,7 @@ const TTS_ENGINES: { value: TTSEngineOption; label: string }[] = [
   { value: 'inworld', label: 'Inworld' },
   { value: 'deepgram', label: 'Deepgram Flux' },
   { value: 'gradium', label: 'Gradium' },
+  { value: 'openRouter', label: 'OpenRouter' },
   { value: 'piperPlus', label: 'Piper Plus' },
   { value: 'webSpeech', label: 'Web Speech API' },
   { value: 'none', label: 'None' },
@@ -819,6 +821,7 @@ export function SettingsPanel({
   updateXaiSampleRate,
   updateXaiBitRate,
   updateTtsField,
+  updateOpenRouterTtsModel,
   updatePiperPlusBasePath,
   updatePiperPlusModelConfigFile,
   updatePiperPlusModelFile,
@@ -947,6 +950,16 @@ export function SettingsPanel({
     useState(false);
   const [isFetchingInworldVoices, setIsFetchingInworldVoices] = useState(false);
   const [isFetchingCatalogVoices, setIsFetchingCatalogVoices] = useState(false);
+  const [openRouterVoices, setOpenRouterVoices] = useState<VoiceEngineVoice[]>(
+    [],
+  );
+  const [isFetchingOpenRouterVoices, setIsFetchingOpenRouterVoices] =
+    useState(false);
+  // Lets the voice-list effect read the current voice without refetching.
+  const speakerRef = useRef(settings.tts.speaker);
+  useEffect(() => {
+    speakerRef.current = settings.tts.speaker;
+  }, [settings.tts.speaker]);
   const [expandedSections, setExpandedSections] = useState<
     Record<SectionKey, boolean>
   >({
@@ -1252,6 +1265,56 @@ export function SettingsPanel({
     settings.tts.cartesiaVoiceListApiUrl,
     settings.tts.cartesiaLanguage,
     settings.tts.speaker,
+    updateTTSSpeaker,
+  ]);
+
+  // OpenRouter voices are scoped to the explicitly selected preview model.
+  // A saved voice is kept while listed; otherwise an English voice (or the
+  // first one) is selected so speech never runs without a valid voice ID.
+  const openRouterApiKey = getApiKeyForProvider('openrouter').trim();
+  useEffect(() => {
+    if (settings.tts.engine !== 'openRouter') return;
+    const apiKey = openRouterApiKey;
+    const model = settings.tts.openRouterModel;
+    if (!apiKey || !model) {
+      queueMicrotask(() => setOpenRouterVoices([]));
+      return;
+    }
+
+    let active = true;
+    const fetchOpenRouterVoices = async () => {
+      setIsFetchingOpenRouterVoices(true);
+      try {
+        const voices = await getVoiceEngineVoiceList('openRouter', {
+          apiKey,
+          openRouterModel: model,
+        });
+        if (!active) return;
+        setOpenRouterVoices(voices);
+        setFetchError('');
+        if (!voices.some((voice) => voice.id === speakerRef.current)) {
+          const preferred =
+            voices.find((voice) => voice.id.startsWith('en-US-')) ?? voices[0];
+          updateTTSSpeaker(preferred?.id ?? '');
+        }
+      } catch (error) {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : String(error);
+        setOpenRouterVoices([]);
+        setFetchError(`OpenRouter音声一覧エラー: ${message}`);
+      } finally {
+        if (active) setIsFetchingOpenRouterVoices(false);
+      }
+    };
+
+    void fetchOpenRouterVoices();
+    return () => {
+      active = false;
+    };
+  }, [
+    settings.tts.engine,
+    openRouterApiKey,
+    settings.tts.openRouterModel,
     updateTTSSpeaker,
   ]);
 
@@ -2395,6 +2458,97 @@ export function SettingsPanel({
                   {fetchError.startsWith('Fish Audio') && (
                     <small className="settings-field-error">{fetchError}</small>
                   )}
+                </div>
+              </>
+            )}
+
+            {settings.tts.engine === 'openRouter' && (
+              <>
+                <div className="settings-field">
+                  <label htmlFor="tts-openrouter-apikey">
+                    API Key (OpenRouter)
+                  </label>
+                  <input
+                    id="tts-openrouter-apikey"
+                    type="password"
+                    value={getApiKeyForProvider('openrouter')}
+                    onChange={(e) =>
+                      updateLLMApiKey('openrouter', e.target.value)
+                    }
+                    placeholder="sk-or-..."
+                    disabled={disabled}
+                  />
+                  <p className="settings-field-hint">
+                    LLMのOpenRouterと同じAPIキーを使います。
+                  </p>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-openrouter-model">Model</label>
+                  <select
+                    id="tts-openrouter-model"
+                    value={settings.tts.openRouterModel || ''}
+                    onChange={(e) =>
+                      updateOpenRouterTtsModel(
+                        e.target.value as '' | OpenRouterTtsModel,
+                      )
+                    }
+                    disabled={disabled}
+                  >
+                    <option value="">モデルを選択してください</option>
+                    <option value="microsoft/mai-voice-2.1">
+                      MAI Voice 2.1（プレビュー）
+                    </option>
+                    <option value="microsoft/mai-voice-2.1-flash">
+                      MAI Voice 2.1 Flash（プレビュー）
+                    </option>
+                  </select>
+                  <p className="settings-field-hint">
+                    どちらも公開プレビュー版で、SLAはなく本番利用は推奨されていません。現時点では日本語の音声がありません。
+                  </p>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-openrouter-speaker">Voice</label>
+                  <select
+                    id="tts-openrouter-speaker"
+                    value={settings.tts.speaker}
+                    onChange={(e) => updateTTSSpeaker(e.target.value)}
+                    disabled={
+                      disabled ||
+                      !openRouterApiKey ||
+                      !settings.tts.openRouterModel ||
+                      isFetchingOpenRouterVoices ||
+                      openRouterVoices.length === 0
+                    }
+                  >
+                    {!openRouterApiKey ? (
+                      <option value="">API Keyを入力してください</option>
+                    ) : !settings.tts.openRouterModel ? (
+                      <option value="">モデルを選択してください</option>
+                    ) : isFetchingOpenRouterVoices ? (
+                      <option value="">音声一覧を取得中...</option>
+                    ) : openRouterVoices.length === 0 ? (
+                      <option value="">音声一覧を取得できませんでした</option>
+                    ) : (
+                      <option value="">音声を選択してください</option>
+                    )}
+                    {openRouterVoices.map((voice) => (
+                      <option key={voice.id} value={voice.id}>
+                        {voice.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="settings-field">
+                  <label htmlFor="tts-openrouter-url">TTS API URL</label>
+                  <input
+                    id="tts-openrouter-url"
+                    type="text"
+                    value={settings.tts.openRouterApiUrl || ''}
+                    onChange={(e) =>
+                      updateTtsField('openRouterApiUrl', e.target.value)
+                    }
+                    disabled={disabled}
+                  />
                 </div>
               </>
             )}

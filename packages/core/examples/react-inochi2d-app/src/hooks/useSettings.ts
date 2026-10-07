@@ -1,5 +1,6 @@
 import {
   AITuberOnAirCore,
+  type OpenRouterTtsModel,
   type XaiReasoningEffort,
   getDefaultXaiReasoningEffort,
 } from '@aituber-onair/core';
@@ -63,6 +64,8 @@ const DEFAULT_INWORLD_LANGUAGE = 'ja-JP';
 const DEFAULT_GRADIUM_TTS_ENDPOINT =
   'https://api.gradium.ai/api/post/speech/tts';
 const DEFAULT_GRADIUM_OUTPUT_FORMAT = 'wav';
+const DEFAULT_OPENROUTER_TTS_ENDPOINT =
+  'https://openrouter.ai/api/v1/audio/speech';
 const DEFAULT_PIPER_PLUS_BASE_PATH = `${import.meta.env.BASE_URL}piper/`;
 const DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE = 'tsukuyomi-config.json';
 const DEFAULT_PIPER_PLUS_MODEL_FILE = 'tsukuyomi-wavlm-300epoch.onnx';
@@ -233,6 +236,8 @@ function getDefaultSettings(): AppSettings {
       gradiumVoiceSimilarity: '',
       gradiumPaddingBonus: '',
       gradiumRewriteRules: '',
+      openRouterModel: '',
+      openRouterApiUrl: DEFAULT_OPENROUTER_TTS_ENDPOINT,
       piperPlusBasePath: DEFAULT_PIPER_PLUS_BASE_PATH,
       piperPlusModelConfigFile: DEFAULT_PIPER_PLUS_MODEL_CONFIG_FILE,
       piperPlusModelFile: DEFAULT_PIPER_PLUS_MODEL_FILE,
@@ -478,6 +483,8 @@ export function useSettings() {
       inworld: '',
       deepgram: 'flux-haley-en',
       gradium: 'YTpq7expH9539ERJ',
+      // Preview voices are model-specific and must be chosen explicitly.
+      openRouter: '',
       piperPlus: 'default',
       webSpeech: '',
       none: '',
@@ -684,6 +691,10 @@ export function useSettings() {
           engine === 'gradium'
             ? prev.tts.gradiumRewriteRules || ''
             : prev.tts.gradiumRewriteRules,
+        openRouterApiUrl:
+          engine === 'openRouter'
+            ? prev.tts.openRouterApiUrl || DEFAULT_OPENROUTER_TTS_ENDPOINT
+            : prev.tts.openRouterApiUrl,
         piperPlusBasePath:
           engine === 'piperPlus'
             ? prev.tts.piperPlusBasePath || DEFAULT_PIPER_PLUS_BASE_PATH
@@ -869,6 +880,17 @@ export function useSettings() {
       tts: { ...prev.tts, xaiBitRate: bitRate },
     }));
   }, []);
+
+  // A voice belongs to one preview model, so a model change clears it.
+  const updateOpenRouterTtsModel = useCallback(
+    (model: '' | OpenRouterTtsModel) => {
+      setSettings((prev) => ({
+        ...prev,
+        tts: { ...prev.tts, openRouterModel: model, speaker: '' },
+      }));
+    },
+    [],
+  );
 
   const updateTtsField = useCallback(
     <TKey extends keyof AppSettings['tts']>(
@@ -1417,6 +1439,7 @@ export function useSettings() {
     updateXaiSampleRate,
     updateXaiBitRate,
     updateTtsField,
+    updateOpenRouterTtsModel,
     updatePiperPlusBasePath,
     updatePiperPlusModelConfigFile,
     updatePiperPlusModelFile,

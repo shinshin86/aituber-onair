@@ -19,6 +19,7 @@ export type VoiceEngineType =
   | 'inworld'
   | 'deepgram'
   | 'gradium'
+  | 'openRouter'
   | 'piperPlus'
   | 'webSpeech'
   | 'none';
@@ -183,6 +184,12 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       defaultParams: {
         outputFormat: 'wav',
       },
+    },
+    openRouter: {
+      name: 'OpenRouter (MAI Voice preview)',
+      apiUrl: 'https://openrouter.ai/api/v1/audio/speech',
+      needsApiKey: true,
+      placeholder: 'OpenRouter API key',
     },
     piperPlus: {
       name: 'Piper Plus',
