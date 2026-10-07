@@ -72,11 +72,12 @@ describe('OpenRouter TTS settings', () => {
           {
             id: PRO,
             supported_voices: [
+              'cs-CZ-Grant:MAI-Voice-2.1',
               'en-US-Jenny:MAI-Voice-2.1',
               'en-US-Guy:MAI-Voice-2.1',
             ],
           },
-          { id: FLASH, supported_voices: ['en-US-Jenny:MAI-Voice-2.1-Flash'] },
+          { id: FLASH, supported_voices: ['cs-CZ-Grant:MAI-Voice-2.1-Flash'] },
         ],
       }),
     });
@@ -92,7 +93,7 @@ describe('OpenRouter TTS settings', () => {
     vi.unstubAllGlobals();
   });
 
-  it('requires an explicit preview model and voice, and clears the voice on model changes', async () => {
+  it('requires an explicit preview model and preselects an English voice for it', async () => {
     await act(async () => root.render(<Harness />));
 
     expect(select('tts-openrouter-model').value).toBe('');
@@ -106,11 +107,18 @@ describe('OpenRouter TTS settings', () => {
     );
     expect(optionValues('tts-openrouter-speaker')).toEqual([
       '',
+      'cs-CZ-Grant:MAI-Voice-2.1',
       'en-US-Jenny:MAI-Voice-2.1',
       'en-US-Guy:MAI-Voice-2.1',
     ]);
-    expect(select('tts-openrouter-speaker').value).toBe('');
-    expect(saved()).toMatchObject({ openRouterModel: PRO, speaker: '' });
+    // The stale saved voice is replaced by the first English voice.
+    expect(select('tts-openrouter-speaker').value).toBe(
+      'en-US-Jenny:MAI-Voice-2.1',
+    );
+    expect(saved()).toMatchObject({
+      openRouterModel: PRO,
+      speaker: 'en-US-Jenny:MAI-Voice-2.1',
+    });
 
     await choose('tts-openrouter-speaker', 'en-US-Guy:MAI-Voice-2.1');
     expect(saved()).toMatchObject({
@@ -119,13 +127,17 @@ describe('OpenRouter TTS settings', () => {
       speaker: 'en-US-Guy:MAI-Voice-2.1',
     });
 
+    // A voice from the previous model is never reused; without an English
+    // voice the first listed voice is selected.
     await choose('tts-openrouter-model', FLASH);
-    expect(saved()).toMatchObject({ openRouterModel: FLASH, speaker: '' });
     expect(optionValues('tts-openrouter-speaker')).toEqual([
       '',
-      'en-US-Jenny:MAI-Voice-2.1-Flash',
+      'cs-CZ-Grant:MAI-Voice-2.1-Flash',
     ]);
-    expect(select('tts-openrouter-speaker').value).toBe('');
+    expect(saved()).toMatchObject({
+      openRouterModel: FLASH,
+      speaker: 'cs-CZ-Grant:MAI-Voice-2.1-Flash',
+    });
   });
 
   it('shares the LLM OpenRouter API key instead of storing a TTS copy', async () => {
@@ -147,13 +159,16 @@ describe('OpenRouter TTS settings', () => {
     expect(stored.tts).not.toHaveProperty('openRouterApiKey');
   });
 
-  it('hides the TTS key field when the LLM already uses OpenRouter', async () => {
+  it('prefills the TTS key field when the LLM already uses OpenRouter', async () => {
     const stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
     stored.llm.provider = 'openrouter';
     localStorage.setItem(storageKey, JSON.stringify(stored));
     await act(async () => root.render(<Harness />));
 
-    expect(container.querySelector('#tts-openrouter-apikey')).toBeNull();
+    expect(
+      container.querySelector<HTMLInputElement>('#tts-openrouter-apikey')
+        ?.value,
+    ).toBe('test-only-key');
     await choose('tts-openrouter-model', PRO);
     expect(speechCatalogCalls()).toHaveLength(1);
     expect(optionValues('tts-openrouter-speaker')).toContain(

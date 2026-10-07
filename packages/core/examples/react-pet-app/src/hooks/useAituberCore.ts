@@ -884,6 +884,8 @@ export function useAituberCore({
     settings.tts.webSpeechPitch,
     settings.tts.webSpeechVolume,
     settings.tts.webSpeechLanguage,
+    settings.tts.openRouterModel,
+    settings.tts.openRouterApiUrl,
     ttsApiKey,
   ]);
 

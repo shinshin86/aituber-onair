@@ -698,10 +698,10 @@ and Pareto accept images; the others are text-only. The selector keeps
 
 Select **OpenRouter** as the TTS engine for the public-preview
 `microsoft/mai-voice-2.1` and `microsoft/mai-voice-2.1-flash` models. No model
-or voice is preselected: choose a model to load its voices, and then choose a
-voice. Changing the model clears the voice. Speech uses the same OpenRouter API
-key as the LLM settings; when the LLM provider is OpenRouter, the TTS settings
-do not ask for the key again. Both models are previews without an SLA and are not recommended for
+is preselected. After you choose one, its voices load and an English voice is
+selected; you can pick another. A voice from the previous model is never reused.
+The TTS API key field shares the OpenRouter key from the LLM settings, so a key
+entered there appears here as well. Both models are previews without an SLA and are not recommended for
 production; catalogs checked on October 1, 2026 had no Japanese voices. The
 sample calls OpenRouter directly from the browser, so the API key is visible to
 the page; deploy shared apps behind your own backend.

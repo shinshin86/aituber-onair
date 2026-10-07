@@ -1449,7 +1449,8 @@ const App: React.FC = () => {
   ]);
 
   // OpenRouter voices are scoped to the explicitly selected preview model.
-  // Nothing is auto-selected; a chosen voice survives only if still listed.
+  // A chosen voice is kept while listed; otherwise an English voice (or the
+  // first one) is selected so speech never runs without a valid voice ID.
   useEffect(() => {
     if (selectedVoiceEngine !== 'openRouter') return;
     const apiKey = openRouterTtsApiKey.trim();
@@ -1472,11 +1473,12 @@ const App: React.FC = () => {
         if (!active) return;
         setOpenRouterVoices(voices);
         setOpenRouterVoiceFetchError('');
-        setSelectedSpeakers((prev) =>
-          voices.some((voice) => voice.id === prev.openRouter)
-            ? prev
-            : { ...prev, openRouter: '' },
-        );
+        setSelectedSpeakers((prev) => {
+          if (voices.some((voice) => voice.id === prev.openRouter)) return prev;
+          const preferred =
+            voices.find((voice) => voice.id.startsWith('en-US-')) ?? voices[0];
+          return { ...prev, openRouter: preferred?.id ?? '' };
+        });
       } catch (error) {
         if (!active) return;
         const message = error instanceof Error ? error.message : String(error);
@@ -4300,11 +4302,7 @@ const App: React.FC = () => {
                   </select>
 
                   {selectedVoiceEngine !== 'none' &&
-                    VOICE_ENGINE_CONFIGS[selectedVoiceEngine].needsApiKey &&
-                    !(
-                      selectedVoiceEngine === 'openRouter' &&
-                      sharesOpenRouterLlmKey
-                    ) && (
+                    VOICE_ENGINE_CONFIGS[selectedVoiceEngine].needsApiKey && (
                       <>
                         <label
                           htmlFor="voiceApiKey"
@@ -4323,13 +4321,26 @@ const App: React.FC = () => {
                               : VOICE_ENGINE_CONFIGS[selectedVoiceEngine]
                                   .placeholder
                           }
-                          value={voiceApiKeys[selectedVoiceEngine] || ''}
-                          onChange={(e) =>
+                          value={
+                            selectedVoiceEngine === 'openRouter'
+                              ? openRouterTtsApiKey
+                              : voiceApiKeys[selectedVoiceEngine] || ''
+                          }
+                          onChange={(e) => {
+                            // The OpenRouter field edits the LLM key while
+                            // the chat provider is OpenRouter.
+                            if (
+                              selectedVoiceEngine === 'openRouter' &&
+                              sharesOpenRouterLlmKey
+                            ) {
+                              setApiKey(e.target.value);
+                              return;
+                            }
                             setVoiceApiKeys((prev) => ({
                               ...prev,
                               [selectedVoiceEngine]: e.target.value,
-                            }))
-                          }
+                            }));
+                          }}
                           style={{ width: '100%', marginBottom: '8px' }}
                         />
 

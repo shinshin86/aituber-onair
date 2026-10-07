@@ -46,7 +46,7 @@ TTS 設定を持つ全10 React サンプルでは、Vite の dev / preview proxy
 
 `engineType: 'openRouter'`、OpenRouter の API キー、`openRouterModel`（`microsoft/mai-voice-2.1` または `microsoft/mai-voice-2.1-flash`）、そのモデルの一覧にある音声 ID（例: `en-US-Harper:MAI-Voice-2.1`）を指定します。モデルは必ず明示的に選びます。Core は `OpenRouterEngine`、`OpenRouterTtsModel`、設定型、`OPENROUTER_TTS_API_URL` / `OPENROUTER_MODELS_API_URL` を再エクスポートします。`getVoiceEngineVoiceList('openRouter', { openRouterModel })` は、指定したモデルの音声だけを返します。どちらのモデルも SLA のない公開プレビュー版で、本番利用は推奨されていません。2026年10月1日時点の一覧に日本語の音声はありませんでした。
 
-TTS 設定を持つ全10 React サンプルに OpenRouter エンジンを追加しました。プレビュー版のモデルと音声は自動では選ばれません。モデルを選ぶとそのモデルの音声一覧を取得するので、そこから音声を選んでください。モデルを変えると、選んでいた音声はクリアされます。API キーは LLM 設定の OpenRouter 用キーを共有するため、入力は1回で済みます。サンプルはブラウザから OpenRouter を直接呼び出すため、API キーはページから見える状態になります。共有するアプリでは自前のバックエンドを用意してください。直接呼び出せるかどうかは提供元の CORS ポリシーによります。
+TTS 設定を持つ全10 React サンプルに OpenRouter エンジンを追加しました。プレビュー版のモデルは自動では選ばれません。モデルを選ぶとそのモデルの音声一覧を取得し、英語の音声が選ばれます。別の音声にも変更できます。モデルを変えると、新しいモデルの音声から選び直します。TTS 側の API キー欄は LLM 設定の OpenRouter 用キーを共有するため、入力は1回で済みます。サンプルはブラウザから OpenRouter を直接呼び出すため、API キーはページから見える状態になります。共有するアプリでは自前のバックエンドを用意してください。直接呼び出せるかどうかは提供元の CORS ポリシーによります。
 
 ## 目次
 
