@@ -91,7 +91,8 @@ describe('ClaudeChatService', () => {
       'x-api-key': 'test-key',
       'anthropic-version': '2023-06-01',
     });
-    expect(postSpy.mock.calls[0][1].output_config).toBeUndefined();
+    // Without an explicit effort, the package sends its low default.
+    expect(postSpy.mock.calls[0][1].output_config).toEqual({ effort: 'low' });
   });
 
   it('maps reasoning_effort to Claude output_config.effort', async () => {

@@ -96,6 +96,7 @@ import {
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_5_OPUS,
   MODEL_CLAUDE_5_5_SONNET,
+  MODEL_CLAUDE_5_5_HAIKU,
   // Gemini models
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
@@ -760,6 +761,13 @@ export const allModels: ProviderModel[] = [
     name: 'Claude 4.5 Haiku',
     provider: 'claude',
     default: true,
+  },
+
+  {
+    id: MODEL_CLAUDE_5_5_HAIKU,
+    name: 'Claude Haiku 5.5',
+    provider: 'claude',
+    default: false,
   },
 
   // Gemini models
@@ -2015,11 +2023,15 @@ export default function ProviderSelector({
                   <option key={effort} value={effort}>
                     {effort === 'low'
                       ? 'Low (fastest)'
-                      : effort === 'high'
-                        ? 'High (API default)'
-                        : effort === 'xhigh'
-                          ? 'XHigh'
-                          : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                      : effort === 'medium' &&
+                          selectedModel === MODEL_CLAUDE_5_5_HAIKU
+                        ? 'Medium (API default)'
+                        : effort === 'high' &&
+                            selectedModel !== MODEL_CLAUDE_5_5_HAIKU
+                          ? 'High (API default)'
+                          : effort === 'xhigh'
+                            ? 'XHigh'
+                            : `${effort[0].toUpperCase()}${effort.slice(1)}`}
                   </option>
                 ))}
               </select>
