@@ -1605,7 +1605,7 @@ const App: React.FC = () => {
       case 'claude':
         setModel(claudeModels[0]);
         setReasoningEffort(
-          getDefaultClaudeReasoningEffort(claudeModels[0]) ?? 'high',
+          getDefaultClaudeReasoningEffort(claudeModels[0]) ?? 'low',
         );
         break;
       case 'zai':

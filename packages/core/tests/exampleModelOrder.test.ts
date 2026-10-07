@@ -4,6 +4,8 @@ import { act, createElement } from 'react';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  MODEL_CLAUDE_4_5_SONNET,
+  MODEL_CLAUDE_5_5_HAIKU,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
 } from '../../chat/src';
@@ -23,12 +25,16 @@ const examples = [
     name: 'react-pet-app',
     storageKey: 'react-pet-app-settings',
     useSettings: usePetSettings,
+    // Lists Claude models in SDK order.
+    firstClaudeModel: MODEL_CLAUDE_4_5_SONNET,
     Picker: PetOpenRouterModelPicker,
   },
   {
     name: 'react-vrm-app',
     storageKey: 'react-vrm-app-settings',
     useSettings: useVrmSettings,
+    // Lists Claude models newest first.
+    firstClaudeModel: MODEL_CLAUDE_5_5_HAIKU,
     Picker: VrmOpenRouterModelPicker,
   },
 ] as const;
@@ -114,6 +120,12 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     await switchToOpenRouter();
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
     expect(listedModels()).toEqual(models);
+  });
+
+  it('selects the first listed Claude model when switching to Claude', async () => {
+    await renderSettings();
+    await act(async () => current.updateLLMProvider('claude'));
+    expect(current.settings.llm.model).toBe(example.firstClaudeModel);
   });
 
   it('preserves an explicitly selected Pareto model after saving and remounting', async () => {
