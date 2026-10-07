@@ -21,6 +21,7 @@ export const MODEL_CLAUDE_5_SONNET = 'claude-sonnet-5';
 export const MODEL_CLAUDE_5_OPUS = 'claude-opus-5';
 export const MODEL_CLAUDE_5_5_OPUS = 'claude-opus-5-5';
 export const MODEL_CLAUDE_5_5_SONNET = 'claude-sonnet-5-5';
+export const MODEL_CLAUDE_5_5_HAIKU = 'claude-haiku-5-5';
 
 // Retired model ids remain exported so existing imports continue to compile.
 export const CLAUDE_DEPRECATED_MODELS = [
@@ -65,6 +66,7 @@ const CLAUDE_REASONING_EFFORTS_BY_MODEL: Record<
   [MODEL_CLAUDE_5_SONNET]: CLAUDE_XHIGH_REASONING_EFFORTS,
   [MODEL_CLAUDE_5_OPUS]: CLAUDE_XHIGH_REASONING_EFFORTS,
   [MODEL_CLAUDE_5_5_SONNET]: CLAUDE_XHIGH_REASONING_EFFORTS,
+  [MODEL_CLAUDE_5_5_HAIKU]: CLAUDE_XHIGH_REASONING_EFFORTS,
 };
 
 export const CLAUDE_VISION_SUPPORTED_MODELS = [
@@ -81,6 +83,7 @@ export const CLAUDE_VISION_SUPPORTED_MODELS = [
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_5_OPUS,
   MODEL_CLAUDE_5_5_SONNET,
+  MODEL_CLAUDE_5_5_HAIKU,
 ];
 
 /**
@@ -97,11 +100,13 @@ export function isClaudeReasoningEffortModel(model: string): boolean {
 }
 
 /**
- * Claude API defaults to high effort when output_config.effort is omitted.
+ * Package/UI effort default. Haiku 5.5 uses low for real-time chat,
+ * below its medium API default. Existing model defaults remain unchanged.
  */
 export function getDefaultClaudeReasoningEffort(
   model: string,
 ): ClaudeReasoningEffort | undefined {
+  if (model === MODEL_CLAUDE_5_5_HAIKU) return 'low';
   return isClaudeReasoningEffortModel(model) ? 'high' : undefined;
 }
 
@@ -125,5 +130,5 @@ export function normalizeClaudeReasoningEffort(
     return effort;
   }
 
-  return 'high';
+  return getDefaultClaudeReasoningEffort(model);
 }

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   ChatServiceFactory,
+  MODEL_CLAUDE_5_5_HAIKU,
   OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   ChatService,
   allowsReasoningLow,
@@ -716,8 +717,13 @@ function App() {
                     ? reasoning_effort
                     : undefined;
                 setReasoningEffort(
-                  normalizeClaudeReasoningEffort(modelId, requestedEffort) ??
-                    'high',
+                  modelId === MODEL_CLAUDE_5_5_HAIKU &&
+                    modelId !== selectedModel
+                    ? getDefaultClaudeReasoningEffort(modelId)!
+                    : (normalizeClaudeReasoningEffort(
+                        modelId,
+                        requestedEffort,
+                      ) ?? 'high'),
                 );
               } else if (newProvider === 'gemini') {
                 const requestedEffort =

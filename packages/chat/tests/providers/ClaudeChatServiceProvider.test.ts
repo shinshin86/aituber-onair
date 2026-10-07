@@ -19,6 +19,7 @@ import {
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_5_OPUS,
   MODEL_CLAUDE_5_5_SONNET,
+  MODEL_CLAUDE_5_5_HAIKU,
 } from '../../src/constants';
 
 // Mock ClaudeChatService
@@ -56,6 +57,7 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_5_OPUS,
         MODEL_CLAUDE_5_5_OPUS,
         MODEL_CLAUDE_5_5_SONNET,
+        MODEL_CLAUDE_5_5_HAIKU,
       ]);
     });
   });

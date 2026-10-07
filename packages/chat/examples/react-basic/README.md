@@ -137,9 +137,27 @@ built-in model status is `available`.
 - Best for: local LLMs (Ollama/LM Studio/vLLM-compatible endpoints)
 
 **Claude**
-- Models: Claude Opus 5.5, Claude Sonnet 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, and Claude 4.5 (Opus, Sonnet, Haiku)
+- Models: Claude Haiku 5.5, Claude Opus 5.5, Claude Sonnet 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, and Claude 4.5 (Opus, Sonnet, Haiku)
 - Vision: All listed Claude models
-- Effort: Supported models expose model-aware Low/Medium/High/XHigh/Max options. The control maps to `output_config.effort` and defaults to High.
+- Haiku 5.5 is an explicit option appended to the Claude selector; Haiku 4.5
+  remains the default. Selecting Haiku 5.5 starts at `low` effort for chat;
+  its API default is `medium`. The effort control sends any of the five
+  supported levels, and reselecting the active model preserves your setting.
+- Haiku 5.5 keeps adaptive thinking enabled. Short response-length budgets
+  include thinking tokens and may finish before visible text, especially at
+  higher effort. The package API's `chatOnce` max-token argument allows a
+  larger budget. Keep signed-thinking conversation history append-only.
+- Claude requests go directly to `https://api.anthropic.com/v1/messages`,
+  using the existing `anthropic-dangerous-direct-browser-access: true`
+  header. The configured Vite `/api/anthropic` development proxy is not used
+  by this route; preview also makes direct requests. Anthropic's
+  [official SDK](https://github.com/anthropics/anthropic-sdk-typescript#requirements)
+  documents browser opt-in and its credential-exposure risk. Use only your
+  own key in a trusted local demo. Shared production deployments need an
+  application backend that keeps credentials server-side; do not ship shared
+  keys in a frontend.
+  Offline tests do not verify current upstream CORS or account access.
+- Effort: Supported models expose model-aware Low/Medium/High/XHigh/Max options. The control maps to `output_config.effort` and existing configurable models default to High; Haiku 5.5 starts at Low.
 - Refusals: Streaming refusal metadata is preserved as a terminal completion rather than surfaced as a tool error.
 - Best for: Long context, tool use + advanced reasoning
 
