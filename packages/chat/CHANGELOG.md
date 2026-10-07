@@ -1,33 +1,32 @@
 # @aituber-onair/chat
 
-## Unreleased
+## 0.63.0
 
-### Added
+### Minor Changes
 
 - Added Claude Haiku 5.5 (`claude-haiku-5-5`) as an explicit text, image,
   streaming, and automatic-tool option through the existing Messages API.
   Existing model order and the Haiku 4.5 provider default are unchanged.
-- Haiku 5.5 defaults to `low` effort for real-time chat, below the API's
-  `medium` default, with all five effort levels available. Adaptive thinking
-  and signed tool-continuation blocks use the existing provider path.
-- Updated the React selector, English/Japanese usage documentation, and
-  offline transport/DOM regressions. Direct browser routing is unchanged.
-
-### Changed
-
 - Claude models with adjustable effort now default to `low` for real-time
   chat and send `output_config.effort: 'low'` when no effort is set, instead
-  of relying on the API's `high` default. Set `reasoning_effort` explicitly to
-  keep the previous behavior. Unsupported `xhigh` or `max` requests still fall
-  back to `high`. The React example starts every configurable Claude model at
-  Low and keeps the selected effort when switching Claude models.
+  of relying on the API's `high` default (`medium` on Haiku 5.5). Set
+  `reasoning_effort` explicitly to keep the previous behavior. Unsupported
+  `xhigh` or `max` requests still fall back to `high`.
+
+### Patch Changes
+
+- Updated the React example and English/Japanese documentation for Haiku 5.5.
+  The example starts every configurable Claude model at Low and keeps the
+  selected effort when switching Claude models.
+- Added offline transport and rendered-DOM regression coverage for Haiku 5.5,
+  including signed thinking with tool-result continuations.
 
 ### Known Limitations
 
 - Thinking tokens count toward response-length budgets; short budgets can
   finish before visible text. Live generation and authenticated browser CORS
-  have not been verified. Signed thinking requires unchanged earlier history
-  and replay through the same account.
+  have not been verified for Haiku 5.5. Signed thinking requires unchanged
+  earlier history and replay through the same account.
 
 ## 0.62.0
 
