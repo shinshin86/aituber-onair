@@ -712,8 +712,10 @@ user ターンでリクエストを終えてください。thinking は `max_tok
 [Migration guide](https://platform.claude.com/docs/en/models/haiku-5-5/migration-guide)。
 
 対応するClaudeモデルでは `reasoning_effort` を指定でき、Anthropic APIの
-`output_config.effort` に変換されます。既存の調整可能なモデルの `high` 既定値は維持し、
-Haiku 5.5 では上記のパッケージ既定値 `low` を使います。
+`output_config.effort` に変換されます。リアルタイムの会話向けに、調整可能なすべてのモデルで
+パッケージ既定値を `low` とし、指定がないときも `low` を送信します。Claude API 自体の既定値は
+`high`（Haiku 5.5 では `medium`）です。別のレベルを使う場合は `reasoning_effort` を指定してください。
+モデルが対応していない `xhigh` や `max` を指定した場合は `high` を使います。
 
 - Claude Haiku 5.5、Fable 5、Opus 5、Sonnet 5.5、Sonnet 5、Opus 4.8、Opus 4.7:
   `low`、`medium`、`high`、`xhigh`、`max`

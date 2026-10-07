@@ -13,6 +13,15 @@
 - Updated the React selector, English/Japanese usage documentation, and
   offline transport/DOM regressions. Direct browser routing is unchanged.
 
+### Changed
+
+- Claude models with adjustable effort now default to `low` for real-time
+  chat and send `output_config.effort: 'low'` when no effort is set, instead
+  of relying on the API's `high` default. Set `reasoning_effort` explicitly to
+  keep the previous behavior. Unsupported `xhigh` or `max` requests still fall
+  back to `high`. The React example starts every configurable Claude model at
+  Low and keeps the selected effort when switching Claude models.
+
 ### Known Limitations
 
 - Thinking tokens count toward response-length budgets; short budgets can

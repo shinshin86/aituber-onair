@@ -729,8 +729,11 @@ via `chatOnce(..., maxTokens)` when needed, especially at higher efforts.
 [Migration guide](https://platform.claude.com/docs/en/models/haiku-5-5/migration-guide).
 
 Supported Claude models accept `reasoning_effort`, which maps to Anthropic's
-`output_config.effort`. Existing configurable models retain their `high`
-default; Haiku 5.5 uses the package's `low` default described above:
+`output_config.effort`. For real-time chat, the package defaults every
+configurable model to `low` and sends it when no effort is set; the Claude API
+itself defaults to `high` (`medium` on Haiku 5.5). Set `reasoning_effort`
+explicitly to use another level. Requests for an unsupported `xhigh` or `max`
+fall back to `high`:
 
 - Claude Haiku 5.5, Fable 5, Opus 5, Sonnet 5.5, Sonnet 5, Opus 4.8, and Opus 4.7:
   `low`, `medium`, `high`, `xhigh`, or `max`.

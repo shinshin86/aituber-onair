@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   ChatServiceFactory,
-  MODEL_CLAUDE_5_5_HAIKU,
   OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   ChatService,
   allowsReasoningLow,
@@ -656,7 +655,7 @@ function App() {
                 );
               } else if (newProvider === 'claude') {
                 setReasoningEffort(
-                  getDefaultClaudeReasoningEffort(defaultModel) ?? 'high',
+                  getDefaultClaudeReasoningEffort(defaultModel) ?? 'low',
                 );
               } else if (newProvider === 'gemini') {
                 setReasoningEffort(
@@ -717,13 +716,8 @@ function App() {
                     ? reasoning_effort
                     : undefined;
                 setReasoningEffort(
-                  modelId === MODEL_CLAUDE_5_5_HAIKU &&
-                    modelId !== selectedModel
-                    ? getDefaultClaudeReasoningEffort(modelId)!
-                    : (normalizeClaudeReasoningEffort(
-                        modelId,
-                        requestedEffort,
-                      ) ?? 'high'),
+                  normalizeClaudeReasoningEffort(modelId, requestedEffort) ??
+                    'low',
                 );
               } else if (newProvider === 'gemini') {
                 const requestedEffort =

@@ -31,7 +31,7 @@ describe('Claude reasoning effort helpers', () => {
       'xhigh',
       'max',
     ]);
-    expect(getDefaultClaudeReasoningEffort(model)).toBe('high');
+    expect(getDefaultClaudeReasoningEffort(model)).toBe('low');
   });
 
   it('excludes xhigh from Claude Opus 4.6', () => {

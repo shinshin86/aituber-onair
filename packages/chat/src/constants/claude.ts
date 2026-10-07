@@ -100,14 +100,13 @@ export function isClaudeReasoningEffortModel(model: string): boolean {
 }
 
 /**
- * Package/UI effort default. Haiku 5.5 uses low for real-time chat,
- * below its medium API default. Existing model defaults remain unchanged.
+ * Package/UI effort default. Configurable models start at low for real-time
+ * chat; the Claude API itself defaults to high (medium on Haiku 5.5).
  */
 export function getDefaultClaudeReasoningEffort(
   model: string,
 ): ClaudeReasoningEffort | undefined {
-  if (model === MODEL_CLAUDE_5_5_HAIKU) return 'low';
-  return isClaudeReasoningEffortModel(model) ? 'high' : undefined;
+  return isClaudeReasoningEffortModel(model) ? 'low' : undefined;
 }
 
 /**
@@ -130,5 +129,6 @@ export function normalizeClaudeReasoningEffort(
     return effort;
   }
 
-  return getDefaultClaudeReasoningEffort(model);
+  // Only xhigh/max can be unsupported; use the closest level below them.
+  return 'high';
 }

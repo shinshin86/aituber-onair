@@ -12,7 +12,6 @@ import {
 import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_4_5_HAIKU,
-  MODEL_CLAUDE_5_5_HAIKU,
   getDefaultClaudeReasoningEffort,
   CLAUDE_VISION_SUPPORTED_MODELS,
   getClaudeSupportedReasoningEfforts,
@@ -250,11 +249,9 @@ export class ClaudeChatService implements ChatService {
           : getMaxTokensForResponseLength(this.responseLength),
     };
 
+    // Send the package's low default instead of relying on the API default.
     const reasoningEffort =
-      this.reasoningEffort ??
-      (model === MODEL_CLAUDE_5_5_HAIKU
-        ? getDefaultClaudeReasoningEffort(model)
-        : undefined);
+      this.reasoningEffort ?? getDefaultClaudeReasoningEffort(model);
     if (
       reasoningEffort !== undefined &&
       getClaudeSupportedReasoningEfforts(model).includes(reasoningEffort)

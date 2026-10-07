@@ -157,7 +157,7 @@ built-in model status is `available`.
   application backend that keeps credentials server-side; do not ship shared
   keys in a frontend.
   Offline tests do not verify current upstream CORS or account access.
-- Effort: Supported models expose model-aware Low/Medium/High/XHigh/Max options. The control maps to `output_config.effort` and existing configurable models default to High; Haiku 5.5 starts at Low.
+- Effort: Supported models expose model-aware Low/Medium/High/XHigh/Max options. The control maps to `output_config.effort`, and every configurable model starts at Low for responsive chat.
 - Refusals: Streaming refusal metadata is preserved as a terminal completion rather than surfaced as a tool error.
 - Best for: Long context, tool use + advanced reasoning
 
