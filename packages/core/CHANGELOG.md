@@ -1,5 +1,20 @@
 # @aituber-onair/core
 
+## 0.26.20
+
+### Patch Changes
+
+- Propagate published Chat 0.63.0.
+- Re-export Claude Haiku 5.5 (`MODEL_CLAUDE_5_5_HAIKU`) and add it to the
+  React basic Claude selector.
+- Configurable Claude models now default to `low` effort through Chat 0.63.0
+  instead of the API's `high` default. Set `reasoning_effort` explicitly to
+  keep the previous behavior.
+- Avatar examples that list Claude models newest first (Inochi2D, Live2D,
+  Purupuru, and VRM) now select Haiku 5.5 when switching to Claude; the other
+  examples keep their first model.
+- Refresh Core and example documentation and all embedded Core lockfiles.
+
 ## 0.26.19
 
 ### Patch Changes
