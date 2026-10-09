@@ -6,7 +6,8 @@
 
 AITuber OnAir is not only a chat and voice toolkit. It is also a starting
 point for building richer AI character presentation with PNG, PuruPuru
-PNGTuber, VRM, Live2D, Inochi2D, PSD, and animated pet avatars.
+PNGTuber, VRM, Live2D, Inochi2D, PSD, animated pet, single-image, and mesh
+avatars.
 
 This guide explains which avatar style to start with and where to extend avatar
 assets when you want more expressive AI characters.
@@ -14,6 +15,8 @@ assets when you want more expressive AI characters.
 ## Avatar Styles
 
 ### PNGTuber
+
+![PNGTuber example screen](../packages/core/examples/react-pngtuber-app/images/react-pngtuber-app.png)
 
 Use PNGTuber assets when you want the shortest path to a lightweight 2D avatar.
 The PNGTuber example uses four image states:
@@ -27,6 +30,8 @@ Start from
 [`packages/core/examples/react-pngtuber-app`](../packages/core/examples/react-pngtuber-app).
 
 ### PuruPuru PNGTuber
+
+![PuruPuru PNGTuber example screen](../packages/core/examples/react-purupuru-app/images/react-purupuru-app.png)
 
 Use PuruPuru PNGTuber when you want a livelier 2D avatar without preparing
 tracking or 3D assets. A single `.purupuru` package combines six face states
@@ -44,6 +49,8 @@ production kit described below.
 
 ### VRM
 
+![VRM example screen](../packages/core/examples/react-vrm-app/images/react-vrm-app.png)
+
 Use VRM when you want a 3D avatar with camera control, idle motion, lip-sync,
 and expression presets. The VRM example renders a local `.vrm` model and can
 apply available expressions from reply emotion tags.
@@ -53,6 +60,10 @@ Start from
 
 ### Live2D
 
+![Live2D example screen](../packages/core/examples/react-live2d-app/images/react-live2d-app-hiyori.png)
+
+This screenshot uses the official Live2D sample model "Hiyori Momose". The model data is not included in this repository.
+
 Use Live2D when you already have a Cubism model folder and want a 2D character
 with model-driven motion. The Live2D example loads a local `.model3.json` model
 folder that you have the right to use.
@@ -61,6 +72,8 @@ Start from
 [`packages/core/examples/react-live2d-app`](../packages/core/examples/react-live2d-app).
 
 ### Inochi2D
+
+![Inochi2D example screen](../packages/core/examples/react-inochi2d-app/images/react-inochi2d-app.png)
 
 Use Inochi2D when you want to try a rigged 2D avatar on a WebGL stage. The
 example loads `.inx` / `.inp` models and drives audio lip-sync, speaking
@@ -72,6 +85,8 @@ Start from
 [`packages/core/examples/react-inochi2d-app`](../packages/core/examples/react-inochi2d-app).
 
 ### PSD
+
+![PSD example screen](../packages/core/examples/react-psd-app/images/react-psd-app.webp)
 
 Use PSD when you want to load a layered 2D character from a single `.psd`
 file. The PSD example composites layers on a canvas and binds mouth and eye
@@ -88,6 +103,8 @@ Still2Rig PSD workflow described below.
 
 ### Pet
 
+![Pet example screen](../packages/core/examples/react-pet-app/images/react-pet-app.jpg)
+
 Use the pet example when you want a compact animated companion instead of a
 human-style avatar. It uses a Codex Pet-compatible spritesheet and changes
 animation from chat state, reply mood, and audio volume.
@@ -97,6 +114,19 @@ Start from
 
 ### Single Image Avatar
 
+<p align="center">
+  <img
+    src="../packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png"
+    alt="Single Image Avatar example with illustrated Miko"
+    width="49%"
+  />
+  <img
+    src="../packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app-puppet.png"
+    alt="Single Image Avatar example with felt-puppet Miko"
+    width="49%"
+  />
+</p>
+
 Use the Single Image Avatar example when you have one character image and want the
 whole character to react to speech without drawing mouth or eye states. It
 offers jumping Bounce motion and gentler Puppet Wobble motion driven by TTS
@@ -105,6 +135,25 @@ can replace them with your own image.
 
 Start from
 [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app).
+
+### Mesh Avatar
+
+![Mesh Avatar example screen](../packages/core/examples/react-mesh-avatar-app/images/react-mesh-avatar-app.png)
+
+Use the Mesh Avatar example when you want to animate a single illustration in a
+Live2D-like way. The illustration is split into layers such as the body, hand,
+tassels, and eye parts, and WebGL2 mesh deformation adds head turns and tilts,
+breathing, blinking, gaze, and hair sway. Lip sync follows the TTS audio level,
+and emotion tags in replies switch the face and play motions. Miko in a qipao is
+included.
+
+The rig is tuned for the bundled image, so using another illustration requires
+rebuilding the layers and adjusting the rig.
+
+Start from
+[`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app).
+
+To make a mesh avatar from your own illustration, see Mesh Avatar Studio below.
 
 ## Extending Avatar Expressions
 
@@ -227,6 +276,32 @@ Codex, such as Claude Code or Hermes Agent, can follow the same steps.
 After generating the PSD, start the PSD example and choose the file from
 **PSD avatar** in **Settings → Visual**. Check the rights for source images and
 generated assets separately from the tool licenses.
+
+## Related Tool: Mesh Avatar Studio
+
+[Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio)
+is a related repository for turning one illustration into a 2D mesh avatar that
+blinks, lip-syncs, turns its head, breathes, and sways its hair.
+
+Give an illustration to Claude Code or Codex, and the agent places the rig, cuts
+the image into layers, and checks the result against a fixed set of poses. You
+then open the project in a local editor and drag points while watching the
+preview to fix eye and hand outlines or the hair area. Adding closed-eye and
+per-vowel mouth images makes blinking and lip sync look more natural. Codex can
+draw these images with its built-in image generation. Claude Code cannot
+generate images, so with Claude Code you ask it to prepare the masks and the
+prompt to pass to an image generator.
+
+The finished avatar can also be driven by a camera and microphone for streaming.
+Video and audio are processed on the device, and the streaming view is shown
+through an OBS browser source.
+
+Projects made in Mesh Avatar Studio cannot currently be loaded into the Mesh
+Avatar example as they are. The example defines its rig in code for the bundled
+Miko image.
+
+Check the rights to source images and generated assets separately from the
+tool license.
 
 ## Related Resources and License Checks
 
