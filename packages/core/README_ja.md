@@ -12,7 +12,13 @@
 
 ## Chat・Voiceモデルの更新
 
-Chat 0.61.0のモデル・能力判定ヘルパーと、Voice 0.25.0の音声エンジン・設定型・エンドポイント用ヘルパーをCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
+Chat 0.63.0のモデル・能力判定ヘルパーと、Voice 0.26.0の音声エンジン・設定型・エンドポイント用ヘルパーをCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
+
+- Chat 0.63.0 では、Claude Haiku 5.5（`claude-haiku-5-5`）を明示選択のモデルとして Claude の一覧の末尾に追加しました。Claude の一覧を新しい順に表示するアバターサンプル（Inochi2D、Live2D、Purupuru、VRM）では、Claude に切り替えると Haiku 5.5 が選ばれます。そのほかのサンプルでは、先頭のモデルは変わりません。推論レベルを調整できる Claude モデルは既定値が `low` になり、指定がないときも `low` を送信します。これまでは API の既定値 `high` で動いていました。別のレベルを使う場合は `reasoning_effort` を指定してください。
+
+- Chat 0.62.0 では、OpenRouter の明示選択モデルとして Ling 3.1 Flash（`inclusionai/ling-3.1-flash`）、Solar Pro 4（`upstage/solar-pro4`）、Solar Mini4（`upstage/solar-mini4`）、MiMo V2.6 Flash（`xiaomi/mimo-v2.6-flash`）、Apodex 1.1 Mini Free（`apodex/apodex-1.1-mini:free`）、Pareto 26.10 Preview（`unbiased/pareto-26.10-preview`）が加わりました。画像入力に対応するのは MiMo と Pareto で、ほかはテキスト専用です。
+- OpenRouter の既定モデルは変わりません。ただし `AITuberOnAirCore.getSupportedModels('openrouter')` の先頭が Ling 3.1 Flash になりました。アバターサンプルは OpenRouter に切り替えたときに先頭のモデルを選ぶため、Ling 3.1 Flash が選ばれます。
+- Voice 0.26.0 では、公開プレビュー版の `microsoft/mai-voice-2.1` と `microsoft/mai-voice-2.1-flash` を使う `openRouter` エンジンが加わりました。[OpenRouter TTS の設定](#openrouter-tts-の設定)を参照してください。
 
 - ネイティブモデル: GPT-6 Astra / Sol / Luna、Claude Fable 5.1 / Opus 5.5 / Sonnet 5.5、DeepSeek V4.1 Flash、Grok 4.7。
 - OpenAI 互換エンドポイント用ヘルパー: `resolveOpenAICompatibleEndpoint`、`listOpenAICompatibleModels`、`testOpenAICompatibleConnection`、`OPENAI_COMPATIBLE_LOCAL_PRESETS`（Ollama、LM Studio、llama.cpp、vLLM）。[ローカル LLM ガイド](../../docs/local-llm.ja.md)も参照してください。
@@ -37,6 +43,12 @@ API と制約の詳細は [Chat README](../chat/README.ja.md) と [Voice README]
 `engineType: 'deepgram'`、API キー、`flux-haley-en` などの英語 Flux 音声 ID を指定します。Core は `DeepgramEngine`、設定型、音声合成・カタログ URL 定数を再エクスポートします。`getVoiceEngineVoiceList('deepgram')` は API キーなしで v2 公開カタログの英語音声を取得します。`deepgramSpeed` は 0.5〜1.5 を 0.05 刻みで指定できます。`POST /v2/speak` から完成した MP3 を取得する方式で、Aura や WebSocket 音声合成は使いません。[Deepgram batch ガイド](https://developers.deepgram.com/docs/flux-tts/batch)を参照してください。
 
 TTS 設定を持つ全10 React サンプルでは、Vite の dev / preview proxy 経由で `/api/deepgram/v2/speak` と `/api/deepgram/v2/models` を使います。本番環境では認証付き backend route を用意し、API キーをサーバー側に保持してください。アバターサンプルでは音声合成・カタログ URL を変更できます。音声一覧の更新は選択中の音声を保持し、空の結果や取得失敗でも既存の一覧を残します。Haley は常に選択できます。Gradium は production が既定で、エンジンを切り替えて Gradium に戻すと production に戻ります。
+
+### OpenRouter TTS の設定
+
+`engineType: 'openRouter'`、OpenRouter の API キー、`openRouterModel`（`microsoft/mai-voice-2.1` または `microsoft/mai-voice-2.1-flash`）、そのモデルの一覧にある音声 ID（例: `en-US-Harper:MAI-Voice-2.1`）を指定します。モデルは必ず明示的に選びます。Core は `OpenRouterEngine`、`OpenRouterTtsModel`、設定型、`OPENROUTER_TTS_API_URL` / `OPENROUTER_MODELS_API_URL` を再エクスポートします。`getVoiceEngineVoiceList('openRouter', { openRouterModel })` は、指定したモデルの音声だけを返します。どちらのモデルも SLA のない公開プレビュー版で、本番利用は推奨されていません。2026年10月1日時点の一覧に日本語の音声はありませんでした。
+
+TTS 設定を持つ全10 React サンプルに OpenRouter エンジンを追加しました。プレビュー版のモデルは自動では選ばれません。モデルを選ぶとそのモデルの音声一覧を取得し、英語の音声が選ばれます。別の音声にも変更できます。モデルを変えると、新しいモデルの音声から選び直します。TTS 側の API キー欄は LLM 設定の OpenRouter 用キーを共有するため、入力は1回で済みます。サンプルはブラウザから OpenRouter を直接呼び出すため、API キーはページから見える状態になります。共有するアプリでは自前のバックエンドを用意してください。直接呼び出せるかどうかは提供元の CORS ポリシーによります。
 
 ## 目次
 
@@ -1414,7 +1426,7 @@ OpenRouter API、DeepSeek API、Mistral API、Sakana AI、PLaMo が利用可能�
 - **OpenAI**: GPT-5系（Nano/Mini/Standard/5.1/5.4/5.5/5.6 Sol/Terra/Luna/5.4 Mini/5.4 Nano/5.4 Pro）、GPT-4.1（Mini/Nano含む）、GPT-4o、GPT-4o-mini、O3-mini、o1、o1-miniのモデルをサポート。GPT-5.6 系では `max` reasoning effort も利用可能
 - **Gemini**: Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3.6 Flash、Gemini 3.5 Flash / Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などをサポート。Gemini 3.8 Flash と Gemini 3.7 Flash の `reasoning_effort` は `low`、従来の Flash 系は `minimal`、Pro 系は `low` をチャット向けのデフォルトにします。Gemini 3.8 Flash はネイティブ Gemini プロバイダー経由の Vision と tool calling にも対応します。Gemini 2.5 は引き続き `thinkingBudget` を使用します
 - **Gemini Nano**: Chrome内蔵の `gemini-nano` モデルを API キー不要でサポート（Chrome 138+ かつ Prompt API のフラグ有効化が必要）
-- **Claude**: Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Opus 4.8、Claude Opus 4.7、Claude Opus 4.6、Claude Opus 4.5、Claude Sonnet 4.6、Claude Sonnet 4.5、Claude Haiku 4.5 をサポートします。retired ID は source compatibility export として残しますが selector では案内しません。対応モデルでは `reasoning_effort` を Anthropic の `output_config.effort` として送信でき、API のデフォルトは `high` です
+- **Claude**: Claude Haiku 5.5、Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Opus 4.8、Claude Opus 4.7、Claude Opus 4.6、Claude Opus 4.5、Claude Sonnet 4.6、Claude Sonnet 4.5、Claude Haiku 4.5 をサポートします。retired ID は source compatibility export として残しますが selector では案内しません。対応モデルでは `reasoning_effort` を Anthropic の `output_config.effort` として送信でき、パッケージの既定値は `low` です（API のデフォルトは `high`）
 - **xAI**: Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 系をサポート。Grok 4.6 は `low`、`medium`、`high`、`xhigh` を利用でき、既定は `low` です。Grok 4.5 も `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです。Grok 4.1 Fast は compatibility export のみです
 - **DeepSeek**: first-class `deepseek` provider として DeepSeek V4 Flash / V4 Pro / Vision 対応の DeepSeek V4 Flash Vision Exp をサポート。各モデルでモデル別の `reasoning_effort` を利用でき、Core でも Chat の低レイテンシ向けデフォルト `none` を維持しつつ、対応する高い effort へ切り替えられます。現時点では thinking と tool calling を同一リクエストで併用できません
 - **Mistral**: Vision 対応の Ministral 3 系（`ministral-3b-2512`、`ministral-8b-2512`、`ministral-14b-2512`）と、`mistral-small-latest`、`mistral-medium-3-5`、`mistral-large-latest` などの現行 generalist model をサポート。対応モデルでは adjustable reasoning も利用可能

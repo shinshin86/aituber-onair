@@ -12,9 +12,31 @@ It specializes in generating response text and audio from text or image inputs, 
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.61.0 and the
-speech engines, option types, and endpoint helpers from Voice 0.25.0.
+Core exposes the models and capability helpers from Chat 0.63.0 and the
+speech engines, option types, and endpoint helpers from Voice 0.26.0.
 Existing provider defaults are unchanged.
+
+- Chat 0.63.0 adds Claude Haiku 5.5 (`claude-haiku-5-5`) as an explicit option
+  appended to the Claude model list. Avatar examples that list Claude models
+  newest first (Inochi2D, Live2D, Purupuru, and VRM) now select Haiku 5.5
+  when switching to Claude; the other examples keep their first model. Claude models with adjustable effort now
+  default to `low` and send it when no effort is set; previously requests ran
+  at the API's `high` default. Set `reasoning_effort` explicitly to use
+  another level.
+
+- Chat 0.62.0 adds explicit OpenRouter options: Ling 3.1 Flash
+  (`inclusionai/ling-3.1-flash`), Solar Pro 4 (`upstage/solar-pro4`), Solar
+  Mini4 (`upstage/solar-mini4`), MiMo V2.6 Flash (`xiaomi/mimo-v2.6-flash`),
+  Apodex 1.1 Mini Free (`apodex/apodex-1.1-mini:free`), and Pareto 26.10
+  Preview (`unbiased/pareto-26.10-preview`). MiMo and Pareto accept images;
+  the others are text-only.
+- The OpenRouter default model is unchanged, but
+  `AITuberOnAirCore.getSupportedModels('openrouter')` now lists Ling 3.1 Flash
+  first. Avatar examples select the first listed model when switching to
+  OpenRouter, so they now pick Ling 3.1 Flash.
+- Voice 0.26.0 adds an `openRouter` TTS engine for the public-preview
+  `microsoft/mai-voice-2.1` and `microsoft/mai-voice-2.1-flash` models. See
+  [OpenRouter TTS setup](#openrouter-tts-setup).
 
 - Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
   Sonnet 5.5;
@@ -91,6 +113,27 @@ Avatar settings allow custom TTS/catalog URLs. Voice-list refreshes preserve
 the selected voice and the previous list on empty or failed responses;
 Haley remains selectable. Gradium settings default to production and reset
 to production when switching back to Gradium.
+
+### OpenRouter TTS setup
+
+Use `engineType: 'openRouter'`, an OpenRouter API key, an explicit
+`openRouterModel` (`microsoft/mai-voice-2.1` or
+`microsoft/mai-voice-2.1-flash`), and a full voice ID from that model's
+catalog, such as `en-US-Harper:MAI-Voice-2.1`. Core re-exports
+`OpenRouterEngine`, `OpenRouterTtsModel`, the option types, and
+`OPENROUTER_TTS_API_URL` / `OPENROUTER_MODELS_API_URL`.
+`getVoiceEngineVoiceList('openRouter', { openRouterModel })` returns only
+the selected model's voices. Both models are public previews without an SLA
+and are not recommended for production. Catalogs checked on October 1, 2026
+had no Japanese voices.
+
+All ten React TTS examples add an OpenRouter engine. No preview model is
+selected automatically. After a model is chosen, its voices load and an English
+voice is selected; users can pick another. The TTS API key field shares the
+OpenRouter key from the LLM settings, so users enter it only once.
+The examples call OpenRouter directly from the browser, so the API key is
+visible to the page; deploy shared apps behind your own backend. Direct access
+depends on the provider's CORS policy.
 
 ## Table of Contents
 
@@ -1474,7 +1517,7 @@ Currently, the following AI provider is built-in:
 - **OpenAI**: Supports models like GPT-5 family (Nano/Mini/Standard/5.1/5.4/5.5/5.6 Sol/Terra/Luna/5.4 Mini/5.4 Nano/5.4 Pro), GPT-4.1 (including Mini/Nano), GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini. GPT-5.6 models also support `max` reasoning effort.
 - **Gemini**: Supports models like Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 Flash-family models support configurable `reasoning_effort`; Gemini 3.8 Flash and Gemini 3.7 Flash start at `low`, while earlier Flash models start at `minimal` and Pro models at `low`. Gemini 3.8 Flash also supports Vision and tool calling through the native Gemini provider. Gemini 2.5 continues to use `thinkingBudget` instead.
 - **Gemini Nano**: Supports the built-in Chrome `gemini-nano` model without an API key (Chrome 138+ with Prompt API flags enabled)
-- **Claude**: Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Retired IDs remain exported for source compatibility but are not advertised in selectors. Supported models accept `reasoning_effort`, which maps to Anthropic's `output_config.effort`; the API default is `high`.
+- **Claude**: Supports current Claude API model IDs including Claude Haiku 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Retired IDs remain exported for source compatibility but are not advertised in selectors. Supported models accept `reasoning_effort`, which maps to Anthropic's `output_config.effort`; the package defaults these models to `low` (the API default is `high`).
 - **xAI**: Supports Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 model families. Grok 4.6 supports `low`, `medium`, `high`, and `xhigh` reasoning effort and defaults to `low`; Grok 4.5 also defaults to `low`, while Grok 4.3 defaults to `none` for lower latency. Retired Grok 4.1 Fast IDs remain compatibility exports only.
 - **DeepSeek**: Supports DeepSeek V4 Flash, DeepSeek V4 Pro, and the vision-capable DeepSeek V4 Flash Vision Exp through the first-class `deepseek` provider. These models expose model-aware `reasoning_effort`; Core keeps Chat's low-latency `none` default, while higher supported efforts remain selectable. Thinking and tool calling cannot currently be combined in one request.
 - **Mistral**: Supports the vision-capable Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including adjustable reasoning for supported models.

@@ -1,13 +1,50 @@
 # @aituber-onair/core
 
-## Unreleased
+## 0.26.20
 
 ### Patch Changes
 
+- Propagate published Chat 0.63.0.
+- Re-export Claude Haiku 5.5 (`MODEL_CLAUDE_5_5_HAIKU`) and add it to the
+  React basic Claude selector.
+- Configurable Claude models now default to `low` effort through Chat 0.63.0
+  instead of the API's `high` default. Set `reasoning_effort` explicitly to
+  keep the previous behavior.
+- Avatar examples that list Claude models newest first (Inochi2D, Live2D,
+  Purupuru, and VRM) now select Haiku 5.5 when switching to Claude; the other
+  examples keep their first model.
+- Refresh Core and example documentation and all embedded Core lockfiles.
+
+## 0.26.19
+
+### Patch Changes
+
+- Propagate published Chat 0.62.0 and Voice 0.26.0.
+- Re-export the new OpenRouter model constants (Ling 3.1 Flash, Solar Pro 4,
+  Solar Mini4, MiMo V2.6 Flash, Apodex 1.1 Mini Free, and Pareto 26.10
+  Preview), and Voice's `OpenRouterEngine`, `OpenRouterTtsModel`, OpenRouter
+  option types, and speech/model catalog URL constants.
+- `getSupportedModels('openrouter')` now lists Ling 3.1 Flash first, so the
+  avatar examples select it when switching to OpenRouter. The OpenRouter
+  default model is unchanged. React basic lists the new models and keeps
+  `openrouter/auto` first.
+- Add an OpenRouter TTS engine to all ten React TTS examples for the
+  public-preview MAI Voice 2.1 models. No model is preselected; after one is
+  chosen, its voices load and an English voice is selected by default. The
+  TTS API key field shares the OpenRouter key from the LLM settings.
 - React samples: discover OpenRouter text-chat candidates from the anonymous
   public catalog, with searchable pricing filters, cached/stale metadata,
   deliberate pricing-change acknowledgment, and conservative SDK capability
-  gates. Preserve public SDK behavior, defaults, and dependency versions.
+  gates. The picker and catalog messages are shown in Japanese. Public SDK
+  behavior and defaults are unchanged.
+- Refresh Core and example documentation and all embedded Core lockfiles.
+
+### Known Limitations
+
+- The OpenRouter MAI Voice models are public previews without an SLA, and
+  catalogs checked on October 1, 2026 had no Japanese voices. The examples
+  call OpenRouter directly from the browser, so API keys are visible to the
+  page.
 
 ## 0.26.18
 

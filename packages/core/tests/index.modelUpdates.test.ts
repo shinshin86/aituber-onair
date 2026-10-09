@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import * as core from '../src';
 import * as chat from '@aituber-onair/chat';
-import type { GeminiTtsModel, InworldModel, VoiceServiceOptions } from '../src';
+import * as voice from '@aituber-onair/voice';
+import type {
+  GeminiTtsModel,
+  InworldModel,
+  OpenRouterTtsModel,
+  VoiceServiceOptions,
+} from '../src';
 
 describe('Released Chat and Voice model exports', () => {
   it.each([
@@ -38,6 +44,13 @@ describe('Released Chat and Voice model exports', () => {
     'MODEL_NEX_AGI_NEX_N2_5_PRO_FREE',
     'MODEL_QWEN_QWEN_3_8_MAX_0902',
     'MODEL_META_MUSE_SPARK_1_3',
+    'MODEL_INCLUSIONAI_LING_3_1_FLASH',
+    'MODEL_UPSTAGE_SOLAR_PRO4',
+    'MODEL_UPSTAGE_SOLAR_MINI4',
+    'MODEL_XIAOMI_MIMO_V2_6_FLASH',
+    'MODEL_APODEX_1_1_MINI_FREE',
+    'MODEL_UNBIASED_PARETO_26_10_PREVIEW',
+    'MODEL_CLAUDE_5_5_HAIKU',
     'isOpenAIReasoningModel',
     'getDefaultReasoningEffortForOpenAIModel',
   ] as const)('re-exports %s from Chat', (name) => {
@@ -64,5 +77,22 @@ describe('Released Chat and Voice model exports', () => {
     };
     expect(options.geminiTtsModel).toBe(flashLite);
     expect(flash).toBe('gemini-3.8-flash-tts');
+  });
+
+  it.each([
+    'OpenRouterEngine',
+    'OPENROUTER_TTS_API_URL',
+    'OPENROUTER_MODELS_API_URL',
+  ] as const)('re-exports %s from Voice', (name) => {
+    expect(core[name]).toBe(voice[name]);
+  });
+
+  it('accepts an explicit OpenRouter MAI preview model through Core options', () => {
+    const model: OpenRouterTtsModel = 'microsoft/mai-voice-2.1-flash';
+    const options: VoiceServiceOptions = {
+      engineType: 'openRouter',
+      openRouterModel: model,
+    };
+    expect(options.openRouterModel).toBe(model);
   });
 });

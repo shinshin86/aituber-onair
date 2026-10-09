@@ -271,7 +271,7 @@ describe('Core index chat re-exports', () => {
       'max',
     ]);
     expect(isClaudeReasoningEffortModel(MODEL_CLAUDE_5_OPUS)).toBe(true);
-    expect(getDefaultClaudeReasoningEffort(MODEL_CLAUDE_5_OPUS)).toBe('high');
+    expect(getDefaultClaudeReasoningEffort(MODEL_CLAUDE_5_OPUS)).toBe('low');
     expect(normalizeClaudeReasoningEffort(MODEL_CLAUDE_5_OPUS, 'xhigh')).toBe(
       'xhigh',
     );

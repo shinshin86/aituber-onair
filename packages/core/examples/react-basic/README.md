@@ -6,8 +6,8 @@ A comprehensive React-based AI chat application demonstrating the full capabilit
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.61.0 and the
-Gemini TTS model type from Voice 0.25.0. Existing provider defaults are unchanged.
+Core exposes the models and capability helpers from Chat 0.63.0 and the
+Gemini TTS model type from Voice 0.26.0. Existing provider defaults are unchanged.
 
 - Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
   Sonnet 5.5;
@@ -177,6 +177,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Requires Chrome 138+ with `#optimization-guide-on-device-model` and `#prompt-api-for-gemini-nano` enabled
 
 **Claude:**
+- Claude Haiku 5.5
 - Claude Fable 5, Claude Opus 5, and Claude Sonnet 5
 - Claude Opus 4.8
 - Claude Opus 4.7
@@ -186,7 +187,8 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Retired Claude 4 Sonnet/Opus and Claude 3 Haiku IDs remain compatibility
   exports but are not offered by this selector
 - Supported models expose `reasoning_effort`, mapped to Claude
-  `output_config.effort`; the API default is `high`
+  `output_config.effort`; the selector starts at `low` for responsive chat
+  (the API default is `high`)
 
 **Z.ai:**
 - GLM-5.3 and GLM-5.3 Flash (vision)
@@ -669,7 +671,7 @@ Contributions are welcome! Feel free to submit issues or pull requests to improv
 
 ## Updated Chat and Voice options
 
-This example uses published Chat 0.61.0 and Voice 0.25.0 through Core.
+This example uses published Chat 0.63.0 and Voice 0.26.0 through Core.
 New Chat models are available in the model selector, including GPT-6.1 Sol,
 GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
 Chat's capability checks and model-specific reasoning defaults. The avatar
@@ -691,6 +693,24 @@ Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
 `sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
 model selector defaults to production; `gradium-tts-beta` is an explicit
 opt-in, and switching back to Gradium resets the model to production.
+Chat 0.63.0 adds Claude Haiku 5.5 at the end of the Claude selector, and the
+Claude effort selector starts at Low for faster replies.
+
+Chat 0.62.0 adds the OpenRouter options Ling 3.1 Flash, Solar Pro 4, Solar
+Mini4, MiMo V2.6 Flash, Apodex 1.1 Mini Free, and Pareto 26.10 Preview. MiMo
+and Pareto accept images; the others are text-only. The selector keeps
+`openrouter/auto` first.
+
+Select **OpenRouter** as the TTS engine for the public-preview
+`microsoft/mai-voice-2.1` and `microsoft/mai-voice-2.1-flash` models. No model
+is preselected. After you choose one, its voices load and an English voice is
+selected; you can pick another. A voice from the previous model is never reused.
+The TTS API key field shares the OpenRouter key from the LLM settings, so a key
+entered there appears here as well. Both models are previews without an SLA and are not recommended for
+production; catalogs checked on October 1, 2026 had no Japanese voices. The
+sample calls OpenRouter directly from the browser, so the API key is visible to
+the page; deploy shared apps behind your own backend.
+
 See the [Core model update notes](../../README.md#chat-and-voice-model-updates)
 for endpoint details and limitations.
 

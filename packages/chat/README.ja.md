@@ -691,10 +691,33 @@ Opus 5.5 は画像入力に対応します。今回参照した資料ではモ�
 effortは5段階すべてに対応します。強制ツール選択はAPIで拒否されますが、このパッケージは
 送信しません。継続時は返された `assistant_message` を会話履歴に保持してください。
 [Migration guide](https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide)。
-対応するClaudeモデルでは `reasoning_effort` を指定でき、Anthropic APIの
-`output_config.effort` に変換されます。省略時のClaude API既定値は `high` です。
+`claude-haiku-5-5`（`MODEL_CLAUDE_5_5_HAIKU`）は
+`https://api.anthropic.com/v1/messages` 経由の明示的な選択肢として、
+テキスト・画像入力、streaming、通常の自動ツール呼び出しに対応します。
+プロバイダーの既定モデルは Haiku 4.5 のままです。
+低レイテンシーの会話向けに、パッケージと React の選択時の effort は `low` とします。
+API 自体の既定値は `medium` です。5段階すべてに対応し、明示した値を維持します。
+adaptive thinking は暗黙に有効なままで、thinking モード切り替えは公開せず、
+手動の thinking budget や sampling パラメーターも送信しません。
+Sonnet 5.5 の `between_tools` を指定する必要はありません。
+[Effort guidance](https://platform.claude.com/docs/en/build-with-claude/effort#recommended-effort-levels-for-claude-haiku-55)。
 
-- Claude Fable 5、Opus 5、Sonnet 5.5、Sonnet 5、Opus 4.8、Opus 4.7:
+署名付き thinking を保持するモデルでは system、tools、過去の履歴を変更せず、
+返された `assistant_message` とツール結果を末尾に追加してください。
+Haiku 5.5 は表示用テキストの前に、thinking 本文が空で署名だけを含むブロックを
+返す場合があります。同じアカウントで履歴を再送し、assistant prefill ではなく
+user ターンでリクエストを終えてください。thinking は `max_tokens` に含まれ、
+短い `responseLength` では表示用の回答に達する前に上限で終了する場合があります。
+必要に応じて `chatOnce(..., maxTokens)` の上限を増やしてください。
+[Migration guide](https://platform.claude.com/docs/en/models/haiku-5-5/migration-guide)。
+
+対応するClaudeモデルでは `reasoning_effort` を指定でき、Anthropic APIの
+`output_config.effort` に変換されます。リアルタイムの会話向けに、調整可能なすべてのモデルで
+パッケージ既定値を `low` とし、指定がないときも `low` を送信します。Claude API 自体の既定値は
+`high`（Haiku 5.5 では `medium`）です。別のレベルを使う場合は `reasoning_effort` を指定してください。
+モデルが対応していない `xhigh` や `max` を指定した場合は `high` を使います。
+
+- Claude Haiku 5.5、Fable 5、Opus 5、Sonnet 5.5、Sonnet 5、Opus 4.8、Opus 4.7:
   `low`、`medium`、`high`、`xhigh`、`max`
 - Claude Opus 4.6、Sonnet 4.6:
   `low`、`medium`、`high`、`max`
@@ -1543,7 +1566,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **OpenAI**: GPT-6.1 Sol (`gpt-6.1-sol`, ツールはResponses経由)、GPT-6 Astra (`gpt-6-astra`)、GPT-6 Sol (`gpt-6-sol`)、GPT-6 Luna (`gpt-6-luna`, 既定でResponses API); GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3.6 Flash、Gemini 3.5 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3 はチャット用途向けに利用可能な最小の thinking を既定値にします。`minimal` 非対応の Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3 Pro は `low`、その他の Gemini 3 Flash は `minimal` を使います。Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
-- **Claude**: Claude Opus 5.5 (`claude-opus-5-5`)、Claude Sonnet 5.5 (`claude-sonnet-5-5`)、Claude Fable 5.1 (`claude-fable-5-1`); Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 をサポート。調整可能な`reasoning_effort`は対応モデルに限り`output_config.effort`として送信し、refusal metadataは終端completionとして保持します
+- **Claude**: Claude Haiku 5.5 (`claude-haiku-5-5`、明示選択)、Claude Opus 5.5 (`claude-opus-5-5`)、Claude Sonnet 5.5 (`claude-sonnet-5-5`)、Claude Fable 5.1 (`claude-fable-5-1`); Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5 をサポート。調整可能な`reasoning_effort`は対応モデルに限り`output_config.effort`として送信し、refusal metadataは終端completionとして保持します
 - **OpenRouter**: Mistral Large 4 (`mistralai/mistral-large-4-0`, 明示選択の公開プレビュー), Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`, 明示選択のプレビュー), Ling 3.1 Flash（テキスト専用・明示選択）、Solar Mini4、Solar Pro 4、MiMo V2.6 Flash、Apodex 1.1 Mini (Free)、GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilotのキュレーション済み一覧をサポート。GLM-5.3/FlashX、Qwen3.8 Flash、DeepSeek V4 Flash Vision Exp、Claude Sonnet 5/Opus 4.8、Kimi K2.6も含みます。 明示選択として`nvidia/nemotron-3.5-lightning`（テキスト専用）、`qwen/qwen3.8-27b`と`qwen/qwen3.8-omni-flash`（画像入力対応）も利用できます。
 - **Z.ai**: GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-TurboとGLM-4.7/4.6のテキストモデル、GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V系のビジョンモデルをサポート。GLM-5.3はthinking必須で`low`、GLM-5.2は`none`を既定値にします
 - **xAI**: Grok 4.7、Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 Reasoning/Non-Reasoningをvision対応でサポート。Grok 4.7/4.6/4.5のpackage既定は低遅延向けの`reasoning_effort: 'low'`、Grok 4.3は`none`です

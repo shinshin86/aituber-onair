@@ -655,7 +655,7 @@ function App() {
                 );
               } else if (newProvider === 'claude') {
                 setReasoningEffort(
-                  getDefaultClaudeReasoningEffort(defaultModel) ?? 'high',
+                  getDefaultClaudeReasoningEffort(defaultModel) ?? 'low',
                 );
               } else if (newProvider === 'gemini') {
                 setReasoningEffort(
@@ -717,7 +717,7 @@ function App() {
                     : undefined;
                 setReasoningEffort(
                   normalizeClaudeReasoningEffort(modelId, requestedEffort) ??
-                    'high',
+                    'low',
                 );
               } else if (newProvider === 'gemini') {
                 const requestedEffort =
