@@ -2,6 +2,8 @@
 
 [日本語 README](./README.ja.md)
 
+![react-mesh-avatar-app image](./images/react-mesh-avatar-app.png)
+
 A chat example built on `@aituber-onair/core` whose avatar is a single illustration animated
 Live2D-style with WebGL2 mesh deformation. LLM, TTS, live comments and the broadcast layout are
 the same as in `react-single-image-avatar-app`; only the avatar is replaced.

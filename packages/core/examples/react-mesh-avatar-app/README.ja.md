@@ -1,5 +1,7 @@
 # Mesh Avatar Chat
 
+![react-mesh-avatar-app image](./images/react-mesh-avatar-app.png)
+
 `@aituber-onair/core` を使った、1枚絵をメッシュ変形で Live2D 風に動かすアバター付きチャットサンプルです。
 `react-single-image-avatar-app` と同じ LLM、TTS、ライブコメント、配信表示を使い、アバター部分だけを WebGL2 のメッシュアバターに置き換えています。
 
