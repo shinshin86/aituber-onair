@@ -1,5 +1,17 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+- Add Mistral Large 4 (`mistralai/mistral-large-4-0`) as an explicit OpenRouter
+  public preview for text/image input, streaming, and tool calls. Append it
+  after Pareto without changing existing defaults or model order.
+- Default its reasoning to `none` for responsive chat, preserve explicit `high`,
+  and omit unsupported reasoning-token budgets, including inherited settings.
+- Update the React example, English/Japanese documentation, and mock transport
+  and rendered-DOM regression tests. Live inference and authenticated upstream
+  browser CORS have not been verified. Reasoning-enabled tool continuations do
+  not preserve upstream `reasoning_details`.
+
 ## 0.63.0
 
 ### Minor Changes

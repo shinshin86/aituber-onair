@@ -13,6 +13,11 @@ const error = { message: 'Mock provider failure' };
 const routes = [
   {
     provider: 'openrouter',
+    model: 'mistralai/mistral-large-4-0',
+    responses: false,
+  },
+  {
+    provider: 'openrouter',
     model: 'unbiased/pareto-26.10-preview',
     responses: false,
   },

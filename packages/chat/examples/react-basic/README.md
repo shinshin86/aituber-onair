@@ -445,3 +445,24 @@ refreshing this list.
 See [catalog behavior and SDK boundaries](../../../../docs/sample-openrouter-catalog.md)
 for cache, pricing, capability, and request limitations. Run `npm test` in this
 example directory for its offline regression suite.
+
+### Mistral Large 4 on OpenRouter
+
+Select **OpenRouter → Mistral Large 4** (`mistralai/mistral-large-4-0`), an
+explicit public-preview option appended after Pareto. Existing model defaults
+and curated ordering stay unchanged. Text and image input are supported when
+the catalog confirms image support. The sample and package start reasoning at
+`none` for responsive chat; the vendor default is `high`. The selector offers
+only `none` and `high` when confirmed by catalog metadata, and hides reasoning
+token budgets. Stale budgets from another model are never sent.
+
+Development, preview, and deployed builds send authenticated requests directly
+to `https://openrouter.ai/api/v1/chat/completions`; no OpenRouter proxy is
+configured. The provider supports ordinary tool calls with reasoning disabled.
+This sample UI does not configure tools; the provider parser does not preserve
+`reasoning_details` across tool continuations, so state-preserving multi-turn
+reasoning/tool sessions at `high` are not promised.
+Audio/video input and enforced structured output are not enabled here.
+Rendered-DOM tests use fake credentials and mocked SSE to cover None/High,
+streaming, image requests, repeated sends, and HTTP/in-stream error recovery.
+These checks do not prove live inference, account access, or browser CORS.

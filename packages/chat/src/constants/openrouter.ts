@@ -1,6 +1,8 @@
 export const ENDPOINT_OPENROUTER_API =
   'https://openrouter.ai/api/v1/chat/completions';
 
+export const MODEL_OPENROUTER_MISTRAL_LARGE_4_0 = 'mistralai/mistral-large-4-0';
+
 export const MODEL_UNBIASED_PARETO_26_10_PREVIEW =
   'unbiased/pareto-26.10-preview';
 
@@ -48,6 +50,7 @@ export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+  MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
 ];
 
 // OpenRouter models
@@ -194,6 +197,10 @@ const OPENROUTER_MODEL_REASONING: Record<
     defaultEffort?: OpenRouterReasoningEffort;
   }
 > = {
+  [MODEL_OPENROUTER_MISTRAL_LARGE_4_0]: {
+    efforts: ['none', 'high'],
+    defaultEffort: 'none',
+  },
   [MODEL_UNBIASED_PARETO_26_10_PREVIEW]: {
     efforts: [],
     defaultEffort: undefined,
@@ -362,6 +369,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_XAI_GROK_4_6,
   MODEL_XAI_GROK_4_5,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+  MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
 ];
 
 // Rate limits for free tier

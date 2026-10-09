@@ -249,14 +249,15 @@ afterEach(async () => {
 
 describe('ProviderSelector rendered configuration for recent models', () => {
   it('appends Pareto after the existing OpenRouter choices without changing selection', async () => {
-    // The curated list (shown as the unverified fallback) keeps Pareto last.
+    // The curated fallback keeps every old choice in order before the appended model.
     // A fetched catalog is listed by model ID, so only its presence is checked.
     const curatedLabels = allModels
       .filter((model) => model.provider === 'openrouter')
       .map((model) => model.name);
-    expect(curatedLabels.slice(-2)).toEqual([
+    expect(curatedLabels.slice(-3)).toEqual([
       'KAT-Coder-Pro V2.5 (OpenRouter)',
       'Pareto 26.10 Preview',
+      'Mistral Large 4',
     ]);
 
     await renderApp();
@@ -274,6 +275,10 @@ describe('ProviderSelector rendered configuration for recent models', () => {
     ).toBe('true');
     expect(
       button('Pareto 26.10 Preview', 'model').getAttribute('aria-pressed'),
+    ).toBe('false');
+
+    expect(
+      button('Mistral Large 4', 'model').getAttribute('aria-pressed'),
     ).toBe('false');
 
     await click(button('Pareto 26.10 Preview', 'model'));

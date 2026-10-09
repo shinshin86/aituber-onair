@@ -3,6 +3,7 @@ import { OpenRouterChatServiceProvider } from '../../src/services/providers/open
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+  MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
@@ -87,6 +88,7 @@ import {
 
 const recentOpenRouterVisionModels = [
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+  MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_OPENAI_GPT_5_6_SOL,
@@ -139,7 +141,7 @@ describe('OpenRouterChatServiceProvider', () => {
   });
 
   describe('getSupportedModels', () => {
-    it('preserves existing model order and appends Pareto last', () => {
+    it('preserves existing model order and appends Mistral Large 4 after Pareto', () => {
       const models = provider.getSupportedModels();
       expect(Array.isArray(models)).toBe(true);
       expect(models).toEqual([
@@ -226,6 +228,7 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
         MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
         MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+        MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
       ]);
     });
   });
