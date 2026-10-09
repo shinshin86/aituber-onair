@@ -5,7 +5,8 @@
 [English version](./avatar.md)
 
 AITuber OnAir は、チャットや音声の裏側だけを扱うツールキットではありません。
-PNG / ぷるぷるPNGTuber / VRM / Live2D / Inochi2D / PSD / Pet などのアバター表現を
+PNG / ぷるぷるPNGTuber / VRM / Live2D / Inochi2D / PSD / Pet / 1枚画像 /
+メッシュアバターなどのアバター表現を
 組み合わせて、より豊かな AI キャラクター体験を作るための入口にもなります。
 
 このガイドでは、どのアバター方式から始めるとよいか、表現力を増やしたい
@@ -14,6 +15,8 @@ PNG / ぷるぷるPNGTuber / VRM / Live2D / Inochi2D / PSD / Pet などのアバ
 ## アバター方式
 
 ### PNGTuber
+
+![PNGTuber サンプルの画面](../packages/core/examples/react-pngtuber-app/images/react-pngtuber-app.png)
 
 軽量な 2D アバターを最短で動かしたい場合に向いています。
 PNGTuber サンプルでは、次の4状態画像を使います。
@@ -28,6 +31,8 @@ PNGTuber サンプルでは、次の4状態画像を使います。
 を参照してください。
 
 ### ぷるぷるPNGTuber
+
+![ぷるぷるPNGTuber サンプルの画面](../packages/core/examples/react-purupuru-app/images/react-purupuru-app.png)
 
 トラッキングや 3D アセットを用意せずに、よく動く 2D アバターを使いたい場合に
 向いています。6状態の表情画像と前髪・後ろ髪レイヤーを 1 つの `.purupuru`
@@ -46,6 +51,8 @@ PNGTuber サンプルでは、次の4状態画像を使います。
 
 ### VRM
 
+![VRM サンプルの画面](../packages/core/examples/react-vrm-app/images/react-vrm-app.png)
+
 3D アバター、カメラ操作、待機モーション、リップシンク、表情プリセットを
 使いたい場合に向いています。VRM サンプルはローカルの `.vrm` モデルを
 表示し、応答の感情タグに応じて利用可能な表情を適用できます。
@@ -55,6 +62,10 @@ PNGTuber サンプルでは、次の4状態画像を使います。
 を参照してください。
 
 ### Live2D
+
+![Live2D サンプルの画面](../packages/core/examples/react-live2d-app/images/react-live2d-app-hiyori.png)
+
+この画像は Live2D 公式サンプルデータ「桃瀬ひより」を読み込んだ表示例です。モデルデータはこのリポジトリに同梱していません。
 
 すでに Cubism のモデルフォルダを持っていて、モデル側の動きを活かした
 2D キャラクターを表示したい場合に向いています。このサンプルでは、
@@ -67,6 +78,8 @@ PNGTuber サンプルでは、次の4状態画像を使います。
 
 ### Inochi2D
 
+![Inochi2D サンプルの画面](../packages/core/examples/react-inochi2d-app/images/react-inochi2d-app.png)
+
 Inochi2D モデルを WebGL ステージで表示し、リグやモーションを活かした
 2D アバターを試したい場合に向いています。サンプルは `.inx` / `.inp` を
 読み込み、音声リップシンク、対応ランタイムでの発話表情、ドラッグ・ズーム、
@@ -78,6 +91,8 @@ Inochi2D モデルを WebGL ステージで表示し、リグやモーション�
 を参照してください。
 
 ### PSD
+
+![PSD サンプルの画面](../packages/core/examples/react-psd-app/images/react-psd-app.webp)
 
 1つの `.psd` ファイルにまとめたレイヤー付き 2D 立ち絵を、そのまま
 アバターとして使いたい場合に向いています。PSD サンプルはレイヤーを canvas 上で
@@ -95,6 +110,8 @@ Still2Rig PSD のワークフローも利用できます。
 
 ### Pet
 
+![Pet サンプルの画面](../packages/core/examples/react-pet-app/images/react-pet-app.jpg)
+
 人型アバターではなく、小さな相棒キャラクターを使いたい場合に向いています。
 Codex Pet 互換のスプライトシートを使い、チャット状態、応答の雰囲気、
 音声ボリュームに応じてアニメーションを切り替えます。
@@ -105,6 +122,19 @@ Codex Pet 互換のスプライトシートを使い、チャット状態、応�
 
 ### Single Image Avatar
 
+<p align="center">
+  <img
+    src="../packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png"
+    alt="イラスト版ミコを表示した Single Image Avatar サンプル"
+    width="49%"
+  />
+  <img
+    src="../packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app-puppet.png"
+    alt="フェルト人形風ミコを表示した Single Image Avatar サンプル"
+    width="49%"
+  />
+</p>
+
 キャラクター画像を1枚だけ用意し、口や目の差分画像を作らずに発話へ反応させたい
 場合に向いています。TTSの実音声に合わせて、跳ねる「Bounce」と小さく左右へ
 揺れる「Puppet Wobble」を切り替えられます。イラスト版とフェルト製パペット風の
@@ -113,6 +143,26 @@ Miko画像を同梱しており、手元の画像にも差し替えられます�
 まずは
 [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
 を参照してください。
+
+### Mesh Avatar
+
+![Mesh Avatar サンプルの画面](../packages/core/examples/react-mesh-avatar-app/images/react-mesh-avatar-app.png)
+
+イラスト1枚を Live2D のように動かしたい場合に向いています。イラストを素体、
+手、房飾り、目のパーツなどのレイヤーに分け、WebGL2 のメッシュ変形で顔の向きと
+傾き、呼吸、まばたき、視線、髪の揺れを付けます。TTS の音量に合わせた口パクと、
+応答の感情タグに合わせた表情・モーションの切り替えにも対応しています。
+チャイナドレス姿のミコを同梱しています。
+
+リグは同梱画像に合わせて調整しているため、別のイラストを使う場合は
+レイヤーの作り直しとリグの調整が必要です。
+
+まずは
+[`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app)
+を参照してください。
+
+自分のイラストからメッシュアバターを作りたい場合は、後述する
+Mesh Avatar Studio を利用できます。
 
 ## アバター表現の拡張
 
@@ -230,6 +280,29 @@ See-through を実行でき、Codex 以外の Claude Code や Hermes Agent な�
 PSD を生成したら、PSD サンプルを起動し、Settings の Visual セクションにある
 PSD avatar からファイルを選択してください。元画像や生成した素材の権利は、
 ツールのライセンスとは別に確認してください。
+
+## 関連ツール: Mesh Avatar Studio
+
+[Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio)
+は、イラスト1枚から、まばたき・口パク・首振り・呼吸・髪の揺れをする
+2D メッシュアバターを作るための関連リポジトリです。
+
+イラストを渡して Claude Code や Codex に依頼すると、エージェントがリグを
+配置し、画像をレイヤーに切り出して、決まったポーズの画像で仕上がりを確認します。
+作ったプロジェクトはローカルのエディタで開き、プレビューを見ながら点をドラッグ
+して、目や手の輪郭、髪の範囲を直せます。閉じた目や母音ごとの口の描き分け画像を
+追加すると、まばたきと口の動きが自然になります。描き分け画像は Codex の
+画像生成で作れます。Claude Code は画像を生成できないため、画像生成に渡す
+マスクと依頼文の準備までを頼みます。
+
+作ったアバターは、カメラとマイクで動かして配信にも使えます。映像と音声は
+端末内で処理し、OBS のブラウザソースで配信用の画面を表示します。
+
+現時点では、Mesh Avatar Studio で作ったプロジェクトを Mesh Avatar サンプルに
+そのまま読み込む機能はありません。サンプルのリグは、同梱のミコに合わせて
+コードで定義しています。
+
+元画像や生成した素材の権利は、ツールのライセンスとは別に確認してください。
 
 ## 関連リソースと利用条件の確認
 
