@@ -302,6 +302,7 @@ export const FISH_AUDIO_MODELS: Record<FishAudioModel, string> = {
   's2.1-pro-free': 'S2.1 Pro Free — promotional tier without an SLA',
   's2-pro': 'S2 Pro — production model',
   s1: 'S1 — previous generation',
+  'drama-3-preview': 'Drama 3 Preview — behavior and availability may change',
 };
 
 export const FISH_AUDIO_FORMATS: Record<FishAudioFormat, string> = {

@@ -344,6 +344,14 @@ model/voice を取得できます。この統合では `s2-pro` を安定版の�
 `s2.1-pro-free` は明示選択のみ可能です。SLA 付きの本番 tier としては扱わないで
 ください。
 
+プレビューモデルは動作や提供状況が変わる可能性があるため、明示的に選択します。
+Drama 3 Preview は `fishAudioModel: 'drama-3-preview'` で指定できます。
+[2026年9月23日の変更履歴](https://docs.fish.audio/developer-guide/getting-started/changelog)で発表され、
+同じ [TTS エンドポイント](https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech)に記載されています。
+この統合は単一の `reference_id` を送信し、one-shot の音声を返します。
+複数話者の対話や `Talk.style` からモデル固有の演出指示への変換には対応していません。
+既定値の `s2-pro` は変更しません。
+
 話者一覧は、公開 model catalog 全体を走査しないよう既定で最大100件を返します。
 より多くの結果が必要な場合は `limit` と、必要に応じて `pageSize` を指定すると、
 その上限内でページングします。
