@@ -1,5 +1,26 @@
 # @aituber-onair/core
 
+## 0.26.21
+
+### Patch Changes
+
+- Fix `chatOptions.responseLength` being ignored for text chat since 0.23.8.
+  Core now forwards it to the chat provider, so the selected preset sets the
+  provider's output-token budget again instead of the provider default.
+- An explicit `providerOptions.responseLength` still takes precedence, and an
+  explicit `chatOptions.maxTokens` still overrides both.
+- `openai-compatible` keeps token limits opt-in: it does not inherit
+  `chatOptions.responseLength`. Set `providerOptions.responseLength` or
+  `chatOptions.maxTokens` to request a limit.
+- `updateChatOptions({ responseLength })` now reaches the provider. Core
+  rebuilds the chat service while keeping chat history, memory, tools, and
+  listeners, and switches only after in-flight chat, vision, and one-shot
+  requests finish. If the rebuild fails, `updateChatOptions` throws and none of
+  the passed options are applied.
+- Short presets now cap output tokens again. Reasoning-capable models outside
+  the OpenAI minimum-token floors may need a longer preset to avoid empty or
+  truncated replies.
+
 ## 0.26.20
 
 ### Patch Changes
