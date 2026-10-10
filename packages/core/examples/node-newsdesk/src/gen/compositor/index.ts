@@ -17,6 +17,11 @@ export async function openCompositor(
   mouthValues: Float32Array,
 ): Promise<CompositorSession> {
   const avatar = await loadAvatar(config.avatar);
+  if (avatar.runtime === 'hybrid')
+    return (await import('../../avatars/psd/compositor.js')).openPsdCompositor(
+      config,
+      mouthValues,
+    );
   if (avatar.runtime === 'node')
     return (await import('./node.js')).openNodeCompositor(
       config,

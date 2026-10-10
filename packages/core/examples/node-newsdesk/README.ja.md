@@ -1,6 +1,6 @@
 # Node Newsdesk
 
-JSON台本から縦型ニュース動画を生成します。元の記事やメモから、AITuber OnAir Coreで台本を作ることもできます。同じ台本のまま、`--avatar`でPNGTuber・Purupuru・Mesh・VRM・Live2D・Inochi2Dを切り替えられます。
+JSON台本から縦型ニュース動画を生成します。元の記事やメモから、AITuber OnAir Coreで台本を作ることもできます。同じ台本のまま、`--avatar`でPNGTuber・Purupuru・Mesh・VRM・Live2D・Inochi2D・PSDを切り替えられます。
 
 [English](README.md)
 
@@ -17,17 +17,19 @@ npx playwright install chromium
 npm run gen -- --script samples/hello-sine.json --avatar mesh --output work/mesh.mp4
 npm run gen -- --script samples/hello-sine.json --avatar vrm --output work/vrm.mp4
 npm run gen -- --script samples/hello-sine.json --avatar inochi2d --output work/inochi2d.mp4
+npm run gen -- --script samples/hello-sine.json --avatar psd --output work/psd.mp4
 ```
 
 サンプルの音声は決定的なサイン波で、APIキーは不要です。出力は1080 × 1920、30 fpsです。MP4と同じ場所に、ナレーションWAV・時刻情報JSON・描画設定JSONを保存します。アバターの初期値はPNGTuberです。
 
-PNGTuberとPurupuruはNodeのネイティブCanvas2Dで描画し、Playwrightの読み込みやChromiumの起動を行いません。MeshはWebGLアバターと共通のCanvas2D画面をヘッドレスChromium内で描画します。上記のChromiumインストールはMesh・VRM・Live2D・Inochi2Dを使う場合に必要です。VRMは隣接する`react-vrm-app/public/avatar/miko.vrm`と`idle_loop.vrma`を初期アセットとして使います。Live2Dは利用者がモデルとCubism Coreのパスを指定します（下記参照）。Inochi2Dは隣接する`react-inochi2d-app/public/inochi2d`のruntime・Akaモデル・モーションを使います。ブラウザアダプターは共通画面をページ内で描画します。
+PNGTuberとPurupuruはNodeのネイティブCanvas2Dで描画し、Playwrightの読み込みやChromiumの起動を行いません。MeshはWebGLアバターと共通のCanvas2D画面をヘッドレスChromium内で描画します。上記のChromiumインストールはMesh・VRM・Live2D・Inochi2D・PSDのauto/motionモードで必要です。PSDのstaticモードを明示すると、ChromiumなしでNode描画を使います。VRMは隣接する`react-vrm-app/public/avatar/miko.vrm`と`idle_loop.vrma`を初期アセットとして使います。Live2Dは利用者がモデルとCubism Coreのパスを指定します（下記参照）。Inochi2Dは隣接する`react-inochi2d-app/public/inochi2d`のruntime・Akaモデル・モーションを使います。ブラウザアダプターは共通画面をページ内で描画します。
 
 画面にはニュースパネル、章の進行表示、キーワード、感情に合わせた効果、カラオケ字幕、ティッカー、開始・終了タイトルが表示されます。PNGTuberは口・目の4状態と呼吸・傾き、Purupuruは口の3状態と瞬き・呼吸・傾き・髪の揺れに対応します。この2種類の表情画像は元のままで、台詞の感情は画面効果に反映されます。
 
 Meshは表情と予定された動作にも対応します。隣接する`react-mesh-avatar-app`のフレームワーク非依存エンジンとqipaoアセットを読み取り専用で利用するため、そのディレクトリが必要です。VRMは音声RMSによる口パク、seedに基づく瞬き、VRMAアニメーション、モデルが持つ感情表情に対応します。未対応の感情は通常の表情で表示し、画面の名前付き動作は選択したVRMAループを置き換えません。
 
 Live2Dは音声RMSによる口パク、seedに基づく瞬き、固定したIdleモーションに対応し、撮影前にモデルを安定させます。台詞の感情と名前付き動作は共通画面に反映し、モデルは選択したIdleを続けます。Inochi2Dは未改変のWASMブリッジで、音声RMSの口パク、seedに基づく瞬き、idleループを描画します。台詞の感情と名前付き動作は共通画面に反映します。
+PSDはNodeでPSDTool形式の口・目レイヤーを切り替え、ChromiumではAnime2.5DRigのモーションを描画します。autoモードはリグを判定し、不適合なら静止描画に戻ります。台詞の感情と名前付き動作は共通画面に反映します。
 
 ## アバター設定
 
@@ -43,7 +45,7 @@ Live2Dは音声RMSによる口パク、seedに基づく瞬き、固定したIdle
 }
 ```
 
-`model`は設定ファイルからの相対パスです。PNGTuberでは4枚のPNGを持つディレクトリ、Purupuruでは`.purupuru`ファイル、Meshでは`manifest.json`を持つアセットディレクトリ、VRMでは`.vrm`、Live2Dでは`.model3.json`、Inochi2Dでは`.inx`を指定します。PNGTuber・Purupuru・Mesh・VRMでは省略すると初期のMikoアセットを使います。Live2DはモデルとCoreのパスを明示する必要があります。Inochi2Dは隣接する`react-inochi2d-app/public/inochi2d`のAkaモデル・モーション・runtimeを初期値として参照します。
+`model`は設定ファイルからの相対パスです。PNGTuberでは4枚のPNGを持つディレクトリ、Purupuruでは`.purupuru`ファイル、Meshでは`manifest.json`を持つアセットディレクトリ、VRMでは`.vrm`、Live2Dでは`.model3.json`、Inochi2Dでは`.inx`、PSDでは`.psd`を指定します。PNGTuber・Purupuru・Mesh・VRMでは省略すると初期のMikoアセットを使います。Live2DはモデルとCoreのパスを明示する必要があります。Inochi2Dは隣接する`react-inochi2d-app/public/inochi2d`のAkaモデル・モーション・runtimeを初期値として参照します。PSDの初期値は同梱の`assets/sample-static.psd`と`mode: "auto"`です。
 
 `scale`は0.1〜3、`x`と`y`は660 × 700のアバター枠内の位置（0〜1）、`intensity`は0〜3です。不明な項目や不正な値はエラーになります。検証と初期値は各アダプターで定義しています。Meshは`intensity`の代わりに`padTop`・`padSide`・`talkGain`を受け取ります。
 
@@ -54,6 +56,7 @@ Live2Dは音声RMSによる口パク、seedに基づく瞬き、固定したIdle
 | VRM | `scale: 1`, `x: 0.5`, `y: 0.5` | `animation`、`intensity: 1`（0〜3）、`framing`、`lighting`（下記参照） |
 | Live2D | `scale: 1`, `x: 0.5`, `y: 0.5` | `cubismCore`、`intensity: 1`（0〜3）、`framing`、`idleMotionGroup`、`warmupSeconds: 3`（0〜30） |
 | Inochi2D | `scale: 1`, `x: 0.5`, `y: 0.5` | `runtime`・`motion`・`idleAnimation`・`intensity: 1`（0〜3）・`framing`（下記参照） |
+| PSD | `scale: 1`, `x: 0.5`, `y: 0.5` | `mode: "auto"`・`roles`・`intensity: 1`（0〜3、motionでは2まで）・motion用`framing`（下記参照） |
 | Mesh | `scale: 1`, `x: 0.5`, `y: 0.5` | `padTop: -0.07`（-0.5〜1）、`padSide: -0.18`（-0.45〜1）、`talkGain: 0.55`（0〜3） |
 
 Purupuruは上半身を大きく表示します。Meshのpaddingは元画像の切り取り範囲、`talkGain`は音声に伴う体の動きの強さを調整します。
@@ -133,6 +136,60 @@ Live2D公式サンプルモデルで作った動画を公開する場合は、[�
 
 ブリッジをimportする前に、rAFキュー・`performance.now()`・`Date.now()`・`Math.random()`をseedに基づく仮想時計へ置き換えます。各フレームで`1 / 30`秒だけ進め、ブリッジを1回更新して次フレームの予約が1件であることを確認します。更新中に予約されたrAFは次フレームまで待ちます。口は`Mouth:: Shape`のvec2、瞬きは`setEyeBlinkValue`を優先し、終了時には元の時計APIへ戻します。
 
+### PSDの静止・モーション描画
+
+同梱の静止サンプルを使う場合は、`work/psd-static.json`に次を保存します。
+
+```json
+{ "mode": "static", "intensity": 1 }
+```
+
+```bash
+npm run gen -- --script samples/hello-sine.json --avatar psd \
+  --avatar-config work/psd-static.json --output work/psd-static.mp4
+```
+
+`mode: "static"`はNodeのPSDパーサーとCanvas2Dだけを読み込みます。初期値の`mode: "auto"`はChromiumでAnime2.5DRigの判定を行い、不適合ならChromiumを閉じて静止描画へ戻ります。`mode: "motion"`で適合するリグが見つからなければ、判定理由をエラーとして返します。同梱サンプルはPSDTool形式のため、autoでも静止描画になります。
+
+静止モードはPSDToolの`!`による強制表示、`*`によるラジオグループ、下から上への合成、親から引き継ぐ不透明度を維持します。口・目の役割は日本語・英語のレイヤー名から判定し、`roles`でピクセルレイヤーへの正確なパスを指定できます。
+
+```json
+{
+  "mode": "static",
+  "model": "avatar.psd",
+  "roles": {
+    "mouthOpen": "Face/Mouth/Open",
+    "mouthClosed": "Face/Mouth/Closed",
+    "eyesOpen": "Face/Eyes/Open",
+    "eyesClosed": "Face/Eyes/Closed"
+  }
+}
+```
+
+役割を解決できない場合はレイヤーツリーを表示します。口は音声RMS 0.45を境に切り替え、目はseedに基づく瞬きで切り替えます。`intensity`は呼吸と傾きを0〜3倍にし、0ではその動きを止めます。同梱サンプルの口・目は差分領域だけのレイヤーなので、それぞれ独立して切り替わります。
+
+静止モードは通常のピクセルレイヤーを持つ8-bit RGB PSDを対象にしています。PSB、クリッピング、マスク、効果、`.faview`、`:flip*`変換は未対応です。通常以外の合成モードは通常のアルファ合成で描画します。`:flip*`名は解析しますが変換せず、レイヤーの未対応機能は診断情報に記録します。
+
+モーションは隣接する既存のMiko PSDをコピーせず参照できます。`work/psd-motion.json`に次を保存します。
+
+```json
+{
+  "model": "../../react-psd-app/public/avatar/miko-anime25drig-cheer.psd",
+  "mode": "auto",
+  "intensity": 0.6,
+  "framing": { "scale": 2, "x": 0.5, "y": 0.8 }
+}
+```
+
+```bash
+npm run gen -- --script samples/hello-sine.json --avatar psd \
+  --avatar-config work/psd-motion.json --output work/psd-motion.mp4
+```
+
+パスは設定ファイル相対、絶対パス、`~/`始まりを指定できます。モーションは隣接する既存のリガーとAnime2.5DRigレンダラーを読み取り専用で参照します。読み込む前にseedに基づく仮想時計を設定し、各フレームで`mouthOpen`入力、固定時間の進行、1回のrAF更新を行います。モーションの`intensity`は旧レンダラーの0〜2へ制限します。目の開閉を直接設定するAPIはないため、時刻と乱数を固定した内蔵の瞬きを維持します。`roles`は静止モードで使います。
+
+モーション用`framing`は共通のscale・位置より先に元キャンバスを変換し、静止モードでは使いません。初期値の`scale: 2`・`x: 0.5`・`y: 0.8`は隣接サンプルの上半身を表示する構図です。scaleは0.1〜3、xとyは0〜1です。元キャンバス全体を収める場合は`scale: 1`・`x: 0.5`・`y: 0.5`を指定します。
+
 ## 台本生成
 
 ```bash
@@ -166,8 +223,10 @@ npm run gen -- --script samples/hello-sine.json --frame 60 --png work/frame60.pn
 | VRM | 隣接する`react-vrm-app/public/avatar/miko.vrm` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Mesh | 隣接する`react-mesh-avatar-app/public/avatar/qipao` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Inochi2D | 隣接する派生Akaモデル・モーション | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Aka / seagetch（下記参照） |
+| PSD static | 同梱のMiko由来`sample-static.psd` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
+| PSD motion | 隣接する`react-psd-app/public/avatar/miko-anime25drig-cheer.psd` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 
-MikoはAITuber OnAirの公式キャラクターです。[Mikoキャラクター利用ガイドライン](https://miko.aituberonair.com/#terms)の日本語版を正式な利用条件として参照してください。PSDは、このサンプルではまだ利用できません。初期VRMAループは`react-vrm-app`が[`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM)のアセットから流用したものです。アニメーション自体を再配布する場合は、そのライセンスを確認してください。隣接するモデルとアニメーションは、このサンプル内には複製していません。
+MikoはAITuber OnAirの公式キャラクターです。[Mikoキャラクター利用ガイドライン](https://miko.aituberonair.com/#terms)の日本語版を正式な利用条件として参照してください。初期VRMAループは`react-vrm-app`が[`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM)のアセットから流用したものです。アニメーション自体を再配布する場合は、そのライセンスを確認してください。隣接するモデルとアニメーションは、このサンプル内には複製していません。
 
 ## Aka のクレジット
 
@@ -184,6 +243,25 @@ MikoはAITuber OnAirの公式キャラクターです。[Mikoキャラクター�
 ブラウザ描画向け rig 調整、アバター動作用 helper rig、idle motion の調整、
 `public/inochi2d/manifest.json` による motion metadata 設定です。元モデルの
 クレジットとライセンスは sibling の `Aka.ATTRIBUTION.md` に保持されています。
+
+## Anime2.5DRig のクレジット
+
+Anime2.5DRig 互換 auto-rigging と renderer のクレジットは次のとおりです。
+
+- Project: [Anime2.5DRig](https://github.com/852wa/Anime2.5DRig)
+- Author: 852wa (hakoniwa)
+- Copyright: Copyright (c) 2026 hakoniwa
+- License: MIT License
+- Upstream commit: `d48825867acd081de22b0e7b5585bb562288796d`
+
+この example は vendored sibling rigger と renderer を read-only で import し、
+コピーしません。sibling のミコPSDには、下記の素材利用条件が適用されます。
+
+同梱のミコ由来 PSD アバターの著作権表記は © Yuki Shindo (AITuber OnAir) です。
+このアバターはリポジトリの MIT License 対象外です。作品・コンテンツの一部
+として一体で再配布できますが、素材単体・素材集としての再配布は禁止です。
+正式な日本語ガイドラインへのリンクは
+[Miko Asset Terms](./MIKO_ASSET_TERMS.md)を参照してください。
 
 ## 開発時の確認
 

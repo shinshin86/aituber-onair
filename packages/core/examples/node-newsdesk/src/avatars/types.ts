@@ -62,12 +62,31 @@ export interface Inochi2dAvatarConfig extends BaseAvatarConfig {
   intensity: number;
   framing: { scale: number; x: number; y: number };
 }
+export type PsdAvatarMode = 'auto' | 'static' | 'motion';
+export interface PsdAvatarRoles {
+  mouthOpen?: string;
+  mouthClosed?: string;
+  eyesOpen?: string;
+  eyesClosed?: string;
+}
+export interface PsdAvatarConfig extends BaseAvatarConfig {
+  kind: 'psd';
+  model: string;
+  mode: PsdAvatarMode;
+  roles: PsdAvatarRoles;
+  intensity: number;
+  framing: { scale: number; x: number; y: number };
+}
 export type BrowserAvatarConfig =
   | MeshAvatarConfig
   | VrmAvatarConfig
   | Live2dAvatarConfig
-  | Inochi2dAvatarConfig;
-export type NodeAvatarConfig = PngtuberAvatarConfig | PurupuruAvatarConfig;
+  | Inochi2dAvatarConfig
+  | PsdAvatarConfig;
+export type NodeAvatarConfig =
+  | PngtuberAvatarConfig
+  | PurupuruAvatarConfig
+  | PsdAvatarConfig;
 export type AvatarConfig = NodeAvatarConfig | BrowserAvatarConfig;
 export interface AvatarPrepareInput<
   Config extends AvatarConfig = AvatarConfig,
@@ -113,7 +132,15 @@ export interface BrowserAvatarAdapter {
   readonly runtime: 'browser';
   resolveConfig(raw: unknown, configFile: string): BrowserAvatarConfig;
 }
-export type LoadedAvatar = NodeAvatarAdapter | BrowserAvatarAdapter;
+export interface HybridAvatarAdapter {
+  readonly kind: 'psd';
+  readonly runtime: 'hybrid';
+  resolveConfig(raw: unknown, configFile: string): PsdAvatarConfig;
+}
+export type LoadedAvatar =
+  | NodeAvatarAdapter
+  | BrowserAvatarAdapter
+  | HybridAvatarAdapter;
 export type BrowserAvatarRenderer = AvatarAdapter<
   HTMLCanvasElement | Promise<HTMLCanvasElement>,
   BrowserAvatarConfig

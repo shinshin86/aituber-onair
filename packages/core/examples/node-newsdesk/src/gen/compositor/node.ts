@@ -33,7 +33,8 @@ export async function openNodeCompositor(
   if (
     avatar.runtime !== 'node' ||
     (config.avatarConfig.kind !== 'pngtuber' &&
-      config.avatarConfig.kind !== 'purupuru')
+      config.avatarConfig.kind !== 'purupuru' &&
+      config.avatarConfig.kind !== 'psd')
   )
     throw new Error('A Node avatar config is required.');
   try {
@@ -52,6 +53,7 @@ export async function openNodeCompositor(
   return {
     launchMode: 'node',
     frameFormat: 'rgba' as const,
+    avatarDiagnostics: avatar.describe?.(),
     actions: timeline.actions.length,
     async renderFrame(frame: number, mouth: number) {
       const start = performance.now();

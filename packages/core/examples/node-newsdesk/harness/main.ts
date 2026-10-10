@@ -17,7 +17,8 @@ async function load({ config, mouthValues }: HarnessInput) {
     config.avatarConfig.kind !== 'mesh' &&
     config.avatarConfig.kind !== 'vrm' &&
     config.avatarConfig.kind !== 'live2d' &&
-    config.avatarConfig.kind !== 'inochi2d'
+    config.avatarConfig.kind !== 'inochi2d' &&
+    config.avatarConfig.kind !== 'psd'
   )
     throw new Error('Unsupported browser avatar.');
   await avatar?.dispose();
@@ -28,9 +29,11 @@ async function load({ config, mouthValues }: HarnessInput) {
         ? (await import('../src/avatars/vrm/renderer.js')).createRenderer()
         : config.avatarConfig.kind === 'live2d'
           ? (await import('../src/avatars/live2d/renderer.js')).createRenderer()
-          : (
-              await import('../src/avatars/inochi2d/renderer.js')
-            ).createRenderer();
+          : config.avatarConfig.kind === 'inochi2d'
+            ? (
+                await import('../src/avatars/inochi2d/renderer.js')
+              ).createRenderer()
+            : (await import('../src/avatars/psd/renderer.js')).createRenderer();
   const stage = document.querySelector<HTMLCanvasElement>('#stage');
   if (!stage) throw new Error('Harness stage canvas was not found.');
   stage.width = config.width;

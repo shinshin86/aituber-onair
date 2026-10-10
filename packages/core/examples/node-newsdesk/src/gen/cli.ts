@@ -129,7 +129,7 @@ export function parseArgs(argv: string[]): GenArgs {
 
 function usage(): string {
   return `Usage:
-  npm run gen -- --script <script.json> [--avatar pngtuber|purupuru|mesh|vrm|live2d|inochi2d] [--avatar-config config.json] [--output <video.mp4>]
+  npm run gen -- --script <script.json> [--avatar pngtuber|purupuru|mesh|vrm|live2d|inochi2d|psd] [--avatar-config config.json] [--output <video.mp4>]
   npm run gen -- --script <script.json> [--output <video.mp4>] --dry-run
   npm run gen -- --script <script.json> [--output <video.mp4>] --render-only
   npm run gen -- --script <script.json> --frame 45 --png work/frame45.png`;

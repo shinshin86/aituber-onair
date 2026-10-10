@@ -19,6 +19,9 @@ vi.mock('../src/avatars/mesh/adapter.js', () => {
 vi.mock('../src/avatars/inochi2d/adapter.js', () => {
   throw new Error('Unselected Inochi2D module was loaded.');
 });
+vi.mock('../src/avatars/psd/adapter.js', () => {
+  throw new Error('Unselected PSD module was loaded.');
+});
 vi.mock('../src/gen/compositor/browser.js', () => {
   throw new Error('Browser compositor was loaded for a Node avatar.');
 });
@@ -49,7 +52,6 @@ it('selects PNGTuber without evaluating any other adapter', async () => {
     await stage.close();
   }
   expect(() => parseAvatarKind('unknown')).toThrow(/Unknown avatar/);
-  await expect(loadAvatar('psd')).rejects.toThrow(/not available/);
 });
 
 it('keeps optional browser runtimes out of the Node CLI module graph', async () => {

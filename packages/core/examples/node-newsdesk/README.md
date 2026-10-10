@@ -2,7 +2,7 @@
 
 Generate a vertical news video from a JSON script, or turn source text into a
 script with AITuber OnAir Core. The same script can be rendered with PNGTuber,
-Purupuru, Mesh, VRM, Live2D, or Inochi2D by changing `--avatar`.
+Purupuru, Mesh, VRM, Live2D, Inochi2D, or PSD by changing `--avatar`.
 
 [日本語](README.ja.md)
 
@@ -19,6 +19,7 @@ npx playwright install chromium
 npm run gen -- --script samples/hello-sine.json --avatar mesh --output work/mesh.mp4
 npm run gen -- --script samples/hello-sine.json --avatar vrm --output work/vrm.mp4
 npm run gen -- --script samples/hello-sine.json --avatar inochi2d --output work/inochi2d.mp4
+npm run gen -- --script samples/hello-sine.json --avatar psd --output work/psd.mp4
 ```
 
 The sample uses a deterministic sine voice and requires no API key. Output is
@@ -26,7 +27,7 @@ The sample uses a deterministic sine voice and requires no API key. Output is
 beside the MP4. PNGTuber is the default. PNGTuber and Purupuru run in Node
 using native Canvas2D and do not load Playwright or launch Chromium. Mesh
 renders its WebGL avatar and the same Canvas2D screen in headless Chromium.
-Mesh, VRM, Live2D, and Inochi2D need the Chromium installation step above. VRM uses the sibling
+Mesh, VRM, Live2D, Inochi2D, and PSD auto/motion modes need the Chromium installation step above. Explicit PSD static mode runs in Node without Chromium. VRM uses the sibling
 `react-vrm-app/public/avatar/miko.vrm` and `idle_loop.vrma` by default; keep
 those files available. Live2D requires user-supplied model and Cubism Core paths
 (see below). Inochi2D uses the sibling `react-inochi2d-app/public/inochi2d`
@@ -48,6 +49,9 @@ settling period before capture. Line emotions and named cues affect the shared
 screen while the model continues its selected idle motion. Inochi2D provides
 RMS lip sync, seeded blinking, and a looping idle through its unmodified WASM
 bridge. Line emotions and named cues affect the shared screen.
+PSD supports PSDTool-style mouth/eye layers in Node and Anime2.5DRig motion in
+Chromium. Auto mode detects a usable rig and falls back to static rendering
+when none is found. Line emotions and named cues affect the shared screen.
 
 ## Avatar configuration
 
@@ -66,10 +70,11 @@ Avatar settings belong in a separate JSON file, passed with
 
 `model` is relative to that config file: a four-PNG directory for PNGTuber,
 a `.purupuru` file for Purupuru, or a Mesh asset directory containing
-`manifest.json`, a `.vrm` model file, a Live2D `.model3.json` file, or an Inochi2D `.inx` model. Omitting
+`manifest.json`, a `.vrm` model file, a Live2D `.model3.json` file, an Inochi2D `.inx` model, or a `.psd` file. Omitting
 it selects the default Miko assets for PNGTuber, Purupuru, Mesh, and VRM.
 Live2D requires explicit model and Core paths. Inochi2D defaults to the sibling
 Aka model, motion, and runtime without copying them.
+PSD defaults to the bundled `assets/sample-static.psd` and `mode: "auto"`.
 `scale` ranges from 0.1 to 3; `x` and `y` are normalized positions inside the
 660 × 700 avatar frame; `intensity` ranges from 0 to 3. Unknown fields and
 invalid values produce an error. Config validation and defaults belong to each
@@ -82,6 +87,7 @@ adapter. Mesh accepts `padTop`, `padSide`, and `talkGain` instead of `intensity`
 | VRM | `scale: 1`, `x: 0.5`, `y: 0.5` | `animation`, `intensity: 1` (0–3), `framing`, `lighting` (see below) |
 | Live2D | `scale: 1`, `x: 0.5`, `y: 0.5` | `cubismCore`, `intensity: 1` (0–3), `framing`, `idleMotionGroup`, `warmupSeconds: 3` (0–30) |
 | Inochi2D | `scale: 1`, `x: 0.5`, `y: 0.5` | `runtime`, `motion`, `idleAnimation`, `intensity: 1` (0–3), `framing` (see below) |
+| PSD | `scale: 1`, `x: 0.5`, `y: 0.5` | `mode: "auto"`, `roles`, `intensity: 1` (0–3; motion clamps to 2), motion `framing` (see below) |
 | Mesh | `scale: 1`, `x: 0.5`, `y: 0.5` | `padTop: -0.07` (-0.5–1), `padSide: -0.18` (-0.45–1), `talkGain: 0.55` (0–3) |
 
 Purupuru uses a closer upper-body view. Mesh padding controls the source-image
@@ -207,6 +213,82 @@ one next callback queued. Nested rAF callbacks wait until the next frame.
 Mouth control prefers the `Mouth:: Shape` vec2 parameter; blink control prefers
 `setEyeBlinkValue`. Original clock APIs are restored when the renderer disposes.
 
+### PSD static and motion modes
+
+For the bundled static sample, save `work/psd-static.json` with:
+
+```json
+{ "mode": "static", "intensity": 1 }
+```
+
+```bash
+npm run gen -- --script samples/hello-sine.json --avatar psd \
+  --avatar-config work/psd-static.json --output work/psd-static.mp4
+```
+
+`mode: "static"` loads only the Node PSD parser and Canvas2D compositor.
+`mode: "auto"` (the default) tries Anime2.5DRig detection in Chromium first;
+an unsuitable model closes Chromium and falls back to static rendering.
+`mode: "motion"` requires a usable rig and reports the detection reason otherwise.
+The bundled sample has PSDTool layers and uses static rendering in auto mode.
+
+Static mode preserves PSDTool `!` forced visibility, `*` radio groups,
+bottom-to-top composition, and inherited opacity. Mouth/eye roles are detected
+from Japanese or English layer names; override them with exact pixel-layer paths:
+
+```json
+{
+  "mode": "static",
+  "model": "avatar.psd",
+  "roles": {
+    "mouthOpen": "Face/Mouth/Open",
+    "mouthClosed": "Face/Mouth/Closed",
+    "eyesOpen": "Face/Eyes/Open",
+    "eyesClosed": "Face/Eyes/Closed"
+  }
+}
+```
+
+Unresolved roles report the layer tree. Mouth state switches at RMS 0.45;
+eyes follow the seeded blink schedule. `intensity` scales breathing and roll
+from 0–3; 0 disables those movements. The sample's mouth and eye layers are
+cropped feature regions, so each group can switch independently.
+
+Static support targets 8-bit RGB PSDs with ordinary pixel layers. PSB,
+clipping, masks, effects, `.faview`, and `:flip*` transforms are unsupported.
+Non-normal blending uses normal alpha composition. `:flip*` names are parsed
+without applying transforms; diagnostics list unsupported layer features.
+
+For motion, the existing sibling Miko PSD can be referenced without copying it.
+Save this as `work/psd-motion.json`:
+
+```json
+{
+  "model": "../../react-psd-app/public/avatar/miko-anime25drig-cheer.psd",
+  "mode": "auto",
+  "intensity": 0.6,
+  "framing": { "scale": 2, "x": 0.5, "y": 0.8 }
+}
+```
+
+```bash
+npm run gen -- --script samples/hello-sine.json --avatar psd \
+  --avatar-config work/psd-motion.json --output work/psd-motion.mp4
+```
+
+Paths may be config-relative, absolute, or begin with `~/`. Motion imports the
+existing sibling rigger and Anime2.5DRig renderer read-only. A seeded virtual
+clock is installed before those modules load. Each frame sets `mouthOpen`,
+advances fixed time, and flushes one rAF callback. Motion intensity is clamped
+to the original renderer's 0–2 range. The renderer has no eye-open input, so
+it retains its built-in blink automation with seeded time and randomness.
+`roles` applies only to static rendering.
+
+Motion `framing` transforms the source before shared scale/placement; static
+mode ignores it. Defaults `scale: 2`, `x: 0.5`, `y: 0.8` give an upper-body
+view of the sibling sample. Scale accepts 0.1–3 and x/y accept 0–1. Set
+`scale: 1`, `x: 0.5`, `y: 0.5` to fit the whole source canvas.
+
 ## Script generation
 
 ```bash
@@ -255,9 +337,11 @@ a browser Canvas2D context. Chromium also needs Japanese-capable system fonts;
 | Mesh | Sibling `react-mesh-avatar-app/public/avatar/qipao` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Purupuru | Bundled `miko.purupuru` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Inochi2D | Sibling derived Aka model/motion | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Aka by seagetch (details below) |
+| PSD static | Bundled Miko-derived `sample-static.psd` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
+| PSD motion | Sibling `react-psd-app/public/avatar/miko-anime25drig-cheer.psd` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 
 The Japanese [Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms)
-are authoritative. Miko is the official character of AITuber OnAir. PSD is not available in this example yet. The default
+are authoritative. Miko is the official character of AITuber OnAir. The default
 VRMA loop is reused by `react-vrm-app` from
 [`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM); review its license before
 redistributing the animation itself. Neither sibling model nor animation is
@@ -281,6 +365,26 @@ helper rig controls for avatar motion, adapted idle motion data, and motion
 metadata configured through `public/inochi2d/manifest.json`. The original model
 attribution and license are preserved in the sibling
 `Aka.ATTRIBUTION.md` file.
+
+## Anime2.5DRig attribution
+
+Anime2.5DRig-compatible auto-rigging and rendering carry this attribution:
+
+- Project: [Anime2.5DRig](https://github.com/852wa/Anime2.5DRig)
+- Author: 852wa (hakoniwa)
+- Copyright: Copyright (c) 2026 hakoniwa
+- License: MIT License
+- Upstream commit: `d48825867acd081de22b0e7b5585bb562288796d`
+
+This example imports the vendored sibling rigger and renderer read-only and
+does not copy them. The sibling Miko PSD remains subject to the asset terms
+below.
+
+The bundled Miko-derived PSD avatar is © Yuki Shindo (AITuber OnAir) and is not covered by
+the repository's MIT License. It may be redistributed as an integral part of a
+work or other content, but standalone redistribution and asset collections are
+prohibited. See [Miko Asset Terms](./MIKO_ASSET_TERMS.md), which links to the
+authoritative Japanese guidelines.
 
 ## Development
 

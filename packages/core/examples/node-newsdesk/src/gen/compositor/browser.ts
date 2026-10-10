@@ -139,6 +139,11 @@ async function startServer(
         url.pathname,
       );
     } else if (
+      config.avatarConfig.kind === 'psd' &&
+      url.pathname === '/model/psd'
+    ) {
+      void sendFile(response, config.avatarConfig.model);
+    } else if (
       config.avatarConfig.kind === 'inochi2d' &&
       url.pathname.startsWith('/runtime/')
     ) {
@@ -294,7 +299,8 @@ export async function openBrowserCompositor(
     config.avatarConfig.kind !== 'mesh' &&
     config.avatarConfig.kind !== 'vrm' &&
     config.avatarConfig.kind !== 'live2d' &&
-    config.avatarConfig.kind !== 'inochi2d'
+    config.avatarConfig.kind !== 'inochi2d' &&
+    config.avatarConfig.kind !== 'psd'
   )
     throw new Error('A browser avatar config is required.');
   if (config.avatarConfig.kind === 'live2d')
