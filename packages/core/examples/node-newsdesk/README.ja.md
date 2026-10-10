@@ -4,6 +4,20 @@ JSON台本から縦型ニュース動画を生成します。元の記事やメ�
 
 [English](README.md)
 
+## アバターギャラリー
+
+`samples/hello-sine.json`から、発話・キーワード・感情効果が見える4秒間を抜き出しています。PSDモーションは下記のPSD設定にある、隣接サンプルのMiko PSDを使います。
+
+| PNGTuber | Purupuru |
+| --- | --- |
+| ![PNGTuberのプレビュー](images/pngtuber.gif) | ![Purupuruのプレビュー](images/purupuru.gif) |
+| **PSD（静止）** | **PSD（モーション）** |
+| ![PSD静止のプレビュー](images/psd-static.gif) | ![PSDモーションのプレビュー](images/psd-motion.gif) |
+| **Mesh** | **VRM** |
+| ![Meshのプレビュー](images/mesh.gif) | ![VRMのプレビュー](images/vrm.gif) |
+| **Inochi2D** | **Live2D** |
+| ![Inochi2Dのプレビュー](images/inochi2d.gif) | 利用者がモデルとCubism Coreを用意する必要があります。[Live2Dのセットアップ](#live2d設定と必要ファイル)を参照してください。 |
+
 ## セットアップと動画生成
 
 Node.js 22以降と、PATH上の`ffmpeg`が必要です。

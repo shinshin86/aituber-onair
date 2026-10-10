@@ -6,6 +6,22 @@ Purupuru, Mesh, VRM, Live2D, Inochi2D, or PSD by changing `--avatar`.
 
 [日本語](README.ja.md)
 
+## Avatar gallery
+
+Four-second excerpts from `samples/hello-sine.json`, showing speech, keywords,
+and emotion effects. PSD motion uses the sibling Miko PSD described in the
+PSD configuration below.
+
+| PNGTuber | Purupuru |
+| --- | --- |
+| ![PNGTuber preview](images/pngtuber.gif) | ![Purupuru preview](images/purupuru.gif) |
+| **PSD (static)** | **PSD (motion)** |
+| ![PSD static preview](images/psd-static.gif) | ![PSD motion preview](images/psd-motion.gif) |
+| **Mesh** | **VRM** |
+| ![Mesh preview](images/mesh.gif) | ![VRM preview](images/vrm.gif) |
+| **Inochi2D** | **Live2D** |
+| ![Inochi2D preview](images/inochi2d.gif) | Requires a user-supplied model and Cubism Core. See [Live2D setup](#live2d-configuration-and-required-files). |
+
 ## Quick start
 
 Requires Node.js 22 or later and `ffmpeg` on PATH.
