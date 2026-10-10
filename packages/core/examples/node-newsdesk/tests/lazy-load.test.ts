@@ -46,7 +46,7 @@ it('selects PNGTuber without evaluating any other adapter', async () => {
     await stage.close();
   }
   expect(() => parseAvatarKind('unknown')).toThrow(/Unknown avatar/);
-  await expect(loadAvatar('live2d')).rejects.toThrow(/not available/);
+  await expect(loadAvatar('inochi2d')).rejects.toThrow(/not available/);
 });
 
 it('keeps optional browser runtimes out of the Node CLI module graph', async () => {

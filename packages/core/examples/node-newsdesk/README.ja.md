@@ -1,6 +1,6 @@
 # Node Newsdesk
 
-JSON台本から縦型ニュース動画を生成します。元の記事やメモから、AITuber OnAir Coreで台本を作ることもできます。同じ台本のまま、`--avatar`でPNGTuber・Purupuru・Mesh・VRMを切り替えられます。
+JSON台本から縦型ニュース動画を生成します。元の記事やメモから、AITuber OnAir Coreで台本を作ることもできます。同じ台本のまま、`--avatar`でPNGTuber・Purupuru・Mesh・VRM・Live2Dを切り替えられます。
 
 [English](README.md)
 
@@ -20,11 +20,13 @@ npm run gen -- --script samples/hello-sine.json --avatar vrm --output work/vrm.m
 
 サンプルの音声は決定的なサイン波で、APIキーは不要です。出力は1080 × 1920、30 fpsです。MP4と同じ場所に、ナレーションWAV・時刻情報JSON・描画設定JSONを保存します。アバターの初期値はPNGTuberです。
 
-PNGTuberとPurupuruはNodeのネイティブCanvas2Dで描画し、Playwrightの読み込みやChromiumの起動を行いません。MeshはWebGLアバターと共通のCanvas2D画面をヘッドレスChromium内で描画します。上記のChromiumインストールはMesh・VRMを使う場合に必要です。VRMは隣接する`react-vrm-app/public/avatar/miko.vrm`と`idle_loop.vrma`を初期アセットとして使います。両ブラウザアダプターとも共通画面をページ内で描画します。
+PNGTuberとPurupuruはNodeのネイティブCanvas2Dで描画し、Playwrightの読み込みやChromiumの起動を行いません。MeshはWebGLアバターと共通のCanvas2D画面をヘッドレスChromium内で描画します。上記のChromiumインストールはMesh・VRM・Live2Dを使う場合に必要です。VRMは隣接する`react-vrm-app/public/avatar/miko.vrm`と`idle_loop.vrma`を初期アセットとして使います。Live2Dは利用者がモデルとCubism Coreのパスを指定します（下記参照）。ブラウザアダプターは共通画面をページ内で描画します。
 
 画面にはニュースパネル、章の進行表示、キーワード、感情に合わせた効果、カラオケ字幕、ティッカー、開始・終了タイトルが表示されます。PNGTuberは口・目の4状態と呼吸・傾き、Purupuruは口の3状態と瞬き・呼吸・傾き・髪の揺れに対応します。この2種類の表情画像は元のままで、台詞の感情は画面効果に反映されます。
 
 Meshは表情と予定された動作にも対応します。隣接する`react-mesh-avatar-app`のフレームワーク非依存エンジンとqipaoアセットを読み取り専用で利用するため、そのディレクトリが必要です。VRMは音声RMSによる口パク、seedに基づく瞬き、VRMAアニメーション、モデルが持つ感情表情に対応します。未対応の感情は通常の表情で表示し、画面の名前付き動作は選択したVRMAループを置き換えません。
+
+Live2Dは音声RMSによる口パク、seedに基づく瞬き、固定したIdleモーションに対応し、撮影前にモデルを安定させます。台詞の感情と名前付き動作は共通画面に反映し、モデルは選択したIdleを続けます。
 
 ## アバター設定
 
@@ -40,7 +42,7 @@ Meshは表情と予定された動作にも対応します。隣接する`react-
 }
 ```
 
-`model`は設定ファイルからの相対パスです。PNGTuberでは4枚のPNGを持つディレクトリ、Purupuruでは`.purupuru`ファイル、Meshでは`manifest.json`を持つアセットディレクトリ、VRMでは`.vrm`モデルファイルを指定します。省略すると各アダプターのMikoアセットを使います。
+`model`は設定ファイルからの相対パスです。PNGTuberでは4枚のPNGを持つディレクトリ、Purupuruでは`.purupuru`ファイル、Meshでは`manifest.json`を持つアセットディレクトリ、VRMでは`.vrm`、Live2Dでは`.model3.json`を指定します。PNGTuber・Purupuru・Mesh・VRMでは省略すると初期のMikoアセットを使います。Live2DはモデルとCoreのパスを明示する必要があります。
 
 `scale`は0.1〜3、`x`と`y`は660 × 700のアバター枠内の位置（0〜1）、`intensity`は0〜3です。不明な項目や不正な値はエラーになります。検証と初期値は各アダプターで定義しています。Meshは`intensity`の代わりに`padTop`・`padSide`・`talkGain`を受け取ります。
 
@@ -49,6 +51,7 @@ Meshは表情と予定された動作にも対応します。隣接する`react-
 | PNGTuber | `scale: 1`, `x: 0.5`, `y: 0.5` | `intensity: 1`（0〜3） |
 | Purupuru | `scale: 1.5`, `x: 0.5`, `y: 0.65` | `intensity: 1`（0〜3） |
 | VRM | `scale: 1`, `x: 0.5`, `y: 0.5` | `animation`、`intensity: 1`（0〜3）、`framing`、`lighting`（下記参照） |
+| Live2D | `scale: 1`, `x: 0.5`, `y: 0.5` | `cubismCore`、`intensity: 1`（0〜3）、`framing`、`idleMotionGroup`、`warmupSeconds: 3`（0〜30） |
 | Mesh | `scale: 1`, `x: 0.5`, `y: 0.5` | `padTop: -0.07`（-0.5〜1）、`padSide: -0.18`（-0.45〜1）、`talkGain: 0.55`（0〜3） |
 
 Purupuruは上半身を大きく表示します。Meshのpaddingは元画像の切り取り範囲、`talkGain`は音声に伴う体の動きの強さを調整します。
@@ -64,7 +67,7 @@ Purupuruは上半身を大きく表示します。Meshのpaddingは元画像の�
   "model": "avatar/miko.vrm",
   "animation": "avatar/idle_loop.vrma",
   "intensity": 1,
-  "framing": { "visibleHeightRatio": 0.39, "lookAtHeightRatio": 0.845 },
+  "framing": { "visibleHeightRatio": 0.32, "lookAtHeightRatio": 0.84 },
   "lighting": { "ambientIntensity": 1.4, "directionalIntensity": 2.35 }
 }
 ```
@@ -73,7 +76,39 @@ Purupuruは上半身を大きく表示します。Meshのpaddingは元画像の�
 
 `framing.visibleHeightRatio`はズーム（0.05〜2、小さいほど寄る）、`lookAtHeightRatio`はカメラが向く高さ（0〜1.5、小さいほどモデルが上へ移動）を指定します。カメラ設定の後に、アバター枠内のscaleと位置を適用します。環境光・指向性ライトの強さはそれぞれ0〜10です。
 
-カメラ、光量単位、腰の移動を除く処理、固定時間刻みは旧VRMレンダラーを引き継いでいます。描画ライブラリはthree.js `0.182.0`、`@pixiv/three-vrm` `3.4.5`、`@pixiv/three-vrm-animation` `3.4.5`に固定しています。
+初期の構図は、頭部と上半身が共通のアバター枠を満たすように調整しています。光量単位、腰の移動を除く処理、固定時間刻みは旧VRMレンダラーを引き継いでいます。描画ライブラリはthree.js `0.182.0`、`@pixiv/three-vrm` `3.4.5`、`@pixiv/three-vrm-animation` `3.4.5`に固定しています。
+
+### Live2D設定と必要ファイル
+
+利用許諾を確認したCubism 4の`.model3.json`と参照先一式、ローカルの`live2dcubismcore.min.js`が必要です。このサンプルはCoreもLive2Dモデルも同梱・ダウンロードしません。[Live2D公式ダウンロードページ](https://www.live2d.com/sdk/download/web/)から、使用許諾を確認・同意したうえでCubism SDK for Webを取得し、`Core/live2dcubismcore.min.js`を使います。Coreを直リンクしないでください。
+
+台本とは別に設定を保存します。例えば`work/live2d.json`に次を書き、手元のファイルパスへ置き換えます。
+
+```json
+{
+  "model": "/path/to/model/runtime/model.model3.json",
+  "cubismCore": "/path/to/CubismSdkForWeb/Core/live2dcubismcore.min.js",
+  "framing": { "scale": 2.5, "x": 0.5, "y": 0.4 },
+  "idleMotionGroup": "Idle",
+  "warmupSeconds": 3,
+  "intensity": 1
+}
+```
+
+```bash
+npm run gen -- --script samples/hello-sine.json --avatar live2d \
+  --avatar-config work/live2d.json --output work/live2d.mp4
+```
+
+パスは設定ファイル相対、絶対パス、`~/`始まりを使えます。隣接する`react-live2d-app/public/scripts/`に既存のCoreがある場合は、明示的なパスで参照できます。そのドロップはgitignore済みです。必要なファイルはこのサンプルの外に保管し、設定から参照してください。Coreまたはモデルがなければ、Chromiumを起動する前にエラーを返します。
+
+`framing`は共通のscale・位置を適用する前のモデル変換です。バストアップの初期値は`scale: 2.5`・`x: 0.5`・`y: 0.4`で、scaleは0.1〜5、xとyは0〜1を受け付けます。`idleMotionGroup`は初回と再開時のモーションをindex 0に固定します。省略または`null`では、存在する`Idle`を使います。
+
+`warmupSeconds`はフレーム0より前に撮影せずモデルを更新する時間です。動画のフレーム数は増やしません。`intensity`は撮影開始後のアニメーション速度を0〜3倍にし、0では安定したポーズを固定します。口パクとseedに基づく瞬きは続けます。
+
+ページは利用者指定のCoreを先に読み、Cubism 4レンダラーを読み込みます。PixiJSと表示プラグインはLive2D選択時だけ読み込みます。依存は旧Live2Dサンプルと同じPixiJS `^7.4.3`と、`pixi-live2d-display-lipsyncpatch`の`release/v0.5.0-ls-7-noMaskFix`です。ループバックサーバーはハーネス、指定Core、モデルの親ディレクトリ以下を配信し、パストラバーサルとシンボリックリンクによる脱出を拒否します。
+
+Live2D公式サンプルモデルで作った動画を公開する場合は、[無償提供マテリアルの使用許諾契約書](https://www.live2d.com/eula/live2d-free-material-license-agreement.html)と[Live2D Cubismサンプルデータ利用条件](https://www.live2d.com/eula/live2d-sample-model-terms.html)の両方を確認し、利用者・事業者区分の条件や必要な著作権表示に従ってください。
 
 ## 台本生成
 
@@ -95,7 +130,7 @@ npm run gen -- --script samples/hello-sine.json --render-only --output work/news
 npm run gen -- --script samples/hello-sine.json --frame 60 --png work/frame60.png
 ```
 
-`--dry-run`は音声と時刻情報だけを生成します。`--render-only`はそれらを再利用し、`--avatar`と`--avatar-config`で今回の描画方法を選びます。ネイティブアダプターは指定フレームへ直接移動できます。MeshとVRMはフレーム0から再生して指定フレームを保存します。共通画面には音声履歴を明示的に渡し、Purupuruの物理演算は仮想時計で事前計算するため、フレームの描画順に結果が左右されません。
+`--dry-run`は音声と時刻情報だけを生成します。`--render-only`はそれらを再利用し、`--avatar`と`--avatar-config`で今回の描画方法を選びます。ネイティブアダプターは指定フレームへ直接移動できます。ブラウザアダプターはフレーム0から再生して指定フレームを保存します。共通画面には音声履歴を明示的に渡し、Purupuruの物理演算は仮想時計で事前計算するため、フレームの描画順に結果が左右されません。
 
 ネイティブCanvas2Dはシステムフォントを使います。macOSではヒラギノを利用できます。LinuxではNoto Sans JPまたはNoto Sans CJK JPをインストールし、認識されない場合は`NEWSDESK_FONT_PATH=/path/to/NotoSansJP.ttf`を指定してください。Chromiumにも日本語対応のシステムフォントが必要です。`NEWSDESK_FONT_PATH`はネイティブCanvas2Dにのみ適用されます。
 

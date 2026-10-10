@@ -1,7 +1,7 @@
-/** Keep camera/light defaults aligned with the original VRM example. */
+/** Fill the shared portrait frame while retaining the original lighting. */
 export const DEFAULT_AVATAR_FRAMING = {
-  visibleHeightRatio: 0.39,
-  lookAtHeightRatio: 0.845,
+  visibleHeightRatio: 0.32,
+  lookAtHeightRatio: 0.84,
 } as const;
 export const DEFAULT_AVATAR_LIGHTING = {
   ambientIntensity: 1.4,

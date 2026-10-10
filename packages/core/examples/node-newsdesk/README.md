@@ -2,7 +2,7 @@
 
 Generate a vertical news video from a JSON script, or turn source text into a
 script with AITuber OnAir Core. The same script can be rendered with PNGTuber,
-Purupuru, Mesh, or VRM by changing `--avatar`.
+Purupuru, Mesh, VRM, or Live2D by changing `--avatar`.
 
 [日本語](README.ja.md)
 
@@ -25,9 +25,10 @@ The sample uses a deterministic sine voice and requires no API key. Output is
 beside the MP4. PNGTuber is the default. PNGTuber and Purupuru run in Node
 using native Canvas2D and do not load Playwright or launch Chromium. Mesh
 renders its WebGL avatar and the same Canvas2D screen in headless Chromium.
-Mesh and VRM need the Chromium installation step above. VRM uses the sibling
+Mesh, VRM, and Live2D need the Chromium installation step above. VRM uses the sibling
 `react-vrm-app/public/avatar/miko.vrm` and `idle_loop.vrma` by default; keep
-those files available. Both browser adapters render the shared screen in-page.
+those files available. Live2D requires user-supplied model and Cubism Core paths
+(see below). Browser adapters render the shared screen in-page.
 
 The shared screen includes a news panel, chapter progress, keyword pop-ups,
 emotion effects, karaoke subtitles, a ticker, and opening/closing title cards.
@@ -40,6 +41,9 @@ The engine and assets are used read-only; keep that sibling directory available.
 VRM supports RMS lip sync, seeded blinking, VRMA animation, and supported facial
 emotions. Unsupported emotions use a neutral face; named screen motion cues
 do not replace the selected VRMA loop.
+Live2D provides RMS lip sync, seeded blinking, and a pinned idle motion with a
+settling period before capture. Line emotions and named cues affect the shared
+screen while the model continues its selected idle motion.
 
 ## Avatar configuration
 
@@ -58,8 +62,9 @@ Avatar settings belong in a separate JSON file, passed with
 
 `model` is relative to that config file: a four-PNG directory for PNGTuber,
 a `.purupuru` file for Purupuru, or a Mesh asset directory containing
-`manifest.json`, or a `.vrm` model file. Omitting it selects each adapter's
-default Miko assets.
+`manifest.json`, a `.vrm` model file, or a Live2D `.model3.json` file. Omitting
+it selects the default Miko assets for PNGTuber, Purupuru, Mesh, and VRM.
+Live2D requires explicit model and Core paths.
 `scale` ranges from 0.1 to 3; `x` and `y` are normalized positions inside the
 660 × 700 avatar frame; `intensity` ranges from 0 to 3. Unknown fields and
 invalid values produce an error. Config validation and defaults belong to each
@@ -70,6 +75,7 @@ adapter. Mesh accepts `padTop`, `padSide`, and `talkGain` instead of `intensity`
 | PNGTuber | `scale: 1`, `x: 0.5`, `y: 0.5` | `intensity: 1` (0–3) |
 | Purupuru | `scale: 1.5`, `x: 0.5`, `y: 0.65` | `intensity: 1` (0–3) |
 | VRM | `scale: 1`, `x: 0.5`, `y: 0.5` | `animation`, `intensity: 1` (0–3), `framing`, `lighting` (see below) |
+| Live2D | `scale: 1`, `x: 0.5`, `y: 0.5` | `cubismCore`, `intensity: 1` (0–3), `framing`, `idleMotionGroup`, `warmupSeconds: 3` (0–30) |
 | Mesh | `scale: 1`, `x: 0.5`, `y: 0.5` | `padTop: -0.07` (-0.5–1), `padSide: -0.18` (-0.45–1), `talkGain: 0.55` (0–3) |
 
 Purupuru uses a closer upper-body view. Mesh padding controls the source-image
@@ -86,7 +92,7 @@ crop, and `talkGain` controls voice-driven body movement. For example:
   "model": "avatar/miko.vrm",
   "animation": "avatar/idle_loop.vrma",
   "intensity": 1,
-  "framing": { "visibleHeightRatio": 0.39, "lookAtHeightRatio": 0.845 },
+  "framing": { "visibleHeightRatio": 0.32, "lookAtHeightRatio": 0.84 },
   "lighting": { "ambientIntensity": 1.4, "directionalIntensity": 2.35 }
 }
 ```
@@ -99,9 +105,64 @@ clock from 0 to 3; 0 freezes the pose while mouth and blink expressions continue
 model upward). Camera controls run before scale/placement inside the avatar
 frame. Ambient and directional lighting intensities range from 0 to 10.
 
-The camera, light units, hip-translation stabilization, and fixed time steps
-follow the original VRM renderer. The rendering stack stays pinned to three.js
+The default camera framing fills the shared frame with the head and upper body.
+Light units, hip-translation stabilization, and fixed time steps follow the
+original VRM renderer. The rendering stack stays pinned to three.js
 `0.182.0`, `@pixiv/three-vrm` `3.4.5`, and `@pixiv/three-vrm-animation` `3.4.5`.
+
+### Live2D configuration and required files
+
+Live2D needs a licensed Cubism 4 `.model3.json` model and all referenced files,
+plus your local `live2dcubismcore.min.js`. Neither Core nor a Live2D model is
+bundled or downloaded by this example. Obtain Cubism SDK for Web from the
+[official Live2D download page](https://www.live2d.com/en/sdk/download/web/),
+accept its license terms, and use `Core/live2dcubismcore.min.js`. Do not hotlink
+the runtime.
+
+Save a separate avatar configuration, for example `work/live2d.json`:
+
+```json
+{
+  "model": "/path/to/model/runtime/model.model3.json",
+  "cubismCore": "/path/to/CubismSdkForWeb/Core/live2dcubismcore.min.js",
+  "framing": { "scale": 2.5, "x": 0.5, "y": 0.4 },
+  "idleMotionGroup": "Idle",
+  "warmupSeconds": 3,
+  "intensity": 1
+}
+```
+
+```bash
+npm run gen -- --script samples/hello-sine.json --avatar live2d \
+  --avatar-config work/live2d.json --output work/live2d.mp4
+```
+
+Paths may be config-relative, absolute, or begin with `~/`. An existing Core
+file in the sibling `react-live2d-app/public/scripts/` directory can be used
+by an explicit path; that drop is gitignored. Keep proprietary files outside
+this example and point the config at them. Missing Core or model files produce
+an error before Chromium launches.
+
+`framing` controls the model transform before shared scale/placement. Its
+defaults are `scale: 2.5`, `x: 0.5`, `y: 0.4` for a bust-up view; scale accepts
+0.1–5 and x/y accept 0–1. `idleMotionGroup` uses index zero for both the first
+motion and each restart; omitted or `null` selects `Idle` when available.
+`warmupSeconds` advances fixed model updates before frame zero without adding
+captured frames. `intensity` scales the subsequent animation clock from 0–3;
+0 freezes the settled pose while lip sync and seeded blinking continue.
+
+The page loads user-supplied Core before the Cubism 4 renderer. PixiJS and the
+display plugin load only when Live2D is selected. The dependency pair matches
+the original Live2D example: PixiJS `^7.4.3` and
+`pixi-live2d-display-lipsyncpatch` at `release/v0.5.0-ls-7-noMaskFix`.
+The loopback server serves the harness, configured Core file, and files below
+the model's parent directory, rejecting traversal and symlink escapes.
+
+If you use an official Live2D sample model, publishing a video must follow both
+the [Free Material License Agreement](https://www.live2d.com/eula/live2d-free-material-license-agreement_en.html)
+and the [Terms of Use for Live2D Cubism Sample Data](https://www.live2d.com/eula/live2d-sample-model-terms_en.html),
+including the terms for your user/business category and required copyright
+notices.
 
 ## Script generation
 
@@ -131,7 +192,7 @@ npm run gen -- --script samples/hello-sine.json --frame 60 --png work/frame60.pn
 
 `--dry-run` synthesizes audio and timings without rendering. `--render-only`
 reuses those artifacts; `--avatar` and `--avatar-config` select the adapter for
-that run. Native adapters seek directly to a frame; Mesh and VRM replay from frame 0
+that run. Native adapters seek directly to a frame; browser adapters replay from frame 0
 before exporting the selected frame. The shared scene receives
 explicit voice history, and Purupuru physics uses a precomputed virtual clock,
 so frame order does not affect the result.

@@ -13,6 +13,7 @@ import type { Browser, Page } from 'playwright';
 import type { CompositorSession } from './index.js';
 import { resolveProjectRoot } from '../../paths.js';
 import type { RenderConfig } from '../../types.js';
+import { requireLive2dAssets } from '../../avatars/live2d/assets.js';
 
 const SWIFTSHADER_ARGS = [
   '--use-angle=swiftshader',
@@ -147,6 +148,21 @@ async function startServer(
     ) {
       void sendFile(response, config.avatarConfig.animation);
     } else if (
+      config.avatarConfig.kind === 'live2d' &&
+      url.pathname === '/cubism/live2dcubismcore.min.js'
+    ) {
+      void sendFile(response, config.avatarConfig.cubismCore);
+    } else if (
+      config.avatarConfig.kind === 'live2d' &&
+      url.pathname.startsWith('/model/')
+    ) {
+      void sendRootedFile(
+        response,
+        path.dirname(config.avatarConfig.model),
+        '/model/',
+        url.pathname,
+      );
+    } else if (
       config.avatarConfig.kind === 'mesh' &&
       url.pathname.startsWith('/avatar/')
     ) {
@@ -241,8 +257,14 @@ export async function openBrowserCompositor(
   config: RenderConfig,
   mouthValues: Float32Array,
 ): Promise<CompositorSession> {
-  if (config.avatarConfig.kind !== 'mesh' && config.avatarConfig.kind !== 'vrm')
+  if (
+    config.avatarConfig.kind !== 'mesh' &&
+    config.avatarConfig.kind !== 'vrm' &&
+    config.avatarConfig.kind !== 'live2d'
+  )
     throw new Error('A browser avatar config is required.');
+  if (config.avatarConfig.kind === 'live2d')
+    await requireLive2dAssets(config.avatarConfig);
   const avatarStat = await stat(config.avatarConfig.model).catch(() => null);
   const validModel =
     config.avatarConfig.kind === 'mesh'

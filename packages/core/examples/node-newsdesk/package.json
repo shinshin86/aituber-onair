@@ -26,7 +26,9 @@
     "playwright": "^1.55.0",
     "three": "0.182.0",
     "@pixiv/three-vrm": "3.4.5",
-    "@pixiv/three-vrm-animation": "3.4.5"
+    "@pixiv/three-vrm-animation": "3.4.5",
+    "pixi.js": "^7.4.3",
+    "pixi-live2d-display-lipsyncpatch": "github:shinshin86/pixi-live2d-display-lipsyncpatch#release/v0.5.0-ls-7-noMaskFix"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

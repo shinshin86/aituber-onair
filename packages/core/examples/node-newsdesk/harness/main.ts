@@ -13,13 +13,19 @@ let avatar: BrowserAvatarRenderer | null = null;
 let draw: ((frame: number, mouth: number) => void) | null = null;
 
 async function load({ config, mouthValues }: HarnessInput) {
-  if (config.avatarConfig.kind !== 'mesh' && config.avatarConfig.kind !== 'vrm')
+  if (
+    config.avatarConfig.kind !== 'mesh' &&
+    config.avatarConfig.kind !== 'vrm' &&
+    config.avatarConfig.kind !== 'live2d'
+  )
     throw new Error('Unsupported browser avatar.');
   await avatar?.dispose();
   avatar =
     config.avatarConfig.kind === 'mesh'
       ? (await import('../src/avatars/mesh/renderer.js')).createRenderer()
-      : (await import('../src/avatars/vrm/renderer.js')).createRenderer();
+      : config.avatarConfig.kind === 'vrm'
+        ? (await import('../src/avatars/vrm/renderer.js')).createRenderer()
+        : (await import('../src/avatars/live2d/renderer.js')).createRenderer();
   const stage = document.querySelector<HTMLCanvasElement>('#stage');
   if (!stage) throw new Error('Harness stage canvas was not found.');
   stage.width = config.width;

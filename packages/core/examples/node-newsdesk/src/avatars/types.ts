@@ -44,7 +44,19 @@ export interface VrmAvatarConfig extends BaseAvatarConfig {
   framing: { visibleHeightRatio: number; lookAtHeightRatio: number };
   lighting: { ambientIntensity: number; directionalIntensity: number };
 }
-export type BrowserAvatarConfig = MeshAvatarConfig | VrmAvatarConfig;
+export interface Live2dAvatarConfig extends BaseAvatarConfig {
+  kind: 'live2d';
+  model: string;
+  cubismCore: string;
+  intensity: number;
+  framing: { scale: number; x: number; y: number };
+  idleMotionGroup: string | null;
+  warmupSeconds: number;
+}
+export type BrowserAvatarConfig =
+  | MeshAvatarConfig
+  | VrmAvatarConfig
+  | Live2dAvatarConfig;
 export type NodeAvatarConfig = PngtuberAvatarConfig | PurupuruAvatarConfig;
 export type AvatarConfig = NodeAvatarConfig | BrowserAvatarConfig;
 export interface AvatarPrepareInput<
@@ -87,7 +99,7 @@ export type NodeAvatarAdapter = AvatarAdapter<Canvas, NodeAvatarConfig> & {
 };
 /** Browser renderer code is loaded in the harness, never evaluated in Node. */
 export interface BrowserAvatarAdapter {
-  readonly kind: 'mesh' | 'vrm';
+  readonly kind: BrowserAvatarConfig['kind'];
   readonly runtime: 'browser';
   resolveConfig(raw: unknown, configFile: string): BrowserAvatarConfig;
 }

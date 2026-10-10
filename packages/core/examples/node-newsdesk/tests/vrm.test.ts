@@ -17,7 +17,7 @@ it('selects VRM metadata without evaluating its browser runtime', async () => {
   expect(avatar.resolveConfig({}, 'config.json')).toMatchObject({
     kind: 'vrm',
     intensity: 1,
-    framing: { visibleHeightRatio: 0.39, lookAtHeightRatio: 0.845 },
+    framing: { visibleHeightRatio: 0.32, lookAtHeightRatio: 0.84 },
     lighting: { ambientIntensity: 1.4, directionalIntensity: 2.35 },
   });
 });
@@ -41,7 +41,7 @@ it('resolves model/animation paths and permits an explicit static pose', () => {
       'config.json',
     ),
   ).toMatchObject({
-    framing: { visibleHeightRatio: 0.5, lookAtHeightRatio: 0.845 },
+    framing: { visibleHeightRatio: 0.5, lookAtHeightRatio: 0.84 },
     lighting: { ambientIntensity: 0, directionalIntensity: 2.35 },
   });
 });
