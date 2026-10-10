@@ -63,6 +63,10 @@ function Miko({
     reports: entries,
     phase: 'monitoring',
     runId: 0,
+    // Separate keys keep the operator preview and stage from both speaking.
+    storageKey: stage
+      ? 'fan-mail-stage:voice:stage'
+      : 'fan-mail-stage:voice:operator',
   });
   const [controls, setControls] = useState(!stage);
   const latest = entries[0];

@@ -12,6 +12,40 @@ export interface VoiceEntry {
 type DemoPhase = 'pre' | 'monitoring' | 'paused' | 'ending' | 'complete';
 type FixtureReport = VoiceEntry;
 
+interface StoredVoiceSettings {
+  engine: MikoVoiceEngine;
+  aivisSpeaker: string;
+}
+
+const isVoiceEngine = (value: unknown): value is MikoVoiceEngine =>
+  value === 'off' || value === 'webSpeech' || value === 'aivisSpeech';
+
+// Storage can be unavailable (private mode, blocked site data), so every
+// access falls back to the default settings.
+const readVoiceSettings = (key?: string): StoredVoiceSettings | null => {
+  if (!key) return null;
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(key) ?? '');
+    if (!parsed || typeof parsed !== 'object') return null;
+    const { engine, aivisSpeaker } = parsed as Record<string, unknown>;
+    if (!isVoiceEngine(engine)) return null;
+    return {
+      engine,
+      aivisSpeaker: typeof aivisSpeaker === 'string' ? aivisSpeaker : '',
+    };
+  } catch {
+    return null;
+  }
+};
+
+const writeVoiceSettings = (key: string, settings: StoredVoiceSettings) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(settings));
+  } catch {
+    // Settings simply stop persisting when storage is unavailable.
+  }
+};
+
 export type MikoVoiceEngine = 'off' | 'webSpeech' | 'aivisSpeech';
 export type AivisConnectionState =
   | 'unchecked'
@@ -67,19 +101,31 @@ interface UseMikoVoiceOptions {
   reports: readonly FixtureReport[];
   phase: DemoPhase;
   runId: number;
+  /** localStorage key for the engine and speaker; omit to keep them in memory. */
+  storageKey?: string;
 }
 
 const getSpeechText = (report: FixtureReport) => report.speechText;
 
-export function useMikoVoice({ reports, phase, runId }: UseMikoVoiceOptions) {
-  const [engine, setEngineState] = useState<MikoVoiceEngine>('off');
+export function useMikoVoice({
+  reports,
+  phase,
+  runId,
+  storageKey,
+}: UseMikoVoiceOptions) {
+  const [storedSettings] = useState(() => readVoiceSettings(storageKey));
+  const [engine, setEngineState] = useState<MikoVoiceEngine>(
+    storedSettings?.engine ?? 'off'
+  );
   const [webVoice, setWebVoice] = useState<VoiceEngineVoice | null>(null);
   const [aivisState, setAivisState] =
     useState<AivisConnectionState>('unchecked');
   const [aivisVoices, setAivisVoices] = useState<readonly VoiceEngineVoice[]>(
     []
   );
-  const [aivisSpeaker, setAivisSpeaker] = useState('');
+  const [aivisSpeaker, setAivisSpeaker] = useState(
+    storedSettings?.aivisSpeaker ?? ''
+  );
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceLevel, setVoiceLevel] = useState(0);
   const [activeText, setActiveText] = useState<string | null>(null);
@@ -191,6 +237,22 @@ export function useMikoVoice({ reports, phase, runId }: UseMikoVoiceOptions) {
       window.clearTimeout(timeoutId);
     }
   }, []);
+
+  // A restored AivisSpeech engine needs its speaker list fetched once.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Run only on mount.
+  useEffect(() => {
+    if (storedSettings?.engine === 'aivisSpeech') void refreshAivis();
+  }, []);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    // An unavailable engine clears the speaker list; keep the saved choice.
+    const saved = readVoiceSettings(storageKey);
+    writeVoiceSettings(storageKey, {
+      engine,
+      aivisSpeaker: aivisSpeaker || saved?.aivisSpeaker || '',
+    });
+  }, [aivisSpeaker, engine, storageKey]);
 
   useEffect(() => {
     let active = true;

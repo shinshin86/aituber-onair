@@ -483,8 +483,10 @@ footer {
 }
 .stage-panel .voice-toggle {
   opacity: 0;
+  transition: opacity 0.2s;
 }
-.stage-panel .voice-toggle:hover,
+/* Reveal while the pointer is anywhere on the stage; hidden once it leaves. */
+.stage-shell:hover .voice-toggle,
 .stage-panel .voice-toggle:focus-visible {
   opacity: 1;
 }

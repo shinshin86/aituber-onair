@@ -49,11 +49,13 @@ the browser's Japanese voice, if available. AivisSpeech requires a running local
 engine at `http://127.0.0.1:10101` and offers a fetched speaker list. Browser
 autoplay rules may require interaction with the broadcast page. Failed audio
 does not block text publication. Changing the audio setting cancels its queue;
-previous reactions are not replayed when audio is enabled.
+previous reactions are not replayed when audio is enabled. Each page remembers
+its own engine and speaker in browser storage, so a reload keeps them.
 
-In OBS, open **Interact** for the stage browser source and hover just below the
-subtitles to reveal the audio settings button (keyboard focus also reveals it).
-Enable audio, close the settings, and move the pointer away before broadcasting.
+In OBS, open **Interact** for the stage browser source and move the pointer over
+the page to reveal the audio settings button below the subtitles (keyboard focus
+also reveals it). Enable audio, close the settings, and move the pointer off the
+page before broadcasting.
 The button is hidden when idle; the backend label appears only on the operator page.
 
 ## Data flow
