@@ -1,0 +1,449 @@
+import {
+  AIVIS_SPEECH_API_URL,
+  VoiceEngineAdapter,
+  type VoiceEngineVoice,
+  getVoiceEngineVoiceList,
+} from '@aituber-onair/voice';
+import { useCallback, useEffect, useRef, useState } from 'react';
+export interface VoiceEntry {
+  id: string;
+  speechText: string;
+}
+type DemoPhase = 'pre' | 'monitoring' | 'paused' | 'ending' | 'complete';
+type FixtureReport = VoiceEntry;
+
+interface StoredVoiceSettings {
+  engine: MikoVoiceEngine;
+  aivisSpeaker: string;
+}
+
+const isVoiceEngine = (value: unknown): value is MikoVoiceEngine =>
+  value === 'off' || value === 'webSpeech' || value === 'aivisSpeech';
+
+// Storage can be unavailable (private mode, blocked site data), so every
+// access falls back to the default settings.
+const readVoiceSettings = (key?: string): StoredVoiceSettings | null => {
+  if (!key) return null;
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(key) ?? '');
+    if (!parsed || typeof parsed !== 'object') return null;
+    const { engine, aivisSpeaker } = parsed as Record<string, unknown>;
+    if (!isVoiceEngine(engine)) return null;
+    return {
+      engine,
+      aivisSpeaker: typeof aivisSpeaker === 'string' ? aivisSpeaker : '',
+    };
+  } catch {
+    return null;
+  }
+};
+
+const writeVoiceSettings = (key: string, settings: StoredVoiceSettings) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(settings));
+  } catch {
+    // Settings simply stop persisting when storage is unavailable.
+  }
+};
+
+export type MikoVoiceEngine = 'off' | 'webSpeech' | 'aivisSpeech';
+export type AivisConnectionState =
+  | 'unchecked'
+  | 'checking'
+  | 'available'
+  | 'unavailable';
+
+const AIVIS_CHECK_TIMEOUT_MS = 1_500;
+const DEFAULT_UTTERANCE_TIMEOUT_MS = 30_000;
+const VOICE_TIMEOUT_NOTICE = '音声の生成に時間がかかったためスキップしました';
+const AIVIS_CONNECTION_ERROR =
+  'AivisSpeechに接続できませんでした。アプリを起動して再確認してください';
+const AIVIS_DISCONNECTED_ERROR =
+  'AivisSpeechとの接続が切れました。接続状態を確認して再確認してください';
+
+class VoiceUtteranceTimeoutError extends Error {
+  constructor() {
+    super('Voice utterance timed out');
+    this.name = 'VoiceUtteranceTimeoutError';
+  }
+}
+
+const getUtteranceTimeoutMs = () => {
+  const developmentOverride = import.meta.env.DEV
+    ? Number(import.meta.env.VITE_MIKO_VOICE_TIMEOUT_MS)
+    : Number.NaN;
+
+  return Number.isFinite(developmentOverride) && developmentOverride > 0
+    ? developmentOverride
+    : DEFAULT_UTTERANCE_TIMEOUT_MS;
+};
+
+const speakWithTimeout = async (
+  service: VoiceEngineAdapter,
+  text: string
+): Promise<void> => {
+  let timeoutId = 0;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(
+      () => reject(new VoiceUtteranceTimeoutError()),
+      getUtteranceTimeoutMs()
+    );
+  });
+
+  try {
+    await Promise.race([service.speakText(text), timeoutPromise]);
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+};
+
+interface UseMikoVoiceOptions {
+  reports: readonly FixtureReport[];
+  phase: DemoPhase;
+  runId: number;
+  /** localStorage key for the engine and speaker; omit to keep them in memory. */
+  storageKey?: string;
+}
+
+const getSpeechText = (report: FixtureReport) => report.speechText;
+
+export function useMikoVoice({
+  reports,
+  phase,
+  runId,
+  storageKey,
+}: UseMikoVoiceOptions) {
+  const [storedSettings] = useState(() => readVoiceSettings(storageKey));
+  const [engine, setEngineState] = useState<MikoVoiceEngine>(
+    storedSettings?.engine ?? 'off'
+  );
+  const [webVoice, setWebVoice] = useState<VoiceEngineVoice | null>(null);
+  const [aivisState, setAivisState] =
+    useState<AivisConnectionState>('unchecked');
+  const [aivisVoices, setAivisVoices] = useState<readonly VoiceEngineVoice[]>(
+    []
+  );
+  const [aivisSpeaker, setAivisSpeaker] = useState(
+    storedSettings?.aivisSpeaker ?? ''
+  );
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceLevel, setVoiceLevel] = useState(0);
+  const [activeText, setActiveText] = useState<string | null>(null);
+  const [speakingReportKind, setSpeakingReportKind] = useState<string | null>(
+    null
+  );
+  const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  const serviceRef = useRef<VoiceEngineAdapter | null>(null);
+  const serviceFactoryRef = useRef<(() => VoiceEngineAdapter) | null>(null);
+  const queueRef = useRef<FixtureReport[]>([]);
+  const seenReportIdsRef = useRef(new Set<string>());
+  const generationRef = useRef(0);
+  const activeWorkerRef = useRef<number | null>(null);
+  const stopPlaybackRef = useRef<(() => void) | null>(null);
+
+  const cancelQueue = useCallback(() => {
+    generationRef.current += 1;
+    queueRef.current = [];
+    serviceRef.current?.stop();
+    stopPlaybackRef.current?.();
+    setVoiceLevel(0);
+    setIsSpeaking(false);
+    setSpeakingReportKind(null);
+  }, []);
+
+  const playAudio = useCallback(async (buffer: ArrayBuffer) => {
+    const generation = generationRef.current;
+    const context = new AudioContext();
+    const source = context.createBufferSource();
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 256;
+    let frame = 0;
+    try {
+      source.buffer = await context.decodeAudioData(buffer.slice(0));
+      if (generation !== generationRef.current) return;
+      source.connect(analyser);
+      analyser.connect(context.destination);
+      await context.resume();
+      if (generation !== generationRef.current) return;
+      const samples = new Float32Array(analyser.fftSize);
+      const sampleLevel = () => {
+        analyser.getFloatTimeDomainData(samples);
+        const rms = Math.sqrt(
+          samples.reduce((sum, value) => sum + value * value, 0) /
+            samples.length
+        );
+        setVoiceLevel(Math.min(1, rms * 5));
+        frame = requestAnimationFrame(sampleLevel);
+      };
+      await new Promise<void>((resolve) => {
+        source.onended = () => resolve();
+        stopPlaybackRef.current = () => {
+          source.stop();
+          resolve();
+        };
+        setIsSpeaking(true);
+        source.start();
+        sampleLevel();
+      });
+    } finally {
+      cancelAnimationFrame(frame);
+      source.disconnect();
+      analyser.disconnect();
+      await context.close();
+      if (generation === generationRef.current) {
+        stopPlaybackRef.current = null;
+        setVoiceLevel(0);
+        setIsSpeaking(false);
+      }
+    }
+  }, []);
+
+  const refreshAivis = useCallback(async () => {
+    setAivisState('checking');
+    setVoiceError(null);
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(
+      () => controller.abort(),
+      AIVIS_CHECK_TIMEOUT_MS
+    );
+
+    try {
+      const response = await fetch(`${AIVIS_SPEECH_API_URL}/version`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      // This browser-side list request verifies both the local engine and CORS.
+      const voices = await getVoiceEngineVoiceList('aivisSpeech', {
+        apiUrl: AIVIS_SPEECH_API_URL,
+      });
+      if (voices.length === 0) throw new Error('話者が見つかりません');
+
+      setAivisVoices(voices);
+      setAivisSpeaker((current) =>
+        voices.some((voice) => voice.id === current) ? current : voices[0].id
+      );
+      setAivisState('available');
+    } catch {
+      setAivisVoices([]);
+      setAivisSpeaker('');
+      setAivisState('unavailable');
+      setVoiceError(AIVIS_CONNECTION_ERROR);
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }, []);
+
+  // A restored AivisSpeech engine needs its speaker list fetched once.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Run only on mount.
+  useEffect(() => {
+    if (storedSettings?.engine === 'aivisSpeech') void refreshAivis();
+  }, []);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    // An unavailable engine clears the speaker list; keep the saved choice.
+    const saved = readVoiceSettings(storageKey);
+    writeVoiceSettings(storageKey, {
+      engine,
+      aivisSpeaker: aivisSpeaker || saved?.aivisSpeaker || '',
+    });
+  }, [aivisSpeaker, engine, storageKey]);
+
+  useEffect(() => {
+    let active = true;
+
+    void getVoiceEngineVoiceList('webSpeech', { timeoutMs: 1_200 })
+      .then((voices) => {
+        if (!active) return;
+        const japaneseVoice = voices.find((voice) =>
+          voice.metadata?.language?.toLowerCase().startsWith('ja')
+        );
+        setWebVoice(japaneseVoice ?? null);
+      })
+      .catch(() => {
+        if (active) setWebVoice(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    cancelQueue();
+
+    if (engine === 'webSpeech') {
+      serviceFactoryRef.current = () =>
+        new VoiceEngineAdapter({
+          engineType: 'webSpeech',
+          speaker: webVoice?.id ?? '',
+          webSpeechLanguage: 'ja-JP',
+          webSpeechRate: 1.05,
+        });
+    } else if (
+      engine === 'aivisSpeech' &&
+      aivisState === 'available' &&
+      aivisSpeaker
+    ) {
+      serviceFactoryRef.current = () =>
+        new VoiceEngineAdapter({
+          engineType: 'aivisSpeech',
+          speaker: aivisSpeaker,
+          aivisSpeechApiUrl: AIVIS_SPEECH_API_URL,
+          onPlay: playAudio,
+        });
+    } else {
+      serviceFactoryRef.current = null;
+    }
+    serviceRef.current = serviceFactoryRef.current?.() ?? null;
+
+    return () => {
+      cancelQueue();
+      serviceRef.current = null;
+      serviceFactoryRef.current = null;
+    };
+  }, [aivisSpeaker, aivisState, cancelQueue, engine, webVoice?.id, playAudio]);
+
+  const startWorker = useCallback(() => {
+    const generation = generationRef.current;
+    if (activeWorkerRef.current === generation) return;
+    activeWorkerRef.current = generation;
+
+    void (async () => {
+      while (
+        generation === generationRef.current &&
+        queueRef.current.length > 0
+      ) {
+        const report = queueRef.current.shift();
+        const service = serviceRef.current;
+        if (!report || !service) break;
+
+        setActiveText(report.speechText);
+        setIsSpeaking(engine === 'webSpeech');
+        setSpeakingReportKind(report.id);
+        setVoiceError(null);
+
+        try {
+          await speakWithTimeout(service, getSpeechText(report));
+          if (generation === generationRef.current) setVoiceNotice(null);
+        } catch (error) {
+          if (generation !== generationRef.current) break;
+
+          if (error instanceof VoiceUtteranceTimeoutError) {
+            service.stop();
+            stopPlaybackRef.current?.();
+            if (serviceRef.current === service) {
+              serviceRef.current = serviceFactoryRef.current?.() ?? null;
+            }
+            setVoiceNotice(VOICE_TIMEOUT_NOTICE);
+            continue;
+          }
+
+          queueRef.current = [];
+          if (engine === 'aivisSpeech') {
+            setAivisState('unavailable');
+            setVoiceError(AIVIS_DISCONNECTED_ERROR);
+          } else {
+            setVoiceError(
+              error instanceof Error
+                ? error.message
+                : '音声を再生できませんでした'
+            );
+          }
+          break;
+        } finally {
+          if (generation === generationRef.current) {
+            setIsSpeaking(false);
+            setSpeakingReportKind(null);
+          }
+        }
+      }
+
+      if (activeWorkerRef.current === generation) {
+        activeWorkerRef.current = null;
+      }
+    })();
+  }, [engine]);
+
+  useEffect(() => {
+    const unseenReports = [...reports]
+      .reverse()
+      .filter((report) => !seenReportIdsRef.current.has(report.id));
+
+    for (const report of unseenReports) {
+      seenReportIdsRef.current.add(report.id);
+    }
+
+    if (
+      unseenReports.length === 0 ||
+      engine === 'off' ||
+      phase !== 'monitoring' ||
+      !serviceRef.current
+    ) {
+      return;
+    }
+
+    queueRef.current.push(...unseenReports);
+    startWorker();
+  }, [engine, phase, reports, startWorker]);
+
+  useEffect(() => {
+    void runId;
+    seenReportIdsRef.current.clear();
+    cancelQueue();
+    setVoiceNotice(null);
+  }, [cancelQueue, runId]);
+
+  useEffect(() => {
+    if (
+      phase === 'pre' ||
+      phase === 'paused' ||
+      phase === 'ending' ||
+      phase === 'complete'
+    ) {
+      cancelQueue();
+    }
+  }, [cancelQueue, phase]);
+
+  const setEngine = useCallback(
+    (nextEngine: MikoVoiceEngine) => {
+      cancelQueue();
+      setVoiceNotice(null);
+      setVoiceError(null);
+      setEngineState(nextEngine);
+      if (nextEngine === 'aivisSpeech') void refreshAivis();
+    },
+    [cancelQueue, refreshAivis]
+  );
+
+  const selectAivisSpeaker = useCallback(
+    (speaker: string) => {
+      cancelQueue();
+      setVoiceNotice(null);
+      setAivisSpeaker(speaker);
+    },
+    [cancelQueue]
+  );
+
+  return {
+    engine,
+    setEngine,
+    webVoice,
+    aivisState,
+    aivisVoices,
+    aivisSpeaker,
+    selectAivisSpeaker,
+    refreshAivis,
+    isSpeaking,
+    voiceLevel: engine === 'webSpeech' && isSpeaking ? 0.65 : voiceLevel,
+    activeText,
+    speakingReportKind,
+    voiceNotice,
+    voiceError,
+  };
+}
