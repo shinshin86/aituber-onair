@@ -10,6 +10,9 @@ import { openCompositor } from '../src/gen/compositor/index.js';
 vi.mock('../src/avatars/purupuru/adapter.js', () => {
   throw new Error('Unselected Purupuru module was loaded.');
 });
+vi.mock('../src/avatars/vrm/adapter.js', () => {
+  throw new Error('Unselected VRM module was loaded.');
+});
 vi.mock('../src/avatars/mesh/adapter.js', () => {
   throw new Error('Unselected Mesh module was loaded.');
 });
@@ -43,7 +46,7 @@ it('selects PNGTuber without evaluating any other adapter', async () => {
     await stage.close();
   }
   expect(() => parseAvatarKind('unknown')).toThrow(/Unknown avatar/);
-  await expect(loadAvatar('vrm')).rejects.toThrow(/not available/);
+  await expect(loadAvatar('live2d')).rejects.toThrow(/not available/);
 });
 
 it('keeps optional browser runtimes out of the Node CLI module graph', async () => {

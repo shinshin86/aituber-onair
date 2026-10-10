@@ -155,7 +155,11 @@ describe.each(['pngtuber', 'purupuru'] as const)('%s adapter', (kind) => {
   it('changes mouth/eye images while retaining an opaque-free avatar layer', async () => {
     const config = configFor(kind);
     const avatar = await loadAvatar(kind);
-    if (avatar.runtime !== 'node' || config.avatarConfig.kind === 'mesh')
+    if (
+      avatar.runtime !== 'node' ||
+      (config.avatarConfig.kind !== 'pngtuber' &&
+        config.avatarConfig.kind !== 'purupuru')
+    )
       throw new Error('Expected Node runtime.');
     await avatar.prepare({
       config: config.avatarConfig,

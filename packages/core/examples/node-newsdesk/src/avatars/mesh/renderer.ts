@@ -18,6 +18,8 @@ export function createRenderer(): BrowserAvatarRenderer {
     kind: 'mesh',
     runtime: 'browser',
     async prepare(input) {
+      if (input.config.kind !== 'mesh')
+        throw new Error('Expected mesh avatar configuration.');
       config = input.config;
       fps = input.fps;
       Math.random = createSeededRandom(input.seed);

@@ -2,6 +2,7 @@ import type { BrowserAvatarRenderer } from '../src/avatars/types.js';
 import { AVATAR_FRAME, createScene } from '../src/screen/scene.js';
 import { buildTimeline } from '../src/screen/schedule.js';
 import { resolveFrameState } from '../src/screen/state.js';
+import { createBlinkSchedule } from '../src/gen/blink.js';
 import type { RenderConfig } from '../src/types.js';
 
 interface HarnessInput {
@@ -12,10 +13,13 @@ let avatar: BrowserAvatarRenderer | null = null;
 let draw: ((frame: number, mouth: number) => void) | null = null;
 
 async function load({ config, mouthValues }: HarnessInput) {
-  if (config.avatarConfig.kind !== 'mesh')
+  if (config.avatarConfig.kind !== 'mesh' && config.avatarConfig.kind !== 'vrm')
     throw new Error('Unsupported browser avatar.');
   await avatar?.dispose();
-  avatar = (await import('../src/avatars/mesh/renderer.js')).createRenderer();
+  avatar =
+    config.avatarConfig.kind === 'mesh'
+      ? (await import('../src/avatars/mesh/renderer.js')).createRenderer()
+      : (await import('../src/avatars/vrm/renderer.js')).createRenderer();
   const stage = document.querySelector<HTMLCanvasElement>('#stage');
   if (!stage) throw new Error('Harness stage canvas was not found.');
   stage.width = config.width;
@@ -33,6 +37,11 @@ async function load({ config, mouthValues }: HarnessInput) {
   const timeline = buildTimeline(config.lines, config.duration, config.seed);
   const scene = createScene(g, config, timeline);
   const renderer = avatar;
+  const blink = createBlinkSchedule(
+    Math.max(1, Math.ceil(config.duration * config.fps)),
+    config.fps,
+    config.seed,
+  );
   draw = (frame, mouth) => {
     const history = Array.from({ length: 24 }, (_, i) => {
       const f = frame - 23 + i;
@@ -46,12 +55,16 @@ async function load({ config, mouthValues }: HarnessInput) {
       timeline,
       frame,
       mouth,
-      false,
+      Boolean(blink[frame]),
       history,
     );
     scene.draw(state.scene, renderer.render(state.avatar));
   };
-  return { lines: config.lines.length, actions: timeline.actions.length };
+  return {
+    lines: config.lines.length,
+    actions: timeline.actions.length,
+    avatarDiagnostics: avatar.describe?.(),
+  };
 }
 
 declare global {

@@ -18,13 +18,15 @@ export async function loadAvatar(kind: AvatarKind): Promise<LoadedAvatar> {
   switch (kind) {
     case 'pngtuber':
       return (await import('./pngtuber/adapter.js')).createAdapter();
+    case 'vrm':
+      return (await import('./vrm/adapter.js')).createAdapter();
     case 'mesh':
       return (await import('./mesh/adapter.js')).createAdapter();
     case 'purupuru':
       return (await import('./purupuru/adapter.js')).createAdapter();
     default:
       throw new Error(
-        `Avatar "${kind}" is not available in this example yet. Available: pngtuber, purupuru, mesh.`,
+        `Avatar "${kind}" is not available in this example yet. Available: pngtuber, purupuru, mesh, vrm.`,
       );
   }
 }

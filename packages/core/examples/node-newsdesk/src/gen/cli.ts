@@ -74,6 +74,7 @@ interface RenderSummary {
   duration?: number;
   launchMode: string;
   scheduledActions: number;
+  avatarDiagnostics?: Record<string, unknown>;
   renderPerformance: {
     measuredFrames: number;
     totalMs: number;
@@ -128,7 +129,7 @@ export function parseArgs(argv: string[]): GenArgs {
 
 function usage(): string {
   return `Usage:
-  npm run gen -- --script <script.json> [--avatar pngtuber|purupuru|mesh] [--avatar-config config.json] [--output <video.mp4>]
+  npm run gen -- --script <script.json> [--avatar pngtuber|purupuru|mesh|vrm] [--avatar-config config.json] [--output <video.mp4>]
   npm run gen -- --script <script.json> [--output <video.mp4>] --dry-run
   npm run gen -- --script <script.json> [--output <video.mp4>] --render-only
   npm run gen -- --script <script.json> --frame 45 --png work/frame45.png`;
@@ -316,6 +317,7 @@ async function render(
   const summary = (): Omit<RenderSummary, 'output'> => ({
     launchMode: stage.launchMode,
     scheduledActions: stage.actions,
+    avatarDiagnostics: stage.avatarDiagnostics,
     renderPerformance: {
       measuredFrames,
       totalMs,

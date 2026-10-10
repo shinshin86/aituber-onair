@@ -33,8 +33,7 @@ export interface EncodeMp4Options {
 
 /**
  * Encode PNG or raw RGBA frames from stdin plus the narration WAV into an H.264/AAC
- * MP4. Encoder flags are chosen for deterministic output so the same script
- * renders byte-identically.
+ * MP4. Encoder flags give deterministic output for identical input frames.
  */
 export function encodeMp4({
   config,

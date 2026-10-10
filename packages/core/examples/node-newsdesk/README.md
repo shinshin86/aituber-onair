@@ -2,7 +2,7 @@
 
 Generate a vertical news video from a JSON script, or turn source text into a
 script with AITuber OnAir Core. The same script can be rendered with PNGTuber,
-Purupuru, or Mesh by changing `--avatar`.
+Purupuru, Mesh, or VRM by changing `--avatar`.
 
 [日本語](README.ja.md)
 
@@ -17,6 +17,7 @@ npm run gen -- --script samples/hello-sine.json --output work/pngtuber.mp4
 npm run gen -- --script samples/hello-sine.json --avatar purupuru --output work/purupuru.mp4
 npx playwright install chromium
 npm run gen -- --script samples/hello-sine.json --avatar mesh --output work/mesh.mp4
+npm run gen -- --script samples/hello-sine.json --avatar vrm --output work/vrm.mp4
 ```
 
 The sample uses a deterministic sine voice and requires no API key. Output is
@@ -24,7 +25,9 @@ The sample uses a deterministic sine voice and requires no API key. Output is
 beside the MP4. PNGTuber is the default. PNGTuber and Purupuru run in Node
 using native Canvas2D and do not load Playwright or launch Chromium. Mesh
 renders its WebGL avatar and the same Canvas2D screen in headless Chromium.
-Only Mesh needs the Chromium installation step above.
+Mesh and VRM need the Chromium installation step above. VRM uses the sibling
+`react-vrm-app/public/avatar/miko.vrm` and `idle_loop.vrma` by default; keep
+those files available. Both browser adapters render the shared screen in-page.
 
 The shared screen includes a news panel, chapter progress, keyword pop-ups,
 emotion effects, karaoke subtitles, a ticker, and opening/closing title cards.
@@ -34,6 +37,9 @@ two adapters keep their original faces; line emotions affect screen effects.
 Mesh supports facial emotions and scheduled motions, using the framework-free
 engine and default qipao assets from the sibling `react-mesh-avatar-app` example.
 The engine and assets are used read-only; keep that sibling directory available.
+VRM supports RMS lip sync, seeded blinking, VRMA animation, and supported facial
+emotions. Unsupported emotions use a neutral face; named screen motion cues
+do not replace the selected VRMA loop.
 
 ## Avatar configuration
 
@@ -52,7 +58,8 @@ Avatar settings belong in a separate JSON file, passed with
 
 `model` is relative to that config file: a four-PNG directory for PNGTuber,
 a `.purupuru` file for Purupuru, or a Mesh asset directory containing
-`manifest.json`. Omitting it selects each adapter's default Miko assets.
+`manifest.json`, or a `.vrm` model file. Omitting it selects each adapter's
+default Miko assets.
 `scale` ranges from 0.1 to 3; `x` and `y` are normalized positions inside the
 660 × 700 avatar frame; `intensity` ranges from 0 to 3. Unknown fields and
 invalid values produce an error. Config validation and defaults belong to each
@@ -62,6 +69,7 @@ adapter. Mesh accepts `padTop`, `padSide`, and `talkGain` instead of `intensity`
 | --- | --- | --- |
 | PNGTuber | `scale: 1`, `x: 0.5`, `y: 0.5` | `intensity: 1` (0–3) |
 | Purupuru | `scale: 1.5`, `x: 0.5`, `y: 0.65` | `intensity: 1` (0–3) |
+| VRM | `scale: 1`, `x: 0.5`, `y: 0.5` | `animation`, `intensity: 1` (0–3), `framing`, `lighting` (see below) |
 | Mesh | `scale: 1`, `x: 0.5`, `y: 0.5` | `padTop: -0.07` (-0.5–1), `padSide: -0.18` (-0.45–1), `talkGain: 0.55` (0–3) |
 
 Purupuru uses a closer upper-body view. Mesh padding controls the source-image
@@ -70,6 +78,30 @@ crop, and `talkGain` controls voice-driven body movement. For example:
 ```json
 { "padTop": -0.07, "padSide": -0.18, "talkGain": 0.55 }
 ```
+
+### VRM configuration
+
+```json
+{
+  "model": "avatar/miko.vrm",
+  "animation": "avatar/idle_loop.vrma",
+  "intensity": 1,
+  "framing": { "visibleHeightRatio": 0.39, "lookAtHeightRatio": 0.845 },
+  "lighting": { "ambientIntensity": 1.4, "directionalIntensity": 2.35 }
+}
+```
+
+`animation` is relative to the config file; omitted selects the default idle
+loop, and `null` disables animation. `intensity` scales the animation/physics
+clock from 0 to 3; 0 freezes the pose while mouth and blink expressions continue.
+`framing.visibleHeightRatio` controls zoom (0.05–2; smaller is tighter), while
+`lookAtHeightRatio` controls the camera target height (0–1.5; smaller moves the
+model upward). Camera controls run before scale/placement inside the avatar
+frame. Ambient and directional lighting intensities range from 0 to 10.
+
+The camera, light units, hip-translation stabilization, and fixed time steps
+follow the original VRM renderer. The rendering stack stays pinned to three.js
+`0.182.0`, `@pixiv/three-vrm` `3.4.5`, and `@pixiv/three-vrm-animation` `3.4.5`.
 
 ## Script generation
 
@@ -99,7 +131,7 @@ npm run gen -- --script samples/hello-sine.json --frame 60 --png work/frame60.pn
 
 `--dry-run` synthesizes audio and timings without rendering. `--render-only`
 reuses those artifacts; `--avatar` and `--avatar-config` select the adapter for
-that run. Native adapters seek directly to a frame; Mesh replays from frame 0
+that run. Native adapters seek directly to a frame; Mesh and VRM replay from frame 0
 before exporting the selected frame. The shared scene receives
 explicit voice history, and Purupuru physics uses a precomputed virtual clock,
 so frame order does not affect the result.
@@ -115,12 +147,17 @@ a browser Canvas2D context. Chromium also needs Japanese-capable system fonts;
 | Avatar | Asset | Terms | Attribution |
 | --- | --- | --- | --- |
 | PNGTuber | Bundled Miko four-state PNGs | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
+| VRM | Sibling `react-vrm-app/public/avatar/miko.vrm` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Mesh | Sibling `react-mesh-avatar-app/public/avatar/qipao` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Purupuru | Bundled `miko.purupuru` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 
 The Japanese [Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms)
 are authoritative. Miko is the official character of AITuber OnAir. The
-remaining avatar adapters are not available in this example yet.
+remaining avatar adapters are not available in this example yet. The default
+VRMA loop is reused by `react-vrm-app` from
+[`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM); review its license before
+redistributing the animation itself. Neither sibling model nor animation is
+copied into this example.
 
 ## Development
 

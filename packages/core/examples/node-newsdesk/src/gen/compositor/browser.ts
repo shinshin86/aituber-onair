@@ -1,5 +1,5 @@
 /**
- * Serves the render harness and the mesh avatar folder on 127.0.0.1 and drives
+ * Serves the render harness and selected avatar assets on 127.0.0.1 and drives
  * a headless Chromium page that draws each 1080x1920 frame. Frames come back
  * as PNG screenshots of the `#stage` canvas.
  */
@@ -135,7 +135,21 @@ async function startServer(
         '/harness/',
         url.pathname,
       );
-    } else if (url.pathname.startsWith('/avatar/')) {
+    } else if (
+      config.avatarConfig.kind === 'vrm' &&
+      url.pathname === '/model/vrm'
+    ) {
+      void sendFile(response, config.avatarConfig.model);
+    } else if (
+      config.avatarConfig.kind === 'vrm' &&
+      config.avatarConfig.animation &&
+      url.pathname === '/model/vrma'
+    ) {
+      void sendFile(response, config.avatarConfig.animation);
+    } else if (
+      config.avatarConfig.kind === 'mesh' &&
+      url.pathname.startsWith('/avatar/')
+    ) {
       void sendRootedFile(
         response,
         config.avatarConfig.model,
@@ -173,7 +187,12 @@ async function openPage(
   config: RenderConfig,
   mouthValues: Float32Array,
   launchMode: 'swiftshader' | 'default-gl',
-): Promise<{ browser: Browser; page: Page; actions: number }> {
+): Promise<{
+  browser: Browser;
+  page: Page;
+  actions: number;
+  avatarDiagnostics?: Record<string, unknown>;
+}> {
   const { chromium } = await import('playwright');
   const browser = await chromium.launch({
     headless: true,
@@ -196,13 +215,22 @@ async function openPage(
       (value) =>
         (
           window as unknown as {
-            load(v: typeof value): Promise<{ lines: number; actions: number }>;
+            load(v: typeof value): Promise<{
+              lines: number;
+              actions: number;
+              avatarDiagnostics?: Record<string, unknown>;
+            }>;
           }
         ).load(value),
       { config, mouthValues: Array.from(mouthValues) },
     );
     if (errors.length) throw new Error(errors.join('\n'));
-    return { browser, page, actions: loaded.actions };
+    return {
+      browser,
+      page,
+      actions: loaded.actions,
+      avatarDiagnostics: loaded.avatarDiagnostics,
+    };
   } catch (error) {
     await browser.close();
     throw error;
@@ -213,13 +241,25 @@ export async function openBrowserCompositor(
   config: RenderConfig,
   mouthValues: Float32Array,
 ): Promise<CompositorSession> {
-  if (config.avatarConfig.kind !== 'mesh')
+  if (config.avatarConfig.kind !== 'mesh' && config.avatarConfig.kind !== 'vrm')
     throw new Error('A browser avatar config is required.');
   const avatarStat = await stat(config.avatarConfig.model).catch(() => null);
-  if (!avatarStat?.isDirectory()) {
+  const validModel =
+    config.avatarConfig.kind === 'mesh'
+      ? avatarStat?.isDirectory()
+      : avatarStat?.isFile();
+  if (!validModel)
     throw new Error(
-      `Mesh avatar folder was not found: ${config.avatarConfig.model}`,
+      `${config.avatar} avatar ${config.avatarConfig.kind === 'mesh' ? 'folder' : 'file'} was not found: ${config.avatarConfig.model}`,
     );
+  if (config.avatarConfig.kind === 'vrm' && config.avatarConfig.animation) {
+    const animationStat = await stat(config.avatarConfig.animation).catch(
+      () => null,
+    );
+    if (!animationStat?.isFile())
+      throw new Error(
+        `VRMA animation file was not found: ${config.avatarConfig.animation}`,
+      );
   }
   const { server, origin } = await startServer(config);
   let opened: Awaited<ReturnType<typeof openPage>>;
@@ -246,12 +286,13 @@ export async function openBrowserCompositor(
       throw retryError;
     }
   }
-  const { browser, page, actions } = opened;
+  const { browser, page, actions, avatarDiagnostics } = opened;
   const stage = page.locator('#stage');
   let nextFrame = 0;
   let closed = false;
   return {
     frameFormat: 'png',
+    avatarDiagnostics,
     launchMode,
     actions,
     async renderFrame(frame, mouth) {

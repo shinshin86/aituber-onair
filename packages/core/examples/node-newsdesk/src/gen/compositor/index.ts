@@ -5,6 +5,7 @@ export interface CompositorSession {
   frameFormat: 'rgba' | 'png';
   launchMode: string;
   actions: number;
+  avatarDiagnostics?: Record<string, unknown>;
   renderFrame(
     frame: number,
     mouth: number,

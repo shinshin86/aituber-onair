@@ -36,8 +36,17 @@ export interface MeshAvatarConfig extends BaseAvatarConfig {
   padSide: number;
   talkGain: number;
 }
+export interface VrmAvatarConfig extends BaseAvatarConfig {
+  kind: 'vrm';
+  model: string;
+  animation: string | null;
+  intensity: number;
+  framing: { visibleHeightRatio: number; lookAtHeightRatio: number };
+  lighting: { ambientIntensity: number; directionalIntensity: number };
+}
+export type BrowserAvatarConfig = MeshAvatarConfig | VrmAvatarConfig;
 export type NodeAvatarConfig = PngtuberAvatarConfig | PurupuruAvatarConfig;
-export type AvatarConfig = NodeAvatarConfig | MeshAvatarConfig;
+export type AvatarConfig = NodeAvatarConfig | BrowserAvatarConfig;
 export interface AvatarPrepareInput<
   Config extends AvatarConfig = AvatarConfig,
 > {
@@ -69,6 +78,7 @@ export interface AvatarAdapter<
   prepare(input: AvatarPrepareInput<Config>): Promise<void>;
   render(input: AvatarFrameInput): Layer;
   dispose(): Promise<void>;
+  describe?(): Record<string, unknown>;
 }
 
 export type NodeAvatarAdapter = AvatarAdapter<Canvas, NodeAvatarConfig> & {
@@ -77,12 +87,12 @@ export type NodeAvatarAdapter = AvatarAdapter<Canvas, NodeAvatarConfig> & {
 };
 /** Browser renderer code is loaded in the harness, never evaluated in Node. */
 export interface BrowserAvatarAdapter {
-  readonly kind: 'mesh';
+  readonly kind: 'mesh' | 'vrm';
   readonly runtime: 'browser';
-  resolveConfig(raw: unknown, configFile: string): MeshAvatarConfig;
+  resolveConfig(raw: unknown, configFile: string): BrowserAvatarConfig;
 }
 export type LoadedAvatar = NodeAvatarAdapter | BrowserAvatarAdapter;
 export type BrowserAvatarRenderer = AvatarAdapter<
   HTMLCanvasElement,
-  MeshAvatarConfig
+  BrowserAvatarConfig
 > & { runtime: 'browser' };

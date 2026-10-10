@@ -30,7 +30,11 @@ export async function openNodeCompositor(
   const totalFrames = Math.max(1, Math.ceil(config.duration * config.fps));
   const blink = createBlinkSchedule(totalFrames, config.fps, config.seed);
   const avatar = loadedAvatar ?? (await loadAvatar(config.avatar));
-  if (avatar.runtime !== 'node' || config.avatarConfig.kind === 'mesh')
+  if (
+    avatar.runtime !== 'node' ||
+    (config.avatarConfig.kind !== 'pngtuber' &&
+      config.avatarConfig.kind !== 'purupuru')
+  )
     throw new Error('A Node avatar config is required.');
   try {
     await avatar.prepare({
