@@ -2,7 +2,7 @@
 
 Generate a vertical news video from a JSON script, or turn source text into a
 script with AITuber OnAir Core. The same script can be rendered with PNGTuber,
-Purupuru, Mesh, VRM, or Live2D by changing `--avatar`.
+Purupuru, Mesh, VRM, Live2D, or Inochi2D by changing `--avatar`.
 
 [日本語](README.ja.md)
 
@@ -18,6 +18,7 @@ npm run gen -- --script samples/hello-sine.json --avatar purupuru --output work/
 npx playwright install chromium
 npm run gen -- --script samples/hello-sine.json --avatar mesh --output work/mesh.mp4
 npm run gen -- --script samples/hello-sine.json --avatar vrm --output work/vrm.mp4
+npm run gen -- --script samples/hello-sine.json --avatar inochi2d --output work/inochi2d.mp4
 ```
 
 The sample uses a deterministic sine voice and requires no API key. Output is
@@ -25,10 +26,11 @@ The sample uses a deterministic sine voice and requires no API key. Output is
 beside the MP4. PNGTuber is the default. PNGTuber and Purupuru run in Node
 using native Canvas2D and do not load Playwright or launch Chromium. Mesh
 renders its WebGL avatar and the same Canvas2D screen in headless Chromium.
-Mesh, VRM, and Live2D need the Chromium installation step above. VRM uses the sibling
+Mesh, VRM, Live2D, and Inochi2D need the Chromium installation step above. VRM uses the sibling
 `react-vrm-app/public/avatar/miko.vrm` and `idle_loop.vrma` by default; keep
 those files available. Live2D requires user-supplied model and Cubism Core paths
-(see below). Browser adapters render the shared screen in-page.
+(see below). Inochi2D uses the sibling `react-inochi2d-app/public/inochi2d`
+runtime and bundled Aka model/motion by default. Browser adapters render the shared screen in-page.
 
 The shared screen includes a news panel, chapter progress, keyword pop-ups,
 emotion effects, karaoke subtitles, a ticker, and opening/closing title cards.
@@ -43,7 +45,9 @@ emotions. Unsupported emotions use a neutral face; named screen motion cues
 do not replace the selected VRMA loop.
 Live2D provides RMS lip sync, seeded blinking, and a pinned idle motion with a
 settling period before capture. Line emotions and named cues affect the shared
-screen while the model continues its selected idle motion.
+screen while the model continues its selected idle motion. Inochi2D provides
+RMS lip sync, seeded blinking, and a looping idle through its unmodified WASM
+bridge. Line emotions and named cues affect the shared screen.
 
 ## Avatar configuration
 
@@ -62,9 +66,10 @@ Avatar settings belong in a separate JSON file, passed with
 
 `model` is relative to that config file: a four-PNG directory for PNGTuber,
 a `.purupuru` file for Purupuru, or a Mesh asset directory containing
-`manifest.json`, a `.vrm` model file, or a Live2D `.model3.json` file. Omitting
+`manifest.json`, a `.vrm` model file, a Live2D `.model3.json` file, or an Inochi2D `.inx` model. Omitting
 it selects the default Miko assets for PNGTuber, Purupuru, Mesh, and VRM.
-Live2D requires explicit model and Core paths.
+Live2D requires explicit model and Core paths. Inochi2D defaults to the sibling
+Aka model, motion, and runtime without copying them.
 `scale` ranges from 0.1 to 3; `x` and `y` are normalized positions inside the
 660 × 700 avatar frame; `intensity` ranges from 0 to 3. Unknown fields and
 invalid values produce an error. Config validation and defaults belong to each
@@ -76,6 +81,7 @@ adapter. Mesh accepts `padTop`, `padSide`, and `talkGain` instead of `intensity`
 | Purupuru | `scale: 1.5`, `x: 0.5`, `y: 0.65` | `intensity: 1` (0–3) |
 | VRM | `scale: 1`, `x: 0.5`, `y: 0.5` | `animation`, `intensity: 1` (0–3), `framing`, `lighting` (see below) |
 | Live2D | `scale: 1`, `x: 0.5`, `y: 0.5` | `cubismCore`, `intensity: 1` (0–3), `framing`, `idleMotionGroup`, `warmupSeconds: 3` (0–30) |
+| Inochi2D | `scale: 1`, `x: 0.5`, `y: 0.5` | `runtime`, `motion`, `idleAnimation`, `intensity: 1` (0–3), `framing` (see below) |
 | Mesh | `scale: 1`, `x: 0.5`, `y: 0.5` | `padTop: -0.07` (-0.5–1), `padSide: -0.18` (-0.45–1), `talkGain: 0.55` (0–3) |
 
 Purupuru uses a closer upper-body view. Mesh padding controls the source-image
@@ -164,6 +170,43 @@ and the [Terms of Use for Live2D Cubism Sample Data](https://www.live2d.com/eula
 including the terms for your user/business category and required copyright
 notices.
 
+### Inochi2D configuration
+
+The default runtime, `Aka.original-rig.inx`, and `Aka.original.motion.json` are
+read-only references to `react-inochi2d-app/public/inochi2d`. No model or runtime
+is copied or downloaded. Keep that sibling directory available, or provide
+config-relative, absolute, or `~/` paths:
+
+```json
+{
+  "model": "models/avatar.inx",
+  "runtime": "runtime",
+  "motion": "models/avatar.motion.json",
+  "idleAnimation": "original_idle_calm_breath",
+  "intensity": 1,
+  "framing": { "scale": 0.4, "x": 0, "y": 1800 }
+}
+```
+
+`runtime` must contain `inochi_bridge.js`, `inochi2d.js`, `inochi2d_bg.wasm`,
+and `secondary_motion.js`. Missing runtime/model/motion files fail before
+Chromium launches. `motion: null` skips external motion loading;
+`idleAnimation: null` skips starting an idle loop. `intensity` is the idle
+animation weight (0–3), following the original renderer, rather than its speed.
+The bridge's secondary physics continue at weight zero.
+
+`framing` controls the bridge camera before shared scale/placement. Scale is
+0.05–2; x/y are model-space pixel offsets (-10000–10000). The default
+uses `scale: 0.4`, `x: 0`, `y: 1800` to fit the head, ears, and upper body in
+the shared frame (the original full-page view used 0.65 / 0 / 1450).
+
+Before importing the bridge, the renderer installs a virtual rAF queue,
+`performance.now()`, `Date.now()`, and a seed-based mulberry32 `Math.random()`.
+Each frame advances exactly `1 / 30` second and flushes the bridge once, with
+one next callback queued. Nested rAF callbacks wait until the next frame.
+Mouth control prefers the `Mouth:: Shape` vec2 parameter; blink control prefers
+`setEyeBlinkValue`. Original clock APIs are restored when the renderer disposes.
+
 ## Script generation
 
 ```bash
@@ -211,14 +254,33 @@ a browser Canvas2D context. Chromium also needs Japanese-capable system fonts;
 | VRM | Sibling `react-vrm-app/public/avatar/miko.vrm` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Mesh | Sibling `react-mesh-avatar-app/public/avatar/qipao` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Purupuru | Bundled `miko.purupuru` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
+| Inochi2D | Sibling derived Aka model/motion | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Aka by seagetch (details below) |
 
 The Japanese [Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms)
-are authoritative. Miko is the official character of AITuber OnAir. The
-remaining avatar adapters are not available in this example yet. The default
+are authoritative. Miko is the official character of AITuber OnAir. PSD is not available in this example yet. The default
 VRMA loop is reused by `react-vrm-app` from
 [`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM); review its license before
 redistributing the animation itself. Neither sibling model nor animation is
 copied into this example.
+
+## Aka attribution
+
+This example references the derived Aka files bundled by
+`react-inochi2d-app`:
+
+- Title: Aka
+- Author: seagetch
+- Source: https://github.com/Inochi2D/example-models
+- License: Creative Commons Attribution 4.0 International
+- License URL: https://creativecommons.org/licenses/by/4.0/
+
+The referenced files are `Aka.original-rig.inx` and
+`Aka.original.motion.json`. This bundled version was adapted for the AITuber
+OnAir Inochi2D example. Changes include rig adjustments for browser rendering,
+helper rig controls for avatar motion, adapted idle motion data, and motion
+metadata configured through `public/inochi2d/manifest.json`. The original model
+attribution and license are preserved in the sibling
+`Aka.ATTRIBUTION.md` file.
 
 ## Development
 

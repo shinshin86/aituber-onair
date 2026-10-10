@@ -16,6 +16,9 @@ vi.mock('../src/avatars/vrm/adapter.js', () => {
 vi.mock('../src/avatars/mesh/adapter.js', () => {
   throw new Error('Unselected Mesh module was loaded.');
 });
+vi.mock('../src/avatars/inochi2d/adapter.js', () => {
+  throw new Error('Unselected Inochi2D module was loaded.');
+});
 vi.mock('../src/gen/compositor/browser.js', () => {
   throw new Error('Browser compositor was loaded for a Node avatar.');
 });
@@ -46,7 +49,7 @@ it('selects PNGTuber without evaluating any other adapter', async () => {
     await stage.close();
   }
   expect(() => parseAvatarKind('unknown')).toThrow(/Unknown avatar/);
-  await expect(loadAvatar('inochi2d')).rejects.toThrow(/not available/);
+  await expect(loadAvatar('psd')).rejects.toThrow(/not available/);
 });
 
 it('keeps optional browser runtimes out of the Node CLI module graph', async () => {
@@ -77,7 +80,7 @@ it('keeps optional browser runtimes out of the Node CLI module graph', async () 
   };
   if (entry) visit(entry);
   const graph = JSON.stringify([...visited].map((file) => outputs[file]));
-  expect(graph).not.toMatch(/playwright|puppeteer|three|pixi|cubism/i);
+  expect(graph).not.toMatch(/playwright|puppeteer|three|pixi|cubism|inochi2d/i);
   const registryOutput = Object.values(result.metafile?.outputs ?? {}).find(
     (output) =>
       Object.keys(output.inputs).some((input) =>

@@ -14,6 +14,7 @@ import type { CompositorSession } from './index.js';
 import { resolveProjectRoot } from '../../paths.js';
 import type { RenderConfig } from '../../types.js';
 import { requireLive2dAssets } from '../../avatars/live2d/assets.js';
+import { requireInochi2dAssets } from '../../avatars/inochi2d/assets.js';
 
 const SWIFTSHADER_ARGS = [
   '--use-angle=swiftshader',
@@ -25,6 +26,7 @@ function contentType(filePath: string): string {
   if (lower.endsWith('.html')) return 'text/html; charset=utf-8';
   if (lower.endsWith('.js')) return 'text/javascript; charset=utf-8';
   if (lower.endsWith('.json')) return 'application/json';
+  if (lower.endsWith('.wasm')) return 'application/wasm';
   if (lower.endsWith('.png')) return 'image/png';
   return 'application/octet-stream';
 }
@@ -134,6 +136,37 @@ async function startServer(
         response,
         harnessDirectory,
         '/harness/',
+        url.pathname,
+      );
+    } else if (
+      config.avatarConfig.kind === 'inochi2d' &&
+      url.pathname.startsWith('/runtime/')
+    ) {
+      void sendRootedFile(
+        response,
+        config.avatarConfig.runtime,
+        '/runtime/',
+        url.pathname,
+      );
+    } else if (
+      config.avatarConfig.kind === 'inochi2d' &&
+      url.pathname.startsWith('/model/')
+    ) {
+      void sendRootedFile(
+        response,
+        path.dirname(config.avatarConfig.model),
+        '/model/',
+        url.pathname,
+      );
+    } else if (
+      config.avatarConfig.kind === 'inochi2d' &&
+      config.avatarConfig.motion &&
+      url.pathname.startsWith('/motion/')
+    ) {
+      void sendRootedFile(
+        response,
+        path.dirname(config.avatarConfig.motion),
+        '/motion/',
         url.pathname,
       );
     } else if (
@@ -260,11 +293,14 @@ export async function openBrowserCompositor(
   if (
     config.avatarConfig.kind !== 'mesh' &&
     config.avatarConfig.kind !== 'vrm' &&
-    config.avatarConfig.kind !== 'live2d'
+    config.avatarConfig.kind !== 'live2d' &&
+    config.avatarConfig.kind !== 'inochi2d'
   )
     throw new Error('A browser avatar config is required.');
   if (config.avatarConfig.kind === 'live2d')
     await requireLive2dAssets(config.avatarConfig);
+  if (config.avatarConfig.kind === 'inochi2d')
+    await requireInochi2dAssets(config.avatarConfig);
   const avatarStat = await stat(config.avatarConfig.model).catch(() => null);
   const validModel =
     config.avatarConfig.kind === 'mesh'
@@ -328,7 +364,7 @@ export async function openBrowserCompositor(
         (value) =>
           (
             window as unknown as {
-              renderFrame(v: typeof value): void;
+              renderFrame(v: typeof value): Promise<void>;
             }
           ).renderFrame(value),
         { frame, mouth },

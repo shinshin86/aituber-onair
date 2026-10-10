@@ -53,10 +53,20 @@ export interface Live2dAvatarConfig extends BaseAvatarConfig {
   idleMotionGroup: string | null;
   warmupSeconds: number;
 }
+export interface Inochi2dAvatarConfig extends BaseAvatarConfig {
+  kind: 'inochi2d';
+  model: string;
+  runtime: string;
+  motion: string | null;
+  idleAnimation: string | null;
+  intensity: number;
+  framing: { scale: number; x: number; y: number };
+}
 export type BrowserAvatarConfig =
   | MeshAvatarConfig
   | VrmAvatarConfig
-  | Live2dAvatarConfig;
+  | Live2dAvatarConfig
+  | Inochi2dAvatarConfig;
 export type NodeAvatarConfig = PngtuberAvatarConfig | PurupuruAvatarConfig;
 export type AvatarConfig = NodeAvatarConfig | BrowserAvatarConfig;
 export interface AvatarPrepareInput<
@@ -105,6 +115,6 @@ export interface BrowserAvatarAdapter {
 }
 export type LoadedAvatar = NodeAvatarAdapter | BrowserAvatarAdapter;
 export type BrowserAvatarRenderer = AvatarAdapter<
-  HTMLCanvasElement,
+  HTMLCanvasElement | Promise<HTMLCanvasElement>,
   BrowserAvatarConfig
 > & { runtime: 'browser' };

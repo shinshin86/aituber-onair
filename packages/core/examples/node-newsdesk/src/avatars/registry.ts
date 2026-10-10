@@ -22,13 +22,15 @@ export async function loadAvatar(kind: AvatarKind): Promise<LoadedAvatar> {
       return (await import('./vrm/adapter.js')).createAdapter();
     case 'live2d':
       return (await import('./live2d/adapter.js')).createAdapter();
+    case 'inochi2d':
+      return (await import('./inochi2d/adapter.js')).createAdapter();
     case 'mesh':
       return (await import('./mesh/adapter.js')).createAdapter();
     case 'purupuru':
       return (await import('./purupuru/adapter.js')).createAdapter();
     default:
       throw new Error(
-        `Avatar "${kind}" is not available in this example yet. Available: pngtuber, purupuru, mesh, vrm, live2d.`,
+        `Avatar "${kind}" is not available in this example yet. Available: pngtuber, purupuru, mesh, vrm, live2d, inochi2d.`,
       );
   }
 }
