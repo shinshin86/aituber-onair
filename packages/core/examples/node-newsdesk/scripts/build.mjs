@@ -1,4 +1,4 @@
-import { mkdir } from 'node:fs/promises';
+import { mkdir, copyFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { build } from 'esbuild';
 
@@ -21,9 +21,23 @@ await build({
     js: "import { createRequire as newsdeskCreateRequire } from 'node:module'; const require = newsdeskCreateRequire(import.meta.url);",
   },
   external: [
+    'playwright',
     '@napi-rs/canvas',
     'linkedom',
     '@mozilla/readability',
     '@openai/codex-sdk',
   ],
 });
+
+await build({
+  entryPoints: ['harness/main.ts'],
+  outdir: 'dist/harness',
+  bundle: true,
+  splitting: true,
+  platform: 'browser',
+  format: 'esm',
+  target: 'chrome120',
+  sourcemap: true,
+  logLevel: 'info',
+});
+await copyFile('harness/index.html', 'dist/harness/index.html');

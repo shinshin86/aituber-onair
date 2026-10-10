@@ -1,4 +1,5 @@
 import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
+import type { NodeAvatarAdapter } from '../../avatars/types.js';
 import { loadAvatar } from '../../avatars/registry.js';
 import { AVATAR_FRAME, createScene } from '../../screen/scene.js';
 import { buildTimeline } from '../../screen/schedule.js';
@@ -9,6 +10,7 @@ import { createBlinkSchedule } from '../blink.js';
 export async function openNodeCompositor(
   config: RenderConfig,
   mouthValues: Float32Array,
+  loadedAvatar?: NodeAvatarAdapter,
 ) {
   // Native canvas discovers system fonts; allow an explicit Linux font file.
   if (
@@ -27,7 +29,9 @@ export async function openNodeCompositor(
   const scene = createScene(context, config, timeline);
   const totalFrames = Math.max(1, Math.ceil(config.duration * config.fps));
   const blink = createBlinkSchedule(totalFrames, config.fps, config.seed);
-  const avatar = await loadAvatar(config.avatar);
+  const avatar = loadedAvatar ?? (await loadAvatar(config.avatar));
+  if (avatar.runtime !== 'node' || config.avatarConfig.kind === 'mesh')
+    throw new Error('A Node avatar config is required.');
   try {
     await avatar.prepare({
       config: config.avatarConfig,
@@ -43,6 +47,7 @@ export async function openNodeCompositor(
   }
   return {
     launchMode: 'node',
+    frameFormat: 'rgba' as const,
     actions: timeline.actions.length,
     async renderFrame(frame: number, mouth: number) {
       const start = performance.now();
@@ -63,10 +68,12 @@ export async function openNodeCompositor(
       );
       scene.draw(state.scene, avatar.render(state.avatar));
       const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      const bytes = Buffer.from(data);
       return {
+        bytes,
         // Own the bytes while ffmpeg consumes them asynchronously. The native
         // image data can otherwise be released before the pipe finishes.
-        rgba: Buffer.from(data),
+        rgba: bytes,
         png: () => canvas.toBuffer('image/png'),
         elapsedMs: performance.now() - start,
       };

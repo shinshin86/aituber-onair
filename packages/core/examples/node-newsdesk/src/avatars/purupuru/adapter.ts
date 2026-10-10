@@ -5,10 +5,16 @@ import {
   createCanvas,
 } from '@napi-rs/canvas';
 import type {
-  AvatarConfig,
+  PurupuruAvatarConfig,
   AvatarFrameInput,
   NodeAvatarAdapter,
 } from '../types.js';
+import {
+  configObject,
+  baseConfig,
+  configNumber,
+  modelPath,
+} from '../config.js';
 import {
   createHairSpringState,
   type HairSpringOutput,
@@ -117,7 +123,7 @@ function drawAvatar(
   context: SKRSContext2D,
   canvas: Canvas,
   avatar: PuruPuruAvatarPackage,
-  layout: AvatarConfig,
+  layout: PurupuruAvatarConfig,
   pose: Pose,
   hair: HairMotion,
   mouthValue: number,
@@ -248,6 +254,25 @@ function applyItemTransform(
   context.scale(scale, scale);
 }
 
+export function resolveConfig(
+  raw: unknown,
+  configFile: string,
+): PurupuruAvatarConfig {
+  const value = configObject(raw, 'purupuru', [
+    'model',
+    'scale',
+    'x',
+    'y',
+    'intensity',
+  ]);
+  return {
+    kind: 'purupuru',
+    ...baseConfig(value, { scale: 1.5, x: 0.5, y: 0.65 }),
+    model: modelPath(value.model, configFile, 'assets/miko.purupuru'),
+    intensity: configNumber(value, 'intensity', 1, 0, 3),
+  };
+}
+
 /** Precompute the original spring simulation on a fixed virtual clock.
  * Rendering then only samples the immutable pose table, so seeks and restarts
  * reproduce exactly the same hair motion without startup impulses.
@@ -255,12 +280,15 @@ function applyItemTransform(
 export function createAdapter(): NodeAvatarAdapter {
   let canvas: Canvas | null = null;
   let avatar: PuruPuruAvatarPackage | null = null;
-  let config: AvatarConfig;
+  let config: PurupuruAvatarConfig;
   let poses: MotionDiagnostics[] = [];
   return {
     kind: 'purupuru',
     runtime: 'node',
+    resolveConfig,
     async prepare(input) {
+      if (input.config.kind !== 'purupuru')
+        throw new Error('Expected purupuru avatar configuration.');
       config = input.config;
       avatar = await loadPuruPuruPackage(config.model);
       canvas = createCanvas(input.width, input.height);

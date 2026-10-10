@@ -1,6 +1,7 @@
 import { createCanvas, type Canvas } from '@napi-rs/canvas';
 import { resolveAvatarConfig, loadAvatar } from '../src/avatars/registry.js';
-import type { AvatarKind } from '../src/avatars/types.js';
+import { resolveConfig as pngConfig } from '../src/avatars/pngtuber/adapter.js';
+import { resolveConfig as puruConfig } from '../src/avatars/purupuru/adapter.js';
 import { parseScript } from '../src/gen/cli.js';
 import { createBlinkSchedule } from '../src/gen/blink.js';
 import { openNodeCompositor } from '../src/gen/compositor/node.js';
@@ -15,13 +16,16 @@ import { buildTimeline } from '../src/screen/schedule.js';
 import { resolveFrameState } from '../src/screen/state.js';
 import type { RenderConfig } from '../src/types.js';
 
-function configFor(avatar: AvatarKind = 'pngtuber'): RenderConfig {
+function configFor(avatar: 'pngtuber' | 'purupuru' = 'pngtuber'): RenderConfig {
   return {
     width: W,
     height: H,
     fps: 30,
     avatar,
-    avatarConfig: resolveAvatarConfig(avatar, {}, 'samples/script.json'),
+    avatarConfig: (avatar === 'pngtuber' ? pngConfig : puruConfig)(
+      {},
+      'samples/script.json',
+    ),
     show: { title: 'AI NEWS DESK', subtitle: 'テスト', clock: '10:00' },
     seed: 42,
     audio: '',
@@ -151,6 +155,8 @@ describe.each(['pngtuber', 'purupuru'] as const)('%s adapter', (kind) => {
   it('changes mouth/eye images while retaining an opaque-free avatar layer', async () => {
     const config = configFor(kind);
     const avatar = await loadAvatar(kind);
+    if (avatar.runtime !== 'node' || config.avatarConfig.kind === 'mesh')
+      throw new Error('Expected Node runtime.');
     await avatar.prepare({
       config: config.avatarConfig,
       width: 660,
@@ -167,6 +173,7 @@ describe.each(['pngtuber', 'purupuru'] as const)('%s adapter', (kind) => {
       eyesClosed: false,
       emotion: 'happy' as const,
       motion: null,
+      cues: [],
     };
     try {
       const closed = avatar.render(input).toBuffer('image/png');
@@ -221,23 +228,23 @@ describe('strict avatar-independent input', () => {
     ).toThrow(/duration is required/);
   });
 
-  it('validates config fields and resolves model paths relative to the config', () => {
-    const result = resolveAvatarConfig(
+  it('validates config fields and resolves model paths relative to the config', async () => {
+    const result = await resolveAvatarConfig(
       'pngtuber',
       { model: 'avatar', scale: 1.1 },
       '/path/to/config.json',
     );
     expect(result.model).toBe('/path/to/avatar');
     expect(result.scale).toBe(1.1);
-    expect(() =>
+    await expect(
       resolveAvatarConfig('pngtuber', { cubismCore: 'x' }, 'config.json'),
-    ).toThrow(/Unknown pngtuber/);
-    expect(() =>
+    ).rejects.toThrow(/Unknown pngtuber/);
+    await expect(
       resolveAvatarConfig('purupuru', { intensity: -1 }, 'config.json'),
-    ).toThrow(/intensity/);
-    expect(() =>
+    ).rejects.toThrow(/intensity/);
+    await expect(
       resolveAvatarConfig('purupuru', { scale: 'large' }, 'config.json'),
-    ).toThrow(/scale/);
+    ).rejects.toThrow(/scale/);
   });
 
   it('uses a seeded blink schedule with visible closed-eye frames', () => {

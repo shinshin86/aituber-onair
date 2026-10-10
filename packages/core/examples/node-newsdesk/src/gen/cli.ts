@@ -28,7 +28,7 @@ import * as sayEngine from './engines/say.js';
 import * as sineEngine from './engines/sine.js';
 import type { SynthesisResult, VoiceEngine } from './engines/types.js';
 import { assertFfmpeg, encodeMp4, writeFrame } from './ffmpeg.js';
-import { openNodeCompositor } from './compositor/node.js';
+import { openCompositor } from './compositor/index.js';
 
 const ENGINES: Record<ScriptVoice['engine'], VoiceEngine> = {
   say: sayEngine,
@@ -128,7 +128,7 @@ export function parseArgs(argv: string[]): GenArgs {
 
 function usage(): string {
   return `Usage:
-  npm run gen -- --script <script.json> [--avatar pngtuber|purupuru] [--avatar-config config.json] [--output <video.mp4>]
+  npm run gen -- --script <script.json> [--avatar pngtuber|purupuru|mesh] [--avatar-config config.json] [--output <video.mp4>]
   npm run gen -- --script <script.json> [--output <video.mp4>] --dry-run
   npm run gen -- --script <script.json> [--output <video.mp4>] --render-only
   npm run gen -- --script <script.json> --frame 45 --png work/frame45.png`;
@@ -292,8 +292,15 @@ async function render(
 ): Promise<RenderSummary> {
   const audio = await decodeWav(config.audio);
   const totalFrames = Math.max(1, Math.ceil(config.duration * config.fps));
-  const mouthValues = createMouthValues(audio, config.fps, totalFrames);
-  const stage = await openNodeCompositor(config, mouthValues);
+  const mouthValues =
+    config.avatar === 'mesh'
+      ? (await import('../avatars/mesh/mouth.js')).createMouthValues(
+          audio,
+          config.fps,
+          totalFrames,
+        )
+      : createMouthValues(audio, config.fps, totalFrames);
+  const stage = await openCompositor(config, mouthValues);
   let measuredFrames = 0;
   let totalMs = 0;
   let speakingFrames = 0;
@@ -323,6 +330,10 @@ async function render(
         0,
         Math.min(totalFrames - 1, Math.floor(args.frame)),
       );
+      // Stateful browser avatars replay their fixed clock before capture.
+      if (stage.frameFormat === 'png') {
+        for (let frame = 0; frame < target; frame++) await renderOne(frame);
+      }
       const result = await renderOne(target);
       const pngPath = path.resolve(args.png);
       await mkdir(path.dirname(pngPath), { recursive: true });
@@ -331,9 +342,10 @@ async function render(
     }
     await encodeMp4({
       config,
+      frameFormat: stage.frameFormat,
       writeFrames: async (stdin: Writable) => {
         for (let frame = 0; frame < totalFrames; frame += 1) {
-          await writeFrame(stdin, (await renderOne(frame)).rgba);
+          await writeFrame(stdin, (await renderOne(frame)).bytes);
           if (frame % 150 === 0) console.error(`frame ${frame}/${totalFrames}`);
         }
       },
@@ -374,7 +386,11 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
   const rawConfig: unknown = args.avatarConfig
     ? JSON.parse(await readFile(configFile, 'utf8'))
     : {};
-  const avatarConfig = resolveAvatarConfig(args.avatar, rawConfig, configFile);
+  const avatarConfig = await resolveAvatarConfig(
+    args.avatar,
+    rawConfig,
+    configFile,
+  );
   const paths = createPaths(scriptPath, script.output, args.output);
   await mkdir(paths.outputDir, { recursive: true });
   await assertFfmpeg();

@@ -24,7 +24,8 @@ export function resolveFrameState(
   for (const scheduled of timeline.actions) {
     if (scheduled.time > time) break;
     if (scheduled.action.type === 'emotion') {
-      if (scheduled.action.tag !== emotion) emotionStart = scheduled.time;
+      if (scheduled.action.tag !== emotion)
+        emotionStart = Math.ceil(scheduled.time * config.fps) / config.fps;
       emotion = scheduled.action.tag;
     } else motion = { id: scheduled.action.id, start: scheduled.time };
   }
@@ -48,6 +49,13 @@ export function resolveFrameState(
       eyesClosed,
       emotion,
       motion,
+      cues: timeline.actions
+        .filter(
+          (cue) =>
+            cue.time <= time &&
+            (frame === 0 || cue.time > (frame - 1) / config.fps),
+        )
+        .map((cue) => cue.action),
     },
   };
 }

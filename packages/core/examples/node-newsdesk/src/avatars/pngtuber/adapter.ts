@@ -1,24 +1,52 @@
 import { createCanvas, type Canvas } from '@napi-rs/canvas';
 import type {
-  AvatarConfig,
+  PngtuberAvatarConfig,
   AvatarFrameInput,
   NodeAvatarAdapter,
 } from '../types.js';
+import {
+  configObject,
+  baseConfig,
+  configNumber,
+  modelPath,
+} from '../config.js';
 import {
   loadPngtuberAvatar,
   selectImageKey,
   type PngtuberAvatar,
 } from './images.js';
 
+export function resolveConfig(
+  raw: unknown,
+  configFile: string,
+): PngtuberAvatarConfig {
+  const value = configObject(raw, 'pngtuber', [
+    'model',
+    'scale',
+    'x',
+    'y',
+    'intensity',
+  ]);
+  return {
+    kind: 'pngtuber',
+    ...baseConfig(value, { scale: 1, x: 0.5, y: 0.5 }),
+    model: modelPath(value.model, configFile, 'assets/pngtuber'),
+    intensity: configNumber(value, 'intensity', 1, 0, 3),
+  };
+}
+
 /** Preserve the four-state images and the original small breathing/roll pose. */
 export function createAdapter(): NodeAvatarAdapter {
   let avatar: PngtuberAvatar | null = null;
   let canvas: Canvas | null = null;
-  let config: AvatarConfig;
+  let config: PngtuberAvatarConfig;
   return {
     kind: 'pngtuber',
     runtime: 'node',
+    resolveConfig,
     async prepare(input) {
+      if (input.config.kind !== 'pngtuber')
+        throw new Error('Expected pngtuber avatar configuration.');
       avatar = await loadPngtuberAvatar(input.config.model);
       canvas = createCanvas(input.width, input.height);
       config = input.config;

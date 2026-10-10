@@ -17,7 +17,7 @@ export function assertFfmpeg(): Promise<void> {
   });
 }
 
-/** Write one raw RGBA frame, waiting for back-pressure to clear. */
+/** Write one encoded PNG or raw RGBA frame, waiting for back-pressure to clear. */
 export async function writeFrame(
   stream: Writable,
   frame: Buffer,
@@ -27,28 +27,34 @@ export async function writeFrame(
 
 export interface EncodeMp4Options {
   config: RenderConfig;
+  frameFormat?: 'rgba' | 'png';
   writeFrames: (stdin: Writable) => Promise<void>;
 }
 
 /**
- * Encode raw RGBA frames from stdin plus the narration WAV into an H.264/AAC
+ * Encode PNG or raw RGBA frames from stdin plus the narration WAV into an H.264/AAC
  * MP4. Encoder flags are chosen for deterministic output so the same script
  * renders byte-identically.
  */
 export function encodeMp4({
   config,
+  frameFormat = 'rgba',
   writeFrames,
 }: EncodeMp4Options): Promise<void> {
   const args = [
     '-y',
     '-v',
     'error',
-    '-f',
-    'rawvideo',
-    '-pixel_format',
-    'rgba',
-    '-video_size',
-    `${config.width}x${config.height}`,
+    ...(frameFormat === 'png'
+      ? ['-f', 'image2pipe', '-c:v', 'png']
+      : [
+          '-f',
+          'rawvideo',
+          '-pixel_format',
+          'rgba',
+          '-video_size',
+          `${config.width}x${config.height}`,
+        ]),
     '-framerate',
     String(config.fps),
     '-i',
