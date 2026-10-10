@@ -196,6 +196,11 @@ export enum AITuberOnAirCoreEvent {
  */
 export class AITuberOnAirCore extends EventEmitter {
   private chatService: ChatService;
+  private chatProviderName: CoreChatProviderName;
+  private chatServiceOptions: CoreChatServiceOptions;
+  private providerResponseLength?: ChatProcessorOptions['responseLength'];
+  private pendingChatService?: ChatService;
+  private activeOneShotRequests = 0;
   private chatProcessor: ChatProcessor;
   private memoryManager?: MemoryManager;
   private voiceService?: VoiceService;
@@ -221,6 +226,8 @@ export class AITuberOnAirCore extends EventEmitter {
 
     // Determine provider name (default is 'openai')
     const providerName: CoreChatProviderName = options.chatProvider || 'openai';
+    this.chatProviderName = providerName;
+    this.providerResponseLength = options.providerOptions?.responseLength;
 
     if (
       isAgentChatProviderName(providerName) &&
@@ -248,6 +255,7 @@ export class AITuberOnAirCore extends EventEmitter {
       providerName,
       baseOptions,
       options.providerOptions,
+      options.chatOptions.responseLength,
     );
 
     // Add MCP servers for providers that support remote MCP
@@ -268,13 +276,8 @@ export class AITuberOnAirCore extends EventEmitter {
     }
 
     // Initialize ChatService
-    const createChatService = ChatServiceFactory.createChatService.bind(
-      ChatServiceFactory,
-    ) as (
-      providerName: CoreChatProviderName,
-      options: CoreChatServiceOptions,
-    ) => ChatService;
-    this.chatService = createChatService(providerName, chatServiceOptions);
+    this.chatServiceOptions = chatServiceOptions;
+    this.chatService = this.createChatService(chatServiceOptions);
 
     // Initialize MemoryManager (optional)
     if (options.memoryOptions?.enableSummarization) {
@@ -329,6 +332,16 @@ export class AITuberOnAirCore extends EventEmitter {
     this.log('AITuberOnAirCore initialized');
   }
 
+  private createChatService(options: CoreChatServiceOptions): ChatService {
+    const createChatService = ChatServiceFactory.createChatService.bind(
+      ChatServiceFactory,
+    ) as (
+      providerName: CoreChatProviderName,
+      options: CoreChatServiceOptions,
+    ) => ChatService;
+    return createChatService(this.chatProviderName, options);
+  }
+
   private buildChatServiceOptions(
     providerName: CoreChatProviderName,
     baseOptions: {
@@ -336,8 +349,21 @@ export class AITuberOnAirCore extends EventEmitter {
       model?: string;
       tools: ToolDefinition[];
     },
-    providerOptions?: AITuberOnAirCoreOptions['providerOptions'],
+    originalProviderOptions?: AITuberOnAirCoreOptions['providerOptions'],
+    responseLength?: ChatProcessorOptions['responseLength'],
   ): CoreChatServiceOptions {
+    // Keep local/self-hosted token limits opt-in to avoid truncating reasoning.
+    const effectiveResponseLength =
+      originalProviderOptions?.responseLength ??
+      (providerName === 'openai-compatible' ? undefined : responseLength);
+    const providerOptions =
+      effectiveResponseLength === undefined
+        ? originalProviderOptions
+        : {
+            ...originalProviderOptions,
+            responseLength: effectiveResponseLength,
+          };
+
     if (isAgentChatProviderName(providerName)) {
       return {
         ...(baseOptions.apiKey !== undefined
@@ -509,6 +535,7 @@ export class AITuberOnAirCore extends EventEmitter {
       return false;
     } finally {
       this.isProcessing = false;
+      this.applyPendingChatService();
       this.emit(AITuberOnAirCoreEvent.PROCESSING_END);
     }
   }
@@ -557,7 +584,49 @@ export class AITuberOnAirCore extends EventEmitter {
   updateChatOptions(
     options: Partial<AITuberOnAirCoreOptions['chatOptions']>,
   ): void {
+    if (
+      'responseLength' in options &&
+      this.chatProviderName !== 'openai-compatible' &&
+      this.providerResponseLength === undefined &&
+      options.responseLength !== this.chatServiceOptions.responseLength
+    ) {
+      const nextOptions = {
+        ...this.chatServiceOptions,
+        responseLength: options.responseLength,
+      };
+      const nextService = this.createChatService(nextOptions);
+      if (this.pendingChatService) {
+        this.disposeChatService(this.pendingChatService);
+      }
+      this.chatServiceOptions = nextOptions;
+      this.pendingChatService = nextService;
+      this.applyPendingChatService();
+    }
     this.chatProcessor.updateOptions(options);
+  }
+
+  private applyPendingChatService(): void {
+    // Finish active tool loops and one-shot requests before replacing the service.
+    if (
+      !this.pendingChatService ||
+      this.isProcessing ||
+      this.activeOneShotRequests > 0
+    ) {
+      return;
+    }
+    const previousService = this.chatService;
+    this.chatService = this.pendingChatService;
+    this.pendingChatService = undefined;
+    this.chatProcessor.setChatService(this.chatService);
+    this.disposeChatService(previousService);
+  }
+
+  private disposeChatService(service: ChatService): void {
+    try {
+      service.dispose?.();
+    } catch (error) {
+      this.log('Error disposing chat service:', error);
+    }
   }
 
   /**
@@ -935,11 +1004,17 @@ export class AITuberOnAirCore extends EventEmitter {
     const messages: Message[] = [{ role: 'system', content: prompt }];
     messages.push(...messageHistory);
 
-    const result = await this.chatService.chatOnce(messages, false, () => {});
-    return result.blocks
-      .filter((b) => b.type === 'text')
-      .map((b) => b.text)
-      .join('');
+    this.activeOneShotRequests++;
+    try {
+      const result = await this.chatService.chatOnce(messages, false, () => {});
+      return result.blocks
+        .filter((b) => b.type === 'text')
+        .map((b) => b.text)
+        .join('');
+    } finally {
+      this.activeOneShotRequests--;
+      this.applyPendingChatService();
+    }
   }
 
   /**

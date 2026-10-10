@@ -919,7 +919,9 @@ const options: AITuberOnAirCoreOptions = {
 };
 ```
 
-利用可能なプリセット：
+プリセットの基準となるトークン数は以下のとおりです。プロバイダーによっては、
+モデルごとの最小値を適用したり、上限値の代わりにプロンプトで長さを指示したりします。
+
 - `'veryShort'`: 40トークン - 必要最小限の簡潔な応答
 - `'short'`: 100トークン - 簡潔だが完全な応答
 - `'medium'`: 200トークン - ほとんどのシナリオに適したバランスの良い長さ
@@ -927,11 +929,17 @@ const options: AITuberOnAirCoreOptions = {
 
 ### 優先順位システム
 
-複数の長さ制御が指定された場合、以下の優先順位が適用されます：
+テキストチャットでは、以下の優先順位が適用されます：
 
-1. **直接指定値** (`maxTokens`, `visionMaxTokens`) - 最高優先度
-2. **プリセット値** (`responseLength`, `visionResponseLength`) - 中優先度
-3. **デフォルト値** (1000トークン) - 何も指定されていない場合のフォールバック
+1. `chatOptions.maxTokens`
+2. `providerOptions.responseLength`
+3. `chatOptions.responseLength`
+4. プロバイダーのデフォルト値
+
+ローカル・セルフホストのエンドポイントでは、推論中に出力が途切れるのを避けるため、
+トークン上限は明示した場合にだけ設定します。`openai-compatible` プロバイダーには
+`chatOptions.responseLength` を引き継ぎません。上限を設ける場合は、
+`providerOptions.responseLength` または `chatOptions.maxTokens` を指定してください。
 
 ### 画像処理専用設定
 
@@ -949,19 +957,26 @@ const options: AITuberOnAirCoreOptions = {
 };
 ```
 
-画像処理専用設定が提供されていない場合、通常のチャット設定にフォールバックします。
+画像処理では、`visionMaxTokens`、`visionResponseLength`、`maxTokens` の順に優先します。
+いずれも未指定の場合は、プロバイダーの応答長設定またはデフォルト値を使用します。
 
 ### 動的更新
 
 応答長設定は実行時に更新できます：
 
 ```typescript
-// チャットプロセッサーオプションの更新
-aituber.updateChatProcessorOptions({
-  maxTokens: 100,
+aituber.updateChatOptions({
+  responseLength: 'short',
   visionMaxTokens: 250,
 });
 ```
+
+`responseLength` を変更すると、チャット履歴、メモリ、ツール、イベントリスナーを保持したまま、
+プロバイダーの設定を更新します。`providerOptions.responseLength` の優先と
+`openai-compatible` の例外は、更新時も同じです。実行中のチャット・画像処理・単発生成の
+リクエストがある場合は、すべて完了してからサービスを差し替えます。
+Gemini Nano の永続セッションなど、プロバイダーが管理するセッションは、
+Core が保持する履歴を使って再作成します。
 
 ### 使用例
 

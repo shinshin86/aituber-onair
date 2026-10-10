@@ -139,6 +139,11 @@ export class ChatProcessor extends EventEmitter {
     }
   }
 
+  /** Replace the provider while preserving chat history, memory and listeners. */
+  setChatService(chatService: ChatService): void {
+    this.chatService = chatService;
+  }
+
   /**
    * Process text chat
    * @param text User input text

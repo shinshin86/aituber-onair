@@ -1015,7 +1015,8 @@ const options: AITuberOnAirCoreOptions = {
 };
 ```
 
-Available presets:
+Base token budgets for the presets (providers may apply model-specific minimums
+or use prompt instructions instead of hard limits):
 - `'veryShort'`: 40 tokens - Brief, essential responses only
 - `'short'`: 100 tokens - Concise but complete responses
 - `'medium'`: 200 tokens - Balanced length for most scenarios
@@ -1023,11 +1024,17 @@ Available presets:
 
 ### Priority System
 
-When multiple length controls are specified, the following priority order applies:
+For text chat, the following priority order applies:
 
-1. **Direct values** (`maxTokens`, `visionMaxTokens`) - Highest priority
-2. **Preset values** (`responseLength`, `visionResponseLength`) - Medium priority
-3. **Default values** (1000 tokens) - Fallback when nothing is specified
+1. `chatOptions.maxTokens`
+2. `providerOptions.responseLength`
+3. `chatOptions.responseLength`
+4. Provider defaults
+
+For local and self-hosted endpoints, token limits remain opt-in to avoid
+truncating reasoning output. The `openai-compatible` provider does not inherit
+`chatOptions.responseLength`; set `providerOptions.responseLength` or an explicit
+`chatOptions.maxTokens` to request a limit.
 
 ### Vision-Specific Settings
 
@@ -1045,19 +1052,25 @@ const options: AITuberOnAirCoreOptions = {
 };
 ```
 
-If vision-specific settings are not provided, they will fall back to the regular chat settings.
+Vision requests use `visionMaxTokens`, then `visionResponseLength`, then
+`maxTokens`, and finally the provider's response-length setting or default.
 
 ### Dynamic Updates
 
 Response length settings can be updated at runtime:
 
 ```typescript
-// Update chat processor options
-aituber.updateChatProcessorOptions({
-  maxTokens: 100,
+aituber.updateChatOptions({
+  responseLength: 'short',
   visionMaxTokens: 250,
 });
 ```
+
+Changing `responseLength` updates the provider while preserving chat history,
+memory, tools, and event listeners. Provider overrides and the
+`openai-compatible` exception still apply. Active chat, vision, and one-shot
+requests finish before the replacement takes effect. Provider-owned sessions
+(such as Gemini Nano persistent sessions) are recreated using Core's history.
 
 ### Usage Examples
 
