@@ -189,6 +189,14 @@ npm run dev
 サンプル全体の一覧とおすすめの始め方は
 [サンプル一覧](./docs/examples.ja.md) を参照してください。
 
+#### Node Newsdesk（テキストから縦型ニュース動画）
+
+元のテキストからCoreのチャット・音声を使い、チャプター付き縦型ニュース動画を作ります。
+[`packages/core/examples/node-newsdesk`](./packages/core/examples/node-newsdesk)
+は生成処理を1つのフォルダーにまとめ、同じ台本のまま`--avatar`で
+PNGTuber・Purupuru・Mesh・VRM・Live2D・Inochi2D・PSDを切り替えられます。
+サンプルのREADMEにセットアップ手順とアニメーションギャラリーがあります。
+
 ### 4. パッケージを使って自分のアプリに組み込む
 
 必要なものだけをインストールして、自分のアプリに差し込めます。

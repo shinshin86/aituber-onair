@@ -234,6 +234,14 @@ Open `http://localhost:5173` in any case, then set API keys and provider options
 See [Examples](./docs/examples.md) for the full example map and recommended
 starting points.
 
+#### Node Newsdesk — text to vertical news video
+
+Turn source text into a chaptered vertical news video with Core chat and voice.
+[`packages/core/examples/node-newsdesk`](./packages/core/examples/node-newsdesk)
+keeps the pipeline in one folder; use `--avatar` to switch between PNGTuber,
+Purupuru, Mesh, VRM, Live2D, Inochi2D, and PSD without changing the script.
+The example README includes setup instructions and an animated gallery.
+
 ### 4. Build your own with the packages
 
 Install only what you need and drop it into your own app:

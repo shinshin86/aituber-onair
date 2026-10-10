@@ -134,8 +134,8 @@ model upward). Camera controls run before scale/placement inside the avatar
 frame. Ambient and directional lighting intensities range from 0 to 10.
 
 The default camera framing fills the shared frame with the head and upper body.
-Light units, hip-translation stabilization, and fixed time steps follow the
-original VRM renderer. The rendering stack stays pinned to three.js
+The renderer uses consistent light units, stabilized hip translation, and
+fixed time steps. The rendering stack stays pinned to three.js
 `0.182.0`, `@pixiv/three-vrm` `3.4.5`, and `@pixiv/three-vrm-animation` `3.4.5`.
 
 ### Live2D configuration and required files
@@ -180,8 +180,7 @@ captured frames. `intensity` scales the subsequent animation clock from 0–3;
 0 freezes the settled pose while lip sync and seeded blinking continue.
 
 The page loads user-supplied Core before the Cubism 4 renderer. PixiJS and the
-display plugin load only when Live2D is selected. The dependency pair matches
-the original Live2D example: PixiJS `^7.4.3` and
+display plugin load only when Live2D is selected. Live2D uses PixiJS `^7.4.3` and
 `pixi-live2d-display-lipsyncpatch` at `release/v0.5.0-ls-7-noMaskFix`.
 The loopback server serves the harness, configured Core file, and files below
 the model's parent directory, rejecting traversal and symlink escapes.
@@ -214,13 +213,13 @@ config-relative, absolute, or `~/` paths:
 and `secondary_motion.js`. Missing runtime/model/motion files fail before
 Chromium launches. `motion: null` skips external motion loading;
 `idleAnimation: null` skips starting an idle loop. `intensity` is the idle
-animation weight (0–3), following the original renderer, rather than its speed.
+animation weight (0–3), rather than its speed.
 The bridge's secondary physics continue at weight zero.
 
 `framing` controls the bridge camera before shared scale/placement. Scale is
 0.05–2; x/y are model-space pixel offsets (-10000–10000). The default
 uses `scale: 0.4`, `x: 0`, `y: 1800` to fit the head, ears, and upper body in
-the shared frame (the original full-page view used 0.65 / 0 / 1450).
+the shared frame.
 
 Before importing the bridge, the renderer installs a virtual rAF queue,
 `performance.now()`, `Date.now()`, and a seed-based mulberry32 `Math.random()`.
@@ -296,7 +295,7 @@ Paths may be config-relative, absolute, or begin with `~/`. Motion imports the
 existing sibling rigger and Anime2.5DRig renderer read-only. A seeded virtual
 clock is installed before those modules load. Each frame sets `mouthOpen`,
 advances fixed time, and flushes one rAF callback. Motion intensity is clamped
-to the original renderer's 0–2 range. The renderer has no eye-open input, so
+to the sibling renderer's 0–2 range. The renderer has no eye-open input, so
 it retains its built-in blink automation with seeded time and randomness.
 `roles` applies only to static rendering.
 

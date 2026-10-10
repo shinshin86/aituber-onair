@@ -43,7 +43,7 @@ await build({
 });
 await copyFile('harness/index.html', 'dist/harness/index.html');
 
-// Use the same read-only vendored UMD wrapper as the original PSD example.
+// Bundle the read-only vendored UMD rigger as an ES module.
 await build({
   entryPoints: ['src/avatars/psd/motionRuntime.ts'],
   outfile: 'dist/harness/motion-runtime.js',

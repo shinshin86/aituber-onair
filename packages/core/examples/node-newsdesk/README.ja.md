@@ -95,7 +95,7 @@ Purupuruは上半身を大きく表示します。Meshのpaddingは元画像の�
 
 `framing.visibleHeightRatio`はズーム（0.05〜2、小さいほど寄る）、`lookAtHeightRatio`はカメラが向く高さ（0〜1.5、小さいほどモデルが上へ移動）を指定します。カメラ設定の後に、アバター枠内のscaleと位置を適用します。環境光・指向性ライトの強さはそれぞれ0〜10です。
 
-初期の構図は、頭部と上半身が共通のアバター枠を満たすように調整しています。光量単位、腰の移動を除く処理、固定時間刻みは旧VRMレンダラーを引き継いでいます。描画ライブラリはthree.js `0.182.0`、`@pixiv/three-vrm` `3.4.5`、`@pixiv/three-vrm-animation` `3.4.5`に固定しています。
+初期の構図は、頭部と上半身が共通のアバター枠を満たすように調整しています。レンダラーは光量単位を統一し、腰の移動を除いて固定時間刻みで更新します。描画ライブラリはthree.js `0.182.0`、`@pixiv/three-vrm` `3.4.5`、`@pixiv/three-vrm-animation` `3.4.5`に固定しています。
 
 ### Live2D設定と必要ファイル
 
@@ -125,7 +125,7 @@ npm run gen -- --script samples/hello-sine.json --avatar live2d \
 
 `warmupSeconds`はフレーム0より前に撮影せずモデルを更新する時間です。動画のフレーム数は増やしません。`intensity`は撮影開始後のアニメーション速度を0〜3倍にし、0では安定したポーズを固定します。口パクとseedに基づく瞬きは続けます。
 
-ページは利用者指定のCoreを先に読み、Cubism 4レンダラーを読み込みます。PixiJSと表示プラグインはLive2D選択時だけ読み込みます。依存は旧Live2Dサンプルと同じPixiJS `^7.4.3`と、`pixi-live2d-display-lipsyncpatch`の`release/v0.5.0-ls-7-noMaskFix`です。ループバックサーバーはハーネス、指定Core、モデルの親ディレクトリ以下を配信し、パストラバーサルとシンボリックリンクによる脱出を拒否します。
+ページは利用者指定のCoreを先に読み、Cubism 4レンダラーを読み込みます。PixiJSと表示プラグインはLive2D選択時だけ読み込みます。描画にはPixiJS `^7.4.3`と、`pixi-live2d-display-lipsyncpatch`の`release/v0.5.0-ls-7-noMaskFix`を使います。ループバックサーバーはハーネス、指定Core、モデルの親ディレクトリ以下を配信し、パストラバーサルとシンボリックリンクによる脱出を拒否します。
 
 Live2D公式サンプルモデルで作った動画を公開する場合は、[無償提供マテリアルの使用許諾契約書](https://www.live2d.com/eula/live2d-free-material-license-agreement.html)と[Live2D Cubismサンプルデータ利用条件](https://www.live2d.com/eula/live2d-sample-model-terms.html)の両方を確認し、利用者・事業者区分の条件や必要な著作権表示に従ってください。
 
@@ -144,9 +144,9 @@ Live2D公式サンプルモデルで作った動画を公開する場合は、[�
 }
 ```
 
-`runtime`には`inochi_bridge.js`・`inochi2d.js`・`inochi2d_bg.wasm`・`secondary_motion.js`が必要です。runtime・モデル・モーションがなければChromium起動前にエラーを返します。`motion: null`で外部モーションを読み込まず、`idleAnimation: null`でidleループの開始を省略します。`intensity`は旧レンダラーと同じidleの重み（0〜3）で、速度は変えません。0でもブリッジの二次物理演算は続きます。
+`runtime`には`inochi_bridge.js`・`inochi2d.js`・`inochi2d_bg.wasm`・`secondary_motion.js`が必要です。runtime・モデル・モーションがなければChromium起動前にエラーを返します。`motion: null`で外部モーションを読み込まず、`idleAnimation: null`でidleループの開始を省略します。`intensity`はidleの重み（0〜3）で、速度は変えません。0でもブリッジの二次物理演算は続きます。
 
-`framing`は共通のscale・位置を適用する前のカメラ変換です。scaleは0.05〜2、xとyはモデル空間のピクセル単位（-10000〜10000）です。初期値は`scale: 0.4`・`x: 0`・`y: 1800`で、耳を含む頭部と上半身が共通枠に収まる構図です。旧版の全画面表示は0.65・0・1450でした。
+`framing`は共通のscale・位置を適用する前のカメラ変換です。scaleは0.05〜2、xとyはモデル空間のピクセル単位（-10000〜10000）です。初期値は`scale: 0.4`・`x: 0`・`y: 1800`で、耳を含む頭部と上半身が共通枠に収まる構図です。
 
 ブリッジをimportする前に、rAFキュー・`performance.now()`・`Date.now()`・`Math.random()`をseedに基づく仮想時計へ置き換えます。各フレームで`1 / 30`秒だけ進め、ブリッジを1回更新して次フレームの予約が1件であることを確認します。更新中に予約されたrAFは次フレームまで待ちます。口は`Mouth:: Shape`のvec2、瞬きは`setEyeBlinkValue`を優先し、終了時には元の時計APIへ戻します。
 
@@ -200,7 +200,7 @@ npm run gen -- --script samples/hello-sine.json --avatar psd \
   --avatar-config work/psd-motion.json --output work/psd-motion.mp4
 ```
 
-パスは設定ファイル相対、絶対パス、`~/`始まりを指定できます。モーションは隣接する既存のリガーとAnime2.5DRigレンダラーを読み取り専用で参照します。読み込む前にseedに基づく仮想時計を設定し、各フレームで`mouthOpen`入力、固定時間の進行、1回のrAF更新を行います。モーションの`intensity`は旧レンダラーの0〜2へ制限します。目の開閉を直接設定するAPIはないため、時刻と乱数を固定した内蔵の瞬きを維持します。`roles`は静止モードで使います。
+パスは設定ファイル相対、絶対パス、`~/`始まりを指定できます。モーションは隣接する既存のリガーとAnime2.5DRigレンダラーを読み取り専用で参照します。読み込む前にseedに基づく仮想時計を設定し、各フレームで`mouthOpen`入力、固定時間の進行、1回のrAF更新を行います。モーションの`intensity`は参照するレンダラーの0〜2へ制限します。目の開閉を直接設定するAPIはないため、時刻と乱数を固定した内蔵の瞬きを維持します。`roles`は静止モードで使います。
 
 モーション用`framing`は共通のscale・位置より先に元キャンバスを変換し、静止モードでは使いません。初期値の`scale: 2`・`x: 0.5`・`y: 0.8`は隣接サンプルの上半身を表示する構図です。scaleは0.1〜3、xとyは0〜1です。元キャンバス全体を収める場合は`scale: 1`・`x: 0.5`・`y: 0.5`を指定します。
 
