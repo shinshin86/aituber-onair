@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["server", "src/protocol.ts", "tests"]
+}

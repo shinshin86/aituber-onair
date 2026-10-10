@@ -54,6 +54,7 @@ jobs:
       matrix:
         sample:
           - packages/chat/examples/react-basic
+          - packages/agent/examples/fan-mail-stage
           - packages/core/examples/react-basic
           - packages/core/examples/react-inochi2d-app
           - packages/core/examples/react-live2d-app
