@@ -195,9 +195,17 @@ Tests cover ingestion, startup scans, external directories, atomic writing,
 deduplication, validation, quarantine, untrusted Agent input, generation failures,
 public-data separation, rejection, approval races, and outbox persistence.
 
-The mesh avatar runtime and Miko's qipao assets are copied from
-`packages/core/examples/react-mesh-avatar-app`; the lightweight audio hook is
-adapted from `stream-operations-staff`. No Core dependency is required.
+The avatar uses the [`mesh-avatar`](https://www.npmjs.com/package/mesh-avatar)
+runtime. Miko's qipao artwork is bundled separately in
+`public/avatar/miko-qipao.mavatar`. The lightweight audio hook is adapted from
+`stream-operations-staff`. No Core dependency is required.
+
+To use your own avatar, export a `.mavatar` file from
+[Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio) and replace
+`public/avatar/miko-qipao.mavatar`. To keep a different filename, place it under
+`public/avatar/` and add `source="/avatar/your-avatar.mavatar"` to the
+`MeshAvatarCanvas` in `src/App.tsx`. Restart `npm run dev` to rebuild the assets.
+
 **Miko assets are not covered by the repository's MIT license.** See
 [MIKO_ASSET_TERMS.md](MIKO_ASSET_TERMS.md) and the authoritative
 [Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms).

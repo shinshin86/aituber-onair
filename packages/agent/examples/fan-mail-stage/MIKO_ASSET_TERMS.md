@@ -1,5 +1,9 @@
 # Miko Asset Terms
 
+These terms apply to the Miko artwork bundled in
+`public/avatar/miko-qipao.mavatar`. The `mesh-avatar` runtime has its own MIT
+license, which does not cover this artwork.
+
 The authoritative terms for Miko assets are the Japanese
 [Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms).
 Translations are provided for reference only. If a translation differs from

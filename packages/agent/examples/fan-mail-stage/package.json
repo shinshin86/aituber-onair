@@ -20,6 +20,7 @@
   "dependencies": {
     "@aituber-onair/agent": "file:../..",
     "@aituber-onair/voice": "file:../../../voice",
+    "mesh-avatar": "^0.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

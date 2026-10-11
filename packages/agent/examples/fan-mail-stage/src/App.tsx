@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMikoVoice, type VoiceEntry } from './hooks/useMikoVoice';
-import { MeshAvatarCanvas } from './meshAvatar/MeshAvatarCanvas';
+import { MeshAvatarCanvas } from './components/MeshAvatarCanvas';
 import type {
   Draft,
   MailRecord,
