@@ -197,9 +197,19 @@ npm run lint
 untrusted 入力、生成エラー、公開データの分離、拒否、同時承認、outbox 保存を
 テストしています。
 
-メッシュアバターの描画コードとミコのチャイナ服素材は
-`packages/core/examples/react-mesh-avatar-app` からコピーしています。
+アバターの描画には [`mesh-avatar`](https://www.npmjs.com/package/mesh-avatar)
+を使っています。ミコのチャイナ服素材は、描画パッケージとは別に
+`public/avatar/miko-qipao.mavatar` として同梱しています。
 音声フックは `stream-operations-staff` をもとに調整しました。Core パッケージへの
-依存はありません。**ミコの素材はリポジトリの MIT ライセンス対象外です。**
+依存はありません。
+
+自分のアバターを使う場合は、
+[Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio) から
+`.mavatar` を書き出し、`public/avatar/miko-qipao.mavatar` を差し替えてください。
+別のファイル名を使う場合は `public/avatar/` に配置し、`src/App.tsx` の
+`MeshAvatarCanvas` に `source="/avatar/your-avatar.mavatar"` を指定します。
+変更後は `npm run dev` を再起動して素材をビルドし直してください。
+
+**ミコの素材はリポジトリの MIT ライセンス対象外です。**
 [MIKO_ASSET_TERMS.md](MIKO_ASSET_TERMS.md) と
 [ミコのキャラクター利用ガイドライン](https://miko.aituberonair.com/#terms)をご確認ください。

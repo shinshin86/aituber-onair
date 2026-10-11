@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  type MeshAvatar,
-  type MeshAvatarOptions,
-  createMeshAvatar,
-} from './createMeshAvatar.js';
+import { type MeshAvatar, loadMeshAvatar } from 'mesh-avatar';
 
 export interface MeshAvatarCanvasProps {
   voiceLevel: number;
@@ -17,7 +13,7 @@ export interface MeshAvatarCanvasProps {
   motionRequest?: { id: string; seq: number } | null;
   /** Bump `seq` to move the mouth through the vowels of `text` */
   kanaRequest?: { text: string; seq: number } | null;
-  assetsBase?: MeshAvatarOptions['assetsBase'];
+  source?: string;
   className?: string;
   onReady?: (avatar: MeshAvatar) => void;
 }
@@ -32,7 +28,7 @@ export function MeshAvatarCanvas({
   swayGain = 1,
   motionRequest,
   kanaRequest,
-  assetsBase,
+  source = '/avatar/miko-qipao.mavatar',
   className,
   onReady,
 }: MeshAvatarCanvasProps) {
@@ -50,13 +46,14 @@ export function MeshAvatarCanvas({
     if (!canvas) return;
     let disposed = false;
     let instance: MeshAvatar | null = null;
-    createMeshAvatar(canvas, { assetsBase })
+    loadMeshAvatar(canvas, source)
       .then((created) => {
         if (disposed) {
           created.destroy();
           return;
         }
         instance = created;
+        setError(null);
         setAvatar(created);
         // dev only: poke the avatar from devtools, e.g. __meshAvatar.advance(0.5)
         if (import.meta.env.DEV) {
@@ -75,7 +72,7 @@ export function MeshAvatarCanvas({
       instance?.destroy();
       setAvatar(null);
     };
-  }, [assetsBase]);
+  }, [source]);
 
   useEffect(() => {
     avatar?.setVoiceLevel(voiceLevel);
