@@ -20,7 +20,18 @@ PSD configuration below.
 | **Mesh** | **VRM** |
 | ![Mesh preview](images/mesh.gif) | ![VRM preview](images/vrm.gif) |
 | **Inochi2D** | **Live2D** |
-| ![Inochi2D preview](images/inochi2d.gif) | Requires a user-supplied model and Cubism Core. See [Live2D setup](#live2d-configuration-and-required-files). |
+| ![Inochi2D preview](images/inochi2d.gif) | ![Live2D preview](images/live2d.gif) |
+
+<p align="center">
+  <small>
+    Live2D sample model: Hiyori Momose. Illustration: Kani Biimu;
+    Modeling: Live2D Inc. This content uses sample data owned and copyrighted
+    by Live2D Inc. See
+    <a href="https://www.live2d.com/en/learn/sample/">Live2D Sample Data</a>.
+    The model and Cubism Core are not bundled; see
+    <a href="#live2d-configuration-and-required-files">Live2D setup</a>.
+  </small>
+</p>
 
 ## Quick start
 

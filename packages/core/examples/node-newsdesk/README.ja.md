@@ -16,7 +16,18 @@ JSON台本から縦型ニュース動画を生成します。元の記事やメ�
 | **Mesh** | **VRM** |
 | ![Meshのプレビュー](images/mesh.gif) | ![VRMのプレビュー](images/vrm.gif) |
 | **Inochi2D** | **Live2D** |
-| ![Inochi2Dのプレビュー](images/inochi2d.gif) | 利用者がモデルとCubism Coreを用意する必要があります。[Live2Dのセットアップ](#live2d設定と必要ファイル)を参照してください。 |
+| ![Inochi2Dのプレビュー](images/inochi2d.gif) | ![Live2Dのプレビュー](images/live2d.gif) |
+
+<p align="center">
+  <small>
+    Live2D サンプルモデル: 桃瀬ひより。イラスト: かにビーム、
+    モデリング: Live2D Inc. このコンテンツは Live2D Inc. が著作権を
+    有するサンプルデータを使用しています。詳細:
+    <a href="https://www.live2d.com/learn/sample/">Live2D サンプルデータ集</a>。
+    モデルとCubism Coreは同梱していません。
+    <a href="#live2d設定と必要ファイル">Live2Dのセットアップ</a>を参照してください。
+  </small>
+</p>
 
 ## セットアップと動画生成
 
