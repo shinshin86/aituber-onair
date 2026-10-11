@@ -122,6 +122,7 @@ async function sendRootedFile(
 
 async function startServer(
   config: RenderConfig,
+  meshArchive: boolean,
 ): Promise<{ server: Server; origin: string }> {
   const harnessDirectory = path.join(resolveProjectRoot(), 'dist', 'harness');
   const server = createServer((request, response) => {
@@ -204,12 +205,21 @@ async function startServer(
       config.avatarConfig.kind === 'mesh' &&
       url.pathname.startsWith('/avatar/')
     ) {
-      void sendRootedFile(
-        response,
-        config.avatarConfig.model,
-        '/avatar/',
-        url.pathname,
-      );
+      if (meshArchive) {
+        if (url.pathname === '/avatar/model.mavatar') {
+          void sendFile(response, config.avatarConfig.model);
+        } else {
+          response.writeHead(404);
+          response.end('Not found.');
+        }
+      } else {
+        void sendRootedFile(
+          response,
+          config.avatarConfig.model,
+          '/avatar/',
+          url.pathname,
+        );
+      }
     } else {
       response.writeHead(404);
       response.end('Not found.');
@@ -310,11 +320,13 @@ export async function openBrowserCompositor(
   const avatarStat = await stat(config.avatarConfig.model).catch(() => null);
   const validModel =
     config.avatarConfig.kind === 'mesh'
-      ? avatarStat?.isDirectory()
+      ? avatarStat?.isDirectory() ||
+        (avatarStat?.isFile() &&
+          config.avatarConfig.model.toLowerCase().endsWith('.mavatar'))
       : avatarStat?.isFile();
   if (!validModel)
     throw new Error(
-      `${config.avatar} avatar ${config.avatarConfig.kind === 'mesh' ? 'folder' : 'file'} was not found: ${config.avatarConfig.model}`,
+      `${config.avatar} avatar ${config.avatarConfig.kind === 'mesh' ? '.mavatar file or project folder' : 'file'} was not found: ${config.avatarConfig.model}`,
     );
   if (config.avatarConfig.kind === 'vrm' && config.avatarConfig.animation) {
     const animationStat = await stat(config.avatarConfig.animation).catch(
@@ -325,11 +337,24 @@ export async function openBrowserCompositor(
         `VRMA animation file was not found: ${config.avatarConfig.animation}`,
       );
   }
-  const { server, origin } = await startServer(config);
+  const meshArchive =
+    config.avatarConfig.kind === 'mesh' && avatarStat?.isFile() === true;
+  const { server, origin } = await startServer(config, meshArchive);
+  // The mesh loader consumes an origin-local URL in the browser.
+  const browserConfig: RenderConfig =
+    config.avatarConfig.kind === 'mesh'
+      ? {
+          ...config,
+          avatarConfig: {
+            ...config.avatarConfig,
+            model: meshArchive ? '/avatar/model.mavatar' : '/avatar/',
+          },
+        }
+      : config;
   let opened: Awaited<ReturnType<typeof openPage>>;
   let launchMode: 'swiftshader' | 'default-gl' = 'swiftshader';
   try {
-    opened = await openPage(origin, config, mouthValues, launchMode);
+    opened = await openPage(origin, browserConfig, mouthValues, launchMode);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/Executable doesn't exist|playwright install/i.test(message)) {
@@ -344,7 +369,7 @@ export async function openBrowserCompositor(
     );
     launchMode = 'default-gl';
     try {
-      opened = await openPage(origin, config, mouthValues, launchMode);
+      opened = await openPage(origin, browserConfig, mouthValues, launchMode);
     } catch (retryError) {
       await stopServer(server);
       throw retryError;

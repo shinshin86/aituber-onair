@@ -25,7 +25,7 @@ export function resolveConfig(
     model: modelPath(
       value.model,
       configFile,
-      '../react-mesh-avatar-app/public/avatar/qipao',
+      '../react-mesh-avatar-app/public/avatar/miko-qipao.mavatar',
     ),
     padTop: configNumber(value, 'padTop', -0.07, -0.5, 1),
     padSide: configNumber(value, 'padSide', -0.18, -0.45, 1),

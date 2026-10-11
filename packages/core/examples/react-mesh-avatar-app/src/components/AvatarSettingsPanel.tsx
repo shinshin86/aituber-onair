@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { RESET_VIEW_EVENT } from '../hooks/useAvatarViewGesture';
-import type { MeshAvatarMotionInfo } from '../meshAvatar/createMeshAvatar.js';
+import type { MeshAvatar } from 'mesh-avatar';
 
 export interface MeshAvatarOptions {
   autoIdle: boolean;
@@ -65,7 +65,7 @@ const MOTION_HINTS: Record<string, string> = {
 interface AvatarSettingsPanelProps {
   options: MeshAvatarOptions;
   onOptionsChange: (options: MeshAvatarOptions) => void;
-  motions: MeshAvatarMotionInfo[];
+  motions: MeshAvatar['motions'];
   playingMotion: string | null;
   onPlayMotion: (id: string) => void;
   previewEmotion: string | null;
@@ -250,26 +250,27 @@ export function AvatarSettingsPanel({
         </form>
       </section>
 
-      {motionGroups.map((group) => (
-        <section className="settings-section" key={group.title}>
-          <h3>
-            {group.title}
-            <span className="mesh-count">{group.items.length}</span>
-          </h3>
-          <p className="mesh-section-help">{group.help}</p>
-          <ul className="mesh-action-list">
-            {group.items.map((motion) => (
-              <ActionRow
-                key={motion.id}
-                label={motion.label}
-                hint={MOTION_HINTS[motion.id]}
-                active={playingMotion === motion.id}
-                onClick={() => onPlayMotion(motion.id)}
-              />
-            ))}
-          </ul>
-        </section>
-      ))}
+      {motions.length > 0 &&
+        motionGroups.map((group) => (
+          <section className="settings-section" key={group.title}>
+            <h3>
+              {group.title}
+              <span className="mesh-count">{group.items.length}</span>
+            </h3>
+            <p className="mesh-section-help">{group.help}</p>
+            <ul className="mesh-action-list">
+              {group.items.map((motion) => (
+                <ActionRow
+                  key={motion.id}
+                  label={motion.label}
+                  hint={MOTION_HINTS[motion.id]}
+                  active={playingMotion === motion.id}
+                  onClick={() => onPlayMotion(motion.id)}
+                />
+              ))}
+            </ul>
+          </section>
+        ))}
     </div>
   );
 }

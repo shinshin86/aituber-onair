@@ -9,7 +9,7 @@
 
 - 1枚絵を「素体・手・房飾り・目のパーツ」に分けたレイヤーを、WebGL2 のメッシュで変形
 - 顔の向き・傾き、呼吸、まばたき、視線、眉、毛束ごとの髪の揺れ、房飾りの振り子
-- 待機中はアイドルモーション（11種）とリアクション（9種）をランダム再生
+- 待機中はアイドルモーション（12種）とリアクション（9種）をランダム再生
 - TTS 音声の音量で口パクし、話している間はアイドルを止めて声に合わせて軽くうなずく
 - 返答の感情タグ（`[happy]` `[sad]` `[angry]` `[surprised]` `[relaxed]` `[neutral]`）に合わせて表情とモーションを切り替え
 - Settings の「アバター・モーション」から、揺れやすさの調整、モーションの再生、API キーなしでの話し方プレビューが可能
@@ -53,12 +53,12 @@ npm run dev
 
 ## アバターの API
 
-`src/meshAvatar/createMeshAvatar.js` は React に依存しない単体のエンジンです。
+描画には、React に依存しない [`mesh-avatar`](https://www.npmjs.com/package/mesh-avatar) パッケージを使っています。
 
 ```ts
-import { createMeshAvatar } from './meshAvatar/createMeshAvatar.js';
+import { loadMeshAvatar } from 'mesh-avatar';
 
-const avatar = await createMeshAvatar(canvas, { assetsBase: '/avatar/qipao/' });
+const avatar = await loadMeshAvatar(canvas, '/avatar/miko-qipao.mavatar');
 avatar.setSpeaking(true);       // TTS 再生中
 avatar.setVoiceLevel(0.6);      // 0〜1 の音量（RMS を正規化した値）
 avatar.setEmotion('happy');     // 感情タグ
@@ -68,18 +68,26 @@ avatar.setSwayGain(1.5);        // 髪・髪飾りの揺れやすさ
 avatar.destroy();
 ```
 
-React からは `src/meshAvatar/MeshAvatarCanvas.tsx` を使います。
+React からは `src/components/MeshAvatarCanvas.tsx` を使います。
 `useAudioMotion` の `voiceLevel` / `isSpeaking` と、`onSpeechStart` で受け取った感情タグを渡すだけで動きます。
+
+モーションボタンは読み込んだアバターの一覧から作り、日本語の表示名はアプリ側で付けています。
+
+## 別のアバターを使う
+
+[Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio) で `.mavatar` を
+エクスポートし、`public/avatar/miko-qipao.mavatar` と置き換えてください。
+ランタイムが対応する形式で出力されたアバターなら、そのファイル内のリグと画像で動きます。
+別のファイル名を使う場合は `public/avatar/` に置き、`src/components/AvatarPanel.tsx` の
+`MeshAvatarCanvas` に `source="/avatar/my-avatar.mavatar"` のように指定します。
+ファイルはアプリと同じオリジンから読み込みます。
 
 ## 同梱画像
 
-`public/avatar/qipao/` には、チャイナドレス姿のミコの1枚絵から分割したレイヤー画像
-（素体・手・房飾り・目のパーツ・髪のマスク）、閉じ目や口の差分画像、`layers.json` を
-同梱しています。元の1枚絵はミコの画像を元に ChatGPT で生成し、閉じ目・口の差分は
+`public/avatar/miko-qipao.mavatar` には、チャイナドレス姿のミコのリグ、元の1枚絵、
+レイヤー画像（素体・手・房飾り・目のパーツ・髪のマスク）、閉じ目や口の差分画像、
+マニフェストを同梱しています。元の1枚絵はミコの画像を元に ChatGPT で生成し、閉じ目・口の差分は
 その絵に合わせて画像生成で描き足しました。
-
-現在のリグ（手の輪郭、目の形、毛束の位置など）はこの画像に合わせて指定しているため、
-別の画像を使うにはレイヤーの作り直しとリグの調整が必要です。
 
 ## 素材利用条件とクレジット
 

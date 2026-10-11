@@ -65,8 +65,9 @@ emotion effects, karaoke subtitles, a ticker, and opening/closing title cards.
 PNGTuber provides four mouth/eye states and gentle breathing/roll. Purupuru
 provides three mouth states, blinking, breathing/roll, and hair springs. These
 two adapters keep their original faces; line emotions affect screen effects.
-Mesh supports facial emotions and scheduled motions, using the framework-free
-engine and default qipao assets from the sibling `react-mesh-avatar-app` example.
+Mesh supports facial emotions and scheduled motions through the `mesh-avatar`
+package. Its default asset is the sibling
+`react-mesh-avatar-app/public/avatar/miko-qipao.mavatar` file.
 The engine and assets are used read-only; keep that sibling directory available.
 VRM supports RMS lip sync, seeded blinking, VRMA animation, and supported facial
 emotions. Unsupported emotions use a neutral face; named screen motion cues
@@ -96,9 +97,9 @@ Avatar settings belong in a separate JSON file, passed with
 ```
 
 `model` is relative to that config file: a four-PNG directory for PNGTuber,
-a `.purupuru` file for Purupuru, or a Mesh asset directory containing
-`manifest.json`, a `.vrm` model file, a Live2D `.model3.json` file, an Inochi2D `.inx` model, or a `.psd` file. Omitting
-it selects the default Miko assets for PNGTuber, Purupuru, Mesh, and VRM.
+a `.purupuru` file for Purupuru, a `.mavatar` file or Mesh Avatar Studio project
+folder containing `rig.json` and `built/` for Mesh, a `.vrm` model file, a Live2D
+`.model3.json` file, an Inochi2D `.inx` model, or a `.psd` file. Omitting it selects the default Miko assets for PNGTuber, Purupuru, Mesh, and VRM.
 Live2D requires explicit model and Core paths. Inochi2D defaults to the sibling
 Aka model, motion, and runtime without copying them.
 PSD defaults to the bundled `assets/sample-static.psd` and `mode: "auto"`.
@@ -121,7 +122,7 @@ Purupuru uses a closer upper-body view. Mesh padding controls the source-image
 crop, and `talkGain` controls voice-driven body movement. For example:
 
 ```json
-{ "padTop": -0.07, "padSide": -0.18, "talkGain": 0.55 }
+{ "model": "avatar/my-avatar.mavatar", "padTop": -0.07, "padSide": -0.18, "talkGain": 0.55 }
 ```
 
 ### VRM configuration
@@ -360,7 +361,7 @@ a browser Canvas2D context. Chromium also needs Japanese-capable system fonts;
 | --- | --- | --- | --- |
 | PNGTuber | Bundled Miko four-state PNGs | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | VRM | Sibling `react-vrm-app/public/avatar/miko.vrm` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
-| Mesh | Sibling `react-mesh-avatar-app/public/avatar/qipao` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
+| Mesh | Sibling `react-mesh-avatar-app/public/avatar/miko-qipao.mavatar` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Purupuru | Bundled `miko.purupuru` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Inochi2D | Sibling derived Aka model/motion | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Aka by seagetch (details below) |
 | PSD static | Bundled Miko-derived `sample-static.psd` | [Miko terms](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |

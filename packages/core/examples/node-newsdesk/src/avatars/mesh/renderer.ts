@@ -1,7 +1,4 @@
-import {
-  createMeshAvatar,
-  type MeshAvatar,
-} from '../../../../react-mesh-avatar-app/src/meshAvatar/createMeshAvatar.js';
+import { loadMeshAvatar, type MeshAvatar } from 'mesh-avatar';
 import { createSeededRandom } from '../../screen/schedule.js';
 import type { BrowserAvatarRenderer, MeshAvatarConfig } from '../types.js';
 
@@ -36,8 +33,7 @@ export function createRenderer(): BrowserAvatarRenderer {
       canvas = document.createElement('canvas');
       canvas.width = input.width;
       canvas.height = input.height;
-      avatar = await createMeshAvatar(source, {
-        assetsBase: '/avatar/',
+      avatar = await loadMeshAvatar(source, config.model, {
         manual: true,
         padTop: config.padTop,
         padSide: config.padSide,
