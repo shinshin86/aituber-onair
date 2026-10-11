@@ -154,8 +154,10 @@ Miko画像を同梱しており、手元の画像にも差し替えられます�
 応答の感情タグに合わせた表情・モーションの切り替えにも対応しています。
 チャイナドレス姿のミコを同梱しています。
 
-リグは同梱画像に合わせて調整しているため、別のイラストを使う場合は
-レイヤーの作り直しとリグの調整が必要です。
+描画には `mesh-avatar` パッケージを使い、Mesh Avatar Studio から出力した
+`.mavatar` を読み込みます。`public/avatar/miko-qipao.mavatar` を自分のファイルと
+置き換えてください。別名で置く場合は、`src/components/AvatarPanel.tsx` の
+`MeshAvatarCanvas` に `source="/avatar/my-avatar.mavatar"` のように指定します。
 
 まずは
 [`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app)
@@ -298,9 +300,8 @@ PSD avatar からファイルを選択してください。元画像や生成し
 作ったアバターは、カメラとマイクで動かして配信にも使えます。映像と音声は
 端末内で処理し、OBS のブラウザソースで配信用の画面を表示します。
 
-現時点では、Mesh Avatar Studio で作ったプロジェクトを Mesh Avatar サンプルに
-そのまま読み込む機能はありません。サンプルのリグは、同梱のミコに合わせて
-コードで定義しています。
+Studio の **Export .mavatar** で出力したファイルを、前述の Mesh Avatar サンプルで
+使えます。`mesh-avatar` ランタイムがファイル内のリグと画像を読み込みます。
 
 元画像や生成した素材の権利は、ツールのライセンスとは別に確認してください。
 
