@@ -23,6 +23,7 @@
     "@napi-rs/canvas": "^1.0.3",
     "@openai/codex-sdk": "^0.146.0",
     "linkedom": "^0.18.13",
+    "mesh-avatar": "^0.1.1",
     "playwright": "^1.55.0",
     "three": "0.182.0",
     "@pixiv/three-vrm": "3.4.5",

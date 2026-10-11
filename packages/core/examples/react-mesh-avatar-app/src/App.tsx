@@ -31,11 +31,8 @@ import {
   createLinkedPngTuberEmotionReaction,
   withPngTuberEmotionReactionId,
 } from './lib/pngtuberEmotionEffects';
-import type {
-  MeshAvatar,
-  MeshAvatarMotionInfo,
-} from './meshAvatar/createMeshAvatar.js';
-import { MOTION_LIST } from './meshAvatar/motionList';
+import type { MeshAvatar } from 'mesh-avatar';
+import { MESH_MOTION_LABELS } from './constants/meshMotionLabels';
 import './styles/app.css';
 import './styles/localLlmSetup.css';
 import './styles/localTtsSetup.css';
@@ -93,11 +90,17 @@ export default function App() {
     autoMotion: true,
     swayGain: 1,
   });
-  const meshMotions: MeshAvatarMotionInfo[] = MOTION_LIST;
+  const [meshMotions, setMeshMotions] = useState<MeshAvatar['motions']>([]);
   const speechPreview = useSpeechPreview();
   const [playingMotion, setPlayingMotion] = useState<string | null>(null);
   const [previewEmotion, setPreviewEmotion] = useState<string | null>(null);
   const handleMeshAvatarReady = useCallback((avatar: MeshAvatar) => {
+    setMeshMotions(
+      avatar.motions.map((motion) => ({
+        ...motion,
+        label: MESH_MOTION_LABELS[motion.id] ?? motion.label,
+      })),
+    );
     avatar.onMotion(setPlayingMotion);
   }, []);
   const setMeshEmotionTag = useCallback((tag: string) => {

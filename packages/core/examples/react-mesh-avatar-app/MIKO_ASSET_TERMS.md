@@ -1,5 +1,8 @@
 # Miko Asset Terms
 
+These terms cover the bundled `public/avatar/miko-qipao.mavatar`, including
+its source illustration, layers, and eye and mouth variants.
+
 The authoritative terms for Miko assets are the Japanese
 [Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms).
 Translations are provided for reference only. If a translation differs from

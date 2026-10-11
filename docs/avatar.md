@@ -147,8 +147,10 @@ breathing, blinking, gaze, and hair sway. Lip sync follows the TTS audio level,
 and emotion tags in replies switch the face and play motions. Miko in a qipao is
 included.
 
-The rig is tuned for the bundled image, so using another illustration requires
-rebuilding the layers and adjusting the rig.
+The example uses the `mesh-avatar` package to load a `.mavatar` exported from
+Mesh Avatar Studio. Replace `public/avatar/miko-qipao.mavatar` with your export,
+or set the `MeshAvatarCanvas` source in `src/components/AvatarPanel.tsx` to another
+file under `public/avatar/`, such as `/avatar/my-avatar.mavatar`.
 
 Start from
 [`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app).
@@ -296,9 +298,9 @@ The finished avatar can also be driven by a camera and microphone for streaming.
 Video and audio are processed on the device, and the streaming view is shown
 through an OBS browser source.
 
-Projects made in Mesh Avatar Studio cannot currently be loaded into the Mesh
-Avatar example as they are. The example defines its rig in code for the bundled
-Miko image.
+Choose **Export .mavatar** in Studio, then use that file in the Mesh Avatar
+example described above. The `mesh-avatar` runtime loads the rig and images
+from the exported file.
 
 Check the rights to source images and generated assets separately from the
 tool license.

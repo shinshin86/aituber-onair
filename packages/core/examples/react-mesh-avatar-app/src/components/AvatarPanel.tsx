@@ -26,7 +26,7 @@ import {
 import {
   MeshAvatarCanvas,
   type MeshAvatarCanvasProps,
-} from '../meshAvatar/MeshAvatarCanvas';
+} from './MeshAvatarCanvas';
 
 /** What the mesh avatar should show; set from the app (speech, emotion, settings). */
 export type MeshAvatarDisplay = Pick<

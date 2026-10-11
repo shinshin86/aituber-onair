@@ -51,7 +51,7 @@ PNGTuberとPurupuruはNodeのネイティブCanvas2Dで描画し、Playwrightの
 
 画面にはニュースパネル、章の進行表示、キーワード、感情に合わせた効果、カラオケ字幕、ティッカー、開始・終了タイトルが表示されます。PNGTuberは口・目の4状態と呼吸・傾き、Purupuruは口の3状態と瞬き・呼吸・傾き・髪の揺れに対応します。この2種類の表情画像は元のままで、台詞の感情は画面効果に反映されます。
 
-Meshは表情と予定された動作にも対応します。隣接する`react-mesh-avatar-app`のフレームワーク非依存エンジンとqipaoアセットを読み取り専用で利用するため、そのディレクトリが必要です。VRMは音声RMSによる口パク、seedに基づく瞬き、VRMAアニメーション、モデルが持つ感情表情に対応します。未対応の感情は通常の表情で表示し、画面の名前付き動作は選択したVRMAループを置き換えません。
+Meshは表情と予定された動作にも対応します。描画には`mesh-avatar`パッケージを使い、初期アセットは隣接する`react-mesh-avatar-app/public/avatar/miko-qipao.mavatar`を読み込みます。VRMは音声RMSによる口パク、seedに基づく瞬き、VRMAアニメーション、モデルが持つ感情表情に対応します。未対応の感情は通常の表情で表示し、画面の名前付き動作は選択したVRMAループを置き換えません。
 
 Live2Dは音声RMSによる口パク、seedに基づく瞬き、固定したIdleモーションに対応し、撮影前にモデルを安定させます。台詞の感情と名前付き動作は共通画面に反映し、モデルは選択したIdleを続けます。Inochi2Dは未改変のWASMブリッジで、音声RMSの口パク、seedに基づく瞬き、idleループを描画します。台詞の感情と名前付き動作は共通画面に反映します。
 PSDはNodeでPSDTool形式の口・目レイヤーを切り替え、ChromiumではAnime2.5DRigのモーションを描画します。autoモードはリグを判定し、不適合なら静止描画に戻ります。台詞の感情と名前付き動作は共通画面に反映します。
@@ -70,7 +70,7 @@ PSDはNodeでPSDTool形式の口・目レイヤーを切り替え、Chromiumで�
 }
 ```
 
-`model`は設定ファイルからの相対パスです。PNGTuberでは4枚のPNGを持つディレクトリ、Purupuruでは`.purupuru`ファイル、Meshでは`manifest.json`を持つアセットディレクトリ、VRMでは`.vrm`、Live2Dでは`.model3.json`、Inochi2Dでは`.inx`、PSDでは`.psd`を指定します。PNGTuber・Purupuru・Mesh・VRMでは省略すると初期のMikoアセットを使います。Live2DはモデルとCoreのパスを明示する必要があります。Inochi2Dは隣接する`react-inochi2d-app/public/inochi2d`のAkaモデル・モーション・runtimeを初期値として参照します。PSDの初期値は同梱の`assets/sample-static.psd`と`mode: "auto"`です。
+`model`は設定ファイルからの相対パスです。PNGTuberでは4枚のPNGを持つディレクトリ、Purupuruでは`.purupuru`ファイル、Meshでは`.mavatar`ファイル、または`rig.json`と`built/`を持つMesh Avatar Studioのプロジェクトフォルダー、VRMでは`.vrm`、Live2Dでは`.model3.json`、Inochi2Dでは`.inx`、PSDでは`.psd`を指定します。PNGTuber・Purupuru・Mesh・VRMでは省略すると初期のMikoアセットを使います。Live2DはモデルとCoreのパスを明示する必要があります。Inochi2Dは隣接する`react-inochi2d-app/public/inochi2d`のAkaモデル・モーション・runtimeを初期値として参照します。PSDの初期値は同梱の`assets/sample-static.psd`と`mode: "auto"`です。
 
 `scale`は0.1〜3、`x`と`y`は660 × 700のアバター枠内の位置（0〜1）、`intensity`は0〜3です。不明な項目や不正な値はエラーになります。検証と初期値は各アダプターで定義しています。Meshは`intensity`の代わりに`padTop`・`padSide`・`talkGain`を受け取ります。
 
@@ -87,7 +87,7 @@ PSDはNodeでPSDTool形式の口・目レイヤーを切り替え、Chromiumで�
 Purupuruは上半身を大きく表示します。Meshのpaddingは元画像の切り取り範囲、`talkGain`は音声に伴う体の動きの強さを調整します。
 
 ```json
-{ "padTop": -0.07, "padSide": -0.18, "talkGain": 0.55 }
+{ "model": "avatar/my-avatar.mavatar", "padTop": -0.07, "padSide": -0.18, "talkGain": 0.55 }
 ```
 
 ### VRM設定
@@ -246,7 +246,7 @@ npm run gen -- --script samples/hello-sine.json --frame 60 --png work/frame60.pn
 | PNGTuber | 同梱のMiko 4状態PNG | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Purupuru | 同梱の`miko.purupuru` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | VRM | 隣接する`react-vrm-app/public/avatar/miko.vrm` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
-| Mesh | 隣接する`react-mesh-avatar-app/public/avatar/qipao` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
+| Mesh | 隣接する`react-mesh-avatar-app/public/avatar/miko-qipao.mavatar` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | Inochi2D | 隣接する派生Akaモデル・モーション | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Aka / seagetch（下記参照） |
 | PSD static | 同梱のMiko由来`sample-static.psd` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |
 | PSD motion | 隣接する`react-psd-app/public/avatar/miko-anime25drig-cheer.psd` | [Miko利用条件](MIKO_ASSET_TERMS.md) | © Yuki Shindo (AITuber OnAir) |

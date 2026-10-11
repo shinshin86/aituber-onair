@@ -6,6 +6,7 @@ import { resolveLocalAssetPath } from '../src/gen/compositor/browser.js';
 it('keeps Mesh options distinct from native avatar options', () => {
   expect(resolveConfig({}, 'config.json')).toMatchObject({
     kind: 'mesh',
+    model: expect.stringMatching(/\/avatar\/miko-qipao\.mavatar$/),
     padTop: -0.07,
     padSide: -0.18,
     talkGain: 0.55,
