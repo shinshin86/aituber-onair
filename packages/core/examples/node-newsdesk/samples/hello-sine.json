@@ -1,0 +1,39 @@
+{
+  "voice": {
+    "engine": "sine",
+    "options": { "secondsPerChar": 0.11, "minDuration": 1 }
+  },
+  "leadIn": 1.1,
+  "leadOut": 1.6,
+  "defaultPauseAfter": 0.45,
+  "show": {
+    "title": "AI NEWS DESK",
+    "subtitle": "アバターを切り替えて動画生成",
+    "clock": "10:00"
+  },
+  "seed": 42,
+  "lines": [
+    {
+      "text": "こんにちは。今日のニュースです。",
+      "chapter": "ニュースの時間",
+      "emotion": "happy"
+    },
+    {
+      "text": "同じ台本でアバターを切り替えられます。",
+      "point": "台本とアバターを分離",
+      "keywords": ["アバター"],
+      "emotion": "surprised"
+    },
+    {
+      "text": "音声に合わせて口と目が動きます。",
+      "point": "口パクと瞬きに対応",
+      "keywords": ["口パク", "瞬き"],
+      "emotion": "neutral"
+    },
+    {
+      "text": "また次回のニュースでお会いしましょう。",
+      "chapter": "まとめ",
+      "emotion": "relaxed"
+    }
+  ]
+}

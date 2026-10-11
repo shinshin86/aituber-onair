@@ -216,25 +216,11 @@ npm run dev
   に対応した React チャット統合。
 - [`packages/core/examples/coding-agent`](../packages/core/examples/coding-agent):
   コーディングエージェント風ワークフローで AITuber OnAir Core を使う例。
-- [`packages/core/examples/node-purupuru-newsdesk`](../packages/core/examples/node-purupuru-newsdesk):
-  ソーステキストから Core のチャット・音声を通して、チャプター付き縦型
-  `.purupuru` アバターニュース動画を作る Node.js パイプライン。
-- [`packages/core/examples/node-pngtuber-newsdesk`](../packages/core/examples/node-pngtuber-newsdesk):
-  ソーステキストから Core のチャット・音声を通して、チャプター付き縦型
-  4状態 PNGTuber ニュース動画を作る Node.js パイプライン。
-- [`packages/core/examples/node-psd-newsdesk`](../packages/core/examples/node-psd-newsdesk):
-  ソーステキストから Core のチャット・音声を通して、チャプター付き縦型
-  PSD アバターニュース動画を作る Node.js パイプライン。静的 PSDTool と
-  ヘッドレス Chromium の Anime2.5DRig motion の両モードに対応。
-- [`packages/core/examples/node-vrm-newsdesk`](../packages/core/examples/node-vrm-newsdesk):
-  ヘッドレス Chromium で VRM を描画し、Core のチャット・音声を通して
-  チャプター付き縦型アバターニュース動画を作る Node.js パイプライン。
-- [`packages/core/examples/node-live2d-newsdesk`](../packages/core/examples/node-live2d-newsdesk):
-  ヘッドレス Chromium で Cubism 4 Live2D を描画し、Core のチャット・音声を
-  通してチャプター付き縦型アバターニュース動画を作る Node.js パイプライン。
-- [`packages/core/examples/node-inochi2d-newsdesk`](../packages/core/examples/node-inochi2d-newsdesk):
-  決定的な仮想時計の下で Inochi2D WASM bridge を駆動し、チャプター付き
-  縦型ニュース動画を作る Node.js パイプライン。
+- [`packages/core/examples/node-newsdesk`](../packages/core/examples/node-newsdesk):
+  元のテキストから Core のチャット・音声を通して、チャプター付き縦型
+  ニュース動画を作る Node.js パイプライン。1つのフォルダーで`--avatar`を使い、
+  PNGTuber・Purupuru・Mesh・VRM・Live2D・Inochi2D・PSDの7種類を
+  切り替えられます。PSDは静止・モーションの両モードに対応します。
 
 ## Chat サンプル
 

@@ -218,25 +218,10 @@ npm run dev
   calling, MCP, and image chat.
 - [`packages/core/examples/coding-agent`](../packages/core/examples/coding-agent):
   example of using AITuber OnAir Core with a coding-agent style workflow.
-- [`packages/core/examples/node-purupuru-newsdesk`](../packages/core/examples/node-purupuru-newsdesk):
+- [`packages/core/examples/node-newsdesk`](../packages/core/examples/node-newsdesk):
   Node.js pipeline from source text through Core chat and voice to a chaptered
-  vertical `.purupuru` avatar news video.
-- [`packages/core/examples/node-pngtuber-newsdesk`](../packages/core/examples/node-pngtuber-newsdesk):
-  Node.js pipeline from source text through Core chat and voice to a chaptered
-  vertical four-state PNGTuber news video.
-- [`packages/core/examples/node-psd-newsdesk`](../packages/core/examples/node-psd-newsdesk):
-  Node.js pipeline from source text through Core chat and voice to a chaptered
-  vertical PSD avatar news video, with static PSDTool and headless-Chromium
-  Anime2.5DRig motion modes.
-- [`packages/core/examples/node-vrm-newsdesk`](../packages/core/examples/node-vrm-newsdesk):
-  Node.js pipeline that drives a headless-Chromium VRM renderer and produces a
-  chaptered vertical avatar news video with Core chat and voice.
-- [`packages/core/examples/node-live2d-newsdesk`](../packages/core/examples/node-live2d-newsdesk):
-  Node.js pipeline that drives a headless-Chromium Cubism 4 Live2D renderer and
-  produces a chaptered vertical avatar news video with Core chat and voice.
-- [`packages/core/examples/node-inochi2d-newsdesk`](../packages/core/examples/node-inochi2d-newsdesk):
-  Node.js pipeline that drives the Inochi2D WASM bridge under a deterministic
-  virtual clock and produces a chaptered vertical news video.
+  vertical news video. One folder supports seven avatar types via `--avatar`:
+  PNGTuber, Purupuru, Mesh, VRM, Live2D, Inochi2D, and PSD (static or motion).
 
 ## Chat Examples
 
