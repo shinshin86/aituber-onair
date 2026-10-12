@@ -13,6 +13,7 @@
 - TTS 音声の音量で口パクし、話している間はアイドルを止めて声に合わせて軽くうなずく
 - 返答の感情タグ（`[happy]` `[sad]` `[angry]` `[surprised]` `[relaxed]` `[neutral]`）に合わせて表情とモーションを切り替え
 - Settings の「アバター・モーション」から、揺れやすさの調整、モーションの再生、API キーなしでの話し方プレビューが可能
+- Settings の「アバター・モーション」から `.mavatar` ファイルを読み込み、アバターを差し替えられる
 
 ## 音声入力
 
@@ -76,10 +77,24 @@ React からは `src/components/MeshAvatarCanvas.tsx` を使います。
 ## 別のアバターを使う
 
 [Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio) で `.mavatar` を
-エクスポートし、`public/avatar/miko-qipao.mavatar` と置き換えてください。
-ランタイムが対応する形式で出力されたアバターなら、そのファイル内のリグと画像で動きます。
-別のファイル名を使う場合は `public/avatar/` に置き、`src/components/AvatarPanel.tsx` の
-`MeshAvatarCanvas` に `source="/avatar/my-avatar.mavatar"` のように指定します。
+エクスポートします。ランタイムが対応する形式で出力されたアバターなら、そのファイル内のリグと画像で動きます。
+
+### 画面から読み込む
+
+Settings →「アバター・モーション」→「アバター」の **ファイルを選択** で `.mavatar` を選ぶと、
+その場でアバターが切り替わります。モーションボタンは読み込んだアバターのモーション一覧に置き換わります。
+
+- ファイルはブラウザ内で読み込むだけで、外部に送信しません
+- 読み込んだアバターは保存しないため、ページを再読み込みすると付属アバターに戻ります
+- **付属アバターに戻す** で付属アバターに戻せます
+- 読み込みに失敗した場合はエラーを表示し、付属アバターに戻ります
+- 感情表現エフェクトのアンカーは、ファイル名ごとに別々に保存されます
+
+### 既定のアバターを置き換える
+
+起動時から別のアバターを表示したい場合は、`public/avatar/miko-qipao.mavatar` と置き換えてください。
+別のファイル名を使う場合は `public/avatar/` に置き、`src/components/MeshAvatarCanvas.tsx` の
+`DEFAULT_MESH_AVATAR_SOURCE` を `'/avatar/my-avatar.mavatar'` のように変更します。
 ファイルはアプリと同じオリジンから読み込みます。
 
 ## 同梱画像

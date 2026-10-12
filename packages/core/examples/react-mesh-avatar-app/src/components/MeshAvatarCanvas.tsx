@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { type MeshAvatar, loadMeshAvatar } from 'mesh-avatar';
+import {
+  type AvatarSource,
+  type MeshAvatar,
+  loadMeshAvatar,
+} from 'mesh-avatar';
+
+/** Avatar returned by `loadMeshAvatar`, including its opened package */
+export type LoadedMeshAvatar = Awaited<ReturnType<typeof loadMeshAvatar>>;
+
+/** Bundled avatar served from the app's own origin */
+export const DEFAULT_MESH_AVATAR_SOURCE = '/avatar/miko-qipao.mavatar';
 
 export interface MeshAvatarCanvasProps {
   voiceLevel: number;
@@ -13,9 +23,11 @@ export interface MeshAvatarCanvasProps {
   motionRequest?: { id: string; seq: number } | null;
   /** Bump `seq` to move the mouth through the vowels of `text` */
   kanaRequest?: { text: string; seq: number } | null;
-  source?: string;
+  /** URL of a `.mavatar` archive or avatar folder, or a loaded file (`Blob`) */
+  source?: AvatarSource;
   className?: string;
-  onReady?: (avatar: MeshAvatar) => void;
+  onReady?: (avatar: LoadedMeshAvatar) => void;
+  onError?: (message: string) => void;
 }
 
 /** WebGL canvas that runs the mesh avatar and forwards voice / emotion to it. */
@@ -28,18 +40,21 @@ export function MeshAvatarCanvas({
   swayGain = 1,
   motionRequest,
   kanaRequest,
-  source = '/avatar/miko-qipao.mavatar',
+  source = DEFAULT_MESH_AVATAR_SOURCE,
   className,
   onReady,
+  onError,
 }: MeshAvatarCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [avatar, setAvatar] = useState<MeshAvatar | null>(null);
   const [error, setError] = useState<string | null>(null);
   const onReadyRef = useRef(onReady);
+  const onErrorRef = useRef(onError);
 
   useEffect(() => {
     onReadyRef.current = onReady;
-  }, [onReady]);
+    onErrorRef.current = onError;
+  }, [onReady, onError]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -64,8 +79,10 @@ export function MeshAvatarCanvas({
       })
       .catch((err: unknown) => {
         console.error('Failed to start the mesh avatar:', err);
-        if (!disposed)
-          setError(err instanceof Error ? err.message : String(err));
+        if (disposed) return;
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message);
+        onErrorRef.current?.(message);
       });
     return () => {
       disposed = true;

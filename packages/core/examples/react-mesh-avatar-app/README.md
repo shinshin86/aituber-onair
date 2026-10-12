@@ -16,6 +16,7 @@ the same as in `react-single-image-avatar-app`; only the avatar is replaced.
 - Lip sync from the TTS audio level; while speaking, idle motions pause and the head nods along
 - Emotion tags (`[happy]` `[sad]` `[angry]` `[surprised]` `[relaxed]` `[neutral]`) switch the face and play a motion
 - Settings → Avatar: sway strength, motion buttons, and a speech preview that needs no API key
+- Settings → Avatar: load a `.mavatar` file to swap the avatar
 
 ## Voice input
 
@@ -78,12 +79,28 @@ avatar's motion list, with Japanese labels supplied by the app.
 
 ## Use another avatar
 
-Export a `.mavatar` from [Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio)
-and replace `public/avatar/miko-qipao.mavatar` with it. Any avatar exported in the
-runtime's supported format can be used; its rig and layers are loaded from the file.
-To keep a different filename, place it under `public/avatar/` and set `source` on
-`MeshAvatarCanvas` in `src/components/AvatarPanel.tsx`, for example
-`source="/avatar/my-avatar.mavatar"`. The file is served from the app's own origin.
+Export a `.mavatar` from [Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio).
+Any avatar exported in the runtime's supported format can be used; its rig and layers are
+loaded from the file.
+
+### Load a file from the UI
+
+Open Settings → **アバター・モーション** → **アバター** and pick a `.mavatar` with
+**ファイルを選択**. The avatar switches immediately, and the motion buttons are rebuilt from
+the loaded avatar's motion list.
+
+- The file is read in the browser and is not uploaded anywhere
+- The loaded avatar is not saved; reloading the page brings back the bundled avatar
+- **付属アバターに戻す** switches back to the bundled avatar
+- If loading fails, an error is shown and the bundled avatar is restored
+- Emotion effect anchors are saved separately for each file name
+
+### Replace the default avatar
+
+To show another avatar from startup, replace `public/avatar/miko-qipao.mavatar` with it.
+To keep a different filename, place it under `public/avatar/` and change
+`DEFAULT_MESH_AVATAR_SOURCE` in `src/components/MeshAvatarCanvas.tsx`, for example to
+`'/avatar/my-avatar.mavatar'`. The file is served from the app's own origin.
 
 ## Bundled image and asset terms
 
