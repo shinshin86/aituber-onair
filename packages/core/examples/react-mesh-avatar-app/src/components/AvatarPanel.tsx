@@ -37,7 +37,9 @@ export type MeshAvatarDisplay = Pick<
   | 'autoIdle'
   | 'autoMotion'
   | 'swayGain'
+  | 'source'
   | 'onReady'
+  | 'onError'
 >;
 
 interface AvatarPanelProps {

@@ -32,6 +32,7 @@ import {
   withPngTuberEmotionReactionId,
 } from './lib/pngtuberEmotionEffects';
 import type { MeshAvatar } from 'mesh-avatar';
+import type { LoadedMeshAvatar } from './components/MeshAvatarCanvas';
 import { MESH_MOTION_LABELS } from './constants/meshMotionLabels';
 import './styles/app.css';
 import './styles/localLlmSetup.css';
@@ -41,6 +42,13 @@ import type { YouTubeChatMessage } from './services/youtube/youtubeService';
 
 const DEFAULT_SETTINGS_DIALOG_OFFSET: DialogDragPoint = { x: 0, y: 0 };
 const AVATAR_EFFECT_ANCHOR_PROFILE_ID = 'mesh-avatar';
+
+/** Uploaded avatars keep their own effect anchors, keyed by file name */
+function getAvatarEffectAnchorProfileId(file: File | null): string {
+  return file
+    ? `${AVATAR_EFFECT_ANCHOR_PROFILE_ID}:${file.name}`
+    : AVATAR_EFFECT_ANCHOR_PROFILE_ID;
+}
 
 interface SettingsDialogDragState {
   pointerId: number;
@@ -94,7 +102,13 @@ export default function App() {
   const speechPreview = useSpeechPreview();
   const [playingMotion, setPlayingMotion] = useState<string | null>(null);
   const [previewEmotion, setPreviewEmotion] = useState<string | null>(null);
-  const handleMeshAvatarReady = useCallback((avatar: MeshAvatar) => {
+  // a `.mavatar` chosen in the settings; kept for this session only
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const avatarFileRef = useRef<File | null>(null);
+  const [avatarName, setAvatarName] = useState<string | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(true);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const handleMeshAvatarReady = useCallback((avatar: LoadedMeshAvatar) => {
     setMeshMotions(
       avatar.motions.map((motion) => ({
         ...motion,
@@ -102,6 +116,29 @@ export default function App() {
       })),
     );
     avatar.onMotion(setPlayingMotion);
+    setAvatarName(avatar.package.manifest.name || null);
+    setAvatarLoading(false);
+  }, []);
+  const handleAvatarFileChange = useCallback((file: File | null) => {
+    if (file === avatarFileRef.current) return;
+    avatarFileRef.current = file;
+    setAvatarFile(file);
+    setAvatarError(null);
+    setAvatarLoading(true);
+    setMeshMotions([]);
+    setPlayingMotion(null);
+  }, []);
+  const handleMeshAvatarError = useCallback((message: string) => {
+    const failedFile = avatarFileRef.current;
+    if (!failedFile) {
+      setAvatarLoading(false);
+      setAvatarError(message);
+      return;
+    }
+    // fall back to the bundled avatar so the stage is never left empty
+    avatarFileRef.current = null;
+    setAvatarFile(null);
+    setAvatarError(`${failedFile.name} を読み込めませんでした: ${message}`);
   }, []);
   const setMeshEmotionTag = useCallback((tag: string) => {
     meshSeqRef.current += 1;
@@ -454,24 +491,26 @@ export default function App() {
           autoIdle: meshOptions.autoIdle,
           autoMotion: meshOptions.autoMotion,
           swayGain: meshOptions.swayGain,
+          source: avatarFile ?? undefined,
           onReady: handleMeshAvatarReady,
+          onError: handleMeshAvatarError,
         }}
         avatarReaction={avatarReaction}
         visual={settingsHook.settings.visual}
         voiceInput={voiceInput}
         effectAnchor={getEmotionEffectAnchor(
           settingsHook.settings.visual.pngtuberEmotionEffectAnchors,
-          AVATAR_EFFECT_ANCHOR_PROFILE_ID,
+          getAvatarEffectAnchorProfileId(avatarFile),
         )}
         onEffectAnchorChange={(anchor) =>
           settingsHook.updateVisualPngTuberEmotionEffectAnchor(
-            AVATAR_EFFECT_ANCHOR_PROFILE_ID,
+            getAvatarEffectAnchorProfileId(avatarFile),
             anchor,
           )
         }
         onEffectAnchorReset={() =>
           settingsHook.resetVisualPngTuberEmotionEffectAnchor(
-            AVATAR_EFFECT_ANCHOR_PROFILE_ID,
+            getAvatarEffectAnchorProfileId(avatarFile),
           )
         }
         onToggleSettings={toggleSettingsDialog}
@@ -526,6 +565,11 @@ export default function App() {
             <div className="settings-dialog-body">
               {settingsCategory === 'avatar' && (
                 <AvatarSettingsPanel
+                  avatarFile={avatarFile}
+                  avatarName={avatarName}
+                  avatarLoading={avatarLoading}
+                  avatarError={avatarError}
+                  onAvatarFileChange={handleAvatarFileChange}
                   options={meshOptions}
                   onOptionsChange={setMeshOptions}
                   motions={meshMotions}

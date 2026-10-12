@@ -63,6 +63,13 @@ const MOTION_HINTS: Record<string, string> = {
 };
 
 interface AvatarSettingsPanelProps {
+  /** `.mavatar` chosen by the user, or null for the bundled avatar */
+  avatarFile: File | null;
+  /** Name from the loaded avatar's manifest */
+  avatarName: string | null;
+  avatarLoading: boolean;
+  avatarError: string | null;
+  onAvatarFileChange: (file: File | null) => void;
   options: MeshAvatarOptions;
   onOptionsChange: (options: MeshAvatarOptions) => void;
   motions: MeshAvatar['motions'];
@@ -105,7 +112,22 @@ function ActionRow({
   );
 }
 
+function describeAvatar(
+  file: File | null,
+  name: string | null,
+  loading: boolean,
+): string {
+  if (loading) return '読み込み中…';
+  if (!file) return `付属アバター${name ? `（${name}）` : ''}`;
+  return name && name !== file.name ? `${name}（${file.name}）` : file.name;
+}
+
 export function AvatarSettingsPanel({
+  avatarFile,
+  avatarName,
+  avatarLoading,
+  avatarError,
+  onAvatarFileChange,
   options,
   onOptionsChange,
   motions,
@@ -136,6 +158,58 @@ export function AvatarSettingsPanel({
 
   return (
     <div className="settings-panel avatar-settings-panel">
+      <section className="settings-section">
+        <h3>アバター</h3>
+        <p className="mesh-section-help">
+          Mesh Avatar Studio で書き出した .mavatar
+          ファイルを読み込むと、アバターを差し替えられます。ファイルはブラウザ内で読み込むだけで、送信も保存もしません。ページを再読み込みすると付属アバターに戻ります。
+        </p>
+        <div className="settings-field">
+          <label htmlFor="mesh-avatar-file">アバターファイル</label>
+          <div className="settings-file-picker-row">
+            <input
+              id="mesh-avatar-file"
+              className="settings-file-input-hidden"
+              type="file"
+              accept=".mavatar"
+              disabled={avatarLoading}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.currentTarget.value = '';
+                if (file) onAvatarFileChange(file);
+              }}
+            />
+            <label
+              htmlFor="mesh-avatar-file"
+              className={`settings-file-trigger${avatarLoading ? ' is-disabled' : ''}`}
+            >
+              ファイルを選択
+            </label>
+            <span className="settings-file-hint">.mavatar</span>
+          </div>
+          <div className="settings-file-actions">
+            <span className="settings-file-status" aria-live="polite">
+              {describeAvatar(avatarFile, avatarName, avatarLoading)}
+            </span>
+            {avatarFile && (
+              <button
+                type="button"
+                className="settings-clear-button"
+                onClick={() => onAvatarFileChange(null)}
+                disabled={avatarLoading}
+              >
+                付属アバターに戻す
+              </button>
+            )}
+          </div>
+          {avatarError && (
+            <p className="settings-field-error" role="alert">
+              {avatarError}
+            </p>
+          )}
+        </div>
+      </section>
+
       <section className="settings-section">
         <h3>待機中の動き</h3>
         <label className="mesh-toggle">
