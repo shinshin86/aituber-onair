@@ -1,3 +1,4 @@
+import { OpenAICompatibleTranscriptionSession } from './providers/OpenAICompatibleTranscriptionSession';
 import type {
   RealtimeTranscriptionOptions,
   RealtimeTranscriptionSession,
@@ -17,6 +18,8 @@ export function createRealtimeTranscriptionSession(
       return new OpenAIRealtimeTranscriptionSession(options);
     case 'gemini-live':
       return new GeminiLiveTranscriptionSession(options);
+    case 'openai-compatible':
+      return new OpenAICompatibleTranscriptionSession(options);
     case 'local-whisper':
       return new LocalWhisperTranscriptionSession(options);
     default: {

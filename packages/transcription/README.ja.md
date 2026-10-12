@@ -4,20 +4,21 @@
 
 [English](./README.md)
 
-AITuber OnAir 向けの、プロバイダーに依存しないリアルタイムマイク文字起こしパッケージです。
+AITuber OnAir 向けの、プロバイダーに依存しないマイク文字起こしパッケージです。
 
 > このパッケージはα版です。安定版になるまでに公開 API が変更される可能性が
 > あります。
 
 Web Speech、ブラウザ WebRTC を利用する OpenAI Realtime、ブラウザ WebSocket を
 利用する Gemini Live、WebGPU でローカル推論する Whisper Tiny、Base、Small に
-対応しています。すべてのプロバイダーが、発話ごとに同じ形式のスナップショット
+加え、OpenAI 互換サーバーへのバッチ文字起こしに対応しています。すべてのプロバイダーが、
+発話ごとに同じ形式のスナップショット
 イベントを発行します。ファイルの文字起こし、サーバー WebSocket入力、チャットへの
 自動送信、プロバイダーのフォールバックは、意図的に対象外です。
 
 ## ブラウザサンプル
 
-AITuber OnAir Core に依存せず、4つのプロバイダーを試せるフレームワーク非依存の
+AITuber OnAir Core に依存せず、5つのプロバイダーを試せるフレームワーク非依存の
 ブラウザサンプルが含まれています。リポジトリルートで依存関係をインストールした後、
 サンプルのディレクトリから起動できます。
 
@@ -40,7 +41,8 @@ Local Whisper には WebGPU が必要で、初回開始時にモデルとラン�
 してブラウザにキャッシュします。画面は日本語・英語を切り替えられ、初期表示には
 ブラウザの言語設定が使われます。詳細は
 [サンプルの README](https://github.com/shinshin86/aituber-onair/blob/main/packages/transcription/examples/browser-basic/README.md)
-を参照してください。
+を参照してください。OpenAI 互換サーバーでは接続先 URL と任意の API キーを指定します。
+ローカルの speech.cpp サーバーにキーは不要です。
 
 サーバーを起動せずにサンプルをビルドするには、次のコマンドを実行します。
 
@@ -70,7 +72,7 @@ await session.dispose();
 
 進捗イベントを発行するのは、時間のかかる初期化を伴うプロバイダーだけです。現在は
 `local-whisper` のみが `onProgress` を発行し、Web Speech、OpenAI Realtime、
-Gemini Live は発行しません。
+Gemini Live、OpenAI 互換サーバーは発行しません。
 
 ### Local Whisper
 
@@ -147,6 +149,45 @@ Baseで約1.2秒、Smallで約2.5秒でした。ダウンロード量はモデ�
 パッケージを事前バンドルする環境でこの資産を解決できない場合は、高度な設定である
 `workerUrl` に同じモジュールWorker資産または同等のビルドを指定してください。この
 ブラウザサンプルでは、そのために Vite の `?worker&url` import を使っています。
+
+### OpenAI 互換サーバー
+
+multipart の音声文字起こしリクエストを受け付け、`{ text: string }` を返すサーバーには
+`openai-compatible` を使います。マイクの発話ごとにモノラル 16 kHz PCM16 WAV を
+`/v1/audio/transcriptions` へ送り、確定結果のみを発行します。WebGPU と WebSocket
+ストリーミングは使いません。
+
+```ts
+const session = createRealtimeTranscriptionSession({
+  provider: 'openai-compatible',
+  baseUrl: 'http://127.0.0.1:8080',
+  language: 'ja-JP',
+  silenceDurationMs: 500,
+  timeoutMs: 30000,
+});
+```
+
+`baseUrl` には Origin、`/v1` などの API ベース URL、または完全な
+`/audio/transcriptions` エンドポイントを指定できます。公開関数
+`resolveOpenAICompatibleTranscriptionEndpoint()` で実際の送信先を確認できます。
+`model`、`language`、`prompt` は空でない場合だけ送信します。言語ヒントは `ja-JP`
+から `ja` に変換されます。ロード済みモデルを既定で使うサーバーではモデルを省略でき、
+モデル ID が必須のサーバーでは指定が必要です。
+
+認証が必要な場合は `auth` に `type: 'browser-api-key'`、`getApiKey`、
+`acknowledgeBrowserKeyRisk: true` を指定します。コールバックは送信ごとに呼び出されます。
+音声とキーは指定したサーバーへ直接送られるため、信頼できる接続先を使ってください。
+アプリケーション所有のキーはバックエンドで管理してください。
+
+`stop()` は最後の発話を確定し、待機中の送信が終わるまで待ちます。`dispose()` は進行中の
+通信を中断し、待機中の発話を破棄します。送信は発話順に実行します。通信失敗とタイムアウト
+は `connection-failed` を通知して次の発話を受け付け、401/403 は
+`authentication-failed` を通知して録音を停止します。その他の HTTP エラーは
+`provider-error` です。空の結果と Local Whisper の既知の誤認識文は除外します。
+タイムアウトは既定で 30 秒、発話終了の無音は既定で 500 ms、最小 150 ms です。
+
+speech.cpp の接続例、CORS、任意の認証、エラーへの対処は
+[ローカル STT ガイド](../../docs/local-stt.ja.md)を参照してください。
 
 ### OpenAI Realtime
 
@@ -251,27 +292,28 @@ OpenAI と Google は、標準 API キーをサーバーに保管し、有効期
 エンドユーザー自身が所有・提供するキーを使用する必要があります。アプリケーション
 所有者のキーを、ソースコードやビルド成果物に含めないでください。
 
-このパッケージは `start()` のたびに `getApiKey()`、`getClientSecret()`、または
-`getEphemeralToken()` を通じて認証情報を要求し、保存、キャッシュ、返却、ログ出力は
-行いません。ただし、保存方法は利用側のアプリケーションが管理します。ブラウザにキーを
+リアルタイムプロバイダーは `start()` のたびに、OpenAI 互換サーバーは発話の送信ごとに、
+`getApiKey()`、`getClientSecret()`、または `getEphemeralToken()` を通じて認証情報を
+要求します。キーの保存、キャッシュ、返却、ログ出力は行いません。ただし、保存方法は利用側のアプリケーションが管理します。ブラウザにキーを
 保存すると、XSS、拡張機能、ローカル端末へのアクセス、侵害された依存パッケージなどを
 通じて漏洩する可能性があります。認証情報の取得に失敗した場合は型付きエラーを返し、
 別の認証方式へ自動的にフォールバックすることはありません。
 
 ## プロバイダーの違い
 
-| 機能 | Web Speech | OpenAI Realtime | Gemini Live | Local Whisper |
-| --- | --- | --- | --- | --- |
-| 途中経過のスナップショット | 対応 | 対応 | 対応 | 非対応 |
-| 複数の想定言語 | 非対応 | 対応 | 対応 | 非対応 |
-| キーワード / カスタム語彙 | 非対応 | 対応 | 対応 | 非対応 |
-| スマート文字起こし | 非対応 | 非対応 | 対応 | 非対応 |
-| 遅延の設定 | 非対応 | 対応 | 非対応 | 対応 |
-| 発話境界の判定 | ブラウザ実装 | ブラウザの音量検出 | GeminiのサーバーVAD | ブラウザのPCM/VAD |
+| 機能 | Web Speech | OpenAI Realtime | Gemini Live | Local Whisper | OpenAI 互換サーバー |
+| --- | --- | --- | --- | --- | --- |
+| 途中経過のスナップショット | 対応 | 対応 | 対応 | 非対応 | 非対応 |
+| 複数の想定言語 | 非対応 | 対応 | 対応 | 非対応 | 非対応 |
+| キーワード / カスタム語彙 | 非対応 | 対応 | 対応 | 非対応 | 非対応 |
+| スマート文字起こし | 非対応 | 非対応 | 対応 | 非対応 | 非対応 |
+| 遅延の設定 | 非対応 | 対応 | 非対応 | 対応 | 非対応 |
+| 発話境界の判定 | ブラウザ実装 | ブラウザの音量検出 | GeminiのサーバーVAD | ブラウザのPCM/VAD | ブラウザのPCM/VAD |
 
 すべてのプロバイダーに、対応ブラウザとマイクの使用許可が必要です。OpenAI WebRTC、
-Gemini Live、Local Whisper では Web Audio API と HTTPS または localhost も必要です。
+Gemini Live、Local Whisper、OpenAI 互換サーバーでは Web Audio API と HTTPS または localhost も必要です。
 Gemini Live はさらに WebSocket、Local Whisper は WebGPU を必要とします。Web Speech の
-利用可否と動作はブラウザによって異なります。リモートプロバイダーでは待機中も利用料金が
+利用可否と動作はブラウザによって異なります。OpenAI 互換サーバーには AudioWorklet、
+fetch、FormData とサーバーの CORS 許可が必要ですが、ブラウザ側に WebGPU は不要です。リモートプロバイダーでは待機中も利用料金が
 発生する可能性があるため、アプリケーションでは状態を明確に表示し、未使用時には
 セッションを停止してください。

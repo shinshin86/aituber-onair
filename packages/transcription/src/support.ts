@@ -15,6 +15,8 @@ interface BrowserGlobal {
   webkitAudioContext?: unknown;
   AudioWorkletNode?: unknown;
   Worker?: unknown;
+  fetch?: unknown;
+  FormData?: unknown;
 }
 
 function browserGlobal(): BrowserGlobal | undefined {
@@ -31,6 +33,17 @@ export function isTranscriptionProviderSupported(
   if (provider === 'web-speech') {
     return Boolean(
       browser.SpeechRecognition ?? browser.webkitSpeechRecognition
+    );
+  }
+
+  if (provider === 'openai-compatible') {
+    return Boolean(
+      browser.isSecureContext !== false &&
+        browser.navigator?.mediaDevices?.getUserMedia &&
+        (browser.AudioContext ?? browser.webkitAudioContext) &&
+        browser.AudioWorkletNode &&
+        browser.fetch &&
+        browser.FormData
     );
   }
 

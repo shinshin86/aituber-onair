@@ -12,6 +12,14 @@ import {
 import { LocalWhisperWorkerClient } from './LocalWhisperWorkerClient';
 import type { CapturedAudioTurn } from './PcmTurnAssembler';
 import { resampleTo16k } from './resampleTo16k';
+import {
+  isLikelyWhisperHallucination,
+  normalizeWhisperLanguage,
+} from './whisperText';
+export {
+  isLikelyWhisperHallucination,
+  normalizeWhisperLanguage,
+} from './whisperText';
 
 const DEFAULT_SILENCE_DURATION_MS = 500;
 const MIN_SILENCE_DURATION_MS = 150;
@@ -22,18 +30,6 @@ const LOCAL_WHISPER_MODEL_SIZES: readonly LocalWhisperModelSize[] = [
   'base',
   'small',
 ];
-
-const WHISPER_HALLUCINATIONS = [
-  'ご視聴ありがとうございました',
-  'ご視聴ありがとうございます',
-  'おやすみなさい',
-  'チャンネル登録お願いします',
-  'Thank you.',
-  'Thanks for watching.',
-  'Thank you for watching.',
-];
-
-const TRAILING_PUNCTUATION = /[。．.！!？?]+$/u;
 
 interface LocalWhisperWorker {
   readonly hasFailed: boolean;
@@ -79,31 +75,6 @@ const DEFAULT_DEPENDENCIES: LocalWhisperSessionDependencies = {
   createCapture: (stream, options) =>
     new BrowserPcmTurnCapture(stream, options),
 };
-
-function normalizedHallucinationText(text: string): string {
-  return text
-    .trim()
-    .normalize('NFKC')
-    .toLowerCase()
-    .replace(TRAILING_PUNCTUATION, '')
-    .trim();
-}
-
-const NORMALIZED_WHISPER_HALLUCINATIONS = new Set(
-  WHISPER_HALLUCINATIONS.map(normalizedHallucinationText)
-);
-
-export function isLikelyWhisperHallucination(text: string): boolean {
-  return NORMALIZED_WHISPER_HALLUCINATIONS.has(
-    normalizedHallucinationText(text)
-  );
-}
-
-export function normalizeWhisperLanguage(
-  language: string | undefined
-): string | undefined {
-  return language?.trim().replace(/_/g, '-').toLowerCase().split('-')[0];
-}
 
 function validateOptions(options: LocalWhisperTranscriptionOptions): void {
   if (

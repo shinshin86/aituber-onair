@@ -3,12 +3,32 @@ export const DISPLAY_LANGUAGES = ['en', 'ja'] as const;
 export type DisplayLanguage = (typeof DISPLAY_LANGUAGES)[number];
 
 const englishMessages = {
+  compatibleProvider: 'OpenAI-compatible server',
+  compatibleServerUrl: 'Server URL',
+  compatiblePreset: 'Use speech.cpp URL',
+  compatibleEndpoint: 'Requests go to',
+  compatibleInvalidUrl: 'Enter a valid HTTP(S) server URL.',
+  compatibleModel: 'Model (optional)',
+  compatibleModelHint:
+    'Leave blank to use the server default, or enter an ID from GET /v1/models. Some servers require a model.',
+  compatibleApiKey: 'API key (optional)',
+  compatibleApiKeyPlaceholder:
+    'Leave blank when authentication is not required',
+  compatibleKeyNotice:
+    'Audio and any API key are sent directly to the server URL above. Use only a trusted server and your own key. Avoid shared devices; keep application keys on a backend in production.',
+  compatiblePrompt: 'Prompt (optional)',
+  compatiblePromptHint:
+    'Recognition context, if supported by the server and model.',
+  compatibleCorsHint: 'Allow this page origin on your server. For speech.cpp:',
+  compatibleBatchHint:
+    'Final results only, after each utterance. No WebGPU is needed. Use HTTPS or localhost for microphone access.',
+
   pageTitle: 'AITuber OnAir Transcription',
   metaDescription: 'Minimal browser example for @aituber-onair/transcription',
   displayLanguage: 'Language',
-  heroTitle: 'Try realtime transcription',
+  heroTitle: 'Try microphone transcription',
   heroCopy:
-    'Transcribe microphone audio with Web Speech, OpenAI Realtime, Gemini Live, or Local Whisper. Results are not submitted as chat messages automatically.',
+    'Transcribe microphone audio with Web Speech, OpenAI Realtime, Gemini Live, Local Whisper, or an OpenAI-compatible server. Results are not submitted as chat messages automatically.',
   sessionSettings: 'Transcription settings',
   checkingSupport: 'Checking availability',
   browserSupported: 'Available',
@@ -111,12 +131,32 @@ export type TranslationKey = keyof typeof englishMessages;
 type Messages = Record<TranslationKey, string>;
 
 const japaneseMessages: Messages = {
+  compatibleProvider: 'OpenAI 互換サーバー',
+  compatibleServerUrl: 'サーバー URL',
+  compatiblePreset: 'speech.cpp の URL を入力',
+  compatibleEndpoint: '送信先',
+  compatibleInvalidUrl: '有効な HTTP(S) サーバー URL を入力してください。',
+  compatibleModel: 'モデル（任意）',
+  compatibleModelHint:
+    '空欄ならサーバーの既定モデルを使います。指定する場合は GET /v1/models の ID を入力してください。モデル指定が必須のサーバーもあります。',
+  compatibleApiKey: 'API キー（任意）',
+  compatibleApiKeyPlaceholder: '認証不要の場合は空欄',
+  compatibleKeyNotice:
+    '音声と API キーは上記のサーバーへ直接送信されます。信頼できるサーバーとご自身のキーを使ってください。共有端末での利用は避け、本番環境のアプリ用キーはバックエンドで管理してください。',
+  compatiblePrompt: 'プロンプト（任意）',
+  compatiblePromptHint:
+    '認識の参考情報です。対応状況はサーバーとモデルによって異なります。',
+  compatibleCorsHint:
+    'サーバーでこのページの Origin を許可してください。speech.cpp の指定例：',
+  compatibleBatchHint:
+    '発話ごとに確定結果を返します。WebGPU は不要です。マイクを使うには HTTPS または localhost で開いてください。',
+
   pageTitle: 'AITuber OnAir 文字起こし',
   metaDescription: '@aituber-onair/transcription のブラウザサンプル',
   displayLanguage: '表示言語',
-  heroTitle: 'リアルタイム文字起こしを試す',
+  heroTitle: 'マイク文字起こしを試す',
   heroCopy:
-    'Web Speech、OpenAI Realtime、Gemini Live、Local Whisperで、マイク音声をリアルタイムに文字起こしできます。結果がチャットへ自動送信されることはありません。',
+    'Web Speech、OpenAI Realtime、Gemini Live、Local Whisper、OpenAI 互換サーバーでマイク音声を文字起こしできます。結果がチャットへ自動送信されることはありません。',
   sessionSettings: '文字起こし設定',
   checkingSupport: '利用可否を確認中',
   browserSupported: '利用可能',

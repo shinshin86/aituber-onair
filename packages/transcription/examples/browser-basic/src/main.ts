@@ -1,6 +1,7 @@
 import {
   createRealtimeTranscriptionSession,
   isTranscriptionProviderSupported,
+  resolveOpenAICompatibleTranscriptionEndpoint,
   type GeminiTranscriptionMode,
   type LocalWhisperModelSize,
   type RealtimeTranscriptionSession,
@@ -53,6 +54,28 @@ const localWhisperLanguage = element<HTMLInputElement>(
   '#local-whisper-language'
 );
 const localWhisperSilence = element<HTMLInputElement>('#local-whisper-silence');
+const compatibleFields = element<HTMLDivElement>('#compatible-fields');
+const compatibleUrl = element<HTMLInputElement>('#compatible-url');
+const compatibleModel = element<HTMLInputElement>('#compatible-model');
+const compatibleKey = element<HTMLInputElement>('#compatible-key');
+const compatibleLanguage = element<HTMLInputElement>('#compatible-language');
+const compatibleSilence = element<HTMLInputElement>('#compatible-silence');
+const compatiblePrompt = element<HTMLTextAreaElement>('#compatible-prompt');
+const compatiblePreset = element<HTMLButtonElement>('#compatible-preset');
+
+function renderCompatibleEndpoint(): void {
+  const output = element<HTMLElement>('#compatible-endpoint');
+  try {
+    output.textContent = resolveOpenAICompatibleTranscriptionEndpoint(
+      compatibleUrl.value
+    );
+  } catch {
+    output.textContent = translate(displayLanguage, 'compatibleInvalidUrl');
+  }
+  element<HTMLElement>('#compatible-cors').textContent =
+    `--cors-origin ${window.location.origin}`;
+}
+
 const stateBadge = element<HTMLSpanElement>('#state-badge');
 const progressMessage = element<HTMLParagraphElement>('#progress-message');
 const startButton = element<HTMLButtonElement>('#start-button');
@@ -171,10 +194,13 @@ function translatedErrorMessage(error: TranscriptionError | Error): string {
   if (!key) return error.message;
   const summary = translate(displayLanguage, key);
   if (
-    error.provider !== 'gemini-live' ||
-    !['authentication-failed', 'connection-failed', 'provider-error'].includes(
-      error.code as TranscriptionErrorCode
-    )
+    !['gemini-live', 'openai-compatible'].includes(error.provider as string) ||
+    ![
+      'authentication-failed',
+      'connection-failed',
+      'provider-error',
+      'invalid-configuration',
+    ].includes(error.code as TranscriptionErrorCode)
   ) {
     return summary;
   }
@@ -270,6 +296,10 @@ function renderState(state: TranscriptionState): void {
     busy || !isTranscriptionProviderSupported(selectedProvider());
   stopButton.disabled = !active;
   localWhisperModel.disabled = busy;
+  for (const field of compatibleFields.querySelectorAll<
+    HTMLInputElement | HTMLTextAreaElement | HTMLButtonElement
+  >('input, textarea, button'))
+    field.disabled = busy;
   if (state !== 'connecting') resetProgress();
 }
 
@@ -330,6 +360,26 @@ function createSession(): RealtimeTranscriptionSession {
         keywords: commaSeparated(geminiKeywords.value),
         mode: geminiMode.value as GeminiTranscriptionMode,
       });
+    case 'openai-compatible': {
+      const apiKey = compatibleKey.value.trim();
+      return createRealtimeTranscriptionSession({
+        provider: 'openai-compatible',
+        baseUrl: compatibleUrl.value,
+        model: compatibleModel.value,
+        language: compatibleLanguage.value,
+        prompt: compatiblePrompt.value,
+        silenceDurationMs: Number(compatibleSilence.value),
+        ...(apiKey
+          ? {
+              auth: {
+                type: 'browser-api-key' as const,
+                getApiKey: async () => apiKey,
+                acknowledgeBrowserKeyRisk: true as const,
+              },
+            }
+          : {}),
+      });
+    }
     case 'local-whisper':
       return createRealtimeTranscriptionSession({
         provider: 'local-whisper',
@@ -401,6 +451,8 @@ function syncSettings(): void {
   openAIFields.hidden = !openAISelected;
   geminiFields.hidden = !geminiSelected;
   localWhisperFields.hidden = !localWhisperSelected;
+  compatibleFields.hidden = provider !== 'openai-compatible';
+  renderCompatibleEndpoint();
   renderLocalWhisperModelHint();
 
   const supported = isTranscriptionProviderSupported(provider);
@@ -431,6 +483,12 @@ async function resetSessionForSettings(): Promise<void> {
   setError(null);
   syncSettings();
 }
+
+compatibleUrl.addEventListener('input', renderCompatibleEndpoint);
+compatiblePreset.addEventListener('click', () => {
+  compatibleUrl.value = 'http://127.0.0.1:8080';
+  renderCompatibleEndpoint();
+});
 
 providerSelect.addEventListener('change', () => void resetSessionForSettings());
 localWhisperModel.addEventListener('change', renderLocalWhisperModelHint);
