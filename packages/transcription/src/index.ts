@@ -1,3 +1,4 @@
+export { resolveOpenAICompatibleTranscriptionEndpoint } from './providers/openaiCompatibleTranscription';
 export { createRealtimeTranscriptionSession } from './createRealtimeTranscriptionSession';
 export { TranscriptionSessionError } from './errors';
 export { isTranscriptionProviderSupported } from './support';
@@ -7,6 +8,8 @@ export type {
   GeminiTranscriptionMode,
   LocalWhisperModelSize,
   LocalWhisperTranscriptionOptions,
+  OpenAICompatibleTranscriptionAuth,
+  OpenAICompatibleTranscriptionOptions,
   OpenAIRealtimeAuth,
   OpenAIRealtimeTranscriptionOptions,
   RealtimeTranscriptionOptions,

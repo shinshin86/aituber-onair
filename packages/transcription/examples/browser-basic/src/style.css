@@ -388,3 +388,12 @@ button:disabled {
     margin-left: 0;
   }
 }
+
+.endpoint-hint {
+  overflow-wrap: anywhere;
+}
+
+.endpoint-hint code {
+  display: inline-block;
+  max-width: 100%;
+}

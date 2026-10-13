@@ -4,21 +4,22 @@
 
 [日本語版はこちら](./README.ja.md)
 
-Provider-neutral realtime microphone transcription for AITuber OnAir.
+Provider-neutral microphone transcription for AITuber OnAir.
 
 > This package is an alpha release. Its public API may change before a stable
 > release.
 
 The package supports Web Speech, OpenAI Realtime transcription over browser
-WebRTC, Gemini Live transcription over browser WebSocket, and local Whisper
-Tiny, Base, and Small inference through WebGPU. All providers emit the same
+WebRTC, Gemini Live transcription over browser WebSocket, local Whisper
+Tiny, Base, and Small inference through WebGPU, and OpenAI-compatible batch
+transcription servers. All providers emit the same
 per-utterance snapshot events. File transcription, server WebSocket input,
 automatic chat submission, and provider fallback are intentionally out of
 scope.
 
 ## Browser example
 
-The package includes a framework-free browser example that exercises all four
+The package includes a framework-free browser example that exercises all five
 providers without depending on AITuber OnAir Core:
 
 ```sh
@@ -41,7 +42,8 @@ Whisper requires WebGPU; its first start downloads model/runtime assets and
 caches them in the browser. The interface supports English and Japanese and
 selects the initial display from the browser language. See the
 [example README](https://github.com/shinshin86/aituber-onair/blob/main/packages/transcription/examples/browser-basic/README.md)
-for details.
+for details. OpenAI-compatible servers use a configurable URL and an optional
+API key; a local speech.cpp server needs no key.
 
 Build the example without starting a server:
 
@@ -71,7 +73,7 @@ await session.dispose();
 
 Only providers with potentially long initialization emit `onProgress` events.
 Currently, only `local-whisper` emits them; Web Speech, OpenAI Realtime, and
-Gemini Live do not.
+Gemini Live and OpenAI-compatible servers do not.
 
 ### Local Whisper
 
@@ -154,6 +156,46 @@ ESM entry. If a bundler pre-bundles the package and cannot resolve that asset,
 set the advanced `workerUrl` option to the same module worker asset or an
 equivalent build. This browser example uses Vite's `?worker&url` import for that
 reason.
+
+### OpenAI-compatible servers
+
+For servers that accept multipart audio transcription requests and return
+`{ text: string }`, use `openai-compatible`. It captures microphone utterances,
+sends mono 16 kHz PCM16 WAV to `/v1/audio/transcriptions`, and emits final results
+only. No WebGPU or WebSocket streaming is required.
+
+```ts
+const session = createRealtimeTranscriptionSession({
+  provider: 'openai-compatible',
+  baseUrl: 'http://127.0.0.1:8080',
+  language: 'ja-JP',
+  silenceDurationMs: 500,
+  timeoutMs: 30000,
+});
+```
+
+`baseUrl` accepts an origin, an API base such as `/v1`, or the complete
+`/audio/transcriptions` endpoint. The exported
+`resolveOpenAICompatibleTranscriptionEndpoint()` returns the actual request URL.
+Optional `model`, `language`, and `prompt` values are sent only when nonempty;
+language hints are normalized from `ja-JP` to `ja`. Leave Model blank for a
+server that uses its loaded model; other servers require an explicit model ID.
+
+Authentication is optional. If needed, provide `auth` with
+`type: 'browser-api-key'`, `getApiKey`, and `acknowledgeBrowserKeyRisk: true`.
+The callback runs per request. Audio and any key are sent directly to the chosen
+server. Use trusted endpoints and keep application-owned keys on a backend.
+
+`stop()` flushes the final utterance and drains queued requests. `dispose()`
+aborts the current request and discards pending turns. Requests run in order;
+network errors and timeouts report `connection-failed` and allow later turns.
+401/403 report `authentication-failed` and stop capture. Other HTTP failures
+report `provider-error`. Empty text and Local Whisper's known hallucination
+phrases are filtered. The timeout defaults to 30 seconds; end silence defaults
+to 500 ms (minimum 150 ms).
+
+See the [local STT guide](../../docs/local-stt.md) for the speech.cpp example,
+CORS configuration, optional authentication, and troubleshooting.
 
 ### OpenAI Realtime
 
@@ -260,26 +302,29 @@ frontend-only or self-hosted use. They must use a key owned and supplied by the
 end user; never bundle an application-owner key in source code or built assets.
 
 The package requests credentials through `getApiKey()`, `getClientSecret()`, or
-`getEphemeralToken()` for each `start()` and does not persist, cache, return, or
-log them. A consuming application still controls its own storage. Browser
+`getEphemeralToken()` for each `start()` for the realtime providers, or each
+utterance request for OpenAI-compatible servers. It does not persist, cache,
+return, or log keys. A consuming application still controls its own storage. Browser
 persistence can expose a key to XSS, extensions, local device access, or
 compromised dependencies. Credential failures are returned as typed errors and
 never trigger an authentication fallback.
 
 ## Provider differences
 
-| Capability | Web Speech | OpenAI Realtime | Gemini Live | Local Whisper |
-| --- | --- | --- | --- | --- |
-| Interim snapshots | Yes | Yes | Yes | No |
-| Multiple expected languages | No | Yes | Yes | No |
-| Keywords / custom vocabulary | No | Yes | Yes | No |
-| Smart transcription | No | No | Yes | No |
-| Configurable delay | No | Yes | No | Yes |
-| Utterance boundary | Browser implementation | Browser audio-level detection | Gemini server VAD | Browser PCM/VAD |
+| Capability | Web Speech | OpenAI Realtime | Gemini Live | Local Whisper | OpenAI-compatible |
+| --- | --- | --- | --- | --- | --- |
+| Interim snapshots | Yes | Yes | Yes | No | No |
+| Multiple expected languages | No | Yes | Yes | No | No |
+| Keywords / custom vocabulary | No | Yes | Yes | No | No |
+| Smart transcription | No | No | Yes | No | No |
+| Configurable delay | No | Yes | No | Yes | No |
+| Utterance boundary | Browser implementation | Browser audio-level detection | Gemini server VAD | Browser PCM/VAD | Browser PCM/VAD |
 
 All providers require a supported browser and microphone permission. OpenAI
-WebRTC, Gemini Live, and Local Whisper also require the Web Audio API and HTTPS
-or localhost; Gemini Live additionally requires WebSocket and Local Whisper
-requires WebGPU. Web Speech availability and behavior vary by browser. Remote
+WebRTC, Gemini Live, Local Whisper, and OpenAI-compatible servers also require
+the Web Audio API and HTTPS or localhost; Gemini Live additionally requires WebSocket and Local Whisper
+requires WebGPU. OpenAI-compatible servers need AudioWorklet, fetch,
+FormData, and server CORS access; their browser capture does not need WebGPU.
+Web Speech availability and behavior vary by browser. Remote
 providers can incur usage charges while listening, so applications should
 expose state clearly and stop sessions when unused.

@@ -23,10 +23,10 @@
             </select>
           </label>
         </div>
-        <h1 data-i18n="heroTitle">Try realtime transcription</h1>
+        <h1 data-i18n="heroTitle">Try microphone transcription</h1>
         <p class="hero-copy" data-i18n="heroCopy">
           Transcribe microphone audio with Web Speech, OpenAI Realtime, Gemini
-          Live, or Local Whisper. Results are not submitted as chat messages
+          Live, Local Whisper, or an OpenAI-compatible server. Results are not submitted as chat messages
           automatically.
         </p>
       </header>
@@ -51,6 +51,7 @@
             <option value="openai-realtime">OpenAI Realtime</option>
             <option value="gemini-live">Gemini Live</option>
             <option value="local-whisper">Local Whisper</option>
+            <option value="openai-compatible" data-i18n="compatibleProvider">OpenAI-compatible server</option>
           </select>
         </label>
 
@@ -62,6 +63,51 @@
           <p class="hint" data-i18n="webSpeechHint">
             Availability and recognition quality vary by browser.
           </p>
+        </div>
+
+        <div id="compatible-fields" hidden>
+          <label class="field">
+            <span data-i18n="compatiblePreset">Preset</span>
+            <select id="compatible-preset">
+              <option value="" data-i18n="compatiblePresetManual">Enter manually</option>
+              <option value="http://127.0.0.1:8080">speech.cpp (http://127.0.0.1:8080)</option>
+            </select>
+            <small data-i18n="compatiblePresetHint"></small>
+          </label>
+          <label class="field">
+            <span data-i18n="compatibleServerUrl">Server URL</span>
+            <input id="compatible-url" type="url" placeholder="http://127.0.0.1:8080" spellcheck="false" />
+          </label>
+          <p class="hint endpoint-hint"><span data-i18n="compatibleEndpoint">Requests go to</span>: <code id="compatible-endpoint"></code></p>
+          <label class="field">
+            <span data-i18n="compatibleModel">Model (optional)</span>
+            <input id="compatible-model" spellcheck="false" />
+            <small data-i18n="compatibleModelHint"></small>
+          </label>
+          <label class="field">
+            <span data-i18n="compatibleApiKey">API key (optional)</span>
+            <input id="compatible-key" type="password" autocomplete="off" data-i18n-placeholder="compatibleApiKeyPlaceholder" />
+          </label>
+          <p class="notice info" data-i18n="compatibleKeyNotice"></p>
+          <div class="field-grid">
+            <label class="field">
+              <span data-i18n="localWhisperLanguage">Language hint</span>
+              <input id="compatible-language" value="ja-JP" />
+              <small data-i18n="localWhisperLanguageHint"></small>
+            </label>
+            <label class="field">
+              <span data-i18n="localWhisperSilence">End silence (ms)</span>
+              <input id="compatible-silence" type="number" min="150" value="500" />
+              <small data-i18n="localWhisperSilenceHint"></small>
+            </label>
+          </div>
+          <label class="field">
+            <span data-i18n="compatiblePrompt">Prompt (optional)</span>
+            <textarea id="compatible-prompt" rows="2"></textarea>
+            <small data-i18n="compatiblePromptHint"></small>
+          </label>
+          <p class="hint" data-i18n="compatibleBatchHint"></p>
+          <p class="notice info endpoint-hint"><span data-i18n="compatibleCorsHint"></span> <code id="compatible-cors"></code></p>
         </div>
 
         <div id="openai-fields" hidden>

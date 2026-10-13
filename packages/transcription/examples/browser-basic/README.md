@@ -45,3 +45,19 @@ or selecting another provider does not initialize Transformers.js. Vite handles
 the same import during development and emits a dedicated worker chunk in
 production builds. The Vite worker output format is set to `es`; no dependency
 optimization exclusion is required.
+
+## OpenAI-compatible servers
+
+Select **OpenAI-compatible server**, then enter an origin, `/v1` API base, or
+full `/audio/transcriptions` endpoint. The **Preset** menu fills in the default
+URL of servers verified with this sample (currently speech.cpp). If you would
+like a preset added, please send a pull request. The sample displays the resolved request
+URL and the page origin that the server must allow through CORS. Model and API
+key are optional when the server does not require them; a local speech.cpp
+server needs neither. Audio and any key are sent to this URL.
+
+Language, prompt, and end silence can be configured before starting. Results
+appear only after an utterance ends. No WebGPU is needed. Stop waits for queued
+requests; changing providers aborts the session. See the
+[local STT guide](../../../../docs/local-stt.md) / [日本語](../../../../docs/local-stt.ja.md)
+for server setup, model IDs, CORS, mixed content, and error handling.

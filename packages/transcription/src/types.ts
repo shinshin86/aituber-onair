@@ -2,7 +2,8 @@ export type TranscriptionProviderName =
   | 'web-speech'
   | 'openai-realtime'
   | 'gemini-live'
-  | 'local-whisper';
+  | 'local-whisper'
+  | 'openai-compatible';
 
 export interface TranscriptUpdate {
   utteranceId: string;
@@ -165,11 +166,36 @@ export interface LocalWhisperTranscriptionOptions {
   workerUrl?: string | URL;
 }
 
+/** Optional bearer authentication for endpoints called directly from a browser. */
+export interface OpenAICompatibleTranscriptionAuth {
+  type: 'browser-api-key';
+  getApiKey: () => Promise<string>;
+  acknowledgeBrowserKeyRisk: true;
+}
+
+export interface OpenAICompatibleTranscriptionOptions {
+  provider: 'openai-compatible';
+  /** HTTP(S) origin, API base URL, or full /audio/transcriptions endpoint. */
+  baseUrl: string;
+  /** Sent only when nonempty. Some servers use their loaded model by default. */
+  model?: string;
+  /** Optional BCP 47 hint, normalized to its primary language subtag. */
+  language?: string;
+  prompt?: string;
+  /** Omit for servers that do not require authentication. */
+  auth?: OpenAICompatibleTranscriptionAuth;
+  /** End-of-utterance silence. Default: 500 ms; minimum: 150 ms. */
+  silenceDurationMs?: number;
+  /** Timeout per request, including authentication and response body. Default: 30000 ms. */
+  timeoutMs?: number;
+}
+
 export type RealtimeTranscriptionOptions =
   | WebSpeechTranscriptionOptions
   | OpenAIRealtimeTranscriptionOptions
   | GeminiLiveTranscriptionOptions
-  | LocalWhisperTranscriptionOptions;
+  | LocalWhisperTranscriptionOptions
+  | OpenAICompatibleTranscriptionOptions;
 
 export interface RealtimeTranscriptionSession {
   readonly provider: TranscriptionProviderName;
