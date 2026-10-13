@@ -52,7 +52,7 @@ npm -w @aituber-onair/transcription run example:dev
 2. Select **OpenAI-compatible server**.
 3. Choose **speech.cpp** under **Preset**, or set **Server URL** to
    `http://127.0.0.1:8080`. The presets list only servers verified with this
-   sample; pull requests that add a verified server are welcome. Check the **Requests go to** line.
+   sample. If you would like a preset added, please send a pull request. Check the **Requests go to** line.
 4. Leave **Model** blank for speech.cpp's loaded model, or enter the ID returned
    by `GET /v1/models`. Other servers may require a model, such as `whisper-1`
    for an OpenAI Whisper transcription request.

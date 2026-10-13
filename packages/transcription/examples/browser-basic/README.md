@@ -50,8 +50,8 @@ optimization exclusion is required.
 
 Select **OpenAI-compatible server**, then enter an origin, `/v1` API base, or
 full `/audio/transcriptions` endpoint. The **Preset** menu fills in the default
-URL of servers verified with this sample (currently speech.cpp). If you verify
-another server, a pull request adding its preset is welcome. The sample displays the resolved request
+URL of servers verified with this sample (currently speech.cpp). If you would
+like a preset added, please send a pull request. The sample displays the resolved request
 URL and the page origin that the server must allow through CORS. Model and API
 key are optional when the server does not require them; a local speech.cpp
 server needs neither. Audio and any key are sent to this URL.

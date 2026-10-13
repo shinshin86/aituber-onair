@@ -7,7 +7,7 @@ const englishMessages = {
   compatiblePreset: 'Preset',
   compatiblePresetManual: 'Enter manually',
   compatiblePresetHint:
-    'Defaults of servers verified with this sample. If you verify another server, a pull request adding its preset is welcome.',
+    'Defaults of servers verified with this sample. If you would like a preset added, please send a pull request.',
   compatibleServerUrl: 'Server URL',
   compatibleEndpoint: 'Requests go to',
   compatibleInvalidUrl: 'Enter a valid HTTP(S) server URL.',
@@ -139,7 +139,7 @@ const japaneseMessages: Messages = {
   compatiblePreset: 'プリセット',
   compatiblePresetManual: '手動で入力',
   compatiblePresetHint:
-    'このサンプルで動作を確認したサーバーの既定値です。他のサーバーで確認できたら、プリセットを追加するプルリクエストを歓迎します。',
+    'このサンプルで動作を確認したサーバーの既定値です。追加を希望するプリセットがあればプルリクエストをお送りください。',
   compatibleServerUrl: 'サーバー URL',
   compatibleEndpoint: '送信先',
   compatibleInvalidUrl: '有効な HTTP(S) サーバー URL を入力してください。',
