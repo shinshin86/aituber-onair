@@ -8,7 +8,8 @@ export type FishAudioModel =
   | 's2.1-pro-free'
   | 's2-pro'
   | 's1'
-  | 'drama-3-preview';
+  | 'drama-3-preview'
+  | 'drama-3';
 export type FishAudioFormat = 'mp3' | 'wav' | 'pcm' | 'opus';
 export type FishAudioLatency = 'normal' | 'balanced' | 'low';
 

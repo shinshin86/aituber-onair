@@ -29,6 +29,17 @@ const fishBody = JSON.stringify({
   latency: 'normal',
   prosody: { speed: 1.1 },
 });
+const dramaBody = JSON.stringify({
+  text: '[calm] Hello <whisper>日本語 + & ?</whisper> [pause]',
+  reference_id: 'mock-drama-voice-id',
+  format: 'wav',
+  sample_rate: 44100,
+  latency: 'normal',
+  prosody: { speed: 1.1 },
+});
+const wavBytes = Buffer.from([
+  0x52, 0x49, 0x46, 0x46, 0x00, 0x7f, 0x80, 0xfe, 0xff,
+]);
 const cases = [
   {
     name: 'Deepgram speech preserves query, Token auth, JSON, and binary audio',
@@ -67,6 +78,21 @@ const cases = [
     body: fishBody,
     responseType: 'audio/mpeg',
     responseBody: audioBytes,
+  },
+  {
+    name: 'Fish Drama 3 preserves its exact header, Bearer auth, tagged single-speaker JSON, and binary audio',
+    path: '/api/fish-audio/v1/tts?tag=a%2Bb%20c&tag=two',
+    upstreamPath: '/v1/tts?tag=a%2Bb%20c&tag=two',
+    method: 'POST',
+    headers: {
+      authorization: 'Bearer fake-fish-key',
+      'content-type': 'application/json',
+      model: 'drama-3',
+    },
+    body: dramaBody,
+    responseType: 'audio/wav',
+    responseHeaders: { 'x-request-id': 'mock-drama-success' },
+    responseBody: wavBytes,
   },
   {
     name: 'Fish Drama 3 Preview preserves the opt-in model header and single-speaker body',
@@ -121,6 +147,27 @@ const cases = [
     responseType: 'application/json',
     responseHeaders: { 'retry-after': '3' },
     responseBody: Buffer.from('{"message":"Mock rate limit"}'),
+  },
+  {
+    name: 'Fish Drama 3 errors preserve status, headers, and the JSON error body',
+    path: '/api/fish-audio/v1/tts',
+    upstreamPath: '/v1/tts',
+    method: 'POST',
+    headers: {
+      authorization: 'Bearer fake-fish-key',
+      'content-type': 'application/json',
+      model: 'drama-3',
+    },
+    body: dramaBody,
+    responseStatus: 503,
+    responseType: 'application/json',
+    responseHeaders: {
+      'retry-after': '3',
+      'x-request-id': 'mock-drama-error',
+    },
+    responseBody: Buffer.from(
+      '{"status":503,"message":"Mock Drama 3 unavailable","reason":"fixture capacity limit"}',
+    ),
   },
   {
     name: 'Fish Drama 3 Preview rate limits preserve status, Retry-After, and JSON response',

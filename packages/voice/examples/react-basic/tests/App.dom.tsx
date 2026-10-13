@@ -275,91 +275,127 @@ describe('Voice sample DOM flow with fake network and audio', () => {
     expect(field('text').value).toBe('こんにちは');
   });
 
-  it('selects Fish Drama 3 Preview through the real options and same-origin speech route', async () => {
-    await change('engine', 'fishAudio');
-    expect(field('fishAudioModel').value).toBe('s2-pro');
-    expect(field('apiUrl').value).toBe('/api/fish-audio/v1/tts');
-    const modelOptions = Array.from(
-      (field('fishAudioModel') as HTMLSelectElement).options,
-    );
-    expect(modelOptions.map((option) => option.value)).toEqual([
-      's2.1-pro',
-      's2.1-pro-free',
-      's2-pro',
-      's1',
-      'drama-3-preview',
-    ]);
-    expect(modelOptions.at(-1)?.textContent).toContain(
-      'behavior and availability may change',
-    );
-    await change('apiKey', '<YOUR_API_KEY>');
-    routes.set(
-      'GET http://localhost:3000/api/fish-audio/model?page_size=100&page_number=1',
-      (init) => {
-        expect(init.headers).toEqual({
+  it.each(['drama-3', 'drama-3-preview'])(
+    'selects Fish %s explicitly through the real adapter and same-origin route',
+    async (model) => {
+      await change('engine', 'fishAudio');
+      expect(field('fishAudioModel').value).toBe('s2-pro');
+      expect(field('apiUrl').value).toBe('/api/fish-audio/v1/tts');
+      const modelOptions = Array.from(
+        (field('fishAudioModel') as HTMLSelectElement).options,
+      );
+      expect(modelOptions.map((option) => option.value)).toEqual([
+        's2.1-pro',
+        's2.1-pro-free',
+        's2-pro',
+        's1',
+        'drama-3-preview',
+        'drama-3',
+      ]);
+      expect(
+        modelOptions.find((option) => option.value === 'drama-3')?.textContent,
+      ).toContain('Drama 3');
+      expect(
+        modelOptions.find((option) => option.value === 'drama-3')?.textContent,
+      ).not.toContain('Preview');
+      expect(
+        modelOptions.find((option) => option.value === 'drama-3-preview')
+          ?.textContent,
+      ).toContain('behavior and availability may change');
+      await change('apiKey', '<YOUR_API_KEY>');
+      routes.set(
+        'GET http://localhost:3000/api/fish-audio/model?page_size=100&page_number=1',
+        (init) => {
+          expect(init.headers).toEqual({
+            Authorization: 'Bearer <YOUR_API_KEY>',
+          });
+          return jsonResponse({
+            items: [
+              {
+                _id: 'fixture-fish-voice',
+                title: 'Fixture voice',
+                languages: ['ja'],
+              },
+            ],
+            total: 1,
+            has_more: false,
+          });
+        },
+      );
+      await click(listButton('Fish Audio'));
+      await change('speaker', 'fixture-fish-voice');
+      await change('fishAudioFormat', 'wav');
+      await change('fishAudioSpeed', '1.1');
+      const taggedText = '[calm] Hello <whisper>日本語 + & ?</whisper> [pause]';
+      await change('text', taggedText);
+      const models: string[] = [];
+      let expectedModel = 's2-pro';
+      let unavailable = false;
+      routes.set('POST /api/fish-audio/v1/tts', (init) => {
+        const headers = init.headers as Record<string, string>;
+        models.push(headers.model);
+        expect(headers).toEqual({
           Authorization: 'Bearer <YOUR_API_KEY>',
+          'Content-Type': 'application/json',
+          model: expectedModel,
         });
-        return jsonResponse({
-          items: [
-            {
-              _id: 'fixture-fish-voice',
-              title: 'Fixture voice',
-              languages: ['ja'],
-            },
-          ],
-          total: 1,
-          has_more: false,
+        expect(JSON.parse(init.body as string)).toEqual({
+          text: taggedText,
+          reference_id: 'fixture-fish-voice',
+          format: 'wav',
+          sample_rate: 44100,
+          latency: 'normal',
+          prosody: { speed: 1.1 },
         });
-      },
-    );
-    await click(listButton('Fish Audio'));
-    await change('speaker', 'fixture-fish-voice');
-    await change('fishAudioModel', 'drama-3-preview');
-    await change('fishAudioFormat', 'wav');
-    await change('fishAudioSpeed', '1.1');
-    await change('text', 'Preview sample');
-    const models: string[] = [];
-    routes.set('POST /api/fish-audio/v1/tts', (init) => {
-      const headers = init.headers as Record<string, string>;
-      models.push(headers.model);
-      expect(headers).toEqual({
-        Authorization: 'Bearer <YOUR_API_KEY>',
-        'Content-Type': 'application/json',
-        model: models.length === 1 ? 'drama-3-preview' : 's2-pro',
+        return unavailable
+          ? jsonResponse({ message: 'Mock model unavailable' }, 503)
+          : audioResponse(wavBytes, 'audio/wav');
       });
-      expect(JSON.parse(init.body as string)).toEqual({
-        text: 'Preview sample',
-        reference_id: 'fixture-fish-voice',
-        format: 'wav',
-        sample_rate: 44100,
-        latency: 'normal',
-        prosody: { speed: 1.1 },
-      });
-      return audioResponse(wavBytes, 'audio/wav');
-    });
-    await click(speakButton);
-    expect(audio.played).toHaveBeenLastCalledWith(wavBytes);
-    expect(container.querySelector('.status')?.textContent).toBe(
-      'Playback completed',
-    );
-    await change('fishAudioModel', 's2-pro');
-    expect(field('speaker').value).toBe('fixture-fish-voice');
-    expect(field('text').value).toBe('Preview sample');
-    await click(speakButton);
-    expect(models).toEqual(['drama-3-preview', 's2-pro']);
 
-    await change('fishAudioModel', 'drama-3-preview');
-    routes.set('POST /api/fish-audio/v1/tts', () =>
-      jsonResponse({ message: 'Mock preview unavailable' }, 503),
-    );
-    await click(speakButton);
-    expect(container.querySelector('.status')?.textContent).toContain('503');
-    expect(container.querySelector('.status')?.textContent).toContain(
-      'Mock preview unavailable',
-    );
-    expect(button(speakButton).disabled).toBe(false);
-    expect(audio.played).toHaveBeenCalledTimes(2);
-  });
+      // Exercise the retained default and repeated explicit changes through
+      // real adapter requests, not only option values in the rendered select.
+      await click(speakButton);
+      for (const selection of [model, 's2-pro', model]) {
+        expectedModel = selection;
+        await change('fishAudioModel', selection);
+        expect(field('fishAudioModel').value).toBe(selection);
+        expect(field('speaker').value).toBe('fixture-fish-voice');
+        expect(field('apiKey').value).toBe('<YOUR_API_KEY>');
+        expect(field('apiUrl').value).toBe('/api/fish-audio/v1/tts');
+        expect(field('fishAudioFormat').value).toBe('wav');
+        expect(field('fishAudioSpeed').value).toBe('1.1');
+        expect(field('text').value).toBe(taggedText);
+        await click(speakButton);
+        expect(audio.played).toHaveBeenLastCalledWith(wavBytes);
+        expect(container.querySelector('.status')?.textContent).toBe(
+          'Playback completed',
+        );
+      }
+      expect(models).toEqual(['s2-pro', model, 's2-pro', model]);
+      expect(audio.played).toHaveBeenCalledTimes(4);
+
+      unavailable = true;
+      await click(speakButton);
+      expect(container.querySelector('.status')?.textContent).toContain('503');
+      expect(container.querySelector('.status')?.textContent).toContain(
+        'Mock model unavailable',
+      );
+      expect(field('fishAudioModel').value).toBe(model);
+      expect(field('speaker').value).toBe('fixture-fish-voice');
+      expect(field('text').value).toBe(taggedText);
+      expect(button(speakButton).disabled).toBe(false);
+      expect(audio.played).toHaveBeenCalledTimes(4);
+
+      unavailable = false;
+      await click(speakButton);
+      expect(models).toEqual(['s2-pro', model, 's2-pro', model, model, model]);
+      expect(audio.played).toHaveBeenCalledTimes(5);
+      expect(audio.played).toHaveBeenLastCalledWith(wavBytes);
+      expect(container.querySelector('.status')?.textContent).toBe(
+        'Playback completed',
+      );
+    },
+  );
 
   it('uses the Deepgram catalog without a key and sends selected Flux voice and speed through the proxy', async () => {
     await change('engine', 'deepgram');

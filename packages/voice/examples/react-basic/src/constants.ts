@@ -298,11 +298,12 @@ export const ELEVENLABS_MODELS: Record<string, string> = {
 };
 
 export const FISH_AUDIO_MODELS: Record<FishAudioModel, string> = {
-  's2.1-pro': 'S2.1 Pro — newest production model',
+  's2.1-pro': 'S2.1 Pro — production model',
   's2.1-pro-free': 'S2.1 Pro Free — promotional tier without an SLA',
   's2-pro': 'S2 Pro — production model',
   s1: 'S1 — previous generation',
   'drama-3-preview': 'Drama 3 Preview — behavior and availability may change',
+  'drama-3': 'Drama 3 — released model for directed voice performances',
 };
 
 export const FISH_AUDIO_FORMATS: Record<FishAudioFormat, string> = {
