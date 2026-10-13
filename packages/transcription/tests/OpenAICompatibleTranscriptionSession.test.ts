@@ -10,7 +10,10 @@ import type {
   TranscriptionError,
 } from '../src';
 import { OpenAICompatibleTranscriptionSession } from '../src/providers/OpenAICompatibleTranscriptionSession';
-import { encodeTranscriptionWav } from '../src/providers/openaiCompatibleTranscription';
+import {
+  encodeTranscriptionWav,
+  withLeadingSilence,
+} from '../src/providers/openaiCompatibleTranscription';
 import type { BrowserPcmTurnCaptureOptions } from '../src/providers/BrowserPcmTurnCapture';
 import type { CapturedAudioTurn } from '../src/providers/PcmTurnAssembler';
 
@@ -129,6 +132,14 @@ describe('OpenAI-compatible URL and WAV', () => {
     expect(() => session({ baseUrl })).toThrowError(
       expect.objectContaining({ code: 'invalid-configuration' })
     );
+  });
+  it('prepends 1 s of silence before the utterance', () => {
+    const padded = withLeadingSilence(new Float32Array([0.5, -0.5]));
+    expect(padded).toHaveLength(16002);
+    expect(padded.subarray(0, 16000).every((sample) => sample === 0)).toBe(
+      true
+    );
+    expect(Array.from(padded.subarray(16000))).toEqual([0.5, -0.5]);
   });
   it('writes a valid mono PCM16 16 kHz header and clamps samples', () => {
     const buffer = encodeTranscriptionWav(new Float32Array([-2, -1, 0, 1, 2]));
@@ -256,7 +267,8 @@ describe('OpenAICompatibleTranscriptionSession', () => {
     const file = form.get('file') as File;
     expect(file.name).toBe('utterance.wav');
     expect(file.type).toBe('audio/wav');
-    expect(file.size).toBe(44 + 8000 * 2);
+    // 1 s of leading silence plus 0.5 s of resampled speech.
+    expect(file.size).toBe(44 + (16000 + 8000) * 2);
     expect(updates).toEqual([
       { utteranceId: 'openai-compatible:1', text: '結果', isFinal: true },
     ]);

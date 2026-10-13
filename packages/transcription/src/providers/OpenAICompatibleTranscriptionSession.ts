@@ -5,6 +5,7 @@ import { isTranscriptionProviderSupported } from '../support';
 import {
   encodeTranscriptionWav,
   resolveOpenAICompatibleTranscriptionEndpoint,
+  withLeadingSilence,
 } from './openaiCompatibleTranscription';
 import {
   BrowserPcmTurnCapture,
@@ -293,7 +294,9 @@ export class OpenAICompatibleTranscriptionSession extends BaseRealtimeTranscript
     if (this.state !== 'listening' && this.state !== 'stopping') return;
     if (turn.confirmedSpeechDurationMs < 300) return;
     const utteranceId = `openai-compatible:${++this.utteranceSequence}`;
-    const audio = resampleTo16k(turn.audio, turn.sampleRate);
+    const audio = withLeadingSilence(
+      resampleTo16k(turn.audio, turn.sampleRate)
+    );
     this.transcriptionQueue = this.transcriptionQueue
       .then(async () => {
         if (this.discardQueuedTurns || this.isDisposed()) return;

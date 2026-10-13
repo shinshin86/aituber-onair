@@ -27,6 +27,24 @@ export function resolveOpenAICompatibleTranscriptionEndpoint(
   }
 }
 
+const TRANSCRIPTION_SAMPLE_RATE = 16000;
+
+/**
+ * Silence prepended to each utterance. Some recognizers drop the first word
+ * when speech starts near the beginning of the file; ReazonSpeech v2 on
+ * speech.cpp needed a little over 500 ms in testing, so this keeps a margin.
+ */
+export const OPENAI_COMPATIBLE_LEADING_SILENCE_MS = 1000;
+
+/** Prepend leading silence to mono 16 kHz audio. */
+export function withLeadingSilence(audio: Float32Array): Float32Array {
+  const silenceSamples =
+    (TRANSCRIPTION_SAMPLE_RATE * OPENAI_COMPATIBLE_LEADING_SILENCE_MS) / 1000;
+  const padded = new Float32Array(silenceSamples + audio.length);
+  padded.set(audio, silenceSamples);
+  return padded;
+}
+
 /** Encode mono 16 kHz audio as little-endian PCM16 WAV. */
 export function encodeTranscriptionWav(audio: Float32Array): ArrayBuffer {
   const buffer = new ArrayBuffer(44 + audio.length * 2);

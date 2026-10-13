@@ -7,7 +7,9 @@ accept multipart `POST /v1/audio/transcriptions` and return JSON with a string
 `text` field. The `openai-compatible` provider uses the same browser PCM capture,
 utterance detection, and 16 kHz resampling as Local Whisper. It sends a mono
 PCM16 WAV after each utterance and emits final results only. It does not use
-WebSocket streaming or require WebGPU.
+WebSocket streaming or require WebGPU. Each WAV starts with 1 second of
+silence, because some recognizers drop the first word when speech begins right
+at the start of the file.
 
 The server must accept `file` and `response_format=json`. The package sends
 `model`, `language`, and `prompt` only when nonempty; support for these options

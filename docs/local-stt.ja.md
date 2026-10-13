@@ -6,7 +6,9 @@
 `POST /v1/audio/transcriptions` を受け付け、文字列の `text` を含む JSON を返す
 サーバーへマイク音声を送信します。Local Whisper と同じ録音・発話判定・16 kHz
 への変換処理を使い、発話ごとにモノラル PCM16 WAV を送ります。確定結果のみを
-発行し、WebSocket ストリーミングと WebGPU は使いません。
+発行し、WebSocket ストリーミングと WebGPU は使いません。認識モデルによっては
+ファイルの先頭から話し始めると最初の言葉を落とすため、各 WAV の先頭に 1 秒の
+無音を入れて送ります。
 
 サーバーは `file` と `response_format=json` に対応している必要があります。
 `model`、`language`、`prompt` は空でない場合だけ送信します。各オプションの対応状況は
