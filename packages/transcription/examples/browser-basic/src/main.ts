@@ -56,6 +56,7 @@ const localWhisperLanguage = element<HTMLInputElement>(
 const localWhisperSilence = element<HTMLInputElement>('#local-whisper-silence');
 const compatibleFields = element<HTMLDivElement>('#compatible-fields');
 const compatibleUrl = element<HTMLInputElement>('#compatible-url');
+const compatiblePreset = element<HTMLSelectElement>('#compatible-preset');
 const compatibleModel = element<HTMLInputElement>('#compatible-model');
 const compatibleKey = element<HTMLInputElement>('#compatible-key');
 const compatibleLanguage = element<HTMLInputElement>('#compatible-language');
@@ -295,8 +296,8 @@ function renderState(state: TranscriptionState): void {
   stopButton.disabled = !active;
   localWhisperModel.disabled = busy;
   for (const field of compatibleFields.querySelectorAll<
-    HTMLInputElement | HTMLTextAreaElement | HTMLButtonElement
-  >('input, textarea, button'))
+    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  >('input, textarea, select'))
     field.disabled = busy;
   if (state !== 'connecting') resetProgress();
 }
@@ -482,7 +483,16 @@ async function resetSessionForSettings(): Promise<void> {
   syncSettings();
 }
 
-compatibleUrl.addEventListener('input', renderCompatibleEndpoint);
+compatibleUrl.addEventListener('input', () => {
+  if (compatiblePreset.value !== compatibleUrl.value.trim()) {
+    compatiblePreset.value = '';
+  }
+  renderCompatibleEndpoint();
+});
+compatiblePreset.addEventListener('change', () => {
+  if (compatiblePreset.value) compatibleUrl.value = compatiblePreset.value;
+  renderCompatibleEndpoint();
+});
 
 providerSelect.addEventListener('change', () => void resetSessionForSettings());
 localWhisperModel.addEventListener('change', renderLocalWhisperModelHint);

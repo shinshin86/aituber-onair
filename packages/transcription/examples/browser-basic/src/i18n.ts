@@ -4,6 +4,10 @@ export type DisplayLanguage = (typeof DISPLAY_LANGUAGES)[number];
 
 const englishMessages = {
   compatibleProvider: 'OpenAI-compatible server',
+  compatiblePreset: 'Preset',
+  compatiblePresetManual: 'Enter manually',
+  compatiblePresetHint:
+    'Defaults of servers verified with this sample. If you verify another server, a pull request adding its preset is welcome.',
   compatibleServerUrl: 'Server URL',
   compatibleEndpoint: 'Requests go to',
   compatibleInvalidUrl: 'Enter a valid HTTP(S) server URL.',
@@ -132,6 +136,10 @@ type Messages = Record<TranslationKey, string>;
 
 const japaneseMessages: Messages = {
   compatibleProvider: 'OpenAI 互換サーバー',
+  compatiblePreset: 'プリセット',
+  compatiblePresetManual: '手動で入力',
+  compatiblePresetHint:
+    'このサンプルで動作を確認したサーバーの既定値です。他のサーバーで確認できたら、プリセットを追加するプルリクエストを歓迎します。',
   compatibleServerUrl: 'サーバー URL',
   compatibleEndpoint: '送信先',
   compatibleInvalidUrl: '有効な HTTP(S) サーバー URL を入力してください。',

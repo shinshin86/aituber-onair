@@ -67,6 +67,14 @@
 
         <div id="compatible-fields" hidden>
           <label class="field">
+            <span data-i18n="compatiblePreset">Preset</span>
+            <select id="compatible-preset">
+              <option value="" data-i18n="compatiblePresetManual">Enter manually</option>
+              <option value="http://127.0.0.1:8080">speech.cpp (http://127.0.0.1:8080)</option>
+            </select>
+            <small data-i18n="compatiblePresetHint"></small>
+          </label>
+          <label class="field">
             <span data-i18n="compatibleServerUrl">Server URL</span>
             <input id="compatible-url" type="url" placeholder="http://127.0.0.1:8080" spellcheck="false" />
           </label>
