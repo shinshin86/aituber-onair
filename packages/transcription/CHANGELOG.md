@@ -1,5 +1,30 @@
 # @aituber-onair/transcription
 
+## 0.0.4
+
+### Added
+
+- Added the `openai-compatible` provider, which sends each detected utterance
+  as 16 kHz mono PCM16 WAV to a server implementing OpenAI's
+  `POST /v1/audio/transcriptions`, such as a local speech.cpp server. It reuses
+  the Local Whisper capture and voice activity detection, emits final
+  transcripts only, sends only `file`, `response_format`, and non-empty
+  `model`, `language`, and `prompt`, and supports optional browser API key
+  authentication.
+- Exported `resolveOpenAICompatibleTranscriptionEndpoint()`, which accepts an
+  origin, an API base URL, or a full `/audio/transcriptions` URL.
+- Added the provider to the browser example with a preset menu for servers
+  verified with the sample (currently speech.cpp), the resolved request URL,
+  and the page origin to allow through CORS.
+- Added a local STT guide (`docs/local-stt.md`) with the speech.cpp setup,
+  CORS notes, and troubleshooting.
+
+### Fixed
+
+- Prepended 1 second of silence to each OpenAI-compatible upload, because some
+  recognizers, including ReazonSpeech v2 on speech.cpp, drop the first word
+  when speech starts near the beginning of the file.
+
 ## 0.0.3
 
 ### Added
