@@ -5,7 +5,6 @@ export type DisplayLanguage = (typeof DISPLAY_LANGUAGES)[number];
 const englishMessages = {
   compatibleProvider: 'OpenAI-compatible server',
   compatibleServerUrl: 'Server URL',
-  compatiblePreset: 'Use speech.cpp URL',
   compatibleEndpoint: 'Requests go to',
   compatibleInvalidUrl: 'Enter a valid HTTP(S) server URL.',
   compatibleModel: 'Model (optional)',
@@ -19,7 +18,8 @@ const englishMessages = {
   compatiblePrompt: 'Prompt (optional)',
   compatiblePromptHint:
     'Recognition context, if supported by the server and model.',
-  compatibleCorsHint: 'Allow this page origin on your server. For speech.cpp:',
+  compatibleCorsHint:
+    "Allow this page's origin in the server's CORS settings. Server-specific examples are in the local STT guide. Origin:",
   compatibleBatchHint:
     'Final results only, after each utterance. No WebGPU is needed. Use HTTPS or localhost for microphone access.',
 
@@ -133,7 +133,6 @@ type Messages = Record<TranslationKey, string>;
 const japaneseMessages: Messages = {
   compatibleProvider: 'OpenAI 互換サーバー',
   compatibleServerUrl: 'サーバー URL',
-  compatiblePreset: 'speech.cpp の URL を入力',
   compatibleEndpoint: '送信先',
   compatibleInvalidUrl: '有効な HTTP(S) サーバー URL を入力してください。',
   compatibleModel: 'モデル（任意）',
@@ -147,7 +146,7 @@ const japaneseMessages: Messages = {
   compatiblePromptHint:
     '認識の参考情報です。対応状況はサーバーとモデルによって異なります。',
   compatibleCorsHint:
-    'サーバーでこのページの Origin を許可してください。speech.cpp の指定例：',
+    'サーバーの CORS 設定で、このページの Origin を許可してください。サーバーごとの設定例はローカル STT ガイドにあります。Origin：',
   compatibleBatchHint:
     '発話ごとに確定結果を返します。WebGPU は不要です。マイクを使うには HTTPS または localhost で開いてください。',
 

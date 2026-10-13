@@ -50,8 +50,7 @@ npm -w @aituber-onair/transcription run example:dev
 
 1. Open the URL printed by Vite using localhost or HTTPS.
 2. Select **OpenAI-compatible server**.
-3. Set **Server URL** to `http://127.0.0.1:8080`, or use the speech.cpp URL button.
-   Check the **Requests go to** line.
+3. Set **Server URL** to `http://127.0.0.1:8080`. Check the **Requests go to** line.
 4. Leave **Model** blank for speech.cpp's loaded model, or enter the ID returned
    by `GET /v1/models`. Other servers may require a model, such as `whisper-1`
    for an OpenAI Whisper transcription request.

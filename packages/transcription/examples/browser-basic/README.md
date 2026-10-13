@@ -50,9 +50,9 @@ optimization exclusion is required.
 
 Select **OpenAI-compatible server**, then enter an origin, `/v1` API base, or
 full `/audio/transcriptions` endpoint. The sample displays the resolved request
-URL and a CORS argument using the actual page origin. The speech.cpp URL button
-sets `http://127.0.0.1:8080`. Model and API key are optional for a local speech.cpp
-server; other servers may require them. Audio and any key are sent to this URL.
+URL and the page origin that the server must allow through CORS. Model and API
+key are optional when the server does not require them; a local speech.cpp
+server needs neither. Audio and any key are sent to this URL.
 
 Language, prompt, and end silence can be configured before starting. Results
 appear only after an utterance ends. No WebGPU is needed. Stop waits for queued

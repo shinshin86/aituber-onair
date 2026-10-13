@@ -61,7 +61,6 @@ const compatibleKey = element<HTMLInputElement>('#compatible-key');
 const compatibleLanguage = element<HTMLInputElement>('#compatible-language');
 const compatibleSilence = element<HTMLInputElement>('#compatible-silence');
 const compatiblePrompt = element<HTMLTextAreaElement>('#compatible-prompt');
-const compatiblePreset = element<HTMLButtonElement>('#compatible-preset');
 
 function renderCompatibleEndpoint(): void {
   const output = element<HTMLElement>('#compatible-endpoint');
@@ -72,8 +71,7 @@ function renderCompatibleEndpoint(): void {
   } catch {
     output.textContent = translate(displayLanguage, 'compatibleInvalidUrl');
   }
-  element<HTMLElement>('#compatible-cors').textContent =
-    `--cors-origin ${window.location.origin}`;
+  element<HTMLElement>('#compatible-cors').textContent = window.location.origin;
 }
 
 const stateBadge = element<HTMLSpanElement>('#state-badge');
@@ -485,10 +483,6 @@ async function resetSessionForSettings(): Promise<void> {
 }
 
 compatibleUrl.addEventListener('input', renderCompatibleEndpoint);
-compatiblePreset.addEventListener('click', () => {
-  compatibleUrl.value = 'http://127.0.0.1:8080';
-  renderCompatibleEndpoint();
-});
 
 providerSelect.addEventListener('change', () => void resetSessionForSettings());
 localWhisperModel.addEventListener('change', renderLocalWhisperModelHint);
